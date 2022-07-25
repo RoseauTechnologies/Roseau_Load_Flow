@@ -1,0 +1,6 @@
+[flake8]
+max-line-length = 120
+count = true
+statistics = true
+show_source = True
+max_complexity = 15

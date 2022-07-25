@@ -1,0 +1,107 @@
+[tool.poetry]
+name = "thunders"
+version = "0.5.0"
+description = "Three-phase load flow solver"
+authors = [
+    "Sébastien Vallet <sebastien.vallet@roseautechnologies.com>",
+    "Benoît Vinot <benoit.vinot@roseautechnologies.com>",
+    "Victor Gouin <victor.gouin@roseautechnologies.com>",
+]
+maintainers = ["Sébastien Vallet <sebastien.vallet@roseautechnologies.com>"]
+license = "Proprietary"
+build = "build.py"
+repository = "https://github.com/RoseauTechnologies/Thunders/"
+readme = "README.md"
+exclude = [
+    "thunders/tests/data/**",
+]
+
+[build-system]
+requires = ["poetry-core>=1.0.0", "setuptools", "wheel", "Cython", "numpy"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.dependencies]
+python = ">=3.9,<3.11"
+# Data
+numpy = "^1.21.5"
+pandas = "^1.4.0"
+pygeos = ">=0.12.0"
+geopandas = ">=0.10.2"
+scipy = "^1.5.0"
+Shapely = "^1.8.0"
+regex = "^2022.1.18"
+pyproj = "^3.3.0"
+
+# Command line
+rich = ">=11.0.0"
+
+# Display
+matplotlib = "^3.5.1"
+adjustText = ">=0.7.3"
+
+# Compilation
+Cython = ">=0.29.26"
+
+
+[tool.poetry.dev-dependencies]
+# Tests
+pytest = "^7.1.2"
+pytest-cov = "^3.0.0"
+pytest-xdist = "^2.5.0"
+pytest-runner = "^6.0.0"
+
+# Code quality
+coverage = { version = "^6.0.0", extras = ["toml"] }
+flake8 = "^4.0.1"
+pre-commit = "^2.6.0"
+black = { version = ">=20.8b1", extras = ["jupyter"] }
+isort = "^5.1.0"
+
+# Black
+[tool.black]
+line-length = 120
+fast = true
+target-version = ["py39", "py310"]
+
+# isort
+[tool.isort]
+profile = "black"
+line_length = 120
+force_alphabetical_sort_within_sections = true
+case_sensitive = true
+
+
+# Coverage
+[tool.coverage.run]
+branch = true
+omit = ["thunders/__about__.py"]
+
+[tool.coverage.paths]
+source = ["thunders/"]
+
+[tool.coverage.report]
+# Regexes for lines to exclude from consideration
+exclude_lines = [
+    # Have to re-enable the standard pragma
+    "pragma: no cover",
+    # Don't complain about missing debug-only code:
+    "def __repr__",
+    "if self.debug",
+    # Don't complain if tests don't hit defensive assertion code:
+    "raise AssertionError",
+    "raise NotImplementedError",
+    # Don't complain if non-runnable code isn't run:
+    "if 0:",
+    "if __name__ == .__main__.:",
+    # Type checking
+    "if TYPE_CHECKING:",
+]
+ignore_errors = true
+
+[tool.coverage.html]
+directory = "htmlcov"
+
+# Pytest
+[tool.pytest.ini_options]
+addopts = "--color=yes -vv -n=0"
+testpaths = ["thunders"]
