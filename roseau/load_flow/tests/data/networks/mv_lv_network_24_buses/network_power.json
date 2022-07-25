@@ -1,0 +1,655 @@
+{
+    "buses": [
+        {
+            "id": 1,
+            "type": "slack",
+            "loads": [],
+            "voltages": {
+                "va": [11547.005383792515, 0.0],
+                "vb": [-5773.502691896258, -10000.000000179687],
+                "vc": [-5773.502691896258, 10000.000000179687]
+            },
+            "geometry": "POINT (0 0)"
+        },
+        {
+            "id": 2,
+            "type": "bus",
+            "loads": [],
+            "geometry": "POINT (1 0)"
+        },
+        {
+            "id": 3,
+            "type": "bus",
+            "loads": [],
+            "geometry": "POINT (1 -1)"
+        },
+        {
+            "id": 4,
+            "type": "bus",
+            "loads": [],
+            "geometry": "POINT (2 0)"
+        },
+        {
+            "id": 5,
+            "type": "bus",
+            "loads": [
+                {
+                    "id": 1,
+                    "function": "ys",
+                    "powers": {
+                        "sa": [251009.2634237357, 50201.85268474712],
+                        "sb": [250995.49287217823, 50199.09857443569],
+                        "sc": [251009.0826811284, 50201.81653622564]
+                    }
+                }
+            ],
+            "geometry": "POINT (2 1)"
+        },
+        {
+            "id": 6,
+            "type": "bus",
+            "loads": [],
+            "geometry": "POINT (3 0)"
+        },
+        {
+            "id": 7,
+            "type": "bus",
+            "loads": [],
+            "geometry": "POINT (4 0)"
+        },
+        {
+            "id": 8,
+            "type": "bus",
+            "loads": [
+                {
+                    "id": 2,
+                    "function": "ys",
+                    "powers": {
+                        "sa": [250205.73959141047, 50041.147918282135],
+                        "sb": [250192.01312175737, 50038.402624351525],
+                        "sc": [250205.5594273914, 50041.11188547827]
+                    }
+                }
+            ],
+            "geometry": "POINT (5 0)"
+        },
+        {
+            "id": 9,
+            "type": "bus",
+            "loads": [
+                {
+                    "id": 3,
+                    "function": "ys",
+                    "powers": {
+                        "sa": [250000.8781073924, 50000.17562147856],
+                        "sb": [249987.16287658954, 49997.43257531784],
+                        "sc": [250000.69809088638, 50000.1396181774]
+                    }
+                }
+            ],
+            "geometry": "POINT (3 -1)"
+        },
+        {
+            "id": 10,
+            "type": "bus",
+            "loads": [],
+            "geometry": "POINT (4 -1)"
+        },
+        {
+            "id": 11,
+            "type": "bus",
+            "loads": [],
+            "geometry": "POINT (5 -1)"
+        },
+        {
+            "id": 12,
+            "type": "bus",
+            "loads": [
+                {
+                    "id": 4,
+                    "function": "ys",
+                    "powers": {
+                        "sa": [249207.2413601394, 49841.448272027876],
+                        "sb": [249193.5696688285, 49838.71393376577],
+                        "sc": [249207.0619151023, 49841.4123830203]
+                    }
+                }
+            ],
+            "geometry": "POINT (6 -1)"
+        },
+        {
+            "id": 13,
+            "type": "bus_neutral",
+            "loads": [],
+            "geometry": "POINT (1 -2)"
+        },
+        {
+            "id": 14,
+            "type": "bus_neutral",
+            "loads": [],
+            "geometry": "POINT (1 -3)"
+        },
+        {
+            "id": 15,
+            "type": "bus_neutral",
+            "loads": [
+                {
+                    "id": 5,
+                    "function": "ys_neutral",
+                    "powers": {
+                        "sa": [4022.684654015081, 2011.3423270075414],
+                        "sb": [4396.4639371455905, 2747.789960715992],
+                        "sc": [3602.3239721679847, 1500.968321736661]
+                    }
+                }
+            ],
+            "geometry": "POINT (2 -3)"
+        },
+        {
+            "id": 16,
+            "type": "bus_neutral",
+            "loads": [],
+            "geometry": "POINT (1 -4)"
+        },
+        {
+            "id": 17,
+            "type": "bus_neutral",
+            "loads": [],
+            "geometry": "POINT (0 -4)"
+        },
+        {
+            "id": 18,
+            "type": "bus_neutral",
+            "loads": [],
+            "geometry": "POINT (-1 -4)"
+        },
+        {
+            "id": 19,
+            "type": "bus_neutral",
+            "loads": [
+                {
+                    "id": 6,
+                    "function": "ys_neutral",
+                    "powers": {
+                        "sa": [3956.1153917407923, 1978.057695870396],
+                        "sb": [4235.944883388208, 2647.46555211763],
+                        "sc": [3559.2513593225367, 1483.021399717724]
+                    }
+                }
+            ],
+            "geometry": "POINT (-2 -4)"
+        },
+        {
+            "id": 20,
+            "type": "bus_neutral",
+            "loads": [],
+            "geometry": "POINT (1 -5)"
+        },
+        {
+            "id": 21,
+            "type": "bus_neutral",
+            "loads": [
+                {
+                    "id": 7,
+                    "function": "ys_neutral",
+                    "powers": {
+                        "sa": [3944.7439109776074, 1972.371955488804],
+                        "sb": [4210.512435293473, 2631.57027205842],
+                        "sc": [3552.015927941965, 1480.0066366424855]
+                    }
+                }
+            ],
+            "geometry": "POINT (2 -5)"
+        },
+        {
+            "id": 22,
+            "type": "bus_neutral",
+            "loads": [
+                {
+                    "id": 8,
+                    "function": "ys_neutral",
+                    "powers": {
+                        "sa": [3933.576461887421, 1966.7882309437105],
+                        "sb": [4184.640537609303, 2615.4003360058136],
+                        "sc": [3544.8493185110397, 1477.0205493796004]
+                    }
+                }
+            ],
+            "geometry": "POINT (1 -6)"
+        },
+        {
+            "id": 23,
+            "type": "bus_neutral",
+            "loads": [],
+            "geometry": "POINT (1 -7)"
+        },
+        {
+            "id": 24,
+            "type": "bus_neutral",
+            "loads": [
+                {
+                    "id": 9,
+                    "function": "ys_neutral",
+                    "powers": {
+                        "sa": [3911.425534062758, 1955.712767031379],
+                        "sb": [4132.774797382108, 2582.984248363817],
+                        "sc": [3530.59314215058, 1471.080475896075]
+                    }
+                }
+            ],
+            "geometry": "POINT (1 -8)"
+        }
+    ],
+    "branches": [
+        {
+            "id": "line1",
+            "bus1": 1,
+            "bus2": 2,
+            "geometry": "LINESTRING (0 0, 1 0)",
+            "length": 5.0,
+            "type_name": "S_AL_150_sym",
+            "type": "line"
+        },
+        {
+            "id": "line2",
+            "bus1": 2,
+            "bus2": 3,
+            "geometry": "LINESTRING (1 0, -1 1)",
+            "length": 2.0,
+            "type_name": "S_AL_150_sym",
+            "type": "line"
+        },
+        {
+            "id": "line3",
+            "bus1": 2,
+            "bus2": 4,
+            "geometry": "LINESTRING (1 0, 1 1)",
+            "length": 1.0,
+            "type_name": "S_AL_150_sym",
+            "type": "line"
+        },
+        {
+            "id": "line4",
+            "bus1": 4,
+            "bus2": 5,
+            "geometry": "LINESTRING (1 0, 2 0)",
+            "length": 2.0,
+            "type_name": "S_AL_150_sym",
+            "type": "line"
+        },
+        {
+            "id": "line5",
+            "bus1": 4,
+            "bus2": 6,
+            "geometry": "LINESTRING (2 0, 3 0)",
+            "length": 1.0,
+            "type_name": "S_AL_150_sym",
+            "type": "line"
+        },
+        {
+            "id": "line6",
+            "bus1": 6,
+            "bus2": 7,
+            "geometry": "LINESTRING (3 0, 4 0)",
+            "length": 2.0,
+            "type_name": "S_AL_150_sym",
+            "type": "line"
+        },
+        {
+            "id": "line7",
+            "bus1": 7,
+            "bus2": 8,
+            "geometry": "LINESTRING (4 0, 5 0)",
+            "length": 1.0,
+            "type_name": "S_AL_150_sym",
+            "type": "line"
+        },
+        {
+            "id": "line8",
+            "bus1": 6,
+            "bus2": 9,
+            "geometry": "LINESTRING (3 0, 3 -1)",
+            "length": 2.0,
+            "type_name": "S_AL_150_sym",
+            "type": "line"
+        },
+        {
+            "id": "line9",
+            "bus1": 9,
+            "bus2": 10,
+            "geometry": "LINESTRING (3 -1, 4 -1)",
+            "length": 1.0,
+            "type_name": "S_AL_150_sym",
+            "type": "line"
+        },
+        {
+            "id": "line10",
+            "bus1": 10,
+            "bus2": 11,
+            "geometry": "LINESTRING (4 -1, 5 -1)",
+            "length": 2.0,
+            "type_name": "S_AL_150_sym",
+            "type": "line"
+        },
+        {
+            "id": "line11",
+            "bus1": 11,
+            "bus2": 12,
+            "geometry": "LINESTRING (5 -1, 6 -1)",
+            "length": 1.0,
+            "type_name": "S_AL_150_sym",
+            "type": "line"
+        },
+        {
+            "id": "transformateur",
+            "bus1": 3,
+            "bus2": 13,
+            "geometry": "POINT (1 -1.5)",
+            "type_name": "160kVA_Dyn11",
+            "tap": 1.0,
+            "type": "transformer"
+        },
+        {
+            "id": "line13",
+            "bus1": 13,
+            "bus2": 14,
+            "geometry": "LINESTRING (1 -2, 1 -3)",
+            "length": 0.1,
+            "type_name": "S_AL_150_exact",
+            "type": "line"
+        },
+        {
+            "id": "line14",
+            "bus1": 14,
+            "bus2": 15,
+            "geometry": "LINESTRING (1 -3, 2 -3)",
+            "length": 0.1,
+            "type_name": "S_AL_150_exact",
+            "type": "line"
+        },
+        {
+            "id": "line15",
+            "bus1": 14,
+            "bus2": 16,
+            "geometry": "LINESTRING (1 -3, 1 -4)",
+            "length": 0.1,
+            "type_name": "S_AL_150_exact",
+            "type": "line"
+        },
+        {
+            "id": "line16",
+            "bus1": 16,
+            "bus2": 17,
+            "geometry": "LINESTRING (1 -4, 0 -4)",
+            "length": 0.1,
+            "type_name": "S_AL_150_exact",
+            "type": "line"
+        },
+        {
+            "id": "line17",
+            "bus1": 17,
+            "bus2": 18,
+            "geometry": "LINESTRING (0 -4, -1 -4)",
+            "length": 0.1,
+            "type_name": "S_AL_150_exact",
+            "type": "line"
+        },
+        {
+            "id": "line18",
+            "bus1": 18,
+            "bus2": 19,
+            "geometry": "LINESTRING (-1 -4, -2 -4)",
+            "length": 0.1,
+            "type_name": "S_AL_150_exact",
+            "type": "line"
+        },
+        {
+            "id": "line19",
+            "bus1": 16,
+            "bus2": 20,
+            "geometry": "LINESTRING (1 -4, 1 -5)",
+            "length": 0.1,
+            "type_name": "S_AL_150_exact",
+            "type": "line"
+        },
+        {
+            "id": "line20",
+            "bus1": 20,
+            "bus2": 21,
+            "geometry": "LINESTRING (1 -5, 2 -5)",
+            "length": 0.1,
+            "type_name": "S_AL_150_exact",
+            "type": "line"
+        },
+        {
+            "id": "line21",
+            "bus1": 20,
+            "bus2": 22,
+            "geometry": "LINESTRING (1 -5, 1 -6)",
+            "length": 0.1,
+            "type_name": "S_AL_150_exact",
+            "type": "line"
+        },
+        {
+            "id": "line22",
+            "bus1": 22,
+            "bus2": 23,
+            "geometry": "LINESTRING (1 -6, 1 -7)",
+            "length": 0.1,
+            "type_name": "S_AL_150_exact",
+            "type": "line"
+        },
+        {
+            "id": "line23",
+            "bus1": 23,
+            "bus2": 24,
+            "geometry": "LINESTRING (1 -7, 1 -8)",
+            "length": 0.1,
+            "type_name": "S_AL_150_exact",
+            "type": "line"
+        }
+    ],
+    "line_types": [
+        {
+            "name": "S_AL_150_exact",
+            "model": "zy_neutral",
+            "z_line": [
+                [
+                    [
+                        0.18800000000000003,
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    [
+                        0.0,
+                        0.18800000000000003,
+                        0.0,
+                        0.0
+                    ],
+                    [
+                        0.0,
+                        0.0,
+                        0.18800000000000003,
+                        0.0
+                    ],
+                    [
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.4028571428571429
+                    ]
+                ],
+                [
+                    [
+                        0.32828402771266313,
+                        0.2543135354137983,
+                        0.23253767451076202,
+                        0.25431353541379775
+                    ],
+                    [
+                        0.2543135354137983,
+                        0.32828402771266313,
+                        0.25431353541379775,
+                        0.23253767451076202
+                    ],
+                    [
+                        0.23253767451076202,
+                        0.25431353541379775,
+                        0.32828402771266313,
+                        0.2543135354137983
+                    ],
+                    [
+                        0.25431353541379775,
+                        0.23253767451076202,
+                        0.2543135354137983,
+                        0.35222736359783396
+                    ]
+                ]
+            ],
+            "y_shunt": [
+                [
+                    [
+                        1.8739702458486386e-05,
+                        -0.0,
+                        -0.0,
+                        -0.0
+                    ],
+                    [
+                        -0.0,
+                        2.0220210675210224e-05,
+                        -0.0,
+                        -0.0
+                    ],
+                    [
+                        -0.0,
+                        -0.0,
+                        1.87397024584863e-05,
+                        -0.0
+                    ],
+                    [
+                        -0.0,
+                        -0.0,
+                        -0.0,
+                        1.251453341640509e-05
+                    ]
+                ],
+                [
+                    [
+                        0.0004502863047450181,
+                        -7.293254163840195e-05,
+                        -2.098988878582756e-05,
+                        -4.403550001268221e-05
+                    ],
+                    [
+                        -7.293254163840193e-05,
+                        0.0004893022525501052,
+                        -7.293254163839993e-05,
+                        -6.4336580197996484e-06
+                    ],
+                    [
+                        -2.0989888785827554e-05,
+                        -7.293254163839992e-05,
+                        0.00045028630474501605,
+                        -4.403550001268351e-05
+                    ],
+                    [
+                        -4.403550001268222e-05,
+                        -6.433658019799651e-06,
+                        -4.403550001268351e-05,
+                        0.00030308021498525026
+                    ]
+                ]
+            ]
+        },
+        {
+            "name": "S_AL_150_sym",
+            "model": "zy_neutral",
+            "z_line": [
+                [
+                    [
+                        0.18800000000000003,
+                        0.0,
+                        0.0
+                    ],
+                    [
+                        0.0,
+                        0.18800000000000003,
+                        0.0
+                    ],
+                    [
+                        0.0,
+                        0.0,
+                        0.18800000000000003
+                    ]
+                ],
+                [
+                    [
+                        0.328,
+                        0.254,
+                        0.254
+                    ],
+                    [
+                        0.254,
+                        0.328,
+                        0.254
+                    ],
+                    [
+                        0.254,
+                        0.254,
+                        0.328
+                    ]
+                ]
+            ],
+            "y_shunt": [
+                [
+                    [
+                        2.8506e-05,
+                        0.0,
+                        0.0
+                    ],
+                    [
+                        0.0,
+                        2.8506e-05,
+                        0.0
+                    ],
+                    [
+                        0.0,
+                        0.0,
+                        2.8506e-05
+                    ]
+                ],
+                [
+                    [
+                        1.7782e-05,
+                        -2.2840000000000005e-06,
+                        -2.2840000000000005e-06
+                    ],
+                    [
+                        -2.2840000000000005e-06,
+                        1.7782e-05,
+                        -2.2840000000000005e-06
+                    ],
+                    [
+                        -2.2840000000000005e-06,
+                        -2.2840000000000005e-06,
+                        1.7782e-05
+                    ]
+                ]
+            ]
+        }
+    ],
+    "transformer_types": [
+        {
+            "name": "160kVA_Dyn11",
+            "sn": 160000.0,
+            "uhv": 20000.0,
+            "ulv": 400.0,
+            "i0": 0.023,
+            "p0": 460.0,
+            "psc": 2350.0,
+            "vsc": 0.04,
+            "type": "dyn11"
+        }
+    ]
+}

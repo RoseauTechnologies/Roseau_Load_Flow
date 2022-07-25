@@ -1,0 +1,58 @@
+
+Size of the problem 25 x 25
+Rank of the matrix: 25
+Matrix conditionning: 34.07089327142746
+
+List of variables:
+ - node_1_Va
+ - node_1_Vb
+ - node_1_Vc
+ - node_1_Vn
+ - node_2_Va
+ - node_2_Vb
+ - node_2_Vc
+ - node_2_Ia
+ - node_2_Ib
+ - node_2_Ic
+ - node_2_Vn
+ - node_2_In
+ - line_line1_Ia1
+ - line_line1_Ib1
+ - line_line1_Ic1
+ - line_line1_Ia2
+ - line_line1_Ib2
+ - line_line1_Ic2
+ - line_line1_In1
+ - line_line1_In2
+ - load_0_Ia
+ - load_0_Ib
+ - load_0_Ic
+ - load_0_In
+ - load_0_Vn
+
+List of linear expressions:
+ - 0 = (node_1_Va) - ((230.94010767585033+0j))
+ - 0 = (node_1_Vb) - ((-115.47005383792516-200.00000028072188j))
+ - 0 = (node_1_Vc) - ((-115.47005383792516+200.00000028072188j))
+ - 0 = (node_1_Vn) - (0j)
+ - 0 = ((((((((((1+0j)) * (node_2_Va)) + ((0j) * (node_2_Vb))) + ((0j) * (node_2_Vc))) + ((0j) * (node_2_Vn))) - (((0.094+0.16414201385633156j)) * (line_line1_Ia2))) - ((0.12715676770689915j) * (line_line1_Ib2))) - ((0.11626883725538101j) * (line_line1_Ic2))) - ((0.12715676770689888j) * (line_line1_In2))) - (node_1_Va)
+ - 0 = (((((((((0j) * (node_2_Va)) + ((0j) * (node_2_Vb))) + ((0j) * (node_2_Vc))) + ((0j) * (node_2_Vn))) - (((1+0j)) * (line_line1_Ia2))) - ((0j) * (line_line1_Ib2))) - ((0j) * (line_line1_Ic2))) - ((0j) * (line_line1_In2))) - (line_line1_Ia1)
+ - 0 = (((((((((0j) * (node_2_Va)) + (((1+0j)) * (node_2_Vb))) + ((0j) * (node_2_Vc))) + ((0j) * (node_2_Vn))) - ((0.12715676770689915j) * (line_line1_Ia2))) - (((0.094+0.16414201385633156j)) * (line_line1_Ib2))) - ((0.12715676770689888j) * (line_line1_Ic2))) - ((0.11626883725538101j) * (line_line1_In2))) - (node_1_Vb)
+ - 0 = (((((((((0j) * (node_2_Va)) + ((0j) * (node_2_Vb))) + ((0j) * (node_2_Vc))) + ((0j) * (node_2_Vn))) - ((0j) * (line_line1_Ia2))) - (((1+0j)) * (line_line1_Ib2))) - ((0j) * (line_line1_Ic2))) - ((0j) * (line_line1_In2))) - (line_line1_Ib1)
+ - 0 = (((((((((0j) * (node_2_Va)) + ((0j) * (node_2_Vb))) + (((1+0j)) * (node_2_Vc))) + ((0j) * (node_2_Vn))) - ((0.11626883725538101j) * (line_line1_Ia2))) - ((0.12715676770689888j) * (line_line1_Ib2))) - (((0.094+0.16414201385633156j)) * (line_line1_Ic2))) - ((0.12715676770689915j) * (line_line1_In2))) - (node_1_Vc)
+ - 0 = (((((((((0j) * (node_2_Va)) + ((0j) * (node_2_Vb))) + ((0j) * (node_2_Vc))) + ((0j) * (node_2_Vn))) - ((0j) * (line_line1_Ia2))) - ((0j) * (line_line1_Ib2))) - (((1+0j)) * (line_line1_Ic2))) - ((0j) * (line_line1_In2))) - (line_line1_Ic1)
+ - 0 = (((((((((0j) * (node_2_Va)) + ((0j) * (node_2_Vb))) + ((0j) * (node_2_Vc))) + (((1+0j)) * (node_2_Vn))) - ((0.12715676770689888j) * (line_line1_Ia2))) - ((0.11626883725538101j) * (line_line1_Ib2))) - ((0.12715676770689915j) * (line_line1_Ic2))) - (((0.20142857142857143+0.17611368179891698j)) * (line_line1_In2))) - (node_1_Vn)
+ - 0 = (((((((((0j) * (node_2_Va)) + ((0j) * (node_2_Vb))) + ((0j) * (node_2_Vc))) + ((0j) * (node_2_Vn))) - ((0j) * (line_line1_Ia2))) - ((0j) * (line_line1_Ib2))) - ((0j) * (line_line1_Ic2))) - (((1+0j)) * (line_line1_In2))) - (line_line1_In1)
+ - 0 = ((node_2_Va) - (load_0_Vn)) + (((10+5j)) * (load_0_Ia))
+ - 0 = ((node_2_Vb) - (load_0_Vn)) + (((10+5j)) * (load_0_Ib))
+ - 0 = ((node_2_Vc) - (load_0_Vn)) + (((10+5j)) * (load_0_Ic))
+ - 0 = (load_0_In) + (((load_0_Ia) + (load_0_Ib)) + (load_0_Ic))
+ - 0 = (load_0_Vn) - (node_2_Vn)
+ - 0 = (node_2_Ia) - (load_0_Ia)
+ - 0 = (node_2_Ib) - (load_0_Ib)
+ - 0 = (node_2_Ic) - (load_0_Ic)
+ - 0 = (node_2_In) - (load_0_In)
+ - 0 = (node_2_Ia) - (line_line1_Ia2)
+ - 0 = (node_2_Ib) - (line_line1_Ib2)
+ - 0 = (node_2_Ic) - (line_line1_Ic2)
+ - 0 = (node_2_In) - (line_line1_In2)

@@ -1,0 +1,56 @@
+{
+    "buses": [
+        {
+            "id": 1,
+            "type": "slack",
+            "loads": [],
+            "voltages": {
+                "va": [11547.005383792515, 0.0],
+                "vb": [-5773.502691896258, -10000.000000179687],
+                "vc": [-5773.502691896258, 10000.000000179687]
+            },
+            "geometry": "POINT (0 0)"
+        },
+        {
+            "id": 2,
+            "type": "bus_neutral",
+            "loads": [
+                {
+                    "id": 2,
+                    "function": "yz_neutral",
+                    "impedances": {
+                        "za": [1.0, 0.5],
+                        "zb": [1.0, 0.5],
+                        "zc": [1.0, 0.5]
+                    }
+                }
+            ],
+            "geometry": "POINT (0 0.5)"
+        }
+    ],
+    "branches": [
+        {
+            "id": "transfo1",
+            "bus1": 1,
+            "bus2": 2,
+            "geometry": "POINT (0 0)",
+            "type_name": "160kVA_Dyn11",
+            "tap": 1.0,
+            "type": "transformer"
+        }
+    ],
+    "line_types": [],
+    "transformer_types": [
+        {
+            "name": "160kVA_Dyn11",
+            "sn": 160000.0,
+            "uhv": 20000.0,
+            "ulv": 400.0,
+            "i0": 0.023,
+            "p0": 460.0,
+            "psc": 2350.0,
+            "vsc": 0.04,
+            "type": "dyn11"
+        }
+    ]
+}

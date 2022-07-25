@@ -1,0 +1,143 @@
+{
+  "General": {
+    "Attributes": ["FID", "Descr", "Val"],
+    "Values": [
+      ["1", "Version", "7.0"]
+    ]
+  },
+  "ElmLne": {
+    "Attributes": ["FID", "OP", "loc_name", "fold_id", "typ_id", "bus1", "bus2", "dline", "nlnum", "Unom", "GPScoords:SIZEROW", "GPScoords:SIZECOL"],
+    "Values": [
+      ["2", "C", "LV Line", "9", "59", "47", "49", 1, 1, 0.4, "0", "0"],
+      ["3", "C", "Line", "9", "60", "54", "58", 10, 1, 20, "0", "0"]
+    ]
+  },
+  "ElmLodLV": {
+    "Attributes": ["FID", "OP", "loc_name", "typ_id", "fold_id", "bus1", "phtech", "slini", "plini", "coslini", "pf_recap", "slinir", "plinir", "coslinir", "pf_recapr", "slinis", "plinis", "coslinis", "pf_recaps", "slinit", "plinit", "coslinit", "pf_recapt", "c:sr:i", "c:ss:i", "c:st:i", "m:P:bus1:A", "m:Q:bus1:A", "m:P:bus1:B", "m:Q:bus1:B", "m:P:bus1:C", "m:Q:bus1:C", "m:P:bus1:N", "m:Q:bus1:N", "m:ur:bus1:A", "m:ur:bus1:B", "m:ur:bus1:C", "m:ur:bus1:N", "m:ui:bus1:A", "m:ui:bus1:B", "m:ui:bus1:C", "m:ui:bus1:N", "m:I:bus1:A", "m:I:bus1:B", "m:I:bus1:C", "m:I:bus1:N", "m:phii:bus1:A", "m:phii:bus1:B", "m:phii:bus1:C", "m:phii:bus1:N"],
+    "Values": [
+      ["4", "C", "LV Load", null, null, "50", 3, 10, 5, null, 1, 0, 0, null, 0, 10, -5, null, 0, 0, 0, null, 1, null, null, null, 0.005, -0.00866025403784, 0.005, -0.00866025403784, 0.005, -0.00866025403784, 0.005, -0.00866025403784, 0.84554997186925, 0.84554997186925, 0.84554997186925, 0.84554997186925, 0.53389817975015, 0.53389817975015, 0.53389817975015, 0.53389817975015, 0.01443374192743, 0.01443374192743, 0.01443374192743, 0.01443374192743, 92.2691829316895, 92.2691829316895, 92.2691829316895, 92.2691829316895],
+      ["5", "C", "Low-Voltage Load", null, null, "48", 2, 10, 8, null, 0, 0, 0, null, 0, 0, 0, null, 0, 0, 0, null, 0, null, null, null, 0.008, 0.00599999962250, 0.008, 0.00599999962250, 0.008, 0.00599999962250, null, null, 0.85629522140861, 0.85629522140861, 0.85629522140861, null, 0.50289892669302, 0.50289892669302, 0.50289892669302, null, 0.01453476892251, 0.01453476892251, 0.01453476892251, null, -6.44434176657393, -6.44434176657393, -6.44434176657393, null]
+    ]
+  },
+  "ElmLodmv": {
+    "Attributes": ["FID", "OP", "loc_name", "bus1", "phtech", "fold_id", "slini", "plini", "coslini", "pf_recap", "slinir", "plinir", "coslinir", "pf_recapr", "slinis", "plinis", "coslinis", "pf_recaps", "slinit", "plinit", "coslinit", "pf_recapt", "sgini", "pgini", "cosgini", "pfg_recap", "sginir", "pginir", "cosginir", "pfg_recapr", "sginis", "pginis", "cosginis", "pfg_recaps", "sginit", "pginit", "cosginit", "pfg_recapt", "n:ur:bus1", "n:ui:bus1", "n:u:bus1", "n:Ul:bus1", "n:Pload:bus1", "n:Qload:bus1"],
+    "Values": [
+      ["6", "C", "MV Load Balanced", "52", null, "9", 1, 0.9, null, 0, 0, 0, null, 0, 0, 0, null, 0, 0, 0, null, 0, 0.5, 0.5, null, 0, 0, 0, null, 0, 0, 0, null, 0, 0, 0, null, 0, 0.99963211559994, 0.00016044663370, 0.99963212847624, 19.9926425695248, 1.179999982843, 0.29598600973486],
+      ["7", "C", "MV Load Unbalanced", "53", null, "9", 0.313006, 0.28, null, 1, 0.2, 0.18, null, 0, 0.3, 0.03, null, 1, 0.1, 0.07, null, 0, 0.336716, 0.22, null, 1, 0.1, 0.1, null, 0, 0.1, 0.09, null, 0, 0.3, 0.03, null, 1, 0.99963211559994, 0.00016044663370, 0.99963212847624, 19.9926425695248, 1.179999982843, 0.29598600973486],
+      ["8", "C", "MV Load", "57", null, "9", 1, 0.9, null, 0, 0, 0, null, 0, 0, 0, null, 0, 0, 0, null, 0, 0, 0, null, 0, 0, 0, null, 0, 0, 0, null, 0, 0, 0, null, 0, 1, 0, 1, 20, 0.89999997615814, 0.43588995933532]
+    ]
+  },
+  "ElmNet": {
+    "Attributes": ["FID", "OP", "loc_name", "fold_id", "frnom"],
+    "Values": [
+      ["9", "C", "Exemple exhaustif", null, 50]
+    ]
+  },
+  "ElmPvsys": {
+    "Attributes": ["FID", "OP", "loc_name", "typ_id", "bus1", "mode_pgi", "phtech", "sgn", "cosn", "Inom", "pgini", "qgini", "cosgini", "pf_recap", "usetp", "phiini", "av_mode", "usp_min", "usp_max", "ddroop", "Qfu_min", "Qfu_max", "q_min", "q_max"],
+    "Values": [
+      ["10", "C", "PV System", null, "51", null, 0, 18, 1, 0.025980, 20, 34.64102, 0.5, 0, 1, 0, "constv", 0.9, 1.1, 1, -9999, 9999, -1, 1]
+    ]
+  },
+  "ElmTerm": {
+    "Attributes": ["FID", "OP", "loc_name", "fold_id", "typ_id", "iUsage", "phtech", "uknom", "outserv", "GPSlat", "GPSlon", "m:ur:A", "m:ui:A", "m:ur:B", "m:ui:B", "m:ur:C", "m:ui:C", "m:phiuln:A", "m:phiuln:B", "m:phiuln:C"],
+    "Values": [
+      ["11", "C", "Bus LV 1", "9", null, 0, 1, 0.4, 0, 0, 0, 0.85629522140861, 0.50289892669302, 0.85629522140861, 0.50289892669302, 0.85629522140861, 0.50289892669302, null, null, null],
+      ["12", "C", "Bus LV 2", "9", null, 0, 1, 0.4, 0, 0, 0, 0.84554997186925, 0.53389817975015, 0.84554997186925, 0.53389817975015, 0.84554997186925, 0.53389817975015, null, null, null],
+      ["13", "C", "Bus MV", "9", null, 0, 0, 20, 0, 0, 0, 0.99963211559994, 0.00016044663370, 0.99963211559994, 0.00016044663370, 0.99963211559994, 0.00016044663370, null, null, null],
+      ["14", "C", "Terminal", "9", null, 0, 0, 20, 0, 0, 0, 1, 0, 1, 0, 1, 0, null, null, null]
+    ]
+  },
+  "ElmTr2": {
+    "Attributes": ["FID", "OP", "loc_name", "fold_id", "typ_id", "bushv", "buslv", "nntap"],
+    "Values": [
+      ["15", "C", "MV/LV Transformer", "9", "61", "56", "46", 0]
+    ]
+  },
+  "ElmXnet": {
+    "Attributes": ["FID", "OP", "loc_name", "fold_id", "bus1", "GPSlat", "GPSlon", "pgini", "qgini", "sgini", "bustp", "uset_mode", "usetp", "iintgnd"],
+    "Values": [
+      ["16", "C", "External Grid", "9", "55", null, 0, 0, 0, 0, "PV", 0, 1, 0]
+    ]
+  },
+  "IntCase": {
+    "Attributes": ["FID", "OP", "loc_name", "cpowexp", "campexp", "cpexpshc"],
+    "Values": [
+      ["17", "C", "Study Case(1)", "M", "k", "M"]
+    ]
+  },
+  "IntGrf": {
+    "Attributes": ["FID", "OP", "loc_name", "fold_id", "rCenterX", "rCenterY", "rSizeX", "rSizeY", "iRot"],
+    "Values": [
+      ["18", "C", "Graphical Net Object1(1)", "45", 76.5625, 109.375, 2.166667, 1, 0],
+      ["19", "C", "Graphical Net Object1(2)", "45", 216.5625, 109.375, 3.5, 1, 0],
+      ["20", "C", "Graphical Net Object1(3)", "45", 76.5625, 65.625, 2.166667, 1, 0],
+      ["21", "C", "Graphical Net Object10", "45", 96.25, 39.375, 1, 1, 0],
+      ["22", "C", "Graphical Net Object11(1)", "45", 240.625, 87.5, 1, 1, 0],
+      ["23", "C", "Graphical Net Object11", "45", 201.25, 87.5, 1, 1, 0],
+      ["24", "C", "Graphical Net Object13", "45", 109.375, 153.125, 1, 1, 0],
+      ["25", "C", "Graphical Net Object14(1)", "45", 192.5, 170.625, 1, 1, 0],
+      ["26", "C", "Graphical Net Object14(2)", "45", 140, 175, 6, 1, 0],
+      ["27", "C", "Graphical Net Object14", "45", 100.625, 91.875, 1, 1, 0],
+      ["28", "C", "Graphical Net Object2", "45", 131.25, 196.875, 1, 1, 180],
+      ["29", "C", "Graphical Net Object6", "45", 74.375, 142.1875, 1, 1, 0],
+      ["30", "C", "Graphical Net Object8", "45", 87.5, 87.5, 1, 1, 0],
+      ["31", "C", "Graphical Net Object9", "45", 70, 39.375, 1, 1, 0]
+    ]
+  },
+  "IntGrfcon": {
+    "Attributes": ["FID", "OP", "loc_name", "fold_id", "iLinSt", "rLinWd", "rX:SIZEROW", "rX:0", "rX:1", "rY:SIZEROW", "rY:0", "rY:1"],
+    "Values": [
+      ["32", "C", "GCO_1", "21", 1, 0, "2", 96.25, 96.25, "2", 43.75, 65.625],
+      ["33", "C", "GCO_1", "22", 1, 0, "2", 240.625, 240.625, "2", 91.875, 109.375],
+      ["34", "C", "GCO_1", "23", 1, 0, "2", 201.25, 201.25, "2", 91.875, 109.375],
+      ["35", "C", "GCO_1", "24", 1, 0, "2", 109.375, 109.375, "2", 157.5, 175],
+      ["36", "C", "GCO_1", "25", 1, 0, "2", 192.5, 192.5, "2", 170.625, 109.375],
+      ["37", "C", "GCO_2", "25", 1, 0, "2", 192.5, 192.5, "2", 170.625, 175],
+      ["38", "C", "GCO_1", "27", 1, 0, "2", 100.625, 100.625, "2", 96.25, 109.375],
+      ["39", "C", "GCO_1", "28", 1, 0, "2", 131.25, 131.25, "2", 192.5, 175],
+      ["40", "C", "GCO_1", "29", 1, 0, "2", 74.375, 74.375, "2", 146.5625, 175],
+      ["41", "C", "GCO_2", "29", 1, 0, "2", 74.375, 74.375, "2", 137.8125, 109.375],
+      ["42", "C", "GCO_1", "30", 1, 0, "2", 87.5, 87.5, "2", 87.5, 109.375],
+      ["43", "C", "GCO_2", "30", 1, 0, "2", 87.5, 87.5, "2", 87.5, 65.625],
+      ["44", "C", "GCO_1", "31", 1, 0, "2", 70, 70, "2", 43.75, 65.625]
+    ]
+  },
+  "IntGrfnet": {
+    "Attributes": ["FID", "OP", "loc_name", "fold_id", "sBordSym:SIZEROW", "snap_on", "ortho_on", "sSubstTyp:SIZEROW", "sSymbol:SIZEROW"],
+    "Values": [
+      ["45", "C", "Exemple exhaustif", null, "0", 1, null, "0", "0"]
+    ]
+  },
+  "StaCubic": {
+    "Attributes": ["FID", "OP", "loc_name", "fold_id", "cterm", "obj_bus", "obj_id", "chr_name", "nphase"],
+    "Values": [
+      ["46", "C", "Cub_1", "11", "11", 1, "15", "", 3],
+      ["47", "C", "Cub_2", "11", "11", 0, "2", "", 3],
+      ["48", "C", "Cub_3", "11", "11", 0, null, "", 3],
+      ["49", "C", "Cub_1", "12", "12", 1, "2", "", 3],
+      ["50", "C", "Cub_2", "12", "12", 0, null, "", 3],
+      ["51", "C", "Cub_3", "12", "12", 0, "10", "", 3],
+      ["52", "C", "Cub_2", "13", "13", 0, "6", "", 3],
+      ["53", "C", "Cub_3", "13", "13", 0, "7", "", 3],
+      ["54", "C", "Cub_4", "13", "13", 0, "3", "", 3],
+      ["55", "C", "Cub_1", "14", "14", 0, "16", "", 3],
+      ["56", "C", "Cub_2", "14", "14", 0, "15", "", 3],
+      ["57", "C", "Cub_3", "14", "14", 0, "8", "", 3],
+      ["58", "C", "Cub_4", "14", "14", 1, "3", "", 3]
+    ]
+  },
+  "TypLne": {
+    "Attributes": ["FID", "OP", "loc_name", "fold_id", "uline", "sline", "InomAir", "mlei", "cohl_", "systp", "nlnph", "nneutral", "frnom", "rline", "xline", "lline", "rline0", "xline0", "lline0", "rnline", "xnline", "lnline", "rpnline", "xpnline", "lpnline", "bline", "cline", "tline", "gline", "bline0", "cline0", "gline0", "bnline", "cnline", "bpnline", "cpnline"],
+    "Values": [
+      ["59", "C", "Ligne BT", null, 0.4, 1, 1, "Cu", 0, 0, 3, 1, 50, 0.2, 0.1, 0.318309, 0.2, 0.1, 0.318309, 0.2, 0.1, 0.318309, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      ["60", "C", "Ligne HTA", null, 20, 1, 1, "Cu", 0, 0, 3, 0, 50, 0.2, 0.1, 0.318309, 0.2, 0.1, 0.318309, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    ]
+  },
+  "TypTr2": {
+    "Attributes": ["FID", "OP", "loc_name", "fold_id", "frnom", "strn", "nt2ph", "tr2cn_h", "tr2cn_l", "nt2ag", "utrn_h", "utrn_l", "uktr", "pcutr", "uk0tr", "ur0tr", "pfe", "curmg", "zx0hl_n", "rtox0_n", "tapchtype", "tap_side", "dutap", "phitr", "nntap0", "ntpmn", "ntpmx"],
+    "Values": [
+      ["61", "C", "Transformer 100 kVA Dyn11", null, 50, 0.1, 3, "D", "YN", 11, 20, 0.4, 4, 2.15, 4, 2.15, 0.21, 2.5, 100, 0, 0, 0, 0, 0, 0, 0, 0]
+    ]
+  }
+}

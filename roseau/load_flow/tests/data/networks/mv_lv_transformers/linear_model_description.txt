@@ -1,0 +1,750 @@
+
+Size of the problem 371 x 371
+Rank of the matrix: 371
+Matrix conditionning: 180.55946217920666
+
+List of variables:
+ - node_1_Va
+ - node_1_Vb
+ - node_1_Vc
+ - node_2_Va
+ - node_2_Vb
+ - node_2_Vc
+ - node_2_Ia
+ - node_2_Ib
+ - node_2_Ic
+ - node_3_Va
+ - node_3_Vb
+ - node_3_Vc
+ - node_3_Ia
+ - node_3_Ib
+ - node_3_Ic
+ - node_3_Vn
+ - node_3_In
+ - node_4_Va
+ - node_4_Vb
+ - node_4_Vc
+ - node_4_Ia
+ - node_4_Ib
+ - node_4_Ic
+ - node_4_Vn
+ - node_4_In
+ - node_5_Va
+ - node_5_Vb
+ - node_5_Vc
+ - node_5_Ia
+ - node_5_Ib
+ - node_5_Ic
+ - node_5_Vn
+ - node_5_In
+ - node_6_Va
+ - node_6_Vb
+ - node_6_Vc
+ - node_6_Ia
+ - node_6_Ib
+ - node_6_Ic
+ - node_7_Va
+ - node_7_Vb
+ - node_7_Vc
+ - node_7_Ia
+ - node_7_Ib
+ - node_7_Ic
+ - node_7_Vn
+ - node_7_In
+ - node_8_Va
+ - node_8_Vb
+ - node_8_Vc
+ - node_8_Ia
+ - node_8_Ib
+ - node_8_Ic
+ - node_9_Va
+ - node_9_Vb
+ - node_9_Vc
+ - node_9_Ia
+ - node_9_Ib
+ - node_9_Ic
+ - node_9_Vn
+ - node_9_In
+ - node_10_Va
+ - node_10_Vb
+ - node_10_Vc
+ - node_10_Ia
+ - node_10_Ib
+ - node_10_Ic
+ - node_10_Vn
+ - node_10_In
+ - node_11_Va
+ - node_11_Vb
+ - node_11_Vc
+ - node_11_Ia
+ - node_11_Ib
+ - node_11_Ic
+ - node_11_Vn
+ - node_11_In
+ - node_12_Va
+ - node_12_Vb
+ - node_12_Vc
+ - node_12_Ia
+ - node_12_Ib
+ - node_12_Ic
+ - node_13_Va
+ - node_13_Vb
+ - node_13_Vc
+ - node_13_Ia
+ - node_13_Ib
+ - node_13_Ic
+ - node_13_Vn
+ - node_13_In
+ - line_line1_Ia1
+ - line_line1_Ib1
+ - line_line1_Ic1
+ - line_line1_Ia2
+ - line_line1_Ib2
+ - line_line1_Ic2
+ - line_line2_Ia1
+ - line_line2_Ib1
+ - line_line2_Ic1
+ - line_line2_Ia2
+ - line_line2_Ib2
+ - line_line2_Ic2
+ - line_line2_In2
+ - line_line3_Ia1
+ - line_line3_Ib1
+ - line_line3_Ic1
+ - line_line3_Ia2
+ - line_line3_Ib2
+ - line_line3_Ic2
+ - line_line3_In2
+ - line_line4_Ia1
+ - line_line4_Ib1
+ - line_line4_Ic1
+ - line_line4_Ia2
+ - line_line4_Ib2
+ - line_line4_Ic2
+ - line_line4_In2
+ - line_line5_Ia1
+ - line_line5_Ib1
+ - line_line5_Ic1
+ - line_line5_Ia2
+ - line_line5_Ib2
+ - line_line5_Ic2
+ - line_line6_Ia1
+ - line_line6_Ib1
+ - line_line6_Ic1
+ - line_line6_Ia2
+ - line_line6_Ib2
+ - line_line6_Ic2
+ - line_line6_In2
+ - line_line7_Ia1
+ - line_line7_Ib1
+ - line_line7_Ic1
+ - line_line7_Ia2
+ - line_line7_Ib2
+ - line_line7_Ic2
+ - line_line8_Ia1
+ - line_line8_Ib1
+ - line_line8_Ic1
+ - line_line8_Ia2
+ - line_line8_Ib2
+ - line_line8_Ic2
+ - line_line8_In2
+ - line_line9_Ia1
+ - line_line9_Ib1
+ - line_line9_Ic1
+ - line_line9_Ia2
+ - line_line9_Ib2
+ - line_line9_Ic2
+ - line_line9_In2
+ - line_line10_Ia1
+ - line_line10_Ib1
+ - line_line10_Ic1
+ - line_line10_Ia2
+ - line_line10_Ib2
+ - line_line10_Ic2
+ - line_line10_In2
+ - line_line11_Ia1
+ - line_line11_Ib1
+ - line_line11_Ic1
+ - line_line11_Ia2
+ - line_line11_Ib2
+ - line_line11_Ic2
+ - line_line12_Ia1
+ - line_line12_Ib1
+ - line_line12_Ic1
+ - line_line12_Ia2
+ - line_line12_Ib2
+ - line_line12_Ic2
+ - line_line12_In2
+ - transfo_IX
+ - transfo_IY
+ - transfo_IZ
+ - transfo_Ix
+ - transfo_Iy
+ - transfo_Iz
+ - transfo_UX
+ - transfo_UY
+ - transfo_UZ
+ - transfo_Ux
+ - transfo_Uy
+ - transfo_Uz
+ - transfo_IX
+ - transfo_IY
+ - transfo_IZ
+ - transfo_Ix
+ - transfo_Iy
+ - transfo_Iz
+ - transfo_UX
+ - transfo_UY
+ - transfo_UZ
+ - transfo_Ux
+ - transfo_Uy
+ - transfo_Uz
+ - transfo_IX
+ - transfo_IY
+ - transfo_IZ
+ - transfo_Ix
+ - transfo_Iy
+ - transfo_Iz
+ - transfo_UX
+ - transfo_UY
+ - transfo_UZ
+ - transfo_Ux
+ - transfo_Uy
+ - transfo_Uz
+ - transfo_IX
+ - transfo_IY
+ - transfo_IZ
+ - transfo_Ix
+ - transfo_Iy
+ - transfo_Iz
+ - transfo_UX
+ - transfo_UY
+ - transfo_UZ
+ - transfo_Ux
+ - transfo_Uy
+ - transfo_Uz
+ - transfo_IX
+ - transfo_IY
+ - transfo_IZ
+ - transfo_Ix
+ - transfo_Iy
+ - transfo_Iz
+ - transfo_UX
+ - transfo_UY
+ - transfo_UZ
+ - transfo_Ux
+ - transfo_Uy
+ - transfo_Uz
+ - transfo_IX
+ - transfo_IY
+ - transfo_IZ
+ - transfo_Ix
+ - transfo_Iy
+ - transfo_Iz
+ - transfo_UX
+ - transfo_UY
+ - transfo_UZ
+ - transfo_Ux
+ - transfo_Uy
+ - transfo_Uz
+ - transfo_IX
+ - transfo_IY
+ - transfo_IZ
+ - transfo_Ix
+ - transfo_Iy
+ - transfo_Iz
+ - transfo_UX
+ - transfo_UY
+ - transfo_UZ
+ - transfo_Ux
+ - transfo_Uy
+ - transfo_Uz
+ - transfo_IX
+ - transfo_IY
+ - transfo_IZ
+ - transfo_Ix
+ - transfo_Iy
+ - transfo_Iz
+ - transfo_UX
+ - transfo_UY
+ - transfo_UZ
+ - transfo_Ux
+ - transfo_Uy
+ - transfo_Uz
+ - transfo_IX
+ - transfo_IY
+ - transfo_IZ
+ - transfo_Ix
+ - transfo_Iy
+ - transfo_Iz
+ - transfo_UX
+ - transfo_UY
+ - transfo_UZ
+ - transfo_Ux
+ - transfo_Uy
+ - transfo_Uz
+ - transfo_IX
+ - transfo_IY
+ - transfo_IZ
+ - transfo_Ix
+ - transfo_Iy
+ - transfo_Iz
+ - transfo_UX
+ - transfo_UY
+ - transfo_UZ
+ - transfo_Ux
+ - transfo_Uy
+ - transfo_Uz
+ - transfo_IX
+ - transfo_IY
+ - transfo_IZ
+ - transfo_Ix
+ - transfo_Iy
+ - transfo_Iz
+ - transfo_UX
+ - transfo_UY
+ - transfo_UZ
+ - transfo_Ux
+ - transfo_Uy
+ - transfo_Uz
+ - transfo_IX
+ - transfo_IY
+ - transfo_IZ
+ - transfo_Ix
+ - transfo_Iy
+ - transfo_Iz
+ - transfo_UX
+ - transfo_UY
+ - transfo_UZ
+ - transfo_Ux
+ - transfo_Uy
+ - transfo_Uz
+ - load_1_Ia
+ - load_1_Ib
+ - load_1_Ic
+ - load_1_Vn
+ - load_2_Ia
+ - load_2_Ib
+ - load_2_Ic
+ - load_2_In
+ - load_2_Vn
+ - load_3_Ia
+ - load_3_Ib
+ - load_3_Ic
+ - load_3_In
+ - load_3_Vn
+ - load_4_Ia
+ - load_4_Ib
+ - load_4_Ic
+ - load_4_In
+ - load_4_Vn
+ - load_5_Ia
+ - load_5_Ib
+ - load_5_Ic
+ - load_5_Vn
+ - load_6_Ia
+ - load_6_Ib
+ - load_6_Ic
+ - load_6_In
+ - load_6_Vn
+ - load_7_Ia
+ - load_7_Ib
+ - load_7_Ic
+ - load_7_Vn
+ - load_8_Ia
+ - load_8_Ib
+ - load_8_Ic
+ - load_8_In
+ - load_8_Vn
+ - load_9_Ia
+ - load_9_Ib
+ - load_9_Ic
+ - load_9_In
+ - load_9_Vn
+ - load_10_Ia
+ - load_10_Ib
+ - load_10_Ic
+ - load_10_In
+ - load_10_Vn
+ - load_11_Ia
+ - load_11_Ib
+ - load_11_Ic
+ - load_11_Vn
+ - load_12_Ia
+ - load_12_Ib
+ - load_12_Ic
+ - load_12_In
+ - load_12_Vn
+
+List of linear expressions:
+ - 0 = (node_1_Va) - ((11547.005383792515+0j))
+ - 0 = (node_1_Vb) - ((-5773.502691896258-10000.000000179687j))
+ - 0 = (node_1_Vc) - ((-5773.502691896258+10000.000000179687j))
+ - 0 = (line_line1_Ia1) - ((transfo_IX) - (transfo_IZ))
+ - 0 = (line_line1_Ib1) - ((transfo_IY) - (transfo_IX))
+ - 0 = (line_line1_Ic1) - ((transfo_IZ) - (transfo_IY))
+ - 0 = (transfo_UX) - ((node_1_Va) - (node_1_Vb))
+ - 0 = (transfo_UY) - ((node_1_Vb) - (node_1_Vc))
+ - 0 = (transfo_UZ) - ((node_1_Vc) - (node_1_Va))
+ - 0 = (transfo_Ux) - (((0.02) * (transfo_UX)) + (((0.0146875+0.037205877811845804j)) * (transfo_Ix)))
+ - 0 = (transfo_Uy) - (((0.02) * (transfo_UY)) + (((0.0146875+0.037205877811845804j)) * (transfo_Iy)))
+ - 0 = (transfo_Uz) - (((0.02) * (transfo_UZ)) + (((0.0146875+0.037205877811845804j)) * (transfo_Iz)))
+ - 0 = (transfo_IX) - ((((1.15e-06-9.127842023172837e-06j)) * (transfo_UX)) + ((-0.02) * (transfo_Ix)))
+ - 0 = (transfo_IY) - ((((1.15e-06-9.127842023172837e-06j)) * (transfo_UY)) + ((-0.02) * (transfo_Iy)))
+ - 0 = (transfo_IZ) - ((((1.15e-06-9.127842023172837e-06j)) * (transfo_UZ)) + ((-0.02) * (transfo_Iz)))
+ - 0 = ((node_2_Va) - (node_2_Vb)) - (transfo_Ux)
+ - 0 = ((node_2_Vb) - (node_2_Vc)) - (transfo_Uy)
+ - 0 = ((node_2_Vc) - (node_2_Va)) - (transfo_Uz)
+ - 0 = (line_line1_Ia2) - ((transfo_Ix) - (transfo_Iz))
+ - 0 = (line_line1_Ib2) - ((transfo_Iy) - (transfo_Ix))
+ - 0 = ((node_2_Va) + (node_2_Vb)) + (node_2_Vc)
+ - 0 = (line_line2_Ia1) - (transfo_IX)
+ - 0 = (line_line2_Ib1) - (transfo_IY)
+ - 0 = (line_line2_Ic1) - (transfo_IZ)
+ - 0 = (transfo_UX) - (node_1_Va)
+ - 0 = (transfo_UY) - (node_1_Vb)
+ - 0 = (transfo_UZ) - (node_1_Vc)
+ - 0 = (transfo_Ux) - (((0.02) * (transfo_UX)) + (((0.0146875+0.037205877811845804j)) * (transfo_Ix)))
+ - 0 = (transfo_Uy) - (((0.02) * (transfo_UY)) + (((0.0146875+0.037205877811845804j)) * (transfo_Iy)))
+ - 0 = (transfo_Uz) - (((0.02) * (transfo_UZ)) + (((0.0146875+0.037205877811845804j)) * (transfo_Iz)))
+ - 0 = (transfo_IX) - ((((1.15e-06-9.127842023172837e-06j)) * (transfo_UX)) + ((-0.02) * (transfo_Ix)))
+ - 0 = (transfo_IY) - ((((1.15e-06-9.127842023172837e-06j)) * (transfo_UY)) + ((-0.02) * (transfo_Iy)))
+ - 0 = (transfo_IZ) - ((((1.15e-06-9.127842023172837e-06j)) * (transfo_UZ)) + ((-0.02) * (transfo_Iz)))
+ - 0 = (line_line2_Ia2) - (transfo_Ix)
+ - 0 = (line_line2_Ib2) - (transfo_Iy)
+ - 0 = (line_line2_Ic2) - (transfo_Iz)
+ - 0 = ((node_3_Va) - (node_3_Vn)) - (transfo_Ux)
+ - 0 = ((node_3_Vb) - (node_3_Vn)) - (transfo_Uy)
+ - 0 = ((node_3_Vc) - (node_3_Vn)) - (transfo_Uz)
+ - 0 = node_3_Vn
+ - 0 = (line_line3_Ia1) - ((transfo_IX) - (transfo_IZ))
+ - 0 = (line_line3_Ib1) - ((transfo_IY) - (transfo_IX))
+ - 0 = (line_line3_Ic1) - ((transfo_IZ) - (transfo_IY))
+ - 0 = (transfo_UX) - ((node_1_Va) - (node_1_Vb))
+ - 0 = (transfo_UY) - ((node_1_Vb) - (node_1_Vc))
+ - 0 = (transfo_UZ) - ((node_1_Vc) - (node_1_Va))
+ - 0 = (transfo_Ux) - (((0.006666666666666667) * (transfo_UX)) + (((0.0146875+0.037205877811845804j)) * (transfo_Ix)))
+ - 0 = (transfo_Uy) - (((0.006666666666666667) * (transfo_UY)) + (((0.0146875+0.037205877811845804j)) * (transfo_Iy)))
+ - 0 = (transfo_Uz) - (((0.006666666666666667) * (transfo_UZ)) + (((0.0146875+0.037205877811845804j)) * (transfo_Iz)))
+ - 0 = (transfo_IX) - ((((1.15e-06-9.127842023172837e-06j)) * (transfo_UX)) + ((-0.006666666666666667) * ((transfo_Ix) - (transfo_Iy))))
+ - 0 = (transfo_IY) - ((((1.15e-06-9.127842023172837e-06j)) * (transfo_UY)) + ((-0.006666666666666667) * ((transfo_Iy) - (transfo_Iz))))
+ - 0 = (transfo_IZ) - ((((1.15e-06-9.127842023172837e-06j)) * (transfo_UZ)) + ((-0.006666666666666667) * ((transfo_Iz) - (transfo_Ix))))
+ - 0 = (line_line3_Ia2) - (transfo_Ix)
+ - 0 = (line_line3_Ib2) - (transfo_Iy)
+ - 0 = (line_line3_Ic2) - (transfo_Iz)
+ - 0 = ((node_4_Va) - (node_4_Vn)) - ((transfo_Ux) - (transfo_Uz))
+ - 0 = ((node_4_Vb) - (node_4_Vn)) - ((transfo_Uy) - (transfo_Ux))
+ - 0 = ((node_4_Vc) - (node_4_Vn)) - ((transfo_Uz) - (transfo_Uy))
+ - 0 = node_4_Vn
+ - 0 = (line_line4_Ia1) - ((transfo_IX) - (transfo_IZ))
+ - 0 = (line_line4_Ib1) - ((transfo_IY) - (transfo_IX))
+ - 0 = (line_line4_Ic1) - ((transfo_IZ) - (transfo_IY))
+ - 0 = (transfo_UX) - ((node_1_Va) - (node_1_Vb))
+ - 0 = (transfo_UY) - ((node_1_Vb) - (node_1_Vc))
+ - 0 = (transfo_UZ) - ((node_1_Vc) - (node_1_Va))
+ - 0 = (transfo_Ux) - (((0.011547005383792516) * (transfo_UX)) + (((0.0146875+0.037205877811845804j)) * (transfo_Ix)))
+ - 0 = (transfo_Uy) - (((0.011547005383792516) * (transfo_UY)) + (((0.0146875+0.037205877811845804j)) * (transfo_Iy)))
+ - 0 = (transfo_Uz) - (((0.011547005383792516) * (transfo_UZ)) + (((0.0146875+0.037205877811845804j)) * (transfo_Iz)))
+ - 0 = (transfo_IX) - ((((1.15e-06-9.127842023172837e-06j)) * (transfo_UX)) + ((-0.011547005383792516) * (transfo_Ix)))
+ - 0 = (transfo_IY) - ((((1.15e-06-9.127842023172837e-06j)) * (transfo_UY)) + ((-0.011547005383792516) * (transfo_Iy)))
+ - 0 = (transfo_IZ) - ((((1.15e-06-9.127842023172837e-06j)) * (transfo_UZ)) + ((-0.011547005383792516) * (transfo_Iz)))
+ - 0 = (line_line4_Ia2) - (transfo_Ix)
+ - 0 = (line_line4_Ib2) - (transfo_Iy)
+ - 0 = (line_line4_Ic2) - (transfo_Iz)
+ - 0 = ((node_5_Va) - (node_5_Vn)) - (transfo_Ux)
+ - 0 = ((node_5_Vb) - (node_5_Vn)) - (transfo_Uy)
+ - 0 = ((node_5_Vc) - (node_5_Vn)) - (transfo_Uz)
+ - 0 = node_5_Vn
+ - 0 = (line_line5_Ia1) - (transfo_IX)
+ - 0 = (line_line5_Ib1) - (transfo_IY)
+ - 0 = (line_line5_Ic1) - (transfo_IZ)
+ - 0 = (transfo_UX) - (node_1_Va)
+ - 0 = (transfo_UY) - (node_1_Vb)
+ - 0 = (transfo_UZ) - (node_1_Vc)
+ - 0 = (transfo_Ux) - (((0.034641016151377546) * (transfo_UX)) + (((0.0146875+0.037205877811845804j)) * (transfo_Ix)))
+ - 0 = (transfo_Uy) - (((0.034641016151377546) * (transfo_UY)) + (((0.0146875+0.037205877811845804j)) * (transfo_Iy)))
+ - 0 = (transfo_Uz) - (((0.034641016151377546) * (transfo_UZ)) + (((0.0146875+0.037205877811845804j)) * (transfo_Iz)))
+ - 0 = (transfo_IX) - ((((1.15e-06-9.127842023172837e-06j)) * (transfo_UX)) + ((-0.034641016151377546) * (transfo_Ix)))
+ - 0 = (transfo_IY) - ((((1.15e-06-9.127842023172837e-06j)) * (transfo_UY)) + ((-0.034641016151377546) * (transfo_Iy)))
+ - 0 = (transfo_IZ) - ((((1.15e-06-9.127842023172837e-06j)) * (transfo_UZ)) + ((-0.034641016151377546) * (transfo_Iz)))
+ - 0 = ((node_6_Va) - (node_6_Vc)) - (transfo_Ux)
+ - 0 = ((node_6_Vb) - (node_6_Va)) - (transfo_Uy)
+ - 0 = ((node_6_Vc) - (node_6_Vb)) - (transfo_Uz)
+ - 0 = (line_line5_Ia2) - ((transfo_Ix) - (transfo_Iy))
+ - 0 = (line_line5_Ib2) - ((transfo_Iy) - (transfo_Iz))
+ - 0 = ((node_6_Va) + (node_6_Vb)) + (node_6_Vc)
+ - 0 = (line_line6_Ia1) - (transfo_IX)
+ - 0 = (line_line6_Ib1) - (transfo_IY)
+ - 0 = (line_line6_Ic1) - (transfo_IZ)
+ - 0 = (transfo_UX) - (node_1_Va)
+ - 0 = (transfo_UY) - (node_1_Vb)
+ - 0 = (transfo_UZ) - (node_1_Vc)
+ - 0 = (transfo_Ux) - (((0.011547005383792516) * (transfo_UX)) + (((0.0146875+0.037205877811845804j)) * (transfo_Ix)))
+ - 0 = (transfo_Uy) - (((0.011547005383792516) * (transfo_UY)) + (((0.0146875+0.037205877811845804j)) * (transfo_Iy)))
+ - 0 = (transfo_Uz) - (((0.011547005383792516) * (transfo_UZ)) + (((0.0146875+0.037205877811845804j)) * (transfo_Iz)))
+ - 0 = (transfo_IX) - ((((1.15e-06-9.127842023172837e-06j)) * (transfo_UX)) + ((-0.011547005383792516) * ((transfo_Ix) - (transfo_Iy))))
+ - 0 = (transfo_IY) - ((((1.15e-06-9.127842023172837e-06j)) * (transfo_UY)) + ((-0.011547005383792516) * ((transfo_Iy) - (transfo_Iz))))
+ - 0 = (transfo_IZ) - ((((1.15e-06-9.127842023172837e-06j)) * (transfo_UZ)) + ((-0.011547005383792516) * ((transfo_Iz) - (transfo_Ix))))
+ - 0 = (line_line6_Ia2) - (transfo_Ix)
+ - 0 = (line_line6_Ib2) - (transfo_Iy)
+ - 0 = (line_line6_Ic2) - (transfo_Iz)
+ - 0 = ((node_7_Va) - (node_7_Vn)) - ((transfo_Ux) - (transfo_Uy))
+ - 0 = ((node_7_Vb) - (node_7_Vn)) - ((transfo_Uy) - (transfo_Uz))
+ - 0 = ((node_7_Vc) - (node_7_Vn)) - ((transfo_Uz) - (transfo_Ux))
+ - 0 = node_7_Vn
+ - 0 = (line_line7_Ia1) - ((transfo_IX) - (transfo_IZ))
+ - 0 = (line_line7_Ib1) - ((transfo_IY) - (transfo_IX))
+ - 0 = (line_line7_Ic1) - ((transfo_IZ) - (transfo_IY))
+ - 0 = (transfo_UX) - ((node_1_Va) - (node_1_Vb))
+ - 0 = (transfo_UY) - ((node_1_Vb) - (node_1_Vc))
+ - 0 = (transfo_UZ) - ((node_1_Vc) - (node_1_Va))
+ - 0 = (transfo_Ux) - (((-0.02) * (transfo_UX)) + (((0.0146875+0.037205877811845804j)) * (transfo_Ix)))
+ - 0 = (transfo_Uy) - (((-0.02) * (transfo_UY)) + (((0.0146875+0.037205877811845804j)) * (transfo_Iy)))
+ - 0 = (transfo_Uz) - (((-0.02) * (transfo_UZ)) + (((0.0146875+0.037205877811845804j)) * (transfo_Iz)))
+ - 0 = (transfo_IX) - ((((1.15e-06-9.127842023172837e-06j)) * (transfo_UX)) + ((0.02) * (transfo_Ix)))
+ - 0 = (transfo_IY) - ((((1.15e-06-9.127842023172837e-06j)) * (transfo_UY)) + ((0.02) * (transfo_Iy)))
+ - 0 = (transfo_IZ) - ((((1.15e-06-9.127842023172837e-06j)) * (transfo_UZ)) + ((0.02) * (transfo_Iz)))
+ - 0 = ((node_8_Va) - (node_8_Vb)) - (transfo_Ux)
+ - 0 = ((node_8_Vb) - (node_8_Vc)) - (transfo_Uy)
+ - 0 = ((node_8_Vc) - (node_8_Va)) - (transfo_Uz)
+ - 0 = (line_line7_Ia2) - ((transfo_Ix) - (transfo_Iz))
+ - 0 = (line_line7_Ib2) - ((transfo_Iy) - (transfo_Ix))
+ - 0 = ((node_8_Va) + (node_8_Vb)) + (node_8_Vc)
+ - 0 = (line_line8_Ia1) - (transfo_IX)
+ - 0 = (line_line8_Ib1) - (transfo_IY)
+ - 0 = (line_line8_Ic1) - (transfo_IZ)
+ - 0 = (transfo_UX) - (node_1_Va)
+ - 0 = (transfo_UY) - (node_1_Vb)
+ - 0 = (transfo_UZ) - (node_1_Vc)
+ - 0 = (transfo_Ux) - (((-0.02) * (transfo_UX)) + (((0.0146875+0.037205877811845804j)) * (transfo_Ix)))
+ - 0 = (transfo_Uy) - (((-0.02) * (transfo_UY)) + (((0.0146875+0.037205877811845804j)) * (transfo_Iy)))
+ - 0 = (transfo_Uz) - (((-0.02) * (transfo_UZ)) + (((0.0146875+0.037205877811845804j)) * (transfo_Iz)))
+ - 0 = (transfo_IX) - ((((1.15e-06-9.127842023172837e-06j)) * (transfo_UX)) + ((0.02) * (transfo_Ix)))
+ - 0 = (transfo_IY) - ((((1.15e-06-9.127842023172837e-06j)) * (transfo_UY)) + ((0.02) * (transfo_Iy)))
+ - 0 = (transfo_IZ) - ((((1.15e-06-9.127842023172837e-06j)) * (transfo_UZ)) + ((0.02) * (transfo_Iz)))
+ - 0 = (line_line8_Ia2) - (transfo_Ix)
+ - 0 = (line_line8_Ib2) - (transfo_Iy)
+ - 0 = (line_line8_Ic2) - (transfo_Iz)
+ - 0 = ((node_9_Va) - (node_9_Vn)) - (transfo_Ux)
+ - 0 = ((node_9_Vb) - (node_9_Vn)) - (transfo_Uy)
+ - 0 = ((node_9_Vc) - (node_9_Vn)) - (transfo_Uz)
+ - 0 = node_9_Vn
+ - 0 = (line_line9_Ia1) - ((transfo_IX) - (transfo_IZ))
+ - 0 = (line_line9_Ib1) - ((transfo_IY) - (transfo_IX))
+ - 0 = (line_line9_Ic1) - ((transfo_IZ) - (transfo_IY))
+ - 0 = (transfo_UX) - ((node_1_Va) - (node_1_Vb))
+ - 0 = (transfo_UY) - ((node_1_Vb) - (node_1_Vc))
+ - 0 = (transfo_UZ) - ((node_1_Vc) - (node_1_Va))
+ - 0 = (transfo_Ux) - (((-0.006666666666666667) * (transfo_UX)) + (((0.0146875+0.037205877811845804j)) * (transfo_Ix)))
+ - 0 = (transfo_Uy) - (((-0.006666666666666667) * (transfo_UY)) + (((0.0146875+0.037205877811845804j)) * (transfo_Iy)))
+ - 0 = (transfo_Uz) - (((-0.006666666666666667) * (transfo_UZ)) + (((0.0146875+0.037205877811845804j)) * (transfo_Iz)))
+ - 0 = (transfo_IX) - ((((1.15e-06-9.127842023172837e-06j)) * (transfo_UX)) + ((0.006666666666666667) * ((transfo_Ix) - (transfo_Iy))))
+ - 0 = (transfo_IY) - ((((1.15e-06-9.127842023172837e-06j)) * (transfo_UY)) + ((0.006666666666666667) * ((transfo_Iy) - (transfo_Iz))))
+ - 0 = (transfo_IZ) - ((((1.15e-06-9.127842023172837e-06j)) * (transfo_UZ)) + ((0.006666666666666667) * ((transfo_Iz) - (transfo_Ix))))
+ - 0 = (line_line9_Ia2) - (transfo_Ix)
+ - 0 = (line_line9_Ib2) - (transfo_Iy)
+ - 0 = (line_line9_Ic2) - (transfo_Iz)
+ - 0 = ((node_10_Va) - (node_10_Vn)) - ((transfo_Ux) - (transfo_Uz))
+ - 0 = ((node_10_Vb) - (node_10_Vn)) - ((transfo_Uy) - (transfo_Ux))
+ - 0 = ((node_10_Vc) - (node_10_Vn)) - ((transfo_Uz) - (transfo_Uy))
+ - 0 = node_10_Vn
+ - 0 = (line_line10_Ia1) - ((transfo_IX) - (transfo_IZ))
+ - 0 = (line_line10_Ib1) - ((transfo_IY) - (transfo_IX))
+ - 0 = (line_line10_Ic1) - ((transfo_IZ) - (transfo_IY))
+ - 0 = (transfo_UX) - ((node_1_Va) - (node_1_Vb))
+ - 0 = (transfo_UY) - ((node_1_Vb) - (node_1_Vc))
+ - 0 = (transfo_UZ) - ((node_1_Vc) - (node_1_Va))
+ - 0 = (transfo_Ux) - (((-0.011547005383792516) * (transfo_UX)) + (((0.0146875+0.037205877811845804j)) * (transfo_Ix)))
+ - 0 = (transfo_Uy) - (((-0.011547005383792516) * (transfo_UY)) + (((0.0146875+0.037205877811845804j)) * (transfo_Iy)))
+ - 0 = (transfo_Uz) - (((-0.011547005383792516) * (transfo_UZ)) + (((0.0146875+0.037205877811845804j)) * (transfo_Iz)))
+ - 0 = (transfo_IX) - ((((1.15e-06-9.127842023172837e-06j)) * (transfo_UX)) + ((0.011547005383792516) * (transfo_Ix)))
+ - 0 = (transfo_IY) - ((((1.15e-06-9.127842023172837e-06j)) * (transfo_UY)) + ((0.011547005383792516) * (transfo_Iy)))
+ - 0 = (transfo_IZ) - ((((1.15e-06-9.127842023172837e-06j)) * (transfo_UZ)) + ((0.011547005383792516) * (transfo_Iz)))
+ - 0 = (line_line10_Ia2) - (transfo_Ix)
+ - 0 = (line_line10_Ib2) - (transfo_Iy)
+ - 0 = (line_line10_Ic2) - (transfo_Iz)
+ - 0 = ((node_11_Va) - (node_11_Vn)) - (transfo_Ux)
+ - 0 = ((node_11_Vb) - (node_11_Vn)) - (transfo_Uy)
+ - 0 = ((node_11_Vc) - (node_11_Vn)) - (transfo_Uz)
+ - 0 = node_11_Vn
+ - 0 = (line_line11_Ia1) - (transfo_IX)
+ - 0 = (line_line11_Ib1) - (transfo_IY)
+ - 0 = (line_line11_Ic1) - (transfo_IZ)
+ - 0 = (transfo_UX) - (node_1_Va)
+ - 0 = (transfo_UY) - (node_1_Vb)
+ - 0 = (transfo_UZ) - (node_1_Vc)
+ - 0 = (transfo_Ux) - (((-0.034641016151377546) * (transfo_UX)) + (((0.0146875+0.037205877811845804j)) * (transfo_Ix)))
+ - 0 = (transfo_Uy) - (((-0.034641016151377546) * (transfo_UY)) + (((0.0146875+0.037205877811845804j)) * (transfo_Iy)))
+ - 0 = (transfo_Uz) - (((-0.034641016151377546) * (transfo_UZ)) + (((0.0146875+0.037205877811845804j)) * (transfo_Iz)))
+ - 0 = (transfo_IX) - ((((1.15e-06-9.127842023172837e-06j)) * (transfo_UX)) + ((0.034641016151377546) * (transfo_Ix)))
+ - 0 = (transfo_IY) - ((((1.15e-06-9.127842023172837e-06j)) * (transfo_UY)) + ((0.034641016151377546) * (transfo_Iy)))
+ - 0 = (transfo_IZ) - ((((1.15e-06-9.127842023172837e-06j)) * (transfo_UZ)) + ((0.034641016151377546) * (transfo_Iz)))
+ - 0 = ((node_12_Va) - (node_12_Vc)) - (transfo_Ux)
+ - 0 = ((node_12_Vb) - (node_12_Va)) - (transfo_Uy)
+ - 0 = ((node_12_Vc) - (node_12_Vb)) - (transfo_Uz)
+ - 0 = (line_line11_Ia2) - ((transfo_Ix) - (transfo_Iy))
+ - 0 = (line_line11_Ib2) - ((transfo_Iy) - (transfo_Iz))
+ - 0 = ((node_12_Va) + (node_12_Vb)) + (node_12_Vc)
+ - 0 = (line_line12_Ia1) - (transfo_IX)
+ - 0 = (line_line12_Ib1) - (transfo_IY)
+ - 0 = (line_line12_Ic1) - (transfo_IZ)
+ - 0 = (transfo_UX) - (node_1_Va)
+ - 0 = (transfo_UY) - (node_1_Vb)
+ - 0 = (transfo_UZ) - (node_1_Vc)
+ - 0 = (transfo_Ux) - (((-0.011547005383792516) * (transfo_UX)) + (((0.0146875+0.037205877811845804j)) * (transfo_Ix)))
+ - 0 = (transfo_Uy) - (((-0.011547005383792516) * (transfo_UY)) + (((0.0146875+0.037205877811845804j)) * (transfo_Iy)))
+ - 0 = (transfo_Uz) - (((-0.011547005383792516) * (transfo_UZ)) + (((0.0146875+0.037205877811845804j)) * (transfo_Iz)))
+ - 0 = (transfo_IX) - ((((1.15e-06-9.127842023172837e-06j)) * (transfo_UX)) + ((0.011547005383792516) * ((transfo_Ix) - (transfo_Iy))))
+ - 0 = (transfo_IY) - ((((1.15e-06-9.127842023172837e-06j)) * (transfo_UY)) + ((0.011547005383792516) * ((transfo_Iy) - (transfo_Iz))))
+ - 0 = (transfo_IZ) - ((((1.15e-06-9.127842023172837e-06j)) * (transfo_UZ)) + ((0.011547005383792516) * ((transfo_Iz) - (transfo_Ix))))
+ - 0 = (line_line12_Ia2) - (transfo_Ix)
+ - 0 = (line_line12_Ib2) - (transfo_Iy)
+ - 0 = (line_line12_Ic2) - (transfo_Iz)
+ - 0 = ((node_13_Va) - (node_13_Vn)) - ((transfo_Ux) - (transfo_Uy))
+ - 0 = ((node_13_Vb) - (node_13_Vn)) - ((transfo_Uy) - (transfo_Uz))
+ - 0 = ((node_13_Vc) - (node_13_Vn)) - ((transfo_Uz) - (transfo_Ux))
+ - 0 = node_13_Vn
+ - 0 = ((node_2_Va) - (load_1_Vn)) + (((1+0.5j)) * (load_1_Ia))
+ - 0 = ((node_2_Vb) - (load_1_Vn)) + (((1+0.5j)) * (load_1_Ib))
+ - 0 = ((node_2_Vc) - (load_1_Vn)) + (((1+0.5j)) * (load_1_Ic))
+ - 0 = (load_1_Vn) - (((0.33333333333333326+0.16666666666666663j)) * (((((0.8-0.4j)) * (node_2_Va)) + (((0.8-0.4j)) * (node_2_Vb))) + (((0.8-0.4j)) * (node_2_Vc))))
+ - 0 = (node_2_Ia) - (load_1_Ia)
+ - 0 = (node_2_Ib) - (load_1_Ib)
+ - 0 = (node_2_Ic) - (load_1_Ic)
+ - 0 = (node_2_Ia) - (line_line1_Ia2)
+ - 0 = (node_2_Ib) - (line_line1_Ib2)
+ - 0 = (node_2_Ic) - (line_line1_Ic2)
+ - 0 = ((node_3_Va) - (load_2_Vn)) + (((1+0.5j)) * (load_2_Ia))
+ - 0 = ((node_3_Vb) - (load_2_Vn)) + (((1+0.5j)) * (load_2_Ib))
+ - 0 = ((node_3_Vc) - (load_2_Vn)) + (((1+0.5j)) * (load_2_Ic))
+ - 0 = (load_2_In) + (((load_2_Ia) + (load_2_Ib)) + (load_2_Ic))
+ - 0 = (load_2_Vn) - (node_3_Vn)
+ - 0 = (node_3_Ia) - (load_2_Ia)
+ - 0 = (node_3_Ib) - (load_2_Ib)
+ - 0 = (node_3_Ic) - (load_2_Ic)
+ - 0 = (node_3_In) - (load_2_In)
+ - 0 = (node_3_Ia) - (line_line2_Ia2)
+ - 0 = (node_3_Ib) - (line_line2_Ib2)
+ - 0 = (node_3_Ic) - (line_line2_Ic2)
+ - 0 = (node_3_In) - (line_line2_In2)
+ - 0 = ((node_4_Va) - (load_3_Vn)) + (((1+0.5j)) * (load_3_Ia))
+ - 0 = ((node_4_Vb) - (load_3_Vn)) + (((1+0.5j)) * (load_3_Ib))
+ - 0 = ((node_4_Vc) - (load_3_Vn)) + (((1+0.5j)) * (load_3_Ic))
+ - 0 = (load_3_In) + (((load_3_Ia) + (load_3_Ib)) + (load_3_Ic))
+ - 0 = (load_3_Vn) - (node_4_Vn)
+ - 0 = (node_4_Ia) - (load_3_Ia)
+ - 0 = (node_4_Ib) - (load_3_Ib)
+ - 0 = (node_4_Ic) - (load_3_Ic)
+ - 0 = (node_4_In) - (load_3_In)
+ - 0 = (node_4_Ia) - (line_line3_Ia2)
+ - 0 = (node_4_Ib) - (line_line3_Ib2)
+ - 0 = (node_4_Ic) - (line_line3_Ic2)
+ - 0 = (node_4_In) - (line_line3_In2)
+ - 0 = ((node_5_Va) - (load_4_Vn)) + (((1+0.5j)) * (load_4_Ia))
+ - 0 = ((node_5_Vb) - (load_4_Vn)) + (((1+0.5j)) * (load_4_Ib))
+ - 0 = ((node_5_Vc) - (load_4_Vn)) + (((1+0.5j)) * (load_4_Ic))
+ - 0 = (load_4_In) + (((load_4_Ia) + (load_4_Ib)) + (load_4_Ic))
+ - 0 = (load_4_Vn) - (node_5_Vn)
+ - 0 = (node_5_Ia) - (load_4_Ia)
+ - 0 = (node_5_Ib) - (load_4_Ib)
+ - 0 = (node_5_Ic) - (load_4_Ic)
+ - 0 = (node_5_In) - (load_4_In)
+ - 0 = (node_5_Ia) - (line_line4_Ia2)
+ - 0 = (node_5_Ib) - (line_line4_Ib2)
+ - 0 = (node_5_Ic) - (line_line4_Ic2)
+ - 0 = (node_5_In) - (line_line4_In2)
+ - 0 = ((node_6_Va) - (load_5_Vn)) + (((1+0.5j)) * (load_5_Ia))
+ - 0 = ((node_6_Vb) - (load_5_Vn)) + (((1+0.5j)) * (load_5_Ib))
+ - 0 = ((node_6_Vc) - (load_5_Vn)) + (((1+0.5j)) * (load_5_Ic))
+ - 0 = (load_5_Vn) - (((0.33333333333333326+0.16666666666666663j)) * (((((0.8-0.4j)) * (node_6_Va)) + (((0.8-0.4j)) * (node_6_Vb))) + (((0.8-0.4j)) * (node_6_Vc))))
+ - 0 = (node_6_Ia) - (load_5_Ia)
+ - 0 = (node_6_Ib) - (load_5_Ib)
+ - 0 = (node_6_Ic) - (load_5_Ic)
+ - 0 = (node_6_Ia) - (line_line5_Ia2)
+ - 0 = (node_6_Ib) - (line_line5_Ib2)
+ - 0 = (node_6_Ic) - (line_line5_Ic2)
+ - 0 = ((node_7_Va) - (load_6_Vn)) + (((1+0.5j)) * (load_6_Ia))
+ - 0 = ((node_7_Vb) - (load_6_Vn)) + (((1+0.5j)) * (load_6_Ib))
+ - 0 = ((node_7_Vc) - (load_6_Vn)) + (((1+0.5j)) * (load_6_Ic))
+ - 0 = (load_6_In) + (((load_6_Ia) + (load_6_Ib)) + (load_6_Ic))
+ - 0 = (load_6_Vn) - (node_7_Vn)
+ - 0 = (node_7_Ia) - (load_6_Ia)
+ - 0 = (node_7_Ib) - (load_6_Ib)
+ - 0 = (node_7_Ic) - (load_6_Ic)
+ - 0 = (node_7_In) - (load_6_In)
+ - 0 = (node_7_Ia) - (line_line6_Ia2)
+ - 0 = (node_7_Ib) - (line_line6_Ib2)
+ - 0 = (node_7_Ic) - (line_line6_Ic2)
+ - 0 = (node_7_In) - (line_line6_In2)
+ - 0 = ((node_8_Va) - (load_7_Vn)) + (((1+0.5j)) * (load_7_Ia))
+ - 0 = ((node_8_Vb) - (load_7_Vn)) + (((1+0.5j)) * (load_7_Ib))
+ - 0 = ((node_8_Vc) - (load_7_Vn)) + (((1+0.5j)) * (load_7_Ic))
+ - 0 = (load_7_Vn) - (((0.33333333333333326+0.16666666666666663j)) * (((((0.8-0.4j)) * (node_8_Va)) + (((0.8-0.4j)) * (node_8_Vb))) + (((0.8-0.4j)) * (node_8_Vc))))
+ - 0 = (node_8_Ia) - (load_7_Ia)
+ - 0 = (node_8_Ib) - (load_7_Ib)
+ - 0 = (node_8_Ic) - (load_7_Ic)
+ - 0 = (node_8_Ia) - (line_line7_Ia2)
+ - 0 = (node_8_Ib) - (line_line7_Ib2)
+ - 0 = (node_8_Ic) - (line_line7_Ic2)
+ - 0 = ((node_9_Va) - (load_8_Vn)) + (((1+0.5j)) * (load_8_Ia))
+ - 0 = ((node_9_Vb) - (load_8_Vn)) + (((1+0.5j)) * (load_8_Ib))
+ - 0 = ((node_9_Vc) - (load_8_Vn)) + (((1+0.5j)) * (load_8_Ic))
+ - 0 = (load_8_In) + (((load_8_Ia) + (load_8_Ib)) + (load_8_Ic))
+ - 0 = (load_8_Vn) - (node_9_Vn)
+ - 0 = (node_9_Ia) - (load_8_Ia)
+ - 0 = (node_9_Ib) - (load_8_Ib)
+ - 0 = (node_9_Ic) - (load_8_Ic)
+ - 0 = (node_9_In) - (load_8_In)
+ - 0 = (node_9_Ia) - (line_line8_Ia2)
+ - 0 = (node_9_Ib) - (line_line8_Ib2)
+ - 0 = (node_9_Ic) - (line_line8_Ic2)
+ - 0 = (node_9_In) - (line_line8_In2)
+ - 0 = ((node_10_Va) - (load_9_Vn)) + (((1+0.5j)) * (load_9_Ia))
+ - 0 = ((node_10_Vb) - (load_9_Vn)) + (((1+0.5j)) * (load_9_Ib))
+ - 0 = ((node_10_Vc) - (load_9_Vn)) + (((1+0.5j)) * (load_9_Ic))
+ - 0 = (load_9_In) + (((load_9_Ia) + (load_9_Ib)) + (load_9_Ic))
+ - 0 = (load_9_Vn) - (node_10_Vn)
+ - 0 = (node_10_Ia) - (load_9_Ia)
+ - 0 = (node_10_Ib) - (load_9_Ib)
+ - 0 = (node_10_Ic) - (load_9_Ic)
+ - 0 = (node_10_In) - (load_9_In)
+ - 0 = (node_10_Ia) - (line_line9_Ia2)
+ - 0 = (node_10_Ib) - (line_line9_Ib2)
+ - 0 = (node_10_Ic) - (line_line9_Ic2)
+ - 0 = (node_10_In) - (line_line9_In2)
+ - 0 = ((node_11_Va) - (load_10_Vn)) + (((1+0.5j)) * (load_10_Ia))
+ - 0 = ((node_11_Vb) - (load_10_Vn)) + (((1+0.5j)) * (load_10_Ib))
+ - 0 = ((node_11_Vc) - (load_10_Vn)) + (((1+0.5j)) * (load_10_Ic))
+ - 0 = (load_10_In) + (((load_10_Ia) + (load_10_Ib)) + (load_10_Ic))
+ - 0 = (load_10_Vn) - (node_11_Vn)
+ - 0 = (node_11_Ia) - (load_10_Ia)
+ - 0 = (node_11_Ib) - (load_10_Ib)
+ - 0 = (node_11_Ic) - (load_10_Ic)
+ - 0 = (node_11_In) - (load_10_In)
+ - 0 = (node_11_Ia) - (line_line10_Ia2)
+ - 0 = (node_11_Ib) - (line_line10_Ib2)
+ - 0 = (node_11_Ic) - (line_line10_Ic2)
+ - 0 = (node_11_In) - (line_line10_In2)
+ - 0 = ((node_12_Va) - (load_11_Vn)) + (((1+0.5j)) * (load_11_Ia))
+ - 0 = ((node_12_Vb) - (load_11_Vn)) + (((1+0.5j)) * (load_11_Ib))
+ - 0 = ((node_12_Vc) - (load_11_Vn)) + (((1+0.5j)) * (load_11_Ic))
+ - 0 = (load_11_Vn) - (((0.33333333333333326+0.16666666666666663j)) * (((((0.8-0.4j)) * (node_12_Va)) + (((0.8-0.4j)) * (node_12_Vb))) + (((0.8-0.4j)) * (node_12_Vc))))
+ - 0 = (node_12_Ia) - (load_11_Ia)
+ - 0 = (node_12_Ib) - (load_11_Ib)
+ - 0 = (node_12_Ic) - (load_11_Ic)
+ - 0 = (node_12_Ia) - (line_line11_Ia2)
+ - 0 = (node_12_Ib) - (line_line11_Ib2)
+ - 0 = (node_12_Ic) - (line_line11_Ic2)
+ - 0 = ((node_13_Va) - (load_12_Vn)) + (((1+0.5j)) * (load_12_Ia))
+ - 0 = ((node_13_Vb) - (load_12_Vn)) + (((1+0.5j)) * (load_12_Ib))
+ - 0 = ((node_13_Vc) - (load_12_Vn)) + (((1+0.5j)) * (load_12_Ic))
+ - 0 = (load_12_In) + (((load_12_Ia) + (load_12_Ib)) + (load_12_Ic))
+ - 0 = (load_12_Vn) - (node_13_Vn)
+ - 0 = (node_13_Ia) - (load_12_Ia)
+ - 0 = (node_13_Ib) - (load_12_Ib)
+ - 0 = (node_13_Ic) - (load_12_Ic)
+ - 0 = (node_13_In) - (load_12_In)
+ - 0 = (node_13_Ia) - (line_line12_Ia2)
+ - 0 = (node_13_Ib) - (line_line12_Ib2)
+ - 0 = (node_13_Ic) - (line_line12_Ic2)
+ - 0 = (node_13_In) - (line_line12_In2)
