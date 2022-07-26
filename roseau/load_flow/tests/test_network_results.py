@@ -4,8 +4,8 @@ import pandas as pd
 import pytest
 from pandas.testing import assert_frame_equal
 
-from roseau.load_flow import Switch, Transformer
-from roseau.load_flow.models.core.core import PotentialRef
+from roseau.load_flow import AbstractTransformer, Switch
+from roseau.load_flow.models.core import PotentialReference
 from roseau.load_flow.network.electrical_network import ElectricalNetwork
 from roseau.load_flow.utils.exceptions import ThundersIOError, ThundersLoadFlowError
 
@@ -39,17 +39,17 @@ def test_electrical_network(all_network_path, all_network_result):  # noqa: C901
 
     for bus_id, df in results_df.groupby(by="id_eb"):
         # Warning: careful with atol and rtol...
-        if df["v"].values.shape[0] < en.bus_potentials(bus_id=bus_id).shape[0]:  # TODO refactor
-            bus_potentials = np.resize(en.bus_potentials(bus_id=bus_id), 3)
+        if df["v"].values.shape[0] < en.bus_potentials(id=bus_id).shape[0]:  # TODO refactor
+            bus_potentials = np.resize(en.bus_potentials(id=bus_id), 3)
         else:
-            bus_potentials = en.bus_potentials(bus_id=bus_id)
+            bus_potentials = en.bus_potentials(id=bus_id)
         npt.assert_allclose(bus_potentials, df["v"].values, atol=1e-5, rtol=1e-7)
 
     for branch in en.branches.values():
         id_bus1 = branch.connected_elements[0].id
         id_bus2 = branch.connected_elements[1].id
 
-        if isinstance(branch, Switch) or isinstance(branch, Transformer):
+        if isinstance(branch, Switch) or isinstance(branch, AbstractTransformer):
             continue
 
         i1, i2 = branch.currents
@@ -85,7 +85,7 @@ def test_electrical_network(all_network_path, all_network_result):  # noqa: C901
             npt.assert_allclose(im_i2_check, i2.imag, atol=1e-3, rtol=1e-5)  # Warning: careful with atol and rtol...
 
     for special_element in en.special_elements:
-        if isinstance(special_element, PotentialRef):
+        if isinstance(special_element, PotentialReference):
             npt.assert_allclose(special_element.current.real, 0.0, atol=1e-7)
             npt.assert_allclose(special_element.current.imag, 0.0, atol=1e-7)
 

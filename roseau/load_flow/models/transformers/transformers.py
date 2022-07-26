@@ -1,10 +1,11 @@
 import logging
+from abc import ABC
 from typing import Any, Optional
 
 from shapely.geometry import Point
 
-from roseau.load_flow.models.buses.buses import AbstractBus
-from roseau.load_flow.models.core.core import AbstractBranch
+from roseau.load_flow.models.buses import AbstractBus
+from roseau.load_flow.models.core import AbstractBranch
 from roseau.load_flow.models.transformers.transformers_characteristics import TransformerCharacteristics
 from roseau.load_flow.utils import BranchType, TransformerType
 from roseau.load_flow.utils.exceptions import ThundersIOError, ThundersValueError
@@ -12,12 +13,12 @@ from roseau.load_flow.utils.exceptions import ThundersIOError, ThundersValueErro
 logger = logging.getLogger(__name__)
 
 
-class Transformer(AbstractBranch):
+class AbstractTransformer(AbstractBranch, ABC):
     type = BranchType.TRANSFORMER
 
     def __init__(
         self,
-        id_: Any,
+        id: Any,
         n1: int,
         n2: int,
         bus1: AbstractBus,
@@ -25,11 +26,12 @@ class Transformer(AbstractBranch):
         transformer_characteristics: TransformerCharacteristics,
         tap: float = 1.0,
         geometry: Optional[Point] = None,
+        **kwargs,
     ) -> None:
         """Transformer constructor.
 
         Args:
-            id_:
+            id:
                 The identifier of the transformer.
 
             n1:
@@ -63,13 +65,13 @@ class Transformer(AbstractBranch):
         if tap < 0.9:
             logger.warning(f"The provided tap {tap:.2f} is lower than 0.9. A good value is between 0.9 and 1.1.")
 
-        super().__init__(n1=n1, n2=n2, bus1=bus1, bus2=bus2, id_=id_, geometry=geometry)
+        super().__init__(n1=n1, n2=n2, bus1=bus1, bus2=bus2, id=id, geometry=geometry, **kwargs)
         self.transformer_characteristics = transformer_characteristics
         self.tap = tap
 
     @staticmethod
     def from_dict(
-        id_: Any,
+        id: Any,
         bus1: AbstractBus,
         bus2: AbstractBus,
         type_name: str,
@@ -77,7 +79,7 @@ class Transformer(AbstractBranch):
         tap: float = 1.0,
         geometry: Optional[Point] = None,
         *args,
-    ) -> "Transformer":
+    ) -> "AbstractTransformer":
         """Transformer constructor from dict.
 
         Args:
@@ -87,7 +89,7 @@ class Transformer(AbstractBranch):
             type_name:
                 The name of the transformer type.
 
-            id_:
+            id:
                 The identifier of the transformer.
 
             bus1:
@@ -109,7 +111,7 @@ class Transformer(AbstractBranch):
         winding1, winding2, phase_displacement = TransformerType.extract_windings(transformer_characteristics.windings)
         if "Y" in winding1 and "y" in winding2:
             return WyeWyeTransformer(
-                id_=id_,
+                id=id,
                 bus1=bus1,
                 bus2=bus2,
                 transformer_characteristics=transformer_characteristics,
@@ -118,7 +120,7 @@ class Transformer(AbstractBranch):
             )
         elif "D" in winding1 and "y" in winding2:
             return DeltaWyeTransformer(
-                id_=id_,
+                id=id,
                 bus1=bus1,
                 bus2=bus2,
                 transformer_characteristics=transformer_characteristics,
@@ -127,7 +129,7 @@ class Transformer(AbstractBranch):
             )
         elif "D" in winding1 and "z" in winding2:
             return DeltaZigzagTransformer(
-                id_=id_,
+                id=id,
                 bus1=bus1,
                 bus2=bus2,
                 transformer_characteristics=transformer_characteristics,
@@ -136,7 +138,7 @@ class Transformer(AbstractBranch):
             )
         elif "D" in winding1 and "d" in winding2:
             return DeltaDeltaTransformer(
-                id_=id_,
+                id=id,
                 bus1=bus1,
                 bus2=bus2,
                 transformer_characteristics=transformer_characteristics,
@@ -145,7 +147,7 @@ class Transformer(AbstractBranch):
             )
         elif "Y" in winding1 and "d" in winding2:
             return WyeDeltaTransformer(
-                id_=id_,
+                id=id,
                 bus1=bus1,
                 bus2=bus2,
                 transformer_characteristics=transformer_characteristics,
@@ -154,7 +156,7 @@ class Transformer(AbstractBranch):
             )
         elif "Y" in winding1 and "z" in winding2:
             return WyeZigzagTransformer(
-                id_=id_,
+                id=id,
                 bus1=bus1,
                 bus2=bus2,
                 transformer_characteristics=transformer_characteristics,
@@ -204,20 +206,21 @@ class Transformer(AbstractBranch):
         self.tap = tap
 
 
-class WyeWyeTransformer(Transformer):
+class WyeWyeTransformer(AbstractTransformer):
     def __init__(
         self,
-        id_: Any,
+        id: Any,
         bus1: AbstractBus,
         bus2: AbstractBus,
         transformer_characteristics: TransformerCharacteristics,
         tap: float = 1.0,
         geometry: Optional[Point] = None,
+        **kwargs,
     ) -> None:
         """WyeWyeTransformer constructor
 
         Args:
-            id_:
+            id:
                 The identifier of the transformer.
 
             bus1:
@@ -236,7 +239,7 @@ class WyeWyeTransformer(Transformer):
                 The geometry of the transformer.
         """
         super().__init__(
-            id_=id_,
+            id=id,
             n1=4,
             n2=4,
             bus1=bus1,
@@ -244,6 +247,7 @@ class WyeWyeTransformer(Transformer):
             transformer_characteristics=transformer_characteristics,
             tap=tap,
             geometry=geometry,
+            **kwargs,
         )
         if transformer_characteristics.winding1[0] != "Y" or transformer_characteristics.winding2[0] != "y":
             raise ThundersValueError(
@@ -251,20 +255,21 @@ class WyeWyeTransformer(Transformer):
             )
 
 
-class DeltaWyeTransformer(Transformer):
+class DeltaWyeTransformer(AbstractTransformer):
     def __init__(
         self,
-        id_: Any,
+        id: Any,
         bus1: AbstractBus,
         bus2: AbstractBus,
         transformer_characteristics: TransformerCharacteristics,
         tap: float = 1.0,
         geometry: Optional[Point] = None,
+        **kwargs,
     ) -> None:
         """DeltaWyeTransformer constructor
 
         Args:
-            id_:
+            id:
                 The identifier of the transformer.
 
             bus1:
@@ -283,7 +288,7 @@ class DeltaWyeTransformer(Transformer):
                 The geometry of the transformer.
         """
         super().__init__(
-            id_=id_,
+            id=id,
             n1=3,
             n2=4,
             bus1=bus1,
@@ -291,6 +296,7 @@ class DeltaWyeTransformer(Transformer):
             transformer_characteristics=transformer_characteristics,
             tap=tap,
             geometry=geometry,
+            **kwargs,
         )
         if transformer_characteristics.winding1[0] != "D" or transformer_characteristics.winding2[0] != "y":
             raise ThundersValueError(
@@ -298,20 +304,21 @@ class DeltaWyeTransformer(Transformer):
             )
 
 
-class DeltaDeltaTransformer(Transformer):
+class DeltaDeltaTransformer(AbstractTransformer):
     def __init__(
         self,
-        id_: Any,
+        id: Any,
         bus1: AbstractBus,
         bus2: AbstractBus,
         transformer_characteristics: TransformerCharacteristics,
         tap: float = 1.0,
         geometry: Optional[Point] = None,
+        **kwargs,
     ) -> None:
-        """DeltaWyeTransformer constructor
+        """DeltaDeltaTransformer constructor
 
         Args:
-            id_:
+            id:
                 The identifier of the transformer.
 
             bus1:
@@ -330,7 +337,7 @@ class DeltaDeltaTransformer(Transformer):
                 The geometry of the transformer.
         """
         super().__init__(
-            id_=id_,
+            id=id,
             n1=3,
             n2=3,
             bus1=bus1,
@@ -338,6 +345,7 @@ class DeltaDeltaTransformer(Transformer):
             transformer_characteristics=transformer_characteristics,
             tap=tap,
             geometry=geometry,
+            **kwargs,
         )
         if transformer_characteristics.winding1[0] != "D" or transformer_characteristics.winding2[0] != "d":
             raise ThundersValueError(
@@ -345,20 +353,21 @@ class DeltaDeltaTransformer(Transformer):
             )
 
 
-class WyeDeltaTransformer(Transformer):
+class WyeDeltaTransformer(AbstractTransformer):
     def __init__(
         self,
-        id_: Any,
+        id: Any,
         bus1: AbstractBus,
         bus2: AbstractBus,
         transformer_characteristics: TransformerCharacteristics,
         tap: float = 1.0,
         geometry: Optional[Point] = None,
+        **kwargs,
     ) -> None:
-        """DeltaWyeTransformer constructor
+        """WyeDeltaTransformer
 
         Args:
-            id_:
+            id:
                 The identifier of the transformer.
 
             bus1:
@@ -377,7 +386,7 @@ class WyeDeltaTransformer(Transformer):
                 The geometry of the transformer.
         """
         super().__init__(
-            id_=id_,
+            id=id,
             n1=4,
             n2=3,
             bus1=bus1,
@@ -385,6 +394,7 @@ class WyeDeltaTransformer(Transformer):
             transformer_characteristics=transformer_characteristics,
             tap=tap,
             geometry=geometry,
+            **kwargs,
         )
         if transformer_characteristics.winding1[0] != "Y" or transformer_characteristics.winding2[0] != "d":
             raise ThundersValueError(
@@ -392,20 +402,21 @@ class WyeDeltaTransformer(Transformer):
             )
 
 
-class WyeZigzagTransformer(Transformer):
+class WyeZigzagTransformer(AbstractTransformer):
     def __init__(
         self,
-        id_: Any,
+        id: Any,
         bus1: AbstractBus,
         bus2: AbstractBus,
         transformer_characteristics: TransformerCharacteristics,
         tap: float = 1.0,
         geometry: Optional[Point] = None,
+        **kwargs,
     ) -> None:
-        """DeltaWyeTransformer constructor
+        """WyeZigzagTransformer constructor
 
         Args:
-            id_:
+            id:
                 The identifier of the transformer.
 
             bus1:
@@ -424,7 +435,7 @@ class WyeZigzagTransformer(Transformer):
                 The geometry of the transformer.
         """
         super().__init__(
-            id_=id_,
+            id=id,
             n1=4,
             n2=4,
             bus1=bus1,
@@ -432,6 +443,7 @@ class WyeZigzagTransformer(Transformer):
             transformer_characteristics=transformer_characteristics,
             tap=tap,
             geometry=geometry,
+            **kwargs,
         )
         if transformer_characteristics.winding1[0] != "Y" or transformer_characteristics.winding2[0] != "z":
             raise ThundersValueError(
@@ -439,20 +451,21 @@ class WyeZigzagTransformer(Transformer):
             )
 
 
-class DeltaZigzagTransformer(Transformer):
+class DeltaZigzagTransformer(AbstractTransformer):
     def __init__(
         self,
-        id_: Any,
+        id: Any,
         bus1: AbstractBus,
         bus2: AbstractBus,
         transformer_characteristics: TransformerCharacteristics,
         tap: float = 1.0,
         geometry: Optional[Point] = None,
+        **kwargs,
     ) -> None:
-        """DeltaWyeTransformer constructor
+        """DeltaZigzagTransformer constructor
 
         Args:
-            id_:
+            id:
                 The identifier of the transformer.
 
             bus1:
@@ -471,7 +484,7 @@ class DeltaZigzagTransformer(Transformer):
                 The geometry of the transformer.
         """
         super().__init__(
-            id_=id_,
+            id=id,
             n1=3,
             n2=4,
             bus1=bus1,
@@ -479,52 +492,9 @@ class DeltaZigzagTransformer(Transformer):
             transformer_characteristics=transformer_characteristics,
             tap=tap,
             geometry=geometry,
+            **kwargs,
         )
         if transformer_characteristics.winding1[0] != "D" or transformer_characteristics.winding2[0] != "z":
             raise ThundersValueError(
                 f"Bad windings for DeltaZigzagTransformer {self.id!r}: {transformer_characteristics.windings}"
             )
-
-
-class IdealDeltaWye(Transformer):
-    def __init__(
-        self,
-        id_: Any,
-        bus1: AbstractBus,
-        bus2: AbstractBus,
-        transformer_characteristics: TransformerCharacteristics,
-        tap: float = 1.0,
-        geometry: Optional[Point] = None,
-    ) -> None:
-        """DeltaWyeTransformer constructor
-
-        Args:
-            id_:
-                The identifier of the transformer.
-
-            bus1:
-                bus to connect to the transformer
-
-            bus2:
-                bus to connect to the transformer
-
-            transformer_characteristics:
-                The characteristics of the transformer.
-
-            tap:
-                The tap of the transformer, for example 1.02.
-
-            geometry:
-                The geometry of the transformer.
-        """
-        super().__init__(
-            id_=id_,
-            n1=3,
-            n2=4,
-            bus1=bus1,
-            bus2=bus2,
-            transformer_characteristics=transformer_characteristics,
-            tap=tap,
-            geometry=geometry,
-        )
-        _, _, k, orientation = transformer_characteristics.to_zyk()

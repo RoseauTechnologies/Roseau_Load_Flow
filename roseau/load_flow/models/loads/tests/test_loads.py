@@ -10,7 +10,7 @@ from roseau.load_flow import (
     Ground,
     ImpedanceLoad,
     LineCharacteristics,
-    PotentialRef,
+    PotentialReference,
     PowerLoad,
     SimplifiedLine,
     VoltageSource,
@@ -141,18 +141,18 @@ def test_flexible_load():
     )
     fp2 = FlexibleParameter.q_u(u_min=210, u_down=220, u_up=240, u_max=250, s_max=300)
     ground = Ground()
-    _ = PotentialRef(ground)
+    _ = PotentialReference(ground)
     vs = VoltageSource("vs", 4, ground, [vn, vn * np.exp(-2 / 3 * np.pi * 1j), vn * np.exp(2 / 3 * np.pi * 1j)])
     bus = Bus("bus", 4)
     line_characteristics = LineCharacteristics("test", z_line=np.eye(4, dtype=complex))
-    _ = SimplifiedLine(id_="line", n=4, bus1=vs, bus2=bus, line_characteristics=line_characteristics, length=10)
+    _ = SimplifiedLine(id="line", n=4, bus1=vs, bus2=bus, line_characteristics=line_characteristics, length=10)
     flexible_load = FlexibleLoad("flexible load", 4, bus, [100 + 50j, 100 + 50j, 0j], [fp, fp2, fc])
     _ = PowerLoad("load", 4, bus, [100, 100, 100])
 
     en = ElectricalNetwork.from_element(vs)
     en.solve_load_flow()
 
-    powers = flexible_load.get_powers()
+    powers = flexible_load.powers
     assert powers[0].real > 0 and powers.real[0] < 100
     assert powers[1].real == 100 and powers[1].imag > 0 and powers.imag[1] < 50
     assert powers[2] == 0j

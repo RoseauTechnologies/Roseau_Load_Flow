@@ -76,7 +76,8 @@ en.solve_load_flow()
 By describing the network and its components, here is a simple example:
 
 ```python
-from roseau.load_flow import Ground, VoltageSource, Bus, PowerLoad, PotentialRef, SimplifiedLine, ElectricalNetwork, LineCharacteristics
+from roseau.load_flow import Ground, VoltageSource, Bus, PowerLoad, PotentialReference, SimplifiedLine,
+    ElectricalNetwork, LineCharacteristics
 import numpy as np
 
 ground = Ground()
@@ -99,7 +100,7 @@ line = SimplifiedLine(
     line_characteristics=line_characteristics,
     length=10  # km
 )
-p_ref = PotentialRef(element=ground)
+p_ref = PotentialReference(element=ground)
 
 en = ElectricalNetwork(buses=[vs, load_bus], branches=[line], loads=[load], special_elements=[p_ref, ground])
 # or

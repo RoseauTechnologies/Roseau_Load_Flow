@@ -12,12 +12,16 @@ license = "Proprietary"
 repository = "https://github.com/RoseauTechnologies/Roseau_Load_Flow/"
 readme = "README.md"
 include = []
+exclude = [
+    "**/tests/**",
+    "**/conftest.py",
+]
 packages = [
     { include = "roseau/load_flow" }
 ]
 
 [build-system]
-requires = ["poetry-core>=1.0.0", "setuptools", "wheel", "Cython", "numpy"]
+requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.dependencies]
@@ -27,20 +31,12 @@ numpy = "^1.21.5"
 pandas = "^1.4.0"
 pygeos = ">=0.12.0"
 geopandas = ">=0.10.2"
-scipy = "^1.5.0"
 Shapely = "^1.8.0"
 regex = "^2022.1.18"
-pyproj = "^3.3.0"
+pint = ">=0.19.2"
 
 # Command line
 rich = ">=11.0.0"
-
-# Display
-matplotlib = "^3.5.1"
-adjustText = ">=0.7.3"
-
-# Compilation
-Cython = ">=0.29.26"
 
 
 [tool.poetry.dev-dependencies]
@@ -74,10 +70,10 @@ case_sensitive = true
 # Coverage
 [tool.coverage.run]
 branch = true
-omit = ["thunders/__about__.py"]
+omit = ["roseau/load_flow/__about__.py"]
 
 [tool.coverage.paths]
-source = ["thunders/"]
+source = ["roseau/load_flow/"]
 
 [tool.coverage.report]
 # Regexes for lines to exclude from consideration
@@ -104,4 +100,4 @@ directory = "htmlcov"
 # Pytest
 [tool.pytest.ini_options]
 addopts = "--color=yes -vv -n=0"
-testpaths = ["thunders"]
+testpaths = ["roseau/load_flow/"]

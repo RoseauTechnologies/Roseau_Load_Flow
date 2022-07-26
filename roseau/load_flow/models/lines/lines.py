@@ -1,14 +1,16 @@
 import logging
 from typing import Any, Optional
 
+from pint import Quantity
 from shapely.geometry import LineString, Point
 from shapely.geometry.base import BaseGeometry
 
-from roseau.load_flow.models.buses.buses import AbstractBus, VoltageSource
-from roseau.load_flow.models.core.core import AbstractBranch, Ground
+from roseau.load_flow.models.buses import AbstractBus, VoltageSource
+from roseau.load_flow.models.core import AbstractBranch, Ground
 from roseau.load_flow.models.lines.line_characteristics import LineCharacteristics
 from roseau.load_flow.utils.exceptions import ThundersValueError
 from roseau.load_flow.utils.types import BranchType
+from roseau.load_flow.utils.units import ureg
 
 logger = logging.getLogger(__name__)
 
@@ -17,13 +19,16 @@ class Switch(AbstractBranch):
     type = BranchType.SWITCH
 
     def __init__(
-        self, id_: Any, n: int, bus1: AbstractBus, bus2: AbstractBus, geometry: Optional[Point] = None
+        self, id: Any, n: int, bus1: AbstractBus, bus2: AbstractBus, geometry: Optional[Point] = None, **kwargs
     ) -> None:
         """Switch constructor.
 
         Args:
-            id_:
+            id:
                 The id of the branch.
+
+            n:
+                The number of ports of the extremity buses.
 
             bus1:
                 Bus to connect to the switch.
@@ -38,7 +43,7 @@ class Switch(AbstractBranch):
             msg = f"The geometry for a {type(self)} must be a point: {geometry.geom_type} provided."
             logger.error(msg)
             raise ThundersValueError(msg)
-        super().__init__(id_=id_, n1=n, n2=n, bus1=bus1, bus2=bus2, geometry=geometry)
+        super().__init__(id=id, n1=n, n2=n, bus1=bus1, bus2=bus2, geometry=geometry, **kwargs)
         self._check_elements()
         self._check_loop()
 
@@ -88,18 +93,19 @@ class Line(AbstractBranch):
 
     def __init__(
         self,
-        id_: Any,
+        id: Any,
         n: int,
         bus1: AbstractBus,
         bus2: AbstractBus,
         line_characteristics: LineCharacteristics,
         length: float,
         geometry: Optional[LineString] = None,
+        **kwargs,
     ):
         """Line constructor.
 
         Args:
-            id_:
+            id:
                 The id of the branch.
 
             n:
@@ -127,27 +133,34 @@ class Line(AbstractBranch):
 
         if line_characteristics.z_line.shape != (n, n):
             msg = (
-                f"Incorrect z_line dimensions for line {id_!r}: {line_characteristics.z_line.shape} instead of "
+                f"Incorrect z_line dimensions for line {id!r}: {line_characteristics.z_line.shape} instead of "
                 f"({n}, {n})"
             )
             logger.error(msg)
             raise ThundersValueError(msg)
         if line_characteristics.y_shunt is not None and line_characteristics.y_shunt.shape != (n, n):
             msg = (
-                f"Incorrect y_shunt dimensions for line {id_!r}: {line_characteristics.y_shunt.shape} instead of "
+                f"Incorrect y_shunt dimensions for line {id!r}: {line_characteristics.y_shunt.shape} instead of "
                 f"({n}, {n})"
             )
             logger.error(msg)
             raise ThundersValueError(msg)
 
-        super().__init__(n1=n, n2=n, bus1=bus1, bus2=bus2, id_=id_, geometry=geometry)
+        super().__init__(n1=n, n2=n, bus1=bus1, bus2=bus2, id=id, geometry=geometry, **kwargs)
         self.n = n
         self.line_characteristics = line_characteristics
+
+        if isinstance(length, Quantity):
+            length = length.m_as("km")
         self.length = length
 
+    #
+    # Json Mixin interface
+    #
     @staticmethod
+    @ureg.wraps(None, (None, None, None, "km", None, None, None, None), strict=False)
     def from_dict(
-        id_: Any,
+        id: Any,
         bus1: AbstractBus,
         bus2: AbstractBus,
         length: float,
@@ -165,7 +178,7 @@ class Line(AbstractBranch):
             type_name:
                 The name of the line type
 
-            id_:
+            id:
                 The id of the created line.
 
             bus1:
@@ -190,7 +203,7 @@ class Line(AbstractBranch):
         n = line_characteristics.z_line.shape[0]
         if line_characteristics.y_shunt is None:
             return SimplifiedLine(
-                id_=id_,
+                id=id,
                 n=n,
                 bus1=bus1,
                 bus2=bus2,
@@ -200,7 +213,7 @@ class Line(AbstractBranch):
             )
         else:
             return ShuntLine(
-                id_=id_,
+                id=id,
                 n=n,
                 bus1=bus1,
                 bus2=bus2,
@@ -223,20 +236,26 @@ class Line(AbstractBranch):
 
 
 class SimplifiedLine(Line):
+    """A line without shunt elements.
+
+    TODO: Equation to place here.
+    """
+
     def __init__(
         self,
-        id_: Any,
+        id: Any,
         n: int,
         bus1: AbstractBus,
         bus2: AbstractBus,
         line_characteristics: LineCharacteristics,
         length: float,
         geometry: Optional[BaseGeometry] = None,
+        **kwargs,
     ) -> None:
         """SimplifiedLine constructor.
 
         Args:
-            id_:
+            id:
                 The id of the branch.
 
             n:
@@ -261,10 +280,11 @@ class SimplifiedLine(Line):
             n=n,
             bus1=bus1,
             bus2=bus2,
-            id_=id_,
+            id=id,
             length=length,
             line_characteristics=line_characteristics,
             geometry=geometry,
+            **kwargs,
         )
 
         if line_characteristics.y_shunt is not None:
@@ -275,9 +295,15 @@ class SimplifiedLine(Line):
 
 
 class ShuntLine(Line):
+    """A PI line model
+
+    TODO: Equation to write here
+
+    """
+
     def __init__(
         self,
-        id_: Any,
+        id: Any,
         n: int,
         bus1: AbstractBus,
         bus2: AbstractBus,
@@ -285,6 +311,7 @@ class ShuntLine(Line):
         line_characteristics: LineCharacteristics,
         length: float,
         geometry: Optional[BaseGeometry] = None,
+        **kwargs,
     ) -> None:
         """ShuntLine constructor.
 
@@ -301,7 +328,7 @@ class ShuntLine(Line):
             ground:
                 The ground.
 
-            id_:
+            id:
                 The id of the branch.
 
             line_characteristics:
@@ -317,10 +344,11 @@ class ShuntLine(Line):
             n=n,
             bus1=bus1,
             bus2=bus2,
-            id_=id_,
+            id=id,
             line_characteristics=line_characteristics,
             length=length,
             geometry=geometry,
+            **kwargs,
         )
 
         self.connected_elements.append(ground)

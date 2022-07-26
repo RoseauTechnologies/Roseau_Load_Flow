@@ -1,17 +1,20 @@
 import json
 import logging
 import re
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, Sequence, Union
+from typing import Any, Union
 
+import numpy as np
 import pandas as pd
 
 from roseau.load_flow.io.dgs import network_from_dgs
 from roseau.load_flow.io.dict import network_from_dict, network_to_dict
-from roseau.load_flow.models.buses.buses import AbstractBus, VoltageSource
-from roseau.load_flow.models.core.core import AbstractBranch, Element, PotentialRef
+from roseau.load_flow.models.buses import AbstractBus, VoltageSource
+from roseau.load_flow.models.core import AbstractBranch, Element, PotentialReference
 from roseau.load_flow.models.loads.loads import AbstractLoad, PowerLoad
-from roseau.load_flow.models.transformers.transformers import Transformer
+from roseau.load_flow.models.transformers.transformers import AbstractTransformer
+from roseau.load_flow.utils import ureg
 from roseau.load_flow.utils.exceptions import ThundersValueError
 
 logger = logging.getLogger(__name__)
@@ -27,6 +30,7 @@ class ElectricalNetwork:
         branches: Union[list[AbstractBranch], dict[Any, AbstractBranch]],
         loads: Union[list[AbstractLoad], dict[Any, AbstractLoad]],
         special_elements: list[Element],
+        **kwargs,
     ):
         """ElectricalNetwork constructor
 
@@ -44,11 +48,32 @@ class ElectricalNetwork:
                 The other elements (special, ground...)
         """
         if isinstance(buses, list):
-            buses = {bus.id: bus for bus in buses}
+            buses_dict=dict()
+            for bus in buses:
+                if bus.id in buses_dict:
+                    msg=f"Duplicate id for a bus in this network: {bus.id!r}."
+                    logger.error(msg)
+                    raise ThundersValueError(msg)
+                buses_dict[bus.id]=bus
+            buses = buses_dict
         if isinstance(branches, list):
-            branches = {branch.id: branch for branch in branches}
+            branches_dict = dict()
+            for branch in branches:
+                if branch.id in branches_dict:
+                    msg = f"Duplicate id for a branch in this network: {branch.id!r}."
+                    logger.error(msg)
+                    raise ThundersValueError(msg)
+                branches_dict[branch.id] = branch
+            branches = branches_dict
         if isinstance(loads, list):
-            loads = {load.id: load for load in loads}
+            loads_dict = dict()
+            for load in loads:
+                if load.id in loads_dict:
+                    msg = f"Duplicate id for a load in this network: {load.id!r}."
+                    logger.error(msg)
+                    raise ThundersValueError(msg)
+                loads_dict[load.id] = load
+            loads = loads_dict
 
         self.buses: dict[Any, AbstractBus] = buses
         self.branches: dict[Any, AbstractBranch] = branches
@@ -89,70 +114,9 @@ class ElectricalNetwork:
                     elements.append(connected_element)
         return cls(buses=buses, branches=branches, loads=loads, special_elements=specials)
 
-    @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "ElectricalNetwork":
-        """ElectricalNetwork constructor from dict.
-
-        Args:
-            data:
-                The dictionary containing the network data.
-
-        Returns:
-            The constructed network.
-        """
-        buses_dict, branches_dict, loads_dict, special_elements = network_from_dict(data=data)
-        return cls(buses=buses_dict, branches=branches_dict, loads=loads_dict, special_elements=special_elements)
-
-    @classmethod
-    def from_json(cls, path: Union[str, Path]) -> "ElectricalNetwork":
-        """ElectricalNetwork constructor from dict.
-
-        Args:
-            path:
-                The path to the network data.
-
-        Returns:
-            The constructed network.
-        """
-        with open(path) as file:
-            data = json.load(file)
-        return cls.from_dict(data=data)
-
-    @classmethod
-    def from_dgs(cls, path: Union[str, Path]):
-        """ElectricalNetwork constructor from json dgs file (PowerFactory).
-
-        Args:
-            path:
-                The path to the network data.
-
-        Returns:
-            The constructed network.
-        """
-        buses_dict, branches_dict, loads_dict, special_elements = network_from_dgs(filename=path)
-        return cls(buses=buses_dict, branches=branches_dict, loads=loads_dict, special_elements=special_elements)
-
-    def to_dict(self) -> dict[str, Any]:
-        """Return a dictionary of the current network data.
-
-        Returns:
-            The created dictionary.
-        """
-        return network_to_dict(self)
-
-    def to_json(self, path: Union[str, Path]):
-        """Save the current network to a json file.
-
-        Args:
-            path:
-                The path for the network output.
-        """
-        res = self.to_dict()
-        output = json.dumps(res, indent=4)
-        output = re.sub(r"\[\s+(.*),\s+(.*)\s+]", r"[\1, \2]", output)
-        with open(path, "w") as output_file:
-            output_file.write(output)
-
+    #
+    # Solve the load flow
+    #
     def solve_load_flow(self, epsilon: float = DEFAULT_PRECISION, max_iterations: int = DEFAULT_MAX_ITERATIONS) -> int:
         """Execute a newton algorithm for load flow calculation. In order to get the results of the load flow, please
         use the `get_results` method or call the elements directly.
@@ -167,9 +131,13 @@ class ElectricalNetwork:
         Returns:
             The number of iterations taken
         """
-        # TODO
+        # TODO Call requests ad store the results in the class and subsequents objects
         return 0
 
+    #
+    # Getter for the load flow results
+    #
+    @property
     def results(self) -> tuple[pd.DataFrame, pd.DataFrame]:
         """Get the voltages and currents computed by the load flow
 
@@ -177,8 +145,51 @@ class ElectricalNetwork:
             The DataFrame of the voltages of the buses indexed by the bus ids and the DataFrame of the current
             flowing through the branches indexed by the branch ids.
         """
-        # TODO
+        # TODO Retrieve the result objects
+        # TODO use pint-pandas (?)
+        raise NotImplementedError
 
+    @ureg.wraps("V", (None, None), strict=False)
+    def bus_potentials(self, id: Any) -> np.ndarray:
+        """Compute the potential of a bus
+
+        Args:
+            id:
+                The id of the bus
+
+        Returns:
+            The complex value of the bus potential
+        """
+        return self.buses[id].potentials
+
+    @ureg.wraps(("A", "A"), (None, None), strict=False)
+    def branch_currents(self, id: Any) -> tuple[np.ndarray, np.ndarray]:
+        """Compute the current of a branch
+
+        Args:
+            id:
+                The name of the branch
+
+        Returns:
+            The complex value of the branch current
+        """
+        return self.branches[id].currents
+
+    @ureg.wraps("A", (None, None), strict=False)
+    def load_currents(self, id: Any) -> np.ndarray:
+        """Compute the currents of a load
+
+        Args:
+            id:
+                The id of the load
+
+        Returns:
+            The complex value of the branch current
+        """
+        return self.loads[id].currents
+    #
+    # Set the dynamic parameters.
+    #
     def set_load_point(self, load_point: dict[Any, Sequence[complex]]):
         """Set a new load point to the network
 
@@ -202,6 +213,7 @@ class ElectricalNetwork:
             voltages:
                 The new voltages
         """
+        # TODO: give an id here and apply the new voltage to this bus_id (or a dictionary as set_load_point)
         for bus in self.buses.values():
             if isinstance(bus, VoltageSource):
                 bus.update_voltages(voltages=voltages)
@@ -223,24 +235,24 @@ class ElectricalNetwork:
             raise ThundersValueError("Only lines, loads and buses can be added to the network.")
         self._valid = False
 
-    def remove_element(self, id_):
+    def remove_element(self, id: Any):
         """Remove an element of the network (the C++ electrical network and the tape will be recomputed).
 
         Args:
-            id_:
+            id:
                 The id of the element to remove.
         """
-        if id_ in self.buses:
-            bus = self.buses.pop(id_)
+        if id in self.buses:
+            bus = self.buses.pop(id)
             bus.disconnect()
-        elif id_ in self.loads:
-            load = self.loads.pop(id_)
+        elif id in self.loads:
+            load = self.loads.pop(id)
             load.disconnect()
-        elif id_ in self.branches:
-            branch = self.branches.pop(id_)
+        elif id in self.branches:
+            branch = self.branches.pop(id)
             branch.disconnect()
         else:
-            raise ThundersValueError(f"{id_!r} is not a valid bus, branch or load key.")
+            raise ThundersValueError(f"{id!r} is not a valid bus, branch or load key.")
         self._valid = False
 
     def _create_network(self):
@@ -283,38 +295,116 @@ class ElectricalNetwork:
 
         self._check_ref(elements)
 
-    def _check_ref(self, elements):
+    @staticmethod
+    def _check_ref(elements):
         """Check the number of potential references to avoid having a singular jacobian matrix"""
         visited_elements = []
         for initial_element in elements:
-            if initial_element not in visited_elements and not isinstance(initial_element, Transformer):
-                visited_elements.append(initial_element)
-                connected_component = []
-                to_visit = [initial_element]
-                while to_visit:
-                    element = to_visit.pop(-1)
-                    connected_component.append(element)
-                    for connected_element in element.connected_elements:
-                        if connected_element not in visited_elements and not isinstance(connected_element, Transformer):
-                            to_visit.append(connected_element)
-                            visited_elements.append(connected_element)
+            if initial_element in visited_elements or isinstance(initial_element, AbstractTransformer):
+                continue
+            visited_elements.append(initial_element)
+            connected_component = []
+            to_visit = [initial_element]
+            while to_visit:
+                element = to_visit.pop(-1)
+                connected_component.append(element)
+                for connected_element in element.connected_elements:
+                    if connected_element not in visited_elements and not isinstance(
+                        connected_element, AbstractTransformer
+                    ):
+                        to_visit.append(connected_element)
+                        visited_elements.append(connected_element)
 
-                potential_ref = 0
-                for element in connected_component:
-                    if isinstance(element, PotentialRef):
-                        potential_ref += 1
+            potential_ref = 0
+            for element in connected_component:
+                if isinstance(element, PotentialReference):
+                    potential_ref += 1
 
-                if potential_ref == 0:
-                    msg = (
-                        f"The connected component containing the element {initial_element.id!r} does not have a "
-                        f"potential reference."
-                    )
-                    logger.error(msg)
-                    raise ThundersValueError(msg)
-                elif potential_ref >= 2:
-                    msg = (
-                        f"The connected component containing the element {initial_element.id!r} has {potential_ref} "
-                        f"potential references, it should have only one."
-                    )
-                    logger.error(msg)
-                    raise ThundersValueError(msg)
+            if potential_ref == 0:
+                msg = (
+                    f"The connected component containing the element {initial_element.id!r} does not have a "
+                    f"potential reference."
+                )
+                logger.error(msg)
+                raise ThundersValueError(msg)
+            elif potential_ref >= 2:
+                msg = (
+                    f"The connected component containing the element {initial_element.id!r} has {potential_ref} "
+                    f"potential references, it should have only one."
+                )
+                logger.error(msg)
+                raise ThundersValueError(msg)
+
+    #
+    # Json Mixin interface
+    #
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "ElectricalNetwork":
+        """ElectricalNetwork constructor from dict.
+
+        Args:
+            data:
+                The dictionary containing the network data.
+
+        Returns:
+            The constructed network.
+        """
+        buses_dict, branches_dict, loads_dict, special_elements = network_from_dict(data=data)
+        return cls(buses=buses_dict, branches=branches_dict, loads=loads_dict, special_elements=special_elements)
+
+    @classmethod
+    def from_json(cls, path: Union[str, Path]) -> "ElectricalNetwork":
+        """ElectricalNetwork constructor from dict.
+
+        Args:
+            path:
+                The path to the network data.
+
+        Returns:
+            The constructed network.
+        """
+        if not isinstance(path, Path):
+            path = Path(path)
+        data = json.loads(path.read_text())
+        return cls.from_dict(data=data)
+    def to_dict(self) -> dict[str, Any]:
+        """Return a dictionary of the current network data.
+
+        Returns:
+            The created dictionary.
+        """
+        return network_to_dict(self)
+
+    def to_json(self, path: Union[str, Path]):
+        """Save the current network to a json file.
+
+        Args:
+            path:
+                The path for the network output.
+        """
+        res = self.to_dict()
+        output = json.dumps(res, ensure_ascii=False, indent=4)
+        output = re.sub(r"\[\s+(.*),\s+(.*)\s+]", r"[\1, \2]", output)
+        if not isinstance(path, Path):
+            path = Path(path)
+        path.write_text(output)
+
+    #
+    # DGS interface
+    #
+    @classmethod
+    def from_dgs(cls, path: Union[str, Path]):
+        """ElectricalNetwork constructor from json dgs file (PowerFactory).
+
+        Args:
+            path:
+                The path to the network data.
+
+        Returns:
+            The constructed network.
+        """
+        buses_dict, branches_dict, loads_dict, special_elements = network_from_dgs(filename=path)
+        return cls(buses=buses_dict, branches=branches_dict, loads=loads_dict, special_elements=special_elements)
+
+
+

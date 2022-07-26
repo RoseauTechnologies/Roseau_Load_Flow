@@ -1,13 +1,16 @@
 import logging
-import math
 from typing import Any
 
+import numpy as np
+
 from roseau.load_flow.utils import ThundersValueError, TransformerType
+from roseau.load_flow.utils.units import ureg
 
 logger = logging.getLogger(__name__)
 
 
 class TransformerCharacteristics:
+    @ureg.wraps(None, (None, None, None, "V", "V", "VA", "W", None, "W", None), strict=False)
     def __init__(
         self,
         type_name: str,
@@ -103,6 +106,7 @@ class TransformerCharacteristics:
             "type": self.windings,
         }
 
+    @ureg.wraps(("ohm", "S", None, None), None, strict=False)
     def to_zyk(self) -> tuple[complex, complex, float, float]:
         """Compute the transformer characteristics z2, ym, k and orientation mandatory for some models
 
@@ -120,23 +124,23 @@ class TransformerCharacteristics:
         r_iron = self.uhv**2 / self.p0
         # Magnetizing inductance (Henry) * omega (rad/s)
         if self.i0 * self.sn > self.p0:
-            lm_omega = self.uhv**2 / (math.sqrt((self.i0 * self.sn) ** 2 - self.p0**2))
+            lm_omega = self.uhv**2 / (np.sqrt((self.i0 * self.sn) ** 2 - self.p0**2))
             ym = 1 / r_iron + 1 / (1j * lm_omega)
         else:
             ym = 1 / r_iron
 
         # Short circuit test
         r2 = self.psc * (self.ulv / self.sn) ** 2
-        l2_omega = math.sqrt((self.vsc * self.ulv**2 / self.sn) ** 2 - r2**2)
+        l2_omega = np.sqrt((self.vsc * self.ulv**2 / self.sn) ** 2 - r2**2)
         z2 = r2 + 1j * l2_omega
 
         # Change the voltages if the reference voltages is phase to neutral
         uhv = self.uhv
         ulv = self.ulv
         if winding1[0] in ("y", "Y"):
-            uhv /= math.sqrt(3.0)
+            uhv /= np.sqrt(3.0)
         if winding2[0] in ("y", "Y"):
-            ulv /= math.sqrt(3.0)
+            ulv /= np.sqrt(3.0)
         if winding1[0] in ("z", "Z"):
             uhv /= 3.0
         if winding2[0] in ("z", "Z"):

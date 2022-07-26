@@ -1,39 +1,49 @@
 import logging
-from abc import ABCMeta
-from typing import Any, Optional, Sequence
+from abc import ABC
+from collections.abc import Sequence
+from typing import Any, Optional
 
 import numpy as np
 import shapely.wkt
-from shapely.geometry import Point
+from pint import Quantity
+from shapely.geometry import Point, shape
 
-from roseau.load_flow.models.core.core import Element, Ground
+from roseau.load_flow.models.core import Element, Ground
 from roseau.load_flow.utils.exceptions import ThundersIOError
 from roseau.load_flow.utils.json_mixin import JsonMixin
+from roseau.load_flow.utils.units import ureg
 
 logger = logging.getLogger(__name__)
 
 
-class AbstractBus(Element, JsonMixin, metaclass=ABCMeta):
+class AbstractBus(Element, JsonMixin, ABC):
+    """This is an abstract class for all different types of buses."""
+
     def __init__(
-        self, id_: Any, n: int, potentials: Optional[Sequence[complex]] = None, geometry: Optional[Point] = None
+        self,
+        id: Any,
+        n: int,
+        potentials: Optional[Sequence[complex]] = None,
+        geometry: Optional[Point] = None,
+        **kwargs,
     ) -> None:
         """Abstract bus constructor.
 
         Args:
-            id_:
+            id:
                 The identifier of the bus.
 
             n:
-                Number of ports.
+                Number of ports ie number of phases.
 
             potentials:
-                List of initial potentials of each phase
+                List of initial potentials of each phase.
 
             geometry:
                 The geometry of the bus.
         """
-        super().__init__()
-        self.id = id_
+        super().__init__(**kwargs)
+        self.id = id
         self.n = n
 
         if potentials is None:
@@ -44,6 +54,8 @@ class AbstractBus(Element, JsonMixin, metaclass=ABCMeta):
                 msg = f"Incorrect number of potentials: {len(potentials)} instead of {n}"
                 logger.error(msg)
                 raise ThundersIOError(msg)
+            if isinstance(potentials, Quantity):
+                potentials = potentials.m_as("V")
             self.initialized = True
         self.initial_potentials = np.asarray(potentials)
 
@@ -52,40 +64,65 @@ class AbstractBus(Element, JsonMixin, metaclass=ABCMeta):
     def __str__(self) -> str:
         return f"id={self.id} - n={self.n}"
 
+    @property
+    @ureg.wraps("V", None, strict=False)
+    def potentials(self) -> np.ndarray:
+        """Return the potentials of the element
+
+        Returns:
+            An array of the potentials
+        """
+        raise NotImplementedError
+
+    #
+    # Json Mixin interface
+    #
     @classmethod
     def from_dict(cls, data, ground):
-        geometry = shapely.wkt.loads(data["geometry"]) if "geometry" in data else None
+        if "geometry" not in data:
+            geometry = None
+        elif isinstance(data["geometry"], str):
+            geometry = shapely.wkt.loads(data["geometry"])
+        else:
+            geometry = shape(data["geometry"])
+
         potentials = data["potentials"] if "potentials" in data else None
         if data["type"] == "slack":
             v = data["voltages"]
             voltages = [v["va"][0] + 1j * v["va"][1], v["vb"][0] + 1j * v["vb"][1], v["vc"][0] + 1j * v["vc"][1]]
             return VoltageSource(
-                id_=data["id"], n=4, ground=ground, voltages=voltages, potentials=potentials, geometry=geometry
+                id=data["id"], n=4, ground=ground, voltages=voltages, potentials=potentials, geometry=geometry
             )
         else:
             if data["type"] not in ["bus", "bus_neutral"]:
                 raise ThundersIOError(f"Bad bus type : {data['type']}")
             if "neutral" in data["type"]:
-                bus = Bus(id_=data["id"], n=4, potentials=potentials, geometry=geometry)
+                bus = Bus(id=data["id"], n=4, potentials=potentials, geometry=geometry)
             else:
-                bus = Bus(id_=data["id"], n=3, potentials=potentials, geometry=geometry)
+                bus = Bus(id=data["id"], n=3, potentials=potentials, geometry=geometry)
             return bus
 
 
 class VoltageSource(AbstractBus):
+    """A VoltageSource bus.
+
+    TODO: Equation to write here.
+    """
+
     def __init__(
         self,
-        id_: Any,
+        id: Any,
         n: int,
         ground: Optional[Ground],
         voltages: Sequence[complex],
         potentials: Optional[Sequence[complex]] = None,
         geometry: Optional[Point] = None,
+        **kwargs,
     ):
         """VoltageSource constructor.
 
         Args:
-            id_:
+            id:
                 The identifier of the bus.
 
             n:
@@ -95,24 +132,28 @@ class VoltageSource(AbstractBus):
                 The ground to connect the neutral to.
 
             voltages:
-                List of the voltages of the source.
+                List of the voltages of the source (V).
 
             potentials:
-                List of initial potentials of each phase.
+                List of initial potentials of each phase (V).
 
             geometry:
                 The geometry of the bus.
         """
-        super().__init__(id_=id_, n=n, potentials=potentials, geometry=geometry)
+        super().__init__(id=id, n=n, potentials=potentials, geometry=geometry, **kwargs)
         if len(voltages) != n - 1:
             msg = f"Incorrect number of voltages: {len(voltages)} instead of {n - 1}"
             logger.error(msg)
             raise ThundersIOError(msg)
 
+        if isinstance(voltages, Quantity):
+            voltages = voltages.m_as("V")
+
         self.voltages = voltages
         if ground is not None:
             ground.connect(self)
 
+    @ureg.wraps(None, (None, "V"), strict=False)
     def update_voltages(self, voltages: Sequence[complex]) -> None:
         """Change the voltages of the source
 
@@ -127,6 +168,9 @@ class VoltageSource(AbstractBus):
 
         self.voltages = voltages
 
+    #
+    # Json Mixin interface
+    #
     def to_dict(self) -> dict[str, Any]:
         va = self.voltages[0]
         vb = self.voltages[1]
@@ -142,34 +186,44 @@ class VoltageSource(AbstractBus):
             },
         }
         if self.geometry is not None:
-            res["geometry"] = str(self.geometry)
+            res["geometry"] = self.geometry.__geo_interface__
         return res
 
 
 class Bus(AbstractBus):
+    """This class is used for a general purpose bus."""
+
     def __init__(
-        self, id_: Any, n: int, potentials: Optional[Sequence[complex]] = None, geometry: Optional[Point] = None
+        self,
+        id: Any,
+        n: int,
+        potentials: Optional[Sequence[complex]] = None,
+        geometry: Optional[Point] = None,
+        **kwargs,
     ) -> None:
         """Bus constructor.
 
         Args:
-            id_:
+            id:
                 The identifier of the bus.
 
             n:
                 Number of ports.
 
             potentials:
-                List of initial potentials of each phase
+                List of initial potentials of each phase (V)
 
             geometry:
                 The geometry of the bus.
         """
-        super().__init__(id_=id_, n=n, potentials=potentials, geometry=geometry)
+        super().__init__(id=id, n=n, potentials=potentials, geometry=geometry, **kwargs)
 
+    #
+    # Json Mixin interface
+    #
     def to_dict(self) -> dict[str, Any]:
         bus_type = "bus" if self.n == 3 else "bus_neutral"
         res = {"id": self.id, "type": bus_type, "loads": []}
         if self.geometry is not None:
-            res["geometry"] = str(self.geometry)
+            res["geometry"] = self.geometry.__geo_interface__
         return res

@@ -1,22 +1,29 @@
 import logging
 from abc import ABCMeta
-from typing import Any, Sequence
+from collections.abc import Sequence
+from typing import Any
 
-from roseau.load_flow.models.buses.buses import AbstractBus
-from roseau.load_flow.models.core.core import Element
+import numpy as np
+from pint import Quantity
+
+from roseau.load_flow.models.buses import AbstractBus
+from roseau.load_flow.models.core import Element
 from roseau.load_flow.models.loads.flexible_parameters import FlexibleParameter
 from roseau.load_flow.utils.exceptions import ThundersIOError, ThundersValueError
 from roseau.load_flow.utils.json_mixin import JsonMixin
+from roseau.load_flow.utils.units import ureg
 
 logger = logging.getLogger(__name__)
 
 
 class AbstractLoad(Element, JsonMixin, metaclass=ABCMeta):
-    def __init__(self, id_: Any, n: int, bus: AbstractBus) -> None:
+    """An abstract class to depict a load."""
+
+    def __init__(self, id: Any, n: int, bus: AbstractBus, **kwargs) -> None:
         """Load constructor.
 
         Args:
-            id_:
+            id:
                 The id of the load.
 
             n:
@@ -25,14 +32,30 @@ class AbstractLoad(Element, JsonMixin, metaclass=ABCMeta):
             bus:
                 Bus to be attached to.
         """
-        super().__init__()
+        super().__init__(**kwargs)
         self.connected_elements = [bus]
         bus.connected_elements.append(self)
 
-        self.id = id_
+        self.id = id
         self.n = n
         self.bus = bus
 
+    def __str__(self) -> str:
+        return f"id={self.id} - n={self.n}"
+
+    @property
+    @ureg.wraps("A", None, strict=False)
+    def currents(self) -> np.ndarray:
+        """Get the actual currents of the load.
+
+        Returns:
+            An array containing the actual currents of each phase.
+        """
+        raise NotImplementedError
+
+    #
+    # Json Mixin interface
+    #
     @staticmethod
     def from_dict(data, bus):
         if data["function"] == "flexible":
@@ -40,28 +63,37 @@ class AbstractLoad(Element, JsonMixin, metaclass=ABCMeta):
         if "ys" in data["function"]:
             s = data["powers"]
             powers = [s["sa"][0] + 1j * s["sa"][1], s["sb"][0] + 1j * s["sb"][1], s["sc"][0] + 1j * s["sc"][1]]
-            return PowerLoad(id_=data["id"], n=4, bus=bus, s=powers)
+            return PowerLoad(id=data["id"], n=4, bus=bus, s=powers)
         elif "yy" in data["function"]:
             y = data["admittances"]
             admittances = [y["ya"][0] + 1j * y["ya"][1], y["yb"][0] + 1j * y["yb"][1], y["yc"][0] + 1j * y["yc"][1]]
-            return AdmittanceLoad(id_=data["id"], n=4, bus=bus, y=admittances)
+            return AdmittanceLoad(id=data["id"], n=4, bus=bus, y=admittances)
         elif "yz" in data["function"]:
             z = data["impedances"]
             impedances = [z["za"][0] + 1j * z["za"][1], z["zb"][0] + 1j * z["zb"][1], z["zc"][0] + 1j * z["zc"][1]]
-            return ImpedanceLoad(id_=data["id"], n=4, bus=bus, z=impedances)
+            return ImpedanceLoad(id=data["id"], n=4, bus=bus, z=impedances)
         else:
             raise ThundersIOError(f"Unknown load type for load {data['id']}: {data['function']}")
 
-    def __str__(self) -> str:
-        return f"id={self.id} - n={self.n}"
-
 
 class PowerLoad(AbstractLoad):
-    def __init__(self, id_: Any, n: int, bus: AbstractBus, s: Sequence[complex]) -> None:
+    """A constant power load.
+
+    The equations are the following if n=4 (star loads):
+
+    .. math::
+        I_{\\mathrm{abc}}=\\left(\frac{S_{\\mathrm{abc}}}{V_{\\mathrm{abc}}-V_{\\mathrm{n}}}\right)^{\\star}
+        I_{\\mathrm{n}}=-\\sum_{p\\in\\{\\mathrm{a},\\mathrm{b},\\mathrm{c}\\}}I_{p}
+
+    else (n==3, triangle loads)
+        TODO Triangle power loads
+    """
+
+    def __init__(self, id: Any, n: int, bus: AbstractBus, s: Sequence[complex], **kwargs) -> None:
         """PowerLoad constructor.
 
         Args:
-            id_:
+            id:
                 The id of the load.
 
             n:
@@ -71,29 +103,35 @@ class PowerLoad(AbstractLoad):
                 Bus to be attached to
 
             s:
-                List of power for each phase (Volts).
+                List of power for each phase (VA).
         """
-        super().__init__(id_=id_, n=n, bus=bus)
+        super().__init__(id=id, n=n, bus=bus, **kwargs)
         if len(s) != n - 1:
             msg = f"Incorrect number of powers: {len(s)} instead of {n - 1}"
             logger.error(msg)
             raise ThundersValueError(msg)
 
+        if isinstance(s, Quantity):
+            s = s.m_as("VA")
         self.s = s
 
-    def update_powers(self, powers: Sequence[complex]) -> None:
+    @ureg.wraps(None, (None, "VA"), strict=False)
+    def update_powers(self, s: Sequence[complex]) -> None:
         """Change the power of the load.
 
         Args:
-            powers:
-                the new powers to set (Volts).
+            s:
+                The new powers to set (VA).
         """
-        if len(powers) != self.n - 1:
-            msg = f"Incorrect number of powers: {len(powers)} instead of {self.n - 1}"
+        if len(s) != self.n - 1:
+            msg = f"Incorrect number of powers: {len(s)} instead of {self.n - 1}"
             logger.error(msg)
             raise ThundersValueError(msg)
-        self.s = powers
+        self.s = s
 
+    #
+    # Json Mixin interface
+    #
     def to_dict(self) -> dict[str, Any]:
         if self.bus.n == 3:
             load_type = "ys"
@@ -112,11 +150,24 @@ class PowerLoad(AbstractLoad):
 
 
 class AdmittanceLoad(AbstractLoad):
-    def __init__(self, id_: Any, n: int, bus: AbstractBus, y: Sequence[complex]) -> None:
+    """A constant admittance load.
+
+    The equations are the following if n=4 (star loads):
+
+    .. math::
+        I_{\\mathrm{abc}}=Y_{\\mathrm{abc}}\\left(V_{\\mathrm{abc}}-V_{\\mathrm{n}}\right)^{\\star}
+        I_{\\mathrm{n}}=-\\sum_{p\\in\\{\\mathrm{a},\\mathrm{b},\\mathrm{c}\\}}I_{p}
+
+    else (n==3, triangle loads)
+        TODO Triangle admittance loads
+
+    """
+
+    def __init__(self, id: Any, n: int, bus: AbstractBus, y: Sequence[complex], **kwargs) -> None:
         """AdmittanceLoad constructor.
 
         Args:
-            id_:
+            id:
                 The id of the load.
 
             n:
@@ -128,27 +179,34 @@ class AdmittanceLoad(AbstractLoad):
             y:
                 List of admittance for each phase (Siemens).
         """
-        super().__init__(id_=id_, n=n, bus=bus)
+        super().__init__(id=id, n=n, bus=bus, **kwargs)
         if len(y) != n - 1:
             msg = f"Incorrect number of admittance: {len(y)} instead of {n - 1}"
             logger.error(msg)
             raise ThundersValueError(msg)
 
+        if isinstance(y, Quantity):
+            y = y.m_as("S")
+
         self.y = y
 
-    def update_admittances(self, admittances: Sequence[complex]) -> None:
+    @ureg.wraps(None, (None, "S"), strict=False)
+    def update_admittances(self, y: Sequence[complex]) -> None:
         """Change the admittances of the load
 
         Args:
-            admittances:
+            y:
                 The new admittances to set (Siemens).
         """
-        if len(admittances) != self.n - 1:
-            msg = f"Incorrect number of admittances: {len(admittances)} instead of {self.n - 1}"
+        if len(y) != self.n - 1:
+            msg = f"Incorrect number of admittances: {len(y)} instead of {self.n - 1}"
             logger.error(msg)
             raise ThundersValueError(msg)
-        self.y = admittances
+        self.y = y
 
+    #
+    # Json Mixin interface
+    #
     def to_dict(self) -> dict[str, Any]:
         if self.bus.n == 3:
             load_type = "yy"
@@ -167,11 +225,16 @@ class AdmittanceLoad(AbstractLoad):
 
 
 class ImpedanceLoad(AbstractLoad):
-    def __init__(self, id_: Any, n: int, bus: AbstractBus, z: Sequence[complex]) -> None:
+    """Constant impedance loads.
+
+    The equations are the same as in the constance admittance load implementation.
+    """
+
+    def __init__(self, id: Any, n: int, bus: AbstractBus, z: Sequence[complex], **kwargs) -> None:
         """ImpedanceLoad constructor.
 
         Args:
-            id_:
+            id:
                 The id of the load.
 
             n:
@@ -183,21 +246,46 @@ class ImpedanceLoad(AbstractLoad):
             z:
                 List of impedance for each phase (Ohms).
         """
-        super().__init__(id_=id_, n=n, bus=bus)
+        super().__init__(id=id, n=n, bus=bus, **kwargs)
         if len(z) != n - 1:
             msg = f"Incorrect number of impedance: {len(z)} instead of {n - 1}"
             logger.error(msg)
             raise ThundersValueError(msg)
 
-        y = []
+        if isinstance(z, Quantity):
+            z = z.m_as("ohm")
+
         for zi in z:
-            if zi == 0.0:
+            if np.isclose(zi, 0):
                 msg = f"An impedance for load {self.id!r} is null"
                 logger.error(msg)
                 raise ThundersValueError(msg)
-            y.append(1.0 / zi)
+
         self.z = z
 
+    @ureg.wraps(None, (None, "ohm"), strict=False)
+    def update_impedance(self, z: Sequence[complex]) -> None:
+        """Change the admittances of the load
+
+        Args:
+            z:
+                The new impedance to set (Ohms).
+        """
+        if len(z) != self.n - 1:
+            msg = f"Incorrect number of impedance: {len(z)} instead of {self.n - 1}"
+            logger.error(msg)
+            raise ThundersValueError(msg)
+
+        for zi in z:
+            if np.isclose(zi, 0):
+                msg = f"An impedance for load {self.id!r} is null"
+                logger.error(msg)
+                raise ThundersValueError(msg)
+        self.z = z
+
+    #
+    # Json Mixin interface
+    #
     def to_dict(self) -> dict[str, Any]:
         if self.bus.n == 3:
             load_type = "yz"
@@ -214,41 +302,17 @@ class ImpedanceLoad(AbstractLoad):
             },
         }
 
-    def update_impedance(self, impedances: Sequence[complex]) -> None:
-        """Change the admittances of the load
-
-        Args:
-            impedances:
-                The new impedances to set (Ohms).
-        """
-        if len(impedances) != self.n - 1:
-            msg = f"Incorrect number of impedance: {len(impedances)} instead of {self.n - 1}"
-            logger.error(msg)
-            raise ThundersValueError(msg)
-
-        y = []
-        for zi in impedances:
-            if zi == 0.0:
-                msg = f"An impedance for load {self.id!r} is null"
-                logger.error(msg)
-                raise ThundersValueError(msg)
-            y.append(1.0 / zi)
-        self.z = impedances
-
 
 class FlexibleLoad(AbstractLoad):
+    """A class to depict a flexible load i.e. a load with control."""
+
     def __init__(
-        self,
-        id_: Any,
-        n: int,
-        bus: AbstractBus,
-        s: Sequence[complex],
-        parameters: list[FlexibleParameter],
+        self, id: Any, n: int, bus: AbstractBus, s: Sequence[complex], parameters: list[FlexibleParameter], **kwargs
     ):
         """FlexibleLoad constructor.
 
         Args:
-            id_:
+            id:
                 The id of the load.
 
             n:
@@ -263,7 +327,7 @@ class FlexibleLoad(AbstractLoad):
             parameters:
                 List of flexible parameters for each phase.
         """
-        super().__init__(id_=id_, n=n, bus=bus)
+        super().__init__(id=id, n=n, bus=bus, **kwargs)
         if len(s) != n - 1:
             msg = f"Incorrect number of powers: {len(s)} instead of {n - 1}"
             logger.error(msg)
@@ -272,6 +336,9 @@ class FlexibleLoad(AbstractLoad):
             msg = f"Incorrect number of parameters: {len(parameters)} instead of {n}"
             logger.error(msg)
             raise ThundersValueError(msg)
+
+        if isinstance(s, Quantity):
+            s = s.m_as("VA")
 
         for power, parameter in zip(s, parameters):
             if abs(power) > parameter.s_max and (
@@ -293,12 +360,22 @@ class FlexibleLoad(AbstractLoad):
                 logger.error(msg)
                 raise ThundersValueError(msg)
 
-        cy_parameters = []
-        for p in parameters:
-            cy_parameters.append(p.cy_fp)
         self.s = s
         self.parameters = parameters
 
+    @property
+    @ureg.wraps("VA", None, strict=False)
+    def powers(self) -> np.ndarray:
+        """Compute the actual power consumed by the loads.
+
+        Returns:
+            An array containing the actual powers of each phase (VA)
+        """
+        raise NotImplementedError
+
+    #
+    # Json Mixin interface
+    #
     @classmethod
     def from_dict(cls, data: dict[str, Any], bus: AbstractBus) -> "FlexibleLoad":
         s = data["powers"]
@@ -306,7 +383,7 @@ class FlexibleLoad(AbstractLoad):
         parameters = list()
         for parameter in data["parameters"]:
             parameters.append(FlexibleParameter.from_dict(parameter))
-        return cls(id_=data["id"], n=4, bus=bus, s=powers, parameters=parameters)
+        return cls(id=data["id"], n=4, bus=bus, s=powers, parameters=parameters)
 
     def to_dict(self) -> dict[str, Any]:
         parameter_res = []

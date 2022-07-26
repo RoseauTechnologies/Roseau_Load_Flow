@@ -19,6 +19,7 @@ from roseau.load_flow.utils.exceptions import (
     ThundersValueError,
 )
 from roseau.load_flow.utils.types import BranchType, ConductorType, IsolationType, LineModel, LineType, TransformerType
+from roseau.load_flow.utils.units import Q_, ureg
 
 __all__ = [
     # Exceptions
@@ -46,4 +47,7 @@ __all__ = [
     "IsolationType",
     "BranchType",
     "TransformerType",
+    # Units
+    "Q_",
+    "ureg",
 ]

@@ -1,10 +1,9 @@
-import math
-
 import numpy as np
 import pytest
 
 from roseau.load_flow import TransformerCharacteristics
 from roseau.load_flow.utils import ThundersValueError
+from roseau.load_flow.utils.units import Q_
 
 
 def test_transformer_characteristics():
@@ -25,14 +24,14 @@ def test_transformer_characteristics():
 
     z2, ym, k, orientation = tc.to_zyk()
     r_iron = 20e3**2 / 145  # Ohm
-    lm_omega = 20e3**2 / (math.sqrt((1.8 / 100 * 50e3) ** 2 - 145**2))  # H *rad/s
+    lm_omega = 20e3**2 / (np.sqrt((1.8 / 100 * 50e3) ** 2 - 145**2))  # H *rad/s
     z2_norm = 4 / 100 * 400**2 / 50e3
     r2 = 1350 * 400**2 / 50e3**2  # Ohm
-    l2_omega = math.sqrt(z2_norm**2 - r2**2)  # H*rad/s
+    l2_omega = np.sqrt(z2_norm**2 - r2**2)  # H*rad/s
 
-    ym_expected = 1 / r_iron + 1 / (1j * lm_omega)
-    z2_expected = r2 + 1j * l2_omega
-    k_expected = 400 / (math.sqrt(3.0) * 20e3)
+    ym_expected = Q_(1 / r_iron + 1 / (1j * lm_omega), "S")
+    z2_expected = Q_(r2 + 1j * l2_omega, "ohm")
+    k_expected = 400 / (np.sqrt(3.0) * 20e3)
     orientation_expected = 1.0
 
     assert np.isclose(z2, z2_expected)
@@ -55,14 +54,14 @@ def test_transformer_characteristics():
     tc = TransformerCharacteristics.from_dict(data)
     z2, ym, k, orientation = tc.to_zyk()
     r_iron = 20e3**2 / 210  # Ohm
-    lm_omega = 20e3**2 / (math.sqrt((3.5 / 100 * 100e3) ** 2 - 210**2))  # H*rad/s
+    lm_omega = 20e3**2 / (np.sqrt((3.5 / 100 * 100e3) ** 2 - 210**2))  # H*rad/s
     z2_norm = 4 / 100 * 400**2 / 100e3
     r2 = 2150 * 400**2 / 100e3**2  # Ohm
-    l2_omega = math.sqrt(z2_norm**2 - r2**2)  # H*rad/s
+    l2_omega = np.sqrt(z2_norm**2 - r2**2)  # H*rad/s
 
-    ym_expected = 1 / r_iron + 1 / (1j * lm_omega)
-    z2_expected = r2 + 1j * l2_omega
-    k_expected = (400 / math.sqrt(3)) / 20e3
+    ym_expected = Q_(1 / r_iron + 1 / (1j * lm_omega), "S")
+    z2_expected = Q_(r2 + 1j * l2_omega, "ohm")
+    k_expected = (400 / np.sqrt(3)) / 20e3
     orientation_expected = 1.0
 
     assert np.isclose(z2, z2_expected)
@@ -85,14 +84,14 @@ def test_transformer_characteristics():
     tc = TransformerCharacteristics.from_dict(data)
     z2, ym, k, orientation = tc.to_zyk()
     r_iron = 20e3**2 / 460  # Ohm
-    lm_omega = 20e3**2 / (math.sqrt((5.6 / 100 * 160e3) ** 2 - 460**2))  # H*rad/s
+    lm_omega = 20e3**2 / (np.sqrt((5.6 / 100 * 160e3) ** 2 - 460**2))  # H*rad/s
     z2_norm = 4 / 100 * 400**2 / 160e3
     r2 = 2350 * 400**2 / 160e3**2  # Ohm
-    l2_omega = math.sqrt(z2_norm**2 - r2**2)  # H*rad/s
+    l2_omega = np.sqrt(z2_norm**2 - r2**2)  # H*rad/s
 
-    ym_expected = 1 / r_iron + 1 / (1j * lm_omega)
-    z2_expected = r2 + 1j * l2_omega
-    k_expected = 400 / math.sqrt(3) / 20e3
+    ym_expected = Q_(1 / r_iron + 1 / (1j * lm_omega), "S")
+    z2_expected = Q_(r2 + 1j * l2_omega, "ohm")
+    k_expected = 400 / np.sqrt(3) / 20e3
     orientation_expected = -1.0
 
     assert np.isclose(z2, z2_expected)

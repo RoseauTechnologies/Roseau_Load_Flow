@@ -1,17 +1,8 @@
 from roseau.load_flow.models.transformers.transformers import (
-    DeltaWyeF,
+    AbstractTransformer,
     DeltaWyeTransformer,
-    IdealDeltaWye,
-    Transformer,
     TransformerCharacteristics,
     WyeWyeTransformer,
 )
 
-__all__ = [
-    "Transformer",
-    "WyeWyeTransformer",
-    "DeltaWyeTransformer",
-    "IdealDeltaWye",
-    "TransformerCharacteristics",
-    "DeltaWyeF",
-]
+__all__ = ["AbstractTransformer", "WyeWyeTransformer", "DeltaWyeTransformer", "TransformerCharacteristics"]

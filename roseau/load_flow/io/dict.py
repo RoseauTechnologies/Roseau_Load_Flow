@@ -4,14 +4,14 @@ from typing import Any, TYPE_CHECKING
 from roseau.load_flow import (
     AbstractBranch,
     AbstractBus,
+    AbstractTransformer,
     Ground,
     Line,
     LineCharacteristics,
-    PotentialRef,
-    Transformer,
+    PotentialReference,
     TransformerCharacteristics,
 )
-from roseau.load_flow.models.core.core import Element
+from roseau.load_flow.models.core import Element
 from roseau.load_flow.models.loads.loads import AbstractLoad
 from roseau.load_flow.utils import ThundersIOError
 
@@ -42,7 +42,7 @@ def network_from_dict(
         transformer_types[type_name] = TransformerCharacteristics.from_dict(transformer_data)
 
     ground = Ground()
-    special_elements = [ground, PotentialRef(element=ground)]
+    special_elements = [ground, PotentialReference(element=ground)]
     buses_dict = dict()
     loads_dict = dict()
     for bus_data in data["buses"]:
@@ -62,11 +62,11 @@ def network_from_dict(
             line_types,
             transformer_types,
         )
-        if isinstance(branches_dict[branch_data["id"]], Transformer):
+        if isinstance(branches_dict[branch_data["id"]], AbstractTransformer):
             if bus2.n == 4:
                 ground.connect(bus2)
             else:
-                special_elements.append(PotentialRef(element=bus2))
+                special_elements.append(PotentialReference(element=bus2))
 
     return buses_dict, branches_dict, loads_dict, special_elements
 
@@ -95,7 +95,7 @@ def network_to_dict(en: "ElectricalNetwork"):
         branches.append(branch.to_dict())
         if isinstance(branch, Line):
             line_characteristics_set.add(branch.line_characteristics)
-        elif isinstance(branch, Transformer):
+        elif isinstance(branch, AbstractTransformer):
             transformer_characteristics_set.add(branch.transformer_characteristics)
     line_characteristics = list()
     for lc in line_characteristics_set:

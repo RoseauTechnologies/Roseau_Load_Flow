@@ -9,7 +9,7 @@ from roseau.load_flow import (
     ElectricalNetwork,
     Ground,
     ImpedanceLoad,
-    PotentialRef,
+    PotentialReference,
     PowerLoad,
     ShuntLine,
     SimplifiedLine,
@@ -27,18 +27,18 @@ def test_from_element():
     vn = 400 / np.sqrt(3)
     voltages = [vn, vn * np.exp(-2 / 3 * np.pi * 1j), vn * np.exp(2 / 3 * np.pi * 1j)]
     vs = VoltageSource(
-        id_="source",
+        id="source",
         n=4,
         ground=ground,
         voltages=voltages,
     )
-    load_bus = Bus(id_="load bus", n=4)
-    load = PowerLoad(id_="power load", n=4, bus=load_bus, s=[100 + 0j, 100 + 0j, 100 + 0j])
+    load_bus = Bus(id="load bus", n=4)
+    load = PowerLoad(id="power load", n=4, bus=load_bus, s=[100 + 0j, 100 + 0j, 100 + 0j])
     line_characteristics = LineCharacteristics("test", z_line=np.eye(4, dtype=complex))
     line = SimplifiedLine(
-        id_="line", n=4, bus1=vs, bus2=load_bus, line_characteristics=line_characteristics, length=10  # km
+        id="line", n=4, bus1=vs, bus2=load_bus, line_characteristics=line_characteristics, length=10  # km
     )
-    p_ref = PotentialRef(element=ground)
+    p_ref = PotentialReference(element=ground)
 
     en = ElectricalNetwork(buses=[vs, load_bus], branches=[line], loads=[load], special_elements=[p_ref, ground])
     en.solve_load_flow()
@@ -58,24 +58,24 @@ def test_add_and_remove():
     vn = 400 / np.sqrt(3)
     voltages = [vn, vn * np.exp(-2 / 3 * np.pi * 1j), vn * np.exp(2 / 3 * np.pi * 1j)]
     vs = VoltageSource(
-        id_="source",
+        id="source",
         n=4,
         ground=ground,
         voltages=voltages,
     )
-    load_bus = Bus(id_="load bus", n=4)
-    load = PowerLoad(id_="power load", n=4, bus=load_bus, s=[100 + 0j, 100 + 0j, 100 + 0j])
+    load_bus = Bus(id="load bus", n=4)
+    load = PowerLoad(id="power load", n=4, bus=load_bus, s=[100 + 0j, 100 + 0j, 100 + 0j])
     line_characteristics = LineCharacteristics("test", z_line=np.eye(4, dtype=complex))
     line = SimplifiedLine(
-        id_="line", n=4, bus1=vs, bus2=load_bus, line_characteristics=line_characteristics, length=10  # km
+        id="line", n=4, bus1=vs, bus2=load_bus, line_characteristics=line_characteristics, length=10  # km
     )
-    _ = PotentialRef(element=ground)
+    _ = PotentialReference(element=ground)
     en = ElectricalNetwork.from_element(vs)
     en.solve_load_flow()
     buses_results_1, branches_results_1 = en.results()
 
     en.remove_element(load.id)
-    new_load = PowerLoad(id_="power load", n=4, bus=load_bus, s=[100 + 0j, 100 + 0j, 100 + 0j])
+    new_load = PowerLoad(id="power load", n=4, bus=load_bus, s=[100 + 0j, 100 + 0j, 100 + 0j])
     en.add_element(new_load)
     en.solve_load_flow()
     buses_results_2, branches_results_2 = en.results()
@@ -114,8 +114,8 @@ def test_bad_networks():
     bus2 = Bus("bus2", 3)
     ground.connect(bus2)
     line_characteristics = LineCharacteristics("test", z_line=np.eye(3, dtype=complex))
-    line = SimplifiedLine(id_="line", n=3, bus1=bus1, bus2=bus2, line_characteristics=line_characteristics, length=10)
-    p_ref = PotentialRef(ground)
+    line = SimplifiedLine(id="line", n=3, bus1=bus1, bus2=bus2, line_characteristics=line_characteristics, length=10)
+    p_ref = PotentialReference(ground)
     with pytest.raises(ThundersValueError) as e:
         ElectricalNetwork.from_element(bus1)
     assert e.value.args[0] == "There is no voltage source provided in the network, you must provide at least one."
@@ -144,7 +144,7 @@ def test_bad_networks():
     en.solve_load_flow()
 
     # 2 potential reference
-    _ = PotentialRef(bus3)
+    _ = PotentialReference(bus3)
     with pytest.raises(ThundersValueError) as e:
         ElectricalNetwork.from_element(vs)
     assert "has 2 potential references, it should have only one." in e.value.args[0]
@@ -152,21 +152,21 @@ def test_bad_networks():
 
 def test_update_dynamics():
     ground = Ground()
-    _ = PotentialRef(ground)
+    _ = PotentialReference(ground)
     vn = 20000 / np.sqrt(3)
     voltages = [vn, vn * np.exp(-2 / 3 * np.pi * 1j), vn * np.exp(2 / 3 * np.pi * 1j)]
     vs = VoltageSource(
-        id_="source",
+        id="source",
         n=4,
         ground=ground,
         voltages=voltages,
     )
-    bus1 = Bus(id_="bus1", n=4)
-    bus2 = Bus(id_="bus2", n=4)
-    load_bus = Bus(id_="load bus", n=4)
-    power_load = PowerLoad(id_="load1", n=4, bus=load_bus, s=[10 + 0j, 10 + 0j, 10 + 0j])
-    admittance_load = AdmittanceLoad(id_="load2", n=4, bus=load_bus, y=[1e-5 + 0j, 1e-5 + 0j, 1e-5 + 0j])
-    impedance_load = ImpedanceLoad(id_="load3", n=4, bus=load_bus, z=[1e5 + 0j, 1e5 + 0j, 1e5 + 0j])
+    bus1 = Bus(id="bus1", n=4)
+    bus2 = Bus(id="bus2", n=4)
+    load_bus = Bus(id="load bus", n=4)
+    power_load = PowerLoad(id="load1", n=4, bus=load_bus, s=[10 + 0j, 10 + 0j, 10 + 0j])
+    admittance_load = AdmittanceLoad(id="load2", n=4, bus=load_bus, y=[1e-5 + 0j, 1e-5 + 0j, 1e-5 + 0j])
+    impedance_load = ImpedanceLoad(id="load3", n=4, bus=load_bus, z=[1e5 + 0j, 1e5 + 0j, 1e5 + 0j])
     transformer_characteristics = TransformerCharacteristics(
         type_name="160 kVA", windings="Dyn11", uhv=20000, ulv=400, sn=160 * 1e3, p0=460, i0=2.3, psc=2350, vsc=4
     )
@@ -176,10 +176,10 @@ def test_update_dynamics():
     )
     line_characteristics_2 = LineCharacteristics("test2", z_line=5 * np.eye(4, dtype=complex))
     shunt_line = ShuntLine(
-        id_="line1", n=4, bus1=bus1, bus2=bus2, ground=ground, line_characteristics=line_characteristics, length=1.0
+        id="line1", n=4, bus1=bus1, bus2=bus2, ground=ground, line_characteristics=line_characteristics, length=1.0
     )
     simplified_line = SimplifiedLine(
-        id_="line2", n=4, bus1=bus2, bus2=load_bus, line_characteristics=line_characteristics_2, length=1.0
+        id="line2", n=4, bus1=bus2, bus2=load_bus, line_characteristics=line_characteristics_2, length=1.0
     )
 
     # Change dynamic parameters before network creation
