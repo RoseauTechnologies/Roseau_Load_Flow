@@ -114,22 +114,23 @@ def network_from_dgs(  # noqa: C901
                 raise ThundersIOError(
                     f"The number of phases ({n}) of line type {type_id!r} can not be handled, it should be 3 or 4."
                 )
-            line_types[type_id] = LineCharacteristics.from_sym(type_name=type_id,
-                                                         r0=typ_lne.at[type_id, "rline0"],
-                                                               model=line_model,
-            r1 = typ_lne.at[type_id, "rline"],
-            x0 = typ_lne.at[type_id, "xline0"],
-            x1 = typ_lne.at[type_id, "xline"],
-            g0 = Q_(typ_lne.at[type_id, "gline0"], "uS/km"),
-            g1 = Q_(typ_lne.at[type_id, "gline"], "uS/km"),
-            b0 = Q_(typ_lne.at[type_id, "bline0"], "uS/km"),
-            b1 = Q_(typ_lne.at[type_id, "bline"], "uS/km"),
-            rn = typ_lne.at[type_id, "rnline"],
-            xn = typ_lne.at[type_id, "xnline"],
-            xpn = typ_lne.at[type_id, "xpnline"],
-            bn = Q_(typ_lne.at[type_id, "bnline"], "uS/km"),
-            bpn = Q_(typ_lne.at[type_id, "bpnline"], "uS/km"),
-                                                               )
+            line_types[type_id] = LineCharacteristics.from_sym(
+                type_name=type_id,
+                r0=typ_lne.at[type_id, "rline0"],
+                model=line_model,
+                r1=typ_lne.at[type_id, "rline"],
+                x0=typ_lne.at[type_id, "xline0"],
+                x1=typ_lne.at[type_id, "xline"],
+                g0=Q_(typ_lne.at[type_id, "gline0"], "uS/km"),
+                g1=Q_(typ_lne.at[type_id, "gline"], "uS/km"),
+                b0=Q_(typ_lne.at[type_id, "bline0"], "uS/km"),
+                b1=Q_(typ_lne.at[type_id, "bline"], "uS/km"),
+                rn=typ_lne.at[type_id, "rnline"],
+                xn=typ_lne.at[type_id, "xnline"],
+                xpn=typ_lne.at[type_id, "xpnline"],
+                bn=Q_(typ_lne.at[type_id, "bnline"], "uS/km"),
+                bpn=Q_(typ_lne.at[type_id, "bpnline"], "uS/km"),
+            )
 
         for line_id in elm_lne.index:
             type_id = elm_lne.at[line_id, "typ_id"]  # id of the line type

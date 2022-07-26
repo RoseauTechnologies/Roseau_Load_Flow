@@ -48,13 +48,13 @@ class ElectricalNetwork:
                 The other elements (special, ground...)
         """
         if isinstance(buses, list):
-            buses_dict=dict()
+            buses_dict = dict()
             for bus in buses:
                 if bus.id in buses_dict:
-                    msg=f"Duplicate id for a bus in this network: {bus.id!r}."
+                    msg = f"Duplicate id for a bus in this network: {bus.id!r}."
                     logger.error(msg)
                     raise ThundersValueError(msg)
-                buses_dict[bus.id]=bus
+                buses_dict[bus.id] = bus
             buses = buses_dict
         if isinstance(branches, list):
             branches_dict = dict()
@@ -187,6 +187,7 @@ class ElectricalNetwork:
             The complex value of the branch current
         """
         return self.loads[id].currents
+
     #
     # Set the dynamic parameters.
     #
@@ -367,6 +368,7 @@ class ElectricalNetwork:
             path = Path(path)
         data = json.loads(path.read_text())
         return cls.from_dict(data=data)
+
     def to_dict(self) -> dict[str, Any]:
         """Return a dictionary of the current network data.
 
@@ -405,6 +407,3 @@ class ElectricalNetwork:
         """
         buses_dict, branches_dict, loads_dict, special_elements = network_from_dgs(filename=path)
         return cls(buses=buses_dict, branches=branches_dict, loads=loads_dict, special_elements=special_elements)
-
-
-
