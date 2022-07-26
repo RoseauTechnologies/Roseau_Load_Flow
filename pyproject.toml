@@ -1,6 +1,6 @@
 [tool.poetry]
-name = "thunders"
-version = "0.5.0"
+name = "roseau_load_flow"
+version = "0.1.0"
 description = "Three-phase load flow solver"
 authors = [
     "Sébastien Vallet <sebastien.vallet@roseautechnologies.com>",
@@ -9,11 +9,11 @@ authors = [
 ]
 maintainers = ["Sébastien Vallet <sebastien.vallet@roseautechnologies.com>"]
 license = "Proprietary"
-build = "build.py"
-repository = "https://github.com/RoseauTechnologies/Thunders/"
+repository = "https://github.com/RoseauTechnologies/Roseau_Load_Flow/"
 readme = "README.md"
-exclude = [
-    "thunders/tests/data/**",
+include = []
+packages = [
+    { include = "roseau/load_flow" }
 ]
 
 [build-system]
