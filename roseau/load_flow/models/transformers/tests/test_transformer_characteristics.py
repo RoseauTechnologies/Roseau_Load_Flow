@@ -3,7 +3,6 @@ import pytest
 
 from roseau.load_flow.models import TransformerCharacteristics
 from roseau.load_flow.utils import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
-from roseau.load_flow.utils.units import Q_
 
 
 def test_transformer_characteristics():
@@ -29,8 +28,8 @@ def test_transformer_characteristics():
     r2 = 1350 * 400**2 / 50e3**2  # Ohm
     l2_omega = np.sqrt(z2_norm**2 - r2**2)  # H*rad/s
 
-    ym_expected = Q_(1 / r_iron + 1 / (1j * lm_omega), "S")
-    z2_expected = Q_(r2 + 1j * l2_omega, "ohm")
+    ym_expected = 1 / r_iron + 1 / (1j * lm_omega)
+    z2_expected = r2 + 1j * l2_omega
     k_expected = 400 / (np.sqrt(3.0) * 20e3)
     orientation_expected = 1.0
 
@@ -59,8 +58,8 @@ def test_transformer_characteristics():
     r2 = 2150 * 400**2 / 100e3**2  # Ohm
     l2_omega = np.sqrt(z2_norm**2 - r2**2)  # H*rad/s
 
-    ym_expected = Q_(1 / r_iron + 1 / (1j * lm_omega), "S")
-    z2_expected = Q_(r2 + 1j * l2_omega, "ohm")
+    ym_expected = 1 / r_iron + 1 / (1j * lm_omega)
+    z2_expected = r2 + 1j * l2_omega
     k_expected = (400 / np.sqrt(3)) / 20e3
     orientation_expected = 1.0
 
@@ -89,8 +88,8 @@ def test_transformer_characteristics():
     r2 = 2350 * 400**2 / 160e3**2  # Ohm
     l2_omega = np.sqrt(z2_norm**2 - r2**2)  # H*rad/s
 
-    ym_expected = Q_(1 / r_iron + 1 / (1j * lm_omega), "S")
-    z2_expected = Q_(r2 + 1j * l2_omega, "ohm")
+    ym_expected = 1 / r_iron + 1 / (1j * lm_omega)
+    z2_expected = r2 + 1j * l2_omega
     k_expected = 400 / np.sqrt(3) / 20e3
     orientation_expected = -1.0
 

@@ -106,7 +106,6 @@ class TransformerCharacteristics:
             "type": self.windings,
         }
 
-    @ureg.wraps(("ohm", "S", None, None), None, strict=False)
     def to_zyk(self) -> tuple[complex, complex, float, float]:
         """Compute the transformer characteristics z2, ym, k and orientation mandatory for some models
 
