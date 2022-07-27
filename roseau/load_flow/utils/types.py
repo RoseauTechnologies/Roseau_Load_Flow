@@ -4,7 +4,7 @@ from typing import Optional
 
 import regex
 
-from roseau.load_flow.utils.exceptions import ThundersValueError
+from roseau.load_flow.utils.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 
 # The local logger
 logger = logging.getLogger(__name__)
@@ -64,12 +64,12 @@ class LineType(Enum):
         else:
             msg = f"The string {string!r} can not be converted into a LineType."
             logger.error(msg)
-            raise ThundersValueError(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_TYPE)
 
 
 @unique
 class ConductorType(Enum):
-    """The type of a conductor.
+    """The type of conductor.
 
     Attributes:
         ConductorType.UNKNOWN:
@@ -120,7 +120,7 @@ class ConductorType(Enum):
             s = super().__str__()
             msg = f"The ConductorType {s} is not known..."
             logger.error(msg)
-            raise ThundersValueError(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_CONDUCTOR_TYPE)
 
     @classmethod
     def from_string(cls, string: str) -> "ConductorType":
@@ -149,7 +149,7 @@ class ConductorType(Enum):
         else:
             msg = f"The string {string!r} can not be converted into a ConductorType."
             logger.error(msg)
-            raise ThundersValueError(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_CONDUCTOR_TYPE)
 
 
 @unique
@@ -217,7 +217,7 @@ class IsolationType(Enum):
         else:
             msg = f"The string {string!r} can not be converted into a IsolationType."
             logger.error(msg)
-            raise ThundersValueError(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_ISOLATION_TYPE)
 
 
 @unique
@@ -299,7 +299,7 @@ class LineModel(Enum):
         else:
             msg = f"The string {string!r} can not be converted into a LineModel."
             logger.error(msg)
-            raise ThundersValueError(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_MODEL)
 
     @classmethod
     def with_neutral(cls) -> tuple["LineModel", ...]:
@@ -385,7 +385,7 @@ class BranchType(Enum):
         else:
             msg = f"The string {string!r} can not be converted into a BranchType."
             logger.error(msg)
-            raise ThundersValueError(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_BRANCH_TYPE)
 
 
 EXTRACT_WINDINGS_RE: regex.Regex = regex.compile(
@@ -486,7 +486,7 @@ class TransformerType(Enum):
         except AttributeError:
             msg = f"The string {string!r} can not be converted into a TransformerType."
             logger.error(msg)
-            raise ThundersValueError(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_TYPE)
 
     @property
     def windings(self) -> tuple[str, str]:
@@ -512,7 +512,7 @@ class TransformerType(Enum):
         try:
             match: regex.regex.Match = EXTRACT_WINDINGS_RE.fullmatch(string=string)
             return bool(match) and bool(match.group("p"))
-        except ThundersValueError:
+        except RoseauLoadFlowException:
             return False
 
     @classmethod
@@ -537,4 +537,4 @@ class TransformerType(Enum):
         else:
             msg = f"Transformer windings can not be extracted from the string {string!r}."
             logger.error(msg)
-            raise ThundersValueError(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS)

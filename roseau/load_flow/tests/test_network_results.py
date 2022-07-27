@@ -7,7 +7,7 @@ from pandas.testing import assert_frame_equal
 from roseau.load_flow import AbstractTransformer, Switch
 from roseau.load_flow.models.core import PotentialReference
 from roseau.load_flow.network.electrical_network import ElectricalNetwork
-from roseau.load_flow.utils.exceptions import ThundersIOError, ThundersLoadFlowError
+from roseau.load_flow.utils.exceptions import RoseauLoadFlowException
 
 EPSILON: float = 1e-7
 MAX_ITERATIONS: int = 20
@@ -19,7 +19,7 @@ def test_electrical_network(all_network_path, all_network_result):  # noqa: C901
         en = ElectricalNetwork.from_json(all_network_path)
         # Solve the load flow
         en.solve_load_flow(max_iterations=MAX_ITERATIONS, epsilon=EPSILON)
-    except (ThundersLoadFlowError, ThundersIOError) as e:
+    except RoseauLoadFlowException as e:
         if "is not implemented yet..." in e.args[0]:
             pytest.xfail(f"Need to implement other components: {e.args[0]}")
             return
@@ -97,13 +97,13 @@ def test_network_io(some_network_path, some_network_result):
         en = ElectricalNetwork.from_json(some_network_path)
         # Solve the load flow
         en.solve_load_flow(max_iterations=MAX_ITERATIONS, epsilon=EPSILON)
-    except (ThundersLoadFlowError, ThundersIOError) as e:
+    except RoseauLoadFlowException as e:
         if "is not implemented yet..." in e.args[0]:
             pytest.xfail(f"Need to implement other components: {e.args[0]}")
             return
         raise
 
-    buses_results, branches_results = en.results()
+    buses_results, branches_results = en.results
 
     # Check the buses results
     assert isinstance(buses_results, pd.DataFrame)

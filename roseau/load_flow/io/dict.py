@@ -1,4 +1,5 @@
 import collections
+import logging
 from typing import Any, TYPE_CHECKING
 
 from roseau.load_flow import (
@@ -13,10 +14,12 @@ from roseau.load_flow import (
 )
 from roseau.load_flow.models.core import Element
 from roseau.load_flow.models.loads.loads import AbstractLoad
-from roseau.load_flow.utils import ThundersIOError
+from roseau.load_flow.utils.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 
 if TYPE_CHECKING:
-    from roseau.load_flow import ElectricalNetwork
+    from roseau.load_flow.network import ElectricalNetwork
+
+logger = logging.getLogger(__name__)
 
 
 def network_from_dict(
@@ -71,7 +74,7 @@ def network_from_dict(
     return buses_dict, branches_dict, loads_dict, special_elements
 
 
-def network_to_dict(en: "ElectricalNetwork"):
+def network_to_dict(en: "ElectricalNetwork") -> dict[str, Any]:
     """Return a dictionary of the current network data.
 
     Args:
@@ -81,6 +84,7 @@ def network_to_dict(en: "ElectricalNetwork"):
     Returns:
         The created dictionary.
     """
+    # Export the buses and the loads
     buses = list()
     for bus in en.buses.values():
         bus_dict = bus.to_dict()
@@ -88,6 +92,8 @@ def network_to_dict(en: "ElectricalNetwork"):
             if isinstance(load, AbstractLoad):
                 bus_dict["loads"].append(load.to_dict())
         buses.append(bus_dict)
+
+    # Export the branches with their characteristics
     branches = list()
     line_characteristics_set = set()
     transformer_characteristics_set = set()
@@ -97,24 +103,40 @@ def network_to_dict(en: "ElectricalNetwork"):
             line_characteristics_set.add(branch.line_characteristics)
         elif isinstance(branch, AbstractTransformer):
             transformer_characteristics_set.add(branch.transformer_characteristics)
+
+    # Line characteristics
     line_characteristics = list()
     for lc in line_characteristics_set:
         line_characteristics.append(lc.to_dict())
     line_characteristics.sort(key=lambda x: x["name"])  # Always keep the same order
     line_characteristic_names = [lc.type_name for lc in line_characteristics_set]
     if len(line_characteristic_names) > len(set(line_characteristic_names)):
-        duplicates = [item for item, count in collections.Counter(line_characteristic_names).items() if count > 1]
-        raise ThundersIOError(f"There are line characteristics type name duplicates: {duplicates}")
+        duplicates = ", ".join(
+            [repr(str(item)) for item, count in collections.Counter(line_characteristic_names).items() if count > 1]
+        )
+        msg = f"There are line characteristics type name duplicates: {duplicates}"
+        logger.error(msg)
+        raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.JSON_LINE_CHARACTERISTICS_DUPLICATES)
+
+    # Transformer characteristics
     transformer_characteristics = list()
     for tc in transformer_characteristics_set:
         transformer_characteristics.append(tc.to_dict())
     transformer_characteristics.sort(key=lambda x: x["name"])  # Always keep the same order
     transformer_characteristics_names = [tc.type_name for tc in transformer_characteristics_set]
     if len(transformer_characteristics) > len(set(transformer_characteristics_names)):
-        duplicates = [
-            item for item, count in collections.Counter(transformer_characteristics_names).items() if count > 1
-        ]
-        raise ThundersIOError(f"There are transformer characteristics type name duplicates: {duplicates}")
+        duplicates = ", ".join(
+            [
+                repr(str(item))
+                for item, count in collections.Counter(transformer_characteristics_names).items()
+                if count > 1
+            ]
+        )
+        msg = f"There are transformer characteristics type name duplicates: {duplicates}"
+        logger.error(msg)
+        raise RoseauLoadFlowException(
+            msg=msg, code=RoseauLoadFlowExceptionCode.JSON_TRANSFORMER_CHARACTERISTICS_DUPLICATES
+        )
 
     return {
         "buses": buses,

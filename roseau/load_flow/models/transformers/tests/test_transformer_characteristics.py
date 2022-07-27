@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
 
-from roseau.load_flow import TransformerCharacteristics
-from roseau.load_flow.utils import ThundersValueError
+from roseau.load_flow.models import TransformerCharacteristics
+from roseau.load_flow.utils import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.utils.units import Q_
 
 
@@ -111,9 +111,10 @@ def test_transformer_characteristics():
         "vsc": 4 / 100,  # %
         "type": "dtotoyn11",
     }
-    with pytest.raises(ThundersValueError) as e:
+    with pytest.raises(RoseauLoadFlowException) as e:
         TransformerCharacteristics.from_dict(data)
     assert "Transformer windings can not be extracted from the string" in e.value.args[0]
+    assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS
 
     # UHV == ULV...
     data = {
@@ -127,9 +128,10 @@ def test_transformer_characteristics():
         "vsc": 4 / 100,  # %
         "type": "dyn11",
     }
-    with pytest.raises(ThundersValueError) as e:
+    with pytest.raises(RoseauLoadFlowException) as e:
         TransformerCharacteristics.from_dict(data)
     assert "has a high voltages lower or equal than the low voltages" in e.value.args[0]
+    assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_VOLTAGES
 
     # UHV < ULV...
     data = {
@@ -143,6 +145,7 @@ def test_transformer_characteristics():
         "vsc": 4 / 100,  # %
         "type": "dyn11",
     }
-    with pytest.raises(ThundersValueError) as e:
+    with pytest.raises(RoseauLoadFlowException) as e:
         TransformerCharacteristics.from_dict(data)
     assert "has a high voltages lower or equal than the low voltages" in e.value.args[0]
+    assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_VOLTAGES

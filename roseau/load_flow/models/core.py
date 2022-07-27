@@ -1,3 +1,4 @@
+import logging
 from abc import ABC
 from typing import Any, Optional, TYPE_CHECKING
 
@@ -7,12 +8,14 @@ from shapely.geometry import shape
 from shapely.geometry.base import BaseGeometry
 
 from roseau.load_flow.utils import BranchType
-from roseau.load_flow.utils.exceptions import ThundersIOError
+from roseau.load_flow.utils.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.utils.json_mixin import JsonMixin
 from roseau.load_flow.utils.units import ureg
 
 if TYPE_CHECKING:
     from roseau.load_flow.models.buses import AbstractBus
+
+logger = logging.getLogger(__name__)
 
 
 class Element(ABC):
@@ -162,7 +165,9 @@ class AbstractBranch(Element, JsonMixin):
         elif branch["type"] == "switch":
             return Switch(id=branch["id"], n=bus1.n, bus1=bus1, bus2=bus2, geometry=geometry)
         else:
-            raise ThundersIOError(f"Unknown branch type for branch {branch['id']}: {branch['type']}")
+            msg = f"Unknown branch type for branch {branch['id']}: {branch['type']}"
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_BRANCH_TYPE)
 
     def to_dict(self) -> dict[str, Any]:
         res = {

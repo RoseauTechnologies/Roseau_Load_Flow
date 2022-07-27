@@ -15,7 +15,7 @@ from roseau.load_flow import (
     VoltageSource,
 )
 from roseau.load_flow.models.lines.line_characteristics import LineCharacteristics
-from roseau.load_flow.utils import ThundersIOError
+from roseau.load_flow.utils.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.utils.units import Q_
 
 
@@ -40,9 +40,10 @@ def test_to_dict():
     line1 = SimplifiedLine(id="line1", n=4, bus1=vs, bus2=bus, line_characteristics=line_characteristics1, length=10)
     line2 = SimplifiedLine(id="line2", n=4, bus1=vs, bus2=bus, line_characteristics=line_characteristics2, length=10)
     en = ElectricalNetwork([vs, bus], [line1, line2], [], [p_ref, ground])
-    with pytest.raises(ThundersIOError) as e:
+    with pytest.raises(RoseauLoadFlowException) as e:
         en.to_dict()
     assert "There are line characteristics type name duplicates" in e.value.args[0]
+    assert e.value.args[1] == RoseauLoadFlowExceptionCode.JSON_LINE_CHARACTERISTICS_DUPLICATES
 
     en.remove_element("line1")
     en.remove_element("line2")
@@ -60,9 +61,10 @@ def test_to_dict():
     )
     en.add_element(transformer1)
     en.add_element(transformer2)
-    with pytest.raises(ThundersIOError) as e:
+    with pytest.raises(RoseauLoadFlowException) as e:
         en.to_dict()
     assert "There are transformer characteristics type name duplicates" in e.value.args[0]
+    assert e.value.args[1] == RoseauLoadFlowExceptionCode.JSON_TRANSFORMER_CHARACTERISTICS_DUPLICATES
 
 
 def test_from_dict():

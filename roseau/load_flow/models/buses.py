@@ -9,7 +9,7 @@ from pint import Quantity
 from shapely.geometry import Point, shape
 
 from roseau.load_flow.models.core import Element, Ground
-from roseau.load_flow.utils.exceptions import ThundersIOError
+from roseau.load_flow.utils.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.utils.json_mixin import JsonMixin
 from roseau.load_flow.utils.units import ureg
 
@@ -53,7 +53,7 @@ class AbstractBus(Element, JsonMixin, ABC):
             if len(potentials) != n:
                 msg = f"Incorrect number of potentials: {len(potentials)} instead of {n}"
                 logger.error(msg)
-                raise ThundersIOError(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_POTENTIALS_SIZE)
             if isinstance(potentials, Quantity):
                 potentials = potentials.m_as("V")
             self.initialized = True
@@ -95,7 +95,9 @@ class AbstractBus(Element, JsonMixin, ABC):
             )
         else:
             if data["type"] not in ["bus", "bus_neutral"]:
-                raise ThundersIOError(f"Bad bus type : {data['type']}")
+                msg = f"Bad bus type for bus {data['id']}: {data['type']}"
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_BUS_TYPE)
             if "neutral" in data["type"]:
                 bus = Bus(id=data["id"], n=4, potentials=potentials, geometry=geometry)
             else:
@@ -144,7 +146,7 @@ class VoltageSource(AbstractBus):
         if len(voltages) != n - 1:
             msg = f"Incorrect number of voltages: {len(voltages)} instead of {n - 1}"
             logger.error(msg)
-            raise ThundersIOError(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_VOLTAGES_SIZE)
 
         if isinstance(voltages, Quantity):
             voltages = voltages.m_as("V")
@@ -164,7 +166,7 @@ class VoltageSource(AbstractBus):
         if len(voltages) != self.n - 1:
             msg = f"Incorrect number of voltages: {len(voltages)} instead of {self.n - 1}"
             logger.error(msg)
-            raise ThundersIOError(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_VOLTAGES_SIZE)
 
         self.voltages = voltages
 

@@ -8,7 +8,7 @@ from roseau.load_flow.models.buses import AbstractBus
 from roseau.load_flow.models.core import AbstractBranch
 from roseau.load_flow.models.transformers.transformers_characteristics import TransformerCharacteristics
 from roseau.load_flow.utils import BranchType, TransformerType
-from roseau.load_flow.utils.exceptions import ThundersIOError, ThundersValueError
+from roseau.load_flow.utils.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 
 logger = logging.getLogger(__name__)
 
@@ -58,7 +58,7 @@ class AbstractTransformer(AbstractBranch, ABC):
         if geometry is not None and not isinstance(geometry, Point):
             msg = f"The geometry for a {type(self)} must be a point: {geometry.geom_type} provided."
             logger.error(msg)
-            raise ThundersValueError(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_GEOMETRY_TYPE)
 
         if tap > 1.1:
             logger.warning(f"The provided tap {tap:.2f} is higher than 1.1. A good value is between 0.9 and 1.1.")
@@ -166,7 +166,7 @@ class AbstractTransformer(AbstractBranch, ABC):
         else:
             msg = f"Transformer {transformer_characteristics.windings} is not implemented yet..."
             logger.error(msg)
-            raise ThundersIOError(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS)
 
     def to_dict(self) -> dict[str, Any]:
         res = super().to_dict()
@@ -194,9 +194,9 @@ class AbstractTransformer(AbstractBranch, ABC):
         windings1 = self.transformer_characteristics.windings
         windings2 = transformer_characteristics.windings
         if windings1 != windings2:
-            raise ThundersValueError(
-                f"The updated windings changed for transformer {self.id!r}: {windings1} to {windings2}."
-            )
+            msg = f"The updated windings changed for transformer {self.id!r}: {windings1} to {windings2}."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS)
         if tap > 1.1:
             logger.warning(f"The provided tap {tap:.2f} is higher than 1.1. A good value is between 0.9 and 1.1.")
         if tap < 0.9:
@@ -250,9 +250,9 @@ class WyeWyeTransformer(AbstractTransformer):
             **kwargs,
         )
         if transformer_characteristics.winding1[0] != "Y" or transformer_characteristics.winding2[0] != "y":
-            raise ThundersValueError(
-                f"Bad windings for WyeWyeTransformer {self.id!r}: {transformer_characteristics.windings}"
-            )
+            msg = f"Bad windings for WyeWyeTransformer {self.id!r}: {transformer_characteristics.windings}"
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS)
 
 
 class DeltaWyeTransformer(AbstractTransformer):
@@ -299,9 +299,9 @@ class DeltaWyeTransformer(AbstractTransformer):
             **kwargs,
         )
         if transformer_characteristics.winding1[0] != "D" or transformer_characteristics.winding2[0] != "y":
-            raise ThundersValueError(
-                f"Bad windings for DeltaWyeTransformer {self.id!r}: {transformer_characteristics.windings}"
-            )
+            msg = f"Bad windings for DeltaWyeTransformer {self.id!r}: {transformer_characteristics.windings}"
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS)
 
 
 class DeltaDeltaTransformer(AbstractTransformer):
@@ -348,9 +348,9 @@ class DeltaDeltaTransformer(AbstractTransformer):
             **kwargs,
         )
         if transformer_characteristics.winding1[0] != "D" or transformer_characteristics.winding2[0] != "d":
-            raise ThundersValueError(
-                f"Bad windings for DeltaDeltaTransformer {self.id!r}: {transformer_characteristics.windings}"
-            )
+            msg = f"Bad windings for DeltaDeltaTransformer {self.id!r}: {transformer_characteristics.windings}"
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS)
 
 
 class WyeDeltaTransformer(AbstractTransformer):
@@ -397,9 +397,9 @@ class WyeDeltaTransformer(AbstractTransformer):
             **kwargs,
         )
         if transformer_characteristics.winding1[0] != "Y" or transformer_characteristics.winding2[0] != "d":
-            raise ThundersValueError(
-                f"Bad windings for WyeDeltaTransformer {self.id!r}: {transformer_characteristics.windings}"
-            )
+            msg = f"Bad windings for WyeDeltaTransformer {self.id!r}: {transformer_characteristics.windings}"
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS)
 
 
 class WyeZigzagTransformer(AbstractTransformer):
@@ -446,9 +446,9 @@ class WyeZigzagTransformer(AbstractTransformer):
             **kwargs,
         )
         if transformer_characteristics.winding1[0] != "Y" or transformer_characteristics.winding2[0] != "z":
-            raise ThundersValueError(
-                f"Bad windings for WyeZigzagTransformer {self.id!r}: {transformer_characteristics.windings}"
-            )
+            msg = f"Bad windings for WyeZigzagTransformer {self.id!r}: {transformer_characteristics.windings}"
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS)
 
 
 class DeltaZigzagTransformer(AbstractTransformer):
@@ -495,6 +495,6 @@ class DeltaZigzagTransformer(AbstractTransformer):
             **kwargs,
         )
         if transformer_characteristics.winding1[0] != "D" or transformer_characteristics.winding2[0] != "z":
-            raise ThundersValueError(
-                f"Bad windings for DeltaZigzagTransformer {self.id!r}: {transformer_characteristics.windings}"
-            )
+            msg = f"Bad windings for DeltaZigzagTransformer {self.id!r}: {transformer_characteristics.windings}"
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS)

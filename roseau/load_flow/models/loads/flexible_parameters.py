@@ -1,7 +1,7 @@
 import logging
 from typing import Any
 
-from roseau.load_flow.utils import ThundersIOError
+from roseau.load_flow.utils.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.utils.units import ureg
 
 logger = logging.getLogger(__name__)
@@ -147,7 +147,9 @@ class Control:
                 u_min=data["u_min"], u_down=data["u_down"], u_up=data["u_up"], u_max=data["u_max"], alpha=alpha
             )
         else:
-            raise ThundersIOError(f"Unsupported control type {data['type']}")
+            msg = f"Unsupported control type {data['type']}"
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_CONTROL_TYPE)
 
     def to_dict(self) -> dict[str, Any]:
         if self.type == "constant":
@@ -166,7 +168,9 @@ class Control:
                 "alpha": self.alpha,
             }
         else:
-            raise ThundersIOError(f"Unsupported control type {self.type}")
+            msg = f"Unsupported control type {self.type!r}"
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_CONTROL_TYPE)
 
 
 class Projection:

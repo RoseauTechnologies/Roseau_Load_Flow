@@ -15,7 +15,7 @@ from roseau.load_flow.models.core import AbstractBranch, Element, PotentialRefer
 from roseau.load_flow.models.loads.loads import AbstractLoad, PowerLoad
 from roseau.load_flow.models.transformers.transformers import AbstractTransformer
 from roseau.load_flow.utils import ureg
-from roseau.load_flow.utils.exceptions import ThundersValueError
+from roseau.load_flow.utils.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +53,7 @@ class ElectricalNetwork:
                 if bus.id in buses_dict:
                     msg = f"Duplicate id for a bus in this network: {bus.id!r}."
                     logger.error(msg)
-                    raise ThundersValueError(msg)
+                    raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DUPLICATE_BUS_ID)
                 buses_dict[bus.id] = bus
             buses = buses_dict
         if isinstance(branches, list):
@@ -62,7 +62,7 @@ class ElectricalNetwork:
                 if branch.id in branches_dict:
                     msg = f"Duplicate id for a branch in this network: {branch.id!r}."
                     logger.error(msg)
-                    raise ThundersValueError(msg)
+                    raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DUPLICATE_BRANCH_ID)
                 branches_dict[branch.id] = branch
             branches = branches_dict
         if isinstance(loads, list):
@@ -71,7 +71,7 @@ class ElectricalNetwork:
                 if load.id in loads_dict:
                     msg = f"Duplicate id for a load in this network: {load.id!r}."
                     logger.error(msg)
-                    raise ThundersValueError(msg)
+                    raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DUPLICATE_LOAD_ID)
                 loads_dict[load.id] = load
             loads = loads_dict
 
@@ -205,7 +205,7 @@ class ElectricalNetwork:
             else:
                 msg = "Only power loads can be updated yet..."
                 logger.error(msg)
-                raise ThundersValueError(msg)
+                raise NotImplementedError(msg)
 
     def set_source_voltages(self, voltages: Sequence[complex]):
         """Set new voltages for the voltage source
@@ -233,7 +233,9 @@ class ElectricalNetwork:
         elif isinstance(element, AbstractBranch):
             self.branches[element.id] = element
         else:
-            raise ThundersValueError("Only lines, loads and buses can be added to the network.")
+            msg = "Only lines, loads and buses can be added to the network."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT)
         self._valid = False
 
     def remove_element(self, id: Any):
@@ -253,7 +255,9 @@ class ElectricalNetwork:
             branch = self.branches.pop(id)
             branch.disconnect()
         else:
-            raise ThundersValueError(f"{id!r} is not a valid bus, branch or load key.")
+            msg = f"{id!r} is not a valid bus, branch or load id."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_ELEMENT_ID)
         self._valid = False
 
     def _create_network(self):
@@ -283,7 +287,7 @@ class ElectricalNetwork:
                         f"constructor."
                     )
                     logger.error(msg)
-                    raise ThundersValueError(msg)
+                    raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.UNKNOWN_ELEMENT)
 
         found_source = False
         for element in elements:
@@ -292,7 +296,7 @@ class ElectricalNetwork:
         if not found_source:
             msg = "There is no voltage source provided in the network, you must provide at least one."
             logger.error(msg)
-            raise ThundersValueError(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.NO_VOLTAGE_SOURCE)
 
         self._check_ref(elements)
 
@@ -327,14 +331,14 @@ class ElectricalNetwork:
                     f"potential reference."
                 )
                 logger.error(msg)
-                raise ThundersValueError(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.NO_POTENTIAL_REFERENCE)
             elif potential_ref >= 2:
                 msg = (
                     f"The connected component containing the element {initial_element.id!r} has {potential_ref} "
                     f"potential references, it should have only one."
                 )
                 logger.error(msg)
-                raise ThundersValueError(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.SEVERAL_POTENTIAL_REFERENCE)
 
     #
     # Json Mixin interface

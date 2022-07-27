@@ -1,6 +1,5 @@
-#!/usr/bin/env python
-
 import json
+import logging
 from pathlib import Path
 from typing import Union
 
@@ -23,7 +22,10 @@ from roseau.load_flow.models import (
 )
 from roseau.load_flow.models.core import Element
 from roseau.load_flow.models.loads.loads import AbstractLoad
-from roseau.load_flow.utils import LineModel, Q_, ThundersIOError
+from roseau.load_flow.utils import LineModel, Q_
+from roseau.load_flow.utils.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
+
+logger = logging.getLogger(__name__)
 
 
 def network_from_dgs(  # noqa: C901
@@ -66,7 +68,9 @@ def network_from_dgs(  # noqa: C901
         elif ph_tech == 1:  # ABC-N
             n = 4
         else:
-            raise ThundersIOError(f"The Ph tech {ph_tech} for bus {bus_id!r} can not be handle.")
+            msg = f"The Ph tech {ph_tech!r} for bus {bus_id!r} can not be handle."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DGS_BAD_PHASE_TECHNOLOGY)
         buses[bus_id] = Bus(id=bus_id, n=n)
 
     # Sources
@@ -111,9 +115,10 @@ def network_from_dgs(  # noqa: C901
             elif n == 3:
                 line_model = LineModel.SYM
             else:
-                raise ThundersIOError(
-                    f"The number of phases ({n}) of line type {type_id!r} can not be handled, it should be 3 or 4."
-                )
+                msg = f"The number of phases ({n}) of line type {type_id!r} can not be handled, it should be 3 or 4."
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DGS_BAD_PHASE_NUMBER)
+
             line_types[type_id] = LineCharacteristics.from_sym(
                 type_name=type_id,
                 r0=typ_lne.at[type_id, "rline0"],

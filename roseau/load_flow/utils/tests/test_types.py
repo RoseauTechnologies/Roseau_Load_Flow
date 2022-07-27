@@ -1,6 +1,6 @@
 import pytest
 
-from roseau.load_flow.utils.exceptions import ThundersValueError
+from roseau.load_flow.utils.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.utils.types import ConductorType, IsolationType, LineModel, LineType, TransformerType
 
 TYPES = [
@@ -97,12 +97,14 @@ def test_transformer_type():
                         assert p == phase_displacement
                     else:
                         assert not TransformerType.validate_windings(t)
-                        with pytest.raises(ThundersValueError):
+                        with pytest.raises(RoseauLoadFlowException) as e:
                             TransformerType.extract_windings(t)
+                        assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS
             else:
                 assert not TransformerType.validate_windings(t)
-                with pytest.raises(ThundersValueError):
+                with pytest.raises(RoseauLoadFlowException):
                     TransformerType.extract_windings(t)
+                assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS
 
     for x in TransformerType:
         s = str(x)

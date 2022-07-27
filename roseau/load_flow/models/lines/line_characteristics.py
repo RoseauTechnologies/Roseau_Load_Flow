@@ -4,15 +4,9 @@ from typing import Any, Optional
 import numpy as np
 import numpy.linalg as nplin
 
-from roseau.load_flow.utils import (
-    ConductorType,
-    IsolationType,
-    LineModel,
-    LineType,
-    ThundersIOError,
-    ThundersValueError,
-)
+from roseau.load_flow.utils import ConductorType, IsolationType, LineModel, LineType
 from roseau.load_flow.utils.constants import EPSILON_0, EPSILON_R, MU_0, OMEGA, PI, RHO, TAN_D
+from roseau.load_flow.utils.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.utils.units import Q_, ureg
 
 logger = logging.getLogger(__name__)
@@ -320,7 +314,7 @@ class LineCharacteristics:
                         f"admittance and line impedance."
                     )
                     logger.error(msg)
-                    raise ThundersIOError(msg)
+                    raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Y_SHUNT_VALUE)
             else:
                 # Break: the current choice is good!
                 break
@@ -498,11 +492,11 @@ class LineCharacteristics:
         elif line_type == LineType.UNKNOWN:
             msg = f"The line type of the line {type_name!r} is unknown. It should have been filled in the reading."
             logger.error(msg)
-            raise ThundersValueError(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_TYPE)
         else:
             msg = f"The line type of the line {type_name!r} is unknown. It should never happen."
             logger.error(msg)
-            raise ThundersValueError(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_TYPE)
 
         # Electrical parameters
         sections = Q_([section, section, section, section_neutral], "mm**2")  # surfaces (m2)
@@ -581,7 +575,7 @@ class LineCharacteristics:
         else:
             msg = f"The line {type_name!r} has an unknown model... We can do nothing."
             logger.error(msg)
-            raise ThundersValueError(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_MODEL)
 
     def to_dict(self) -> dict[str, Any]:
         """Return the line characteristics information as a dictionary format."""
@@ -596,16 +590,22 @@ class LineCharacteristics:
 
     def _check_matrix(self):
         """Check the coefficients of the matrix."""
-        for matrix, matrix_name in [(self.y_shunt, "y_shunt"), (self.z_line, "z_line")]:
+        for matrix, matrix_name, code in [
+            (self.y_shunt, "y_shunt", RoseauLoadFlowExceptionCode.BAD_Y_SHUNT_SHAPE),
+            (self.z_line, "z_line", RoseauLoadFlowExceptionCode.BAD_Z_LINE_SHAPE),
+        ]:
             if matrix_name == "y_shunt" and self.y_shunt is None:
                 continue
             if matrix.shape[0] != matrix.shape[1]:
                 msg = f"Incorrect {matrix_name} dimensions for line characteristics {self.type_name!r}: {matrix.shape}"
                 logger.error(msg)
-                raise ThundersValueError(msg)
+                raise RoseauLoadFlowException(msg=msg, code=code)
 
         # Check of the coefficients value
-        for matrix, matrix_name in [(self.z_line, "line impedance"), (self.y_shunt, "shunt admittance")]:
+        for matrix, matrix_name, code in [
+            (self.z_line, "line impedance", RoseauLoadFlowExceptionCode.BAD_Z_LINE_VALUE),
+            (self.y_shunt, "shunt admittance", RoseauLoadFlowExceptionCode.BAD_Y_SHUNT_VALUE),
+        ]:
             if matrix_name == "shunt admittance" and self.y_shunt is None:
                 continue
             # Check that the off-diagonal element have a zero real part
@@ -616,9 +616,9 @@ class LineCharacteristics:
                     f"part."
                 )
                 logger.error(msg)
-                raise ThundersValueError(msg)
+                raise RoseauLoadFlowException(msg=msg, code=code)
             # Check that the real coefficients are positive
             if (matrix.real < 0.0).any():
                 msg = f"Some real part coefficients of the {matrix_name} matrix of {self.type_name!r} are negative..."
                 logger.error(msg)
-                raise ThundersValueError(msg)
+                raise RoseauLoadFlowException(msg=msg, code=code)

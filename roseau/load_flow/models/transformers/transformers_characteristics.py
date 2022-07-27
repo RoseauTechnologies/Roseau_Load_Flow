@@ -3,7 +3,7 @@ from typing import Any
 
 import numpy as np
 
-from roseau.load_flow.utils import ThundersValueError, TransformerType
+from roseau.load_flow.utils import RoseauLoadFlowException, RoseauLoadFlowExceptionCode, TransformerType
 from roseau.load_flow.utils.units import ureg
 
 logger = logging.getLogger(__name__)
@@ -71,7 +71,7 @@ class TransformerCharacteristics:
                 f"{uhv:.2f} V and ulv={ulv:.2f} V"
             )
             logger.error(msg)
-            raise ThundersValueError(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_VOLTAGES)
 
     @classmethod
     def from_dict(cls, characteristics: dict[str, Any]):

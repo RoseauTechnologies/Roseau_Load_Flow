@@ -8,7 +8,7 @@ from shapely.geometry.base import BaseGeometry
 from roseau.load_flow.models.buses import AbstractBus, VoltageSource
 from roseau.load_flow.models.core import AbstractBranch, Ground
 from roseau.load_flow.models.lines.line_characteristics import LineCharacteristics
-from roseau.load_flow.utils.exceptions import ThundersValueError
+from roseau.load_flow.utils.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.utils.types import BranchType
 from roseau.load_flow.utils.units import ureg
 
@@ -42,7 +42,7 @@ class Switch(AbstractBranch):
         if geometry is not None and not isinstance(geometry, Point):
             msg = f"The geometry for a {type(self)} must be a point: {geometry.geom_type} provided."
             logger.error(msg)
-            raise ThundersValueError(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_GEOMETRY_TYPE)
         super().__init__(id=id, n1=n, n2=n, bus1=bus1, bus2=bus2, geometry=geometry, **kwargs)
         self._check_elements()
         self._check_loop()
@@ -73,7 +73,7 @@ class Switch(AbstractBranch):
         if visited_1.intersection(visited_2):
             msg = f"There is a loop of switch involving the switch {self.id!r}. It is not allowed."
             logger.error(msg)
-            raise ThundersValueError(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.SWITCHES_LOOP)
 
     def _check_elements(self):
         """Check that we can connect both elements."""
@@ -85,7 +85,7 @@ class Switch(AbstractBranch):
                 f"connected with the switch {self.id!r}. It is not allowed."
             )
             logger.error(msg)
-            raise ThundersValueError(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_VOLTAGES_SOURCES_CONNECTION)
 
 
 class Line(AbstractBranch):
@@ -129,7 +129,7 @@ class Line(AbstractBranch):
         if geometry is not None and not isinstance(geometry, LineString):
             msg = f"The geometry for a {type(self)} must be a linestring: {geometry.geom_type} provided."
             logger.error(msg)
-            raise ThundersValueError(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_GEOMETRY_TYPE)
 
         if line_characteristics.z_line.shape != (n, n):
             msg = (
@@ -137,14 +137,14 @@ class Line(AbstractBranch):
                 f"({n}, {n})"
             )
             logger.error(msg)
-            raise ThundersValueError(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Z_LINE_SHAPE)
         if line_characteristics.y_shunt is not None and line_characteristics.y_shunt.shape != (n, n):
             msg = (
                 f"Incorrect y_shunt dimensions for line {id!r}: {line_characteristics.y_shunt.shape} instead of "
                 f"({n}, {n})"
             )
             logger.error(msg)
-            raise ThundersValueError(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Y_SHUNT_SHAPE)
 
         super().__init__(n1=n, n2=n, bus1=bus1, bus2=bus2, id=id, geometry=geometry, **kwargs)
         self.n = n
@@ -153,6 +153,15 @@ class Line(AbstractBranch):
         if isinstance(length, Quantity):
             length = length.m_as("km")
         self.length = length
+
+    def update_line_parameters(self, line_characteristics: LineCharacteristics) -> None:
+        """Change the line parameters.
+
+        Args:
+            line_characteristics:
+                The line characteristics of the new line parameters.
+        """
+        self.line_characteristics = line_characteristics
 
     #
     # Json Mixin interface
@@ -292,6 +301,21 @@ class SimplifiedLine(Line):
                 f"The simplified line {self.id!r} has been given a line characteristic "
                 f"{self.line_characteristics.type_name} with a shunt. The shunt part will be ignored."
             )
+
+    def update_line_parameters(self, line_characteristics: LineCharacteristics) -> None:
+        """Change the line parameters.
+
+        Args:
+            line_characteristics:
+                The line characteristics of the new line parameters.
+        """
+        if line_characteristics.y_shunt is not None:
+            logger.warning(
+                f"The simplified line {self.id!r} has been given a line characteristic "
+                f"{self.line_characteristics.type_name} with a shunt. The shunt part will be ignored."
+            )
+
+        super().update_line_parameters(line_characteristics=line_characteristics)
 
 
 class ShuntLine(Line):

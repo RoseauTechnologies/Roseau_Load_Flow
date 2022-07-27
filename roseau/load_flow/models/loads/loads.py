@@ -9,7 +9,7 @@ from pint import Quantity
 from roseau.load_flow.models.buses import AbstractBus
 from roseau.load_flow.models.core import Element
 from roseau.load_flow.models.loads.flexible_parameters import FlexibleParameter
-from roseau.load_flow.utils.exceptions import ThundersIOError, ThundersValueError
+from roseau.load_flow.utils.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.utils.json_mixin import JsonMixin
 from roseau.load_flow.utils.units import ureg
 
@@ -73,7 +73,9 @@ class AbstractLoad(Element, JsonMixin, metaclass=ABCMeta):
             impedances = [z["za"][0] + 1j * z["za"][1], z["zb"][0] + 1j * z["zb"][1], z["zc"][0] + 1j * z["zc"][1]]
             return ImpedanceLoad(id=data["id"], n=4, bus=bus, z=impedances)
         else:
-            raise ThundersIOError(f"Unknown load type for load {data['id']}: {data['function']}")
+            msg = f"Unknown load type for load {data['id']}: {data['function']}"
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LOAD_TYPE)
 
 
 class PowerLoad(AbstractLoad):
@@ -109,7 +111,7 @@ class PowerLoad(AbstractLoad):
         if len(s) != n - 1:
             msg = f"Incorrect number of powers: {len(s)} instead of {n - 1}"
             logger.error(msg)
-            raise ThundersValueError(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_S_SIZE)
 
         if isinstance(s, Quantity):
             s = s.m_as("VA")
@@ -126,7 +128,7 @@ class PowerLoad(AbstractLoad):
         if len(s) != self.n - 1:
             msg = f"Incorrect number of powers: {len(s)} instead of {self.n - 1}"
             logger.error(msg)
-            raise ThundersValueError(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_S_SIZE)
         self.s = s
 
     #
@@ -183,7 +185,7 @@ class AdmittanceLoad(AbstractLoad):
         if len(y) != n - 1:
             msg = f"Incorrect number of admittance: {len(y)} instead of {n - 1}"
             logger.error(msg)
-            raise ThundersValueError(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Y_SIZE)
 
         if isinstance(y, Quantity):
             y = y.m_as("S")
@@ -201,7 +203,7 @@ class AdmittanceLoad(AbstractLoad):
         if len(y) != self.n - 1:
             msg = f"Incorrect number of admittances: {len(y)} instead of {self.n - 1}"
             logger.error(msg)
-            raise ThundersValueError(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Y_SIZE)
         self.y = y
 
     #
@@ -250,7 +252,7 @@ class ImpedanceLoad(AbstractLoad):
         if len(z) != n - 1:
             msg = f"Incorrect number of impedance: {len(z)} instead of {n - 1}"
             logger.error(msg)
-            raise ThundersValueError(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Z_SIZE)
 
         if isinstance(z, Quantity):
             z = z.m_as("ohm")
@@ -259,7 +261,7 @@ class ImpedanceLoad(AbstractLoad):
             if np.isclose(zi, 0):
                 msg = f"An impedance for load {self.id!r} is null"
                 logger.error(msg)
-                raise ThundersValueError(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Z_VALUE)
 
         self.z = z
 
@@ -274,13 +276,13 @@ class ImpedanceLoad(AbstractLoad):
         if len(z) != self.n - 1:
             msg = f"Incorrect number of impedance: {len(z)} instead of {self.n - 1}"
             logger.error(msg)
-            raise ThundersValueError(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Z_SIZE)
 
         for zi in z:
             if np.isclose(zi, 0):
                 msg = f"An impedance for load {self.id!r} is null"
                 logger.error(msg)
-                raise ThundersValueError(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Z_VALUE)
         self.z = z
 
     #
@@ -331,11 +333,11 @@ class FlexibleLoad(AbstractLoad):
         if len(s) != n - 1:
             msg = f"Incorrect number of powers: {len(s)} instead of {n - 1}"
             logger.error(msg)
-            raise ThundersValueError(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_S_SIZE)
         if len(parameters) != n - 1:
             msg = f"Incorrect number of parameters: {len(parameters)} instead of {n}"
             logger.error(msg)
-            raise ThundersValueError(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PARAMETERS_SIZE)
 
         if isinstance(s, Quantity):
             s = s.m_as("VA")
@@ -346,19 +348,19 @@ class FlexibleLoad(AbstractLoad):
             ):
                 msg = f"The power is greater than the parameter s_max for flexible load {self.id!r}"
                 logger.error(msg)
-                raise ThundersValueError(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_S_VALUE)
             if parameter.control_p.type == "p_max_u_production" and power.real > 0:
                 msg = f"There is a production control but a positive power for flexible load {self.id!r}"
                 logger.error(msg)
-                raise ThundersValueError(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_S_VALUE)
             if parameter.control_p.type == "p_max_u_consumption" and power.real < 0:
                 msg = f"There is a consumption control but a negative power for flexible load {self.id!r}"
                 logger.error(msg)
-                raise ThundersValueError(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_S_VALUE)
             if parameter.control_p.type != "constant" and power.real == 0:
                 msg = f"There is a P control but a null active power for flexible load {self.id!r}"
                 logger.error(msg)
-                raise ThundersValueError(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_S_VALUE)
 
         self.s = s
         self.parameters = parameters

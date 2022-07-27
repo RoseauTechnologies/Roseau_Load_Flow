@@ -7,7 +7,7 @@ from roseau.load_flow import LineCharacteristics
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import Ground
 from roseau.load_flow.models.lines.lines import ShuntLine
-from roseau.load_flow.utils.exceptions import ThundersValueError
+from roseau.load_flow.utils.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.utils.types import ConductorType, IsolationType, LineModel, LineType
 from roseau.load_flow.utils.units import Q_
 
@@ -20,18 +20,19 @@ def test_line_characteristics():
     z_line = np.ones(shape=(4, 4), dtype=np.complex_)
     y_shunt = np.eye(4, dtype=np.complex_)
 
-    with pytest.raises(ThundersValueError) as e:
+    with pytest.raises(RoseauLoadFlowException) as e:
         line_characteristics = LineCharacteristics("test", z_line, y_shunt)
         ShuntLine(
             id="line", n=4, bus1=bus, bus2=bus, ground=ground, line_characteristics=line_characteristics, length=2.5
         )
     assert e.value.args[0] == "The line impedance matrix of 'test' has off-diagonal elements with a non-zero real part."
+    assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_Z_LINE_VALUE
 
     # Real element off the diagonal (Y)
 
     z_line = np.eye(3, dtype=np.complex_)
     y_shunt = np.ones(shape=(3, 3), dtype=np.complex_)
-    with pytest.raises(ThundersValueError) as e:
+    with pytest.raises(RoseauLoadFlowException) as e:
         line_characteristics = LineCharacteristics("test", z_line, y_shunt)
         ShuntLine(
             id="line", n=3, bus1=bus, bus2=bus, ground=ground, line_characteristics=line_characteristics, length=2.5
@@ -39,42 +40,46 @@ def test_line_characteristics():
     assert (
         e.value.args[0] == "The shunt admittance matrix of 'test' has off-diagonal elements with a non-zero real part."
     )
+    assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_Y_SHUNT_VALUE
 
     # Negative real values (Z)
     z_line = 2 * np.eye(4, dtype=np.complex_)
     z_line[1, 1] = -3
     y_shunt = -2 * np.eye(4, dtype=np.complex_)
-    with pytest.raises(ThundersValueError) as e:
+    with pytest.raises(RoseauLoadFlowException) as e:
         line_characteristics = LineCharacteristics("test", z_line, y_shunt)
         ShuntLine(
             id="line", n=4, bus1=bus, bus2=bus, ground=ground, line_characteristics=line_characteristics, length=2.4
         )
     assert e.value.args[0] == "Some real part coefficients of the line impedance matrix of 'test' are negative..."
+    assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_Z_LINE_VALUE
 
     # Negative real values (Y)
     y_shunt = 2 * np.eye(3, dtype=np.complex_)
     y_shunt[1, 1] = -3
-    with pytest.raises(ThundersValueError):
+    with pytest.raises(RoseauLoadFlowException):
         line_characteristics = LineCharacteristics("test", z_line, y_shunt)
         ShuntLine(
             id="line", n=4, bus1=bus, bus2=bus, ground=ground, line_characteristics=line_characteristics, length=2.4
         )
     assert e.value.args[0] == "Some real part coefficients of the line impedance matrix of 'test' are negative..."
+    assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_Z_LINE_VALUE
 
     # Bad shape (LV - Z)
     z_line = np.eye(4, dtype=np.complex_)[:, :2]
     y_shunt = np.eye(4, dtype=np.complex_)
-    with pytest.raises(ThundersValueError) as e:
+    with pytest.raises(RoseauLoadFlowException) as e:
         line_characteristics = LineCharacteristics("test", z_line, y_shunt)
         ShuntLine(
             id="line", n=4, bus1=bus, bus2=bus, ground=ground, line_characteristics=line_characteristics, length=2.4
         )
     assert e.value.args[0] == "Incorrect z_line dimensions for line characteristics 'test': (4, 2)"
+    assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_Z_LINE_SHAPE
 
     # Bad shape (LV - Y)
     z_line = np.eye(4, dtype=np.complex_)
     y_shunt = np.eye(3, dtype=np.complex_)
-    with pytest.raises(ThundersValueError) as e:
+    with pytest.raises(RoseauLoadFlowException) as e:
         line_characteristics = LineCharacteristics("test", z_line, y_shunt)
         ShuntLine(
             id="line",
@@ -86,11 +91,12 @@ def test_line_characteristics():
             length=2.4,
         )
     assert e.value.args[0] == "Incorrect y_shunt dimensions for line 'line': (3, 3) instead of (4, 4)"
+    assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_Y_SHUNT_SHAPE
 
     # Bad shape (MV - Z)
     z_line = np.eye(4, dtype=np.complex_)[:, :2]
     y_shunt = np.eye(3, dtype=np.complex_)
-    with pytest.raises(ThundersValueError) as e:
+    with pytest.raises(RoseauLoadFlowException) as e:
         line_characteristics = LineCharacteristics("test", z_line, y_shunt)
         ShuntLine(
             id="line",
@@ -102,11 +108,12 @@ def test_line_characteristics():
             length=2.4,
         )
     assert e.value.args[0] == "Incorrect z_line dimensions for line characteristics 'test': (4, 2)"
+    assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_Z_LINE_SHAPE
 
     # Bad shape (MV - Y)
     z_line = np.eye(3, dtype=np.complex_)
     y_shunt = np.eye(6, dtype=np.complex_)
-    with pytest.raises(ThundersValueError) as e:
+    with pytest.raises(RoseauLoadFlowException) as e:
         line_characteristics = LineCharacteristics("test", z_line, y_shunt)
         ShuntLine(
             id="line",
@@ -118,11 +125,12 @@ def test_line_characteristics():
             length=2.4,
         )
     assert e.value.args[0] == "Incorrect y_shunt dimensions for line 'line': (6, 6) instead of (3, 3)"
+    assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_Y_SHUNT_SHAPE
 
     # LV line with not zero shunt admittance
     z_line = np.eye(3, dtype=np.complex_)
     y_shunt = np.eye(3, dtype=np.complex_)
-    with pytest.raises(ThundersValueError) as e:
+    with pytest.raises(RoseauLoadFlowException) as e:
         line_characteristics = LineCharacteristics("test", z_line, y_shunt)
         ShuntLine(
             id="line",
@@ -134,13 +142,15 @@ def test_line_characteristics():
             length=2.4,
         )
     assert e.value.args[0] == "Incorrect z_line dimensions for line 'line': (3, 3) instead of (4, 4)"
+    assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_Z_LINE_SHAPE
 
 
 def test_bad_model():
     # Unknown line model
     data = {"model": "unknown", "name": "test"}
-    with pytest.raises(ThundersValueError):
+    with pytest.raises(RoseauLoadFlowException) as e:
         LineCharacteristics.from_dict(data=data)
+    assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_LINE_MODEL
 
 
 def test_lv_exact():
