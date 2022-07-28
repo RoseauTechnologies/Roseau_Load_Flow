@@ -51,7 +51,9 @@ class RoseauLoadFlowExceptionCode(Enum):
     UNKNOWN_ELEMENT = auto()
     NO_VOLTAGE_SOURCE = auto()
     BAD_ELEMENT_OBJECT = auto()
+    DISCONNECTED_ELEMENT = auto()
     BAD_ELEMENT_ID = auto()
+    NO_LOAD_FLOW_CONVERGENCE = auto()
 
     # DGS export
     DGS_BAD_PHASE_TECHNOLOGY = auto()
