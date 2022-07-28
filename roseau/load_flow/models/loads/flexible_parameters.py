@@ -222,6 +222,9 @@ class Projection:
 class FlexibleParameter:
     """This class stores the required data to make a flexible parameter."""
 
+    control_class: type[Control] = Control
+    projection_class: type[Projection] = Projection
+
     @ureg.wraps(None, (None, None, None, None, "VA"), strict=False)
     def __init__(self, control_p: Control, control_q: Control, projection: Projection, s_max: float) -> None:
         """FlexibleParameter constructor.
@@ -248,9 +251,9 @@ class FlexibleParameter:
     def constant(cls) -> "FlexibleParameter":
         """Retrieve a constant control i.e. no control at all. It is an equivalent of the constant power load."""
         return cls(
-            control_p=Control.constant(),
-            control_q=Control.constant(),
-            projection=Projection(type="euclidean"),
+            control_p=cls.control_class.constant(),
+            control_q=cls.control_class.constant(),
+            projection=cls.projection_class(type="euclidean"),
             s_max=1.0,
         )
 
@@ -291,11 +294,11 @@ class FlexibleParameter:
             The flexible parameter which depicts "p_max_p_u_production" control on the production active power with
             a Euclidean projection.
         """
-        control_p = Control.p_max_u_production(u_up=u_up, u_max=u_max, alpha=alpha_control)
+        control_p = cls.control_class.p_max_u_production(u_up=u_up, u_max=u_max, alpha=alpha_control)
         return cls(
             control_p=control_p,
-            control_q=Control.constant(),
-            projection=Projection(type="euclidean", alpha=alpha_proj, epsilon=epsilon_proj),
+            control_q=cls.control_class.constant(),
+            projection=cls.projection_class(type="euclidean", alpha=alpha_proj, epsilon=epsilon_proj),
             s_max=s_max,
         )
 
@@ -336,11 +339,11 @@ class FlexibleParameter:
             The flexible parameter which depicts "p_max_p_u_consumption" control on the consumption active power with
             a Euclidean projection.
         """
-        control_p = Control.p_max_u_consumption(u_min=u_min, u_down=u_down, alpha=alpha_control)
+        control_p = cls.control_class.p_max_u_consumption(u_min=u_min, u_down=u_down, alpha=alpha_control)
         return cls(
             control_p=control_p,
-            control_q=Control.constant(),
-            projection=Projection("euclidean", alpha=alpha_proj, epsilon=epsilon_proj),
+            control_q=cls.control_class.constant(),
+            projection=cls.projection_class("euclidean", alpha=alpha_proj, epsilon=epsilon_proj),
             s_max=s_max,
         )
 
@@ -388,11 +391,11 @@ class FlexibleParameter:
         Returns:
             The flexible parameter which depicts "q_u" control on the reactive power with a Euclidean projection.
         """
-        control_q = Control.q_u(u_min=u_min, u_down=u_down, u_up=u_up, u_max=u_max, alpha=alpha_control)
+        control_q = cls.control_class.q_u(u_min=u_min, u_down=u_down, u_up=u_up, u_max=u_max, alpha=alpha_control)
         return cls(
-            control_p=Control.constant(),
+            control_p=cls.control_class.constant(),
             control_q=control_q,
-            projection=Projection(type="euclidean", alpha=alpha_proj, epsilon=epsilon_proj),
+            projection=cls.projection_class(type="euclidean", alpha=alpha_proj, epsilon=epsilon_proj),
             s_max=s_max,
         )
 
@@ -449,12 +452,12 @@ class FlexibleParameter:
             The flexible parameter which depicts a control on the active power in production and a reactive
             power control with a Euclidean projection.
         """
-        control_p = Control.p_max_u_production(u_up=up_up, u_max=up_max, alpha=alpha_control)
-        control_q = Control.q_u(u_min=uq_min, u_down=uq_down, u_up=uq_up, u_max=uq_max, alpha=alpha_control)
+        control_p = cls.control_class.p_max_u_production(u_up=up_up, u_max=up_max, alpha=alpha_control)
+        control_q = cls.control_class.q_u(u_min=uq_min, u_down=uq_down, u_up=uq_up, u_max=uq_max, alpha=alpha_control)
         return cls(
             control_p=control_p,
             control_q=control_q,
-            projection=Projection(type="euclidean", alpha=alpha_proj, epsilon=epsilon_proj),
+            projection=cls.projection_class(type="euclidean", alpha=alpha_proj, epsilon=epsilon_proj),
             s_max=s_max,
         )
 
@@ -511,12 +514,12 @@ class FlexibleParameter:
             The flexible parameter which depicts a control on the active power in consumption and a reactive
             power control with a Euclidean projection.
         """
-        control_p = Control.p_max_u_consumption(u_min=up_min, u_down=up_down, alpha=alpha_control)
-        control_q = Control.q_u(u_min=uq_min, u_down=uq_down, u_up=uq_up, u_max=uq_max, alpha=alpha_control)
+        control_p = cls.control_class.p_max_u_consumption(u_min=up_min, u_down=up_down, alpha=alpha_control)
+        control_q = cls.control_class.q_u(u_min=uq_min, u_down=uq_down, u_up=uq_up, u_max=uq_max, alpha=alpha_control)
         return cls(
             control_p=control_p,
             control_q=control_q,
-            projection=Projection(type="euclidean", alpha=alpha_proj, epsilon=epsilon_proj),
+            projection=cls.projection_class(type="euclidean", alpha=alpha_proj, epsilon=epsilon_proj),
             s_max=s_max,
         )
 
@@ -525,9 +528,9 @@ class FlexibleParameter:
     #
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "FlexibleParameter":
-        control_p = Control.from_dict(data["control_p"])
-        control_q = Control.from_dict(data["control_q"])
-        projection = Projection.from_dict(data["projection"])
+        control_p = cls.control_class.from_dict(data["control_p"])
+        control_q = cls.control_class.from_dict(data["control_q"])
+        projection = cls.projection_class.from_dict(data["projection"])
         return cls(control_p=control_p, control_q=control_q, projection=projection, s_max=data["s_max"])
 
     def to_dict(self) -> dict[str, Any]:

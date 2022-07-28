@@ -313,6 +313,8 @@ class ImpedanceLoad(AbstractLoad):
 class FlexibleLoad(AbstractLoad):
     """A class to depict a flexible load i.e. a load with control."""
 
+    flexible_parameter_class: type[FlexibleParameter] = FlexibleParameter
+
     def __init__(
         self, id: Any, n: int, bus: AbstractBus, s: Sequence[complex], parameters: list[FlexibleParameter], **kwargs
     ):
@@ -370,6 +372,15 @@ class FlexibleLoad(AbstractLoad):
         self.s = s
         self.parameters = parameters
 
+    def update_powers(self, s: Sequence[complex]) -> None:
+        """Change the power of the load.
+
+        Args:
+            s:
+                the new powers to set (Volts).
+        """
+        self.s = s
+
     @property
     @ureg.wraps("VA", None, strict=False)
     def powers(self) -> np.ndarray:
@@ -389,7 +400,7 @@ class FlexibleLoad(AbstractLoad):
         powers = [s["sa"][0] + 1j * s["sa"][1], s["sb"][0] + 1j * s["sb"][1], s["sc"][0] + 1j * s["sc"][1]]
         parameters = list()
         for parameter in data["parameters"]:
-            parameters.append(FlexibleParameter.from_dict(parameter))
+            parameters.append(cls.flexible_parameter_class.from_dict(parameter))
         return cls(id=data["id"], n=4, bus=bus, s=powers, parameters=parameters)
 
     def to_dict(self) -> dict[str, Any]:
