@@ -10,7 +10,7 @@ from roseau.load_flow import (
     Ground,
     ImpedanceLoad,
     LineCharacteristics,
-    PotentialReference,
+    PotentialRef,
     PowerLoad,
     SimplifiedLine,
     VoltageSource,
@@ -163,7 +163,7 @@ def test_flexible_load():
     )
     fp2 = FlexibleParameter.q_u(u_min=210, u_down=220, u_up=240, u_max=250, s_max=300)
     ground = Ground()
-    _ = PotentialReference(ground)
+    _ = PotentialRef(ground)
     vs = VoltageSource("vs", 4, ground, [vn, vn * np.exp(-2 / 3 * np.pi * 1j), vn * np.exp(2 / 3 * np.pi * 1j)])
     bus = Bus("bus", 4)
     line_characteristics = LineCharacteristics("test", z_line=np.eye(4, dtype=complex))

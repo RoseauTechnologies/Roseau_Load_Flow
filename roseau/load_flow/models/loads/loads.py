@@ -1,7 +1,7 @@
 import logging
 from abc import ABCMeta
 from collections.abc import Sequence
-from typing import Any
+from typing import Any, Optional
 
 import numpy as np
 from pint import Quantity
@@ -18,6 +18,11 @@ logger = logging.getLogger(__name__)
 
 class AbstractLoad(Element, JsonMixin, metaclass=ABCMeta):
     """An abstract class to depict a load."""
+
+    power_load_class: Optional[type["PowerLoad"]] = None
+    impedance_load_class: Optional[type["ImpedanceLoad"]] = None
+    admittance_load_class: Optional[type["AdmittanceLoad"]] = None
+    flexible_load_class: Optional[type["FlexibleLoad"]] = None
 
     def __init__(self, id: Any, n: int, bus: AbstractBus, **kwargs) -> None:
         """Load constructor.
@@ -56,22 +61,22 @@ class AbstractLoad(Element, JsonMixin, metaclass=ABCMeta):
     #
     # Json Mixin interface
     #
-    @staticmethod
-    def from_dict(data, bus):
+    @classmethod
+    def from_dict(cls, data, bus):
         if data["function"] == "flexible":
-            return FlexibleLoad.from_dict(data=data, bus=bus)
+            return cls.flexible_load_class.from_dict(data=data, bus=bus)
         if "ys" in data["function"]:
             s = data["powers"]
             powers = [s["sa"][0] + 1j * s["sa"][1], s["sb"][0] + 1j * s["sb"][1], s["sc"][0] + 1j * s["sc"][1]]
-            return PowerLoad(id=data["id"], n=4, bus=bus, s=powers)
+            return cls.power_load_class(id=data["id"], n=4, bus=bus, s=powers)
         elif "yy" in data["function"]:
             y = data["admittances"]
             admittances = [y["ya"][0] + 1j * y["ya"][1], y["yb"][0] + 1j * y["yb"][1], y["yc"][0] + 1j * y["yc"][1]]
-            return AdmittanceLoad(id=data["id"], n=4, bus=bus, y=admittances)
+            return cls.admittance_load_class(id=data["id"], n=4, bus=bus, y=admittances)
         elif "yz" in data["function"]:
             z = data["impedances"]
             impedances = [z["za"][0] + 1j * z["za"][1], z["zb"][0] + 1j * z["zb"][1], z["zc"][0] + 1j * z["zc"][1]]
-            return ImpedanceLoad(id=data["id"], n=4, bus=bus, z=impedances)
+            return cls.impedance_load_class(id=data["id"], n=4, bus=bus, z=impedances)
         else:
             msg = f"Unknown load type for load {data['id']}: {data['function']}"
             logger.error(msg)
@@ -402,3 +407,9 @@ class FlexibleLoad(AbstractLoad):
             },
             "parameters": parameter_res,
         }
+
+
+AbstractLoad.power_load_class = PowerLoad
+AbstractLoad.impedance_load_class = ImpedanceLoad
+AbstractLoad.admittance_load_class = AdmittanceLoad
+AbstractLoad.flexible_load_class = FlexibleLoad

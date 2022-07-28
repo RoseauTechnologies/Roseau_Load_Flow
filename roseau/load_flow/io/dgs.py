@@ -9,12 +9,12 @@ import pandas as pd
 from roseau.load_flow.models import (
     AbstractBranch,
     AbstractBus,
+    AbstractLine,
     AbstractTransformer,
     Bus,
     Ground,
-    Line,
     LineCharacteristics,
-    PotentialReference,
+    PotentialRef,
     PowerLoad,
     Switch,
     TransformerCharacteristics,
@@ -57,7 +57,7 @@ def network_from_dgs(  # noqa: C901
 
     # Ground and special elements
     ground = Ground()
-    p_ref = PotentialReference(ground)
+    p_ref = PotentialRef(ground)
 
     # Buses
     buses = dict()
@@ -140,7 +140,7 @@ def network_from_dgs(  # noqa: C901
         for line_id in elm_lne.index:
             type_id = elm_lne.at[line_id, "typ_id"]  # id of the line type
 
-            branches[line_id] = Line.from_dict(
+            branches[line_id] = AbstractLine.from_dict(
                 id=line_id,
                 bus1=buses[sta_cubic.at[elm_lne.at[line_id, "bus1"], "cterm"]],
                 bus2=buses[sta_cubic.at[elm_lne.at[line_id, "bus2"], "cterm"]],

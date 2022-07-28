@@ -19,6 +19,9 @@ logger = logging.getLogger(__name__)
 class AbstractBus(Element, JsonMixin, ABC):
     """This is an abstract class for all different types of buses."""
 
+    voltage_source_class: Optional[type["VoltageSource"]] = None
+    bus_class: Optional[type["Bus"]] = None
+
     def __init__(
         self,
         id: Any,
@@ -90,7 +93,7 @@ class AbstractBus(Element, JsonMixin, ABC):
         if data["type"] == "slack":
             v = data["voltages"]
             voltages = [v["va"][0] + 1j * v["va"][1], v["vb"][0] + 1j * v["vb"][1], v["vc"][0] + 1j * v["vc"][1]]
-            return VoltageSource(
+            return cls.voltage_source_class(
                 id=data["id"], n=4, ground=ground, voltages=voltages, potentials=potentials, geometry=geometry
             )
         else:
@@ -99,9 +102,9 @@ class AbstractBus(Element, JsonMixin, ABC):
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_BUS_TYPE)
             if "neutral" in data["type"]:
-                bus = Bus(id=data["id"], n=4, potentials=potentials, geometry=geometry)
+                bus = cls.bus_class(id=data["id"], n=4, potentials=potentials, geometry=geometry)
             else:
-                bus = Bus(id=data["id"], n=3, potentials=potentials, geometry=geometry)
+                bus = cls.bus_class(id=data["id"], n=3, potentials=potentials, geometry=geometry)
             return bus
 
 
@@ -142,7 +145,9 @@ class VoltageSource(AbstractBus):
             geometry:
                 The geometry of the bus.
         """
-        super().__init__(id=id, n=n, potentials=potentials, geometry=geometry, **kwargs)
+        super().__init__(
+            id=id, n=n, ground=ground, voltages=voltages, potentials=potentials, geometry=geometry, **kwargs
+        )
         if len(voltages) != n - 1:
             msg = f"Incorrect number of voltages: {len(voltages)} instead of {n - 1}"
             logger.error(msg)
@@ -152,8 +157,6 @@ class VoltageSource(AbstractBus):
             voltages = voltages.m_as("V")
 
         self.voltages = voltages
-        if ground is not None:
-            ground.connect(self)
 
     @ureg.wraps(None, (None, "V"), strict=False)
     def update_voltages(self, voltages: Sequence[complex]) -> None:
@@ -229,3 +232,7 @@ class Bus(AbstractBus):
         if self.geometry is not None:
             res["geometry"] = self.geometry.__geo_interface__
         return res
+
+
+AbstractBus.voltage_source_class = VoltageSource
+AbstractBus.bus_class = Bus

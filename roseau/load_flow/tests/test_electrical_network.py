@@ -9,7 +9,7 @@ from roseau.load_flow import (
     ElectricalNetwork,
     Ground,
     ImpedanceLoad,
-    PotentialReference,
+    PotentialRef,
     PowerLoad,
     ShuntLine,
     SimplifiedLine,
@@ -38,7 +38,7 @@ def test_from_element():
     line = SimplifiedLine(
         id="line", n=4, bus1=vs, bus2=load_bus, line_characteristics=line_characteristics, length=10  # km
     )
-    p_ref = PotentialReference(element=ground)
+    p_ref = PotentialRef(element=ground)
 
     en = ElectricalNetwork(buses=[vs, load_bus], branches=[line], loads=[load], special_elements=[p_ref, ground])
     en.solve_load_flow()
@@ -69,7 +69,7 @@ def test_add_and_remove():
     line = SimplifiedLine(
         id="line", n=4, bus1=vs, bus2=load_bus, line_characteristics=line_characteristics, length=10  # km
     )
-    _ = PotentialReference(element=ground)
+    _ = PotentialRef(element=ground)
     en = ElectricalNetwork.from_element(vs)
     en.solve_load_flow()
     buses_results_1, branches_results_1 = en.results
@@ -119,7 +119,7 @@ def test_bad_networks():
     ground.connect(bus2)
     line_characteristics = LineCharacteristics("test", z_line=np.eye(3, dtype=complex))
     line = SimplifiedLine(id="line", n=3, bus1=bus1, bus2=bus2, line_characteristics=line_characteristics, length=10)
-    p_ref = PotentialReference(ground)
+    p_ref = PotentialRef(ground)
     with pytest.raises(RoseauLoadFlowException) as e:
         ElectricalNetwork.from_element(bus1)
     assert e.value.args[0] == "There is no voltage source provided in the network, you must provide at least one."
@@ -151,7 +151,7 @@ def test_bad_networks():
     en.solve_load_flow()
 
     # 2 potential reference
-    _ = PotentialReference(bus3)
+    _ = PotentialRef(bus3)
     with pytest.raises(RoseauLoadFlowException) as e:
         ElectricalNetwork.from_element(vs)
     assert "has 2 potential references, it should have only one." in e.value.args[0]
@@ -160,7 +160,7 @@ def test_bad_networks():
 
 def test_update_dynamics():
     ground = Ground()
-    _ = PotentialReference(ground)
+    _ = PotentialRef(ground)
     vn = 20000 / np.sqrt(3)
     voltages = [vn, vn * np.exp(-2 / 3 * np.pi * 1j), vn * np.exp(2 / 3 * np.pi * 1j)]
     vs = VoltageSource(

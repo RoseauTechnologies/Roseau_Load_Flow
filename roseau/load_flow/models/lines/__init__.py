@@ -1,3 +1,3 @@
-from roseau.load_flow.models.lines.lines import Line, LineCharacteristics, ShuntLine, SimplifiedLine, Switch
+from roseau.load_flow.models.lines.lines import AbstractLine, LineCharacteristics, ShuntLine, SimplifiedLine, Switch
 
-__all__ = ["Switch", "Line", "ShuntLine", "SimplifiedLine", "LineCharacteristics"]
+__all__ = ["Switch", "AbstractLine", "ShuntLine", "SimplifiedLine", "LineCharacteristics"]

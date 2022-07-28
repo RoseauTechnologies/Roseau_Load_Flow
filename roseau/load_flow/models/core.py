@@ -14,6 +14,8 @@ from roseau.load_flow.utils.units import ureg
 
 if TYPE_CHECKING:
     from roseau.load_flow.models.buses import AbstractBus
+    from roseau.load_flow.models.lines import AbstractLine, Switch
+    from roseau.load_flow.models.transformers import AbstractTransformer
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +30,7 @@ class Element(ABC):
             element.connected_elements[:] = [e for e in element.connected_elements if e != self]
 
 
-class PotentialReference(Element):
+class PotentialRef(Element):
     def __init__(self, element: Element, **kwargs):
         """Potential reference element constructor, this element will set the origin of the potentials as
         Va + Vb + Vc = 0 for delta elements or Vn = 0 for the others.
@@ -71,7 +73,25 @@ class Ground(Element):
 
 
 class AbstractBranch(Element, JsonMixin):
-    type: BranchType = NotImplemented
+    branch_type: BranchType = NotImplemented
+
+    @classmethod
+    def line_class(cls) -> type["AbstractLine"]:
+        from roseau.load_flow.models.lines.lines import AbstractLine
+
+        return AbstractLine
+
+    @classmethod
+    def transformer_class(cls) -> type["AbstractTransformer"]:
+        from roseau.load_flow.models.transformers.transformers import AbstractTransformer
+
+        return AbstractTransformer
+
+    @classmethod
+    def switch_class(cls) -> type["Switch"]:
+        from roseau.load_flow.models.lines.lines import Switch
+
+        return Switch
 
     def __init__(
         self,
@@ -129,10 +149,8 @@ class AbstractBranch(Element, JsonMixin):
     #
     # Json Mixin interface
     #
-    @staticmethod
-    def from_dict(branch, bus1, bus2, ground, line_types, transformer_types, *args):
-        from roseau.load_flow.models.lines.lines import Line, Switch
-        from roseau.load_flow.models.transformers.transformers import AbstractTransformer
+    @classmethod
+    def from_dict(cls, branch, bus1, bus2, ground, line_types, transformer_types, *args):
 
         if "geometry" not in branch:
             geometry = None
@@ -142,7 +160,7 @@ class AbstractBranch(Element, JsonMixin):
             geometry = shape(branch["geometry"])
 
         if branch["type"] == "line":
-            return Line.from_dict(
+            return cls.line_class().from_dict(
                 id=branch["id"],
                 bus1=bus1,
                 bus2=bus2,
@@ -153,7 +171,7 @@ class AbstractBranch(Element, JsonMixin):
                 geometry=geometry,
             )
         elif branch["type"] == "transformer":
-            return AbstractTransformer.from_dict(
+            return cls.transformer_class().from_dict(
                 id=branch["id"],
                 bus1=bus1,
                 bus2=bus2,
@@ -163,7 +181,7 @@ class AbstractBranch(Element, JsonMixin):
                 geometry=geometry,
             )
         elif branch["type"] == "switch":
-            return Switch(id=branch["id"], n=bus1.n, bus1=bus1, bus2=bus2, geometry=geometry)
+            return cls.switch_class()(id=branch["id"], n=bus1.n, bus1=bus1, bus2=bus2, geometry=geometry)
         else:
             msg = f"Unknown branch type for branch {branch['id']}: {branch['type']}"
             logger.error(msg)

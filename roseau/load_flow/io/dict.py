@@ -5,11 +5,9 @@ from typing import Any, TYPE_CHECKING
 from roseau.load_flow import (
     AbstractBranch,
     AbstractBus,
+    AbstractLine,
     AbstractTransformer,
-    Ground,
-    Line,
     LineCharacteristics,
-    PotentialReference,
     TransformerCharacteristics,
 )
 from roseau.load_flow.models.core import Element
@@ -23,13 +21,16 @@ logger = logging.getLogger(__name__)
 
 
 def network_from_dict(
-    data: dict[str, Any]
+    data: dict[str, Any], en_class: type["ElectricalNetwork"]
 ) -> tuple[dict[str, AbstractBus], dict[str, AbstractBranch], dict[str, AbstractLoad], list[Element]]:
     """Create the electrical elements from a dictionary to create an electrical network.
 
     Args:
         data:
             The dictionary containing the network data.
+
+        en_class:
+            The ElectricalNetwork class to create
 
     Returns:
         The buses, branches, loads and special elements to construct the electrical network.
@@ -44,20 +45,20 @@ def network_from_dict(
         type_name = transformer_data["name"]
         transformer_types[type_name] = TransformerCharacteristics.from_dict(transformer_data)
 
-    ground = Ground()
-    special_elements = [ground, PotentialReference(element=ground)]
+    ground = en_class.ground_class()
+    special_elements = [ground, en_class.pref_class(element=ground)]
     buses_dict = dict()
     loads_dict = dict()
     for bus_data in data["buses"]:
-        buses_dict[bus_data["id"]] = AbstractBus.from_dict(bus_data, ground)
+        buses_dict[bus_data["id"]] = en_class.bus_class.from_dict(bus_data, ground)
         for load_data in bus_data["loads"]:
-            loads_dict[load_data["id"]] = AbstractLoad.from_dict(load_data, buses_dict[bus_data["id"]])
+            loads_dict[load_data["id"]] = en_class.load_class.from_dict(load_data, buses_dict[bus_data["id"]])
 
     branches_dict = dict()
     for branch_data in data["branches"]:
         bus1 = buses_dict[branch_data["bus1"]]
         bus2 = buses_dict[branch_data["bus2"]]
-        branches_dict[branch_data["id"]] = AbstractBranch.from_dict(
+        branches_dict[branch_data["id"]] = en_class.branch_class.from_dict(
             branch_data,
             bus1,
             bus2,
@@ -69,7 +70,7 @@ def network_from_dict(
             if bus2.n == 4:
                 ground.connect(bus2)
             else:
-                special_elements.append(PotentialReference(element=bus2))
+                special_elements.append(en_class.pref_class(element=bus2))
 
     return buses_dict, branches_dict, loads_dict, special_elements
 
@@ -99,7 +100,7 @@ def network_to_dict(en: "ElectricalNetwork") -> dict[str, Any]:
     transformer_characteristics_set = set()
     for branch in en.branches.values():
         branches.append(branch.to_dict())
-        if isinstance(branch, Line):
+        if isinstance(branch, AbstractLine):
             line_characteristics_set.add(branch.line_characteristics)
         elif isinstance(branch, AbstractTransformer):
             transformer_characteristics_set.add(branch.transformer_characteristics)

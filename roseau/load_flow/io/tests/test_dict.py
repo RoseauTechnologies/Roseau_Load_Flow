@@ -9,7 +9,7 @@ from roseau.load_flow import (
     FlexibleLoad,
     FlexibleParameter,
     Ground,
-    PotentialReference,
+    PotentialRef,
     SimplifiedLine,
     TransformerCharacteristics,
     VoltageSource,
@@ -31,7 +31,7 @@ def test_to_dict():
     )
     bus = Bus(id="load bus", n=4)
     ground.connect(bus)
-    p_ref = PotentialReference(element=ground)
+    p_ref = PotentialRef(element=ground)
 
     # Same type name twice
     line_characteristics1 = LineCharacteristics("test", z_line=np.eye(4, dtype=complex))
@@ -90,7 +90,7 @@ def test_from_dict():
     flexible_load = FlexibleLoad("flexible load", 4, load_bus, [-100 + 50j, -100 + 50j, 100 + 50j], [pa, pb, pc])
     fpc = FlexibleParameter.constant()
     power_load = FlexibleLoad("power load", 4, load_bus, [100 + 0j, 0j, 0j], [fpc, fpc, fpc])
-    p_ref = PotentialReference(ground)
+    p_ref = PotentialRef(ground)
 
     en = ElectricalNetwork([vs, load_bus], [line], [flexible_load, power_load], [p_ref, ground])
     en.solve_load_flow(max_iterations=50)

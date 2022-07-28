@@ -11,7 +11,7 @@ import pandas as pd
 from roseau.load_flow.io.dgs import network_from_dgs
 from roseau.load_flow.io.dict import network_from_dict, network_to_dict
 from roseau.load_flow.models.buses import AbstractBus, VoltageSource
-from roseau.load_flow.models.core import AbstractBranch, Element, PotentialReference
+from roseau.load_flow.models.core import AbstractBranch, Element, Ground, PotentialRef
 from roseau.load_flow.models.loads.loads import AbstractLoad, PowerLoad
 from roseau.load_flow.models.transformers.transformers import AbstractTransformer
 from roseau.load_flow.utils import ureg
@@ -23,6 +23,12 @@ logger = logging.getLogger(__name__)
 class ElectricalNetwork:
     DEFAULT_PRECISION: float = 1e-6
     DEFAULT_MAX_ITERATIONS: int = 20
+
+    branch_class = AbstractBranch
+    load_class = AbstractLoad
+    bus_class = AbstractBus
+    ground_class = Ground
+    pref_class = PotentialRef
 
     def __init__(
         self,
@@ -322,7 +328,7 @@ class ElectricalNetwork:
 
             potential_ref = 0
             for element in connected_component:
-                if isinstance(element, PotentialReference):
+                if isinstance(element, PotentialRef):
                     potential_ref += 1
 
             if potential_ref == 0:
@@ -354,7 +360,7 @@ class ElectricalNetwork:
         Returns:
             The constructed network.
         """
-        buses_dict, branches_dict, loads_dict, special_elements = network_from_dict(data=data)
+        buses_dict, branches_dict, loads_dict, special_elements = network_from_dict(data=data, en_class=cls)
         return cls(buses=buses_dict, branches=branches_dict, loads=loads_dict, special_elements=special_elements)
 
     @classmethod

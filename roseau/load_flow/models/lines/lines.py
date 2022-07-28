@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 class Switch(AbstractBranch):
-    type = BranchType.SWITCH
+    branch_type = BranchType.SWITCH
 
     def __init__(
         self, id: Any, n: int, bus1: AbstractBus, bus2: AbstractBus, geometry: Optional[Point] = None, **kwargs
@@ -88,8 +88,10 @@ class Switch(AbstractBranch):
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_VOLTAGES_SOURCES_CONNECTION)
 
 
-class Line(AbstractBranch):
-    type = BranchType.LINE
+class AbstractLine(AbstractBranch):
+    branch_type = BranchType.LINE
+    simplified_line_class: Optional[type["SimplifiedLine"]] = None
+    shunt_line_class: Optional[type["ShuntLine"]] = None
 
     def __init__(
         self,
@@ -166,9 +168,10 @@ class Line(AbstractBranch):
     #
     # Json Mixin interface
     #
-    @staticmethod
-    @ureg.wraps(None, (None, None, None, "km", None, None, None, None), strict=False)
+    @classmethod
+    @ureg.wraps(None, (None, None, None, None, "km", None, None, None, None), strict=False)
     def from_dict(
+        cls,
         id: Any,
         bus1: AbstractBus,
         bus2: AbstractBus,
@@ -177,7 +180,7 @@ class Line(AbstractBranch):
         type_name: str,
         ground: Optional[Ground] = None,
         geometry: Optional[BaseGeometry] = None,
-    ) -> "Line":
+    ) -> "AbstractLine":
         """Line constructor from dict.
 
         Args:
@@ -211,7 +214,7 @@ class Line(AbstractBranch):
         line_characteristics = line_types[type_name]
         n = line_characteristics.z_line.shape[0]
         if line_characteristics.y_shunt is None:
-            return SimplifiedLine(
+            return cls.simplified_line_class(
                 id=id,
                 n=n,
                 bus1=bus1,
@@ -221,7 +224,7 @@ class Line(AbstractBranch):
                 geometry=geometry,
             )
         else:
-            return ShuntLine(
+            return cls.shunt_line_class(
                 id=id,
                 n=n,
                 bus1=bus1,
@@ -244,7 +247,7 @@ class Line(AbstractBranch):
         return res
 
 
-class SimplifiedLine(Line):
+class SimplifiedLine(AbstractLine):
     """A line without shunt elements.
 
     TODO: Equation to place here.
@@ -318,7 +321,7 @@ class SimplifiedLine(Line):
         super().update_line_parameters(line_characteristics=line_characteristics)
 
 
-class ShuntLine(Line):
+class ShuntLine(AbstractLine):
     """A PI line model
 
     TODO: Equation to write here
@@ -377,3 +380,7 @@ class ShuntLine(Line):
 
         self.connected_elements.append(ground)
         ground.connected_elements.append(self)
+
+
+AbstractLine.simplified_line_class = SimplifiedLine
+AbstractLine.shunt_line_class = ShuntLine

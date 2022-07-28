@@ -5,7 +5,7 @@ import pytest
 from pandas.testing import assert_frame_equal
 
 from roseau.load_flow import AbstractTransformer, Switch
-from roseau.load_flow.models.core import PotentialReference
+from roseau.load_flow.models.core import PotentialRef
 from roseau.load_flow.network.electrical_network import ElectricalNetwork
 from roseau.load_flow.utils.exceptions import RoseauLoadFlowException
 
@@ -85,7 +85,7 @@ def test_electrical_network(all_network_path, all_network_result):  # noqa: C901
             npt.assert_allclose(im_i2_check, i2.imag, atol=1e-3, rtol=1e-5)  # Warning: careful with atol and rtol...
 
     for special_element in en.special_elements:
-        if isinstance(special_element, PotentialReference):
+        if isinstance(special_element, PotentialRef):
             npt.assert_allclose(special_element.current.real, 0.0, atol=1e-7)
             npt.assert_allclose(special_element.current.imag, 0.0, atol=1e-7)
 
