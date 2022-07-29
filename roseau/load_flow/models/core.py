@@ -132,6 +132,7 @@ class AbstractBranch(Element, JsonMixin):
         bus1.connected_elements.append(self)
         bus2.connected_elements.append(self)
         self.geometry = geometry
+        self._currents = None
 
     def __str__(self) -> str:
         return f"id={self.id} - n1={self.n1} - n2={self.n2}"
@@ -144,7 +145,11 @@ class AbstractBranch(Element, JsonMixin):
         Returns:
             The complex currents of each phase.
         """
-        raise NotImplementedError
+        return self._currents
+
+    @currents.setter
+    def currents(self, value: np.ndarray):
+        self._currents = value
 
     #
     # Json Mixin interface

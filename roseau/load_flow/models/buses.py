@@ -61,8 +61,8 @@ class AbstractBus(Element, JsonMixin, ABC):
                 potentials = potentials.m_as("V")
             self.initialized = True
         self.initial_potentials = np.asarray(potentials)
-
         self.geometry = geometry
+        self._potentials = None
 
     def __str__(self) -> str:
         return f"id={self.id} - n={self.n}"
@@ -75,7 +75,11 @@ class AbstractBus(Element, JsonMixin, ABC):
         Returns:
             An array of the potentials
         """
-        raise NotImplementedError
+        return self._potentials
+
+    @potentials.setter
+    def potentials(self, value: np.ndarray):
+        self._potentials = value
 
     #
     # Json Mixin interface

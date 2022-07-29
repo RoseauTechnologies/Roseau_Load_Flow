@@ -138,7 +138,55 @@ class ElectricalNetwork:
             The number of iterations taken
         """
         # TODO Call requests ad store the results in the class and subsequents objects
-        return 0
+        result_dict: dict[str, Any] = dict()
+        info = result_dict["info"]
+        if info["status"] != "ok":
+            msg = (
+                f"The load flow did not converge after {info['iterations']} iterations. The norm of the residuals is "
+                f"{info['final_error']}"
+            )
+            logger.error(msg=msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.NO_LOAD_FLOW_CONVERGENCE)
+
+        logger.info(f"The load flow converged after {info['iterations']}.")
+
+        for bus_data in result_dict["buses"]:
+            bus_id = bus_data["id"]
+            v = bus_data["potentials"]
+            if "vn" in v:
+                potentials = [
+                    v["va"][0] + 1j * v["va"][1],
+                    v["vb"][0] + 1j * v["vb"][1],
+                    v["vc"][0] + 1j * v["vc"][1],
+                    v["vn"][0] + 1j * v["vn"][1],
+                ]
+            else:
+                potentials = [
+                    v["va"][0] + 1j * v["va"][1],
+                    v["vb"][0] + 1j * v["vb"][1],
+                    v["vc"][0] + 1j * v["vc"][1],
+                ]
+            self.buses[bus_id].potentials = np.asarray(potentials)
+
+        for branch_data in result_dict["branches"]:
+            branch_id = branch_data["id"]
+            i = branch_data["currents"]
+            if "in" in i:
+                currents = [
+                    i["ia"][0] + 1j * i["ia"][1],
+                    i["ib"][0] + 1j * i["ib"][1],
+                    i["ic"][0] + 1j * i["ic"][1],
+                    i["in"][0] + 1j * i["in"][1],
+                ]
+            else:
+                currents = [
+                    i["ia"][0] + 1j * i["ia"][1],
+                    i["ib"][0] + 1j * i["ib"][1],
+                    i["ic"][0] + 1j * i["ic"][1],
+                ]
+            self.branches[branch_id].currents = currents
+
+        return info["iterations"]
 
     #
     # Getter for the load flow results
