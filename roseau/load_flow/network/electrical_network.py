@@ -12,7 +12,7 @@ from roseau.load_flow.io.dgs import network_from_dgs
 from roseau.load_flow.io.dict import network_from_dict, network_to_dict
 from roseau.load_flow.models.buses import AbstractBus, VoltageSource
 from roseau.load_flow.models.core import AbstractBranch, Element, Ground, PotentialRef
-from roseau.load_flow.models.loads.loads import AbstractLoad, PowerLoad
+from roseau.load_flow.models.loads.loads import AbstractLoad, FlexibleLoad, PowerLoad
 from roseau.load_flow.models.transformers.transformers import AbstractTransformer
 from roseau.load_flow.utils import ureg
 from roseau.load_flow.utils.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
@@ -186,13 +186,24 @@ class ElectricalNetwork:
                 ]
             self.branches[branch_id].currents = currents
 
+        for load_data in result_dict["loads"]:
+            load_id = load_data["id"]
+            assert isinstance(self.loads[load_id], FlexibleLoad)
+            s = load_data["powers"]
+            powers = [
+                s["sa"][0] + 1j * s["sa"][1],
+                s["sb"][0] + 1j * s["sb"][1],
+                s["sc"][0] + 1j * s["sc"][1],
+            ]
+            self.loads[load_id].powers = powers
+
         return info["iterations"]
 
     #
     # Getter for the load flow results
     #
     @property
-    def results(self) -> tuple[pd.DataFrame, pd.DataFrame]:
+    def results(self) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         """Get the voltages and currents computed by the load flow
 
         Returns:
@@ -254,7 +265,7 @@ class ElectricalNetwork:
         """
         for load_id, value in load_point.items():
             load: AbstractLoad = self.loads[load_id]
-            if isinstance(load, PowerLoad):
+            if isinstance(load, PowerLoad) or isinstance(load, FlexibleLoad):
                 load.update_powers(value)
             else:
                 msg = "Only power loads can be updated yet..."

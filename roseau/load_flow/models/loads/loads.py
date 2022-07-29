@@ -371,6 +371,7 @@ class FlexibleLoad(AbstractLoad):
 
         self.s = s
         self.parameters = parameters
+        self._powers = None
 
     def update_powers(self, s: Sequence[complex]) -> None:
         """Change the power of the load.
@@ -389,7 +390,11 @@ class FlexibleLoad(AbstractLoad):
         Returns:
             An array containing the actual powers of each phase (VA)
         """
-        raise NotImplementedError
+        return self._powers
+
+    @powers.setter
+    def powers(self, value: np.ndarray):
+        self._powers = value
 
     #
     # Json Mixin interface
