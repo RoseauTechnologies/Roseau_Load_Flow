@@ -1,20 +1,6 @@
-import numpy as np
 import pytest
 
-from roseau.load_flow import (
-    AdmittanceLoad,
-    Bus,
-    ElectricalNetwork,
-    FlexibleLoad,
-    FlexibleParameter,
-    Ground,
-    ImpedanceLoad,
-    LineCharacteristics,
-    PotentialRef,
-    PowerLoad,
-    SimplifiedLine,
-    VoltageSource,
-)
+from roseau.load_flow import AdmittanceLoad, Bus, FlexibleLoad, FlexibleParameter, ImpedanceLoad, PowerLoad
 from roseau.load_flow.utils import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 
 
@@ -108,7 +94,6 @@ def test_loads():
 
 
 def test_flexible_load():
-    vn = 400 / np.sqrt(3)
     bus = Bus("bus", 4)
     fp = FlexibleParameter.pq_u_production(
         up_up=250,
@@ -124,6 +109,7 @@ def test_flexible_load():
     )
     fc = FlexibleParameter.constant()
 
+    # Bad loads
     with pytest.raises(RoseauLoadFlowException) as e:
         FlexibleLoad("flexible load", 4, bus, [300 + 50j, 0, 0j], [fp, fc, fc])
     assert "The power is greater than the parameter s_max for flexible load" in e.value.args[0]
@@ -149,7 +135,7 @@ def test_flexible_load():
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_S_VALUE
 
     # Good load
-    fp = FlexibleParameter.pq_u_consumption(
+    _ = FlexibleParameter.pq_u_consumption(
         up_min=200,
         up_down=210,
         uq_min=210,
@@ -161,20 +147,3 @@ def test_flexible_load():
         alpha_proj=100.0,
         epsilon_proj=0.01,
     )
-    fp2 = FlexibleParameter.q_u(u_min=210, u_down=220, u_up=240, u_max=250, s_max=300)
-    ground = Ground()
-    _ = PotentialRef(ground)
-    vs = VoltageSource("vs", 4, ground, [vn, vn * np.exp(-2 / 3 * np.pi * 1j), vn * np.exp(2 / 3 * np.pi * 1j)])
-    bus = Bus("bus", 4)
-    line_characteristics = LineCharacteristics("test", z_line=np.eye(4, dtype=complex))
-    _ = SimplifiedLine(id="line", n=4, bus1=vs, bus2=bus, line_characteristics=line_characteristics, length=10)
-    flexible_load = FlexibleLoad("flexible load", 4, bus, [100 + 50j, 100 + 50j, 0j], [fp, fp2, fc])
-    _ = PowerLoad("load", 4, bus, [100, 100, 100])
-
-    en = ElectricalNetwork.from_element(vs)
-    en.solve_load_flow()
-
-    powers = flexible_load.powers
-    assert powers[0].real > 0 and powers.real[0] < 100
-    assert powers[1].real == 100 and powers[1].imag > 0 and powers.imag[1] < 50
-    assert powers[2] == 0j

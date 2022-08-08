@@ -137,6 +137,9 @@ class ElectricalNetwork:
         Returns:
             The number of iterations taken
         """
+        if not self._valid:
+            self._create_network()
+
         # TODO Call requests ad store the results in the class and subsequents objects
         result_dict: dict[str, Any] = dict()
         info = result_dict["info"]
@@ -328,6 +331,7 @@ class ElectricalNetwork:
     def _create_network(self):
         """Create the Cython and C++ electrical network of all the passed elements"""
         self._check_validity()
+        self._valid = True
 
     def _check_validity(self):
         """Check the validity of the network to avoid having a singular jacobian matrix"""
