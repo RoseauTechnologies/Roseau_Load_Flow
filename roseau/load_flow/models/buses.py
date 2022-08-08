@@ -160,6 +160,10 @@ class VoltageSource(AbstractBus):
         if isinstance(voltages, Quantity):
             voltages = voltages.m_as("V")
 
+        if ground is not None:
+            ground.connected_elements.append(self)
+            self.connected_elements.append(ground)
+
         self.voltages = voltages
 
     @ureg.wraps(None, (None, "V"), strict=False)
