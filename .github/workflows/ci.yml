@@ -1,0 +1,80 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+    tags:
+      - '*'
+  pull_request:
+    branches: [ main, develop ]
+    tags:
+      - '*'
+
+env:
+  CI: true
+
+jobs:
+  build:
+
+    runs-on: ubuntu-22.04
+
+    strategy:
+      matrix:
+        python-version: [ "3.9" ]
+
+    steps:
+      - name: Install debian dependencies
+        run: |
+          sudo apt update
+          sudo apt -yq --no-install-suggests --no-install-recommends install libspdlog-dev libfmt-dev \
+          libeigen3-dev libcppad-dev
+
+      - uses: actions/checkout@v3
+        with:
+          lfs: false
+
+      - name: Create LFS file list
+        run: git lfs ls-files -l | cut -d' ' -f1 | sort > .lfs-assets-id
+
+      - name: Cache git LFS
+        uses: actions/cache@v3
+        with:
+          path: .git/lfs
+          key: git-lfs-v1-${{ matrix.python-version }}-${{ hashFiles('.lfs-assets-id') }}
+          restore-keys: |
+            git-lfs-v1-${{ matrix.python-version }}
+            git-lfs-v1
+            git-lfs
+
+      - name: Git LFS
+        run: |
+          git lfs checkout
+          git lfs pull
+          git lfs prune --verify-remote
+
+      - name: Install poetry
+        run: pipx install poetry
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'poetry'
+
+      - name: Install dependencies
+        run: |
+          poetry env use "${{ matrix.python-version }}"
+          pip install -U pip setuptools
+          poetry install
+
+      - name: Test with pytest
+        run: |
+          poetry run pytest -n=auto --durations=25 --cov=roseau --cov-report html \
+          --cov-config pyproject.toml --cov-fail-under 90 roseau
+
+      - name: Archive code coverage results
+        uses: actions/upload-artifact@v3
+        if: ${{ always() }}
+        with:
+          name: code-coverage-report-${{ runner.os }}-python-${{ matrix.python-version }}
+          path: htmlcov/

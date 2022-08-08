@@ -1,0 +1,33 @@
+name: pre-commit
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths-ignore:
+      - ".vscode/**"
+      - ".idea/**"
+    tags:
+      - '*'
+  pull_request:
+    branches: [ main, develop ]
+    paths-ignore:
+      - ".vscode/**"
+      - ".idea/**"
+    tags:
+      - '*'
+
+jobs:
+  pre-commit:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Install debian dependencies
+        run: |
+          sudo apt update
+          sudo apt -yq --no-install-suggests --no-install-recommends install cppcheck
+      - uses: actions/checkout@v3
+        with:
+          lfs: false
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.9"
+      - uses: pre-commit/action@v3.0.0
