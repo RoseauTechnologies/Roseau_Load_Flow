@@ -191,15 +191,30 @@ class ElectricalNetwork:
 
         for load_data in result_dict["loads"]:
             load_id = load_data["id"]
-            assert isinstance(self.loads[load_id], FlexibleLoad)
-            s = load_data["powers"]
-            powers = [
-                s["sa"][0] + 1j * s["sa"][1],
-                s["sb"][0] + 1j * s["sb"][1],
-                s["sc"][0] + 1j * s["sc"][1],
-            ]
-            self.loads[load_id].powers = powers
-
+            load = self.loads[load_id]
+            if isinstance(load, FlexibleLoad):
+                s = load_data["powers"]
+                powers = [
+                    s["sa"][0] + 1j * s["sa"][1],
+                    s["sb"][0] + 1j * s["sb"][1],
+                    s["sc"][0] + 1j * s["sc"][1],
+                ]
+                load.powers = powers
+            i = load_data["currents"]
+            if "in" in i:
+                currents = [
+                    i["ia"][0] + 1j * i["ia"][1],
+                    i["ib"][0] + 1j * i["ib"][1],
+                    i["ic"][0] + 1j * i["ic"][1],
+                    i["in"][0] + 1j * i["in"][1],
+                ]
+            else:
+                currents = [
+                    i["ia"][0] + 1j * i["ia"][1],
+                    i["ib"][0] + 1j * i["ib"][1],
+                    i["ic"][0] + 1j * i["ic"][1],
+                ]
+            load.currents = currents
         return info["iterations"]
 
     #

@@ -47,6 +47,7 @@ class AbstractLoad(Element, JsonMixin, metaclass=ABCMeta):
         self.id = id
         self.n = n
         self.bus = bus
+        self._currents = None
 
     def __str__(self) -> str:
         return f"id={self.id} - n={self.n}"
@@ -59,7 +60,11 @@ class AbstractLoad(Element, JsonMixin, metaclass=ABCMeta):
         Returns:
             An array containing the actual currents of each phase.
         """
-        raise NotImplementedError
+        return self._currents
+
+    @currents.setter
+    def currents(self, value: np.ndarray):
+        self._currents = value
 
     #
     # Json Mixin interface
