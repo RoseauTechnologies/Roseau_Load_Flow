@@ -67,11 +67,25 @@ class TransformerCharacteristics:
         # Check
         if uhv <= ulv:
             msg = (
-                f"The transformer {type_name!r} has a high voltages lower or equal than the low voltages: uhv="
+                f"The transformer type {type_name!r} has a high voltages lower or equal than the low voltages: uhv="
                 f"{uhv:.2f} V and ulv={ulv:.2f} V"
             )
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_VOLTAGES)
+        if i0 > 1.0 or i0 < 0.0:
+            msg = (
+                f"The transformer type {type_name!r} has a current during off-load test i0={i0}. It is a percentage"
+                f"that should be between 0 and 1."
+            )
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_PARAMETERS)
+        if vsc > 1.0 or vsc < 0.0:
+            msg = (
+                f"The transformer type {type_name!r} has a voltages on LV side during short circuit test vsc={vsc}. "
+                f"It is a percentage that should be between 0 and 1."
+            )
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_PARAMETERS)
 
     @classmethod
     def from_dict(cls, characteristics: dict[str, Any]):

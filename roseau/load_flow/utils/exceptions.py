@@ -29,6 +29,7 @@ class RoseauLoadFlowExceptionCode(Enum):
     BAD_TRANSFORMER_WINDINGS = auto()
     BAD_TRANSFORMER_TYPE = auto()
     BAD_TRANSFORMER_VOLTAGES = auto()
+    BAD_TRANSFORMER_PARAMETERS = auto()
 
     # Control
     BAD_CONTROL_TYPE = auto()

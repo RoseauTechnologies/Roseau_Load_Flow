@@ -148,3 +148,37 @@ def test_transformer_characteristics():
         TransformerCharacteristics.from_dict(data)
     assert "has a high voltages lower or equal than the low voltages" in e.value.args[0]
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_VOLTAGES
+
+    # Bad i0
+    data = {
+        "name": "test",
+        "psc": 2350.0,  # W
+        "p0": 460.0,  # W
+        "i0": 5.6,  # %
+        "ulv": 400,  # V
+        "uhv": 20000,  # V
+        "sn": 160 * 1e3,  # VA
+        "vsc": 4 / 100,  # %
+        "type": "dyn11",
+    }
+    with pytest.raises(RoseauLoadFlowException) as e:
+        TransformerCharacteristics.from_dict(data)
+    assert "has a current during off-load test i0" in e.value.args[0]
+    assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_PARAMETERS
+
+    # Bad vsc
+    data = {
+        "name": "test",
+        "psc": 2350.0,  # W
+        "p0": 460.0,  # W
+        "i0": 5.6 / 100,  # %
+        "ulv": 400,  # V
+        "uhv": 20000,  # V
+        "sn": 160 * 1e3,  # VA
+        "vsc": 4,  # %
+        "type": "dyn11",
+    }
+    with pytest.raises(RoseauLoadFlowException) as e:
+        TransformerCharacteristics.from_dict(data)
+    assert "has a voltages on LV side during short circuit test vsc" in e.value.args[0]
+    assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_PARAMETERS
