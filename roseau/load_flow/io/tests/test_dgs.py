@@ -1,4 +1,4 @@
-from roseau.load_flow import ElectricalNetwork
+from roseau.load_flow.network import ElectricalNetwork
 
 
 def test_from_dgs(dgs_network_path):

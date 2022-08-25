@@ -1,5 +1,6 @@
 from roseau.load_flow.models.loads.flexible_parameters import Control, FlexibleParameter, Projection
 from roseau.load_flow.models.loads.loads import (
+    AbstractLoad,
     AdmittanceLoad,
     DeltaAdmittanceLoad,
     DeltaImpedanceLoad,
@@ -10,6 +11,7 @@ from roseau.load_flow.models.loads.loads import (
 )
 
 __all__ = [
+    "AbstractLoad",
     "ImpedanceLoad",
     "PowerLoad",
     "AdmittanceLoad",

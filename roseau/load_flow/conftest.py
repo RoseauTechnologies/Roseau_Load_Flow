@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 from pandas.testing import assert_frame_equal
 
-from roseau.load_flow.utils.utils import set_logging_config
+from roseau.load_flow.utils.log import set_logging_config
 
 # Variable to test the network
 HERE = Path(__file__).parent.expanduser().absolute()

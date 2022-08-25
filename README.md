@@ -4,12 +4,6 @@
 
 ## Installation ##
 
-`Roseau Load Flow` requires a few additional libraries which can be installed with:
-
-``` bash
-sudo apt install libspdlog-dev libfmt-dev libeigen3-dev libcppad-dev
-```
-
 ### As a dependency of a project via `poetry` ###
 
 ```toml
@@ -20,7 +14,7 @@ secondary = true
 
 [tool.poetry.dependencies]
 #...
-roseau_load_flow = { version = ">=0.5.0", source = "roseau" }
+roseau_load_flow = { version = ">=0.1.0", source = "roseau" }
 ```
 
 Le Pypi repository `roseau` is a private repository. An authentication is required. Do not forget to apply
@@ -93,7 +87,7 @@ p_ref = PotentialRef(element=ground)
 
 en = ElectricalNetwork(buses=[vs, load_bus], branches=[line], loads=[load], special_elements=[p_ref, ground])
 # or
-en = ElectricalNetwork.from_element(vs)
+# en = ElectricalNetwork.from_element(vs)
 
 en.solve_load_flow()
 ```

@@ -5,10 +5,10 @@ from pint import Quantity
 from shapely.geometry import LineString, Point
 from shapely.geometry.base import BaseGeometry
 
+from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.buses import AbstractBus, VoltageSource
 from roseau.load_flow.models.core import AbstractBranch, Ground
 from roseau.load_flow.models.lines.line_characteristics import LineCharacteristics
-from roseau.load_flow.utils.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.utils.types import BranchType
 from roseau.load_flow.utils.units import ureg
 

@@ -1,6 +1,6 @@
 import pytest
 
-from roseau.load_flow.utils.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
+from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.utils.types import ConductorType, IsolationType, LineModel, LineType, TransformerType
 
 TYPES = [

@@ -2,17 +2,17 @@ import collections
 import logging
 from typing import Any, TYPE_CHECKING
 
-from roseau.load_flow import (
+from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
+from roseau.load_flow.models import (
     AbstractBranch,
     AbstractBus,
     AbstractLine,
+    AbstractLoad,
     AbstractTransformer,
+    Element,
     LineCharacteristics,
     TransformerCharacteristics,
 )
-from roseau.load_flow.models.core import Element
-from roseau.load_flow.models.loads.loads import AbstractLoad
-from roseau.load_flow.utils.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 
 if TYPE_CHECKING:
     from roseau.load_flow.network import ElectricalNetwork

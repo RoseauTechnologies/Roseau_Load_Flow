@@ -1,6 +1,7 @@
 import pytest
 
-from roseau.load_flow import (
+from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
+from roseau.load_flow.models import (
     AdmittanceLoad,
     Bus,
     DeltaAdmittanceLoad,
@@ -11,7 +12,6 @@ from roseau.load_flow import (
     ImpedanceLoad,
     PowerLoad,
 )
-from roseau.load_flow.utils import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 
 
 def test_loads():

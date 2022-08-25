@@ -1,7 +1,7 @@
 import logging
 from typing import Any
 
-from roseau.load_flow.utils.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
+from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.utils.units import ureg
 
 logger = logging.getLogger(__name__)

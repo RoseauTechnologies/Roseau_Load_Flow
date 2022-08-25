@@ -1,18 +1,18 @@
 import numpy as np
 import pytest
 
-from roseau.load_flow import (
+from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
+from roseau.load_flow.models import (
     Bus,
     DeltaWyeTransformer,
-    ElectricalNetwork,
     Ground,
+    LineCharacteristics,
     PotentialRef,
     SimplifiedLine,
     TransformerCharacteristics,
     VoltageSource,
 )
-from roseau.load_flow.models.lines.line_characteristics import LineCharacteristics
-from roseau.load_flow.utils.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
+from roseau.load_flow.network import ElectricalNetwork
 
 
 def test_to_dict():
