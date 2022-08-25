@@ -123,12 +123,14 @@ class ElectricalNetwork:
     #
     # Solve the load flow
     #
-    def solve_load_flow(self, epsilon: float = DEFAULT_PRECISION, max_iterations: int = DEFAULT_MAX_ITERATIONS) -> int:
+    def solve_load_flow(
+        self, precision: float = DEFAULT_PRECISION, max_iterations: int = DEFAULT_MAX_ITERATIONS
+    ) -> int:
         """Execute a newton algorithm for load flow calculation. In order to get the results of the load flow, please
         use the `get_results` method or call the elements directly.
 
         Args:
-            epsilon:
+            precision:
                 Precision needed for the convergence
 
             max_iterations:
@@ -143,10 +145,10 @@ class ElectricalNetwork:
         # TODO Call requests ad store the results in the class and subsequents objects
         result_dict: dict[str, Any] = dict()
         info = result_dict["info"]
-        if info["status"] != "ok":
+        if info["status"] != "success":
             msg = (
                 f"The load flow did not converge after {info['iterations']} iterations. The norm of the residuals is "
-                f"{info['final_error']}"
+                f"{info['finalError']}"
             )
             logger.error(msg=msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.NO_LOAD_FLOW_CONVERGENCE)
