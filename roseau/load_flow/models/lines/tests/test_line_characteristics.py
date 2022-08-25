@@ -3,13 +3,9 @@ import numpy.linalg as nplin
 import numpy.testing as npt
 import pytest
 
-from roseau.load_flow import LineCharacteristics
-from roseau.load_flow.models.buses import Bus
-from roseau.load_flow.models.core import Ground
-from roseau.load_flow.models.lines.lines import ShuntLine
-from roseau.load_flow.utils.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
-from roseau.load_flow.utils.types import ConductorType, IsolationType, LineModel, LineType
-from roseau.load_flow.utils.units import Q_
+from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
+from roseau.load_flow.models import Bus, Ground, LineCharacteristics, ShuntLine
+from roseau.load_flow.utils import ConductorType, IsolationType, LineModel, LineType, Q_
 
 
 def test_line_characteristics():

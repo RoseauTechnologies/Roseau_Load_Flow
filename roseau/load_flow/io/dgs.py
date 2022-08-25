@@ -6,6 +6,7 @@ from typing import Union
 import numpy as np
 import pandas as pd
 
+from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models import (
     AbstractBranch,
     AbstractBus,
@@ -23,7 +24,6 @@ from roseau.load_flow.models import (
 from roseau.load_flow.models.core import Element
 from roseau.load_flow.models.loads.loads import AbstractLoad
 from roseau.load_flow.utils import LineModel, Q_
-from roseau.load_flow.utils.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 
 logger = logging.getLogger(__name__)
 

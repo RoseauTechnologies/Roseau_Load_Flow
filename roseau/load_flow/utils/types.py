@@ -4,7 +4,7 @@ from typing import Optional
 
 import regex
 
-from roseau.load_flow.utils.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
+from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 
 # The local logger
 logger = logging.getLogger(__name__)

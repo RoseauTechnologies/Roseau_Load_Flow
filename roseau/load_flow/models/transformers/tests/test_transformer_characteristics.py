@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
 
+from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models import TransformerCharacteristics
-from roseau.load_flow.utils import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 
 
 def test_transformer_characteristics():

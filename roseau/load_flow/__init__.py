@@ -1,3 +1,4 @@
+from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models import (
     AbstractBranch,
     AbstractBus,
@@ -60,4 +61,7 @@ __all__ = [
     "WyeWyeTransformer",
     "DeltaWyeTransformer",
     "TransformerCharacteristics",
+    # Exceptions
+    "RoseauLoadFlowException",
+    "RoseauLoadFlowExceptionCode",
 ]

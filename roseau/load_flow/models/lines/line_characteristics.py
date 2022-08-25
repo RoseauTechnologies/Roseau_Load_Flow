@@ -4,9 +4,9 @@ from typing import Any, Optional
 import numpy as np
 import numpy.linalg as nplin
 
+from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.utils import ConductorType, IsolationType, LineModel, LineType
 from roseau.load_flow.utils.constants import EPSILON_0, EPSILON_R, MU_0, OMEGA, PI, RHO, TAN_D
-from roseau.load_flow.utils.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.utils.units import Q_, ureg
 
 logger = logging.getLogger(__name__)

@@ -2,6 +2,7 @@ from roseau.load_flow.models.buses import AbstractBus, Bus, VoltageSource
 from roseau.load_flow.models.core import AbstractBranch, Element, Ground, PotentialRef
 from roseau.load_flow.models.lines import AbstractLine, LineCharacteristics, ShuntLine, SimplifiedLine, Switch
 from roseau.load_flow.models.loads import (
+    AbstractLoad,
     AdmittanceLoad,
     Control,
     DeltaAdmittanceLoad,
@@ -37,6 +38,7 @@ __all__ = [
     "SimplifiedLine",
     "LineCharacteristics",
     # Loads
+    "AbstractLoad",
     "ImpedanceLoad",
     "PowerLoad",
     "AdmittanceLoad",

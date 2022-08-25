@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
 
-from roseau.load_flow import Bus, Ground, LineCharacteristics, SimplifiedLine, Switch, VoltageSource
-from roseau.load_flow.utils.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
+from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
+from roseau.load_flow.models import Bus, Ground, LineCharacteristics, SimplifiedLine, Switch, VoltageSource
 
 
 def test_switch_loop():
