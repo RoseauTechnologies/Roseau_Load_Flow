@@ -252,9 +252,4 @@ $RECYCLE.BIN/
 
 .idea-*/
 
-# cython generated cpp files
-cy_*.cpp
-
-thunders/models/_load_flow.cpp
-thunders/models/Makefile
 benchmark/*.mtx
