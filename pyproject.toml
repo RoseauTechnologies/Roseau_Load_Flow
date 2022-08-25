@@ -48,7 +48,7 @@ pytest-runner = "^6.0.0"
 
 # Code quality
 coverage = { version = "^6.0.0", extras = ["toml"] }
-flake8 = "^4.0.1"
+flake8 = "^5.0.4"
 pre-commit = "^2.6.0"
 black = { version = ">=20.8b1", extras = ["jupyter"] }
 isort = "^5.1.0"
