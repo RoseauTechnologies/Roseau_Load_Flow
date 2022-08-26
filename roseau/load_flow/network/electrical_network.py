@@ -7,6 +7,7 @@ from typing import Any, Union
 
 import numpy as np
 import pandas as pd
+import requests
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.io.dgs import network_from_dgs
@@ -23,6 +24,7 @@ logger = logging.getLogger(__name__)
 class ElectricalNetwork:
     DEFAULT_PRECISION: float = 1e-6
     DEFAULT_MAX_ITERATIONS: int = 20
+    DEFAULT_BASE_URL = "http://localhost:8000"
 
     branch_class = AbstractBranch
     load_class = AbstractLoad
@@ -124,12 +126,26 @@ class ElectricalNetwork:
     # Solve the load flow
     #
     def solve_load_flow(
-        self, precision: float = DEFAULT_PRECISION, max_iterations: int = DEFAULT_MAX_ITERATIONS
+        self,
+        login: str,
+        password: str,
+        base_url: str = DEFAULT_BASE_URL,
+        precision: float = DEFAULT_PRECISION,
+        max_iterations: int = DEFAULT_MAX_ITERATIONS,
     ) -> int:
         """Execute a newton algorithm for load flow calculation. In order to get the results of the load flow, please
         use the `get_results` method or call the elements directly.
 
         Args:
+            login:
+                The login for the roseau load flow api.
+
+            password:
+                The password for the roseau load flow api.
+
+            base_url:
+                The base url to request the load flow solver.
+
             precision:
                 Precision needed for the convergence
 
@@ -142,8 +158,16 @@ class ElectricalNetwork:
         if not self._valid:
             self._create_network()
 
-        # TODO Call requests ad store the results in the class and subsequents objects
-        result_dict: dict[str, Any] = dict()
+        params = {"max_iterations": max_iterations, "precision": precision}
+        network_data = self.to_dict()
+        response = requests.post(f"{base_url}/solve/", params=params, json=network_data, auth=(login, password))
+
+        if response.status_code != 200:  # TODO
+            msg = "There is a problem in the request"
+            logger.error(msg=msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.NO_LOAD_FLOW_CONVERGENCE)
+
+        result_dict: dict[str, Any] = response.json()
         info = result_dict["info"]
         if info["status"] != "success":
             msg = (
@@ -155,6 +179,16 @@ class ElectricalNetwork:
 
         logger.info(f"The load flow converged after {info['iterations']}.")
 
+        self._dispatch_results(result_dict)
+        return info["iterations"]
+
+    def _dispatch_results(self, result_dict: dict[str, Any]):
+        """Dispatch the results to all the elements of the network.
+
+        Args:
+            result_dict:
+                The results returned by the solver.
+        """
         for bus_data in result_dict["buses"]:
             bus_id = bus_data["id"]
             v = bus_data["potentials"]
@@ -172,7 +206,6 @@ class ElectricalNetwork:
                     v["vc"][0] + 1j * v["vc"][1],
                 ]
             self.buses[bus_id].potentials = np.asarray(potentials)
-
         for branch_data in result_dict["branches"]:
             branch_id = branch_data["id"]
             i = branch_data["currents"]
@@ -190,7 +223,6 @@ class ElectricalNetwork:
                     i["ic"][0] + 1j * i["ic"][1],
                 ]
             self.branches[branch_id].currents = currents
-
         for load_data in result_dict["loads"]:
             load_id = load_data["id"]
             load = self.loads[load_id]
@@ -217,7 +249,6 @@ class ElectricalNetwork:
                     i["ic"][0] + 1j * i["ic"][1],
                 ]
             load.currents = currents
-        return info["iterations"]
 
     #
     # Getter for the load flow results
