@@ -3,14 +3,18 @@ from roseau.load_flow.models import (
     AbstractBranch,
     AbstractBus,
     AbstractLine,
+    AbstractLoad,
     AbstractTransformer,
     AdmittanceLoad,
     Bus,
     Control,
     DeltaAdmittanceLoad,
+    DeltaDeltaTransformer,
     DeltaImpedanceLoad,
     DeltaPowerLoad,
     DeltaWyeTransformer,
+    DeltaZigzagTransformer,
+    Element,
     FlexibleLoad,
     FlexibleParameter,
     Ground,
@@ -24,7 +28,9 @@ from roseau.load_flow.models import (
     Switch,
     TransformerCharacteristics,
     VoltageSource,
+    WyeDeltaTransformer,
     WyeWyeTransformer,
+    WyeZigzagTransformer,
 )
 from roseau.load_flow.network import ElectricalNetwork
 
@@ -36,6 +42,7 @@ __all__ = [
     "Bus",
     "VoltageSource",
     # Core
+    "Element",
     "Ground",
     "PotentialRef",
     "AbstractBranch",
@@ -46,6 +53,7 @@ __all__ = [
     "SimplifiedLine",
     "LineCharacteristics",
     # Loads
+    "AbstractLoad",
     "ImpedanceLoad",
     "PowerLoad",
     "AdmittanceLoad",
@@ -60,6 +68,10 @@ __all__ = [
     "AbstractTransformer",
     "WyeWyeTransformer",
     "DeltaWyeTransformer",
+    "DeltaDeltaTransformer",
+    "WyeDeltaTransformer",
+    "WyeZigzagTransformer",
+    "DeltaZigzagTransformer",
     "TransformerCharacteristics",
     # Exceptions
     "RoseauLoadFlowException",

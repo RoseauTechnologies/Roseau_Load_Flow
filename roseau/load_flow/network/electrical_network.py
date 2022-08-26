@@ -148,7 +148,7 @@ class ElectricalNetwork:
         if info["status"] != "success":
             msg = (
                 f"The load flow did not converge after {info['iterations']} iterations. The norm of the residuals is "
-                f"{info['finalError']}"
+                f"{info['final_error']}"
             )
             logger.error(msg=msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.NO_LOAD_FLOW_CONVERGENCE)
