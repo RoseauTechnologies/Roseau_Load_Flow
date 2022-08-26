@@ -399,3 +399,29 @@ def test_sym():
     y_shunt_expected = 0.00014106j * np.eye(3)
     npt.assert_allclose(y_shunt, y_shunt_expected)
     assert model == LineModel.SYM
+
+
+def test_from_name_lv():
+    with pytest.raises(RoseauLoadFlowException) as e:
+        LineCharacteristics.from_name_lv("totoS_Al_150")
+    assert "The line type name does not follow the syntax rule." in e.value.args[0]
+    assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_TYPE_NAME_SYNTAX
+
+    lc = LineCharacteristics.from_name_lv("S_AL_150")
+    assert lc.z_line.shape == (4, 4)
+    assert lc.y_shunt.shape == (4, 4)
+    assert (lc.z_line.real >= 0).all().all()
+
+
+def test_from_name_mv():
+    with pytest.raises(RoseauLoadFlowException) as e:
+        LineCharacteristics.from_name_mv("totoS_Al_150")
+    assert "The line type name does not follow the syntax rule." in e.value.args[0]
+    assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_TYPE_NAME_SYNTAX
+
+    lc = LineCharacteristics.from_name_mv("S_AL_150")
+    z_line_expected = (0.188 + 0.1j) * np.eye(4, 4)
+    y_shunt_expected = 0.00014106j * np.eye(4, 4)
+
+    npt.assert_allclose(lc.z_line, z_line_expected)
+    npt.assert_allclose(lc.y_shunt, y_shunt_expected, rtol=1e-4)

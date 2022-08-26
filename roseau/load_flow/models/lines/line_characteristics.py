@@ -1,4 +1,5 @@
 import logging
+import re
 from typing import Any, Optional
 
 import numpy as np
@@ -6,7 +7,7 @@ import numpy.linalg as nplin
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.utils import ConductorType, IsolationType, LineModel, LineType
-from roseau.load_flow.utils.constants import EPSILON_0, EPSILON_R, MU_0, OMEGA, PI, RHO, TAN_D
+from roseau.load_flow.utils.constants import CX, EPSILON_0, EPSILON_R, MU_0, OMEGA, PI, RHO, TAN_D
 from roseau.load_flow.utils.units import Q_, ureg
 
 logger = logging.getLogger(__name__)
@@ -14,6 +15,13 @@ logger = logging.getLogger(__name__)
 
 class LineCharacteristics:
     """A class to store the line characteristics of lines"""
+
+    _type_re = "|".join(x.code() for x in LineType)
+    _material_re = "|".join(x.code() for x in ConductorType)
+    _section_re = r"[1-9][0-9]*"
+    REGEXP_LINE_TYPE_NAME: re.Pattern = re.compile(
+        rf"^({_type_re})_({_material_re})_{_section_re}$", flags=re.IGNORECASE
+    )
 
     @ureg.wraps(None, (None, None, "ohm/km", "S/km"), strict=False)
     def __init__(self, type_name: str, z_line: np.ndarray, y_shunt: Optional[np.ndarray] = None):
@@ -324,7 +332,7 @@ class LineCharacteristics:
     @classmethod
     @ureg.wraps(
         None,
-        (None, None, None, None, None, "mm**2", "mm**2", "m", "mm"),
+        (None, None, None, None, None, "mm**2", "mm**2", "m", "m"),
         strict=False,
     )
     def from_lv_exact(
@@ -363,7 +371,7 @@ class LineCharacteristics:
                  Height of the line (m).
 
             external_diameter:
-                External diameter of the wire (mm).
+                External diameter of the wire (m).
 
         Returns:
             The created line characteristics.
@@ -489,12 +497,8 @@ class LineCharacteristics:
                 "m",
             )
             epsilon = EPSILON_0 * EPSILON_R[insulator_type]
-        elif line_type == LineType.UNKNOWN:
-            msg = f"The line type of the line {type_name!r} is unknown. It should have been filled in the reading."
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_TYPE)
         else:
-            msg = f"The line type of the line {type_name!r} is unknown. It should never happen."
+            msg = f"The line type of the line {type_name!r} is unknown. It should have been filled in the reading."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_TYPE)
 
@@ -547,6 +551,103 @@ class LineCharacteristics:
                     y_shunt[i, j] = -y[i, j]
 
         return z_line, y_shunt, LineModel.LV_EXACT
+
+    @classmethod
+    def from_name_lv(
+        cls,
+        name: str,
+        section_neutral: Optional[float] = None,
+        height: Optional[float] = None,
+        external_diameter: Optional[float] = None,
+    ) -> "LineCharacteristics":
+        """Method to get the electrical characteristics of a line from its canonical name.
+        Some hypothesis will be made: the section of the neutral is the same as the other sections, the height and
+        external diameter are pre-defined, and the isolation is PVC.
+
+        Args:
+            name:
+                The name of the line the characteristics must be computed. Eg. "S_AL_150".
+
+            section_neutral:
+                Surface of the neutral (mm²). If None it will be the same as the section of the other phases.
+
+            height:
+                 Height of the line (m). If None a default value will be used.
+
+            external_diameter:
+                External diameter of the wire (mm). If None a default value will be used.
+
+        Returns:
+            The corresponding line characteristics.
+        """
+        match: re.Match = cls.REGEXP_LINE_TYPE_NAME.fullmatch(string=name)
+        if not match:
+            msg = f"The line type name does not follow the syntax rule. {name!r} was provided."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TYPE_NAME_SYNTAX)
+
+        # Check the user input and retrieve enumerated types
+        line_type, conductor_type, section = name.split("_")
+        line_type = LineType.from_string(string=line_type)
+        conductor_type = ConductorType.from_string(conductor_type)
+        isolation_type = IsolationType.PVC
+
+        section = float(section)
+
+        if section_neutral is None:
+            section_neutral = section
+        if height is None:
+            height = Q_(-1.5, "m") if line_type == LineType.UNDERGROUND else Q_(10.0, "m")
+        if external_diameter is None:
+            external_diameter = Q_(40, "mm")
+
+        return cls.from_lv_exact(
+            type_name=name,
+            line_type=line_type,
+            conductor_type=conductor_type,
+            isolation_type=isolation_type,
+            section=section,
+            section_neutral=section_neutral,
+            height=height,
+            external_diameter=external_diameter,
+        )
+
+    @classmethod
+    def from_name_mv(cls, name: str):
+        match: re.Match = cls.REGEXP_LINE_TYPE_NAME.fullmatch(string=name)
+        if not match:
+            msg = f"The line type name does not follow the syntax rule. {name!r} was provided."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TYPE_NAME_SYNTAX)
+
+        # Check the user input and retrieve enumerated types
+        line_type, conductor_type, section = name.split("_")
+        line_type = LineType.from_string(string=line_type)
+        conductor_type = ConductorType.from_string(conductor_type)
+        section = Q_(float(section), "mm**2")
+
+        r = RHO[conductor_type] / section
+        x = CX[line_type]
+        if type == LineType.OVERHEAD:
+            c_b1 = Q_(50, "µF/km")
+            c_b2 = Q_(0, "µF/(km*mm**2)")
+        elif type == LineType.TWISTED:
+            # Twisted line
+            c_b1 = Q_(1750, "µF/km")
+            c_b2 = Q_(5, "µF/(km*mm**2)")
+        else:
+            if section <= Q_(50, "mm**2"):
+                c_b1 = Q_(1120, "µF/km")
+                c_b2 = Q_(33, "µF/(km*mm**2)")
+            else:
+                c_b1 = Q_(2240, "µF/km")
+                c_b2 = Q_(15, "µF/(km*mm**2)")
+        b = (c_b1 + c_b2 * section) * 1e-4 * OMEGA
+        b = b.to("S/km")
+
+        z_line = (r + x * 1j) * np.eye(4)  # in ohms/km
+        y_shunt = b * 1j * np.eye(4, 4)  # in siemens/km
+        return cls(type_name=name, z_line=z_line, y_shunt=y_shunt)
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]):

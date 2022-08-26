@@ -1,6 +1,6 @@
 import numpy as np
 
-from roseau.load_flow.utils.types import ConductorType, IsolationType
+from roseau.load_flow.utils.types import ConductorType, IsolationType, LineType
 from roseau.load_flow.utils.units import Q_
 
 PI: float = np.pi
@@ -22,10 +22,17 @@ RHO: dict[ConductorType, float] = {
     ConductorType.CU: Q_(1.72e-8, "ohm*m"),
     ConductorType.AL: Q_(2.82e-8, "ohm*m"),
     ConductorType.AM: Q_(3.26e-8, "ohm*m"),
-    ConductorType.AA: np.nan,  # TODO
-    ConductorType.LA: np.nan,
-}  # TODO
+    ConductorType.AA: Q_(4.0587e-8, "ohm*m"),
+    ConductorType.LA: Q_(3.26e-8, "ohm*m"),
+}
 """Resistivity (ohm.m)"""
+
+CX: dict[LineType, float] = {
+    LineType.OVERHEAD: Q_(0.35, "ohm/km"),
+    LineType.UNDERGROUND: Q_(0.1, "ohm/km"),
+    LineType.TWISTED: Q_(0.1, "ohm/km"),
+}
+"""Reactance parameter (Ohm/km)"""
 
 MU_R: dict[ConductorType, float] = {
     ConductorType.CU: Q_(1.2566e-8, "H/m"),

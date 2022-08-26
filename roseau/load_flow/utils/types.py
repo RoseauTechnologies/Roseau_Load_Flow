@@ -15,9 +15,6 @@ class LineType(Enum):
     """The type of a line.
 
     Attributes:
-        LineType.UNKNOWN:
-            The line is an unknown line.
-
         LineType.OVERHEAD:
             The line is an overhead line.
 
@@ -28,7 +25,6 @@ class LineType(Enum):
             The line is a twisted line.
     """
 
-    UNKNOWN = 0
     OVERHEAD = 1
     UNDERGROUND = 2
     TWISTED = 3
@@ -53,18 +49,36 @@ class LineType(Enum):
             The corresponding LineType.
         """
         string = string.lower()
-        if string in ("unknown", "", "nan"):
-            return cls.UNKNOWN
-        elif string in ("overhead", "aérien", "aerien", "galerie"):
+        if string in ("overhead", "aérien", "aerien", "galerie", "a", "o"):
             return cls.OVERHEAD
-        elif string in ("underground", "souterrain", "sous-marin"):
+        elif string in ("underground", "souterrain", "sous-marin", "s", "u"):
             return cls.UNDERGROUND
-        elif string in ("twisted", "torsadé", "torsade"):
+        elif string in ("twisted", "torsadé", "torsade", "t"):
             return cls.TWISTED
         else:
             msg = f"The string {string!r} can not be converted into a LineType."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_TYPE)
+
+    #
+    # WordingCodeMixin
+    #
+    def code(self) -> str:
+        """The code method is modified to retrieve a code that can be used in line type names.
+
+        Returns:
+            The code of the enumerated value.
+        """
+        if self == LineType.OVERHEAD:
+            return "A"
+        elif self == LineType.UNDERGROUND:
+            return "S"
+        elif self == LineType.TWISTED:
+            return "T"
+        else:  # pragma: no cover
+            msg = f"There is code missing here. I do not know the LineType {self!r}."
+            logger.error(msg)
+            raise NotImplementedError(msg)
 
 
 @unique
@@ -72,9 +86,6 @@ class ConductorType(Enum):
     """The type of conductor.
 
     Attributes:
-        ConductorType.UNKNOWN:
-            The conductor is made with unknown material.
-
         ConductorType.AL:
             The conductor is in Aluminium.
 
@@ -91,7 +102,6 @@ class ConductorType(Enum):
             The conductor is in Almélec-Acier.
     """
 
-    UNKNOWN = 0
     AL = 1
     CU = 2
     AM = 3
@@ -104,9 +114,7 @@ class ConductorType(Enum):
         Returns:
             A printable string of the conductor type.
         """
-        if self == ConductorType.UNKNOWN:
-            return "unknown"
-        elif self == ConductorType.AL:
+        if self == ConductorType.AL:
             return "Al"
         elif self == ConductorType.CU:
             return "Cu"
@@ -134,9 +142,7 @@ class ConductorType(Enum):
             The corresponding ConductorType.
         """
         string = string.lower()
-        if string in ("unknown", "", "nan"):
-            return cls.UNKNOWN
-        elif string == "al":
+        if string == "al":
             return cls.AL
         elif string == "cu":
             return cls.CU
@@ -150,6 +156,17 @@ class ConductorType(Enum):
             msg = f"The string {string!r} can not be converted into a ConductorType."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_CONDUCTOR_TYPE)
+
+    #
+    # WordingCodeMixin
+    #
+    def code(self) -> str:
+        """The code method is modified to retrieve a code that can be used in line type names.
+
+        Returns:
+            The code of the enumerated value.
+        """
+        return self.name.upper()
 
 
 @unique

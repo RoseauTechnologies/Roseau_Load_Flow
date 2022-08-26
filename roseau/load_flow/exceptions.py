@@ -30,6 +30,7 @@ class RoseauLoadFlowExceptionCode(Enum):
     BAD_TRANSFORMER_TYPE = auto()
     BAD_TRANSFORMER_VOLTAGES = auto()
     BAD_TRANSFORMER_PARAMETERS = auto()
+    BAD_TYPE_NAME_SYNTAX = auto()
 
     # Control
     BAD_CONTROL_TYPE = auto()

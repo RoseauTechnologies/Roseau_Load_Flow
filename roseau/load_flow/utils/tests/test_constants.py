@@ -4,8 +4,6 @@ from roseau.load_flow.utils.types import ConductorType, IsolationType
 
 def test_constants():
     for x in ConductorType:
-        if x is ConductorType.UNKNOWN:
-            continue
         assert x in MU_R
         assert x in RHO
         assert x in DELTA_P
