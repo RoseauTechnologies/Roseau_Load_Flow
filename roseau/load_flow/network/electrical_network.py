@@ -292,17 +292,20 @@ class ElectricalNetwork:
                 logger.error(msg)
                 raise NotImplementedError(msg)
 
-    def set_source_voltages(self, voltages: Sequence[complex]):
+    def set_source_voltages(self, voltages: dict[Any, Sequence[complex]]):
         """Set new voltages for the voltage source
 
         Args:
             voltages:
-                The new voltages
+                A dictionary voltage_source_id -> voltages to update
         """
-        # TODO: give an id here and apply the new voltage to this bus_id (or a dictionary as set_load_point)
-        for bus in self.buses.values():
-            if isinstance(bus, VoltageSource):
-                bus.update_voltages(voltages=voltages)
+        for bus_id, value in voltages.items():
+            voltage_source = self.buses[bus_id]
+            if not isinstance(voltage_source, VoltageSource):
+                msg = "Only voltage sources can have their voltages updated."
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT)
+            voltage_source.update_voltages(voltages=value)
 
     def add_element(self, element: Element):
         """Add an element to the network (the C++ electrical network and the tape will be recomputed).
