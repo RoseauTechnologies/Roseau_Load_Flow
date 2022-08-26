@@ -88,6 +88,36 @@ class TransformerCharacteristics:
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_PARAMETERS)
 
     @classmethod
+    def from_name(cls, name: str, windings: str) -> "TransformerCharacteristics":
+        """TransformerCharacteristics constructor from name.
+
+        Args:
+            name:
+                The name of the transformer characteristics, such as "160kVA" or "H61_50kVA".
+
+            windings:
+                The type of windings such as "Dyn11".
+
+        Returns:
+            The constructed transformer characteristics.
+        """
+        if name == "H61_50kVA":
+            return cls(name, windings, 20000, 400, 50 * 1e3, 145, 1.8 / 100, 1350, 4 / 100)
+        elif name[-3:] == "kVA":
+            try:
+                sn = float(name[:-3])
+            except ValueError:
+                msg = f"The transformer type name does not follow the syntax rule. {name!r} was provided."
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TYPE_NAME_SYNTAX)
+            else:
+                return cls(name, windings, 20000, 400, sn * 1e3, 460, 2.3 / 100, 2350, 4 / 100)
+        else:
+            msg = f"The transformer type name does not follow the syntax rule. {name!r} was provided."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TYPE_NAME_SYNTAX)
+
+    @classmethod
     def from_dict(cls, characteristics: dict[str, Any]):
         """Dict constructor
 

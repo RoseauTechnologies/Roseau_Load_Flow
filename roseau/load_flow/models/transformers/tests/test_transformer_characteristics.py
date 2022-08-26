@@ -182,3 +182,25 @@ def test_transformer_characteristics():
         TransformerCharacteristics.from_dict(data)
     assert "has a voltages on LV side during short circuit test vsc" in e.value.args[0]
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_PARAMETERS
+
+
+def test_from_name():
+    # Bad ones
+    with pytest.raises(RoseauLoadFlowException) as e:
+        TransformerCharacteristics.from_name("toto", "Dyn11")
+    assert "The transformer type name does not follow the syntax rule" in e.value.args[0]
+    assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_TYPE_NAME_SYNTAX
+
+    with pytest.raises(RoseauLoadFlowException) as e:
+        TransformerCharacteristics.from_name("A160kVA", "Dyn11")
+    assert "The transformer type name does not follow the syntax rule" in e.value.args[0]
+    assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_TYPE_NAME_SYNTAX
+
+    with pytest.raises(RoseauLoadFlowException) as e:
+        TransformerCharacteristics.from_name("160kVA", "totoDyn11")
+    assert "Transformer windings can not be extracted from the string" in e.value.args[0]
+    assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS
+
+    # Good ones
+    TransformerCharacteristics.from_name("160kVA", "Dyn11")
+    TransformerCharacteristics.from_name("H61_50kVA", "Dyn11")
