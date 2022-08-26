@@ -86,7 +86,7 @@ def test_bad_networks():
     # No potential reference
     bus3 = Bus("bus3", 4)
     transformer_characteristics = TransformerCharacteristics(
-        type_name="160 kVA", windings="Dyn11", uhv=20000, ulv=400, sn=160 * 1e3, p0=460, i0=2.3, psc=2350, vsc=4
+        type_name="t", windings="Dyn11", uhv=20000, ulv=400, sn=160 * 1e3, p0=460, i0=2.3 / 100, psc=2350, vsc=4 / 100
     )
     _ = DeltaWyeTransformer("transfo", bus2, bus3, transformer_characteristics)
     with pytest.raises(RoseauLoadFlowException) as e:

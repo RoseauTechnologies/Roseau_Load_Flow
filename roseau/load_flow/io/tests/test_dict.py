@@ -44,10 +44,10 @@ def test_to_dict():
     en.remove_element("line1")
     en.remove_element("line2")
     transformer_characteristics1 = TransformerCharacteristics(
-        type_name="test", windings="Dyn11", uhv=20000, ulv=400, sn=160 * 1e3, p0=460, i0=2.3, psc=2350, vsc=4
+        type_name="t", windings="Dyn11", uhv=20000, ulv=400, sn=160 * 1e3, p0=460, i0=2.3 / 100, psc=2350, vsc=4 / 100
     )
     transformer_characteristics2 = TransformerCharacteristics(
-        type_name="test", windings="Dyn11", uhv=20000, ulv=400, sn=160 * 1e3, p0=460, i0=2.3, psc=2350, vsc=4
+        type_name="t", windings="Dyn11", uhv=20000, ulv=400, sn=160 * 1e3, p0=460, i0=2.3 / 100, psc=2350, vsc=4 / 100
     )
     transformer1 = DeltaWyeTransformer(
         id="Transformer1", bus1=vs, bus2=bus, transformer_characteristics=transformer_characteristics1
