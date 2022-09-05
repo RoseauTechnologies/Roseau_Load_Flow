@@ -87,6 +87,22 @@ class TransformerCharacteristics:
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_PARAMETERS)
 
+    def __eq__(self, other):
+        if not isinstance(other, TransformerCharacteristics):
+            return NotImplemented
+        else:
+            return (
+                self.type_name == other.type_name
+                and self.windings == other.windings
+                and np.isclose(self.sn, other.sn)
+                and np.isclose(self.p0, other.p0)
+                and np.isclose(self.i0, other.i0)
+                and np.isclose(self.uhv, other.uhv)
+                and np.isclose(self.ulv, other.ulv)
+                and np.isclose(self.psc, self.psc)
+                and np.isclose(self.vsc, other.vsc)
+            )
+
     @classmethod
     def from_name(cls, name: str, windings: str) -> "TransformerCharacteristics":
         """TransformerCharacteristics constructor from name.

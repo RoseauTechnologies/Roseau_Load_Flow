@@ -1,4 +1,3 @@
-import collections
 import logging
 from typing import Any, TYPE_CHECKING
 
@@ -96,48 +95,46 @@ def network_to_dict(en: "ElectricalNetwork") -> dict[str, Any]:
 
     # Export the branches with their characteristics
     branches = list()
-    line_characteristics_set = set()
-    transformer_characteristics_set = set()
+    line_characteristics_dict = dict()
+    transformer_characteristics_dict = dict()
     for branch in en.branches.values():
         branches.append(branch.to_dict())
         if isinstance(branch, AbstractLine):
-            line_characteristics_set.add(branch.line_characteristics)
+            type_name = branch.line_characteristics.type_name
+            if (
+                type_name in line_characteristics_dict
+                and branch.line_characteristics != line_characteristics_dict[type_name]
+            ):
+                msg = f"There are line characteristics duplicates: {type_name}"
+                logger.error(msg)
+                raise RoseauLoadFlowException(
+                    msg=msg, code=RoseauLoadFlowExceptionCode.JSON_LINE_CHARACTERISTICS_DUPLICATES
+                )
+            line_characteristics_dict[branch.line_characteristics.type_name] = branch.line_characteristics
         elif isinstance(branch, AbstractTransformer):
-            transformer_characteristics_set.add(branch.transformer_characteristics)
+            type_name = branch.transformer_characteristics.type_name
+            if (
+                type_name in transformer_characteristics_dict
+                and branch.transformer_characteristics != transformer_characteristics_dict[type_name]
+            ):
+                msg = f"There are transformer characteristics duplicates: {type_name}"
+                logger.error(msg)
+                raise RoseauLoadFlowException(
+                    msg=msg, code=RoseauLoadFlowExceptionCode.JSON_TRANSFORMER_CHARACTERISTICS_DUPLICATES
+                )
+            transformer_characteristics_dict[type_name] = branch.transformer_characteristics
 
     # Line characteristics
     line_characteristics = list()
-    for lc in line_characteristics_set:
+    for lc in line_characteristics_dict.values():
         line_characteristics.append(lc.to_dict())
     line_characteristics.sort(key=lambda x: x["name"])  # Always keep the same order
-    line_characteristic_names = [lc.type_name for lc in line_characteristics_set]
-    if len(line_characteristic_names) > len(set(line_characteristic_names)):
-        duplicates = ", ".join(
-            [repr(str(item)) for item, count in collections.Counter(line_characteristic_names).items() if count > 1]
-        )
-        msg = f"There are line characteristics type name duplicates: {duplicates}"
-        logger.error(msg)
-        raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.JSON_LINE_CHARACTERISTICS_DUPLICATES)
 
     # Transformer characteristics
     transformer_characteristics = list()
-    for tc in transformer_characteristics_set:
+    for tc in transformer_characteristics_dict.values():
         transformer_characteristics.append(tc.to_dict())
     transformer_characteristics.sort(key=lambda x: x["name"])  # Always keep the same order
-    transformer_characteristics_names = [tc.type_name for tc in transformer_characteristics_set]
-    if len(transformer_characteristics) > len(set(transformer_characteristics_names)):
-        duplicates = ", ".join(
-            [
-                repr(str(item))
-                for item, count in collections.Counter(transformer_characteristics_names).items()
-                if count > 1
-            ]
-        )
-        msg = f"There are transformer characteristics type name duplicates: {duplicates}"
-        logger.error(msg)
-        raise RoseauLoadFlowException(
-            msg=msg, code=RoseauLoadFlowExceptionCode.JSON_TRANSFORMER_CHARACTERISTICS_DUPLICATES
-        )
 
     return {
         "buses": buses,

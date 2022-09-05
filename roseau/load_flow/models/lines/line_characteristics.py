@@ -42,6 +42,24 @@ class LineCharacteristics:
         self.y_shunt = y_shunt
         self._check_matrix()
 
+    def __eq__(self, other):
+        if not isinstance(other, LineCharacteristics):
+            return NotImplemented
+        return (
+            self.type_name == other.type_name
+            and self.z_line.shape == other.z_line.shape
+            and np.allclose(self.z_line, other.z_line)
+            and (
+                (self.y_shunt is None and other.y_shunt is None)
+                or (
+                    self.y_shunt is not None
+                    and other.y_shunt is not None
+                    and self.y_shunt.shape == other.y_shunt.shape
+                    and np.allclose(self.y_shunt, other.y_shunt)
+                )
+            )
+        )
+
     @classmethod
     @ureg.wraps(
         None,
