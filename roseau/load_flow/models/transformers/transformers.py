@@ -186,9 +186,7 @@ class AbstractTransformer(AbstractBranch, ABC):
         )
         return res
 
-    def update_transformer_parameters(
-        self, transformer_characteristics: TransformerCharacteristics, tap: float = 1.0
-    ) -> None:
+    def update_characteristics(self, transformer_characteristics: TransformerCharacteristics, tap: float = 1.0) -> None:
         """Change the transformer parameters
 
         Args:

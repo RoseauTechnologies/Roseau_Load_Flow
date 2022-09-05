@@ -156,7 +156,7 @@ class AbstractLine(AbstractBranch):
             length = length.m_as("km")
         self.length = length
 
-    def update_line_parameters(self, line_characteristics: LineCharacteristics) -> None:
+    def update_characteristics(self, line_characteristics: LineCharacteristics) -> None:
         """Change the line parameters.
 
         Args:
@@ -305,7 +305,7 @@ class SimplifiedLine(AbstractLine):
                 f"{self.line_characteristics.type_name} with a shunt. The shunt part will be ignored."
             )
 
-    def update_line_parameters(self, line_characteristics: LineCharacteristics) -> None:
+    def update_characteristics(self, line_characteristics: LineCharacteristics) -> None:
         """Change the line parameters.
 
         Args:
@@ -318,7 +318,7 @@ class SimplifiedLine(AbstractLine):
                 f"{self.line_characteristics.type_name} with a shunt. The shunt part will be ignored."
             )
 
-        super().update_line_parameters(line_characteristics=line_characteristics)
+        super().update_characteristics(line_characteristics=line_characteristics)
 
 
 class ShuntLine(AbstractLine):

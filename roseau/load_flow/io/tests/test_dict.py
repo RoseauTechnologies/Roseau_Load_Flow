@@ -43,7 +43,7 @@ def test_to_dict():
 
     # Same type name, same characteristics -> ok
     lc2 = LineCharacteristics("test", z_line=np.eye(4, dtype=complex), y_shunt=np.eye(4, dtype=complex))
-    line2.update_line_parameters(line_characteristics=lc2)
+    line2.update_characteristics(line_characteristics=lc2)
     en.to_dict()
 
     # Same transformer type name, different characteristics -> fail
@@ -72,5 +72,5 @@ def test_to_dict():
     transformer_characteristics2 = TransformerCharacteristics(
         type_name="t", windings="Dyn11", uhv=20000, ulv=400, sn=160 * 1e3, p0=460, i0=2.3 / 100, psc=2350, vsc=4 / 100
     )
-    transformer2.update_transformer_parameters(transformer_characteristics=transformer_characteristics2)
+    transformer2.update_characteristics(transformer_characteristics=transformer_characteristics2)
     en.to_dict()
