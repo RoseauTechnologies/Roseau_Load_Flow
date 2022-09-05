@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+import requests_mock
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models import (
@@ -55,7 +56,7 @@ def test_add_and_remove():
     # Remove line => 2 separated connected components
     with pytest.raises(RoseauLoadFlowException) as e:
         en.remove_element(line.id)
-        en.solve_load_flow()
+        en.solve_load_flow(login="", password="")
     assert "does not have a potential reference" in e.value.args[0]
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.NO_POTENTIAL_REFERENCE
 
@@ -103,3 +104,134 @@ def test_bad_networks():
         ElectricalNetwork.from_element(vs)
     assert "has 2 potential references, it should have only one." in e.value.args[0]
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.SEVERAL_POTENTIAL_REFERENCE
+
+
+def test_solve_load_flow():
+    ground = Ground()
+    vs = VoltageSource("vs", 4, ground, [20000.0 + 0.0j, -10000.0 - 17320.508076j, -10000.0 + 17320.508076j])
+    load_bus = Bus("bus", 4)
+    ground.connect(load_bus)
+    load = PowerLoad("load", 4, load_bus, [100, 100, 100])
+    pref = PotentialRef(ground)
+
+    lc = LineCharacteristics("test", 10 * np.eye(4, dtype=complex))
+    line = SimplifiedLine("line", 4, vs, load_bus, lc, 1.0)
+
+    en = ElectricalNetwork([vs, load_bus], [line], [load], [pref, ground])
+
+    with requests_mock.Mocker() as m:
+        # Good result
+        json_result = {
+            "info": {
+                "status": "success",
+                "resolutionMethod": "newton",
+                "iterations": 1,
+                "targetError": 1e-06,
+                "finalError": 6.296829377361313e-14,
+            },
+            "buses": [
+                {
+                    "id": "vs",
+                    "potentials": {
+                        "va": [20000.0, 0.0],
+                        "vb": [-10000.0, -17320.508076],
+                        "vc": [-10000.0, 17320.508076],
+                        "vn": [0.0, 0.0],
+                    },
+                },
+                {
+                    "id": "bus",
+                    "potentials": {
+                        "va": [19999.949999875, 0.0],
+                        "vb": [-9999.9749999375, -17320.464774621556],
+                        "vc": [-9999.9749999375, 17320.464774621556],
+                        "vn": [1.3476526914363477e-12, 0.0],
+                    },
+                },
+            ],
+            "branches": [
+                {
+                    "id": "line",
+                    "currents": {
+                        "ia": [0.005, 0.0],
+                        "ib": [-0.0025, -0.0043],
+                        "ic": [-0.0025, 0.0043],
+                        "in": [-1.347e-13, 0.0],
+                    },
+                }
+            ],
+            "loads": [
+                {
+                    "id": "load",
+                    "currents": {
+                        "ia": [0.005, -0.0],
+                        "ib": [-0.0025, -0.0043],
+                        "ic": [-0.0025, 0.0043],
+                        "in": [-1.347e-13, 0.0],
+                    },
+                }
+            ],
+        }
+        m.post(f"{ElectricalNetwork.DEFAULT_BASE_URL}/solve/", status_code=200, json=json_result)
+        en.solve_load_flow(login="", password="")
+        assert len(load_bus.potentials) == 4
+
+        # No convergence
+        load.update_powers([10000000, 100, 100])
+        json_result = {
+            "info": {
+                "status": "failure",
+                "resolutionMethod": "newton",
+                "iterations": 50,
+                "targetError": 1e-06,
+                "finalError": 14037.977318668112,
+            },
+            "buses": [
+                {
+                    "id": "vs",
+                    "potentials": {
+                        "va": [20000.0, 0.0],
+                        "vb": [-10000.0, -17320.508076],
+                        "vc": [-10000.0, 17320.508076],
+                        "vn": [0.0, 0.0],
+                    },
+                },
+                {
+                    "id": "bus",
+                    "potentials": {
+                        "va": [110753.81558442864, 1.5688245436058308e-26],
+                        "vb": [-9999.985548801811, -17320.50568183019],
+                        "vc": [-9999.985548801811, 17320.50568183019],
+                        "vn": [-90753.844486825, -2.6687106473172017e-26],
+                    },
+                },
+            ],
+            "branches": [
+                {"id": "line", "currents": {"ia": [0.0, 0.0], "ib": [0.0, 0.0], "ic": [0.0, 0.0], "in": [0.0, 0.0]}}
+            ],
+            "loads": [
+                {"id": "load", "currents": {"ia": [0.0, 0.0], "ib": [0.0, 0.0], "ic": [0.0, 0.0], "in": [0.0, 0.0]}}
+            ],
+        }
+        m.post(f"{ElectricalNetwork.DEFAULT_BASE_URL}/solve/", status_code=200, json=json_result)
+        with pytest.raises(RoseauLoadFlowException) as e:
+            en.solve_load_flow(login="", password="")
+        assert "The load flow did not converge after 50 iterations" in e.value.args[0]
+        assert e.value.args[1] == RoseauLoadFlowExceptionCode.NO_LOAD_FLOW_CONVERGENCE
+
+        # Bad request
+        json_result = {"msg": "Error while parsing the provided JSON", "code": "parse_error"}
+        m.post(f"{ElectricalNetwork.DEFAULT_BASE_URL}/solve/", status_code=400, json=json_result)
+        with pytest.raises(RoseauLoadFlowException) as e:
+            en.solve_load_flow(login="", password="")
+        assert "There is a problem in the request" in e.value.args[0]
+        assert "Error while parsing the provided JSON" in e.value.args[0]
+        assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_REQUEST
+
+        # Authentication fail
+        json_result = {"detail": "authentication_fail"}
+        m.post(f"{ElectricalNetwork.DEFAULT_BASE_URL}/solve/", status_code=401, json=json_result)
+        with pytest.raises(RoseauLoadFlowException) as e:
+            en.solve_load_flow(login="", password="")
+        assert "Authentication failed." in e.value.args[0]
+        assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_REQUEST

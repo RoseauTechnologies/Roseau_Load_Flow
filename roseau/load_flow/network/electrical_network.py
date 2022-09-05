@@ -162,17 +162,24 @@ class ElectricalNetwork:
         network_data = self.to_dict()
         response = requests.post(f"{base_url}/solve/", params=params, json=network_data, auth=(login, password))
 
-        if response.status_code != 200:  # TODO
-            msg = "There is a problem in the request"
-            logger.error(msg=msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.NO_LOAD_FLOW_CONVERGENCE)
-
         result_dict: dict[str, Any] = response.json()
+        if response.status_code != 200:
+            if response.status_code == 401:
+                msg = "Authentication failed."
+                logger.error(msg=msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_REQUEST)
+            else:
+                msg = f"There is a problem in the request. Error code {response.status_code}. "
+                if "msg" in result_dict and "code" in result_dict:
+                    msg += f"{result_dict['code']} - {result_dict['msg']}"
+                logger.error(msg=msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_REQUEST)
+
         info = result_dict["info"]
         if info["status"] != "success":
             msg = (
                 f"The load flow did not converge after {info['iterations']} iterations. The norm of the residuals is "
-                f"{info['final_error']}"
+                f"{info['finalError']}"
             )
             logger.error(msg=msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.NO_LOAD_FLOW_CONVERGENCE)
