@@ -262,15 +262,127 @@ class ElectricalNetwork:
     #
     @property
     def results(self) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-        """Get the voltages and currents computed by the load flow
+        """Get the voltages, currents and flexible load powers computed by the load flow.
 
         Returns:
-            The DataFrame of the voltages of the buses indexed by the bus ids and the DataFrame of the current
-            flowing through the branches indexed by the branch ids.
+            The DataFrame of the voltages of the buses indexed by the bus ids, the DataFrame of the current
+            flowing through the branches indexed by the branch ids and the DataFrame of the actual power of the
+            flexible loads indexed by the load ids.
         """
-        # TODO Retrieve the result objects
-        # TODO use pint-pandas (?)
-        raise NotImplementedError
+        phases = ["a", "b", "c", "n"]
+        potentials_dict = {"bus_id": [], "phase": [], "potential": []}
+        for bus_id, bus in self.buses.items():
+            potentials: np.ndarray = bus.potentials
+            for i in range(len(potentials)):
+                potentials_dict["bus_id"].append(bus_id)
+                potentials_dict["phase"].append(phases[i])
+                potentials_dict["potential"].append(potentials[i].magnitude)
+        buses_results: pd.DataFrame = (
+            pd.DataFrame.from_dict(potentials_dict, orient="columns")
+            .astype({"phase": pd.CategoricalDtype(categories=phases, ordered=True), "potential": complex})
+            .set_index(["bus_id", "phase"])
+        )
+
+        currents_dict = {"branch_id": [], "phase": [], "current1": [], "current2": []}
+        for branch_id, branch in self.branches.items():
+            currents1, currents2 = branch.currents
+            nb_currents1, nb_currents2 = len(currents1), len(currents2)
+            for j in range(max(nb_currents1, nb_currents2)):
+                currents_dict["branch_id"].append(branch_id)
+                currents_dict["phase"].append(phases[j])
+                try:
+                    currents_dict["current1"].append(currents1[j].magnitude)
+                except IndexError:
+                    currents_dict["current1"].append(np.nan)
+                try:
+                    currents_dict["current2"].append(currents2[j].magnitude)
+                except IndexError:
+                    currents_dict["current2"].append(np.nan)
+        branches_results = (
+            pd.DataFrame.from_dict(currents_dict, orient="columns")
+            .astype(
+                {
+                    "phase": pd.CategoricalDtype(categories=phases, ordered=True),
+                    "current1": complex,
+                    "current2": complex,
+                }
+            )
+            .set_index(["branch_id", "phase"])
+        )
+
+        loads_dict = {"load_id": [], "phase": [], "power": []}
+        for load_id, load in self.loads.items():
+            if isinstance(load, FlexibleLoad):
+                powers = load.powers
+                for i in range(len(powers)):
+                    loads_dict["load_id"].append(load_id)
+                    loads_dict["phase"].append(phases[i])
+                    loads_dict["power"].append(powers[i].magnitude)
+        loads_results: pd.DataFrame = (
+            pd.DataFrame.from_dict(loads_dict, orient="columns")
+            .astype({"phase": pd.CategoricalDtype(categories=phases, ordered=True), "power": complex})
+            .set_index(["load_id", "phase"])
+        )
+
+        return buses_results, branches_results, loads_results
+
+    def dict_results(self):
+        """Get the voltages and currents computed by the load flow and return them as dict.
+
+        Returns:
+            The dictionary of the voltages of the buses, and the dictionary of the current flowing through the branches.
+        """
+        phases = ["a", "b", "c", "n"]
+        buses_results = list()
+        for bus_id, bus in self.buses.items():
+            potentials: np.ndarray = bus.potentials
+            potentials_dict = dict()
+            for i in range(len(potentials)):
+                potentials_dict[f"v{phases[i]}"] = [potentials[i].real.magnitude, potentials[i].imag.magnitude]
+            buses_results.append({"id": bus_id, "potentials": potentials_dict})
+
+        branches_results = list()
+        for branch_id, branch in self.branches.items():
+            currents: np.ndarray = branch.currents[0]
+            currents_dict = dict()
+            for i in range(len(currents)):
+                currents_dict[f"i{phases[i]}"] = [currents[i].real.magnitude, currents[i].imag.magnitude]
+            branches_results.append({"id": branch_id, "currents": currents_dict})
+
+        loads_results = list()
+        for load_id, load in self.loads.items():
+            currents: np.ndarray = load.currents
+            currents_dict = dict()
+            for i in range(len(currents)):
+                currents_dict[f"i{phases[i]}"] = [currents[i].real.magnitude, currents[i].imag.magnitude]
+            if isinstance(load, FlexibleLoad):
+                powers: np.ndarray = load.powers
+                powers_dict = dict()
+                for i in range(len(powers)):
+                    powers_dict[f"s{phases[i]}"] = [powers[i].real.magnitude, powers[i].imag.magnitude]
+                loads_results.append({"id": load_id, "powers": powers_dict, "currents": currents_dict})
+            else:
+                loads_results.append({"id": load_id, "currents": currents_dict})
+
+        return {
+            "info": self._results_info,
+            "buses": buses_results,
+            "branches": branches_results,
+            "loads": loads_results,
+        }
+
+    def json_results(self, path: Union[str, Path]):
+        """Write a json containing the voltages and currents results.
+
+        Args:
+            path:
+                The path to write the json.
+        """
+        dict_results = self.dict_results()
+        output = json.dumps(dict_results, indent=4)
+        output = re.sub(r"\[\s+(.*),\s+(.*)\s+]", r"[\1, \2]", output)
+        with open(path, "w") as output_file:
+            output_file.write(output)
 
     @ureg.wraps("V", (None, None), strict=False)
     def bus_potentials(self, id: Any) -> np.ndarray:
