@@ -39,7 +39,7 @@ class ElectricalNetwork:
         loads: Union[list[AbstractLoad], dict[Any, AbstractLoad]],
         special_elements: list[Element],
         **kwargs,
-    ):
+    ) -> None:
         """ElectricalNetwork constructor
 
         Args:
@@ -88,6 +88,7 @@ class ElectricalNetwork:
         self.loads: dict[Any, AbstractLoad] = loads
         self.special_elements: list[Element] = special_elements
 
+        self._check_validity(constructed=False)
         self._create_network()
         self._valid = True
         self._results_info: dict[str, Any] = dict()
@@ -156,6 +157,7 @@ class ElectricalNetwork:
             The number of iterations taken
         """
         if not self._valid:
+            self._check_validity(constructed=True)
             self._create_network()
 
         params = {"max_iterations": max_iterations, "precision": precision}
@@ -189,7 +191,7 @@ class ElectricalNetwork:
         self._dispatch_results(result_dict)
         return info["iterations"]
 
-    def _dispatch_results(self, result_dict: dict[str, Any]):
+    def _dispatch_results(self, result_dict: dict[str, Any]) -> None:
         """Dispatch the results to all the elements of the network.
 
         Args:
@@ -281,7 +283,7 @@ class ElectricalNetwork:
 
         return buses_results, branches_results, loads_results
 
-    def dict_results(self):
+    def dict_results(self) -> dict[str, Any]:
         """Get the voltages and currents computed by the load flow and return them as dict.
 
         Returns:
@@ -330,7 +332,7 @@ class ElectricalNetwork:
             "loads": loads_results,
         }
 
-    def json_results(self, path: Union[str, Path]):
+    def json_results(self, path: Union[str, Path]) -> None:
         """Write a json containing the voltages and currents results.
 
         Args:
@@ -385,7 +387,7 @@ class ElectricalNetwork:
     #
     # Set the dynamic parameters.
     #
-    def set_load_point(self, load_point: dict[Any, Sequence[complex]]):
+    def set_load_point(self, load_point: dict[Any, Sequence[complex]]) -> None:
         """Set a new load point to the network
 
         Args:
@@ -401,7 +403,7 @@ class ElectricalNetwork:
                 logger.error(msg)
                 raise NotImplementedError(msg)
 
-    def set_source_voltages(self, voltages: dict[Any, Sequence[complex]]):
+    def set_source_voltages(self, voltages: dict[Any, Sequence[complex]]) -> None:
         """Set new voltages for the voltage source
 
         Args:
@@ -416,7 +418,7 @@ class ElectricalNetwork:
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT)
             voltage_source.update_voltages(voltages=value)
 
-    def add_element(self, element: Element):
+    def add_element(self, element: Element) -> None:
         """Add an element to the network (the C++ electrical network and the tape will be recomputed).
 
         Args:
@@ -435,7 +437,7 @@ class ElectricalNetwork:
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT)
         self._valid = False
 
-    def remove_element(self, id: Any):
+    def remove_element(self, id: Any) -> None:
         """Remove an element of the network (the C++ electrical network and the tape will be recomputed).
 
         Args:
@@ -457,13 +459,17 @@ class ElectricalNetwork:
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_ELEMENT_ID)
         self._valid = False
 
-    def _create_network(self):
+    def _create_network(self) -> None:
         """Create the Cython and C++ electrical network of all the passed elements"""
-        self._check_validity()
         self._valid = True
 
-    def _check_validity(self):
-        """Check the validity of the network to avoid having a singular jacobian matrix"""
+    def _check_validity(self, constructed: bool) -> None:
+        """Check the validity of the network to avoid having a singular jacobian matrix
+
+        Args:
+            constructed:
+                True if the network is already constructed and we have added an element, False otherwise
+        """
         elements: list[Element] = list(self.buses.values())
         elements += list(self.branches.values())
         elements += list(self.loads.values())
@@ -480,10 +486,16 @@ class ElectricalNetwork:
                         element_id = element.id
                     except AttributeError:
                         element_id = type(element).__name__
-                    msg = (
-                        f"The element {adj_id!r} is connected to {element_id!r} but is not in the ElectricalNetwork "
-                        f"constructor."
-                    )
+                    if constructed:
+                        msg = (
+                            f"The element {adj_id!r} is connected to {element_id!r} but is not in the "
+                            f"ElectricalNetwork constructor."
+                        )
+                    else:
+                        msg = (
+                            f"The element {adj_id!r} is connected to {element_id!r} but has not been added to the "
+                            f"network, you should add it with 'add_element'."
+                        )
                     logger.error(msg)
                     raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.UNKNOWN_ELEMENT)
 
@@ -499,7 +511,7 @@ class ElectricalNetwork:
         self._check_ref(elements)
 
     @staticmethod
-    def _check_ref(elements):
+    def _check_ref(elements) -> None:
         """Check the number of potential references to avoid having a singular jacobian matrix"""
         visited_elements = []
         for initial_element in elements:
@@ -579,7 +591,7 @@ class ElectricalNetwork:
         """
         return network_to_dict(self)
 
-    def to_json(self, path: Union[str, Path]):
+    def to_json(self, path: Union[str, Path]) -> None:
         """Save the current network to a json file.
 
         Args:
@@ -597,7 +609,7 @@ class ElectricalNetwork:
     # DGS interface
     #
     @classmethod
-    def from_dgs(cls, path: Union[str, Path]):
+    def from_dgs(cls, path: Union[str, Path]) -> "ElectricalNetwork":
         """ElectricalNetwork constructor from json dgs file (PowerFactory).
 
         Args:
