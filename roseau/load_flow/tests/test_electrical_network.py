@@ -229,7 +229,7 @@ def test_solve_load_flow():
         assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_REQUEST
 
         # Authentication fail
-        json_result = {"detail": "authentication_fail"}
+        json_result = {"detail": "not_authenticated"}
         m.post(f"{ElectricalNetwork.DEFAULT_BASE_URL}/solve/", status_code=401, json=json_result)
         with pytest.raises(RoseauLoadFlowException) as e:
             en.solve_load_flow(login="", password="")
