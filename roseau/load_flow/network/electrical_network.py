@@ -198,63 +198,18 @@ class ElectricalNetwork:
         """
         for bus_data in result_dict["buses"]:
             bus_id = bus_data["id"]
-            v = bus_data["potentials"]
-            if "vn" in v:
-                potentials = [
-                    v["va"][0] + 1j * v["va"][1],
-                    v["vb"][0] + 1j * v["vb"][1],
-                    v["vc"][0] + 1j * v["vc"][1],
-                    v["vn"][0] + 1j * v["vn"][1],
-                ]
-            else:
-                potentials = [
-                    v["va"][0] + 1j * v["va"][1],
-                    v["vb"][0] + 1j * v["vb"][1],
-                    v["vc"][0] + 1j * v["vc"][1],
-                ]
-            self.buses[bus_id].potentials = np.asarray(potentials)
+            self.buses[bus_id].potentials = self._dispatch_value(bus_data["potentials"], "v")
         for branch_data in result_dict["branches"]:
             branch_id = branch_data["id"]
-            i = branch_data["currents"]
-            if "in" in i:
-                currents = [
-                    i["ia"][0] + 1j * i["ia"][1],
-                    i["ib"][0] + 1j * i["ib"][1],
-                    i["ic"][0] + 1j * i["ic"][1],
-                    i["in"][0] + 1j * i["in"][1],
-                ]
-            else:
-                currents = [
-                    i["ia"][0] + 1j * i["ia"][1],
-                    i["ib"][0] + 1j * i["ib"][1],
-                    i["ic"][0] + 1j * i["ic"][1],
-                ]
-            self.branches[branch_id].currents = currents
+            currents1 = self._dispatch_value(branch_data["currents1"], "i")
+            currents2 = self._dispatch_value(branch_data["currents2"], "i")
+            self.branches[branch_id].currents = [currents1, currents2]
         for load_data in result_dict["loads"]:
             load_id = load_data["id"]
             load = self.loads[load_id]
             if isinstance(load, FlexibleLoad):
-                s = load_data["powers"]
-                powers = [
-                    s["sa"][0] + 1j * s["sa"][1],
-                    s["sb"][0] + 1j * s["sb"][1],
-                    s["sc"][0] + 1j * s["sc"][1],
-                ]
-                load.powers = powers
-            i = load_data["currents"]
-            if "in" in i:
-                currents = [
-                    i["ia"][0] + 1j * i["ia"][1],
-                    i["ib"][0] + 1j * i["ib"][1],
-                    i["ic"][0] + 1j * i["ic"][1],
-                    i["in"][0] + 1j * i["in"][1],
-                ]
-            else:
-                currents = [
-                    i["ia"][0] + 1j * i["ia"][1],
-                    i["ib"][0] + 1j * i["ib"][1],
-                    i["ic"][0] + 1j * i["ic"][1],
-                ]
+                load.powers = self._dispatch_value(load_data["powers"], "s")
+            currents = self._dispatch_value(load_data["currents"], "i")
             load.currents = currents
 
     #
@@ -343,11 +298,15 @@ class ElectricalNetwork:
 
         branches_results = list()
         for branch_id, branch in self.branches.items():
-            currents: np.ndarray = branch.currents[0]
-            currents_dict = dict()
-            for i in range(len(currents)):
-                currents_dict[f"i{phases[i]}"] = [currents[i].real.magnitude, currents[i].imag.magnitude]
-            branches_results.append({"id": branch_id, "currents": currents_dict})
+            currents1: np.ndarray = branch.currents[0]
+            currents2: np.ndarray = branch.currents[1]
+            currents_dict1 = dict()
+            currents_dict2 = dict()
+            for i in range(len(currents1)):
+                currents_dict1[f"i{phases[i]}"] = [currents1[i].real.magnitude, currents1[i].imag.magnitude]
+            for i in range(len(currents2)):
+                currents_dict2[f"i{phases[i]}"] = [currents2[i].real.magnitude, currents2[i].imag.magnitude]
+            branches_results.append({"id": branch_id, "currents1": currents_dict1, "currents2": currents_dict2})
 
         loads_results = list()
         for load_id, load in self.loads.items():
@@ -650,3 +609,32 @@ class ElectricalNetwork:
         """
         buses_dict, branches_dict, loads_dict, special_elements = network_from_dgs(filename=path)
         return cls(buses=buses_dict, branches=branches_dict, loads=loads_dict, special_elements=special_elements)
+
+    @staticmethod
+    def _dispatch_value(value: dict[str, tuple[float, float]], t: str) -> np.ndarray:
+        """Dispatch the currents from a dictionary to a list.
+
+        Args:
+            value:
+                The dictionary value to dispatch.
+
+            t:
+                The type of value ("i", "v" or "s").
+
+        Returns:
+            The complex final value.
+        """
+        if t + "n" in value:
+            res = [
+                value[t + "a"][0] + 1j * value[t + "a"][1],
+                value[t + "b"][0] + 1j * value[t + "b"][1],
+                value[t + "c"][0] + 1j * value[t + "c"][1],
+                value[t + "n"][0] + 1j * value[t + "n"][1],
+            ]
+        else:
+            res = [
+                value[t + "a"][0] + 1j * value[t + "a"][1],
+                value[t + "b"][0] + 1j * value[t + "b"][1],
+                value[t + "c"][0] + 1j * value[t + "c"][1],
+            ]
+        return np.asarray(res)
