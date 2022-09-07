@@ -8,6 +8,7 @@ from typing import Any, Union
 import numpy as np
 import pandas as pd
 import requests
+from requests.auth import HTTPBasicAuth
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.io.dgs import network_from_dgs
@@ -128,21 +129,17 @@ class ElectricalNetwork:
     #
     def solve_load_flow(
         self,
-        login: str,
-        password: str,
+        auth: Union[tuple[str, str], HTTPBasicAuth],
         base_url: str = DEFAULT_BASE_URL,
         precision: float = DEFAULT_PRECISION,
         max_iterations: int = DEFAULT_MAX_ITERATIONS,
     ) -> int:
         """Execute a newton algorithm for load flow calculation. In order to get the results of the load flow, please
-        use the `get_results` method or call the elements directly.
+        use the `results` method or call the elements directly.
 
         Args:
-            login:
-                The login for the roseau load flow api.
-
-            password:
-                The password for the roseau load flow api.
+            auth:
+                The login and password for the roseau load flow api.
 
             base_url:
                 The base url to request the load flow solver.
@@ -162,7 +159,7 @@ class ElectricalNetwork:
 
         params = {"max_iterations": max_iterations, "precision": precision}
         network_data = self.to_dict()
-        response = requests.post(f"{base_url}/solve/", params=params, json=network_data, auth=(login, password))
+        response = requests.post(f"{base_url}/solve/", params=params, json=network_data, auth=auth)
 
         result_dict: dict[str, Any] = response.json()
         if response.status_code != 200:

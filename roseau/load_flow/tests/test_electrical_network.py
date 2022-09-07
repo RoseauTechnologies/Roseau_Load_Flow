@@ -56,7 +56,7 @@ def test_add_and_remove():
     # Remove line => 2 separated connected components
     with pytest.raises(RoseauLoadFlowException) as e:
         en.remove_element(line.id)
-        en.solve_load_flow(login="", password="")
+        en.solve_load_flow(auth=("", ""))
     assert "does not have a potential reference" in e.value.args[0]
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.NO_POTENTIAL_REFERENCE
 
@@ -173,7 +173,7 @@ def test_solve_load_flow():
             ],
         }
         m.post(f"{ElectricalNetwork.DEFAULT_BASE_URL}/solve/", status_code=200, json=json_result)
-        en.solve_load_flow(login="", password="")
+        en.solve_load_flow(auth=("", ""))
         assert len(load_bus.potentials) == 4
 
         # No convergence
@@ -215,7 +215,7 @@ def test_solve_load_flow():
         }
         m.post(f"{ElectricalNetwork.DEFAULT_BASE_URL}/solve/", status_code=200, json=json_result)
         with pytest.raises(RoseauLoadFlowException) as e:
-            en.solve_load_flow(login="", password="")
+            en.solve_load_flow(auth=("", ""))
         assert "The load flow did not converge after 50 iterations" in e.value.args[0]
         assert e.value.args[1] == RoseauLoadFlowExceptionCode.NO_LOAD_FLOW_CONVERGENCE
 
@@ -223,7 +223,7 @@ def test_solve_load_flow():
         json_result = {"msg": "Error while parsing the provided JSON", "code": "parse_error"}
         m.post(f"{ElectricalNetwork.DEFAULT_BASE_URL}/solve/", status_code=400, json=json_result)
         with pytest.raises(RoseauLoadFlowException) as e:
-            en.solve_load_flow(login="", password="")
+            en.solve_load_flow(auth=("", ""))
         assert "There is a problem in the request" in e.value.args[0]
         assert "Error while parsing the provided JSON" in e.value.args[0]
         assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_REQUEST
@@ -232,6 +232,6 @@ def test_solve_load_flow():
         json_result = {"detail": "not_authenticated"}
         m.post(f"{ElectricalNetwork.DEFAULT_BASE_URL}/solve/", status_code=401, json=json_result)
         with pytest.raises(RoseauLoadFlowException) as e:
-            en.solve_load_flow(login="", password="")
+            en.solve_load_flow(auth=("", ""))
         assert "Authentication failed." in e.value.args[0]
         assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_REQUEST
