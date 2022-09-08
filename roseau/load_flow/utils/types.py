@@ -12,22 +12,14 @@ logger = logging.getLogger(__name__)
 
 @unique
 class LineType(Enum):
-    """The type of a line.
+    """The type of a line."""
 
-    Attributes:
-        LineType.OVERHEAD:
-            The line is an overhead line.
-
-        LineType.UNDERGROUND:
-            The line is an underground line.
-
-        LineType.TWISTED:
-            The line is a twisted line.
-    """
-
-    OVERHEAD = 1
-    UNDERGROUND = 2
-    TWISTED = 3
+    OVERHEAD = auto()
+    """The line is an overhead line."""
+    UNDERGROUND = auto()
+    """The line is an underground line."""
+    TWISTED = auto()
+    """The line is a twisted line."""
 
     def __str__(self) -> str:
         """Print a `LineType`
@@ -83,30 +75,18 @@ class LineType(Enum):
 
 @unique
 class ConductorType(Enum):
-    """The type of conductor.
-
-    Attributes:
-        ConductorType.AL:
-            The conductor is in Aluminium.
-
-        ConductorType.CU:
-            The conductor is in Copper.
-
-        ConductorType.AM:
-            The conductor is in Almélec.
-
-        ConductorType.AA:
-            The conductor is in Alu-Acier.
-
-        ConductorType.LA:
-            The conductor is in Almélec-Acier.
-    """
+    """The type of conductor."""
 
     AL = 1
+    """The conductor is in Aluminium."""
     CU = 2
+    """The conductor is in Copper."""
     AM = 3
+    """The conductor is in Almélec."""
     AA = 4
+    """The conductor is in Alu-Acier."""
     LA = 5
+    """The conductor is in Almélec-Acier."""
 
     def __str__(self) -> str:
         """Print a `ConductorType`
@@ -171,34 +151,20 @@ class ConductorType(Enum):
 
 @unique
 class IsolationType(Enum):
-    """The type of the isolation for a wire.
-
-    Attributes:
-        IsolationType.UNKNOWN:
-            The isolation of the conductor is made with unknown material.
-
-        IsolationType.HDPE:
-            The isolation of the conductor is made with High-Density PolyEthylene.
-
-        IsolationType.LDPE:
-            The isolation of the conductor is made with Low-Density PolyEthylene.
-
-        IsolationType.PEX:
-            The isolation of the conductor is made with Cross-linked polyethylene.
-
-        IsolationType.EPR:
-            The isolation of the conductor is made with Ethylene-Propylene Rubber.
-
-        IsolationType.PVC:
-            The isolation of the conductor is made with PolyVinyl Chloride.
-    """
+    """The type of the isolation for a wire."""
 
     UNKNOWN = 0
+    """The isolation of the conductor is made with unknown material."""
     HDPE = 1
+    """The isolation of the conductor is made with High-Density PolyEthylene."""
     LDPE = 2
+    """The isolation of the conductor is made with Low-Density PolyEthylene."""
     PEX = 3
+    """The isolation of the conductor is made with Cross-linked polyethylene."""
     EPR = 4
+    """The isolation of the conductor is made with Ethylene-Propylene Rubber."""
     PVC = 5
+    """The isolation of the conductor is made with PolyVinyl Chloride."""
 
     def __str__(self) -> str:
         """Print a `IsolationType`
@@ -239,43 +205,25 @@ class IsolationType(Enum):
 
 @unique
 class LineModel(Enum):
-    """An enumerated class for the different line models
-
-    Attributes:
-        LineModel.UNKNOWN:
-            The line is modelled through an unknown model.
-
-        LineModel.LV_EXACT:
-            The line is modelled through the position of the wire (with neutral). Some hypothesis limit this model to
-            low voltages lines.
-
-        LineModel.SYM:
-            The line is modelled using a symmetric model (without neutral).
-
-        LineModel.SYM_NEUTRAL:
-            The line is modelled  using a symmetric model (with neutral).
-
-        LineModel.ZY:
-            The line is modelled using two 3x3 matrices (shunt admittance and line impedance, without neutral).
-
-        LineModel.ZY_NEUTRAL:
-            The line is modelled using two 4x4 matrices (shunt admittance and line impedance, with neutral).
-
-        LineModel.Z:
-            The line is modelled using a single 3x3 matrices (line impedance, without neutral).
-
-        LineModel.Z_NEUTRAL:
-            The line is modelled using a single 4x4 matrices (line impedance, with neutral).
-    """
+    """An enumerated class for the different line models."""
 
     UNKNOWN = 0
+    """The line is modelled through an unknown model."""
     LV_EXACT = 1
+    """The line is modelled through the position of the wire (with neutral). Some hypothesis limit this model to
+            low voltages lines."""
     SYM = 2
+    """The line is modelled using a symmetric model (without neutral)."""
     SYM_NEUTRAL = 3
+    """The line is modelled  using a symmetric model (with neutral)."""
     ZY = 4
+    """The line is modelled using two 3x3 matrices (shunt admittance and line impedance, without neutral)."""
     ZY_NEUTRAL = 5
+    """The line is modelled using two 4x4 matrices (shunt admittance and line impedance, with neutral)."""
     Z = 6
+    """The line is modelled using a single 3x3 matrices (line impedance, without neutral)."""
     Z_NEUTRAL = 7
+    """The line is modelled using a single 4x4 matrices (line impedance, with neutral)."""
 
     def __str__(self) -> str:
         """Print a `LineModel`
@@ -357,22 +305,14 @@ class LineModel(Enum):
 
 @unique
 class BranchType(Enum):
-    """The type of 'line' in a network.
-
-    Attributes:
-        BranchType.LINE:
-            The branch is a regular line.
-
-        BranchType.TRANSFORMER:
-            The branch is a regular transformer.
-
-        BranchType.SWITCH:
-            The branch is a regular switch.
-    """
+    """The type of 'line' in a network."""
 
     LINE = auto()
+    """The branch is a regular line."""
     TRANSFORMER = auto()
+    """The branch is a regular transformer."""
     SWITCH = auto()
+    """The branch is a regular switch."""
 
     def __str__(self) -> str:
         """Print a `BranchType`.
@@ -422,61 +362,38 @@ EXTRACT_WINDINGS_RE: regex.Regex = regex.compile(
 
 @unique
 class TransformerType(Enum):
-    """The type of transformer.
-
-    Attributes:
-        TransformerType.Yy:
-            A Wye-Wye transformer without neutral connected to the rest of the network.
-
-        TransformerType.YNy:
-            A Wye-Wye transformer with a neutral connected to the network on the first winding.
-
-        TransformerType.YNyn:
-            A Wye-Wye transformer with a neutral connected to the network on the two windings.
-
-        TransformerType.Yyn:
-            A Wye-Wye transformer with a neutral connected to the network on the second winding.
-
-        TransformerType.Dz:
-            A Delta-Zigzag transformer without neutral connected to the rest of the network.
-
-        TransformerType.Dzn:
-            A Delta-Zigzag transformer with a neutral connected to the network on the second winding.
-
-        TransformerType.Dy:
-            A Delta-Wye transformer without neutral connected to the rest of the network.
-
-        TransformerType.Dyn:
-            A Delta-Wye transformer with a neutral connected to the network on the second winding.
-
-        TransformerType.Yz:
-            A Wye-Zigzag transformer without neutral connected to the rest of the network.
-
-        TransformerType.YNz:
-            A Wye-Zigzag transformer with a neutral connected to the network on the first winding.
-
-        TransformerType.YNzn:
-            A Wye-Zigzag transformer with a neutral connected to the network on the two windings.
-
-        TransformerType.Yzn:
-            A Wye-Zigzag transformer with a neutral connected to the network on the second winding.
-    """
+    """The type of transformer."""
 
     Yy = auto()
+    """A Wye-Wye transformer without neutral connected to the rest of the network."""
     YNy = auto()
+    """A Wye-Wye transformer with a neutral connected to the network on the first winding."""
     YNyn = auto()
+    """A Wye-Wye transformer with a neutral connected to the network on the two windings."""
     Yyn = auto()
+    """A Wye-Wye transformer with a neutral connected to the network on the second winding."""
     Dz = auto()
+    """A Delta-Zigzag transformer without neutral connected to the rest of the network."""
     Dzn = auto()
+    """A Delta-Zigzag transformer with a neutral connected to the network on the second winding."""
     Dy = auto()
+    """A Delta-Wye transformer without neutral connected to the rest of the network."""
     Dyn = auto()
+    """A Delta-Wye transformer with a neutral connected to the network on the second winding."""
     Yz = auto()
+    """A Wye-Zigzag transformer without neutral connected to the rest of the network."""
     YNz = auto()
+    """A Wye-Zigzag transformer with a neutral connected to the network on the first winding."""
     YNzn = auto()
+    """A Wye-Zigzag transformer with a neutral connected to the network on the two windings."""
     Yzn = auto()
+    """A Wye-Zigzag transformer with a neutral connected to the network on the second winding."""
     Yd = auto()
+    """A Wye-Delta transformer without neutral connected to the rest of the network."""
     YNd = auto()
+    """A Wye-Delta transformer with a neutral connected to the network on the first winding."""
     Dd = auto()
+    """A Delta-Delta transformer without neutral connected to the rest of the network."""
 
     def __str__(self) -> str:
         """Print a `TransformerType`
