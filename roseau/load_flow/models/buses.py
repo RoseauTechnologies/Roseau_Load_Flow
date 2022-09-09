@@ -118,9 +118,9 @@ class VoltageSource(AbstractBus):
     The equations are the following:
 
     .. math::
-        \\left(V_{\\mathrm{a}}-V_{\\mathrm{n}}\\right)=U_{\\mathrm{a}}
-        \\left(V_{\\mathrm{b}}-V_{\\mathrm{n}}\\right)=U_{\\mathrm{b}}
-        \\left(V_{\\mathrm{c}}-V_{\\mathrm{n}}\\right)=U_{\\mathrm{c}}
+        \\left(V_{\\mathrm{a}}-V_{\\mathrm{n}}\\right) &= U_{\\mathrm{a}} \\\\
+        \\left(V_{\\mathrm{b}}-V_{\\mathrm{n}}\\right) &= U_{\\mathrm{b}} \\\\
+        \\left(V_{\\mathrm{c}}-V_{\\mathrm{n}}\\right) &= U_{\\mathrm{c}}
     """
 
     def __init__(

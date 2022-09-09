@@ -12,7 +12,7 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath('.'))
+sys.path.insert(0, os.path.abspath('../roseau/'))
 
 
 # -- Project information -----------------------------------------------------
@@ -37,9 +37,9 @@ extensions = [
 ]
 # autosummary_generate = True  # Turn on sphinx.ext.autosummary
 
-autodoc_default_options = {
-    "ignore-module-all": False
-}
+napoleon_numpy_docstring = False
+autodoc_default_options = {"ignore-module-all": False}
+add_module_names = False
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -59,7 +59,7 @@ html_theme = "sphinx_book_theme"
 html_show_copyright = True
 html_theme_options = {
     "toc_title": "Sommaire",
-    "repository_url": "https://github.com/RoseauTechnologies/SIRAO_Documentation_Dev/",
+    "repository_url": "https://github.com/RoseauTechnologies/Roseau_Load_Flow/",
     "use_issues_button": False,
     "repository_branch": "main",
     "use_fullscreen_button": False,

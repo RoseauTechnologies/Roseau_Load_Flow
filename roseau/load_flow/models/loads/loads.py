@@ -244,8 +244,8 @@ class AdmittanceLoad(AbstractLoad):
     The equations are the following (star loads):
 
     .. math::
-        I_{\\mathrm{abc}}=Y_{\\mathrm{abc}}\\left(V_{\\mathrm{abc}}-V_{\\mathrm{n}}\\right)
-        I_{\\mathrm{n}}=-\\sum_{p\\in\\{\\mathrm{a},\\mathrm{b},\\mathrm{c}\\}}I_{p}
+        I_{\\mathrm{abc}} &= Y_{\\mathrm{abc}}\\left(V_{\\mathrm{abc}}-V_{\\mathrm{n}}\\right) \\\\
+        I_{\\mathrm{n}} &= -\\sum_{p\\in\\{\\mathrm{a},\\mathrm{b},\\mathrm{c}\\}}I_{p}
     """
 
     def __init__(self, id: Any, n: int, bus: AbstractBus, y: Sequence[complex], **kwargs) -> None:
@@ -315,9 +315,9 @@ class DeltaAdmittanceLoad(AbstractLoad):
     The equations are the following (delta loads):
 
     .. math::
-        I_{\\mathrm{ab}}=Y_{\\mathrm{ab}}\\left(V_{\\mathrm{a}}-V_{\\mathrm{b}}\\right)
-        I_{\\mathrm{bc}}=Y_{\\mathrm{bc}}\\left(V_{\\mathrm{b}}-V_{\\mathrm{c}}\\right)
-        I_{\\mathrm{ca}}=Y_{\\mathrm{ca}}\\left(V_{\\mathrm{c}}-V_{\\mathrm{a}}\\right)
+        I_{\\mathrm{ab}} &= Y_{\\mathrm{ab}}\\left(V_{\\mathrm{a}}-V_{\\mathrm{b}}\\right) \\\\
+        I_{\\mathrm{bc}} &= Y_{\\mathrm{bc}}\\left(V_{\\mathrm{b}}-V_{\\mathrm{c}}\\right) \\\\
+        I_{\\mathrm{ca}} &= Y_{\\mathrm{ca}}\\left(V_{\\mathrm{c}}-V_{\\mathrm{a}}\\right)
     """
 
     def __init__(self, id: Any, bus: AbstractBus, y: Sequence[complex], **kwargs) -> None:

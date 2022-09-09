@@ -1,32 +1,14 @@
 roseau.load\_flow.io package
 ============================
 
-Subpackages
------------
+Submodules
+----------
 
 .. toctree::
    :maxdepth: 4
 
-   roseau.load_flow.io.tests
-
-Submodules
-----------
-
-roseau.load\_flow.io.dgs module
--------------------------------
-
-.. automodule:: roseau.load_flow.io.dgs
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-roseau.load\_flow.io.dict module
---------------------------------
-
-.. automodule:: roseau.load_flow.io.dict
-   :members:
-   :undoc-members:
-   :show-inheritance:
+   roseau.load_flow.io.dgs
+   roseau.load_flow.io.dict
 
 Module contents
 ---------------

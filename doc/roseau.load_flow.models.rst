@@ -14,21 +14,11 @@ Subpackages
 Submodules
 ----------
 
-roseau.load\_flow.models.buses module
--------------------------------------
+.. toctree::
+   :maxdepth: 4
 
-.. automodule:: roseau.load_flow.models.buses
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-roseau.load\_flow.models.core module
-------------------------------------
-
-.. automodule:: roseau.load_flow.models.core
-   :members:
-   :undoc-members:
-   :show-inheritance:
+   roseau.load_flow.models.buses
+   roseau.load_flow.models.core
 
 Module contents
 ---------------

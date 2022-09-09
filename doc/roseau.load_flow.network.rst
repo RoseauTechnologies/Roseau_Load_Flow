@@ -4,13 +4,10 @@ roseau.load\_flow.network package
 Submodules
 ----------
 
-roseau.load\_flow.network.electrical\_network module
-----------------------------------------------------
+.. toctree::
+   :maxdepth: 4
 
-.. automodule:: roseau.load_flow.network.electrical_network
-   :members:
-   :undoc-members:
-   :show-inheritance:
+   roseau.load_flow.network.electrical_network
 
 Module contents
 ---------------
