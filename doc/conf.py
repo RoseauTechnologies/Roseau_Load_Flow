@@ -33,12 +33,12 @@ release = '0.5.0'
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.napoleon',
-    # 'sphinx.ext.autosummary',
 ]
-# autosummary_generate = True  # Turn on sphinx.ext.autosummary
 
 napoleon_numpy_docstring = False
 autodoc_default_options = {"ignore-module-all": False}
+autodoc_member_order = "bysource"
+python_use_unqualified_type_names = True
 add_module_names = False
 
 # Add any paths that contain templates here, relative to this directory.
