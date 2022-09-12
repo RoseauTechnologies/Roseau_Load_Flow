@@ -43,6 +43,7 @@ sphinx-math-dollar = "^1.2.1"
 rich = ">=11.0.0"
 requests = "^2.28.1"
 requests-mock = "^1.9.3"
+sphinx-rtd-theme = "^1.0.0"
 
 
 [tool.poetry.dev-dependencies]
