@@ -19,13 +19,13 @@ logger = logging.getLogger(__name__)
 class AbstractLoad(Element, JsonMixin, metaclass=ABCMeta):
     """An abstract class to depict a load."""
 
-    power_load_class: Optional[type["PowerLoad"]] = None
-    delta_power_load_class: Optional[type["DeltaPowerLoad"]] = None
-    impedance_load_class: Optional[type["ImpedanceLoad"]] = None
-    delta_impedance_load_class: Optional[type["DeltaImpedanceLoad"]] = None
-    admittance_load_class: Optional[type["AdmittanceLoad"]] = None
-    delta_admittance_load_class: Optional[type["DeltaAdmittanceLoad"]] = None
-    flexible_load_class: Optional[type["FlexibleLoad"]] = None
+    _power_load_class: Optional[type["PowerLoad"]] = None
+    _delta_power_load_class: Optional[type["DeltaPowerLoad"]] = None
+    _impedance_load_class: Optional[type["ImpedanceLoad"]] = None
+    _delta_impedance_load_class: Optional[type["DeltaImpedanceLoad"]] = None
+    _admittance_load_class: Optional[type["AdmittanceLoad"]] = None
+    _delta_admittance_load_class: Optional[type["DeltaAdmittanceLoad"]] = None
+    _flexible_load_class: Optional[type["FlexibleLoad"]] = None
 
     def __init__(self, id: Any, n: int, bus: AbstractBus, **kwargs) -> None:
         """Load constructor.
@@ -72,28 +72,28 @@ class AbstractLoad(Element, JsonMixin, metaclass=ABCMeta):
     @classmethod
     def from_dict(cls, data, bus):
         if data["function"] == "flexible":
-            return cls.flexible_load_class.from_dict(data=data, bus=bus)
+            return cls._flexible_load_class.from_dict(data=data, bus=bus)
         if "ys" in data["function"] or "ds" in data["function"]:
             s = data["powers"]
             powers = [s["sa"][0] + 1j * s["sa"][1], s["sb"][0] + 1j * s["sb"][1], s["sc"][0] + 1j * s["sc"][1]]
             if "ys" in data["function"]:
-                return cls.power_load_class(id=data["id"], n=4, bus=bus, s=powers)
+                return cls._power_load_class(id=data["id"], n=4, bus=bus, s=powers)
             else:
-                return cls.delta_power_load_class(id=data["id"], bus=bus, s=powers)
+                return cls._delta_power_load_class(id=data["id"], bus=bus, s=powers)
         elif "yy" in data["function"] or "dy" in data["function"]:
             y = data["admittances"]
             admittances = [y["ya"][0] + 1j * y["ya"][1], y["yb"][0] + 1j * y["yb"][1], y["yc"][0] + 1j * y["yc"][1]]
             if "yy" in data["function"]:
-                return cls.admittance_load_class(id=data["id"], n=4, bus=bus, y=admittances)
+                return cls._admittance_load_class(id=data["id"], n=4, bus=bus, y=admittances)
             else:
-                return cls.delta_admittance_load_class(id=data["id"], bus=bus, y=admittances)
+                return cls._delta_admittance_load_class(id=data["id"], bus=bus, y=admittances)
         elif "yz" in data["function"] or "dz" in data["function"]:
             z = data["impedances"]
             impedances = [z["za"][0] + 1j * z["za"][1], z["zb"][0] + 1j * z["zb"][1], z["zc"][0] + 1j * z["zc"][1]]
             if "yz" in data["function"]:
-                return cls.impedance_load_class(id=data["id"], n=4, bus=bus, z=impedances)
+                return cls._impedance_load_class(id=data["id"], n=4, bus=bus, z=impedances)
             else:
-                return cls.delta_impedance_load_class(id=data["id"], bus=bus, z=impedances)
+                return cls._delta_impedance_load_class(id=data["id"], bus=bus, z=impedances)
         else:
             msg = f"Unknown load type for load {data['id']}: {data['function']}"
             logger.error(msg)
@@ -646,10 +646,10 @@ class FlexibleLoad(AbstractLoad):
         }
 
 
-AbstractLoad.power_load_class = PowerLoad
-AbstractLoad.power_load_class = DeltaPowerLoad
-AbstractLoad.impedance_load_class = ImpedanceLoad
-AbstractLoad.impedance_load_class = DeltaImpedanceLoad
-AbstractLoad.admittance_load_class = AdmittanceLoad
-AbstractLoad.admittance_load_class = DeltaAdmittanceLoad
-AbstractLoad.flexible_load_class = FlexibleLoad
+AbstractLoad._power_load_class = PowerLoad
+AbstractLoad._delta_power_load_class = DeltaPowerLoad
+AbstractLoad._impedance_load_class = ImpedanceLoad
+AbstractLoad._delta_impedance_load_class = DeltaImpedanceLoad
+AbstractLoad._admittance_load_class = AdmittanceLoad
+AbstractLoad._delta_admittance_load_class = DeltaAdmittanceLoad
+AbstractLoad._flexible_load_class = FlexibleLoad

@@ -153,7 +153,7 @@ def test_lv_exact():
     # line_data = {"dpp": 0, "dpn": 0, "dsh": 0.04}
 
     # Working example
-    z_line, y_shunt, model = LineCharacteristics.lv_exact_to_zy(
+    z_line, y_shunt, model = LineCharacteristics._lv_exact_to_zy(
         type_name="test",
         line_type=LineType.OVERHEAD,
         conductor_type=ConductorType.AL,
@@ -215,7 +215,7 @@ def test_lv_exact():
     # line_data = {"dpp": 0, "dpn": 0, "dsh": 0.04}
 
     # Working example
-    z_line, y_shunt, model = LineCharacteristics.lv_exact_to_zy(
+    z_line, y_shunt, model = LineCharacteristics._lv_exact_to_zy(
         type_name="test",
         line_type=LineType.UNDERGROUND,
         conductor_type=ConductorType.AL,
@@ -278,7 +278,7 @@ def test_sym():
     # With the bad model of PwF
     # line_data = {"name": "NKBA NOR  25.00 kV", "un": 25000.0, "in": 277.0000100135803}
 
-    z_line, y_shunt, model = LineCharacteristics.sym_to_zy(
+    z_line, y_shunt, model = LineCharacteristics._sym_to_zy(
         type_name="NKBA NOR  25.00 kV",
         r0=0.0,
         x0=0.0,
@@ -303,7 +303,7 @@ def test_sym():
 
     # line_data = {"name": "NKBA 4x150   1.00 kV", "un": 1000.0, "in": 361.0000014305115}
 
-    z_line, y_shunt, model = LineCharacteristics.sym_to_zy(
+    z_line, y_shunt, model = LineCharacteristics._sym_to_zy(
         type_name="NKBA 4x150   1.00 kV",
         r0=0.5,
         x0=0.3050000071525574,
@@ -336,7 +336,7 @@ def test_sym():
     # First line
     # line_data = {"name": "sym_neutral_underground_line_example", "un": 400.0, "in": 150}
 
-    z_line, y_shunt, model = LineCharacteristics.sym_to_zy(
+    z_line, y_shunt, model = LineCharacteristics._sym_to_zy(
         type_name="sym_neutral_underground_line_example",
         r0=0.188,
         x0=0.8224,
@@ -381,7 +381,7 @@ def test_sym():
     # Second line
     # line_data = {"name": "sym_line_example", "un": 20000.0, "in": 309}
 
-    z_line, y_shunt, model = LineCharacteristics.sym_to_zy(
+    z_line, y_shunt, model = LineCharacteristics._sym_to_zy(
         type_name="sym_line_example",
         r0=Q_(0.2, "ohm/km").to("ohm/m"),
         x0=0.1,

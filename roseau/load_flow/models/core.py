@@ -76,19 +76,19 @@ class AbstractBranch(Element, JsonMixin):
     branch_type: BranchType = NotImplemented
 
     @classmethod
-    def line_class(cls) -> type["AbstractLine"]:
+    def _line_class(cls) -> type["AbstractLine"]:
         from roseau.load_flow.models.lines.lines import AbstractLine
 
         return AbstractLine
 
     @classmethod
-    def transformer_class(cls) -> type["AbstractTransformer"]:
+    def _transformer_class(cls) -> type["AbstractTransformer"]:
         from roseau.load_flow.models.transformers.transformers import AbstractTransformer
 
         return AbstractTransformer
 
     @classmethod
-    def switch_class(cls) -> type["Switch"]:
+    def _switch_class(cls) -> type["Switch"]:
         from roseau.load_flow.models.lines.lines import Switch
 
         return Switch
@@ -165,7 +165,7 @@ class AbstractBranch(Element, JsonMixin):
             geometry = shape(branch["geometry"])
 
         if branch["type"] == "line":
-            return cls.line_class().from_dict(
+            return cls._line_class().from_dict(
                 id=branch["id"],
                 bus1=bus1,
                 bus2=bus2,
@@ -176,7 +176,7 @@ class AbstractBranch(Element, JsonMixin):
                 geometry=geometry,
             )
         elif branch["type"] == "transformer":
-            return cls.transformer_class().from_dict(
+            return cls._transformer_class().from_dict(
                 id=branch["id"],
                 bus1=bus1,
                 bus2=bus2,
@@ -186,7 +186,7 @@ class AbstractBranch(Element, JsonMixin):
                 geometry=geometry,
             )
         elif branch["type"] == "switch":
-            return cls.switch_class()(id=branch["id"], n=bus1.n, bus1=bus1, bus2=bus2, geometry=geometry)
+            return cls._switch_class()(id=branch["id"], n=bus1.n, bus1=bus1, bus2=bus2, geometry=geometry)
         else:
             msg = f"Unknown branch type for branch {branch['id']}: {branch['type']}"
             logger.error(msg)

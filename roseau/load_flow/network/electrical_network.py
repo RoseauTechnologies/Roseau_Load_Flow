@@ -566,7 +566,7 @@ class ElectricalNetwork:
 
     @classmethod
     def from_json(cls, path: Union[str, Path]) -> "ElectricalNetwork":
-        """ElectricalNetwork constructor from dict.
+        """ElectricalNetwork constructor from json.
 
         Args:
             path:

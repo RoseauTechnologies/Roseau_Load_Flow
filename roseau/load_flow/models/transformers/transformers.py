@@ -15,12 +15,12 @@ logger = logging.getLogger(__name__)
 
 class AbstractTransformer(AbstractBranch, ABC):
     branch_type = BranchType.TRANSFORMER
-    dd_class: Optional[type["DeltaDeltaTransformer"]] = None
-    dy_class: Optional[type["DeltaWyeTransformer"]] = None
-    dz_class: Optional[type["DeltaZigzagTransformer"]] = None
-    yd_class: Optional[type["WyeDeltaTransformer"]] = None
-    yy_class: Optional[type["WyeWyeTransformer"]] = None
-    yz_class: Optional[type["WyeZigzagTransformer"]] = None
+    _dd_class: Optional[type["DeltaDeltaTransformer"]] = None
+    _dy_class: Optional[type["DeltaWyeTransformer"]] = None
+    _dz_class: Optional[type["DeltaZigzagTransformer"]] = None
+    _yd_class: Optional[type["WyeDeltaTransformer"]] = None
+    _yy_class: Optional[type["WyeWyeTransformer"]] = None
+    _yz_class: Optional[type["WyeZigzagTransformer"]] = None
 
     def __init__(
         self,
@@ -117,7 +117,7 @@ class AbstractTransformer(AbstractBranch, ABC):
         transformer_characteristics = transformer_types[type_name]
         winding1, winding2, phase_displacement = TransformerType.extract_windings(transformer_characteristics.windings)
         if "Y" in winding1 and "y" in winding2:
-            return cls.yy_class(
+            return cls._yy_class(
                 id=id,
                 bus1=bus1,
                 bus2=bus2,
@@ -126,7 +126,7 @@ class AbstractTransformer(AbstractBranch, ABC):
                 geometry=geometry,
             )
         elif "D" in winding1 and "y" in winding2:
-            return cls.dy_class(
+            return cls._dy_class(
                 id=id,
                 bus1=bus1,
                 bus2=bus2,
@@ -135,7 +135,7 @@ class AbstractTransformer(AbstractBranch, ABC):
                 geometry=geometry,
             )
         elif "D" in winding1 and "z" in winding2:
-            return cls.dz_class(
+            return cls._dz_class(
                 id=id,
                 bus1=bus1,
                 bus2=bus2,
@@ -144,7 +144,7 @@ class AbstractTransformer(AbstractBranch, ABC):
                 geometry=geometry,
             )
         elif "D" in winding1 and "d" in winding2:
-            return cls.dd_class(
+            return cls._dd_class(
                 id=id,
                 bus1=bus1,
                 bus2=bus2,
@@ -153,7 +153,7 @@ class AbstractTransformer(AbstractBranch, ABC):
                 geometry=geometry,
             )
         elif "Y" in winding1 and "d" in winding2:
-            return cls.yd_class(
+            return cls._yd_class(
                 id=id,
                 bus1=bus1,
                 bus2=bus2,
@@ -162,7 +162,7 @@ class AbstractTransformer(AbstractBranch, ABC):
                 geometry=geometry,
             )
         elif "Y" in winding1 and "z" in winding2:
-            return cls.yz_class(
+            return cls._yz_class(
                 id=id,
                 bus1=bus1,
                 bus2=bus2,
@@ -505,9 +505,9 @@ class DeltaZigzagTransformer(AbstractTransformer):
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS)
 
 
-AbstractTransformer.dd_class = DeltaDeltaTransformer
-AbstractTransformer.dy_class = DeltaWyeTransformer
-AbstractTransformer.dz_class = DeltaZigzagTransformer
-AbstractTransformer.yd_class = WyeDeltaTransformer
-AbstractTransformer.yy_class = WyeWyeTransformer
-AbstractTransformer.yz_class = WyeZigzagTransformer
+AbstractTransformer._dd_class = DeltaDeltaTransformer
+AbstractTransformer._dy_class = DeltaWyeTransformer
+AbstractTransformer._dz_class = DeltaZigzagTransformer
+AbstractTransformer._yd_class = WyeDeltaTransformer
+AbstractTransformer._yy_class = WyeWyeTransformer
+AbstractTransformer._yz_class = WyeZigzagTransformer

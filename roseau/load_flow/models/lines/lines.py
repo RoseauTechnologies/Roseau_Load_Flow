@@ -90,8 +90,8 @@ class Switch(AbstractBranch):
 
 class AbstractLine(AbstractBranch):
     branch_type = BranchType.LINE
-    simplified_line_class: Optional[type["SimplifiedLine"]] = None
-    shunt_line_class: Optional[type["ShuntLine"]] = None
+    _simplified_line_class: Optional[type["SimplifiedLine"]] = None
+    _shunt_line_class: Optional[type["ShuntLine"]] = None
 
     def __init__(
         self,
@@ -214,7 +214,7 @@ class AbstractLine(AbstractBranch):
         line_characteristics = line_types[type_name]
         n = line_characteristics.z_line.shape[0]
         if line_characteristics.y_shunt is None:
-            return cls.simplified_line_class(
+            return cls._simplified_line_class(
                 id=id,
                 n=n,
                 bus1=bus1,
@@ -224,7 +224,7 @@ class AbstractLine(AbstractBranch):
                 geometry=geometry,
             )
         else:
-            return cls.shunt_line_class(
+            return cls._shunt_line_class(
                 id=id,
                 n=n,
                 bus1=bus1,
@@ -398,5 +398,5 @@ class ShuntLine(AbstractLine):
         ground.connected_elements.append(self)
 
 
-AbstractLine.simplified_line_class = SimplifiedLine
-AbstractLine.shunt_line_class = ShuntLine
+AbstractLine._simplified_line_class = SimplifiedLine
+AbstractLine._shunt_line_class = ShuntLine

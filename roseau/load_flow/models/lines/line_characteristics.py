@@ -19,7 +19,7 @@ class LineCharacteristics:
     _type_re = "|".join(x.code() for x in LineType)
     _material_re = "|".join(x.code() for x in ConductorType)
     _section_re = r"[1-9][0-9]*"
-    REGEXP_LINE_TYPE_NAME: re.Pattern = re.compile(
+    _REGEXP_LINE_TYPE_NAME: re.Pattern = re.compile(
         rf"^({_type_re})_({_material_re})_{_section_re}$", flags=re.IGNORECASE
     )
 
@@ -152,7 +152,7 @@ class LineCharacteristics:
         Returns:
             The created line characteristics.
         """
-        z_line, y_shunt, model = cls.sym_to_zy(
+        z_line, y_shunt, model = cls._sym_to_zy(
             type_name=type_name,
             model=model,
             r0=r0,
@@ -193,7 +193,7 @@ class LineCharacteristics:
         ),
         strict=False,
     )
-    def sym_to_zy(
+    def _sym_to_zy(
         type_name: str,
         model: LineModel,
         r0: float,
@@ -396,7 +396,7 @@ class LineCharacteristics:
 
         TODO: Documentation on the line data
         """
-        z_line, y_shunt, model = cls.lv_exact_to_zy(
+        z_line, y_shunt, model = cls._lv_exact_to_zy(
             type_name=type_name,
             line_type=line_type,
             conductor_type=conductor_type,
@@ -414,7 +414,7 @@ class LineCharacteristics:
         (None, None, None, None, "mm**2", "mm**2", "m", "m"),
         strict=False,
     )
-    def lv_exact_to_zy(
+    def _lv_exact_to_zy(
         type_name: str,
         line_type: LineType,
         conductor_type: ConductorType,
@@ -578,7 +578,7 @@ class LineCharacteristics:
         height: Optional[float] = None,
         external_diameter: Optional[float] = None,
     ) -> "LineCharacteristics":
-        """Method to get the electrical characteristics of a line from its canonical name.
+        """Method to get the electrical characteristics of a LV line from its canonical name.
         Some hypothesis will be made: the section of the neutral is the same as the other sections, the height and
         external diameter are pre-defined, and the isolation is PVC.
 
@@ -598,7 +598,7 @@ class LineCharacteristics:
         Returns:
             The corresponding line characteristics.
         """
-        match: re.Match = cls.REGEXP_LINE_TYPE_NAME.fullmatch(string=name)
+        match: re.Match = cls._REGEXP_LINE_TYPE_NAME.fullmatch(string=name)
         if not match:
             msg = f"The line type name does not follow the syntax rule. {name!r} was provided."
             logger.error(msg)
@@ -632,7 +632,16 @@ class LineCharacteristics:
 
     @classmethod
     def from_name_mv(cls, name: str):
-        match: re.Match = cls.REGEXP_LINE_TYPE_NAME.fullmatch(string=name)
+        """Method to get the electrical characteristics of a MV line from its canonical name.
+
+        Args:
+            name:
+                The name of the line the characteristics must be computed. Eg. "S_AL_150".
+
+        Returns:
+            The corresponding line characteristics.
+        """
+        match: re.Match = cls._REGEXP_LINE_TYPE_NAME.fullmatch(string=name)
         if not match:
             msg = f"The line type name does not follow the syntax rule. {name!r} was provided."
             logger.error(msg)

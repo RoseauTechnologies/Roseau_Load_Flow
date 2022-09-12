@@ -77,15 +77,15 @@ class LineType(Enum):
 class ConductorType(Enum):
     """The type of conductor."""
 
-    AL = 1
+    AL = auto()
     """The conductor is in Aluminium."""
-    CU = 2
+    CU = auto()
     """The conductor is in Copper."""
-    AM = 3
+    AM = auto()
     """The conductor is in Almélec."""
-    AA = 4
+    AA = auto()
     """The conductor is in Alu-Acier."""
-    LA = 5
+    LA = auto()
     """The conductor is in Almélec-Acier."""
 
     def __str__(self) -> str:
@@ -153,17 +153,17 @@ class ConductorType(Enum):
 class IsolationType(Enum):
     """The type of the isolation for a wire."""
 
-    UNKNOWN = 0
+    UNKNOWN = auto()
     """The isolation of the conductor is made with unknown material."""
-    HDPE = 1
+    HDPE = auto()
     """The isolation of the conductor is made with High-Density PolyEthylene."""
-    LDPE = 2
+    LDPE = auto()
     """The isolation of the conductor is made with Low-Density PolyEthylene."""
-    PEX = 3
+    PEX = auto()
     """The isolation of the conductor is made with Cross-linked polyethylene."""
-    EPR = 4
+    EPR = auto()
     """The isolation of the conductor is made with Ethylene-Propylene Rubber."""
-    PVC = 5
+    PVC = auto()
     """The isolation of the conductor is made with PolyVinyl Chloride."""
 
     def __str__(self) -> str:
@@ -207,22 +207,22 @@ class IsolationType(Enum):
 class LineModel(Enum):
     """An enumerated class for the different line models."""
 
-    UNKNOWN = 0
+    UNKNOWN = auto()
     """The line is modelled through an unknown model."""
-    LV_EXACT = 1
+    LV_EXACT = auto()
     """The line is modelled through the position of the wire (with neutral). Some hypothesis limit this model to
             low voltages lines."""
-    SYM = 2
+    SYM = auto()
     """The line is modelled using a symmetric model (without neutral)."""
-    SYM_NEUTRAL = 3
+    SYM_NEUTRAL = auto()
     """The line is modelled  using a symmetric model (with neutral)."""
-    ZY = 4
+    ZY = auto()
     """The line is modelled using two 3x3 matrices (shunt admittance and line impedance, without neutral)."""
-    ZY_NEUTRAL = 5
+    ZY_NEUTRAL = auto()
     """The line is modelled using two 4x4 matrices (shunt admittance and line impedance, with neutral)."""
-    Z = 6
+    Z = auto()
     """The line is modelled using a single 3x3 matrices (line impedance, without neutral)."""
-    Z_NEUTRAL = 7
+    Z_NEUTRAL = auto()
     """The line is modelled using a single 4x4 matrices (line impedance, with neutral)."""
 
     def __str__(self) -> str:

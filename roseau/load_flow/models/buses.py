@@ -19,8 +19,8 @@ logger = logging.getLogger(__name__)
 class AbstractBus(Element, JsonMixin, ABC):
     """This is an abstract class for all different types of buses."""
 
-    voltage_source_class: Optional[type["VoltageSource"]] = None
-    bus_class: Optional[type["Bus"]] = None
+    _voltage_source_class: Optional[type["VoltageSource"]] = None
+    _bus_class: Optional[type["Bus"]] = None
 
     def __init__(
         self,
@@ -97,7 +97,7 @@ class AbstractBus(Element, JsonMixin, ABC):
         if data["type"] == "slack":
             v = data["voltages"]
             voltages = [v["va"][0] + 1j * v["va"][1], v["vb"][0] + 1j * v["vb"][1], v["vc"][0] + 1j * v["vc"][1]]
-            return cls.voltage_source_class(
+            return cls._voltage_source_class(
                 id=data["id"], n=4, ground=ground, voltages=voltages, potentials=potentials, geometry=geometry
             )
         else:
@@ -106,9 +106,9 @@ class AbstractBus(Element, JsonMixin, ABC):
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_BUS_TYPE)
             if "neutral" in data["type"]:
-                bus = cls.bus_class(id=data["id"], n=4, potentials=potentials, geometry=geometry)
+                bus = cls._bus_class(id=data["id"], n=4, potentials=potentials, geometry=geometry)
             else:
-                bus = cls.bus_class(id=data["id"], n=3, potentials=potentials, geometry=geometry)
+                bus = cls._bus_class(id=data["id"], n=3, potentials=potentials, geometry=geometry)
             return bus
 
 
@@ -247,5 +247,5 @@ class Bus(AbstractBus):
         return res
 
 
-AbstractBus.voltage_source_class = VoltageSource
-AbstractBus.bus_class = Bus
+AbstractBus._voltage_source_class = VoltageSource
+AbstractBus._bus_class = Bus
