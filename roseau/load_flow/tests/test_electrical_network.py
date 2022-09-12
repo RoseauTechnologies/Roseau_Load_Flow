@@ -80,7 +80,7 @@ def test_bad_networks():
     switch = Switch("switch", 4, vs, bus1)
     with pytest.raises(RoseauLoadFlowException) as e:
         ElectricalNetwork([vs, bus1], [line, switch], [], [ground, p_ref])  # no bus2
-    assert "but is not in the ElectricalNetwork constructor." in e.value.args[0]
+    assert "but has not been added to the network, you should add it with 'add_element'." in e.value.args[0]
     assert bus2.id in e.value.args[0]
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.UNKNOWN_ELEMENT
 
@@ -152,7 +152,13 @@ def test_solve_load_flow():
             "branches": [
                 {
                     "id": "line",
-                    "currents": {
+                    "currents1": {
+                        "ia": [0.005, 0.0],
+                        "ib": [-0.0025, -0.0043],
+                        "ic": [-0.0025, 0.0043],
+                        "in": [-1.347e-13, 0.0],
+                    },
+                    "currents2": {
                         "ia": [0.005, 0.0],
                         "ib": [-0.0025, -0.0043],
                         "ic": [-0.0025, 0.0043],
@@ -207,7 +213,11 @@ def test_solve_load_flow():
                 },
             ],
             "branches": [
-                {"id": "line", "currents": {"ia": [0.0, 0.0], "ib": [0.0, 0.0], "ic": [0.0, 0.0], "in": [0.0, 0.0]}}
+                {
+                    "id": "line",
+                    "currents1": {"ia": [0.0, 0.0], "ib": [0.0, 0.0], "ic": [0.0, 0.0], "in": [0.0, 0.0]},
+                    "currents2": {"ia": [0.0, 0.0], "ib": [0.0, 0.0], "ic": [0.0, 0.0], "in": [0.0, 0.0]},
+                }
             ],
             "loads": [
                 {"id": "load", "currents": {"ia": [0.0, 0.0], "ib": [0.0, 0.0], "ic": [0.0, 0.0], "in": [0.0, 0.0]}}
