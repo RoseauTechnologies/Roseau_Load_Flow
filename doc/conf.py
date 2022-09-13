@@ -34,6 +34,7 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.napoleon',
     'sphinx_rtd_theme',
+    'nbsphinx',
 ]
 
 napoleon_numpy_docstring = False
@@ -58,16 +59,6 @@ exclude_patterns = []
 #
 html_theme = "sphinx_rtd_theme"
 html_show_copyright = True
-html_theme_options = {
-    "toc_title": "Sommaire",
-    "repository_url": "https://github.com/RoseauTechnologies/Roseau_Load_Flow/",
-    "use_issues_button": False,
-    "repository_branch": "main",
-    "use_fullscreen_button": False,
-    "logo_only": True,
-    "use_download_button": False,
-    "show_navbar_depth": 2,
-}
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,

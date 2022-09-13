@@ -6,6 +6,9 @@ Welcome to Roseau Load Flow's documentation!
    :caption: Contents:
 
    modules
+   notebooks/basic
+   notebooks/from_file
+   notebooks/advanced
 
 
 Indices and tables

@@ -74,7 +74,7 @@ class TransformerCharacteristics:
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_VOLTAGES)
         if i0 > 1.0 or i0 < 0.0:
             msg = (
-                f"The transformer type {type_name!r} has a current during off-load test i0={i0}. It is a percentage"
+                f"The transformer type {type_name!r} has a current during off-load test i0={i0}. It is a percentage "
                 f"that should be between 0 and 1."
             )
             logger.error(msg)
