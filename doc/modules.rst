@@ -4,4 +4,4 @@ roseau
 .. toctree::
    :maxdepth: 4
 
-   roseau
+   roseau.load_flow
