@@ -34,19 +34,11 @@ geopandas = ">=0.10.2"
 Shapely = "^1.8.0"
 regex = "^2022.1.18"
 pint = ">=0.19.2"
-Sphinx = "^4.4.0"
-myst-parser = ">=0.16.1"
-sphinx-book-theme = {version = "==0.2.0", optional = true} # Trouble with 0.3 https://github.com/executablebooks/sphinx-book-theme/issues/538
-sphinx-math-dollar = {version = "^1.2.1", optional = true}
-sphinx-rtd-theme = {version = "^1.0.0", optional = true}
-jupyter = {version = "^1.0.0", optional = true}
+requests = "^2.28.1"
+requests-mock = "^1.9.3"
 
 # Command line
 rich = ">=11.0.0"
-requests = "^2.28.1"
-requests-mock = "^1.9.3"
-nbsphinx = "^0.8.9"
-
 
 [tool.poetry.dev-dependencies]
 # Tests
@@ -61,6 +53,15 @@ flake8 = "^5.0.4"
 pre-commit = "^2.6.0"
 black = { version = ">=20.8b1", extras = ["jupyter"] }
 isort = "^5.1.0"
+
+# Documentation
+Sphinx = "^4.4.0"
+myst-parser = ">=0.16.1"
+sphinx-book-theme = "==0.2.0" # Trouble with 0.3 https://github.com/executablebooks/sphinx-book-theme/issues/538
+sphinx-math-dollar = "^1.2.1"
+sphinx-rtd-theme = "^1.0.0"
+jupyter = "^1.0.0"
+nbsphinx = "^0.8.9"
 
 # Black
 [tool.black]
