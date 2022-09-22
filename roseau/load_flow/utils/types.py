@@ -4,7 +4,7 @@ from typing import Optional
 
 import regex
 
-from roseau.load_flow.utils.exceptions import ThundersValueError
+from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 
 # The local logger
 logger = logging.getLogger(__name__)
@@ -12,26 +12,14 @@ logger = logging.getLogger(__name__)
 
 @unique
 class LineType(Enum):
-    """The type of a line.
+    """The type of a line."""
 
-    Attributes:
-        LineType.UNKNOWN:
-            The line is an unknown line.
-
-        LineType.OVERHEAD:
-            The line is an overhead line.
-
-        LineType.UNDERGROUND:
-            The line is an underground line.
-
-        LineType.TWISTED:
-            The line is a twisted line.
-    """
-
-    UNKNOWN = 0
-    OVERHEAD = 1
-    UNDERGROUND = 2
-    TWISTED = 3
+    OVERHEAD = auto()
+    """The line is an overhead line."""
+    UNDERGROUND = auto()
+    """The line is an underground line."""
+    TWISTED = auto()
+    """The line is a twisted line."""
 
     def __str__(self) -> str:
         """Print a `LineType`
@@ -53,50 +41,52 @@ class LineType(Enum):
             The corresponding LineType.
         """
         string = string.lower()
-        if string in ("unknown", "", "nan"):
-            return cls.UNKNOWN
-        elif string in ("overhead", "aérien", "aerien", "galerie"):
+        if string in ("overhead", "aérien", "aerien", "galerie", "a", "o"):
             return cls.OVERHEAD
-        elif string in ("underground", "souterrain", "sous-marin"):
+        elif string in ("underground", "souterrain", "sous-marin", "s", "u"):
             return cls.UNDERGROUND
-        elif string in ("twisted", "torsadé", "torsade"):
+        elif string in ("twisted", "torsadé", "torsade", "t"):
             return cls.TWISTED
         else:
             msg = f"The string {string!r} can not be converted into a LineType."
             logger.error(msg)
-            raise ThundersValueError(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_TYPE)
+
+    #
+    # WordingCodeMixin
+    #
+    def code(self) -> str:
+        """The code method is modified to retrieve a code that can be used in line type names.
+
+        Returns:
+            The code of the enumerated value.
+        """
+        if self == LineType.OVERHEAD:
+            return "A"
+        elif self == LineType.UNDERGROUND:
+            return "S"
+        elif self == LineType.TWISTED:
+            return "T"
+        else:  # pragma: no cover
+            msg = f"There is code missing here. I do not know the LineType {self!r}."
+            logger.error(msg)
+            raise NotImplementedError(msg)
 
 
 @unique
 class ConductorType(Enum):
-    """The type of a conductor.
+    """The type of conductor."""
 
-    Attributes:
-        ConductorType.UNKNOWN:
-            The conductor is made with unknown material.
-
-        ConductorType.AL:
-            The conductor is in Aluminium.
-
-        ConductorType.CU:
-            The conductor is in Copper.
-
-        ConductorType.AM:
-            The conductor is in Almélec.
-
-        ConductorType.AA:
-            The conductor is in Alu-Acier.
-
-        ConductorType.LA:
-            The conductor is in Almélec-Acier.
-    """
-
-    UNKNOWN = 0
-    AL = 1
-    CU = 2
-    AM = 3
-    AA = 4
-    LA = 5
+    AL = auto()
+    """The conductor is in Aluminium."""
+    CU = auto()
+    """The conductor is in Copper."""
+    AM = auto()
+    """The conductor is in Almélec."""
+    AA = auto()
+    """The conductor is in Alu-Acier."""
+    LA = auto()
+    """The conductor is in Almélec-Acier."""
 
     def __str__(self) -> str:
         """Print a `ConductorType`
@@ -104,9 +94,7 @@ class ConductorType(Enum):
         Returns:
             A printable string of the conductor type.
         """
-        if self == ConductorType.UNKNOWN:
-            return "unknown"
-        elif self == ConductorType.AL:
+        if self == ConductorType.AL:
             return "Al"
         elif self == ConductorType.CU:
             return "Cu"
@@ -120,7 +108,7 @@ class ConductorType(Enum):
             s = super().__str__()
             msg = f"The ConductorType {s} is not known..."
             logger.error(msg)
-            raise ThundersValueError(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_CONDUCTOR_TYPE)
 
     @classmethod
     def from_string(cls, string: str) -> "ConductorType":
@@ -134,9 +122,7 @@ class ConductorType(Enum):
             The corresponding ConductorType.
         """
         string = string.lower()
-        if string in ("unknown", "", "nan"):
-            return cls.UNKNOWN
-        elif string == "al":
+        if string == "al":
             return cls.AL
         elif string == "cu":
             return cls.CU
@@ -149,39 +135,36 @@ class ConductorType(Enum):
         else:
             msg = f"The string {string!r} can not be converted into a ConductorType."
             logger.error(msg)
-            raise ThundersValueError(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_CONDUCTOR_TYPE)
+
+    #
+    # WordingCodeMixin
+    #
+    def code(self) -> str:
+        """The code method is modified to retrieve a code that can be used in line type names.
+
+        Returns:
+            The code of the enumerated value.
+        """
+        return self.name.upper()
 
 
 @unique
 class IsolationType(Enum):
-    """The type of the isolation for a wire.
+    """The type of the isolation for a wire."""
 
-    Attributes:
-        IsolationType.UNKNOWN:
-            The isolation of the conductor is made with unknown material.
-
-        IsolationType.HDPE:
-            The isolation of the conductor is made with High-Density PolyEthylene.
-
-        IsolationType.LDPE:
-            The isolation of the conductor is made with Low-Density PolyEthylene.
-
-        IsolationType.PEX:
-            The isolation of the conductor is made with Cross-linked polyethylene.
-
-        IsolationType.EPR:
-            The isolation of the conductor is made with Ethylene-Propylene Rubber.
-
-        IsolationType.PVC:
-            The isolation of the conductor is made with PolyVinyl Chloride.
-    """
-
-    UNKNOWN = 0
-    HDPE = 1
-    LDPE = 2
-    PEX = 3
-    EPR = 4
-    PVC = 5
+    UNKNOWN = auto()
+    """The isolation of the conductor is made with unknown material."""
+    HDPE = auto()
+    """The isolation of the conductor is made with High-Density PolyEthylene."""
+    LDPE = auto()
+    """The isolation of the conductor is made with Low-Density PolyEthylene."""
+    PEX = auto()
+    """The isolation of the conductor is made with Cross-linked polyethylene."""
+    EPR = auto()
+    """The isolation of the conductor is made with Ethylene-Propylene Rubber."""
+    PVC = auto()
+    """The isolation of the conductor is made with PolyVinyl Chloride."""
 
     def __str__(self) -> str:
         """Print a `IsolationType`
@@ -217,48 +200,30 @@ class IsolationType(Enum):
         else:
             msg = f"The string {string!r} can not be converted into a IsolationType."
             logger.error(msg)
-            raise ThundersValueError(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_ISOLATION_TYPE)
 
 
 @unique
 class LineModel(Enum):
-    """An enumerated class for the different line models
+    """An enumerated class for the different line models."""
 
-    Attributes:
-        LineModel.UNKNOWN:
-            The line is modelled through an unknown model.
-
-        LineModel.LV_EXACT:
-            The line is modelled through the position of the wire (with neutral). Some hypothesis limit this model to
-            low voltages lines.
-
-        LineModel.SYM:
-            The line is modelled using a symmetric model (without neutral).
-
-        LineModel.SYM_NEUTRAL:
-            The line is modelled  using a symmetric model (with neutral).
-
-        LineModel.ZY:
-            The line is modelled using two 3x3 matrices (shunt admittance and line impedance, without neutral).
-
-        LineModel.ZY_NEUTRAL:
-            The line is modelled using two 4x4 matrices (shunt admittance and line impedance, with neutral).
-
-        LineModel.Z:
-            The line is modelled using a single 3x3 matrices (line impedance, without neutral).
-
-        LineModel.Z_NEUTRAL:
-            The line is modelled using a single 4x4 matrices (line impedance, with neutral).
-    """
-
-    UNKNOWN = 0
-    LV_EXACT = 1
-    SYM = 2
-    SYM_NEUTRAL = 3
-    ZY = 4
-    ZY_NEUTRAL = 5
-    Z = 6
-    Z_NEUTRAL = 7
+    UNKNOWN = auto()
+    """The line is modelled through an unknown model."""
+    LV_EXACT = auto()
+    """The line is modelled through the position of the wire (with neutral). Some hypothesis limit this model to
+            low voltages lines."""
+    SYM = auto()
+    """The line is modelled using a symmetric model (without neutral)."""
+    SYM_NEUTRAL = auto()
+    """The line is modelled  using a symmetric model (with neutral)."""
+    ZY = auto()
+    """The line is modelled using two 3x3 matrices (shunt admittance and line impedance, without neutral)."""
+    ZY_NEUTRAL = auto()
+    """The line is modelled using two 4x4 matrices (shunt admittance and line impedance, with neutral)."""
+    Z = auto()
+    """The line is modelled using a single 3x3 matrices (line impedance, without neutral)."""
+    Z_NEUTRAL = auto()
+    """The line is modelled using a single 4x4 matrices (line impedance, with neutral)."""
 
     def __str__(self) -> str:
         """Print a `LineModel`
@@ -299,7 +264,7 @@ class LineModel(Enum):
         else:
             msg = f"The string {string!r} can not be converted into a LineModel."
             logger.error(msg)
-            raise ThundersValueError(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_MODEL)
 
     @classmethod
     def with_neutral(cls) -> tuple["LineModel", ...]:
@@ -340,22 +305,14 @@ class LineModel(Enum):
 
 @unique
 class BranchType(Enum):
-    """The type of 'line' in a network.
-
-    Attributes:
-        BranchType.LINE:
-            The branch is a regular line.
-
-        BranchType.TRANSFORMER:
-            The branch is a regular transformer.
-
-        BranchType.SWITCH:
-            The branch is a regular switch.
-    """
+    """The type of 'line' in a network."""
 
     LINE = auto()
+    """The branch is a regular line."""
     TRANSFORMER = auto()
+    """The branch is a regular transformer."""
     SWITCH = auto()
+    """The branch is a regular switch."""
 
     def __str__(self) -> str:
         """Print a `BranchType`.
@@ -385,7 +342,7 @@ class BranchType(Enum):
         else:
             msg = f"The string {string!r} can not be converted into a BranchType."
             logger.error(msg)
-            raise ThundersValueError(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_BRANCH_TYPE)
 
 
 EXTRACT_WINDINGS_RE: regex.Regex = regex.compile(
@@ -405,61 +362,38 @@ EXTRACT_WINDINGS_RE: regex.Regex = regex.compile(
 
 @unique
 class TransformerType(Enum):
-    """The type of transformer.
-
-    Attributes:
-        TransformerType.Yy:
-            A Wye-Wye transformer without neutral connected to the rest of the network.
-
-        TransformerType.YNy:
-            A Wye-Wye transformer with a neutral connected to the network on the first winding.
-
-        TransformerType.YNyn:
-            A Wye-Wye transformer with a neutral connected to the network on the two windings.
-
-        TransformerType.Yyn:
-            A Wye-Wye transformer with a neutral connected to the network on the second winding.
-
-        TransformerType.Dz:
-            A Delta-Zigzag transformer without neutral connected to the rest of the network.
-
-        TransformerType.Dzn:
-            A Delta-Zigzag transformer with a neutral connected to the network on the second winding.
-
-        TransformerType.Dy:
-            A Delta-Wye transformer without neutral connected to the rest of the network.
-
-        TransformerType.Dyn:
-            A Delta-Wye transformer with a neutral connected to the network on the second winding.
-
-        TransformerType.Yz:
-            A Wye-Zigzag transformer without neutral connected to the rest of the network.
-
-        TransformerType.YNz:
-            A Wye-Zigzag transformer with a neutral connected to the network on the first winding.
-
-        TransformerType.YNzn:
-            A Wye-Zigzag transformer with a neutral connected to the network on the two windings.
-
-        TransformerType.Yzn:
-            A Wye-Zigzag transformer with a neutral connected to the network on the second winding.
-    """
+    """The type of transformer."""
 
     Yy = auto()
+    """A Wye-Wye transformer without neutral connected to the rest of the network."""
     YNy = auto()
+    """A Wye-Wye transformer with a neutral connected to the network on the first winding."""
     YNyn = auto()
+    """A Wye-Wye transformer with a neutral connected to the network on the two windings."""
     Yyn = auto()
+    """A Wye-Wye transformer with a neutral connected to the network on the second winding."""
     Dz = auto()
+    """A Delta-Zigzag transformer without neutral connected to the rest of the network."""
     Dzn = auto()
+    """A Delta-Zigzag transformer with a neutral connected to the network on the second winding."""
     Dy = auto()
+    """A Delta-Wye transformer without neutral connected to the rest of the network."""
     Dyn = auto()
+    """A Delta-Wye transformer with a neutral connected to the network on the second winding."""
     Yz = auto()
+    """A Wye-Zigzag transformer without neutral connected to the rest of the network."""
     YNz = auto()
+    """A Wye-Zigzag transformer with a neutral connected to the network on the first winding."""
     YNzn = auto()
+    """A Wye-Zigzag transformer with a neutral connected to the network on the two windings."""
     Yzn = auto()
+    """A Wye-Zigzag transformer with a neutral connected to the network on the second winding."""
     Yd = auto()
+    """A Wye-Delta transformer without neutral connected to the rest of the network."""
     YNd = auto()
+    """A Wye-Delta transformer with a neutral connected to the network on the first winding."""
     Dd = auto()
+    """A Delta-Delta transformer without neutral connected to the rest of the network."""
 
     def __str__(self) -> str:
         """Print a `TransformerType`
@@ -486,7 +420,7 @@ class TransformerType(Enum):
         except AttributeError:
             msg = f"The string {string!r} can not be converted into a TransformerType."
             logger.error(msg)
-            raise ThundersValueError(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_TYPE)
 
     @property
     def windings(self) -> tuple[str, str]:
@@ -512,7 +446,7 @@ class TransformerType(Enum):
         try:
             match: regex.regex.Match = EXTRACT_WINDINGS_RE.fullmatch(string=string)
             return bool(match) and bool(match.group("p"))
-        except ThundersValueError:
+        except RoseauLoadFlowException:
             return False
 
     @classmethod
@@ -537,4 +471,4 @@ class TransformerType(Enum):
         else:
             msg = f"Transformer windings can not be extracted from the string {string!r}."
             logger.error(msg)
-            raise ThundersValueError(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS)

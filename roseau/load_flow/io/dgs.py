@@ -1,29 +1,31 @@
-#!/usr/bin/env python
-
 import json
+import logging
 from pathlib import Path
 from typing import Union
 
 import numpy as np
 import pandas as pd
 
-from roseau.load_flow import (
+from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
+from roseau.load_flow.models import (
     AbstractBranch,
     AbstractBus,
+    AbstractLine,
+    AbstractTransformer,
     Bus,
     Ground,
-    Line,
     LineCharacteristics,
     PotentialRef,
     PowerLoad,
     Switch,
-    Transformer,
     TransformerCharacteristics,
     VoltageSource,
 )
-from roseau.load_flow.models.core.core import Element
+from roseau.load_flow.models.core import Element
 from roseau.load_flow.models.loads.loads import AbstractLoad
-from roseau.load_flow.utils import LineModel, ThundersIOError
+from roseau.load_flow.utils import LineModel, Q_
+
+logger = logging.getLogger(__name__)
 
 
 def network_from_dgs(  # noqa: C901
@@ -66,8 +68,10 @@ def network_from_dgs(  # noqa: C901
         elif ph_tech == 1:  # ABC-N
             n = 4
         else:
-            raise ThundersIOError(f"The Ph tech {ph_tech} for bus {bus_id!r} can not be handle.")
-        buses[bus_id] = Bus(id_=bus_id, n=n)
+            msg = f"The Ph tech {ph_tech!r} for bus {bus_id!r} can not be handle."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DGS_BAD_PHASE_TECHNOLOGY)
+        buses[bus_id] = Bus(id=bus_id, n=n)
 
     # Sources
     for bus_id in elm_xnet.index:
@@ -78,7 +82,7 @@ def network_from_dgs(  # noqa: C901
         # the voltage source "erases" the buse to which it is connected
         voltages = [un * tap, un * np.exp(-np.pi * 2 / 3 * 1j) * tap, un * np.exp(np.pi * 2 / 3 * 1j) * tap]
         buses[source_bus] = VoltageSource(
-            id_=source_bus,
+            id=source_bus,
             n=4,
             ground=ground,
             voltages=voltages,
@@ -105,37 +109,39 @@ def network_from_dgs(  # noqa: C901
 
         line_types = dict()
         for type_id in typ_lne.index:
-            line_data = dict()
-            line_data["r0"] = typ_lne.at[type_id, "rline0"]
-            line_data["r1"] = typ_lne.at[type_id, "rline"]
-            line_data["x0"] = typ_lne.at[type_id, "xline0"]
-            line_data["x1"] = typ_lne.at[type_id, "xline"]
-            line_data["g0"] = typ_lne.at[type_id, "gline0"] / 1e6
-            line_data["g1"] = typ_lne.at[type_id, "gline"] / 1e6
-            line_data["b0"] = typ_lne.at[type_id, "bline0"] / 1e6
-            line_data["b1"] = typ_lne.at[type_id, "bline"] / 1e6
-            line_data["rn"] = typ_lne.at[type_id, "rnline"]
-            line_data["xn"] = typ_lne.at[type_id, "xnline"]
-            line_data["xpn"] = typ_lne.at[type_id, "xpnline"]
-            line_data["bn"] = typ_lne.at[type_id, "bnline"] / 1e6
-            line_data["bpn"] = typ_lne.at[type_id, "bpnline"] / 1e6
-
             n = typ_lne.at[type_id, "nlnph"] + typ_lne.at[type_id, "nneutral"]
             if n == 4:
-                line_data["model"] = LineModel.SYM_NEUTRAL
+                line_model = LineModel.SYM_NEUTRAL
             elif n == 3:
-                line_data["model"] = LineModel.SYM
+                line_model = LineModel.SYM
             else:
-                raise ThundersIOError(
-                    f"The number of phases ({n}) of line type {type_id!r} can not be handled, it should be 3 or 4."
-                )
-            line_types[type_id] = LineCharacteristics.from_sym(type_id, line_data)
+                msg = f"The number of phases ({n}) of line type {type_id!r} can not be handled, it should be 3 or 4."
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DGS_BAD_PHASE_NUMBER)
+
+            line_types[type_id] = LineCharacteristics.from_sym(
+                type_name=type_id,
+                r0=typ_lne.at[type_id, "rline0"],
+                model=line_model,
+                r1=typ_lne.at[type_id, "rline"],
+                x0=typ_lne.at[type_id, "xline0"],
+                x1=typ_lne.at[type_id, "xline"],
+                g0=Q_(typ_lne.at[type_id, "gline0"], "uS/km"),
+                g1=Q_(typ_lne.at[type_id, "gline"], "uS/km"),
+                b0=Q_(typ_lne.at[type_id, "bline0"], "uS/km"),
+                b1=Q_(typ_lne.at[type_id, "bline"], "uS/km"),
+                rn=typ_lne.at[type_id, "rnline"],
+                xn=typ_lne.at[type_id, "xnline"],
+                xpn=typ_lne.at[type_id, "xpnline"],
+                bn=Q_(typ_lne.at[type_id, "bnline"], "uS/km"),
+                bpn=Q_(typ_lne.at[type_id, "bpnline"], "uS/km"),
+            )
 
         for line_id in elm_lne.index:
             type_id = elm_lne.at[line_id, "typ_id"]  # id of the line type
 
-            branches[line_id] = Line.from_dict(
-                id_=line_id,
+            branches[line_id] = AbstractLine.from_dict(
+                id=line_id,
                 bus1=buses[sta_cubic.at[elm_lne.at[line_id, "bus1"], "cterm"]],
                 bus2=buses[sta_cubic.at[elm_lne.at[line_id, "bus2"], "cterm"]],
                 length=elm_lne.at[line_id, "dline"],
@@ -171,8 +177,8 @@ def network_from_dgs(  # noqa: C901
         for idx in elm_tr.index:
             type_id = elm_tr.at[idx, "typ_id"]  # id of the line type
             tap = 1.0 + elm_tr.at[idx, "nntap"] * transformers_tap[type_id] / 100
-            branches[idx] = Transformer.from_dict(
-                id_=idx,
+            branches[idx] = AbstractTransformer.from_dict(
+                id=idx,
                 transformer_types=transformers_data,
                 type_name=type_id,
                 bus1=buses[sta_cubic.at[elm_tr.at[idx, "bushv"], "cterm"]],
@@ -186,7 +192,7 @@ def network_from_dgs(  # noqa: C901
         for switch_id in elm_coup.index:
             n = elm_coup.at[switch_id, "nphase"] + elm_coup.at[switch_id, "nneutral"]
             branches[switch_id] = Switch(
-                id_=switch_id,
+                id=switch_id,
                 n=n,
                 bus1=buses[sta_cubic.at[elm_coup.at[switch_id, "bus1"], "cterm"]],
                 bus2=buses[sta_cubic.at[elm_coup.at[switch_id, "bus2"], "cterm"]],
@@ -349,9 +355,9 @@ def _generate_loads(
             sc = _compute_load_power(elm_lod, load_id, "t") * factor
 
         if sa == 0 and sb == 0 and sc == 0:  # Balanced
-            loads[load_id] = PowerLoad(id_=load_id, n=4, bus=buses[bus_id], s=[s_phase / 3, s_phase / 3, s_phase / 3])
+            loads[load_id] = PowerLoad(id=load_id, n=4, bus=buses[bus_id], s=[s_phase / 3, s_phase / 3, s_phase / 3])
         else:  # Unbalanced
-            loads[load_id] = PowerLoad(id_=load_id, n=4, bus=buses[bus_id], s=[sa, sb, sc])
+            loads[load_id] = PowerLoad(id=load_id, n=4, bus=buses[bus_id], s=[sa, sb, sc])
 
 
 def _compute_load_power(elm_lod: pd.DataFrame, load_id: str, suffix: str) -> complex:

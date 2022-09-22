@@ -1,6 +1,6 @@
 import pytest
 
-from roseau.load_flow.utils.exceptions import ThundersValueError
+from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.utils.types import ConductorType, IsolationType, LineModel, LineType, TransformerType
 
 TYPES = [
@@ -21,8 +21,15 @@ def test_types_basic(t):
 
 
 def test_line_type():
-    assert LineType.from_string("") == LineType.UNKNOWN
-    assert LineType.from_string("nan") == LineType.UNKNOWN
+    with pytest.raises(RoseauLoadFlowException) as e:
+        LineType.from_string("")
+    assert "can not be converted into a LineType" in e.value.args[0]
+    assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_LINE_TYPE
+    with pytest.raises(RoseauLoadFlowException) as e:
+        LineType.from_string("nan")
+    assert "can not be converted into a LineType" in e.value.args[0]
+    assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_LINE_TYPE
+
     assert LineType.from_string("Aérien") == LineType.OVERHEAD
     assert LineType.from_string("Aerien") == LineType.OVERHEAD
     assert LineType.from_string("galerie") == LineType.OVERHEAD
@@ -37,8 +44,14 @@ def test_isolation_type():
 
 
 def test_conductor_type():
-    assert ConductorType.from_string("") == ConductorType.UNKNOWN
-    assert ConductorType.from_string("nan") == ConductorType.UNKNOWN
+    with pytest.raises(RoseauLoadFlowException) as e:
+        ConductorType.from_string("")
+    assert "can not be converted into a ConductorType" in e.value.args[0]
+    assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_CONDUCTOR_TYPE
+    with pytest.raises(RoseauLoadFlowException) as e:
+        ConductorType.from_string("nan")
+    assert "can not be converted into a ConductorType" in e.value.args[0]
+    assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_CONDUCTOR_TYPE
 
 
 def test_transformer_type():
@@ -97,12 +110,14 @@ def test_transformer_type():
                         assert p == phase_displacement
                     else:
                         assert not TransformerType.validate_windings(t)
-                        with pytest.raises(ThundersValueError):
+                        with pytest.raises(RoseauLoadFlowException) as e:
                             TransformerType.extract_windings(t)
+                        assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS
             else:
                 assert not TransformerType.validate_windings(t)
-                with pytest.raises(ThundersValueError):
+                with pytest.raises(RoseauLoadFlowException):
                     TransformerType.extract_windings(t)
+                assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS
 
     for x in TransformerType:
         s = str(x)

@@ -1,9 +1,13 @@
 from roseau.load_flow.models.buses import AbstractBus, Bus, VoltageSource
-from roseau.load_flow.models.core import AbstractBranch, Ground, PotentialRef
-from roseau.load_flow.models.lines import Line, LineCharacteristics, ShuntLine, SimplifiedLine, Switch
+from roseau.load_flow.models.core import AbstractBranch, Element, Ground, PotentialRef
+from roseau.load_flow.models.lines import AbstractLine, LineCharacteristics, ShuntLine, SimplifiedLine, Switch
 from roseau.load_flow.models.loads import (
+    AbstractLoad,
     AdmittanceLoad,
     Control,
+    DeltaAdmittanceLoad,
+    DeltaImpedanceLoad,
+    DeltaPowerLoad,
     FlexibleLoad,
     FlexibleParameter,
     ImpedanceLoad,
@@ -11,42 +15,51 @@ from roseau.load_flow.models.loads import (
     Projection,
 )
 from roseau.load_flow.models.transformers import (
-    DeltaWyeF,
+    AbstractTransformer,
+    DeltaDeltaTransformer,
     DeltaWyeTransformer,
-    IdealDeltaWye,
-    Transformer,
+    DeltaZigzagTransformer,
     TransformerCharacteristics,
+    WyeDeltaTransformer,
     WyeWyeTransformer,
+    WyeZigzagTransformer,
 )
 
 __all__ = [
+    # Core
+    "Element",
+    "PotentialRef",
+    "Ground",
+    "AbstractBranch",
     # Buses
     "AbstractBus",
     "Bus",
     "VoltageSource",
-    # Core
-    "Ground",
-    "PotentialRef",
-    "AbstractBranch",
     # Lines
     "Switch",
-    "Line",
+    "AbstractLine",
     "ShuntLine",
     "SimplifiedLine",
     "LineCharacteristics",
     # Loads
+    "AbstractLoad",
     "ImpedanceLoad",
     "PowerLoad",
     "AdmittanceLoad",
+    "DeltaAdmittanceLoad",
+    "DeltaImpedanceLoad",
+    "DeltaPowerLoad",
     "FlexibleLoad",
     "FlexibleParameter",
     "Control",
     "Projection",
     # Transformers
-    "Transformer",
+    "AbstractTransformer",
     "WyeWyeTransformer",
     "DeltaWyeTransformer",
-    "IdealDeltaWye",
-    "DeltaWyeF",
+    "DeltaDeltaTransformer",
+    "WyeDeltaTransformer",
+    "WyeZigzagTransformer",
+    "DeltaZigzagTransformer",
     "TransformerCharacteristics",
 ]

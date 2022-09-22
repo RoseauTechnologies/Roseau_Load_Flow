@@ -1,23 +1,32 @@
 import logging
+from abc import ABC
 from typing import Any, Optional
 
 from shapely.geometry import Point
 
-from roseau.load_flow.models.buses.buses import AbstractBus
-from roseau.load_flow.models.core.core import AbstractBranch
+from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
+from roseau.load_flow.models.buses import AbstractBus
+from roseau.load_flow.models.core import AbstractBranch
 from roseau.load_flow.models.transformers.transformers_characteristics import TransformerCharacteristics
 from roseau.load_flow.utils import BranchType, TransformerType
-from roseau.load_flow.utils.exceptions import ThundersIOError, ThundersValueError
 
 logger = logging.getLogger(__name__)
 
 
-class Transformer(AbstractBranch):
-    type = BranchType.TRANSFORMER
+class AbstractTransformer(AbstractBranch, ABC):
+    """An abstract class used for all transformers of this package"""
+
+    branch_type = BranchType.TRANSFORMER
+    _dd_class: Optional[type["DeltaDeltaTransformer"]] = None
+    _dy_class: Optional[type["DeltaWyeTransformer"]] = None
+    _dz_class: Optional[type["DeltaZigzagTransformer"]] = None
+    _yd_class: Optional[type["WyeDeltaTransformer"]] = None
+    _yy_class: Optional[type["WyeWyeTransformer"]] = None
+    _yz_class: Optional[type["WyeZigzagTransformer"]] = None
 
     def __init__(
         self,
-        id_: Any,
+        id: Any,
         n1: int,
         n2: int,
         bus1: AbstractBus,
@@ -25,11 +34,12 @@ class Transformer(AbstractBranch):
         transformer_characteristics: TransformerCharacteristics,
         tap: float = 1.0,
         geometry: Optional[Point] = None,
+        **kwargs,
     ) -> None:
         """Transformer constructor.
 
         Args:
-            id_:
+            id:
                 The identifier of the transformer.
 
             n1:
@@ -56,20 +66,21 @@ class Transformer(AbstractBranch):
         if geometry is not None and not isinstance(geometry, Point):
             msg = f"The geometry for a {type(self)} must be a point: {geometry.geom_type} provided."
             logger.error(msg)
-            raise ThundersValueError(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_GEOMETRY_TYPE)
 
         if tap > 1.1:
             logger.warning(f"The provided tap {tap:.2f} is higher than 1.1. A good value is between 0.9 and 1.1.")
         if tap < 0.9:
             logger.warning(f"The provided tap {tap:.2f} is lower than 0.9. A good value is between 0.9 and 1.1.")
 
-        super().__init__(n1=n1, n2=n2, bus1=bus1, bus2=bus2, id_=id_, geometry=geometry)
+        super().__init__(n1=n1, n2=n2, bus1=bus1, bus2=bus2, id=id, geometry=geometry, **kwargs)
         self.transformer_characteristics = transformer_characteristics
         self.tap = tap
 
-    @staticmethod
+    @classmethod
     def from_dict(
-        id_: Any,
+        cls,
+        id: Any,
         bus1: AbstractBus,
         bus2: AbstractBus,
         type_name: str,
@@ -77,7 +88,7 @@ class Transformer(AbstractBranch):
         tap: float = 1.0,
         geometry: Optional[Point] = None,
         *args,
-    ) -> "Transformer":
+    ) -> "AbstractTransformer":
         """Transformer constructor from dict.
 
         Args:
@@ -87,7 +98,7 @@ class Transformer(AbstractBranch):
             type_name:
                 The name of the transformer type.
 
-            id_:
+            id:
                 The identifier of the transformer.
 
             bus1:
@@ -108,8 +119,8 @@ class Transformer(AbstractBranch):
         transformer_characteristics = transformer_types[type_name]
         winding1, winding2, phase_displacement = TransformerType.extract_windings(transformer_characteristics.windings)
         if "Y" in winding1 and "y" in winding2:
-            return WyeWyeTransformer(
-                id_=id_,
+            return cls._yy_class(
+                id=id,
                 bus1=bus1,
                 bus2=bus2,
                 transformer_characteristics=transformer_characteristics,
@@ -117,8 +128,8 @@ class Transformer(AbstractBranch):
                 geometry=geometry,
             )
         elif "D" in winding1 and "y" in winding2:
-            return DeltaWyeTransformer(
-                id_=id_,
+            return cls._dy_class(
+                id=id,
                 bus1=bus1,
                 bus2=bus2,
                 transformer_characteristics=transformer_characteristics,
@@ -126,8 +137,8 @@ class Transformer(AbstractBranch):
                 geometry=geometry,
             )
         elif "D" in winding1 and "z" in winding2:
-            return DeltaZigzagTransformer(
-                id_=id_,
+            return cls._dz_class(
+                id=id,
                 bus1=bus1,
                 bus2=bus2,
                 transformer_characteristics=transformer_characteristics,
@@ -135,8 +146,8 @@ class Transformer(AbstractBranch):
                 geometry=geometry,
             )
         elif "D" in winding1 and "d" in winding2:
-            return DeltaDeltaTransformer(
-                id_=id_,
+            return cls._dd_class(
+                id=id,
                 bus1=bus1,
                 bus2=bus2,
                 transformer_characteristics=transformer_characteristics,
@@ -144,8 +155,8 @@ class Transformer(AbstractBranch):
                 geometry=geometry,
             )
         elif "Y" in winding1 and "d" in winding2:
-            return WyeDeltaTransformer(
-                id_=id_,
+            return cls._yd_class(
+                id=id,
                 bus1=bus1,
                 bus2=bus2,
                 transformer_characteristics=transformer_characteristics,
@@ -153,8 +164,8 @@ class Transformer(AbstractBranch):
                 geometry=geometry,
             )
         elif "Y" in winding1 and "z" in winding2:
-            return WyeZigzagTransformer(
-                id_=id_,
+            return cls._yz_class(
+                id=id,
                 bus1=bus1,
                 bus2=bus2,
                 transformer_characteristics=transformer_characteristics,
@@ -164,7 +175,7 @@ class Transformer(AbstractBranch):
         else:
             msg = f"Transformer {transformer_characteristics.windings} is not implemented yet..."
             logger.error(msg)
-            raise ThundersIOError(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS)
 
     def to_dict(self) -> dict[str, Any]:
         res = super().to_dict()
@@ -177,9 +188,7 @@ class Transformer(AbstractBranch):
         )
         return res
 
-    def update_transformer_parameters(
-        self, transformer_characteristics: TransformerCharacteristics, tap: float = 1.0
-    ) -> None:
+    def update_characteristics(self, transformer_characteristics: TransformerCharacteristics, tap: float = 1.0) -> None:
         """Change the transformer parameters
 
         Args:
@@ -192,9 +201,9 @@ class Transformer(AbstractBranch):
         windings1 = self.transformer_characteristics.windings
         windings2 = transformer_characteristics.windings
         if windings1 != windings2:
-            raise ThundersValueError(
-                f"The updated windings changed for transformer {self.id!r}: {windings1} to {windings2}."
-            )
+            msg = f"The updated windings changed for transformer {self.id!r}: {windings1} to {windings2}."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS)
         if tap > 1.1:
             logger.warning(f"The provided tap {tap:.2f} is higher than 1.1. A good value is between 0.9 and 1.1.")
         if tap < 0.9:
@@ -204,20 +213,23 @@ class Transformer(AbstractBranch):
         self.tap = tap
 
 
-class WyeWyeTransformer(Transformer):
+class WyeWyeTransformer(AbstractTransformer):
+    """A class to describe Wye-Wye transformers."""
+
     def __init__(
         self,
-        id_: Any,
+        id: Any,
         bus1: AbstractBus,
         bus2: AbstractBus,
         transformer_characteristics: TransformerCharacteristics,
         tap: float = 1.0,
         geometry: Optional[Point] = None,
+        **kwargs,
     ) -> None:
         """WyeWyeTransformer constructor
 
         Args:
-            id_:
+            id:
                 The identifier of the transformer.
 
             bus1:
@@ -236,7 +248,7 @@ class WyeWyeTransformer(Transformer):
                 The geometry of the transformer.
         """
         super().__init__(
-            id_=id_,
+            id=id,
             n1=4,
             n2=4,
             bus1=bus1,
@@ -244,27 +256,31 @@ class WyeWyeTransformer(Transformer):
             transformer_characteristics=transformer_characteristics,
             tap=tap,
             geometry=geometry,
+            **kwargs,
         )
         if transformer_characteristics.winding1[0] != "Y" or transformer_characteristics.winding2[0] != "y":
-            raise ThundersValueError(
-                f"Bad windings for WyeWyeTransformer {self.id!r}: {transformer_characteristics.windings}"
-            )
+            msg = f"Bad windings for WyeWyeTransformer {self.id!r}: {transformer_characteristics.windings}"
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS)
 
 
-class DeltaWyeTransformer(Transformer):
+class DeltaWyeTransformer(AbstractTransformer):
+    """A class to describe Delta-Wye transformers."""
+
     def __init__(
         self,
-        id_: Any,
+        id: Any,
         bus1: AbstractBus,
         bus2: AbstractBus,
         transformer_characteristics: TransformerCharacteristics,
         tap: float = 1.0,
         geometry: Optional[Point] = None,
+        **kwargs,
     ) -> None:
         """DeltaWyeTransformer constructor
 
         Args:
-            id_:
+            id:
                 The identifier of the transformer.
 
             bus1:
@@ -283,7 +299,7 @@ class DeltaWyeTransformer(Transformer):
                 The geometry of the transformer.
         """
         super().__init__(
-            id_=id_,
+            id=id,
             n1=3,
             n2=4,
             bus1=bus1,
@@ -291,27 +307,31 @@ class DeltaWyeTransformer(Transformer):
             transformer_characteristics=transformer_characteristics,
             tap=tap,
             geometry=geometry,
+            **kwargs,
         )
         if transformer_characteristics.winding1[0] != "D" or transformer_characteristics.winding2[0] != "y":
-            raise ThundersValueError(
-                f"Bad windings for DeltaWyeTransformer {self.id!r}: {transformer_characteristics.windings}"
-            )
+            msg = f"Bad windings for DeltaWyeTransformer {self.id!r}: {transformer_characteristics.windings}"
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS)
 
 
-class DeltaDeltaTransformer(Transformer):
+class DeltaDeltaTransformer(AbstractTransformer):
+    """A class to describe Delta-Delta transformers."""
+
     def __init__(
         self,
-        id_: Any,
+        id: Any,
         bus1: AbstractBus,
         bus2: AbstractBus,
         transformer_characteristics: TransformerCharacteristics,
         tap: float = 1.0,
         geometry: Optional[Point] = None,
+        **kwargs,
     ) -> None:
-        """DeltaWyeTransformer constructor
+        """DeltaDeltaTransformer constructor
 
         Args:
-            id_:
+            id:
                 The identifier of the transformer.
 
             bus1:
@@ -330,7 +350,7 @@ class DeltaDeltaTransformer(Transformer):
                 The geometry of the transformer.
         """
         super().__init__(
-            id_=id_,
+            id=id,
             n1=3,
             n2=3,
             bus1=bus1,
@@ -338,27 +358,31 @@ class DeltaDeltaTransformer(Transformer):
             transformer_characteristics=transformer_characteristics,
             tap=tap,
             geometry=geometry,
+            **kwargs,
         )
         if transformer_characteristics.winding1[0] != "D" or transformer_characteristics.winding2[0] != "d":
-            raise ThundersValueError(
-                f"Bad windings for DeltaDeltaTransformer {self.id!r}: {transformer_characteristics.windings}"
-            )
+            msg = f"Bad windings for DeltaDeltaTransformer {self.id!r}: {transformer_characteristics.windings}"
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS)
 
 
-class WyeDeltaTransformer(Transformer):
+class WyeDeltaTransformer(AbstractTransformer):
+    """A class to describe Wye-Delta transformers."""
+
     def __init__(
         self,
-        id_: Any,
+        id: Any,
         bus1: AbstractBus,
         bus2: AbstractBus,
         transformer_characteristics: TransformerCharacteristics,
         tap: float = 1.0,
         geometry: Optional[Point] = None,
+        **kwargs,
     ) -> None:
-        """DeltaWyeTransformer constructor
+        """WyeDeltaTransformer
 
         Args:
-            id_:
+            id:
                 The identifier of the transformer.
 
             bus1:
@@ -377,7 +401,7 @@ class WyeDeltaTransformer(Transformer):
                 The geometry of the transformer.
         """
         super().__init__(
-            id_=id_,
+            id=id,
             n1=4,
             n2=3,
             bus1=bus1,
@@ -385,27 +409,31 @@ class WyeDeltaTransformer(Transformer):
             transformer_characteristics=transformer_characteristics,
             tap=tap,
             geometry=geometry,
+            **kwargs,
         )
         if transformer_characteristics.winding1[0] != "Y" or transformer_characteristics.winding2[0] != "d":
-            raise ThundersValueError(
-                f"Bad windings for WyeDeltaTransformer {self.id!r}: {transformer_characteristics.windings}"
-            )
+            msg = f"Bad windings for WyeDeltaTransformer {self.id!r}: {transformer_characteristics.windings}"
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS)
 
 
-class WyeZigzagTransformer(Transformer):
+class WyeZigzagTransformer(AbstractTransformer):
+    """A class to describe Wye-Zigzag transformers."""
+
     def __init__(
         self,
-        id_: Any,
+        id: Any,
         bus1: AbstractBus,
         bus2: AbstractBus,
         transformer_characteristics: TransformerCharacteristics,
         tap: float = 1.0,
         geometry: Optional[Point] = None,
+        **kwargs,
     ) -> None:
-        """DeltaWyeTransformer constructor
+        """WyeZigzagTransformer constructor
 
         Args:
-            id_:
+            id:
                 The identifier of the transformer.
 
             bus1:
@@ -424,7 +452,7 @@ class WyeZigzagTransformer(Transformer):
                 The geometry of the transformer.
         """
         super().__init__(
-            id_=id_,
+            id=id,
             n1=4,
             n2=4,
             bus1=bus1,
@@ -432,27 +460,31 @@ class WyeZigzagTransformer(Transformer):
             transformer_characteristics=transformer_characteristics,
             tap=tap,
             geometry=geometry,
+            **kwargs,
         )
         if transformer_characteristics.winding1[0] != "Y" or transformer_characteristics.winding2[0] != "z":
-            raise ThundersValueError(
-                f"Bad windings for WyeZigzagTransformer {self.id!r}: {transformer_characteristics.windings}"
-            )
+            msg = f"Bad windings for WyeZigzagTransformer {self.id!r}: {transformer_characteristics.windings}"
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS)
 
 
-class DeltaZigzagTransformer(Transformer):
+class DeltaZigzagTransformer(AbstractTransformer):
+    """A class to describe Delta-Zigzag transformers."""
+
     def __init__(
         self,
-        id_: Any,
+        id: Any,
         bus1: AbstractBus,
         bus2: AbstractBus,
         transformer_characteristics: TransformerCharacteristics,
         tap: float = 1.0,
         geometry: Optional[Point] = None,
+        **kwargs,
     ) -> None:
-        """DeltaWyeTransformer constructor
+        """DeltaZigzagTransformer constructor
 
         Args:
-            id_:
+            id:
                 The identifier of the transformer.
 
             bus1:
@@ -471,7 +503,7 @@ class DeltaZigzagTransformer(Transformer):
                 The geometry of the transformer.
         """
         super().__init__(
-            id_=id_,
+            id=id,
             n1=3,
             n2=4,
             bus1=bus1,
@@ -479,52 +511,17 @@ class DeltaZigzagTransformer(Transformer):
             transformer_characteristics=transformer_characteristics,
             tap=tap,
             geometry=geometry,
+            **kwargs,
         )
         if transformer_characteristics.winding1[0] != "D" or transformer_characteristics.winding2[0] != "z":
-            raise ThundersValueError(
-                f"Bad windings for DeltaZigzagTransformer {self.id!r}: {transformer_characteristics.windings}"
-            )
+            msg = f"Bad windings for DeltaZigzagTransformer {self.id!r}: {transformer_characteristics.windings}"
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS)
 
 
-class IdealDeltaWye(Transformer):
-    def __init__(
-        self,
-        id_: Any,
-        bus1: AbstractBus,
-        bus2: AbstractBus,
-        transformer_characteristics: TransformerCharacteristics,
-        tap: float = 1.0,
-        geometry: Optional[Point] = None,
-    ) -> None:
-        """DeltaWyeTransformer constructor
-
-        Args:
-            id_:
-                The identifier of the transformer.
-
-            bus1:
-                bus to connect to the transformer
-
-            bus2:
-                bus to connect to the transformer
-
-            transformer_characteristics:
-                The characteristics of the transformer.
-
-            tap:
-                The tap of the transformer, for example 1.02.
-
-            geometry:
-                The geometry of the transformer.
-        """
-        super().__init__(
-            id_=id_,
-            n1=3,
-            n2=4,
-            bus1=bus1,
-            bus2=bus2,
-            transformer_characteristics=transformer_characteristics,
-            tap=tap,
-            geometry=geometry,
-        )
-        _, _, k, orientation = transformer_characteristics.to_zyk()
+AbstractTransformer._dd_class = DeltaDeltaTransformer
+AbstractTransformer._dy_class = DeltaWyeTransformer
+AbstractTransformer._dz_class = DeltaZigzagTransformer
+AbstractTransformer._yd_class = WyeDeltaTransformer
+AbstractTransformer._yy_class = WyeWyeTransformer
+AbstractTransformer._yz_class = WyeZigzagTransformer

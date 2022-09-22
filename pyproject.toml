@@ -12,12 +12,16 @@ license = "Proprietary"
 repository = "https://github.com/RoseauTechnologies/Roseau_Load_Flow/"
 readme = "README.md"
 include = []
+exclude = [
+    "**/tests/**",
+    "**/conftest.py",
+]
 packages = [
     { include = "roseau/load_flow" }
 ]
 
 [build-system]
-requires = ["poetry-core>=1.0.0", "setuptools", "wheel", "Cython", "numpy"]
+requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.dependencies]
@@ -27,35 +31,37 @@ numpy = "^1.21.5"
 pandas = "^1.4.0"
 pygeos = ">=0.12.0"
 geopandas = ">=0.10.2"
-scipy = "^1.5.0"
 Shapely = "^1.8.0"
 regex = "^2022.1.18"
-pyproj = "^3.3.0"
+pint = ">=0.19.2"
+requests = "^2.28.1"
+requests-mock = "^1.9.3"
 
 # Command line
 rich = ">=11.0.0"
 
-# Display
-matplotlib = "^3.5.1"
-adjustText = ">=0.7.3"
-
-# Compilation
-Cython = ">=0.29.26"
-
-
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 # Tests
 pytest = "^7.1.2"
 pytest-cov = "^3.0.0"
 pytest-xdist = "^2.5.0"
-pytest-runner = "^6.0.0"
 
 # Code quality
 coverage = { version = "^6.0.0", extras = ["toml"] }
-flake8 = "^4.0.1"
+flake8 = "^5.0.4"
 pre-commit = "^2.6.0"
 black = { version = ">=20.8b1", extras = ["jupyter"] }
 isort = "^5.1.0"
+
+# Documentation
+[tool.poetry.group.doc.dependencies]
+Sphinx = "^5.1.0"
+myst-parser = ">=0.16.1"
+sphinx-math-dollar = "^1.2.1"
+sphinx-rtd-theme = "^1.0.0"
+sphinx-autoapi = "^1.9.0"
+jupyter = "^1.0.0"
+nbsphinx = "^0.8.9"
 
 # Black
 [tool.black]
@@ -74,10 +80,10 @@ case_sensitive = true
 # Coverage
 [tool.coverage.run]
 branch = true
-omit = ["thunders/__about__.py"]
+omit = ["roseau/load_flow/__about__.py"]
 
 [tool.coverage.paths]
-source = ["thunders/"]
+source = ["roseau/load_flow/"]
 
 [tool.coverage.report]
 # Regexes for lines to exclude from consideration
@@ -104,4 +110,4 @@ directory = "htmlcov"
 # Pytest
 [tool.pytest.ini_options]
 addopts = "--color=yes -vv -n=0"
-testpaths = ["thunders"]
+testpaths = ["roseau/load_flow/"]

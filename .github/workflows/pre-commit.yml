@@ -1,0 +1,29 @@
+name: pre-commit
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths-ignore:
+      - ".vscode/**"
+      - ".idea/**"
+    tags:
+      - '*'
+  pull_request:
+    branches: [ main, develop ]
+    paths-ignore:
+      - ".vscode/**"
+      - ".idea/**"
+    tags:
+      - '*'
+
+jobs:
+  pre-commit:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          lfs: false
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+      - uses: pre-commit/action@v3.0.0
