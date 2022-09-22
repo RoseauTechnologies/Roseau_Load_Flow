@@ -180,7 +180,7 @@ def test_lv_exact():
         ]
     )
 
-    npt.assert_allclose(z_line, nplin.inv(y_line_expected))
+    npt.assert_allclose(z_line.m_as("ohm/km"), nplin.inv(y_line_expected))
     y_shunt_expected = np.array(
         [
             [
@@ -209,7 +209,7 @@ def test_lv_exact():
             ],
         ]
     )
-    npt.assert_allclose(y_shunt, y_shunt_expected)
+    npt.assert_allclose(y_shunt.m_as("S/km"), y_shunt_expected)
     assert model == LineModel.LV_EXACT
 
     # line_data = {"dpp": 0, "dpn": 0, "dsh": 0.04}
@@ -240,7 +240,7 @@ def test_lv_exact():
             [-0.03859093131793137, 0.20837873067712717, -0.03859093131792582, -0.6182914857776997],
         ]
     )
-    npt.assert_allclose(z_line, nplin.inv(y_line_expected))
+    npt.assert_allclose(z_line.m_as("ohm/km"), nplin.inv(y_line_expected))
     y_shunt_expected = np.array(
         [
             [
@@ -270,7 +270,7 @@ def test_lv_exact():
         ]
     )
 
-    npt.assert_allclose(y_shunt, y_shunt_expected)
+    npt.assert_allclose(y_shunt.m_as("S/km"), y_shunt_expected)
     assert model == LineModel.LV_EXACT
 
 
@@ -328,9 +328,9 @@ def test_sym():
         ],
         dtype=np.complex_,
     )
-    npt.assert_allclose(z_line, z_line_expected)
+    npt.assert_allclose(z_line.m_as("ohm/km"), z_line_expected)
     y_shunt_expected = np.zeros(shape=(3, 3), dtype=np.complex_)
-    npt.assert_allclose(y_shunt, y_shunt_expected)
+    npt.assert_allclose(y_shunt.m_as("S/km"), y_shunt_expected)
     assert model == LineModel.SYM  # Downgraded model because of PwF bad data
 
     # First line
@@ -366,7 +366,7 @@ def test_sym():
             ],
         ]
     )
-    npt.assert_allclose(z_line, z_line_expected)
+    npt.assert_allclose(z_line.m_as("ohm/km"), z_line_expected)
     y_shunt_expected = np.array(
         [
             [1.0462e-05 + 1.74371333e-04j, 0 - 5.56186667e-05j, 0 - 5.56186667e-05j, -0 - 3.15020000e-05j],
@@ -375,7 +375,7 @@ def test_sym():
             [-0 - 3.15020000e-05j, -0 - 3.15020000e-05j, -0 - 3.15020000e-05j, 0 + 1.14070000e-04j],
         ]
     )
-    npt.assert_allclose(y_shunt, y_shunt_expected)
+    npt.assert_allclose(y_shunt.m_as("S/km"), y_shunt_expected)
     assert model == LineModel.SYM_NEUTRAL
 
     # Second line
@@ -395,9 +395,9 @@ def test_sym():
         model=LineModel.SYM,
     )
     z_line_expected = (0.2 + 0.1j) * np.eye(3)
-    npt.assert_allclose(z_line, z_line_expected)
+    npt.assert_allclose(z_line.m_as("ohm/km"), z_line_expected)
     y_shunt_expected = 0.00014106j * np.eye(3)
-    npt.assert_allclose(y_shunt, y_shunt_expected)
+    npt.assert_allclose(y_shunt.m_as("S/km"), y_shunt_expected)
     assert model == LineModel.SYM
 
 
