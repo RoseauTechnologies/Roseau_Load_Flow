@@ -70,7 +70,7 @@ jobs:
       - name: Test with pytest
         run: |
           poetry run pytest -n=auto --durations=25 --cov=roseau --cov-report html \
-          --cov-config pyproject.toml --cov-fail-under 80 roseau
+          --cov-config pyproject.toml --cov-fail-under 75 roseau
 
       - name: Archive code coverage results
         uses: actions/upload-artifact@v3
