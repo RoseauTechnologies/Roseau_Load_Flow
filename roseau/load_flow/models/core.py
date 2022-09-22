@@ -21,6 +21,8 @@ logger = logging.getLogger(__name__)
 
 
 class Element(ABC):
+    """An abstract class to describe an element of an Electrical network"""
+
     def __init__(self, **kwargs):
         self.connected_elements: list[Element] = []
 
@@ -31,6 +33,8 @@ class Element(ABC):
 
 
 class PotentialRef(Element):
+    """This elements defines the potential reference"""
+
     def __init__(self, element: Element, **kwargs):
         """Potential reference element constructor, this element will set the origin of the potentials as
         Va + Vb + Vc = 0 for delta elements or Vn = 0 for the others.
@@ -56,6 +60,8 @@ class PotentialRef(Element):
 
 
 class Ground(Element):
+    """This element defines the ground."""
+
     def __init__(self, **kwargs):
         """Ground constructor."""
         super().__init__(**kwargs)
@@ -73,6 +79,8 @@ class Ground(Element):
 
 
 class AbstractBranch(Element, JsonMixin):
+    """This is an abstract class for all the branches (lines, switches and transformers) of the network."""
+
     branch_type: BranchType = NotImplemented
 
     @classmethod

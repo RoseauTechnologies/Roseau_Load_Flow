@@ -16,6 +16,8 @@ logger = logging.getLogger(__name__)
 
 
 class Switch(AbstractBranch):
+    """A general purpose switch branch."""
+
     branch_type = BranchType.SWITCH
 
     def __init__(
@@ -89,6 +91,8 @@ class Switch(AbstractBranch):
 
 
 class AbstractLine(AbstractBranch):
+    """An abstract class for all lines of this package."""
+
     branch_type = BranchType.LINE
     _simplified_line_class: Optional[type["SimplifiedLine"]] = None
     _shunt_line_class: Optional[type["ShuntLine"]] = None

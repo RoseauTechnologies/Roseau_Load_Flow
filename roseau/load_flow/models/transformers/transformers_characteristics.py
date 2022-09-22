@@ -10,6 +10,8 @@ logger = logging.getLogger(__name__)
 
 
 class TransformerCharacteristics:
+    """A class to store the characteristics of the transformers."""
+
     @ureg.wraps(None, (None, None, None, "V", "V", "VA", "W", None, "W", None), strict=False)
     def __init__(
         self,

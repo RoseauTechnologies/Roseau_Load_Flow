@@ -40,12 +40,11 @@ requests-mock = "^1.9.3"
 # Command line
 rich = ">=11.0.0"
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 # Tests
 pytest = "^7.1.2"
 pytest-cov = "^3.0.0"
 pytest-xdist = "^2.5.0"
-pytest-runner = "^6.0.0"
 
 # Code quality
 coverage = { version = "^6.0.0", extras = ["toml"] }
@@ -55,11 +54,12 @@ black = { version = ">=20.8b1", extras = ["jupyter"] }
 isort = "^5.1.0"
 
 # Documentation
-Sphinx = "^4.4.0"
+[tool.poetry.group.doc.dependencies]
+Sphinx = "^5.1.0"
 myst-parser = ">=0.16.1"
-sphinx-book-theme = "==0.2.0" # Trouble with 0.3 https://github.com/executablebooks/sphinx-book-theme/issues/538
 sphinx-math-dollar = "^1.2.1"
 sphinx-rtd-theme = "^1.0.0"
+sphinx-autoapi = "^1.9.0"
 jupyter = "^1.0.0"
 nbsphinx = "^0.8.9"
 

@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 class ElectricalNetwork:
     DEFAULT_PRECISION: float = 1e-6
     DEFAULT_MAX_ITERATIONS: int = 20
-    DEFAULT_BASE_URL = "http://localhost:8000"
+    DEFAULT_BASE_URL = "https://load-flow-api.roseautechnologies.com/"
 
     branch_class = AbstractBranch
     load_class = AbstractLoad

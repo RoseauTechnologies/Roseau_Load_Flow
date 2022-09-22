@@ -11,6 +11,7 @@
 name = "roseau"
 url = "https://gitlab.com/api/v4/projects/21838126/packages/pypi/simple"
 secondary = true
+default = false
 
 [tool.poetry.dependencies]
 #...

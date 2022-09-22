@@ -329,8 +329,7 @@ class LineCharacteristics:
                     logger.warning(
                         f"The conversion of the symmetric model of {type_name!r} to its matrix model reached invalid "
                         f"line impedance matrix... It is often the case with line models coming from "
-                        "PowerFactory. We pass to a 'degraded' model of lines to handle the provided "
-                        f"data."
+                        "PowerFactory. We pass to a 'degraded' model of lines to handle the provided data."
                     )
                     # Go to choice == 1
                 else:
@@ -524,7 +523,7 @@ class LineCharacteristics:
         sections = Q_([section, section, section, section_neutral], "mm**2")  # surfaces (m2)
         radius = Q_(np.zeros(4, dtype=float), "m")  # radius (m)
         gmr = Q_(np.zeros(4, dtype=float), "m")  # geometric mean radius (m)
-        d = Q_(np.zeros((4, 4), dtype=float), "m")  # distance between projections of two wires (m)
+        # d = Q_(np.zeros((4, 4), dtype=float), "m")  # distance between projections of two wires (m)
         distance = Q_(np.zeros((4, 4), dtype=float), "m")  # distance between two wires (m)
         distance_prim = Q_(np.zeros((4, 4), dtype=float), "m")  # distance between a wire and the image of another
         # wire (m)
@@ -536,7 +535,7 @@ class LineCharacteristics:
             gmr[i] = radius[i].to("m") * np.exp(-0.25)
             r[i, i] = RHO[conductor_type] / sections[i]
             for j in range(4):
-                d[i, j] = abs(coord[i][0] - coord[j][0])
+                # d[i, j] = abs(coord[i][0] - coord[j][0])
                 distance[i, j] = np.sqrt((coord[i][0] - coord[j][0]) ** 2 + (coord[i][1] - coord[j][1]) ** 2)
                 distance_prim[i, j] = np.sqrt((coord[i][0] - coord[j][2]) ** 2 + (coord[i][1] - coord[j][3]) ** 2)
                 if j != i:

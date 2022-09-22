@@ -14,6 +14,8 @@ logger = logging.getLogger(__name__)
 
 
 class AbstractTransformer(AbstractBranch, ABC):
+    """An abstract class used for all transformers of this package"""
+
     branch_type = BranchType.TRANSFORMER
     _dd_class: Optional[type["DeltaDeltaTransformer"]] = None
     _dy_class: Optional[type["DeltaWyeTransformer"]] = None
@@ -212,6 +214,8 @@ class AbstractTransformer(AbstractBranch, ABC):
 
 
 class WyeWyeTransformer(AbstractTransformer):
+    """A class to describe Wye-Wye transformers."""
+
     def __init__(
         self,
         id: Any,
@@ -261,6 +265,8 @@ class WyeWyeTransformer(AbstractTransformer):
 
 
 class DeltaWyeTransformer(AbstractTransformer):
+    """A class to describe Delta-Wye transformers."""
+
     def __init__(
         self,
         id: Any,
@@ -310,6 +316,8 @@ class DeltaWyeTransformer(AbstractTransformer):
 
 
 class DeltaDeltaTransformer(AbstractTransformer):
+    """A class to describe Delta-Delta transformers."""
+
     def __init__(
         self,
         id: Any,
@@ -359,6 +367,8 @@ class DeltaDeltaTransformer(AbstractTransformer):
 
 
 class WyeDeltaTransformer(AbstractTransformer):
+    """A class to describe Wye-Delta transformers."""
+
     def __init__(
         self,
         id: Any,
@@ -408,6 +418,8 @@ class WyeDeltaTransformer(AbstractTransformer):
 
 
 class WyeZigzagTransformer(AbstractTransformer):
+    """A class to describe Wye-Zigzag transformers."""
+
     def __init__(
         self,
         id: Any,
@@ -457,6 +469,8 @@ class WyeZigzagTransformer(AbstractTransformer):
 
 
 class DeltaZigzagTransformer(AbstractTransformer):
+    """A class to describe Delta-Zigzag transformers."""
+
     def __init__(
         self,
         id: Any,

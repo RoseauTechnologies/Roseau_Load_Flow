@@ -1,4 +1,4 @@
-exclude: ^.idea/|^doc/
+exclude: ^.idea/
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.3.0
@@ -16,7 +16,7 @@ repos:
     hooks:
       - id: absolufy-imports
   - repo: https://github.com/asottile/pyupgrade
-    rev: v2.37.3
+    rev: v2.38.0
     hooks:
       - id: pyupgrade
         args: [ --py39-plus ]
@@ -25,9 +25,9 @@ repos:
     hooks:
       - id: isort
   - repo: https://github.com/psf/black
-    rev: 22.6.0
+    rev: 22.8.0
     hooks:
-      - id: black
+      - id: black-jupyter
   - repo: https://github.com/asottile/yesqa
     rev: v1.3.0
     hooks:
@@ -36,19 +36,3 @@ repos:
     rev: 5.0.4
     hooks:
       - id: flake8
-  #  C++ code
-  - repo: https://github.com/pocc/pre-commit-hooks
-    rev: v1.3.5
-    hooks:
-      - id: clang-format
-        args: [-i] # --style=Google,
-#      - id: clang-tidy
-#        args: [-checks=clang-diagnostic-return-type, --fix-errors, --]
-      - id: cppcheck
-        args: [
-            --std=c++17,
-            --platform=unix64,
-            --language=c++,
-            --suppressions-list=suppression.txt,
-            '--enable=warning,performance,portability,information,missingInclude'
-        ]

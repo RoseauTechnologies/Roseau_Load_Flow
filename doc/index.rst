@@ -9,16 +9,16 @@ To get started you can use the following notebooks:
 .. toctree::
    :maxdepth: 3
 
-   notebooks/basic
-   notebooks/from_file
-   notebooks/advanced
+   notebooks/Getting_Started
+   notebooks/IO
+   notebooks/Advanced
 
 If you want the full documentation of all the classes and methods, you can refer to the following modules:
 
 .. toctree::
    :maxdepth: 3
 
-   modules
+   autoapi/roseau/index
 
 
 Indices and tables
