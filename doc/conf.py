@@ -71,4 +71,5 @@ html_static_path = ["_static"]
 
 # AutoAPI
 autoapi_dirs = ["../roseau"]
-autoapi_ignore = ["**/tests/**"]
+autoapi_ignore = ["**/tests/**", "**/conftest.py"]
+autoapi_options = ["members", "undoc-members", "show-inheritance", "show-module-summary", "imported-members"]
