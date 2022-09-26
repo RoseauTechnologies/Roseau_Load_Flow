@@ -4,6 +4,7 @@ import re
 from collections.abc import Sequence
 from pathlib import Path
 from typing import Any, Union
+from urllib.parse import urljoin
 
 import numpy as np
 import pandas as pd
@@ -157,35 +158,54 @@ class ElectricalNetwork:
             self._check_validity(constructed=True)
             self._create_network()
 
-        params = {"max_iterations": max_iterations, "precision": precision}
+        # Get the data
         network_data = self.to_dict()
-        response = requests.post(f"{base_url}/solve/", params=params, json=network_data, auth=auth)
 
-        result_dict: dict[str, Any] = response.json()
-        if response.status_code != 200:
+        # Request the server
+        params = {"max_iterations": max_iterations, "precision": precision}
+        response = requests.post(
+            url=urljoin(base_url, "solve/"),
+            params=params,
+            json=network_data,
+            auth=auth,
+            headers={"accept": "application/json"},
+        )
+
+        # Read the response
+        if not response.ok:
+            content_type = response.headers["content-type"]
             if response.status_code == 401:
                 msg = "Authentication failed."
                 logger.error(msg=msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_REQUEST)
             else:
-                msg = f"There is a problem in the request. Error code {response.status_code}. "
-                if "msg" in result_dict and "code" in result_dict:
-                    msg += f"{result_dict['code']} - {result_dict['msg']}"
+                msg = f"There is a problem in the request. Error code {response.status_code}."
+                if content_type == "application/json":
+                    result_dict: dict[str, Any] = response.json()
+                    if "msg" in result_dict and "code" in result_dict:
+                        msg += f" {result_dict['code']} - {result_dict['msg']}"
+                else:
+                    msg += response.text
                 logger.error(msg=msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_REQUEST)
 
+        result_dict: dict[str, Any] = response.json()
         info = result_dict["info"]
         if info["status"] != "success":
             msg = (
                 f"The load flow did not converge after {info['iterations']} iterations. The norm of the residuals is "
-                f"{info['finalError']}"
+                f"{info['finalError']:.5n}"
             )
             logger.error(msg=msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.NO_LOAD_FLOW_CONVERGENCE)
 
-        logger.info(f"The load flow converged after {info['iterations']}.")
+        logger.info(
+            f"The load flow converged after {info['iterations']} iterations (final error={info['finalError']:.5n})."
+        )
 
-        self._dispatch_results(result_dict)
+        # Dispatch the results
+        self._dispatch_results(result_dict=result_dict)
+
         return info["iterations"]
 
     def _dispatch_results(self, result_dict: dict[str, Any]) -> None:

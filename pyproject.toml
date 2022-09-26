@@ -40,12 +40,13 @@ requests-mock = "^1.9.3"
 # Command line
 rich = ">=11.0.0"
 
-[tool.poetry.group.dev.dependencies]
+[tool.poetry.group.test.dependencies]
 # Tests
 pytest = "^7.1.2"
 pytest-cov = "^3.0.0"
 pytest-xdist = "^2.5.0"
 
+[tool.poetry.group.dev.dependencies]
 # Code quality
 coverage = { version = "^6.0.0", extras = ["toml"] }
 flake8 = "^5.0.4"
