@@ -70,16 +70,33 @@ class AbstractBus(Element, JsonMixin, ABC):
     @property
     @ureg.wraps("V", None, strict=False)
     def potentials(self) -> np.ndarray:
-        """Return the potentials of the element
+        """Return the potentials of the element.
 
         Returns:
-            An array of the potentials
+            An array of the potentials.
         """
         return self._potentials
 
     @potentials.setter
     def potentials(self, value: np.ndarray):
         self._potentials = value
+
+    @property
+    @ureg.wraps("V", None, strict=False)
+    def voltages(self) -> np.ndarray:
+        """Return the voltages of the element, as [Van, Vbn, Vcn] for a wye bus, or [Vab, Vbc, Vca] for a delta bus.
+
+        Returns:
+            An array of the voltages.
+        """
+        if self.n == 3:
+            return np.asarray(
+                self._potentials[1] - self._potentials[0],
+                self._potentials[2] - self._potentials[1],
+                self._potentials[0] - self._potentials[2],
+            )
+        else:
+            return self._potentials[: self.n - 1] - self._potentials[self.n - 1]
 
     #
     # Json Mixin interface
@@ -169,7 +186,7 @@ class VoltageSource(AbstractBus):
             ground.connected_elements.append(self)
             self.connected_elements.append(ground)
 
-        self.voltages = voltages
+        self.source_voltages = voltages
 
     @ureg.wraps(None, (None, "V"), strict=False)
     def update_voltages(self, voltages: Sequence[complex]) -> None:
@@ -184,15 +201,15 @@ class VoltageSource(AbstractBus):
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_VOLTAGES_SIZE)
 
-        self.voltages = voltages
+        self.source_voltages = voltages
 
     #
     # Json Mixin interface
     #
     def to_dict(self) -> dict[str, Any]:
-        va = self.voltages[0]
-        vb = self.voltages[1]
-        vc = self.voltages[2]
+        va = self.source_voltages[0]
+        vb = self.source_voltages[1]
+        vc = self.source_voltages[2]
         res = {
             "id": self.id,
             "type": "slack",
