@@ -71,7 +71,9 @@ class Control:
         Returns:
             The control using the provided parameters.
 
-        TODO Add in the docstring a link to an image of the LaTeX documentation.
+        .. image:: /_static/Control_PU_Prod.png
+            :width: 600
+            :align: center
         """
         assert u_up < u_max
         return cls(type="p_max_u_production", u_min=0.0, u_down=0.0, u_up=u_up, u_max=u_max, alpha=alpha)
@@ -95,7 +97,9 @@ class Control:
         Returns:
             The control using the provided parameters.
 
-        TODO Add in the docstring a link to an image of the LaTeX documentation.
+        .. image:: /_static/Control_PU_Cons.png
+            :width: 600
+            :align: center
         """
         assert u_min < u_down
         return cls(type="p_max_u_consumption", u_min=u_min, u_down=u_down, u_up=0.0, u_max=0.0, alpha=alpha)
@@ -125,7 +129,9 @@ class Control:
         Returns:
             The control using the provided parameters.
 
-        TODO Add in the docstring a link to an image of the LaTeX documentation.
+        .. image:: /_static/Control_QU.png
+            :width: 600
+            :align: center
         """
         assert u_min < u_down < u_up < u_max
         return cls(type="q_u", u_min=u_min, u_down=u_down, u_up=u_up, u_max=u_max, alpha=alpha)
