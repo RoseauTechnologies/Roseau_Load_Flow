@@ -1,3 +1,5 @@
+from urllib.parse import urljoin
+
 import numpy as np
 import pytest
 import requests_mock
@@ -107,6 +109,7 @@ def test_bad_networks():
 
 
 def test_solve_load_flow():
+    # Build a small network
     ground = Ground()
     vs = VoltageSource("vs", 4, ground, [20000.0 + 0.0j, -10000.0 - 17320.508076j, -10000.0 + 17320.508076j])
     load_bus = Bus("bus", 4)
@@ -119,129 +122,133 @@ def test_solve_load_flow():
 
     en = ElectricalNetwork([vs, load_bus], [line], [load], [pref, ground])
 
-    with requests_mock.Mocker() as m:
-        # Good result
-        json_result = {
-            "info": {
-                "status": "success",
-                "resolutionMethod": "newton",
-                "iterations": 1,
-                "targetError": 1e-06,
-                "finalError": 6.296829377361313e-14,
+    # Good result
+    json_result = {
+        "info": {
+            "status": "success",
+            "resolutionMethod": "newton",
+            "iterations": 1,
+            "targetError": 1e-06,
+            "finalError": 6.296829377361313e-14,
+        },
+        "buses": [
+            {
+                "id": "vs",
+                "potentials": {
+                    "va": [20000.0, 0.0],
+                    "vb": [-10000.0, -17320.508076],
+                    "vc": [-10000.0, 17320.508076],
+                    "vn": [0.0, 0.0],
+                },
             },
-            "buses": [
-                {
-                    "id": "vs",
-                    "potentials": {
-                        "va": [20000.0, 0.0],
-                        "vb": [-10000.0, -17320.508076],
-                        "vc": [-10000.0, 17320.508076],
-                        "vn": [0.0, 0.0],
-                    },
+            {
+                "id": "bus",
+                "potentials": {
+                    "va": [19999.949999875, 0.0],
+                    "vb": [-9999.9749999375, -17320.464774621556],
+                    "vc": [-9999.9749999375, 17320.464774621556],
+                    "vn": [1.3476526914363477e-12, 0.0],
                 },
-                {
-                    "id": "bus",
-                    "potentials": {
-                        "va": [19999.949999875, 0.0],
-                        "vb": [-9999.9749999375, -17320.464774621556],
-                        "vc": [-9999.9749999375, 17320.464774621556],
-                        "vn": [1.3476526914363477e-12, 0.0],
-                    },
+            },
+        ],
+        "branches": [
+            {
+                "id": "line",
+                "currents1": {
+                    "ia": [0.005, 0.0],
+                    "ib": [-0.0025, -0.0043],
+                    "ic": [-0.0025, 0.0043],
+                    "in": [-1.347e-13, 0.0],
                 },
-            ],
-            "branches": [
-                {
-                    "id": "line",
-                    "currents1": {
-                        "ia": [0.005, 0.0],
-                        "ib": [-0.0025, -0.0043],
-                        "ic": [-0.0025, 0.0043],
-                        "in": [-1.347e-13, 0.0],
-                    },
-                    "currents2": {
-                        "ia": [0.005, 0.0],
-                        "ib": [-0.0025, -0.0043],
-                        "ic": [-0.0025, 0.0043],
-                        "in": [-1.347e-13, 0.0],
-                    },
-                }
-            ],
-            "loads": [
-                {
-                    "id": "load",
-                    "currents": {
-                        "ia": [0.005, -0.0],
-                        "ib": [-0.0025, -0.0043],
-                        "ic": [-0.0025, 0.0043],
-                        "in": [-1.347e-13, 0.0],
-                    },
-                }
-            ],
-        }
-        m.post(f"{ElectricalNetwork.DEFAULT_BASE_URL}/solve/", status_code=200, json=json_result)
-        en.solve_load_flow(auth=("", ""))
-        assert len(load_bus.potentials) == 4
+                "currents2": {
+                    "ia": [0.005, 0.0],
+                    "ib": [-0.0025, -0.0043],
+                    "ic": [-0.0025, 0.0043],
+                    "in": [-1.347e-13, 0.0],
+                },
+            }
+        ],
+        "loads": [
+            {
+                "id": "load",
+                "currents": {
+                    "ia": [0.005, -0.0],
+                    "ib": [-0.0025, -0.0043],
+                    "ic": [-0.0025, 0.0043],
+                    "in": [-1.347e-13, 0.0],
+                },
+            }
+        ],
+    }
 
-        # No convergence
-        load.update_powers([10000000, 100, 100])
-        json_result = {
-            "info": {
-                "status": "failure",
-                "resolutionMethod": "newton",
-                "iterations": 50,
-                "targetError": 1e-06,
-                "finalError": 14037.977318668112,
+    # Request the server
+    solve_url = urljoin(ElectricalNetwork.DEFAULT_BASE_URL, "solve/")
+    with requests_mock.Mocker() as m:
+        m.post(solve_url, status_code=200, json=json_result)
+        en.solve_load_flow(auth=("", ""))
+    assert len(load_bus.potentials) == 4
+
+    # No convergence
+    load.update_powers([10000000, 100, 100])
+    json_result = {
+        "info": {
+            "status": "failure",
+            "resolutionMethod": "newton",
+            "iterations": 50,
+            "targetError": 1e-06,
+            "finalError": 14037.977318668112,
+        },
+        "buses": [
+            {
+                "id": "vs",
+                "potentials": {
+                    "va": [20000.0, 0.0],
+                    "vb": [-10000.0, -17320.508076],
+                    "vc": [-10000.0, 17320.508076],
+                    "vn": [0.0, 0.0],
+                },
             },
-            "buses": [
-                {
-                    "id": "vs",
-                    "potentials": {
-                        "va": [20000.0, 0.0],
-                        "vb": [-10000.0, -17320.508076],
-                        "vc": [-10000.0, 17320.508076],
-                        "vn": [0.0, 0.0],
-                    },
+            {
+                "id": "bus",
+                "potentials": {
+                    "va": [110753.81558442864, 1.5688245436058308e-26],
+                    "vb": [-9999.985548801811, -17320.50568183019],
+                    "vc": [-9999.985548801811, 17320.50568183019],
+                    "vn": [-90753.844486825, -2.6687106473172017e-26],
                 },
-                {
-                    "id": "bus",
-                    "potentials": {
-                        "va": [110753.81558442864, 1.5688245436058308e-26],
-                        "vb": [-9999.985548801811, -17320.50568183019],
-                        "vc": [-9999.985548801811, 17320.50568183019],
-                        "vn": [-90753.844486825, -2.6687106473172017e-26],
-                    },
-                },
-            ],
-            "branches": [
-                {
-                    "id": "line",
-                    "currents1": {"ia": [0.0, 0.0], "ib": [0.0, 0.0], "ic": [0.0, 0.0], "in": [0.0, 0.0]},
-                    "currents2": {"ia": [0.0, 0.0], "ib": [0.0, 0.0], "ic": [0.0, 0.0], "in": [0.0, 0.0]},
-                }
-            ],
-            "loads": [
-                {"id": "load", "currents": {"ia": [0.0, 0.0], "ib": [0.0, 0.0], "ic": [0.0, 0.0], "in": [0.0, 0.0]}}
-            ],
-        }
-        m.post(f"{ElectricalNetwork.DEFAULT_BASE_URL}/solve/", status_code=200, json=json_result)
+            },
+        ],
+        "branches": [
+            {
+                "id": "line",
+                "currents1": {"ia": [0.0, 0.0], "ib": [0.0, 0.0], "ic": [0.0, 0.0], "in": [0.0, 0.0]},
+                "currents2": {"ia": [0.0, 0.0], "ib": [0.0, 0.0], "ic": [0.0, 0.0], "in": [0.0, 0.0]},
+            }
+        ],
+        "loads": [{"id": "load", "currents": {"ia": [0.0, 0.0], "ib": [0.0, 0.0], "ic": [0.0, 0.0], "in": [0.0, 0.0]}}],
+    }
+    with requests_mock.Mocker() as m:
+        m.post(solve_url, status_code=200, json=json_result)
         with pytest.raises(RoseauLoadFlowException) as e:
             en.solve_load_flow(auth=("", ""))
         assert "The load flow did not converge after 50 iterations" in e.value.args[0]
         assert e.value.args[1] == RoseauLoadFlowExceptionCode.NO_LOAD_FLOW_CONVERGENCE
 
-        # Bad request
-        json_result = {"msg": "Error while parsing the provided JSON", "code": "parse_error"}
-        m.post(f"{ElectricalNetwork.DEFAULT_BASE_URL}/solve/", status_code=400, json=json_result)
+    # Bad request
+    json_result = {"msg": "Error while parsing the provided JSON", "code": "parse_error"}
+    with requests_mock.Mocker() as m:
+        m.post(solve_url, status_code=400, json=json_result)
         with pytest.raises(RoseauLoadFlowException) as e:
             en.solve_load_flow(auth=("", ""))
-        assert "There is a problem in the request" in e.value.args[0]
-        assert "Error while parsing the provided JSON" in e.value.args[0]
-        assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_REQUEST
+    assert "There is a problem in the request" in e.value.args[0]
+    assert "Error while parsing the provided JSON" in e.value.args[0]
+    assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_REQUEST
 
-        # Authentication fail
-        json_result = {"detail": "not_authenticated"}
-        m.post(f"{ElectricalNetwork.DEFAULT_BASE_URL}/solve/", status_code=401, json=json_result)
+    # Authentication fail
+    json_result = {"detail": "not_authenticated"}
+    with requests_mock.Mocker() as m:
+        m.post(solve_url, status_code=401, json=json_result)
         with pytest.raises(RoseauLoadFlowException) as e:
             en.solve_load_flow(auth=("", ""))
-        assert "Authentication failed." in e.value.args[0]
-        assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_REQUEST
+    assert "Authentication failed." in e.value.args[0]
+    assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_REQUEST

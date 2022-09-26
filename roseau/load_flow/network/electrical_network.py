@@ -173,7 +173,7 @@ class ElectricalNetwork:
 
         # Read the response
         if not response.ok:
-            content_type = response.headers["content-type"]
+            content_type = response.headers.get("content-type", None)
             if response.status_code == 401:
                 msg = "Authentication failed."
                 logger.error(msg=msg)
