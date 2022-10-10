@@ -458,7 +458,7 @@ class LineCharacteristics:
         # dsh = data["dsh"]  # Diameter of the sheath (mm)
 
         # Geometric configuration
-        if line_type == LineType.OVERHEAD:
+        if line_type == LineType.OVERHEAD or line_type == LineType.TWISTED:
             coord = Q_(
                 np.array(
                     [
@@ -671,8 +671,8 @@ class LineCharacteristics:
         b = (c_b1 + c_b2 * section) * 1e-4 * OMEGA
         b = b.to("S/km")
 
-        z_line = (r + x * 1j) * np.eye(4)  # in ohms/km
-        y_shunt = b * 1j * np.eye(4, 4)  # in siemens/km
+        z_line = (r + x * 1j) * np.eye(3)  # in ohms/km
+        y_shunt = b * 1j * np.eye(3)  # in siemens/km
         return cls(type_name=name, z_line=z_line, y_shunt=y_shunt)
 
     @classmethod

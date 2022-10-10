@@ -420,8 +420,8 @@ def test_from_name_mv():
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_TYPE_NAME_SYNTAX
 
     lc = LineCharacteristics.from_name_mv("S_AL_150")
-    z_line_expected = (0.188 + 0.1j) * np.eye(4, 4)
-    y_shunt_expected = 0.00014106j * np.eye(4, 4)
+    z_line_expected = (0.188 + 0.1j) * np.eye(3)
+    y_shunt_expected = 0.00014106j * np.eye(3)
 
     npt.assert_allclose(lc.z_line, z_line_expected)
     npt.assert_allclose(lc.y_shunt, y_shunt_expected, rtol=1e-4)
