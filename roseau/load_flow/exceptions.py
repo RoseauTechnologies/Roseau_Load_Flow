@@ -100,7 +100,7 @@ class RoseauLoadFlowExceptionCode(Enum):
         string = unicodedata.normalize("NFKD", string.lower()).encode("ASCII", "ignore").decode()
 
         # Withdraw the package prefix (e.g. roseau.core)
-        error_str = string.removeprefix(f"{cls.package_name}.")
+        error_str = string.removeprefix(f"{cls.package_name()}.")
 
         # Get the value of this string
         return cls[error_str.upper()]

@@ -6,9 +6,12 @@ from pathlib import Path
 from typing import Any, Union
 from urllib.parse import urljoin
 
+import geopandas as gpd
 import numpy as np
 import pandas as pd
 import requests
+from pyproj import CRS
+from requests import Response
 from requests.auth import HTTPBasicAuth
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
@@ -35,12 +38,16 @@ class ElectricalNetwork:
     DEFAULT_MAX_ITERATIONS: int = 20
     DEFAULT_BASE_URL = "https://load-flow-api.roseautechnologies.com/"
 
+    # Default classes to use
     branch_class = AbstractBranch
     load_class = AbstractLoad
     bus_class = AbstractBus
     ground_class = Ground
     pref_class = PotentialRef
 
+    #
+    # Methods to build an electrical network
+    #
     def __init__(
         self,
         buses: Union[list[AbstractBus], dict[Any, AbstractBus]],
@@ -133,7 +140,68 @@ class ElectricalNetwork:
         return cls(buses=buses, branches=branches, loads=loads, special_elements=specials)
 
     #
-    # Solve the load flow
+    # Methods to access the data
+    #
+    @property
+    def buses_frame(self) -> gpd.GeoDataFrame:
+        """A property to get a geo dataframe of the buses.
+
+        Returns:
+            The geo dataframe of buses.
+        """
+        return gpd.GeoDataFrame(
+            data=pd.DataFrame.from_records(
+                data=[(bus_id, bus.n, bus.geometry) for bus_id, bus in self.buses.items()],
+                columns=["id", "n", "geometry"],
+                index="id",
+            ),
+            geometry="geometry",
+            crs=CRS("EPSG:4326"),
+        )
+
+    @property
+    def branches_frame(self) -> gpd.GeoDataFrame:
+        """A property to get a geo dataframe of the branches.
+
+        Returns:
+            The geo dataframe of branches.
+        """
+        return gpd.GeoDataFrame(
+            data=pd.DataFrame.from_records(
+                data=[
+                    (
+                        branch_id,
+                        branch.branch_type,
+                        branch.n1,
+                        branch.n2,
+                        branch.connected_elements[0].id,
+                        branch.connected_elements[1].id,
+                        branch.geometry,
+                    )
+                    for branch_id, branch in self.branches.items()
+                ],
+                columns=["id", "branch_type", "n1", "n2", "bus1_id", "bus2_id", "geometry"],
+                index="id",
+            ),
+            geometry="geometry",
+            crs=CRS("EPSG:4326"),
+        )
+
+    @property
+    def loads_frame(self) -> pd.DataFrame:
+        """A property to get a dataframe of the loads.
+
+        Returns:
+            The dataframe of loads.
+        """
+        return pd.DataFrame.from_records(
+            data=[(load_id, load.n, load.bus.id) for load_id, load in self.loads.items()],
+            columns=["id", "n", "bus_id"],
+            index="id",
+        )
+
+    #
+    # Method to solve a load flow
     #
     def solve_load_flow(
         self,
@@ -179,23 +247,11 @@ class ElectricalNetwork:
         )
 
         # Read the response
+        # HTTP 4xx,5xx
         if not response.ok:
-            content_type = response.headers.get("content-type", None)
-            if response.status_code == 401:
-                msg = "Authentication failed."
-                logger.error(msg=msg)
-                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_REQUEST)
-            else:
-                msg = f"There is a problem in the request. Error code {response.status_code}."
-                if content_type == "application/json":
-                    result_dict: dict[str, Any] = response.json()
-                    if "msg" in result_dict and "code" in result_dict:
-                        msg += f" {result_dict['code']} - {result_dict['msg']}"
-                else:
-                    msg += response.text
-                logger.error(msg=msg)
-                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_REQUEST)
+            self._parse_error(response=response)
 
+        # HTTP 200
         result_dict: dict[str, Any] = response.json()
         info = result_dict["info"]
         if info["status"] != "success":
@@ -214,6 +270,41 @@ class ElectricalNetwork:
         self._dispatch_results(result_dict=result_dict)
 
         return info["iterations"]
+
+    @staticmethod
+    def _parse_error(response: Response):
+        """Parse a response when its status is not "ok".
+
+        Args:
+            response:
+                The response to parse
+        """
+        content_type = response.headers.get("content-type", None)
+        if response.status_code == 401:
+            msg = "Authentication failed."
+            logger.error(msg=msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_REQUEST)
+        else:
+            msg = f"There is a problem in the request. Error code {response.status_code}."
+            if content_type == "application/json":
+                result_dict: dict[str, Any] = response.json()
+
+                # If we have a valid Roseau Load Flow Exception, raise it
+                if "msg" in result_dict and "code" in result_dict:
+                    try:
+                        code = RoseauLoadFlowExceptionCode.from_string(result_dict["code"])
+                    except Exception:
+                        msg += f" {result_dict['code']} - {result_dict['msg']}"
+                    else:
+                        msg = result_dict["msg"]
+                        logger.error(msg)
+                        raise RoseauLoadFlowException(msg=msg, code=code)
+            else:
+                msg += response.text
+
+            # Otherwise, raise a generic "Bad request"
+            logger.error(msg=msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_REQUEST)
 
     def _dispatch_results(self, result_dict: dict[str, Any]) -> None:
         """Dispatch the results to all the elements of the network.
@@ -237,6 +328,35 @@ class ElectricalNetwork:
                 load.powers = self._dispatch_value(load_data["powers"], "s")
             currents = self._dispatch_value(load_data["currents"], "i")
             load.currents = currents
+
+    @staticmethod
+    def _dispatch_value(value: dict[str, tuple[float, float]], t: str) -> np.ndarray:
+        """Dispatch the currents from a dictionary to a list.
+
+        Args:
+            value:
+                The dictionary value to dispatch.
+
+            t:
+                The type of value ("i", "v" or "s").
+
+        Returns:
+            The complex final value.
+        """
+        if t + "n" in value:
+            res = [
+                value[t + "a"][0] + 1j * value[t + "a"][1],
+                value[t + "b"][0] + 1j * value[t + "b"][1],
+                value[t + "c"][0] + 1j * value[t + "c"][1],
+                value[t + "n"][0] + 1j * value[t + "n"][1],
+            ]
+        else:
+            res = [
+                value[t + "a"][0] + 1j * value[t + "a"][1],
+                value[t + "b"][0] + 1j * value[t + "b"][1],
+                value[t + "c"][0] + 1j * value[t + "c"][1],
+            ]
+        return np.asarray(res)
 
     #
     # Getter for the load flow results
@@ -415,7 +535,7 @@ class ElectricalNetwork:
                 msg = "Only voltage sources can have their voltages updated."
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT)
-            voltage_source.update_voltages(voltages=value)
+            voltage_source.update_source_voltages(source_voltages=value)
 
     def add_element(self, element: Element) -> None:
         """Add an element to the network (the C++ electrical network and the tape will be recomputed).
@@ -691,32 +811,3 @@ class ElectricalNetwork:
         """
         buses_dict, branches_dict, loads_dict, special_elements = network_from_dgs(filename=path)
         return cls(buses=buses_dict, branches=branches_dict, loads=loads_dict, special_elements=special_elements)
-
-    @staticmethod
-    def _dispatch_value(value: dict[str, tuple[float, float]], t: str) -> np.ndarray:
-        """Dispatch the currents from a dictionary to a list.
-
-        Args:
-            value:
-                The dictionary value to dispatch.
-
-            t:
-                The type of value ("i", "v" or "s").
-
-        Returns:
-            The complex final value.
-        """
-        if t + "n" in value:
-            res = [
-                value[t + "a"][0] + 1j * value[t + "a"][1],
-                value[t + "b"][0] + 1j * value[t + "b"][1],
-                value[t + "c"][0] + 1j * value[t + "c"][1],
-                value[t + "n"][0] + 1j * value[t + "n"][1],
-            ]
-        else:
-            res = [
-                value[t + "a"][0] + 1j * value[t + "a"][1],
-                value[t + "b"][0] + 1j * value[t + "b"][1],
-                value[t + "c"][0] + 1j * value[t + "c"][1],
-            ]
-        return np.asarray(res)

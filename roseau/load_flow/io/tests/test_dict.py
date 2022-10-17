@@ -23,7 +23,7 @@ def test_to_dict():
         id="source",
         n=4,
         ground=ground,
-        voltages=voltages,
+        source_voltages=voltages,
     )
     bus = Bus(id="load bus", n=4)
     ground.connect(bus)

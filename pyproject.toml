@@ -35,8 +35,6 @@ Shapely = "^1.8.0"
 regex = ">=2022.1.18"
 pint = ">=0.19.2"
 requests = "^2.28.1"
-
-# Command line
 rich = ">=11.0.0"
 
 [tool.poetry.group.test.dependencies]
