@@ -91,12 +91,12 @@ class AbstractBus(Element, JsonMixin, ABC):
         """
         if self.n == 3:
             return np.asarray(
-                self._potentials[1] - self._potentials[0],
-                self._potentials[2] - self._potentials[1],
-                self._potentials[0] - self._potentials[2],
+                self._potentials[1] - self._potentials[0],  # ab
+                self._potentials[2] - self._potentials[1],  # bc
+                self._potentials[0] - self._potentials[2],  # ca
             )
         else:
-            return self._potentials[: self.n - 1] - self._potentials[self.n - 1]
+            return self._potentials[: self.n - 1] - self._potentials[self.n - 1]  # an, bn, cn
 
     #
     # Json Mixin interface

@@ -12,12 +12,19 @@ import requests
 from requests.auth import HTTPBasicAuth
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
-from roseau.load_flow.io.dgs import network_from_dgs
-from roseau.load_flow.io.dict import network_from_dict, network_to_dict
-from roseau.load_flow.models.buses import AbstractBus, VoltageSource
-from roseau.load_flow.models.core import AbstractBranch, Element, Ground, PotentialRef
-from roseau.load_flow.models.loads.loads import AbstractLoad, FlexibleLoad, PowerLoad
-from roseau.load_flow.models.transformers.transformers import AbstractTransformer
+from roseau.load_flow.io import network_from_dgs, network_from_dict, network_to_dict
+from roseau.load_flow.models import (
+    AbstractBranch,
+    AbstractBus,
+    AbstractLoad,
+    AbstractTransformer,
+    Element,
+    FlexibleLoad,
+    Ground,
+    PotentialRef,
+    PowerLoad,
+    VoltageSource,
+)
 from roseau.load_flow.utils import ureg
 
 logger = logging.getLogger(__name__)
@@ -234,134 +241,6 @@ class ElectricalNetwork:
     #
     # Getter for the load flow results
     #
-    @property
-    def results(self) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-        """Get the voltages, currents and flexible load powers computed by the load flow.
-
-        Returns:
-            The DataFrame of the voltages of the buses indexed by the bus ids, the DataFrame of the current
-            flowing through the branches indexed by the branch ids and the DataFrame of the actual power of the
-            flexible loads indexed by the load ids.
-        """
-        phases = ["a", "b", "c", "n"]
-        potentials_dict = {"bus_id": [], "phase": [], "potential": []}
-        for bus_id, bus in self.buses.items():
-            potentials: np.ndarray = bus.potentials
-            for i in range(len(potentials)):
-                potentials_dict["bus_id"].append(bus_id)
-                potentials_dict["phase"].append(phases[i])
-                potentials_dict["potential"].append(potentials[i].magnitude)
-        buses_results: pd.DataFrame = (
-            pd.DataFrame.from_dict(potentials_dict, orient="columns")
-            .astype({"phase": pd.CategoricalDtype(categories=phases, ordered=True), "potential": complex})
-            .set_index(["bus_id", "phase"])
-        )
-
-        currents_dict = {"branch_id": [], "phase": [], "current1": [], "current2": []}
-        for branch_id, branch in self.branches.items():
-            currents1, currents2 = branch.currents
-            nb_currents1, nb_currents2 = len(currents1), len(currents2)
-            for j in range(max(nb_currents1, nb_currents2)):
-                currents_dict["branch_id"].append(branch_id)
-                currents_dict["phase"].append(phases[j])
-                try:
-                    currents_dict["current1"].append(currents1[j].magnitude)
-                except IndexError:
-                    currents_dict["current1"].append(np.nan)
-                try:
-                    currents_dict["current2"].append(currents2[j].magnitude)
-                except IndexError:
-                    currents_dict["current2"].append(np.nan)
-        branches_results = (
-            pd.DataFrame.from_dict(currents_dict, orient="columns")
-            .astype(
-                {
-                    "phase": pd.CategoricalDtype(categories=phases, ordered=True),
-                    "current1": complex,
-                    "current2": complex,
-                }
-            )
-            .set_index(["branch_id", "phase"])
-        )
-
-        loads_dict = {"load_id": [], "phase": [], "power": []}
-        for load_id, load in self.loads.items():
-            if isinstance(load, FlexibleLoad):
-                powers = load.powers
-                for i in range(len(powers)):
-                    loads_dict["load_id"].append(load_id)
-                    loads_dict["phase"].append(phases[i])
-                    loads_dict["power"].append(powers[i].magnitude)
-        loads_results: pd.DataFrame = (
-            pd.DataFrame.from_dict(loads_dict, orient="columns")
-            .astype({"phase": pd.CategoricalDtype(categories=phases, ordered=True), "power": complex})
-            .set_index(["load_id", "phase"])
-        )
-
-        return buses_results, branches_results, loads_results
-
-    def dict_results(self) -> dict[str, Any]:
-        """Get the voltages and currents computed by the load flow and return them as dict.
-
-        Returns:
-            The dictionary of the voltages of the buses, and the dictionary of the current flowing through the branches.
-        """
-        phases = ["a", "b", "c", "n"]
-        buses_results = list()
-        for bus_id, bus in self.buses.items():
-            potentials: np.ndarray = bus.potentials
-            potentials_dict = dict()
-            for i in range(len(potentials)):
-                potentials_dict[f"v{phases[i]}"] = [potentials[i].real.magnitude, potentials[i].imag.magnitude]
-            buses_results.append({"id": bus_id, "potentials": potentials_dict})
-
-        branches_results = list()
-        for branch_id, branch in self.branches.items():
-            currents1: np.ndarray = branch.currents[0]
-            currents2: np.ndarray = branch.currents[1]
-            currents_dict1 = dict()
-            currents_dict2 = dict()
-            for i in range(len(currents1)):
-                currents_dict1[f"i{phases[i]}"] = [currents1[i].real.magnitude, currents1[i].imag.magnitude]
-            for i in range(len(currents2)):
-                currents_dict2[f"i{phases[i]}"] = [currents2[i].real.magnitude, currents2[i].imag.magnitude]
-            branches_results.append({"id": branch_id, "currents1": currents_dict1, "currents2": currents_dict2})
-
-        loads_results = list()
-        for load_id, load in self.loads.items():
-            currents: np.ndarray = load.currents
-            currents_dict = dict()
-            for i in range(len(currents)):
-                currents_dict[f"i{phases[i]}"] = [currents[i].real.magnitude, currents[i].imag.magnitude]
-            if isinstance(load, FlexibleLoad):
-                powers: np.ndarray = load.powers
-                powers_dict = dict()
-                for i in range(len(powers)):
-                    powers_dict[f"s{phases[i]}"] = [powers[i].real.magnitude, powers[i].imag.magnitude]
-                loads_results.append({"id": load_id, "powers": powers_dict, "currents": currents_dict})
-            else:
-                loads_results.append({"id": load_id, "currents": currents_dict})
-
-        return {
-            "info": self._results_info,
-            "buses": buses_results,
-            "branches": branches_results,
-            "loads": loads_results,
-        }
-
-    def json_results(self, path: Union[str, Path]) -> None:
-        """Write a json containing the voltages and currents results.
-
-        Args:
-            path:
-                The path to write the json.
-        """
-        dict_results = self.dict_results()
-        output = json.dumps(dict_results, indent=4)
-        output = re.sub(r"\[\s+(.*),\s+(.*)\s+]", r"[\1, \2]", output)
-        with open(path, "w") as output_file:
-            output_file.write(output)
-
     @ureg.wraps("V", (None, None), strict=False)
     def bus_potentials(self, id: Any) -> np.ndarray:
         """Compute the potential of a bus
@@ -374,6 +253,28 @@ class ElectricalNetwork:
             The complex value of the bus potential
         """
         return self.buses[id].potentials
+
+    @property
+    def buses_potentials(self) -> pd.DataFrame:
+        """Get the potentials of buses after a load flow has been solved.
+
+        Returns:
+            The data frame of the potentials of the buses of the electrical network.
+        """
+        phases = ["a", "b", "c", "n"]
+        potentials_dict = {"bus_id": [], "phase": [], "potential": []}
+        for bus_id, bus in self.buses.items():
+            potentials: np.ndarray = bus.potentials
+            for i in range(len(potentials)):
+                potentials_dict["bus_id"].append(bus_id)
+                potentials_dict["phase"].append(phases[i])
+                potentials_dict["potential"].append(potentials[i].m_as("V"))
+        potentials_df: pd.DataFrame = (
+            pd.DataFrame.from_dict(potentials_dict, orient="columns")
+            .astype({"phase": pd.CategoricalDtype(categories=phases, ordered=True), "potential": complex})
+            .set_index(["bus_id", "phase"])
+        )
+        return potentials_df
 
     @ureg.wraps(("A", "A"), (None, None), strict=False)
     def branch_currents(self, id: Any) -> tuple[np.ndarray, np.ndarray]:
@@ -388,6 +289,42 @@ class ElectricalNetwork:
         """
         return self.branches[id].currents
 
+    @property
+    def branches_currents(self) -> pd.DataFrame:
+        """Get the currents of the branches after a load flow has been solved.
+
+        Returns:
+            The data frame of the currents of the branches of the electrical network.
+        """
+        phases = ["a", "b", "c", "n"]
+        currents_dict = {"branch_id": [], "phase": [], "current1": [], "current2": []}
+        for branch_id, branch in self.branches.items():
+            currents1, currents2 = branch.currents
+            nb_currents1, nb_currents2 = len(currents1), len(currents2)
+            for j in range(max(nb_currents1, nb_currents2)):
+                currents_dict["branch_id"].append(branch_id)
+                currents_dict["phase"].append(phases[j])
+                try:
+                    currents_dict["current1"].append(currents1[j].m_as("A"))
+                except IndexError:
+                    currents_dict["current1"].append(np.nan)
+                try:
+                    currents_dict["current2"].append(currents2[j].m_as("A"))
+                except IndexError:
+                    currents_dict["current2"].append(np.nan)
+        currents_df = (
+            pd.DataFrame.from_dict(currents_dict, orient="columns")
+            .astype(
+                {
+                    "phase": pd.CategoricalDtype(categories=phases, ordered=True),
+                    "current1": complex,
+                    "current2": complex,
+                }
+            )
+            .set_index(["branch_id", "phase"])
+        )
+        return currents_df
+
     @ureg.wraps("A", (None, None), strict=False)
     def load_currents(self, id: Any) -> np.ndarray:
         """Compute the currents of a load
@@ -400,6 +337,51 @@ class ElectricalNetwork:
             The complex value of the branch current
         """
         return self.loads[id].currents
+
+    @property
+    def loads_currents(self) -> pd.DataFrame:
+        """Get the currents of the loads after a load flow has been solved.
+
+        Returns:
+            The data frame of the currents of the loads of the electrical network.
+        """
+        phases = ["a", "b", "c", "n"]
+        loads_dict = {"load_id": [], "phase": [], "current": []}
+        for load_id, load in self.loads.items():
+            currents = load.currents
+            for i in range(len(currents)):
+                loads_dict["load_id"].append(load_id)
+                loads_dict["phase"].append(phases[i])
+                loads_dict["current"].append(currents[i].m_as("A"))
+        currents_df: pd.DataFrame = (
+            pd.DataFrame.from_dict(loads_dict, orient="columns")
+            .astype({"phase": pd.CategoricalDtype(categories=phases, ordered=True), "current": complex})
+            .set_index(["load_id", "phase"])
+        )
+        return currents_df
+
+    @property
+    def loads_powers(self) -> pd.DataFrame:
+        """Get the powers of the loads after a load flow has been solved. Only for FlexibleLoads.
+
+        Returns:
+            The data frame of the powers of the loads of the electrical network.
+        """
+        phases = ["a", "b", "c", "n"]
+        loads_dict = {"load_id": [], "phase": [], "power": []}
+        for load_id, load in self.loads.items():
+            if isinstance(load, FlexibleLoad):
+                powers = load.powers
+                for i in range(len(powers)):
+                    loads_dict["load_id"].append(load_id)
+                    loads_dict["phase"].append(phases[i])
+                    loads_dict["power"].append(powers[i].m_as("VA"))
+        powers_df: pd.DataFrame = (
+            pd.DataFrame.from_dict(loads_dict, orient="columns")
+            .astype({"phase": pd.CategoricalDtype(categories=phases, ordered=True), "power": complex})
+            .set_index(["load_id", "phase"])
+        )
+        return powers_df
 
     #
     # Set the dynamic parameters.
@@ -621,6 +603,77 @@ class ElectricalNetwork:
         if not isinstance(path, Path):
             path = Path(path)
         path.write_text(output)
+
+    #
+    # Output of results
+    #
+    def results_to_dict(self) -> dict[str, Any]:
+        """Get the voltages and currents computed by the load flow and return them as dict.
+
+        Returns:
+            The dictionary of the voltages of the buses, and the dictionary of the current flowing through the branches.
+        """
+        phases = ["a", "b", "c", "n"]
+        buses_results = list()
+        for bus_id, bus in self.buses.items():
+            potentials: np.ndarray = bus.potentials
+            potentials_dict = dict()
+            for i in range(len(potentials)):
+                potentials_dict[f"v{phases[i]}"] = [potentials[i].real.magnitude, potentials[i].imag.magnitude]
+            buses_results.append({"id": bus_id, "potentials": potentials_dict})
+
+        branches_results = list()
+        for branch_id, branch in self.branches.items():
+            currents1: np.ndarray = branch.currents[0]
+            currents2: np.ndarray = branch.currents[1]
+            currents_dict1 = dict()
+            currents_dict2 = dict()
+            for i in range(len(currents1)):
+                currents_dict1[f"i{phases[i]}"] = [currents1[i].real.magnitude, currents1[i].imag.magnitude]
+            for i in range(len(currents2)):
+                currents_dict2[f"i{phases[i]}"] = [currents2[i].real.magnitude, currents2[i].imag.magnitude]
+            branches_results.append({"id": branch_id, "currents1": currents_dict1, "currents2": currents_dict2})
+
+        loads_results = list()
+        for load_id, load in self.loads.items():
+            currents: np.ndarray = load.currents
+            currents_dict = dict()
+            for i in range(len(currents)):
+                currents_dict[f"i{phases[i]}"] = [currents[i].real.magnitude, currents[i].imag.magnitude]
+            if isinstance(load, FlexibleLoad):
+                powers: np.ndarray = load.powers
+                powers_dict = dict()
+                for i in range(len(powers)):
+                    powers_dict[f"s{phases[i]}"] = [powers[i].real.magnitude, powers[i].imag.magnitude]
+                loads_results.append({"id": load_id, "powers": powers_dict, "currents": currents_dict})
+            else:
+                loads_results.append({"id": load_id, "currents": currents_dict})
+
+        return {
+            "info": self._results_info,
+            "buses": buses_results,
+            "branches": branches_results,
+            "loads": loads_results,
+        }
+
+    def results_to_json(self, path: Union[str, Path]) -> Path:
+        """Write a json containing the voltages and currents results.
+
+        Args:
+            path:
+                The path to write the json.
+
+        Returns:
+            The path it has been writen in.
+        """
+        if isinstance(path, str):
+            path = Path(path).expanduser().resolve()
+
+        dict_results = self.results_to_dict()
+        output = json.dumps(dict_results, indent=4)
+        output = re.sub(r"\[\s+(.*),\s+(.*)\s+]", r"[\1, \2]", output)
+        path.write_text(output)
+        return path
 
     #
     # DGS interface

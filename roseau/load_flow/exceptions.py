@@ -67,12 +67,11 @@ class RoseauLoadFlowExceptionCode(Enum):
     JSON_TRANSFORMER_CHARACTERISTICS_DUPLICATES = auto()
 
     @classmethod
-    @property
     def package_name(cls) -> str:
         return "roseau.load_flow"
 
     def __str__(self) -> str:
-        return f"{self.package_name}.{self.name}".lower()
+        return f"{self.package_name()}.{self.name}".lower()
 
     def __eq__(self, other) -> bool:
         if isinstance(other, str):
