@@ -58,13 +58,13 @@ isort = "^5.1.0"
 Sphinx = "^5.1.0"
 myst-parser = ">=0.16.1"
 sphinx-math-dollar = "^1.2.1"
-sphinx-rtd-theme = "^1.0.0"
 sphinx-autoapi = "^2.0.0"
 jupyter = "^1.0.0"
 nbsphinx = ">=0.8.9"
+furo = ">=2022.9.29"
 
-# Black
 [tool.black]
+# Black
 line-length = 120
 fast = true
 target-version = ["py39", "py310"]
