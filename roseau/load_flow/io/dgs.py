@@ -85,7 +85,7 @@ def network_from_dgs(  # noqa: C901
             id=source_bus,
             n=4,
             ground=ground,
-            voltages=voltages,
+            source_voltages=voltages,
         )
 
     # LV loads

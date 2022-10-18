@@ -70,16 +70,33 @@ class AbstractBus(Element, JsonMixin, ABC):
     @property
     @ureg.wraps("V", None, strict=False)
     def potentials(self) -> np.ndarray:
-        """Return the potentials of the element
+        """Return the potentials of the element.
 
         Returns:
-            An array of the potentials
+            An array of the potentials.
         """
         return self._potentials
 
     @potentials.setter
     def potentials(self, value: np.ndarray):
         self._potentials = value
+
+    @property
+    @ureg.wraps("V", None, strict=False)
+    def voltages(self) -> np.ndarray:
+        """Return the voltages of the element, as [Van, Vbn, Vcn] for a wye bus, or [Vab, Vbc, Vca] for a delta bus.
+
+        Returns:
+            An array of the voltages.
+        """
+        if self.n == 3:
+            return np.asarray(
+                self._potentials[1] - self._potentials[0],  # ab
+                self._potentials[2] - self._potentials[1],  # bc
+                self._potentials[0] - self._potentials[2],  # ca
+            )
+        else:
+            return self._potentials[: self.n - 1] - self._potentials[self.n - 1]  # an, bn, cn
 
     #
     # Json Mixin interface
@@ -98,7 +115,7 @@ class AbstractBus(Element, JsonMixin, ABC):
             v = data["voltages"]
             voltages = [v["va"][0] + 1j * v["va"][1], v["vb"][0] + 1j * v["vb"][1], v["vc"][0] + 1j * v["vc"][1]]
             return cls._voltage_source_class(
-                id=data["id"], n=4, ground=ground, voltages=voltages, potentials=potentials, geometry=geometry
+                id=data["id"], n=4, ground=ground, source_voltages=voltages, potentials=potentials, geometry=geometry
             )
         else:
             if data["type"] not in ["bus", "bus_neutral"]:
@@ -128,7 +145,7 @@ class VoltageSource(AbstractBus):
         id: Any,
         n: int,
         ground: Optional[Ground],
-        voltages: Sequence[complex],
+        source_voltages: Sequence[complex],
         potentials: Optional[Sequence[complex]] = None,
         geometry: Optional[Point] = None,
         **kwargs,
@@ -145,7 +162,7 @@ class VoltageSource(AbstractBus):
             ground:
                 The ground to connect the neutral to.
 
-            voltages:
+            source_voltages:
                 List of the voltages of the source (V).
 
             potentials:
@@ -155,44 +172,44 @@ class VoltageSource(AbstractBus):
                 The geometry of the bus.
         """
         super().__init__(
-            id=id, n=n, ground=ground, voltages=voltages, potentials=potentials, geometry=geometry, **kwargs
+            id=id, n=n, ground=ground, voltages=source_voltages, potentials=potentials, geometry=geometry, **kwargs
         )
-        if len(voltages) != n - 1:
-            msg = f"Incorrect number of voltages: {len(voltages)} instead of {n - 1}"
+        if len(source_voltages) != n - 1:
+            msg = f"Incorrect number of voltages: {len(source_voltages)} instead of {n - 1}"
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_VOLTAGES_SIZE)
 
-        if isinstance(voltages, Quantity):
-            voltages = voltages.m_as("V")
+        if isinstance(source_voltages, Quantity):
+            source_voltages = source_voltages.m_as("V")
 
         if ground is not None:
             ground.connected_elements.append(self)
             self.connected_elements.append(ground)
 
-        self.voltages = voltages
+        self.source_voltages = source_voltages
 
     @ureg.wraps(None, (None, "V"), strict=False)
-    def update_voltages(self, voltages: Sequence[complex]) -> None:
+    def update_source_voltages(self, source_voltages: Sequence[complex]) -> None:
         """Change the voltages of the source
 
         Args:
-            voltages:
+            source_voltages:
                 The new voltages.
         """
-        if len(voltages) != self.n - 1:
-            msg = f"Incorrect number of voltages: {len(voltages)} instead of {self.n - 1}"
+        if len(source_voltages) != self.n - 1:
+            msg = f"Incorrect number of voltages: {len(source_voltages)} instead of {self.n - 1}"
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_VOLTAGES_SIZE)
 
-        self.voltages = voltages
+        self.source_voltages = source_voltages
 
     #
     # Json Mixin interface
     #
     def to_dict(self) -> dict[str, Any]:
-        va = self.voltages[0]
-        vb = self.voltages[1]
-        vc = self.voltages[2]
+        va = self.source_voltages[0]
+        vb = self.source_voltages[1]
+        vc = self.source_voltages[2]
         res = {
             "id": self.id,
             "type": "slack",

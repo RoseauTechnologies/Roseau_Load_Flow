@@ -1,6 +1,11 @@
+from urllib.parse import urljoin
+
+import geopandas as gpd
 import numpy as np
+import pandas as pd
 import pytest
 import requests_mock
+from shapely.geometry import LineString, Point
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models import (
@@ -18,6 +23,37 @@ from roseau.load_flow.models import (
 from roseau.load_flow.network import ElectricalNetwork
 
 
+@pytest.fixture()
+def small_network() -> ElectricalNetwork:
+    # Build a small network
+    ground = Ground()
+    vs = VoltageSource(
+        id="vs",
+        n=4,
+        ground=ground,
+        source_voltages=[20000.0 + 0.0j, -10000.0 - 17320.508076j, -10000.0 + 17320.508076j],
+        geometry=Point(-1.318375372111463, 48.64794139348595),
+    )
+    load_bus = Bus("bus", 4, geometry=Point(-1.320149235966572, 48.64971306653889))
+    ground.connect(load_bus)
+    load = PowerLoad("load", 4, load_bus, [100, 100, 100])
+    pref = PotentialRef(ground)
+
+    lc = LineCharacteristics("test", 10 * np.eye(4, dtype=complex))
+    line = SimplifiedLine(
+        id="line",
+        n=4,
+        bus1=vs,
+        bus2=load_bus,
+        line_characteristics=lc,
+        length=1.0,  # km
+        geometry=LineString([(-1.318375372111463, 48.64794139348595), (-1.320149235966572, 48.64971306653889)]),
+    )
+
+    en = ElectricalNetwork(buses=[vs, load_bus], branches=[line], loads=[load], special_elements=[pref, ground])
+    return en
+
+
 def test_add_and_remove():
     ground = Ground()
     vn = 400 / np.sqrt(3)
@@ -26,7 +62,7 @@ def test_add_and_remove():
         id="source",
         n=4,
         ground=ground,
-        voltages=voltages,
+        source_voltages=voltages,
     )
     load_bus = Bus(id="load bus", n=4)
     load = PowerLoad(id="power load", n=4, bus=load_bus, s=[100 + 0j, 100 + 0j, 100 + 0j])
@@ -106,142 +142,181 @@ def test_bad_networks():
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.SEVERAL_POTENTIAL_REFERENCE
 
 
-def test_solve_load_flow():
-    ground = Ground()
-    vs = VoltageSource("vs", 4, ground, [20000.0 + 0.0j, -10000.0 - 17320.508076j, -10000.0 + 17320.508076j])
-    load_bus = Bus("bus", 4)
-    ground.connect(load_bus)
-    load = PowerLoad("load", 4, load_bus, [100, 100, 100])
-    pref = PotentialRef(ground)
+def test_solve_load_flow(small_network):
+    load: PowerLoad = small_network.loads["load"]
+    load_bus = small_network.buses["bus"]
 
-    lc = LineCharacteristics("test", 10 * np.eye(4, dtype=complex))
-    line = SimplifiedLine("line", 4, vs, load_bus, lc, 1.0)
+    # Good result
+    json_result = {
+        "info": {
+            "status": "success",
+            "resolutionMethod": "newton",
+            "iterations": 1,
+            "targetError": 1e-06,
+            "finalError": 6.296829377361313e-14,
+        },
+        "buses": [
+            {
+                "id": "vs",
+                "potentials": {
+                    "va": [20000.0, 0.0],
+                    "vb": [-10000.0, -17320.508076],
+                    "vc": [-10000.0, 17320.508076],
+                    "vn": [0.0, 0.0],
+                },
+            },
+            {
+                "id": "bus",
+                "potentials": {
+                    "va": [19999.949999875, 0.0],
+                    "vb": [-9999.9749999375, -17320.464774621556],
+                    "vc": [-9999.9749999375, 17320.464774621556],
+                    "vn": [1.3476526914363477e-12, 0.0],
+                },
+            },
+        ],
+        "branches": [
+            {
+                "id": "line",
+                "currents1": {
+                    "ia": [0.005, 0.0],
+                    "ib": [-0.0025, -0.0043],
+                    "ic": [-0.0025, 0.0043],
+                    "in": [-1.347e-13, 0.0],
+                },
+                "currents2": {
+                    "ia": [0.005, 0.0],
+                    "ib": [-0.0025, -0.0043],
+                    "ic": [-0.0025, 0.0043],
+                    "in": [-1.347e-13, 0.0],
+                },
+            }
+        ],
+        "loads": [
+            {
+                "id": "load",
+                "currents": {
+                    "ia": [0.005, -0.0],
+                    "ib": [-0.0025, -0.0043],
+                    "ic": [-0.0025, 0.0043],
+                    "in": [-1.347e-13, 0.0],
+                },
+            }
+        ],
+    }
 
-    en = ElectricalNetwork([vs, load_bus], [line], [load], [pref, ground])
-
+    # Request the server
+    solve_url = urljoin(ElectricalNetwork.DEFAULT_BASE_URL, "solve/")
     with requests_mock.Mocker() as m:
-        # Good result
-        json_result = {
-            "info": {
-                "status": "success",
-                "resolutionMethod": "newton",
-                "iterations": 1,
-                "targetError": 1e-06,
-                "finalError": 6.296829377361313e-14,
-            },
-            "buses": [
-                {
-                    "id": "vs",
-                    "potentials": {
-                        "va": [20000.0, 0.0],
-                        "vb": [-10000.0, -17320.508076],
-                        "vc": [-10000.0, 17320.508076],
-                        "vn": [0.0, 0.0],
-                    },
-                },
-                {
-                    "id": "bus",
-                    "potentials": {
-                        "va": [19999.949999875, 0.0],
-                        "vb": [-9999.9749999375, -17320.464774621556],
-                        "vc": [-9999.9749999375, 17320.464774621556],
-                        "vn": [1.3476526914363477e-12, 0.0],
-                    },
-                },
-            ],
-            "branches": [
-                {
-                    "id": "line",
-                    "currents1": {
-                        "ia": [0.005, 0.0],
-                        "ib": [-0.0025, -0.0043],
-                        "ic": [-0.0025, 0.0043],
-                        "in": [-1.347e-13, 0.0],
-                    },
-                    "currents2": {
-                        "ia": [0.005, 0.0],
-                        "ib": [-0.0025, -0.0043],
-                        "ic": [-0.0025, 0.0043],
-                        "in": [-1.347e-13, 0.0],
-                    },
-                }
-            ],
-            "loads": [
-                {
-                    "id": "load",
-                    "currents": {
-                        "ia": [0.005, -0.0],
-                        "ib": [-0.0025, -0.0043],
-                        "ic": [-0.0025, 0.0043],
-                        "in": [-1.347e-13, 0.0],
-                    },
-                }
-            ],
-        }
-        m.post(f"{ElectricalNetwork.DEFAULT_BASE_URL}/solve/", status_code=200, json=json_result)
-        en.solve_load_flow(auth=("", ""))
-        assert len(load_bus.potentials) == 4
+        m.post(solve_url, status_code=200, json=json_result, headers={"content-type": "application/json"})
+        small_network.solve_load_flow(auth=("", ""))
+    assert len(load_bus.potentials) == 4
 
-        # No convergence
-        load.update_powers([10000000, 100, 100])
-        json_result = {
-            "info": {
-                "status": "failure",
-                "resolutionMethod": "newton",
-                "iterations": 50,
-                "targetError": 1e-06,
-                "finalError": 14037.977318668112,
+    # No convergence
+    load.update_powers([10000000, 100, 100])
+    json_result = {
+        "info": {
+            "status": "failure",
+            "resolutionMethod": "newton",
+            "iterations": 50,
+            "targetError": 1e-06,
+            "finalError": 14037.977318668112,
+        },
+        "buses": [
+            {
+                "id": "vs",
+                "potentials": {
+                    "va": [20000.0, 0.0],
+                    "vb": [-10000.0, -17320.508076],
+                    "vc": [-10000.0, 17320.508076],
+                    "vn": [0.0, 0.0],
+                },
             },
-            "buses": [
-                {
-                    "id": "vs",
-                    "potentials": {
-                        "va": [20000.0, 0.0],
-                        "vb": [-10000.0, -17320.508076],
-                        "vc": [-10000.0, 17320.508076],
-                        "vn": [0.0, 0.0],
-                    },
+            {
+                "id": "bus",
+                "potentials": {
+                    "va": [110753.81558442864, 1.5688245436058308e-26],
+                    "vb": [-9999.985548801811, -17320.50568183019],
+                    "vc": [-9999.985548801811, 17320.50568183019],
+                    "vn": [-90753.844486825, -2.6687106473172017e-26],
                 },
-                {
-                    "id": "bus",
-                    "potentials": {
-                        "va": [110753.81558442864, 1.5688245436058308e-26],
-                        "vb": [-9999.985548801811, -17320.50568183019],
-                        "vc": [-9999.985548801811, 17320.50568183019],
-                        "vn": [-90753.844486825, -2.6687106473172017e-26],
-                    },
-                },
-            ],
-            "branches": [
-                {
-                    "id": "line",
-                    "currents1": {"ia": [0.0, 0.0], "ib": [0.0, 0.0], "ic": [0.0, 0.0], "in": [0.0, 0.0]},
-                    "currents2": {"ia": [0.0, 0.0], "ib": [0.0, 0.0], "ic": [0.0, 0.0], "in": [0.0, 0.0]},
-                }
-            ],
-            "loads": [
-                {"id": "load", "currents": {"ia": [0.0, 0.0], "ib": [0.0, 0.0], "ic": [0.0, 0.0], "in": [0.0, 0.0]}}
-            ],
-        }
-        m.post(f"{ElectricalNetwork.DEFAULT_BASE_URL}/solve/", status_code=200, json=json_result)
+            },
+        ],
+        "branches": [
+            {
+                "id": "line",
+                "currents1": {"ia": [0.0, 0.0], "ib": [0.0, 0.0], "ic": [0.0, 0.0], "in": [0.0, 0.0]},
+                "currents2": {"ia": [0.0, 0.0], "ib": [0.0, 0.0], "ic": [0.0, 0.0], "in": [0.0, 0.0]},
+            }
+        ],
+        "loads": [{"id": "load", "currents": {"ia": [0.0, 0.0], "ib": [0.0, 0.0], "ic": [0.0, 0.0], "in": [0.0, 0.0]}}],
+    }
+    with requests_mock.Mocker() as m:
+        m.post(solve_url, status_code=200, json=json_result, headers={"content-type": "application/json"})
         with pytest.raises(RoseauLoadFlowException) as e:
-            en.solve_load_flow(auth=("", ""))
+            small_network.solve_load_flow(auth=("", ""))
         assert "The load flow did not converge after 50 iterations" in e.value.args[0]
         assert e.value.args[1] == RoseauLoadFlowExceptionCode.NO_LOAD_FLOW_CONVERGENCE
 
-        # Bad request
-        json_result = {"msg": "Error while parsing the provided JSON", "code": "parse_error"}
-        m.post(f"{ElectricalNetwork.DEFAULT_BASE_URL}/solve/", status_code=400, json=json_result)
-        with pytest.raises(RoseauLoadFlowException) as e:
-            en.solve_load_flow(auth=("", ""))
-        assert "There is a problem in the request" in e.value.args[0]
-        assert "Error while parsing the provided JSON" in e.value.args[0]
-        assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_REQUEST
 
-        # Authentication fail
-        json_result = {"detail": "not_authenticated"}
-        m.post(f"{ElectricalNetwork.DEFAULT_BASE_URL}/solve/", status_code=401, json=json_result)
+def test_solve_load_flow_error(small_network):
+    # Solve url
+    solve_url = urljoin(ElectricalNetwork.DEFAULT_BASE_URL, "solve/")
+
+    # Parse RLF error
+    json_result = {"msg": "toto", "code": "roseau.load_flow.bad_branch_type"}
+    with requests_mock.Mocker() as m, pytest.raises(RoseauLoadFlowException) as e:
+        m.post(solve_url, status_code=400, json=json_result, headers={"content-type": "application/json"})
+        small_network.solve_load_flow(auth=("", ""))
+    assert e.value.args[0] == json_result["msg"]
+    assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_BRANCH_TYPE
+
+    # Load flow error (other than official exceptions of RoseauLoadFlowException)
+    json_result = {"msg": "Error while solving the load flow", "code": "load_flow_error"}
+    with requests_mock.Mocker() as m, pytest.raises(RoseauLoadFlowException) as e:
+        m.post(solve_url, status_code=400, json=json_result, headers={"content-type": "application/json"})
+        small_network.solve_load_flow(auth=("", ""))
+    assert json_result["msg"] in e.value.args[0]
+    assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_REQUEST
+
+    # Authentication fail
+    json_result = {"detail": "not_authenticated"}
+    with requests_mock.Mocker() as m:
+        m.post(solve_url, status_code=401, json=json_result, headers={"content-type": "application/json"})
         with pytest.raises(RoseauLoadFlowException) as e:
-            en.solve_load_flow(auth=("", ""))
-        assert "Authentication failed." in e.value.args[0]
-        assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_REQUEST
+            small_network.solve_load_flow(auth=("", ""))
+    assert "Authentication failed." in e.value.args[0]
+    assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_REQUEST
+
+    # Bad request
+    json_result = {"msg": "Error while parsing the provided JSON", "code": "parse_error"}
+    with requests_mock.Mocker() as m:
+        m.post(solve_url, status_code=400, json=json_result, headers={"content-type": "application/json"})
+        with pytest.raises(RoseauLoadFlowException) as e:
+            small_network.solve_load_flow(auth=("", ""))
+    assert "There is a problem in the request" in e.value.args[0]
+    assert "Error while parsing the provided JSON" in e.value.args[0]
+    assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_REQUEST
+
+
+def test_frame(small_network):
+    # Buses
+    buses_gdf = small_network.buses_frame
+    assert isinstance(buses_gdf, gpd.GeoDataFrame)
+    assert buses_gdf.shape == (2, 2)
+    assert set(buses_gdf.columns) == {"n", "geometry"}
+    assert buses_gdf.index.name == "id"
+
+    # Branches
+    branches_gdf = small_network.branches_frame
+    assert isinstance(branches_gdf, gpd.GeoDataFrame)
+    assert branches_gdf.shape == (1, 6)
+    assert set(branches_gdf.columns) == {"branch_type", "n1", "n2", "bus1_id", "bus2_id", "geometry"}
+    assert branches_gdf.index.name == "id"
+
+    # Loads
+    loads_gdf = small_network.loads_frame
+    assert isinstance(loads_gdf, pd.DataFrame)
+    assert loads_gdf.shape == (1, 2)
+    assert set(loads_gdf.columns) == {"n", "bus_id"}
+    assert loads_gdf.index.name == "id"

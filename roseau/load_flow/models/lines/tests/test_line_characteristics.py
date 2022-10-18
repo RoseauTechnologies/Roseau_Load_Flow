@@ -296,9 +296,9 @@ def test_sym():
         model=LineModel.SYM,
     )
     z_line_expected = (1 + 1j) * np.eye(3)
-    npt.assert_allclose(z_line, z_line_expected)
+    npt.assert_allclose(z_line.m_as("ohm/km"), z_line_expected)
     y_shunt_expected = 1e-6j * np.eye(3)
-    npt.assert_allclose(y_shunt, y_shunt_expected)
+    npt.assert_allclose(y_shunt.m_as("S/km"), y_shunt_expected)
     assert model == LineModel.SYM
 
     # line_data = {"name": "NKBA 4x150   1.00 kV", "un": 1000.0, "in": 361.0000014305115}
@@ -420,8 +420,8 @@ def test_from_name_mv():
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_TYPE_NAME_SYNTAX
 
     lc = LineCharacteristics.from_name_mv("S_AL_150")
-    z_line_expected = (0.188 + 0.1j) * np.eye(4, 4)
-    y_shunt_expected = 0.00014106j * np.eye(4, 4)
+    z_line_expected = (0.188 + 0.1j) * np.eye(3)
+    y_shunt_expected = 0.00014106j * np.eye(3)
 
     npt.assert_allclose(lc.z_line, z_line_expected)
     npt.assert_allclose(lc.y_shunt, y_shunt_expected, rtol=1e-4)

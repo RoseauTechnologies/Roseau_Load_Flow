@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "roseau_load_flow"
-version = "0.1.0"
+version = "0.2.0"
 description = "Three-phase load flow solver"
 authors = [
     "Sébastien Vallet <sebastien.vallet@roseautechnologies.com>",
@@ -26,58 +26,50 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.dependencies]
 python = ">=3.9,<3.11"
-# Data
 numpy = "^1.21.5"
 pandas = "^1.4.0"
 pygeos = ">=0.12.0"
 geopandas = ">=0.10.2"
 Shapely = "^1.8.0"
-regex = "^2022.1.18"
+regex = ">=2022.1.18"
 pint = ">=0.19.2"
 requests = "^2.28.1"
-requests-mock = "^1.9.3"
-
-# Command line
 rich = ">=11.0.0"
 
-[tool.poetry.group.dev.dependencies]
-# Tests
+[tool.poetry.group.test.dependencies]
 pytest = "^7.1.2"
-pytest-cov = "^3.0.0"
+pytest-cov = "^4.0.0"
 pytest-xdist = "^2.5.0"
+requests-mock = "^1.9.3"
 
-# Code quality
+[tool.poetry.group.dev.dependencies]
 coverage = { version = "^6.0.0", extras = ["toml"] }
 flake8 = "^5.0.4"
 pre-commit = "^2.6.0"
 black = { version = ">=20.8b1", extras = ["jupyter"] }
 isort = "^5.1.0"
 
-# Documentation
+
 [tool.poetry.group.doc.dependencies]
 Sphinx = "^5.1.0"
 myst-parser = ">=0.16.1"
 sphinx-math-dollar = "^1.2.1"
-sphinx-rtd-theme = "^1.0.0"
-sphinx-autoapi = "^1.9.0"
+sphinx-autoapi = "^2.0.0"
 jupyter = "^1.0.0"
-nbsphinx = "^0.8.9"
+nbsphinx = ">=0.8.9"
+furo = ">=2022.9.29"
 
-# Black
 [tool.black]
 line-length = 120
 fast = true
 target-version = ["py39", "py310"]
 
-# isort
 [tool.isort]
 profile = "black"
 line_length = 120
 force_alphabetical_sort_within_sections = true
 case_sensitive = true
 
-
-# Coverage
 [tool.coverage.run]
 branch = true
 omit = ["roseau/load_flow/__about__.py"]

@@ -67,12 +67,11 @@ class RoseauLoadFlowExceptionCode(Enum):
     JSON_TRANSFORMER_CHARACTERISTICS_DUPLICATES = auto()
 
     @classmethod
-    @property
     def package_name(cls) -> str:
         return "roseau.load_flow"
 
     def __str__(self) -> str:
-        return f"{self.package_name}.{self.name}".lower()
+        return f"{self.package_name()}.{self.name}".lower()
 
     def __eq__(self, other) -> bool:
         if isinstance(other, str):
@@ -101,7 +100,7 @@ class RoseauLoadFlowExceptionCode(Enum):
         string = unicodedata.normalize("NFKD", string.lower()).encode("ASCII", "ignore").decode()
 
         # Withdraw the package prefix (e.g. roseau.core)
-        error_str = string.removeprefix(f"{cls.package_name}.")
+        error_str = string.removeprefix(f"{cls.package_name()}.")
 
         # Get the value of this string
         return cls[error_str.upper()]
