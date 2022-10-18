@@ -1,0 +1,9 @@
+build/
+!build/html/
+.git/
+.pytest_cache/
+#dist/
+.github/
+.idea/
+Dockerfile
+doc/notebooks/data
