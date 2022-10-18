@@ -4,39 +4,8 @@
 
 ## Installation ##
 
-### As a dependency of a project via `poetry` ###
-
-```toml
-[[tool.poetry.source]]
-name = "roseau"
-url = "https://gitlab.com/api/v4/projects/21838126/packages/pypi/simple"
-secondary = true
-default = false
-
-[tool.poetry.dependencies]
-#...
-roseau_load_flow = { version = ">=0.1.0", source = "roseau" }
-```
-
-Le Pypi repository `roseau` is a private repository. An authentication is required. Do not forget to apply
-a `poetry update` after that.
-
-### To develop via Git ###
-
-First, clone this repository:
-
-```bash
-git clone git@github.com:RoseauTechnologies/Roseau_Load_Flow.git
-cd Roseau_Load_Flow
-```
-
-Then, create your virtual environment and activate it.
-
-Use the following command to install `Roseau Load Flow`:
-
-```bash
-poetry install
-```
+The simplest way is to download the docker container attached to this repository and to start it. I will start a
+Jupyterlab session with the package installed.
 
 ## Usage ##
 
@@ -53,7 +22,7 @@ en = ElectricalNetwork.from_dgs(path=path)  # DGS
 
 en = ElectricalNetwork.from_json(path=path)  # Json
 
-en.solve_load_flow()
+en.solve_load_flow(auth=("username", "password"))
 ```
 
 ### From code ###
@@ -61,8 +30,7 @@ en.solve_load_flow()
 By describing the network and its components, here is a simple example:
 
 ```python
-from roseau.load_flow import Ground, VoltageSource, Bus, PowerLoad, PotentialRef, SimplifiedLine, ElectricalNetwork,
-    LineCharacteristics
+from roseau.load_flow import Ground, VoltageSource, Bus, PowerLoad, PotentialRef, SimplifiedLine, ElectricalNetwork, LineCharacteristics
 import numpy as np
 
 ground = Ground()
@@ -91,7 +59,7 @@ en = ElectricalNetwork(buses=[vs, load_bus], branches=[line], loads=[load], spec
 # or
 # en = ElectricalNetwork.from_element(vs)
 
-en.solve_load_flow()
+en.solve_load_flow(auth=("username", "password"))
 ```
 
 <!-- Local Variables: -->
