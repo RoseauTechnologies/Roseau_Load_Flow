@@ -45,10 +45,11 @@ RUN apt update && \
 
 # Copy the virtualenv
 COPY --from=build /app/.venv/ .venv/
-COPY --from=build /app/dist/*.whl .
+COPY --from=build /app/dist/*.whl ./
 
 # Install Jupyter lab
-RUN pip3 install -U roseau_load_flow-*.whl pip jupyterlab jupyterlab-language-pack-fr-FR
+RUN pip3 install -U $(ls roseau_load_flow-*.whl | sort -Vr | head -n 1) pip jupyterlab jupyterlab-language-pack-fr-FR \
+    && rm roseau_load_flow-*.whl
 
 # COPY the documentation, the noteboks and the data
 COPY --from=build /app/build/html/ doc/

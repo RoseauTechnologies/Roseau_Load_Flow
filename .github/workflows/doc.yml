@@ -1,28 +1,28 @@
-name: CI
+name: Documentation
 
 on:
   push:
-    branches: [ main, develop ]
-    tags:
-      - '*'
-  pull_request:
-    branches: [ main, develop ]
-    tags:
-      - '*'
+    branches: [ "main" ]
+  workflow_dispatch:
 
-env:
-  CI: true
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
 
 jobs:
   build:
-
     runs-on: ubuntu-22.04
-
-    strategy:
-      matrix:
-        python-version: [ "3.9", "3.10" ]
-
     steps:
+      - name: Install debian dependencies
+        run: |
+          sudo apt update
+          sudo apt -yq --no-install-suggests --no-install-recommends install pandoc make
+
       - uses: actions/checkout@v3
         with:
           lfs: false
@@ -46,6 +46,9 @@ jobs:
           git lfs pull
           git lfs prune --verify-remote
 
+      - name: Setup Pages
+        uses: actions/configure-pages@v2
+
       - name: Install poetry
         run: pipx install poetry
 
@@ -58,16 +61,28 @@ jobs:
       - name: Install dependencies
         run: |
           poetry env use "${{ matrix.python-version }}"
-          poetry install --without dev
+          poetry install --only doc
 
-      - name: Test with pytest
+      - name: Build with Sphinx
         run: |
-          poetry run pytest -n=auto --durations=25 --cov=roseau --cov-report html \
-          --cov-config pyproject.toml --cov-fail-under 75 roseau
+          poetry env use "${{ matrix.python-version }}"
+          cd doc && make html
+        env:
+          SPHINXBUILD: poetry run sphinx-build
 
-      - name: Archive code coverage results
-        uses: actions/upload-artifact@v3
-        if: ${{ always() }}
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v1
         with:
-          name: code-coverage-report-${{ runner.os }}-python-${{ matrix.python-version }}
-          path: htmlcov/
+          path: 'build/html/'
+
+  # Deployment job
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-22.04
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v1
