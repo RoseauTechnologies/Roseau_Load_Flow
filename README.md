@@ -1,11 +1,15 @@
 ![CI](https://github.com/RoseauTechnologies/Roseau_Load_Flow/workflows/CI/badge.svg)
+[![Documentation](https://github.com/RoseauTechnologies/Roseau_Load_Flow/actions/workflows/doc.yml/badge.svg)](https://github.com/RoseauTechnologies/Roseau_Load_Flow/actions/workflows/doc.yml)
+[![pre-commit](https://github.com/RoseauTechnologies/Roseau_Load_Flow/actions/workflows/pre-commit.yml/badge.svg)](https://github.com/RoseauTechnologies/Roseau_Load_Flow/actions/workflows/pre-commit.yml)
 
 # Roseau Load Flow #
 
 ## Installation ##
 
 The simplest way is to download the docker container attached to this repository and to start it. I will start a
-Jupyterlab session with the package installed.
+Jupyterlab session with all the required packages installed.
+
+The entire documentation is available via [GitHub pages](https://roseautechnologies.github.io/Roseau_Load_Flow/)
 
 ## Usage ##
 
