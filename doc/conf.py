@@ -6,6 +6,8 @@
 
 # -- Path setup --------------------------------------------------------------
 
+import importlib.metadata
+
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
@@ -15,7 +17,6 @@ import sys
 
 sys.path.insert(0, os.path.abspath("../roseau/"))
 
-
 # -- Project information -----------------------------------------------------
 
 project = "Roseau Load Flow"
@@ -23,8 +24,7 @@ copyright = "2022, Roseau Technologies SAS"
 # author = "Benoît Vinot"
 
 # The full version, including alpha/beta/rc tags
-release = "0.2.0"
-
+release = importlib.metadata.version("roseau_load_flow")
 
 # -- General configuration ---------------------------------------------------
 
@@ -62,7 +62,6 @@ language = "en"
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = []
 
-
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
@@ -95,7 +94,6 @@ html_theme_options = {
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
-
 
 # AutoAPI
 autoapi_dirs = ["../roseau"]
