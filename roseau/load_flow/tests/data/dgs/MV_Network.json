@@ -30,7 +30,7 @@
   "ElmNet": {
     "Attributes": ["FID", "OP", "loc_name", "fold_id", "frnom"],
     "Values": [
-      ["14", "C", "Réseau MV", null, 50]
+      ["14", "C", "RÃ©seau MV", null, 50]
     ]
   },
   "ElmTerm": {
@@ -61,25 +61,25 @@
     "Values": [
       ["23", "C", "ColLeg", "63", 30.7575, 35.44231, 0.6, 0.6, 0],
       ["24", "C", "ColLeg", "64", 0, 0, 0.6, 0.6, 0],
-      ["25", "C", "Objet de réseau graphique2", "64", 107.1875, 175, 4.833333, 1, 0],
-      ["26", "C", "Objet de réseau graphique3", "64", 91.875, 201.25, 1, 1, 180],
-      ["27", "C", "Objet de réseau graphique4(1)", "64", 83.125, 56.875, 2.666667, 1, 0],
-      ["28", "C", "Objet de réseau graphique4(2)", "64", 179.375, 118.125, 2.666667, 1, 0],
-      ["29", "C", "Objet de réseau graphique4(3)", "64", 188.125, 56.875, 2.666667, 1, 0],
-      ["30", "C", "Objet de réseau graphique4(4)", "64", 245, 30.625, 2.666667, 1, 0],
-      ["31", "C", "Objet de réseau graphique4", "64", 78.75, 118.125, 2.666667, 1, 0],
-      ["32", "C", "Objet de réseau graphique5(1)", "64", 74.375, 146.5625, 1, 1, 0],
-      ["33", "C", "Objet de réseau graphique5(2)", "64", 83.125, 89.6875, 1, 1, 0],
-      ["34", "C", "Objet de réseau graphique5(3)", "64", 166.25, 144.375, 1, 1, 90],
-      ["35", "C", "Objet de réseau graphique5(4)", "64", 175, 87.5, 1, 1, 0],
-      ["36", "C", "Objet de réseau graphique5(5)", "64", 218.75, 43.75, 1, 1, 0],
-      ["37", "C", "Objet de réseau graphique5", "64", 109.375, 146.5625, 1, 1, 0],
-      ["38", "C", "Objet de réseau graphique6(1)", "64", 105, 39.375, 1, 1, 0],
-      ["39", "C", "Objet de réseau graphique6(2)", "64", 131.25, 157.5, 1, 1, 0],
-      ["40", "C", "Objet de réseau graphique6(3)", "64", 210, 100.625, 1, 1, 0],
-      ["41", "C", "Objet de réseau graphique6(4)", "64", 188.125, 39.375, 1, 1, 0],
-      ["42", "C", "Objet de réseau graphique6(5)", "64", 262.5, 13.125, 1, 1, 0],
-      ["43", "C", "Objet de réseau graphique6", "64", 100.625, 100.625, 1, 1, 0]
+      ["25", "C", "Objet de rÃ©seau graphique2", "64", 107.1875, 175, 4.833333, 1, 0],
+      ["26", "C", "Objet de rÃ©seau graphique3", "64", 91.875, 201.25, 1, 1, 180],
+      ["27", "C", "Objet de rÃ©seau graphique4(1)", "64", 83.125, 56.875, 2.666667, 1, 0],
+      ["28", "C", "Objet de rÃ©seau graphique4(2)", "64", 179.375, 118.125, 2.666667, 1, 0],
+      ["29", "C", "Objet de rÃ©seau graphique4(3)", "64", 188.125, 56.875, 2.666667, 1, 0],
+      ["30", "C", "Objet de rÃ©seau graphique4(4)", "64", 245, 30.625, 2.666667, 1, 0],
+      ["31", "C", "Objet de rÃ©seau graphique4", "64", 78.75, 118.125, 2.666667, 1, 0],
+      ["32", "C", "Objet de rÃ©seau graphique5(1)", "64", 74.375, 146.5625, 1, 1, 0],
+      ["33", "C", "Objet de rÃ©seau graphique5(2)", "64", 83.125, 89.6875, 1, 1, 0],
+      ["34", "C", "Objet de rÃ©seau graphique5(3)", "64", 166.25, 144.375, 1, 1, 90],
+      ["35", "C", "Objet de rÃ©seau graphique5(4)", "64", 175, 87.5, 1, 1, 0],
+      ["36", "C", "Objet de rÃ©seau graphique5(5)", "64", 218.75, 43.75, 1, 1, 0],
+      ["37", "C", "Objet de rÃ©seau graphique5", "64", 109.375, 146.5625, 1, 1, 0],
+      ["38", "C", "Objet de rÃ©seau graphique6(1)", "64", 105, 39.375, 1, 1, 0],
+      ["39", "C", "Objet de rÃ©seau graphique6(2)", "64", 131.25, 157.5, 1, 1, 0],
+      ["40", "C", "Objet de rÃ©seau graphique6(3)", "64", 210, 100.625, 1, 1, 0],
+      ["41", "C", "Objet de rÃ©seau graphique6(4)", "64", 188.125, 39.375, 1, 1, 0],
+      ["42", "C", "Objet de rÃ©seau graphique6(5)", "64", 262.5, 13.125, 1, 1, 0],
+      ["43", "C", "Objet de rÃ©seau graphique6", "64", 100.625, 100.625, 1, 1, 0]
     ]
   },
   "IntGrfcon": {
