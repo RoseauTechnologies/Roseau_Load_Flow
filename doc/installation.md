@@ -18,16 +18,26 @@
    $ docker run -p 8080:8080 --name rlf-test ghcr.io/roseautechnologies/roseau-load-flow:0.2.1
    ```
 
-6. Open your web browser and go to http://localhost:8080 to find the interface of the JupyterLab of the container.
+6. Open your web browser and go to [http://localhost:8080](http://localhost:8080) to find the interface of the
+   JupyterLab of the container.
    A basic python environment is already installed with the `roseau_load_flow` package already installed.
 
 ## On Windows
 
-1. Download and install Docker Desktop for Windows available [here](https://www.docker.com/products/docker-desktop/).
+1. Download and install Docker Desktop for Windows available [here](https://www.docker.
+   com/products/docker-desktop/).
+
+   ```{hint}
+   During the installation, select "WSL **2**" (WSL = Windows Subsystem for Linux).
+   ```
 
 2. Open Docker Desktop to start the Docker Engine
 
    ![Docker Desktop](_static/2022_10_20_Installation_2.png)
+
+   ```{note}
+   During the first start of the software, it may require to install some extra file to update WSL1 to WSL2.
+   ```
 
 3. Go to the Package page of the GitHub repository available [here](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pkgs/container/roseau-load-flow)
 
@@ -54,9 +64,9 @@
 
    ![Advanced options](_static/2022_10_20_Installation_6.png)
 
-9. The container should start in a few second. Open your web browser and go to http://localhost:8080 to find the
-   interface of the JupyterLab of the container. A basic python environment is already installed with the
-   `roseau_load_flow` package already installed.
+9. The container should start in a few second. Open your web browser and go to
+   [http://localhost:8080](http://localhost:8080) to find the interface of the JupyterLab of the container. A basic
+   python environment is already installed with the `roseau_load_flow` package already installed.
 
 # Via the wheel
 
