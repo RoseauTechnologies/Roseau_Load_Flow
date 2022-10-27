@@ -782,7 +782,7 @@ class ElectricalNetwork:
                 The path to write the json.
 
         Returns:
-            The path it has been writen in.
+            The path it has been written in.
         """
         if isinstance(path, str):
             path = Path(path).expanduser().resolve()
