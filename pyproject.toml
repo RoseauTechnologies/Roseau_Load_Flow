@@ -51,7 +51,7 @@ requests-mock = "^1.9.3"
 coverage = { version = "^6.0.0", extras = ["toml"] }
 flake8 = "^5.0.4"
 pre-commit = "^2.6.0"
-black = { version = ">=20.8b1", extras = ["jupyter"] }
+black = { version = ">=22.10.0", extras = ["jupyter"] }
 isort = "^5.1.0"
 
 [tool.poetry.group.doc.dependencies]
@@ -71,7 +71,6 @@ jupyterlab-language-pack-fr-FR= "^3.4"
 
 [tool.black]
 line-length = 120
-fast = true
 target-version = ["py39", "py310"]
 
 [tool.isort]
