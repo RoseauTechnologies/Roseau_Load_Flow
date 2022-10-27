@@ -4,8 +4,6 @@ import numpy as np
 import pytest
 from pandas.testing import assert_frame_equal
 
-from roseau.load_flow.utils.log import set_logging_config
-
 # Variable to test the network
 HERE = Path(__file__).parent.expanduser().absolute()
 TEST_ALL_NETWORKS_DATA_FOLDER = HERE / "tests" / "data" / "networks"
@@ -31,12 +29,6 @@ TEST_SOME_NETWORKS_DATA_IDS = [x.name for x in TEST_SOME_NETWORKS_DATA_PARAMS]
 TEST_COMPARISON_DATA_FOLDER = HERE / "tests" / "data" / "comparison"
 TEST_COMPARISON_DATA_PARAMS = [x for x in TEST_COMPARISON_DATA_FOLDER.glob("*") if x.is_dir()]
 TEST_COMPARISON_DATA_IDS = [x.name for x in TEST_COMPARISON_DATA_PARAMS]
-
-
-@pytest.fixture(scope="function", autouse=True)
-def log_setup():
-    """A basic fixture (automatically used) to set the log level"""
-    set_logging_config(verbosity="debug")
 
 
 @pytest.fixture(scope="module")

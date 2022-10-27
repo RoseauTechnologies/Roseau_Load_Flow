@@ -13,7 +13,7 @@ The entire documentation is available via [GitHub pages](https://roseautechnolog
 
 ## Usage ##
 
-There are 2 main ways to execute a load flow with thunders:
+There are 2 main ways to execute a load flow:
 
 ### From files ###
 

@@ -272,24 +272,24 @@ class LineCharacteristics:
         for choice in (0, 1):
             if choice == 0:
                 # We trust the manual !!! can gives singular matrix !!!
-                zs = (z0 + 2 * z1) / 3  # Serie impedance (ohms/km)
+                zs = (z0 + 2 * z1) / 3  # Series impedance (ohms/km)
                 zm = (z0 - z1) / 3  # Mutual impedance (ohms/km)
 
-                ys = (y0 + 2 * y1) / 3  # Serie shunt admittance (siemens/km)
+                ys = (y0 + 2 * y1) / 3  # Series shunt admittance (siemens/km)
                 ym = (y0 - y1) / 3  # Mutual shunt admittance (siemens/km)
             else:
                 # Do not read the manual, it is useless: in pwf we trust
-                zs = r1 + 1j * x1  # Serie impedance (ohms/km)
+                zs = r1 + 1j * x1  # Series impedance (ohms/km)
                 zm = 0 + 0j  # Mutual impedance (ohms/km)
 
-                ys = g1 + 1j * b1  # Serie shunt admittance (siemens/km)
+                ys = g1 + 1j * b1  # Series shunt admittance (siemens/km)
                 ym = 0 + 0j  # Mutual shunt admittance (siemens/km)
 
             if model == LineModel.SYM_NEUTRAL:
                 # Add the neutral
                 # Build the complex
-                zn = rn + 1j * xn  # Neutral serie impedance (ohm/km)
-                zpn = xpn * 1j  # Phase-to-neutral serie impedance (ohm/km)
+                zn = rn + 1j * xn  # Neutral series impedance (ohm/km)
+                zpn = xpn * 1j  # Phase-to-neutral series impedance (ohm/km)
                 yn = bn * 1j  # Neutral shunt admittance (Siemens/km)
                 ypn = bpn * 1j  # Phase to neutral shunt admittance (Siemens/km)
 

@@ -280,31 +280,29 @@ class ElectricalNetwork:
                 The response to parse
         """
         content_type = response.headers.get("content-type", None)
+        code = RoseauLoadFlowExceptionCode.BAD_REQUEST
         if response.status_code == 401:
             msg = "Authentication failed."
-            logger.error(msg=msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_REQUEST)
         else:
             msg = f"There is a problem in the request. Error code {response.status_code}."
             if content_type == "application/json":
                 result_dict: dict[str, Any] = response.json()
-
-                # If we have a valid Roseau Load Flow Exception, raise it
                 if "msg" in result_dict and "code" in result_dict:
+                    # If we have a valid Roseau Load Flow Exception, raise it
                     try:
                         code = RoseauLoadFlowExceptionCode.from_string(result_dict["code"])
                     except Exception:
-                        msg += f" {result_dict['code']} - {result_dict['msg']}"
+                        msg += f" {result_dict['code']!r} - {result_dict['msg']!r}"
                     else:
                         msg = result_dict["msg"]
-                        logger.error(msg)
-                        raise RoseauLoadFlowException(msg=msg, code=code)
+                else:
+                    # Otherwise, raise a generic "Bad request"
+                    msg += response.text
             else:
+                # Non JSON response, raise a generic "Bad request"
                 msg += response.text
-
-            # Otherwise, raise a generic "Bad request"
-            logger.error(msg=msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_REQUEST)
+        logger.error(msg=msg)
+        raise RoseauLoadFlowException(msg=msg, code=code)
 
     def _dispatch_results(self, result_dict: dict[str, Any]) -> None:
         """Dispatch the results to all the elements of the network.
@@ -784,7 +782,7 @@ class ElectricalNetwork:
                 The path to write the json.
 
         Returns:
-            The path it has been writen in.
+            The path it has been written in.
         """
         if isinstance(path, str):
             path = Path(path).expanduser().resolve()

@@ -68,7 +68,7 @@ def network_from_dgs(  # noqa: C901
         elif ph_tech == 1:  # ABC-N
             n = 4
         else:
-            msg = f"The Ph tech {ph_tech!r} for bus {bus_id!r} can not be handle."
+            msg = f"The Ph tech {ph_tech!r} for bus {bus_id!r} cannot be handled."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DGS_BAD_PHASE_TECHNOLOGY)
         buses[bus_id] = Bus(id=bus_id, n=n)
@@ -115,7 +115,7 @@ def network_from_dgs(  # noqa: C901
             elif n == 3:
                 line_model = LineModel.SYM
             else:
-                msg = f"The number of phases ({n}) of line type {type_id!r} can not be handled, it should be 3 or 4."
+                msg = f"The number of phases ({n}) of line type {type_id!r} cannot be handled, it should be 3 or 4."
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DGS_BAD_PHASE_NUMBER)
 
