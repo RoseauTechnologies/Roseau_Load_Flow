@@ -112,7 +112,7 @@ def test_transformer_characteristics():
     }
     with pytest.raises(RoseauLoadFlowException) as e:
         TransformerCharacteristics.from_dict(data)
-    assert "Transformer windings can not be extracted from the string" in e.value.args[0]
+    assert "Transformer windings cannot be extracted from the string" in e.value.args[0]
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS
 
     # UHV == ULV...
@@ -198,7 +198,7 @@ def test_from_name():
 
     with pytest.raises(RoseauLoadFlowException) as e:
         TransformerCharacteristics.from_name("160kVA", "totoDyn11")
-    assert "Transformer windings can not be extracted from the string" in e.value.args[0]
+    assert "Transformer windings cannot be extracted from the string" in e.value.args[0]
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS
 
     # Good ones
