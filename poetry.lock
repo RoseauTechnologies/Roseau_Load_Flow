@@ -73,7 +73,10 @@ python-versions = ">=3.7.2"
 [package.dependencies]
 lazy-object-proxy = ">=1.4.0"
 typing-extensions = {version = ">=3.10", markers = "python_version < \"3.10\""}
-wrapt = {version = ">=1.11,<2", markers = "python_version < \"3.11\""}
+wrapt = [
+    {version = ">=1.11,<2", markers = "python_version < \"3.11\""},
+    {version = ">=1.14,<2", markers = "python_version >= \"3.11\""},
+]
 
 [[package]]
 name = "asttokens"
@@ -2019,8 +2022,8 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 
 [metadata]
 lock-version = "1.1"
-python-versions = ">=3.9,<3.11"
-content-hash = "4262d05502fb6d37e1f7976f7115483fd08cd8baad770b7191f5a601a0a816b3"
+python-versions = "^3.9"
+content-hash = "d6368bd5dc65b5953edb3e2c6d2fbc306cb03ae72f43403a9a58d0a367a3c924"
 
 [metadata.files]
 alabaster = [
