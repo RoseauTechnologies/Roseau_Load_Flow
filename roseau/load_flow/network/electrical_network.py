@@ -1,9 +1,10 @@
 import json
 import logging
 import re
-from collections.abc import Sequence
+from collections.abc import Sequence, Sized
+from itertools import zip_longest
 from pathlib import Path
-from typing import Any, Union
+from typing import Any, Optional, Union
 from urllib.parse import urljoin
 
 import geopandas as gpd
@@ -31,6 +32,8 @@ from roseau.load_flow.models import (
 from roseau.load_flow.utils import ureg
 
 logger = logging.getLogger(__name__)
+
+_PHASE_DTYPE = pd.CategoricalDtype(categories=list("abcn"), ordered=True)
 
 
 class ElectricalNetwork:
@@ -109,6 +112,23 @@ class ElectricalNetwork:
         self._valid = True
         self._results_info: dict[str, Any] = dict()
 
+    def __repr__(self) -> str:
+        def count_repr(__o: Sized, /, singular: str, plural: Optional[str] = None) -> str:
+            """Singular/plural count representation: `1 bus` or `2 buses`."""
+            n = len(__o)
+            if n == 1:
+                return f"{n} {singular}"
+            return f"{n} {plural if plural is not None else singular+'s'}"
+
+        return (
+            f"<{type(self).__name__}:"
+            f" {count_repr(self.buses, 'bus', 'buses')},"
+            f" {count_repr(self.branches, 'branch', 'branches')},"
+            f" {count_repr(self.loads, 'load', 'loads')},"
+            f" {count_repr(self.special_elements, 'special element')}"
+            f">"
+        )
+
     @classmethod
     def from_element(cls, initial_bus: AbstractBus) -> "ElectricalNetwork":
         """ElectricalNetwork constructor. Construct the network from only one element and add the others automatically
@@ -117,12 +137,12 @@ class ElectricalNetwork:
             initial_bus:
                 Any bus of the network
         """
-        buses = []
-        branches = []
-        loads = []
-        specials = []
-        elements = [initial_bus]
-        visited_elements = []
+        buses: list[AbstractBus] = []
+        branches: list[AbstractBranch] = []
+        loads: list[AbstractLoad] = []
+        specials: list[Element] = []
+        elements: list[Element] = [initial_bus]
+        visited_elements: list[Element] = []
         while elements:
             e = elements.pop(-1)
             visited_elements.append(e)
@@ -379,20 +399,93 @@ class ElectricalNetwork:
         Returns:
             The data frame of the potentials of the buses of the electrical network.
         """
-        phases = ["a", "b", "c", "n"]
         potentials_dict = {"bus_id": [], "phase": [], "potential": []}
         for bus_id, bus in self.buses.items():
-            potentials: np.ndarray = bus.potentials
-            for i in range(len(potentials)):
+            potentials = bus.potentials.m_as("V")
+            for potential, phase in zip(potentials, "abcn"):
                 potentials_dict["bus_id"].append(bus_id)
-                potentials_dict["phase"].append(phases[i])
-                potentials_dict["potential"].append(potentials[i].m_as("V"))
-        potentials_df: pd.DataFrame = (
+                potentials_dict["phase"].append(phase)
+                potentials_dict["potential"].append(potential)
+        potentials_df = (
             pd.DataFrame.from_dict(potentials_dict, orient="columns")
-            .astype({"phase": pd.CategoricalDtype(categories=phases, ordered=True), "potential": complex})
+            .astype({"phase": _PHASE_DTYPE, "potential": complex})
             .set_index(["bus_id", "phase"])
         )
         return potentials_df
+
+    def buses_voltages(self, as_magnitude_angle: bool = False) -> pd.DataFrame:
+        """Get the 3-phase voltages of the buses.
+
+        Args:
+            as_magnitude_angle:
+                If True, the voltages are returned as magnitude and angle. Otherwise, they are
+                returned as complex values. Default is False.
+
+        Returns:
+            The dataframe of voltages of buses after a load flow has been solved.
+
+        Examples:
+            >>> net
+            <ElectricalNetwork: 2 buses, 1 branch, 1 load, 2 special elements>
+
+            >>> net.buses_voltages()
+                                             voltage
+            bus_id phase
+            vs     a      200000000000.0+0.00000000j
+                   b     -10000.000000-17320.508076j
+                   c     -10000.000000+17320.508076j
+            bus    a      19999.00000095+0.00000000j
+                   b      -9999.975000-17320.464775j
+                   c      -9999.975000+17320.464775j
+
+            >>> net.buses_voltages(as_magnitude_angle=True)
+                          voltage_magnitude  voltage_angle
+            bus_id phase
+            vs     a               20000.00            0.0
+                   b               20000.00         -120.0
+                   c               20000.00          120.0
+            bus    a               19999.95            0.0
+                   b               19999.95         -120.0
+                   c               19999.95          120.0
+
+            To get the symmetrical components of the voltages:
+            >>> from roseau.load_flow.utils.converters import series_phasor_to_sym
+            >>> voltage_series = net.buses_voltages()
+            >>> voltage_symmetrical = series_phasor_to_sym(voltage_series)
+            >>> voltage_symmetrical
+            bus_id  sequence
+            bus     zero        3.183231e-12-9.094947e-13j
+                    pos         1.999995e+04+3.283594e-12j
+                    neg        -1.796870e-07-2.728484e-12j
+            vs      zero        5.002221e-12-9.094947e-13j
+                    pos         2.000000e+04+3.283596e-12j
+                    neg        -1.796880e-07-1.818989e-12j
+            Name: voltage, dtype: complex128
+
+            To access one of the symmetrical components sequences, say the positive sequence:
+            >>> voltage_symmetrical.loc[:, "pos"]
+            bus_id
+            bus    19999.95+0.00j
+            vs     200000.0+0.00j
+            Name: voltage, dtype: complex128
+        """
+        voltages_dict = {"bus_id": [], "phase": [], "voltage": []}
+        for bus_id, bus in self.buses.items():
+            voltages = bus.voltages.m_as("V")
+            for voltage, phase in zip(voltages, "abcn"):
+                voltages_dict["bus_id"].append(bus_id)
+                voltages_dict["phase"].append(phase)
+                voltages_dict["voltage"].append(voltage)
+        voltages_df = (
+            pd.DataFrame.from_dict(voltages_dict, orient="columns")
+            .astype({"phase": _PHASE_DTYPE, "voltage": complex})
+            .set_index(["bus_id", "phase"])
+        )
+        if as_magnitude_angle:
+            voltages_df["voltage_magnitude"] = np.abs(voltages_df["voltage"])
+            voltages_df["voltage_angle"] = np.angle(voltages_df["voltage"], deg=True)
+            voltages_df.drop(columns=["voltage"], inplace=True)
+        return voltages_df
 
     @ureg.wraps(("A", "A"), (None, None), strict=False)
     def branch_currents(self, id: Any) -> tuple[np.ndarray, np.ndarray]:
@@ -414,31 +507,18 @@ class ElectricalNetwork:
         Returns:
             The data frame of the currents of the branches of the electrical network.
         """
-        phases = ["a", "b", "c", "n"]
         currents_dict = {"branch_id": [], "phase": [], "current1": [], "current2": []}
         for branch_id, branch in self.branches.items():
             currents1, currents2 = branch.currents
-            nb_currents1, nb_currents2 = len(currents1), len(currents2)
-            for j in range(max(nb_currents1, nb_currents2)):
+            currents = zip_longest(currents1.m_as("A"), currents2.m_as("A"), fillvalue=np.nan)
+            for (current1, current2), phase in zip(currents, "abcn"):
                 currents_dict["branch_id"].append(branch_id)
-                currents_dict["phase"].append(phases[j])
-                try:
-                    currents_dict["current1"].append(currents1[j].m_as("A"))
-                except IndexError:
-                    currents_dict["current1"].append(np.nan)
-                try:
-                    currents_dict["current2"].append(currents2[j].m_as("A"))
-                except IndexError:
-                    currents_dict["current2"].append(np.nan)
+                currents_dict["phase"].append(phase)
+                currents_dict["current1"].append(current1)
+                currents_dict["current2"].append(current2)
         currents_df = (
             pd.DataFrame.from_dict(currents_dict, orient="columns")
-            .astype(
-                {
-                    "phase": pd.CategoricalDtype(categories=phases, ordered=True),
-                    "current1": complex,
-                    "current2": complex,
-                }
-            )
+            .astype({"phase": _PHASE_DTYPE, "current1": complex, "current2": complex})
             .set_index(["branch_id", "phase"])
         )
         return currents_df
@@ -463,17 +543,16 @@ class ElectricalNetwork:
         Returns:
             The data frame of the currents of the loads of the electrical network.
         """
-        phases = ["a", "b", "c", "n"]
         loads_dict = {"load_id": [], "phase": [], "current": []}
         for load_id, load in self.loads.items():
-            currents = load.currents
-            for i in range(len(currents)):
+            currents = load.currents.m_as("A")
+            for current, phase in zip(currents, "abcn"):
                 loads_dict["load_id"].append(load_id)
-                loads_dict["phase"].append(phases[i])
-                loads_dict["current"].append(currents[i].m_as("A"))
-        currents_df: pd.DataFrame = (
+                loads_dict["phase"].append(phase)
+                loads_dict["current"].append(current)
+        currents_df = (
             pd.DataFrame.from_dict(loads_dict, orient="columns")
-            .astype({"phase": pd.CategoricalDtype(categories=phases, ordered=True), "current": complex})
+            .astype({"phase": _PHASE_DTYPE, "current": complex})
             .set_index(["load_id", "phase"])
         )
         return currents_df
@@ -485,18 +564,17 @@ class ElectricalNetwork:
         Returns:
             The data frame of the powers of the loads of the electrical network.
         """
-        phases = ["a", "b", "c", "n"]
         loads_dict = {"load_id": [], "phase": [], "power": []}
         for load_id, load in self.loads.items():
             if isinstance(load, FlexibleLoad):
-                powers = load.powers
-                for i in range(len(powers)):
+                powers = load.powers.m_as("VA")
+                for power, phase in zip(powers, "abcn"):
                     loads_dict["load_id"].append(load_id)
-                    loads_dict["phase"].append(phases[i])
-                    loads_dict["power"].append(powers[i].m_as("VA"))
-        powers_df: pd.DataFrame = (
+                    loads_dict["phase"].append(phase)
+                    loads_dict["power"].append(power)
+        powers_df = (
             pd.DataFrame.from_dict(loads_dict, orient="columns")
-            .astype({"phase": pd.CategoricalDtype(categories=phases, ordered=True), "power": complex})
+            .astype({"phase": _PHASE_DTYPE, "power": complex})
             .set_index(["load_id", "phase"])
         )
         return powers_df

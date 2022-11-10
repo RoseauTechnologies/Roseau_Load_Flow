@@ -47,6 +47,9 @@ class PotentialRef(Element):
         self.connected_elements = [element]
         element.connected_elements.append(self)
 
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}({self.connected_elements[0]!r})"
+
     @property
     @ureg.wraps("V", None, strict=False)
     def current(self) -> complex:
@@ -65,6 +68,9 @@ class Ground(Element):
     def __init__(self, **kwargs):
         """Ground constructor."""
         super().__init__(**kwargs)
+
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}()"
 
     def connect(self, bus: "AbstractBus"):
         """Connect the ground to the bus neutral.
@@ -141,6 +147,14 @@ class AbstractBranch(Element, JsonMixin):
         bus2.connected_elements.append(self)
         self.geometry = geometry
         self._currents = None
+
+    def __repr__(self) -> str:
+        s = f"{type(self).__name__}(id={self.id!r}, n1={self.n1}, n2={self.n2}"
+        s += f", bus1={self.connected_elements[0].id!r}, bus2={self.connected_elements[1].id!r}"
+        if self.geometry is not None:
+            s += f", geometry={self.geometry}"
+        s += ")"
+        return s
 
     def __str__(self) -> str:
         return f"id={self.id} - n1={self.n1} - n2={self.n2}"
