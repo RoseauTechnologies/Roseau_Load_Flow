@@ -17,10 +17,12 @@ A = np.array(
 )
 """numpy.ndarray[complex]: "A" matrix: transformation matrix from phasor to symmetrical components."""
 
+_A_INV = np.linalg.inv(A)
+
 
 def phasor_to_sym(v_abc: Sequence[complex]) -> np.ndarray[complex]:
     """Compute the symmetrical components `(0, +, -)` from the phasor components `(a, b, c)`."""
-    v_012 = np.linalg.inv(A) @ np.asarray(v_abc).reshape((3, 1))
+    v_012 = _A_INV @ np.asarray(v_abc).reshape((3, 1))
     return v_012
 
 
@@ -36,7 +38,7 @@ def series_phasor_to_sym(s_abc: pd.Series) -> pd.Series:
     Args:
         s_abc:
             Series of phasor components (voltage, current, ...). The series must have a
-            multi-index with a `'phase'` level of values `('a', 'b', 'c')`.
+            multi-index with a `'phase'` level containing the phases in order (a -> b -> c).
 
     Returns:
         Series of the symmetrical components representing the input phasor series. The series has
@@ -48,12 +50,12 @@ def series_phasor_to_sym(s_abc: pd.Series) -> pd.Series:
 
         >>> voltage
         bus_id  phase
-        vs      a        200000000000.0+0.00000000j
-                b       -10000.000000-17320.508076j
-                c       -10000.000000+17320.508076j
-        bus     a        19999.00000095+0.00000000j
-                b        -9999.975000-17320.464775j
-                c        -9999.975000+17320.464775j
+        vs      an       200000000000.0+0.00000000j
+                bn      -10000.000000-17320.508076j
+                cn      -10000.000000+17320.508076j
+        bus     an       19999.00000095+0.00000000j
+                bn       -9999.975000-17320.464775j
+                cn       -9999.975000+17320.464775j
         Name: voltage, dtype: complex128
 
         We can get the `zero`, `positive`, and `negative` sequences of the voltage using:

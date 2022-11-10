@@ -432,22 +432,22 @@ class ElectricalNetwork:
             >>> net.buses_voltages()
                                              voltage
             bus_id phase
-            vs     a      200000000000.0+0.00000000j
-                   b     -10000.000000-17320.508076j
-                   c     -10000.000000+17320.508076j
-            bus    a      19999.00000095+0.00000000j
-                   b      -9999.975000-17320.464775j
-                   c      -9999.975000+17320.464775j
+            vs     an     200000000000.0+0.00000000j
+                   bn    -10000.000000-17320.508076j
+                   cn    -10000.000000+17320.508076j
+            bus    an     19999.00000095+0.00000000j
+                   bn     -9999.975000-17320.464775j
+                   cn     -9999.975000+17320.464775j
 
             >>> net.buses_voltages(as_magnitude_angle=True)
                           voltage_magnitude  voltage_angle
             bus_id phase
-            vs     a               20000.00            0.0
-                   b               20000.00         -120.0
-                   c               20000.00          120.0
-            bus    a               19999.95            0.0
-                   b               19999.95         -120.0
-                   c               19999.95          120.0
+            vs     an              20000.00            0.0
+                   bn              20000.00         -120.0
+                   cn              20000.00          120.0
+            bus    an              19999.95            0.0
+                   bn              19999.95         -120.0
+                   cn              19999.95          120.0
 
             To get the symmetrical components of the voltages:
 
@@ -473,15 +473,17 @@ class ElectricalNetwork:
             Name: voltage, dtype: complex128
         """
         voltages_dict = {"bus_id": [], "phase": [], "voltage": []}
+        phases = {3: ["ab", "bc", "ca"], 4: ["an", "bn", "cn"]}
+        phases_dtype = pd.CategoricalDtype(phases[4] + phases[3], ordered=True)
         for bus_id, bus in self.buses.items():
             voltages = bus.voltages.m_as("V")
-            for voltage, phase in zip(voltages, "abcn"):
+            for voltage, phase in zip(voltages, phases[bus.n]):
                 voltages_dict["bus_id"].append(bus_id)
                 voltages_dict["phase"].append(phase)
                 voltages_dict["voltage"].append(voltage)
         voltages_df = (
             pd.DataFrame.from_dict(voltages_dict, orient="columns")
-            .astype({"phase": _PHASE_DTYPE, "voltage": complex})
+            .astype({"phase": phases_dtype, "voltage": complex})
             .set_index(["bus_id", "phase"])
         )
         if as_magnitude_angle:

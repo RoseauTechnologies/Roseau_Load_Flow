@@ -208,12 +208,10 @@ def test_solve_load_flow(small_network, good_json_results):
     load_bus = small_network.buses["bus"]
 
     # Good result
-    json_result = good_json_results
-
     # Request the server
     solve_url = urljoin(ElectricalNetwork.DEFAULT_BASE_URL, "solve/")
     with requests_mock.Mocker() as m:
-        m.post(solve_url, status_code=200, json=json_result, headers={"content-type": "application/json"})
+        m.post(solve_url, status_code=200, json=good_json_results, headers={"content-type": "application/json"})
         small_network.solve_load_flow(auth=("", ""))
     assert len(load_bus.potentials) == 4
 
@@ -332,17 +330,17 @@ def test_buses_voltages(small_network, good_json_results):
     small_network._dispatch_results(good_json_results)
 
     voltage_records = [
-        {"bus_id": "vs", "phase": "a", "voltage": 20000.0 + 0.0j},
-        {"bus_id": "vs", "phase": "b", "voltage": -10000.0 + -17320.508076j},
-        {"bus_id": "vs", "phase": "c", "voltage": -10000.0 + 17320.508076j},
-        {"bus_id": "bus", "phase": "a", "voltage": 19999.949999875 + 0.0j},
-        {"bus_id": "bus", "phase": "b", "voltage": -9999.9749999375 + -17320.464774621556j},
-        {"bus_id": "bus", "phase": "c", "voltage": -9999.9749999375 + 17320.464774621556j},
+        {"bus_id": "vs", "phase": "an", "voltage": 20000.0 + 0.0j},
+        {"bus_id": "vs", "phase": "bn", "voltage": -10000.0 + -17320.508076j},
+        {"bus_id": "vs", "phase": "cn", "voltage": -10000.0 + 17320.508076j},
+        {"bus_id": "bus", "phase": "an", "voltage": 19999.949999875 + 0.0j},
+        {"bus_id": "bus", "phase": "bn", "voltage": -9999.9749999375 + -17320.464774621556j},
+        {"bus_id": "bus", "phase": "cn", "voltage": -9999.9749999375 + 17320.464774621556j},
     ]
 
     def fix_index_type(idx: pd.MultiIndex) -> pd.MultiIndex:
         return idx.set_levels(
-            idx.levels[1].astype(pd.CategoricalDtype(list("abcn"), ordered=True)),
+            idx.levels[1].astype(pd.CategoricalDtype(["an", "bn", "cn", "ab", "bc", "ca"], ordered=True)),
             level=1,
         )
 
