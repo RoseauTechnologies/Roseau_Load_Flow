@@ -54,6 +54,67 @@ def small_network() -> ElectricalNetwork:
     return en
 
 
+@pytest.fixture
+def good_json_results() -> dict:
+    return {
+        "info": {
+            "status": "success",
+            "resolutionMethod": "newton",
+            "iterations": 1,
+            "targetError": 1e-06,
+            "finalError": 6.296829377361313e-14,
+        },
+        "buses": [
+            {
+                "id": "vs",
+                "potentials": {
+                    "va": [20000.0, 0.0],
+                    "vb": [-10000.0, -17320.508076],
+                    "vc": [-10000.0, 17320.508076],
+                    "vn": [0.0, 0.0],
+                },
+            },
+            {
+                "id": "bus",
+                "potentials": {
+                    "va": [19999.949999875, 0.0],
+                    "vb": [-9999.9749999375, -17320.464774621556],
+                    "vc": [-9999.9749999375, 17320.464774621556],
+                    "vn": [1.3476526914363477e-12, 0.0],
+                },
+            },
+        ],
+        "branches": [
+            {
+                "id": "line",
+                "currents1": {
+                    "ia": [0.005, 0.0],
+                    "ib": [-0.0025, -0.0043],
+                    "ic": [-0.0025, 0.0043],
+                    "in": [-1.347e-13, 0.0],
+                },
+                "currents2": {
+                    "ia": [0.005, 0.0],
+                    "ib": [-0.0025, -0.0043],
+                    "ic": [-0.0025, 0.0043],
+                    "in": [-1.347e-13, 0.0],
+                },
+            }
+        ],
+        "loads": [
+            {
+                "id": "load",
+                "currents": {
+                    "ia": [0.005, -0.0],
+                    "ib": [-0.0025, -0.0043],
+                    "ic": [-0.0025, 0.0043],
+                    "in": [-1.347e-13, 0.0],
+                },
+            }
+        ],
+    }
+
+
 def test_add_and_remove():
     ground = Ground()
     vn = 400 / np.sqrt(3)
@@ -142,73 +203,15 @@ def test_bad_networks():
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.SEVERAL_POTENTIAL_REFERENCE
 
 
-def test_solve_load_flow(small_network):
+def test_solve_load_flow(small_network, good_json_results):
     load: PowerLoad = small_network.loads["load"]
     load_bus = small_network.buses["bus"]
 
     # Good result
-    json_result = {
-        "info": {
-            "status": "success",
-            "resolutionMethod": "newton",
-            "iterations": 1,
-            "targetError": 1e-06,
-            "finalError": 6.296829377361313e-14,
-        },
-        "buses": [
-            {
-                "id": "vs",
-                "potentials": {
-                    "va": [20000.0, 0.0],
-                    "vb": [-10000.0, -17320.508076],
-                    "vc": [-10000.0, 17320.508076],
-                    "vn": [0.0, 0.0],
-                },
-            },
-            {
-                "id": "bus",
-                "potentials": {
-                    "va": [19999.949999875, 0.0],
-                    "vb": [-9999.9749999375, -17320.464774621556],
-                    "vc": [-9999.9749999375, 17320.464774621556],
-                    "vn": [1.3476526914363477e-12, 0.0],
-                },
-            },
-        ],
-        "branches": [
-            {
-                "id": "line",
-                "currents1": {
-                    "ia": [0.005, 0.0],
-                    "ib": [-0.0025, -0.0043],
-                    "ic": [-0.0025, 0.0043],
-                    "in": [-1.347e-13, 0.0],
-                },
-                "currents2": {
-                    "ia": [0.005, 0.0],
-                    "ib": [-0.0025, -0.0043],
-                    "ic": [-0.0025, 0.0043],
-                    "in": [-1.347e-13, 0.0],
-                },
-            }
-        ],
-        "loads": [
-            {
-                "id": "load",
-                "currents": {
-                    "ia": [0.005, -0.0],
-                    "ib": [-0.0025, -0.0043],
-                    "ic": [-0.0025, 0.0043],
-                    "in": [-1.347e-13, 0.0],
-                },
-            }
-        ],
-    }
-
     # Request the server
     solve_url = urljoin(ElectricalNetwork.DEFAULT_BASE_URL, "solve/")
     with requests_mock.Mocker() as m:
-        m.post(solve_url, status_code=200, json=json_result, headers={"content-type": "application/json"})
+        m.post(solve_url, status_code=200, json=good_json_results, headers={"content-type": "application/json"})
         small_network.solve_load_flow(auth=("", ""))
     assert len(load_bus.potentials) == 4
 
@@ -320,3 +323,56 @@ def test_frame(small_network):
     assert loads_gdf.shape == (1, 2)
     assert set(loads_gdf.columns) == {"n", "bus_id"}
     assert loads_gdf.index.name == "id"
+
+
+def test_buses_voltages(small_network, good_json_results):
+    assert isinstance(small_network, ElectricalNetwork)
+    small_network._dispatch_results(good_json_results)
+
+    voltage_records = [
+        {"bus_id": "vs", "phase": "an", "voltage": 20000.0 + 0.0j},
+        {"bus_id": "vs", "phase": "bn", "voltage": -10000.0 + -17320.508076j},
+        {"bus_id": "vs", "phase": "cn", "voltage": -10000.0 + 17320.508076j},
+        {"bus_id": "bus", "phase": "an", "voltage": 19999.949999875 + 0.0j},
+        {"bus_id": "bus", "phase": "bn", "voltage": -9999.9749999375 + -17320.464774621556j},
+        {"bus_id": "bus", "phase": "cn", "voltage": -9999.9749999375 + 17320.464774621556j},
+    ]
+
+    def fix_index_type(idx: pd.MultiIndex) -> pd.MultiIndex:
+        return idx.set_levels(
+            idx.levels[1].astype(pd.CategoricalDtype(["an", "bn", "cn", "ab", "bc", "ca"], ordered=True)),
+            level=1,
+        )
+
+    # Complex voltages
+    buses_voltages = small_network.buses_voltages()
+    expected_buses_voltages = pd.DataFrame.from_records(voltage_records, index=["bus_id", "phase"])
+    expected_buses_voltages.index = fix_index_type(expected_buses_voltages.index)
+
+    assert isinstance(buses_voltages, pd.DataFrame)
+    assert buses_voltages.shape == (6, 1)
+    assert buses_voltages.index.names == ["bus_id", "phase"]
+    assert list(buses_voltages.columns) == ["voltage"]
+    pd.testing.assert_frame_equal(buses_voltages, expected_buses_voltages)
+
+    # Magnitude and Angle voltages
+    buses_voltages = small_network.buses_voltages(as_magnitude_angle=True)
+    expected_buses_voltages = pd.DataFrame.from_records(
+        [
+            {
+                "bus_id": record["bus_id"],
+                "phase": record["phase"],
+                "voltage_magnitude": np.abs(record["voltage"]),
+                "voltage_angle": np.angle(record["voltage"], deg=True),
+            }
+            for record in voltage_records
+        ],
+        index=["bus_id", "phase"],
+    )
+    expected_buses_voltages.index = fix_index_type(expected_buses_voltages.index)
+
+    assert isinstance(buses_voltages, pd.DataFrame)
+    assert buses_voltages.shape == (6, 2)
+    assert buses_voltages.index.names == ["bus_id", "phase"]
+    assert list(buses_voltages.columns) == ["voltage_magnitude", "voltage_angle"]
+    pd.testing.assert_frame_equal(buses_voltages, expected_buses_voltages)

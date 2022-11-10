@@ -49,6 +49,9 @@ class AbstractLoad(Element, JsonMixin, metaclass=ABCMeta):
         self.bus = bus
         self._currents = None
 
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}({self.id!r}, n={self.n}, bus={self.bus.id!r})"
+
     def __str__(self) -> str:
         return f"id={self.id} - n={self.n}"
 

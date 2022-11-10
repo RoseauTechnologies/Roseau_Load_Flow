@@ -16,6 +16,7 @@
         "mathrm",
         "ndarray",
         "nplin",
+        "phasor",
         "pipx",
         "pmatrix",
         "pmax",

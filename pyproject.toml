@@ -17,7 +17,8 @@ exclude = [
     "**/conftest.py",
 ]
 packages = [
-    { include = "roseau/load_flow" }
+    # { include = "roseau/load_flow" }
+    { include = "roseau" }  # This should be used so that the special __init__.py is included in the wheel and sdist
 ]
 classifiers = [
     "Development Status :: 3 - Alpha",

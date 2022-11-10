@@ -64,6 +64,14 @@ class AbstractBus(Element, JsonMixin, ABC):
         self.geometry = geometry
         self._potentials = None
 
+    def __repr__(self) -> str:
+        s = f"{type(self).__name__}(id={self.id!r}, n={self.n}"
+        if self._potentials is not None:
+            s += f", potentials={self.potentials!r}"
+        if self.geometry is not None:
+            s += f", geometry={self.geometry})"
+        return s
+
     def __str__(self) -> str:
         return f"id={self.id} - n={self.n}"
 
