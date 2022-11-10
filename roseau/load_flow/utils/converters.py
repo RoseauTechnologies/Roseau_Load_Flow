@@ -1,14 +1,11 @@
 from collections.abc import Sequence
 
 import numpy as np
-import numpy.typing as npt
 import pandas as pd
 
-Vector = npt.NDArray[np.complex_]
-
 ALPHA = np.e ** (2 / 3 * np.pi * 1j)
-"""Phasor rotation operator `alpha`, which rotates a phasor vector counterclockwise by 120 degrees
-when multiplied by it."""
+"""complex: Phasor rotation operator `alpha`, which rotates a phasor vector counterclockwise by 120
+degrees when multiplied by it."""
 
 A = np.array(
     [
@@ -18,16 +15,16 @@ A = np.array(
     ],
     dtype=np.complex_,
 )
-""""A" matrix: transformation matrix from phasor to symmetrical components."""
+"""numpy.ndarray[complex]: "A" matrix: transformation matrix from phasor to symmetrical components."""
 
 
-def phasor_to_sym(v_abc: Sequence[complex]) -> Vector:
+def phasor_to_sym(v_abc: Sequence[complex]) -> np.ndarray[complex]:
     """Compute the symmetrical components `(0, +, -)` from the phasor components `(a, b, c)`."""
     v_012 = np.linalg.inv(A) @ np.asarray(v_abc).reshape((3, 1))
     return v_012
 
 
-def sym_to_phasor(v_012: Sequence[complex]) -> Vector:
+def sym_to_phasor(v_012: Sequence[complex]) -> np.ndarray[complex]:
     """Compute the phasor components `(a, b, c)` from the symmetrical components `(0, +, -)`."""
     v_abc = A @ np.asarray(v_012).reshape((3, 1))
     return v_abc
@@ -47,6 +44,8 @@ def series_phasor_to_sym(s_abc: pd.Series) -> pd.Series:
         `('zero', 'pos', 'neg')`.
 
     Example:
+        Say we have a pandas series of three-phase voltages of every bus in the network:
+
         >>> voltage
         bus_id  phase
         vs      a        200000000000.0+0.00000000j
@@ -57,7 +56,10 @@ def series_phasor_to_sym(s_abc: pd.Series) -> pd.Series:
                 c        -9999.975000+17320.464775j
         Name: voltage, dtype: complex128
 
-        >>> series_phasor_to_sym(voltage)
+        We can get the `zero`, `positive`, and `negative` sequences of the voltage using:
+
+        >>> voltage_sym_components = series_phasor_to_sym(voltage)
+        >>> voltage_sym_components
         bus_id  sequence
         bus     zero        3.183231e-12-9.094947e-13j
                 pos         1.999995e+04+3.283594e-12j
@@ -66,6 +68,15 @@ def series_phasor_to_sym(s_abc: pd.Series) -> pd.Series:
                 pos         2.000000e+04+3.283596e-12j
                 neg        -1.796880e-07-1.818989e-12j
         Name: voltage, dtype: complex128
+
+        We can now access each sequence of the symmetrical components individually:
+
+        >>> voltage_sym_components.loc[:, "zero"]  # get zero sequence values
+        bus_id
+        bus     3.183231e-12-9.094947e-13j
+        vs      5.002221e-12-9.094947e-13j
+        Name: voltage, dtype: complex128
+
     """
     if not isinstance(s_abc, pd.Series):
         raise TypeError("Input must be a pandas Series.")

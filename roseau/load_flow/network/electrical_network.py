@@ -425,6 +425,7 @@ class ElectricalNetwork:
             The dataframe of voltages of buses after a load flow has been solved.
 
         Examples:
+
             >>> net
             <ElectricalNetwork: 2 buses, 1 branch, 1 load, 2 special elements>
 
@@ -449,6 +450,7 @@ class ElectricalNetwork:
                    c               19999.95          120.0
 
             To get the symmetrical components of the voltages:
+
             >>> from roseau.load_flow.utils.converters import series_phasor_to_sym
             >>> voltage_series = net.buses_voltages()
             >>> voltage_symmetrical = series_phasor_to_sym(voltage_series)
@@ -463,6 +465,7 @@ class ElectricalNetwork:
             Name: voltage, dtype: complex128
 
             To access one of the symmetrical components sequences, say the positive sequence:
+
             >>> voltage_symmetrical.loc[:, "pos"]
             bus_id
             bus    19999.95+0.00j
