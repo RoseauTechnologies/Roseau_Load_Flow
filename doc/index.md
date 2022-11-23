@@ -5,7 +5,7 @@ line, transformer, load and flexible load models.
 
 ## Installation
 
-The first step is to install the `roseau_load_flow` package.
+The first step is to install the `roseau_load_flow` package with either of the following options.
 
 ```{toctree}
 ---
