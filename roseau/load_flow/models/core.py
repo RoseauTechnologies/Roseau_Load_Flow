@@ -33,16 +33,17 @@ class Element(ABC):
 
 
 class PotentialRef(Element):
-    """This elements defines the potential reference"""
+    """The potential reference of the network.
+
+    This element will set the origin of the potentials as `Va + Vb + Vc = 0` for delta elements
+    or `Vn = 0` for others.
+
+    Args:
+        element:
+            The element to connect to, normally the ground element.
+    """
 
     def __init__(self, element: Element, **kwargs):
-        """Potential reference element constructor, this element will set the origin of the potentials as
-        Va + Vb + Vc = 0 for delta elements or Vn = 0 for the others.
-
-        Args:
-            element:
-                The element to connect to.
-        """
         super().__init__(**kwargs)
         self.connected_elements = [element]
         element.connected_elements.append(self)
@@ -53,8 +54,9 @@ class PotentialRef(Element):
     @property
     @ureg.wraps("V", None, strict=False)
     def current(self) -> complex:
-        """Compute the sum of the currents of the connection associated to the potential reference. This sum should be
-        equal to 0 after the load flow.
+        """Compute the sum of the currents of the connection associated to the potential reference.
+
+        This sum should be equal to 0 after the load flow.
 
         Returns:
             The sum of the current of the connection.

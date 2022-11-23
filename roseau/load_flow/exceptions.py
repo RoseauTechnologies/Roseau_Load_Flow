@@ -4,7 +4,7 @@ from typing import Union
 
 
 class RoseauLoadFlowExceptionCode(Enum):
-    """An abstract class that will be used in every Roseau Packages."""
+    """Error codes used by Roseau Load Flow."""
 
     # Generic
     BAD_GEOMETRY_TYPE = auto()
@@ -107,17 +107,18 @@ class RoseauLoadFlowExceptionCode(Enum):
 
 
 class RoseauLoadFlowException(Exception):
-    """A base exception for this repository"""
+    """Base exception for Roseau Load Flow."""
 
-    def __init__(self, msg: str, code: RoseauLoadFlowExceptionCode, *args) -> None:
-        """Constructor for RoseauCoreException
+    def __init__(self, msg: str, code: RoseauLoadFlowExceptionCode, *args: object) -> None:
+        """Constructor of RoseauLoadFlowException.
 
         Args:
             msg:
-                A message in English.
+                A text description that provides the reason of the exception and potential
+                solution.
 
             code:
-                The code related to this exception.
+                The code that identifies the reason of the exception.
         """
         super().__init__(msg, code, *args)
         self.msg = msg

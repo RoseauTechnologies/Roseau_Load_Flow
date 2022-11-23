@@ -100,6 +100,7 @@ html_static_path = ["_static"]
 autoapi_dirs = ["../roseau"]
 autoapi_ignore = ["**/tests/**", "**/conftest.py"]
 autoapi_options = ["members", "undoc-members", "show-inheritance", "show-module-summary", "imported-members"]
+autoapi_python_class_content = "both"  # without this, the __init__ docstring is not shown
 
 # Extra CSS files
 html_css_files = ["css/custom.css"]

@@ -40,3 +40,9 @@ caption: API
 ---
 autoapi/roseau/load_flow/index
 ```
+
+<!-- to suppress the warning from sphinx -->
+```{toctree}
+:hidden:
+autoapi/index
+```
