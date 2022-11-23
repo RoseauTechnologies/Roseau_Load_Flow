@@ -17,24 +17,26 @@ installation
 
 ## Usage
 
-To get started you can use the following notebooks:
+To get started refer to the following tutorials:
 
 ```{toctree}
 ---
 maxdepth: 3
-caption: Notebooks
+caption: Tutorials
 ---
 notebooks/Getting_Started
 notebooks/IO
 notebooks/Advanced
 ```
 
-If you want the full documentation of all the classes and methods, you can refer to the following modules:
+## API
+If you want the full documentation of all the classes and methods, you can refer to the following
+modules:
 
 ```{toctree}
 ---
-maxdepth: 5
+maxdepth: 3
 caption: API
 ---
-autoapi/roseau/index
+autoapi/roseau/load_flow/index
 ```
