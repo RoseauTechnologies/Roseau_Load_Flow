@@ -6,10 +6,10 @@ from roseau.load_flow.models import (
     AbstractBranch,
     AbstractBus,
     AbstractLoad,
-    AbstractTransformer,
     Element,
     Line,
     LineCharacteristics,
+    Transformer,
     TransformerCharacteristics,
 )
 
@@ -65,7 +65,7 @@ def network_from_dict(
             line_types,
             transformer_types,
         )
-        if isinstance(branches_dict[branch_data["id"]], AbstractTransformer):
+        if isinstance(branches_dict[branch_data["id"]], Transformer):
             if bus2.n == 4:
                 ground.connect(bus2)
             else:
@@ -111,7 +111,7 @@ def network_to_dict(en: "ElectricalNetwork") -> dict[str, Any]:
                     msg=msg, code=RoseauLoadFlowExceptionCode.JSON_LINE_CHARACTERISTICS_DUPLICATES
                 )
             line_characteristics_dict[branch.line_characteristics.type_name] = branch.line_characteristics
-        elif isinstance(branch, AbstractTransformer):
+        elif isinstance(branch, Transformer):
             type_name = branch.transformer_characteristics.type_name
             if (
                 type_name in transformer_characteristics_dict

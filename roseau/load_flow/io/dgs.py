@@ -10,7 +10,6 @@ from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowE
 from roseau.load_flow.models import (
     AbstractBranch,
     AbstractBus,
-    AbstractTransformer,
     Bus,
     Ground,
     Line,
@@ -18,6 +17,7 @@ from roseau.load_flow.models import (
     PotentialRef,
     PowerLoad,
     Switch,
+    Transformer,
     TransformerCharacteristics,
     VoltageSource,
 )
@@ -177,7 +177,7 @@ def network_from_dgs(  # noqa: C901
         for idx in elm_tr.index:
             type_id = elm_tr.at[idx, "typ_id"]  # id of the line type
             tap = 1.0 + elm_tr.at[idx, "nntap"] * transformers_tap[type_id] / 100
-            branches[idx] = AbstractTransformer.from_dict(
+            branches[idx] = Transformer.from_dict(
                 id=idx,
                 transformer_types=transformers_data,
                 type_name=type_id,
