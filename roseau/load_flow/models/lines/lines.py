@@ -6,7 +6,7 @@ from shapely.geometry import LineString, Point
 from shapely.geometry.base import BaseGeometry
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
-from roseau.load_flow.models.buses import AbstractBus, VoltageSource
+from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import AbstractBranch, Ground
 from roseau.load_flow.models.lines.line_characteristics import LineCharacteristics
 from roseau.load_flow.utils.types import BranchType
@@ -20,9 +20,7 @@ class Switch(AbstractBranch):
 
     branch_type = BranchType.SWITCH
 
-    def __init__(
-        self, id: Any, n: int, bus1: AbstractBus, bus2: AbstractBus, geometry: Optional[Point] = None, **kwargs
-    ) -> None:
+    def __init__(self, id: Any, n: int, bus1: Bus, bus2: Bus, geometry: Optional[Point] = None, **kwargs) -> None:
         """Switch constructor.
 
         Args:
@@ -62,7 +60,7 @@ class Switch(AbstractBranch):
             element = elements.pop(-1)
             visited_1.add(element)
             for e in element.connected_elements:
-                if e not in visited_1 and (isinstance(e, AbstractBus) or isinstance(e, Switch)) and e != self:
+                if e not in visited_1 and (isinstance(e, Bus) or isinstance(e, Switch)) and e != self:
                     elements.append(e)
         visited_2 = set()
         elements = [self.connected_elements[1]]
@@ -70,7 +68,7 @@ class Switch(AbstractBranch):
             element = elements.pop(-1)
             visited_2.add(element)
             for e in element.connected_elements:
-                if e not in visited_2 and (isinstance(e, AbstractBus) or isinstance(e, Switch)) and e != self:
+                if e not in visited_2 and (isinstance(e, Bus) or isinstance(e, Switch)) and e != self:
                     elements.append(e)
         if visited_1.intersection(visited_2):
             msg = f"There is a loop of switch involving the switch {self.id!r}. It is not allowed."
@@ -81,7 +79,12 @@ class Switch(AbstractBranch):
         """Check that we can connect both elements."""
         element1 = self.connected_elements[0]
         element2 = self.connected_elements[1]
-        if isinstance(element1, VoltageSource) and isinstance(element2, VoltageSource):
+        if (
+            isinstance(element1, Bus)
+            and element1.type == "slack"
+            and isinstance(element2, Bus)
+            and element2.type == "slack"
+        ):
             msg = (
                 f"The voltage sources {element1.id!r} and {element2.id!r} are "
                 f"connected with the switch {self.id!r}. It is not allowed."
@@ -123,8 +126,8 @@ class Line(AbstractBranch):
         self,
         id: Any,
         n: int,
-        bus1: AbstractBus,
-        bus2: AbstractBus,
+        bus1: Bus,
+        bus2: Bus,
         line_characteristics: LineCharacteristics,
         length: float,
         ground: Optional[Ground] = None,
@@ -217,8 +220,8 @@ class Line(AbstractBranch):
     def from_dict(
         cls,
         id: Any,
-        bus1: AbstractBus,
-        bus2: AbstractBus,
+        bus1: Bus,
+        bus2: Bus,
         length: float,
         line_types: dict[str, LineCharacteristics],
         type_name: str,

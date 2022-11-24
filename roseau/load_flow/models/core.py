@@ -13,7 +13,7 @@ from roseau.load_flow.utils.json_mixin import JsonMixin
 from roseau.load_flow.utils.units import ureg
 
 if TYPE_CHECKING:
-    from roseau.load_flow.models.buses import AbstractBus
+    from roseau.load_flow.models.buses import Bus
     from roseau.load_flow.models.lines import Line, Switch
     from roseau.load_flow.models.transformers import Transformer
 
@@ -74,7 +74,7 @@ class Ground(Element):
     def __repr__(self) -> str:
         return f"{type(self).__name__}()"
 
-    def connect(self, bus: "AbstractBus"):
+    def connect(self, bus: "Bus"):
         """Connect the ground to the bus neutral.
 
         Args:
@@ -114,8 +114,8 @@ class AbstractBranch(Element, JsonMixin):
         id: Any,
         n1: int,
         n2: int,
-        bus1: "AbstractBus",
-        bus2: "AbstractBus",
+        bus1: "Bus",
+        bus2: "Bus",
         geometry: Optional[BaseGeometry] = None,
         **kwargs,
     ) -> None:

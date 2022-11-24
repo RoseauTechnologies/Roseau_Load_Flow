@@ -10,7 +10,6 @@ from roseau.load_flow.models import (
     PotentialRef,
     Transformer,
     TransformerCharacteristics,
-    VoltageSource,
 )
 from roseau.load_flow.network import ElectricalNetwork
 
@@ -19,12 +18,7 @@ def test_to_dict():
     ground = Ground()
     vn = 400 / np.sqrt(3)
     voltages = [vn, vn * np.exp(-2 / 3 * np.pi * 1j), vn * np.exp(2 / 3 * np.pi * 1j)]
-    vs = VoltageSource(
-        id="source",
-        n=4,
-        ground=ground,
-        source_voltages=voltages,
-    )
+    vs = Bus(id="source", n=4, ground=ground, source_voltages=voltages)
     bus = Bus(id="load bus", n=4)
     ground.connect(bus)
     p_ref = PotentialRef(element=ground)

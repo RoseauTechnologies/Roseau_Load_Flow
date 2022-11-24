@@ -18,7 +18,6 @@ from roseau.load_flow.models import (
     Switch,
     Transformer,
     TransformerCharacteristics,
-    VoltageSource,
 )
 from roseau.load_flow.network import ElectricalNetwork
 
@@ -27,7 +26,7 @@ from roseau.load_flow.network import ElectricalNetwork
 def small_network() -> ElectricalNetwork:
     # Build a small network
     ground = Ground()
-    vs = VoltageSource(
+    vs = Bus(
         id="vs",
         n=4,
         ground=ground,
@@ -119,7 +118,7 @@ def test_add_and_remove():
     ground = Ground()
     vn = 400 / np.sqrt(3)
     voltages = [vn, vn * np.exp(-2 / 3 * np.pi * 1j), vn * np.exp(2 / 3 * np.pi * 1j)]
-    vs = VoltageSource(
+    vs = Bus(
         id="source",
         n=4,
         ground=ground,
@@ -171,7 +170,9 @@ def test_bad_networks():
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.NO_VOLTAGE_SOURCE
 
     # Bad constructor
-    vs = VoltageSource("vs", 4, ground, [20000.0 + 0.0j, -10000.0 - 17320.508076j, -10000.0 + 17320.508076j])
+    vs = Bus(
+        "vs", n=4, ground=ground, source_voltages=[20000.0 + 0.0j, -10000.0 - 17320.508076j, -10000.0 + 17320.508076j]
+    )
     switch = Switch("switch", 4, vs, bus1)
     with pytest.raises(RoseauLoadFlowException) as e:
         ElectricalNetwork([vs, bus1], [line, switch], [], [ground, p_ref])  # no bus2

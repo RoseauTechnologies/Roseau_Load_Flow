@@ -1,5 +1,4 @@
 import logging
-from abc import ABC
 from collections.abc import Sequence
 from typing import Any, Optional
 
@@ -16,21 +15,30 @@ from roseau.load_flow.utils.units import ureg
 logger = logging.getLogger(__name__)
 
 
-class AbstractBus(Element, JsonMixin, ABC):
-    """This is an abstract class for all different types of buses."""
+class Bus(Element, JsonMixin):
+    """An electrical bus.
 
-    _voltage_source_class: Optional[type["VoltageSource"]] = None
-    _bus_class: Optional[type["Bus"]] = None
+    The voltage equations are the following:
+
+    .. math::
+        \\left(V_{\\mathrm{a}}-V_{\\mathrm{n}}\\right) &= U_{\\mathrm{a}} \\\\
+        \\left(V_{\\mathrm{b}}-V_{\\mathrm{n}}\\right) &= U_{\\mathrm{b}} \\\\
+        \\left(V_{\\mathrm{c}}-V_{\\mathrm{n}}\\right) &= U_{\\mathrm{c}}
+
+    Where $U$ is the voltage and $V$ is the node potential.
+    """
 
     def __init__(
         self,
         id: Any,
         n: int,
-        potentials: Optional[Sequence[complex]] = None,
         geometry: Optional[Point] = None,
+        potentials: Optional[Sequence[complex]] = None,
+        ground: Optional[Ground] = None,
+        source_voltages: Optional[Sequence[complex]] = None,
         **kwargs,
     ) -> None:
-        """Abstract bus constructor.
+        """Bus constructor.
 
         Args:
             id:
@@ -39,15 +47,40 @@ class AbstractBus(Element, JsonMixin, ABC):
             n:
                 Number of ports ie number of phases.
 
+            geometry:
+                The geometry of the bus.
+
             potentials:
                 List of initial potentials of each phase.
 
-            geometry:
-                The geometry of the bus.
+            ground:
+                The ground of the bus.
+
+            source_voltages:
+                The source voltages of the bus. If provided, it is used to fix the bus voltages.
+                In other terms, the bus becomes a slack bus which by definition a bus with a known
+                voltage. A non-slack bus must not set a source_voltages.
         """
         super().__init__(**kwargs)
         self.id = id
         self.n = n
+        if source_voltages is None:
+            # The bus is a normal bus (non slack): PV bus or PQ bus.
+            self.type = "bus" if n < 4 else "bus_neutral"
+        else:
+            # The bus is a slack bus: The voltage is known and fixed.
+            self.type = "slack"
+            if len(source_voltages) != n - 1:
+                msg = f"Incorrect number of voltages: {len(source_voltages)} instead of {n - 1}"
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg, code=RoseauLoadFlowExceptionCode.BAD_VOLTAGES_SIZE)
+
+            if isinstance(source_voltages, Quantity):
+                source_voltages = source_voltages.m_as("V")
+
+            if ground is not None:
+                ground.connected_elements.append(self)
+                self.connected_elements.append(ground)
 
         if potentials is None:
             potentials = np.zeros(n, dtype=complex)
@@ -61,6 +94,7 @@ class AbstractBus(Element, JsonMixin, ABC):
                 potentials = potentials.m_as("V")
             self.initialized = True
         self.initial_potentials = np.asarray(potentials)
+        self.source_voltages = source_voltages
         self.geometry = geometry
         self._potentials = None
 
@@ -106,104 +140,18 @@ class AbstractBus(Element, JsonMixin, ABC):
         else:
             return self._potentials[: self.n - 1] - self._potentials[self.n - 1]  # an, bn, cn
 
-    #
-    # Json Mixin interface
-    #
-    @classmethod
-    def from_dict(cls, data, ground):
-        if "geometry" not in data:
-            geometry = None
-        elif isinstance(data["geometry"], str):
-            geometry = shapely.wkt.loads(data["geometry"])
-        else:
-            geometry = shape(data["geometry"])
-
-        potentials = data["potentials"] if "potentials" in data else None
-        if data["type"] == "slack":
-            v = data["voltages"]
-            voltages = [v["va"][0] + 1j * v["va"][1], v["vb"][0] + 1j * v["vb"][1], v["vc"][0] + 1j * v["vc"][1]]
-            return cls._voltage_source_class(
-                id=data["id"], n=4, ground=ground, source_voltages=voltages, potentials=potentials, geometry=geometry
-            )
-        else:
-            if data["type"] not in ["bus", "bus_neutral"]:
-                msg = f"Bad bus type for bus {data['id']}: {data['type']}"
-                logger.error(msg)
-                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_BUS_TYPE)
-            if "neutral" in data["type"]:
-                bus = cls._bus_class(id=data["id"], n=4, potentials=potentials, geometry=geometry)
-            else:
-                bus = cls._bus_class(id=data["id"], n=3, potentials=potentials, geometry=geometry)
-            return bus
-
-
-class VoltageSource(AbstractBus):
-    """A VoltageSource bus.
-
-    The equations are the following:
-
-    .. math::
-        \\left(V_{\\mathrm{a}}-V_{\\mathrm{n}}\\right) &= U_{\\mathrm{a}} \\\\
-        \\left(V_{\\mathrm{b}}-V_{\\mathrm{n}}\\right) &= U_{\\mathrm{b}} \\\\
-        \\left(V_{\\mathrm{c}}-V_{\\mathrm{n}}\\right) &= U_{\\mathrm{c}}
-    """
-
-    def __init__(
-        self,
-        id: Any,
-        n: int,
-        ground: Optional[Ground],
-        source_voltages: Sequence[complex],
-        potentials: Optional[Sequence[complex]] = None,
-        geometry: Optional[Point] = None,
-        **kwargs,
-    ):
-        """VoltageSource constructor.
-
-        Args:
-            id:
-                The identifier of the bus.
-
-            n:
-                Number of ports.
-
-            ground:
-                The ground to connect the neutral to.
-
-            source_voltages:
-                List of the voltages of the source (V).
-
-            potentials:
-                List of initial potentials of each phase (V).
-
-            geometry:
-                The geometry of the bus.
-        """
-        super().__init__(
-            id=id, n=n, ground=ground, voltages=source_voltages, potentials=potentials, geometry=geometry, **kwargs
-        )
-        if len(source_voltages) != n - 1:
-            msg = f"Incorrect number of voltages: {len(source_voltages)} instead of {n - 1}"
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_VOLTAGES_SIZE)
-
-        if isinstance(source_voltages, Quantity):
-            source_voltages = source_voltages.m_as("V")
-
-        if ground is not None:
-            ground.connected_elements.append(self)
-            self.connected_elements.append(ground)
-
-        self.source_voltages = source_voltages
-
     @ureg.wraps(None, (None, "V"), strict=False)
     def update_source_voltages(self, source_voltages: Sequence[complex]) -> None:
-        """Change the voltages of the source
+        """Change the voltages of the source; only possible with a slack bus.
 
         Args:
             source_voltages:
                 The new voltages.
         """
+        if self.type != "slack":
+            msg = "Cannot update the source voltages of a non-slack bus"
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg, code=RoseauLoadFlowExceptionCode.BAD_VOLTAGES_SOURCES_CONNECTION)
         if len(source_voltages) != self.n - 1:
             msg = f"Incorrect number of voltages: {len(source_voltages)} instead of {self.n - 1}"
             logger.error(msg)
@@ -214,63 +162,52 @@ class VoltageSource(AbstractBus):
     #
     # Json Mixin interface
     #
+    @classmethod
+    def from_dict(cls, data: dict[str, Any], ground: Optional[Ground]) -> "Bus":
+        if "geometry" not in data:
+            geometry = None
+        elif isinstance(data["geometry"], str):
+            geometry = shapely.wkt.loads(data["geometry"])
+        else:
+            geometry = shape(data["geometry"])
+
+        potentials = data.get("potentials")
+
+        if data["type"] == "slack":
+            n = 4
+            v = data["voltages"]
+            voltages = [complex(*v["va"]), complex(*v["vb"]), complex(*v["vc"])]
+        elif data["type"] not in ("bus", "bus_neutral"):
+            n = 4 if "neutral" in data["type"] else 3
+            voltages = None
+        else:
+            msg = f"Bad bus type for bus {data['id']}: {data['type']}"
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_BUS_TYPE)
+
+        return cls(
+            id=data["id"],
+            n=n,
+            ground=ground,
+            potentials=potentials,
+            geometry=geometry,
+            source_voltages=voltages,
+        )
+
     def to_dict(self) -> dict[str, Any]:
-        va = self.source_voltages[0]
-        vb = self.source_voltages[1]
-        vc = self.source_voltages[2]
-        res = {
-            "id": self.id,
-            "type": "slack",
-            "loads": [],
-            "voltages": {
-                "va": [va.real, va.imag],
-                "vb": [vb.real, vb.imag],
-                "vc": [vc.real, vc.imag],
-            },
-        }
+        res = {"id": self.id, "type": self.type, "loads": []}
+        if self.type == "slack":
+            assert self.source_voltages is not None
+            va = self.source_voltages[0]
+            vb = self.source_voltages[1]
+            vc = self.source_voltages[2]
+            res["voltages"] = (
+                {
+                    "va": [va.real, va.imag],
+                    "vb": [vb.real, vb.imag],
+                    "vc": [vc.real, vc.imag],
+                },
+            )
         if self.geometry is not None:
             res["geometry"] = self.geometry.__geo_interface__
         return res
-
-
-class Bus(AbstractBus):
-    """This class is used for a general purpose bus."""
-
-    def __init__(
-        self,
-        id: Any,
-        n: int,
-        potentials: Optional[Sequence[complex]] = None,
-        geometry: Optional[Point] = None,
-        **kwargs,
-    ) -> None:
-        """Bus constructor.
-
-        Args:
-            id:
-                The identifier of the bus.
-
-            n:
-                Number of ports.
-
-            potentials:
-                List of initial potentials of each phase (V)
-
-            geometry:
-                The geometry of the bus.
-        """
-        super().__init__(id=id, n=n, potentials=potentials, geometry=geometry, **kwargs)
-
-    #
-    # Json Mixin interface
-    #
-    def to_dict(self) -> dict[str, Any]:
-        bus_type = "bus" if self.n == 3 else "bus_neutral"
-        res = {"id": self.id, "type": bus_type, "loads": []}
-        if self.geometry is not None:
-            res["geometry"] = self.geometry.__geo_interface__
-        return res
-
-
-AbstractBus._voltage_source_class = VoltageSource
-AbstractBus._bus_class = Bus

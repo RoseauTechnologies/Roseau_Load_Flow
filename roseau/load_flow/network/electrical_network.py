@@ -19,15 +19,14 @@ from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowE
 from roseau.load_flow.io import network_from_dgs, network_from_dict, network_to_dict
 from roseau.load_flow.models import (
     AbstractBranch,
-    AbstractBus,
     AbstractLoad,
+    Bus,
     Element,
     FlexibleLoad,
     Ground,
     PotentialRef,
     PowerLoad,
     Transformer,
-    VoltageSource,
 )
 from roseau.load_flow.utils import ureg
 
@@ -44,7 +43,7 @@ class ElectricalNetwork:
     # Default classes to use
     branch_class = AbstractBranch
     load_class = AbstractLoad
-    bus_class = AbstractBus
+    bus_class = Bus
     ground_class = Ground
     pref_class = PotentialRef
 
@@ -53,7 +52,7 @@ class ElectricalNetwork:
     #
     def __init__(
         self,
-        buses: Union[list[AbstractBus], dict[Any, AbstractBus]],
+        buses: Union[list[Bus], dict[Any, Bus]],
         branches: Union[list[AbstractBranch], dict[Any, AbstractBranch]],
         loads: Union[list[AbstractLoad], dict[Any, AbstractLoad]],
         special_elements: list[Element],
@@ -102,7 +101,7 @@ class ElectricalNetwork:
                 loads_dict[load.id] = load
             loads = loads_dict
 
-        self.buses: dict[Any, AbstractBus] = buses
+        self.buses: dict[Any, Bus] = buses
         self.branches: dict[Any, AbstractBranch] = branches
         self.loads: dict[Any, AbstractLoad] = loads
         self.special_elements: list[Element] = special_elements
@@ -130,14 +129,14 @@ class ElectricalNetwork:
         )
 
     @classmethod
-    def from_element(cls, initial_bus: AbstractBus) -> "ElectricalNetwork":
+    def from_element(cls, initial_bus: Bus) -> "ElectricalNetwork":
         """ElectricalNetwork constructor. Construct the network from only one element and add the others automatically
 
         Args:
             initial_bus:
                 Any bus of the network
         """
-        buses: list[AbstractBus] = []
+        buses: list[Bus] = []
         branches: list[AbstractBranch] = []
         loads: list[AbstractLoad] = []
         specials: list[Element] = []
@@ -146,7 +145,7 @@ class ElectricalNetwork:
         while elements:
             e = elements.pop(-1)
             visited_elements.append(e)
-            if isinstance(e, AbstractBus):
+            if isinstance(e, Bus):
                 buses.append(e)
             elif isinstance(e, AbstractBranch):
                 branches.append(e)
@@ -612,7 +611,7 @@ class ElectricalNetwork:
         """
         for bus_id, value in voltages.items():
             voltage_source = self.buses[bus_id]
-            if not isinstance(voltage_source, VoltageSource):
+            if voltage_source.type != "slack":
                 msg = "Only voltage sources can have their voltages updated."
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT)
@@ -625,7 +624,7 @@ class ElectricalNetwork:
             element:
                 The element to add.
         """
-        if isinstance(element, AbstractBus):
+        if isinstance(element, Bus):
             self.buses[element.id] = element
         elif isinstance(element, AbstractLoad):
             self.loads[element.id] = element
@@ -701,8 +700,9 @@ class ElectricalNetwork:
 
         found_source = False
         for element in elements:
-            if isinstance(element, VoltageSource):
+            if isinstance(element, Bus) and element.type == "slack":
                 found_source = True
+                break
         if not found_source:
             msg = "There is no voltage source provided in the network, you must provide at least one."
             logger.error(msg)

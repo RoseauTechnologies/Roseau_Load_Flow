@@ -9,7 +9,6 @@ import pandas as pd
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models import (
     AbstractBranch,
-    AbstractBus,
     Bus,
     Ground,
     Line,
@@ -19,7 +18,6 @@ from roseau.load_flow.models import (
     Switch,
     Transformer,
     TransformerCharacteristics,
-    VoltageSource,
 )
 from roseau.load_flow.models.core import Element
 from roseau.load_flow.models.loads.loads import AbstractLoad
@@ -30,7 +28,7 @@ logger = logging.getLogger(__name__)
 
 def network_from_dgs(  # noqa: C901
     filename: Union[str, Path]
-) -> tuple[dict[str, AbstractBus], dict[str, AbstractBranch], dict[str, AbstractLoad], list[Element]]:
+) -> tuple[dict[str, Bus], dict[str, AbstractBranch], dict[str, AbstractLoad], list[Element]]:
     """Create the electrical elements from a JSON file in DGS format to create an electrical network.
 
     Args:
@@ -81,7 +79,7 @@ def network_from_dgs(  # noqa: C901
         tap = elm_xnet.at[bus_id, "usetp"]  # tap voltage (p.u.)
         # the voltage source "erases" the buse to which it is connected
         voltages = [un * tap, un * np.exp(-np.pi * 2 / 3 * 1j) * tap, un * np.exp(np.pi * 2 / 3 * 1j) * tap]
-        buses[source_bus] = VoltageSource(
+        buses[source_bus] = Bus(
             id=source_bus,
             n=4,
             ground=ground,
@@ -315,7 +313,7 @@ def _read_dgs_json_file(filename: Union[str, Path]):
 def _generate_loads(
     elm_lod: pd.DataFrame,
     loads: dict[str, AbstractLoad],
-    buses: dict[str, AbstractBus],
+    buses: dict[str, Bus],
     sta_cubic: pd.DataFrame,
     factor: float,
     production: bool,

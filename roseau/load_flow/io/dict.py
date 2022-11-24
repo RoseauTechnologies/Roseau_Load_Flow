@@ -4,8 +4,8 @@ from typing import Any, TYPE_CHECKING
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models import (
     AbstractBranch,
-    AbstractBus,
     AbstractLoad,
+    Bus,
     Element,
     Line,
     LineCharacteristics,
@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 def network_from_dict(
     data: dict[str, Any], en_class: type["ElectricalNetwork"]
-) -> tuple[dict[str, AbstractBus], dict[str, AbstractBranch], dict[str, AbstractLoad], list[Element]]:
+) -> tuple[dict[str, Bus], dict[str, AbstractBranch], dict[str, AbstractLoad], list[Element]]:
     """Create the electrical elements from a dictionary to create an electrical network.
 
     Args:
