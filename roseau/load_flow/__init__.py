@@ -14,7 +14,6 @@ from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowE
 from roseau.load_flow.models import (
     AbstractBranch,
     AbstractBus,
-    AbstractLine,
     AbstractLoad,
     AbstractTransformer,
     AdmittanceLoad,
@@ -31,12 +30,11 @@ from roseau.load_flow.models import (
     FlexibleParameter,
     Ground,
     ImpedanceLoad,
+    Line,
     LineCharacteristics,
     PotentialRef,
     PowerLoad,
     Projection,
-    ShuntLine,
-    SimplifiedLine,
     Switch,
     TransformerCharacteristics,
     VoltageSource,
@@ -71,9 +69,7 @@ __all__ = [
     "AbstractBranch",
     # Lines
     "Switch",
-    "AbstractLine",
-    "ShuntLine",
-    "SimplifiedLine",
+    "Line",
     "LineCharacteristics",
     # Loads
     "AbstractLoad",

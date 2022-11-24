@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from roseau.load_flow import ShuntLine
+from roseau.load_flow import Line
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models import (
     Bus,
@@ -33,8 +33,8 @@ def test_to_dict():
     lc1 = LineCharacteristics("test", z_line=np.eye(4, dtype=complex), y_shunt=np.eye(4, dtype=complex))
     lc2 = LineCharacteristics("test", z_line=np.eye(4, dtype=complex), y_shunt=np.eye(4, dtype=complex) * 1.1)
 
-    line1 = ShuntLine(id="line1", n=4, bus1=vs, bus2=bus, ground=ground, line_characteristics=lc1, length=10)
-    line2 = ShuntLine(id="line2", n=4, bus1=vs, bus2=bus, ground=ground, line_characteristics=lc2, length=10)
+    line1 = Line(id="line1", n=4, bus1=vs, bus2=bus, ground=ground, line_characteristics=lc1, length=10)
+    line2 = Line(id="line2", n=4, bus1=vs, bus2=bus, ground=ground, line_characteristics=lc2, length=10)
     en = ElectricalNetwork([vs, bus], [line1, line2], [], [p_ref, ground])
     with pytest.raises(RoseauLoadFlowException) as e:
         en.to_dict()

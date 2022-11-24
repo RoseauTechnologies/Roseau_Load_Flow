@@ -90,12 +90,34 @@ class Switch(AbstractBranch):
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_VOLTAGES_SOURCES_CONNECTION)
 
 
-class AbstractLine(AbstractBranch):
-    """An abstract class for all lines of this package."""
+class Line(AbstractBranch):
+    """An electrical line PI model with series impedance and optional shunt admittance.
+
+    .. math::
+        V_1 &= a \\cdot V_2 - b \\cdot I_2 + g \\cdot V_g \\\\
+        I_1 &= c \\cdot V_2 - d \\cdot I_2 + h \\cdot V_g \\\\
+        I_g &= f^t \\cdot \\left(V_1 + V_2 - 2\\cdot V_g\\right)
+
+    where
+
+    .. math::
+        a &= \\mathcal{I}_5 + \\dfrac{1}{2} \\cdot Z \\cdot Y  \\\\
+        b &= Z  \\\\
+        c &= Y + \\dfrac{1}{4}\\cdot Y \\cdot Z \\cdot Y  \\\\
+        d &= \\mathcal{I}_5 + \\dfrac{1}{2} \\cdot Y \\cdot Z  \\\\
+        f &= -\\dfrac{1}{2} \\cdot \\begin{pmatrix} y_{ag} & y_{bg} & y_{cg} &y_{ng} \\end{pmatrix} ^t  \\\\
+        g &= Z \\cdot f  \\\\
+        h &= 2 \\cdot f + \\frac{1}{2}\\cdot Y \\cdot Z \\cdot f  \\\\
+
+    If the line does not define a shunt admittance, the following simplified equations are used
+    instead:
+
+    .. math::
+        \\left(V_1 - V_2\\right) &= Z \\cdot I_1 \\\\
+        I_2 &= -I_1
+    """
 
     branch_type = BranchType.LINE
-    _simplified_line_class: Optional[type["SimplifiedLine"]] = None
-    _shunt_line_class: Optional[type["ShuntLine"]] = None
 
     def __init__(
         self,
@@ -105,6 +127,7 @@ class AbstractLine(AbstractBranch):
         bus2: AbstractBus,
         line_characteristics: LineCharacteristics,
         length: float,
+        ground: Optional[Ground] = None,
         geometry: Optional[LineString] = None,
         **kwargs,
     ):
@@ -112,16 +135,16 @@ class AbstractLine(AbstractBranch):
 
         Args:
             id:
-                The id of the branch.
+                The id of the line.
 
             n:
-                number of phases of the line.
+                The number of phases of the line.
 
             bus1:
-                bus to connect to the line.
+                The first bus (aka `"from_bus"`) to connect to the line.
 
             bus2:
-                bus to connect to the line.
+                The second bus (aka `"to_bus"`) to connect to the line.
 
             line_characteristics:
                 The characteristics of the line.
@@ -129,11 +152,14 @@ class AbstractLine(AbstractBranch):
             length:
                 The length of the line in km.
 
+            ground:
+                The ground element attached to the line if it has shunt admittance.
+
             geometry:
-                The geometry of the line.
+                The geometry of the line i.e. the linestring.
         """
         if geometry is not None and not isinstance(geometry, LineString):
-            msg = f"The geometry for a {type(self)} must be a linestring: {geometry.geom_type} provided."
+            msg = f"The geometry for a {type(self).__name__} must be a linestring: {geometry.geom_type} provided."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_GEOMETRY_TYPE)
 
@@ -144,17 +170,27 @@ class AbstractLine(AbstractBranch):
             )
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Z_LINE_SHAPE)
-        if line_characteristics.y_shunt is not None and line_characteristics.y_shunt.shape != (n, n):
-            msg = (
-                f"Incorrect y_shunt dimensions for line {id!r}: {line_characteristics.y_shunt.shape} instead of "
-                f"({n}, {n})"
-            )
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Y_SHUNT_SHAPE)
 
         super().__init__(n1=n, n2=n, bus1=bus1, bus2=bus2, id=id, geometry=geometry, **kwargs)
+
+        if line_characteristics.y_shunt is not None:
+            if line_characteristics.y_shunt.shape != (n, n):
+                msg = (
+                    f"Incorrect y_shunt dimensions for line {id!r}: {line_characteristics.y_shunt.shape} instead of "
+                    f"({n}, {n})"
+                )
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Y_SHUNT_SHAPE)
+
+            if ground is None:
+                msg = f"The ground element must be provided for line {id!r} with shunt admittance."
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_TYPE)
+            self.connected_elements.append(ground)
+            ground.connected_elements.append(self)
         self.n = n
         self.line_characteristics = line_characteristics
+        self.ground = ground
 
         if isinstance(length, Quantity):
             length = length.m_as("km")
@@ -168,6 +204,10 @@ class AbstractLine(AbstractBranch):
                 The line characteristics of the new line parameters.
         """
         self.line_characteristics = line_characteristics
+        if self.line_characteristics.y_shunt is not None:
+            if self.ground is not None and self.ground not in self.connected_elements:
+                self.connected_elements.append(self.ground)
+                self.ground.connected_elements.append(self)
 
     #
     # Json Mixin interface
@@ -184,7 +224,7 @@ class AbstractLine(AbstractBranch):
         type_name: str,
         ground: Optional[Ground] = None,
         geometry: Optional[BaseGeometry] = None,
-    ) -> "AbstractLine":
+    ) -> "Line":
         """Line constructor from dict.
 
         Args:
@@ -207,7 +247,7 @@ class AbstractLine(AbstractBranch):
                 Length of the line (km).
 
             ground:
-                The ground (optional for SimplifiedLine models).
+                The ground (optional for line models without a shunt admittance).
 
             geometry:
                 The geometry of the line.
@@ -217,27 +257,16 @@ class AbstractLine(AbstractBranch):
         """
         line_characteristics = line_types[type_name]
         n = line_characteristics.z_line.shape[0]
-        if line_characteristics.y_shunt is None:
-            return cls._simplified_line_class(
-                id=id,
-                n=n,
-                bus1=bus1,
-                bus2=bus2,
-                line_characteristics=line_characteristics,
-                length=length,
-                geometry=geometry,
-            )
-        else:
-            return cls._shunt_line_class(
-                id=id,
-                n=n,
-                bus1=bus1,
-                bus2=bus2,
-                ground=ground,
-                line_characteristics=line_characteristics,
-                length=length,
-                geometry=geometry,
-            )
+        return cls(
+            id=id,
+            n=n,
+            bus1=bus1,
+            bus2=bus2,
+            ground=ground,
+            line_characteristics=line_characteristics,
+            length=length,
+            geometry=geometry,
+        )
 
     def to_dict(self) -> dict[str, Any]:
         res = super().to_dict()
@@ -249,158 +278,3 @@ class AbstractLine(AbstractBranch):
             }
         )
         return res
-
-
-class SimplifiedLine(AbstractLine):
-    """A line without shunt elements.
-
-    .. math::
-        \\left(V_1 - V_2\\right) &= Z \\cdot I_1 \\\\
-        I_2 &= -I_1
-    """
-
-    def __init__(
-        self,
-        id: Any,
-        n: int,
-        bus1: AbstractBus,
-        bus2: AbstractBus,
-        line_characteristics: LineCharacteristics,
-        length: float,
-        geometry: Optional[BaseGeometry] = None,
-        **kwargs,
-    ) -> None:
-        """SimplifiedLine constructor.
-
-        Args:
-            id:
-                The id of the branch.
-
-            n:
-                Number of phases of the line.
-
-            bus1:
-                Bus to connect to the line.
-
-            bus2:
-                Bus to connect to the line.
-
-            line_characteristics:
-                The characteristics of the line.
-
-            length:
-                The length of the line in km.
-
-            geometry:
-                The geometry of the line.
-        """
-        super().__init__(
-            n=n,
-            bus1=bus1,
-            bus2=bus2,
-            id=id,
-            length=length,
-            line_characteristics=line_characteristics,
-            geometry=geometry,
-            **kwargs,
-        )
-
-        if line_characteristics.y_shunt is not None:
-            logger.warning(
-                f"The simplified line {self.id!r} has been given a line characteristic "
-                f"{self.line_characteristics.type_name} with a shunt. The shunt part will be ignored."
-            )
-
-    def update_characteristics(self, line_characteristics: LineCharacteristics) -> None:
-        """Change the line parameters.
-
-        Args:
-            line_characteristics:
-                The line characteristics of the new line parameters.
-        """
-        if line_characteristics.y_shunt is not None:
-            logger.warning(
-                f"The simplified line {self.id!r} has been given a line characteristic "
-                f"{self.line_characteristics.type_name} with a shunt. The shunt part will be ignored."
-            )
-
-        super().update_characteristics(line_characteristics=line_characteristics)
-
-
-class ShuntLine(AbstractLine):
-    """A PI line model
-
-    .. math::
-        V_1 &= a \\cdot V_2 - b \\cdot I_2 + g \\cdot V_g \\\\
-        I_1 &= c \\cdot V_2 - d \\cdot I_2 + h \\cdot V_g \\\\
-        I_g &= f^t \\cdot \\left(V_1 + V_2 - 2\\cdot V_g\\right)
-
-    with
-
-    .. math::
-        a &= \\mathcal{I}_5 + \\dfrac{1}{2} \\cdot Z \\cdot Y  \\\\
-        b &= Z  \\\\
-        c &= Y + \\dfrac{1}{4}\\cdot Y \\cdot Z \\cdot Y  \\\\
-        d &= \\mathcal{I}_5 + \\dfrac{1}{2} \\cdot Y \\cdot Z  \\\\
-        f &= -\\dfrac{1}{2} \\cdot \\begin{pmatrix} y_{ag} & y_{bg} & y_{cg} &y_{ng} \\end{pmatrix} ^t  \\\\
-        g &= Z \\cdot f  \\\\
-        h &= 2 \\cdot f + \\frac{1}{2}\\cdot Y \\cdot Z \\cdot f  \\\\
-
-    """
-
-    def __init__(
-        self,
-        id: Any,
-        n: int,
-        bus1: AbstractBus,
-        bus2: AbstractBus,
-        ground: Ground,
-        line_characteristics: LineCharacteristics,
-        length: float,
-        geometry: Optional[BaseGeometry] = None,
-        **kwargs,
-    ) -> None:
-        """ShuntLine constructor.
-
-        Args:
-            n:
-                Number of phases of the line.
-
-            bus1:
-                Bus to connect to the line.
-
-            bus2:
-                Bus to connect to the line.
-
-            ground:
-                The ground.
-
-            id:
-                The id of the branch.
-
-            line_characteristics:
-                The characteristics of the line.
-
-            length:
-                The length of the line in km.
-
-            geometry:
-                The geometry of the line.
-        """
-        super().__init__(
-            n=n,
-            bus1=bus1,
-            bus2=bus2,
-            id=id,
-            line_characteristics=line_characteristics,
-            length=length,
-            geometry=geometry,
-            **kwargs,
-        )
-
-        self.connected_elements.append(ground)
-        ground.connected_elements.append(self)
-
-
-AbstractLine._simplified_line_class = SimplifiedLine
-AbstractLine._shunt_line_class = ShuntLine

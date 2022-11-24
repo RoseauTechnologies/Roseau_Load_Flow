@@ -5,10 +5,10 @@ from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowE
 from roseau.load_flow.models import (
     AbstractBranch,
     AbstractBus,
-    AbstractLine,
     AbstractLoad,
     AbstractTransformer,
     Element,
+    Line,
     LineCharacteristics,
     TransformerCharacteristics,
 )
@@ -99,7 +99,7 @@ def network_to_dict(en: "ElectricalNetwork") -> dict[str, Any]:
     transformer_characteristics_dict = dict()
     for branch in en.branches.values():
         branches.append(branch.to_dict())
-        if isinstance(branch, AbstractLine):
+        if isinstance(branch, Line):
             type_name = branch.line_characteristics.type_name
             if (
                 type_name in line_characteristics_dict
