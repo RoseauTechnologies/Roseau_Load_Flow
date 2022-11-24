@@ -14,7 +14,7 @@ from roseau.load_flow.utils.units import ureg
 
 if TYPE_CHECKING:
     from roseau.load_flow.models.buses import AbstractBus
-    from roseau.load_flow.models.lines import AbstractLine, Switch
+    from roseau.load_flow.models.lines import Line, Switch
     from roseau.load_flow.models.transformers import AbstractTransformer
 
 logger = logging.getLogger(__name__)
@@ -92,10 +92,10 @@ class AbstractBranch(Element, JsonMixin):
     branch_type: BranchType = NotImplemented
 
     @classmethod
-    def _line_class(cls) -> type["AbstractLine"]:
-        from roseau.load_flow.models.lines.lines import AbstractLine
+    def _line_class(cls) -> type["Line"]:
+        from roseau.load_flow.models.lines.lines import Line
 
-        return AbstractLine
+        return Line
 
     @classmethod
     def _transformer_class(cls) -> type["AbstractTransformer"]:

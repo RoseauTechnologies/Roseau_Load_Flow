@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
-from roseau.load_flow.models import Bus, Ground, LineCharacteristics, SimplifiedLine, Switch, VoltageSource
+from roseau.load_flow.models import Bus, Ground, Line, LineCharacteristics, Switch, VoltageSource
 
 
 def test_switch_loop():
@@ -13,7 +13,7 @@ def test_switch_loop():
     bus3 = Bus("bus3", 4)
 
     _ = Switch("switch1", 4, bus1, bus2)
-    _ = SimplifiedLine(id="line", n=4, bus1=bus1, bus2=bus3, line_characteristics=line_characteristics, length=10)
+    _ = Line(id="line", n=4, bus1=bus1, bus2=bus3, line_characteristics=line_characteristics, length=10)
 
     with pytest.raises(RoseauLoadFlowException) as e:
         Switch("switch2", 4, bus1, bus2)

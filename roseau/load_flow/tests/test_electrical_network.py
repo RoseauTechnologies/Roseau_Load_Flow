@@ -12,10 +12,10 @@ from roseau.load_flow.models import (
     Bus,
     DeltaWyeTransformer,
     Ground,
+    Line,
     LineCharacteristics,
     PotentialRef,
     PowerLoad,
-    SimplifiedLine,
     Switch,
     TransformerCharacteristics,
     VoltageSource,
@@ -40,7 +40,7 @@ def small_network() -> ElectricalNetwork:
     pref = PotentialRef(ground)
 
     lc = LineCharacteristics("test", 10 * np.eye(4, dtype=complex))
-    line = SimplifiedLine(
+    line = Line(
         id="line",
         n=4,
         bus1=vs,
@@ -128,9 +128,7 @@ def test_add_and_remove():
     load_bus = Bus(id="load bus", n=4)
     load = PowerLoad(id="power load", n=4, bus=load_bus, s=[100 + 0j, 100 + 0j, 100 + 0j])
     line_characteristics = LineCharacteristics("test", z_line=np.eye(4, dtype=complex))
-    line = SimplifiedLine(
-        id="line", n=4, bus1=vs, bus2=load_bus, line_characteristics=line_characteristics, length=10  # km
-    )
+    line = Line(id="line", n=4, bus1=vs, bus2=load_bus, line_characteristics=line_characteristics, length=10)  # km
     _ = PotentialRef(element=ground)
     en = ElectricalNetwork.from_element(vs)
     en.remove_element(load.id)
@@ -165,7 +163,7 @@ def test_bad_networks():
     bus2 = Bus("bus2", 3)
     ground.connect(bus2)
     line_characteristics = LineCharacteristics("test", z_line=np.eye(3, dtype=complex))
-    line = SimplifiedLine(id="line", n=3, bus1=bus1, bus2=bus2, line_characteristics=line_characteristics, length=10)
+    line = Line(id="line", n=3, bus1=bus1, bus2=bus2, line_characteristics=line_characteristics, length=10)
     p_ref = PotentialRef(ground)
     with pytest.raises(RoseauLoadFlowException) as e:
         ElectricalNetwork.from_element(bus1)
