@@ -12,10 +12,10 @@ import importlib.metadata
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-import os
-import sys
+# import os
+# import sys
 
-sys.path.insert(0, os.path.abspath("../roseau/"))
+# sys.path.insert(0, os.path.abspath("../roseau/"))
 
 # -- Project information -----------------------------------------------------
 
@@ -24,7 +24,8 @@ copyright = "2022, Roseau Technologies SAS"
 # author = "Benoît Vinot"
 
 # The full version, including alpha/beta/rc tags
-release = importlib.metadata.version("roseau_load_flow")
+version = importlib.metadata.version("roseau_load_flow")
+release = f"{project} {version}"
 
 # -- General configuration ---------------------------------------------------
 
@@ -99,6 +100,7 @@ html_static_path = ["_static"]
 autoapi_dirs = ["../roseau"]
 autoapi_ignore = ["**/tests/**", "**/conftest.py"]
 autoapi_options = ["members", "undoc-members", "show-inheritance", "show-module-summary", "imported-members"]
+autoapi_python_class_content = "both"  # without this, the __init__ docstring is not shown
 
 # Extra CSS files
 html_css_files = ["css/custom.css"]
