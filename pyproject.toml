@@ -111,5 +111,5 @@ directory = "htmlcov"
 
 # Pytest
 [tool.pytest.ini_options]
-addopts = "--color=yes -vv -n=0"
+addopts = "--color=yes -n=0"
 testpaths = ["roseau/load_flow/"]
