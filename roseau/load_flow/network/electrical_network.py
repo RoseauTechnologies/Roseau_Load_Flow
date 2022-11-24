@@ -21,11 +21,8 @@ from roseau.load_flow.models import (
     AbstractBranch,
     AbstractBus,
     AbstractLoad,
-    AbstractTransformer,
     Element,
     FlexibleLoad,
-    Ground,
-    PotentialRef,
     PowerLoad,
     VoltageSource,
 )
@@ -45,8 +42,6 @@ class ElectricalNetwork:
     branch_class = AbstractBranch
     load_class = AbstractLoad
     bus_class = AbstractBus
-    ground_class = Ground
-    pref_class = PotentialRef
 
     #
     # Methods to build an electrical network
@@ -56,7 +51,6 @@ class ElectricalNetwork:
         buses: Union[list[AbstractBus], dict[Any, AbstractBus]],
         branches: Union[list[AbstractBranch], dict[Any, AbstractBranch]],
         loads: Union[list[AbstractLoad], dict[Any, AbstractLoad]],
-        special_elements: list[Element],
         **kwargs,
     ) -> None:
         """ElectricalNetwork constructor
@@ -70,9 +64,6 @@ class ElectricalNetwork:
 
             loads:
                 The loads of the network
-
-            special_elements:
-                The other elements (special, ground...)
         """
         if isinstance(buses, list):
             buses_dict = dict()
@@ -105,7 +96,6 @@ class ElectricalNetwork:
         self.buses: dict[Any, AbstractBus] = buses
         self.branches: dict[Any, AbstractBranch] = branches
         self.loads: dict[Any, AbstractLoad] = loads
-        self.special_elements: list[Element] = special_elements
 
         self._check_validity(constructed=False)
         self._create_network()
@@ -124,8 +114,7 @@ class ElectricalNetwork:
             f"<{type(self).__name__}:"
             f" {count_repr(self.buses, 'bus', 'buses')},"
             f" {count_repr(self.branches, 'branch', 'branches')},"
-            f" {count_repr(self.loads, 'load', 'loads')},"
-            f" {count_repr(self.special_elements, 'special element')}"
+            f" {count_repr(self.loads, 'load', 'loads')}"
             f">"
         )
 
@@ -140,7 +129,6 @@ class ElectricalNetwork:
         buses: list[AbstractBus] = []
         branches: list[AbstractBranch] = []
         loads: list[AbstractLoad] = []
-        specials: list[Element] = []
         elements: list[Element] = [initial_bus]
         visited_elements: list[Element] = []
         while elements:
@@ -153,11 +141,11 @@ class ElectricalNetwork:
             elif isinstance(e, AbstractLoad):
                 loads.append(e)
             else:
-                specials.append(e)
+                raise AssertionError
             for connected_element in e.connected_elements:
                 if connected_element not in visited_elements and connected_element not in elements:
                     elements.append(connected_element)
-        return cls(buses=buses, branches=branches, loads=loads, special_elements=specials)
+        return cls(buses=buses, branches=branches, loads=loads)
 
     #
     # Methods to access the data
@@ -427,7 +415,7 @@ class ElectricalNetwork:
         Examples:
 
             >>> net
-            <ElectricalNetwork: 2 buses, 1 branch, 1 load, 2 special elements>
+            <ElectricalNetwork: 2 buses, 1 branch, 1 load>
 
             >>> net.buses_voltages()
                                              voltage
@@ -673,7 +661,6 @@ class ElectricalNetwork:
         elements: list[Element] = list(self.buses.values())
         elements += list(self.branches.values())
         elements += list(self.loads.values())
-        elements += self.special_elements
 
         for element in elements:
             for adj_element in element.connected_elements:
@@ -708,48 +695,6 @@ class ElectricalNetwork:
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.NO_VOLTAGE_SOURCE)
 
-        self._check_ref(elements)
-
-    @staticmethod
-    def _check_ref(elements) -> None:
-        """Check the number of potential references to avoid having a singular jacobian matrix"""
-        visited_elements = []
-        for initial_element in elements:
-            if initial_element in visited_elements or isinstance(initial_element, AbstractTransformer):
-                continue
-            visited_elements.append(initial_element)
-            connected_component = []
-            to_visit = [initial_element]
-            while to_visit:
-                element = to_visit.pop(-1)
-                connected_component.append(element)
-                for connected_element in element.connected_elements:
-                    if connected_element not in visited_elements and not isinstance(
-                        connected_element, AbstractTransformer
-                    ):
-                        to_visit.append(connected_element)
-                        visited_elements.append(connected_element)
-
-            potential_ref = 0
-            for element in connected_component:
-                if isinstance(element, PotentialRef):
-                    potential_ref += 1
-
-            if potential_ref == 0:
-                msg = (
-                    f"The connected component containing the element {initial_element.id!r} does not have a "
-                    f"potential reference."
-                )
-                logger.error(msg)
-                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.NO_POTENTIAL_REFERENCE)
-            elif potential_ref >= 2:
-                msg = (
-                    f"The connected component containing the element {initial_element.id!r} has {potential_ref} "
-                    f"potential references, it should have only one."
-                )
-                logger.error(msg)
-                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.SEVERAL_POTENTIAL_REFERENCE)
-
     #
     # Json Mixin interface
     #
@@ -764,8 +709,8 @@ class ElectricalNetwork:
         Returns:
             The constructed network.
         """
-        buses_dict, branches_dict, loads_dict, special_elements = network_from_dict(data=data, en_class=cls)
-        return cls(buses=buses_dict, branches=branches_dict, loads=loads_dict, special_elements=special_elements)
+        buses_dict, branches_dict, loads_dict = network_from_dict(data=data, en_class=cls)
+        return cls(buses=buses_dict, branches=branches_dict, loads=loads_dict)
 
     @classmethod
     def from_json(cls, path: Union[str, Path]) -> "ElectricalNetwork":
@@ -890,5 +835,5 @@ class ElectricalNetwork:
         Returns:
             The constructed network.
         """
-        buses_dict, branches_dict, loads_dict, special_elements = network_from_dgs(filename=path)
-        return cls(buses=buses_dict, branches=branches_dict, loads=loads_dict, special_elements=special_elements)
+        buses_dict, branches_dict, loads_dict = network_from_dgs(filename=path)
+        return cls(buses=buses_dict, branches=branches_dict, loads=loads_dict)

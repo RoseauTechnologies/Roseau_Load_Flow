@@ -4,13 +4,12 @@ import numpy.testing as npt
 import pytest
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
-from roseau.load_flow.models import Bus, Ground, LineCharacteristics, ShuntLine
+from roseau.load_flow.models import Bus, LineCharacteristics, ShuntLine
 from roseau.load_flow.utils import ConductorType, IsolationType, LineModel, LineType, Q_
 
 
 def test_line_characteristics():
     bus = Bus(id="junction", n=4)
-    ground = Ground()
 
     # Real element off the diagonal (Z)
     z_line = np.ones(shape=(4, 4), dtype=np.complex_)
@@ -18,9 +17,7 @@ def test_line_characteristics():
 
     with pytest.raises(RoseauLoadFlowException) as e:
         line_characteristics = LineCharacteristics("test", z_line, y_shunt)
-        ShuntLine(
-            id="line", n=4, bus1=bus, bus2=bus, ground=ground, line_characteristics=line_characteristics, length=2.5
-        )
+        ShuntLine(id="line", n=4, bus1=bus, bus2=bus, line_characteristics=line_characteristics, length=2.5)
     assert e.value.args[0] == "The line impedance matrix of 'test' has off-diagonal elements with a non-zero real part."
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_Z_LINE_VALUE
 
@@ -30,9 +27,7 @@ def test_line_characteristics():
     y_shunt = np.ones(shape=(3, 3), dtype=np.complex_)
     with pytest.raises(RoseauLoadFlowException) as e:
         line_characteristics = LineCharacteristics("test", z_line, y_shunt)
-        ShuntLine(
-            id="line", n=3, bus1=bus, bus2=bus, ground=ground, line_characteristics=line_characteristics, length=2.5
-        )
+        ShuntLine(id="line", n=3, bus1=bus, bus2=bus, line_characteristics=line_characteristics, length=2.5)
     assert (
         e.value.args[0] == "The shunt admittance matrix of 'test' has off-diagonal elements with a non-zero real part."
     )
@@ -44,9 +39,7 @@ def test_line_characteristics():
     y_shunt = -2 * np.eye(4, dtype=np.complex_)
     with pytest.raises(RoseauLoadFlowException) as e:
         line_characteristics = LineCharacteristics("test", z_line, y_shunt)
-        ShuntLine(
-            id="line", n=4, bus1=bus, bus2=bus, ground=ground, line_characteristics=line_characteristics, length=2.4
-        )
+        ShuntLine(id="line", n=4, bus1=bus, bus2=bus, line_characteristics=line_characteristics, length=2.4)
     assert e.value.args[0] == "Some real part coefficients of the line impedance matrix of 'test' are negative..."
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_Z_LINE_VALUE
 
@@ -55,9 +48,7 @@ def test_line_characteristics():
     y_shunt[1, 1] = -3
     with pytest.raises(RoseauLoadFlowException):
         line_characteristics = LineCharacteristics("test", z_line, y_shunt)
-        ShuntLine(
-            id="line", n=4, bus1=bus, bus2=bus, ground=ground, line_characteristics=line_characteristics, length=2.4
-        )
+        ShuntLine(id="line", n=4, bus1=bus, bus2=bus, line_characteristics=line_characteristics, length=2.4)
     assert e.value.args[0] == "Some real part coefficients of the line impedance matrix of 'test' are negative..."
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_Z_LINE_VALUE
 
@@ -66,9 +57,7 @@ def test_line_characteristics():
     y_shunt = np.eye(4, dtype=np.complex_)
     with pytest.raises(RoseauLoadFlowException) as e:
         line_characteristics = LineCharacteristics("test", z_line, y_shunt)
-        ShuntLine(
-            id="line", n=4, bus1=bus, bus2=bus, ground=ground, line_characteristics=line_characteristics, length=2.4
-        )
+        ShuntLine(id="line", n=4, bus1=bus, bus2=bus, line_characteristics=line_characteristics, length=2.4)
     assert e.value.args[0] == "Incorrect z_line dimensions for line characteristics 'test': (4, 2)"
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_Z_LINE_SHAPE
 
@@ -82,7 +71,6 @@ def test_line_characteristics():
             n=4,
             bus1=bus,
             bus2=bus,
-            ground=ground,
             line_characteristics=line_characteristics,
             length=2.4,
         )
@@ -99,7 +87,6 @@ def test_line_characteristics():
             n=3,
             bus1=bus,
             bus2=bus,
-            ground=ground,
             line_characteristics=line_characteristics,
             length=2.4,
         )
@@ -116,7 +103,6 @@ def test_line_characteristics():
             n=3,
             bus1=bus,
             bus2=bus,
-            ground=ground,
             line_characteristics=line_characteristics,
             length=2.4,
         )
@@ -133,7 +119,6 @@ def test_line_characteristics():
             n=4,
             bus1=bus,
             bus2=bus,
-            ground=ground,
             line_characteristics=line_characteristics,
             length=2.4,
         )

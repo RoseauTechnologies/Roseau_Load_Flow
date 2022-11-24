@@ -7,7 +7,7 @@ from shapely.geometry.base import BaseGeometry
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.buses import AbstractBus, VoltageSource
-from roseau.load_flow.models.core import AbstractBranch, Ground
+from roseau.load_flow.models.core import AbstractBranch
 from roseau.load_flow.models.lines.line_characteristics import LineCharacteristics
 from roseau.load_flow.utils.types import BranchType
 from roseau.load_flow.utils.units import ureg
@@ -173,7 +173,7 @@ class AbstractLine(AbstractBranch):
     # Json Mixin interface
     #
     @classmethod
-    @ureg.wraps(None, (None, None, None, None, "km", None, None, None, None), strict=False)
+    @ureg.wraps(None, (None, None, None, None, "km", None, None, None), strict=False)
     def from_dict(
         cls,
         id: Any,
@@ -182,7 +182,6 @@ class AbstractLine(AbstractBranch):
         length: float,
         line_types: dict[str, LineCharacteristics],
         type_name: str,
-        ground: Optional[Ground] = None,
         geometry: Optional[BaseGeometry] = None,
     ) -> "AbstractLine":
         """Line constructor from dict.
@@ -205,9 +204,6 @@ class AbstractLine(AbstractBranch):
 
             length:
                 Length of the line (km).
-
-            ground:
-                The ground (optional for SimplifiedLine models).
 
             geometry:
                 The geometry of the line.
@@ -233,7 +229,6 @@ class AbstractLine(AbstractBranch):
                 n=n,
                 bus1=bus1,
                 bus2=bus2,
-                ground=ground,
                 line_characteristics=line_characteristics,
                 length=length,
                 geometry=geometry,
@@ -354,7 +349,6 @@ class ShuntLine(AbstractLine):
         n: int,
         bus1: AbstractBus,
         bus2: AbstractBus,
-        ground: Ground,
         line_characteristics: LineCharacteristics,
         length: float,
         geometry: Optional[BaseGeometry] = None,
@@ -371,9 +365,6 @@ class ShuntLine(AbstractLine):
 
             bus2:
                 Bus to connect to the line.
-
-            ground:
-                The ground.
 
             id:
                 The id of the branch.
@@ -397,9 +388,6 @@ class ShuntLine(AbstractLine):
             geometry=geometry,
             **kwargs,
         )
-
-        self.connected_elements.append(ground)
-        ground.connected_elements.append(self)
 
 
 AbstractLine._simplified_line_class = SimplifiedLine

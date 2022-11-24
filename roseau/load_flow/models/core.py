@@ -32,60 +32,6 @@ class Element(ABC):
             element.connected_elements[:] = [e for e in element.connected_elements if e != self]
 
 
-class PotentialRef(Element):
-    """The potential reference of the network.
-
-    This element will set the origin of the potentials as `Va + Vb + Vc = 0` for delta elements
-    or `Vn = 0` for others.
-
-    Args:
-        element:
-            The element to connect to, normally the ground element.
-    """
-
-    def __init__(self, element: Element, **kwargs):
-        super().__init__(**kwargs)
-        self.connected_elements = [element]
-        element.connected_elements.append(self)
-
-    def __repr__(self) -> str:
-        return f"{type(self).__name__}({self.connected_elements[0]!r})"
-
-    @property
-    @ureg.wraps("V", None, strict=False)
-    def current(self) -> complex:
-        """Compute the sum of the currents of the connection associated to the potential reference.
-
-        This sum should be equal to 0 after the load flow.
-
-        Returns:
-            The sum of the current of the connection.
-        """
-        raise NotImplementedError
-
-
-class Ground(Element):
-    """This element defines the ground."""
-
-    def __init__(self, **kwargs):
-        """Ground constructor."""
-        super().__init__(**kwargs)
-
-    def __repr__(self) -> str:
-        return f"{type(self).__name__}()"
-
-    def connect(self, bus: "AbstractBus"):
-        """Connect the ground to the bus neutral.
-
-        Args:
-            bus:
-                The bus to connect to.
-        """
-        if self not in bus.connected_elements:
-            self.connected_elements.append(bus)
-            bus.connected_elements.append(self)
-
-
 class AbstractBranch(Element, JsonMixin):
     """This is an abstract class for all the branches (lines, switches and transformers) of the network."""
 
@@ -179,7 +125,7 @@ class AbstractBranch(Element, JsonMixin):
     # Json Mixin interface
     #
     @classmethod
-    def from_dict(cls, branch, bus1, bus2, ground, line_types, transformer_types, *args):
+    def from_dict(cls, branch, bus1, bus2, line_types, transformer_types, *args):
 
         if "geometry" not in branch:
             geometry = None
@@ -196,7 +142,6 @@ class AbstractBranch(Element, JsonMixin):
                 length=branch["length"],
                 line_types=line_types,
                 type_name=branch["type_name"],
-                ground=ground,
                 geometry=geometry,
             )
         elif branch["type"] == "transformer":

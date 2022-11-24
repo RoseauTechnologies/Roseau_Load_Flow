@@ -13,15 +13,12 @@ from roseau.load_flow.models import (
     AbstractLine,
     AbstractTransformer,
     Bus,
-    Ground,
     LineCharacteristics,
-    PotentialRef,
     PowerLoad,
     Switch,
     TransformerCharacteristics,
     VoltageSource,
 )
-from roseau.load_flow.models.core import Element
 from roseau.load_flow.models.loads.loads import AbstractLoad
 from roseau.load_flow.utils import LineModel, Q_
 
@@ -30,14 +27,14 @@ logger = logging.getLogger(__name__)
 
 def network_from_dgs(  # noqa: C901
     filename: Union[str, Path]
-) -> tuple[dict[str, AbstractBus], dict[str, AbstractBranch], dict[str, AbstractLoad], list[Element]]:
+) -> tuple[dict[str, AbstractBus], dict[str, AbstractBranch], dict[str, AbstractLoad]]:
     """Create the electrical elements from a JSON file in DGS format to create an electrical network.
 
     Args:
         filename: name of the JSON file
 
     Returns:
-        The buses, branches, loads and special elements to construct the electrical network.
+        The buses, branches, loads to construct the electrical network.
     """
     # Read files
     (
@@ -54,10 +51,6 @@ def network_from_dgs(  # noqa: C901
         elm_gen_stat,
         elm_pv_sys,
     ) = _read_dgs_json_file(filename=filename)
-
-    # Ground and special elements
-    ground = Ground()
-    p_ref = PotentialRef(ground)
 
     # Buses
     buses = dict()
@@ -81,12 +74,7 @@ def network_from_dgs(  # noqa: C901
         tap = elm_xnet.at[bus_id, "usetp"]  # tap voltage (p.u.)
         # the voltage source "erases" the buse to which it is connected
         voltages = [un * tap, un * np.exp(-np.pi * 2 / 3 * 1j) * tap, un * np.exp(np.pi * 2 / 3 * 1j) * tap]
-        buses[source_bus] = VoltageSource(
-            id=source_bus,
-            n=4,
-            ground=ground,
-            source_voltages=voltages,
-        )
+        buses[source_bus] = VoltageSource(id=source_bus, n=4, source_voltages=voltages)
 
     # LV loads
     loads = dict()
@@ -147,7 +135,6 @@ def network_from_dgs(  # noqa: C901
                 length=elm_lne.at[line_id, "dline"],
                 line_types=line_types,
                 type_name=type_id,
-                ground=ground,
             )
 
     # Transformers
@@ -185,7 +172,6 @@ def network_from_dgs(  # noqa: C901
                 bus2=buses[sta_cubic.at[elm_tr.at[idx, "buslv"], "cterm"]],
                 tap=tap,
             )
-            ground.connect(bus=buses[sta_cubic.at[elm_tr.at[idx, "buslv"], "cterm"]])
 
     # Create switches
     if elm_coup is not None:
@@ -198,7 +184,7 @@ def network_from_dgs(  # noqa: C901
                 bus2=buses[sta_cubic.at[elm_coup.at[switch_id, "bus2"], "cterm"]],
             )
 
-    return buses, branches, loads, [p_ref, ground]
+    return buses, branches, loads
 
 
 def _read_dgs_json_file(filename: Union[str, Path]):

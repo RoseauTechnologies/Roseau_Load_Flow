@@ -29,10 +29,8 @@ from roseau.load_flow.models import (
     Element,
     FlexibleLoad,
     FlexibleParameter,
-    Ground,
     ImpedanceLoad,
     LineCharacteristics,
-    PotentialRef,
     PowerLoad,
     Projection,
     ShuntLine,
@@ -66,8 +64,6 @@ __all__ = [
     "VoltageSource",
     # Core
     "Element",
-    "Ground",
-    "PotentialRef",
     "AbstractBranch",
     # Lines
     "Switch",

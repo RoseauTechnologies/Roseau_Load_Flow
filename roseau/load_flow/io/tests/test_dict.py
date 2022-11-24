@@ -6,9 +6,7 @@ from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowE
 from roseau.load_flow.models import (
     Bus,
     DeltaWyeTransformer,
-    Ground,
     LineCharacteristics,
-    PotentialRef,
     TransformerCharacteristics,
     VoltageSource,
 )
@@ -16,26 +14,22 @@ from roseau.load_flow.network import ElectricalNetwork
 
 
 def test_to_dict():
-    ground = Ground()
     vn = 400 / np.sqrt(3)
     voltages = [vn, vn * np.exp(-2 / 3 * np.pi * 1j), vn * np.exp(2 / 3 * np.pi * 1j)]
     vs = VoltageSource(
         id="source",
         n=4,
-        ground=ground,
         source_voltages=voltages,
     )
     bus = Bus(id="load bus", n=4)
-    ground.connect(bus)
-    p_ref = PotentialRef(element=ground)
 
     # Same type name, different characteristics -> fail
     lc1 = LineCharacteristics("test", z_line=np.eye(4, dtype=complex), y_shunt=np.eye(4, dtype=complex))
     lc2 = LineCharacteristics("test", z_line=np.eye(4, dtype=complex), y_shunt=np.eye(4, dtype=complex) * 1.1)
 
-    line1 = ShuntLine(id="line1", n=4, bus1=vs, bus2=bus, ground=ground, line_characteristics=lc1, length=10)
-    line2 = ShuntLine(id="line2", n=4, bus1=vs, bus2=bus, ground=ground, line_characteristics=lc2, length=10)
-    en = ElectricalNetwork([vs, bus], [line1, line2], [], [p_ref, ground])
+    line1 = ShuntLine(id="line1", n=4, bus1=vs, bus2=bus, line_characteristics=lc1, length=10)
+    line2 = ShuntLine(id="line2", n=4, bus1=vs, bus2=bus, line_characteristics=lc2, length=10)
+    en = ElectricalNetwork([vs, bus], [line1, line2], [])
     with pytest.raises(RoseauLoadFlowException) as e:
         en.to_dict()
     assert "There are line characteristics duplicates" in e.value.args[0]

@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
-from roseau.load_flow.models import Bus, Ground, LineCharacteristics, SimplifiedLine, Switch, VoltageSource
+from roseau.load_flow.models import Bus, LineCharacteristics, SimplifiedLine, Switch, VoltageSource
 
 
 def test_switch_loop():
@@ -33,9 +33,8 @@ def test_switch_loop():
 
 
 def test_switch_connection():
-    ground = Ground()
-    vs1 = VoltageSource(id="source1", n=4, ground=ground, source_voltages=[230 + 0j, -115 + 200j, 115 - 200j])
-    vs2 = VoltageSource(id="source2", n=4, ground=ground, source_voltages=[230 + 0j, -115 + 200j, 115 - 200j])
+    vs1 = VoltageSource(id="source1", n=4, source_voltages=[230 + 0j, -115 + 200j, 115 - 200j])
+    vs2 = VoltageSource(id="source2", n=4, source_voltages=[230 + 0j, -115 + 200j, 115 - 200j])
     with pytest.raises(RoseauLoadFlowException) as e:
         Switch("switch", 4, vs1, vs2)
     assert "are connected with the switch" in e.value.args[0]

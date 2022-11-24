@@ -9,7 +9,7 @@ from pint import Quantity
 from shapely.geometry import Point, shape
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
-from roseau.load_flow.models.core import Element, Ground
+from roseau.load_flow.models.core import Element
 from roseau.load_flow.utils.json_mixin import JsonMixin
 from roseau.load_flow.utils.units import ureg
 
@@ -110,7 +110,7 @@ class AbstractBus(Element, JsonMixin, ABC):
     # Json Mixin interface
     #
     @classmethod
-    def from_dict(cls, data, ground):
+    def from_dict(cls, data):
         if "geometry" not in data:
             geometry = None
         elif isinstance(data["geometry"], str):
@@ -123,7 +123,7 @@ class AbstractBus(Element, JsonMixin, ABC):
             v = data["voltages"]
             voltages = [v["va"][0] + 1j * v["va"][1], v["vb"][0] + 1j * v["vb"][1], v["vc"][0] + 1j * v["vc"][1]]
             return cls._voltage_source_class(
-                id=data["id"], n=4, ground=ground, source_voltages=voltages, potentials=potentials, geometry=geometry
+                id=data["id"], n=4, source_voltages=voltages, potentials=potentials, geometry=geometry
             )
         else:
             if data["type"] not in ["bus", "bus_neutral"]:
@@ -152,7 +152,6 @@ class VoltageSource(AbstractBus):
         self,
         id: Any,
         n: int,
-        ground: Optional[Ground],
         source_voltages: Sequence[complex],
         potentials: Optional[Sequence[complex]] = None,
         geometry: Optional[Point] = None,
@@ -167,9 +166,6 @@ class VoltageSource(AbstractBus):
             n:
                 Number of ports.
 
-            ground:
-                The ground to connect the neutral to.
-
             source_voltages:
                 List of the voltages of the source (V).
 
@@ -179,9 +175,7 @@ class VoltageSource(AbstractBus):
             geometry:
                 The geometry of the bus.
         """
-        super().__init__(
-            id=id, n=n, ground=ground, voltages=source_voltages, potentials=potentials, geometry=geometry, **kwargs
-        )
+        super().__init__(id=id, n=n, voltages=source_voltages, potentials=potentials, geometry=geometry, **kwargs)
         if len(source_voltages) != n - 1:
             msg = f"Incorrect number of voltages: {len(source_voltages)} instead of {n - 1}"
             logger.error(msg)
@@ -189,10 +183,6 @@ class VoltageSource(AbstractBus):
 
         if isinstance(source_voltages, Quantity):
             source_voltages = source_voltages.m_as("V")
-
-        if ground is not None:
-            ground.connected_elements.append(self)
-            self.connected_elements.append(ground)
 
         self.source_voltages = source_voltages
 
