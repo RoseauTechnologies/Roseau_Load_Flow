@@ -10,13 +10,13 @@ from shapely.geometry import LineString, Point
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models import (
     Bus,
-    DeltaWyeTransformer,
     Ground,
     Line,
     LineCharacteristics,
     PotentialRef,
     PowerLoad,
     Switch,
+    Transformer,
     TransformerCharacteristics,
     VoltageSource,
 )
@@ -184,7 +184,7 @@ def test_bad_networks():
     transformer_characteristics = TransformerCharacteristics(
         type_name="t", windings="Dyn11", uhv=20000, ulv=400, sn=160 * 1e3, p0=460, i0=2.3 / 100, psc=2350, vsc=4 / 100
     )
-    _ = DeltaWyeTransformer("transfo", bus2, bus3, transformer_characteristics)
+    _ = Transformer("transfo", bus2, bus3, transformer_characteristics)
     with pytest.raises(RoseauLoadFlowException) as e:
         ElectricalNetwork.from_element(vs)
     assert "does not have a potential reference" in e.value.args[0]

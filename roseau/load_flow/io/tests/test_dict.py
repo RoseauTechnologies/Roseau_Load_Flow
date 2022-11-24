@@ -5,10 +5,10 @@ from roseau.load_flow import Line
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models import (
     Bus,
-    DeltaWyeTransformer,
     Ground,
     LineCharacteristics,
     PotentialRef,
+    Transformer,
     TransformerCharacteristics,
     VoltageSource,
 )
@@ -55,10 +55,10 @@ def test_to_dict():
     transformer_characteristics2 = TransformerCharacteristics(
         type_name="t", windings="Dyn11", uhv=20000, ulv=400, sn=200 * 1e3, p0=460, i0=2.3 / 100, psc=2350, vsc=4 / 100
     )
-    transformer1 = DeltaWyeTransformer(
+    transformer1 = Transformer(
         id="Transformer1", bus1=vs, bus2=bus, transformer_characteristics=transformer_characteristics1
     )
-    transformer2 = DeltaWyeTransformer(
+    transformer2 = Transformer(
         id="Transformer2", bus1=vs, bus2=bus, transformer_characteristics=transformer_characteristics2
     )
     en.add_element(transformer1)

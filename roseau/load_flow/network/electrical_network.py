@@ -21,12 +21,12 @@ from roseau.load_flow.models import (
     AbstractBranch,
     AbstractBus,
     AbstractLoad,
-    AbstractTransformer,
     Element,
     FlexibleLoad,
     Ground,
     PotentialRef,
     PowerLoad,
+    Transformer,
     VoltageSource,
 )
 from roseau.load_flow.utils import ureg
@@ -715,7 +715,7 @@ class ElectricalNetwork:
         """Check the number of potential references to avoid having a singular jacobian matrix"""
         visited_elements = []
         for initial_element in elements:
-            if initial_element in visited_elements or isinstance(initial_element, AbstractTransformer):
+            if initial_element in visited_elements or isinstance(initial_element, Transformer):
                 continue
             visited_elements.append(initial_element)
             connected_component = []
@@ -724,9 +724,7 @@ class ElectricalNetwork:
                 element = to_visit.pop(-1)
                 connected_component.append(element)
                 for connected_element in element.connected_elements:
-                    if connected_element not in visited_elements and not isinstance(
-                        connected_element, AbstractTransformer
-                    ):
+                    if connected_element not in visited_elements and not isinstance(connected_element, Transformer):
                         to_visit.append(connected_element)
                         visited_elements.append(connected_element)
 

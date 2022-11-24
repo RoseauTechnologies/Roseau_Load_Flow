@@ -14,16 +14,7 @@ from roseau.load_flow.models.loads import (
     PowerLoad,
     Projection,
 )
-from roseau.load_flow.models.transformers import (
-    AbstractTransformer,
-    DeltaDeltaTransformer,
-    DeltaWyeTransformer,
-    DeltaZigzagTransformer,
-    TransformerCharacteristics,
-    WyeDeltaTransformer,
-    WyeWyeTransformer,
-    WyeZigzagTransformer,
-)
+from roseau.load_flow.models.transformers import Transformer, TransformerCharacteristics
 
 __all__ = [
     # Core
@@ -52,12 +43,6 @@ __all__ = [
     "Control",
     "Projection",
     # Transformers
-    "AbstractTransformer",
-    "WyeWyeTransformer",
-    "DeltaWyeTransformer",
-    "DeltaDeltaTransformer",
-    "WyeDeltaTransformer",
-    "WyeZigzagTransformer",
-    "DeltaZigzagTransformer",
+    "Transformer",
     "TransformerCharacteristics",
 ]
