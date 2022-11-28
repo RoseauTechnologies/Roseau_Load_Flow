@@ -17,18 +17,7 @@ from requests.auth import HTTPBasicAuth
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.io import network_from_dgs, network_from_dict, network_to_dict
-from roseau.load_flow.models import (
-    AbstractBranch,
-    AbstractLoad,
-    Bus,
-    Element,
-    FlexibleLoad,
-    Ground,
-    PotentialRef,
-    PowerLoad,
-    Transformer,
-    VoltageSource,
-)
+from roseau.load_flow.models import AbstractBranch, Bus, Element, Ground, Load, PotentialRef, Transformer, VoltageSource
 from roseau.load_flow.utils import ureg
 
 logger = logging.getLogger(__name__)
@@ -43,7 +32,7 @@ class ElectricalNetwork:
 
     # Default classes to use
     branch_class = AbstractBranch
-    load_class = AbstractLoad
+    load_class = Load
     voltage_source_class = VoltageSource
     bus_class = Bus
     ground_class = Ground
@@ -56,7 +45,7 @@ class ElectricalNetwork:
         self,
         buses: Union[list[Bus], dict[Any, Bus]],
         branches: Union[list[AbstractBranch], dict[Any, AbstractBranch]],
-        loads: Union[list[AbstractLoad], dict[Any, AbstractLoad]],
+        loads: Union[list[Load], dict[Any, Load]],
         voltage_sources: Union[list[VoltageSource], dict[Any, VoltageSource]],
         special_elements: list[Element],
         **kwargs,
@@ -119,7 +108,7 @@ class ElectricalNetwork:
 
         self.buses: dict[Any, Bus] = buses
         self.branches: dict[Any, AbstractBranch] = branches
-        self.loads: dict[Any, AbstractLoad] = loads
+        self.loads: dict[Any, Load] = loads
         self.voltage_sources: dict[Any, VoltageSource] = voltage_sources
         self.special_elements: list[Element] = special_elements
 
@@ -156,7 +145,7 @@ class ElectricalNetwork:
         """
         buses: list[Bus] = []
         branches: list[AbstractBranch] = []
-        loads: list[AbstractLoad] = []
+        loads: list[Load] = []
         voltage_sources: list[VoltageSource] = []
         specials: list[Element] = []
         elements: list[Element] = [initial_bus]
@@ -168,7 +157,7 @@ class ElectricalNetwork:
                 buses.append(e)
             elif isinstance(e, AbstractBranch):
                 branches.append(e)
-            elif isinstance(e, AbstractLoad):
+            elif isinstance(e, Load):
                 loads.append(e)
             elif isinstance(e, VoltageSource):
                 voltage_sources.append(e)
@@ -377,7 +366,7 @@ class ElectricalNetwork:
         for load_data in result_dict["loads"]:
             load_id = load_data["id"]
             load = self.loads[load_id]
-            if isinstance(load, FlexibleLoad):
+            if load.is_flexible():
                 load.powers = self._dispatch_value(load_data["powers"], "s")
             currents = self._dispatch_value(load_data["currents"], "i")
             load.currents = currents
@@ -599,14 +588,14 @@ class ElectricalNetwork:
 
     @property
     def loads_powers(self) -> pd.DataFrame:
-        """Get the powers of the loads after a load flow has been solved. Only for FlexibleLoads.
+        """Get the powers of the loads after a load flow has been solved. Only for flexible loads.
 
         Returns:
             The data frame of the powers of the loads of the electrical network.
         """
         loads_dict = {"load_id": [], "phase": [], "power": []}
         for load_id, load in self.loads.items():
-            if isinstance(load, FlexibleLoad):
+            if load.is_flexible():
                 powers = load.powers.m_as("VA")
                 for power, phase in zip(powers, "abcn"):
                     loads_dict["load_id"].append(load_id)
@@ -630,9 +619,9 @@ class ElectricalNetwork:
                 The new load point
         """
         for load_id, value in load_point.items():
-            load: AbstractLoad = self.loads[load_id]
-            if isinstance(load, PowerLoad) or isinstance(load, FlexibleLoad):
-                load.update_powers(value)
+            load: Load = self.loads[load_id]
+            if load.type == "power":
+                load.update(value)
             else:
                 msg = "Only power loads can be updated yet..."
                 logger.error(msg)
@@ -658,7 +647,7 @@ class ElectricalNetwork:
         """
         if isinstance(element, Bus):
             self.buses[element.id] = element
-        elif isinstance(element, AbstractLoad):
+        elif isinstance(element, Load):
             self.loads[element.id] = element
         elif isinstance(element, AbstractBranch):
             self.branches[element.id] = element
@@ -885,7 +874,7 @@ class ElectricalNetwork:
             currents_dict = dict()
             for i in range(len(currents)):
                 currents_dict[f"i{phases[i]}"] = [currents[i].real.magnitude, currents[i].imag.magnitude]
-            if isinstance(load, FlexibleLoad):
+            if load.is_flexible():
                 powers: np.ndarray = load.powers
                 powers_dict = dict()
                 for i in range(len(powers)):

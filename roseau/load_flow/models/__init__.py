@@ -1,19 +1,7 @@
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import AbstractBranch, Element, Ground, PotentialRef
 from roseau.load_flow.models.lines import Line, LineCharacteristics, Switch
-from roseau.load_flow.models.loads import (
-    AbstractLoad,
-    AdmittanceLoad,
-    Control,
-    DeltaAdmittanceLoad,
-    DeltaImpedanceLoad,
-    DeltaPowerLoad,
-    FlexibleLoad,
-    FlexibleParameter,
-    ImpedanceLoad,
-    PowerLoad,
-    Projection,
-)
+from roseau.load_flow.models.loads import Control, FlexibleParameter, Load, Projection
 from roseau.load_flow.models.transformers import Transformer, TransformerCharacteristics
 from roseau.load_flow.models.voltage_sources import VoltageSource
 
@@ -30,14 +18,7 @@ __all__ = [
     "Line",
     "LineCharacteristics",
     # Loads
-    "AbstractLoad",
-    "ImpedanceLoad",
-    "PowerLoad",
-    "AdmittanceLoad",
-    "DeltaAdmittanceLoad",
-    "DeltaImpedanceLoad",
-    "DeltaPowerLoad",
-    "FlexibleLoad",
+    "Load",
     "FlexibleParameter",
     "Control",
     "Projection",

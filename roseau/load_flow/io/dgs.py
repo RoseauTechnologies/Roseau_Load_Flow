@@ -14,14 +14,13 @@ from roseau.load_flow.models import (
     Line,
     LineCharacteristics,
     PotentialRef,
-    PowerLoad,
     Switch,
     Transformer,
     TransformerCharacteristics,
     VoltageSource,
 )
 from roseau.load_flow.models.core import Element
-from roseau.load_flow.models.loads.loads import AbstractLoad
+from roseau.load_flow.models.loads.loads import Load
 from roseau.load_flow.utils import LineModel, Q_
 
 logger = logging.getLogger(__name__)
@@ -29,7 +28,7 @@ logger = logging.getLogger(__name__)
 
 def network_from_dgs(  # noqa: C901
     filename: Union[str, Path]
-) -> tuple[dict[str, Bus], dict[str, AbstractBranch], dict[str, AbstractLoad], dict[str, VoltageSource], list[Element]]:
+) -> tuple[dict[str, Bus], dict[str, AbstractBranch], dict[str, Load], dict[str, VoltageSource], list[Element]]:
     """Create the electrical elements from a JSON file in DGS format to create an electrical network.
 
     Args:
@@ -87,7 +86,7 @@ def network_from_dgs(  # noqa: C901
         source_bus.connected_elements.append(ground)
 
     # LV loads
-    loads: dict[str, AbstractLoad] = {}
+    loads: dict[str, Load] = {}
     if elm_lod_lv is not None:
         _generate_loads(elm_lod_lv, loads, buses, sta_cubic, 1e3, production=False)
 
@@ -312,7 +311,7 @@ def _read_dgs_json_file(filename: Union[str, Path]):
 
 def _generate_loads(
     elm_lod: pd.DataFrame,
-    loads: dict[str, AbstractLoad],
+    loads: dict[str, Load],
     buses: dict[str, Bus],
     sta_cubic: pd.DataFrame,
     factor: float,
@@ -353,9 +352,10 @@ def _generate_loads(
             sc = _compute_load_power(elm_lod, load_id, "t") * factor
 
         if sa == 0 and sb == 0 and sc == 0:  # Balanced
-            loads[load_id] = PowerLoad(id=load_id, n=4, bus=buses[bus_id], s=[s_phase / 3, s_phase / 3, s_phase / 3])
+            s = [s_phase / 3, s_phase / 3, s_phase / 3]
         else:  # Unbalanced
-            loads[load_id] = PowerLoad(id=load_id, n=4, bus=buses[bus_id], s=[sa, sb, sc])
+            s = [sa, sb, sc]
+        loads[load_id] = Load.constant_power(load_id, n=4, bus=buses[bus_id], power=s)
 
 
 def _compute_load_power(elm_lod: pd.DataFrame, load_id: str, suffix: str) -> complex:

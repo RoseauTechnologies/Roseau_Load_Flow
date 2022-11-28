@@ -8,6 +8,7 @@ class RoseauLoadFlowExceptionCode(Enum):
 
     # Generic
     BAD_GEOMETRY_TYPE = auto()
+    BAD_PHASE = auto()
 
     # Buses
     DUPLICATE_BUS_ID = auto()

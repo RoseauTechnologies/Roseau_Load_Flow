@@ -4,11 +4,11 @@ from typing import Any, TYPE_CHECKING
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models import (
     AbstractBranch,
-    AbstractLoad,
     Bus,
     Element,
     Line,
     LineCharacteristics,
+    Load,
     Transformer,
     TransformerCharacteristics,
     VoltageSource,
@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 def network_from_dict(
     data: dict[str, Any], en_class: type["ElectricalNetwork"]
-) -> tuple[dict[str, Bus], dict[str, AbstractBranch], dict[str, AbstractLoad], dict[str, VoltageSource], list[Element]]:
+) -> tuple[dict[str, Bus], dict[str, AbstractBranch], dict[str, Load], dict[str, VoltageSource], list[Element]]:
     """Create the electrical elements from a dictionary to create an electrical network.
 
     Args:
@@ -48,7 +48,7 @@ def network_from_dict(
     ground = en_class.ground_class()
     special_elements = [ground, en_class.pref_class(element=ground)]
     buses_dict: dict[str, Bus] = {}
-    loads_dict: dict[str, AbstractLoad] = {}
+    loads_dict: dict[str, Load] = {}
     sources_dict: dict[str, VoltageSource] = {}
     for bus_data in data["buses"]:
         buses_dict[bus_data["id"]] = en_class.bus_class.from_dict(bus_data, ground)
@@ -95,7 +95,7 @@ def network_to_dict(en: "ElectricalNetwork") -> dict[str, Any]:
     for bus in en.buses.values():
         bus_dict = bus.to_dict()
         for element in bus.connected_elements:
-            if isinstance(element, AbstractLoad):
+            if isinstance(element, Load):
                 bus_dict["loads"].append(element.to_dict())
             elif isinstance(element, VoltageSource):
                 bus_dict["sources"].append(element.to_dict())
