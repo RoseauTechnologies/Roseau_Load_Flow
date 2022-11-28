@@ -15,6 +15,7 @@ from roseau.load_flow.models.loads import (
     Projection,
 )
 from roseau.load_flow.models.transformers import Transformer, TransformerCharacteristics
+from roseau.load_flow.models.voltage_sources import VoltageSource
 
 __all__ = [
     # Core
@@ -43,4 +44,6 @@ __all__ = [
     # Transformers
     "Transformer",
     "TransformerCharacteristics",
+    # Voltage sources
+    "VoltageSource",
 ]

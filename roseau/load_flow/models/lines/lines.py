@@ -9,6 +9,7 @@ from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowE
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import AbstractBranch, Ground
 from roseau.load_flow.models.lines.line_characteristics import LineCharacteristics
+from roseau.load_flow.models.voltage_sources import VoltageSource
 from roseau.load_flow.utils.types import BranchType
 from roseau.load_flow.utils.units import ureg
 
@@ -81,9 +82,9 @@ class Switch(AbstractBranch):
         element2 = self.connected_elements[1]
         if (
             isinstance(element1, Bus)
-            and element1.type == "slack"
+            and any(isinstance(e, VoltageSource) for e in element1.connected_elements)
             and isinstance(element2, Bus)
-            and element2.type == "slack"
+            and any(isinstance(e, VoltageSource) for e in element2.connected_elements)
         ):
             msg = (
                 f"The voltage sources {element1.id!r} and {element2.id!r} are "

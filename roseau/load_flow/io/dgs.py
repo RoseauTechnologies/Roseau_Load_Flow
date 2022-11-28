@@ -18,6 +18,7 @@ from roseau.load_flow.models import (
     Switch,
     Transformer,
     TransformerCharacteristics,
+    VoltageSource,
 )
 from roseau.load_flow.models.core import Element
 from roseau.load_flow.models.loads.loads import AbstractLoad
@@ -28,14 +29,14 @@ logger = logging.getLogger(__name__)
 
 def network_from_dgs(  # noqa: C901
     filename: Union[str, Path]
-) -> tuple[dict[str, Bus], dict[str, AbstractBranch], dict[str, AbstractLoad], list[Element]]:
+) -> tuple[dict[str, Bus], dict[str, AbstractBranch], dict[str, AbstractLoad], dict[str, VoltageSource], list[Element]]:
     """Create the electrical elements from a JSON file in DGS format to create an electrical network.
 
     Args:
         filename: name of the JSON file
 
     Returns:
-        The buses, branches, loads and special elements to construct the electrical network.
+        The buses, branches, loads, sources and special elements to construct the electrical network.
     """
     # Read files
     (
@@ -58,7 +59,7 @@ def network_from_dgs(  # noqa: C901
     p_ref = PotentialRef(ground)
 
     # Buses
-    buses = dict()
+    buses: dict[str, Bus] = {}
     for bus_id in elm_term.index:
         ph_tech = elm_term.at[bus_id, "phtech"]
         if ph_tech == 0:  # ABC
@@ -72,22 +73,21 @@ def network_from_dgs(  # noqa: C901
         buses[bus_id] = Bus(id=bus_id, n=n)
 
     # Sources
-    for bus_id in elm_xnet.index:
-        id_sta_cubic_source = elm_xnet.at[bus_id, "bus1"]  # id of the cubicle connecting the source and its bus
-        source_bus = sta_cubic.at[id_sta_cubic_source, "cterm"]  # id of the bus to which the source is connected
-        un = elm_term.at[source_bus, "uknom"] / np.sqrt(3) * 1e3  # phase-to-neutral voltage (V)
-        tap = elm_xnet.at[bus_id, "usetp"]  # tap voltage (p.u.)
-        # the voltage source "erases" the buse to which it is connected
+    sources: dict[str, VoltageSource] = {}
+    for source_id in elm_xnet.index:
+        id_sta_cubic_source = elm_xnet.at[source_id, "bus1"]  # id of the cubicle connecting the source and its bus
+        bus_id = sta_cubic.at[id_sta_cubic_source, "cterm"]  # id of the bus to which the source is connected
+        un = elm_term.at[bus_id, "uknom"] / np.sqrt(3) * 1e3  # phase-to-neutral voltage (V)
+        tap = elm_xnet.at[source_id, "usetp"]  # tap voltage (p.u.)
         voltages = [un * tap, un * np.exp(-np.pi * 2 / 3 * 1j) * tap, un * np.exp(np.pi * 2 / 3 * 1j) * tap]
-        buses[source_bus] = Bus(
-            id=source_bus,
-            n=4,
-            ground=ground,
-            source_voltages=voltages,
-        )
+        source_bus = buses[bus_id]
+
+        sources[source_id] = VoltageSource(id=source_id, n=4, bus=source_bus, voltages=voltages)
+        ground.connected_elements.append(source_bus)
+        source_bus.connected_elements.append(ground)
 
     # LV loads
-    loads = dict()
+    loads: dict[str, AbstractLoad] = {}
     if elm_lod_lv is not None:
         _generate_loads(elm_lod_lv, loads, buses, sta_cubic, 1e3, production=False)
 
@@ -102,7 +102,7 @@ def network_from_dgs(  # noqa: C901
         _generate_loads(elm_lod_mv, loads, buses, sta_cubic, 1e6, production=False)
 
     # Lines
-    branches = dict()
+    branches: dict[str, AbstractBranch] = {}
     if elm_lne is not None:
 
         line_types = dict()
@@ -151,8 +151,8 @@ def network_from_dgs(  # noqa: C901
     # Transformers
     if elm_tr is not None:
         # Transformers type
-        transformers_data = dict()
-        transformers_tap = dict()
+        transformers_data: dict[str, TransformerCharacteristics] = {}
+        transformers_tap: dict[str, int] = {}
         for idx in typ_tr.index:
             # Extract data
             name = typ_tr.at[idx, "loc_name"]
@@ -196,7 +196,7 @@ def network_from_dgs(  # noqa: C901
                 bus2=buses[sta_cubic.at[elm_coup.at[switch_id, "bus2"], "cterm"]],
             )
 
-    return buses, branches, loads, [p_ref, ground]
+    return buses, branches, loads, sources, [p_ref, ground]
 
 
 def _read_dgs_json_file(filename: Union[str, Path]):

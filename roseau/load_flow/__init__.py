@@ -33,6 +33,7 @@ from roseau.load_flow.models import (
     Switch,
     Transformer,
     TransformerCharacteristics,
+    VoltageSource,
 )
 from roseau.load_flow.network import ElectricalNetwork
 
@@ -76,6 +77,7 @@ __all__ = [
     # Transformers
     "Transformer",
     "TransformerCharacteristics",
+    "VoltageSource",
     # Exceptions
     "RoseauLoadFlowException",
     "RoseauLoadFlowExceptionCode",

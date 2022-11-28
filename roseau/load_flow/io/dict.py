@@ -11,6 +11,7 @@ from roseau.load_flow.models import (
     LineCharacteristics,
     Transformer,
     TransformerCharacteristics,
+    VoltageSource,
 )
 
 if TYPE_CHECKING:
@@ -21,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 def network_from_dict(
     data: dict[str, Any], en_class: type["ElectricalNetwork"]
-) -> tuple[dict[str, Bus], dict[str, AbstractBranch], dict[str, AbstractLoad], list[Element]]:
+) -> tuple[dict[str, Bus], dict[str, AbstractBranch], dict[str, AbstractLoad], dict[str, VoltageSource], list[Element]]:
     """Create the electrical elements from a dictionary to create an electrical network.
 
     Args:
@@ -32,28 +33,33 @@ def network_from_dict(
             The ElectricalNetwork class to create
 
     Returns:
-        The buses, branches, loads and special elements to construct the electrical network.
+        The buses, branches, loads, sources and special elements to construct the electrical network.
     """
-    line_types = dict()
+    line_types: dict[str, LineCharacteristics] = {}
     for line_data in data["line_types"]:
         type_name = line_data["name"]
         line_types[type_name] = LineCharacteristics.from_dict(line_data)
 
-    transformer_types = dict()
+    transformer_types: dict[str, TransformerCharacteristics] = {}
     for transformer_data in data["transformer_types"]:
         type_name = transformer_data["name"]
         transformer_types[type_name] = TransformerCharacteristics.from_dict(transformer_data)
 
     ground = en_class.ground_class()
     special_elements = [ground, en_class.pref_class(element=ground)]
-    buses_dict = dict()
-    loads_dict = dict()
+    buses_dict: dict[str, Bus] = {}
+    loads_dict: dict[str, AbstractLoad] = {}
+    sources_dict: dict[str, VoltageSource] = {}
     for bus_data in data["buses"]:
         buses_dict[bus_data["id"]] = en_class.bus_class.from_dict(bus_data, ground)
         for load_data in bus_data["loads"]:
             loads_dict[load_data["id"]] = en_class.load_class.from_dict(load_data, buses_dict[bus_data["id"]])
+        for source_data in bus_data["sources"]:
+            sources_dict[source_data["id"]] = en_class.voltage_source_class.from_dict(
+                source_data, buses_dict[bus_data["id"]]
+            )
 
-    branches_dict = dict()
+    branches_dict: dict[str, AbstractBranch] = {}
     for branch_data in data["branches"]:
         bus1 = buses_dict[branch_data["bus1"]]
         bus2 = buses_dict[branch_data["bus2"]]
@@ -71,7 +77,7 @@ def network_from_dict(
             else:
                 special_elements.append(en_class.pref_class(element=bus2))
 
-    return buses_dict, branches_dict, loads_dict, special_elements
+    return buses_dict, branches_dict, loads_dict, sources_dict, special_elements
 
 
 def network_to_dict(en: "ElectricalNetwork") -> dict[str, Any]:
@@ -85,18 +91,20 @@ def network_to_dict(en: "ElectricalNetwork") -> dict[str, Any]:
         The created dictionary.
     """
     # Export the buses and the loads
-    buses = list()
+    buses: list[Bus] = []
     for bus in en.buses.values():
         bus_dict = bus.to_dict()
-        for load in bus.connected_elements:
-            if isinstance(load, AbstractLoad):
-                bus_dict["loads"].append(load.to_dict())
+        for element in bus.connected_elements:
+            if isinstance(element, AbstractLoad):
+                bus_dict["loads"].append(element.to_dict())
+            elif isinstance(element, VoltageSource):
+                bus_dict["sources"] = element.to_dict()
         buses.append(bus_dict)
 
     # Export the branches with their characteristics
-    branches = list()
-    line_characteristics_dict = dict()
-    transformer_characteristics_dict = dict()
+    branches: list[AbstractBranch] = []
+    line_characteristics_dict: dict[str, LineCharacteristics] = {}
+    transformer_characteristics_dict: dict[str, TransformerCharacteristics] = {}
     for branch in en.branches.values():
         branches.append(branch.to_dict())
         if isinstance(branch, Line):
@@ -125,13 +133,13 @@ def network_to_dict(en: "ElectricalNetwork") -> dict[str, Any]:
             transformer_characteristics_dict[type_name] = branch.transformer_characteristics
 
     # Line characteristics
-    line_characteristics = list()
+    line_characteristics: list[LineCharacteristics] = []
     for lc in line_characteristics_dict.values():
         line_characteristics.append(lc.to_dict())
     line_characteristics.sort(key=lambda x: x["name"])  # Always keep the same order
 
     # Transformer characteristics
-    transformer_characteristics = list()
+    transformer_characteristics: list[TransformerCharacteristics] = []
     for tc in transformer_characteristics_dict.values():
         transformer_characteristics.append(tc.to_dict())
     transformer_characteristics.sort(key=lambda x: x["name"])  # Always keep the same order
