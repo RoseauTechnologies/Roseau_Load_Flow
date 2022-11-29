@@ -800,8 +800,16 @@ class ElectricalNetwork:
         Returns:
             The constructed network.
         """
-        buses_dict, branches_dict, loads_dict, special_elements = network_from_dict(data=data, en_class=cls)
-        return cls(buses=buses_dict, branches=branches_dict, loads=loads_dict, special_elements=special_elements)
+        buses_dict, branches_dict, loads_dict, sources_dict, special_elements = network_from_dict(
+            data=data, en_class=cls
+        )
+        return cls(
+            buses=buses_dict,
+            branches=branches_dict,
+            loads=loads_dict,
+            voltage_sources=sources_dict,
+            special_elements=special_elements,
+        )
 
     @classmethod
     def from_json(cls, path: Union[str, Path]) -> "ElectricalNetwork":
