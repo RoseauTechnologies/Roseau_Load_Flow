@@ -647,7 +647,7 @@ class ElectricalNetwork:
         """
         for vs_id, value in voltages.items():
             voltage_source = self.voltage_sources[vs_id]
-            voltage_source.voltages = value
+            voltage_source.update_voltages(value)
 
     def add_element(self, element: Element) -> None:
         """Add an element to the network (the C++ electrical network and the tape will be recomputed).

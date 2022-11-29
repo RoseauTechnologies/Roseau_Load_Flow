@@ -45,6 +45,13 @@ class VoltageSource(Element, JsonMixin):
         super().__init__(**kwargs)
         self.connected_elements = [bus]
         bus.connected_elements.append(self)
+        if len(voltages) != n - 1:
+            msg = f"Incorrect number of voltages: {len(voltages)} instead of {n - 1}"
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg, code=RoseauLoadFlowExceptionCode.BAD_VOLTAGES_SIZE)
+
+        if isinstance(voltages, Quantity):
+            voltages = voltages.m_as("V")
 
         self.id = id
         self.n = n
@@ -54,22 +61,19 @@ class VoltageSource(Element, JsonMixin):
     def __repr__(self) -> str:
         return f"{type(self).__name__}(id={self.id!r}, n={self.n}, bus={self.bus.id!r}, voltages={self.voltages!r})"
 
-    @property
-    def voltages(self) -> Sequence[complex]:
-        """The source voltages."""
-        return self._voltages
-
-    @voltages.setter
     @ureg.wraps(None, (None, "V"), strict=False)
-    def voltages(self, voltages: Sequence[complex]) -> None:
+    def update_voltages(self, voltages: Sequence[complex]) -> None:
+        """Change the voltages of the source.
+
+        Args:
+            voltages:
+                The new voltages to set on the source.
+        """
         if len(voltages) != self.n - 1:
             msg = f"Incorrect number of voltages: {len(voltages)} instead of {self.n - 1}"
             logger.error(msg)
             raise RoseauLoadFlowException(msg, code=RoseauLoadFlowExceptionCode.BAD_VOLTAGES_SIZE)
-
-        if isinstance(voltages, Quantity):
-            voltages = voltages.m_as("V")
-        self._voltages = voltages
+        self.voltages = voltages
 
     #
     # Json Mixin interface
