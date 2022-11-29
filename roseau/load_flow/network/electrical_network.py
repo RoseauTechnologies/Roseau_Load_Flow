@@ -684,8 +684,8 @@ class ElectricalNetwork:
             load = self.loads.pop(id)
             load.disconnect()
         elif id in self.voltage_sources:
-            load = self.voltage_sources.pop(id)
-            load.disconnect()
+            source = self.voltage_sources.pop(id)
+            source.disconnect()
         elif id in self.branches:
             branch = self.branches.pop(id)
             branch.disconnect()
