@@ -1,6 +1,6 @@
 import logging
 from collections.abc import Sequence
-from typing import Any, Optional
+from typing import Any
 
 from pint import Quantity
 
@@ -26,7 +26,7 @@ class VoltageSource(Element, JsonMixin):
     Where $U$ is the voltage and $V$ is the node potential.
     """
 
-    def __init__(self, id: Any, n: int, bus: Bus, voltages: Optional[Sequence[complex]] = None, **kwargs) -> None:
+    def __init__(self, id: Any, n: int, bus: Bus, voltages: Sequence[complex], **kwargs) -> None:
         """Voltage source constructor.
 
         Args:
