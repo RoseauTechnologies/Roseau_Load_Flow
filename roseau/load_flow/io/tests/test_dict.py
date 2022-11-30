@@ -19,23 +19,19 @@ def test_to_dict():
     ground = Ground()
     vn = 400 / np.sqrt(3)
     voltages = [vn, vn * np.exp(-2 / 3 * np.pi * 1j), vn * np.exp(2 / 3 * np.pi * 1j)]
-    vs = VoltageSource(
-        id="source",
-        n=4,
-        ground=ground,
-        source_voltages=voltages,
-    )
-    bus = Bus(id="load bus", n=4)
-    ground.connect(bus)
+    source_bus = Bus(id="source", n=4, ground=ground)
+    load_bus = Bus(id="load bus", n=4)
+    ground.connect(load_bus)
     p_ref = PotentialRef(element=ground)
+    vs = VoltageSource(id="vs", n=4, bus=source_bus, voltages=voltages)
 
     # Same type name, different characteristics -> fail
     lc1 = LineCharacteristics("test", z_line=np.eye(4, dtype=complex), y_shunt=np.eye(4, dtype=complex))
     lc2 = LineCharacteristics("test", z_line=np.eye(4, dtype=complex), y_shunt=np.eye(4, dtype=complex) * 1.1)
 
-    line1 = Line(id="line1", n=4, bus1=vs, bus2=bus, ground=ground, line_characteristics=lc1, length=10)
-    line2 = Line(id="line2", n=4, bus1=vs, bus2=bus, ground=ground, line_characteristics=lc2, length=10)
-    en = ElectricalNetwork([vs, bus], [line1, line2], [], [p_ref, ground])
+    line1 = Line(id="line1", n=4, bus1=source_bus, bus2=load_bus, ground=ground, line_characteristics=lc1, length=10)
+    line2 = Line(id="line2", n=4, bus1=source_bus, bus2=load_bus, ground=ground, line_characteristics=lc2, length=10)
+    en = ElectricalNetwork([source_bus, load_bus], [line1, line2], [], [vs], [p_ref, ground])
     with pytest.raises(RoseauLoadFlowException) as e:
         en.to_dict()
     assert "There are line characteristics duplicates" in e.value.args[0]
@@ -56,10 +52,10 @@ def test_to_dict():
         type_name="t", windings="Dyn11", uhv=20000, ulv=400, sn=200 * 1e3, p0=460, i0=2.3 / 100, psc=2350, vsc=4 / 100
     )
     transformer1 = Transformer(
-        id="Transformer1", bus1=vs, bus2=bus, transformer_characteristics=transformer_characteristics1
+        id="Transformer1", bus1=source_bus, bus2=load_bus, transformer_characteristics=transformer_characteristics1
     )
     transformer2 = Transformer(
-        id="Transformer2", bus1=vs, bus2=bus, transformer_characteristics=transformer_characteristics2
+        id="Transformer2", bus1=source_bus, bus2=load_bus, transformer_characteristics=transformer_characteristics2
     )
     en.add_element(transformer1)
     en.add_element(transformer2)

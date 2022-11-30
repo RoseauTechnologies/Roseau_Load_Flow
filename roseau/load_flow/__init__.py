@@ -13,7 +13,6 @@ from roseau.load_flow.__about__ import (
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models import (
     AbstractBranch,
-    AbstractBus,
     AbstractLoad,
     AdmittanceLoad,
     Bus,
@@ -53,9 +52,7 @@ __all__ = [
     # Electrical Network
     "ElectricalNetwork",
     # Buses
-    "AbstractBus",
     "Bus",
-    "VoltageSource",
     # Core
     "Element",
     "Ground",
@@ -80,6 +77,7 @@ __all__ = [
     # Transformers
     "Transformer",
     "TransformerCharacteristics",
+    "VoltageSource",
     # Exceptions
     "RoseauLoadFlowException",
     "RoseauLoadFlowExceptionCode",

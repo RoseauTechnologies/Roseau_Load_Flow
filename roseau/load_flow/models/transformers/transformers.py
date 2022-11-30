@@ -4,7 +4,7 @@ from typing import Any, Optional
 from shapely.geometry import Point
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
-from roseau.load_flow.models.buses import AbstractBus
+from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import AbstractBranch
 from roseau.load_flow.models.transformers.transformers_characteristics import TransformerCharacteristics
 from roseau.load_flow.utils import BranchType
@@ -23,8 +23,8 @@ class Transformer(AbstractBranch):
     def __init__(
         self,
         id: Any,
-        bus1: AbstractBus,
-        bus2: AbstractBus,
+        bus1: Bus,
+        bus2: Bus,
         transformer_characteristics: TransformerCharacteristics,
         tap: float = 1.0,
         geometry: Optional[Point] = None,
@@ -72,8 +72,8 @@ class Transformer(AbstractBranch):
     def from_dict(
         cls,
         id: Any,
-        bus1: AbstractBus,
-        bus2: AbstractBus,
+        bus1: Bus,
+        bus2: Bus,
         type_name: str,
         transformer_types: dict[str, TransformerCharacteristics],
         tap: float = 1.0,

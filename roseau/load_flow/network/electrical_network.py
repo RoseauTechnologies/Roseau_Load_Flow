@@ -19,8 +19,8 @@ from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowE
 from roseau.load_flow.io import network_from_dgs, network_from_dict, network_to_dict
 from roseau.load_flow.models import (
     AbstractBranch,
-    AbstractBus,
     AbstractLoad,
+    Bus,
     Element,
     FlexibleLoad,
     Ground,
@@ -44,7 +44,8 @@ class ElectricalNetwork:
     # Default classes to use
     branch_class = AbstractBranch
     load_class = AbstractLoad
-    bus_class = AbstractBus
+    voltage_source_class = VoltageSource
+    bus_class = Bus
     ground_class = Ground
     pref_class = PotentialRef
 
@@ -53,9 +54,10 @@ class ElectricalNetwork:
     #
     def __init__(
         self,
-        buses: Union[list[AbstractBus], dict[Any, AbstractBus]],
+        buses: Union[list[Bus], dict[Any, Bus]],
         branches: Union[list[AbstractBranch], dict[Any, AbstractBranch]],
         loads: Union[list[AbstractLoad], dict[Any, AbstractLoad]],
+        voltage_sources: Union[list[VoltageSource], dict[Any, VoltageSource]],
         special_elements: list[Element],
         **kwargs,
     ) -> None:
@@ -70,6 +72,9 @@ class ElectricalNetwork:
 
             loads:
                 The loads of the network
+
+            voltage_sources:
+                The voltage sources of the network
 
             special_elements:
                 The other elements (special, ground...)
@@ -102,9 +107,20 @@ class ElectricalNetwork:
                 loads_dict[load.id] = load
             loads = loads_dict
 
-        self.buses: dict[Any, AbstractBus] = buses
+        if isinstance(voltage_sources, list):
+            sources_dict = {}
+            for voltage_source in voltage_sources:
+                if voltage_source.id in sources_dict:
+                    msg = f"Duplicate id for a voltage source in this network: {voltage_source.id!r}."
+                    logger.error(msg)
+                    raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DUPLICATE_VOLTAGE_SOURCE_ID)
+                sources_dict[voltage_source.id] = voltage_source
+            voltage_sources = sources_dict
+
+        self.buses: dict[Any, Bus] = buses
         self.branches: dict[Any, AbstractBranch] = branches
         self.loads: dict[Any, AbstractLoad] = loads
+        self.voltage_sources: dict[Any, VoltageSource] = voltage_sources
         self.special_elements: list[Element] = special_elements
 
         self._check_validity(constructed=False)
@@ -125,39 +141,49 @@ class ElectricalNetwork:
             f" {count_repr(self.buses, 'bus', 'buses')},"
             f" {count_repr(self.branches, 'branch', 'branches')},"
             f" {count_repr(self.loads, 'load', 'loads')},"
+            f" {count_repr(self.voltage_sources, 'voltage source')},"
             f" {count_repr(self.special_elements, 'special element')}"
             f">"
         )
 
     @classmethod
-    def from_element(cls, initial_bus: AbstractBus) -> "ElectricalNetwork":
+    def from_element(cls, initial_bus: Bus) -> "ElectricalNetwork":
         """ElectricalNetwork constructor. Construct the network from only one element and add the others automatically
 
         Args:
             initial_bus:
                 Any bus of the network
         """
-        buses: list[AbstractBus] = []
+        buses: list[Bus] = []
         branches: list[AbstractBranch] = []
         loads: list[AbstractLoad] = []
+        voltage_sources: list[VoltageSource] = []
         specials: list[Element] = []
         elements: list[Element] = [initial_bus]
         visited_elements: list[Element] = []
         while elements:
             e = elements.pop(-1)
             visited_elements.append(e)
-            if isinstance(e, AbstractBus):
+            if isinstance(e, Bus):
                 buses.append(e)
             elif isinstance(e, AbstractBranch):
                 branches.append(e)
             elif isinstance(e, AbstractLoad):
                 loads.append(e)
+            elif isinstance(e, VoltageSource):
+                voltage_sources.append(e)
             else:
                 specials.append(e)
             for connected_element in e.connected_elements:
                 if connected_element not in visited_elements and connected_element not in elements:
                     elements.append(connected_element)
-        return cls(buses=buses, branches=branches, loads=loads, special_elements=specials)
+        return cls(
+            buses=buses,
+            branches=branches,
+            loads=loads,
+            voltage_sources=voltage_sources,
+            special_elements=specials,
+        )
 
     #
     # Methods to access the data
@@ -216,6 +242,15 @@ class ElectricalNetwork:
         """
         return pd.DataFrame.from_records(
             data=[(load_id, load.n, load.bus.id) for load_id, load in self.loads.items()],
+            columns=["id", "n", "bus_id"],
+            index="id",
+        )
+
+    @property
+    def voltage_sources_frame(self) -> pd.DataFrame:
+        """A dataframe of the voltage sources."""
+        return pd.DataFrame.from_records(
+            data=[(source_id, source.n, source.bus.id) for source_id, source in self.voltage_sources.items()],
             columns=["id", "n", "bus_id"],
             index="id",
         )
@@ -604,19 +639,15 @@ class ElectricalNetwork:
                 raise NotImplementedError(msg)
 
     def set_source_voltages(self, voltages: dict[Any, Sequence[complex]]) -> None:
-        """Set new voltages for the voltage source
+        """Set new voltages for the voltage source(s).
 
         Args:
             voltages:
-                A dictionary voltage_source_id -> voltages to update
+                A dictionary voltage_source_id -> voltages to update.
         """
-        for bus_id, value in voltages.items():
-            voltage_source = self.buses[bus_id]
-            if not isinstance(voltage_source, VoltageSource):
-                msg = "Only voltage sources can have their voltages updated."
-                logger.error(msg)
-                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT)
-            voltage_source.update_source_voltages(source_voltages=value)
+        for vs_id, value in voltages.items():
+            voltage_source = self.voltage_sources[vs_id]
+            voltage_source.update_voltages(value)
 
     def add_element(self, element: Element) -> None:
         """Add an element to the network (the C++ electrical network and the tape will be recomputed).
@@ -625,14 +656,16 @@ class ElectricalNetwork:
             element:
                 The element to add.
         """
-        if isinstance(element, AbstractBus):
+        if isinstance(element, Bus):
             self.buses[element.id] = element
         elif isinstance(element, AbstractLoad):
             self.loads[element.id] = element
         elif isinstance(element, AbstractBranch):
             self.branches[element.id] = element
+        elif isinstance(element, VoltageSource):
+            self.voltage_sources[element.id] = element
         else:
-            msg = "Only lines, loads and buses can be added to the network."
+            msg = "Only lines, loads, buses and voltage sources can be added to the network."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT)
         self._valid = False
@@ -650,11 +683,14 @@ class ElectricalNetwork:
         elif id in self.loads:
             load = self.loads.pop(id)
             load.disconnect()
+        elif id in self.voltage_sources:
+            source = self.voltage_sources.pop(id)
+            source.disconnect()
         elif id in self.branches:
             branch = self.branches.pop(id)
             branch.disconnect()
         else:
-            msg = f"{id!r} is not a valid bus, branch or load id."
+            msg = f"{id!r} is not a valid bus, branch, load or voltage source id."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_ELEMENT_ID)
         self._valid = False
@@ -673,6 +709,7 @@ class ElectricalNetwork:
         elements: list[Element] = list(self.buses.values())
         elements += list(self.branches.values())
         elements += list(self.loads.values())
+        elements += list(self.voltage_sources.values())
         elements += self.special_elements
 
         for element in elements:
@@ -703,6 +740,7 @@ class ElectricalNetwork:
         for element in elements:
             if isinstance(element, VoltageSource):
                 found_source = True
+                break
         if not found_source:
             msg = "There is no voltage source provided in the network, you must provide at least one."
             logger.error(msg)
@@ -711,14 +749,14 @@ class ElectricalNetwork:
         self._check_ref(elements)
 
     @staticmethod
-    def _check_ref(elements) -> None:
+    def _check_ref(elements: list[Element]) -> None:
         """Check the number of potential references to avoid having a singular jacobian matrix"""
-        visited_elements = []
+        visited_elements: list[Element] = []
         for initial_element in elements:
             if initial_element in visited_elements or isinstance(initial_element, Transformer):
                 continue
             visited_elements.append(initial_element)
-            connected_component = []
+            connected_component: list[Element] = []
             to_visit = [initial_element]
             while to_visit:
                 element = to_visit.pop(-1)
@@ -762,8 +800,16 @@ class ElectricalNetwork:
         Returns:
             The constructed network.
         """
-        buses_dict, branches_dict, loads_dict, special_elements = network_from_dict(data=data, en_class=cls)
-        return cls(buses=buses_dict, branches=branches_dict, loads=loads_dict, special_elements=special_elements)
+        buses_dict, branches_dict, loads_dict, sources_dict, special_elements = network_from_dict(
+            data=data, en_class=cls
+        )
+        return cls(
+            buses=buses_dict,
+            branches=branches_dict,
+            loads=loads_dict,
+            voltage_sources=sources_dict,
+            special_elements=special_elements,
+        )
 
     @classmethod
     def from_json(cls, path: Union[str, Path]) -> "ElectricalNetwork":
@@ -888,5 +934,11 @@ class ElectricalNetwork:
         Returns:
             The constructed network.
         """
-        buses_dict, branches_dict, loads_dict, special_elements = network_from_dgs(filename=path)
-        return cls(buses=buses_dict, branches=branches_dict, loads=loads_dict, special_elements=special_elements)
+        buses_dict, branches_dict, loads_dict, sources_dict, special_elements = network_from_dgs(filename=path)
+        return cls(
+            buses=buses_dict,
+            branches=branches_dict,
+            loads=loads_dict,
+            voltage_sources=sources_dict,
+            special_elements=special_elements,
+        )

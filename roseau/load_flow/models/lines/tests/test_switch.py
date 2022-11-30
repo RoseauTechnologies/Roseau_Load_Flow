@@ -34,9 +34,11 @@ def test_switch_loop():
 
 def test_switch_connection():
     ground = Ground()
-    vs1 = VoltageSource(id="source1", n=4, ground=ground, source_voltages=[230 + 0j, -115 + 200j, 115 - 200j])
-    vs2 = VoltageSource(id="source2", n=4, ground=ground, source_voltages=[230 + 0j, -115 + 200j, 115 - 200j])
+    bus1 = Bus("bus1", n=4, ground=ground)
+    bus2 = Bus("bus2", n=4, ground=ground)
+    _ = VoltageSource("vs1", n=4, bus=bus1, voltages=[230 + 0j, -115 + 200j, 115 - 200j])
+    _ = VoltageSource("vs2", n=4, bus=bus2, voltages=[230 + 0j, -115 + 200j, 115 - 200j])
     with pytest.raises(RoseauLoadFlowException) as e:
-        Switch("switch", 4, vs1, vs2)
+        Switch("switch", 4, bus1=bus1, bus2=bus2)
     assert "are connected with the switch" in e.value.args[0]
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_VOLTAGES_SOURCES_CONNECTION

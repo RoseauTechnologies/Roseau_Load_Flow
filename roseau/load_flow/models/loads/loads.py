@@ -7,7 +7,7 @@ import numpy as np
 from pint import Quantity
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
-from roseau.load_flow.models.buses import AbstractBus
+from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import Element
 from roseau.load_flow.models.loads.flexible_parameters import FlexibleParameter
 from roseau.load_flow.utils.json_mixin import JsonMixin
@@ -27,7 +27,7 @@ class AbstractLoad(Element, JsonMixin, metaclass=ABCMeta):
     _delta_admittance_load_class: Optional[type["DeltaAdmittanceLoad"]] = None
     _flexible_load_class: Optional[type["FlexibleLoad"]] = None
 
-    def __init__(self, id: Any, n: int, bus: AbstractBus, **kwargs) -> None:
+    def __init__(self, id: Any, n: int, bus: Bus, **kwargs) -> None:
         """Load constructor.
 
         Args:
@@ -114,7 +114,7 @@ class PowerLoad(AbstractLoad):
 
     """
 
-    def __init__(self, id: Any, n: int, bus: AbstractBus, s: Sequence[complex], **kwargs) -> None:
+    def __init__(self, id: Any, n: int, bus: Bus, s: Sequence[complex], **kwargs) -> None:
         """PowerLoad constructor.
 
         Args:
@@ -185,7 +185,7 @@ class DeltaPowerLoad(AbstractLoad):
         I_{\\mathrm{ca}} &= \\left(\\frac{S_{\\mathrm{ca}}}{V_{\\mathrm{c}}-V_{\\mathrm{a}}}\\right)^{\\star}
     """
 
-    def __init__(self, id: Any, bus: AbstractBus, s: Sequence[complex], **kwargs) -> None:
+    def __init__(self, id: Any, bus: Bus, s: Sequence[complex], **kwargs) -> None:
         """PowerLoad constructor.
 
         Args:
@@ -251,7 +251,7 @@ class AdmittanceLoad(AbstractLoad):
         I_{\\mathrm{n}} &= -\\sum_{p\\in\\{\\mathrm{a},\\mathrm{b},\\mathrm{c}\\}}I_{p}
     """
 
-    def __init__(self, id: Any, n: int, bus: AbstractBus, y: Sequence[complex], **kwargs) -> None:
+    def __init__(self, id: Any, n: int, bus: Bus, y: Sequence[complex], **kwargs) -> None:
         """AdmittanceLoad constructor.
 
         Args:
@@ -323,7 +323,7 @@ class DeltaAdmittanceLoad(AbstractLoad):
         I_{\\mathrm{ca}} &= Y_{\\mathrm{ca}}\\left(V_{\\mathrm{c}}-V_{\\mathrm{a}}\\right)
     """
 
-    def __init__(self, id: Any, bus: AbstractBus, y: Sequence[complex], **kwargs) -> None:
+    def __init__(self, id: Any, bus: Bus, y: Sequence[complex], **kwargs) -> None:
         """AdmittanceLoad constructor.
 
         Args:
@@ -386,7 +386,7 @@ class ImpedanceLoad(AbstractLoad):
     The equations are the same as in the constance admittance load implementation.
     """
 
-    def __init__(self, id: Any, n: int, bus: AbstractBus, z: Sequence[complex], **kwargs) -> None:
+    def __init__(self, id: Any, n: int, bus: Bus, z: Sequence[complex], **kwargs) -> None:
         """ImpedanceLoad constructor.
 
         Args:
@@ -465,7 +465,7 @@ class DeltaImpedanceLoad(AbstractLoad):
     The equations are the same as in the constance admittance delta load implementation.
     """
 
-    def __init__(self, id: Any, bus: AbstractBus, z: Sequence[complex], **kwargs) -> None:
+    def __init__(self, id: Any, bus: Bus, z: Sequence[complex], **kwargs) -> None:
         """ImpedanceLoad constructor.
 
         Args:
@@ -539,9 +539,7 @@ class FlexibleLoad(AbstractLoad):
 
     flexible_parameter_class: type[FlexibleParameter] = FlexibleParameter
 
-    def __init__(
-        self, id: Any, n: int, bus: AbstractBus, s: Sequence[complex], parameters: list[FlexibleParameter], **kwargs
-    ):
+    def __init__(self, id: Any, n: int, bus: Bus, s: Sequence[complex], parameters: list[FlexibleParameter], **kwargs):
         """FlexibleLoad constructor.
 
         Args:
@@ -624,7 +622,7 @@ class FlexibleLoad(AbstractLoad):
     # Json Mixin interface
     #
     @classmethod
-    def from_dict(cls, data: dict[str, Any], bus: AbstractBus) -> "FlexibleLoad":
+    def from_dict(cls, data: dict[str, Any], bus: Bus) -> "FlexibleLoad":
         s = data["powers"]
         powers = [s["sa"][0] + 1j * s["sa"][1], s["sb"][0] + 1j * s["sb"][1], s["sc"][0] + 1j * s["sc"][1]]
         parameters = list()
