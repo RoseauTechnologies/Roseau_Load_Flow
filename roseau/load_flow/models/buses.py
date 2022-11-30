@@ -125,7 +125,7 @@ class Bus(Element, JsonMixin):
 
         potentials = data.get("potentials")
 
-        if data["type"] not in ("bus", "bus_neutral"):
+        if data["type"] in ("bus", "bus_neutral"):
             n = 4 if "neutral" in data["type"] else 3
         else:
             msg = f"Bad bus type for bus {data['id']}: {data['type']}"

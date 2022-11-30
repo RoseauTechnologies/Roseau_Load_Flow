@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import pytest
 import requests_mock
+from pandas.testing import assert_frame_equal
 from shapely.geometry import LineString, Point
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
@@ -388,3 +389,12 @@ def test_buses_voltages(small_network, good_json_results):
     assert buses_voltages.index.names == ["bus_id", "phase"]
     assert list(buses_voltages.columns) == ["voltage_magnitude", "voltage_angle"]
     pd.testing.assert_frame_equal(buses_voltages, expected_buses_voltages)
+
+
+def test_to_from_dict_roundtrip(small_network: ElectricalNetwork):
+    net_dict = small_network.to_dict()
+    new_net = ElectricalNetwork.from_dict(net_dict)
+    assert_frame_equal(small_network.buses_frame, new_net.buses_frame)
+    assert_frame_equal(small_network.branches_frame, new_net.branches_frame)
+    assert_frame_equal(small_network.loads_frame, new_net.loads_frame)
+    assert_frame_equal(small_network.voltage_sources_frame, new_net.voltage_sources_frame)

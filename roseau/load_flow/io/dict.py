@@ -98,7 +98,7 @@ def network_to_dict(en: "ElectricalNetwork") -> dict[str, Any]:
             if isinstance(element, AbstractLoad):
                 bus_dict["loads"].append(element.to_dict())
             elif isinstance(element, VoltageSource):
-                bus_dict["sources"] = element.to_dict()
+                bus_dict["sources"].append(element.to_dict())
         buses.append(bus_dict)
 
     # Export the branches with their characteristics
