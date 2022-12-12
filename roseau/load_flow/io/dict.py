@@ -51,13 +51,14 @@ def network_from_dict(
     loads_dict: dict[str, AbstractLoad] = {}
     sources_dict: dict[str, VoltageSource] = {}
     for bus_data in data["buses"]:
-        buses_dict[bus_data["id"]] = en_class.bus_class.from_dict(bus_data, ground)
+        buses_dict[bus_data["id"]] = en_class.bus_class.from_dict(bus_data, None)
         for load_data in bus_data["loads"]:
             loads_dict[load_data["id"]] = en_class.load_class.from_dict(load_data, buses_dict[bus_data["id"]])
         for source_data in bus_data["sources"]:
             sources_dict[source_data["id"]] = en_class.voltage_source_class.from_dict(
                 source_data, buses_dict[bus_data["id"]]
             )
+            ground.connect(sources_dict[source_data["id"]])
 
     branches_dict: dict[str, AbstractBranch] = {}
     for branch_data in data["branches"]:
