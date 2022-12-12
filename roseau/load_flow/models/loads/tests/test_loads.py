@@ -17,11 +17,11 @@ def test_loads():
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_S_SIZE
 
     with pytest.raises(RoseauLoadFlowException) as e:
-        Load.constant_power("load", 3, bus, [100, 100], connection="delta")
+        Load.constant_power("load", 3, bus, [100, 100])  # delta
     assert "Incorrect number of power" in e.value.args[0]
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_S_SIZE
     with pytest.raises(RoseauLoadFlowException) as e:
-        Load.constant_power("load", 3, bus, [100, 100, 100, 100], connection="delta")
+        Load.constant_power("load", 3, bus, [100, 100, 100, 100])  # delta
     assert "Incorrect number of power" in e.value.args[0]
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_S_SIZE
 
@@ -35,11 +35,11 @@ def test_loads():
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_Y_SIZE
 
     with pytest.raises(RoseauLoadFlowException) as e:
-        Load.constant_admittance("load", 3, bus, [100, 100], connection="delta")
+        Load.constant_admittance("load", 3, bus, [100, 100])  # delta
     assert "Incorrect number of admittance" in e.value.args[0]
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_Y_SIZE
     with pytest.raises(RoseauLoadFlowException) as e:
-        Load.constant_admittance("load", 3, bus, [100, 100, 100, 100], connection="delta")
+        Load.constant_admittance("load", 3, bus, [100, 100, 100, 100])  # delta
     assert "Incorrect number of admittance" in e.value.args[0]
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_Y_SIZE
 
@@ -53,11 +53,11 @@ def test_loads():
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_Z_SIZE
 
     with pytest.raises(RoseauLoadFlowException) as e:
-        Load.constant_impedance("load", 3, bus, [100, 100], connection="delta")
+        Load.constant_impedance("load", 3, bus, [100, 100])  # delta
     assert "Incorrect number of impedance" in e.value.args[0]
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_Z_SIZE
     with pytest.raises(RoseauLoadFlowException) as e:
-        Load.constant_impedance("load", 3, bus, [100, 100, 100, 100], connection="delta")
+        Load.constant_impedance("load", 3, bus, [100, 100, 100, 100])  # delta
     assert "Incorrect number of impedance" in e.value.args[0]
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_Z_SIZE
 
@@ -78,14 +78,14 @@ def test_loads():
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_Z_VALUE
 
     with pytest.raises(RoseauLoadFlowException) as e:
-        Load.constant_impedance("load", 3, bus, [100, 100, 0.0], connection="delta")
+        Load.constant_impedance("load", 3, bus, [100, 100, 0.0])  # delta
     assert "An impedance for load" in e.value.args[0]
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_Z_VALUE
 
     # Update
     loads = [
-        Load.constant_power("load", 4, bus, [100, 100, 100]),
-        Load.constant_power("load", 3, bus, [100, 100, 100], connection="delta"),
+        Load.constant_power("load", 4, bus, [100, 100, 100]),  # star
+        Load.constant_power("load", 3, bus, [100, 100, 100]),  # delta
     ]
     for load in loads:
         with pytest.raises(RoseauLoadFlowException) as e:
@@ -98,8 +98,8 @@ def test_loads():
         assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_S_SIZE
 
     loads = [
-        Load.constant_admittance("load", 4, bus, [100, 100, 100]),
-        Load.constant_admittance("load", 3, bus, [100, 100, 100], connection="delta"),
+        Load.constant_admittance("load", 4, bus, [100, 100, 100]),  # star
+        Load.constant_admittance("load", 3, bus, [100, 100, 100]),  # delta
     ]
     for load in loads:
         with pytest.raises(RoseauLoadFlowException) as e:
@@ -112,8 +112,8 @@ def test_loads():
         assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_Y_SIZE
 
     loads = [
-        Load.constant_impedance("load", 4, bus, [100, 100, 100]),
-        Load.constant_impedance("load", 3, bus, [100, 100, 100], connection="delta"),
+        Load.constant_impedance("load", 4, bus, [100, 100, 100]),  # star
+        Load.constant_impedance("load", 3, bus, [100, 100, 100]),  # delta
     ]
     for load in loads:
         with pytest.raises(RoseauLoadFlowException) as e:

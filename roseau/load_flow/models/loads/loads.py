@@ -15,35 +15,16 @@ from roseau.load_flow.utils.units import ureg
 logger = logging.getLogger(__name__)
 
 LoadType = Literal["power", "admittance", "impedance"]  # TODO constant "current" loads?
-Connection = Literal["star", "delta"]
 
 
 class Load(Element, JsonMixin):
     """An electrical load."""
 
-    _UNITS = {
-        "power": "VA",
-        "admittance": "S",
-        "impedance": "ohm",
-    }
-    _FUNCTIONS = {
-        "power": {"star": "ys", "star_neutral": "ys_neutral", "delta": "ds"},
-        "admittance": {"star": "yy", "star_neutral": "yy_neutral", "delta": "dy"},
-        "impedance": {"star": "yz", "star_neutral": "yz_neutral", "delta": "dz"},
-    }
-
+    _UNITS = {"power": "VA", "admittance": "S", "impedance": "ohm"}
+    _FUNCTIONS = {"power": "s", "admittance": "y", "impedance": "z"}
     _ERRORS = {"power": "S", "admittance": "Y", "impedance": "Z"}
 
-    def __init__(
-        self,
-        id: Any,
-        n: int,
-        bus: Bus,
-        type: LoadType,
-        value: Sequence[complex],
-        connection: Connection = "star",
-        **kwargs: Any,
-    ) -> None:
+    def __init__(self, id: Any, n: int, bus: Bus, type: LoadType, value: Sequence[complex], **kwargs: Any) -> None:
         """Generic electrical load constructor.
 
         Args:
@@ -72,28 +53,12 @@ class Load(Element, JsonMixin):
                       of each phase.
                     * ``"impedance"``: A sequence of complex values representing the impedances
                       of each phase.
-
-            connection:
-                The connection type of the load. Can be ``"star"`` or ``"delta"``.
         """
         super().__init__(**kwargs)
         self.connected_elements = [bus]
         bus.connected_elements.append(self)
 
-        if connection == "delta":
-            dimension = 3
-            if n != 3:
-                msg = f"Delta connection requires 3 ports, not {n}"
-                logger.error(msg)
-                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
-        else:
-            dimension = n - 1
-            if n == 4:  # is n ever 3 here!!!
-                connection = "star_neutral"
-
         self._unit = self._UNITS[type]
-        self._function = self._FUNCTIONS[type][connection]
-        self._dimension = dimension
         self._powers = None
 
         self.id = id
@@ -108,9 +73,9 @@ class Load(Element, JsonMixin):
     def _check_value(self, value: Sequence[complex]) -> Sequence[complex]:
         if isinstance(value, Quantity):
             value = value.m_as(self._unit)
-        if len(value) != self._dimension:
+        if len(value) != 3:  # currently only three, later it will depend on the phases
             error_code = RoseauLoadFlowExceptionCode.from_string(f"BAD_{self._ERRORS[self.type]}_SIZE")
-            msg = f"Incorrect number of {self.type}: {len(value)} instead of {self._dimension}"
+            msg = f"Incorrect number of {self.type}: {len(value)} instead of 3"
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=error_code)
         if self.type == "impedance" and np.isclose(value, 0).any():
@@ -171,15 +136,7 @@ class Load(Element, JsonMixin):
         return self.flexible_parameters is not None
 
     @classmethod
-    def constant_power(
-        cls,
-        id: Any,
-        n: int,
-        bus: Bus,
-        power: Sequence[complex],
-        connection: Connection = "star",
-        **kwargs: Any,
-    ) -> "Load":
+    def constant_power(cls, id: Any, n: int, bus: Bus, power: Sequence[complex], **kwargs: Any) -> "Load":
         r"""Create a constant power load.
 
         A constant power load is a load whose power value does not depend on the voltage. It is
@@ -210,22 +167,11 @@ class Load(Element, JsonMixin):
 
             value:
                 A sequence of complex values representing the apparent power of each phase.
-
-            connection:
-                The connection type of the load. Can be ``"star"`` or ``"delta"``.
         """
-        return cls(id, n=n, bus=bus, value=power, type="power", connection=connection, **kwargs)
+        return cls(id, n=n, bus=bus, value=power, type="power", **kwargs)
 
     @classmethod
-    def constant_admittance(
-        cls,
-        id: Any,
-        n: int,
-        bus: Bus,
-        admittance: Sequence[complex],
-        connection: Connection = "star",
-        **kwargs: Any,
-    ) -> "Load":
+    def constant_admittance(cls, id: Any, n: int, bus: Bus, admittance: Sequence[complex], **kwargs: Any) -> "Load":
         r"""A constant admittance load.
 
         A constant admittance load is a load whose power value is proportional to the square of the
@@ -256,22 +202,11 @@ class Load(Element, JsonMixin):
 
             value:
                 A sequence of complex values representing the admittance of each phase.
-
-            connection:
-                The connection type of the load. Can be ``"star"`` or ``"delta"``.
         """
-        return cls(id, n=n, bus=bus, value=admittance, type="admittance", connection=connection, **kwargs)
+        return cls(id, n=n, bus=bus, value=admittance, type="admittance", **kwargs)
 
     @classmethod
-    def constant_impedance(
-        cls,
-        id: Any,
-        n: int,
-        bus: Bus,
-        impedance: Sequence[complex],
-        connection: Connection = "star",
-        **kwargs: Any,
-    ) -> "Load":
+    def constant_impedance(cls, id: Any, n: int, bus: Bus, impedance: Sequence[complex], **kwargs: Any) -> "Load":
         r"""A constant impedance load.
 
         A constant impedance load is a load whose power value is proportional to the square of the
@@ -302,11 +237,8 @@ class Load(Element, JsonMixin):
 
             value:
                 A sequence of complex values representing the impedance of each phase.
-
-            connection:
-                The connection type of the load. Can be ``"star"`` or ``"delta"``.
         """
-        return cls(id, n=n, bus=bus, value=impedance, type="impedance", connection=connection, **kwargs)
+        return cls(id, n=n, bus=bus, value=impedance, type="impedance", **kwargs)
 
     def add_control(self, parameters: list[FlexibleParameter]) -> None:
         """Make the load flexible load i.e. a load with control.
@@ -318,13 +250,13 @@ class Load(Element, JsonMixin):
             parameters:
                 List of flexible parameters for each phase.
         """
-        if self.type != "power" or not self._function.startswith("y"):
-            msg = "Flexible parameters are only available for power loads (star connection)"
+        if self.type != "power" or self.n != 4:
+            msg = "Flexible parameters are currently only available for power loads with neutral connection"
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LOAD_TYPE)
 
-        if len(parameters) != self._dimension:
-            msg = f"Incorrect number of parameters: {len(parameters)} instead of {self._dimension}"
+        if len(parameters) != 3:  # currently only three, later it will depend on the phases
+            msg = f"Incorrect number of parameters: {len(parameters)} instead of 3"
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PARAMETERS_SIZE)
 
@@ -359,7 +291,7 @@ class Load(Element, JsonMixin):
             s = data["powers"]
             powers = [complex(*s["sa"]), complex(*s["sb"]), complex(*s["sc"])]
             if data["function"].startswith("ds"):
-                return cls.constant_power(id=data["id"], n=3, bus=bus, power=powers, connection="delta")
+                return cls.constant_power(id=data["id"], n=3, bus=bus, power=powers)
             else:
                 load = cls.constant_power(id=data["id"], n=4, bus=bus, power=powers)
                 if data["function"] == "flexible":
@@ -373,7 +305,7 @@ class Load(Element, JsonMixin):
             if data["function"].startswith("yy"):
                 return cls.constant_admittance(id=data["id"], n=4, bus=bus, admittance=admittances)
             else:
-                return cls.constant_admittance(id=data["id"], bus=bus, admittance=admittances, connection="delta")
+                return cls.constant_admittance(id=data["id"], n=3, bus=bus, admittance=admittances)
         elif data["function"].startswith(("yz", "dz")):
             # Impedance load
             z = data["impedances"]
@@ -381,7 +313,7 @@ class Load(Element, JsonMixin):
             if data["function"].startswith("yz"):
                 return cls.constant_impedance(id=data["id"], n=4, bus=bus, impedance=impedances)
             else:
-                return cls.constant_impedance(id=data["id"], bus=bus, impedance=impedances, connection="delta")
+                return cls.constant_impedance(id=data["id"], n=3, bus=bus, impedance=impedances)
         else:
             msg = f"Unknown load type for load {data['id']}: {data['function']}"
             logger.error(msg)
@@ -389,7 +321,10 @@ class Load(Element, JsonMixin):
 
     def to_dict(self) -> dict[str, Any]:
         # function was computed using self.bus.n instead of self.n for star loads!!!
-        res = {"id": self.id, "function": self._function}
+        res = {
+            "id": self.id,
+            "function": f"d{self._FUNCTIONS[self.type]}" if self.n == 3 else f"y{self._FUNCTIONS[self.type]}_neutral",
+        }
         if self.is_flexible():
             res["function"] = "flexible"  # overwrite the function
             res["parameters"] = [param.to_dict() for param in self.flexible_parameters]
