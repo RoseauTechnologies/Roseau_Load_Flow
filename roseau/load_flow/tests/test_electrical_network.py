@@ -38,7 +38,7 @@ def small_network() -> ElectricalNetwork:
         bus=source_bus,
         voltages=[20000.0 + 0.0j, -10000.0 - 17320.508076j, -10000.0 + 17320.508076j],
     )
-    load = Load.constant_power("load", 4, load_bus, [100, 100, 100])
+    load = Load("load", 4, load_bus, s=[100, 100, 100])
     pref = PotentialRef(ground)
 
     lc = LineCharacteristics("test", 10 * np.eye(4, dtype=complex))
@@ -130,7 +130,7 @@ def test_add_and_remove():
     source_bus = Bus(id="source", n=4, ground=ground)
     load_bus = Bus(id="load bus", n=4)
     _ = VoltageSource(id="vs", n=4, bus=source_bus, voltages=voltages)
-    load = Load.constant_power(id="power load", n=4, bus=load_bus, power=[100 + 0j, 100 + 0j, 100 + 0j])
+    load = Load(id="power load", n=4, bus=load_bus, s=[100 + 0j, 100 + 0j, 100 + 0j])
     line_characteristics = LineCharacteristics("test", z_line=np.eye(4, dtype=complex))
     line = Line(
         id="line", n=4, bus1=source_bus, bus2=load_bus, line_characteristics=line_characteristics, length=10
@@ -138,7 +138,7 @@ def test_add_and_remove():
     _ = PotentialRef(element=ground)
     en = ElectricalNetwork.from_element(source_bus)
     en.remove_element(load.id)
-    new_load = Load.constant_power(id="power load", n=4, bus=load_bus, power=[100 + 0j, 100 + 0j, 100 + 0j])
+    new_load = Load(id="power load", n=4, bus=load_bus, s=[100 + 0j, 100 + 0j, 100 + 0j])
     en.add_element(new_load)
 
     # Bad key
@@ -223,7 +223,7 @@ def test_solve_load_flow(small_network, good_json_results):
     assert len(load_bus.potentials) == 4
 
     # No convergence
-    load.update([10000000, 100, 100])
+    load.update_powers([10000000, 100, 100])
     json_result = {
         "info": {
             "status": "failure",

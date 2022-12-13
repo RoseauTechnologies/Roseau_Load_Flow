@@ -39,7 +39,7 @@ class RoseauLoadFlowExceptionCode(Enum):
     # Load
     DUPLICATE_LOAD_ID = auto()
     BAD_LOAD_TYPE = auto()
-    BAD_Y_SIZE = auto()
+    BAD_I_SIZE = auto()
     BAD_Z_SIZE = auto()
     BAD_Z_VALUE = auto()
     BAD_S_SIZE = auto()

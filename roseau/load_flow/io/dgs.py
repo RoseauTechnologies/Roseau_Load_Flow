@@ -355,7 +355,7 @@ def _generate_loads(
             s = [s_phase / 3, s_phase / 3, s_phase / 3]
         else:  # Unbalanced
             s = [sa, sb, sc]
-        loads[load_id] = Load.constant_power(load_id, n=4, bus=buses[bus_id], power=s)
+        loads[load_id] = Load(load_id, n=4, bus=buses[bus_id], s=s)
 
 
 def _compute_load_power(elm_lod: pd.DataFrame, load_id: str, suffix: str) -> complex:
