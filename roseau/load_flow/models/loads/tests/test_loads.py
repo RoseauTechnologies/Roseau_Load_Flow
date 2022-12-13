@@ -100,13 +100,12 @@ def test_load_errors():
     assert "Incorrect number of impedance" in e.value.args[0]
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_Z_SIZE
 
-    load = Load("load", 4, bus, s=[100, 100, 100])
     with pytest.raises(RoseauLoadFlowException) as e:
-        load.add_control([FlexibleParameter.constant()] * 2)
+        Load("load", 4, bus, s=[100, 100, 100], flexible_parameters=[FlexibleParameter.constant()] * 2)
     assert "Incorrect number of parameters" in e.value.args[0]
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_PARAMETERS_SIZE
     with pytest.raises(RoseauLoadFlowException) as e:
-        load.add_control([FlexibleParameter.constant()] * 4)
+        Load("load", 4, bus, s=[100, 100, 100], flexible_parameters=[FlexibleParameter.constant()] * 4)
     assert "Incorrect number of parameters" in e.value.args[0]
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_PARAMETERS_SIZE
 
@@ -208,43 +207,36 @@ def test_flexible_load():
     fp_const = FlexibleParameter.constant()
 
     # Bad control parameters
-    load = Load("flexible load", 4, bus, s=[300 + 50j, 0, 0j])
     with pytest.raises(RoseauLoadFlowException) as e:
-        load.add_control([fp_pq_prod, fp_const, fp_const])
+        Load("flexible load", 4, bus, s=[300 + 50j, 0, 0j], flexible_parameters=[fp_pq_prod, fp_const, fp_const])
     assert "The power is greater than the parameter s_max for flexible load" in e.value.args[0]
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_S_VALUE
 
-    load = Load("flexible load", 4, bus, s=[100 + 50j, 0, 0j])
     with pytest.raises(RoseauLoadFlowException) as e:
-        load.add_control([fp_pq_prod, fp_const, fp_const])
+        Load("flexible load", 4, bus, s=[100 + 50j, 0, 0j], flexible_parameters=[fp_pq_prod, fp_const, fp_const])
     assert "There is a production control but a positive power for flexible load" in e.value.args[0]
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_S_VALUE
 
-    load = Load("flexible load", 4, bus, s=[0, 0, 0j])
     with pytest.raises(RoseauLoadFlowException) as e:
-        load.add_control([fp_pq_prod, fp_const, fp_const])
+        Load("flexible load", 4, bus, s=[0, 0, 0j], flexible_parameters=[fp_pq_prod, fp_const, fp_const])
     assert "There is a P control but a null active power for flexible load" in e.value.args[0]
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_S_VALUE
 
-    load = Load("flexible load", 4, bus, s=[-100 + 50j, 0, 0j])
     with pytest.raises(RoseauLoadFlowException) as e:
-        load.add_control([fp_p_cons, fp_const, fp_const])
+        Load("flexible load", 4, bus, s=[-100 + 50j, 0, 0j], flexible_parameters=[fp_p_cons, fp_const, fp_const])
     assert "There is a consumption control but a negative power for flexible load" in e.value.args[0]
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_S_VALUE
 
     # Only power loads with neutral can have control (this is the legacy behavior with FlexibleLoad)
     # (TODO: what needs to be done to enable it on other loads?)
-    for load in [
-        Load("flexible load", 4, bus, z=[100, 100, 100]),
-        Load("flexible load", 3, bus, s=[100, 100, 100]),
-    ]:
-        with pytest.raises(RoseauLoadFlowException) as e:
-            load.add_control([fp_pq_prod, fp_const, fp_const])
-        assert e.value.code == RoseauLoadFlowExceptionCode.BAD_LOAD_TYPE
-        assert (
-            "Flexible parameters are currently only available for power loads with neutral connection"
-            in e.value.args[0]
-        )
+    with pytest.raises(RoseauLoadFlowException) as e:
+        Load("flexible load", 4, bus, z=[100, 100, 100], flexible_parameters=[fp_pq_prod, fp_const, fp_const])
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_LOAD_TYPE
+    assert "Flexible parameters are currently only available for power loads with neutral connection" in e.value.args[0]
+    with pytest.raises(RoseauLoadFlowException) as e:
+        Load("flexible load", 3, bus, s=[100, 100, 100], flexible_parameters=[fp_pq_prod, fp_const, fp_const])
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_LOAD_TYPE
+    assert "Flexible parameters are currently only available for power loads with neutral connection" in e.value.args[0]
 
     # Getting/Setting the power on a non flexible load
     load = Load("normal load", 4, bus, s=[100 + 50j, 0, 0j])
@@ -258,8 +250,7 @@ def test_flexible_load():
     assert "Cannot set the power of a non flexible load" in e.value.args[0]
 
     # Good load
-    load = Load("flexible load", 4, bus, s=[100 + 50j, 0, 0j])
-    load.add_control([fp_pq_cons, fp_const, fp_const])
+    load = Load("flexible load", 4, bus, s=[100 + 50j, 0, 0j], flexible_parameters=[fp_pq_cons, fp_const, fp_const])
     assert load.flexible_parameters == [fp_pq_cons, fp_const, fp_const]
     assert load.is_flexible()
     assert load._powers is None  # cannot use load.powers because it is passing None to pint

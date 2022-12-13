@@ -55,9 +55,10 @@ class Load(Element, JsonMixin):
         s: Optional[Sequence[complex]] = None,
         i: Optional[Sequence[complex]] = None,
         z: Optional[Sequence[complex]] = None,
+        flexible_parameters: Optional[Sequence[FlexibleParameter]] = None,
         **kwargs: Any,
     ) -> None:
-        r"""Generic electrical load constructor.
+        r"""Electrical load constructor.
 
         A load is characterized by its complex power `S`, current `I` and impedance `Z`. The ``s``
         parameter is the constant power part of the load, the ``i`` parameter is the constant
@@ -113,6 +114,11 @@ class Load(Element, JsonMixin):
 
             z:
                 An optional sequence of complex values of the impedances of each phase.
+
+            flexible_parameters:
+                Optional list of flexible parameters for each phase. If added the control becomes
+                controllable. Only constant power loads with star connection currently can be made
+                flexible.
         """
         super().__init__(**kwargs)
         self.connected_elements = [bus]
@@ -131,7 +137,9 @@ class Load(Element, JsonMixin):
         self.z = self._clean_value(z, type="z") if z is not None else None
 
         # Control
-        self.flexible_parameters: Optional[list[FlexibleParameter]] = None
+        if flexible_parameters is not None:
+            flexible_parameters = self._check_flexible_parameters(flexible_parameters)
+        self.flexible_parameters = flexible_parameters
         self._powers = None
 
     def _clean_value(self, value: Sequence[complex], type: Literal["s", "z", "i"]) -> Sequence[complex]:
@@ -210,16 +218,7 @@ class Load(Element, JsonMixin):
         """
         return self.flexible_parameters is not None
 
-    def add_control(self, parameters: list[FlexibleParameter]) -> None:
-        """Make the load flexible load i.e. a load with control.
-
-        .. important::
-            Only constant power loads with star connection currently can be made flexible.
-
-        Args:
-            parameters:
-                List of flexible parameters for each phase.
-        """
+    def _check_flexible_parameters(self, parameters: Sequence[FlexibleParameter]) -> list[FlexibleParameter]:
         if self.s is None or self.n != 4:
             msg = "Flexible parameters are currently only available for power loads with neutral connection"
             logger.error(msg)
@@ -249,7 +248,7 @@ class Load(Element, JsonMixin):
                 msg = f"There is a P control but a null active power for flexible load {self.id!r}"
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_S_VALUE)
-        self.flexible_parameters = parameters
+        return list(parameters)
 
     #
     # Json Mixin interface
@@ -259,18 +258,20 @@ class Load(Element, JsonMixin):
         s = data.get("powers")
         i = data.get("currents")
         z = data.get("impedances")
+        params = data.get("parameters")
         const_s = [complex(*s["sa"]), complex(*s["sb"]), complex(*s["sc"])] if s is not None else None
         const_i = [complex(*i["ia"]), complex(*i["ib"]), complex(*i["ic"])] if i is not None else None
         const_z = [complex(*z["za"]), complex(*z["zb"]), complex(*z["zc"])] if z is not None else None
-
-        load = Load(id=data["id"], n=len(data["phases"]), bus=bus, s=const_s, i=const_i, z=const_z)
-
-        params_list = data.get("parameters")
-        if params_list is not None:
-            parameters = [FlexibleParameter.from_dict(param) for param in params_list]
-            load.add_control(parameters)
-
-        return load
+        flexible_params = [FlexibleParameter.from_dict(p) for p in params] if params is not None else None
+        return Load(
+            id=data["id"],
+            n=len(data["phases"]),
+            bus=bus,
+            s=const_s,
+            i=const_i,
+            z=const_z,
+            flexible_parameters=flexible_params,
+        )
 
     def to_dict(self) -> dict[str, Any]:
         _temporarily_check_only_s_or_z(s=self.s, i=self.i, z=self.z)
