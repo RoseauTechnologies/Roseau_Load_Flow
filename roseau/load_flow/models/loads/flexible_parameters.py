@@ -6,7 +6,6 @@ from roseau.load_flow.utils.units import ureg
 
 logger = logging.getLogger(__name__)
 
-
 ControlType = Literal["constant", "p_max_u_production", "p_max_u_consumption", "q_u"]
 
 

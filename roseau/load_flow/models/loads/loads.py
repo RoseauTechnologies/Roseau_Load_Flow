@@ -1,6 +1,7 @@
 import logging
+from abc import ABCMeta
 from collections.abc import Sequence
-from typing import Any, Literal, Optional
+from typing import Any, Literal
 
 import numpy as np
 from pint import Quantity
@@ -15,85 +16,118 @@ from roseau.load_flow.utils.units import ureg
 logger = logging.getLogger(__name__)
 
 
-def _temporarily_check_only_s_or_z(
-    s: Optional[Sequence[complex]], i: Optional[Sequence[complex]], z: Optional[Sequence[complex]]
-) -> None:
-    # Temporarily block loads that are not yet available until we implement the full load equation
-    # Remove this check later
+class AbstractLoad(Element, JsonMixin, metaclass=ABCMeta):
+    """An abstract class of an electric load."""
 
-    # Constant current loads are not implemented
-    if i is not None:
-        raise RoseauLoadFlowException(
-            msg=(
-                "Load currently expects s (constant power) or z (constant impedance), "
-                "i (constant current) is not implemented"
-            ),
-            code=RoseauLoadFlowExceptionCode.BAD_LOAD_TYPE,
-        )
+    _power_load_class: type["PowerLoad"]
+    _current_load_class: type["CurrentLoad"]
+    _impedance_load_class: type["ImpedanceLoad"]
+    _flexible_load_class: type["FlexibleLoad"]
 
-    # Mixed constant power and constant impedance loads are not implemented
-    if s is not None and z is not None:
-        raise RoseauLoadFlowException(
-            msg="Load currently expects only s (constant power) or z (constant impedance), not both.",
-            code=RoseauLoadFlowExceptionCode.BAD_LOAD_TYPE,
-        )
-    elif s is None and z is None:
-        raise RoseauLoadFlowException(
-            msg="Load currently expects either s (constant power) or z (constant impedance), non given.",
-            code=RoseauLoadFlowExceptionCode.BAD_LOAD_TYPE,
-        )
+    _type: Literal["power", "current", "impedance"]
+
+    def __init__(self, id: Any, n: int, bus: Bus, **kwargs) -> None:
+        """AbstractLoad constructor.
+
+        Args:
+            id:
+                The unique id of the load.
+
+            n:
+                The number of ports (phases) of the load.
+
+            bus:
+                The bus to connect the load to.
+        """
+        super().__init__(**kwargs)
+        self.connected_elements = [bus]
+        bus.connected_elements.append(self)
+
+        self.id = id
+        self.n = n
+        self.bus = bus
+        self._currents = None
+        self._symbol = {"power": "S", "current": "I", "impedance": "Z"}[self._type]
+
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}({self.id!r}, n={self.n}, bus={self.bus.id!r})"
+
+    def __str__(self) -> str:
+        return f"id={self.id!r} - n={self.n}"
+
+    @property
+    @ureg.wraps("A", None, strict=False)
+    def currents(self) -> np.ndarray:
+        """An array of the actual currents of each phase (A) as computed by the load flow."""
+        return self._currents
+
+    @currents.setter
+    def currents(self, value: np.ndarray) -> None:
+        self._currents = value
+
+    def _validate_value(self, value: Sequence[complex]) -> Sequence[complex]:
+        if len(value) != 3:  # TODO change the test when we have phases
+            msg = f"Incorrect number of {self._type}s: {len(value)} instead of 3"
+            logger.error(msg)
+            raise RoseauLoadFlowException(
+                msg=msg, code=RoseauLoadFlowExceptionCode.from_string(f"BAD_{self._symbol}_SIZE")
+            )
+        # A load cannot have any zero impedance
+        if self._type == "impedance" and np.isclose(value, 0).any():
+            msg = f"An impedance of the load {self.id!r} is null"
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Z_VALUE)
+        return value
+
+    #
+    # Json Mixin interface
+    #
+    @classmethod
+    def from_dict(cls, data: dict[str, Any], bus: Bus) -> "AbstractLoad":
+        id = data["id"]
+        n = len(data["phases"])
+        if (params := data.get("parameters")) is not None:
+            s = data["powers"]
+            s_complex = [complex(*s["sa"]), complex(*s["sb"]), complex(*s["sc"])]
+            parameters = [cls._flexible_load_class._flexible_parameter_class.from_dict(p) for p in params]
+            return cls._flexible_load_class(id, n, bus, s=s_complex, parameters=parameters)
+        elif (s := data.get("powers")) is not None:
+            s_complex = [complex(*s["sa"]), complex(*s["sb"]), complex(*s["sc"])]
+            return cls._power_load_class(id, n, bus, s=s_complex)
+        elif (i := data.get("currents")) is not None:
+            i_complex = [complex(*i["ia"]), complex(*i["ib"]), complex(*i["ic"])]
+            return cls._current_load_class(id, n, bus, i=i_complex)
+        elif (z := data.get("impedances")) is not None:
+            z_complex = [complex(*z["za"]), complex(*z["zb"]), complex(*z["zc"])]
+            return cls._impedance_load_class(id, n, bus, z=z_complex)
+        else:
+            msg = f"Unknown load type for load {data['id']!r}"
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LOAD_TYPE)
 
 
-class Load(Element, JsonMixin):
-    """An electrical load."""
+class PowerLoad(AbstractLoad):
+    r"""A constant power load.
 
-    def __init__(
-        self,
-        id: Any,
-        n: int,
-        bus: Bus,
-        s: Optional[Sequence[complex]] = None,
-        i: Optional[Sequence[complex]] = None,
-        z: Optional[Sequence[complex]] = None,
-        flexible_parameters: Optional[Sequence[FlexibleParameter]] = None,
-        **kwargs: Any,
-    ) -> None:
-        r"""Electrical load constructor.
+    The equations are the following (star loads):
 
-        A load is characterized by its complex power `S`, current `I` and impedance `Z`. The ``s``
-        parameter is the constant power part of the load, the ``i`` parameter is the constant
-        current part, and the ``z`` parameter is the constant impedance part. The load is then
-        characterized by the following equations:
+    .. math::
+        I_{\mathrm{abc}} &= \left(\frac{S_{\mathrm{abc}}}{V_{\mathrm{abc}}-V_{\mathrm{n}}}\right)^{\star} \\
+        I_{\mathrm{n}} &= -\sum_{p\in\{\mathrm{a},\mathrm{b},\mathrm{c}\}}I_{p}
 
-        1. Star loads (aka Wye loads):
+    and the following (delta loads):
 
-            .. math::
-                \mathbf{I}_{\mathrm{abc}} &=
-                    \left(\frac{S_{\mathrm{abc}}}{V_{\mathrm{abc}}-V_{\mathrm{n}}}\right)^{\star}
-                    + I_{\mathrm{abc}}
-                    + \left(\frac{V_{\mathrm{abc}}-V_{\mathrm{n}}}{Z_{\mathrm{abc}}}\right)^{\star} \\
-                \mathbf{I}_{\mathrm{n}} &= -\sum_{p\in\{\mathrm{a},\mathrm{b},\mathrm{c}\}}I_{p}
+    .. math::
+        I_{\mathrm{ab}} &= \left(\frac{S_{\mathrm{ab}}}{V_{\mathrm{a}}-V_{\mathrm{b}}}\right)^{\star} \\
+        I_{\mathrm{bc}} &= \left(\frac{S_{\mathrm{bc}}}{V_{\mathrm{b}}-V_{\mathrm{c}}}\right)^{\star} \\
+        I_{\mathrm{ca}} &= \left(\frac{S_{\mathrm{ca}}}{V_{\mathrm{c}}-V_{\mathrm{a}}}\right)^{\star}
 
-        2. Delta loads:
+    """
 
-            .. math::
-                \mathbf{I}_{\mathrm{ab}} &=
-                    \left(\frac{S_{\mathrm{ab}}}{V_{\mathrm{a}}-V_{\mathrm{b}}}\right)^{\star}
-                    + I_{\mathrm{ab}}
-                    + \left(\frac{V_{\mathrm{a}}-V_{\mathrm{b}}}{Z_{\mathrm{ab}}}\right)^{\star} \\
-                \mathbf{I}_{\mathrm{bc}} &=
-                    \left(\frac{S_{\mathrm{bc}}}{V_{\mathrm{b}}-V_{\mathrm{c}}}\right)^{\star}
-                    + I_{\mathrm{bc}}
-                    + \left(\frac{V_{\mathrm{b}}-V_{\mathrm{c}}}{Z_{\mathrm{bc}}}\right)^{\star} \\
-                \mathbf{I}_{\mathrm{ca}} &=
-                    \left(\frac{S_{\mathrm{ca}}}{V_{\mathrm{c}}-V_{\mathrm{a}}}\right)^{\star}
-                    + I_{\mathrm{ca}}
-                    + \left(\frac{V_{\mathrm{b}}-V_{\mathrm{c}}}{Z_{\mathrm{ca}}}\right)^{\star}
+    _type = "power"
 
-        .. important::
-            The full load equation is not implemented yet. Only constant power loads or constant
-            impedance loads are currently supported. Use either the ``s`` or ``z`` parameter, but
-            not both.
+    def __init__(self, id: Any, n: int, bus: Bus, s: Sequence[complex], **kwargs) -> None:
+        """PowerLoad constructor.
 
         Args:
             id:
@@ -106,125 +140,189 @@ class Load(Element, JsonMixin):
                 The bus to connect the load to.
 
             s:
-                An optional sequence of complex values of the apparent powers of each phase.
-
-            i:
-                An optional sequence of complex values of the currents of each phase.
-                (This option is not implemented yet.)
-
-            z:
-                An optional sequence of complex values of the impedances of each phase.
-
-            flexible_parameters:
-                Optional list of flexible parameters for each phase. If added the control becomes
-                controllable. Only constant power loads with star connection currently can be made
-                flexible.
+                List of power for each phase (VA).
         """
-        super().__init__(**kwargs)
-        self.connected_elements = [bus]
-        bus.connected_elements.append(self)
-
-        # Element attributes
-        self.id = id
-        self.n = n
-        self.bus = bus
-        self._currents = None
-
-        # Load equation
-        _temporarily_check_only_s_or_z(s=s, i=i, z=z)
-        self.s = self._clean_value(s, type="s") if s is not None else None
-        self.i = self._clean_value(i, type="i") if i is not None else None
-        self.z = self._clean_value(z, type="z") if z is not None else None
-
-        # Control
-        if flexible_parameters is not None:
-            flexible_parameters = self._check_flexible_parameters(flexible_parameters)
-        self.flexible_parameters = flexible_parameters
-        self._powers = None
-
-    def _clean_value(self, value: Sequence[complex], type: Literal["s", "z", "i"]) -> Sequence[complex]:
-        if isinstance(value, Quantity):
-            unit = {"s": "VA", "z": "ohm", "i": "A"}[type]
-            value = value.m_as(unit)
-        if len(value) != 3:  # currently only three, later it will depend on the phases
-            error_code = RoseauLoadFlowExceptionCode.from_string(f"BAD_{type.upper()}_SIZE")
-            qty = {"s": "power", "z": "impedance", "i": "current"}[type]
-            msg = f"Incorrect number of {qty}: {len(value)} instead of 3"
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=error_code)
-        if type == "z" and np.isclose(value, 0).any():
-            msg = f"An impedance for load {self.id!r} is null"
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Z_VALUE)
-        return value
-
-    def __repr__(self) -> str:
-        return f"{type(self).__name__}({self.id!r}, n={self.n}, bus={self.bus.id!r})"
-
-    def __str__(self) -> str:
-        return f"id={self.id!r} - n={self.n}"
-
-    @property
-    @ureg.wraps("A", None, strict=False)
-    def currents(self) -> np.ndarray:
-        """An array of the actual currents of each phase of the load as computed by the load flow."""
-        return self._currents
-
-    @currents.setter
-    def currents(self, value: np.ndarray) -> None:
-        self._currents = value
-
-    @property
-    @ureg.wraps("VA", None, strict=False)
-    def powers(self) -> np.ndarray:
-        """An array of the actual powers of each phase of the load as computed by the load flow."""
-        if not self.is_flexible():
-            msg = f"Cannot get the power of a non flexible load {self.id!r}"
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LOAD_TYPE)
-        return self._powers
-
-    @powers.setter
-    def powers(self, value: np.ndarray) -> None:
-        if not self.is_flexible():
-            msg = f"Cannot set the power of a non flexible load {self.id!r}"
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LOAD_TYPE)
-        self._powers = value
+        super().__init__(id=id, n=n, bus=bus, **kwargs)
+        if isinstance(s, Quantity):
+            s = s.m_as("VA")
+        self.s = self._validate_value(s)
 
     @ureg.wraps(None, (None, "VA"), strict=False)
-    def update_powers(self, value: Sequence[complex]) -> None:
-        """Update the constant power of the load."""
-        _temporarily_check_only_s_or_z(s=value, i=self.i, z=self.z)
-        self.s = self._clean_value(value, type="s")
+    def update_powers(self, s: Sequence[complex]) -> None:
+        """Change the powers of the load.
+
+        Args:
+            s:
+                The new powers to set (VA).
+        """
+        self.s = self._validate_value(s)
+
+    def to_dict(self) -> dict[str, Any]:
+        sa, sb, sc = self.s
+        return {
+            "id": self.id,
+            "phases": "abc" if self.n == 3 else "abcn",
+            "powers": {
+                "sa": [sa.real, sa.imag],
+                "sb": [sb.real, sb.imag],
+                "sc": [sc.real, sc.imag],
+            },
+        }
+
+
+class CurrentLoad(AbstractLoad):
+    r"""A constant current load.
+
+    The equations are the following (star loads):
+
+    .. math::
+        I_{\mathrm{abc}} &= constant \\
+        I_{\mathrm{n}} &= -\sum_{p\in\{\mathrm{a},\mathrm{b},\mathrm{c}\}}I_{p}
+
+    and the following (delta loads):
+
+    .. math::
+        I_{\mathrm{ab}} &= constant \\
+        I_{\mathrm{bc}} &= constant \\
+        I_{\mathrm{ca}} &= constant
+    """
+
+    _type = "current"
+
+    def __init__(self, id: Any, n: int, bus: Bus, i: Sequence[complex], **kwargs) -> None:
+        """CurrentLoad constructor.
+
+        Args:
+            id:
+                The unique id of the load.
+
+            n:
+                The number of ports (phases) of the load.
+
+            bus:
+                The bus to connect the load to.
+
+            i:
+                List of currents for each phase (Amps).
+        """
+        super().__init__(id=id, n=n, bus=bus, **kwargs)
+        if isinstance(i, Quantity):
+            i = i.m_as("A")
+        self.i = self._validate_value(i)
 
     @ureg.wraps(None, (None, "A"), strict=False)
-    def update_currents(self, value: Sequence[complex]) -> None:
-        """Update the constant current of the load."""
-        _temporarily_check_only_s_or_z(s=self.s, i=value, z=self.z)
-        self.i = self._clean_value(value, type="i")
+    def update_currents(self, i: Sequence[complex]) -> None:
+        """Change the currents of the load.
+
+        Args:
+            i:
+                The new currents to set (Amps).
+        """
+        self.i = self._validate_value(i)
+
+    def to_dict(self) -> dict[str, Any]:
+        ya, yb, yc = self.i
+        return {
+            "id": self.id,
+            "phases": "abc" if self.n == 3 else "abcn",
+            "currents": {
+                "ya": [ya.real, ya.imag],
+                "yb": [yb.real, yb.imag],
+                "yc": [yc.real, yc.imag],
+            },
+        }
+
+
+class ImpedanceLoad(AbstractLoad):
+    r"""A constant impedance load.
+
+    The equations are the following (star loads):
+
+    .. math::
+        I_{\mathrm{abc}} &= \frac{\left(V_{\mathrm{abc}}-V_{\mathrm{n}}\right)}{Z_{\mathrm{abc}}} \\
+        I_{\mathrm{n}} &= -\sum_{p\in\{\mathrm{a},\mathrm{b},\mathrm{c}\}}I_{p}
+
+    and the following (delta loads):
+
+    .. math::
+        I_{\mathrm{ab}} &= \frac{\left(V_{\mathrm{a}}-V_{\mathrm{b}}\right)}{Z_{\mathrm{ab}}} \\
+        I_{\mathrm{bc}} &= \frac{\left(V_{\mathrm{b}}-V_{\mathrm{c}}\right)}{Z_{\mathrm{bc}}} \\
+        I_{\mathrm{ca}} &= \frac{\left(V_{\mathrm{c}}-V_{\mathrm{a}}\right)}{Z_{\mathrm{ca}}}
+
+    """
+
+    _type = "impedance"
+
+    def __init__(self, id: Any, n: int, bus: Bus, z: Sequence[complex], **kwargs) -> None:
+        """ImpedanceLoad constructor.
+
+        Args:
+            id:
+                The unique id of the load.
+
+            n:
+                The number of ports (phases) of the load.
+
+            bus:
+                The bus to connect the load to.
+
+            z:
+                List of impedances for each phase (Ohms).
+        """
+        super().__init__(id=id, n=n, bus=bus, **kwargs)
+        if isinstance(z, Quantity):
+            z = z.m_as("ohm")
+        self.z = self._validate_value(z)
 
     @ureg.wraps(None, (None, "ohm"), strict=False)
-    def update_impedances(self, value: Sequence[complex]) -> None:
-        """Update the constant impedance of the load."""
-        _temporarily_check_only_s_or_z(s=self.s, i=self.i, z=value)
-        self.z = self._clean_value(value, type="z")
+    def update_impedances(self, z: Sequence[complex]) -> None:
+        """Change the impedances of the load.
 
-    def is_flexible(self) -> bool:
-        """Check if the load is flexible.
-
-        Returns:
-            True if the load is flexible, False otherwise.
+        Args:
+            z:
+                The new impedances to set (Ohms).
         """
-        return self.flexible_parameters is not None
+        self.z = self._validate_value(z)
 
-    def _check_flexible_parameters(self, parameters: Sequence[FlexibleParameter]) -> list[FlexibleParameter]:
-        if self.s is None or self.n != 4:
-            msg = "Flexible parameters are currently only available for power loads with neutral connection"
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LOAD_TYPE)
+    def to_dict(self) -> dict[str, Any]:
+        za, zb, zc = self.z
+        return {
+            "id": self.id,
+            "phases": "abc" if self.n == 3 else "abcn",
+            "impedances": {
+                "za": [za.real, za.imag],
+                "zb": [zb.real, zb.imag],
+                "zc": [zc.real, zc.imag],
+            },
+        }
 
-        if len(parameters) != 3:  # currently only three, later it will depend on the phases
+
+class FlexibleLoad(PowerLoad):
+    """A flexible power load i.e. a load with control."""
+
+    _flexible_parameter_class: type[FlexibleParameter] = FlexibleParameter
+
+    def __init__(self, id: Any, n: int, bus: Bus, s: Sequence[complex], parameters: list[FlexibleParameter], **kwargs):
+        """FlexibleLoad constructor.
+
+        Args:
+            id:
+                The unique id of the load.
+
+            n:
+                The number of ports (phases) of the load.
+
+            bus:
+                The bus to connect the load to.
+
+            s:
+                List of theoretical powers for each phase.
+
+            parameters:
+                List of flexible parameters for each phase.
+        """
+        super().__init__(id=id, n=n, bus=bus, s=s, **kwargs)
+        if len(parameters) != 3:
             msg = f"Incorrect number of parameters: {len(parameters)} instead of 3"
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PARAMETERS_SIZE)
@@ -248,43 +346,25 @@ class Load(Element, JsonMixin):
                 msg = f"There is a P control but a null active power for flexible load {self.id!r}"
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_S_VALUE)
-        return list(parameters)
 
-    #
-    # Json Mixin interface
-    #
-    @classmethod
-    def from_dict(cls, data: dict[str, Any], bus: Bus) -> "Load":
-        s = data.get("powers")
-        i = data.get("currents")
-        z = data.get("impedances")
-        params = data.get("parameters")
-        const_s = [complex(*s["sa"]), complex(*s["sb"]), complex(*s["sc"])] if s is not None else None
-        const_i = [complex(*i["ia"]), complex(*i["ib"]), complex(*i["ic"])] if i is not None else None
-        const_z = [complex(*z["za"]), complex(*z["zb"]), complex(*z["zc"])] if z is not None else None
-        flexible_params = [FlexibleParameter.from_dict(p) for p in params] if params is not None else None
-        return Load(
-            id=data["id"],
-            n=len(data["phases"]),
-            bus=bus,
-            s=const_s,
-            i=const_i,
-            z=const_z,
-            flexible_parameters=flexible_params,
-        )
+        self.parameters = parameters
+        self._powers = None
+
+    @property
+    @ureg.wraps("VA", None, strict=False)
+    def powers(self) -> np.ndarray:
+        """An array of the actual powers of each phase (VA) as computed by the load flow."""
+        return self._powers
+
+    @powers.setter
+    def powers(self, value: np.ndarray):
+        self._powers = value
 
     def to_dict(self) -> dict[str, Any]:
-        _temporarily_check_only_s_or_z(s=self.s, i=self.i, z=self.z)
-        res = {"id": self.id, "phases": "abc" if self.n == 3 else "abcn"}
-        if self.is_flexible():
-            res["parameters"] = [param.to_dict() for param in self.flexible_parameters]
-        if self.s is not None:
-            a, b, c = self.s
-            res["powers"] = {"sa": [a.real, a.imag], "sb": [b.real, b.imag], "sc": [c.real, c.imag]}
-        elif self.i is not None:
-            a, b, c = self.i
-            res["currents"] = {"ia": [a.real, a.imag], "ib": [b.real, b.imag], "ic": [c.real, c.imag]}
-        elif self.z is not None:
-            a, b, c = self.z
-            res["impedances"] = {"za": [a.real, a.imag], "zb": [b.real, b.imag], "zc": [c.real, c.imag]}
-        return res
+        return {**super().to_dict(), "parameters": [p.to_dict() for p in self.parameters]}
+
+
+AbstractLoad._power_load_class = PowerLoad
+AbstractLoad._current_load_class = CurrentLoad
+AbstractLoad._impedance_load_class = ImpedanceLoad
+AbstractLoad._flexible_load_class = FlexibleLoad

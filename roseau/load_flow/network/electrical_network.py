@@ -17,7 +17,18 @@ from requests.auth import HTTPBasicAuth
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.io import network_from_dgs, network_from_dict, network_to_dict
-from roseau.load_flow.models import AbstractBranch, Bus, Element, Ground, Load, PotentialRef, Transformer, VoltageSource
+from roseau.load_flow.models import (
+    AbstractBranch,
+    AbstractLoad,
+    Bus,
+    Element,
+    FlexibleLoad,
+    Ground,
+    PotentialRef,
+    PowerLoad,
+    Transformer,
+    VoltageSource,
+)
 from roseau.load_flow.utils import ureg
 
 logger = logging.getLogger(__name__)
@@ -32,7 +43,7 @@ class ElectricalNetwork:
 
     # Default classes to use
     branch_class = AbstractBranch
-    load_class = Load
+    load_class = AbstractLoad
     voltage_source_class = VoltageSource
     bus_class = Bus
     ground_class = Ground
@@ -45,7 +56,7 @@ class ElectricalNetwork:
         self,
         buses: Union[list[Bus], dict[Any, Bus]],
         branches: Union[list[AbstractBranch], dict[Any, AbstractBranch]],
-        loads: Union[list[Load], dict[Any, Load]],
+        loads: Union[list[AbstractLoad], dict[Any, AbstractLoad]],
         voltage_sources: Union[list[VoltageSource], dict[Any, VoltageSource]],
         special_elements: list[Element],
         **kwargs,
@@ -69,7 +80,7 @@ class ElectricalNetwork:
                 The other elements (special, ground...)
         """
         if isinstance(buses, list):
-            buses_dict = dict()
+            buses_dict = {}
             for bus in buses:
                 if bus.id in buses_dict:
                     msg = f"Duplicate id for a bus in this network: {bus.id!r}."
@@ -78,7 +89,7 @@ class ElectricalNetwork:
                 buses_dict[bus.id] = bus
             buses = buses_dict
         if isinstance(branches, list):
-            branches_dict = dict()
+            branches_dict = {}
             for branch in branches:
                 if branch.id in branches_dict:
                     msg = f"Duplicate id for a branch in this network: {branch.id!r}."
@@ -87,7 +98,7 @@ class ElectricalNetwork:
                 branches_dict[branch.id] = branch
             branches = branches_dict
         if isinstance(loads, list):
-            loads_dict = dict()
+            loads_dict = {}
             for load in loads:
                 if load.id in loads_dict:
                     msg = f"Duplicate id for a load in this network: {load.id!r}."
@@ -108,14 +119,14 @@ class ElectricalNetwork:
 
         self.buses: dict[Any, Bus] = buses
         self.branches: dict[Any, AbstractBranch] = branches
-        self.loads: dict[Any, Load] = loads
+        self.loads: dict[Any, AbstractLoad] = loads
         self.voltage_sources: dict[Any, VoltageSource] = voltage_sources
         self.special_elements: list[Element] = special_elements
 
         self._check_validity(constructed=False)
         self._create_network()
         self._valid = True
-        self._results_info: dict[str, Any] = dict()
+        self._results_info: dict[str, Any] = {}
 
     def __repr__(self) -> str:
         def count_repr(__o: Sized, /, singular: str, plural: Optional[str] = None) -> str:
@@ -145,7 +156,7 @@ class ElectricalNetwork:
         """
         buses: list[Bus] = []
         branches: list[AbstractBranch] = []
-        loads: list[Load] = []
+        loads: list[AbstractLoad] = []
         voltage_sources: list[VoltageSource] = []
         specials: list[Element] = []
         elements: list[Element] = [initial_bus]
@@ -157,7 +168,7 @@ class ElectricalNetwork:
                 buses.append(e)
             elif isinstance(e, AbstractBranch):
                 branches.append(e)
-            elif isinstance(e, Load):
+            elif isinstance(e, AbstractLoad):
                 loads.append(e)
             elif isinstance(e, VoltageSource):
                 voltage_sources.append(e)
@@ -366,7 +377,7 @@ class ElectricalNetwork:
         for load_data in result_dict["loads"]:
             load_id = load_data["id"]
             load = self.loads[load_id]
-            if load.is_flexible():
+            if isinstance(load, FlexibleLoad):
                 load.powers = self._dispatch_value(load_data["powers"], "s")
             currents = self._dispatch_value(load_data["currents"], "i")
             load.currents = currents
@@ -595,7 +606,7 @@ class ElectricalNetwork:
         """
         loads_dict = {"load_id": [], "phase": [], "power": []}
         for load_id, load in self.loads.items():
-            if load.is_flexible():
+            if isinstance(load, FlexibleLoad):
                 powers = load.powers.m_as("VA")
                 for power, phase in zip(powers, "abcn"):
                     loads_dict["load_id"].append(load_id)
@@ -619,9 +630,9 @@ class ElectricalNetwork:
                 The new load point
         """
         for load_id, value in load_point.items():
-            load: Load = self.loads[load_id]
-            if load.type == "power":
-                load.update(value)
+            load = self.loads[load_id]
+            if isinstance(load, PowerLoad) or isinstance(load, FlexibleLoad):
+                load.update_powers(value)
             else:
                 msg = "Only power loads can be updated yet..."
                 logger.error(msg)
@@ -647,7 +658,7 @@ class ElectricalNetwork:
         """
         if isinstance(element, Bus):
             self.buses[element.id] = element
-        elif isinstance(element, Load):
+        elif isinstance(element, AbstractLoad):
             self.loads[element.id] = element
         elif isinstance(element, AbstractBranch):
             self.branches[element.id] = element
@@ -848,7 +859,7 @@ class ElectricalNetwork:
             The dictionary of the voltages of the buses, and the dictionary of the current flowing through the branches.
         """
         phases = ["a", "b", "c", "n"]
-        buses_results = list()
+        buses_results: list[dict[str, Any]] = []
         for bus_id, bus in self.buses.items():
             potentials: np.ndarray = bus.potentials
             potentials_dict = dict()
@@ -856,7 +867,7 @@ class ElectricalNetwork:
                 potentials_dict[f"v{phases[i]}"] = [potentials[i].real.magnitude, potentials[i].imag.magnitude]
             buses_results.append({"id": bus_id, "potentials": potentials_dict})
 
-        branches_results = list()
+        branches_results: list[dict[str, Any]] = []
         for branch_id, branch in self.branches.items():
             currents1: np.ndarray = branch.currents[0]
             currents2: np.ndarray = branch.currents[1]
@@ -868,13 +879,13 @@ class ElectricalNetwork:
                 currents_dict2[f"i{phases[i]}"] = [currents2[i].real.magnitude, currents2[i].imag.magnitude]
             branches_results.append({"id": branch_id, "currents1": currents_dict1, "currents2": currents_dict2})
 
-        loads_results = list()
+        loads_results: list[dict[str, Any]] = []
         for load_id, load in self.loads.items():
             currents: np.ndarray = load.currents
             currents_dict = dict()
             for i in range(len(currents)):
                 currents_dict[f"i{phases[i]}"] = [currents[i].real.magnitude, currents[i].imag.magnitude]
-            if load.is_flexible():
+            if isinstance(load, FlexibleLoad):
                 powers: np.ndarray = load.powers
                 powers_dict = dict()
                 for i in range(len(powers)):
