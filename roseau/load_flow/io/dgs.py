@@ -9,7 +9,9 @@ import pandas as pd
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models import (
     AbstractBranch,
+    AbstractLoad,
     Bus,
+    Element,
     Ground,
     Line,
     LineCharacteristics,
@@ -20,8 +22,6 @@ from roseau.load_flow.models import (
     TransformerCharacteristics,
     VoltageSource,
 )
-from roseau.load_flow.models.core import Element
-from roseau.load_flow.models.loads.loads import AbstractLoad
 from roseau.load_flow.utils import LineModel, Q_
 
 logger = logging.getLogger(__name__)
@@ -353,9 +353,10 @@ def _generate_loads(
             sc = _compute_load_power(elm_lod, load_id, "t") * factor
 
         if sa == 0 and sb == 0 and sc == 0:  # Balanced
-            loads[load_id] = PowerLoad(id=load_id, n=4, bus=buses[bus_id], s=[s_phase / 3, s_phase / 3, s_phase / 3])
+            s = [s_phase / 3, s_phase / 3, s_phase / 3]
         else:  # Unbalanced
-            loads[load_id] = PowerLoad(id=load_id, n=4, bus=buses[bus_id], s=[sa, sb, sc])
+            s = [sa, sb, sc]
+        loads[load_id] = PowerLoad(id=load_id, n=4, bus=buses[bus_id], s=s)
 
 
 def _compute_load_power(elm_lod: pd.DataFrame, load_id: str, suffix: str) -> complex:

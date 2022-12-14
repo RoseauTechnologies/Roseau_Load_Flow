@@ -88,6 +88,8 @@ omit = ["roseau/load_flow/__about__.py"]
 source = ["roseau/load_flow/"]
 
 [tool.coverage.report]
+# Skip files with 100% coverage
+skip_covered = true
 # Regexes for lines to exclude from consideration
 exclude_lines = [
     # Have to re-enable the standard pragma

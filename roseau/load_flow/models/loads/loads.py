@@ -1,7 +1,7 @@
 import logging
 from abc import ABCMeta
 from collections.abc import Sequence
-from typing import Any, Optional
+from typing import Any, Literal
 
 import numpy as np
 from pint import Quantity
@@ -17,28 +17,27 @@ logger = logging.getLogger(__name__)
 
 
 class AbstractLoad(Element, JsonMixin, metaclass=ABCMeta):
-    """An abstract class to depict a load."""
+    """An abstract class of an electric load."""
 
-    _power_load_class: Optional[type["PowerLoad"]] = None
-    _delta_power_load_class: Optional[type["DeltaPowerLoad"]] = None
-    _impedance_load_class: Optional[type["ImpedanceLoad"]] = None
-    _delta_impedance_load_class: Optional[type["DeltaImpedanceLoad"]] = None
-    _admittance_load_class: Optional[type["AdmittanceLoad"]] = None
-    _delta_admittance_load_class: Optional[type["DeltaAdmittanceLoad"]] = None
-    _flexible_load_class: Optional[type["FlexibleLoad"]] = None
+    _power_load_class: type["PowerLoad"]
+    _current_load_class: type["CurrentLoad"]
+    _impedance_load_class: type["ImpedanceLoad"]
+    _flexible_load_class: type["FlexibleLoad"]
+
+    _type: Literal["power", "current", "impedance"]
 
     def __init__(self, id: Any, n: int, bus: Bus, **kwargs) -> None:
-        """Load constructor.
+        """AbstractLoad constructor.
 
         Args:
             id:
-                The id of the load.
+                The unique id of the load.
 
             n:
-                Number of ports
+                The number of ports (phases) of the load.
 
             bus:
-                Bus to be attached to.
+                The bus to connect the load to.
         """
         super().__init__(**kwargs)
         self.connected_elements = [bus]
@@ -48,124 +47,121 @@ class AbstractLoad(Element, JsonMixin, metaclass=ABCMeta):
         self.n = n
         self.bus = bus
         self._currents = None
+        self._symbol = {"power": "S", "current": "I", "impedance": "Z"}[self._type]
 
     def __repr__(self) -> str:
         return f"{type(self).__name__}({self.id!r}, n={self.n}, bus={self.bus.id!r})"
 
     def __str__(self) -> str:
-        return f"id={self.id} - n={self.n}"
+        return f"id={self.id!r} - n={self.n}"
 
     @property
     @ureg.wraps("A", None, strict=False)
     def currents(self) -> np.ndarray:
-        """Get the actual currents of the load.
-
-        Returns:
-            An array containing the actual currents of each phase.
-        """
+        """An array of the actual currents of each phase (A) as computed by the load flow."""
         return self._currents
 
     @currents.setter
-    def currents(self, value: np.ndarray):
+    def currents(self, value: np.ndarray) -> None:
         self._currents = value
+
+    def _validate_value(self, value: Sequence[complex]) -> Sequence[complex]:
+        if len(value) != 3:  # TODO change the test when we have phases
+            msg = f"Incorrect number of {self._type}s: {len(value)} instead of 3"
+            logger.error(msg)
+            raise RoseauLoadFlowException(
+                msg=msg, code=RoseauLoadFlowExceptionCode.from_string(f"BAD_{self._symbol}_SIZE")
+            )
+        # A load cannot have any zero impedance
+        if self._type == "impedance" and np.isclose(value, 0).any():
+            msg = f"An impedance of the load {self.id!r} is null"
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Z_VALUE)
+        return value
 
     #
     # Json Mixin interface
     #
     @classmethod
-    def from_dict(cls, data, bus):
-        if data["function"] == "flexible":
-            return cls._flexible_load_class.from_dict(data=data, bus=bus)
-        if "ys" in data["function"] or "ds" in data["function"]:
+    def from_dict(cls, data: dict[str, Any], bus: Bus) -> "AbstractLoad":
+        id = data["id"]
+        n = len(data["phases"])
+        if (params := data.get("parameters")) is not None:
             s = data["powers"]
-            powers = [s["sa"][0] + 1j * s["sa"][1], s["sb"][0] + 1j * s["sb"][1], s["sc"][0] + 1j * s["sc"][1]]
-            if "ys" in data["function"]:
-                return cls._power_load_class(id=data["id"], n=4, bus=bus, s=powers)
-            else:
-                return cls._delta_power_load_class(id=data["id"], bus=bus, s=powers)
-        elif "yy" in data["function"] or "dy" in data["function"]:
-            y = data["admittances"]
-            admittances = [y["ya"][0] + 1j * y["ya"][1], y["yb"][0] + 1j * y["yb"][1], y["yc"][0] + 1j * y["yc"][1]]
-            if "yy" in data["function"]:
-                return cls._admittance_load_class(id=data["id"], n=4, bus=bus, y=admittances)
-            else:
-                return cls._delta_admittance_load_class(id=data["id"], bus=bus, y=admittances)
-        elif "yz" in data["function"] or "dz" in data["function"]:
-            z = data["impedances"]
-            impedances = [z["za"][0] + 1j * z["za"][1], z["zb"][0] + 1j * z["zb"][1], z["zc"][0] + 1j * z["zc"][1]]
-            if "yz" in data["function"]:
-                return cls._impedance_load_class(id=data["id"], n=4, bus=bus, z=impedances)
-            else:
-                return cls._delta_impedance_load_class(id=data["id"], bus=bus, z=impedances)
+            s_complex = [complex(*s["sa"]), complex(*s["sb"]), complex(*s["sc"])]
+            parameters = [cls._flexible_load_class._flexible_parameter_class.from_dict(p) for p in params]
+            return cls._flexible_load_class(id, n, bus, s=s_complex, parameters=parameters)
+        elif (s := data.get("powers")) is not None:
+            s_complex = [complex(*s["sa"]), complex(*s["sb"]), complex(*s["sc"])]
+            return cls._power_load_class(id, n, bus, s=s_complex)
+        elif (i := data.get("currents")) is not None:
+            i_complex = [complex(*i["ia"]), complex(*i["ib"]), complex(*i["ic"])]
+            return cls._current_load_class(id, n, bus, i=i_complex)
+        elif (z := data.get("impedances")) is not None:
+            z_complex = [complex(*z["za"]), complex(*z["zb"]), complex(*z["zc"])]
+            return cls._impedance_load_class(id, n, bus, z=z_complex)
         else:
-            msg = f"Unknown load type for load {data['id']}: {data['function']}"
+            msg = f"Unknown load type for load {data['id']!r}"
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LOAD_TYPE)
 
 
 class PowerLoad(AbstractLoad):
-    """A constant power load.
+    r"""A constant power load.
 
     The equations are the following (star loads):
 
     .. math::
-        I_{\\mathrm{abc}} &= \\left(\\frac{S_{\\mathrm{abc}}}{V_{\\mathrm{abc}}-V_{\\mathrm{n}}}\\right)^{\\star} \\\\
-        I_{\\mathrm{n}} &= -\\sum_{p\\in\\{\\mathrm{a},\\mathrm{b},\\mathrm{c}\\}}I_{p}
+        I_{\mathrm{abc}} &= \left(\frac{S_{\mathrm{abc}}}{V_{\mathrm{abc}}-V_{\mathrm{n}}}\right)^{\star} \\
+        I_{\mathrm{n}} &= -\sum_{p\in\{\mathrm{a},\mathrm{b},\mathrm{c}\}}I_{p}
+
+    and the following (delta loads):
+
+    .. math::
+        I_{\mathrm{ab}} &= \left(\frac{S_{\mathrm{ab}}}{V_{\mathrm{a}}-V_{\mathrm{b}}}\right)^{\star} \\
+        I_{\mathrm{bc}} &= \left(\frac{S_{\mathrm{bc}}}{V_{\mathrm{b}}-V_{\mathrm{c}}}\right)^{\star} \\
+        I_{\mathrm{ca}} &= \left(\frac{S_{\mathrm{ca}}}{V_{\mathrm{c}}-V_{\mathrm{a}}}\right)^{\star}
 
     """
+
+    _type = "power"
 
     def __init__(self, id: Any, n: int, bus: Bus, s: Sequence[complex], **kwargs) -> None:
         """PowerLoad constructor.
 
         Args:
             id:
-                The id of the load.
+                The unique id of the load.
 
             n:
-                Number of ports
+                The number of ports (phases) of the load.
 
             bus:
-                Bus to be attached to
+                The bus to connect the load to.
 
             s:
                 List of power for each phase (VA).
         """
         super().__init__(id=id, n=n, bus=bus, **kwargs)
-        if len(s) != n - 1:
-            msg = f"Incorrect number of powers: {len(s)} instead of {n - 1}"
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_S_SIZE)
-
         if isinstance(s, Quantity):
             s = s.m_as("VA")
-        self.s = s
+        self.s = self._validate_value(s)
 
     @ureg.wraps(None, (None, "VA"), strict=False)
     def update_powers(self, s: Sequence[complex]) -> None:
-        """Change the power of the load.
+        """Change the powers of the load.
 
         Args:
             s:
                 The new powers to set (VA).
         """
-        if len(s) != self.n - 1:
-            msg = f"Incorrect number of powers: {len(s)} instead of {self.n - 1}"
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_S_SIZE)
-        self.s = s
+        self.s = self._validate_value(s)
 
-    #
-    # Json Mixin interface
-    #
     def to_dict(self) -> dict[str, Any]:
-        if self.bus.n == 3:
-            load_type = "ys"
-        else:
-            load_type = "ys_neutral"
         sa, sb, sc = self.s
         return {
             "id": self.id,
-            "function": load_type,
+            "phases": "abc" if self.n == 3 else "abcn",
             "powers": {
                 "sa": [sa.real, sa.imag],
                 "sb": [sb.real, sb.imag],
@@ -174,283 +170,125 @@ class PowerLoad(AbstractLoad):
         }
 
 
-class DeltaPowerLoad(AbstractLoad):
-    """A constant power load.
-
-    The equations are the following (delta loads):
-
-    .. math::
-        I_{\\mathrm{ab}} &= \\left(\\frac{S_{\\mathrm{ab}}}{V_{\\mathrm{a}}-V_{\\mathrm{b}}}\\right)^{\\star} \\\\
-        I_{\\mathrm{bc}} &= \\left(\\frac{S_{\\mathrm{bc}}}{V_{\\mathrm{b}}-V_{\\mathrm{c}}}\\right)^{\\star} \\\\
-        I_{\\mathrm{ca}} &= \\left(\\frac{S_{\\mathrm{ca}}}{V_{\\mathrm{c}}-V_{\\mathrm{a}}}\\right)^{\\star}
-    """
-
-    def __init__(self, id: Any, bus: Bus, s: Sequence[complex], **kwargs) -> None:
-        """PowerLoad constructor.
-
-        Args:
-            id:
-                The id of the load.
-
-            bus:
-                Bus to be attached to
-
-            s:
-                List of power for each phase (VA).
-        """
-        if "n" in kwargs:
-            kwargs.pop("n")
-        super().__init__(id=id, n=3, bus=bus, **kwargs)
-        if len(s) != 3:
-            msg = f"Incorrect number of powers: {len(s)} instead of 3"
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_S_SIZE)
-
-        if isinstance(s, Quantity):
-            s = s.m_as("VA")
-        self.s = s
-
-    @ureg.wraps(None, (None, "VA"), strict=False)
-    def update_powers(self, s: Sequence[complex]) -> None:
-        """Change the power of the load.
-
-        Args:
-            s:
-                The new powers to set (VA).
-        """
-        if len(s) != 3:
-            msg = f"Incorrect number of powers: {len(s)} instead of 3"
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_S_SIZE)
-        self.s = s
-
-    #
-    # Json Mixin interface
-    #
-    def to_dict(self) -> dict[str, Any]:
-        load_type = "ds"
-        sa, sb, sc = self.s
-        return {
-            "id": self.id,
-            "function": load_type,
-            "powers": {
-                "sa": [sa.real, sa.imag],
-                "sb": [sb.real, sb.imag],
-                "sc": [sc.real, sc.imag],
-            },
-        }
-
-
-class AdmittanceLoad(AbstractLoad):
-    """A constant admittance load.
+class CurrentLoad(AbstractLoad):
+    r"""A constant current load.
 
     The equations are the following (star loads):
 
     .. math::
-        I_{\\mathrm{abc}} &= Y_{\\mathrm{abc}}\\left(V_{\\mathrm{abc}}-V_{\\mathrm{n}}\\right) \\\\
-        I_{\\mathrm{n}} &= -\\sum_{p\\in\\{\\mathrm{a},\\mathrm{b},\\mathrm{c}\\}}I_{p}
-    """
+        I_{\mathrm{abc}} &= constant \\
+        I_{\mathrm{n}} &= -\sum_{p\in\{\mathrm{a},\mathrm{b},\mathrm{c}\}}I_{p}
 
-    def __init__(self, id: Any, n: int, bus: Bus, y: Sequence[complex], **kwargs) -> None:
-        """AdmittanceLoad constructor.
-
-        Args:
-            id:
-                The id of the load.
-
-            n:
-                Number of ports.
-
-            bus:
-                Bus to be attached to.
-
-            y:
-                List of admittance for each phase (Siemens).
-        """
-        super().__init__(id=id, n=n, bus=bus, **kwargs)
-        if len(y) != n - 1:
-            msg = f"Incorrect number of admittance: {len(y)} instead of {n - 1}"
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Y_SIZE)
-
-        if isinstance(y, Quantity):
-            y = y.m_as("S")
-
-        self.y = y
-
-    @ureg.wraps(None, (None, "S"), strict=False)
-    def update_admittances(self, y: Sequence[complex]) -> None:
-        """Change the admittances of the load
-
-        Args:
-            y:
-                The new admittances to set (Siemens).
-        """
-        if len(y) != self.n - 1:
-            msg = f"Incorrect number of admittances: {len(y)} instead of {self.n - 1}"
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Y_SIZE)
-        self.y = y
-
-    #
-    # Json Mixin interface
-    #
-    def to_dict(self) -> dict[str, Any]:
-        if self.bus.n == 3:
-            load_type = "yy"
-        else:
-            load_type = "yy_neutral"
-        ya, yb, yc = self.y
-        return {
-            "id": self.id,
-            "function": load_type,
-            "admittances": {
-                "ya": [ya.real, ya.imag],
-                "yb": [yb.real, yb.imag],
-                "yc": [yc.real, yc.imag],
-            },
-        }
-
-
-class DeltaAdmittanceLoad(AbstractLoad):
-    """A constant admittance load.
-
-    The equations are the following (delta loads):
+    and the following (delta loads):
 
     .. math::
-        I_{\\mathrm{ab}} &= Y_{\\mathrm{ab}}\\left(V_{\\mathrm{a}}-V_{\\mathrm{b}}\\right) \\\\
-        I_{\\mathrm{bc}} &= Y_{\\mathrm{bc}}\\left(V_{\\mathrm{b}}-V_{\\mathrm{c}}\\right) \\\\
-        I_{\\mathrm{ca}} &= Y_{\\mathrm{ca}}\\left(V_{\\mathrm{c}}-V_{\\mathrm{a}}\\right)
+        I_{\mathrm{ab}} &= constant \\
+        I_{\mathrm{bc}} &= constant \\
+        I_{\mathrm{ca}} &= constant
     """
 
-    def __init__(self, id: Any, bus: Bus, y: Sequence[complex], **kwargs) -> None:
-        """AdmittanceLoad constructor.
+    _type = "current"
+
+    def __init__(self, id: Any, n: int, bus: Bus, i: Sequence[complex], **kwargs) -> None:
+        """CurrentLoad constructor.
 
         Args:
             id:
-                The id of the load.
+                The unique id of the load.
+
+            n:
+                The number of ports (phases) of the load.
 
             bus:
-                Bus to be attached to.
+                The bus to connect the load to.
 
-            y:
-                List of admittance for each phase (Siemens).
+            i:
+                List of currents for each phase (Amps).
         """
-        if "n" in kwargs:
-            kwargs.pop("n")
-        super().__init__(id=id, n=3, bus=bus, **kwargs)
-        if len(y) != 3:
-            msg = f"Incorrect number of admittance: {len(y)} instead of 3"
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Y_SIZE)
+        super().__init__(id=id, n=n, bus=bus, **kwargs)
+        if isinstance(i, Quantity):
+            i = i.m_as("A")
+        self.i = self._validate_value(i)
 
-        if isinstance(y, Quantity):
-            y = y.m_as("S")
-
-        self.y = y
-
-    @ureg.wraps(None, (None, "S"), strict=False)
-    def update_admittances(self, y: Sequence[complex]) -> None:
-        """Change the admittances of the load
+    @ureg.wraps(None, (None, "A"), strict=False)
+    def update_currents(self, i: Sequence[complex]) -> None:
+        """Change the currents of the load.
 
         Args:
-            y:
-                The new admittances to set (Siemens).
+            i:
+                The new currents to set (Amps).
         """
-        if len(y) != 3:
-            msg = f"Incorrect number of admittances: {len(y)} instead of 3"
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Y_SIZE)
-        self.y = y
+        self.i = self._validate_value(i)
 
-    #
-    # Json Mixin interface
-    #
     def to_dict(self) -> dict[str, Any]:
-        load_type = "dy"
-        ya, yb, yc = self.y
+        ia, ib, ic = self.i
         return {
             "id": self.id,
-            "function": load_type,
-            "admittances": {
-                "ya": [ya.real, ya.imag],
-                "yb": [yb.real, yb.imag],
-                "yc": [yc.real, yc.imag],
+            "phases": "abc" if self.n == 3 else "abcn",
+            "currents": {
+                "ia": [ia.real, ia.imag],
+                "ib": [ib.real, ib.imag],
+                "ic": [ic.real, ic.imag],
             },
         }
 
 
 class ImpedanceLoad(AbstractLoad):
-    """Constant impedance loads.
+    r"""A constant impedance load.
 
-    The equations are the same as in the constance admittance load implementation.
+    The equations are the following (star loads):
+
+    .. math::
+        I_{\mathrm{abc}} &= \frac{\left(V_{\mathrm{abc}}-V_{\mathrm{n}}\right)}{Z_{\mathrm{abc}}} \\
+        I_{\mathrm{n}} &= -\sum_{p\in\{\mathrm{a},\mathrm{b},\mathrm{c}\}}I_{p}
+
+    and the following (delta loads):
+
+    .. math::
+        I_{\mathrm{ab}} &= \frac{\left(V_{\mathrm{a}}-V_{\mathrm{b}}\right)}{Z_{\mathrm{ab}}} \\
+        I_{\mathrm{bc}} &= \frac{\left(V_{\mathrm{b}}-V_{\mathrm{c}}\right)}{Z_{\mathrm{bc}}} \\
+        I_{\mathrm{ca}} &= \frac{\left(V_{\mathrm{c}}-V_{\mathrm{a}}\right)}{Z_{\mathrm{ca}}}
+
     """
+
+    _type = "impedance"
 
     def __init__(self, id: Any, n: int, bus: Bus, z: Sequence[complex], **kwargs) -> None:
         """ImpedanceLoad constructor.
 
         Args:
             id:
-                The id of the load.
+                The unique id of the load.
 
             n:
-                Number of ports.
+                The number of ports (phases) of the load.
 
             bus:
-                Bus to be attached to.
+                The bus to connect the load to.
 
             z:
-                List of impedance for each phase (Ohms).
+                List of impedances for each phase (Ohms).
         """
         super().__init__(id=id, n=n, bus=bus, **kwargs)
-        if len(z) != n - 1:
-            msg = f"Incorrect number of impedance: {len(z)} instead of {n - 1}"
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Z_SIZE)
-
         if isinstance(z, Quantity):
             z = z.m_as("ohm")
-
-        for zi in z:
-            if np.isclose(zi, 0):
-                msg = f"An impedance for load {self.id!r} is null"
-                logger.error(msg)
-                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Z_VALUE)
-
-        self.z = z
+        self.z = self._validate_value(z)
 
     @ureg.wraps(None, (None, "ohm"), strict=False)
-    def update_impedance(self, z: Sequence[complex]) -> None:
-        """Change the admittances of the load
+    def update_impedances(self, z: Sequence[complex]) -> None:
+        """Change the impedances of the load.
 
         Args:
             z:
-                The new impedance to set (Ohms).
+                The new impedances to set (Ohms).
         """
-        if len(z) != self.n - 1:
-            msg = f"Incorrect number of impedance: {len(z)} instead of {self.n - 1}"
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Z_SIZE)
+        self.z = self._validate_value(z)
 
-        for zi in z:
-            if np.isclose(zi, 0):
-                msg = f"An impedance for load {self.id!r} is null"
-                logger.error(msg)
-                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Z_VALUE)
-        self.z = z
-
-    #
-    # Json Mixin interface
-    #
     def to_dict(self) -> dict[str, Any]:
-        if self.bus.n == 3:
-            load_type = "yz"
-        else:
-            load_type = "yz_neutral"
         za, zb, zc = self.z
         return {
             "id": self.id,
-            "function": load_type,
+            "phases": "abc" if self.n == 3 else "abcn",
             "impedances": {
                 "za": [za.real, za.imag],
                 "zb": [zb.real, zb.imag],
@@ -459,119 +297,37 @@ class ImpedanceLoad(AbstractLoad):
         }
 
 
-class DeltaImpedanceLoad(AbstractLoad):
-    """Constant delta impedance loads.
+class FlexibleLoad(PowerLoad):
+    """A flexible power load i.e. a load with control."""
 
-    The equations are the same as in the constance admittance delta load implementation.
-    """
-
-    def __init__(self, id: Any, bus: Bus, z: Sequence[complex], **kwargs) -> None:
-        """ImpedanceLoad constructor.
-
-        Args:
-            id:
-                The id of the load.
-
-            bus:
-                Bus to be attached to.
-
-            z:
-                List of impedance for each phase (Ohms).
-        """
-        if "n" in kwargs:
-            kwargs.pop("n")
-        super().__init__(id=id, n=3, bus=bus, **kwargs)
-        if len(z) != 3:
-            msg = f"Incorrect number of impedance: {len(z)} instead of 3"
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Z_SIZE)
-
-        if isinstance(z, Quantity):
-            z = z.m_as("ohm")
-
-        for zi in z:
-            if np.isclose(zi, 0):
-                msg = f"An impedance for load {self.id!r} is null"
-                logger.error(msg)
-                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Z_VALUE)
-
-        self.z = z
-
-    @ureg.wraps(None, (None, "ohm"), strict=False)
-    def update_impedance(self, z: Sequence[complex]) -> None:
-        """Change the admittances of the load
-
-        Args:
-            z:
-                The new impedance to set (Ohms).
-        """
-        if len(z) != 3:
-            msg = f"Incorrect number of impedance: {len(z)} instead of 3"
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Z_SIZE)
-
-        for zi in z:
-            if np.isclose(zi, 0):
-                msg = f"An impedance for load {self.id!r} is null"
-                logger.error(msg)
-                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Z_VALUE)
-        self.z = z
-
-    #
-    # Json Mixin interface
-    #
-    def to_dict(self) -> dict[str, Any]:
-        load_type = "dz"
-        za, zb, zc = self.z
-        return {
-            "id": self.id,
-            "function": load_type,
-            "impedances": {
-                "za": [za.real, za.imag],
-                "zb": [zb.real, zb.imag],
-                "zc": [zc.real, zc.imag],
-            },
-        }
-
-
-class FlexibleLoad(AbstractLoad):
-    """A class to depict a flexible load i.e. a load with control."""
-
-    flexible_parameter_class: type[FlexibleParameter] = FlexibleParameter
+    _flexible_parameter_class: type[FlexibleParameter] = FlexibleParameter
 
     def __init__(self, id: Any, n: int, bus: Bus, s: Sequence[complex], parameters: list[FlexibleParameter], **kwargs):
         """FlexibleLoad constructor.
 
         Args:
             id:
-                The id of the load.
+                The unique id of the load.
 
             n:
-                Number of ports.
+                The number of ports (phases) of the load.
 
             bus:
-                Bus to be attached to.
+                The bus to connect the load to.
 
             s:
-                List of theoretic powers for each phase.
+                List of theoretical powers for each phase.
 
             parameters:
                 List of flexible parameters for each phase.
         """
-        super().__init__(id=id, n=n, bus=bus, **kwargs)
-        if len(s) != n - 1:
-            msg = f"Incorrect number of powers: {len(s)} instead of {n - 1}"
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_S_SIZE)
-        if len(parameters) != n - 1:
-            msg = f"Incorrect number of parameters: {len(parameters)} instead of {n}"
+        super().__init__(id=id, n=n, bus=bus, s=s, **kwargs)
+        if len(parameters) != 3:
+            msg = f"Incorrect number of parameters: {len(parameters)} instead of 3"
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PARAMETERS_SIZE)
 
-        if isinstance(s, Quantity):
-            s = s.m_as("VA")
-
-        for power, parameter in zip(s, parameters):
+        for power, parameter in zip(self.s, parameters):
             if abs(power) > parameter.s_max and (
                 parameter.control_p.type != "constant" or parameter.control_q.type != "constant"
             ):
@@ -591,66 +347,24 @@ class FlexibleLoad(AbstractLoad):
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_S_VALUE)
 
-        self.s = s
         self.parameters = parameters
         self._powers = None
-
-    def update_powers(self, s: Sequence[complex]) -> None:
-        """Change the power of the load.
-
-        Args:
-            s:
-                the new powers to set (Volts).
-        """
-        self.s = s
 
     @property
     @ureg.wraps("VA", None, strict=False)
     def powers(self) -> np.ndarray:
-        """Compute the actual power consumed by the loads.
-
-        Returns:
-            An array containing the actual powers of each phase (VA)
-        """
+        """An array of the actual powers of each phase (VA) as computed by the load flow."""
         return self._powers
 
     @powers.setter
     def powers(self, value: np.ndarray):
         self._powers = value
 
-    #
-    # Json Mixin interface
-    #
-    @classmethod
-    def from_dict(cls, data: dict[str, Any], bus: Bus) -> "FlexibleLoad":
-        s = data["powers"]
-        powers = [s["sa"][0] + 1j * s["sa"][1], s["sb"][0] + 1j * s["sb"][1], s["sc"][0] + 1j * s["sc"][1]]
-        parameters = list()
-        for parameter in data["parameters"]:
-            parameters.append(cls.flexible_parameter_class.from_dict(parameter))
-        return cls(id=data["id"], n=4, bus=bus, s=powers, parameters=parameters)
-
     def to_dict(self) -> dict[str, Any]:
-        parameter_res = []
-        for parameter in self.parameters:
-            parameter_res.append(parameter.to_dict())
-        sa, sb, sc = self.s
-        return {
-            "id": self.id,
-            "function": "flexible",
-            "powers": {
-                "sa": [sa.real, sa.imag],
-                "sb": [sb.real, sb.imag],
-                "sc": [sc.real, sc.imag],
-            },
-            "parameters": parameter_res,
-        }
+        return {**super().to_dict(), "parameters": [p.to_dict() for p in self.parameters]}
 
 
 AbstractLoad._power_load_class = PowerLoad
-AbstractLoad._delta_power_load_class = DeltaPowerLoad
+AbstractLoad._current_load_class = CurrentLoad
 AbstractLoad._impedance_load_class = ImpedanceLoad
-AbstractLoad._delta_impedance_load_class = DeltaImpedanceLoad
-AbstractLoad._admittance_load_class = AdmittanceLoad
-AbstractLoad._delta_admittance_load_class = DeltaAdmittanceLoad
 AbstractLoad._flexible_load_class = FlexibleLoad

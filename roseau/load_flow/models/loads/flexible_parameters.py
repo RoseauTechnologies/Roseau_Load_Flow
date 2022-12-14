@@ -1,10 +1,12 @@
 import logging
-from typing import Any
+from typing import Any, Literal
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.utils.units import ureg
 
 logger = logging.getLogger(__name__)
+
+ControlType = Literal["constant", "p_max_u_production", "p_max_u_consumption", "q_u"]
 
 
 class Control:
@@ -15,7 +17,7 @@ class Control:
     @ureg.wraps(None, (None, None, "V", "V", "V", "V", None), strict=False)
     def __init__(
         self,
-        type: str,
+        type: ControlType,
         u_min: float,
         u_down: float,
         u_up: float,

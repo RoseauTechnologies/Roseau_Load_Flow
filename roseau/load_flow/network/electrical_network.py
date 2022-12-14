@@ -80,7 +80,7 @@ class ElectricalNetwork:
                 The other elements (special, ground...)
         """
         if isinstance(buses, list):
-            buses_dict = dict()
+            buses_dict = {}
             for bus in buses:
                 if bus.id in buses_dict:
                     msg = f"Duplicate id for a bus in this network: {bus.id!r}."
@@ -89,7 +89,7 @@ class ElectricalNetwork:
                 buses_dict[bus.id] = bus
             buses = buses_dict
         if isinstance(branches, list):
-            branches_dict = dict()
+            branches_dict = {}
             for branch in branches:
                 if branch.id in branches_dict:
                     msg = f"Duplicate id for a branch in this network: {branch.id!r}."
@@ -98,7 +98,7 @@ class ElectricalNetwork:
                 branches_dict[branch.id] = branch
             branches = branches_dict
         if isinstance(loads, list):
-            loads_dict = dict()
+            loads_dict = {}
             for load in loads:
                 if load.id in loads_dict:
                     msg = f"Duplicate id for a load in this network: {load.id!r}."
@@ -126,7 +126,7 @@ class ElectricalNetwork:
         self._check_validity(constructed=False)
         self._create_network()
         self._valid = True
-        self._results_info: dict[str, Any] = dict()
+        self._results_info: dict[str, Any] = {}
 
     def __repr__(self) -> str:
         def count_repr(__o: Sized, /, singular: str, plural: Optional[str] = None) -> str:
@@ -599,7 +599,7 @@ class ElectricalNetwork:
 
     @property
     def loads_powers(self) -> pd.DataFrame:
-        """Get the powers of the loads after a load flow has been solved. Only for FlexibleLoads.
+        """Get the powers of the loads after a load flow has been solved. Only for flexible loads.
 
         Returns:
             The data frame of the powers of the loads of the electrical network.
@@ -630,7 +630,7 @@ class ElectricalNetwork:
                 The new load point
         """
         for load_id, value in load_point.items():
-            load: AbstractLoad = self.loads[load_id]
+            load = self.loads[load_id]
             if isinstance(load, PowerLoad) or isinstance(load, FlexibleLoad):
                 load.update_powers(value)
             else:
@@ -859,7 +859,7 @@ class ElectricalNetwork:
             The dictionary of the voltages of the buses, and the dictionary of the current flowing through the branches.
         """
         phases = ["a", "b", "c", "n"]
-        buses_results = list()
+        buses_results: list[dict[str, Any]] = []
         for bus_id, bus in self.buses.items():
             potentials: np.ndarray = bus.potentials
             potentials_dict = dict()
@@ -867,7 +867,7 @@ class ElectricalNetwork:
                 potentials_dict[f"v{phases[i]}"] = [potentials[i].real.magnitude, potentials[i].imag.magnitude]
             buses_results.append({"id": bus_id, "potentials": potentials_dict})
 
-        branches_results = list()
+        branches_results: list[dict[str, Any]] = []
         for branch_id, branch in self.branches.items():
             currents1: np.ndarray = branch.currents[0]
             currents2: np.ndarray = branch.currents[1]
@@ -879,7 +879,7 @@ class ElectricalNetwork:
                 currents_dict2[f"i{phases[i]}"] = [currents2[i].real.magnitude, currents2[i].imag.magnitude]
             branches_results.append({"id": branch_id, "currents1": currents_dict1, "currents2": currents_dict2})
 
-        loads_results = list()
+        loads_results: list[dict[str, Any]] = []
         for load_id, load in self.loads.items():
             currents: np.ndarray = load.currents
             currents_dict = dict()
