@@ -43,6 +43,7 @@ class VoltageSource(Element, JsonMixin):
             voltages:
                 The voltages of the source. They will be fixed on the connected bus.
         """
+        self._check_phases(id, phases=phases)
         super().__init__(**kwargs)
         self.connected_elements = [bus]
         bus.connected_elements.append(self)

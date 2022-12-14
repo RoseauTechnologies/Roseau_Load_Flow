@@ -43,6 +43,7 @@ class Switch(AbstractBranch):
             geometry:
                 The geometry of the switch.
         """
+        self._check_phases(id, phases=phases)
         if geometry is not None and not isinstance(geometry, Point):
             msg = f"The geometry for a {type(self)} must be a point: {geometry.geom_type} provided."
             logger.error(msg)
@@ -161,6 +162,7 @@ class Line(AbstractBranch):
             geometry:
                 The geometry of the line i.e. the linestring.
         """
+        self._check_phases(id, phases=phases)
         if geometry is not None and not isinstance(geometry, LineString):
             msg = f"The geometry for a {type(self).__name__} must be a linestring: {geometry.geom_type} provided."
             logger.error(msg)

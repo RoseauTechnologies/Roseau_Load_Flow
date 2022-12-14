@@ -40,6 +40,7 @@ class AbstractLoad(Element, JsonMixin, metaclass=ABCMeta):
             bus:
                 The bus to connect the load to.
         """
+        self._check_phases(id, phases=phases)
         super().__init__(**kwargs)
         self.connected_elements = [bus]
         bus.connected_elements.append(self)

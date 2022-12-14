@@ -46,6 +46,7 @@ class Bus(Element, JsonMixin):
             ground:
                 The ground of the bus.
         """
+        self._check_phases(id, phases=phases)
         super().__init__(**kwargs)
         self.id = id
         self.phases = phases

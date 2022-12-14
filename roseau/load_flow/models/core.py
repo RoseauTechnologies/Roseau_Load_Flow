@@ -30,6 +30,14 @@ class Element(ABC):
     def __init__(self, **kwargs):
         self.connected_elements: list[Element] = []
 
+    def _check_phases(self, id: str, **kwargs: str) -> None:
+        # A check on all elements to tell users we only support 3-phase elements for now
+        name, phases = kwargs.popitem()  # phases, phases1 or phases2
+        if phases not in ("abc", "abcn"):
+            msg = f"{type(self).__name__} of id {id!r} got invalid {name} {phases!r}, allowed values are: 'abc', 'abcn'"
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.BAD_PHASE)
+
     def disconnect(self):
         """Remove all the connections with the other elements."""
         for element in self.connected_elements:
@@ -145,6 +153,8 @@ class AbstractBranch(Element, JsonMixin):
             geometry:
                 The geometry of the branch.
         """
+        self._check_phases(id, phases1=phases1)
+        self._check_phases(id, phases2=phases2)
         super().__init__(**kwargs)
         self.id = id
         self.phases1 = phases1

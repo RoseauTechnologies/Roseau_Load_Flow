@@ -38,7 +38,7 @@ def small_network() -> ElectricalNetwork:
         bus=source_bus,
         voltages=[20000.0 + 0.0j, -10000.0 - 17320.508076j, -10000.0 + 17320.508076j],
     )
-    load = PowerLoad("load", 4, load_bus, [100, 100, 100])
+    load = PowerLoad("load", "abcn", load_bus, [100, 100, 100])
     pref = PotentialRef(ground)
 
     lc = LineCharacteristics("test", 10 * np.eye(4, dtype=complex))
@@ -196,7 +196,7 @@ def test_bad_networks():
         bus=bus0,
         voltages=[20000.0 + 0.0j, -10000.0 - 17320.508076j, -10000.0 + 17320.508076j],
     )
-    switch = Switch("switch", 4, bus0, bus1)
+    switch = Switch("switch", "abcn", bus0, bus1)
     with pytest.raises(RoseauLoadFlowException) as e:
         ElectricalNetwork([bus0, bus1], [line, switch], [], [vs], [ground, p_ref])  # no bus2
     assert "but has not been added to the network, you should add it with 'add_element'." in e.value.args[0]
