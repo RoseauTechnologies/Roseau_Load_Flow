@@ -82,7 +82,7 @@ def network_from_dgs(  # noqa: C901
         voltages = [un * tap, un * np.exp(-np.pi * 2 / 3 * 1j) * tap, un * np.exp(np.pi * 2 / 3 * 1j) * tap]
         source_bus = buses[bus_id]
 
-        sources[source_id] = VoltageSource(id=source_id, n=4, bus=source_bus, voltages=voltages)
+        sources[source_id] = VoltageSource(id=source_id, phases="abcn", bus=source_bus, voltages=voltages)
         ground.connected_elements.append(source_bus)
         source_bus.connected_elements.append(ground)
 

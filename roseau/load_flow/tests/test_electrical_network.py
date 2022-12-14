@@ -34,7 +34,7 @@ def small_network() -> ElectricalNetwork:
 
     vs = VoltageSource(
         id="vs",
-        n=4,
+        phases="abcn",
         bus=source_bus,
         voltages=[20000.0 + 0.0j, -10000.0 - 17320.508076j, -10000.0 + 17320.508076j],
     )
@@ -129,7 +129,7 @@ def test_add_and_remove():
     voltages = [vn, vn * np.exp(-2 / 3 * np.pi * 1j), vn * np.exp(2 / 3 * np.pi * 1j)]
     source_bus = Bus(id="source", phases="abcn", ground=ground)
     load_bus = Bus(id="load bus", phases="abcn")
-    _ = VoltageSource(id="vs", n=4, bus=source_bus, voltages=voltages)
+    VoltageSource(id="vs", phases="abcn", bus=source_bus, voltages=voltages)
     load = PowerLoad(id="power load", n=4, bus=load_bus, s=[100 + 0j, 100 + 0j, 100 + 0j])
     line_characteristics = LineCharacteristics("test", z_line=np.eye(4, dtype=complex))
     line = Line(
@@ -179,7 +179,10 @@ def test_bad_networks():
     # Bad constructor
     bus0 = Bus("bus0", phases="abcn", ground=ground)
     vs = VoltageSource(
-        "vs", n=4, bus=bus0, voltages=[20000.0 + 0.0j, -10000.0 - 17320.508076j, -10000.0 + 17320.508076j]
+        "vs",
+        phases="abcn",
+        bus=bus0,
+        voltages=[20000.0 + 0.0j, -10000.0 - 17320.508076j, -10000.0 + 17320.508076j],
     )
     switch = Switch("switch", 4, bus0, bus1)
     with pytest.raises(RoseauLoadFlowException) as e:

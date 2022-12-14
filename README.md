@@ -53,7 +53,7 @@ p_ref = PotentialRef(element=ground)  # A potential reference
 vn = 400 / np.sqrt(3)
 voltages = [vn, vn * np.exp(-2 / 3 * np.pi * 1j), vn * np.exp(2 / 3 * np.pi * 1j)]
 source_bus = Bus(id="source bus", phases="abcn", ground=ground)
-vs = VoltageSource(id="source", n=4, bus=source_bus, voltages=voltages)
+vs = VoltageSource(id="source", phases="abcn", bus=source_bus, voltages=voltages)
 
 # Create a load bus and a load
 load_bus = Bus(id="load bus", phases="abcn")

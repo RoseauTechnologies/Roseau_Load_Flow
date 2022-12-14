@@ -250,8 +250,8 @@ class ElectricalNetwork:
     def voltage_sources_frame(self) -> pd.DataFrame:
         """A dataframe of the voltage sources."""
         return pd.DataFrame.from_records(
-            data=[(source_id, source.n, source.bus.id) for source_id, source in self.voltage_sources.items()],
-            columns=["id", "n", "bus_id"],
+            data=[(source_id, source.phases, source.bus.id) for source_id, source in self.voltage_sources.items()],
+            columns=["id", "phases", "bus_id"],
             index="id",
         )
 

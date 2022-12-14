@@ -6,7 +6,7 @@ from pint import Quantity
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.buses import Bus
-from roseau.load_flow.models.core import Element
+from roseau.load_flow.models.core import Element, Phases
 from roseau.load_flow.utils.json_mixin import JsonMixin
 from roseau.load_flow.utils.units import ureg
 
@@ -26,15 +26,16 @@ class VoltageSource(Element, JsonMixin):
     Where $U$ is the voltage and $V$ is the node potential.
     """
 
-    def __init__(self, id: Any, n: int, bus: Bus, voltages: Sequence[complex], **kwargs) -> None:
+    def __init__(self, id: Any, phases: Phases, bus: Bus, voltages: Sequence[complex], **kwargs) -> None:
         """Voltage source constructor.
 
         Args:
             id:
                 The unique ID of the voltage source.
 
-            n:
-                Number of ports ie number of phases.
+            phases:
+                The phases of the source. Only 3-phase elements are currently supported.
+                Allowed values are: ``"abc"`` or ``"abcn"``.
 
             bus:
                 The bus of the voltage source.
@@ -45,8 +46,8 @@ class VoltageSource(Element, JsonMixin):
         super().__init__(**kwargs)
         self.connected_elements = [bus]
         bus.connected_elements.append(self)
-        if len(voltages) != n - 1:
-            msg = f"Incorrect number of voltages: {len(voltages)} instead of {n - 1}"
+        if len(voltages) != 3:
+            msg = f"Incorrect number of voltages: {len(voltages)} instead of 3"
             logger.error(msg)
             raise RoseauLoadFlowException(msg, code=RoseauLoadFlowExceptionCode.BAD_VOLTAGES_SIZE)
 
@@ -54,12 +55,15 @@ class VoltageSource(Element, JsonMixin):
             voltages = voltages.m_as("V")
 
         self.id = id
-        self.n = n
+        self.phases = phases
         self.bus = bus
         self.voltages = voltages
 
     def __repr__(self) -> str:
-        return f"{type(self).__name__}(id={self.id!r}, n={self.n}, bus={self.bus.id!r}, voltages={self.voltages!r})"
+        return (
+            f"{type(self).__name__}(id={self.id!r}, phases={self.phases!r}, bus={self.bus.id!r}, "
+            f"voltages={self.voltages!r})"
+        )
 
     @ureg.wraps(None, (None, "V"), strict=False)
     def update_voltages(self, voltages: Sequence[complex]) -> None:
@@ -69,8 +73,8 @@ class VoltageSource(Element, JsonMixin):
             voltages:
                 The new voltages to set on the source.
         """
-        if len(voltages) != self.n - 1:
-            msg = f"Incorrect number of voltages: {len(voltages)} instead of {self.n - 1}"
+        if len(voltages) != 3:
+            msg = f"Incorrect number of voltages: {len(voltages)} instead of 3"
             logger.error(msg)
             raise RoseauLoadFlowException(msg, code=RoseauLoadFlowExceptionCode.BAD_VOLTAGES_SIZE)
         self.voltages = voltages
@@ -82,7 +86,7 @@ class VoltageSource(Element, JsonMixin):
     def from_dict(cls, data: dict[str, Any], bus: Bus) -> "VoltageSource":
         v = data["voltages"]
         voltages = [complex(*v["va"]), complex(*v["vb"]), complex(*v["vc"])]
-        return cls(id=data["id"], n=4, bus=bus, voltages=voltages)
+        return cls(id=data["id"], phases=data["phases"], bus=bus, voltages=voltages)
 
     def to_dict(self) -> dict[str, Any]:
         va = self.voltages[0]
@@ -90,6 +94,6 @@ class VoltageSource(Element, JsonMixin):
         vc = self.voltages[2]
         return {
             "id": self.id,
-            "n": self.n,
+            "phases": self.phases,
             "voltages": {"va": [va.real, va.imag], "vb": [vb.real, vb.imag], "vc": [vc.real, vc.imag]},
         }

@@ -23,7 +23,7 @@ def test_to_dict():
     load_bus = Bus(id="load bus", phases="abcn")
     ground.connect(load_bus)
     p_ref = PotentialRef(element=ground)
-    vs = VoltageSource(id="vs", n=4, bus=source_bus, voltages=voltages)
+    vs = VoltageSource(id="vs", phases="abcn", bus=source_bus, voltages=voltages)
 
     # Same type name, different characteristics -> fail
     lc1 = LineCharacteristics("test", z_line=np.eye(4, dtype=complex), y_shunt=np.eye(4, dtype=complex))
