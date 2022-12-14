@@ -218,15 +218,15 @@ class ElectricalNetwork:
                     (
                         branch_id,
                         branch.branch_type,
-                        branch.n1,
-                        branch.n2,
+                        branch.phases1,
+                        branch.phases2,
                         branch.connected_elements[0].id,
                         branch.connected_elements[1].id,
                         branch.geometry,
                     )
                     for branch_id, branch in self.branches.items()
                 ],
-                columns=["id", "branch_type", "n1", "n2", "bus1_id", "bus2_id", "geometry"],
+                columns=["id", "branch_type", "phases1", "phases2", "bus1_id", "bus2_id", "geometry"],
                 index="id",
             ),
             geometry="geometry",
@@ -384,7 +384,7 @@ class ElectricalNetwork:
 
     @staticmethod
     def _dispatch_value(value: dict[str, tuple[float, float]], t: str) -> np.ndarray:
-        """Dispatch the currents from a dictionary to a list.
+        """Dispatch the load flow results from a dictionary to an array.
 
         Args:
             value:
@@ -396,20 +396,8 @@ class ElectricalNetwork:
         Returns:
             The complex final value.
         """
-        if t + "n" in value:
-            res = [
-                value[t + "a"][0] + 1j * value[t + "a"][1],
-                value[t + "b"][0] + 1j * value[t + "b"][1],
-                value[t + "c"][0] + 1j * value[t + "c"][1],
-                value[t + "n"][0] + 1j * value[t + "n"][1],
-            ]
-        else:
-            res = [
-                value[t + "a"][0] + 1j * value[t + "a"][1],
-                value[t + "b"][0] + 1j * value[t + "b"][1],
-                value[t + "c"][0] + 1j * value[t + "c"][1],
-            ]
-        return np.asarray(res)
+        phases = "abcn" if t + "n" in value else "abc"
+        return np.array([complex(*value[t + p]) for p in phases])
 
     #
     # Getter for the load flow results

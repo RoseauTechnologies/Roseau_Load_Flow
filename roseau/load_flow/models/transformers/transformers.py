@@ -62,9 +62,9 @@ class Transformer(AbstractBranch):
             logger.warning(f"The provided tap {tap:.2f} is lower than 0.9. A good value is between 0.9 and 1.1.")
 
         # Compute the number of ports
-        n1 = 3 if transformer_characteristics.winding1.lower().startswith("d") else 4
-        n2 = 3 if transformer_characteristics.winding2.lower().startswith("d") else 4
-        super().__init__(n1=n1, n2=n2, bus1=bus1, bus2=bus2, id=id, geometry=geometry, **kwargs)
+        phases1 = "abc" if transformer_characteristics.winding1.lower().startswith("d") else "abcn"
+        phases2 = "abc" if transformer_characteristics.winding2.lower().startswith("d") else "abcn"
+        super().__init__(id, phases1, phases2, bus1, bus2, geometry=geometry, **kwargs)
         self.transformer_characteristics = transformer_characteristics
         self.tap = tap
 
@@ -118,15 +118,11 @@ class Transformer(AbstractBranch):
         )
 
     def to_dict(self) -> dict[str, Any]:
-        res = super().to_dict()
-        res.update(
-            {
-                "type_name": self.transformer_characteristics.type_name,
-                "tap": self.tap,
-                "type": "transformer",
-            }
-        )
-        return res
+        return {
+            **super().to_dict(),
+            "type_name": self.transformer_characteristics.type_name,
+            "tap": self.tap,
+        }
 
     def update_characteristics(self, transformer_characteristics: TransformerCharacteristics, tap: float = 1.0) -> None:
         """Change the transformer parameters

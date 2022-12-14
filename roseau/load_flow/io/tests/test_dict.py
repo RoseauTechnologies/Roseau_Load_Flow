@@ -29,8 +29,24 @@ def test_to_dict():
     lc1 = LineCharacteristics("test", z_line=np.eye(4, dtype=complex), y_shunt=np.eye(4, dtype=complex))
     lc2 = LineCharacteristics("test", z_line=np.eye(4, dtype=complex), y_shunt=np.eye(4, dtype=complex) * 1.1)
 
-    line1 = Line(id="line1", n=4, bus1=source_bus, bus2=load_bus, ground=ground, line_characteristics=lc1, length=10)
-    line2 = Line(id="line2", n=4, bus1=source_bus, bus2=load_bus, ground=ground, line_characteristics=lc2, length=10)
+    line1 = Line(
+        id="line1",
+        phases="abcn",
+        bus1=source_bus,
+        bus2=load_bus,
+        ground=ground,
+        line_characteristics=lc1,
+        length=10,
+    )
+    line2 = Line(
+        id="line2",
+        phases="abcn",
+        bus1=source_bus,
+        bus2=load_bus,
+        ground=ground,
+        line_characteristics=lc2,
+        length=10,
+    )
     en = ElectricalNetwork([source_bus, load_bus], [line1, line2], [], [vs], [p_ref, ground])
     with pytest.raises(RoseauLoadFlowException) as e:
         en.to_dict()

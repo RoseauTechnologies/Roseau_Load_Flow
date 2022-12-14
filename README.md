@@ -63,12 +63,12 @@ load = PowerLoad(id="power load", phases="abcn", bus=load_bus, s=[100 + 0j, 100 
 line_characteristics = LineCharacteristics(type_name="test", z_line=np.eye(4, dtype=complex))
 line = Line(
     id="line",
-    n=4,
+    phases="abcn",
     bus1=source_bus,
     bus2=load_bus,
     line_characteristics=line_characteristics,
-    length=10,
-)  # km
+    length=10,  # km
+)
 
 # Create the network from these elements
 en = ElectricalNetwork(

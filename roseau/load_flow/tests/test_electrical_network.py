@@ -44,7 +44,7 @@ def small_network() -> ElectricalNetwork:
     lc = LineCharacteristics("test", 10 * np.eye(4, dtype=complex))
     line = Line(
         id="line",
-        n=4,
+        phases="abcn",
         bus1=source_bus,
         bus2=load_bus,
         line_characteristics=lc,
@@ -133,8 +133,13 @@ def test_add_and_remove():
     load = PowerLoad(id="power load", phases="abcn", bus=load_bus, s=[100 + 0j, 100 + 0j, 100 + 0j])
     line_characteristics = LineCharacteristics("test", z_line=np.eye(4, dtype=complex))
     line = Line(
-        id="line", n=4, bus1=source_bus, bus2=load_bus, line_characteristics=line_characteristics, length=10
-    )  # km
+        id="line",
+        phases="abcn",
+        bus1=source_bus,
+        bus2=load_bus,
+        line_characteristics=line_characteristics,
+        length=10,  # km
+    )
     _ = PotentialRef(element=ground)
     en = ElectricalNetwork.from_element(source_bus)
     en.remove_element(load.id)
@@ -169,7 +174,14 @@ def test_bad_networks():
     bus2 = Bus("bus2", phases="abcn")
     ground.connect(bus2)
     line_characteristics = LineCharacteristics("test", z_line=np.eye(3, dtype=complex))
-    line = Line(id="line", n=3, bus1=bus1, bus2=bus2, line_characteristics=line_characteristics, length=10)
+    line = Line(
+        id="line",
+        phases="abc",
+        bus1=bus1,
+        bus2=bus2,
+        line_characteristics=line_characteristics,
+        length=10,
+    )
     p_ref = PotentialRef(ground)
     with pytest.raises(RoseauLoadFlowException) as e:
         ElectricalNetwork.from_element(bus1)
@@ -330,7 +342,7 @@ def test_frame(small_network):
     branches_gdf = small_network.branches_frame
     assert isinstance(branches_gdf, gpd.GeoDataFrame)
     assert branches_gdf.shape == (1, 6)
-    assert set(branches_gdf.columns) == {"branch_type", "n1", "n2", "bus1_id", "bus2_id", "geometry"}
+    assert set(branches_gdf.columns) == {"branch_type", "phases1", "phases2", "bus1_id", "bus2_id", "geometry"}
     assert branches_gdf.index.name == "id"
 
     # Loads

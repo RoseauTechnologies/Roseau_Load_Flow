@@ -7,7 +7,7 @@ from shapely.geometry.base import BaseGeometry
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.buses import Bus
-from roseau.load_flow.models.core import AbstractBranch, Ground
+from roseau.load_flow.models.core import AbstractBranch, Ground, Phases
 from roseau.load_flow.models.lines.line_characteristics import LineCharacteristics
 from roseau.load_flow.models.voltage_sources import VoltageSource
 from roseau.load_flow.utils.types import BranchType
@@ -21,15 +21,18 @@ class Switch(AbstractBranch):
 
     branch_type = BranchType.SWITCH
 
-    def __init__(self, id: Any, n: int, bus1: Bus, bus2: Bus, geometry: Optional[Point] = None, **kwargs) -> None:
+    def __init__(
+        self, id: Any, phases: Phases, bus1: Bus, bus2: Bus, geometry: Optional[Point] = None, **kwargs
+    ) -> None:
         """Switch constructor.
 
         Args:
             id:
                 The id of the branch.
 
-            n:
-                The number of ports of the extremity buses.
+            phases:
+                The phases of the switch. Only 3-phase elements are currently supported.
+                Allowed values are: ``"abc"`` or ``"abcn"``.
 
             bus1:
                 Bus to connect to the switch.
@@ -44,14 +47,9 @@ class Switch(AbstractBranch):
             msg = f"The geometry for a {type(self)} must be a point: {geometry.geom_type} provided."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_GEOMETRY_TYPE)
-        super().__init__(id=id, n1=n, n2=n, bus1=bus1, bus2=bus2, geometry=geometry, **kwargs)
+        super().__init__(id=id, phases1=phases, phases2=phases, bus1=bus1, bus2=bus2, geometry=geometry, **kwargs)
         self._check_elements()
         self._check_loop()
-
-    def to_dict(self) -> dict[str, Any]:
-        res = super().to_dict()
-        res["type"] = "switch"
-        return res
 
     def _check_loop(self):
         """Check that there are no switch loop, raise an exception if it is the case"""
@@ -126,7 +124,7 @@ class Line(AbstractBranch):
     def __init__(
         self,
         id: Any,
-        n: int,
+        phases: Phases,
         bus1: Bus,
         bus2: Bus,
         line_characteristics: LineCharacteristics,
@@ -141,8 +139,9 @@ class Line(AbstractBranch):
             id:
                 The id of the line.
 
-            n:
-                The number of phases of the line.
+            phases:
+                The phases of the line. Only 3-phase elements are currently supported.
+                Allowed values are: ``"abc"`` or ``"abcn"``.
 
             bus1:
                 The first bus (aka `"from_bus"`) to connect to the line.
@@ -167,21 +166,22 @@ class Line(AbstractBranch):
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_GEOMETRY_TYPE)
 
-        if line_characteristics.z_line.shape != (n, n):
+        line_dimensions = (len(phases),) * 2
+        if line_characteristics.z_line.shape != line_dimensions:
             msg = (
                 f"Incorrect z_line dimensions for line {id!r}: {line_characteristics.z_line.shape} instead of "
-                f"({n}, {n})"
+                f"{line_dimensions}"
             )
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Z_LINE_SHAPE)
 
-        super().__init__(n1=n, n2=n, bus1=bus1, bus2=bus2, id=id, geometry=geometry, **kwargs)
+        super().__init__(id=id, phases1=phases, phases2=phases, bus1=bus1, bus2=bus2, geometry=geometry, **kwargs)
 
         if line_characteristics.y_shunt is not None:
-            if line_characteristics.y_shunt.shape != (n, n):
+            if line_characteristics.y_shunt.shape != line_dimensions:
                 msg = (
                     f"Incorrect y_shunt dimensions for line {id!r}: {line_characteristics.y_shunt.shape} instead of "
-                    f"({n}, {n})"
+                    f"{line_dimensions}"
                 )
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Y_SHUNT_SHAPE)
@@ -192,7 +192,8 @@ class Line(AbstractBranch):
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_TYPE)
             self.connected_elements.append(ground)
             ground.connected_elements.append(self)
-        self.n = n
+
+        self.phases = phases
         self.line_characteristics = line_characteristics
         self.ground = ground
 
@@ -232,12 +233,6 @@ class Line(AbstractBranch):
         """Line constructor from dict.
 
         Args:
-            line_types:
-                A dictionary of line characteristics by type name.
-
-            type_name:
-                The name of the line type
-
             id:
                 The id of the created line.
 
@@ -250,6 +245,12 @@ class Line(AbstractBranch):
             length:
                 Length of the line (km).
 
+            line_types:
+                A dictionary of line characteristics by type name.
+
+            type_name:
+                The name of the line type
+
             ground:
                 The ground (optional for line models without a shunt admittance).
 
@@ -261,9 +262,13 @@ class Line(AbstractBranch):
         """
         line_characteristics = line_types[type_name]
         n = line_characteristics.z_line.shape[0]
+        # TODO: line phases should be provided in the branch dict. For now we assume 3-phase lines
+        # so we can determine the number of phases from the z_line shape. This will not work for
+        # single-phase lines.
+        phases = "abc" if n == 3 else "abcn"
         return cls(
             id=id,
-            n=n,
+            phases=phases,
             bus1=bus1,
             bus2=bus2,
             ground=ground,
@@ -273,12 +278,8 @@ class Line(AbstractBranch):
         )
 
     def to_dict(self) -> dict[str, Any]:
-        res = super().to_dict()
-        res.update(
-            {
-                "length": self.length,
-                "type_name": self.line_characteristics.type_name,
-                "type": "line",
-            }
-        )
-        return res
+        return {
+            **super().to_dict(),
+            "length": self.length,
+            "type_name": self.line_characteristics.type_name,
+        }

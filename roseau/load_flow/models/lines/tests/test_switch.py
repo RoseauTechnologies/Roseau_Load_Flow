@@ -12,22 +12,29 @@ def test_switch_loop():
     bus2 = Bus("bus2", phases="abcn")
     bus3 = Bus("bus3", phases="abcn")
 
-    _ = Switch("switch1", 4, bus1, bus2)
-    _ = Line(id="line", n=4, bus1=bus1, bus2=bus3, line_characteristics=line_characteristics, length=10)
+    _ = Switch("switch1", "abcn", bus1, bus2)
+    _ = Line(
+        id="line",
+        phases="abcn",
+        bus1=bus1,
+        bus2=bus3,
+        line_characteristics=line_characteristics,
+        length=10,
+    )
 
     with pytest.raises(RoseauLoadFlowException) as e:
-        Switch("switch2", 4, bus1, bus2)
+        Switch("switch2", "abcn", bus1, bus2)
     assert "There is a loop of switch" in e.value.args[0]
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.SWITCHES_LOOP
 
     with pytest.raises(RoseauLoadFlowException) as e:
-        Switch("switch2", 4, bus2, bus1)
+        Switch("switch2", "abcn", bus2, bus1)
     assert "There is a loop of switch" in e.value.args[0]
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.SWITCHES_LOOP
 
-    _ = Switch("switch2", 4, bus2, bus3)
+    _ = Switch("switch2", "abcn", bus2, bus3)
     with pytest.raises(RoseauLoadFlowException) as e:
-        Switch("switch3", 4, bus1, bus3)
+        Switch("switch3", "abcn", bus1, bus3)
     assert "There is a loop of switch" in e.value.args[0]
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.SWITCHES_LOOP
 
@@ -39,6 +46,6 @@ def test_switch_connection():
     _ = VoltageSource("vs1", phases="abcn", bus=bus1, voltages=[230 + 0j, -115 + 200j, 115 - 200j])
     _ = VoltageSource("vs2", phases="abcn", bus=bus2, voltages=[230 + 0j, -115 + 200j, 115 - 200j])
     with pytest.raises(RoseauLoadFlowException) as e:
-        Switch("switch", 4, bus1=bus1, bus2=bus2)
+        Switch("switch", "abcn", bus1=bus1, bus2=bus2)
     assert "are connected with the switch" in e.value.args[0]
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_VOLTAGES_SOURCES_CONNECTION

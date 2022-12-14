@@ -14,8 +14,8 @@ from roseau.load_flow.utils.units import ureg
 
 if TYPE_CHECKING:
     from roseau.load_flow.models.buses import Bus
-    from roseau.load_flow.models.lines import Line, Switch
-    from roseau.load_flow.models.transformers import Transformer
+    from roseau.load_flow.models.lines import Line, LineCharacteristics, Switch
+    from roseau.load_flow.models.transformers import Transformer, TransformerCharacteristics
 
 logger = logging.getLogger(__name__)
 
@@ -93,7 +93,7 @@ class Ground(Element):
 class AbstractBranch(Element, JsonMixin):
     """This is an abstract class for all the branches (lines, switches and transformers) of the network."""
 
-    branch_type: BranchType = NotImplemented
+    branch_type: BranchType
 
     @classmethod
     def _line_class(cls) -> type["Line"]:
@@ -116,8 +116,8 @@ class AbstractBranch(Element, JsonMixin):
     def __init__(
         self,
         id: Any,
-        n1: int,
-        n2: int,
+        phases1: Phases,
+        phases2: Phases,
         bus1: "Bus",
         bus2: "Bus",
         geometry: Optional[BaseGeometry] = None,
@@ -127,27 +127,28 @@ class AbstractBranch(Element, JsonMixin):
 
         Args:
             id:
-                The identifier of the branch.
+                The unique id of the branch.
 
-            n1:
-                Number of ports in the first extremity of the branch.
+            phases1:
+                The phases of the first extremity of the branch. Only 3-phase elements are
+                currently supported. Allowed values are: ``"abc"`` or ``"abcn"``.
 
-            n2:
-                Number of ports in the second extremity of the branch.
+            phases2:
+                The phases of the second extremity of the branch.
 
             bus1:
-                Bus to connect to the first extremity of the branch.
+                The bus to connect the first extremity of the branch to.
 
             bus2:
-                Bus to connect to the second extremity of the branch.
+                The bus to connect the second extremity of the branch to.
 
             geometry:
                 The geometry of the branch.
         """
         super().__init__(**kwargs)
         self.id = id
-        self.n1 = n1
-        self.n2 = n2
+        self.phases1 = phases1
+        self.phases2 = phases2
         self.connected_elements = [bus1, bus2]
         bus1.connected_elements.append(self)
         bus2.connected_elements.append(self)
@@ -155,7 +156,7 @@ class AbstractBranch(Element, JsonMixin):
         self._currents = None
 
     def __repr__(self) -> str:
-        s = f"{type(self).__name__}(id={self.id!r}, n1={self.n1}, n2={self.n2}"
+        s = f"{type(self).__name__}(id={self.id!r}, phases1={self.phases1!r}, phases2={self.phases2!r}"
         s += f", bus1={self.connected_elements[0].id!r}, bus2={self.connected_elements[1].id!r}"
         if self.geometry is not None:
             s += f", geometry={self.geometry}"
@@ -163,16 +164,12 @@ class AbstractBranch(Element, JsonMixin):
         return s
 
     def __str__(self) -> str:
-        return f"id={self.id} - n1={self.n1} - n2={self.n2}"
+        return f"id={self.id!r} - phases1={self.phases1!r} - phases2={self.phases2!r}"
 
     @property
     @ureg.wraps(("A", "A"), None, strict=False)
     def currents(self) -> tuple[np.ndarray, np.ndarray]:
-        """Current accessor
-
-        Returns:
-            The complex currents of each phase.
-        """
+        """Arrays of the actual currents of each phase of the two extremities (A) as computed by the load flow."""
         return self._currents
 
     @currents.setter
@@ -183,46 +180,58 @@ class AbstractBranch(Element, JsonMixin):
     # Json Mixin interface
     #
     @classmethod
-    def from_dict(cls, branch, bus1, bus2, ground, line_types, transformer_types, *args):
+    def from_dict(
+        cls,
+        data: dict[str, Any],
+        bus1: "Bus",
+        bus2: "Bus",
+        ground: Ground,
+        line_types: dict[str, "LineCharacteristics"],
+        transformer_types: dict[str, "TransformerCharacteristics"],
+        *args,
+    ) -> "AbstractBranch":
 
-        if "geometry" not in branch:
+        if "geometry" not in data:
             geometry = None
-        elif isinstance(branch["geometry"], str):
-            geometry = shapely.wkt.loads(branch["geometry"])
+        elif isinstance(data["geometry"], str):
+            geometry = shapely.wkt.loads(data["geometry"])
         else:
-            geometry = shape(branch["geometry"])
+            geometry = shape(data["geometry"])
 
-        if branch["type"] == "line":
+        if data["type"] == "line":
             return cls._line_class().from_dict(
-                id=branch["id"],
+                id=data["id"],
                 bus1=bus1,
                 bus2=bus2,
-                length=branch["length"],
+                length=data["length"],
                 line_types=line_types,
-                type_name=branch["type_name"],
+                type_name=data["type_name"],
                 ground=ground,
                 geometry=geometry,
             )
-        elif branch["type"] == "transformer":
+        elif data["type"] == "transformer":
             return cls._transformer_class().from_dict(
-                id=branch["id"],
+                id=data["id"],
                 bus1=bus1,
                 bus2=bus2,
-                type_name=branch["type_name"],
+                type_name=data["type_name"],
                 transformer_types=transformer_types,
-                tap=branch["tap"],
+                tap=data["tap"],
                 geometry=geometry,
             )
-        elif branch["type"] == "switch":
-            return cls._switch_class()(id=branch["id"], n=bus1.n, bus1=bus1, bus2=bus2, geometry=geometry)
+        elif data["type"] == "switch":
+            return cls._switch_class()(id=data["id"], phases=bus1.phases, bus1=bus1, bus2=bus2, geometry=geometry)
         else:
-            msg = f"Unknown branch type for branch {branch['id']}: {branch['type']}"
+            msg = f"Unknown branch type for branch {data['id']}: {data['type']}"
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_BRANCH_TYPE)
 
     def to_dict(self) -> dict[str, Any]:
         res = {
             "id": self.id,
+            "type": str(self.branch_type),
+            "phases1": self.phases1,
+            "phases2": self.phases2,
             "bus1": self.connected_elements[0].id,
             "bus2": self.connected_elements[1].id,
         }

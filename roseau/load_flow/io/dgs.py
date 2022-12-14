@@ -107,6 +107,7 @@ def network_from_dgs(  # noqa: C901
 
         line_types = dict()
         for type_id in typ_lne.index:
+            # TODO: use the detailed phase information instead of n
             n = typ_lne.at[type_id, "nlnph"] + typ_lne.at[type_id, "nneutral"]
             if n == 4:
                 line_model = LineModel.SYM_NEUTRAL
@@ -188,10 +189,11 @@ def network_from_dgs(  # noqa: C901
     # Create switches
     if elm_coup is not None:
         for switch_id in elm_coup.index:
+            # TODO: use the detailed phase information instead of n
             n = elm_coup.at[switch_id, "nphase"] + elm_coup.at[switch_id, "nneutral"]
             branches[switch_id] = Switch(
                 id=switch_id,
-                n=n,
+                phases="abc" if n == 3 else "abcn",
                 bus1=buses[sta_cubic.at[elm_coup.at[switch_id, "bus1"], "cterm"]],
                 bus2=buses[sta_cubic.at[elm_coup.at[switch_id, "bus2"], "cterm"]],
             )
