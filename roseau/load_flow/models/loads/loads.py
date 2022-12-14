@@ -221,14 +221,14 @@ class CurrentLoad(AbstractLoad):
         self.i = self._validate_value(i)
 
     def to_dict(self) -> dict[str, Any]:
-        ya, yb, yc = self.i
+        ia, ib, ic = self.i
         return {
             "id": self.id,
             "phases": "abc" if self.n == 3 else "abcn",
             "currents": {
-                "ya": [ya.real, ya.imag],
-                "yb": [yb.real, yb.imag],
-                "yc": [yc.real, yc.imag],
+                "ia": [ia.real, ia.imag],
+                "ib": [ib.real, ib.imag],
+                "ic": [ic.real, ic.imag],
             },
         }
 

@@ -194,3 +194,60 @@ def test_flexible_load():
     assert load._powers is None  # cannot use load.powers because it is passing None to pint
     load.powers = [100, 100, 100]
     assert (load.powers.m_as("VA") == [100, 100, 100]).all()
+
+
+def test_loads_to_dict():
+    bus = Bus("bus", 4)
+    values = [1 + 2j, 3 + 4j, 5 + 6j]
+
+    # Power load
+    assert PowerLoad("load_s1", 4, bus, values).to_dict() == {
+        "id": "load_s1",
+        "phases": "abcn",
+        "powers": {"sa": [1.0, 2.0], "sb": [3.0, 4.0], "sc": [5.0, 6.0]},
+    }
+    assert PowerLoad("load_s2", 3, bus, values).to_dict() == {
+        "id": "load_s2",
+        "phases": "abc",
+        "powers": {"sa": [1.0, 2.0], "sb": [3.0, 4.0], "sc": [5.0, 6.0]},
+    }
+
+    # Current load
+    assert CurrentLoad("load_i1", 4, bus, values).to_dict() == {
+        "id": "load_i1",
+        "phases": "abcn",
+        "currents": {"ia": [1.0, 2.0], "ib": [3.0, 4.0], "ic": [5.0, 6.0]},
+    }
+    assert CurrentLoad("load_i2", 3, bus, values).to_dict() == {
+        "id": "load_i2",
+        "phases": "abc",
+        "currents": {"ia": [1.0, 2.0], "ib": [3.0, 4.0], "ic": [5.0, 6.0]},
+    }
+
+    # Impedance load
+    assert ImpedanceLoad("load_z1", 4, bus, values).to_dict() == {
+        "id": "load_z1",
+        "phases": "abcn",
+        "impedances": {"za": [1.0, 2.0], "zb": [3.0, 4.0], "zc": [5.0, 6.0]},
+    }
+    assert ImpedanceLoad("load_z2", 3, bus, values).to_dict() == {
+        "id": "load_z2",
+        "phases": "abc",
+        "impedances": {"za": [1.0, 2.0], "zb": [3.0, 4.0], "zc": [5.0, 6.0]},
+    }
+
+    # Flexible load
+    assert FlexibleLoad("load_f1", 4, bus, values, [FlexibleParameter.constant()] * 3).to_dict() == {
+        "id": "load_f1",
+        "phases": "abcn",
+        "powers": {"sa": [1.0, 2.0], "sb": [3.0, 4.0], "sc": [5.0, 6.0]},
+        "parameters": [
+            {
+                "control_p": {"type": "constant"},
+                "control_q": {"type": "constant"},
+                "projection": {"type": "euclidean", "alpha": 100.0, "epsilon": 0.01},
+                "s_max": 1.0,
+            },
+        ]
+        * 3,
+    }
