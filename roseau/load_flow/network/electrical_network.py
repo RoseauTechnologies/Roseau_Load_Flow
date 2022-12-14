@@ -241,8 +241,8 @@ class ElectricalNetwork:
             The dataframe of loads.
         """
         return pd.DataFrame.from_records(
-            data=[(load_id, load.n, load.bus.id) for load_id, load in self.loads.items()],
-            columns=["id", "n", "bus_id"],
+            data=[(load_id, load.phases, load.bus.id) for load_id, load in self.loads.items()],
+            columns=["id", "phases", "bus_id"],
             index="id",
         )
 

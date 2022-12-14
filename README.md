@@ -57,7 +57,7 @@ vs = VoltageSource(id="source", phases="abcn", bus=source_bus, voltages=voltages
 
 # Create a load bus and a load
 load_bus = Bus(id="load bus", phases="abcn")
-load = PowerLoad(id="power load", n=4, bus=load_bus, s=[100 + 0j, 100 + 0j, 100 + 0j])
+load = PowerLoad(id="power load", phases="abcn", bus=load_bus, s=[100 + 0j, 100 + 0j, 100 + 0j])
 
 # Create a line between the two buses
 line_characteristics = LineCharacteristics(type_name="test", z_line=np.eye(4, dtype=complex))

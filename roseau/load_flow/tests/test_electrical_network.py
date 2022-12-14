@@ -130,7 +130,7 @@ def test_add_and_remove():
     source_bus = Bus(id="source", phases="abcn", ground=ground)
     load_bus = Bus(id="load bus", phases="abcn")
     VoltageSource(id="vs", phases="abcn", bus=source_bus, voltages=voltages)
-    load = PowerLoad(id="power load", n=4, bus=load_bus, s=[100 + 0j, 100 + 0j, 100 + 0j])
+    load = PowerLoad(id="power load", phases="abcn", bus=load_bus, s=[100 + 0j, 100 + 0j, 100 + 0j])
     line_characteristics = LineCharacteristics("test", z_line=np.eye(4, dtype=complex))
     line = Line(
         id="line", n=4, bus1=source_bus, bus2=load_bus, line_characteristics=line_characteristics, length=10
@@ -138,7 +138,7 @@ def test_add_and_remove():
     _ = PotentialRef(element=ground)
     en = ElectricalNetwork.from_element(source_bus)
     en.remove_element(load.id)
-    new_load = PowerLoad(id="power load", n=4, bus=load_bus, s=[100 + 0j, 100 + 0j, 100 + 0j])
+    new_load = PowerLoad(id="power load", phases="abcn", bus=load_bus, s=[100 + 0j, 100 + 0j, 100 + 0j])
     en.add_element(new_load)
 
     # Bad key
@@ -337,7 +337,7 @@ def test_frame(small_network):
     loads_gdf = small_network.loads_frame
     assert isinstance(loads_gdf, pd.DataFrame)
     assert loads_gdf.shape == (1, 2)
-    assert set(loads_gdf.columns) == {"n", "bus_id"}
+    assert set(loads_gdf.columns) == {"phases", "bus_id"}
     assert loads_gdf.index.name == "id"
 
 

@@ -201,43 +201,43 @@ def test_loads_to_dict():
     values = [1 + 2j, 3 + 4j, 5 + 6j]
 
     # Power load
-    assert PowerLoad("load_s1", 4, bus, values).to_dict() == {
+    assert PowerLoad("load_s1", "abcn", bus, values).to_dict() == {
         "id": "load_s1",
         "phases": "abcn",
         "powers": {"sa": [1.0, 2.0], "sb": [3.0, 4.0], "sc": [5.0, 6.0]},
     }
-    assert PowerLoad("load_s2", 3, bus, values).to_dict() == {
+    assert PowerLoad("load_s2", "abc", bus, values).to_dict() == {
         "id": "load_s2",
         "phases": "abc",
         "powers": {"sa": [1.0, 2.0], "sb": [3.0, 4.0], "sc": [5.0, 6.0]},
     }
 
     # Current load
-    assert CurrentLoad("load_i1", 4, bus, values).to_dict() == {
+    assert CurrentLoad("load_i1", "abcn", bus, values).to_dict() == {
         "id": "load_i1",
         "phases": "abcn",
         "currents": {"ia": [1.0, 2.0], "ib": [3.0, 4.0], "ic": [5.0, 6.0]},
     }
-    assert CurrentLoad("load_i2", 3, bus, values).to_dict() == {
+    assert CurrentLoad("load_i2", "abc", bus, values).to_dict() == {
         "id": "load_i2",
         "phases": "abc",
         "currents": {"ia": [1.0, 2.0], "ib": [3.0, 4.0], "ic": [5.0, 6.0]},
     }
 
     # Impedance load
-    assert ImpedanceLoad("load_z1", 4, bus, values).to_dict() == {
+    assert ImpedanceLoad("load_z1", "abcn", bus, values).to_dict() == {
         "id": "load_z1",
         "phases": "abcn",
         "impedances": {"za": [1.0, 2.0], "zb": [3.0, 4.0], "zc": [5.0, 6.0]},
     }
-    assert ImpedanceLoad("load_z2", 3, bus, values).to_dict() == {
+    assert ImpedanceLoad("load_z2", "abc", bus, values).to_dict() == {
         "id": "load_z2",
         "phases": "abc",
         "impedances": {"za": [1.0, 2.0], "zb": [3.0, 4.0], "zc": [5.0, 6.0]},
     }
 
     # Flexible load
-    assert FlexibleLoad("load_f1", 4, bus, values, [FlexibleParameter.constant()] * 3).to_dict() == {
+    assert FlexibleLoad("load_f1", "abcn", bus, values, [FlexibleParameter.constant()] * 3).to_dict() == {
         "id": "load_f1",
         "phases": "abcn",
         "powers": {"sa": [1.0, 2.0], "sb": [3.0, 4.0], "sc": [5.0, 6.0]},
