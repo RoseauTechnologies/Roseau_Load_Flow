@@ -34,35 +34,54 @@ en.solve_load_flow(auth=("username", "password"))
 By describing the network and its components, here is a simple example:
 
 ```python
-from roseau.load_flow import Ground, VoltageSource, Bus, PowerLoad, PotentialRef, SimplifiedLine, ElectricalNetwork, LineCharacteristics
 import numpy as np
 
-ground = Ground()
+from roseau.load_flow import (
+    Bus,
+    ElectricalNetwork,
+    Ground,
+    Line,
+    LineCharacteristics,
+    PotentialRef,
+    PowerLoad,
+    VoltageSource,
+)
+
+# Create a main bus and a voltage source
+ground = Ground()  # A ground connection
+p_ref = PotentialRef(element=ground)  # A potential reference
 vn = 400 / np.sqrt(3)
 voltages = [vn, vn * np.exp(-2 / 3 * np.pi * 1j), vn * np.exp(2 / 3 * np.pi * 1j)]
-vs = VoltageSource(
-    id="source",
-    n=4,
-    ground=ground,
-    source_voltages=voltages,
-)
-load_bus = Bus(id="load bus", n=4)
+source_bus = Bus(id="source bus", phases="abcn", ground=ground)
+vs = VoltageSource(id="source", n=4, bus=source_bus, voltages=voltages)
+
+# Create a load bus and a load
+load_bus = Bus(id="load bus", phases="abcn")
 load = PowerLoad(id="power load", n=4, bus=load_bus, s=[100 + 0j, 100 + 0j, 100 + 0j])
+
+# Create a line between the two buses
 line_characteristics = LineCharacteristics(type_name="test", z_line=np.eye(4, dtype=complex))
-line = SimplifiedLine(
+line = Line(
     id="line",
     n=4,
-    bus1=vs,
+    bus1=source_bus,
     bus2=load_bus,
     line_characteristics=line_characteristics,
-    length=10  # km
+    length=10,
+)  # km
+
+# Create the network from these elements
+en = ElectricalNetwork(
+    buses=[source_bus, load_bus],
+    branches=[line],
+    loads=[load],
+    voltage_sources=[vs],
+    special_elements=[p_ref, ground],
 )
-p_ref = PotentialRef(element=ground)
+# or simply using the main bus
+# en = ElectricalNetwork.from_element(source_bus)
 
-en = ElectricalNetwork(buses=[vs, load_bus], branches=[line], loads=[load], special_elements=[p_ref, ground])
-# or
-# en = ElectricalNetwork.from_element(vs)
-
+# Solve the load flow
 en.solve_load_flow(auth=("username", "password"))
 ```
 

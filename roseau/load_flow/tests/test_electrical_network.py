@@ -28,8 +28,8 @@ from roseau.load_flow.network import ElectricalNetwork
 def small_network() -> ElectricalNetwork:
     # Build a small network
     ground = Ground()
-    source_bus = Bus(id="bus0", n=4, ground=ground, geometry=Point(-1.318375372111463, 48.64794139348595))
-    load_bus = Bus("bus1", 4, geometry=Point(-1.320149235966572, 48.64971306653889))
+    source_bus = Bus("bus0", phases="abcn", ground=ground, geometry=Point(-1.318375372111463, 48.64794139348595))
+    load_bus = Bus("bus1", phases="abcn", geometry=Point(-1.320149235966572, 48.64971306653889))
     ground.connect(load_bus)
 
     vs = VoltageSource(
@@ -127,8 +127,8 @@ def test_add_and_remove():
     ground = Ground()
     vn = 400 / np.sqrt(3)
     voltages = [vn, vn * np.exp(-2 / 3 * np.pi * 1j), vn * np.exp(2 / 3 * np.pi * 1j)]
-    source_bus = Bus(id="source", n=4, ground=ground)
-    load_bus = Bus(id="load bus", n=4)
+    source_bus = Bus(id="source", phases="abcn", ground=ground)
+    load_bus = Bus(id="load bus", phases="abcn")
     _ = VoltageSource(id="vs", n=4, bus=source_bus, voltages=voltages)
     load = PowerLoad(id="power load", n=4, bus=load_bus, s=[100 + 0j, 100 + 0j, 100 + 0j])
     line_characteristics = LineCharacteristics("test", z_line=np.eye(4, dtype=complex))
@@ -165,8 +165,8 @@ def test_add_and_remove():
 def test_bad_networks():
     # No voltage source
     ground = Ground()
-    bus1 = Bus("bus1", 3)
-    bus2 = Bus("bus2", 3)
+    bus1 = Bus("bus1", phases="abcn")
+    bus2 = Bus("bus2", phases="abcn")
     ground.connect(bus2)
     line_characteristics = LineCharacteristics("test", z_line=np.eye(3, dtype=complex))
     line = Line(id="line", n=3, bus1=bus1, bus2=bus2, line_characteristics=line_characteristics, length=10)
@@ -177,7 +177,7 @@ def test_bad_networks():
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.NO_VOLTAGE_SOURCE
 
     # Bad constructor
-    bus0 = Bus("bus0", 4, ground=ground)
+    bus0 = Bus("bus0", phases="abcn", ground=ground)
     vs = VoltageSource(
         "vs", n=4, bus=bus0, voltages=[20000.0 + 0.0j, -10000.0 - 17320.508076j, -10000.0 + 17320.508076j]
     )
@@ -189,7 +189,7 @@ def test_bad_networks():
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.UNKNOWN_ELEMENT
 
     # No potential reference
-    bus3 = Bus("bus3", 4)
+    bus3 = Bus("bus3", phases="abcn")
     transformer_characteristics = TransformerCharacteristics(
         type_name="t", windings="Dyn11", uhv=20000, ulv=400, sn=160 * 1e3, p0=460, i0=2.3 / 100, psc=2350, vsc=4 / 100
     )
@@ -320,7 +320,7 @@ def test_frame(small_network):
     buses_gdf = small_network.buses_frame
     assert isinstance(buses_gdf, gpd.GeoDataFrame)
     assert buses_gdf.shape == (2, 2)
-    assert set(buses_gdf.columns) == {"n", "geometry"}
+    assert set(buses_gdf.columns) == {"phases", "geometry"}
     assert buses_gdf.index.name == "id"
 
     # Branches

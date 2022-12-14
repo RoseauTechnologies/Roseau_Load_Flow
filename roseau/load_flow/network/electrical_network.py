@@ -197,8 +197,8 @@ class ElectricalNetwork:
         """
         return gpd.GeoDataFrame(
             data=pd.DataFrame.from_records(
-                data=[(bus_id, bus.n, bus.geometry) for bus_id, bus in self.buses.items()],
-                columns=["id", "n", "geometry"],
+                data=[(bus_id, bus.phases, bus.geometry) for bus_id, bus in self.buses.items()],
+                columns=["id", "phases", "geometry"],
                 index="id",
             ),
             geometry="geometry",
@@ -508,11 +508,11 @@ class ElectricalNetwork:
             Name: voltage, dtype: complex128
         """
         voltages_dict = {"bus_id": [], "phase": [], "voltage": []}
-        phases = {3: ["ab", "bc", "ca"], 4: ["an", "bn", "cn"]}
-        phases_dtype = pd.CategoricalDtype(phases[4] + phases[3], ordered=True)
+        phases = {False: ["ab", "bc", "ca"], True: ["an", "bn", "cn"]}
+        phases_dtype = pd.CategoricalDtype(phases[True] + phases[False], ordered=True)
         for bus_id, bus in self.buses.items():
             voltages = bus.voltages.m_as("V")
-            for voltage, phase in zip(voltages, phases[bus.n]):
+            for voltage, phase in zip(voltages, phases["n" in bus.phases]):
                 voltages_dict["bus_id"].append(bus_id)
                 voltages_dict["phase"].append(phase)
                 voltages_dict["voltage"].append(voltage)

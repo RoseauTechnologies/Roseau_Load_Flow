@@ -62,15 +62,15 @@ def network_from_dgs(  # noqa: C901
     buses: dict[str, Bus] = {}
     for bus_id in elm_term.index:
         ph_tech = elm_term.at[bus_id, "phtech"]
-        if ph_tech == 0:  # ABC
-            n = 3
-        elif ph_tech == 1:  # ABC-N
-            n = 4
+        if ph_tech == 0:
+            phases = "abc"
+        elif ph_tech == 1:
+            phases = "abcn"
         else:
             msg = f"The Ph tech {ph_tech!r} for bus {bus_id!r} cannot be handled."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DGS_BAD_PHASE_TECHNOLOGY)
-        buses[bus_id] = Bus(id=bus_id, n=n)
+        buses[bus_id] = Bus(id=bus_id, phases=phases)
 
     # Sources
     sources: dict[str, VoltageSource] = {}

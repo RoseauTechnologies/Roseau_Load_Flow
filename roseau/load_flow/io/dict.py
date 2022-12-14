@@ -72,7 +72,7 @@ def network_from_dict(
             transformer_types,
         )
         if isinstance(branches_dict[branch_data["id"]], Transformer):
-            if bus2.n == 4:
+            if "n" in bus2.phases:
                 ground.connect(bus2)
             else:
                 special_elements.append(en_class.pref_class(element=bus2))

@@ -1,6 +1,6 @@
 import logging
 from abc import ABC
-from typing import Any, Optional, TYPE_CHECKING
+from typing import Any, Literal, Optional, TYPE_CHECKING
 
 import numpy as np
 import shapely.wkt
@@ -18,6 +18,10 @@ if TYPE_CHECKING:
     from roseau.load_flow.models.transformers import Transformer
 
 logger = logging.getLogger(__name__)
+
+
+# Only these phases are currently allowed
+Phases = Literal["abc", "abcn"]
 
 
 class Element(ABC):

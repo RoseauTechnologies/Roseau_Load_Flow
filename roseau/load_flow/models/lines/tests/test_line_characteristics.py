@@ -9,7 +9,7 @@ from roseau.load_flow.utils import ConductorType, IsolationType, LineModel, Line
 
 
 def test_line_characteristics():
-    bus = Bus(id="junction", n=4)
+    bus = Bus(id="junction", phases="abcn")
     ground = Ground()
 
     # Real element off the diagonal (Z)

@@ -8,9 +8,9 @@ from roseau.load_flow.models import Bus, Ground, Line, LineCharacteristics, Swit
 def test_switch_loop():
     line_characteristics = LineCharacteristics("test", z_line=np.eye(4, dtype=complex))
 
-    bus1 = Bus("bus1", 4)
-    bus2 = Bus("bus2", 4)
-    bus3 = Bus("bus3", 4)
+    bus1 = Bus("bus1", phases="abcn")
+    bus2 = Bus("bus2", phases="abcn")
+    bus3 = Bus("bus3", phases="abcn")
 
     _ = Switch("switch1", 4, bus1, bus2)
     _ = Line(id="line", n=4, bus1=bus1, bus2=bus3, line_characteristics=line_characteristics, length=10)
@@ -34,8 +34,8 @@ def test_switch_loop():
 
 def test_switch_connection():
     ground = Ground()
-    bus1 = Bus("bus1", n=4, ground=ground)
-    bus2 = Bus("bus2", n=4, ground=ground)
+    bus1 = Bus("bus1", phases="abcn", ground=ground)
+    bus2 = Bus("bus2", phases="abcn", ground=ground)
     _ = VoltageSource("vs1", n=4, bus=bus1, voltages=[230 + 0j, -115 + 200j, 115 - 200j])
     _ = VoltageSource("vs2", n=4, bus=bus2, voltages=[230 + 0j, -115 + 200j, 115 - 200j])
     with pytest.raises(RoseauLoadFlowException) as e:

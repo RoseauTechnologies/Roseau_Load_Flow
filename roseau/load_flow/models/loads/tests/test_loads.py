@@ -7,7 +7,7 @@ from roseau.load_flow.utils import Q_
 
 
 def test_loads():
-    bus = Bus("bus", 4)
+    bus = Bus("bus", phases="abcn")
     # Bad number of phases
     with pytest.raises(RoseauLoadFlowException) as e:
         PowerLoad("load", 4, bus, [100, 100])
@@ -137,7 +137,7 @@ def test_loads():
 
 
 def test_flexible_load():
-    bus = Bus("bus", 4)
+    bus = Bus("bus", phases="abcn")
     fp_pq_prod = FlexibleParameter.pq_u_production(
         up_up=250,
         up_max=260,
@@ -197,7 +197,7 @@ def test_flexible_load():
 
 
 def test_loads_to_dict():
-    bus = Bus("bus", 4)
+    bus = Bus("bus", phases="abcn")
     values = [1 + 2j, 3 + 4j, 5 + 6j]
 
     # Power load
