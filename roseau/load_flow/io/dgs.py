@@ -105,7 +105,7 @@ def network_from_dgs(  # noqa: C901
     branches: dict[str, AbstractBranch] = {}
     if elm_lne is not None:
 
-        line_types = dict()
+        line_types: dict[str, LineCharacteristics] = {}
         for type_id in typ_lne.index:
             # TODO: use the detailed phase information instead of n
             n = typ_lne.at[type_id, "nlnph"] + typ_lne.at[type_id, "nneutral"]

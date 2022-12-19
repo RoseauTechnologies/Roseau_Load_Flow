@@ -103,21 +103,21 @@ class AbstractLoad(Element, JsonMixin, metaclass=ABCMeta):
     #
     @classmethod
     def from_dict(cls, data: dict[str, Any], bus: Bus) -> "AbstractLoad":
-        id = data["id"]
-        phases = data["phases"]
+        id: Any = data["id"]
+        phases: str = data["phases"]
         if (params := data.get("parameters")) is not None:
             s = data["powers"]
-            s_complex = [complex(*s["sa"]), complex(*s["sb"]), complex(*s["sc"])]
+            s_complex = [complex(*s[f"s{ph}"]) for ph in phases.removesuffix("n")]
             parameters = [cls._flexible_load_class._flexible_parameter_class.from_dict(p) for p in params]
             return cls._flexible_load_class(id, bus, s=s_complex, phases=phases, parameters=parameters)
         elif (s := data.get("powers")) is not None:
-            s_complex = [complex(*s["sa"]), complex(*s["sb"]), complex(*s["sc"])]
+            s_complex = [complex(*s[f"s{ph}"]) for ph in phases.removesuffix("n")]
             return cls._power_load_class(id, bus, s=s_complex, phases=phases)
         elif (i := data.get("currents")) is not None:
-            i_complex = [complex(*i["ia"]), complex(*i["ib"]), complex(*i["ic"])]
+            i_complex = [complex(*i[f"i{ph}"]) for ph in phases.removesuffix("n")]
             return cls._current_load_class(id, bus, i=i_complex, phases=phases)
         elif (z := data.get("impedances")) is not None:
-            z_complex = [complex(*z["za"]), complex(*z["zb"]), complex(*z["zc"])]
+            z_complex = [complex(*z[f"z{ph}"]) for ph in phases.removesuffix("n")]
             return cls._impedance_load_class(id, bus, z=z_complex, phases=phases)
         else:
             msg = f"Unknown load type for load {data['id']!r}"
@@ -180,15 +180,10 @@ class PowerLoad(AbstractLoad):
         self.s = self._validate_value(s)
 
     def to_dict(self) -> dict[str, Any]:
-        sa, sb, sc = self.s
         return {
             "id": self.id,
             "phases": self.phases,
-            "powers": {
-                "sa": [sa.real, sa.imag],
-                "sb": [sb.real, sb.imag],
-                "sc": [sc.real, sc.imag],
-            },
+            "powers": {f"s{ph}": [s.real, s.imag] for s, ph in zip(self.s, self.phases)},
         }
 
 
@@ -246,15 +241,10 @@ class CurrentLoad(AbstractLoad):
         self.i = self._validate_value(i)
 
     def to_dict(self) -> dict[str, Any]:
-        ia, ib, ic = self.i
         return {
             "id": self.id,
             "phases": self.phases,
-            "currents": {
-                "ia": [ia.real, ia.imag],
-                "ib": [ib.real, ib.imag],
-                "ic": [ic.real, ic.imag],
-            },
+            "currents": {f"i{ph}": [i.real, i.imag] for i, ph in zip(self.i, self.phases)},
         }
 
 
@@ -313,15 +303,10 @@ class ImpedanceLoad(AbstractLoad):
         self.z = self._validate_value(z)
 
     def to_dict(self) -> dict[str, Any]:
-        za, zb, zc = self.z
         return {
             "id": self.id,
             "phases": self.phases,
-            "impedances": {
-                "za": [za.real, za.imag],
-                "zb": [zb.real, zb.imag],
-                "zc": [zc.real, zc.imag],
-            },
+            "impedances": {f"z{ph}": [z.real, z.imag] for z, ph in zip(self.z, self.phases)},
         }
 
 

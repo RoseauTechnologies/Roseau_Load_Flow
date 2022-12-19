@@ -256,7 +256,7 @@ class Line(AbstractBranch):
     # Json Mixin interface
     #
     @classmethod
-    @ureg.wraps(None, (None, None, None, None, "km", None, None, None, None), strict=False)
+    @ureg.wraps(None, (None, None, None, None, "km", None, None, None, None, None), strict=False)
     def from_dict(
         cls,
         id: Any,
@@ -265,6 +265,7 @@ class Line(AbstractBranch):
         length: float,
         line_types: dict[str, LineCharacteristics],
         type_name: str,
+        phases: Optional[str] = None,
         ground: Optional[Ground] = None,
         geometry: Optional[BaseGeometry] = None,
     ) -> "Line":
@@ -298,20 +299,14 @@ class Line(AbstractBranch):
         Returns:
             The constructed line.
         """
-        line_characteristics = line_types[type_name]
-        n = line_characteristics.z_line.shape[0]
-        # TODO: line phases should be provided in the branch dict. For now we assume 3-phase lines
-        # so we can determine the number of phases from the z_line shape. This will not work for
-        # single-phase lines.
-        phases = "abc" if n == 3 else "abcn"
         return cls(
             id=id,
-            phases=phases,
             bus1=bus1,
             bus2=bus2,
-            ground=ground,
-            line_characteristics=line_characteristics,
+            line_characteristics=line_types[type_name],
             length=length,
+            phases=phases,
+            ground=ground,
             geometry=geometry,
         )
 

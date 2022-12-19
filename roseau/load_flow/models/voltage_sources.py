@@ -106,16 +106,14 @@ class VoltageSource(Element, JsonMixin):
     #
     @classmethod
     def from_dict(cls, data: dict[str, Any], bus: Bus) -> "VoltageSource":
-        v = data["voltages"]
-        voltages = [complex(*v["va"]), complex(*v["vb"]), complex(*v["vc"])]
-        return cls(id=data["id"], phases=data["phases"], bus=bus, voltages=voltages)
+        v: dict[str, list[str]] = data["voltages"]
+        phases: str = data["phases"]
+        voltages = [complex(*v[f"v{ph}"]) for ph in phases.removesuffix("n")]
+        return cls(data["id"], bus, voltages=voltages, phases=phases)
 
     def to_dict(self) -> dict[str, Any]:
-        va = self.voltages[0]
-        vb = self.voltages[1]
-        vc = self.voltages[2]
         return {
             "id": self.id,
             "phases": self.phases,
-            "voltages": {"va": [va.real, va.imag], "vb": [vb.real, vb.imag], "vc": [vc.real, vc.imag]},
+            "voltages": {f"v{ph}": [v.real, v.imag] for v, ph in zip(self.voltages, self.phases)},
         }

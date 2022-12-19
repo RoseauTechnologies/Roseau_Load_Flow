@@ -130,6 +130,8 @@ class Transformer(AbstractBranch):
         type_name: str,
         transformer_types: dict[str, TransformerCharacteristics],
         tap: float = 1.0,
+        phases1: Optional[str] = None,
+        phases2: Optional[str] = None,
         geometry: Optional[Point] = None,
         *args,
     ) -> "Transformer":
@@ -162,11 +164,13 @@ class Transformer(AbstractBranch):
         """
         transformer_characteristics = transformer_types[type_name]
         return cls(
-            id=id,
-            bus1=bus1,
-            bus2=bus2,
+            id,
+            bus1,
+            bus2,
             transformer_characteristics=transformer_characteristics,
             tap=tap,
+            phases1=phases1,
+            phases2=phases2,
             geometry=geometry,
         )
 

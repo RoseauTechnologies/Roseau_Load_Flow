@@ -254,6 +254,7 @@ class AbstractBranch(Element, JsonMixin):
             geometry = shape(data["geometry"])
 
         if data["type"] == "line":
+            assert data["phases2"] == data["phases1"]  # line phases must be the same
             return cls._line_class().from_dict(
                 id=data["id"],
                 bus1=bus1,
@@ -261,6 +262,7 @@ class AbstractBranch(Element, JsonMixin):
                 length=data["length"],
                 line_types=line_types,
                 type_name=data["type_name"],
+                phases=data["phases1"],  # or phases2, they are the same
                 ground=ground,
                 geometry=geometry,
             )
@@ -272,10 +274,13 @@ class AbstractBranch(Element, JsonMixin):
                 type_name=data["type_name"],
                 transformer_types=transformer_types,
                 tap=data["tap"],
+                phases1=data["phases1"],
+                phases2=data["phases2"],
                 geometry=geometry,
             )
         elif data["type"] == "switch":
-            return cls._switch_class()(id=data["id"], phases=bus1.phases, bus1=bus1, bus2=bus2, geometry=geometry)
+            assert data["phases2"] == data["phases1"]  # switch phases must be the same
+            return cls._switch_class()(data["id"], bus1, bus2, phases=bus1.phases, geometry=geometry)
         else:
             msg = f"Unknown branch type for branch {data['id']}: {data['type']}"
             logger.error(msg)
