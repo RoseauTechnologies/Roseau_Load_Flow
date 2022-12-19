@@ -7,7 +7,7 @@ from shapely.geometry.base import BaseGeometry
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.buses import Bus
-from roseau.load_flow.models.core import AbstractBranch, Ground, Phases
+from roseau.load_flow.models.core import AbstractBranch, Ground
 from roseau.load_flow.models.lines.line_characteristics import LineCharacteristics
 from roseau.load_flow.models.voltage_sources import VoltageSource
 from roseau.load_flow.utils.types import BranchType
@@ -21,8 +21,10 @@ class Switch(AbstractBranch):
 
     branch_type = BranchType.SWITCH
 
+    allowed_phases = frozenset(Bus.allowed_phases | {"a", "b", "c", "n"})
+
     def __init__(
-        self, id: Any, phases: Phases, bus1: Bus, bus2: Bus, geometry: Optional[Point] = None, **kwargs
+        self, id: Any, bus1: Bus, bus2: Bus, *, phases: Optional[str] = None, geometry: Optional[Point] = None, **kwargs
     ) -> None:
         """Switch constructor.
 
@@ -30,25 +32,41 @@ class Switch(AbstractBranch):
             id:
                 The id of the branch.
 
-            phases:
-                The phases of the switch. Only 3-phase elements are currently supported.
-                Allowed values are: ``"abc"`` or ``"abcn"``.
-
             bus1:
                 Bus to connect to the switch.
 
             bus2:
                 Bus to connect to the switch.
 
+            phases:
+                The phases of the switch. A string like ``"abc"`` or ``"an"`` etc. The order of the
+                phases is important. For a full list of supported phases, see the class attribute
+                :attr:`allowed_phases`. All phases of the switch must be present in the phases of
+                both connected buses. By default, the phases common to both buses are used.
+
             geometry:
                 The geometry of the switch.
         """
-        self._check_phases(id, phases=phases)
+        if phases is None:
+            phases = "".join(p for p in bus1.phases if p in bus2.phases)  # can't use set because order is important
+        else:
+            # Also check they are in the intersection of buses phases
+            self._check_phases(id, phases=phases)
+            buses_phases = set(bus1.phases) & set(bus2.phases)
+            phases_not_in_buses = set(phases) - buses_phases
+            if phases_not_in_buses:
+                msg = (
+                    f"Phases {sorted(phases_not_in_buses)} of switch {id!r} are not in the common phases "
+                    f"{sorted(buses_phases)} of buses {bus1.id!r} and {bus2.id!r}."
+                )
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
         if geometry is not None and not isinstance(geometry, Point):
             msg = f"The geometry for a {type(self)} must be a point: {geometry.geom_type} provided."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_GEOMETRY_TYPE)
         super().__init__(id=id, phases1=phases, phases2=phases, bus1=bus1, bus2=bus2, geometry=geometry, **kwargs)
+        self.phases = phases
         self._check_elements()
         self._check_loop()
 
@@ -85,7 +103,7 @@ class Switch(AbstractBranch):
             and isinstance(element2, Bus)
             and any(isinstance(e, VoltageSource) for e in element2.connected_elements)
         ):
-            msg = (
+            msg = (  # TODO: Fix this message to say "The two source buses ..."
                 f"The voltage sources {element1.id!r} and {element2.id!r} are "
                 f"connected with the switch {self.id!r}. It is not allowed."
             )
@@ -122,14 +140,17 @@ class Line(AbstractBranch):
 
     branch_type = BranchType.LINE
 
+    allowed_phases = frozenset(Bus.allowed_phases | {"a", "b", "c", "n"})
+
     def __init__(
         self,
         id: Any,
-        phases: Phases,
         bus1: Bus,
         bus2: Bus,
+        *,
         line_characteristics: LineCharacteristics,
         length: float,
+        phases: Optional[str] = None,
         ground: Optional[Ground] = None,
         geometry: Optional[LineString] = None,
         **kwargs,
@@ -139,10 +160,6 @@ class Line(AbstractBranch):
         Args:
             id:
                 The id of the line.
-
-            phases:
-                The phases of the line. Only 3-phase elements are currently supported.
-                Allowed values are: ``"abc"`` or ``"abcn"``.
 
             bus1:
                 The first bus (aka `"from_bus"`) to connect to the line.
@@ -156,13 +173,32 @@ class Line(AbstractBranch):
             length:
                 The length of the line in km.
 
+            phases:
+                The phases of the line. A string like ``"abc"`` or ``"an"`` etc. The order of the
+                phases is important. For a full list of supported phases, see the class attribute
+                :attr:`allowed_phases`. All phases of the line must be present in the phases of
+                both connected buses. By default, the phases common to both buses are used.
+
             ground:
                 The ground element attached to the line if it has shunt admittance.
 
             geometry:
                 The geometry of the line i.e. the linestring.
         """
-        self._check_phases(id, phases=phases)
+        if phases is None:
+            phases = "".join(p for p in bus1.phases if p in bus2.phases)  # can't use set because order is important
+        else:
+            # Also check they are in the intersection of buses phases
+            self._check_phases(id, phases=phases)
+            buses_phases = set(bus1.phases) & set(bus2.phases)
+            phases_not_in_buses = set(phases) - buses_phases
+            if phases_not_in_buses:
+                msg = (
+                    f"Phases {sorted(phases_not_in_buses)} of line {id!r} are not in the common phases "
+                    f"{sorted(buses_phases)} of buses {bus1.id!r} and {bus2.id!r}."
+                )
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
         if geometry is not None and not isinstance(geometry, LineString):
             msg = f"The geometry for a {type(self).__name__} must be a linestring: {geometry.geom_type} provided."
             logger.error(msg)

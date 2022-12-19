@@ -34,11 +34,11 @@ def small_network() -> ElectricalNetwork:
 
     vs = VoltageSource(
         id="vs",
-        phases="abcn",
         bus=source_bus,
         voltages=[20000.0 + 0.0j, -10000.0 - 17320.508076j, -10000.0 + 17320.508076j],
+        phases="abcn",
     )
-    load = PowerLoad("load", "abcn", load_bus, [100, 100, 100])
+    load = PowerLoad("load", load_bus, s=[100, 100, 100], phases="abcn")
     pref = PotentialRef(ground)
 
     lc = LineCharacteristics("test", 10 * np.eye(4, dtype=complex))
@@ -196,7 +196,7 @@ def test_bad_networks():
         bus=bus0,
         voltages=[20000.0 + 0.0j, -10000.0 - 17320.508076j, -10000.0 + 17320.508076j],
     )
-    switch = Switch("switch", "abcn", bus0, bus1)
+    switch = Switch("switch", bus0, bus1, phases="abcn")
     with pytest.raises(RoseauLoadFlowException) as e:
         ElectricalNetwork([bus0, bus1], [line, switch], [], [vs], [ground, p_ref])  # no bus2
     assert "but has not been added to the network, you should add it with 'add_element'." in e.value.args[0]
@@ -208,7 +208,7 @@ def test_bad_networks():
     transformer_characteristics = TransformerCharacteristics(
         type_name="t", windings="Dyn11", uhv=20000, ulv=400, sn=160 * 1e3, p0=460, i0=2.3 / 100, psc=2350, vsc=4 / 100
     )
-    _ = Transformer("transfo", bus2, bus3, transformer_characteristics)
+    _ = Transformer("transfo", bus2, bus3, transformer_characteristics=transformer_characteristics)
     with pytest.raises(RoseauLoadFlowException) as e:
         ElectricalNetwork.from_element(bus0)
     assert "does not have a potential reference" in e.value.args[0]

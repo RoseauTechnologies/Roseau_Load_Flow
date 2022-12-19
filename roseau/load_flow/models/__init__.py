@@ -1,5 +1,5 @@
 from roseau.load_flow.models.buses import Bus
-from roseau.load_flow.models.core import AbstractBranch, Element, Ground, Phases, PotentialRef
+from roseau.load_flow.models.core import AbstractBranch, Element, Ground, PotentialRef
 from roseau.load_flow.models.lines import Line, LineCharacteristics, Switch
 from roseau.load_flow.models.loads import (
     AbstractLoad,
@@ -20,7 +20,6 @@ __all__ = [
     "PotentialRef",
     "Ground",
     "AbstractBranch",
-    "Phases",
     # Buses
     "Bus",
     # Lines

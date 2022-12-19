@@ -1,14 +1,14 @@
 import logging
 from abc import ABCMeta
 from collections.abc import Sequence
-from typing import Any, Literal
+from typing import Any, Literal, Optional
 
 import numpy as np
 from pint import Quantity
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.buses import Bus
-from roseau.load_flow.models.core import Element, Phases
+from roseau.load_flow.models.core import Element
 from roseau.load_flow.models.loads.flexible_parameters import FlexibleParameter
 from roseau.load_flow.utils.json_mixin import JsonMixin
 from roseau.load_flow.utils.units import ureg
@@ -26,21 +26,37 @@ class AbstractLoad(Element, JsonMixin, metaclass=ABCMeta):
 
     _type: Literal["power", "current", "impedance"]
 
-    def __init__(self, id: Any, phases: Phases, bus: Bus, **kwargs) -> None:
+    allowed_phases = Bus.allowed_phases
+
+    def __init__(self, id: Any, bus: Bus, *, phases: Optional[str] = None, **kwargs) -> None:
         """AbstractLoad constructor.
 
         Args:
             id:
                 The unique id of the load.
 
-            phases:
-                The phases of the load. Only 3-phase elements are currently supported.
-                Allowed values are: ``"abc"`` or ``"abcn"``.
-
             bus:
                 The bus to connect the load to.
+
+            phases:
+                The phases of the load. A string like ``"abc"`` or ``"an"`` etc. The order of the
+                phases is important. For a full list of supported phases, see the class attribute
+                :attr:`allowed_phases`. All phases of the load, except ``"n"``, must be present in
+                the phases of the connected bus. By default, the phases of the bus are used.
         """
-        self._check_phases(id, phases=phases)
+        if phases is None:
+            phases = bus.phases
+        else:
+            self._check_phases(id, phases=phases)
+            # Also check they are in the bus phases
+            phases_not_in_bus = set(phases) - set(bus.phases) - {"n"}  # "n" is allowed to be absent
+            if phases_not_in_bus:
+                msg = (
+                    f"Phases {sorted(phases_not_in_bus)} of load {id!r} are not in bus {bus.id!r} "
+                    f"phases {bus.phases!r}"
+                )
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
         super().__init__(**kwargs)
         self.connected_elements = [bus]
         bus.connected_elements.append(self)
@@ -50,6 +66,7 @@ class AbstractLoad(Element, JsonMixin, metaclass=ABCMeta):
         self.bus = bus
         self._currents = None
         self._symbol = {"power": "S", "current": "I", "impedance": "Z"}[self._type]
+        self._size = len(set(self.phases) - {"n"})
 
     def __repr__(self) -> str:
         return f"{type(self).__name__}({self.id!r}, phases={self.phases!r}, bus={self.bus.id!r})"
@@ -68,8 +85,8 @@ class AbstractLoad(Element, JsonMixin, metaclass=ABCMeta):
         self._currents = value
 
     def _validate_value(self, value: Sequence[complex]) -> Sequence[complex]:
-        if len(value) != 3:  # TODO change the test when we have phases
-            msg = f"Incorrect number of {self._type}s: {len(value)} instead of 3"
+        if len(value) != self._size:  # TODO change the test when we have phases
+            msg = f"Incorrect number of {self._type}s: {len(value)} instead of {self._size}"
             logger.error(msg)
             raise RoseauLoadFlowException(
                 msg=msg, code=RoseauLoadFlowExceptionCode.from_string(f"BAD_{self._symbol}_SIZE")
@@ -92,16 +109,16 @@ class AbstractLoad(Element, JsonMixin, metaclass=ABCMeta):
             s = data["powers"]
             s_complex = [complex(*s["sa"]), complex(*s["sb"]), complex(*s["sc"])]
             parameters = [cls._flexible_load_class._flexible_parameter_class.from_dict(p) for p in params]
-            return cls._flexible_load_class(id, phases, bus, s=s_complex, parameters=parameters)
+            return cls._flexible_load_class(id, bus, s=s_complex, phases=phases, parameters=parameters)
         elif (s := data.get("powers")) is not None:
             s_complex = [complex(*s["sa"]), complex(*s["sb"]), complex(*s["sc"])]
-            return cls._power_load_class(id, phases, bus, s=s_complex)
+            return cls._power_load_class(id, bus, s=s_complex, phases=phases)
         elif (i := data.get("currents")) is not None:
             i_complex = [complex(*i["ia"]), complex(*i["ib"]), complex(*i["ic"])]
-            return cls._current_load_class(id, phases, bus, i=i_complex)
+            return cls._current_load_class(id, bus, i=i_complex, phases=phases)
         elif (z := data.get("impedances")) is not None:
             z_complex = [complex(*z["za"]), complex(*z["zb"]), complex(*z["zc"])]
-            return cls._impedance_load_class(id, phases, bus, z=z_complex)
+            return cls._impedance_load_class(id, bus, z=z_complex, phases=phases)
         else:
             msg = f"Unknown load type for load {data['id']!r}"
             logger.error(msg)
@@ -128,24 +145,26 @@ class PowerLoad(AbstractLoad):
 
     _type = "power"
 
-    def __init__(self, id: Any, phases: Phases, bus: Bus, s: Sequence[complex], **kwargs) -> None:
+    def __init__(self, id: Any, bus: Bus, *, s: Sequence[complex], phases: Optional[str] = None, **kwargs) -> None:
         """PowerLoad constructor.
 
         Args:
             id:
                 The unique id of the load.
 
-            phases:
-                The phases of the load. Only 3-phase elements are currently supported.
-                Allowed values are: ``"abc"`` or ``"abcn"``.
-
             bus:
                 The bus to connect the load to.
 
             s:
                 List of power for each phase (VA).
+
+            phases:
+                The phases of the load. A string like ``"abc"`` or ``"an"`` etc. The order of the
+                phases is important. For a full list of supported phases, see the class attribute
+                :attr:`allowed_phases`. All phases of the load, except ``"n"``, must be present in
+                the phases of the connected bus. By default, the phases of the bus are used.
         """
-        super().__init__(id=id, phases=phases, bus=bus, **kwargs)
+        super().__init__(id=id, bus=bus, phases=phases, **kwargs)
         if isinstance(s, Quantity):
             s = s.m_as("VA")
         self.s = self._validate_value(s)
@@ -192,22 +211,24 @@ class CurrentLoad(AbstractLoad):
 
     _type = "current"
 
-    def __init__(self, id: Any, phases: Phases, bus: Bus, i: Sequence[complex], **kwargs) -> None:
+    def __init__(self, id: Any, bus: Bus, i: Sequence[complex], phases: Optional[str] = None, **kwargs) -> None:
         """CurrentLoad constructor.
 
         Args:
             id:
                 The unique id of the load.
 
-            phases:
-                The phases of the load. Only 3-phase elements are currently supported.
-                Allowed values are: ``"abc"`` or ``"abcn"``.
-
             bus:
                 The bus to connect the load to.
 
             i:
                 List of currents for each phase (Amps).
+
+            phases:
+                The phases of the load. A string like ``"abc"`` or ``"an"`` etc. The order of the
+                phases is important. For a full list of supported phases, see the class attribute
+                :attr:`allowed_phases`. All phases of the load, except ``"n"``, must be present in
+                the phases of the connected bus. By default, the phases of the bus are used.
         """
         super().__init__(id=id, phases=phases, bus=bus, **kwargs)
         if isinstance(i, Quantity):
@@ -257,22 +278,24 @@ class ImpedanceLoad(AbstractLoad):
 
     _type = "impedance"
 
-    def __init__(self, id: Any, phases: Phases, bus: Bus, z: Sequence[complex], **kwargs) -> None:
+    def __init__(self, id: Any, bus: Bus, *, z: Sequence[complex], phases: Optional[str] = None, **kwargs) -> None:
         """ImpedanceLoad constructor.
 
         Args:
             id:
                 The unique id of the load.
 
-            phases:
-                The phases of the load. Only 3-phase elements are currently supported.
-                Allowed values are: ``"abc"`` or ``"abcn"``.
-
             bus:
                 The bus to connect the load to.
 
             z:
                 List of impedances for each phase (Ohms).
+
+            phases:
+                The phases of the load. A string like ``"abc"`` or ``"an"`` etc. The order of the
+                phases is important. For a full list of supported phases, see the class attribute
+                :attr:`allowed_phases`. All phases of the load, except ``"n"``, must be present in
+                the phases of the connected bus. By default, the phases of the bus are used.
         """
         super().__init__(id=id, phases=phases, bus=bus, **kwargs)
         if isinstance(z, Quantity):
@@ -308,17 +331,20 @@ class FlexibleLoad(PowerLoad):
     _flexible_parameter_class: type[FlexibleParameter] = FlexibleParameter
 
     def __init__(
-        self, id: Any, phases: Phases, bus: Bus, s: Sequence[complex], parameters: list[FlexibleParameter], **kwargs
+        self,
+        id: Any,
+        bus: Bus,
+        *,
+        s: Sequence[complex],
+        parameters: list[FlexibleParameter],
+        phases: Optional[str] = None,
+        **kwargs,
     ):
         """FlexibleLoad constructor.
 
         Args:
             id:
                 The unique id of the load.
-
-            phases:
-                The phases of the load. Only 3-phase elements are currently supported.
-                Allowed values are: ``"abc"`` or ``"abcn"``.
 
             bus:
                 The bus to connect the load to.
@@ -328,6 +354,12 @@ class FlexibleLoad(PowerLoad):
 
             parameters:
                 List of flexible parameters for each phase.
+
+            phases:
+                The phases of the load. A string like ``"abc"`` or ``"an"`` etc. The order of the
+                phases is important. For a full list of supported phases, see the class attribute
+                :attr:`allowed_phases`. All phases of the load, except ``"n"``, must be present in
+                the phases of the connected bus. By default, the phases of the bus are used.
         """
         super().__init__(id=id, phases=phases, bus=bus, s=s, **kwargs)
         if len(parameters) != 3:

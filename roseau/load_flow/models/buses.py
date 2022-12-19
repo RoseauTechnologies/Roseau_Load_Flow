@@ -8,7 +8,7 @@ from pint import Quantity
 from shapely.geometry import Point, shape
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
-from roseau.load_flow.models.core import Element, Ground, Phases
+from roseau.load_flow.models.core import Element, Ground
 from roseau.load_flow.utils.json_mixin import JsonMixin
 from roseau.load_flow.utils.units import ureg
 
@@ -18,10 +18,13 @@ logger = logging.getLogger(__name__)
 class Bus(Element, JsonMixin):
     """An electrical bus."""
 
+    allowed_phases = frozenset({"ab", "bc", "ca", "an", "bn", "cn", "abn", "bcn", "can", "abc", "abcn"})
+
     def __init__(
         self,
         id: Any,
-        phases: Phases,
+        *,
+        phases: str,
         geometry: Optional[Point] = None,
         potentials: Optional[Sequence[complex]] = None,
         ground: Optional[Ground] = None,
@@ -34,8 +37,9 @@ class Bus(Element, JsonMixin):
                 The identifier of the bus.
 
             phases:
-                The phases of the bus. Only 3-phase elements are currently supported.
-                Allowed values are: ``"abc"`` or ``"abcn"``.
+                The phases of the bus. A string like ``"abc"`` or ``"an"`` etc. The order of the
+                phases is important. For a full list of supported phases, see the class attribute
+                :attr:`Bus.allowed_phases`.
 
             geometry:
                 The geometry of the bus.

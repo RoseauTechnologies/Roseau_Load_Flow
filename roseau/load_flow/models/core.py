@@ -1,6 +1,6 @@
 import logging
 from abc import ABC
-from typing import Any, Literal, Optional, TYPE_CHECKING
+from typing import Any, ClassVar, Optional, TYPE_CHECKING
 
 import numpy as np
 import shapely.wkt
@@ -20,21 +20,27 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-# Only these phases are currently allowed
-Phases = Literal["abc", "abcn"]
-
-
 class Element(ABC):
     """An abstract class to describe an element of an Electrical network"""
+
+    allowed_phases: ClassVar[frozenset[str]]  # frozenset for immutability and uniqueness
+    """The allowed phases for this element type.
+
+    It is a frozen set of strings like ``"abc"`` or ``"an"`` etc. The order of the phases is
+    important. For a full list of supported phases, use ``print(<Element class>.allowed_phases)``.
+    """
 
     def __init__(self, **kwargs):
         self.connected_elements: list[Element] = []
 
-    def _check_phases(self, id: str, **kwargs: str) -> None:
-        # A check on all elements to tell users we only support 3-phase elements for now
+    @classmethod
+    def _check_phases(cls, id: str, **kwargs: str) -> None:
         name, phases = kwargs.popitem()  # phases, phases1 or phases2
-        if phases not in ("abc", "abcn"):
-            msg = f"{type(self).__name__} of id {id!r} got invalid {name} {phases!r}, allowed values are: 'abc', 'abcn'"
+        if phases not in cls.allowed_phases:
+            msg = (
+                f"{cls.__name__} of id {id!r} got invalid {name} {phases!r}, allowed values are: "
+                f"{sorted(cls.allowed_phases)}"
+            )
             logger.error(msg)
             raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.BAD_PHASE)
 
@@ -49,16 +55,42 @@ class PotentialRef(Element):
 
     This element will set the origin of the potentials as `Va + Vb + Vc = 0` for delta elements
     or `Vn = 0` for others.
+    """  # TODO: update the docstring with the new semantics
 
-    Args:
-        element:
-            The element to connect to, normally the ground element.
-    """
+    allowed_phases = frozenset({"a", "b", "c", "n"})
 
-    def __init__(self, element: Element, **kwargs):
+    def __init__(self, element: Element, *, phase: Optional[str] = None, **kwargs):
+        """PotentialRef constructor.
+
+        Args:
+            element:
+                The element to connect to, normally the ground element.
+
+            phase:
+                The phase of the potential reference. If not given, the phase of the element will
+                be used.
+        """
+        from roseau.load_flow.models.buses import Bus  # TODO refactor potential ref and ground
+
+        if isinstance(element, Bus):
+            if phase is None:
+                phase = "n" if "n" in element.phases else None
+            else:
+                self._check_phases(element.id, phases=phase)
+        elif isinstance(element, Ground):
+            if phase is not None:
+                # TODO: add ID to the error message when the ID is implemented
+                msg = "Potential reference connected to the ground cannot have a phase."
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.BAD_PHASE)
+        else:
+            msg = f"Only buses and ground can be connected to a potential reference, got {element!r}."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT)
         super().__init__(**kwargs)
         self.connected_elements = [element]
         element.connected_elements.append(self)
+        self.phase = phase
 
     def __repr__(self) -> str:
         return f"{type(self).__name__}({self.connected_elements[0]!r})"
@@ -79,23 +111,36 @@ class PotentialRef(Element):
 class Ground(Element):
     """This element defines the ground."""
 
+    allowed_phases = frozenset({"a", "b", "c", "n"})
+
     def __init__(self, **kwargs):
         """Ground constructor."""
         super().__init__(**kwargs)
+        self.phase: Optional[str] = None
 
     def __repr__(self) -> str:
         return f"{type(self).__name__}()"
 
-    def connect(self, bus: "Bus"):
+    def connect(self, bus: "Bus", phase: str = "n"):
         """Connect the ground to the bus neutral.
 
         Args:
             bus:
                 The bus to connect to.
+
+            phase:
+                The phase of the connection. It must be one of ``{"a", "b", "c", "n"}`` and must be
+                present in the bus phases. Defaults to ``"n"``.
         """
+        self._check_phases(None, phases=phase)  # TODO: pass ID when implemented
+        if phase not in bus.phases:
+            msg = f"Cannot connect a ground to phase {phase!r} of bus {bus.id!r} that has phases {bus.phases!r}."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.BAD_PHASE)
         if self not in bus.connected_elements:
             self.connected_elements.append(bus)
             bus.connected_elements.append(self)
+        self.phase = phase
 
 
 class AbstractBranch(Element, JsonMixin):
@@ -124,8 +169,8 @@ class AbstractBranch(Element, JsonMixin):
     def __init__(
         self,
         id: Any,
-        phases1: Phases,
-        phases2: Phases,
+        phases1: str,
+        phases2: str,
         bus1: "Bus",
         bus2: "Bus",
         geometry: Optional[BaseGeometry] = None,
