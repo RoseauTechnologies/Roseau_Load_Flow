@@ -228,7 +228,7 @@ class AbstractBranch(Element, JsonMixin):
         return self._currents
 
     @currents.setter
-    def currents(self, value: np.ndarray):
+    def currents(self, value: tuple[np.ndarray, np.ndarray]) -> None:
         self._currents = value
 
     #

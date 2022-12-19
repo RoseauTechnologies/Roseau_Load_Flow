@@ -211,7 +211,7 @@ class CurrentLoad(AbstractLoad):
 
     _type = "current"
 
-    def __init__(self, id: Any, bus: Bus, i: Sequence[complex], phases: Optional[str] = None, **kwargs) -> None:
+    def __init__(self, id: Any, bus: Bus, *, i: Sequence[complex], phases: Optional[str] = None, **kwargs) -> None:
         """CurrentLoad constructor.
 
         Args:

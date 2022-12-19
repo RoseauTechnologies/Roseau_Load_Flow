@@ -100,23 +100,28 @@ class Bus(Element, JsonMixin):
     @property
     @ureg.wraps("V", None, strict=False)
     def voltages(self) -> np.ndarray:
-        """The voltage results of the bus (Only available after a load flow).
+        """An array of the voltage results of the bus.
 
-        For a "Star Bus", the voltages are ``[Van, Vbn, Vcn]``, for a "Delta Bus", they are
-        ``[Vab, Vbc, Vca]``.
-
-        Returns:
-            An array of the voltages.
+        If the bus has a neutral, the voltages are phase-neutral voltages for existing phases in
+        the order ``[Van, Vbn, Vcn]``. If the bus does not have a neutral, phase-phase voltages
+        are returned in the order ``[Vab, Vbc, Vca]``.
         """
         # TODO use self.potentials with the check
-        if "n" in self.phases:
-            return self._potentials[:-1] - self._potentials[-1]  # an, bn, cn
-        else:
-            return np.asarray(
-                self._potentials[1] - self._potentials[0],  # ab
-                self._potentials[2] - self._potentials[1],  # bc
-                self._potentials[0] - self._potentials[2],  # ca
-            )
+        potentials = np.asarray(self._potentials)
+        if "n" in self.phases:  # Van, Vbn, Vcn
+            # we know "n" is the last phase
+            return potentials[:-1] - potentials[-1]
+        else:  # Vab, Vbc, Vca
+            # np.roll(["a", "b", "c"], -1) -> ["b", "c", "a"]  # also works with single or double phase
+            return np.roll(potentials, -1) - potentials
+
+    @property
+    def voltage_phases(self) -> list[str]:
+        """The phases of the voltages."""
+        if "n" in self.phases:  # "an", "bn", "cn"
+            return [p + "n" for p in self.phases[:-1]]
+        else:  # "ab", "bc", "ca"
+            return [p1 + p2 for p1, p2 in zip(self.phases, np.roll(list(self.phases), -1))]
 
     #
     # Json Mixin interface
