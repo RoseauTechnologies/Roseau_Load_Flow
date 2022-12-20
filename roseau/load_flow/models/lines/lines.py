@@ -21,15 +21,16 @@ class Switch(AbstractBranch):
 
     branch_type = BranchType.SWITCH
 
-    def __init__(self, id: Any, n: int, bus1: Bus, bus2: Bus, geometry: Optional[Point] = None, **kwargs) -> None:
+    allowed_phases = frozenset(Bus.allowed_phases | {"a", "b", "c", "n"})
+
+    def __init__(
+        self, id: Any, bus1: Bus, bus2: Bus, *, phases: Optional[str] = None, geometry: Optional[Point] = None, **kwargs
+    ) -> None:
         """Switch constructor.
 
         Args:
             id:
                 The id of the branch.
-
-            n:
-                The number of ports of the extremity buses.
 
             bus1:
                 Bus to connect to the switch.
@@ -37,21 +38,37 @@ class Switch(AbstractBranch):
             bus2:
                 Bus to connect to the switch.
 
+            phases:
+                The phases of the switch. A string like ``"abc"`` or ``"an"`` etc. The order of the
+                phases is important. For a full list of supported phases, see the class attribute
+                :attr:`allowed_phases`. All phases of the switch must be present in the phases of
+                both connected buses. By default, the phases common to both buses are used.
+
             geometry:
                 The geometry of the switch.
         """
+        if phases is None:
+            phases = "".join(p for p in bus1.phases if p in bus2.phases)  # can't use set because order is important
+        else:
+            # Also check they are in the intersection of buses phases
+            self._check_phases(id, phases=phases)
+            buses_phases = set(bus1.phases) & set(bus2.phases)
+            phases_not_in_buses = set(phases) - buses_phases
+            if phases_not_in_buses:
+                msg = (
+                    f"Phases {sorted(phases_not_in_buses)} of switch {id!r} are not in the common phases "
+                    f"{sorted(buses_phases)} of buses {bus1.id!r} and {bus2.id!r}."
+                )
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
         if geometry is not None and not isinstance(geometry, Point):
             msg = f"The geometry for a {type(self)} must be a point: {geometry.geom_type} provided."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_GEOMETRY_TYPE)
-        super().__init__(id=id, n1=n, n2=n, bus1=bus1, bus2=bus2, geometry=geometry, **kwargs)
+        super().__init__(id=id, phases1=phases, phases2=phases, bus1=bus1, bus2=bus2, geometry=geometry, **kwargs)
+        self.phases = phases
         self._check_elements()
         self._check_loop()
-
-    def to_dict(self) -> dict[str, Any]:
-        res = super().to_dict()
-        res["type"] = "switch"
-        return res
 
     def _check_loop(self):
         """Check that there are no switch loop, raise an exception if it is the case"""
@@ -86,7 +103,7 @@ class Switch(AbstractBranch):
             and isinstance(element2, Bus)
             and any(isinstance(e, VoltageSource) for e in element2.connected_elements)
         ):
-            msg = (
+            msg = (  # TODO: Fix this message to say "The two source buses ..."
                 f"The voltage sources {element1.id!r} and {element2.id!r} are "
                 f"connected with the switch {self.id!r}. It is not allowed."
             )
@@ -123,14 +140,17 @@ class Line(AbstractBranch):
 
     branch_type = BranchType.LINE
 
+    allowed_phases = frozenset(Bus.allowed_phases | {"a", "b", "c", "n"})
+
     def __init__(
         self,
         id: Any,
-        n: int,
         bus1: Bus,
         bus2: Bus,
+        *,
         line_characteristics: LineCharacteristics,
         length: float,
+        phases: Optional[str] = None,
         ground: Optional[Ground] = None,
         geometry: Optional[LineString] = None,
         **kwargs,
@@ -140,9 +160,6 @@ class Line(AbstractBranch):
         Args:
             id:
                 The id of the line.
-
-            n:
-                The number of phases of the line.
 
             bus1:
                 The first bus (aka `"from_bus"`) to connect to the line.
@@ -156,32 +173,53 @@ class Line(AbstractBranch):
             length:
                 The length of the line in km.
 
+            phases:
+                The phases of the line. A string like ``"abc"`` or ``"an"`` etc. The order of the
+                phases is important. For a full list of supported phases, see the class attribute
+                :attr:`allowed_phases`. All phases of the line must be present in the phases of
+                both connected buses. By default, the phases common to both buses are used.
+
             ground:
                 The ground element attached to the line if it has shunt admittance.
 
             geometry:
                 The geometry of the line i.e. the linestring.
         """
+        if phases is None:
+            phases = "".join(p for p in bus1.phases if p in bus2.phases)  # can't use set because order is important
+        else:
+            # Also check they are in the intersection of buses phases
+            self._check_phases(id, phases=phases)
+            buses_phases = set(bus1.phases) & set(bus2.phases)
+            phases_not_in_buses = set(phases) - buses_phases
+            if phases_not_in_buses:
+                msg = (
+                    f"Phases {sorted(phases_not_in_buses)} of line {id!r} are not in the common phases "
+                    f"{sorted(buses_phases)} of buses {bus1.id!r} and {bus2.id!r}."
+                )
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
         if geometry is not None and not isinstance(geometry, LineString):
             msg = f"The geometry for a {type(self).__name__} must be a linestring: {geometry.geom_type} provided."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_GEOMETRY_TYPE)
 
-        if line_characteristics.z_line.shape != (n, n):
+        line_dimensions = (len(phases),) * 2
+        if line_characteristics.z_line.shape != line_dimensions:
             msg = (
                 f"Incorrect z_line dimensions for line {id!r}: {line_characteristics.z_line.shape} instead of "
-                f"({n}, {n})"
+                f"{line_dimensions}"
             )
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Z_LINE_SHAPE)
 
-        super().__init__(n1=n, n2=n, bus1=bus1, bus2=bus2, id=id, geometry=geometry, **kwargs)
+        super().__init__(id=id, phases1=phases, phases2=phases, bus1=bus1, bus2=bus2, geometry=geometry, **kwargs)
 
         if line_characteristics.y_shunt is not None:
-            if line_characteristics.y_shunt.shape != (n, n):
+            if line_characteristics.y_shunt.shape != line_dimensions:
                 msg = (
                     f"Incorrect y_shunt dimensions for line {id!r}: {line_characteristics.y_shunt.shape} instead of "
-                    f"({n}, {n})"
+                    f"{line_dimensions}"
                 )
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Y_SHUNT_SHAPE)
@@ -192,7 +230,8 @@ class Line(AbstractBranch):
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_TYPE)
             self.connected_elements.append(ground)
             ground.connected_elements.append(self)
-        self.n = n
+
+        self.phases = phases
         self.line_characteristics = line_characteristics
         self.ground = ground
 
@@ -217,7 +256,7 @@ class Line(AbstractBranch):
     # Json Mixin interface
     #
     @classmethod
-    @ureg.wraps(None, (None, None, None, None, "km", None, None, None, None), strict=False)
+    @ureg.wraps(None, (None, None, None, None, "km", None, None, None, None, None), strict=False)
     def from_dict(
         cls,
         id: Any,
@@ -226,18 +265,13 @@ class Line(AbstractBranch):
         length: float,
         line_types: dict[str, LineCharacteristics],
         type_name: str,
+        phases: Optional[str] = None,
         ground: Optional[Ground] = None,
         geometry: Optional[BaseGeometry] = None,
     ) -> "Line":
         """Line constructor from dict.
 
         Args:
-            line_types:
-                A dictionary of line characteristics by type name.
-
-            type_name:
-                The name of the line type
-
             id:
                 The id of the created line.
 
@@ -250,6 +284,12 @@ class Line(AbstractBranch):
             length:
                 Length of the line (km).
 
+            line_types:
+                A dictionary of line characteristics by type name.
+
+            type_name:
+                The name of the line type
+
             ground:
                 The ground (optional for line models without a shunt admittance).
 
@@ -259,26 +299,20 @@ class Line(AbstractBranch):
         Returns:
             The constructed line.
         """
-        line_characteristics = line_types[type_name]
-        n = line_characteristics.z_line.shape[0]
         return cls(
             id=id,
-            n=n,
             bus1=bus1,
             bus2=bus2,
-            ground=ground,
-            line_characteristics=line_characteristics,
+            line_characteristics=line_types[type_name],
             length=length,
+            phases=phases,
+            ground=ground,
             geometry=geometry,
         )
 
     def to_dict(self) -> dict[str, Any]:
-        res = super().to_dict()
-        res.update(
-            {
-                "length": self.length,
-                "type_name": self.line_characteristics.type_name,
-                "type": "line",
-            }
-        )
-        return res
+        return {
+            **super().to_dict(),
+            "length": self.length,
+            "type_name": self.line_characteristics.type_name,
+        }

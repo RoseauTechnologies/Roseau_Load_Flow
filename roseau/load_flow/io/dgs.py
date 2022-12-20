@@ -62,15 +62,15 @@ def network_from_dgs(  # noqa: C901
     buses: dict[str, Bus] = {}
     for bus_id in elm_term.index:
         ph_tech = elm_term.at[bus_id, "phtech"]
-        if ph_tech == 0:  # ABC
-            n = 3
-        elif ph_tech == 1:  # ABC-N
-            n = 4
+        if ph_tech == 0:
+            phases = "abc"
+        elif ph_tech == 1:
+            phases = "abcn"
         else:
             msg = f"The Ph tech {ph_tech!r} for bus {bus_id!r} cannot be handled."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DGS_BAD_PHASE_TECHNOLOGY)
-        buses[bus_id] = Bus(id=bus_id, n=n)
+        buses[bus_id] = Bus(id=bus_id, phases=phases)
 
     # Sources
     sources: dict[str, VoltageSource] = {}
@@ -82,7 +82,7 @@ def network_from_dgs(  # noqa: C901
         voltages = [un * tap, un * np.exp(-np.pi * 2 / 3 * 1j) * tap, un * np.exp(np.pi * 2 / 3 * 1j) * tap]
         source_bus = buses[bus_id]
 
-        sources[source_id] = VoltageSource(id=source_id, n=4, bus=source_bus, voltages=voltages)
+        sources[source_id] = VoltageSource(id=source_id, phases="abcn", bus=source_bus, voltages=voltages)
         ground.connected_elements.append(source_bus)
         source_bus.connected_elements.append(ground)
 
@@ -105,8 +105,9 @@ def network_from_dgs(  # noqa: C901
     branches: dict[str, AbstractBranch] = {}
     if elm_lne is not None:
 
-        line_types = dict()
+        line_types: dict[str, LineCharacteristics] = {}
         for type_id in typ_lne.index:
+            # TODO: use the detailed phase information instead of n
             n = typ_lne.at[type_id, "nlnph"] + typ_lne.at[type_id, "nneutral"]
             if n == 4:
                 line_model = LineModel.SYM_NEUTRAL
@@ -188,10 +189,11 @@ def network_from_dgs(  # noqa: C901
     # Create switches
     if elm_coup is not None:
         for switch_id in elm_coup.index:
+            # TODO: use the detailed phase information instead of n
             n = elm_coup.at[switch_id, "nphase"] + elm_coup.at[switch_id, "nneutral"]
             branches[switch_id] = Switch(
                 id=switch_id,
-                n=n,
+                phases="abc" if n == 3 else "abcn",
                 bus1=buses[sta_cubic.at[elm_coup.at[switch_id, "bus1"], "cterm"]],
                 bus2=buses[sta_cubic.at[elm_coup.at[switch_id, "bus2"], "cterm"]],
             )
@@ -356,7 +358,7 @@ def _generate_loads(
             s = [s_phase / 3, s_phase / 3, s_phase / 3]
         else:  # Unbalanced
             s = [sa, sb, sc]
-        loads[load_id] = PowerLoad(id=load_id, n=4, bus=buses[bus_id], s=s)
+        loads[load_id] = PowerLoad(id=load_id, phases="abcn", bus=buses[bus_id], s=s)
 
 
 def _compute_load_power(elm_lod: pd.DataFrame, load_id: str, suffix: str) -> complex:

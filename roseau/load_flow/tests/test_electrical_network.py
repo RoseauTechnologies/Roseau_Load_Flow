@@ -22,29 +22,30 @@ from roseau.load_flow.models import (
     VoltageSource,
 )
 from roseau.load_flow.network import ElectricalNetwork
+from roseau.load_flow.network.electrical_network import _PHASE_DTYPE, _VOLTAGE_PHASES_DTYPE
 
 
 @pytest.fixture()
 def small_network() -> ElectricalNetwork:
     # Build a small network
     ground = Ground()
-    source_bus = Bus(id="bus0", n=4, ground=ground, geometry=Point(-1.318375372111463, 48.64794139348595))
-    load_bus = Bus("bus1", 4, geometry=Point(-1.320149235966572, 48.64971306653889))
+    source_bus = Bus("bus0", phases="abcn", ground=ground, geometry=Point(-1.318375372111463, 48.64794139348595))
+    load_bus = Bus("bus1", phases="abcn", geometry=Point(-1.320149235966572, 48.64971306653889))
     ground.connect(load_bus)
 
     vs = VoltageSource(
         id="vs",
-        n=4,
         bus=source_bus,
         voltages=[20000.0 + 0.0j, -10000.0 - 17320.508076j, -10000.0 + 17320.508076j],
+        phases="abcn",
     )
-    load = PowerLoad("load", 4, load_bus, [100, 100, 100])
+    load = PowerLoad("load", load_bus, s=[100, 100, 100], phases="abcn")
     pref = PotentialRef(ground)
 
     lc = LineCharacteristics("test", 10 * np.eye(4, dtype=complex))
     line = Line(
         id="line",
-        n=4,
+        phases="abcn",
         bus1=source_bus,
         bus2=load_bus,
         line_characteristics=lc,
@@ -54,6 +55,42 @@ def small_network() -> ElectricalNetwork:
 
     return ElectricalNetwork(
         buses=[source_bus, load_bus],
+        branches=[line],
+        loads=[load],
+        voltage_sources=[vs],
+        special_elements=[pref, ground],
+    )
+
+
+@pytest.fixture()
+def single_phase_network() -> ElectricalNetwork:
+    # Build a small single-phase network
+    phases = "bn"
+    point1 = Point(-1.318375372111463, 48.64794139348595)
+    point2 = Point(-1.320149235966572, 48.64971306653889)
+    bus0 = Bus("bus0", phases=phases, geometry=point1)
+    bus1 = Bus("bus1", phases=phases, geometry=point2)
+
+    ground = Ground()
+    ground.connect(bus1)
+    pref = PotentialRef(ground)
+
+    vs = VoltageSource("vs", bus0, voltages=[20000.0 + 0.0j], phases=phases)
+    load = PowerLoad("load", bus1, s=[100], phases=phases)
+
+    lc = LineCharacteristics("test", 10 * np.eye(2, dtype=complex))
+    line = Line(
+        "line",
+        bus0,
+        bus1,
+        phases=phases,
+        line_characteristics=lc,
+        length=1.0,
+        geometry=LineString([point1, point2]),
+    )
+
+    return ElectricalNetwork(
+        buses=[bus0, bus1],
         branches=[line],
         loads=[load],
         voltage_sources=[vs],
@@ -127,18 +164,23 @@ def test_add_and_remove():
     ground = Ground()
     vn = 400 / np.sqrt(3)
     voltages = [vn, vn * np.exp(-2 / 3 * np.pi * 1j), vn * np.exp(2 / 3 * np.pi * 1j)]
-    source_bus = Bus(id="source", n=4, ground=ground)
-    load_bus = Bus(id="load bus", n=4)
-    _ = VoltageSource(id="vs", n=4, bus=source_bus, voltages=voltages)
-    load = PowerLoad(id="power load", n=4, bus=load_bus, s=[100 + 0j, 100 + 0j, 100 + 0j])
+    source_bus = Bus(id="source", phases="abcn", ground=ground)
+    load_bus = Bus(id="load bus", phases="abcn")
+    VoltageSource(id="vs", phases="abcn", bus=source_bus, voltages=voltages)
+    load = PowerLoad(id="power load", phases="abcn", bus=load_bus, s=[100 + 0j, 100 + 0j, 100 + 0j])
     line_characteristics = LineCharacteristics("test", z_line=np.eye(4, dtype=complex))
     line = Line(
-        id="line", n=4, bus1=source_bus, bus2=load_bus, line_characteristics=line_characteristics, length=10
-    )  # km
+        id="line",
+        phases="abcn",
+        bus1=source_bus,
+        bus2=load_bus,
+        line_characteristics=line_characteristics,
+        length=10,  # km
+    )
     _ = PotentialRef(element=ground)
     en = ElectricalNetwork.from_element(source_bus)
     en.remove_element(load.id)
-    new_load = PowerLoad(id="power load", n=4, bus=load_bus, s=[100 + 0j, 100 + 0j, 100 + 0j])
+    new_load = PowerLoad(id="power load", phases="abcn", bus=load_bus, s=[100 + 0j, 100 + 0j, 100 + 0j])
     en.add_element(new_load)
 
     # Bad key
@@ -165,11 +207,18 @@ def test_add_and_remove():
 def test_bad_networks():
     # No voltage source
     ground = Ground()
-    bus1 = Bus("bus1", 3)
-    bus2 = Bus("bus2", 3)
+    bus1 = Bus("bus1", phases="abcn")
+    bus2 = Bus("bus2", phases="abcn")
     ground.connect(bus2)
     line_characteristics = LineCharacteristics("test", z_line=np.eye(3, dtype=complex))
-    line = Line(id="line", n=3, bus1=bus1, bus2=bus2, line_characteristics=line_characteristics, length=10)
+    line = Line(
+        id="line",
+        phases="abc",
+        bus1=bus1,
+        bus2=bus2,
+        line_characteristics=line_characteristics,
+        length=10,
+    )
     p_ref = PotentialRef(ground)
     with pytest.raises(RoseauLoadFlowException) as e:
         ElectricalNetwork.from_element(bus1)
@@ -177,11 +226,14 @@ def test_bad_networks():
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.NO_VOLTAGE_SOURCE
 
     # Bad constructor
-    bus0 = Bus("bus0", 4, ground=ground)
+    bus0 = Bus("bus0", phases="abcn", ground=ground)
     vs = VoltageSource(
-        "vs", n=4, bus=bus0, voltages=[20000.0 + 0.0j, -10000.0 - 17320.508076j, -10000.0 + 17320.508076j]
+        "vs",
+        phases="abcn",
+        bus=bus0,
+        voltages=[20000.0 + 0.0j, -10000.0 - 17320.508076j, -10000.0 + 17320.508076j],
     )
-    switch = Switch("switch", 4, bus0, bus1)
+    switch = Switch("switch", bus0, bus1, phases="abcn")
     with pytest.raises(RoseauLoadFlowException) as e:
         ElectricalNetwork([bus0, bus1], [line, switch], [], [vs], [ground, p_ref])  # no bus2
     assert "but has not been added to the network, you should add it with 'add_element'." in e.value.args[0]
@@ -189,11 +241,11 @@ def test_bad_networks():
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.UNKNOWN_ELEMENT
 
     # No potential reference
-    bus3 = Bus("bus3", 4)
+    bus3 = Bus("bus3", phases="abcn")
     transformer_characteristics = TransformerCharacteristics(
         type_name="t", windings="Dyn11", uhv=20000, ulv=400, sn=160 * 1e3, p0=460, i0=2.3 / 100, psc=2350, vsc=4 / 100
     )
-    _ = Transformer("transfo", bus2, bus3, transformer_characteristics)
+    _ = Transformer("transfo", bus2, bus3, transformer_characteristics=transformer_characteristics)
     with pytest.raises(RoseauLoadFlowException) as e:
         ElectricalNetwork.from_element(bus0)
     assert "does not have a potential reference" in e.value.args[0]
@@ -320,21 +372,21 @@ def test_frame(small_network):
     buses_gdf = small_network.buses_frame
     assert isinstance(buses_gdf, gpd.GeoDataFrame)
     assert buses_gdf.shape == (2, 2)
-    assert set(buses_gdf.columns) == {"n", "geometry"}
+    assert set(buses_gdf.columns) == {"phases", "geometry"}
     assert buses_gdf.index.name == "id"
 
     # Branches
     branches_gdf = small_network.branches_frame
     assert isinstance(branches_gdf, gpd.GeoDataFrame)
     assert branches_gdf.shape == (1, 6)
-    assert set(branches_gdf.columns) == {"branch_type", "n1", "n2", "bus1_id", "bus2_id", "geometry"}
+    assert set(branches_gdf.columns) == {"branch_type", "phases1", "phases2", "bus1_id", "bus2_id", "geometry"}
     assert branches_gdf.index.name == "id"
 
     # Loads
     loads_gdf = small_network.loads_frame
     assert isinstance(loads_gdf, pd.DataFrame)
     assert loads_gdf.shape == (1, 2)
-    assert set(loads_gdf.columns) == {"n", "bus_id"}
+    assert set(loads_gdf.columns) == {"phases", "bus_id"}
     assert loads_gdf.index.name == "id"
 
 
@@ -398,3 +450,111 @@ def test_to_from_dict_roundtrip(small_network: ElectricalNetwork):
     assert_frame_equal(small_network.branches_frame, new_net.branches_frame)
     assert_frame_equal(small_network.loads_frame, new_net.loads_frame)
     assert_frame_equal(small_network.voltage_sources_frame, new_net.voltage_sources_frame)
+
+
+def test_single_phase_network(single_phase_network: ElectricalNetwork):
+    # Test dict conversion
+    # ====================
+    net_dict = single_phase_network.to_dict()
+    new_net = ElectricalNetwork.from_dict(net_dict)
+    assert_frame_equal(single_phase_network.buses_frame, new_net.buses_frame)
+    assert_frame_equal(single_phase_network.branches_frame, new_net.branches_frame)
+    assert_frame_equal(single_phase_network.loads_frame, new_net.loads_frame)
+    assert_frame_equal(single_phase_network.voltage_sources_frame, new_net.voltage_sources_frame)
+
+    # Test load flow results
+    # ======================
+    source_bus = single_phase_network.buses["bus0"]
+    load_bus = single_phase_network.buses["bus1"]
+    line = single_phase_network.branches["line"]
+    load = single_phase_network.loads["load"]
+
+    json_results = {
+        "info": {
+            "status": "success",
+            "resolutionMethod": "newton",
+            "iterations": 1,
+            "targetError": 1e-06,
+            "finalError": 6.29e-14,
+        },
+        "buses": [
+            {"id": "bus0", "potentials": {"vb": [-10000.0, -17320.508], "vn": [0.0, 0.0]}},
+            {"id": "bus1", "potentials": {"vb": [-9999.974, -17320.464], "vn": [1.347e-12, 0.0]}},
+        ],
+        "branches": [
+            {
+                "id": "line",
+                "currents1": {"ib": [-0.0025, -0.0043], "in": [-1.347e-13, 0.0]},
+                "currents2": {"ib": [-0.0025, -0.0043], "in": [-1.347e-13, 0.0]},
+            }
+        ],
+        "loads": [
+            {"id": "load", "currents": {"ib": [-0.0025, -0.0043], "in": [-1.347e-13, 0.0]}},
+        ],
+        "sources": [],
+    }
+    solve_url = urljoin(ElectricalNetwork.DEFAULT_BASE_URL, "solve/")
+    with requests_mock.Mocker() as m:
+        m.post(solve_url, status_code=200, json=json_results, headers={"content-type": "application/json"})
+        single_phase_network.solve_load_flow(auth=("", ""))
+
+    # Test results of elements
+    # ------------------------
+    assert np.isclose(source_bus.potentials.m_as("V"), [-10000.0 - 17320.508j, 0j]).all()
+    assert np.isclose(load_bus.potentials.m_as("V"), [-9999.974 - 17320.464j, 1.347e-12 + 0j]).all()
+    assert np.isclose(line.currents[0].m_as("A"), [-0.0025 - 0.0043j, -1.347e-13 + 0j]).all()
+    assert np.isclose(line.currents[1].m_as("A"), [-0.0025 - 0.0043j, -1.347e-13 + 0j]).all()
+    assert np.isclose(load.currents.m_as("A"), [-0.0025 - 0.0043j, -1.347e-13 + 0j]).all()
+
+    # Test results of network
+    # -----------------------
+    # Buses potentials frame
+    pd.testing.assert_frame_equal(
+        single_phase_network.buses_potentials,
+        pd.DataFrame.from_records(
+            [
+                {"bus_id": "bus0", "phase": "b", "potential": -10000.0 - 17320.508j},
+                {"bus_id": "bus0", "phase": "n", "potential": 0j},
+                {"bus_id": "bus1", "phase": "b", "potential": -9999.974 - 17320.464j},
+                {"bus_id": "bus1", "phase": "n", "potential": 0j},
+            ]
+        )
+        .astype({"phase": _PHASE_DTYPE, "potential": complex})
+        .set_index(["bus_id", "phase"]),
+    )
+    # Buses voltages frame
+    pd.testing.assert_frame_equal(
+        single_phase_network.buses_voltages(),
+        pd.DataFrame.from_records(
+            [
+                {"bus_id": "bus0", "phase": "bn", "voltage": -10000.0 - 17320.508j},
+                {"bus_id": "bus1", "phase": "bn", "voltage": -9999.974 - 17320.464j},
+            ]
+        )
+        .astype({"phase": _VOLTAGE_PHASES_DTYPE, "voltage": complex})
+        .set_index(["bus_id", "phase"]),
+    )
+    # Branches currents frame
+    pd.testing.assert_frame_equal(
+        single_phase_network.branches_currents,
+        pd.DataFrame.from_records(
+            [
+                {"branch_id": "line", "phase": "b", "current1": -0.0025 - 0.0043j, "current2": -0.0025 - 0.0043j},
+                {"branch_id": "line", "phase": "n", "current1": -1.347e-13 + 0j, "current2": -1.347e-13 + 0j},
+            ]
+        )
+        .astype({"phase": _PHASE_DTYPE, "current1": complex, "current2": complex})
+        .set_index(["branch_id", "phase"]),
+    )
+    # Loads currents frame
+    pd.testing.assert_frame_equal(
+        single_phase_network.loads_currents,
+        pd.DataFrame.from_records(
+            [
+                {"load_id": "load", "phase": "b", "current": -0.0025 - 0.0043j},
+                {"load_id": "load", "phase": "n", "current": -1.347e-13 + 0j},
+            ]
+        )
+        .astype({"phase": _PHASE_DTYPE, "current": complex})
+        .set_index(["load_id", "phase"]),
+    )

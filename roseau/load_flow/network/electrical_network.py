@@ -2,7 +2,6 @@ import json
 import logging
 import re
 from collections.abc import Sequence, Sized
-from itertools import zip_longest
 from pathlib import Path
 from typing import Any, Optional, Union
 from urllib.parse import urljoin
@@ -33,7 +32,10 @@ from roseau.load_flow.utils import ureg
 
 logger = logging.getLogger(__name__)
 
-_PHASE_DTYPE = pd.CategoricalDtype(categories=list("abcn"), ordered=True)
+# Phases dtype for all data frames
+_PHASE_DTYPE = pd.CategoricalDtype(categories=["a", "b", "c", "n"], ordered=True)
+# Phases dtype for voltage data frames
+_VOLTAGE_PHASES_DTYPE = pd.CategoricalDtype(["an", "bn", "cn", "ab", "bc", "ca"], ordered=True)
 
 
 class ElectricalNetwork:
@@ -197,8 +199,8 @@ class ElectricalNetwork:
         """
         return gpd.GeoDataFrame(
             data=pd.DataFrame.from_records(
-                data=[(bus_id, bus.n, bus.geometry) for bus_id, bus in self.buses.items()],
-                columns=["id", "n", "geometry"],
+                data=[(bus_id, bus.phases, bus.geometry) for bus_id, bus in self.buses.items()],
+                columns=["id", "phases", "geometry"],
                 index="id",
             ),
             geometry="geometry",
@@ -218,15 +220,15 @@ class ElectricalNetwork:
                     (
                         branch_id,
                         branch.branch_type,
-                        branch.n1,
-                        branch.n2,
+                        branch.phases1,
+                        branch.phases2,
                         branch.connected_elements[0].id,
                         branch.connected_elements[1].id,
                         branch.geometry,
                     )
                     for branch_id, branch in self.branches.items()
                 ],
-                columns=["id", "branch_type", "n1", "n2", "bus1_id", "bus2_id", "geometry"],
+                columns=["id", "branch_type", "phases1", "phases2", "bus1_id", "bus2_id", "geometry"],
                 index="id",
             ),
             geometry="geometry",
@@ -241,8 +243,8 @@ class ElectricalNetwork:
             The dataframe of loads.
         """
         return pd.DataFrame.from_records(
-            data=[(load_id, load.n, load.bus.id) for load_id, load in self.loads.items()],
-            columns=["id", "n", "bus_id"],
+            data=[(load_id, load.phases, load.bus.id) for load_id, load in self.loads.items()],
+            columns=["id", "phases", "bus_id"],
             index="id",
         )
 
@@ -250,8 +252,8 @@ class ElectricalNetwork:
     def voltage_sources_frame(self) -> pd.DataFrame:
         """A dataframe of the voltage sources."""
         return pd.DataFrame.from_records(
-            data=[(source_id, source.n, source.bus.id) for source_id, source in self.voltage_sources.items()],
-            columns=["id", "n", "bus_id"],
+            data=[(source_id, source.phases, source.bus.id) for source_id, source in self.voltage_sources.items()],
+            columns=["id", "phases", "bus_id"],
             index="id",
         )
 
@@ -367,28 +369,30 @@ class ElectricalNetwork:
                 The results returned by the solver.
         """
         for bus_data in result_dict["buses"]:
-            bus_id = bus_data["id"]
-            self.buses[bus_id].potentials = self._dispatch_value(bus_data["potentials"], "v")
+            bus = self.buses[bus_data["id"]]
+            bus.potentials = self._dispatch_value(bus_data["potentials"], bus.phases, "v")
         for branch_data in result_dict["branches"]:
-            branch_id = branch_data["id"]
-            currents1 = self._dispatch_value(branch_data["currents1"], "i")
-            currents2 = self._dispatch_value(branch_data["currents2"], "i")
-            self.branches[branch_id].currents = [currents1, currents2]
+            branch = self.branches[branch_data["id"]]
+            currents1 = self._dispatch_value(branch_data["currents1"], branch.phases1, "i")
+            currents2 = self._dispatch_value(branch_data["currents2"], branch.phases2, "i")
+            branch.currents = (currents1, currents2)
         for load_data in result_dict["loads"]:
-            load_id = load_data["id"]
-            load = self.loads[load_id]
+            load = self.loads[load_data["id"]]
             if isinstance(load, FlexibleLoad):
-                load.powers = self._dispatch_value(load_data["powers"], "s")
-            currents = self._dispatch_value(load_data["currents"], "i")
+                load.powers = self._dispatch_value(load_data["powers"], load.phases, "s")
+            currents = self._dispatch_value(load_data["currents"], load.phases, "i")
             load.currents = currents
 
     @staticmethod
-    def _dispatch_value(value: dict[str, tuple[float, float]], t: str) -> np.ndarray:
-        """Dispatch the currents from a dictionary to a list.
+    def _dispatch_value(value: dict[str, tuple[float, float]], phases: str, t: str) -> np.ndarray:
+        """Dispatch the load flow results from a dictionary to an array.
 
         Args:
             value:
                 The dictionary value to dispatch.
+
+            phases:
+                The phases of the element.
 
             t:
                 The type of value ("i", "v" or "s").
@@ -396,20 +400,7 @@ class ElectricalNetwork:
         Returns:
             The complex final value.
         """
-        if t + "n" in value:
-            res = [
-                value[t + "a"][0] + 1j * value[t + "a"][1],
-                value[t + "b"][0] + 1j * value[t + "b"][1],
-                value[t + "c"][0] + 1j * value[t + "c"][1],
-                value[t + "n"][0] + 1j * value[t + "n"][1],
-            ]
-        else:
-            res = [
-                value[t + "a"][0] + 1j * value[t + "a"][1],
-                value[t + "b"][0] + 1j * value[t + "b"][1],
-                value[t + "c"][0] + 1j * value[t + "c"][1],
-            ]
-        return np.asarray(res)
+        return np.array([complex(*value[t + p]) for p in phases])
 
     #
     # Getter for the load flow results
@@ -437,7 +428,7 @@ class ElectricalNetwork:
         potentials_dict = {"bus_id": [], "phase": [], "potential": []}
         for bus_id, bus in self.buses.items():
             potentials = bus.potentials.m_as("V")
-            for potential, phase in zip(potentials, "abcn"):
+            for potential, phase in zip(potentials, bus.phases):
                 potentials_dict["bus_id"].append(bus_id)
                 potentials_dict["phase"].append(phase)
                 potentials_dict["potential"].append(potential)
@@ -508,17 +499,15 @@ class ElectricalNetwork:
             Name: voltage, dtype: complex128
         """
         voltages_dict = {"bus_id": [], "phase": [], "voltage": []}
-        phases = {3: ["ab", "bc", "ca"], 4: ["an", "bn", "cn"]}
-        phases_dtype = pd.CategoricalDtype(phases[4] + phases[3], ordered=True)
         for bus_id, bus in self.buses.items():
             voltages = bus.voltages.m_as("V")
-            for voltage, phase in zip(voltages, phases[bus.n]):
+            for voltage, phase in zip(voltages, bus.voltage_phases):
                 voltages_dict["bus_id"].append(bus_id)
                 voltages_dict["phase"].append(phase)
                 voltages_dict["voltage"].append(voltage)
         voltages_df = (
             pd.DataFrame.from_dict(voltages_dict, orient="columns")
-            .astype({"phase": phases_dtype, "voltage": complex})
+            .astype({"phase": _VOLTAGE_PHASES_DTYPE, "voltage": complex})
             .set_index(["bus_id", "phase"])
         )
         if as_magnitude_angle:
@@ -547,19 +536,25 @@ class ElectricalNetwork:
         Returns:
             The data frame of the currents of the branches of the electrical network.
         """
-        currents_dict = {"branch_id": [], "phase": [], "current1": [], "current2": []}
+        # Old implementation does not work anymore because phases 1 & 2 are not necessarily the same
+        currents_list = []
         for branch_id, branch in self.branches.items():
             currents1, currents2 = branch.currents
-            currents = zip_longest(currents1.m_as("A"), currents2.m_as("A"), fillvalue=np.nan)
-            for (current1, current2), phase in zip(currents, "abcn"):
-                currents_dict["branch_id"].append(branch_id)
-                currents_dict["phase"].append(phase)
-                currents_dict["current1"].append(current1)
-                currents_dict["current2"].append(current2)
+            currents_list.extend(
+                {"branch_id": branch_id, "phase": phase, "current1": i1, "current2": None}
+                for i1, phase in zip(currents1.m_as("A"), branch.phases1)
+            )
+            currents_list.extend(
+                {"branch_id": branch_id, "phase": phase, "current1": None, "current2": i2}
+                for i2, phase in zip(currents2.m_as("A"), branch.phases2)
+            )
+
         currents_df = (
-            pd.DataFrame.from_dict(currents_dict, orient="columns")
+            pd.DataFrame.from_records(currents_list)
             .astype({"phase": _PHASE_DTYPE, "current1": complex, "current2": complex})
-            .set_index(["branch_id", "phase"])
+            .groupby(["branch_id", "phase"])  # aggregate current1 and current2 for the same phase
+            .mean()  # 2 values only one is not nan -> keep it
+            .dropna(how="all")  # if all values are nan -> drop the row (the phase does not exist)
         )
         return currents_df
 
@@ -586,7 +581,7 @@ class ElectricalNetwork:
         loads_dict = {"load_id": [], "phase": [], "current": []}
         for load_id, load in self.loads.items():
             currents = load.currents.m_as("A")
-            for current, phase in zip(currents, "abcn"):
+            for current, phase in zip(currents, load.phases):
                 loads_dict["load_id"].append(load_id)
                 loads_dict["phase"].append(phase)
                 loads_dict["current"].append(current)
@@ -608,7 +603,7 @@ class ElectricalNetwork:
         for load_id, load in self.loads.items():
             if isinstance(load, FlexibleLoad):
                 powers = load.powers.m_as("VA")
-                for power, phase in zip(powers, "abcn"):
+                for power, phase in zip(powers, load.phases):
                     loads_dict["load_id"].append(load_id)
                     loads_dict["phase"].append(phase)
                     loads_dict["power"].append(power)
@@ -858,38 +853,38 @@ class ElectricalNetwork:
         Returns:
             The dictionary of the voltages of the buses, and the dictionary of the current flowing through the branches.
         """
-        phases = ["a", "b", "c", "n"]
         buses_results: list[dict[str, Any]] = []
         for bus_id, bus in self.buses.items():
-            potentials: np.ndarray = bus.potentials
-            potentials_dict = dict()
-            for i in range(len(potentials)):
-                potentials_dict[f"v{phases[i]}"] = [potentials[i].real.magnitude, potentials[i].imag.magnitude]
+            potentials_dict = {
+                f"v{phase}": [potential.real.magnitude, potential.imag.magnitude]
+                for potential, phase in zip(bus.potentials, bus.phases)
+            }
             buses_results.append({"id": bus_id, "potentials": potentials_dict})
 
         branches_results: list[dict[str, Any]] = []
         for branch_id, branch in self.branches.items():
-            currents1: np.ndarray = branch.currents[0]
-            currents2: np.ndarray = branch.currents[1]
-            currents_dict1 = dict()
-            currents_dict2 = dict()
-            for i in range(len(currents1)):
-                currents_dict1[f"i{phases[i]}"] = [currents1[i].real.magnitude, currents1[i].imag.magnitude]
-            for i in range(len(currents2)):
-                currents_dict2[f"i{phases[i]}"] = [currents2[i].real.magnitude, currents2[i].imag.magnitude]
+            currents1, currents2 = branch.currents
+            currents_dict1 = {
+                f"i{phase}": [current.real.magnitude, current.imag.magnitude]
+                for current, phase in zip(currents1, branch.phases1)
+            }
+            currents_dict2 = {
+                f"i{phase}": [current.real.magnitude, current.imag.magnitude]
+                for current, phase in zip(currents2, branch.phases2)
+            }
             branches_results.append({"id": branch_id, "currents1": currents_dict1, "currents2": currents_dict2})
 
         loads_results: list[dict[str, Any]] = []
         for load_id, load in self.loads.items():
-            currents: np.ndarray = load.currents
-            currents_dict = dict()
-            for i in range(len(currents)):
-                currents_dict[f"i{phases[i]}"] = [currents[i].real.magnitude, currents[i].imag.magnitude]
+            currents_dict = {
+                f"i{phase}": [current.real.magnitude, current.imag.magnitude]
+                for current, phase in zip(load.currents, load.phases)
+            }
             if isinstance(load, FlexibleLoad):
-                powers: np.ndarray = load.powers
-                powers_dict = dict()
-                for i in range(len(powers)):
-                    powers_dict[f"s{phases[i]}"] = [powers[i].real.magnitude, powers[i].imag.magnitude]
+                powers_dict = {
+                    f"s{phase}": [power.real.magnitude, power.imag.magnitude]
+                    for power, phase in zip(load.powers, load.phases)
+                }
                 loads_results.append({"id": load_id, "powers": powers_dict, "currents": currents_dict})
             else:
                 loads_results.append({"id": load_id, "currents": currents_dict})

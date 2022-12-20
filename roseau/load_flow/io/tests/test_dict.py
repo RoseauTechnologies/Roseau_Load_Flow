@@ -19,18 +19,34 @@ def test_to_dict():
     ground = Ground()
     vn = 400 / np.sqrt(3)
     voltages = [vn, vn * np.exp(-2 / 3 * np.pi * 1j), vn * np.exp(2 / 3 * np.pi * 1j)]
-    source_bus = Bus(id="source", n=4, ground=ground)
-    load_bus = Bus(id="load bus", n=4)
+    source_bus = Bus(id="source", phases="abcn", ground=ground)
+    load_bus = Bus(id="load bus", phases="abcn")
     ground.connect(load_bus)
     p_ref = PotentialRef(element=ground)
-    vs = VoltageSource(id="vs", n=4, bus=source_bus, voltages=voltages)
+    vs = VoltageSource(id="vs", phases="abcn", bus=source_bus, voltages=voltages)
 
     # Same type name, different characteristics -> fail
     lc1 = LineCharacteristics("test", z_line=np.eye(4, dtype=complex), y_shunt=np.eye(4, dtype=complex))
     lc2 = LineCharacteristics("test", z_line=np.eye(4, dtype=complex), y_shunt=np.eye(4, dtype=complex) * 1.1)
 
-    line1 = Line(id="line1", n=4, bus1=source_bus, bus2=load_bus, ground=ground, line_characteristics=lc1, length=10)
-    line2 = Line(id="line2", n=4, bus1=source_bus, bus2=load_bus, ground=ground, line_characteristics=lc2, length=10)
+    line1 = Line(
+        id="line1",
+        phases="abcn",
+        bus1=source_bus,
+        bus2=load_bus,
+        ground=ground,
+        line_characteristics=lc1,
+        length=10,
+    )
+    line2 = Line(
+        id="line2",
+        phases="abcn",
+        bus1=source_bus,
+        bus2=load_bus,
+        ground=ground,
+        line_characteristics=lc2,
+        length=10,
+    )
     en = ElectricalNetwork([source_bus, load_bus], [line1, line2], [], [vs], [p_ref, ground])
     with pytest.raises(RoseauLoadFlowException) as e:
         en.to_dict()

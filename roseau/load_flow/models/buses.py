@@ -18,10 +18,13 @@ logger = logging.getLogger(__name__)
 class Bus(Element, JsonMixin):
     """An electrical bus."""
 
+    allowed_phases = frozenset({"ab", "bc", "ca", "an", "bn", "cn", "abn", "bcn", "can", "abc", "abcn"})
+
     def __init__(
         self,
         id: Any,
-        n: int,
+        *,
+        phases: str,
         geometry: Optional[Point] = None,
         potentials: Optional[Sequence[complex]] = None,
         ground: Optional[Ground] = None,
@@ -33,8 +36,10 @@ class Bus(Element, JsonMixin):
             id:
                 The identifier of the bus.
 
-            n:
-                Number of ports ie number of phases.
+            phases:
+                The phases of the bus. A string like ``"abc"`` or ``"an"`` etc. The order of the
+                phases is important. For a full list of supported phases, see the class attribute
+                :attr:`Bus.allowed_phases`.
 
             geometry:
                 The geometry of the bus.
@@ -45,14 +50,15 @@ class Bus(Element, JsonMixin):
             ground:
                 The ground of the bus.
         """
+        self._check_phases(id, phases=phases)
         super().__init__(**kwargs)
         self.id = id
-        self.n = n
-        self.type = "bus" if n < 4 else "bus_neutral"
+        self.phases = phases
         if ground is not None:
             ground.connected_elements.append(self)
             self.connected_elements.append(ground)
 
+        n = len(phases)
         if potentials is None:
             potentials = np.zeros(n, dtype=complex)
             self.initialized = False
@@ -69,15 +75,16 @@ class Bus(Element, JsonMixin):
         self._potentials = None
 
     def __repr__(self) -> str:
-        s = f"{type(self).__name__}(id={self.id!r}, n={self.n}"
+        s = f"{type(self).__name__}(id={self.id!r}, phases={self.phases!r}"
         if self._potentials is not None:
             s += f", potentials={self.potentials!r}"
         if self.geometry is not None:
-            s += f", geometry={self.geometry})"
+            s += f", geometry={self.geometry}"
+        s += ")"
         return s
 
     def __str__(self) -> str:
-        return f"id={self.id} - n={self.n}"
+        return f"id={self.id!r} - phases={self.phases!r}"
 
     @property
     @ureg.wraps("V", None, strict=False)
@@ -93,23 +100,28 @@ class Bus(Element, JsonMixin):
     @property
     @ureg.wraps("V", None, strict=False)
     def voltages(self) -> np.ndarray:
-        """The voltage results of the bus (Only available after a load flow).
+        """An array of the voltage results of the bus.
 
-        For a "Star Bus", the voltages are ``[Van, Vbn, Vcn]``, for a "Delta Bus", they are
-        ``[Vab, Vbc, Vca]``.
-
-        Returns:
-            An array of the voltages.
+        If the bus has a neutral, the voltages are phase-neutral voltages for existing phases in
+        the order ``[Van, Vbn, Vcn]``. If the bus does not have a neutral, phase-phase voltages
+        are returned in the order ``[Vab, Vbc, Vca]``.
         """
         # TODO use self.potentials with the check
-        if self.n == 3:
-            return np.asarray(
-                self._potentials[1] - self._potentials[0],  # ab
-                self._potentials[2] - self._potentials[1],  # bc
-                self._potentials[0] - self._potentials[2],  # ca
-            )
-        else:
-            return self._potentials[: self.n - 1] - self._potentials[self.n - 1]  # an, bn, cn
+        potentials = np.asarray(self._potentials)
+        if "n" in self.phases:  # Van, Vbn, Vcn
+            # we know "n" is the last phase
+            return potentials[:-1] - potentials[-1]
+        else:  # Vab, Vbc, Vca
+            # np.roll(["a", "b", "c"], -1) -> ["b", "c", "a"]  # also works with single or double phase
+            return np.roll(potentials, -1) - potentials
+
+    @property
+    def voltage_phases(self) -> list[str]:
+        """The phases of the voltages."""
+        if "n" in self.phases:  # "an", "bn", "cn"
+            return [p + "n" for p in self.phases[:-1]]
+        else:  # "ab", "bc", "ca"
+            return [p1 + p2 for p1, p2 in zip(self.phases, np.roll(list(self.phases), -1))]
 
     #
     # Json Mixin interface
@@ -123,19 +135,16 @@ class Bus(Element, JsonMixin):
         else:
             geometry = shape(data["geometry"])
 
-        potentials = data.get("potentials")
-
-        if data["type"] in ("bus", "bus_neutral"):
-            n = 4 if "neutral" in data["type"] else 3
-        else:
-            msg = f"Bad bus type for bus {data['id']}: {data['type']}"
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_BUS_TYPE)
-
-        return cls(id=data["id"], n=n, ground=ground, potentials=potentials, geometry=geometry)
+        return cls(
+            id=data["id"],
+            phases=data["phases"],
+            geometry=geometry,
+            potentials=data.get("potentials"),
+            ground=ground,
+        )
 
     def to_dict(self) -> dict[str, Any]:
-        res = {"id": self.id, "type": self.type, "loads": [], "sources": []}
+        res = {"id": self.id, "phases": self.phases, "loads": [], "sources": []}
         if self.geometry is not None:
             res["geometry"] = self.geometry.__geo_interface__
         return res

@@ -1,6 +1,6 @@
 import logging
 from abc import ABC
-from typing import Any, Optional, TYPE_CHECKING
+from typing import Any, ClassVar, Optional, TYPE_CHECKING
 
 import numpy as np
 import shapely.wkt
@@ -14,8 +14,8 @@ from roseau.load_flow.utils.units import ureg
 
 if TYPE_CHECKING:
     from roseau.load_flow.models.buses import Bus
-    from roseau.load_flow.models.lines import Line, Switch
-    from roseau.load_flow.models.transformers import Transformer
+    from roseau.load_flow.models.lines import Line, LineCharacteristics, Switch
+    from roseau.load_flow.models.transformers import Transformer, TransformerCharacteristics
 
 logger = logging.getLogger(__name__)
 
@@ -23,8 +23,26 @@ logger = logging.getLogger(__name__)
 class Element(ABC):
     """An abstract class to describe an element of an Electrical network"""
 
+    allowed_phases: ClassVar[frozenset[str]]  # frozenset for immutability and uniqueness
+    """The allowed phases for this element type.
+
+    It is a frozen set of strings like ``"abc"`` or ``"an"`` etc. The order of the phases is
+    important. For a full list of supported phases, use ``print(<Element class>.allowed_phases)``.
+    """
+
     def __init__(self, **kwargs):
         self.connected_elements: list[Element] = []
+
+    @classmethod
+    def _check_phases(cls, id: str, **kwargs: str) -> None:
+        name, phases = kwargs.popitem()  # phases, phases1 or phases2
+        if phases not in cls.allowed_phases:
+            msg = (
+                f"{cls.__name__} of id {id!r} got invalid {name} {phases!r}, allowed values are: "
+                f"{sorted(cls.allowed_phases)}"
+            )
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.BAD_PHASE)
 
     def disconnect(self):
         """Remove all the connections with the other elements."""
@@ -37,16 +55,42 @@ class PotentialRef(Element):
 
     This element will set the origin of the potentials as `Va + Vb + Vc = 0` for delta elements
     or `Vn = 0` for others.
+    """  # TODO: update the docstring with the new semantics
 
-    Args:
-        element:
-            The element to connect to, normally the ground element.
-    """
+    allowed_phases = frozenset({"a", "b", "c", "n"})
 
-    def __init__(self, element: Element, **kwargs):
+    def __init__(self, element: Element, *, phase: Optional[str] = None, **kwargs):
+        """PotentialRef constructor.
+
+        Args:
+            element:
+                The element to connect to, normally the ground element.
+
+            phase:
+                The phase of the potential reference. If not given, the phase of the element will
+                be used.
+        """
+        from roseau.load_flow.models.buses import Bus  # TODO refactor potential ref and ground
+
+        if isinstance(element, Bus):
+            if phase is None:
+                phase = "n" if "n" in element.phases else None
+            else:
+                self._check_phases(element.id, phases=phase)
+        elif isinstance(element, Ground):
+            if phase is not None:
+                # TODO: add ID to the error message when the ID is implemented
+                msg = "Potential reference connected to the ground cannot have a phase."
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.BAD_PHASE)
+        else:
+            msg = f"Only buses and ground can be connected to a potential reference, got {element!r}."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT)
         super().__init__(**kwargs)
         self.connected_elements = [element]
         element.connected_elements.append(self)
+        self.phase = phase
 
     def __repr__(self) -> str:
         return f"{type(self).__name__}({self.connected_elements[0]!r})"
@@ -67,29 +111,42 @@ class PotentialRef(Element):
 class Ground(Element):
     """This element defines the ground."""
 
+    allowed_phases = frozenset({"a", "b", "c", "n"})
+
     def __init__(self, **kwargs):
         """Ground constructor."""
         super().__init__(**kwargs)
+        self.phase: Optional[str] = None
 
     def __repr__(self) -> str:
         return f"{type(self).__name__}()"
 
-    def connect(self, bus: "Bus"):
+    def connect(self, bus: "Bus", phase: str = "n"):
         """Connect the ground to the bus neutral.
 
         Args:
             bus:
                 The bus to connect to.
+
+            phase:
+                The phase of the connection. It must be one of ``{"a", "b", "c", "n"}`` and must be
+                present in the bus phases. Defaults to ``"n"``.
         """
+        self._check_phases(None, phases=phase)  # TODO: pass ID when implemented
+        if phase not in bus.phases:
+            msg = f"Cannot connect a ground to phase {phase!r} of bus {bus.id!r} that has phases {bus.phases!r}."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.BAD_PHASE)
         if self not in bus.connected_elements:
             self.connected_elements.append(bus)
             bus.connected_elements.append(self)
+        self.phase = phase
 
 
 class AbstractBranch(Element, JsonMixin):
     """This is an abstract class for all the branches (lines, switches and transformers) of the network."""
 
-    branch_type: BranchType = NotImplemented
+    branch_type: BranchType
 
     @classmethod
     def _line_class(cls) -> type["Line"]:
@@ -112,8 +169,8 @@ class AbstractBranch(Element, JsonMixin):
     def __init__(
         self,
         id: Any,
-        n1: int,
-        n2: int,
+        phases1: str,
+        phases2: str,
         bus1: "Bus",
         bus2: "Bus",
         geometry: Optional[BaseGeometry] = None,
@@ -123,27 +180,30 @@ class AbstractBranch(Element, JsonMixin):
 
         Args:
             id:
-                The identifier of the branch.
+                The unique id of the branch.
 
-            n1:
-                Number of ports in the first extremity of the branch.
+            phases1:
+                The phases of the first extremity of the branch. Only 3-phase elements are
+                currently supported. Allowed values are: ``"abc"`` or ``"abcn"``.
 
-            n2:
-                Number of ports in the second extremity of the branch.
+            phases2:
+                The phases of the second extremity of the branch.
 
             bus1:
-                Bus to connect to the first extremity of the branch.
+                The bus to connect the first extremity of the branch to.
 
             bus2:
-                Bus to connect to the second extremity of the branch.
+                The bus to connect the second extremity of the branch to.
 
             geometry:
                 The geometry of the branch.
         """
+        self._check_phases(id, phases1=phases1)
+        self._check_phases(id, phases2=phases2)
         super().__init__(**kwargs)
         self.id = id
-        self.n1 = n1
-        self.n2 = n2
+        self.phases1 = phases1
+        self.phases2 = phases2
         self.connected_elements = [bus1, bus2]
         bus1.connected_elements.append(self)
         bus2.connected_elements.append(self)
@@ -151,7 +211,7 @@ class AbstractBranch(Element, JsonMixin):
         self._currents = None
 
     def __repr__(self) -> str:
-        s = f"{type(self).__name__}(id={self.id!r}, n1={self.n1}, n2={self.n2}"
+        s = f"{type(self).__name__}(id={self.id!r}, phases1={self.phases1!r}, phases2={self.phases2!r}"
         s += f", bus1={self.connected_elements[0].id!r}, bus2={self.connected_elements[1].id!r}"
         if self.geometry is not None:
             s += f", geometry={self.geometry}"
@@ -159,66 +219,79 @@ class AbstractBranch(Element, JsonMixin):
         return s
 
     def __str__(self) -> str:
-        return f"id={self.id} - n1={self.n1} - n2={self.n2}"
+        return f"id={self.id!r} - phases1={self.phases1!r} - phases2={self.phases2!r}"
 
     @property
     @ureg.wraps(("A", "A"), None, strict=False)
     def currents(self) -> tuple[np.ndarray, np.ndarray]:
-        """Current accessor
-
-        Returns:
-            The complex currents of each phase.
-        """
+        """Arrays of the actual currents of each phase of the two extremities (A) as computed by the load flow."""
         return self._currents
 
     @currents.setter
-    def currents(self, value: np.ndarray):
+    def currents(self, value: tuple[np.ndarray, np.ndarray]) -> None:
         self._currents = value
 
     #
     # Json Mixin interface
     #
     @classmethod
-    def from_dict(cls, branch, bus1, bus2, ground, line_types, transformer_types, *args):
+    def from_dict(
+        cls,
+        data: dict[str, Any],
+        bus1: "Bus",
+        bus2: "Bus",
+        ground: Ground,
+        line_types: dict[str, "LineCharacteristics"],
+        transformer_types: dict[str, "TransformerCharacteristics"],
+        *args,
+    ) -> "AbstractBranch":
 
-        if "geometry" not in branch:
+        if "geometry" not in data:
             geometry = None
-        elif isinstance(branch["geometry"], str):
-            geometry = shapely.wkt.loads(branch["geometry"])
+        elif isinstance(data["geometry"], str):
+            geometry = shapely.wkt.loads(data["geometry"])
         else:
-            geometry = shape(branch["geometry"])
+            geometry = shape(data["geometry"])
 
-        if branch["type"] == "line":
+        if data["type"] == "line":
+            assert data["phases2"] == data["phases1"]  # line phases must be the same
             return cls._line_class().from_dict(
-                id=branch["id"],
+                id=data["id"],
                 bus1=bus1,
                 bus2=bus2,
-                length=branch["length"],
+                length=data["length"],
                 line_types=line_types,
-                type_name=branch["type_name"],
+                type_name=data["type_name"],
+                phases=data["phases1"],  # or phases2, they are the same
                 ground=ground,
                 geometry=geometry,
             )
-        elif branch["type"] == "transformer":
+        elif data["type"] == "transformer":
             return cls._transformer_class().from_dict(
-                id=branch["id"],
+                id=data["id"],
                 bus1=bus1,
                 bus2=bus2,
-                type_name=branch["type_name"],
+                type_name=data["type_name"],
                 transformer_types=transformer_types,
-                tap=branch["tap"],
+                tap=data["tap"],
+                phases1=data["phases1"],
+                phases2=data["phases2"],
                 geometry=geometry,
             )
-        elif branch["type"] == "switch":
-            return cls._switch_class()(id=branch["id"], n=bus1.n, bus1=bus1, bus2=bus2, geometry=geometry)
+        elif data["type"] == "switch":
+            assert data["phases2"] == data["phases1"]  # switch phases must be the same
+            return cls._switch_class()(data["id"], bus1, bus2, phases=bus1.phases, geometry=geometry)
         else:
-            msg = f"Unknown branch type for branch {branch['id']}: {branch['type']}"
+            msg = f"Unknown branch type for branch {data['id']}: {data['type']}"
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_BRANCH_TYPE)
 
     def to_dict(self) -> dict[str, Any]:
         res = {
             "id": self.id,
+            "type": str(self.branch_type),
+            "phases1": self.phases1,
+            "phases2": self.phases2,
             "bus1": self.connected_elements[0].id,
             "bus2": self.connected_elements[1].id,
         }
