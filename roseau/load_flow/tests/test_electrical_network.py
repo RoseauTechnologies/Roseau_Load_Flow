@@ -42,7 +42,7 @@ def small_network() -> ElectricalNetwork:
     load = PowerLoad("load", load_bus, s=[100, 100, 100], phases="abcn")
     pref = PotentialRef("pref", element=ground)
 
-    lc = LineCharacteristics("test", 10 * np.eye(4, dtype=complex))
+    lc = LineCharacteristics("test", z_line=10 * np.eye(4, dtype=complex))
     line = Line(
         id="line",
         phases="abcn",
@@ -78,7 +78,7 @@ def single_phase_network() -> ElectricalNetwork:
     vs = VoltageSource("vs", bus0, voltages=[20000.0 + 0.0j], phases=phases)
     load = PowerLoad("load", bus1, s=[100], phases=phases)
 
-    lc = LineCharacteristics("test", 10 * np.eye(2, dtype=complex))
+    lc = LineCharacteristics("test", z_line=10 * np.eye(2, dtype=complex))
     line = Line(
         "line",
         bus0,

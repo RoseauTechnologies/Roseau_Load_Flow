@@ -17,7 +17,7 @@ def test_line_characteristics():
     y_shunt = np.eye(4, dtype=np.complex_)
 
     with pytest.raises(RoseauLoadFlowException) as e:
-        line_characteristics = LineCharacteristics("test", z_line, y_shunt)
+        line_characteristics = LineCharacteristics("test", z_line=z_line, y_shunt=y_shunt)
         Line(
             id="line",
             phases="abcn",
@@ -35,7 +35,7 @@ def test_line_characteristics():
     z_line = np.eye(3, dtype=np.complex_)
     y_shunt = np.ones(shape=(3, 3), dtype=np.complex_)
     with pytest.raises(RoseauLoadFlowException) as e:
-        line_characteristics = LineCharacteristics("test", z_line, y_shunt)
+        line_characteristics = LineCharacteristics("test", z_line=z_line, y_shunt=y_shunt)
         Line(
             id="line",
             phases="abc",
@@ -53,7 +53,7 @@ def test_line_characteristics():
     z_line[1, 1] = -3
     y_shunt = -2 * np.eye(4, dtype=np.complex_)
     with pytest.raises(RoseauLoadFlowException) as e:
-        line_characteristics = LineCharacteristics("test", z_line, y_shunt)
+        line_characteristics = LineCharacteristics("test", z_line=z_line, y_shunt=y_shunt)
         Line(
             id="line",
             phases="abcn",
@@ -70,7 +70,7 @@ def test_line_characteristics():
     y_shunt = 2 * np.eye(3, dtype=np.complex_)
     y_shunt[1, 1] = -3
     with pytest.raises(RoseauLoadFlowException):
-        line_characteristics = LineCharacteristics("test", z_line, y_shunt)
+        line_characteristics = LineCharacteristics("test", z_line=z_line, y_shunt=y_shunt)
         Line(
             id="line",
             phases="abcn",
@@ -87,7 +87,7 @@ def test_line_characteristics():
     z_line = np.eye(4, dtype=np.complex_)[:, :2]
     y_shunt = np.eye(4, dtype=np.complex_)
     with pytest.raises(RoseauLoadFlowException) as e:
-        line_characteristics = LineCharacteristics("test", z_line, y_shunt)
+        line_characteristics = LineCharacteristics("test", z_line=z_line, y_shunt=y_shunt)
         Line(
             id="line",
             phases="abcn",
@@ -104,7 +104,7 @@ def test_line_characteristics():
     z_line = np.eye(4, dtype=np.complex_)
     y_shunt = np.eye(3, dtype=np.complex_)
     with pytest.raises(RoseauLoadFlowException) as e:
-        line_characteristics = LineCharacteristics("test", z_line, y_shunt)
+        line_characteristics = LineCharacteristics("test", z_line=z_line, y_shunt=y_shunt)
         Line(
             id="line",
             phases="abcn",
@@ -121,7 +121,7 @@ def test_line_characteristics():
     z_line = np.eye(4, dtype=np.complex_)[:, :2]
     y_shunt = np.eye(3, dtype=np.complex_)
     with pytest.raises(RoseauLoadFlowException) as e:
-        line_characteristics = LineCharacteristics("test", z_line, y_shunt)
+        line_characteristics = LineCharacteristics("test", z_line=z_line, y_shunt=y_shunt)
         Line(
             id="line",
             phases="abc",
@@ -138,7 +138,7 @@ def test_line_characteristics():
     z_line = np.eye(3, dtype=np.complex_)
     y_shunt = np.eye(6, dtype=np.complex_)
     with pytest.raises(RoseauLoadFlowException) as e:
-        line_characteristics = LineCharacteristics("test", z_line, y_shunt)
+        line_characteristics = LineCharacteristics("test", z_line=z_line, y_shunt=y_shunt)
         Line(
             id="line",
             phases="abc",
@@ -155,7 +155,7 @@ def test_line_characteristics():
     z_line = np.eye(3, dtype=np.complex_)
     y_shunt = np.eye(3, dtype=np.complex_)
     with pytest.raises(RoseauLoadFlowException) as e:
-        line_characteristics = LineCharacteristics("test", z_line, y_shunt)
+        line_characteristics = LineCharacteristics("test", z_line=z_line, y_shunt=y_shunt)
         Line(
             id="line",
             phases="abcn",
