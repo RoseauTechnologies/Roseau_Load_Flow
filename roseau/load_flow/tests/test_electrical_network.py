@@ -31,7 +31,7 @@ def small_network() -> ElectricalNetwork:
     ground = Ground("ground")
     source_bus = Bus("bus0", phases="abcn", geometry=Point(-1.318375372111463, 48.64794139348595))
     load_bus = Bus("bus1", phases="abcn", geometry=Point(-1.320149235966572, 48.64971306653889))
-    ground.connect_to_bus(load_bus)
+    ground.connect(load_bus)
 
     vs = VoltageSource(
         id="vs",
@@ -72,7 +72,7 @@ def single_phase_network() -> ElectricalNetwork:
     bus1 = Bus("bus1", phases=phases, geometry=point2)
 
     ground = Ground("ground")
-    ground.connect_to_bus(bus1)
+    ground.connect(bus1)
     pref = PotentialRef("pref", element=ground)
 
     vs = VoltageSource("vs", bus0, voltages=[20000.0 + 0.0j], phases=phases)
@@ -166,7 +166,7 @@ def test_add_and_remove():
     voltages = [vn, vn * np.exp(-2 / 3 * np.pi * 1j), vn * np.exp(2 / 3 * np.pi * 1j)]
     source_bus = Bus(id="source", phases="abcn")
     load_bus = Bus(id="load bus", phases="abcn")
-    ground.connect_to_bus(load_bus)
+    ground.connect(load_bus)
     VoltageSource(id="vs", phases="abcn", bus=source_bus, voltages=voltages)
     load = PowerLoad(id="power load", phases="abcn", bus=load_bus, s=[100 + 0j, 100 + 0j, 100 + 0j])
     line_characteristics = LineCharacteristics("test", z_line=np.eye(4, dtype=complex))
@@ -210,7 +210,7 @@ def test_bad_networks():
     ground = Ground("ground")
     bus1 = Bus("bus1", phases="abcn")
     bus2 = Bus("bus2", phases="abcn")
-    ground.connect_to_bus(bus2)
+    ground.connect(bus2)
     line_characteristics = LineCharacteristics("test", z_line=np.eye(3, dtype=complex))
     line = Line(
         id="line",
@@ -228,7 +228,7 @@ def test_bad_networks():
 
     # Bad constructor
     bus0 = Bus("bus0", phases="abcn")
-    ground.connect_to_bus(bus0)
+    ground.connect(bus0)
     vs = VoltageSource(
         "vs",
         phases="abcn",
@@ -254,7 +254,7 @@ def test_bad_networks():
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.NO_POTENTIAL_REFERENCE
 
     # Good network
-    ground.connect_to_bus(bus3)
+    ground.connect(bus3)
 
     # 2 potential reference
     _ = PotentialRef("pref2", element=bus3)

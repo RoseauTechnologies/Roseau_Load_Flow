@@ -71,7 +71,7 @@ def network_from_dict(
     for ground_data in data["grounds"]:
         ground = en_class.ground_class.from_dict(ground_data)
         for bus_id, phase in ground_data["buses"].items():
-            ground.connect_to_bus(buses_dict[bus_id], phase)
+            ground.connect(buses_dict[bus_id], phase)
         grounds[ground_data["id"]] = ground
     for pref_data in data["potential_refs"]:
         if "bus" in pref_data:

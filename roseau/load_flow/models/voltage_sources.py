@@ -50,7 +50,7 @@ class VoltageSource(Element):
                 the phases of the connected bus. By default, the phases of the bus are used.
         """
         super().__init__(id, **kwargs)
-        self.connect(bus)
+        self._connect(bus)
 
         if phases is None:
             phases = bus.phases

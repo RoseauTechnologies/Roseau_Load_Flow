@@ -58,7 +58,7 @@ class AbstractLoad(Element, metaclass=ABCMeta):
                 )
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
-        self.connect(bus)
+        self._connect(bus)
 
         self.phases = phases
         self.bus = bus

@@ -235,7 +235,7 @@ class Line(AbstractBranch):
                 msg = f"The ground element must be provided for line {id!r} with shunt admittance."
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_TYPE)
-            self.connect(ground)
+            self._connect(ground)
 
         self.phases = phases
         self.line_characteristics = line_characteristics
@@ -254,7 +254,7 @@ class Line(AbstractBranch):
         """
         self.line_characteristics = line_characteristics
         if self.line_characteristics.y_shunt is not None and self.ground is not None:
-            self.connect(self.ground)  # handles already connected case
+            self._connect(self.ground)  # handles already connected case
 
     #
     # Json Mixin interface

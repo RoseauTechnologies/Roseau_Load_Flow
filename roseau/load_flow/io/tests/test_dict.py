@@ -21,7 +21,7 @@ def test_to_dict():
     voltages = [vn, vn * np.exp(-2 / 3 * np.pi * 1j), vn * np.exp(2 / 3 * np.pi * 1j)]
     source_bus = Bus(id="source", phases="abcn")
     load_bus = Bus(id="load bus", phases="abcn")
-    ground.connect_to_bus(load_bus)
+    ground.connect(load_bus)
     p_ref = PotentialRef("pref", element=ground)
     vs = VoltageSource("vs", source_bus, phases="abcn", voltages=voltages)
 

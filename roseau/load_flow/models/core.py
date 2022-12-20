@@ -52,7 +52,7 @@ class Element(ABC, Identifiable, JsonMixin):
             logger.error(msg)
             raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.BAD_PHASE)
 
-    def connect(self, element: "Element") -> None:
+    def _connect(self, element: "Element") -> None:
         """Connect this element to another element.
 
         Args:
@@ -66,6 +66,7 @@ class Element(ABC, Identifiable, JsonMixin):
 
     def disconnect(self) -> None:
         """Remove all the connections with the other elements."""
+        # TODO: make private
         for element in self.connected_elements:
             element.connected_elements.remove(self)
 
@@ -115,7 +116,7 @@ class PotentialRef(Element):
             msg = f"Potential reference {self.id!r} is connected to {element!r} which is not a ground nor a bus."
             logger.error(msg)
             raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT)
-        self.connect(element)
+        self._connect(element)
         self.phase = phase
 
     def __repr__(self) -> str:
@@ -159,7 +160,7 @@ class Ground(Element):
 
     1. Connecting to a bus:
 
-       To connect a ground to a bus on a given phase, use the :meth:`Ground.connect_to_bus` method.
+       To connect a ground to a bus on a given phase, use the :meth:`Ground.connect` method.
        This method lets you specify the bus to connect to as well as the phase of the connection.
        If the bus has a neutral and the phase is not specified, the ground will be connected to the
        neutral, otherwise, an error will be raised because the phase is needed.
@@ -186,7 +187,7 @@ class Ground(Element):
     def __repr__(self) -> str:
         return f"{type(self).__name__}(id={self.id!r})"
 
-    def connect_to_bus(self, bus: "Bus", phase: str = "n"):
+    def connect(self, bus: "Bus", phase: str = "n") -> None:
         """Connect the ground to a bus on the given phase.
 
         Args:
@@ -202,7 +203,7 @@ class Ground(Element):
             msg = f"Cannot connect a ground to phase {phase!r} of bus {bus.id!r} that has phases {bus.phases!r}."
             logger.error(msg)
             raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.BAD_PHASE)
-        self.connect(bus)
+        self._connect(bus)
         self.phases[bus.id] = phase
 
     @classmethod
@@ -276,8 +277,8 @@ class AbstractBranch(Element):
         self._check_phases(id, phases2=phases2)
         self.phases1 = phases1
         self.phases2 = phases2
-        self.connect(bus1)
-        self.connect(bus2)
+        self._connect(bus1)
+        self._connect(bus2)
         self.geometry = geometry
         self._currents = None
 
