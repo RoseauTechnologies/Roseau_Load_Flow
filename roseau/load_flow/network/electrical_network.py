@@ -756,13 +756,13 @@ class ElectricalNetwork:
         Returns:
             The constructed network.
         """
-        buses, branches, loads, sources, special_elements = network_from_dict(data=data, en_class=cls)
+        buses, branches, loads, sources, grounds, potential_refs = network_from_dict(data=data, en_class=cls)
         return cls(
             buses=buses,
             branches=branches,
             loads=loads,
             voltage_sources=sources,
-            special_elements=special_elements,
+            special_elements=[*grounds.values(), *potential_refs.values()],  # temporary until we kill special elements
         )
 
     @classmethod

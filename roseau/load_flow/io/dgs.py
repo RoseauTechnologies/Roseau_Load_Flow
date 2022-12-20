@@ -161,9 +161,8 @@ def network_from_dgs(  # noqa: C901
             p0 = typ_tr.at[idx, "pfe"] * 1e3 / 3  # Losses during off-load test (kW -> W)
             psc = typ_tr.at[idx, "pcutr"] * 1e3  # Losses during short circuit test (kW -> W)
             vsc = typ_tr.at[idx, "uktr"] / 100  # Voltages on LV side during short circuit test (%)
-            windings = "{}{}{}".format(  # Windings of the transformer
-                typ_tr.at[idx, "tr2cn_h"], typ_tr.at[idx, "tr2cn_l"], typ_tr.at[idx, "nt2ag"]
-            )
+            # Windings of the transformer
+            windings = f"{typ_tr.at[idx, 'tr2cn_h']}{typ_tr.at[idx, 'tr2cn_l']}{typ_tr.at[idx, 'nt2ag']}"
 
             # Generate transformer parameters
             transformers_data[idx] = TransformerCharacteristics(name, windings, uhv, ulv, sn, p0, i0, psc, vsc)

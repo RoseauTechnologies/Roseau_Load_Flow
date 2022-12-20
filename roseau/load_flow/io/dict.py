@@ -6,7 +6,6 @@ from roseau.load_flow.models import (
     AbstractBranch,
     AbstractLoad,
     Bus,
-    Element,
     Ground,
     Line,
     LineCharacteristics,
@@ -25,31 +24,39 @@ logger = logging.getLogger(__name__)
 
 def network_from_dict(
     data: JsonDict, en_class: type["ElectricalNetwork"]
-) -> tuple[dict[str, Bus], dict[str, AbstractBranch], dict[str, AbstractLoad], dict[str, VoltageSource], list[Element]]:
-    """Create the electrical elements from a dictionary to create an electrical network.
+) -> tuple[
+    dict[Id, Bus],
+    dict[Id, AbstractBranch],
+    dict[Id, AbstractLoad],
+    dict[Id, VoltageSource],
+    dict[Id, Ground],
+    dict[Id, PotentialRef],
+]:
+    """Create the electrical network elements from a dictionary.
 
     Args:
         data:
             The dictionary containing the network data.
 
         en_class:
-            The ElectricalNetwork class to create
+            The ElectricalNetwork class to create.
 
     Returns:
-        The buses, branches, loads, sources and special elements to construct the electrical network.
+        The buses, branches, loads, sources, grounds and potential refs to construct the electrical
+        network.
     """
-    line_types: dict[str, LineCharacteristics] = {}
+    line_types: dict[Id, LineCharacteristics] = {}
     for line_data in data["line_types"]:
         type_id = line_data["id"]
         line_types[type_id] = LineCharacteristics.from_dict(line_data)
 
-    transformer_types: dict[str, TransformerCharacteristics] = {}
+    transformer_types: dict[Id, TransformerCharacteristics] = {}
     for transformer_data in data["transformer_types"]:
         type_id = transformer_data["id"]
         transformer_types[type_id] = TransformerCharacteristics.from_dict(transformer_data)
 
-    grounds: dict[Id:Ground] = {}  # en_class.ground_class()
-    potential_refs: dict[Id:PotentialRef] = {}  # en_class.pref_class()
+    grounds: dict[Id, Ground] = {}
+    potential_refs: dict[Id, PotentialRef] = {}
     buses_dict: dict[Id, Bus] = {}
     loads_dict: dict[Id, AbstractLoad] = {}
     sources_dict: dict[Id, VoltageSource] = {}
@@ -78,7 +85,7 @@ def network_from_dict(
         pref_data["element"] = bus_or_ground
         potential_refs[pref_data["id"]] = en_class.pref_class.from_dict(pref_data)
 
-    branches_dict: dict[str, AbstractBranch] = {}
+    branches_dict: dict[Id, AbstractBranch] = {}
     for branch_data in data["branches"]:
         bus1 = buses_dict[branch_data["bus1"]]
         bus2 = buses_dict[branch_data["bus2"]]
@@ -91,8 +98,7 @@ def network_from_dict(
             line_types,
             transformer_types,
         )
-    special_elements = list(grounds.values()) + list(potential_refs.values())
-    return buses_dict, branches_dict, loads_dict, sources_dict, special_elements
+    return buses_dict, branches_dict, loads_dict, sources_dict, grounds, potential_refs
 
 
 def network_to_dict(en: "ElectricalNetwork") -> JsonDict:
