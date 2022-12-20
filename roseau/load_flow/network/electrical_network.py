@@ -14,7 +14,6 @@ from pyproj import CRS
 from requests import Response
 from requests.auth import HTTPBasicAuth
 
-from roseau.load_flow.aliases import Id, JsonDict, StrPath
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.io import network_from_dgs, network_from_dict, network_to_dict
 from roseau.load_flow.models import (
@@ -29,6 +28,7 @@ from roseau.load_flow.models import (
     Transformer,
     VoltageSource,
 )
+from roseau.load_flow.typing import Id, JsonDict, StrPath
 
 logger = logging.getLogger(__name__)
 

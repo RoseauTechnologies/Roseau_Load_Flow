@@ -4,7 +4,6 @@ import logging
 import numpy as np
 import pandas as pd
 
-from roseau.load_flow.aliases import StrPath
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models import (
     AbstractBranch,
@@ -21,6 +20,7 @@ from roseau.load_flow.models import (
     TransformerCharacteristics,
     VoltageSource,
 )
+from roseau.load_flow.typing import StrPath
 from roseau.load_flow.utils import LineModel, Q_
 
 logger = logging.getLogger(__name__)

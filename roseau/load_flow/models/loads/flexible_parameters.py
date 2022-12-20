@@ -1,8 +1,8 @@
 import logging
 from typing import Literal
 
-from roseau.load_flow.aliases import JsonDict
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
+from roseau.load_flow.typing import JsonDict
 from roseau.load_flow.utils.mixins import JsonMixin
 from roseau.load_flow.utils.units import ureg
 

@@ -2,8 +2,8 @@ import logging
 
 import numpy as np
 
-from roseau.load_flow.aliases import Id, JsonDict
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
+from roseau.load_flow.typing import Id, JsonDict
 from roseau.load_flow.utils import TransformerType, ureg
 from roseau.load_flow.utils.mixins import Identifiable, JsonMixin
 

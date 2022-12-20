@@ -1,7 +1,6 @@
 import logging
 from typing import TYPE_CHECKING
 
-from roseau.load_flow.aliases import Id, JsonDict
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models import (
     AbstractBranch,
@@ -16,6 +15,7 @@ from roseau.load_flow.models import (
     TransformerCharacteristics,
     VoltageSource,
 )
+from roseau.load_flow.typing import Id, JsonDict
 
 if TYPE_CHECKING:
     from roseau.load_flow.network import ElectricalNetwork

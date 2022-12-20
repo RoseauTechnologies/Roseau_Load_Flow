@@ -4,10 +4,10 @@ from typing import Any, Optional
 
 from pint import Quantity
 
-from roseau.load_flow.aliases import Id, JsonDict
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import Element
+from roseau.load_flow.typing import Id, JsonDict
 from roseau.load_flow.utils.units import ureg
 
 logger = logging.getLogger(__name__)

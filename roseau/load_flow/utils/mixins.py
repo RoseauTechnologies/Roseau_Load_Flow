@@ -2,8 +2,8 @@ import logging
 from abc import ABCMeta, abstractmethod
 from typing import Any
 
-from roseau.load_flow.aliases import Id, JsonDict
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
+from roseau.load_flow.typing import Id, JsonDict
 
 logger = logging.getLogger(__name__)
 

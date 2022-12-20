@@ -3,11 +3,11 @@ from typing import Any, Optional
 
 from shapely.geometry import Point
 
-from roseau.load_flow.aliases import Id, JsonDict
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import AbstractBranch
 from roseau.load_flow.models.transformers.transformers_characteristics import TransformerCharacteristics
+from roseau.load_flow.typing import Id, JsonDict
 from roseau.load_flow.utils import BranchType
 
 logger = logging.getLogger(__name__)

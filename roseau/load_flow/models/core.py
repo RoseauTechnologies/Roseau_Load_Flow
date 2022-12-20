@@ -7,8 +7,8 @@ import shapely.wkt
 from shapely.geometry import shape
 from shapely.geometry.base import BaseGeometry
 
-from roseau.load_flow.aliases import Id, JsonDict
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
+from roseau.load_flow.typing import Id, JsonDict
 from roseau.load_flow.utils import BranchType, ureg
 from roseau.load_flow.utils.mixins import Identifiable, JsonMixin
 
