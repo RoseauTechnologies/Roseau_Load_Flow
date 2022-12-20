@@ -693,6 +693,8 @@ class LineCharacteristics(Identifiable, JsonMixin):
         if model == LineModel.LV_EXACT:
             if not isinstance(type_id, str):
                 msg = f"The 'id' representing an LV Exact type name must be a string, got {type_id!r}"
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_ID_TYPE)
             return cls.from_lv_exact(type_id, **data)
         elif model in (LineModel.SYM_NEUTRAL, LineModel.SYM):
             return cls.from_sym(type_id, **data)
