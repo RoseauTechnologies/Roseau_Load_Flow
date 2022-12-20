@@ -39,9 +39,8 @@ MU_R = {
     ConductorType.AL: Q_(1.2566e-8, "H/m"),
     ConductorType.AM: Q_(1.2566e-8, "H/m"),
     ConductorType.AA: np.nan,  # TODO
-    ConductorType.LA: np.nan,
-}  # TODO
-
+    ConductorType.LA: np.nan,  # TODO
+}
 """Magnetic permeability (H/m)"""
 
 DELTA_P = {
@@ -49,9 +48,8 @@ DELTA_P = {
     ConductorType.AL: Q_(112, "mm"),
     ConductorType.AM: Q_(12.9, "mm"),
     ConductorType.AA: np.nan,  # TODO
-    ConductorType.LA: np.nan,
-}  # TODO
-
+    ConductorType.LA: np.nan,  # TODO
+}
 """Skin effect (mm)"""
 
 TAN_D = {

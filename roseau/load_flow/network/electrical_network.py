@@ -3,7 +3,7 @@ import logging
 import re
 from collections.abc import Sequence, Sized
 from pathlib import Path
-from typing import Any, Optional, Union
+from typing import NoReturn, Optional, Union
 from urllib.parse import urljoin
 
 import geopandas as gpd
@@ -14,6 +14,7 @@ from pyproj import CRS
 from requests import Response
 from requests.auth import HTTPBasicAuth
 
+from roseau.load_flow.aliases import Id, JsonDict, StrPath
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.io import network_from_dgs, network_from_dict, network_to_dict
 from roseau.load_flow.models import (
@@ -28,7 +29,6 @@ from roseau.load_flow.models import (
     Transformer,
     VoltageSource,
 )
-from roseau.load_flow.utils import ureg
 
 logger = logging.getLogger(__name__)
 
@@ -56,27 +56,31 @@ class ElectricalNetwork:
     #
     def __init__(
         self,
-        buses: Union[list[Bus], dict[Any, Bus]],
-        branches: Union[list[AbstractBranch], dict[Any, AbstractBranch]],
-        loads: Union[list[AbstractLoad], dict[Any, AbstractLoad]],
-        voltage_sources: Union[list[VoltageSource], dict[Any, VoltageSource]],
+        buses: Union[list[Bus], dict[Id, Bus]],
+        branches: Union[list[AbstractBranch], dict[Id, AbstractBranch]],
+        loads: Union[list[AbstractLoad], dict[Id, AbstractLoad]],
+        voltage_sources: Union[list[VoltageSource], dict[Id, VoltageSource]],
         special_elements: list[Element],
         **kwargs,
     ) -> None:
-        """ElectricalNetwork constructor
+        """ElectricalNetwork constructor.
 
         Args:
             buses:
-                The buses of the network
+                The buses of the network. Either a list of buses or a dictionary of buses with
+                their IDs as keys.
 
             branches:
-                The branches of the network
+                The branches of the network. Either a list of branches or a dictionary of branches
+                with their IDs as keys.
 
             loads:
-                The loads of the network
+                The loads of the network. Either a list of loads or a dictionary of loads with their
+                IDs as keys.
 
             voltage_sources:
-                The voltage sources of the network
+                The voltage sources of the network. Either a list of voltage sources or a dictionary
+                of voltage sources with their IDs as keys.
 
             special_elements:
                 The other elements (special, ground...)
@@ -119,16 +123,16 @@ class ElectricalNetwork:
                 sources_dict[voltage_source.id] = voltage_source
             voltage_sources = sources_dict
 
-        self.buses: dict[Any, Bus] = buses
-        self.branches: dict[Any, AbstractBranch] = branches
-        self.loads: dict[Any, AbstractLoad] = loads
-        self.voltage_sources: dict[Any, VoltageSource] = voltage_sources
+        self.buses: dict[Id, Bus] = buses
+        self.branches: dict[Id, AbstractBranch] = branches
+        self.loads: dict[Id, AbstractLoad] = loads
+        self.voltage_sources: dict[Id, VoltageSource] = voltage_sources
         self.special_elements: list[Element] = special_elements
 
         self._check_validity(constructed=False)
         self._create_network()
         self._valid = True
-        self._results_info: dict[str, Any] = {}
+        self._results_info: JsonDict = {}
 
     def __repr__(self) -> str:
         def count_repr(__o: Sized, /, singular: str, plural: Optional[str] = None) -> str:
@@ -150,11 +154,11 @@ class ElectricalNetwork:
 
     @classmethod
     def from_element(cls, initial_bus: Bus) -> "ElectricalNetwork":
-        """ElectricalNetwork constructor. Construct the network from only one element and add the others automatically
+        """Construct the network from only one element and add the others automatically.
 
         Args:
             initial_bus:
-                Any bus of the network
+                Any bus of the network.
         """
         buses: list[Bus] = []
         branches: list[AbstractBranch] = []
@@ -188,15 +192,11 @@ class ElectricalNetwork:
         )
 
     #
-    # Methods to access the data
+    # Properties to access the data as dataframes
     #
     @property
     def buses_frame(self) -> gpd.GeoDataFrame:
-        """A property to get a geo dataframe of the buses.
-
-        Returns:
-            The geo dataframe of buses.
-        """
+        """A geo dataframe of the network buses."""
         return gpd.GeoDataFrame(
             data=pd.DataFrame.from_records(
                 data=[(bus_id, bus.phases, bus.geometry) for bus_id, bus in self.buses.items()],
@@ -209,11 +209,7 @@ class ElectricalNetwork:
 
     @property
     def branches_frame(self) -> gpd.GeoDataFrame:
-        """A property to get a geo dataframe of the branches.
-
-        Returns:
-            The geo dataframe of branches.
-        """
+        """A geo dataframe of the network branches."""
         return gpd.GeoDataFrame(
             data=pd.DataFrame.from_records(
                 data=[
@@ -237,11 +233,7 @@ class ElectricalNetwork:
 
     @property
     def loads_frame(self) -> pd.DataFrame:
-        """A property to get a dataframe of the loads.
-
-        Returns:
-            The dataframe of loads.
-        """
+        """A dataframe of the network loads."""
         return pd.DataFrame.from_records(
             data=[(load_id, load.phases, load.bus.id) for load_id, load in self.loads.items()],
             columns=["id", "phases", "bus_id"],
@@ -250,7 +242,7 @@ class ElectricalNetwork:
 
     @property
     def voltage_sources_frame(self) -> pd.DataFrame:
-        """A dataframe of the voltage sources."""
+        """A dataframe of the network voltage sources."""
         return pd.DataFrame.from_records(
             data=[(source_id, source.phases, source.bus.id) for source_id, source in self.voltage_sources.items()],
             columns=["id", "phases", "bus_id"],
@@ -267,8 +259,10 @@ class ElectricalNetwork:
         precision: float = DEFAULT_PRECISION,
         max_iterations: int = DEFAULT_MAX_ITERATIONS,
     ) -> int:
-        """Execute a newton algorithm for load flow calculation. In order to get the results of the load flow, please
-        use the `results` method or call the elements directly.
+        """Solve the load flow for this network.
+
+        Execute a newton algorithm for load flow calculation. In order to get the results of the
+        load flow, please use the `results` method or call the elements directly.
 
         Args:
             auth:
@@ -278,13 +272,13 @@ class ElectricalNetwork:
                 The base url to request the load flow solver.
 
             precision:
-                Precision needed for the convergence
+                Precision needed for the convergence.
 
             max_iterations:
-                The maximum number of allowed iterations
+                The maximum number of allowed iterations.
 
         Returns:
-            The number of iterations taken
+            The number of iterations taken.
         """
         if not self._valid:
             self._check_validity(constructed=True)
@@ -309,7 +303,7 @@ class ElectricalNetwork:
             self._parse_error(response=response)
 
         # HTTP 200
-        result_dict: dict[str, Any] = response.json()
+        result_dict: JsonDict = response.json()
         info = result_dict["info"]
         if info["status"] != "success":
             msg = (
@@ -329,12 +323,12 @@ class ElectricalNetwork:
         return info["iterations"]
 
     @staticmethod
-    def _parse_error(response: Response):
+    def _parse_error(response: Response) -> NoReturn:
         """Parse a response when its status is not "ok".
 
         Args:
             response:
-                The response to parse
+                The response to parse.
         """
         content_type = response.headers.get("content-type", None)
         code = RoseauLoadFlowExceptionCode.BAD_REQUEST
@@ -343,7 +337,7 @@ class ElectricalNetwork:
         else:
             msg = f"There is a problem in the request. Error code {response.status_code}."
             if content_type == "application/json":
-                result_dict: dict[str, Any] = response.json()
+                result_dict: JsonDict = response.json()
                 if "msg" in result_dict and "code" in result_dict:
                     # If we have a valid Roseau Load Flow Exception, raise it
                     try:
@@ -361,7 +355,7 @@ class ElectricalNetwork:
         logger.error(msg=msg)
         raise RoseauLoadFlowException(msg=msg, code=code)
 
-    def _dispatch_results(self, result_dict: dict[str, Any]) -> None:
+    def _dispatch_results(self, result_dict: JsonDict) -> None:
         """Dispatch the results to all the elements of the network.
 
         Args:
@@ -403,21 +397,8 @@ class ElectricalNetwork:
         return np.array([complex(*value[t + p]) for p in phases])
 
     #
-    # Getter for the load flow results
+    # Getters for the load flow results
     #
-    @ureg.wraps("V", (None, None), strict=False)
-    def bus_potentials(self, id: Any) -> np.ndarray:
-        """Compute the potential of a bus
-
-        Args:
-            id:
-                The id of the bus
-
-        Returns:
-            The complex value of the bus potential
-        """
-        return self.buses[id].potentials
-
     @property
     def buses_potentials(self) -> pd.DataFrame:
         """Get the potentials of buses after a load flow has been solved.
@@ -458,20 +439,20 @@ class ElectricalNetwork:
             >>> net.buses_voltages()
                                              voltage
             bus_id phase
-            vs     an     200000000000.0+0.00000000j
+            s_bus  an     200000000000.0+0.00000000j
                    bn    -10000.000000-17320.508076j
                    cn    -10000.000000+17320.508076j
-            bus    an     19999.00000095+0.00000000j
+            l_bus  an     19999.00000095+0.00000000j
                    bn     -9999.975000-17320.464775j
                    cn     -9999.975000+17320.464775j
 
             >>> net.buses_voltages(as_magnitude_angle=True)
                           voltage_magnitude  voltage_angle
             bus_id phase
-            vs     an              20000.00            0.0
+            s_bus  an              20000.00            0.0
                    bn              20000.00         -120.0
                    cn              20000.00          120.0
-            bus    an              19999.95            0.0
+            l_bus  an              19999.95            0.0
                    bn              19999.95         -120.0
                    cn              19999.95          120.0
 
@@ -482,10 +463,10 @@ class ElectricalNetwork:
             >>> voltage_symmetrical = series_phasor_to_sym(voltage_series)
             >>> voltage_symmetrical
             bus_id  sequence
-            bus     zero        3.183231e-12-9.094947e-13j
+            l_bus   zero        3.183231e-12-9.094947e-13j
                     pos         1.999995e+04+3.283594e-12j
                     neg        -1.796870e-07-2.728484e-12j
-            vs      zero        5.002221e-12-9.094947e-13j
+            s_bus   zero        5.002221e-12-9.094947e-13j
                     pos         2.000000e+04+3.283596e-12j
                     neg        -1.796880e-07-1.818989e-12j
             Name: voltage, dtype: complex128
@@ -494,8 +475,8 @@ class ElectricalNetwork:
 
             >>> voltage_symmetrical.loc[:, "pos"]
             bus_id
-            bus    19999.95+0.00j
-            vs     200000.0+0.00j
+            l_bus  19999.95+0.00j
+            s_bus  200000.0+0.00j
             Name: voltage, dtype: complex128
         """
         voltages_dict = {"bus_id": [], "phase": [], "voltage": []}
@@ -515,19 +496,6 @@ class ElectricalNetwork:
             voltages_df["voltage_angle"] = np.angle(voltages_df["voltage"], deg=True)
             voltages_df.drop(columns=["voltage"], inplace=True)
         return voltages_df
-
-    @ureg.wraps(("A", "A"), (None, None), strict=False)
-    def branch_currents(self, id: Any) -> tuple[np.ndarray, np.ndarray]:
-        """Compute the current of a branch
-
-        Args:
-            id:
-                The name of the branch
-
-        Returns:
-            The complex value of the branch current
-        """
-        return self.branches[id].currents
 
     @property
     def branches_currents(self) -> pd.DataFrame:
@@ -557,19 +525,6 @@ class ElectricalNetwork:
             .dropna(how="all")  # if all values are nan -> drop the row (the phase does not exist)
         )
         return currents_df
-
-    @ureg.wraps("A", (None, None), strict=False)
-    def load_currents(self, id: Any) -> np.ndarray:
-        """Compute the currents of a load
-
-        Args:
-            id:
-                The id of the load
-
-        Returns:
-            The complex value of the branch current
-        """
-        return self.loads[id].currents
 
     @property
     def loads_currents(self) -> pd.DataFrame:
@@ -617,40 +572,44 @@ class ElectricalNetwork:
     #
     # Set the dynamic parameters.
     #
-    def set_load_point(self, load_point: dict[Any, Sequence[complex]]) -> None:
-        """Set a new load point to the network
+    def set_load_point(self, load_point: dict[Id, Sequence[complex]]) -> None:
+        """Set a new load point to the network.
 
         Args:
             load_point:
-                The new load point
+                The new load points to set indexed by the load id.
         """
         for load_id, value in load_point.items():
             load = self.loads[load_id]
             if isinstance(load, PowerLoad) or isinstance(load, FlexibleLoad):
                 load.update_powers(value)
             else:
-                msg = "Only power loads can be updated yet..."
+                msg = "Only power loads can be updated for now..."
                 logger.error(msg)
                 raise NotImplementedError(msg)
 
-    def set_source_voltages(self, voltages: dict[Any, Sequence[complex]]) -> None:
+    def set_source_voltages(self, voltages: dict[Id, Sequence[complex]]) -> None:
         """Set new voltages for the voltage source(s).
 
         Args:
             voltages:
-                A dictionary voltage_source_id -> voltages to update.
+                The new voltages to set indexed by the voltage source id.
         """
         for vs_id, value in voltages.items():
             voltage_source = self.voltage_sources[vs_id]
             voltage_source.update_voltages(value)
 
     def add_element(self, element: Element) -> None:
-        """Add an element to the network (the C++ electrical network and the tape will be recomputed).
+        """Add an element to the network.
+
+        When an element is added to the network, extra processing is done to keep the network
+        valid. Always use this method to add new elements to the network after creating it.
 
         Args:
             element:
-                The element to add.
+                The element to add. Only lines, loads, buses and voltage sources can be added.
         """
+        # The C++ electrical network and the tape will be recomputed
         if isinstance(element, Bus):
             self.buses[element.id] = element
         elif isinstance(element, AbstractLoad):
@@ -665,47 +624,49 @@ class ElectricalNetwork:
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT)
         self._valid = False
 
-    def remove_element(self, id: Any) -> None:
-        """Remove an element of the network (the C++ electrical network and the tape will be recomputed).
+    def remove_element(self, element: Element) -> None:
+        """Remove an element of the network.
+
+        When an element is removed from the network, extra processing is needed to keep the network
+        valid. Always use this method to remove an element from the network.
 
         Args:
-            id:
-                The id of the element to remove.
+            element:
+                The element to remove.
         """
-        if id in self.buses:
-            bus = self.buses.pop(id)
-            bus.disconnect()
-        elif id in self.loads:
-            load = self.loads.pop(id)
-            load.disconnect()
-        elif id in self.voltage_sources:
-            source = self.voltage_sources.pop(id)
-            source.disconnect()
-        elif id in self.branches:
-            branch = self.branches.pop(id)
-            branch.disconnect()
+        # The C++ electrical network and the tape will be recomputed
+        if isinstance(element, Bus):
+            self.buses.pop(element.id).disconnect()
+        elif isinstance(element, AbstractLoad):
+            self.loads.pop(element.id).disconnect()
+        elif isinstance(element, VoltageSource):
+            self.voltage_sources.pop(element.id).disconnect()
+        elif isinstance(element, AbstractBranch):
+            self.branches.pop(element.id).disconnect()
         else:
-            msg = f"{id!r} is not a valid bus, branch, load or voltage source id."
+            msg = f"{element!r} is not a valid bus, branch, load or voltage source."
             logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_ELEMENT_ID)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT)
         self._valid = False
 
     def _create_network(self) -> None:
-        """Create the Cython and C++ electrical network of all the passed elements"""
+        """Create the Cython and C++ electrical network of all the passed elements."""
         self._valid = True
 
     def _check_validity(self, constructed: bool) -> None:
-        """Check the validity of the network to avoid having a singular jacobian matrix
+        """Check the validity of the network to avoid having a singular jacobian matrix.
 
         Args:
             constructed:
-                True if the network is already constructed and we have added an element, False otherwise
+                True if the network is already constructed and we have added an element, False
+                otherwise.
         """
-        elements: list[Element] = list(self.buses.values())
-        elements += list(self.branches.values())
-        elements += list(self.loads.values())
-        elements += list(self.voltage_sources.values())
-        elements += self.special_elements
+        elements: list[Element] = []
+        elements.extend(self.buses.values())
+        elements.extend(self.branches.values())
+        elements.extend(self.loads.values())
+        elements.extend(self.voltage_sources.values())
+        elements.extend(self.special_elements)
 
         for element in elements:
             for adj_element in element.connected_elements:
@@ -745,7 +706,7 @@ class ElectricalNetwork:
 
     @staticmethod
     def _check_ref(elements: list[Element]) -> None:
-        """Check the number of potential references to avoid having a singular jacobian matrix"""
+        """Check the number of potential references to avoid having a singular jacobian matrix."""
         visited_elements: list[Element] = []
         for initial_element in elements:
             if initial_element in visited_elements or isinstance(initial_element, Transformer):
@@ -785,8 +746,8 @@ class ElectricalNetwork:
     # Json Mixin interface
     #
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "ElectricalNetwork":
-        """ElectricalNetwork constructor from dict.
+    def from_dict(cls, data: JsonDict) -> "ElectricalNetwork":
+        """Construct an electrical network from a dict created with ``ElectricalNetwork(...).to_dict()``.
 
         Args:
             data:
@@ -795,42 +756,34 @@ class ElectricalNetwork:
         Returns:
             The constructed network.
         """
-        buses_dict, branches_dict, loads_dict, sources_dict, special_elements = network_from_dict(
-            data=data, en_class=cls
-        )
+        buses, branches, loads, sources, special_elements = network_from_dict(data=data, en_class=cls)
         return cls(
-            buses=buses_dict,
-            branches=branches_dict,
-            loads=loads_dict,
-            voltage_sources=sources_dict,
+            buses=buses,
+            branches=branches,
+            loads=loads,
+            voltage_sources=sources,
             special_elements=special_elements,
         )
 
     @classmethod
-    def from_json(cls, path: Union[str, Path]) -> "ElectricalNetwork":
-        """ElectricalNetwork constructor from json.
+    def from_json(cls, path: StrPath) -> "ElectricalNetwork":
+        """Construct an electrical network from a json file.
 
         Args:
             path:
-                The path to the network data.
+                The path to the network data file.
 
         Returns:
             The constructed network.
         """
-        if not isinstance(path, Path):
-            path = Path(path)
-        data = json.loads(path.read_text())
+        data = json.loads(Path(path).read_text())
         return cls.from_dict(data=data)
 
-    def to_dict(self) -> dict[str, Any]:
-        """Return a dictionary of the current network data.
-
-        Returns:
-            The created dictionary.
-        """
+    def to_dict(self) -> JsonDict:
+        """Convert the electrical network to a dictionary."""
         return network_to_dict(self)
 
-    def to_json(self, path: Union[str, Path]) -> None:
+    def to_json(self, path: StrPath) -> None:
         """Save the current network to a json file.
 
         Args:
@@ -840,20 +793,14 @@ class ElectricalNetwork:
         res = self.to_dict()
         output = json.dumps(res, ensure_ascii=False, indent=4)
         output = re.sub(r"\[\s+(.*),\s+(.*)\s+]", r"[\1, \2]", output)
-        if not isinstance(path, Path):
-            path = Path(path)
-        path.write_text(output)
+        Path(path).write_text(output)
 
     #
     # Output of results
     #
-    def results_to_dict(self) -> dict[str, Any]:
-        """Get the voltages and currents computed by the load flow and return them as dict.
-
-        Returns:
-            The dictionary of the voltages of the buses, and the dictionary of the current flowing through the branches.
-        """
-        buses_results: list[dict[str, Any]] = []
+    def results_to_dict(self) -> JsonDict:
+        """Get the voltages and currents computed by the load flow and return them as a dict."""
+        buses_results: list[JsonDict] = []
         for bus_id, bus in self.buses.items():
             potentials_dict = {
                 f"v{phase}": [potential.real.magnitude, potential.imag.magnitude]
@@ -861,7 +808,7 @@ class ElectricalNetwork:
             }
             buses_results.append({"id": bus_id, "potentials": potentials_dict})
 
-        branches_results: list[dict[str, Any]] = []
+        branches_results: list[JsonDict] = []
         for branch_id, branch in self.branches.items():
             currents1, currents2 = branch.currents
             currents_dict1 = {
@@ -874,7 +821,7 @@ class ElectricalNetwork:
             }
             branches_results.append({"id": branch_id, "currents1": currents_dict1, "currents2": currents_dict2})
 
-        loads_results: list[dict[str, Any]] = []
+        loads_results: list[JsonDict] = []
         for load_id, load in self.loads.items():
             currents_dict = {
                 f"i{phase}": [current.real.magnitude, current.imag.magnitude]
@@ -896,19 +843,20 @@ class ElectricalNetwork:
             "loads": loads_results,
         }
 
-    def results_to_json(self, path: Union[str, Path]) -> Path:
-        """Write a json containing the voltages and currents results.
+    def results_to_json(self, path: StrPath) -> Path:
+        """Write the results of the load flow to a json file.
+
+        .. warning::
+            If the file exists, it will be overwritten.
 
         Args:
             path:
-                The path to write the json.
+                The path to the json file.
 
         Returns:
-            The path it has been written in.
+            The resolved and normalized path of the written file.
         """
-        if isinstance(path, str):
-            path = Path(path).expanduser().resolve()
-
+        path = Path(path).expanduser().resolve()
         dict_results = self.results_to_dict()
         output = json.dumps(dict_results, indent=4)
         output = re.sub(r"\[\s+(.*),\s+(.*)\s+]", r"[\1, \2]", output)
@@ -919,21 +867,21 @@ class ElectricalNetwork:
     # DGS interface
     #
     @classmethod
-    def from_dgs(cls, path: Union[str, Path]) -> "ElectricalNetwork":
-        """ElectricalNetwork constructor from json dgs file (PowerFactory).
+    def from_dgs(cls, path: StrPath) -> "ElectricalNetwork":
+        """Construct an electrical network from json DGS file (PowerFactory).
 
         Args:
             path:
-                The path to the network data.
+                The path to the network DGS data file.
 
         Returns:
             The constructed network.
         """
-        buses_dict, branches_dict, loads_dict, sources_dict, special_elements = network_from_dgs(filename=path)
+        buses, branches, loads, sources, special_elements = network_from_dgs(filename=path)
         return cls(
-            buses=buses_dict,
-            branches=branches_dict,
-            loads=loads_dict,
-            voltage_sources=sources_dict,
+            buses=buses,
+            branches=branches,
+            loads=loads,
+            voltage_sources=sources,
             special_elements=special_elements,
         )

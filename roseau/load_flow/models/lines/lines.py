@@ -5,13 +5,13 @@ from pint import Quantity
 from shapely.geometry import LineString, Point
 from shapely.geometry.base import BaseGeometry
 
+from roseau.load_flow.aliases import Id, JsonDict
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import AbstractBranch, Ground
 from roseau.load_flow.models.lines.line_characteristics import LineCharacteristics
 from roseau.load_flow.models.voltage_sources import VoltageSource
-from roseau.load_flow.utils.types import BranchType
-from roseau.load_flow.utils.units import ureg
+from roseau.load_flow.utils import BranchType, ureg
 
 logger = logging.getLogger(__name__)
 
@@ -24,13 +24,20 @@ class Switch(AbstractBranch):
     allowed_phases = frozenset(Bus.allowed_phases | {"a", "b", "c", "n"})
 
     def __init__(
-        self, id: Any, bus1: Bus, bus2: Bus, *, phases: Optional[str] = None, geometry: Optional[Point] = None, **kwargs
+        self,
+        id: Id,
+        bus1: Bus,
+        bus2: Bus,
+        *,
+        phases: Optional[str] = None,
+        geometry: Optional[Point] = None,
+        **kwargs: Any,
     ) -> None:
         """Switch constructor.
 
         Args:
             id:
-                The id of the branch.
+                A unique ID of the switch in the network branches.
 
             bus1:
                 Bus to connect to the switch.
@@ -70,7 +77,7 @@ class Switch(AbstractBranch):
         self._check_elements()
         self._check_loop()
 
-    def _check_loop(self):
+    def _check_loop(self) -> None:
         """Check that there are no switch loop, raise an exception if it is the case"""
         visited_1 = set()
         elements = [self.connected_elements[0]]
@@ -93,18 +100,18 @@ class Switch(AbstractBranch):
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.SWITCHES_LOOP)
 
-    def _check_elements(self):
+    def _check_elements(self) -> None:
         """Check that we can connect both elements."""
-        element1 = self.connected_elements[0]
-        element2 = self.connected_elements[1]
+        e1 = self.connected_elements[0]
+        e2 = self.connected_elements[1]
         if (
-            isinstance(element1, Bus)
-            and any(isinstance(e, VoltageSource) for e in element1.connected_elements)
-            and isinstance(element2, Bus)
-            and any(isinstance(e, VoltageSource) for e in element2.connected_elements)
+            isinstance(e1, Bus)
+            and any(isinstance(e, VoltageSource) for e in e1.connected_elements)
+            and isinstance(e2, Bus)
+            and any(isinstance(e, VoltageSource) for e in e2.connected_elements)
         ):
-            msg = (  # TODO: Fix this message to say "The two source buses ..."
-                f"The voltage sources {element1.id!r} and {element2.id!r} are "
+            msg = (
+                f"The buses {e1.id!r} and {e2.id!r} both have a voltage source and are "
                 f"connected with the switch {self.id!r}. It is not allowed."
             )
             logger.error(msg)
@@ -144,7 +151,7 @@ class Line(AbstractBranch):
 
     def __init__(
         self,
-        id: Any,
+        id: Id,
         bus1: Bus,
         bus2: Bus,
         *,
@@ -153,13 +160,13 @@ class Line(AbstractBranch):
         phases: Optional[str] = None,
         ground: Optional[Ground] = None,
         geometry: Optional[LineString] = None,
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> None:
         """Line constructor.
 
         Args:
             id:
-                The id of the line.
+                A unique ID of the line in the network branches.
 
             bus1:
                 The first bus (aka `"from_bus"`) to connect to the line.
@@ -213,7 +220,7 @@ class Line(AbstractBranch):
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Z_LINE_SHAPE)
 
-        super().__init__(id=id, phases1=phases, phases2=phases, bus1=bus1, bus2=bus2, geometry=geometry, **kwargs)
+        super().__init__(id, bus1, bus2, phases1=phases, phases2=phases, geometry=geometry, **kwargs)
 
         if line_characteristics.y_shunt is not None:
             if line_characteristics.y_shunt.shape != line_dimensions:
@@ -228,8 +235,7 @@ class Line(AbstractBranch):
                 msg = f"The ground element must be provided for line {id!r} with shunt admittance."
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_TYPE)
-            self.connected_elements.append(ground)
-            ground.connected_elements.append(self)
+            self.connect(ground)
 
         self.phases = phases
         self.line_characteristics = line_characteristics
@@ -247,24 +253,21 @@ class Line(AbstractBranch):
                 The line characteristics of the new line parameters.
         """
         self.line_characteristics = line_characteristics
-        if self.line_characteristics.y_shunt is not None:
-            if self.ground is not None and self.ground not in self.connected_elements:
-                self.connected_elements.append(self.ground)
-                self.ground.connected_elements.append(self)
+        if self.line_characteristics.y_shunt is not None and self.ground is not None:
+            self.connect(self.ground)  # handles already connected case
 
     #
     # Json Mixin interface
     #
     @classmethod
-    @ureg.wraps(None, (None, None, None, None, "km", None, None, None, None, None), strict=False)
+    @ureg.wraps(None, (None, None, None, None, "km", None, None, None, None), strict=False)
     def from_dict(
         cls,
-        id: Any,
+        id: Id,
         bus1: Bus,
         bus2: Bus,
         length: float,
-        line_types: dict[str, LineCharacteristics],
-        type_name: str,
+        line_type: LineCharacteristics,
         phases: Optional[str] = None,
         ground: Optional[Ground] = None,
         geometry: Optional[BaseGeometry] = None,
@@ -273,22 +276,19 @@ class Line(AbstractBranch):
 
         Args:
             id:
-                The id of the created line.
+                A unique ID of the line in the network branches.
 
             bus1:
-                Bus to connect to the line.
+                The first bus to connect to the line.
 
             bus2:
-                Bus to connect to the line.
+                The second bus to connect to the line.
 
             length:
                 Length of the line (km).
 
-            line_types:
-                A dictionary of line characteristics by type name.
-
-            type_name:
-                The name of the line type
+            line_type:
+                The line characteristics.
 
             ground:
                 The ground (optional for line models without a shunt admittance).
@@ -303,16 +303,15 @@ class Line(AbstractBranch):
             id=id,
             bus1=bus1,
             bus2=bus2,
-            line_characteristics=line_types[type_name],
+            line_characteristics=line_type,
             length=length,
             phases=phases,
             ground=ground,
             geometry=geometry,
         )
 
-    def to_dict(self) -> dict[str, Any]:
-        return {
-            **super().to_dict(),
-            "length": self.length,
-            "type_name": self.line_characteristics.type_name,
-        }
+    def to_dict(self) -> JsonDict:
+        res = {**super().to_dict(), "length": self.length, "type_id": self.line_characteristics.id}
+        if self.ground is not None:
+            res["ground"] = self.ground.id
+        return res

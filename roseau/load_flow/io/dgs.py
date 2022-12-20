@@ -1,11 +1,10 @@
 import json
 import logging
-from pathlib import Path
-from typing import Union
 
 import numpy as np
 import pandas as pd
 
+from roseau.load_flow.aliases import StrPath
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models import (
     AbstractBranch,
@@ -28,7 +27,7 @@ logger = logging.getLogger(__name__)
 
 
 def network_from_dgs(  # noqa: C901
-    filename: Union[str, Path]
+    filename: StrPath,
 ) -> tuple[dict[str, Bus], dict[str, AbstractBranch], dict[str, AbstractLoad], dict[str, VoltageSource], list[Element]]:
     """Create the electrical elements from a JSON file in DGS format to create an electrical network.
 
@@ -55,8 +54,8 @@ def network_from_dgs(  # noqa: C901
     ) = _read_dgs_json_file(filename=filename)
 
     # Ground and special elements
-    ground = Ground()
-    p_ref = PotentialRef(ground)
+    ground = Ground("ground")
+    p_ref = PotentialRef("pref", element=ground)
 
     # Buses
     buses: dict[str, Bus] = {}
@@ -83,8 +82,7 @@ def network_from_dgs(  # noqa: C901
         source_bus = buses[bus_id]
 
         sources[source_id] = VoltageSource(id=source_id, phases="abcn", bus=source_bus, voltages=voltages)
-        ground.connected_elements.append(source_bus)
-        source_bus.connected_elements.append(ground)
+        source_bus.connect(ground)
 
     # LV loads
     loads: dict[str, AbstractLoad] = {}
@@ -119,7 +117,7 @@ def network_from_dgs(  # noqa: C901
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DGS_BAD_PHASE_NUMBER)
 
             line_types[type_id] = LineCharacteristics.from_sym(
-                type_name=type_id,
+                type_id,
                 r0=typ_lne.at[type_id, "rline0"],
                 model=line_model,
                 r1=typ_lne.at[type_id, "rline"],
@@ -144,8 +142,7 @@ def network_from_dgs(  # noqa: C901
                 bus1=buses[sta_cubic.at[elm_lne.at[line_id, "bus1"], "cterm"]],
                 bus2=buses[sta_cubic.at[elm_lne.at[line_id, "bus2"], "cterm"]],
                 length=elm_lne.at[line_id, "dline"],
-                line_types=line_types,
-                type_name=type_id,
+                line_type=line_types[type_id],
                 ground=ground,
             )
 
@@ -164,12 +161,12 @@ def network_from_dgs(  # noqa: C901
             p0 = typ_tr.at[idx, "pfe"] * 1e3 / 3  # Losses during off-load test (kW -> W)
             psc = typ_tr.at[idx, "pcutr"] * 1e3  # Losses during short circuit test (kW -> W)
             vsc = typ_tr.at[idx, "uktr"] / 100  # Voltages on LV side during short circuit test (%)
-            type_name = "{}{}{}".format(  # Winding of the transformer
+            windings = "{}{}{}".format(  # Windings of the transformer
                 typ_tr.at[idx, "tr2cn_h"], typ_tr.at[idx, "tr2cn_l"], typ_tr.at[idx, "nt2ag"]
             )
 
             # Generate transformer parameters
-            transformers_data[idx] = TransformerCharacteristics(name, type_name, uhv, ulv, sn, p0, i0, psc, vsc)
+            transformers_data[idx] = TransformerCharacteristics(name, windings, uhv, ulv, sn, p0, i0, psc, vsc)
             transformers_tap[idx] = typ_tr.at[idx, "dutap"]
 
         # Create transformers
@@ -178,13 +175,12 @@ def network_from_dgs(  # noqa: C901
             tap = 1.0 + elm_tr.at[idx, "nntap"] * transformers_tap[type_id] / 100
             branches[idx] = Transformer.from_dict(
                 id=idx,
-                transformer_types=transformers_data,
-                type_name=type_id,
                 bus1=buses[sta_cubic.at[elm_tr.at[idx, "bushv"], "cterm"]],
                 bus2=buses[sta_cubic.at[elm_tr.at[idx, "buslv"], "cterm"]],
+                transformer_type=transformers_data[type_id],
                 tap=tap,
             )
-            ground.connect(bus=buses[sta_cubic.at[elm_tr.at[idx, "buslv"], "cterm"]])
+            ground.connect_to_bus(bus=buses[sta_cubic.at[elm_tr.at[idx, "buslv"], "cterm"]])
 
     # Create switches
     if elm_coup is not None:
@@ -201,7 +197,7 @@ def network_from_dgs(  # noqa: C901
     return buses, branches, loads, sources, [p_ref, ground]
 
 
-def _read_dgs_json_file(filename: Union[str, Path]):
+def _read_dgs_json_file(filename: StrPath):
     """Read a JSON file in DGS format.
 
     Args:
@@ -319,7 +315,7 @@ def _generate_loads(
     sta_cubic: pd.DataFrame,
     factor: float,
     production: bool,
-):
+) -> None:
     """Generate the loads of a given dataframe.
 
     Args:

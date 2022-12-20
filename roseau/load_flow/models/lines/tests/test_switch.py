@@ -40,9 +40,11 @@ def test_switch_loop():
 
 
 def test_switch_connection():
-    ground = Ground()
-    bus1 = Bus("bus1", phases="abcn", ground=ground)
-    bus2 = Bus("bus2", phases="abcn", ground=ground)
+    ground = Ground("ground")
+    bus1 = Bus("bus1", phases="abcn")
+    bus2 = Bus("bus2", phases="abcn")
+    ground.connect_to_bus(bus1)
+    ground.connect_to_bus(bus2)
     VoltageSource("vs1", bus1, voltages=[230 + 0j, -115 + 200j, 115 - 200j], phases="abcn")
     VoltageSource("vs2", bus2, voltages=[230 + 0j, -115 + 200j, 115 - 200j], phases="abcn")
     with pytest.raises(RoseauLoadFlowException) as e:

@@ -10,6 +10,7 @@
         "asarray",
         "astype",
         "cython",
+        "dropna",
         "dtype",
         "htmlcov",
         "isort",

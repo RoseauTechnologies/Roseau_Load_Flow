@@ -4,16 +4,16 @@ from typing import Any, Optional
 
 from pint import Quantity
 
+from roseau.load_flow.aliases import Id, JsonDict
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import Element
-from roseau.load_flow.utils.json_mixin import JsonMixin
 from roseau.load_flow.utils.units import ureg
 
 logger = logging.getLogger(__name__)
 
 
-class VoltageSource(Element, JsonMixin):
+class VoltageSource(Element):
     r"""A voltage source.
 
     The voltage equations are the following:
@@ -29,13 +29,13 @@ class VoltageSource(Element, JsonMixin):
     allowed_phases = Bus.allowed_phases
 
     def __init__(
-        self, id: Any, bus: Bus, *, voltages: Sequence[complex], phases: Optional[str] = None, **kwargs
+        self, id: Id, bus: Bus, *, voltages: Sequence[complex], phases: Optional[str] = None, **kwargs: Any
     ) -> None:
         """Voltage source constructor.
 
         Args:
             id:
-                The unique ID of the voltage source.
+                A unique ID of the voltage source in the network sources.
 
             bus:
                 The bus of the voltage source.
@@ -49,10 +49,8 @@ class VoltageSource(Element, JsonMixin):
                 :attr:`allowed_phases`. All phases of the source, except ``"n"``, must be present in
                 the phases of the connected bus. By default, the phases of the bus are used.
         """
-        super().__init__(**kwargs)
-        self.connected_elements = [bus]
-        bus.connected_elements.append(self)
-        self.id = id
+        super().__init__(id, **kwargs)
+        self.connect(bus)
 
         if phases is None:
             phases = bus.phases
@@ -105,13 +103,13 @@ class VoltageSource(Element, JsonMixin):
     # Json Mixin interface
     #
     @classmethod
-    def from_dict(cls, data: dict[str, Any], bus: Bus) -> "VoltageSource":
+    def from_dict(cls, data: JsonDict, bus: Bus) -> "VoltageSource":
         v: dict[str, list[str]] = data["voltages"]
         phases: str = data["phases"]
         voltages = [complex(*v[f"v{ph}"]) for ph in phases.removesuffix("n")]
         return cls(data["id"], bus, voltages=voltages, phases=phases)
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> JsonDict:
         return {
             "id": self.id,
             "phases": self.phases,
