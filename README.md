@@ -48,11 +48,12 @@ from roseau.load_flow import (
 )
 
 # Create a main bus and a voltage source
-ground = Ground()  # A ground connection
-p_ref = PotentialRef(element=ground)  # A potential reference
+ground = Ground("ground")  # A ground connection
+p_ref = PotentialRef("pref", element=ground)  # A potential reference
 vn = 400 / np.sqrt(3)
 voltages = [vn, vn * np.exp(-2 / 3 * np.pi * 1j), vn * np.exp(2 / 3 * np.pi * 1j)]
-source_bus = Bus(id="source bus", phases="abcn", ground=ground)
+source_bus = Bus(id="source bus", phases="abcn")
+ground.connect(source_bus)
 vs = VoltageSource(id="source", phases="abcn", bus=source_bus, voltages=voltages)
 
 # Create a load bus and a load
@@ -60,7 +61,7 @@ load_bus = Bus(id="load bus", phases="abcn")
 load = PowerLoad(id="power load", phases="abcn", bus=load_bus, s=[100 + 0j, 100 + 0j, 100 + 0j])
 
 # Create a line between the two buses
-line_characteristics = LineCharacteristics(type_name="test", z_line=np.eye(4, dtype=complex))
+line_characteristics = LineCharacteristics("test", z_line=np.eye(4, dtype=complex))
 line = Line(
     id="line",
     phases="abcn",

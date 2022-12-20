@@ -1,21 +1,22 @@
 import logging
-from typing import Any
 
 import numpy as np
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
+from roseau.load_flow.typing import Id, JsonDict
 from roseau.load_flow.utils import TransformerType, ureg
+from roseau.load_flow.utils.mixins import Identifiable, JsonMixin
 
 logger = logging.getLogger(__name__)
 
 
-class TransformerCharacteristics:
+class TransformerCharacteristics(Identifiable, JsonMixin):
     """A class to store the characteristics of the transformers."""
 
     @ureg.wraps(None, (None, None, None, "V", "V", "VA", "W", None, "W", None), strict=False)
     def __init__(
         self,
-        type_name: str,
+        id: Id,
         windings: str,
         uhv: float,
         ulv: float,
@@ -24,12 +25,12 @@ class TransformerCharacteristics:
         i0: float,
         psc: float,
         vsc: float,
-    ):
+    ) -> None:
         """TransformerCharacteristics constructor.
 
         Args:
-            type_name:
-                The name of the transformer type
+            id:
+                A unique ID of the transformer characteristics, typically its canonical name.
 
             windings:
                 The type of windings such as "Dyn11"
@@ -55,7 +56,7 @@ class TransformerCharacteristics:
             vsc:
                 Voltages on LV side during short circuit test (%)
         """
-        self.type_name = type_name
+        super().__init__(id)
         self.sn = sn
         self.uhv = uhv
         self.ulv = ulv
@@ -69,32 +70,32 @@ class TransformerCharacteristics:
         # Check
         if uhv <= ulv:
             msg = (
-                f"The transformer type {type_name!r} has a high voltages lower or equal than the low voltages: uhv="
-                f"{uhv:.2f} V and ulv={ulv:.2f} V"
+                f"Transformer type {id!r} has the low voltages higher than the high voltages: "
+                f"uhv={uhv:.2f} V and ulv={ulv:.2f} V."
             )
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_VOLTAGES)
         if i0 > 1.0 or i0 < 0.0:
             msg = (
-                f"The transformer type {type_name!r} has a current during off-load test i0={i0}. It is a percentage "
-                f"that should be between 0 and 1."
+                f"Transformer type {id!r} has the 'current during off-load test' i0={i0}. It is a "
+                f"percentage that should be between 0 and 1."
             )
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_PARAMETERS)
         if vsc > 1.0 or vsc < 0.0:
             msg = (
-                f"The transformer type {type_name!r} has a voltages on LV side during short circuit test vsc={vsc}. "
-                f"It is a percentage that should be between 0 and 1."
+                f"Transformer type {id!r} has the 'voltages on LV side during short circuit test' "
+                f"vsc={vsc}. It is a percentage that should be between 0 and 1."
             )
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_PARAMETERS)
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, TransformerCharacteristics):
             return NotImplemented
         else:
             return (
-                self.type_name == other.type_name
+                self.id == other.id
                 and self.windings == other.windings
                 and np.isclose(self.sn, other.sn)
                 and np.isclose(self.p0, other.p0)
@@ -107,14 +108,14 @@ class TransformerCharacteristics:
 
     @classmethod
     def from_name(cls, name: str, windings: str) -> "TransformerCharacteristics":
-        """TransformerCharacteristics constructor from name.
+        """Construct TransformerCharacteristics from name and windings.
 
         Args:
             name:
-                The name of the transformer characteristics, such as "160kVA" or "H61_50kVA".
+                The name of the transformer characteristics, such as `"160kVA"` or `"H61_50kVA"`.
 
             windings:
-                The type of windings such as "Dyn11".
+                The type of windings such as `"Dyn11"`.
 
         Returns:
             The constructed transformer characteristics.
@@ -136,28 +137,22 @@ class TransformerCharacteristics:
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TYPE_NAME_SYNTAX)
 
     @classmethod
-    def from_dict(cls, characteristics: dict[str, Any]):
-        """Dict constructor
+    def from_dict(cls, data: JsonDict) -> "TransformerCharacteristics":
+        return cls(
+            id=data["id"],
+            windings=data["type"],  # Windings of the transformer
+            uhv=data["uhv"],  # Phase-to-phase nominal voltages of the high voltages side (V)
+            ulv=data["ulv"],  # Phase-to-phase nominal voltages of the low voltages side (V)
+            sn=data["sn"],
+            p0=data["p0"],  # Losses during off-load test (W)
+            i0=data["i0"],
+            psc=data["psc"],  # Losses during short circuit test (W)
+            vsc=data["vsc"],
+        )
 
-        Args:
-            characteristics:
-                A dictionary of the characteristics of the transformer
-        """
-        type_name = characteristics["name"]
-        sn = characteristics["sn"]
-        uhv = characteristics["uhv"]  # Phase-to-phase nominal voltages of the high voltages side (V)
-        ulv = characteristics["ulv"]  # Phase-to-phase nominal voltages of the low voltages side (V)
-        i0 = characteristics["i0"]
-        p0 = characteristics["p0"]  # Losses during off-load test (W)
-        psc = characteristics["psc"]  # Losses during short circuit test (W)
-        vsc = characteristics["vsc"]
-        windings = characteristics["type"]  # Winding of the transformer
-
-        return cls(type_name=type_name, windings=windings, uhv=uhv, ulv=ulv, sn=sn, p0=p0, i0=i0, psc=psc, vsc=vsc)
-
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> JsonDict:
         return {
-            "name": self.type_name,
+            "id": self.id,
             "sn": self.sn,
             "uhv": self.uhv,
             "ulv": self.ulv,
@@ -172,10 +167,10 @@ class TransformerCharacteristics:
         """Compute the transformer characteristics z2, ym, k and orientation mandatory for some models
 
         Returns:
-            * z2 The series impedance of the transformer (Ohms).
-            * ym The magnetizing admittance of the transformer (Siemens).
-            * k The transformation ratio
-            * orientation 1 for direct winding, -1 for reverse winding
+            * ``z2``: The series impedance of the transformer (Ohms).
+            * ``ym``: The magnetizing admittance of the transformer (Siemens).
+            * ``k``: The transformation ratio.
+            * orientation: 1 for direct winding, -1 for reverse winding.
         """
         # Extract the windings of the primary and the secondary of the transformer
         winding1, winding2, phase_displacement = TransformerType.extract_windings(self.windings)

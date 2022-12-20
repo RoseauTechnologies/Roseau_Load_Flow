@@ -7,6 +7,7 @@ from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowE
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import AbstractBranch
 from roseau.load_flow.models.transformers.transformers_characteristics import TransformerCharacteristics
+from roseau.load_flow.typing import Id, JsonDict
 from roseau.load_flow.utils import BranchType
 
 logger = logging.getLogger(__name__)
@@ -24,7 +25,7 @@ class Transformer(AbstractBranch):
 
     def __init__(
         self,
-        id: Any,
+        id: Id,
         bus1: Bus,
         bus2: Bus,
         *,
@@ -33,13 +34,13 @@ class Transformer(AbstractBranch):
         phases1: Optional[str] = None,
         phases2: Optional[str] = None,
         geometry: Optional[Point] = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         """Transformer constructor.
 
         Args:
             id:
-                The identifier of the transformer.
+                A unique ID of the transformer in the network branches.
 
             bus1:
                 Bus to connect the first extremity of the transformer.
@@ -117,69 +118,9 @@ class Transformer(AbstractBranch):
             )
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
-        super().__init__(id, phases1, phases2, bus1, bus2, geometry=geometry, **kwargs)
+        super().__init__(id, bus1, bus2, phases1=phases1, phases2=phases2, geometry=geometry, **kwargs)
         self.transformer_characteristics = transformer_characteristics
         self.tap = tap
-
-    @classmethod
-    def from_dict(
-        cls,
-        id: Any,
-        bus1: Bus,
-        bus2: Bus,
-        type_name: str,
-        transformer_types: dict[str, TransformerCharacteristics],
-        tap: float = 1.0,
-        phases1: Optional[str] = None,
-        phases2: Optional[str] = None,
-        geometry: Optional[Point] = None,
-        *args,
-    ) -> "Transformer":
-        """Transformer constructor from dict.
-
-        Args:
-            transformer_types:
-                A dictionary of transformer characteristics by type name.
-
-            type_name:
-                The name of the transformer type.
-
-            id:
-                The identifier of the transformer.
-
-            bus1:
-                Bus to connect to the transformer.
-
-            bus2:
-                Bus to connect to the transformer.
-
-            tap:
-                The tap of the transformer, for example 1.02.
-
-            geometry:
-                The geometry of the transformer.
-
-        Returns:
-            The constructed transformer.
-        """
-        transformer_characteristics = transformer_types[type_name]
-        return cls(
-            id,
-            bus1,
-            bus2,
-            transformer_characteristics=transformer_characteristics,
-            tap=tap,
-            phases1=phases1,
-            phases2=phases2,
-            geometry=geometry,
-        )
-
-    def to_dict(self) -> dict[str, Any]:
-        return {
-            **super().to_dict(),
-            "type_name": self.transformer_characteristics.type_name,
-            "tap": self.tap,
-        }
 
     def update_characteristics(self, transformer_characteristics: TransformerCharacteristics, tap: float = 1.0) -> None:
         """Change the transformer parameters
@@ -204,3 +145,54 @@ class Transformer(AbstractBranch):
 
         self.transformer_characteristics = transformer_characteristics
         self.tap = tap
+
+    @classmethod
+    def from_dict(
+        cls,
+        id: Id,
+        bus1: Bus,
+        bus2: Bus,
+        transformer_type: TransformerCharacteristics,
+        tap: float = 1.0,
+        phases1: Optional[str] = None,
+        phases2: Optional[str] = None,
+        geometry: Optional[Point] = None,
+        *args: Any,
+    ) -> "Transformer":
+        """Transformer constructor from dict.
+
+        Args:
+            id:
+                A unique ID of the transformer in the network branches.
+
+            bus1:
+                Bus to connect to the transformer.
+
+            bus2:
+                Bus to connect to the transformer.
+
+            transformer_type:
+                The transformer characteristics.
+
+            tap:
+                The tap of the transformer, for example 1.02.
+
+            geometry:
+                The geometry of the transformer.
+
+        Returns:
+            The constructed transformer.
+        """
+        return cls(
+            id,
+            bus1,
+            bus2,
+            transformer_characteristics=transformer_type,
+            tap=tap,
+            phases1=phases1,
+            phases2=phases2,
+            geometry=geometry,
+        )
+
+    def to_dict(self) -> JsonDict:
+        return {**super().to_dict(), "type_id": self.transformer_characteristics.id, "tap": self.tap}

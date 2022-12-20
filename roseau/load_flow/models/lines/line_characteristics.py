@@ -1,19 +1,21 @@
 import logging
 import re
-from typing import Any, Optional
+from typing import Optional
 
 import numpy as np
 import numpy.linalg as nplin
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
+from roseau.load_flow.typing import Id, JsonDict
 from roseau.load_flow.utils import ConductorType, IsolationType, LineModel, LineType
 from roseau.load_flow.utils.constants import CX, EPSILON_0, EPSILON_R, MU_0, OMEGA, PI, RHO, TAN_D
+from roseau.load_flow.utils.mixins import Identifiable, JsonMixin
 from roseau.load_flow.utils.units import Q_, ureg
 
 logger = logging.getLogger(__name__)
 
 
-class LineCharacteristics:
+class LineCharacteristics(Identifiable, JsonMixin):
     """A class to store the line characteristics of lines"""
 
     _type_re = "|".join(x.code() for x in LineType)
@@ -24,12 +26,12 @@ class LineCharacteristics:
     )
 
     @ureg.wraps(None, (None, None, "ohm/km", "S/km"), strict=False)
-    def __init__(self, type_name: str, z_line: np.ndarray, y_shunt: Optional[np.ndarray] = None):
+    def __init__(self, id: Id, z_line: np.ndarray, y_shunt: Optional[np.ndarray] = None) -> None:
         """LineCharacteristics constructor.
 
         Args:
-            type_name:
-                The name of the line characteristics.
+            id:
+                A unique ID of the line characteristics, typically its canonical name.
 
             z_line:
                  The Z matrix of the line (Ohm/km).
@@ -37,16 +39,16 @@ class LineCharacteristics:
             y_shunt:
                 The Y matrix of the line (Siemens/km). This field is optional if the line has no shunt part.
         """
-        self.type_name = type_name
+        super().__init__(id)
         self.z_line = z_line
         self.y_shunt = y_shunt
         self._check_matrix()
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, LineCharacteristics):
             return NotImplemented
         return (
-            self.type_name == other.type_name
+            self.id == other.id
             and self.z_line.shape == other.z_line.shape
             and np.allclose(self.z_line, other.z_line)
             and (
@@ -85,7 +87,7 @@ class LineCharacteristics:
     )
     def from_sym(
         cls,
-        type_name: str,
+        id: Id,
         model: LineModel,
         r0: float,
         x0: float,
@@ -104,8 +106,8 @@ class LineCharacteristics:
         """Create line characteristics from sym model.
 
         Args:
-            type_name:
-                The name of the line characteristics.
+            id:
+                A unique ID of the line characteristics, typically its canonical name.
 
             model:
                 The required model. It can be SYM or SYM_NEUTRAL. Be careful, it can be downgraded...
@@ -153,7 +155,7 @@ class LineCharacteristics:
             The created line characteristics.
         """
         z_line, y_shunt, model = cls._sym_to_zy(
-            type_name=type_name,
+            id=id,
             model=model,
             r0=r0,
             x0=x0,
@@ -169,7 +171,7 @@ class LineCharacteristics:
             bn=bn,
             bpn=bpn,
         )
-        return cls(type_name=type_name, z_line=z_line, y_shunt=y_shunt)
+        return cls(id, z_line=z_line, y_shunt=y_shunt)
 
     @staticmethod
     @ureg.wraps(
@@ -194,7 +196,7 @@ class LineCharacteristics:
         strict=False,
     )
     def _sym_to_zy(
-        type_name: str,
+        id: Id,
         model: LineModel,
         r0: float,
         x0: float,
@@ -213,8 +215,8 @@ class LineCharacteristics:
         """Create impedance and admittance matrix from a symmetrical model.
 
         Args:
-            type_name:
-                The name of this type.
+            id:
+                A unique ID of the line characteristics, typically its canonical name.
 
             model:
                 The required model. It can be SYM or SYM_NEUTRAL. Be careful, it can be downgraded...
@@ -271,7 +273,7 @@ class LineCharacteristics:
         # Two possible choices. The first one is the best but sometimes PwF data forces us to choose the second one
         for choice in (0, 1):
             if choice == 0:
-                # We trust the manual !!! can gives singular matrix !!!
+                # We trust the manual !!! can give singular matrix !!!
                 zs = (z0 + 2 * z1) / 3  # Series impedance (ohms/km)
                 zm = (z0 - z1) / 3  # Mutual impedance (ohms/km)
 
@@ -295,8 +297,8 @@ class LineCharacteristics:
 
                 if zpn == 0 and zn == 0:
                     logger.warning(
-                        f"The low voltages line {type_name!r} does not have neutral elements. It will model as an "
-                        f"medium voltages line."
+                        f"The low voltage line model {id!r} does not have neutral elements. It "
+                        f"will be modelled as a medium voltage line instead."
                     )
                     z_line = np.array([[zs, zm, zm], [zm, zs, zm], [zm, zm, zs]], dtype=complex)
 
@@ -327,16 +329,16 @@ class LineCharacteristics:
                 if choice == 0:
                     # Warn the user that the PwF data are bad...
                     logger.warning(
-                        f"The conversion of the symmetric model of {type_name!r} to its matrix model reached invalid "
+                        f"The symmetric model data provided for line type {id!r} produces invalid "
                         f"line impedance matrix... It is often the case with line models coming from "
-                        "PowerFactory. We pass to a 'degraded' model of lines to handle the provided data."
+                        f"PowerFactory. Trying to handle the data in a 'degraded' line model."
                     )
                     # Go to choice == 1
                 else:
                     assert choice == 1
                     msg = (
-                        f"The data provided for the line type {type_name!r} does not allow us to create a valid shunt "
-                        f"admittance and line impedance."
+                        f"The symmetric model data provided for line type {id!r} produces invalid "
+                        f"line impedance matrix."
                     )
                     logger.error(msg)
                     raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Y_SHUNT_VALUE)
@@ -367,7 +369,7 @@ class LineCharacteristics:
 
         Args:
             type_name:
-                The name of the line characteristics.
+                The name of the "LV exact" type.
 
             line_type:
                 Overhead or underground.
@@ -396,7 +398,7 @@ class LineCharacteristics:
         TODO: Documentation on the line data
         """
         z_line, y_shunt, model = cls._lv_exact_to_zy(
-            type_name=type_name,
+            type_name,
             line_type=line_type,
             conductor_type=conductor_type,
             insulator_type=isolation_type,
@@ -405,7 +407,7 @@ class LineCharacteristics:
             height=height,
             external_diameter=external_diameter,
         )
-        return cls(type_name=type_name, z_line=z_line, y_shunt=y_shunt)
+        return cls(type_name, z_line=z_line, y_shunt=y_shunt)
 
     @staticmethod
     @ureg.wraps(
@@ -427,7 +429,7 @@ class LineCharacteristics:
 
         Args:
             type_name:
-                The name of this type.
+                The name of the "LV exact" type.
 
             line_type:
                 Overhead or underground.
@@ -597,7 +599,7 @@ class LineCharacteristics:
         Returns:
             The corresponding line characteristics.
         """
-        match: re.Match = cls._REGEXP_LINE_TYPE_NAME.fullmatch(string=name)
+        match = cls._REGEXP_LINE_TYPE_NAME.fullmatch(string=name)
         if not match:
             msg = f"The line type name does not follow the syntax rule. {name!r} was provided."
             logger.error(msg)
@@ -605,7 +607,7 @@ class LineCharacteristics:
 
         # Check the user input and retrieve enumerated types
         line_type, conductor_type, section = name.split("_")
-        line_type = LineType.from_string(string=line_type)
+        line_type = LineType.from_string(line_type)
         conductor_type = ConductorType.from_string(conductor_type)
         isolation_type = IsolationType.PVC
 
@@ -619,7 +621,7 @@ class LineCharacteristics:
             external_diameter = Q_(40, "mm")
 
         return cls.from_lv_exact(
-            type_name=name,
+            name,
             line_type=line_type,
             conductor_type=conductor_type,
             isolation_type=isolation_type,
@@ -630,7 +632,7 @@ class LineCharacteristics:
         )
 
     @classmethod
-    def from_name_mv(cls, name: str):
+    def from_name_mv(cls, name: str) -> "LineCharacteristics":
         """Method to get the electrical characteristics of a MV line from its canonical name.
 
         Args:
@@ -640,7 +642,7 @@ class LineCharacteristics:
         Returns:
             The corresponding line characteristics.
         """
-        match: re.Match = cls._REGEXP_LINE_TYPE_NAME.fullmatch(string=name)
+        match = cls._REGEXP_LINE_TYPE_NAME.fullmatch(string=name)
         if not match:
             msg = f"The line type name does not follow the syntax rule. {name!r} was provided."
             logger.error(msg)
@@ -673,10 +675,10 @@ class LineCharacteristics:
 
         z_line = (r + x * 1j) * np.eye(3)  # in ohms/km
         y_shunt = b * 1j * np.eye(3)  # in siemens/km
-        return cls(type_name=name, z_line=z_line, y_shunt=y_shunt)
+        return cls(name, z_line=z_line, y_shunt=y_shunt)
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]):
+    def from_dict(cls, data: JsonDict) -> "LineCharacteristics":
         """Line characteristics constructor from dict.
 
         Args:
@@ -686,28 +688,32 @@ class LineCharacteristics:
         Returns:
             The created line characteristics.
         """
-        type_name = data["name"]
+        type_id = data.pop("id")
         model = LineModel.from_string(data["model"])
         if model == LineModel.LV_EXACT:
-            return cls.from_lv_exact(type_name=type_name, **data)
+            if not isinstance(type_id, str):
+                msg = f"The 'id' representing an LV Exact type name must be a string, got {type_id!r}"
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_ID_TYPE)
+            return cls.from_lv_exact(type_id, **data)
         elif model in (LineModel.SYM_NEUTRAL, LineModel.SYM):
-            return cls.from_sym(type_name=type_name, **data)
+            return cls.from_sym(type_id, **data)
         elif model in (LineModel.ZY_NEUTRAL, LineModel.ZY, LineModel.Z, LineModel.Z_NEUTRAL):
             z_line = np.asarray(data["z_line"][0]) + 1j * np.asarray(data["z_line"][1])
             if "y_shunt" in data:
                 y_shunt = np.asarray(data["y_shunt"][0]) + 1j * np.asarray(data["y_shunt"][1])
             else:
                 y_shunt = None
-            return cls(type_name=type_name, z_line=z_line, y_shunt=y_shunt)
+            return cls(type_id, z_line=z_line, y_shunt=y_shunt)
         else:
-            msg = f"The line {type_name!r} has an unknown model... We can do nothing."
+            msg = f"The line {type_id!r} has an unknown model {model!r}..."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_MODEL)
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> JsonDict:
         """Return the line characteristics information as a dictionary format."""
         res = {
-            "name": self.type_name,
+            "id": self.id,
             "model": "zy_neutral" if self.y_shunt is not None else "z_neutral",
             "z_line": [self.z_line.real.tolist(), self.z_line.imag.tolist()],
         }
@@ -715,7 +721,7 @@ class LineCharacteristics:
             res["y_shunt"] = [self.y_shunt.real.tolist(), self.y_shunt.imag.tolist()]
         return res
 
-    def _check_matrix(self):
+    def _check_matrix(self) -> None:
         """Check the coefficients of the matrix."""
         for matrix, matrix_name, code in [
             (self.y_shunt, "y_shunt", RoseauLoadFlowExceptionCode.BAD_Y_SHUNT_SHAPE),
@@ -724,28 +730,28 @@ class LineCharacteristics:
             if matrix_name == "y_shunt" and self.y_shunt is None:
                 continue
             if matrix.shape[0] != matrix.shape[1]:
-                msg = f"Incorrect {matrix_name} dimensions for line characteristics {self.type_name!r}: {matrix.shape}"
+                msg = f"The {matrix_name} matrix of line type {self.id!r} has incorrect dimensions {matrix.shape}."
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=code)
 
         # Check of the coefficients value
         for matrix, matrix_name, code in [
-            (self.z_line, "line impedance", RoseauLoadFlowExceptionCode.BAD_Z_LINE_VALUE),
-            (self.y_shunt, "shunt admittance", RoseauLoadFlowExceptionCode.BAD_Y_SHUNT_VALUE),
+            (self.z_line, "z_line", RoseauLoadFlowExceptionCode.BAD_Z_LINE_VALUE),
+            (self.y_shunt, "y_shunt", RoseauLoadFlowExceptionCode.BAD_Y_SHUNT_VALUE),
         ]:
-            if matrix_name == "shunt admittance" and self.y_shunt is None:
+            if matrix_name == "y_shunt" and self.y_shunt is None:
                 continue
             # Check that the off-diagonal element have a zero real part
             off_diagonal_elements = matrix[~np.eye(*matrix.shape, dtype=np.bool_)]
             if not np.allclose(off_diagonal_elements.real, 0):
                 msg = (
-                    f"The {matrix_name} matrix of {self.type_name!r} has off-diagonal elements with a non-zero real "
-                    f"part."
+                    f"The {matrix_name} matrix of line type {self.id!r} has off-diagonal elements "
+                    f"with a non-zero real part."
                 )
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=code)
-            # Check that the real coefficients are positive
+            # Check that the real coefficients are non-negative
             if (matrix.real < 0.0).any():
-                msg = f"Some real part coefficients of the {matrix_name} matrix of {self.type_name!r} are negative..."
+                msg = f"The {matrix_name} matrix of line type {self.id!r} has coefficients with negative real part."
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=code)

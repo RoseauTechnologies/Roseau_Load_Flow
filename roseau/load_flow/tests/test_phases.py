@@ -124,7 +124,7 @@ def test_lines_phases():
     assert Line.allowed_phases == Bus.allowed_phases | {"a", "b", "c", "n"}
 
     # Not allowed
-    lc = LineCharacteristics("test", 10 * np.eye(4, dtype=complex))
+    lc = LineCharacteristics("test", z_line=10 * np.eye(4, dtype=complex))
     for ph in ("ba", "nc", "anb", "nabc", "acb"):
         with pytest.raises(RoseauLoadFlowException) as e:
             Line("line1", bus1, bus2, phases=ph, line_characteristics=lc, length=10)
@@ -133,7 +133,7 @@ def test_lines_phases():
 
     # Allowed
     for ph in ("ab", "abc", "a", "n"):
-        lc = LineCharacteristics("test", 10 * np.eye(len(ph), dtype=complex))
+        lc = LineCharacteristics("test", z_line=10 * np.eye(len(ph), dtype=complex))
         Line("line1", bus1, bus2, phases=ph, line_characteristics=lc, length=10)
 
     # Not in bus
@@ -149,12 +149,12 @@ def test_lines_phases():
     # Default
     bus1.phases = "abcn"
     bus2.phases = "ab"
-    lc = LineCharacteristics("test", 10 * np.eye(2, dtype=complex))
+    lc = LineCharacteristics("test", z_line=10 * np.eye(2, dtype=complex))
     line = Line("line1", bus1, bus2, line_characteristics=lc, length=10)
     assert line.phases == line.phases1 == line.phases2 == "ab"
 
     # Bad default
-    lc = LineCharacteristics("test", 10 * np.eye(3, dtype=complex))  # bad
+    lc = LineCharacteristics("test", z_line=10 * np.eye(3, dtype=complex))  # bad
     with pytest.raises(RoseauLoadFlowException) as e:
         Line("line1", bus1, bus2, line_characteristics=lc, length=10)
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_Z_LINE_SHAPE
