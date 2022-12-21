@@ -45,15 +45,8 @@ def network_from_dict(
         The buses, branches, loads, sources, grounds and potential refs to construct the electrical
         network.
     """
-    line_types: dict[Id, LineParameters] = {}
-    for line_data in data["line_types"]:
-        type_id = line_data["id"]
-        line_types[type_id] = LineParameters.from_dict(line_data)
-
-    transformer_types: dict[Id, TransformerParameters] = {}
-    for transformer_data in data["transformer_types"]:
-        type_id = transformer_data["id"]
-        transformer_types[type_id] = TransformerParameters.from_dict(transformer_data)
+    lines_params = {lp["id"]: LineParameters.from_dict(lp) for lp in data["lines_params"]}
+    transformers_params = {tp["id"]: TransformerParameters.from_dict(tp) for tp in data["transformers_params"]}
 
     grounds: dict[Id, Ground] = {}
     potential_refs: dict[Id, PotentialRef] = {}
@@ -95,8 +88,8 @@ def network_from_dict(
             bus1,
             bus2,
             ground,
-            line_types,
-            transformer_types,
+            lines_params,
+            transformers_params,
         )
     return buses_dict, branches_dict, loads_dict, sources_dict, grounds, potential_refs
 
@@ -138,21 +131,21 @@ def network_to_dict(en: "ElectricalNetwork") -> JsonDict:
     for branch in en.branches.values():
         branches.append(branch.to_dict())
         if isinstance(branch, Line):
-            type_id = branch.parameters.id
-            if type_id in lines_params_dict and branch.parameters != lines_params_dict[type_id]:
-                msg = f"There are multiple line parameters with id {type_id!r}"
+            params_id = branch.parameters.id
+            if params_id in lines_params_dict and branch.parameters != lines_params_dict[params_id]:
+                msg = f"There are multiple line parameters with id {params_id!r}"
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.JSON_LINE_PARAMETERS_DUPLICATES)
             lines_params_dict[branch.parameters.id] = branch.parameters
         elif isinstance(branch, Transformer):
-            type_id = branch.parameters.id
-            if type_id in transformers_params_dict and branch.parameters != transformers_params_dict[type_id]:
-                msg = f"There are multiple transformer parameters with id {type_id!r}"
+            params_id = branch.parameters.id
+            if params_id in transformers_params_dict and branch.parameters != transformers_params_dict[params_id]:
+                msg = f"There are multiple transformer parameters with id {params_id!r}"
                 logger.error(msg)
                 raise RoseauLoadFlowException(
                     msg=msg, code=RoseauLoadFlowExceptionCode.JSON_TRANSFORMER_PARAMETERS_DUPLICATES
                 )
-            transformers_params_dict[type_id] = branch.parameters
+            transformers_params_dict[params_id] = branch.parameters
 
     # Line parameters
     line_params: list[JsonDict] = []
@@ -171,6 +164,6 @@ def network_to_dict(en: "ElectricalNetwork") -> JsonDict:
         "potential_refs": potential_refs,
         "buses": buses,
         "branches": branches,
-        "line_types": line_params,
-        "transformer_types": transformer_params,
+        "lines_params": line_params,
+        "transformers_params": transformer_params,
     }

@@ -310,8 +310,8 @@ class AbstractBranch(Element):
         bus1: "Bus",
         bus2: "Bus",
         ground: Optional[Ground],
-        line_types: dict[str, "LineParameters"],
-        transformer_types: dict[str, "TransformerParameters"],
+        lines_params: dict[str, "LineParameters"],
+        transformers_params: dict[str, "TransformerParameters"],
         *args,
     ) -> "AbstractBranch":
 
@@ -324,22 +324,22 @@ class AbstractBranch(Element):
 
         if data["type"] == "line":
             assert data["phases2"] == data["phases1"]  # line phases must be the same
-            return cls._line_class().from_dict(
+            return cls._line_class()(
                 id=data["id"],
                 bus1=bus1,
                 bus2=bus2,
                 length=data["length"],
-                line_type=line_types[data["type_id"]],
+                parameters=lines_params[data["params_id"]],
                 phases=data["phases1"],  # or phases2, they are the same
                 ground=ground,
                 geometry=geometry,
             )
         elif data["type"] == "transformer":
-            return cls._transformer_class().from_dict(
+            return cls._transformer_class()(
                 id=data["id"],
                 bus1=bus1,
                 bus2=bus2,
-                transformer_type=transformer_types[data["type_id"]],
+                parameters=transformers_params[data["params_id"]],
                 tap=data["tap"],
                 phases1=data["phases1"],
                 phases2=data["phases2"],

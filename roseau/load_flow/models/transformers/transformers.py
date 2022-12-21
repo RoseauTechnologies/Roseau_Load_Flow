@@ -146,53 +146,5 @@ class Transformer(AbstractBranch):
         self.parameters = parameters
         self.tap = tap
 
-    @classmethod
-    def from_dict(
-        cls,
-        id: Id,
-        bus1: Bus,
-        bus2: Bus,
-        transformer_type: TransformerParameters,
-        tap: float = 1.0,
-        phases1: Optional[str] = None,
-        phases2: Optional[str] = None,
-        geometry: Optional[Point] = None,
-        *args: Any,
-    ) -> "Transformer":
-        """Transformer constructor from dict.
-
-        Args:
-            id:
-                A unique ID of the transformer in the network branches.
-
-            bus1:
-                Bus to connect to the transformer.
-
-            bus2:
-                Bus to connect to the transformer.
-
-            transformer_type:
-                The transformer parameters.
-
-            tap:
-                The tap of the transformer, for example 1.02.
-
-            geometry:
-                The geometry of the transformer.
-
-        Returns:
-            The constructed transformer.
-        """
-        return cls(
-            id,
-            bus1,
-            bus2,
-            parameters=transformer_type,
-            tap=tap,
-            phases1=phases1,
-            phases2=phases2,
-            geometry=geometry,
-        )
-
     def to_dict(self) -> JsonDict:
-        return {**super().to_dict(), "type_id": self.parameters.id, "tap": self.tap}
+        return {**super().to_dict(), "params_id": self.parameters.id, "tap": self.tap}

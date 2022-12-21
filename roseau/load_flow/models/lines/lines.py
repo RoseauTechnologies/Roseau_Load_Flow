@@ -3,7 +3,6 @@ from typing import Any, Optional
 
 from pint import Quantity
 from shapely.geometry import LineString, Point
-from shapely.geometry.base import BaseGeometry
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.buses import Bus
@@ -11,7 +10,7 @@ from roseau.load_flow.models.core import AbstractBranch, Ground
 from roseau.load_flow.models.lines.parameters import LineParameters
 from roseau.load_flow.models.voltage_sources import VoltageSource
 from roseau.load_flow.typing import Id, JsonDict
-from roseau.load_flow.utils import BranchType, ureg
+from roseau.load_flow.utils import BranchType
 
 logger = logging.getLogger(__name__)
 
@@ -259,59 +258,8 @@ class Line(AbstractBranch):
     #
     # Json Mixin interface
     #
-    @classmethod
-    @ureg.wraps(None, (None, None, None, None, "km", None, None, None, None), strict=False)
-    def from_dict(
-        cls,
-        id: Id,
-        bus1: Bus,
-        bus2: Bus,
-        length: float,
-        line_type: LineParameters,
-        phases: Optional[str] = None,
-        ground: Optional[Ground] = None,
-        geometry: Optional[BaseGeometry] = None,
-    ) -> "Line":
-        """Line constructor from dict.
-
-        Args:
-            id:
-                A unique ID of the line in the network branches.
-
-            bus1:
-                The first bus to connect to the line.
-
-            bus2:
-                The second bus to connect to the line.
-
-            length:
-                Length of the line (km).
-
-            line_type:
-                The line parameters.
-
-            ground:
-                The ground (optional for line models without a shunt admittance).
-
-            geometry:
-                The geometry of the line.
-
-        Returns:
-            The constructed line.
-        """
-        return cls(
-            id=id,
-            bus1=bus1,
-            bus2=bus2,
-            parameters=line_type,
-            length=length,
-            phases=phases,
-            ground=ground,
-            geometry=geometry,
-        )
-
     def to_dict(self) -> JsonDict:
-        res = {**super().to_dict(), "length": self.length, "type_id": self.parameters.id}
+        res = {**super().to_dict(), "length": self.length, "params_id": self.parameters.id}
         if self.ground is not None:
             res["ground"] = self.ground.id
         return res
