@@ -31,7 +31,14 @@ def test_to_dict():
 
     line1 = Line("line1", source_bus, load_bus, phases="abcn", ground=ground, parameters=lp1, length=10)
     line2 = Line("line2", source_bus, load_bus, phases="abcn", ground=ground, parameters=lp2, length=10)
-    en = ElectricalNetwork([source_bus, load_bus], [line1, line2], [], [vs], [p_ref, ground])
+    en = ElectricalNetwork(
+        buses=[source_bus, load_bus],
+        branches=[line1, line2],
+        loads=[],
+        voltage_sources=[vs],
+        grounds=[ground],
+        potential_refs=[p_ref],
+    )
     with pytest.raises(RoseauLoadFlowException) as e:
         en.to_dict()
     assert "There are multiple line parameters with id 'test'" in e.value.msg

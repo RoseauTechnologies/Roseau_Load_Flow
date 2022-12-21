@@ -21,8 +21,7 @@ from roseau.load_flow.models import (
     TransformerParameters,
     VoltageSource,
 )
-from roseau.load_flow.network import ElectricalNetwork
-from roseau.load_flow.network.electrical_network import _PHASE_DTYPE, _VOLTAGE_PHASES_DTYPE
+from roseau.load_flow.network import _PHASE_DTYPE, _VOLTAGE_PHASES_DTYPE, ElectricalNetwork
 
 
 @pytest.fixture()
@@ -50,7 +49,8 @@ def small_network() -> ElectricalNetwork:
         branches=[line],
         loads=[load],
         voltage_sources=[vs],
-        special_elements=[pref, ground],
+        grounds=[ground],
+        potential_refs=[pref],
     )
 
 
@@ -86,7 +86,8 @@ def single_phase_network() -> ElectricalNetwork:
         branches=[line],
         loads=[load],
         voltage_sources=[vs],
-        special_elements=[pref, ground],
+        grounds=[ground],
+        potential_refs=[pref],
     )
 
 
@@ -211,7 +212,14 @@ def test_bad_networks():
     vs = VoltageSource("vs", bus0, phases="abcn", voltages=voltages)
     switch = Switch("switch", bus0, bus1, phases="abcn")
     with pytest.raises(RoseauLoadFlowException) as e:
-        ElectricalNetwork([bus0, bus1], [line, switch], [], [vs], [ground, p_ref])  # no bus2
+        ElectricalNetwork(
+            buses=[bus0, bus1],  # no bus2
+            branches=[line, switch],
+            loads=[],
+            voltage_sources=[vs],
+            grounds=[ground],
+            potential_refs=[p_ref],
+        )
     assert "but has not been added to the network, you should add it with 'add_element'." in e.value.msg
     assert bus2.id in e.value.msg
     assert e.value.code == RoseauLoadFlowExceptionCode.UNKNOWN_ELEMENT

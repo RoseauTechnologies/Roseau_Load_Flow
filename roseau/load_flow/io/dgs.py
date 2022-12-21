@@ -9,7 +9,6 @@ from roseau.load_flow.models import (
     AbstractBranch,
     AbstractLoad,
     Bus,
-    Element,
     Ground,
     Line,
     LineParameters,
@@ -28,14 +27,21 @@ logger = logging.getLogger(__name__)
 
 def network_from_dgs(  # noqa: C901
     filename: StrPath,
-) -> tuple[dict[str, Bus], dict[str, AbstractBranch], dict[str, AbstractLoad], dict[str, VoltageSource], list[Element]]:
-    """Create the electrical elements from a JSON file in DGS format to create an electrical network.
+) -> tuple[
+    dict[str, Bus],
+    dict[str, AbstractBranch],
+    dict[str, AbstractLoad],
+    dict[str, VoltageSource],
+    dict[str, Ground],
+    dict[str, PotentialRef],
+]:
+    """Create the electrical elements from a JSON file in DGS format.
 
     Args:
         filename: name of the JSON file
 
     Returns:
-        The buses, branches, loads, sources and special elements to construct the electrical network.
+        The elements of the network: buses, branches, loads, sources, grounds and potential refs.
     """
     # Read files
     (
@@ -53,9 +59,12 @@ def network_from_dgs(  # noqa: C901
         elm_pv_sys,
     ) = _read_dgs_json_file(filename=filename)
 
-    # Ground and special elements
+    # Ground and potential reference
     ground = Ground("ground")
     p_ref = PotentialRef("pref", element=ground)
+
+    grounds = {ground.id: ground}
+    potential_refs = {p_ref.id: p_ref}
 
     # Buses
     buses: dict[str, Bus] = {}
@@ -191,7 +200,7 @@ def network_from_dgs(  # noqa: C901
                 bus2=buses[sta_cubic.at[elm_coup.at[switch_id, "bus2"], "cterm"]],
             )
 
-    return buses, branches, loads, sources, [p_ref, ground]
+    return buses, branches, loads, sources, grounds, potential_refs
 
 
 def _read_dgs_json_file(filename: StrPath):

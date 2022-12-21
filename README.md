@@ -72,7 +72,8 @@ en = ElectricalNetwork(
     branches=[line],
     loads=[load],
     voltage_sources=[vs],
-    special_elements=[p_ref, ground],
+    grounds=[ground],
+    potential_refs=[p_ref],
 )
 # or simply using the main bus
 # en = ElectricalNetwork.from_element(source_bus)

@@ -3,7 +3,7 @@ import logging
 import re
 from collections.abc import Sequence, Sized
 from pathlib import Path
-from typing import NoReturn, Optional, Union
+from typing import NoReturn, Optional, TypeVar, Union
 from urllib.parse import urljoin
 
 import geopandas as gpd
@@ -37,6 +37,8 @@ _PHASE_DTYPE = pd.CategoricalDtype(categories=["a", "b", "c", "n"], ordered=True
 # Phases dtype for voltage data frames
 _VOLTAGE_PHASES_DTYPE = pd.CategoricalDtype(["an", "bn", "cn", "ab", "bc", "ca"], ordered=True)
 
+_T = TypeVar("_T", bound=Element)
+
 
 class ElectricalNetwork:
     DEFAULT_PRECISION: float = 1e-6
@@ -60,7 +62,8 @@ class ElectricalNetwork:
         branches: Union[list[AbstractBranch], dict[Id, AbstractBranch]],
         loads: Union[list[AbstractLoad], dict[Id, AbstractLoad]],
         voltage_sources: Union[list[VoltageSource], dict[Id, VoltageSource]],
-        special_elements: list[Element],
+        grounds: Union[list[Ground], dict[Id, Ground]],
+        potential_refs: Union[list[PotentialRef], dict[Id, PotentialRef]],
         **kwargs,
     ) -> None:
         """ElectricalNetwork constructor.
@@ -82,52 +85,25 @@ class ElectricalNetwork:
                 The voltage sources of the network. Either a list of voltage sources or a dictionary
                 of voltage sources with their IDs as keys.
 
-            special_elements:
-                The other elements (special, ground...)
+            grounds:
+                The grounds of the network. Either a list of grounds or a dictionary of grounds with
+                their IDs as keys. A small network typically has only one ground.
+
+            potential_refs:
+                The potential references of the network. Either a list of potential references or a
+                dictionary of potential references with their IDs as keys. A potential reference
+                per galvanically isolated section of the network is expected.
         """
-        if isinstance(buses, list):
-            buses_dict = {}
-            for bus in buses:
-                if bus.id in buses_dict:
-                    msg = f"Duplicate id for a bus in this network: {bus.id!r}."
-                    logger.error(msg)
-                    raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DUPLICATE_BUS_ID)
-                buses_dict[bus.id] = bus
-            buses = buses_dict
-        if isinstance(branches, list):
-            branches_dict = {}
-            for branch in branches:
-                if branch.id in branches_dict:
-                    msg = f"Duplicate id for a branch in this network: {branch.id!r}."
-                    logger.error(msg)
-                    raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DUPLICATE_BRANCH_ID)
-                branches_dict[branch.id] = branch
-            branches = branches_dict
-        if isinstance(loads, list):
-            loads_dict = {}
-            for load in loads:
-                if load.id in loads_dict:
-                    msg = f"Duplicate id for a load in this network: {load.id!r}."
-                    logger.error(msg)
-                    raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DUPLICATE_LOAD_ID)
-                loads_dict[load.id] = load
-            loads = loads_dict
-
-        if isinstance(voltage_sources, list):
-            sources_dict = {}
-            for voltage_source in voltage_sources:
-                if voltage_source.id in sources_dict:
-                    msg = f"Duplicate id for a voltage source in this network: {voltage_source.id!r}."
-                    logger.error(msg)
-                    raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DUPLICATE_VOLTAGE_SOURCE_ID)
-                sources_dict[voltage_source.id] = voltage_source
-            voltage_sources = sources_dict
-
-        self.buses: dict[Id, Bus] = buses
-        self.branches: dict[Id, AbstractBranch] = branches
-        self.loads: dict[Id, AbstractLoad] = loads
-        self.voltage_sources: dict[Id, VoltageSource] = voltage_sources
-        self.special_elements: list[Element] = special_elements
+        self.buses = self._elements_as_dict(buses, RoseauLoadFlowExceptionCode.DUPLICATE_BUS_ID)
+        self.branches = self._elements_as_dict(branches, RoseauLoadFlowExceptionCode.DUPLICATE_BRANCH_ID)
+        self.loads = self._elements_as_dict(loads, RoseauLoadFlowExceptionCode.DUPLICATE_LOAD_ID)
+        self.voltage_sources = self._elements_as_dict(
+            voltage_sources, RoseauLoadFlowExceptionCode.DUPLICATE_VOLTAGE_SOURCE_ID
+        )
+        self.grounds = self._elements_as_dict(grounds, RoseauLoadFlowExceptionCode.DUPLICATE_GROUND_ID)
+        self.potential_refs = self._elements_as_dict(
+            potential_refs, RoseauLoadFlowExceptionCode.DUPLICATE_POTENTIAL_REF_ID
+        )
 
         self._check_validity(constructed=False)
         self._create_network()
@@ -148,9 +124,27 @@ class ElectricalNetwork:
             f" {count_repr(self.branches, 'branch', 'branches')},"
             f" {count_repr(self.loads, 'load', 'loads')},"
             f" {count_repr(self.voltage_sources, 'voltage source')},"
-            f" {count_repr(self.special_elements, 'special element')}"
+            f" {count_repr(self.grounds, 'ground')},"
+            f" {count_repr(self.potential_refs, 'potential ref')}"
             f">"
         )
+
+    @staticmethod
+    def _elements_as_dict(
+        elements: Union[list[_T], dict[Id, _T]], error_code: RoseauLoadFlowExceptionCode
+    ) -> dict[Id, _T]:
+        """Convert a list of elements to a dictionary of elements with their IDs as keys."""
+        if isinstance(elements, dict):
+            return elements
+        elements_dict: dict[Id, _T] = {}
+        for element in elements:
+            if element.id in elements_dict:
+                name = error_code.name.removeprefix("DUPLICATE_").removesuffix("_ID").replace("_", " ").lower()
+                msg = f"Duplicate id for an {name} in this network: {element.id!r}."
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg, code=error_code)
+            elements_dict[element.id] = element
+        return elements_dict
 
     @classmethod
     def from_element(cls, initial_bus: Bus) -> "ElectricalNetwork":
@@ -164,7 +158,9 @@ class ElectricalNetwork:
         branches: list[AbstractBranch] = []
         loads: list[AbstractLoad] = []
         voltage_sources: list[VoltageSource] = []
-        specials: list[Element] = []
+        grounds: list[Ground] = []
+        potential_refs: list[PotentialRef] = []
+
         elements: list[Element] = [initial_bus]
         visited_elements: list[Element] = []
         while elements:
@@ -178,8 +174,10 @@ class ElectricalNetwork:
                 loads.append(e)
             elif isinstance(e, VoltageSource):
                 voltage_sources.append(e)
-            else:
-                specials.append(e)
+            elif isinstance(e, Ground):
+                grounds.append(e)
+            elif isinstance(e, PotentialRef):
+                potential_refs.append(e)
             for connected_element in e.connected_elements:
                 if connected_element not in visited_elements and connected_element not in elements:
                     elements.append(connected_element)
@@ -188,7 +186,8 @@ class ElectricalNetwork:
             branches=branches,
             loads=loads,
             voltage_sources=voltage_sources,
-            special_elements=specials,
+            grounds=grounds,
+            potential_refs=potential_refs,
         )
 
     #
@@ -434,7 +433,7 @@ class ElectricalNetwork:
         Examples:
 
             >>> net
-            <ElectricalNetwork: 2 buses, 1 branch, 1 load, 2 special elements>
+            <ElectricalNetwork: 2 buses, 1 branch, 1 load, 1 ground, 1 potential ref>
 
             >>> net.buses_voltages()
                                              voltage
@@ -666,7 +665,8 @@ class ElectricalNetwork:
         elements.extend(self.branches.values())
         elements.extend(self.loads.values())
         elements.extend(self.voltage_sources.values())
-        elements.extend(self.special_elements)
+        elements.extend(self.grounds.values())
+        elements.extend(self.potential_refs.values())
 
         for element in elements:
             for adj_element in element.connected_elements:
@@ -756,13 +756,14 @@ class ElectricalNetwork:
         Returns:
             The constructed network.
         """
-        buses, branches, loads, sources, grounds, potential_refs = network_from_dict(data=data, en_class=cls)
+        buses, branches, loads, sources, grounds, p_refs = network_from_dict(data, en_class=cls)
         return cls(
             buses=buses,
             branches=branches,
             loads=loads,
             voltage_sources=sources,
-            special_elements=[*grounds.values(), *potential_refs.values()],  # temporary until we kill special elements
+            grounds=grounds,
+            potential_refs=p_refs,
         )
 
     @classmethod
@@ -877,11 +878,12 @@ class ElectricalNetwork:
         Returns:
             The constructed network.
         """
-        buses, branches, loads, sources, special_elements = network_from_dgs(filename=path)
+        buses, branches, loads, voltage_sources, grounds, potential_refs = network_from_dgs(path)
         return cls(
             buses=buses,
             branches=branches,
             loads=loads,
-            voltage_sources=sources,
-            special_elements=special_elements,
+            voltage_sources=voltage_sources,
+            grounds=grounds,
+            potential_refs=potential_refs,
         )

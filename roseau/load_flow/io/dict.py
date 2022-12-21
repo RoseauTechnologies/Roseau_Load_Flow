@@ -107,11 +107,10 @@ def network_to_dict(en: "ElectricalNetwork") -> JsonDict:
     # Export the grounds and the pref
     grounds: list[JsonDict] = []
     potential_refs: list[JsonDict] = []
-    for se in en.special_elements:
-        if isinstance(se, Ground):
-            grounds.append(se.to_dict())
-        elif isinstance(se, PotentialRef):
-            potential_refs.append(se.to_dict())
+    for ground in en.grounds.values():
+        grounds.append(ground.to_dict())
+    for p_ref in en.potential_refs.values():
+        potential_refs.append(p_ref.to_dict())
 
     # Export the buses and the loads
     buses: list[JsonDict] = []
