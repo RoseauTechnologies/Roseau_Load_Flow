@@ -11,6 +11,10 @@ class RoseauLoadFlowExceptionCode(Enum):
     BAD_PHASE = auto()
     BAD_ID_TYPE = auto()
 
+    # Grounds and Potential references
+    DUPLICATE_GROUND_ID = auto()
+    DUPLICATE_POTENTIAL_REF_ID = auto()
+
     # Buses
     DUPLICATE_BUS_ID = auto()
     BAD_BUS_TYPE = auto()
