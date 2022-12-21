@@ -1,7 +1,9 @@
 import logging
-from typing import Any, Literal
+from typing import Literal
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
+from roseau.load_flow.typing import JsonDict
+from roseau.load_flow.utils.mixins import JsonMixin
 from roseau.load_flow.utils.units import ureg
 
 logger = logging.getLogger(__name__)
@@ -9,7 +11,7 @@ logger = logging.getLogger(__name__)
 ControlType = Literal["constant", "p_max_u_production", "p_max_u_consumption", "q_u"]
 
 
-class Control:
+class Control(JsonMixin):
     """A class to store the important values of a control."""
 
     DEFAULT_ALPHA: float = 200.0
@@ -169,7 +171,7 @@ class Control:
     # Json Mixin interface
     #
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "Control":
+    def from_dict(cls, data: JsonDict) -> "Control":
         alpha = data["alpha"] if "alpha" in data else cls.DEFAULT_ALPHA
         if data["type"] == "constant":
             return cls.constant()
@@ -186,7 +188,7 @@ class Control:
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_CONTROL_TYPE)
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> JsonDict:
         if self.type == "constant":
             return {"type": "constant"}
         elif self.type == "p_max_u_production":
@@ -208,7 +210,7 @@ class Control:
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_CONTROL_TYPE)
 
 
-class Projection:
+class Projection(JsonMixin):
     """This class defines the projection on the feasible circle for a flexible load."""
 
     # TODO: add the projection diagram (the feasible circle) to the docstring
@@ -216,7 +218,7 @@ class Projection:
     DEFAULT_ALPHA: float = 100.0
     DEFAULT_EPSILON: float = 0.01
 
-    def __init__(self, type: str, alpha: float = DEFAULT_ALPHA, epsilon: float = DEFAULT_EPSILON):
+    def __init__(self, type: str, alpha: float = DEFAULT_ALPHA, epsilon: float = DEFAULT_EPSILON) -> None:
         """Projection constructor.
 
         Args:
@@ -245,12 +247,12 @@ class Projection:
     # Json Mixin interface
     #
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "Projection":
+    def from_dict(cls, data: JsonDict) -> "Projection":
         alpha = data["alpha"] if "alpha" in data else cls.DEFAULT_ALPHA
         epsilon = data["epsilon"] if "epsilon" in data else cls.DEFAULT_EPSILON
         return cls(type=data["type"], alpha=alpha, epsilon=epsilon)
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> JsonDict:
         return {
             "type": self.type,
             "alpha": self.alpha,
@@ -258,7 +260,7 @@ class Projection:
         }
 
 
-class FlexibleParameter:
+class FlexibleParameter(JsonMixin):
     """This class stores the required data to make a flexible parameter."""
 
     control_class: type[Control] = Control
@@ -610,13 +612,13 @@ class FlexibleParameter:
     # Json Mixin interface
     #
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "FlexibleParameter":
+    def from_dict(cls, data: JsonDict) -> "FlexibleParameter":
         control_p = cls.control_class.from_dict(data["control_p"])
         control_q = cls.control_class.from_dict(data["control_q"])
         projection = cls.projection_class.from_dict(data["projection"])
         return cls(control_p=control_p, control_q=control_q, projection=projection, s_max=data["s_max"])
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> JsonDict:
         return {
             "control_p": self.control_p.to_dict(),
             "control_q": self.control_q.to_dict(),

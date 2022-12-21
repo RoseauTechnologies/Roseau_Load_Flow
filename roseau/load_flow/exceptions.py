@@ -9,6 +9,7 @@ class RoseauLoadFlowExceptionCode(Enum):
     # Generic
     BAD_GEOMETRY_TYPE = auto()
     BAD_PHASE = auto()
+    BAD_ID_TYPE = auto()
 
     # Buses
     DUPLICATE_BUS_ID = auto()
@@ -69,6 +70,7 @@ class RoseauLoadFlowExceptionCode(Enum):
     # JSON export
     JSON_LINE_CHARACTERISTICS_DUPLICATES = auto()
     JSON_TRANSFORMER_CHARACTERISTICS_DUPLICATES = auto()
+    JSON_PREF_INVALID = auto()
 
     @classmethod
     def package_name(cls) -> str:

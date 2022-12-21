@@ -8,33 +8,32 @@ from pint import Quantity
 from shapely.geometry import Point, shape
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
-from roseau.load_flow.models.core import Element, Ground
-from roseau.load_flow.utils.json_mixin import JsonMixin
+from roseau.load_flow.models.core import Element
+from roseau.load_flow.typing import Id, JsonDict
 from roseau.load_flow.utils.units import ureg
 
 logger = logging.getLogger(__name__)
 
 
-class Bus(Element, JsonMixin):
+class Bus(Element):
     """An electrical bus."""
 
     allowed_phases = frozenset({"ab", "bc", "ca", "an", "bn", "cn", "abn", "bcn", "can", "abc", "abcn"})
 
     def __init__(
         self,
-        id: Any,
+        id: Id,
         *,
         phases: str,
         geometry: Optional[Point] = None,
         potentials: Optional[Sequence[complex]] = None,
-        ground: Optional[Ground] = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         """Bus constructor.
 
         Args:
             id:
-                The identifier of the bus.
+                A unique ID of the bus in the network buses.
 
             phases:
                 The phases of the bus. A string like ``"abc"`` or ``"an"`` etc. The order of the
@@ -50,14 +49,9 @@ class Bus(Element, JsonMixin):
             ground:
                 The ground of the bus.
         """
+        super().__init__(id, **kwargs)
         self._check_phases(id, phases=phases)
-        super().__init__(**kwargs)
-        self.id = id
         self.phases = phases
-        if ground is not None:
-            ground.connected_elements.append(self)
-            self.connected_elements.append(ground)
-
         n = len(phases)
         if potentials is None:
             potentials = np.zeros(n, dtype=complex)
@@ -83,9 +77,6 @@ class Bus(Element, JsonMixin):
         s += ")"
         return s
 
-    def __str__(self) -> str:
-        return f"id={self.id!r} - phases={self.phases!r}"
-
     @property
     @ureg.wraps("V", None, strict=False)
     def potentials(self) -> np.ndarray:
@@ -106,7 +97,6 @@ class Bus(Element, JsonMixin):
         the order ``[Van, Vbn, Vcn]``. If the bus does not have a neutral, phase-phase voltages
         are returned in the order ``[Vab, Vbc, Vca]``.
         """
-        # TODO use self.potentials with the check
         potentials = np.asarray(self._potentials)
         if "n" in self.phases:  # Van, Vbn, Vcn
             # we know "n" is the last phase
@@ -127,7 +117,7 @@ class Bus(Element, JsonMixin):
     # Json Mixin interface
     #
     @classmethod
-    def from_dict(cls, data: dict[str, Any], ground: Optional[Ground]) -> "Bus":
+    def from_dict(cls, data: JsonDict) -> "Bus":
         if "geometry" not in data:
             geometry = None
         elif isinstance(data["geometry"], str):
@@ -135,15 +125,9 @@ class Bus(Element, JsonMixin):
         else:
             geometry = shape(data["geometry"])
 
-        return cls(
-            id=data["id"],
-            phases=data["phases"],
-            geometry=geometry,
-            potentials=data.get("potentials"),
-            ground=ground,
-        )
+        return cls(id=data["id"], phases=data["phases"], geometry=geometry, potentials=data.get("potentials"))
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> JsonDict:
         res = {"id": self.id, "phases": self.phases, "loads": [], "sources": []}
         if self.geometry is not None:
             res["geometry"] = self.geometry.__geo_interface__

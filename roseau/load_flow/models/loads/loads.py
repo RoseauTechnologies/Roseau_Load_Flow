@@ -10,13 +10,13 @@ from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowE
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import Element
 from roseau.load_flow.models.loads.flexible_parameters import FlexibleParameter
-from roseau.load_flow.utils.json_mixin import JsonMixin
+from roseau.load_flow.typing import Id, JsonDict
 from roseau.load_flow.utils.units import ureg
 
 logger = logging.getLogger(__name__)
 
 
-class AbstractLoad(Element, JsonMixin, metaclass=ABCMeta):
+class AbstractLoad(Element, metaclass=ABCMeta):
     """An abstract class of an electric load."""
 
     _power_load_class: type["PowerLoad"]
@@ -28,12 +28,12 @@ class AbstractLoad(Element, JsonMixin, metaclass=ABCMeta):
 
     allowed_phases = Bus.allowed_phases
 
-    def __init__(self, id: Any, bus: Bus, *, phases: Optional[str] = None, **kwargs) -> None:
+    def __init__(self, id: Id, bus: Bus, *, phases: Optional[str] = None, **kwargs: Any) -> None:
         """AbstractLoad constructor.
 
         Args:
             id:
-                The unique id of the load.
+                A unique ID of the load in the network loads.
 
             bus:
                 The bus to connect the load to.
@@ -44,6 +44,7 @@ class AbstractLoad(Element, JsonMixin, metaclass=ABCMeta):
                 :attr:`allowed_phases`. All phases of the load, except ``"n"``, must be present in
                 the phases of the connected bus. By default, the phases of the bus are used.
         """
+        super().__init__(id, **kwargs)
         if phases is None:
             phases = bus.phases
         else:
@@ -57,11 +58,8 @@ class AbstractLoad(Element, JsonMixin, metaclass=ABCMeta):
                 )
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
-        super().__init__(**kwargs)
-        self.connected_elements = [bus]
-        bus.connected_elements.append(self)
+        self._connect(bus)
 
-        self.id = id
         self.phases = phases
         self.bus = bus
         self._currents = None
@@ -69,10 +67,7 @@ class AbstractLoad(Element, JsonMixin, metaclass=ABCMeta):
         self._size = len(set(self.phases) - {"n"})
 
     def __repr__(self) -> str:
-        return f"{type(self).__name__}({self.id!r}, phases={self.phases!r}, bus={self.bus.id!r})"
-
-    def __str__(self) -> str:
-        return f"id={self.id!r} - phases={self.phases!r}"
+        return f"{type(self).__name__}(id={self.id!r}, phases={self.phases!r}, bus={self.bus.id!r})"
 
     @property
     @ureg.wraps("A", None, strict=False)
@@ -85,7 +80,7 @@ class AbstractLoad(Element, JsonMixin, metaclass=ABCMeta):
         self._currents = value
 
     def _validate_value(self, value: Sequence[complex]) -> Sequence[complex]:
-        if len(value) != self._size:  # TODO change the test when we have phases
+        if len(value) != self._size:
             msg = f"Incorrect number of {self._type}s: {len(value)} instead of {self._size}"
             logger.error(msg)
             raise RoseauLoadFlowException(
@@ -102,8 +97,8 @@ class AbstractLoad(Element, JsonMixin, metaclass=ABCMeta):
     # Json Mixin interface
     #
     @classmethod
-    def from_dict(cls, data: dict[str, Any], bus: Bus) -> "AbstractLoad":
-        id: Any = data["id"]
+    def from_dict(cls, data: JsonDict, bus: Bus) -> "AbstractLoad":
+        id: Id = data["id"]
         phases: str = data["phases"]
         if (params := data.get("parameters")) is not None:
             s = data["powers"]
@@ -145,12 +140,12 @@ class PowerLoad(AbstractLoad):
 
     _type = "power"
 
-    def __init__(self, id: Any, bus: Bus, *, s: Sequence[complex], phases: Optional[str] = None, **kwargs) -> None:
+    def __init__(self, id: Id, bus: Bus, *, s: Sequence[complex], phases: Optional[str] = None, **kwargs: Any) -> None:
         """PowerLoad constructor.
 
         Args:
             id:
-                The unique id of the load.
+                A unique ID of the load in the network loads.
 
             bus:
                 The bus to connect the load to.
@@ -179,7 +174,7 @@ class PowerLoad(AbstractLoad):
         """
         self.s = self._validate_value(s)
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> JsonDict:
         return {
             "id": self.id,
             "phases": self.phases,
@@ -206,12 +201,12 @@ class CurrentLoad(AbstractLoad):
 
     _type = "current"
 
-    def __init__(self, id: Any, bus: Bus, *, i: Sequence[complex], phases: Optional[str] = None, **kwargs) -> None:
+    def __init__(self, id: Id, bus: Bus, *, i: Sequence[complex], phases: Optional[str] = None, **kwargs: Any) -> None:
         """CurrentLoad constructor.
 
         Args:
             id:
-                The unique id of the load.
+                A unique ID of the load in the network loads.
 
             bus:
                 The bus to connect the load to.
@@ -240,7 +235,7 @@ class CurrentLoad(AbstractLoad):
         """
         self.i = self._validate_value(i)
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> JsonDict:
         return {
             "id": self.id,
             "phases": self.phases,
@@ -268,12 +263,12 @@ class ImpedanceLoad(AbstractLoad):
 
     _type = "impedance"
 
-    def __init__(self, id: Any, bus: Bus, *, z: Sequence[complex], phases: Optional[str] = None, **kwargs) -> None:
+    def __init__(self, id: Id, bus: Bus, *, z: Sequence[complex], phases: Optional[str] = None, **kwargs: Any) -> None:
         """ImpedanceLoad constructor.
 
         Args:
             id:
-                The unique id of the load.
+                A unique ID of the load in the network loads.
 
             bus:
                 The bus to connect the load to.
@@ -302,7 +297,7 @@ class ImpedanceLoad(AbstractLoad):
         """
         self.z = self._validate_value(z)
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> JsonDict:
         return {
             "id": self.id,
             "phases": self.phases,
@@ -317,7 +312,7 @@ class FlexibleLoad(PowerLoad):
 
     def __init__(
         self,
-        id: Any,
+        id: Id,
         bus: Bus,
         *,
         s: Sequence[complex],
@@ -329,7 +324,7 @@ class FlexibleLoad(PowerLoad):
 
         Args:
             id:
-                The unique id of the load.
+                A unique ID of the load in the network loads.
 
             bus:
                 The bus to connect the load to.
@@ -385,7 +380,7 @@ class FlexibleLoad(PowerLoad):
     def powers(self, value: np.ndarray):
         self._powers = value
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> JsonDict:
         return {**super().to_dict(), "parameters": [p.to_dict() for p in self.parameters]}
 
 
