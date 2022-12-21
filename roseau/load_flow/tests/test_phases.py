@@ -5,11 +5,11 @@ from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowE
 from roseau.load_flow.models import (
     Bus,
     Line,
-    LineCharacteristics,
+    LineParameters,
     PowerLoad,
     Switch,
     Transformer,
-    TransformerCharacteristics,
+    TransformerParameters,
     VoltageSource,
 )
 
@@ -124,22 +124,22 @@ def test_lines_phases():
     assert Line.allowed_phases == Bus.allowed_phases | {"a", "b", "c", "n"}
 
     # Not allowed
-    lc = LineCharacteristics("test", z_line=10 * np.eye(4, dtype=complex))
+    lp = LineParameters("test", z_line=10 * np.eye(4, dtype=complex))
     for ph in ("ba", "nc", "anb", "nabc", "acb"):
         with pytest.raises(RoseauLoadFlowException) as e:
-            Line("line1", bus1, bus2, phases=ph, line_characteristics=lc, length=10)
+            Line("line1", bus1, bus2, phases=ph, parameters=lp, length=10)
         assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
         assert e.value.msg.startswith(f"Line of id 'line1' got invalid phases '{ph}', allowed values are")
 
     # Allowed
     for ph in ("ab", "abc", "a", "n"):
-        lc = LineCharacteristics("test", z_line=10 * np.eye(len(ph), dtype=complex))
-        Line("line1", bus1, bus2, phases=ph, line_characteristics=lc, length=10)
+        lp = LineParameters("test", z_line=10 * np.eye(len(ph), dtype=complex))
+        Line("line1", bus1, bus2, phases=ph, parameters=lp, length=10)
 
     # Not in bus
     bus1.phases = "abc"
     with pytest.raises(RoseauLoadFlowException) as e:
-        Line("line1", bus1, bus2, phases="abcn", line_characteristics=lc, length=10)
+        Line("line1", bus1, bus2, phases="abcn", parameters=lp, length=10)
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
     assert (
         e.value.msg
@@ -149,14 +149,14 @@ def test_lines_phases():
     # Default
     bus1.phases = "abcn"
     bus2.phases = "ab"
-    lc = LineCharacteristics("test", z_line=10 * np.eye(2, dtype=complex))
-    line = Line("line1", bus1, bus2, line_characteristics=lc, length=10)
+    lp = LineParameters("test", z_line=10 * np.eye(2, dtype=complex))
+    line = Line("line1", bus1, bus2, parameters=lp, length=10)
     assert line.phases == line.phases1 == line.phases2 == "ab"
 
     # Bad default
-    lc = LineCharacteristics("test", z_line=10 * np.eye(3, dtype=complex))  # bad
+    lp = LineParameters("test", z_line=10 * np.eye(3, dtype=complex))  # bad
     with pytest.raises(RoseauLoadFlowException) as e:
-        Line("line1", bus1, bus2, line_characteristics=lc, length=10)
+        Line("line1", bus1, bus2, parameters=lp, length=10)
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_Z_LINE_SHAPE
     assert e.value.msg == "Incorrect z_line dimensions for line 'line1': (3, 3) instead of (2, 2)"
 
@@ -204,32 +204,32 @@ def test_transformer_phases():
     assert Transformer.allowed_phases == {"abc", "abcn"}
 
     # Not allowed
-    tc = TransformerCharacteristics.from_name("H61_50kVA", "Dyn11")
+    tp = TransformerParameters.from_name("H61_50kVA", "Dyn11")
     for ph in ("ba", "nc", "anb", "nabc", "acb"):
         with pytest.raises(RoseauLoadFlowException) as e:
-            Transformer("tr1", bus1, bus2, phases1=ph, phases2=ph, transformer_characteristics=tc)
+            Transformer("tr1", bus1, bus2, phases1=ph, phases2=ph, parameters=tp)
         assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
         assert e.value.msg.startswith(f"Transformer of id 'tr1' got invalid phases1 '{ph}', allowed values are")
 
     # Allowed
-    Transformer("tr1", bus1, bus2, phases1="abc", phases2="abcn", transformer_characteristics=tc)
+    Transformer("tr1", bus1, bus2, phases1="abc", phases2="abcn", parameters=tp)
 
     # Not in bus
     bus2.phases = "abc"
     with pytest.raises(RoseauLoadFlowException) as e:
-        Transformer("tr1", bus1, bus2, phases1="abc", phases2="abcn", transformer_characteristics=tc)
+        Transformer("tr1", bus1, bus2, phases1="abc", phases2="abcn", parameters=tp)
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
     assert e.value.msg == "Phases (2) ['n'] of transformer 'tr1' are not in phases 'abc' of bus 'bus-2'."
 
     # Bad phases
     bus2.phases = "abcn"
     with pytest.raises(RoseauLoadFlowException) as e:
-        Transformer("tr1", bus1, bus2, phases1="abc", phases2="abc", transformer_characteristics=tc)
+        Transformer("tr1", bus1, bus2, phases1="abc", phases2="abc", parameters=tp)
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS
     assert e.value.msg == "Phases (2) 'abc' of transformer 'tr1' are not compatible with its winding 'yn'."
 
     # Default
-    transformer = Transformer(id="tr1", bus1=bus1, bus2=bus2, transformer_characteristics=tc, length=10)
+    transformer = Transformer(id="tr1", bus1=bus1, bus2=bus2, parameters=tp, length=10)
     assert transformer.phases1 == "abc"
     assert transformer.phases2 == "abcn"
 
@@ -237,6 +237,6 @@ def test_transformer_phases():
     bus1.phases = "abc"
     bus2.phases = "abc"
     with pytest.raises(RoseauLoadFlowException) as e:
-        Transformer("tr1", bus1, bus2, transformer_characteristics=tc)
+        Transformer("tr1", bus1, bus2, parameters=tp)
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
     assert e.value.msg == "Phases (2) ['n'] of transformer 'tr1' are not in phases 'abc' of bus 'bus-2'."

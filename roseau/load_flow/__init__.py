@@ -23,13 +23,13 @@ from roseau.load_flow.models import (
     Ground,
     ImpedanceLoad,
     Line,
-    LineCharacteristics,
+    LineParameters,
     PotentialRef,
     PowerLoad,
     Projection,
     Switch,
     Transformer,
-    TransformerCharacteristics,
+    TransformerParameters,
     VoltageSource,
 )
 from roseau.load_flow.network import ElectricalNetwork
@@ -58,7 +58,7 @@ __all__ = [
     # Lines
     "Switch",
     "Line",
-    "LineCharacteristics",
+    "LineParameters",
     # Loads
     "AbstractLoad",
     "ImpedanceLoad",
@@ -70,7 +70,7 @@ __all__ = [
     "Projection",
     # Transformers
     "Transformer",
-    "TransformerCharacteristics",
+    "TransformerParameters",
     "VoltageSource",
     # Exceptions
     "RoseauLoadFlowException",

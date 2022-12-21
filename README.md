@@ -41,35 +41,30 @@ from roseau.load_flow import (
     ElectricalNetwork,
     Ground,
     Line,
-    LineCharacteristics,
+    LineParameters,
     PotentialRef,
     PowerLoad,
     VoltageSource,
 )
 
+# Create a ground connection and a potential reference
+ground = Ground(id="g")  # A ground connection
+p_ref = PotentialRef(id="pr", element=ground)  # A potential reference
+
 # Create a main bus and a voltage source
-ground = Ground("ground")  # A ground connection
-p_ref = PotentialRef("pref", element=ground)  # A potential reference
 vn = 400 / np.sqrt(3)
 voltages = [vn, vn * np.exp(-2 / 3 * np.pi * 1j), vn * np.exp(2 / 3 * np.pi * 1j)]
-source_bus = Bus(id="source bus", phases="abcn")
-ground.connect(source_bus)
-vs = VoltageSource(id="source", phases="abcn", bus=source_bus, voltages=voltages)
+source_bus = Bus(id="sb", phases="abcn")
+ground.connect(source_bus)  # The neutral of the main is connected to the ground
+vs = VoltageSource(id="vs", bus=source_bus, phases="abcn", voltages=voltages)
 
 # Create a load bus and a load
-load_bus = Bus(id="load bus", phases="abcn")
-load = PowerLoad(id="power load", phases="abcn", bus=load_bus, s=[100 + 0j, 100 + 0j, 100 + 0j])
+load_bus = Bus(id="lb", phases="abcn")
+load = PowerLoad(id="pl", bus=load_bus, phases="abcn", s=[100 + 0j, 100 + 0j, 100 + 0j])
 
 # Create a line between the two buses
-line_characteristics = LineCharacteristics("test", z_line=np.eye(4, dtype=complex))
-line = Line(
-    id="line",
-    phases="abcn",
-    bus1=source_bus,
-    bus2=load_bus,
-    line_characteristics=line_characteristics,
-    length=10,  # km
-)
+lp = LineParameters("lp_series", z_line=np.eye(4, dtype=complex))
+line = Line(id="l", bus1=source_bus, bus2=load_bus, phases="abcn", parameters=lp, length=10)
 
 # Create the network from these elements
 en = ElectricalNetwork(

@@ -3,15 +3,14 @@ from typing import Any, Optional
 
 from pint import Quantity
 from shapely.geometry import LineString, Point
-from shapely.geometry.base import BaseGeometry
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import AbstractBranch, Ground
-from roseau.load_flow.models.lines.line_characteristics import LineCharacteristics
+from roseau.load_flow.models.lines.parameters import LineParameters
 from roseau.load_flow.models.voltage_sources import VoltageSource
 from roseau.load_flow.typing import Id, JsonDict
-from roseau.load_flow.utils import BranchType, ureg
+from roseau.load_flow.utils import BranchType
 
 logger = logging.getLogger(__name__)
 
@@ -155,7 +154,7 @@ class Line(AbstractBranch):
         bus1: Bus,
         bus2: Bus,
         *,
-        line_characteristics: LineCharacteristics,
+        parameters: LineParameters,
         length: float,
         phases: Optional[str] = None,
         ground: Optional[Ground] = None,
@@ -174,8 +173,8 @@ class Line(AbstractBranch):
             bus2:
                 The second bus (aka `"to_bus"`) to connect to the line.
 
-            line_characteristics:
-                The characteristics of the line.
+            parameters:
+                The parameters of the line, an instance of :class:`LineParameters`.
 
             length:
                 The length of the line in km.
@@ -212,9 +211,9 @@ class Line(AbstractBranch):
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_GEOMETRY_TYPE)
 
         line_dimensions = (len(phases),) * 2
-        if line_characteristics.z_line.shape != line_dimensions:
+        if parameters.z_line.shape != line_dimensions:
             msg = (
-                f"Incorrect z_line dimensions for line {id!r}: {line_characteristics.z_line.shape} instead of "
+                f"Incorrect z_line dimensions for line {id!r}: {parameters.z_line.shape} instead of "
                 f"{line_dimensions}"
             )
             logger.error(msg)
@@ -222,10 +221,10 @@ class Line(AbstractBranch):
 
         super().__init__(id, bus1, bus2, phases1=phases, phases2=phases, geometry=geometry, **kwargs)
 
-        if line_characteristics.y_shunt is not None:
-            if line_characteristics.y_shunt.shape != line_dimensions:
+        if parameters.y_shunt is not None:
+            if parameters.y_shunt.shape != line_dimensions:
                 msg = (
-                    f"Incorrect y_shunt dimensions for line {id!r}: {line_characteristics.y_shunt.shape} instead of "
+                    f"Incorrect y_shunt dimensions for line {id!r}: {parameters.y_shunt.shape} instead of "
                     f"{line_dimensions}"
                 )
                 logger.error(msg)
@@ -238,80 +237,29 @@ class Line(AbstractBranch):
             self._connect(ground)
 
         self.phases = phases
-        self.line_characteristics = line_characteristics
+        self.parameters = parameters
         self.ground = ground
 
         if isinstance(length, Quantity):
             length = length.m_as("km")
         self.length = length
 
-    def update_characteristics(self, line_characteristics: LineCharacteristics) -> None:
+    def update_parameters(self, parameters: LineParameters) -> None:
         """Change the line parameters.
 
         Args:
-            line_characteristics:
-                The line characteristics of the new line parameters.
+            parameters:
+                The new line parameters.
         """
-        self.line_characteristics = line_characteristics
-        if self.line_characteristics.y_shunt is not None and self.ground is not None:
+        self.parameters = parameters
+        if self.parameters.y_shunt is not None and self.ground is not None:
             self._connect(self.ground)  # handles already connected case
 
     #
     # Json Mixin interface
     #
-    @classmethod
-    @ureg.wraps(None, (None, None, None, None, "km", None, None, None, None), strict=False)
-    def from_dict(
-        cls,
-        id: Id,
-        bus1: Bus,
-        bus2: Bus,
-        length: float,
-        line_type: LineCharacteristics,
-        phases: Optional[str] = None,
-        ground: Optional[Ground] = None,
-        geometry: Optional[BaseGeometry] = None,
-    ) -> "Line":
-        """Line constructor from dict.
-
-        Args:
-            id:
-                A unique ID of the line in the network branches.
-
-            bus1:
-                The first bus to connect to the line.
-
-            bus2:
-                The second bus to connect to the line.
-
-            length:
-                Length of the line (km).
-
-            line_type:
-                The line characteristics.
-
-            ground:
-                The ground (optional for line models without a shunt admittance).
-
-            geometry:
-                The geometry of the line.
-
-        Returns:
-            The constructed line.
-        """
-        return cls(
-            id=id,
-            bus1=bus1,
-            bus2=bus2,
-            line_characteristics=line_type,
-            length=length,
-            phases=phases,
-            ground=ground,
-            geometry=geometry,
-        )
-
     def to_dict(self) -> JsonDict:
-        res = {**super().to_dict(), "length": self.length, "type_id": self.line_characteristics.id}
+        res = {**super().to_dict(), "length": self.length, "params_id": self.parameters.id}
         if self.ground is not None:
             res["ground"] = self.ground.id
         return res

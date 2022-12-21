@@ -10,8 +10,8 @@ from roseau.load_flow.utils.mixins import Identifiable, JsonMixin
 logger = logging.getLogger(__name__)
 
 
-class TransformerCharacteristics(Identifiable, JsonMixin):
-    """A class to store the characteristics of the transformers."""
+class TransformerParameters(Identifiable, JsonMixin):
+    """A class to store the parameters of the transformers."""
 
     @ureg.wraps(None, (None, None, None, "V", "V", "VA", "W", None, "W", None), strict=False)
     def __init__(
@@ -26,11 +26,11 @@ class TransformerCharacteristics(Identifiable, JsonMixin):
         psc: float,
         vsc: float,
     ) -> None:
-        """TransformerCharacteristics constructor.
+        """TransformerParameters constructor.
 
         Args:
             id:
-                A unique ID of the transformer characteristics, typically its canonical name.
+                A unique ID of the transformer parameters, typically its canonical name.
 
             windings:
                 The type of windings such as "Dyn11"
@@ -91,7 +91,7 @@ class TransformerCharacteristics(Identifiable, JsonMixin):
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_PARAMETERS)
 
     def __eq__(self, other: object) -> bool:
-        if not isinstance(other, TransformerCharacteristics):
+        if not isinstance(other, TransformerParameters):
             return NotImplemented
         else:
             return (
@@ -107,18 +107,18 @@ class TransformerCharacteristics(Identifiable, JsonMixin):
             )
 
     @classmethod
-    def from_name(cls, name: str, windings: str) -> "TransformerCharacteristics":
-        """Construct TransformerCharacteristics from name and windings.
+    def from_name(cls, name: str, windings: str) -> "TransformerParameters":
+        """Construct TransformerParameters from name and windings.
 
         Args:
             name:
-                The name of the transformer characteristics, such as `"160kVA"` or `"H61_50kVA"`.
+                The name of the transformer parameters, such as `"160kVA"` or `"H61_50kVA"`.
 
             windings:
                 The type of windings such as `"Dyn11"`.
 
         Returns:
-            The constructed transformer characteristics.
+            The constructed transformer parameters.
         """
         if name == "H61_50kVA":
             return cls(name, windings, 20000, 400, 50 * 1e3, 145, 1.8 / 100, 1350, 4 / 100)
@@ -137,7 +137,7 @@ class TransformerCharacteristics(Identifiable, JsonMixin):
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TYPE_NAME_SYNTAX)
 
     @classmethod
-    def from_dict(cls, data: JsonDict) -> "TransformerCharacteristics":
+    def from_dict(cls, data: JsonDict) -> "TransformerParameters":
         return cls(
             id=data["id"],
             windings=data["type"],  # Windings of the transformer
@@ -164,7 +164,7 @@ class TransformerCharacteristics(Identifiable, JsonMixin):
         }
 
     def to_zyk(self) -> tuple[complex, complex, float, float]:
-        """Compute the transformer characteristics z2, ym, k and orientation mandatory for some models
+        """Compute the transformer parameters z2, ym, k and orientation mandatory for some models
 
         Returns:
             * ``z2``: The series impedance of the transformer (Ohms).

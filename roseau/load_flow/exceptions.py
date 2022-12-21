@@ -68,8 +68,8 @@ class RoseauLoadFlowExceptionCode(Enum):
     DGS_BAD_PHASE_NUMBER = auto()
 
     # JSON export
-    JSON_LINE_CHARACTERISTICS_DUPLICATES = auto()
-    JSON_TRANSFORMER_CHARACTERISTICS_DUPLICATES = auto()
+    JSON_LINE_PARAMETERS_DUPLICATES = auto()
+    JSON_TRANSFORMER_PARAMETERS_DUPLICATES = auto()
     JSON_PREF_INVALID = auto()
 
     @classmethod

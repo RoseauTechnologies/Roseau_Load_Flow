@@ -12,12 +12,12 @@ from roseau.load_flow.models import (
     Element,
     Ground,
     Line,
-    LineCharacteristics,
+    LineParameters,
     PotentialRef,
     PowerLoad,
     Switch,
     Transformer,
-    TransformerCharacteristics,
+    TransformerParameters,
     VoltageSource,
 )
 from roseau.load_flow.typing import StrPath
@@ -102,8 +102,7 @@ def network_from_dgs(  # noqa: C901
     # Lines
     branches: dict[str, AbstractBranch] = {}
     if elm_lne is not None:
-
-        line_types: dict[str, LineCharacteristics] = {}
+        lines_params_dict: dict[str, LineParameters] = {}
         for type_id in typ_lne.index:
             # TODO: use the detailed phase information instead of n
             n = typ_lne.at[type_id, "nlnph"] + typ_lne.at[type_id, "nneutral"]
@@ -116,7 +115,7 @@ def network_from_dgs(  # noqa: C901
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DGS_BAD_PHASE_NUMBER)
 
-            line_types[type_id] = LineCharacteristics.from_sym(
+            lines_params_dict[type_id] = LineParameters.from_sym(
                 type_id,
                 r0=typ_lne.at[type_id, "rline0"],
                 model=line_model,
@@ -136,20 +135,19 @@ def network_from_dgs(  # noqa: C901
 
         for line_id in elm_lne.index:
             type_id = elm_lne.at[line_id, "typ_id"]  # id of the line type
-
-            branches[line_id] = Line.from_dict(
+            branches[line_id] = Line(
                 id=line_id,
                 bus1=buses[sta_cubic.at[elm_lne.at[line_id, "bus1"], "cterm"]],
                 bus2=buses[sta_cubic.at[elm_lne.at[line_id, "bus2"], "cterm"]],
                 length=elm_lne.at[line_id, "dline"],
-                line_type=line_types[type_id],
+                parameters=lines_params_dict[type_id],
                 ground=ground,
             )
 
     # Transformers
     if elm_tr is not None:
         # Transformers type
-        transformers_data: dict[str, TransformerCharacteristics] = {}
+        transformers_params_dict: dict[str, TransformerParameters] = {}
         transformers_tap: dict[str, int] = {}
         for idx in typ_tr.index:
             # Extract data
@@ -165,18 +163,18 @@ def network_from_dgs(  # noqa: C901
             windings = f"{typ_tr.at[idx, 'tr2cn_h']}{typ_tr.at[idx, 'tr2cn_l']}{typ_tr.at[idx, 'nt2ag']}"
 
             # Generate transformer parameters
-            transformers_data[idx] = TransformerCharacteristics(name, windings, uhv, ulv, sn, p0, i0, psc, vsc)
+            transformers_params_dict[idx] = TransformerParameters(name, windings, uhv, ulv, sn, p0, i0, psc, vsc)
             transformers_tap[idx] = typ_tr.at[idx, "dutap"]
 
         # Create transformers
         for idx in elm_tr.index:
             type_id = elm_tr.at[idx, "typ_id"]  # id of the line type
             tap = 1.0 + elm_tr.at[idx, "nntap"] * transformers_tap[type_id] / 100
-            branches[idx] = Transformer.from_dict(
+            branches[idx] = Transformer(
                 id=idx,
                 bus1=buses[sta_cubic.at[elm_tr.at[idx, "bushv"], "cterm"]],
                 bus2=buses[sta_cubic.at[elm_tr.at[idx, "buslv"], "cterm"]],
-                transformer_type=transformers_data[type_id],
+                parameters=transformers_params_dict[type_id],
                 tap=tap,
             )
             ground.connect(bus=buses[sta_cubic.at[elm_tr.at[idx, "buslv"], "cterm"]])
