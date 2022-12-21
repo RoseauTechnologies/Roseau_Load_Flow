@@ -12,12 +12,12 @@ from roseau.load_flow.models import (
     Element,
     Ground,
     Line,
-    LineCharacteristics,
+    LineParameters,
     PotentialRef,
     PowerLoad,
     Switch,
     Transformer,
-    TransformerCharacteristics,
+    TransformerParameters,
     VoltageSource,
 )
 from roseau.load_flow.typing import StrPath
@@ -103,7 +103,7 @@ def network_from_dgs(  # noqa: C901
     branches: dict[str, AbstractBranch] = {}
     if elm_lne is not None:
 
-        line_types: dict[str, LineCharacteristics] = {}
+        line_types: dict[str, LineParameters] = {}
         for type_id in typ_lne.index:
             # TODO: use the detailed phase information instead of n
             n = typ_lne.at[type_id, "nlnph"] + typ_lne.at[type_id, "nneutral"]
@@ -116,7 +116,7 @@ def network_from_dgs(  # noqa: C901
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DGS_BAD_PHASE_NUMBER)
 
-            line_types[type_id] = LineCharacteristics.from_sym(
+            line_types[type_id] = LineParameters.from_sym(
                 type_id,
                 r0=typ_lne.at[type_id, "rline0"],
                 model=line_model,
@@ -149,7 +149,7 @@ def network_from_dgs(  # noqa: C901
     # Transformers
     if elm_tr is not None:
         # Transformers type
-        transformers_data: dict[str, TransformerCharacteristics] = {}
+        transformers_data: dict[str, TransformerParameters] = {}
         transformers_tap: dict[str, int] = {}
         for idx in typ_tr.index:
             # Extract data
@@ -165,7 +165,7 @@ def network_from_dgs(  # noqa: C901
             windings = f"{typ_tr.at[idx, 'tr2cn_h']}{typ_tr.at[idx, 'tr2cn_l']}{typ_tr.at[idx, 'nt2ag']}"
 
             # Generate transformer parameters
-            transformers_data[idx] = TransformerCharacteristics(name, windings, uhv, ulv, sn, p0, i0, psc, vsc)
+            transformers_data[idx] = TransformerParameters(name, windings, uhv, ulv, sn, p0, i0, psc, vsc)
             transformers_tap[idx] = typ_tr.at[idx, "dutap"]
 
         # Create transformers

@@ -6,10 +6,10 @@ from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowE
 from roseau.load_flow.models import (
     Bus,
     Ground,
-    LineCharacteristics,
+    LineParameters,
     PotentialRef,
     Transformer,
-    TransformerCharacteristics,
+    TransformerParameters,
     VoltageSource,
 )
 from roseau.load_flow.network import ElectricalNetwork
@@ -25,64 +25,44 @@ def test_to_dict():
     p_ref = PotentialRef("pref", element=ground)
     vs = VoltageSource("vs", source_bus, phases="abcn", voltages=voltages)
 
-    # Same type name, different characteristics -> fail
-    lc1 = LineCharacteristics("test", z_line=np.eye(4, dtype=complex), y_shunt=np.eye(4, dtype=complex))
-    lc2 = LineCharacteristics("test", z_line=np.eye(4, dtype=complex), y_shunt=np.eye(4, dtype=complex) * 1.1)
+    # Same id, different line parameters -> fail
+    lp1 = LineParameters("test", z_line=np.eye(4, dtype=complex), y_shunt=np.eye(4, dtype=complex))
+    lp2 = LineParameters("test", z_line=np.eye(4, dtype=complex), y_shunt=np.eye(4, dtype=complex) * 1.1)
 
-    line1 = Line(
-        id="line1",
-        phases="abcn",
-        bus1=source_bus,
-        bus2=load_bus,
-        ground=ground,
-        line_characteristics=lc1,
-        length=10,
-    )
-    line2 = Line(
-        id="line2",
-        phases="abcn",
-        bus1=source_bus,
-        bus2=load_bus,
-        ground=ground,
-        line_characteristics=lc2,
-        length=10,
-    )
+    line1 = Line("line1", source_bus, load_bus, phases="abcn", ground=ground, parameters=lp1, length=10)
+    line2 = Line("line2", source_bus, load_bus, phases="abcn", ground=ground, parameters=lp2, length=10)
     en = ElectricalNetwork([source_bus, load_bus], [line1, line2], [], [vs], [p_ref, ground])
     with pytest.raises(RoseauLoadFlowException) as e:
         en.to_dict()
-    assert "There are multiple line characteristics with 'test'" in e.value.args[0]
-    assert e.value.args[1] == RoseauLoadFlowExceptionCode.JSON_LINE_CHARACTERISTICS_DUPLICATES
+    assert "There are multiple line parameters with id 'test'" in e.value.msg
+    assert e.value.code == RoseauLoadFlowExceptionCode.JSON_LINE_PARAMETERS_DUPLICATES
 
-    # Same type name, same characteristics -> ok
-    lc2 = LineCharacteristics("test", z_line=np.eye(4, dtype=complex), y_shunt=np.eye(4, dtype=complex))
-    line2.update_characteristics(line_characteristics=lc2)
+    # Same id, same line parameters -> ok
+    lp2 = LineParameters("test", z_line=np.eye(4, dtype=complex), y_shunt=np.eye(4, dtype=complex))
+    line2.update_parameters(lp2)
     en.to_dict()
 
-    # Same transformer type name, different characteristics -> fail
+    # Same id, different transformer parameters -> fail
     en.remove_element(line1)
     en.remove_element(line2)
-    transformer_characteristics1 = TransformerCharacteristics(
+    tp1 = TransformerParameters(
         "t", windings="Dyn11", uhv=20000, ulv=400, sn=160 * 1e3, p0=460, i0=2.3 / 100, psc=2350, vsc=4 / 100
     )
-    transformer_characteristics2 = TransformerCharacteristics(
+    tp2 = TransformerParameters(
         "t", windings="Dyn11", uhv=20000, ulv=400, sn=200 * 1e3, p0=460, i0=2.3 / 100, psc=2350, vsc=4 / 100
     )
-    transformer1 = Transformer(
-        id="Transformer1", bus1=source_bus, bus2=load_bus, transformer_characteristics=transformer_characteristics1
-    )
-    transformer2 = Transformer(
-        id="Transformer2", bus1=source_bus, bus2=load_bus, transformer_characteristics=transformer_characteristics2
-    )
+    transformer1 = Transformer(id="Transformer1", bus1=source_bus, bus2=load_bus, parameters=tp1)
+    transformer2 = Transformer(id="Transformer2", bus1=source_bus, bus2=load_bus, parameters=tp2)
     en.add_element(transformer1)
     en.add_element(transformer2)
     with pytest.raises(RoseauLoadFlowException) as e:
         en.to_dict()
-    assert "There are multiple transformer characteristics with 't'" in e.value.args[0]
-    assert e.value.args[1] == RoseauLoadFlowExceptionCode.JSON_TRANSFORMER_CHARACTERISTICS_DUPLICATES
+    assert "There are multiple transformer parameters with id 't'" in e.value.msg
+    assert e.value.code == RoseauLoadFlowExceptionCode.JSON_TRANSFORMER_PARAMETERS_DUPLICATES
 
-    # Same type name, same characteristics -> ok
-    transformer_characteristics2 = TransformerCharacteristics(
+    # Same id, same transformer parameters -> ok
+    tp2 = TransformerParameters(
         "t", windings="Dyn11", uhv=20000, ulv=400, sn=160 * 1e3, p0=460, i0=2.3 / 100, psc=2350, vsc=4 / 100
     )
-    transformer2.update_characteristics(transformer_characteristics=transformer_characteristics2)
+    transformer2.update_parameters(tp2)
     en.to_dict()

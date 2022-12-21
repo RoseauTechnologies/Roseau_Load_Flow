@@ -13,12 +13,12 @@ from roseau.load_flow.models import (
     Bus,
     Ground,
     Line,
-    LineCharacteristics,
+    LineParameters,
     PotentialRef,
     PowerLoad,
     Switch,
     Transformer,
-    TransformerCharacteristics,
+    TransformerParameters,
     VoltageSource,
 )
 from roseau.load_flow.network import ElectricalNetwork
@@ -28,30 +28,22 @@ from roseau.load_flow.network.electrical_network import _PHASE_DTYPE, _VOLTAGE_P
 @pytest.fixture()
 def small_network() -> ElectricalNetwork:
     # Build a small network
+    point1 = Point(-1.318375372111463, 48.64794139348595)
+    point2 = Point(-1.320149235966572, 48.64971306653889)
+    line_string = LineString([point1, point2])
+
     ground = Ground("ground")
-    source_bus = Bus("bus0", phases="abcn", geometry=Point(-1.318375372111463, 48.64794139348595))
-    load_bus = Bus("bus1", phases="abcn", geometry=Point(-1.320149235966572, 48.64971306653889))
+    source_bus = Bus("bus0", phases="abcn", geometry=point1)
+    load_bus = Bus("bus1", phases="abcn", geometry=point2)
     ground.connect(load_bus)
 
-    vs = VoltageSource(
-        id="vs",
-        bus=source_bus,
-        voltages=[20000.0 + 0.0j, -10000.0 - 17320.508076j, -10000.0 + 17320.508076j],
-        phases="abcn",
-    )
+    voltages = [20000.0 + 0.0j, -10000.0 - 17320.508076j, -10000.0 + 17320.508076j]
+    vs = VoltageSource("vs", source_bus, voltages=voltages, phases="abcn")
     load = PowerLoad("load", load_bus, s=[100, 100, 100], phases="abcn")
     pref = PotentialRef("pref", element=ground)
 
-    lc = LineCharacteristics("test", z_line=10 * np.eye(4, dtype=complex))
-    line = Line(
-        id="line",
-        phases="abcn",
-        bus1=source_bus,
-        bus2=load_bus,
-        line_characteristics=lc,
-        length=1.0,  # km
-        geometry=LineString([(-1.318375372111463, 48.64794139348595), (-1.320149235966572, 48.64971306653889)]),
-    )
+    lp = LineParameters("test", z_line=10 * np.eye(4, dtype=complex))
+    line = Line("line", source_bus, load_bus, phases="abcn", parameters=lp, length=1.0, geometry=line_string)
 
     return ElectricalNetwork(
         buses=[source_bus, load_bus],
@@ -65,9 +57,17 @@ def small_network() -> ElectricalNetwork:
 @pytest.fixture()
 def single_phase_network() -> ElectricalNetwork:
     # Build a small single-phase network
+    # ----------------------------------
+
+    # Phase "b" is chosen to catch errors where the index of the first phase may be assumed to be 0
     phases = "bn"
+
+    # Network geometry
     point1 = Point(-1.318375372111463, 48.64794139348595)
     point2 = Point(-1.320149235966572, 48.64971306653889)
+    line_string = LineString([point1, point2])
+
+    # Network elements
     bus0 = Bus("bus0", phases=phases, geometry=point1)
     bus1 = Bus("bus1", phases=phases, geometry=point2)
 
@@ -78,16 +78,8 @@ def single_phase_network() -> ElectricalNetwork:
     vs = VoltageSource("vs", bus0, voltages=[20000.0 + 0.0j], phases=phases)
     load = PowerLoad("load", bus1, s=[100], phases=phases)
 
-    lc = LineCharacteristics("test", z_line=10 * np.eye(2, dtype=complex))
-    line = Line(
-        "line",
-        bus0,
-        bus1,
-        phases=phases,
-        line_characteristics=lc,
-        length=1.0,
-        geometry=LineString([point1, point2]),
-    )
+    lp = LineParameters("test", z_line=10 * np.eye(2, dtype=complex))
+    line = Line("line", bus0, bus1, phases=phases, parameters=lp, length=1.0, geometry=line_string)
 
     return ElectricalNetwork(
         buses=[bus0, bus1],
@@ -169,15 +161,8 @@ def test_add_and_remove():
     ground.connect(load_bus)
     VoltageSource(id="vs", phases="abcn", bus=source_bus, voltages=voltages)
     load = PowerLoad(id="power load", phases="abcn", bus=load_bus, s=[100 + 0j, 100 + 0j, 100 + 0j])
-    line_characteristics = LineCharacteristics("test", z_line=np.eye(4, dtype=complex))
-    line = Line(
-        id="line",
-        phases="abcn",
-        bus1=source_bus,
-        bus2=load_bus,
-        line_characteristics=line_characteristics,
-        length=10,  # km
-    )
+    lp = LineParameters("test", z_line=np.eye(4, dtype=complex))
+    line = Line(id="line", bus1=source_bus, bus2=load_bus, phases="abcn", parameters=lp, length=10)
     PotentialRef("pref", element=ground)
     en = ElectricalNetwork.from_element(source_bus)
     en.remove_element(load)
@@ -187,22 +172,22 @@ def test_add_and_remove():
     # Bad key
     with pytest.raises(RoseauLoadFlowException) as e:
         en.remove_element(Ground("a separate ground element"))
-    assert "is not a valid bus, branch, load or voltage source" in e.value.args[0]
-    assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT
+    assert "is not a valid bus, branch, load or voltage source" in e.value.msg
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT
 
     # Adding ground
     ground2 = Ground("ground2")
     with pytest.raises(RoseauLoadFlowException) as e:
         en.add_element(ground2)
-    assert e.value.args[0] == "Only lines, loads, buses and voltage sources can be added to the network."
-    assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT
+    assert e.value.msg == "Only lines, loads, buses and voltage sources can be added to the network."
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT
 
     # Remove line => 2 separated connected components
     with pytest.raises(RoseauLoadFlowException) as e:
         en.remove_element(line)
         en.solve_load_flow(auth=("", ""))
-    assert "does not have a potential reference" in e.value.args[0]
-    assert e.value.args[1] == RoseauLoadFlowExceptionCode.NO_POTENTIAL_REFERENCE
+    assert "does not have a potential reference" in e.value.msg
+    assert e.value.code == RoseauLoadFlowExceptionCode.NO_POTENTIAL_REFERENCE
 
 
 def test_bad_networks():
@@ -211,57 +196,46 @@ def test_bad_networks():
     bus1 = Bus("bus1", phases="abcn")
     bus2 = Bus("bus2", phases="abcn")
     ground.connect(bus2)
-    line_characteristics = LineCharacteristics("test", z_line=np.eye(3, dtype=complex))
-    line = Line(
-        id="line",
-        phases="abc",
-        bus1=bus1,
-        bus2=bus2,
-        line_characteristics=line_characteristics,
-        length=10,
-    )
+    lp = LineParameters("test", z_line=np.eye(3, dtype=complex))
+    line = Line("line", bus1, bus2, phases="abc", parameters=lp, length=10)
     p_ref = PotentialRef("pref1", element=ground)
     with pytest.raises(RoseauLoadFlowException) as e:
         ElectricalNetwork.from_element(bus1)
-    assert e.value.args[0] == "There is no voltage source provided in the network, you must provide at least one."
-    assert e.value.args[1] == RoseauLoadFlowExceptionCode.NO_VOLTAGE_SOURCE
+    assert e.value.msg == "There is no voltage source provided in the network, you must provide at least one."
+    assert e.value.code == RoseauLoadFlowExceptionCode.NO_VOLTAGE_SOURCE
 
     # Bad constructor
     bus0 = Bus("bus0", phases="abcn")
     ground.connect(bus0)
-    vs = VoltageSource(
-        "vs",
-        phases="abcn",
-        bus=bus0,
-        voltages=[20000.0 + 0.0j, -10000.0 - 17320.508076j, -10000.0 + 17320.508076j],
-    )
+    voltages = [20000.0 + 0.0j, -10000.0 - 17320.508076j, -10000.0 + 17320.508076j]
+    vs = VoltageSource("vs", bus0, phases="abcn", voltages=voltages)
     switch = Switch("switch", bus0, bus1, phases="abcn")
     with pytest.raises(RoseauLoadFlowException) as e:
         ElectricalNetwork([bus0, bus1], [line, switch], [], [vs], [ground, p_ref])  # no bus2
-    assert "but has not been added to the network, you should add it with 'add_element'." in e.value.args[0]
-    assert bus2.id in e.value.args[0]
-    assert e.value.args[1] == RoseauLoadFlowExceptionCode.UNKNOWN_ELEMENT
+    assert "but has not been added to the network, you should add it with 'add_element'." in e.value.msg
+    assert bus2.id in e.value.msg
+    assert e.value.code == RoseauLoadFlowExceptionCode.UNKNOWN_ELEMENT
 
     # No potential reference
     bus3 = Bus("bus3", phases="abcn")
-    transformer_characteristics = TransformerCharacteristics(
+    tp = TransformerParameters(
         "t", windings="Dyn11", uhv=20000, ulv=400, sn=160 * 1e3, p0=460, i0=2.3 / 100, psc=2350, vsc=4 / 100
     )
-    _ = Transformer("transfo", bus2, bus3, transformer_characteristics=transformer_characteristics)
+    Transformer("transfo", bus2, bus3, parameters=tp)
     with pytest.raises(RoseauLoadFlowException) as e:
         ElectricalNetwork.from_element(bus0)
-    assert "does not have a potential reference" in e.value.args[0]
-    assert e.value.args[1] == RoseauLoadFlowExceptionCode.NO_POTENTIAL_REFERENCE
+    assert "does not have a potential reference" in e.value.msg
+    assert e.value.code == RoseauLoadFlowExceptionCode.NO_POTENTIAL_REFERENCE
 
     # Good network
     ground.connect(bus3)
 
     # 2 potential reference
-    _ = PotentialRef("pref2", element=bus3)
+    PotentialRef("pref2", element=bus3)
     with pytest.raises(RoseauLoadFlowException) as e:
         ElectricalNetwork.from_element(vs)
-    assert "has 2 potential references, it should have only one." in e.value.args[0]
-    assert e.value.args[1] == RoseauLoadFlowExceptionCode.SEVERAL_POTENTIAL_REFERENCE
+    assert "has 2 potential references, it should have only one." in e.value.msg
+    assert e.value.code == RoseauLoadFlowExceptionCode.SEVERAL_POTENTIAL_REFERENCE
 
 
 def test_solve_load_flow(small_network, good_json_results):
@@ -325,8 +299,8 @@ def test_solve_load_flow(small_network, good_json_results):
         m.post(solve_url, status_code=200, json=json_result, headers={"content-type": "application/json"})
         with pytest.raises(RoseauLoadFlowException) as e:
             small_network.solve_load_flow(auth=("", ""))
-        assert "The load flow did not converge after 50 iterations" in e.value.args[0]
-        assert e.value.args[1] == RoseauLoadFlowExceptionCode.NO_LOAD_FLOW_CONVERGENCE
+        assert "The load flow did not converge after 50 iterations" in e.value.msg
+        assert e.value.code == RoseauLoadFlowExceptionCode.NO_LOAD_FLOW_CONVERGENCE
 
 
 def test_solve_load_flow_error(small_network):
@@ -338,16 +312,16 @@ def test_solve_load_flow_error(small_network):
     with requests_mock.Mocker() as m, pytest.raises(RoseauLoadFlowException) as e:
         m.post(solve_url, status_code=400, json=json_result, headers={"content-type": "application/json"})
         small_network.solve_load_flow(auth=("", ""))
-    assert e.value.args[0] == json_result["msg"]
-    assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_BRANCH_TYPE
+    assert e.value.msg == json_result["msg"]
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_BRANCH_TYPE
 
     # Load flow error (other than official exceptions of RoseauLoadFlowException)
     json_result = {"msg": "Error while solving the load flow", "code": "load_flow_error"}
     with requests_mock.Mocker() as m, pytest.raises(RoseauLoadFlowException) as e:
         m.post(solve_url, status_code=400, json=json_result, headers={"content-type": "application/json"})
         small_network.solve_load_flow(auth=("", ""))
-    assert json_result["msg"] in e.value.args[0]
-    assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_REQUEST
+    assert json_result["msg"] in e.value.msg
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_REQUEST
 
     # Authentication fail
     json_result = {"detail": "not_authenticated"}
@@ -355,8 +329,8 @@ def test_solve_load_flow_error(small_network):
         m.post(solve_url, status_code=401, json=json_result, headers={"content-type": "application/json"})
         with pytest.raises(RoseauLoadFlowException) as e:
             small_network.solve_load_flow(auth=("", ""))
-    assert "Authentication failed." in e.value.args[0]
-    assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_REQUEST
+    assert "Authentication failed." in e.value.msg
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_REQUEST
 
     # Bad request
     json_result = {"msg": "Error while parsing the provided JSON", "code": "parse_error"}
@@ -364,9 +338,9 @@ def test_solve_load_flow_error(small_network):
         m.post(solve_url, status_code=400, json=json_result, headers={"content-type": "application/json"})
         with pytest.raises(RoseauLoadFlowException) as e:
             small_network.solve_load_flow(auth=("", ""))
-    assert "There is a problem in the request" in e.value.args[0]
-    assert "Error while parsing the provided JSON" in e.value.args[0]
-    assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_REQUEST
+    assert "There is a problem in the request" in e.value.msg
+    assert "Error while parsing the provided JSON" in e.value.msg
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_REQUEST
 
 
 def test_frame(small_network):

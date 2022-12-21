@@ -15,8 +15,8 @@ from roseau.load_flow.utils.units import Q_, ureg
 logger = logging.getLogger(__name__)
 
 
-class LineCharacteristics(Identifiable, JsonMixin):
-    """A class to store the line characteristics of lines"""
+class LineParameters(Identifiable, JsonMixin):
+    """A class to store the line parameters of lines"""
 
     _type_re = "|".join(x.code() for x in LineType)
     _material_re = "|".join(x.code() for x in ConductorType)
@@ -27,11 +27,11 @@ class LineCharacteristics(Identifiable, JsonMixin):
 
     @ureg.wraps(None, (None, None, "ohm/km", "S/km"), strict=False)
     def __init__(self, id: Id, z_line: np.ndarray, y_shunt: Optional[np.ndarray] = None) -> None:
-        """LineCharacteristics constructor.
+        """LineParameters constructor.
 
         Args:
             id:
-                A unique ID of the line characteristics, typically its canonical name.
+                A unique ID of the line parameters, typically its canonical name.
 
             z_line:
                  The Z matrix of the line (Ohm/km).
@@ -45,7 +45,7 @@ class LineCharacteristics(Identifiable, JsonMixin):
         self._check_matrix()
 
     def __eq__(self, other: object) -> bool:
-        if not isinstance(other, LineCharacteristics):
+        if not isinstance(other, LineParameters):
             return NotImplemented
         return (
             self.id == other.id
@@ -102,12 +102,12 @@ class LineCharacteristics(Identifiable, JsonMixin):
         xpn: Optional[float] = None,
         bn: Optional[float] = None,
         bpn: Optional[float] = None,
-    ):
-        """Create line characteristics from sym model.
+    ) -> "LineParameters":
+        """Create line parameters from sym model.
 
         Args:
             id:
-                A unique ID of the line characteristics, typically its canonical name.
+                A unique ID of the line parameters, typically its canonical name.
 
             model:
                 The required model. It can be SYM or SYM_NEUTRAL. Be careful, it can be downgraded...
@@ -152,7 +152,7 @@ class LineCharacteristics(Identifiable, JsonMixin):
                 Phase to neutral susceptance (siemens/km)
 
         Returns:
-            The created line characteristics.
+            The created line parameters.
         """
         z_line, y_shunt, model = cls._sym_to_zy(
             id=id,
@@ -216,7 +216,7 @@ class LineCharacteristics(Identifiable, JsonMixin):
 
         Args:
             id:
-                A unique ID of the line characteristics, typically its canonical name.
+                A unique ID of the line parameters, typically its canonical name.
 
             model:
                 The required model. It can be SYM or SYM_NEUTRAL. Be careful, it can be downgraded...
@@ -349,11 +349,7 @@ class LineCharacteristics(Identifiable, JsonMixin):
         return z_line, y_shunt, model
 
     @classmethod
-    @ureg.wraps(
-        None,
-        (None, None, None, None, None, "mm**2", "mm**2", "m", "m"),
-        strict=False,
-    )
+    @ureg.wraps(None, (None, None, None, None, None, "mm**2", "mm**2", "m", "m"), strict=False)
     def from_lv_exact(
         cls,
         type_name: str,
@@ -364,8 +360,8 @@ class LineCharacteristics(Identifiable, JsonMixin):
         section_neutral: float,
         height: float,
         external_diameter: float,
-    ) -> "LineCharacteristics":
-        """Create line characteristics from LV exact model.
+    ) -> "LineParameters":
+        """Create line parameters from LV exact model.
 
         Args:
             type_name:
@@ -393,7 +389,7 @@ class LineCharacteristics(Identifiable, JsonMixin):
                 External diameter of the wire (m).
 
         Returns:
-            The created line characteristics.
+            The created line parameters.
 
         TODO: Documentation on the line data
         """
@@ -578,14 +574,14 @@ class LineCharacteristics(Identifiable, JsonMixin):
         section_neutral: Optional[float] = None,
         height: Optional[float] = None,
         external_diameter: Optional[float] = None,
-    ) -> "LineCharacteristics":
-        """Method to get the electrical characteristics of a LV line from its canonical name.
+    ) -> "LineParameters":
+        """Method to get the electrical parameters of a LV line from its canonical name.
         Some hypothesis will be made: the section of the neutral is the same as the other sections, the height and
         external diameter are pre-defined, and the isolation is PVC.
 
         Args:
             name:
-                The name of the line the characteristics must be computed. Eg. "S_AL_150".
+                The name of the line the parameters must be computed. Eg. "S_AL_150".
 
             section_neutral:
                 Surface of the neutral (mm²). If None it will be the same as the section of the other phases.
@@ -597,7 +593,7 @@ class LineCharacteristics(Identifiable, JsonMixin):
                 External diameter of the wire (mm). If None a default value will be used.
 
         Returns:
-            The corresponding line characteristics.
+            The corresponding line parameters.
         """
         match = cls._REGEXP_LINE_TYPE_NAME.fullmatch(string=name)
         if not match:
@@ -632,15 +628,15 @@ class LineCharacteristics(Identifiable, JsonMixin):
         )
 
     @classmethod
-    def from_name_mv(cls, name: str) -> "LineCharacteristics":
-        """Method to get the electrical characteristics of a MV line from its canonical name.
+    def from_name_mv(cls, name: str) -> "LineParameters":
+        """Method to get the electrical parameters of a MV line from its canonical name.
 
         Args:
             name:
-                The name of the line the characteristics must be computed. Eg. "S_AL_150".
+                The name of the line the parameters must be computed. Eg. "S_AL_150".
 
         Returns:
-            The corresponding line characteristics.
+            The corresponding line parameters.
         """
         match = cls._REGEXP_LINE_TYPE_NAME.fullmatch(string=name)
         if not match:
@@ -678,15 +674,15 @@ class LineCharacteristics(Identifiable, JsonMixin):
         return cls(name, z_line=z_line, y_shunt=y_shunt)
 
     @classmethod
-    def from_dict(cls, data: JsonDict) -> "LineCharacteristics":
-        """Line characteristics constructor from dict.
+    def from_dict(cls, data: JsonDict) -> "LineParameters":
+        """Line parameters constructor from dict.
 
         Args:
             data:
-                The dictionary data of the line characteristics.
+                The dictionary data of the line parameters.
 
         Returns:
-            The created line characteristics.
+            The created line parameters.
         """
         type_id = data.pop("id")
         model = LineModel.from_string(data["model"])
@@ -711,7 +707,7 @@ class LineCharacteristics(Identifiable, JsonMixin):
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_MODEL)
 
     def to_dict(self) -> JsonDict:
-        """Return the line characteristics information as a dictionary format."""
+        """Return the line parameters information as a dictionary format."""
         res = {
             "id": self.id,
             "model": "zy_neutral" if self.y_shunt is not None else "z_neutral",

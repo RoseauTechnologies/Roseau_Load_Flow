@@ -2,10 +2,10 @@ import numpy as np
 import pytest
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
-from roseau.load_flow.models import TransformerCharacteristics
+from roseau.load_flow.models import TransformerParameters
 
 
-def test_transformer_characteristics():
+def test_transformer_parameters():
     # Example in the "transformers" document of Victor.
     # Yzn11 - 50kVA
     data = {
@@ -19,9 +19,9 @@ def test_transformer_characteristics():
         "vsc": 4 / 100,  # %
         "type": "yzn11",
     }
-    tc = TransformerCharacteristics.from_dict(data)
+    tp = TransformerParameters.from_dict(data)
 
-    z2, ym, k, orientation = tc.to_zyk()
+    z2, ym, k, orientation = tp.to_zyk()
     r_iron = 20e3**2 / 145  # Ohm
     lm_omega = 20e3**2 / (np.sqrt((1.8 / 100 * 50e3) ** 2 - 145**2))  # H *rad/s
     z2_norm = 4 / 100 * 400**2 / 50e3
@@ -50,8 +50,8 @@ def test_transformer_characteristics():
         "vsc": 4 / 100,  # %
         "type": "dyn11",
     }
-    tc = TransformerCharacteristics.from_dict(data)
-    z2, ym, k, orientation = tc.to_zyk()
+    tp = TransformerParameters.from_dict(data)
+    z2, ym, k, orientation = tp.to_zyk()
     r_iron = 20e3**2 / 210  # Ohm
     lm_omega = 20e3**2 / (np.sqrt((3.5 / 100 * 100e3) ** 2 - 210**2))  # H*rad/s
     z2_norm = 4 / 100 * 400**2 / 100e3
@@ -80,8 +80,8 @@ def test_transformer_characteristics():
         "vsc": 4 / 100,  # %
         "type": "dyn5",
     }
-    tc = TransformerCharacteristics.from_dict(data)
-    z2, ym, k, orientation = tc.to_zyk()
+    tp = TransformerParameters.from_dict(data)
+    z2, ym, k, orientation = tp.to_zyk()
     r_iron = 20e3**2 / 460  # Ohm
     lm_omega = 20e3**2 / (np.sqrt((5.6 / 100 * 160e3) ** 2 - 460**2))  # H*rad/s
     z2_norm = 4 / 100 * 400**2 / 160e3
@@ -111,9 +111,9 @@ def test_transformer_characteristics():
         "type": "dtotoyn11",
     }
     with pytest.raises(RoseauLoadFlowException) as e:
-        TransformerCharacteristics.from_dict(data)
-    assert "Transformer windings cannot be extracted from the string" in e.value.args[0]
-    assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS
+        TransformerParameters.from_dict(data)
+    assert "Transformer windings cannot be extracted from the string" in e.value.msg
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS
 
     # UHV == ULV...
     data = {
@@ -128,9 +128,9 @@ def test_transformer_characteristics():
         "type": "dyn11",
     }
     with pytest.raises(RoseauLoadFlowException) as e:
-        TransformerCharacteristics.from_dict(data)
-    assert "has the low voltages higher than the high voltages" in e.value.args[0]
-    assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_VOLTAGES
+        TransformerParameters.from_dict(data)
+    assert "has the low voltages higher than the high voltages" in e.value.msg
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_VOLTAGES
 
     # UHV < ULV...
     data = {
@@ -145,9 +145,9 @@ def test_transformer_characteristics():
         "type": "dyn11",
     }
     with pytest.raises(RoseauLoadFlowException) as e:
-        TransformerCharacteristics.from_dict(data)
-    assert "has the low voltages higher than the high voltages" in e.value.args[0]
-    assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_VOLTAGES
+        TransformerParameters.from_dict(data)
+    assert "has the low voltages higher than the high voltages" in e.value.msg
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_VOLTAGES
 
     # Bad i0
     data = {
@@ -162,9 +162,9 @@ def test_transformer_characteristics():
         "type": "dyn11",
     }
     with pytest.raises(RoseauLoadFlowException) as e:
-        TransformerCharacteristics.from_dict(data)
-    assert "has the 'current during off-load test' i0" in e.value.args[0]
-    assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_PARAMETERS
+        TransformerParameters.from_dict(data)
+    assert "has the 'current during off-load test' i0" in e.value.msg
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_PARAMETERS
 
     # Bad vsc
     data = {
@@ -179,28 +179,28 @@ def test_transformer_characteristics():
         "type": "dyn11",
     }
     with pytest.raises(RoseauLoadFlowException) as e:
-        TransformerCharacteristics.from_dict(data)
-    assert "has the 'voltages on LV side during short circuit test' vsc" in e.value.args[0]
-    assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_PARAMETERS
+        TransformerParameters.from_dict(data)
+    assert "has the 'voltages on LV side during short circuit test' vsc" in e.value.msg
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_PARAMETERS
 
 
 def test_from_name():
     # Bad ones
     with pytest.raises(RoseauLoadFlowException) as e:
-        TransformerCharacteristics.from_name("toto", "Dyn11")
-    assert "The transformer type name does not follow the syntax rule" in e.value.args[0]
-    assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_TYPE_NAME_SYNTAX
+        TransformerParameters.from_name("toto", "Dyn11")
+    assert "The transformer type name does not follow the syntax rule" in e.value.msg
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_TYPE_NAME_SYNTAX
 
     with pytest.raises(RoseauLoadFlowException) as e:
-        TransformerCharacteristics.from_name("A160kVA", "Dyn11")
-    assert "The transformer type name does not follow the syntax rule" in e.value.args[0]
-    assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_TYPE_NAME_SYNTAX
+        TransformerParameters.from_name("A160kVA", "Dyn11")
+    assert "The transformer type name does not follow the syntax rule" in e.value.msg
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_TYPE_NAME_SYNTAX
 
     with pytest.raises(RoseauLoadFlowException) as e:
-        TransformerCharacteristics.from_name("160kVA", "totoDyn11")
-    assert "Transformer windings cannot be extracted from the string" in e.value.args[0]
-    assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS
+        TransformerParameters.from_name("160kVA", "totoDyn11")
+    assert "Transformer windings cannot be extracted from the string" in e.value.msg
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS
 
     # Good ones
-    TransformerCharacteristics.from_name("160kVA", "Dyn11")
-    TransformerCharacteristics.from_name("H61_50kVA", "Dyn11")
+    TransformerParameters.from_name("160kVA", "Dyn11")
+    TransformerParameters.from_name("H61_50kVA", "Dyn11")

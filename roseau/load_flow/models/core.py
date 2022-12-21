@@ -14,8 +14,8 @@ from roseau.load_flow.utils.mixins import Identifiable, JsonMixin
 
 if TYPE_CHECKING:
     from roseau.load_flow.models.buses import Bus
-    from roseau.load_flow.models.lines import Line, LineCharacteristics, Switch
-    from roseau.load_flow.models.transformers import Transformer, TransformerCharacteristics
+    from roseau.load_flow.models.lines import Line, LineParameters, Switch
+    from roseau.load_flow.models.transformers import Transformer, TransformerParameters
 
 logger = logging.getLogger(__name__)
 
@@ -310,8 +310,8 @@ class AbstractBranch(Element):
         bus1: "Bus",
         bus2: "Bus",
         ground: Optional[Ground],
-        line_types: dict[str, "LineCharacteristics"],
-        transformer_types: dict[str, "TransformerCharacteristics"],
+        line_types: dict[str, "LineParameters"],
+        transformer_types: dict[str, "TransformerParameters"],
         *args,
     ) -> "AbstractBranch":
 

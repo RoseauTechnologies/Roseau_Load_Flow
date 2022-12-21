@@ -8,10 +8,10 @@ from roseau.load_flow.models import (
     Bus,
     Ground,
     Line,
-    LineCharacteristics,
+    LineParameters,
     PotentialRef,
     Transformer,
-    TransformerCharacteristics,
+    TransformerParameters,
     VoltageSource,
 )
 from roseau.load_flow.typing import Id, JsonDict
@@ -45,15 +45,15 @@ def network_from_dict(
         The buses, branches, loads, sources, grounds and potential refs to construct the electrical
         network.
     """
-    line_types: dict[Id, LineCharacteristics] = {}
+    line_types: dict[Id, LineParameters] = {}
     for line_data in data["line_types"]:
         type_id = line_data["id"]
-        line_types[type_id] = LineCharacteristics.from_dict(line_data)
+        line_types[type_id] = LineParameters.from_dict(line_data)
 
-    transformer_types: dict[Id, TransformerCharacteristics] = {}
+    transformer_types: dict[Id, TransformerParameters] = {}
     for transformer_data in data["transformer_types"]:
         type_id = transformer_data["id"]
-        transformer_types[type_id] = TransformerCharacteristics.from_dict(transformer_data)
+        transformer_types[type_id] = TransformerParameters.from_dict(transformer_data)
 
     grounds: dict[Id, Ground] = {}
     potential_refs: dict[Id, PotentialRef] = {}
@@ -131,54 +131,46 @@ def network_to_dict(en: "ElectricalNetwork") -> JsonDict:
                 bus_dict["sources"].append(element.to_dict())
         buses.append(bus_dict)
 
-    # Export the branches with their characteristics
+    # Export the branches with their parameters
     branches: list[JsonDict] = []
-    line_characteristics_dict: dict[Id, LineCharacteristics] = {}
-    transformer_characteristics_dict: dict[Id, TransformerCharacteristics] = {}
+    lines_params_dict: dict[Id, LineParameters] = {}
+    transformers_params_dict: dict[Id, TransformerParameters] = {}
     for branch in en.branches.values():
         branches.append(branch.to_dict())
         if isinstance(branch, Line):
-            type_id = branch.line_characteristics.id
-            if (
-                type_id in line_characteristics_dict
-                and branch.line_characteristics != line_characteristics_dict[type_id]
-            ):
-                msg = f"There are multiple line characteristics with {type_id!r}"
+            type_id = branch.parameters.id
+            if type_id in lines_params_dict and branch.parameters != lines_params_dict[type_id]:
+                msg = f"There are multiple line parameters with id {type_id!r}"
                 logger.error(msg)
-                raise RoseauLoadFlowException(
-                    msg=msg, code=RoseauLoadFlowExceptionCode.JSON_LINE_CHARACTERISTICS_DUPLICATES
-                )
-            line_characteristics_dict[branch.line_characteristics.id] = branch.line_characteristics
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.JSON_LINE_PARAMETERS_DUPLICATES)
+            lines_params_dict[branch.parameters.id] = branch.parameters
         elif isinstance(branch, Transformer):
-            type_id = branch.transformer_characteristics.id
-            if (
-                type_id in transformer_characteristics_dict
-                and branch.transformer_characteristics != transformer_characteristics_dict[type_id]
-            ):
-                msg = f"There are multiple transformer characteristics with {type_id!r}"
+            type_id = branch.parameters.id
+            if type_id in transformers_params_dict and branch.parameters != transformers_params_dict[type_id]:
+                msg = f"There are multiple transformer parameters with id {type_id!r}"
                 logger.error(msg)
                 raise RoseauLoadFlowException(
-                    msg=msg, code=RoseauLoadFlowExceptionCode.JSON_TRANSFORMER_CHARACTERISTICS_DUPLICATES
+                    msg=msg, code=RoseauLoadFlowExceptionCode.JSON_TRANSFORMER_PARAMETERS_DUPLICATES
                 )
-            transformer_characteristics_dict[type_id] = branch.transformer_characteristics
+            transformers_params_dict[type_id] = branch.parameters
 
-    # Line characteristics
-    line_characteristics: list[JsonDict] = []
-    for lc in line_characteristics_dict.values():
-        line_characteristics.append(lc.to_dict())
-    line_characteristics.sort(key=lambda x: x["id"])  # Always keep the same order
+    # Line parameters
+    line_params: list[JsonDict] = []
+    for lp in lines_params_dict.values():
+        line_params.append(lp.to_dict())
+    line_params.sort(key=lambda x: x["id"])  # Always keep the same order
 
-    # Transformer characteristics
-    transformer_characteristics: list[JsonDict] = []
-    for tc in transformer_characteristics_dict.values():
-        transformer_characteristics.append(tc.to_dict())
-    transformer_characteristics.sort(key=lambda x: x["id"])  # Always keep the same order
+    # Transformer parameters
+    transformer_params: list[JsonDict] = []
+    for tp in transformers_params_dict.values():
+        transformer_params.append(tp.to_dict())
+    transformer_params.sort(key=lambda x: x["id"])  # Always keep the same order
 
     return {
         "grounds": grounds,
         "potential_refs": potential_refs,
         "buses": buses,
         "branches": branches,
-        "line_types": line_characteristics,
-        "transformer_types": transformer_characteristics,
+        "line_types": line_params,
+        "transformer_types": transformer_params,
     }
