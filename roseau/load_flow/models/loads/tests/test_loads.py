@@ -255,8 +255,7 @@ def test_loads_to_dict():
     }
 
     # Flexible load
-    fp = [FlexibleParameter.constant()] * 3
-    assert PowerLoad("load_f1", bus, phases="abcn", s=values, flexible_params=fp).to_dict() == {
+    expected_dict = {
         "id": "load_f1",
         "phases": "abcn",
         "powers": {"sa": [1.0, 2.0], "sb": [3.0, 4.0], "sc": [5.0, 6.0]},
@@ -270,3 +269,13 @@ def test_loads_to_dict():
         ]
         * 3,
     }
+    fp = [FlexibleParameter.constant()] * 3
+    flex_load = PowerLoad("load_f1", bus, phases="abcn", s=values, flexible_params=fp)
+    assert flex_load.to_dict() == expected_dict
+    parsed_flex_load = PowerLoad.from_dict(expected_dict, bus)
+    assert isinstance(parsed_flex_load, PowerLoad)
+    assert parsed_flex_load.id == flex_load.id
+    assert parsed_flex_load.bus.id == flex_load.bus.id
+    assert parsed_flex_load.phases == flex_load.phases
+    assert parsed_flex_load.s == flex_load.s
+    assert [p.to_dict() for p in parsed_flex_load.flexible_params] == [p.to_dict() for p in flex_load.flexible_params]

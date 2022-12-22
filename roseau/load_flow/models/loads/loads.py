@@ -22,7 +22,7 @@ class AbstractLoad(Element, metaclass=ABCMeta):
     _power_load_class: type["PowerLoad"]
     _current_load_class: type["CurrentLoad"]
     _impedance_load_class: type["ImpedanceLoad"]
-    _flexible_parameter_class: type[FlexibleParameter]
+    _flexible_parameter_class = FlexibleParameter
 
     _type: Literal["power", "current", "impedance"]
 
@@ -107,7 +107,7 @@ class AbstractLoad(Element, metaclass=ABCMeta):
         phases: str = data["phases"]
         if (s := data.get("powers")) is not None:
             s_complex = [complex(*s[f"s{ph}"]) for ph in phases.removesuffix("n")]
-            if (fp_data_list := data.get("parameters")) is not None:
+            if (fp_data_list := data.get("flexible_params")) is not None:
                 fp = [cls._flexible_parameter_class.from_dict(fp_dict) for fp_dict in fp_data_list]
             else:
                 fp = None
