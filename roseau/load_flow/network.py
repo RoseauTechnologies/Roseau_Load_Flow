@@ -22,8 +22,10 @@ from roseau.load_flow.models import (
     Bus,
     Element,
     Ground,
+    Line,
     PotentialRef,
     PowerLoad,
+    Switch,
     Transformer,
     VoltageSource,
 )
@@ -46,6 +48,9 @@ class ElectricalNetwork:
 
     # Default classes to use
     branch_class = AbstractBranch
+    line_class = Line
+    transformer_class = Transformer
+    switch_class = Switch
     load_class = AbstractLoad
     voltage_source_class = VoltageSource
     bus_class = Bus
@@ -362,37 +367,17 @@ class ElectricalNetwork:
         """
         for bus_data in result_dict["buses"]:
             bus = self.buses[bus_data["id"]]
-            bus.potentials = self._dispatch_value(bus_data["potentials"], bus.phases, "v")
+            bus.potentials = [complex(v[0], v[1]) for v in bus_data["potentials"]]
         for branch_data in result_dict["branches"]:
             branch = self.branches[branch_data["id"]]
-            currents1 = self._dispatch_value(branch_data["currents1"], branch.phases1, "i")
-            currents2 = self._dispatch_value(branch_data["currents2"], branch.phases2, "i")
+            currents1 = [complex(i[0], i[1]) for i in branch_data["currents1"]]
+            currents2 = [complex(i[0], i[1]) for i in branch_data["currents2"]]
             branch.currents = (currents1, currents2)
         for load_data in result_dict["loads"]:
             load = self.loads[load_data["id"]]
+            load.currents = [complex(i[0], i[1]) for i in load_data["currents"]]
             if isinstance(load, PowerLoad) and load.is_flexible:
-                load.flexible_powers = self._dispatch_value(load_data["powers"], load.phases, "s")
-            currents = self._dispatch_value(load_data["currents"], load.phases, "i")
-            load.currents = currents
-
-    @staticmethod
-    def _dispatch_value(value: dict[str, tuple[float, float]], phases: str, t: str) -> np.ndarray:
-        """Dispatch the load flow results from a dictionary to an array.
-
-        Args:
-            value:
-                The dictionary value to dispatch.
-
-            phases:
-                The phases of the element.
-
-            t:
-                The type of value ("i", "v" or "s").
-
-        Returns:
-            The complex final value.
-        """
-        return np.array([complex(*value[t + p]) for p in phases])
+                load.flexible_powers = [complex(p[0], p[1]) for p in load_data["powers"]]
 
     #
     # Getters for the load flow results

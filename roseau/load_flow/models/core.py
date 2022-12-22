@@ -14,8 +14,6 @@ from roseau.load_flow.utils.mixins import Identifiable, JsonMixin
 
 if TYPE_CHECKING:
     from roseau.load_flow.models.buses import Bus
-    from roseau.load_flow.models.lines import Line, LineParameters, Switch
-    from roseau.load_flow.models.transformers import Transformer, TransformerParameters
 
 logger = logging.getLogger(__name__)
 
@@ -69,6 +67,15 @@ class Element(ABC, Identifiable, JsonMixin):
         # TODO: make private
         for element in self.connected_elements:
             element.connected_elements.remove(self)
+
+    @staticmethod
+    def _parse_geometry(geometry: Union[str, None, Any]) -> BaseGeometry:
+        if geometry is None:
+            return None
+        elif isinstance(geometry, str):
+            return shapely.wkt.loads(geometry)
+        else:
+            return shape(geometry)
 
 
 class PotentialRef(Element):
@@ -222,24 +229,6 @@ class AbstractBranch(Element):
 
     branch_type: BranchType
 
-    @classmethod
-    def _line_class(cls) -> type["Line"]:
-        from roseau.load_flow.models.lines.lines import Line
-
-        return Line
-
-    @classmethod
-    def _transformer_class(cls) -> type["Transformer"]:
-        from roseau.load_flow.models.transformers.transformers import Transformer
-
-        return Transformer
-
-    @classmethod
-    def _switch_class(cls) -> type["Switch"]:
-        from roseau.load_flow.models.lines.lines import Switch
-
-        return Switch
-
     def __init__(
         self,
         id: Id,
@@ -304,54 +293,8 @@ class AbstractBranch(Element):
     # Json Mixin interface
     #
     @classmethod
-    def from_dict(
-        cls,
-        data: JsonDict,
-        bus1: "Bus",
-        bus2: "Bus",
-        ground: Optional[Ground],
-        lines_params: dict[str, "LineParameters"],
-        transformers_params: dict[str, "TransformerParameters"],
-        *args,
-    ) -> "AbstractBranch":
-
-        if "geometry" not in data:
-            geometry = None
-        elif isinstance(data["geometry"], str):
-            geometry = shapely.wkt.loads(data["geometry"])
-        else:
-            geometry = shape(data["geometry"])
-
-        if data["type"] == "line":
-            assert data["phases2"] == data["phases1"]  # line phases must be the same
-            return cls._line_class()(
-                id=data["id"],
-                bus1=bus1,
-                bus2=bus2,
-                length=data["length"],
-                parameters=lines_params[data["params_id"]],
-                phases=data["phases1"],  # or phases2, they are the same
-                ground=ground,
-                geometry=geometry,
-            )
-        elif data["type"] == "transformer":
-            return cls._transformer_class()(
-                id=data["id"],
-                bus1=bus1,
-                bus2=bus2,
-                parameters=transformers_params[data["params_id"]],
-                tap=data["tap"],
-                phases1=data["phases1"],
-                phases2=data["phases2"],
-                geometry=geometry,
-            )
-        elif data["type"] == "switch":
-            assert data["phases2"] == data["phases1"]  # switch phases must be the same
-            return cls._switch_class()(data["id"], bus1, bus2, phases=bus1.phases, geometry=geometry)
-        else:
-            msg = f"Unknown branch type for branch {data['id']}: {data['type']}"
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_BRANCH_TYPE)
+    def from_dict(cls, data: JsonDict) -> "AbstractBranch":
+        return cls(**data)  # not used anymore
 
     def to_dict(self) -> JsonDict:
         res = {

@@ -1,4 +1,9 @@
+import functools
 import logging
+import os
+import platform
+import sys
+from importlib.metadata import version
 from typing import TYPE_CHECKING
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
@@ -20,6 +25,29 @@ if TYPE_CHECKING:
     from roseau.load_flow.network import ElectricalNetwork
 
 logger = logging.getLogger(__name__)
+
+
+@functools.lru_cache(maxsize=1)
+def _get_system_info() -> JsonDict:
+    from roseau.load_flow import __version__  # circular import
+
+    return {
+        # RLF version (for compatibility checks)
+        # --------------------------------------
+        "version": __version__,
+        # System information (useful for debugging)
+        # -----------------------------------------
+        "os_name": os.name,  # posix, nt etc.
+        "platform": sys.platform,  # linux, win32, darwin etc.
+        "machine": platform.machine(),  # x86_64, amd64, i386 etc.
+        # Python environment (useful for debugging)
+        # -----------------------------------------
+        # Only packages that may affect the json data are included
+        "python_version": sys.version_info,
+        "numpy_version": version("numpy"),
+        "pint_version": version("pint"),
+        "shapely_version": version("shapely"),
+    }
 
 
 def network_from_dict(
@@ -45,53 +73,69 @@ def network_from_dict(
         The buses, branches, loads, sources, grounds and potential refs to construct the electrical
         network.
     """
+    # Lines and transformers parameters
     lines_params = {lp["id"]: LineParameters.from_dict(lp) for lp in data["lines_params"]}
     transformers_params = {tp["id"]: TransformerParameters.from_dict(tp) for tp in data["transformers_params"]}
 
+    # Buses, loads and sources
+    buses = {bd["id"]: en_class.bus_class.from_dict(bd) for bd in data["buses"]}
+    loads = {ld["id"]: en_class.load_class.from_dict(ld | {"bus": buses[ld["bus"]]}) for ld in data["loads"]}
+    sources = {
+        sd["id"]: en_class.voltage_source_class.from_dict(sd | {"bus": buses[sd["bus"]]}) for sd in data["sources"]
+    }
+
+    # Grounds and potential refs
     grounds: dict[Id, Ground] = {}
-    potential_refs: dict[Id, PotentialRef] = {}
-    buses_dict: dict[Id, Bus] = {}
-    loads_dict: dict[Id, AbstractLoad] = {}
-    sources_dict: dict[Id, VoltageSource] = {}
-    for bus_data in data["buses"]:
-        buses_dict[bus_data["id"]] = en_class.bus_class.from_dict(bus_data)
-        for load_data in bus_data["loads"]:
-            loads_dict[load_data["id"]] = en_class.load_class.from_dict(load_data, buses_dict[bus_data["id"]])
-        for source_data in bus_data["sources"]:
-            sources_dict[source_data["id"]] = en_class.voltage_source_class.from_dict(
-                source_data, buses_dict[bus_data["id"]]
-            )
     for ground_data in data["grounds"]:
-        ground = en_class.ground_class.from_dict(ground_data)
+        ground = en_class.ground_class(ground_data["id"])
         for bus_id, phase in ground_data["buses"].items():
-            ground.connect(buses_dict[bus_id], phase)
+            ground.connect(buses[bus_id], phase)
         grounds[ground_data["id"]] = ground
+    potential_refs: dict[Id, PotentialRef] = {}
     for pref_data in data["potential_refs"]:
         if "bus" in pref_data:
-            bus_or_ground = buses_dict[pref_data.pop("bus")]
+            bus_or_ground = buses[pref_data["bus"]]
         elif "ground" in pref_data:
-            bus_or_ground = grounds[pref_data.pop("ground")]
+            bus_or_ground = grounds[pref_data["ground"]]
         else:
             msg = f"Potential reference data {pref_data['id']} missing bus or ground."
             logger.error(msg)
             raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.JSON_PREF_INVALID)
-        pref_data["element"] = bus_or_ground
-        potential_refs[pref_data["id"]] = en_class.pref_class.from_dict(pref_data)
+        potential_refs[pref_data["id"]] = en_class.pref_class(
+            pref_data["id"], element=bus_or_ground, phase=pref_data.get("phases")
+        )
 
+    # Branches
     branches_dict: dict[Id, AbstractBranch] = {}
     for branch_data in data["branches"]:
-        bus1 = buses_dict[branch_data["bus1"]]
-        bus2 = buses_dict[branch_data["bus2"]]
-        ground = grounds[branch_data["ground"]] if branch_data.get("ground") is not None else None
-        branches_dict[branch_data["id"]] = en_class.branch_class.from_dict(
-            branch_data,
-            bus1,
-            bus2,
-            ground,
-            lines_params,
-            transformers_params,
-        )
-    return buses_dict, branches_dict, loads_dict, sources_dict, grounds, potential_refs
+        id = branch_data["id"]
+        phases1 = branch_data["phases1"]
+        phases2 = branch_data["phases2"]
+        bus1 = buses[branch_data["bus1"]]
+        bus2 = buses[branch_data["bus2"]]
+        geometry = AbstractBranch._parse_geometry(branch_data.get("geometry"))
+        if branch_data["type"] == "line":
+            assert phases1 == phases2
+            length = branch_data["length"]
+            lp = lines_params[branch_data["params_id"]]
+            gid = branch_data.get("ground")
+            ground = grounds[gid] if gid is not None else None
+            branches_dict[branch_data["id"]] = en_class.line_class(
+                id, bus1, bus2, parameters=lp, phases=phases1, length=length, ground=ground, geometry=geometry
+            )
+        elif branch_data["type"] == "transformer":
+            tp = transformers_params[branch_data["params_id"]]
+            branches_dict[id] = en_class.transformer_class(
+                id, bus1, bus2, parameters=tp, phases1=phases1, phases2=phases2, geometry=geometry
+            )
+        elif branch_data["type"] == "switch":
+            assert phases1 == phases2
+            branches_dict[id] = en_class.switch_class(id, bus1, bus2, phases=phases1, geometry=geometry)
+        else:
+            msg = f"Unknown branch type for branch {id}: {branch_data['type']}"
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_BRANCH_TYPE)
+    return buses, branches_dict, loads, sources, grounds, potential_refs
 
 
 def network_to_dict(en: "ElectricalNetwork") -> JsonDict:
@@ -105,23 +149,22 @@ def network_to_dict(en: "ElectricalNetwork") -> JsonDict:
         The created dictionary.
     """
     # Export the grounds and the pref
-    grounds: list[JsonDict] = []
-    potential_refs: list[JsonDict] = []
-    for ground in en.grounds.values():
-        grounds.append(ground.to_dict())
-    for p_ref in en.potential_refs.values():
-        potential_refs.append(p_ref.to_dict())
+    grounds = [ground.to_dict() for ground in en.grounds.values()]
+    potential_refs = [p_ref.to_dict() for p_ref in en.potential_refs.values()]
 
-    # Export the buses and the loads
+    # Export the buses, loads and sources
     buses: list[JsonDict] = []
+    loads: list[JsonDict] = []
+    sources: list[JsonDict] = []
     for bus in en.buses.values():
-        bus_dict = bus.to_dict()
+        buses.append(bus.to_dict())
         for element in bus.connected_elements:
             if isinstance(element, AbstractLoad):
-                bus_dict["loads"].append(element.to_dict())
+                assert element.bus is bus
+                loads.append(element.to_dict())
             elif isinstance(element, VoltageSource):
-                bus_dict["sources"].append(element.to_dict())
-        buses.append(bus_dict)
+                assert element.bus is bus
+                sources.append(element.to_dict())
 
     # Export the branches with their parameters
     branches: list[JsonDict] = []
@@ -159,10 +202,13 @@ def network_to_dict(en: "ElectricalNetwork") -> JsonDict:
     transformer_params.sort(key=lambda x: x["id"])  # Always keep the same order
 
     return {
+        "system_info": _get_system_info(),
         "grounds": grounds,
         "potential_refs": potential_refs,
         "buses": buses,
         "branches": branches,
+        "loads": loads,
+        "sources": sources,
         "lines_params": line_params,
         "transformers_params": transformer_params,
     }

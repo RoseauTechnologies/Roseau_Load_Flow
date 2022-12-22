@@ -221,44 +221,51 @@ def test_loads_to_dict():
     # Power load
     assert PowerLoad("load_s1", bus, phases="abcn", s=values).to_dict() == {
         "id": "load_s1",
+        "bus": "bus",
         "phases": "abcn",
-        "powers": {"sa": [1.0, 2.0], "sb": [3.0, 4.0], "sc": [5.0, 6.0]},
+        "powers": [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
     }
     assert PowerLoad("load_s2", bus, phases="abc", s=values).to_dict() == {
         "id": "load_s2",
+        "bus": "bus",
         "phases": "abc",
-        "powers": {"sa": [1.0, 2.0], "sb": [3.0, 4.0], "sc": [5.0, 6.0]},
+        "powers": [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
     }
 
     # Current load
     assert CurrentLoad("load_i1", bus, phases="abcn", i=values).to_dict() == {
         "id": "load_i1",
+        "bus": "bus",
         "phases": "abcn",
-        "currents": {"ia": [1.0, 2.0], "ib": [3.0, 4.0], "ic": [5.0, 6.0]},
+        "currents": [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
     }
     assert CurrentLoad("load_i2", bus, phases="abc", i=values).to_dict() == {
         "id": "load_i2",
+        "bus": "bus",
         "phases": "abc",
-        "currents": {"ia": [1.0, 2.0], "ib": [3.0, 4.0], "ic": [5.0, 6.0]},
+        "currents": [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
     }
 
     # Impedance load
     assert ImpedanceLoad("load_z1", bus, phases="abcn", z=values).to_dict() == {
         "id": "load_z1",
+        "bus": "bus",
         "phases": "abcn",
-        "impedances": {"za": [1.0, 2.0], "zb": [3.0, 4.0], "zc": [5.0, 6.0]},
+        "impedances": [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
     }
     assert ImpedanceLoad("load_z2", bus, phases="abc", z=values).to_dict() == {
         "id": "load_z2",
+        "bus": "bus",
         "phases": "abc",
-        "impedances": {"za": [1.0, 2.0], "zb": [3.0, 4.0], "zc": [5.0, 6.0]},
+        "impedances": [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
     }
 
     # Flexible load
     expected_dict = {
         "id": "load_f1",
+        "bus": "bus",
         "phases": "abcn",
-        "powers": {"sa": [1.0, 2.0], "sb": [3.0, 4.0], "sc": [5.0, 6.0]},
+        "powers": [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
         "flexible_params": [
             {
                 "control_p": {"type": "constant"},
@@ -272,7 +279,7 @@ def test_loads_to_dict():
     fp = [FlexibleParameter.constant()] * 3
     flex_load = PowerLoad("load_f1", bus, phases="abcn", s=values, flexible_params=fp)
     assert flex_load.to_dict() == expected_dict
-    parsed_flex_load = PowerLoad.from_dict(expected_dict, bus)
+    parsed_flex_load = PowerLoad.from_dict(expected_dict | {"bus": bus})
     assert isinstance(parsed_flex_load, PowerLoad)
     assert parsed_flex_load.id == flex_load.id
     assert parsed_flex_load.bus.id == flex_load.bus.id
