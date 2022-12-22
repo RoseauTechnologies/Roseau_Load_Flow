@@ -21,7 +21,6 @@ from roseau.load_flow.models import (
     AbstractLoad,
     Bus,
     Element,
-    FlexibleLoad,
     Ground,
     PotentialRef,
     PowerLoad,
@@ -371,8 +370,8 @@ class ElectricalNetwork:
             branch.currents = (currents1, currents2)
         for load_data in result_dict["loads"]:
             load = self.loads[load_data["id"]]
-            if isinstance(load, FlexibleLoad):
-                load.powers = self._dispatch_value(load_data["powers"], load.phases, "s")
+            if isinstance(load, PowerLoad) and load.is_flexible:
+                load.flexible_powers = self._dispatch_value(load_data["powers"], load.phases, "s")
             currents = self._dispatch_value(load_data["currents"], load.phases, "i")
             load.currents = currents
 
@@ -555,8 +554,8 @@ class ElectricalNetwork:
         """
         loads_dict = {"load_id": [], "phase": [], "power": []}
         for load_id, load in self.loads.items():
-            if isinstance(load, FlexibleLoad):
-                powers = load.powers.m_as("VA")
+            if isinstance(load, PowerLoad) and load.is_flexible:
+                powers = load.flexible_powers.m_as("VA")
                 for power, phase in zip(powers, load.phases):
                     loads_dict["load_id"].append(load_id)
                     loads_dict["phase"].append(phase)
@@ -580,7 +579,7 @@ class ElectricalNetwork:
         """
         for load_id, value in load_point.items():
             load = self.loads[load_id]
-            if isinstance(load, PowerLoad) or isinstance(load, FlexibleLoad):
+            if isinstance(load, PowerLoad):
                 load.update_powers(value)
             else:
                 msg = "Only power loads can be updated for now..."
@@ -828,10 +827,10 @@ class ElectricalNetwork:
                 f"i{phase}": [current.real.magnitude, current.imag.magnitude]
                 for current, phase in zip(load.currents, load.phases)
             }
-            if isinstance(load, FlexibleLoad):
+            if isinstance(load, PowerLoad) and load.is_flexible:
                 powers_dict = {
                     f"s{phase}": [power.real.magnitude, power.imag.magnitude]
-                    for power, phase in zip(load.powers, load.phases)
+                    for power, phase in zip(load.flexible_powers, load.phases)
                 }
                 loads_results.append({"id": load_id, "powers": powers_dict, "currents": currents_dict})
             else:
