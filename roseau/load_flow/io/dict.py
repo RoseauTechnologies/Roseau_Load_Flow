@@ -120,7 +120,7 @@ def network_from_dict(
             lp = lines_params[branch_data["params_id"]]
             gid = branch_data.get("ground")
             ground = grounds[gid] if gid is not None else None
-            branches_dict[branch_data["id"]] = en_class.line_class(
+            branches_dict[id] = en_class.line_class(
                 id, bus1, bus2, parameters=lp, phases=phases1, length=length, ground=ground, geometry=geometry
             )
         elif branch_data["type"] == "transformer":
