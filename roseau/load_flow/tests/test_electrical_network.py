@@ -104,6 +104,7 @@ def good_json_results() -> dict:
         "buses": [
             {
                 "id": "bus0",
+                "phases": "abcn",
                 "potentials": [
                     [20000.0, 0.0],
                     [-10000.0, -17320.508076],
@@ -113,6 +114,7 @@ def good_json_results() -> dict:
             },
             {
                 "id": "bus1",
+                "phases": "abcn",
                 "potentials": [
                     [19999.949999875, 0.0],
                     [-9999.9749999375, -17320.464774621556],
@@ -124,6 +126,8 @@ def good_json_results() -> dict:
         "branches": [
             {
                 "id": "line",
+                "phases1": "abcn",
+                "phases2": "abcn",
                 "currents1": [
                     [0.005, 0.0],
                     [-0.0025, -0.0043],
@@ -141,6 +145,7 @@ def good_json_results() -> dict:
         "loads": [
             {
                 "id": "load",
+                "phases": "abcn",
                 "currents": [
                     [0.005, -0.0],
                     [-0.0025, -0.0043],
@@ -271,6 +276,7 @@ def test_solve_load_flow(small_network, good_json_results):
         "buses": [
             {
                 "id": "bus0",
+                "phases": "abcn",
                 "potentials": [
                     [20000.0, 0.0],
                     [-10000.0, -17320.508076],
@@ -280,6 +286,7 @@ def test_solve_load_flow(small_network, good_json_results):
             },
             {
                 "id": "bus1",
+                "phases": "abcn",
                 "potentials": [
                     [110753.81558442864, 1.5688245436058308e-26],
                     [-9999.985548801811, -17320.50568183019],
@@ -291,6 +298,8 @@ def test_solve_load_flow(small_network, good_json_results):
         "branches": [
             {
                 "id": "line",
+                "phases1": "abcn",
+                "phases2": "abcn",
                 "currents1": [[0.0, 0.0], [0.0, 0.0], [0.0, 0.0], [0.0, 0.0]],
                 "currents2": [[0.0, 0.0], [0.0, 0.0], [0.0, 0.0], [0.0, 0.0]],
             }
@@ -298,6 +307,7 @@ def test_solve_load_flow(small_network, good_json_results):
         "loads": [
             {
                 "id": "load",
+                "phases": "abcn",
                 "currents": [[0.0, 0.0], [0.0, 0.0], [0.0, 0.0], [0.0, 0.0]],
             },
         ],
@@ -466,18 +476,20 @@ def test_single_phase_network(single_phase_network: ElectricalNetwork):
             "finalError": 6.29e-14,
         },
         "buses": [
-            {"id": "bus0", "potentials": [[-10000.0, -17320.508], [0.0, 0.0]]},
-            {"id": "bus1", "potentials": [[-9999.974, -17320.464], [1.347e-12, 0.0]]},
+            {"id": "bus0", "phases": "bn", "potentials": [[-10000.0, -17320.508], [0.0, 0.0]]},
+            {"id": "bus1", "phases": "bn", "potentials": [[-9999.974, -17320.464], [1.347e-12, 0.0]]},
         ],
         "branches": [
             {
                 "id": "line",
+                "phases1": "bn",
+                "phases2": "bn",
                 "currents1": [[-0.0025, -0.0043], [-1.347e-13, 0.0]],
                 "currents2": [[-0.0025, -0.0043], [-1.347e-13, 0.0]],
             }
         ],
         "loads": [
-            {"id": "load", "currents": [[-0.0025, -0.0043], [1.347e-13, 0.0]]},
+            {"id": "load", "phases": "bn", "currents": [[-0.0025, -0.0043], [1.347e-13, 0.0]]},
         ],
         "sources": [],
     }

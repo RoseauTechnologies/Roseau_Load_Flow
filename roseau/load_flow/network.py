@@ -787,39 +787,34 @@ class ElectricalNetwork:
         """Get the voltages and currents computed by the load flow and return them as a dict."""
         buses_results: list[JsonDict] = []
         for bus_id, bus in self.buses.items():
-            potentials_dict = {
-                f"v{phase}": [potential.real.magnitude, potential.imag.magnitude]
-                for potential, phase in zip(bus.potentials, bus.phases)
-            }
-            buses_results.append({"id": bus_id, "potentials": potentials_dict})
+            potentials_dict = [[v.real.magnitude, v.imag.magnitude] for v in bus.potentials]
+            buses_results.append({"id": bus_id, "phases": bus.phases, "potentials": potentials_dict})
 
         branches_results: list[JsonDict] = []
         for branch_id, branch in self.branches.items():
             currents1, currents2 = branch.currents
-            currents_dict1 = {
-                f"i{phase}": [current.real.magnitude, current.imag.magnitude]
-                for current, phase in zip(currents1, branch.phases1)
-            }
-            currents_dict2 = {
-                f"i{phase}": [current.real.magnitude, current.imag.magnitude]
-                for current, phase in zip(currents2, branch.phases2)
-            }
-            branches_results.append({"id": branch_id, "currents1": currents_dict1, "currents2": currents_dict2})
+            currents_dict1 = [[i.real.magnitude, i.imag.magnitude] for i in currents1]
+            currents_dict2 = [[i.real.magnitude, i.imag.magnitude] for i in currents2]
+            branches_results.append(
+                {
+                    "id": branch_id,
+                    "phases1": branch.phases1,
+                    "phases2": branch.phases2,
+                    "currents1": currents_dict1,
+                    "currents2": currents_dict2,
+                }
+            )
 
         loads_results: list[JsonDict] = []
         for load_id, load in self.loads.items():
-            currents_dict = {
-                f"i{phase}": [current.real.magnitude, current.imag.magnitude]
-                for current, phase in zip(load.currents, load.phases)
-            }
+            currents_dict = [[i.real.magnitude, i.imag.magnitude] for i in load.currents]
             if isinstance(load, PowerLoad) and load.is_flexible:
-                powers_dict = {
-                    f"s{phase}": [power.real.magnitude, power.imag.magnitude]
-                    for power, phase in zip(load.flexible_powers, load.phases)
-                }
-                loads_results.append({"id": load_id, "powers": powers_dict, "currents": currents_dict})
+                powers_dict = [[s.real.magnitude, s.imag.magnitude] for s in load.flexible_powers]
+                loads_results.append(
+                    {"id": load_id, "phases": load.phases, "powers": powers_dict, "currents": currents_dict}
+                )
             else:
-                loads_results.append({"id": load_id, "currents": currents_dict})
+                loads_results.append({"id": load_id, "phases": load.phases, "currents": currents_dict})
 
         return {
             "info": self._results_info,

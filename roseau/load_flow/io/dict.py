@@ -1,9 +1,4 @@
-import functools
 import logging
-import os
-import platform
-import sys
-from importlib.metadata import version
 from typing import TYPE_CHECKING
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
@@ -25,29 +20,6 @@ if TYPE_CHECKING:
     from roseau.load_flow.network import ElectricalNetwork
 
 logger = logging.getLogger(__name__)
-
-
-@functools.lru_cache(maxsize=1)
-def _get_system_info() -> JsonDict:
-    from roseau.load_flow import __version__  # circular import
-
-    return {
-        # RLF version (for compatibility checks)
-        # --------------------------------------
-        "version": __version__,
-        # System information (useful for debugging)
-        # -----------------------------------------
-        "os_name": os.name,  # posix, nt etc.
-        "platform": sys.platform,  # linux, win32, darwin etc.
-        "machine": platform.machine(),  # x86_64, amd64, i386 etc.
-        # Python environment (useful for debugging)
-        # -----------------------------------------
-        # Only packages that may affect the json data are included
-        "python_version": sys.version_info,
-        "numpy_version": version("numpy"),
-        "pint_version": version("pint"),
-        "shapely_version": version("shapely"),
-    }
 
 
 def network_from_dict(
@@ -202,7 +174,7 @@ def network_to_dict(en: "ElectricalNetwork") -> JsonDict:
     transformer_params.sort(key=lambda x: x["id"])  # Always keep the same order
 
     return {
-        "system_info": _get_system_info(),
+        "version": 1,
         "grounds": grounds,
         "potential_refs": potential_refs,
         "buses": buses,

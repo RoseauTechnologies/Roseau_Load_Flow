@@ -69,7 +69,7 @@ class Element(ABC, Identifiable, JsonMixin):
             element.connected_elements.remove(self)
 
     @staticmethod
-    def _parse_geometry(geometry: Union[str, None, Any]) -> BaseGeometry:
+    def _parse_geometry(geometry: Union[str, None, Any]) -> Optional[BaseGeometry]:
         if geometry is None:
             return None
         elif isinstance(geometry, str):
