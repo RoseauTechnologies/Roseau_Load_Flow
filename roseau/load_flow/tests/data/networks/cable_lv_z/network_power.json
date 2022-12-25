@@ -1,47 +1,87 @@
 {
+    "version": 1,
+    "grounds": [
+        {
+            "id": "ground",
+            "buses": [
+                {
+                    "id": 1,
+                    "phase": "n"
+                }
+            ]
+        }
+    ],
+    "potential_refs": [
+        {
+            "id": "pref",
+            "ground": "ground"
+        }
+    ],
     "buses": [
         {
             "id": 1,
-            "type": "slack",
-            "loads": [],
-            "voltages": {
-                "va": [230.94010767585033, 0.0],
-                "vb": [-115.47005383792516, -200.00000028072188],
-                "vc": [-115.47005383792516, 200.00000028072188]
-            },
-            "geometry": "POINT (0 0)"
+            "phases": "abcn",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [0.0, 0.0]
+            }
         },
         {
             "id": 2,
-            "type": "bus_neutral",
-            "loads": [
-                {
-                    "id": 0,
-                    "function": "ys_neutral",
-                    "powers": {
-                        "sa": [4178.566539756862, 2089.283269878431],
-                        "sb": [4187.615297660943, 2093.807648830472],
-                        "sc": [4202.879669403405, 2101.439834701703]
-                    }
-                }
-            ],
-            "geometry": "POINT (1 0)"
+            "phases": "abcn",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [1.0, 0.0]
+            }
         }
     ],
     "branches": [
         {
             "id": "line1",
+            "type": "line",
+            "phases1": "abcn",
+            "phases2": "abcn",
             "bus1": 1,
             "bus2": 2,
-            "geometry": "LINESTRING (0 0, 1 0)",
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [0.0, 0.0],
+                    [1.0, 0.0]
+                ]
+            },
             "length": 0.5,
-            "type_name": "S_AL_150_z_neutral",
-            "type": "line"
+            "params_id": "S_AL_150_z_neutral",
+            "ground": "ground"
         }
     ],
-    "line_types": [
+    "loads": [
         {
-            "name": "S_AL_150_z_neutral",
+            "id": 0,
+            "bus": 2,
+            "phases": "abcn",
+            "powers": [
+                [4178.566539756862, 2089.283269878431],
+                [4187.615297660943, 2093.807648830472],
+                [4202.879669403405, 2101.439834701703]
+            ]
+        }
+    ],
+    "sources": [
+        {
+            "id": 1,
+            "bus": 1,
+            "phases": "abcn",
+            "voltages": [
+                [230.94010767585033, 0.0],
+                [-115.47005383792516, -200.00000028072188],
+                [-115.47005383792516, 200.00000028072188]
+            ]
+        }
+    ],
+    "lines_params": [
+        {
+            "id": "S_AL_150_z_neutral",
             "model": "zy_neutral",
             "z_line": [
                 [
@@ -153,5 +193,5 @@
             ]
         }
     ],
-    "transformer_types": []
+    "transformers_params": []
 }

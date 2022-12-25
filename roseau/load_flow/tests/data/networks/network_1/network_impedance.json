@@ -1,100 +1,169 @@
 {
+    "version": 1,
+    "grounds": [
+        {
+            "id": "ground",
+            "buses": [
+                {
+                    "id": 1,
+                    "phase": "n"
+                },
+                {
+                    "id": 2,
+                    "phase": "n"
+                }
+            ]
+        }
+    ],
+    "potential_refs": [
+        {
+            "id": "pref",
+            "ground": "ground"
+        }
+    ],
     "buses": [
         {
             "id": 1,
-            "type": "slack",
-            "loads": [],
-            "voltages": {
-                "va": [11547.005383792515, 0.0],
-                "vb": [-5773.502691896258, -10000.000000179687],
-                "vc": [-5773.502691896258, 10000.000000179687]
-            },
-            "geometry": "POINT (0 0)"
+            "phases": "abcn",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [0.0, 0.0]
+            }
         },
         {
             "id": 2,
-            "type": "bus_neutral",
-            "loads": [],
-            "geometry": "POINT (0 0.25)"
+            "phases": "abcn",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [0.0, 0.25]
+            }
         },
         {
             "id": 3,
-            "type": "bus_neutral",
-            "loads": [
-                {
-                    "id": 1,
-                    "function": "yz_neutral",
-                    "impedances": {
-                        "za": [5.0, 0.0],
-                        "zb": [15.0, 10.0],
-                        "zc": [10.0, 5.0]
-                    }
-                }
-            ],
-            "geometry": "POINT (0 0.5)"
+            "phases": "abcn",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [0.0, 0.5]
+            }
         },
         {
             "id": 4,
-            "type": "bus",
-            "loads": [],
-            "geometry": "POINT (0.4 0)"
+            "phases": "abc",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [0.4, 0.0]
+            }
         },
         {
             "id": 5,
-            "type": "bus",
-            "loads": [
-                {
-                    "id": 2,
-                    "function": "yz",
-                    "impedances": {
-                        "za": [500.0, 100.0],
-                        "zb": [500.0, 100.0],
-                        "zc": [500.0, 100.0]
-                    }
-                }
-            ],
-            "geometry": "POINT (-0.4 0.25)"
+            "phases": "abc",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [-0.4, 0.25]
+            }
         }
     ],
     "branches": [
         {
             "id": "line1",
+            "type": "transformer",
+            "phases1": "abc",
+            "phases2": "abcn",
             "bus1": 1,
             "bus2": 2,
-            "geometry": "POINT (0 0.125)",
-            "type_name": "H61_50kVA_Dyn11",
-            "tap": 1.0,
-            "type": "transformer"
+            "geometry": {
+                "type": "Point",
+                "coordinates": [0.0, 0.125]
+            },
+            "params_id": "H61_50kVA_Dyn11",
+            "tap": 1.0
         },
         {
             "id": "line2",
+            "type": "line",
+            "phases1": "abcn",
+            "phases2": "abcn",
             "bus1": 2,
             "bus2": 3,
-            "geometry": "LINESTRING (0 0.25, 0 0.5)",
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [0.0, 0.25],
+                    [0.0, 0.5]
+                ]
+            },
             "length": 1.0,
-            "type_name": "A_AL_150_exact",
-            "type": "line"
+            "params_id": "A_AL_150_exact",
+            "ground": "ground"
         },
         {
             "id": "line3",
+            "type": "switch",
+            "phases1": "abc",
+            "phases2": "abc",
             "bus1": 1,
             "bus2": 4,
-            "geometry": "POINT (0.2 0)",
-            "type": "switch"
+            "geometry": {
+                "type": "Point",
+                "coordinates": [0.2, 0.0]
+            }
         },
         {
             "id": "line4",
+            "type": "line",
+            "phases1": "abc",
+            "phases2": "abc",
             "bus1": 4,
             "bus2": 5,
-            "geometry": "LINESTRING (0 0, -0.4 0.25)",
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [0.0, 0.0],
+                    [-0.4, 0.25]
+                ]
+            },
             "length": 0.5,
-            "type_name": "S_AL_150_sym",
-            "type": "line"
+            "params_id": "S_AL_150_sym",
+            "ground": "ground"
         }
     ],
-    "line_types": [
+    "loads": [
         {
-            "name": "A_AL_150_exact",
+            "id": 1,
+            "bus": 3,
+            "phases": "abcn",
+            "impedances": [
+                [5.0, 0.0],
+                [15.0, 10.0],
+                [10.0, 5.0]
+            ]
+        },
+        {
+            "id": 2,
+            "bus": 5,
+            "phases": "abc",
+            "impedances": [
+                [500.0, 100.0],
+                [500.0, 100.0],
+                [500.0, 100.0]
+            ]
+        }
+    ],
+    "sources": [
+        {
+            "id": 1,
+            "bus": 1,
+            "phases": "abcn",
+            "voltages": [
+                [11547.005383792515, 0.0],
+                [-5773.502691896258, -10000.000000179687],
+                [-5773.502691896258, 10000.000000179687]
+            ]
+        }
+    ],
+    "lines_params": [
+        {
+            "id": "A_AL_150_exact",
             "model": "zy_neutral",
             "z_line": [
                 [
@@ -206,7 +275,7 @@
             ]
         },
         {
-            "name": "S_AL_150_sym",
+            "id": "S_AL_150_sym",
             "model": "zy_neutral",
             "z_line": [
                 [
@@ -282,9 +351,9 @@
             ]
         }
     ],
-    "transformer_types": [
+    "transformers_params": [
         {
-            "name": "H61_50kVA_Dyn11",
+            "id": "H61_50kVA_Dyn11",
             "sn": 50000.0,
             "uhv": 20000.0,
             "ulv": 400.0,

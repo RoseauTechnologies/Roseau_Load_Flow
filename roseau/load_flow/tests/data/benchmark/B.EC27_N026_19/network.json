@@ -1,321 +1,561 @@
 {
+    "version": 1,
+    "grounds": [
+        {
+            "id": "ground",
+            "buses": [
+                {
+                    "id": 0,
+                    "phase": "n"
+                },
+                {
+                    "id": 83,
+                    "phase": "n"
+                }
+            ]
+        }
+    ],
+    "potential_refs": [
+        {
+            "id": "pref",
+            "ground": "ground"
+        }
+    ],
     "buses": [
         {
             "id": 0,
-            "type": "slack",
-            "loads": [],
-            "voltages": {
-                "va": [11547.005383792515, 0.0],
-                "vb": [-5773.502691896258, -10000.000000179687],
-                "vc": [-5773.502691896258, 10000.000000179687]
-            },
-            "geometry": "POINT (4.845962381409016 45.68384043214515)"
+            "phases": "abcn",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [4.845962381409016, 45.68384043214515]
+            }
         },
         {
             "id": 83,
-            "type": "bus_neutral",
-            "loads": [],
-            "geometry": "POINT (4.845962381409016 45.68384043214515)"
+            "phases": "abcn",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [4.845962381409016, 45.68384043214515]
+            }
         },
         {
             "id": 99,
-            "type": "bus_neutral",
-            "loads": [],
-            "geometry": "POINT (4.846156585393867 45.68367766450246)"
+            "phases": "abcn",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [4.846156585393867, 45.68367766450246]
+            }
         },
         {
             "id": 100,
-            "type": "bus_neutral",
-            "loads": [],
-            "geometry": "POINT (4.846250687311938 45.6832344998551)"
+            "phases": "abcn",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [4.846250687311938, 45.6832344998551]
+            }
         },
         {
             "id": 105,
-            "type": "bus_neutral",
-            "loads": [],
-            "geometry": "POINT (4.847069369791975 45.68322067202762)"
+            "phases": "abcn",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [4.847069369791975, 45.68322067202762]
+            }
         },
         {
             "id": 106,
-            "type": "bus_neutral",
-            "loads": [
-                {
-                    "id": 1,
-                    "function": "ys_neutral",
-                    "powers": {
-                        "sa": [4079.9204366170316, 662.3395468482394],
-                        "sb": [0.0, 0.0],
-                        "sc": [0.0, 0.0]
-                    }
-                },
-                {
-                    "id": 3,
-                    "function": "ys_neutral",
-                    "powers": {
-                        "sa": [0.0, 0.0],
-                        "sb": [0.0, 0.0],
-                        "sc": [4079.7380005646523, 663.4623509990394]
-                    }
-                }
-            ],
-            "geometry": "POINT (4.847547024466777 45.68347281055756)"
+            "phases": "abcn",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [4.847547024466777, 45.68347281055756]
+            }
         },
         {
             "id": 107,
-            "type": "bus_neutral",
-            "loads": [],
-            "geometry": "POINT (4.84623598955454 45.68279917127494)"
+            "phases": "abcn",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [4.84623598955454, 45.68279917127494]
+            }
         },
         {
             "id": 391,
-            "type": "bus_neutral",
-            "loads": [],
-            "geometry": "POINT (4.848237446933078 45.68115303991434)"
+            "phases": "abcn",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [4.848237446933078, 45.68115303991434]
+            }
         },
         {
             "id": 474,
-            "type": "bus_neutral",
-            "loads": [],
-            "geometry": "POINT (4.845581618983626 45.68374183928897)"
+            "phases": "abcn",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [4.845581618983626, 45.68374183928897]
+            }
         },
         {
             "id": 475,
-            "type": "bus_neutral",
-            "loads": [
-                {
-                    "id": 2,
-                    "function": "ys_neutral",
-                    "powers": {
-                        "sa": [3955.5045052285295, 1199.3450519184416],
-                        "sb": [0.0, 0.0],
-                        "sc": [0.0, 0.0]
-                    }
-                }
-            ],
-            "geometry": "POINT (4.845156025280701 45.68367395215652)"
+            "phases": "abcn",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [4.845156025280701, 45.68367395215652]
+            }
         },
         {
             "id": 523,
-            "type": "bus_neutral",
-            "loads": [],
-            "geometry": "POINT (4.845922473772013 45.6837819174691)"
+            "phases": "abcn",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [4.845922473772013, 45.6837819174691]
+            }
         },
         {
             "id": 582,
-            "type": "bus_neutral",
-            "loads": [],
-            "geometry": "POINT (4.845719135428181 45.68312398072084)"
+            "phases": "abcn",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [4.845719135428181, 45.68312398072084]
+            }
         },
         {
             "id": 1464,
-            "type": "bus_neutral",
-            "loads": [],
-            "geometry": "POINT (4.845693784456832 45.68312113660608)"
+            "phases": "abcn",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [4.845693784456832, 45.68312113660608]
+            }
         },
         {
             "id": 1465,
-            "type": "bus_neutral",
-            "loads": [],
-            "geometry": "POINT (4.845207063024701 45.68321554995192)"
+            "phases": "abcn",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [4.845207063024701, 45.68321554995192]
+            }
         },
         {
             "id": 2470,
-            "type": "bus_neutral",
-            "loads": [],
-            "geometry": "POINT (4.845723296509978 45.68310622726796)"
+            "phases": "abcn",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [4.845723296509978, 45.68310622726796]
+            }
         },
         {
             "id": 2471,
-            "type": "bus_neutral",
-            "loads": [],
-            "geometry": "POINT (4.845901154044143 45.68234732615426)"
+            "phases": "abcn",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [4.845901154044143, 45.68234732615426]
+            }
         },
         {
             "id": 2472,
-            "type": "bus_neutral",
-            "loads": [],
-            "geometry": "POINT (4.84590299176227 45.68233946299197)"
+            "phases": "abcn",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [4.84590299176227, 45.68233946299197]
+            }
         },
         {
             "id": 3283,
-            "type": "bus_neutral",
-            "loads": [],
-            "geometry": "POINT (4.845897154829175 45.68377893765827)"
+            "phases": "abcn",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [4.845897154829175, 45.68377893765827]
+            }
         },
         {
             "id": 3284,
-            "type": "bus_neutral",
-            "loads": [],
-            "geometry": "POINT (4.845859183244179 45.68377447677985)"
+            "phases": "abcn",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [4.845859183244179, 45.68377447677985]
+            }
         }
     ],
     "branches": [
         {
             "id": "transfo",
+            "type": "transformer",
+            "phases1": "abc",
+            "phases2": "abcn",
             "bus1": 0,
             "bus2": 83,
-            "geometry": "POINT (0 0)",
-            "type_name": "160kVA",
-            "tap": 1.0,
-            "type": "transformer"
+            "geometry": {
+                "type": "Point",
+                "coordinates": [0.0, 0.0]
+            },
+            "params_id": "160kVA",
+            "tap": 1.0
         },
         {
             "id": "line359",
+            "type": "line",
+            "phases1": "abcn",
+            "phases2": "abcn",
             "bus1": 83,
             "bus2": 99,
-            "geometry": "LINESTRING (4.845962381409016 45.68384043214515, 4.845967218558783 45.68382737117161, 4.845985253622802 45.68377871214401, 4.846037332609646 45.68373794129257, 4.846156585393867 45.68367766450246)",
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [4.845962381409016, 45.68384043214515],
+                    [4.845967218558783, 45.68382737117161],
+                    [4.845985253622802, 45.68377871214401],
+                    [4.846037332609646, 45.68373794129257],
+                    [4.846156585393867, 45.68367766450246]
+                ]
+            },
             "length": 0.0231239168145578,
-            "type_name": "S_AL_95",
-            "type": "line"
+            "params_id": "S_AL_95",
+            "ground": "ground"
         },
         {
             "id": "line230",
+            "type": "line",
+            "phases1": "abcn",
+            "phases2": "abcn",
             "bus1": 83,
             "bus2": 523,
-            "geometry": "LINESTRING (4.845962381409016 45.68384043214515, 4.845954083097388 45.68382825923782, 4.845922473772013 45.6837819174691)",
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [4.845962381409016, 45.68384043214515],
+                    [4.845954083097388, 45.68382825923782],
+                    [4.845922473772013, 45.6837819174691]
+                ]
+            },
             "length": 0.0057090361650646,
-            "type_name": "S_AL_95",
-            "type": "line"
+            "params_id": "S_AL_95",
+            "ground": "ground"
         },
         {
             "id": "line2717",
+            "type": "line",
+            "phases1": "abcn",
+            "phases2": "abcn",
             "bus1": 523,
             "bus2": 3283,
-            "geometry": "LINESTRING (4.845922473772013 45.6837819174691, 4.845897154829175 45.68377893765827)",
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [4.845922473772013, 45.6837819174691],
+                    [4.845897154829175, 45.68377893765827]
+                ]
+            },
             "length": 0.0020000434170354,
-            "type_name": "S_AL_50",
-            "type": "line"
+            "params_id": "S_AL_50",
+            "ground": "ground"
         },
         {
             "id": "line2718",
+            "type": "line",
+            "phases1": "abcn",
+            "phases2": "abcn",
             "bus1": 3283,
             "bus2": 3284,
-            "geometry": "LINESTRING (4.845897154829175 45.68377893765827, 4.845859183244179 45.68377447677985)",
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [4.845897154829175, 45.68377893765827],
+                    [4.845859183244179, 45.68377447677985]
+                ]
+            },
             "length": 0.0029993781124104,
-            "type_name": "S_AL_50",
-            "type": "line"
+            "params_id": "S_AL_50",
+            "ground": "ground"
         },
         {
             "id": "line2719",
+            "type": "line",
+            "phases1": "abcn",
+            "phases2": "abcn",
             "bus1": 3284,
             "bus2": 474,
-            "geometry": "LINESTRING (4.845859183244179 45.68377447677985, 4.845581618983626 45.68374183928897)",
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [4.845859183244179, 45.68377447677985],
+                    [4.845581618983626, 45.68374183928897]
+                ]
+            },
             "length": 0.0219253677107112,
-            "type_name": "S_AL_50",
-            "type": "line"
+            "params_id": "S_AL_50",
+            "ground": "ground"
         },
         {
             "id": "line2",
+            "type": "line",
+            "phases1": "abcn",
+            "phases2": "abcn",
             "bus1": 99,
             "bus2": 100,
-            "geometry": "LINESTRING (4.846156585393867 45.68367766450246, 4.846250687311938 45.6832344998551)",
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [4.846156585393867, 45.68367766450246],
+                    [4.846250687311938, 45.6832344998551]
+                ]
+            },
             "length": 0.0497981490086611,
-            "type_name": "T_AL_70",
-            "type": "line"
+            "params_id": "T_AL_70",
+            "ground": "ground"
         },
         {
             "id": "line203",
+            "type": "line",
+            "phases1": "abcn",
+            "phases2": "abcn",
             "bus1": 474,
             "bus2": 475,
-            "geometry": "LINESTRING (4.845581618983626 45.68374183928897, 4.845532108276982 45.68395177478787, 4.845100917560134 45.68390201502873, 4.845156025280701 45.68367395215652)",
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [4.845581618983626, 45.68374183928897],
+                    [4.845532108276982, 45.68395177478787],
+                    [4.845100917560134, 45.68390201502873],
+                    [4.845156025280701, 45.68367395215652]
+                ]
+            },
             "length": 0.0834023804327046,
-            "type_name": "S_CU_14",
-            "type": "line"
+            "params_id": "S_CU_14",
+            "ground": "ground"
         },
         {
             "id": "line267",
+            "type": "line",
+            "phases1": "abcn",
+            "phases2": "abcn",
             "bus1": 474,
             "bus2": 582,
-            "geometry": "LINESTRING (4.845581618983626 45.68374183928897, 4.845719135428181 45.68312398072084)",
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [4.845581618983626, 45.68374183928897],
+                    [4.845719135428181, 45.68312398072084]
+                ]
+            },
             "length": 0.0695025869248514,
-            "type_name": "S_AL_50",
-            "type": "line"
+            "params_id": "S_AL_50",
+            "ground": "ground"
         },
         {
             "id": "line6",
+            "type": "line",
+            "phases1": "abcn",
+            "phases2": "abcn",
             "bus1": 100,
             "bus2": 107,
-            "geometry": "LINESTRING (4.846250687311938 45.6832344998551, 4.84623598955454 45.68279917127494)",
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [4.846250687311938, 45.6832344998551],
+                    [4.84623598955454, 45.68279917127494]
+                ]
+            },
             "length": 0.0483981960512238,
-            "type_name": "T_AL_70",
-            "type": "line"
+            "params_id": "T_AL_70",
+            "ground": "ground"
         },
         {
             "id": "line1039",
+            "type": "line",
+            "phases1": "abcn",
+            "phases2": "abcn",
             "bus1": 582,
             "bus2": 1464,
-            "geometry": "LINESTRING (4.845719135428181 45.68312398072084, 4.845693784456832 45.68312113660608)",
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [4.845719135428181, 45.68312398072084],
+                    [4.845693784456832, 45.68312113660608]
+                ]
+            },
             "length": 0.0020000879179518,
-            "type_name": "S_CU_14",
-            "type": "line"
+            "params_id": "S_CU_14",
+            "ground": "ground"
         },
         {
             "id": "line1943",
+            "type": "line",
+            "phases1": "abcn",
+            "phases2": "abcn",
             "bus1": 582,
             "bus2": 2470,
-            "geometry": "LINESTRING (4.845719135428181 45.68312398072084, 4.845723296509978 45.68310622726796)",
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [4.845719135428181, 45.68312398072084],
+                    [4.845723296509978, 45.68310622726796]
+                ]
+            },
             "length": 0.0019996601111272,
-            "type_name": "S_CU_14",
-            "type": "line"
+            "params_id": "S_CU_14",
+            "ground": "ground"
         },
         {
             "id": "line1944",
+            "type": "line",
+            "phases1": "abcn",
+            "phases2": "abcn",
             "bus1": 2470,
             "bus2": 2471,
-            "geometry": "LINESTRING (4.845723296509978 45.68310622726796, 4.845901154044143 45.68234732615426)",
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [4.845723296509978, 45.68310622726796],
+                    [4.845901154044143, 45.68234732615426]
+                ]
+            },
             "length": 0.0854786464782574,
-            "type_name": "S_CU_14",
-            "type": "line"
+            "params_id": "S_CU_14",
+            "ground": "ground"
         },
         {
             "id": "line1040",
+            "type": "line",
+            "phases1": "abcn",
+            "phases2": "abcn",
             "bus1": 1464,
             "bus2": 1465,
-            "geometry": "LINESTRING (4.845693784456832 45.68312113660608, 4.845324158276797 45.68307971235598, 4.845287174983968 45.68322635909988, 4.845207063024701 45.68321554995192)",
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [4.845693784456832, 45.68312113660608],
+                    [4.845324158276797, 45.68307971235598],
+                    [4.845287174983968, 45.68322635909988],
+                    [4.845207063024701, 45.68321554995192]
+                ]
+            },
             "length": 0.0520686283532788,
-            "type_name": "S_CU_14",
-            "type": "line"
+            "params_id": "S_CU_14",
+            "ground": "ground"
         },
         {
             "id": "line20",
+            "type": "line",
+            "phases1": "abcn",
+            "phases2": "abcn",
             "bus1": 107,
             "bus2": 105,
-            "geometry": "LINESTRING (4.84623598955454 45.68279917127494, 4.847069369791975 45.68322067202762)",
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [4.84623598955454, 45.68279917127494],
+                    [4.847069369791975, 45.68322067202762]
+                ]
+            },
             "length": 0.0800614921683771,
-            "type_name": "T_AL_35",
-            "type": "line"
+            "params_id": "T_AL_35",
+            "ground": "ground"
         },
         {
             "id": "line1945",
+            "type": "line",
+            "phases1": "abcn",
+            "phases2": "abcn",
             "bus1": 2471,
             "bus2": 2472,
-            "geometry": "LINESTRING (4.845901154044143 45.68234732615426, 4.84590299176227 45.68233946299197)",
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [4.845901154044143, 45.68234732615426],
+                    [4.84590299176227, 45.68233946299197]
+                ]
+            },
             "length": 0.0008856010986698,
-            "type_name": "S_CU_14",
-            "type": "line"
+            "params_id": "S_CU_14",
+            "ground": "ground"
         },
         {
             "id": "line5",
+            "type": "line",
+            "phases1": "abcn",
+            "phases2": "abcn",
             "bus1": 105,
             "bus2": 106,
-            "geometry": "LINESTRING (4.847069369791975 45.68322067202762, 4.847547024466777 45.68347281055756)",
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [4.847069369791975, 45.68322067202762],
+                    [4.847547024466777, 45.68347281055756]
+                ]
+            },
             "length": 0.0465834382688477,
-            "type_name": "T_AL_35",
-            "type": "line"
+            "params_id": "T_AL_35",
+            "ground": "ground"
         },
         {
             "id": "line157",
+            "type": "line",
+            "phases1": "abcn",
+            "phases2": "abcn",
             "bus1": 106,
             "bus2": 391,
-            "geometry": "LINESTRING (4.847547024466777 45.68347281055756, 4.847747154588589 45.68346832835926, 4.847837128896726 45.68268140889288, 4.847871328228379 45.68196684814885, 4.848000559193578 45.68159040386583, 4.848237446933078 45.68115303991434)",
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [4.847547024466777, 45.68347281055756],
+                    [4.847747154588589, 45.68346832835926],
+                    [4.847837128896726, 45.68268140889288],
+                    [4.847871328228379, 45.68196684814885],
+                    [4.848000559193578, 45.68159040386583],
+                    [4.848237446933078, 45.68115303991434]
+                ]
+            },
             "length": 0.2778365911956989,
-            "type_name": "S_AL_95",
-            "type": "line"
+            "params_id": "S_AL_95",
+            "ground": "ground"
         }
     ],
-    "line_types": [
+    "loads": [
         {
-            "name": "S_AL_50",
+            "id": 1,
+            "bus": 106,
+            "phases": "abcn",
+            "powers": [
+                [4079.9204366170316, 662.3395468482394],
+                [0.0, 0.0],
+                [0.0, 0.0]
+            ]
+        },
+        {
+            "id": 3,
+            "bus": 106,
+            "phases": "abcn",
+            "powers": [
+                [0.0, 0.0],
+                [0.0, 0.0],
+                [4079.7380005646523, 663.4623509990394]
+            ]
+        },
+        {
+            "id": 2,
+            "bus": 475,
+            "phases": "abcn",
+            "powers": [
+                [3955.5045052285295, 1199.3450519184416],
+                [0.0, 0.0],
+                [0.0, 0.0]
+            ]
+        }
+    ],
+    "sources": [
+        {
+            "id": 0,
+            "bus": 0,
+            "phases": "abcn",
+            "voltages": [
+                [11547.005383792515, 0.0],
+                [-5773.502691896258, -10000.000000179687],
+                [-5773.502691896258, 10000.000000179687]
+            ]
+        }
+    ],
+    "lines_params": [
+        {
+            "id": "S_AL_50",
             "model": "zy_neutral",
             "z_line": [
                 [
@@ -427,7 +667,7 @@
             ]
         },
         {
-            "name": "S_AL_95",
+            "id": "S_AL_95",
             "model": "zy_neutral",
             "z_line": [
                 [
@@ -539,7 +779,7 @@
             ]
         },
         {
-            "name": "S_CU_14",
+            "id": "S_CU_14",
             "model": "zy_neutral",
             "z_line": [
                 [
@@ -651,7 +891,7 @@
             ]
         },
         {
-            "name": "T_AL_35",
+            "id": "T_AL_35",
             "model": "zy_neutral",
             "z_line": [
                 [
@@ -763,7 +1003,7 @@
             ]
         },
         {
-            "name": "T_AL_70",
+            "id": "T_AL_70",
             "model": "zy_neutral",
             "z_line": [
                 [
@@ -875,9 +1115,9 @@
             ]
         }
     ],
-    "transformer_types": [
+    "transformers_params": [
         {
-            "name": "160kVA",
+            "id": "160kVA",
             "sn": 160000.0,
             "uhv": 20000.0,
             "ulv": 400.0,
