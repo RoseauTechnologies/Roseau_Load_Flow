@@ -188,7 +188,7 @@ def network_to_dict(en: "ElectricalNetwork") -> JsonDict:
     transformer_params.sort(key=lambda x: x["id"])  # Always keep the same order
 
     return {
-        "version": 1,
+        "version": NETWORK_JSON_VERSION,
         "grounds": grounds,
         "potential_refs": potential_refs,
         "buses": buses,
