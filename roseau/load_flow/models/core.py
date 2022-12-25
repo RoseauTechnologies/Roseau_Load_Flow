@@ -221,7 +221,10 @@ class Ground(Element):
 
     def to_dict(self) -> JsonDict:
         # Shunt lines and potential references will have the ground in their dict not here.
-        return {"id": self.id, "buses": self.phases}
+        return {
+            "id": self.id,
+            "buses": [{"id": bus_id, "phase": phase} for bus_id, phase in self.phases.items()],
+        }
 
 
 class AbstractBranch(Element):

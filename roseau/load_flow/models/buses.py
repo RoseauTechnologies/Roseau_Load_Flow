@@ -122,6 +122,8 @@ class Bus(Element):
 
     def to_dict(self) -> JsonDict:
         res = {"id": self.id, "phases": self.phases}
+        if (self.initial_potentials != 0).all():
+            res["potentials"] = [[v.real, v.imag] for v in self.initial_potentials]
         if self.geometry is not None:
             res["geometry"] = self.geometry.__geo_interface__
         return res
