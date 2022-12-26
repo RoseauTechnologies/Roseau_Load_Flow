@@ -102,22 +102,20 @@ class AbstractLoad(Element, metaclass=ABCMeta):
     # Json Mixin interface
     #
     @classmethod
-    def from_dict(cls, data: JsonDict, bus: Bus) -> "AbstractLoad":
-        id: Id = data["id"]
-        phases: str = data["phases"]
-        if (s := data.get("powers")) is not None:
-            s_complex = [complex(*s[f"s{ph}"]) for ph in phases.removesuffix("n")]
+    def from_dict(cls, data: JsonDict) -> "AbstractLoad":
+        if (s_list := data.get("powers")) is not None:
+            powers = [complex(s[0], s[1]) for s in s_list]
             if (fp_data_list := data.get("flexible_params")) is not None:
                 fp = [cls._flexible_parameter_class.from_dict(fp_dict) for fp_dict in fp_data_list]
             else:
                 fp = None
-            return cls._power_load_class(id, bus, s=s_complex, phases=phases, flexible_params=fp)
-        elif (i := data.get("currents")) is not None:
-            i_complex = [complex(*i[f"i{ph}"]) for ph in phases.removesuffix("n")]
-            return cls._current_load_class(id, bus, i=i_complex, phases=phases)
-        elif (z := data.get("impedances")) is not None:
-            z_complex = [complex(*z[f"z{ph}"]) for ph in phases.removesuffix("n")]
-            return cls._impedance_load_class(id, bus, z=z_complex, phases=phases)
+            return cls._power_load_class(data["id"], data["bus"], s=powers, phases=data["phases"], flexible_params=fp)
+        elif (i_list := data.get("currents")) is not None:
+            currents = [complex(i[0], i[1]) for i in i_list]
+            return cls._current_load_class(data["id"], data["bus"], i=currents, phases=data["phases"])
+        elif (z_list := data.get("impedances")) is not None:
+            impedances = [complex(z[0], z[1]) for z in z_list]
+            return cls._impedance_load_class(data["id"], data["bus"], z=impedances, phases=data["phases"])
         else:
             msg = f"Unknown load type for load {data['id']!r}"
             logger.error(msg)
@@ -238,8 +236,9 @@ class PowerLoad(AbstractLoad):
     def to_dict(self) -> JsonDict:
         res = {
             "id": self.id,
+            "bus": self.bus.id,
             "phases": self.phases,
-            "powers": {f"s{ph}": [s.real, s.imag] for s, ph in zip(self.s, self.phases)},
+            "powers": [[s.real, s.imag] for s in self.s],
         }
         if self.flexible_params is not None:
             res["flexible_params"] = [fp.to_dict() for fp in self.flexible_params]
@@ -302,8 +301,9 @@ class CurrentLoad(AbstractLoad):
     def to_dict(self) -> JsonDict:
         return {
             "id": self.id,
+            "bus": self.bus.id,
             "phases": self.phases,
-            "currents": {f"i{ph}": [i.real, i.imag] for i, ph in zip(self.i, self.phases)},
+            "currents": [[i.real, i.imag] for i in self.i],
         }
 
 
@@ -364,8 +364,9 @@ class ImpedanceLoad(AbstractLoad):
     def to_dict(self) -> JsonDict:
         return {
             "id": self.id,
+            "bus": self.bus.id,
             "phases": self.phases,
-            "impedances": {f"z{ph}": [z.real, z.imag] for z, ph in zip(self.z, self.phases)},
+            "impedances": [[z.real, z.imag] for z in self.z],
         }
 
 

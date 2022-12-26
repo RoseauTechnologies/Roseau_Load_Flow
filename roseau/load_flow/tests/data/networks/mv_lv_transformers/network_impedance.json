@@ -1,323 +1,488 @@
 {
+    "version": 1,
+    "grounds": [
+        {
+            "id": "ground",
+            "buses": [
+                {
+                    "id": 1,
+                    "phase": "n"
+                },
+                {
+                    "id": 3,
+                    "phase": "n"
+                },
+                {
+                    "id": 4,
+                    "phase": "n"
+                },
+                {
+                    "id": 5,
+                    "phase": "n"
+                },
+                {
+                    "id": 7,
+                    "phase": "n"
+                },
+                {
+                    "id": 9,
+                    "phase": "n"
+                },
+                {
+                    "id": 10,
+                    "phase": "n"
+                },
+                {
+                    "id": 11,
+                    "phase": "n"
+                },
+                {
+                    "id": 13,
+                    "phase": "n"
+                }
+            ]
+        }
+    ],
+    "potential_refs": [
+        {
+            "id": "pref",
+            "ground": "ground"
+        },
+        {
+            "id": "line12",
+            "bus": 2,
+            "phases": null
+        },
+        {
+            "id": "line56",
+            "bus": 6,
+            "phases": null
+        },
+        {
+            "id": "line78",
+            "bus": 8,
+            "phases": null
+        },
+        {
+            "id": "line1112",
+            "bus": 12,
+            "phases": null
+        }
+    ],
     "buses": [
         {
             "id": 1,
-            "type": "slack",
-            "loads": [],
-            "voltages": {
-                "va": [11547.005383792515, 0.0],
-                "vb": [-5773.502691896258, -10000.000000179687],
-                "vc": [-5773.502691896258, 10000.000000179687]
-            },
-            "geometry": "POINT (0 0)"
+            "phases": "abcn",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [0.0, 0.0]
+            }
         },
         {
             "id": 2,
-            "type": "bus",
-            "loads": [
-                {
-                    "id": 1,
-                    "function": "yz",
-                    "impedances": {
-                        "za": [1.0, 0.5],
-                        "zb": [1.0, 0.5],
-                        "zc": [1.0, 0.5]
-                    }
-                }
-            ],
-            "geometry": "POINT (0 1)"
+            "phases": "abc",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [0.0, 1.0]
+            }
         },
         {
             "id": 3,
-            "type": "bus_neutral",
-            "loads": [
-                {
-                    "id": 2,
-                    "function": "yz_neutral",
-                    "impedances": {
-                        "za": [1.0, 0.5],
-                        "zb": [1.0, 0.5],
-                        "zc": [1.0, 0.5]
-                    }
-                }
-            ],
-            "geometry": "POINT (0 1)"
+            "phases": "abcn",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [0.0, 1.0]
+            }
         },
         {
             "id": 4,
-            "type": "bus_neutral",
-            "loads": [
-                {
-                    "id": 3,
-                    "function": "yz_neutral",
-                    "impedances": {
-                        "za": [1.0, 0.5],
-                        "zb": [1.0, 0.5],
-                        "zc": [1.0, 0.5]
-                    }
-                }
-            ],
-            "geometry": "POINT (0 1)"
+            "phases": "abcn",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [0.0, 1.0]
+            }
         },
         {
             "id": 5,
-            "type": "bus_neutral",
-            "loads": [
-                {
-                    "id": 4,
-                    "function": "yz_neutral",
-                    "impedances": {
-                        "za": [1.0, 0.5],
-                        "zb": [1.0, 0.5],
-                        "zc": [1.0, 0.5]
-                    }
-                }
-            ],
-            "geometry": "POINT (0 1)"
+            "phases": "abcn",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [0.0, 1.0]
+            }
         },
         {
             "id": 6,
-            "type": "bus",
-            "loads": [
-                {
-                    "id": 5,
-                    "function": "yz",
-                    "impedances": {
-                        "za": [1.0, 0.5],
-                        "zb": [1.0, 0.5],
-                        "zc": [1.0, 0.5]
-                    }
-                }
-            ],
-            "geometry": "POINT (0 1)"
+            "phases": "abc",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [0.0, 1.0]
+            }
         },
         {
             "id": 7,
-            "type": "bus_neutral",
-            "loads": [
-                {
-                    "id": 6,
-                    "function": "yz_neutral",
-                    "impedances": {
-                        "za": [1.0, 0.5],
-                        "zb": [1.0, 0.5],
-                        "zc": [1.0, 0.5]
-                    }
-                }
-            ],
-            "geometry": "POINT (0 1)"
+            "phases": "abcn",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [0.0, 1.0]
+            }
         },
         {
             "id": 8,
-            "type": "bus",
-            "loads": [
-                {
-                    "id": 7,
-                    "function": "yz",
-                    "impedances": {
-                        "za": [1.0, 0.5],
-                        "zb": [1.0, 0.5],
-                        "zc": [1.0, 0.5]
-                    }
-                }
-            ],
-            "geometry": "POINT (0 1)"
+            "phases": "abc",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [0.0, 1.0]
+            }
         },
         {
             "id": 9,
-            "type": "bus_neutral",
-            "loads": [
-                {
-                    "id": 8,
-                    "function": "yz_neutral",
-                    "impedances": {
-                        "za": [1.0, 0.5],
-                        "zb": [1.0, 0.5],
-                        "zc": [1.0, 0.5]
-                    }
-                }
-            ],
-            "geometry": "POINT (0 1)"
+            "phases": "abcn",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [0.0, 1.0]
+            }
         },
         {
             "id": 10,
-            "type": "bus_neutral",
-            "loads": [
-                {
-                    "id": 9,
-                    "function": "yz_neutral",
-                    "impedances": {
-                        "za": [1.0, 0.5],
-                        "zb": [1.0, 0.5],
-                        "zc": [1.0, 0.5]
-                    }
-                }
-            ],
-            "geometry": "POINT (0 1)"
+            "phases": "abcn",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [0.0, 1.0]
+            }
         },
         {
             "id": 11,
-            "type": "bus_neutral",
-            "loads": [
-                {
-                    "id": 10,
-                    "function": "yz_neutral",
-                    "impedances": {
-                        "za": [1.0, 0.5],
-                        "zb": [1.0, 0.5],
-                        "zc": [1.0, 0.5]
-                    }
-                }
-            ],
-            "geometry": "POINT (0 1)"
+            "phases": "abcn",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [0.0, 1.0]
+            }
         },
         {
             "id": 12,
-            "type": "bus",
-            "loads": [
-                {
-                    "id": 11,
-                    "function": "yz",
-                    "impedances": {
-                        "za": [1.0, 0.5],
-                        "zb": [1.0, 0.5],
-                        "zc": [1.0, 0.5]
-                    }
-                }
-            ],
-            "geometry": "POINT (0 1)"
+            "phases": "abc",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [0.0, 1.0]
+            }
         },
         {
             "id": 13,
-            "type": "bus_neutral",
-            "loads": [
-                {
-                    "id": 12,
-                    "function": "yz_neutral",
-                    "impedances": {
-                        "za": [1.0, 0.5],
-                        "zb": [1.0, 0.5],
-                        "zc": [1.0, 0.5]
-                    }
-                }
-            ],
-            "geometry": "POINT (0 1)"
+            "phases": "abcn",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [0.0, 1.0]
+            }
         }
     ],
     "branches": [
         {
             "id": "line1",
+            "type": "transformer",
+            "phases1": "abc",
+            "phases2": "abc",
             "bus1": 1,
             "bus2": 2,
-            "geometry": "POINT (0 0.5)",
-            "type_name": "160kVA_Dd0",
-            "tap": 1.0,
-            "type": "transformer"
+            "geometry": {
+                "type": "Point",
+                "coordinates": [0.0, 0.5]
+            },
+            "params_id": "160kVA_Dd0",
+            "tap": 1.0
         },
         {
             "id": "line2",
+            "type": "transformer",
+            "phases1": "abc",
+            "phases2": "abcn",
             "bus1": 1,
             "bus2": 3,
-            "geometry": "POINT (0 0.5)",
-            "type_name": "160kVA_Yyn0",
-            "tap": 1.0,
-            "type": "transformer"
+            "geometry": {
+                "type": "Point",
+                "coordinates": [0.0, 0.5]
+            },
+            "params_id": "160kVA_Yyn0",
+            "tap": 1.0
         },
         {
             "id": "line3",
+            "type": "transformer",
+            "phases1": "abc",
+            "phases2": "abcn",
             "bus1": 1,
             "bus2": 4,
-            "geometry": "POINT (0 0.5)",
-            "type_name": "160kVA_Dzn0",
-            "tap": 1.0,
-            "type": "transformer"
+            "geometry": {
+                "type": "Point",
+                "coordinates": [0.0, 0.5]
+            },
+            "params_id": "160kVA_Dzn0",
+            "tap": 1.0
         },
         {
             "id": "line4",
+            "type": "transformer",
+            "phases1": "abc",
+            "phases2": "abcn",
             "bus1": 1,
             "bus2": 5,
-            "geometry": "POINT (0 0.5)",
-            "type_name": "160kVA_Dyn11",
-            "tap": 1.0,
-            "type": "transformer"
+            "geometry": {
+                "type": "Point",
+                "coordinates": [0.0, 0.5]
+            },
+            "params_id": "160kVA_Dyn11",
+            "tap": 1.0
         },
         {
             "id": "line5",
+            "type": "transformer",
+            "phases1": "abc",
+            "phases2": "abc",
             "bus1": 1,
             "bus2": 6,
-            "geometry": "POINT (0 0.5)",
-            "type_name": "160kVA_Yd11",
-            "tap": 1.0,
-            "type": "transformer"
+            "geometry": {
+                "type": "Point",
+                "coordinates": [0.0, 0.5]
+            },
+            "params_id": "160kVA_Yd11",
+            "tap": 1.0
         },
         {
             "id": "line6",
+            "type": "transformer",
+            "phases1": "abc",
+            "phases2": "abcn",
             "bus1": 1,
             "bus2": 7,
-            "geometry": "POINT (0 0.5)",
-            "type_name": "160kVA_Yzn11",
-            "tap": 1.0,
-            "type": "transformer"
+            "geometry": {
+                "type": "Point",
+                "coordinates": [0.0, 0.5]
+            },
+            "params_id": "160kVA_Yzn11",
+            "tap": 1.0
         },
         {
             "id": "line7",
+            "type": "transformer",
+            "phases1": "abc",
+            "phases2": "abc",
             "bus1": 1,
             "bus2": 8,
-            "geometry": "POINT (0 0.5)",
-            "type_name": "160kVA_Dd6",
-            "tap": 1.0,
-            "type": "transformer"
+            "geometry": {
+                "type": "Point",
+                "coordinates": [0.0, 0.5]
+            },
+            "params_id": "160kVA_Dd6",
+            "tap": 1.0
         },
         {
             "id": "line8",
+            "type": "transformer",
+            "phases1": "abc",
+            "phases2": "abcn",
             "bus1": 1,
             "bus2": 9,
-            "geometry": "POINT (0 0.5)",
-            "type_name": "160kVA_Yyn6",
-            "tap": 1.0,
-            "type": "transformer"
+            "geometry": {
+                "type": "Point",
+                "coordinates": [0.0, 0.5]
+            },
+            "params_id": "160kVA_Yyn6",
+            "tap": 1.0
         },
         {
             "id": "line9",
+            "type": "transformer",
+            "phases1": "abc",
+            "phases2": "abcn",
             "bus1": 1,
             "bus2": 10,
-            "geometry": "POINT (0 0.5)",
-            "type_name": "160kVA_Dzn6",
-            "tap": 1.0,
-            "type": "transformer"
+            "geometry": {
+                "type": "Point",
+                "coordinates": [0.0, 0.5]
+            },
+            "params_id": "160kVA_Dzn6",
+            "tap": 1.0
         },
         {
             "id": "line10",
+            "type": "transformer",
+            "phases1": "abc",
+            "phases2": "abcn",
             "bus1": 1,
             "bus2": 11,
-            "geometry": "POINT (0 0.5)",
-            "type_name": "160kVA_Dyn5",
-            "tap": 1.0,
-            "type": "transformer"
+            "geometry": {
+                "type": "Point",
+                "coordinates": [0.0, 0.5]
+            },
+            "params_id": "160kVA_Dyn5",
+            "tap": 1.0
         },
         {
             "id": "line11",
+            "type": "transformer",
+            "phases1": "abc",
+            "phases2": "abc",
             "bus1": 1,
             "bus2": 12,
-            "geometry": "POINT (0 0.5)",
-            "type_name": "160kVA_Yd5",
-            "tap": 1.0,
-            "type": "transformer"
+            "geometry": {
+                "type": "Point",
+                "coordinates": [0.0, 0.5]
+            },
+            "params_id": "160kVA_Yd5",
+            "tap": 1.0
         },
         {
             "id": "line12",
+            "type": "transformer",
+            "phases1": "abc",
+            "phases2": "abcn",
             "bus1": 1,
             "bus2": 13,
-            "geometry": "POINT (0 0.5)",
-            "type_name": "160kVA_Yzn5",
-            "tap": 1.0,
-            "type": "transformer"
+            "geometry": {
+                "type": "Point",
+                "coordinates": [0.0, 0.5]
+            },
+            "params_id": "160kVA_Yzn5",
+            "tap": 1.0
         }
     ],
-    "line_types": [],
-    "transformer_types": [
+    "loads": [
         {
-            "name": "160kVA_Dd0",
+            "id": 1,
+            "bus": 2,
+            "phases": "abcn",
+            "impedances": [
+                [1.0, 0.5],
+                [1.0, 0.5],
+                [1.0, 0.5]
+            ]
+        },
+        {
+            "id": 2,
+            "bus": 3,
+            "phases": "abcn",
+            "impedances": [
+                [1.0, 0.5],
+                [1.0, 0.5],
+                [1.0, 0.5]
+            ]
+        },
+        {
+            "id": 3,
+            "bus": 4,
+            "phases": "abcn",
+            "impedances": [
+                [1.0, 0.5],
+                [1.0, 0.5],
+                [1.0, 0.5]
+            ]
+        },
+        {
+            "id": 4,
+            "bus": 5,
+            "phases": "abcn",
+            "impedances": [
+                [1.0, 0.5],
+                [1.0, 0.5],
+                [1.0, 0.5]
+            ]
+        },
+        {
+            "id": 5,
+            "bus": 6,
+            "phases": "abcn",
+            "impedances": [
+                [1.0, 0.5],
+                [1.0, 0.5],
+                [1.0, 0.5]
+            ]
+        },
+        {
+            "id": 6,
+            "bus": 7,
+            "phases": "abcn",
+            "impedances": [
+                [1.0, 0.5],
+                [1.0, 0.5],
+                [1.0, 0.5]
+            ]
+        },
+        {
+            "id": 7,
+            "bus": 8,
+            "phases": "abcn",
+            "impedances": [
+                [1.0, 0.5],
+                [1.0, 0.5],
+                [1.0, 0.5]
+            ]
+        },
+        {
+            "id": 8,
+            "bus": 9,
+            "phases": "abcn",
+            "impedances": [
+                [1.0, 0.5],
+                [1.0, 0.5],
+                [1.0, 0.5]
+            ]
+        },
+        {
+            "id": 9,
+            "bus": 10,
+            "phases": "abcn",
+            "impedances": [
+                [1.0, 0.5],
+                [1.0, 0.5],
+                [1.0, 0.5]
+            ]
+        },
+        {
+            "id": 10,
+            "bus": 11,
+            "phases": "abcn",
+            "impedances": [
+                [1.0, 0.5],
+                [1.0, 0.5],
+                [1.0, 0.5]
+            ]
+        },
+        {
+            "id": 11,
+            "bus": 12,
+            "phases": "abcn",
+            "impedances": [
+                [1.0, 0.5],
+                [1.0, 0.5],
+                [1.0, 0.5]
+            ]
+        },
+        {
+            "id": 12,
+            "bus": 13,
+            "phases": "abcn",
+            "impedances": [
+                [1.0, 0.5],
+                [1.0, 0.5],
+                [1.0, 0.5]
+            ]
+        }
+    ],
+    "sources": [
+        {
+            "id": 1,
+            "bus": 1,
+            "phases": "abcn",
+            "voltages": [
+                [11547.005383792515, 0.0],
+                [-5773.502691896258, -10000.000000179687],
+                [-5773.502691896258, 10000.000000179687]
+            ]
+        }
+    ],
+    "lines_params": [],
+    "transformers_params": [
+        {
+            "id": "160kVA_Dd0",
             "sn": 160000.0,
             "uhv": 20000.0,
             "ulv": 400.0,
@@ -328,7 +493,7 @@
             "type": "dd0"
         },
         {
-            "name": "160kVA_Dd6",
+            "id": "160kVA_Dd6",
             "sn": 160000.0,
             "uhv": 20000.0,
             "ulv": 400.0,
@@ -339,7 +504,7 @@
             "type": "dd6"
         },
         {
-            "name": "160kVA_Dyn11",
+            "id": "160kVA_Dyn11",
             "sn": 160000.0,
             "uhv": 20000.0,
             "ulv": 400.0,
@@ -350,7 +515,7 @@
             "type": "dyn11"
         },
         {
-            "name": "160kVA_Dyn5",
+            "id": "160kVA_Dyn5",
             "sn": 160000.0,
             "uhv": 20000.0,
             "ulv": 400.0,
@@ -361,7 +526,7 @@
             "type": "dyn5"
         },
         {
-            "name": "160kVA_Dzn0",
+            "id": "160kVA_Dzn0",
             "sn": 160000.0,
             "uhv": 20000.0,
             "ulv": 400.0,
@@ -372,7 +537,7 @@
             "type": "dzn0"
         },
         {
-            "name": "160kVA_Dzn6",
+            "id": "160kVA_Dzn6",
             "sn": 160000.0,
             "uhv": 20000.0,
             "ulv": 400.0,
@@ -383,7 +548,7 @@
             "type": "dzn6"
         },
         {
-            "name": "160kVA_Yd11",
+            "id": "160kVA_Yd11",
             "sn": 160000.0,
             "uhv": 20000.0,
             "ulv": 400.0,
@@ -394,7 +559,7 @@
             "type": "yd11"
         },
         {
-            "name": "160kVA_Yd5",
+            "id": "160kVA_Yd5",
             "sn": 160000.0,
             "uhv": 20000.0,
             "ulv": 400.0,
@@ -405,7 +570,7 @@
             "type": "yd5"
         },
         {
-            "name": "160kVA_Yyn0",
+            "id": "160kVA_Yyn0",
             "sn": 160000.0,
             "uhv": 20000.0,
             "ulv": 400.0,
@@ -416,7 +581,7 @@
             "type": "yyn0"
         },
         {
-            "name": "160kVA_Yyn6",
+            "id": "160kVA_Yyn6",
             "sn": 160000.0,
             "uhv": 20000.0,
             "ulv": 400.0,
@@ -427,7 +592,7 @@
             "type": "yyn6"
         },
         {
-            "name": "160kVA_Yzn11",
+            "id": "160kVA_Yzn11",
             "sn": 160000.0,
             "uhv": 20000.0,
             "ulv": 400.0,
@@ -438,7 +603,7 @@
             "type": "yzn11"
         },
         {
-            "name": "160kVA_Yzn5",
+            "id": "160kVA_Yzn5",
             "sn": 160000.0,
             "uhv": 20000.0,
             "ulv": 400.0,

@@ -22,8 +22,10 @@ from roseau.load_flow.models import (
     Bus,
     Element,
     Ground,
+    Line,
     PotentialRef,
     PowerLoad,
+    Switch,
     Transformer,
     VoltageSource,
 )
@@ -46,6 +48,9 @@ class ElectricalNetwork:
 
     # Default classes to use
     branch_class = AbstractBranch
+    line_class = Line
+    transformer_class = Transformer
+    switch_class = Switch
     load_class = AbstractLoad
     voltage_source_class = VoltageSource
     bus_class = Bus
@@ -362,37 +367,17 @@ class ElectricalNetwork:
         """
         for bus_data in result_dict["buses"]:
             bus = self.buses[bus_data["id"]]
-            bus.potentials = self._dispatch_value(bus_data["potentials"], bus.phases, "v")
+            bus.potentials = [complex(v[0], v[1]) for v in bus_data["potentials"]]
         for branch_data in result_dict["branches"]:
             branch = self.branches[branch_data["id"]]
-            currents1 = self._dispatch_value(branch_data["currents1"], branch.phases1, "i")
-            currents2 = self._dispatch_value(branch_data["currents2"], branch.phases2, "i")
+            currents1 = [complex(i[0], i[1]) for i in branch_data["currents1"]]
+            currents2 = [complex(i[0], i[1]) for i in branch_data["currents2"]]
             branch.currents = (currents1, currents2)
         for load_data in result_dict["loads"]:
             load = self.loads[load_data["id"]]
+            load.currents = [complex(i[0], i[1]) for i in load_data["currents"]]
             if isinstance(load, PowerLoad) and load.is_flexible:
-                load.flexible_powers = self._dispatch_value(load_data["powers"], load.phases, "s")
-            currents = self._dispatch_value(load_data["currents"], load.phases, "i")
-            load.currents = currents
-
-    @staticmethod
-    def _dispatch_value(value: dict[str, tuple[float, float]], phases: str, t: str) -> np.ndarray:
-        """Dispatch the load flow results from a dictionary to an array.
-
-        Args:
-            value:
-                The dictionary value to dispatch.
-
-            phases:
-                The phases of the element.
-
-            t:
-                The type of value ("i", "v" or "s").
-
-        Returns:
-            The complex final value.
-        """
-        return np.array([complex(*value[t + p]) for p in phases])
+                load.flexible_powers = [complex(p[0], p[1]) for p in load_data["powers"]]
 
     #
     # Getters for the load flow results
@@ -793,6 +778,8 @@ class ElectricalNetwork:
         res = self.to_dict()
         output = json.dumps(res, ensure_ascii=False, indent=4)
         output = re.sub(r"\[\s+(.*),\s+(.*)\s+]", r"[\1, \2]", output)
+        if not output.endswith("\n"):
+            output += "\n"
         Path(path).write_text(output)
 
     #
@@ -802,39 +789,34 @@ class ElectricalNetwork:
         """Get the voltages and currents computed by the load flow and return them as a dict."""
         buses_results: list[JsonDict] = []
         for bus_id, bus in self.buses.items():
-            potentials_dict = {
-                f"v{phase}": [potential.real.magnitude, potential.imag.magnitude]
-                for potential, phase in zip(bus.potentials, bus.phases)
-            }
-            buses_results.append({"id": bus_id, "potentials": potentials_dict})
+            potentials_dict = [[v.real.magnitude, v.imag.magnitude] for v in bus.potentials]
+            buses_results.append({"id": bus_id, "phases": bus.phases, "potentials": potentials_dict})
 
         branches_results: list[JsonDict] = []
         for branch_id, branch in self.branches.items():
             currents1, currents2 = branch.currents
-            currents_dict1 = {
-                f"i{phase}": [current.real.magnitude, current.imag.magnitude]
-                for current, phase in zip(currents1, branch.phases1)
-            }
-            currents_dict2 = {
-                f"i{phase}": [current.real.magnitude, current.imag.magnitude]
-                for current, phase in zip(currents2, branch.phases2)
-            }
-            branches_results.append({"id": branch_id, "currents1": currents_dict1, "currents2": currents_dict2})
+            currents_dict1 = [[i.real.magnitude, i.imag.magnitude] for i in currents1]
+            currents_dict2 = [[i.real.magnitude, i.imag.magnitude] for i in currents2]
+            branches_results.append(
+                {
+                    "id": branch_id,
+                    "phases1": branch.phases1,
+                    "phases2": branch.phases2,
+                    "currents1": currents_dict1,
+                    "currents2": currents_dict2,
+                }
+            )
 
         loads_results: list[JsonDict] = []
         for load_id, load in self.loads.items():
-            currents_dict = {
-                f"i{phase}": [current.real.magnitude, current.imag.magnitude]
-                for current, phase in zip(load.currents, load.phases)
-            }
+            currents_dict = [[i.real.magnitude, i.imag.magnitude] for i in load.currents]
             if isinstance(load, PowerLoad) and load.is_flexible:
-                powers_dict = {
-                    f"s{phase}": [power.real.magnitude, power.imag.magnitude]
-                    for power, phase in zip(load.flexible_powers, load.phases)
-                }
-                loads_results.append({"id": load_id, "powers": powers_dict, "currents": currents_dict})
+                powers_dict = [[s.real.magnitude, s.imag.magnitude] for s in load.flexible_powers]
+                loads_results.append(
+                    {"id": load_id, "phases": load.phases, "powers": powers_dict, "currents": currents_dict}
+                )
             else:
-                loads_results.append({"id": load_id, "currents": currents_dict})
+                loads_results.append({"id": load_id, "phases": load.phases, "currents": currents_dict})
 
         return {
             "info": self._results_info,

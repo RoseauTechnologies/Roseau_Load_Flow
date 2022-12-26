@@ -3,9 +3,8 @@ from collections.abc import Sequence
 from typing import Any, Optional
 
 import numpy as np
-import shapely.wkt
 from pint import Quantity
-from shapely.geometry import Point, shape
+from shapely.geometry import Point
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.core import Element
@@ -118,17 +117,13 @@ class Bus(Element):
     #
     @classmethod
     def from_dict(cls, data: JsonDict) -> "Bus":
-        if "geometry" not in data:
-            geometry = None
-        elif isinstance(data["geometry"], str):
-            geometry = shapely.wkt.loads(data["geometry"])
-        else:
-            geometry = shape(data["geometry"])
-
+        geometry = cls._parse_geometry(data.get("geometry"))
         return cls(id=data["id"], phases=data["phases"], geometry=geometry, potentials=data.get("potentials"))
 
     def to_dict(self) -> JsonDict:
-        res = {"id": self.id, "phases": self.phases, "loads": [], "sources": []}
+        res = {"id": self.id, "phases": self.phases}
+        if (self.initial_potentials != 0).all():
+            res["potentials"] = [[v.real, v.imag] for v in self.initial_potentials]
         if self.geometry is not None:
             res["geometry"] = self.geometry.__geo_interface__
         return res

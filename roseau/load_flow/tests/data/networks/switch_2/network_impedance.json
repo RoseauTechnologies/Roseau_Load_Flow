@@ -1,123 +1,199 @@
 {
+    "version": 1,
+    "grounds": [
+        {
+            "id": "ground",
+            "buses": [
+                {
+                    "id": 1,
+                    "phase": "n"
+                }
+            ]
+        }
+    ],
+    "potential_refs": [
+        {
+            "id": "pref",
+            "ground": "ground"
+        }
+    ],
     "buses": [
         {
             "id": 1,
-            "type": "slack",
-            "loads": [],
-            "voltages": {
-                "va": [230.94010767585033, 0.0],
-                "vb": [-115.47005383792516, -200.00000028072188],
-                "vc": [-115.47005383792516, 200.00000028072188]
-            },
-            "geometry": "POINT (0 0)"
+            "phases": "abcn",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [0.0, 0.0]
+            }
         },
         {
             "id": 2,
-            "type": "bus_neutral",
-            "loads": [],
-            "geometry": "POINT (1 0)"
+            "phases": "abcn",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [1.0, 0.0]
+            }
         },
         {
             "id": 3,
-            "type": "bus_neutral",
-            "loads": [],
-            "geometry": "POINT (2 0)"
+            "phases": "abcn",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [2.0, 0.0]
+            }
         },
         {
             "id": 4,
-            "type": "bus_neutral",
-            "loads": [
-                {
-                    "id": 0,
-                    "function": "yz_neutral",
-                    "impedances": {
-                        "za": [10.0, 5.0],
-                        "zb": [10.0, 5.0],
-                        "zc": [10.0, 5.0]
-                    }
-                }
-            ],
-            "geometry": "POINT (2 1)"
+            "phases": "abcn",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [2.0, 1.0]
+            }
         },
         {
             "id": 5,
-            "type": "bus_neutral",
-            "loads": [
-                {
-                    "id": 1,
-                    "function": "yz_neutral",
-                    "impedances": {
-                        "za": [10.0, 5.0],
-                        "zb": [10.0, 5.0],
-                        "zc": [10.0, 5.0]
-                    }
-                }
-            ],
-            "geometry": "POINT (3 0)"
+            "phases": "abcn",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [3.0, 0.0]
+            }
         },
         {
             "id": 6,
-            "type": "bus_neutral",
-            "loads": [
-                {
-                    "id": 2,
-                    "function": "yz_neutral",
-                    "impedances": {
-                        "za": [10.0, 5.0],
-                        "zb": [10.0, 5.0],
-                        "zc": [10.0, 5.0]
-                    }
-                }
-            ],
-            "geometry": "POINT (2 -1)"
+            "phases": "abcn",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [2.0, -1.0]
+            }
         }
     ],
     "branches": [
         {
             "id": "line1",
+            "type": "line",
+            "phases1": "abcn",
+            "phases2": "abcn",
             "bus1": 1,
             "bus2": 2,
-            "geometry": "LINESTRING (0 0, 1 0)",
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [0.0, 0.0],
+                    [1.0, 0.0]
+                ]
+            },
             "length": 0.5,
-            "type_name": "A_AL_150_sym_neutral",
-            "type": "line"
+            "params_id": "A_AL_150_sym_neutral",
+            "ground": "ground"
         },
         {
             "id": "switch1",
+            "type": "switch",
+            "phases1": "abcn",
+            "phases2": "abcn",
             "bus1": 2,
             "bus2": 3,
-            "geometry": "POINT (1.5 0)",
-            "type": "switch"
+            "geometry": {
+                "type": "Point",
+                "coordinates": [1.5, 0.0]
+            }
         },
         {
             "id": "line2",
+            "type": "line",
+            "phases1": "abcn",
+            "phases2": "abcn",
             "bus1": 3,
             "bus2": 4,
-            "geometry": "LINESTRING (2 0, 2 1)",
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [2.0, 0.0],
+                    [2.0, 1.0]
+                ]
+            },
             "length": 0.5,
-            "type_name": "A_AL_150_sym_neutral",
-            "type": "line"
+            "params_id": "A_AL_150_sym_neutral",
+            "ground": "ground"
         },
         {
             "id": "switch2",
+            "type": "switch",
+            "phases1": "abcn",
+            "phases2": "abcn",
             "bus1": 3,
             "bus2": 5,
-            "geometry": "POINT (2.5 0)",
-            "type": "switch"
+            "geometry": {
+                "type": "Point",
+                "coordinates": [2.5, 0.0]
+            }
         },
         {
             "id": "line3",
+            "type": "line",
+            "phases1": "abcn",
+            "phases2": "abcn",
             "bus1": 3,
             "bus2": 6,
-            "geometry": "LINESTRING (2 0, 2 -1)",
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [2.0, 0.0],
+                    [2.0, -1.0]
+                ]
+            },
             "length": 0.5,
-            "type_name": "A_AL_150_sym_neutral",
-            "type": "line"
+            "params_id": "A_AL_150_sym_neutral",
+            "ground": "ground"
         }
     ],
-    "line_types": [
+    "loads": [
         {
-            "name": "A_AL_150_sym_neutral",
+            "id": 0,
+            "bus": 4,
+            "phases": "abcn",
+            "impedances": [
+                [10.0, 5.0],
+                [10.0, 5.0],
+                [10.0, 5.0]
+            ]
+        },
+        {
+            "id": 1,
+            "bus": 5,
+            "phases": "abcn",
+            "impedances": [
+                [10.0, 5.0],
+                [10.0, 5.0],
+                [10.0, 5.0]
+            ]
+        },
+        {
+            "id": 2,
+            "bus": 6,
+            "phases": "abcn",
+            "impedances": [
+                [10.0, 5.0],
+                [10.0, 5.0],
+                [10.0, 5.0]
+            ]
+        }
+    ],
+    "sources": [
+        {
+            "id": 1,
+            "bus": 1,
+            "phases": "abcn",
+            "voltages": [
+                [230.94010767585033, 0.0],
+                [-115.47005383792516, -200.00000028072188],
+                [-115.47005383792516, 200.00000028072188]
+            ]
+        }
+    ],
+    "lines_params": [
+        {
+            "id": "A_AL_150_sym_neutral",
             "model": "zy_neutral",
             "z_line": [
                 [
@@ -229,5 +305,5 @@
             ]
         }
     ],
-    "transformer_types": []
+    "transformers_params": []
 }

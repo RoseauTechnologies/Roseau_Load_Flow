@@ -1,42 +1,78 @@
 {
+    "version": 1,
+    "grounds": [
+        {
+            "id": "ground",
+            "buses": [
+                {
+                    "id": 1,
+                    "phase": "n"
+                }
+            ]
+        }
+    ],
+    "potential_refs": [
+        {
+            "id": "pref",
+            "ground": "ground"
+        }
+    ],
     "buses": [
         {
             "id": 1,
-            "type": "slack",
-            "loads": [],
-            "voltages": {
-                "va": [230.94010767585033, 0.0],
-                "vb": [-115.47005383792516, -200.00000028072188],
-                "vc": [-115.47005383792516, 200.00000028072188]
-            },
-            "geometry": "POINT (0 0)"
+            "phases": "abcn",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [0.0, 0.0]
+            }
         },
         {
             "id": 2,
-            "type": "bus_neutral",
-            "loads": [
-                {
-                    "id": 0,
-                    "function": "yz_neutral",
-                    "impedances": {
-                        "za": [10.0, 5.0],
-                        "zb": [10.0, 5.0],
-                        "zc": [10.0, 5.0]
-                    }
-                }
-            ],
-            "geometry": "POINT (1 0)"
+            "phases": "abcn",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [1.0, 0.0]
+            }
         }
     ],
     "branches": [
         {
             "id": "switch1",
+            "type": "switch",
+            "phases1": "abcn",
+            "phases2": "abcn",
             "bus1": 1,
             "bus2": 2,
-            "geometry": "POINT (0.5 0)",
-            "type": "switch"
+            "geometry": {
+                "type": "Point",
+                "coordinates": [0.5, 0.0]
+            }
         }
     ],
-    "line_types": [],
-    "transformer_types": []
+    "loads": [
+        {
+            "id": 0,
+            "bus": 2,
+            "phases": "abcn",
+            "impedances": [
+                [10.0, 5.0],
+                [10.0, 5.0],
+                [10.0, 5.0]
+            ]
+        }
+    ],
+    "sources": [
+        {
+            "id": 1,
+            "bus": 1,
+            "phases": "abcn",
+            "voltages": [
+                [230.94010767585033, 0.0],
+                [-115.47005383792516, -200.00000028072188],
+                [-115.47005383792516, 200.00000028072188]
+            ]
+        }
+    ],
+    "lines_params": [],
+    "transformers_params": []
 }
