@@ -319,7 +319,7 @@
         {
             "id": 1,
             "bus": 3,
-            "phases": "abc",
+            "phases": "abcn",
             "impedances": [
                 [10.0, 5.0],
                 [10.0, 5.0],
@@ -329,7 +329,7 @@
         {
             "id": 2,
             "bus": 5,
-            "phases": "abc",
+            "phases": "abcn",
             "impedances": [
                 [10.0, 0.0],
                 [10.0, 5.0],
@@ -339,7 +339,7 @@
         {
             "id": 3,
             "bus": 8,
-            "phases": "abc",
+            "phases": "abcn",
             "impedances": [
                 [10.0, 5.0],
                 [10.0, 5.0],
@@ -349,7 +349,7 @@
         {
             "id": 4,
             "bus": 9,
-            "phases": "abc",
+            "phases": "abcn",
             "impedances": [
                 [10.0, 5.0],
                 [10.0, 5.0],
@@ -359,7 +359,7 @@
         {
             "id": 5,
             "bus": 12,
-            "phases": "abc",
+            "phases": "abcn",
             "impedances": [
                 [10.0, 5.0],
                 [5.0, 0.0],

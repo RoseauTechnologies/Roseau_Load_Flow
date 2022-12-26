@@ -254,12 +254,11 @@ def v0_to_v1_converter(data: JsonDict) -> JsonDict:  # noqa: C901
             func = old_load["function"]
             flexible_params = None
             if func.startswith("y"):  # Star loads
+                load_phases = "abcn"
                 if func.endswith("_neutral"):
                     assert phases == "abcn"  # y*_neutral loads are only for buses with neutral
-                    load_phases = "abcn"
                 else:
                     assert phases == "abc"  # y* loads are only for buses without neutral
-                    load_phases = "abc"
             elif func.startswith("d"):  # Delta loads
                 load_phases = "abc"
             else:  # Flexible loads

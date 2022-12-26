@@ -59,7 +59,7 @@
         {
             "id": 0,
             "bus": 2,
-            "phases": "abc",
+            "phases": "abcn",
             "impedances": [
                 [10.0, 5.0],
                 [10.0, 5.0],

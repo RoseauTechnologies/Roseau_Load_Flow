@@ -778,6 +778,8 @@ class ElectricalNetwork:
         res = self.to_dict()
         output = json.dumps(res, ensure_ascii=False, indent=4)
         output = re.sub(r"\[\s+(.*),\s+(.*)\s+]", r"[\1, \2]", output)
+        if not output.endswith("\n"):
+            output += "\n"
         Path(path).write_text(output)
 
     #
