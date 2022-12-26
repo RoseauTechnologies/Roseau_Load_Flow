@@ -71,11 +71,7 @@ class Transformer(AbstractBranch):
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_GEOMETRY_TYPE)
 
-        if tap > 1.1:
-            logger.warning(f"The provided tap {tap:.2f} is higher than 1.1. A good value is between 0.9 and 1.1.")
-        if tap < 0.9:
-            logger.warning(f"The provided tap {tap:.2f} is lower than 0.9. A good value is between 0.9 and 1.1.")
-
+        self.tap = tap
         # Compute the phases if not provided, check them if provided
         w1_has_neutral = "n" in parameters.winding1.lower()
         w2_has_neutral = "n" in parameters.winding2.lower()
@@ -120,31 +116,34 @@ class Transformer(AbstractBranch):
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
         super().__init__(id, bus1, bus2, phases1=phases1, phases2=phases2, geometry=geometry, **kwargs)
         self.parameters = parameters
-        self.tap = tap
 
-    def update_parameters(self, parameters: TransformerParameters, tap: float = 1.0) -> None:
-        """Change the transformer parameters
+    @property
+    def tap(self) -> float:
+        """The tap of the transformer, for example 1.02."""
+        return self._tap
 
-        Args:
-            parameters:
-                The new transformer parameters.
+    @tap.setter
+    def tap(self, value: float) -> None:
+        if value > 1.1:
+            logger.warning(f"The provided tap {value:.2f} is higher than 1.1. A good value is between 0.9 and 1.1.")
+        if value < 0.9:
+            logger.warning(f"The provided tap {value:.2f} is lower than 0.9. A good value is between 0.9 and 1.1.")
+        self._tap = value
 
-            tap:
-                The tap of the transformer, for example 1.02.
-        """
+    @property
+    def parameters(self) -> TransformerParameters:
+        """The parameters of the transformer."""
+        return self._parameters
+
+    @parameters.setter
+    def parameters(self, value: TransformerParameters) -> None:
+        self._parameters = value
         windings1 = self.parameters.windings
-        windings2 = parameters.windings
+        windings2 = value.windings
         if windings1 != windings2:
             msg = f"The updated windings changed for transformer {self.id!r}: {windings1} to {windings2}."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS)
-        if tap > 1.1:
-            logger.warning(f"The provided tap {tap:.2f} is higher than 1.1. A good value is between 0.9 and 1.1.")
-        if tap < 0.9:
-            logger.warning(f"The provided tap {tap:.2f} is lower than 0.9. A good value is between 0.9 and 1.1.")
-
-        self.parameters = parameters
-        self.tap = tap
 
     def to_dict(self) -> JsonDict:
         return {**super().to_dict(), "params_id": self.parameters.id, "tap": self.tap}

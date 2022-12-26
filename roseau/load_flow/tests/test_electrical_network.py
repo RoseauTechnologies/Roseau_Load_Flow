@@ -38,7 +38,7 @@ def small_network() -> ElectricalNetwork:
 
     voltages = [20000.0 + 0.0j, -10000.0 - 17320.508076j, -10000.0 + 17320.508076j]
     vs = VoltageSource("vs", source_bus, voltages=voltages, phases="abcn")
-    load = PowerLoad("load", load_bus, s=[100, 100, 100], phases="abcn")
+    load = PowerLoad("load", load_bus, powers=[100, 100, 100], phases="abcn")
     pref = PotentialRef("pref", element=ground)
 
     lp = LineParameters("test", z_line=10 * np.eye(4, dtype=complex))
@@ -76,7 +76,7 @@ def single_phase_network() -> ElectricalNetwork:
     pref = PotentialRef("pref", element=ground)
 
     vs = VoltageSource("vs", bus0, voltages=[20000.0 + 0.0j], phases=phases)
-    load = PowerLoad("load", bus1, s=[100], phases=phases)
+    load = PowerLoad("load", bus1, powers=[100], phases=phases)
 
     lp = LineParameters("test", z_line=10 * np.eye(2, dtype=complex))
     line = Line("line", bus0, bus1, phases=phases, parameters=lp, length=1.0, geometry=line_string)
@@ -166,13 +166,13 @@ def test_add_and_remove():
     load_bus = Bus(id="load bus", phases="abcn")
     ground.connect(load_bus)
     VoltageSource(id="vs", phases="abcn", bus=source_bus, voltages=voltages)
-    load = PowerLoad(id="power load", phases="abcn", bus=load_bus, s=[100 + 0j, 100 + 0j, 100 + 0j])
+    load = PowerLoad(id="power load", phases="abcn", bus=load_bus, powers=[100 + 0j, 100 + 0j, 100 + 0j])
     lp = LineParameters("test", z_line=np.eye(4, dtype=complex))
     line = Line(id="line", bus1=source_bus, bus2=load_bus, phases="abcn", parameters=lp, length=10)
     PotentialRef("pref", element=ground)
     en = ElectricalNetwork.from_element(source_bus)
     en.remove_element(load)
-    new_load = PowerLoad(id="power load", phases="abcn", bus=load_bus, s=[100 + 0j, 100 + 0j, 100 + 0j])
+    new_load = PowerLoad(id="power load", phases="abcn", bus=load_bus, powers=[100 + 0j, 100 + 0j, 100 + 0j])
     en.add_element(new_load)
 
     # Bad key
@@ -225,7 +225,7 @@ def test_bad_networks():
             grounds=[ground],
             potential_refs=[p_ref],
         )
-    assert "but has not been added to the network, you should add it with 'add_element'." in e.value.msg
+    assert "but has not been added to the network. It must be added with 'add_element'." in e.value.msg
     assert bus2.id in e.value.msg
     assert e.value.code == RoseauLoadFlowExceptionCode.UNKNOWN_ELEMENT
 
@@ -261,10 +261,10 @@ def test_solve_load_flow(small_network, good_json_results):
     with requests_mock.Mocker() as m:
         m.post(solve_url, status_code=200, json=good_json_results, headers={"content-type": "application/json"})
         small_network.solve_load_flow(auth=("", ""))
-    assert len(load_bus.potentials) == 4
+    assert len(load_bus.res_potentials) == 4
 
     # No convergence
-    load.update_powers([10000000, 100, 100])
+    load.powers = [10000000, 100, 100]
     json_result = {
         "info": {
             "status": "failure",
@@ -408,7 +408,7 @@ def test_buses_voltages(small_network, good_json_results):
         return idx.set_levels(idx.levels[1].astype(_VOLTAGE_PHASES_DTYPE), level=1)
 
     # Complex voltages
-    buses_voltages = small_network.buses_voltages()
+    buses_voltages = small_network.res_buses_voltages()
     expected_buses_voltages = pd.DataFrame.from_records(voltage_records, index=["bus_id", "phase"])
     expected_buses_voltages.index = set_index_dtype(expected_buses_voltages.index)
 
@@ -419,7 +419,7 @@ def test_buses_voltages(small_network, good_json_results):
     assert_frame_equal(buses_voltages, expected_buses_voltages)
 
     # Magnitude and Angle voltages
-    buses_voltages = small_network.buses_voltages(as_magnitude_angle=True)
+    buses_voltages = small_network.res_buses_voltages(as_magnitude_angle=True)
     expected_buses_voltages = pd.DataFrame.from_records(
         [
             {
@@ -500,17 +500,17 @@ def test_single_phase_network(single_phase_network: ElectricalNetwork):
 
     # Test results of elements
     # ------------------------
-    assert np.allclose(source_bus.potentials.m_as("V"), [-10000.0 - 17320.508j, 0j])
-    assert np.allclose(load_bus.potentials.m_as("V"), [-9999.974 - 17320.464j, 1.347e-12 + 0j])
-    assert np.allclose(line.currents[0].m_as("A"), [-0.0025 - 0.0043j, -1.347e-13 + 0j])
-    assert np.allclose(line.currents[1].m_as("A"), [-0.0025 - 0.0043j, -1.347e-13 + 0j])
-    assert np.allclose(load.currents.m_as("A"), [-0.0025 - 0.0043j, -1.347e-13 + 0j])
+    assert np.allclose(source_bus.res_potentials, [-10000.0 - 17320.508j, 0j])
+    assert np.allclose(load_bus.res_potentials, [-9999.974 - 17320.464j, 1.347e-12 + 0j])
+    assert np.allclose(line.res_currents[0], [-0.0025 - 0.0043j, -1.347e-13 + 0j])
+    assert np.allclose(line.res_currents[1], [-0.0025 - 0.0043j, -1.347e-13 + 0j])
+    assert np.allclose(load.res_currents, [-0.0025 - 0.0043j, -1.347e-13 + 0j])
 
     # Test results of network
     # -----------------------
     # Buses potentials frame
     pd.testing.assert_frame_equal(
-        single_phase_network.buses_potentials,
+        single_phase_network.res_buses_potentials,
         pd.DataFrame.from_records(
             [
                 {"bus_id": "bus0", "phase": "b", "potential": -10000.0 - 17320.508j},
@@ -524,7 +524,7 @@ def test_single_phase_network(single_phase_network: ElectricalNetwork):
     )
     # Buses voltages frame
     pd.testing.assert_frame_equal(
-        single_phase_network.buses_voltages(),
+        single_phase_network.res_buses_voltages(),
         pd.DataFrame.from_records(
             [
                 {"bus_id": "bus0", "phase": "bn", "voltage": -10000.0 - 17320.508j},
@@ -536,7 +536,7 @@ def test_single_phase_network(single_phase_network: ElectricalNetwork):
     )
     # Branches currents frame
     pd.testing.assert_frame_equal(
-        single_phase_network.branches_currents,
+        single_phase_network.res_branches_currents,
         pd.DataFrame.from_records(
             [
                 {"branch_id": "line", "phase": "b", "current1": -0.0025 - 0.0043j, "current2": -0.0025 - 0.0043j},
@@ -548,7 +548,7 @@ def test_single_phase_network(single_phase_network: ElectricalNetwork):
     )
     # Loads currents frame
     pd.testing.assert_frame_equal(
-        single_phase_network.loads_currents,
+        single_phase_network.res_loads_currents,
         pd.DataFrame.from_records(
             [
                 {"load_id": "load", "phase": "b", "current": -0.0025 - 0.0043j},

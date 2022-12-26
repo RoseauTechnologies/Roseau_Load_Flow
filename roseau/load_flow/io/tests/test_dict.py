@@ -46,7 +46,7 @@ def test_to_dict():
 
     # Same id, same line parameters -> ok
     lp2 = LineParameters("test", z_line=np.eye(4, dtype=complex), y_shunt=np.eye(4, dtype=complex))
-    line2.update_parameters(lp2)
+    line2.parameters = lp2
     en.to_dict()
 
     # Same id, different transformer parameters -> fail
@@ -71,5 +71,5 @@ def test_to_dict():
     tp2 = TransformerParameters(
         "t", windings="Dyn11", uhv=20000, ulv=400, sn=160 * 1e3, p0=460, i0=2.3 / 100, psc=2350, vsc=4 / 100
     )
-    transformer2.update_parameters(tp2)
+    transformer2.parameters = tp2
     en.to_dict()

@@ -59,28 +59,28 @@ def test_loads_phases():
     # Not allowed
     for ph in ("a", "n", "ba", "nc", "anb", "nabc", "acb"):
         with pytest.raises(RoseauLoadFlowException) as e:
-            PowerLoad("load1", bus, phases=ph, s=[100, 100, 100])
+            PowerLoad("load1", bus, phases=ph, powers=[100, 100, 100])
         assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
         assert e.value.msg.startswith(f"PowerLoad of id 'load1' got invalid phases '{ph}', allowed values are")
 
     # Allowed
     for ph in ("ab", "abc", "abcn"):
-        PowerLoad("load1", bus, phases=ph, s=[100] * len(set(ph) - {"n"}))
+        PowerLoad("load1", bus, phases=ph, powers=[100] * len(set(ph) - {"n"}))
 
     # Not in bus
     bus.phases = "ab"
     with pytest.raises(RoseauLoadFlowException) as e:
-        PowerLoad("load1", bus, phases="abc", s=[100, 100, 100])
+        PowerLoad("load1", bus, phases="abc", powers=[100, 100, 100])
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
     assert e.value.msg == "Phases ['c'] of load 'load1' are not in bus 'bus' phases 'ab'"
 
     # "n" not in bus is allowed though
-    PowerLoad("load1", bus, phases="abn", s=[100, 100])
+    PowerLoad("load1", bus, phases="abn", powers=[100, 100])
 
     # Default
     for ph in ("ab", "abc", "abcn"):
         bus.phases = ph
-        load = PowerLoad("load1", bus, phases=ph, s=[100] * len(set(ph) - {"n"}))
+        load = PowerLoad("load1", bus, phases=ph, powers=[100] * len(set(ph) - {"n"}))
         assert load.phases == ph
 
 

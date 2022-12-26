@@ -3,7 +3,6 @@ from collections.abc import Sequence
 from typing import Any, Optional
 
 import numpy as np
-from pint import Quantity
 from shapely.geometry import Point
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
@@ -51,58 +50,64 @@ class Bus(Element):
         super().__init__(id, **kwargs)
         self._check_phases(id, phases=phases)
         self.phases = phases
-        n = len(phases)
         if potentials is None:
-            potentials = np.zeros(n, dtype=complex)
             self.initialized = False
+            potentials = [0] * len(phases)
         else:
-            if len(potentials) != n:
-                msg = f"Incorrect number of potentials: {len(potentials)} instead of {n}"
-                logger.error(msg)
-                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_POTENTIALS_SIZE)
-            if isinstance(potentials, Quantity):
-                potentials = potentials.m_as("V")
             self.initialized = True
-        self.initial_potentials = np.asarray(potentials)
+        self.potentials = potentials
         self.geometry = geometry
-        self._potentials = None
+
+        self._res_potentials: Optional[list[complex]] = None
 
     def __repr__(self) -> str:
-        s = f"{type(self).__name__}(id={self.id!r}, phases={self.phases!r}"
-        if self._potentials is not None:
-            s += f", potentials={self.potentials!r}"
-        if self.geometry is not None:
-            s += f", geometry={self.geometry}"
-        s += ")"
-        return s
+        return f"{type(self).__name__}(id={self.id!r}, phases={self.phases!r})"
+
+    def _validate_potentials(self, potentials: Sequence[complex]) -> list[complex]:
+        if len(potentials) != len(self.phases):
+            msg = f"Incorrect number of potentials: {len(potentials)} instead of {len(self.phases)}"
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_POTENTIALS_SIZE)
+        return list(potentials)
 
     @property
-    @ureg.wraps("V", None, strict=False)
-    def potentials(self) -> np.ndarray:
-        """The potentials results of the bus (Only available after a load flow)."""
-        # TODO add a check to see if the load flow has been run (if self._potentials is None raise)
+    def potentials(self) -> list[complex]:
+        """The potentials of the bus (V)."""
         return self._potentials
 
     @potentials.setter
-    def potentials(self, value: np.ndarray) -> None:
-        self._potentials = value
+    @ureg.wraps(None, (None, "V"), strict=False)
+    def potentials(self, value: Sequence[complex]) -> None:
+        self._potentials = self._validate_potentials(value)
 
     @property
-    @ureg.wraps("V", None, strict=False)
-    def voltages(self) -> np.ndarray:
-        """An array of the voltage results of the bus.
+    def res_potentials(self) -> list[complex]:
+        """The load flow result of the bus potentials (V)."""
+        if self._res_potentials is None:
+            self._raise_load_flow_not_run()
+        return self._res_potentials
+
+    @res_potentials.setter
+    @ureg.wraps(None, (None, "V"), strict=False)
+    def res_potentials(self, value: Sequence[complex]) -> None:
+        self._res_potentials = self._validate_potentials(value)
+
+    @property
+    def res_voltages(self) -> list[complex]:
+        """The load flow result of the bus voltages (V).
 
         If the bus has a neutral, the voltages are phase-neutral voltages for existing phases in
         the order ``[Van, Vbn, Vcn]``. If the bus does not have a neutral, phase-phase voltages
         are returned in the order ``[Vab, Vbc, Vca]``.
         """
-        potentials = np.asarray(self._potentials)
+        potentials = np.asarray(self.res_potentials)
         if "n" in self.phases:  # Van, Vbn, Vcn
             # we know "n" is the last phase
-            return potentials[:-1] - potentials[-1]
+            voltages = potentials[:-1] - potentials[-1]
         else:  # Vab, Vbc, Vca
             # np.roll(["a", "b", "c"], -1) -> ["b", "c", "a"]  # also works with single or double phase
-            return np.roll(potentials, -1) - potentials
+            voltages = np.roll(potentials, -1) - potentials
+        return list(voltages)
 
     @property
     def voltage_phases(self) -> list[str]:
@@ -122,8 +127,8 @@ class Bus(Element):
 
     def to_dict(self) -> JsonDict:
         res = {"id": self.id, "phases": self.phases}
-        if (self.initial_potentials != 0).all():
-            res["potentials"] = [[v.real, v.imag] for v in self.initial_potentials]
+        if not np.allclose(self.potentials, 0):
+            res["potentials"] = [[v.real, v.imag] for v in self.potentials]
         if self.geometry is not None:
             res["geometry"] = self.geometry.__geo_interface__
         return res

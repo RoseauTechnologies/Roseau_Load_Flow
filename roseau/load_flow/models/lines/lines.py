@@ -210,50 +210,40 @@ class Line(AbstractBranch):
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_GEOMETRY_TYPE)
 
-        line_dimensions = (len(phases),) * 2
-        if parameters.z_line.shape != line_dimensions:
-            msg = (
-                f"Incorrect z_line dimensions for line {id!r}: {parameters.z_line.shape} instead of "
-                f"{line_dimensions}"
-            )
+        if isinstance(length, Quantity):
+            length = length.m_as("km")
+
+        super().__init__(id, bus1, bus2, phases1=phases, phases2=phases, geometry=geometry, **kwargs)
+        self.phases = phases
+        self.ground = ground
+        self.length = length
+        self.parameters = parameters
+
+    @property
+    def parameters(self) -> LineParameters:
+        """The parameters of the line."""
+        return self._parameters
+
+    @parameters.setter
+    def parameters(self, value: LineParameters) -> None:
+        self._parameters = value
+
+        shape = (len(self.phases),) * 2
+        if value.z_line.shape != shape:
+            msg = f"Incorrect z_line dimensions for line {self.id!r}: {value.z_line.shape} instead of {shape}"
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Z_LINE_SHAPE)
 
-        super().__init__(id, bus1, bus2, phases1=phases, phases2=phases, geometry=geometry, **kwargs)
-
-        if parameters.y_shunt is not None:
-            if parameters.y_shunt.shape != line_dimensions:
-                msg = (
-                    f"Incorrect y_shunt dimensions for line {id!r}: {parameters.y_shunt.shape} instead of "
-                    f"{line_dimensions}"
-                )
+        if value.y_shunt is not None:
+            if value.y_shunt.shape != shape:
+                msg = f"Incorrect y_shunt dimensions for line {self.id!r}: {value.y_shunt.shape} instead of {shape}"
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Y_SHUNT_SHAPE)
-
-            if ground is None:
-                msg = f"The ground element must be provided for line {id!r} with shunt admittance."
+            if self.ground is None:
+                msg = f"The ground element must be provided for line {self.id!r} with shunt admittance."
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_TYPE)
-            self._connect(ground)
-
-        self.phases = phases
-        self.parameters = parameters
-        self.ground = ground
-
-        if isinstance(length, Quantity):
-            length = length.m_as("km")
-        self.length = length
-
-    def update_parameters(self, parameters: LineParameters) -> None:
-        """Change the line parameters.
-
-        Args:
-            parameters:
-                The new line parameters.
-        """
-        self.parameters = parameters
-        if self.parameters.y_shunt is not None and self.ground is not None:
-            self._connect(self.ground)  # handles already connected case
+            self._connect(self.ground)
 
     #
     # Json Mixin interface

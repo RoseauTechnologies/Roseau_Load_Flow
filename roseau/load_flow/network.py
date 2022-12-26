@@ -367,32 +367,27 @@ class ElectricalNetwork:
         """
         for bus_data in result_dict["buses"]:
             bus = self.buses[bus_data["id"]]
-            bus.potentials = [complex(v[0], v[1]) for v in bus_data["potentials"]]
+            bus.res_potentials = [complex(v[0], v[1]) for v in bus_data["potentials"]]
         for branch_data in result_dict["branches"]:
             branch = self.branches[branch_data["id"]]
             currents1 = [complex(i[0], i[1]) for i in branch_data["currents1"]]
             currents2 = [complex(i[0], i[1]) for i in branch_data["currents2"]]
-            branch.currents = (currents1, currents2)
+            branch.res_currents = (currents1, currents2)
         for load_data in result_dict["loads"]:
             load = self.loads[load_data["id"]]
-            load.currents = [complex(i[0], i[1]) for i in load_data["currents"]]
+            load.res_currents = [complex(i[0], i[1]) for i in load_data["currents"]]
             if isinstance(load, PowerLoad) and load.is_flexible:
-                load.flexible_powers = [complex(p[0], p[1]) for p in load_data["powers"]]
+                load.res_flexible_powers = [complex(p[0], p[1]) for p in load_data["powers"]]
 
     #
     # Getters for the load flow results
     #
     @property
-    def buses_potentials(self) -> pd.DataFrame:
-        """Get the potentials of buses after a load flow has been solved.
-
-        Returns:
-            The data frame of the potentials of the buses of the electrical network.
-        """
+    def res_buses_potentials(self) -> pd.DataFrame:
+        """The load flow results of the potentials of the buses (V) as a dataframe."""
         potentials_dict = {"bus_id": [], "phase": [], "potential": []}
         for bus_id, bus in self.buses.items():
-            potentials = bus.potentials.m_as("V")
-            for potential, phase in zip(potentials, bus.phases):
+            for potential, phase in zip(bus.res_potentials, bus.phases):
                 potentials_dict["bus_id"].append(bus_id)
                 potentials_dict["phase"].append(phase)
                 potentials_dict["potential"].append(potential)
@@ -403,7 +398,7 @@ class ElectricalNetwork:
         )
         return potentials_df
 
-    def buses_voltages(self, as_magnitude_angle: bool = False) -> pd.DataFrame:
+    def res_buses_voltages(self, as_magnitude_angle: bool = False) -> pd.DataFrame:
         """Get the 3-phase voltages of the buses.
 
         Args:
@@ -464,8 +459,7 @@ class ElectricalNetwork:
         """
         voltages_dict = {"bus_id": [], "phase": [], "voltage": []}
         for bus_id, bus in self.buses.items():
-            voltages = bus.voltages.m_as("V")
-            for voltage, phase in zip(voltages, bus.voltage_phases):
+            for voltage, phase in zip(bus.res_voltages, bus.voltage_phases):
                 voltages_dict["bus_id"].append(bus_id)
                 voltages_dict["phase"].append(phase)
                 voltages_dict["voltage"].append(voltage)
@@ -481,45 +475,35 @@ class ElectricalNetwork:
         return voltages_df
 
     @property
-    def branches_currents(self) -> pd.DataFrame:
-        """Get the currents of the branches after a load flow has been solved.
-
-        Returns:
-            The data frame of the currents of the branches of the electrical network.
-        """
-        # Old implementation does not work anymore because phases 1 & 2 are not necessarily the same
+    def res_branches_currents(self) -> pd.DataFrame:
+        """The load flow results of the currents of the branches (A) as a dataframe."""
         currents_list = []
         for branch_id, branch in self.branches.items():
-            currents1, currents2 = branch.currents
+            currents1, currents2 = branch.res_currents
             currents_list.extend(
                 {"branch_id": branch_id, "phase": phase, "current1": i1, "current2": None}
-                for i1, phase in zip(currents1.m_as("A"), branch.phases1)
+                for i1, phase in zip(currents1, branch.phases1)
             )
             currents_list.extend(
                 {"branch_id": branch_id, "phase": phase, "current1": None, "current2": i2}
-                for i2, phase in zip(currents2.m_as("A"), branch.phases2)
+                for i2, phase in zip(currents2, branch.phases2)
             )
 
         currents_df = (
             pd.DataFrame.from_records(currents_list)
             .astype({"phase": _PHASE_DTYPE, "current1": complex, "current2": complex})
             .groupby(["branch_id", "phase"])  # aggregate current1 and current2 for the same phase
-            .mean()  # 2 values only one is not nan -> keep it
+            .mean()  # 2 values; only one is not nan -> keep it
             .dropna(how="all")  # if all values are nan -> drop the row (the phase does not exist)
         )
         return currents_df
 
     @property
-    def loads_currents(self) -> pd.DataFrame:
-        """Get the currents of the loads after a load flow has been solved.
-
-        Returns:
-            The data frame of the currents of the loads of the electrical network.
-        """
+    def res_loads_currents(self) -> pd.DataFrame:
+        """The load flow results of the currents of the loads (A) as a dataframe."""
         loads_dict = {"load_id": [], "phase": [], "current": []}
         for load_id, load in self.loads.items():
-            currents = load.currents.m_as("A")
-            for current, phase in zip(currents, load.phases):
+            for current, phase in zip(load.res_currents, load.phases):
                 loads_dict["load_id"].append(load_id)
                 loads_dict["phase"].append(phase)
                 loads_dict["current"].append(current)
@@ -531,17 +515,12 @@ class ElectricalNetwork:
         return currents_df
 
     @property
-    def loads_powers(self) -> pd.DataFrame:
-        """Get the powers of the loads after a load flow has been solved. Only for flexible loads.
-
-        Returns:
-            The data frame of the powers of the loads of the electrical network.
-        """
+    def res_loads_flexible_powers(self) -> pd.DataFrame:
+        """The load flow results of the flexible powers of the "flexible" loads (A) as a dataframe."""
         loads_dict = {"load_id": [], "phase": [], "power": []}
         for load_id, load in self.loads.items():
             if isinstance(load, PowerLoad) and load.is_flexible:
-                powers = load.flexible_powers.m_as("VA")
-                for power, phase in zip(powers, load.phases):
+                for power, phase in zip(load.res_flexible_powers, load.phases):
                     loads_dict["load_id"].append(load_id)
                     loads_dict["phase"].append(phase)
                     loads_dict["power"].append(power)
@@ -565,7 +544,7 @@ class ElectricalNetwork:
         for load_id, value in load_point.items():
             load = self.loads[load_id]
             if isinstance(load, PowerLoad):
-                load.update_powers(value)
+                load.powers = value
             else:
                 msg = "Only power loads can be updated for now..."
                 logger.error(msg)
@@ -580,7 +559,7 @@ class ElectricalNetwork:
         """
         for vs_id, value in voltages.items():
             voltage_source = self.voltage_sources[vs_id]
-            voltage_source.update_voltages(value)
+            voltage_source.voltages = value
 
     def add_element(self, element: Element) -> None:
         """Add an element to the network.
@@ -655,24 +634,14 @@ class ElectricalNetwork:
         for element in elements:
             for adj_element in element.connected_elements:
                 if adj_element not in elements:
-                    try:
-                        adj_id = adj_element.id
-                    except AttributeError:
-                        adj_id = type(adj_element).__name__
-                    try:
-                        element_id = element.id
-                    except AttributeError:
-                        element_id = type(element).__name__
+                    msg = (
+                        f"{type(adj_element).__name__} element ({adj_element.id!r}) is connected "
+                        f"to {type(element).__name__} element ({element.id!r}) but "
+                    )
                     if constructed:
-                        msg = (
-                            f"The element {adj_id!r} is connected to {element_id!r} but is not in the "
-                            f"ElectricalNetwork constructor."
-                        )
+                        msg += "was not passed to the ElectricalNetwork constructor."
                     else:
-                        msg = (
-                            f"The element {adj_id!r} is connected to {element_id!r} but has not been added to the "
-                            f"network, you should add it with 'add_element'."
-                        )
+                        msg += "has not been added to the network. It must be added with 'add_element'."
                     logger.error(msg)
                     raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.UNKNOWN_ELEMENT)
 
@@ -787,36 +756,29 @@ class ElectricalNetwork:
     #
     def results_to_dict(self) -> JsonDict:
         """Get the voltages and currents computed by the load flow and return them as a dict."""
-        buses_results: list[JsonDict] = []
-        for bus_id, bus in self.buses.items():
-            potentials_dict = [[v.real.magnitude, v.imag.magnitude] for v in bus.potentials]
-            buses_results.append({"id": bus_id, "phases": bus.phases, "potentials": potentials_dict})
+        buses_results: list[JsonDict] = [
+            {"id": bus.id, "phases": bus.phases, "potentials": [[v.real, v.imag] for v in bus.res_potentials]}
+            for bus in self.buses.values()
+        ]
 
         branches_results: list[JsonDict] = []
-        for branch_id, branch in self.branches.items():
-            currents1, currents2 = branch.currents
-            currents_dict1 = [[i.real.magnitude, i.imag.magnitude] for i in currents1]
-            currents_dict2 = [[i.real.magnitude, i.imag.magnitude] for i in currents2]
+        for branch in self.branches.values():
+            currents1, currents2 = branch.res_currents
             branches_results.append(
                 {
-                    "id": branch_id,
+                    "id": branch.id,
                     "phases1": branch.phases1,
-                    "phases2": branch.phases2,
-                    "currents1": currents_dict1,
-                    "currents2": currents_dict2,
+                    "phases2": branch.phases1,
+                    "currents1": [[i.real, i.imag] for i in currents1],
+                    "currents2": [[i.real, i.imag] for i in currents2],
                 }
             )
 
         loads_results: list[JsonDict] = []
-        for load_id, load in self.loads.items():
-            currents_dict = [[i.real.magnitude, i.imag.magnitude] for i in load.currents]
+        for load in self.loads.values():
+            res = {"id": load.id, "phases": load.phases, "currents": [[i.real, i.imag] for i in load.res_currents]}
             if isinstance(load, PowerLoad) and load.is_flexible:
-                powers_dict = [[s.real.magnitude, s.imag.magnitude] for s in load.flexible_powers]
-                loads_results.append(
-                    {"id": load_id, "phases": load.phases, "powers": powers_dict, "currents": currents_dict}
-                )
-            else:
-                loads_results.append({"id": load_id, "phases": load.phases, "currents": currents_dict})
+                res["powers"] = [[s.real, s.imag] for s in load.res_flexible_powers]
 
         return {
             "info": self._results_info,

@@ -2,8 +2,6 @@ import logging
 from collections.abc import Sequence
 from typing import Any, Optional
 
-from pint import Quantity
-
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import Element
@@ -67,14 +65,6 @@ class VoltageSource(Element):
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
         self._size = len(set(phases) - {"n"})
 
-        if len(voltages) != self._size:
-            msg = f"Incorrect number of voltages: {len(voltages)} instead of {self._size}"
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg, code=RoseauLoadFlowExceptionCode.BAD_VOLTAGES_SIZE)
-
-        if isinstance(voltages, Quantity):
-            voltages = voltages.m_as("V")
-
         self.phases = phases
         self.bus = bus
         self.voltages = voltages
@@ -85,19 +75,22 @@ class VoltageSource(Element):
             f"phases={self.phases!r})"
         )
 
-    @ureg.wraps(None, (None, "V"), strict=False)
-    def update_voltages(self, voltages: Sequence[complex]) -> None:
-        """Change the voltages of the source.
-
-        Args:
-            voltages:
-                The new voltages to set on the source.
-        """
+    def _validate_voltages(self, voltages: Sequence[complex]) -> None:
         if len(voltages) != self._size:
             msg = f"Incorrect number of voltages: {len(voltages)} instead of {self._size}"
             logger.error(msg)
             raise RoseauLoadFlowException(msg, code=RoseauLoadFlowExceptionCode.BAD_VOLTAGES_SIZE)
-        self.voltages = voltages
+        return list(voltages)
+
+    @property
+    def voltages(self) -> list[complex]:
+        """The voltages of the source (V)."""
+        return self._voltages
+
+    @voltages.setter
+    @ureg.wraps(None, (None, "V"), strict=False)
+    def voltages(self, voltages: Sequence[complex]) -> None:
+        self._voltages = self._validate_voltages(voltages)
 
     #
     # Json Mixin interface

@@ -4,7 +4,6 @@ from collections.abc import Sequence
 from typing import Any, Literal, Optional
 
 import numpy as np
-from pint import Quantity
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.buses import Bus
@@ -62,9 +61,11 @@ class AbstractLoad(Element, metaclass=ABCMeta):
 
         self.phases = phases
         self.bus = bus
-        self._currents = None
         self._symbol = {"power": "S", "current": "I", "impedance": "Z"}[self._type]
         self._size = len(set(self.phases) - {"n"})
+
+        # Results
+        self._res_currents: Optional[list[complex]] = None
 
     def __repr__(self) -> str:
         return f"{type(self).__name__}(id={self.id!r}, phases={self.phases!r}, bus={self.bus.id!r})"
@@ -75,18 +76,21 @@ class AbstractLoad(Element, metaclass=ABCMeta):
         return False
 
     @property
-    @ureg.wraps("A", None, strict=False)
-    def currents(self) -> np.ndarray:
-        """An array of the actual currents of each phase (A) as computed by the load flow."""
-        return self._currents
+    def res_currents(self) -> list[complex]:
+        """The load flow result of the load currents (A)."""
+        if self._res_currents is None:
+            self._raise_load_flow_not_run()
+        return self._res_currents
 
-    @currents.setter
-    def currents(self, value: np.ndarray) -> None:
-        self._currents = value
+    @res_currents.setter
+    @ureg.wraps(None, (None, "A"), strict=False)
+    def res_currents(self, value: Sequence[complex]) -> None:
+        self._res_currents = self._validate_value(value, size=len(self.phases))
 
-    def _validate_value(self, value: Sequence[complex]) -> Sequence[complex]:
-        if len(value) != self._size:
-            msg = f"Incorrect number of {self._type}s: {len(value)} instead of {self._size}"
+    def _validate_value(self, value: Sequence[complex], size: Optional[int] = None) -> list[complex]:
+        size = size or self._size
+        if len(value) != size:
+            msg = f"Incorrect number of {self._type}s: {len(value)} instead of {size}"
             logger.error(msg)
             raise RoseauLoadFlowException(
                 msg=msg, code=RoseauLoadFlowExceptionCode.from_string(f"BAD_{self._symbol}_SIZE")
@@ -96,7 +100,7 @@ class AbstractLoad(Element, metaclass=ABCMeta):
             msg = f"An impedance of the load {self.id!r} is null"
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Z_VALUE)
-        return value
+        return list(value)
 
     #
     # Json Mixin interface
@@ -109,13 +113,15 @@ class AbstractLoad(Element, metaclass=ABCMeta):
                 fp = [cls._flexible_parameter_class.from_dict(fp_dict) for fp_dict in fp_data_list]
             else:
                 fp = None
-            return cls._power_load_class(data["id"], data["bus"], s=powers, phases=data["phases"], flexible_params=fp)
+            return cls._power_load_class(
+                data["id"], data["bus"], powers=powers, phases=data["phases"], flexible_params=fp
+            )
         elif (i_list := data.get("currents")) is not None:
             currents = [complex(i[0], i[1]) for i in i_list]
-            return cls._current_load_class(data["id"], data["bus"], i=currents, phases=data["phases"])
+            return cls._current_load_class(data["id"], data["bus"], currents=currents, phases=data["phases"])
         elif (z_list := data.get("impedances")) is not None:
             impedances = [complex(z[0], z[1]) for z in z_list]
-            return cls._impedance_load_class(data["id"], data["bus"], z=impedances, phases=data["phases"])
+            return cls._impedance_load_class(data["id"], data["bus"], impedances=impedances, phases=data["phases"])
         else:
             msg = f"Unknown load type for load {data['id']!r}"
             logger.error(msg)
@@ -147,7 +153,7 @@ class PowerLoad(AbstractLoad):
         id: Id,
         bus: Bus,
         *,
-        s: Sequence[complex],
+        powers: Sequence[complex],
         phases: Optional[str] = None,
         flexible_params: Optional[list[FlexibleParameter]] = None,
         **kwargs: Any,
@@ -161,7 +167,7 @@ class PowerLoad(AbstractLoad):
             bus:
                 The bus to connect the load to.
 
-            s:
+            powers:
                 List of power for each phase (VA).
 
             phases:
@@ -176,16 +182,14 @@ class PowerLoad(AbstractLoad):
                 to compute the flexible power of the load.
         """
         super().__init__(id=id, bus=bus, phases=phases, **kwargs)
-        if isinstance(s, Quantity):
-            s = s.m_as("VA")
-        s = self._validate_value(s)
+        self.powers = powers
 
         if flexible_params:
             if len(flexible_params) != self._size:
                 msg = f"Incorrect number of parameters: {len(flexible_params)} instead of {self._size}"
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PARAMETERS_SIZE)
-            for power, fp in zip(s, flexible_params):
+            for power, fp in zip(self.powers, flexible_params):
                 if fp.control_p.type == "constant" and fp.control_q.type == "constant":
                     continue  # No checks for this case
                 if abs(power) > fp.s_max:
@@ -205,40 +209,41 @@ class PowerLoad(AbstractLoad):
                     logger.error(msg)
                     raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_S_VALUE)
 
-        self.s = s
         self.flexible_params = flexible_params
-        self._flexible_powers = None
+        self._res_flexible_powers: Optional[list[complex]] = None
 
     @property
     def is_flexible(self) -> bool:
         return self.flexible_params is not None
 
     @property
-    @ureg.wraps("VA", None, strict=False)
-    def flexible_powers(self) -> np.ndarray:
-        """An array of the flexible powers (VA) as computed by the load flow."""
-        return self._flexible_powers
+    def powers(self) -> list[complex]:
+        """The powers of the load (VA)."""
+        return self._powers
 
-    @flexible_powers.setter
-    def flexible_powers(self, value: np.ndarray):
-        self._flexible_powers = value
-
+    @powers.setter
     @ureg.wraps(None, (None, "VA"), strict=False)
-    def update_powers(self, s: Sequence[complex]) -> None:
-        """Change the powers of the load.
+    def powers(self, value: Sequence[complex]) -> None:
+        self._powers = self._validate_value(value)
 
-        Args:
-            s:
-                The new powers to set (VA).
-        """
-        self.s = self._validate_value(s)
+    @property
+    def res_flexible_powers(self) -> list[complex]:
+        """The load flow result of the load flexible powers (VA)."""
+        if self._res_flexible_powers is None:
+            self._raise_load_flow_not_run()
+        return self._res_flexible_powers
+
+    @res_flexible_powers.setter
+    @ureg.wraps(None, (None, "VA"), strict=False)
+    def res_flexible_powers(self, value: Sequence[complex]) -> None:
+        self._res_flexible_powers = self._validate_value(value)
 
     def to_dict(self) -> JsonDict:
         res = {
             "id": self.id,
             "bus": self.bus.id,
             "phases": self.phases,
-            "powers": [[s.real, s.imag] for s in self.s],
+            "powers": [[s.real, s.imag] for s in self.powers],
         }
         if self.flexible_params is not None:
             res["flexible_params"] = [fp.to_dict() for fp in self.flexible_params]
@@ -264,7 +269,9 @@ class CurrentLoad(AbstractLoad):
 
     _type = "current"
 
-    def __init__(self, id: Id, bus: Bus, *, i: Sequence[complex], phases: Optional[str] = None, **kwargs: Any) -> None:
+    def __init__(
+        self, id: Id, bus: Bus, *, currents: Sequence[complex], phases: Optional[str] = None, **kwargs: Any
+    ) -> None:
         """CurrentLoad constructor.
 
         Args:
@@ -274,7 +281,7 @@ class CurrentLoad(AbstractLoad):
             bus:
                 The bus to connect the load to.
 
-            i:
+            currents:
                 List of currents for each phase (Amps).
 
             phases:
@@ -284,26 +291,24 @@ class CurrentLoad(AbstractLoad):
                 the phases of the connected bus. By default, the phases of the bus are used.
         """
         super().__init__(id=id, phases=phases, bus=bus, **kwargs)
-        if isinstance(i, Quantity):
-            i = i.m_as("A")
-        self.i = self._validate_value(i)
+        self.currents = currents  # handles size checks and unit conversion
 
+    @property
+    def currents(self) -> list[complex]:
+        """The currents of the load (Amps)."""
+        return self._currents
+
+    @currents.setter
     @ureg.wraps(None, (None, "A"), strict=False)
-    def update_currents(self, i: Sequence[complex]) -> None:
-        """Change the currents of the load.
-
-        Args:
-            i:
-                The new currents to set (Amps).
-        """
-        self.i = self._validate_value(i)
+    def currents(self, value: Sequence[complex]) -> None:
+        self._currents = self._validate_value(value)
 
     def to_dict(self) -> JsonDict:
         return {
             "id": self.id,
             "bus": self.bus.id,
             "phases": self.phases,
-            "currents": [[i.real, i.imag] for i in self.i],
+            "currents": [[i.real, i.imag] for i in self.currents],
         }
 
 
@@ -327,7 +332,9 @@ class ImpedanceLoad(AbstractLoad):
 
     _type = "impedance"
 
-    def __init__(self, id: Id, bus: Bus, *, z: Sequence[complex], phases: Optional[str] = None, **kwargs: Any) -> None:
+    def __init__(
+        self, id: Id, bus: Bus, *, impedances: Sequence[complex], phases: Optional[str] = None, **kwargs: Any
+    ) -> None:
         """ImpedanceLoad constructor.
 
         Args:
@@ -337,7 +344,7 @@ class ImpedanceLoad(AbstractLoad):
             bus:
                 The bus to connect the load to.
 
-            z:
+            impedances:
                 List of impedances for each phase (Ohms).
 
             phases:
@@ -347,26 +354,24 @@ class ImpedanceLoad(AbstractLoad):
                 the phases of the connected bus. By default, the phases of the bus are used.
         """
         super().__init__(id=id, phases=phases, bus=bus, **kwargs)
-        if isinstance(z, Quantity):
-            z = z.m_as("ohm")
-        self.z = self._validate_value(z)
+        self.impedances = impedances
 
+    @property
+    def impedances(self) -> list[complex]:
+        """The impedances of the load (Ohms)."""
+        return self._impedances
+
+    @impedances.setter
     @ureg.wraps(None, (None, "ohm"), strict=False)
-    def update_impedances(self, z: Sequence[complex]) -> None:
-        """Change the impedances of the load.
-
-        Args:
-            z:
-                The new impedances to set (Ohms).
-        """
-        self.z = self._validate_value(z)
+    def impedances(self, impedances: Sequence[complex]) -> None:
+        self._impedances = self._validate_value(impedances)
 
     def to_dict(self) -> JsonDict:
         return {
             "id": self.id,
             "bus": self.bus.id,
             "phases": self.phases,
-            "impedances": [[z.real, z.imag] for z in self.z],
+            "impedances": [[z.real, z.imag] for z in self.impedances],
         }
 
 

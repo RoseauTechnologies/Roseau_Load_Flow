@@ -66,6 +66,7 @@ class RoseauLoadFlowExceptionCode(Enum):
     BAD_ELEMENT_ID = auto()
     NO_LOAD_FLOW_CONVERGENCE = auto()
     BAD_REQUEST = auto()
+    LOAD_FLOW_NOT_RUN = auto()
 
     # DGS export
     DGS_BAD_PHASE_TECHNOLOGY = auto()

@@ -1,8 +1,8 @@
 import logging
 from abc import ABC
-from typing import Any, ClassVar, Optional, TYPE_CHECKING, Union
+from collections.abc import Sequence
+from typing import Any, ClassVar, NoReturn, Optional, TYPE_CHECKING, Union
 
-import numpy as np
 import shapely.wkt
 from shapely.geometry import shape
 from shapely.geometry.base import BaseGeometry
@@ -76,6 +76,15 @@ class Element(ABC, Identifiable, JsonMixin):
             return shapely.wkt.loads(geometry)
         else:
             return shape(geometry)
+
+    def _raise_load_flow_not_run(self) -> NoReturn:
+        """Raise an exception when accessing results and the load flow has not been run yet."""
+        msg = (
+            f"Results for {type(self).__name__} {self.id!r} are not available because the load "
+            f"flow has not been run yet."
+        )
+        logger.error(msg)
+        raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN)
 
 
 class PotentialRef(Element):
@@ -272,7 +281,7 @@ class AbstractBranch(Element):
         self._connect(bus1)
         self._connect(bus2)
         self.geometry = geometry
-        self._currents = None
+        self._res_currents = None
 
     def __repr__(self) -> str:
         s = f"{type(self).__name__}(id={self.id!r}, phases1={self.phases1!r}, phases2={self.phases2!r}"
@@ -282,15 +291,29 @@ class AbstractBranch(Element):
         s += ")"
         return s
 
-    @property
-    @ureg.wraps(("A", "A"), None, strict=False)
-    def currents(self) -> tuple[np.ndarray, np.ndarray]:
-        """Arrays of the actual currents of each phase of the two extremities (A) as computed by the load flow."""
-        return self._currents
+    def _validate_currents(
+        self, currents: tuple[Sequence[complex], Sequence[complex]]
+    ) -> tuple[list[complex], list[complex]]:
+        currents1, currents2 = currents
+        if len(currents1) != len(self.phases1):
+            msg = f"Incorrect number of currents1: {len(currents1)} instead of {len(self.phases1)}"
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_I_SIZE)
+        if len(currents2) != len(self.phases2):
+            msg = f"Incorrect number of currents2: {len(currents2)} instead of {len(self.phases2)}"
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_I_SIZE)
+        return list(currents1), list(currents2)
 
-    @currents.setter
-    def currents(self, value: tuple[np.ndarray, np.ndarray]) -> None:
-        self._currents = value
+    @property
+    def res_currents(self) -> tuple[list[complex], list[complex]]:
+        """The load flow result of the branch currents (A)."""
+        return self._res_currents
+
+    @res_currents.setter
+    @ureg.wraps(None, (None, "A"), strict=False)
+    def res_currents(self, value: tuple[Sequence[complex], Sequence[complex]]) -> None:
+        self._res_currents = self._validate_currents(value)
 
     #
     # Json Mixin interface

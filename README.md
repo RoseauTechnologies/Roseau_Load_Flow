@@ -55,12 +55,12 @@ p_ref = PotentialRef(id="pr", element=ground)  # A potential reference
 vn = 400 / np.sqrt(3)
 voltages = [vn, vn * np.exp(-2 / 3 * np.pi * 1j), vn * np.exp(2 / 3 * np.pi * 1j)]
 source_bus = Bus(id="sb", phases="abcn")
-ground.connect(source_bus)  # The neutral of the main is connected to the ground
+ground.connect(source_bus)  # The neutral of the main bus is connected to the ground
 vs = VoltageSource(id="vs", bus=source_bus, phases="abcn", voltages=voltages)
 
 # Create a load bus and a load
 load_bus = Bus(id="lb", phases="abcn")
-load = PowerLoad(id="pl", bus=load_bus, phases="abcn", s=[100 + 0j, 100 + 0j, 100 + 0j])
+load = PowerLoad(id="pl", bus=load_bus, phases="abcn", powers=[100 + 0j, 100 + 0j, 100 + 0j])
 
 # Create a line between the two buses
 lp = LineParameters("lp_series", z_line=np.eye(4, dtype=complex))
