@@ -32,6 +32,7 @@ from roseau.load_flow.models import (
     VoltageSource,
 )
 from roseau.load_flow.network import ElectricalNetwork
+from roseau.load_flow.utils._versions import show_versions
 
 __version__ = importlib.metadata.version("roseau_load_flow")
 
@@ -45,6 +46,7 @@ __all__ = [
     "__status__",
     "__url__",
     "__version__",
+    "show_versions",
     # Electrical Network
     "ElectricalNetwork",
     # Buses
