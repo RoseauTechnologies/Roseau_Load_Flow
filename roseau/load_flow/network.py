@@ -367,17 +367,17 @@ class ElectricalNetwork:
         """
         for bus_data in result_dict["buses"]:
             bus = self.buses[bus_data["id"]]
-            bus.res_potentials = [complex(v[0], v[1]) for v in bus_data["potentials"]]
+            bus._res_potentials = np.array([complex(v[0], v[1]) for v in bus_data["potentials"]], dtype=complex)
         for branch_data in result_dict["branches"]:
             branch = self.branches[branch_data["id"]]
-            currents1 = [complex(i[0], i[1]) for i in branch_data["currents1"]]
-            currents2 = [complex(i[0], i[1]) for i in branch_data["currents2"]]
-            branch.res_currents = (currents1, currents2)
+            currents1 = np.array([complex(i[0], i[1]) for i in branch_data["currents1"]], dtype=complex)
+            currents2 = np.array([complex(i[0], i[1]) for i in branch_data["currents2"]], dtype=complex)
+            branch._res_currents = (currents1, currents2)
         for load_data in result_dict["loads"]:
             load = self.loads[load_data["id"]]
-            load.res_currents = [complex(i[0], i[1]) for i in load_data["currents"]]
+            load._res_currents = np.array([complex(i[0], i[1]) for i in load_data["currents"]], dtype=complex)
             if isinstance(load, PowerLoad) and load.is_flexible:
-                load.res_flexible_powers = [complex(p[0], p[1]) for p in load_data["powers"]]
+                load._res_flexible_powers = np.array([complex(p[0], p[1]) for p in load_data["powers"]], dtype=complex)
 
     #
     # Getters for the load flow results

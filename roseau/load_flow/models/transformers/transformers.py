@@ -115,7 +115,7 @@ class Transformer(AbstractBranch):
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
         super().__init__(id, bus1, bus2, phases1=phases1, phases2=phases2, geometry=geometry, **kwargs)
-        self.parameters = parameters
+        self._parameters = parameters
 
     @property
     def tap(self) -> float:
@@ -137,13 +137,13 @@ class Transformer(AbstractBranch):
 
     @parameters.setter
     def parameters(self, value: TransformerParameters) -> None:
-        self._parameters = value
         windings1 = self.parameters.windings
         windings2 = value.windings
         if windings1 != windings2:
             msg = f"The updated windings changed for transformer {self.id!r}: {windings1} to {windings2}."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS)
+        self._parameters = value
 
     def to_dict(self) -> JsonDict:
         return {**super().to_dict(), "params_id": self.parameters.id, "tap": self.tap}

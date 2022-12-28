@@ -1,3 +1,4 @@
+import numpy as np
 import pytest
 from pint.errors import DimensionalityError
 
@@ -204,8 +205,8 @@ def test_flexible_load():
     load = PowerLoad("flexible load", bus, powers=[100 + 50j, 0, 0j], phases="abcn", flexible_params=fp)
     assert load.flexible_params == [fp_pq_cons, fp_const, fp_const]
     assert load._res_flexible_powers is None  # load flow not run yet
-    load.res_flexible_powers = [100, 100, 100]
-    assert load.res_flexible_powers == [100, 100, 100]
+    load._res_flexible_powers = np.array([100, 100, 100], dtype=complex)
+    assert np.allclose(load.res_flexible_powers, [100, 100, 100])
 
 
 def test_loads_to_dict():
@@ -278,7 +279,7 @@ def test_loads_to_dict():
     assert parsed_flex_load.id == flex_load.id
     assert parsed_flex_load.bus.id == flex_load.bus.id
     assert parsed_flex_load.phases == flex_load.phases
-    assert parsed_flex_load.powers == flex_load.powers
+    assert np.allclose(parsed_flex_load.powers, flex_load.powers)
     assert [p.to_dict() for p in parsed_flex_load.flexible_params] == [p.to_dict() for p in flex_load.flexible_params]
 
 
@@ -287,13 +288,13 @@ def test_loads_units():
 
     # Good unit constructor
     load = PowerLoad("load", bus, powers=Q_([1, 1, 1], "kVA"), phases="abcn")
-    assert load.powers == [1000, 1000, 1000]
+    assert np.allclose(load.powers, [1000, 1000, 1000])
 
     # Good unit setter
     load = PowerLoad("load", bus, powers=[100, 100, 100], phases="abcn")
-    assert load.powers == [100, 100, 100]
+    assert np.allclose(load.powers, [100, 100, 100])
     load.powers = Q_([1, 1, 1], "kVA")
-    assert load.powers == [1000, 1000, 1000]
+    assert np.allclose(load.powers, [1000, 1000, 1000])
 
     # Bad unit constructor
     with pytest.raises(DimensionalityError, match=r"Cannot convert from 'ampere' \(\[current\]\) to 'VA'"):

@@ -2,6 +2,8 @@ import logging
 from collections.abc import Sequence
 from typing import Any, Optional
 
+import numpy as np
+
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import Element
@@ -75,22 +77,19 @@ class VoltageSource(Element):
             f"phases={self.phases!r})"
         )
 
-    def _validate_voltages(self, voltages: Sequence[complex]) -> None:
-        if len(voltages) != self._size:
-            msg = f"Incorrect number of voltages: {len(voltages)} instead of {self._size}"
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg, code=RoseauLoadFlowExceptionCode.BAD_VOLTAGES_SIZE)
-        return list(voltages)
-
     @property
-    def voltages(self) -> list[complex]:
+    def voltages(self) -> np.ndarray:
         """The voltages of the source (V)."""
         return self._voltages
 
     @voltages.setter
     @ureg.wraps(None, (None, "V"), strict=False)
     def voltages(self, voltages: Sequence[complex]) -> None:
-        self._voltages = self._validate_voltages(voltages)
+        if len(voltages) != self._size:
+            msg = f"Incorrect number of voltages: {len(voltages)} instead of {self._size}"
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg, code=RoseauLoadFlowExceptionCode.BAD_VOLTAGES_SIZE)
+        self._voltages = np.asarray(voltages, dtype=complex)
 
     #
     # Json Mixin interface

@@ -4,6 +4,7 @@ from collections.abc import Sequence
 from typing import Any, Literal, Optional
 
 import numpy as np
+from pint import Quantity
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.buses import Bus
@@ -62,10 +63,11 @@ class AbstractLoad(Element, metaclass=ABCMeta):
         self.phases = phases
         self.bus = bus
         self._symbol = {"power": "S", "current": "I", "impedance": "Z"}[self._type]
+        self._unit = {"power": "VA", "current": "A", "impedance": "ohm"}[self._type]
         self._size = len(set(self.phases) - {"n"})
 
         # Results
-        self._res_currents: Optional[list[complex]] = None
+        self._res_currents: Optional[np.ndarray] = None
 
     def __repr__(self) -> str:
         return f"{type(self).__name__}(id={self.id!r}, phases={self.phases!r}, bus={self.bus.id!r})"
@@ -76,21 +78,17 @@ class AbstractLoad(Element, metaclass=ABCMeta):
         return False
 
     @property
-    def res_currents(self) -> list[complex]:
+    def res_currents(self) -> np.ndarray:
         """The load flow result of the load currents (A)."""
         if self._res_currents is None:
             self._raise_load_flow_not_run()
         return self._res_currents
 
-    @res_currents.setter
-    @ureg.wraps(None, (None, "A"), strict=False)
-    def res_currents(self, value: Sequence[complex]) -> None:
-        self._res_currents = self._validate_value(value, size=len(self.phases))
-
-    def _validate_value(self, value: Sequence[complex], size: Optional[int] = None) -> list[complex]:
-        size = size or self._size
-        if len(value) != size:
-            msg = f"Incorrect number of {self._type}s: {len(value)} instead of {size}"
+    def _validate_value(self, value: Sequence[complex]) -> np.ndarray:
+        if isinstance(value, Quantity):
+            value = value.m_as(self._unit)
+        if len(value) != self._size:
+            msg = f"Incorrect number of {self._type}s: {len(value)} instead of {self._size}"
             logger.error(msg)
             raise RoseauLoadFlowException(
                 msg=msg, code=RoseauLoadFlowExceptionCode.from_string(f"BAD_{self._symbol}_SIZE")
@@ -100,7 +98,7 @@ class AbstractLoad(Element, metaclass=ABCMeta):
             msg = f"An impedance of the load {self.id!r} is null"
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Z_VALUE)
-        return list(value)
+        return np.asarray(value, dtype=complex)
 
     #
     # Json Mixin interface
@@ -210,14 +208,14 @@ class PowerLoad(AbstractLoad):
                     raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_S_VALUE)
 
         self.flexible_params = flexible_params
-        self._res_flexible_powers: Optional[list[complex]] = None
+        self._res_flexible_powers: Optional[np.ndarray] = None
 
     @property
     def is_flexible(self) -> bool:
         return self.flexible_params is not None
 
     @property
-    def powers(self) -> list[complex]:
+    def powers(self) -> np.ndarray:
         """The powers of the load (VA)."""
         return self._powers
 
@@ -227,16 +225,11 @@ class PowerLoad(AbstractLoad):
         self._powers = self._validate_value(value)
 
     @property
-    def res_flexible_powers(self) -> list[complex]:
+    def res_flexible_powers(self) -> np.ndarray:
         """The load flow result of the load flexible powers (VA)."""
         if self._res_flexible_powers is None:
             self._raise_load_flow_not_run()
         return self._res_flexible_powers
-
-    @res_flexible_powers.setter
-    @ureg.wraps(None, (None, "VA"), strict=False)
-    def res_flexible_powers(self, value: Sequence[complex]) -> None:
-        self._res_flexible_powers = self._validate_value(value)
 
     def to_dict(self) -> JsonDict:
         res = {
@@ -294,7 +287,7 @@ class CurrentLoad(AbstractLoad):
         self.currents = currents  # handles size checks and unit conversion
 
     @property
-    def currents(self) -> list[complex]:
+    def currents(self) -> np.ndarray:
         """The currents of the load (Amps)."""
         return self._currents
 
@@ -357,7 +350,7 @@ class ImpedanceLoad(AbstractLoad):
         self.impedances = impedances
 
     @property
-    def impedances(self) -> list[complex]:
+    def impedances(self) -> np.ndarray:
         """The impedances of the load (Ohms)."""
         return self._impedances
 

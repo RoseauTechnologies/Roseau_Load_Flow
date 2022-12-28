@@ -58,42 +58,34 @@ class Bus(Element):
         self.potentials = potentials
         self.geometry = geometry
 
-        self._res_potentials: Optional[list[complex]] = None
+        self._res_potentials: Optional[np.ndarray] = None
 
     def __repr__(self) -> str:
         return f"{type(self).__name__}(id={self.id!r}, phases={self.phases!r})"
 
-    def _validate_potentials(self, potentials: Sequence[complex]) -> list[complex]:
-        if len(potentials) != len(self.phases):
-            msg = f"Incorrect number of potentials: {len(potentials)} instead of {len(self.phases)}"
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_POTENTIALS_SIZE)
-        return list(potentials)
-
     @property
-    def potentials(self) -> list[complex]:
+    def potentials(self) -> np.ndarray:
         """The potentials of the bus (V)."""
         return self._potentials
 
     @potentials.setter
     @ureg.wraps(None, (None, "V"), strict=False)
     def potentials(self, value: Sequence[complex]) -> None:
-        self._potentials = self._validate_potentials(value)
+        if len(value) != len(self.phases):
+            msg = f"Incorrect number of potentials: {len(value)} instead of {len(self.phases)}"
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_POTENTIALS_SIZE)
+        self._potentials = np.asarray(value, dtype=complex)
 
     @property
-    def res_potentials(self) -> list[complex]:
+    def res_potentials(self) -> np.ndarray:
         """The load flow result of the bus potentials (V)."""
         if self._res_potentials is None:
             self._raise_load_flow_not_run()
         return self._res_potentials
 
-    @res_potentials.setter
-    @ureg.wraps(None, (None, "V"), strict=False)
-    def res_potentials(self, value: Sequence[complex]) -> None:
-        self._res_potentials = self._validate_potentials(value)
-
     @property
-    def res_voltages(self) -> list[complex]:
+    def res_voltages(self) -> np.ndarray:
         """The load flow result of the bus voltages (V).
 
         If the bus has a neutral, the voltages are phase-neutral voltages for existing phases in
@@ -107,7 +99,7 @@ class Bus(Element):
         else:  # Vab, Vbc, Vca
             # np.roll(["a", "b", "c"], -1) -> ["b", "c", "a"]  # also works with single or double phase
             voltages = np.roll(potentials, -1) - potentials
-        return list(voltages)
+        return voltages
 
     @property
     def voltage_phases(self) -> list[str]:

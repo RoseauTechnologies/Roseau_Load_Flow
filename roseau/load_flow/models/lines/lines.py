@@ -226,8 +226,6 @@ class Line(AbstractBranch):
 
     @parameters.setter
     def parameters(self, value: LineParameters) -> None:
-        self._parameters = value
-
         shape = (len(self.phases),) * 2
         if value.z_line.shape != shape:
             msg = f"Incorrect z_line dimensions for line {self.id!r}: {value.z_line.shape} instead of {shape}"
@@ -244,6 +242,7 @@ class Line(AbstractBranch):
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_TYPE)
             self._connect(self.ground)
+        self._parameters = value
 
     #
     # Json Mixin interface
