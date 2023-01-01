@@ -360,7 +360,7 @@ def _generate_loads(
             s = [s_phase / 3, s_phase / 3, s_phase / 3]
         else:  # Unbalanced
             s = [sa, sb, sc]
-        loads[load_id] = PowerLoad(id=load_id, phases="abcn", bus=buses[bus_id], s=s)
+        loads[load_id] = PowerLoad(id=load_id, phases="abcn", bus=buses[bus_id], powers=s)
 
 
 def _compute_load_power(elm_lod: pd.DataFrame, load_id: str, suffix: str) -> complex:

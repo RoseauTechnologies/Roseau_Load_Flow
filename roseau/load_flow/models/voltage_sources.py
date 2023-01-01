@@ -2,7 +2,7 @@ import logging
 from collections.abc import Sequence
 from typing import Any, Optional
 
-from pint import Quantity
+import numpy as np
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.buses import Bus
@@ -67,14 +67,6 @@ class VoltageSource(Element):
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
         self._size = len(set(phases) - {"n"})
 
-        if len(voltages) != self._size:
-            msg = f"Incorrect number of voltages: {len(voltages)} instead of {self._size}"
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg, code=RoseauLoadFlowExceptionCode.BAD_VOLTAGES_SIZE)
-
-        if isinstance(voltages, Quantity):
-            voltages = voltages.m_as("V")
-
         self.phases = phases
         self.bus = bus
         self.voltages = voltages
@@ -85,19 +77,19 @@ class VoltageSource(Element):
             f"phases={self.phases!r})"
         )
 
-    @ureg.wraps(None, (None, "V"), strict=False)
-    def update_voltages(self, voltages: Sequence[complex]) -> None:
-        """Change the voltages of the source.
+    @property
+    def voltages(self) -> np.ndarray:
+        """The voltages of the source (V)."""
+        return self._voltages
 
-        Args:
-            voltages:
-                The new voltages to set on the source.
-        """
+    @voltages.setter
+    @ureg.wraps(None, (None, "V"), strict=False)
+    def voltages(self, voltages: Sequence[complex]) -> None:
         if len(voltages) != self._size:
             msg = f"Incorrect number of voltages: {len(voltages)} instead of {self._size}"
             logger.error(msg)
             raise RoseauLoadFlowException(msg, code=RoseauLoadFlowExceptionCode.BAD_VOLTAGES_SIZE)
-        self.voltages = voltages
+        self._voltages = np.asarray(voltages, dtype=complex)
 
     #
     # Json Mixin interface

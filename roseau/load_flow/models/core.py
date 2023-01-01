@@ -1,6 +1,6 @@
 import logging
 from abc import ABC
-from typing import Any, ClassVar, Optional, TYPE_CHECKING, Union
+from typing import Any, ClassVar, NoReturn, Optional, TYPE_CHECKING, Union
 
 import numpy as np
 import shapely.wkt
@@ -9,7 +9,7 @@ from shapely.geometry.base import BaseGeometry
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.typing import Id, JsonDict
-from roseau.load_flow.utils import BranchType, ureg
+from roseau.load_flow.utils import BranchType
 from roseau.load_flow.utils.mixins import Identifiable, JsonMixin
 
 if TYPE_CHECKING:
@@ -77,6 +77,15 @@ class Element(ABC, Identifiable, JsonMixin):
         else:
             return shape(geometry)
 
+    def _raise_load_flow_not_run(self) -> NoReturn:
+        """Raise an exception when accessing results and the load flow has not been run yet."""
+        msg = (
+            f"Results for {type(self).__name__} {self.id!r} are not available because the load "
+            f"flow has not been run yet."
+        )
+        logger.error(msg)
+        raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN)
+
 
 class PotentialRef(Element):
     """A potential reference.
@@ -130,14 +139,10 @@ class PotentialRef(Element):
         return f"{type(self).__name__}(id={self.id!r}, element={self.connected_elements[0]!r}, phase={self.phase!r})"
 
     @property
-    @ureg.wraps("V", None, strict=False)
-    def current(self) -> complex:
-        """Compute the sum of the currents of the connection associated to the potential reference.
+    def res_current(self) -> complex:
+        """The sum of the currents of the connection associated to the potential reference.
 
         This sum should be equal to 0 after the load flow.
-
-        Returns:
-            The sum of the current of the connection.
         """
         raise NotImplementedError
 
@@ -272,7 +277,7 @@ class AbstractBranch(Element):
         self._connect(bus1)
         self._connect(bus2)
         self.geometry = geometry
-        self._currents = None
+        self._res_currents = None
 
     def __repr__(self) -> str:
         s = f"{type(self).__name__}(id={self.id!r}, phases1={self.phases1!r}, phases2={self.phases2!r}"
@@ -283,14 +288,9 @@ class AbstractBranch(Element):
         return s
 
     @property
-    @ureg.wraps(("A", "A"), None, strict=False)
-    def currents(self) -> tuple[np.ndarray, np.ndarray]:
-        """Arrays of the actual currents of each phase of the two extremities (A) as computed by the load flow."""
-        return self._currents
-
-    @currents.setter
-    def currents(self, value: tuple[np.ndarray, np.ndarray]) -> None:
-        self._currents = value
+    def res_currents(self) -> tuple[np.ndarray, np.ndarray]:
+        """The load flow result of the branch currents (A)."""
+        return self._res_currents
 
     #
     # Json Mixin interface
