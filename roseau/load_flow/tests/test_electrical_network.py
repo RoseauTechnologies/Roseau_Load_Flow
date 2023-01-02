@@ -407,8 +407,7 @@ def test_buses_voltages(small_network, good_json_results):
     def set_index_dtype(idx: pd.MultiIndex) -> pd.MultiIndex:
         return idx.set_levels(idx.levels[1].astype(_VOLTAGE_PHASES_DTYPE), level=1)
 
-    # Complex voltages
-    buses_voltages = small_network.res_buses_voltages()
+    buses_voltages = small_network.res_buses_voltages
     expected_buses_voltages = pd.DataFrame.from_records(voltage_records, index=["bus_id", "phase"])
     expected_buses_voltages.index = set_index_dtype(expected_buses_voltages.index)
 
@@ -416,28 +415,6 @@ def test_buses_voltages(small_network, good_json_results):
     assert buses_voltages.shape == (6, 1)
     assert buses_voltages.index.names == ["bus_id", "phase"]
     assert list(buses_voltages.columns) == ["voltage"]
-    assert_frame_equal(buses_voltages, expected_buses_voltages)
-
-    # Magnitude and Angle voltages
-    buses_voltages = small_network.res_buses_voltages(as_magnitude_angle=True)
-    expected_buses_voltages = pd.DataFrame.from_records(
-        [
-            {
-                "bus_id": record["bus_id"],
-                "phase": record["phase"],
-                "voltage_magnitude": np.abs(record["voltage"]),
-                "voltage_angle": np.angle(record["voltage"], deg=True),
-            }
-            for record in voltage_records
-        ],
-        index=["bus_id", "phase"],
-    )
-    expected_buses_voltages.index = set_index_dtype(expected_buses_voltages.index)
-
-    assert isinstance(buses_voltages, pd.DataFrame)
-    assert buses_voltages.shape == (6, 2)
-    assert buses_voltages.index.names == ["bus_id", "phase"]
-    assert list(buses_voltages.columns) == ["voltage_magnitude", "voltage_angle"]
     assert_frame_equal(buses_voltages, expected_buses_voltages)
 
 
@@ -524,7 +501,7 @@ def test_single_phase_network(single_phase_network: ElectricalNetwork):
     )
     # Buses voltages frame
     pd.testing.assert_frame_equal(
-        single_phase_network.res_buses_voltages(),
+        single_phase_network.res_buses_voltages,
         pd.DataFrame.from_records(
             [
                 {"bus_id": "bus0", "phase": "bn", "voltage": -10000.0 - 17320.508j},
