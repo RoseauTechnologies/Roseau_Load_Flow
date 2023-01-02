@@ -398,23 +398,20 @@ class ElectricalNetwork:
         )
         return potentials_df
 
-    def res_buses_voltages(self, as_magnitude_angle: bool = False) -> pd.DataFrame:
-        """Get the 3-phase voltages of the buses.
+    @property
+    def res_buses_voltages(self) -> pd.DataFrame:
+        """The load flow results of the voltages of the buses (V) as a dataframe.
 
-        Args:
-            as_magnitude_angle:
-                If True, the voltages are returned as magnitude and angle. Otherwise, they are
-                returned as complex values. Default is False.
-
-        Returns:
-            The dataframe of voltages of buses after a load flow has been solved.
+        The voltages are computed from the potentials of the buses. If the bus has a neutral, the
+        voltage is the line-to-neutral voltage. Otherwise, the voltage is the line-to-line voltage.
+        The result dataframe has a ``phase`` index that depicts this behavior.
 
         Examples:
 
             >>> net
             <ElectricalNetwork: 2 buses, 1 branch, 1 load, 1 ground, 1 potential ref>
 
-            >>> net.buses_voltages()
+            >>> net.res_buses_voltages
                                              voltage
             bus_id phase
             s_bus  an     200000000000.0+0.00000000j
@@ -424,20 +421,23 @@ class ElectricalNetwork:
                    bn     -9999.975000-17320.464775j
                    cn     -9999.975000+17320.464775j
 
-            >>> net.buses_voltages(as_magnitude_angle=True)
-                          voltage_magnitude  voltage_angle
+            To get the magnitude and angle of the voltages:
+
+            >>> net.res_buses_voltages.transform([np.abs, np.angle])
+                           voltage
+                          absolute     angle
             bus_id phase
-            s_bus  an              20000.00            0.0
-                   bn              20000.00         -120.0
-                   cn              20000.00          120.0
-            l_bus  an              19999.95            0.0
-                   bn              19999.95         -120.0
-                   cn              19999.95          120.0
+            s_bus  an     20000.00  0.000000
+                   bn     20000.00 -2.094395
+                   cn     20000.00  2.094395
+            l_bus  an     19999.95  0.000000
+                   bn     19999.95 -2.094395
+                   cn     19999.95  2.094395
 
             To get the symmetrical components of the voltages:
 
             >>> from roseau.load_flow.utils.converters import series_phasor_to_sym
-            >>> voltage_series = net.buses_voltages()
+            >>> voltage_series = net.res_buses_voltages["voltage"]
             >>> voltage_symmetrical = series_phasor_to_sym(voltage_series)
             >>> voltage_symmetrical
             bus_id  sequence
@@ -468,10 +468,6 @@ class ElectricalNetwork:
             .astype({"phase": _VOLTAGE_PHASES_DTYPE, "voltage": complex})
             .set_index(["bus_id", "phase"])
         )
-        if as_magnitude_angle:
-            voltages_df["voltage_magnitude"] = np.abs(voltages_df["voltage"])
-            voltages_df["voltage_angle"] = np.angle(voltages_df["voltage"], deg=True)
-            voltages_df.drop(columns=["voltage"], inplace=True)
         return voltages_df
 
     @property
