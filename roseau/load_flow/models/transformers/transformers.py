@@ -78,7 +78,9 @@ class Transformer(AbstractBranch):
         if phases1 is None:
             phases1 = "abcn" if w1_has_neutral else "abc"
             phases1 = "".join(p for p in bus1.phases if p in phases1)
+            self._check_phases(id, phases1=phases1)
         else:
+            self._check_phases(id, phases1=phases1)
             # Check that the phases are in the bus
             phases_not_in_bus1 = set(phases1) - set(bus1.phases)
             if phases_not_in_bus1:
@@ -97,12 +99,13 @@ class Transformer(AbstractBranch):
                 )
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
-        self._check_phases(id, phases1=phases1)
 
         if phases2 is None:
             phases2 = "abcn" if w2_has_neutral else "abc"
             phases2 = "".join(p for p in bus2.phases if p in phases2)
+            self._check_phases(id, phases2=phases2)
         else:
+            self._check_phases(id, phases2=phases2)
             # Check that the phases are in the bus
             phases_not_in_bus2 = set(phases2) - set(bus2.phases)
             if phases_not_in_bus2:
@@ -121,7 +124,6 @@ class Transformer(AbstractBranch):
                 )
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
-        self._check_phases(id, phases2=phases2)
 
         super().__init__(id, bus1, bus2, phases1=phases1, phases2=phases2, geometry=geometry, **kwargs)
         self._parameters = parameters
