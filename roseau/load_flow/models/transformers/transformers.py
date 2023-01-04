@@ -73,13 +73,13 @@ class Transformer(AbstractBranch):
 
         self.tap = tap
         # Compute the phases if not provided, check them if provided
-        w1_has_neutral = "n" in parameters.winding1.lower()
-        w2_has_neutral = "n" in parameters.winding2.lower()
+        w1_has_neutral = "y" in parameters.winding1.lower() or "z" in parameters.winding1.lower()
+        w2_has_neutral = "y" in parameters.winding2.lower() or "z" in parameters.winding2.lower()
         if phases1 is None:
             phases1 = "abcn" if w1_has_neutral else "abc"
         else:
             self._check_phases(id, phases1=phases1)
-            if (w1_has_neutral and "n" not in phases1) or (not w1_has_neutral and "n" in phases1):
+            if not w1_has_neutral and "n" in phases1:
                 msg = (
                     f"Phases (1) {phases1!r} of transformer {id!r} are not compatible with its "
                     f"winding {parameters.winding1!r}."
@@ -90,7 +90,7 @@ class Transformer(AbstractBranch):
             phases2 = "abcn" if w2_has_neutral else "abc"
         else:
             self._check_phases(id, phases2=phases2)
-            if (w2_has_neutral and "n" not in phases2) or (not w2_has_neutral and "n" in phases2):
+            if not w2_has_neutral and "n" in phases2:
                 msg = (
                     f"Phases (2) {phases2!r} of transformer {id!r} are not compatible with its "
                     f"winding {parameters.winding2!r}."
