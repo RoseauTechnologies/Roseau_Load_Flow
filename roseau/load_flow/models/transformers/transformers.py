@@ -73,47 +73,58 @@ class Transformer(AbstractBranch):
 
         self.tap = tap
         # Compute the phases if not provided, check them if provided
-        w1_has_neutral = "n" in parameters.winding1.lower()
-        w2_has_neutral = "n" in parameters.winding2.lower()
+        w1_has_neutral = "y" in parameters.winding1.lower() or "z" in parameters.winding1.lower()
+        w2_has_neutral = "y" in parameters.winding2.lower() or "z" in parameters.winding2.lower()
         if phases1 is None:
             phases1 = "abcn" if w1_has_neutral else "abc"
+            phases1 = "".join(p for p in bus1.phases if p in phases1)
+            self._check_phases(id, phases1=phases1)
         else:
             self._check_phases(id, phases1=phases1)
-            if (w1_has_neutral and "n" not in phases1) or (not w1_has_neutral and "n" in phases1):
+            # Check that the phases are in the bus
+            phases_not_in_bus1 = set(phases1) - set(bus1.phases)
+            if phases_not_in_bus1:
+                msg = (
+                    f"Phases (1) {sorted(phases_not_in_bus1)} of transformer {id!r} are not in phases "
+                    f"{bus1.phases!r} of bus {bus1.id!r}."
+                )
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
+            transformer_phases = "abcn" if w1_has_neutral else "abc"
+            phases_not_in_transformer = set(phases1) - set(transformer_phases)
+            if phases_not_in_transformer:
                 msg = (
                     f"Phases (1) {phases1!r} of transformer {id!r} are not compatible with its "
                     f"winding {parameters.winding1!r}."
                 )
                 logger.error(msg)
-                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
+
         if phases2 is None:
             phases2 = "abcn" if w2_has_neutral else "abc"
+            phases2 = "".join(p for p in bus2.phases if p in phases2)
+            self._check_phases(id, phases2=phases2)
         else:
             self._check_phases(id, phases2=phases2)
-            if (w2_has_neutral and "n" not in phases2) or (not w2_has_neutral and "n" in phases2):
+            # Check that the phases are in the bus
+            phases_not_in_bus2 = set(phases2) - set(bus2.phases)
+            if phases_not_in_bus2:
+                msg = (
+                    f"Phases (2) {sorted(phases_not_in_bus2)} of transformer {id!r} are not in phases "
+                    f"{bus2.phases!r} of bus {bus2.id!r}."
+                )
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
+            transformer_phases = "abcn" if w2_has_neutral else "abc"
+            phases_not_in_transformer = set(phases2) - set(transformer_phases)
+            if phases_not_in_transformer:
                 msg = (
                     f"Phases (2) {phases2!r} of transformer {id!r} are not compatible with its "
                     f"winding {parameters.winding2!r}."
                 )
                 logger.error(msg)
-                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS)
-        # Check that the phases are in the bus (computed or provided)
-        phases_not_in_bus1 = set(phases1) - set(bus1.phases)
-        if phases_not_in_bus1:
-            msg = (
-                f"Phases (1) {sorted(phases_not_in_bus1)} of transformer {id!r} are not in phases "
-                f"{bus1.phases!r} of bus {bus1.id!r}."
-            )
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
-        phases_not_in_bus2 = set(phases2) - set(bus2.phases)
-        if phases_not_in_bus2:
-            msg = (
-                f"Phases (2) {sorted(phases_not_in_bus2)} of transformer {id!r} are not in phases "
-                f"{bus2.phases!r} of bus {bus2.id!r}."
-            )
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
+
         super().__init__(id, bus1, bus2, phases1=phases1, phases2=phases2, geometry=geometry, **kwargs)
         self._parameters = parameters
 

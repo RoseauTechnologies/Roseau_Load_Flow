@@ -51,10 +51,7 @@ class Bus(Element):
         self._check_phases(id, phases=phases)
         self.phases = phases
         if potentials is None:
-            self.initialized = False
             potentials = [0] * len(phases)
-        else:
-            self.initialized = True
         self.potentials = potentials
         self.geometry = geometry
 
@@ -115,7 +112,10 @@ class Bus(Element):
     @classmethod
     def from_dict(cls, data: JsonDict) -> "Bus":
         geometry = cls._parse_geometry(data.get("geometry"))
-        return cls(id=data["id"], phases=data["phases"], geometry=geometry, potentials=data.get("potentials"))
+        potentials = data.get("potentials")
+        if potentials is not None:
+            potentials = [complex(v[0], v[1]) for v in potentials]
+        return cls(id=data["id"], phases=data["phases"], geometry=geometry, potentials=potentials)
 
     def to_dict(self) -> JsonDict:
         res = {"id": self.id, "phases": self.phases}

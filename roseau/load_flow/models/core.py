@@ -193,7 +193,7 @@ class Ground(Element):
                 A unique ID of the ground in the network grounds.
         """
         super().__init__(id, **kwargs)
-        self.phases: dict[Id, str] = {}
+        self._bus_phases: dict[Id, str] = {}
         """A map of bus id to phase connected to this ground."""
 
     def __repr__(self) -> str:
@@ -210,25 +210,25 @@ class Ground(Element):
                 The phase of the connection. It must be one of ``{"a", "b", "c", "n"}`` and must be
                 present in the bus phases. Defaults to ``"n"``.
         """
-        self._check_phases(id, phases=phase)
+        self._check_phases(self.id, phases=phase)
         if phase not in bus.phases:
             msg = f"Cannot connect a ground to phase {phase!r} of bus {bus.id!r} that has phases {bus.phases!r}."
             logger.error(msg)
             raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.BAD_PHASE)
         self._connect(bus)
-        self.phases[bus.id] = phase
+        self._bus_phases[bus.id] = phase
 
     @classmethod
     def from_dict(cls, data: JsonDict) -> "Ground":
         self = cls(data["id"])
-        self.phases = data["buses"]
+        self._bus_phases = data["buses"]
         return self
 
     def to_dict(self) -> JsonDict:
         # Shunt lines and potential references will have the ground in their dict not here.
         return {
             "id": self.id,
-            "buses": [{"id": bus_id, "phase": phase} for bus_id, phase in self.phases.items()],
+            "buses": [{"id": bus_id, "phase": phase} for bus_id, phase in self._bus_phases.items()],
         }
 
 

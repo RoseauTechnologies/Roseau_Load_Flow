@@ -333,8 +333,8 @@ def v0_to_v1_converter(data: JsonDict) -> JsonDict:  # noqa: C901
             branch["type"] = branch_type
             # Transformers have no phases information, we need to infer it from the windings
             w1, w2, _ = TransformerType.extract_windings(transformers_params[params_id]["type"])
-            phases1 = "abcn" if "n" in w1.lower() else "abc"
-            phases2 = "abcn" if "n" in w2.lower() else "abc"
+            phases1 = "abcn" if ("y" in w1.lower() or "z" in w1.lower()) else "abc"
+            phases2 = "abcn" if ("y" in w2.lower() or "z" in w2.lower()) else "abc"
             # Determine the "special element" connected to bus2 of the transformer
             if phases2 == "abcn":  # ground if it has neutral
                 ground["buses"].append({"id": bus2_id, "phase": "n"})

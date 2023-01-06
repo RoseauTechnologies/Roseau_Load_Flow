@@ -221,22 +221,24 @@ def test_transformer_phases():
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
     assert e.value.msg == "Phases (2) ['n'] of transformer 'tr1' are not in phases 'abc' of bus 'bus-2'."
 
-    # Bad phases
+    # Not in transformer
+    bus1.phases = "abcn"
     bus2.phases = "abcn"
     with pytest.raises(RoseauLoadFlowException) as e:
-        Transformer("tr1", bus1, bus2, phases1="abc", phases2="abc", parameters=tp)
-    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS
-    assert e.value.msg == "Phases (2) 'abc' of transformer 'tr1' are not compatible with its winding 'yn'."
+        Transformer("tr1", bus1, bus2, phases1="abcn", phases2="abcn", parameters=tp)
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
+    assert e.value.msg == "Phases (1) 'abcn' of transformer 'tr1' are not compatible with its winding 'D'."
 
     # Default
+    bus1.phases = "abc"
+    bus2.phases = "abcn"
     transformer = Transformer(id="tr1", bus1=bus1, bus2=bus2, parameters=tp, length=10)
     assert transformer.phases1 == "abc"
     assert transformer.phases2 == "abcn"
 
-    # Bad default
-    bus1.phases = "abc"
-    bus2.phases = "abc"
-    with pytest.raises(RoseauLoadFlowException) as e:
-        Transformer("tr1", bus1, bus2, parameters=tp)
-    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
-    assert e.value.msg == "Phases (2) ['n'] of transformer 'tr1' are not in phases 'abc' of bus 'bus-2'."
+    # Intersection
+    bus1.phases = "abcn"
+    bus2.phases = "abcn"
+    transformer = Transformer(id="tr1", bus1=bus1, bus2=bus2, parameters=tp, length=10)
+    assert transformer.phases1 == "abc"
+    assert transformer.phases2 == "abcn"
