@@ -193,7 +193,7 @@
         {
             "id": "line2",
             "type": "transformer",
-            "phases1": "abc",
+            "phases1": "abcn",
             "phases2": "abcn",
             "bus1": 1,
             "bus2": 3,
@@ -235,7 +235,7 @@
         {
             "id": "line5",
             "type": "transformer",
-            "phases1": "abc",
+            "phases1": "abcn",
             "phases2": "abc",
             "bus1": 1,
             "bus2": 6,
@@ -249,7 +249,7 @@
         {
             "id": "line6",
             "type": "transformer",
-            "phases1": "abc",
+            "phases1": "abcn",
             "phases2": "abcn",
             "bus1": 1,
             "bus2": 7,
@@ -277,7 +277,7 @@
         {
             "id": "line8",
             "type": "transformer",
-            "phases1": "abc",
+            "phases1": "abcn",
             "phases2": "abcn",
             "bus1": 1,
             "bus2": 9,
@@ -319,7 +319,7 @@
         {
             "id": "line11",
             "type": "transformer",
-            "phases1": "abc",
+            "phases1": "abcn",
             "phases2": "abc",
             "bus1": 1,
             "bus2": 12,
@@ -333,7 +333,7 @@
         {
             "id": "line12",
             "type": "transformer",
-            "phases1": "abc",
+            "phases1": "abcn",
             "phases2": "abcn",
             "bus1": 1,
             "bus2": 13,
