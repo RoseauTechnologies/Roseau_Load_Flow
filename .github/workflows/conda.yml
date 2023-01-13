@@ -1,0 +1,67 @@
+name: Conda
+
+on:
+  push:
+    branches: [ main, develop ]
+    tags:
+      - '*'
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  CI: true
+
+jobs:
+  build:
+
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ "ubuntu-latest", "windows-latest" ]
+        python-version: [ "3.9", "3.10" ]
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          lfs: false
+
+      - name: Create LFS file list
+        run: git lfs ls-files -l | cut -d' ' -f1 | sort > .lfs-assets-id
+
+      - name: Cache git LFS
+        uses: actions/cache@v3
+        with:
+          path: .git/lfs
+          key: git-lfs-v1-${{ matrix.python-version }}-${{ hashFiles('.lfs-assets-id') }}
+          restore-keys: |
+            git-lfs-v1-${{ matrix.python-version }}
+            git-lfs-v1
+            git-lfs
+
+      - name: Git LFS
+        run: |
+          git lfs checkout
+          git lfs pull
+          git lfs prune --verify-remote
+
+      - uses: conda-incubator/setup-miniconda@v2
+        with:
+          auto-update-conda: true
+          python-version: ${{ matrix.python-version }}
+
+      - name: Conda Upload
+        id: conda-upload
+        shell: bash -l {0}
+        run: |
+          conda config --add channels conda-forge
+          conda config --set channel_priority strict
+          conda install --channel conda-forge conda-build conda-verify
+          mkdir -p dist/
+          conda build --output-folder dist/ recipe
+          echo "CONDA_ARCHIVE=$(conda build --output-folder dist/ --output recipe)" >> $GITHUB_OUTPUT
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          path: ${{ steps.conda-upload.outputs.CONDA_ARCHIVE }}
