@@ -50,8 +50,9 @@ class AbstractLoad(Element, metaclass=ABCMeta):
         else:
             self._check_phases(id, phases=phases)
             # Also check they are in the bus phases
-            phases_not_in_bus = set(phases) - set(bus.phases) - {"n"}  # "n" is allowed to be absent
-            if phases_not_in_bus:
+            phases_not_in_bus = set(phases) - set(bus.phases)
+            if phases_not_in_bus and not (phases_not_in_bus == {"n"} and len(phases) > 2):
+                # "n" is allowed to be absent from the bus only if the load has more than 2 phases
                 msg = (
                     f"Phases {sorted(phases_not_in_bus)} of load {id!r} are not in bus {bus.id!r} "
                     f"phases {bus.phases!r}"
@@ -64,7 +65,11 @@ class AbstractLoad(Element, metaclass=ABCMeta):
         self.bus = bus
         self._symbol = {"power": "S", "current": "I", "impedance": "Z"}[self._type]
         self._unit = {"power": "VA", "current": "A", "impedance": "ohm"}[self._type]
-        self._size = len(set(self.phases) - {"n"})
+        if len(phases) == 2 and "n" not in phases:
+            # This is a delta load that has one element connected between two phases
+            self._size = 1
+        else:
+            self._size = len(set(phases) - {"n"})
 
         # Results
         self._res_currents: Optional[np.ndarray] = None

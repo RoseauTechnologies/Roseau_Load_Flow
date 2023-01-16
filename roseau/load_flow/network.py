@@ -775,6 +775,7 @@ class ElectricalNetwork:
             res = {"id": load.id, "phases": load.phases, "currents": [[i.real, i.imag] for i in load.res_currents]}
             if isinstance(load, PowerLoad) and load.is_flexible:
                 res["powers"] = [[s.real, s.imag] for s in load.res_flexible_powers]
+            loads_results.append(res)
 
         return {
             "info": self._results_info,

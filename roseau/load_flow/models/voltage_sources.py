@@ -57,15 +57,20 @@ class VoltageSource(Element):
         else:
             self._check_phases(id, phases=phases)
             # Also check they are in the bus phases
-            phases_not_in_bus = set(phases) - set(bus.phases) - {"n"}  # "n" is allowed to be absent
-            if phases_not_in_bus:
+            phases_not_in_bus = set(phases) - set(bus.phases)
+            if phases_not_in_bus and not (phases_not_in_bus == {"n"} and len(phases) > 2):
+                # "n" is allowed to be absent from the bus only if the source has more than 2 phases
                 msg = (
                     f"Phases {sorted(phases_not_in_bus)} of source {id!r} are not in bus "
                     f"{bus.id!r} phases {bus.phases!r}"
                 )
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
-        self._size = len(set(phases) - {"n"})
+        if len(phases) == 2 and "n" not in phases:
+            # This is a delta source that has one element connected between two phases
+            self._size = 1
+        else:
+            self._size = len(set(phases) - {"n"})
 
         self.phases = phases
         self.bus = bus

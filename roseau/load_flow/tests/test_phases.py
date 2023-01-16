@@ -64,8 +64,8 @@ def test_loads_phases():
         assert e.value.msg.startswith(f"PowerLoad of id 'load1' got invalid phases '{ph}', allowed values are")
 
     # Allowed
-    for ph in ("ab", "abc", "abcn"):
-        PowerLoad("load1", bus, phases=ph, powers=[100] * len(set(ph) - {"n"}))
+    for ph, n in (("ab", 1), ("abc", 3), ("abcn", 3)):
+        PowerLoad("load1", bus, phases=ph, powers=[100] * n)
 
     # Not in bus
     bus.phases = "ab"
@@ -76,11 +76,16 @@ def test_loads_phases():
 
     # "n" not in bus is allowed though
     PowerLoad("load1", bus, phases="abn", powers=[100, 100])
+    # unless it is a single phase load
+    with pytest.raises(RoseauLoadFlowException) as e:
+        PowerLoad("load1", bus, phases="an", powers=[100])
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
+    assert e.value.msg == "Phases ['n'] of load 'load1' are not in bus 'bus' phases 'ab'"
 
     # Default
-    for ph in ("ab", "abc", "abcn"):
+    for ph, n in (("ab", 1), ("abc", 3), ("abcn", 3)):
         bus.phases = ph
-        load = PowerLoad("load1", bus, phases=ph, powers=[100] * len(set(ph) - {"n"}))
+        load = PowerLoad("load1", bus, phases=ph, powers=[100] * n)
         assert load.phases == ph
 
 
@@ -97,8 +102,8 @@ def test_sources_phases():
         assert e.value.msg.startswith(f"VoltageSource of id 'source1' got invalid phases '{ph}', allowed values are")
 
     # Allowed
-    for ph in ("ab", "abc", "abcn"):
-        VoltageSource("source1", bus, phases=ph, voltages=[100] * len(set(ph) - {"n"}))
+    for ph, n in (("ab", 1), ("abc", 3), ("abcn", 3)):
+        VoltageSource("source1", bus, phases=ph, voltages=[100] * n)
 
     # Not in bus
     bus.phases = "ab"
@@ -109,11 +114,16 @@ def test_sources_phases():
 
     # "n" not in bus is allowed though
     VoltageSource("source1", bus, phases="abn", voltages=[100, 100])
+    # unless it is a single phase source
+    with pytest.raises(RoseauLoadFlowException) as e:
+        VoltageSource("source1", bus, phases="an", voltages=[100])
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
+    assert e.value.msg == "Phases ['n'] of source 'source1' are not in bus 'bus' phases 'ab'"
 
     # Default
-    for ph in ("ab", "abc", "abcn"):
+    for ph, n in (("ab", 1), ("abc", 3), ("abcn", 3)):
         bus.phases = ph
-        vs = VoltageSource("source1", bus, voltages=[100] * len(set(ph) - {"n"}))
+        vs = VoltageSource("source1", bus, voltages=[100] * n)
         assert vs.phases == ph
 
 
