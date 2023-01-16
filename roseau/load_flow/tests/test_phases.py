@@ -76,6 +76,11 @@ def test_loads_phases():
 
     # "n" not in bus is allowed though
     PowerLoad("load1", bus, phases="abn", powers=[100, 100])
+    # unless it is a single phase load
+    with pytest.raises(RoseauLoadFlowException) as e:
+        PowerLoad("load1", bus, phases="an", powers=[100])
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
+    assert e.value.msg == "Phases ['n'] of load 'load1' are not in bus 'bus' phases 'ab'"
 
     # Default
     for ph in ("ab", "abc", "abcn"):
@@ -109,6 +114,11 @@ def test_sources_phases():
 
     # "n" not in bus is allowed though
     VoltageSource("source1", bus, phases="abn", voltages=[100, 100])
+    # unless it is a single phase source
+    with pytest.raises(RoseauLoadFlowException) as e:
+        VoltageSource("source1", bus, phases="an", voltages=[100])
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
+    assert e.value.msg == "Phases ['n'] of source 'source1' are not in bus 'bus' phases 'ab'"
 
     # Default
     for ph in ("ab", "abc", "abcn"):
