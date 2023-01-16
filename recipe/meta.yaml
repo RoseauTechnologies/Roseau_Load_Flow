@@ -36,6 +36,9 @@ test:
   imports:
     - roseau
     - roseau.load_flow
+    - roseau.load_flow.io
+    - roseau.load_flow.models
+    - roseau.load_flow.utils
 
 about:
   home: https://github.com/RoseauTechnologies/Roseau_Load_Flow
