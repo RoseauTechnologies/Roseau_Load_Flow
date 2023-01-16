@@ -247,7 +247,7 @@ def v0_to_v1_converter(data: JsonDict) -> JsonDict:  # noqa: C901
         bus["phases"] = phases
         # buses in V0 didn't have (initial) potentials, they were ignored
         if "geometry" in old_bus:  # geometry is optional
-            bus["geometry"] = old_bus["geometry"]
+            bus["geometry"] = Bus._parse_geometry(old_bus["geometry"]).__geo_interface__
         buses[bus_id] = bus
 
         for old_load in old_bus["loads"]:
@@ -315,7 +315,7 @@ def v0_to_v1_converter(data: JsonDict) -> JsonDict:  # noqa: C901
         branch_type = old_branch["type"]
         branch = {"id": branch_id, "bus1": bus1_id, "bus2": bus2_id}
         if "geometry" in old_branch:
-            branch["geometry"] = old_branch["geometry"]
+            branch["geometry"] = AbstractBranch._parse_geometry(old_branch["geometry"]).__geo_interface__
         if branch_type == "line":
             params_id = old_branch["type_name"]
             branch["length"] = old_branch["length"]
