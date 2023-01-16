@@ -1,5 +1,5 @@
-__author__ = "Benoît Vinot, Victor Gouin, Florent Cadoux, Sébastien Vallet"
-__copyright__ = "Roseau Technologies 2018-2022"
+__author__ = "Benoît Vinot, Victor Gouin, Florent Cadoux, Sébastien Vallet, Ali Hamdan"
+__copyright__ = "Roseau Technologies 2018--2023"
 __credits__ = "Roseau Technologies"
 __license__ = "Proprietary"
 __maintainer__ = "Sébastien Vallet"

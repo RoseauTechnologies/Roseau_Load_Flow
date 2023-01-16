@@ -1,8 +1,8 @@
-name: CI
+name: Conda
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main ]
     tags:
       - '*'
   pull_request:
@@ -14,11 +14,11 @@ env:
 jobs:
   build:
 
-    runs-on: ubuntu-latest
-
+    runs-on: "ubuntu-latest"
     strategy:
+      fail-fast: false
       matrix:
-        python-version: [ "3.9", "3.10" ] # TODO: "3.11" wait for Fiona wheel
+        python-version: [ "3.9" ]
 
     steps:
       - uses: actions/checkout@v3
@@ -44,28 +44,24 @@ jobs:
           git lfs pull
           git lfs prune --verify-remote
 
-      - name: Install poetry
-        run: pipx install poetry
-
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+      - uses: conda-incubator/setup-miniconda@v2
         with:
+          auto-update-conda: true
           python-version: ${{ matrix.python-version }}
-          cache: "poetry"
 
-      - name: Install dependencies
+      - name: Conda Build
+        id: conda-build
+        shell: bash -l {0}
         run: |
-          poetry env use "${{ matrix.python-version }}"
-          poetry install --without dev,docker
+          conda config --add channels conda-forge
+          conda config --set channel_priority strict
+          conda install --channel conda-forge conda-build conda-verify
+          mkdir -p dist/
+          conda build --output-folder dist/ conda/
+          echo "CONDA_ARCHIVE=$(conda build --output-folder dist/ --output conda/)" >> $GITHUB_OUTPUT
 
-      - name: Test with pytest
-        run: |
-          poetry run pytest -n=auto --durations=25 --cov=roseau --cov-report html \
-          --cov-config pyproject.toml --cov-fail-under 75 roseau
-
-      - name: Archive code coverage results
+      - name: Upload artifact
         uses: actions/upload-artifact@v3
-        if: ${{ always() }}
         with:
-          name: code-coverage-report-${{ runner.os }}-python-${{ matrix.python-version }}
-          path: htmlcov/
+          name: package-python-${{ matrix.python-version }}
+          path: ${{ steps.conda-build.outputs.CONDA_ARCHIVE }}

@@ -6,7 +6,7 @@
 
 ## Installation ##
 
-The simplest way is to download the docker container attached to this repository and to start it. I will start a
+The simplest way is to download the docker container attached to this repository and to start it. It will start a
 Jupyterlab session with all the required packages installed.
 
 The entire documentation is available via [GitHub pages](https://roseautechnologies.github.io/Roseau_Load_Flow/)
@@ -22,9 +22,7 @@ By giving path to the needed files:
 ```python
 from roseau.load_flow import ElectricalNetwork
 
-en = ElectricalNetwork.from_dgs(path=path)  # DGS
-
-en = ElectricalNetwork.from_json(path=path)  # Json
+en = ElectricalNetwork.from_json(path="./data/my-network.json")
 
 en.solve_load_flow(auth=("username", "password"))
 ```

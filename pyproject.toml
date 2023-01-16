@@ -35,9 +35,8 @@ build-backend = "poetry.core.masonry.api"
 python = "^3.9"
 numpy = "^1.21.5"
 pandas = "^1.4.0"
-pygeos = ">=0.12.0"
 geopandas = ">=0.10.2"
-Shapely = "^1.8.0"
+shapely = "^2.0.0"
 regex = ">=2022.1.18"
 pint = ">=0.19.2"
 requests = "^2.28.1"
@@ -45,12 +44,12 @@ requests = "^2.28.1"
 [tool.poetry.group.test.dependencies]
 pytest = "^7.1.2"
 pytest-cov = "^4.0.0"
-pytest-xdist = "^2.5.0"
+pytest-xdist = "^3.1.0"
 requests-mock = "^1.9.3"
 
 [tool.poetry.group.dev.dependencies]
-coverage = { version = "^6.0.0", extras = ["toml"] }
-flake8 = "^5.0.4"
+coverage = { version = "^7.0.5", extras = ["toml"] }
+flake8 = "^6.0.0"
 pre-commit = "^2.6.0"
 black = { version = ">=22.10.0", extras = ["jupyter"] }
 isort = "^5.1.0"
@@ -68,11 +67,11 @@ furo = ">=2022.9.29"
 optional = true
 [tool.poetry.group.docker.dependencies]
 jupyterlab = "^3.4.8"
-jupyterlab-language-pack-fr-FR= "^3.4"
+jupyterlab-language-pack-fr-FR = "^3.4"
 
 [tool.black]
 line-length = 120
-target-version = ["py39", "py310"]
+target-version = ["py39", "py310", "py311"]
 
 [tool.isort]
 profile = "black"
