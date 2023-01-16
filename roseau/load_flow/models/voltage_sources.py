@@ -66,7 +66,11 @@ class VoltageSource(Element):
                 )
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
-        self._size = len(set(phases) - {"n"})
+        if len(phases) == 2 and "n" not in phases:
+            # This is a delta source that has one element connected between two phases
+            self._size = 1
+        else:
+            self._size = len(set(phases) - {"n"})
 
         self.phases = phases
         self.bus = bus

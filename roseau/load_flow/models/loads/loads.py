@@ -65,7 +65,11 @@ class AbstractLoad(Element, metaclass=ABCMeta):
         self.bus = bus
         self._symbol = {"power": "S", "current": "I", "impedance": "Z"}[self._type]
         self._unit = {"power": "VA", "current": "A", "impedance": "ohm"}[self._type]
-        self._size = len(set(self.phases) - {"n"})
+        if len(phases) == 2 and "n" not in phases:
+            # This is a delta load that has one element connected between two phases
+            self._size = 1
+        else:
+            self._size = len(set(phases) - {"n"})
 
         # Results
         self._res_currents: Optional[np.ndarray] = None
