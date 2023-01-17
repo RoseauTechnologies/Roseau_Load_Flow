@@ -6,6 +6,7 @@ from roseau.load_flow import Line
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.io.dict import v0_to_v1_converter
 from roseau.load_flow.models import (
+    AbstractLoad,
     Bus,
     Ground,
     LineParameters,
@@ -78,8 +79,11 @@ def test_to_dict():
     en.to_dict()
 
 
-def test_v0_to_v1_converter():
+def test_v0_to_v1_converter(monkeypatch):
     # Do not change `dict_v0` or the network manually, add/update the converters until the test passes
+
+    # Test with floating neutral (monkeypatch the whole test function)
+    monkeypatch.setattr(AbstractLoad, "_floating_neutral_allowed", True)
     dict_v0 = {
         "buses": [
             {
