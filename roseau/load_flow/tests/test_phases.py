@@ -69,24 +69,29 @@ def test_loads_phases():
 
     # Not in bus
     bus.phases = "ab"
-    with pytest.raises(RoseauLoadFlowException) as e:
-        PowerLoad("load1", bus, phases="abc", powers=[100, 100, 100])
-    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
-    assert e.value.msg == "Phases ['c'] of load 'load1' are not in bus 'bus' phases 'ab'"
-
-    # "n" not in bus is allowed though
-    PowerLoad("load1", bus, phases="abn", powers=[100, 100])
-    # unless it is a single phase load
-    with pytest.raises(RoseauLoadFlowException) as e:
-        PowerLoad("load1", bus, phases="an", powers=[100])
-    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
-    assert e.value.msg == "Phases ['n'] of load 'load1' are not in bus 'bus' phases 'ab'"
+    for phase, missing, n in (("abc", "c", 3), ("abn", "n", 2), ("an", "n", 1)):
+        with pytest.raises(RoseauLoadFlowException) as e:
+            PowerLoad("load1", bus, phases=phase, powers=[100] * n)
+        assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
+        assert e.value.msg == f"Phases ['{missing}'] of load 'load1' are not in bus 'bus' phases 'ab'"
 
     # Default
     for ph, n in (("ab", 1), ("abc", 3), ("abcn", 3)):
         bus.phases = ph
         load = PowerLoad("load1", bus, phases=ph, powers=[100] * n)
         assert load.phases == ph
+
+    # Floating neutral (disallowed by default)
+    class PowerLoadEngine(PowerLoad):
+        _floating_neutral_allowed = True
+
+    bus.phases = "ab"
+    PowerLoadEngine("load1", bus, phases="abn", powers=[100, 100])
+    # single-phase floating neutral does not make sense
+    with pytest.raises(RoseauLoadFlowException) as e:
+        PowerLoadEngine("load1", bus, phases="an", powers=[100])
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
+    assert e.value.msg == "Phases ['n'] of load 'load1' are not in bus 'bus' phases 'ab'"
 
 
 def test_sources_phases():
@@ -107,24 +112,29 @@ def test_sources_phases():
 
     # Not in bus
     bus.phases = "ab"
-    with pytest.raises(RoseauLoadFlowException) as e:
-        VoltageSource("source1", bus, phases="abc", voltages=[100, 100, 100])
-    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
-    assert e.value.msg == "Phases ['c'] of source 'source1' are not in bus 'bus' phases 'ab'"
-
-    # "n" not in bus is allowed though
-    VoltageSource("source1", bus, phases="abn", voltages=[100, 100])
-    # unless it is a single phase source
-    with pytest.raises(RoseauLoadFlowException) as e:
-        VoltageSource("source1", bus, phases="an", voltages=[100])
-    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
-    assert e.value.msg == "Phases ['n'] of source 'source1' are not in bus 'bus' phases 'ab'"
+    for phase, missing, n in (("abc", "c", 3), ("abn", "n", 2), ("an", "n", 1)):
+        with pytest.raises(RoseauLoadFlowException) as e:
+            VoltageSource("source1", bus, phases=phase, voltages=[100] * n)
+        assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
+        assert e.value.msg == f"Phases ['{missing}'] of source 'source1' are not in bus 'bus' phases 'ab'"
 
     # Default
     for ph, n in (("ab", 1), ("abc", 3), ("abcn", 3)):
         bus.phases = ph
         vs = VoltageSource("source1", bus, voltages=[100] * n)
         assert vs.phases == ph
+
+    # Floating neutral (disallowed by default)
+    class VoltageSourceEngine(VoltageSource):
+        _floating_neutral_allowed = True
+
+    bus.phases = "ab"
+    VoltageSourceEngine("source1", bus, phases="abn", voltages=[100, 100])
+    # single-phase floating neutral does not make sense
+    with pytest.raises(RoseauLoadFlowException) as e:
+        VoltageSourceEngine("source1", bus, phases="an", voltages=[100])
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
+    assert e.value.msg == "Phases ['n'] of source 'source1' are not in bus 'bus' phases 'ab'"
 
 
 def test_lines_phases():

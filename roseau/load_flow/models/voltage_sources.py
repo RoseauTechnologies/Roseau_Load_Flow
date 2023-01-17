@@ -27,6 +27,7 @@ class VoltageSource(Element):
     """
 
     allowed_phases = Bus.allowed_phases
+    _floating_neutral_allowed: bool = False
 
     def __init__(
         self, id: Id, bus: Bus, *, voltages: Sequence[complex], phases: Optional[str] = None, **kwargs: Any
@@ -58,8 +59,9 @@ class VoltageSource(Element):
             self._check_phases(id, phases=phases)
             # Also check they are in the bus phases
             phases_not_in_bus = set(phases) - set(bus.phases)
-            if phases_not_in_bus and not (phases_not_in_bus == {"n"} and len(phases) > 2):
-                # "n" is allowed to be absent from the bus only if the source has more than 2 phases
+            # "n" is allowed to be absent from the bus only if the load has more than 2 phases
+            floating_neutral = self._floating_neutral_allowed and phases_not_in_bus == {"n"} and len(phases) > 2
+            if phases_not_in_bus and not floating_neutral:
                 msg = (
                     f"Phases {sorted(phases_not_in_bus)} of source {id!r} are not in bus "
                     f"{bus.id!r} phases {bus.phases!r}"
