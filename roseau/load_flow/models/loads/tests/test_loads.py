@@ -304,3 +304,284 @@ def test_loads_units():
     load = PowerLoad("load", bus, powers=[100, 100, 100], phases="abcn")
     with pytest.raises(DimensionalityError, match=r"Cannot convert from 'ampere' \(\[current\]\) to 'VA'"):
         load.powers = Q_([100, 100, 100], "A")
+
+
+@pytest.mark.parametrize(
+    ("bus_ph", "load_ph", "s", "res_pot", "res_cur"),
+    (
+        pytest.param(
+            "abcn",
+            "abcn",
+            [100, 50, 100],
+            [
+                2.29564186e02 + 3.57582604e-04j,
+                -1.14891305e02 - 1.98997577e02j,
+                -1.14781783e02 + 1.98808595e02j,
+                1.08902102e-01 + 1.88623974e-01j,
+            ],
+            [
+                0.43581447 - 3.57582604e-04j,
+                -0.10869546 - 1.88266054e-01j,
+                -0.21821691 + 3.77247611e-01j,
+                -0.1089021 - 1.88623974e-01j,
+            ],
+            id="abcn,abcn",
+        ),
+        pytest.param(
+            "abcn",
+            "bn",
+            [100],
+            [
+                2.30000000e02 + 0.0j,
+                -1.14781781e02 - 198.80787565j,
+                -1.15000000e02 + 199.18584287j,
+                -2.18219474e-01 - 0.37796722j,
+            ],
+            [-0.21821947 - 0.37796722j, 0.21821947 + 0.37796722j],
+            id="abcn,bn",
+        ),
+        pytest.param(
+            "abcn",
+            "abn",
+            [100, 50],
+            [
+                229.56376987 - 3.56904091e-04j,
+                -114.89089301 - 1.98997578e02j,
+                -115.0 + 1.99185843e02j,
+                0.32712315 - 1.87908131e-01j,
+            ],
+            [0.43623013 + 0.0003569j, -0.10910699 - 0.18826504j, -0.32712315 + 0.18790813j],
+            id="abcn,abn",
+        ),
+        pytest.param(
+            "abcn",
+            "abc",
+            [100, 50, 100],
+            [
+                229.78226585 - 1.25629783e-01j,
+                -114.78233441 - 1.98934583e02j,
+                -114.99993144 + 1.99060213e02j,
+                0.0 + 0.0000j,
+            ],
+            [-1.52803999e228 + 0.12562986j, -2.17665984e-001 - 0.2512596j, 1.52803999e228 + 0.12562975j],
+            id="abcn,abc",
+        ),
+        pytest.param(
+            "abcn",
+            "ab",
+            [100],
+            [
+                229.78233438 - 1.25669301e-01j,
+                -114.78233438 - 1.99060174e02j,
+                -115.0 + 1.99185843e02j,
+                0.0 + 0.00000000e00j,
+            ],
+            [0.21766596 + 0.1256695j, -0.21766596 - 0.1256695j],
+            id="abcn,ab",
+        ),
+        pytest.param(
+            "abc",
+            "abc",
+            [100, 50, 100],
+            [229.78226585 - 1.25629783e-01j, -114.78233441 - 1.98934583e02j, -114.99993144 + 1.99060213e02j],
+            [2.17734670e-01 + 0.12562986j, -2.17665984e-01 - 0.2512596j, -6.86859745e-05 + 0.12562975j],
+            id="abc,abc",
+        ),
+        pytest.param(
+            "abc",
+            "ab",
+            [100],
+            [229.78233438 - 1.25669301e-01j, -114.78233438 - 1.99060174e02j, -115.0 + 1.99185843e02j],
+            [0.21766596 + 0.1256695j, -0.21766596 - 0.1256695j],
+            id="abc,ab",
+        ),
+        # pytest.param(  # TODO: this causes Segmentation fault, re-visit when fixed
+        #     "bcn",
+        #     "cn",
+        #     [100],
+        #     [
+        #         ...
+        #     ],
+        #     [
+        #         ...
+        #     ],
+        #     id="bcn,cn",
+        # ),
+    ),
+)
+def test_power_load_res_powers(bus_ph, load_ph, s, res_pot, res_cur):
+    bus = Bus("bus", phases=bus_ph)
+    load = PowerLoad("load", bus, powers=s, phases=load_ph)
+    bus._res_potentials = np.array(res_pot, dtype=np.complex_)
+    load._res_currents = np.array(res_cur, dtype=np.complex_)
+    assert np.allclose(load.res_powers, load.powers)
+
+
+@pytest.mark.parametrize(
+    ("bus_ph", "load_ph", "i", "res_pot", "res_cur"),
+    (
+        pytest.param(
+            "abcn",
+            "abcn",
+            [1, 0.5, 1],
+            [229.0 + 0.0j, -115.5 - 199.18584287j, -116.0 + 199.18584287j, 2.5 + 0.0j],
+            [1.0 + 0.0j, 0.5 + 0.0j, 1.0 + 0.0j, -2.5 + 0.0j],
+            id="abcn,abcn",
+        ),
+        pytest.param(
+            "abcn",
+            "bn",
+            [1],
+            [230.0 + 0.0j, -116.0 - 199.18584287j, -115.0 + 199.18584287j, 1.0 + 0.0j],
+            [1.0 + 0.0j, -1.0 + 0.0j],
+            id="abcn,bn",
+        ),
+        pytest.param(
+            "abcn",
+            "abn",
+            [1, 0.5],
+            [229.0 + 0.0j, -115.5 - 199.18584287j, -115.0 + 199.18584287j, 1.5 + 0.0j],
+            [1.0 + 0.0j, 0.5 + 0.0j, -1.5 + 0.0j],
+            id="abcn,abn",
+        ),
+        pytest.param(
+            "abcn",
+            "abc",
+            [1, 0.5, 1],
+            [230.0 + 0.0j, -114.5 - 199.18584287j, -115.5 + 199.18584287j, 0.0 + 0.0j],
+            [0.0 + 0.0j, -0.5 + 0.0j, 0.5 + 0.0j],
+            id="abcn,abc",
+        ),
+        pytest.param(
+            "abcn",
+            "ab",
+            [1],
+            [229.0 + 0.0j, -114.0 - 199.18584287j, -115.0 + 199.18584287j, 0.0 + 0.0j],
+            [1.0 + 0.0j, -1.0 + 0.0j],
+            id="abcn,ab",
+        ),
+        pytest.param(
+            "abc",
+            "abc",
+            [1, 0.5, 1],
+            [230.0 + 0.0j, -114.5 - 199.18584287j, -115.5 + 199.18584287j],
+            [0.0 + 0.0j, -0.5 + 0.0j, 0.5 + 0.0j],
+            id="abc,abc",
+        ),
+        pytest.param(
+            "abc",
+            "ab",
+            [1],
+            [229.0 + 0.0j, -114.0 - 199.18584287j, -115.0 + 199.18584287j],
+            [1.0 + 0.0j, -1.0 + 0.0j],
+            id="abc,ab",
+        ),
+    ),
+)
+def test_current_load_res_powers(bus_ph, load_ph, i, res_pot, res_cur):
+    bus = Bus("bus", phases=bus_ph)
+    load = CurrentLoad("load", bus, currents=i, phases=load_ph)
+    bus._res_potentials = np.array(res_pot, dtype=np.complex_)
+    load._res_currents = np.array(res_cur, dtype=np.complex_)
+    voltages = load._get_res_voltages_from_bus()
+    assert np.allclose((load.res_powers / voltages).conj(), load.currents)  # I = (S / V)*
+
+
+@pytest.mark.parametrize(
+    ("bus_ph", "load_ph", "z", "res_pot", "res_cur"),
+    (
+        pytest.param(
+            "abcn",
+            "abcn",
+            [1000, 500, 1000],
+            [
+                2.29770116e02 - 1.97602061e-04j,
+                -1.14770687e02 - 1.98788661e02j,
+                -1.14885229e02 + 1.98986658e02j,
+                -1.14199689e-01 - 1.97799663e-01j,
+            ],
+            [
+                0.22988432 + 1.97602061e-04j,
+                -0.22931297 - 3.97181723e-01j,
+                -0.11477103 + 1.99184458e-01j,
+                0.11419969 + 1.97799663e-01j,
+            ],
+            id="abcn,abcn",
+        ),
+        pytest.param(
+            "abcn",
+            "bn",
+            [1000],
+            [
+                2.30000000e02 + 0.00000000e00j,
+                -1.14885230e02 - 1.98987055e02j,
+                -1.15000000e02 + 1.99185843e02j,
+                -1.14770459e-01 - 1.98788266e-01j,
+            ],
+            [-0.11477046 - 0.19878827j, 0.11477046 + 0.19878827j],
+            id="abcn,bn",
+        ),
+        pytest.param(
+            "abcn",
+            "abn",
+            [1000, 500],
+            [
+                2.29770230e02 - 3.95993350e-04j,
+                -1.14770459e02 - 1.98789058e02j,
+                -1.15000000e02 + 1.99185843e02j,
+                2.28626867e-04 - 3.96389343e-01j,
+            ],
+            [2.29770001e-01 + 3.95993350e-04j, -2.29541375e-01 - 3.96785336e-01j, -2.28626867e-04 + 3.96389343e-01j],
+            id="abcn,abn",
+        ),
+        pytest.param(
+            "abcn",
+            "abc",
+            [1000, 500, 1000],
+            [
+                229.65568794 + 1.97996675e-01j,
+                -114.99931412 - 1.98392668e02j,
+                -114.65637382 + 1.98194672e02j,
+                0.0 + 0.00000000e00j,
+            ],
+            [0.34431206 - 0.19799667j, -0.00068588 - 0.79317468j, -0.34362618 + 0.99117135j],
+            id="abcn,abc",
+        ),
+        pytest.param(
+            "abcn",
+            "ab",
+            [1000],
+            [
+                229.65568862 - 1.98788266e-01j,
+                -114.65568862 - 1.98987055e02j,
+                -115.0 + 1.99185843e02j,
+                0.0 + 0.00000000e00j,
+            ],
+            [0.34431138 + 0.19878827j, -0.34431138 - 0.19878827j],
+            id="abcn,ab",
+        ),
+        pytest.param(
+            "abc",
+            "abc",
+            [1000, 500, 1000],
+            [229.65568794 + 1.97996675e-01j, -114.99931412 - 1.98392668e02j, -114.65637382 + 1.98194672e02j],
+            [0.34431206 - 0.19799667j, -0.00068588 - 0.79317468j, -0.34362618 + 0.99117135j],
+            id="abc,abc",
+        ),
+        pytest.param(
+            "abc",
+            "ab",
+            [1000],
+            [229.65568862 - 1.98788266e-01j, -114.65568862 - 1.98987055e02j, -115.0 + 1.99185843e02j],
+            [0.34431138 + 0.19878827j, -0.34431138 - 0.19878827j],
+            id="abc,ab",
+        ),
+    ),
+)
+def test_impedance_load_res_powers(bus_ph, load_ph, z, res_pot, res_cur):
+    bus = Bus("bus", phases=bus_ph)
+    load = ImpedanceLoad("load", bus, impedances=z, phases=load_ph)
+    bus._res_potentials = np.array(res_pot, dtype=np.complex_)
+    load._res_currents = np.array(res_cur, dtype=np.complex_)
+    voltages = load._get_res_voltages_from_bus()
+    assert np.allclose(np.abs(voltages) ** 2 / load.res_powers, load.impedances)  # Z = |V|² / S

@@ -95,7 +95,7 @@ class Bus(Element):
             voltages = potentials[:-1] - potentials[-1]
         else:  # Vab, Vbc, Vca
             # np.roll(["a", "b", "c"], -1) -> ["b", "c", "a"]  # also works with single or double phase
-            voltages = np.roll(potentials, -1) - potentials
+            voltages = potentials - np.roll(potentials, -1)
         return voltages
 
     @property

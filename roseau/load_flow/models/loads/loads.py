@@ -111,15 +111,22 @@ class AbstractLoad(Element, metaclass=ABCMeta):
         if "n" in self.phases:
             # Wye load: get the phase-to-neutral voltages
             bus_voltages = self.bus.res_voltages
+            bus_voltage_phases = self.bus.voltage_phases
         else:
             # Delta load: get the phase-to-phase voltages
-            bus_voltages = np.roll(self.bus.res_potentials, -1) - self.bus.res_potentials
-        current_phases = self.phases.removesuffix("n")
+            if "n" in self.bus.phases:  # calculate delta bus voltages
+                bus_voltages = self.bus.res_potentials[:-1] - np.roll(self.bus.res_potentials[:-1], -1)
+                bus_voltage_phases = [
+                    p1 + p2 for p1, p2 in zip(self.bus.phases[:-1], np.roll(list(self.bus.phases[:-1]), -1))
+                ]
+            else:  # bus voltages are already delta
+                bus_voltages = self.bus.res_voltages
+                bus_voltage_phases = self.bus.voltage_phases
 
         # filter to the voltages of this load
         voltages = []
-        for v, (p1, _) in zip(bus_voltages, self.bus.voltage_phases):
-            if p1 in current_phases:
+        for v, (p1, p2) in zip(bus_voltages, bus_voltage_phases):
+            if p1 in self.phases and p2 in self.phases:
                 voltages.append(v)
         return np.array(voltages)
 
