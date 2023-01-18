@@ -190,11 +190,7 @@ def test_connect_and_disconnect():
     assert load.bus is None
     with pytest.raises(RoseauLoadFlowException) as e:
         load.to_dict()
-    assert (
-        e.value.args[0]
-        == "The element PowerLoad(id='power load', phases='abcn', bus=None) is disconnected and can not be used "
-        "anymore."
-    )
+    assert e.value.args[0] == "The load 'power load' is disconnected and can not be used anymore."
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.DISCONNECTED_ELEMENT
     new_load = PowerLoad(id="power load", phases="abcn", bus=load_bus, powers=[100 + 0j, 100 + 0j, 100 + 0j])
     assert new_load.network == en
@@ -206,11 +202,7 @@ def test_connect_and_disconnect():
     assert vs.bus is None
     with pytest.raises(RoseauLoadFlowException) as e:
         vs.to_dict()
-    assert (
-        e.value.args[0]
-        == "The element VoltageSource(id='vs', bus=None, voltages=array([ 230.94010768  +0.j, -115.47005384-200.j, "
-        "-115.47005384+200.j]), phases='abcn') is disconnected and can not be used anymore."
-    )
+    assert e.value.args[0] == "The voltage source 'vs' is disconnected and can not be used anymore."
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.DISCONNECTED_ELEMENT
 
     # Bad key

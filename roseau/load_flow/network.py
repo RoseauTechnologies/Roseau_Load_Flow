@@ -611,7 +611,7 @@ class ElectricalNetwork:
         """Remove an element of the network.
 
         When an element is removed from the network, extra processing is needed to keep the network
-        valid. Always use this method to remove an element from the network.
+        valid.
 
         Args:
             element:

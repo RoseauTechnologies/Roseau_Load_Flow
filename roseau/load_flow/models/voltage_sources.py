@@ -112,7 +112,7 @@ class VoltageSource(Element):
 
     def to_dict(self) -> JsonDict:
         if self.bus is None:
-            msg = f"The element {self!r} is disconnected and can not be used anymore."
+            msg = f"The voltage source {self.id!r} is disconnected and can not be used anymore."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DISCONNECTED_ELEMENT)
         return {
