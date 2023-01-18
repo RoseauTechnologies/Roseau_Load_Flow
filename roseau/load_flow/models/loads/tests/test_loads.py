@@ -483,8 +483,8 @@ def test_current_load_res_powers(bus_ph, load_ph, i, res_pot, res_cur):
     load = CurrentLoad("load", bus, currents=i, phases=load_ph)
     bus._res_potentials = np.array(res_pot, dtype=np.complex_)
     load._res_currents = np.array(res_cur, dtype=np.complex_)
-    voltages = load._get_res_voltages_from_bus()
-    assert np.allclose((load.res_powers / voltages).conj(), load.currents)  # I = (S / V)*
+    currents = (load.res_powers / load.res_voltages).conj()  # I = (S / V)*
+    assert np.allclose(currents, load.currents)
 
 
 @pytest.mark.parametrize(
@@ -563,9 +563,9 @@ def test_current_load_res_powers(bus_ph, load_ph, i, res_pot, res_cur):
         pytest.param(
             "abc",
             "abc",
-            [1000, 500, 1000],
-            [229.65568794 + 1.97996675e-01j, -114.99931412 - 1.98392668e02j, -114.65637382 + 1.98194672e02j],
-            [0.34431206 - 0.19799667j, -0.00068588 - 0.79317468j, -0.34362618 + 0.99117135j],
+            [1000, 500j, 1000],
+            [229.65489388 + 1.98785776e-01j, -114.20366418 - 1.99183348e02j, -115.4512297 + 1.98984562e02j],
+            [0.34510612 - 0.19878578j, -0.79633582 - 0.00249513j, 0.4512297 + 0.20128091j],
             id="abc,abc",
         ),
         pytest.param(
@@ -583,5 +583,7 @@ def test_impedance_load_res_powers(bus_ph, load_ph, z, res_pot, res_cur):
     load = ImpedanceLoad("load", bus, impedances=z, phases=load_ph)
     bus._res_potentials = np.array(res_pot, dtype=np.complex_)
     load._res_currents = np.array(res_cur, dtype=np.complex_)
-    voltages = load._get_res_voltages_from_bus()
-    assert np.allclose(np.abs(voltages) ** 2 / load.res_powers, load.impedances)  # Z = |V|² / S
+    impedances = np.abs(load.res_voltages) ** 2 / load.res_powers.conj()  # Z = |V|² / S*
+    # TODO: test comparison to load.res_currents using Delta-Wye transform
+    # https://en.wikipedia.org/wiki/Y-%CE%94_transform
+    assert np.allclose(impedances, load.impedances)
