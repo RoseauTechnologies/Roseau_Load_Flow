@@ -78,10 +78,13 @@ class AbstractLoad(Element, ABC):
         """Whether the load is flexible or not. Only :class:`PowerLoad` can be flexible."""
         return False
 
+    def _res_currents_getter(self, warning: bool) -> np.ndarray:
+        return self._res_getter(value=self._res_currents, warning=warning)
+
     @property
     def res_currents(self) -> np.ndarray:
         """The load flow result of the load currents (A)."""
-        return self._res_getter(value=self._res_currents, warning=True)
+        return self._res_currents_getter(warning=True)
 
     def _validate_value(self, value: Sequence[complex]) -> np.ndarray:
         if isinstance(value, Quantity):
@@ -231,12 +234,15 @@ class PowerLoad(AbstractLoad):
     @ureg.wraps(None, (None, "VA"), strict=False)
     def powers(self, value: Sequence[complex]) -> None:
         self._powers = self._validate_value(value)
-        self._invalidate_network()
+        self._invalidate_network_results()
+
+    def _res_flexible_powers_getter(self, warning: bool) -> np.ndarray:
+        return self._res_getter(value=self._res_flexible_powers, warning=warning)
 
     @property
     def res_flexible_powers(self) -> np.ndarray:
         """The load flow result of the load flexible powers (VA)."""
-        return self._res_getter(value=self._res_flexible_powers, warning=True)
+        return self._res_flexible_powers_getter(warning=True)
 
     def to_dict(self) -> JsonDict:
         if self.bus is None:
@@ -306,7 +312,7 @@ class CurrentLoad(AbstractLoad):
     @ureg.wraps(None, (None, "A"), strict=False)
     def currents(self, value: Sequence[complex]) -> None:
         self._currents = self._validate_value(value)
-        self._invalidate_network()
+        self._invalidate_network_results()
 
     def to_dict(self) -> JsonDict:
         if self.bus is None:
@@ -374,7 +380,7 @@ class ImpedanceLoad(AbstractLoad):
     @ureg.wraps(None, (None, "ohm"), strict=False)
     def impedances(self, impedances: Sequence[complex]) -> None:
         self._impedances = self._validate_value(impedances)
-        self._invalidate_network()
+        self._invalidate_network_results()
 
     def to_dict(self) -> JsonDict:
         if self.bus is None:

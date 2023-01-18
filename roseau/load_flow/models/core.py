@@ -98,10 +98,10 @@ class Element(ABC, Identifiable, JsonMixin):
         if self._network is not None:
             self.network._disconnect_element(element=self)
 
-    def _invalidate_network(self) -> None:
+    def _invalidate_network_results(self) -> None:
         """Invalidate the network making the result"""
         if self.network is not None:
-            self.network._valid = False
+            self.network._results_valid = False
 
     def _res_getter(self, value: Optional[_T], warning: bool) -> _T:
         """A safe getter for load flow results.
@@ -119,7 +119,7 @@ class Element(ABC, Identifiable, JsonMixin):
         if value is None:
             self._raise_load_flow_not_run()
         if warning:
-            self._warn_invalid_network()
+            self._warn_invalid_results()
         return value
 
     @staticmethod
@@ -146,9 +146,9 @@ class Element(ABC, Identifiable, JsonMixin):
         logger.error(msg)
         raise RoseauLoadFlowException(msg, code=RoseauLoadFlowExceptionCode.SEVERAL_NETWORKS)
 
-    def _warn_invalid_network(self) -> None:
+    def _warn_invalid_results(self) -> None:
         """Warn when the network of `self` is invalid."""
-        if self.network is not None and not self.network._valid:
+        if self.network is not None and not self.network._results_valid:
             warnings.warn(
                 message="The results of this element may be outdated. Please re-run a load flow to ensure "
                 "the validity of results.",
@@ -345,7 +345,7 @@ class AbstractBranch(Element):
         self.phases2 = phases2
         self._connect(bus1, bus2)
         self.geometry = geometry
-        self._res_currents = None
+        self._res_currents: Optional[tuple[np.ndarray, np.ndarray]] = None
 
     def __repr__(self) -> str:
         s = f"{type(self).__name__}(id={self.id!r}, phases1={self.phases1!r}, phases2={self.phases2!r}"
@@ -355,10 +355,13 @@ class AbstractBranch(Element):
         s += ")"
         return s
 
+    def _res_currents_getter(self, warning: bool) -> tuple[np.ndarray, np.ndarray]:
+        return self._res_getter(value=self._res_currents, warning=warning)
+
     @property
     def res_currents(self) -> tuple[np.ndarray, np.ndarray]:
         """The load flow result of the branch currents (A)."""
-        return self._res_getter(value=self._res_currents, warning=True)
+        return self._res_currents_getter(warning=True)
 
     #
     # Json Mixin interface

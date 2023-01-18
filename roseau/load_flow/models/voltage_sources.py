@@ -91,7 +91,7 @@ class VoltageSource(Element):
             logger.error(msg)
             raise RoseauLoadFlowException(msg, code=RoseauLoadFlowExceptionCode.BAD_VOLTAGES_SIZE)
         self._voltages = np.asarray(voltages, dtype=complex)
-        self._invalidate_network()
+        self._invalidate_network_results()
 
     #
     # Disconnect

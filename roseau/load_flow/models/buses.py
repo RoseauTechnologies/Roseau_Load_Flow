@@ -73,24 +73,18 @@ class Bus(Element):
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_POTENTIALS_SIZE)
         self._potentials = np.asarray(value, dtype=complex)
-        self._invalidate_network()
+        self._invalidate_network_results()
+
+    def _res_potentials_getter(self, warning: bool) -> np.ndarray:
+        return self._res_getter(value=self._res_potentials, warning=warning)
 
     @property
     def res_potentials(self) -> np.ndarray:
         """The load flow result of the bus potentials (V)."""
-        return self._res_getter(value=self._res_potentials, warning=True)
+        return self._res_potentials_getter(warning=True)
 
-    def _res_voltages(self, warning: bool) -> np.ndarray:
-        """The load flow result of the bus voltages (V). Add the optio to display a warning in case of invalid results.
-
-        Args:
-            warning:
-                If True and if the results may be invalid (because of an invalid network), a warning log is emitted.
-
-        Returns:
-            The voltages in V.
-        """
-        potentials = np.asarray(self._res_getter(value=self._res_potentials, warning=warning))
+    def _res_voltages_getter(self, warning: bool) -> np.ndarray:
+        potentials = np.asarray(self._res_potentials_getter(warning=warning))
         if "n" in self.phases:  # Van, Vbn, Vcn
             # we know "n" is the last phase
             voltages = potentials[:-1] - potentials[-1]
@@ -107,7 +101,7 @@ class Bus(Element):
         the order ``[Van, Vbn, Vcn]``. If the bus does not have a neutral, phase-phase voltages
         are returned in the order ``[Vab, Vbc, Vca]``.
         """
-        return self._res_voltages(warning=True)
+        return self._res_voltages_getter(warning=True)
 
     @property
     def voltage_phases(self) -> list[str]:

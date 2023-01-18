@@ -113,7 +113,8 @@ class ElectricalNetwork:
         self._check_validity(constructed=False)
         self._create_network()
         self._valid = True
-        self._results_info: JsonDict = {}
+        self._results_valid: bool = False
+        self.results_info: JsonDict = {}  # TODO: Add doc on this field
 
     def __repr__(self) -> str:
         def count_repr(__o: Sized, /, singular: str, plural: Optional[str] = None) -> str:
@@ -121,7 +122,7 @@ class ElectricalNetwork:
             n = len(__o)
             if n == 1:
                 return f"{n} {singular}"
-            return f"{n} {plural if plural is not None else singular+'s'}"
+            return f"{n} {plural if plural is not None else singular + 's'}"
 
         return (
             f"<{type(self).__name__}:"
@@ -308,23 +309,27 @@ class ElectricalNetwork:
 
         # HTTP 200
         result_dict: JsonDict = response.json()
-        info = result_dict["info"]
-        if info["status"] != "success":
+        self.results_info = result_dict["info"]
+        if self.results_info["status"] != "success":
             msg = (
-                f"The load flow did not converge after {info['iterations']} iterations. The norm of the residuals is "
-                f"{info['finalError']:.5n}"
+                f"The load flow did not converge after {self.results_info['iterations']} iterations. The norm of the "
+                f"residuals is {self.results_info['finalError']:.5n}"
             )
             logger.error(msg=msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.NO_LOAD_FLOW_CONVERGENCE)
 
         logger.info(
-            f"The load flow converged after {info['iterations']} iterations (final error={info['finalError']:.5n})."
+            f"The load flow converged after {self.results_info['iterations']} iterations (final error="
+            f"{self.results_info['finalError']:.5n})."
         )
 
         # Dispatch the results
         self._dispatch_results(result_dict=result_dict)
 
-        return info["iterations"]
+        # The results are now valid
+        self._results_valid = True
+
+        return self.results_info["iterations"]
 
     @staticmethod
     def _parse_error(response: Response) -> NoReturn:
@@ -383,9 +388,9 @@ class ElectricalNetwork:
     #
     # Getters for the load flow results
     #
-    def _warn_invalid(self) -> None:
+    def _warn_invalid_results(self) -> None:
         """Warn when the network is invalid."""
-        if not self._valid:
+        if not self._results_valid:
             warnings.warn(
                 message="The results of this network may be outdated. Please re-run a load flow to ensure the "
                 "validity of results.",
@@ -395,10 +400,10 @@ class ElectricalNetwork:
     @property
     def res_buses_potentials(self) -> pd.DataFrame:
         """The load flow results of the potentials of the buses (V) as a dataframe."""
-        self._warn_invalid()
+        self._warn_invalid_results()
         potentials_dict = {"bus_id": [], "phase": [], "potential": []}
         for bus_id, bus in self.buses.items():
-            for potential, phase in zip(bus._res_getter(bus._res_potentials, warning=False), bus.phases):
+            for potential, phase in zip(bus._res_potentials_getter(warning=False), bus.phases):
                 potentials_dict["bus_id"].append(bus_id)
                 potentials_dict["phase"].append(phase)
                 potentials_dict["potential"].append(potential)
@@ -468,10 +473,10 @@ class ElectricalNetwork:
             s_bus  200000.0+0.00j
             Name: voltage, dtype: complex128
         """
-        self._warn_invalid()
+        self._warn_invalid_results()
         voltages_dict = {"bus_id": [], "phase": [], "voltage": []}
         for bus_id, bus in self.buses.items():
-            for voltage, phase in zip(bus._res_voltages(warning=False), bus.voltage_phases):
+            for voltage, phase in zip(bus._res_voltages_getter(warning=False), bus.voltage_phases):
                 voltages_dict["bus_id"].append(bus_id)
                 voltages_dict["phase"].append(phase)
                 voltages_dict["voltage"].append(voltage)
@@ -485,10 +490,10 @@ class ElectricalNetwork:
     @property
     def res_branches_currents(self) -> pd.DataFrame:
         """The load flow results of the currents of the branches (A) as a dataframe."""
-        self._warn_invalid()
+        self._warn_invalid_results()
         currents_list = []
         for branch_id, branch in self.branches.items():
-            currents1, currents2 = branch._res_getter(branch._res_currents, warning=False)
+            currents1, currents2 = branch._res_currents_getter(warning=False)
             currents_list.extend(
                 {"branch_id": branch_id, "phase": phase, "current1": i1, "current2": None}
                 for i1, phase in zip(currents1, branch.phases1)
@@ -510,10 +515,10 @@ class ElectricalNetwork:
     @property
     def res_loads_currents(self) -> pd.DataFrame:
         """The load flow results of the currents of the loads (A) as a dataframe."""
-        self._warn_invalid()
+        self._warn_invalid_results()
         loads_dict = {"load_id": [], "phase": [], "current": []}
         for load_id, load in self.loads.items():
-            for current, phase in zip(load._res_getter(load._res_currents, warning=False), load.phases):
+            for current, phase in zip(load._res_currents_getter(warning=False), load.phases):
                 loads_dict["load_id"].append(load_id)
                 loads_dict["phase"].append(phase)
                 loads_dict["current"].append(current)
@@ -527,11 +532,11 @@ class ElectricalNetwork:
     @property
     def res_loads_flexible_powers(self) -> pd.DataFrame:
         """The load flow results of the flexible powers of the "flexible" loads (A) as a dataframe."""
-        self._warn_invalid()
+        self._warn_invalid_results()
         loads_dict = {"load_id": [], "phase": [], "power": []}
         for load_id, load in self.loads.items():
             if isinstance(load, PowerLoad) and load.is_flexible:
-                for power, phase in zip(load._res_getter(load._res_flexible_powers, warning=False), load.phases):
+                for power, phase in zip(load._res_flexible_powers_getter(warning=False), load.phases):
                     loads_dict["load_id"].append(load_id)
                     loads_dict["phase"].append(phase)
                     loads_dict["power"].append(power)
@@ -600,6 +605,7 @@ class ElectricalNetwork:
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT)
         element._network = self
         self._valid = False
+        self._results_valid = False
 
     def _disconnect_element(self, element: Element) -> None:
         """Remove an element of the network.
@@ -626,6 +632,7 @@ class ElectricalNetwork:
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT)
         element._network = None
         self._valid = False
+        self._results_valid = False
 
     def _create_network(self) -> None:
         """Create the Cython and C++ electrical network of all the passed elements."""
@@ -808,7 +815,7 @@ class ElectricalNetwork:
                 res["powers"] = [[s.real, s.imag] for s in load.res_flexible_powers]
 
         return {
-            "info": self._results_info,
+            "info": self.results_info,
             "buses": buses_results,
             "branches": branches_results,
             "loads": loads_results,

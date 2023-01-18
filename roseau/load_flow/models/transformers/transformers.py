@@ -140,7 +140,7 @@ class Transformer(AbstractBranch):
         if value < 0.9:
             logger.warning(f"The provided tap {value:.2f} is lower than 0.9. A good value is between 0.9 and 1.1.")
         self._tap = value
-        self._invalidate_network()
+        self._invalidate_network_results()
 
     @property
     def parameters(self) -> TransformerParameters:
@@ -156,7 +156,7 @@ class Transformer(AbstractBranch):
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS)
         self._parameters = value
-        self._invalidate_network()
+        self._invalidate_network_results()
 
     def to_dict(self) -> JsonDict:
         return {**super().to_dict(), "params_id": self.parameters.id, "tap": self.tap}

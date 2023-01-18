@@ -243,7 +243,7 @@ class Line(AbstractBranch):
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_TYPE)
             self._connect(self.ground)
         self._parameters = value
-        self._invalidate_network()
+        self._invalidate_network_results()
 
     #
     # Json Mixin interface
