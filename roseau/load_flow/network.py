@@ -326,9 +326,6 @@ class ElectricalNetwork:
         # Dispatch the results
         self._dispatch_results(result_dict=result_dict)
 
-        # The results are now valid
-        self._results_valid = True
-
         return self.results_info["iterations"]
 
     @staticmethod
@@ -385,6 +382,9 @@ class ElectricalNetwork:
             if isinstance(load, PowerLoad) and load.is_flexible:
                 load._res_flexible_powers = np.array([complex(p[0], p[1]) for p in load_data["powers"]], dtype=complex)
 
+        # The results are now valid
+        self._results_valid = True
+
     #
     # Getters for the load flow results
     #
@@ -395,6 +395,7 @@ class ElectricalNetwork:
                 message="The results of this network may be outdated. Please re-run a load flow to ensure the "
                 "validity of results.",
                 category=UserWarning,
+                stacklevel=2,
             )
 
     @property
