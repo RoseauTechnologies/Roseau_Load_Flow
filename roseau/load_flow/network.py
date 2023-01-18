@@ -533,18 +533,36 @@ class ElectricalNetwork:
     @property
     def res_loads_powers(self) -> pd.DataFrame:
         """The load flow results of the powers of the loads (VA) as a dataframe."""
+        self._warn_invalid_results()
         loads_dict = {"load_id": [], "phase": [], "power": []}
         for load_id, load in self.loads.items():
-            for power, phase in zip(load.res_powers, load.phases):
+            for power, phase in zip(load._res_powers_getter(warning=False), load.voltage_phases):
                 loads_dict["load_id"].append(load_id)
                 loads_dict["phase"].append(phase)
                 loads_dict["power"].append(power)
         currents_df = (
             pd.DataFrame.from_dict(loads_dict, orient="columns")
-            .astype({"phase": _PHASE_DTYPE, "power": complex})
+            .astype({"phase": _VOLTAGE_PHASES_DTYPE, "power": complex})
             .set_index(["load_id", "phase"])
         )
         return currents_df
+
+    @property
+    def res_loads_voltages(self) -> pd.DataFrame:
+        """The load flow results of the voltages of the loads (V) as a dataframe."""
+        self._warn_invalid_results()
+        voltages_dict = {"load_id": [], "phase": [], "voltage": []}
+        for load_id, load in self.loads.items():
+            for voltage, phase in zip(load._res_voltages_getter(warning=False), load.voltage_phases):
+                voltages_dict["load_id"].append(load_id)
+                voltages_dict["phase"].append(phase)
+                voltages_dict["voltage"].append(voltage)
+        voltages_df = (
+            pd.DataFrame.from_dict(voltages_dict, orient="columns")
+            .astype({"phase": _VOLTAGE_PHASES_DTYPE, "voltage": complex})
+            .set_index(["load_id", "phase"])
+        )
+        return voltages_df
 
     @property
     def res_loads_flexible_powers(self) -> pd.DataFrame:
