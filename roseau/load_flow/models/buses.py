@@ -73,13 +73,25 @@ class Bus(Element):
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_POTENTIALS_SIZE)
         self._potentials = np.asarray(value, dtype=complex)
+        self._invalidate_network_results()
+
+    def _res_potentials_getter(self, warning: bool) -> np.ndarray:
+        return self._res_getter(value=self._res_potentials, warning=warning)
 
     @property
     def res_potentials(self) -> np.ndarray:
         """The load flow result of the bus potentials (V)."""
-        if self._res_potentials is None:
-            self._raise_load_flow_not_run()
-        return self._res_potentials
+        return self._res_potentials_getter(warning=True)
+
+    def _res_voltages_getter(self, warning: bool) -> np.ndarray:
+        potentials = np.asarray(self._res_potentials_getter(warning=warning))
+        if "n" in self.phases:  # Van, Vbn, Vcn
+            # we know "n" is the last phase
+            voltages = potentials[:-1] - potentials[-1]
+        else:  # Vab, Vbc, Vca
+            # np.roll(["a", "b", "c"], -1) -> ["b", "c", "a"]  # also works with single or double phase
+            voltages = potentials - np.roll(potentials, -1)
+        return voltages
 
     @property
     def res_voltages(self) -> np.ndarray:
@@ -89,14 +101,7 @@ class Bus(Element):
         the order ``[Van, Vbn, Vcn]``. If the bus does not have a neutral, phase-phase voltages
         are returned in the order ``[Vab, Vbc, Vca]``.
         """
-        potentials = np.asarray(self.res_potentials)
-        if "n" in self.phases:  # Van, Vbn, Vcn
-            # we know "n" is the last phase
-            voltages = potentials[:-1] - potentials[-1]
-        else:  # Vab, Vbc, Vca
-            # np.roll(["a", "b", "c"], -1) -> ["b", "c", "a"]  # also works with single or double phase
-            voltages = potentials - np.roll(potentials, -1)
-        return voltages
+        return self._res_voltages_getter(warning=True)
 
     @property
     def voltage_phases(self) -> list[str]:

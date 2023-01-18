@@ -1,5 +1,5 @@
 import logging
-from abc import ABCMeta, abstractmethod
+from abc import ABC, abstractmethod
 from collections.abc import Sequence
 from typing import Any, Literal, Optional
 
@@ -16,7 +16,7 @@ from roseau.load_flow.utils.units import ureg
 logger = logging.getLogger(__name__)
 
 
-class AbstractLoad(Element, metaclass=ABCMeta):
+class AbstractLoad(Element, ABC):
     """An abstract class of an electric load."""
 
     _power_load_class: type["PowerLoad"]
@@ -77,19 +77,21 @@ class AbstractLoad(Element, metaclass=ABCMeta):
         self._res_currents: Optional[np.ndarray] = None
 
     def __repr__(self) -> str:
-        return f"{type(self).__name__}(id={self.id!r}, phases={self.phases!r}, bus={self.bus.id!r})"
+        bus_id = self.bus.id if self.bus is not None else None
+        return f"{type(self).__name__}(id={self.id!r}, phases={self.phases!r}, bus={bus_id!r})"
 
     @property
     def is_flexible(self) -> bool:
         """Whether the load is flexible or not. Only :class:`PowerLoad` can be flexible."""
         return False
 
+    def _res_currents_getter(self, warning: bool) -> np.ndarray:
+        return self._res_getter(value=self._res_currents, warning=warning)
+
     @property
     def res_currents(self) -> np.ndarray:
         """The load flow result of the load currents (A)."""
-        if self._res_currents is None:
-            self._raise_load_flow_not_run()
-        return self._res_currents
+        return self._res_currents_getter(warning=True)
 
     def _validate_value(self, value: Sequence[complex]) -> np.ndarray:
         if isinstance(value, Quantity):
@@ -151,6 +153,15 @@ class AbstractLoad(Element, metaclass=ABCMeta):
                 # 2. We don't know the phase currents. We can use the load inputs to compute S.
                 # CurrentLoad: S = V x I_in*; PowerLoad: S = S_in; ImpedanceLoad: S = |V|² / Z*
                 return self._get_delta_res_powers()
+
+    #
+    # Disconnect
+    #
+    def disconnect(self) -> None:
+        """Disconnect the load from the network it belongs to. After a disconnection, the remaining load object can
+        not be used any more."""
+        self._disconnect()
+        self.bus = None
 
     #
     # Json Mixin interface
@@ -275,18 +286,24 @@ class PowerLoad(AbstractLoad):
     @ureg.wraps(None, (None, "VA"), strict=False)
     def powers(self, value: Sequence[complex]) -> None:
         self._powers = self._validate_value(value)
+        self._invalidate_network_results()
+
+    def _res_flexible_powers_getter(self, warning: bool) -> np.ndarray:
+        return self._res_getter(value=self._res_flexible_powers, warning=warning)
 
     @property
     def res_flexible_powers(self) -> np.ndarray:
         """The load flow result of the load flexible powers (VA)."""
-        if self._res_flexible_powers is None:
-            self._raise_load_flow_not_run()
-        return self._res_flexible_powers
+        return self._res_flexible_powers_getter(warning=True)
 
     def _get_delta_res_powers(self) -> np.ndarray:
         return self._powers  # S = S
 
     def to_dict(self) -> JsonDict:
+        if self.bus is None:
+            msg = f"The load {self.id!r} is disconnected and can not be used anymore."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DISCONNECTED_ELEMENT)
         res = {
             "id": self.id,
             "bus": self.bus.id,
@@ -350,12 +367,17 @@ class CurrentLoad(AbstractLoad):
     @ureg.wraps(None, (None, "A"), strict=False)
     def currents(self, value: Sequence[complex]) -> None:
         self._currents = self._validate_value(value)
+        self._invalidate_network_results()
 
     def _get_delta_res_powers(self) -> np.ndarray:
         voltages = self._get_res_voltages_from_bus()
         return voltages * self.currents.conj()  # S = V x I*
 
     def to_dict(self) -> JsonDict:
+        if self.bus is None:
+            msg = f"The load {self.id!r} is disconnected and can not be used anymore."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DISCONNECTED_ELEMENT)
         return {
             "id": self.id,
             "bus": self.bus.id,
@@ -417,12 +439,17 @@ class ImpedanceLoad(AbstractLoad):
     @ureg.wraps(None, (None, "ohm"), strict=False)
     def impedances(self, impedances: Sequence[complex]) -> None:
         self._impedances = self._validate_value(impedances)
+        self._invalidate_network_results()
 
     def _get_delta_res_powers(self) -> np.ndarray:
         voltages = self._get_res_voltages_from_bus()
         return np.abs(voltages) ** 2 / self.impedances  # S = |V|² / Z
 
     def to_dict(self) -> JsonDict:
+        if self.bus is None:
+            msg = f"The load {self.id!r} is disconnected and can not be used anymore."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DISCONNECTED_ELEMENT)
         return {
             "id": self.id,
             "bus": self.bus.id,
