@@ -511,6 +511,22 @@ class ElectricalNetwork:
         return currents_df
 
     @property
+    def res_loads_powers(self) -> pd.DataFrame:
+        """The load flow results of the powers of the loads (VA) as a dataframe."""
+        loads_dict = {"load_id": [], "phase": [], "power": []}
+        for load_id, load in self.loads.items():
+            for power, phase in zip(load.res_powers, load.phases):
+                loads_dict["load_id"].append(load_id)
+                loads_dict["phase"].append(phase)
+                loads_dict["power"].append(power)
+        currents_df = (
+            pd.DataFrame.from_dict(loads_dict, orient="columns")
+            .astype({"phase": _PHASE_DTYPE, "power": complex})
+            .set_index(["load_id", "phase"])
+        )
+        return currents_df
+
+    @property
     def res_loads_flexible_powers(self) -> pd.DataFrame:
         """The load flow results of the flexible powers of the "flexible" loads (A) as a dataframe."""
         loads_dict = {"load_id": [], "phase": [], "power": []}

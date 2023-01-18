@@ -1,5 +1,5 @@
 import logging
-from abc import ABCMeta
+from abc import ABCMeta, abstractmethod
 from collections.abc import Sequence
 from typing import Any, Literal, Optional
 
@@ -106,6 +106,44 @@ class AbstractLoad(Element, metaclass=ABCMeta):
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Z_VALUE)
         return np.asarray(value, dtype=complex)
+
+    def _get_res_voltages_from_bus(self) -> np.ndarray:
+        if "n" in self.phases:
+            # Wye load: get the phase-to-neutral voltages
+            bus_voltages = self.bus.res_voltages
+        else:
+            # Delta load: get the phase-to-phase voltages
+            bus_voltages = np.roll(self.bus.res_potentials, -1) - self.bus.res_potentials
+        current_phases = self.phases.removesuffix("n")
+
+        # filter to the voltages of this load
+        voltages = []
+        for v, (p1, _) in zip(bus_voltages, self.bus.voltage_phases):
+            if p1 in current_phases:
+                voltages.append(v)
+        return np.array(voltages)
+
+    @abstractmethod
+    def _get_delta_res_powers(self) -> np.ndarray:
+        raise NotImplementedError
+
+    @property
+    def res_powers(self) -> np.ndarray:
+        """The load flow result of the load powers (VA)."""
+        currents = self.res_currents[: self._size]  # without the neutral
+        voltages = self._get_res_voltages_from_bus()
+        if "n" in self.phases:
+            # Wye load: trivial
+            return voltages * currents.conj()
+        else:
+            # Delta load: two cases
+            if len(self.phases) == 2:
+                # 1. A phase-to-phase connection: line current is the same as phase current
+                return voltages * currents[0].conj()  # Example: Sab = Vab x Iab*; Iab = Ia = - Ib
+            else:
+                # 2. We don't know the phase currents. We can use the load inputs to compute S.
+                # CurrentLoad: S = V x I_in*; PowerLoad: S = S_in; ImpedanceLoad: S = |V|² / Z*
+                return self._get_delta_res_powers()
 
     #
     # Json Mixin interface
@@ -238,6 +276,9 @@ class PowerLoad(AbstractLoad):
             self._raise_load_flow_not_run()
         return self._res_flexible_powers
 
+    def _get_delta_res_powers(self) -> np.ndarray:
+        return self._powers  # S = S
+
     def to_dict(self) -> JsonDict:
         res = {
             "id": self.id,
@@ -303,6 +344,10 @@ class CurrentLoad(AbstractLoad):
     def currents(self, value: Sequence[complex]) -> None:
         self._currents = self._validate_value(value)
 
+    def _get_delta_res_powers(self) -> np.ndarray:
+        voltages = self._get_res_voltages_from_bus()
+        return voltages * self.currents.conj()  # S = V x I*
+
     def to_dict(self) -> JsonDict:
         return {
             "id": self.id,
@@ -365,6 +410,10 @@ class ImpedanceLoad(AbstractLoad):
     @ureg.wraps(None, (None, "ohm"), strict=False)
     def impedances(self, impedances: Sequence[complex]) -> None:
         self._impedances = self._validate_value(impedances)
+
+    def _get_delta_res_powers(self) -> np.ndarray:
+        voltages = self._get_res_voltages_from_bus()
+        return np.abs(voltages) ** 2 / self.impedances  # S = |V|² / Z
 
     def to_dict(self) -> JsonDict:
         return {
