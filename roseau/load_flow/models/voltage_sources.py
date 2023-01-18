@@ -72,8 +72,9 @@ class VoltageSource(Element):
         self.voltages = voltages
 
     def __repr__(self) -> str:
+        bus_id = self.bus.id if self.bus is not None else None
         return (
-            f"{type(self).__name__}(id={self.id!r}, bus={self.bus.id!r}, voltages={self.voltages!r}, "
+            f"{type(self).__name__}(id={self.id!r}, bus={bus_id!r}, voltages={self.voltages!r}, "
             f"phases={self.phases!r})"
         )
 
@@ -90,6 +91,16 @@ class VoltageSource(Element):
             logger.error(msg)
             raise RoseauLoadFlowException(msg, code=RoseauLoadFlowExceptionCode.BAD_VOLTAGES_SIZE)
         self._voltages = np.asarray(voltages, dtype=complex)
+        self._invalidate_network()
+
+    #
+    # Disconnect
+    #
+    def disconnect(self) -> None:
+        """Disconnect the voltage source from the network it belongs to. After a disconnection, the remaining load
+        object can not be used any more."""
+        self._disconnect()
+        self.bus = None
 
     #
     # Json Mixin interface
@@ -100,6 +111,10 @@ class VoltageSource(Element):
         return cls(data["id"], data["bus"], voltages=voltages, phases=data["phases"])
 
     def to_dict(self) -> JsonDict:
+        if self.bus is None:
+            msg = f"The element {self!r} is disconnected and can not be used anymore."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DISCONNECTED_ELEMENT)
         return {
             "id": self.id,
             "bus": self.bus.id,

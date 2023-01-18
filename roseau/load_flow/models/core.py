@@ -1,6 +1,7 @@
 import logging
+import warnings
 from abc import ABC
-from typing import Any, ClassVar, NoReturn, Optional, TYPE_CHECKING, Union
+from typing import Any, ClassVar, NoReturn, Optional, TYPE_CHECKING, TypeVar, Union
 
 import numpy as np
 import shapely.wkt
@@ -14,8 +15,11 @@ from roseau.load_flow.utils.mixins import Identifiable, JsonMixin
 
 if TYPE_CHECKING:
     from roseau.load_flow.models.buses import Bus
+    from roseau.load_flow.network import ElectricalNetwork
 
 logger = logging.getLogger(__name__)
+
+_T = TypeVar("_T")
 
 
 class Element(ABC, Identifiable, JsonMixin):
@@ -38,6 +42,12 @@ class Element(ABC, Identifiable, JsonMixin):
         """
         super().__init__(id)
         self.connected_elements: list[Element] = []
+        self._network: Optional["ElectricalNetwork"] = None
+
+    @property
+    def network(self) -> Optional["ElectricalNetwork"]:
+        """Return the network the element belong to (if any)."""
+        return self._network
 
     @classmethod
     def _check_phases(cls, id: str, **kwargs: str) -> None:
@@ -50,30 +60,74 @@ class Element(ABC, Identifiable, JsonMixin):
             logger.error(msg)
             raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.BAD_PHASE)
 
-    def _connect(self, element: "Element") -> None:
+    def _connect(self, *elements: "Element") -> None:
         """Connect this element to another element.
 
         Args:
-            element:
-                The element to connect to.
+            elements:
+                The elements to connect to self.
         """
-        if element not in self.connected_elements:
-            self.connected_elements.append(element)
-        if self not in element.connected_elements:
-            element.connected_elements.append(self)
+        # Get the common network. May raise exception
+        network = self.network
+        for element in elements:
+            if network is None:
+                network = element.network
+            elif element.network is not None and element.network != network:
+                element._raise_several_network()
 
-    def disconnect(self) -> None:
-        """Remove all the connections with the other elements."""
-        # TODO: make private
+        # Modify objects. Append to the connected_elements and assign the common network
+        for element in elements:
+            if element not in self.connected_elements:
+                self.connected_elements.append(element)
+            if self not in element.connected_elements:
+                element.connected_elements.append(self)
+            if element.network is None and network is not None:
+                network._connect_element(element=element)
+
+        if self._network is None and network is not None:
+            network._connect_element(element=self)
+
+    def _disconnect(self) -> None:
+        """Remove all the connections with the other elements. This method can be used in a public `disconnect`
+        method for"""
         for element in self.connected_elements:
             element.connected_elements.remove(self)
+            if element.network is not None:
+                element.network._disconnect_element(element=self)
+
+        if self._network is not None:
+            self.network._disconnect_element(element=self)
+
+    def _invalidate_network(self) -> None:
+        """Invalidate the network making the result"""
+        if self.network is not None:
+            self.network._valid = False
+
+    def _res_getter(self, value: Optional[_T], warning: bool) -> _T:
+        """A safe getter for load flow results.
+
+        Args:
+            value:
+                The optional array(s) of results.
+
+            warning:
+                If True and if the results may be invalid (because of an invalid network), a warning log is emitted.
+
+        Returns:
+            The input if valid. May also emit a warning for potential invalid results.
+        """
+        if value is None:
+            self._raise_load_flow_not_run()
+        if warning:
+            self._warn_invalid_network()
+        return value
 
     @staticmethod
     def _parse_geometry(geometry: Union[str, None, Any]) -> Optional[BaseGeometry]:
         if geometry is None:
             return None
         elif isinstance(geometry, str):
-            return shapely.wkt.loads(geometry)
+            return shapely.from_wkt(geometry)
         else:
             return shape(geometry)
 
@@ -85,6 +139,21 @@ class Element(ABC, Identifiable, JsonMixin):
         )
         logger.error(msg)
         raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN)
+
+    def _raise_several_network(self) -> NoReturn:
+        """Raise an exception when there are several networks involved during a connection of elements."""
+        msg = f"The {type(self).__name__} {self.id!r} is already assigned to another network."
+        logger.error(msg)
+        raise RoseauLoadFlowException(msg, code=RoseauLoadFlowExceptionCode.SEVERAL_NETWORKS)
+
+    def _warn_invalid_network(self) -> None:
+        """Warn when the network of `self` is invalid."""
+        if self.network is not None and not self.network._valid:
+            warnings.warn(
+                message="The results of this element may be outdated. Please re-run a load flow to ensure "
+                "the validity of results.",
+                category=UserWarning,
+            )
 
 
 class PotentialRef(Element):
@@ -274,8 +343,7 @@ class AbstractBranch(Element):
         self._check_phases(id, phases2=phases2)
         self.phases1 = phases1
         self.phases2 = phases2
-        self._connect(bus1)
-        self._connect(bus2)
+        self._connect(bus1, bus2)
         self.geometry = geometry
         self._res_currents = None
 
@@ -290,7 +358,7 @@ class AbstractBranch(Element):
     @property
     def res_currents(self) -> tuple[np.ndarray, np.ndarray]:
         """The load flow result of the branch currents (A)."""
-        return self._res_currents
+        return self._res_getter(value=self._res_currents, warning=True)
 
     #
     # Json Mixin interface

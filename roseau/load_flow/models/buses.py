@@ -73,13 +73,31 @@ class Bus(Element):
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_POTENTIALS_SIZE)
         self._potentials = np.asarray(value, dtype=complex)
+        self._invalidate_network()
 
     @property
     def res_potentials(self) -> np.ndarray:
         """The load flow result of the bus potentials (V)."""
-        if self._res_potentials is None:
-            self._raise_load_flow_not_run()
-        return self._res_potentials
+        return self._res_getter(value=self._res_potentials, warning=True)
+
+    def _res_voltages(self, warning: bool) -> np.ndarray:
+        """The load flow result of the bus voltages (V). Add the optio to display a warning in case of invalid results.
+
+        Args:
+            warning:
+                If True and if the results may be invalid (because of an invalid network), a warning log is emitted.
+
+        Returns:
+            The voltages in V.
+        """
+        potentials = np.asarray(self._res_getter(value=self._res_potentials, warning=warning))
+        if "n" in self.phases:  # Van, Vbn, Vcn
+            # we know "n" is the last phase
+            voltages = potentials[:-1] - potentials[-1]
+        else:  # Vab, Vbc, Vca
+            # np.roll(["a", "b", "c"], -1) -> ["b", "c", "a"]  # also works with single or double phase
+            voltages = np.roll(potentials, -1) - potentials
+        return voltages
 
     @property
     def res_voltages(self) -> np.ndarray:
@@ -89,14 +107,7 @@ class Bus(Element):
         the order ``[Van, Vbn, Vcn]``. If the bus does not have a neutral, phase-phase voltages
         are returned in the order ``[Vab, Vbc, Vca]``.
         """
-        potentials = np.asarray(self.res_potentials)
-        if "n" in self.phases:  # Van, Vbn, Vcn
-            # we know "n" is the last phase
-            voltages = potentials[:-1] - potentials[-1]
-        else:  # Vab, Vbc, Vca
-            # np.roll(["a", "b", "c"], -1) -> ["b", "c", "a"]  # also works with single or double phase
-            voltages = np.roll(potentials, -1) - potentials
-        return voltages
+        return self._res_voltages(warning=True)
 
     @property
     def voltage_phases(self) -> list[str]:

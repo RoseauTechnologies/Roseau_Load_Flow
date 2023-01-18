@@ -71,7 +71,6 @@ class Transformer(AbstractBranch):
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_GEOMETRY_TYPE)
 
-        self.tap = tap
         # Compute the phases if not provided, check them if provided
         w1_has_neutral = "y" in parameters.winding1.lower() or "z" in parameters.winding1.lower()
         w2_has_neutral = "y" in parameters.winding2.lower() or "z" in parameters.winding2.lower()
@@ -126,6 +125,7 @@ class Transformer(AbstractBranch):
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
 
         super().__init__(id, bus1, bus2, phases1=phases1, phases2=phases2, geometry=geometry, **kwargs)
+        self.tap = tap
         self._parameters = parameters
 
     @property
@@ -140,6 +140,7 @@ class Transformer(AbstractBranch):
         if value < 0.9:
             logger.warning(f"The provided tap {value:.2f} is lower than 0.9. A good value is between 0.9 and 1.1.")
         self._tap = value
+        self._invalidate_network()
 
     @property
     def parameters(self) -> TransformerParameters:
@@ -148,13 +149,14 @@ class Transformer(AbstractBranch):
 
     @parameters.setter
     def parameters(self, value: TransformerParameters) -> None:
-        windings1 = self.parameters.windings
+        windings1 = self._parameters.windings
         windings2 = value.windings
         if windings1 != windings2:
             msg = f"The updated windings changed for transformer {self.id!r}: {windings1} to {windings2}."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS)
         self._parameters = value
+        self._invalidate_network()
 
     def to_dict(self) -> JsonDict:
         return {**super().to_dict(), "params_id": self.parameters.id, "tap": self.tap}

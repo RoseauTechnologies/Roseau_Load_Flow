@@ -1,5 +1,5 @@
 import logging
-from abc import ABCMeta
+from abc import ABC
 from collections.abc import Sequence
 from typing import Any, Literal, Optional
 
@@ -16,7 +16,7 @@ from roseau.load_flow.utils.units import ureg
 logger = logging.getLogger(__name__)
 
 
-class AbstractLoad(Element, metaclass=ABCMeta):
+class AbstractLoad(Element, ABC):
     """An abstract class of an electric load."""
 
     _power_load_class: type["PowerLoad"]
@@ -70,7 +70,8 @@ class AbstractLoad(Element, metaclass=ABCMeta):
         self._res_currents: Optional[np.ndarray] = None
 
     def __repr__(self) -> str:
-        return f"{type(self).__name__}(id={self.id!r}, phases={self.phases!r}, bus={self.bus.id!r})"
+        bus_id = self.bus.id if self.bus is not None else None
+        return f"{type(self).__name__}(id={self.id!r}, phases={self.phases!r}, bus={bus_id!r})"
 
     @property
     def is_flexible(self) -> bool:
@@ -80,9 +81,7 @@ class AbstractLoad(Element, metaclass=ABCMeta):
     @property
     def res_currents(self) -> np.ndarray:
         """The load flow result of the load currents (A)."""
-        if self._res_currents is None:
-            self._raise_load_flow_not_run()
-        return self._res_currents
+        return self._res_getter(value=self._res_currents, warning=True)
 
     def _validate_value(self, value: Sequence[complex]) -> np.ndarray:
         if isinstance(value, Quantity):
@@ -99,6 +98,15 @@ class AbstractLoad(Element, metaclass=ABCMeta):
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Z_VALUE)
         return np.asarray(value, dtype=complex)
+
+    #
+    # Disconnect
+    #
+    def disconnect(self) -> None:
+        """Disconnect the load from the network it belongs to. After a disconnection, the remaining load object can
+        not be used any more."""
+        self._disconnect()
+        self.bus = None
 
     #
     # Json Mixin interface
@@ -223,15 +231,18 @@ class PowerLoad(AbstractLoad):
     @ureg.wraps(None, (None, "VA"), strict=False)
     def powers(self, value: Sequence[complex]) -> None:
         self._powers = self._validate_value(value)
+        self._invalidate_network()
 
     @property
     def res_flexible_powers(self) -> np.ndarray:
         """The load flow result of the load flexible powers (VA)."""
-        if self._res_flexible_powers is None:
-            self._raise_load_flow_not_run()
-        return self._res_flexible_powers
+        return self._res_getter(value=self._res_flexible_powers, warning=True)
 
     def to_dict(self) -> JsonDict:
+        if self.bus is None:
+            msg = f"The element {self!r} is disconnected and can not be used anymore."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DISCONNECTED_ELEMENT)
         res = {
             "id": self.id,
             "bus": self.bus.id,
@@ -295,8 +306,13 @@ class CurrentLoad(AbstractLoad):
     @ureg.wraps(None, (None, "A"), strict=False)
     def currents(self, value: Sequence[complex]) -> None:
         self._currents = self._validate_value(value)
+        self._invalidate_network()
 
     def to_dict(self) -> JsonDict:
+        if self.bus is None:
+            msg = f"The element {self!r} is disconnected and can not be used anymore."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DISCONNECTED_ELEMENT)
         return {
             "id": self.id,
             "bus": self.bus.id,
@@ -358,8 +374,13 @@ class ImpedanceLoad(AbstractLoad):
     @ureg.wraps(None, (None, "ohm"), strict=False)
     def impedances(self, impedances: Sequence[complex]) -> None:
         self._impedances = self._validate_value(impedances)
+        self._invalidate_network()
 
     def to_dict(self) -> JsonDict:
+        if self.bus is None:
+            msg = f"The element {self!r} is disconnected and can not be used anymore."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DISCONNECTED_ELEMENT)
         return {
             "id": self.id,
             "bus": self.bus.id,
