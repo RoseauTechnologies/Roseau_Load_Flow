@@ -54,8 +54,17 @@ def test_to_dict():
     en.to_dict()
 
     # Same id, different transformer parameters -> fail
-    en.remove_element(line1)
-    en.remove_element(line2)
+    ground = Ground("ground")
+    vn = 400 / np.sqrt(3)
+    voltages = [vn, vn * np.exp(-2 / 3 * np.pi * 1j), vn * np.exp(2 / 3 * np.pi * 1j)]
+    source_bus = Bus(id="source", phases="abcn")
+    load_bus = Bus(id="load bus", phases="abcn")
+    ground.connect(load_bus)
+    ground.connect(source_bus)
+    p_ref = PotentialRef("pref", element=ground)
+    vs = VoltageSource("vs", source_bus, phases="abcn", voltages=voltages)
+
+    # Same id, different transformer parameters -> fail
     tp1 = TransformerParameters(
         "t", windings="Dyn11", uhv=20000, ulv=400, sn=160 * 1e3, p0=460, i0=2.3 / 100, psc=2350, vsc=4 / 100
     )
@@ -64,8 +73,14 @@ def test_to_dict():
     )
     transformer1 = Transformer(id="Transformer1", bus1=source_bus, bus2=load_bus, parameters=tp1)
     transformer2 = Transformer(id="Transformer2", bus1=source_bus, bus2=load_bus, parameters=tp2)
-    en.add_element(transformer1)
-    en.add_element(transformer2)
+    en = ElectricalNetwork(
+        buses=[source_bus, load_bus],
+        branches=[transformer1, transformer2],
+        loads=[],
+        voltage_sources=[vs],
+        grounds=[ground],
+        potential_refs=[p_ref],
+    )
     with pytest.raises(RoseauLoadFlowException) as e:
         en.to_dict()
     assert "There are multiple transformer parameters with id 't'" in e.value.msg

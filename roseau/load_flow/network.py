@@ -1,6 +1,7 @@
 import json
 import logging
 import re
+import warnings
 from collections.abc import Sequence, Sized
 from pathlib import Path
 from typing import NoReturn, Optional, TypeVar, Union
@@ -112,7 +113,8 @@ class ElectricalNetwork:
         self._check_validity(constructed=False)
         self._create_network()
         self._valid = True
-        self._results_info: JsonDict = {}
+        self._results_valid: bool = False
+        self.results_info: JsonDict = {}  # TODO: Add doc on this field
 
     def __repr__(self) -> str:
         def count_repr(__o: Sized, /, singular: str, plural: Optional[str] = None) -> str:
@@ -120,7 +122,7 @@ class ElectricalNetwork:
             n = len(__o)
             if n == 1:
                 return f"{n} {singular}"
-            return f"{n} {plural if plural is not None else singular+'s'}"
+            return f"{n} {plural if plural is not None else singular + 's'}"
 
         return (
             f"<{type(self).__name__}:"
@@ -307,23 +309,27 @@ class ElectricalNetwork:
 
         # HTTP 200
         result_dict: JsonDict = response.json()
-        info = result_dict["info"]
-        if info["status"] != "success":
+        self.results_info = result_dict["info"]
+        if self.results_info["status"] != "success":
             msg = (
-                f"The load flow did not converge after {info['iterations']} iterations. The norm of the residuals is "
-                f"{info['finalError']:.5n}"
+                f"The load flow did not converge after {self.results_info['iterations']} iterations. The norm of the "
+                f"residuals is {self.results_info['finalError']:.5n}"
             )
             logger.error(msg=msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.NO_LOAD_FLOW_CONVERGENCE)
 
         logger.info(
-            f"The load flow converged after {info['iterations']} iterations (final error={info['finalError']:.5n})."
+            f"The load flow converged after {self.results_info['iterations']} iterations (final error="
+            f"{self.results_info['finalError']:.5n})."
         )
 
         # Dispatch the results
         self._dispatch_results(result_dict=result_dict)
 
-        return info["iterations"]
+        # The results are now valid
+        self._results_valid = True
+
+        return self.results_info["iterations"]
 
     @staticmethod
     def _parse_error(response: Response) -> NoReturn:
@@ -382,12 +388,22 @@ class ElectricalNetwork:
     #
     # Getters for the load flow results
     #
+    def _warn_invalid_results(self) -> None:
+        """Warn when the network is invalid."""
+        if not self._results_valid:
+            warnings.warn(
+                message="The results of this network may be outdated. Please re-run a load flow to ensure the "
+                "validity of results.",
+                category=UserWarning,
+            )
+
     @property
     def res_buses_potentials(self) -> pd.DataFrame:
         """The load flow results of the potentials of the buses (V) as a dataframe."""
+        self._warn_invalid_results()
         potentials_dict = {"bus_id": [], "phase": [], "potential": []}
         for bus_id, bus in self.buses.items():
-            for potential, phase in zip(bus.res_potentials, bus.phases):
+            for potential, phase in zip(bus._res_potentials_getter(warning=False), bus.phases):
                 potentials_dict["bus_id"].append(bus_id)
                 potentials_dict["phase"].append(phase)
                 potentials_dict["potential"].append(potential)
@@ -457,9 +473,10 @@ class ElectricalNetwork:
             s_bus  200000.0+0.00j
             Name: voltage, dtype: complex128
         """
+        self._warn_invalid_results()
         voltages_dict = {"bus_id": [], "phase": [], "voltage": []}
         for bus_id, bus in self.buses.items():
-            for voltage, phase in zip(bus.res_voltages, bus.voltage_phases):
+            for voltage, phase in zip(bus._res_voltages_getter(warning=False), bus.voltage_phases):
                 voltages_dict["bus_id"].append(bus_id)
                 voltages_dict["phase"].append(phase)
                 voltages_dict["voltage"].append(voltage)
@@ -473,9 +490,10 @@ class ElectricalNetwork:
     @property
     def res_branches_currents(self) -> pd.DataFrame:
         """The load flow results of the currents of the branches (A) as a dataframe."""
+        self._warn_invalid_results()
         currents_list = []
         for branch_id, branch in self.branches.items():
-            currents1, currents2 = branch.res_currents
+            currents1, currents2 = branch._res_currents_getter(warning=False)
             currents_list.extend(
                 {"branch_id": branch_id, "phase": phase, "current1": i1, "current2": None}
                 for i1, phase in zip(currents1, branch.phases1)
@@ -497,9 +515,10 @@ class ElectricalNetwork:
     @property
     def res_loads_currents(self) -> pd.DataFrame:
         """The load flow results of the currents of the loads (A) as a dataframe."""
+        self._warn_invalid_results()
         loads_dict = {"load_id": [], "phase": [], "current": []}
         for load_id, load in self.loads.items():
-            for current, phase in zip(load.res_currents, load.phases):
+            for current, phase in zip(load._res_currents_getter(warning=False), load.phases):
                 loads_dict["load_id"].append(load_id)
                 loads_dict["phase"].append(phase)
                 loads_dict["current"].append(current)
@@ -513,10 +532,11 @@ class ElectricalNetwork:
     @property
     def res_loads_flexible_powers(self) -> pd.DataFrame:
         """The load flow results of the flexible powers of the "flexible" loads (A) as a dataframe."""
+        self._warn_invalid_results()
         loads_dict = {"load_id": [], "phase": [], "power": []}
         for load_id, load in self.loads.items():
             if isinstance(load, PowerLoad) and load.is_flexible:
-                for power, phase in zip(load.res_flexible_powers, load.phases):
+                for power, phase in zip(load._res_flexible_powers_getter(warning=False), load.phases):
                     loads_dict["load_id"].append(load_id)
                     loads_dict["phase"].append(phase)
                     loads_dict["power"].append(power)
@@ -557,8 +577,8 @@ class ElectricalNetwork:
             voltage_source = self.voltage_sources[vs_id]
             voltage_source.voltages = value
 
-    def add_element(self, element: Element) -> None:
-        """Add an element to the network.
+    def _connect_element(self, element: Element) -> None:
+        """Connect an element to the network.
 
         When an element is added to the network, extra processing is done to keep the network
         valid. Always use this method to add new elements to the network after creating it.
@@ -568,6 +588,9 @@ class ElectricalNetwork:
                 The element to add. Only lines, loads, buses and voltage sources can be added.
         """
         # The C++ electrical network and the tape will be recomputed
+        if element.network is not None and element.network != self:
+            element._raise_several_network()
+
         if isinstance(element, Bus):
             self.buses[element.id] = element
         elif isinstance(element, AbstractLoad):
@@ -580,43 +603,48 @@ class ElectricalNetwork:
             msg = "Only lines, loads, buses and voltage sources can be added to the network."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT)
+        element._network = self
         self._valid = False
+        self._results_valid = False
 
-    def remove_element(self, element: Element) -> None:
+    def _disconnect_element(self, element: Element) -> None:
         """Remove an element of the network.
 
         When an element is removed from the network, extra processing is needed to keep the network
-        valid. Always use this method to remove an element from the network.
+        valid.
 
         Args:
             element:
                 The element to remove.
         """
         # The C++ electrical network and the tape will be recomputed
-        if isinstance(element, Bus):
-            self.buses.pop(element.id).disconnect()
-        elif isinstance(element, AbstractLoad):
-            self.loads.pop(element.id).disconnect()
-        elif isinstance(element, VoltageSource):
-            self.voltage_sources.pop(element.id).disconnect()
-        elif isinstance(element, AbstractBranch):
-            self.branches.pop(element.id).disconnect()
-        else:
-            msg = f"{element!r} is not a valid bus, branch, load or voltage source."
+        if isinstance(element, (Bus, AbstractBranch)):
+            msg = f"{element!r} is a {type(element).__name__} and it can not be disconnected from a network."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT)
+        elif isinstance(element, AbstractLoad):
+            self.loads.pop(element.id)
+        elif isinstance(element, VoltageSource):
+            self.voltage_sources.pop(element.id)
+        else:
+            msg = f"{element!r} is not a valid load or voltage source."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT)
+        element._network = None
         self._valid = False
+        self._results_valid = False
 
     def _create_network(self) -> None:
         """Create the Cython and C++ electrical network of all the passed elements."""
         self._valid = True
 
     def _check_validity(self, constructed: bool) -> None:
-        """Check the validity of the network to avoid having a singular jacobian matrix.
+        """Check the validity of the network to avoid having a singular jacobian matrix. It also assigns the `self`
+        to the network field of elements.
 
         Args:
             constructed:
-                True if the network is already constructed and we have added an element, False
+                True if the network is already constructed, and we have added an element, False
                 otherwise.
         """
         elements: list[Element] = []
@@ -627,7 +655,9 @@ class ElectricalNetwork:
         elements.extend(self.grounds.values())
         elements.extend(self.potential_refs.values())
 
+        found_source = False
         for element in elements:
+            # Check connected elements and check network assignment
             for adj_element in element.connected_elements:
                 if adj_element not in elements:
                     msg = (
@@ -641,17 +671,25 @@ class ElectricalNetwork:
                     logger.error(msg)
                     raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.UNKNOWN_ELEMENT)
 
-        found_source = False
-        for element in elements:
+            # Check that there is at least a `VoltageSource` element in the network
             if isinstance(element, VoltageSource):
                 found_source = True
-                break
+
+        # Raises an error if no voltage sources
         if not found_source:
             msg = "There is no voltage source provided in the network, you must provide at least one."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.NO_VOLTAGE_SOURCE)
 
+        # Check the potential references
         self._check_ref(elements)
+
+        # Assign the network
+        for element in elements:
+            if element.network is None:
+                element._network = self
+            elif element.network != self:
+                element._raise_several_network()
 
     @staticmethod
     def _check_ref(elements: list[Element]) -> None:
@@ -778,7 +816,7 @@ class ElectricalNetwork:
             loads_results.append(res)
 
         return {
-            "info": self._results_info,
+            "info": self.results_info,
             "buses": buses_results,
             "branches": branches_results,
             "loads": loads_results,

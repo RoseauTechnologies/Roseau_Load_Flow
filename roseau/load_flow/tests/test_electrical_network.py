@@ -1,3 +1,6 @@
+import itertools as it
+import warnings
+from contextlib import contextmanager
 from urllib.parse import urljoin
 
 import geopandas as gpd
@@ -22,6 +25,7 @@ from roseau.load_flow.models import (
     VoltageSource,
 )
 from roseau.load_flow.network import _PHASE_DTYPE, _VOLTAGE_PHASES_DTYPE, ElectricalNetwork
+from roseau.load_flow.utils import Q_
 
 
 @pytest.fixture()
@@ -158,42 +162,71 @@ def good_json_results() -> dict:
     }
 
 
-def test_add_and_remove():
+@contextmanager
+def check_result_warning(expected_message: str):
+    with warnings.catch_warnings(record=True) as records:
+        yield
+    assert len(records) == 1
+    assert records[0].message.args[0] == expected_message
+    assert records[0].category == UserWarning
+
+
+def test_connect_and_disconnect():
     ground = Ground("ground")
     vn = 400 / np.sqrt(3)
     voltages = [vn, vn * np.exp(-2 / 3 * np.pi * 1j), vn * np.exp(2 / 3 * np.pi * 1j)]
     source_bus = Bus(id="source", phases="abcn")
     load_bus = Bus(id="load bus", phases="abcn")
     ground.connect(load_bus)
-    VoltageSource(id="vs", phases="abcn", bus=source_bus, voltages=voltages)
+    vs = VoltageSource(id="vs", phases="abcn", bus=source_bus, voltages=voltages)
     load = PowerLoad(id="power load", phases="abcn", bus=load_bus, powers=[100 + 0j, 100 + 0j, 100 + 0j])
     lp = LineParameters("test", z_line=np.eye(4, dtype=complex))
     line = Line(id="line", bus1=source_bus, bus2=load_bus, phases="abcn", parameters=lp, length=10)
     PotentialRef("pref", element=ground)
     en = ElectricalNetwork.from_element(source_bus)
-    en.remove_element(load)
+    assert load.network == en
+    load.disconnect()
+    assert load.network is None
+    assert load.bus is None
+    with pytest.raises(RoseauLoadFlowException) as e:
+        load.to_dict()
+    assert e.value.args[0] == "The load 'power load' is disconnected and can not be used anymore."
+    assert e.value.args[1] == RoseauLoadFlowExceptionCode.DISCONNECTED_ELEMENT
     new_load = PowerLoad(id="power load", phases="abcn", bus=load_bus, powers=[100 + 0j, 100 + 0j, 100 + 0j])
-    en.add_element(new_load)
+    assert new_load.network == en
+
+    # Disconnection of a voltage source
+    assert vs.network == en
+    vs.disconnect()
+    assert vs.network is None
+    assert vs.bus is None
+    with pytest.raises(RoseauLoadFlowException) as e:
+        vs.to_dict()
+    assert e.value.args[0] == "The voltage source 'vs' is disconnected and can not be used anymore."
+    assert e.value.args[1] == RoseauLoadFlowExceptionCode.DISCONNECTED_ELEMENT
 
     # Bad key
     with pytest.raises(RoseauLoadFlowException) as e:
-        en.remove_element(Ground("a separate ground element"))
-    assert "is not a valid bus, branch, load or voltage source" in e.value.msg
+        en._disconnect_element(Ground("a separate ground element"))
+    assert e.value.msg == "Ground(id='a separate ground element') is not a valid load or voltage source."
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT
 
-    # Adding ground
+    # Adding ground => impossible
     ground2 = Ground("ground2")
     with pytest.raises(RoseauLoadFlowException) as e:
-        en.add_element(ground2)
+        en._connect_element(ground2)
     assert e.value.msg == "Only lines, loads, buses and voltage sources can be added to the network."
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT
 
-    # Remove line => 2 separated connected components
+    # Remove line => impossible
     with pytest.raises(RoseauLoadFlowException) as e:
-        en.remove_element(line)
-        en.solve_load_flow(auth=("", ""))
-    assert "does not have a potential reference" in e.value.msg
-    assert e.value.code == RoseauLoadFlowExceptionCode.NO_POTENTIAL_REFERENCE
+        en._disconnect_element(line)
+    assert (
+        e.value.msg
+        == "Line(id='line', phases1='abcn', phases2='abcn', bus1='source', bus2='load bus') is a Line and it can not "
+        "be disconnected from a network."
+    )
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT
 
 
 def test_bad_networks():
@@ -209,6 +242,12 @@ def test_bad_networks():
         ElectricalNetwork.from_element(bus1)
     assert e.value.msg == "There is no voltage source provided in the network, you must provide at least one."
     assert e.value.code == RoseauLoadFlowExceptionCode.NO_VOLTAGE_SOURCE
+
+    # No network has been assigned
+    assert bus1.network is None
+    assert line.network is None
+    assert ground.network is None
+    assert p_ref.network is None
 
     # Bad constructor
     bus0 = Bus("bus0", phases="abcn")
@@ -229,26 +268,58 @@ def test_bad_networks():
     assert bus2.id in e.value.msg
     assert e.value.code == RoseauLoadFlowExceptionCode.UNKNOWN_ELEMENT
 
+    # No network has been assigned
+    assert bus0.network is None
+    assert bus1.network is None
+    assert line.network is None
+    assert switch.network is None
+    assert vs.network is None
+    assert ground.network is None
+    assert p_ref.network is None
+
     # No potential reference
     bus3 = Bus("bus3", phases="abcn")
     tp = TransformerParameters(
         "t", windings="Dyn11", uhv=20000, ulv=400, sn=160 * 1e3, p0=460, i0=2.3 / 100, psc=2350, vsc=4 / 100
     )
-    Transformer("transfo", bus2, bus3, parameters=tp)
+    t = Transformer("transfo", bus2, bus3, parameters=tp)
     with pytest.raises(RoseauLoadFlowException) as e:
         ElectricalNetwork.from_element(bus0)
     assert "does not have a potential reference" in e.value.msg
     assert e.value.code == RoseauLoadFlowExceptionCode.NO_POTENTIAL_REFERENCE
 
+    # No network has been assigned
+    assert bus0.network is None
+    assert bus1.network is None
+    assert line.network is None
+    assert switch.network is None
+    assert vs.network is None
+    assert ground.network is None
+    assert p_ref.network is None
+    assert bus3.network is None
+    assert t.network is None
+
     # Good network
     ground.connect(bus3)
 
     # 2 potential reference
-    PotentialRef("pref2", element=bus3)
+    p_ref2 = PotentialRef("pref2", element=bus3)
     with pytest.raises(RoseauLoadFlowException) as e:
         ElectricalNetwork.from_element(vs)
     assert "has 2 potential references, it should have only one." in e.value.msg
     assert e.value.code == RoseauLoadFlowExceptionCode.SEVERAL_POTENTIAL_REFERENCE
+
+    # No network has been assigned
+    assert bus0.network is None
+    assert bus1.network is None
+    assert line.network is None
+    assert switch.network is None
+    assert vs.network is None
+    assert ground.network is None
+    assert p_ref.network is None
+    assert bus3.network is None
+    assert t.network is None
+    assert p_ref2.network is None
 
 
 def test_solve_load_flow(small_network, good_json_results):
@@ -535,3 +606,154 @@ def test_single_phase_network(single_phase_network: ElectricalNetwork):
         .astype({"phase": _PHASE_DTYPE, "current": complex})
         .set_index(["load_id", "phase"]),
     )
+
+
+def test_network_elements(small_network):
+    # Add a line to the network ("bus2" constructor belongs to the network)
+    bus1 = small_network.buses["bus1"]
+    bus2 = Bus("bus2", phases="abcn")
+    assert bus2.network is None
+    lp = LineParameters("test", z_line=10 * np.eye(4, dtype=complex))
+    l2 = Line(id="line2", bus1=bus2, bus2=bus1, parameters=lp, length=Q_(0.3, "km"))
+    assert l2.network == small_network
+    assert bus2.network == small_network
+
+    # Add a switch ("bus1" constructor belongs to the network)
+    bus3 = Bus("bus2", phases="abcn")
+    assert bus3.network is None
+    s = Switch(id="switch", bus1=bus2, bus2=bus3)
+    assert s.network == small_network
+    assert bus3.network == small_network
+
+    # Create a second network
+    bus_vs = Bus("bus_vs", phases="abcn")
+    VoltageSource("vs2", bus=bus_vs, voltages=15e3 * np.array([1, np.exp(-2j * np.pi / 3), np.exp(2j * np.pi / 3)]))
+    ground = Ground("ground2")
+    ground.connect(bus=bus_vs, phase="a")
+    PotentialRef("pref2", element=ground)
+    small_network_2 = ElectricalNetwork.from_element(initial_bus=bus_vs)
+
+    # Connect the two networks
+    with pytest.raises(RoseauLoadFlowException) as e:
+        Switch("switch2", bus1=bus2, bus2=bus_vs)
+    assert e.value.args[0] == "The Bus 'bus_vs' is already assigned to another network."
+    assert e.value.args[1] == RoseauLoadFlowExceptionCode.SEVERAL_NETWORKS
+
+    # Every object have their good network after this failure
+    for element in it.chain(
+        small_network.buses.values(),
+        small_network.branches.values(),
+        small_network.loads.values(),
+        small_network.grounds.values(),
+        small_network.potential_refs.values(),
+    ):
+        assert element.network == small_network
+    for element in it.chain(
+        small_network_2.buses.values(),
+        small_network_2.branches.values(),
+        small_network_2.loads.values(),
+        small_network_2.grounds.values(),
+        small_network_2.potential_refs.values(),
+    ):
+        assert element.network == small_network_2
+
+
+def test_network_results_warning(small_network, good_json_results, recwarn):  # noqa: C901
+    # network well-defined using the constructor
+    for bus in small_network.buses.values():
+        assert bus.network == small_network
+    for load in small_network.loads.values():
+        assert load.network == small_network
+    for branch in small_network.branches.values():
+        assert branch.network == small_network
+    for ground in small_network.grounds.values():
+        assert ground.network == small_network
+    for p_ref in small_network.potential_refs.values():
+        assert p_ref.network == small_network
+
+    # All the results function raises an exception
+    for bus in small_network.buses.values():
+        with pytest.raises(RoseauLoadFlowException) as e:
+            bus.res_potentials
+        assert e.value.args[1] == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
+        with pytest.raises(RoseauLoadFlowException) as e:
+            bus.res_voltages
+        assert e.value.args[1] == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
+    for branch in small_network.branches.values():
+        with pytest.raises(RoseauLoadFlowException) as e:
+            branch.res_currents
+        assert e.value.args[1] == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
+    for load in small_network.loads.values():
+        with pytest.raises(RoseauLoadFlowException) as e:
+            load.res_currents
+        assert e.value.args[1] == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
+        if load.is_flexible and isinstance(load, PowerLoad):
+            with pytest.raises(RoseauLoadFlowException) as e:
+                load.res_flexible_powers
+            assert e.value.args[1] == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
+    # for p_ref in small_network.potential_refs.values():
+    #     with pytest.raises(RoseauLoadFlowException) as e:
+    #         p_ref.res_current
+    # assert e.value.args[1]==RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
+
+    # Solve a load flow
+    solve_url = urljoin(ElectricalNetwork.DEFAULT_BASE_URL, "solve/")
+    with requests_mock.Mocker() as m:
+        m.post(solve_url, status_code=200, json=good_json_results, headers={"content-type": "application/json"})
+        small_network.solve_load_flow(auth=("", ""))
+
+    # No warning when getting results (they are up-to-date)
+    recwarn.clear()
+    for bus in small_network.buses.values():
+        bus.res_potentials
+        bus.res_voltages
+    for branch in small_network.branches.values():
+        branch.res_currents
+    for load in small_network.loads.values():
+        load.res_currents
+        if load.is_flexible and isinstance(load, PowerLoad):
+            load.res_flexible_powers
+    # for p_ref in small_network.potential_refs.values():
+    #     p_ref.res_current
+    assert len(recwarn) == 0
+
+    # Modify something
+    load = small_network.loads["load"]
+    load.powers = [200, 200, 200]  # VA
+
+    # Ensure that a warning is raised no matter which result is requested
+    expected_message = (
+        "The results of this element may be outdated. Please re-run a load flow to ensure the validity of results."
+    )
+    for bus in small_network.buses.values():
+        with check_result_warning(expected_message=expected_message):
+            bus.res_potentials
+        with check_result_warning(expected_message=expected_message):
+            bus.res_voltages
+    for branch in small_network.branches.values():
+        with check_result_warning(expected_message=expected_message):
+            branch.res_currents
+    for load in small_network.loads.values():
+        with check_result_warning(expected_message=expected_message):
+            load.res_currents
+        if load.is_flexible and isinstance(load, PowerLoad):
+            with check_result_warning(expected_message=expected_message):
+                load.res_flexible_powers
+    # for p_ref in small_network.potential_refs.values():
+    #     with check_result_warning(expected_message=expected_message):
+    #         p_ref.res_current
+
+    # Ensure that a single warning is raised when having a data frame result
+    expected_message = (
+        "The results of this network may be outdated. Please re-run a load flow to ensure the validity of results."
+    )
+    with check_result_warning(expected_message=expected_message):
+        small_network.res_buses_potentials
+    with check_result_warning(expected_message=expected_message):
+        small_network.res_buses_voltages
+    with check_result_warning(expected_message=expected_message):
+        small_network.res_branches_currents
+    with check_result_warning(expected_message=expected_message):
+        small_network.res_loads_currents
+    with check_result_warning(expected_message=expected_message):
+        small_network.res_loads_flexible_powers
