@@ -153,6 +153,7 @@ class Element(ABC, Identifiable, JsonMixin):
                 message="The results of this element may be outdated. Please re-run a load flow to ensure "
                 "the validity of results.",
                 category=UserWarning,
+                stacklevel=2,
             )
 
 
