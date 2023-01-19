@@ -156,6 +156,16 @@ class Element(ABC, Identifiable, JsonMixin):
                 stacklevel=2,
             )
 
+    @staticmethod
+    def _get_voltage_phases(phases: str) -> list[str]:
+        if "n" in phases:  # "an", "bn", "cn"
+            return [p + "n" for p in phases[:-1]]
+        else:  # "ab", "bc", "ca"
+            if len(phases) == 2:
+                return [phases]
+            else:
+                return [p1 + p2 for p1, p2 in zip(phases, np.roll(list(phases), -1))]
+
 
 class PotentialRef(Element):
     """A potential reference.

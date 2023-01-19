@@ -88,10 +88,7 @@ class AbstractLoad(Element, ABC):
     @property
     def voltage_phases(self) -> list[str]:
         """The phases of the load voltages."""
-        if "n" in self.phases:  # "an", "bn", "cn"
-            return [p + "n" for p in self.phases[:-1]]
-        else:  # "ab", "bc", "ca"
-            return [p1 + p2 for p1, p2 in zip(self.phases, np.roll(list(self.phases), -1))]
+        return self._get_voltage_phases(self.phases)
 
     def _res_currents_getter(self, warning: bool) -> np.ndarray:
         return self._res_getter(value=self._res_currents, warning=warning)
