@@ -5,6 +5,7 @@ from typing import Optional
 import regex
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
+from roseau.load_flow.typing import Self
 
 # The local logger
 logger = logging.getLogger(__name__)
@@ -30,7 +31,7 @@ class LineType(Enum):
         return self.name.lower()
 
     @classmethod
-    def from_string(cls, string: str) -> "LineType":
+    def from_string(cls, string: str) -> Self:
         """Convert a string into a LineType
 
         Args:
@@ -111,7 +112,7 @@ class ConductorType(Enum):
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_CONDUCTOR_TYPE)
 
     @classmethod
-    def from_string(cls, string: str) -> "ConductorType":
+    def from_string(cls, string: str) -> Self:
         """Convert a string into a ConductorType
 
         Args:
@@ -175,7 +176,7 @@ class IsolationType(Enum):
         return self.name.upper()
 
     @classmethod
-    def from_string(cls, string: str) -> "IsolationType":
+    def from_string(cls, string: str) -> Self:
         """Convert a string into a IsolationType
 
         Args:
@@ -234,7 +235,7 @@ class LineModel(Enum):
         return self.name.lower()
 
     @classmethod
-    def from_string(cls, string: str) -> "LineModel":
+    def from_string(cls, string: str) -> Self:
         """Convert a string into a LineModel
 
         Args:
@@ -323,7 +324,7 @@ class BranchType(Enum):
         return self.name.lower()
 
     @classmethod
-    def from_string(cls, string: str) -> "BranchType":
+    def from_string(cls, string: str) -> Self:
         """Convert a string into a ConnectionType
 
         Args:
@@ -404,7 +405,7 @@ class TransformerType(Enum):
         return self.name
 
     @classmethod
-    def from_string(cls, string: str) -> "TransformerType":
+    def from_string(cls, string: str) -> Self:
         """Convert a string into a TransformerType
 
         Args:

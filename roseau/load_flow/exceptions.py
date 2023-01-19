@@ -2,6 +2,8 @@ import unicodedata
 from enum import auto, Enum
 from typing import Union
 
+from roseau.load_flow.typing import Self
+
 
 class RoseauLoadFlowExceptionCode(Enum):
     """Error codes used by Roseau Load Flow."""
@@ -91,7 +93,7 @@ class RoseauLoadFlowExceptionCode(Enum):
         return super().__eq__(other)
 
     @classmethod
-    def from_string(cls, string: Union[str, "RoseauLoadFlowExceptionCode"]) -> "RoseauLoadFlowExceptionCode":
+    def from_string(cls, string: Union[str, "RoseauLoadFlowExceptionCode"]) -> Self:
         """A method to convert a string into an error code enumerated type.
 
         Args:

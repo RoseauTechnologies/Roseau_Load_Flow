@@ -3,7 +3,7 @@ import logging
 import numpy as np
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
-from roseau.load_flow.typing import Id, JsonDict
+from roseau.load_flow.typing import Id, JsonDict, Self
 from roseau.load_flow.utils import TransformerType, ureg
 from roseau.load_flow.utils.mixins import Identifiable, JsonMixin
 
@@ -107,7 +107,7 @@ class TransformerParameters(Identifiable, JsonMixin):
             )
 
     @classmethod
-    def from_name(cls, name: str, windings: str) -> "TransformerParameters":
+    def from_name(cls, name: str, windings: str) -> Self:
         """Construct TransformerParameters from name and windings.
 
         Args:
@@ -137,7 +137,7 @@ class TransformerParameters(Identifiable, JsonMixin):
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TYPE_NAME_SYNTAX)
 
     @classmethod
-    def from_dict(cls, data: JsonDict) -> "TransformerParameters":
+    def from_dict(cls, data: JsonDict) -> Self:
         return cls(
             id=data["id"],
             windings=data["type"],  # Windings of the transformer

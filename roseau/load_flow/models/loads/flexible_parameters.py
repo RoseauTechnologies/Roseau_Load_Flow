@@ -2,7 +2,7 @@ import logging
 from typing import Literal
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
-from roseau.load_flow.typing import JsonDict
+from roseau.load_flow.typing import JsonDict, Self
 from roseau.load_flow.utils.mixins import JsonMixin
 from roseau.load_flow.utils.units import ureg
 
@@ -62,13 +62,13 @@ class Control(JsonMixin):
         self.alpha = alpha
 
     @classmethod
-    def constant(cls) -> "Control":
+    def constant(cls) -> Self:
         """Create a constant control i.e no control."""
         return cls(type="constant", u_min=0.0, u_down=0.0, u_up=0.0, u_max=0.0)
 
     @classmethod
     @ureg.wraps(None, (None, "V", "V", None), strict=False)
-    def p_max_u_production(cls, u_up: float, u_max: float, alpha: float = DEFAULT_ALPHA) -> "Control":
+    def p_max_u_production(cls, u_up: float, u_max: float, alpha: float = DEFAULT_ALPHA) -> Self:
         """Create a control of the type ``"p_max_u_production"``.
 
         .. image:: /_static/Control_PU_Prod.png
@@ -98,7 +98,7 @@ class Control(JsonMixin):
 
     @classmethod
     @ureg.wraps(None, (None, "V", "V", None), strict=False)
-    def p_max_u_consumption(cls, u_min: float, u_down: float, alpha: float = DEFAULT_ALPHA) -> "Control":
+    def p_max_u_consumption(cls, u_min: float, u_down: float, alpha: float = DEFAULT_ALPHA) -> Self:
         """Create a control of the type ``"p_max_u_consumption"``.
 
         .. image:: /_static/Control_PU_Cons.png
@@ -128,7 +128,7 @@ class Control(JsonMixin):
 
     @classmethod
     @ureg.wraps(None, (None, "V", "V", "V", "V", None), strict=False)
-    def q_u(cls, u_min: float, u_down: float, u_up: float, u_max: float, alpha: float = DEFAULT_ALPHA) -> "Control":
+    def q_u(cls, u_min: float, u_down: float, u_up: float, u_max: float, alpha: float = DEFAULT_ALPHA) -> Self:
         """Create a control of the type ``"q_u"``.
 
         .. image:: /_static/Control_QU.png
@@ -171,7 +171,7 @@ class Control(JsonMixin):
     # Json Mixin interface
     #
     @classmethod
-    def from_dict(cls, data: JsonDict) -> "Control":
+    def from_dict(cls, data: JsonDict) -> Self:
         alpha = data["alpha"] if "alpha" in data else cls.DEFAULT_ALPHA
         if data["type"] == "constant":
             return cls.constant()
@@ -247,7 +247,7 @@ class Projection(JsonMixin):
     # Json Mixin interface
     #
     @classmethod
-    def from_dict(cls, data: JsonDict) -> "Projection":
+    def from_dict(cls, data: JsonDict) -> Self:
         alpha = data["alpha"] if "alpha" in data else cls.DEFAULT_ALPHA
         epsilon = data["epsilon"] if "epsilon" in data else cls.DEFAULT_EPSILON
         return cls(type=data["type"], alpha=alpha, epsilon=epsilon)
@@ -290,7 +290,7 @@ class FlexibleParameter(JsonMixin):
         self.s_max = s_max
 
     @classmethod
-    def constant(cls) -> "FlexibleParameter":
+    def constant(cls) -> Self:
         """Build flexible parameters for a constant control with a Euclidean projection.
 
         Returns:
@@ -314,7 +314,7 @@ class FlexibleParameter(JsonMixin):
         alpha_control: float = Control.DEFAULT_ALPHA,
         alpha_proj: float = Projection.DEFAULT_ALPHA,
         epsilon_proj: float = Projection.DEFAULT_EPSILON,
-    ) -> "FlexibleParameter":
+    ) -> Self:
         """Build flexible parameters for production ``P(U)`` control with a Euclidean projection.
 
         .. image:: /_static/Control_PU_Prod.png
@@ -367,7 +367,7 @@ class FlexibleParameter(JsonMixin):
         alpha_control: float = Control.DEFAULT_ALPHA,
         alpha_proj: float = Projection.DEFAULT_ALPHA,
         epsilon_proj: float = Projection.DEFAULT_EPSILON,
-    ) -> "FlexibleParameter":
+    ) -> Self:
         """Build flexible parameters for consumption ``P(U)`` control with a Euclidean projection.
 
         .. image:: /_static/Control_PU_Cons.png
@@ -419,7 +419,7 @@ class FlexibleParameter(JsonMixin):
         alpha_control: float = Control.DEFAULT_ALPHA,
         alpha_proj: float = Projection.DEFAULT_ALPHA,
         epsilon_proj: float = Projection.DEFAULT_EPSILON,
-    ) -> "FlexibleParameter":
+    ) -> Self:
         """Build flexible parameters for ``Q(U)`` control with a Euclidean projection.
 
         .. image:: /_static/Control_QU.png
@@ -480,7 +480,7 @@ class FlexibleParameter(JsonMixin):
         alpha_control=Control.DEFAULT_ALPHA,
         alpha_proj=Projection.DEFAULT_ALPHA,
         epsilon_proj=Projection.DEFAULT_EPSILON,
-    ) -> "FlexibleParameter":
+    ) -> Self:
         """Build flexible parameters for production ``P(U)`` control and ``Q(U)`` control with a
         Euclidean projection.
 
@@ -551,7 +551,7 @@ class FlexibleParameter(JsonMixin):
         alpha_control: float = Control.DEFAULT_ALPHA,
         alpha_proj: float = Projection.DEFAULT_ALPHA,
         epsilon_proj: float = Projection.DEFAULT_EPSILON,
-    ) -> "FlexibleParameter":
+    ) -> Self:
         """Build flexible parameters for consumption ``P(U)`` control and ``Q(U)`` control with a
         Euclidean projection.
 
@@ -612,7 +612,7 @@ class FlexibleParameter(JsonMixin):
     # Json Mixin interface
     #
     @classmethod
-    def from_dict(cls, data: JsonDict) -> "FlexibleParameter":
+    def from_dict(cls, data: JsonDict) -> Self:
         control_p = cls.control_class.from_dict(data["control_p"])
         control_q = cls.control_class.from_dict(data["control_q"])
         projection = cls.projection_class.from_dict(data["projection"])

@@ -6,7 +6,7 @@ import numpy as np
 import numpy.linalg as nplin
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
-from roseau.load_flow.typing import Id, JsonDict
+from roseau.load_flow.typing import Id, JsonDict, Self
 from roseau.load_flow.utils import ConductorType, IsolationType, LineModel, LineType
 from roseau.load_flow.utils.constants import CX, EPSILON_0, EPSILON_R, MU_0, OMEGA, PI, RHO, TAN_D
 from roseau.load_flow.utils.mixins import Identifiable, JsonMixin
@@ -102,7 +102,7 @@ class LineParameters(Identifiable, JsonMixin):
         xpn: Optional[float] = None,
         bn: Optional[float] = None,
         bpn: Optional[float] = None,
-    ) -> "LineParameters":
+    ) -> Self:
         """Create line parameters from sym model.
 
         Args:
@@ -360,7 +360,7 @@ class LineParameters(Identifiable, JsonMixin):
         section_neutral: float,
         height: float,
         external_diameter: float,
-    ) -> "LineParameters":
+    ) -> Self:
         """Create line parameters from LV exact model.
 
         Args:
@@ -574,7 +574,7 @@ class LineParameters(Identifiable, JsonMixin):
         section_neutral: Optional[float] = None,
         height: Optional[float] = None,
         external_diameter: Optional[float] = None,
-    ) -> "LineParameters":
+    ) -> Self:
         """Method to get the electrical parameters of a LV line from its canonical name.
         Some hypothesis will be made: the section of the neutral is the same as the other sections, the height and
         external diameter are pre-defined, and the isolation is PVC.
@@ -628,7 +628,7 @@ class LineParameters(Identifiable, JsonMixin):
         )
 
     @classmethod
-    def from_name_mv(cls, name: str) -> "LineParameters":
+    def from_name_mv(cls, name: str) -> Self:
         """Method to get the electrical parameters of a MV line from its canonical name.
 
         Args:
@@ -674,7 +674,7 @@ class LineParameters(Identifiable, JsonMixin):
         return cls(name, z_line=z_line, y_shunt=y_shunt)
 
     @classmethod
-    def from_dict(cls, data: JsonDict) -> "LineParameters":
+    def from_dict(cls, data: JsonDict) -> Self:
         """Line parameters constructor from dict.
 
         Args:

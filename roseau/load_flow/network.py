@@ -30,7 +30,7 @@ from roseau.load_flow.models import (
     Transformer,
     VoltageSource,
 )
-from roseau.load_flow.typing import Id, JsonDict, StrPath
+from roseau.load_flow.typing import Id, JsonDict, Self, StrPath
 
 logger = logging.getLogger(__name__)
 
@@ -156,7 +156,7 @@ class ElectricalNetwork:
         return elements_dict
 
     @classmethod
-    def from_element(cls, initial_bus: Bus) -> "ElectricalNetwork":
+    def from_element(cls, initial_bus: Bus) -> Self:
         """Construct the network from only one element and add the others automatically.
 
         Args:
@@ -771,7 +771,7 @@ class ElectricalNetwork:
     # Json Mixin interface
     #
     @classmethod
-    def from_dict(cls, data: JsonDict) -> "ElectricalNetwork":
+    def from_dict(cls, data: JsonDict) -> Self:
         """Construct an electrical network from a dict created with ``ElectricalNetwork(...).to_dict()``.
 
         Args:
@@ -792,7 +792,7 @@ class ElectricalNetwork:
         )
 
     @classmethod
-    def from_json(cls, path: StrPath) -> "ElectricalNetwork":
+    def from_json(cls, path: StrPath) -> Self:
         """Construct an electrical network from a json file.
 
         Args:
@@ -884,7 +884,7 @@ class ElectricalNetwork:
     # DGS interface
     #
     @classmethod
-    def from_dgs(cls, path: StrPath) -> "ElectricalNetwork":
+    def from_dgs(cls, path: StrPath) -> Self:
         """Construct an electrical network from json DGS file (PowerFactory).
 
         Args:

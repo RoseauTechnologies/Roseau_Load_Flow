@@ -3,7 +3,7 @@ from abc import ABCMeta, abstractmethod
 from typing import Any
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
-from roseau.load_flow.typing import Id, JsonDict
+from roseau.load_flow.typing import Id, JsonDict, Self
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +22,7 @@ class Identifiable(metaclass=ABCMeta):
 class JsonMixin(metaclass=ABCMeta):
     @classmethod
     @abstractmethod
-    def from_dict(cls, data: JsonDict, *args: Any) -> "JsonMixin":
+    def from_dict(cls, data: JsonDict, *args: Any) -> Self:
         """Create an element from a dictionary."""
         raise NotImplementedError
 

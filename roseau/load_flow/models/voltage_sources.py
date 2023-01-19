@@ -7,7 +7,7 @@ import numpy as np
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import Element
-from roseau.load_flow.typing import Id, JsonDict
+from roseau.load_flow.typing import Id, JsonDict, Self
 from roseau.load_flow.utils.units import ureg
 
 logger = logging.getLogger(__name__)
@@ -117,7 +117,7 @@ class VoltageSource(Element):
     # Json Mixin interface
     #
     @classmethod
-    def from_dict(cls, data: JsonDict) -> "VoltageSource":
+    def from_dict(cls, data: JsonDict) -> Self:
         voltages = [complex(v[0], v[1]) for v in data["voltages"]]
         return cls(data["id"], data["bus"], voltages=voltages, phases=data["phases"])
 
