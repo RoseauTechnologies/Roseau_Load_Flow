@@ -262,3 +262,55 @@ def test_transformer_phases():
     transformer = Transformer(id="tr1", bus1=bus1, bus2=bus2, parameters=tp, length=10)
     assert transformer.phases1 == "abc"
     assert transformer.phases2 == "abcn"
+
+
+def test_voltage_phases():
+    # Bus
+    bus = Bus("bus", phases="abcn")
+    assert bus.voltage_phases == ["an", "bn", "cn"]
+
+    bus = Bus("bus", phases="bcn")
+    assert bus.voltage_phases == ["bn", "cn"]
+
+    bus = Bus("bus", phases="bn")
+    assert bus.voltage_phases == ["bn"]
+
+    bus = Bus("bus", phases="abc")
+    assert bus.voltage_phases == ["ab", "bc", "ca"]
+
+    bus = Bus("bus", phases="ab")
+    assert bus.voltage_phases == ["ab"]
+
+    # Load
+    bus = Bus("bus", phases="abcn")
+    load = PowerLoad("load", bus, powers=[100, 100, 100], phases="abcn")
+    assert load.voltage_phases == ["an", "bn", "cn"]
+
+    load = PowerLoad("load", bus, powers=[100, 100], phases="bcn")
+    assert load.voltage_phases == ["bn", "cn"]
+
+    load = PowerLoad("load", bus, powers=[100], phases="bn")
+    assert load.voltage_phases == ["bn"]
+
+    load = PowerLoad("load", bus, powers=[100, 100, 100], phases="abc")
+    assert load.voltage_phases == ["ab", "bc", "ca"]
+
+    load = PowerLoad("load", bus, powers=[100], phases="ab")
+    assert load.voltage_phases == ["ab"]
+
+    # Source
+    bus = Bus("bus", phases="abcn")
+    load = VoltageSource("vs", bus, voltages=[100, 100, 100], phases="abcn")
+    assert load.voltage_phases == ["an", "bn", "cn"]
+
+    load = VoltageSource("vs", bus, voltages=[100, 100], phases="bcn")
+    assert load.voltage_phases == ["bn", "cn"]
+
+    load = VoltageSource("vs", bus, voltages=[100], phases="bn")
+    assert load.voltage_phases == ["bn"]
+
+    load = VoltageSource("vs", bus, voltages=[100, 100, 100], phases="abc")
+    assert load.voltage_phases == ["ab", "bc", "ca"]
+
+    load = VoltageSource("vs", bus, voltages=[100], phases="ab")
+    assert load.voltage_phases == ["ab"]

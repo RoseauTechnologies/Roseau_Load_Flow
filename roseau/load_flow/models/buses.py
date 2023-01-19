@@ -90,7 +90,7 @@ class Bus(Element):
             voltages = potentials[:-1] - potentials[-1]
         else:  # Vab, Vbc, Vca
             # np.roll(["a", "b", "c"], -1) -> ["b", "c", "a"]  # also works with single or double phase
-            voltages = np.roll(potentials, -1) - potentials
+            voltages = potentials - np.roll(potentials, -1)
         return voltages
 
     @property
@@ -106,10 +106,7 @@ class Bus(Element):
     @property
     def voltage_phases(self) -> list[str]:
         """The phases of the voltages."""
-        if "n" in self.phases:  # "an", "bn", "cn"
-            return [p + "n" for p in self.phases[:-1]]
-        else:  # "ab", "bc", "ca"
-            return [p1 + p2 for p1, p2 in zip(self.phases, np.roll(list(self.phases), -1))]
+        return self._get_voltage_phases(self.phases)
 
     #
     # Json Mixin interface

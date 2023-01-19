@@ -100,12 +100,16 @@ class VoltageSource(Element):
         self._voltages = np.asarray(voltages, dtype=complex)
         self._invalidate_network_results()
 
+    @property
+    def voltage_phases(self) -> list[str]:
+        """The phases of the source voltages."""
+        return self._get_voltage_phases(self.phases)
+
     #
     # Disconnect
     #
     def disconnect(self) -> None:
-        """Disconnect the voltage source from the network it belongs to. After a disconnection, the remaining load
-        object can not be used any more."""
+        """Disconnect this voltage source from the network. It cannot be used afterwards."""
         self._disconnect()
         self.bus = None
 

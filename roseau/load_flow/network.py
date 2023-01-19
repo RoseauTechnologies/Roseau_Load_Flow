@@ -326,9 +326,6 @@ class ElectricalNetwork:
         # Dispatch the results
         self._dispatch_results(result_dict=result_dict)
 
-        # The results are now valid
-        self._results_valid = True
-
         return self.results_info["iterations"]
 
     @staticmethod
@@ -385,6 +382,9 @@ class ElectricalNetwork:
             if isinstance(load, PowerLoad) and load.is_flexible:
                 load._res_flexible_powers = np.array([complex(p[0], p[1]) for p in load_data["powers"]], dtype=complex)
 
+        # The results are now valid
+        self._results_valid = True
+
     #
     # Getters for the load flow results
     #
@@ -395,6 +395,7 @@ class ElectricalNetwork:
                 message="The results of this network may be outdated. Please re-run a load flow to ensure the "
                 "validity of results.",
                 category=UserWarning,
+                stacklevel=2,
             )
 
     @property
@@ -528,6 +529,40 @@ class ElectricalNetwork:
             .set_index(["load_id", "phase"])
         )
         return currents_df
+
+    @property
+    def res_loads_powers(self) -> pd.DataFrame:
+        """The load flow results of the powers of the loads (VA) as a dataframe."""
+        self._warn_invalid_results()
+        loads_dict = {"load_id": [], "phase": [], "power": []}
+        for load_id, load in self.loads.items():
+            for power, phase in zip(load._res_powers_getter(warning=False), load.voltage_phases):
+                loads_dict["load_id"].append(load_id)
+                loads_dict["phase"].append(phase)
+                loads_dict["power"].append(power)
+        currents_df = (
+            pd.DataFrame.from_dict(loads_dict, orient="columns")
+            .astype({"phase": _VOLTAGE_PHASES_DTYPE, "power": complex})
+            .set_index(["load_id", "phase"])
+        )
+        return currents_df
+
+    @property
+    def res_loads_voltages(self) -> pd.DataFrame:
+        """The load flow results of the voltages of the loads (V) as a dataframe."""
+        self._warn_invalid_results()
+        voltages_dict = {"load_id": [], "phase": [], "voltage": []}
+        for load_id, load in self.loads.items():
+            for voltage, phase in zip(load._res_voltages_getter(warning=False), load.voltage_phases):
+                voltages_dict["load_id"].append(load_id)
+                voltages_dict["phase"].append(phase)
+                voltages_dict["voltage"].append(voltage)
+        voltages_df = (
+            pd.DataFrame.from_dict(voltages_dict, orient="columns")
+            .astype({"phase": _VOLTAGE_PHASES_DTYPE, "voltage": complex})
+            .set_index(["load_id", "phase"])
+        )
+        return voltages_df
 
     @property
     def res_loads_flexible_powers(self) -> pd.DataFrame:
