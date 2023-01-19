@@ -1,5 +1,7 @@
+from roseau.load_flow.models.branches import AbstractBranch
 from roseau.load_flow.models.buses import Bus
-from roseau.load_flow.models.core import AbstractBranch, Element, Ground, PotentialRef
+from roseau.load_flow.models.core import Element
+from roseau.load_flow.models.grounds import Ground
 from roseau.load_flow.models.lines import Line, LineParameters, Switch
 from roseau.load_flow.models.loads import (
     AbstractLoad,
@@ -10,6 +12,7 @@ from roseau.load_flow.models.loads import (
     PowerLoad,
     Projection,
 )
+from roseau.load_flow.models.potential_refs import PotentialRef
 from roseau.load_flow.models.transformers import Transformer, TransformerParameters
 from roseau.load_flow.models.voltage_sources import VoltageSource
 
