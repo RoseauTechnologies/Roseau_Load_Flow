@@ -826,6 +826,32 @@ class ElectricalNetwork:
     #
     # Output of results
     #
+    def results_from_dict(self, data: JsonDict) -> None:
+        """Load the results of a load flow from a dict created by ``self.results_to_dict()``."""
+        for key, self_elements, name in (
+            ("buses", self.buses, "Bus"),
+            ("branches", self.branches, "Branch"),
+            ("loads", self.loads, "Load"),
+        ):
+            seen = set()
+            for element_data in data[key]:
+                element_id = element_data["id"]
+                if element_id not in self_elements:
+                    msg = f"{name} {element_id!r} appears in the results but is not present in the network."
+                    logger.error(msg)
+                    raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LOAD_FLOW_RESULT)
+                seen.add(element_id)
+            if missing_buses := self_elements.keys() - seen:
+                msg = f"The following {key} are present in the network but not in the results: {sorted(missing_buses)}."
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LOAD_FLOW_RESULT)
+        self._dispatch_results(data)
+
+    def results_from_json(self, path: StrPath) -> None:
+        """Load the results of a load flow from a json file created by ``self.results_to_json()``."""
+        data = json.loads(Path(path).read_text())
+        self.results_from_dict(data)
+
     def results_to_dict(self) -> JsonDict:
         """Get the voltages and currents computed by the load flow and return them as a dict."""
         buses_results: list[JsonDict] = [

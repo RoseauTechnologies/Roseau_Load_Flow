@@ -68,6 +68,7 @@ class RoseauLoadFlowExceptionCode(Enum):
     BAD_ELEMENT_ID = auto()
     NO_LOAD_FLOW_CONVERGENCE = auto()
     BAD_REQUEST = auto()
+    BAD_LOAD_FLOW_RESULT = auto()
     LOAD_FLOW_NOT_RUN = auto()
     SEVERAL_NETWORKS = auto()
 
