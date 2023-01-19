@@ -214,11 +214,13 @@ class Line(AbstractBranch):
         if isinstance(length, Quantity):
             length = length.m_as("km")
 
+        self._initialized = False
         super().__init__(id, bus1, bus2, phases1=phases, phases2=phases, geometry=geometry, **kwargs)
         self.phases = phases
         self.ground = ground
         self.length = length
         self.parameters = parameters
+        self._initialized = True
 
     @property
     def parameters(self) -> LineParameters:
@@ -234,6 +236,10 @@ class Line(AbstractBranch):
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Z_LINE_SHAPE)
 
         if value.y_shunt is not None:
+            if self._initialized and self.parameters.y_shunt is None:
+                msg = "Cannot set line parameters with a shunt to a line that does not have shunt components."
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_MODEL)
             if value.y_shunt.shape != shape:
                 msg = f"Incorrect y_shunt dimensions for line {self.id!r}: {value.y_shunt.shape} instead of {shape}"
                 logger.error(msg)
@@ -243,6 +249,11 @@ class Line(AbstractBranch):
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_TYPE)
             self._connect(self.ground)
+        else:
+            if self._initialized and self.parameters.y_shunt is not None:
+                msg = "Cannot set line parameters without a shunt to a line that has shunt components."
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_MODEL)
         self._parameters = value
         self._invalidate_network_results()
 

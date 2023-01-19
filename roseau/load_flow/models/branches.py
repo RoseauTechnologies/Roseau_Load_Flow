@@ -6,7 +6,7 @@ from shapely.geometry.base import BaseGeometry
 
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import Element
-from roseau.load_flow.typing import Id, JsonDict
+from roseau.load_flow.typing import Id, JsonDict, Self
 from roseau.load_flow.utils import BranchType
 
 logger = logging.getLogger(__name__)
@@ -78,7 +78,7 @@ class AbstractBranch(Element):
     # Json Mixin interface
     #
     @classmethod
-    def from_dict(cls, data: JsonDict) -> "AbstractBranch":
+    def from_dict(cls, data: JsonDict) -> Self:
         return cls(**data)  # not used anymore
 
     def to_dict(self) -> JsonDict:

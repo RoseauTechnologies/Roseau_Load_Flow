@@ -7,7 +7,7 @@ from shapely.geometry import Point
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.core import Element
-from roseau.load_flow.typing import Id, JsonDict
+from roseau.load_flow.typing import Id, JsonDict, Self
 from roseau.load_flow.utils.units import ureg
 
 logger = logging.getLogger(__name__)
@@ -112,7 +112,7 @@ class Bus(Element):
     # Json Mixin interface
     #
     @classmethod
-    def from_dict(cls, data: JsonDict) -> "Bus":
+    def from_dict(cls, data: JsonDict) -> Self:
         geometry = cls._parse_geometry(data.get("geometry"))
         potentials = data.get("potentials")
         if potentials is not None:

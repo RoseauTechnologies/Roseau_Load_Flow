@@ -5,7 +5,7 @@ from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowE
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import Element
 from roseau.load_flow.models.grounds import Ground
-from roseau.load_flow.typing import Id, JsonDict
+from roseau.load_flow.typing import Id, JsonDict, Self
 
 logger = logging.getLogger(__name__)
 
@@ -68,7 +68,7 @@ class PotentialRef(Element):
         raise NotImplementedError
 
     @classmethod
-    def from_dict(cls, data: JsonDict) -> "PotentialRef":
+    def from_dict(cls, data: JsonDict) -> Self:
         return cls(data["id"], data["element"], phase=data.get("phases"))
 
     def to_dict(self) -> JsonDict:

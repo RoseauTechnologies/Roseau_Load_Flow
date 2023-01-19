@@ -95,6 +95,24 @@ def test_line_parameters():
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_Z_LINE_SHAPE
     assert e.value.msg == "Incorrect z_line dimensions for line 'line': (3, 3) instead of (4, 4)"
 
+    # Adding/Removing a shunt to a line is not allowed
+    mat = np.eye(3, dtype=np.complex_)
+    lp1 = LineParameters("lp1", z_line=mat.copy(), y_shunt=mat.copy())
+    lp2 = LineParameters("lp2", z_line=mat.copy())
+    bus1 = Bus("bus1", phases="abc")
+    bus2 = Bus("bus2", phases="abc")
+    ground = Ground("ground")
+    line1 = Line(id="line1", bus1=bus1, bus2=bus2, parameters=lp1, length=1.0, ground=ground)
+    line2 = Line(id="line2", bus1=bus1, bus2=bus2, parameters=lp2, length=1.0, ground=ground)
+    with pytest.raises(RoseauLoadFlowException) as e:
+        line1.parameters = lp2
+    assert e.value.msg == "Cannot set line parameters without a shunt to a line that has shunt components."
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_LINE_MODEL
+    with pytest.raises(RoseauLoadFlowException) as e:
+        line2.parameters = lp1
+    assert e.value.msg == "Cannot set line parameters with a shunt to a line that does not have shunt components."
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_LINE_MODEL
+
 
 def test_bad_model():
     # Unknown line model

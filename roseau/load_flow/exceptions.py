@@ -2,6 +2,8 @@ import unicodedata
 from enum import auto, Enum
 from typing import Union
 
+from roseau.load_flow.typing import Self
+
 
 class RoseauLoadFlowExceptionCode(Enum):
     """Error codes used by Roseau Load Flow."""
@@ -12,17 +14,17 @@ class RoseauLoadFlowExceptionCode(Enum):
     BAD_ID_TYPE = auto()
 
     # Grounds and Potential references
-    DUPLICATE_GROUND_ID = auto()
-    DUPLICATE_POTENTIAL_REF_ID = auto()
+    BAD_GROUND_ID = auto()
+    BAD_POTENTIAL_REF_ID = auto()
 
     # Buses
-    DUPLICATE_BUS_ID = auto()
+    BAD_BUS_ID = auto()
     BAD_BUS_TYPE = auto()
     BAD_POTENTIALS_SIZE = auto()
     BAD_VOLTAGES_SIZE = auto()
 
     # Branches
-    DUPLICATE_BRANCH_ID = auto()
+    BAD_BRANCH_ID = auto()
     BAD_BRANCH_TYPE = auto()
     BAD_Z_LINE_SHAPE = auto()
     BAD_Y_SHUNT_SHAPE = auto()
@@ -42,7 +44,7 @@ class RoseauLoadFlowExceptionCode(Enum):
     BAD_CONTROL_TYPE = auto()
 
     # Load
-    DUPLICATE_LOAD_ID = auto()
+    BAD_LOAD_ID = auto()
     BAD_LOAD_TYPE = auto()
     BAD_I_SIZE = auto()
     BAD_Z_SIZE = auto()
@@ -52,7 +54,7 @@ class RoseauLoadFlowExceptionCode(Enum):
     BAD_PARAMETERS_SIZE = auto()
 
     # Voltage source
-    DUPLICATE_VOLTAGE_SOURCE_ID = auto()
+    BAD_VOLTAGE_SOURCE_ID = auto()
 
     # Network
     BAD_VOLTAGES_SOURCES_CONNECTION = auto()
@@ -66,6 +68,7 @@ class RoseauLoadFlowExceptionCode(Enum):
     BAD_ELEMENT_ID = auto()
     NO_LOAD_FLOW_CONVERGENCE = auto()
     BAD_REQUEST = auto()
+    BAD_LOAD_FLOW_RESULT = auto()
     LOAD_FLOW_NOT_RUN = auto()
     SEVERAL_NETWORKS = auto()
 
@@ -91,7 +94,7 @@ class RoseauLoadFlowExceptionCode(Enum):
         return super().__eq__(other)
 
     @classmethod
-    def from_string(cls, string: Union[str, "RoseauLoadFlowExceptionCode"]) -> "RoseauLoadFlowExceptionCode":
+    def from_string(cls, string: Union[str, "RoseauLoadFlowExceptionCode"]) -> Self:
         """A method to convert a string into an error code enumerated type.
 
         Args:
@@ -137,4 +140,4 @@ class RoseauLoadFlowException(Exception):
         self.code = code
 
     def __str__(self) -> str:
-        return str(self.code)
+        return f"{self.msg} [{self.code.name.lower()}]"

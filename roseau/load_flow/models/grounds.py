@@ -4,7 +4,7 @@ from typing import Any
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import Element
-from roseau.load_flow.typing import Id, JsonDict
+from roseau.load_flow.typing import Id, JsonDict, Self
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +63,7 @@ class Ground(Element):
         self._bus_phases[bus.id] = phase
 
     @classmethod
-    def from_dict(cls, data: JsonDict) -> "Ground":
+    def from_dict(cls, data: JsonDict) -> Self:
         self = cls(data["id"])
         self._bus_phases = data["buses"]
         return self

@@ -30,7 +30,7 @@ from roseau.load_flow.models import (
     Transformer,
     VoltageSource,
 )
-from roseau.load_flow.typing import Id, JsonDict, StrPath
+from roseau.load_flow.typing import Id, JsonDict, Self, StrPath
 
 logger = logging.getLogger(__name__)
 
@@ -99,16 +99,14 @@ class ElectricalNetwork:
                 dictionary of potential references with their IDs as keys. A potential reference
                 per galvanically isolated section of the network is expected.
         """
-        self.buses = self._elements_as_dict(buses, RoseauLoadFlowExceptionCode.DUPLICATE_BUS_ID)
-        self.branches = self._elements_as_dict(branches, RoseauLoadFlowExceptionCode.DUPLICATE_BRANCH_ID)
-        self.loads = self._elements_as_dict(loads, RoseauLoadFlowExceptionCode.DUPLICATE_LOAD_ID)
+        self.buses = self._elements_as_dict(buses, RoseauLoadFlowExceptionCode.BAD_BUS_ID)
+        self.branches = self._elements_as_dict(branches, RoseauLoadFlowExceptionCode.BAD_BRANCH_ID)
+        self.loads = self._elements_as_dict(loads, RoseauLoadFlowExceptionCode.BAD_LOAD_ID)
         self.voltage_sources = self._elements_as_dict(
-            voltage_sources, RoseauLoadFlowExceptionCode.DUPLICATE_VOLTAGE_SOURCE_ID
+            voltage_sources, RoseauLoadFlowExceptionCode.BAD_VOLTAGE_SOURCE_ID
         )
-        self.grounds = self._elements_as_dict(grounds, RoseauLoadFlowExceptionCode.DUPLICATE_GROUND_ID)
-        self.potential_refs = self._elements_as_dict(
-            potential_refs, RoseauLoadFlowExceptionCode.DUPLICATE_POTENTIAL_REF_ID
-        )
+        self.grounds = self._elements_as_dict(grounds, RoseauLoadFlowExceptionCode.BAD_GROUND_ID)
+        self.potential_refs = self._elements_as_dict(potential_refs, RoseauLoadFlowExceptionCode.BAD_POTENTIAL_REF_ID)
 
         self._check_validity(constructed=False)
         self._create_network()
@@ -140,20 +138,25 @@ class ElectricalNetwork:
         elements: Union[list[_T], dict[Id, _T]], error_code: RoseauLoadFlowExceptionCode
     ) -> dict[Id, _T]:
         """Convert a list of elements to a dictionary of elements with their IDs as keys."""
+        typ = error_code.name.removeprefix("BAD_").removesuffix("_ID").replace("_", " ")
         if isinstance(elements, dict):
+            for element_id, element in elements.items():
+                if element.id != element_id:
+                    msg = f"{typ.capitalize()} ID mismatch: {element_id!r} != {element.id!r}."
+                    logger.error(msg)
+                    raise RoseauLoadFlowException(msg, code=error_code)
             return elements
         elements_dict: dict[Id, _T] = {}
         for element in elements:
             if element.id in elements_dict:
-                name = error_code.name.removeprefix("DUPLICATE_").removesuffix("_ID").replace("_", " ").lower()
-                msg = f"Duplicate id for an {name} in this network: {element.id!r}."
+                msg = f"Duplicate ID for an {typ.lower()} in this network: {element.id!r}."
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg, code=error_code)
             elements_dict[element.id] = element
         return elements_dict
 
     @classmethod
-    def from_element(cls, initial_bus: Bus) -> "ElectricalNetwork":
+    def from_element(cls, initial_bus: Bus) -> Self:
         """Construct the network from only one element and add the others automatically.
 
         Args:
@@ -768,7 +771,7 @@ class ElectricalNetwork:
     # Json Mixin interface
     #
     @classmethod
-    def from_dict(cls, data: JsonDict) -> "ElectricalNetwork":
+    def from_dict(cls, data: JsonDict) -> Self:
         """Construct an electrical network from a dict created with ``ElectricalNetwork(...).to_dict()``.
 
         Args:
@@ -789,7 +792,7 @@ class ElectricalNetwork:
         )
 
     @classmethod
-    def from_json(cls, path: StrPath) -> "ElectricalNetwork":
+    def from_json(cls, path: StrPath) -> Self:
         """Construct an electrical network from a json file.
 
         Args:
@@ -823,6 +826,32 @@ class ElectricalNetwork:
     #
     # Output of results
     #
+    def results_from_dict(self, data: JsonDict) -> None:
+        """Load the results of a load flow from a dict created by ``self.results_to_dict()``."""
+        for key, self_elements, name in (
+            ("buses", self.buses, "Bus"),
+            ("branches", self.branches, "Branch"),
+            ("loads", self.loads, "Load"),
+        ):
+            seen = set()
+            for element_data in data[key]:
+                element_id = element_data["id"]
+                if element_id not in self_elements:
+                    msg = f"{name} {element_id!r} appears in the results but is not present in the network."
+                    logger.error(msg)
+                    raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LOAD_FLOW_RESULT)
+                seen.add(element_id)
+            if missing_buses := self_elements.keys() - seen:
+                msg = f"The following {key} are present in the network but not in the results: {sorted(missing_buses)}."
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LOAD_FLOW_RESULT)
+        self._dispatch_results(data)
+
+    def results_from_json(self, path: StrPath) -> None:
+        """Load the results of a load flow from a json file created by ``self.results_to_json()``."""
+        data = json.loads(Path(path).read_text())
+        self.results_from_dict(data)
+
     def results_to_dict(self) -> JsonDict:
         """Get the voltages and currents computed by the load flow and return them as a dict."""
         buses_results: list[JsonDict] = [
@@ -881,7 +910,7 @@ class ElectricalNetwork:
     # DGS interface
     #
     @classmethod
-    def from_dgs(cls, path: StrPath) -> "ElectricalNetwork":
+    def from_dgs(cls, path: StrPath) -> Self:
         """Construct an electrical network from json DGS file (PowerFactory).
 
         Args:
