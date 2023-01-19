@@ -48,7 +48,7 @@ class Element(ABC, Identifiable, JsonMixin):
         return self._network
 
     @classmethod
-    def _check_phases(cls, id: str, **kwargs: str) -> None:
+    def _check_phases(cls, id: Id, **kwargs: str) -> None:
         name, phases = kwargs.popitem()  # phases, phases1 or phases2
         if phases not in cls.allowed_phases:
             msg = (

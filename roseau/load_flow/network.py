@@ -99,16 +99,14 @@ class ElectricalNetwork:
                 dictionary of potential references with their IDs as keys. A potential reference
                 per galvanically isolated section of the network is expected.
         """
-        self.buses = self._elements_as_dict(buses, RoseauLoadFlowExceptionCode.DUPLICATE_BUS_ID)
-        self.branches = self._elements_as_dict(branches, RoseauLoadFlowExceptionCode.DUPLICATE_BRANCH_ID)
-        self.loads = self._elements_as_dict(loads, RoseauLoadFlowExceptionCode.DUPLICATE_LOAD_ID)
+        self.buses = self._elements_as_dict(buses, RoseauLoadFlowExceptionCode.BAD_BUS_ID)
+        self.branches = self._elements_as_dict(branches, RoseauLoadFlowExceptionCode.BAD_BRANCH_ID)
+        self.loads = self._elements_as_dict(loads, RoseauLoadFlowExceptionCode.BAD_LOAD_ID)
         self.voltage_sources = self._elements_as_dict(
-            voltage_sources, RoseauLoadFlowExceptionCode.DUPLICATE_VOLTAGE_SOURCE_ID
+            voltage_sources, RoseauLoadFlowExceptionCode.BAD_VOLTAGE_SOURCE_ID
         )
-        self.grounds = self._elements_as_dict(grounds, RoseauLoadFlowExceptionCode.DUPLICATE_GROUND_ID)
-        self.potential_refs = self._elements_as_dict(
-            potential_refs, RoseauLoadFlowExceptionCode.DUPLICATE_POTENTIAL_REF_ID
-        )
+        self.grounds = self._elements_as_dict(grounds, RoseauLoadFlowExceptionCode.BAD_GROUND_ID)
+        self.potential_refs = self._elements_as_dict(potential_refs, RoseauLoadFlowExceptionCode.BAD_POTENTIAL_REF_ID)
 
         self._check_validity(constructed=False)
         self._create_network()
@@ -140,13 +138,18 @@ class ElectricalNetwork:
         elements: Union[list[_T], dict[Id, _T]], error_code: RoseauLoadFlowExceptionCode
     ) -> dict[Id, _T]:
         """Convert a list of elements to a dictionary of elements with their IDs as keys."""
+        typ = error_code.name.removeprefix("BAD_").removesuffix("_ID").replace("_", " ")
         if isinstance(elements, dict):
+            for element_id, element in elements.items():
+                if element.id != element_id:
+                    msg = f"{typ.capitalize()} ID mismatch: {element_id!r} != {element.id!r}."
+                    logger.error(msg)
+                    raise RoseauLoadFlowException(msg, code=error_code)
             return elements
         elements_dict: dict[Id, _T] = {}
         for element in elements:
             if element.id in elements_dict:
-                name = error_code.name.removeprefix("DUPLICATE_").removesuffix("_ID").replace("_", " ").lower()
-                msg = f"Duplicate id for an {name} in this network: {element.id!r}."
+                msg = f"Duplicate ID for an {typ.lower()} in this network: {element.id!r}."
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg, code=error_code)
             elements_dict[element.id] = element

@@ -321,6 +321,28 @@ def test_bad_networks():
     assert t.network is None
     assert p_ref2.network is None
 
+    # Bad ID
+    src_bus = Bus("sb", phases="abcn")
+    load_bus = Bus("lb", phases="abcn")
+    ground = Ground("g")
+    pref = PotentialRef("pr", element=ground)
+    ground.connect(src_bus)
+    lp = LineParameters("test", z_line=np.eye(4, dtype=complex))
+    line = Line("ln", src_bus, load_bus, phases="abcn", parameters=lp, length=10)
+    vs = VoltageSource("vs", src_bus, phases="abcn", voltages=[230, 120 + 150j, 120 - 150j])
+    load = PowerLoad("pl", load_bus, phases="abcn", powers=[1000, 500, 1000])
+    with pytest.raises(RoseauLoadFlowException) as e:
+        ElectricalNetwork(
+            buses={"foo": src_bus, "lb": load_bus},  # <-- ID of src_bus is wrong
+            branches={"ln": line},
+            loads={"pl": load},
+            voltage_sources={"vs": vs},
+            grounds={"g": ground},
+            potential_refs={"pr": pref},
+        )
+    assert e.value.msg == "Bus ID mismatch: 'foo' != 'sb'."
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_BUS_ID
+
 
 def test_solve_load_flow(small_network, good_json_results):
     load: PowerLoad = small_network.loads["load"]
