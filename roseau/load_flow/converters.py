@@ -3,7 +3,7 @@ from collections.abc import Sequence
 import numpy as np
 import pandas as pd
 
-ALPHA = np.e ** (2 / 3 * np.pi * 1j)
+ALPHA = np.exp(2 / 3 * np.pi * 1j)
 """complex: Phasor rotation operator `alpha`, which rotates a phasor vector counterclockwise by 120
 degrees when multiplied by it."""
 
@@ -93,3 +93,70 @@ def series_phasor_to_sym(s_abc: pd.Series) -> pd.Series:
         s_012.index.levels[-1].astype(pd.CategoricalDtype(categories=["zero", "pos", "neg"], ordered=True)), level=-1
     )
     return s_012
+
+
+def calculate_voltages(potentials: np.ndarray, phases: str) -> np.ndarray:
+    """Calculate the voltages between phases given the potentials of each phase.
+
+    Args:
+        potentials:
+            Array of the complex potentials of each phase.
+
+        phases:
+            String of the phases in order. If a neutral exists, it must be the last.
+
+    Returns:
+        Array of the voltages between phases. If a neutral exists, the voltages are Phase-Neutral.
+        Otherwise, the voltages are Phase-Phase.
+
+    Example:
+        >>> potentials = 230 * np.array([1, np.exp(-2j*np.pi/3), np.exp(2j*np.pi/3), 0], dtype=np.complex_)
+        >>> calculate_voltages(potentials, "abcn")
+        array([ 230.  +0.j        , -115.-199.18584287j, -115.+199.18584287j])
+        >>> potentials = np.array([230, 230 * np.exp(-2j*np.pi/3)], dtype=np.complex_)
+        >>> calculate_voltages(potentials, "ab")
+        array([345.+199.18584287j])
+        >>> calculate_voltages(np.array([230, 0], dtype=np.complex_), "an")
+        array([230.+0.j])
+    """
+    assert len(potentials) == len(phases), "Number of potentials must match number of phases."
+    if "n" in phases:  # Van, Vbn, Vcn
+        # we know "n" is the last phase
+        voltages = potentials[:-1] - potentials[-1]
+    else:  # Vab, Vbc, Vca
+        if len(phases) == 2:
+            # V = potentials[0] - potentials[1] (but as array)
+            voltages = potentials[:1] - potentials[1:]
+        else:
+            # np.roll(["a", "b", "c"], -1) -> ["b", "c", "a"]
+            voltages = potentials - np.roll(potentials, -1)
+    return voltages
+
+
+def calculate_voltage_phases(phases: str) -> list[str]:
+    """Calculate the composite phases of the voltages given the phases of an element.
+
+    Args:
+        phases:
+            String of the phases in order. If a neutral exists, it must be the last.
+
+    Returns:
+        List of the composite phases of the voltages.
+
+    Example:
+        >>> calculate_voltage_phases("an")
+        ['an']
+        >>> calculate_voltage_phases("ab")
+        ['ab']
+        >>> calculate_voltage_phases("abc")
+        ['ab', 'bc', 'ca']
+        >>> calculate_voltage_phases("abcn")
+        ['an', 'bn', 'cn']
+    """
+    if "n" in phases:  # "an", "bn", "cn"
+        return [p + "n" for p in phases[:-1]]
+    else:  # "ab", "bc", "ca"
+        if len(phases) == 2:
+            return [phases]
+        else:
+            return [p1 + p2 for p1, p2 in zip(phases, np.roll(list(phases), -1))]

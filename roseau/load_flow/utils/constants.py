@@ -1,7 +1,7 @@
 import numpy as np
 
+from roseau.load_flow.units import Q_
 from roseau.load_flow.utils.types import ConductorType, IsolationType, LineType
-from roseau.load_flow.utils.units import Q_
 
 PI = np.pi
 """The famous constant."""

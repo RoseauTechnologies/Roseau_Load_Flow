@@ -6,12 +6,13 @@ from typing import Any, Literal, Optional
 import numpy as np
 from pint import Quantity
 
+from roseau.load_flow.converters import calculate_voltage_phases, calculate_voltages
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import Element
 from roseau.load_flow.models.loads.flexible_parameters import FlexibleParameter
 from roseau.load_flow.typing import Id, JsonDict
-from roseau.load_flow.utils.units import ureg
+from roseau.load_flow.units import ureg
 
 logger = logging.getLogger(__name__)
 
@@ -88,7 +89,7 @@ class AbstractLoad(Element, ABC):
     @property
     def voltage_phases(self) -> list[str]:
         """The phases of the load voltages."""
-        return self._get_voltage_phases(self.phases)
+        return calculate_voltage_phases(self.phases)
 
     def _res_currents_getter(self, warning: bool) -> np.ndarray:
         return self._res_getter(value=self._res_currents, warning=warning)
@@ -115,27 +116,9 @@ class AbstractLoad(Element, ABC):
         return np.asarray(value, dtype=complex)
 
     def _res_voltages_getter(self, warning: bool) -> np.ndarray:
-        if "n" in self.phases:
-            # Wye load: get the phase-to-neutral voltages
-            bus_voltages = self.bus._res_voltages_getter(warning)
-            bus_voltage_phases = self.bus.voltage_phases
-        else:
-            # Delta load: get the phase-to-phase voltages
-            if "n" in self.bus.phases:  # calculate delta bus voltages
-                bus_voltages = self.bus.res_potentials[:-1] - np.roll(self.bus.res_potentials[:-1], -1)
-                bus_voltage_phases = [
-                    p1 + p2 for p1, p2 in zip(self.bus.phases[:-1], np.roll(list(self.bus.phases[:-1]), -1))
-                ]
-            else:  # bus voltages are already delta
-                bus_voltages = self.bus._res_voltages_getter(warning)
-                bus_voltage_phases = self.bus.voltage_phases
-
-        # filter to the voltages of this load
-        voltages = []
-        for v, (p1, p2) in zip(bus_voltages, bus_voltage_phases):
-            if p1 in self.phases and p2 in self.phases:
-                voltages.append(v)
-        return np.array(voltages)
+        bus_potentials = self.bus._res_potentials_getter(warning)
+        potentials = np.array([p for p, ph in zip(bus_potentials, self.bus.phases) if ph in self.phases])
+        return calculate_voltages(potentials, self.phases)
 
     @property
     def res_voltages(self) -> np.ndarray:

@@ -5,10 +5,11 @@ from typing import Any, Optional
 import numpy as np
 from shapely.geometry import Point
 
+from roseau.load_flow.converters import calculate_voltage_phases, calculate_voltages
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.core import Element
 from roseau.load_flow.typing import Id, JsonDict, Self
-from roseau.load_flow.utils.units import ureg
+from roseau.load_flow.units import ureg
 
 logger = logging.getLogger(__name__)
 
@@ -85,13 +86,7 @@ class Bus(Element):
 
     def _res_voltages_getter(self, warning: bool) -> np.ndarray:
         potentials = np.asarray(self._res_potentials_getter(warning=warning))
-        if "n" in self.phases:  # Van, Vbn, Vcn
-            # we know "n" is the last phase
-            voltages = potentials[:-1] - potentials[-1]
-        else:  # Vab, Vbc, Vca
-            # np.roll(["a", "b", "c"], -1) -> ["b", "c", "a"]  # also works with single or double phase
-            voltages = potentials - np.roll(potentials, -1)
-        return voltages
+        return calculate_voltages(potentials, self.phases)
 
     @property
     def res_voltages(self) -> np.ndarray:
@@ -106,7 +101,7 @@ class Bus(Element):
     @property
     def voltage_phases(self) -> list[str]:
         """The phases of the voltages."""
-        return self._get_voltage_phases(self.phases)
+        return calculate_voltage_phases(self.phases)
 
     #
     # Json Mixin interface
