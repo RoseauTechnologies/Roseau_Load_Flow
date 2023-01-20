@@ -9,7 +9,7 @@ from shapely.geometry.base import BaseGeometry
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.typing import Id
-from roseau.load_flow.utils.mixins import Identifiable, JsonMixin
+from roseau.load_flow.utils import Identifiable, JsonMixin
 
 if TYPE_CHECKING:
     from roseau.load_flow.network import ElectricalNetwork

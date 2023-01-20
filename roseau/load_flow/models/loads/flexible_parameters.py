@@ -4,7 +4,7 @@ from typing import Literal
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.typing import JsonDict, Self
 from roseau.load_flow.units import ureg
-from roseau.load_flow.utils.mixins import JsonMixin
+from roseau.load_flow.utils import JsonMixin
 
 logger = logging.getLogger(__name__)
 
