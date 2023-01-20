@@ -456,7 +456,7 @@ class ElectricalNetwork:
 
             To get the symmetrical components of the voltages:
 
-            >>> from roseau.load_flow.utils.converters import series_phasor_to_sym
+            >>> from roseau.load_flow.converters import series_phasor_to_sym
             >>> voltage_series = net.res_buses_voltages["voltage"]
             >>> voltage_symmetrical = series_phasor_to_sym(voltage_series)
             >>> voltage_symmetrical

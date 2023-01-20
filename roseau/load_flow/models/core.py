@@ -3,14 +3,13 @@ import warnings
 from abc import ABC
 from typing import Any, ClassVar, NoReturn, Optional, TYPE_CHECKING, TypeVar, Union
 
-import numpy as np
 import shapely
 from shapely.geometry import shape
 from shapely.geometry.base import BaseGeometry
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.typing import Id
-from roseau.load_flow.utils.mixins import Identifiable, JsonMixin
+from roseau.load_flow.utils import Identifiable, JsonMixin
 
 if TYPE_CHECKING:
     from roseau.load_flow.network import ElectricalNetwork
@@ -153,13 +152,3 @@ class Element(ABC, Identifiable, JsonMixin):
                 category=UserWarning,
                 stacklevel=2,
             )
-
-    @staticmethod
-    def _get_voltage_phases(phases: str) -> list[str]:
-        if "n" in phases:  # "an", "bn", "cn"
-            return [p + "n" for p in phases[:-1]]
-        else:  # "ab", "bc", "ca"
-            if len(phases) == 2:
-                return [phases]
-            else:
-                return [p1 + p2 for p1, p2 in zip(phases, np.roll(list(phases), -1))]

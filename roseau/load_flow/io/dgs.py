@@ -20,7 +20,8 @@ from roseau.load_flow.models import (
     VoltageSource,
 )
 from roseau.load_flow.typing import StrPath
-from roseau.load_flow.utils import LineModel, Q_
+from roseau.load_flow.units import Q_
+from roseau.load_flow.utils import LineModel
 
 logger = logging.getLogger(__name__)
 

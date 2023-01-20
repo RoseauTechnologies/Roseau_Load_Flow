@@ -4,11 +4,12 @@ from typing import Any, Optional
 
 import numpy as np
 
+from roseau.load_flow.converters import calculate_voltage_phases
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import Element
 from roseau.load_flow.typing import Id, JsonDict, Self
-from roseau.load_flow.utils.units import ureg
+from roseau.load_flow.units import ureg
 
 logger = logging.getLogger(__name__)
 
@@ -103,7 +104,7 @@ class VoltageSource(Element):
     @property
     def voltage_phases(self) -> list[str]:
         """The phases of the source voltages."""
-        return self._get_voltage_phases(self.phases)
+        return calculate_voltage_phases(self.phases)
 
     #
     # Disconnect

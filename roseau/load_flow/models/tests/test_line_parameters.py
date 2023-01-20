@@ -5,7 +5,8 @@ import pytest
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models import Bus, Ground, Line, LineParameters
-from roseau.load_flow.utils import ConductorType, IsolationType, LineModel, LineType, Q_
+from roseau.load_flow.units import Q_
+from roseau.load_flow.utils import ConductorType, IsolationType, LineModel, LineType
 
 
 def test_line_parameters():

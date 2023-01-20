@@ -25,7 +25,7 @@ from roseau.load_flow.models import (
     VoltageSource,
 )
 from roseau.load_flow.network import _PHASE_DTYPE, _VOLTAGE_PHASES_DTYPE, ElectricalNetwork
-from roseau.load_flow.utils import Q_
+from roseau.load_flow.units import Q_
 
 
 @pytest.fixture()

@@ -4,7 +4,7 @@ from pint.errors import DimensionalityError
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models import Bus, CurrentLoad, FlexibleParameter, ImpedanceLoad, PowerLoad
-from roseau.load_flow.utils import Q_
+from roseau.load_flow.units import Q_
 
 
 def test_loads():
@@ -587,3 +587,36 @@ def test_impedance_load_res_powers(bus_ph, load_ph, z, res_pot, res_cur):
     # TODO: test comparison to load.res_currents using Delta-Wye transform
     # https://en.wikipedia.org/wiki/Y-%CE%94_transform
     assert np.allclose(impedances, load.impedances)
+
+
+@pytest.mark.parametrize(
+    ("bus_ph", "load_ph", "bus_vph", "load_vph"),
+    (
+        pytest.param("abcn", "abcn", ["an", "bn", "cn"], ["an", "bn", "cn"], id="abcn,abcn"),
+        pytest.param("abcn", "abc", ["an", "bn", "cn"], ["ab", "bc", "ca"], id="abcn,abc"),
+        pytest.param("abcn", "can", ["an", "bn", "cn"], ["cn", "an"], id="abcn,can"),
+        pytest.param("abcn", "bn", ["an", "bn", "cn"], ["bn"], id="abcn,bn"),
+        pytest.param("bcn", "bn", ["bn", "cn"], ["bn"], id="bcn,bn"),
+        pytest.param("bcn", "bc", ["bn", "cn"], ["bc"], id="bcn,bc"),
+        pytest.param("bn", "bn", ["bn"], ["bn"], id="bn,bn"),
+        pytest.param("abc", "abc", ["ab", "bc", "ca"], ["ab", "bc", "ca"], id="abc,abc"),
+        pytest.param("abc", "bc", ["ab", "bc", "ca"], ["bc"], id="abc,bc"),
+        pytest.param("bc", "bc", ["bc"], ["bc"], id="bc,bc"),
+    ),
+)
+def test_load_voltages(bus_ph, load_ph, bus_vph, load_vph):
+    bus = Bus("bus", phases=bus_ph)
+    powers = [100, 200, 300]
+    load = PowerLoad("load", bus, powers=powers[: len(load_vph)], phases=load_ph)
+
+    res_pot = [230 + 0j, 230 * np.exp(1j * 2 * np.pi / 3), 230 * np.exp(1j * 4 * np.pi / 3), 0j]
+    bus._res_potentials = np.array(res_pot[: len(bus_ph)], dtype=np.complex_)
+
+    res_cur = [0.1 + 0j, 0.2 + 0j, 0.3 + 0j, 0.6 + 0j]
+    load._res_currents = np.array(res_cur[: len(load_ph)], dtype=np.complex_)
+
+    assert bus.voltage_phases == bus_vph
+    assert len(bus.res_voltages) == len(bus.voltage_phases)
+
+    assert load.voltage_phases == load_vph
+    assert len(load.res_voltages) == len(load.voltage_phases)

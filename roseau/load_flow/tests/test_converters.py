@@ -2,8 +2,8 @@ import numpy as np
 import pandas as pd
 from pandas.testing import assert_series_equal
 
+from roseau.load_flow.converters import phasor_to_sym, series_phasor_to_sym, sym_to_phasor
 from roseau.load_flow.network import _PHASE_DTYPE
-from roseau.load_flow.utils.converters import phasor_to_sym, series_phasor_to_sym, sym_to_phasor
 
 
 def test_phasor_to_sym():
