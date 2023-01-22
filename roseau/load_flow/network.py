@@ -257,6 +257,28 @@ class ElectricalNetwork:
             index="id",
         )
 
+    @property
+    def grounds_frame(self) -> pd.DataFrame:
+        """A dataframe of the network grounds."""
+        return pd.DataFrame.from_records(
+            data=[
+                (ground.id, bus_id, phase)
+                for ground in self.grounds.values()
+                for bus_id, phase in ground.connected_buses.items()
+            ],
+            columns=["id", "bus_id", "phase"],
+            index=["id", "bus_id"],
+        )
+
+    @property
+    def potential_refs_frame(self) -> pd.DataFrame:
+        """A dataframe of the network potential references."""
+        return pd.DataFrame.from_records(
+            data=[(pref.id, pref.phase, pref.connected_elements[0].id) for pref in self.potential_refs.values()],
+            columns=["id", "phase", "element_id"],
+            index="id",
+        )
+
     #
     # Method to solve a load flow
     #
@@ -384,6 +406,12 @@ class ElectricalNetwork:
             load._res_currents = np.array([complex(i[0], i[1]) for i in load_data["currents"]], dtype=complex)
             if isinstance(load, PowerLoad) and load.is_flexible:
                 load._res_flexible_powers = np.array([complex(p[0], p[1]) for p in load_data["powers"]], dtype=complex)
+        for ground_data in result_dict["grounds"]:
+            ground = self.grounds[ground_data["id"]]
+            ground._res_potential = complex(*ground_data["potential"])
+        for p_ref_data in result_dict["potential_refs"]:
+            p_ref = self.potential_refs[p_ref_data["id"]]
+            p_ref._res_current = complex(*p_ref_data["current"])
 
         # The results are now valid
         self._results_valid = True
@@ -584,6 +612,38 @@ class ElectricalNetwork:
             .set_index(["load_id", "phase"])
         )
         return powers_df
+
+    @property
+    def res_grounds_potential(self) -> pd.DataFrame:
+        """The load flow results of the potential of the grounds (V) as a dataframe."""
+        self._warn_invalid_results()
+        potentials_dict = {"ground_id": [], "potential": []}
+        for ground in self.grounds.values():
+            potential = ground._res_potential_getter(warning=False)
+            potentials_dict["ground_id"].append(ground.id)
+            potentials_dict["potential"].append(potential)
+        potentials_df = (
+            pd.DataFrame.from_dict(potentials_dict, orient="columns")
+            .astype({"potential": complex})
+            .set_index(["ground_id"])
+        )
+        return potentials_df
+
+    @property
+    def res_potential_refs_current(self) -> pd.DataFrame:
+        """The load flow results of the current of the potential refs (A) as a dataframe."""
+        self._warn_invalid_results()
+        potentials_dict = {"potential_ref_id": [], "current": []}
+        for p_ref in self.potential_refs.values():
+            current = p_ref._res_current_getter(warning=False)
+            potentials_dict["potential_ref_id"].append(p_ref.id)
+            potentials_dict["current"].append(current)
+        potentials_df = (
+            pd.DataFrame.from_dict(potentials_dict, orient="columns")
+            .astype({"current": complex})
+            .set_index(["potential_ref_id"])
+        )
+        return potentials_df
 
     #
     # Set the dynamic parameters.
@@ -832,6 +892,8 @@ class ElectricalNetwork:
             ("buses", self.buses, "Bus"),
             ("branches", self.branches, "Branch"),
             ("loads", self.loads, "Load"),
+            ("grounds", self.grounds, "Ground"),
+            ("potential_refs", self.potential_refs, "PotentialRef"),
         ):
             seen = set()
             for element_data in data[key]:
@@ -841,8 +903,11 @@ class ElectricalNetwork:
                     logger.error(msg)
                     raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LOAD_FLOW_RESULT)
                 seen.add(element_id)
-            if missing_buses := self_elements.keys() - seen:
-                msg = f"The following {key} are present in the network but not in the results: {sorted(missing_buses)}."
+            if missing_elements := self_elements.keys() - seen:
+                msg = (
+                    f"The following {key} are present in the network but not in the results: "
+                    f"{sorted(missing_elements)}."
+                )
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LOAD_FLOW_RESULT)
         self._dispatch_results(data)

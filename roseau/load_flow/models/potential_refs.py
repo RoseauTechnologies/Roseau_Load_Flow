@@ -55,17 +55,21 @@ class PotentialRef(Element):
             raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT)
         self._connect(element)
         self.phase = phase
+        self._res_current: Optional[complex] = None
 
     def __repr__(self) -> str:
         return f"{type(self).__name__}(id={self.id!r}, element={self.connected_elements[0]!r}, phase={self.phase!r})"
 
+    def _res_current_getter(self, warning: bool) -> complex:
+        return self._res_getter(self._res_current, warning)
+
     @property
     def res_current(self) -> complex:
-        """The sum of the currents of the connection associated to the potential reference.
+        """The sum of the currents (A) of the connection associated to the potential reference.
 
         This sum should be equal to 0 after the load flow.
         """
-        raise NotImplementedError
+        return self._res_current_getter(warning=True)
 
     @classmethod
     def from_dict(cls, data: JsonDict) -> Self:

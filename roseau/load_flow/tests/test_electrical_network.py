@@ -159,6 +159,18 @@ def good_json_results() -> dict:
             }
         ],
         "sources": [],
+        "grounds": [
+            {
+                "id": "ground",
+                "potential": [1.3476526914363477e-12, 0.0],
+            }
+        ],
+        "potential_refs": [
+            {
+                "id": "pref",
+                "current": [0.0, 0.0],
+            },
+        ],
     }
 
 
@@ -405,6 +417,18 @@ def test_solve_load_flow(small_network, good_json_results):
             },
         ],
         "sources": [],
+        "grounds": [
+            {
+                "id": "ground",
+                "potential": [1.3476526914363477e-12, 0.0],
+            }
+        ],
+        "potential_refs": [
+            {
+                "id": "pref",
+                "current": [0.0, 0.0],
+            },
+        ],
     }
     with requests_mock.Mocker() as m:
         m.post(solve_url, status_code=200, json=json_result, headers={"content-type": "application/json"})
@@ -562,6 +586,12 @@ def test_single_phase_network(single_phase_network: ElectricalNetwork):
             {"id": "load", "phases": "bn", "currents": [[-0.0025, -0.0043], [1.347e-13, 0.0]]},
         ],
         "sources": [],
+        "grounds": [
+            {"id": "ground", "potential": [1.347e-12, 0.0]},
+        ],
+        "potential_refs": [
+            {"id": "pref", "current": [0.0, 0.0]},
+        ],
     }
     solve_url = urljoin(ElectricalNetwork.DEFAULT_BASE_URL, "solve/")
     with requests_mock.Mocker() as m:
@@ -713,10 +743,14 @@ def test_network_results_warning(small_network, good_json_results, recwarn):  # 
             with pytest.raises(RoseauLoadFlowException) as e:
                 load.res_flexible_powers
             assert e.value.args[1] == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
-    # for p_ref in small_network.potential_refs.values():
-    #     with pytest.raises(RoseauLoadFlowException) as e:
-    #         p_ref.res_current
-    # assert e.value.args[1]==RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
+    for ground in small_network.grounds.values():
+        with pytest.raises(RoseauLoadFlowException) as e:
+            ground.res_potential
+        assert e.value.args[1] == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
+    for p_ref in small_network.potential_refs.values():
+        with pytest.raises(RoseauLoadFlowException) as e:
+            p_ref.res_current
+        assert e.value.args[1] == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
 
     # Solve a load flow
     solve_url = urljoin(ElectricalNetwork.DEFAULT_BASE_URL, "solve/")
@@ -735,8 +769,10 @@ def test_network_results_warning(small_network, good_json_results, recwarn):  # 
         load.res_currents
         if load.is_flexible and isinstance(load, PowerLoad):
             load.res_flexible_powers
-    # for p_ref in small_network.potential_refs.values():
-    #     p_ref.res_current
+    for ground in small_network.grounds.values():
+        ground.res_potential
+    for p_ref in small_network.potential_refs.values():
+        p_ref.res_current
     assert len(recwarn) == 0
 
     # Modify something
@@ -761,9 +797,12 @@ def test_network_results_warning(small_network, good_json_results, recwarn):  # 
         if load.is_flexible and isinstance(load, PowerLoad):
             with check_result_warning(expected_message=expected_message):
                 load.res_flexible_powers
-    # for p_ref in small_network.potential_refs.values():
-    #     with check_result_warning(expected_message=expected_message):
-    #         p_ref.res_current
+    for ground in small_network.grounds.values():
+        with check_result_warning(expected_message=expected_message):
+            ground.res_potential
+    for p_ref in small_network.potential_refs.values():
+        with check_result_warning(expected_message=expected_message):
+            p_ref.res_current
 
     # Ensure that a single warning is raised when having a data frame result
     expected_message = (
