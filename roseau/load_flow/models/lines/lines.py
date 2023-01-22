@@ -7,6 +7,7 @@ from shapely.geometry import LineString, Point
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.branches import AbstractBranch
 from roseau.load_flow.models.buses import Bus
+from roseau.load_flow.models.core import Element
 from roseau.load_flow.models.grounds import Ground
 from roseau.load_flow.models.lines.parameters import LineParameters
 from roseau.load_flow.models.voltage_sources import VoltageSource
@@ -79,20 +80,20 @@ class Switch(AbstractBranch):
 
     def _check_loop(self) -> None:
         """Check that there are no switch loop, raise an exception if it is the case"""
-        visited_1 = set()
-        elements = [self.connected_elements[0]]
+        visited_1: set[Element] = set()
+        elements: list[Element] = [self.bus1]
         while elements:
             element = elements.pop(-1)
             visited_1.add(element)
-            for e in element.connected_elements:
+            for e in element._connected_elements:
                 if e not in visited_1 and (isinstance(e, Bus) or isinstance(e, Switch)) and e != self:
                     elements.append(e)
-        visited_2 = set()
-        elements = [self.connected_elements[1]]
+        visited_2: set[Element] = set()
+        elements = [self.bus2]
         while elements:
             element = elements.pop(-1)
             visited_2.add(element)
-            for e in element.connected_elements:
+            for e in element._connected_elements:
                 if e not in visited_2 and (isinstance(e, Bus) or isinstance(e, Switch)) and e != self:
                     elements.append(e)
         if visited_1.intersection(visited_2):
@@ -102,17 +103,12 @@ class Switch(AbstractBranch):
 
     def _check_elements(self) -> None:
         """Check that we can connect both elements."""
-        e1 = self.connected_elements[0]
-        e2 = self.connected_elements[1]
-        if (
-            isinstance(e1, Bus)
-            and any(isinstance(e, VoltageSource) for e in e1.connected_elements)
-            and isinstance(e2, Bus)
-            and any(isinstance(e, VoltageSource) for e in e2.connected_elements)
+        if any(isinstance(e, VoltageSource) for e in self.bus1._connected_elements) and any(
+            isinstance(e, VoltageSource) for e in self.bus2._connected_elements
         ):
             msg = (
-                f"The buses {e1.id!r} and {e2.id!r} both have a voltage source and are "
-                f"connected with the switch {self.id!r}. It is not allowed."
+                f"The buses {self.bus1.id!r} and {self.bus2.id!r} both have a voltage source and "
+                f"are connected with the switch {self.id!r}. It is not allowed."
             )
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_VOLTAGES_SOURCES_CONNECTION)

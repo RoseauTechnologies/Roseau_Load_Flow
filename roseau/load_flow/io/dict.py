@@ -144,7 +144,7 @@ def network_to_dict(en: "ElectricalNetwork") -> JsonDict:
     sources: list[JsonDict] = []
     for bus in en.buses.values():
         buses.append(bus.to_dict())
-        for element in bus.connected_elements:
+        for element in bus._connected_elements:
             if isinstance(element, AbstractLoad):
                 assert element.bus is bus
                 loads.append(element.to_dict())
