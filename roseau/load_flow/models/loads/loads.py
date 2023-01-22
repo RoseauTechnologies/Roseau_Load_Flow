@@ -1,5 +1,5 @@
 import logging
-from abc import ABC, abstractmethod
+from abc import ABC
 from collections.abc import Sequence
 from typing import Any, Literal, Optional
 
@@ -115,9 +115,16 @@ class AbstractLoad(Element, ABC):
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Z_VALUE)
         return np.asarray(value, dtype=complex)
 
+    def _res_potentials_getter(self, warning: bool) -> np.ndarray:
+        return self.bus._get_potentials_of(self.phases, warning)
+
+    @property
+    def res_potentials(self) -> np.ndarray:
+        """The load flow result of the load potentials (V)."""
+        return self._res_potentials_getter(warning=True)
+
     def _res_voltages_getter(self, warning: bool) -> np.ndarray:
-        bus_potentials = self.bus._res_potentials_getter(warning)
-        potentials = np.array([p for p, ph in zip(bus_potentials, self.bus.phases) if ph in self.phases])
+        potentials = self._res_potentials_getter(warning)
         return calculate_voltages(potentials, self.phases)
 
     @property
@@ -125,26 +132,10 @@ class AbstractLoad(Element, ABC):
         """The load flow result of the load voltages (V)."""
         return self._res_voltages_getter(warning=True)
 
-    @abstractmethod
-    def _get_delta_res_powers(self, voltages: np.ndarray) -> np.ndarray:
-        """Res power for delta loads is load-type specific."""
-        raise NotImplementedError
-
     def _res_powers_getter(self, warning: bool) -> np.ndarray:
-        currents = self._res_currents_getter(warning)[: self._size]  # without the neutral current
-        voltages = self._res_voltages_getter(warning=False)  # we warn on the previous line
-        if "n" in self.phases:
-            # Wye load: trivial
-            return voltages * currents.conj()
-        else:
-            # Delta load: two cases
-            if len(self.phases) == 2:
-                # 1. A phase-to-phase connection: line current is the same as phase current
-                return voltages * currents[0].conj()  # Example: Sab = Vab x Iab*; Iab = Ia = - Ib
-            else:
-                # 2. We don't know the phase currents. We can use the load inputs to compute S.
-                # CurrentLoad: S = V x I_in*; PowerLoad: S = S_in; ImpedanceLoad: S = |V|² / Z*
-                return self._get_delta_res_powers(voltages)
+        curs = self._res_currents_getter(warning)
+        pots = self._res_potentials_getter(warning=False)  # we warn on the previous line
+        return pots * curs.conj()
 
     @property
     def res_powers(self) -> np.ndarray:
@@ -292,9 +283,6 @@ class PowerLoad(AbstractLoad):
         """The load flow result of the load flexible powers (VA)."""
         return self._res_flexible_powers_getter(warning=True)
 
-    def _get_delta_res_powers(self, voltages: np.ndarray) -> np.ndarray:
-        return self._powers  # S = S
-
     def to_dict(self) -> JsonDict:
         if self.bus is None:
             msg = f"The load {self.id!r} is disconnected and can not be used anymore."
@@ -365,9 +353,6 @@ class CurrentLoad(AbstractLoad):
         self._currents = self._validate_value(value)
         self._invalidate_network_results()
 
-    def _get_delta_res_powers(self, voltages: np.ndarray) -> np.ndarray:
-        return voltages * self.currents.conj()  # S = V x I*
-
     def to_dict(self) -> JsonDict:
         if self.bus is None:
             msg = f"The load {self.id!r} is disconnected and can not be used anymore."
@@ -435,9 +420,6 @@ class ImpedanceLoad(AbstractLoad):
     def impedances(self, impedances: Sequence[complex]) -> None:
         self._impedances = self._validate_value(impedances)
         self._invalidate_network_results()
-
-    def _get_delta_res_powers(self, voltages: np.ndarray) -> np.ndarray:
-        return np.abs(voltages) ** 2 / self.impedances.conj()  # S = |V|² / Z*
 
     def to_dict(self) -> JsonDict:
         if self.bus is None:

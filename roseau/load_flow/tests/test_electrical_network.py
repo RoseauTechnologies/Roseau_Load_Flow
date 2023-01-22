@@ -99,32 +99,32 @@ def single_phase_network() -> ElectricalNetwork:
 def good_json_results() -> dict:
     return {
         "info": {
-            "status": "success",
             "resolution_method": "newton",
-            "nb_iterations": 1,
             "precision": 1e-06,
-            "final_precision": 6.296829377361313e-14,
             "max_iterations": 20,
+            "status": "success",
+            "nb_iterations": 1,
+            "final_precision": 6.296829377361313e-14,
         },
         "buses": [
             {
                 "id": "bus0",
                 "phases": "abcn",
                 "potentials": [
-                    [20000.0, 0.0],
-                    [-10000.0, -17320.508076],
-                    [-10000.0, 17320.508076],
-                    [0.0, 0.0],
+                    [20000.0, 2.891203383964549e-18],
+                    [-10000.000000000002, -17320.508076],
+                    [-10000.000000000002, 17320.508076],
+                    [-1.3476481215690672e-12, 2.891203383964549e-18],
                 ],
             },
             {
                 "id": "bus1",
                 "phases": "abcn",
                 "potentials": [
-                    [19999.949999875, 0.0],
-                    [-9999.9749999375, -17320.464774621556],
-                    [-9999.9749999375, 17320.464774621556],
-                    [1.3476526914363477e-12, 0.0],
+                    [19999.949999875, 2.8911961559741588e-18],
+                    [-9999.974999937502, -17320.464774621556],
+                    [-9999.974999937502, 17320.464774621556],
+                    [0.0, 0.0],
                 ],
             },
         ],
@@ -134,16 +134,16 @@ def good_json_results() -> dict:
                 "phases1": "abcn",
                 "phases2": "abcn",
                 "currents1": [
-                    [0.005, 0.0],
-                    [-0.0025, -0.0043],
-                    [-0.0025, 0.0043],
-                    [-1.347e-13, 0.0],
+                    [0.005000012500022422, 7.227990390093038e-25],
+                    [-0.002500006250011211, -0.004330137844226556],
+                    [-0.002500006250011211, 0.004330137844226556],
+                    [-1.3476481215690672e-13, 2.891203383964549e-19],
                 ],
                 "currents2": [
-                    [0.005, 0.0],
-                    [-0.0025, -0.0043],
-                    [-0.0025, 0.0043],
-                    [-1.347e-13, 0.0],
+                    [-0.005000012500022422, -7.227990390093038e-25],
+                    [0.002500006250011211, 0.004330137844226556],
+                    [0.002500006250011211, -0.004330137844226556],
+                    [1.3476481215690672e-13, -2.891203383964549e-19],
                 ],
             }
         ],
@@ -152,10 +152,10 @@ def good_json_results() -> dict:
                 "id": "load",
                 "phases": "abcn",
                 "currents": [
-                    [0.005, -0.0],
-                    [-0.0025, -0.0043],
-                    [-0.0025, 0.0043],
-                    [-1.347e-13, 0.0],
+                    [0.0050000125000625, 7.228026530113222e-25],
+                    [-0.002500006249963868, -0.004330137844254964],
+                    [-0.002500006249963868, 0.004330137844254964],
+                    [-1.3476372795473424e-13, 0.0],
                 ],
             }
         ],
@@ -164,24 +164,18 @@ def good_json_results() -> dict:
                 "id": "vs",
                 "phases": "abcn",
                 "currents": [
-                    [0.005, 0.0],
-                    [-0.0025, -0.0043],
-                    [-0.0025, 0.0043],
-                    [-1.347e-13, 0.0],
+                    [-0.005000012500031251, 0.0],
+                    [0.0025000062499482426, 0.004330137844227901],
+                    [0.0025000062499482435, -0.004330137844227901],
+                    [1.3476481215690672e-13, -2.891210611954938e-19],
                 ],
             }
         ],
         "grounds": [
-            {
-                "id": "ground",
-                "potential": [1.3476526914363477e-12, 0.0],
-            }
+            {"id": "ground", "potential": [0.0, 0.0]},
         ],
         "potential_refs": [
-            {
-                "id": "pref",
-                "current": [0.0, 0.0],
-            },
+            {"id": "pref", "current": [1.0842021724855044e-18, -2.891203383964549e-19]},
         ],
     }
 
@@ -583,35 +577,49 @@ def test_single_phase_network(single_phase_network: ElectricalNetwork):
 
     json_results = {
         "info": {
-            "status": "success",
             "resolution_method": "newton",
-            "nb_iterations": 1,
             "precision": 1e-06,
-            "final_precision": 6.29e-14,
             "max_iterations": 20,
+            "status": "success",
+            "nb_iterations": 1,
+            "final_precision": 1.3239929985697785e-13,
         },
         "buses": [
-            {"id": "bus0", "phases": "bn", "potentials": [[-10000.0, -17320.508], [0.0, 0.0]]},
-            {"id": "bus1", "phases": "bn", "potentials": [[-9999.974, -17320.464], [1.347e-12, 0.0]]},
+            {
+                "id": "bus0",
+                "phases": "bn",
+                "potentials": [[19999.94999975, 0.0], [-0.050000250001249996, 0.0]],
+            },
+            {"id": "bus1", "phases": "bn", "potentials": [[19999.899999499998, 0.0], [0.0, 0.0]]},
         ],
         "branches": [
             {
                 "id": "line",
                 "phases1": "bn",
                 "phases2": "bn",
-                "currents1": [[-0.0025, -0.0043], [-1.347e-13, 0.0]],
-                "currents2": [[-0.0025, -0.0043], [-1.347e-13, 0.0]],
+                "currents1": [[0.005000025000117603, 0.0], [-0.005000025000125, 0.0]],
+                "currents2": [[-0.005000025000117603, -0.0], [0.005000025000125, -0.0]],
             }
         ],
         "loads": [
-            {"id": "load", "phases": "bn", "currents": [[-0.0025, -0.0043], [1.347e-13, 0.0]]},
+            {
+                "id": "load",
+                "phases": "bn",
+                "currents": [[0.005000025000250002, -0.0], [-0.005000025000250002, 0.0]],
+            }
         ],
-        "sources": [],
+        "sources": [
+            {
+                "id": "vs",
+                "phases": "bn",
+                "currents": [[-0.005000025000125, 0.0], [0.005000025000125, 0.0]],
+            },
+        ],
         "grounds": [
-            {"id": "ground", "potential": [1.347e-12, 0.0]},
+            {"id": "ground", "potential": [0.0, 0.0]},
         ],
         "potential_refs": [
-            {"id": "pref", "current": [0.0, 0.0]},
+            {"id": "pref", "current": [-1.2500243895541274e-13, 0.0]},
         ],
     }
     solve_url = urljoin(ElectricalNetwork.DEFAULT_BASE_URL, "solve/")
@@ -621,62 +629,102 @@ def test_single_phase_network(single_phase_network: ElectricalNetwork):
 
     # Test results of elements
     # ------------------------
-    assert np.allclose(source_bus.res_potentials, [-10000.0 - 17320.508j, 0j])
-    assert np.allclose(load_bus.res_potentials, [-9999.974 - 17320.464j, 1.347e-12 + 0j])
-    assert np.allclose(line.res_currents[0], [-0.0025 - 0.0043j, -1.347e-13 + 0j])
-    assert np.allclose(line.res_currents[1], [-0.0025 - 0.0043j, -1.347e-13 + 0j])
-    assert np.allclose(load.res_currents, [-0.0025 - 0.0043j, -1.347e-13 + 0j])
+    assert np.allclose(source_bus.res_potentials, [19999.94999975 + 0j, -0.050000250001249996 + 0j])
+    assert np.allclose(load_bus.res_potentials, [19999.899999499998 + 0j, 0j])
+    assert np.allclose(line.res_currents[0], [0.005000025000117603 + 0j, -0.005000025000125 + 0j])
+    assert np.allclose(line.res_currents[1], [-0.005000025000117603 - 0j, 0.005000025000125 - 0j])
+    assert np.allclose(load.res_currents, [0.005000025000250002 - 0j, -0.005000025000250002 - 0j])
 
     # Test results of network
     # -----------------------
-    # Buses potentials frame
+    # Buses results
     pd.testing.assert_frame_equal(
-        single_phase_network.res_buses_potentials,
+        single_phase_network.res_buses,
         pd.DataFrame.from_records(
             [
-                {"bus_id": "bus0", "phase": "b", "potential": -10000.0 - 17320.508j},
-                {"bus_id": "bus0", "phase": "n", "potential": 0j},
-                {"bus_id": "bus1", "phase": "b", "potential": -9999.974 - 17320.464j},
+                {"bus_id": "bus0", "phase": "b", "potential": 19999.94999975 + 0j},
+                {"bus_id": "bus0", "phase": "n", "potential": -0.050000250001249996 + 0j},
+                {"bus_id": "bus1", "phase": "b", "potential": 19999.899999499998 + 0j},
                 {"bus_id": "bus1", "phase": "n", "potential": 0j},
             ]
         )
         .astype({"phase": _PHASE_DTYPE, "potential": complex})
         .set_index(["bus_id", "phase"]),
     )
-    # Buses voltages frame
+    # Buses voltages results
     pd.testing.assert_frame_equal(
         single_phase_network.res_buses_voltages,
         pd.DataFrame.from_records(
             [
-                {"bus_id": "bus0", "phase": "bn", "voltage": -10000.0 - 17320.508j},
-                {"bus_id": "bus1", "phase": "bn", "voltage": -9999.974 - 17320.464j},
+                {"bus_id": "bus0", "phase": "bn", "voltage": (19999.94999975 + 0j) - (-0.050000250001249996 + 0j)},
+                {"bus_id": "bus1", "phase": "bn", "voltage": (19999.899999499998 + 0j) - (0j)},
             ]
         )
         .astype({"phase": _VOLTAGE_PHASES_DTYPE, "voltage": complex})
         .set_index(["bus_id", "phase"]),
     )
-    # Branches currents frame
+    # Branches results
     pd.testing.assert_frame_equal(
-        single_phase_network.res_branches_currents,
+        single_phase_network.res_branches,
         pd.DataFrame.from_records(
             [
-                {"branch_id": "line", "phase": "b", "current1": -0.0025 - 0.0043j, "current2": -0.0025 - 0.0043j},
-                {"branch_id": "line", "phase": "n", "current1": -1.347e-13 + 0j, "current2": -1.347e-13 + 0j},
+                {
+                    "branch_id": "line",
+                    "phase": "b",
+                    "current1": 0.005000025000117603 + 0j,
+                    "current2": -0.005000025000117603 - 0j,
+                    "power1": (19999.94999975 + 0j) * (0.005000025000117603 + 0j).conjugate(),
+                    "power2": (19999.899999499998 + 0j) * (-0.005000025000117603 - 0j).conjugate(),
+                    "potential1": 19999.94999975 + 0j,
+                    "potential2": 19999.899999499998 + 0j,
+                },
+                {
+                    "branch_id": "line",
+                    "phase": "n",
+                    "current1": -0.005000025000125 + 0j,
+                    "current2": 0.005000025000125 - 0j,
+                    "power1": (-0.050000250001249996 + 0j) * (-0.005000025000125 + 0j).conjugate(),
+                    "power2": (0j) * (0.005000025000125 - 0j).conjugate(),
+                    "potential1": -0.050000250001249996 + 0j,
+                    "potential2": 0j,
+                },
             ]
         )
-        .astype({"phase": _PHASE_DTYPE, "current1": complex, "current2": complex})
+        .astype(
+            {
+                "phase": _PHASE_DTYPE,
+                "current1": complex,
+                "current2": complex,
+                "power1": complex,
+                "power2": complex,
+                "potential1": complex,
+                "potential2": complex,
+            }
+        )
         .set_index(["branch_id", "phase"]),
     )
-    # Loads currents frame
+    # Loads results
     pd.testing.assert_frame_equal(
-        single_phase_network.res_loads_currents,
+        single_phase_network.res_loads,
         pd.DataFrame.from_records(
             [
-                {"load_id": "load", "phase": "b", "current": -0.0025 - 0.0043j},
-                {"load_id": "load", "phase": "n", "current": -1.347e-13 + 0j},
+                {
+                    "load_id": "load",
+                    "phase": "b",
+                    "current": 0.005000025000250002 - 0j,
+                    "power": (19999.899999499998 + 0j) * (0.005000025000250002 - 0j).conjugate(),
+                    "potential": 19999.899999499998 + 0j,
+                },
+                {
+                    "load_id": "load",
+                    "phase": "n",
+                    "current": -0.005000025000250002 - 0j,
+                    "power": (0j) * (-0.005000025000250002 - 0j).conjugate(),
+                    "potential": 0j,
+                },
             ]
         )
-        .astype({"phase": _PHASE_DTYPE, "current": complex})
+        .astype({"phase": _PHASE_DTYPE, "current": complex, "power": complex, "potential": complex})
         .set_index(["load_id", "phase"]),
     )
 
@@ -841,15 +889,15 @@ def test_network_results_warning(small_network: ElectricalNetwork, good_json_res
         "The results of this network may be outdated. Please re-run a load flow to ensure the validity of results."
     )
     with check_result_warning(expected_message=expected_message):
-        small_network.res_buses_potentials
+        small_network.res_buses
     with check_result_warning(expected_message=expected_message):
         small_network.res_buses_voltages
     with check_result_warning(expected_message=expected_message):
-        small_network.res_branches_currents
+        small_network.res_branches
     with check_result_warning(expected_message=expected_message):
-        small_network.res_loads_currents
+        small_network.res_loads
     with check_result_warning(expected_message=expected_message):
-        small_network.res_sources_currents
+        small_network.res_sources
     with check_result_warning(expected_message=expected_message):
         small_network.res_loads_flexible_powers
 
@@ -860,70 +908,154 @@ def test_load_flow_results_frames(small_network: ElectricalNetwork, good_json_re
     def set_index_dtype(df, dtype):
         df.index = df.index.set_levels(df.index.levels[1].astype(dtype), level=1)
 
-    buses_potentials = pd.DataFrame.from_records(
+    expected_res_buses = pd.DataFrame.from_records(
         [
-            {"bus_id": "bus0", "phase": "a", "potential": 20000.0 + 0.0j},
-            {"bus_id": "bus0", "phase": "b", "potential": -10000.0 - 17320.508076j},
-            {"bus_id": "bus0", "phase": "c", "potential": -10000.0 + 17320.508076j},
-            {"bus_id": "bus0", "phase": "n", "potential": 0.0 + 0.0j},
-            {"bus_id": "bus1", "phase": "a", "potential": 19999.949999875 + 0.0j},
-            {"bus_id": "bus1", "phase": "b", "potential": -9999.9749999375 - 17320.464774621556j},
-            {"bus_id": "bus1", "phase": "c", "potential": -9999.9749999375 + 17320.464774621556j},
-            {"bus_id": "bus1", "phase": "n", "potential": 1.3476526914363477e-12 + 0.0j},
+            {"bus_id": "bus0", "phase": "a", "potential": 20000 + 2.89120e-18j},
+            {"bus_id": "bus0", "phase": "b", "potential": -10000.00000 - 17320.50807j},
+            {"bus_id": "bus0", "phase": "c", "potential": -10000.00000 + 17320.50807j},
+            {"bus_id": "bus0", "phase": "n", "potential": -1.34764e-12 + 2.89120e-18j},
+            {"bus_id": "bus1", "phase": "a", "potential": 19999.94999 + 2.89119e-18j},
+            {"bus_id": "bus1", "phase": "b", "potential": -9999.97499 - 17320.46477j},
+            {"bus_id": "bus1", "phase": "c", "potential": -9999.97499 + 17320.46477j},
+            {"bus_id": "bus1", "phase": "n", "potential": 0j},
         ],
         index=["bus_id", "phase"],
     )
-    set_index_dtype(buses_potentials, _PHASE_DTYPE)
-    assert_frame_equal(small_network.res_buses_potentials, buses_potentials)
+    set_index_dtype(expected_res_buses, _PHASE_DTYPE)
+    assert_frame_equal(small_network.res_buses, expected_res_buses, rtol=1e-4)
 
-    branches_currents = pd.DataFrame.from_records(
+    expected_res_branches = pd.DataFrame.from_records(
         [
-            {"branch_id": "line", "phase": "a", "current1": 0.005 + 0.0j, "current2": 0.005 + 0.0j},
-            {"branch_id": "line", "phase": "b", "current1": -0.0025 - 0.0043j, "current2": -0.0025 - 0.0043j},
-            {"branch_id": "line", "phase": "c", "current1": -0.0025 + 0.0043j, "current2": -0.0025 + 0.0043j},
-            {"branch_id": "line", "phase": "n", "current1": -1.347e-13 + 0.0j, "current2": -1.347e-13 + 0.0j},
+            {
+                "branch_id": "line",
+                "phase": "a",
+                "current1": 0.00500 + 7.22799e-25j,
+                "current2": -0.00500 - 7.22799e-25j,
+                "power1": (20000 + 2.89120e-18j) * (0.00500 + 7.22799e-25j).conjugate(),
+                "power2": (19999.94999 + 2.89119e-18j) * (-0.00500 - 7.22799e-25j).conjugate(),
+                "potential1": 20000 + 2.89120e-18j,
+                "potential2": 19999.94999 + 2.89119e-18j,
+            },
+            {
+                "branch_id": "line",
+                "phase": "b",
+                "current1": -0.00250 - 0.00433j,
+                "current2": 0.00250 + 0.00433j,
+                "power1": (-10000.00000 - 17320.50807j) * (-0.00250 - 0.00433j).conjugate(),
+                "power2": (-9999.97499 - 17320.46477j) * (0.00250 + 0.00433j).conjugate(),
+                "potential1": -10000.00000 - 17320.50807j,
+                "potential2": -9999.97499 - 17320.46477j,
+            },
+            {
+                "branch_id": "line",
+                "phase": "c",
+                "current1": -0.00250 + 0.00433j,
+                "current2": 0.00250 - 0.00433j,
+                "power1": (-10000.00000 + 17320.50807j) * (-0.00250 + 0.00433j).conjugate(),
+                "power2": (-9999.97499 + 17320.46477j) * (0.00250 - 0.00433j).conjugate(),
+                "potential1": -10000.00000 + 17320.50807j,
+                "potential2": -9999.97499 + 17320.46477j,
+            },
+            {
+                "branch_id": "line",
+                "phase": "n",
+                "current1": -1.34764e-13 + 2.89120e-19j,
+                "current2": 1.34764e-13 - 2.89120e-19j,
+                "power1": (-1.34764e-12 + 2.89120e-18j) * (-1.34764e-13 + 2.89120e-19j).conjugate(),
+                "power2": (0j) * (1.34764e-13 - 2.89120e-19j).conjugate(),
+                "potential1": -1.34764e-12 + 2.89120e-18j,
+                "potential2": 0j,
+            },
         ],
         index=["branch_id", "phase"],
     )
-    set_index_dtype(branches_currents, _PHASE_DTYPE)
-    assert_frame_equal(small_network.res_branches_currents, branches_currents)
+    set_index_dtype(expected_res_branches, _PHASE_DTYPE)
+    assert_frame_equal(small_network.res_branches, expected_res_branches, rtol=1e-4)
 
-    loads_currents = pd.DataFrame.from_records(
+    expected_res_loads = pd.DataFrame.from_records(
         [
-            {"load_id": "load", "phase": "a", "current": 0.005 - 0.0j},
-            {"load_id": "load", "phase": "b", "current": -0.0025 - 0.0043j},
-            {"load_id": "load", "phase": "c", "current": -0.0025 + 0.0043j},
-            {"load_id": "load", "phase": "n", "current": -1.347e-13 + 0.0j},
+            {
+                "load_id": "load",
+                "phase": "a",
+                "current": 0.00500 + 7.22802e-25j,
+                "power": (19999.94999 + 2.89119e-18j) * (0.00500 + 7.22802e-25j).conjugate(),
+                "potential": 19999.94999 + 2.89119e-18j,
+            },
+            {
+                "load_id": "load",
+                "phase": "b",
+                "current": -0.00250 - 0.00433j,
+                "power": (-9999.97499 - 17320.46477j) * (-0.00250 - 0.00433j).conjugate(),
+                "potential": -9999.97499 - 17320.46477j,
+            },
+            {
+                "load_id": "load",
+                "phase": "c",
+                "current": -0.00250 + 0.00433j,
+                "power": (-9999.97499 + 17320.46477j) * (-0.00250 + 0.00433j).conjugate(),
+                "potential": -9999.97499 + 17320.46477j,
+            },
+            {
+                "load_id": "load",
+                "phase": "n",
+                "current": -1.34763e-13 + 0j,
+                "power": (0j) * (-1.34763e-13 + 0j).conjugate(),
+                "potential": 0j,
+            },
         ],
         index=["load_id", "phase"],
     )
-    set_index_dtype(loads_currents, _PHASE_DTYPE)
-    assert_frame_equal(small_network.res_loads_currents, loads_currents)
+    set_index_dtype(expected_res_loads, _PHASE_DTYPE)
+    assert_frame_equal(small_network.res_loads, expected_res_loads, rtol=1e-4)
 
-    sources_currents = pd.DataFrame.from_records(
+    expected_res_sources = pd.DataFrame.from_records(
         [
-            {"source_id": "vs", "phase": "a", "current": 0.005 + 0.0j},
-            {"source_id": "vs", "phase": "b", "current": -0.0025 - 0.0043j},
-            {"source_id": "vs", "phase": "c", "current": -0.0025 + 0.0043j},
-            {"source_id": "vs", "phase": "n", "current": -1.347e-13 + 0.0j},
+            {
+                "source_id": "vs",
+                "phase": "a",
+                "current": -0.00500 + 0j,
+                "power": (20000 + 2.89120e-18j) * (-0.00500 + 0j).conjugate(),
+                "potential": 20000 + 2.89120e-18j,
+            },
+            {
+                "source_id": "vs",
+                "phase": "b",
+                "current": 0.00250 + 0.00433j,
+                "power": (-10000.00000 - 17320.50807j) * (0.00250 + 0.00433j).conjugate(),
+                "potential": -10000.00000 - 17320.50807j,
+            },
+            {
+                "source_id": "vs",
+                "phase": "c",
+                "current": 0.00250 - 0.00433j,
+                "power": (-10000.00000 + 17320.50807j) * (0.00250 - 0.00433j).conjugate(),
+                "potential": -10000.00000 + 17320.50807j,
+            },
+            {
+                "source_id": "vs",
+                "phase": "n",
+                "current": 1.34764e-13 - 2.89121e-19j,
+                "power": (-1.34764e-12 + 2.89120e-18j) * (1.34764e-13 - 2.89121e-19j).conjugate(),
+                "potential": -1.34764e-12 + 2.89120e-18j,
+            },
         ],
         index=["source_id", "phase"],
     )
-    set_index_dtype(sources_currents, _PHASE_DTYPE)
-    assert_frame_equal(small_network.res_sources_currents, sources_currents)
+    set_index_dtype(expected_res_sources, _PHASE_DTYPE)
+    assert_frame_equal(small_network.res_sources, expected_res_sources, rtol=1e-4)
 
-    grounds_potential = pd.DataFrame.from_records(
+    expected_res_grounds = pd.DataFrame.from_records(
         [
-            {"ground_id": "ground", "potential": 1.3476526914363477e-12 + 0.0j},
+            {"ground_id": "ground", "potential": 0j},
         ],
         index=["ground_id"],
     )
-    assert_frame_equal(small_network.res_grounds_potential, grounds_potential)
+    assert_frame_equal(small_network.res_grounds, expected_res_grounds)
 
-    potential_ref_current = pd.DataFrame.from_records(
+    expected_res_potential_refs = pd.DataFrame.from_records(
         [
-            {"potential_ref_id": "pref", "current": 0.0 + 0.0j},
+            {"potential_ref_id": "pref", "current": 1.08420e-18 - 2.89120e-19j},
         ],
         index=["potential_ref_id"],
     )
-    assert_frame_equal(small_network.res_potential_refs_current, potential_ref_current)
+    assert_frame_equal(small_network.res_potential_refs, expected_res_potential_refs)

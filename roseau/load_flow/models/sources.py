@@ -117,6 +117,24 @@ class VoltageSource(Element):
         """The load flow result of the source currents (A)."""
         return self._res_currents_getter(warning=True)
 
+    def _res_potentials_getter(self, warning: bool) -> np.ndarray:
+        return self.bus._get_potentials_of(self.phases, warning)
+
+    @property
+    def res_potentials(self) -> np.ndarray:
+        """The load flow result of the source potentials (V)."""
+        return self._res_potentials_getter(warning=True)
+
+    def _res_powers_getter(self, warning: bool) -> np.ndarray:
+        curs = self._res_currents_getter(warning)
+        pots = self._res_potentials_getter(warning=False)  # we warn on the previous line
+        return pots * curs.conj()
+
+    @property
+    def res_powers(self) -> np.ndarray:
+        """The load flow result of the source powers (VA)."""
+        return self._res_powers_getter(warning=True)
+
     #
     # Disconnect
     #

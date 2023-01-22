@@ -1,6 +1,7 @@
 import logging
 from typing import Any, Optional
 
+import numpy as np
 from pint import Quantity
 from shapely.geometry import LineString, Point
 
@@ -254,6 +255,36 @@ class Line(AbstractBranch):
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_MODEL)
         self._parameters = value
         self._invalidate_network_results()
+
+    def _res_series_power_losses_getter(self, warning: bool) -> np.ndarray:
+        pot1, pot2 = self._res_potentials_getter(warning)
+        du_line = pot1 - pot2
+        z_line = self.parameters.z_line * self.length
+        i_line = np.linalg.inv(z_line) @ du_line  # Zₗ.Iₗ = ΔU -> I = Zₗ⁻¹.ΔU
+        return du_line * i_line.conj()  # Sₗ = ΔU.Iₗ*
+
+    @property
+    def res_series_power_losses(self) -> np.ndarray:
+        """Get the power losses in the series elements of the line (VA)."""
+        return self._res_series_power_losses_getter(warning=True)
+
+    def _res_shunt_power_losses_getter(self, warning: bool) -> np.ndarray:
+        y_shunt = self.parameters.y_shunt
+        if y_shunt is None:
+            return np.zeros_like(self.parameters.z_line)
+        assert self.ground is not None
+        pot1, pot2 = self._res_potentials_getter(warning)
+        vg = self.ground.res_potential
+        y_shunt = y_shunt * self.length
+        yg = y_shunt.sum(axis=1)  # y_ig = Y_ia + Y_ib + Y_ic + Y_in for i in {a, b, c, n}
+        i1_shunt = (y_shunt @ pot1 - yg * vg) / 2
+        i2_shunt = (y_shunt @ pot2 - yg * vg) / 2
+        return pot1 * i1_shunt.conj() + pot2 * i2_shunt.conj()
+
+    @property
+    def res_shunt_power_losses(self) -> np.ndarray:
+        """Get the power losses in the shunt elements of the line (VA)."""
+        return self._res_shunt_power_losses_getter(warning=True)
 
     #
     # Json Mixin interface
