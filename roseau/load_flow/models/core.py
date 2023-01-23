@@ -38,7 +38,7 @@ class Element(ABC, Identifiable, JsonMixin):
                 have the same ID.
         """
         super().__init__(id)
-        self.connected_elements: list[Element] = []
+        self._connected_elements: list[Element] = []
         self._network: Optional["ElectricalNetwork"] = None
 
     @property
@@ -74,10 +74,10 @@ class Element(ABC, Identifiable, JsonMixin):
 
         # Modify objects. Append to the connected_elements and assign the common network
         for element in elements:
-            if element not in self.connected_elements:
-                self.connected_elements.append(element)
-            if self not in element.connected_elements:
-                element.connected_elements.append(self)
+            if element not in self._connected_elements:
+                self._connected_elements.append(element)
+            if self not in element._connected_elements:
+                element._connected_elements.append(self)
             if element.network is None and network is not None:
                 network._connect_element(element=element)
 
@@ -87,8 +87,8 @@ class Element(ABC, Identifiable, JsonMixin):
     def _disconnect(self) -> None:
         """Remove all the connections with the other elements. This method can be used in a public `disconnect`
         method for"""
-        for element in self.connected_elements:
-            element.connected_elements.remove(self)
+        for element in self._connected_elements:
+            element._connected_elements.remove(self)
             if element.network is not None:
                 element.network._disconnect_element(element=self)
 

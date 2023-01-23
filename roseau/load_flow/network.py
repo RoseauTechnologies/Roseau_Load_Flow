@@ -187,7 +187,7 @@ class ElectricalNetwork:
                 grounds.append(e)
             elif isinstance(e, PotentialRef):
                 potential_refs.append(e)
-            for connected_element in e.connected_elements:
+            for connected_element in e._connected_elements:
                 if connected_element not in visited_elements and connected_element not in elements:
                     elements.append(connected_element)
         return cls(
@@ -226,8 +226,8 @@ class ElectricalNetwork:
                         branch.branch_type,
                         branch.phases1,
                         branch.phases2,
-                        branch.connected_elements[0].id,
-                        branch.connected_elements[1].id,
+                        branch.bus1.id,
+                        branch.bus2.id,
                         branch.geometry,
                     )
                     for branch_id, branch in self.branches.items()
@@ -274,7 +274,7 @@ class ElectricalNetwork:
     def potential_refs_frame(self) -> pd.DataFrame:
         """A dataframe of the network potential references."""
         return pd.DataFrame.from_records(
-            data=[(pref.id, pref.phase, pref.connected_elements[0].id) for pref in self.potential_refs.values()],
+            data=[(pref.id, pref.phase, pref.element.id) for pref in self.potential_refs.values()],
             columns=["id", "phase", "element_id"],
             index="id",
         )
@@ -756,7 +756,7 @@ class ElectricalNetwork:
         found_source = False
         for element in elements:
             # Check connected elements and check network assignment
-            for adj_element in element.connected_elements:
+            for adj_element in element._connected_elements:
                 if adj_element not in elements:
                     msg = (
                         f"{type(adj_element).__name__} element ({adj_element.id!r}) is connected "
@@ -802,7 +802,7 @@ class ElectricalNetwork:
             while to_visit:
                 element = to_visit.pop(-1)
                 connected_component.append(element)
-                for connected_element in element.connected_elements:
+                for connected_element in element._connected_elements:
                     if connected_element not in visited_elements and not isinstance(connected_element, Transformer):
                         to_visit.append(connected_element)
                         visited_elements.append(connected_element)

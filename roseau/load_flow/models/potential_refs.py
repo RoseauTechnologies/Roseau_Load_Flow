@@ -53,12 +53,13 @@ class PotentialRef(Element):
             msg = f"Potential reference {self.id!r} is connected to {element!r} which is not a ground nor a bus."
             logger.error(msg)
             raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT)
-        self._connect(element)
         self.phase = phase
+        self.element = element
+        self._connect(element)
         self._res_current: Optional[complex] = None
 
     def __repr__(self) -> str:
-        return f"{type(self).__name__}(id={self.id!r}, element={self.connected_elements[0]!r}, phase={self.phase!r})"
+        return f"{type(self).__name__}(id={self.id!r}, element={self.element!r}, phase={self.phase!r})"
 
     def _res_current_getter(self, warning: bool) -> complex:
         return self._res_getter(self._res_current, warning)
@@ -77,7 +78,7 @@ class PotentialRef(Element):
 
     def to_dict(self) -> JsonDict:
         res = {"id": self.id}
-        e = self.connected_elements[0]
+        e = self.element
         if isinstance(e, Bus):
             res["bus"] = e.id
             res["phases"] = self.phase

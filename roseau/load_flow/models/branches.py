@@ -54,13 +54,15 @@ class AbstractBranch(Element):
         self._check_phases(id, phases2=phases2)
         self.phases1 = phases1
         self.phases2 = phases2
+        self.bus1 = bus1
+        self.bus2 = bus2
         self._connect(bus1, bus2)
         self.geometry = geometry
         self._res_currents: Optional[tuple[np.ndarray, np.ndarray]] = None
 
     def __repr__(self) -> str:
         s = f"{type(self).__name__}(id={self.id!r}, phases1={self.phases1!r}, phases2={self.phases2!r}"
-        s += f", bus1={self.connected_elements[0].id!r}, bus2={self.connected_elements[1].id!r}"
+        s += f", bus1={self.bus1.id!r}, bus2={self.bus2.id!r}"
         if self.geometry is not None:
             s += f", geometry={self.geometry}"
         s += ")"
@@ -87,8 +89,8 @@ class AbstractBranch(Element):
             "type": str(self.branch_type),
             "phases1": self.phases1,
             "phases2": self.phases2,
-            "bus1": self.connected_elements[0].id,
-            "bus2": self.connected_elements[1].id,
+            "bus1": self.bus1.id,
+            "bus2": self.bus2.id,
         }
         if self.geometry is not None:
             res["geometry"] = self.geometry.__geo_interface__
