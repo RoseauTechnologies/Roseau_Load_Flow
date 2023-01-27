@@ -406,6 +406,9 @@ class ElectricalNetwork:
             load._res_currents = np.array([complex(i[0], i[1]) for i in load_data["currents"]], dtype=complex)
             if isinstance(load, PowerLoad) and load.is_flexible:
                 load._res_flexible_powers = np.array([complex(p[0], p[1]) for p in load_data["powers"]], dtype=complex)
+        for source_data in result_dict["sources"]:
+            source = self.voltage_sources[source_data["id"]]
+            source._res_currents = np.array([complex(i[0], i[1]) for i in source_data["currents"]], dtype=complex)
         for ground_data in result_dict["grounds"]:
             ground = self.grounds[ground_data["id"]]
             ground._res_potential = complex(*ground_data["potential"])
@@ -612,6 +615,23 @@ class ElectricalNetwork:
             .set_index(["load_id", "phase"])
         )
         return powers_df
+
+    @property
+    def res_voltage_sources_currents(self) -> pd.DataFrame:
+        """The load flow results of the currents of the sources (A) as a dataframe."""
+        self._warn_invalid_results()
+        sources_dict = {"source_id": [], "phase": [], "current": []}
+        for source_id, source in self.voltage_sources.items():
+            for current, phase in zip(source._res_currents_getter(warning=False), source.phases):
+                sources_dict["source_id"].append(source_id)
+                sources_dict["phase"].append(phase)
+                sources_dict["current"].append(current)
+        currents_df = (
+            pd.DataFrame.from_dict(sources_dict, orient="columns")
+            .astype({"phase": _PHASE_DTYPE, "current": complex})
+            .set_index(["source_id", "phase"])
+        )
+        return currents_df
 
     @property
     def res_grounds_potential(self) -> pd.DataFrame:
@@ -892,6 +912,7 @@ class ElectricalNetwork:
             ("buses", self.buses, "Bus"),
             ("branches", self.branches, "Branch"),
             ("loads", self.loads, "Load"),
+            ("sources", self.voltage_sources, "Source"),
             ("grounds", self.grounds, "Ground"),
             ("potential_refs", self.potential_refs, "PotentialRef"),
         ):
