@@ -79,6 +79,9 @@ class VoltageSource(Element):
         self.bus = bus
         self.voltages = voltages
 
+        # Results
+        self._res_currents: Optional[np.ndarray] = None
+
     def __repr__(self) -> str:
         bus_id = self.bus.id if self.bus is not None else None
         return (
@@ -105,6 +108,14 @@ class VoltageSource(Element):
     def voltage_phases(self) -> list[str]:
         """The phases of the source voltages."""
         return calculate_voltage_phases(self.phases)
+
+    def _res_currents_getter(self, warning: bool) -> np.ndarray:
+        return self._res_getter(value=self._res_currents, warning=warning)
+
+    @property
+    def res_currents(self) -> np.ndarray:
+        """The load flow result of the source currents (A)."""
+        return self._res_currents_getter(warning=True)
 
     #
     # Disconnect
