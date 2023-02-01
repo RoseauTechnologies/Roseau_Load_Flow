@@ -57,6 +57,7 @@ class Switch(AbstractBranch):
         """
         if phases is None:
             phases = "".join(p for p in bus1.phases if p in bus2.phases)  # can't use set because order is important
+            phases = phases.replace("ac", "ca")
         else:
             # Also check they are in the intersection of buses phases
             self._check_phases(id, phases=phases)
@@ -190,6 +191,7 @@ class Line(AbstractBranch):
         """
         if phases is None:
             phases = "".join(p for p in bus1.phases if p in bus2.phases)  # can't use set because order is important
+            phases = phases.replace("ac", "ca")
         else:
             # Also check they are in the intersection of buses phases
             self._check_phases(id, phases=phases)

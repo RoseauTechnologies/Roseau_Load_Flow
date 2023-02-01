@@ -168,10 +168,10 @@ def test_lines_phases():
 
     # Default
     bus1.phases = "abcn"
-    bus2.phases = "ab"
+    bus2.phases = "ca"
     lp = LineParameters("test", z_line=10 * np.eye(2, dtype=complex))
     line = Line("line1", bus1, bus2, parameters=lp, length=10)
-    assert line.phases == line.phases1 == line.phases2 == "ab"
+    assert line.phases == line.phases1 == line.phases2 == "ca"
 
     # Bad default
     lp = LineParameters("test", z_line=10 * np.eye(3, dtype=complex))  # bad
@@ -212,9 +212,9 @@ def test_switches_phases():
 
     # Default
     bus1 = Bus("bus-1", phases="abcn")
-    bus2 = Bus("bus-2", phases="ab")
+    bus2 = Bus("bus-2", phases="ca")
     switch = Switch("switch1", bus1, bus2)
-    assert switch.phases == switch.phases1 == switch.phases2 == "ab"
+    assert switch.phases == switch.phases1 == switch.phases2 == "ca"
 
 
 def test_transformer_phases():
