@@ -965,11 +965,33 @@ class ElectricalNetwork:
                 res["powers"] = [[s.real, s.imag] for s in load.res_flexible_powers]
             loads_results.append(res)
 
+        sources_results: list[JsonDict] = [
+            {
+                "id": source.id,
+                "phases": source.phases,
+                "currents": [[i.real, i.imag] for i in source.res_currents],
+            }
+            for source in self.voltage_sources.values()
+        ]
+
+        grounds_results: list[JsonDict] = []
+        for ground in self.grounds.values():
+            v = ground.res_potential
+            grounds_results.append({"id": ground.id, "potential": [v.real, v.imag]})
+
+        p_refs_results: list[JsonDict] = []
+        for p_ref in self.potential_refs.values():
+            i = p_ref.res_current
+            p_refs_results.append({"id": p_ref.id, "current": [i.real, i.imag]})
+
         return {
             "info": self.results_info,
             "buses": buses_results,
             "branches": branches_results,
             "loads": loads_results,
+            "sources": sources_results,
+            "grounds": grounds_results,
+            "potential_refs": p_refs_results,
         }
 
     def results_to_json(self, path: StrPath) -> Path:
