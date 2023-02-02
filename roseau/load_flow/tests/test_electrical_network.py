@@ -378,6 +378,7 @@ def test_solve_load_flow(small_network, good_json_results):
         m.post(solve_url, status_code=200, json=good_json_results, headers={"content-type": "application/json"})
         small_network.solve_load_flow(auth=("", ""))
     assert len(load_bus.res_potentials) == 4
+    assert small_network.results_to_dict() == good_json_results
 
     # No convergence
     load.powers = [10000000, 100, 100]
