@@ -112,7 +112,7 @@ class ElectricalNetwork:
         self._create_network()
         self._valid = True
         self._results_valid: bool = False
-        self.results_info: JsonDict = {}  # TODO: Add doc on this field
+        self.res_info: JsonDict = {}  # TODO: Add doc on this field
 
     def __repr__(self) -> str:
         def count_repr(__o: Sized, /, singular: str, plural: Optional[str] = None) -> str:
@@ -291,7 +291,7 @@ class ElectricalNetwork:
     ) -> int:
         """Solve the load flow for this network.
 
-        Execute a newton algorithm for load flow calculation. In order to get the results of the
+        Execute a Newton algorithm for load flow calculation. In order to get the results of the
         load flow, please use the `results` method or call the elements directly.
 
         Args:
@@ -310,6 +310,8 @@ class ElectricalNetwork:
         Returns:
             The number of iterations taken.
         """
+        from roseau.load_flow import __version__
+
         if not self._valid:
             self._check_validity(constructed=True)
             self._create_network()
@@ -324,34 +326,44 @@ class ElectricalNetwork:
             params=params,
             json=network_data,
             auth=auth,
-            headers={"accept": "application/json"},
+            headers={"accept": "application/json", "rlf-version": __version__},
         )
 
         # Read the response
+        # Check the resonse headers
+        remote_rlf_version = response.headers.get("rlf-new-version")
+        if remote_rlf_version is not None:
+            warnings.warn(
+                message=f"A new version ({remote_rlf_version}) of the library roseau-load-flow is available. Please "
+                f"visit https://github.com/RoseauTechnologies/Roseau_Load_Flow for more information.",
+                category=UserWarning,
+                stacklevel=2,
+            )
+
         # HTTP 4xx,5xx
         if not response.ok:
             self._parse_error(response=response)
 
         # HTTP 200
         result_dict: JsonDict = response.json()
-        self.results_info = result_dict["info"]
-        if self.results_info["status"] != "success":
+        self.res_info = result_dict["info"]
+        if self.res_info["status"] != "success":
             msg = (
-                f"The load flow did not converge after {self.results_info['iterations']} iterations. The norm of the "
-                f"residuals is {self.results_info['finalError']:.5n}"
+                f"The load flow did not converge after {self.res_info['nb_iterations']} iterations. The norm of "
+                f"the residuals is {self.res_info['final_precision']:.5n}"
             )
             logger.error(msg=msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.NO_LOAD_FLOW_CONVERGENCE)
 
         logger.info(
-            f"The load flow converged after {self.results_info['iterations']} iterations (final error="
-            f"{self.results_info['finalError']:.5n})."
+            f"The load flow converged after {self.res_info['nb_iterations']} iterations (final error="
+            f"{self.res_info['final_precision']:.5n})."
         )
 
         # Dispatch the results
         self._dispatch_results(result_dict=result_dict)
 
-        return self.results_info["iterations"]
+        return self.res_info["nb_iterations"]
 
     @staticmethod
     def _parse_error(response: Response) -> NoReturn:
@@ -952,7 +964,7 @@ class ElectricalNetwork:
                 {
                     "id": branch.id,
                     "phases1": branch.phases1,
-                    "phases2": branch.phases1,
+                    "phases2": branch.phases2,
                     "currents1": [[i.real, i.imag] for i in currents1],
                     "currents2": [[i.real, i.imag] for i in currents2],
                 }
@@ -985,7 +997,7 @@ class ElectricalNetwork:
             p_refs_results.append({"id": p_ref.id, "current": [i.real, i.imag]})
 
         return {
-            "info": self.results_info,
+            "info": self.res_info,
             "buses": buses_results,
             "branches": branches_results,
             "loads": loads_results,

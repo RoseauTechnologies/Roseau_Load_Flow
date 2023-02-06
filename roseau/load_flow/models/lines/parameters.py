@@ -319,7 +319,6 @@ class LineParameters(Identifiable, JsonMixin):
                     # We downgrade the model to sym
                     model = LineModel.SYM
                 else:
-
                     z_line = np.array(
                         [[zs, zm, zm, zpn], [zm, zs, zm, zpn], [zm, zm, zs, zpn], [zpn, zpn, zpn, zn]],
                         dtype=complex,

@@ -17,13 +17,13 @@ exclude = [
     "**/conftest.py",
 ]
 packages = [
-    # { include = "roseau/load_flow" }
-    { include = "roseau" }  # This should be used so that the special __init__.py is included in the wheel and sdist
+    { include = "roseau/load_flow" }
 ]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
     "Topic :: Scientific/Engineering :: Physics",
 ]
 
@@ -50,8 +50,8 @@ requests-mock = "^1.9.3"
 [tool.poetry.group.dev.dependencies]
 coverage = { version = "^7.0.5", extras = ["toml"] }
 flake8 = "^6.0.0"
-pre-commit = "^2.6.0"
-black = { version = ">=22.10.0", extras = ["jupyter"] }
+pre-commit = "^3.0.0"
+black = { version = "^23.1.0", extras = ["jupyter"] }
 isort = "^5.1.0"
 
 [tool.poetry.group.doc.dependencies]

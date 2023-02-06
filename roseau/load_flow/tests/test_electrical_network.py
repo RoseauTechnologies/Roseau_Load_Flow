@@ -100,10 +100,11 @@ def good_json_results() -> dict:
     return {
         "info": {
             "status": "success",
-            "resolutionMethod": "newton",
-            "iterations": 1,
-            "targetError": 1e-06,
-            "finalError": 6.296829377361313e-14,
+            "resolution_method": "newton",
+            "nb_iterations": 1,
+            "precision": 1e-06,
+            "final_precision": 6.296829377361313e-14,
+            "max_iterations": 20,
         },
         "buses": [
             {
@@ -385,10 +386,11 @@ def test_solve_load_flow(small_network, good_json_results):
     json_result = {
         "info": {
             "status": "failure",
-            "resolutionMethod": "newton",
-            "iterations": 50,
-            "targetError": 1e-06,
-            "finalError": 14037.977318668112,
+            "resolution_method": "newton",
+            "nb_iterations": 50,
+            "precision": 1e-06,
+            "final_precision": 14037.977318668112,
+            "max_iterations": 20,
         },
         "buses": [
             {
@@ -582,10 +584,11 @@ def test_single_phase_network(single_phase_network: ElectricalNetwork):
     json_results = {
         "info": {
             "status": "success",
-            "resolutionMethod": "newton",
-            "iterations": 1,
-            "targetError": 1e-06,
-            "finalError": 6.29e-14,
+            "resolution_method": "newton",
+            "nb_iterations": 1,
+            "precision": 1e-06,
+            "final_precision": 6.29e-14,
+            "max_iterations": 20,
         },
         "buses": [
             {"id": "bus0", "phases": "bn", "potentials": [[-10000.0, -17320.508], [0.0, 0.0]]},
