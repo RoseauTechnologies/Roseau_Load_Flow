@@ -39,7 +39,7 @@ def test_to_dict():
         buses=[source_bus, load_bus],
         branches=[line1, line2],
         loads=[],
-        voltage_sources=[vs],
+        sources=[vs],
         grounds=[ground],
         potential_refs=[p_ref],
     )
@@ -77,7 +77,7 @@ def test_to_dict():
         buses=[source_bus, load_bus],
         branches=[transformer1, transformer2],
         loads=[],
-        voltage_sources=[vs],
+        sources=[vs],
         grounds=[ground],
         potential_refs=[p_ref],
     )
@@ -894,7 +894,7 @@ def test_v0_to_v1_converter(monkeypatch):
         buses=buses,
         branches=branches,
         loads=loads,
-        voltage_sources=[vs],
+        sources=[vs],
         grounds=[ground],
         potential_refs=potential_refs,
     )
