@@ -10,7 +10,7 @@ from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import Element
 from roseau.load_flow.models.grounds import Ground
 from roseau.load_flow.models.lines.parameters import LineParameters
-from roseau.load_flow.models.voltage_sources import VoltageSource
+from roseau.load_flow.models.sources import VoltageSource
 from roseau.load_flow.typing import Id, JsonDict
 from roseau.load_flow.utils import BranchType
 

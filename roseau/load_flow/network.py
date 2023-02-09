@@ -66,7 +66,7 @@ class ElectricalNetwork:
         buses: Union[list[Bus], dict[Id, Bus]],
         branches: Union[list[AbstractBranch], dict[Id, AbstractBranch]],
         loads: Union[list[AbstractLoad], dict[Id, AbstractLoad]],
-        voltage_sources: Union[list[VoltageSource], dict[Id, VoltageSource]],
+        sources: Union[list[VoltageSource], dict[Id, VoltageSource]],
         grounds: Union[list[Ground], dict[Id, Ground]],
         potential_refs: Union[list[PotentialRef], dict[Id, PotentialRef]],
         **kwargs,
@@ -86,9 +86,9 @@ class ElectricalNetwork:
                 The loads of the network. Either a list of loads or a dictionary of loads with their
                 IDs as keys.
 
-            voltage_sources:
-                The voltage sources of the network. Either a list of voltage sources or a dictionary
-                of voltage sources with their IDs as keys.
+            sources:
+                The sources of the network. Either a list of sources or a dictionary of sources with
+                their IDs as keys.
 
             grounds:
                 The grounds of the network. Either a list of grounds or a dictionary of grounds with
@@ -102,9 +102,7 @@ class ElectricalNetwork:
         self.buses = self._elements_as_dict(buses, RoseauLoadFlowExceptionCode.BAD_BUS_ID)
         self.branches = self._elements_as_dict(branches, RoseauLoadFlowExceptionCode.BAD_BRANCH_ID)
         self.loads = self._elements_as_dict(loads, RoseauLoadFlowExceptionCode.BAD_LOAD_ID)
-        self.voltage_sources = self._elements_as_dict(
-            voltage_sources, RoseauLoadFlowExceptionCode.BAD_VOLTAGE_SOURCE_ID
-        )
+        self.sources = self._elements_as_dict(sources, RoseauLoadFlowExceptionCode.BAD_SOURCE_ID)
         self.grounds = self._elements_as_dict(grounds, RoseauLoadFlowExceptionCode.BAD_GROUND_ID)
         self.potential_refs = self._elements_as_dict(potential_refs, RoseauLoadFlowExceptionCode.BAD_POTENTIAL_REF_ID)
 
@@ -126,8 +124,8 @@ class ElectricalNetwork:
             f"<{type(self).__name__}:"
             f" {count_repr(self.buses, 'bus', 'buses')},"
             f" {count_repr(self.branches, 'branch', 'branches')},"
-            f" {count_repr(self.loads, 'load', 'loads')},"
-            f" {count_repr(self.voltage_sources, 'voltage source')},"
+            f" {count_repr(self.loads, 'load')},"
+            f" {count_repr(self.sources, 'source')},"
             f" {count_repr(self.grounds, 'ground')},"
             f" {count_repr(self.potential_refs, 'potential ref')}"
             f">"
@@ -166,7 +164,7 @@ class ElectricalNetwork:
         buses: list[Bus] = []
         branches: list[AbstractBranch] = []
         loads: list[AbstractLoad] = []
-        voltage_sources: list[VoltageSource] = []
+        sources: list[VoltageSource] = []
         grounds: list[Ground] = []
         potential_refs: list[PotentialRef] = []
 
@@ -182,7 +180,7 @@ class ElectricalNetwork:
             elif isinstance(e, AbstractLoad):
                 loads.append(e)
             elif isinstance(e, VoltageSource):
-                voltage_sources.append(e)
+                sources.append(e)
             elif isinstance(e, Ground):
                 grounds.append(e)
             elif isinstance(e, PotentialRef):
@@ -194,7 +192,7 @@ class ElectricalNetwork:
             buses=buses,
             branches=branches,
             loads=loads,
-            voltage_sources=voltage_sources,
+            sources=sources,
             grounds=grounds,
             potential_refs=potential_refs,
         )
@@ -249,10 +247,10 @@ class ElectricalNetwork:
         )
 
     @property
-    def voltage_sources_frame(self) -> pd.DataFrame:
-        """A dataframe of the network voltage sources."""
+    def sources_frame(self) -> pd.DataFrame:
+        """A dataframe of the network sources."""
         return pd.DataFrame.from_records(
-            data=[(source_id, source.phases, source.bus.id) for source_id, source in self.voltage_sources.items()],
+            data=[(source_id, source.phases, source.bus.id) for source_id, source in self.sources.items()],
             columns=["id", "phases", "bus_id"],
             index="id",
         )
@@ -419,7 +417,7 @@ class ElectricalNetwork:
             if isinstance(load, PowerLoad) and load.is_flexible:
                 load._res_flexible_powers = np.array([complex(p[0], p[1]) for p in load_data["powers"]], dtype=complex)
         for source_data in result_dict["sources"]:
-            source = self.voltage_sources[source_data["id"]]
+            source = self.sources[source_data["id"]]
             source._res_currents = np.array([complex(i[0], i[1]) for i in source_data["currents"]], dtype=complex)
         for ground_data in result_dict["grounds"]:
             ground = self.grounds[ground_data["id"]]
@@ -629,11 +627,11 @@ class ElectricalNetwork:
         return powers_df
 
     @property
-    def res_voltage_sources_currents(self) -> pd.DataFrame:
+    def res_sources_currents(self) -> pd.DataFrame:
         """The load flow results of the currents of the sources (A) as a dataframe."""
         self._warn_invalid_results()
         sources_dict = {"source_id": [], "phase": [], "current": []}
-        for source_id, source in self.voltage_sources.items():
+        for source_id, source in self.sources.items():
             for current, phase in zip(source._res_currents_getter(warning=False), source.phases):
                 sources_dict["source_id"].append(source_id)
                 sources_dict["phase"].append(phase)
@@ -697,15 +695,15 @@ class ElectricalNetwork:
                 raise NotImplementedError(msg)
 
     def set_source_voltages(self, voltages: dict[Id, Sequence[complex]]) -> None:
-        """Set new voltages for the voltage source(s).
+        """Set new voltages for the source(s).
 
         Args:
             voltages:
-                The new voltages to set indexed by the voltage source id.
+                The new voltages to set indexed by the source id.
         """
-        for vs_id, value in voltages.items():
-            voltage_source = self.voltage_sources[vs_id]
-            voltage_source.voltages = value
+        for source_id, value in voltages.items():
+            source = self.sources[source_id]
+            source.voltages = value
 
     def _connect_element(self, element: Element) -> None:
         """Connect an element to the network.
@@ -715,7 +713,7 @@ class ElectricalNetwork:
 
         Args:
             element:
-                The element to add. Only lines, loads, buses and voltage sources can be added.
+                The element to add. Only lines, loads, buses and sources can be added.
         """
         # The C++ electrical network and the tape will be recomputed
         if element.network is not None and element.network != self:
@@ -728,9 +726,9 @@ class ElectricalNetwork:
         elif isinstance(element, AbstractBranch):
             self.branches[element.id] = element
         elif isinstance(element, VoltageSource):
-            self.voltage_sources[element.id] = element
+            self.sources[element.id] = element
         else:
-            msg = "Only lines, loads, buses and voltage sources can be added to the network."
+            msg = "Only lines, loads, buses and sources can be added to the network."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT)
         element._network = self
@@ -755,9 +753,9 @@ class ElectricalNetwork:
         elif isinstance(element, AbstractLoad):
             self.loads.pop(element.id)
         elif isinstance(element, VoltageSource):
-            self.voltage_sources.pop(element.id)
+            self.sources.pop(element.id)
         else:
-            msg = f"{element!r} is not a valid load or voltage source."
+            msg = f"{element!r} is not a valid load or source."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT)
         element._network = None
@@ -781,7 +779,7 @@ class ElectricalNetwork:
         elements.extend(self.buses.values())
         elements.extend(self.branches.values())
         elements.extend(self.loads.values())
-        elements.extend(self.voltage_sources.values())
+        elements.extend(self.sources.values())
         elements.extend(self.grounds.values())
         elements.extend(self.potential_refs.values())
 
@@ -878,7 +876,7 @@ class ElectricalNetwork:
             buses=buses,
             branches=branches,
             loads=loads,
-            voltage_sources=sources,
+            sources=sources,
             grounds=grounds,
             potential_refs=p_refs,
         )
@@ -924,7 +922,7 @@ class ElectricalNetwork:
             ("buses", self.buses, "Bus"),
             ("branches", self.branches, "Branch"),
             ("loads", self.loads, "Load"),
-            ("sources", self.voltage_sources, "Source"),
+            ("sources", self.sources, "Source"),
             ("grounds", self.grounds, "Ground"),
             ("potential_refs", self.potential_refs, "PotentialRef"),
         ):
@@ -983,7 +981,7 @@ class ElectricalNetwork:
                 "phases": source.phases,
                 "currents": [[i.real, i.imag] for i in source.res_currents],
             }
-            for source in self.voltage_sources.values()
+            for source in self.sources.values()
         ]
 
         grounds_results: list[JsonDict] = []
@@ -1040,12 +1038,12 @@ class ElectricalNetwork:
         Returns:
             The constructed network.
         """
-        buses, branches, loads, voltage_sources, grounds, potential_refs = network_from_dgs(path)
+        buses, branches, loads, sources, grounds, potential_refs = network_from_dgs(path)
         return cls(
             buses=buses,
             branches=branches,
             loads=loads,
-            voltage_sources=voltage_sources,
+            sources=sources,
             grounds=grounds,
             potential_refs=potential_refs,
         )

@@ -13,8 +13,8 @@ from roseau.load_flow.models.loads import (
     Projection,
 )
 from roseau.load_flow.models.potential_refs import PotentialRef
+from roseau.load_flow.models.sources import VoltageSource
 from roseau.load_flow.models.transformers import Transformer, TransformerParameters
-from roseau.load_flow.models.voltage_sources import VoltageSource
 
 __all__ = [
     # Core

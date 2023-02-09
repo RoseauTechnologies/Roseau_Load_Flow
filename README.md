@@ -49,7 +49,7 @@ from roseau.load_flow import (
 ground = Ground(id="g")  # A ground connection
 p_ref = PotentialRef(id="pr", element=ground)  # A potential reference
 
-# Create a main bus and a voltage source
+# Create a main bus and a source
 vn = 400 / np.sqrt(3)
 voltages = [vn, vn * np.exp(-2 / 3 * np.pi * 1j), vn * np.exp(2 / 3 * np.pi * 1j)]
 source_bus = Bus(id="sb", phases="abcn")
@@ -69,7 +69,7 @@ en = ElectricalNetwork(
     buses=[source_bus, load_bus],
     branches=[line],
     loads=[load],
-    voltage_sources=[vs],
+    sources=[vs],
     grounds=[ground],
     potential_refs=[p_ref],
 )

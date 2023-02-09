@@ -52,7 +52,7 @@ def small_network() -> ElectricalNetwork:
         buses=[source_bus, load_bus],
         branches=[line],
         loads=[load],
-        voltage_sources=[vs],
+        sources=[vs],
         grounds=[ground],
         potential_refs=[pref],
     )
@@ -89,7 +89,7 @@ def single_phase_network() -> ElectricalNetwork:
         buses=[bus0, bus1],
         branches=[line],
         loads=[load],
-        voltage_sources=[vs],
+        sources=[vs],
         grounds=[ground],
         potential_refs=[pref],
     )
@@ -219,7 +219,7 @@ def test_connect_and_disconnect():
     new_load = PowerLoad(id="power load", phases="abcn", bus=load_bus, powers=[100 + 0j, 100 + 0j, 100 + 0j])
     assert new_load.network == en
 
-    # Disconnection of a voltage source
+    # Disconnection of a source
     assert vs.network == en
     vs.disconnect()
     assert vs.network is None
@@ -232,14 +232,14 @@ def test_connect_and_disconnect():
     # Bad key
     with pytest.raises(RoseauLoadFlowException) as e:
         en._disconnect_element(Ground("a separate ground element"))
-    assert e.value.msg == "Ground(id='a separate ground element') is not a valid load or voltage source."
+    assert e.value.msg == "Ground(id='a separate ground element') is not a valid load or source."
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT
 
     # Adding ground => impossible
     ground2 = Ground("ground2")
     with pytest.raises(RoseauLoadFlowException) as e:
         en._connect_element(ground2)
-    assert e.value.msg == "Only lines, loads, buses and voltage sources can be added to the network."
+    assert e.value.msg == "Only lines, loads, buses and sources can be added to the network."
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT
 
     # Remove line => impossible
@@ -254,7 +254,7 @@ def test_connect_and_disconnect():
 
 
 def test_bad_networks():
-    # No voltage source
+    # No source
     ground = Ground("ground")
     bus1 = Bus("bus1", phases="abcn")
     bus2 = Bus("bus2", phases="abcn")
@@ -284,7 +284,7 @@ def test_bad_networks():
             buses=[bus0, bus1],  # no bus2
             branches=[line, switch],
             loads=[],
-            voltage_sources=[vs],
+            sources=[vs],
             grounds=[ground],
             potential_refs=[p_ref],
         )
@@ -360,7 +360,7 @@ def test_bad_networks():
             buses={"foo": src_bus, "lb": load_bus},  # <-- ID of src_bus is wrong
             branches={"ln": line},
             loads={"pl": load},
-            voltage_sources={"vs": vs},
+            sources={"vs": vs},
             grounds={"g": ground},
             potential_refs={"pr": pref},
         )
@@ -521,7 +521,7 @@ def test_frame(small_network):
     assert loads_df.index.name == "id"
 
     # Sources
-    sources_df = small_network.voltage_sources_frame
+    sources_df = small_network.sources_frame
     assert isinstance(sources_df, pd.DataFrame)
     assert sources_df.shape == (1, 2)
     assert set(sources_df.columns) == {"phases", "bus_id"}
@@ -561,7 +561,7 @@ def test_to_from_dict_roundtrip(small_network: ElectricalNetwork):
     assert_frame_equal(small_network.buses_frame, new_net.buses_frame)
     assert_frame_equal(small_network.branches_frame, new_net.branches_frame)
     assert_frame_equal(small_network.loads_frame, new_net.loads_frame)
-    assert_frame_equal(small_network.voltage_sources_frame, new_net.voltage_sources_frame)
+    assert_frame_equal(small_network.sources_frame, new_net.sources_frame)
 
 
 def test_single_phase_network(single_phase_network: ElectricalNetwork):
@@ -572,7 +572,7 @@ def test_single_phase_network(single_phase_network: ElectricalNetwork):
     assert_frame_equal(single_phase_network.buses_frame, new_net.buses_frame)
     assert_frame_equal(single_phase_network.branches_frame, new_net.branches_frame)
     assert_frame_equal(single_phase_network.loads_frame, new_net.loads_frame)
-    assert_frame_equal(single_phase_network.voltage_sources_frame, new_net.voltage_sources_frame)
+    assert_frame_equal(single_phase_network.sources_frame, new_net.sources_frame)
 
     # Test load flow results
     # ======================
@@ -737,7 +737,7 @@ def test_network_results_warning(small_network: ElectricalNetwork, good_json_res
         assert bus.network == small_network
     for load in small_network.loads.values():
         assert load.network == small_network
-    for source in small_network.voltage_sources.values():
+    for source in small_network.sources.values():
         assert source.network == small_network
     for branch in small_network.branches.values():
         assert branch.network == small_network
@@ -766,7 +766,7 @@ def test_network_results_warning(small_network: ElectricalNetwork, good_json_res
             with pytest.raises(RoseauLoadFlowException) as e:
                 load.res_flexible_powers
             assert e.value.args[1] == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
-    for source in small_network.voltage_sources.values():
+    for source in small_network.sources.values():
         with pytest.raises(RoseauLoadFlowException) as e:
             source.res_currents
         assert e.value.args[1] == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
@@ -796,7 +796,7 @@ def test_network_results_warning(small_network: ElectricalNetwork, good_json_res
         load.res_currents
         if load.is_flexible and isinstance(load, PowerLoad):
             load.res_flexible_powers
-    for source in small_network.voltage_sources.values():
+    for source in small_network.sources.values():
         source.res_currents
     for ground in small_network.grounds.values():
         ground.res_potential
@@ -826,7 +826,7 @@ def test_network_results_warning(small_network: ElectricalNetwork, good_json_res
         if load.is_flexible and isinstance(load, PowerLoad):
             with check_result_warning(expected_message=expected_message):
                 load.res_flexible_powers
-    for source in small_network.voltage_sources.values():
+    for source in small_network.sources.values():
         with check_result_warning(expected_message=expected_message):
             source.res_currents
     for ground in small_network.grounds.values():
@@ -849,7 +849,7 @@ def test_network_results_warning(small_network: ElectricalNetwork, good_json_res
     with check_result_warning(expected_message=expected_message):
         small_network.res_loads_currents
     with check_result_warning(expected_message=expected_message):
-        small_network.res_voltage_sources_currents
+        small_network.res_sources_currents
     with check_result_warning(expected_message=expected_message):
         small_network.res_loads_flexible_powers
 
@@ -910,7 +910,7 @@ def test_load_flow_results_frames(small_network: ElectricalNetwork, good_json_re
         index=["source_id", "phase"],
     )
     set_index_dtype(sources_currents, _PHASE_DTYPE)
-    assert_frame_equal(small_network.res_voltage_sources_currents, sources_currents)
+    assert_frame_equal(small_network.res_sources_currents, sources_currents)
 
     grounds_potential = pd.DataFrame.from_records(
         [

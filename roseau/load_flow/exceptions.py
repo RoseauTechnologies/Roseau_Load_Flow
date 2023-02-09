@@ -53,8 +53,8 @@ class RoseauLoadFlowExceptionCode(Enum):
     BAD_S_VALUE = auto()
     BAD_PARAMETERS_SIZE = auto()
 
-    # Voltage source
-    BAD_VOLTAGE_SOURCE_ID = auto()
+    # Source
+    BAD_SOURCE_ID = auto()
 
     # Network
     BAD_VOLTAGES_SOURCES_CONNECTION = auto()
