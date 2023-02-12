@@ -39,6 +39,7 @@ def test_powers_equal(network_with_results):
     powers1, powers2 = line.res_powers
     assert np.allclose(powers1, -vs.res_powers)
     assert np.allclose(powers2, -pl.res_powers)
+    assert np.allclose(powers1 + powers2, line.res_power_losses)
 
 
 @pytest.mark.parametrize(
@@ -235,14 +236,16 @@ def test_lines_res_powers(phases, z_line, y_shunt, len_line, bus_pot, line_cur, 
     res_powers1, res_powers2 = line.res_powers
     series_losses = line.res_series_power_losses
     shunt_losses = line.res_shunt_power_losses
-    line_losses = series_losses + shunt_losses
-    assert np.allclose(res_powers1, expected_pow[0])
-    assert np.allclose(res_powers2, expected_pow[1])
-    assert np.allclose(series_losses, expected_pow[2])
+    line_losses = line.res_power_losses
+    exp_p1, exp_p2, exp_pl_series = expected_pow
+    assert np.allclose(res_powers1, exp_p1)
+    assert np.allclose(res_powers2, exp_p2)
+    assert np.allclose(series_losses, exp_pl_series)
     if y_shunt is None:
         assert np.allclose(shunt_losses, 0)
     else:
         assert not np.allclose(shunt_losses, 0)
+    assert np.allclose(line_losses, series_losses + shunt_losses)
 
     # Sanity check: the total power lost is equal to the sum of the powers flowing through
     assert np.allclose(res_powers1 + res_powers2, line_losses)

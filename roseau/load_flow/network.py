@@ -444,7 +444,7 @@ class ElectricalNetwork:
 
     @property
     def res_buses(self) -> pd.DataFrame:
-        """The load flow results of the buses (V) as a dataframe."""
+        """The load flow results of the buses as a dataframe."""
         self._warn_invalid_results()
         res_dict = {"bus_id": [], "phase": [], "potential": []}
         for bus_id, bus in self.buses.items():
@@ -470,7 +470,7 @@ class ElectricalNetwork:
         Examples:
 
             >>> net
-            <ElectricalNetwork: 2 buses, 1 branch, 1 load, 1 ground, 1 potential ref>
+            <ElectricalNetwork: 2 buses, 1 branch, 1 load, 1 source, 1 ground, 1 potential ref>
 
             >>> net.res_buses_voltages
                                              voltage
@@ -584,6 +584,37 @@ class ElectricalNetwork:
             .groupby(["branch_id", "phase"])  # aggregate x1 and x2 for the same phase
             .mean()  # 2 values; only one is not nan -> keep it
             .dropna(how="all")  # if all values are nan -> drop the row (the phase does not exist)
+        )
+        return res_df
+
+    @property
+    def res_lines_losses(self) -> pd.DataFrame:
+        """The load flow results of the lines losses as a dataframe."""
+        self._warn_invalid_results()
+        res_dict = {"line_id": [], "phase": [], "series_losses": [], "shunt_losses": [], "total_losses": []}
+        for br_id, branch in self.branches.items():
+            if not isinstance(branch, Line):
+                continue
+            series_losses = branch._res_series_power_losses_getter(warning=False)
+            shunt_losses = branch._res_shunt_power_losses_getter(warning=False)
+            total_losses = series_losses + shunt_losses
+            for series, shunt, total, phase in zip(series_losses, shunt_losses, total_losses, branch.phases):
+                res_dict["line_id"].append(br_id)
+                res_dict["phase"].append(phase)
+                res_dict["series_losses"].append(series)
+                res_dict["shunt_losses"].append(shunt)
+                res_dict["total_losses"].append(total)
+        res_df = (
+            pd.DataFrame.from_dict(res_dict, orient="columns")
+            .astype(
+                {
+                    "phase": _PHASE_DTYPE,
+                    "series_losses": complex,
+                    "shunt_losses": complex,
+                    "total_losses": complex,
+                }
+            )
+            .set_index(["line_id", "phase"])
         )
         return res_df
 

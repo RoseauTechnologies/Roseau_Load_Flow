@@ -271,7 +271,7 @@ class Line(AbstractBranch):
     def _res_shunt_power_losses_getter(self, warning: bool) -> np.ndarray:
         y_shunt = self.parameters.y_shunt
         if y_shunt is None:
-            return np.zeros_like(self.parameters.z_line)
+            return np.zeros(len(self.phases), dtype=np.complex_)
         assert self.ground is not None
         pot1, pot2 = self._res_potentials_getter(warning)
         vg = self.ground.res_potential
@@ -285,6 +285,16 @@ class Line(AbstractBranch):
     def res_shunt_power_losses(self) -> np.ndarray:
         """Get the power losses in the shunt elements of the line (VA)."""
         return self._res_shunt_power_losses_getter(warning=True)
+
+    def _res_power_losses_getter(self, warning: bool) -> np.ndarray:
+        series_losses = self._res_series_power_losses_getter(warning)
+        shunt_losses = self._res_shunt_power_losses_getter(warning=False)  # we warn on the previous line
+        return series_losses + shunt_losses
+
+    @property
+    def res_power_losses(self) -> np.ndarray:
+        """Get the power losses in the line (VA)."""
+        return self._res_power_losses_getter(warning=True)
 
     #
     # Json Mixin interface
