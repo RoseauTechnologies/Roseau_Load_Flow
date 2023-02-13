@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from shapely.geometry import Point
+from shapely import Point
 
 from roseau.load_flow import Line
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode

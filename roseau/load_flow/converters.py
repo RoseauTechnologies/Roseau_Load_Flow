@@ -1,3 +1,11 @@
+"""
+This module provides helper functions to convert from one representation to another.
+
+Available functions:
+
+* convert between phasor and symmetrical components
+* convert potentials to voltages
+"""
 from collections.abc import Sequence
 
 import numpy as np

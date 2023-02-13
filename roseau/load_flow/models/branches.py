@@ -1,8 +1,8 @@
 import logging
-from typing import Any, Optional
+from typing import Any, Optional, Union
 
 import numpy as np
-from shapely.geometry.base import BaseGeometry
+from shapely import LineString, Point
 
 from roseau.load_flow.converters import calculate_voltages
 from roseau.load_flow.models.buses import Bus
@@ -26,7 +26,7 @@ class AbstractBranch(Element):
         *,
         phases1: str,
         phases2: str,
-        geometry: Optional[BaseGeometry] = None,
+        geometry: Optional[Union[Point, LineString]] = None,
         **kwargs: Any,
     ) -> None:
         """AbstractBranch constructor.

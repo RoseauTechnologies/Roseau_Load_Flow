@@ -1,8 +1,11 @@
+"""
+This module defines the electrical network class.
+"""
 import json
 import logging
 import re
 import warnings
-from collections.abc import Sequence, Sized
+from collections.abc import Sized
 from pathlib import Path
 from typing import NoReturn, Optional, TypeVar, Union
 from urllib.parse import urljoin
@@ -43,6 +46,96 @@ _T = TypeVar("_T", bound=Element)
 
 
 class ElectricalNetwork:
+    """Electrical network class.
+
+    This class represents an electrical network, its elements, and their connections. After
+    creating the network, the load flow algorithm can be run on it using the
+    :meth:`solve_load_flow` method.
+
+    Args:
+        buses:
+            The buses of the network. Either a list of buses or a dictionary of buses with
+            their IDs as keys. Buses are the nodes of the network. They connect other elements
+            such as loads and sources. Buses can be connected together with branches.
+
+        branches:
+            The branches of the network. Either a list of branches or a dictionary of branches
+            with their IDs as keys. Branches are the elements that connect two buses together.
+            They can be lines, transformers, or switches.
+
+        loads:
+            The loads of the network. Either a list of loads or a dictionary of loads with their
+            IDs as keys. There are three types of loads: constant power, constant current, and
+            constant impedance.
+
+        sources:
+            The sources of the network. Either a list of sources or a dictionary of sources with
+            their IDs as keys. A network must have at least one source. Note that two sources
+            cannot be connected with a switch.
+
+        grounds:
+            The grounds of the network. Either a list of grounds or a dictionary of grounds with
+            their IDs as keys. LV networks typically have one ground element connected to the
+            neutral of the main source bus (secondary of the MV/LV transformer). HV networks
+            may have one or more grounds connected to the shunt components of their lines.
+
+        potential_refs:
+            The potential references of the network. Either a list of potential references or a
+            dictionary of potential references with their IDs as keys. As the name suggests, this
+            element defines the reference of potentials of the network. A potential reference per
+            galvanically isolated section of the network is expected. A potential reference can
+            be connected to a bus or to a ground.
+
+    Attributes:
+        DEFAULT_PRECISION (float):
+            The default precision needed for the convergence of the load flow algorithm. The solver
+            stops when the error between two iterations is below this value. Default is 1e-6.
+
+        DEFAULT_MAX_ITERATIONS (int):
+            Maximum number of iterations to perform the load flow analysis. The solver stops when
+            this number of iterations is reached. Default is 20.
+
+        DEFAULT_BASE_URL (str):
+            Base URL of the Roseau Load Flow API endpoint.
+
+        buses (dict[Id, Bus]):
+            Dictionary of buses of the network indexed by their IDs. Also available as a
+            :attr:`GeoDataFrame<buses_frame>`.
+
+        branches (dict[Id, AbstractBranch]):
+            Dictionary of branches of the network indexed by their IDs. Also available as a
+            :attr:`GeoDataFrame<branches_frame>`.
+
+        loads (dict[Id, AbstractLoad]):
+            Dictionary of loads of the network indexed by their IDs. Also available as a
+            :attr:`DataFrame<loads_frame>`.
+
+        sources (dict[Id, VoltageSource]):
+            Dictionary of voltage sources of the network indexed by their IDs. Also available as a
+            :attr:`DataFrame<sources_frame>`.
+
+        grounds (dict[Id, Ground]):
+            Dictionary of grounds of the network indexed by their IDs. Also available as a
+            :attr:`DataFrame<grounds_frame>`.
+
+        potential_refs (dict[Id, PotentialRef]):
+            Dictionary of potential references of the network indexed by their IDs. Also available
+            as a :attr:`DataFrame<potential_refs_frame>`.
+
+        res_info (JsonDict):
+            Dictionary containing solver information on the last run of the load flow analysis.
+            Empty if the load flow analysis has not been run yet.
+            Example::
+
+                {
+                    "status": "success",
+                    "resolution_method": "newton",
+                    "iterations": 2,
+                    "target_error": 1e-06,
+                    "final_error": 1.9468870959826745e-12
+                }
+    """
+
     DEFAULT_PRECISION: float = 1e-6
     DEFAULT_MAX_ITERATIONS: int = 20
     DEFAULT_BASE_URL = "https://load-flow-api.roseautechnologies.com/"
@@ -71,34 +164,6 @@ class ElectricalNetwork:
         potential_refs: Union[list[PotentialRef], dict[Id, PotentialRef]],
         **kwargs,
     ) -> None:
-        """ElectricalNetwork constructor.
-
-        Args:
-            buses:
-                The buses of the network. Either a list of buses or a dictionary of buses with
-                their IDs as keys.
-
-            branches:
-                The branches of the network. Either a list of branches or a dictionary of branches
-                with their IDs as keys.
-
-            loads:
-                The loads of the network. Either a list of loads or a dictionary of loads with their
-                IDs as keys.
-
-            sources:
-                The sources of the network. Either a list of sources or a dictionary of sources with
-                their IDs as keys.
-
-            grounds:
-                The grounds of the network. Either a list of grounds or a dictionary of grounds with
-                their IDs as keys. A small network typically has only one ground.
-
-            potential_refs:
-                The potential references of the network. Either a list of potential references or a
-                dictionary of potential references with their IDs as keys. A potential reference
-                per galvanically isolated section of the network is expected.
-        """
         self.buses = self._elements_as_dict(buses, RoseauLoadFlowExceptionCode.BAD_BUS_ID)
         self.branches = self._elements_as_dict(branches, RoseauLoadFlowExceptionCode.BAD_BRANCH_ID)
         self.loads = self._elements_as_dict(loads, RoseauLoadFlowExceptionCode.BAD_LOAD_ID)
@@ -110,7 +175,7 @@ class ElectricalNetwork:
         self._create_network()
         self._valid = True
         self._results_valid: bool = False
-        self.res_info: JsonDict = {}  # TODO: Add doc on this field
+        self.res_info: JsonDict = {}
 
     def __repr__(self) -> str:
         def count_repr(__o: Sized, /, singular: str, plural: Optional[str] = None) -> str:
@@ -202,7 +267,7 @@ class ElectricalNetwork:
     #
     @property
     def buses_frame(self) -> gpd.GeoDataFrame:
-        """A geo dataframe of the network buses."""
+        """The :attr:`buses` of the network as a geo dataframe."""
         return gpd.GeoDataFrame(
             data=pd.DataFrame.from_records(
                 data=[(bus_id, bus.phases, bus.geometry) for bus_id, bus in self.buses.items()],
@@ -215,7 +280,7 @@ class ElectricalNetwork:
 
     @property
     def branches_frame(self) -> gpd.GeoDataFrame:
-        """A geo dataframe of the network branches."""
+        """The :attr:`branches` of the network as a geo dataframe."""
         return gpd.GeoDataFrame(
             data=pd.DataFrame.from_records(
                 data=[
@@ -239,7 +304,7 @@ class ElectricalNetwork:
 
     @property
     def loads_frame(self) -> pd.DataFrame:
-        """A dataframe of the network loads."""
+        """The :attr:`loads` of the network as a dataframe."""
         return pd.DataFrame.from_records(
             data=[(load_id, load.phases, load.bus.id) for load_id, load in self.loads.items()],
             columns=["id", "phases", "bus_id"],
@@ -248,7 +313,7 @@ class ElectricalNetwork:
 
     @property
     def sources_frame(self) -> pd.DataFrame:
-        """A dataframe of the network sources."""
+        """The :attr:`sources` of the network as a dataframe."""
         return pd.DataFrame.from_records(
             data=[(source_id, source.phases, source.bus.id) for source_id, source in self.sources.items()],
             columns=["id", "phases", "bus_id"],
@@ -257,7 +322,7 @@ class ElectricalNetwork:
 
     @property
     def grounds_frame(self) -> pd.DataFrame:
-        """A dataframe of the network grounds."""
+        """The :attr:`grounds` of the network as a dataframe."""
         return pd.DataFrame.from_records(
             data=[
                 (ground.id, bus_id, phase)
@@ -270,7 +335,7 @@ class ElectricalNetwork:
 
     @property
     def potential_refs_frame(self) -> pd.DataFrame:
-        """A dataframe of the network potential references."""
+        """The :attr:`potential references <potential_refs>` of the network as a dataframe."""
         return pd.DataFrame.from_records(
             data=[(pref.id, pref.phase, pref.element.id) for pref in self.potential_refs.values()],
             columns=["id", "phase", "element_id"],
@@ -287,10 +352,12 @@ class ElectricalNetwork:
         precision: float = DEFAULT_PRECISION,
         max_iterations: int = DEFAULT_MAX_ITERATIONS,
     ) -> int:
-        """Solve the load flow for this network.
+        """Solve the load flow for this network (Requires internet access).
 
-        Execute a Newton algorithm for load flow calculation. In order to get the results of the
-        load flow, please use the `results` method or call the elements directly.
+        Execute a Newton algorithm for load flow calculation. To get the results of the
+        load flow for the whole network, use the different `res_` properties (e.g.
+        ``print(net.res_buses``). To get the results for a specific element, use the
+        element directly (e.g. ``print(net.buses["bus1"].res_potentials)``
 
         Args:
             auth:
@@ -430,21 +497,30 @@ class ElectricalNetwork:
         self._results_valid = True
 
     #
-    # Getters for the load flow results
+    # Properties to access the load flow results as dataframes
     #
     def _warn_invalid_results(self) -> None:
         """Warn when the network is invalid."""
         if not self._results_valid:
             warnings.warn(
-                message="The results of this network may be outdated. Please re-run a load flow to ensure the "
-                "validity of results.",
+                message=(
+                    "The results of this network may be outdated. Please re-run a load flow to "
+                    "ensure the validity of results."
+                ),
                 category=UserWarning,
                 stacklevel=2,
             )
 
     @property
     def res_buses(self) -> pd.DataFrame:
-        """The load flow results of the buses as a dataframe."""
+        """The load flow results of the network buses.
+
+        The results are returned as a dataframe with the following index:
+            - `bus_id`: The id of the bus.
+            - `phase`: The phase of the bus (in ``{'a', 'b', 'c', 'n'}``).
+        and the following columns:
+            - `potential`: The complex potential of the bus (in Volts) for the given phase.
+        """
         self._warn_invalid_results()
         res_dict = {"bus_id": [], "phase": [], "potential": []}
         for bus_id, bus in self.buses.items():
@@ -461,62 +537,17 @@ class ElectricalNetwork:
 
     @property
     def res_buses_voltages(self) -> pd.DataFrame:
-        """The load flow results of the voltages of the buses (V) as a dataframe.
+        """The load flow results of the complex voltages of the buses (V).
 
         The voltages are computed from the potentials of the buses. If the bus has a neutral, the
         voltage is the line-to-neutral voltage. Otherwise, the voltage is the line-to-line voltage.
         The result dataframe has a ``phase`` index that depicts this behavior.
 
-        Examples:
-
-            >>> net
-            <ElectricalNetwork: 2 buses, 1 branch, 1 load, 1 source, 1 ground, 1 potential ref>
-
-            >>> net.res_buses_voltages
-                                             voltage
-            bus_id phase
-            s_bus  an     200000000000.0+0.00000000j
-                   bn    -10000.000000-17320.508076j
-                   cn    -10000.000000+17320.508076j
-            l_bus  an     19999.00000095+0.00000000j
-                   bn     -9999.975000-17320.464775j
-                   cn     -9999.975000+17320.464775j
-
-            To get the magnitude and angle of the voltages:
-
-            >>> net.res_buses_voltages.transform([np.abs, np.angle])
-                           voltage
-                          absolute     angle
-            bus_id phase
-            s_bus  an     20000.00  0.000000
-                   bn     20000.00 -2.094395
-                   cn     20000.00  2.094395
-            l_bus  an     19999.95  0.000000
-                   bn     19999.95 -2.094395
-                   cn     19999.95  2.094395
-
-            To get the symmetrical components of the voltages:
-
-            >>> from roseau.load_flow.converters import series_phasor_to_sym
-            >>> voltage_series = net.res_buses_voltages["voltage"]
-            >>> voltage_symmetrical = series_phasor_to_sym(voltage_series)
-            >>> voltage_symmetrical
-            bus_id  sequence
-            l_bus   zero        3.183231e-12-9.094947e-13j
-                    pos         1.999995e+04+3.283594e-12j
-                    neg        -1.796870e-07-2.728484e-12j
-            s_bus   zero        5.002221e-12-9.094947e-13j
-                    pos         2.000000e+04+3.283596e-12j
-                    neg        -1.796880e-07-1.818989e-12j
-            Name: voltage, dtype: complex128
-
-            To access one of the symmetrical components sequences, say the positive sequence:
-
-            >>> voltage_symmetrical.loc[:, "pos"]
-            bus_id
-            l_bus  19999.95+0.00j
-            s_bus  200000.0+0.00j
-            Name: voltage, dtype: complex128
+        The results are returned as a dataframe with the following index:
+            - `bus_id`: The id of the bus.
+            - `phase`: The phase of the bus (in ``{'an', 'bn', 'cn', 'ab', 'bc', 'ca'}``).
+        and the following columns:
+            - `voltage`: The complex voltage of the bus (in Volts) for the given phase.
         """
         self._warn_invalid_results()
         voltages_dict = {"bus_id": [], "phase": [], "voltage": []}
@@ -534,7 +565,23 @@ class ElectricalNetwork:
 
     @property
     def res_branches(self) -> pd.DataFrame:
-        """The load flow results of the branches as a dataframe."""
+        """The load flow results of the network branches.
+
+        The results are returned as a dataframe with the following index:
+            - `branch_id`: The id of the branch.
+            - `phase`: The phase of the branch (in ``{'a', 'b', 'c', 'n'}``).
+        and the following columns:
+            - `current1`: The complex current of the branch (in Amps) for the given phase at the
+                first bus.
+            - `current2`: The complex current of the branch (in Amps) for the given phase at the
+                second bus.
+            - `power1`: The complex power of the branch (in VoltAmps) for the given phase at the
+                first bus.
+            - `power2`: The complex power of the branch (in VoltAmps) for the given phase at the
+                second bus.
+            - `potential1`: The complex potential of the first bus (in Volts) for the given phase.
+            - `potential2`: The complex potential of the second bus (in Volts) for the given phase.
+        """
         self._warn_invalid_results()
         res_list = []
         for branch_id, branch in self.branches.items():
@@ -589,7 +636,24 @@ class ElectricalNetwork:
 
     @property
     def res_lines_losses(self) -> pd.DataFrame:
-        """The load flow results of the lines losses as a dataframe."""
+        """The load flow results of the complex power losses of the network lines.
+
+        To get the active power losses, use the real part of the complex power losses.
+
+        The results are returned as a dataframe with the following index:
+            - `line_id`: The id of the line.
+            - `phase`: The phase of the line (in ``{'a', 'b', 'c', 'n'}``).
+        and the following columns:
+            - `series_losses`: The complex power losses of the line (in VoltAmps) for the given
+                phase due to the series and mutual impedances.
+            - `shunt_losses`: The complex power losses of the line (in VoltAmps) for the given
+                phase due to the shunt admittances.
+            - `total_losses`: The complex power losses of the line (in VoltAmps) for the given
+                phase due to the series and mutual impedances and the shunt admittances. This is
+                the sum of the series and shunt losses. It is equal to the power flow through the
+                line; for any line, ``series_losses + shunt_losses == power1 + power2`` is always
+                true.
+        """
         self._warn_invalid_results()
         res_dict = {"line_id": [], "phase": [], "series_losses": [], "shunt_losses": [], "total_losses": []}
         for br_id, branch in self.branches.items():
@@ -620,7 +684,16 @@ class ElectricalNetwork:
 
     @property
     def res_loads(self) -> pd.DataFrame:
-        """The load flow results of the loads as a dataframe."""
+        """The load flow results of the network loads.
+
+        The results are returned as a dataframe with the following index:
+            - `load_id`: The id of the load.
+            - `phase`: The phase of the load (in ``{'a', 'b', 'c', 'n'}``).
+        and the following columns:
+            - `current`: The complex current of the load (in Amps) for the given phase.
+            - `power`: The complex power of the load (in VoltAmps) for the given phase.
+            - `potential`: The complex potential of the load (in Volts) for the given phase.
+        """
         self._warn_invalid_results()
         res_dict = {"load_id": [], "phase": [], "current": [], "power": [], "potential": []}
         for load_id, load in self.loads.items():
@@ -642,7 +715,15 @@ class ElectricalNetwork:
 
     @property
     def res_loads_voltages(self) -> pd.DataFrame:
-        """The load flow results of the voltages of the loads (V) as a dataframe."""
+        """The load flow results of the complex voltages of the loads (V).
+
+        The results are returned as a dataframe with the following index:
+            - `load_id`: The id of the load.
+            - `phase`: The phase of the load (in ``{'an', 'bn', 'cn'}`` for wye loads and in
+                ``{'ab', 'bc', 'ca'}`` for delta loads.).
+        and the following columns:
+            - `voltage`: The complex voltage of the load (in Volts) for the given *phase*.
+        """
         self._warn_invalid_results()
         voltages_dict = {"load_id": [], "phase": [], "voltage": []}
         for load_id, load in self.loads.items():
@@ -659,7 +740,16 @@ class ElectricalNetwork:
 
     @property
     def res_loads_flexible_powers(self) -> pd.DataFrame:
-        """The load flow results of the flexible powers of the "flexible" loads (A) as a dataframe."""
+        """The load flow results of the flexible powers of the "flexible" loads.
+
+        The results are returned as a dataframe with the following index:
+            - `load_id`: The id of the load.
+            - `phase`: The phase of the load (in ``{'a', 'b', 'c', 'n'}``).
+        and the following columns:
+            - `power`: The complex flexible power of the load (in VoltAmps) for the given phase.
+        """
+        # TODO(Ali): If the flexible power is not per line, but per physical element, update the
+        # docstring and add a note about this
         self._warn_invalid_results()
         loads_dict = {"load_id": [], "phase": [], "power": []}
         for load_id, load in self.loads.items():
@@ -677,7 +767,16 @@ class ElectricalNetwork:
 
     @property
     def res_sources(self) -> pd.DataFrame:
-        """The load flow results of the sources as a dataframe."""
+        """The load flow results of the network sources.
+
+        The results are returned as a dataframe with the following index:
+            - `source_id`: The id of the source.
+            - `phase`: The phase of the source (in ``{'a', 'b', 'c', 'n'}``).
+        and the following columns:
+            - `current`: The complex current of the source (in Amps) for the given phase.
+            - `power`: The complex power of the source (in VoltAmps) for the given phase.
+            - `potential`: The complex potential of the source (in Volts) for the given phase.
+        """
         self._warn_invalid_results()
         res_dict = {"source_id": [], "phase": [], "current": [], "power": [], "potential": []}
         for source_id, source in self.sources.items():
@@ -699,7 +798,13 @@ class ElectricalNetwork:
 
     @property
     def res_grounds(self) -> pd.DataFrame:
-        """The load flow results of the grounds as a dataframe."""
+        """The load flow results of the network grounds.
+
+        The results are returned as a dataframe with the following index:
+            - `ground_id`: The id of the ground.
+        and the following columns:
+            - `potential`: The complex potential of the ground (in Volts).
+        """
         self._warn_invalid_results()
         res_dict = {"ground_id": [], "potential": []}
         for ground in self.grounds.values():
@@ -713,7 +818,13 @@ class ElectricalNetwork:
 
     @property
     def res_potential_refs(self) -> pd.DataFrame:
-        """The load flow results of the potential refs as a dataframe."""
+        """The load flow results of the network potential references.
+
+        The results are returned as a dataframe with the following index:
+            - `potential_ref_id`: The id of the potential reference.
+        and the following columns:
+            - `current`: The complex current of the potential reference (in Amps).
+        """
         self._warn_invalid_results()
         res_dict = {"potential_ref_id": [], "current": []}
         for p_ref in self.potential_refs.values():
@@ -728,35 +839,8 @@ class ElectricalNetwork:
         return res_df
 
     #
-    # Set the dynamic parameters.
+    # Internal methods, please do not use
     #
-    def set_load_point(self, load_point: dict[Id, Sequence[complex]]) -> None:
-        """Set a new load point to the network.
-
-        Args:
-            load_point:
-                The new load points to set indexed by the load id.
-        """
-        for load_id, value in load_point.items():
-            load = self.loads[load_id]
-            if isinstance(load, PowerLoad):
-                load.powers = value
-            else:
-                msg = "Only power loads can be updated for now..."
-                logger.error(msg)
-                raise NotImplementedError(msg)
-
-    def set_source_voltages(self, voltages: dict[Id, Sequence[complex]]) -> None:
-        """Set new voltages for the source(s).
-
-        Args:
-            voltages:
-                The new voltages to set indexed by the source id.
-        """
-        for source_id, value in voltages.items():
-            source = self.sources[source_id]
-            source.voltages = value
-
     def _connect_element(self, element: Element) -> None:
         """Connect an element to the network.
 
@@ -910,11 +994,11 @@ class ElectricalNetwork:
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.SEVERAL_POTENTIAL_REFERENCE)
 
     #
-    # Json Mixin interface
+    # Network saving/loading
     #
     @classmethod
     def from_dict(cls, data: JsonDict) -> Self:
-        """Construct an electrical network from a dict created with ``ElectricalNetwork(...).to_dict()``.
+        """Construct an electrical network from a dict created with :meth:`to_dict`.
 
         Args:
             data:
@@ -935,7 +1019,7 @@ class ElectricalNetwork:
 
     @classmethod
     def from_json(cls, path: StrPath) -> Self:
-        """Construct an electrical network from a json file.
+        """Construct an electrical network from a json file created with :meth:`to_json`.
 
         Args:
             path:
@@ -951,25 +1035,46 @@ class ElectricalNetwork:
         """Convert the electrical network to a dictionary."""
         return network_to_dict(self)
 
-    def to_json(self, path: StrPath) -> None:
+    def to_json(self, path: StrPath) -> Path:
         """Save the current network to a json file.
+
+        .. note::
+            The path is `expanded`_ then `resolved`_ before writing the file.
+
+        .. _expanded: https://docs.python.org/3/library/pathlib.html#pathlib.Path.expanduser
+        .. _resolved: https://docs.python.org/3/library/pathlib.html#pathlib.Path.resolve
+
+        .. warning::
+            If the file exists, it will be overwritten.
 
         Args:
             path:
-                The path for the network output.
+                The path to the output file to write the network to.
+
+        Returns:
+            The expanded and resolved path of the written file.
         """
         res = self.to_dict()
         output = json.dumps(res, ensure_ascii=False, indent=4)
         output = re.sub(r"\[\s+(.*),\s+(.*)\s+]", r"[\1, \2]", output)
         if not output.endswith("\n"):
             output += "\n"
-        Path(path).write_text(output)
+        path = Path(path).expanduser().resolve()
+        path.write_text(output)
+        return path
 
     #
-    # Output of results
+    # Results saving/loading
     #
     def results_from_dict(self, data: JsonDict) -> None:
-        """Load the results of a load flow from a dict created by ``self.results_to_dict()``."""
+        """Load the results of a load flow from a dict created by :meth:`results_to_dict`.
+
+        The results are stored in the network elements.
+
+        Args:
+            data:
+                The dictionary containing the results as returned by the solver.
+        """
         for key, self_elements, name in (
             ("buses", self.buses, "Bus"),
             ("branches", self.branches, "Branch"),
@@ -996,7 +1101,14 @@ class ElectricalNetwork:
         self._dispatch_results(data)
 
     def results_from_json(self, path: StrPath) -> None:
-        """Load the results of a load flow from a json file created by ``self.results_to_json()``."""
+        """Load the results of a load flow from a json file created by :meth:`results_to_json`.
+
+        The results are stored in the network elements.
+
+        Args:
+            path:
+                The path to the JSON file containing the results.
+        """
         data = json.loads(Path(path).read_text())
         self.results_from_dict(data)
 
@@ -1059,20 +1171,28 @@ class ElectricalNetwork:
     def results_to_json(self, path: StrPath) -> Path:
         """Write the results of the load flow to a json file.
 
+        .. note::
+            The path is `expanded`_ then `resolved`_ before writing the file.
+
+        .. _expanded: https://docs.python.org/3/library/pathlib.html#pathlib.Path.expanduser
+        .. _resolved: https://docs.python.org/3/library/pathlib.html#pathlib.Path.resolve
+
         .. warning::
             If the file exists, it will be overwritten.
 
         Args:
             path:
-                The path to the json file.
+                The path to the output file to write the results to.
 
         Returns:
-            The resolved and normalized path of the written file.
+            The expanded and resolved path of the written file.
         """
-        path = Path(path).expanduser().resolve()
         dict_results = self.results_to_dict()
         output = json.dumps(dict_results, indent=4)
         output = re.sub(r"\[\s+(.*),\s+(.*)\s+]", r"[\1, \2]", output)
+        path = Path(path).expanduser().resolve()
+        if not output.endswith("\n"):
+            output += "\n"
         path.write_text(output)
         return path
 

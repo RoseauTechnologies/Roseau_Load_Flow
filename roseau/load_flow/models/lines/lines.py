@@ -3,7 +3,7 @@ from typing import Any, Optional
 
 import numpy as np
 from pint import Quantity
-from shapely.geometry import LineString, Point
+from shapely import LineString, Point
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.branches import AbstractBranch
@@ -24,6 +24,13 @@ class Switch(AbstractBranch):
     branch_type = BranchType.SWITCH
 
     allowed_phases = frozenset(Bus.allowed_phases | {"a", "b", "c", "n"})
+    """The allowed phases for a switch are:
+
+    - P-P-P or P-P-P-N: ``"abc"``, ``"abcn"``
+    - P-P or P-P-N: ``"ab"``, ``"bc"``, ``"ca"``, "abn"``, ``"bcn"``, ``"can"``
+    - P or P-N: ``"a"``, ``"b"``, ``"c"``, ``"an"``, ``"bn"``, ``"cn"``
+    - N: ``"n"``
+    """
 
     def __init__(
         self,
@@ -146,6 +153,13 @@ class Line(AbstractBranch):
     branch_type = BranchType.LINE
 
     allowed_phases = frozenset(Bus.allowed_phases | {"a", "b", "c", "n"})
+    """The allowed phases for a line are:
+
+    - P-P-P or P-P-P-N: ``"abc"``, ``"abcn"``
+    - P-P or P-P-N: ``"ab"``, ``"bc"``, ``"ca"``, "abn"``, ``"bcn"``, ``"can"``
+    - P or P-N: ``"a"``, ``"b"``, ``"c"``, ``"an"``, ``"bn"``, ``"cn"``
+    - N: ``"n"``
+    """
 
     def __init__(
         self,

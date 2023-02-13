@@ -28,6 +28,7 @@ class VoltageSource(Element):
     """
 
     allowed_phases = Bus.allowed_phases
+    """The allowed phases for a voltage source are the same as for a :attr:`bus<Bus.allowed_phases>`."""
     _floating_neutral_allowed: bool = False
 
     def __init__(

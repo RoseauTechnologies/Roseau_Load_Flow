@@ -29,6 +29,7 @@ class AbstractLoad(Element, ABC):
     _floating_neutral_allowed: bool = False
 
     allowed_phases = Bus.allowed_phases
+    """The allowed phases for a load are the same as for a :attr:`bus<Bus.allowed_phases>`."""
 
     def __init__(self, id: Id, bus: Bus, *, phases: Optional[str] = None, **kwargs: Any) -> None:
         """AbstractLoad constructor.

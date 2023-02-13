@@ -1,19 +1,36 @@
-"""Aliases for types used in the load flow module.
+"""
+Type Aliases used by Roseau Load Flow.
 
-These will help users to get better IDE support.
+.. class:: Id
+
+    The type of the identifier of an element.
+
+.. class:: JsonDict
+
+    A dictionary that can be serialized to JSON.
+
+.. class:: StrPath
+
+    The accepted type for files of roseau.load_flow.io.
+
+.. class:: Self
+
+    The type of the class itself.
 """
 import os
 import sys
 from typing import Any, TYPE_CHECKING, TypeVar, Union
 
-Id = Union[int, str]
-"""The type of the identifier of an element."""
+if sys.version_info >= (3, 10):
+    from typing import TypeAlias as TypeAlias
+elif TYPE_CHECKING:
+    from typing_extensions import TypeAlias as TypeAlias
+else:
+    TypeAlias = Any
 
-JsonDict = dict[str, Any]
-"""A dictionary that can be serialized to JSON."""
-
-StrPath = Union[str, os.PathLike[str]]
-"""The accepted type for files of roseau.load_flow.io."""
+Id: TypeAlias = Union[int, str]
+JsonDict: TypeAlias = dict[str, Any]
+StrPath: TypeAlias = Union[str, os.PathLike[str]]
 
 
 if sys.version_info >= (3, 11):
