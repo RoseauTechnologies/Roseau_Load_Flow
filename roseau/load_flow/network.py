@@ -45,7 +45,8 @@ _T = TypeVar("_T", bound=Element)
 class ElectricalNetwork:
     DEFAULT_PRECISION: float = 1e-6
     DEFAULT_MAX_ITERATIONS: int = 20
-    DEFAULT_BASE_URL = "https://load-flow-api.roseautechnologies.com/"
+    DEFAULT_BASE_URL: str = "https://load-flow-api.roseautechnologies.com/"
+    DEFAULT_WARM_START: bool = True
 
     # Default classes to use
     branch_class = AbstractBranch
@@ -286,6 +287,7 @@ class ElectricalNetwork:
         base_url: str = DEFAULT_BASE_URL,
         precision: float = DEFAULT_PRECISION,
         max_iterations: int = DEFAULT_MAX_ITERATIONS,
+        warm_start: bool = DEFAULT_WARM_START,
     ) -> int:
         """Solve the load flow for this network.
 
@@ -305,6 +307,9 @@ class ElectricalNetwork:
             max_iterations:
                 The maximum number of allowed iterations.
 
+            warm_start:
+                Should we use the values of potentials of the last successful load flow result (if any)?
+
         Returns:
             The number of iterations taken.
         """
@@ -315,14 +320,16 @@ class ElectricalNetwork:
             self._create_network()
 
         # Get the data
-        network_data = self.to_dict()
+        data = {"network": self.to_dict()}
+        if warm_start and self.res_info.get("status", "failure") == "success":
+            data["results"] = self.results_to_dict()
 
         # Request the server
-        params = {"max_iterations": max_iterations, "precision": precision}
+        params = {"max_iterations": max_iterations, "precision": precision, "warm_start": warm_start}
         response = requests.post(
             url=urljoin(base_url, "solve/"),
             params=params,
-            json=network_data,
+            json=data,
             auth=auth,
             headers={"accept": "application/json", "rlf-version": __version__},
         )
@@ -347,21 +354,21 @@ class ElectricalNetwork:
         self.res_info = result_dict["info"]
         if self.res_info["status"] != "success":
             msg = (
-                f"The load flow did not converge after {self.res_info['nb_iterations']} iterations. The norm of "
+                f"The load flow did not converge after {self.res_info['iterations']} iterations. The norm of "
                 f"the residuals is {self.res_info['final_precision']:.5n}"
             )
             logger.error(msg=msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.NO_LOAD_FLOW_CONVERGENCE)
 
         logger.info(
-            f"The load flow converged after {self.res_info['nb_iterations']} iterations (final error="
+            f"The load flow converged after {self.res_info['iterations']} iterations (final error="
             f"{self.res_info['final_precision']:.5n})."
         )
 
         # Dispatch the results
         self._dispatch_results(result_dict=result_dict)
 
-        return self.res_info["nb_iterations"]
+        return self.res_info["iterations"]
 
     @staticmethod
     def _parse_error(response: Response) -> NoReturn:
