@@ -260,7 +260,7 @@ class Line(AbstractBranch):
         pot1, pot2 = self._res_potentials_getter(warning)
         du_line = pot1 - pot2
         z_line = self.parameters.z_line * self.length
-        i_line = np.linalg.inv(z_line) @ du_line  # Zₗ.Iₗ = ΔU -> I = Zₗ⁻¹.ΔU
+        i_line = np.linalg.inv(z_line) @ du_line  # Zₗ x Iₗ = ΔU -> I = Zₗ⁻¹ x ΔU
         return du_line * i_line.conj()  # Sₗ = ΔU.Iₗ*
 
     @property
