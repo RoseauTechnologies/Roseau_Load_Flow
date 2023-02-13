@@ -141,10 +141,10 @@ class LineParameters(Identifiable, JsonMixin):
                 Conductance - zero sequence (Siemens/km)
 
             b0:
-                Conductance - direct sequence (Siemens/km)
+                Susceptance - zero sequence (Siemens/km)
 
             g1:
-                Susceptance - zero sequence (Siemens/km)
+                Conductance - direct sequence (Siemens/km)
 
             b1:
                 Susceptance - direct sequence (Siemens/km)
@@ -250,10 +250,10 @@ class LineParameters(Identifiable, JsonMixin):
                 Conductance - zero sequence (Siemens/km)
 
             b0:
-                Conductance - direct sequence (Siemens/km)
+                Susceptance - zero sequence (Siemens/km)
 
             g1:
-                Susceptance - zero sequence (Siemens/km)
+                Conductance - direct sequence (Siemens/km)
 
             b1:
                 Susceptance - direct sequence (Siemens/km)
@@ -294,6 +294,7 @@ class LineParameters(Identifiable, JsonMixin):
                 ym = (y0 - y1) / 3  # Mutual shunt admittance (siemens/km)
             else:
                 # Do not read the manual, it is useless: in pwf we trust
+                # NB (Ali): this is equivalent to setting z0 to z1 and y0 to y1
                 zs = r1 + 1j * x1  # Series impedance (ohms/km)
                 zm = 0 + 0j  # Mutual impedance (ohms/km)
 

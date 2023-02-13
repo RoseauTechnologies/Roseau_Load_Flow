@@ -4,6 +4,7 @@ from typing import Any, Optional
 import numpy as np
 from shapely.geometry.base import BaseGeometry
 
+from roseau.load_flow.converters import calculate_voltages
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import Element
 from roseau.load_flow.typing import Id, JsonDict, Self
@@ -75,6 +76,37 @@ class AbstractBranch(Element):
     def res_currents(self) -> tuple[np.ndarray, np.ndarray]:
         """The load flow result of the branch currents (A)."""
         return self._res_currents_getter(warning=True)
+
+    def _res_powers_getter(self, warning: bool) -> tuple[np.ndarray, np.ndarray]:
+        cur1, cur2 = self._res_currents_getter(warning)
+        pot1, pot2 = self._res_potentials_getter(warning=False)  # we warn on the previous line
+        powers1 = pot1 * cur1.conj()
+        powers2 = pot2 * cur2.conj()
+        return powers1, powers2
+
+    @property
+    def res_powers(self) -> tuple[np.ndarray, np.ndarray]:
+        """The load flow result of the branch powers (VA)."""
+        return self._res_powers_getter(warning=True)
+
+    def _res_potentials_getter(self, warning: bool) -> tuple[np.ndarray, np.ndarray]:
+        pot1 = self.bus1._get_potentials_of(self.phases1, warning)
+        pot2 = self.bus2._get_potentials_of(self.phases2, warning=False)  # we warn on the previous line
+        return pot1, pot2
+
+    @property
+    def res_potentials(self) -> tuple[np.ndarray, np.ndarray]:
+        """The load flow result of the branch potentials (V)."""
+        return self._res_potentials_getter(warning=True)
+
+    def _res_voltages_getter(self, warning: bool) -> tuple[np.ndarray, np.ndarray]:
+        pot1, pot2 = self._res_potentials_getter(warning)
+        return calculate_voltages(pot1, self.phases1), calculate_voltages(pot2, self.phases2)
+
+    @property
+    def res_voltages(self) -> tuple[np.ndarray, np.ndarray]:
+        """The load flow result of the branch voltages (V)."""
+        return self._res_voltages_getter(warning=True)
 
     #
     # Json Mixin interface

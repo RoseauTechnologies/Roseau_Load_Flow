@@ -358,12 +358,12 @@ def test_loads_units():
             "abc",
             [100, 50, 100],
             [
-                229.78226585 - 1.25629783e-01j,
-                -114.78233441 - 1.98934583e02j,
-                -114.99993144 + 1.99060213e02j,
-                0.0 + 0.0000j,
+                229.56453031 - 8.54648227e-24j,
+                -114.78226516 - 1.98934385e02j,
+                -114.78226516 + 1.98934385e02j,
+                0.0 + 0.00000000e00j,
             ],
-            [-1.52803999e228 + 0.12562986j, -2.17665984e-001 - 0.2512596j, 1.52803999e228 + 0.12562975j],
+            [0.43546969 + 0.0j, -0.21773484 - 0.25145831j, -0.21773484 + 0.25145831j],
             id="abcn,abc",
         ),
         pytest.param(
@@ -383,8 +383,8 @@ def test_loads_units():
             "abc",
             "abc",
             [100, 50, 100],
-            [229.78226585 - 1.25629783e-01j, -114.78233441 - 1.98934583e02j, -114.99993144 + 1.99060213e02j],
-            [2.17734670e-01 + 0.12562986j, -2.17665984e-01 - 0.2512596j, -6.86859745e-05 + 0.12562975j],
+            [229.56453031 - 1.70412303e-23j, -114.78226516 - 1.98934385e02j, -114.78226516 + 1.98934385e02j],
+            [0.43546969 + 0.0j, -0.21773484 - 0.25145831j, -0.21773484 + 0.25145831j],
             id="abc,abc",
         ),
         pytest.param(
@@ -395,18 +395,14 @@ def test_loads_units():
             [0.21766596 + 0.1256695j, -0.21766596 - 0.1256695j],
             id="abc,ab",
         ),
-        # pytest.param(  # TODO: this causes Segmentation fault, re-visit when fixed
-        #     "bcn",
-        #     "cn",
-        #     [100],
-        #     [
-        #         ...
-        #     ],
-        #     [
-        #         ...
-        #     ],
-        #     id="bcn,cn",
-        # ),
+        pytest.param(
+            "bcn",
+            "cn",
+            [100],
+            [-115.0 - 199.18584287j, -114.78178053 + 198.80787565j, -0.21821947 + 0.37796722j],
+            [-0.21821947 + 0.37796722j, 0.21821947 - 0.37796722j],
+            id="bcn,cn",
+        ),
     ),
 )
 def test_power_load_res_powers(bus_ph, load_ph, s, res_pot, res_cur):
@@ -414,7 +410,7 @@ def test_power_load_res_powers(bus_ph, load_ph, s, res_pot, res_cur):
     load = PowerLoad("load", bus, powers=s, phases=load_ph)
     bus._res_potentials = np.array(res_pot, dtype=np.complex_)
     load._res_currents = np.array(res_cur, dtype=np.complex_)
-    assert np.allclose(load.res_powers, load.powers)
+    assert np.allclose(sum(load.res_powers), sum(load.powers))
 
 
 @pytest.mark.parametrize(
@@ -483,8 +479,8 @@ def test_current_load_res_powers(bus_ph, load_ph, i, res_pot, res_cur):
     load = CurrentLoad("load", bus, currents=i, phases=load_ph)
     bus._res_potentials = np.array(res_pot, dtype=np.complex_)
     load._res_currents = np.array(res_cur, dtype=np.complex_)
-    currents = (load.res_powers / load.res_voltages).conj()  # I = (S / V)*
-    assert np.allclose(currents, load.currents)
+    load_powers = load.res_voltages * load.currents.conj()  # S = V * I*
+    assert np.allclose(sum(load.res_powers), sum(load_powers))
 
 
 @pytest.mark.parametrize(
@@ -537,14 +533,14 @@ def test_current_load_res_powers(bus_ph, load_ph, i, res_pot, res_cur):
         pytest.param(
             "abcn",
             "abc",
-            [1000, 500, 1000],
+            [1000, 500j, 1000],
             [
-                229.65568794 + 1.97996675e-01j,
-                -114.99931412 - 1.98392668e02j,
-                -114.65637382 + 1.98194672e02j,
-                0.0 + 0.00000000e00j,
+                229.31206381 - 2.70509524e-20j,
+                -113.86089233 - 1.98983679e02j,
+                -115.45117148 + 1.98983679e02j,
+                0.0 + 0.0j,
             ],
-            [0.34431206 - 0.19799667j, -0.00068588 - 0.79317468j, -0.34362618 + 0.99117135j],
+            [0.68793619 + 0.0j, -1.13910767 - 0.20216424j, 0.45117148 + 0.20216424j],
             id="abcn,abc",
         ),
         pytest.param(
@@ -564,8 +560,8 @@ def test_current_load_res_powers(bus_ph, load_ph, i, res_pot, res_cur):
             "abc",
             "abc",
             [1000, 500j, 1000],
-            [229.65489388 + 1.98785776e-01j, -114.20366418 - 1.99183348e02j, -115.4512297 + 1.98984562e02j],
-            [0.34510612 - 0.19878578j, -0.79633582 - 0.00249513j, 0.4512297 + 0.20128091j],
+            [229.31206381 - 2.70509524e-20j, -113.86089233 - 1.98983679e02j, -115.45117148 + 1.98983679e02j],
+            [0.68793619 + 0.0j, -1.13910767 - 0.20216424j, 0.45117148 + 0.20216424j],
             id="abc,abc",
         ),
         pytest.param(
@@ -583,10 +579,8 @@ def test_impedance_load_res_powers(bus_ph, load_ph, z, res_pot, res_cur):
     load = ImpedanceLoad("load", bus, impedances=z, phases=load_ph)
     bus._res_potentials = np.array(res_pot, dtype=np.complex_)
     load._res_currents = np.array(res_cur, dtype=np.complex_)
-    impedances = np.abs(load.res_voltages) ** 2 / load.res_powers.conj()  # Z = |V|² / S*
-    # TODO: test comparison to load.res_currents using Delta-Wye transform
-    # https://en.wikipedia.org/wiki/Y-%CE%94_transform
-    assert np.allclose(impedances, load.impedances)
+    load_powers = np.abs(load.res_voltages) ** 2 / load.impedances.conj()  # S = |V|² / Z*
+    assert np.allclose(sum(load.res_powers), sum(load_powers))
 
 
 @pytest.mark.parametrize(

@@ -328,7 +328,7 @@ class ElectricalNetwork:
         )
 
         # Read the response
-        # Check the resonse headers
+        # Check the response headers
         remote_rlf_version = response.headers.get("rlf-new-version")
         if remote_rlf_version is not None:
             warnings.warn(
@@ -443,21 +443,21 @@ class ElectricalNetwork:
             )
 
     @property
-    def res_buses_potentials(self) -> pd.DataFrame:
-        """The load flow results of the potentials of the buses (V) as a dataframe."""
+    def res_buses(self) -> pd.DataFrame:
+        """The load flow results of the buses as a dataframe."""
         self._warn_invalid_results()
-        potentials_dict = {"bus_id": [], "phase": [], "potential": []}
+        res_dict = {"bus_id": [], "phase": [], "potential": []}
         for bus_id, bus in self.buses.items():
             for potential, phase in zip(bus._res_potentials_getter(warning=False), bus.phases):
-                potentials_dict["bus_id"].append(bus_id)
-                potentials_dict["phase"].append(phase)
-                potentials_dict["potential"].append(potential)
-        potentials_df = (
-            pd.DataFrame.from_dict(potentials_dict, orient="columns")
+                res_dict["bus_id"].append(bus_id)
+                res_dict["phase"].append(phase)
+                res_dict["potential"].append(potential)
+        res_df = (
+            pd.DataFrame.from_dict(res_dict, orient="columns")
             .astype({"phase": _PHASE_DTYPE, "potential": complex})
             .set_index(["bus_id", "phase"])
         )
-        return potentials_df
+        return res_df
 
     @property
     def res_buses_voltages(self) -> pd.DataFrame:
@@ -470,7 +470,7 @@ class ElectricalNetwork:
         Examples:
 
             >>> net
-            <ElectricalNetwork: 2 buses, 1 branch, 1 load, 1 ground, 1 potential ref>
+            <ElectricalNetwork: 2 buses, 1 branch, 1 load, 1 source, 1 ground, 1 potential ref>
 
             >>> net.res_buses_voltages
                                              voltage
@@ -533,63 +533,112 @@ class ElectricalNetwork:
         return voltages_df
 
     @property
-    def res_branches_currents(self) -> pd.DataFrame:
-        """The load flow results of the currents of the branches (A) as a dataframe."""
+    def res_branches(self) -> pd.DataFrame:
+        """The load flow results of the branches as a dataframe."""
         self._warn_invalid_results()
-        currents_list = []
+        res_list = []
         for branch_id, branch in self.branches.items():
             currents1, currents2 = branch._res_currents_getter(warning=False)
-            currents_list.extend(
-                {"branch_id": branch_id, "phase": phase, "current1": i1, "current2": None}
-                for i1, phase in zip(currents1, branch.phases1)
+            powers1, powers2 = branch._res_powers_getter(warning=False)
+            potentials1, potentials2 = branch._res_potentials_getter(warning=False)
+            res_list.extend(
+                {
+                    "branch_id": branch_id,
+                    "phase": phase,
+                    "current1": i1,
+                    "current2": None,
+                    "power1": s1,
+                    "power2": None,
+                    "potential1": v1,
+                    "potential2": None,
+                }
+                for i1, s1, v1, phase in zip(currents1, powers1, potentials1, branch.phases1)
             )
-            currents_list.extend(
-                {"branch_id": branch_id, "phase": phase, "current1": None, "current2": i2}
-                for i2, phase in zip(currents2, branch.phases2)
+            res_list.extend(
+                {
+                    "branch_id": branch_id,
+                    "phase": phase,
+                    "current1": None,
+                    "current2": i2,
+                    "power1": None,
+                    "power2": s2,
+                    "potential1": None,
+                    "potential2": v2,
+                }
+                for i2, s2, v2, phase in zip(currents2, powers2, potentials2, branch.phases2)
             )
 
-        currents_df = (
-            pd.DataFrame.from_records(currents_list)
-            .astype({"phase": _PHASE_DTYPE, "current1": complex, "current2": complex})
-            .groupby(["branch_id", "phase"])  # aggregate current1 and current2 for the same phase
+        res_df = (
+            pd.DataFrame.from_records(res_list)
+            .astype(
+                {
+                    "phase": _PHASE_DTYPE,
+                    "current1": complex,
+                    "current2": complex,
+                    "power1": complex,
+                    "power2": complex,
+                    "potential1": complex,
+                    "potential2": complex,
+                }
+            )
+            .groupby(["branch_id", "phase"])  # aggregate x1 and x2 for the same phase
             .mean()  # 2 values; only one is not nan -> keep it
             .dropna(how="all")  # if all values are nan -> drop the row (the phase does not exist)
         )
-        return currents_df
+        return res_df
 
     @property
-    def res_loads_currents(self) -> pd.DataFrame:
-        """The load flow results of the currents of the loads (A) as a dataframe."""
+    def res_lines_losses(self) -> pd.DataFrame:
+        """The load flow results of the lines losses as a dataframe."""
         self._warn_invalid_results()
-        loads_dict = {"load_id": [], "phase": [], "current": []}
-        for load_id, load in self.loads.items():
-            for current, phase in zip(load._res_currents_getter(warning=False), load.phases):
-                loads_dict["load_id"].append(load_id)
-                loads_dict["phase"].append(phase)
-                loads_dict["current"].append(current)
-        currents_df = (
-            pd.DataFrame.from_dict(loads_dict, orient="columns")
-            .astype({"phase": _PHASE_DTYPE, "current": complex})
-            .set_index(["load_id", "phase"])
+        res_dict = {"line_id": [], "phase": [], "series_losses": [], "shunt_losses": [], "total_losses": []}
+        for br_id, branch in self.branches.items():
+            if not isinstance(branch, Line):
+                continue
+            series_losses = branch._res_series_power_losses_getter(warning=False)
+            shunt_losses = branch._res_shunt_power_losses_getter(warning=False)
+            total_losses = series_losses + shunt_losses
+            for series, shunt, total, phase in zip(series_losses, shunt_losses, total_losses, branch.phases):
+                res_dict["line_id"].append(br_id)
+                res_dict["phase"].append(phase)
+                res_dict["series_losses"].append(series)
+                res_dict["shunt_losses"].append(shunt)
+                res_dict["total_losses"].append(total)
+        res_df = (
+            pd.DataFrame.from_dict(res_dict, orient="columns")
+            .astype(
+                {
+                    "phase": _PHASE_DTYPE,
+                    "series_losses": complex,
+                    "shunt_losses": complex,
+                    "total_losses": complex,
+                }
+            )
+            .set_index(["line_id", "phase"])
         )
-        return currents_df
+        return res_df
 
     @property
-    def res_loads_powers(self) -> pd.DataFrame:
-        """The load flow results of the powers of the loads (VA) as a dataframe."""
+    def res_loads(self) -> pd.DataFrame:
+        """The load flow results of the loads as a dataframe."""
         self._warn_invalid_results()
-        loads_dict = {"load_id": [], "phase": [], "power": []}
+        res_dict = {"load_id": [], "phase": [], "current": [], "power": [], "potential": []}
         for load_id, load in self.loads.items():
-            for power, phase in zip(load._res_powers_getter(warning=False), load.voltage_phases):
-                loads_dict["load_id"].append(load_id)
-                loads_dict["phase"].append(phase)
-                loads_dict["power"].append(power)
-        currents_df = (
-            pd.DataFrame.from_dict(loads_dict, orient="columns")
-            .astype({"phase": _VOLTAGE_PHASES_DTYPE, "power": complex})
+            currents = load._res_currents_getter(warning=False)
+            powers = load._res_powers_getter(warning=False)
+            potentials = load._res_potentials_getter(warning=False)
+            for i, s, v, phase in zip(currents, powers, potentials, load.phases):
+                res_dict["load_id"].append(load_id)
+                res_dict["phase"].append(phase)
+                res_dict["current"].append(i)
+                res_dict["power"].append(s)
+                res_dict["potential"].append(v)
+        res_df = (
+            pd.DataFrame.from_dict(res_dict, orient="columns")
+            .astype({"phase": _PHASE_DTYPE, "current": complex, "power": complex, "potential": complex})
             .set_index(["load_id", "phase"])
         )
-        return currents_df
+        return res_df
 
     @property
     def res_loads_voltages(self) -> pd.DataFrame:
@@ -627,53 +676,56 @@ class ElectricalNetwork:
         return powers_df
 
     @property
-    def res_sources_currents(self) -> pd.DataFrame:
-        """The load flow results of the currents of the sources (A) as a dataframe."""
+    def res_sources(self) -> pd.DataFrame:
+        """The load flow results of the sources as a dataframe."""
         self._warn_invalid_results()
-        sources_dict = {"source_id": [], "phase": [], "current": []}
+        res_dict = {"source_id": [], "phase": [], "current": [], "power": [], "potential": []}
         for source_id, source in self.sources.items():
-            for current, phase in zip(source._res_currents_getter(warning=False), source.phases):
-                sources_dict["source_id"].append(source_id)
-                sources_dict["phase"].append(phase)
-                sources_dict["current"].append(current)
-        currents_df = (
-            pd.DataFrame.from_dict(sources_dict, orient="columns")
-            .astype({"phase": _PHASE_DTYPE, "current": complex})
+            currents = source._res_currents_getter(warning=False)
+            powers = source._res_powers_getter(warning=False)
+            potentials = source._res_potentials_getter(warning=False)
+            for i, s, v, phase in zip(currents, powers, potentials, source.phases):
+                res_dict["source_id"].append(source_id)
+                res_dict["phase"].append(phase)
+                res_dict["current"].append(i)
+                res_dict["power"].append(s)
+                res_dict["potential"].append(v)
+        res_df = (
+            pd.DataFrame.from_dict(res_dict, orient="columns")
+            .astype({"phase": _PHASE_DTYPE, "current": complex, "power": complex, "potential": complex})
             .set_index(["source_id", "phase"])
         )
-        return currents_df
+        return res_df
 
     @property
-    def res_grounds_potential(self) -> pd.DataFrame:
-        """The load flow results of the potential of the grounds (V) as a dataframe."""
+    def res_grounds(self) -> pd.DataFrame:
+        """The load flow results of the grounds as a dataframe."""
         self._warn_invalid_results()
-        potentials_dict = {"ground_id": [], "potential": []}
+        res_dict = {"ground_id": [], "potential": []}
         for ground in self.grounds.values():
             potential = ground._res_potential_getter(warning=False)
-            potentials_dict["ground_id"].append(ground.id)
-            potentials_dict["potential"].append(potential)
-        potentials_df = (
-            pd.DataFrame.from_dict(potentials_dict, orient="columns")
-            .astype({"potential": complex})
-            .set_index(["ground_id"])
+            res_dict["ground_id"].append(ground.id)
+            res_dict["potential"].append(potential)
+        res_df = (
+            pd.DataFrame.from_dict(res_dict, orient="columns").astype({"potential": complex}).set_index(["ground_id"])
         )
-        return potentials_df
+        return res_df
 
     @property
-    def res_potential_refs_current(self) -> pd.DataFrame:
-        """The load flow results of the current of the potential refs (A) as a dataframe."""
+    def res_potential_refs(self) -> pd.DataFrame:
+        """The load flow results of the potential refs as a dataframe."""
         self._warn_invalid_results()
-        potentials_dict = {"potential_ref_id": [], "current": []}
+        res_dict = {"potential_ref_id": [], "current": []}
         for p_ref in self.potential_refs.values():
             current = p_ref._res_current_getter(warning=False)
-            potentials_dict["potential_ref_id"].append(p_ref.id)
-            potentials_dict["current"].append(current)
-        potentials_df = (
-            pd.DataFrame.from_dict(potentials_dict, orient="columns")
+            res_dict["potential_ref_id"].append(p_ref.id)
+            res_dict["current"].append(current)
+        res_df = (
+            pd.DataFrame.from_dict(res_dict, orient="columns")
             .astype({"current": complex})
             .set_index(["potential_ref_id"])
         )
-        return potentials_df
+        return res_df
 
     #
     # Set the dynamic parameters.

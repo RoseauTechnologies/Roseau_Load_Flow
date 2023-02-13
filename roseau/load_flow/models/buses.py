@@ -103,6 +103,11 @@ class Bus(Element):
         """The phases of the voltages."""
         return calculate_voltage_phases(self.phases)
 
+    def _get_potentials_of(self, phases: str, warning: bool) -> np.ndarray:
+        """Get the potentials of the given phases."""
+        potentials = self._res_potentials_getter(warning)
+        return np.array([potentials[self.phases.index(p)] for p in phases])
+
     #
     # Json Mixin interface
     #
