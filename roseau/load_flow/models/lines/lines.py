@@ -127,18 +127,19 @@ class Line(AbstractBranch):
     """An electrical line PI model with series impedance and optional shunt admittance.
 
     .. math::
-        V_1 &= a \\cdot V_2 - b \\cdot I_2 + g \\cdot V_g \\\\
-        I_1 &= c \\cdot V_2 - d \\cdot I_2 + h \\cdot V_g \\\\
-        I_g &= f^t \\cdot \\left(V_1 + V_2 - 2\\cdot V_g\\right)
+        V_1 &= a \\cdot V_2 - b \\cdot I_2 + g \\cdot V_{\\mathrm{g}} \\\\
+        I_1 &= c \\cdot V_2 - d \\cdot I_2 + h \\cdot V_{\\mathrm{g}} \\\\
+        I_{\\mathrm{g}} &= f^t \\cdot \\left(V_1 + V_2 - 2\\cdot V_{\\mathrm{g}}\\right)
 
     where
 
     .. math::
-        a &= \\mathcal{I}_5 + \\dfrac{1}{2} \\cdot Z \\cdot Y  \\\\
+        a &= \\mathcal{I}_4 + \\dfrac{1}{2} \\cdot Z \\cdot Y  \\\\
         b &= Z  \\\\
         c &= Y + \\dfrac{1}{4}\\cdot Y \\cdot Z \\cdot Y  \\\\
-        d &= \\mathcal{I}_5 + \\dfrac{1}{2} \\cdot Y \\cdot Z  \\\\
-        f &= -\\dfrac{1}{2} \\cdot \\begin{pmatrix} y_{ag} & y_{bg} & y_{cg} &y_{ng} \\end{pmatrix} ^t  \\\\
+        d &= \\mathcal{I}_4 + \\dfrac{1}{2} \\cdot Y \\cdot Z  \\\\
+        f &= -\\dfrac{1}{2} \\cdot \\begin{pmatrix} y_{\\mathrm{ag}} & y_{\\mathrm{bg}} & y_{\\mathrm{cg}} &
+        y_{\\mathrm{ng}} \\end{pmatrix} ^t  \\\\
         g &= Z \\cdot f  \\\\
         h &= 2 \\cdot f + \\frac{1}{2}\\cdot Y \\cdot Z \\cdot f  \\\\
 

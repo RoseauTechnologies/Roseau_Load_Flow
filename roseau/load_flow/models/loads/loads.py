@@ -306,15 +306,15 @@ class CurrentLoad(AbstractLoad):
     The equations are the following (star loads):
 
     .. math::
-        I_{\mathrm{abc}} &= constant \\
+        I_{\mathrm{abc}} &= \mathrm{constant} \\
         I_{\mathrm{n}} &= -\sum_{p\in\{\mathrm{a},\mathrm{b},\mathrm{c}\}}I_{p}
 
     and the following (delta loads):
 
     .. math::
-        I_{\mathrm{ab}} &= constant \\
-        I_{\mathrm{bc}} &= constant \\
-        I_{\mathrm{ca}} &= constant
+        I_{\mathrm{ab}} &= \mathrm{constant} \\
+        I_{\mathrm{bc}} &= \mathrm{constant} \\
+        I_{\mathrm{ca}} &= \mathrm{constant}
     """
 
     _type = "current"
