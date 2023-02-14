@@ -1,7 +1,7 @@
 import itertools as it
 import warnings
 from contextlib import contextmanager
-from urllib.parse import urljoin
+from urllib.parse import parse_qs, urljoin, urlsplit
 
 import geopandas as gpd
 import numpy as np
@@ -1062,3 +1062,88 @@ def test_load_flow_results_frames(small_network: ElectricalNetwork, good_json_re
         index=["potential_ref_id"],
     )
     assert_frame_equal(small_network.res_potential_refs, expected_res_potential_refs)
+
+
+def test_solver_warm_start(small_network: ElectricalNetwork, good_json_results):
+    load: PowerLoad = small_network.loads["load"]
+    load_bus = small_network.buses["bus1"]
+    solve_url = urljoin(ElectricalNetwork.DEFAULT_BASE_URL, "solve/")
+    headers = {"Content-Type": "application/json"}
+
+    def json_callback(request, context):
+        request_json_data = request.json()
+        query = parse_qs(urlsplit(request.url).query)
+        warm_start = query["warm_start"][0].casefold() == "true"
+        assert isinstance(request_json_data, dict)
+        assert "network" in request_json_data
+        if should_warm_start:
+            assert warm_start  # Make sure the warm start flag is set by the user
+            assert "results" in request_json_data
+        else:
+            assert "results" not in request_json_data
+        if not warm_start:
+            # Make sure to not warm start if the user does not want warm start
+            assert not should_warm_start
+            assert "results" not in request_json_data
+        return good_json_results
+
+    # First case: network is valid, no results yet -> no warm start
+    should_warm_start = False
+    assert small_network._valid
+    assert not small_network.res_info  # No results
+    assert not small_network._results_valid  # Results are not valid by default
+    with requests_mock.Mocker() as m, warnings.catch_warnings():
+        warnings.simplefilter("error")  # Make sure there is no warning
+        m.post(solve_url, status_code=200, json=json_callback, headers=headers)
+        small_network.solve_load_flow(auth=("", ""), warm_start=True)
+    assert small_network.results_to_dict() == good_json_results
+
+    # Second case: the user requested no warm start (even though the network and results are valid)
+    should_warm_start = False
+    assert small_network._valid
+    assert small_network._results_valid
+    with requests_mock.Mocker() as m, warnings.catch_warnings():
+        warnings.simplefilter("error")  # Make sure there is no warning
+        m.post(solve_url, status_code=200, json=json_callback, headers=headers)
+        small_network.solve_load_flow(auth=("", ""), warm_start=False)
+    assert small_network.results_to_dict() == good_json_results
+
+    # Third case: network is valid, results are valid -> warm start
+    should_warm_start = True
+    assert small_network._valid
+    assert small_network._results_valid
+    with requests_mock.Mocker() as m, warnings.catch_warnings():
+        warnings.simplefilter("error")  # Make sure there is no warning
+        m.post(solve_url, status_code=200, json=json_callback, headers=headers)
+        small_network.solve_load_flow(auth=("", ""), warm_start=True)
+    assert small_network.results_to_dict() == good_json_results
+
+    # Fourth case (load powers changes): network is valid, results are not valid -> warm start
+    should_warm_start = True
+    load.powers = load.powers + 1
+    assert small_network._valid
+    assert not small_network._results_valid
+    with requests_mock.Mocker() as m, warnings.catch_warnings():
+        warnings.simplefilter("error")  # Make sure there is no warning
+        m.post(solve_url, status_code=200, json=json_callback, headers=headers)
+        small_network.solve_load_flow(auth=("", ""), warm_start=True)
+    assert small_network.results_to_dict() == good_json_results
+
+    # Fifth case: network is not valid -> no warm start
+    should_warm_start = False
+    new_load = PowerLoad("new_load", load_bus, powers=[100, 200, 300], phases=load.phases)
+    new_load_result = good_json_results["loads"][0].copy()
+    new_load_result["id"] = "new_load"
+    good_json_results["loads"].append(new_load_result)
+    assert new_load.network is small_network
+    assert not small_network._valid
+    assert not small_network._results_valid
+    with requests_mock.Mocker() as m, warnings.catch_warnings():
+        # We could warn here that the user requested warm start but the network is not valid
+        # but this will be disruptive for the user especially that warm start is the default
+        warnings.simplefilter("error")  # Make sure there is no warning
+        m.post(solve_url, status_code=200, json=json_callback, headers=headers)
+        assert not small_network._valid
+        assert not small_network._results_valid
+        small_network.solve_load_flow(auth=("", ""), warm_start=True)
+    assert small_network.results_to_dict() == good_json_results

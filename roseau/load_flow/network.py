@@ -316,13 +316,17 @@ class ElectricalNetwork:
         from roseau.load_flow import __version__
 
         if not self._valid:
+            warm_start = False  # Otherwise, we may get an error when calling self.results_to_dict()
             self._check_validity(constructed=True)
             self._create_network()
 
         # Get the data
         data = {"network": self.to_dict()}
         if warm_start and self.res_info.get("status", "failure") == "success":
-            data["results"] = self.results_to_dict()
+            with warnings.catch_warnings():
+                # Ignore warnings because results may not be valid (a load power has been changed, etc.)
+                warnings.simplefilter("ignore", category=UserWarning)
+                data["results"] = self.results_to_dict()
 
         # Request the server
         params = {"max_iterations": max_iterations, "precision": precision, "warm_start": warm_start}
