@@ -13,23 +13,23 @@ def test_phasor_to_sym():
     vc = 230 * np.e ** (1j * 2 * np.pi / 3)
 
     # Test balanced direct system: positive sequence
-    expected = np.array([[0], [230], [0]], dtype=np.complex_)
+    expected = np.array([[0], [230], [0]], dtype=complex)
     assert np.allclose(phasor_to_sym([va, vb, vc]), expected)
     # Also test numpy array input with different shapes
     assert np.allclose(phasor_to_sym(np.array([va, vb, vc])), expected)
     assert np.allclose(phasor_to_sym(np.array([[va], [vb], [vc]])), expected)
 
     # Test balanced indirect system: negative sequence
-    expected = np.array([[0], [0], [230]], dtype=np.complex_)
+    expected = np.array([[0], [0], [230]], dtype=complex)
     assert np.allclose(phasor_to_sym([va, vc, vb]), expected)
 
     # Test unbalanced system: zero sequence
-    expected = np.array([[230], [0], [0]], dtype=np.complex_)
+    expected = np.array([[230], [0], [0]], dtype=complex)
     assert np.allclose(phasor_to_sym([va, va, va]), expected)
 
     # Test unbalanced system: general case
     va = 200 + 0j
-    expected = np.array([[10 * np.e ** (1j * np.pi)], [220], [10 * np.e ** (1j * np.pi)]], dtype=np.complex_)
+    expected = np.array([[10 * np.e ** (1j * np.pi)], [220], [10 * np.e ** (1j * np.pi)]], dtype=complex)
     assert np.allclose(phasor_to_sym([va, vb, vc]), expected)
 
 
@@ -40,23 +40,23 @@ def test_sym_to_phasor():
     vc = 230 * np.e ** (1j * 2 * np.pi / 3)
 
     # Test balanced direct system: positive sequence
-    expected = np.array([[va], [vb], [vc]], dtype=np.complex_)
+    expected = np.array([[va], [vb], [vc]], dtype=complex)
     assert np.allclose(sym_to_phasor([0, va, 0]), expected)
     # Also test numpy array input with different shapes
     assert np.allclose(sym_to_phasor(np.array([0, va, 0])), expected)
     assert np.allclose(sym_to_phasor(np.array([[0], [va], [0]])), expected)
 
     # Test balanced indirect system: negative sequence
-    expected = np.array([[va], [vc], [vb]], dtype=np.complex_)
+    expected = np.array([[va], [vc], [vb]], dtype=complex)
     assert np.allclose(sym_to_phasor([0, 0, va]), expected)
 
     # Test unbalanced system: zero sequence
-    expected = np.array([[va], [va], [va]], dtype=np.complex_)
+    expected = np.array([[va], [va], [va]], dtype=complex)
     assert np.allclose(sym_to_phasor([va, 0, 0]), expected)
 
     # Test unbalanced system: general case
     va = 200 + 0j
-    expected = np.array([[va], [vb], [vc]], dtype=np.complex_)
+    expected = np.array([[va], [vb], [vc]], dtype=complex)
     assert np.allclose(sym_to_phasor([10 * np.e ** (1j * np.pi), 220, 10 * np.e ** (1j * np.pi)]), expected)
 
 

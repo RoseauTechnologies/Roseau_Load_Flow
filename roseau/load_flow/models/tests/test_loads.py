@@ -408,8 +408,8 @@ def test_loads_units():
 def test_power_load_res_powers(bus_ph, load_ph, s, res_pot, res_cur):
     bus = Bus("bus", phases=bus_ph)
     load = PowerLoad("load", bus, powers=s, phases=load_ph)
-    bus._res_potentials = np.array(res_pot, dtype=np.complex_)
-    load._res_currents = np.array(res_cur, dtype=np.complex_)
+    bus._res_potentials = np.array(res_pot, dtype=complex)
+    load._res_currents = np.array(res_cur, dtype=complex)
     assert np.allclose(sum(load.res_powers), sum(load.powers))
 
 
@@ -477,8 +477,8 @@ def test_power_load_res_powers(bus_ph, load_ph, s, res_pot, res_cur):
 def test_current_load_res_powers(bus_ph, load_ph, i, res_pot, res_cur):
     bus = Bus("bus", phases=bus_ph)
     load = CurrentLoad("load", bus, currents=i, phases=load_ph)
-    bus._res_potentials = np.array(res_pot, dtype=np.complex_)
-    load._res_currents = np.array(res_cur, dtype=np.complex_)
+    bus._res_potentials = np.array(res_pot, dtype=complex)
+    load._res_currents = np.array(res_cur, dtype=complex)
     load_powers = load.res_voltages * load.currents.conj()  # S = V * I*
     assert np.allclose(sum(load.res_powers), sum(load_powers))
 
@@ -577,8 +577,8 @@ def test_current_load_res_powers(bus_ph, load_ph, i, res_pot, res_cur):
 def test_impedance_load_res_powers(bus_ph, load_ph, z, res_pot, res_cur):
     bus = Bus("bus", phases=bus_ph)
     load = ImpedanceLoad("load", bus, impedances=z, phases=load_ph)
-    bus._res_potentials = np.array(res_pot, dtype=np.complex_)
-    load._res_currents = np.array(res_cur, dtype=np.complex_)
+    bus._res_potentials = np.array(res_pot, dtype=complex)
+    load._res_currents = np.array(res_cur, dtype=complex)
     load_powers = np.abs(load.res_voltages) ** 2 / load.impedances.conj()  # S = |V|² / Z*
     assert np.allclose(sum(load.res_powers), sum(load_powers))
 
@@ -604,10 +604,10 @@ def test_load_voltages(bus_ph, load_ph, bus_vph, load_vph):
     load = PowerLoad("load", bus, powers=powers[: len(load_vph)], phases=load_ph)
 
     res_pot = [230 + 0j, 230 * np.exp(1j * 2 * np.pi / 3), 230 * np.exp(1j * 4 * np.pi / 3), 0j]
-    bus._res_potentials = np.array(res_pot[: len(bus_ph)], dtype=np.complex_)
+    bus._res_potentials = np.array(res_pot[: len(bus_ph)], dtype=complex)
 
     res_cur = [0.1 + 0j, 0.2 + 0j, 0.3 + 0j, 0.6 + 0j]
-    load._res_currents = np.array(res_cur[: len(load_ph)], dtype=np.complex_)
+    load._res_currents = np.array(res_cur[: len(load_ph)], dtype=complex)
 
     assert bus.voltage_phases == bus_vph
     assert len(bus.res_voltages) == len(bus.voltage_phases)
