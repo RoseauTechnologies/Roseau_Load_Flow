@@ -44,7 +44,9 @@ class VoltageSource(Element):
                 The bus of the voltage source.
 
             voltages:
-                The voltages of the source. They will be fixed on the connected bus.
+                The voltages of the source. They will be fixed on the connected bus. If the source
+                has a neutral connection, the voltages are the phase-to-neutral voltages, otherwise
+                they are the phase-to-phase voltages.
 
             phases:
                 The phases of the source. A string like ``"abc"`` or ``"an"`` etc. The order of the

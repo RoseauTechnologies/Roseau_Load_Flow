@@ -46,99 +46,94 @@ _T = TypeVar("_T", bound=Element)
 class ElectricalNetwork(JsonMixin):
     """Electrical network class.
 
-        This class represents an electrical network, its elements, and their connections. After
-        creating the network, the load flow algorithm can be run on it using the
-        :meth:`solve_load_flow` method.
+    This class represents an electrical network, its elements, and their connections. After
+    creating the network, the load flow algorithm can be run on it using the
+    :meth:`solve_load_flow` method.
 
-        Args:
-            buses:
-                The buses of the network. Either a list of buses or a dictionary of buses with
-                their IDs as keys. Buses are the nodes of the network. They connect other elements
-                such as loads and sources. Buses can be connected together with branches.
+    Args:
+        buses:
+            The buses of the network. Either a list of buses or a dictionary of buses with
+            their IDs as keys. Buses are the nodes of the network. They connect other elements
+            such as loads and sources. Buses can be connected together with branches.
 
-            branches:
-                The branches of the network. Either a list of branches or a dictionary of branches
-                with their IDs as keys. Branches are the elements that connect two buses together.
-                They can be lines, transformers, or switches.
+        branches:
+            The branches of the network. Either a list of branches or a dictionary of branches
+            with their IDs as keys. Branches are the elements that connect two buses together.
+            They can be lines, transformers, or switches.
 
-            loads:
-                The loads of the network. Either a list of loads or a dictionary of loads with their
-                IDs as keys. There are three types of loads: constant power, constant current, and
-                constant impedance.
+        loads:
+            The loads of the network. Either a list of loads or a dictionary of loads with their
+            IDs as keys. There are three types of loads: constant power, constant current, and
+            constant impedance.
 
-            sources:
-                The sources of the network. Either a list of sources or a dictionary of sources with
-                their IDs as keys. A network must have at least one source. Note that two sources
-                cannot be connected with a switch.
+        sources:
+            The sources of the network. Either a list of sources or a dictionary of sources with
+            their IDs as keys. A network must have at least one source. Note that two sources
+            cannot be connected with a switch.
 
-            grounds:
-                The grounds of the network. Either a list of grounds or a dictionary of grounds with
-                their IDs as keys. LV networks typically have one ground element connected to the
-                neutral of the main source bus (secondary of the MV/LV transformer). HV networks
-                may have one or more grounds connected to the shunt components of their lines.
+        grounds:
+            The grounds of the network. Either a list of grounds or a dictionary of grounds with
+            their IDs as keys. LV networks typically have one ground element connected to the
+            neutral of the main source bus (secondary of the MV/LV transformer). HV networks
+            may have one or more grounds connected to the shunt components of their lines.
 
-            potential_refs:
-                The potential references of the network. Either a list of potential references or a
-                dictionary of potential references with their IDs as keys. As the name suggests, this
-                element defines the reference of potentials of the network. A potential reference per
-                galvanically isolated section of the network is expected. A potential reference can
-                be connected to a bus or to a ground.
+        potential_refs:
+            The potential references of the network. Either a list of potential references or a
+            dictionary of potential references with their IDs as keys. As the name suggests, this
+            element defines the reference of potentials of the network. A potential reference per
+            galvanically isolated section of the network is expected. A potential reference can
+            be connected to a bus or to a ground.
 
-        Attributes:
-            DEFAULT_PRECISION (float):
-    <<<<<<< HEAD
-                The default precision needed for the convergence of the load flow algorithm. At each
-                iteration, the solver computes the residuals of the equations of the problem. When the
-                maximum of the absolute values of the residuals vector is lower than the provided
-                precision, the solver stops. Default is 1e-6.
-    =======
-                The default precision needed for the convergence of the load flow algorithm. The solver
-                stops when the error between two iterations is below this value. Default is 1e-6.
-    >>>>>>> 22e82bb (More Json interface)
+    Attributes:
+        DEFAULT_PRECISION (float):
+            The default precision needed for the convergence of the load flow algorithm. At each
+            iteration, the solver computes the residuals of the equations of the problem. When the
+            maximum of the absolute values of the residuals vector is lower than the provided
+            precision, the solver stops. Default is 1e-6.
 
-            DEFAULT_MAX_ITERATIONS (int):
-                Maximum number of iterations to perform the load flow analysis. The solver stops when
-                this number of iterations is reached. Default is 20.
+        DEFAULT_MAX_ITERATIONS (int):
+            Maximum number of iterations to perform the load flow analysis. The solver stops when
+            this number of iterations is reached. Default is 20.
 
-            DEFAULT_BASE_URL (str):
-                Base URL of the Roseau Load Flow API endpoint.
+        DEFAULT_BASE_URL (str):
+            Base URL of the Roseau Load Flow API endpoint.
 
-            buses (dict[Id, Bus]):
-                Dictionary of buses of the network indexed by their IDs. Also available as a
-                :attr:`GeoDataFrame<buses_frame>`.
+        buses (dict[Id, Bus]):
+            Dictionary of buses of the network indexed by their IDs. Also available as a
+            :attr:`GeoDataFrame<buses_frame>`.
 
-            branches (dict[Id, AbstractBranch]):
-                Dictionary of branches of the network indexed by their IDs. Also available as a
-                :attr:`GeoDataFrame<branches_frame>`.
+        branches (dict[Id, AbstractBranch]):
+            Dictionary of branches of the network indexed by their IDs. Also available as a
+            :attr:`GeoDataFrame<branches_frame>`.
 
-            loads (dict[Id, AbstractLoad]):
-                Dictionary of loads of the network indexed by their IDs. Also available as a
-                :attr:`DataFrame<loads_frame>`.
+        loads (dict[Id, AbstractLoad]):
+            Dictionary of loads of the network indexed by their IDs. Also available as a
+            :attr:`DataFrame<loads_frame>`.
 
-            sources (dict[Id, VoltageSource]):
-                Dictionary of voltage sources of the network indexed by their IDs. Also available as a
-                :attr:`DataFrame<sources_frame>`.
+        sources (dict[Id, VoltageSource]):
+            Dictionary of voltage sources of the network indexed by their IDs. Also available as a
+            :attr:`DataFrame<sources_frame>`.
 
-            grounds (dict[Id, Ground]):
-                Dictionary of grounds of the network indexed by their IDs. Also available as a
-                :attr:`DataFrame<grounds_frame>`.
+        grounds (dict[Id, Ground]):
+            Dictionary of grounds of the network indexed by their IDs. Also available as a
+            :attr:`DataFrame<grounds_frame>`.
 
-            potential_refs (dict[Id, PotentialRef]):
-                Dictionary of potential references of the network indexed by their IDs. Also available
-                as a :attr:`DataFrame<potential_refs_frame>`.
+        potential_refs (dict[Id, PotentialRef]):
+            Dictionary of potential references of the network indexed by their IDs. Also available
+            as a :attr:`DataFrame<potential_refs_frame>`.
 
-            res_info (JsonDict):
-                Dictionary containing solver information on the last run of the load flow analysis.
-                Empty if the load flow analysis has not been run yet.
-                Example::
+        res_info (JsonDict):
+            Dictionary containing solver information on the last run of the load flow analysis.
+            Empty if the load flow analysis has not been run yet.
+            Example::
 
-                    {
-                        "status": "success",
-                        "resolution_method": "newton",
-                        "iterations": 2,
-                        "target_error": 1e-06,
-                        "final_error": 1.9468870959826745e-12
-                    }
+                {
+                    "status": "success",
+                    "resolution_method": "newton",
+                    "iterations": 2,
+                    "target_error": 1e-06,
+                    "final_error": 1.9468870959826745e-12
+                }
     """
 
     DEFAULT_PRECISION: float = 1e-6

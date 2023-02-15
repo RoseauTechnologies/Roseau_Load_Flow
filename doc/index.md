@@ -1,7 +1,7 @@
 # Roseau Load Flow
 
-`Roseau Load Flow` is a load flow solver, capable of modeling 3 phases unbalanced networks with a
-wide variety of line, transformer, load and flexible load models.
+`Roseau Load Flow` is a load flow solver capable of modeling 3-phases unbalanced power systems with
+a wide variety of models for lines, transformers, loads, and sources.
 
 ## Installation
 

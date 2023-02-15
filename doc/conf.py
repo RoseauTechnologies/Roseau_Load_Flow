@@ -44,6 +44,7 @@ extensions = [
 
 add_module_names = False
 napoleon_numpy_docstring = False
+nbsphinx_allow_errors = True
 python_use_unqualified_type_names = True
 
 # Add any paths that contain templates here, relative to this directory.
