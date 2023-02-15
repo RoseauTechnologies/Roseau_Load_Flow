@@ -136,3 +136,13 @@ class Bus(Element):
         if self.geometry is not None:
             res["geometry"] = self.geometry.__geo_interface__
         return res
+
+    def results_from_dict(self, data: JsonDict) -> None:
+        self._res_potentials = np.array([complex(v[0], v[1]) for v in data["potentials"]], dtype=complex)
+
+    def _results_to_dict(self, warning: bool) -> JsonDict:
+        return {
+            "id": self.id,
+            "phases": self.phases,
+            "potentials": [[v.real, v.imag] for v in self._res_potentials_getter(warning)],
+        }

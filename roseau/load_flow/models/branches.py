@@ -132,3 +132,18 @@ class AbstractBranch(Element):
         if self.geometry is not None:
             res["geometry"] = self.geometry.__geo_interface__
         return res
+
+    def results_from_dict(self, data: JsonDict) -> None:
+        currents1 = np.array([complex(i[0], i[1]) for i in data["currents1"]], dtype=complex)
+        currents2 = np.array([complex(i[0], i[1]) for i in data["currents2"]], dtype=complex)
+        self._res_currents = (currents1, currents2)
+
+    def _results_to_dict(self, warning: bool) -> JsonDict:
+        currents1, currents2 = self._res_currents_getter(warning)
+        return {
+            "id": self.id,
+            "phases1": self.phases1,
+            "phases2": self.phases2,
+            "currents1": [[i.real, i.imag] for i in currents1],
+            "currents2": [[i.real, i.imag] for i in currents2],
+        }

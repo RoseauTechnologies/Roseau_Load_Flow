@@ -97,3 +97,10 @@ class Ground(Element):
             "id": self.id,
             "buses": [{"id": bus_id, "phase": phase} for bus_id, phase in self._connected_buses.items()],
         }
+
+    def results_from_dict(self, data: JsonDict) -> None:
+        self._res_potential = complex(*data["potential"])
+
+    def _results_to_dict(self, warning: bool) -> JsonDict:
+        v = self._res_potential_getter(warning)
+        return {"id": self.id, "potential": [v.real, v.imag]}

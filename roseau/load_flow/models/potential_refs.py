@@ -74,6 +74,9 @@ class PotentialRef(Element):
         """
         return self._res_current_getter(warning=True)
 
+    #
+    # Jso Mixin interface
+    #
     @classmethod
     def from_dict(cls, data: JsonDict) -> Self:
         return cls(data["id"], data["element"], phase=data.get("phases"))
@@ -89,3 +92,10 @@ class PotentialRef(Element):
         else:
             assert False, f"Unexpected element type {type(e).__name__}"
         return res
+
+    def results_from_dict(self, data: JsonDict) -> None:
+        self._res_current = complex(*data["current"])
+
+    def _results_to_dict(self, warning: bool) -> JsonDict:
+        i = self._res_current_getter(warning)
+        return {"id": self.id, "current": [i.real, i.imag]}

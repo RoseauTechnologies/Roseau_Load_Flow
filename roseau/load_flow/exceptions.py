@@ -83,6 +83,7 @@ class RoseauLoadFlowExceptionCode(Enum):
     JSON_LINE_PARAMETERS_DUPLICATES = auto()
     JSON_TRANSFORMER_PARAMETERS_DUPLICATES = auto()
     JSON_PREF_INVALID = auto()
+    JSON_NO_RESULTS = auto()
 
     @classmethod
     def package_name(cls) -> str:

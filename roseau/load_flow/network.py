@@ -1,17 +1,14 @@
 """
 This module defines the electrical network class.
 """
-import json
+
 import logging
-import re
 import warnings
 from collections.abc import Sized
-from pathlib import Path
 from typing import NoReturn, Optional, TypeVar, Union
 from urllib.parse import urljoin
 
 import geopandas as gpd
-import numpy as np
 import pandas as pd
 import requests
 from pyproj import CRS
@@ -34,6 +31,7 @@ from roseau.load_flow.models import (
     VoltageSource,
 )
 from roseau.load_flow.typing import Id, JsonDict, Self, StrPath
+from roseau.load_flow.utils import JsonMixin
 
 logger = logging.getLogger(__name__)
 
@@ -45,97 +43,102 @@ _VOLTAGE_PHASES_DTYPE = pd.CategoricalDtype(["an", "bn", "cn", "ab", "bc", "ca"]
 _T = TypeVar("_T", bound=Element)
 
 
-class ElectricalNetwork:
+class ElectricalNetwork(JsonMixin):
     """Electrical network class.
 
-    This class represents an electrical network, its elements, and their connections. After
-    creating the network, the load flow algorithm can be run on it using the
-    :meth:`solve_load_flow` method.
+        This class represents an electrical network, its elements, and their connections. After
+        creating the network, the load flow algorithm can be run on it using the
+        :meth:`solve_load_flow` method.
 
-    Args:
-        buses:
-            The buses of the network. Either a list of buses or a dictionary of buses with
-            their IDs as keys. Buses are the nodes of the network. They connect other elements
-            such as loads and sources. Buses can be connected together with branches.
+        Args:
+            buses:
+                The buses of the network. Either a list of buses or a dictionary of buses with
+                their IDs as keys. Buses are the nodes of the network. They connect other elements
+                such as loads and sources. Buses can be connected together with branches.
 
-        branches:
-            The branches of the network. Either a list of branches or a dictionary of branches
-            with their IDs as keys. Branches are the elements that connect two buses together.
-            They can be lines, transformers, or switches.
+            branches:
+                The branches of the network. Either a list of branches or a dictionary of branches
+                with their IDs as keys. Branches are the elements that connect two buses together.
+                They can be lines, transformers, or switches.
 
-        loads:
-            The loads of the network. Either a list of loads or a dictionary of loads with their
-            IDs as keys. There are three types of loads: constant power, constant current, and
-            constant impedance.
+            loads:
+                The loads of the network. Either a list of loads or a dictionary of loads with their
+                IDs as keys. There are three types of loads: constant power, constant current, and
+                constant impedance.
 
-        sources:
-            The sources of the network. Either a list of sources or a dictionary of sources with
-            their IDs as keys. A network must have at least one source. Note that two sources
-            cannot be connected with a switch.
+            sources:
+                The sources of the network. Either a list of sources or a dictionary of sources with
+                their IDs as keys. A network must have at least one source. Note that two sources
+                cannot be connected with a switch.
 
-        grounds:
-            The grounds of the network. Either a list of grounds or a dictionary of grounds with
-            their IDs as keys. LV networks typically have one ground element connected to the
-            neutral of the main source bus (secondary of the MV/LV transformer). HV networks
-            may have one or more grounds connected to the shunt components of their lines.
+            grounds:
+                The grounds of the network. Either a list of grounds or a dictionary of grounds with
+                their IDs as keys. LV networks typically have one ground element connected to the
+                neutral of the main source bus (secondary of the MV/LV transformer). HV networks
+                may have one or more grounds connected to the shunt components of their lines.
 
-        potential_refs:
-            The potential references of the network. Either a list of potential references or a
-            dictionary of potential references with their IDs as keys. As the name suggests, this
-            element defines the reference of potentials of the network. A potential reference per
-            galvanically isolated section of the network is expected. A potential reference can
-            be connected to a bus or to a ground.
+            potential_refs:
+                The potential references of the network. Either a list of potential references or a
+                dictionary of potential references with their IDs as keys. As the name suggests, this
+                element defines the reference of potentials of the network. A potential reference per
+                galvanically isolated section of the network is expected. A potential reference can
+                be connected to a bus or to a ground.
 
-    Attributes:
-        DEFAULT_PRECISION (float):
-            The default precision needed for the convergence of the load flow algorithm. At each
-            iteration, the solver computes the residuals of the equations of the problem. When the
-            maximum of the absolute values of the residuals vector is lower than the provided
-            precision, the solver stops. Default is 1e-6.
+        Attributes:
+            DEFAULT_PRECISION (float):
+    <<<<<<< HEAD
+                The default precision needed for the convergence of the load flow algorithm. At each
+                iteration, the solver computes the residuals of the equations of the problem. When the
+                maximum of the absolute values of the residuals vector is lower than the provided
+                precision, the solver stops. Default is 1e-6.
+    =======
+                The default precision needed for the convergence of the load flow algorithm. The solver
+                stops when the error between two iterations is below this value. Default is 1e-6.
+    >>>>>>> 22e82bb (More Json interface)
 
-        DEFAULT_MAX_ITERATIONS (int):
-            Maximum number of iterations to perform the load flow analysis. The solver stops when
-            this number of iterations is reached. Default is 20.
+            DEFAULT_MAX_ITERATIONS (int):
+                Maximum number of iterations to perform the load flow analysis. The solver stops when
+                this number of iterations is reached. Default is 20.
 
-        DEFAULT_BASE_URL (str):
-            Base URL of the Roseau Load Flow API endpoint.
+            DEFAULT_BASE_URL (str):
+                Base URL of the Roseau Load Flow API endpoint.
 
-        buses (dict[Id, Bus]):
-            Dictionary of buses of the network indexed by their IDs. Also available as a
-            :attr:`GeoDataFrame<buses_frame>`.
+            buses (dict[Id, Bus]):
+                Dictionary of buses of the network indexed by their IDs. Also available as a
+                :attr:`GeoDataFrame<buses_frame>`.
 
-        branches (dict[Id, AbstractBranch]):
-            Dictionary of branches of the network indexed by their IDs. Also available as a
-            :attr:`GeoDataFrame<branches_frame>`.
+            branches (dict[Id, AbstractBranch]):
+                Dictionary of branches of the network indexed by their IDs. Also available as a
+                :attr:`GeoDataFrame<branches_frame>`.
 
-        loads (dict[Id, AbstractLoad]):
-            Dictionary of loads of the network indexed by their IDs. Also available as a
-            :attr:`DataFrame<loads_frame>`.
+            loads (dict[Id, AbstractLoad]):
+                Dictionary of loads of the network indexed by their IDs. Also available as a
+                :attr:`DataFrame<loads_frame>`.
 
-        sources (dict[Id, VoltageSource]):
-            Dictionary of voltage sources of the network indexed by their IDs. Also available as a
-            :attr:`DataFrame<sources_frame>`.
+            sources (dict[Id, VoltageSource]):
+                Dictionary of voltage sources of the network indexed by their IDs. Also available as a
+                :attr:`DataFrame<sources_frame>`.
 
-        grounds (dict[Id, Ground]):
-            Dictionary of grounds of the network indexed by their IDs. Also available as a
-            :attr:`DataFrame<grounds_frame>`.
+            grounds (dict[Id, Ground]):
+                Dictionary of grounds of the network indexed by their IDs. Also available as a
+                :attr:`DataFrame<grounds_frame>`.
 
-        potential_refs (dict[Id, PotentialRef]):
-            Dictionary of potential references of the network indexed by their IDs. Also available
-            as a :attr:`DataFrame<potential_refs_frame>`.
+            potential_refs (dict[Id, PotentialRef]):
+                Dictionary of potential references of the network indexed by their IDs. Also available
+                as a :attr:`DataFrame<potential_refs_frame>`.
 
-        res_info (JsonDict):
-            Dictionary containing solver information on the last run of the load flow analysis.
-            Empty if the load flow analysis has not been run yet.
-            Example::
+            res_info (JsonDict):
+                Dictionary containing solver information on the last run of the load flow analysis.
+                Empty if the load flow analysis has not been run yet.
+                Example::
 
-                {
-                    "status": "success",
-                    "resolution_method": "newton",
-                    "iterations": 2,
-                    "target_error": 1e-06,
-                    "final_error": 1.9468870959826745e-12
-                }
+                    {
+                        "status": "success",
+                        "resolution_method": "newton",
+                        "iterations": 2,
+                        "target_error": 1e-06,
+                        "final_error": 1.9468870959826745e-12
+                    }
     """
 
     DEFAULT_PRECISION: float = 1e-6
@@ -392,10 +395,8 @@ class ElectricalNetwork:
         # Get the data
         data = {"network": self.to_dict()}
         if warm_start and self.res_info.get("status", "failure") == "success":
-            with warnings.catch_warnings():
-                # Ignore warnings because results may not be valid (a load power has been changed, etc.)
-                warnings.simplefilter("ignore", category=UserWarning)
-                data["results"] = self.results_to_dict()
+            # Ignore warnings because results may not be valid (a load power has been changed, etc.)
+            data["results"] = self._results_to_dict(False)
 
         # Request the server
         params = {"max_iterations": max_iterations, "precision": precision, "warm_start": warm_start}
@@ -423,8 +424,8 @@ class ElectricalNetwork:
             self._parse_error(response=response)
 
         # HTTP 200
-        result_dict: JsonDict = response.json()
-        self.res_info = result_dict["info"]
+        results: JsonDict = response.json()
+        self.res_info = results["info"]
         if self.res_info["status"] != "success":
             msg = (
                 f"The load flow did not converge after {self.res_info['iterations']} iterations. The norm of "
@@ -439,7 +440,7 @@ class ElectricalNetwork:
         )
 
         # Dispatch the results
-        self._dispatch_results(result_dict=result_dict)
+        self._results_from_dict(data=results)
 
         return self.res_info["iterations"]
 
@@ -476,35 +477,31 @@ class ElectricalNetwork:
         logger.error(msg=msg)
         raise RoseauLoadFlowException(msg=msg, code=code)
 
-    def _dispatch_results(self, result_dict: JsonDict) -> None:
+    def _results_from_dict(self, data: JsonDict) -> None:
         """Dispatch the results to all the elements of the network.
 
         Args:
-            result_dict:
+            data:
                 The results returned by the solver.
         """
-        for bus_data in result_dict["buses"]:
+        for bus_data in data["buses"]:
             bus = self.buses[bus_data["id"]]
-            bus._res_potentials = np.array([complex(v[0], v[1]) for v in bus_data["potentials"]], dtype=complex)
-        for branch_data in result_dict["branches"]:
+            bus.results_from_dict(bus_data)
+        for branch_data in data["branches"]:
             branch = self.branches[branch_data["id"]]
-            currents1 = np.array([complex(i[0], i[1]) for i in branch_data["currents1"]], dtype=complex)
-            currents2 = np.array([complex(i[0], i[1]) for i in branch_data["currents2"]], dtype=complex)
-            branch._res_currents = (currents1, currents2)
-        for load_data in result_dict["loads"]:
+            branch.results_from_dict(branch_data)
+        for load_data in data["loads"]:
             load = self.loads[load_data["id"]]
-            load._res_currents = np.array([complex(i[0], i[1]) for i in load_data["currents"]], dtype=complex)
-            if isinstance(load, PowerLoad) and load.is_flexible:
-                load._res_flexible_powers = np.array([complex(p[0], p[1]) for p in load_data["powers"]], dtype=complex)
-        for source_data in result_dict["sources"]:
+            load.results_from_dict(load_data)
+        for source_data in data["sources"]:
             source = self.sources[source_data["id"]]
-            source._res_currents = np.array([complex(i[0], i[1]) for i in source_data["currents"]], dtype=complex)
-        for ground_data in result_dict["grounds"]:
+            source.results_from_dict(data=source_data)
+        for ground_data in data["grounds"]:
             ground = self.grounds[ground_data["id"]]
-            ground._res_potential = complex(*ground_data["potential"])
-        for p_ref_data in result_dict["potential_refs"]:
+            ground.results_from_dict(ground_data)
+        for p_ref_data in data["potential_refs"]:
             p_ref = self.potential_refs[p_ref_data["id"]]
-            p_ref._res_current = complex(*p_ref_data["current"])
+            p_ref.results_from_dict(p_ref_data)
 
         # The results are now valid
         self._results_valid = True
@@ -1031,51 +1028,9 @@ class ElectricalNetwork:
             potential_refs=p_refs,
         )
 
-    @classmethod
-    def from_json(cls, path: StrPath) -> Self:
-        """Construct an electrical network from a json file created with :meth:`to_json`.
-
-        Args:
-            path:
-                The path to the network data file.
-
-        Returns:
-            The constructed network.
-        """
-        data = json.loads(Path(path).read_text())
-        return cls.from_dict(data=data)
-
     def to_dict(self) -> JsonDict:
         """Convert the electrical network to a dictionary."""
         return network_to_dict(self)
-
-    def to_json(self, path: StrPath) -> Path:
-        """Save the current network to a json file.
-
-        .. note::
-            The path is `expanded`_ then `resolved`_ before writing the file.
-
-        .. _expanded: https://docs.python.org/3/library/pathlib.html#pathlib.Path.expanduser
-        .. _resolved: https://docs.python.org/3/library/pathlib.html#pathlib.Path.resolve
-
-        .. warning::
-            If the file exists, it will be overwritten.
-
-        Args:
-            path:
-                The path to the output file to write the network to.
-
-        Returns:
-            The expanded and resolved path of the written file.
-        """
-        res = self.to_dict()
-        output = json.dumps(res, ensure_ascii=False, indent=4)
-        output = re.sub(r"\[\s+(.*),\s+(.*)\s+]", r"[\1, \2]", output)
-        if not output.endswith("\n"):
-            output += "\n"
-        path = Path(path).expanduser().resolve()
-        path.write_text(output)
-        return path
 
     #
     # Results saving/loading
@@ -1089,6 +1044,7 @@ class ElectricalNetwork:
             data:
                 The dictionary containing the results as returned by the solver.
         """
+        # Checks on the provided data
         for key, self_elements, name in (
             ("buses", self.buses, "Bus"),
             ("branches", self.branches, "Branch"),
@@ -1112,103 +1068,23 @@ class ElectricalNetwork:
                 )
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LOAD_FLOW_RESULT)
-        self._dispatch_results(data)
 
-    def results_from_json(self, path: StrPath) -> None:
-        """Load the results of a load flow from a json file created by :meth:`results_to_json`.
+        # The results are assigned to all elements
+        self._results_from_dict(data)
 
-        The results are stored in the network elements.
-
-        Args:
-            path:
-                The path to the JSON file containing the results.
-        """
-        data = json.loads(Path(path).read_text())
-        self.results_from_dict(data)
-
-    def results_to_dict(self) -> JsonDict:
+    def _results_to_dict(self, warning: bool) -> JsonDict:
         """Get the voltages and currents computed by the load flow and return them as a dict."""
-        buses_results: list[JsonDict] = [
-            {"id": bus.id, "phases": bus.phases, "potentials": [[v.real, v.imag] for v in bus.res_potentials]}
-            for bus in self.buses.values()
-        ]
-
-        branches_results: list[JsonDict] = []
-        for branch in self.branches.values():
-            currents1, currents2 = branch.res_currents
-            branches_results.append(
-                {
-                    "id": branch.id,
-                    "phases1": branch.phases1,
-                    "phases2": branch.phases2,
-                    "currents1": [[i.real, i.imag] for i in currents1],
-                    "currents2": [[i.real, i.imag] for i in currents2],
-                }
-            )
-
-        loads_results: list[JsonDict] = []
-        for load in self.loads.values():
-            res = {"id": load.id, "phases": load.phases, "currents": [[i.real, i.imag] for i in load.res_currents]}
-            if isinstance(load, PowerLoad) and load.is_flexible:
-                res["powers"] = [[s.real, s.imag] for s in load.res_flexible_powers]
-            loads_results.append(res)
-
-        sources_results: list[JsonDict] = [
-            {
-                "id": source.id,
-                "phases": source.phases,
-                "currents": [[i.real, i.imag] for i in source.res_currents],
-            }
-            for source in self.sources.values()
-        ]
-
-        grounds_results: list[JsonDict] = []
-        for ground in self.grounds.values():
-            v = ground.res_potential
-            grounds_results.append({"id": ground.id, "potential": [v.real, v.imag]})
-
-        p_refs_results: list[JsonDict] = []
-        for p_ref in self.potential_refs.values():
-            i = p_ref.res_current
-            p_refs_results.append({"id": p_ref.id, "current": [i.real, i.imag]})
-
+        if warning:
+            self._warn_invalid_results()  # Warn only once if asked
         return {
             "info": self.res_info,
-            "buses": buses_results,
-            "branches": branches_results,
-            "loads": loads_results,
-            "sources": sources_results,
-            "grounds": grounds_results,
-            "potential_refs": p_refs_results,
+            "buses": [bus._results_to_dict(False) for bus in self.buses.values()],
+            "branches": [branch._results_to_dict(False) for branch in self.branches.values()],
+            "loads": [load._results_to_dict(False) for load in self.loads.values()],
+            "sources": [source._results_to_dict(False) for source in self.sources.values()],
+            "grounds": [ground._results_to_dict(False) for ground in self.grounds.values()],
+            "potential_refs": [p_ref._results_to_dict(False) for p_ref in self.potential_refs.values()],
         }
-
-    def results_to_json(self, path: StrPath) -> Path:
-        """Write the results of the load flow to a json file.
-
-        .. note::
-            The path is `expanded`_ then `resolved`_ before writing the file.
-
-        .. _expanded: https://docs.python.org/3/library/pathlib.html#pathlib.Path.expanduser
-        .. _resolved: https://docs.python.org/3/library/pathlib.html#pathlib.Path.resolve
-
-        .. warning::
-            If the file exists, it will be overwritten.
-
-        Args:
-            path:
-                The path to the output file to write the results to.
-
-        Returns:
-            The expanded and resolved path of the written file.
-        """
-        dict_results = self.results_to_dict()
-        output = json.dumps(dict_results, indent=4)
-        output = re.sub(r"\[\s+(.*),\s+(.*)\s+]", r"[\1, \2]", output)
-        path = Path(path).expanduser().resolve()
-        if not output.endswith("\n"):
-            output += "\n"
-        path.write_text(output)
-        return path
 
     #
     # DGS interface

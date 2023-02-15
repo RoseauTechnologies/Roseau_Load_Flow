@@ -1,4 +1,5 @@
 import logging
+from typing import NoReturn
 
 import numpy as np
 
@@ -253,3 +254,13 @@ class TransformerParameters(Identifiable, JsonMixin):
             "vsc": self._vsc,
             "type": self.windings,
         }
+
+    def _results_to_dict(self, warning: bool) -> NoReturn:
+        msg = f"The {type(self).__name__} has no results to export."
+        logger.error(msg)
+        raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.JSON_NO_RESULTS)
+
+    def results_from_dict(self, data: JsonDict) -> NoReturn:
+        msg = f"The {type(self).__name__} has no results to import."
+        logger.error(msg)
+        raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.JSON_NO_RESULTS)

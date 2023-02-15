@@ -526,7 +526,7 @@ def test_frame(small_network):
 
 def test_buses_voltages(small_network, good_json_results):
     assert isinstance(small_network, ElectricalNetwork)
-    small_network._dispatch_results(good_json_results)
+    small_network.results_from_dict(good_json_results)
 
     voltage_records = [
         {"bus_id": "bus0", "phase": "an", "voltage": 20000.0 + 0.0j},

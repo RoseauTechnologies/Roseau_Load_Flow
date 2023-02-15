@@ -1,5 +1,5 @@
 import logging
-from typing import Literal
+from typing import Literal, NoReturn
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.typing import JsonDict, Self
@@ -209,6 +209,16 @@ class Control(JsonMixin):
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_CONTROL_TYPE)
 
+    def _results_to_dict(self, warning: bool) -> NoReturn:
+        msg = f"The {type(self).__name__} has no results to export."
+        logger.error(msg)
+        raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.JSON_NO_RESULTS)
+
+    def results_from_dict(self, data: JsonDict) -> NoReturn:
+        msg = f"The {type(self).__name__} has no results to import."
+        logger.error(msg)
+        raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.JSON_NO_RESULTS)
+
 
 class Projection(JsonMixin):
     """This class defines the projection on the feasible circle for a flexible load."""
@@ -253,11 +263,17 @@ class Projection(JsonMixin):
         return cls(type=data["type"], alpha=alpha, epsilon=epsilon)
 
     def to_dict(self) -> JsonDict:
-        return {
-            "type": self.type,
-            "alpha": self.alpha,
-            "epsilon": self.epsilon,
-        }
+        return {"type": self.type, "alpha": self.alpha, "epsilon": self.epsilon}
+
+    def _results_to_dict(self, warning: bool) -> NoReturn:
+        msg = f"The {type(self).__name__} has no results to export."
+        logger.error(msg)
+        raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.JSON_NO_RESULTS)
+
+    def results_from_dict(self, data: JsonDict) -> NoReturn:
+        msg = f"The {type(self).__name__} has no results to import."
+        logger.error(msg)
+        raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.JSON_NO_RESULTS)
 
 
 class FlexibleParameter(JsonMixin):
@@ -630,3 +646,13 @@ class FlexibleParameter(JsonMixin):
             "projection": self.projection.to_dict(),
             "s_max": self._s_max,
         }
+
+    def _results_to_dict(self, warning: bool) -> NoReturn:
+        msg = f"The {type(self).__name__} has no results to export."
+        logger.error(msg)
+        raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.JSON_NO_RESULTS)
+
+    def results_from_dict(self, data: JsonDict) -> NoReturn:
+        msg = f"The {type(self).__name__} has no results to import."
+        logger.error(msg)
+        raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.JSON_NO_RESULTS)

@@ -180,6 +180,16 @@ class AbstractLoad(Element, ABC):
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LOAD_TYPE)
 
+    def results_from_dict(self, data: JsonDict) -> None:
+        self._res_currents = np.array([complex(i[0], i[1]) for i in data["currents"]], dtype=complex)
+
+    def _results_to_dict(self, warning: bool) -> JsonDict:
+        return {
+            "id": self.id,
+            "phases": self.phases,
+            "currents": [[i.real, i.imag] for i in self._res_currents_getter(warning)],
+        }
+
 
 class PowerLoad(AbstractLoad):
     r"""A constant power load.
@@ -290,6 +300,9 @@ class PowerLoad(AbstractLoad):
         """The load flow result of the load flexible powers (VA)."""
         return self._res_flexible_powers_getter(warning=True)
 
+    #
+    # Json Mixin interface
+    #
     def to_dict(self) -> JsonDict:
         if self.bus is None:
             msg = f"The load {self.id!r} is disconnected and can not be used anymore."
@@ -299,11 +312,25 @@ class PowerLoad(AbstractLoad):
             "id": self.id,
             "bus": self.bus.id,
             "phases": self.phases,
-            "powers": [[s.real, s.imag] for s in self.powers],
+            "powers": [[s.real, s.imag] for s in self._powers],
         }
         if self.flexible_params is not None:
             res["flexible_params"] = [fp.to_dict() for fp in self.flexible_params]
         return res
+
+    def results_from_dict(self, data: JsonDict) -> None:
+        super().results_from_dict(data=data)
+        if self.is_flexible:
+            self._res_flexible_powers = np.array([complex(p[0], p[1]) for p in data["powers"]], dtype=complex)
+
+    def _results_to_dict(self, warning: bool) -> JsonDict:
+        if self.is_flexible:
+            return {
+                **super()._results_to_dict(warning),
+                "powers": [[s.real, s.imag] for s in self._res_flexible_powers_getter(False)],
+            }
+        else:
+            return super()._results_to_dict(warning)
 
 
 class CurrentLoad(AbstractLoad):
