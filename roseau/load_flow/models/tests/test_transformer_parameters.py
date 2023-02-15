@@ -33,8 +33,8 @@ def test_transformer_parameters():
     k_expected = 400 / (np.sqrt(3.0) * 20e3)
     orientation_expected = 1.0
 
-    assert np.isclose(z2, z2_expected)
-    assert np.isclose(ym, ym_expected)
+    assert np.isclose(z2.m_as("ohm"), z2_expected)
+    assert np.isclose(ym.m_as("S"), ym_expected)
     assert np.isclose(k, k_expected)
     assert np.isclose(orientation, orientation_expected)
 
@@ -63,8 +63,8 @@ def test_transformer_parameters():
     k_expected = (400 / np.sqrt(3)) / 20e3
     orientation_expected = 1.0
 
-    assert np.isclose(z2, z2_expected)
-    assert np.isclose(ym, ym_expected)
+    assert np.isclose(z2.m_as("ohm"), z2_expected)
+    assert np.isclose(ym.m_as("S"), ym_expected)
     assert np.isclose(k, k_expected)
     assert np.isclose(orientation, orientation_expected)
 
@@ -93,8 +93,8 @@ def test_transformer_parameters():
     k_expected = 400 / np.sqrt(3) / 20e3
     orientation_expected = -1.0
 
-    assert np.isclose(z2, z2_expected)
-    assert np.isclose(ym, ym_expected)
+    assert np.isclose(z2.m_as("ohm"), z2_expected)
+    assert np.isclose(ym.m_as("S"), ym_expected)
     assert np.isclose(k, k_expected)
     assert np.isclose(orientation, orientation_expected)
 

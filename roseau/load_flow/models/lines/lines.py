@@ -13,6 +13,7 @@ from roseau.load_flow.models.grounds import Ground
 from roseau.load_flow.models.lines.parameters import LineParameters
 from roseau.load_flow.models.sources import VoltageSource
 from roseau.load_flow.typing import Id, JsonDict
+from roseau.load_flow.units import Q_, ureg
 from roseau.load_flow.utils import BranchType
 
 logger = logging.getLogger(__name__)
@@ -232,9 +233,14 @@ class Line(AbstractBranch):
         super().__init__(id, bus1, bus2, phases1=phases, phases2=phases, geometry=geometry, **kwargs)
         self.phases = phases
         self.ground = ground
-        self.length = length
+        self._length = length
         self.parameters = parameters
         self._initialized = True
+
+    @property
+    @ureg.wraps("km", (None,), strict=False)
+    def length(self) -> Q_:
+        return self._length
 
     @property
     def parameters(self) -> LineParameters:
@@ -249,8 +255,8 @@ class Line(AbstractBranch):
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Z_LINE_SHAPE)
 
-        if value.y_shunt is not None:
-            if self._initialized and self.parameters.y_shunt is None:
+        if value.with_shunt:
+            if self._initialized and not self.parameters.with_shunt:
                 msg = "Cannot set line parameters with a shunt to a line that does not have shunt components."
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_MODEL)
@@ -264,7 +270,7 @@ class Line(AbstractBranch):
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_TYPE)
             self._connect(self.ground)
         else:
-            if self._initialized and self.parameters.y_shunt is not None:
+            if self._initialized and self.parameters.with_shunt:
                 msg = "Cannot set line parameters without a shunt to a line that has shunt components."
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_MODEL)
@@ -272,32 +278,34 @@ class Line(AbstractBranch):
         self._invalidate_network_results()
 
     def _res_series_power_losses_getter(self, warning: bool) -> np.ndarray:
-        pot1, pot2 = self._res_potentials_getter(warning)
+        pot1, pot2 = self._res_potentials_getter(warning)  # V
         du_line = pot1 - pot2
         z_line = self.parameters.z_line * self.length
-        i_line = np.linalg.inv(z_line) @ du_line  # Zₗ x Iₗ = ΔU -> I = Zₗ⁻¹ x ΔU
+        i_line = np.linalg.inv(z_line.m_as("ohm")) @ du_line  # Zₗ x Iₗ = ΔU -> I = Zₗ⁻¹ x ΔU
         return du_line * i_line.conj()  # Sₗ = ΔU.Iₗ*
 
     @property
-    def res_series_power_losses(self) -> np.ndarray:
+    @ureg.wraps("VA", (None,), strict=False)
+    def res_series_power_losses(self) -> Q_:
         """Get the power losses in the series elements of the line (VA)."""
         return self._res_series_power_losses_getter(warning=True)
 
     def _res_shunt_power_losses_getter(self, warning: bool) -> np.ndarray:
+        if not self.parameters.with_shunt:
+            return np.zeros(len(self.phases), dtype=complex)
         y_shunt = self.parameters.y_shunt
-        if y_shunt is None:
-            return np.zeros(len(self.phases), dtype=np.complex_)
         assert self.ground is not None
         pot1, pot2 = self._res_potentials_getter(warning)
-        vg = self.ground.res_potential
-        y_shunt = y_shunt * self.length
+        vg = self.ground.res_potential.m_as("V")
+        y_shunt = (y_shunt * self.length).m_as("S")
         yg = y_shunt.sum(axis=1)  # y_ig = Y_ia + Y_ib + Y_ic + Y_in for i in {a, b, c, n}
         i1_shunt = (y_shunt @ pot1 - yg * vg) / 2
         i2_shunt = (y_shunt @ pot2 - yg * vg) / 2
         return pot1 * i1_shunt.conj() + pot2 * i2_shunt.conj()
 
     @property
-    def res_shunt_power_losses(self) -> np.ndarray:
+    @ureg.wraps("VA", (None,), strict=False)
+    def res_shunt_power_losses(self) -> Q_:
         """Get the power losses in the shunt elements of the line (VA)."""
         return self._res_shunt_power_losses_getter(warning=True)
 
@@ -307,7 +315,8 @@ class Line(AbstractBranch):
         return series_losses + shunt_losses
 
     @property
-    def res_power_losses(self) -> np.ndarray:
+    @ureg.wraps("VA", (None,), strict=False)
+    def res_power_losses(self) -> Q_:
         """Get the power losses in the line (VA)."""
         return self._res_power_losses_getter(warning=True)
 
@@ -315,7 +324,7 @@ class Line(AbstractBranch):
     # Json Mixin interface
     #
     def to_dict(self) -> JsonDict:
-        res = {**super().to_dict(), "length": self.length, "params_id": self.parameters.id}
+        res = {**super().to_dict(), "length": self._length, "params_id": self.parameters.id}
         if self.ground is not None:
             res["ground"] = self.ground.id
         return res

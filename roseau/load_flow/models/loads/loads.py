@@ -12,7 +12,7 @@ from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import Element
 from roseau.load_flow.models.loads.flexible_parameters import FlexibleParameter
 from roseau.load_flow.typing import Id, JsonDict
-from roseau.load_flow.units import ureg
+from roseau.load_flow.units import Q_, ureg
 
 logger = logging.getLogger(__name__)
 
@@ -96,7 +96,8 @@ class AbstractLoad(Element, ABC):
         return self._res_getter(value=self._res_currents, warning=warning)
 
     @property
-    def res_currents(self) -> np.ndarray:
+    @ureg.wraps("A", (None,), strict=False)
+    def res_currents(self) -> Q_:
         """The load flow result of the load currents (A)."""
         return self._res_currents_getter(warning=True)
 
@@ -120,7 +121,8 @@ class AbstractLoad(Element, ABC):
         return self.bus._get_potentials_of(self.phases, warning)
 
     @property
-    def res_potentials(self) -> np.ndarray:
+    @ureg.wraps("V", (None,), strict=False)
+    def res_potentials(self) -> Q_:
         """The load flow result of the load potentials (V)."""
         return self._res_potentials_getter(warning=True)
 
@@ -129,7 +131,8 @@ class AbstractLoad(Element, ABC):
         return calculate_voltages(potentials, self.phases)
 
     @property
-    def res_voltages(self) -> np.ndarray:
+    @ureg.wraps("V", (None,), strict=False)
+    def res_voltages(self) -> Q_:
         """The load flow result of the load voltages (V)."""
         return self._res_voltages_getter(warning=True)
 
@@ -139,7 +142,8 @@ class AbstractLoad(Element, ABC):
         return pots * curs.conj()
 
     @property
-    def res_powers(self) -> np.ndarray:
+    @ureg.wraps("VA", (None,), strict=False)
+    def res_powers(self) -> Q_:
         """The load flow result of the load powers (VA)."""
         return self._res_powers_getter(warning=True)
 
@@ -266,7 +270,8 @@ class PowerLoad(AbstractLoad):
         return self.flexible_params is not None
 
     @property
-    def powers(self) -> np.ndarray:
+    @ureg.wraps("VA", (None,), strict=False)
+    def powers(self) -> Q_:
         """The powers of the load (VA)."""
         return self._powers
 
@@ -280,7 +285,8 @@ class PowerLoad(AbstractLoad):
         return self._res_getter(value=self._res_flexible_powers, warning=warning)
 
     @property
-    def res_flexible_powers(self) -> np.ndarray:
+    @ureg.wraps("VA", (None,), strict=False)
+    def res_flexible_powers(self) -> Q_:
         """The load flow result of the load flexible powers (VA)."""
         return self._res_flexible_powers_getter(warning=True)
 
@@ -344,7 +350,8 @@ class CurrentLoad(AbstractLoad):
         self.currents = currents  # handles size checks and unit conversion
 
     @property
-    def currents(self) -> np.ndarray:
+    @ureg.wraps("A", (None,), strict=False)
+    def currents(self) -> Q_:
         """The currents of the load (Amps)."""
         return self._currents
 
@@ -363,7 +370,7 @@ class CurrentLoad(AbstractLoad):
             "id": self.id,
             "bus": self.bus.id,
             "phases": self.phases,
-            "currents": [[i.real, i.imag] for i in self.currents],
+            "currents": [[i.real, i.imag] for i in self._currents],
         }
 
 
@@ -412,7 +419,8 @@ class ImpedanceLoad(AbstractLoad):
         self.impedances = impedances
 
     @property
-    def impedances(self) -> np.ndarray:
+    @ureg.wraps("ohm", (None,), strict=False)
+    def impedances(self) -> Q_:
         """The impedances of the load (Ohms)."""
         return self._impedances
 
@@ -431,7 +439,7 @@ class ImpedanceLoad(AbstractLoad):
             "id": self.id,
             "bus": self.bus.id,
             "phases": self.phases,
-            "impedances": [[z.real, z.imag] for z in self.impedances],
+            "impedances": [[z.real, z.imag] for z in self._impedances],
         }
 
 

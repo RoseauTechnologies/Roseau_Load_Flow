@@ -4,7 +4,7 @@ import numpy as np
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.typing import Id, JsonDict, Self
-from roseau.load_flow.units import ureg
+from roseau.load_flow.units import Q_, ureg
 from roseau.load_flow.utils import Identifiable, JsonMixin, TransformerType
 
 logger = logging.getLogger(__name__)
@@ -57,13 +57,13 @@ class TransformerParameters(Identifiable, JsonMixin):
                 Voltages on LV side during short circuit test (%)
         """
         super().__init__(id)
-        self.sn = sn
-        self.uhv = uhv
-        self.ulv = ulv
-        self.i0 = i0
-        self.p0 = p0
-        self.psc = psc
-        self.vsc = vsc
+        self._sn = sn
+        self._uhv = uhv
+        self._ulv = ulv
+        self._i0 = i0
+        self._p0 = p0
+        self._psc = psc
+        self._vsc = vsc
         self.windings = windings
         self.winding1, self.winding2, self.phase_displacement = TransformerType.extract_windings(string=windings)
 
@@ -97,14 +97,54 @@ class TransformerParameters(Identifiable, JsonMixin):
             return (
                 self.id == other.id
                 and self.windings == other.windings
-                and np.isclose(self.sn, other.sn)
-                and np.isclose(self.p0, other.p0)
-                and np.isclose(self.i0, other.i0)
-                and np.isclose(self.uhv, other.uhv)
-                and np.isclose(self.ulv, other.ulv)
-                and np.isclose(self.psc, self.psc)
-                and np.isclose(self.vsc, other.vsc)
+                and np.isclose(self._sn, other._sn)
+                and np.isclose(self._p0, other._p0)
+                and np.isclose(self._i0, other._i0)
+                and np.isclose(self._uhv, other._uhv)
+                and np.isclose(self._ulv, other._ulv)
+                and np.isclose(self._psc, other._psc)
+                and np.isclose(self._vsc, other._vsc)
             )
+
+    @property
+    @ureg.wraps("V", (None,), strict=False)
+    def uhv(self) -> Q_:
+        """Phase-to-phase nominal voltages of the high voltages side (V)"""
+        return self._uhv
+
+    @property
+    @ureg.wraps("V", (None,), strict=False)
+    def ulv(self) -> Q_:
+        """Phase-to-phase nominal voltages of the low voltages side (V)"""
+        return self._ulv
+
+    @property
+    def i0(self) -> float:
+        """The nominal voltages of the transformer (VA)"""
+        return self._i0
+
+    @property
+    @ureg.wraps("VA", (None,), strict=False)
+    def sn(self) -> Q_:
+        """Losses during off-load test (W)"""
+        return self._sn
+
+    @property
+    @ureg.wraps("W", (None,), strict=False)
+    def p0(self) -> Q_:
+        """Current during off-load test (%)"""
+        return self._p0
+
+    @property
+    @ureg.wraps("W", (None,), strict=False)
+    def psc(self) -> Q_:
+        """Losses during short circuit test (W)"""
+        return self._psc
+
+    @property
+    def vsc(self) -> float:
+        """Voltages on LV side during short circuit test (%)"""
+        return self._vsc
 
     @classmethod
     def from_name(cls, name: str, windings: str) -> Self:
@@ -136,34 +176,8 @@ class TransformerParameters(Identifiable, JsonMixin):
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TYPE_NAME_SYNTAX)
 
-    @classmethod
-    def from_dict(cls, data: JsonDict) -> Self:
-        return cls(
-            id=data["id"],
-            windings=data["type"],  # Windings of the transformer
-            uhv=data["uhv"],  # Phase-to-phase nominal voltages of the high voltages side (V)
-            ulv=data["ulv"],  # Phase-to-phase nominal voltages of the low voltages side (V)
-            sn=data["sn"],
-            p0=data["p0"],  # Losses during off-load test (W)
-            i0=data["i0"],
-            psc=data["psc"],  # Losses during short circuit test (W)
-            vsc=data["vsc"],
-        )
-
-    def to_dict(self) -> JsonDict:
-        return {
-            "id": self.id,
-            "sn": self.sn,
-            "uhv": self.uhv,
-            "ulv": self.ulv,
-            "i0": self.i0,
-            "p0": self.p0,
-            "psc": self.psc,
-            "vsc": self.vsc,
-            "type": self.windings,
-        }
-
-    def to_zyk(self) -> tuple[complex, complex, float, float]:
+    @ureg.wraps(("ohm", "S", None, None), (None,), strict=False)
+    def to_zyk(self) -> tuple[Q_, Q_, float, float]:
         """Compute the transformer parameters z2, ym, k and orientation mandatory for some models
 
         Returns:
@@ -209,3 +223,33 @@ class TransformerParameters(Identifiable, JsonMixin):
             # Normal winding
             assert phase_displacement in (0, 11)
             return z2, ym, ulv / uhv, 1.0
+
+    #
+    # Json Mixin interface
+    #
+    @classmethod
+    def from_dict(cls, data: JsonDict) -> Self:
+        return cls(
+            id=data["id"],
+            windings=data["type"],  # Windings of the transformer
+            uhv=data["uhv"],  # Phase-to-phase nominal voltages of the high voltages side (V)
+            ulv=data["ulv"],  # Phase-to-phase nominal voltages of the low voltages side (V)
+            sn=data["sn"],
+            p0=data["p0"],  # Losses during off-load test (W)
+            i0=data["i0"],
+            psc=data["psc"],  # Losses during short circuit test (W)
+            vsc=data["vsc"],
+        )
+
+    def to_dict(self) -> JsonDict:
+        return {
+            "id": self.id,
+            "sn": self._sn,
+            "uhv": self._uhv,
+            "ulv": self._ulv,
+            "i0": self._i0,
+            "p0": self._p0,
+            "psc": self._psc,
+            "vsc": self._vsc,
+            "type": self.windings,
+        }

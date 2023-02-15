@@ -6,6 +6,7 @@ from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import Element
 from roseau.load_flow.models.grounds import Ground
 from roseau.load_flow.typing import Id, JsonDict, Self
+from roseau.load_flow.units import Q_, ureg
 
 logger = logging.getLogger(__name__)
 
@@ -65,7 +66,8 @@ class PotentialRef(Element):
         return self._res_getter(self._res_current, warning)
 
     @property
-    def res_current(self) -> complex:
+    @ureg.wraps("A", (None,), strict=False)
+    def res_current(self) -> Q_:
         """The sum of the currents (A) of the connection associated to the potential reference.
 
         This sum should be equal to 0 after the load flow.

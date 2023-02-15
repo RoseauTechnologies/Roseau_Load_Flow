@@ -206,7 +206,7 @@ def test_flexible_load():
     assert load.flexible_params == [fp_pq_cons, fp_const, fp_const]
     assert load._res_flexible_powers is None  # load flow not run yet
     load._res_flexible_powers = np.array([100, 100, 100], dtype=complex)
-    assert np.allclose(load.res_flexible_powers, [100, 100, 100])
+    assert np.allclose(load.res_flexible_powers.m_as("VA"), [100, 100, 100])
 
 
 def test_loads_to_dict():
@@ -288,13 +288,13 @@ def test_loads_units():
 
     # Good unit constructor
     load = PowerLoad("load", bus, powers=Q_([1, 1, 1], "kVA"), phases="abcn")
-    assert np.allclose(load.powers, [1000, 1000, 1000])
+    assert np.allclose(load._powers, [1000, 1000, 1000])
 
     # Good unit setter
     load = PowerLoad("load", bus, powers=[100, 100, 100], phases="abcn")
-    assert np.allclose(load.powers, [100, 100, 100])
+    assert np.allclose(load._powers, [100, 100, 100])
     load.powers = Q_([1, 1, 1], "kVA")
-    assert np.allclose(load.powers, [1000, 1000, 1000])
+    assert np.allclose(load._powers, [1000, 1000, 1000])
 
     # Bad unit constructor
     with pytest.raises(DimensionalityError, match=r"Cannot convert from 'ampere' \(\[current\]\) to 'VA'"):

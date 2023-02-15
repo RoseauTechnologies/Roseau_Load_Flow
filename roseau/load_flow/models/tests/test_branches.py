@@ -28,8 +28,8 @@ def test_res_branches_potentials():
         [19962.27794964 - 62.50004648j, -10017.22332639 - 17267.46636437j, -9945.05462325 + 17329.96641085j]
     )
     line_pot1, line_pot2 = line.res_potentials
-    assert np.allclose(line_pot1, [-10000.0 + 17320.50807569j, 20000.0 + 0.0j])
-    assert np.allclose(line_pot2, [-9945.05462325 + 17329.96641085j, 19962.27794964 - 62.50004648j])
+    assert np.allclose(line_pot1.m_as("V"), [-10000.0 + 17320.50807569j, 20000.0 + 0.0j])
+    assert np.allclose(line_pot2.m_as("V"), [-9945.05462325 + 17329.96641085j, 19962.27794964 - 62.50004648j])
 
 
 def test_powers_equal(network_with_results):
@@ -225,22 +225,22 @@ def test_powers_equal(network_with_results):
 def test_lines_res_powers(phases, z_line, y_shunt, len_line, bus_pot, line_cur, ground_pot, expected_pow):
     bus1 = Bus("bus1", phases=phases["bus1"])
     bus2 = Bus("bus2", phases=phases["bus2"])
-    y_shunt = np.asarray(y_shunt, dtype=np.complex_) if y_shunt is not None else None
+    y_shunt = np.asarray(y_shunt, dtype=complex) if y_shunt is not None else None
     ground = Ground("gnd")
-    lp = LineParameters("lp", z_line=np.asarray(z_line, dtype=np.complex_), y_shunt=y_shunt)
+    lp = LineParameters("lp", z_line=np.asarray(z_line, dtype=complex), y_shunt=y_shunt)
     line = Line("line", bus1, bus2, phases=phases["line"], length=len_line, parameters=lp, ground=ground)
-    bus1._res_potentials = np.array(bus_pot[0], dtype=np.complex_)
-    bus2._res_potentials = np.array(bus_pot[1], dtype=np.complex_)
-    line._res_currents = np.array(line_cur[0], dtype=np.complex_), np.array(line_cur[1], dtype=np.complex_)
+    bus1._res_potentials = np.array(bus_pot[0], dtype=complex)
+    bus2._res_potentials = np.array(bus_pot[1], dtype=complex)
+    line._res_currents = np.array(line_cur[0], dtype=complex), np.array(line_cur[1], dtype=complex)
     ground._res_potential = ground_pot
     res_powers1, res_powers2 = line.res_powers
     series_losses = line.res_series_power_losses
     shunt_losses = line.res_shunt_power_losses
     line_losses = line.res_power_losses
     exp_p1, exp_p2, exp_pl_series = expected_pow
-    assert np.allclose(res_powers1, exp_p1)
-    assert np.allclose(res_powers2, exp_p2)
-    assert np.allclose(series_losses, exp_pl_series)
+    assert np.allclose(res_powers1.m_as("VA"), exp_p1)
+    assert np.allclose(res_powers2.m_as("VA"), exp_p2)
+    assert np.allclose(series_losses.m_as("VA"), exp_pl_series)
     if y_shunt is None:
         assert np.allclose(shunt_losses, 0)
     else:

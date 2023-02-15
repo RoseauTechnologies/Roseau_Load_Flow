@@ -3,7 +3,7 @@ from typing import Literal
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.typing import JsonDict, Self
-from roseau.load_flow.units import ureg
+from roseau.load_flow.units import Q_, ureg
 from roseau.load_flow.utils import JsonMixin
 
 logger = logging.getLogger(__name__)
@@ -281,13 +281,18 @@ class FlexibleParameter(JsonMixin):
                 The projection to use to have a feasible result.
 
             s_max:
-                The apparent power of the flexible load (VA). It is the radius of the feasible
-                circle.
+                The apparent power of the flexible load (VA). It is the radius of the feasible circle.
         """
         self.control_p = control_p
         self.control_q = control_q
         self.projection = projection
-        self.s_max = s_max
+        self._s_max = s_max
+
+    @property
+    @ureg.wraps("VA", (None,), strict=False)
+    def s_max(self) -> Q_:
+        """The apparent power of the flexible load (VA). It is the radius of the feasible circle."""
+        return self._s_max
 
     @classmethod
     def constant(cls) -> Self:
@@ -623,5 +628,5 @@ class FlexibleParameter(JsonMixin):
             "control_p": self.control_p.to_dict(),
             "control_q": self.control_q.to_dict(),
             "projection": self.projection.to_dict(),
-            "s_max": self.s_max,
+            "s_max": self._s_max,
         }
