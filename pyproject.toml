@@ -3,11 +3,12 @@ name = "roseau_load_flow"
 version = "0.2.1"
 description = "Three-phase load flow solver"
 authors = [
+    "Ali Hamdan <ali.hamdan@roseautechnologies.com>",
     "Sébastien Vallet <sebastien.vallet@roseautechnologies.com>",
     "Benoît Vinot <benoit.vinot@roseautechnologies.com>",
     "Victor Gouin <victor.gouin@roseautechnologies.com>",
 ]
-maintainers = ["Sébastien Vallet <sebastien.vallet@roseautechnologies.com>"]
+maintainers = ["Ali Hamdan <ali.hamdan@roseautechnologies.com>"]
 license = "Proprietary"
 repository = "https://github.com/RoseauTechnologies/Roseau_Load_Flow/"
 readme = "README.md"
