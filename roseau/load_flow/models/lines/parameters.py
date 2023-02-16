@@ -69,8 +69,15 @@ class LineParameters(Identifiable, JsonMixin):
             self.id == other.id
             and self._z_line.shape == other._z_line.shape
             and np.allclose(self._z_line, other._z_line)
-            and self._y_shunt.shape == other._y_shunt.shape
-            and np.allclose(self._y_shunt, other._y_shunt)
+            and (
+                (not self._with_shunt and not other._with_shunt)
+                or (
+                    self._with_shunt
+                    and other._with_shunt
+                    and self._y_shunt.shape == other._y_shunt.shape
+                    and np.allclose(self._y_shunt, other._y_shunt)
+                )
+            )
         )
 
     @property
@@ -431,11 +438,6 @@ class LineParameters(Identifiable, JsonMixin):
         return cls(type_name, z_line=z_line, y_shunt=y_shunt)
 
     @staticmethod
-    @ureg.wraps(
-        ("ohm/km", "S/km", None),
-        (None, None, None, None, "mm**2", "mm**2", "m", "m"),
-        strict=False,
-    )
     def _lv_exact_to_zy(
         type_name: str,
         line_type: LineType,
@@ -593,6 +595,7 @@ class LineParameters(Identifiable, JsonMixin):
         return z_line, y_shunt, LineModel.LV_EXACT
 
     @classmethod
+    @ureg.wraps(None, (None, None, "mm²", "m", "mm"), strict=False)
     def from_name_lv(
         cls,
         name: str,

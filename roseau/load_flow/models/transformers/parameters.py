@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 class TransformerParameters(Identifiable, JsonMixin):
     """A class to store the parameters of the transformers."""
 
-    @ureg.wraps(None, (None, None, None, "V", "V", "VA", "W", None, "W", None), strict=False)
+    @ureg.wraps(None, (None, None, None, "V", "V", "VA", "W", "", "W", ""), strict=False)
     def __init__(
         self,
         id: Id,
@@ -43,7 +43,7 @@ class TransformerParameters(Identifiable, JsonMixin):
                 Phase-to-phase nominal voltages of the low voltages side (V)
 
             sn:
-                The nominal voltages of the transformer (VA)
+                The nominal power of the transformer (VA)
 
             p0:
                 Losses during off-load test (W)
@@ -120,21 +120,22 @@ class TransformerParameters(Identifiable, JsonMixin):
         return self._ulv
 
     @property
-    def i0(self) -> float:
-        """The nominal voltages of the transformer (VA)"""
-        return self._i0
-
-    @property
     @ureg.wraps("VA", (None,), strict=False)
     def sn(self) -> Q_:
-        """Losses during off-load test (W)"""
+        """The nominal power of the transformer (VA)"""
         return self._sn
 
     @property
     @ureg.wraps("W", (None,), strict=False)
     def p0(self) -> Q_:
-        """Current during off-load test (%)"""
+        """Losses during off-load test (W)"""
         return self._p0
+
+    @property
+    @ureg.wraps("", (None,), strict=False)
+    def i0(self) -> float:
+        """Current during off-load test (%)"""
+        return self._i0
 
     @property
     @ureg.wraps("W", (None,), strict=False)
@@ -143,6 +144,7 @@ class TransformerParameters(Identifiable, JsonMixin):
         return self._psc
 
     @property
+    @ureg.wraps("", (None,), strict=False)
     def vsc(self) -> float:
         """Voltages on LV side during short circuit test (%)"""
         return self._vsc
@@ -162,7 +164,9 @@ class TransformerParameters(Identifiable, JsonMixin):
             The constructed transformer parameters.
         """
         if name == "H61_50kVA":
-            return cls(name, windings, 20000, 400, 50 * 1e3, 145, 1.8 / 100, 1350, 4 / 100)
+            return cls(
+                id=name, windings=windings, uhv=20000, ulv=400, sn=50 * 1e3, p0=145, i0=1.8 / 100, psc=1350, vsc=4 / 100
+            )
         elif name[-3:] == "kVA":
             try:
                 sn = float(name[:-3])
@@ -177,7 +181,7 @@ class TransformerParameters(Identifiable, JsonMixin):
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TYPE_NAME_SYNTAX)
 
-    @ureg.wraps(("ohm", "S", None, None), (None,), strict=False)
+    @ureg.wraps(("ohm", "S", "", None), (None,), strict=False)
     def to_zyk(self) -> tuple[Q_, Q_, float, float]:
         """Compute the transformer parameters z2, ym, k and orientation mandatory for some models
 
@@ -192,22 +196,22 @@ class TransformerParameters(Identifiable, JsonMixin):
 
         # Off-load test
         # Iron losses resistance (Ohm)
-        r_iron = self.uhv**2 / self.p0
+        r_iron = self._uhv**2 / self._p0
         # Magnetizing inductance (Henry) * omega (rad/s)
-        if self.i0 * self.sn > self.p0:
-            lm_omega = self.uhv**2 / (np.sqrt((self.i0 * self.sn) ** 2 - self.p0**2))
+        if self._i0 * self._sn > self._p0:
+            lm_omega = self._uhv**2 / (np.sqrt((self._i0 * self._sn) ** 2 - self._p0**2))
             ym = 1 / r_iron + 1 / (1j * lm_omega)
         else:
             ym = 1 / r_iron
 
         # Short circuit test
-        r2 = self.psc * (self.ulv / self.sn) ** 2
-        l2_omega = np.sqrt((self.vsc * self.ulv**2 / self.sn) ** 2 - r2**2)
+        r2 = self._psc * (self._ulv / self._sn) ** 2
+        l2_omega = np.sqrt((self._vsc * self._ulv**2 / self._sn) ** 2 - r2**2)
         z2 = r2 + 1j * l2_omega
 
         # Change the voltages if the reference voltages is phase to neutral
-        uhv = self.uhv
-        ulv = self.ulv
+        uhv = self._uhv
+        ulv = self._ulv
         if winding1[0] in ("y", "Y"):
             uhv /= np.sqrt(3.0)
         if winding2[0] in ("y", "Y"):

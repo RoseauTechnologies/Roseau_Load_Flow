@@ -2,7 +2,6 @@ import logging
 from typing import Any, Optional
 
 import numpy as np
-from pint import Quantity
 from shapely import LineString, Point
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
@@ -226,14 +225,11 @@ class Line(AbstractBranch):
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_GEOMETRY_TYPE)
 
-        if isinstance(length, Quantity):
-            length = length.m_as("km")
-
         self._initialized = False
         super().__init__(id, bus1, bus2, phases1=phases, phases2=phases, geometry=geometry, **kwargs)
         self.phases = phases
         self.ground = ground
-        self._length = length
+        self.length = length
         self.parameters = parameters
         self._initialized = True
 
@@ -241,6 +237,16 @@ class Line(AbstractBranch):
     @ureg.wraps("km", (None,), strict=False)
     def length(self) -> Q_:
         return self._length
+
+    @length.setter
+    @ureg.wraps(None, (None, "km"), strict=False)
+    def length(self, value: float) -> None:
+        if value <= 0:
+            msg = f"A line length must be greater than 0. {value:.2f} km provided."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LENGTH_VALUE)
+        self._length = value
+        self._invalidate_network_results()
 
     @property
     def parameters(self) -> LineParameters:
