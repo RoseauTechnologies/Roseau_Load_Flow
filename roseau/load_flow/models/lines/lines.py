@@ -3,7 +3,7 @@ from typing import Any, Optional
 
 import numpy as np
 from pint import Quantity
-from shapely.geometry import LineString, Point
+from shapely import LineString, Point
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.branches import AbstractBranch
@@ -24,6 +24,13 @@ class Switch(AbstractBranch):
     branch_type = BranchType.SWITCH
 
     allowed_phases = frozenset(Bus.allowed_phases | {"a", "b", "c", "n"})
+    """The allowed phases for a switch are:
+
+    - P-P-P or P-P-P-N: ``"abc"``, ``"abcn"``
+    - P-P or P-P-N: ``"ab"``, ``"bc"``, ``"ca"``, "abn"``, ``"bcn"``, ``"can"``
+    - P or P-N: ``"a"``, ``"b"``, ``"c"``, ``"an"``, ``"bn"``, ``"cn"``
+    - N: ``"n"``
+    """
 
     def __init__(
         self,
@@ -120,18 +127,19 @@ class Line(AbstractBranch):
     """An electrical line PI model with series impedance and optional shunt admittance.
 
     .. math::
-        V_1 &= a \\cdot V_2 - b \\cdot I_2 + g \\cdot V_g \\\\
-        I_1 &= c \\cdot V_2 - d \\cdot I_2 + h \\cdot V_g \\\\
-        I_g &= f^t \\cdot \\left(V_1 + V_2 - 2\\cdot V_g\\right)
+        V_1 &= a \\cdot V_2 - b \\cdot I_2 + g \\cdot V_{\\mathrm{g}} \\\\
+        I_1 &= c \\cdot V_2 - d \\cdot I_2 + h \\cdot V_{\\mathrm{g}} \\\\
+        I_{\\mathrm{g}} &= f^t \\cdot \\left(V_1 + V_2 - 2\\cdot V_{\\mathrm{g}}\\right)
 
     where
 
     .. math::
-        a &= \\mathcal{I}_5 + \\dfrac{1}{2} \\cdot Z \\cdot Y  \\\\
+        a &= \\mathcal{I}_4 + \\dfrac{1}{2} \\cdot Z \\cdot Y  \\\\
         b &= Z  \\\\
         c &= Y + \\dfrac{1}{4}\\cdot Y \\cdot Z \\cdot Y  \\\\
-        d &= \\mathcal{I}_5 + \\dfrac{1}{2} \\cdot Y \\cdot Z  \\\\
-        f &= -\\dfrac{1}{2} \\cdot \\begin{pmatrix} y_{ag} & y_{bg} & y_{cg} &y_{ng} \\end{pmatrix} ^t  \\\\
+        d &= \\mathcal{I}_4 + \\dfrac{1}{2} \\cdot Y \\cdot Z  \\\\
+        f &= -\\dfrac{1}{2} \\cdot \\begin{pmatrix} y_{\\mathrm{ag}} & y_{\\mathrm{bg}} & y_{\\mathrm{cg}} &
+        y_{\\mathrm{ng}} \\end{pmatrix} ^t  \\\\
         g &= Z \\cdot f  \\\\
         h &= 2 \\cdot f + \\frac{1}{2}\\cdot Y \\cdot Z \\cdot f  \\\\
 
@@ -146,6 +154,13 @@ class Line(AbstractBranch):
     branch_type = BranchType.LINE
 
     allowed_phases = frozenset(Bus.allowed_phases | {"a", "b", "c", "n"})
+    """The allowed phases for a line are:
+
+    - P-P-P or P-P-P-N: ``"abc"``, ``"abcn"``
+    - P-P or P-P-N: ``"ab"``, ``"bc"``, ``"ca"``, "abn"``, ``"bcn"``, ``"can"``
+    - P or P-N: ``"a"``, ``"b"``, ``"c"``, ``"an"``, ``"bn"``, ``"cn"``
+    - N: ``"n"``
+    """
 
     def __init__(
         self,

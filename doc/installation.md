@@ -1,3 +1,46 @@
+# Using `pip` #
+
+`roseau_load_flow` is available on [PyPI](https://pypi.org/project/roseau-load-flow/). If you are
+using pip, you can install it with:
+```sh
+python -m pip install roseau-load-flow
+```
+
+```{tip}
+   It is recommended to work in a virtual environment. You can create one with:
+
+   `python -m venv venv`
+
+   and activate it with:
+
+   * `source venv/bin/activate` on Linux and macOS;
+   * and `venv\Scripts\activate.bat` on Windows.
+```
+
+To upgrade to the latest version (recommended), use:
+```sh
+python -m pip install --upgrade roseau-load-flow
+```
+
+# Using `conda` #
+
+If you use *conda* to manage your project, **it is recommended to use the `conda` package manager
+instead of *pip***. To install `roseau_load_flow` via `conda`, please go the release page of the
+GitHub repository [here](https://github.com/RoseauTechnologies/Roseau_Load_Flow/releases/) and
+download the latest available *Conda archive* (Click on the file that ends with `.tar.bz2`). It can
+then be installed via the following command (in this example, the installed version is 0.2.1):
+
+```sh
+conda install <PATH TO THE FILE roseau-load-flow-0.2.1-py310_0.tar.bz2>
+```
+
+```{note}
+Always install the latest version available which is conveniently marked *latest* by GitHub as
+shown here:
+
+![GitHub Latest Release](_static/2022_11_23_GH_Latest_Release.png)
+```
+
 # Using `docker` #
 
 `roseau_load_flow` provides a *docker* image with all required dependencies to run the software, including *Python*,
@@ -73,44 +116,6 @@ your docker environment, follow the steps that correspond to your operating syst
 6. Open your web browser and go to [http://localhost:8080](http://localhost:8080) to find the interface of the
    JupyterLab of the container.  A basic python environment is already installed with the `roseau_load_flow` package
    already installed.
-
-# Using `pip` #
-
-If you desire to install the `roseau_load_flow` package via `pip`, please go the release page of the GitHub repository
-[here](https://github.com/RoseauTechnologies/Roseau_Load_Flow/releases/) and download the latest available *Wheel*
-(Click on the file that ends with `.whl`). It can then be installed via the following command (here, the installed
-version is 0.2.1):
-
-```console
-$ python -m pip install <PATH TO THE FILE roseau_load_flow-0.2.1-py3-none-any.whl>
-```
-
-```{note}
-Always install the latest version available which is conveniently marked *latest* by GitHub as
-shown here:
-
-![GitHub Latest Release](_static/2022_11_23_GH_Latest_Release.png)
-```
-
-
-# Using `conda` #
-
-`roseau_load_flow` can also be installed via `conda`. Please go the release page of the GitHub repository
-[here](https://github.com/RoseauTechnologies/Roseau_Load_Flow/releases/) and download the latest available *Conda
-archive* (Click on the file that ends with `.tar.bz2`). It can then be installed via the following command (here, the
-installed version is 0.2.1):
-
-```console
-$ conda install <PATH TO THE FILE roseau-load-flow-0.2.1-py310_0.tar.bz2>
-```
-
-```{note}
-Always install the latest version available which is conveniently marked *latest* by GitHub as
-shown here:
-
-![GitHub Latest Release](_static/2022_11_23_GH_Latest_Release.png)
-```
-
 
 <!-- Local Variables: -->
 <!-- mode: markdown -->

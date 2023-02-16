@@ -3,7 +3,7 @@ from collections.abc import Sequence
 from typing import Any, Optional
 
 import numpy as np
-from shapely.geometry import Point
+from shapely import Point
 
 from roseau.load_flow.converters import calculate_voltage_phases, calculate_voltages
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
@@ -18,6 +18,12 @@ class Bus(Element):
     """An electrical bus."""
 
     allowed_phases = frozenset({"ab", "bc", "ca", "an", "bn", "cn", "abn", "bcn", "can", "abc", "abcn"})
+    """The allowed phases for a bus are:
+
+    - P-P-P or P-P-P-N: ``"abc"``, ``"abcn"``
+    - P-P or P-P-N: ``"ab"``, ``"bc"``, ``"ca"``, ``"abn"``, ``"bcn"``, ``"can"``
+    - P-N: ``"an"``, ``"bn"``, ``"cn"``
+    """
 
     def __init__(
         self,
@@ -40,10 +46,11 @@ class Bus(Element):
                 :attr:`Bus.allowed_phases`.
 
             geometry:
-                The geometry of the bus.
+                An optional geometry of the bus; a :class:`~shapely.Point` that represents the
+                x-y coordinates of the bus.
 
             potentials:
-                List of initial potentials of each phase.
+                An optional list of initial potentials of each phase of the bus.
 
             ground:
                 The ground of the bus.

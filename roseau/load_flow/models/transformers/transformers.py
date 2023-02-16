@@ -1,7 +1,7 @@
 import logging
 from typing import Any, Optional
 
-from shapely.geometry import Point
+from shapely import Point
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.branches import AbstractBranch
@@ -22,6 +22,13 @@ class Transformer(AbstractBranch):
     branch_type = BranchType.TRANSFORMER
 
     allowed_phases = frozenset({"abc", "abcn"})  # Only these for now
+    """The allowed phases for a transformer are:
+
+    - P-P-P or P-P-P-N: ``"abc"``, ``"abcn"``
+
+    .. note::
+        Only 3-phase transformers are supported for now.
+    """
 
     def __init__(
         self,

@@ -29,6 +29,7 @@ class AbstractLoad(Element, ABC):
     _floating_neutral_allowed: bool = False
 
     allowed_phases = Bus.allowed_phases
+    """The allowed phases for a load are the same as for a :attr:`bus<Bus.allowed_phases>`."""
 
     def __init__(self, id: Id, bus: Bus, *, phases: Optional[str] = None, **kwargs: Any) -> None:
         """AbstractLoad constructor.
@@ -305,15 +306,15 @@ class CurrentLoad(AbstractLoad):
     The equations are the following (star loads):
 
     .. math::
-        I_{\mathrm{abc}} &= constant \\
+        I_{\mathrm{abc}} &= \mathrm{constant} \\
         I_{\mathrm{n}} &= -\sum_{p\in\{\mathrm{a},\mathrm{b},\mathrm{c}\}}I_{p}
 
     and the following (delta loads):
 
     .. math::
-        I_{\mathrm{ab}} &= constant \\
-        I_{\mathrm{bc}} &= constant \\
-        I_{\mathrm{ca}} &= constant
+        I_{\mathrm{ab}} &= \mathrm{constant} \\
+        I_{\mathrm{bc}} &= \mathrm{constant} \\
+        I_{\mathrm{ca}} &= \mathrm{constant}
     """
 
     _type = "current"

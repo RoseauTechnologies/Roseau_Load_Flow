@@ -85,8 +85,7 @@ class Element(ABC, Identifiable, JsonMixin):
             network._connect_element(element=self)
 
     def _disconnect(self) -> None:
-        """Remove all the connections with the other elements. This method can be used in a public `disconnect`
-        method for"""
+        """Remove all the connections with the other elements."""
         for element in self._connected_elements:
             element._connected_elements.remove(self)
             if element.network is not None:
@@ -114,9 +113,21 @@ class Element(ABC, Identifiable, JsonMixin):
             The input if valid. May also emit a warning for potential invalid results.
         """
         if value is None:
-            self._raise_load_flow_not_run()
-        if warning:
-            self._warn_invalid_results()
+            msg = (
+                f"Results for {type(self).__name__} {self.id!r} are not available because the load "
+                f"flow has not been run yet."
+            )
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN)
+        if warning and self.network is not None and not self.network._results_valid:
+            warnings.warn(
+                message=(
+                    "The results of this element may be outdated. Please re-run a load flow to "
+                    "ensure the validity of results."
+                ),
+                category=UserWarning,
+                stacklevel=2,
+            )
         return value
 
     @staticmethod
@@ -128,27 +139,8 @@ class Element(ABC, Identifiable, JsonMixin):
         else:
             return shape(geometry)
 
-    def _raise_load_flow_not_run(self) -> NoReturn:
-        """Raise an exception when accessing results and the load flow has not been run yet."""
-        msg = (
-            f"Results for {type(self).__name__} {self.id!r} are not available because the load "
-            f"flow has not been run yet."
-        )
-        logger.error(msg)
-        raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN)
-
     def _raise_several_network(self) -> NoReturn:
         """Raise an exception when there are several networks involved during a connection of elements."""
         msg = f"The {type(self).__name__} {self.id!r} is already assigned to another network."
         logger.error(msg)
         raise RoseauLoadFlowException(msg, code=RoseauLoadFlowExceptionCode.SEVERAL_NETWORKS)
-
-    def _warn_invalid_results(self) -> None:
-        """Warn when the network of `self` is invalid."""
-        if self.network is not None and not self.network._results_valid:
-            warnings.warn(
-                message="The results of this element may be outdated. Please re-run a load flow to ensure "
-                "the validity of results.",
-                category=UserWarning,
-                stacklevel=2,
-            )

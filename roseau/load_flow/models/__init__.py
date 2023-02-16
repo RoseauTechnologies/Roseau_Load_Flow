@@ -1,3 +1,7 @@
+"""
+This module contains the models used to represent the network elements. The
+models are used to build the network and to perform the load flow analysis.
+"""
 from roseau.load_flow.models.branches import AbstractBranch
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import Element

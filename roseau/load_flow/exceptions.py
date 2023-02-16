@@ -1,3 +1,6 @@
+"""
+This module contains the exceptions used by Roseau Load Flow.
+"""
 import unicodedata
 from enum import auto, Enum
 from typing import Union

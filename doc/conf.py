@@ -37,16 +37,14 @@ extensions = [
     "sphinx.ext.mathjax",
     "sphinx.ext.autodoc",
     "sphinx.ext.napoleon",
+    "sphinx.ext.intersphinx",
     "nbsphinx",
     "autoapi.extension",
 ]
 
-napoleon_numpy_docstring = False
-autodoc_default_options = {"ignore-module-all": False}
-autodoc_member_order = "bysource"
-autodoc_typehints = "signature"
-python_use_unqualified_type_names = True
 add_module_names = False
+napoleon_numpy_docstring = False
+python_use_unqualified_type_names = True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
@@ -63,6 +61,12 @@ language = "en"
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = []
 
+# -- Options for autodoc ----------------------------------------------------
+autodoc_default_options = {"ignore-module-all": False}
+autodoc_member_order = "bysource"
+autodoc_typehints = "signature"
+autodoc_inherit_docstrings = True
+
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
@@ -74,7 +78,7 @@ html_title = f"{release}"
 html_logo = "_static/Logo_Roseau_Technologies_Without_Baseline.png"
 html_favicon = "_static/Favicon_Roseau_Technologies.ico"
 html_theme_options = {
-    # "source_repository": "https://github.com/RoseauTechnologies/SIRAO_Documentation/",
+    "source_repository": "https://github.com/RoseauTechnologies/Roseau_Load_Flow/",
     # "source_branch": "main",
     # "source_directory": "source/",
     # "sidebar_hide_name": True,
@@ -96,11 +100,23 @@ html_theme_options = {
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
 
-# AutoAPI
-autoapi_dirs = ["../roseau"]
-autoapi_ignore = ["**/tests/**", "**/conftest.py"]
-autoapi_options = ["members", "undoc-members", "show-inheritance", "show-module-summary", "imported-members"]
-autoapi_python_class_content = "both"  # without this, the __init__ docstring is not shown
-
 # Extra CSS files
 html_css_files = ["css/custom.css"]
+
+# -- Options for AutoAPI -------------------------------------------------
+autoapi_dirs = ["../roseau"]
+autoapi_ignore = ["**/tests/**", "**/conftest.py", "__about__.py"]
+autoapi_options = ["members", "show-inheritance", "show-module-summary", "imported-members"]
+autoapi_python_class_content = "both"  # without this, the __init__ docstring is not shown
+autoapi_python_use_implicit_namespaces = True
+
+# -- Options for intersphinx -------------------------------------------------
+intersphinx_mapping = {
+    "python": ("https://docs.python.org/3", None),
+    "shapely": ("https://shapely.readthedocs.io/en/stable/", None),
+    "numpy": ("https://numpy.org/doc/stable/", None),
+    "pandas": ("https://pandas.pydata.org/docs/", None),
+    "geopandas": ("https://geopandas.org/en/stable/", None),
+    "requests": ("https://requests.readthedocs.io/en/latest/", None),
+    "pint": ("https://pint.readthedocs.io/en/stable/", None),
+}

@@ -9,7 +9,7 @@ import pandas as pd
 import pytest
 import requests_mock
 from pandas.testing import assert_frame_equal
-from shapely.geometry import LineString, Point
+from shapely import LineString, Point
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models import (

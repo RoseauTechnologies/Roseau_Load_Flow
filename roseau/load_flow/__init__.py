@@ -1,3 +1,10 @@
+"""
+Welcome to the API reference of Roseau Load Flow.
+
+For the most part, public classes and functions can be imported directly from this module.
+
+See Package Contents below for a list of available classes and functions.
+"""
 import importlib.metadata
 
 from roseau.load_flow.__about__ import (

@@ -6,10 +6,15 @@
 
 ## Installation ##
 
-The simplest way is to download the docker container attached to this repository and to start it. It will start a
-Jupyterlab session with all the required packages installed.
+The simplest way is to download the docker container attached to this repository and to start it.
+It will start a Jupyterlab session with all the required packages installed.
 
-The entire documentation is available via [GitHub pages](https://roseautechnologies.github.io/Roseau_Load_Flow/)
+The project can also be installed via `pip` or `conda`. Please see the [Installation](https://roseautechnologies.github.io/Roseau_Load_Flow/installation.html) page for more details.
+
+## Documentation ##
+
+The documentation contianing the installation instructions, tutorials, and the API index is
+available at https://roseautechnologies.github.io/Roseau_Load_Flow/
 
 ## Usage ##
 
