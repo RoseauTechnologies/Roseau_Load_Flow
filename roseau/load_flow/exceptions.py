@@ -42,6 +42,7 @@ class RoseauLoadFlowExceptionCode(Enum):
     BAD_TRANSFORMER_VOLTAGES = auto()
     BAD_TRANSFORMER_PARAMETERS = auto()
     BAD_TYPE_NAME_SYNTAX = auto()
+    BAD_LENGTH_VALUE = auto()
 
     # Control
     BAD_CONTROL_TYPE = auto()
@@ -83,6 +84,7 @@ class RoseauLoadFlowExceptionCode(Enum):
     JSON_LINE_PARAMETERS_DUPLICATES = auto()
     JSON_TRANSFORMER_PARAMETERS_DUPLICATES = auto()
     JSON_PREF_INVALID = auto()
+    JSON_NO_RESULTS = auto()
 
     @classmethod
     def package_name(cls) -> str:

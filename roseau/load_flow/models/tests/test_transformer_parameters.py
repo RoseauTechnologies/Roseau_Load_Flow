@@ -1,8 +1,10 @@
 import numpy as np
 import pytest
+from pint import DimensionalityError
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models import TransformerParameters
+from roseau.load_flow.units import Q_
 
 
 def test_transformer_parameters():
@@ -33,8 +35,8 @@ def test_transformer_parameters():
     k_expected = 400 / (np.sqrt(3.0) * 20e3)
     orientation_expected = 1.0
 
-    assert np.isclose(z2, z2_expected)
-    assert np.isclose(ym, ym_expected)
+    assert np.isclose(z2.m_as("ohm"), z2_expected)
+    assert np.isclose(ym.m_as("S"), ym_expected)
     assert np.isclose(k, k_expected)
     assert np.isclose(orientation, orientation_expected)
 
@@ -63,8 +65,8 @@ def test_transformer_parameters():
     k_expected = (400 / np.sqrt(3)) / 20e3
     orientation_expected = 1.0
 
-    assert np.isclose(z2, z2_expected)
-    assert np.isclose(ym, ym_expected)
+    assert np.isclose(z2.m_as("ohm"), z2_expected)
+    assert np.isclose(ym.m_as("S"), ym_expected)
     assert np.isclose(k, k_expected)
     assert np.isclose(orientation, orientation_expected)
 
@@ -93,8 +95,8 @@ def test_transformer_parameters():
     k_expected = 400 / np.sqrt(3) / 20e3
     orientation_expected = -1.0
 
-    assert np.isclose(z2, z2_expected)
-    assert np.isclose(ym, ym_expected)
+    assert np.isclose(z2.m_as("ohm"), z2_expected)
+    assert np.isclose(ym.m_as("S"), ym_expected)
     assert np.isclose(k, k_expected)
     assert np.isclose(orientation, orientation_expected)
 
@@ -204,3 +206,44 @@ def test_from_name():
     # Good ones
     TransformerParameters.from_name("160kVA", "Dyn11")
     TransformerParameters.from_name("H61_50kVA", "Dyn11")
+
+
+def test_transformers_parameters_units():
+    # Example in the "transformers" document of Victor.
+    # Yzn11 - 50kVA. Good units
+    data = {
+        "id": "Yzn11 - 50kVA",
+        "psc": Q_(1350.0, "W"),  # W
+        "p0": Q_(145.0, "W"),  # W
+        "i0": Q_(1.8, "percent"),  # %
+        "ulv": Q_(400, "V"),  # V
+        "uhv": Q_(20, "kV"),  # V
+        "sn": Q_(50, "kVA"),  # VA
+        "vsc": Q_(4, "percent"),  # %
+        "type": "yzn11",
+    }
+    tp = TransformerParameters.from_dict(data)
+    assert np.isclose(tp._psc, 1350.0)
+    assert np.isclose(tp._p0, 145.0)
+    assert np.isclose(tp._i0, 1.8e-2)
+    assert np.isclose(tp._ulv, 400)
+    assert np.isclose(tp._uhv, 20000)
+    assert np.isclose(tp._sn, 50e3)
+    assert np.isclose(tp._vsc, 4e-2)
+
+    # Bad unit for each of them
+    for param, fake_quantity in (
+        ("psc", Q_(1350.0, "A")),
+        ("p0", Q_(145.0, "A")),
+        ("i0", Q_(1.8 / 100, "A")),
+        ("ulv", Q_(400, "A")),
+        ("uhv", Q_(20, "A")),
+        ("sn", Q_(50, "A")),
+        ("vsc", Q_(4 / 100, "A")),
+    ):
+        copy_data = data.copy()
+        copy_data[param] = fake_quantity
+        with pytest.raises(
+            DimensionalityError, match=r"Cannot convert from 'ampere' \(\[current\]\) to '\w+?' \(.+?\)"
+        ):
+            TransformerParameters.from_dict(copy_data)

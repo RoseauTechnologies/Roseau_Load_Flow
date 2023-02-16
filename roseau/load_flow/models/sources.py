@@ -9,7 +9,7 @@ from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowE
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import Element
 from roseau.load_flow.typing import Id, JsonDict, Self
-from roseau.load_flow.units import ureg
+from roseau.load_flow.units import Q_, ureg
 
 logger = logging.getLogger(__name__)
 
@@ -91,7 +91,8 @@ class VoltageSource(Element):
         )
 
     @property
-    def voltages(self) -> np.ndarray:
+    @ureg.wraps("V", (None,), strict=False)
+    def voltages(self) -> Q_:
         """The voltages of the source (V)."""
         return self._voltages
 
@@ -114,7 +115,8 @@ class VoltageSource(Element):
         return self._res_getter(value=self._res_currents, warning=warning)
 
     @property
-    def res_currents(self) -> np.ndarray:
+    @ureg.wraps("A", (None,), strict=False)
+    def res_currents(self) -> Q_:
         """The load flow result of the source currents (A)."""
         return self._res_currents_getter(warning=True)
 
@@ -122,7 +124,8 @@ class VoltageSource(Element):
         return self.bus._get_potentials_of(self.phases, warning)
 
     @property
-    def res_potentials(self) -> np.ndarray:
+    @ureg.wraps("V", (None,), strict=False)
+    def res_potentials(self) -> Q_:
         """The load flow result of the source potentials (V)."""
         return self._res_potentials_getter(warning=True)
 
@@ -132,6 +135,7 @@ class VoltageSource(Element):
         return pots * curs.conj()
 
     @property
+    @ureg.wraps("VA", (None,), strict=False)
     def res_powers(self) -> np.ndarray:
         """The load flow result of the source powers (VA)."""
         return self._res_powers_getter(warning=True)
@@ -161,5 +165,15 @@ class VoltageSource(Element):
             "id": self.id,
             "bus": self.bus.id,
             "phases": self.phases,
-            "voltages": [[v.real, v.imag] for v in self.voltages],
+            "voltages": [[v.real, v.imag] for v in self._voltages],
+        }
+
+    def results_from_dict(self, data: JsonDict) -> None:
+        self._res_currents = np.array([complex(i[0], i[1]) for i in data["currents"]], dtype=complex)
+
+    def _results_to_dict(self, warning: bool) -> JsonDict:
+        return {
+            "id": self.id,
+            "phases": self.phases,
+            "currents": [[i.real, i.imag] for i in self._res_currents_getter(warning)],
         }

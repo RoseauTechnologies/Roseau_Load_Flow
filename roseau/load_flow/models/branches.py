@@ -8,6 +8,7 @@ from roseau.load_flow.converters import calculate_voltages
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import Element
 from roseau.load_flow.typing import Id, JsonDict, Self
+from roseau.load_flow.units import Q_, ureg
 from roseau.load_flow.utils import BranchType
 
 logger = logging.getLogger(__name__)
@@ -73,7 +74,8 @@ class AbstractBranch(Element):
         return self._res_getter(value=self._res_currents, warning=warning)
 
     @property
-    def res_currents(self) -> tuple[np.ndarray, np.ndarray]:
+    @ureg.wraps(("A", "A"), (None,), strict=False)
+    def res_currents(self) -> tuple[Q_, Q_]:
         """The load flow result of the branch currents (A)."""
         return self._res_currents_getter(warning=True)
 
@@ -85,7 +87,8 @@ class AbstractBranch(Element):
         return powers1, powers2
 
     @property
-    def res_powers(self) -> tuple[np.ndarray, np.ndarray]:
+    @ureg.wraps(("VA", "VA"), (None,), strict=False)
+    def res_powers(self) -> tuple[Q_, Q_]:
         """The load flow result of the branch powers (VA)."""
         return self._res_powers_getter(warning=True)
 
@@ -95,7 +98,8 @@ class AbstractBranch(Element):
         return pot1, pot2
 
     @property
-    def res_potentials(self) -> tuple[np.ndarray, np.ndarray]:
+    @ureg.wraps(("V", "V"), (None,), strict=False)
+    def res_potentials(self) -> tuple[Q_, Q_]:
         """The load flow result of the branch potentials (V)."""
         return self._res_potentials_getter(warning=True)
 
@@ -104,7 +108,8 @@ class AbstractBranch(Element):
         return calculate_voltages(pot1, self.phases1), calculate_voltages(pot2, self.phases2)
 
     @property
-    def res_voltages(self) -> tuple[np.ndarray, np.ndarray]:
+    @ureg.wraps(("V", "V"), (None,), strict=False)
+    def res_voltages(self) -> tuple[Q_, Q_]:
         """The load flow result of the branch voltages (V)."""
         return self._res_voltages_getter(warning=True)
 
@@ -127,3 +132,18 @@ class AbstractBranch(Element):
         if self.geometry is not None:
             res["geometry"] = self.geometry.__geo_interface__
         return res
+
+    def results_from_dict(self, data: JsonDict) -> None:
+        currents1 = np.array([complex(i[0], i[1]) for i in data["currents1"]], dtype=complex)
+        currents2 = np.array([complex(i[0], i[1]) for i in data["currents2"]], dtype=complex)
+        self._res_currents = (currents1, currents2)
+
+    def _results_to_dict(self, warning: bool) -> JsonDict:
+        currents1, currents2 = self._res_currents_getter(warning)
+        return {
+            "id": self.id,
+            "phases1": self.phases1,
+            "phases2": self.phases2,
+            "currents1": [[i.real, i.imag] for i in currents1],
+            "currents2": [[i.real, i.imag] for i in currents2],
+        }

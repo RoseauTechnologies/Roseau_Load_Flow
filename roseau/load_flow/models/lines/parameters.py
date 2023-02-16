@@ -1,6 +1,6 @@
 import logging
 import re
-from typing import Optional
+from typing import NoReturn, Optional
 
 import numpy as np
 import numpy.linalg as nplin
@@ -53,8 +53,13 @@ class LineParameters(Identifiable, JsonMixin):
                 The Y matrix of the line (Siemens/km). This field is optional if the line has no shunt part.
         """
         super().__init__(id)
-        self.z_line = z_line
-        self.y_shunt = y_shunt
+        self._z_line = z_line
+        if y_shunt is None:
+            self._with_shunt = False
+            self._y_shunt = np.zeros_like(z_line, dtype=complex)
+        else:
+            self._with_shunt = not np.allclose(y_shunt, 0)
+            self._y_shunt = y_shunt
         self._check_matrix()
 
     def __eq__(self, other: object) -> bool:
@@ -62,18 +67,32 @@ class LineParameters(Identifiable, JsonMixin):
             return NotImplemented
         return (
             self.id == other.id
-            and self.z_line.shape == other.z_line.shape
-            and np.allclose(self.z_line, other.z_line)
+            and self._z_line.shape == other._z_line.shape
+            and np.allclose(self._z_line, other._z_line)
             and (
-                (self.y_shunt is None and other.y_shunt is None)
+                (not self._with_shunt and not other._with_shunt)
                 or (
-                    self.y_shunt is not None
-                    and other.y_shunt is not None
-                    and self.y_shunt.shape == other.y_shunt.shape
-                    and np.allclose(self.y_shunt, other.y_shunt)
+                    self._with_shunt
+                    and other._with_shunt
+                    and self._y_shunt.shape == other._y_shunt.shape
+                    and np.allclose(self._y_shunt, other._y_shunt)
                 )
             )
         )
+
+    @property
+    @ureg.wraps("ohm/km", (None,), strict=False)
+    def z_line(self) -> Q_:
+        return self._z_line
+
+    @property
+    @ureg.wraps("S/km", (None,), strict=False)
+    def y_shunt(self) -> Q_:
+        return self._y_shunt
+
+    @property
+    def with_shunt(self) -> bool:
+        return self._with_shunt
 
     @classmethod
     @ureg.wraps(
@@ -419,11 +438,6 @@ class LineParameters(Identifiable, JsonMixin):
         return cls(type_name, z_line=z_line, y_shunt=y_shunt)
 
     @staticmethod
-    @ureg.wraps(
-        ("ohm/km", "S/km", None),
-        (None, None, None, None, "mm**2", "mm**2", "m", "m"),
-        strict=False,
-    )
     def _lv_exact_to_zy(
         type_name: str,
         line_type: LineType,
@@ -581,6 +595,7 @@ class LineParameters(Identifiable, JsonMixin):
         return z_line, y_shunt, LineModel.LV_EXACT
 
     @classmethod
+    @ureg.wraps(None, (None, None, "mm²", "m", "mm"), strict=False)
     def from_name_lv(
         cls,
         name: str,
@@ -686,6 +701,9 @@ class LineParameters(Identifiable, JsonMixin):
         y_shunt = b * 1j * np.eye(3)  # in siemens/km
         return cls(name, z_line=z_line, y_shunt=y_shunt)
 
+    #
+    # Json Mixin interface
+    #
     @classmethod
     def from_dict(cls, data: JsonDict) -> Self:
         """Line parameters constructor from dict.
@@ -723,20 +741,33 @@ class LineParameters(Identifiable, JsonMixin):
         """Return the line parameters information as a dictionary format."""
         res = {
             "id": self.id,
-            "model": "zy_neutral" if self.y_shunt is not None else "z_neutral",
-            "z_line": [self.z_line.real.tolist(), self.z_line.imag.tolist()],
+            "model": "zy_neutral" if self._y_shunt is not None else "z_neutral",
+            "z_line": [self._z_line.real.tolist(), self._z_line.imag.tolist()],
         }
-        if self.y_shunt is not None:
-            res["y_shunt"] = [self.y_shunt.real.tolist(), self.y_shunt.imag.tolist()]
+        if self.with_shunt:
+            res["y_shunt"] = [self._y_shunt.real.tolist(), self._y_shunt.imag.tolist()]
         return res
 
+    def _results_to_dict(self, warning: bool) -> NoReturn:
+        msg = f"The {type(self).__name__} has no results to export."
+        logger.error(msg)
+        raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.JSON_NO_RESULTS)
+
+    def results_from_dict(self, data: JsonDict) -> None:
+        msg = f"The {type(self).__name__} has no results to import."
+        logger.error(msg)
+        raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.JSON_NO_RESULTS)
+
+    #
+    # Utility
+    #
     def _check_matrix(self) -> None:
         """Check the coefficients of the matrix."""
         for matrix, matrix_name, code in [
-            (self.y_shunt, "y_shunt", RoseauLoadFlowExceptionCode.BAD_Y_SHUNT_SHAPE),
-            (self.z_line, "z_line", RoseauLoadFlowExceptionCode.BAD_Z_LINE_SHAPE),
+            (self._y_shunt, "y_shunt", RoseauLoadFlowExceptionCode.BAD_Y_SHUNT_SHAPE),
+            (self._z_line, "z_line", RoseauLoadFlowExceptionCode.BAD_Z_LINE_SHAPE),
         ]:
-            if matrix_name == "y_shunt" and self.y_shunt is None:
+            if matrix_name == "y_shunt" and not self.with_shunt:
                 continue
             if matrix.shape[0] != matrix.shape[1]:
                 msg = f"The {matrix_name} matrix of line type {self.id!r} has incorrect dimensions {matrix.shape}."
@@ -745,10 +776,10 @@ class LineParameters(Identifiable, JsonMixin):
 
         # Check of the coefficients value
         for matrix, matrix_name, code in [
-            (self.z_line, "z_line", RoseauLoadFlowExceptionCode.BAD_Z_LINE_VALUE),
-            (self.y_shunt, "y_shunt", RoseauLoadFlowExceptionCode.BAD_Y_SHUNT_VALUE),
+            (self._z_line, "z_line", RoseauLoadFlowExceptionCode.BAD_Z_LINE_VALUE),
+            (self._y_shunt, "y_shunt", RoseauLoadFlowExceptionCode.BAD_Y_SHUNT_VALUE),
         ]:
-            if matrix_name == "y_shunt" and self.y_shunt is None:
+            if matrix_name == "y_shunt" and not self.with_shunt:
                 continue
             # Check that the off-diagonal element have a zero real part
             off_diagonal_elements = matrix[~np.eye(*matrix.shape, dtype=np.bool_)]

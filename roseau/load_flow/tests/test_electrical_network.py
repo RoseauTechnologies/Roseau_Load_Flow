@@ -526,7 +526,7 @@ def test_frame(small_network):
 
 def test_buses_voltages(small_network, good_json_results):
     assert isinstance(small_network, ElectricalNetwork)
-    small_network._dispatch_results(good_json_results)
+    small_network.results_from_dict(good_json_results)
 
     voltage_records = [
         {"bus_id": "bus0", "phase": "an", "voltage": 20000.0 + 0.0j},
@@ -632,11 +632,11 @@ def test_single_phase_network(single_phase_network: ElectricalNetwork):
 
     # Test results of elements
     # ------------------------
-    assert np.allclose(source_bus.res_potentials, [19999.94999975 + 0j, -0.050000250001249996 + 0j])
-    assert np.allclose(load_bus.res_potentials, [19999.899999499998 + 0j, 0j])
-    assert np.allclose(line.res_currents[0], [0.005000025000117603 + 0j, -0.005000025000125 + 0j])
-    assert np.allclose(line.res_currents[1], [-0.005000025000117603 - 0j, 0.005000025000125 - 0j])
-    assert np.allclose(load.res_currents, [0.005000025000250002 - 0j, -0.005000025000250002 - 0j])
+    assert np.allclose(source_bus.res_potentials.m_as("V"), [19999.94999975 + 0j, -0.050000250001249996 + 0j])
+    assert np.allclose(load_bus.res_potentials.m_as("V"), [19999.899999499998 + 0j, 0j])
+    assert np.allclose(line.res_currents[0].m_as("A"), [0.005000025000117603 + 0j, -0.005000025000125 + 0j])
+    assert np.allclose(line.res_currents[1].m_as("A"), [-0.005000025000117603 - 0j, 0.005000025000125 - 0j])
+    assert np.allclose(load.res_currents.m_as("A"), [0.005000025000250002 - 0j, -0.005000025000250002 - 0j])
 
     # Test results of network
     # -----------------------
@@ -1120,7 +1120,7 @@ def test_solver_warm_start(small_network: ElectricalNetwork, good_json_results):
 
     # Fourth case (load powers changes): network is valid, results are not valid -> warm start
     should_warm_start = True
-    load.powers = load.powers + 1
+    load.powers = load.powers + Q_(1 + 1j, "VA")
     assert small_network._valid
     assert not small_network._results_valid
     with requests_mock.Mocker() as m, warnings.catch_warnings():

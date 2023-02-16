@@ -1,9 +1,9 @@
 import logging
-from typing import Literal
+from typing import Literal, NoReturn
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.typing import JsonDict, Self
-from roseau.load_flow.units import ureg
+from roseau.load_flow.units import Q_, ureg
 from roseau.load_flow.utils import JsonMixin
 
 logger = logging.getLogger(__name__)
@@ -209,6 +209,16 @@ class Control(JsonMixin):
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_CONTROL_TYPE)
 
+    def _results_to_dict(self, warning: bool) -> NoReturn:
+        msg = f"The {type(self).__name__} has no results to export."
+        logger.error(msg)
+        raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.JSON_NO_RESULTS)
+
+    def results_from_dict(self, data: JsonDict) -> NoReturn:
+        msg = f"The {type(self).__name__} has no results to import."
+        logger.error(msg)
+        raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.JSON_NO_RESULTS)
+
 
 class Projection(JsonMixin):
     """This class defines the projection on the feasible circle for a flexible load."""
@@ -253,11 +263,17 @@ class Projection(JsonMixin):
         return cls(type=data["type"], alpha=alpha, epsilon=epsilon)
 
     def to_dict(self) -> JsonDict:
-        return {
-            "type": self.type,
-            "alpha": self.alpha,
-            "epsilon": self.epsilon,
-        }
+        return {"type": self.type, "alpha": self.alpha, "epsilon": self.epsilon}
+
+    def _results_to_dict(self, warning: bool) -> NoReturn:
+        msg = f"The {type(self).__name__} has no results to export."
+        logger.error(msg)
+        raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.JSON_NO_RESULTS)
+
+    def results_from_dict(self, data: JsonDict) -> NoReturn:
+        msg = f"The {type(self).__name__} has no results to import."
+        logger.error(msg)
+        raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.JSON_NO_RESULTS)
 
 
 class FlexibleParameter(JsonMixin):
@@ -281,13 +297,18 @@ class FlexibleParameter(JsonMixin):
                 The projection to use to have a feasible result.
 
             s_max:
-                The apparent power of the flexible load (VA). It is the radius of the feasible
-                circle.
+                The apparent power of the flexible load (VA). It is the radius of the feasible circle.
         """
         self.control_p = control_p
         self.control_q = control_q
         self.projection = projection
-        self.s_max = s_max
+        self._s_max = s_max
+
+    @property
+    @ureg.wraps("VA", (None,), strict=False)
+    def s_max(self) -> Q_:
+        """The apparent power of the flexible load (VA). It is the radius of the feasible circle."""
+        return self._s_max
 
     @classmethod
     def constant(cls) -> Self:
@@ -623,5 +644,15 @@ class FlexibleParameter(JsonMixin):
             "control_p": self.control_p.to_dict(),
             "control_q": self.control_q.to_dict(),
             "projection": self.projection.to_dict(),
-            "s_max": self.s_max,
+            "s_max": self._s_max,
         }
+
+    def _results_to_dict(self, warning: bool) -> NoReturn:
+        msg = f"The {type(self).__name__} has no results to export."
+        logger.error(msg)
+        raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.JSON_NO_RESULTS)
+
+    def results_from_dict(self, data: JsonDict) -> NoReturn:
+        msg = f"The {type(self).__name__} has no results to import."
+        logger.error(msg)
+        raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.JSON_NO_RESULTS)

@@ -9,7 +9,7 @@ from roseau.load_flow.converters import calculate_voltage_phases, calculate_volt
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.core import Element
 from roseau.load_flow.typing import Id, JsonDict, Self
-from roseau.load_flow.units import ureg
+from roseau.load_flow.units import Q_, ureg
 
 logger = logging.getLogger(__name__)
 
@@ -69,7 +69,8 @@ class Bus(Element):
         return f"{type(self).__name__}(id={self.id!r}, phases={self.phases!r})"
 
     @property
-    def potentials(self) -> np.ndarray:
+    @ureg.wraps("V", (None,), strict=False)
+    def potentials(self) -> Q_:
         """The potentials of the bus (V)."""
         return self._potentials
 
@@ -87,7 +88,8 @@ class Bus(Element):
         return self._res_getter(value=self._res_potentials, warning=warning)
 
     @property
-    def res_potentials(self) -> np.ndarray:
+    @ureg.wraps("V", (None,), strict=False)
+    def res_potentials(self) -> Q_:
         """The load flow result of the bus potentials (V)."""
         return self._res_potentials_getter(warning=True)
 
@@ -96,7 +98,8 @@ class Bus(Element):
         return calculate_voltages(potentials, self.phases)
 
     @property
-    def res_voltages(self) -> np.ndarray:
+    @ureg.wraps("V", (None,), strict=False)
+    def res_voltages(self) -> Q_:
         """The load flow result of the bus voltages (V).
 
         If the bus has a neutral, the voltages are phase-neutral voltages for existing phases in
@@ -129,7 +132,17 @@ class Bus(Element):
     def to_dict(self) -> JsonDict:
         res = {"id": self.id, "phases": self.phases}
         if not np.allclose(self.potentials, 0):
-            res["potentials"] = [[v.real, v.imag] for v in self.potentials]
+            res["potentials"] = [[v.real, v.imag] for v in self._potentials]
         if self.geometry is not None:
             res["geometry"] = self.geometry.__geo_interface__
         return res
+
+    def results_from_dict(self, data: JsonDict) -> None:
+        self._res_potentials = np.array([complex(v[0], v[1]) for v in data["potentials"]], dtype=complex)
+
+    def _results_to_dict(self, warning: bool) -> JsonDict:
+        return {
+            "id": self.id,
+            "phases": self.phases,
+            "potentials": [[v.real, v.imag] for v in self._res_potentials_getter(warning)],
+        }

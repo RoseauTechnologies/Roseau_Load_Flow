@@ -5,6 +5,7 @@ from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowE
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import Element
 from roseau.load_flow.typing import Id, JsonDict, Self
+from roseau.load_flow.units import Q_, ureg
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +49,8 @@ class Ground(Element):
         return self._res_getter(self._res_potential, warning)
 
     @property
-    def res_potential(self) -> complex:
+    @ureg.wraps("V", (None,), strict=False)
+    def res_potential(self) -> Q_:
         """The load flow result of the ground potential (V)."""
         return self._res_potential_getter(warning=True)
 
@@ -80,6 +82,9 @@ class Ground(Element):
         self._connect(bus)
         self._connected_buses[bus.id] = phase
 
+    #
+    # Json Mixin interface
+    #
     @classmethod
     def from_dict(cls, data: JsonDict) -> Self:
         self = cls(data["id"])
@@ -92,3 +97,10 @@ class Ground(Element):
             "id": self.id,
             "buses": [{"id": bus_id, "phase": phase} for bus_id, phase in self._connected_buses.items()],
         }
+
+    def results_from_dict(self, data: JsonDict) -> None:
+        self._res_potential = complex(*data["potential"])
+
+    def _results_to_dict(self, warning: bool) -> JsonDict:
+        v = self._res_potential_getter(warning)
+        return {"id": self.id, "potential": [v.real, v.imag]}

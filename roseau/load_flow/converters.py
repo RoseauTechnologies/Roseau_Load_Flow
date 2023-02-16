@@ -21,7 +21,7 @@ A = np.array(
         [1, ALPHA**2, ALPHA],
         [1, ALPHA, ALPHA**2],
     ],
-    dtype=np.complex_,
+    dtype=complex,
 )
 """numpy.ndarray[complex]: "A" matrix: transformation matrix from phasor to symmetrical components."""
 
@@ -118,13 +118,13 @@ def calculate_voltages(potentials: np.ndarray, phases: str) -> np.ndarray:
         Otherwise, the voltages are Phase-Phase.
 
     Example:
-        >>> potentials = 230 * np.array([1, np.exp(-2j*np.pi/3), np.exp(2j*np.pi/3), 0], dtype=np.complex_)
+        >>> potentials = 230 * np.array([1, np.exp(-2j*np.pi/3), np.exp(2j*np.pi/3), 0], dtype=complex)
         >>> calculate_voltages(potentials, "abcn")
         array([ 230.  +0.j        , -115.-199.18584287j, -115.+199.18584287j])
-        >>> potentials = np.array([230, 230 * np.exp(-2j*np.pi/3)], dtype=np.complex_)
+        >>> potentials = np.array([230, 230 * np.exp(-2j*np.pi/3)], dtype=complex)
         >>> calculate_voltages(potentials, "ab")
         array([345.+199.18584287j])
-        >>> calculate_voltages(np.array([230, 0], dtype=np.complex_), "an")
+        >>> calculate_voltages(np.array([230, 0], dtype=complex), "an")
         array([230.+0.j])
     """
     assert len(potentials) == len(phases), "Number of potentials must match number of phases."
