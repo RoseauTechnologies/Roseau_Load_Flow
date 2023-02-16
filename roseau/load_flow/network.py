@@ -88,8 +88,10 @@ class ElectricalNetwork:
 
     Attributes:
         DEFAULT_PRECISION (float):
-            The default precision needed for the convergence of the load flow algorithm. The solver
-            stops when the error between two iterations is below this value. Default is 1e-6.
+            The default precision needed for the convergence of the load flow algorithm. At each
+            iteration, the solver computes the residuals of the equations of the problem. When the
+            maximum of the absolute values of the residuals vector is lower than the provided
+            precision, the solver stops. Default is 1e-6.
 
         DEFAULT_MAX_ITERATIONS (int):
             Maximum number of iterations to perform the load flow analysis. The solver stops when
@@ -823,7 +825,8 @@ class ElectricalNetwork:
         The results are returned as a dataframe with the following index:
             - `potential_ref_id`: The id of the potential reference.
         and the following columns:
-            - `current`: The complex current of the potential reference (in Amps).
+            - `current`: The complex current of the potential reference (in Amps). If the load flow
+                converged, this should be zero.
         """
         self._warn_invalid_results()
         res_dict = {"potential_ref_id": [], "current": []}
