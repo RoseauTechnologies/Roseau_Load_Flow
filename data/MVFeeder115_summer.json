@@ -1,14 +1,26 @@
 {
+    "version": 1,
+    "grounds": [
+        {
+            "id": "ground",
+            "buses": [
+                {
+                    "id": "VoltageSource",
+                    "phase": "n"
+                }
+            ]
+        }
+    ],
+    "potential_refs": [
+        {
+            "id": "pref",
+            "ground": "ground"
+        }
+    ],
     "buses": [
         {
             "id": "VoltageSource",
-            "type": "slack",
-            "loads": [],
-            "voltages": {
-                "va": [11547.005383792515, 0.0],
-                "vb": [-5773.502691896255, -10000.0],
-                "vc": [-5773.502691896255, 10000.0]
-            },
+            "phases": "abcn",
             "geometry": {
                 "type": "Point",
                 "coordinates": [-1.687159292228112, 49.48974276829431]
@@ -16,8 +28,7 @@
         },
         {
             "id": "HVMV07",
-            "type": "bus",
-            "loads": [],
+            "phases": "abc",
             "geometry": {
                 "type": "Point",
                 "coordinates": [-1.687159292228112, 49.48974276829431]
@@ -25,27 +36,7 @@
         },
         {
             "id": "MVLV14092",
-            "type": "bus",
-            "loads": [
-                {
-                    "id": "MVLV14092_production",
-                    "function": "ds",
-                    "powers": {
-                        "sa": [0.0, 0.0],
-                        "sb": [0.0, 0.0],
-                        "sc": [0.0, 0.0]
-                    }
-                },
-                {
-                    "id": "MVLV14092_consumption",
-                    "function": "ds",
-                    "powers": {
-                        "sa": [0.0, 0.0],
-                        "sb": [0.0, 0.0],
-                        "sc": [0.0, 0.0]
-                    }
-                }
-            ],
+            "phases": "abc",
             "geometry": {
                 "type": "Point",
                 "coordinates": [-1.6650298238154546, 49.46180069059946]
@@ -53,27 +44,7 @@
         },
         {
             "id": "MVLV05996",
-            "type": "bus",
-            "loads": [
-                {
-                    "id": "MVLV05996_production",
-                    "function": "ds",
-                    "powers": {
-                        "sa": [-3333333.3333333335, 0.0],
-                        "sb": [-3333333.3333333335, 0.0],
-                        "sc": [-3333333.3333333335, 0.0]
-                    }
-                },
-                {
-                    "id": "MVLV05996_consumption",
-                    "function": "ds",
-                    "powers": {
-                        "sa": [0.0, 0.0],
-                        "sb": [0.0, 0.0],
-                        "sc": [0.0, 0.0]
-                    }
-                }
-            ],
+            "phases": "abc",
             "geometry": {
                 "type": "Point",
                 "coordinates": [-1.626239709998294, 49.43249717368583]
@@ -83,16 +54,21 @@
     "branches": [
         {
             "id": "Switch",
+            "type": "switch",
+            "phases1": "abc",
+            "phases2": "abc",
             "bus1": "VoltageSource",
             "bus2": "HVMV07",
             "geometry": {
                 "type": "Point",
                 "coordinates": [-1.687159292228112, 49.48974276829431]
-            },
-            "type": "switch"
+            }
         },
         {
             "id": "MVBranch48268",
+            "type": "line",
+            "phases1": "abc",
+            "phases2": "abc",
             "bus1": "HVMV07",
             "bus2": "MVLV14092",
             "geometry": {
@@ -161,11 +137,14 @@
                 ]
             },
             "length": 5.766634582124083,
-            "type_name": "S_AL_240",
-            "type": "line"
+            "params_id": "S_AL_240",
+            "ground": "ground"
         },
         {
             "id": "MVBranch39083",
+            "type": "line",
+            "phases1": "abc",
+            "phases2": "abc",
             "bus1": "MVLV14092",
             "bus2": "MVLV05996",
             "geometry": {
@@ -275,13 +254,67 @@
                 ]
             },
             "length": 6.070765210726548,
-            "type_name": "S_AL_240",
-            "type": "line"
+            "params_id": "S_AL_240",
+            "ground": "ground"
         }
     ],
-    "line_types": [
+    "loads": [
         {
-            "name": "S_AL_240",
+            "id": "MVLV14092_production",
+            "bus": "MVLV14092",
+            "phases": "abc",
+            "powers": [
+                [0.0, 0.0],
+                [0.0, 0.0],
+                [0.0, 0.0]
+            ]
+        },
+        {
+            "id": "MVLV14092_consumption",
+            "bus": "MVLV14092",
+            "phases": "abc",
+            "powers": [
+                [0.0, 0.0],
+                [0.0, 0.0],
+                [0.0, 0.0]
+            ]
+        },
+        {
+            "id": "MVLV05996_production",
+            "bus": "MVLV05996",
+            "phases": "abc",
+            "powers": [
+                [-3333333.3333333335, 0.0],
+                [-3333333.3333333335, 0.0],
+                [-3333333.3333333335, 0.0]
+            ]
+        },
+        {
+            "id": "MVLV05996_consumption",
+            "bus": "MVLV05996",
+            "phases": "abc",
+            "powers": [
+                [0.0, 0.0],
+                [0.0, 0.0],
+                [0.0, 0.0]
+            ]
+        }
+    ],
+    "sources": [
+        {
+            "id": "VoltageSource",
+            "bus": "VoltageSource",
+            "phases": "abcn",
+            "voltages": [
+                [11547.005383792515, 0.0],
+                [-5773.502691896255, -10000.0],
+                [-5773.502691896255, 10000.0]
+            ]
+        }
+    ],
+    "lines_params": [
+        {
+            "id": "S_AL_240",
             "model": "zy_neutral",
             "z_line": [
                 [
@@ -357,5 +390,5 @@
             ]
         }
     ],
-    "transformer_types": []
+    "transformers_params": []
 }

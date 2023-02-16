@@ -65,7 +65,7 @@
     ],
     "branches": [
         {
-            "id": "line1",
+            "id": "tr1",
             "type": "transformer",
             "phases1": "abc",
             "phases2": "abcn",

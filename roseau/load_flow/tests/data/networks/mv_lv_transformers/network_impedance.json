@@ -177,7 +177,7 @@
     ],
     "branches": [
         {
-            "id": "line1",
+            "id": "tr1",
             "type": "transformer",
             "phases1": "abc",
             "phases2": "abc",
@@ -191,7 +191,7 @@
             "tap": 1.0
         },
         {
-            "id": "line2",
+            "id": "tr2",
             "type": "transformer",
             "phases1": "abcn",
             "phases2": "abcn",
@@ -205,7 +205,7 @@
             "tap": 1.0
         },
         {
-            "id": "line3",
+            "id": "tr3",
             "type": "transformer",
             "phases1": "abc",
             "phases2": "abcn",
@@ -219,7 +219,7 @@
             "tap": 1.0
         },
         {
-            "id": "line4",
+            "id": "tr4",
             "type": "transformer",
             "phases1": "abc",
             "phases2": "abcn",
@@ -233,7 +233,7 @@
             "tap": 1.0
         },
         {
-            "id": "line5",
+            "id": "tr5",
             "type": "transformer",
             "phases1": "abcn",
             "phases2": "abc",
@@ -247,7 +247,7 @@
             "tap": 1.0
         },
         {
-            "id": "line6",
+            "id": "tr6",
             "type": "transformer",
             "phases1": "abcn",
             "phases2": "abcn",
@@ -261,7 +261,7 @@
             "tap": 1.0
         },
         {
-            "id": "line7",
+            "id": "tr7",
             "type": "transformer",
             "phases1": "abc",
             "phases2": "abc",
@@ -275,7 +275,7 @@
             "tap": 1.0
         },
         {
-            "id": "line8",
+            "id": "tr8",
             "type": "transformer",
             "phases1": "abcn",
             "phases2": "abcn",
@@ -289,7 +289,7 @@
             "tap": 1.0
         },
         {
-            "id": "line9",
+            "id": "tr9",
             "type": "transformer",
             "phases1": "abc",
             "phases2": "abcn",
@@ -303,7 +303,7 @@
             "tap": 1.0
         },
         {
-            "id": "line10",
+            "id": "tr10",
             "type": "transformer",
             "phases1": "abc",
             "phases2": "abcn",
@@ -317,7 +317,7 @@
             "tap": 1.0
         },
         {
-            "id": "line11",
+            "id": "tr11",
             "type": "transformer",
             "phases1": "abcn",
             "phases2": "abc",
@@ -331,7 +331,7 @@
             "tap": 1.0
         },
         {
-            "id": "line12",
+            "id": "tr12",
             "type": "transformer",
             "phases1": "abcn",
             "phases2": "abcn",
