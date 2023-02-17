@@ -25,7 +25,6 @@ maxdepth: 3
 caption: Tutorials
 ---
 notebooks/Getting_Started
-notebooks/IO
 notebooks/Advanced
 ```
 
