@@ -34,12 +34,12 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.dependencies]
 python = "^3.9"
-numpy = "^1.21.5"
-pandas = "^1.4.0"
+numpy = ">=1.21.5"
+pandas = ">=1.4.0"
 geopandas = ">=0.10.2"
-shapely = "^2.0.0"
+shapely = ">=2.0.0"
 regex = ">=2022.1.18"
-requests = "^2.28.1"
+requests = ">=2.28.1"
 pint = ">=0.19.2"
 
 [tool.poetry.group.test.dependencies]
@@ -47,13 +47,11 @@ pytest = "^7.1.2"
 pytest-cov = "^4.0.0"
 pytest-xdist = "^3.1.0"
 requests-mock = "^1.9.3"
+coverage = { version = "^7.0.5", extras = ["toml"] }
 
 [tool.poetry.group.dev.dependencies]
-coverage = { version = "^7.0.5", extras = ["toml"] }
-flake8 = "^6.0.0"
 pre-commit = "^3.0.0"
 black = { version = "^23.1.0", extras = ["jupyter"] }
-isort = "^5.1.0"
 
 [tool.poetry.group.doc.dependencies]
 Sphinx = "^5.1.0"
@@ -74,11 +72,12 @@ jupyterlab-language-pack-fr-FR = "^3.4"
 line-length = 120
 target-version = ["py39", "py310", "py311"]
 
-[tool.isort]
-profile = "black"
-line_length = 120
-force_alphabetical_sort_within_sections = true
-case_sensitive = true
+[tool.ruff]
+line-length = 120
+target-version = "py39"
+
+[tool.ruff.mccabe]
+max-complexity = 15
 
 [tool.coverage.run]
 branch = true
