@@ -1,20 +1,17 @@
 ---
 name: Feature request
-about: Suggest an idea for this project
+about: A proposal for a new feature
 title: 'ENH: '
 labels: enhancement
 assignees: benoit9126
 
 ---
 
-**Is your feature request related to a problem? Please describe.**
-A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
-
-**Describe the solution you'd like**
-A clear and concise description of what you want to happen.
+**Describe the feature you want. What problem does it solve?**
+A clear and concise description of your proposal. What problem does it solve?
 
 **Describe alternatives you've considered**
 A clear and concise description of any alternative solutions or features you've considered.
 
 **Additional context**
-Add any other context or screenshots about the feature request here.
+Other information that might be important in the context of the feature request.

@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: Create a report to help us improve
+about: Something is not working as expected
 title: 'BUG: '
 labels: bug
 assignees: benoit9126
@@ -30,4 +30,9 @@ Please copy/paste here the output of the function `show_versions`
 from roseau.load_flow import show_versions
 
 show_versions()
+```
+
+```
+# Paste here the output of the function `show_versions`
+
 ```
