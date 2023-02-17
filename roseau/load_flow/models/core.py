@@ -57,6 +57,40 @@ class Element(ABC, Identifiable, JsonMixin):
             logger.error(msg)
             raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.BAD_PHASE)
 
+    def _set_network(self, value: Optional["ElectricalNetwork"]) -> None:
+        """Network setter with the ability to set the network to `None`. This method must not be exposed through a
+        traditional public setter. It is internally used in the `_connect` and `_disconnect` methods.
+
+        Args:
+            value:
+                The new network for `self`. May also be None.
+        """
+        # The setter can not be used to replace an existing network
+        if self._network is not None and value is not None and self._network != value:
+            self._raise_several_network()
+
+        # Add/remove the element to the dictionaries of elements in the network
+        if value is None:
+            if self._network is not None:
+                self._network._disconnect_element(element=self)
+        else:
+            value._connect_element(element=self)
+
+        # Assign the new network to self
+        self._network = value
+
+        # In case of disconnection, do nothing to connected elements
+        if value is None:
+            return
+
+        # Recursively call this method to the elements connected to self
+        for e in self._connected_elements:
+            if e.network == value:
+                continue
+            else:
+                # Recursive call
+                e._set_network(value)
+
     def _connect(self, *elements: "Element") -> None:
         """Connect this element to another element.
 
@@ -72,27 +106,23 @@ class Element(ABC, Identifiable, JsonMixin):
             elif element.network is not None and element.network != network:
                 element._raise_several_network()
 
-        # Modify objects. Append to the connected_elements and assign the common network
+        # Modify objects. Append to the connected_elements
         for element in elements:
             if element not in self._connected_elements:
                 self._connected_elements.append(element)
             if self not in element._connected_elements:
                 element._connected_elements.append(self)
-            if element.network is None and network is not None:
-                network._connect_element(element=element)
 
-        if self._network is None and network is not None:
-            network._connect_element(element=self)
+        # Propagate the new network to `self` and other newly connected elements (recursively)`
+        if network is not None:
+            self._set_network(network)
 
     def _disconnect(self) -> None:
         """Remove all the connections with the other elements."""
         for element in self._connected_elements:
             element._connected_elements.remove(self)
-            if element.network is not None:
-                element.network._disconnect_element(element=self)
-
-        if self._network is not None:
-            self.network._disconnect_element(element=self)
+        self._connected_elements = []
+        self._set_network(None)
 
     def _invalidate_network_results(self) -> None:
         """Invalidate the network making the result"""

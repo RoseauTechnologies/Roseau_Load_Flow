@@ -850,17 +850,15 @@ class ElectricalNetwork(JsonMixin):
     def _connect_element(self, element: Element) -> None:
         """Connect an element to the network.
 
-        When an element is added to the network, extra processing is done to keep the network
-        valid. Always use this method to add new elements to the network after creating it.
+        When an element is added to the network, extra processing is done to keep the network valid. This method is
+        used in the by the `network` setter of `Element` instances to add the element to the internal dictionary of
+        `self`.
 
         Args:
             element:
                 The element to add. Only lines, loads, buses and sources can be added.
         """
         # The C++ electrical network and the tape will be recomputed
-        if element.network is not None and element.network != self:
-            element._raise_several_network()
-
         if isinstance(element, Bus):
             self.buses[element.id] = element
         elif isinstance(element, AbstractLoad):
@@ -880,8 +878,9 @@ class ElectricalNetwork(JsonMixin):
     def _disconnect_element(self, element: Element) -> None:
         """Remove an element of the network.
 
-        When an element is removed from the network, extra processing is needed to keep the network
-        valid.
+        When an element is removed from the network, extra processing is needed to keep the network valid. This method
+        is used in the by the `network` setter of `Element` instances (when the provided network is `None`) to remove
+        the element to the internal dictionary of `self`.
 
         Args:
             element:

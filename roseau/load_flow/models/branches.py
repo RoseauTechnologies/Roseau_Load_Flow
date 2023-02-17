@@ -58,8 +58,8 @@ class AbstractBranch(Element):
         self.phases2 = phases2
         self.bus1 = bus1
         self.bus2 = bus2
-        self._connect(bus1, bus2)
         self.geometry = geometry
+        self._connect(bus1, bus2)
         self._res_currents: Optional[tuple[np.ndarray, np.ndarray]] = None
 
     def __repr__(self) -> str:
