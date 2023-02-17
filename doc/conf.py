@@ -20,7 +20,7 @@ import importlib.metadata
 # -- Project information -----------------------------------------------------
 
 project = "Roseau Load Flow"
-copyright = "2022, Roseau Technologies SAS"
+copyright = "2022-2023, Roseau Technologies SAS"
 # author = "Benoît Vinot"
 
 # The full version, including alpha/beta/rc tags
