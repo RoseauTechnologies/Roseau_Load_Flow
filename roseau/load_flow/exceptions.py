@@ -75,6 +75,7 @@ class RoseauLoadFlowExceptionCode(Enum):
     BAD_LOAD_FLOW_RESULT = auto()
     LOAD_FLOW_NOT_RUN = auto()
     SEVERAL_NETWORKS = auto()
+    TOO_MANY_BUSES = auto()
 
     # DGS export
     DGS_BAD_PHASE_TECHNOLOGY = auto()
