@@ -138,7 +138,7 @@ class ElectricalNetwork(JsonMixin):
 
     DEFAULT_PRECISION: float = 1e-6
     DEFAULT_MAX_ITERATIONS: int = 20
-    DEFAULT_BASE_URL: str = "http://localhost:8080/"
+    DEFAULT_BASE_URL: str = "https://load-flow-api-dev.roseautechnologies.com/"
     DEFAULT_WARM_START: bool = True
 
     # Default classes to use
