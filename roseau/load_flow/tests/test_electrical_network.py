@@ -376,7 +376,7 @@ def test_bad_networks():
             grounds=[ground],
             potential_refs=[p_ref],
         )
-    assert "but has not been added to the network. It must be added with 'add_element'." in e.value.msg
+    assert "but has not been added to the network. It must be added with 'connect'." in e.value.msg
     assert bus2.id in e.value.msg
     assert e.value.code == RoseauLoadFlowExceptionCode.UNKNOWN_ELEMENT
 

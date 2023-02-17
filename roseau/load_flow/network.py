@@ -936,7 +936,7 @@ class ElectricalNetwork(JsonMixin):
                     if constructed:
                         msg += "was not passed to the ElectricalNetwork constructor."
                     else:
-                        msg += "has not been added to the network. It must be added with 'add_element'."
+                        msg += "has not been added to the network. It must be added with 'connect'."
                     logger.error(msg)
                     raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.UNKNOWN_ELEMENT)
 
