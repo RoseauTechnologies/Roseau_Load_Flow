@@ -53,13 +53,13 @@ class LineParameters(Identifiable, JsonMixin):
                 The Y matrix of the line (Siemens/km). This field is optional if the line has no shunt part.
         """
         super().__init__(id)
-        self._z_line = z_line
+        self._z_line = np.asarray(z_line, dtype=complex)
         if y_shunt is None:
             self._with_shunt = False
             self._y_shunt = np.zeros_like(z_line, dtype=complex)
         else:
             self._with_shunt = not np.allclose(y_shunt, 0)
-            self._y_shunt = y_shunt
+            self._y_shunt = np.asarray(y_shunt, dtype=complex)
         self._check_matrix()
 
     def __eq__(self, other: object) -> bool:
