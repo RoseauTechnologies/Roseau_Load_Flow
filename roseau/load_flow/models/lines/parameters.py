@@ -135,22 +135,22 @@ class LineParameters(Identifiable, JsonMixin):
                 The required model. It can be SYM or SYM_NEUTRAL. Be careful, it can be downgraded...
 
             z0:
-                Impedance - zero sequence - $r0+x0\\cdot j$ (ohms/km)
+                Impedance - zero sequence - :math:`r_0+x_0\\cdot j` (ohms/km)
 
             z1:
-                Impedance - direct sequence - $r1+x1\\cdot j$ (ohms/km)
+                Impedance - direct sequence - :math:`r_1+x_1\\cdot j` (ohms/km)
 
             y0:
-                Admittance - zero sequence - $g0+b0\\cdot j$ (Siemens/km)
+                Admittance - zero sequence - :math:`g_0+b_0\\cdot j` (Siemens/km)
 
             y1:
-                Conductance - direct sequence - $g1+b1\\cdot j$ (Siemens/km)
+                Conductance - direct sequence - :math:`g_1+b_1\\cdot j` (Siemens/km)
 
             zn:
-                Neutral impedance - $rn+xn\\cdot j$ (ohms/km)
+                Neutral impedance - :math:`r_{\\mathrm{n}}+x_{\\mathrm{n}}\\cdot j` (ohms/km)
 
             xpn:
-                Phase to neutral reactance  (ohms/km)
+                Phase to neutral reactance (ohms/km)
 
             bn:
                 Neutral susceptance (siemens/km)
@@ -189,22 +189,22 @@ class LineParameters(Identifiable, JsonMixin):
                 The required model. It can be SYM or SYM_NEUTRAL. Be careful, it can be downgraded...
 
             z0:
-                Impedance - zero sequence - $r0+x0\\cdot j$ (ohms/km)
+                Impedance - zero sequence - :math:`r_0+x_0\\cdot j` (ohms/km)
 
             z1:
-                Impedance - direct sequence - $r1+x1\\cdot j$ (ohms/km)
+                Impedance - direct sequence - :math:`r_1+x_1\\cdot j` (ohms/km)
 
             y0:
-                Admittance - zero sequence - $g0+b0\\cdot j$ (Siemens/km)
+                Admittance - zero sequence - :math:`g_0+b_0\\cdot j` (Siemens/km)
 
             y1:
-                Conductance - direct sequence - $g1+b1\\cdot j$ (Siemens/km)
+                Conductance - direct sequence - :math:`g_1+b_1\\cdot j` (Siemens/km)
 
             zn:
-                Neutral impedance - $rn+xn\\cdot j$ (ohms/km)
+                Neutral impedance - :math:`r_{\\mathrm{n}}+x_{\\mathrm{n}}\\cdot j` (ohms/km)
 
             xpn:
-                Phase to neutral reactance  (ohms/km)
+                Phase to neutral reactance (ohms/km)
 
             bn:
                 Neutral susceptance (siemens/km)
