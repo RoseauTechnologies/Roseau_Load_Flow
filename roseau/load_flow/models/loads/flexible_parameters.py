@@ -1,14 +1,12 @@
 import logging
-from typing import Literal, NoReturn
+from typing import NoReturn
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
-from roseau.load_flow.typing import JsonDict, Self
+from roseau.load_flow.typing import JsonDict, Self, ControlType, ProjectionType
 from roseau.load_flow.units import Q_, ureg
 from roseau.load_flow.utils import JsonMixin
 
 logger = logging.getLogger(__name__)
-
-ControlType = Literal["constant", "p_max_u_production", "p_max_u_consumption", "q_u"]
 
 
 class Control(JsonMixin):
@@ -228,7 +226,7 @@ class Projection(JsonMixin):
     DEFAULT_ALPHA: float = 100.0
     DEFAULT_EPSILON: float = 0.01
 
-    def __init__(self, type: str, alpha: float = DEFAULT_ALPHA, epsilon: float = DEFAULT_EPSILON) -> None:
+    def __init__(self, type: ProjectionType, alpha: float = DEFAULT_ALPHA, epsilon: float = DEFAULT_EPSILON) -> None:
         """Projection constructor.
 
         Args:
