@@ -4,7 +4,6 @@ from collections.abc import Sequence
 from typing import Any, Literal, Optional
 
 import numpy as np
-from pint import Quantity
 
 from roseau.load_flow.converters import calculate_voltage_phases, calculate_voltages
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
@@ -68,7 +67,6 @@ class AbstractLoad(Element, ABC):
         self.phases = phases
         self.bus = bus
         self._symbol = {"power": "S", "current": "I", "impedance": "Z"}[self._type]
-        self._unit = {"power": "VA", "current": "A", "impedance": "ohm"}[self._type]
         if len(phases) == 2 and "n" not in phases:
             # This is a delta load that has one element connected between two phases
             self._size = 1
@@ -102,8 +100,6 @@ class AbstractLoad(Element, ABC):
         return self._res_currents_getter(warning=True)
 
     def _validate_value(self, value: Sequence[complex]) -> np.ndarray:
-        if isinstance(value, Quantity):
-            value = value.m_as(self._unit)
         if len(value) != self._size:
             msg = f"Incorrect number of {self._type}s: {len(value)} instead of {self._size}"
             logger.error(msg)
@@ -245,17 +241,40 @@ class PowerLoad(AbstractLoad):
                 to compute the flexible power of the load.
         """
         super().__init__(id=id, bus=bus, phases=phases, **kwargs)
-        self.powers = powers
 
         if flexible_params:
             if len(flexible_params) != self._size:
                 msg = f"Incorrect number of parameters: {len(flexible_params)} instead of {self._size}"
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PARAMETERS_SIZE)
-            for power, fp in zip(self.powers, flexible_params):
+
+        self._flexible_params = flexible_params
+        self.powers = powers
+        self._res_flexible_powers: Optional[np.ndarray] = None
+
+    @property
+    def flexible_params(self) -> Optional[list[FlexibleParameter]]:
+        return self._flexible_params
+
+    @property
+    def is_flexible(self) -> bool:
+        return self._flexible_params is not None
+
+    @property
+    @ureg.wraps("VA", (None,), strict=False)
+    def powers(self) -> Q_:
+        """The powers of the load (VA)."""
+        return self._powers
+
+    @powers.setter
+    @ureg.wraps(None, (None, "VA"), strict=False)
+    def powers(self, value: Sequence[complex]) -> None:
+        value = self._validate_value(value)
+        if self.is_flexible:
+            for power, fp in zip(value, self._flexible_params):
                 if fp.control_p.type == "constant" and fp.control_q.type == "constant":
                     continue  # No checks for this case
-                if abs(power) > fp.s_max:
+                if abs(power) > fp.s_max.m_as("VA"):
                     msg = f"The power is greater than the parameter s_max for flexible load {id!r}"
                     logger.error(msg)
                     raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_S_VALUE)
@@ -271,24 +290,7 @@ class PowerLoad(AbstractLoad):
                     msg = f"There is a P control but a null active power for flexible load {id!r}"
                     logger.error(msg)
                     raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_S_VALUE)
-
-        self.flexible_params = flexible_params
-        self._res_flexible_powers: Optional[np.ndarray] = None
-
-    @property
-    def is_flexible(self) -> bool:
-        return self.flexible_params is not None
-
-    @property
-    @ureg.wraps("VA", (None,), strict=False)
-    def powers(self) -> Q_:
-        """The powers of the load (VA)."""
-        return self._powers
-
-    @powers.setter
-    @ureg.wraps(None, (None, "VA"), strict=False)
-    def powers(self, value: Sequence[complex]) -> None:
-        self._powers = self._validate_value(value)
+        self._powers = value
         self._invalidate_network_results()
 
     def _res_flexible_powers_getter(self, warning: bool) -> np.ndarray:

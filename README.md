@@ -13,7 +13,7 @@ The project can also be installed via `pip` or `conda`. Please see the [Installa
 
 ## Documentation ##
 
-The documentation contianing the installation instructions, tutorials, and the API index is
+The documentation containing the installation instructions, tutorials, and the API index is
 available at https://roseautechnologies.github.io/Roseau_Load_Flow/
 
 ## Usage ##

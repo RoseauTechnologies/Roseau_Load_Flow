@@ -1,14 +1,12 @@
 import logging
-from typing import Literal, NoReturn
+from typing import NoReturn
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
-from roseau.load_flow.typing import JsonDict, Self
+from roseau.load_flow.typing import JsonDict, Self, ControlType, ProjectionType
 from roseau.load_flow.units import Q_, ureg
 from roseau.load_flow.utils import JsonMixin
 
 logger = logging.getLogger(__name__)
-
-ControlType = Literal["constant", "p_max_u_production", "p_max_u_consumption", "q_u"]
 
 
 class Control(JsonMixin):
@@ -55,11 +53,41 @@ class Control(JsonMixin):
                 factor is the closer the function is to the non-differentiable function.
         """
         self.type = type
-        self.u_min = u_min
-        self.u_down = u_down
-        self.u_up = u_up
-        self.u_max = u_max
-        self.alpha = alpha
+        self._u_min = u_min
+        self._u_down = u_down
+        self._u_up = u_up
+        self._u_max = u_max
+        self._alpha = alpha
+
+    @property
+    @ureg.wraps("V", (None,), strict=False)
+    def u_min(self) -> Q_:
+        """The minimum voltage i.e. the one the control reached the maximum action."""
+        return self._u_min
+
+    @property
+    @ureg.wraps("V", (None,), strict=False)
+    def u_down(self) -> Q_:
+        """The voltage which starts to trigger the control (lower value)."""
+        return self._u_down
+
+    @property
+    @ureg.wraps("V", (None,), strict=False)
+    def u_up(self) -> Q_:
+        """TThe voltage  which starts to trigger the control (upper value)."""
+        return self._u_up
+
+    @property
+    @ureg.wraps("V", (None,), strict=False)
+    def u_max(self) -> Q_:
+        """The maximum voltage i.e. the one the control reached its maximum action."""
+        return self._u_max
+
+    @property
+    def alpha(self) -> float:
+        """An approximation factor used by the family function (soft clip). The bigger the factor is the closer the
+        function is to the non-differentiable function."""
+        return self._alpha
 
     @classmethod
     def constant(cls) -> Self:
@@ -192,17 +220,17 @@ class Control(JsonMixin):
         if self.type == "constant":
             return {"type": "constant"}
         elif self.type == "p_max_u_production":
-            return {"type": "p_max_u_production", "u_up": self.u_up, "u_max": self.u_max, "alpha": self.alpha}
+            return {"type": "p_max_u_production", "u_up": self._u_up, "u_max": self._u_max, "alpha": self._alpha}
         elif self.type == "p_max_u_consumption":
-            return {"type": "p_max_u_consumption", "u_min": self.u_min, "u_down": self.u_down, "alpha": self.alpha}
+            return {"type": "p_max_u_consumption", "u_min": self._u_min, "u_down": self._u_down, "alpha": self._alpha}
         elif self.type == "q_u":
             return {
                 "type": "q_u",
-                "u_min": self.u_min,
-                "u_down": self.u_down,
-                "u_up": self.u_up,
-                "u_max": self.u_max,
-                "alpha": self.alpha,
+                "u_min": self._u_min,
+                "u_down": self._u_down,
+                "u_up": self._u_up,
+                "u_max": self._u_max,
+                "alpha": self._alpha,
             }
         else:
             msg = f"Unsupported control type {self.type!r}"
@@ -228,7 +256,7 @@ class Projection(JsonMixin):
     DEFAULT_ALPHA: float = 100.0
     DEFAULT_EPSILON: float = 0.01
 
-    def __init__(self, type: str, alpha: float = DEFAULT_ALPHA, epsilon: float = DEFAULT_EPSILON) -> None:
+    def __init__(self, type: ProjectionType, alpha: float = DEFAULT_ALPHA, epsilon: float = DEFAULT_EPSILON) -> None:
         """Projection constructor.
 
         Args:
@@ -242,16 +270,25 @@ class Projection(JsonMixin):
                 This value is used to make soft sign function and to build a soft projection function.
 
             epsilon:
-                This value is used to make a smooth sqrt function. It is only used in the Euclidean
-                projection.
+                This value is used to make a smooth sqrt function. It is only used in the Euclidean projection.
 
                 .. math::
                     \\sqrt{S} = \\sqrt{\\varepsilon \\times
                     \\exp\\left(\\frac{-{|S|}^2}{\\varepsilon}\\right) + {|S|}^2}
         """
         self.type = type
-        self.alpha = alpha
-        self.epsilon = epsilon
+        self._alpha = alpha
+        self._epsilon = epsilon
+
+    @property
+    def alpha(self) -> float:
+        """This value is used to make soft sign function and to build a soft projection function."""
+        return self._alpha
+
+    @property
+    def epsilon(self) -> float:
+        """This value is used to make a smooth sqrt function. It is only used in the Euclidean projection."""
+        return self._epsilon
 
     #
     # Json Mixin interface
@@ -263,7 +300,7 @@ class Projection(JsonMixin):
         return cls(type=data["type"], alpha=alpha, epsilon=epsilon)
 
     def to_dict(self) -> JsonDict:
-        return {"type": self.type, "alpha": self.alpha, "epsilon": self.epsilon}
+        return {"type": self.type, "alpha": self._alpha, "epsilon": self._epsilon}
 
     def _results_to_dict(self, warning: bool) -> NoReturn:
         msg = f"The {type(self).__name__} has no results to export."

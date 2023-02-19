@@ -5,7 +5,6 @@ import pytest
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models import Bus, Ground, Line, LineParameters
-from roseau.load_flow.units import Q_
 from roseau.load_flow.utils import ConductorType, IsolationType, LineModel, LineType
 
 
@@ -254,42 +253,32 @@ def test_sym():
 
     z_line, y_shunt, model = LineParameters._sym_to_zy(
         "NKBA NOR  25.00 kV",
-        r0=0.0,
-        x0=0.0,
-        r1=1.0,
-        x1=1.0,
-        rn=0.0,
-        xn=0.0,
+        z0=0.0j,
+        z1=1.0 + 1.0j,
+        zn=0.0j,
         xpn=0.0,
-        b0=0.0,
-        g0=0.0,
-        b1=1e-06,
-        g1=0.0,
+        y0=0.0j,
+        y1=1e-06j,
         bn=0.0,
         bpn=0.0,
         model=LineModel.SYM,
     )
     z_line_expected = (1 + 1j) * np.eye(3)
-    npt.assert_allclose(z_line.m_as("ohm/km"), z_line_expected)
+    npt.assert_allclose(z_line, z_line_expected)
     y_shunt_expected = 1e-6j * np.eye(3)
-    npt.assert_allclose(y_shunt.m_as("S/km"), y_shunt_expected)
+    npt.assert_allclose(y_shunt, y_shunt_expected)
     assert model == LineModel.SYM
 
     # line_data = {"id": "NKBA 4x150   1.00 kV", "un": 1000.0, "in": 361.0000014305115}
 
     z_line, y_shunt, model = LineParameters._sym_to_zy(
         "NKBA 4x150   1.00 kV",
-        r0=0.5,
-        x0=0.3050000071525574,
-        r1=0.125,
-        x1=0.0860000029206276,
-        rn=0.0,
-        xn=0.0,
+        z0=0.5 + 0.3050000071525574j,
+        z1=0.125 + 0.0860000029206276j,
+        zn=0.0j,
         xpn=0.0,
-        b0=0.0,
-        g0=0.0,
-        b1=0.0,
-        g1=0.0,
+        y0=0.0j,
+        y1=0.0j,
         bn=0.0,
         bpn=0.0,
         model=LineModel.SYM_NEUTRAL,
@@ -302,9 +291,9 @@ def test_sym():
         ],
         dtype=complex,
     )
-    npt.assert_allclose(z_line.m_as("ohm/km"), z_line_expected)
+    npt.assert_allclose(z_line, z_line_expected)
     y_shunt_expected = np.zeros(shape=(3, 3), dtype=complex)
-    npt.assert_allclose(y_shunt.m_as("S/km"), y_shunt_expected)
+    npt.assert_allclose(y_shunt, y_shunt_expected)
     assert model == LineModel.SYM  # Downgraded model because of PwF bad data
 
     # First line
@@ -312,17 +301,12 @@ def test_sym():
 
     z_line, y_shunt, model = LineParameters._sym_to_zy(
         "sym_neutral_underground_line_example",
-        r0=0.188,
-        x0=0.8224,
-        r1=0.188,
-        x1=0.0812,
-        rn=0.4029,
-        xn=0.3522,
+        z0=0.188 + 0.8224j,
+        z1=0.188 + 0.0812j,
+        zn=0.4029 + 0.3522j,
         xpn=0.2471,
-        b0=0.000063134,
-        g0=0.000010462,
-        b1=0.00022999,
-        g1=0.000010462,
+        y0=0.000010462 + 0.000063134j,
+        y1=0.000010462 + 0.00022999j,
         bn=0.00011407,
         bpn=-0.000031502,
         model=LineModel.SYM_NEUTRAL,
@@ -335,7 +319,7 @@ def test_sym():
             [0.0 + 0.2471j, 0.0 + 0.2471j, 0.0 + 0.2471j, 0.4029 + 0.3522j],
         ]
     )
-    npt.assert_allclose(z_line.m_as("ohm/km"), z_line_expected)
+    npt.assert_allclose(z_line, z_line_expected)
     y_shunt_expected = np.array(
         [
             [1.0462e-05 + 1.74371333e-04j, 0 - 5.56186667e-05j, 0 - 5.56186667e-05j, -0 - 3.15020000e-05j],
@@ -344,29 +328,19 @@ def test_sym():
             [-0 - 3.15020000e-05j, -0 - 3.15020000e-05j, -0 - 3.15020000e-05j, 0 + 1.14070000e-04j],
         ]
     )
-    npt.assert_allclose(y_shunt.m_as("S/km"), y_shunt_expected)
+    npt.assert_allclose(y_shunt, y_shunt_expected)
     assert model == LineModel.SYM_NEUTRAL
 
     # Second line
     # line_data = {"id": "sym_line_example", "un": 20000.0, "in": 309}
 
     z_line, y_shunt, model = LineParameters._sym_to_zy(
-        "sym_line_example",
-        r0=Q_(0.2, "ohm/km").to("ohm/m"),
-        x0=0.1,
-        r1=0.2,
-        x1=0.1,
-        rn=0.4029,
-        b0=0.00014106,
-        g0=0.0,
-        b1=0.00014106,
-        g1=0.0,
-        model=LineModel.SYM,
+        "sym_line_example", z0=0.2 + 0.1j, z1=0.2 + 0.1j, zn=0.4029, y0=0.00014106j, y1=0.00014106j, model=LineModel.SYM
     )
     z_line_expected = (0.2 + 0.1j) * np.eye(3)
-    npt.assert_allclose(z_line.m_as("ohm/km"), z_line_expected)
+    npt.assert_allclose(z_line, z_line_expected)
     y_shunt_expected = 0.00014106j * np.eye(3)
-    npt.assert_allclose(y_shunt.m_as("S/km"), y_shunt_expected)
+    npt.assert_allclose(y_shunt, y_shunt_expected)
     assert model == LineModel.SYM
 
 
