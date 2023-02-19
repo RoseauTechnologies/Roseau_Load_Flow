@@ -41,4 +41,4 @@ elif TYPE_CHECKING:
 else:
     Self = TypeVar("Self")
 
-__all__ = ["Id", "JsonDict", "StrPath", "ControlType", "ProjectionType", "Self"]
+__all__ = ["Id", "JsonDict", "StrPath", "ControlType", "ProjectionType"]
