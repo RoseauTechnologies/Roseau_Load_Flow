@@ -76,7 +76,7 @@ autodoc_inherit_docstrings = True
 html_theme = "furo"
 html_show_copyright = True
 html_title = f"{release}"
-html_logo = "_static/Logo_Roseau_Technologies_Without_Baseline.png"
+html_logo = "_static/Logo_Roseau_Technologies_Without_Baseline.svg"
 html_favicon = "_static/Favicon_Roseau_Technologies.ico"
 html_theme_options = {
     "source_repository": "https://github.com/RoseauTechnologies/Roseau_Load_Flow/",

@@ -31,10 +31,10 @@ class Control(JsonMixin):
                 The type of the control:
                   * ``"constant"``: no control is applied;
                   * ``"p_max_u_production"``: control the maximum production active power of the
-                    load (inverter) based on the voltage $P_{prod}(U)$;
+                    load (inverter) based on the voltage :math:`P^{\max}_{\mathrm{prod}}(U)`;
                   * ``"p_max_u_consumption"``: control the maximum consumption active power of the
-                    load based on the voltage $P_{cons}(U)$;
-                  * ``"q_u"``: control the reactive power based on the voltage $Q(U)$.
+                    load based on the voltage :math:`P^{\max}_{\mathrm{cons}}(U)`;
+                  * ``"q_u"``: control the reactive power based on the voltage :math:`Q(U)`.
 
             u_min:
                 The minimum voltage i.e. the one the control reached the maximum action.
@@ -99,24 +99,25 @@ class Control(JsonMixin):
     def p_max_u_production(cls, u_up: float, u_max: float, alpha: float = DEFAULT_ALPHA) -> Self:
         """Create a control of the type ``"p_max_u_production"``.
 
-        .. image:: /_static/Control_PU_Prod.png
+        .. image:: /_static/Control_PU_Prod.svg
             :width: 600
             :align: center
 
         Args:
-            u_up ($U^{up}$ on the figure):
-                The voltage that triggers the control. A voltage higher than this value signals to
-                the controller to start to reduce the production active power.
+            u_up:
+                The voltage norm that triggers the control. A voltage higher than this value signals to
+                the controller to start to reduce the production active power. On the figure, a normalised version
+                :math:`U^{\mathrm{up}\,\mathrm{norm.}}` is used.
 
-            u_max ($U^{max}$ on the figure):
-                The maximum voltage i.e. the one the control reached its maximum action. A voltage
+            u_max:
+                The maximum norm voltage i.e. the one the control reached its maximum action. A voltage
                 higher than this value signals to the controller to set the production active power
-                to its minimal value.
+                to its minimal value. On the figure, a normalised version :math:`U^{\max\,\mathrm{norm.}}` is used.
 
-            alpha ($\\\\alpha$ on the figure):
+            alpha:
                 A factor used to soften the control function (soft clip) to make it more
                 differentiable. The bigger alpha is, the closer the function is to the
-                non-differentiable function.
+                non-differentiable function. This parameter is noted :math:`\\alpha` on the figure.
 
         Returns:
             The ``"p_max_u_production"`` control using the provided parameters.
@@ -129,24 +130,25 @@ class Control(JsonMixin):
     def p_max_u_consumption(cls, u_min: float, u_down: float, alpha: float = DEFAULT_ALPHA) -> Self:
         """Create a control of the type ``"p_max_u_consumption"``.
 
-        .. image:: /_static/Control_PU_Cons.png
+        .. image:: /_static/Control_PU_Cons.svg
             :width: 600
             :align: center
 
         Args:
-            u_min ($U^{min}$ on the figure):
-                The minimum voltage i.e. the one the control reached its maximum action. A voltage
+            u_min:
+                The minimum voltage norm i.e. the one the control reached its maximum action. A voltage
                 lower than this value signals to the controller to set the consumption active power
-                to its minimal value.
+                to its minimal value. On the figure, a normalised version :math:`U^{\min\,\mathrm{norm.}}` is used.
 
-            u_down ($U^{down}$ on the figure):
-                The voltage that triggers the control. A voltage lower than this value signals to
-                the controller to start to reduce the consumption active power.
+            u_down:
+                The voltage norm that triggers the control. A voltage lower than this value signals to
+                the controller to start to reduce the consumption active power. On the figure, a normalised version
+                :math:`U^{\mathrm{down}\,\mathrm{norm.}}` is used.
 
-            alpha ($\\\\alpha$ on the figure):
+            alpha:
                 A factor used to soften the control function (soft clip) to make it more
                 differentiable. The bigger alpha is, the closer the function is to the
-                non-differentiable function.
+                non-differentiable function. This parameter is noted :math:`\\alpha` on the figure.
 
         Returns:
             The ``"p_max_u_consumption"`` control using the provided parameters.
@@ -159,35 +161,35 @@ class Control(JsonMixin):
     def q_u(cls, u_min: float, u_down: float, u_up: float, u_max: float, alpha: float = DEFAULT_ALPHA) -> Self:
         """Create a control of the type ``"q_u"``.
 
-        .. image:: /_static/Control_QU.png
+        .. image:: /_static/Control_QU.svg
             :width: 600
             :align: center
 
         Args:
-            u_min ($U^{min}$ on the figure):
-                The minimum voltage i.e. the one the control reached its maximum action. A voltage
+            u_min:
+                The minimum voltage norm i.e. the one the control reached its maximum action. A voltage
                 lower than this value signals to the controller to set the reactive power to its
-                maximal capacitive value.
+                maximal capacitive value. On the figure, a normalised version :math:`U^{\min\,\mathrm{norm.}}` is used.
 
-            u_down ($U^{down}$ on the figure):
+            u_down:
                 The voltage that triggers the capacitive reactive power control. A voltage lower
                 than this value signals to the controller to start to increase the capacitive
-                reactive power.
+                reactive power.  On the figure, a normalised version :math:`U^{\mathrm{down}\,\mathrm{norm.}}` is used.
 
-            u_up ($U^{up}$ on the figure):
+            u_up:
                 The voltage that triggers the inductive reactive power control. A voltage higher
                 than this value signals to the controller to start to increase the inductive
-                reactive power.
+                reactive power. On the figure, a normalised version :math:`U^{\mathrm{up}\,\mathrm{norm.}}` is used.
 
-            u_max ($U^{max}$ on the figure):
+            u_max:
                 The minimum voltage i.e. the one the control reached its maximum action. A voltage
                 lower than this value signals to the controller to set the reactive power to its
-                maximal inductive value.
+                maximal inductive value. On the figure, a normalised version :math:`U^{\max\,\mathrm{norm.}}` is used.
 
-            alpha ($\\\\alpha$ on the figure):
+            alpha:
                 A factor used to soften the control function (soft clip) to make it more
                 differentiable. The bigger alpha is, the closer the function is to the
-                non-differentiable function.
+                non-differentiable function. This parameter is noted :math:`\\alpha` on the figure.
 
         Returns:
             The ``"q_u"`` control using the provided parameters.
@@ -375,7 +377,7 @@ class FlexibleParameter(JsonMixin):
     ) -> Self:
         """Build flexible parameters for production ``P(U)`` control with a Euclidean projection.
 
-        .. image:: /_static/Control_PU_Prod.png
+        .. image:: /_static/Control_PU_Prod.svg
             :width: 600
             :align: center
 
@@ -428,7 +430,7 @@ class FlexibleParameter(JsonMixin):
     ) -> Self:
         """Build flexible parameters for consumption ``P(U)`` control with a Euclidean projection.
 
-        .. image:: /_static/Control_PU_Cons.png
+        .. image:: /_static/Control_PU_Cons.svg
             :width: 600
             :align: center
 
@@ -480,7 +482,7 @@ class FlexibleParameter(JsonMixin):
     ) -> Self:
         """Build flexible parameters for ``Q(U)`` control with a Euclidean projection.
 
-        .. image:: /_static/Control_QU.png
+        .. image:: /_static/Control_QU.svg
             :width: 600
             :align: center
 
