@@ -20,7 +20,7 @@ import importlib.metadata
 # -- Project information -----------------------------------------------------
 
 project = "Roseau Load Flow"
-copyright = "2022, Roseau Technologies SAS"
+copyright = "2022-2023, Roseau Technologies SAS"
 # author = "Benoît Vinot"
 
 # The full version, including alpha/beta/rc tags
@@ -44,6 +44,7 @@ extensions = [
 
 add_module_names = False
 napoleon_numpy_docstring = False
+nbsphinx_execute = "never"
 python_use_unqualified_type_names = True
 
 # Add any paths that contain templates here, relative to this directory.
@@ -75,7 +76,7 @@ autodoc_inherit_docstrings = True
 html_theme = "furo"
 html_show_copyright = True
 html_title = f"{release}"
-html_logo = "_static/Logo_Roseau_Technologies_Without_Baseline.png"
+html_logo = "_static/Logo_Roseau_Technologies_Without_Baseline.svg"
 html_favicon = "_static/Favicon_Roseau_Technologies.ico"
 html_theme_options = {
     "source_repository": "https://github.com/RoseauTechnologies/Roseau_Load_Flow/",

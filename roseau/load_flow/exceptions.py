@@ -46,6 +46,14 @@ class RoseauLoadFlowExceptionCode(Enum):
 
     # Control
     BAD_CONTROL_TYPE = auto()
+    BAD_CONTROL_VALUE = auto()
+
+    # Projection
+    BAD_PROJECTION_TYPE = auto()
+    BAD_PROJECTION_VALUE = auto()
+
+    # Flexible parameter
+    BAD_SMAX_VALUE = auto()
 
     # Load
     BAD_LOAD_ID = auto()
@@ -75,6 +83,7 @@ class RoseauLoadFlowExceptionCode(Enum):
     BAD_LOAD_FLOW_RESULT = auto()
     LOAD_FLOW_NOT_RUN = auto()
     SEVERAL_NETWORKS = auto()
+    TOO_MANY_BUSES = auto()
 
     # DGS export
     DGS_BAD_PHASE_TECHNOLOGY = auto()

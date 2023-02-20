@@ -200,6 +200,35 @@ def test_flexible_load():
     assert "There is a consumption control but a negative power for flexible load" in e.value.msg
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_S_VALUE
 
+    # Same mistakes with the powers setter
+    fp = [fp_pq_prod, fp_const, fp_const]
+    load = PowerLoad("flexible load", bus, powers=[-200 + 50j, 0, 0j], phases="abcn", flexible_params=fp)
+    with pytest.raises(RoseauLoadFlowException) as e:
+        load.powers = [300 + 50j, 0, 0j]
+    assert "The power is greater than the parameter s_max for flexible load" in e.value.msg
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_S_VALUE
+
+    fp = [fp_pq_prod, fp_const, fp_const]
+    load = PowerLoad("flexible load", bus, powers=[-100 + 50j, 0, 0j], phases="abcn", flexible_params=fp)
+    with pytest.raises(RoseauLoadFlowException) as e:
+        load.powers = [100 + 50j, 0, 0j]
+    assert "There is a production control but a positive power for flexible load" in e.value.msg
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_S_VALUE
+
+    fp = [fp_pq_prod, fp_const, fp_const]
+    load = PowerLoad("flexible load", bus, powers=[-1, 1, 1j], phases="abcn", flexible_params=fp)
+    with pytest.raises(RoseauLoadFlowException) as e:
+        load.powers = Q_([0, 0, 0j], "VA")
+    assert "There is a P control but a null active power for flexible load" in e.value.msg
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_S_VALUE
+
+    fp = [fp_p_cons, fp_const, fp_const]
+    load = PowerLoad("flexible load", bus, powers=[100 + 50j, 0, 0j], phases="abcn", flexible_params=fp)
+    with pytest.raises(RoseauLoadFlowException) as e:
+        load.powers = [-100 + 50j, 0, 0j]
+    assert "There is a consumption control but a negative power for flexible load" in e.value.msg
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_S_VALUE
+
     # Good load
     fp = [fp_pq_cons, fp_const, fp_const]
     load = PowerLoad("flexible load", bus, powers=[100 + 50j, 0, 0j], phases="abcn", flexible_params=fp)

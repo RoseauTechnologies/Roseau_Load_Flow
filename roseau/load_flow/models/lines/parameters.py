@@ -53,13 +53,13 @@ class LineParameters(Identifiable, JsonMixin):
                 The Y matrix of the line (Siemens/km). This field is optional if the line has no shunt part.
         """
         super().__init__(id)
-        self._z_line = z_line
+        self._z_line = np.asarray(z_line, dtype=complex)
         if y_shunt is None:
             self._with_shunt = False
             self._y_shunt = np.zeros_like(z_line, dtype=complex)
         else:
             self._with_shunt = not np.allclose(y_shunt, 0)
-            self._y_shunt = y_shunt
+            self._y_shunt = np.asarray(y_shunt, dtype=complex)
         self._check_matrix()
 
     def __eq__(self, other: object) -> bool:
@@ -103,13 +103,8 @@ class LineParameters(Identifiable, JsonMixin):
             None,
             "ohm/km",
             "ohm/km",
-            "ohm/km",
-            "ohm/km",
             "S/km",
             "S/km",
-            "S/km",
-            "S/km",
-            "ohm/km",
             "ohm/km",
             "ohm/km",
             "S/km",
@@ -121,16 +116,11 @@ class LineParameters(Identifiable, JsonMixin):
         cls,
         id: Id,
         model: LineModel,
-        r0: float,
-        x0: float,
-        r1: float,
-        x1: float,
-        g0: float,
-        b0: float,
-        g1: float,
-        b1: float,
-        rn: Optional[float] = None,
-        xn: Optional[float] = None,
+        z0: complex,
+        z1: complex,
+        y0: complex,
+        y1: complex,
+        zn: Optional[complex] = None,
         xpn: Optional[float] = None,
         bn: Optional[float] = None,
         bpn: Optional[float] = None,
@@ -144,38 +134,23 @@ class LineParameters(Identifiable, JsonMixin):
             model:
                 The required model. It can be SYM or SYM_NEUTRAL. Be careful, it can be downgraded...
 
-            r0:
-                Resistance - zero sequence (ohms/km)
+            z0:
+                Impedance - zero sequence - :math:`r_0+x_0\\cdot j` (ohms/km)
 
-            x0:
-                reactance - zero sequence  (ohms/km)
+            z1:
+                Impedance - direct sequence - :math:`r_1+x_1\\cdot j` (ohms/km)
 
-            r1:
-                resistance - direct sequence (ohms/km)
+            y0:
+                Admittance - zero sequence - :math:`g_0+b_0\\cdot j` (Siemens/km)
 
-            x1:
-                reactance - direct sequence (ohms/km)
+            y1:
+                Conductance - direct sequence - :math:`g_1+b_1\\cdot j` (Siemens/km)
 
-            g0:
-                Conductance - zero sequence (Siemens/km)
-
-            b0:
-                Susceptance - zero sequence (Siemens/km)
-
-            g1:
-                Conductance - direct sequence (Siemens/km)
-
-            b1:
-                Susceptance - direct sequence (Siemens/km)
-
-            rn:
-                Neutral resistance (ohms/km)
-
-            xn:
-                Neutral reactance  (ohms/km)
+            zn:
+                Neutral impedance - :math:`r_{\\mathrm{n}}+x_{\\mathrm{n}}\\cdot j` (ohms/km)
 
             xpn:
-                Phase to neutral reactance  (ohms/km)
+                Phase to neutral reactance (ohms/km)
 
             bn:
                 Neutral susceptance (siemens/km)
@@ -187,59 +162,19 @@ class LineParameters(Identifiable, JsonMixin):
             The created line parameters.
         """
         z_line, y_shunt, model = cls._sym_to_zy(
-            id=id,
-            model=model,
-            r0=r0,
-            x0=x0,
-            r1=r1,
-            x1=x1,
-            g0=g0,
-            b0=b0,
-            g1=g1,
-            b1=b1,
-            rn=rn,
-            xn=xn,
-            xpn=xpn,
-            bn=bn,
-            bpn=bpn,
+            id=id, model=model, z0=z0, z1=z1, y0=y0, y1=y1, zn=zn, xpn=xpn, bn=bn, bpn=bpn
         )
         return cls(id, z_line=z_line, y_shunt=y_shunt)
 
     @staticmethod
-    @ureg.wraps(
-        ("ohm/km", "S/km", None),
-        (
-            None,
-            None,
-            "ohm/km",
-            "ohm/km",
-            "ohm/km",
-            "ohm/km",
-            "S/km",
-            "S/km",
-            "S/km",
-            "S/km",
-            "ohm/km",
-            "ohm/km",
-            "ohm/km",
-            "S/km",
-            "S/km",
-        ),
-        strict=False,
-    )
     def _sym_to_zy(
         id: Id,
         model: LineModel,
-        r0: float,
-        x0: float,
-        r1: float,
-        x1: float,
-        g0: float,
-        b0: float,
-        g1: float,
-        b1: float,
-        rn: Optional[float] = None,
-        xn: Optional[float] = None,
+        z0: complex,
+        z1: complex,
+        y0: complex,
+        y1: complex,
+        zn: Optional[complex] = None,
         xpn: Optional[float] = None,
         bn: Optional[float] = None,
         bpn: Optional[float] = None,
@@ -253,38 +188,23 @@ class LineParameters(Identifiable, JsonMixin):
             model:
                 The required model. It can be SYM or SYM_NEUTRAL. Be careful, it can be downgraded...
 
-            r0:
-                Resistance - zero sequence (ohms/km)
+            z0:
+                Impedance - zero sequence - :math:`r_0+x_0\\cdot j` (ohms/km)
 
-            x0:
-                reactance - zero sequence  (ohms/km)
+            z1:
+                Impedance - direct sequence - :math:`r_1+x_1\\cdot j` (ohms/km)
 
-            r1:
-                resistance - direct sequence (ohms/km)
+            y0:
+                Admittance - zero sequence - :math:`g_0+b_0\\cdot j` (Siemens/km)
 
-            x1:
-                reactance - direct sequence (ohms/km)
+            y1:
+                Conductance - direct sequence - :math:`g_1+b_1\\cdot j` (Siemens/km)
 
-            g0:
-                Conductance - zero sequence (Siemens/km)
-
-            b0:
-                Susceptance - zero sequence (Siemens/km)
-
-            g1:
-                Conductance - direct sequence (Siemens/km)
-
-            b1:
-                Susceptance - direct sequence (Siemens/km)
-
-            rn:
-                Neutral resistance (ohms/km)
-
-            xn:
-                Neutral reactance  (ohms/km)
+            zn:
+                Neutral impedance - :math:`r_{\\mathrm{n}}+x_{\\mathrm{n}}\\cdot j` (ohms/km)
 
             xpn:
-                Phase to neutral reactance  (ohms/km)
+                Phase to neutral reactance (ohms/km)
 
             bn:
                 Neutral susceptance (siemens/km)
@@ -296,11 +216,6 @@ class LineParameters(Identifiable, JsonMixin):
             The impedance and admittance matrices and the line model. The line model may be downgraded from
             SYM_NEUTRAL to SYM if the model of the neutral is not possible.
         """
-        # Extract the data
-        z0 = r0 + 1j * x0
-        z1 = r1 + 1j * x1
-        y0 = g0 + 1j * b0
-        y1 = g1 + 1j * b1
 
         # Two possible choices. The first one is the best but sometimes PwF data forces us to choose the second one
         for choice in (0, 1):
@@ -314,16 +229,16 @@ class LineParameters(Identifiable, JsonMixin):
             else:
                 # Do not read the manual, it is useless: in pwf we trust
                 # NB (Ali): this is equivalent to setting z0 to z1 and y0 to y1
-                zs = r1 + 1j * x1  # Series impedance (ohms/km)
+                zs = z1  # Series impedance (ohms/km)
                 zm = 0 + 0j  # Mutual impedance (ohms/km)
 
-                ys = g1 + 1j * b1  # Series shunt admittance (siemens/km)
+                ys = y1  # Series shunt admittance (siemens/km)
                 ym = 0 + 0j  # Mutual shunt admittance (siemens/km)
 
             if model == LineModel.SYM_NEUTRAL:
                 # Add the neutral
                 # Build the complex
-                zn = rn + 1j * xn  # Neutral series impedance (ohm/km)
+                # zn: Neutral series impedance (ohm/km)
                 zpn = xpn * 1j  # Phase-to-neutral series impedance (ohm/km)
                 yn = bn * 1j  # Neutral shunt admittance (Siemens/km)
                 ypn = bpn * 1j  # Phase to neutral shunt admittance (Siemens/km)

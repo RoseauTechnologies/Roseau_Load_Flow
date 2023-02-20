@@ -1,14 +1,15 @@
 import logging
-from typing import Literal, NoReturn
+import warnings
+from typing import NoReturn
+
+import numpy as np
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
-from roseau.load_flow.typing import JsonDict, Self
+from roseau.load_flow.typing import JsonDict, Self, ControlType, ProjectionType
 from roseau.load_flow.units import Q_, ureg
 from roseau.load_flow.utils import JsonMixin
 
 logger = logging.getLogger(__name__)
-
-ControlType = Literal["constant", "p_max_u_production", "p_max_u_consumption", "q_u"]
 
 
 class Control(JsonMixin):
@@ -33,10 +34,10 @@ class Control(JsonMixin):
                 The type of the control:
                   * ``"constant"``: no control is applied;
                   * ``"p_max_u_production"``: control the maximum production active power of the
-                    load (inverter) based on the voltage $P_{prod}(U)$;
+                    load (inverter) based on the voltage :math:`P^{\max}_{\mathrm{prod}}(U)`;
                   * ``"p_max_u_consumption"``: control the maximum consumption active power of the
-                    load based on the voltage $P_{cons}(U)$;
-                  * ``"q_u"``: control the reactive power based on the voltage $Q(U)$.
+                    load based on the voltage :math:`P^{\max}_{\mathrm{cons}}(U)`;
+                  * ``"q_u"``: control the reactive power based on the voltage :math:`Q(U)`.
 
             u_min:
                 The minimum voltage i.e. the one the control reached the maximum action.
@@ -55,11 +56,103 @@ class Control(JsonMixin):
                 factor is the closer the function is to the non-differentiable function.
         """
         self.type = type
-        self.u_min = u_min
-        self.u_down = u_down
-        self.u_up = u_up
-        self.u_max = u_max
-        self.alpha = alpha
+        self._u_min = u_min
+        self._u_down = u_down
+        self._u_up = u_up
+        self._u_max = u_max
+        self._alpha = alpha
+        self._check_values()
+
+    def _check_values(self) -> None:
+        """Check the provided values."""
+        if self.type == "constant":
+            useless_values = {"u_min": self._u_min, "u_down": self._u_down, "u_up": self._u_up, "u_max": self._u_max}
+        elif self.type == "p_max_u_production":
+            useless_values = {"u_min": self._u_min, "u_down": self._u_down}
+        elif self.type == "p_max_u_consumption":
+            useless_values = {"u_max": self._u_max, "u_up": self._u_up}
+        elif self.type == "q_u":
+            useless_values = dict()
+        else:
+            msg = f"Unsupported control type {self.type!r}"
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_CONTROL_TYPE)
+
+        # Warn the user if a value different from 0 was given to the control for a useless value
+        msg_list = list()
+        for name, value in useless_values.items():
+            if not np.isclose(value, 0):
+                msg_list.append(f"{name!r} ({value:.1f} V)")
+
+        if msg_list:
+            msg = ", ".join(msg_list)
+            warnings.warn(
+                message=(
+                    f"Some voltage norm value(s) will not be used by the {self.type!r} control. Nevertheless, values "
+                    f"different from 0 were given: {msg}"
+                ),
+                category=UserWarning,
+                stacklevel=2,
+            )
+
+        # Raise an error if the useful values are not well-ordered and positive
+        natural_order = ("u_min", "u_down", "u_up", "u_max")
+        previous_name = None
+        previous_value = Q_(0, "V")
+        for name in natural_order:
+            if name in useless_values:
+                continue
+
+            value = getattr(self, name)
+            if value <= previous_value:
+                if previous_name is None:
+                    msg = f"{name!r} must be greater than zero as it is a voltage norm: {value:P#~} was provided."
+                else:
+                    msg = (
+                        f"{name!r} must be greater than the value {previous_name!r}, but {value:P#~} <= "
+                        f"{previous_value:P#~}."
+                    )
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_CONTROL_VALUE)
+
+            previous_value = value
+            previous_name = name
+
+        # Check on alpha
+        if self._alpha <= 0:
+            msg = f"'alpha' must be greater than 0 but {self._alpha:.1f} was provided."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_CONTROL_VALUE)
+
+    @property
+    @ureg.wraps("V", (None,), strict=False)
+    def u_min(self) -> Q_:
+        """The minimum voltage i.e. the one the control reached the maximum action."""
+        return self._u_min
+
+    @property
+    @ureg.wraps("V", (None,), strict=False)
+    def u_down(self) -> Q_:
+        """The voltage which starts to trigger the control (lower value)."""
+        return self._u_down
+
+    @property
+    @ureg.wraps("V", (None,), strict=False)
+    def u_up(self) -> Q_:
+        """TThe voltage  which starts to trigger the control (upper value)."""
+        return self._u_up
+
+    @property
+    @ureg.wraps("V", (None,), strict=False)
+    def u_max(self) -> Q_:
+        """The maximum voltage i.e. the one the control reached its maximum action."""
+        return self._u_max
+
+    @property
+    def alpha(self) -> float:
+        """An approximation factor used by the family function (soft clip). The bigger the factor is the closer the
+        function is to the non-differentiable function."""
+        return self._alpha
 
     @classmethod
     def constant(cls) -> Self:
@@ -71,29 +164,29 @@ class Control(JsonMixin):
     def p_max_u_production(cls, u_up: float, u_max: float, alpha: float = DEFAULT_ALPHA) -> Self:
         """Create a control of the type ``"p_max_u_production"``.
 
-        .. image:: /_static/Control_PU_Prod.png
+        .. image:: /_static/Control_PU_Prod.svg
             :width: 600
             :align: center
 
         Args:
-            u_up ($U^{up}$ on the figure):
-                The voltage that triggers the control. A voltage higher than this value signals to
-                the controller to start to reduce the production active power.
+            u_up:
+                The voltage norm that triggers the control. A voltage higher than this value signals to
+                the controller to start to reduce the production active power. On the figure, a normalised version
+                :math:`U^{\mathrm{up}\,\mathrm{norm.}}` is used.
 
-            u_max ($U^{max}$ on the figure):
-                The maximum voltage i.e. the one the control reached its maximum action. A voltage
+            u_max:
+                The maximum norm voltage i.e. the one the control reached its maximum action. A voltage
                 higher than this value signals to the controller to set the production active power
-                to its minimal value.
+                to its minimal value. On the figure, a normalised version :math:`U^{\max\,\mathrm{norm.}}` is used.
 
-            alpha ($\\\\alpha$ on the figure):
+            alpha:
                 A factor used to soften the control function (soft clip) to make it more
                 differentiable. The bigger alpha is, the closer the function is to the
-                non-differentiable function.
+                non-differentiable function. This parameter is noted :math:`\\alpha` on the figure.
 
         Returns:
             The ``"p_max_u_production"`` control using the provided parameters.
         """
-        assert u_up < u_max
         return cls(type="p_max_u_production", u_min=0.0, u_down=0.0, u_up=u_up, u_max=u_max, alpha=alpha)
 
     @classmethod
@@ -101,29 +194,29 @@ class Control(JsonMixin):
     def p_max_u_consumption(cls, u_min: float, u_down: float, alpha: float = DEFAULT_ALPHA) -> Self:
         """Create a control of the type ``"p_max_u_consumption"``.
 
-        .. image:: /_static/Control_PU_Cons.png
+        .. image:: /_static/Control_PU_Cons.svg
             :width: 600
             :align: center
 
         Args:
-            u_min ($U^{min}$ on the figure):
-                The minimum voltage i.e. the one the control reached its maximum action. A voltage
+            u_min:
+                The minimum voltage norm i.e. the one the control reached its maximum action. A voltage
                 lower than this value signals to the controller to set the consumption active power
-                to its minimal value.
+                to its minimal value. On the figure, a normalised version :math:`U^{\min\,\mathrm{norm.}}` is used.
 
-            u_down ($U^{down}$ on the figure):
-                The voltage that triggers the control. A voltage lower than this value signals to
-                the controller to start to reduce the consumption active power.
+            u_down:
+                The voltage norm that triggers the control. A voltage lower than this value signals to
+                the controller to start to reduce the consumption active power. On the figure, a normalised version
+                :math:`U^{\mathrm{down}\,\mathrm{norm.}}` is used.
 
-            alpha ($\\\\alpha$ on the figure):
+            alpha:
                 A factor used to soften the control function (soft clip) to make it more
                 differentiable. The bigger alpha is, the closer the function is to the
-                non-differentiable function.
+                non-differentiable function. This parameter is noted :math:`\\alpha` on the figure.
 
         Returns:
             The ``"p_max_u_consumption"`` control using the provided parameters.
         """
-        assert u_min < u_down
         return cls(type="p_max_u_consumption", u_min=u_min, u_down=u_down, u_up=0.0, u_max=0.0, alpha=alpha)
 
     @classmethod
@@ -131,40 +224,39 @@ class Control(JsonMixin):
     def q_u(cls, u_min: float, u_down: float, u_up: float, u_max: float, alpha: float = DEFAULT_ALPHA) -> Self:
         """Create a control of the type ``"q_u"``.
 
-        .. image:: /_static/Control_QU.png
+        .. image:: /_static/Control_QU.svg
             :width: 600
             :align: center
 
         Args:
-            u_min ($U^{min}$ on the figure):
-                The minimum voltage i.e. the one the control reached its maximum action. A voltage
+            u_min:
+                The minimum voltage norm i.e. the one the control reached its maximum action. A voltage
                 lower than this value signals to the controller to set the reactive power to its
-                maximal capacitive value.
+                maximal capacitive value. On the figure, a normalised version :math:`U^{\min\,\mathrm{norm.}}` is used.
 
-            u_down ($U^{down}$ on the figure):
+            u_down:
                 The voltage that triggers the capacitive reactive power control. A voltage lower
                 than this value signals to the controller to start to increase the capacitive
-                reactive power.
+                reactive power.  On the figure, a normalised version :math:`U^{\mathrm{down}\,\mathrm{norm.}}` is used.
 
-            u_up ($U^{up}$ on the figure):
+            u_up:
                 The voltage that triggers the inductive reactive power control. A voltage higher
                 than this value signals to the controller to start to increase the inductive
-                reactive power.
+                reactive power. On the figure, a normalised version :math:`U^{\mathrm{up}\,\mathrm{norm.}}` is used.
 
-            u_max ($U^{max}$ on the figure):
+            u_max:
                 The minimum voltage i.e. the one the control reached its maximum action. A voltage
                 lower than this value signals to the controller to set the reactive power to its
-                maximal inductive value.
+                maximal inductive value. On the figure, a normalised version :math:`U^{\max\,\mathrm{norm.}}` is used.
 
-            alpha ($\\\\alpha$ on the figure):
+            alpha:
                 A factor used to soften the control function (soft clip) to make it more
                 differentiable. The bigger alpha is, the closer the function is to the
-                non-differentiable function.
+                non-differentiable function. This parameter is noted :math:`\\alpha` on the figure.
 
         Returns:
             The ``"q_u"`` control using the provided parameters.
         """
-        assert u_min < u_down < u_up < u_max
         return cls(type="q_u", u_min=u_min, u_down=u_down, u_up=u_up, u_max=u_max, alpha=alpha)
 
     #
@@ -184,7 +276,7 @@ class Control(JsonMixin):
                 u_min=data["u_min"], u_down=data["u_down"], u_up=data["u_up"], u_max=data["u_max"], alpha=alpha
             )
         else:
-            msg = f"Unsupported control type {data['type']}"
+            msg = f"Unsupported control type {data['type']!r}"
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_CONTROL_TYPE)
 
@@ -192,17 +284,17 @@ class Control(JsonMixin):
         if self.type == "constant":
             return {"type": "constant"}
         elif self.type == "p_max_u_production":
-            return {"type": "p_max_u_production", "u_up": self.u_up, "u_max": self.u_max, "alpha": self.alpha}
+            return {"type": "p_max_u_production", "u_up": self._u_up, "u_max": self._u_max, "alpha": self._alpha}
         elif self.type == "p_max_u_consumption":
-            return {"type": "p_max_u_consumption", "u_min": self.u_min, "u_down": self.u_down, "alpha": self.alpha}
+            return {"type": "p_max_u_consumption", "u_min": self._u_min, "u_down": self._u_down, "alpha": self._alpha}
         elif self.type == "q_u":
             return {
                 "type": "q_u",
-                "u_min": self.u_min,
-                "u_down": self.u_down,
-                "u_up": self.u_up,
-                "u_max": self.u_max,
-                "alpha": self.alpha,
+                "u_min": self._u_min,
+                "u_down": self._u_down,
+                "u_up": self._u_up,
+                "u_max": self._u_max,
+                "alpha": self._alpha,
             }
         else:
             msg = f"Unsupported control type {self.type!r}"
@@ -228,7 +320,7 @@ class Projection(JsonMixin):
     DEFAULT_ALPHA: float = 100.0
     DEFAULT_EPSILON: float = 0.01
 
-    def __init__(self, type: str, alpha: float = DEFAULT_ALPHA, epsilon: float = DEFAULT_EPSILON) -> None:
+    def __init__(self, type: ProjectionType, alpha: float = DEFAULT_ALPHA, epsilon: float = DEFAULT_EPSILON) -> None:
         """Projection constructor.
 
         Args:
@@ -242,16 +334,53 @@ class Projection(JsonMixin):
                 This value is used to make soft sign function and to build a soft projection function.
 
             epsilon:
-                This value is used to make a smooth sqrt function. It is only used in the Euclidean
-                projection.
+                This value is used to make a smooth sqrt function. It is only used in the Euclidean projection.
 
                 .. math::
                     \\sqrt{S} = \\sqrt{\\varepsilon \\times
                     \\exp\\left(\\frac{-{|S|}^2}{\\varepsilon}\\right) + {|S|}^2}
         """
         self.type = type
-        self.alpha = alpha
-        self.epsilon = epsilon
+        self._alpha = alpha
+        self._epsilon = epsilon
+        self._check_values()
+
+    def _check_values(self) -> None:
+        """Check the provided values."""
+        # Good type
+        if self.type not in ("euclidean", "keep_p", "keep_q"):
+            msg = f"Unsupported projection type {self.type!r}"
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PROJECTION_TYPE)
+
+        # Values greater than 0
+        for name, value in (("alpha", self._alpha), ("epsilon", self._epsilon)):
+            if value <= 0:
+                msg = f"'{name}' must be greater than 0 but {value:.1f} was provided."
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PROJECTION_VALUE)
+
+        # alpha must be "large"
+        if self._alpha < 1.0:
+            msg = f"'alpha' must be greater than 1 but {self._alpha:.1f} was provided."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PROJECTION_VALUE)
+
+        # epsilon must be "small"
+        if self._epsilon > 1.0:
+            msg = f"'epsilon' must be lower than 1 but {self._epsilon:.3f} was provided."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PROJECTION_VALUE)
+
+    @property
+    def alpha(self) -> float:
+        """This value is used to make soft sign function and to build a soft projection function."""
+        return self._alpha
+
+    @property
+    def epsilon(self) -> float:
+        """This value is used to make a smooth sqrt function. It is only used in the Euclidean projection."""
+        return self._epsilon
 
     #
     # Json Mixin interface
@@ -263,7 +392,7 @@ class Projection(JsonMixin):
         return cls(type=data["type"], alpha=alpha, epsilon=epsilon)
 
     def to_dict(self) -> JsonDict:
-        return {"type": self.type, "alpha": self.alpha, "epsilon": self.epsilon}
+        return {"type": self.type, "alpha": self._alpha, "epsilon": self._epsilon}
 
     def _results_to_dict(self, warning: bool) -> NoReturn:
         msg = f"The {type(self).__name__} has no results to export."
@@ -303,6 +432,14 @@ class FlexibleParameter(JsonMixin):
         self.control_q = control_q
         self.projection = projection
         self._s_max = s_max
+        self._check_values()
+
+    def _check_values(self) -> None:
+        """Check the provided values."""
+        if self._s_max <= 0:
+            msg = f"'s_max' must be greater than 0 but {self.s_max:P#~} was provided."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_SMAX_VALUE)
 
     @property
     @ureg.wraps("VA", (None,), strict=False)
@@ -338,7 +475,7 @@ class FlexibleParameter(JsonMixin):
     ) -> Self:
         """Build flexible parameters for production ``P(U)`` control with a Euclidean projection.
 
-        .. image:: /_static/Control_PU_Prod.png
+        .. image:: /_static/Control_PU_Prod.svg
             :width: 600
             :align: center
 
@@ -391,7 +528,7 @@ class FlexibleParameter(JsonMixin):
     ) -> Self:
         """Build flexible parameters for consumption ``P(U)`` control with a Euclidean projection.
 
-        .. image:: /_static/Control_PU_Cons.png
+        .. image:: /_static/Control_PU_Cons.svg
             :width: 600
             :align: center
 
@@ -443,7 +580,7 @@ class FlexibleParameter(JsonMixin):
     ) -> Self:
         """Build flexible parameters for ``Q(U)`` control with a Euclidean projection.
 
-        .. image:: /_static/Control_QU.png
+        .. image:: /_static/Control_QU.svg
             :width: 600
             :align: center
 

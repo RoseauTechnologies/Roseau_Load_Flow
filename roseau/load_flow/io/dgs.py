@@ -127,17 +127,12 @@ def network_from_dgs(  # noqa: C901
 
             lines_params_dict[type_id] = LineParameters.from_sym(
                 type_id,
-                r0=typ_lne.at[type_id, "rline0"],
+                z0=complex(typ_lne.at[type_id, "rline0"], typ_lne.at[type_id, "xline0"]),
                 model=line_model,
-                r1=typ_lne.at[type_id, "rline"],
-                x0=typ_lne.at[type_id, "xline0"],
-                x1=typ_lne.at[type_id, "xline"],
-                g0=Q_(typ_lne.at[type_id, "gline0"], "uS/km"),
-                g1=Q_(typ_lne.at[type_id, "gline"], "uS/km"),
-                b0=Q_(typ_lne.at[type_id, "bline0"], "uS/km"),
-                b1=Q_(typ_lne.at[type_id, "bline"], "uS/km"),
-                rn=typ_lne.at[type_id, "rnline"],
-                xn=typ_lne.at[type_id, "xnline"],
+                z1=complex(typ_lne.at[type_id, "rline"], typ_lne.at[type_id, "xline"]),
+                y0=Q_(complex(typ_lne.at[type_id, "gline0"], typ_lne.at[type_id, "bline0"]), "uS/km"),
+                y1=Q_(complex(typ_lne.at[type_id, "gline"], typ_lne.at[type_id, "bline"]), "uS/km"),
+                zn=complex(typ_lne.at[type_id, "rnline"], typ_lne.at[type_id, "xnline"]),
                 xpn=typ_lne.at[type_id, "xpnline"],
                 bn=Q_(typ_lne.at[type_id, "bnline"], "uS/km"),
                 bpn=Q_(typ_lne.at[type_id, "bpnline"], "uS/km"),
@@ -162,18 +157,20 @@ def network_from_dgs(  # noqa: C901
         for idx in typ_tr.index:
             # Extract data
             name = typ_tr.at[idx, "loc_name"]
-            sn = typ_tr.at[idx, "strn"] * 1e6  # The nominal voltages of the transformer (MVA -> VA)
-            uhv = typ_tr.at[idx, "utrn_h"] * 1e3  # Phase-to-phase nominal voltages of the high voltages side (kV -> V)
-            ulv = typ_tr.at[idx, "utrn_l"] * 1e3  # Phase-to-phase nominal voltages of the low voltages side (kV -> V)
-            i0 = typ_tr.at[idx, "curmg"] / 3 / 100  # Current during off-load test (%)
-            p0 = typ_tr.at[idx, "pfe"] * 1e3 / 3  # Losses during off-load test (kW -> W)
-            psc = typ_tr.at[idx, "pcutr"] * 1e3  # Losses during short circuit test (kW -> W)
-            vsc = typ_tr.at[idx, "uktr"] / 100  # Voltages on LV side during short circuit test (%)
+            sn = Q_(typ_tr.at[idx, "strn"], "MVA")  # The nominal voltages of the transformer (MVA)
+            uhv = Q_(typ_tr.at[idx, "utrn_h"], "kV")  # Phase-to-phase nominal voltages of the high voltages side (kV)
+            ulv = Q_(typ_tr.at[idx, "utrn_l"], "kV")  # Phase-to-phase nominal voltages of the low voltages side (kV)
+            i0 = Q_(typ_tr.at[idx, "curmg"] / 3, "percent")  # Current during off-load test (%)
+            p0 = Q_(typ_tr.at[idx, "pfe"] / 3, "kW")  # Losses during off-load test (kW)
+            psc = Q_(typ_tr.at[idx, "pcutr"], "kW")  # Losses during short circuit test (kW)
+            vsc = Q_(typ_tr.at[idx, "uktr"], "percent")  # Voltages on LV side during short circuit test (%)
             # Windings of the transformer
             windings = f"{typ_tr.at[idx, 'tr2cn_h']}{typ_tr.at[idx, 'tr2cn_l']}{typ_tr.at[idx, 'nt2ag']}"
 
             # Generate transformer parameters
-            transformers_params_dict[idx] = TransformerParameters(name, windings, uhv, ulv, sn, p0, i0, psc, vsc)
+            transformers_params_dict[idx] = TransformerParameters(
+                id=name, windings=windings, uhv=uhv, ulv=ulv, sn=sn, p0=p0, i0=i0, psc=psc, vsc=vsc
+            )
             transformers_tap[idx] = typ_tr.at[idx, "dutap"]
 
         # Create transformers
