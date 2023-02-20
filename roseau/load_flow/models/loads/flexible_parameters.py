@@ -1,5 +1,8 @@
 import logging
+import warnings
 from typing import NoReturn
+
+import numpy as np
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.typing import JsonDict, Self, ControlType, ProjectionType
@@ -58,6 +61,68 @@ class Control(JsonMixin):
         self._u_up = u_up
         self._u_max = u_max
         self._alpha = alpha
+        self._check_values()
+
+    def _check_values(self) -> None:
+        """Check the provided values."""
+        if self.type == "constant":
+            useless_values = {"u_min": self._u_min, "u_down": self._u_down, "u_up": self._u_up, "u_max": self._u_max}
+        elif self.type == "p_max_u_production":
+            useless_values = {"u_min": self._u_min, "u_down": self._u_down}
+        elif self.type == "p_max_u_consumption":
+            useless_values = {"u_max": self._u_max, "u_up": self._u_up}
+        elif self.type == "q_u":
+            useless_values = dict()
+        else:
+            msg = f"Unsupported control type {self.type!r}"
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_CONTROL_TYPE)
+
+        # Warn the user if a value different from 0 was given to the control for a useless value
+        msg_list = list()
+        for name, value in useless_values.items():
+            if not np.isclose(value, 0):
+                msg_list.append(f"{name!r} ({value:.1f} V)")
+
+        if msg_list:
+            msg = ", ".join(msg_list)
+            warnings.warn(
+                message=(
+                    f"Some voltage norm value(s) will not be used by the {self.type!r} control. Nevertheless, values "
+                    f"different from 0 were given: {msg}"
+                ),
+                category=UserWarning,
+                stacklevel=2,
+            )
+
+        # Raise an error if the useful values are not well-ordered and positive
+        natural_order = ("u_min", "u_down", "u_up", "u_max")
+        previous_name = None
+        previous_value = Q_(0, "V")
+        for name in natural_order:
+            if name in useless_values:
+                continue
+
+            value = getattr(self, name)
+            if value <= previous_value:
+                if previous_name is None:
+                    msg = f"{name!r} must be greater than zero as it is a voltage norm: {value:P#~} was provided."
+                else:
+                    msg = (
+                        f"{name!r} must be greater than the value {previous_name!r}, but {value:P#~} <= "
+                        f"{previous_value:P#~}."
+                    )
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_CONTROL_VALUE)
+
+            previous_value = value
+            previous_name = name
+
+        # Check on alpha
+        if self._alpha <= 0:
+            msg = f"'alpha' must be greater than 0 but {self._alpha:.1f} was provided."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_CONTROL_VALUE)
 
     @property
     @ureg.wraps("V", (None,), strict=False)
@@ -122,7 +187,6 @@ class Control(JsonMixin):
         Returns:
             The ``"p_max_u_production"`` control using the provided parameters.
         """
-        assert u_up < u_max
         return cls(type="p_max_u_production", u_min=0.0, u_down=0.0, u_up=u_up, u_max=u_max, alpha=alpha)
 
     @classmethod
@@ -153,7 +217,6 @@ class Control(JsonMixin):
         Returns:
             The ``"p_max_u_consumption"`` control using the provided parameters.
         """
-        assert u_min < u_down
         return cls(type="p_max_u_consumption", u_min=u_min, u_down=u_down, u_up=0.0, u_max=0.0, alpha=alpha)
 
     @classmethod
@@ -194,7 +257,6 @@ class Control(JsonMixin):
         Returns:
             The ``"q_u"`` control using the provided parameters.
         """
-        assert u_min < u_down < u_up < u_max
         return cls(type="q_u", u_min=u_min, u_down=u_down, u_up=u_up, u_max=u_max, alpha=alpha)
 
     #
@@ -214,7 +276,7 @@ class Control(JsonMixin):
                 u_min=data["u_min"], u_down=data["u_down"], u_up=data["u_up"], u_max=data["u_max"], alpha=alpha
             )
         else:
-            msg = f"Unsupported control type {data['type']}"
+            msg = f"Unsupported control type {data['type']!r}"
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_CONTROL_TYPE)
 
@@ -281,6 +343,34 @@ class Projection(JsonMixin):
         self.type = type
         self._alpha = alpha
         self._epsilon = epsilon
+        self._check_values()
+
+    def _check_values(self) -> None:
+        """Check the provided values."""
+        # Good type
+        if self.type not in ("euclidean", "keep_p", "keep_q"):
+            msg = f"Unsupported projection type {self.type!r}"
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PROJECTION_TYPE)
+
+        # Values greater than 0
+        for name, value in (("alpha", self._alpha), ("epsilon", self._epsilon)):
+            if value <= 0:
+                msg = f"'{name}' must be greater than 0 but {value:.1f} was provided."
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PROJECTION_VALUE)
+
+        # alpha must be "large"
+        if self._alpha < 1.0:
+            msg = f"'alpha' must be greater than 1 but {self._alpha:.1f} was provided."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PROJECTION_VALUE)
+
+        # epsilon must be "small"
+        if self._epsilon > 1.0:
+            msg = f"'epsilon' must be lower than 1 but {self._epsilon:.3f} was provided."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PROJECTION_VALUE)
 
     @property
     def alpha(self) -> float:
@@ -342,6 +432,14 @@ class FlexibleParameter(JsonMixin):
         self.control_q = control_q
         self.projection = projection
         self._s_max = s_max
+        self._check_values()
+
+    def _check_values(self) -> None:
+        """Check the provided values."""
+        if self._s_max <= 0:
+            msg = f"'s_max' must be greater than 0 but {self.s_max:P#~} was provided."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_SMAX_VALUE)
 
     @property
     @ureg.wraps("VA", (None,), strict=False)

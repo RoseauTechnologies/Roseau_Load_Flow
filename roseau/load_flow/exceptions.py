@@ -46,6 +46,14 @@ class RoseauLoadFlowExceptionCode(Enum):
 
     # Control
     BAD_CONTROL_TYPE = auto()
+    BAD_CONTROL_VALUE = auto()
+
+    # Projection
+    BAD_PROJECTION_TYPE = auto()
+    BAD_PROJECTION_VALUE = auto()
+
+    # Flexible parameter
+    BAD_SMAX_VALUE = auto()
 
     # Load
     BAD_LOAD_ID = auto()
