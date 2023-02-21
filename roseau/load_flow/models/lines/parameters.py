@@ -9,20 +9,20 @@ from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowE
 from roseau.load_flow.typing import Id, JsonDict, Self
 from roseau.load_flow.units import Q_, ureg
 from roseau.load_flow.utils import (
-    ConductorType,
     CX,
     EPSILON_0,
     EPSILON_R,
-    Identifiable,
-    IsolationType,
-    JsonMixin,
-    LineModel,
-    LineType,
     MU_0,
     OMEGA,
     PI,
     RHO,
     TAN_D,
+    ConductorType,
+    Identifiable,
+    IsolationType,
+    JsonMixin,
+    LineModel,
+    LineType,
 )
 
 logger = logging.getLogger(__name__)

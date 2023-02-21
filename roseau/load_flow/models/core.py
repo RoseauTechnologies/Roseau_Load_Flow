@@ -1,7 +1,7 @@
 import logging
 import warnings
 from abc import ABC
-from typing import Any, ClassVar, NoReturn, Optional, TYPE_CHECKING, TypeVar, Union
+from typing import TYPE_CHECKING, Any, ClassVar, NoReturn, Optional, TypeVar, Union
 
 import shapely
 from shapely.geometry import shape

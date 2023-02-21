@@ -90,7 +90,7 @@ class PotentialRef(Element):
         elif isinstance(e, Ground):
             res["ground"] = e.id
         else:
-            assert False, f"Unexpected element type {type(e).__name__}"
+            raise AssertionError(f"Unexpected element type {type(e).__name__}")
         return res
 
     def results_from_dict(self, data: JsonDict) -> None:

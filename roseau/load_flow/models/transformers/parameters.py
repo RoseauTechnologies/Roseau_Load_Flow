@@ -173,7 +173,7 @@ class TransformerParameters(Identifiable, JsonMixin):
             except ValueError:
                 msg = f"The transformer type name does not follow the syntax rule. {name!r} was provided."
                 logger.error(msg)
-                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TYPE_NAME_SYNTAX)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TYPE_NAME_SYNTAX) from None
             else:
                 return cls(name, windings, 20000, 400, sn * 1e3, 460, 2.3 / 100, 2350, 4 / 100)
         else:

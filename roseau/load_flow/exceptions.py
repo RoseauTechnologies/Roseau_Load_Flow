@@ -2,7 +2,7 @@
 This module contains the exceptions used by Roseau Load Flow.
 """
 import unicodedata
-from enum import auto, Enum
+from enum import Enum, auto
 from typing import Union
 
 from roseau.load_flow.typing import Self

@@ -77,6 +77,11 @@ target-version = ["py39", "py310", "py311"]
 [tool.ruff]
 line-length = 120
 target-version = "py39"
+show-fixes = true
+select = ["E", "F", "C90", "W", "B", "UP", "I", "RUF100"]
+unfixable = ["B"]
+extend-ignore = ["E501", "B024"]
+
 
 [tool.ruff.mccabe]
 max-complexity = 15
