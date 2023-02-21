@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "roseau_load_flow"
-version = "0.2.1"
+version = "0.3.0"
 description = "Three-phase load flow solver"
 authors = [
     "Ali Hamdan <ali.hamdan@roseautechnologies.com>",
@@ -81,7 +81,6 @@ show-fixes = true
 select = ["E", "F", "C90", "W", "B", "UP", "I", "RUF100"]
 unfixable = ["B"]
 extend-ignore = ["E501", "B024"]
-
 
 [tool.ruff.mccabe]
 max-complexity = 15
