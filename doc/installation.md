@@ -55,7 +55,7 @@ available *Conda archive* (Click on the file that ends with `.tar.bz2`). It can 
 via the following command (in this example, the installed version is *0.3.0*):
 
 ```console
-$ conda install <PATH TO THE roseau-load-flow-0.3.0-py310_0.tar.bz2 FILE>
+$ conda install <PATH TO THE roseau-load-flow-0.3.0-py_0.tar.bz2 FILE>
 ```
 
 ```{note}

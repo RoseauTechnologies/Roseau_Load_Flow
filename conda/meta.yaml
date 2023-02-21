@@ -1,5 +1,5 @@
 {% set name = "roseau-load-flow" %}
-{% set version = "0.3.0 %}
+{% set version = "0.3.0" %}
 
 package:
   name: "{{ name|lower }}"
