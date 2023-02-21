@@ -1,4 +1,5 @@
 import logging
+import warnings
 from typing import Any, Optional
 
 import numpy as np
@@ -233,6 +234,21 @@ class Line(AbstractBranch):
         self.parameters = parameters
         self._initialized = True
 
+        # Handle the ground
+        if self.ground is not None and not self.parameters.with_shunt:
+            warnings.warn(
+                message=(
+                    f"The ground element must not be provided for line {self.id!r} as it does not have a shunt "
+                    f"admittance."
+                ),
+                category=UserWarning,
+                stacklevel=2,
+            )
+            self.ground = None
+        elif self.parameters.with_shunt:
+            # Connect the ground
+            self._connect(self.ground)
+
     @property
     @ureg.wraps("km", (None,), strict=False)
     def length(self) -> Q_:
@@ -274,7 +290,6 @@ class Line(AbstractBranch):
                 msg = f"The ground element must be provided for line {self.id!r} with shunt admittance."
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_TYPE)
-            self._connect(self.ground)
         else:
             if self._initialized and self.parameters.with_shunt:
                 msg = "Cannot set line parameters without a shunt to a line that has shunt components."

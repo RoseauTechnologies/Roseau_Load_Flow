@@ -341,6 +341,62 @@ def test_recursive_connect_disconnect():
     assert new_load2.id in en.loads
 
 
+def test_recursive_connect_disconnect_ground():
+    #
+    # The same but with a "ground connection" from a line with shunt
+    #
+    ground = Ground("ground")
+    vn = 400 / np.sqrt(3)
+    voltages = [vn, vn * np.exp(-2 / 3 * np.pi * 1j), vn * np.exp(2 / 3 * np.pi * 1j)]
+    source_bus = Bus(id="source", phases="abcn")
+    load_bus = Bus(id="load bus", phases="abcn")
+    ground.connect(load_bus)
+    VoltageSource(id="vs", phases="abcn", bus=source_bus, voltages=voltages)
+    PowerLoad(id="power load", phases="abcn", bus=load_bus, powers=[100 + 0j, 100 + 0j, 100 + 0j])
+    lp = LineParameters("test", z_line=np.eye(4, dtype=complex))
+    Line(id="line", bus1=source_bus, bus2=load_bus, phases="abcn", parameters=lp, length=10)
+    PotentialRef("pref", element=ground)
+    en = ElectricalNetwork.from_element(source_bus)
+
+    # Create new elements (without connecting them to the existing network)
+    ground = en.grounds["ground"]
+    new_bus2 = Bus(id="new_bus2", phases="abcn")
+    new_load2 = PowerLoad(id="new_load2", bus=new_bus2, phases="abcn", powers=Q_([100, 0, 0], "VA"))
+    new_bus = Bus(id="new_bus", phases="abcn")
+    new_load = PowerLoad(id="new_load", bus=new_bus, phases="abcn", powers=Q_([100, 0, 0], "VA"))
+    assert new_bus.network is None
+    assert new_bus.id not in en.buses
+    assert new_load.network is None
+    assert new_load.id not in en.loads
+    assert new_bus2.network is None
+    assert new_bus2.id not in en.buses
+    assert new_load2.network is None
+    assert new_load2.id not in en.loads
+
+    lp = LineParameters(
+        "S_AL_240_with_shunt", z_line=Q_(0.1 * np.eye(4), "ohm/km"), y_shunt=Q_(0.1 * np.eye(4), "S/km")
+    )
+    new_line2 = Line(
+        id="new_line2",
+        bus1=new_bus2,
+        bus2=new_bus,
+        phases="abcn",
+        parameters=lp,
+        ground=ground,  # Here, I connect a ground to the new_line2. The ground belongs to the previous network
+        length=0.5,
+    )
+    assert new_line2.network == en
+    assert new_line2.id in en.branches
+    assert new_bus.network == en
+    assert new_bus.id in en.buses
+    assert new_load.network == en
+    assert new_load.id in en.loads
+    assert new_bus2.network == en
+    assert new_bus2.id in en.buses
+    assert new_load2.network == en
+    assert new_load2.id in en.loads
+
+
 def test_bad_networks():
     # No source
     ground = Ground("ground")
