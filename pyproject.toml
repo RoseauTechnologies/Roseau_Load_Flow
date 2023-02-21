@@ -58,6 +58,8 @@ Sphinx = "^5.1.0"
 myst-parser = ">=0.16.1"
 sphinx-math-dollar = "^1.2.1"
 sphinx-autoapi = "^2.0.0"
+sphinx-copybutton = ">=0.5.1"
+sphinx-inline-tabs = ">=2022.1.2b11"
 jupyter = "^1.0.0"
 nbsphinx = ">=0.8.9"
 furo = ">=2022.9.29"
@@ -75,6 +77,11 @@ target-version = ["py39", "py310", "py311"]
 [tool.ruff]
 line-length = 120
 target-version = "py39"
+show-fixes = true
+select = ["E", "F", "C90", "W", "B", "UP", "I", "RUF100"]
+unfixable = ["B"]
+extend-ignore = ["E501", "B024"]
+
 
 [tool.ruff.mccabe]
 max-complexity = 15

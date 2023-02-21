@@ -13,13 +13,21 @@ Type Aliases used by Roseau Load Flow.
 
     The accepted type for files of roseau.load_flow.io.
 
+.. class:: ControlType
+
+    Available types of control for flexible loads.
+
+.. class:: ProjectionType
+
+    Available types of projections for flexible loads control.
+
 .. class:: Self
 
     The type of the class itself.
 """
 import os
 import sys
-from typing import Any, Literal, TYPE_CHECKING, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Literal, TypeVar, Union
 
 if sys.version_info >= (3, 10):
     from typing import TypeAlias as TypeAlias
@@ -31,8 +39,8 @@ else:
 Id: TypeAlias = Union[int, str]
 JsonDict: TypeAlias = dict[str, Any]
 StrPath: TypeAlias = Union[str, os.PathLike[str]]
-ControlType = Literal["constant", "p_max_u_production", "p_max_u_consumption", "q_u"]
-ProjectionType = Literal["euclidean", "keep_p", "keep_q"]
+ControlType: TypeAlias = Literal["constant", "p_max_u_production", "p_max_u_consumption", "q_u"]
+ProjectionType: TypeAlias = Literal["euclidean", "keep_p", "keep_q"]
 
 if sys.version_info >= (3, 11):
     from typing import Self as Self

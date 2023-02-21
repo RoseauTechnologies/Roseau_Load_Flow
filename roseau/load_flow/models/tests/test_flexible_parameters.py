@@ -3,10 +3,10 @@ import warnings
 import pytest
 
 from roseau.load_flow import (
+    Q_,
     Control,
     FlexibleParameter,
     Projection,
-    Q_,
     RoseauLoadFlowException,
     RoseauLoadFlowExceptionCode,
 )

@@ -5,7 +5,7 @@ from typing import NoReturn
 import numpy as np
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
-from roseau.load_flow.typing import JsonDict, Self, ControlType, ProjectionType
+from roseau.load_flow.typing import ControlType, JsonDict, ProjectionType, Self
 from roseau.load_flow.units import Q_, ureg
 from roseau.load_flow.utils import JsonMixin
 
@@ -34,9 +34,9 @@ class Control(JsonMixin):
                 The type of the control:
                   * ``"constant"``: no control is applied;
                   * ``"p_max_u_production"``: control the maximum production active power of the
-                    load (inverter) based on the voltage :math:`P^{\max}_{\mathrm{prod}}(U)`;
+                    load (inverter) based on the voltage :math:`P^{\\max}_{\\mathrm{prod}}(U)`;
                   * ``"p_max_u_consumption"``: control the maximum consumption active power of the
-                    load based on the voltage :math:`P^{\max}_{\mathrm{cons}}(U)`;
+                    load based on the voltage :math:`P^{\\max}_{\\mathrm{cons}}(U)`;
                   * ``"q_u"``: control the reactive power based on the voltage :math:`Q(U)`.
 
             u_min:
@@ -172,12 +172,12 @@ class Control(JsonMixin):
             u_up:
                 The voltage norm that triggers the control. A voltage higher than this value signals to
                 the controller to start to reduce the production active power. On the figure, a normalised version
-                :math:`U^{\mathrm{up}\,\mathrm{norm.}}` is used.
+                :math:`U^{\\mathrm{up}\\,\\mathrm{norm.}}` is used.
 
             u_max:
                 The maximum norm voltage i.e. the one the control reached its maximum action. A voltage
                 higher than this value signals to the controller to set the production active power
-                to its minimal value. On the figure, a normalised version :math:`U^{\max\,\mathrm{norm.}}` is used.
+                to its minimal value. On the figure, a normalised version :math:`U^{\\max\\,\\mathrm{norm.}}` is used.
 
             alpha:
                 A factor used to soften the control function (soft clip) to make it more
@@ -202,12 +202,12 @@ class Control(JsonMixin):
             u_min:
                 The minimum voltage norm i.e. the one the control reached its maximum action. A voltage
                 lower than this value signals to the controller to set the consumption active power
-                to its minimal value. On the figure, a normalised version :math:`U^{\min\,\mathrm{norm.}}` is used.
+                to its minimal value. On the figure, a normalised version :math:`U^{\\min\\,\\mathrm{norm.}}` is used.
 
             u_down:
                 The voltage norm that triggers the control. A voltage lower than this value signals to
                 the controller to start to reduce the consumption active power. On the figure, a normalised version
-                :math:`U^{\mathrm{down}\,\mathrm{norm.}}` is used.
+                :math:`U^{\\mathrm{down}\\,\\mathrm{norm.}}` is used.
 
             alpha:
                 A factor used to soften the control function (soft clip) to make it more
@@ -232,22 +232,22 @@ class Control(JsonMixin):
             u_min:
                 The minimum voltage norm i.e. the one the control reached its maximum action. A voltage
                 lower than this value signals to the controller to set the reactive power to its
-                maximal capacitive value. On the figure, a normalised version :math:`U^{\min\,\mathrm{norm.}}` is used.
+                maximal capacitive value. On the figure, a normalised version :math:`U^{\\min\\,\\mathrm{norm.}}` is used.
 
             u_down:
                 The voltage that triggers the capacitive reactive power control. A voltage lower
                 than this value signals to the controller to start to increase the capacitive
-                reactive power.  On the figure, a normalised version :math:`U^{\mathrm{down}\,\mathrm{norm.}}` is used.
+                reactive power.  On the figure, a normalised version :math:`U^{\\mathrm{down}\\,\\mathrm{norm.}}` is used.
 
             u_up:
                 The voltage that triggers the inductive reactive power control. A voltage higher
                 than this value signals to the controller to start to increase the inductive
-                reactive power. On the figure, a normalised version :math:`U^{\mathrm{up}\,\mathrm{norm.}}` is used.
+                reactive power. On the figure, a normalised version :math:`U^{\\mathrm{up}\\,\\mathrm{norm.}}` is used.
 
             u_max:
                 The minimum voltage i.e. the one the control reached its maximum action. A voltage
                 lower than this value signals to the controller to set the reactive power to its
-                maximal inductive value. On the figure, a normalised version :math:`U^{\max\,\mathrm{norm.}}` is used.
+                maximal inductive value. On the figure, a normalised version :math:`U^{\\max\\,\\mathrm{norm.}}` is used.
 
             alpha:
                 A factor used to soften the control function (soft clip) to make it more

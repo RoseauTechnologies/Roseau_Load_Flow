@@ -27,7 +27,7 @@ class Transformer(AbstractBranch):
     - P-P-P or P-P-P-N: ``"abc"``, ``"abcn"``
 
     .. note::
-        Only 3-phase transformers are supported for now.
+        Only 3-phase transformers are currently supported.
     """
 
     def __init__(

@@ -9,20 +9,20 @@ from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowE
 from roseau.load_flow.typing import Id, JsonDict, Self
 from roseau.load_flow.units import Q_, ureg
 from roseau.load_flow.utils import (
-    ConductorType,
     CX,
     EPSILON_0,
     EPSILON_R,
-    Identifiable,
-    IsolationType,
-    JsonMixin,
-    LineModel,
-    LineType,
     MU_0,
     OMEGA,
     PI,
     RHO,
     TAN_D,
+    ConductorType,
+    Identifiable,
+    IsolationType,
+    JsonMixin,
+    LineModel,
+    LineType,
 )
 
 logger = logging.getLogger(__name__)
@@ -337,9 +337,8 @@ class LineParameters(Identifiable, JsonMixin):
 
         Returns:
             The created line parameters.
-
-        TODO: Documentation on the line data
         """
+        # TODO: Add documentation on the LV exact model
         z_line, y_shunt, model = cls._lv_exact_to_zy(
             type_name,
             line_type=line_type,

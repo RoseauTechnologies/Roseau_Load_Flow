@@ -5,7 +5,7 @@ a wide variety of models for lines, transformers, loads, and sources.
 
 ## Installation
 
-The first step is to install the `roseau_load_flow` package with either of the following options.
+`roseau_load_flow` is compatible with Python 3.9 and above. It can be installed with:
 
 ```{toctree}
 ---
@@ -17,11 +17,11 @@ installation
 
 ## Usage
 
-To get started refer to the following tutorials:
+The following tutorials are available to help you get started:
 
 ```{toctree}
 ---
-maxdepth: 3
+maxdepth: 2
 caption: Tutorials
 ---
 notebooks/Getting_Started
@@ -29,8 +29,8 @@ notebooks/Advanced
 ```
 
 ## API
-If you want the full documentation of all the classes and methods, you can refer to the following
-modules:
+If you want the full documentation of all the classes and functions, you can refer to the following
+references:
 
 ```{toctree}
 ---

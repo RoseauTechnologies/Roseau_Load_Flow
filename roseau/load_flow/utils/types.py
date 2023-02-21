@@ -1,5 +1,5 @@
 import logging
-from enum import auto, Enum, unique
+from enum import Enum, auto, unique
 from typing import Optional
 
 import regex
@@ -421,7 +421,7 @@ class TransformerType(Enum):
         except AttributeError:
             msg = f"The string {string!r} cannot be converted into a TransformerType."
             logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_TYPE)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_TYPE) from None
 
     @property
     def windings(self) -> tuple[str, str]:

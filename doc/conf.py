@@ -40,6 +40,8 @@ extensions = [
     "sphinx.ext.intersphinx",
     "nbsphinx",
     "autoapi.extension",
+    "sphinx_copybutton",
+    "sphinx_inline_tabs",
 ]
 
 add_module_names = False

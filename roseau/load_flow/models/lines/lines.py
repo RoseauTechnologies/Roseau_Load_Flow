@@ -27,7 +27,7 @@ class Switch(AbstractBranch):
     """The allowed phases for a switch are:
 
     - P-P-P or P-P-P-N: ``"abc"``, ``"abcn"``
-    - P-P or P-P-N: ``"ab"``, ``"bc"``, ``"ca"``, "abn"``, ``"bcn"``, ``"can"``
+    - P-P or P-P-N: ``"ab"``, ``"bc"``, ``"ca"``, ``"abn"``, ``"bcn"``, ``"can"``
     - P or P-N: ``"a"``, ``"b"``, ``"c"``, ``"an"``, ``"bn"``, ``"cn"``
     - N: ``"n"``
     """
@@ -157,7 +157,7 @@ class Line(AbstractBranch):
     """The allowed phases for a line are:
 
     - P-P-P or P-P-P-N: ``"abc"``, ``"abcn"``
-    - P-P or P-P-N: ``"ab"``, ``"bc"``, ``"ca"``, "abn"``, ``"bcn"``, ``"can"``
+    - P-P or P-P-N: ``"ab"``, ``"bc"``, ``"ca"``, ``"abn"``, ``"bcn"``, ``"can"``
     - P or P-N: ``"a"``, ``"b"``, ``"c"``, ``"an"``, ``"bn"``, ``"cn"``
     - N: ``"n"``
     """

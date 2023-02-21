@@ -173,7 +173,7 @@ class TransformerParameters(Identifiable, JsonMixin):
             except ValueError:
                 msg = f"The transformer type name does not follow the syntax rule. {name!r} was provided."
                 logger.error(msg)
-                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TYPE_NAME_SYNTAX)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TYPE_NAME_SYNTAX) from None
             else:
                 return cls(name, windings, 20000, 400, sn * 1e3, 460, 2.3 / 100, 2350, 4 / 100)
         else:
@@ -183,13 +183,17 @@ class TransformerParameters(Identifiable, JsonMixin):
 
     @ureg.wraps(("ohm", "S", "", None), (None,), strict=False)
     def to_zyk(self) -> tuple[Q_, Q_, float, float]:
-        """Compute the transformer parameters z2, ym, k and orientation mandatory for some models
+        """Compute the transformer parameters ``z2``, ``ym``, ``k`` and ``orientation`` mandatory
+        for some models.
 
-        Returns:
+        Where:
             * ``z2``: The series impedance of the transformer (Ohms).
             * ``ym``: The magnetizing admittance of the transformer (Siemens).
             * ``k``: The transformation ratio.
-            * orientation: 1 for direct winding, -1 for reverse winding.
+            * ``orientation``: 1 for direct winding, -1 for reverse winding.
+
+        Returns:
+            The parameters (``z2``, ``ym``, ``k``, ``orientation``).
         """
         # Extract the windings of the primary and the secondary of the transformer
         winding1, winding2, phase_displacement = TransformerType.extract_windings(self.windings)
