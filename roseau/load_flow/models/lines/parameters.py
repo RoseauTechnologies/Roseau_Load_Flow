@@ -337,9 +337,8 @@ class LineParameters(Identifiable, JsonMixin):
 
         Returns:
             The created line parameters.
-
-        TODO: Documentation on the line data
         """
+        # TODO: Add documentation on the LV exact model
         z_line, y_shunt, model = cls._lv_exact_to_zy(
             type_name,
             line_type=line_type,
