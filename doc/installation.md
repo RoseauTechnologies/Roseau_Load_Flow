@@ -1,41 +1,65 @@
 # Using `pip` #
 
-`roseau_load_flow` is available on [PyPI](https://pypi.org/project/roseau-load-flow/). If you are
-using pip, you can install it with:
-```sh
-python -m pip install roseau-load-flow
+`roseau_load_flow` is available on [PyPI](https://pypi.org/project/roseau-load-flow/). It can be
+installed using pip with:
+```console
+$ python -m pip install roseau-load-flow
 ```
 
-```{tip}
-   It is recommended to work in a virtual environment. You can create one with:
+`````{tip}
+It is recommended to work in a virtual environment to isolate your project. You can create one with:
 
-   `python -m venv venv`
-
-   and activate it with:
-
-   * `source venv/bin/activate` on Linux and macOS;
-   * and `venv\Scripts\activate.bat` on Windows.
+```console
+$ python -m venv venv
 ```
+
+A folder named `venv` will be created. To activate the virtual environment, run:
+
+````{tab} Windows
+
+```doscon
+C:> venv\Scripts\activate
+```
+
+````
+
+````{tab} Linux
+
+```console
+$ source venv/bin/activate
+```
+
+````
+
+````{tab} MacOS
+
+```console
+$ . venv/bin/activate
+```
+
+````
+
+`````
 
 To upgrade to the latest version (recommended), use:
-```sh
-python -m pip install --upgrade roseau-load-flow
+```console
+$ python -m pip install --upgrade roseau-load-flow
 ```
 
 # Using `conda` #
 
 If you use *conda* to manage your project, **it is recommended to use the `conda` package manager
-instead of *pip***. To install `roseau_load_flow` via `conda`, please go the release page of the
-GitHub repository [here](https://github.com/RoseauTechnologies/Roseau_Load_Flow/releases/) and
-download the latest available *Conda archive* (Click on the file that ends with `.tar.bz2`). It can
-then be installed via the following command (in this example, the installed version is 0.2.1):
+instead of `pip`**. To install `roseau_load_flow` via `conda`, please go to the [release page](
+https://github.com/RoseauTechnologies/Roseau_Load_Flow/releases/) on GitHub and download the latest
+available *Conda archive* (Click on the file that ends with `.tar.bz2`). It can then be installed
+via the following command (in this example, the installed version is *0.2.1*):
 
-```sh
-conda install <PATH TO THE FILE roseau-load-flow-0.2.1-py310_0.tar.bz2>
+```console
+$ conda install <PATH TO THE roseau-load-flow-0.2.1-py310_0.tar.bz2 FILE>
 ```
 
 ```{note}
-Always install the latest version available which is conveniently marked *latest* by GitHub as
+Always install the latest version available which is conveniently marked `latest` by GitHub as
 shown here:
 
 ![GitHub Latest Release](_static/2022_11_23_GH_Latest_Release.png)
@@ -43,83 +67,91 @@ shown here:
 
 # Using `docker` #
 
-`roseau_load_flow` provides a *docker* image with all required dependencies to run the software, including *Python*,
-installed in the environment. The image runs a *Jupyter* session that you can access in your browser. To install and run
-your docker environment, follow the steps that correspond to your operating system below.
+`roseau_load_flow` provides a *docker image* with all required dependencies pre-installed,
+including *Python*. The image runs a *Jupyter* session that you can access in your browser. To
+install and run your docker environment, follow the steps corresponding to your operating system
+below.
 
-## On Windows ##
+````{tab} Windows
 
-1. Download and install Docker Desktop for Windows available [here](https://www.docker.com/products/docker-desktop/).
+1. Download and install Docker Desktop for Windows, available [here](
+   https://www.docker.com/products/docker-desktop/).
 
    ```{hint}
    During the installation, select "WSL **2**" (WSL = Windows Subsystem for Linux).
    ```
 
-2. Open Docker Desktop to start the Docker Engine
+2. Open *Docker Desktop* to start the *Docker Engine*
 
    ![Docker Desktop](_static/2022_10_20_Installation_2.png)
 
    ```{note}
-   During the first start of the software, it may require to install some extra file to update WSL1 to WSL2.
+   During the first start of the software, it may require to install some extra files to update
+   WSL1 to WSL2.
    ```
 
-3. Go to the Package page of the GitHub repository available [here](
-   https://github.com/RoseauTechnologies/Roseau_Load_Flow/pkgs/container/roseau-load-flow)
-
-4. Copy the Docker command line
+3. Go to the [Package page](
+   https://github.com/RoseauTechnologies/Roseau_Load_Flow/pkgs/container/roseau-load-flow) of
+   Roseau Load Flow on GitHub and copy the Docker command to pull the image.
 
    ![Package](_static/2022_10_20_Installation_1.png)
 
-5. Open a Terminal
+4. Open a Terminal
 
    ```{image} _static/2022_10_20_Installation_3.png
    :alt: Terminal
    :width: 15cm
    ```
 
-6. Paste the command line in your terminal to start downloading the Docker image
+5. Paste the command line in your terminal to start downloading the Docker image
 
    ![Package](_static/2022_10_20_Installation_4.png)
 
-7. In the "Images" tab of Docker Desktop, the image should be visible. You can click on "Run" to start it.
+6. In the "Images" tab of *Docker Desktop*, the image should be visible. You can click on `Run` to
+   start it.
 
-8. Fill the advanced options if you want. It allows you to give a name to the created container, and to link folders of
-   your system to the container. You can by instance (as depicted below) link the folder `Documents` to the container
-   directory `/app/Documents/`. Then click on `Run`.
+7. Fill the advanced options if you want. It allows you to give a name to the created container,
+   and to link folders of your system to the container. You can for instance link the folder
+   `Documents` to the directory `/app/Documents/` in the container (as shown below). When done
+   click on `Run` to start the container.
 
    ![Advanced options](_static/2022_10_20_Installation_6.png)
 
-9. The container should start in a few second. Open your web browser and go to
-   [http://localhost:8080](http://localhost:8080) to find the interface of the JupyterLab of the container. A basic
-   python environment is already installed with the `roseau_load_flow` package already installed.
+8. The container should start in a few seconds. Open a web browser and navigate to
+   [http://localhost:8080](http://localhost:8080) to find the JupyterLab page of the container. A
+   basic python environment is set up with the `roseau_load_flow` package already installed.
 
-## On Linux ##
+````
 
-1. Install Docker via the [detailed tutorial](https://docs.docker.com/engine/install/#server) written by the Docker
-   team. Follow instructions specific to your platform like [Ubuntu](https://docs.docker.com/engine/install/ubuntu/) or
-   [Debian](https://docs.docker.com/engine/install/debian/).
+````{tab} Linux
 
-2. Go to the Package page of the GitHub repository available [here](
-   https://github.com/RoseauTechnologies/Roseau_Load_Flow/pkgs/container/roseau-load-flow)
+1. Install Docker via the [detailed tutorial](https://docs.docker.com/engine/install/#server)
+   written by the Docker team. Follow instructions specific to your platform like [Ubuntu](
+   https://docs.docker.com/engine/install/ubuntu/) or [Debian](
+   https://docs.docker.com/engine/install/debian/).
 
-3. Copy the Docker command line
+2. Go to the [Package page](
+   https://github.com/RoseauTechnologies/Roseau_Load_Flow/pkgs/container/roseau-load-flow) of
+   Roseau Load Flow on GitHub and copy the Docker command to pull the image.
 
    ![Package](_static/2022_10_20_Installation_1.png)
 
-4. Paste it in your terminal to start downloading the Docker image
+3. Paste it in your terminal to start downloading the Docker image
 
-5. Use docker run to start a container. The most simple command to do that can be (with version 0.2.1):
+4. Use `docker run` to start a container; for example with version *0.2.1*:
    ```console
    $ docker run -p 8080:8080 --name rlf-test ghcr.io/roseautechnologies/roseau-load-flow:0.2.1
    ```
 
-6. Open your web browser and go to [http://localhost:8080](http://localhost:8080) to find the interface of the
-   JupyterLab of the container.  A basic python environment is already installed with the `roseau_load_flow` package
-   already installed.
+5. Open a web browser and navigate to [http://localhost:8080](http://localhost:8080) to find the
+   JupyterLab page of the container. A basic python environment is set up with the
+   `roseau_load_flow` package already installed.
+
+````
 
 <!-- Local Variables: -->
 <!-- mode: markdown -->
 <!-- coding: utf-8-unix -->
-<!-- fill-column: 120 -->
+<!-- fill-column: 100 -->
 <!-- ispell-local-dictionary: "english" -->
 <!-- End: -->

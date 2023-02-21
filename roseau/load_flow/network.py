@@ -128,11 +128,13 @@ class ElectricalNetwork(JsonMixin):
             Example::
 
                 {
-                    "status": "success",
                     "resolution_method": "newton",
+                    "precision": 1e-06,
+                    "max_iterations": 20,
+                    "warm_start": True,
+                    "status": "success",
                     "iterations": 2,
-                    "target_error": 1e-06,
-                    "final_error": 1.9468870959826745e-12
+                    "final_precision": 1.8595619621919468e-07
                 }
     """
 
