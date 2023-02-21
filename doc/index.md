@@ -21,7 +21,7 @@ The following tutorials are available to help you get started:
 
 ```{toctree}
 ---
-maxdepth: 3
+maxdepth: 2
 caption: Tutorials
 ---
 notebooks/Getting_Started
