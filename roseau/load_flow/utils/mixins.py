@@ -26,6 +26,8 @@ class Identifiable(metaclass=ABCMeta):
 
 
 class JsonMixin(metaclass=ABCMeta):
+    """Mixin for classes that can be serialized to and from JSON."""
+
     @classmethod
     @abstractmethod
     def from_dict(cls, data: JsonDict, *args: Any) -> Self:
