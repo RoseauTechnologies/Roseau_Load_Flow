@@ -1,14 +1,30 @@
 {
+    "version": 1,
+    "grounds": [
+        {
+            "id": "ground",
+            "buses": [
+                {
+                    "id": "VoltageSource",
+                    "phase": "n"
+                },
+                {
+                    "id": "MVLV01157",
+                    "phase": "n"
+                }
+            ]
+        }
+    ],
+    "potential_refs": [
+        {
+            "id": "pref",
+            "ground": "ground"
+        }
+    ],
     "buses": [
         {
             "id": "VoltageSource",
-            "type": "slack",
-            "loads": [],
-            "voltages": {
-                "va": [11547.005383792515, 0.0],
-                "vb": [-5773.502691896255, -10000.0],
-                "vc": [-5773.502691896255, 10000.0]
-            },
+            "phases": "abcn",
             "geometry": {
                 "type": "Point",
                 "coordinates": [-0.763275481768985, 48.60297718339383]
@@ -16,8 +32,7 @@
         },
         {
             "id": "MVLV01157",
-            "type": "bus_neutral",
-            "loads": [],
+            "phases": "abcn",
             "geometry": {
                 "type": "Point",
                 "coordinates": [-0.763275481768985, 48.60297718339383]
@@ -25,27 +40,7 @@
         },
         {
             "id": "LVBus127384",
-            "type": "bus_neutral",
-            "loads": [
-                {
-                    "id": "LVBus127384_production",
-                    "function": "ys_neutral",
-                    "powers": {
-                        "sa": [0.0, 0.0],
-                        "sb": [0.0, 0.0],
-                        "sc": [-0.0, 0.0]
-                    }
-                },
-                {
-                    "id": "LVBus127384_consumption",
-                    "function": "ys_neutral",
-                    "powers": {
-                        "sa": [0.0, 0.0],
-                        "sb": [0.0, 0.0],
-                        "sc": [0.0, 0.0]
-                    }
-                }
-            ],
+            "phases": "abcn",
             "geometry": {
                 "type": "Point",
                 "coordinates": [-0.7634742960757851, 48.60299255811956]
@@ -53,27 +48,7 @@
         },
         {
             "id": "LVBus186172",
-            "type": "bus_neutral",
-            "loads": [
-                {
-                    "id": "LVBus186172_production",
-                    "function": "ys_neutral",
-                    "powers": {
-                        "sa": [0.0, 0.0],
-                        "sb": [0.0, 0.0],
-                        "sc": [-0.0, 0.0]
-                    }
-                },
-                {
-                    "id": "LVBus186172_consumption",
-                    "function": "ys_neutral",
-                    "powers": {
-                        "sa": [0.0, 0.0],
-                        "sb": [0.0, 0.0],
-                        "sc": [0.0, 0.0]
-                    }
-                }
-            ],
+            "phases": "abcn",
             "geometry": {
                 "type": "Point",
                 "coordinates": [-0.76161692546682, 48.60244671901419]
@@ -81,27 +56,7 @@
         },
         {
             "id": "LVBus186175",
-            "type": "bus_neutral",
-            "loads": [
-                {
-                    "id": "LVBus186175_production",
-                    "function": "ys_neutral",
-                    "powers": {
-                        "sa": [0.0, 0.0],
-                        "sb": [0.0, 0.0],
-                        "sc": [-0.0, 0.0]
-                    }
-                },
-                {
-                    "id": "LVBus186175_consumption",
-                    "function": "ys_neutral",
-                    "powers": {
-                        "sa": [0.0, 0.0],
-                        "sb": [0.0, 0.0],
-                        "sc": [0.0, 0.0]
-                    }
-                }
-            ],
+            "phases": "abcn",
             "geometry": {
                 "type": "Point",
                 "coordinates": [-0.761608195980402, 48.602420513668555]
@@ -109,27 +64,7 @@
         },
         {
             "id": "LVBus186176",
-            "type": "bus_neutral",
-            "loads": [
-                {
-                    "id": "LVBus186176_production",
-                    "function": "ys_neutral",
-                    "powers": {
-                        "sa": [0.0, 0.0],
-                        "sb": [0.0, 0.0],
-                        "sc": [-0.0, 0.0]
-                    }
-                },
-                {
-                    "id": "LVBus186176_consumption",
-                    "function": "ys_neutral",
-                    "powers": {
-                        "sa": [0.0, 0.0],
-                        "sb": [0.0, 0.0],
-                        "sc": [0.0, 0.0]
-                    }
-                }
-            ],
+            "phases": "abcn",
             "geometry": {
                 "type": "Point",
                 "coordinates": [-0.762572178265289, 48.60149259897884]
@@ -137,27 +72,7 @@
         },
         {
             "id": "LVBus186177",
-            "type": "bus_neutral",
-            "loads": [
-                {
-                    "id": "LVBus186177_production",
-                    "function": "ys_neutral",
-                    "powers": {
-                        "sa": [0.0, 0.0],
-                        "sb": [-0.0, 0.0],
-                        "sc": [0.0, 0.0]
-                    }
-                },
-                {
-                    "id": "LVBus186177_consumption",
-                    "function": "ys_neutral",
-                    "powers": {
-                        "sa": [0.0, 0.0],
-                        "sb": [8107.2589902034315, 2664.727166648309],
-                        "sc": [0.0, 0.0]
-                    }
-                }
-            ],
+            "phases": "abcn",
             "geometry": {
                 "type": "Point",
                 "coordinates": [-0.763339776619962, 48.60077755334537]
@@ -165,27 +80,7 @@
         },
         {
             "id": "LVBus186173",
-            "type": "bus_neutral",
-            "loads": [
-                {
-                    "id": "LVBus186173_production",
-                    "function": "ys_neutral",
-                    "powers": {
-                        "sa": [0.0, 0.0],
-                        "sb": [0.0, 0.0],
-                        "sc": [-0.0, 0.0]
-                    }
-                },
-                {
-                    "id": "LVBus186173_consumption",
-                    "function": "ys_neutral",
-                    "powers": {
-                        "sa": [0.0, 0.0],
-                        "sb": [0.0, 0.0],
-                        "sc": [0.0, 0.0]
-                    }
-                }
-            ],
+            "phases": "abcn",
             "geometry": {
                 "type": "Point",
                 "coordinates": [-0.761561617561471, 48.60247914514799]
@@ -193,27 +88,7 @@
         },
         {
             "id": "LVBus186174",
-            "type": "bus_neutral",
-            "loads": [
-                {
-                    "id": "LVBus186174_production",
-                    "function": "ys_neutral",
-                    "powers": {
-                        "sa": [0.0, 0.0],
-                        "sb": [-0.0, 0.0],
-                        "sc": [0.0, 0.0]
-                    }
-                },
-                {
-                    "id": "LVBus186174_consumption",
-                    "function": "ys_neutral",
-                    "powers": {
-                        "sa": [0.0, 0.0],
-                        "sb": [8107.2589902034315, 2664.727166648309],
-                        "sc": [0.0, 0.0]
-                    }
-                }
-            ],
+            "phases": "abcn",
             "geometry": {
                 "type": "Point",
                 "coordinates": [-0.760257742058163, 48.602203698430706]
@@ -221,27 +96,7 @@
         },
         {
             "id": "LVBus187572",
-            "type": "bus_neutral",
-            "loads": [
-                {
-                    "id": "LVBus187572_production",
-                    "function": "ys_neutral",
-                    "powers": {
-                        "sa": [0.0, 0.0],
-                        "sb": [0.0, 0.0],
-                        "sc": [-0.0, 0.0]
-                    }
-                },
-                {
-                    "id": "LVBus187572_consumption",
-                    "function": "ys_neutral",
-                    "powers": {
-                        "sa": [0.0, 0.0],
-                        "sb": [0.0, 0.0],
-                        "sc": [0.0, 0.0]
-                    }
-                }
-            ],
+            "phases": "abcn",
             "geometry": {
                 "type": "Point",
                 "coordinates": [-0.763823658677378, 48.60305776103005]
@@ -249,27 +104,7 @@
         },
         {
             "id": "LVBus195737",
-            "type": "bus_neutral",
-            "loads": [
-                {
-                    "id": "LVBus195737_production",
-                    "function": "ys_neutral",
-                    "powers": {
-                        "sa": [-0.0, 0.0],
-                        "sb": [0.0, 0.0],
-                        "sc": [0.0, 0.0]
-                    }
-                },
-                {
-                    "id": "LVBus195737_consumption",
-                    "function": "ys_neutral",
-                    "powers": {
-                        "sa": [8107.2589902034315, 2664.727166648309],
-                        "sb": [0.0, 0.0],
-                        "sc": [0.0, 0.0]
-                    }
-                }
-            ],
+            "phases": "abcn",
             "geometry": {
                 "type": "Point",
                 "coordinates": [-0.763276537372726, 48.604304238644815]
@@ -279,18 +114,23 @@
     "branches": [
         {
             "id": "Transformer",
+            "type": "transformer",
+            "phases1": "abc",
+            "phases2": "abcn",
             "bus1": "VoltageSource",
             "bus2": "MVLV01157",
             "geometry": {
                 "type": "Point",
                 "coordinates": [-0.763275481768985, 48.60297718339383]
             },
-            "type_name": "Dyn11_160kVA",
-            "tap": 1.0,
-            "type": "transformer"
+            "params_id": "Dyn11_160kVA",
+            "tap": 1.0
         },
         {
             "id": "LVBranch119309",
+            "type": "line",
+            "phases1": "abcn",
+            "phases2": "abcn",
             "bus1": "MVLV01157",
             "bus2": "LVBus127384",
             "geometry": {
@@ -307,11 +147,14 @@
                 ]
             },
             "length": 0.013551760479693866,
-            "type_name": "S_AL_150",
-            "type": "line"
+            "params_id": "S_AL_150",
+            "ground": "ground"
         },
         {
             "id": "LVBranch158853",
+            "type": "line",
+            "phases1": "abcn",
+            "phases2": "abcn",
             "bus1": "LVBus127384",
             "bus2": "LVBus186172",
             "geometry": {
@@ -339,11 +182,14 @@
                 ]
             },
             "length": 0.16687032258739654,
-            "type_name": "S_AL_150",
-            "type": "line"
+            "params_id": "S_AL_150",
+            "ground": "ground"
         },
         {
             "id": "LVBranch133747",
+            "type": "line",
+            "phases1": "abcn",
+            "phases2": "abcn",
             "bus1": "LVBus186172",
             "bus2": "LVBus186175",
             "geometry": {
@@ -357,11 +203,14 @@
                 ]
             },
             "length": 0.0031663050478217317,
-            "type_name": "S_AL_150",
-            "type": "line"
+            "params_id": "S_AL_150",
+            "ground": "ground"
         },
         {
             "id": "LVBranch053605",
+            "type": "line",
+            "phases1": "abcn",
+            "phases2": "abcn",
             "bus1": "LVBus186175",
             "bus2": "LVBus186176",
             "geometry": {
@@ -377,11 +226,14 @@
                 ]
             },
             "length": 0.12653087931322696,
-            "type_name": "T_AL_70",
-            "type": "line"
+            "params_id": "T_AL_70",
+            "ground": "ground"
         },
         {
             "id": "LVBranch011205",
+            "type": "line",
+            "phases1": "abcn",
+            "phases2": "abcn",
             "bus1": "LVBus186176",
             "bus2": "LVBus186177",
             "geometry": {
@@ -397,11 +249,14 @@
                 ]
             },
             "length": 0.09796160126133627,
-            "type_name": "T_AL_70",
-            "type": "line"
+            "params_id": "T_AL_70",
+            "ground": "ground"
         },
         {
             "id": "LVBranch142467",
+            "type": "line",
+            "phases1": "abcn",
+            "phases2": "abcn",
             "bus1": "LVBus186172",
             "bus2": "LVBus186173",
             "geometry": {
@@ -415,11 +270,14 @@
                 ]
             },
             "length": 0.007565816669528637,
-            "type_name": "S_AL_150",
-            "type": "line"
+            "params_id": "S_AL_150",
+            "ground": "ground"
         },
         {
             "id": "LVBranch084743",
+            "type": "line",
+            "phases1": "abcn",
+            "phases2": "abcn",
             "bus1": "LVBus186173",
             "bus2": "LVBus186174",
             "geometry": {
@@ -439,11 +297,14 @@
                 ]
             },
             "length": 0.10304715198115963,
-            "type_name": "S_AL_150",
-            "type": "line"
+            "params_id": "S_AL_150",
+            "ground": "ground"
         },
         {
             "id": "LVBranch133746",
+            "type": "line",
+            "phases1": "abcn",
+            "phases2": "abcn",
             "bus1": "LVBus127384",
             "bus2": "LVBus187572",
             "geometry": {
@@ -464,11 +325,14 @@
                 ]
             },
             "length": 0.02998363504572132,
-            "type_name": "S_AL_150",
-            "type": "line"
+            "params_id": "S_AL_150",
+            "ground": "ground"
         },
         {
             "id": "LVBranch119296",
+            "type": "line",
+            "phases1": "abcn",
+            "phases2": "abcn",
             "bus1": "LVBus187572",
             "bus2": "LVBus195737",
             "geometry": {
@@ -491,13 +355,207 @@
                 ]
             },
             "length": 0.16203866991098098,
-            "type_name": "S_AL_150",
-            "type": "line"
+            "params_id": "S_AL_150",
+            "ground": "ground"
         }
     ],
-    "line_types": [
+    "loads": [
         {
-            "name": "S_AL_150",
+            "id": "LVBus127384_production",
+            "bus": "LVBus127384",
+            "phases": "abcn",
+            "powers": [
+                [0.0, 0.0],
+                [0.0, 0.0],
+                [-0.0, 0.0]
+            ]
+        },
+        {
+            "id": "LVBus127384_consumption",
+            "bus": "LVBus127384",
+            "phases": "abcn",
+            "powers": [
+                [0.0, 0.0],
+                [0.0, 0.0],
+                [0.0, 0.0]
+            ]
+        },
+        {
+            "id": "LVBus186172_production",
+            "bus": "LVBus186172",
+            "phases": "abcn",
+            "powers": [
+                [0.0, 0.0],
+                [0.0, 0.0],
+                [-0.0, 0.0]
+            ]
+        },
+        {
+            "id": "LVBus186172_consumption",
+            "bus": "LVBus186172",
+            "phases": "abcn",
+            "powers": [
+                [0.0, 0.0],
+                [0.0, 0.0],
+                [0.0, 0.0]
+            ]
+        },
+        {
+            "id": "LVBus186175_production",
+            "bus": "LVBus186175",
+            "phases": "abcn",
+            "powers": [
+                [0.0, 0.0],
+                [0.0, 0.0],
+                [-0.0, 0.0]
+            ]
+        },
+        {
+            "id": "LVBus186175_consumption",
+            "bus": "LVBus186175",
+            "phases": "abcn",
+            "powers": [
+                [0.0, 0.0],
+                [0.0, 0.0],
+                [0.0, 0.0]
+            ]
+        },
+        {
+            "id": "LVBus186176_production",
+            "bus": "LVBus186176",
+            "phases": "abcn",
+            "powers": [
+                [0.0, 0.0],
+                [0.0, 0.0],
+                [-0.0, 0.0]
+            ]
+        },
+        {
+            "id": "LVBus186176_consumption",
+            "bus": "LVBus186176",
+            "phases": "abcn",
+            "powers": [
+                [0.0, 0.0],
+                [0.0, 0.0],
+                [0.0, 0.0]
+            ]
+        },
+        {
+            "id": "LVBus186177_production",
+            "bus": "LVBus186177",
+            "phases": "abcn",
+            "powers": [
+                [0.0, 0.0],
+                [-0.0, 0.0],
+                [0.0, 0.0]
+            ]
+        },
+        {
+            "id": "LVBus186177_consumption",
+            "bus": "LVBus186177",
+            "phases": "abcn",
+            "powers": [
+                [0.0, 0.0],
+                [8107.2589902034315, 2664.727166648309],
+                [0.0, 0.0]
+            ]
+        },
+        {
+            "id": "LVBus186173_production",
+            "bus": "LVBus186173",
+            "phases": "abcn",
+            "powers": [
+                [0.0, 0.0],
+                [0.0, 0.0],
+                [-0.0, 0.0]
+            ]
+        },
+        {
+            "id": "LVBus186173_consumption",
+            "bus": "LVBus186173",
+            "phases": "abcn",
+            "powers": [
+                [0.0, 0.0],
+                [0.0, 0.0],
+                [0.0, 0.0]
+            ]
+        },
+        {
+            "id": "LVBus186174_production",
+            "bus": "LVBus186174",
+            "phases": "abcn",
+            "powers": [
+                [0.0, 0.0],
+                [-0.0, 0.0],
+                [0.0, 0.0]
+            ]
+        },
+        {
+            "id": "LVBus186174_consumption",
+            "bus": "LVBus186174",
+            "phases": "abcn",
+            "powers": [
+                [0.0, 0.0],
+                [8107.2589902034315, 2664.727166648309],
+                [0.0, 0.0]
+            ]
+        },
+        {
+            "id": "LVBus187572_production",
+            "bus": "LVBus187572",
+            "phases": "abcn",
+            "powers": [
+                [0.0, 0.0],
+                [0.0, 0.0],
+                [-0.0, 0.0]
+            ]
+        },
+        {
+            "id": "LVBus187572_consumption",
+            "bus": "LVBus187572",
+            "phases": "abcn",
+            "powers": [
+                [0.0, 0.0],
+                [0.0, 0.0],
+                [0.0, 0.0]
+            ]
+        },
+        {
+            "id": "LVBus195737_production",
+            "bus": "LVBus195737",
+            "phases": "abcn",
+            "powers": [
+                [-0.0, 0.0],
+                [0.0, 0.0],
+                [0.0, 0.0]
+            ]
+        },
+        {
+            "id": "LVBus195737_consumption",
+            "bus": "LVBus195737",
+            "phases": "abcn",
+            "powers": [
+                [8107.2589902034315, 2664.727166648309],
+                [0.0, 0.0],
+                [0.0, 0.0]
+            ]
+        }
+    ],
+    "sources": [
+        {
+            "id": "VoltageSource",
+            "bus": "VoltageSource",
+            "phases": "abcn",
+            "voltages": [
+                [11547.005383792515, 0.0],
+                [-5773.502691896255, -10000.0],
+                [-5773.502691896255, 10000.0]
+            ]
+        }
+    ],
+    "lines_params": [
+        {
+            "id": "S_AL_150",
             "model": "zy_neutral",
             "z_line": [
                 [
@@ -558,24 +616,24 @@
                     [
                         4.063682544124005e-05,
                         0.0,
-                        -0.0,
+                        0.0,
                         0.0
                     ],
                     [
                         0.0,
                         4.063682544124003e-05,
                         0.0,
-                        -0.0
+                        0.0
                     ],
                     [
-                        -0.0,
+                        0.0,
                         0.0,
                         4.063682544124003e-05,
                         0.0
                     ],
                     [
                         0.0,
-                        -0.0,
+                        0.0,
                         0.0,
                         4.0636825441240034e-05
                     ]
@@ -609,7 +667,7 @@
             ]
         },
         {
-            "name": "T_AL_70",
+            "id": "T_AL_70",
             "model": "zy_neutral",
             "z_line": [
                 [
@@ -721,9 +779,9 @@
             ]
         }
     ],
-    "transformer_types": [
+    "transformers_params": [
         {
-            "name": "Dyn11_160kVA",
+            "id": "Dyn11_160kVA",
             "sn": 160000.0,
             "uhv": 20000.0,
             "ulv": 400.0,

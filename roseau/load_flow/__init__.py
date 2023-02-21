@@ -1,3 +1,10 @@
+"""
+Welcome to the API reference of Roseau Load Flow.
+
+For the most part, public classes and functions can be imported directly from this module.
+
+See Package Contents below for a list of available classes and functions.
+"""
 import importlib.metadata
 
 from roseau.load_flow.__about__ import (
@@ -13,38 +20,27 @@ from roseau.load_flow.__about__ import (
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models import (
     AbstractBranch,
-    AbstractBus,
-    AbstractLine,
     AbstractLoad,
-    AbstractTransformer,
-    AdmittanceLoad,
     Bus,
     Control,
-    DeltaAdmittanceLoad,
-    DeltaDeltaTransformer,
-    DeltaImpedanceLoad,
-    DeltaPowerLoad,
-    DeltaWyeTransformer,
-    DeltaZigzagTransformer,
+    CurrentLoad,
     Element,
-    FlexibleLoad,
     FlexibleParameter,
     Ground,
     ImpedanceLoad,
-    LineCharacteristics,
+    Line,
+    LineParameters,
     PotentialRef,
     PowerLoad,
     Projection,
-    ShuntLine,
-    SimplifiedLine,
     Switch,
-    TransformerCharacteristics,
+    Transformer,
+    TransformerParameters,
     VoltageSource,
-    WyeDeltaTransformer,
-    WyeWyeTransformer,
-    WyeZigzagTransformer,
 )
 from roseau.load_flow.network import ElectricalNetwork
+from roseau.load_flow.units import Q_, ureg
+from roseau.load_flow.utils._versions import show_versions
 
 __version__ = importlib.metadata.version("roseau_load_flow")
 
@@ -58,12 +54,11 @@ __all__ = [
     "__status__",
     "__url__",
     "__version__",
+    "show_versions",
     # Electrical Network
     "ElectricalNetwork",
     # Buses
-    "AbstractBus",
     "Bus",
-    "VoltageSource",
     # Core
     "Element",
     "Ground",
@@ -71,32 +66,24 @@ __all__ = [
     "AbstractBranch",
     # Lines
     "Switch",
-    "AbstractLine",
-    "ShuntLine",
-    "SimplifiedLine",
-    "LineCharacteristics",
+    "Line",
+    "LineParameters",
     # Loads
     "AbstractLoad",
     "ImpedanceLoad",
     "PowerLoad",
-    "AdmittanceLoad",
-    "DeltaPowerLoad",
-    "DeltaAdmittanceLoad",
-    "DeltaImpedanceLoad",
-    "FlexibleLoad",
+    "CurrentLoad",
     "FlexibleParameter",
     "Control",
     "Projection",
     # Transformers
-    "AbstractTransformer",
-    "WyeWyeTransformer",
-    "DeltaWyeTransformer",
-    "DeltaDeltaTransformer",
-    "WyeDeltaTransformer",
-    "WyeZigzagTransformer",
-    "DeltaZigzagTransformer",
-    "TransformerCharacteristics",
+    "Transformer",
+    "TransformerParameters",
+    "VoltageSource",
     # Exceptions
     "RoseauLoadFlowException",
     "RoseauLoadFlowExceptionCode",
+    # Units
+    "Q_",
+    "ureg",
 ]

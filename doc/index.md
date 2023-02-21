@@ -1,26 +1,41 @@
-# Welcome to Roseau Load Flow's documentation!
+# Roseau Load Flow
 
-`Roseau Load Flow` is a load flow solver, capable of modeling 3 phases unbalanced networks with a wide variety of
-line, transformer, load and flexible load models.
+`Roseau Load Flow` is a load flow solver capable of modeling 3-phases unbalanced power systems with
+a wide variety of models for lines, transformers, loads, and sources.
 
-To get started you can use the following notebooks:
+## Installation
+
+`roseau_load_flow` is compatible with Python 3.9 and above. It can be installed with:
 
 ```{toctree}
 ---
 maxdepth: 3
-caption: Notebooks
+caption: Installation
 ---
-notebooks/Getting_Started
-notebooks/IO
-notebooks/Advanced
+installation
 ```
 
-If you want the full documentation of all the classes and methods, you can refer to the following modules:
+## Usage
+
+The following tutorials are available to help you get started:
 
 ```{toctree}
 ---
-maxdepth: 5
+maxdepth: 2
+caption: Tutorials
+---
+notebooks/Getting_Started
+notebooks/Advanced
+```
+
+## API
+If you want the full documentation of all the classes and functions, you can refer to the following
+references:
+
+```{toctree}
+---
+maxdepth: 3
 caption: API
 ---
-autoapi/roseau/index
+autoapi/roseau/load_flow/index
 ```

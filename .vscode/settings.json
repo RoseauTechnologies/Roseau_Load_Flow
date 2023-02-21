@@ -1,0 +1,19 @@
+{
+    // Jupyter
+    "jupyter.notebookFileRoot": "${workspaceFolder}",
+
+    // Python
+    "python.analysis.diagnosticSeverityOverrides": {
+        "reportInvalidStringEscapeSequence": "warning",
+        "reportImportCycles": "warning",
+        "reportUnusedImport": "warning",
+    },
+    "python.formatting.provider": "none",
+    "python.testing.pytestArgs": [],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true,
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter",
+        "editor.formatOnSave": true,
+    },
+}

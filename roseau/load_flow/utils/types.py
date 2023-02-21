@@ -1,10 +1,11 @@
 import logging
-from enum import auto, Enum, unique
+from enum import Enum, auto, unique
 from typing import Optional
 
 import regex
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
+from roseau.load_flow.typing import Self
 
 # The local logger
 logger = logging.getLogger(__name__)
@@ -27,10 +28,10 @@ class LineType(Enum):
         Returns:
              A printable string of the line type.
         """
-        return super().__str__().split(".", 1)[-1].lower()
+        return self.name.lower()
 
     @classmethod
-    def from_string(cls, string: str) -> "LineType":
+    def from_string(cls, string: str) -> Self:
         """Convert a string into a LineType
 
         Args:
@@ -48,7 +49,7 @@ class LineType(Enum):
         elif string in ("twisted", "torsadé", "torsade", "t"):
             return cls.TWISTED
         else:
-            msg = f"The string {string!r} can not be converted into a LineType."
+            msg = f"The string {string!r} cannot be converted into a LineType."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_TYPE)
 
@@ -111,7 +112,7 @@ class ConductorType(Enum):
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_CONDUCTOR_TYPE)
 
     @classmethod
-    def from_string(cls, string: str) -> "ConductorType":
+    def from_string(cls, string: str) -> Self:
         """Convert a string into a ConductorType
 
         Args:
@@ -133,7 +134,7 @@ class ConductorType(Enum):
         elif string == "la":
             return cls.LA
         else:
-            msg = f"The string {string!r} can not be converted into a ConductorType."
+            msg = f"The string {string!r} cannot be converted into a ConductorType."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_CONDUCTOR_TYPE)
 
@@ -172,10 +173,10 @@ class IsolationType(Enum):
         Returns:
             A printable string of the isolation type.
         """
-        return super().__str__().split(".", 1)[-1].upper()
+        return self.name.upper()
 
     @classmethod
-    def from_string(cls, string: str) -> "IsolationType":
+    def from_string(cls, string: str) -> Self:
         """Convert a string into a IsolationType
 
         Args:
@@ -198,7 +199,7 @@ class IsolationType(Enum):
         elif string == "PVC":
             return cls.PVC
         else:
-            msg = f"The string {string!r} can not be converted into a IsolationType."
+            msg = f"The string {string!r} cannot be converted into a IsolationType."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_ISOLATION_TYPE)
 
@@ -231,10 +232,10 @@ class LineModel(Enum):
         Returns:
             A printable string of the names of line model.
         """
-        return super().__str__().split(".", 1)[-1].lower()
+        return self.name.lower()
 
     @classmethod
-    def from_string(cls, string: str) -> "LineModel":
+    def from_string(cls, string: str) -> Self:
         """Convert a string into a LineModel
 
         Args:
@@ -262,7 +263,7 @@ class LineModel(Enum):
         elif string in ("", "nan", "unknown"):
             return cls.UNKNOWN
         else:
-            msg = f"The string {string!r} can not be converted into a LineModel."
+            msg = f"The string {string!r} cannot be converted into a LineModel."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_MODEL)
 
@@ -320,10 +321,10 @@ class BranchType(Enum):
         Returns:
             A printable string of the connection type.
         """
-        return super().__str__().split(".", 1)[-1].lower()
+        return self.name.lower()
 
     @classmethod
-    def from_string(cls, string: str) -> "BranchType":
+    def from_string(cls, string: str) -> Self:
         """Convert a string into a ConnectionType
 
         Args:
@@ -340,12 +341,12 @@ class BranchType(Enum):
         elif string == "switch":
             return cls.SWITCH
         else:
-            msg = f"The string {string!r} can not be converted into a BranchType."
+            msg = f"The string {string!r} cannot be converted into a BranchType."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_BRANCH_TYPE)
 
 
-EXTRACT_WINDINGS_RE: regex.Regex = regex.compile(
+EXTRACT_WINDINGS_RE = regex.compile(
     "(?(DEFINE)(?P<y_winding>yn?)(?P<d_winding>d)(?P<z_winding>zn?)(?P<p_set_1>[06])"
     "(?P<p_set_2>5|11))"
     ""
@@ -401,10 +402,10 @@ class TransformerType(Enum):
         Returns:
             A printable string of the transformer type.
         """
-        return super().__str__().split(".", 1)[-1]
+        return self.name
 
     @classmethod
-    def from_string(cls, string: str) -> "TransformerType":
+    def from_string(cls, string: str) -> Self:
         """Convert a string into a TransformerType
 
         Args:
@@ -414,13 +415,13 @@ class TransformerType(Enum):
         Returns:
             The corresponding TransformerType
         """
-        winding1, winding2, phase_displacement = TransformerType.extract_windings(string=string)
+        winding1, winding2, phase_displacement = cls.extract_windings(string=string)
         try:
             return getattr(cls, f"{winding1}{winding2}")
         except AttributeError:
-            msg = f"The string {string!r} can not be converted into a TransformerType."
+            msg = f"The string {string!r} cannot be converted into a TransformerType."
             logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_TYPE)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_TYPE) from None
 
     @property
     def windings(self) -> tuple[str, str]:
@@ -444,9 +445,9 @@ class TransformerType(Enum):
             True if the provided string corresponds to valid transformer windings.
         """
         try:
-            match: regex.regex.Match = EXTRACT_WINDINGS_RE.fullmatch(string=string)
+            match = EXTRACT_WINDINGS_RE.fullmatch(string=string)
             return bool(match) and bool(match.group("p"))
-        except RoseauLoadFlowException:
+        except Exception:
             return False
 
     @classmethod
@@ -460,7 +461,7 @@ class TransformerType(Enum):
         Returns:
             The high voltages winding, the low voltages winding, and the phase displacement.
         """
-        match: regex.regex.Match = EXTRACT_WINDINGS_RE.fullmatch(string=string)
+        match = EXTRACT_WINDINGS_RE.fullmatch(string=string)
         if match:
             groups = match.groupdict()
             winding1, winding2, phase_displacement = groups["w1"], groups["w2"], groups["p"]
@@ -469,6 +470,6 @@ class TransformerType(Enum):
             else:
                 return winding1.upper(), winding2.lower(), None
         else:
-            msg = f"Transformer windings can not be extracted from the string {string!r}."
+            msg = f"Transformer windings cannot be extracted from the string {string!r}."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS)

@@ -6,25 +6,26 @@
 
 # -- Path setup --------------------------------------------------------------
 
+import importlib.metadata
+
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-import os
-import sys
+# import os
+# import sys
 
-sys.path.insert(0, os.path.abspath("../roseau/"))
-
+# sys.path.insert(0, os.path.abspath("../roseau/"))
 
 # -- Project information -----------------------------------------------------
 
 project = "Roseau Load Flow"
-copyright = "2022, Roseau Technologies SAS"
+copyright = "2022-2023, Roseau Technologies SAS"
 # author = "Benoît Vinot"
 
 # The full version, including alpha/beta/rc tags
-release = "0.2.0"
-
+version = importlib.metadata.version("roseau_load_flow")
+release = f"{project} {version}"
 
 # -- General configuration ---------------------------------------------------
 
@@ -36,16 +37,17 @@ extensions = [
     "sphinx.ext.mathjax",
     "sphinx.ext.autodoc",
     "sphinx.ext.napoleon",
+    "sphinx.ext.intersphinx",
     "nbsphinx",
     "autoapi.extension",
+    "sphinx_copybutton",
+    "sphinx_inline_tabs",
 ]
 
-napoleon_numpy_docstring = False
-autodoc_default_options = {"ignore-module-all": False}
-autodoc_member_order = "bysource"
-autodoc_typehints = "signature"
-python_use_unqualified_type_names = True
 add_module_names = False
+napoleon_numpy_docstring = False
+nbsphinx_execute = "never"
+python_use_unqualified_type_names = True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
@@ -62,6 +64,11 @@ language = "en"
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = []
 
+# -- Options for autodoc ----------------------------------------------------
+autodoc_default_options = {"ignore-module-all": False}
+autodoc_member_order = "bysource"
+autodoc_typehints = "signature"
+autodoc_inherit_docstrings = True
 
 # -- Options for HTML output -------------------------------------------------
 
@@ -71,10 +78,10 @@ exclude_patterns = []
 html_theme = "furo"
 html_show_copyright = True
 html_title = f"{release}"
-html_logo = "_static/Logo_Roseau_Technologies_With_Baseline.png"
+html_logo = "_static/Logo_Roseau_Technologies_Without_Baseline.svg"
 html_favicon = "_static/Favicon_Roseau_Technologies.ico"
 html_theme_options = {
-    # "source_repository": "https://github.com/RoseauTechnologies/SIRAO_Documentation/",
+    "source_repository": "https://github.com/RoseauTechnologies/Roseau_Load_Flow/",
     # "source_branch": "main",
     # "source_directory": "source/",
     # "sidebar_hide_name": True,
@@ -96,11 +103,23 @@ html_theme_options = {
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
 
-
-# AutoAPI
-autoapi_dirs = ["../roseau"]
-autoapi_ignore = ["**/tests/**", "**/conftest.py"]
-autoapi_options = ["members", "undoc-members", "show-inheritance", "show-module-summary", "imported-members"]
-
 # Extra CSS files
 html_css_files = ["css/custom.css"]
+
+# -- Options for AutoAPI -------------------------------------------------
+autoapi_dirs = ["../roseau"]
+autoapi_ignore = ["**/tests/**", "**/conftest.py", "__about__.py"]
+autoapi_options = ["members", "show-inheritance", "show-module-summary", "imported-members"]
+autoapi_python_class_content = "both"  # without this, the __init__ docstring is not shown
+autoapi_python_use_implicit_namespaces = True
+
+# -- Options for intersphinx -------------------------------------------------
+intersphinx_mapping = {
+    "python": ("https://docs.python.org/3", None),
+    "shapely": ("https://shapely.readthedocs.io/en/stable/", None),
+    "numpy": ("https://numpy.org/doc/stable/", None),
+    "pandas": ("https://pandas.pydata.org/docs/", None),
+    "geopandas": ("https://geopandas.org/en/stable/", None),
+    "requests": ("https://requests.readthedocs.io/en/latest/", None),
+    "pint": ("https://pint.readthedocs.io/en/stable/", None),
+}

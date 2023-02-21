@@ -1,7 +1,5 @@
 import json
 import logging
-from pathlib import Path
-from typing import Union
 
 import numpy as np
 import pandas as pd
@@ -9,35 +7,42 @@ import pandas as pd
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models import (
     AbstractBranch,
-    AbstractBus,
-    AbstractLine,
-    AbstractTransformer,
+    AbstractLoad,
     Bus,
     Ground,
-    LineCharacteristics,
+    Line,
+    LineParameters,
     PotentialRef,
     PowerLoad,
     Switch,
-    TransformerCharacteristics,
+    Transformer,
+    TransformerParameters,
     VoltageSource,
 )
-from roseau.load_flow.models.core import Element
-from roseau.load_flow.models.loads.loads import AbstractLoad
-from roseau.load_flow.utils import LineModel, Q_
+from roseau.load_flow.typing import StrPath
+from roseau.load_flow.units import Q_
+from roseau.load_flow.utils import LineModel
 
 logger = logging.getLogger(__name__)
 
 
 def network_from_dgs(  # noqa: C901
-    filename: Union[str, Path]
-) -> tuple[dict[str, AbstractBus], dict[str, AbstractBranch], dict[str, AbstractLoad], list[Element]]:
-    """Create the electrical elements from a JSON file in DGS format to create an electrical network.
+    filename: StrPath,
+) -> tuple[
+    dict[str, Bus],
+    dict[str, AbstractBranch],
+    dict[str, AbstractLoad],
+    dict[str, VoltageSource],
+    dict[str, Ground],
+    dict[str, PotentialRef],
+]:
+    """Create the electrical elements from a JSON file in DGS format.
 
     Args:
         filename: name of the JSON file
 
     Returns:
-        The buses, branches, loads and special elements to construct the electrical network.
+        The elements of the network: buses, branches, loads, sources, grounds and potential refs.
     """
     # Read files
     (
@@ -55,41 +60,42 @@ def network_from_dgs(  # noqa: C901
         elm_pv_sys,
     ) = _read_dgs_json_file(filename=filename)
 
-    # Ground and special elements
-    ground = Ground()
-    p_ref = PotentialRef(ground)
+    # Ground and potential reference
+    ground = Ground("ground")
+    p_ref = PotentialRef("pref", element=ground)
+
+    grounds = {ground.id: ground}
+    potential_refs = {p_ref.id: p_ref}
 
     # Buses
-    buses = dict()
+    buses: dict[str, Bus] = {}
     for bus_id in elm_term.index:
         ph_tech = elm_term.at[bus_id, "phtech"]
-        if ph_tech == 0:  # ABC
-            n = 3
-        elif ph_tech == 1:  # ABC-N
-            n = 4
+        if ph_tech == 0:
+            phases = "abc"
+        elif ph_tech == 1:
+            phases = "abcn"
         else:
-            msg = f"The Ph tech {ph_tech!r} for bus {bus_id!r} can not be handle."
+            msg = f"The Ph tech {ph_tech!r} for bus {bus_id!r} cannot be handled."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DGS_BAD_PHASE_TECHNOLOGY)
-        buses[bus_id] = Bus(id=bus_id, n=n)
+        buses[bus_id] = Bus(id=bus_id, phases=phases)
 
     # Sources
-    for bus_id in elm_xnet.index:
-        id_sta_cubic_source = elm_xnet.at[bus_id, "bus1"]  # id of the cubicle connecting the source and its bus
-        source_bus = sta_cubic.at[id_sta_cubic_source, "cterm"]  # id of the bus to which the source is connected
-        un = elm_term.at[source_bus, "uknom"] / np.sqrt(3) * 1e3  # phase-to-neutral voltage (V)
-        tap = elm_xnet.at[bus_id, "usetp"]  # tap voltage (p.u.)
-        # the voltage source "erases" the buse to which it is connected
+    sources: dict[str, VoltageSource] = {}
+    for source_id in elm_xnet.index:
+        id_sta_cubic_source = elm_xnet.at[source_id, "bus1"]  # id of the cubicle connecting the source and its bus
+        bus_id = sta_cubic.at[id_sta_cubic_source, "cterm"]  # id of the bus to which the source is connected
+        un = elm_term.at[bus_id, "uknom"] / np.sqrt(3) * 1e3  # phase-to-neutral voltage (V)
+        tap = elm_xnet.at[source_id, "usetp"]  # tap voltage (p.u.)
         voltages = [un * tap, un * np.exp(-np.pi * 2 / 3 * 1j) * tap, un * np.exp(np.pi * 2 / 3 * 1j) * tap]
-        buses[source_bus] = VoltageSource(
-            id=source_bus,
-            n=4,
-            ground=ground,
-            source_voltages=voltages,
-        )
+        source_bus = buses[bus_id]
+
+        sources[source_id] = VoltageSource(id=source_id, phases="abcn", bus=source_bus, voltages=voltages)
+        source_bus._connect(ground)
 
     # LV loads
-    loads = dict()
+    loads: dict[str, AbstractLoad] = {}
     if elm_lod_lv is not None:
         _generate_loads(elm_lod_lv, loads, buses, sta_cubic, 1e3, production=False)
 
@@ -104,34 +110,29 @@ def network_from_dgs(  # noqa: C901
         _generate_loads(elm_lod_mv, loads, buses, sta_cubic, 1e6, production=False)
 
     # Lines
-    branches = dict()
+    branches: dict[str, AbstractBranch] = {}
     if elm_lne is not None:
-
-        line_types = dict()
+        lines_params_dict: dict[str, LineParameters] = {}
         for type_id in typ_lne.index:
+            # TODO: use the detailed phase information instead of n
             n = typ_lne.at[type_id, "nlnph"] + typ_lne.at[type_id, "nneutral"]
             if n == 4:
                 line_model = LineModel.SYM_NEUTRAL
             elif n == 3:
                 line_model = LineModel.SYM
             else:
-                msg = f"The number of phases ({n}) of line type {type_id!r} can not be handled, it should be 3 or 4."
+                msg = f"The number of phases ({n}) of line type {type_id!r} cannot be handled, it should be 3 or 4."
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DGS_BAD_PHASE_NUMBER)
 
-            line_types[type_id] = LineCharacteristics.from_sym(
-                type_name=type_id,
-                r0=typ_lne.at[type_id, "rline0"],
+            lines_params_dict[type_id] = LineParameters.from_sym(
+                type_id,
+                z0=complex(typ_lne.at[type_id, "rline0"], typ_lne.at[type_id, "xline0"]),
                 model=line_model,
-                r1=typ_lne.at[type_id, "rline"],
-                x0=typ_lne.at[type_id, "xline0"],
-                x1=typ_lne.at[type_id, "xline"],
-                g0=Q_(typ_lne.at[type_id, "gline0"], "uS/km"),
-                g1=Q_(typ_lne.at[type_id, "gline"], "uS/km"),
-                b0=Q_(typ_lne.at[type_id, "bline0"], "uS/km"),
-                b1=Q_(typ_lne.at[type_id, "bline"], "uS/km"),
-                rn=typ_lne.at[type_id, "rnline"],
-                xn=typ_lne.at[type_id, "xnline"],
+                z1=complex(typ_lne.at[type_id, "rline"], typ_lne.at[type_id, "xline"]),
+                y0=Q_(complex(typ_lne.at[type_id, "gline0"], typ_lne.at[type_id, "bline0"]), "uS/km"),
+                y1=Q_(complex(typ_lne.at[type_id, "gline"], typ_lne.at[type_id, "bline"]), "uS/km"),
+                zn=complex(typ_lne.at[type_id, "rnline"], typ_lne.at[type_id, "xnline"]),
                 xpn=typ_lne.at[type_id, "xpnline"],
                 bn=Q_(typ_lne.at[type_id, "bnline"], "uS/km"),
                 bpn=Q_(typ_lne.at[type_id, "bpnline"], "uS/km"),
@@ -139,50 +140,48 @@ def network_from_dgs(  # noqa: C901
 
         for line_id in elm_lne.index:
             type_id = elm_lne.at[line_id, "typ_id"]  # id of the line type
-
-            branches[line_id] = AbstractLine.from_dict(
+            branches[line_id] = Line(
                 id=line_id,
                 bus1=buses[sta_cubic.at[elm_lne.at[line_id, "bus1"], "cterm"]],
                 bus2=buses[sta_cubic.at[elm_lne.at[line_id, "bus2"], "cterm"]],
                 length=elm_lne.at[line_id, "dline"],
-                line_types=line_types,
-                type_name=type_id,
+                parameters=lines_params_dict[type_id],
                 ground=ground,
             )
 
     # Transformers
     if elm_tr is not None:
         # Transformers type
-        transformers_data = dict()
-        transformers_tap = dict()
+        transformers_params_dict: dict[str, TransformerParameters] = {}
+        transformers_tap: dict[str, int] = {}
         for idx in typ_tr.index:
             # Extract data
             name = typ_tr.at[idx, "loc_name"]
-            sn = typ_tr.at[idx, "strn"] * 1e6  # The nominal voltages of the transformer (MVA -> VA)
-            uhv = typ_tr.at[idx, "utrn_h"] * 1e3  # Phase-to-phase nominal voltages of the high voltages side (kV -> V)
-            ulv = typ_tr.at[idx, "utrn_l"] * 1e3  # Phase-to-phase nominal voltages of the low voltages side (kV -> V)
-            i0 = typ_tr.at[idx, "curmg"] / 3 / 100  # Current during off-load test (%)
-            p0 = typ_tr.at[idx, "pfe"] * 1e3 / 3  # Losses during off-load test (kW -> W)
-            psc = typ_tr.at[idx, "pcutr"] * 1e3  # Losses during short circuit test (kW -> W)
-            vsc = typ_tr.at[idx, "uktr"] / 100  # Voltages on LV side during short circuit test (%)
-            type_name = "{}{}{}".format(  # Winding of the transformer
-                typ_tr.at[idx, "tr2cn_h"], typ_tr.at[idx, "tr2cn_l"], typ_tr.at[idx, "nt2ag"]
-            )
+            sn = Q_(typ_tr.at[idx, "strn"], "MVA")  # The nominal voltages of the transformer (MVA)
+            uhv = Q_(typ_tr.at[idx, "utrn_h"], "kV")  # Phase-to-phase nominal voltages of the high voltages side (kV)
+            ulv = Q_(typ_tr.at[idx, "utrn_l"], "kV")  # Phase-to-phase nominal voltages of the low voltages side (kV)
+            i0 = Q_(typ_tr.at[idx, "curmg"] / 3, "percent")  # Current during off-load test (%)
+            p0 = Q_(typ_tr.at[idx, "pfe"] / 3, "kW")  # Losses during off-load test (kW)
+            psc = Q_(typ_tr.at[idx, "pcutr"], "kW")  # Losses during short circuit test (kW)
+            vsc = Q_(typ_tr.at[idx, "uktr"], "percent")  # Voltages on LV side during short circuit test (%)
+            # Windings of the transformer
+            windings = f"{typ_tr.at[idx, 'tr2cn_h']}{typ_tr.at[idx, 'tr2cn_l']}{typ_tr.at[idx, 'nt2ag']}"
 
             # Generate transformer parameters
-            transformers_data[idx] = TransformerCharacteristics(name, type_name, uhv, ulv, sn, p0, i0, psc, vsc)
+            transformers_params_dict[idx] = TransformerParameters(
+                id=name, windings=windings, uhv=uhv, ulv=ulv, sn=sn, p0=p0, i0=i0, psc=psc, vsc=vsc
+            )
             transformers_tap[idx] = typ_tr.at[idx, "dutap"]
 
         # Create transformers
         for idx in elm_tr.index:
             type_id = elm_tr.at[idx, "typ_id"]  # id of the line type
             tap = 1.0 + elm_tr.at[idx, "nntap"] * transformers_tap[type_id] / 100
-            branches[idx] = AbstractTransformer.from_dict(
+            branches[idx] = Transformer(
                 id=idx,
-                transformer_types=transformers_data,
-                type_name=type_id,
                 bus1=buses[sta_cubic.at[elm_tr.at[idx, "bushv"], "cterm"]],
                 bus2=buses[sta_cubic.at[elm_tr.at[idx, "buslv"], "cterm"]],
+                parameters=transformers_params_dict[type_id],
                 tap=tap,
             )
             ground.connect(bus=buses[sta_cubic.at[elm_tr.at[idx, "buslv"], "cterm"]])
@@ -190,18 +189,19 @@ def network_from_dgs(  # noqa: C901
     # Create switches
     if elm_coup is not None:
         for switch_id in elm_coup.index:
+            # TODO: use the detailed phase information instead of n
             n = elm_coup.at[switch_id, "nphase"] + elm_coup.at[switch_id, "nneutral"]
             branches[switch_id] = Switch(
                 id=switch_id,
-                n=n,
+                phases="abc" if n == 3 else "abcn",
                 bus1=buses[sta_cubic.at[elm_coup.at[switch_id, "bus1"], "cterm"]],
                 bus2=buses[sta_cubic.at[elm_coup.at[switch_id, "bus2"], "cterm"]],
             )
 
-    return buses, branches, loads, [p_ref, ground]
+    return buses, branches, loads, sources, grounds, potential_refs
 
 
-def _read_dgs_json_file(filename: Union[str, Path]):
+def _read_dgs_json_file(filename: StrPath):
     """Read a JSON file in DGS format.
 
     Args:
@@ -315,11 +315,11 @@ def _read_dgs_json_file(filename: Union[str, Path]):
 def _generate_loads(
     elm_lod: pd.DataFrame,
     loads: dict[str, AbstractLoad],
-    buses: dict[str, AbstractBus],
+    buses: dict[str, Bus],
     sta_cubic: pd.DataFrame,
     factor: float,
     production: bool,
-):
+) -> None:
     """Generate the loads of a given dataframe.
 
     Args:
@@ -355,9 +355,10 @@ def _generate_loads(
             sc = _compute_load_power(elm_lod, load_id, "t") * factor
 
         if sa == 0 and sb == 0 and sc == 0:  # Balanced
-            loads[load_id] = PowerLoad(id=load_id, n=4, bus=buses[bus_id], s=[s_phase / 3, s_phase / 3, s_phase / 3])
+            s = [s_phase / 3, s_phase / 3, s_phase / 3]
         else:  # Unbalanced
-            loads[load_id] = PowerLoad(id=load_id, n=4, bus=buses[bus_id], s=[sa, sb, sc])
+            s = [sa, sb, sc]
+        loads[load_id] = PowerLoad(id=load_id, phases="abcn", bus=buses[bus_id], powers=s)
 
 
 def _compute_load_power(elm_lod: pd.DataFrame, load_id: str, suffix: str) -> complex:

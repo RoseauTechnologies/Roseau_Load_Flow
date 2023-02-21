@@ -1,29 +1,24 @@
-from roseau.load_flow.models.buses import AbstractBus, Bus, VoltageSource
-from roseau.load_flow.models.core import AbstractBranch, Element, Ground, PotentialRef
-from roseau.load_flow.models.lines import AbstractLine, LineCharacteristics, ShuntLine, SimplifiedLine, Switch
+"""
+This module contains the models used to represent the network elements. The
+models are used to build the network and to perform the load flow analysis.
+"""
+from roseau.load_flow.models.branches import AbstractBranch
+from roseau.load_flow.models.buses import Bus
+from roseau.load_flow.models.core import Element
+from roseau.load_flow.models.grounds import Ground
+from roseau.load_flow.models.lines import Line, LineParameters, Switch
 from roseau.load_flow.models.loads import (
     AbstractLoad,
-    AdmittanceLoad,
     Control,
-    DeltaAdmittanceLoad,
-    DeltaImpedanceLoad,
-    DeltaPowerLoad,
-    FlexibleLoad,
+    CurrentLoad,
     FlexibleParameter,
     ImpedanceLoad,
     PowerLoad,
     Projection,
 )
-from roseau.load_flow.models.transformers import (
-    AbstractTransformer,
-    DeltaDeltaTransformer,
-    DeltaWyeTransformer,
-    DeltaZigzagTransformer,
-    TransformerCharacteristics,
-    WyeDeltaTransformer,
-    WyeWyeTransformer,
-    WyeZigzagTransformer,
-)
+from roseau.load_flow.models.potential_refs import PotentialRef
+from roseau.load_flow.models.sources import VoltageSource
+from roseau.load_flow.models.transformers import Transformer, TransformerParameters
 
 __all__ = [
     # Core
@@ -32,34 +27,22 @@ __all__ = [
     "Ground",
     "AbstractBranch",
     # Buses
-    "AbstractBus",
     "Bus",
-    "VoltageSource",
     # Lines
     "Switch",
-    "AbstractLine",
-    "ShuntLine",
-    "SimplifiedLine",
-    "LineCharacteristics",
+    "Line",
+    "LineParameters",
     # Loads
     "AbstractLoad",
     "ImpedanceLoad",
     "PowerLoad",
-    "AdmittanceLoad",
-    "DeltaAdmittanceLoad",
-    "DeltaImpedanceLoad",
-    "DeltaPowerLoad",
-    "FlexibleLoad",
+    "CurrentLoad",
     "FlexibleParameter",
     "Control",
     "Projection",
     # Transformers
-    "AbstractTransformer",
-    "WyeWyeTransformer",
-    "DeltaWyeTransformer",
-    "DeltaDeltaTransformer",
-    "WyeDeltaTransformer",
-    "WyeZigzagTransformer",
-    "DeltaZigzagTransformer",
-    "TransformerCharacteristics",
+    "Transformer",
+    "TransformerParameters",
+    # Voltage sources
+    "VoltageSource",
 ]

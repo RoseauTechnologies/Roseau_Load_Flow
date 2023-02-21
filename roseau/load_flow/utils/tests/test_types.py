@@ -23,11 +23,11 @@ def test_types_basic(t):
 def test_line_type():
     with pytest.raises(RoseauLoadFlowException) as e:
         LineType.from_string("")
-    assert "can not be converted into a LineType" in e.value.args[0]
+    assert "cannot be converted into a LineType" in e.value.args[0]
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_LINE_TYPE
     with pytest.raises(RoseauLoadFlowException) as e:
         LineType.from_string("nan")
-    assert "can not be converted into a LineType" in e.value.args[0]
+    assert "cannot be converted into a LineType" in e.value.args[0]
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_LINE_TYPE
 
     assert LineType.from_string("Aérien") == LineType.OVERHEAD
@@ -46,11 +46,11 @@ def test_isolation_type():
 def test_conductor_type():
     with pytest.raises(RoseauLoadFlowException) as e:
         ConductorType.from_string("")
-    assert "can not be converted into a ConductorType" in e.value.args[0]
+    assert "cannot be converted into a ConductorType" in e.value.args[0]
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_CONDUCTOR_TYPE
     with pytest.raises(RoseauLoadFlowException) as e:
         ConductorType.from_string("nan")
-    assert "can not be converted into a ConductorType" in e.value.args[0]
+    assert "cannot be converted into a ConductorType" in e.value.args[0]
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_CONDUCTOR_TYPE
 
 

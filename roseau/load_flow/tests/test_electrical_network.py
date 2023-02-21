@@ -1,262 +1,606 @@
-from urllib.parse import urljoin
+import itertools as it
+import warnings
+from contextlib import contextmanager
+from urllib.parse import parse_qs, urljoin, urlsplit
 
 import geopandas as gpd
 import numpy as np
 import pandas as pd
 import pytest
 import requests_mock
-from shapely.geometry import LineString, Point
+from pandas.testing import assert_frame_equal
+from shapely import LineString, Point
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models import (
     Bus,
-    DeltaWyeTransformer,
     Ground,
-    LineCharacteristics,
+    Line,
+    LineParameters,
     PotentialRef,
     PowerLoad,
-    SimplifiedLine,
     Switch,
-    TransformerCharacteristics,
+    Transformer,
+    TransformerParameters,
     VoltageSource,
 )
-from roseau.load_flow.network import ElectricalNetwork
+from roseau.load_flow.network import _PHASE_DTYPE, _VOLTAGE_PHASES_DTYPE, ElectricalNetwork
+from roseau.load_flow.units import Q_
 
 
 @pytest.fixture()
 def small_network() -> ElectricalNetwork:
     # Build a small network
-    ground = Ground()
-    vs = VoltageSource(
-        id="vs",
-        n=4,
-        ground=ground,
-        source_voltages=[20000.0 + 0.0j, -10000.0 - 17320.508076j, -10000.0 + 17320.508076j],
-        geometry=Point(-1.318375372111463, 48.64794139348595),
-    )
-    load_bus = Bus("bus", 4, geometry=Point(-1.320149235966572, 48.64971306653889))
+    point1 = Point(-1.318375372111463, 48.64794139348595)
+    point2 = Point(-1.320149235966572, 48.64971306653889)
+    line_string = LineString([point1, point2])
+
+    ground = Ground("ground")
+    source_bus = Bus("bus0", phases="abcn", geometry=point1)
+    load_bus = Bus("bus1", phases="abcn", geometry=point2)
     ground.connect(load_bus)
-    load = PowerLoad("load", 4, load_bus, [100, 100, 100])
-    pref = PotentialRef(ground)
 
-    lc = LineCharacteristics("test", 10 * np.eye(4, dtype=complex))
-    line = SimplifiedLine(
-        id="line",
-        n=4,
-        bus1=vs,
-        bus2=load_bus,
-        line_characteristics=lc,
-        length=1.0,  # km
-        geometry=LineString([(-1.318375372111463, 48.64794139348595), (-1.320149235966572, 48.64971306653889)]),
+    voltages = [20000.0 + 0.0j, -10000.0 - 17320.508076j, -10000.0 + 17320.508076j]
+    vs = VoltageSource("vs", source_bus, voltages=voltages, phases="abcn")
+    load = PowerLoad("load", load_bus, powers=[100, 100, 100], phases="abcn")
+    pref = PotentialRef("pref", element=ground)
+
+    lp = LineParameters("test", z_line=10 * np.eye(4, dtype=complex))
+    line = Line("line", source_bus, load_bus, phases="abcn", parameters=lp, length=1.0, geometry=line_string)
+
+    return ElectricalNetwork(
+        buses=[source_bus, load_bus],
+        branches=[line],
+        loads=[load],
+        sources=[vs],
+        grounds=[ground],
+        potential_refs=[pref],
     )
 
-    en = ElectricalNetwork(buses=[vs, load_bus], branches=[line], loads=[load], special_elements=[pref, ground])
-    return en
 
+@pytest.fixture()
+def single_phase_network() -> ElectricalNetwork:
+    # Build a small single-phase network
+    # ----------------------------------
 
-def test_add_and_remove():
-    ground = Ground()
-    vn = 400 / np.sqrt(3)
-    voltages = [vn, vn * np.exp(-2 / 3 * np.pi * 1j), vn * np.exp(2 / 3 * np.pi * 1j)]
-    vs = VoltageSource(
-        id="source",
-        n=4,
-        ground=ground,
-        source_voltages=voltages,
+    # Phase "b" is chosen to catch errors where the index of the first phase may be assumed to be 0
+    phases = "bn"
+
+    # Network geometry
+    point1 = Point(-1.318375372111463, 48.64794139348595)
+    point2 = Point(-1.320149235966572, 48.64971306653889)
+    line_string = LineString([point1, point2])
+
+    # Network elements
+    bus0 = Bus("bus0", phases=phases, geometry=point1)
+    bus1 = Bus("bus1", phases=phases, geometry=point2)
+
+    ground = Ground("ground")
+    ground.connect(bus1)
+    pref = PotentialRef("pref", element=ground)
+
+    vs = VoltageSource("vs", bus0, voltages=[20000.0 + 0.0j], phases=phases)
+    load = PowerLoad("load", bus1, powers=[100], phases=phases)
+
+    lp = LineParameters("test", z_line=10 * np.eye(2, dtype=complex))
+    line = Line("line", bus0, bus1, phases=phases, parameters=lp, length=1.0, geometry=line_string)
+
+    return ElectricalNetwork(
+        buses=[bus0, bus1],
+        branches=[line],
+        loads=[load],
+        sources=[vs],
+        grounds=[ground],
+        potential_refs=[pref],
     )
-    load_bus = Bus(id="load bus", n=4)
-    load = PowerLoad(id="power load", n=4, bus=load_bus, s=[100 + 0j, 100 + 0j, 100 + 0j])
-    line_characteristics = LineCharacteristics("test", z_line=np.eye(4, dtype=complex))
-    line = SimplifiedLine(
-        id="line", n=4, bus1=vs, bus2=load_bus, line_characteristics=line_characteristics, length=10  # km
-    )
-    _ = PotentialRef(element=ground)
-    en = ElectricalNetwork.from_element(vs)
-    en.remove_element(load.id)
-    new_load = PowerLoad(id="power load", n=4, bus=load_bus, s=[100 + 0j, 100 + 0j, 100 + 0j])
-    en.add_element(new_load)
-
-    # Bad key
-    with pytest.raises(RoseauLoadFlowException) as e:
-        en.remove_element("unknown element")
-    assert "is not a valid bus, branch or load id" in e.value.args[0]
-    assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_ELEMENT_ID
-
-    # Adding ground
-    ground2 = Ground()
-    with pytest.raises(RoseauLoadFlowException) as e:
-        en.add_element(ground2)
-    assert e.value.args[0] == "Only lines, loads and buses can be added to the network."
-    assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT
-
-    # Remove line => 2 separated connected components
-    with pytest.raises(RoseauLoadFlowException) as e:
-        en.remove_element(line.id)
-        en.solve_load_flow(auth=("", ""))
-    assert "does not have a potential reference" in e.value.args[0]
-    assert e.value.args[1] == RoseauLoadFlowExceptionCode.NO_POTENTIAL_REFERENCE
 
 
-def test_bad_networks():
-    # No voltage source
-    ground = Ground()
-    bus1 = Bus("bus1", 3)
-    bus2 = Bus("bus2", 3)
-    ground.connect(bus2)
-    line_characteristics = LineCharacteristics("test", z_line=np.eye(3, dtype=complex))
-    line = SimplifiedLine(id="line", n=3, bus1=bus1, bus2=bus2, line_characteristics=line_characteristics, length=10)
-    p_ref = PotentialRef(ground)
-    with pytest.raises(RoseauLoadFlowException) as e:
-        ElectricalNetwork.from_element(bus1)
-    assert e.value.args[0] == "There is no voltage source provided in the network, you must provide at least one."
-    assert e.value.args[1] == RoseauLoadFlowExceptionCode.NO_VOLTAGE_SOURCE
-
-    # Bad constructor
-    vs = VoltageSource("vs", 4, ground, [20000.0 + 0.0j, -10000.0 - 17320.508076j, -10000.0 + 17320.508076j])
-    switch = Switch("switch", 4, vs, bus1)
-    with pytest.raises(RoseauLoadFlowException) as e:
-        ElectricalNetwork([vs, bus1], [line, switch], [], [ground, p_ref])  # no bus2
-    assert "but has not been added to the network, you should add it with 'add_element'." in e.value.args[0]
-    assert bus2.id in e.value.args[0]
-    assert e.value.args[1] == RoseauLoadFlowExceptionCode.UNKNOWN_ELEMENT
-
-    # No potential reference
-    bus3 = Bus("bus3", 4)
-    transformer_characteristics = TransformerCharacteristics(
-        type_name="t", windings="Dyn11", uhv=20000, ulv=400, sn=160 * 1e3, p0=460, i0=2.3 / 100, psc=2350, vsc=4 / 100
-    )
-    _ = DeltaWyeTransformer("transfo", bus2, bus3, transformer_characteristics)
-    with pytest.raises(RoseauLoadFlowException) as e:
-        ElectricalNetwork.from_element(vs)
-    assert "does not have a potential reference" in e.value.args[0]
-    assert e.value.args[1] == RoseauLoadFlowExceptionCode.NO_POTENTIAL_REFERENCE
-
-    # Good network
-    ground.connect(bus3)
-
-    # 2 potential reference
-    _ = PotentialRef(bus3)
-    with pytest.raises(RoseauLoadFlowException) as e:
-        ElectricalNetwork.from_element(vs)
-    assert "has 2 potential references, it should have only one." in e.value.args[0]
-    assert e.value.args[1] == RoseauLoadFlowExceptionCode.SEVERAL_POTENTIAL_REFERENCE
-
-
-def test_solve_load_flow(small_network):
-    load: PowerLoad = small_network.loads["load"]
-    load_bus = small_network.buses["bus"]
-
-    # Good result
-    json_result = {
+@pytest.fixture
+def good_json_results() -> dict:
+    return {
         "info": {
+            "resolution_method": "newton",
+            "precision": 1e-06,
+            "max_iterations": 20,
+            "warm_start": True,
             "status": "success",
-            "resolutionMethod": "newton",
             "iterations": 1,
-            "targetError": 1e-06,
-            "finalError": 6.296829377361313e-14,
+            "final_precision": 6.296829377361313e-14,
         },
         "buses": [
             {
-                "id": "vs",
-                "potentials": {
-                    "va": [20000.0, 0.0],
-                    "vb": [-10000.0, -17320.508076],
-                    "vc": [-10000.0, 17320.508076],
-                    "vn": [0.0, 0.0],
-                },
+                "id": "bus0",
+                "phases": "abcn",
+                "potentials": [
+                    [20000.0, 2.891203383964549e-18],
+                    [-10000.000000000002, -17320.508076],
+                    [-10000.000000000002, 17320.508076],
+                    [-1.3476481215690672e-12, 2.891203383964549e-18],
+                ],
             },
             {
-                "id": "bus",
-                "potentials": {
-                    "va": [19999.949999875, 0.0],
-                    "vb": [-9999.9749999375, -17320.464774621556],
-                    "vc": [-9999.9749999375, 17320.464774621556],
-                    "vn": [1.3476526914363477e-12, 0.0],
-                },
+                "id": "bus1",
+                "phases": "abcn",
+                "potentials": [
+                    [19999.949999875, 2.8911961559741588e-18],
+                    [-9999.974999937502, -17320.464774621556],
+                    [-9999.974999937502, 17320.464774621556],
+                    [0.0, 0.0],
+                ],
             },
         ],
         "branches": [
             {
                 "id": "line",
-                "currents1": {
-                    "ia": [0.005, 0.0],
-                    "ib": [-0.0025, -0.0043],
-                    "ic": [-0.0025, 0.0043],
-                    "in": [-1.347e-13, 0.0],
-                },
-                "currents2": {
-                    "ia": [0.005, 0.0],
-                    "ib": [-0.0025, -0.0043],
-                    "ic": [-0.0025, 0.0043],
-                    "in": [-1.347e-13, 0.0],
-                },
+                "phases1": "abcn",
+                "phases2": "abcn",
+                "currents1": [
+                    [0.005000012500022422, 7.227990390093038e-25],
+                    [-0.002500006250011211, -0.004330137844226556],
+                    [-0.002500006250011211, 0.004330137844226556],
+                    [-1.3476481215690672e-13, 2.891203383964549e-19],
+                ],
+                "currents2": [
+                    [-0.005000012500022422, -7.227990390093038e-25],
+                    [0.002500006250011211, 0.004330137844226556],
+                    [0.002500006250011211, -0.004330137844226556],
+                    [1.3476481215690672e-13, -2.891203383964549e-19],
+                ],
             }
         ],
         "loads": [
             {
                 "id": "load",
-                "currents": {
-                    "ia": [0.005, -0.0],
-                    "ib": [-0.0025, -0.0043],
-                    "ic": [-0.0025, 0.0043],
-                    "in": [-1.347e-13, 0.0],
-                },
+                "phases": "abcn",
+                "currents": [
+                    [0.0050000125000625, 7.228026530113222e-25],
+                    [-0.002500006249963868, -0.004330137844254964],
+                    [-0.002500006249963868, 0.004330137844254964],
+                    [-1.3476372795473424e-13, 0.0],
+                ],
             }
+        ],
+        "sources": [
+            {
+                "id": "vs",
+                "phases": "abcn",
+                "currents": [
+                    [-0.005000012500031251, 0.0],
+                    [0.0025000062499482426, 0.004330137844227901],
+                    [0.0025000062499482435, -0.004330137844227901],
+                    [1.3476481215690672e-13, -2.891210611954938e-19],
+                ],
+            }
+        ],
+        "grounds": [
+            {"id": "ground", "potential": [0.0, 0.0]},
+        ],
+        "potential_refs": [
+            {"id": "pref", "current": [1.0842021724855044e-18, -2.891203383964549e-19]},
         ],
     }
 
+
+@contextmanager
+def check_result_warning(expected_message: str):
+    with warnings.catch_warnings(record=True) as records:
+        yield
+    assert len(records) == 1
+    assert records[0].message.args[0] == expected_message
+    assert records[0].category == UserWarning
+
+
+def test_connect_and_disconnect():
+    ground = Ground("ground")
+    vn = 400 / np.sqrt(3)
+    voltages = [vn, vn * np.exp(-2 / 3 * np.pi * 1j), vn * np.exp(2 / 3 * np.pi * 1j)]
+    source_bus = Bus(id="source", phases="abcn")
+    load_bus = Bus(id="load bus", phases="abcn")
+    ground.connect(load_bus)
+    vs = VoltageSource(id="vs", phases="abcn", bus=source_bus, voltages=voltages)
+    load = PowerLoad(id="power load", phases="abcn", bus=load_bus, powers=[100 + 0j, 100 + 0j, 100 + 0j])
+    lp = LineParameters("test", z_line=np.eye(4, dtype=complex))
+    line = Line(id="line", bus1=source_bus, bus2=load_bus, phases="abcn", parameters=lp, length=10)
+    PotentialRef("pref", element=ground)
+    en = ElectricalNetwork.from_element(source_bus)
+    assert load.network == en
+    load.disconnect()
+    assert load.network is None
+    assert load.bus is None
+    with pytest.raises(RoseauLoadFlowException) as e:
+        load.to_dict()
+    assert e.value.args[0] == "The load 'power load' is disconnected and can not be used anymore."
+    assert e.value.args[1] == RoseauLoadFlowExceptionCode.DISCONNECTED_ELEMENT
+    new_load = PowerLoad(id="power load", phases="abcn", bus=load_bus, powers=[100 + 0j, 100 + 0j, 100 + 0j])
+    assert new_load.network == en
+
+    # Disconnection of a source
+    assert vs.network == en
+    vs.disconnect()
+    assert vs.network is None
+    assert vs.bus is None
+    with pytest.raises(RoseauLoadFlowException) as e:
+        vs.to_dict()
+    assert e.value.args[0] == "The voltage source 'vs' is disconnected and can not be used anymore."
+    assert e.value.args[1] == RoseauLoadFlowExceptionCode.DISCONNECTED_ELEMENT
+
+    # Bad key
+    with pytest.raises(RoseauLoadFlowException) as e:
+        en._disconnect_element(Ground("a separate ground element"))
+    assert e.value.msg == "Ground(id='a separate ground element') is not a valid load or source."
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT
+
+    # Adding ground => impossible
+    ground2 = Ground("ground2")
+    with pytest.raises(RoseauLoadFlowException) as e:
+        en._connect_element(ground2)
+    assert e.value.msg == "Only lines, loads, buses and sources can be added to the network."
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT
+
+    # Remove line => impossible
+    with pytest.raises(RoseauLoadFlowException) as e:
+        en._disconnect_element(line)
+    assert (
+        e.value.msg
+        == "Line(id='line', phases1='abcn', phases2='abcn', bus1='source', bus2='load bus') is a Line and it can not "
+        "be disconnected from a network."
+    )
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT
+
+
+def test_recursive_connect_disconnect():
+    ground = Ground("ground")
+    vn = 400 / np.sqrt(3)
+    voltages = [vn, vn * np.exp(-2 / 3 * np.pi * 1j), vn * np.exp(2 / 3 * np.pi * 1j)]
+    source_bus = Bus(id="source", phases="abcn")
+    load_bus = Bus(id="load bus", phases="abcn")
+    ground.connect(load_bus)
+    VoltageSource(id="vs", phases="abcn", bus=source_bus, voltages=voltages)
+    load = PowerLoad(id="power load", phases="abcn", bus=load_bus, powers=[100 + 0j, 100 + 0j, 100 + 0j])
+    lp = LineParameters("test", z_line=np.eye(4, dtype=complex))
+    line = Line(id="line", bus1=source_bus, bus2=load_bus, phases="abcn", parameters=lp, length=10)
+    PotentialRef("pref", element=ground)
+    en = ElectricalNetwork.from_element(source_bus)
+
+    # Create new elements (without connecting them to the existing network)
+    ground = en.grounds["ground"]
+    new_bus2 = Bus(id="new_bus2", phases="abcn")
+    new_load2 = PowerLoad(id="new_load2", bus=new_bus2, phases="abcn", powers=Q_([100, 0, 0], "VA"))
+    new_bus = Bus(id="new_bus", phases="abcn")
+    new_load = PowerLoad(id="new_load", bus=new_bus, phases="abcn", powers=Q_([100, 0, 0], "VA"))
+    lp = LineParameters("S_AL_240_without_shunt", z_line=Q_(0.1 * np.eye(4), "ohm/km"), y_shunt=None)
+    new_line2 = Line(
+        id="new_line2",
+        bus1=new_bus2,
+        bus2=new_bus,
+        phases="abcn",
+        parameters=lp,
+        length=0.5,
+    )
+    assert new_bus.network is None
+    assert new_bus.id not in en.buses
+    assert new_load.network is None
+    assert new_load.id not in en.loads
+    assert new_bus2.network is None
+    assert new_bus2.id not in en.buses
+    assert new_line2.network is None
+    assert new_line2.id not in en.branches
+    assert new_load2.network is None
+    assert new_load2.id not in en.loads
+
+    # Connect them to the first part of the network using a Line
+    new_line = Line(
+        id="new_line",
+        bus1=new_bus,  # new part of the network
+        bus2=load_bus,  # first part of the network
+        phases="abcn",
+        ground=ground,
+        parameters=lp,
+        length=0.5,
+    )
+    assert load_bus._connected_elements == [ground, load, line, new_line]
+    assert new_bus.network == en
+    assert new_bus._connected_elements == [new_load, new_line2, new_line]
+    assert new_bus.id in en.buses
+    assert new_line.network == en
+    assert new_line._connected_elements == [new_bus, load_bus]
+    assert new_line.id in en.branches
+    assert new_load.network == en
+    assert new_load._connected_elements == [new_bus]
+    assert new_load.id in en.loads
+    assert new_bus2.network == en
+    assert new_bus2._connected_elements == [new_load2, new_line2]
+    assert new_bus2.id in en.buses
+    assert new_line2.network == en
+    assert new_line2._connected_elements == [new_bus2, new_bus]
+    assert new_line2.id in en.branches
+    assert new_load2.network == en
+    assert new_load2._connected_elements == [new_bus2]
+    assert new_load2.id in en.loads
+
+    # Disconnect a load
+    new_load.disconnect()
+    assert load_bus._connected_elements == [ground, load, line, new_line]
+    assert new_bus.network == en
+    assert new_bus._connected_elements == [new_line2, new_line]
+    assert new_bus.id in en.buses
+    assert new_line.network == en
+    assert new_line._connected_elements == [new_bus, load_bus]
+    assert new_line.id in en.branches
+    assert new_load.network is None
+    assert new_load._connected_elements == []
+    assert new_load.id not in en.loads
+    assert new_bus2.network == en
+    assert new_bus2._connected_elements == [new_load2, new_line2]
+    assert new_bus2.id in en.buses
+    assert new_line2.network == en
+    assert new_line2._connected_elements == [new_bus2, new_bus]
+    assert new_line2.id in en.branches
+    assert new_load2.network == en
+    assert new_load2._connected_elements == [new_bus2]
+    assert new_load2.id in en.loads
+
+
+def test_recursive_connect_disconnect_ground():
+    #
+    # The same but with a "ground connection" from a line with shunt
+    #
+    ground = Ground("ground")
+    vn = 400 / np.sqrt(3)
+    voltages = [vn, vn * np.exp(-2 / 3 * np.pi * 1j), vn * np.exp(2 / 3 * np.pi * 1j)]
+    source_bus = Bus(id="source", phases="abcn")
+    load_bus = Bus(id="load bus", phases="abcn")
+    ground.connect(load_bus)
+    VoltageSource(id="vs", phases="abcn", bus=source_bus, voltages=voltages)
+    PowerLoad(id="power load", phases="abcn", bus=load_bus, powers=[100 + 0j, 100 + 0j, 100 + 0j])
+    lp = LineParameters("test", z_line=np.eye(4, dtype=complex))
+    Line(id="line", bus1=source_bus, bus2=load_bus, phases="abcn", parameters=lp, length=10)
+    PotentialRef("pref", element=ground)
+    en = ElectricalNetwork.from_element(source_bus)
+
+    # Create new elements (without connecting them to the existing network)
+    ground = en.grounds["ground"]
+    new_bus2 = Bus(id="new_bus2", phases="abcn")
+    new_load2 = PowerLoad(id="new_load2", bus=new_bus2, phases="abcn", powers=Q_([100, 0, 0], "VA"))
+    new_bus = Bus(id="new_bus", phases="abcn")
+    new_load = PowerLoad(id="new_load", bus=new_bus, phases="abcn", powers=Q_([100, 0, 0], "VA"))
+    assert new_bus.network is None
+    assert new_bus.id not in en.buses
+    assert new_load.network is None
+    assert new_load.id not in en.loads
+    assert new_bus2.network is None
+    assert new_bus2.id not in en.buses
+    assert new_load2.network is None
+    assert new_load2.id not in en.loads
+
+    lp = LineParameters(
+        "S_AL_240_with_shunt", z_line=Q_(0.1 * np.eye(4), "ohm/km"), y_shunt=Q_(0.1 * np.eye(4), "S/km")
+    )
+    new_line2 = Line(
+        id="new_line2",
+        bus1=new_bus2,
+        bus2=new_bus,
+        phases="abcn",
+        parameters=lp,
+        ground=ground,  # Here, I connect a ground to the new_line2. The ground belongs to the previous network
+        length=0.5,
+    )
+    assert new_line2.network == en
+    assert new_line2.id in en.branches
+    assert new_bus.network == en
+    assert new_bus.id in en.buses
+    assert new_load.network == en
+    assert new_load.id in en.loads
+    assert new_bus2.network == en
+    assert new_bus2.id in en.buses
+    assert new_load2.network == en
+    assert new_load2.id in en.loads
+
+
+def test_bad_networks():
+    # No source
+    ground = Ground("ground")
+    bus1 = Bus("bus1", phases="abcn")
+    bus2 = Bus("bus2", phases="abcn")
+    ground.connect(bus2)
+    lp = LineParameters("test", z_line=np.eye(3, dtype=complex))
+    line = Line("line", bus1, bus2, phases="abc", parameters=lp, length=10)
+    p_ref = PotentialRef("pref1", element=ground)
+    with pytest.raises(RoseauLoadFlowException) as e:
+        ElectricalNetwork.from_element(bus1)
+    assert e.value.msg == "There is no voltage source provided in the network, you must provide at least one."
+    assert e.value.code == RoseauLoadFlowExceptionCode.NO_VOLTAGE_SOURCE
+
+    # No network has been assigned
+    assert bus1.network is None
+    assert line.network is None
+    assert ground.network is None
+    assert p_ref.network is None
+
+    # Bad constructor
+    bus0 = Bus("bus0", phases="abcn")
+    ground.connect(bus0)
+    voltages = [20000.0 + 0.0j, -10000.0 - 17320.508076j, -10000.0 + 17320.508076j]
+    vs = VoltageSource("vs", bus0, phases="abcn", voltages=voltages)
+    switch = Switch("switch", bus0, bus1, phases="abcn")
+    with pytest.raises(RoseauLoadFlowException) as e:
+        ElectricalNetwork(
+            buses=[bus0, bus1],  # no bus2
+            branches=[line, switch],
+            loads=[],
+            sources=[vs],
+            grounds=[ground],
+            potential_refs=[p_ref],
+        )
+    assert "but has not been added to the network. It must be added with 'connect'." in e.value.msg
+    assert bus2.id in e.value.msg
+    assert e.value.code == RoseauLoadFlowExceptionCode.UNKNOWN_ELEMENT
+
+    # No network has been assigned
+    assert bus0.network is None
+    assert bus1.network is None
+    assert line.network is None
+    assert switch.network is None
+    assert vs.network is None
+    assert ground.network is None
+    assert p_ref.network is None
+
+    # No potential reference
+    bus3 = Bus("bus3", phases="abcn")
+    tp = TransformerParameters(
+        "t", windings="Dyn11", uhv=20000, ulv=400, sn=160 * 1e3, p0=460, i0=2.3 / 100, psc=2350, vsc=4 / 100
+    )
+    t = Transformer("transfo", bus2, bus3, parameters=tp)
+    with pytest.raises(RoseauLoadFlowException) as e:
+        ElectricalNetwork.from_element(bus0)
+    assert "does not have a potential reference" in e.value.msg
+    assert e.value.code == RoseauLoadFlowExceptionCode.NO_POTENTIAL_REFERENCE
+
+    # No network has been assigned
+    assert bus0.network is None
+    assert bus1.network is None
+    assert line.network is None
+    assert switch.network is None
+    assert vs.network is None
+    assert ground.network is None
+    assert p_ref.network is None
+    assert bus3.network is None
+    assert t.network is None
+
+    # Good network
+    ground.connect(bus3)
+
+    # 2 potential reference
+    p_ref2 = PotentialRef("pref2", element=bus3)
+    with pytest.raises(RoseauLoadFlowException) as e:
+        ElectricalNetwork.from_element(vs)
+    assert "has 2 potential references, it should have only one." in e.value.msg
+    assert e.value.code == RoseauLoadFlowExceptionCode.SEVERAL_POTENTIAL_REFERENCE
+
+    # No network has been assigned
+    assert bus0.network is None
+    assert bus1.network is None
+    assert line.network is None
+    assert switch.network is None
+    assert vs.network is None
+    assert ground.network is None
+    assert p_ref.network is None
+    assert bus3.network is None
+    assert t.network is None
+    assert p_ref2.network is None
+
+    # Bad ID
+    src_bus = Bus("sb", phases="abcn")
+    load_bus = Bus("lb", phases="abcn")
+    ground = Ground("g")
+    pref = PotentialRef("pr", element=ground)
+    ground.connect(src_bus)
+    lp = LineParameters("test", z_line=np.eye(4, dtype=complex))
+    line = Line("ln", src_bus, load_bus, phases="abcn", parameters=lp, length=10)
+    vs = VoltageSource("vs", src_bus, phases="abcn", voltages=[230, 120 + 150j, 120 - 150j])
+    load = PowerLoad("pl", load_bus, phases="abcn", powers=[1000, 500, 1000])
+    with pytest.raises(RoseauLoadFlowException) as e:
+        ElectricalNetwork(
+            buses={"foo": src_bus, "lb": load_bus},  # <-- ID of src_bus is wrong
+            branches={"ln": line},
+            loads={"pl": load},
+            sources={"vs": vs},
+            grounds={"g": ground},
+            potential_refs={"pr": pref},
+        )
+    assert e.value.msg == "Bus ID mismatch: 'foo' != 'sb'."
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_BUS_ID
+
+
+def test_solve_load_flow(small_network, good_json_results):
+    load: PowerLoad = small_network.loads["load"]
+    load_bus = small_network.buses["bus1"]
+
+    # Good result
     # Request the server
     solve_url = urljoin(ElectricalNetwork.DEFAULT_BASE_URL, "solve/")
     with requests_mock.Mocker() as m:
-        m.post(solve_url, status_code=200, json=json_result, headers={"content-type": "application/json"})
+        m.post(solve_url, status_code=200, json=good_json_results, headers={"content-type": "application/json"})
         small_network.solve_load_flow(auth=("", ""))
-    assert len(load_bus.potentials) == 4
+    assert len(load_bus.res_potentials) == 4
+    assert small_network.results_to_dict() == good_json_results
 
     # No convergence
-    load.update_powers([10000000, 100, 100])
+    load.powers = [10000000, 100, 100]
     json_result = {
         "info": {
             "status": "failure",
-            "resolutionMethod": "newton",
+            "resolution_method": "newton",
             "iterations": 50,
-            "targetError": 1e-06,
-            "finalError": 14037.977318668112,
+            "wam_start": False,
+            "precision": 1e-06,
+            "final_precision": 14037.977318668112,
+            "max_iterations": 20,
         },
         "buses": [
             {
-                "id": "vs",
-                "potentials": {
-                    "va": [20000.0, 0.0],
-                    "vb": [-10000.0, -17320.508076],
-                    "vc": [-10000.0, 17320.508076],
-                    "vn": [0.0, 0.0],
-                },
+                "id": "bus0",
+                "phases": "abcn",
+                "potentials": [
+                    [20000.0, 0.0],
+                    [-10000.0, -17320.508076],
+                    [-10000.0, 17320.508076],
+                    [0.0, 0.0],
+                ],
             },
             {
-                "id": "bus",
-                "potentials": {
-                    "va": [110753.81558442864, 1.5688245436058308e-26],
-                    "vb": [-9999.985548801811, -17320.50568183019],
-                    "vc": [-9999.985548801811, 17320.50568183019],
-                    "vn": [-90753.844486825, -2.6687106473172017e-26],
-                },
+                "id": "bus1",
+                "phases": "abcn",
+                "potentials": [
+                    [110753.81558442864, 1.5688245436058308e-26],
+                    [-9999.985548801811, -17320.50568183019],
+                    [-9999.985548801811, 17320.50568183019],
+                    [-90753.844486825, -2.6687106473172017e-26],
+                ],
             },
         ],
         "branches": [
             {
                 "id": "line",
-                "currents1": {"ia": [0.0, 0.0], "ib": [0.0, 0.0], "ic": [0.0, 0.0], "in": [0.0, 0.0]},
-                "currents2": {"ia": [0.0, 0.0], "ib": [0.0, 0.0], "ic": [0.0, 0.0], "in": [0.0, 0.0]},
+                "phases1": "abcn",
+                "phases2": "abcn",
+                "currents1": [[0.0, 0.0], [0.0, 0.0], [0.0, 0.0], [0.0, 0.0]],
+                "currents2": [[0.0, 0.0], [0.0, 0.0], [0.0, 0.0], [0.0, 0.0]],
             }
         ],
-        "loads": [{"id": "load", "currents": {"ia": [0.0, 0.0], "ib": [0.0, 0.0], "ic": [0.0, 0.0], "in": [0.0, 0.0]}}],
+        "loads": [
+            {
+                "id": "load",
+                "phases": "abcn",
+                "currents": [[0.0, 0.0], [0.0, 0.0], [0.0, 0.0], [0.0, 0.0]],
+            },
+        ],
+        "sources": [
+            {
+                "id": "vs",
+                "phases": "abcn",
+                "currents": [[0.0, 0.0], [0.0, 0.0], [0.0, 0.0], [0.0, 0.0]],
+            },
+        ],
+        "grounds": [
+            {
+                "id": "ground",
+                "potential": [1.3476526914363477e-12, 0.0],
+            }
+        ],
+        "potential_refs": [
+            {
+                "id": "pref",
+                "current": [0.0, 0.0],
+            },
+        ],
     }
     with requests_mock.Mocker() as m:
         m.post(solve_url, status_code=200, json=json_result, headers={"content-type": "application/json"})
         with pytest.raises(RoseauLoadFlowException) as e:
             small_network.solve_load_flow(auth=("", ""))
-        assert "The load flow did not converge after 50 iterations" in e.value.args[0]
-        assert e.value.args[1] == RoseauLoadFlowExceptionCode.NO_LOAD_FLOW_CONVERGENCE
+        assert "The load flow did not converge after 50 iterations" in e.value.msg
+        assert e.value.code == RoseauLoadFlowExceptionCode.NO_LOAD_FLOW_CONVERGENCE
 
 
 def test_solve_load_flow_error(small_network):
@@ -268,16 +612,16 @@ def test_solve_load_flow_error(small_network):
     with requests_mock.Mocker() as m, pytest.raises(RoseauLoadFlowException) as e:
         m.post(solve_url, status_code=400, json=json_result, headers={"content-type": "application/json"})
         small_network.solve_load_flow(auth=("", ""))
-    assert e.value.args[0] == json_result["msg"]
-    assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_BRANCH_TYPE
+    assert e.value.msg == json_result["msg"]
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_BRANCH_TYPE
 
     # Load flow error (other than official exceptions of RoseauLoadFlowException)
     json_result = {"msg": "Error while solving the load flow", "code": "load_flow_error"}
     with requests_mock.Mocker() as m, pytest.raises(RoseauLoadFlowException) as e:
         m.post(solve_url, status_code=400, json=json_result, headers={"content-type": "application/json"})
         small_network.solve_load_flow(auth=("", ""))
-    assert json_result["msg"] in e.value.args[0]
-    assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_REQUEST
+    assert json_result["msg"] in e.value.msg
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_REQUEST
 
     # Authentication fail
     json_result = {"detail": "not_authenticated"}
@@ -285,8 +629,8 @@ def test_solve_load_flow_error(small_network):
         m.post(solve_url, status_code=401, json=json_result, headers={"content-type": "application/json"})
         with pytest.raises(RoseauLoadFlowException) as e:
             small_network.solve_load_flow(auth=("", ""))
-    assert "Authentication failed." in e.value.args[0]
-    assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_REQUEST
+    assert "Authentication failed." in e.value.msg
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_REQUEST
 
     # Bad request
     json_result = {"msg": "Error while parsing the provided JSON", "code": "parse_error"}
@@ -294,9 +638,9 @@ def test_solve_load_flow_error(small_network):
         m.post(solve_url, status_code=400, json=json_result, headers={"content-type": "application/json"})
         with pytest.raises(RoseauLoadFlowException) as e:
             small_network.solve_load_flow(auth=("", ""))
-    assert "There is a problem in the request" in e.value.args[0]
-    assert "Error while parsing the provided JSON" in e.value.args[0]
-    assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_REQUEST
+    assert "There is a problem in the request" in e.value.msg
+    assert "Error while parsing the provided JSON" in e.value.msg
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_REQUEST
 
 
 def test_frame(small_network):
@@ -304,19 +648,651 @@ def test_frame(small_network):
     buses_gdf = small_network.buses_frame
     assert isinstance(buses_gdf, gpd.GeoDataFrame)
     assert buses_gdf.shape == (2, 2)
-    assert set(buses_gdf.columns) == {"n", "geometry"}
+    assert set(buses_gdf.columns) == {"phases", "geometry"}
     assert buses_gdf.index.name == "id"
 
     # Branches
     branches_gdf = small_network.branches_frame
     assert isinstance(branches_gdf, gpd.GeoDataFrame)
     assert branches_gdf.shape == (1, 6)
-    assert set(branches_gdf.columns) == {"branch_type", "n1", "n2", "bus1_id", "bus2_id", "geometry"}
+    assert set(branches_gdf.columns) == {"branch_type", "phases1", "phases2", "bus1_id", "bus2_id", "geometry"}
     assert branches_gdf.index.name == "id"
 
     # Loads
-    loads_gdf = small_network.loads_frame
-    assert isinstance(loads_gdf, pd.DataFrame)
-    assert loads_gdf.shape == (1, 2)
-    assert set(loads_gdf.columns) == {"n", "bus_id"}
-    assert loads_gdf.index.name == "id"
+    loads_df = small_network.loads_frame
+    assert isinstance(loads_df, pd.DataFrame)
+    assert loads_df.shape == (1, 2)
+    assert set(loads_df.columns) == {"phases", "bus_id"}
+    assert loads_df.index.name == "id"
+
+    # Sources
+    sources_df = small_network.sources_frame
+    assert isinstance(sources_df, pd.DataFrame)
+    assert sources_df.shape == (1, 2)
+    assert set(sources_df.columns) == {"phases", "bus_id"}
+    assert sources_df.index.name == "id"
+
+
+def test_buses_voltages(small_network, good_json_results):
+    assert isinstance(small_network, ElectricalNetwork)
+    small_network.results_from_dict(good_json_results)
+
+    voltage_records = [
+        {"bus_id": "bus0", "phase": "an", "voltage": 20000.0 + 0.0j},
+        {"bus_id": "bus0", "phase": "bn", "voltage": -10000.0 + -17320.508076j},
+        {"bus_id": "bus0", "phase": "cn", "voltage": -10000.0 + 17320.508076j},
+        {"bus_id": "bus1", "phase": "an", "voltage": 19999.949999875 + 0.0j},
+        {"bus_id": "bus1", "phase": "bn", "voltage": -9999.9749999375 + -17320.464774621556j},
+        {"bus_id": "bus1", "phase": "cn", "voltage": -9999.9749999375 + 17320.464774621556j},
+    ]
+
+    def set_index_dtype(idx: pd.MultiIndex) -> pd.MultiIndex:
+        return idx.set_levels(idx.levels[1].astype(_VOLTAGE_PHASES_DTYPE), level=1)
+
+    buses_voltages = small_network.res_buses_voltages
+    expected_buses_voltages = pd.DataFrame.from_records(voltage_records, index=["bus_id", "phase"])
+    expected_buses_voltages.index = set_index_dtype(expected_buses_voltages.index)
+
+    assert isinstance(buses_voltages, pd.DataFrame)
+    assert buses_voltages.shape == (6, 1)
+    assert buses_voltages.index.names == ["bus_id", "phase"]
+    assert list(buses_voltages.columns) == ["voltage"]
+    assert_frame_equal(buses_voltages, expected_buses_voltages)
+
+
+def test_to_from_dict_roundtrip(small_network: ElectricalNetwork):
+    net_dict = small_network.to_dict()
+    new_net = ElectricalNetwork.from_dict(net_dict)
+    assert_frame_equal(small_network.buses_frame, new_net.buses_frame)
+    assert_frame_equal(small_network.branches_frame, new_net.branches_frame)
+    assert_frame_equal(small_network.loads_frame, new_net.loads_frame)
+    assert_frame_equal(small_network.sources_frame, new_net.sources_frame)
+
+
+def test_single_phase_network(single_phase_network: ElectricalNetwork):
+    # Test dict conversion
+    # ====================
+    net_dict = single_phase_network.to_dict()
+    new_net = ElectricalNetwork.from_dict(net_dict)
+    assert_frame_equal(single_phase_network.buses_frame, new_net.buses_frame)
+    assert_frame_equal(single_phase_network.branches_frame, new_net.branches_frame)
+    assert_frame_equal(single_phase_network.loads_frame, new_net.loads_frame)
+    assert_frame_equal(single_phase_network.sources_frame, new_net.sources_frame)
+
+    # Test load flow results
+    # ======================
+    source_bus = single_phase_network.buses["bus0"]
+    load_bus = single_phase_network.buses["bus1"]
+    line = single_phase_network.branches["line"]
+    load = single_phase_network.loads["load"]
+
+    json_results = {
+        "info": {
+            "resolution_method": "newton",
+            "precision": 1e-06,
+            "max_iterations": 20,
+            "status": "success",
+            "iterations": 1,
+            "warm_start": True,
+            "final_precision": 1.3239929985697785e-13,
+        },
+        "buses": [
+            {
+                "id": "bus0",
+                "phases": "bn",
+                "potentials": [[19999.94999975, 0.0], [-0.050000250001249996, 0.0]],
+            },
+            {"id": "bus1", "phases": "bn", "potentials": [[19999.899999499998, 0.0], [0.0, 0.0]]},
+        ],
+        "branches": [
+            {
+                "id": "line",
+                "phases1": "bn",
+                "phases2": "bn",
+                "currents1": [[0.005000025000117603, 0.0], [-0.005000025000125, 0.0]],
+                "currents2": [[-0.005000025000117603, -0.0], [0.005000025000125, -0.0]],
+            }
+        ],
+        "loads": [
+            {
+                "id": "load",
+                "phases": "bn",
+                "currents": [[0.005000025000250002, -0.0], [-0.005000025000250002, 0.0]],
+            }
+        ],
+        "sources": [
+            {
+                "id": "vs",
+                "phases": "bn",
+                "currents": [[-0.005000025000125, 0.0], [0.005000025000125, 0.0]],
+            },
+        ],
+        "grounds": [
+            {"id": "ground", "potential": [0.0, 0.0]},
+        ],
+        "potential_refs": [
+            {"id": "pref", "current": [-1.2500243895541274e-13, 0.0]},
+        ],
+    }
+    solve_url = urljoin(ElectricalNetwork.DEFAULT_BASE_URL, "solve/")
+    with requests_mock.Mocker() as m:
+        m.post(solve_url, status_code=200, json=json_results, headers={"content-type": "application/json"})
+        single_phase_network.solve_load_flow(auth=("", ""))
+
+    # Test results of elements
+    # ------------------------
+    assert np.allclose(source_bus.res_potentials.m_as("V"), [19999.94999975 + 0j, -0.050000250001249996 + 0j])
+    assert np.allclose(load_bus.res_potentials.m_as("V"), [19999.899999499998 + 0j, 0j])
+    assert np.allclose(line.res_currents[0].m_as("A"), [0.005000025000117603 + 0j, -0.005000025000125 + 0j])
+    assert np.allclose(line.res_currents[1].m_as("A"), [-0.005000025000117603 - 0j, 0.005000025000125 - 0j])
+    assert np.allclose(load.res_currents.m_as("A"), [0.005000025000250002 - 0j, -0.005000025000250002 - 0j])
+
+    # Test results of network
+    # -----------------------
+    # Buses results
+    pd.testing.assert_frame_equal(
+        single_phase_network.res_buses,
+        pd.DataFrame.from_records(
+            [
+                {"bus_id": "bus0", "phase": "b", "potential": 19999.94999975 + 0j},
+                {"bus_id": "bus0", "phase": "n", "potential": -0.050000250001249996 + 0j},
+                {"bus_id": "bus1", "phase": "b", "potential": 19999.899999499998 + 0j},
+                {"bus_id": "bus1", "phase": "n", "potential": 0j},
+            ]
+        )
+        .astype({"phase": _PHASE_DTYPE, "potential": complex})
+        .set_index(["bus_id", "phase"]),
+    )
+    # Buses voltages results
+    pd.testing.assert_frame_equal(
+        single_phase_network.res_buses_voltages,
+        pd.DataFrame.from_records(
+            [
+                {"bus_id": "bus0", "phase": "bn", "voltage": (19999.94999975 + 0j) - (-0.050000250001249996 + 0j)},
+                {"bus_id": "bus1", "phase": "bn", "voltage": (19999.899999499998 + 0j) - (0j)},
+            ]
+        )
+        .astype({"phase": _VOLTAGE_PHASES_DTYPE, "voltage": complex})
+        .set_index(["bus_id", "phase"]),
+    )
+    # Branches results
+    pd.testing.assert_frame_equal(
+        single_phase_network.res_branches,
+        pd.DataFrame.from_records(
+            [
+                {
+                    "branch_id": "line",
+                    "phase": "b",
+                    "current1": 0.005000025000117603 + 0j,
+                    "current2": -0.005000025000117603 - 0j,
+                    "power1": (19999.94999975 + 0j) * (0.005000025000117603 + 0j).conjugate(),
+                    "power2": (19999.899999499998 + 0j) * (-0.005000025000117603 - 0j).conjugate(),
+                    "potential1": 19999.94999975 + 0j,
+                    "potential2": 19999.899999499998 + 0j,
+                },
+                {
+                    "branch_id": "line",
+                    "phase": "n",
+                    "current1": -0.005000025000125 + 0j,
+                    "current2": 0.005000025000125 - 0j,
+                    "power1": (-0.050000250001249996 + 0j) * (-0.005000025000125 + 0j).conjugate(),
+                    "power2": (0j) * (0.005000025000125 - 0j).conjugate(),
+                    "potential1": -0.050000250001249996 + 0j,
+                    "potential2": 0j,
+                },
+            ]
+        )
+        .astype(
+            {
+                "phase": _PHASE_DTYPE,
+                "current1": complex,
+                "current2": complex,
+                "power1": complex,
+                "power2": complex,
+                "potential1": complex,
+                "potential2": complex,
+            }
+        )
+        .set_index(["branch_id", "phase"]),
+    )
+    # Loads results
+    pd.testing.assert_frame_equal(
+        single_phase_network.res_loads,
+        pd.DataFrame.from_records(
+            [
+                {
+                    "load_id": "load",
+                    "phase": "b",
+                    "current": 0.005000025000250002 - 0j,
+                    "power": (19999.899999499998 + 0j) * (0.005000025000250002 - 0j).conjugate(),
+                    "potential": 19999.899999499998 + 0j,
+                },
+                {
+                    "load_id": "load",
+                    "phase": "n",
+                    "current": -0.005000025000250002 - 0j,
+                    "power": (0j) * (-0.005000025000250002 - 0j).conjugate(),
+                    "potential": 0j,
+                },
+            ]
+        )
+        .astype({"phase": _PHASE_DTYPE, "current": complex, "power": complex, "potential": complex})
+        .set_index(["load_id", "phase"]),
+    )
+
+
+def test_network_elements(small_network):
+    # Add a line to the network ("bus2" constructor belongs to the network)
+    bus1 = small_network.buses["bus1"]
+    bus2 = Bus("bus2", phases="abcn")
+    assert bus2.network is None
+    lp = LineParameters("test", z_line=10 * np.eye(4, dtype=complex))
+    l2 = Line(id="line2", bus1=bus2, bus2=bus1, parameters=lp, length=Q_(0.3, "km"))
+    assert l2.network == small_network
+    assert bus2.network == small_network
+
+    # Add a switch ("bus1" constructor belongs to the network)
+    bus3 = Bus("bus2", phases="abcn")
+    assert bus3.network is None
+    s = Switch(id="switch", bus1=bus2, bus2=bus3)
+    assert s.network == small_network
+    assert bus3.network == small_network
+
+    # Create a second network
+    bus_vs = Bus("bus_vs", phases="abcn")
+    VoltageSource("vs2", bus=bus_vs, voltages=15e3 * np.array([1, np.exp(-2j * np.pi / 3), np.exp(2j * np.pi / 3)]))
+    ground = Ground("ground2")
+    ground.connect(bus=bus_vs, phase="a")
+    PotentialRef("pref2", element=ground)
+    small_network_2 = ElectricalNetwork.from_element(initial_bus=bus_vs)
+
+    # Connect the two networks
+    with pytest.raises(RoseauLoadFlowException) as e:
+        Switch("switch2", bus1=bus2, bus2=bus_vs)
+    assert e.value.args[0] == "The Bus 'bus_vs' is already assigned to another network."
+    assert e.value.args[1] == RoseauLoadFlowExceptionCode.SEVERAL_NETWORKS
+
+    # Every object have their good network after this failure
+    for element in it.chain(
+        small_network.buses.values(),
+        small_network.branches.values(),
+        small_network.loads.values(),
+        small_network.grounds.values(),
+        small_network.potential_refs.values(),
+    ):
+        assert element.network == small_network
+    for element in it.chain(
+        small_network_2.buses.values(),
+        small_network_2.branches.values(),
+        small_network_2.loads.values(),
+        small_network_2.grounds.values(),
+        small_network_2.potential_refs.values(),
+    ):
+        assert element.network == small_network_2
+
+
+def test_network_results_warning(small_network: ElectricalNetwork, good_json_results, recwarn):  # noqa: C901
+    # network well-defined using the constructor
+    for bus in small_network.buses.values():
+        assert bus.network == small_network
+    for load in small_network.loads.values():
+        assert load.network == small_network
+    for source in small_network.sources.values():
+        assert source.network == small_network
+    for branch in small_network.branches.values():
+        assert branch.network == small_network
+    for ground in small_network.grounds.values():
+        assert ground.network == small_network
+    for p_ref in small_network.potential_refs.values():
+        assert p_ref.network == small_network
+
+    # All the results function raises an exception
+    for bus in small_network.buses.values():
+        with pytest.raises(RoseauLoadFlowException) as e:
+            bus.res_potentials
+        assert e.value.args[1] == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
+        with pytest.raises(RoseauLoadFlowException) as e:
+            bus.res_voltages
+        assert e.value.args[1] == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
+    for branch in small_network.branches.values():
+        with pytest.raises(RoseauLoadFlowException) as e:
+            branch.res_currents
+        assert e.value.args[1] == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
+    for load in small_network.loads.values():
+        with pytest.raises(RoseauLoadFlowException) as e:
+            load.res_currents
+        assert e.value.args[1] == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
+        if load.is_flexible and isinstance(load, PowerLoad):
+            with pytest.raises(RoseauLoadFlowException) as e:
+                load.res_flexible_powers
+            assert e.value.args[1] == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
+    for source in small_network.sources.values():
+        with pytest.raises(RoseauLoadFlowException) as e:
+            source.res_currents
+        assert e.value.args[1] == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
+    for ground in small_network.grounds.values():
+        with pytest.raises(RoseauLoadFlowException) as e:
+            ground.res_potential
+        assert e.value.args[1] == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
+    for p_ref in small_network.potential_refs.values():
+        with pytest.raises(RoseauLoadFlowException) as e:
+            p_ref.res_current
+        assert e.value.args[1] == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
+
+    # Solve a load flow
+    solve_url = urljoin(ElectricalNetwork.DEFAULT_BASE_URL, "solve/")
+    with requests_mock.Mocker() as m:
+        m.post(solve_url, status_code=200, json=good_json_results, headers={"content-type": "application/json"})
+        small_network.solve_load_flow(auth=("", ""))
+
+    # No warning when getting results (they are up-to-date)
+    recwarn.clear()
+    for bus in small_network.buses.values():
+        bus.res_potentials
+        bus.res_voltages
+    for branch in small_network.branches.values():
+        branch.res_currents
+    for load in small_network.loads.values():
+        load.res_currents
+        if load.is_flexible and isinstance(load, PowerLoad):
+            load.res_flexible_powers
+    for source in small_network.sources.values():
+        source.res_currents
+    for ground in small_network.grounds.values():
+        ground.res_potential
+    for p_ref in small_network.potential_refs.values():
+        p_ref.res_current
+    assert len(recwarn) == 0
+
+    # Modify something
+    load = small_network.loads["load"]
+    load.powers = [200, 200, 200]  # VA
+
+    # Ensure that a warning is raised no matter which result is requested
+    expected_message = (
+        "The results of this element may be outdated. Please re-run a load flow to ensure the validity of results."
+    )
+    for bus in small_network.buses.values():
+        with check_result_warning(expected_message=expected_message):
+            bus.res_potentials
+        with check_result_warning(expected_message=expected_message):
+            bus.res_voltages
+    for branch in small_network.branches.values():
+        with check_result_warning(expected_message=expected_message):
+            branch.res_currents
+    for load in small_network.loads.values():
+        with check_result_warning(expected_message=expected_message):
+            load.res_currents
+        if load.is_flexible and isinstance(load, PowerLoad):
+            with check_result_warning(expected_message=expected_message):
+                load.res_flexible_powers
+    for source in small_network.sources.values():
+        with check_result_warning(expected_message=expected_message):
+            source.res_currents
+    for ground in small_network.grounds.values():
+        with check_result_warning(expected_message=expected_message):
+            ground.res_potential
+    for p_ref in small_network.potential_refs.values():
+        with check_result_warning(expected_message=expected_message):
+            p_ref.res_current
+
+    # Ensure that a single warning is raised when having a data frame result
+    expected_message = (
+        "The results of this network may be outdated. Please re-run a load flow to ensure the validity of results."
+    )
+    with check_result_warning(expected_message=expected_message):
+        small_network.res_buses
+    with check_result_warning(expected_message=expected_message):
+        small_network.res_buses_voltages
+    with check_result_warning(expected_message=expected_message):
+        small_network.res_branches
+    with check_result_warning(expected_message=expected_message):
+        small_network.res_loads
+    with check_result_warning(expected_message=expected_message):
+        small_network.res_sources
+    with check_result_warning(expected_message=expected_message):
+        small_network.res_loads_flexible_powers
+
+
+def test_load_flow_results_frames(small_network: ElectricalNetwork, good_json_results: dict):
+    small_network.results_from_dict(good_json_results)
+
+    def set_index_dtype(df, dtype):
+        df.index = df.index.set_levels(df.index.levels[1].astype(dtype), level=1)
+
+    expected_res_buses = pd.DataFrame.from_records(
+        [
+            {"bus_id": "bus0", "phase": "a", "potential": 20000 + 2.89120e-18j},
+            {"bus_id": "bus0", "phase": "b", "potential": -10000.00000 - 17320.50807j},
+            {"bus_id": "bus0", "phase": "c", "potential": -10000.00000 + 17320.50807j},
+            {"bus_id": "bus0", "phase": "n", "potential": -1.34764e-12 + 2.89120e-18j},
+            {"bus_id": "bus1", "phase": "a", "potential": 19999.94999 + 2.89119e-18j},
+            {"bus_id": "bus1", "phase": "b", "potential": -9999.97499 - 17320.46477j},
+            {"bus_id": "bus1", "phase": "c", "potential": -9999.97499 + 17320.46477j},
+            {"bus_id": "bus1", "phase": "n", "potential": 0j},
+        ],
+        index=["bus_id", "phase"],
+    )
+    set_index_dtype(expected_res_buses, _PHASE_DTYPE)
+    assert_frame_equal(small_network.res_buses, expected_res_buses, rtol=1e-4)
+
+    expected_res_branches = pd.DataFrame.from_records(
+        [
+            {
+                "branch_id": "line",
+                "phase": "a",
+                "current1": 0.00500 + 7.22799e-25j,
+                "current2": -0.00500 - 7.22799e-25j,
+                "power1": (20000 + 2.89120e-18j) * (0.00500 + 7.22799e-25j).conjugate(),
+                "power2": (19999.94999 + 2.89119e-18j) * (-0.00500 - 7.22799e-25j).conjugate(),
+                "potential1": 20000 + 2.89120e-18j,
+                "potential2": 19999.94999 + 2.89119e-18j,
+            },
+            {
+                "branch_id": "line",
+                "phase": "b",
+                "current1": -0.00250 - 0.00433j,
+                "current2": 0.00250 + 0.00433j,
+                "power1": (-10000.00000 - 17320.50807j) * (-0.00250 - 0.00433j).conjugate(),
+                "power2": (-9999.97499 - 17320.46477j) * (0.00250 + 0.00433j).conjugate(),
+                "potential1": -10000.00000 - 17320.50807j,
+                "potential2": -9999.97499 - 17320.46477j,
+            },
+            {
+                "branch_id": "line",
+                "phase": "c",
+                "current1": -0.00250 + 0.00433j,
+                "current2": 0.00250 - 0.00433j,
+                "power1": (-10000.00000 + 17320.50807j) * (-0.00250 + 0.00433j).conjugate(),
+                "power2": (-9999.97499 + 17320.46477j) * (0.00250 - 0.00433j).conjugate(),
+                "potential1": -10000.00000 + 17320.50807j,
+                "potential2": -9999.97499 + 17320.46477j,
+            },
+            {
+                "branch_id": "line",
+                "phase": "n",
+                "current1": -1.34764e-13 + 2.89120e-19j,
+                "current2": 1.34764e-13 - 2.89120e-19j,
+                "power1": (-1.34764e-12 + 2.89120e-18j) * (-1.34764e-13 + 2.89120e-19j).conjugate(),
+                "power2": (0j) * (1.34764e-13 - 2.89120e-19j).conjugate(),
+                "potential1": -1.34764e-12 + 2.89120e-18j,
+                "potential2": 0j,
+            },
+        ],
+        index=["branch_id", "phase"],
+    )
+    set_index_dtype(expected_res_branches, _PHASE_DTYPE)
+    assert_frame_equal(small_network.res_branches, expected_res_branches, rtol=1e-4)
+
+    expected_res_loads = pd.DataFrame.from_records(
+        [
+            {
+                "load_id": "load",
+                "phase": "a",
+                "current": 0.00500 + 7.22802e-25j,
+                "power": (19999.94999 + 2.89119e-18j) * (0.00500 + 7.22802e-25j).conjugate(),
+                "potential": 19999.94999 + 2.89119e-18j,
+            },
+            {
+                "load_id": "load",
+                "phase": "b",
+                "current": -0.00250 - 0.00433j,
+                "power": (-9999.97499 - 17320.46477j) * (-0.00250 - 0.00433j).conjugate(),
+                "potential": -9999.97499 - 17320.46477j,
+            },
+            {
+                "load_id": "load",
+                "phase": "c",
+                "current": -0.00250 + 0.00433j,
+                "power": (-9999.97499 + 17320.46477j) * (-0.00250 + 0.00433j).conjugate(),
+                "potential": -9999.97499 + 17320.46477j,
+            },
+            {
+                "load_id": "load",
+                "phase": "n",
+                "current": -1.34763e-13 + 0j,
+                "power": (0j) * (-1.34763e-13 + 0j).conjugate(),
+                "potential": 0j,
+            },
+        ],
+        index=["load_id", "phase"],
+    )
+    set_index_dtype(expected_res_loads, _PHASE_DTYPE)
+    assert_frame_equal(small_network.res_loads, expected_res_loads, rtol=1e-4)
+
+    expected_res_sources = pd.DataFrame.from_records(
+        [
+            {
+                "source_id": "vs",
+                "phase": "a",
+                "current": -0.00500 + 0j,
+                "power": (20000 + 2.89120e-18j) * (-0.00500 + 0j).conjugate(),
+                "potential": 20000 + 2.89120e-18j,
+            },
+            {
+                "source_id": "vs",
+                "phase": "b",
+                "current": 0.00250 + 0.00433j,
+                "power": (-10000.00000 - 17320.50807j) * (0.00250 + 0.00433j).conjugate(),
+                "potential": -10000.00000 - 17320.50807j,
+            },
+            {
+                "source_id": "vs",
+                "phase": "c",
+                "current": 0.00250 - 0.00433j,
+                "power": (-10000.00000 + 17320.50807j) * (0.00250 - 0.00433j).conjugate(),
+                "potential": -10000.00000 + 17320.50807j,
+            },
+            {
+                "source_id": "vs",
+                "phase": "n",
+                "current": 1.34764e-13 - 2.89121e-19j,
+                "power": (-1.34764e-12 + 2.89120e-18j) * (1.34764e-13 - 2.89121e-19j).conjugate(),
+                "potential": -1.34764e-12 + 2.89120e-18j,
+            },
+        ],
+        index=["source_id", "phase"],
+    )
+    set_index_dtype(expected_res_sources, _PHASE_DTYPE)
+    assert_frame_equal(small_network.res_sources, expected_res_sources, rtol=1e-4)
+
+    expected_res_grounds = pd.DataFrame.from_records(
+        [
+            {"ground_id": "ground", "potential": 0j},
+        ],
+        index=["ground_id"],
+    )
+    assert_frame_equal(small_network.res_grounds, expected_res_grounds)
+
+    expected_res_potential_refs = pd.DataFrame.from_records(
+        [
+            {"potential_ref_id": "pref", "current": 1.08420e-18 - 2.89120e-19j},
+        ],
+        index=["potential_ref_id"],
+    )
+    assert_frame_equal(small_network.res_potential_refs, expected_res_potential_refs)
+
+
+def test_solver_warm_start(small_network: ElectricalNetwork, good_json_results):
+    load: PowerLoad = small_network.loads["load"]
+    load_bus = small_network.buses["bus1"]
+    solve_url = urljoin(ElectricalNetwork.DEFAULT_BASE_URL, "solve/")
+    headers = {"Content-Type": "application/json"}
+
+    def json_callback(request, context):
+        request_json_data = request.json()
+        query = parse_qs(urlsplit(request.url).query)
+        warm_start = query["warm_start"][0].casefold() == "true"
+        assert isinstance(request_json_data, dict)
+        assert "network" in request_json_data
+        if should_warm_start:
+            assert warm_start  # Make sure the warm start flag is set by the user
+            assert "results" in request_json_data
+        else:
+            assert "results" not in request_json_data
+        if not warm_start:
+            # Make sure to not warm start if the user does not want warm start
+            assert not should_warm_start
+            assert "results" not in request_json_data
+        return good_json_results
+
+    # First case: network is valid, no results yet -> no warm start
+    should_warm_start = False
+    assert small_network._valid
+    assert not small_network.res_info  # No results
+    assert not small_network._results_valid  # Results are not valid by default
+    with requests_mock.Mocker() as m, warnings.catch_warnings():
+        warnings.simplefilter("error")  # Make sure there is no warning
+        m.post(solve_url, status_code=200, json=json_callback, headers=headers)
+        small_network.solve_load_flow(auth=("", ""), warm_start=True)
+    assert small_network.results_to_dict() == good_json_results
+
+    # Second case: the user requested no warm start (even though the network and results are valid)
+    should_warm_start = False
+    assert small_network._valid
+    assert small_network._results_valid
+    with requests_mock.Mocker() as m, warnings.catch_warnings():
+        warnings.simplefilter("error")  # Make sure there is no warning
+        m.post(solve_url, status_code=200, json=json_callback, headers=headers)
+        small_network.solve_load_flow(auth=("", ""), warm_start=False)
+    assert small_network.results_to_dict() == good_json_results
+
+    # Third case: network is valid, results are valid -> warm start
+    should_warm_start = True
+    assert small_network._valid
+    assert small_network._results_valid
+    with requests_mock.Mocker() as m, warnings.catch_warnings():
+        warnings.simplefilter("error")  # Make sure there is no warning
+        m.post(solve_url, status_code=200, json=json_callback, headers=headers)
+        small_network.solve_load_flow(auth=("", ""), warm_start=True)
+    assert small_network.results_to_dict() == good_json_results
+
+    # Fourth case (load powers changes): network is valid, results are not valid -> warm start
+    should_warm_start = True
+    load.powers = load.powers + Q_(1 + 1j, "VA")
+    assert small_network._valid
+    assert not small_network._results_valid
+    with requests_mock.Mocker() as m, warnings.catch_warnings():
+        warnings.simplefilter("error")  # Make sure there is no warning
+        m.post(solve_url, status_code=200, json=json_callback, headers=headers)
+        small_network.solve_load_flow(auth=("", ""), warm_start=True)
+    assert small_network.results_to_dict() == good_json_results
+
+    # Fifth case: network is not valid -> no warm start
+    should_warm_start = False
+    new_load = PowerLoad("new_load", load_bus, powers=[100, 200, 300], phases=load.phases)
+    new_load_result = good_json_results["loads"][0].copy()
+    new_load_result["id"] = "new_load"
+    good_json_results["loads"].append(new_load_result)
+    assert new_load.network is small_network
+    assert not small_network._valid
+    assert not small_network._results_valid
+    with requests_mock.Mocker() as m, warnings.catch_warnings():
+        # We could warn here that the user requested warm start but the network is not valid
+        # but this will be disruptive for the user especially that warm start is the default
+        warnings.simplefilter("error")  # Make sure there is no warning
+        m.post(solve_url, status_code=200, json=json_callback, headers=headers)
+        assert not small_network._valid
+        assert not small_network._results_valid
+        small_network.solve_load_flow(auth=("", ""), warm_start=True)
+    assert small_network.results_to_dict() == good_json_results
