@@ -1,7 +1,10 @@
 # Roseau Load Flow
 
 `Roseau Load Flow` is a load flow solver capable of modeling 3-phases unbalanced power systems with
-a wide variety of models for lines, transformers, loads, and sources.
+a wide variety of models for lines, transformers, loads, and sources. This software is maintained
+by [Roseau Technologies](https://www.roseautechnologies.com/en).
+<a href="https://www.linkedin.com/company/roseau-technologies/"><i class="fa-brands fa-linkedin" ></i></a>
+<a href="https://github.com/RoseauTechnologies/"><i class="fa-brands fa-github" ></i></a>
 
 ## Installation
 
@@ -29,6 +32,7 @@ notebooks/Advanced
 ```
 
 ## API
+
 If you want the full documentation of all the classes and functions, you can refer to the following
 references:
 
