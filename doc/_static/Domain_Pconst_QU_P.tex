@@ -1,0 +1,38 @@
+\documentclass[%
+crop,%
+tikz,%
+convert={outext=.svg,command=\unexpanded{pdf2svg \infile\space\outfile}},%
+multi=false%
+]{standalone}%
+\usepackage[utf8]{luainputenc}%
+\usepackage{xspace}%
+\usepackage{amsmath}%
+\usepackage{amssymb}%
+\usepackage{mathrsfs}%
+\usepackage{mathtools}%
+\usepackage{siunitx}%
+\usetikzlibrary{arrows.meta,patterns,calc,backgrounds}%
+\input{Definitions.tex}%
+\begin{document}
+\begin{tikzpicture}[%
+    show background rectangle,%
+    tight background,%
+    background rectangle/.style={fill=white}%
+    ]
+    \input{Domain_Common.tikz}%
+
+    % The domain is a segment
+    \draw[domaine] (\pthvaleur,-\qthmaxvaleur) -- (\pthvaleur,\qthmaxvaleur);%
+
+    \pic[domaine] at (\pthvaleur,\qthvaleur) {point};%
+\end{tikzpicture}
+\end{document}
+% Local Variables:
+% mode: latex
+% TeX-engine: luatex
+% TeX-source-correlate-method-active: synctex
+% ispell-local-dictionary: "british"
+% coding: utf-8
+% LaTeX-indent-level: 4
+% fill-column: 100
+% End:

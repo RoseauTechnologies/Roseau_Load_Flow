@@ -96,6 +96,20 @@ html_theme_options = {
         "color-announcement-background": "#222798"
         # "font-stack--monospace": "Courier, monospace",
     },
+    "footer_icons": [
+        {
+            "name": "LinkedIn",
+            "url": "https://www.linkedin.com/company/roseau-technologies/",
+            "html": "",
+            "class": "fa-brands fa-linkedin fa-2x",
+        },
+        {
+            "name": "GitHub",
+            "url": "https://github.com/RoseauTechnologies/",
+            "html": "",
+            "class": "fa-brands fa-github fa-2x",
+        },
+    ],
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,
@@ -104,7 +118,14 @@ html_theme_options = {
 html_static_path = ["_static"]
 
 # Extra CSS files
-html_css_files = ["css/custom.css"]
+html_css_files = [
+    # Fontawesome
+    "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.3.0/css/fontawesome.min.css",
+    "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.3.0/css/solid.min.css",
+    "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.3.0/css/brands.min.css",
+    # Local CSS file
+    "css/custom.css",
+]
 
 # -- Options for AutoAPI -------------------------------------------------
 autoapi_dirs = ["../roseau"]
