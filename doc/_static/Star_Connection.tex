@@ -47,21 +47,21 @@ multi=false%
     \node[above right] at (N) {N};%
 
     % Lines
-    \draw (A) to[short,*-] (A1) to[generic,
-    v<=$\underline{V_{\ell,\arm}}-\underline{V_{\ell,\nrm}}$, -*] (N);%
-    \draw (B) to[short,*-] (B1) to[generic,
-    v<=$\underline{V_{\ell,\brm}}-\underline{V_{\ell,\nrm}}$, -*] (N);%
-    \draw (C) to[short,*-] (C1) to[generic,
-    v<=$\underline{V_{\ell,\crm}}-\underline{V_{\ell,\nrm}}$, -*] (N);%
-    \draw (A2) to[short,i=$\underline{I_{\ell,\arm}}$,*-*] (A);%
-    \draw (B2) to[short,i=$\underline{I_{\ell,\brm}}$,*-*] (B);%
-    \draw (C2) to[short,i=$\underline{I_{\ell,\crm}}$,*-] (C3);%
-    \draw (C3) -- (C); \draw (N2) to[short, i=$\underline{I_{\ell,\nrm}}$, *-] (N);%
+    \draw (A) to[short,*-] (A1) to[generic, v<=$\underline{V_{\arm}}-\underline{V_{\nrm}}$, -*]
+    (N);%
+    \draw (B) to[short,*-] (B1) to[generic, v<=$\underline{V_{\brm}}-\underline{V_{\nrm}}$, -*]
+    (N);%
+    \draw (C) to[short,*-] (C1) to[generic, v<=$\underline{V_{\crm}}-\underline{V_{\nrm}}$, -*]
+    (N);%
+    \draw (A2) to[short,i=$\underline{I_{\arm}}$,*-*] (A);%
+    \draw (B2) to[short,i=$\underline{I_{\brm}}$,*-*] (B);%
+    \draw (C2) to[short,i=$\underline{I_{\crm}}$,*-] (C3);%
+    \draw (C3) -- (C); \draw (N2) to[short, i=$\underline{I_{\nrm}}$, *-] (N);%
 
     % Line-to-line voltage
     % \draw (A) to[open, v=$V_{m,\abrm}$] (B)
-    % to[open, v=$V_{\ell,\bcrm}$] (C)
-    % to[open, v=$V_{\ell,\carm}$] (A);
+    % to[open, v=$V_{\bcrm}$] (C)
+    % to[open, v=$V_{\carm}$] (A);
 \end{tikzpicture}
 \end{document}
 % Local Variables:

@@ -24,7 +24,7 @@ If you find a bug or have a feature request, please open an issue on the
 
 # Credits #
 
-This software is maintained by [Roseau Technologies](https://www.roseautechnologies.com/en).
+This software is developed by [Roseau Technologies](https://www.roseautechnologies.com/en).
 [![Linkedin](https://i.stack.imgur.com/gVE0j.png) LinkedIn](https://www.linkedin.com/company/roseau-technologies/)
 &nbsp;
 [![GitHub](https://i.stack.imgur.com/tskMh.png) GitHub](https://github.com/RoseauTechnologies)

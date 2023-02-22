@@ -39,23 +39,14 @@ multi=false%
   \node[above right] at (C) {C};%
 
   % Lignes
-  \draw (A) to[%
-  generic,%
-  v<=$\underline{V_{\ell,\arm}}-\underline{V_{\ell,\brm}}$,%
-  i=$\underline{I_{\ell,\abrm}}$,%
-  *-*] (B) to[%
-  generic,%
-  v<=$\underline{V_{\ell,\brm}}-\underline{V_{\ell,\crm}}$,%
-  i=$\underline{I_{\ell,\bcrm}}$,%
-  *-*] (C) to[%
-  generic,%
-  v<=$\underline{V_{\ell,\crm}}-\underline{V_{\ell,\arm}}$,%
-  i=$\underline{I_{\ell,\carm}}$,%
+  \draw (A) to[ generic, v<=$\underline{V_{\arm}}-\underline{V_{\brm}}$, i=$\underline{I_{\abrm}}$,
+  *-*] (B) to[ generic, v<=$\underline{V_{\brm}}-\underline{V_{\crm}}$, i=$\underline{I_{\bcrm}}$,
+  *-*] (C) to[ generic, v<=$\underline{V_{\crm}}-\underline{V_{\arm}}$, i=$\underline{I_{\carm}}$,
   *-*] (A);%
-  \draw (A2) to[short,i=$\underline{I_{\ell,\arm}}$,*-*] (A);%
+  \draw (A2) to[short,i=$\underline{I_{\arm}}$,*-*] (A);%
   \draw (B) -- (B3);%
-  \draw (B2) to[short,i=$\underline{I_{\ell,\brm}}$,*-] (B3);%
-  \draw (C2) to[short,i=$\underline{I_{\ell,\crm}}$,*-] (C);%
+  \draw (B2) to[short,i=$\underline{I_{\brm}}$,*-] (B3);%
+  \draw (C2) to[short,i=$\underline{I_{\crm}}$,*-] (C);%
 \end{tikzpicture}
 \end{document}
 % Local Variables:
