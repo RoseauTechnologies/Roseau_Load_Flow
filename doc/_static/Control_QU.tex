@@ -1,0 +1,128 @@
+\documentclass[%
+crop,%
+tikz,%
+convert={outext=.svg,command=\unexpanded{pdf2svg \infile\space\outfile}},%
+multi=false%
+]{standalone}%
+\usepackage[utf8]{luainputenc}%
+\usepackage{xspace}%
+\usepackage{amsmath}%
+\usepackage{amssymb}%
+\usepackage{mathrsfs}%
+\usepackage{mathtools}%
+\usepackage{siunitx}%
+\usepackage{pgfplots}%
+\pgfplotsset{compat=newest}%
+\usepgfplotslibrary{groupplots, colorbrewer}%
+\usetikzlibrary{backgrounds}%
+\input{Definitions.tex}%
+\begin{document}
+\begin{tikzpicture}[%
+    show background rectangle,%
+    tight background,%
+    background rectangle/.style={fill=white}%
+    ]
+    %
+    % Common parameters
+    %
+    \pgfmathsetmacro{\umaxvaleur}{250.0}%
+    \pgfmathsetmacro{\umaxnormvaleur}{1.0}%
+    \pgfmathsetmacro{\uupvaleur}{240.0}%
+    \pgfmathsetmacro{\uupnormvaleur}{\uupvaleur/\umaxvaleur}%
+    \pgfmathsetmacro{\udownvaleur}{220.0}%
+    \pgfmathsetmacro{\udownnormvaleur}{\udownvaleur/\umaxvaleur}%
+    \pgfmathsetmacro{\uminvaleur}{210.0}%
+    \pgfmathsetmacro{\uminnormvaleur}{\uminvaleur/\umaxvaleur}%
+    \pgfmathsetmacro{\unomvaleur}{(\udownvaleur+\uupvaleur)/2.0}%
+    \pgfmathsetmacro{\unomnormvaleur}{\unomvaleur/\umaxvaleur}%
+    \pgfmathsetmacro{\umidminvaleur}{(\udownvaleur+\uminvaleur)/2.0}%
+    \pgfmathsetmacro{\umidminnormvaleur}{\umidminvaleur/\umaxvaleur}%
+    \pgfmathsetmacro{\umidmaxvaleur}{(\uupvaleur+\umaxvaleur)/2.0}%
+    \pgfmathsetmacro{\umidmaxnormvaleur}{\umidmaxvaleur/\umaxvaleur}%
+
+    \pgfmathsetmacro{\xminvaleur}{\uminvaleur - 2.5}%
+    \pgfmathsetmacro{\xminnormvaleur}{\xminvaleur/\umaxvaleur}%
+    \pgfmathsetmacro{\xmaxvaleur}{\umaxvaleur + 2.5}%
+    \pgfmathsetmacro{\xmaxnormvaleur}{\xmaxvaleur/\umaxvaleur}%
+
+    \pgfmathsetmacro{\yminnormvaleur}{-1}%
+    \pgfmathsetmacro{\ymaxnormvaleur}{1}%
+
+    \pgfmathsetmacro{\qthnormvaleur}{0.30}%
+
+    %
+    % Style
+    %
+    \tikzset{lisse/.style={line width=0.3mm, domain=\xminnormvaleur:\xmaxnormvaleur, samples=75,
+            mark=none}}%
+    \tikzset{non lisse/.style={line width=0.3mm, mark=*}}%
+
+    \begin{axis}[%
+        height=7cm,%
+        width=0.9\textwidth,%
+        enlarge y limits,%
+        grid=major,%
+        xlabel={$|V_{\ell,p_1}-V_{\ell,p_2}|$},%
+        xtick={\uminnormvaleur,\umidminnormvaleur,\udownnormvaleur,\unomnormvaleur,\uupnormvaleur,\umidmaxnormvaleur,\umaxnormvaleur},%
+        xticklabels={%
+            $\uminnorm$,,$\udownnorm$,$\unomnorm$,$\uupnorm$,,$\umaxnorm$%
+        },%
+        y tick label style={/pgf/number format/.cd,%
+            set thousands separator={},%
+            fixed,%
+            fixed zerofill,%
+            precision=1,%
+            use comma%
+        },%
+        ytick={\yminnormvaleur,0,\qthnormvaleur,\ymaxnormvaleur},%
+        yticklabels={-1,0,$\dfrac{Q^{\theo}_{p_1p_2}}{\smax_{p_1p_2}}$,1},%
+        xmin=\xminnormvaleur,%
+        xmax=\xmaxnormvaleur,%
+        ymin=\yminnormvaleur,%
+        ymax=\ymaxnormvaleur,%
+        % ylabel={$\alpha\left(|V_{\ell,p}|\right)$},%
+        % legend entries={Contrôles non lisses,Contrôles lisses},%
+        legend columns=2,%
+        legend style={%
+            at={(0.5,-0.25)},%
+            anchor=north,%
+            nodes={text width=4cm}%
+        },%
+        cycle list/YlOrRd-5, % initialize YlOrRd-5
+        cycle list name=YlOrRd-5%
+        ]
+
+        % Fonction linéaire par morceaux
+        \addplot[non lisse, red] coordinates {%
+            (\xminnormvaleur,-1)%
+            (\uminnormvaleur,-1)%
+            (\udownnormvaleur,\qthnormvaleur)%
+            (\uupnormvaleur,\qthnormvaleur)%
+            (\umaxnormvaleur,1)%
+            (\xmaxnormvaleur,1)%
+        };%
+        \addlegendentry{Non-smooth control};%
+
+        % Soft clipping functions
+        \pgfplotsset{cycle list shift=-1}% Reset cycle to 0
+        \foreach \alphavaleur in {50,100,200,300,400} {%
+            \addplot+[lisse] expression {%
+                \qthnormvaleur + ( 1.0/(\alphavaleur*(\uminnormvaleur-\udownnormvaleur)) *
+                ln((1+exp(\alphavaleur*(x-\udownnormvaleur)))/(1+exp(\alphavaleur*(x-\uminnormvaleur))))-1.0
+                )*(1+\qthnormvaleur) + ( 1.0/(\alphavaleur*(\umaxnormvaleur-\uupnormvaleur)) *
+                ln((1+exp(\alphavaleur*(x-\uupnormvaleur)))/(1+exp(\alphavaleur*(x-\umaxnormvaleur))))
+                )*(1-\qthnormvaleur) };%
+            \addlegendentryexpanded{Écrêtage doux ($\alpha=\num{\alphavaleur}$)};%
+        };%
+    \end{axis}
+\end{tikzpicture}
+\end{document}
+% Local Variables:
+% mode: latex
+% TeX-engine: luatex
+% TeX-source-correlate-method-active: synctex
+% ispell-local-dictionary: "british"
+% coding: utf-8
+% LaTeX-indent-level: 4
+% fill-column: 100
+% End:
