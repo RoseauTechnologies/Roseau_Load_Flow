@@ -19,7 +19,7 @@ up for an account. For inquiry, please contact us at contact@roseautechnologies.
 
 # Bug reports / Feature requests #
 
-If you find a bug or have a feature request, please open an issue on the
+If you find a bug or have a feature request, please open an issue on
 [GitHub](https://github.com/RoseauTechnologies/Roseau_Load_Flow/issues)
 
 # Credits #
