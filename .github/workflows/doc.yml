@@ -60,6 +60,7 @@ jobs:
       - name: Install dependencies
         run: |
           poetry env use "3.10"
+          poetry config installer.modern-installation false  # https://github.com/python-poetry/poetry/issues/7686#issuecomment-1475402611
           poetry install --only doc
 
       - name: Build with Sphinx
