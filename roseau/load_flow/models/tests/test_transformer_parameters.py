@@ -185,6 +185,23 @@ def test_transformer_parameters():
     assert "has the 'voltages on LV side during short circuit test' vsc" in e.value.msg
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_PARAMETERS
 
+    # Bad l2_omega
+    data = {
+        "id": "test",
+        "type": "Dyn11",
+        "sn": 50000.0,
+        "uhv": 20000.0,
+        "ulv": 400.0,
+        "i0": 0.027,
+        "p0": 210.0,
+        "psc": 2150.0,
+        "vsc": 0.04,
+    }
+    with pytest.raises(RoseauLoadFlowException) as e:
+        TransformerParameters.from_dict(data)
+    assert "The following inequality should be respected: psc/sn < vsc" in e.value.msg
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_PARAMETERS
+
 
 def test_from_name():
     # Bad ones
