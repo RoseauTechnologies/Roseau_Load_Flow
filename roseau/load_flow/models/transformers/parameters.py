@@ -93,7 +93,7 @@ class TransformerParameters(Identifiable, JsonMixin):
         if psc / sn > vsc:
             msg = (
                 f"Transformer type {id!r} has parameters that can't be modeled. The following inequality should be "
-                f"respected: psc/sn < vsc"
+                f"respected: psc/sn <= vsc"
             )
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_PARAMETERS)
