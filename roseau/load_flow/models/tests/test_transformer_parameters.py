@@ -199,7 +199,7 @@ def test_transformer_parameters():
     }
     with pytest.raises(RoseauLoadFlowException) as e:
         TransformerParameters.from_dict(data)
-    assert "The following inequality should be respected: psc/sn < vsc" in e.value.msg
+    assert "The following inequality should be respected: psc/sn <= vsc" in e.value.msg
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_PARAMETERS
 
 
