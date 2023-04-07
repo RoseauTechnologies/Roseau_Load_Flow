@@ -237,10 +237,10 @@ class ElectricalNetwork(JsonMixin):
         potential_refs: list[PotentialRef] = []
 
         elements: list[Element] = [initial_bus]
-        visited_elements: list[Element] = []
+        visited_elements: set[Element] = set()
         while elements:
             e = elements.pop(-1)
-            visited_elements.append(e)
+            visited_elements.add(e)
             if isinstance(e, Bus):
                 buses.append(e)
             elif isinstance(e, AbstractBranch):
@@ -918,13 +918,13 @@ class ElectricalNetwork(JsonMixin):
                 True if the network is already constructed, and we have added an element, False
                 otherwise.
         """
-        elements: list[Element] = []
-        elements.extend(self.buses.values())
-        elements.extend(self.branches.values())
-        elements.extend(self.loads.values())
-        elements.extend(self.sources.values())
-        elements.extend(self.grounds.values())
-        elements.extend(self.potential_refs.values())
+        elements: set[Element] = set()
+        elements.update(self.buses.values())
+        elements.update(self.branches.values())
+        elements.update(self.loads.values())
+        elements.update(self.sources.values())
+        elements.update(self.grounds.values())
+        elements.update(self.potential_refs.values())
 
         found_source = False
         for element in elements:
@@ -965,11 +965,11 @@ class ElectricalNetwork(JsonMixin):
     @staticmethod
     def _check_ref(elements: list[Element]) -> None:
         """Check the number of potential references to avoid having a singular jacobian matrix."""
-        visited_elements: list[Element] = []
+        visited_elements: set[Element] = set()
         for initial_element in elements:
             if initial_element in visited_elements or isinstance(initial_element, Transformer):
                 continue
-            visited_elements.append(initial_element)
+            visited_elements.add(initial_element)
             connected_component: list[Element] = []
             to_visit = [initial_element]
             while to_visit:
@@ -978,7 +978,7 @@ class ElectricalNetwork(JsonMixin):
                 for connected_element in element._connected_elements:
                     if connected_element not in visited_elements and not isinstance(connected_element, Transformer):
                         to_visit.append(connected_element)
-                        visited_elements.append(connected_element)
+                        visited_elements.add(connected_element)
 
             potential_ref = 0
             for element in connected_component:
