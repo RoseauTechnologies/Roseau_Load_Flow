@@ -30,6 +30,7 @@ from roseau.load_flow.models import (
     Transformer,
     VoltageSource,
 )
+from roseau.load_flow.solvers import AbstractSolver, GoldsteinNewton
 from roseau.load_flow.typing import Id, JsonDict, Self, StrPath
 from roseau.load_flow.utils import JsonMixin
 
@@ -178,6 +179,7 @@ class ElectricalNetwork(JsonMixin):
         self._create_network()
         self._valid = True
         self._results_valid: bool = False
+        self._solver: Optional[AbstractSolver] = None
         self.res_info: JsonDict = {}
 
     def __repr__(self) -> str:
@@ -355,13 +357,13 @@ class ElectricalNetwork(JsonMixin):
         precision: float = DEFAULT_PRECISION,
         max_iterations: int = DEFAULT_MAX_ITERATIONS,
         warm_start: bool = DEFAULT_WARM_START,
+        solver: Optional[AbstractSolver] = None,
     ) -> int:
         """Solve the load flow for this network (Requires internet access).
 
-        Execute a Newton algorithm for load flow calculation. To get the results of the
-        load flow for the whole network, use the different `res_` properties (e.g.
-        ``print(net.res_buses``). To get the results for a specific element, use the
-        element directly (e.g. ``print(net.buses["bus1"].res_potentials)``
+        To get the results of the load flow for the whole network, use the different `res_` properties
+        (e.g. ``print(net.res_buses``). To get the results for a specific element, use the element directly
+        (e.g. ``print(net.buses["bus1"].res_potentials)``
 
         Args:
             auth:
@@ -379,6 +381,10 @@ class ElectricalNetwork(JsonMixin):
             warm_start:
                 Should we use the values of potentials of the last successful load flow result (if any)?
 
+            solver:
+                The solver to use for the load flow. By default, a Newton-Raphson algorithm is performed with the
+                Goldstein and Price linear search.
+
         Returns:
             The number of iterations taken.
         """
@@ -389,8 +395,18 @@ class ElectricalNetwork(JsonMixin):
             self._check_validity(constructed=True)
             self._create_network()
 
+        # Update solver
+        if solver is not None:
+            self._solver = solver
+        if self._solver is None:
+            self._solver = GoldsteinNewton(self)
+        if self._solver.network != self:
+            msg = "The solver has been constructed with a different network than the one it is intending to solve."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.NETWORK_SOLVER_MISMATCH)
+
         # Get the data
-        data = {"network": self.to_dict()}
+        data = {"network": self.to_dict(), "solver": self._solver.to_dict()}
         if warm_start and self.res_info.get("status", "failure") == "success":
             # Ignore warnings because results may not be valid (a load power has been changed, etc.)
             data["results"] = self._results_to_dict(False)

@@ -85,6 +85,11 @@ class RoseauLoadFlowExceptionCode(Enum):
     SEVERAL_NETWORKS = auto()
     TOO_MANY_BUSES = auto()
 
+    # Solver
+    BAD_SOLVER_TYPE = auto()
+    BAD_LINEAR_SOLVER_TYPE = auto()
+    NETWORK_SOLVER_MISMATCH = auto()
+
     # DGS export
     DGS_BAD_PHASE_TECHNOLOGY = auto()
     DGS_BAD_PHASE_NUMBER = auto()

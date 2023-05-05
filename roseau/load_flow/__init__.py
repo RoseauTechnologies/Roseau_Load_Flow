@@ -39,6 +39,7 @@ from roseau.load_flow.models import (
     VoltageSource,
 )
 from roseau.load_flow.network import ElectricalNetwork
+from roseau.load_flow.solvers import AbstractNewton, AbstractSolver, GoldsteinNewton, Newton
 from roseau.load_flow.units import Q_, ureg
 from roseau.load_flow.utils._versions import show_versions
 
@@ -57,6 +58,10 @@ __all__ = [
     "show_versions",
     # Electrical Network
     "ElectricalNetwork",
+    "AbstractSolver",
+    "AbstractNewton",
+    "Newton",
+    "GoldsteinNewton",
     # Buses
     "Bus",
     # Core
