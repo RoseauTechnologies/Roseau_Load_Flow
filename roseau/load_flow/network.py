@@ -31,7 +31,7 @@ from roseau.load_flow.models import (
     VoltageSource,
 )
 from roseau.load_flow.solvers import check_solver_params
-from roseau.load_flow.typing import Id, JsonDict, Self, StrPath
+from roseau.load_flow.typing import Id, JsonDict, Self, SolverName, StrPath
 from roseau.load_flow.utils import JsonMixin
 
 logger = logging.getLogger(__name__)
@@ -99,6 +99,9 @@ class ElectricalNetwork(JsonMixin):
         DEFAULT_BASE_URL (str):
             Base URL of the Roseau Load Flow API endpoint.
 
+        DEFAULT_SOLVER (SolverType):
+            The default solver to compute the load flow.
+
         buses (dict[Id, Bus]):
             Dictionary of buses of the network indexed by their IDs. Also available as a
             :attr:`GeoDataFrame<buses_frame>`.
@@ -143,6 +146,7 @@ class ElectricalNetwork(JsonMixin):
     DEFAULT_MAX_ITERATIONS: int = 20
     DEFAULT_BASE_URL: str = "https://load-flow-api-dev.roseautechnologies.com/"
     DEFAULT_WARM_START: bool = True
+    DEFAULT_SOLVER: SolverName = "goldstein_newton"
 
     # Default classes to use
     branch_class = AbstractBranch
@@ -356,7 +360,7 @@ class ElectricalNetwork(JsonMixin):
         precision: float = DEFAULT_PRECISION,
         max_iterations: int = DEFAULT_MAX_ITERATIONS,
         warm_start: bool = DEFAULT_WARM_START,
-        solver: str = "goldstein_newton",
+        solver: SolverName = DEFAULT_SOLVER,
         solver_params: Optional[dict] = None,
     ) -> int:
         """Solve the load flow for this network (Requires internet access).

@@ -2,13 +2,14 @@ import logging
 from typing import Any, Optional
 
 from roseau.load_flow import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
+from roseau.load_flow.typing import SolverName
 
 logger = logging.getLogger(__name__)
 
 LINEAR_SOLVERS = ["SparseLU"]
 
 
-def check_solver_params(solver_name: str, solver_params: Optional[dict[str, Any]]) -> dict[str, Any]:
+def check_solver_params(solver_name: SolverName, solver_params: Optional[dict[str, Any]]) -> dict[str, Any]:
     """Strip and check the solver parameters.
 
     Args:
