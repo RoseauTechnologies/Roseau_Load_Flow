@@ -30,7 +30,7 @@ from roseau.load_flow.models import (
     Transformer,
     VoltageSource,
 )
-from roseau.load_flow.solvers import AbstractSolver, GoldsteinNewton
+from roseau.load_flow.solvers import check_solver_params
 from roseau.load_flow.typing import Id, JsonDict, Self, StrPath
 from roseau.load_flow.utils import JsonMixin
 
@@ -179,7 +179,6 @@ class ElectricalNetwork(JsonMixin):
         self._create_network()
         self._valid = True
         self._results_valid: bool = False
-        self._solver: Optional[AbstractSolver] = None
         self.res_info: JsonDict = {}
 
     def __repr__(self) -> str:
@@ -357,7 +356,8 @@ class ElectricalNetwork(JsonMixin):
         precision: float = DEFAULT_PRECISION,
         max_iterations: int = DEFAULT_MAX_ITERATIONS,
         warm_start: bool = DEFAULT_WARM_START,
-        solver: Optional[AbstractSolver] = None,
+        solver: str = "goldstein_newton",
+        solver_params: Optional[dict] = None,
     ) -> int:
         """Solve the load flow for this network (Requires internet access).
 
@@ -382,31 +382,26 @@ class ElectricalNetwork(JsonMixin):
                 Should we use the values of potentials of the last successful load flow result (if any)?
 
             solver:
-                The solver to use for the load flow. By default, a Newton-Raphson algorithm is performed with the
-                Goldstein and Price linear search.
+                The name of the solver to use for the load flow. The options are:
+                    *'newton', the classical Newton-Raphson algorithm.
+                    *'goldstein_newton', the Newton-Raphson algorithm with the Goldstein and Price linear search.
+
+            solver_params:
+                The solver parameters. If not provided default values will be used for the parameters.
 
         Returns:
             The number of iterations taken.
         """
         from roseau.load_flow import __version__
 
+        solver_params = check_solver_params(solver_name=solver, solver_params=solver_params)
         if not self._valid:
             warm_start = False  # Otherwise, we may get an error when calling self.results_to_dict()
             self._check_validity(constructed=True)
             self._create_network()
 
-        # Update solver
-        if solver is not None:
-            self._solver = solver
-        if self._solver is None:
-            self._solver = GoldsteinNewton(self)
-        if self._solver.network != self:
-            msg = "The solver has been constructed with a different network than the one it is intending to solve."
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.NETWORK_SOLVER_MISMATCH)
-
         # Get the data
-        data = {"network": self.to_dict(), "solver": self._solver.to_dict()}
+        data = {"network": self.to_dict(), "solver": {"name": solver, "params": solver_params}}
         if warm_start and self.res_info.get("status", "failure") == "success":
             # Ignore warnings because results may not be valid (a load power has been changed, etc.)
             data["results"] = self._results_to_dict(False)

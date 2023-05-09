@@ -1,29 +1,30 @@
 import pytest
 
-from roseau.load_flow import (
-    AbstractSolver,
-    Bus,
-    ElectricalNetwork,
-    PotentialRef,
-    RoseauLoadFlowException,
-    RoseauLoadFlowExceptionCode,
-    VoltageSource,
-)
+from roseau.load_flow import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
+from roseau.load_flow.solvers import check_solver_params
 
 
 def test_solver():
-    bus = Bus(id="bus", phases="abcn")
-    VoltageSource(id="vs", bus=bus, voltages=[20000.0 + 0.0j, -10000.0 - 17320.508076j, -10000.0 + 17320.508076j])
-    PotentialRef(id="pref", element=bus)
-    en = ElectricalNetwork.from_element(bus)
+    # Additional key
+    solver_params = check_solver_params(
+        solver_name="newton", solver_params={"linear_solver": "SparseLU", "m1": 0.1, "toto": ""}
+    )
+    assert "m1" not in solver_params
+    assert "toto" not in solver_params
+    assert "linear_solver" in solver_params
 
     # Bad solvers
     with pytest.raises(RoseauLoadFlowException) as e:
-        AbstractSolver.from_dict(data={"solver": "toto", "linear_solver": "SparseLU"}, network=en)
-    assert "'toto' is not implemented" in e.value.msg
+        check_solver_params(solver_name="toto", solver_params={"linear_solver": "SparseLU"})
+    assert "Solver 'toto' is not implemented" in e.value.msg
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_SOLVER_TYPE
 
     with pytest.raises(RoseauLoadFlowException) as e:
-        AbstractSolver.from_dict(data={"solver": "newton", "linear_solver": "toto"}, network=en)
-    assert "'toto' is not implemented" in e.value.msg
-    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_LINEAR_SOLVER_TYPE
+        check_solver_params(solver_name="newton", solver_params={"linear_solver": "toto"})
+    assert "Linear solver 'toto' is not implemented" in e.value.msg
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_SOLVER_PARAMS
+
+    with pytest.raises(RoseauLoadFlowException) as e:
+        check_solver_params(solver_name="goldstein_newton", solver_params={"m1": 0.9, "m2": 0.1})
+    assert "the inequality m1 < m2 should be respected" in e.value.msg
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_SOLVER_PARAMS

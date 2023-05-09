@@ -87,7 +87,7 @@ class RoseauLoadFlowExceptionCode(Enum):
 
     # Solver
     BAD_SOLVER_TYPE = auto()
-    BAD_LINEAR_SOLVER_TYPE = auto()
+    BAD_SOLVER_PARAMS = auto()
     NETWORK_SOLVER_MISMATCH = auto()
 
     # DGS export
