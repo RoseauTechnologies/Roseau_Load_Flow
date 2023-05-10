@@ -43,3 +43,15 @@ caption: API
 ---
 autoapi/roseau/load_flow/index
 ```
+
+## Solvers
+
+The load flow solvers used are also documented:
+
+```{toctree}
+---
+maxdepth: 2
+caption: Solvers
+---
+solvers
+```

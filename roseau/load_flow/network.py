@@ -386,15 +386,19 @@ class ElectricalNetwork(JsonMixin):
                 Should we use the values of potentials of the last successful load flow result (if any)?
 
             solver:
-                The name of the solver to use for the load flow. The options are:
-                    *'newton', the classical Newton-Raphson algorithm.
-                    *'goldstein_newton', the Newton-Raphson algorithm with the Goldstein and Price linear search.
+                The name of the solver to use for the load flow.
+                The options are:
+                    - 'newton', the classical Newton-Raphson algorithm.
+                    - 'goldstein_newton', the Newton-Raphson algorithm with the Goldstein and Price linear search.
 
             solver_params:
                 The solver parameters. If not provided default values will be used for the parameters.
 
         Returns:
             The number of iterations taken.
+
+        See Also:
+            :ref:`solvers`
         """
         from roseau.load_flow import __version__
 
