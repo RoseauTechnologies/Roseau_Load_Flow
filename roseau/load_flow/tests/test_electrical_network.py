@@ -100,12 +100,12 @@ def good_json_results() -> dict:
     return {
         "info": {
             "resolution_method": "newton",
-            "precision": 1e-06,
+            "tolerance": 1e-06,
             "max_iterations": 20,
             "warm_start": True,
             "status": "success",
             "iterations": 1,
-            "final_precision": 6.296829377361313e-14,
+            "residual": 6.296829377361313e-14,
         },
         "buses": [
             {
@@ -532,8 +532,8 @@ def test_solve_load_flow(small_network, good_json_results):
             "resolution_method": "newton",
             "iterations": 50,
             "wam_start": False,
-            "precision": 1e-06,
-            "final_precision": 14037.977318668112,
+            "tolerance": 1e-06,
+            "residual": 14037.977318668112,
             "max_iterations": 20,
         },
         "buses": [
@@ -728,12 +728,12 @@ def test_single_phase_network(single_phase_network: ElectricalNetwork):
     json_results = {
         "info": {
             "resolution_method": "newton",
-            "precision": 1e-06,
+            "tolerance": 1e-06,
             "max_iterations": 20,
             "status": "success",
             "iterations": 1,
             "warm_start": True,
-            "final_precision": 1.3239929985697785e-13,
+            "residual": 1.3239929985697785e-13,
         },
         "buses": [
             {

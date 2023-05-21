@@ -90,11 +90,11 @@ class ElectricalNetwork(JsonMixin):
             be connected to a bus or to a ground.
 
     Attributes:
-        DEFAULT_PRECISION (float):
-            The default precision needed for the convergence of the load flow solver. At each
+        DEFAULT_TOLERANCE (float):
+            The default tolerance needed for the convergence of the load flow solver. At each
             iteration, the solver computes the residuals of the equations of the problem. When the
             maximum of the absolute values of the residuals vector is lower than the provided
-            precision, the solver stops. Default is 1e-6.
+            tolerance, the solver stops. Default is 1e-6.
 
         DEFAULT_MAX_ITERATIONS (int):
             Maximum number of iterations to perform the load flow analysis. The solver stops when
@@ -137,16 +137,16 @@ class ElectricalNetwork(JsonMixin):
 
                 {
                     "resolution_method": "newton",
-                    "precision": 1e-06,
+                    "tolerance": 1e-06,
                     "max_iterations": 20,
                     "warm_start": True,
                     "status": "success",
                     "iterations": 2,
-                    "final_precision": 1.8595619621919468e-07
+                    "residual": 1.8595619621919468e-07
                 }
     """
 
-    DEFAULT_PRECISION: float = 1e-6
+    DEFAULT_TOLERANCE: float = 1e-6
     DEFAULT_MAX_ITERATIONS: int = 20
     DEFAULT_BASE_URL: str = "https://load-flow-api-dev.roseautechnologies.com/"
     DEFAULT_WARM_START: bool = True
@@ -361,7 +361,7 @@ class ElectricalNetwork(JsonMixin):
         self,
         auth: Union[tuple[str, str], HTTPBasicAuth],
         base_url: str = DEFAULT_BASE_URL,
-        precision: float = DEFAULT_PRECISION,
+        tolerance: float = DEFAULT_TOLERANCE,
         max_iterations: int = DEFAULT_MAX_ITERATIONS,
         warm_start: bool = DEFAULT_WARM_START,
         solver: Solver = DEFAULT_SOLVER,
@@ -380,8 +380,8 @@ class ElectricalNetwork(JsonMixin):
             base_url:
                 The base url to request the load flow solver.
 
-            precision:
-                Precision needed for the convergence.
+            tolerance:
+                Tolerance needed for the convergence.
 
             max_iterations:
                 The maximum number of allowed iterations.
@@ -418,7 +418,7 @@ class ElectricalNetwork(JsonMixin):
             data["results"] = self._results_to_dict(False)
 
         # Request the server
-        params = {"max_iterations": max_iterations, "precision": precision, "warm_start": warm_start}
+        params = {"max_iterations": max_iterations, "tolerance": tolerance, "warm_start": warm_start}
         response = requests.post(
             url=urljoin(base_url, "solve/"),
             params=params,
@@ -448,14 +448,14 @@ class ElectricalNetwork(JsonMixin):
         if self.res_info["status"] != "success":
             msg = (
                 f"The load flow did not converge after {self.res_info['iterations']} iterations. The norm of "
-                f"the residuals is {self.res_info['final_precision']:.5n}"
+                f"the residuals is {self.res_info['residual']:.5n}"
             )
             logger.error(msg=msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.NO_LOAD_FLOW_CONVERGENCE)
 
         logger.info(
             f"The load flow converged after {self.res_info['iterations']} iterations (residual="
-            f"{self.res_info['final_precision']:.5n})."
+            f"{self.res_info['residual']:.5n})."
         )
 
         # Dispatch the results
