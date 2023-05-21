@@ -24,8 +24,8 @@ Computationally, this translates to finding a solution $x$ such that:
 With $\varepsilon$ being a small *tolerance*.
 In code, $\varepsilon$ can be set with `en.solve_load_flow(tolerance=...)` (by default `1e-6`).
 
-There are several algorithms to solve this kind of problems. In Roseau Load Flow, the following
-algorithms are available:
+There are several solvers to solve this kind of problems. In Roseau Load Flow, the following
+solvers are available:
 
 
 ## Newton-Raphson
@@ -47,18 +47,18 @@ with $J_F$ being the jacobian of $F$.
 
 The algorithm stops when it finds a solution $x_n$ such that $||F(x_n)||_{\infty} < \varepsilon$
 within a maximum number of iterations (modify with `en.solve_load_flow(max_iterations=...)`). If
-the maximum number of iterations is exceeded, the algorithm did not converge and the execution
+the maximum number of iterations is exceeded, the solver did not converge and the execution
 fails.
 
 ### Parameters
 
-The *Newton-Raphson* algorithm accepts one parameter:
+The *Newton-Raphson* solver accepts one parameter:
 - `"linear_solver"`: the linear solver used to compute $J_F^{-1}(x)F(x)$. Currently only the
   `"SparseLU"` option is available.
 
 ## Goldstein and Price
 
-This is a variant of the classical *Newton-Raphson* algorithm with a linear search.
+This is a variant of the classical *Newton-Raphson* solver with a linear search.
 
 At each iteration, $x_{n+1}$ is calculated using:
 ```{math}
@@ -67,9 +67,9 @@ x_{n+1} = x_n + t d(x_n)
 ```
 with $d = -J_F^{-1}F$
 
-For the classical *Newton-Raphson* algorithm, $t=1$ is chosen for the next iterate.
+For the classical *Newton-Raphson* solver, $t=1$ is chosen for the next iterate.
 The idea of the linear searches, in this case the *Goldstein and Price* variant, is to find a
-"better" $t$ that improves the convergence of the algorithm.
+"better" $t$ that improves the convergence of the solver.
 
 Let $g$ be a function to be minimized:
 ```{math}
@@ -103,7 +103,7 @@ more robust.
 
 ### Parameters
 
-The *Goldstein and Price* algorithm accepts the following parameters:
+The *Goldstein and Price* solver accepts the following parameters:
 - `"m1"` the first constant of the *Goldstein and Price* variant. By default: `0.1`.
 - `"m2"` the second constant of the *Goldstein and Price* variant. By default: `0.9`.
   Note that the constraint $m_1 < m_2$ must be met.

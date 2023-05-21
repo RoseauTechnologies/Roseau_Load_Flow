@@ -2,70 +2,70 @@ import logging
 from typing import Optional
 
 from roseau.load_flow import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
-from roseau.load_flow.typing import Algorithm, JsonDict
+from roseau.load_flow.typing import JsonDict, Solver
 
 logger = logging.getLogger(__name__)
 
 LINEAR_SOLVERS = ["SparseLU"]
 
-_SOLVER_PARAMS: dict[Algorithm, list[str]] = {
+_SOLVERS_PARAMS: dict[Solver, list[str]] = {
     "newton": ["linear_solver"],
-    "goldstein_newton": ["linear_solver", "m1", "m2"],
+    "newton_goldstein": ["linear_solver", "m1", "m2"],
 }
-ALGORITHMS = list(_SOLVER_PARAMS)
+SOLVERS = list(_SOLVERS_PARAMS)
 
 
-def check_solver_params(algorithm: Algorithm, solver_params: Optional[JsonDict]) -> JsonDict:
+def check_solver_params(solver: Solver, params: Optional[JsonDict]) -> JsonDict:
     """Strip and check the solver parameters.
 
     Args:
-        algorithm:
-            The name of the algorithm used by the solver.
+        solver:
+            The name of the solver used by the solver.
 
-        solver_params:
+        params:
             The solver parameters dictionary.
 
     Returns:
         The updated solver parameters.
     """
-    if solver_params is None:
-        solver_params = {}
+    if params is None:
+        params = {}
     else:
-        solver_params = solver_params.copy()
+        params = params.copy()
 
-    # Check the algorithm
-    if algorithm not in _SOLVER_PARAMS:
-        msg = f"Algorithm {algorithm!r} is not implemented. Available algorithms are: {ALGORITHMS}"
+    # Check the solver
+    if solver not in _SOLVERS_PARAMS:
+        msg = f"Solver {solver!r} is not implemented. Available solvers are: {SOLVERS}"
         logger.error(msg)
-        raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_SOLVER_ALGORITHM)
+        raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_SOLVER_NAME)
 
     # Warn about and remove unexpected parameters
-    param_list = _SOLVER_PARAMS[algorithm]
+    param_list = _SOLVERS_PARAMS[solver]
     to_delete: list[str] = []
-    for key in solver_params:
+    for key in params:
         if key not in param_list:
-            msg = "Unexpected solver parameter %r for the %r algorithm. Available params are: %s"
-            logger.warning(msg, key, algorithm, param_list)
+            msg = "Unexpected solver parameter %r for the %r solver. Available params are: %s"
+            logger.warning(msg, key, solver, param_list)
             to_delete.append(key)
     for key in to_delete:
-        del solver_params[key]
+        del params[key]
 
     # Check the linear solver
-    if "linear_solver" in solver_params and solver_params["linear_solver"] not in LINEAR_SOLVERS:
+    if "linear_solver" in params and params["linear_solver"] not in LINEAR_SOLVERS:
         msg = (
-            f"Linear solver {solver_params['linear_solver']!r} is not implemented. "
+            f"Linear solver {params['linear_solver']!r} is not implemented. "
             f"The implemented solvers are: {LINEAR_SOLVERS}"
         )
         logger.error(msg)
-        raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_SOLVER_PARAMS)
+        raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINEAR_SOLVER)
 
-    # Extra checks per algorithm
-    if algorithm == "newton":
+    # Extra checks per solver
+    if solver == "newton":
         pass  # Nothing more to check
-    elif algorithm == "goldstein_newton":
-        if solver_params.get("m1", 0.1) >= solver_params.get("m2", 0.9):
-            msg = "For the 'goldstein_newton' algorithm, the inequality m1 < m2 should be respected."
+    elif solver == "newton_goldstein":
+        if params.get("m1", 0.1) >= params.get("m2", 0.9):
+            msg = "For the 'newton_goldstein' solver, the inequality m1 < m2 should be respected."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_SOLVER_PARAMS)
 
-    return solver_params
+    return params

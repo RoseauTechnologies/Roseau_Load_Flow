@@ -31,7 +31,7 @@ from roseau.load_flow.models import (
     VoltageSource,
 )
 from roseau.load_flow.solvers import check_solver_params
-from roseau.load_flow.typing import Algorithm, Id, JsonDict, Self, StrPath
+from roseau.load_flow.typing import Id, JsonDict, Self, Solver, StrPath
 from roseau.load_flow.utils import JsonMixin
 
 # if TYPE_CHECKING:
@@ -52,7 +52,7 @@ class ElectricalNetwork(JsonMixin):
     """Electrical network class.
 
     This class represents an electrical network, its elements, and their connections. After
-    creating the network, the load flow algorithm can be run on it using the
+    creating the network, the load flow solver can be run on it using the
     :meth:`solve_load_flow` method.
 
     Args:
@@ -91,7 +91,7 @@ class ElectricalNetwork(JsonMixin):
 
     Attributes:
         DEFAULT_PRECISION (float):
-            The default precision needed for the convergence of the load flow algorithm. At each
+            The default precision needed for the convergence of the load flow solver. At each
             iteration, the solver computes the residuals of the equations of the problem. When the
             maximum of the absolute values of the residuals vector is lower than the provided
             precision, the solver stops. Default is 1e-6.
@@ -103,7 +103,7 @@ class ElectricalNetwork(JsonMixin):
         DEFAULT_BASE_URL (str):
             Base URL of the Roseau Load Flow API endpoint.
 
-        DEFAULT_SOLVER (SolverType):
+        DEFAULT_SOLVER (str):
             The default solver to compute the load flow.
 
         buses (dict[Id, Bus]):
@@ -150,7 +150,7 @@ class ElectricalNetwork(JsonMixin):
     DEFAULT_MAX_ITERATIONS: int = 20
     DEFAULT_BASE_URL: str = "https://load-flow-api-dev.roseautechnologies.com/"
     DEFAULT_WARM_START: bool = True
-    DEFAULT_SOLVER: Algorithm = "goldstein_newton"
+    DEFAULT_SOLVER: Solver = "newton_goldstein"
 
     # Default classes to use
     branch_class = AbstractBranch
@@ -364,7 +364,7 @@ class ElectricalNetwork(JsonMixin):
         precision: float = DEFAULT_PRECISION,
         max_iterations: int = DEFAULT_MAX_ITERATIONS,
         warm_start: bool = DEFAULT_WARM_START,
-        algorithm: Algorithm = DEFAULT_SOLVER,
+        solver: Solver = DEFAULT_SOLVER,
         solver_params: Optional[JsonDict] = None,
     ) -> int:
         """Solve the load flow for this network (Requires internet access).
@@ -390,29 +390,29 @@ class ElectricalNetwork(JsonMixin):
                 If true, initialize the solver with the potentials of the last successful load flow
                 result (if any).
 
-            algorithm:
-                The name of the algorithm to use for the load flow. The options are:
-                    - ``'newton'``: the classical Newton-Raphson algorithm.
-                    - ``'goldstein_newton'``: the Newton-Raphson algorithm with the Goldstein and
+            solver:
+                The name of the solver to use for the load flow. The options are:
+                    - ``'newton'``: the classical Newton-Raphson solver.
+                    - ``'newton_goldstein'``: the Newton-Raphson solver with the Goldstein and
                       Price linear search.
 
             solver_params:
                 A dictionary of parameters used by the solver. Available parameters depend on the
-                algorithm chosen. For more information, see the :ref:`solvers` page.
+                solver chosen. For more information, see the :ref:`solvers` page.
 
         Returns:
             The number of iterations taken.
         """
         from roseau.load_flow import __version__
 
-        solver_params = check_solver_params(algorithm=algorithm, solver_params=solver_params)
+        solver_params = check_solver_params(solver=solver, params=solver_params)
         if not self._valid:
             warm_start = False  # Otherwise, we may get an error when calling self.results_to_dict()
             self._check_validity(constructed=True)
             self._create_network()
 
         # Get the data
-        data = {"network": self.to_dict(), "solver": {"name": algorithm, "params": solver_params}}
+        data = {"network": self.to_dict(), "solver": {"name": solver, "params": solver_params}}
         if warm_start and self.res_info.get("status", "failure") == "success":
             # Ignore warnings because results may be invalid (a load power has been changed, etc.)
             data["results"] = self._results_to_dict(False)
