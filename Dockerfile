@@ -1,4 +1,4 @@
-FROM python:3.10-slim-bullseye as build
+FROM python:3.11-slim-bullseye as build
 
 # Set the working directory to /app
 WORKDIR /app
@@ -28,7 +28,7 @@ RUN poetry build && \
     cd .. && \
     poetry install --without dev,test,doc --with docker --sync
 
-FROM python:3.10-slim-bullseye as run
+FROM python:3.11-slim-bullseye as run
 
 # Set the working directory to /app
 WORKDIR /app
