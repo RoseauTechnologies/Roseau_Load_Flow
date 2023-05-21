@@ -1,34 +1,27 @@
 \documentclass[%
 crop,%
 tikz,%
-convert={outext=.svg,command=\unexpanded{pdf2svg \infile\space\outfile}},%
+convert={outext=.svg,command=\unexpanded{pdf2svg \infile\space../_static/\outfile}},%
 multi=false%
 ]{standalone}%
 \usepackage[utf8]{luainputenc}%
-\usepackage{xspace}%
 \usepackage{amsmath}%
-\usepackage{amssymb}%
-\usepackage{mathrsfs}%
-\usepackage{mathtools}%
-\usepackage{siunitx}%
+\usepackage{roseautechnologies}%
 \usepackage{pgfplots}%
 \pgfplotsset{compat=newest}%
 \usepgfplotslibrary{groupplots, colorbrewer}%
 \usetikzlibrary{backgrounds}%
 \input{Definitions.tex}%
 \begin{document}
-
-%
-% q and q' functions
-%
-\tikzset{declare function = {
-    q(\x) = (\x - 1) * (\x - 1) + 0.1;
-    qp(\x) = 2 * \x - 2;
-}}
 \begin{tikzpicture}[%
     show background rectangle,%
     tight background,%
-    background rectangle/.style={fill=white}%
+    background rectangle/.style={fill=white},%
+    % q and q' functions
+    declare function = {
+        q(\x) = (\x - 1) * (\x - 1) + 0.1;
+        qp(\x) = 2 * \x - 2;
+    }
     ]
     %
     % Common parameters
@@ -91,7 +84,7 @@ multi=false%
         \addplot[lisse, red] expression {q(x)};%
         \addlegendentryexpanded{$q(t)$};%
 
-%        % droites
+        % droites
         \addplot[black, thin] expression {q(0) + qp(0) * \mone * x};%
         \addplot[black, thin] expression {q(0) + qp(0) * \mtwo * x};%
 

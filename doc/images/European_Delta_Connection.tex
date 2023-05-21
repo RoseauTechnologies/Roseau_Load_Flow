@@ -1,20 +1,18 @@
 \documentclass[%
 crop,%
+border={0mm 10mm 10mm 0mm},%
 tikz,%
-convert={outext=.svg,command=\unexpanded{pdf2svg \infile\space\outfile}},%
+convert={outext=.svg,command=\unexpanded{pdf2svg \infile\space../_static/\outfile}},%
 multi=false%
 ]{standalone}%
 \usepackage[utf8]{luainputenc}%
-\usepackage{xspace}%
 \usepackage{amsmath}%
-\usepackage{amssymb}%
-\usepackage{mathrsfs}%
-\usepackage{mathtools}%
-\usepackage{siunitx}%
+\usepackage{roseautechnologies}%
 \usepackage[siunitx,european,straightvoltages]{circuitikz}%
 \usetikzlibrary{calc,backgrounds}%
 \input{Definitions.tex}%
 \begin{document}
+\thispagestyle{empty}%
 \begin{tikzpicture}[%
     show background rectangle,%
     tight background,%

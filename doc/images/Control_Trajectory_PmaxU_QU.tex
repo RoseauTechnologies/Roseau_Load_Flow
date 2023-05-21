@@ -1,16 +1,12 @@
 \documentclass[%
 crop,%
 tikz,%
-convert={outext=.svg,command=\unexpanded{pdf2svg \infile\space\outfile}},%
+convert={outext=.svg,command=\unexpanded{pdf2svg \infile\space../_static/\outfile}},%
 multi=false%
 ]{standalone}%
 \usepackage[utf8]{luainputenc}%
-\usepackage{xspace}%
 \usepackage{amsmath}%
-\usepackage{amssymb}%
-\usepackage{mathrsfs}%
-\usepackage{mathtools}%
-\usepackage{siunitx}%
+\usepackage{roseautechnologies}%
 \usetikzlibrary{arrows.meta,patterns,calc,backgrounds}%
 \usepackage{pgfplots}%
 \pgfplotsset{compat=newest}%
