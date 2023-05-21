@@ -245,4 +245,4 @@ benchmark/*.mtx
 *.aux
 *.log
 .ruff_cache/
-./doc/images/*.pdf
+doc/images/*.pdf

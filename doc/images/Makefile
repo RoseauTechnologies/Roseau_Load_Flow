@@ -9,7 +9,7 @@ PDF2SVG:=$(shell which pdf2svg)
 OUTPUT_FOLDER:=$(shell realpath ../_static/)
 
 # Files
-TEX_FILES:=$(filter-out Definitions.tex, $(wildcard *.tex))
+TEX_FILES:=$(filter-out Preambule.tex, $(wildcard *.tex))
 PDF_FILES:=$(TEX_FILES:%.tex=%.pdf)
 AUX_FILES:=$(TEX_FILES:%.tex=$(OUTPUT_FOLDER)/%.aux)
 LOG_FILES:=$(TEX_FILES:%.tex=$(OUTPUT_FOLDER)/%.log)
@@ -20,11 +20,11 @@ SVG_FILES:=$(TEX_FILES:%.tex=$(OUTPUT_FOLDER)/%.svg)
 all: | checks $(SVG_FILES) clean
 .PHONY: clean cleanall checks
 
-$(OUTPUT_FOLDER)/Domain_%.svg: Domain_%.tex Definitions.tex Domain_Common.tikz
+$(OUTPUT_FOLDER)/Domain_%.svg: Domain_%.tex Domain_Common.tikz Preambule.tex
 	@$(LUALATEX) --jobname=$(basename $<) --file-line-error --interaction=nonstopmode \
 	--shell-escape --output-directory=$(OUTPUT_FOLDER) $<
 
-$(OUTPUT_FOLDER)/%.svg: %.tex Definitions.tex
+$(OUTPUT_FOLDER)/%.svg: %.tex Preambule.tex
 	@$(LUALATEX) --jobname=$(basename $<) --file-line-error --interaction=nonstopmode \
 	--shell-escape --output-directory=$(OUTPUT_FOLDER) $<
 

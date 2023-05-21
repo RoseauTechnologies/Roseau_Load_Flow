@@ -89,7 +89,7 @@ A search is made to find $t$ such that:
 m_2q'(0) \leq \frac{q(t) - q(0)}{t} \leq m_1q'(0)
 ```
 
-```{image} /_static/Goldstein_and_Price.svg
+```{image} /_static/Goldstein_And_Price.svg
 :alt: Goldstein and Price conditions
 :width: 500px
 :align: center
