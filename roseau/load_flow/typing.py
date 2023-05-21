@@ -21,9 +21,9 @@ Type Aliases used by Roseau Load Flow.
 
     Available types of projections for flexible loads control.
 
-.. class:: SolverName
+.. class:: Algorithm
 
-    Available solvers for the load flow computation.
+    Available algorithms for the load flow computation.
 
 .. class:: Self
 
@@ -45,7 +45,7 @@ JsonDict: TypeAlias = dict[str, Any]
 StrPath: TypeAlias = Union[str, os.PathLike[str]]
 ControlType: TypeAlias = Literal["constant", "p_max_u_production", "p_max_u_consumption", "q_u"]
 ProjectionType: TypeAlias = Literal["euclidean", "keep_p", "keep_q"]
-SolverName: TypeAlias = Literal["newton", "goldstein_newton"]
+Algorithm: TypeAlias = Literal["newton", "goldstein_newton"]
 
 if sys.version_info >= (3, 11):
     from typing import Self as Self
@@ -54,4 +54,4 @@ elif TYPE_CHECKING:
 else:
     Self = TypeVar("Self")
 
-__all__ = ["Id", "JsonDict", "StrPath", "ControlType", "ProjectionType", "SolverName"]
+__all__ = ["Id", "JsonDict", "StrPath", "ControlType", "ProjectionType", "Algorithm"]

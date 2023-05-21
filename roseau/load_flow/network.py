@@ -31,7 +31,7 @@ from roseau.load_flow.models import (
     VoltageSource,
 )
 from roseau.load_flow.solvers import check_solver_params
-from roseau.load_flow.typing import Id, JsonDict, Self, SolverName, StrPath
+from roseau.load_flow.typing import Algorithm, Id, JsonDict, Self, StrPath
 from roseau.load_flow.utils import JsonMixin
 
 logger = logging.getLogger(__name__)
@@ -146,7 +146,7 @@ class ElectricalNetwork(JsonMixin):
     DEFAULT_MAX_ITERATIONS: int = 20
     DEFAULT_BASE_URL: str = "https://load-flow-api-dev.roseautechnologies.com/"
     DEFAULT_WARM_START: bool = True
-    DEFAULT_SOLVER: SolverName = "goldstein_newton"
+    DEFAULT_SOLVER: Algorithm = "goldstein_newton"
 
     # Default classes to use
     branch_class = AbstractBranch
@@ -360,14 +360,14 @@ class ElectricalNetwork(JsonMixin):
         precision: float = DEFAULT_PRECISION,
         max_iterations: int = DEFAULT_MAX_ITERATIONS,
         warm_start: bool = DEFAULT_WARM_START,
-        solver: SolverName = DEFAULT_SOLVER,
-        solver_params: Optional[dict] = None,
+        algorithm: Algorithm = DEFAULT_SOLVER,
+        solver_params: Optional[JsonDict] = None,
     ) -> int:
         """Solve the load flow for this network (Requires internet access).
 
-        To get the results of the load flow for the whole network, use the different `res_` properties
-        (e.g. ``print(net.res_buses``). To get the results for a specific element, use the element directly
-        (e.g. ``print(net.buses["bus1"].res_potentials)``
+        To get the results of the load flow for the whole network, use the `res_` properties on the
+        network (e.g. ``print(net.res_buses``). To get the results for a specific element, use the
+        `res_` properties on the element (e.g. ``print(net.buses["bus1"].res_potentials)``.
 
         Args:
             auth:
@@ -383,35 +383,34 @@ class ElectricalNetwork(JsonMixin):
                 The maximum number of allowed iterations.
 
             warm_start:
-                Should we use the values of potentials of the last successful load flow result (if any)?
+                If true, initialize the solver with the potentials of the last successful load flow
+                result (if any).
 
-            solver:
-                The name of the solver to use for the load flow.
-                The options are:
-                    - 'newton', the classical Newton-Raphson algorithm.
-                    - 'goldstein_newton', the Newton-Raphson algorithm with the Goldstein and Price linear search.
+            algorithm:
+                The name of the algorithm to use for the load flow. The options are:
+                    - ``'newton'``: the classical Newton-Raphson algorithm.
+                    - ``'goldstein_newton'``: the Newton-Raphson algorithm with the Goldstein and
+                      Price linear search.
 
             solver_params:
-                The solver parameters. If not provided default values will be used for the parameters.
+                A dictionary of parameters used by the solver. Available parameters depend on the
+                algorithm chosen. For more information, see the :ref:`solvers` page.
 
         Returns:
             The number of iterations taken.
-
-        See Also:
-            :ref:`solvers`
         """
         from roseau.load_flow import __version__
 
-        solver_params = check_solver_params(solver_name=solver, solver_params=solver_params)
+        solver_params = check_solver_params(algorithm=algorithm, solver_params=solver_params)
         if not self._valid:
             warm_start = False  # Otherwise, we may get an error when calling self.results_to_dict()
             self._check_validity(constructed=True)
             self._create_network()
 
         # Get the data
-        data = {"network": self.to_dict(), "solver": {"name": solver, "params": solver_params}}
+        data = {"network": self.to_dict(), "solver": {"name": algorithm, "params": solver_params}}
         if warm_start and self.res_info.get("status", "failure") == "success":
-            # Ignore warnings because results may not be valid (a load power has been changed, etc.)
+            # Ignore warnings because results may be invalid (a load power has been changed, etc.)
             data["results"] = self._results_to_dict(False)
 
         # Request the server
@@ -430,7 +429,7 @@ class ElectricalNetwork(JsonMixin):
         if remote_rlf_version is not None:
             warnings.warn(
                 message=f"A new version ({remote_rlf_version}) of the library roseau-load-flow is available. Please "
-                f"visit https://github.com/RoseauTechnologies/Roseau_Load_Flow for more information.",
+                f"visit https://github.com/RoseauTechnologies/Roseau_Load_Flow/releases for more information.",
                 category=UserWarning,
                 stacklevel=2,
             )
@@ -451,7 +450,7 @@ class ElectricalNetwork(JsonMixin):
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.NO_LOAD_FLOW_CONVERGENCE)
 
         logger.info(
-            f"The load flow converged after {self.res_info['iterations']} iterations (final error="
+            f"The load flow converged after {self.res_info['iterations']} iterations (residual="
             f"{self.res_info['final_precision']:.5n})."
         )
 

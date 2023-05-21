@@ -2,34 +2,40 @@
 
 # Solvers
 
-The goal is to find all the voltages, currents and powers of the network that respect the equations introduced by each
-element of the network.
+The goal is to compute the voltages at each bus and the currents and powers flow in each branch of
+the network. The computation must respect the Kirchhoff's laws and the constraints of the network.
 
-More formally, we have to solve a system of $n$ nonlinear equations with $n$ variables:
+More formally, this is done by solving a system of $n$ nonlinear equations with $n$ variables:
 
 ```{math}
 F: \mathbb{R}^n \to \mathbb{R}^n
 ```
 
-Our goal is to find $x$ such as:
+The goal is then to find $x$ such that:
 
 ```{math}
 F(x) = 0
 ```
 
-As finding an exact solution of a nonlinear system is very difficult, we actually try to find $x$ such as:
+Computationally, this translates to finding a solution $x$ such that:
 ```{math}
-||F(x)||_{\infty} < \epsilon
+||F(x)||_{\infty} < \varepsilon
 ```
-With $\epsilon$ being the parameter `tolerance` that the user can choose (by default `1e-6`).
+With $\varepsilon$ being a small *tolerance*.
+In code, $\varepsilon$ can be set with `en.solve_load_flow(tolerance=...)` (by default `1e-6`).
+
+There are several algorithms to solve this kind of problems. In Roseau Load Flow, the following
+algorithms are available:
 
 
 ## Newton-Raphson
 
-This is the classical Newton-Raphson solver.
+This is the classical [*Newton-Raphson* method](https://en.wikipedia.org/wiki/Newton%27s_method).
 
-We start by choosing an initial solution $x_0$ by propagating the voltages, or re-using the previous results if a load
-flow has already been run (this behaviour actually depends on the `warm_start` parameter which default to `True`).
+First, an initial solution $x_0$ is chosen by initializing the voltages either by propagating the
+voltage of the sources or by re-using the results from the last successful run. The choice of
+either option depends on the `warm_start` argument to the `en.solve_load_flow()` method.
+
 Then, multiple iterations are made with:
 
 ```{math}
@@ -37,63 +43,69 @@ Then, multiple iterations are made with:
 x_{n+1} = x_n - J_F^{-1}(x_n)F(x_n)
 ```
 
-with $J_F$ the jacobian of $F$.
+with $J_F$ being the jacobian of $F$.
 
-The iterations are stopped when we find $x_n$ such as $||F(x_n)||_{\infty} < \epsilon$, or when the number of iterations
-has exceeded the parameter `max_iterations` (in which case we consider that the algorithm can't converge).
+The algorithm stops when it finds a solution $x_n$ such that $||F(x_n)||_{\infty} < \varepsilon$
+within a maximum number of iterations (modify with `en.solve_load_flow(max_iterations=...)`). If
+the maximum number of iterations is exceeded, the algorithm did not converge and the execution
+fails.
 
 ### Parameters
 
-The user can specify one parameter:
-- `"linear_solver"`: the linear solver used to compute $J_F^{-1}(x)F(x)$. Currently only `"SparseLU"` is available.
+The *Newton-Raphson* algorithm accepts one parameter:
+- `"linear_solver"`: the linear solver used to compute $J_F^{-1}(x)F(x)$. Currently only the
+  `"SparseLU"` option is available.
 
 ## Goldstein and Price
 
-This is a variant of the classical Newton-Raphson algorithm with a linear search.
+This is a variant of the classical *Newton-Raphson* algorithm with a linear search.
 
-At each iteration we're choosing $x_{n+1}$ such as
+At each iteration, $x_{n+1}$ is calculated using:
 ```{math}
 :label: linear_search_step
-x_{n+1} = x_n + td(x_n)
+x_{n+1} = x_n + t d(x_n)
 ```
 with $d = -J_F^{-1}F$
 
-For the classical Newton-Raphson algorithm, $t=1$ is chosen for the next iterate. The idea of the linear searches
-(in our case the Goldstein and Price variant), is to find a "better" $t$ to improve the convergence of the
-algorithm.
+For the classical *Newton-Raphson* algorithm, $t=1$ is chosen for the next iterate.
+The idea of the linear searches, in this case the *Goldstein and Price* variant, is to find a
+"better" $t$ that improves the convergence of the algorithm.
 
-Let $g$ a function to be minimised:
+Let $g$ be a function to be minimized:
 ```{math}
 g &: \mathbb{R}^n \to \mathbb{R} \\
 g(x) &:= \frac{1}{2} ||F(x)||_2
 ```
 
-Let $q$ the function $g$ in the direction $d$:
+Let $q$ be the function $g$ in the direction $d$:
 ```{math}
 q &: \mathbb{R} \to \mathbb{R} \\
-q(t) &:= g(x_n + td(x_n))
+q(t) &:= g(x_n + t d(x_n))
 ```
 
-A search is made to find $t$ such as
+A search is made to find $t$ such that:
 ```{math}
-:label: goldstein_and_pric
+:label: goldstein_and_price
 m_2q'(0) \leq \frac{q(t) - q(0)}{t} \leq m_1q'(0)
 ```
 
 ![Goldstein and Price conditions](_static/Goldstein_and_Price.svg)
 
-On the above picture, any $t$ such as $a < t < b$ is satisfactory.
+In the figure above, any $t$ such that $a < t < b$ is satisfactory.
 
-This $t$ is found by dichotomy with multiple iterations, but in most of the cases (especially when there are no flexible
-loads in the network), only one iteration is needed. Thus, the Goldstein and Price variant is as fast as the classical
-Newton-Raphson, while being more robust.
+This $t$ is found by dichotomy with multiple iterations, but in most cases only one iteration is
+needed. This is especially true when there are no flexible loads in the network.
 
-This $t$ is then used to compute $x_{n+1} = x_n + td(x_n)$
+$t$ is then used to compute $x_{n+1} = x_n + t d(x_n)$
+
+The *Goldstein and Price* variant is thus as fast as the classical *Newton-Raphson* while being
+more robust.
 
 ### Parameters
 
-The user can specify 3 parameters:
-- `"m1"` the first constant of the Goldstein and Price variant. By default: `0.1`.
-- `"m2"` the second constant of the Goldstein and Price variant. By default: `0.9`.
-(note that we should have $m_1 < m_2$).
-- `"linear_solver"`: the linear solver used to compute $J_F^{-1}(x)F(x)$. Currently only `"SparseLU"` is available.
+The *Goldstein and Price* algorithm accepts the following parameters:
+- `"m1"` the first constant of the *Goldstein and Price* variant. By default: `0.1`.
+- `"m2"` the second constant of the *Goldstein and Price* variant. By default: `0.9`.
+  Note that the constraint $m_1 < m_2$ must be met.
+- `"linear_solver"`: the linear solver used to compute $J_F^{-1}(x)F(x)$. Currently only the
+  `"SparseLU"` option is available.
