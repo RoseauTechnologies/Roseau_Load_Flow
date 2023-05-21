@@ -228,7 +228,15 @@ def test_lines_res_powers(phases, z_line, y_shunt, len_line, bus_pot, line_cur, 
     y_shunt = np.asarray(y_shunt, dtype=complex) if y_shunt is not None else None
     ground = Ground("gnd")
     lp = LineParameters("lp", z_line=np.asarray(z_line, dtype=complex), y_shunt=y_shunt)
-    line = Line("line", bus1, bus2, phases=phases["line"], length=len_line, parameters=lp, ground=ground)
+    line = Line(
+        "line",
+        bus1,
+        bus2,
+        phases=phases["line"],
+        length=len_line,
+        parameters=lp,
+        ground=ground if lp.with_shunt else None,
+    )
     bus1._res_potentials = np.array(bus_pot[0], dtype=complex)
     bus2._res_potentials = np.array(bus_pot[1], dtype=complex)
     line._res_currents = np.array(line_cur[0], dtype=complex), np.array(line_cur[1], dtype=complex)

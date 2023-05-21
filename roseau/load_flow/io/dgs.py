@@ -140,13 +140,14 @@ def network_from_dgs(  # noqa: C901
 
         for line_id in elm_lne.index:
             type_id = elm_lne.at[line_id, "typ_id"]  # id of the line type
+            lp = lines_params_dict[type_id]
             branches[line_id] = Line(
                 id=line_id,
                 bus1=buses[sta_cubic.at[elm_lne.at[line_id, "bus1"], "cterm"]],
                 bus2=buses[sta_cubic.at[elm_lne.at[line_id, "bus2"], "cterm"]],
                 length=elm_lne.at[line_id, "dline"],
-                parameters=lines_params_dict[type_id],
-                ground=ground,
+                parameters=lp,
+                ground=ground if lp.with_shunt else None,
             )
 
     # Transformers

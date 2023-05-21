@@ -30,8 +30,13 @@ from roseau.load_flow.models import (
     Transformer,
     VoltageSource,
 )
-from roseau.load_flow.typing import Id, JsonDict, Self, StrPath
+from roseau.load_flow.solvers import check_solver_params
+from roseau.load_flow.typing import Id, JsonDict, Self, Solver, StrPath
 from roseau.load_flow.utils import JsonMixin
+
+# if TYPE_CHECKING:
+#     from matplotlib import Axes
+
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +52,7 @@ class ElectricalNetwork(JsonMixin):
     """Electrical network class.
 
     This class represents an electrical network, its elements, and their connections. After
-    creating the network, the load flow algorithm can be run on it using the
+    creating the network, the load flow solver can be run on it using the
     :meth:`solve_load_flow` method.
 
     Args:
@@ -86,7 +91,7 @@ class ElectricalNetwork(JsonMixin):
 
     Attributes:
         DEFAULT_PRECISION (float):
-            The default precision needed for the convergence of the load flow algorithm. At each
+            The default precision needed for the convergence of the load flow solver. At each
             iteration, the solver computes the residuals of the equations of the problem. When the
             maximum of the absolute values of the residuals vector is lower than the provided
             precision, the solver stops. Default is 1e-6.
@@ -97,6 +102,9 @@ class ElectricalNetwork(JsonMixin):
 
         DEFAULT_BASE_URL (str):
             Base URL of the Roseau Load Flow API endpoint.
+
+        DEFAULT_SOLVER (str):
+            The default solver to compute the load flow.
 
         buses (dict[Id, Bus]):
             Dictionary of buses of the network indexed by their IDs. Also available as a
@@ -142,6 +150,7 @@ class ElectricalNetwork(JsonMixin):
     DEFAULT_MAX_ITERATIONS: int = 20
     DEFAULT_BASE_URL: str = "https://load-flow-api-dev.roseautechnologies.com/"
     DEFAULT_WARM_START: bool = True
+    DEFAULT_SOLVER: Solver = "newton_goldstein"
 
     # Default classes to use
     branch_class = AbstractBranch
@@ -355,13 +364,14 @@ class ElectricalNetwork(JsonMixin):
         precision: float = DEFAULT_PRECISION,
         max_iterations: int = DEFAULT_MAX_ITERATIONS,
         warm_start: bool = DEFAULT_WARM_START,
+        solver: Solver = DEFAULT_SOLVER,
+        solver_params: Optional[JsonDict] = None,
     ) -> int:
         """Solve the load flow for this network (Requires internet access).
 
-        Execute a Newton algorithm for load flow calculation. To get the results of the
-        load flow for the whole network, use the different `res_` properties (e.g.
-        ``print(net.res_buses``). To get the results for a specific element, use the
-        element directly (e.g. ``print(net.buses["bus1"].res_potentials)``
+        To get the results of the load flow for the whole network, use the `res_` properties on the
+        network (e.g. ``print(net.res_buses``). To get the results for a specific element, use the
+        `res_` properties on the element (e.g. ``print(net.buses["bus1"].res_potentials)``.
 
         Args:
             auth:
@@ -377,22 +387,34 @@ class ElectricalNetwork(JsonMixin):
                 The maximum number of allowed iterations.
 
             warm_start:
-                Should we use the values of potentials of the last successful load flow result (if any)?
+                If true, initialize the solver with the potentials of the last successful load flow
+                result (if any).
+
+            solver:
+                The name of the solver to use for the load flow. The options are:
+                    - ``'newton'``: the classical Newton-Raphson solver.
+                    - ``'newton_goldstein'``: the Newton-Raphson solver with the Goldstein and
+                      Price linear search.
+
+            solver_params:
+                A dictionary of parameters used by the solver. Available parameters depend on the
+                solver chosen. For more information, see the :ref:`solvers` page.
 
         Returns:
             The number of iterations taken.
         """
         from roseau.load_flow import __version__
 
+        solver_params = check_solver_params(solver=solver, params=solver_params)
         if not self._valid:
             warm_start = False  # Otherwise, we may get an error when calling self.results_to_dict()
             self._check_validity(constructed=True)
             self._create_network()
 
         # Get the data
-        data = {"network": self.to_dict()}
+        data = {"network": self.to_dict(), "solver": {"name": solver, "params": solver_params}}
         if warm_start and self.res_info.get("status", "failure") == "success":
-            # Ignore warnings because results may not be valid (a load power has been changed, etc.)
+            # Ignore warnings because results may be invalid (a load power has been changed, etc.)
             data["results"] = self._results_to_dict(False)
 
         # Request the server
@@ -411,7 +433,7 @@ class ElectricalNetwork(JsonMixin):
         if remote_rlf_version is not None:
             warnings.warn(
                 message=f"A new version ({remote_rlf_version}) of the library roseau-load-flow is available. Please "
-                f"visit https://github.com/RoseauTechnologies/Roseau_Load_Flow for more information.",
+                f"visit https://github.com/RoseauTechnologies/Roseau_Load_Flow/releases for more information.",
                 category=UserWarning,
                 stacklevel=2,
             )
@@ -432,7 +454,7 @@ class ElectricalNetwork(JsonMixin):
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.NO_LOAD_FLOW_CONVERGENCE)
 
         logger.info(
-            f"The load flow converged after {self.res_info['iterations']} iterations (final error="
+            f"The load flow converged after {self.res_info['iterations']} iterations (residual="
             f"{self.res_info['final_precision']:.5n})."
         )
 
@@ -1105,3 +1127,271 @@ class ElectricalNetwork(JsonMixin):
             grounds=grounds,
             potential_refs=potential_refs,
         )
+
+    #
+    # Plot
+    #
+    #
+    # def plot(
+    #     self,
+    #     ax: Optional["Axes"] = None,
+    #     crs: Optional[CRS_LIKE_TYPE] = None,
+    #     zoom: Union[str, int] = DEFAULT_ZOOM,
+    #     source: Optional[Union[TileProvider, str]] = None,
+    #     min_size: Optional[float] = DEFAULT_MIN_SIZE,
+    #     margin: Optional[float] = DEFAULT_MARGIN,
+    #     loads_plot_kwargs: Optional[dict[str, Any]] = None,
+    #     slacks_plot_kwargs: Optional[dict[str, Any]] = None,
+    #     junctions_plot_kwargs: Optional[dict[str, Any]] = None,
+    #     branches_plot_kwargs: Optional[dict[str, Any]] = None,
+    # ) -> tuple["Axes", gpd.GeoDataFrame, gpd.GeoDataFrame]:
+    #     """A basic plot function. It plots the network described by the two `geopandas.GeoDataFrame` `buses` and
+    #     `branches`. It also adds a base map which can come from Maptiler or OSM.
+    #
+    #     Args:
+    #         ax:
+    #             The axes on which plot the network.
+    #
+    #         crs:
+    #             The CRS to use for the projection of data. By default pseudo mercator (EPSG:3857).
+    #
+    #         zoom:
+    #             The zoom to use for the background tiles. By default, 'auto' so let contextily decides.
+    #
+    #         source:
+    #             A tile source. One taken from `sirao_core.io.providers` or an URL. If None or not provided, use
+    #             `NetworkPlotExporter.DEFAULT_SOURCE`.
+    #
+    #         min_size:
+    #             The minimum size (in metres) allowed for the plot. This is to ensure a pertinent zoom level on the map.
+    #             Pass None to define no minimum size (this is equivalent to 0.0). Default to 100.0.
+    #
+    #         margin:
+    #             The margin to use for each side of the plot. It is a percentage of the network's size. Pass None to
+    #             define no margin (this is equivalent to 0.0). Default to 0.05.
+    #
+    #         loads_plot_kwargs:
+    #             The keyword arguments to give to the `geopandas.GeoDataFrame.plot` function (except the `ax`
+    #             argument) to plot the loads buses.
+    #
+    #         slacks_plot_kwargs:
+    #             The keyword arguments to give to the `geopandas.GeoDataFrame.plot` function (except the `ax`
+    #             argument) to plot the slack buses
+    #
+    #         junctions_plot_kwargs:
+    #             The keyword arguments to give to the `geopandas.GeoDataFrame.plot` function (except the `ax`
+    #             argument) to plot the junction buses. To ignore this plot, just pass `{'marker':''}`.
+    #
+    #         branches_plot_kwargs:
+    #             The keyword arguments to give to the `geopandas.GeoDataFrame.plot` function (except the `ax`
+    #             argument) to plot the branches.
+    #
+    #     Returns:
+    #         The axe on which the network has been plotted and the data frames of buses and branches converted to the
+    #         new CRS.
+    #     """
+    #     ax, buses, branches, crs = self.plot_without_basemap(
+    #         ax=ax,
+    #         crs=crs,
+    #         loads_plot_kwargs=loads_plot_kwargs,
+    #         slacks_plot_kwargs=slacks_plot_kwargs,
+    #         junctions_plot_kwargs=junctions_plot_kwargs,
+    #         branches_plot_kwargs=branches_plot_kwargs,
+    #     )
+    #
+    #     # Resize axes according to the provided minimum size and margin
+    #     self.resize_axis(ax=ax, min_size=min_size, margin=margin)
+    #
+    #     # Add the base map
+    #     self.add_basemap(ax=ax, crs=crs, zoom=zoom, source=source)
+    #
+    #     return ax, buses, branches
+    #
+    #
+    # def plot_without_basemap(
+    #     self,
+    #     ax: Optional["Axes"] = None,
+    #     crs: Optional[CRS_LIKE_TYPE] = None,
+    #     loads_plot_kwargs: Optional[dict[str, Any]] = None,
+    #     slacks_plot_kwargs: Optional[dict[str, Any]] = None,
+    #     junctions_plot_kwargs: Optional[dict[str, Any]] = None,
+    #     branches_plot_kwargs: Optional[dict[str, Any]] = None,
+    # ) -> tuple["Axes", gpd.GeoDataFrame, gpd.GeoDataFrame, CRS_LIKE_TYPE]:
+    #     """A basic plot function. It plots the network described by the two `geopandas.GeoDataFrame` `buses` and
+    #     `branches` without adding basemap.
+    #
+    #     Args:
+    #         ax:
+    #             The axes on which plot the network.
+    #
+    #         crs:
+    #             The CRS to use for the projection of data. By default pseudo mercator (EPSG:3857).
+    #
+    #         loads_plot_kwargs:
+    #             The keyword arguments to give to the `geopandas.GeoDataFrame.plot` function (except the `ax`
+    #             argument) to plot the loads buses.
+    #
+    #         slacks_plot_kwargs:
+    #             The keyword arguments to give to the `geopandas.GeoDataFrame.plot` function (except the `ax`
+    #             argument) to plot the slack buses
+    #
+    #         junctions_plot_kwargs:
+    #             The keyword arguments to give to the `geopandas.GeoDataFrame.plot` function (except the `ax`
+    #             argument) to plot the junction buses. To ignore this plot, just pass `{'marker':''}`.
+    #
+    #         branches_plot_kwargs:
+    #             The keyword arguments to give to the `geopandas.GeoDataFrame.plot` function (except the `ax`
+    #             argument) to plot the branches.
+    #
+    #     Returns:
+    #         The axe on which the network has been plotted, the data frames of buses and branches converted to the new
+    #         CRS and the new CRS used.
+    #     """
+    #     from matplotlib import pyplot as plt
+    #
+    #     # Default arguments
+    #     loads_plot_kwargs = loads_plot_kwargs if loads_plot_kwargs is not None else self.DEFAULT_LOADS_PLOT_KWARGS
+    #     branches_plot_kwargs = (
+    #         branches_plot_kwargs if branches_plot_kwargs is not None else self.DEFAULT_BRANCHES_PLOT_KWARGS
+    #     )
+    #     slacks_plot_kwargs = slacks_plot_kwargs if slacks_plot_kwargs is not None else self.DEFAULT_SLACKS_PLOT_KWARGS
+    #     junctions_plot_kwargs = (
+    #         junctions_plot_kwargs if junctions_plot_kwargs is not None else self.DEFAULT_JUNCTIONS_PLOT_KWARGS
+    #     )
+    #     if crs is None:
+    #         crs = CRS.from_epsg(3857)
+    #
+    #     # Get the data and convert them to the provided CRS
+    #     buses = self.buses_frame.to_crs(crs=crs)
+    #     branches = self.branches_frame.to_crs(crs=crs)
+    #
+    #     # Get the axes
+    #     if ax is None:
+    #         ax: "Axes" = plt.gca()
+    #     ax.axis("off")
+    #
+    #     # Plot buses
+    #     # When "marker" is "" and in some other cases, matplotlib raises a ValueError. In these cases,
+    #     # it often means that we do not want to plot the layer, so we just continue
+    #     for bus_type, buses_gdf in buses.groupby(by="bus_type", observed=True):
+    #         if bus_type == "slack":
+    #             if slacks_plot_kwargs["marker"] != "":
+    #                 self._plot_with_stroke(df=buses_gdf, ax=ax, stroke_color="white", **slacks_plot_kwargs)
+    #         elif bus_type == "junction":
+    #             if junctions_plot_kwargs["marker"] != "":
+    #                 self._plot_with_stroke(df=buses_gdf, ax=ax, stroke_color="white", **junctions_plot_kwargs)
+    #         elif bus_type == "load":
+    #             if loads_plot_kwargs["marker"] != "":
+    #                 self._plot_with_stroke(df=buses_gdf, ax=ax, stroke_color="white", **loads_plot_kwargs)
+    #         else:
+    #             logger.warning(
+    #                 f"The bus type {bus_type!r} is unknown so we ignore the {buses_gdf.shape[0]} buses of this type "
+    #                 f"for the plot."
+    #             )
+    #
+    #     if len(branches.index) > 0:
+    #         # Plot branches
+    #         self._plot_with_stroke(df=branches, ax=ax, stroke_color="white", **branches_plot_kwargs)
+    #
+    #     return ax, buses, branches, crs
+    #
+    #
+    # @staticmethod
+    # def _plot_with_stroke(
+    #     df: Union[pd.DataFrame, gpd.GeoDataFrame],
+    #     ax: "Axes",
+    #     stroke_color: Optional[str] = None,
+    #     stroke_zorder: float = 1,
+    #     stroke_width: float = 3,
+    #     **kwargs,
+    # ):
+    #     """Plot a data frame or geo data frame with a stroke.
+    #
+    #     Args:
+    #         df:
+    #             The data frame or geo data frame to plot.
+    #
+    #         ax:
+    #             The axes on which to plot the data.
+    #
+    #         stroke_color:
+    #             The color to use for the stroke. If None or not provided, no stroke will be plotted.
+    #
+    #         stroke_zorder:
+    #             The zorder to pass to matplotlib for the stroke. By default, use 1.
+    #
+    #         stroke_width:
+    #             The line width to use for the stroke. It should be greater than the line width uses for the normal plot.
+    #             By default, use 3.
+    #
+    #     Keyword Args:
+    #         The keyword arguments to pass to the data frame plot method.
+    #     """
+    #     df.plot(ax=ax, **kwargs)
+    #
+    #     kwargs.pop("zorder", None)
+    #     kwargs.pop("linewidth", None)
+    #     kwargs.pop("color", None)
+    #     kwargs.pop("column", None)
+    #     kwargs.pop("cmap", None)
+    #     kwargs.pop("label", None)
+    #     if stroke_color is not None:
+    #         df.plot(ax=ax, zorder=stroke_zorder, linewidth=stroke_width, color=stroke_color, **kwargs)
+    #
+    # @staticmethod
+    # def resize_axe(ax: "Axes", figsize:tuple[float, float]):
+    #     xmin, xmax, ymin, ymax = ax.axis()
+    #     xlen, ylen = (xmax - xmin, ymax - ymin)
+    #     xfig, yfig = figsize
+    #     xratio = xlen / xfig
+    #     yratio = ylen / yfig
+    #
+    #     if xratio > yratio:
+    #         expand = (xratio * yfig - ylen) / 2.0
+    #         ax.set_ylim(ymin=ymin - expand, ymax=ymax + expand)
+    #     elif xratio < yratio:
+    #         expand = (yratio * xfig - xlen) / 2.0
+    #         ax.set_xlim(xmin=xmin - expand, xmax=xmax + expand)
+    #
+    # def add_basemap(
+    #     self,
+    #     ax: "Axes",
+    #     crs: CRS_LIKE_TYPE,
+    #     zoom: Union[str, int] = DEFAULT_ZOOM,
+    #     source: Optional[Union[TileProvider, str]] = None,
+    # ):
+    #     """Add a basemap to the provided axes.
+    #
+    #     Args:
+    #         ax:
+    #             The axes on which to add the basemap.
+    #
+    #         crs:
+    #             The CRS to use for the projection of data.
+    #
+    #         zoom:
+    #             The zoom to use for the background tiles. By default, use "auto".
+    #
+    #         source:
+    #             A tile source. One taken from `sirao_core.io.providers` or an URL. If None or not provided, use
+    #             `NetworkPlotExporter.DEFAULT_SOURCE`.
+    #     """
+    #     import contextily as ctx
+    #
+    #     ax.axis("off")
+    #     if source is None:
+    #         source = self.DEFAULT_SOURCE
+    #     try:
+    #         logger.info(
+    #             f"Start adding basemap from {source['url'] if 'url' in source else source} to the plot."
+    #         )
+    #         ctx.add_basemap(ax=ax, zoom=zoom, source=source, crs=str(crs), reset_extent=True)
+    #         logger.info("Basemap was successfully added to the plot.")
+    #     except (HTTPError, UnidentifiedImageError) as e:
+    #         logger.error(
+    #             f"The following error has been raised by contextily when trying to add basemap to the plot:\n"
+    #             f"{e.__module__}.{e.__class__.__name__}: {e}"
+    #         )
+    #         if source != self.DEFAULT_SOURCE:
+    #             logger.info(f"Adding default basemap from {self.DEFAULT_SOURCE['url']} to the plot.")
+    #             ctx.add_basemap(ax=ax, zoom=zoom, source=self.DEFAULT_SOURCE, crs=str(crs), reset_extent=True)

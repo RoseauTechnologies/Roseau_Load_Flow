@@ -29,6 +29,7 @@
         "pyproject",
         "pytest",
         "pyupgrade",
+        "raphson",
         "rtol",
         "susceptance",
         "transfo",
