@@ -31,6 +31,18 @@ notebooks/Getting_Started
 notebooks/Advanced
 ```
 
+## Solvers
+
+The load flow solvers used are also documented:
+
+```{toctree}
+---
+maxdepth: 2
+caption: Solvers
+---
+solvers
+```
+
 ## API
 
 If you want the full documentation of all the classes and functions, you can refer to the following
@@ -42,16 +54,4 @@ maxdepth: 3
 caption: API
 ---
 autoapi/roseau/load_flow/index
-```
-
-## Solvers
-
-The load flow solvers used are also documented:
-
-```{toctree}
----
-maxdepth: 2
-caption: Solvers
----
-solvers
 ```

@@ -1,20 +1,7 @@
-\documentclass[%
-crop,%
-tikz,%
-convert={outext=.svg,command=\unexpanded{pdf2svg \infile\space\outfile}},%
-multi=false%
-]{standalone}%
-\usepackage[utf8]{luainputenc}%
-\usepackage{xspace}%
-\usepackage{amsmath}%
-\usepackage{amssymb}%
-\usepackage{mathrsfs}%
-\usepackage{mathtools}%
-\usepackage{siunitx}%
-\usepackage[siunitx,european,straightvoltages]{circuitikz}%
-\usetikzlibrary{calc,backgrounds}%
-\input{Definitions.tex}%
+\input{Preambule}%
+
 \begin{document}
+\ctikzset{european,straight voltages}%
 \begin{tikzpicture}[%
     show background rectangle,%
     tight background,%
@@ -39,10 +26,9 @@ multi=false%
   \node[above right] at (C) {C};%
 
   % Lignes
-  \draw (A) to[ generic, v<=$\underline{V_{\arm}}-\underline{V_{\brm}}$, i=$\underline{I_{\abrm}}$,
-  *-*] (B) to[ generic, v<=$\underline{V_{\brm}}-\underline{V_{\crm}}$, i=$\underline{I_{\bcrm}}$,
-  *-*] (C) to[ generic, v<=$\underline{V_{\crm}}-\underline{V_{\arm}}$, i=$\underline{I_{\carm}}$,
-  *-*] (A);%
+  \draw (A) to[resistor, v<=$\underline{V_{\arm}}-\underline{V_{\brm}}$, i=$\underline{I_{\abrm}}$, *-*] (B) %
+  to[resistor, v<=$\underline{V_{\brm}}-\underline{V_{\crm}}$, i=$\underline{I_{\bcrm}}$, *-*] (C) %
+  to[resistor, v<=$\underline{V_{\crm}}-\underline{V_{\arm}}$, i=$\underline{I_{\carm}}$, *-*] (A);%
   \draw (A2) to[short,i=$\underline{I_{\arm}}$,*-*] (A);%
   \draw (B) -- (B3);%
   \draw (B2) to[short,i=$\underline{I_{\brm}}$,*-] (B3);%

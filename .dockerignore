@@ -7,3 +7,4 @@ build/
 .idea/
 Dockerfile
 doc/notebooks/data
+doc/images/

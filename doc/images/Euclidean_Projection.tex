@@ -1,18 +1,5 @@
-\documentclass[%
-crop,%
-tikz,%
-convert={outext=.svg,command=\unexpanded{pdf2svg \infile\space\outfile}},%
-multi=false%
-]{standalone}%
-\usepackage[utf8]{luainputenc}%
-\usepackage{xspace}%
-\usepackage{amsmath}%
-\usepackage{amssymb}%
-\usepackage{mathrsfs}%
-\usepackage{mathtools}%
-\usepackage{siunitx}%
-\usetikzlibrary{arrows.meta,patterns,calc,backgrounds}%
-\input{Definitions.tex}%
+\input{Preambule}%
+
 \begin{document}
 \begin{tikzpicture}[%
     show background rectangle,%
@@ -24,7 +11,7 @@ multi=false%
     \tikzset{interdit/.style={pattern=north east lines, pattern color=red}}%
     \tikzset{point/.pic={\filldraw[#1] (0,0) circle[radius=0.05];}, point/.default=black}%
 
-    % Parameters
+    % Paramètres
     \pgfmathsetmacro{\r}{3.5}%
     \pgfmathsetmacro{\R}{1.1 * \r}%
     \pgfmathsetmacro{\pth}{0.8 * \r}%
@@ -60,7 +47,7 @@ multi=false%
     % Point P^{\theo}
     \path (\pth,0) pic[pic type=point];%
 
-    % Point outside the circle
+    % Point outside of the circle
     \pgfmathsetmacro{\rayon}{1.15*\r}%
     \pgfmathsetmacro{\anglevaleur}{55}%
     \coordinate (S) at (\anglevaleur:\rayon);%
@@ -69,9 +56,7 @@ multi=false%
     \path (S) pic[pic type=point];%
 
     % Projection
-    \pgfmathsetmacro{\tmp}{\rayon*cos(\anglevaleur)};%
-    \pgfmathsetmacro{\tmpdeux}{sqrt(pow(\r,2)-pow(\tmp,2))};%
-    \coordinate (S correct) at (\tmp,\tmpdeux);%
+    \coordinate (S correct) at (\anglevaleur:\r);%
     \draw[fleche, blue] (S) -- (S correct);%
     \path (S correct) pic {point=blue};%
     \node[below left] at (S correct) {$\underline{S^{\text{proj.}}}$};%

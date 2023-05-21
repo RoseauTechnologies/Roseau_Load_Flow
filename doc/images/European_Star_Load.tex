@@ -1,20 +1,7 @@
-\documentclass[%
-crop,%
-tikz,%
-convert={outext=.svg,command=\unexpanded{pdf2svg \infile\space\outfile}},%
-multi=false%
-]{standalone}%
-\usepackage[utf8]{luainputenc}%
-\usepackage{xspace}%
-\usepackage{amsmath}%
-\usepackage{amssymb}%
-\usepackage{mathrsfs}%
-\usepackage{mathtools}%
-\usepackage{siunitx}%
-\usepackage[siunitx,european,straightvoltages]{circuitikz}%
-\usetikzlibrary{calc,backgrounds}%
-\input{Definitions.tex}%
+\input{Preambule}%
+
 \begin{document}
+\ctikzset{european,straight voltages}%
 \begin{tikzpicture}[%
     show background rectangle,%
     tight background,%
@@ -47,12 +34,9 @@ multi=false%
     \node[above right] at (N) {N};%
 
     % Lines
-    \draw (A) to[short,*-] (A1) to[generic, v<=$\underline{V_{\arm}}-\underline{V_{\nrm}}$, -*]
-    (N);%
-    \draw (B) to[short,*-] (B1) to[generic, v<=$\underline{V_{\brm}}-\underline{V_{\nrm}}$, -*]
-    (N);%
-    \draw (C) to[short,*-] (C1) to[generic, v<=$\underline{V_{\crm}}-\underline{V_{\nrm}}$, -*]
-    (N);%
+    \draw (A) to[short,*-] (A1) to[resistor, v<=$\underline{V_{\arm}}-\underline{V_{\nrm}}$, -*] (N);%
+    \draw (B) to[short,*-] (B1) to[resistor, v<=$\underline{V_{\brm}}-\underline{V_{\nrm}}$, -*] (N);%
+    \draw (C) to[short,*-] (C1) to[resistor, v<=$\underline{V_{\crm}}-\underline{V_{\nrm}}$, -*] (N);%
     \draw (A2) to[short,i=$\underline{I_{\arm}}$,*-*] (A);%
     \draw (B2) to[short,i=$\underline{I_{\brm}}$,*-*] (B);%
     \draw (C2) to[short,i=$\underline{I_{\crm}}$,*-] (C3);%
@@ -71,5 +55,5 @@ multi=false%
 % ispell-local-dictionary: "british"
 % coding: utf-8
 % LaTeX-indent-level: 4
-% fill-column: 100
+% fill-column: 120
 % End:
