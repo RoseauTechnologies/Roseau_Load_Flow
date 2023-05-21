@@ -40,12 +40,12 @@ Then, multiple iterations are made with:
 
 ```{math}
 :label: step
-x_{n+1} = x_n - J_F^{-1}(x_n)F(x_n)
+x_{k+1} = x_k - J_F^{-1}(x_k)F(x_k)
 ```
 
 with $J_F$ being the jacobian of $F$.
 
-The algorithm stops when it finds a solution $x_n$ such that $||F(x_n)||_{\infty} < \varepsilon$
+The algorithm stops when it finds a solution $x_k$ such that $||F(x_k)||_{\infty} < \varepsilon$
 within a maximum number of iterations (modify with `en.solve_load_flow(max_iterations=...)`). If
 the maximum number of iterations is exceeded, the solver did not converge and the execution
 fails.
@@ -60,10 +60,10 @@ The *Newton-Raphson* solver accepts one parameter:
 
 This is a variant of the classical *Newton-Raphson* solver with a linear search.
 
-At each iteration, $x_{n+1}$ is calculated using:
+At each iteration, $x_{k+1}$ is calculated using:
 ```{math}
 :label: linear_search_step
-x_{n+1} = x_n + t d(x_n)
+x_{k+1} = x_k + t d(x_k)
 ```
 with $d = -J_F^{-1}F$
 
@@ -80,7 +80,7 @@ g(x) &:= \frac{1}{2} ||F(x)||_2
 Let $q$ be the function $g$ in the direction $d$:
 ```{math}
 q &: \mathbb{R} \to \mathbb{R} \\
-q(t) &:= g(x_n + t d(x_n))
+q(t) &:= g(x_k + t d(x_k))
 ```
 
 A search is made to find $t$ such that:
@@ -89,14 +89,18 @@ A search is made to find $t$ such that:
 m_2q'(0) \leq \frac{q(t) - q(0)}{t} \leq m_1q'(0)
 ```
 
-![Goldstein and Price conditions](_static/Goldstein_and_Price.svg)
+```{image} /_static/Goldstein_and_Price.svg
+:alt: Goldstein and Price conditions
+:width: 500px
+:align: center
+```
 
 In the figure above, any $t$ such that $a < t < b$ is satisfactory.
 
 This $t$ is found by dichotomy with multiple iterations, but in most cases only one iteration is
 needed. This is especially true when there are no flexible loads in the network.
 
-$t$ is then used to compute $x_{n+1} = x_n + t d(x_n)$
+$t$ is then used to compute $x_{k+1} = x_k + t d(x_k)$
 
 The *Goldstein and Price* variant is thus as fast as the classical *Newton-Raphson* while being
 more robust.
