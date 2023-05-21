@@ -1,7 +1,7 @@
 import numpy as np
 
 from roseau.load_flow.units import Q_
-from roseau.load_flow.utils.types import ConductorType, IsolationType, LineType
+from roseau.load_flow.utils.types import ConductorType, InsulationType, LineType
 
 PI = np.pi
 """The famous constant :math:`\\pi`."""
@@ -53,19 +53,19 @@ DELTA_P = {
 """Skin effect of certain conductor materials (mm)."""
 
 TAN_D = {
-    IsolationType.PVC: Q_(600e-4),
-    IsolationType.HDPE: Q_(6e-4),
-    IsolationType.LDPE: Q_(6e-4),
-    IsolationType.PEX: Q_(30e-4),
-    IsolationType.EPR: Q_(125e-4),
+    InsulationType.PVC: Q_(600e-4),
+    InsulationType.HDPE: Q_(6e-4),
+    InsulationType.LDPE: Q_(6e-4),
+    InsulationType.PEX: Q_(30e-4),
+    InsulationType.EPR: Q_(125e-4),
 }
-"""Loss angles of certain isolation materials."""
+"""Loss angles of certain insulation materials."""
 
 EPSILON_R = {
-    IsolationType.PVC: Q_(6.5),
-    IsolationType.HDPE: Q_(2.3),
-    IsolationType.LDPE: Q_(2.2),
-    IsolationType.PEX: Q_(2.5),
-    IsolationType.EPR: Q_(3.1),
+    InsulationType.PVC: Q_(6.5),
+    InsulationType.HDPE: Q_(2.3),
+    InsulationType.LDPE: Q_(2.2),
+    InsulationType.PEX: Q_(2.5),
+    InsulationType.EPR: Q_(3.1),
 }
-"""Relative permittivity of certain isolation materials."""
+"""Relative permittivity of certain insulation materials."""

@@ -34,7 +34,7 @@ class RoseauLoadFlowExceptionCode(Enum):
     BAD_LINE_MODEL = auto()
     BAD_LINE_TYPE = auto()
     BAD_CONDUCTOR_TYPE = auto()
-    BAD_ISOLATION_TYPE = auto()
+    BAD_INSULATION_TYPE = auto()
     BAD_Z_LINE_VALUE = auto()
     BAD_Y_SHUNT_VALUE = auto()
     BAD_TRANSFORMER_WINDINGS = auto()
