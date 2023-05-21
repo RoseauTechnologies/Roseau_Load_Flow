@@ -244,3 +244,4 @@ benchmark/*.mtx
 **/auto/
 *.aux
 *.log
+.ruff_cache/

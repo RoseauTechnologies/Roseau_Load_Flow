@@ -51,21 +51,20 @@ jobs:
       - name: Install poetry
         run: pipx install poetry
 
-      - name: Set up Python 3.10
+      - name: Set up Python 3.11
         uses: actions/setup-python@v4
         with:
-          python-version: "3.10"
+          python-version: "3.11"
           cache: "poetry"
 
       - name: Install dependencies
         run: |
-          poetry env use "3.10"
-          poetry config installer.modern-installation false  # https://github.com/python-poetry/poetry/issues/7686#issuecomment-1475402611
+          poetry env use "3.11"
           poetry install --only doc
 
       - name: Build with Sphinx
         run: |
-          poetry env use "3.10"
+          poetry env use "3.11"
           cd doc && make html
         env:
           SPHINXBUILD: poetry run sphinx-build
