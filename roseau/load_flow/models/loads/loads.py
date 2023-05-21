@@ -24,13 +24,13 @@ class AbstractLoad(Element, ABC):
 
         .. tab:: European Standards
 
-            .. image:: /_static/European_Star_Connection.svg
+            .. image:: /_static/European_Star_Load.svg
               :width: 300px
               :align: center
 
         .. tab:: American Standards
 
-            .. image:: /_static/American_Star_Connection.svg
+            .. image:: /_static/American_Star_Load.svg
               :width: 300px
               :align: center
 
@@ -38,13 +38,13 @@ class AbstractLoad(Element, ABC):
 
         .. tab:: European Standards
 
-            .. image:: /_static/European_Delta_Connection.svg
+            .. image:: /_static/European_Delta_Load.svg
               :width: 300px
               :align: center
 
         .. tab:: American Standards
 
-            .. image:: /_static/American_Delta_Connection.svg
+            .. image:: /_static/American_Delta_Load.svg
               :width: 300px
               :align: center
     """
