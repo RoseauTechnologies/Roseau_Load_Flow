@@ -159,11 +159,11 @@
     "results": {
         "info": {
             "resolution_method": "newton",
-            "precision": 1e-06,
+            "tolerance": 1e-06,
             "max_iterations": 20,
             "status": "success",
             "nb_iterations": 2,
-            "final_precision": 8.284928298962768e-12
+            "residual": 8.284928298962768e-12
         },
         "buses": [
             {
