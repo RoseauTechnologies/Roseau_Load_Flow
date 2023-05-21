@@ -5,7 +5,7 @@
 **In progress**
 
 * [GH73](https://github.com/RoseauTechnologies/Roseau_Load_Flow/issues/73)
-  [PR83](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/82) Rename `precision` into `tolerance` and
+  [PR83](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/83) Rename `precision` into `tolerance` and
   `final_precision` into `residual`.
 * [PR82](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/82) Add the `"newton_goldstein"` solver.
 
