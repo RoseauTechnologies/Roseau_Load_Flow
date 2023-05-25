@@ -6,22 +6,15 @@ from roseau.load_flow.solvers import check_solver_params
 
 def test_solver():
     # Additional key
-    solver_params = check_solver_params(solver="newton", params={"linear_solver": "SparseLU", "m1": 0.1, "toto": ""})
+    solver_params = check_solver_params(solver="newton", params={"m1": 0.1, "toto": ""})
     assert "m1" not in solver_params
     assert "toto" not in solver_params
-    assert "linear_solver" in solver_params
 
     # Bad solver
     with pytest.raises(RoseauLoadFlowException) as e:
-        check_solver_params(solver="toto", params={"linear_solver": "SparseLU"})
+        check_solver_params(solver="toto", params={})
     assert "Solver 'toto' is not implemented" in e.value.msg
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_SOLVER_NAME
-
-    # Bad linear solver
-    with pytest.raises(RoseauLoadFlowException) as e:
-        check_solver_params(solver="newton", params={"linear_solver": "toto"})
-    assert "Linear solver 'toto' is not implemented" in e.value.msg
-    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_LINEAR_SOLVER
 
     # Bad Goldstein and Price parameters
     with pytest.raises(RoseauLoadFlowException) as e:
