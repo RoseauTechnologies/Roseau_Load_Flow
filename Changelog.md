@@ -8,6 +8,8 @@
   [PR83](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/83) Rename `precision` into `tolerance` and
   `final_precision` into `residual`.
 * [PR82](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/82) Add the `"newton_goldstein"` solver.
+* [PR88](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/88) Increase the default `alpha` values for
+  flexible parameters.
 
 ## Version 0.3.0
 
