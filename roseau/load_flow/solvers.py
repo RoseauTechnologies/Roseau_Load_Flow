@@ -6,11 +6,9 @@ from roseau.load_flow.typing import JsonDict, Solver
 
 logger = logging.getLogger(__name__)
 
-LINEAR_SOLVERS = ["SparseLU"]
-
 _SOLVERS_PARAMS: dict[Solver, list[str]] = {
-    "newton": ["linear_solver"],
-    "newton_goldstein": ["linear_solver", "m1", "m2"],
+    "newton": [],
+    "newton_goldstein": ["m1", "m2"],
 }
 SOLVERS = list(_SOLVERS_PARAMS)
 
@@ -49,15 +47,6 @@ def check_solver_params(solver: Solver, params: Optional[JsonDict]) -> JsonDict:
             to_delete.append(key)
     for key in to_delete:
         del params[key]
-
-    # Check the linear solver
-    if "linear_solver" in params and params["linear_solver"] not in LINEAR_SOLVERS:
-        msg = (
-            f"Linear solver {params['linear_solver']!r} is not implemented. "
-            f"The implemented solvers are: {LINEAR_SOLVERS}"
-        )
-        logger.error(msg)
-        raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINEAR_SOLVER)
 
     # Extra checks per solver
     if solver == "newton":

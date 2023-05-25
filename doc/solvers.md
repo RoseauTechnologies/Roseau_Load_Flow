@@ -52,9 +52,7 @@ fails.
 
 ### Parameters
 
-The *Newton-Raphson* solver accepts one parameter:
-- `"linear_solver"`: the linear solver used to compute $J_F^{-1}(x)F(x)$. Currently only the
-  `"SparseLU"` option is available.
+The *Newton-Raphson* solver doesn't accept any parameter.
 
 ## Goldstein and Price
 
@@ -111,5 +109,3 @@ The *Goldstein and Price* solver accepts the following parameters:
 - `"m1"` the first constant of the *Goldstein and Price* variant. By default: `0.1`.
 - `"m2"` the second constant of the *Goldstein and Price* variant. By default: `0.9`.
   Note that the constraint $m_1 < m_2$ must be met.
-- `"linear_solver"`: the linear solver used to compute $J_F^{-1}(x)F(x)$. Currently only the
-  `"SparseLU"` option is available.

@@ -361,8 +361,8 @@ class ElectricalNetwork(JsonMixin):
         self,
         auth: Union[tuple[str, str], HTTPBasicAuth],
         base_url: str = DEFAULT_BASE_URL,
-        tolerance: float = DEFAULT_TOLERANCE,
         max_iterations: int = DEFAULT_MAX_ITERATIONS,
+        tolerance: float = DEFAULT_TOLERANCE,
         warm_start: bool = DEFAULT_WARM_START,
         solver: Solver = DEFAULT_SOLVER,
         solver_params: Optional[JsonDict] = None,
@@ -380,11 +380,11 @@ class ElectricalNetwork(JsonMixin):
             base_url:
                 The base url to request the load flow solver.
 
-            tolerance:
-                Tolerance needed for the convergence.
-
             max_iterations:
                 The maximum number of allowed iterations.
+
+            tolerance:
+                Tolerance needed for the convergence.
 
             warm_start:
                 If true, initialize the solver with the potentials of the last successful load flow
@@ -412,16 +412,23 @@ class ElectricalNetwork(JsonMixin):
             self._create_network()
 
         # Get the data
-        data = {"network": self.to_dict(), "solver": {"name": solver, "params": solver_params}}
+        data = {
+            "network": self.to_dict(),
+            "solver": {
+                "name": solver,
+                "params": solver_params,
+                "max_iterations": max_iterations,
+                "tolerance": tolerance,
+                "warm_start": warm_start,
+            },
+        }
         if warm_start and self.res_info.get("status", "failure") == "success":
             # Ignore warnings because results may be invalid (a load power has been changed, etc.)
             data["results"] = self._results_to_dict(False)
 
         # Request the server
-        params = {"max_iterations": max_iterations, "tolerance": tolerance, "warm_start": warm_start}
         response = requests.post(
             url=urljoin(base_url, "solve/"),
-            params=params,
             json=data,
             auth=auth,
             headers={"accept": "application/json", "rlf-version": __version__},

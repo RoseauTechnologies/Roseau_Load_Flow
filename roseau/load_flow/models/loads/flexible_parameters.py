@@ -45,7 +45,7 @@ class Control(JsonMixin):
               :align: center
     """
 
-    DEFAULT_ALPHA: float = 200.0
+    DEFAULT_ALPHA: float = 1000.0
 
     @ureg.wraps(None, (None, None, "V", "V", "V", "V", None), strict=False)
     def __init__(
@@ -365,7 +365,7 @@ class Projection(JsonMixin):
             :align: center
     """
 
-    DEFAULT_ALPHA: float = 100.0
+    DEFAULT_ALPHA: float = 1000.0
     DEFAULT_EPSILON: float = 0.01
 
     def __init__(self, type: ProjectionType, alpha: float = DEFAULT_ALPHA, epsilon: float = DEFAULT_EPSILON) -> None:
