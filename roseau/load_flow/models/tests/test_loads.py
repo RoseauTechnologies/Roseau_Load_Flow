@@ -2,6 +2,7 @@ import numpy as np
 import pytest
 from pint.errors import DimensionalityError
 
+from roseau.load_flow import Projection
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models import Bus, CurrentLoad, FlexibleParameter, ImpedanceLoad, PowerLoad
 from roseau.load_flow.units import Q_
@@ -294,7 +295,11 @@ def test_loads_to_dict():
             {
                 "control_p": {"type": "constant"},
                 "control_q": {"type": "constant"},
-                "projection": {"type": "euclidean", "alpha": 100.0, "epsilon": 0.01},
+                "projection": {
+                    "type": "euclidean",
+                    "alpha": Projection.DEFAULT_ALPHA,
+                    "epsilon": Projection.DEFAULT_EPSILON,
+                },
                 "s_max": 1.0,
             },
         ]
