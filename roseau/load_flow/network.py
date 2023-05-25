@@ -412,16 +412,23 @@ class ElectricalNetwork(JsonMixin):
             self._create_network()
 
         # Get the data
-        data = {"network": self.to_dict(), "solver": {"name": solver, "params": solver_params}}
+        data = {
+            "network": self.to_dict(),
+            "solver": {
+                "name": solver,
+                "params": solver_params,
+                "max_iterations": max_iterations,
+                "tolerance": tolerance,
+                "warm_start": warm_start,
+            },
+        }
         if warm_start and self.res_info.get("status", "failure") == "success":
             # Ignore warnings because results may be invalid (a load power has been changed, etc.)
             data["results"] = self._results_to_dict(False)
 
         # Request the server
-        params = {"max_iterations": max_iterations, "tolerance": tolerance, "warm_start": warm_start}
         response = requests.post(
             url=urljoin(base_url, "solve/"),
-            params=params,
             json=data,
             auth=auth,
             headers={"accept": "application/json", "rlf-version": __version__},

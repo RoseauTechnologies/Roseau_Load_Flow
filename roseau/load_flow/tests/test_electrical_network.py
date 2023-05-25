@@ -1,7 +1,7 @@
 import itertools as it
 import warnings
 from contextlib import contextmanager
-from urllib.parse import parse_qs, urljoin, urlsplit
+from urllib.parse import urljoin
 
 import geopandas as gpd
 import numpy as np
@@ -1220,8 +1220,7 @@ def test_solver_warm_start(small_network: ElectricalNetwork, good_json_results):
 
     def json_callback(request, context):
         request_json_data = request.json()
-        query = parse_qs(urlsplit(request.url).query)
-        warm_start = query["warm_start"][0].casefold() == "true"
+        warm_start = request_json_data["solver"]["warm_start"]
         assert isinstance(request_json_data, dict)
         assert "network" in request_json_data
         if should_warm_start:
