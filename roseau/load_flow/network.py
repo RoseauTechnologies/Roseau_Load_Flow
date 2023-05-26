@@ -14,6 +14,7 @@ import requests
 from pyproj import CRS
 from requests import Response
 from requests.auth import HTTPBasicAuth
+from typing_extensions import Self
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.io import network_from_dgs, network_from_dict, network_to_dict
@@ -31,7 +32,7 @@ from roseau.load_flow.models import (
     VoltageSource,
 )
 from roseau.load_flow.solvers import check_solver_params
-from roseau.load_flow.typing import Id, JsonDict, Self, Solver, StrPath
+from roseau.load_flow.typing import Id, JsonDict, Solver, StrPath
 from roseau.load_flow.utils import JsonMixin
 
 # if TYPE_CHECKING:

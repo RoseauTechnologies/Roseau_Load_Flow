@@ -5,8 +5,10 @@ from abc import ABCMeta, abstractmethod
 from pathlib import Path
 from typing import Any
 
+from typing_extensions import Self
+
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
-from roseau.load_flow.typing import Id, JsonDict, Self, StrPath
+from roseau.load_flow.typing import Id, JsonDict, StrPath
 
 logger = logging.getLogger(__name__)
 

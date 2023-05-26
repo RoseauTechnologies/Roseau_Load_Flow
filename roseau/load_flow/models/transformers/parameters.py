@@ -2,9 +2,10 @@ import logging
 from typing import NoReturn
 
 import numpy as np
+from typing_extensions import Self
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
-from roseau.load_flow.typing import Id, JsonDict, Self
+from roseau.load_flow.typing import Id, JsonDict
 from roseau.load_flow.units import Q_, ureg
 from roseau.load_flow.utils import Identifiable, JsonMixin, TransformerType
 

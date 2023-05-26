@@ -127,4 +127,5 @@ intersphinx_mapping = {
     "geopandas": ("https://geopandas.org/en/stable/", None),
     "requests": ("https://requests.readthedocs.io/en/latest/", None),
     "pint": ("https://pint.readthedocs.io/en/stable/", None),
+    "typing_extensions": ("https://typing-extensions.readthedocs.io/en/stable/", None),
 }
