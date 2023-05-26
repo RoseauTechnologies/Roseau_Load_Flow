@@ -132,9 +132,9 @@ below.
 
 3. Paste it in your terminal to start downloading the Docker image
 
-4. Use `docker run` to start a container; for example with version *0.3.0*:
+4. Use `docker run` to start a container; for example with version *0.4.0*:
    ```console
-   $ docker run -p 8080:8080 --name rlf-test ghcr.io/roseautechnologies/roseau-load-flow:0.3.0
+   $ docker run -p 8080:8080 --name rlf-test ghcr.io/roseautechnologies/roseau-load-flow:0.4.0
    ```
 
 5. Open a web browser and navigate to [http://localhost:8080](http://localhost:8080) to find the
