@@ -24,14 +24,10 @@ Type Aliases used by Roseau Load Flow.
 .. class:: Solver
 
     Available solvers for the load flow computation.
-
-.. class:: Self
-
-    The type of the class itself.
 """
 import os
 import sys
-from typing import TYPE_CHECKING, Any, Literal, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Literal, Union
 
 if sys.version_info >= (3, 10):
     from typing import TypeAlias as TypeAlias
@@ -47,11 +43,5 @@ ControlType: TypeAlias = Literal["constant", "p_max_u_production", "p_max_u_cons
 ProjectionType: TypeAlias = Literal["euclidean", "keep_p", "keep_q"]
 Solver: TypeAlias = Literal["newton", "newton_goldstein"]
 
-if sys.version_info >= (3, 11):
-    from typing import Self as Self
-elif TYPE_CHECKING:
-    from typing_extensions import Self as Self
-else:
-    Self = TypeVar("Self")
 
-__all__ = ["Id", "JsonDict", "StrPath", "ControlType", "ProjectionType", "Solver", "Self"]
+__all__ = ["Id", "JsonDict", "StrPath", "ControlType", "ProjectionType", "Solver"]

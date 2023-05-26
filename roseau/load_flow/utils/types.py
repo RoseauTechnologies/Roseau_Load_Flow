@@ -3,9 +3,9 @@ from enum import Enum, auto, unique
 from typing import Optional
 
 import regex
+from typing_extensions import Self
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
-from roseau.load_flow.typing import Self
 
 # The local logger
 logger = logging.getLogger(__name__)

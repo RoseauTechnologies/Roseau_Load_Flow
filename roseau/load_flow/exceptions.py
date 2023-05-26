@@ -5,7 +5,7 @@ import unicodedata
 from enum import Enum, auto
 from typing import Union
 
-from roseau.load_flow.typing import Self
+from typing_extensions import Self
 
 
 class RoseauLoadFlowExceptionCode(Enum):

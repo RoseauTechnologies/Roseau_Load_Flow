@@ -4,9 +4,10 @@ from typing import NoReturn, Optional
 
 import numpy as np
 import numpy.linalg as nplin
+from typing_extensions import Self
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
-from roseau.load_flow.typing import Id, JsonDict, Self
+from roseau.load_flow.typing import Id, JsonDict
 from roseau.load_flow.units import Q_, ureg
 from roseau.load_flow.utils import (
     CX,
