@@ -2,8 +2,6 @@
 
 ## Version 0.4.0
 
-**In progress**
-
 * [GH73](https://github.com/RoseauTechnologies/Roseau_Load_Flow/issues/73)
   [PR85](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/85) Rename `precision` into `tolerance` and
   `final_precision` into `residual`.
