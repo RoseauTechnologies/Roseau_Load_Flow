@@ -55,7 +55,6 @@ jobs:
 
       - name: Install dependencies
         run: |
-          poetry config installer.modern-installation false  # https://github.com/python-poetry/poetry/issues/7686#issuecomment-1475402611
           poetry env use "${{ matrix.python-version }}"
           poetry install --without dev,docker
 
