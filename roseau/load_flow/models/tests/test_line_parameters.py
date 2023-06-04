@@ -5,7 +5,7 @@ import pytest
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models import Bus, Ground, Line, LineParameters
-from roseau.load_flow.utils import ConductorType, IsolationType, LineModel, LineType
+from roseau.load_flow.utils import ConductorType, InsulationType, LineModel, LineType
 
 
 def test_line_parameters():
@@ -103,7 +103,7 @@ def test_line_parameters():
     bus2 = Bus("bus2", phases="abc")
     ground = Ground("ground")
     line1 = Line(id="line1", bus1=bus1, bus2=bus2, parameters=lp1, length=1.0, ground=ground)
-    line2 = Line(id="line2", bus1=bus1, bus2=bus2, parameters=lp2, length=1.0, ground=ground)
+    line2 = Line(id="line2", bus1=bus1, bus2=bus2, parameters=lp2, length=1.0, ground=None)
     with pytest.raises(RoseauLoadFlowException) as e:
         line1.parameters = lp2
     assert e.value.msg == "Cannot set line parameters without a shunt to a line that has shunt components."
@@ -130,7 +130,7 @@ def test_lv_exact():
         "test",
         line_type=LineType.OVERHEAD,
         conductor_type=ConductorType.AL,
-        insulator_type=IsolationType.PEX,
+        insulator_type=InsulationType.PEX,
         section=150,
         section_neutral=70,
         height=10,
@@ -192,7 +192,7 @@ def test_lv_exact():
         "test",
         line_type=LineType.UNDERGROUND,
         conductor_type=ConductorType.AL,
-        insulator_type=IsolationType.PVC,
+        insulator_type=InsulationType.PVC,
         section=150,
         section_neutral=70,
         height=-1.5,
@@ -366,5 +366,5 @@ def test_from_name_mv():
     z_line_expected = (0.188 + 0.1j) * np.eye(3)
     y_shunt_expected = 0.00014106j * np.eye(3)
 
-    npt.assert_allclose(lp.z_line, z_line_expected)
-    npt.assert_allclose(lp.y_shunt, y_shunt_expected, rtol=1e-4)
+    npt.assert_allclose(lp.z_line.m_as("ohm/km"), z_line_expected)
+    npt.assert_allclose(lp.y_shunt.m_as("S/km"), y_shunt_expected, rtol=1e-4)

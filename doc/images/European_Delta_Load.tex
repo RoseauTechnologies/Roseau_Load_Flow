@@ -1,0 +1,46 @@
+\input{Preambule}%
+
+\begin{document}
+\ctikzset{european,straight voltages}%
+\begin{tikzpicture}[%
+    show background rectangle,%
+    tight background,%
+    background rectangle/.style={fill=white}%
+    ]
+  \def\radius{2.3}%
+  \def\Radius{3}%
+  \ctikzset{bipoles/open/voltage/distance from node/.initial=0.1}%
+
+  % Coordonnées
+  \coordinate (A) at (90:\Radius);%
+  \coordinate (B) at (210:\Radius);%
+  \coordinate (C) at (330:\Radius);%
+  \coordinate (A2) at ($(\Radius,\Radius)+(1,0)$);%
+  \coordinate (C2) at (A2 |- B);%
+  \coordinate (B2) at ($(C2)-(0,1.25)$);%
+  \coordinate (B3) at ($(B)-(0,1.25)$);%
+
+  % Nœuds
+  \node[above] at (A) {A};%
+  \node[left] at (B) {B};%
+  \node[above right] at (C) {C};%
+
+  % Lignes
+  \draw (A) to[resistor, v<=$\underline{V_{\arm}}-\underline{V_{\brm}}$, i=$\underline{I_{\abrm}}$, *-*] (B) %
+  to[resistor, v<=$\underline{V_{\brm}}-\underline{V_{\crm}}$, i=$\underline{I_{\bcrm}}$, *-*] (C) %
+  to[resistor, v<=$\underline{V_{\crm}}-\underline{V_{\arm}}$, i=$\underline{I_{\carm}}$, *-*] (A);%
+  \draw (A2) to[short,i=$\underline{I_{\arm}}$,*-*] (A);%
+  \draw (B) -- (B3);%
+  \draw (B2) to[short,i=$\underline{I_{\brm}}$,*-] (B3);%
+  \draw (C2) to[short,i=$\underline{I_{\crm}}$,*-] (C);%
+\end{tikzpicture}
+\end{document}
+% Local Variables:
+% mode: latex
+% TeX-engine: luatex
+% TeX-source-correlate-method-active: synctex
+% ispell-local-dictionary: "british"
+% coding: utf-8
+% LaTeX-indent-level: 4
+% fill-column: 100
+% End:

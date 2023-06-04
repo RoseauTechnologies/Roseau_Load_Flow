@@ -1,0 +1,107 @@
+\input{Preambule}%
+
+\usepackage{pgfplots}%
+\pgfplotsset{compat=newest}%
+\usepgfplotslibrary{groupplots, colorbrewer}%
+
+\begin{document}
+\begin{tikzpicture}[%
+    show background rectangle,%
+    tight background,%
+    background rectangle/.style={fill=white},%
+    % q and q' functions
+    declare function = {
+        q(\x) = (\x - 1) * (\x - 1) + 0.1;
+        qp(\x) = 2 * \x - 2;
+    }
+    ]
+    %
+    % Common parameters
+    %
+    \pgfmathsetmacro{\xminnormvaleur}{0.0}%
+    \pgfmathsetmacro{\xmaxnormvaleur}{2.5}%
+
+    \pgfmathsetmacro{\yminnormvaleur}{0}%
+    \pgfmathsetmacro{\ymaxnormvaleur}{2.5}%
+
+    \pgfmathsetmacro{\mone}{0.1}%
+    \pgfmathsetmacro{\mtwo}{0.8}%
+
+    % Solving  q(0) + q'(0)m1.t = q(t) = (t + 1)² + 0.1
+    %   <=>    t² + t(-2 - q'(0)m1) + 0 = 0
+    \pgfmathsetmacro{\a}{(2 + qp(0) * \mtwo + sqrt((-2 - qp(0) * \mtwo) * (-2 - qp(0) * \mtwo))) / 2}%
+    \pgfmathsetmacro{\b}{(2 + qp(0) * \mone + sqrt((-2 - qp(0) * \mone) * (-2 - qp(0) * \mone))) / 2}%
+    \pgfmathsetmacro{\qa}{q(\a)}%
+    \pgfmathsetmacro{\qb}{q(\b)}%
+
+
+    %
+    % Style
+    %
+    \tikzset{lisse/.style={line width=0.3mm, domain=\xminnormvaleur:\xmaxnormvaleur, samples=75,
+            mark=none}}%
+
+    \begin{axis}[%
+        height=7cm,%
+        width=0.9\textwidth,%
+        grid=major,%
+        axis lines=left,
+        xlabel={$t$},%
+        xtick={\a, \b},%
+        xticklabels={$a$, $b$},%
+        xtick style={draw=none},
+        y tick label style={/pgf/number format/.cd,%
+            set thousands separator={},%
+            fixed,%
+            fixed zerofill,%
+            precision=1,%
+            use comma%
+        },%
+        ytick={q(0)},%
+        yticklabels={$q(0)$},%
+        ytick style={draw=none},
+        xmin=\xminnormvaleur,%
+        xmax=\xmaxnormvaleur,%
+        ymin=\yminnormvaleur,%
+        ymax=\ymaxnormvaleur,%
+        legend columns=2,%
+        legend style={%
+            at={(0.5,-0.25)},%
+            anchor=north,%
+        },%
+        grid=none,
+        ]
+
+        % q
+        \addplot[lisse, red] expression {q(x)};%
+        \addlegendentryexpanded{$q(t)$};%
+
+        % droites
+        \addplot[black, thin] expression {q(0) + qp(0) * \mone * x};%
+        \addplot[black, thin] expression {q(0) + qp(0) * \mtwo * x};%
+
+        % a and b
+        \addplot[dotted, black, mark=none] coordinates {%
+            (\a,0)%
+            (\a,\qa)%
+        };%
+        \addplot[dotted, black, mark=none] coordinates {%
+            (\b,0)%
+            (\b,\qb)%
+        };%
+
+        \node[] at (0.46,0.7) {$m_{2}q'(0)$};
+        \node[] at (2.3, 0.75) {$m_{1}q'(0)$};
+
+    \end{axis}
+\end{tikzpicture}
+\end{document}
+% Local Variables:
+% mode: latex
+% TeX-engine: luatex
+% TeX-source-correlate-method-active: synctex
+% ispell-local-dictionary: "british"
+% coding: utf-8
+% LaTeX-indent-level: 4
+% fill-column: 100
+% End:

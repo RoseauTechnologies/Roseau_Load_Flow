@@ -1,5 +1,5 @@
 {% set name = "roseau-load-flow" %}
-{% set version = "0.3.0" %}
+{% set version = "0.4.0" %}
 
 package:
   name: "{{ name|lower }}"
@@ -32,6 +32,7 @@ requirements:
     - regex >=2022.1.18
     - pint >=0.19.2
     - requests >=2.28.1
+    - typing-extensions >=4.6.2
 
 test:
   imports:
@@ -43,16 +44,14 @@ test:
 
 about:
   home: https://github.com/RoseauTechnologies/Roseau_Load_Flow/
-  license: BSD-3
-  license_family: BSD
-  license_file:
-    - LICENSE.md
-  summary: This is the three-phase load flow solver of Roseau Technologies.
+  license: BSD-3-Clause
+  license_file: LICENSE.md
+  summary: Highly capable three-phase load flow solver of Roseau Technologies.
   doc_url: https://roseautechnologies.github.io/Roseau_Load_Flow/
 
-  extra:
-    recipe-maintainers:
-      - benoit9126
+extra:
+  recipe-maintainers:
+    - benoit9126
 
 # https://www.underworldcode.org/articles/build-conda-packages/
 # conda config --add channels conda-forge

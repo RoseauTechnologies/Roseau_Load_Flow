@@ -17,7 +17,37 @@ logger = logging.getLogger(__name__)
 
 
 class AbstractLoad(Element, ABC):
-    """An abstract class of an electric load."""
+    """An abstract class of an electric load.
+
+    The subclasses of this class can be used to depict:
+        * star-connected loads using a `phases` constructor argument containing a `"n"`
+
+        .. tab:: European Standards
+
+            .. image:: /_static/European_Star_Load.svg
+              :width: 300px
+              :align: center
+
+        .. tab:: American Standards
+
+            .. image:: /_static/American_Star_Load.svg
+              :width: 300px
+              :align: center
+
+        * delta-connected loads using a `phases` constructor argument which doesn't contain `"n"`
+
+        .. tab:: European Standards
+
+            .. image:: /_static/European_Delta_Load.svg
+              :width: 300px
+              :align: center
+
+        .. tab:: American Standards
+
+            .. image:: /_static/American_Delta_Load.svg
+              :width: 300px
+              :align: center
+    """
 
     _power_load_class: type["PowerLoad"]
     _current_load_class: type["CurrentLoad"]

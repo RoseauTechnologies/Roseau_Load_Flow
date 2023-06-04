@@ -48,21 +48,15 @@ $ python -m pip install --upgrade roseau-load-flow
 
 # Using `conda` #
 
-If you use *conda* to manage your project, **it is recommended to use the `conda` package manager
-instead of `pip`**. To install `roseau_load_flow` via `conda`, please go to the [release page](
-https://github.com/RoseauTechnologies/Roseau_Load_Flow/releases/) on GitHub and download the latest
-available *Conda archive* (Click on the file that ends with `.tar.bz2`). It can then be installed
-via the following command (in this example, the installed version is *0.3.0*):
-
+`roseau_load_flow` is also available on [conda-forge](https://anaconda.org/conda-forge/roseau-load-flow).
+It can be installed using conda with:
 ```console
-$ conda install <PATH TO THE roseau-load-flow-0.3.0-py_0.tar.bz2 FILE>
+$ conda install -c conda-forge roseau-load-flow
 ```
 
-```{note}
-Always install the latest version available which is conveniently marked `latest` by GitHub as
-shown here:
-
-![GitHub Latest Release](_static/2022_11_23_GH_Latest_Release.png)
+```{tip}
+If you use *conda* to manage your project, it is recommended to use the `conda` package manager
+instead of `pip`.
 ```
 
 # Using `docker` #
@@ -138,9 +132,9 @@ below.
 
 3. Paste it in your terminal to start downloading the Docker image
 
-4. Use `docker run` to start a container; for example with version *0.3.0*:
+4. Use `docker run` to start a container; for example with version *0.4.0*:
    ```console
-   $ docker run -p 8080:8080 --name rlf-test ghcr.io/roseautechnologies/roseau-load-flow:0.3.0
+   $ docker run -p 8080:8080 --name rlf-test ghcr.io/roseautechnologies/roseau-load-flow:0.4.0
    ```
 
 5. Open a web browser and navigate to [http://localhost:8080](http://localhost:8080) to find the

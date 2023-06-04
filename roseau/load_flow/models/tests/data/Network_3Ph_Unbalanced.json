@@ -141,10 +141,11 @@
     "results": {
         "info": {
             "status": "success",
-            "resolution_method": "newton",
+            "solver": "newton",
+            "solver_params": {},
             "iterations": 2,
-            "target_error": 1e-06,
-            "final_error": 1.2896350654045818e-12
+            "tolerance": 1e-06,
+            "residual": 1.2896350654045818e-12
         },
         "buses": [
             {

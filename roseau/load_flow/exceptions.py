@@ -5,7 +5,7 @@ import unicodedata
 from enum import Enum, auto
 from typing import Union
 
-from roseau.load_flow.typing import Self
+from typing_extensions import Self
 
 
 class RoseauLoadFlowExceptionCode(Enum):
@@ -34,7 +34,7 @@ class RoseauLoadFlowExceptionCode(Enum):
     BAD_LINE_MODEL = auto()
     BAD_LINE_TYPE = auto()
     BAD_CONDUCTOR_TYPE = auto()
-    BAD_ISOLATION_TYPE = auto()
+    BAD_INSULATION_TYPE = auto()
     BAD_Z_LINE_VALUE = auto()
     BAD_Y_SHUNT_VALUE = auto()
     BAD_TRANSFORMER_WINDINGS = auto()
@@ -84,6 +84,11 @@ class RoseauLoadFlowExceptionCode(Enum):
     LOAD_FLOW_NOT_RUN = auto()
     SEVERAL_NETWORKS = auto()
     TOO_MANY_BUSES = auto()
+
+    # Solver
+    BAD_SOLVER_NAME = auto()
+    BAD_SOLVER_PARAMS = auto()
+    NETWORK_SOLVER_MISMATCH = auto()
 
     # DGS export
     DGS_BAD_PHASE_TECHNOLOGY = auto()

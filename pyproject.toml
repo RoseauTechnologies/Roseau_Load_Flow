@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "roseau_load_flow"
-version = "0.3.0"
-description = "Three-phase load flow solver"
+version = "0.4.0"
+description = "Highly capable three-phase load flow solver"
 authors = [
     "Ali Hamdan <ali.hamdan@roseautechnologies.com>",
     "Sébastien Vallet <sebastien.vallet@roseautechnologies.com>",
@@ -41,6 +41,7 @@ shapely = ">=2.0.0"
 regex = ">=2022.1.18"
 requests = ">=2.28.1"
 pint = ">=0.19.2"
+typing-extensions = ">=4.6.2"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^7.1.2"
@@ -54,7 +55,7 @@ pre-commit = "^3.0.0"
 black = { version = "^23.1.0", extras = ["jupyter"] }
 
 [tool.poetry.group.doc.dependencies]
-Sphinx = "^5.1.0"
+Sphinx = "^6.2.0"
 myst-parser = ">=0.16.1"
 sphinx-math-dollar = "^1.2.1"
 sphinx-autoapi = "^2.0.0"

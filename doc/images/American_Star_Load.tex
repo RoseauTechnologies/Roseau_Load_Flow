@@ -1,0 +1,59 @@
+\input{Preambule}%
+
+\begin{document}
+\ctikzset{american}%
+\begin{tikzpicture}[%
+    show background rectangle,%
+    tight background,%
+    background rectangle/.style={fill=white}%
+    ]
+    \def\radius{2.3}%
+    \def\Radius{3}%
+
+    \ctikzset{bipoles/open/voltage/distance from node/.initial=0.1}
+    % \ctikzset{bipoles/generic/voltage/european label distance=0.8}
+
+    % Coordinates
+    \coordinate (A1) at (90:\radius);%
+    \coordinate (B1) at (210:\radius);%
+    \coordinate (C1) at (330:\radius);%
+    \coordinate (A) at (90:\Radius);%
+    \coordinate (B) at (210:\Radius);%
+    \coordinate (C) at (330:\Radius);%
+    \coordinate (N) at (0,0);%
+    \coordinate (A2) at ($(-\Radius,\Radius)-(1,0)$);%
+    \coordinate (B2) at (A2 |- B); %x of A2 and y of B
+    \coordinate (C2) at ($(B2)-(0,1)$);%
+    \coordinate (C3) at ($(C)-(0,1)$);%
+    \coordinate (N2) at (A2 |- N);%
+
+    % Nodes
+    \node[above] at (A) {A};%
+    \node[below] at (B) {B};%
+    \node[right] at (C) {C};%
+    \node[above right] at (N) {N};%
+
+    % Lines
+    \draw (A) to[short,*-] (A1) to[resistor, v<=$\underline{V_{\arm}}-\underline{V_{\nrm}}$, -*] (N);%
+    \draw (B) to[short,*-] (B1) to[resistor, v<=$\underline{V_{\brm}}-\underline{V_{\nrm}}$, -*] (N);%
+    \draw (C) to[short,*-] (C1) to[resistor, v<=$\underline{V_{\crm}}-\underline{V_{\nrm}}$, -*] (N);%
+    \draw (A2) to[short,i=$\underline{I_{\arm}}$,*-*] (A);%
+    \draw (B2) to[short,i=$\underline{I_{\brm}}$,*-*] (B);%
+    \draw (C2) to[short,i=$\underline{I_{\crm}}$,*-] (C3);%
+    \draw (C3) -- (C); \draw (N2) to[short, i=$\underline{I_{\nrm}}$, *-] (N);%
+
+    % Line-to-line voltage
+    % \draw (A) to[open, v=$V_{m,\abrm}$] (B)
+    % to[open, v=$V_{\bcrm}$] (C)
+    % to[open, v=$V_{\carm}$] (A);
+\end{tikzpicture}
+\end{document}
+% Local Variables:
+% mode: latex
+% TeX-engine: luatex
+% TeX-source-correlate-method-active: synctex
+% ispell-local-dictionary: "british"
+% coding: utf-8
+% LaTeX-indent-level: 4
+% fill-column: 120
+% End:

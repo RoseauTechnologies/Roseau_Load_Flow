@@ -3,9 +3,10 @@ import warnings
 from typing import NoReturn
 
 import numpy as np
+from typing_extensions import Self
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
-from roseau.load_flow.typing import ControlType, JsonDict, ProjectionType, Self
+from roseau.load_flow.typing import ControlType, JsonDict, ProjectionType
 from roseau.load_flow.units import Q_, ureg
 from roseau.load_flow.utils import JsonMixin
 
@@ -13,9 +14,39 @@ logger = logging.getLogger(__name__)
 
 
 class Control(JsonMixin):
-    """A class to store the important values of a control."""
+    """Control class for flexible loads.
 
-    DEFAULT_ALPHA: float = 200.0
+    This class contains the information needed to formulate the control equations. This includes the control type,
+    control limits, and other factors.
+
+    The control for a :class:`PowerLoad` instance can be of four possible types:
+        * ``"constant"``: no control is applied. In this case, a simple :class:`PowerLoad` without `flexible_params`
+          could have been used instead.
+        * ``"p_max_u_production"``: control the maximum production active power of the load (inverter) based on the
+          voltage :math:`P^{\\max}_{\\mathrm{prod}}(U)`. With this control, the following functions are used
+          (depending on the :math:`\\alpha` value).
+
+          .. image:: /_static/Control_PU_Prod.svg
+              :width: 600
+              :align: center
+
+        * ``"p_max_u_consumption"``: control the maximum consumption active power of the load based on the voltage
+          :math:`P^{\\max}_{\\mathrm{cons}}(U)`. With this control, the following functions are used
+          (depending on the :math:`\\alpha` value).
+
+          .. image:: /_static/Control_PU_Cons.svg
+              :width: 600
+              :align: center
+
+        * ``"q_u"``: control the reactive power based on the voltage :math:`Q(U)`. With this control, the following
+          functions are used  (depending on the :math:`\\alpha` value).
+
+          .. image:: /_static/Control_QU.svg
+              :width: 600
+              :align: center
+    """
+
+    DEFAULT_ALPHA: float = 1000.0
 
     @ureg.wraps(None, (None, None, "V", "V", "V", "V", None), strict=False)
     def __init__(
@@ -313,11 +344,29 @@ class Control(JsonMixin):
 
 
 class Projection(JsonMixin):
-    """This class defines the projection on the feasible circle for a flexible load."""
+    """This class defines the projection on the feasible circle for a flexible load.
 
-    # TODO: add the projection diagram (the feasible circle) to the docstring
+    The three possible projection types are:
+        * ``"euclidean"``: for an Euclidean projection on the feasible space;
 
-    DEFAULT_ALPHA: float = 100.0
+        .. image:: /_static/Euclidean_Projection.svg
+            :width: 300
+            :align: center
+
+        * ``"keep_p"``: for maintaining a constant P;
+
+        .. image:: /_static/Constant_P_Projection.svg
+            :width: 300
+            :align: center
+
+        * ``"keep_q"``: for maintaining a constant Q.
+
+        .. image:: /_static/Constant_Q_Projection.svg
+            :width: 300
+            :align: center
+    """
+
+    DEFAULT_ALPHA: float = 1000.0
     DEFAULT_EPSILON: float = 0.01
 
     def __init__(self, type: ProjectionType, alpha: float = DEFAULT_ALPHA, epsilon: float = DEFAULT_EPSILON) -> None:
@@ -406,7 +455,43 @@ class Projection(JsonMixin):
 
 
 class FlexibleParameter(JsonMixin):
-    """This class stores the required data to make a flexible parameter."""
+    """Flexible parameters of a flexible load.
+
+    This class encapsulate single-phase flexibility information of a flexible load:
+
+        * The active power :class:`Control` to apply;
+        * The reactive power :class:`Control` to apply;
+        * The :class:`Projection` to use when dealing with voltage violations;
+        * The apparent power of the flexible load (VA). This is the maximum power the load can consume/produce. It is
+            the radius of the feasible circle used by the projection
+
+    For multi-phase loads, you need to use a `FlexibleParameter` instance per phase.
+
+    Depending on the mix of controls and projection used through this class, the feasible domains in the :math:`(P, Q)`
+    space changes. Here is an illustration with a theoretical power depicting a production (negative
+    :math:`P^{\\mathrm{theo.}}`).
+
+    .. list-table::
+        :class: borderless
+        :header-rows: 1
+        :widths: 20 20 20 20 20
+
+        * -
+          - :math:`Q^{\\mathrm{const.}}`
+          - :math:`Q(U)` with an Euclidean projection
+          - :math:`Q(U)` with a constant P projection
+          - :math:`Q(U)` with a constant Q projection
+        * - :math:`P^{\\mathrm{const.}}`
+          - .. image:: /_static/Domain_Pconst_Qconst.svg
+          - .. image:: /_static/Domain_Pconst_QU_Eucl.svg
+          - .. image:: /_static/Domain_Pconst_QU_P.svg
+          - .. image:: /_static/Domain_Pconst_QU_Q.svg
+        * - :math:`P^{\\max}(U)`
+          - .. image:: /_static/Domain_PmaxU_Qconst.svg
+          - .. image:: /_static/Domain_PmaxU_QU.svg
+          - .. image:: /_static/Domain_PmaxU_QU.svg
+          - .. image:: /_static/Domain_PmaxU_QU.svg
+    """
 
     control_class: type[Control] = Control
     projection_class: type[Projection] = Projection

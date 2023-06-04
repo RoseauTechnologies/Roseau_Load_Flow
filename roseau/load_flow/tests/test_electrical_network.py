@@ -1,7 +1,7 @@
 import itertools as it
 import warnings
 from contextlib import contextmanager
-from urllib.parse import parse_qs, urljoin, urlsplit
+from urllib.parse import urljoin
 
 import geopandas as gpd
 import numpy as np
@@ -99,13 +99,13 @@ def single_phase_network() -> ElectricalNetwork:
 def good_json_results() -> dict:
     return {
         "info": {
-            "resolution_method": "newton",
-            "precision": 1e-06,
+            "solver": "newton",
+            "tolerance": 1e-06,
             "max_iterations": 20,
             "warm_start": True,
             "status": "success",
             "iterations": 1,
-            "final_precision": 6.296829377361313e-14,
+            "residual": 6.296829377361313e-14,
         },
         "buses": [
             {
@@ -294,7 +294,6 @@ def test_recursive_connect_disconnect():
         bus1=new_bus,  # new part of the network
         bus2=load_bus,  # first part of the network
         phases="abcn",
-        ground=ground,
         parameters=lp,
         length=0.5,
     )
@@ -530,11 +529,11 @@ def test_solve_load_flow(small_network, good_json_results):
     json_result = {
         "info": {
             "status": "failure",
-            "resolution_method": "newton",
+            "solver": "newton",
             "iterations": 50,
             "wam_start": False,
-            "precision": 1e-06,
-            "final_precision": 14037.977318668112,
+            "tolerance": 1e-06,
+            "residual": 14037.977318668112,
             "max_iterations": 20,
         },
         "buses": [
@@ -728,13 +727,13 @@ def test_single_phase_network(single_phase_network: ElectricalNetwork):
 
     json_results = {
         "info": {
-            "resolution_method": "newton",
-            "precision": 1e-06,
+            "solver": "newton",
+            "tolerance": 1e-06,
             "max_iterations": 20,
             "status": "success",
             "iterations": 1,
             "warm_start": True,
-            "final_precision": 1.3239929985697785e-13,
+            "residual": 1.3239929985697785e-13,
         },
         "buses": [
             {
@@ -949,34 +948,34 @@ def test_network_results_warning(small_network: ElectricalNetwork, good_json_res
     # All the results function raises an exception
     for bus in small_network.buses.values():
         with pytest.raises(RoseauLoadFlowException) as e:
-            bus.res_potentials
+            _ = bus.res_potentials
         assert e.value.args[1] == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
         with pytest.raises(RoseauLoadFlowException) as e:
-            bus.res_voltages
+            _ = bus.res_voltages
         assert e.value.args[1] == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
     for branch in small_network.branches.values():
         with pytest.raises(RoseauLoadFlowException) as e:
-            branch.res_currents
+            _ = branch.res_currents
         assert e.value.args[1] == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
     for load in small_network.loads.values():
         with pytest.raises(RoseauLoadFlowException) as e:
-            load.res_currents
+            _ = load.res_currents
         assert e.value.args[1] == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
         if load.is_flexible and isinstance(load, PowerLoad):
             with pytest.raises(RoseauLoadFlowException) as e:
-                load.res_flexible_powers
+                _ = load.res_flexible_powers
             assert e.value.args[1] == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
     for source in small_network.sources.values():
         with pytest.raises(RoseauLoadFlowException) as e:
-            source.res_currents
+            _ = source.res_currents
         assert e.value.args[1] == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
     for ground in small_network.grounds.values():
         with pytest.raises(RoseauLoadFlowException) as e:
-            ground.res_potential
+            _ = ground.res_potential
         assert e.value.args[1] == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
     for p_ref in small_network.potential_refs.values():
         with pytest.raises(RoseauLoadFlowException) as e:
-            p_ref.res_current
+            _ = p_ref.res_current
         assert e.value.args[1] == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
 
     # Solve a load flow
@@ -988,20 +987,20 @@ def test_network_results_warning(small_network: ElectricalNetwork, good_json_res
     # No warning when getting results (they are up-to-date)
     recwarn.clear()
     for bus in small_network.buses.values():
-        bus.res_potentials
-        bus.res_voltages
+        _ = bus.res_potentials
+        _ = bus.res_voltages
     for branch in small_network.branches.values():
-        branch.res_currents
+        _ = branch.res_currents
     for load in small_network.loads.values():
-        load.res_currents
+        _ = load.res_currents
         if load.is_flexible and isinstance(load, PowerLoad):
-            load.res_flexible_powers
+            _ = load.res_flexible_powers
     for source in small_network.sources.values():
-        source.res_currents
+        _ = source.res_currents
     for ground in small_network.grounds.values():
-        ground.res_potential
+        _ = ground.res_potential
     for p_ref in small_network.potential_refs.values():
-        p_ref.res_current
+        _ = p_ref.res_current
     assert len(recwarn) == 0
 
     # Modify something
@@ -1014,44 +1013,44 @@ def test_network_results_warning(small_network: ElectricalNetwork, good_json_res
     )
     for bus in small_network.buses.values():
         with check_result_warning(expected_message=expected_message):
-            bus.res_potentials
+            _ = bus.res_potentials
         with check_result_warning(expected_message=expected_message):
-            bus.res_voltages
+            _ = bus.res_voltages
     for branch in small_network.branches.values():
         with check_result_warning(expected_message=expected_message):
-            branch.res_currents
+            _ = branch.res_currents
     for load in small_network.loads.values():
         with check_result_warning(expected_message=expected_message):
-            load.res_currents
+            _ = load.res_currents
         if load.is_flexible and isinstance(load, PowerLoad):
             with check_result_warning(expected_message=expected_message):
-                load.res_flexible_powers
+                _ = load.res_flexible_powers
     for source in small_network.sources.values():
         with check_result_warning(expected_message=expected_message):
-            source.res_currents
+            _ = source.res_currents
     for ground in small_network.grounds.values():
         with check_result_warning(expected_message=expected_message):
-            ground.res_potential
+            _ = ground.res_potential
     for p_ref in small_network.potential_refs.values():
         with check_result_warning(expected_message=expected_message):
-            p_ref.res_current
+            _ = p_ref.res_current
 
     # Ensure that a single warning is raised when having a data frame result
     expected_message = (
         "The results of this network may be outdated. Please re-run a load flow to ensure the validity of results."
     )
     with check_result_warning(expected_message=expected_message):
-        small_network.res_buses
+        _ = small_network.res_buses
     with check_result_warning(expected_message=expected_message):
-        small_network.res_buses_voltages
+        _ = small_network.res_buses_voltages
     with check_result_warning(expected_message=expected_message):
-        small_network.res_branches
+        _ = small_network.res_branches
     with check_result_warning(expected_message=expected_message):
-        small_network.res_loads
+        _ = small_network.res_loads
     with check_result_warning(expected_message=expected_message):
-        small_network.res_sources
+        _ = small_network.res_sources
     with check_result_warning(expected_message=expected_message):
-        small_network.res_loads_flexible_powers
+        _ = small_network.res_loads_flexible_powers
 
 
 def test_load_flow_results_frames(small_network: ElectricalNetwork, good_json_results: dict):
@@ -1221,8 +1220,7 @@ def test_solver_warm_start(small_network: ElectricalNetwork, good_json_results):
 
     def json_callback(request, context):
         request_json_data = request.json()
-        query = parse_qs(urlsplit(request.url).query)
-        warm_start = query["warm_start"][0].casefold() == "true"
+        warm_start = request_json_data["solver"]["warm_start"]
         assert isinstance(request_json_data, dict)
         assert "network" in request_json_data
         if should_warm_start:

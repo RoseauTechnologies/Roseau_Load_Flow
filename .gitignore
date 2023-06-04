@@ -239,3 +239,10 @@ $RECYCLE.BIN/
 .idea-*/
 
 benchmark/*.mtx
+
+# Emacs and LaTeX
+**/auto/
+*.aux
+*.log
+.ruff_cache/
+doc/images/*.pdf

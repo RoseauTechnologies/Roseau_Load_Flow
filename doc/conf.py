@@ -6,7 +6,6 @@
 
 # -- Path setup --------------------------------------------------------------
 
-import importlib.metadata
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -20,12 +19,12 @@ import importlib.metadata
 # -- Project information -----------------------------------------------------
 
 project = "Roseau Load Flow"
-copyright = "2022-2023, Roseau Technologies SAS"
+copyright = "2022--2023, Roseau Technologies SAS"
 # author = "Benoît Vinot"
 
 # The full version, including alpha/beta/rc tags
-version = importlib.metadata.version("roseau_load_flow")
-release = f"{project} {version}"
+version = "0.4"
+release = "0.4.0"
 
 # -- General configuration ---------------------------------------------------
 
@@ -43,7 +42,7 @@ extensions = [
     "sphinx_copybutton",
     "sphinx_inline_tabs",
 ]
-
+myst_enable_extensions = ["deflist", "smartquotes", "replacements", "dollarmath"]
 add_module_names = False
 napoleon_numpy_docstring = False
 nbsphinx_execute = "never"
@@ -62,7 +61,7 @@ language = "en"
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = []
+exclude_patterns = ["images/*"]
 
 # -- Options for autodoc ----------------------------------------------------
 autodoc_default_options = {"ignore-module-all": False}
@@ -77,8 +76,8 @@ autodoc_inherit_docstrings = True
 #
 html_theme = "furo"
 html_show_copyright = True
-html_title = f"{release}"
-html_logo = "_static/Logo_Roseau_Technologies_Without_Baseline.svg"
+html_title = f"{project} {release}"
+html_logo = "_static/Roseau_Load_Flow_Stacked.svg"
 html_favicon = "_static/Favicon_Roseau_Technologies.ico"
 html_theme_options = {
     "source_repository": "https://github.com/RoseauTechnologies/Roseau_Load_Flow/",
@@ -86,16 +85,22 @@ html_theme_options = {
     # "source_directory": "source/",
     # "sidebar_hide_name": True,
     "navigation_with_keys": True,
-    "light_css_variables": {
-        "font-stack": "Poppins,Helvetica,Arial,Lucida,sans-serif",
-        "color-announcement-background": "#222798"
-        # "font-stack--monospace": "Courier, monospace",
-    },
-    "dark_css_variables": {
-        "font-stack": "Poppins,Helvetica,Arial,Lucida,sans-serif",
-        "color-announcement-background": "#222798"
-        # "font-stack--monospace": "Courier, monospace",
-    },
+    "light_css_variables": {"color-announcement-background": "#222798"},
+    "dark_css_variables": {"color-announcement-background": "#222798"},
+    "footer_icons": [
+        {
+            "name": "LinkedIn",
+            "url": "https://www.linkedin.com/company/roseau-technologies/",
+            "html": "",
+            "class": "fa-brands fa-linkedin fa-2x",
+        },
+        {
+            "name": "GitHub",
+            "url": "https://github.com/RoseauTechnologies/",
+            "html": "",
+            "class": "fa-brands fa-github fa-2x",
+        },
+    ],
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,
@@ -122,4 +127,5 @@ intersphinx_mapping = {
     "geopandas": ("https://geopandas.org/en/stable/", None),
     "requests": ("https://requests.readthedocs.io/en/latest/", None),
     "pint": ("https://pint.readthedocs.io/en/stable/", None),
+    "typing_extensions": ("https://typing-extensions.readthedocs.io/en/stable/", None),
 }

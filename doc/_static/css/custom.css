@@ -1,11 +1,27 @@
+/* Google fonts */
+@import url('https://fonts.googleapis.com/css2?family=Raleway&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined');
+/* Fontawesome */
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/fontawesome.min.css');
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/solid.min.css');
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/brands.min.css');
+
+body {
+    font-family: 'Raleway', sans-serif;
+}
+
 dl dd:not(:last-child) {
     margin-bottom: 0.5em;
 }
 
 /* Improve inline images: material and actions*/
-.material-icons.inline-icon {
+.material-symbols-outlined.inline-symbol {
     font-size: 1.25em;
-    vertical-align: middle;
+    vertical-align: text-top;
+    margin: 0 0.2em;
+}
+.material-symbols-outlined.inline-symbol.counter {
+    color: #FF0000;
 }
 
 .action-icons.inline-icon {
@@ -27,4 +43,5 @@ dl dd:not(:last-child) {
 .sidebar-brand-text {
     color: var(--color-foreground-secondary);
     font-size: var(--toc-font-size);
+    text-align: center;
 }

@@ -3,11 +3,12 @@ from typing import Any, Optional, Union
 
 import numpy as np
 from shapely import LineString, Point
+from typing_extensions import Self
 
 from roseau.load_flow.converters import calculate_voltages
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import Element
-from roseau.load_flow.typing import Id, JsonDict, Self
+from roseau.load_flow.typing import Id, JsonDict
 from roseau.load_flow.units import Q_, ureg
 from roseau.load_flow.utils import BranchType
 

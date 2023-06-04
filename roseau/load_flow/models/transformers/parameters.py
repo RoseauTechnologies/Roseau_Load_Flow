@@ -2,9 +2,10 @@ import logging
 from typing import NoReturn
 
 import numpy as np
+from typing_extensions import Self
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
-from roseau.load_flow.typing import Id, JsonDict, Self
+from roseau.load_flow.typing import Id, JsonDict
 from roseau.load_flow.units import Q_, ureg
 from roseau.load_flow.utils import Identifiable, JsonMixin, TransformerType
 
@@ -90,6 +91,18 @@ class TransformerParameters(Identifiable, JsonMixin):
             )
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_PARAMETERS)
+        if psc / sn > vsc:
+            msg = (
+                f"Transformer type {id!r} has parameters that can't be modeled. The following inequality should be "
+                f"respected: psc/sn <= vsc"
+            )
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_PARAMETERS)
+        if i0 * sn < p0:
+            logger.warning(
+                f"Transformer type {id!r} doesn't respect the inequality: i0 * sn > p0. The magnetizing admittance "
+                f"imaginary part will be null."
+            )
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, TransformerParameters):
