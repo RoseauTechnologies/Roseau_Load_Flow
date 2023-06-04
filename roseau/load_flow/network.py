@@ -35,10 +35,6 @@ from roseau.load_flow.solvers import check_solver_params
 from roseau.load_flow.typing import Id, JsonDict, Solver, StrPath
 from roseau.load_flow.utils import JsonMixin
 
-# if TYPE_CHECKING:
-#     from matplotlib import Axes
-
-
 logger = logging.getLogger(__name__)
 
 # Phases dtype for all data frames
@@ -137,7 +133,7 @@ class ElectricalNetwork(JsonMixin):
             Example::
 
                 {
-                    "resolution_method": "newton",
+                    "solver": "newton",
                     "tolerance": 1e-06,
                     "max_iterations": 20,
                     "warm_start": True,
@@ -441,7 +437,7 @@ class ElectricalNetwork(JsonMixin):
         if remote_rlf_version is not None:
             warnings.warn(
                 message=f"A new version ({remote_rlf_version}) of the library roseau-load-flow is available. Please "
-                f"visit https://github.com/RoseauTechnologies/Roseau_Load_Flow/releases for more information.",
+                f"visit https://roseautechnologies.github.io/Roseau_Load_Flow/Installation.html for more information.",
                 category=UserWarning,
                 stacklevel=2,
             )

@@ -15,7 +15,7 @@ by [Roseau Technologies](https://www.roseautechnologies.com/en).
 maxdepth: 3
 caption: Installation
 ---
-installation
+Installation
 ```
 
 ## Usage
@@ -40,7 +40,7 @@ The load flow solvers used are also documented:
 maxdepth: 2
 caption: Solvers
 ---
-solvers
+Solvers
 ```
 
 ## API
