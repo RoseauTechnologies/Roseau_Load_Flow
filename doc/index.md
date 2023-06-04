@@ -43,6 +43,17 @@ caption: Solvers
 Solvers
 ```
 
+## Changelog
+
+```{toctree}
+---
+maxdepth: 3
+caption: Changelog
+---
+Changelog
+```
+
+
 ## API
 
 If you want the full documentation of all the classes and functions, you can refer to the following
