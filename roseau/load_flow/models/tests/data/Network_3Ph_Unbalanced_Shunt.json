@@ -159,10 +159,11 @@
     "results": {
         "info": {
             "solver": "newton",
+            "solver_params": {},
             "tolerance": 1e-06,
             "max_iterations": 20,
             "status": "success",
-            "nb_iterations": 2,
+            "iterations": 2,
             "residual": 8.284928298962768e-12
         },
         "buses": [

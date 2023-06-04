@@ -90,6 +90,7 @@
         "info": {
             "status": "success",
             "solver": "newton",
+            "solver_params": {},
             "iterations": 2,
             "tolerance": 1e-06,
             "residual": 1.9468870959826745e-12
