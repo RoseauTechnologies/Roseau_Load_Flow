@@ -9,7 +9,7 @@ above.
 
 Please take a look at our documentation to see how to install and use `roseau_load_flow`.
 
-* [Installation](https://roseautechnologies.github.io/Roseau_Load_Flow/installation.html)
+* [Installation](https://roseautechnologies.github.io/Roseau_Load_Flow/Installation.html)
 * [Usage](https://roseautechnologies.github.io/Roseau_Load_Flow/notebooks/Getting_Started.html)
 
 # Accessing the solver #
