@@ -437,7 +437,7 @@ class ElectricalNetwork(JsonMixin):
         if remote_rlf_version is not None:
             warnings.warn(
                 message=f"A new version ({remote_rlf_version}) of the library roseau-load-flow is available. Please "
-                f"visit https://github.com/RoseauTechnologies/Roseau_Load_Flow/releases for more information.",
+                f"visit https://roseautechnologies.github.io/Roseau_Load_Flow/Installation.html for more information.",
                 category=UserWarning,
                 stacklevel=2,
             )
