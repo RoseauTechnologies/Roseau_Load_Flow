@@ -40,7 +40,7 @@ EXPOSE ${PORT}
 # Install node js to allow extension installation
 RUN apt update && \
     apt install --no-install-recommends -yq curl && \
-    curl -sL https://deb.nodesource.com/setup_18.x | bash - && \
+    curl -sL https://deb.nodesource.com/setup_20.x | bash - && \
     apt install --no-install-recommends -yq nodejs && \
     apt upgrade -yq && \
     apt clean && \
