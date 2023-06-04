@@ -99,7 +99,7 @@ def single_phase_network() -> ElectricalNetwork:
 def good_json_results() -> dict:
     return {
         "info": {
-            "resolution_method": "newton",
+            "solver": "newton",
             "tolerance": 1e-06,
             "max_iterations": 20,
             "warm_start": True,
@@ -529,7 +529,7 @@ def test_solve_load_flow(small_network, good_json_results):
     json_result = {
         "info": {
             "status": "failure",
-            "resolution_method": "newton",
+            "solver": "newton",
             "iterations": 50,
             "wam_start": False,
             "tolerance": 1e-06,
@@ -727,7 +727,7 @@ def test_single_phase_network(single_phase_network: ElectricalNetwork):
 
     json_results = {
         "info": {
-            "resolution_method": "newton",
+            "solver": "newton",
             "tolerance": 1e-06,
             "max_iterations": 20,
             "status": "success",

@@ -158,7 +158,7 @@
     },
     "results": {
         "info": {
-            "resolution_method": "newton",
+            "solver": "newton",
             "tolerance": 1e-06,
             "max_iterations": 20,
             "status": "success",
