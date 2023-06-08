@@ -351,6 +351,21 @@ class ElectricalNetwork(JsonMixin):
             index="id",
         )
 
+    @property
+    def short_circuits_frame(self) -> pd.DataFrame:
+        return pd.DataFrame.from_records(
+            data=[
+                (
+                    bus.id,
+                    bus.phases,
+                    "".join(bus._short_circuit),
+                )
+                for bus in self.buses.values()
+                if bus._short_circuit is not None
+            ],
+            columns=["bus_id", "phases", "short_circuit"],
+        )
+
     #
     # Method to solve a load flow
     #
