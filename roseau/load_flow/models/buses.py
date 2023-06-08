@@ -65,7 +65,7 @@ class Bus(Element):
         self.geometry = geometry
 
         self._res_potentials: Optional[np.ndarray] = None
-        self._short_circuits: list[tuple[str]] = []
+        self._short_circuit: Optional[tuple] = None
 
     def __repr__(self) -> str:
         return f"{type(self).__name__}(id={self.id!r}, phases={self.phases!r})"
@@ -132,10 +132,9 @@ class Bus(Element):
         res = cls(id=data["id"], phases=data["phases"], geometry=geometry, potentials=potentials)
 
         # Add short circuits
-        short_circuits = data.get("short_circuits")
-        if short_circuits is not None:
-            for sc in short_circuits:
-                res.short_circuit(phase1=sc[0], phase2=sc[1])
+        short_circuit = data.get("short_circuits")
+        if short_circuit is not None:
+            res.short_circuit(*short_circuit)
 
         return res
 
@@ -145,8 +144,8 @@ class Bus(Element):
             res["potentials"] = [[v.real, v.imag] for v in self._potentials]
         if self.geometry is not None:
             res["geometry"] = self.geometry.__geo_interface__
-        if self._short_circuits:
-            res["short_circuits"] = [[sc[0], sc[1]] for sc in self._short_circuits]
+        if self._short_circuit is not None:
+            res["short_circuits"] = list(self._short_circuit)
         return res
 
     def results_from_dict(self, data: JsonDict) -> None:
@@ -159,30 +158,24 @@ class Bus(Element):
             "potentials": [[v.real, v.imag] for v in self._res_potentials_getter(warning)],
         }
 
-    def short_circuit(self, phase1: str, phase2: str) -> None:
-        """Make a shot-circuit by connecting 2 phases.
+    def short_circuit(self, *phases: str) -> None:
+        """Make a shot-circuit by connecting multiple phases.
 
         Args:
-            phase1:
-                The first phase to connect.
-
-            phase2:
-                The second phase to connect.
+            phases:
+                The phases to connect.
         """
-        if phase1 not in self.phases:
-            msg = f"Phase {phase1!r} is not in the phases {set(self.phases)} of bus {self.id!r}."
+        for phase in phases:
+            if phase not in self.phases:
+                msg = f"Phase {phase!r} is not in the phases {set(self.phases)} of bus {self.id!r}."
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
+        if self._short_circuit is not None:
+            msg = f"A short circuit has already been made on bus {self.id!r}."
             logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
-        if phase2 not in self.phases:
-            msg = f"Phase {phase2!r} is not in the phases {set(self.phases)} of bus {self.id!r}."
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
-        if phase1 == phase2:
-            msg = f"Both phases of the short circuit ({phase1!r} and {phase1!r}) are the same."
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.MULTIPLE_SHORT_CIRCUITS)
 
-        self._short_circuits.append((phase1, phase2))
+        self._short_circuit = phases
 
         if self.network is not None:
             self.network._valid = False

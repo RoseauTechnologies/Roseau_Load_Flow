@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from roseau.load_flow import Bus, RoseauLoadFlowException
+from roseau.load_flow import Bus, RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 
 
 def test_bus_potentials_of_phases():
@@ -21,19 +21,23 @@ def test_short_circuit():
     bus = Bus("bus", phases="abc")
 
     with pytest.raises(RoseauLoadFlowException) as e:
-        bus.short_circuit("a", "a")
-    assert "Both phases of the short circuit ('a' and 'a') are the same" in e.value.msg
-    with pytest.raises(RoseauLoadFlowException) as e:
         bus.short_circuit("a", "n")
     assert "Phase 'n' is not in the phases" in e.value.msg
+    assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_PHASE
     with pytest.raises(RoseauLoadFlowException) as e:
         bus.short_circuit("n", "a")
     assert "Phase 'n' is not in the phases" in e.value.msg
+    assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_PHASE
 
-    assert not bus._short_circuits
-    bus.short_circuit("c", "a")
-    assert ("c", "a") in bus._short_circuits
+    assert bus._short_circuit is None
+    bus.short_circuit("c", "a", "b")
+    assert bus._short_circuit == ("c", "a", "b")
 
     bus_dict = bus.to_dict()
     bus2 = Bus.from_dict(bus_dict)
-    assert ("c", "a") in bus2._short_circuits
+    assert bus2._short_circuit == ("c", "a", "b")
+
+    with pytest.raises(RoseauLoadFlowException) as e:
+        bus.short_circuit("a", "b")
+    assert "A short circuit has already been made on bus" in e.value.msg
+    assert e.value.args[1] == RoseauLoadFlowExceptionCode.MULTIPLE_SHORT_CIRCUITS
