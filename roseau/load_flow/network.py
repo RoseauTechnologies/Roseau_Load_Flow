@@ -359,7 +359,7 @@ class ElectricalNetwork(JsonMixin):
                 (
                     bus.id,
                     bus.phases,
-                    "".join(bus._short_circuit),
+                    "".join(sorted(bus._short_circuit)),
                 )
                 for bus in self.buses.values()
                 if bus._short_circuit is not None

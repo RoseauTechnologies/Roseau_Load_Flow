@@ -53,3 +53,6 @@ def test_short_circuit():
         bus.short_circuit("a", "b")
     assert "A short circuit has already been made on bus" in e.value.msg
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.MULTIPLE_SHORT_CIRCUITS
+
+    bus.remove_short_circuit()
+    bus.short_circuit("a", "b")  # ok now

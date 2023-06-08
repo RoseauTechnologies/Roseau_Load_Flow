@@ -191,3 +191,7 @@ class Bus(Element):
 
         if self.network is not None:
             self.network._valid = False
+
+    def remove_short_circuit(self):
+        """Remove the short circuit."""
+        self._short_circuit = None
