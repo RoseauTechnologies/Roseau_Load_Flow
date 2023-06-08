@@ -159,7 +159,7 @@ class Bus(Element):
         }
 
     def short_circuit(self, *phases: str) -> None:
-        """Make a shot-circuit by connecting multiple phases.
+        """Make a short-circuit by connecting multiple phases together.
 
         Args:
             phases:
@@ -171,7 +171,7 @@ class Bus(Element):
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
         if self._short_circuit is not None:
-            msg = f"A short circuit has already been made on bus {self.id!r}."
+            msg = f"A short circuit has already been made on bus {self.id!r} with phases {self._short_circuit}."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.MULTIPLE_SHORT_CIRCUITS)
 

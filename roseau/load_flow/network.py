@@ -353,6 +353,7 @@ class ElectricalNetwork(JsonMixin):
 
     @property
     def short_circuits_frame(self) -> pd.DataFrame:
+        """The short circuits of the network as a dataframe."""
         return pd.DataFrame.from_records(
             data=[
                 (

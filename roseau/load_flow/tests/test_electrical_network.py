@@ -1294,3 +1294,18 @@ def test_solver_warm_start(small_network: ElectricalNetwork, good_json_results):
         assert not small_network._results_valid
         small_network.solve_load_flow(auth=("", ""), warm_start=True)
     assert small_network.results_to_dict() == good_json_results
+
+
+def test_short_circuit_frames():
+    vn = 400 / np.sqrt(3)
+    voltages = [vn, vn * np.exp(-2 / 3 * np.pi * 1j), vn * np.exp(2 / 3 * np.pi * 1j)]
+    bus = Bus("bus", phases="abcn")
+    bus.short_circuit("a", "n")
+    _ = VoltageSource(id="vs", bus=bus, voltages=voltages)
+    _ = PotentialRef(id="pref", element=bus)
+    en = ElectricalNetwork.from_element(initial_bus=bus)
+    df = pd.DataFrame.from_records(
+        data=[("bus", "abcn", "an")],
+        columns=["bus_id", "phases", "short_circuit"],
+    )
+    assert_frame_equal(en.short_circuits_frame, df)
