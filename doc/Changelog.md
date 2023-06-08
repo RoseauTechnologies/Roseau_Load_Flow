@@ -1,5 +1,13 @@
 # Changelog
 
+## Version 0.4.1
+
+**In development**
+
+* [PR92](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/92) Add the changelog in the documentation
+* [PR92](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/92) Use NodeJs 20 in the Dockerfile
+* [PR92](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/92) Correction of a dead link in the README
+
 ## Version 0.4.0
 
 * [PR91](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/91) Rename `resolution_method` into `solver`.
