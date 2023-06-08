@@ -32,6 +32,14 @@ def test_short_circuit():
         bus.short_circuit("n", "a")
     assert "Phase 'n' is not in the phases" in e.value.msg
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_PHASE
+    with pytest.raises(RoseauLoadFlowException) as e:
+        bus.short_circuit("a", "a")
+    assert "some phases are duplicated" in e.value.msg
+    assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_PHASE
+    with pytest.raises(RoseauLoadFlowException) as e:
+        bus.short_circuit("a")
+    assert "at least two phases should be given" in e.value.msg
+    assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_PHASE
 
     assert bus._short_circuit is None
     bus.short_circuit("c", "a", "b")

@@ -170,6 +170,18 @@ class Bus(Element):
                 msg = f"Phase {phase!r} is not in the phases {set(self.phases)} of bus {self.id!r}."
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
+        if len(phases) < 2:
+            msg = (
+                f"For the short-circuit on bus {self.id!r}, at least two phases should be given "
+                f"(only {phases} is given)."
+            )
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
+        duplicates = [item for item in set(phases) if phases.count(item) > 1]
+        if duplicates:
+            msg = f"For the short-circuit on bus {self.id!r}, some phases are duplicated: {duplicates}."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
         if self._short_circuit is not None:
             msg = f"A short circuit has already been made on bus {self.id!r} with phases {self._short_circuit}."
             logger.error(msg)
