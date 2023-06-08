@@ -79,9 +79,13 @@ target-version = ["py39", "py310", "py311"]
 line-length = 120
 target-version = "py39"
 show-fixes = true
-select = ["E", "F", "C90", "W", "B", "UP", "I", "RUF100"]
+namespace-packages = ["roseau"]
+select = ["E", "F", "C90", "W", "B", "UP", "I", "RUF100", "TID"]
 unfixable = ["B"]
 extend-ignore = ["E501", "B024"]
+
+[tool.ruff.flake8-tidy-imports]
+ban-relative-imports = "all"
 
 [tool.ruff.mccabe]
 max-complexity = 15
