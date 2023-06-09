@@ -199,7 +199,7 @@ def network_to_dict(en: "ElectricalNetwork") -> JsonDict:
         transformer_params.append(tp.to_dict())
     transformer_params.sort(key=lambda x: x["id"])  # Always keep the same order
 
-    return {
+    res = {
         "version": NETWORK_JSON_VERSION,
         "grounds": grounds,
         "potential_refs": potential_refs,
@@ -209,8 +209,10 @@ def network_to_dict(en: "ElectricalNetwork") -> JsonDict:
         "sources": sources,
         "lines_params": line_params,
         "transformers_params": transformer_params,
-        "short_circuits": short_circuits,
     }
+    if short_circuits:
+        res["short_circuits"] = short_circuits
+    return res
 
 
 def v0_to_v1_converter(data: JsonDict) -> JsonDict:  # noqa: C901
