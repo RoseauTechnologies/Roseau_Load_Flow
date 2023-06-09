@@ -1,6 +1,6 @@
 import logging
 from collections.abc import Sequence
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
 import numpy as np
 from shapely import Point
@@ -13,6 +13,9 @@ from roseau.load_flow.typing import Id, JsonDict
 from roseau.load_flow.units import Q_, ureg
 
 logger = logging.getLogger(__name__)
+
+if TYPE_CHECKING:
+    from roseau.load_flow.models.grounds import Ground
 
 
 class Bus(Element):
@@ -65,7 +68,7 @@ class Bus(Element):
         self.geometry = geometry
 
         self._res_potentials: Optional[np.ndarray] = None
-        self._short_circuit: Optional[tuple] = None
+        self._short_circuit: Optional[dict[str, Any]] = None
 
     def __repr__(self) -> str:
         return f"{type(self).__name__}(id={self.id!r}, phases={self.phases!r})"
@@ -129,14 +132,7 @@ class Bus(Element):
         potentials = data.get("potentials")
         if potentials is not None:
             potentials = [complex(v[0], v[1]) for v in potentials]
-        res = cls(id=data["id"], phases=data["phases"], geometry=geometry, potentials=potentials)
-
-        # Add short circuits
-        short_circuit = data.get("short_circuits")
-        if short_circuit is not None:
-            res.short_circuit(*short_circuit)
-
-        return res
+        return cls(id=data["id"], phases=data["phases"], geometry=geometry, potentials=potentials)
 
     def to_dict(self) -> JsonDict:
         res = {"id": self.id, "phases": self.phases}
@@ -144,8 +140,6 @@ class Bus(Element):
             res["potentials"] = [[v.real, v.imag] for v in self._potentials]
         if self.geometry is not None:
             res["geometry"] = self.geometry.__geo_interface__
-        if self._short_circuit is not None:
-            res["short_circuits"] = list(self._short_circuit)
         return res
 
     def results_from_dict(self, data: JsonDict) -> None:
@@ -158,12 +152,15 @@ class Bus(Element):
             "potentials": [[v.real, v.imag] for v in self._res_potentials_getter(warning)],
         }
 
-    def short_circuit(self, *phases: str) -> None:
+    def short_circuit(self, *phases: str, ground: Optional["Ground"] = None) -> None:
         """Make a short-circuit by connecting multiple phases together.
 
         Args:
             phases:
                 The phases to connect.
+
+            ground:
+                If a ground is given, the phases will also be connected to the ground.
         """
         from roseau.load_flow import PowerLoad
 
@@ -172,10 +169,10 @@ class Bus(Element):
                 msg = f"Phase {phase!r} is not in the phases {set(self.phases)} of bus {self.id!r}."
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
-        if len(phases) < 2:
+        if len(phases) < 1 or (len(phases) == 1 and ground is None):
             msg = (
-                f"For the short-circuit on bus {self.id!r}, at least two phases should be given "
-                f"(only {phases} is given)."
+                f"For the short-circuit on bus {self.id!r}, at least two phases (or a phase and a ground) should be "
+                f"given (only {phases} is given)."
             )
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
@@ -197,7 +194,7 @@ class Bus(Element):
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_SHORT_CIRCUIT)
 
-        self._short_circuit = phases
+        self._short_circuit = {"phases": list(phases), "ground": ground.id if ground is not None else None}
 
         if self.network is not None:
             self.network._valid = False

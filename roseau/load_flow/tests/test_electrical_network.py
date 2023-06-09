@@ -1305,7 +1305,7 @@ def test_short_circuit_frames():
     _ = PotentialRef(id="pref", element=bus)
     en = ElectricalNetwork.from_element(initial_bus=bus)
     df = pd.DataFrame.from_records(
-        data=[("bus", "abcn", "an")],
-        columns=["bus_id", "phases", "short_circuit"],
+        data=[("bus", "abcn", "an", None)],
+        columns=["bus_id", "phases", "short_circuit", "ground"],
     )
     assert_frame_equal(en.short_circuits_frame, df)

@@ -359,12 +359,13 @@ class ElectricalNetwork(JsonMixin):
                 (
                     bus.id,
                     bus.phases,
-                    "".join(sorted(bus._short_circuit)),
+                    "".join(sorted(bus._short_circuit["phases"])),
+                    bus._short_circuit["ground"],
                 )
                 for bus in self.buses.values()
                 if bus._short_circuit is not None
             ],
-            columns=["bus_id", "phases", "short_circuit"],
+            columns=["bus_id", "phases", "short_circuit", "ground"],
         )
 
     #
