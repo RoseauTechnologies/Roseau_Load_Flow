@@ -3,6 +3,7 @@ import pytest
 
 from roseau.load_flow import (
     Bus,
+    PowerLoad,
     RoseauLoadFlowException,
     RoseauLoadFlowExceptionCode,
 )
@@ -52,7 +53,14 @@ def test_short_circuit():
     with pytest.raises(RoseauLoadFlowException) as e:
         bus.short_circuit("a", "b")
     assert "A short circuit has already been made on bus" in e.value.msg
-    assert e.value.args[1] == RoseauLoadFlowExceptionCode.MULTIPLE_SHORT_CIRCUITS
+    assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_SHORT_CIRCUIT
 
     bus.remove_short_circuit()
     bus.short_circuit("a", "b")  # ok now
+
+    bus.remove_short_circuit()
+    PowerLoad(id="load", bus=bus, powers=[10, 10, 10])
+    with pytest.raises(RoseauLoadFlowException) as e:
+        bus.short_circuit("a", "b")
+    assert "is already connected on bus" in e.value.msg
+    assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_SHORT_CIRCUIT

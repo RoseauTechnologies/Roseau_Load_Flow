@@ -165,6 +165,8 @@ class Bus(Element):
             phases:
                 The phases to connect.
         """
+        from roseau.load_flow import PowerLoad
+
         for phase in phases:
             if phase not in self.phases:
                 msg = f"Phase {phase!r} is not in the phases {set(self.phases)} of bus {self.id!r}."
@@ -185,7 +187,15 @@ class Bus(Element):
         if self._short_circuit is not None:
             msg = f"A short circuit has already been made on bus {self.id!r} with phases {self._short_circuit}."
             logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.MULTIPLE_SHORT_CIRCUITS)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_SHORT_CIRCUIT)
+        for element in self._connected_elements:
+            if isinstance(element, PowerLoad):
+                msg = (
+                    f"A power load {element.id!r} is already connected on bus {self.id!r}. "
+                    f"It makes the short-circuit calculation impossible."
+                )
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_SHORT_CIRCUIT)
 
         self._short_circuit = phases
 

@@ -272,6 +272,13 @@ class PowerLoad(AbstractLoad):
         """
         super().__init__(id=id, bus=bus, phases=phases, **kwargs)
 
+        if bus._short_circuit is not None:
+            msg = (
+                f"The power load {self.id!r} is connected on bus {bus.id!r} that already has a short-circuit. "
+                f"It makes the short-circuit calculation impossible."
+            )
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_SHORT_CIRCUIT)
         if flexible_params:
             if len(flexible_params) != self._size:
                 msg = f"Incorrect number of parameters: {len(flexible_params)} instead of {self._size}"
