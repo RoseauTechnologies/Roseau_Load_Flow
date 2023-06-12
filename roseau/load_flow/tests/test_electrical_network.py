@@ -1296,7 +1296,7 @@ def test_solver_warm_start(small_network: ElectricalNetwork, good_json_results):
     assert small_network.results_to_dict() == good_json_results
 
 
-def test_short_circuit_frames():
+def test_short_circuits():
     vn = 400 / np.sqrt(3)
     voltages = [vn, vn * np.exp(-2 / 3 * np.pi * 1j), vn * np.exp(2 / 3 * np.pi * 1j)]
     bus = Bus("bus", phases="abcn")
@@ -1309,3 +1309,7 @@ def test_short_circuit_frames():
         columns=["bus_id", "phases", "short_circuit", "ground"],
     )
     assert_frame_equal(en.short_circuits_frame, df)
+
+    assert bus.short_circuits
+    en.clear_short_circuits()
+    assert not bus.short_circuits

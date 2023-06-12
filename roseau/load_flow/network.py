@@ -356,14 +356,9 @@ class ElectricalNetwork(JsonMixin):
         """The short circuits of the network as a dataframe."""
         return pd.DataFrame.from_records(
             data=[
-                (
-                    bus.id,
-                    bus.phases,
-                    "".join(sorted(bus._short_circuit["phases"])),
-                    bus._short_circuit["ground"],
-                )
+                (bus.id, bus.phases, "".join(sorted(sc["phases"])), sc["ground"])
                 for bus in self.buses.values()
-                if bus._short_circuit is not None
+                for sc in bus.short_circuits
             ],
             columns=["bus_id", "phases", "short_circuit", "ground"],
         )
@@ -888,6 +883,11 @@ class ElectricalNetwork(JsonMixin):
             .set_index(["potential_ref_id"])
         )
         return res_df
+
+    def clear_short_circuits(self):
+        """Remove the short circuits of all the buses."""
+        for bus in self.buses.values():
+            bus.clear_short_circuits()
 
     #
     # Internal methods, please do not use

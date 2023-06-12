@@ -272,7 +272,7 @@ class PowerLoad(AbstractLoad):
         """
         super().__init__(id=id, bus=bus, phases=phases, **kwargs)
 
-        if bus._short_circuit is not None:
+        if bus.short_circuits:
             msg = (
                 f"The power load {self.id!r} is connected on bus {bus.id!r} that already has a short-circuit. "
                 f"It makes the short-circuit calculation impossible."

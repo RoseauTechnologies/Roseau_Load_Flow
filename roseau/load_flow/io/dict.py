@@ -161,8 +161,8 @@ def network_to_dict(en: "ElectricalNetwork") -> JsonDict:
             elif isinstance(element, VoltageSource):
                 assert element.bus is bus
                 sources.append(element.to_dict())
-        if bus._short_circuit is not None:
-            short_circuits.append({"bus_id": bus.id, "short_circuit": bus._short_circuit})
+        for sc in bus.short_circuits:
+            short_circuits.append({"bus_id": bus.id, "short_circuit": sc})
 
     # Export the branches with their parameters
     branches: list[JsonDict] = []

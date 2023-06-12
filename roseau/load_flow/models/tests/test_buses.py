@@ -47,10 +47,10 @@ def test_short_circuit():
     assert "at least two phases (or a phase and a ground) should be given" in e.value.msg
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_PHASE
 
-    assert bus._short_circuit is None
+    assert not bus._short_circuits
     bus.short_circuit("c", "a", "b")
-    assert bus._short_circuit["phases"] == ["c", "a", "b"]
-    assert bus._short_circuit["ground"] is None
+    assert bus._short_circuits[0]["phases"] == ["c", "a", "b"]
+    assert bus._short_circuits[0]["ground"] is None
 
     # Dict methods
     vn = 400 / np.sqrt(3)
@@ -59,24 +59,16 @@ def test_short_circuit():
     _ = PotentialRef("pref", element=bus)
     en = ElectricalNetwork.from_element(bus)
     en2 = ElectricalNetwork.from_dict(en.to_dict())
-    assert en2.buses["bus"]._short_circuit["phases"] == ["c", "a", "b"]
-    assert en2.buses["bus"]._short_circuit["ground"] is None
-
-    # New short circuits
-    with pytest.raises(RoseauLoadFlowException) as e:
-        bus.short_circuit("a", "b")
-    assert "A short circuit has already been made on bus" in e.value.msg
-    assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_SHORT_CIRCUIT
-
-    bus.remove_short_circuit()
-    bus.short_circuit("a", "b")  # ok now
+    assert en2.buses["bus"]._short_circuits[0]["phases"] == ["c", "a", "b"]
+    assert en2.buses["bus"]._short_circuits[0]["ground"] is None
 
     ground = Ground("ground")
-    bus.remove_short_circuit()
     bus.short_circuit("a", ground=ground)  # ok
+    assert len(bus.short_circuits) == 2
 
     # With power load
-    bus.remove_short_circuit()
+    bus.clear_short_circuits()
+    assert not bus.short_circuits
     PowerLoad(id="load", bus=bus, powers=[10, 10, 10])
     with pytest.raises(RoseauLoadFlowException) as e:
         bus.short_circuit("a", "b")

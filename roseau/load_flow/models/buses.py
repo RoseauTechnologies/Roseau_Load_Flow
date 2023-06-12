@@ -68,7 +68,7 @@ class Bus(Element):
         self.geometry = geometry
 
         self._res_potentials: Optional[np.ndarray] = None
-        self._short_circuit: Optional[dict[str, Any]] = None
+        self._short_circuits: list[dict[str, Any]] = []
 
     def __repr__(self) -> str:
         return f"{type(self).__name__}(id={self.id!r}, phases={self.phases!r})"
@@ -181,10 +181,6 @@ class Bus(Element):
             msg = f"For the short-circuit on bus {self.id!r}, some phases are duplicated: {duplicates}."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
-        if self._short_circuit is not None:
-            msg = f"A short circuit has already been made on bus {self.id!r} with phases {self._short_circuit}."
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_SHORT_CIRCUIT)
         for element in self._connected_elements:
             if isinstance(element, PowerLoad):
                 msg = (
@@ -194,11 +190,16 @@ class Bus(Element):
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_SHORT_CIRCUIT)
 
-        self._short_circuit = {"phases": list(phases), "ground": ground.id if ground is not None else None}
+        self._short_circuits.append({"phases": list(phases), "ground": ground.id if ground is not None else None})
 
         if self.network is not None:
             self.network._valid = False
 
-    def remove_short_circuit(self):
-        """Remove the short circuit."""
-        self._short_circuit = None
+    @property
+    def short_circuits(self) -> list[dict]:
+        """Return the list of short circuits of this bus"""
+        return self._short_circuits
+
+    def clear_short_circuits(self):
+        """Remove the short circuits."""
+        self._short_circuits = []
