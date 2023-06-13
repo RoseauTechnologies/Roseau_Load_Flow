@@ -29,6 +29,7 @@ caption: Tutorials
 ---
 notebooks/Getting_Started
 notebooks/Advanced
+notebooks/Short_Circuit
 ```
 
 ## Solvers

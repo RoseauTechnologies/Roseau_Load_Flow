@@ -1,6 +1,6 @@
 import logging
 from collections.abc import Sequence
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
 import numpy as np
 from shapely import Point
@@ -13,6 +13,9 @@ from roseau.load_flow.typing import Id, JsonDict
 from roseau.load_flow.units import Q_, ureg
 
 logger = logging.getLogger(__name__)
+
+if TYPE_CHECKING:
+    from roseau.load_flow.models.grounds import Ground
 
 
 class Bus(Element):
@@ -65,6 +68,7 @@ class Bus(Element):
         self.geometry = geometry
 
         self._res_potentials: Optional[np.ndarray] = None
+        self._short_circuits: list[dict[str, Any]] = []
 
     def __repr__(self) -> str:
         return f"{type(self).__name__}(id={self.id!r}, phases={self.phases!r})"
@@ -147,3 +151,55 @@ class Bus(Element):
             "phases": self.phases,
             "potentials": [[v.real, v.imag] for v in self._res_potentials_getter(warning)],
         }
+
+    def short_circuit(self, *phases: str, ground: Optional["Ground"] = None) -> None:
+        """Make a short-circuit by connecting multiple phases together.
+
+        Args:
+            phases:
+                The phases to connect.
+
+            ground:
+                If a ground is given, the phases will also be connected to the ground.
+        """
+        from roseau.load_flow import PowerLoad
+
+        for phase in phases:
+            if phase not in self.phases:
+                msg = f"Phase {phase!r} is not in the phases {set(self.phases)} of bus {self.id!r}."
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
+        if len(phases) < 1 or (len(phases) == 1 and ground is None):
+            msg = (
+                f"For the short-circuit on bus {self.id!r}, at least two phases (or a phase and a ground) should be "
+                f"given (only {phases} is given)."
+            )
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
+        duplicates = [item for item in set(phases) if phases.count(item) > 1]
+        if duplicates:
+            msg = f"For the short-circuit on bus {self.id!r}, some phases are duplicated: {duplicates}."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
+        for element in self._connected_elements:
+            if isinstance(element, PowerLoad):
+                msg = (
+                    f"A power load {element.id!r} is already connected on bus {self.id!r}. "
+                    f"It makes the short-circuit calculation impossible."
+                )
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_SHORT_CIRCUIT)
+
+        self._short_circuits.append({"phases": list(phases), "ground": ground.id if ground is not None else None})
+
+        if self.network is not None:
+            self.network._valid = False
+
+    @property
+    def short_circuits(self) -> list[dict]:
+        """Return the list of short circuits of this bus"""
+        return self._short_circuits
+
+    def clear_short_circuits(self):
+        """Remove the short circuits."""
+        self._short_circuits = []

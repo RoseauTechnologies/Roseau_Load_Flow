@@ -121,6 +121,15 @@ def network_from_dict(
             msg = f"Unknown branch type for branch {id}: {branch_data['type']}"
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_BRANCH_TYPE)
+
+    # Short-circuits
+    short_circuits = data.get("short_circuits")
+    if short_circuits is not None:
+        for sc in short_circuits:
+            ground_id = sc["short_circuit"]["ground"]
+            ground = grounds[ground_id] if ground_id is not None else None
+            buses[sc["bus_id"]].short_circuit(*sc["short_circuit"]["phases"], ground=ground)
+
     return buses, branches_dict, loads, sources, grounds, potential_refs
 
 
@@ -142,6 +151,7 @@ def network_to_dict(en: "ElectricalNetwork") -> JsonDict:
     buses: list[JsonDict] = []
     loads: list[JsonDict] = []
     sources: list[JsonDict] = []
+    short_circuits: list[JsonDict] = []
     for bus in en.buses.values():
         buses.append(bus.to_dict())
         for element in bus._connected_elements:
@@ -151,6 +161,8 @@ def network_to_dict(en: "ElectricalNetwork") -> JsonDict:
             elif isinstance(element, VoltageSource):
                 assert element.bus is bus
                 sources.append(element.to_dict())
+        for sc in bus.short_circuits:
+            short_circuits.append({"bus_id": bus.id, "short_circuit": sc})
 
     # Export the branches with their parameters
     branches: list[JsonDict] = []
@@ -187,7 +199,7 @@ def network_to_dict(en: "ElectricalNetwork") -> JsonDict:
         transformer_params.append(tp.to_dict())
     transformer_params.sort(key=lambda x: x["id"])  # Always keep the same order
 
-    return {
+    res = {
         "version": NETWORK_JSON_VERSION,
         "grounds": grounds,
         "potential_refs": potential_refs,
@@ -198,6 +210,9 @@ def network_to_dict(en: "ElectricalNetwork") -> JsonDict:
         "lines_params": line_params,
         "transformers_params": transformer_params,
     }
+    if short_circuits:
+        res["short_circuits"] = short_circuits
+    return res
 
 
 def v0_to_v1_converter(data: JsonDict) -> JsonDict:  # noqa: C901
