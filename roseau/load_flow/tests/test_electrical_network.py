@@ -95,7 +95,7 @@ def single_phase_network() -> ElectricalNetwork:
     )
 
 
-@pytest.fixture
+@pytest.fixture()
 def good_json_results() -> dict:
     return {
         "info": {
@@ -608,17 +608,19 @@ def test_solve_load_flow_error(small_network):
 
     # Parse RLF error
     json_result = {"msg": "toto", "code": "roseau.load_flow.bad_branch_type"}
-    with requests_mock.Mocker() as m, pytest.raises(RoseauLoadFlowException) as e:
+    with requests_mock.Mocker() as m:
         m.post(solve_url, status_code=400, json=json_result, headers={"content-type": "application/json"})
-        small_network.solve_load_flow(auth=("", ""))
+        with pytest.raises(RoseauLoadFlowException) as e:
+            small_network.solve_load_flow(auth=("", ""))
     assert e.value.msg == json_result["msg"]
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_BRANCH_TYPE
 
     # Load flow error (other than official exceptions of RoseauLoadFlowException)
     json_result = {"msg": "Error while solving the load flow", "code": "load_flow_error"}
-    with requests_mock.Mocker() as m, pytest.raises(RoseauLoadFlowException) as e:
+    with requests_mock.Mocker() as m:
         m.post(solve_url, status_code=400, json=json_result, headers={"content-type": "application/json"})
-        small_network.solve_load_flow(auth=("", ""))
+        with pytest.raises(RoseauLoadFlowException) as e:
+            small_network.solve_load_flow(auth=("", ""))
     assert json_result["msg"] in e.value.msg
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_REQUEST
 
