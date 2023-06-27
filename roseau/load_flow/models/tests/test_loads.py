@@ -65,23 +65,23 @@ def test_loads():
     assert "Incorrect number of impedances" in e.value.msg
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_Z_SIZE
 
+    fp = [FlexibleParameter.constant()] * 3
     with pytest.raises(RoseauLoadFlowException) as e:
-        fp = [FlexibleParameter.constant()] * 3
         PowerLoad("load", bus, phases="abcn", powers=[100, 100], flexible_params=fp)
     assert "Incorrect number of powers" in e.value.msg
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_S_SIZE
+    fp = [FlexibleParameter.constant()] * 3
     with pytest.raises(RoseauLoadFlowException) as e:
-        fp = [FlexibleParameter.constant()] * 3
         PowerLoad("load", bus, phases="abcn", powers=[100, 100, 100, 100], flexible_params=fp)
     assert "Incorrect number of powers" in e.value.msg
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_S_SIZE
+    fp = [FlexibleParameter.constant()] * 2
     with pytest.raises(RoseauLoadFlowException) as e:
-        fp = [FlexibleParameter.constant()] * 2
         PowerLoad("load", bus, phases="abcn", powers=[100, 100, 100], flexible_params=fp)
     assert "Incorrect number of parameters" in e.value.msg
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PARAMETERS_SIZE
+    fp = [FlexibleParameter.constant()] * 4
     with pytest.raises(RoseauLoadFlowException) as e:
-        fp = [FlexibleParameter.constant()] * 4
         PowerLoad("load", bus, phases="abcn", powers=[100, 100, 100], flexible_params=fp)
     assert "Incorrect number of parameters" in e.value.msg
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PARAMETERS_SIZE

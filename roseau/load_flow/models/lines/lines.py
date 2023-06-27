@@ -96,7 +96,7 @@ class Switch(AbstractBranch):
             element = elements.pop(-1)
             visited_1.add(element)
             for e in element._connected_elements:
-                if e not in visited_1 and (isinstance(e, Bus) or isinstance(e, Switch)) and e != self:
+                if e not in visited_1 and (isinstance(e, (Bus, Switch))) and e != self:
                     elements.append(e)
         visited_2: set[Element] = set()
         elements = [self.bus2]
@@ -104,7 +104,7 @@ class Switch(AbstractBranch):
             element = elements.pop(-1)
             visited_2.add(element)
             for e in element._connected_elements:
-                if e not in visited_2 and (isinstance(e, Bus) or isinstance(e, Switch)) and e != self:
+                if e not in visited_2 and (isinstance(e, (Bus, Switch))) and e != self:
                     elements.append(e)
         if visited_1.intersection(visited_2):
             msg = f"There is a loop of switch involving the switch {self.id!r}. It is not allowed."

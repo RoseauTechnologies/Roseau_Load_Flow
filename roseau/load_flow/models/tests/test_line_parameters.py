@@ -15,10 +15,8 @@ def test_line_parameters():
     # Real element off the diagonal (Z)
     z_line = np.ones(shape=(4, 4), dtype=complex)
     y_shunt = np.eye(4, dtype=complex)
-
     with pytest.raises(RoseauLoadFlowException) as e:
-        lp = LineParameters("test", z_line=z_line, y_shunt=y_shunt)
-        Line("line", bus, bus, phases="abcn", ground=ground, parameters=lp, length=2.5)
+        LineParameters("test", z_line=z_line, y_shunt=y_shunt)
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_Z_LINE_VALUE
     assert e.value.msg == "The z_line matrix of line type 'test' has off-diagonal elements with a non-zero real part."
 
@@ -26,8 +24,7 @@ def test_line_parameters():
     z_line = np.eye(3, dtype=complex)
     y_shunt = np.ones(shape=(3, 3), dtype=complex)
     with pytest.raises(RoseauLoadFlowException) as e:
-        lp = LineParameters("test", z_line=z_line, y_shunt=y_shunt)
-        Line("line", bus, bus, phases="abc", ground=ground, parameters=lp, length=2.5)
+        LineParameters("test", z_line=z_line, y_shunt=y_shunt)
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_Y_SHUNT_VALUE
     assert e.value.msg == "The y_shunt matrix of line type 'test' has off-diagonal elements with a non-zero real part."
 
@@ -36,8 +33,7 @@ def test_line_parameters():
     z_line[1, 1] = -3
     y_shunt = -2 * np.eye(4, dtype=complex)
     with pytest.raises(RoseauLoadFlowException) as e:
-        lp = LineParameters("test", z_line=z_line, y_shunt=y_shunt)
-        Line("line", bus, bus, phases="abcn", ground=ground, parameters=lp, length=2.4)
+        LineParameters("test", z_line=z_line, y_shunt=y_shunt)
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_Z_LINE_VALUE
     assert e.value.msg == "The z_line matrix of line type 'test' has coefficients with negative real part."
 
@@ -45,8 +41,7 @@ def test_line_parameters():
     y_shunt = 2 * np.eye(3, dtype=complex)
     y_shunt[1, 1] = -3
     with pytest.raises(RoseauLoadFlowException):
-        lp = LineParameters("test", z_line=z_line, y_shunt=y_shunt)
-        Line("line", bus, bus, phases="abcn", ground=ground, parameters=lp, length=2.4)
+        LineParameters("test", z_line=z_line, y_shunt=y_shunt)
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_Z_LINE_VALUE
     assert e.value.msg == "The z_line matrix of line type 'test' has coefficients with negative real part."
 
@@ -54,16 +49,15 @@ def test_line_parameters():
     z_line = np.eye(4, dtype=complex)[:, :2]
     y_shunt = np.eye(4, dtype=complex)
     with pytest.raises(RoseauLoadFlowException) as e:
-        lp = LineParameters("test", z_line=z_line, y_shunt=y_shunt)
-        Line("line", bus, bus, phases="abcn", ground=ground, parameters=lp, length=2.4)
+        LineParameters("test", z_line=z_line, y_shunt=y_shunt)
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_Z_LINE_SHAPE
     assert e.value.msg == "The z_line matrix of line type 'test' has incorrect dimensions (4, 2)."
 
     # Bad shape (LV - Y)
     z_line = np.eye(4, dtype=complex)
     y_shunt = np.eye(3, dtype=complex)
+    lp = LineParameters("test", z_line=z_line, y_shunt=y_shunt)
     with pytest.raises(RoseauLoadFlowException) as e:
-        lp = LineParameters("test", z_line=z_line, y_shunt=y_shunt)
         Line("line", bus, bus, phases="abcn", ground=ground, parameters=lp, length=2.4)
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_Y_SHUNT_SHAPE
     assert e.value.msg == "Incorrect y_shunt dimensions for line 'line': (3, 3) instead of (4, 4)"
@@ -72,16 +66,15 @@ def test_line_parameters():
     z_line = np.eye(4, dtype=complex)[:, :2]
     y_shunt = np.eye(3, dtype=complex)
     with pytest.raises(RoseauLoadFlowException) as e:
-        lp = LineParameters("test", z_line=z_line, y_shunt=y_shunt)
-        Line("line", bus, bus, phases="abc", ground=ground, parameters=lp, length=2.4)
+        LineParameters("test", z_line=z_line, y_shunt=y_shunt)
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_Z_LINE_SHAPE
     assert e.value.msg == "The z_line matrix of line type 'test' has incorrect dimensions (4, 2)."
 
     # Bad shape (MV - Y)
     z_line = np.eye(3, dtype=complex)
     y_shunt = np.eye(6, dtype=complex)
+    lp = LineParameters("test", z_line=z_line, y_shunt=y_shunt)
     with pytest.raises(RoseauLoadFlowException) as e:
-        lp = LineParameters("test", z_line=z_line, y_shunt=y_shunt)
         Line("line", bus, bus, phases="abc", ground=ground, parameters=lp, length=2.4)
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_Y_SHUNT_SHAPE
     assert e.value.msg == "Incorrect y_shunt dimensions for line 'line': (6, 6) instead of (3, 3)"
@@ -89,8 +82,8 @@ def test_line_parameters():
     # LV line with not zero shunt admittance
     z_line = np.eye(3, dtype=complex)
     y_shunt = np.eye(3, dtype=complex)
+    lp = LineParameters("test", z_line=z_line, y_shunt=y_shunt)
     with pytest.raises(RoseauLoadFlowException) as e:
-        lp = LineParameters("test", z_line=z_line, y_shunt=y_shunt)
         Line("line", bus, bus, phases="abcn", ground=ground, parameters=lp, length=2.4)
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_Z_LINE_SHAPE
     assert e.value.msg == "Incorrect z_line dimensions for line 'line': (3, 3) instead of (4, 4)"

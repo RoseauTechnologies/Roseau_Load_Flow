@@ -103,14 +103,14 @@ class Control(JsonMixin):
         elif self.type == "p_max_u_consumption":
             useless_values = {"u_max": self._u_max, "u_up": self._u_up}
         elif self.type == "q_u":
-            useless_values = dict()
+            useless_values = {}
         else:
             msg = f"Unsupported control type {self.type!r}"
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_CONTROL_TYPE)
 
         # Warn the user if a value different from 0 was given to the control for a useless value
-        msg_list = list()
+        msg_list = []
         for name, value in useless_values.items():
             if not np.isclose(value, 0):
                 msg_list.append(f"{name!r} ({value:.1f} V)")

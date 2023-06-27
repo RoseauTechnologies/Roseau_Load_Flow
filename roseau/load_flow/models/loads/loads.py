@@ -279,11 +279,10 @@ class PowerLoad(AbstractLoad):
             )
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_SHORT_CIRCUIT)
-        if flexible_params:
-            if len(flexible_params) != self._size:
-                msg = f"Incorrect number of parameters: {len(flexible_params)} instead of {self._size}"
-                logger.error(msg)
-                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PARAMETERS_SIZE)
+        if flexible_params and len(flexible_params) != self._size:
+            msg = f"Incorrect number of parameters: {len(flexible_params)} instead of {self._size}"
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PARAMETERS_SIZE)
 
         self._flexible_params = flexible_params
         self.powers = powers

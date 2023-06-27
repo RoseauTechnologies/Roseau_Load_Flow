@@ -235,37 +235,37 @@ def _read_dgs_json_file(filename: StrPath):
     sta_cubic = pd.DataFrame(columns=data["StaCubic"]["Attributes"], data=data["StaCubic"]["Values"]).set_index("FID")
 
     # Transformers
-    if "ElmTr2" in data.keys():
+    if "ElmTr2" in data:
         elm_tr = pd.DataFrame(columns=data["ElmTr2"]["Attributes"], data=data["ElmTr2"]["Values"]).set_index("FID")
     else:
         elm_tr = None
 
     # Transformer types
-    if "TypTr2" in data.keys():
+    if "TypTr2" in data:
         typ_tr = pd.DataFrame(columns=data["TypTr2"]["Attributes"], data=data["TypTr2"]["Values"]).set_index("FID")
     else:
         typ_tr = None
 
     # Switch
-    if "ElmCoup" in data.keys():
+    if "ElmCoup" in data:
         elm_coup = pd.DataFrame(columns=data["ElmCoup"]["Attributes"], data=data["ElmCoup"]["Values"]).set_index("FID")
     else:
         elm_coup = None
 
     # Lines
-    if "ElmLne" in data.keys():
+    if "ElmLne" in data:
         elm_lne = pd.DataFrame(columns=data["ElmLne"]["Attributes"], data=data["ElmLne"]["Values"]).set_index("FID")
     else:
         elm_lne = None
 
     # Line types
-    if "TypLne" in data.keys():
+    if "TypLne" in data:
         typ_lne = pd.DataFrame(columns=data["TypLne"]["Attributes"], data=data["TypLne"]["Values"]).set_index("FID")
     else:
         typ_lne = None
 
     # LV loads
-    if "ElmLodLV" in data.keys():
+    if "ElmLodLV" in data:
         elm_lod_lv = pd.DataFrame(columns=data["ElmLodLV"]["Attributes"], data=data["ElmLodLV"]["Values"]).set_index(
             "FID"
         )
@@ -273,7 +273,7 @@ def _read_dgs_json_file(filename: StrPath):
         elm_lod_lv = None
 
     # MV loads
-    if "ElmLodmv" in data.keys():
+    if "ElmLodmv" in data:
         elm_lod_mv = pd.DataFrame(columns=data["ElmLodmv"]["Attributes"], data=data["ElmLodmv"]["Values"]).set_index(
             "FID"
         )
@@ -281,7 +281,7 @@ def _read_dgs_json_file(filename: StrPath):
         elm_lod_mv = None
 
     # Generators
-    if "ElmGenStat" in data.keys():
+    if "ElmGenStat" in data:
         elm_gen_stat = pd.DataFrame(
             columns=data["ElmGenStat"]["Attributes"], data=data["ElmGenStat"]["Values"]
         ).set_index("FID")
@@ -290,7 +290,7 @@ def _read_dgs_json_file(filename: StrPath):
 
     # LV generators
     # Generators
-    if "ElmPvsys" in data.keys():
+    if "ElmPvsys" in data:
         elm_pv_sys = pd.DataFrame(columns=data["ElmPvsys"]["Attributes"], data=data["ElmPvsys"]["Values"]).set_index(
             "FID"
         )
@@ -355,10 +355,8 @@ def _generate_loads(
             sb = _compute_load_power(elm_lod, load_id, "s") * factor
             sc = _compute_load_power(elm_lod, load_id, "t") * factor
 
-        if sa == 0 and sb == 0 and sc == 0:  # Balanced
-            s = [s_phase / 3, s_phase / 3, s_phase / 3]
-        else:  # Unbalanced
-            s = [sa, sb, sc]
+        # Balanced or Unbalanced
+        s = [s_phase / 3, s_phase / 3, s_phase / 3] if sa == 0 and sb == 0 and sc == 0 else [sa, sb, sc]
         loads[load_id] = PowerLoad(id=load_id, phases="abcn", bus=buses[bus_id], powers=s)
 
 
