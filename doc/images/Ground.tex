@@ -1,0 +1,27 @@
+\input{Preambule}%
+
+\begin{document}
+\ctikzset{european,straight voltages, cute inductors}%
+\begin{tikzpicture}[%
+    show background rectangle,%
+    tight background,%
+    background rectangle/.style={fill=white}%
+    ]
+
+    \coordinate (g) at (0,0);
+    \node[ground] at (g) {};%
+    \node[left] at (g) {$\underline{V_{g}}$};%
+    \draw (0, 1) to[short, i=$\underline{I_{g}}$, -*] (g);
+
+\end{tikzpicture}
+\end{document}
+% Local Variables:
+% mode: latex
+% TeX-engine: luatex
+% TeX-source-correlate-method-active: synctex
+% ispell-local-dictionary: "francais"
+% coding: utf-8
+% TeX-master: "../../Manuscrit.tex"
+% LaTeX-indent-level: 4
+% compile-command: "make -k -C ../../"
+% End:

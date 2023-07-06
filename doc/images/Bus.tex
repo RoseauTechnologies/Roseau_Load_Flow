@@ -1,0 +1,51 @@
+\input{Preambule}%
+
+\begin{document}
+\ctikzset{european,straight voltages, cute inductors}%
+\begin{tikzpicture}[%
+    show background rectangle,%
+    tight background,%
+    background rectangle/.style={fill=white}%
+    ]
+    % Version multifilaire
+
+    %
+    % Définitions
+    %
+    \pgfmathsetmacro{\xl}{0};%
+    \pgfmathsetmacro{\x}{1};%
+    \pgfmathsetmacro{\xr}{2};%
+    \pgfmathsetmacro{\yn}{0};%
+    \pgfmathsetmacro{\yc}{1};%
+    \pgfmathsetmacro{\yb}{2};%
+    \pgfmathsetmacro{\ya}{3};%
+
+    % Début de ligne
+    \coordinate (vln) at (\x,\yn);
+    \coordinate (vlc) at (\x,\yc);
+    \coordinate (vlb) at (\x,\yb);
+    \coordinate (vla) at (\x,\ya);
+
+    % Tensions
+    \node[above] at (vla) {$\underline{V_{\arm}}$};
+    \node[above] at (vlb) {$\underline{V_{\brm}}$};
+    \node[above] at (vlc) {$\underline{V_{\crm}}$};
+    \node[above] at (vln) {$\underline{V_{\nrm}}$};
+
+    \draw (\xl, \yn) to[short, -*] (\x, \yn) -- (\xr, \yn);
+    \draw (\xl, \yc) to[short, -*] (\x, \yc) -- (\xr, \yc);
+    \draw (\xl, \yb) to[short, -*] (\x, \yb) -- (\xr, \yb);
+    \draw (\xl, \ya) to[short, -*] (\x, \ya) -- (\xr, \ya);
+
+\end{tikzpicture}
+\end{document}
+% Local Variables:
+% mode: latex
+% TeX-engine: luatex
+% TeX-source-correlate-method-active: synctex
+% ispell-local-dictionary: "francais"
+% coding: utf-8
+% TeX-master: "../../Manuscrit.tex"
+% LaTeX-indent-level: 4
+% compile-command: "make -k -C ../../"
+% End:

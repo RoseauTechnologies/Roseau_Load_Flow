@@ -32,6 +32,25 @@ notebooks/Advanced
 notebooks/Short_Circuit
 ```
 
+## Models
+
+A description of the electrical models used for each component is available:
+
+```{toctree}
+---
+maxdepth: 2
+caption: Models
+---
+models/PotentialRef
+models/Ground
+models/Bus
+models/VoltageSource
+models/Load
+models/Line
+models/Switch
+models/Transformer
+```
+
 ## Solvers
 
 The load flow solvers used are also documented:

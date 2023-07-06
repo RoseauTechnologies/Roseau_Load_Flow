@@ -1,0 +1,70 @@
+\input{Preambule}%
+
+\begin{document}
+\ctikzset{european,straight voltages, cute inductors}%
+\begin{tikzpicture}[%
+    show background rectangle,%
+    tight background,%
+    background rectangle/.style={fill=white}%
+    ]
+    % Version multifilaire
+
+    %
+    % Définitions
+    %
+    \pgfmathsetmacro{\xl}{0};%
+    \pgfmathsetmacro{\xlc}{1};%
+    \pgfmathsetmacro{\xrc}{3};%
+    \pgfmathsetmacro{\xr}{4};%
+    \pgfmathsetmacro{\yn}{0};%
+    \pgfmathsetmacro{\yc}{1};%
+    \pgfmathsetmacro{\yb}{2};%
+    \pgfmathsetmacro{\ya}{3};%
+
+    % Début de ligne
+    \coordinate (vln) at (\xl,\yn);
+    \coordinate (vlc) at (\xl,\yc);
+    \coordinate (vlb) at (\xl,\yb);
+    \coordinate (vla) at (\xl,\ya);
+
+    % Fin de ligne
+    \coordinate (vrn) at (\xr,\yn);
+    \coordinate (vrc) at (\xr,\yc);
+    \coordinate (vrb) at (\xr,\yb);
+    \coordinate (vra) at (\xr,\ya);
+
+    % Tensions amont
+    \node[left] at (vla) {$\underline{V_{\arm,1}}$};
+    \node[left] at (vlb) {$\underline{V_{\brm,1}}$};
+    \node[left] at (vlc) {$\underline{V_{\crm,1}}$};
+    \node[left] at (vln) {$\underline{V_{\nrm,1}}$};
+
+    % Tensions aval
+    \node[right] at (vra) {$\underline{V_{\arm,2}}$};
+    \node[right] at (vrb) {$\underline{V_{\brm,2}}$};
+    \node[right] at (vrc) {$\underline{V_{\crm,2}}$};
+    \node[right] at (vrn) {$\underline{V_{\nrm,2}}$};
+
+    % Câbles
+    \draw (vla) to[short, i=$\underline{I_{\arm,1}}$, *-] (\xlc, \ya) -- (\xrc, \ya);
+    \draw (vlb) to[short, i=$\underline{I_{\brm,1}}$, *-] (\xlc, \yb) -- (\xrc, \yb);
+    \draw (vlc) to[short, i=$\underline{I_{\crm,1}}$, *-] (\xlc, \yc) -- (\xrc, \yc);
+    \draw (vln) to[short, i=$\underline{I_{\nrm,1}}$, *-] (\xlc, \yn) -- (\xrc, \yn);
+
+    \draw (vra) to[short, i_=$\underline{I_{\arm,2}}$, *-] (\xrc, \ya);
+    \draw (vrb) to[short, i_=$\underline{I_{\brm,2}}$, *-] (\xrc, \yb);
+    \draw (vrc) to[short, i_=$\underline{I_{\crm,2}}$, *-] (\xrc, \yc);
+    \draw (vrn) to[short, i_=$\underline{I_{\nrm,2}}$, *-] (\xrc, \yn);
+
+\end{tikzpicture}
+\end{document}
+% Local Variables:
+% mode: latex
+% TeX-engine: luatex
+% TeX-source-correlate-method-active: synctex
+% ispell-local-dictionary: "francais"
+% coding: utf-8
+% TeX-master: "../../Manuscrit.tex"
+% LaTeX-indent-level: 4
+% compile-command: "make -k -C ../../"
+% End:

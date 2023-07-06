@@ -1,0 +1,426 @@
+\input{Preambule}%
+
+\begin{document}
+\ctikzset{european,straight voltages, cute inductors}%
+\begin{tikzpicture}[%
+    show background rectangle,%
+    tight background,%
+    background rectangle/.style={fill=white}%
+    ]
+    % Version multifilaire
+
+    %
+    % Définitions
+    %
+    \pgfmathsetmacro{\xl}{0};%
+    \pgfmathsetmacro{\zl}{11.5};%
+    \pgfmathsetmacro{\xr}{\zl+2.5};%
+    \pgfmathsetmacro{\xri}{\xr+1.5};%
+    \pgfmathsetmacro{\zm}{21};%
+    \pgfmathsetmacro{\xm}{32.5};%
+    \pgfmathsetmacro{\xli}{2.25};%
+    \pgfmathsetmacro{\xmi}{\xm-2.25};%
+    \pgfmathsetmacro{\yt}{0};%
+    \pgfmathsetmacro{\ytt}{-2};%
+    \pgfmathsetmacro{\yn}{8};%
+    \pgfmathsetmacro{\yc}{10};%
+    \pgfmathsetmacro{\yb}{12};%
+    \pgfmathsetmacro{\ya}{14};%
+
+    %
+    % Styles
+    %
+    \ctikzset{bipoles/length=0.8cm}%
+    \tikzset{fleche/.style={<->,{Latex[]}-{Latex[]}}};%
+
+    %
+    % Coordonnées
+    %
+    \coordinate (orig) at (0,0);
+
+    % Début de ligne
+    \coordinate (vlt) at (\xl,\yt);
+    \coordinate (vln) at (\xl,\yn);
+    \coordinate (vlc) at (\xl,\yc);
+    \coordinate (vlb) at (\xl,\yb);
+    \coordinate (vla) at (\xl,\ya);
+
+    % Fin de ligne
+    \coordinate (vmt) at (\xm,\yt);
+    \coordinate (vmn) at (\xm,\yn);
+    \coordinate (vmc) at (\xm,\yc);
+    \coordinate (vmb) at (\xm,\yb);
+    \coordinate (vma) at (\xm,\ya);
+
+    % Début Z ligne
+    \coordinate (zlt) at (\zl,\yt);
+    \coordinate (zln) at (\zl,\yn);
+    \coordinate (zlc) at (\zl,\yc);
+    \coordinate (zlb) at (\zl,\yb);
+    \coordinate (zla) at (\zl,\ya);
+
+    % Après résistance
+    \coordinate (xrt) at (\xr,\yt);
+    \coordinate (xrn) at (\xr,\yn);
+    \coordinate (xrc) at (\xr,\yc);
+    \coordinate (xrb) at (\xr,\yb);
+    \coordinate (xra) at (\xr,\ya);
+
+    % Après résistance et courant
+    \coordinate (xrit) at (\xri,\yt);
+    \coordinate (xrin) at (\xri,\yn);
+    \coordinate (xric) at (\xri,\yc);
+    \coordinate (xrib) at (\xri,\yb);
+    \coordinate (xria) at (\xri,\ya);
+
+    % Fin Z ligne
+    \coordinate (zmt) at (\zm,\yt);
+    \coordinate (zmn) at (\zm,\yn);
+    \coordinate (zmc) at (\zm,\yc);
+    \coordinate (zmb) at (\zm,\yb);
+    \coordinate (zma) at (\zm,\ya);
+
+    % Première 1/2 admittance
+    \coordinate (xlit) at (\xli,\yt);%
+    \coordinate (xlin) at (\xli,\yn);%
+    \coordinate (xlic) at (\xli,\yc);%
+    \coordinate (xlib) at (\xli,\yb);%
+    \coordinate (xlia) at (\xli,\ya);%
+
+    % Seconde 1/2 admittance
+    \coordinate (xmit) at (\xmi,\yt);%
+    \coordinate (xmin) at (\xmi,\yn);%
+    \coordinate (xmic) at (\xmi,\yc);%
+    \coordinate (xmib) at (\xmi,\yb);%
+    \coordinate (xmia) at (\xmi,\ya);%
+
+    % Terre
+    \coordinate (g) at (\zl/2+\zm/2,\yt);%
+    \coordinate (g2) at (\zl/2+\zm/2,\ytt);%
+
+    %
+    % Dessin
+    %
+    % Tensions amont
+    \node[left] at (vla) {$\underline{V_{\arm 1}}$};
+    \node[left] at (vlb) {$\underline{V_{\brm 1}}$};
+    \node[left] at (vlc) {$\underline{V_{\crm 1}}$};
+    \node[left] at (vln) {$\underline{V_{\nrm 1}}$};
+
+    % Tensions aval
+    \node[right] at (vma) {$\underline{V_{\arm 2}}$};
+    \node[right] at (vmb) {$\underline{V_{\brm 2}}$};
+    \node[right] at (vmc) {$\underline{V_{\crm 2}}$};
+    \node[right] at (vmn) {$\underline{V_{\nrm 2}}$};
+
+    % Tension terre
+    \node[ground, \circuitikzbasekey/bipoles/length=2cm] at (g2) {};%
+    \node[left] at (g2) {$\underline{V_{g}}$};%
+
+    % Câbles principaux
+    % Terre
+    \draw (xlit) to[short,-*] (g) to (xmit);%
+    \draw (xlit) to[short,-*] (g) to (xmit);%
+    \draw (g2) to[short, i=$\underline{I_{g}}$, *-] (g);%
+    % Neutre
+    \draw (vln) to[short,*-,i=$\underline{I_{\nrm 1}}$] (xlin)
+    to[short, -*] (zln) to[R,l=$R_{\nrm}$] ($(zln)!0.5!(xrn)$) to
+    [L,l=$L_{\nrm}$] (xrn)
+    to[short,-] (xrin) to
+    [short,-*] (zmn) to[short,*-] (xmin)
+    to[short,-*,i<=$\underline{I_{\nrm 2}}$] (vmn);%
+    % C
+    \draw (vlc) to[short,*-,i=$\underline{I_{\crm 1}}$] (xlic) to[short, -*]
+    (zlc) to[R,l=$R_{\crm}$] ($(zlc)!0.5!(xrc)$) to
+    [L,l=$L_{\crm}$] (xrc)
+    to[short,-] (xric) to [short,-*]
+    (zmc) to[short,*-] (xmic) to[short,-*,i<=$\underline{I_{\crm 2}}$] (vmc);%
+    % B
+    \draw (vlb) to[short,*-,i=$\underline{I_{\brm 1}}$] (xlib)
+    to[short, -*] (zlb) to[R,l=$R_{\brm}$] ($(zlb)!0.5!(xrb)$) to
+    [L,l=$L_{\brm}$] (xrb)
+    to[short,-] (xrib) to
+    [short,-*] (zmb) to[short,*-] (xmib)
+    to[short,-*,i<=$\underline{I_{\brm 2}}$] (vmb);%
+    % A
+    \draw (vla) to[short,*-,i=$\underline{I_{\arm 1}}$] (xlia)
+    to[short, -*] (zla) to[R,l=$R_{\arm}$] ($(zla)!0.5!(xra)$) to
+    [L,l=$L_{\arm}$] (xra)
+    to[short,-] (xria) to
+    [short,-*] (zma) to[short,*-] (xmia)
+    to[short,-*,i<=$\underline{I_{\arm 2}}$] (vma);%
+
+    % Mutuelles des lignes
+    \pgfmathsetmacro{\xrm}{\xri+0.0*(\zm-\xri)};%
+    \draw[fleche] (\xrm,\ya) to[bend left] node[midway,
+    right]{$\underline{M_{\abrm}}$} (\xrm,\yb);%
+    \draw[fleche] (\xrm,\yb) to[bend left] node[midway,
+    right]{$\underline{M_{\bcrm}}$} (\xrm,\yc);%
+    \draw[fleche] (\xrm,\yc) to[bend left] node[midway,
+    right]{$\underline{M_{\cnrm}}$} (\xrm,\yn);%
+    \pgfmathsetmacro{\xrm}{\xri+0.25*(\zm-\xri)};%
+    \draw[fleche] (\xrm,\ya) to[bend left] node[near start,
+    right]{$\underline{M_{\carm}}$} (\xrm,\yc);%
+    \pgfmathsetmacro{\xrm}{\xri+0.40*(\zm-\xri)};%
+    \draw[fleche] (\xrm,\yb) to[bend left] node[near end,
+    right]{$\underline{M_{\bnrm}}$} (\xrm,\yn);%
+    \pgfmathsetmacro{\xrm}{\xri+0.75*(\zm-\xri)};%
+    \draw[fleche] (\xrm,\ya) to[bend left] node[midway,
+    left]{$\underline{M_{\anrm}}$} (\xrm,\yn);%
+
+    % Mise à la terre
+%    \draw (vln) to[R,l_=$R_{l,\nrm}$,-*] (vlt) node[ground,
+%    \circuitikzbasekey/bipoles/length=2cm] {} ++(0,-0.5) node[below
+%    right] (mtl) {Mise à la terre};%
+%    \draw (vmn) to[R,l=$R_{m,\nrm}$,-*] (vmt) node[ground,
+%    \circuitikzbasekey/bipoles/length=2cm] {} ++(0,-0.5) node[below
+%    left] (mtm) {Mise à la terre};%
+
+    % Première 1/2 admittance
+    \pgfmathsetmacro{\ylihaut}{\yt+0.95*(\yn-\yt)};%
+    \pgfmathsetmacro{\ylibas}{\ylihaut-1.2};%
+    \pgfmathsetmacro{\xliplus}{\xli+0.4};%
+    \pgfmathsetmacro{\xlimoins}{\xli-0.4};%
+    \draw (xlia) to[short,*-] (\xli,\ylihaut) -|
+    (\xliplus,\ylihaut) to[R=$\dfrac{G_{\arm}}{2}$]
+    (\xliplus,\ylibas) |- (\xli,\ylibas) to[short,-*] (\xli,\yt);%
+    \draw (\xli,\ylihaut) -| (\xlimoins,\ylihaut)
+    to[C,l_=$\dfrac{C_{\arm}}{2}$] (\xlimoins,\ylibas) |-
+    (\xli,\ylibas);%
+
+    \pgfmathsetmacro{\ylihaut}{\yt+0.75*(\yn-\yt)};%
+    \pgfmathsetmacro{\ylibas}{\ylihaut-1.2};%
+    \pgfmathsetmacro{\xliref}{\xli+2};%
+    \pgfmathsetmacro{\xliplus}{\xliref+0.4};%
+    \pgfmathsetmacro{\xlimoins}{\xliref-0.4};%
+    \coordinate (ref) at (\xliref,0);%
+    \draw (xlib -| ref) to[short,*-] (\xliref,\ylihaut) -|
+    (\xliplus,\ylihaut) to[R=$\dfrac{G_{\brm}}{2}$]
+    (\xliplus,\ylibas) |- (\xliref,\ylibas) to[short,-*]
+    (\xliref,\yt);%
+    \draw (\xliref,\ylihaut) -| (\xlimoins,\ylihaut)
+    to[C,l_=$\dfrac{C_{\brm}}{2}$] (\xlimoins,\ylibas) |-
+    (\xliref,\ylibas);%
+    \draw (xlia -| ref) to[C,l_=$\dfrac{C_{\abrm}}{2}$,*-] (xlib -|
+    ref);%
+
+    \pgfmathsetmacro{\ylihaut}{\yt+0.55*(\yn-\yt)};%
+    \pgfmathsetmacro{\ylibas}{\ylihaut-1.2};%
+    \pgfmathsetmacro{\xliref}{\xli+4}
+    \pgfmathsetmacro{\xliplus}{\xliref+0.4};%
+    \pgfmathsetmacro{\xlimoins}{\xliref-0.4};%
+    \coordinate (ref) at (\xliref,0);%
+    \draw (xlic -| ref) to[short,*-] (\xliref,\ylihaut) -|
+    (\xliplus,\ylihaut) to[R=$\dfrac{G_{\crm}}{2}$]
+    (\xliplus,\ylibas) |- (\xliref,\ylibas) to[short,-*]
+    (\xliref,\yt);%
+    \draw (\xliref,\ylihaut) -| (\xlimoins,\ylihaut)
+    to[C,l_=$\dfrac{C_{\crm}}{2}$] (\xlimoins,\ylibas) |-
+    (\xliref,\ylibas);%
+    \draw (xlib -| ref) to[C,l_=$\dfrac{C_{\bcrm}}{2}$,*-*] (xlic
+    -| ref);%
+
+    \pgfmathsetmacro{\ylihaut}{\yt+0.35*(\yn-\yt)};%
+    \pgfmathsetmacro{\ylibas}{\ylihaut-1.2};%
+    \pgfmathsetmacro{\xliref}{\xli+6}
+    \pgfmathsetmacro{\xliplus}{\xliref+0.4};%
+    \pgfmathsetmacro{\xlimoins}{\xliref-0.4};%
+    \coordinate (ref) at (\xliref,0);%
+    \draw (xlin -| ref) to[short,*-] (\xliref,\ylihaut) -|
+    (\xliplus,\ylihaut) to[R=$\dfrac{G_{\nrm}}{2}$]
+    (\xliplus,\ylibas) |- (\xliref,\ylibas) to[short,-*]
+    (\xliref,\yt);%
+    \draw (\xliref,\ylihaut) -| (\xlimoins,\ylihaut)
+    to[C,l_=$\dfrac{C_{\nrm}}{2}$] (\xlimoins,\ylibas) |-
+    (\xliref,\ylibas);%
+    \draw (xlic -| ref) to[C,l_=$\dfrac{C_{\cnrm}}{2}$,*-*] (xlin
+    -| ref);%
+    \draw (xlia -| ref) to[C,l_=$\dfrac{C_{\carm}}{2}$,*-] (xlib -|
+    ref) to[short,-*] (xlic -| ref);%
+
+    \pgfmathsetmacro{\xliref}{\xli+8};%
+    \coordinate (ref) at (\xliref,0);%
+    \draw (xlib -| ref) to[C,l_=$\dfrac{C_{\bnrm}}{2}$,*-] (xlic -|
+    ref) to[short,-*] (xlin -| ref);%
+    \pgfmathsetmacro{\xliref}{\xli+8.5};%
+    \coordinate (ref) at (\xliref,0);%
+    \draw (xlia -| ref) to[C,l_=$\dfrac{C_{\anrm}}{2}$,*-] (xlib -|
+    ref) to[short,-*] (xlin -| ref);%
+
+    % Seconde 1/2 admittance
+    \pgfmathsetmacro{\ymihaut}{\yt+0.95*(\yn-\yt)};%
+    \pgfmathsetmacro{\ymibas}{\ymihaut-1.2};%
+    \pgfmathsetmacro{\xmiplus}{\xmi+0.4};%
+    \pgfmathsetmacro{\xmimoins}{\xmi-0.4};%
+    \draw (xmia) to[short,*-] (\xmi,\ymihaut) -|
+    (\xmiplus,\ymihaut) to[R,l=$\dfrac{G_{\arm}}{2}$]
+    (\xmiplus,\ymibas) |- (\xmi,\ymibas) to[short,-*] (\xmi,\yt);%
+    \draw (\xmi,\ymihaut) -| (\xmimoins,\ymihaut)
+    to[C,l_=$\dfrac{C_{\arm}}{2}$] (\xmimoins,\ymibas) |-
+    (\xmi,\ymibas);%
+
+    \pgfmathsetmacro{\ymihaut}{\yt+0.75*(\yn-\yt)};%
+    \pgfmathsetmacro{\ymibas}{\ymihaut-1.2};%
+    \pgfmathsetmacro{\xmiref}{\xmi-2};%
+    \pgfmathsetmacro{\xmiplus}{\xmiref+0.4};%
+    \pgfmathsetmacro{\xmimoins}{\xmiref-0.4};%
+    \coordinate (ref) at (\xmiref,0);%
+    \draw (xmib -| ref) to[short,*-] (\xmiref,\ymihaut) -|
+    (\xmiplus,\ymihaut) to[R,l=$\dfrac{G_{\brm}}{2}$]
+    (\xmiplus,\ymibas) |- (\xmiref,\ymibas) to[short,-*]
+    (\xmiref,\yt);%
+    \draw (\xmiref,\ymihaut) -| (\xmimoins,\ymihaut)
+    to[C,l_=$\dfrac{C_{\brm}}{2}$] (\xmimoins,\ymibas) |-
+    (\xmiref,\ymibas);%
+    \draw (xmia -| ref) to[C,l^=$\dfrac{C_{\abrm}}{2}$,*-] (xmib -|
+    ref);%
+
+    \pgfmathsetmacro{\ymihaut}{\yt+0.55*(\yn-\yt)};%
+    \pgfmathsetmacro{\ymibas}{\ymihaut-1.2};%
+    \pgfmathsetmacro{\xmiref}{\xmi-4}
+    \pgfmathsetmacro{\xmiplus}{\xmiref+0.4};%
+    \pgfmathsetmacro{\xmimoins}{\xmiref-0.4};%
+    \coordinate (ref) at (\xmiref,0);%
+    \draw (xmic -| ref) to[short,*-] (\xmiref,\ymihaut) -|
+    (\xmiplus,\ymihaut) to[R,l=$\dfrac{G_{\crm}}{2}$] (\xmiplus,\ymibas)
+    |- (\xmiref,\ymibas) to[short,-*] (\xmiref,\yt);%
+    \draw (\xmiref,\ymihaut) -| (\xmimoins,\ymihaut)
+    to[C,l_=$\dfrac{C_{\crm}}{2}$] (\xmimoins,\ymibas) |-
+    (\xmiref,\ymibas);%
+    \draw (xmib -| ref) to[C,l^=$\dfrac{C_{\bcrm}}{2}$,*-*] (xmic -| ref);%
+
+    \pgfmathsetmacro{\ymihaut}{\yt+0.35*(\yn-\yt)};%
+    \pgfmathsetmacro{\ymibas}{\ymihaut-1.2};%
+    \pgfmathsetmacro{\xmiref}{\xmi-6}
+    \pgfmathsetmacro{\xmiplus}{\xmiref+0.4};%
+    \pgfmathsetmacro{\xmimoins}{\xmiref-0.4};%
+    \coordinate (ref) at (\xmiref,0);%
+    \draw (xmin -| ref) to[short,*-] (\xmiref,\ymihaut) -|
+    (\xmiplus,\ymihaut) to[R,l=$\dfrac{G_{\nrm}}{2}$] (\xmiplus,\ymibas)
+    |- (\xmiref,\ymibas) to[short,-*] (\xmiref,\yt);%
+    \draw (\xmiref,\ymihaut) -| (\xmimoins,\ymihaut)
+    to[C,l_=$\dfrac{C_{\nrm}}{2}$] (\xmimoins,\ymibas) |-
+    (\xmiref,\ymibas);%
+    \draw (xmic -| ref) to[C,l^=$\dfrac{C_{\cnrm}}{2}$,*-*] (xmin -| ref);%
+    \draw (xmia -| ref) to[C,l^=$\dfrac{C_{\carm}}{2}$,*-] (xmib -| ref)
+    to[short,-*] (xmic -| ref);%
+
+    \pgfmathsetmacro{\xmiref}{\xmi-8};%
+    \coordinate (ref) at (\xmiref,0);%
+    \draw (xmib -| ref) to[C,l^=$\dfrac{C_{\bnrm}}{2}$,*-] (xmic -|
+    ref) to[short,-*] (xmin -| ref);%
+    \pgfmathsetmacro{\xmiref}{\xmi-8.5};%
+    \coordinate (ref) at (\xmiref,0);%
+    \draw (xmia -| ref) to[C,l^=$\dfrac{C_{\anrm}}{2}$,*-] (xmib -|
+    ref) to[short,-*] (xmin -| ref);%
+
+    %
+    % Groupements
+    %
+    % Sol
+%    \coordinate (gauche sol) at ($(vlt)-(1,0)$);%
+%    \coordinate (droite sol) at ($(vmt)+(1,0)$);%
+%    \coordinate (haut sol) at ($(zlt)!0.13!(zln)$);%
+%    \node[fit=(gauche sol) (droite sol) (mtl) (mtm) (haut sol), draw=red, dashed,
+%    ultra thick, inner sep=0] (sol) {};%
+%    \node[anchor=south, text=red] at (sol.south) {Sol};%
+
+%    % 1ère 1/2 admittance
+%    \coordinate (mid ligne l) at ($(vla)!0.5!(zla)$);%
+%    \coordinate (haut ligne l) at ($(mid ligne l)+(0,2)$);%
+%    \coordinate (gauche ligne l) at ($(vla)+(0.25,0)$);%
+%    \coordinate (droite ligne l) at ($(zla)-(0.25,0)$);%
+%    \coordinate (mid ligne l) at ($(vlt)!0.5!(zlt)$);%
+%    \coordinate (bas ligne l) at ($(mid ligne l)+(0,1.25)$);%
+%    \node[fit=(gauche ligne l) (haut ligne l) (droite ligne l) (bas
+%    ligne l), draw=blue, dashed, ultra thick, inner sep=0] (admittance
+%    1) {};%
+%    \node[anchor=north, text=blue] at (admittance 1.north) {Première
+%        demi-admittance en dérivation};%
+%
+%    % 2nde 1/2 admittance
+%    \coordinate (mid ligne m) at ($(vma)!0.5!(zma)$);%
+%    \coordinate (haut ligne m) at ($(mid ligne m)+(0,2)$);%
+%    \coordinate (gauche ligne m) at ($(vma)-(0.25,0)$);%
+%    \coordinate (droite ligne m) at ($(zma)+(0.25,0)$);%
+%    \coordinate (mid ligne m) at ($(vmt)!0.5!(zmt)$);%
+%    \coordinate (bas ligne m) at ($(mid ligne m)+(0,1.25)$);%
+%    \node[fit=(gauche ligne m) (haut ligne m) (droite ligne m) (bas
+%    ligne m), draw=blue, dashed, ultra thick, inner sep=0] (admittance
+%    2) {};%
+%    \node[anchor=north, text=blue] at (admittance 2.north) {Seconde
+%        demi-admittance en dérivation};%
+%
+%    % Ligne
+%    \coordinate (mid ligne) at ($(zla)!0.5!(zma)$);%
+%    \coordinate (haut ligne) at ($(mid ligne)+(0,2)$);%
+%    \coordinate (gauche ligne) at ($(zla)+(0.125,0)$);%
+%    \coordinate (droite ligne) at ($(zma)-(0.125,0)$);%
+%    \coordinate (mid ligne) at ($(zln)!0.5!(zmn)$);%
+%    \coordinate (bas ligne) at ($(mid ligne)-(0,1)$);%
+%    \node[fit=(gauche ligne) (haut ligne) (droite ligne) (bas ligne),
+%    draw=green, dashed, ultra thick, inner sep=0] (ligne) {};%
+%    \node[anchor=north, text=green] at (ligne.north) {Impédance série};%
+
+    % Version unifilaire
+    % \def\bussize{1.75}
+
+    % % Coordonnées
+    % \coordinate (orig) at (0,0);
+    % \coordinate (unit) at (1,1);
+    % \coordinate (busl) at (0,3);
+    % \coordinate (connectl) at (2,3);
+    % \coordinate (linel) at (3,3);
+    % \coordinate (linem) at (5,3);
+    % \coordinate (connectm) at (6,3);
+    % \coordinate (busm) at (8,3);
+    % \coordinate (shuntl) at (connectl |- unit);
+    % \coordinate (shuntm) at (connectm |- unit);
+    % \coordinate (labelheight) at ($(busl)+(0,\bussize)$);
+
+    % % Lignes
+    % \draw (busl) to[short,i=$I_{\abcnrm}$,-*] (connectl)
+    % to[short,i=$I_{\abcnrm}^{\mathrm{ligne}}$] (linel)
+    % to [R=$Z_{lm,\abcnrm}$] (linem)
+    % to[short,i<=$I_{\abcnrm}^{\mathrm{ligne}}$] (connectm)
+    % to[short,i<=$I_{\abcnrm}$,*-] (busm);
+    % %
+    % \draw (connectl)
+    % to[C,i=$I_{\abcnrm}^{\mathrm{sh}}$,l_=$\dfrac{Y_{lm,\abcnrm}^{\mathrm{sh}}}{2}$]
+    % (shuntl) node[ground] {};%
+    % %
+    % \draw (connectm)
+    % to[C,i_=$I_{\abcnrm}^{\mathrm{sh}}$,l=$\dfrac{Y_{ml,\abcnrm}^{\mathrm{sh}}}{2}$]
+    % (shuntm) node[ground] {};
+
+    % % Bus
+    % \draw[very thick] ($(busl)-0.5*(0,\bussize)$) --
+    % ($(busl)+0.5*(0,\bussize)$);
+    % %
+    % \draw[very thick] ($(busm)-0.5*(0,\bussize)$) --
+    % ($(busm)+0.5*(0,\bussize)$);
+
+
+    % % Légende
+    % \node[anchor=south] at (busl |- labelheight) {Bus $l$};
+    % %
+    % \node[anchor=south] at (busm |- labelheight) {Bus $m$};
+    % %
+    % \node[anchor=north] at (busl |- labelheight)
+    % {$\underline{V_{l,\abcnrm}}$};
+    % %
+    % \node[anchor=north] at (busm |- labelheight)
+    % {$\underline{V_{m,\abcnrm}}$};
+
+\end{tikzpicture}
+\end{document}
+% Local Variables:
+% mode: latex
+% TeX-engine: luatex
+% TeX-source-correlate-method-active: synctex
+% ispell-local-dictionary: "francais"
+% coding: utf-8
+% TeX-master: "../../Manuscrit.tex"
+% LaTeX-indent-level: 4
+% compile-command: "make -k -C ../../"
+% End:
