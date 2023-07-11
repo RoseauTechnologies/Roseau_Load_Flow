@@ -447,7 +447,7 @@ def test_bad_networks():
     # No potential reference
     bus3 = Bus("bus3", phases="abcn")
     tp = TransformerParameters(
-        "t", windings="Dyn11", uhv=20000, ulv=400, sn=160 * 1e3, p0=460, i0=2.3 / 100, psc=2350, vsc=4 / 100
+        "t", type="Dyn11", uhv=20000, ulv=400, sn=160 * 1e3, p0=460, i0=2.3 / 100, psc=2350, vsc=4 / 100
     )
     t = Transformer("transfo", bus2, bus3, parameters=tp)
     with pytest.raises(RoseauLoadFlowException) as e:

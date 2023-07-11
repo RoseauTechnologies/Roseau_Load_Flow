@@ -66,10 +66,10 @@ def test_to_dict():
 
     # Same id, different transformer parameters -> fail
     tp1 = TransformerParameters(
-        "t", windings="Dyn11", uhv=20000, ulv=400, sn=160 * 1e3, p0=460, i0=2.3 / 100, psc=2350, vsc=4 / 100
+        "t", type="Dyn11", uhv=20000, ulv=400, sn=160 * 1e3, p0=460, i0=2.3 / 100, psc=2350, vsc=4 / 100
     )
     tp2 = TransformerParameters(
-        "t", windings="Dyn11", uhv=20000, ulv=400, sn=200 * 1e3, p0=460, i0=2.3 / 100, psc=2350, vsc=4 / 100
+        "t", type="Dyn11", uhv=20000, ulv=400, sn=200 * 1e3, p0=460, i0=2.3 / 100, psc=2350, vsc=4 / 100
     )
     transformer1 = Transformer(id="Transformer1", bus1=source_bus, bus2=load_bus, parameters=tp1)
     transformer2 = Transformer(id="Transformer2", bus1=source_bus, bus2=load_bus, parameters=tp2)
@@ -88,7 +88,7 @@ def test_to_dict():
 
     # Same id, same transformer parameters -> ok
     tp2 = TransformerParameters(
-        "t", windings="Dyn11", uhv=20000, ulv=400, sn=160 * 1e3, p0=460, i0=2.3 / 100, psc=2350, vsc=4 / 100
+        "t", type="Dyn11", uhv=20000, ulv=400, sn=160 * 1e3, p0=460, i0=2.3 / 100, psc=2350, vsc=4 / 100
     )
     transformer2.parameters = tp2
     en.to_dict()
@@ -719,7 +719,7 @@ def test_v0_to_v1_converter(monkeypatch):
     tp = {
         "160kVA_Dd0": TransformerParameters(
             id="160kVA_Dd0",
-            windings="dd0",
+            type="dd0",
             sn=160000.0,
             uhv=20000.0,
             ulv=400.0,
@@ -730,7 +730,7 @@ def test_v0_to_v1_converter(monkeypatch):
         ),
         "160kVA_Dd6": TransformerParameters(
             id="160kVA_Dd6",
-            windings="dd6",
+            type="dd6",
             sn=160000.0,
             uhv=20000.0,
             ulv=400.0,
@@ -741,7 +741,7 @@ def test_v0_to_v1_converter(monkeypatch):
         ),
         "160kVA_Dyn11": TransformerParameters(
             id="160kVA_Dyn11",
-            windings="dyn11",
+            type="dyn11",
             sn=160000.0,
             uhv=20000.0,
             ulv=400.0,
@@ -752,7 +752,7 @@ def test_v0_to_v1_converter(monkeypatch):
         ),
         "160kVA_Dyn5": TransformerParameters(
             id="160kVA_Dyn5",
-            windings="dyn5",
+            type="dyn5",
             sn=160000.0,
             uhv=20000.0,
             ulv=400.0,
@@ -763,7 +763,7 @@ def test_v0_to_v1_converter(monkeypatch):
         ),
         "160kVA_Dzn0": TransformerParameters(
             id="160kVA_Dzn0",
-            windings="dzn0",
+            type="dzn0",
             sn=160000.0,
             uhv=20000.0,
             ulv=400.0,
@@ -774,7 +774,7 @@ def test_v0_to_v1_converter(monkeypatch):
         ),
         "160kVA_Dzn6": TransformerParameters(
             id="160kVA_Dzn6",
-            windings="dzn6",
+            type="dzn6",
             sn=160000.0,
             uhv=20000.0,
             ulv=400.0,
@@ -785,7 +785,7 @@ def test_v0_to_v1_converter(monkeypatch):
         ),
         "160kVA_Yd11": TransformerParameters(
             id="160kVA_Yd11",
-            windings="yd11",
+            type="yd11",
             sn=160000.0,
             uhv=20000.0,
             ulv=400.0,
@@ -796,7 +796,7 @@ def test_v0_to_v1_converter(monkeypatch):
         ),
         "160kVA_Yd5": TransformerParameters(
             id="160kVA_Yd5",
-            windings="yd5",
+            type="yd5",
             sn=160000.0,
             uhv=20000.0,
             ulv=400.0,
@@ -807,7 +807,7 @@ def test_v0_to_v1_converter(monkeypatch):
         ),
         "160kVA_Yyn0": TransformerParameters(
             id="160kVA_Yyn0",
-            windings="yyn0",
+            type="yyn0",
             sn=160000.0,
             uhv=20000.0,
             ulv=400.0,
@@ -818,7 +818,7 @@ def test_v0_to_v1_converter(monkeypatch):
         ),
         "160kVA_Yyn6": TransformerParameters(
             id="160kVA_Yyn6",
-            windings="yyn6",
+            type="yyn6",
             sn=160000.0,
             uhv=20000.0,
             ulv=400.0,
@@ -829,7 +829,7 @@ def test_v0_to_v1_converter(monkeypatch):
         ),
         "160kVA_Yzn11": TransformerParameters(
             id="160kVA_Yzn11",
-            windings="yzn11",
+            type="yzn11",
             sn=160000.0,
             uhv=20000.0,
             ulv=400.0,
@@ -840,7 +840,7 @@ def test_v0_to_v1_converter(monkeypatch):
         ),
         "160kVA_Yzn5": TransformerParameters(
             id="160kVA_Yzn5",
-            windings="yzn5",
+            type="yzn5",
             sn=160000.0,
             uhv=20000.0,
             ulv=400.0,

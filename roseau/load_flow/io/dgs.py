@@ -170,7 +170,7 @@ def network_from_dgs(  # noqa: C901
 
             # Generate transformer parameters
             transformers_params_dict[idx] = TransformerParameters(
-                id=name, windings=windings, uhv=uhv, ulv=ulv, sn=sn, p0=p0, i0=i0, psc=psc, vsc=vsc
+                id=name, type=windings, uhv=uhv, ulv=ulv, sn=sn, p0=p0, i0=i0, psc=psc, vsc=vsc
             )
             transformers_tap[idx] = typ_tr.at[idx, "dutap"]
 

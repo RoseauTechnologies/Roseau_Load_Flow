@@ -217,11 +217,11 @@ def test_switches_phases():
     assert switch.phases == switch.phases1 == switch.phases2 == "ca"
 
 
-def test_transformer_phases():
+def test_transformer_tri_phases():
     bus1 = Bus("bus-1", phases="abcn")
     bus2 = Bus("bus-2", phases="abcn")
 
-    assert Transformer.allowed_phases == {"abc", "abcn"}
+    assert Transformer.allowed_phases == Bus.allowed_phases
 
     # Not allowed
     tp = TransformerParameters.from_name("H61_50kVA", "Dyn11")
@@ -252,16 +252,118 @@ def test_transformer_phases():
     # Default
     bus1.phases = "abc"
     bus2.phases = "abcn"
-    transformer = Transformer(id="tr1", bus1=bus1, bus2=bus2, parameters=tp, length=10)
+    transformer = Transformer(id="tr1", bus1=bus1, bus2=bus2, parameters=tp)
     assert transformer.phases1 == "abc"
     assert transformer.phases2 == "abcn"
 
     # Intersection
     bus1.phases = "abcn"
     bus2.phases = "abcn"
-    transformer = Transformer(id="tr1", bus1=bus1, bus2=bus2, parameters=tp, length=10)
+    transformer = Transformer(id="tr1", bus1=bus1, bus2=bus2, parameters=tp)
     assert transformer.phases1 == "abc"
     assert transformer.phases2 == "abcn"
+
+
+def test_transformer_single_phases():
+    bus1 = Bus("bus-1", phases="an")
+    bus2 = Bus("bus-2", phases="an")
+
+    # Not allowed
+    tp = TransformerParameters.from_name("160kVA", "single")
+    for ph in ("ba", "nc", "anb", "nabc", "acb"):
+        with pytest.raises(RoseauLoadFlowException) as e:
+            Transformer("tr1", bus1, bus2, phases1=ph, phases2=ph, parameters=tp)
+        assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
+        assert e.value.msg.startswith(f"Transformer of id 'tr1' got invalid phases1 '{ph}', allowed values are")
+
+    # Allowed
+    Transformer("tr1", bus1, bus2, phases1="an", phases2="an", parameters=tp)
+
+    # Not in bus
+    bus2.phases = "ab"
+    with pytest.raises(RoseauLoadFlowException) as e:
+        Transformer("tr1", bus1, bus2, phases1="an", phases2="an", parameters=tp)
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
+    assert e.value.msg == "Phases (2) ['n'] of transformer 'tr1' are not in phases 'ab' of bus 'bus-2'."
+
+    # Default
+    bus1.phases = "ab"
+    bus2.phases = "ab"
+    transformer = Transformer(id="tr1", bus1=bus1, bus2=bus2, parameters=tp)
+    assert transformer.phases1 == "ab"
+    assert transformer.phases2 == "ab"
+
+    # Intersection
+    bus1.phases = "abcn"
+    bus2.phases = "ab"
+    transformer = Transformer(id="tr1", bus1=bus1, bus2=bus2, parameters=tp)
+    assert transformer.phases1 == "ab"
+    assert transformer.phases2 == "ab"
+
+    # Can not be deduced
+    bus1.phases = "abc"
+    bus2.phases = "abc"
+    with pytest.raises(RoseauLoadFlowException) as e:
+        Transformer(id="tr1", bus1=bus1, bus2=bus2, parameters=tp)
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
+    assert (
+        e.value.msg == "Phases (1) of transformer 'tr1' can not be deduced from the buses, they need to be specified."
+    )
+
+
+def test_transformer_split_phases():
+    bus1 = Bus("bus-1", phases="ab")
+    bus2 = Bus("bus-2", phases="abn")
+
+    # Not allowed
+    tp = TransformerParameters.from_name("160kVA", "split")
+    for ph in ("ba", "nc", "anb", "nabc", "acb"):
+        with pytest.raises(RoseauLoadFlowException) as e:
+            Transformer("tr1", bus1, bus2, phases1=ph, phases2=ph, parameters=tp)
+        assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
+        assert e.value.msg.startswith(f"Transformer of id 'tr1' got invalid phases1 '{ph}', allowed values are")
+
+    # Allowed
+    Transformer("tr1", bus1, bus2, phases1="ab", phases2="abn", parameters=tp)
+
+    # Not in bus 1
+    bus1.phases = "acn"
+    with pytest.raises(RoseauLoadFlowException) as e:
+        Transformer("tr1", bus1, bus2, phases1="ab", phases2="abn", parameters=tp)
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
+    assert e.value.msg == "Phases (1) ['b'] of transformer 'tr1' are not in phases 'acn' of bus 'bus-1'."
+
+    # Not in bus 2
+    bus1.phases = "abc"
+    bus2.phases = "acn"
+    with pytest.raises(RoseauLoadFlowException) as e:
+        Transformer("tr1", bus1, bus2, phases1="ab", phases2="abn", parameters=tp)
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
+    assert e.value.msg == "Phases (2) ['b'] of transformer 'tr1' are not in phases 'acn' of bus 'bus-2'."
+
+    # Default
+    bus1.phases = "ab"
+    bus2.phases = "abn"
+    transformer = Transformer(id="tr1", bus1=bus1, bus2=bus2, parameters=tp)
+    assert transformer.phases1 == "ab"
+    assert transformer.phases2 == "abn"
+
+    # Intersection
+    bus1.phases = "abcn"
+    bus2.phases = "can"
+    transformer = Transformer(id="tr1", bus1=bus1, bus2=bus2, parameters=tp)
+    assert transformer.phases1 == "ca"
+    assert transformer.phases2 == "can"
+
+    # Can not be deduced
+    bus1.phases = "abc"
+    bus2.phases = "abcn"
+    with pytest.raises(RoseauLoadFlowException) as e:
+        Transformer(id="tr1", bus1=bus1, bus2=bus2, parameters=tp)
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
+    assert (
+        e.value.msg == "Phases (1) of transformer 'tr1' can not be deduced from the buses, they need to be specified."
+    )
 
 
 def test_voltage_phases():

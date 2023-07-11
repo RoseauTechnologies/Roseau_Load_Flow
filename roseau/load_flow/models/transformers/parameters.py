@@ -2,6 +2,7 @@ import logging
 from typing import NoReturn
 
 import numpy as np
+import regex
 from typing_extensions import Self
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
@@ -15,11 +16,25 @@ logger = logging.getLogger(__name__)
 class TransformerParameters(Identifiable, JsonMixin):
     """A class to store the parameters of the transformers."""
 
+    _EXTRACT_WINDINGS_RE = regex.compile(
+        "(?(DEFINE)(?P<y_winding>yn?)(?P<d_winding>d)(?P<z_winding>zn?)(?P<p_set_1>[06])"
+        "(?P<p_set_2>5|11))"
+        ""
+        "(?|(?P<w1>(?&y_winding))(?P<w2>(?&y_winding))(?P<p>(?&p_set_1)?)"  # yy
+        "|(?P<w1>(?&y_winding))(?P<w2>(?&d_winding))(?P<p>(?&p_set_2)?)"  # yd
+        "|(?P<w1>(?&y_winding))(?P<w2>(?&z_winding))(?P<p>(?&p_set_2)?)"  # yz
+        "|(?P<w1>(?&d_winding))(?P<w2>(?&z_winding))(?P<p>(?&p_set_1)?)"  # dz
+        "|(?P<w1>(?&d_winding))(?P<w2>(?&y_winding))(?P<p>(?&p_set_2)?)"  # dy
+        "|(?P<w1>(?&d_winding))(?P<w2>(?&d_winding))(?P<p>(?&p_set_1)?))",  # dd
+        regex.IGNORECASE,
+    )
+    """The pattern to extract the winding of the primary and of the secondary of the transformer."""
+
     @ureg.wraps(None, (None, None, None, "V", "V", "VA", "W", "", "W", ""), strict=False)
     def __init__(
         self,
         id: Id,
-        windings: str,
+        type: str,
         uhv: float,
         ulv: float,
         sn: float,
@@ -34,8 +49,8 @@ class TransformerParameters(Identifiable, JsonMixin):
             id:
                 A unique ID of the transformer parameters, typically its canonical name.
 
-            windings:
-                The type of windings such as "Dyn11"
+            type:
+                The type of transformer parameters such as "Dyn11", "single", "split".
 
             uhv:
                 Phase-to-phase nominal voltages of the high voltages side (V)
@@ -66,8 +81,13 @@ class TransformerParameters(Identifiable, JsonMixin):
         self._p0 = p0
         self._psc = psc
         self._vsc = vsc
-        self.windings = windings
-        self.winding1, self.winding2, self.phase_displacement = TransformerType.extract_windings(string=windings)
+        self.type = type
+        if type in ("single", "split"):
+            self.winding1 = None
+            self.winding2 = None
+            self.phase_displacement = None
+        else:
+            self.winding1, self.winding2, self.phase_displacement = self._extract_windings(string=type)
 
         # Check
         if uhv <= ulv:
@@ -110,7 +130,7 @@ class TransformerParameters(Identifiable, JsonMixin):
         else:
             return (
                 self.id == other.id
-                and self.windings == other.windings
+                and self.type == other.type
                 and np.isclose(self._sn, other._sn)
                 and np.isclose(self._p0, other._p0)
                 and np.isclose(self._i0, other._i0)
@@ -163,23 +183,21 @@ class TransformerParameters(Identifiable, JsonMixin):
         return self._vsc
 
     @classmethod
-    def from_name(cls, name: str, windings: str) -> Self:
-        """Construct TransformerParameters from name and windings.
+    def from_name(cls, name: str, type: str) -> Self:
+        """Construct TransformerParameters from name and types.
 
         Args:
             name:
                 The name of the transformer parameters, such as `"160kVA"` or `"H61_50kVA"`.
 
-            windings:
-                The type of windings such as `"Dyn11"`.
+            type:
+                The type of transformer parameters such as "Dyn11", "single", "split".
 
         Returns:
             The constructed transformer parameters.
         """
         if name == "H61_50kVA":
-            return cls(
-                id=name, windings=windings, uhv=20000, ulv=400, sn=50 * 1e3, p0=145, i0=1.8 / 100, psc=1350, vsc=4 / 100
-            )
+            return cls(id=name, type=type, uhv=20000, ulv=400, sn=50 * 1e3, p0=145, i0=1.8 / 100, psc=1350, vsc=4 / 100)
         elif name[-3:] == "kVA":
             try:
                 sn = float(name[:-3])
@@ -188,7 +206,7 @@ class TransformerParameters(Identifiable, JsonMixin):
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TYPE_NAME_SYNTAX) from None
             else:
-                return cls(name, windings, 20000, 400, sn * 1e3, 460, 2.3 / 100, 2350, 4 / 100)
+                return cls(name, type, 20000, 400, sn * 1e3, 460, 2.3 / 100, 2350, 4 / 100)
         else:
             msg = f"The transformer type name does not follow the syntax rule. {name!r} was provided."
             logger.error(msg)
@@ -208,9 +226,6 @@ class TransformerParameters(Identifiable, JsonMixin):
         Returns:
             The parameters (``z2``, ``ym``, ``k``, ``orientation``).
         """
-        # Extract the windings of the primary and the secondary of the transformer
-        winding1, winding2, phase_displacement = TransformerType.extract_windings(self.windings)
-
         # Off-load test
         # Iron losses resistance (Ohm)
         r_iron = self._uhv**2 / self._p0
@@ -229,22 +244,26 @@ class TransformerParameters(Identifiable, JsonMixin):
         # Change the voltages if the reference voltages is phase to neutral
         uhv = self._uhv
         ulv = self._ulv
-        if winding1[0] in ("y", "Y"):
-            uhv /= np.sqrt(3.0)
-        if winding2[0] in ("y", "Y"):
-            ulv /= np.sqrt(3.0)
-        if winding1[0] in ("z", "Z"):
-            uhv /= 3.0
-        if winding2[0] in ("z", "Z"):
-            ulv /= 3.0
-
-        if phase_displacement in (5, 6):
-            # Reverse winding
-            return z2, ym, ulv / uhv, -1.0
+        if self.type == "single" or self.type == "split":
+            orientation = 1.0
         else:
-            # Normal winding
-            assert phase_displacement in (0, 11)
-            return z2, ym, ulv / uhv, 1.0
+            # Extract the windings of the primary and the secondary of the transformer
+            winding1, winding2, phase_displacement = TransformerType.extract_windings(self.type)
+            if winding1[0] in ("y", "Y"):
+                uhv /= np.sqrt(3.0)
+            if winding2[0] in ("y", "Y"):
+                ulv /= np.sqrt(3.0)
+            if winding1[0] in ("z", "Z"):
+                uhv /= 3.0
+            if winding2[0] in ("z", "Z"):
+                ulv /= 3.0
+            if phase_displacement in (0, 11):  # Normal winding
+                orientation = 1.0
+            else:  # Reverse winding
+                assert phase_displacement in (5, 6)
+                orientation = -1.0
+
+        return z2, ym, ulv / uhv, orientation
 
     #
     # Json Mixin interface
@@ -253,7 +272,7 @@ class TransformerParameters(Identifiable, JsonMixin):
     def from_dict(cls, data: JsonDict) -> Self:
         return cls(
             id=data["id"],
-            windings=data["type"],  # Windings of the transformer
+            type=data["type"],  # Type of the transformer
             uhv=data["uhv"],  # Phase-to-phase nominal voltages of the high voltages side (V)
             ulv=data["ulv"],  # Phase-to-phase nominal voltages of the low voltages side (V)
             sn=data["sn"],
@@ -273,7 +292,7 @@ class TransformerParameters(Identifiable, JsonMixin):
             "p0": self._p0,
             "psc": self._psc,
             "vsc": self._vsc,
-            "type": self.windings,
+            "type": self.type,
         }
 
     def _results_to_dict(self, warning: bool) -> NoReturn:
@@ -285,3 +304,17 @@ class TransformerParameters(Identifiable, JsonMixin):
         msg = f"The {type(self).__name__} has no results to import."
         logger.error(msg)
         raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.JSON_NO_RESULTS)
+
+    def _extract_windings(self, string):
+        match = self._EXTRACT_WINDINGS_RE.fullmatch(string=string)
+        if match:
+            groups = match.groupdict()
+            winding1, winding2, phase_displacement = groups["w1"], groups["w2"], groups["p"]
+            if phase_displacement:
+                return winding1.upper(), winding2.lower(), int(phase_displacement)
+            else:
+                return winding1.upper(), winding2.lower(), None
+        else:
+            msg = f"Transformer windings cannot be extracted from the string {string!r}."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS)
