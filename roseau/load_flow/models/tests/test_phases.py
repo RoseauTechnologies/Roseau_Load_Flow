@@ -413,6 +413,15 @@ def test_transformer_split_phases():
         e.value.msg == "Phases (2) of transformer 'tr1' can not be deduced from the buses, they need to be specified."
     )
 
+    bus1.phases = "ab"
+    bus2.phases = "abc"
+    with pytest.raises(RoseauLoadFlowException) as e:
+        Transformer(id="tr1", bus1=bus1, bus2=bus2, parameters=tp)
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
+    assert (
+        e.value.msg == "Phases (2) of transformer 'tr1' can not be deduced from the buses, they need to be specified."
+    )
+
 
 def test_voltage_phases():
     # Bus

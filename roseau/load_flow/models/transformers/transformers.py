@@ -182,7 +182,7 @@ class Transformer(AbstractBranch):
         if phases1 is None:
             phases1 = "".join(p for p in bus1.phases if p in bus2.phases)  # can't use set because order is important
             phases1 = phases1.replace("ac", "ca")
-            if len(phases1) != 2:
+            if phases1 not in self._allowed_phases_single:
                 msg = f"Phases (1) of transformer {id!r} can not be deduced from the buses, they need to be specified."
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
@@ -193,7 +193,7 @@ class Transformer(AbstractBranch):
         if phases2 is None:
             phases2 = "".join(p for p in bus1.phases if p in bus2.phases)  # can't use set because order is important
             phases2 = phases2.replace("ac", "ca")
-            if len(phases2) != 2:
+            if phases2 not in self._allowed_phases_single:
                 msg = f"Phases (2) of transformer {id!r} can not be deduced from the buses, they need to be specified."
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
@@ -209,7 +209,7 @@ class Transformer(AbstractBranch):
         if phases1 is None:
             phases1 = "".join(p for p in bus2.phases if p in bus1.phases and p != "n")
             phases1 = phases1.replace("ac", "ca")
-            if len(phases1) != 2:
+            if phases1 not in self._allowed_phases_single:
                 msg = f"Phases (1) of transformer {id!r} can not be deduced from the buses, they need to be specified."
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
@@ -219,7 +219,7 @@ class Transformer(AbstractBranch):
 
         if phases2 is None:
             phases2 = "".join(p for p in bus2.phases if p in bus1.phases or p == "n")
-            if len(phases2) != 3:
+            if phases2 not in self._allowed_phases_split_secondary:
                 msg = f"Phases (2) of transformer {id!r} can not be deduced from the buses, they need to be specified."
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
