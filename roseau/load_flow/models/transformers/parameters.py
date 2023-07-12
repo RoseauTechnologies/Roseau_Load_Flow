@@ -50,7 +50,9 @@ class TransformerParameters(Identifiable, JsonMixin):
                 A unique ID of the transformer parameters, typically its canonical name.
 
             type:
-                The type of transformer parameters such as "Dyn11", "single", "split".
+                The type of transformer parameters. It can be "single" for single-phase transformers, "split" for
+                split-phase transformers, or the name of the windings such as "Dyn11" for three-phase transformers.
+                Allowed windings are "D" for delta, "Y" for wye (star), and "Z" for zigzag.
 
             uhv:
                 Phase-to-phase nominal voltages of the high voltages side (V)
