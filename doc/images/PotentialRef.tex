@@ -1,7 +1,7 @@
 \input{Preambule}%
 
 \begin{document}
-\ctikzset{european,straight voltages, cute inductors}%
+\ctikzset{european, straight voltages, cute inductors}%
 \begin{tikzpicture}[%
     show background rectangle,%
     tight background,%
@@ -9,8 +9,7 @@
     ]
 
     \coordinate (g) at (0,0);
-    \node[ground] at (g) {};%
-    \node[left] at (g) {$V_{g} = 0$};%
+    \node[left] at (g) {$V = 0$};%
     \draw (g) to[short,*-] (0, 0.5);
 
 \end{tikzpicture}
@@ -19,9 +18,8 @@
 % mode: latex
 % TeX-engine: luatex
 % TeX-source-correlate-method-active: synctex
-% ispell-local-dictionary: "francais"
+% ispell-local-dictionary: "british"
 % coding: utf-8
-% TeX-master: "../../Manuscrit.tex"
 % LaTeX-indent-level: 4
-% compile-command: "make -k -C ../../"
+% fill-column: 120
 % End:

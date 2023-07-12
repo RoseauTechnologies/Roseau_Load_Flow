@@ -1,7 +1,7 @@
 \input{Preambule}%
 
 \begin{document}
-\ctikzset{european,straight voltages, cute inductors}%
+\ctikzset{european, straight voltages, cute inductors}%
 \begin{tikzpicture}[%
     show background rectangle,%
     tight background,%
@@ -10,8 +10,8 @@
 
     \coordinate (g) at (0,0);
     \node[ground] at (g) {};%
-    \node[left] at (g) {$\underline{V_{\grm}}$};%
-    \draw (0, 1) to[short, i=$\underline{I_{\grm}}$, -*] (g);
+    \node[left] at (g) {$V_{\grm} = 0$};%
+    \draw (g) to[short,*-] (0, 0.5);
 
 \end{tikzpicture}
 \end{document}

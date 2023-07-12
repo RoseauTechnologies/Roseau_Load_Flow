@@ -1,7 +1,7 @@
 \input{Preambule}%
 
 \begin{document}
-\ctikzset{european,straight voltages, cute inductors}%
+\ctikzset{american, cute inductors}%
 \begin{tikzpicture}[%
     show background rectangle,%
     tight background,%
@@ -159,105 +159,6 @@
     \pgfmathsetmacro{\xrm}{\xri+0.75*(\zm-\xri)};%
     \draw[fleche] (\xrm,\ya) to[bend left] node[midway,
     left]{$\underline{M_{\anrm}}$} (\xrm,\yn);%
-
-
-    %
-    % Groupements
-    %
-    % Sol
-%    \coordinate (gauche sol) at ($(vlt)-(1,0)$);%
-%    \coordinate (droite sol) at ($(vmt)+(1,0)$);%
-%    \coordinate (haut sol) at ($(zlt)!0.13!(zln)$);%
-%    \node[fit=(gauche sol) (droite sol) (mtl) (mtm) (haut sol), draw=red, dashed,
-%    ultra thick, inner sep=0] (sol) {};%
-%    \node[anchor=south, text=red] at (sol.south) {Sol};%
-
-%    % 1ère 1/2 admittance
-%    \coordinate (mid ligne l) at ($(vla)!0.5!(zla)$);%
-%    \coordinate (haut ligne l) at ($(mid ligne l)+(0,2)$);%
-%    \coordinate (gauche ligne l) at ($(vla)+(0.25,0)$);%
-%    \coordinate (droite ligne l) at ($(zla)-(0.25,0)$);%
-%    \coordinate (mid ligne l) at ($(vlt)!0.5!(zlt)$);%
-%    \coordinate (bas ligne l) at ($(mid ligne l)+(0,1.25)$);%
-%    \node[fit=(gauche ligne l) (haut ligne l) (droite ligne l) (bas
-%    ligne l), draw=blue, dashed, ultra thick, inner sep=0] (admittance
-%    1) {};%
-%    \node[anchor=north, text=blue] at (admittance 1.north) {Première
-%        demi-admittance en dérivation};%
-%
-%    % 2nde 1/2 admittance
-%    \coordinate (mid ligne m) at ($(vma)!0.5!(zma)$);%
-%    \coordinate (haut ligne m) at ($(mid ligne m)+(0,2)$);%
-%    \coordinate (gauche ligne m) at ($(vma)-(0.25,0)$);%
-%    \coordinate (droite ligne m) at ($(zma)+(0.25,0)$);%
-%    \coordinate (mid ligne m) at ($(vmt)!0.5!(zmt)$);%
-%    \coordinate (bas ligne m) at ($(mid ligne m)+(0,1.25)$);%
-%    \node[fit=(gauche ligne m) (haut ligne m) (droite ligne m) (bas
-%    ligne m), draw=blue, dashed, ultra thick, inner sep=0] (admittance
-%    2) {};%
-%    \node[anchor=north, text=blue] at (admittance 2.north) {Seconde
-%        demi-admittance en dérivation};%
-%
-%    % Ligne
-%    \coordinate (mid ligne) at ($(zla)!0.5!(zma)$);%
-%    \coordinate (haut ligne) at ($(mid ligne)+(0,2)$);%
-%    \coordinate (gauche ligne) at ($(zla)+(0.125,0)$);%
-%    \coordinate (droite ligne) at ($(zma)-(0.125,0)$);%
-%    \coordinate (mid ligne) at ($(zln)!0.5!(zmn)$);%
-%    \coordinate (bas ligne) at ($(mid ligne)-(0,1)$);%
-%    \node[fit=(gauche ligne) (haut ligne) (droite ligne) (bas ligne),
-%    draw=green, dashed, ultra thick, inner sep=0] (ligne) {};%
-%    \node[anchor=north, text=green] at (ligne.north) {Impédance série};%
-
-    % Version unifilaire
-    % \def\bussize{1.75}
-
-    % % Coordonnées
-    % \coordinate (orig) at (0,0);
-    % \coordinate (unit) at (1,1);
-    % \coordinate (busl) at (0,3);
-    % \coordinate (connectl) at (2,3);
-    % \coordinate (linel) at (3,3);
-    % \coordinate (linem) at (5,3);
-    % \coordinate (connectm) at (6,3);
-    % \coordinate (busm) at (8,3);
-    % \coordinate (shuntl) at (connectl |- unit);
-    % \coordinate (shuntm) at (connectm |- unit);
-    % \coordinate (labelheight) at ($(busl)+(0,\bussize)$);
-
-    % % Lignes
-    % \draw (busl) to[short,i=$I_{\abcnrm}$,-*] (connectl)
-    % to[short,i=$I_{\abcnrm}^{\mathrm{ligne}}$] (linel)
-    % to [R=$Z_{lm,\abcnrm}$] (linem)
-    % to[short,i<=$I_{\abcnrm}^{\mathrm{ligne}}$] (connectm)
-    % to[short,i<=$I_{\abcnrm}$,*-] (busm);
-    % %
-    % \draw (connectl)
-    % to[C,i=$I_{\abcnrm}^{\mathrm{sh}}$,l_=$\dfrac{Y_{lm,\abcnrm}^{\mathrm{sh}}}{2}$]
-    % (shuntl) node[ground] {};%
-    % %
-    % \draw (connectm)
-    % to[C,i_=$I_{\abcnrm}^{\mathrm{sh}}$,l=$\dfrac{Y_{ml,\abcnrm}^{\mathrm{sh}}}{2}$]
-    % (shuntm) node[ground] {};
-
-    % % Bus
-    % \draw[very thick] ($(busl)-0.5*(0,\bussize)$) --
-    % ($(busl)+0.5*(0,\bussize)$);
-    % %
-    % \draw[very thick] ($(busm)-0.5*(0,\bussize)$) --
-    % ($(busm)+0.5*(0,\bussize)$);
-
-
-    % % Légende
-    % \node[anchor=south] at (busl |- labelheight) {Bus $l$};
-    % %
-    % \node[anchor=south] at (busm |- labelheight) {Bus $m$};
-    % %
-    % \node[anchor=north] at (busl |- labelheight)
-    % {$\underline{V_{l,\abcnrm}}$};
-    % %
-    % \node[anchor=north] at (busm |- labelheight)
-    % {$\underline{V_{m,\abcnrm}}$};
 
 \end{tikzpicture}
 \end{document}

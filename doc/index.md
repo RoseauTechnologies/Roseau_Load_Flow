@@ -45,7 +45,7 @@ models/PotentialRef
 models/Ground
 models/Bus
 models/VoltageSource
-models/Load
+models/Load/index
 models/Line
 models/Switch
 models/Transformer

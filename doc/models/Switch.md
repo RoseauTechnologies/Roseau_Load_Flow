@@ -10,6 +10,10 @@ It refers to an ideal switch that connect two buses.
 
 The associated equations are:
 ```{math}
-I_{\mathrm{abcn},1} &= - I_{\mathrm{abcn},2}\\
-V_{\mathrm{abcn},1} &= V_{\mathrm{abcn},2}\\
+\left\{
+    \begin{aligned}
+        I_{\mathrm{abcn},1} &= - I_{\mathrm{abcn},2}\\
+        V_{\mathrm{abcn},1} &= V_{\mathrm{abcn},2}\\
+    \end{aligned}
+\right.
 ```

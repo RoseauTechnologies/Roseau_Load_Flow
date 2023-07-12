@@ -9,7 +9,7 @@ PDF2SVG:=$(shell which pdf2svg)
 OUTPUT_FOLDER:=$(shell realpath ../_static/)
 
 # Files
-TEX_FILES:=$(filter-out Preambule.tex, $(wildcard *.tex))
+TEX_FILES:=$(filter-out Preambule.tex, $(wildcard *.tex) $(wildcard **/*.tex))
 PDF_FILES:=$(TEX_FILES:%.tex=%.pdf)
 AUX_FILES:=$(TEX_FILES:%.tex=$(OUTPUT_FOLDER)/%.aux)
 LOG_FILES:=$(TEX_FILES:%.tex=$(OUTPUT_FOLDER)/%.log)

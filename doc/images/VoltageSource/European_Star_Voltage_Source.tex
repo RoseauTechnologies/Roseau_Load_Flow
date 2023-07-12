@@ -7,16 +7,12 @@
     tight background,%
     background rectangle/.style={fill=white}%
     ]
-    \def\radius{2.3}%
     \def\Radius{3}%
 
     \ctikzset{bipoles/open/voltage/distance from node/.initial=0.1}
     % \ctikzset{bipoles/generic/voltage/european label distance=0.8}
 
     % Coordinates
-    \coordinate (A1) at (90:\radius);%
-    \coordinate (B1) at (210:\radius);%
-    \coordinate (C1) at (330:\radius);%
     \coordinate (A) at (90:\Radius);%
     \coordinate (B) at (210:\Radius);%
     \coordinate (C) at (330:\Radius);%
@@ -34,9 +30,9 @@
     \node[above left] at (N) {N};%
 
     % Lines
-    \draw (A) to[short,*-] (A1) to[vsourcesin, v<=$\underline{U_{\arm\nrm}}$, -*] (N);%
-    \draw (B) to[short,*-] (B1) to[vsourcesin, v<=$\underline{U_{\brm\nrm}}$, -*] (N);%
-    \draw (C) to[short,*-] (C1) to[vsourcesin, v<=$\underline{U_{\crm\nrm}}$, -*] (N);%
+    \draw (A) to[vsourcesin, v<=$\underline{U_{\anrm}}$, -*] (N);%
+    \draw (B) to[vsourcesin, v<=$\underline{U_{\bnrm}}$, -*] (N);%
+    \draw (C) to[vsourcesin, v<=$\underline{U_{\cnrm}}$, -*] (N);%
     \draw (A2) to[short,i=$\underline{I_{\arm}}$,*-*] (A);%
     \draw (B2) to[short,i=$\underline{I_{\brm}}$,*-] (B3);%
     \draw (C2) to[short,i=$\underline{I_{\crm}}$,*-*] (C);%

@@ -84,7 +84,7 @@ q(t) &:= g(x_k + t d(x_k))
 A search is made to find $t$ such that:
 ```{math}
 :label: goldstein_and_price
-m_2q'(0) \leq \frac{q(t) - q(0)}{t} \leq m_1q'(0)
+m_2q'(0) \leqslant \frac{q(t) - q(0)}{t} \leqslant m_1q'(0)
 ```
 
 ```{image} /_static/Goldstein_And_Price.svg
