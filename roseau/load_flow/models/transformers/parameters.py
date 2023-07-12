@@ -8,7 +8,7 @@ from typing_extensions import Self
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.typing import Id, JsonDict
 from roseau.load_flow.units import Q_, ureg
-from roseau.load_flow.utils import Identifiable, JsonMixin, TransformerType
+from roseau.load_flow.utils import Identifiable, JsonMixin
 
 logger = logging.getLogger(__name__)
 
@@ -20,12 +20,12 @@ class TransformerParameters(Identifiable, JsonMixin):
         "(?(DEFINE)(?P<y_winding>yn?)(?P<d_winding>d)(?P<z_winding>zn?)(?P<p_set_1>[06])"
         "(?P<p_set_2>5|11))"
         ""
-        "(?|(?P<w1>(?&y_winding))(?P<w2>(?&y_winding))(?P<p>(?&p_set_1)?)"  # yy
-        "|(?P<w1>(?&y_winding))(?P<w2>(?&d_winding))(?P<p>(?&p_set_2)?)"  # yd
-        "|(?P<w1>(?&y_winding))(?P<w2>(?&z_winding))(?P<p>(?&p_set_2)?)"  # yz
-        "|(?P<w1>(?&d_winding))(?P<w2>(?&z_winding))(?P<p>(?&p_set_1)?)"  # dz
-        "|(?P<w1>(?&d_winding))(?P<w2>(?&y_winding))(?P<p>(?&p_set_2)?)"  # dy
-        "|(?P<w1>(?&d_winding))(?P<w2>(?&d_winding))(?P<p>(?&p_set_1)?))",  # dd
+        "(?|(?P<w1>(?&y_winding))(?P<w2>(?&y_winding))(?P<p>(?&p_set_1))"  # yy
+        "|(?P<w1>(?&y_winding))(?P<w2>(?&d_winding))(?P<p>(?&p_set_2))"  # yd
+        "|(?P<w1>(?&y_winding))(?P<w2>(?&z_winding))(?P<p>(?&p_set_2))"  # yz
+        "|(?P<w1>(?&d_winding))(?P<w2>(?&z_winding))(?P<p>(?&p_set_1))"  # dz
+        "|(?P<w1>(?&d_winding))(?P<w2>(?&y_winding))(?P<p>(?&p_set_2))"  # dy
+        "|(?P<w1>(?&d_winding))(?P<w2>(?&d_winding))(?P<p>(?&p_set_1)))",  # dd
         regex.IGNORECASE,
     )
     """The pattern to extract the winding of the primary and of the secondary of the transformer."""
@@ -87,7 +87,7 @@ class TransformerParameters(Identifiable, JsonMixin):
             self.winding2 = None
             self.phase_displacement = None
         else:
-            self.winding1, self.winding2, self.phase_displacement = self._extract_windings(string=type)
+            self.winding1, self.winding2, self.phase_displacement = self.extract_windings(string=type)
 
         # Check
         if uhv <= ulv:
@@ -248,19 +248,18 @@ class TransformerParameters(Identifiable, JsonMixin):
             orientation = 1.0
         else:
             # Extract the windings of the primary and the secondary of the transformer
-            winding1, winding2, phase_displacement = TransformerType.extract_windings(self.type)
-            if winding1[0] in ("y", "Y"):
+            if self.winding1[0] in ("y", "Y"):
                 uhv /= np.sqrt(3.0)
-            if winding2[0] in ("y", "Y"):
+            if self.winding2[0] in ("y", "Y"):
                 ulv /= np.sqrt(3.0)
-            if winding1[0] in ("z", "Z"):
+            if self.winding1[0] in ("z", "Z"):
                 uhv /= 3.0
-            if winding2[0] in ("z", "Z"):
+            if self.winding2[0] in ("z", "Z"):
                 ulv /= 3.0
-            if phase_displacement in (0, 11):  # Normal winding
+            if self.phase_displacement in (0, 11):  # Normal winding
                 orientation = 1.0
             else:  # Reverse winding
-                assert phase_displacement in (5, 6)
+                assert self.phase_displacement in (5, 6)
                 orientation = -1.0
 
         return z2, ym, ulv / uhv, orientation
@@ -305,15 +304,22 @@ class TransformerParameters(Identifiable, JsonMixin):
         logger.error(msg)
         raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.JSON_NO_RESULTS)
 
-    def _extract_windings(self, string):
-        match = self._EXTRACT_WINDINGS_RE.fullmatch(string=string)
+    @classmethod
+    def extract_windings(cls, string: str) -> tuple[str, str, int]:
+        """Extract the windings and phase displacement from a given string
+
+        Args:
+            string:
+                The string to parse.
+
+        Returns:
+            The first winding, the second winding, and the phase displacement
+        """
+        match = cls._EXTRACT_WINDINGS_RE.fullmatch(string=string)
         if match:
             groups = match.groupdict()
             winding1, winding2, phase_displacement = groups["w1"], groups["w2"], groups["p"]
-            if phase_displacement:
-                return winding1.upper(), winding2.lower(), int(phase_displacement)
-            else:
-                return winding1.upper(), winding2.lower(), None
+            return winding1.upper(), winding2.lower(), int(phase_displacement)
         else:
             msg = f"Transformer windings cannot be extracted from the string {string!r}."
             logger.error(msg)

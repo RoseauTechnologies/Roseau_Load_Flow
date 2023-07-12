@@ -264,3 +264,66 @@ def test_transformers_parameters_units():
             DimensionalityError, match=r"Cannot convert from 'ampere' \(\[current\]\) to '\w+?' \(.+?\)"
         ):
             TransformerParameters.from_dict(copy_data)
+
+
+def test_transformer_type():
+    valid_windings = ("y", "yn", "z", "zn", "d")
+    valid_phase_displacements = (0, 5, 6, 11)
+    valid_types = {"dd", "yy", "yny", "yyn", "ynyn", "dz", "dzn", "dy", "dyn", "yd", "ynd", "yz", "ynz", "yzn", "ynzn"}
+    valid_full_types = {
+        "dd0",
+        "dd6",
+        "yy0",
+        "yy6",
+        "yny0",
+        "yny6",
+        "yyn0",
+        "yyn6",
+        "ynyn0",
+        "ynyn6",
+        "dz0",
+        "dz6",
+        "dzn0",
+        "dzn6",
+        "dy5",
+        "dy11",
+        "dyn5",
+        "dyn11",
+        "yd5",
+        "yd11",
+        "ynd5",
+        "ynd11",
+        "yz5",
+        "yz11",
+        "ynz5",
+        "ynz11",
+        "yzn5",
+        "yzn11",
+        "ynzn5",
+        "ynzn11",
+    }
+
+    for winding1 in valid_windings:
+        for winding2 in valid_windings:
+            t = f"{winding1}{winding2}"
+            if t in valid_types:
+                with pytest.raises(RoseauLoadFlowException) as e:
+                    TransformerParameters.extract_windings(t)
+                assert "Transformer windings cannot be extracted from the string" in e.value.msg
+                assert e.value.code == RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS
+                for phase_displacement in valid_phase_displacements:
+                    t = f"{winding1}{winding2}{phase_displacement}"
+                    if t in valid_full_types:
+                        w1, w2, p = TransformerParameters.extract_windings(t)
+                        assert w1 == winding1.upper()
+                        assert w2 == winding2
+                        assert p == phase_displacement
+                    else:
+                        with pytest.raises(RoseauLoadFlowException) as e:
+                            TransformerParameters.extract_windings(t)
+                        assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS
+            else:
+                with pytest.raises(RoseauLoadFlowException) as e:
+                    TransformerParameters.extract_windings(t)
+                assert "Transformer windings cannot be extracted from the string" in e.value.msg
+                assert e.value.code == RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS
