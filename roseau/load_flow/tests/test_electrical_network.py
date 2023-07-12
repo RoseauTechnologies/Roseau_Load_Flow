@@ -209,7 +209,7 @@ def test_connect_and_disconnect():
     assert load.bus is None
     with pytest.raises(RoseauLoadFlowException) as e:
         load.to_dict()
-    assert e.value.args[0] == "The load 'power load' is disconnected and can not be used anymore."
+    assert e.value.args[0] == "The load 'power load' is disconnected and cannot be used anymore."
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.DISCONNECTED_ELEMENT
     new_load = PowerLoad(id="power load", phases="abcn", bus=load_bus, powers=[100 + 0j, 100 + 0j, 100 + 0j])
     assert new_load.network == en
@@ -221,7 +221,7 @@ def test_connect_and_disconnect():
     assert vs.bus is None
     with pytest.raises(RoseauLoadFlowException) as e:
         vs.to_dict()
-    assert e.value.args[0] == "The voltage source 'vs' is disconnected and can not be used anymore."
+    assert e.value.args[0] == "The voltage source 'vs' is disconnected and cannot be used anymore."
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.DISCONNECTED_ELEMENT
 
     # Bad key
@@ -242,7 +242,7 @@ def test_connect_and_disconnect():
         en._disconnect_element(line)
     assert (
         e.value.msg
-        == "Line(id='line', phases1='abcn', phases2='abcn', bus1='source', bus2='load bus') is a Line and it can not "
+        == "Line(id='line', phases1='abcn', phases2='abcn', bus1='source', bus2='load bus') is a Line and it cannot "
         "be disconnected from a network."
     )
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT
@@ -447,7 +447,7 @@ def test_bad_networks():
     # No potential reference
     bus3 = Bus("bus3", phases="abcn")
     tp = TransformerParameters(
-        "t", windings="Dyn11", uhv=20000, ulv=400, sn=160 * 1e3, p0=460, i0=2.3 / 100, psc=2350, vsc=4 / 100
+        "t", type="Dyn11", uhv=20000, ulv=400, sn=160 * 1e3, p0=460, i0=2.3 / 100, psc=2350, vsc=4 / 100
     )
     t = Transformer("transfo", bus2, bus3, parameters=tp)
     with pytest.raises(RoseauLoadFlowException) as e:
