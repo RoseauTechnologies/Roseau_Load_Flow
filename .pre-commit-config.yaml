@@ -24,4 +24,11 @@ repos:
     rev: v0.0.275
     hooks:
       - id: ruff
-        args: [--fix, --exit-non-zero-on-fix]
+        args: [ --fix, --exit-non-zero-on-fix ]
+  - repo: https://github.com/adamchainz/blacken-docs
+    rev: 1.15.0
+    hooks:
+      - id: blacken-docs
+        entry: bash -c "blacken-docs -l 90 $(find doc/ -name '*.md')"
+        args: [ -l 90 ]
+        additional_dependencies: [ black==23.3.0 ]

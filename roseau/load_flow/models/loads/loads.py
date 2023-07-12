@@ -22,29 +22,29 @@ class AbstractLoad(Element, ABC):
     The subclasses of this class can be used to depict:
         * star-connected loads using a `phases` constructor argument containing a `"n"`
 
-        .. tab:: European Standards
+        .. tab:: European standards
 
-            .. image:: /_static/European_Star_Load.svg
+            .. image:: /_static/Load/European_Star_Load.svg
               :width: 300px
               :align: center
 
-        .. tab:: American Standards
+        .. tab:: American standards
 
-            .. image:: /_static/American_Star_Load.svg
+            .. image:: /_static/Load/American_Star_Load.svg
               :width: 300px
               :align: center
 
         * delta-connected loads using a `phases` constructor argument which doesn't contain `"n"`
 
-        .. tab:: European Standards
+        .. tab:: European standards
 
-            .. image:: /_static/European_Delta_Load.svg
+            .. image:: /_static/Load/European_Delta_Load.svg
               :width: 300px
               :align: center
 
-        .. tab:: American Standards
+        .. tab:: American standards
 
-            .. image:: /_static/American_Delta_Load.svg
+            .. image:: /_static/Load/American_Delta_Load.svg
               :width: 300px
               :align: center
     """
