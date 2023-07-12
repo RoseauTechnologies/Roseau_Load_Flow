@@ -25,8 +25,8 @@ class Transformer(AbstractBranch):
     """The allowed phases for a transformer are:
 
     - P-P-P or P-P-P-N: ``"abc"``, ``"abcn"`` (three-phase transformer)
-    - P-P or P-N: ``"ab"``, ``"bc"``, ``"ca"``, ``"an"``, ``"bn"``, ``"cn"`` (single-phase transformer or primary of
-    split-phase transformer)
+    - P-P or P-N: ``"ab"``, ``"bc"``, ``"ca"``, ``"an"``, ``"bn"``, ``"cn"`` (single-phase
+      transformer or primary of split-phase transformer)
     - P-P-N: ``"abn"``, ``"bcn"``, ``"can"`` (secondary of split-phase transformer)
     """
     _allowed_phases_three = frozenset({"abc", "abcn"})
