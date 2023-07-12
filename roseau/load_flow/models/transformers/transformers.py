@@ -24,12 +24,12 @@ class Transformer(AbstractBranch):
     allowed_phases = Bus.allowed_phases
     """The allowed phases for a transformer are:
 
-    - P-P-P or P-P-P-N: ``"abc"``, ``"abcn"`` (tri-phase transformer)
+    - P-P-P or P-P-P-N: ``"abc"``, ``"abcn"`` (three-phase transformer)
     - P-P or P-N: ``"ab"``, ``"bc"``, ``"ca"``, ``"an"``, ``"bn"``, ``"cn"`` (single-phase transformer or primary of
     split-phase transformer)
     - P-P-N: ``"abn"``, ``"bcn"``, ``"can"`` (secondary of split-phase transformer)
     """
-    _allowed_phases_tri = frozenset({"abc", "abcn"})
+    _allowed_phases_three = frozenset({"abc", "abcn"})
     _allowed_phases_single = frozenset({"ab", "bc", "ca", "an", "bn", "cn"})
     _allowed_phases_split_secondary = frozenset({"abn", "bcn", "can"})
 
@@ -88,7 +88,7 @@ class Transformer(AbstractBranch):
         elif parameters.type == "split":
             phases1, phases2 = self._compute_phases_split(id=id, bus1=bus1, bus2=bus2, phases1=phases1, phases2=phases2)
         else:
-            phases1, phases2 = self._compute_phases_tri(
+            phases1, phases2 = self._compute_phases_three(
                 id=id, bus1=bus1, bus2=bus2, parameters=parameters, phases1=phases1, phases2=phases2
             )
 
@@ -129,7 +129,7 @@ class Transformer(AbstractBranch):
     def to_dict(self) -> JsonDict:
         return {**super().to_dict(), "params_id": self.parameters.id, "tap": self.tap}
 
-    def _compute_phases_tri(
+    def _compute_phases_three(
         self,
         id: Id,
         bus1: Bus,
@@ -143,9 +143,9 @@ class Transformer(AbstractBranch):
         if phases1 is None:
             phases1 = "abcn" if w1_has_neutral else "abc"
             phases1 = "".join(p for p in bus1.phases if p in phases1)
-            self._check_phases(id, allowed_phases=self._allowed_phases_tri, phases1=phases1)
+            self._check_phases(id, allowed_phases=self._allowed_phases_three, phases1=phases1)
         else:
-            self._check_phases(id, allowed_phases=self._allowed_phases_tri, phases1=phases1)
+            self._check_phases(id, allowed_phases=self._allowed_phases_three, phases1=phases1)
             self._check_bus_phases(id, bus1, phases1=phases1)
             transformer_phases = "abcn" if w1_has_neutral else "abc"
             phases_not_in_transformer = set(phases1) - set(transformer_phases)
@@ -160,9 +160,9 @@ class Transformer(AbstractBranch):
         if phases2 is None:
             phases2 = "abcn" if w2_has_neutral else "abc"
             phases2 = "".join(p for p in bus2.phases if p in phases2)
-            self._check_phases(id, allowed_phases=self._allowed_phases_tri, phases2=phases2)
+            self._check_phases(id, allowed_phases=self._allowed_phases_three, phases2=phases2)
         else:
-            self._check_phases(id, allowed_phases=self._allowed_phases_tri, phases2=phases2)
+            self._check_phases(id, allowed_phases=self._allowed_phases_three, phases2=phases2)
             self._check_bus_phases(id, bus2, phases2=phases2)
             transformer_phases = "abcn" if w2_has_neutral else "abc"
             phases_not_in_transformer = set(phases2) - set(transformer_phases)
@@ -183,7 +183,7 @@ class Transformer(AbstractBranch):
             phases1 = "".join(p for p in bus1.phases if p in bus2.phases)  # can't use set because order is important
             phases1 = phases1.replace("ac", "ca")
             if phases1 not in self._allowed_phases_single:
-                msg = f"Phases (1) of transformer {id!r} can not be deduced from the buses, they need to be specified."
+                msg = f"Phases (1) of transformer {id!r} cannot be deduced from the buses, they need to be specified."
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
         else:
@@ -194,7 +194,7 @@ class Transformer(AbstractBranch):
             phases2 = "".join(p for p in bus1.phases if p in bus2.phases)  # can't use set because order is important
             phases2 = phases2.replace("ac", "ca")
             if phases2 not in self._allowed_phases_single:
-                msg = f"Phases (2) of transformer {id!r} can not be deduced from the buses, they need to be specified."
+                msg = f"Phases (2) of transformer {id!r} cannot be deduced from the buses, they need to be specified."
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
         else:
@@ -210,7 +210,7 @@ class Transformer(AbstractBranch):
             phases1 = "".join(p for p in bus2.phases if p in bus1.phases and p != "n")
             phases1 = phases1.replace("ac", "ca")
             if phases1 not in self._allowed_phases_single:
-                msg = f"Phases (1) of transformer {id!r} can not be deduced from the buses, they need to be specified."
+                msg = f"Phases (1) of transformer {id!r} cannot be deduced from the buses, they need to be specified."
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
         else:
@@ -220,7 +220,7 @@ class Transformer(AbstractBranch):
         if phases2 is None:
             phases2 = "".join(p for p in bus2.phases if p in bus1.phases or p == "n")
             if phases2 not in self._allowed_phases_split_secondary:
-                msg = f"Phases (2) of transformer {id!r} can not be deduced from the buses, they need to be specified."
+                msg = f"Phases (2) of transformer {id!r} cannot be deduced from the buses, they need to be specified."
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
         else:

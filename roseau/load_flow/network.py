@@ -933,7 +933,7 @@ class ElectricalNetwork(JsonMixin):
         """
         # The C++ electrical network and the tape will be recomputed
         if isinstance(element, (Bus, AbstractBranch)):
-            msg = f"{element!r} is a {type(element).__name__} and it can not be disconnected from a network."
+            msg = f"{element!r} is a {type(element).__name__} and it cannot be disconnected from a network."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT)
         elif isinstance(element, AbstractLoad):

@@ -67,7 +67,7 @@ class Element(ABC, Identifiable, JsonMixin):
             value:
                 The new network for `self`. May also be None.
         """
-        # The setter can not be used to replace an existing network
+        # The setter cannot be used to replace an existing network
         if self._network is not None and value is not None and self._network != value:
             self._raise_several_network()
 
