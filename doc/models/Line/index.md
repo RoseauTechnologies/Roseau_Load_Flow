@@ -100,84 +100,14 @@ Y =
 \right.\text{, }\forall(i,j)\in\{\mathrm{a},\mathrm{b},\mathrm{c},\mathrm{n}\}^2
 ```
 
-## Shunt line model
 
-The first model of line which can be used is a PI model with series impedance and shunt admittance. The
-corresponding diagram is:
+The following line models are available in *Roseau Load Flow*:
 
-````{tab} European standards
-```{image} /_static/Line/European_Shunt_Line.svg
-:alt: Shunt line diagram
-:width: 1000px
-:align: center
+```{toctree}
+---
+maxdepth: 2
+caption: Loads
+---
+SimplifiedLine
+ShuntLine
 ```
-````
-````{tab} American standards
-```{image} /_static/Line/American_Shunt_Line.svg
-:alt: Shunt line diagram
-:width: 1000px
-:align: center
-```
-````
-
-The corresponding equations are:
-
-```{math}
-\left\{
-    \begin{aligned}
-        V_1 &= a \cdot V_2 - b \cdot I_2 + g \cdot V_{\mathrm{g}} \\
-        I_1 &= c \cdot V_2 - d \cdot I_2 + h \cdot V_{\mathrm{g}} \\
-        I_{\mathrm{g}} &= f^t \cdot \left(V_1 + V_2 - 2\cdot V_{\mathrm{g}}\right)
-    \end{aligned}
-\right.
-```
-
-where
-
-```{math}
-\left\{
-    \begin{aligned}
-        a &= \mathcal{I}_4 + \dfrac{1}{2} \cdot Z \cdot Y  \\
-        b &= Z  \\
-        c &= Y + \dfrac{1}{4}\cdot Y \cdot Z \cdot Y  \\
-        d &= \mathcal{I}_4 + \dfrac{1}{2} \cdot Y \cdot Z  \\
-        f &= -\dfrac{1}{2} \cdot \begin{pmatrix} y_{\mathrm{ag}} & y_{\mathrm{bg}} & y_{\mathrm{cg}} &
-        y_{\mathrm{ng}} \end{pmatrix} ^t  \\
-        g &= Z \cdot f  \\
-        h &= 2 \cdot f + \frac{1}{2}\cdot Y \cdot Z \cdot f  \\
-    \end{aligned}
-\right.
-```
-
-with $Z$ the series impedance matrix and $Y$ the shunt admittance matrix.
-
-## Simplified line model
-
-If the line does not define a shunt admittance, we can simplify the model as there is no coupling with
-the ground. With $Y = 0$, the equations become:
-
-```{math}
-\left\{
-    \begin{aligned}
-        V_1 - V_2 &= Z \cdot I_1 \\
-        I_2 &= -I_1
-    \end{aligned}
-\right.
-```
-
-The corresponding diagram is:
-
-````{tab} European standards
-```{image} /_static/Line/European_Simplified_Line.svg
-:alt: Simplified line diagram
-:width: 600px
-:align: center
-```
-````
-````{tab} American standards
-```{image} /_static/Line/American_Simplified_Line.svg
-:alt: Simplified line diagram
-:width: 600px
-:align: center
-```
-````

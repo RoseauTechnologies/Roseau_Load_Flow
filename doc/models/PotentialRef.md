@@ -1,5 +1,7 @@
 # Potential Reference
 
+## Definition
+
 As the electrical potentials of the elements of the network are defined as a difference from a reference point, we
 need to define this reference point. The potential reference element set the potential of the element it is connected
 to $0$ Volt.
@@ -11,6 +13,12 @@ A representation of this element could be:
 :width: 100px
 :align: center
 ```
+
+```{note}
+Only one potential reference per galvanically isolated section of the network can be set.
+```
+
+## Usage
 
 Usually, the potential reference is attached to the ground to set the potential of the ground to $0$. In
 *Roseau Load Flow*, the ground element doesn't add any potential reference equation. If you want to do so, please
@@ -40,8 +48,4 @@ from roseau.load_flow.models import Bus, PotentialRef
 
 bus = Bus(id="bus", phases="abcn")
 p_ref = PotentialRef(id="pref", element=bus, phase="a")
-```
-
-```{note}
-Only one potential reference per galvanically isolated section of the network can be set.
 ```

@@ -46,7 +46,7 @@ models/Ground
 models/Bus
 models/VoltageSource
 models/Load/index
-models/Line
+models/Line/index
 models/Switch
 models/Transformer
 ```
