@@ -7,7 +7,7 @@ from typing_extensions import Self
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.typing import Id, JsonDict
-from roseau.load_flow.units import Q_, ureg
+from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow.utils import Identifiable, JsonMixin
 
 logger = logging.getLogger(__name__)
@@ -30,7 +30,7 @@ class TransformerParameters(Identifiable, JsonMixin):
     )
     """The pattern to extract the winding of the primary and of the secondary of the transformer."""
 
-    @ureg.wraps(None, (None, None, None, "V", "V", "VA", "W", "", "W", ""), strict=False)
+    @ureg_wraps(None, (None, None, None, "V", "V", "VA", "W", "", "W", ""), strict=False)
     def __init__(
         self,
         id: Id,
@@ -143,44 +143,44 @@ class TransformerParameters(Identifiable, JsonMixin):
             )
 
     @property
-    @ureg.wraps("V", (None,), strict=False)
-    def uhv(self) -> Q_:
+    @ureg_wraps("V", (None,), strict=False)
+    def uhv(self) -> Q_[float]:
         """Phase-to-phase nominal voltages of the high voltages side (V)"""
         return self._uhv
 
     @property
-    @ureg.wraps("V", (None,), strict=False)
-    def ulv(self) -> Q_:
+    @ureg_wraps("V", (None,), strict=False)
+    def ulv(self) -> Q_[float]:
         """Phase-to-phase nominal voltages of the low voltages side (V)"""
         return self._ulv
 
     @property
-    @ureg.wraps("VA", (None,), strict=False)
-    def sn(self) -> Q_:
+    @ureg_wraps("VA", (None,), strict=False)
+    def sn(self) -> Q_[float]:
         """The nominal power of the transformer (VA)"""
         return self._sn
 
     @property
-    @ureg.wraps("W", (None,), strict=False)
-    def p0(self) -> Q_:
+    @ureg_wraps("W", (None,), strict=False)
+    def p0(self) -> Q_[float]:
         """Losses during off-load test (W)"""
         return self._p0
 
     @property
-    @ureg.wraps("", (None,), strict=False)
-    def i0(self) -> float:
+    @ureg_wraps("", (None,), strict=False)
+    def i0(self) -> Q_[float]:
         """Current during off-load test (%)"""
         return self._i0
 
     @property
-    @ureg.wraps("W", (None,), strict=False)
-    def psc(self) -> Q_:
+    @ureg_wraps("W", (None,), strict=False)
+    def psc(self) -> Q_[float]:
         """Losses during short circuit test (W)"""
         return self._psc
 
     @property
-    @ureg.wraps("", (None,), strict=False)
-    def vsc(self) -> float:
+    @ureg_wraps("", (None,), strict=False)
+    def vsc(self) -> Q_[float]:
         """Voltages on LV side during short circuit test (%)"""
         return self._vsc
 
@@ -214,8 +214,8 @@ class TransformerParameters(Identifiable, JsonMixin):
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TYPE_NAME_SYNTAX)
 
-    @ureg.wraps(("ohm", "S", "", None), (None,), strict=False)
-    def to_zyk(self) -> tuple[Q_, Q_, float, float]:
+    @ureg_wraps(("ohm", "S", "", None), (None,), strict=False)
+    def to_zyk(self) -> tuple[Q_[complex], Q_[complex], Q_[float], float]:
         """Compute the transformer parameters ``z2``, ``ym``, ``k`` and ``orientation`` mandatory
         for some models.
 

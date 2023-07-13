@@ -13,7 +13,7 @@ from roseau.load_flow.models.grounds import Ground
 from roseau.load_flow.models.lines.parameters import LineParameters
 from roseau.load_flow.models.sources import VoltageSource
 from roseau.load_flow.typing import Id, JsonDict
-from roseau.load_flow.units import Q_, ureg
+from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow.utils import BranchType
 
 logger = logging.getLogger(__name__)
@@ -250,12 +250,12 @@ class Line(AbstractBranch):
             self._connect(self.ground)
 
     @property
-    @ureg.wraps("km", (None,), strict=False)
-    def length(self) -> Q_:
+    @ureg_wraps("km", (None,), strict=False)
+    def length(self) -> Q_[float]:
         return self._length
 
     @length.setter
-    @ureg.wraps(None, (None, "km"), strict=False)
+    @ureg_wraps(None, (None, "km"), strict=False)
     def length(self, value: float) -> None:
         if value <= 0:
             msg = f"A line length must be greater than 0. {value:.2f} km provided."
@@ -306,8 +306,8 @@ class Line(AbstractBranch):
         return du_line * i_line.conj()  # Sₗ = ΔU.Iₗ*
 
     @property
-    @ureg.wraps("VA", (None,), strict=False)
-    def res_series_power_losses(self) -> Q_:
+    @ureg_wraps("VA", (None,), strict=False)
+    def res_series_power_losses(self) -> Q_[np.ndarray]:
         """Get the power losses in the series elements of the line (VA)."""
         return self._res_series_power_losses_getter(warning=True)
 
@@ -325,8 +325,8 @@ class Line(AbstractBranch):
         return pot1 * i1_shunt.conj() + pot2 * i2_shunt.conj()
 
     @property
-    @ureg.wraps("VA", (None,), strict=False)
-    def res_shunt_power_losses(self) -> Q_:
+    @ureg_wraps("VA", (None,), strict=False)
+    def res_shunt_power_losses(self) -> Q_[np.ndarray]:
         """Get the power losses in the shunt elements of the line (VA)."""
         return self._res_shunt_power_losses_getter(warning=True)
 
@@ -336,8 +336,8 @@ class Line(AbstractBranch):
         return series_losses + shunt_losses
 
     @property
-    @ureg.wraps("VA", (None,), strict=False)
-    def res_power_losses(self) -> Q_:
+    @ureg_wraps("VA", (None,), strict=False)
+    def res_power_losses(self) -> Q_[np.ndarray]:
         """Get the power losses in the line (VA)."""
         return self._res_power_losses_getter(warning=True)
 

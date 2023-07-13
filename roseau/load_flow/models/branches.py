@@ -9,7 +9,7 @@ from roseau.load_flow.converters import calculate_voltages
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import Element
 from roseau.load_flow.typing import Id, JsonDict
-from roseau.load_flow.units import Q_, ureg
+from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow.utils import BranchType
 
 logger = logging.getLogger(__name__)
@@ -75,8 +75,8 @@ class AbstractBranch(Element):
         return self._res_getter(value=self._res_currents, warning=warning)
 
     @property
-    @ureg.wraps(("A", "A"), (None,), strict=False)
-    def res_currents(self) -> tuple[Q_, Q_]:
+    @ureg_wraps(("A", "A"), (None,), strict=False)
+    def res_currents(self) -> tuple[Q_[np.ndarray], Q_[np.ndarray]]:
         """The load flow result of the branch currents (A)."""
         return self._res_currents_getter(warning=True)
 
@@ -88,8 +88,8 @@ class AbstractBranch(Element):
         return powers1, powers2
 
     @property
-    @ureg.wraps(("VA", "VA"), (None,), strict=False)
-    def res_powers(self) -> tuple[Q_, Q_]:
+    @ureg_wraps(("VA", "VA"), (None,), strict=False)
+    def res_powers(self) -> tuple[Q_[np.ndarray], Q_[np.ndarray]]:
         """The load flow result of the branch powers (VA)."""
         return self._res_powers_getter(warning=True)
 
@@ -99,8 +99,8 @@ class AbstractBranch(Element):
         return pot1, pot2
 
     @property
-    @ureg.wraps(("V", "V"), (None,), strict=False)
-    def res_potentials(self) -> tuple[Q_, Q_]:
+    @ureg_wraps(("V", "V"), (None,), strict=False)
+    def res_potentials(self) -> tuple[Q_[np.ndarray], Q_[np.ndarray]]:
         """The load flow result of the branch potentials (V)."""
         return self._res_potentials_getter(warning=True)
 
@@ -109,8 +109,8 @@ class AbstractBranch(Element):
         return calculate_voltages(pot1, self.phases1), calculate_voltages(pot2, self.phases2)
 
     @property
-    @ureg.wraps(("V", "V"), (None,), strict=False)
-    def res_voltages(self) -> tuple[Q_, Q_]:
+    @ureg_wraps(("V", "V"), (None,), strict=False)
+    def res_voltages(self) -> tuple[Q_[np.ndarray], Q_[np.ndarray]]:
         """The load flow result of the branch voltages (V)."""
         return self._res_voltages_getter(warning=True)
 
