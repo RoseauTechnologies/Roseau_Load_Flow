@@ -1,12 +1,19 @@
 # Changelog
 
-## Version 0.4.1
+## Version 0.5.0
 
 **In development**
 
-* [PR92](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/92) Add the changelog in the documentation
-* [PR92](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/92) Use NodeJs 20 in the Dockerfile
-* [PR92](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/92) Correction of a dead link in the README
+* [PR97](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/97) Add the model section to the documentation
+* [PR96](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/96)
+  * Add single-phase transformer
+  * Add split-phase transformer
+  * Remove the `TransformerType` enumeration
+* [PR93](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/93) Add short circuit computation
+* [PR92](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/92)
+  * Add the changelog in the documentation
+  *  Use NodeJs 20 in the Dockerfile
+  *  Correction of a dead link in the README
 
 ## Version 0.4.0
 
