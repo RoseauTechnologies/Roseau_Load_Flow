@@ -10,7 +10,7 @@ from roseau.load_flow.converters import calculate_voltage_phases, calculate_volt
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.core import Element
 from roseau.load_flow.typing import Id, JsonDict
-from roseau.load_flow.units import Q_, ureg
+from roseau.load_flow.units import Q_, ureg_wraps
 
 logger = logging.getLogger(__name__)
 
@@ -78,13 +78,13 @@ class Bus(Element):
         return f"{type(self).__name__}(id={self.id!r}, phases={self.phases!r})"
 
     @property
-    @ureg.wraps("V", (None,), strict=False)
-    def potentials(self) -> Q_:
+    @ureg_wraps("V", (None,), strict=False)
+    def potentials(self) -> Q_[np.ndarray]:
         """The potentials of the bus (V)."""
         return self._potentials
 
     @potentials.setter
-    @ureg.wraps(None, (None, "V"), strict=False)
+    @ureg_wraps(None, (None, "V"), strict=False)
     def potentials(self, value: Sequence[complex]) -> None:
         if len(value) != len(self.phases):
             msg = f"Incorrect number of potentials: {len(value)} instead of {len(self.phases)}"
@@ -97,8 +97,8 @@ class Bus(Element):
         return self._res_getter(value=self._res_potentials, warning=warning)
 
     @property
-    @ureg.wraps("V", (None,), strict=False)
-    def res_potentials(self) -> Q_:
+    @ureg_wraps("V", (None,), strict=False)
+    def res_potentials(self) -> Q_[np.ndarray]:
         """The load flow result of the bus potentials (V)."""
         return self._res_potentials_getter(warning=True)
 
@@ -107,8 +107,8 @@ class Bus(Element):
         return calculate_voltages(potentials, self.phases)
 
     @property
-    @ureg.wraps("V", (None,), strict=False)
-    def res_voltages(self) -> Q_:
+    @ureg_wraps("V", (None,), strict=False)
+    def res_voltages(self) -> Q_[np.ndarray]:
         """The load flow result of the bus voltages (V).
 
         If the bus has a neutral, the voltages are phase-neutral voltages for existing phases in

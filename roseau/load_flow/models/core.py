@@ -47,12 +47,14 @@ class Element(ABC, Identifiable, JsonMixin):
         return self._network
 
     @classmethod
-    def _check_phases(cls, id: Id, **kwargs: str) -> None:
+    def _check_phases(cls, id: Id, allowed_phases: Optional[frozenset[str]] = None, **kwargs: str) -> None:
+        if allowed_phases is None:
+            allowed_phases = cls.allowed_phases
         name, phases = kwargs.popitem()  # phases, phases1 or phases2
-        if phases not in cls.allowed_phases:
+        if phases not in allowed_phases:
             msg = (
                 f"{cls.__name__} of id {id!r} got invalid {name} {phases!r}, allowed values are: "
-                f"{sorted(cls.allowed_phases)}"
+                f"{sorted(allowed_phases)}"
             )
             logger.error(msg)
             raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.BAD_PHASE)
@@ -65,7 +67,7 @@ class Element(ABC, Identifiable, JsonMixin):
             value:
                 The new network for `self`. May also be None.
         """
-        # The setter can not be used to replace an existing network
+        # The setter cannot be used to replace an existing network
         if self._network is not None and value is not None and self._network != value:
             self._raise_several_network()
 

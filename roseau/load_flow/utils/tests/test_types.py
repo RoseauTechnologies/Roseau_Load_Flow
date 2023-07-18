@@ -1,14 +1,13 @@
 import pytest
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
-from roseau.load_flow.utils.types import ConductorType, InsulationType, LineModel, LineType, TransformerType
+from roseau.load_flow.utils.types import ConductorType, InsulationType, LineModel, LineType
 
 TYPES = [
     ConductorType,
     InsulationType,
     LineModel,
     LineType,
-    TransformerType,
 ]
 TYPES_IDS = [x.__name__ for x in TYPES]
 
@@ -52,78 +51,6 @@ def test_conductor_type():
         ConductorType.from_string("nan")
     assert "cannot be converted into a ConductorType" in e.value.args[0]
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_CONDUCTOR_TYPE
-
-
-def test_transformer_type():
-    valid_windings = ("y", "yn", "z", "zn", "d")
-    valid_phase_displacements = (0, 5, 6, 11)
-    valid_types = {"dd", "yy", "yny", "yyn", "ynyn", "dz", "dzn", "dy", "dyn", "yd", "ynd", "yz", "ynz", "yzn", "ynzn"}
-    valid_full_types = {
-        "dd0",
-        "dd6",
-        "yy0",
-        "yy6",
-        "yny0",
-        "yny6",
-        "yyn0",
-        "yyn6",
-        "ynyn0",
-        "ynyn6",
-        "dz0",
-        "dz6",
-        "dzn0",
-        "dzn6",
-        "dy5",
-        "dy11",
-        "dyn5",
-        "dyn11",
-        "yd5",
-        "yd11",
-        "ynd5",
-        "ynd11",
-        "yz5",
-        "yz11",
-        "ynz5",
-        "ynz11",
-        "yzn5",
-        "yzn11",
-        "ynzn5",
-        "ynzn11",
-    }
-
-    for winding1 in valid_windings:
-        for winding2 in valid_windings:
-            t = f"{winding1}{winding2}"
-            if t in valid_types:
-                assert not TransformerType.validate_windings(t)
-                w1, w2, p = TransformerType.extract_windings(t)
-                assert w1 == winding1.upper()
-                assert w2 == winding2
-                assert p is None
-                for phase_displacement in valid_phase_displacements:
-                    t = f"{winding1}{winding2}{phase_displacement}"
-                    if t in valid_full_types:
-                        assert TransformerType.validate_windings(t)
-                        w1, w2, p = TransformerType.extract_windings(t)
-                        assert w1 == winding1.upper()
-                        assert w2 == winding2
-                        assert p == phase_displacement
-                    else:
-                        assert not TransformerType.validate_windings(t)
-                        with pytest.raises(RoseauLoadFlowException) as e:
-                            TransformerType.extract_windings(t)
-                        assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS
-            else:
-                assert not TransformerType.validate_windings(t)
-                with pytest.raises(RoseauLoadFlowException):
-                    TransformerType.extract_windings(t)
-                assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS
-
-    for x in TransformerType:
-        s = str(x)
-        w1, w2, phase_displacement = TransformerType.extract_windings(s)
-        assert f"{w1}{w2}" == s
-        assert phase_displacement is None
 
 
 def test_line_model():

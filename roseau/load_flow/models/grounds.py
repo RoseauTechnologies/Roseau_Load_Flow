@@ -7,7 +7,7 @@ from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowE
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import Element
 from roseau.load_flow.typing import Id, JsonDict
-from roseau.load_flow.units import Q_, ureg
+from roseau.load_flow.units import Q_, ureg_wraps
 
 logger = logging.getLogger(__name__)
 
@@ -55,8 +55,8 @@ class Ground(Element):
         return self._res_getter(self._res_potential, warning)
 
     @property
-    @ureg.wraps("V", (None,), strict=False)
-    def res_potential(self) -> Q_:
+    @ureg_wraps("V", (None,), strict=False)
+    def res_potential(self) -> Q_[complex]:
         """The load flow result of the ground potential (V)."""
         return self._res_potential_getter(warning=True)
 

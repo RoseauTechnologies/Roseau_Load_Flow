@@ -10,7 +10,7 @@ from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowE
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import Element
 from roseau.load_flow.typing import Id, JsonDict
-from roseau.load_flow.units import Q_, ureg
+from roseau.load_flow.units import Q_, ureg_wraps
 
 logger = logging.getLogger(__name__)
 
@@ -88,13 +88,13 @@ class VoltageSource(Element):
         )
 
     @property
-    @ureg.wraps("V", (None,), strict=False)
-    def voltages(self) -> Q_:
+    @ureg_wraps("V", (None,), strict=False)
+    def voltages(self) -> Q_[np.ndarray]:
         """The voltages of the source (V)."""
         return self._voltages
 
     @voltages.setter
-    @ureg.wraps(None, (None, "V"), strict=False)
+    @ureg_wraps(None, (None, "V"), strict=False)
     def voltages(self, voltages: Sequence[complex]) -> None:
         if len(voltages) != self._size:
             msg = f"Incorrect number of voltages: {len(voltages)} instead of {self._size}"
@@ -112,8 +112,8 @@ class VoltageSource(Element):
         return self._res_getter(value=self._res_currents, warning=warning)
 
     @property
-    @ureg.wraps("A", (None,), strict=False)
-    def res_currents(self) -> Q_:
+    @ureg_wraps("A", (None,), strict=False)
+    def res_currents(self) -> Q_[np.ndarray]:
         """The load flow result of the source currents (A)."""
         return self._res_currents_getter(warning=True)
 
@@ -121,8 +121,8 @@ class VoltageSource(Element):
         return self.bus._get_potentials_of(self.phases, warning)
 
     @property
-    @ureg.wraps("V", (None,), strict=False)
-    def res_potentials(self) -> Q_:
+    @ureg_wraps("V", (None,), strict=False)
+    def res_potentials(self) -> Q_[np.ndarray]:
         """The load flow result of the source potentials (V)."""
         return self._res_potentials_getter(warning=True)
 
@@ -132,8 +132,8 @@ class VoltageSource(Element):
         return pots * curs.conj()
 
     @property
-    @ureg.wraps("VA", (None,), strict=False)
-    def res_powers(self) -> np.ndarray:
+    @ureg_wraps("VA", (None,), strict=False)
+    def res_powers(self) -> Q_[np.ndarray]:
         """The load flow result of the source powers (VA)."""
         return self._res_powers_getter(warning=True)
 
@@ -155,7 +155,7 @@ class VoltageSource(Element):
 
     def to_dict(self) -> JsonDict:
         if self.bus is None:
-            msg = f"The voltage source {self.id!r} is disconnected and can not be used anymore."
+            msg = f"The voltage source {self.id!r} is disconnected and cannot be used anymore."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DISCONNECTED_ELEMENT)
         return {

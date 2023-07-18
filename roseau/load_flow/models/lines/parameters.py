@@ -8,7 +8,7 @@ from typing_extensions import Self
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.typing import Id, JsonDict
-from roseau.load_flow.units import Q_, ureg
+from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow.utils import (
     CX,
     EPSILON_0,
@@ -43,7 +43,7 @@ class LineParameters(Identifiable, JsonMixin):
         rf"^({_type_re})_({_material_re})_{_section_re}$", flags=re.IGNORECASE
     )
 
-    @ureg.wraps(None, (None, None, "ohm/km", "S/km"), strict=False)
+    @ureg_wraps(None, (None, None, "ohm/km", "S/km"), strict=False)
     def __init__(self, id: Id, z_line: np.ndarray, y_shunt: Optional[np.ndarray] = None) -> None:
         """LineParameters constructor.
 
@@ -86,13 +86,13 @@ class LineParameters(Identifiable, JsonMixin):
         )
 
     @property
-    @ureg.wraps("ohm/km", (None,), strict=False)
-    def z_line(self) -> Q_:
+    @ureg_wraps("ohm/km", (None,), strict=False)
+    def z_line(self) -> Q_[np.ndarray]:
         return self._z_line
 
     @property
-    @ureg.wraps("S/km", (None,), strict=False)
-    def y_shunt(self) -> Q_:
+    @ureg_wraps("S/km", (None,), strict=False)
+    def y_shunt(self) -> Q_[np.ndarray]:
         return self._y_shunt
 
     @property
@@ -100,7 +100,7 @@ class LineParameters(Identifiable, JsonMixin):
         return self._with_shunt
 
     @classmethod
-    @ureg.wraps(
+    @ureg_wraps(
         None,
         (
             None,
@@ -301,7 +301,7 @@ class LineParameters(Identifiable, JsonMixin):
         return z_line, y_shunt, model
 
     @classmethod
-    @ureg.wraps(None, (None, None, None, None, None, "mm**2", "mm**2", "m", "m"), strict=False)
+    @ureg_wraps(None, (None, None, None, None, None, "mm**2", "mm**2", "m", "m"), strict=False)
     def from_lv_exact(
         cls,
         type_name: str,
@@ -514,7 +514,7 @@ class LineParameters(Identifiable, JsonMixin):
         return z_line, y_shunt, LineModel.LV_EXACT
 
     @classmethod
-    @ureg.wraps(None, (None, None, "mm²", "m", "mm"), strict=False)
+    @ureg_wraps(None, (None, None, "mm²", "m", "mm"), strict=False)
     def from_name_lv(
         cls,
         name: str,
