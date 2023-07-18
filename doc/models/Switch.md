@@ -1,5 +1,7 @@
 # Switch
 
+## Definition
+
 It refers to an ideal switch that connect two buses.
 
 ```{image}  /_static/Switch.svg
@@ -8,12 +10,18 @@ It refers to an ideal switch that connect two buses.
 :align: center
 ```
 
+## Equations
+
 The associated equations are:
 ```{math}
 \left\{
     \begin{aligned}
-        I_{\mathrm{abcn},1} &= - I_{\mathrm{abcn},2}\\
-        V_{\mathrm{abcn},1} &= V_{\mathrm{abcn},2}\\
+        \underline{I_1} &= - \underline{I_2}\\
+        \underline{V_1} &= \underline{V_2}\\
     \end{aligned}
 \right.
 ```
+
+## Example
+
+TODO

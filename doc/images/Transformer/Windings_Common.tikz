@@ -1,0 +1,303 @@
+%
+% Definitions of windings
+%
+\pgfmathsetmacro{\yzero}{0}%
+\pgfmathsetmacro{\yone}{-0.5}%
+\pgfmathsetmacro{\ytwo}{-1}%
+\pgfmathsetmacro{\ythree}{-1.5}%
+\pgfmathsetmacro{\yfour}{-2}%
+\pgfmathsetmacro{\yfive}{-2.5}%
+\pgfmathsetmacro{\ysix}{-3}%
+\pgfmathsetmacro{\yseven}{-3.5}%
+\pgfmathsetmacro{\yeight}{-4}%
+
+
+\pgfmathsetmacro{\xstep}{0.5}%
+\pgfmathsetmacro{\xzero}{0}%
+\pgfmathsetmacro{\xone}{0.25}%
+\pgfmathsetmacro{\xtwo}{1.8}%
+\pgfmathsetmacro{\xthree}{2}%
+\pgfmathsetmacro{\xfour}{2.2}%
+\pgfmathsetmacro{\xfive}{3.75}%
+\pgfmathsetmacro{\xsix}{4}%
+
+\ctikzset{european, straight voltages, bipoles/length=1.2cm, cute inductors}%
+
+\tikzset{
+    left d/.pic={
+        \draw[red,text=black] (\xzero, \yzero) to[short, -] (\xsix, \yzero)%
+        to[short, -]  (\xsix, \yone) node[right] {A}%
+        to[short, -] (\xfive, \yone)%
+        to[L, mirror, name=X] (\xstep, \yone)%
+        to[short] (\xsix, \yfour) node[right] {B} %
+        to[short, -] (\xfive, \yfour)%
+        to[L, mirror, name=Y] (\xstep, \yfour) %
+        to[short] (\xsix, \yseven) node[right] {C} %
+        to[short, -] (\xfive, \yseven)%
+        to[L, mirror, name=Z] (\xstep, \yseven) %
+        to[short,-] (\xzero, \yseven) to[short,-] (\xzero, \yzero);%
+        \path[fill=red,draw=red] (X.ul dot) node[circ]{}%
+        (Y.ul dot) node[circ]{}%
+        (Z.ul dot) node[circ]{};%
+    },
+    right d/.pic={
+        \draw[red,text=black] (\xzero,0) to[short, -] (\xsix, \yzero)%
+        to[short, -] (\xsix, \yseven)%
+        to[short, -] (\xfive, \yseven)%
+        to[L, mirror, name=z] (\xstep, \yseven)%
+        to[short, -] (\xzero, \yseven) %
+        to[short] (\xzero, \yseven) node[left] {c} %
+        to[short, -] (\xfive, \yfour) %
+        to[L, mirror, name=y] (\xstep, \yfour)%
+        to[short, -] (\xzero, \yfour) node[left] {b} %
+        to[short, -] (\xfive, \yone)%
+        to[L, mirror, name=x] (\xstep, \yone) %
+        to[short, -] (\xzero, \yone) node[left] {a} %
+        to[short, -] (\xzero, \yzero);%
+        \path[fill=red,draw=red] (x.ur dot) node[circ]{}%
+        (y.ur dot) node[circ]{}%
+        (z.ur dot) node[circ]{};%
+    },
+    right d6/.pic={
+        \draw[red, text=black] (\xzero, \yone) node [left] {a}%
+        to[short, -] (\xzero, \yzero)%
+        to[short, -] (\xfive, \yzero) %
+        to[short, -] (\xfive, \yone)%
+        to[L, mirror, name=x] (\xstep, \yone)%
+        to[short, -] (\xfive, \ythree)%
+        to[short, -] (\xzero, \ythree)%
+        to[short, -] (\xzero, \yfour) node[left] {b};%
+        \draw[red, text=black] (\xfive, \ythree)%
+        to[short, -] (\xfive, \yfour)%
+        to[L, mirror, name=y] (\xstep, \yfour)%
+        to[short, -] (\xfive, \ysix)%
+        to[short, -] (\xzero, \ysix)%
+        to[short, -] (\xzero, \yseven) node[left] {c};%
+        \draw[red, text=black] (\xfive, \ysix)%
+        to[short, -] (\xfive, \yseven)%
+        to[L, mirror, name=z] (\xstep, \yseven)%
+        to[short, -] (\xstep, \yeight)%
+        to[short, -] (\xsix, \yeight)%
+        to[short, -] (\xsix, \yone)
+        to[short, -] (\xfive, \yone);%
+        \path[fill=red,draw=red] (x.ur dot) node[circ]{}%
+        (y.ur dot) node[circ]{}%
+        (z.ur dot) node[circ]{};%
+    },
+    right d11/.pic={
+        \draw[red, text=black] (\xzero, \yone) node [left] {a}%
+        to[L, name=x] (\xfive, \yone)%
+        to[short, -] (\xsix, \yone)%
+        to[short, -] (\xsix, \yeight)%
+        to[short, -] (\xzero, \yeight)%
+        to[short, -] (\xzero, \yseven) node[left] {c}%
+        to[L, name=z] (\xfive, \yseven)%
+        to[short, -] (\xzero, \yfour) node[left] {b}%
+        to[L, name=y] (\xfive, \yfour)%
+        to[short, -] (\xzero, \yone);%
+        \path[fill=red,draw=red] (x.ul dot) node[circ]{}%
+        (y.ul dot) node[circ]{}%
+        (z.ul dot) node[circ]{};%
+    },
+    right d5/.pic={
+        \draw[red, text=black] (\xzero, \yone) node [left] {a}%
+        to[short, -] (\xzero, \ytwo)%
+        to[short, -] (\xfive, \ytwo)%
+        to[short, -] (\xfive, \yone)%
+        to[L, mirror, name=x] (\xstep, \yone)%
+        to[short, -] (\xstep, \yzero)%
+        to[short, -] (\xsix, \yzero)%
+        to[short, -] (\xsix, \yseven)%
+        to[short, -] (\xfive, \yseven);%
+        \draw[red, text=black] (\xzero, \yfour) node [left] {b}%
+        to[short, -] (\xzero, \yfive)%
+        to[short, -] (\xfive, \yfive)%
+        to[short, -] (\xfive, \yfour)%
+        to[L, mirror, name=y] (\xstep, \yfour)%
+        to[short, -] (\xfive, \ytwo);%
+        \draw[red, text=black] (\xzero, \yseven) node [left] {b}%
+        to[short, -] (\xzero, \yeight)%
+        to[short, -] (\xfive, \yeight)%
+        to[short, -] (\xfive, \yseven)%
+        to[L, mirror, name=z] (\xstep, \yseven)%
+        to[short, -] (\xfive, \yfive);%
+        \path[fill=red,draw=red] (x.ur dot) node[circ]{}%
+        (y.ur dot) node[circ]{}%
+        (z.ur dot) node[circ]{};%
+    },
+    left y/.pic={
+        \draw[RoseauBlue, text=black] (\xzero, \yone) to[short, -] (\xstep, \yone)%
+        to[L, -, name=X] (\xfive, \yone) node[right] {A}%
+        (\xzero,\yfour) to[short, -] (\xstep, \yfour)%
+        to[L, -, name=Y]  (\xfive, \yfour) node[right] {B}%
+        (\xzero,\yseven) to[short, -] (\xstep, \yseven)%
+        to[L, -, name=Z]  (\xfive, \yseven) node[right] {C}%
+        (\xzero,\yone) to[short, -] (\xzero,\yseven);%
+        \path[fill=RoseauBlue,draw=RoseauBlue] (X.ur dot) node[circ]{}%
+        (Y.ur dot) node[circ]{}%
+        (Z.ur dot) node[circ]{};%
+    },
+    right y/.pic={
+        \draw[RoseauBlue,text=black] (\xsix, \yone) to[short, -] (\xfive, \yone)%
+        to[L, -, mirror, name=x] (\xzero, \yone) node[left] {a}%
+        (\xsix, \yfour) to[short, -] (\xfive, \yfour)%
+        to[L, -, mirror, name=y]  (\xzero,\yfour) node[left] {b}%
+        (\xsix, \yseven) to[short, -] (\xfive, \yseven)%
+        to[L, -, mirror, name=z]  (\xzero,\yseven) node[left] {c}
+        (\xsix,\yone) to[short, -] (\xsix,\yseven);%
+        \path[fill=RoseauBlue,draw=RoseauBlue] (x.ur dot) node[circ]{}%
+        (y.ur dot) node[circ]{}%
+        (z.ur dot) node[circ]{};%
+    },
+    right y reverse/.pic={
+        \draw[RoseauBlue, text=black] (\xzero, \yone) node[left] {a} %
+        to[short, -] (\xzero, \ytwo)%
+        to[short, -] (\xsix, \ytwo)%
+        to[short, -] (\xsix, \yone)%
+        to[short, -] (\xfive, \yone)%
+        to[L, -, mirror, name=x] (\xstep,\yone);%
+        \draw[RoseauBlue, text=black] (\xzero, \yfour) node[left] {b} %
+        to[short, -] (\xzero, \yfive)%
+        to[short, -] (\xsix, \yfive)%
+        to[short, -] (\xsix, \yfour)%
+        to[short, -] (\xfive, \yfour)%
+        to[L, -, mirror, name=y] (\xstep,\yfour);%
+        \draw[RoseauBlue, text=black] (\xzero, \yseven) node[left] {c} %
+        to[short, -] (\xzero, \yeight)%
+        to[short, -] (\xsix, \yeight)%
+        to[short, -] (\xsix, \yseven)%
+        to[short, -] (\xfive, \yseven)%
+        to[L, -, mirror, name=z] (\xstep,\yseven);%
+        \draw[RoseauBlue] (\xstep, \yone) to[crossing] (\xstep, \ythree)%
+        to[short, -] (\xstep, \yfour)%
+        to[crossing] (\xstep, \ysix)%
+        to[short, -] (\xstep, \yseven);%
+        \path[fill=RoseauBlue,draw=RoseauBlue] (x.ur dot) node[circ]{}%
+        (y.ur dot) node[circ]{}%
+        (z.ur dot) node[circ]{};%
+    },
+    right z0/.pic={
+        \draw[RoseauGreen, text=black] (\xzero, \yone) node[left] {a} %
+        to[L, name=x1] (\xtwo, \yone)%
+        to[short, -] (\xtwo,0)%
+        to[short, -] (\xsix,0)%
+        to[short, -] (\xsix,\yseven)%
+        to[short, -] (\xfive,\yseven)%
+        to[L, mirror, name=z2] (\xfour, \yseven);%
+        \draw[RoseauGreen, text=black] (\xzero, \yfour) node[left] {b} %
+        to[L, name=y1] (\xtwo, \yfour)%
+        to[short, -] (\xfive, \yone)%
+        to[L, mirror, name=x2] (\xfour, \yone);%
+        \draw[RoseauGreen, text=black] (\xzero, \yseven) node[left] {b} %
+        to[L, name=z1] (\xtwo, \yseven)%
+        to[short, -] (\xfive, \yfour)%
+        to[L, mirror, name=y2] (\xfour, \yfour);%
+        \draw[RoseauGreen, text=black] (\xfour, \yseven) to[short, -] (\xfour, \yfour) to[short, -] (\xfour, \yone);
+        \path[fill=RoseauGreen,draw=RoseauGreen] (x1.ul dot) node[circ]{}%
+        (x2.ur dot) node[circ]{}%
+        (y1.ul dot) node[circ]{}%
+        (y2.ur dot) node[circ]{}%
+        (z1.ul dot) node[circ]{}%
+        (z2.ur dot) node[circ]{};%
+    },
+    right z6/.pic={
+        \draw[RoseauGreen, text=black] (\xzero, \yone) node[left] {a} %
+        to[short, -] (\xzero,\ytwo)%
+        to[short, -] (\xfive, \ytwo)%
+        to[short, -] (\xfive, \yone)%
+        to[L, mirror, name=x2] (\xfour, \yone)%
+        to[short, -](\xfour, 0)%
+        to[short, -] (\xfive, 0)%
+        to[short, -] (\xsix, 0)%
+        to[short, -] (\xsix, \yseven-0.25)%
+        to[short, -] (\xone, \yseven-0.25)%
+        to[short, -] (\xone, \yseven)%
+        to[L, name=z1] (\xtwo, \yseven);%
+        \draw[RoseauGreen, text=black] (\xzero, \yfour) node[left] {b} %
+        to[short, -] (\xzero,\yfive)%
+        to[short, -] (\xfive, \yfive)%
+        to[short, -] (\xfive, \yfour)%
+        to[L, mirror, name=y2] (\xfour, \yfour)%
+        to[short, -] (\xone, \yone)%
+        to[L, name=x1] (\xtwo, \yone);%
+        \draw[RoseauGreen, text=black] (\xzero, \yseven) node[left] {c} %
+        to[short, -] (\xzero,\yeight)%
+        to[short, -] (\xfive, \yeight)%
+        to[crossing] (\xfive, \yseven)%
+        to[L, mirror, name=z2] (\xfour, \yseven)%
+        to[short, -] (\xone, \yfour)%
+        to[L, name=y1] (\xtwo, \yfour);%
+        \draw[RoseauGreen] (\xtwo, \yone) to[crossing] (\xtwo, \ythree)%
+        to[short, -] (\xtwo, \yfour)%
+        to[crossing] (\xtwo, \ysix)
+        to[short, -] (\xtwo, \yseven);%
+        \path[fill=RoseauGreen,draw=RoseauGreen] (x1.ul dot) node[circ]{}%
+        (x2.ur dot) node[circ]{}%
+        (y1.ul dot) node[circ]{}%
+        (y2.ur dot) node[circ]{}%
+        (z1.ul dot) node[circ]{}%
+        (z2.ur dot) node[circ]{};%
+    },
+    right z11/.pic={
+        \draw[RoseauGreen, text=black] (\xzero, \yone) node[left] {a} %
+        to[L, name=x1] (\xtwo, \yone)%
+        to[short, -] (\xfive, \yfour)%
+        to[L, mirror, name=y2] (\xfour, \yfour);%
+        \draw[RoseauGreen, text=black] (\xzero, \yfour) node[left] {b} %
+        to[L, name=y1] (\xtwo, \yfour)%
+        to[short, -] (\xfive, \yseven)%
+        to[L, mirror, name=z2] (\xfour, \yseven);%
+        \draw[RoseauGreen, text=black] (\xzero, \yseven) node[left] {c} %
+        to[L, name=z1] (\xtwo, \yseven)%
+        to[short, -] (\xtwo, \yeight)%
+        to[short, -] (\xsix, \yeight)%
+        to[short, -] (\xsix, \yone)%
+        to[L, mirror, name=x2] (\xfour, \yone);%
+        \draw[RoseauGreen] (\xfour, \yone) to[short] (\xfour, \yfour) to[short] (\xfour, \yseven);%
+        \path[fill=RoseauGreen,draw=RoseauGreen] (x1.ul dot) node[circ]{}%
+        (x2.ur dot) node[circ]{}%
+        (y1.ul dot) node[circ]{}%
+        (y2.ur dot) node[circ]{}%
+        (z1.ul dot) node[circ]{}%
+        (z2.ur dot) node[circ]{};%
+    },
+    right z5/.pic={
+        \draw[RoseauGreen, text=black] (\xzero, \yone) node[left] {a} %
+        to[short, -] (\xzero, \ytwo)%
+        to[short, -] (\xfive, \ytwo)%
+        to[short, -] (\xfive, \yone)%
+        to[L, mirror, name=x2] (\xfour, \yone)%
+        to[short, -] (\xone, \yfour+0.25)%
+        to[short, -] (\xone, \yfour)%
+        to[L, name=y1] (\xtwo, \yfour);%
+        \draw[RoseauGreen, text=black] (\xzero, \yfour) node[left] {b} %
+        to[short, -] (\xzero, \yfive)%
+        to[short, -] (\xfive, \yfive)%
+        to[short, -] (\xfive, \yfour)%
+        to[L, mirror, name=y2] (\xfour, \yfour)%
+        to[short, -] (\xone, \yseven+0.25)%
+        to[short, -] (\xone, \yseven)%
+        to[L, name=z1] (\xtwo, \yseven);%
+        \draw[RoseauGreen, text=black] (\xzero, \yseven) node[left] {c} %
+        to[short, -] (\xzero, \yseven-0.25)%
+        to[short, -] (\xfive, \yseven-0.25)%
+        to[short, -] (\xfive, \yseven)%
+        to[L, mirror, name=z2] (\xfour, \yseven)%
+        to[crossing] (\xfour, \yeight)%
+        to[short, -] (\xsix, \yeight)%
+        to[short, -] (\xsix, 0)%
+        to[short, -] (\xone, 0)
+        to[short, -] (\xone, \yone)%
+        to[L, name=x1] (\xtwo, \yone);%
+        \draw[RoseauGreen] (\xtwo, \yone) to[crossing] (\xtwo, \ythree)%
+        to[short, -] (\xtwo, \yfour)%
+        to[crossing] (\xtwo, \ysix)%
+        to[short, -] (\xtwo, \yseven);%
+        \path[fill=RoseauGreen,draw=RoseauGreen] (x1.ul dot) node[circ]{}%
+        (x2.ur dot) node[circ]{}%
+        (y1.ul dot) node[circ]{}%
+        (y2.ur dot) node[circ]{}%
+        (z1.ul dot) node[circ]{}%
+        (z2.ur dot) node[circ]{};%
+    }
+}

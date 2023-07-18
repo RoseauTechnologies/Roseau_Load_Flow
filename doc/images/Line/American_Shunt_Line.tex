@@ -1,7 +1,7 @@
 \input{Preambule}%
 
 \begin{document}
-\ctikzset{american, cute inductors}%
+\ctikzset{american}%
 \begin{tikzpicture}[%
     show background rectangle,%
     tight background,%
@@ -102,16 +102,16 @@
     % Dessin
     %
     % Tensions amont
-    \node[left] at (vla) {$\underline{V_{\arm 1}}$};%
-    \node[left] at (vlb) {$\underline{V_{\brm 1}}$};%
-    \node[left] at (vlc) {$\underline{V_{\crm 1}}$};%
-    \node[left] at (vln) {$\underline{V_{\nrm 1}}$};%
+    \node[left] at (vla) {$\underline{V_{1,\arm}}$};%
+    \node[left] at (vlb) {$\underline{V_{1,\brm}}$};%
+    \node[left] at (vlc) {$\underline{V_{1,\crm}}$};%
+    \node[left] at (vln) {$\underline{V_{1,\nrm}}$};%
 
     % Tensions aval
-    \node[right] at (vma) {$\underline{V_{\arm 2}}$};%
-    \node[right] at (vmb) {$\underline{V_{\brm 2}}$};%
-    \node[right] at (vmc) {$\underline{V_{\crm 2}}$};%
-    \node[right] at (vmn) {$\underline{V_{\nrm 2}}$};%
+    \node[right] at (vma) {$\underline{V_{2,\arm}}$};%
+    \node[right] at (vmb) {$\underline{V_{2,\brm}}$};%
+    \node[right] at (vmc) {$\underline{V_{2,\crm}}$};%
+    \node[right] at (vmn) {$\underline{V_{2,\nrm}}$};%
 
     % Tension terre
     \node[ground, \circuitikzbasekey/bipoles/length=2cm] at (g2) {};%
@@ -121,43 +121,43 @@
     % Terre
     \draw (xlit) to[short,-*] (g) to (xmit);%
     \draw (xlit) to[short,-*] (g) to (xmit);%
-    \draw (g2) to[short, i=$\underline{I_{g}}$, *-] (g);%
+    \draw (g2) to[short, i=$\underline{I_{\grm}}$, *-] (g);%
     % Neutre
-    \draw (vln) to[short,*-,i=$\underline{I_{\nrm 1}}$] (xlin) %
+    \draw (vln) to[short,*-,i=$\underline{I_{1,\nrm}}$] (xlin) %
     to[short, -*] (zln)%
     to[R,l=$R_{\nrm}$] ($(zln)!0.5!(xrn)$)%
     to[L,l=$L_{\nrm}$] (xrn)%
     to[short,-] (xrin)%
     to [short,-*] (zmn)%
     to[short,*-] (xmin)%
-    to[short,-*,i<=$\underline{I_{\nrm 2}}$] (vmn);%
+    to[short,-*,i<=$\underline{I_{2,\nrm}}$] (vmn);%
     % C
-    \draw (vlc) to[short,*-,i=$\underline{I_{\crm 1}}$] (xlic)%
+    \draw (vlc) to[short,*-,i=$\underline{I_{1,\crm}}$] (xlic)%
     to[short, -*] (zlc)%
     to[R,l=$R_{\crm}$] ($(zlc)!0.5!(xrc)$)%
     to[L,l=$L_{\crm}$] (xrc)%
     to[short,-] (xric)%
     to [short,-*] (zmc)%
     to[short,*-] (xmic)%
-    to[short,-*,i<=$\underline{I_{\crm 2}}$] (vmc);%
+    to[short,-*,i<=$\underline{I_{2,\crm}}$] (vmc);%
     % B
-    \draw (vlb) to[short,*-,i=$\underline{I_{\brm 1}}$] (xlib)%
+    \draw (vlb) to[short,*-,i=$\underline{I_{1,\brm}}$] (xlib)%
     to[short, -*] (zlb)%
     to[R,l=$R_{\brm}$] ($(zlb)!0.5!(xrb)$) %
     to[L,l=$L_{\brm}$] (xrb)%
     to[short,-] (xrib)%
     to[short,-*] (zmb)%
     to[short,*-] (xmib)%
-    to[short,-*,i<=$\underline{I_{\brm 2}}$] (vmb);%
+    to[short,-*,i<=$\underline{I_{2,\brm}}$] (vmb);%
     % A
-    \draw (vla) to[short,*-,i=$\underline{I_{\arm 1}}$] (xlia)%
+    \draw (vla) to[short,*-,i=$\underline{I_{\arm ,}}$] (xlia)%
     to[short, -*] (zla)%
     to[R,l=$R_{\arm}$] ($(zla)!0.5!(xra)$)%
     to [L,l=$L_{\arm}$] (xra)%
     to[short,-] (xria)%
     to [short,-*] (zma)%
     to[short,*-] (xmia)%
-    to[short,-*,i<=$\underline{I_{\arm 2}}$] (vma);%
+    to[short,-*,i<=$\underline{I_{2,\arm}}$] (vma);%
 
     % Mutuelles des lignes
     \pgfmathsetmacro{\xrm}{\xri+0.0*(\zm-\xri)};%

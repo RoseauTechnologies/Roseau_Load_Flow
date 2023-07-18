@@ -26,15 +26,15 @@ The equations associated to the star voltage source are the following:
 ```{math}
 \left\{
     \begin{split}
-        V_{\mathrm{a}}-V_{\mathrm{n}} &= U_{\mathrm{an}} \\
-        V_{\mathrm{b}}-V_{\mathrm{n}} &= U_{\mathrm{bn}} \\
-        V_{\mathrm{c}}-V_{\mathrm{n}} &= U_{\mathrm{cn}}
+        \underline{V_{\mathrm{a}}}-\underline{V_{\mathrm{n}}} &= \underline{U_{\mathrm{an}}} \\
+        \underline{V_{\mathrm{b}}}-\underline{V_{\mathrm{n}}} &= \underline{U_{\mathrm{bn}}} \\
+        \underline{V_{\mathrm{c}}}-\underline{V_{\mathrm{n}}} &= \underline{U_{\mathrm{cn}}}
     \end{split}
 \right.
 ```
 
-Where $U\in\mathbb{C}^3$ is the voltages (user defined parameters) and $V\in\mathbb{C}^4$ are the node potentials
-(variables).
+Where $\underline{U}\in\mathbb{C}^3$ is the voltages (user defined parameters) and $\underline{V}\in\mathbb{C}^4$
+are the node potentials (variables).
 
 
 ## Delta connection
@@ -60,12 +60,12 @@ The equations associated to the delta voltage source are the following:
 ```{math}
 \left\{
     \begin{split}
-        V_{\mathrm{a}}-V_{\mathrm{b}} &= U_{\mathrm{ab}} \\
-        V_{\mathrm{b}}-V_{\mathrm{c}} &= U_{\mathrm{bc}} \\
-        V_{\mathrm{c}}-V_{\mathrm{a}} &= U_{\mathrm{ca}}
+        \underline{V_{\mathrm{a}}}-\underline{V_{\mathrm{b}}} &= \underline{U_{\mathrm{ab}}} \\
+        \underline{V_{\mathrm{b}}}-\underline{V_{\mathrm{c}}} &= \underline{U_{\mathrm{bc}}} \\
+        \underline{V_{\mathrm{c}}}-\underline{V_{\mathrm{a}}} &= \underline{U_{\mathrm{ca}}}
     \end{split}
 \right.
 ```
 
-Where $U\in\mathbb{C}^3$ are the voltages (user defined parameters) and $V\in\mathbb{C}^3$ are the node potentials
-(variables).
+Where $\underline{U}\in\mathbb{C}^3$ are the voltages (user defined parameters) and $\underline{V}\in\mathbb{C}^3$
+are the node potentials (variables).

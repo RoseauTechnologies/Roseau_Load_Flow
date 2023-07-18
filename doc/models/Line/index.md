@@ -7,20 +7,19 @@ shunt admittance matrix, noted $Y$.
 
 ### Series impedance matrix
 
-The series impedance matrix $Z$, in $\Omega$, is composed of the resistance of the conductors ($R\in{\mathbb{R}^+}
-^4$),
-the self-inductances ($L\in\mathbb{R}^4$) and the mutual inductances ($M\in\mathbb{R}^{12}$).
+The series impedance matrix $\underline{Z}$, in $\Omega$, is composed of the resistance of the conductors ($R\in
+{\mathbb{R}^+}^4$), the self-inductances ($L\in\mathbb{R}^4$) and the mutual inductances ($M\in\mathbb{R}^{12}$).
 
 ```{math}
 \begin{aligned}
-    Z &= R + j \cdot X \\
-    Z &= \begin{pmatrix}
-        Z_{\mathrm{aa}} & Z_{\mathrm{ab}} & Z_{\mathrm{ac}} & Z_{\mathrm{an}}\\
-        Z_{\mathrm{ba}} & Z_{\mathrm{bb}} & Z_{\mathrm{bc}} & Z_{\mathrm{bn}}\\
-        Z_{\mathrm{ca}} & Z_{\mathrm{cb}} & Z_{\mathrm{cc}} & Z_{\mathrm{cn}}\\
-        Z_{\mathrm{na}} & Z_{\mathrm{nb}} & Z_{\mathrm{nc}} & Z_{\mathrm{nn}}\\
+    \underline{Z} &= R + j \cdot X \\
+    \underline{Z} &= \begin{pmatrix}
+        \underline{Z_{\mathrm{aa}}} & \underline{Z_{\mathrm{ab}}} & \underline{Z_{\mathrm{ac}}} & \underline{Z_{\mathrm{an}}}\\
+        \underline{Z_{\mathrm{ba}}} & \underline{Z_{\mathrm{bb}}} & \underline{Z_{\mathrm{bc}}} & \underline{Z_{\mathrm{bn}}}\\
+        \underline{Z_{\mathrm{ca}}} & \underline{Z_{\mathrm{cb}}} & \underline{Z_{\mathrm{cc}}} & \underline{Z_{\mathrm{cn}}}\\
+        \underline{Z_{\mathrm{na}}} & \underline{Z_{\mathrm{nb}}} & \underline{Z_{\mathrm{nc}}} & \underline{Z_{\mathrm{nn}}}\\
     \end{pmatrix}\\
-    Z &= \underbrace{
+    \underline{Z} &= \underbrace{
         \begin{pmatrix}
             R_{\mathrm{a}} & 0 & 0 & 0\\
             0 & R_{\mathrm{b}} & 0 & 0\\
@@ -42,22 +41,22 @@ the self-inductances ($L\in\mathbb{R}^4$) and the mutual inductances ($M\in\math
 ### Admittance matrix
 
 ```{warning}
-The admittance matrix $y$ shouldn't be confused with the shunt admittance matrix $Y$.
+The admittance matrix $\underline{y}$ shouldn't be confused with the shunt admittance matrix $\underline{Y}$.
 ```
 
-$y$ represents the admittances between each node, while $Y$ is used to compute the currents and
+$\underline{y}$ represents the admittances between each node, while $\underline{Y}$ is used to compute the currents and
 voltages.
 
 ```{math}
 \begin{aligned}
-    y &= G + j \cdot B \\
-    y &= \begin{pmatrix}
-        y_{\mathrm{ag}} & y_{\mathrm{ab}} & y_{\mathrm{ac}} & y_{\mathrm{an}}\\
-        y_{\mathrm{ab}} & y_{\mathrm{bg}} & y_{\mathrm{bc}} & y_{\mathrm{bn}}\\
-        y_{\mathrm{ac}} & y_{\mathrm{bc}} & y_{\mathrm{cg}} & y_{\mathrm{cn}}\\
-        y_{\mathrm{an}} & y_{\mathrm{bn}} & y_{\mathrm{cn}} & y_{\mathrm{ng}}
+    \underline{y} &= G + j \cdot B \\
+    \underline{y} &= \begin{pmatrix}
+        \underline{y_{\mathrm{ag}}} & \underline{y_{\mathrm{ab}}} & \underline{y_{\mathrm{ac}}} & \underline{y_{\mathrm{an}}}\\
+        \underline{y_{\mathrm{ab}}} & \underline{y_{\mathrm{bg}}} & \underline{y_{\mathrm{bc}}} & \underline{y_{\mathrm{bn}}}\\
+        \underline{y_{\mathrm{ac}}} & \underline{y_{\mathrm{bc}}} & \underline{y_{\mathrm{cg}}} & \underline{y_{\mathrm{cn}}}\\
+        \underline{y_{\mathrm{an}}} & \underline{y_{\mathrm{bn}}} & \underline{y_{\mathrm{cn}}} & \underline{y_{\mathrm{ng}}}
     \end{pmatrix}\\
-    y &= \underbrace{
+    \underline{y} &= \underbrace{
         \begin{pmatrix}
             G_{\mathrm{a}} & 0 & 0 & 0\\
             0 & G_{\mathrm{b}} & 0 & 0\\
@@ -81,25 +80,72 @@ $C\in\mathbb{R}^{16}$ the transverse susceptances of the line.
 
 ### Shunt admittance matrix
 
-The shunt admittance matrix $Y$ is defined from the admittance matrix $y$ as:
+The shunt admittance matrix $\underline{Y}$ is defined from the admittance matrix $\underline{y}$ as:
 
 ```{math}
-Y =
+\underline{Y} =
 \begin{pmatrix}
-  Y_{\mathrm{aa}} & Y_{\mathrm{ab}} & Y_{\mathrm{ac}} & Y_{\mathrm{an}}\\
-  Y_{\mathrm{ba}} & Y_{\mathrm{bb}} & Y_{\mathrm{bc}} & Y_{\mathrm{bn}}\\
-  Y_{\mathrm{ca}} & Y_{\mathrm{cb}} & Y_{\mathrm{cc}} & Y_{\mathrm{cn}}\\
-  Y_{\mathrm{na}} & Y_{\mathrm{nb}} & Y_{\mathrm{nc}} & Y_{\mathrm{nn}}\\
+  \underline{Y_{\mathrm{aa}}} & \underline{Y_{\mathrm{ab}}} & \underline{Y_{\mathrm{ac}}} & \underline{Y_{\mathrm{an}}}\\
+  \underline{Y_{\mathrm{ba}}} & \underline{Y_{\mathrm{bb}}} & \underline{Y_{\mathrm{bc}}} & \underline{Y_{\mathrm{bn}}}\\
+  \underline{Y_{\mathrm{ca}}} & \underline{Y_{\mathrm{cb}}} & \underline{Y_{\mathrm{cc}}} & \underline{Y_{\mathrm{cn}}}\\
+  \underline{Y_{\mathrm{na}}} & \underline{Y_{\mathrm{nb}}} & \underline{Y_{\mathrm{nc}}} & \underline{Y_{\mathrm{nn}}}\\
 \end{pmatrix}
 \quad \text{with} \quad
 \left\{
   \begin{aligned}
-    Y_{ii} &= \sum_{k\in\{\mathrm{a},\mathrm{b},\mathrm{c},\mathrm{n},\mathrm{g}\}}{y_{ik}}\\
-    Y_{ij} &= -y_{ij}\\
+    \underline{Y_{ii}} &= \sum_{k\in\{\mathrm{a},\mathrm{b},\mathrm{c},\mathrm{n},\mathrm{g}\}}{\underline{y_{ik}}}\\
+    \underline{Y_{ij}} &= -\underline{y_{ij}}\\
   \end{aligned}
 \right.\text{, }\forall(i,j)\in\{\mathrm{a},\mathrm{b},\mathrm{c},\mathrm{n}\}^2
 ```
 
+## Line parameters
+
+To define the parameters of the lines, the `LineParameters` instance must be used. It takes the series impedance
+matrix $\underline{Z}$ and optionally, the shunt admittance matrix $\underline{Y}$. The first one must be given in
+$\Omega$/km (or equivalent unit) and the second must be given in S/km (or equivalent unit).
+
+```python
+import numpy as np
+
+from roseau.load_flow import LineParameters, Q_
+
+# A impedance matrix
+z_line = Q_(
+    np.array(
+        [
+            [0.3 + 0.35j, 0.25j, 0.25j, 0.25j],
+            [0.25j, 0.3 + 0.35j, 0.25j, 0.25j],
+            [0.25j, 0.25j, 0.3 + 0.35j, 0.25j],
+            [0.25j, 0.25j, 0.25j, 0.3 + 0.35j],
+        ]
+    ),
+    "ohm/km",
+)
+
+# A shunt admittance matrix
+y_shunt = Q_(
+    np.array(
+        [
+            [20 + 475j, -68j, -10j, -68j],
+            [-68j, 20 + 475j, -68j, -10j],
+            [-10j, -68j, 20 + 475j, -68j],
+            [-68j, -10j, -68j, 20 + 475j],
+        ]
+    ),
+    "uS/km",  # micro Siemens per kilometer
+)
+
+# The line parameter for a simple line (no shunt)
+simple_line_parameters = LineParameters(id="simple_line_parameters", z_line=z_line)
+
+# The line parameter for a line with a shunt
+shunt_line_parameters = LineParameters(
+    id="shunt_line_parameters", z_line=z_line, y_shunt=y_shunt
+)
+```
+
+## Available models
 
 The following line models are available in *Roseau Load Flow*:
 

@@ -1,40 +1,145 @@
-# Transformers
+(three-phase-transformer)=
+# Three-phase transformer
 
-## Three-phase Transformer
+## Definition
 
 Three-phase transformers can be modeled with 3 transformers, connected to the primary side (generally the high voltage
 side) with the primary windings and to the secondary side (generally the low voltage side) with the secondary windings.
 
-```{image}  /_static/Transformer.png
-:alt: Transformer diagram
+````{tab} European standards
+```{image}  /_static/Transformer/European_Three_Phase_Transformer.svg
+:alt: Three-phase transformer diagram
 :width: 700px
 :align: center
 ```
+````
 
-As non-ideal models are used in Roseau Load Flow, we can see the addition of $Z_2$ the series impedances
-and $Y_m$ the magnetizing admittances.
-
-### Windings
-
-There are multiple ways to connect the transformers, which are represented in the following windings diagram:
-
-```{image}  /_static/Windings.png
-:alt: Windings diagram
+````{tab} American standards
+```{image}  /_static/Transformer/American_Three_Phase_Transformer.svg
+:alt: Three-phase transformer diagram
 :width: 700px
 :align: center
 ```
+````
+
+As non-ideal models are used in *Roseau Load Flow*, we can see the addition of $\underline{Z_2}$ the series impedances
+and $\underline{Y_{\mathrm{m}}}$ the magnetizing admittances.
 
 For example, the windings $Dyn11$ are represented by the following diagram:
 
-```{image}  /_static/Dyn11.png
+````{tab} European standards
+```{image}  /_static/Transformer/European_Dyn11.svg
 :alt: Dyn11 windings diagram
-:width: 600px
+:width: 700px
+:align: center
+```
+````
+
+````{tab} American standards
+```{image}  /_static/Transformer/American_Dyn11.svg
+:alt: Dyn11 windings diagram
+:width: 700px
+:align: center
+```
+````
+
+## Windings
+
+There are multiple ways to connect the transformers, which are represented in the following windings diagrams
+
+### Phase displacement of 0
+
+```{image}  /_static/Transformer/Windings_Dd0.svg
+:alt: Windings Dd0 diagram
+:width: 400px
+:align: center
+```
+<br/>
+
+```{image}  /_static/Transformer/Windings_Yy0.svg
+:alt: Windings Yy0 diagram
+:width: 400px
+:align: center
+```
+<br/>
+
+```{image}  /_static/Transformer/Windings_Dz0.svg
+:alt: Windings Dz0 diagram
+:width: 400px
 :align: center
 ```
 
+### Phase displacement of 6
+
+```{image}  /_static/Transformer/Windings_Dd6.svg
+:alt: Windings Dd6 diagram
+:width: 400px
+:align: center
+```
+<br/>
+
+```{image}  /_static/Transformer/Windings_Yy6.svg
+:alt: Windings Yy6 diagram
+:width: 400px
+:align: center
+```
+<br/>
+
+```{image}  /_static/Transformer/Windings_Dz6.svg
+:alt: Windings Dz6 diagram
+:width: 400px
+:align: center
+```
+
+### Phase displacement of 11
+
+```{image}  /_static/Transformer/Windings_Dy11.svg
+:alt: Windings Dy11 diagram
+:width: 400px
+:align: center
+```
+<br/>
+
+```{image}  /_static/Transformer/Windings_Yd11.svg
+:alt: Windings Yd11 diagram
+:width: 400px
+:align: center
+```
+<br/>
+
+```{image}  /_static/Transformer/Windings_Yz11.svg
+:alt: Windings Yz11 diagram
+:width: 400px
+:align: center
+```
+
+### Phase displacement of 5
+
+```{image}  /_static/Transformer/Windings_Dy5.svg
+:alt: Windings Dy5 diagram
+:width: 400px
+:align: center
+```
+<br/>
+
+```{image}  /_static/Transformer/Windings_Yd5.svg
+:alt: Windings Yd5 diagram
+:width: 400px
+:align: center
+```
+<br/>
+
+```{image}  /_static/Transformer/Windings_Yz5.svg
+:alt: Windings Yz5 diagram
+:width: 400px
+:align: center
+```
+
+## Matrices
+
 For all the windings, different matrices are associated:
 
-- The transformation matrices:
+### Transformation matrices
 
 ```{list-table}
 :class: borderless
@@ -43,37 +148,35 @@ For all the windings, different matrices are associated:
 :align: center
 
 * - Winding
-  - $M_{TV}$
-  - $M_{TI}$
+  - $M_{\mathrm{TV}}$
+  - $M_{\mathrm{TI}}$
 
 * - Dd, Yy, Dy and Yd
-  - $\frac{n_2}{n_1}\begin{pmatrix}
+  - $\dfrac{n_2}{n_1}\begin{pmatrix}
     1 & 0 & 0\\
     0 & 1 & 0\\
     0 & 0 & 1
     \end{pmatrix}$
-  - $\frac{n_2}{n_1}\begin{pmatrix}
+  - $\dfrac{n_2}{n_1}\begin{pmatrix}
     -1 & 0 & 0\\
     0 & -1 & 0\\
     0 & 0 & -1
     \end{pmatrix}$
 
 * - Dz et Yz
-  - $\frac{n_2}{n_1}\begin{pmatrix}
+  - $\dfrac{n_2}{n_1}\begin{pmatrix}
     1 & 0 & 0\\
     0 & 1 & 0\\
     0 & 0 & 1
     \end{pmatrix}$
-  - $\frac{n_2}{n_1}\begin{pmatrix}
+  - $\dfrac{n_2}{n_1}\begin{pmatrix}
     -1 & 1 & 0\\
     0 & -1 & 1\\
     1 & 0 & -1
     \end{pmatrix}$
 ```
 
-with $k = \frac{n_2}{n_1}$ the transformation ratio.
-
-- The primary winding matrices:
+### Primary winding matrices
 
 ```{list-table}
 :class: borderless
@@ -82,11 +185,11 @@ with $k = \frac{n_2}{n_1}$ the transformation ratio.
 :align: center
 
 * - Winding
-  - $K_{VABC}$
-  - $K_{UXYZ}$
-  - $K_{IABC}$
-  - $K_{IXYZ}$
-  - $K_{N}$
+  - $K_{\mathrm{VABC}}$
+  - $K_{\mathrm{UXYZ}}$
+  - $K_{\mathrm{IABC}}$
+  - $K_{\mathrm{IXYZ}}$
+  - $K_{\mathrm{N}}$
 
 * - Dx
   - $\begin{pmatrix}
@@ -170,7 +273,7 @@ with $k = \frac{n_2}{n_1}$ the transformation ratio.
     \end{pmatrix}$
 ```
 
-- The secondary windings matrices:
+### Secondary windings matrices
 
 ```{list-table}
 :class: borderless
@@ -179,11 +282,11 @@ with $k = \frac{n_2}{n_1}$ the transformation ratio.
 :align: center
 
 * - Winding
-  - $K_{Vabc}$
-  - $K_{Uxyz}$
-  - $K_{Iabc}$
-  - $K_{Ixyz}$
-  - $K_{n}$
+  - $K_{\mathrm{Vabc}}$
+  - $K_{\mathrm{Uxyz}}$
+  - $K_{\mathrm{Iabc}}$
+  - $K_{\mathrm{Ixyz}}$
+  - $K_{\mathrm{n}}$
 * - Dd0
   - $\begin{pmatrix}
         1 & -1 & 0\\
@@ -320,7 +423,7 @@ with $k = \frac{n_2}{n_1}$ the transformation ratio.
     \end{pmatrix}$
 ```
 
-### Equations
+## Equations
 
 The following equations are used for the 3-phase transformers:
 
@@ -328,24 +431,25 @@ The following equations are used for the 3-phase transformers:
 \begin{equation}
     \left\{
     \begin{aligned}
-      K_{UXYZ} \cdot U_{XYZ}
-      &= K_{VABC} \cdot V_{ABC} - K_{N} \cdot V_{N} \\
-      K_{Uxyz} \cdot \left( M_{TV}\cdot U_{XYZ} + Z_2
-      \cdot I_{xyz} \right)
-      &= K_{Vabc} \cdot V_{abc} - K_{n} \cdot V_{n} \\
-      K_{IABC} \cdot I_{ABC} &= K_{IXYZ} \cdot
-                                     \left( Y_{m} \cdot U_{XYZ} + M_{TI} \cdot
-                                     I_{xyz} \right)\\
-      K_{Iabc} \cdot I_{abc} &= K_{Ixyz} \cdot I_{xyz} \\
-      I_{N} &= - K_{N}^\top \cdot I_{ABC} \\
-      I_{n} &= - K_{n}^\top \cdot I_{abc}
+        K_{\mathrm{UXYZ}} \cdot \underline{U_{\mathrm{XYZ}}}
+        &= K_{\mathrm{VABC}} \cdot \underline{V_{\mathrm{ABC}}} - K_{\mathrm{N}} \cdot \underline{V_{\mathrm{N}}} \\
+        K_{\mathrm{Uxyz}} \cdot \left( M_{\mathrm{TV}}\cdot \underline{U_{\mathrm{XYZ}}} + \underline{Z_2} \cdot
+        \underline{I_{\mathrm{xyz}}} \right)
+            &= K_{\mathrm{Vabc}} \cdot \underline{V_{\mathrm{abc}}} - K_{\mathrm{n}} \cdot \underline{V_{\mathrm{n}}} \\
+        K_{\mathrm{IABC}} \cdot \underline{I_{\mathrm{ABC}}} &= K_{\mathrm{IXYZ}} \cdot
+            \left( \underline{Y_{\mathrm{m}}} \cdot \underline{U_{\mathrm{XYZ}}} + M_{\mathrm{TI}} \cdot
+            \underline{I_{\mathrm{xyz}}} \right)\\
+        K_{\mathrm{Iabc}} \cdot \underline{I_{\mathrm{abc}}} &= K_{\mathrm{Ixyz}} \cdot \underline{I_{\mathrm{xyz}}} \\
+        \underline{I_{\mathrm{N}}} &= - K_{\mathrm{N}}^\top \cdot \underline{I_{\mathrm{ABC}}} \\
+        \underline{I_{\mathrm{n}}} &= - K_{\mathrm{n}}^\top \cdot \underline{I_{\mathrm{abc}}}
     \end{aligned}
   \right.
 \end{equation}
 ```
 
-with $Z_2$ the series impedance, $Y_m$ the magnetizing admittance of the transformer and $k$ the transformation ratio.
+with $\underline{Z_2}$ the series impedance and $\underline{Y_{\mathrm{m}}}$ the magnetizing admittance of the
+transformer.
 
-The first two values are computed from the nominal power $S_n$, the losses during off-load test $P_0$, the current during
-off-load test $i_0$, the losses during short circuit test $P_{sc}$ and the voltages on LV side during short circuit
-test $V_{sc}$.
+## Example
+
+TODO

@@ -11,11 +11,11 @@ of a line. Its representation is:
 :align: center
 ```
 
-This element adds the equation $I_{\mathrm{g}} = 0$.
+This element adds the equation $\underline{I_{\mathrm{g}}} = 0$.
 
 ```{warning}
-In electrical engineering, it is common to also add the equation $V_{\mathrm{g}}=0$ when defining a ground element.
-If you want to do so, you must add a `PotentialRef` element as defined in <project:./PotentialRef.md>.
+In electrical engineering, it is common to also add the equation $\underline{V_{\mathrm{g}}}=0$ when defining a
+ground element. If you want to do so, you must add a `PotentialRef` element as defined in <project:./PotentialRef.md>.
 ```
 
 ## Usage

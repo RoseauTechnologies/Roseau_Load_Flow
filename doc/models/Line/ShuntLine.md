@@ -25,9 +25,12 @@ The corresponding equations are:
 ```{math}
 \left\{
     \begin{aligned}
-        V_1 &= a \cdot V_2 - b \cdot I_2 + g \cdot V_{\mathrm{g}} \\
-        I_1 &= c \cdot V_2 - d \cdot I_2 + h \cdot V_{\mathrm{g}} \\
-        I_{\mathrm{g}} &= f^t \cdot \left(V_1 + V_2 - 2\cdot V_{\mathrm{g}}\right)
+        \underline{V_1} &= \underline{a} \cdot \underline{V_2} - \underline{b} \cdot \underline{I_2} + \underline{g}
+        \cdot \underline{V_{\mathrm{g}}} \\
+        \underline{I_1} &= \underline{c} \cdot \underline{V_2} - \underline{d} \cdot \underline{I_2} + \underline{h}
+        \cdot \underline{V_{\mathrm{g}}} \\
+        \underline{I_{\mathrm{g}}} &= \underline{f}^\top \cdot \left(\underline{V_1} + \underline{V_2} - 2\cdot
+        \underline{V_{\mathrm{g}}}\right)
     \end{aligned}
 \right.
 ```
@@ -37,19 +40,19 @@ where
 ```{math}
 \left\{
     \begin{aligned}
-        a &= \mathcal{I}_4 + \dfrac{1}{2} \cdot Z \cdot Y  \\
-        b &= Z  \\
-        c &= Y + \dfrac{1}{4}\cdot Y \cdot Z \cdot Y  \\
-        d &= \mathcal{I}_4 + \dfrac{1}{2} \cdot Y \cdot Z  \\
-        f &= -\dfrac{1}{2} \cdot \begin{pmatrix} y_{\mathrm{ag}} & y_{\mathrm{bg}} & y_{\mathrm{cg}} &
-        y_{\mathrm{ng}} \end{pmatrix} ^t  \\
-        g &= Z \cdot f  \\
-        h &= 2 \cdot f + \frac{1}{2}\cdot Y \cdot Z \cdot f  \\
+        \underline{a} &= \mathcal{I}_4 + \dfrac{1}{2} \cdot \underline{Z} \cdot \underline{Y}  \\
+        \underline{b} &= \underline{Z}  \\
+        \underline{c} &= \underline{Y} + \dfrac{1}{4}\cdot \underline{Y} \cdot \underline{Z} \cdot \underline{Y}  \\
+        \underline{d} &= \mathcal{I}_4 + \dfrac{1}{2} \cdot \underline{Y} \cdot \underline{Z}  \\
+        \underline{f} &= -\dfrac{1}{2} \cdot \begin{pmatrix} \underline{y_{\mathrm{ag}}} & \underline{y_{\mathrm{bg}}
+        } & \underline{y_{\mathrm{cg}}} & \underline{y_{\mathrm{ng}}} \end{pmatrix} ^\top  \\
+        \underline{g} &= \underline{Z} \cdot \underline{f}  \\
+        \underline{h} &= 2 \cdot \underline{f} + \frac{1}{2}\cdot \underline{Y} \cdot \underline{Z} \cdot \underline{f}  \\
     \end{aligned}
 \right.
 ```
 
-with $Z$ the series impedance matrix and $Y$ the shunt admittance matrix.
+with $\underline{Z}$ the series impedance matrix and $\underline{Y}$ the shunt admittance matrix.
 
 
 ## Usage

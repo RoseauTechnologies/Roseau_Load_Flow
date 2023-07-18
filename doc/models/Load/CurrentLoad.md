@@ -9,8 +9,8 @@ The equations are the following (star loads):
 ```{math}
 \left\{
     \begin{aligned}
-        I_{\mathrm{abc}} &= \mathrm{constant} \\
-        I_{\mathrm{n}} &= -\sum_{p\in\{\mathrm{a},\mathrm{b},\mathrm{c}\}}I_{p}
+        \underline{I_{\mathrm{abc}}} &= \mathrm{constant} \\
+        \underline{I_{\mathrm{n}}} &= -\sum_{p\in\{\mathrm{a},\mathrm{b},\mathrm{c}\}}\underline{I_{p}}
     \end{aligned}
 \right.
 ```
@@ -20,9 +20,9 @@ And the following (delta loads):
 ```{math}
 \left\{
     \begin{aligned}
-        I_{\mathrm{ab}} &= \mathrm{constant} \\
-        I_{\mathrm{bc}} &= \mathrm{constant} \\
-        I_{\mathrm{ca}} &= \mathrm{constant}
+        \underline{I_{\mathrm{ab}}} &= \mathrm{constant} \\
+        \underline{I_{\mathrm{bc}}} &= \mathrm{constant} \\
+        \underline{I_{\mathrm{ca}}} &= \mathrm{constant}
     \end{aligned}
 \right.
 ```

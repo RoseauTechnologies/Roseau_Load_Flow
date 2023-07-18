@@ -1,7 +1,7 @@
 \input{Preambule}%
 
 \begin{document}
-\ctikzset{european,straight voltages, cute inductors}%
+\ctikzset{european, straight voltages, cute inductors}%
 \begin{tikzpicture}[%
     show background rectangle,%
     tight background,%
@@ -34,27 +34,27 @@
     \coordinate (vra) at (\xr,\ya);
 
     % Tensions amont
-    \node[left] at (vla) {$\underline{V_{\arm,1}}$};
-    \node[left] at (vlb) {$\underline{V_{\brm,1}}$};
-    \node[left] at (vlc) {$\underline{V_{\crm,1}}$};
-    \node[left] at (vln) {$\underline{V_{\nrm,1}}$};
+    \node[left] at (vla) {$\underline{V_{1,\arm}}$};
+    \node[left] at (vlb) {$\underline{V_{1,\brm}}$};
+    \node[left] at (vlc) {$\underline{V_{1,\crm}}$};
+    \node[left] at (vln) {$\underline{V_{1,\nrm}}$};
 
     % Tensions aval
-    \node[right] at (vra) {$\underline{V_{\arm,2}}$};
-    \node[right] at (vrb) {$\underline{V_{\brm,2}}$};
-    \node[right] at (vrc) {$\underline{V_{\crm,2}}$};
-    \node[right] at (vrn) {$\underline{V_{\nrm,2}}$};
+    \node[right] at (vra) {$\underline{V_{2,\arm}}$};
+    \node[right] at (vrb) {$\underline{V_{2,\brm}}$};
+    \node[right] at (vrc) {$\underline{V_{2,\crm}}$};
+    \node[right] at (vrn) {$\underline{V_{2,\nrm}}$};
 
     % Câbles
-    \draw (vla) to[short, i=$\underline{I_{\arm,1}}$, *-] (\xlc, \ya) -- (\xrc, \ya);
-    \draw (vlb) to[short, i=$\underline{I_{\brm,1}}$, *-] (\xlc, \yb) -- (\xrc, \yb);
-    \draw (vlc) to[short, i=$\underline{I_{\crm,1}}$, *-] (\xlc, \yc) -- (\xrc, \yc);
-    \draw (vln) to[short, i=$\underline{I_{\nrm,1}}$, *-] (\xlc, \yn) -- (\xrc, \yn);
+    \draw (vla) to[short, i=$\underline{I_{1,\arm}}$, *-] (\xlc, \ya) -- (\xrc, \ya);
+    \draw (vlb) to[short, i=$\underline{I_{1,\brm}}$, *-] (\xlc, \yb) -- (\xrc, \yb);
+    \draw (vlc) to[short, i=$\underline{I_{1,\crm}}$, *-] (\xlc, \yc) -- (\xrc, \yc);
+    \draw (vln) to[short, i=$\underline{I_{1,\nrm}}$, *-] (\xlc, \yn) -- (\xrc, \yn);
 
-    \draw (vra) to[short, i_=$\underline{I_{\arm,2}}$, *-] (\xrc, \ya);
-    \draw (vrb) to[short, i_=$\underline{I_{\brm,2}}$, *-] (\xrc, \yb);
-    \draw (vrc) to[short, i_=$\underline{I_{\crm,2}}$, *-] (\xrc, \yc);
-    \draw (vrn) to[short, i_=$\underline{I_{\nrm,2}}$, *-] (\xrc, \yn);
+    \draw (vra) to[short, i_=$\underline{I_{2,\arm}}$, *-] (\xrc, \ya);
+    \draw (vrb) to[short, i_=$\underline{I_{2,\brm}}$, *-] (\xrc, \yb);
+    \draw (vrc) to[short, i_=$\underline{I_{2,\crm}}$, *-] (\xrc, \yc);
+    \draw (vrn) to[short, i_=$\underline{I_{2,\nrm}}$, *-] (\xrc, \yn);
 
 \end{tikzpicture}
 \end{document}

@@ -1,8 +1,15 @@
 # Loads
 
 The load element can be used to model consumption loads (with positive active power) as well as generation loads
-(with negative active power). For each load type, two connections can be made:
-* star-connected loads using a `phases` constructor argument containing a `"n"`
+(with negative active power).
+
+## Connections
+
+For each load type, two connections can be made.
+
+### Star connection
+
+Here is the diagram of a star-connected three-phase load:
 
 ````{tab} European standards
 ```{image}  /_static/Load/European_Star_Load.svg
@@ -19,7 +26,11 @@ The load element can be used to model consumption loads (with positive active po
 ```
 ````
 
-* delta-connected loads using a `phases` constructor argument which doesn't contain `"n"`
+In order to be created in *Roseau Load Flow*, the `phases` argument of the constructor must contain `"n"`.
+
+### Delta connection
+
+Here is the diagram of a delta-connected three-phase load:
 
 ````{tab} European standards
 ```{image}  /_static/Load/European_Delta_Load.svg
@@ -35,6 +46,10 @@ The load element can be used to model consumption loads (with positive active po
 :align: center
 ```
 ````
+
+In order to be created in *Roseau Load Flow*, the `phases` argument of the constructor must **not** contain `"n"`.
+
+## Available models
 
 The following load models are available in *Roseau Load Flow*:
 

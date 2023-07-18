@@ -1,7 +1,7 @@
 \input{Preambule}%
 
 \begin{document}
-\ctikzset{european,straight voltages, cute inductors}%
+\ctikzset{european, straight voltages, cute inductors}%
 \begin{tikzpicture}[%
     show background rectangle,%
     tight background,%
@@ -27,15 +27,15 @@
     \coordinate (vla) at (\x,\ya);
 
     % Tensions
-    \node[above] at (vla) {$\underline{V_{\arm}}$};
-    \node[above] at (vlb) {$\underline{V_{\brm}}$};
-    \node[above] at (vlc) {$\underline{V_{\crm}}$};
-    \node[above] at (vln) {$\underline{V_{\nrm}}$};
+    \node[above] at (vla) {$\underline{V_{\arm}}$};%
+    \node[above] at (vlb) {$\underline{V_{\brm}}$};%
+    \node[above] at (vlc) {$\underline{V_{\crm}}$};%
+    \node[above] at (vln) {$\underline{V_{\nrm}}$};%
 
-    \draw (\xl, \yn) to[short, -*] (\x, \yn) -- (\xr, \yn);
-    \draw (\xl, \yc) to[short, -*] (\x, \yc) -- (\xr, \yc);
-    \draw (\xl, \yb) to[short, -*] (\x, \yb) -- (\xr, \yb);
-    \draw (\xl, \ya) to[short, -*] (\x, \ya) -- (\xr, \ya);
+    \draw (\xl, \yn) to[short, -*] (\x, \yn) -- (\xr, \yn);%
+    \draw (\xl, \yc) to[short, -*] (\x, \yc) -- (\xr, \yc);%
+    \draw (\xl, \yb) to[short, -*] (\x, \yb) -- (\xr, \yb);%
+    \draw (\xl, \ya) to[short, -*] (\x, \ya) -- (\xr, \ya);%
 
 \end{tikzpicture}
 \end{document}
@@ -43,9 +43,8 @@
 % mode: latex
 % TeX-engine: luatex
 % TeX-source-correlate-method-active: synctex
-% ispell-local-dictionary: "francais"
+% ispell-local-dictionary: "british"
 % coding: utf-8
-% TeX-master: "../../Manuscrit.tex"
 % LaTeX-indent-level: 4
-% compile-command: "make -k -C ../../"
+% fill-column: 100
 % End:

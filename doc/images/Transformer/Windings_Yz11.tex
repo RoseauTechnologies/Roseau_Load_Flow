@@ -1,0 +1,17 @@
+\input{Preambule}%
+
+\begin{document}
+    \begin{tikzpicture}[%
+        show background rectangle,%
+        tight background,%
+        background rectangle/.style={fill=white}%
+    ]
+        \input{Transformer/Windings_Common.tikz}%
+
+        \begin{scope}[local bounding box=Yz11]
+            \pic at (0,0) {left y};%
+            \pic at (5,0) {right z11};%
+        \end{scope}
+        \node[left=0.1 of Yz11] {\textcolor{RoseauBlue}{Y}\textcolor{RoseauGreen}{z}11};%
+    \end{tikzpicture}
+\end{document}

@@ -48,7 +48,7 @@ models/VoltageSource
 models/Load/index
 models/Line/index
 models/Switch
-models/Transformer
+models/Transformer/index
 ```
 
 ## Solvers

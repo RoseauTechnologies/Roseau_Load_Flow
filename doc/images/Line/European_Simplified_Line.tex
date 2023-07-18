@@ -1,7 +1,7 @@
 \input{Preambule}%
 
 \begin{document}
-\ctikzset{european,straight voltages, cute inductors}%
+\ctikzset{european, straight voltages, cute inductors}%
 \begin{tikzpicture}[%
     show background rectangle,%
     tight background,%
@@ -36,49 +36,49 @@
     %
     % Coordonnées
     %
-    \coordinate (orig) at (0,0);
+    \coordinate (orig) at (0,0);%
 
     % Début de ligne
-    \coordinate (vlt) at (\xl,\yt);
-    \coordinate (vln) at (\xl,\yn);
-    \coordinate (vlc) at (\xl,\yc);
-    \coordinate (vlb) at (\xl,\yb);
-    \coordinate (vla) at (\xl,\ya);
+    \coordinate (vlt) at (\xl,\yt);%
+    \coordinate (vln) at (\xl,\yn);%
+    \coordinate (vlc) at (\xl,\yc);%
+    \coordinate (vlb) at (\xl,\yb);%
+    \coordinate (vla) at (\xl,\ya);%
 
     % Fin de ligne
-    \coordinate (vmt) at (\xm,\yt);
-    \coordinate (vmn) at (\xm,\yn);
-    \coordinate (vmc) at (\xm,\yc);
-    \coordinate (vmb) at (\xm,\yb);
-    \coordinate (vma) at (\xm,\ya);
+    \coordinate (vmt) at (\xm,\yt);%
+    \coordinate (vmn) at (\xm,\yn);%
+    \coordinate (vmc) at (\xm,\yc);%
+    \coordinate (vmb) at (\xm,\yb);%
+    \coordinate (vma) at (\xm,\ya);%
 
     % Début Z ligne
-    \coordinate (zlt) at (\zl,\yt);
-    \coordinate (zln) at (\zl,\yn);
-    \coordinate (zlc) at (\zl,\yc);
-    \coordinate (zlb) at (\zl,\yb);
-    \coordinate (zla) at (\zl,\ya);
+    \coordinate (zlt) at (\zl,\yt);%
+    \coordinate (zln) at (\zl,\yn);%
+    \coordinate (zlc) at (\zl,\yc);%
+    \coordinate (zlb) at (\zl,\yb);%
+    \coordinate (zla) at (\zl,\ya);%
 
     % Après résistance
-    \coordinate (xrt) at (\xr,\yt);
-    \coordinate (xrn) at (\xr,\yn);
-    \coordinate (xrc) at (\xr,\yc);
-    \coordinate (xrb) at (\xr,\yb);
-    \coordinate (xra) at (\xr,\ya);
+    \coordinate (xrt) at (\xr,\yt);%
+    \coordinate (xrn) at (\xr,\yn);%
+    \coordinate (xrc) at (\xr,\yc);%
+    \coordinate (xrb) at (\xr,\yb);%
+    \coordinate (xra) at (\xr,\ya);%
 
     % Après résistance et courant
-    \coordinate (xrit) at (\xri,\yt);
-    \coordinate (xrin) at (\xri,\yn);
-    \coordinate (xric) at (\xri,\yc);
-    \coordinate (xrib) at (\xri,\yb);
-    \coordinate (xria) at (\xri,\ya);
+    \coordinate (xrit) at (\xri,\yt);%
+    \coordinate (xrin) at (\xri,\yn);%
+    \coordinate (xric) at (\xri,\yc);%
+    \coordinate (xrib) at (\xri,\yb);%
+    \coordinate (xria) at (\xri,\ya);%
 
     % Fin Z ligne
-    \coordinate (zmt) at (\zm,\yt);
-    \coordinate (zmn) at (\zm,\yn);
-    \coordinate (zmc) at (\zm,\yc);
-    \coordinate (zmb) at (\zm,\yb);
-    \coordinate (zma) at (\zm,\ya);
+    \coordinate (zmt) at (\zm,\yt);%
+    \coordinate (zmn) at (\zm,\yn);%
+    \coordinate (zmc) at (\zm,\yc);%
+    \coordinate (zmb) at (\zm,\yb);%
+    \coordinate (zma) at (\zm,\ya);%
 
     % Première 1/2 admittance
     \coordinate (xlit) at (\xli,\yt);%
@@ -102,64 +102,58 @@
     % Dessin
     %
     % Tensions amont
-    \node[left] at (vla) {$\underline{V_{\arm 1}}$};
-    \node[left] at (vlb) {$\underline{V_{\brm 1}}$};
-    \node[left] at (vlc) {$\underline{V_{\crm 1}}$};
-    \node[left] at (vln) {$\underline{V_{\nrm 1}}$};
+    \node[left] at (vla) {$\underline{V_{1,\arm}}$};
+    \node[left] at (vlb) {$\underline{V_{1,\brm}}$};
+    \node[left] at (vlc) {$\underline{V_{1,\crm}}$};
+    \node[left] at (vln) {$\underline{V_{1,\nrm}}$};
 
     % Tensions aval
-    \node[right] at (vma) {$\underline{V_{\arm 2}}$};
-    \node[right] at (vmb) {$\underline{V_{\brm 2}}$};
-    \node[right] at (vmc) {$\underline{V_{\crm 2}}$};
-    \node[right] at (vmn) {$\underline{V_{\nrm 2}}$};
+    \node[right] at (vma) {$\underline{V_{2,\arm}}$};
+    \node[right] at (vmb) {$\underline{V_{2,\brm}}$};
+    \node[right] at (vmc) {$\underline{V_{2,\crm}}$};
+    \node[right] at (vmn) {$\underline{V_{2,\nrm}}$};
 
     % Câbles principaux
     % Neutre
-    \draw (vln) to[short,*-*,i=$\underline{I_{\nrm 1}}$]
-    (zln) to[R,l=$R_{\nrm}$] ($(zln)!0.5!(xrn)$) to
-    [L,l=$L_{\nrm}$] (xrn)
-    to[short,-] (xrin) to
-    [short,-*] (zmn)
-    to[short,-*,i<=$\underline{I_{\nrm 2}}$] (vmn);%
+    \draw (vln) to[short,*-*,i=$\underline{I_{1,\nrm}}$](zln)%
+    to[R,l=$R_{\nrm}$] ($(zln)!0.5!(xrn)$) %
+    to[L,l=$L_{\nrm}$] (xrn)%
+    to[short,-] (xrin)%
+    to[short,-*] (zmn)%
+    to[short,-*,i<=$\underline{I_{2,\nrm}}$] (vmn);%
     % C
-    \draw (vlc) to[short,*-*,i=$\underline{I_{\crm 1}}$]
-    (zlc) to[R,l=$R_{\crm}$] ($(zlc)!0.5!(xrc)$) to
-    [L,l=$L_{\crm}$] (xrc)
-    to[short,-] (xric) to [short,-*]
-    (zmc) to[short,-*,i<=$\underline{I_{\crm 2}}$] (vmc);%
+    \draw (vlc) to[short,*-*,i=$\underline{I_{1,\crm}}$] (zlc) %
+    to[R,l=$R_{\crm}$] ($(zlc)!0.5!(xrc)$) %
+    to[L,l=$L_{\crm}$] (xrc)%
+    to[short,-] (xric) %
+    to [short,-*] (zmc)%
+    to[short,-*,i<=$\underline{I_{2,\crm}}$] (vmc);%
     % B
-    \draw (vlb) to[short,*-*,i=$\underline{I_{\brm 1}}$]
-    (zlb) to[R,l=$R_{\brm}$] ($(zlb)!0.5!(xrb)$) to
-    [L,l=$L_{\brm}$] (xrb)
-    to[short,-] (xrib) to
-    [short,-*] (zmb)
-    to[short,-*,i<=$\underline{I_{\brm 2}}$] (vmb);%
+    \draw (vlb) to[short,*-*,i=$\underline{I_{1,\brm}}$] (zlb) %
+    to[R,l=$R_{\brm}$] ($(zlb)!0.5!(xrb)$) %
+    to[L,l=$L_{\brm}$] (xrb)%
+    to[short,-] (xrib) %
+    to[short,-*] (zmb)%
+    to[short,-*,i<=$\underline{I_{2,\brm}}$] (vmb);%
     % A
-    \draw (vla) to[short,*-*,i=$\underline{I_{\arm 1}}$]
-    (zla) to[R,l=$R_{\arm}$] ($(zla)!0.5!(xra)$) to
-    [L,l=$L_{\arm}$] (xra)
-    to[short,-] (xria) to
-    [short,-*] (zma)
-    to[short,-*,i<=$\underline{I_{\arm 2}}$] (vma);%
+    \draw (vla) to[short,*-*,i=$\underline{I_{1,\arm}}$] (zla)%
+    to[R,l=$R_{\arm}$] ($(zla)!0.5!(xra)$)%
+    to[L,l=$L_{\arm}$] (xra)%
+    to[short,-] (xria) %
+    to[short,-*] (zma)%
+    to[short,-*,i<=$\underline{I_{2,\arm}}$] (vma);%
 
     % Mutuelles des lignes
     \pgfmathsetmacro{\xrm}{\xri+0.0*(\zm-\xri)};%
-    \draw[fleche] (\xrm,\ya) to[bend left] node[midway,
-    right]{$\underline{M_{\abrm}}$} (\xrm,\yb);%
-    \draw[fleche] (\xrm,\yb) to[bend left] node[midway,
-    right]{$\underline{M_{\bcrm}}$} (\xrm,\yc);%
-    \draw[fleche] (\xrm,\yc) to[bend left] node[midway,
-    right]{$\underline{M_{\cnrm}}$} (\xrm,\yn);%
+    \draw[fleche] (\xrm,\ya) to[bend left] node[midway,right]{$\underline{M_{\abrm}}$} (\xrm,\yb);%
+    \draw[fleche] (\xrm,\yb) to[bend left] node[midway,right]{$\underline{M_{\bcrm}}$} (\xrm,\yc);%
+    \draw[fleche] (\xrm,\yc) to[bend left] node[midway,right]{$\underline{M_{\cnrm}}$} (\xrm,\yn);%
     \pgfmathsetmacro{\xrm}{\xri+0.25*(\zm-\xri)};%
-    \draw[fleche] (\xrm,\ya) to[bend left] node[near start,
-    right]{$\underline{M_{\carm}}$} (\xrm,\yc);%
+    \draw[fleche] (\xrm,\ya) to[bend left] node[near start,right]{$\underline{M_{\carm}}$} (\xrm,\yc);%
     \pgfmathsetmacro{\xrm}{\xri+0.40*(\zm-\xri)};%
-    \draw[fleche] (\xrm,\yb) to[bend left] node[near end,
-    right]{$\underline{M_{\bnrm}}$} (\xrm,\yn);%
+    \draw[fleche] (\xrm,\yb) to[bend left] node[near end,right]{$\underline{M_{\bnrm}}$} (\xrm,\yn);%
     \pgfmathsetmacro{\xrm}{\xri+0.75*(\zm-\xri)};%
-    \draw[fleche] (\xrm,\ya) to[bend left] node[midway,
-    left]{$\underline{M_{\anrm}}$} (\xrm,\yn);%
-
+    \draw[fleche] (\xrm,\ya) to[bend left] node[midway,left]{$\underline{M_{\anrm}}$} (\xrm,\yn);%
 
 \end{tikzpicture}
 \end{document}

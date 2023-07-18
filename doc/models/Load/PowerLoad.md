@@ -7,8 +7,9 @@ They represent loads for which the power is considered constant. The equations a
 ```{math}
 \left\{
     \begin{aligned}
-        I_{\mathrm{abc}} &= \left(\frac{S_{\mathrm{abc}}}{V_{\mathrm{abc}}-V_{\mathrm{n}}}\right)^{\star} \\
-        I_{\mathrm{n}} &= -\sum_{p\in\{\mathrm{a},\mathrm{b},\mathrm{c}\}}I_{p}
+        \underline{I_{\mathrm{abc}}} &= \left(\frac{\underline{S_{\mathrm{abc}}}}{\underline{V_{\mathrm{abc}}}
+        -\underline{V_{\mathrm{n}}}}\right)^{\star} \\
+        \underline{I_{\mathrm{n}}} &= -\sum_{p\in\{\mathrm{a},\mathrm{b},\mathrm{c}\}}\underline{I_{p}}
     \end{aligned}
 \right.
 ```
@@ -18,9 +19,12 @@ And the following (delta loads):
 ```{math}
 \left\{
     \begin{aligned}
-        I_{\mathrm{ab}} &= \left(\frac{S_{\mathrm{ab}}}{V_{\mathrm{a}}-V_{\mathrm{b}}}\right)^{\star} \\
-        I_{\mathrm{bc}} &= \left(\frac{S_{\mathrm{bc}}}{V_{\mathrm{b}}-V_{\mathrm{c}}}\right)^{\star} \\
-        I_{\mathrm{ca}} &= \left(\frac{S_{\mathrm{ca}}}{V_{\mathrm{c}}-V_{\mathrm{a}}}\right)^{\star}
+        \underline{I_{\mathrm{ab}}} &= \left(\frac{\underline{S_{\mathrm{ab}}}}{\underline{V_{\mathrm{a}}}-\underline
+        {V_{\mathrm{b}}}}\right)^{\star} \\
+        \underline{I_{\mathrm{bc}}} &= \left(\frac{\underline{S_{\mathrm{bc}}}}{\underline{V_{\mathrm{b}}}-\underline
+        {V_{\mathrm{c}}}}\right)^{\star} \\
+        \underline{I_{\mathrm{ca}}} &= \left(\frac{\underline{S_{\mathrm{ca}}}}{\underline{V_{\mathrm{c}}}-\underline
+        {V_{\mathrm{a}}}}\right)^{\star}
     \end{aligned}
 \right.
 ```

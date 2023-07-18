@@ -1,15 +1,15 @@
-# Simplified line model
+# Simplified line
 
 ## Equations
 
 If the line does not define a shunt admittance, we can simplify the model as there is no coupling with
-the ground. With $Y = 0$, the equations become:
+the ground. With $\underline{Y} = 0$, the equations become:
 
 ```{math}
 \left\{
     \begin{aligned}
-        V_1 - V_2 &= Z \cdot I_1 \\
-        I_2 &= -I_1
+        \underline{V_1} - \underline{V_2} &= \underline{Z} \cdot \underline{I_1} \\
+        \underline{I_2} &= -\underline{I_1}
     \end{aligned}
 \right.
 ```

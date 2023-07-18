@@ -24,7 +24,7 @@ Computationally, this translates to finding a solution $x$ such that:
 With $\varepsilon$ being a small *tolerance*.
 In code, $\varepsilon$ can be set with `en.solve_load_flow(tolerance=...)` (by default `1e-6`).
 
-There are several solvers to solve this kind of problems. In Roseau Load Flow, the following
+There are several solvers to solve this kind of problems. In *Roseau Load Flow*, the following
 solvers are available:
 
 

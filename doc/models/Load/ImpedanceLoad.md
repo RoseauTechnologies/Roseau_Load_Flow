@@ -9,8 +9,9 @@ The equations are the following (star loads):
 ```{math}
 \left\{
     \begin{aligned}
-        I_{\mathrm{abc}} &= \frac{V_{\mathrm{abc}}-V_{\mathrm{n}}}{Z_{\mathrm{abc}}} \\
-        I_{\mathrm{n}} &= -\sum_{p\in\{\mathrm{a},\mathrm{b},\mathrm{c}\}}I_{p}
+        \underline{I_{\mathrm{abc}}} &= \frac{\underline{V_{\mathrm{abc}}}-\underline{V_{\mathrm{n}}}}{
+        \underline{Z_{\mathrm{abc}}}} \\
+        \underline{I_{\mathrm{n}}} &= -\sum_{p\in\{\mathrm{a},\mathrm{b},\mathrm{c}\}}\underline{I_{p}}
     \end{aligned}
 \right.
 ```
@@ -20,9 +21,9 @@ And the following (delta loads):
 ```{math}
 \left\{
     \begin{aligned}
-        I_{\mathrm{ab}} &= \frac{V_{\mathrm{a}}-V_{\mathrm{b}}}{Z_{\mathrm{ab}}} \\
-        I_{\mathrm{bc}} &= \frac{V_{\mathrm{b}}-V_{\mathrm{c}}}{Z_{\mathrm{bc}}} \\
-        I_{\mathrm{ca}} &= \frac{V_{\mathrm{c}}-V_{\mathrm{a}}}{Z_{\mathrm{ca}}}
+        \underline{I_{\mathrm{ab}}} &= \frac{\underline{V_{\mathrm{a}}}-\underline{V_{\mathrm{b}}}}{\underline{Z_{\mathrm{ab}}}} \\
+        \underline{I_{\mathrm{bc}}} &= \frac{\underline{V_{\mathrm{b}}}-\underline{V_{\mathrm{c}}}}{\underline{Z_{\mathrm{bc}}}} \\
+        \underline{I_{\mathrm{ca}}} &= \frac{\underline{V_{\mathrm{c}}}-\underline{V_{\mathrm{a}}}}{\underline{Z_{\mathrm{ca}}}}
     \end{aligned}
 \right.
 ```

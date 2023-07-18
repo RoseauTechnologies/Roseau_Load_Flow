@@ -15,7 +15,15 @@ No equation is added for a bus.
 
 ## Short-circuit
 
-The bus element can also be used to create a short-circuit on a network. Here is an example:
+The bus element can also be used to create a short-circuit in a network.
+
+```{note}
+In *Roseau Load Flow*, it is possible to perform short-circuit computation while keeping loads (or generators)
+connected to the network. There is a single exception: it is not allowed to keep a `PowerLoad` connected to the bus
+which has the short-circuit because the equations of a `PowerLoad` can't be satisfied.
+```
+
+Here is an example of a simple short-circuit between two phases:
 
 ```python
 import functools as ft
