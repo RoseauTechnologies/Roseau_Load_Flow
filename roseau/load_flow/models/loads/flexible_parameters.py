@@ -23,27 +23,15 @@ class Control(JsonMixin):
         * ``"constant"``: no control is applied. In this case, a simple :class:`PowerLoad` without `flexible_params`
           could have been used instead.
         * ``"p_max_u_production"``: control the maximum production active power of the load (inverter) based on the
-          voltage :math:`P^{\\max}_{\\mathrm{prod}}(U)`. With this control, the following functions are used
-          (depending on the :math:`\\alpha` value).
-
-          .. image:: /_static/Control_PU_Prod.svg
-              :width: 600
-              :align: center
+          voltage :math:`P^{\\max}_{\\mathrm{prod}}(U)`.
 
         * ``"p_max_u_consumption"``: control the maximum consumption active power of the load based on the voltage
-          :math:`P^{\\max}_{\\mathrm{cons}}(U)`. With this control, the following functions are used
-          (depending on the :math:`\\alpha` value).
+          :math:`P^{\\max}_{\\mathrm{cons}}(U)`.
 
-          .. image:: /_static/Control_PU_Cons.svg
-              :width: 600
-              :align: center
+        * ``"q_u"``: control the reactive power based on the voltage :math:`Q(U)`.
 
-        * ``"q_u"``: control the reactive power based on the voltage :math:`Q(U)`. With this control, the following
-          functions are used  (depending on the :math:`\\alpha` value).
-
-          .. image:: /_static/Control_QU.svg
-              :width: 600
-              :align: center
+    See Also:
+        `Control documentation <../../../models/Load/FlexibleLoad.html#controls>`_
     """
 
     DEFAULT_ALPHA: float = 1000.0
@@ -195,9 +183,8 @@ class Control(JsonMixin):
     def p_max_u_production(cls, u_up: float, u_max: float, alpha: float = DEFAULT_ALPHA) -> Self:
         """Create a control of the type ``"p_max_u_production"``.
 
-        .. image:: /_static/Control_PU_Prod.svg
-            :width: 600
-            :align: center
+        See Also:
+            `$P(U)$ control documentation <../../../models/Load/FlexibleLoad.html#p-u-control>`_
 
         Args:
             u_up:
@@ -225,9 +212,8 @@ class Control(JsonMixin):
     def p_max_u_consumption(cls, u_min: float, u_down: float, alpha: float = DEFAULT_ALPHA) -> Self:
         """Create a control of the type ``"p_max_u_consumption"``.
 
-        .. image:: /_static/Control_PU_Cons.svg
-            :width: 600
-            :align: center
+        See Also:
+            `$P(U)$ control documentation <../../../models/Load/FlexibleLoad.html#p-u-control>`_
 
         Args:
             u_min:
@@ -255,9 +241,8 @@ class Control(JsonMixin):
     def q_u(cls, u_min: float, u_down: float, u_up: float, u_max: float, alpha: float = DEFAULT_ALPHA) -> Self:
         """Create a control of the type ``"q_u"``.
 
-        .. image:: /_static/Control_QU.svg
-            :width: 600
-            :align: center
+        See Also:
+            `$Q(U)$ control documentation <../../../models/Load/FlexibleLoad.html#q-u-control>`_
 
         Args:
             u_min:
@@ -348,22 +333,11 @@ class Projection(JsonMixin):
 
     The three possible projection types are:
         * ``"euclidean"``: for an Euclidean projection on the feasible space;
-
-        .. image:: /_static/Euclidean_Projection.svg
-            :width: 300
-            :align: center
-
         * ``"keep_p"``: for maintaining a constant P;
-
-        .. image:: /_static/Constant_P_Projection.svg
-            :width: 300
-            :align: center
-
         * ``"keep_q"``: for maintaining a constant Q.
 
-        .. image:: /_static/Constant_Q_Projection.svg
-            :width: 300
-            :align: center
+    See Also:
+        `Projection documentation <../../../models/Load/FlexibleLoad.html#projection>`_
     """
 
     DEFAULT_ALPHA: float = 1000.0
@@ -384,10 +358,6 @@ class Projection(JsonMixin):
 
             epsilon:
                 This value is used to make a smooth sqrt function. It is only used in the Euclidean projection.
-
-                .. math::
-                    \\sqrt{S} = \\sqrt{\\varepsilon \\times
-                    \\exp\\left(\\frac{-{|S|}^2}{\\varepsilon}\\right) + {|S|}^2}
         """
         self.type = type
         self._alpha = alpha
@@ -467,30 +437,8 @@ class FlexibleParameter(JsonMixin):
 
     For multi-phase loads, you need to use a `FlexibleParameter` instance per phase.
 
-    Depending on the mix of controls and projection used through this class, the feasible domains in the :math:`(P, Q)`
-    space changes. Here is an illustration with a theoretical power depicting a production (negative
-    :math:`P^{\\mathrm{theo.}}`).
-
-    .. list-table::
-        :class: borderless
-        :header-rows: 1
-        :widths: 20 20 20 20 20
-
-        * -
-          - :math:`Q^{\\mathrm{const.}}`
-          - :math:`Q(U)` with an Euclidean projection
-          - :math:`Q(U)` with a constant P projection
-          - :math:`Q(U)` with a constant Q projection
-        * - :math:`P^{\\mathrm{const.}}`
-          - .. image:: /_static/Domain_Pconst_Qconst.svg
-          - .. image:: /_static/Domain_Pconst_QU_Eucl.svg
-          - .. image:: /_static/Domain_Pconst_QU_P.svg
-          - .. image:: /_static/Domain_Pconst_QU_Q.svg
-        * - :math:`P^{\\max}(U)`
-          - .. image:: /_static/Domain_PmaxU_Qconst.svg
-          - .. image:: /_static/Domain_PmaxU_QU.svg
-          - .. image:: /_static/Domain_PmaxU_QU.svg
-          - .. image:: /_static/Domain_PmaxU_QU.svg
+    See Also:
+        `Flexible Parameter documentation <../../../models/Load/FlexibleLoad.html#flexible-parameters>`_
     """
 
     control_class: type[Control] = Control
@@ -560,9 +508,8 @@ class FlexibleParameter(JsonMixin):
     ) -> Self:
         """Build flexible parameters for production ``P(U)`` control with a Euclidean projection.
 
-        .. image:: /_static/Control_PU_Prod.svg
-            :width: 600
-            :align: center
+        See Also:
+            `$P(U)$ control documentation <../../../models/Load/FlexibleLoad.html#p-u-control>`_
 
         Args:
             u_up:
@@ -613,9 +560,8 @@ class FlexibleParameter(JsonMixin):
     ) -> Self:
         """Build flexible parameters for consumption ``P(U)`` control with a Euclidean projection.
 
-        .. image:: /_static/Control_PU_Cons.svg
-            :width: 600
-            :align: center
+        See Also:
+            `$P(U)$ control documentation <../../../models/Load/FlexibleLoad.html#p-u-control>`_
 
         Args:
             u_min:
@@ -665,9 +611,8 @@ class FlexibleParameter(JsonMixin):
     ) -> Self:
         """Build flexible parameters for ``Q(U)`` control with a Euclidean projection.
 
-        .. image:: /_static/Control_QU.svg
-            :width: 600
-            :align: center
+        See Also:
+            `$Q(U)$ control documentation <../../../models/Load/FlexibleLoad.html#q-u-control>`_
 
         Args:
             u_min:

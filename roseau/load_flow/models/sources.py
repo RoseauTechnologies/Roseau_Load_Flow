@@ -16,25 +16,10 @@ logger = logging.getLogger(__name__)
 
 
 class VoltageSource(Element):
-    r"""A voltage source.
+    """A voltage source.
 
-    The voltage equations are the following:
-
-    For a Star (wye) connected source:
-
-    .. math::
-        \left(V_{\mathrm{a}}-V_{\mathrm{n}}\right) &= U_{\mathrm{an}} \\
-        \left(V_{\mathrm{b}}-V_{\mathrm{n}}\right) &= U_{\mathrm{bn}} \\
-        \left(V_{\mathrm{c}}-V_{\mathrm{n}}\right) &= U_{\mathrm{cn}}
-
-    For a Delta connected source:
-
-    .. math::
-        \left(V_{\mathrm{a}}-V_{\mathrm{b}}\right) &= U_{\mathrm{ab}} \\
-        \left(V_{\mathrm{b}}-V_{\mathrm{c}}\right) &= U_{\mathrm{bc}} \\
-        \left(V_{\mathrm{c}}-V_{\mathrm{a}}\right) &= U_{\mathrm{ca}}
-
-    Where $U$ is the voltage and $V$ is the node potential.
+    See Also:
+        `Voltage source model documentation <../../../models/VoltageSource.html>`_
     """
 
     allowed_phases = Bus.allowed_phases

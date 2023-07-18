@@ -16,7 +16,10 @@ logger = logging.getLogger(__name__)
 class Transformer(AbstractBranch):
     """A generic transformer model.
 
-    The model parameters and windings type are defined in the ``parameters``.
+    The model parameters and type are defined in the ``parameters``.
+
+    See Also:
+        `Transformer documentation <../../../models/Transformer/index.html>`_
     """
 
     branch_type = BranchType.TRANSFORMER

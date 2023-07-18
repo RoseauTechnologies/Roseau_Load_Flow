@@ -19,7 +19,11 @@ if TYPE_CHECKING:
 
 
 class Bus(Element):
-    """An electrical bus."""
+    """An electrical bus.
+
+    See Also:
+        `Bus documentation <../../../models/Bus.html>`_
+    """
 
     allowed_phases = frozenset({"ab", "bc", "ca", "an", "bn", "cn", "abn", "bcn", "can", "abc", "abcn"})
     """The allowed phases for a bus are:

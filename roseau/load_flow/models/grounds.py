@@ -28,6 +28,10 @@ class Ground(Element):
 
        To connect a ground to a line with shunt components, pass the ground object to the
        :class:`Line` constructor. Note that the ground connection is mandatory for shunt lines.
+
+
+    See Also:
+        `Ground documentation <../../../models/Ground.html>`_
     """
 
     allowed_phases = frozenset({"a", "b", "c", "n"})

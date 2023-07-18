@@ -16,7 +16,13 @@ logger = logging.getLogger(__name__)
 
 
 class AbstractBranch(Element):
-    """This is an abstract class for all the branches (lines, switches and transformers) of the network."""
+    """This is an abstract class for all the branches (lines, switches and transformers) of the network.
+
+    See Also:
+        `Line documentation <../../../models/Line/index.html>`_,
+        `Transformer documentation <../../../models/Transformer/index.html>`_ and
+        `Switch documentation <../../../models/Switch.html>`_
+    """
 
     branch_type: BranchType
 

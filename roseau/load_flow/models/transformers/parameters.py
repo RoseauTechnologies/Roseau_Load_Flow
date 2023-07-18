@@ -13,7 +13,11 @@ logger = logging.getLogger(__name__)
 
 
 class TransformerParameters(Identifiable, JsonMixin):
-    """A class to store the parameters of the transformers."""
+    """A class to store the parameters of the transformers.
+
+    See Also:
+        `Transformer parameters documentation <../../../models/Transformer/index.html#transformer-parameters>`_
+    """
 
     @ureg.wraps(None, (None, None, None, "V", "V", "VA", "W", "", "W", ""), strict=False)
     def __init__(
