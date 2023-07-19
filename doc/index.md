@@ -1,6 +1,6 @@
 # Roseau Load Flow
 
-`Roseau Load Flow` is a load flow solver capable of modeling 3-phases unbalanced power systems with
+`Roseau Load Flow` is a load flow solver capable of modeling 3-phase unbalanced power systems with
 a wide variety of models for lines, transformers, loads, and sources. This software is developed
 by [Roseau Technologies](https://www.roseautechnologies.com/en).
 <a href="https://www.linkedin.com/company/roseau-technologies/"><i class="fa-brands fa-linkedin" ></i></a>
@@ -8,7 +8,7 @@ by [Roseau Technologies](https://www.roseautechnologies.com/en).
 
 ## Installation
 
-`roseau_load_flow` is compatible with Python 3.9 and above. It can be installed with:
+`roseau-load-flow` is compatible with Python 3.9 and above. It can be installed with:
 
 ```{toctree}
 ---

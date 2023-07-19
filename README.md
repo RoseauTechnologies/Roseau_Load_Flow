@@ -7,7 +7,7 @@
 *Roseau Load Flow* is a highly capable three-phase load flow solver. This project is compatible with Python 3.9 and
 above.
 
-Please take a look at our documentation to see how to install and use `roseau_load_flow`.
+Please take a look at our documentation to see how to install and use `roseau-load-flow`.
 
 * [Installation](https://roseautechnologies.github.io/Roseau_Load_Flow/Installation.html)
 * [Usage](https://roseautechnologies.github.io/Roseau_Load_Flow/notebooks/Getting_Started.html)
