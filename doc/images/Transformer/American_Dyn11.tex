@@ -93,7 +93,7 @@
         \draw (\xym,\yxp) to[generic,%
         i>^=$\underline{I_{\mathrm{m},\arm}}$,%
         l=$\underline{Y_{\mathrm{m},\arm}}$,%
-        v<=$\underline{U_{\Xrm}}$%
+        v>=$\underline{U_{\Xrm}}$%
         ] (\xym,\yxm);%
         \node[above] at ($(TX.base)-(0,0.2)$) {$\dfrac{n_2}{n_1}$};%
         \draw (TX.inner dot A1) node[circ] {}; %
@@ -111,7 +111,7 @@
         \draw (\xym,\yyp) to[generic,%
         i>^=$\underline{I_{\mathrm{m},\brm}}$,%
         l=$\underline{Y_{\mathrm{m},\brm}}$,%
-        v<=$\underline{U_{\Yrm}}$%
+        v>=$\underline{U_{\Yrm}}$%
         ] (\xym,\yym);%
         \node[above] at ($(TY.base)-(0,0.2)$) {$\dfrac{n_2}{n_1}$};%
         \draw (TY.inner dot A1) node[circ] {}; %
@@ -133,7 +133,7 @@
         \draw (\xym,\yzp) to[generic,%
         i>^=$\underline{I_{\mathrm{m},\crm}}$,%
         l=$\underline{Y_{\mathrm{m},\crm}}$,%
-        v<=$\underline{U_{\Zrm}}$%
+        v>=$\underline{U_{\Zrm}}$%
         ] (\xym,\yzm);%
         \node[above] at ($(TZ.base)-(0,0.2)$) {$\dfrac{n_2}{n_1}$};%
         \draw (TZ.inner dot A1) node[circ] {}; %
@@ -149,8 +149,8 @@
         to[generic,l=$\underline{Z_{2,\arm}}$] (\xztwom, \ya)%
         to[short] (\xtransformerp,\ya) %
         to[short] (TX.B1);%
-        \draw (\xztwop, \yxm) to[open,v=$\underline{U_{\xrm}}$] (\xztwop, \yxp);%
-        \draw (\xztwom, \yxm) to[open,v=$\underline{U_{0,\xrm}}$] (\xztwom, \yxp);%
+        \draw (\xztwop, \yxm) to[open,v<=$\underline{U_{\xrm}}$] (\xztwop, \yxp);%
+        \draw (\xztwom, \yxm) to[open,v<=$\underline{U_{0,\xrm}}$] (\xztwom, \yxp);%
 
         % Second winding (y)
         \node at (16,\yb) [jump crossing,rotate=90](y jump) {};%
@@ -165,8 +165,8 @@
         to[short] (\xtransformerp,\yb)%
         to[short] (TY.B1);%
         \draw (16,\yym) to[short,*-] (\xtransformerp,\yym) to[short] (TY.B2);%
-        \draw (\xztwop, \yym) to[open,v=$\underline{U_{\yrm}}$] (\xztwop, \yb);%
-        \draw (\xztwom, \yym) to[open,v=$\underline{U_{0,\yrm}}$] (\xztwom, \yb);%
+        \draw (\xztwop, \yym) to[open,v<=$\underline{U_{\yrm}}$] (\xztwop, \yb);%
+        \draw (\xztwom, \yym) to[open,v<=$\underline{U_{0,\yrm}}$] (\xztwom, \yb);%
 
         % Second winding (z)
         \node at (16,\yc) [jump crossing,rotate=90](z jump) {};%
@@ -181,8 +181,8 @@
         to[short] (\xtransformerp,\yc)%
         to[short] (TZ.B1);%
         \draw (16,\yzm) to[short,*-] (\xtransformerp,\yzm) to[short] (TZ.B2);%
-        \draw (\xztwop, \yzm) to[open,v=$\underline{U_{\zrm}}$] (\xztwop, \yc);%
-        \draw (\xztwom, \yzm) to[open,v=$\underline{U_{0,\zrm}}$] (\xztwom, \yc);%
+        \draw (\xztwop, \yzm) to[open,v<=$\underline{U_{\zrm}}$] (\xztwop, \yc);%
+        \draw (\xztwom, \yzm) to[open,v<=$\underline{U_{0,\zrm}}$] (\xztwom, \yc);%
 
         % Close the yn
         \draw (\xsix,\yn) node[right] {$\underline{V_{2,\nrm}}$}%

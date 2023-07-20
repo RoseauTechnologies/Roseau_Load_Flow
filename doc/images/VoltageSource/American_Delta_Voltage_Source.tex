@@ -26,9 +26,9 @@
   \node[above right] at (C) {C};%
 
   % Lignes
-  \draw (A) to[vsourcesin, v_<=$\underline{U_{\arm\brm}}$, i=$\underline{I_{\abrm}}$, *-*] (B) %
-  to[vsourcesin, v_<=$\underline{U_{\brm\crm}}$, i=$\underline{I_{\bcrm}}$, *-*] (C) %
-  to[vsourcesin, v_<=$\underline{U_{\crm\arm}}$, i=$\underline{I_{\carm}}$, *-*] (A);%
+  \draw (A) to[vsourcesin, v_=$\underline{U_{\arm\brm}}$, i^>=$\underline{I_{\abrm}}$, *-*] (B) %
+  to[vsourcesin, v_=$\underline{U_{\brm\crm}}$, i^>=$\underline{I_{\bcrm}}$, *-*] (C) %
+  to[vsourcesin, v_=$\underline{U_{\crm\arm}}$, i^>=$\underline{I_{\carm}}$, *-*] (A);%
   \draw (A2) to[short,i=$\underline{I_{\arm}}$,*-*] (A);%
   \draw (B) -- (B3);%
   \draw (B2) to[short,i=$\underline{I_{\brm}}$,*-] (B3);%

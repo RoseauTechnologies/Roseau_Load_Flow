@@ -80,7 +80,7 @@
         \draw (\xym,\yxp) to[generic,%
         i>^=$\underline{I_{\mathrm{m},\arm}}$,%
         l=$\underline{Y_{\mathrm{m},\arm}}$,%
-        v<=$\underline{U_{\Xrm}}$%
+        v>=$\underline{U_{\Xrm}}$%
         ] (\xym,\yxm);%
         \node[above] at ($(TX.base)-(0,0.2)$) {$\dfrac{n_2}{n_1}$};%
         \draw (TX.inner dot A1) node[circ] {}; %
@@ -98,7 +98,7 @@
         \draw (\xym,\yyp) to[generic,%
         i>^=$\underline{I_{\mathrm{m},\brm}}$,%
         l=$\underline{Y_{\mathrm{m},\brm}}$,%
-        v<=$\underline{U_{\Yrm}}$%
+        v>=$\underline{U_{\Yrm}}$%
         ] (\xym,\yym);%
         \node[above] at ($(TY.base)-(0,0.2)$) {$\dfrac{n_2}{n_1}$};%
         \draw (TY.inner dot A1) node[circ] {}; %
@@ -116,7 +116,7 @@
         \draw (\xym,\yzp) to[generic,%
         i>^=$\underline{I_{\mathrm{m},\crm}}$,%
         l=$\underline{Y_{\mathrm{m},\crm}}$,%
-        v<=$\underline{U_{\Zrm}}$%
+        v>=$\underline{U_{\Zrm}}$%
         ] (\xym,\yzm);%
         \node[above] at ($(TZ.base)-(0,0.2)$) {$\dfrac{n_2}{n_1}$};%
         \draw (TZ.inner dot A1) node[circ] {}; %
@@ -131,8 +131,8 @@
         to[short] (TX.B1);%
         \draw (\xfour,\yxm) node[right] {$\xrm^-$}%
         to[short,*-] (TX.B2);%
-        \draw (\xztwop, \yxm) to[open,v=$\underline{U_{\xrm}}$] (\xztwop, \yxp);%
-        \draw (\xztwom, \yxm) to[open,v=$\underline{U_{0,\xrm}}$] (\xztwom, \yxp);%
+        \draw (\xztwop, \yxm) to[open,v<=$\underline{U_{\xrm}}$] (\xztwop, \yxp);%
+        \draw (\xztwom, \yxm) to[open,v<=$\underline{U_{0,\xrm}}$] (\xztwom, \yxp);%
 
         % Second winding (y)
         \pgfmathsetmacro{\ytmp}{0.5*(\yyp+\yym)};%
@@ -142,8 +142,8 @@
         to[short] (TY.B1);%
         \draw (\xfour,\yym) node[right] {$\yrm^-$}%
         to[short,*-] (TY.B2);%
-        \draw (\xztwop, \yym) to[open,v=$\underline{U_{\yrm}}$] (\xztwop, \yyp);%
-        \draw (\xztwom, \yym) to[open,v=$\underline{U_{0,\yrm}}$] (\xztwom, \yyp);%
+        \draw (\xztwop, \yym) to[open,v<=$\underline{U_{\yrm}}$] (\xztwop, \yyp);%
+        \draw (\xztwom, \yym) to[open,v<=$\underline{U_{0,\yrm}}$] (\xztwom, \yyp);%
 
         % Second winding (z)
         \pgfmathsetmacro{\ytmp}{0.5*(\yzp+\yzm)};%
@@ -153,8 +153,8 @@
         to[short] (TZ.B1);%
         \draw (\xfour,\yzm) node[right] {$\zrm^-$}%
         to[short,*-] (TZ.B2);%
-        \draw (\xztwop, \yzm) to[open,v=$\underline{U_{\zrm}}$] (\xztwop, \yzp);%
-        \draw (\xztwom, \yzm) to[open,v=$\underline{U_{0,\zrm}}$] (\xztwom, \yzp);%
+        \draw (\xztwop, \yzm) to[open,v<=$\underline{U_{\zrm}}$] (\xztwop, \yzp);%
+        \draw (\xztwom, \yzm) to[open,v<=$\underline{U_{0,\zrm}}$] (\xztwom, \yzp);%
 
         % abcn
         \draw (\xsix,\ya) node[right] {$\underline{V_{2,\arm}}$}%
