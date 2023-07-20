@@ -123,7 +123,7 @@ def test_transformer_parameters():
         "psc": 2350.0,  # W
         "p0": 460.0,  # W
         "i0": 5.6 / 100,  # %
-        "ulv": 400,  # V
+        "ulv": 401,  # V
         "uhv": 400,  # V
         "sn": 160 * 1e3,  # VA
         "vsc": 4 / 100,  # %

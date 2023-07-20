@@ -96,7 +96,7 @@ class TransformerParameters(Identifiable, JsonMixin):
             self.winding1, self.winding2, self.phase_displacement = self.extract_windings(string=type)
 
         # Check
-        if uhv <= ulv:
+        if uhv < ulv:
             msg = (
                 f"Transformer type {id!r} has the low voltages higher than the high voltages: "
                 f"uhv={uhv:.2f} V and ulv={ulv:.2f} V."
@@ -212,7 +212,17 @@ class TransformerParameters(Identifiable, JsonMixin):
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TYPE_NAME_SYNTAX) from None
             else:
-                return cls(name, type, 20000, 400, sn * 1e3, 460, 2.3 / 100, 2350, 4 / 100)
+                return cls(
+                    id=name,
+                    type=type,
+                    uhv=20000,
+                    ulv=400,
+                    sn=sn * 1e3,
+                    p0=460,
+                    i0=2.3 / 100,
+                    psc=2350,
+                    vsc=4 / 100,
+                )
         else:
             msg = f"The transformer type name does not follow the syntax rule. {name!r} was provided."
             logger.error(msg)

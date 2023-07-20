@@ -1,7 +1,5 @@
 # Shunt line
 
-## Equations
-
 The first model of line which can be used is a PI model with series impedance and shunt admittance. The
 corresponding diagram is:
 
@@ -19,6 +17,8 @@ corresponding diagram is:
 :align: center
 ```
 ````
+
+## Equations
 
 The corresponding equations are:
 
@@ -54,17 +54,15 @@ where
 
 with $\underline{Z}$ the series impedance matrix and $\underline{Y}$ the shunt admittance matrix.
 
-
 ## Usage
-To create a shunt line, the `LineParameter` instance must be created with the `y_shunt` argument. In addition, the
-`ground` argument of the `Line` constructor is now mandatory. Here is a line with a power load.
 
+To create a shunt line, create an instance of `LineParameter` with the `y_shunt` argument. The
+`ground` argument of the `Line` constructor is mandatory for shunt lines. Here is a line that
+connects a constant power load to a voltage source.
 
 ```python
 import functools as ft
-
 import numpy as np
-
 from roseau.load_flow import (
     Bus,
     ElectricalNetwork,

@@ -1,6 +1,9 @@
-# Current loads
+# Current loads (I)
 
-They represent loads for which the current is considered constant.
+They represent loads for which the current is considered constant, i.e. the power is proportional
+to the voltage.
+
+*ZIP* equation: $S = 0 \times V^0 + i \times V^1 + 0 \times V^2 \implies S \propto V$
 
 ## Equations
 
@@ -9,7 +12,7 @@ The equations are the following (star loads):
 ```{math}
 \left\{
     \begin{aligned}
-        \underline{I_{\mathrm{abc}}} &= \mathrm{constant} \\
+        \underline{I_{\mathrm{a,b,c}}} &= \mathrm{constant} \\
         \underline{I_{\mathrm{n}}} &= -\sum_{p\in\{\mathrm{a},\mathrm{b},\mathrm{c}\}}\underline{I_{p}}
     \end{aligned}
 \right.
@@ -31,9 +34,7 @@ And the following (delta loads):
 
 ```python
 import functools as ft
-
 import numpy as np
-
 from roseau.load_flow import (
     Bus,
     ElectricalNetwork,
@@ -50,12 +51,8 @@ bus1 = Bus(id="bus1", phases="abcn")
 bus2 = Bus(id="bus2", phases="abcn")
 
 # A line
-line_parameters = LineParameters(
-    id="line_parameters", z_line=Q_(0.35 * np.eye(4), "ohm/km")
-)
-line = Line(
-    id="line", bus1=bus1, bus2=bus2, parameters=line_parameters, length=Q_(1, "km")
-)
+lp = LineParameters(id="lp", z_line=Q_(0.35 * np.eye(4), "ohm/km"))
+line = Line(id="line", bus1=bus1, bus2=bus2, parameters=lp, length=Q_(1, "km"))
 
 # A voltage source on the first bus
 un = 400 / np.sqrt(3)
@@ -103,7 +100,7 @@ load.currents = Q_(
 )
 en.solve_load_flow(auth=auth)
 
-# Get the currents of the load
+# Get the currents of the loads of the network
 en.res_loads["current"].transform([np.abs, ft.partial(np.angle, deg=True)])
 # |               |   absolute |   angle |
 # |:--------------|-----------:|--------:|

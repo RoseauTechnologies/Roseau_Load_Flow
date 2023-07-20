@@ -1,36 +1,40 @@
 # Transformers
 
-## Definition
+*Roseau Load Flow* can model single-phase, center-tapped and three-phase transformers.
 
-The transformers which can be modelled using *Roseau Load Flow* are of three different types: single phase,
-center-tapped and three-phase transformers. To describe their behaviour, the following parameters are required:
-* $U_{1,\mathrm{nom.}}$: the phase-to-phase nominal voltage of the high voltages side (in V). This parameter is noted
-  `uhv` in the code.
-* $U_{2,\mathrm{nom.}}$: the phase-to-phase nominal voltage of the low voltages side (in V). This parameter is noted
-  `ulv` in the code.
-* $S_{\mathrm{nom.}}$: the nominal power of the transformer (in VA). This parameter is noted  `sn` in the code.
-* $i_0$: the current during off-load test (in %). This parameter is noted  `i0` in the code.
-* $P_0$: the losses during off-load test (in W). This parameter is noted  `p0` in the code.
-* $P_{\mathrm{sc}}$: the losses during short circuit test (in W). This parameter is noted  `psc` in the code.
-* $V_{\mathrm{sc}}$: the voltage on LV side during short circuit test (in %). This parameter is noted  `vsc` in the
-  code.
+## Transformer parameters
 
-For three-phase transformer, the windings is also required. See the dedicated page of
-[three-phase transformers](three-phase-transformer) for more details.
+Transformers are modeled with the following parameters:
+* $U_{1,\mathrm{nom.}}$: the phase-to-phase nominal voltage of the high voltages side (in V). This
+  parameter is called `uhv` in the code.
+* $U_{2,\mathrm{nom.}}$: the phase-to-phase nominal voltage of the low voltages side (in V). This
+  parameter is called `ulv` in the code.
+* $S_{\mathrm{nom.}}$: the nominal power of the transformer (in VA). This parameter is called `sn`
+  in the code.
+* $i_0$: the current during off-load test (in %). This parameter is called  `i0` in the code.
+* $P_0$: the losses during off-load test (in W). This parameter is called  `p0` in the code.
+* $P_{\mathrm{sc}}$: the losses during short circuit test (in W). This parameter is called  `psc`
+  in the code.
+* $V_{\mathrm{sc}}$: the voltage on LV side during short circuit test (in %). This parameter is
+  called  `vsc` in the code.
 
-These parameters come from off-load test and short-circuit test. Internally, these parameters are converted into a
-series impedance $\underline{Z_2}$ and the magnetizing admittance $\underline{Y_{\mathrm{m}}}$.
+For three-phase transformers, the windings configuration is also required. See the dedicated page
+of [three-phase transformers](Three_Phase_Transformer.md) for more details.
 
-First, some notations:
-* on the primary side of the transformer, we note $i_{1,\mathrm{nom.}}=\dfrac{S_{\mathrm{nom.}}}{U_{1,\mathrm{nom.}}}$
-  the nominal current of the primary winding.
-* on the secondary side of the transformer, we note $i_{2,\mathrm{nom.}}=\dfrac{S_{\mathrm{nom.}}}{U_{2,\mathrm{nom.}}}$
-  the nominal current of the secondary winding.
+These parameters come from off-load and short-circuit tests. Internally, these parameters are
+converted into a series impedance $\underline{Z_2}$ and the magnetizing admittance
+$\underline{Y_{\mathrm{m}}}$.
+
+First, we define the following quantities:
+* $i_{1,\mathrm{nom.}}=\dfrac{S_{\mathrm{nom.}}}{U_{1,\mathrm{nom.}}}$: the nominal current of the
+  winding on the primary side of the transformer
+* $i_{2,\mathrm{nom.}}=\dfrac{S_{\mathrm{nom.}}}{U_{2,\mathrm{nom.}}}$: the nominal current of the
+  winding on the secondary side of the transformer.
 
 ### Off-load test
 
-We note $P_0$ the losses and $i_1^0$ the current in the primary winding of the transformer during this test. The
-following values can be computed:
+We note $P_0$ the losses and $i_1^0$ the current in the primary winding of the transformer during
+this test. The following values can be computed:
 
 ```{math}
 \begin{aligned}
@@ -73,17 +77,16 @@ Then, $\underline{Z_2}$ can be deduced:
 \underline{Z_2} = R2+j\cdot X2
 ```
 
-## Transformer parameters
+## Usage
 
-To define the parameters of the transformers, the `TransformerParameters` instance must be used. It takes the
-elements described in the previous section in order to define the behaviour of a transformer. The argument `type` of
-the constructor has three potential values:
+To define the parameters of the transformers, use the `TransformerParameters` class. It takes as
+arguments the elements described in the previous section and converts them into the series
+impedance and the magnetizing admittance. The `type` argument of the constructor can take the
+following values:
 
-* `"single"` if you want to model a single-phase transformer
-* `"center"` if you want to model a center-tapped transformer
+* `"single"` to model a single-phase transformer
+* `"center"` to model a center-tapped transformer
 * Any windings (`"Dd0"`, `"Dz6"`, etc.) to model a three-phase transformer.
-
-Here is an example of the creation of `TansformerParameters` instances.
 
 ```python
 from roseau.load_flow import TransformerParameters, Q_
@@ -91,7 +94,7 @@ from roseau.load_flow import TransformerParameters, Q_
 # The transformer parameters for a single-phase transformer
 single_phase_transformer_parameters = TransformerParameters(
     id="single_phase_transformer_parameters",
-    type="single",  # Here the keyword "single" is provided in the `type` argument
+    type="single",  # <--- single-phase transformer
     uhv=Q_(20, "kV"),
     ulv=Q_(400, "V"),
     sn=Q_(160, "kVA"),
@@ -104,7 +107,7 @@ single_phase_transformer_parameters = TransformerParameters(
 # The transformer parameters for a three-phase transformer
 three_phase_transformer_parameters = TransformerParameters(
     id="three_phase_transformer_parameters",
-    type="Dyn11",  # Here the windings is provided in the `type` argument
+    type="Dyn11",  # <--- three-phase transformer with delta primary and wye secondary
     uhv=Q_(20, "kV"),
     ulv=Q_(400, "V"),
     sn=Q_(160, "kVA"),
@@ -117,7 +120,7 @@ three_phase_transformer_parameters = TransformerParameters(
 # The transformer parameters for a center-tapped transformer
 center_tapped_transformer_parameters = TransformerParameters(
     id="center_tapped_transformer_parameters",
-    type="center",  # Here the keyword "center" is provided in the `type` argument
+    type="center",  # <--- center-tapped transformer
     uhv=Q_(20, "kV"),
     ulv=Q_(400, "V"),
     sn=Q_(160, "kVA"),

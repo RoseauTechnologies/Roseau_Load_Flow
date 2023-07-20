@@ -2,7 +2,9 @@
 
 ## Definition
 
-It represents a node in the network that other elements (loads, lines, transformers, voltage sources...) can connect to.
+It represents a multi-phase node in the network that other elements (loads, lines, transformers,
+voltage sources...) can connect to. A bus is a placeholder point where we want the voltage to be
+computed during the load flow.
 
 ```{image}  /_static/Bus.svg
 :alt: Bus diagram
@@ -12,24 +14,49 @@ It represents a node in the network that other elements (loads, lines, transform
 
 No equation is added for a bus.
 
+## Usage
+
+A bus is identified by its unique id and must define the phases it is connected to. A bus must
+have all the phases of the elements connected to it.
+
+```python
+from roseau.load_flow import Bus, PowerLoad
+
+bus1 = Bus(id="bus1", phases="abcn")  # A three-phase bus with a neutral
+bus2 = Bus(id="bus2", phases="abc")  # A three-phase bus without a neutral
+bus3 = Bus(id="bus3", phases="an")  # A single-phase bus
+
+PowerLoad(id="load1", bus=bus1, powers=[100, 0, 50j], phases="abcn")  # OK
+PowerLoad(id="load2", bus=bus1, powers=[100, 0, 50j], phases="abc")  # OK
+PowerLoad(id="load3", bus=bus2, powers=[100], phases="ab")  # OK
+PowerLoad(
+    id="load4", bus=bus3, powers=[100], phases="ab"
+)  # Error: bus3 does not have phase "b"
+```
+
+Since a bus represents a point in the network, it is possible to define the coordinates of this
+point:
+
+```python
+from shapely import Point
+from roseau.load_flow import Bus
+
+bus = Bus(id="bus", phases="abc", geometry=Point(1.0, -2.5))
+```
+
+This information is not used by the load flow solver but could be used to generate geographical
+plots of the results.
 
 ## Short-circuit
 
-The bus element can also be used to create a short-circuit in a network.
-
-```{note}
-In *Roseau Load Flow*, it is possible to perform short-circuit computation while keeping loads (or generators)
-connected to the network. There is a single exception: it is not allowed to keep a `PowerLoad` connected to the bus
-which has the short-circuit because the equations of a `PowerLoad` can't be satisfied.
-```
+The bus element can also be used to create a short-circuit in the network to perform
+[short circuit analysis](../notebooks/Short_Circuit.ipynb).
 
 Here is an example of a simple short-circuit between two phases:
 
 ```python
 import functools as ft
-
 import numpy as np
-
 from roseau.load_flow import (
     Bus,
     ElectricalNetwork,
@@ -45,12 +72,8 @@ bus1 = Bus(id="bus1", phases="abcn")
 bus2 = Bus(id="bus2", phases="abcn")
 
 # A line
-line_parameters = LineParameters(
-    id="line_parameters", z_line=Q_((0.3 + 0.35j) * np.eye(4), "ohm/km")
-)
-line = Line(
-    id="line", bus1=bus1, bus2=bus2, parameters=line_parameters, length=Q_(1, "km")
-)
+lp = LineParameters(id="lp", z_line=Q_((0.3 + 0.35j) * np.eye(4), "ohm/km"))
+line = Line(id="line", bus1=bus1, bus2=bus2, parameters=lp, length=Q_(1, "km"))
 
 # A voltage source on the first bus
 un = 400 / np.sqrt(3)
@@ -68,8 +91,8 @@ en = ElectricalNetwork.from_element(bus1)
 auth = ("username", "password")
 en.solve_load_flow(auth=auth)
 
-# Get the current flowing from the bus1 to the line
-# One can remark that the current flowing in phase a and b is extremely high
+# Get the currents flowing to the line from bus1
+# Notice the extremely high currents in phases "a" and "b"
 en.res_branches[["current1"]].transform([np.abs, ft.partial(np.angle, deg=True)])
 # |               |   ('current1', 'absolute') |   ('current1', 'angle') |
 # |:--------------|---------------------------:|------------------------:|

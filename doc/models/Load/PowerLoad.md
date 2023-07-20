@@ -1,13 +1,18 @@
-# Power loads
+# Power loads (P)
+
+They represent loads for which the power is considered constant, i.e. it is independent of the
+voltage.
+
+*ZIP* equation: $S = s \times V^0 + 0 \times V^1 + 0 \times V^2 \implies S = \mathrm{constant}$
 
 ## Equations
 
-They represent loads for which the power is considered constant. The equations are the following (star loads):
+The equations are the following (star loads):
 
 ```{math}
 \left\{
     \begin{aligned}
-        \underline{I_{\mathrm{abc}}} &= \left(\frac{\underline{S_{\mathrm{abc}}}}{\underline{V_{\mathrm{abc}}}
+        \underline{I_{\mathrm{a,b,c}}} &= \left(\frac{\underline{S_{\mathrm{a,b,c}}}}{\underline{V_{\mathrm{a,b,c}}}
         -\underline{V_{\mathrm{n}}}}\right)^{\star} \\
         \underline{I_{\mathrm{n}}} &= -\sum_{p\in\{\mathrm{a},\mathrm{b},\mathrm{c}\}}\underline{I_{p}}
     \end{aligned}
@@ -33,9 +38,7 @@ And the following (delta loads):
 
 ```python
 import functools as ft
-
 import numpy as np
-
 from roseau.load_flow import (
     Bus,
     ElectricalNetwork,
@@ -52,12 +55,8 @@ bus1 = Bus(id="bus1", phases="abcn")
 bus2 = Bus(id="bus2", phases="abcn")
 
 # A line
-line_parameters = LineParameters(
-    id="line_parameters", z_line=Q_(0.35 * np.eye(4), "ohm/km")
-)
-line = Line(
-    id="line", bus1=bus1, bus2=bus2, parameters=line_parameters, length=Q_(1, "km")
-)
+lp = LineParameters(id="lp", z_line=Q_(0.35 * np.eye(4), "ohm/km"))
+line = Line(id="line", bus1=bus1, bus2=bus2, parameters=lp, length=Q_(1, "km"))
 
 # A voltage source on the first bus
 un = 400 / np.sqrt(3)
@@ -68,16 +67,14 @@ vs = VoltageSource(id="source", bus=bus1, voltages=voltages)
 pref = PotentialRef(id="pref", element=bus1, phase="n")
 
 # A power load on the second bus
-load = PowerLoad(
-    id="load", bus=bus2, powers=Q_(np.array([1000, 1000, 1000]) * (1 - 0.3j), "VA")
-)
+load = PowerLoad(id="load", bus=bus2, powers=Q_((1000 - 300j) * np.ones(3), "VA"))
 
 # Create a network and solve a load flow
 en = ElectricalNetwork.from_element(bus1)
 auth = ("username", "password")
 en.solve_load_flow(auth=auth)
 
-# Get the powers of the load
+# Get the powers of the loads in the network
 en.res_loads["power"]
 # |               |                      power |
 # |:--------------|---------------------------:|
@@ -101,7 +98,7 @@ en.res_buses_voltages.transform([np.abs, ft.partial(np.angle, deg=True)])
 load.powers = Q_(np.array([5.0, 2.5, 0]) * (1 - 0.3j), "kVA")
 en.solve_load_flow(auth=auth)
 
-# Get the powers of the load
+# Get the powers of the loads in the network
 en.res_loads["power"]
 # |               |                  power |
 # |:--------------|-----------------------:|

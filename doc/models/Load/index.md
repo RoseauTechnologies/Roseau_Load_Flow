@@ -1,11 +1,12 @@
 # Loads
 
-The load element can be used to model consumption loads (with positive active power) as well as generation loads
-(with negative active power).
+The load element can be used to model consumption loads (with positive active power) as well as
+generation loads (with negative active power).
 
 ## Connections
 
-For each load type, two connections can be made.
+A load can be either star-connected or delta-connected depending on whether its phases include a
+neutral or not.
 
 ### Star connection
 
@@ -26,7 +27,7 @@ Here is the diagram of a star-connected three-phase load:
 ```
 ````
 
-In order to be created in *Roseau Load Flow*, the `phases` argument of the constructor must contain `"n"`.
+In *Roseau Load Flow*, the `phases` argument of the constructor must contain `"n"` for star loads.
 
 ### Delta connection
 
@@ -47,9 +48,17 @@ Here is the diagram of a delta-connected three-phase load:
 ```
 ````
 
-In order to be created in *Roseau Load Flow*, the `phases` argument of the constructor must **not** contain `"n"`.
+In *Roseau Load Flow*, the `phases` argument of the constructor must **not** contain `"n"` for delta
+loads.
 
 ## Available models
+
+The *ZIP* model is commonly used to represent electric loads in static grid analysis. This model
+considers the voltage dependency of loads. ZIP stands for the three load types:
+
+* Z = constant impedance load
+* I = constant current load
+* P = constant power load
 
 The following load models are available in *Roseau Load Flow*:
 
@@ -58,8 +67,8 @@ The following load models are available in *Roseau Load Flow*:
 maxdepth: 2
 caption: Loads
 ---
-PowerLoad
 ImpedanceLoad
 CurrentLoad
+PowerLoad
 FlexibleLoad
 ```

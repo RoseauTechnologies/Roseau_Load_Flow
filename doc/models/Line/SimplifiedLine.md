@@ -1,18 +1,7 @@
 # Simplified line
 
-## Equations
-
-If the line does not define a shunt admittance, we can simplify the model as there is no coupling with
-the ground. With $\underline{Y} = 0$, the equations become:
-
-```{math}
-\left\{
-    \begin{aligned}
-        \underline{V_1} - \underline{V_2} &= \underline{Z} \cdot \underline{I_1} \\
-        \underline{I_2} &= -\underline{I_1}
-    \end{aligned}
-\right.
-```
+If the line is modeled with only series impedance, the model is simplified as there is no coupling
+with the ground. This is a common model of short lines, typically in distribution networks.
 
 The corresponding diagram is:
 
@@ -31,18 +20,27 @@ The corresponding diagram is:
 ```
 ````
 
+## Equations
+
+With $\underline{Y} = 0$, the equations become:
+
+```{math}
+\left\{
+    \begin{aligned}
+        \underline{V_1} - \underline{V_2} &= \underline{Z} \cdot \underline{I_1} \\
+        \underline{I_2} &= -\underline{I_1}
+    \end{aligned}
+\right.
+```
+
 ## Usage
 
-
-To create a simplified line, just create a `LineParameter` instance without provided the `y_shunt` argument. Here is
-a simple line with a power load.
-
+To create a simplified line, create an instance of `LineParameter` without providing `y_shunt`.
+Here is a simplified line connecting a constant power load to a voltage source.
 
 ```python
 import functools as ft
-
 import numpy as np
-
 from roseau.load_flow import (
     Bus,
     ElectricalNetwork,
@@ -59,12 +57,8 @@ bus1 = Bus(id="bus1", phases="abcn")
 bus2 = Bus(id="bus2", phases="abcn")
 
 # A line
-line_parameters = LineParameters(
-    id="line_parameters", z_line=Q_(0.35 * np.eye(4), "ohm/km")
-)
-line = Line(
-    id="line", bus1=bus1, bus2=bus2, parameters=line_parameters, length=Q_(1, "km")
-)
+lp = LineParameters(id="lp", z_line=Q_(0.35 * np.eye(4), "ohm/km"))
+line = Line(id="line", bus1=bus1, bus2=bus2, parameters=lp, length=Q_(1, "km"))
 
 # A voltage source on the first bus
 un = 400 / np.sqrt(3)
@@ -84,7 +78,7 @@ en = ElectricalNetwork.from_element(bus1)
 auth = ("username", "password")
 en.solve_load_flow(auth=auth)
 
-# The current "entering" into the line from the bus1
+# The current flowing into the line from bus1
 en.res_branches[["current1"]].transform([np.abs, ft.partial(np.angle, deg=True)])
 # |               |   ('current1', 'absolute') |   ('current1', 'angle') |
 # |:--------------|---------------------------:|------------------------:|
@@ -93,7 +87,7 @@ en.res_branches[["current1"]].transform([np.abs, ft.partial(np.angle, deg=True)]
 # | ('line', 'c') |                     0      |                  0      |
 # | ('line', 'n') |                    20.628  |                168.476  |
 
-# The current "entering" into the line from the bus2
+# The current flowing into the line from bus2
 en.res_branches[["current2"]].transform([np.abs, ft.partial(np.angle, deg=True)])
 # |               |   ('current2', 'absolute') |   ('current2', 'angle') |
 # |:--------------|---------------------------:|------------------------:|
@@ -101,6 +95,8 @@ en.res_branches[["current2"]].transform([np.abs, ft.partial(np.angle, deg=True)]
 # | ('line', 'b') |                    11.3722 |                 74.7366 |
 # | ('line', 'c') |                     0      |                  0      |
 # | ('line', 'n') |                    20.628  |                -11.5242 |
+
+# The two currents are equal in magnitude and opposite in phase, as expected
 
 # The losses of the line can also be accessed. One can remark that there are no shunt losses
 en.res_lines_losses

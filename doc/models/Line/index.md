@@ -1,14 +1,19 @@
 # Lines
 
+Lines are modeled using passive components lumped in a PI section. The lumped parameters are
+defined using the series impedance matrix $\underline{Z}$ and the shunt admittance matrix
+$\underline{Y}$.
+
 ## Matrices definition
 
-Before describing the different line models, we first have to define the series impedance matrix, noted $Z$, and the
-shunt admittance matrix, noted $Y$.
+Before diving into the different line models, lets define the series impedance matrix $Z$, and the
+shunt admittance matrix $Y$ used to model the lines.
 
 ### Series impedance matrix
 
-The series impedance matrix $\underline{Z}$, in $\Omega$, is composed of the resistance of the conductors ($R\in
-{\mathbb{R}^+}^4$), the self-inductances ($L\in\mathbb{R}^4$) and the mutual inductances ($M\in\mathbb{R}^{12}$).
+The series impedance matrix $\underline{Z}$, in $\Omega$, consists of the series resistance of the
+conductors ($R\in{\mathbb{R}^+}^4$), the self-inductances ($L\in\mathbb{R}^4$) and the mutual
+inductances ($M\in\mathbb{R}^{12}$).
 
 ```{math}
 \begin{aligned}
@@ -41,11 +46,12 @@ The series impedance matrix $\underline{Z}$, in $\Omega$, is composed of the res
 ### Admittance matrix
 
 ```{warning}
-The admittance matrix $\underline{y}$ shouldn't be confused with the shunt admittance matrix $\underline{Y}$.
+The admittance matrix $\underline{y}$ shouldn't be confused with the shunt admittance matrix
+$\underline{Y}$ defined below.
 ```
 
-$\underline{y}$ represents the admittances between each node, while $\underline{Y}$ is used to compute the currents and
-voltages.
+$\underline{y}$ represents the admittances between each node, while $\underline{Y}$ is used to
+compute the currents and voltages.
 
 ```{math}
 \begin{aligned}
@@ -101,16 +107,17 @@ The shunt admittance matrix $\underline{Y}$ is defined from the admittance matri
 
 ## Line parameters
 
-To define the parameters of the lines, the `LineParameters` instance must be used. It takes the series impedance
-matrix $\underline{Z}$ and optionally, the shunt admittance matrix $\underline{Y}$. The first one must be given in
-$\Omega$/km (or equivalent unit) and the second must be given in S/km (or equivalent unit).
+The parameters of the lines are defined using the `LineParameters` class. It takes the series
+impedance matrix $\underline{Z}$ and optionally, the shunt admittance matrix $\underline{Y}$. The
+first one must be given in $\Omega/km$ (or an equivalent unit) and the second must be given in
+$S/km$ (or an equivalent unit).
 
 ```python
 import numpy as np
 
 from roseau.load_flow import LineParameters, Q_
 
-# A impedance matrix
+# An impedance matrix
 z_line = Q_(
     np.array(
         [
@@ -152,8 +159,8 @@ The following line models are available in *Roseau Load Flow*:
 ```{toctree}
 ---
 maxdepth: 2
-caption: Loads
+caption: Lines
 ---
-SimplifiedLine
 ShuntLine
+SimplifiedLine
 ```

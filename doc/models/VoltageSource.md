@@ -1,9 +1,14 @@
 # Voltage source
 
-It refers to an ideal voltage source, that can maintain a fixed voltage independently of the load resistance
-or the output current.
+It represents an ideal voltage source that maintains a fixed voltage independently of the load
+resistance or the output current.
 
-## Star connection
+## Connections
+
+A voltage source can be either star-connected or delta-connected depending on whether its phases
+include a neutral or not.
+
+### Star (wye) connection
 
 The diagram of the star voltage source is:
 
@@ -21,7 +26,7 @@ The diagram of the star voltage source is:
 :align: center
 ```
 ````
-The equations associated to the star voltage source are the following:
+The equations that model a star voltage source are:
 
 ```{math}
 \left\{
@@ -33,11 +38,10 @@ The equations associated to the star voltage source are the following:
 \right.
 ```
 
-Where $\underline{U}\in\mathbb{C}^3$ is the voltages (user defined parameters) and $\underline{V}\in\mathbb{C}^4$
-are the node potentials (variables).
+Where $\underline{U}\in\mathbb{C}^3$ is the voltage vector (user defined parameter) and
+$\underline{V}\in\mathbb{C}^4$ is the node potentials vector (variable).
 
-
-## Delta connection
+### Delta connection
 
 The diagram of the delta voltage source is:
 
@@ -55,7 +59,7 @@ The diagram of the delta voltage source is:
 :align: center
 ```
 ````
-The equations associated to the delta voltage source are the following:
+The equations that model a delta voltage source are:
 
 ```{math}
 \left\{
@@ -67,5 +71,38 @@ The equations associated to the delta voltage source are the following:
 \right.
 ```
 
-Where $\underline{U}\in\mathbb{C}^3$ are the voltages (user defined parameters) and $\underline{V}\in\mathbb{C}^3$
-are the node potentials (variables).
+Where $\underline{U}\in\mathbb{C}^3$ is the voltage vector (user defined parameter) and
+$\underline{V}\in\mathbb{C}^3$ is the node potentials vector (variable).
+
+
+## Usage
+
+A voltage source defined with a neutral phase is a star voltage source, otherwise it is a delta
+voltage source. The voltage vector must have the same size as the number of the phase-to-phase
+or phase-to-neutral connections of the source.
+
+```python
+import numpy as np
+from roseau.load_flow import Bus, VoltageSource
+
+bus = Bus(id="bus", phases="abcn")
+
+# Star connection
+un = 400 / np.sqrt(3)  # 400V phase-to-phase -> 230V phase-to-neutral
+voltages = un * np.exp([0, -2j * np.pi / 3, 2j * np.pi / 3])
+VoltageSource(
+    id="vs", bus=bus, phases="abcn", voltages=voltages
+)  # Voltages are considered phase-to-neutral because phases="abcn"
+
+# Delta connection
+un = 400  # 400V phase-to-phase
+voltages = un * np.exp([0, -2j * np.pi / 3, 2j * np.pi / 3])
+VoltageSource(
+    id="vs", bus=bus, phases="abc", voltages=voltages
+)  # Voltages are considered phase-to-phase because phases="abc"
+
+# Incorrect voltage vector
+un = 400
+voltages = un * np.exp([0, -2j * np.pi / 3])  # Only two elements!!
+VoltageSource(id="vs", bus=bus, phases="abc", voltages=voltages)  # Error
+```
