@@ -47,92 +47,40 @@ For example, the windings $Dyn11$ are represented by the following diagram:
 
 There are multiple ways to connect the transformers, which are represented in the following windings diagrams
 
-### Phase displacement of 0
+### Wye secondary
 
-```{image}  /_static/Transformer/Windings_Dd0.svg
-:alt: Windings Dd0 diagram
-:width: 400px
-:align: center
-```
-<br/>
+```{list-table}
+:class: borderless
+:widths: 400 400
 
-```{image}  /_static/Transformer/Windings_Yy0.svg
-:alt: Windings Yy0 diagram
-:width: 400px
-:align: center
-```
-<br/>
-
-```{image}  /_static/Transformer/Windings_Dz0.svg
-:alt: Windings Dz0 diagram
-:width: 400px
-:align: center
+* - ![image](/_static/Transformer/Windings_Dy11.svg)
+  - ![image](/_static/Transformer/Windings_Yy0.svg)
+* - ![image](/_static/Transformer/Windings_Dy5.svg)
+  - ![image](/_static/Transformer/Windings_Yy6.svg)
 ```
 
-### Phase displacement of 6
+### Delta secondary
 
-```{image}  /_static/Transformer/Windings_Dd6.svg
-:alt: Windings Dd6 diagram
-:width: 400px
-:align: center
-```
-<br/>
+```{list-table}
+:class: borderless
+:widths: 400 400
 
-```{image}  /_static/Transformer/Windings_Yy6.svg
-:alt: Windings Yy6 diagram
-:width: 400px
-:align: center
-```
-<br/>
-
-```{image}  /_static/Transformer/Windings_Dz6.svg
-:alt: Windings Dz6 diagram
-:width: 400px
-:align: center
+* - ![image](/_static/Transformer/Windings_Dd0.svg)
+  - ![image](/_static/Transformer/Windings_Yd11.svg)
+* - ![image](/_static/Transformer/Windings_Dd6.svg)
+  - ![image](/_static/Transformer/Windings_Yd5.svg)
 ```
 
-### Phase displacement of 11
+### Zigzag secondary
 
-```{image}  /_static/Transformer/Windings_Dy11.svg
-:alt: Windings Dy11 diagram
-:width: 400px
-:align: center
-```
-<br/>
+```{list-table}
+:class: borderless
+:widths: 400 400
 
-```{image}  /_static/Transformer/Windings_Yd11.svg
-:alt: Windings Yd11 diagram
-:width: 400px
-:align: center
-```
-<br/>
-
-```{image}  /_static/Transformer/Windings_Yz11.svg
-:alt: Windings Yz11 diagram
-:width: 400px
-:align: center
-```
-
-### Phase displacement of 5
-
-```{image}  /_static/Transformer/Windings_Dy5.svg
-:alt: Windings Dy5 diagram
-:width: 400px
-:align: center
-```
-<br/>
-
-```{image}  /_static/Transformer/Windings_Yd5.svg
-:alt: Windings Yd5 diagram
-:width: 400px
-:align: center
-```
-<br/>
-
-```{image}  /_static/Transformer/Windings_Yz5.svg
-:alt: Windings Yz5 diagram
-:width: 400px
-:align: center
+* - ![image](/_static/Transformer/Windings_Dz0.svg)
+  - ![image](/_static/Transformer/Windings_Yz11.svg)
+* - ![image](/_static/Transformer/Windings_Dz6.svg)
+  - ![image](/_static/Transformer/Windings_Yz5.svg)
 ```
 
 ## Matrices
@@ -163,7 +111,19 @@ For all the windings, different matrices are associated:
     0 & 0 & -1
     \end{pmatrix}$
 
-* - Dz et Yz
+* - Yz
+  - $\dfrac{n_2}{n_1}\begin{pmatrix}
+    1 & 0 & 0\\
+    0 & 1 & 0\\
+    0 & 0 & 1
+    \end{pmatrix}$
+  - $\dfrac{n_2}{n_1}\begin{pmatrix}
+    -1 & 0 & 1\\
+    1 & -1 & 0\\
+    0 & 1 & -1
+    \end{pmatrix}$
+
+* - Dz
   - $\dfrac{n_2}{n_1}\begin{pmatrix}
     1 & 0 & 0\\
     0 & 1 & 0\\
@@ -274,6 +234,8 @@ For all the windings, different matrices are associated:
 ```
 
 ### Secondary windings matrices
+
+#### Direct
 
 ```{list-table}
 :class: borderless
@@ -421,6 +383,156 @@ For all the windings, different matrices are associated:
         1\\
         1
     \end{pmatrix}$
+```
+
+#### Inverse
+
+```{list-table}
+:class: borderless
+:header-rows: 1
+:stub-columns: 1
+:align: center
+
+* - Winding
+  - $K_{\mathrm{Vabc}}$
+  - $K_{\mathrm{Uxyz}}$
+  - $K_{\mathrm{Iabc}}$
+  - $K_{\mathrm{Ixyz}}$
+  - $K_{\mathrm{n}}$
+* - Dd6
+  - $\begin{pmatrix}
+        1 & -1 & 0\\
+        0 & 1 & -1\\
+        -1 & 0 & 1
+      \end{pmatrix}$
+  - $\begin{pmatrix}
+        -1 & 0 & 0\\
+        0 & -1 & 0\\
+        0 & 0 & -1
+     \end{pmatrix}$
+  - $\begin{pmatrix}
+        1 & 0 & 0\\
+        0 & 1 & 0\\
+        0 & 0 & 1
+     \end{pmatrix}$
+  - $\begin{pmatrix}
+        -1 & 0 & 1\\
+        1 & -1 & 0\\
+        0 & 1 & -1
+     \end{pmatrix}$
+  - $\begin{pmatrix}
+        0\\
+        0\\
+        0
+    \end{pmatrix}$
+
+* - Yd5
+  - $\begin{pmatrix}
+        1 & 0 & -1\\
+        -1 & 1 & 0\\
+        0 & -1 & 1
+      \end{pmatrix}$
+  - $\begin{pmatrix}
+       -1 & 0 & 0\\
+       0 & -1 & 0\\
+       0 & 0 & -1
+     \end{pmatrix}$
+  - $\begin{pmatrix}
+       1 & 0 & 0\\
+       0 & 1 & 0\\
+       0 & 0 & 1
+     \end{pmatrix}$
+  - $\begin{pmatrix}
+       -1 & 1 & 0\\
+       0 & -1 & 1\\
+       1 & 0 & -1
+     \end{pmatrix}$
+  - $\begin{pmatrix}
+       0\\
+       0\\
+       0
+    \end{pmatrix}$
+
+* - Yy6 and Dy5
+  - $\begin{pmatrix}
+        1 & 0 & 0\\
+        0 & 1 & 0\\
+        0 & 0 & 1
+      \end{pmatrix}$
+  - $\begin{pmatrix}
+       -1 & 0 & 0\\
+       0 & -1 & 0\\
+       0 & 0 & -1
+     \end{pmatrix}$
+  - $\begin{pmatrix}
+       1 & 0 & 0\\
+       0 & 1 & 0\\
+       0 & 0 & 1
+     \end{pmatrix}$
+  - $\begin{pmatrix}
+       -1 & 0 & 0\\
+       0 & -1 & 0\\
+       0 & 0 & -1
+     \end{pmatrix}$
+  - $\begin{pmatrix}
+       1\\
+       1\\
+       1
+     \end{pmatrix}$
+
+* - Dz6
+  - $\begin{pmatrix}
+        1 & 0 & 0\\
+        0 & 1 & 0\\
+        0 & 0 & 1
+      \end{pmatrix}$
+  - $\begin{pmatrix}
+       -1 & 0 & 1\\
+       1 & -1 & 0\\
+       0 & 1 & -1
+     \end{pmatrix}$
+  - $\begin{pmatrix}
+       1 & 0 & 0\\
+       0 & 1 & 0\\
+       0 & 0 & 1
+     \end{pmatrix}$
+  - $\begin{pmatrix}
+       -1 & 0 & 0\\
+       0 & -1 & 0\\
+       0 & 0 & -1
+     \end{pmatrix}$
+  - $\begin{pmatrix}
+       1\\
+       1\\
+       1
+     \end{pmatrix}$
+
+* - Yz5
+  - $\begin{pmatrix}
+        1 & 0 & 0\\
+        0 & 1 & 0\\
+        0 & 0 & 1
+      \end{pmatrix}$
+  - $\begin{pmatrix}
+       -1 & 1 & 0\\
+       0 & -1 & 1\\
+       1 & 0 & -1
+     \end{pmatrix}$
+  - $\begin{pmatrix}
+       1 & 0 & 0\\
+       0 & 1 & 0\\
+       0 & 0 & 1
+     \end{pmatrix}$
+  - $\begin{pmatrix}
+       -1 & 0 & 0\\
+       0 & -1 & 0\\
+       0 & 0 & -1
+     \end{pmatrix}$
+  - $\begin{pmatrix}
+       1\\
+       1\\
+       1
+     \end{pmatrix}$
 ```
 
 ## Equations
