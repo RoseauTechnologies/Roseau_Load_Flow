@@ -1,0 +1,79 @@
+\input{Preambule}%
+
+\begin{document}
+\ctikzset{american, bipoles/length=1cm}%
+\begin{tikzpicture}[%
+    show background rectangle,%
+    tight background,%
+    background rectangle/.style={fill=white}%
+    ]
+    % Version multifilaire
+
+    %
+    % Définitions
+    %
+    % No European transformer in circuitikz [BV, 17/07/2023]
+    \tikzset{
+        transformer/.pic={
+            \draw (-0.2,0) circle[radius=0.4] (0.2,0) circle[radius=0.4];
+        },
+    }
+    \pgfmathsetmacro{\xl}{0};%
+    \pgfmathsetmacro{\xy}{1.75};%
+    \pgfmathsetmacro{\xlt}{2.5};%
+    \pgfmathsetmacro{\xrt}{4.5};%
+    \pgfmathsetmacro{\xz}{6};%
+    \pgfmathsetmacro{\xm}{7.5};%
+    \pgfmathsetmacro{\xt}{0.5*(\xlt+\xrt)};%
+
+    \pgfmathsetmacro{\yn}{0};%
+    \pgfmathsetmacro{\ya}{2};%
+    \pgfmathsetmacro{\transformerheight}{\ya-\yn};%
+    \ctikzset{quadpoles/transformer/height=\transformerheight};%
+    \pgfmathsetmacro{\yt}{0.5*(\ya+\yn)};%
+
+    %
+    % Dessin
+    %
+    % Transformer
+    \draw (\xt,\yt) node[transformer] (T) {};
+    \node[above] at ($(T.base)-(0,0.2)$) {$\dfrac{n_2}{n_1}$};%
+    \draw (T.inner dot A1) node[circ] {}; %
+    \draw (T.inner dot B1) node[circ] {}; %
+
+    % Tensions amont
+    \node[left] at (\xl,\ya) {$\underline{V_{\arm 1}}$};
+    \node[left] at (\xl,\yn) {$\underline{V_{\nrm 1}}$};
+
+    % Tensions aval
+    \node[right] at (\xm,\ya) {$\underline{V_{\arm 2}}$};
+    \node[right] at (\xm,\yn) {$\underline{V_{\nrm 2}}$};
+
+    % Câbles principaux
+    % A
+    \draw (\xl,\ya) to[short,*-*,i=$\underline{I_{\arm 1}}$]
+    (\xy,\ya) to[short,-] (T.A1);
+    \draw (T.B1) -- (\xrt,\ya) to [generic, l=$\underline{Z_2}$, -]
+    (\xz,\ya) to[short,-*,i<=$\underline{I_{\arm 2}}$] (\xm,\ya);%
+
+    % Neutre
+    \draw (\xl,\yn) to[short,*-*,i=$\underline{I_{\nrm 1}}$]
+    (\xy,\yn) to[short,-] (T.A2);
+    \draw (T.B2) to[short, -] (\xz,\yn) to[short,-*,i<=$\underline{I_{\nrm 2}}$] (\xm,\yn);%
+
+    % Ym
+    \draw (\xy,\ya) to [generic, l=$\underline{Y_m}$, v>=$\underline{U_{\arm 1}}$, -] (\xy,\yn);%
+    \draw (\xz,\ya) to [open, v>=$\underline{U_{\arm 2}}$] (\xz,\yn);%
+
+\end{tikzpicture}
+\end{document}
+% Local Variables:
+% mode: latex
+% TeX-engine: luatex
+% TeX-source-correlate-method-active: synctex
+% ispell-local-dictionary: "francais"
+% coding: utf-8
+% TeX-master: "../../Manuscrit.tex"
+% LaTeX-indent-level: 4
+% compile-command: "make -k -C ../../"
+% End:
