@@ -1,5 +1,10 @@
 # Single-phase transformer
 
+```{note}
+In this page, the pictures and the equations depicts a single-phase transformer connected between phases $\mathrm{a}$
+and $\mathrm{n}$. Single-phase transformers can obviously be connected to other phases.
+```
+
 ## Definition
 
 The single-phase transformers are modelled as follows:
@@ -31,10 +36,10 @@ The following equations are used:
 \begin{equation}
     \left\{
     \begin{aligned}
-        \dfrac{n_2}{n_1} \underline{U_{a1}} &= \underline{U_{a2}} - Z_2 \cdot \underline{I_{a2}} \\
-        \underline{I_{a1}} - Y_m \cdot \underline{U_{a1}} &= -\dfrac{n_2}{n_1} \underline{I_{a2}} \\
-        \underline{I_{a1}} &= -\underline{I_{n1}} \\
-        \underline{I_{a2}} &= -\underline{I_{n2}} \\
+        \dfrac{n_2}{n_1} \underline{U_{1,\mathrm{a}}} &= \underline{U_{2,\mathrm{a}}} - Z_2 \cdot \underline{I_{2,\mathrm{a}}} \\
+        \underline{I_{1,\mathrm{a}}} - Y_{\mathrm{m}} \cdot \underline{U_{1,\mathrm{a}}} &= -\dfrac{n_2}{n_1} \underline{I_{2,\mathrm{a}}} \\
+        \underline{I_{1,\mathrm{a}}} &= -\underline{I_{1,\mathrm{n}}} \\
+        \underline{I_{2,\mathrm{a}}} &= -\underline{I_{2,\mathrm{n}}} \\
     \end{aligned}
   \right.
 \end{equation}
