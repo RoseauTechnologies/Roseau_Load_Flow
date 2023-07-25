@@ -103,27 +103,27 @@ class ElectricalNetwork(JsonMixin):
         DEFAULT_SOLVER (str):
             The default solver to compute the load flow.
 
-        buses (dict[Id, Bus]):
+        buses (dict[Id, roseau.load_flow.Bus]):
             Dictionary of buses of the network indexed by their IDs. Also available as a
             :attr:`GeoDataFrame<buses_frame>`.
 
-        branches (dict[Id, AbstractBranch]):
+        branches (dict[Id, roseau.load_flow.AbstractBranch]):
             Dictionary of branches of the network indexed by their IDs. Also available as a
             :attr:`GeoDataFrame<branches_frame>`.
 
-        loads (dict[Id, AbstractLoad]):
+        loads (dict[Id, roseau.load_flow.AbstractLoad]):
             Dictionary of loads of the network indexed by their IDs. Also available as a
             :attr:`DataFrame<loads_frame>`.
 
-        sources (dict[Id, VoltageSource]):
+        sources (dict[Id, roseau.load_flow.VoltageSource]):
             Dictionary of voltage sources of the network indexed by their IDs. Also available as a
             :attr:`DataFrame<sources_frame>`.
 
-        grounds (dict[Id, Ground]):
+        grounds (dict[Id, roseau.load_flow.Ground]):
             Dictionary of grounds of the network indexed by their IDs. Also available as a
             :attr:`DataFrame<grounds_frame>`.
 
-        potential_refs (dict[Id, PotentialRef]):
+        potential_refs (dict[Id, roseau.load_flow.PotentialRef]):
             Dictionary of potential references of the network indexed by their IDs. Also available
             as a :attr:`DataFrame<potential_refs_frame>`.
 
