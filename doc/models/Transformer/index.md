@@ -2,8 +2,8 @@
 
 ## Definition
 
-The transformers which can be modelled using *Roseau Load Flow* are of three different types: single phase, split
-phase and three-phase transformers. To describe their behaviour, the following parameters are required:
+The transformers which can be modelled using *Roseau Load Flow* are of three different types: single phase,
+center-tapped and three-phase transformers. To describe their behaviour, the following parameters are required:
 * $U_{1,\mathrm{nom.}}$: the phase-to-phase nominal voltage of the high voltages side (in V). This parameter is noted
   `uhv` in the code.
 * $U_{2,\mathrm{nom.}}$: the phase-to-phase nominal voltage of the low voltages side (in V). This parameter is noted
@@ -80,7 +80,7 @@ elements described in the previous section in order to define the behaviour of a
 the constructor has three potential values:
 
 * `"single"` if you want to model a single-phase transformer
-* `"split"` if you want to model a split-phase transformer
+* `"center"` if you want to model a center-tapped transformer
 * Any windings (`"Dd0"`, `"Dz6"`, etc.) to model a three-phase transformer.
 
 Here is an example of the creation of `TansformerParameters` instances.
@@ -114,10 +114,10 @@ three_phase_transformer_parameters = TransformerParameters(
     vsc=Q_(4, "%"),
 )
 
-# The transformer parameters for a single-phase transformer
-split_phase_transformer_parameters = TransformerParameters(
-    id="split_phase_transformer_parameters",
-    type="split",  # Here the keyword "split" is provided in the `type` argument
+# The transformer parameters for a center-tapped transformer
+center_tapped_transformer_parameters = TransformerParameters(
+    id="center_tapped_transformer_parameters",
+    type="center",  # Here the keyword "center" is provided in the `type` argument
     uhv=Q_(20, "kV"),
     ulv=Q_(400, "V"),
     sn=Q_(160, "kVA"),
@@ -139,5 +139,5 @@ caption: Transformers
 ---
 Single_Phase_Transformer
 Three_Phase_Transformer
-Split_Phase_Transformer
+Center_Tapped_Transformer
 ```

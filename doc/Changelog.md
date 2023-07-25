@@ -7,7 +7,7 @@
 * [PR97](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/97) Add the model section to the documentation
 * [PR96](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/96)
   * Add single-phase transformer
-  * Add split-phase transformer
+  * Add center-tapped transformer
   * Remove the `TransformerType` enumeration
 * [PR93](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/93) Add short circuit computation
 * [PR92](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/92)

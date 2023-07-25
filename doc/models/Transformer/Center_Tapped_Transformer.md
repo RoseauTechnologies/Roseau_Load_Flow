@@ -1,27 +1,27 @@
-# Split-phase transformer
+# Center-tapped transformer
 
 ```{note}
-In this page, the pictures and the equations depicts a split-phase transformer connected between phases $\mathrm{a}$
-and $\mathrm{b}$. Split-phase transformers can obviously be connected to other phases. Nevertheless, the
+In this page, the pictures and the equations depicts a center-tapped transformer connected between phases $\mathrm{a}$
+and $\mathrm{b}$. Center-tapped transformers can obviously be connected to other phases. Nevertheless, the
 middle-position phase for the secondary part must be $\mathrm{n}$.
 ```
 
 ## Definition
 
-The split-phase transformer allows to convert a two phases primary winding into a split-phase secondary winding, with
+The center-tapped transformer allows to convert a two phases primary winding into a split-phase secondary winding, with
 the neutral at the center of the 2 phases. It is modelled as follows:
 
 ````{tab} European standards
-```{image}  /_static/Transformer/European_Split_Phase_Transformer.svg
-:alt: Split-phase transformer diagram
+```{image}  /_static/Transformer/European_Center_Tapped_Transformer.svg
+:alt: Center-tapped transformer diagram
 :width: 500px
 :align: center
 ```
 ````
 
 ````{tab} American standards
-```{image}  /_static/Transformer/American_Split_Phase_Transformer.svg
-:alt: Split-phase transformer diagram
+```{image}  /_static/Transformer/American_Center_Tapped_Transformer.svg
+:alt: Center-tapped transformer diagram
 :width: 500px
 :align: center
 ```

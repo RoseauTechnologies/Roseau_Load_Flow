@@ -54,8 +54,8 @@ class TransformerParameters(Identifiable, JsonMixin):
                 A unique ID of the transformer parameters, typically its canonical name.
 
             type:
-                The type of transformer parameters. It can be "single" for single-phase transformers, "split" for
-                split-phase transformers, or the name of the windings such as "Dyn11" for three-phase transformers.
+                The type of transformer parameters. It can be "single" for single-phase transformers, "center" for
+                center-tapped transformers, or the name of the windings such as "Dyn11" for three-phase transformers.
                 Allowed windings are "D" for delta, "Y" for wye (star), and "Z" for zigzag.
 
             uhv:
@@ -88,7 +88,7 @@ class TransformerParameters(Identifiable, JsonMixin):
         self._psc = psc
         self._vsc = vsc
         self.type = type
-        if type in ("single", "split"):
+        if type in ("single", "center"):
             self.winding1 = None
             self.winding2 = None
             self.phase_displacement = None
@@ -197,7 +197,7 @@ class TransformerParameters(Identifiable, JsonMixin):
                 The name of the transformer parameters, such as `"160kVA"` or `"H61_50kVA"`.
 
             type:
-                The type of transformer parameters such as "Dyn11", "single", "split".
+                The type of transformer parameters such as "Dyn11", "single", "center".
 
         Returns:
             The constructed transformer parameters.
@@ -250,7 +250,7 @@ class TransformerParameters(Identifiable, JsonMixin):
         # Change the voltages if the reference voltages is phase to neutral
         uhv = self._uhv
         ulv = self._ulv
-        if self.type == "single" or self.type == "split":
+        if self.type == "single" or self.type == "center":
             orientation = 1.0
         else:
             # Extract the windings of the primary and the secondary of the transformer
