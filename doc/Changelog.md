@@ -4,6 +4,7 @@
 
 **In development**
 
+* [GH100](https://github.com/RoseauTechnologies/Roseau_Load_Flow/issues/100) Fix the `Yz` transformers
 * [PR97](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/97) Add the model section to the documentation
 * [PR96](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/96)
   * Add single-phase transformer

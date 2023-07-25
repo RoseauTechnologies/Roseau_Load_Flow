@@ -39,10 +39,10 @@ The following equations are used:
     \left\{
     \begin{aligned}
         \underline{U_{2,\mathrm{a}}^0} &= -\underline{U_{2,\mathrm{b}}^0} \\
-        \dfrac{n_2}{n_1} \underline{U_{1,\mathrm{ab}}} &= \underline{U_{2,\mathrm{a}}^0} - \underline{U_{2,\mathrm
+        k \cdot \underline{U_{1,\mathrm{ab}}} &= \underline{U_{2,\mathrm{a}}^0} - \underline{U_{2,\mathrm
         {b}}^0} \\
         \underline{I_{1,\mathrm{a}}} - Y_{\mathrm{m}} \cdot \underline{U_{1,\mathrm{ab}}} &=
-        -\dfrac{n_2}{n_1} \cdot \frac{\underline{I_{2,\mathrm{a}}} + \underline{I_{2,\mathrm{b}}}}{2} \\
+        -k \cdot \frac{\underline{I_{2,\mathrm{a}}} + \underline{I_{2,\mathrm{b}}}}{2} \\
         \underline{I_{1,\mathrm{a}}} &= -\underline{I_{1,\mathrm{n}}} \\
         \underline{I_{2,\mathrm{a}}} + \underline{I_{2,\mathrm{b}}} + \underline{I_{2,\mathrm{n}}} &= 0 \\
     \end{aligned}

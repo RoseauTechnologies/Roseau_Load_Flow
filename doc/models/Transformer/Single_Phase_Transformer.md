@@ -36,8 +36,8 @@ The following equations are used:
 \begin{equation}
     \left\{
     \begin{aligned}
-        \dfrac{n_2}{n_1} \underline{U_{1,\mathrm{a}}} &= \underline{U_{2,\mathrm{a}}} - Z_2 \cdot \underline{I_{2,\mathrm{a}}} \\
-        \underline{I_{1,\mathrm{a}}} - Y_{\mathrm{m}} \cdot \underline{U_{1,\mathrm{a}}} &= -\dfrac{n_2}{n_1} \underline{I_{2,\mathrm{a}}} \\
+        k \cdot \underline{U_{1,\mathrm{a}}} &= \underline{U_{2,\mathrm{a}}} - Z_2 \cdot \underline{I_{2,\mathrm{a}}} \\
+        \underline{I_{1,\mathrm{a}}} - Y_{\mathrm{m}} \cdot \underline{U_{1,\mathrm{a}}} &= -k \cdot \underline{I_{2,\mathrm{a}}} \\
         \underline{I_{1,\mathrm{a}}} &= -\underline{I_{1,\mathrm{n}}} \\
         \underline{I_{2,\mathrm{a}}} &= -\underline{I_{2,\mathrm{n}}} \\
     \end{aligned}
@@ -45,8 +45,8 @@ The following equations are used:
 \end{equation}
 ```
 
-with $\underline{Z_2}$ the series impedance and $\underline{Y_{\mathrm{m}}}$ the magnetizing admittance of the
-transformer.
+with $\underline{Z_2}$ the series impedance, $\underline{Y_{\mathrm{m}}}$ the magnetizing admittance of the
+transformer, and $k$ the transformation ratio.
 
 ## Example
 

@@ -85,7 +85,33 @@ There are multiple ways to connect the transformers, which are represented in th
 
 ## Matrices
 
-For all the windings, different matrices are associated:
+For all the windings, different transformation ratio and matrices are associated:
+
+### Transformation ratio
+
+The transformation ratio $k$ depends on the windings used:
+
+```{list-table}
+:class: borderless
+:header-rows: 1
+:stub-columns: 1
+:align: center
+
+* - Winding
+  - $k$
+* - Dy
+  - $\dfrac{U_{LV}}{\sqrt{3} \cdot  U_{HV}}$
+* - Yy
+  - $\dfrac{U_{LV}}{U_{HV}}$
+* - Dd
+  - $\dfrac{U_{LV}}{U_{HV}}$
+* - Yd
+  - $\dfrac{\sqrt{3} \cdot U_{LV}}{U_{HV}}$
+* - Dz
+  - $\dfrac{U_{LV}}{3 \cdot U_{HV}}$
+* - Yz
+  - $\dfrac{U_{LV}}{\sqrt{3} \cdot  U_{HV}}$
+```
 
 ### Transformation matrices
 
@@ -100,36 +126,36 @@ For all the windings, different matrices are associated:
   - $M_{\mathrm{TI}}$
 
 * - Dd, Yy, Dy and Yd
-  - $\dfrac{n_2}{n_1}\begin{pmatrix}
+  - $k\begin{pmatrix}
     1 & 0 & 0\\
     0 & 1 & 0\\
     0 & 0 & 1
     \end{pmatrix}$
-  - $\dfrac{n_2}{n_1}\begin{pmatrix}
+  - $k\begin{pmatrix}
     -1 & 0 & 0\\
     0 & -1 & 0\\
     0 & 0 & -1
     \end{pmatrix}$
 
 * - Yz
-  - $\dfrac{n_2}{n_1}\begin{pmatrix}
+  - $k\begin{pmatrix}
     1 & 0 & 0\\
     0 & 1 & 0\\
     0 & 0 & 1
     \end{pmatrix}$
-  - $\dfrac{n_2}{n_1}\begin{pmatrix}
+  - $k\begin{pmatrix}
     -1 & 0 & 1\\
     1 & -1 & 0\\
     0 & 1 & -1
     \end{pmatrix}$
 
 * - Dz
-  - $\dfrac{n_2}{n_1}\begin{pmatrix}
+  - $k\begin{pmatrix}
     1 & 0 & 0\\
     0 & 1 & 0\\
     0 & 0 & 1
     \end{pmatrix}$
-  - $\dfrac{n_2}{n_1}\begin{pmatrix}
+  - $k\begin{pmatrix}
     -1 & 1 & 0\\
     0 & -1 & 1\\
     1 & 0 & -1
