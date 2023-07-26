@@ -64,6 +64,7 @@ sphinx-inline-tabs = ">=2022.1.2b11"
 jupyter = "^1.0.0"
 nbsphinx = ">=0.8.9"
 furo = ">=2022.9.29"
+sphinxcontrib-googleanalytics = ">=0.3"
 
 [tool.poetry.group.docker]
 optional = true

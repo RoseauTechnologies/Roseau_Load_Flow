@@ -17,11 +17,11 @@ repos:
     hooks:
       - id: poetry-check
   - repo: https://github.com/psf/black
-    rev: 23.3.0
+    rev: 23.7.0
     hooks:
       - id: black-jupyter
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: v0.0.275
+    rev: v0.0.280
     hooks:
       - id: ruff
         args: [ --fix, --exit-non-zero-on-fix ]
@@ -31,4 +31,4 @@ repos:
       - id: blacken-docs
         entry: bash -c "blacken-docs -l 90 $(find doc/ -name '*.md')"
         args: [ -l 90 ]
-        additional_dependencies: [ black==23.3.0 ]
+        additional_dependencies: [ black==23.7.0 ]
