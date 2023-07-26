@@ -172,17 +172,17 @@ Where $k$ is the tranformation ratio of the internal transformers defined as:
 * - Winding
   - $k$
 * - Dy
-  - $\dfrac{U_{LV}}{\sqrt{3} \cdot  U_{HV}}$
+  - $\dfrac{U_{\mathrm{LV}}}{\sqrt{3} \cdot  U_{\mathrm{HV}}}$
 * - Yy
-  - $\dfrac{U_{LV}}{U_{HV}}$
+  - $\dfrac{U_{\mathrm{LV}}}{U_{\mathrm{HV}}}$
 * - Dd
-  - $\dfrac{U_{LV}}{U_{HV}}$
+  - $\dfrac{U_{\mathrm{LV}}}{U_{\mathrm{HV}}}$
 * - Yd
-  - $\dfrac{\sqrt{3} \cdot U_{LV}}{U_{HV}}$
+  - $\dfrac{\sqrt{3} \cdot U_{\mathrm{LV}}}{U_{\mathrm{HV}}}$
 * - Dz
-  - $\dfrac{U_{LV}}{3 \cdot U_{HV}}$
+  - $\dfrac{U_{\mathrm{LV}}}{3 \cdot U_{\mathrm{HV}}}$
 * - Yz
-  - $\dfrac{U_{LV}}{\sqrt{3} \cdot  U_{HV}}$
+  - $\dfrac{U_{\mathrm{LV}}}{\sqrt{3} \cdot  U_{\mathrm{HV}}}$
 ```
 
 ### Primary winding matrices

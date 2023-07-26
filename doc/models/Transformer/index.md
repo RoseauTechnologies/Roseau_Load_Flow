@@ -77,7 +77,7 @@ values can be computed:
 
 Then, $\underline{Z_2}$ can be deduced:
 ```{math}
-\underline{Z_2} = R2+j\cdot X2
+\underline{Z_2} = R_2+j\cdot X_2
 ```
 
 ## Usage

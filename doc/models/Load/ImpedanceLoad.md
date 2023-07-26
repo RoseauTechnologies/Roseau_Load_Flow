@@ -12,8 +12,8 @@ The equations are the following (star loads):
 ```{math}
 \left\{
     \begin{aligned}
-        \underline{I_{\mathrm{a,b,c}}} &= \frac{\underline{V_{\mathrm{a,b,c}}}-\underline{V_{\mathrm{n}}}}{
-        \underline{Z_{\mathrm{a,b,c}}}} \\
+        \underline{I_{\mathrm{abc}}} &= \frac{\underline{V_{\mathrm{abc}}}-\underline{V_{\mathrm{n}}}}{
+        \underline{Z_{\mathrm{abc}}}} \\
         \underline{I_{\mathrm{n}}} &= -\sum_{p\in\{\mathrm{a},\mathrm{b},\mathrm{c}\}}\underline{I_{p}}
     \end{aligned}
 \right.

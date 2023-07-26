@@ -12,7 +12,7 @@ The equations are the following (star loads):
 ```{math}
 \left\{
     \begin{aligned}
-        \underline{I_{\mathrm{a,b,c}}} &= \mathrm{constant} \\
+        \underline{I_{\mathrm{abc}}} &= \mathrm{constant} \\
         \underline{I_{\mathrm{n}}} &= -\sum_{p\in\{\mathrm{a},\mathrm{b},\mathrm{c}\}}\underline{I_{p}}
     \end{aligned}
 \right.

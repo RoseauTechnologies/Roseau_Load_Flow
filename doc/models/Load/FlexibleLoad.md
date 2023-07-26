@@ -10,9 +10,9 @@ The equations are the following (star loads):
 ```{math}
 \left\{
     \begin{aligned}
-        \underline{I_{\mathrm{a,b,c}}} &= \left(\frac{
-            \underline{S_{\mathrm{a,b,c}}}(\underline{V_{\mathrm{a,b,c}}}-\underline{V_{\mathrm{n}}})
-        }{\underline{V_{\mathrm{a,b,c}}}-\underline{V_{\mathrm{n}}}}\right)^{\star} \\
+        \underline{I_{\mathrm{abc}}} &= \left(\frac{
+            \underline{S_{\mathrm{abc}}}(\underline{V_{\mathrm{abc}}}-\underline{V_{\mathrm{n}}})
+        }{\underline{V_{\mathrm{abc}}}-\underline{V_{\mathrm{n}}}}\right)^{\star} \\
         \underline{I_{\mathrm{n}}} &= -\sum_{p\in\{\mathrm{a},\mathrm{b},\mathrm{c}\}}\underline{I_{p}}
     \end{aligned}
 \right.
@@ -127,7 +127,7 @@ clipping family of functions $s_{\alpha}(U)$ is used. The default value of `alph
 :align: center
 ```
 
-The final $Q$ is then $Q(U) = s(U) \times S^{max}$
+The final $Q$ is then $Q(U) = s(U) \times S^{\max}$
 
 ```python
 from roseau.load_flow import Control, Q_

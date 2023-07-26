@@ -10,7 +10,7 @@ generation loads (with negative active power).
 A load can be either star-connected or delta-connected depending on whether its phases include a
 neutral or not.
 
-### Star connection
+### Star (wye) connection
 
 Here is the diagram of a star-connected three-phase load:
 

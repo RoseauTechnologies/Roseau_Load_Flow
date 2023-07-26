@@ -20,9 +20,13 @@ secondary connection, with the neutral at the center secondary winding. It is mo
 ````
 
 Non-ideal models are used in *Roseau Load Flow*. The series impedances $\underline{Z_2}$ and the
-magnetizing admittances $\underline{Y_{\mathrm{m}}}$ are included in the model. Center-tapped
-transformers can be connected between any two phases as long as the center phase at the secondary
-is always $\mathrm{n}$.
+magnetizing admittances $\underline{Y_{\mathrm{m}}}$ are included in the model.
+
+```{note}
+Figures and equations on this page are related to a transformer connected between the phases $\mathrm{a}$ and $\mathrm
+{b}$. Nevertheless, center-tapped transformers can be connected between any two phases **as long as the center phase
+at the secondary is always $\mathrm{n}$**.
+```
 
 ## Equations
 

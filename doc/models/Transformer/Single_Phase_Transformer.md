@@ -19,8 +19,12 @@ Single-phase transformers are modelled as follows:
 ````
 
 Non-ideal transformer models are used in *Roseau Load Flow*. The series impedances $\underline{Z_2}$
-and the magnetizing admittances $\underline{Y_{\mathrm{m}}}$ are included in the model. Single-phase
-transformers can be connected between any two phases.
+and the magnetizing admittances $\underline{Y_{\mathrm{m}}}$ are included in the model.
+
+```{note}
+Figures and equations on this page are related to a transformer connected between the phases $\mathrm{a}$ and $\mathrm
+{n}$. Nevertheless, single-phase transformers can be connected between any two phases.
+```
 
 ## Equations
 
@@ -30,8 +34,10 @@ The following equations are used:
 \begin{equation}
     \left\{
     \begin{aligned}
-        k \cdot \underline{U_{1,\mathrm{a}}} &= \underline{U_{2,\mathrm{a}}} - Z_2 \cdot \underline{I_{2,\mathrm{a}}} \\
-        \underline{I_{1,\mathrm{a}}} - Y_{\mathrm{m}} \cdot \underline{U_{1,\mathrm{a}}} &= -k \cdot \underline{I_{2,\mathrm{a}}} \\
+        k \cdot \underline{U_{1,\mathrm{a}}} &= \underline{U_{2,\mathrm{a}}} - \underline{Z_2} \cdot \underline{I_{2,
+        \mathrm{a}}} \\
+        \underline{I_{1,\mathrm{a}}} - \underline{Y_{\mathrm{m}}} \cdot \underline{U_{1,\mathrm{a}}} &= -k \cdot
+        \underline{I_{2,\mathrm{a}}} \\
         \underline{I_{1,\mathrm{a}}} &= -\underline{I_{1,\mathrm{n}}} \\
         \underline{I_{2,\mathrm{a}}} &= -\underline{I_{2,\mathrm{n}}} \\
     \end{aligned}
