@@ -52,7 +52,8 @@ coverage = { version = "^7.0.5", extras = ["toml"] }
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^3.0.0"
-black = { version = "^23.1.0", extras = ["jupyter"] }
+black = { version = "==23.7.0", extras = ["jupyter"] } # keep in sync with .pre-commit-config.yaml
+ruff = "==0.0.280" # keep in sync with .pre-commit-config.yaml
 
 [tool.poetry.group.doc.dependencies]
 sphinx = "^7.0.1"
@@ -84,7 +85,7 @@ show-fixes = true
 namespace-packages = ["roseau"]
 select = ["E", "F", "C90", "W", "B", "UP", "I", "RUF100", "TID", "SIM", "PT", "PIE", "N", "C4", "NPY"]
 unfixable = ["B"]
-extend-ignore = ["E501", "B024", "N818"]
+ignore = ["E501", "B024", "N818"]
 
 [tool.ruff.flake8-tidy-imports]
 ban-relative-imports = "all"
@@ -94,6 +95,9 @@ parametrize-values-type = "tuple"
 
 [tool.ruff.mccabe]
 max-complexity = 15
+
+[tool.ruff.per-file-ignores]
+"*.ipynb" = ["E402", "F403", "F405", "B018"]
 
 [tool.coverage.run]
 branch = true
