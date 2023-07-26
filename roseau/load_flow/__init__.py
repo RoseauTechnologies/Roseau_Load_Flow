@@ -42,7 +42,7 @@ from roseau.load_flow.network import ElectricalNetwork
 from roseau.load_flow.units import Q_, ureg
 from roseau.load_flow.utils._versions import show_versions
 
-__version__ = importlib.metadata.version("roseau_load_flow")
+__version__ = importlib.metadata.version("roseau-load-flow")
 
 __all__ = [
     "__author__",

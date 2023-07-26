@@ -14,7 +14,11 @@ logger = logging.getLogger(__name__)
 
 
 class TransformerParameters(Identifiable, JsonMixin):
-    """A class to store the parameters of the transformers."""
+    """A class to store the parameters of the transformers.
+
+    See Also:
+        :ref:`Transformer parameters documentation <models-transformer_parameters>`
+    """
 
     _EXTRACT_WINDINGS_RE = regex.compile(
         "(?(DEFINE)(?P<y_winding>yn?)(?P<d_winding>d)(?P<z_winding>zn?)(?P<p_set_1>[06])"
@@ -50,8 +54,8 @@ class TransformerParameters(Identifiable, JsonMixin):
                 A unique ID of the transformer parameters, typically its canonical name.
 
             type:
-                The type of transformer parameters. It can be "single" for single-phase transformers, "split" for
-                split-phase transformers, or the name of the windings such as "Dyn11" for three-phase transformers.
+                The type of transformer parameters. It can be "single" for single-phase transformers, "center" for
+                center-tapped transformers, or the name of the windings such as "Dyn11" for three-phase transformers.
                 Allowed windings are "D" for delta, "Y" for wye (star), and "Z" for zigzag.
 
             uhv:
@@ -84,7 +88,7 @@ class TransformerParameters(Identifiable, JsonMixin):
         self._psc = psc
         self._vsc = vsc
         self.type = type
-        if type in ("single", "split"):
+        if type in ("single", "center"):
             self.winding1 = None
             self.winding2 = None
             self.phase_displacement = None
@@ -92,7 +96,7 @@ class TransformerParameters(Identifiable, JsonMixin):
             self.winding1, self.winding2, self.phase_displacement = self.extract_windings(string=type)
 
         # Check
-        if uhv <= ulv:
+        if uhv < ulv:
             msg = (
                 f"Transformer type {id!r} has the low voltages higher than the high voltages: "
                 f"uhv={uhv:.2f} V and ulv={ulv:.2f} V."
@@ -193,7 +197,7 @@ class TransformerParameters(Identifiable, JsonMixin):
                 The name of the transformer parameters, such as `"160kVA"` or `"H61_50kVA"`.
 
             type:
-                The type of transformer parameters such as "Dyn11", "single", "split".
+                The type of transformer parameters such as "Dyn11", "single", "center".
 
         Returns:
             The constructed transformer parameters.
@@ -208,7 +212,17 @@ class TransformerParameters(Identifiable, JsonMixin):
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TYPE_NAME_SYNTAX) from None
             else:
-                return cls(name, type, 20000, 400, sn * 1e3, 460, 2.3 / 100, 2350, 4 / 100)
+                return cls(
+                    id=name,
+                    type=type,
+                    uhv=20000,
+                    ulv=400,
+                    sn=sn * 1e3,
+                    p0=460,
+                    i0=2.3 / 100,
+                    psc=2350,
+                    vsc=4 / 100,
+                )
         else:
             msg = f"The transformer type name does not follow the syntax rule. {name!r} was provided."
             logger.error(msg)
@@ -246,7 +260,7 @@ class TransformerParameters(Identifiable, JsonMixin):
         # Change the voltages if the reference voltages is phase to neutral
         uhv = self._uhv
         ulv = self._ulv
-        if self.type == "single" or self.type == "split":
+        if self.type == "single" or self.type == "center":
             orientation = 1.0
         else:
             # Extract the windings of the primary and the secondary of the transformer

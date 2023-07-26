@@ -30,7 +30,14 @@ BoldItalicFont=*-BoldItalic,%
 \usepackage{mathtools}%
 \usepackage{siunitx}%
 \usepackage[siunitx]{circuitikz}%
-\usetikzlibrary{calc,backgrounds,arrows.meta,patterns}%
+\usetikzlibrary{calc,backgrounds,arrows.meta,patterns,positioning}%
+\ctikzset{bipoles/length=1.2cm}%
+
+% Colors
+\usepackage{xcolor}%
+\definecolor{RoseauGreen}{HTML}{cad40e}%
+\definecolor{RoseauGrey}{HTML}{adb9cb}%
+\definecolor{RoseauBlue}{HTML}{234e83}%
 
 \DeclareMathOperator{\sign}{sign}%
 
@@ -49,19 +56,31 @@ BoldItalicFont=*-BoldItalic,%
 \newcommand{\brm}{\ensuremath{\mathrm{b}}}%
 \newcommand{\crm}{\ensuremath{\mathrm{c}}}%
 \newcommand{\nrm}{\ensuremath{\mathrm{n}}}%
-\newcommand{\trm}{\ensuremath{\mathrm{t}}}%
+\newcommand{\grm}{\ensuremath{\mathrm{g}}}%
 \newcommand{\abrm}{\ensuremath{\mathrm{ab}}}%
 \newcommand{\bcrm}{\ensuremath{\mathrm{bc}}}%
 \newcommand{\carm}{\ensuremath{\mathrm{ca}}}%
 \newcommand{\anrm}{\ensuremath{\mathrm{an}}}%
 \newcommand{\bnrm}{\ensuremath{\mathrm{bn}}}%
 \newcommand{\cnrm}{\ensuremath{\mathrm{cn}}}%
-\newcommand{\atrm}{\ensuremath{\mathrm{at}}}%
-\newcommand{\btrm}{\ensuremath{\mathrm{bt}}}%
-\newcommand{\ctrm}{\ensuremath{\mathrm{ct}}}%
-\newcommand{\ntrm}{\ensuremath{\mathrm{nt}}}%
+\newcommand{\agrm}{\ensuremath{\mathrm{ag}}}%
+\newcommand{\bgrm}{\ensuremath{\mathrm{bg}}}%
+\newcommand{\cgrm}{\ensuremath{\mathrm{cg}}}%
+\newcommand{\ngrm}{\ensuremath{\mathrm{ng}}}%
 \newcommand{\abcrm}{\ensuremath{\mathrm{abc}}}%
 \newcommand{\abcnrm}{\ensuremath{\mathrm{abcn}}}%
+
+% Transformer
+\newcommand{\Xrm}{\ensuremath{\mathrm{X}}}%
+\newcommand{\Yrm}{\ensuremath{\mathrm{Y}}}%
+\newcommand{\Zrm}{\ensuremath{\mathrm{Z}}}%
+\newcommand{\xrm}{\ensuremath{\mathrm{x}}}%
+\newcommand{\yrm}{\ensuremath{\mathrm{y}}}%
+\newcommand{\zrm}{\ensuremath{\mathrm{z}}}%
+\newcommand{\Arm}{\ensuremath{\mathrm{A}}}%
+\newcommand{\Brm}{\ensuremath{\mathrm{B}}}%
+\newcommand{\Crm}{\ensuremath{\mathrm{C}}}%
+\newcommand{\Nrm}{\ensuremath{\mathrm{N}}}%
 
 % Indices ou exposants
 \newcommand{\cons}{\ensuremath{\mathrm{cons.}}}%

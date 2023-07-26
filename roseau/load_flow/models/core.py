@@ -39,7 +39,7 @@ class Element(ABC, Identifiable, JsonMixin):
         """
         super().__init__(id)
         self._connected_elements: list[Element] = []
-        self._network: Optional["ElectricalNetwork"] = None
+        self._network: Optional[ElectricalNetwork] = None
 
     @property
     def network(self) -> Optional["ElectricalNetwork"]:

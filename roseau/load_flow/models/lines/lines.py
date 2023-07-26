@@ -20,7 +20,11 @@ logger = logging.getLogger(__name__)
 
 
 class Switch(AbstractBranch):
-    """A general purpose switch branch."""
+    """A general purpose switch branch.
+
+    See Also:
+        :doc:`Switch model documentation </models/Switch>`
+    """
 
     branch_type = BranchType.SWITCH
 
@@ -127,29 +131,8 @@ class Switch(AbstractBranch):
 class Line(AbstractBranch):
     """An electrical line PI model with series impedance and optional shunt admittance.
 
-    .. math::
-        V_1 &= a \\cdot V_2 - b \\cdot I_2 + g \\cdot V_{\\mathrm{g}} \\\\
-        I_1 &= c \\cdot V_2 - d \\cdot I_2 + h \\cdot V_{\\mathrm{g}} \\\\
-        I_{\\mathrm{g}} &= f^t \\cdot \\left(V_1 + V_2 - 2\\cdot V_{\\mathrm{g}}\\right)
-
-    where
-
-    .. math::
-        a &= \\mathcal{I}_4 + \\dfrac{1}{2} \\cdot Z \\cdot Y  \\\\
-        b &= Z  \\\\
-        c &= Y + \\dfrac{1}{4}\\cdot Y \\cdot Z \\cdot Y  \\\\
-        d &= \\mathcal{I}_4 + \\dfrac{1}{2} \\cdot Y \\cdot Z  \\\\
-        f &= -\\dfrac{1}{2} \\cdot \\begin{pmatrix} y_{\\mathrm{ag}} & y_{\\mathrm{bg}} & y_{\\mathrm{cg}} &
-        y_{\\mathrm{ng}} \\end{pmatrix} ^t  \\\\
-        g &= Z \\cdot f  \\\\
-        h &= 2 \\cdot f + \\frac{1}{2}\\cdot Y \\cdot Z \\cdot f  \\\\
-
-    If the line does not define a shunt admittance, the following simplified equations are used
-    instead:
-
-    .. math::
-        \\left(V_1 - V_2\\right) &= Z \\cdot I_1 \\\\
-        I_2 &= -I_1
+    See Also:
+        :doc:`Line documentation </models/Line/index>`
     """
 
     branch_type = BranchType.LINE

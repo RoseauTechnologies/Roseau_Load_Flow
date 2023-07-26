@@ -1,6 +1,8 @@
-# Using `pip` #
+# Installation
 
-`roseau_load_flow` is available on [PyPI](https://pypi.org/project/roseau-load-flow/). It can be
+## Using `pip`
+
+`roseau-load-flow` is available on [PyPI](https://pypi.org/project/roseau-load-flow/). It can be
 installed using pip with:
 ```console
 $ python -m pip install roseau-load-flow
@@ -46,9 +48,9 @@ To upgrade to the latest version (recommended), use:
 $ python -m pip install --upgrade roseau-load-flow
 ```
 
-# Using `conda` #
+## Using `conda`
 
-`roseau_load_flow` is also available on [conda-forge](https://anaconda.org/conda-forge/roseau-load-flow).
+`roseau-load-flow` is also available on [conda-forge](https://anaconda.org/conda-forge/roseau-load-flow).
 It can be installed using conda with:
 ```console
 $ conda install -c conda-forge roseau-load-flow
@@ -59,9 +61,9 @@ If you use *conda* to manage your project, it is recommended to use the `conda` 
 instead of `pip`.
 ```
 
-# Using `docker` #
+## Using `docker`
 
-`roseau_load_flow` provides a *docker image* with all required dependencies pre-installed,
+`roseau-load-flow` provides a *docker image* with all required dependencies pre-installed,
 including *Python*. The image runs a *Jupyter* session that you can access in your browser. To
 install and run your docker environment, follow the steps corresponding to your operating system
 below.
@@ -113,7 +115,7 @@ below.
 
 8. The container should start in a few seconds. Open a web browser and navigate to
    [http://localhost:8080](http://localhost:8080) to find the JupyterLab page of the container. A
-   basic python environment is set up with the `roseau_load_flow` package already installed.
+   basic python environment is set up with the `roseau-load-flow` package already installed.
 
 ````
 
@@ -139,7 +141,7 @@ below.
 
 5. Open a web browser and navigate to [http://localhost:8080](http://localhost:8080) to find the
    JupyterLab page of the container. A basic python environment is set up with the
-   `roseau_load_flow` package already installed.
+   `roseau-load-flow` package already installed.
 
 ````
 

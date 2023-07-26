@@ -41,6 +41,8 @@ extensions = [
     "autoapi.extension",
     "sphinx_copybutton",
     "sphinx_inline_tabs",
+    "sphinxcontrib.googleanalytics",
+    "sphinxcontrib.bibtex",
 ]
 myst_enable_extensions = ["deflist", "smartquotes", "replacements", "dollarmath"]
 add_module_names = False
@@ -129,3 +131,9 @@ intersphinx_mapping = {
     "pint": ("https://pint.readthedocs.io/en/stable/", None),
     "typing_extensions": ("https://typing-extensions.readthedocs.io/en/stable/", None),
 }
+
+# Google Analytics
+googleanalytics_id = "G-Y9QSN78RFV"
+
+# Bibtex
+bibtex_bibfiles = ["Bibliography.bib"]

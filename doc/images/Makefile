@@ -9,24 +9,30 @@ PDF2SVG:=$(shell which pdf2svg)
 OUTPUT_FOLDER:=$(shell realpath ../_static/)
 
 # Files
-TEX_FILES:=$(filter-out Preambule.tex, $(wildcard *.tex))
+TEX_FILES:=$(filter-out Preambule.tex, $(wildcard *.tex) $(wildcard **/*.tex))
 PDF_FILES:=$(TEX_FILES:%.tex=%.pdf)
-AUX_FILES:=$(TEX_FILES:%.tex=$(OUTPUT_FOLDER)/%.aux)
-LOG_FILES:=$(TEX_FILES:%.tex=$(OUTPUT_FOLDER)/%.log)
 SVG_FILES:=$(TEX_FILES:%.tex=$(OUTPUT_FOLDER)/%.svg)
+AUX_FILES:=$(TEX_FILES:%.tex=%.aux) $(wildcard $(OUTPUT_FOLDER)/*.aux) $(wildcard $(OUTPUT_FOLDER)/**/*.aux)
+LOG_FILES:=$(TEX_FILES:%.tex=%.log) $(wildcard $(OUTPUT_FOLDER)/*.log) $(wildcard $(OUTPUT_FOLDER)/**/*.log)
 
 
 # Rules
-all: | checks $(SVG_FILES) clean
+all: | checks $(SVG_FILES)
 .PHONY: clean cleanall checks
 
 $(OUTPUT_FOLDER)/Domain_%.svg: Domain_%.tex Domain_Common.tikz Preambule.tex
 	@$(LUALATEX) --jobname=$(basename $<) --file-line-error --interaction=nonstopmode \
 	--shell-escape --output-directory=$(OUTPUT_FOLDER) $<
 
+$(OUTPUT_FOLDER)/Transformer/Winding%.svg: Transformer/Winding%.tex Transformer/Windings_Common.tikz Preambule.tex
+	@$(LUALATEX) --jobname=$(basename $<) --file-line-error --interaction=nonstopmode \
+	--shell-escape --output-directory=$(OUTPUT_FOLDER) $<
+
 $(OUTPUT_FOLDER)/%.svg: %.tex Preambule.tex
 	@$(LUALATEX) --jobname=$(basename $<) --file-line-error --interaction=nonstopmode \
 	--shell-escape --output-directory=$(OUTPUT_FOLDER) $<
+
+
 
 clean:
 	@rm -f $(AUX_FILES) $(LOG_FILES) $(PDF_FILES) *~

@@ -1,0 +1,99 @@
+\input{Preambule}%
+
+\begin{document}
+    \begin{tikzpicture}[%
+        show background rectangle,%
+        tight background,%
+        background rectangle/.style={fill=white}%
+    ]
+        \input{Transformer/Windings_Common.tikz}%
+
+        % Phase displacement = 0
+        \begin{scope}[local bounding box=Dd0]
+            \pic at (0,0) {left d};%
+            \pic at (5,0) {right d};%
+        \end{scope}
+        \node[left=0.1 of Dd0] {\textcolor{red}{Dd}0};%
+        \begin{scope}
+            [local bounding box=Yy0, shift={(11,0)}]
+            \pic at (0,0) {left y};%
+            \pic at (5,0) {right y};%
+        \end{scope}
+        \node[left=0.1 of Yy0] {\textcolor{RoseauBlue}{Yy}0};%
+        \begin{scope}
+            [local bounding box=Dz0, shift={(22,0)}]
+            \pic at (0,0) {left d};%
+            \pic at (5,0) {right z0};%
+        \end{scope}
+        \node[left=0.1 of Dz0] {\textcolor{red}{D}\textcolor{RoseauGreen}{z}0};%
+
+        % Phase displacement = 6
+        \begin{scope}
+            [local bounding box=Dd6, shift={(0,-5)}]
+            \pic at (0,0) {left d};%
+            \pic at (5,0) {right d6};%
+        \end{scope}
+        \node[left=0.1 of Dd6] {\textcolor{red}{Dd}6};%
+        \begin{scope}
+            [local bounding box=Yy6, shift={(11,-5)}]
+            \pic at (0,0) {left y};%
+            \pic at (5,0) {right y reverse};%
+        \end{scope}
+        \node[left=0.1 of Yy6] {\textcolor{RoseauBlue}{Yy}6};%
+        \begin{scope}
+            [local bounding box=Dz6, shift={(22,-5)}]
+            \pic at (0,0) {left d};%
+            \pic at (5,0) {right z6};%
+        \end{scope}
+        \node[left=0.1 of Dz6] {\textcolor{red}{D}\textcolor{RoseauGreen}{z}6};%
+
+        % Phase displacement = 11
+        \begin{scope}
+            [local bounding box=Dy11, shift={(0,-10)}]
+            \pic at (0,0) {left d};%
+            \pic at (5,0) {right y};%
+        \end{scope}
+        \node[left=0.1 of Dy11] {\textcolor{red}{D}\textcolor{RoseauBlue}{y}11};%
+        \begin{scope}
+            [local bounding box=Yd11, shift={(11,-10)}]
+            \pic at (0,0) {left y};%
+            \pic at (5,0) {right d11};%
+        \end{scope}
+        \node[left=0.1 of Yd11] {\textcolor{RoseauBlue}{Y}\textcolor{red}{d}11};%
+        \begin{scope}
+            [local bounding box=Yz11, shift={(22,-10)}]
+            \pic at (0,0) {left y};%
+            \pic at (5,0) {right z11};%
+        \end{scope}
+        \node[left=0.1 of Yz11] {\textcolor{RoseauBlue}{Y}\textcolor{RoseauGreen}{z}11};%
+
+        % Phase displacement = 5
+        \begin{scope}
+            [local bounding box=Dy5, shift={(0,-15)}]
+            \pic at (0,0) {left d};%
+            \pic at (5,0) {right y reverse};%
+        \end{scope}
+        \node[left=0.1 of Dy5] {\textcolor{red}{D}\textcolor{RoseauBlue}{y}5};%
+        \begin{scope}
+            [local bounding box=Yd5, shift={(11,-15)}]
+            \pic at (0,0) {left y};%
+            \pic at (5,0) {right d5};%
+        \end{scope}
+        \node[left=0.1 of Yd5] {\textcolor{RoseauBlue}{Y}\textcolor{red}{d}5};%
+        \begin{scope}
+            [local bounding box=Yz5, shift={(22,-15)}]
+            \pic at (0,0) {left y};%
+            \pic at (5,0) {right z5};%
+        \end{scope}
+        \node[left=0.1 of Yz5] {\textcolor{RoseauBlue}{Y}\textcolor{RoseauGreen}{z}5};%
+    \end{tikzpicture}
+\end{document}
+% Local Variables:
+% mode: latex
+% TeX-engine: luatex
+% TeX-source-correlate-method-active: synctex
+% ispell-local-dictionary: "british"
+% coding: utf-8
+% LaTeX-indent-level: 4
+% fill-column: 100
+% End:

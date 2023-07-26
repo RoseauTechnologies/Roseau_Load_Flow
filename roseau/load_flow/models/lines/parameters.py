@@ -30,7 +30,11 @@ logger = logging.getLogger(__name__)
 
 
 class LineParameters(Identifiable, JsonMixin):
-    """A class to store the line parameters of lines"""
+    """A class to store the line parameters of lines
+
+    See Also:
+        :ref:`Line parameters documentation <models-line_parameters>`
+    """
 
     _type_re = "|".join(x.code() for x in LineType)
     _material_re = "|".join(x.code() for x in ConductorType)

@@ -1,6 +1,6 @@
 # Roseau Load Flow
 
-`Roseau Load Flow` is a load flow solver capable of modeling 3-phases unbalanced power systems with
+`Roseau Load Flow` is a load flow solver capable of modeling 3-phase unbalanced power systems with
 a wide variety of models for lines, transformers, loads, and sources. This software is developed
 by [Roseau Technologies](https://www.roseautechnologies.com/en).
 <a href="https://www.linkedin.com/company/roseau-technologies/"><i class="fa-brands fa-linkedin" ></i></a>
@@ -8,11 +8,12 @@ by [Roseau Technologies](https://www.roseautechnologies.com/en).
 
 ## Installation
 
-`roseau_load_flow` is compatible with Python 3.9 and above. It can be installed with:
+`roseau-load-flow` is the python interface to the solver. It is compatible with Python version 3.9
+and newer and can be installed with:
 
 ```{toctree}
 ---
-maxdepth: 3
+maxdepth: 2
 caption: Installation
 ---
 Installation
@@ -25,11 +26,21 @@ The following tutorials are available to help you get started:
 ```{toctree}
 ---
 maxdepth: 2
-caption: Tutorials
+caption: Usage
 ---
-notebooks/Getting_Started
-notebooks/Advanced
-notebooks/Short_Circuit
+notebooks/index
+```
+
+## Models
+
+A description of the electrical models used for each component is available:
+
+```{toctree}
+---
+maxdepth: 2
+caption: Models
+---
+models/index
 ```
 
 ## Solvers
@@ -48,14 +59,14 @@ Solvers
 
 ```{toctree}
 ---
-maxdepth: 3
+maxdepth: 2
 caption: Changelog
 ---
 Changelog
 ```
 
 
-## API
+## API Reference
 
 If you want the full documentation of all the classes and functions, you can refer to the following
 references:
@@ -63,7 +74,7 @@ references:
 ```{toctree}
 ---
 maxdepth: 3
-caption: API
+caption: API Reference
 ---
 autoapi/roseau/load_flow/index
 ```

@@ -17,6 +17,9 @@ class Transformer(AbstractBranch):
     """A generic transformer model.
 
     The model parameters are defined in the ``parameters``.
+
+    See Also:
+        :doc:`Transformer models documentation </models/Transformer/index>`
     """
 
     branch_type = BranchType.TRANSFORMER
@@ -26,12 +29,12 @@ class Transformer(AbstractBranch):
 
     - P-P-P or P-P-P-N: ``"abc"``, ``"abcn"`` (three-phase transformer)
     - P-P or P-N: ``"ab"``, ``"bc"``, ``"ca"``, ``"an"``, ``"bn"``, ``"cn"`` (single-phase
-      transformer or primary of split-phase transformer)
-    - P-P-N: ``"abn"``, ``"bcn"``, ``"can"`` (secondary of split-phase transformer)
+      transformer or primary of center-tapped transformer)
+    - P-P-N: ``"abn"``, ``"bcn"``, ``"can"`` (secondary of center-tapped transformer)
     """
     _allowed_phases_three = frozenset({"abc", "abcn"})
     _allowed_phases_single = frozenset({"ab", "bc", "ca", "an", "bn", "cn"})
-    _allowed_phases_split_secondary = frozenset({"abn", "bcn", "can"})
+    _allowed_phases_center_secondary = frozenset({"abn", "bcn", "can"})
 
     def __init__(
         self,
@@ -85,8 +88,10 @@ class Transformer(AbstractBranch):
             phases1, phases2 = self._compute_phases_single(
                 id=id, bus1=bus1, bus2=bus2, phases1=phases1, phases2=phases2
             )
-        elif parameters.type == "split":
-            phases1, phases2 = self._compute_phases_split(id=id, bus1=bus1, bus2=bus2, phases1=phases1, phases2=phases2)
+        elif parameters.type == "center":
+            phases1, phases2 = self._compute_phases_center(
+                id=id, bus1=bus1, bus2=bus2, phases1=phases1, phases2=phases2
+            )
         else:
             phases1, phases2 = self._compute_phases_three(
                 id=id, bus1=bus1, bus2=bus2, parameters=parameters, phases1=phases1, phases2=phases2
@@ -203,7 +208,7 @@ class Transformer(AbstractBranch):
 
         return phases1, phases2
 
-    def _compute_phases_split(
+    def _compute_phases_center(
         self, id: Id, bus1: Bus, bus2: Bus, phases1: Optional[str], phases2: Optional[str]
     ) -> tuple[str, str]:
         if phases1 is None:
@@ -219,12 +224,12 @@ class Transformer(AbstractBranch):
 
         if phases2 is None:
             phases2 = "".join(p for p in bus2.phases if p in bus1.phases or p == "n")
-            if phases2 not in self._allowed_phases_split_secondary:
+            if phases2 not in self._allowed_phases_center_secondary:
                 msg = f"Phases (2) of transformer {id!r} cannot be deduced from the buses, they need to be specified."
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
         else:
-            self._check_phases(id, allowed_phases=self._allowed_phases_split_secondary, phases2=phases2)
+            self._check_phases(id, allowed_phases=self._allowed_phases_center_secondary, phases2=phases2)
             self._check_bus_phases(id, bus2, phases2=phases2)
 
         return phases1, phases2

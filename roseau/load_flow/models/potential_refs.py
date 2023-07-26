@@ -21,6 +21,9 @@ class PotentialRef(Element):
     can be set on any bus or ground elements. If set on a bus with no neutral and without
     specifying the phase, the reference will be set as ``Va + Vb + Vc = 0``. For other buses, the
     default is ``Vn = 0``.
+
+    See Also:
+        :doc:`Potential reference model documentation </models/PotentialRef>`
     """
 
     allowed_phases = frozenset({"a", "b", "c", "n"})

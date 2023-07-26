@@ -15,6 +15,9 @@ help:
 images:
 	@cd images && $(MAKE)
 
+images-%:
+	@cd images && $(MAKE) $*
+
 .PHONY: help Makefile images
 
 # Catch-all target: route all unknown targets to Sphinx using the new

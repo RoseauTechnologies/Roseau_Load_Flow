@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "roseau_load_flow"
+name = "roseau-load-flow"
 version = "0.4.0"
 description = "Highly capable three-phase load flow solver"
 authors = [
@@ -55,7 +55,7 @@ pre-commit = "^3.0.0"
 black = { version = "^23.1.0", extras = ["jupyter"] }
 
 [tool.poetry.group.doc.dependencies]
-Sphinx = "^6.2.0"
+sphinx = "^7.0.1"
 myst-parser = ">=0.16.1"
 sphinx-math-dollar = "^1.2.1"
 sphinx-autoapi = "^2.0.0"
@@ -64,6 +64,8 @@ sphinx-inline-tabs = ">=2022.1.2b11"
 jupyter = "^1.0.0"
 nbsphinx = ">=0.8.9"
 furo = ">=2022.9.29"
+sphinxcontrib-googleanalytics = ">=0.3"
+sphinxcontrib-bibtex = "^2.5.0"
 
 [tool.poetry.group.docker]
 optional = true

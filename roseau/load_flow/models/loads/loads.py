@@ -21,32 +21,10 @@ class AbstractLoad(Element, ABC):
 
     The subclasses of this class can be used to depict:
         * star-connected loads using a `phases` constructor argument containing a `"n"`
-
-        .. tab:: European Standards
-
-            .. image:: /_static/European_Star_Load.svg
-              :width: 300px
-              :align: center
-
-        .. tab:: American Standards
-
-            .. image:: /_static/American_Star_Load.svg
-              :width: 300px
-              :align: center
-
         * delta-connected loads using a `phases` constructor argument which doesn't contain `"n"`
 
-        .. tab:: European Standards
-
-            .. image:: /_static/European_Delta_Load.svg
-              :width: 300px
-              :align: center
-
-        .. tab:: American Standards
-
-            .. image:: /_static/American_Delta_Load.svg
-              :width: 300px
-              :align: center
+    See Also:
+        :doc:`Load documentation </models/Load/index>`
     """
 
     _power_load_class: type["PowerLoad"]
@@ -218,21 +196,10 @@ class AbstractLoad(Element, ABC):
 
 
 class PowerLoad(AbstractLoad):
-    r"""A constant power load.
+    """A constant power load.
 
-    The equations are the following (star loads):
-
-    .. math::
-        I_{\mathrm{abc}} &= \left(\frac{S_{\mathrm{abc}}}{V_{\mathrm{abc}}-V_{\mathrm{n}}}\right)^{\star} \\
-        I_{\mathrm{n}} &= -\sum_{p\in\{\mathrm{a},\mathrm{b},\mathrm{c}\}}I_{p}
-
-    and the following (delta loads):
-
-    .. math::
-        I_{\mathrm{ab}} &= \left(\frac{S_{\mathrm{ab}}}{V_{\mathrm{a}}-V_{\mathrm{b}}}\right)^{\star} \\
-        I_{\mathrm{bc}} &= \left(\frac{S_{\mathrm{bc}}}{V_{\mathrm{b}}-V_{\mathrm{c}}}\right)^{\star} \\
-        I_{\mathrm{ca}} &= \left(\frac{S_{\mathrm{ca}}}{V_{\mathrm{c}}-V_{\mathrm{a}}}\right)^{\star}
-
+    See Also:
+        :doc:`Power Load documentation </models/Load/PowerLoad>`
     """
 
     _type = "power"
@@ -372,20 +339,10 @@ class PowerLoad(AbstractLoad):
 
 
 class CurrentLoad(AbstractLoad):
-    r"""A constant current load.
+    """A constant current load.
 
-    The equations are the following (star loads):
-
-    .. math::
-        I_{\mathrm{abc}} &= \mathrm{constant} \\
-        I_{\mathrm{n}} &= -\sum_{p\in\{\mathrm{a},\mathrm{b},\mathrm{c}\}}I_{p}
-
-    and the following (delta loads):
-
-    .. math::
-        I_{\mathrm{ab}} &= \mathrm{constant} \\
-        I_{\mathrm{bc}} &= \mathrm{constant} \\
-        I_{\mathrm{ca}} &= \mathrm{constant}
+    See Also:
+        :doc:`Current Load documentation </models/Load/CurrentLoad>`
     """
 
     _type = "current"
@@ -440,21 +397,10 @@ class CurrentLoad(AbstractLoad):
 
 
 class ImpedanceLoad(AbstractLoad):
-    r"""A constant impedance load.
+    """A constant impedance load.
 
-    The equations are the following (star loads):
-
-    .. math::
-        I_{\mathrm{abc}} &= \frac{\left(V_{\mathrm{abc}}-V_{\mathrm{n}}\right)}{Z_{\mathrm{abc}}} \\
-        I_{\mathrm{n}} &= -\sum_{p\in\{\mathrm{a},\mathrm{b},\mathrm{c}\}}I_{p}
-
-    and the following (delta loads):
-
-    .. math::
-        I_{\mathrm{ab}} &= \frac{\left(V_{\mathrm{a}}-V_{\mathrm{b}}\right)}{Z_{\mathrm{ab}}} \\
-        I_{\mathrm{bc}} &= \frac{\left(V_{\mathrm{b}}-V_{\mathrm{c}}\right)}{Z_{\mathrm{bc}}} \\
-        I_{\mathrm{ca}} &= \frac{\left(V_{\mathrm{c}}-V_{\mathrm{a}}\right)}{Z_{\mathrm{ca}}}
-
+    See Also:
+        :doc:`Impedance Load documentation </models/Load/ImpedanceLoad>`
     """
 
     _type = "impedance"
