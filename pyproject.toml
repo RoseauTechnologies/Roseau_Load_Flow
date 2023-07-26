@@ -65,6 +65,7 @@ jupyter = "^1.0.0"
 nbsphinx = ">=0.8.9"
 furo = ">=2022.9.29"
 sphinxcontrib-googleanalytics = ">=0.3"
+sphinxcontrib-bibtex = "^2.5.0"
 
 [tool.poetry.group.docker]
 optional = true

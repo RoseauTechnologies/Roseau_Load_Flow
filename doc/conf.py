@@ -42,6 +42,7 @@ extensions = [
     "sphinx_copybutton",
     "sphinx_inline_tabs",
     "sphinxcontrib.googleanalytics",
+    "sphinxcontrib.bibtex",
 ]
 myst_enable_extensions = ["deflist", "smartquotes", "replacements", "dollarmath"]
 add_module_names = False
@@ -133,3 +134,6 @@ intersphinx_mapping = {
 
 # Google Analytics
 googleanalytics_id = "G-Y9QSN78RFV"
+
+# Bibtex
+bibtex_bibfiles = ["Bibliography.bib"]

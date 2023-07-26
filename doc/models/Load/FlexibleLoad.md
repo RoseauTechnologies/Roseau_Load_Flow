@@ -65,6 +65,11 @@ control = Control.constant()
 
 Control the maximum active power of a load (often a PV inverter) based on the voltage $P^{\max}(U)$.
 
+```{note}
+The functions $s_{\alpha}$ used for the P(U) controls are derived from the *soft clipping function* of
+{cite:p}`Klimek_2020`.
+```
+
 #### Production
 
 With this control, the following soft clipping family of functions $s_{\alpha}(U)$ is used. The
@@ -76,7 +81,7 @@ default value of `alpha` is 1000.
 :align: center
 ```
 
-The final $P$ is then $P(U) = \max(s(U) \times S^{\max}, P^{\mathrm{th.}})$
+The final $P$ is then $P(U) = \max(s_{\alpha}(U) \times S^{\max}, P^{\mathrm{th.}})$
 
 ```python
 from roseau.load_flow import Control, Q_
@@ -101,7 +106,7 @@ default value of `alpha` is 1000.
 :align: center
 ```
 
-The final $P$ is then $P(U) = \min(s(U) \times S^{\max}, P^{\mathrm{th.}})$
+The final $P$ is then $P(U) = \min(s_{\alpha}(U) \times S^{\max}, P^{\mathrm{th.}})$
 
 ```python
 from roseau.load_flow import Control, Q_
@@ -127,7 +132,12 @@ clipping family of functions $s_{\alpha}(U)$ is used. The default value of `alph
 :align: center
 ```
 
-The final $Q$ is then $Q(U) = s(U) \times S^{\max}$
+The final $Q$ is then $Q(U) = s_{\alpha}(U) \times S^{\max}$
+
+```{note}
+The function $s_{\alpha}$ used for the Q(U) control is derived from the *soft clipping function* of
+{cite:p}`Klimek_2020`.
+```
 
 ```python
 from roseau.load_flow import Control, Q_
@@ -403,4 +413,10 @@ the $(P, Q)$ space changes. Here is an illustration with a theoretical productio
   - ![image](/_static/Domain_PmaxU_QU.svg)
   - ![image](/_static/Domain_PmaxU_QU.svg)
   - ![image](/_static/Domain_PmaxU_QU.svg)
+```
+
+## Bibliography
+
+```{bibliography}
+:filter: docname in docnames
 ```
