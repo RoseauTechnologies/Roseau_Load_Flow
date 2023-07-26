@@ -1,5 +1,7 @@
 # Loads
 
+## Definition
+
 The load element can be used to model consumption loads (with positive active power) as well as
 generation loads (with negative active power).
 

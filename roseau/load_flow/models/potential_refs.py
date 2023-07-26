@@ -23,7 +23,7 @@ class PotentialRef(Element):
     default is ``Vn = 0``.
 
     See Also:
-        `Potential reference documentation <../../../models/PotentialRef.html>`_
+        :doc:`Potential reference model documentation </models/PotentialRef>`
     """
 
     allowed_phases = frozenset({"a", "b", "c", "n"})

@@ -24,7 +24,7 @@ class AbstractLoad(Element, ABC):
         * delta-connected loads using a `phases` constructor argument which doesn't contain `"n"`
 
     See Also:
-        `Load documentation <../../../models/Load/index.html>`_
+        :doc:`Load documentation </models/Load/index>`
     """
 
     _power_load_class: type["PowerLoad"]
@@ -199,7 +199,7 @@ class PowerLoad(AbstractLoad):
     """A constant power load.
 
     See Also:
-        `Power Load documentation <../../../models/Load/PowerLoad.html>`_
+        :doc:`Power Load documentation </models/Load/PowerLoad>`
     """
 
     _type = "power"
@@ -342,7 +342,7 @@ class CurrentLoad(AbstractLoad):
     """A constant current load.
 
     See Also:
-        `Current Load documentation <../../../models/Load/CurrentLoad.html>`_
+        :doc:`Current Load documentation </models/Load/CurrentLoad>`
     """
 
     _type = "current"
@@ -400,7 +400,7 @@ class ImpedanceLoad(AbstractLoad):
     """A constant impedance load.
 
     See Also:
-        `Impedance Load documentation <../../../models/Load/ImpedanceLoad.html>`_
+        :doc:`Impedance Load documentation </models/Load/ImpedanceLoad>`
     """
 
     _type = "impedance"

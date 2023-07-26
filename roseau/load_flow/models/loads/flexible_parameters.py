@@ -31,7 +31,7 @@ class Control(JsonMixin):
         * ``"q_u"``: control the reactive power based on the voltage :math:`Q(U)`.
 
     See Also:
-        `Control documentation <../../../models/Load/FlexibleLoad.html#controls>`_
+        :ref:`Control documentation <models-flexible_load-controls>`
     """
 
     DEFAULT_ALPHA: float = 1000.0
@@ -184,7 +184,7 @@ class Control(JsonMixin):
         """Create a control of the type ``"p_max_u_production"``.
 
         See Also:
-            `$P(U)$ control documentation <../../../models/Load/FlexibleLoad.html#p-u-control>`_
+            :ref:`$P(U)$ control documentation <models-flexible_load-p_u_control>`
 
         Args:
             u_up:
@@ -213,7 +213,7 @@ class Control(JsonMixin):
         """Create a control of the type ``"p_max_u_consumption"``.
 
         See Also:
-            `$P(U)$ control documentation <../../../models/Load/FlexibleLoad.html#p-u-control>`_
+            :ref:`$P(U)$ control documentation <models-flexible_load-p_u_control>`
 
         Args:
             u_min:
@@ -242,7 +242,7 @@ class Control(JsonMixin):
         """Create a control of the type ``"q_u"``.
 
         See Also:
-            `$Q(U)$ control documentation <../../../models/Load/FlexibleLoad.html#q-u-control>`_
+            :ref:`$Q(U)$ control documentation <models-flexible_load-q_u_control>`
 
         Args:
             u_min:
@@ -337,7 +337,7 @@ class Projection(JsonMixin):
         * ``"keep_q"``: for maintaining a constant Q.
 
     See Also:
-        `Projection documentation <../../../models/Load/FlexibleLoad.html#projection>`_
+        :ref:`Projection documentation <models-flexible_load-projection>`
     """
 
     DEFAULT_ALPHA: float = 1000.0
@@ -438,7 +438,7 @@ class FlexibleParameter(JsonMixin):
     For multi-phase loads, you need to use a `FlexibleParameter` instance per phase.
 
     See Also:
-        `Flexible Parameter documentation <../../../models/Load/FlexibleLoad.html#flexible-parameters>`_
+        :ref:`Flexible Parameters documentation <models-flexible_load-flexible_parameters>`
     """
 
     control_class: type[Control] = Control
@@ -509,7 +509,7 @@ class FlexibleParameter(JsonMixin):
         """Build flexible parameters for production ``P(U)`` control with a Euclidean projection.
 
         See Also:
-            `$P(U)$ control documentation <../../../models/Load/FlexibleLoad.html#p-u-control>`_
+            :ref:`$P(U)$ control documentation <models-flexible_load-p_u_control>`
 
         Args:
             u_up:
@@ -561,7 +561,7 @@ class FlexibleParameter(JsonMixin):
         """Build flexible parameters for consumption ``P(U)`` control with a Euclidean projection.
 
         See Also:
-            `$P(U)$ control documentation <../../../models/Load/FlexibleLoad.html#p-u-control>`_
+            :ref:`$P(U)$ control documentation <models-flexible_load-p_u_control>`
 
         Args:
             u_min:
@@ -612,7 +612,7 @@ class FlexibleParameter(JsonMixin):
         """Build flexible parameters for ``Q(U)`` control with a Euclidean projection.
 
         See Also:
-            `$Q(U)$ control documentation <../../../models/Load/FlexibleLoad.html#q-u-control>`_
+            :ref:`$Q(U)$ control documentation <models-flexible_load-q_u_control>`
 
         Args:
             u_min:

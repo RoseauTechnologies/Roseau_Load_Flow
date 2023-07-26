@@ -1,5 +1,7 @@
 # Lines
 
+## Definition
+
 Lines are modeled using passive components lumped in a PI section. The lumped parameters are
 defined using the series impedance matrix $\underline{Z}$ and the shunt admittance matrix
 $\underline{Y}$.
@@ -105,6 +107,7 @@ The shunt admittance matrix $\underline{Y}$ is defined from the admittance matri
 \right.\text{, }\forall(i,j)\in\{\mathrm{a},\mathrm{b},\mathrm{c},\mathrm{n}\}^2
 ```
 
+(models-line_parameters)=
 ## Line parameters
 
 The parameters of the lines are defined using the `LineParameters` class. It takes the series

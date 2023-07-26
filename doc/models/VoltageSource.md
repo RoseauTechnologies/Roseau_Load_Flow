@@ -1,5 +1,7 @@
 # Voltage source
 
+## Definition
+
 It represents an ideal voltage source that maintains a fixed voltage independently of the load
 resistance or the output current.
 

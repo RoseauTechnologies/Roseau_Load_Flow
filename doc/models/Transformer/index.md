@@ -1,7 +1,10 @@
 # Transformers
 
+## Definition
+
 *Roseau Load Flow* can model single-phase, center-tapped and three-phase transformers.
 
+(models-transformer_parameters)=
 ## Transformer parameters
 
 Transformers are modeled with the following parameters:

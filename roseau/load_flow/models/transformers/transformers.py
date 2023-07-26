@@ -19,7 +19,7 @@ class Transformer(AbstractBranch):
     The model parameters are defined in the ``parameters``.
 
     See Also:
-        `Transformer documentation <../../../models/Transformer/index.html>`_
+        :doc:`Transformer models documentation </models/Transformer/index>`
     """
 
     branch_type = BranchType.TRANSFORMER

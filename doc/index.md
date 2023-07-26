@@ -8,11 +8,12 @@ by [Roseau Technologies](https://www.roseautechnologies.com/en).
 
 ## Installation
 
-`roseau-load-flow` is compatible with Python 3.9 and above. It can be installed with:
+`roseau-load-flow` is the python interface to the solver. It is compatible with Python version 3.9
+and newer and can be installed with:
 
 ```{toctree}
 ---
-maxdepth: 3
+maxdepth: 2
 caption: Installation
 ---
 Installation
@@ -25,11 +26,9 @@ The following tutorials are available to help you get started:
 ```{toctree}
 ---
 maxdepth: 2
-caption: Tutorials
+caption: Usage
 ---
-notebooks/Getting_Started
-notebooks/Advanced
-notebooks/Short_Circuit
+notebooks/index
 ```
 
 ## Models
@@ -41,14 +40,7 @@ A description of the electrical models used for each component is available:
 maxdepth: 2
 caption: Models
 ---
-models/PotentialRef
-models/Ground
-models/Bus
-models/VoltageSource
-models/Load/index
-models/Line/index
-models/Switch
-models/Transformer/index
+models/index
 ```
 
 ## Solvers
@@ -67,14 +59,14 @@ Solvers
 
 ```{toctree}
 ---
-maxdepth: 3
+maxdepth: 2
 caption: Changelog
 ---
 Changelog
 ```
 
 
-## API
+## API Reference
 
 If you want the full documentation of all the classes and functions, you can refer to the following
 references:
@@ -82,7 +74,7 @@ references:
 ```{toctree}
 ---
 maxdepth: 3
-caption: API
+caption: API Reference
 ---
 autoapi/roseau/load_flow/index
 ```

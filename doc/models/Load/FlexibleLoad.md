@@ -40,6 +40,7 @@ The expression $\underline{S}(U)$ depends on four parameters:
 * The type of control (see below).
 * The type of projection (see below).
 
+(models-flexible_load-controls)=
 ## Controls
 
 There are four available types of control.
@@ -59,6 +60,7 @@ control = Control(type="constant", u_min=0.0, u_down=0.0, u_up=0.0, u_max=0.0)
 control = Control.constant()
 ```
 
+(models-flexible_load-p_u_control)=
 ### P(U) control
 
 Control the maximum active power of a load (often a PV inverter) based on the voltage $P^{\max}(U)$.
@@ -113,6 +115,7 @@ consumption_control = Control(
 consumption_control = Control.p_max_u_consumption(u_min=Q_(210, "V"), u_down=Q_(220, "V"))
 ```
 
+(models-flexible_load-q_u_control)=
 ### Q(U) control
 
 Control the reactive power based on the voltage $Q(U)$. With this control, the following soft
@@ -144,6 +147,7 @@ control = Control.q_u(
 )
 ```
 
+(models-flexible_load-projection)=
 ## Projection
 
 The different controls may produce values for $P$ and $Q$ that are not feasible. The feasibility
@@ -207,6 +211,7 @@ from roseau.load_flow import Projection
 projection = Projection(type="keep_q")  # alpha and epsilon can be provided
 ```
 
+(models-flexible_load-flexible_parameters)=
 ## Flexible parameters
 
 A flexible parameter is a combination of a control on the active power, a control on the reactive

@@ -17,7 +17,7 @@ class TransformerParameters(Identifiable, JsonMixin):
     """A class to store the parameters of the transformers.
 
     See Also:
-        `Transformer parameters documentation <../../../models/Transformer/index.html#transformer-parameters>`_
+        :ref:`Transformer parameters documentation <models-transformer_parameters>`
     """
 
     _EXTRACT_WINDINGS_RE = regex.compile(

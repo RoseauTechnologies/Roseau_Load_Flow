@@ -33,7 +33,7 @@ class LineParameters(Identifiable, JsonMixin):
     """A class to store the line parameters of lines
 
     See Also:
-        `Line parameters documentation <../../../models/Line/index.html#line-parameters>`_
+        :ref:`Line parameters documentation <models-line_parameters>`
     """
 
     _type_re = "|".join(x.code() for x in LineType)

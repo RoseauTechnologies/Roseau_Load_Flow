@@ -31,7 +31,7 @@ class Ground(Element):
 
 
     See Also:
-        `Ground documentation <../../../models/Ground.html>`_
+        :doc:`Ground model documentation </models/Ground>`
     """
 
     allowed_phases = frozenset({"a", "b", "c", "n"})

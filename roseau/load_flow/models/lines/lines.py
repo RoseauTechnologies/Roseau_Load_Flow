@@ -23,7 +23,7 @@ class Switch(AbstractBranch):
     """A general purpose switch branch.
 
     See Also:
-        `Switch documentation <../../../models/Switch.html>`_
+        :doc:`Switch model documentation </models/Switch>`
     """
 
     branch_type = BranchType.SWITCH
@@ -132,7 +132,7 @@ class Line(AbstractBranch):
     """An electrical line PI model with series impedance and optional shunt admittance.
 
     See Also:
-        `Line documentation <../../../models/Line/index.html>`_
+        :doc:`Line documentation </models/Line/index>`
     """
 
     branch_type = BranchType.LINE

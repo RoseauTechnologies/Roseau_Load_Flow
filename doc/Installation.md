@@ -1,4 +1,6 @@
-# Using `pip` #
+# Installation
+
+## Using `pip`
 
 `roseau-load-flow` is available on [PyPI](https://pypi.org/project/roseau-load-flow/). It can be
 installed using pip with:
@@ -46,7 +48,7 @@ To upgrade to the latest version (recommended), use:
 $ python -m pip install --upgrade roseau-load-flow
 ```
 
-# Using `conda` #
+## Using `conda`
 
 `roseau-load-flow` is also available on [conda-forge](https://anaconda.org/conda-forge/roseau-load-flow).
 It can be installed using conda with:
@@ -59,7 +61,7 @@ If you use *conda* to manage your project, it is recommended to use the `conda` 
 instead of `pip`.
 ```
 
-# Using `docker` #
+## Using `docker`
 
 `roseau-load-flow` provides a *docker image* with all required dependencies pre-installed,
 including *Python*. The image runs a *Jupyter* session that you can access in your browser. To

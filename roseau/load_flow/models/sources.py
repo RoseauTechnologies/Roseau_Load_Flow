@@ -19,7 +19,7 @@ class VoltageSource(Element):
     """A voltage source.
 
     See Also:
-        `Voltage source model documentation <../../../models/VoltageSource.html>`_
+        :doc:`Voltage source model documentation </models/VoltageSource>`
     """
 
     allowed_phases = Bus.allowed_phases

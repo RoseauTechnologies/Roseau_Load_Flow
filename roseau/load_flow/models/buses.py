@@ -22,7 +22,7 @@ class Bus(Element):
     """An electrical bus.
 
     See Also:
-        `Bus documentation <../../../models/Bus.html>`_
+        :doc:`Bus model documentation </models/Bus>`
     """
 
     allowed_phases = frozenset({"ab", "bc", "ca", "an", "bn", "cn", "abn", "bcn", "can", "abc", "abcn"})
