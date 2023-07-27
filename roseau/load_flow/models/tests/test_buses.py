@@ -31,24 +31,24 @@ def test_short_circuit():
 
     # Bad parameters
     with pytest.raises(RoseauLoadFlowException) as e:
-        bus.short_circuit("a", "n")
+        bus.add_short_circuit("a", "n")
     assert "Phase 'n' is not in the phases" in e.value.msg
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_PHASE
     with pytest.raises(RoseauLoadFlowException) as e:
-        bus.short_circuit("n", "a")
+        bus.add_short_circuit("n", "a")
     assert "Phase 'n' is not in the phases" in e.value.msg
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_PHASE
     with pytest.raises(RoseauLoadFlowException) as e:
-        bus.short_circuit("a", "a")
+        bus.add_short_circuit("a", "a")
     assert "some phases are duplicated" in e.value.msg
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_PHASE
     with pytest.raises(RoseauLoadFlowException) as e:
-        bus.short_circuit("a")
+        bus.add_short_circuit("a")
     assert "at least two phases (or a phase and a ground) should be given" in e.value.msg
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_PHASE
 
     assert not bus._short_circuits
-    bus.short_circuit("c", "a", "b")
+    bus.add_short_circuit("c", "a", "b")
     assert bus._short_circuits[0]["phases"] == ["c", "a", "b"]
     assert bus._short_circuits[0]["ground"] is None
 
@@ -63,7 +63,7 @@ def test_short_circuit():
     assert en2.buses["bus"]._short_circuits[0]["ground"] is None
 
     ground = Ground("ground")
-    bus.short_circuit("a", ground=ground)  # ok
+    bus.add_short_circuit("a", ground=ground)  # ok
     assert len(bus.short_circuits) == 2
 
     # With power load
@@ -71,6 +71,6 @@ def test_short_circuit():
     assert not bus.short_circuits
     PowerLoad(id="load", bus=bus, powers=[10, 10, 10])
     with pytest.raises(RoseauLoadFlowException) as e:
-        bus.short_circuit("a", "b")
+        bus.add_short_circuit("a", "b")
     assert "is already connected on bus" in e.value.msg
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_SHORT_CIRCUIT

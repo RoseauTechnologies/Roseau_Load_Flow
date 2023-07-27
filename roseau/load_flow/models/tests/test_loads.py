@@ -146,7 +146,7 @@ def test_loads():
 
     # Short-circuit
     bus = Bus(id="bus", phases="abcn")
-    bus.short_circuit("a", "b")
+    bus.add_short_circuit("a", "b")
     with pytest.raises(RoseauLoadFlowException) as e:
         PowerLoad(id="load", bus=bus, powers=[10, 10, 10])
     assert "that already has a short-circuit. It makes the short-circuit calculation impossible." in e.value.msg

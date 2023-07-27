@@ -156,8 +156,8 @@ class Bus(Element):
             "potentials": [[v.real, v.imag] for v in self._res_potentials_getter(warning)],
         }
 
-    def short_circuit(self, *phases: str, ground: Optional["Ground"] = None) -> None:
-        """Make a short-circuit by connecting multiple phases together.
+    def add_short_circuit(self, *phases: str, ground: Optional["Ground"] = None) -> None:
+        """Add a short-circuit by connecting multiple phases together optionally with a ground.
 
         Args:
             phases:
@@ -200,9 +200,9 @@ class Bus(Element):
             self.network._valid = False
 
     @property
-    def short_circuits(self) -> list[dict]:
-        """Return the list of short circuits of this bus"""
-        return self._short_circuits
+    def short_circuits(self) -> list[dict[str, Any]]:
+        """Return the list of short circuits of this bus."""
+        return self._short_circuits[:]  # return a copy as users should not modify the list directly
 
     def clear_short_circuits(self):
         """Remove the short circuits."""

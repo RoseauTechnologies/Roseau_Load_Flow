@@ -127,7 +127,7 @@ def network_from_dict(
         for sc in short_circuits:
             ground_id = sc["short_circuit"]["ground"]
             ground = grounds[ground_id] if ground_id is not None else None
-            buses[sc["bus_id"]].short_circuit(*sc["short_circuit"]["phases"], ground=ground)
+            buses[sc["bus_id"]].add_short_circuit(*sc["short_circuit"]["phases"], ground=ground)
 
     return buses, branches_dict, loads, sources, grounds, potential_refs
 
