@@ -281,11 +281,25 @@ class Line(AbstractBranch):
         self._parameters = value
         self._invalidate_network_results()
 
-    def _res_series_power_losses_getter(self, warning: bool) -> np.ndarray:
+    def _res_series_values_getter(self, warning: bool) -> tuple[np.ndarray, np.ndarray]:
         pot1, pot2 = self._res_potentials_getter(warning)  # V
         du_line = pot1 - pot2
         z_line = self.parameters.z_line * self.length
         i_line = np.linalg.inv(z_line.m_as("ohm")) @ du_line  # Zₗ x Iₗ = ΔU -> I = Zₗ⁻¹ x ΔU
+        return du_line, i_line
+
+    def _res_series_currents_getter(self, warning: bool) -> np.ndarray:
+        _, i_line = self._res_series_values_getter(warning)
+        return i_line
+
+    @property
+    @ureg_wraps("A", (None,), strict=False)
+    def res_series_currents(self) -> Q_[np.ndarray]:
+        """Get the current in the series elements of the line (A)."""
+        return self._res_series_currents_getter(warning=True)
+
+    def _res_series_power_losses_getter(self, warning: bool) -> np.ndarray:
+        du_line, i_line = self._res_series_values_getter(warning)
         return du_line * i_line.conj()  # Sₗ = ΔU.Iₗ*
 
     @property
@@ -294,9 +308,8 @@ class Line(AbstractBranch):
         """Get the power losses in the series elements of the line (VA)."""
         return self._res_series_power_losses_getter(warning=True)
 
-    def _res_shunt_power_losses_getter(self, warning: bool) -> np.ndarray:
-        if not self.parameters.with_shunt:
-            return np.zeros(len(self.phases), dtype=complex)
+    def _res_shunt_values_getter(self, warning: bool) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+        assert self.parameters.with_shunt, "this method only works when there is a shunt"
         y_shunt = self.parameters.y_shunt
         assert self.ground is not None
         pot1, pot2 = self._res_potentials_getter(warning)
@@ -305,7 +318,26 @@ class Line(AbstractBranch):
         yg = y_shunt.sum(axis=1)  # y_ig = Y_ia + Y_ib + Y_ic + Y_in for i in {a, b, c, n}
         i1_shunt = (y_shunt @ pot1 - yg * vg) / 2
         i2_shunt = (y_shunt @ pot2 - yg * vg) / 2
-        return pot1 * i1_shunt.conj() + pot2 * i2_shunt.conj()
+        return pot1, pot2, i1_shunt, i2_shunt
+
+    def _res_shunt_currents_getter(self, warning: bool) -> tuple[np.ndarray, np.ndarray]:
+        if not self.parameters.with_shunt:
+            zeros = np.zeros(len(self.phases), dtype=complex)
+            return zeros[:], zeros[:]
+        _, _, cur1, cur2 = self._res_shunt_values_getter(warning)
+        return cur1, cur2
+
+    @property
+    @ureg_wraps(("A", "A"), (None,), strict=False)
+    def res_shunt_currents(self) -> tuple[Q_[np.ndarray], Q_[np.ndarray]]:
+        """Get the currents in the shunt elements of the line (A)."""
+        return self._res_shunt_currents_getter(warning=True)
+
+    def _res_shunt_power_losses_getter(self, warning: bool) -> np.ndarray:
+        if not self.parameters.with_shunt:
+            return np.zeros(len(self.phases), dtype=complex)
+        pot1, pot2, cur1, cur2 = self._res_shunt_values_getter(warning)
+        return pot1 * cur1.conj() + pot2 * cur2.conj()
 
     @property
     @ureg_wraps("VA", (None,), strict=False)

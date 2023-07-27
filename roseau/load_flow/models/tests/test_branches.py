@@ -222,7 +222,7 @@ def test_powers_equal(network_with_results):
         ),
     ),
 )
-def test_lines_res_powers(phases, z_line, y_shunt, len_line, bus_pot, line_cur, ground_pot, expected_pow):
+def test_lines_results(phases, z_line, y_shunt, len_line, bus_pot, line_cur, ground_pot, expected_pow):
     bus1 = Bus("bus1", phases=phases["bus1"])
     bus2 = Bus("bus2", phases=phases["bus2"])
     y_shunt = np.asarray(y_shunt, dtype=complex) if y_shunt is not None else None
@@ -257,3 +257,10 @@ def test_lines_res_powers(phases, z_line, y_shunt, len_line, bus_pot, line_cur, 
 
     # Sanity check: the total power lost is equal to the sum of the powers flowing through
     assert np.allclose(res_powers1 + res_powers2, line_losses)
+
+    # Check currents (Kirchhoff's law at each end of the line)
+    i1_line, i2_line = line.res_currents
+    i_series = line.res_series_currents
+    i1_shunt, i2_shunt = line.res_shunt_currents
+    assert np.allclose(i1_line, i_series + i1_shunt)
+    assert np.allclose(i2_line + i_series, i2_shunt, atol=1.0e-4)

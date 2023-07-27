@@ -96,14 +96,30 @@ en.res_branches[["current2"]].transform([np.abs, ft.partial(np.angle, deg=True)]
 # | ('line', 'c') |                     0      |                  0      |
 # | ('line', 'n') |                    20.628  |                -11.5242 |
 
-# The two currents are equal in magnitude and opposite in phase, as expected
+# The currents in the series components of the line
+en.res_lines[["series_current"]].transform([np.abs, ft.partial(np.angle, deg=True)])
+# |               |   ('series_current', 'absolute') |   ('series_current', 'angle') |
+# |:--------------|---------------------------------:|------------------------------:|
+# | ('line', 'a') |                          24.1958 |                       16.4456 |
+# | ('line', 'b') |                          11.3722 |                     -105.263  |
+# | ('line', 'c') |                           0      |                        0      |
+# | ('line', 'n') |                          20.628  |                      168.476  |
+
+# All currents are equal in magnitude for a simplified lines as no current escapes to the ground.
+# The current from bus 2 has an opposite direction to the current from bus 1 as expected.
 
 # The losses of the line can also be accessed. One can remark that there are no shunt losses
-en.res_lines_losses
-# |               |   'series_losses'      | 'shunt_losses' |  'total_losses'       |
-# |:--------------|-----------------------:|---------------:|----------------------:|
-# | ('line', 'a') | 204.904 -2.66329e-15   |             0j | 204.904 -2.66329e-15  |
-# | ('line', 'b') |  45.2646 -8.96306e-16  |             0j |  45.2646 -8.96306e-16 |
-# | ('line', 'c') |   0j                   |             0j |   0j                  |
-# | ('line', 'n') | 148.93 + 6.11606e-15   |             0j | 148.93 + 6.11606e-15  |
+en.res_lines[["series_losses"]].transform([np.real, np.imag])
+# |               |   ('series_losses', 'real') |   ('series_losses', 'imag') |
+# |:--------------|----------------------------:|----------------------------:|
+# | ('line', 'a') |                    204.904  |                -2.66329e-15 |
+# | ('line', 'b') |                     45.2646 |                -8.96306e-16 |
+# | ('line', 'c') |                      0      |                 0           |
+# | ('line', 'n') |                    148.93   |                 7.62657e-16 |
+
+# With a simplified model, all the losses are caused by the series impedance of the line
+res_lines = en.res_lines
+total_losses = res_lines["power1"] + res_lines["power2"]  # total = series + shunt
+np.allclose(total_losses, res_lines["series_losses"])
+# True
 ```

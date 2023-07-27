@@ -856,6 +856,58 @@ def test_single_phase_network(single_phase_network: ElectricalNetwork):
         )
         .set_index(["branch_id", "phase"]),
     )
+    # Lines results
+    expected_res_lines = (
+        pd.DataFrame.from_records(
+            [
+                {
+                    "line_id": "line",
+                    "phase": "b",
+                    "current1": 0.005000025000117603 + 0j,
+                    "current2": -0.005000025000117603 - 0j,
+                    "power1": (19999.94999975 + 0j) * (0.005000025000117603 + 0j).conjugate(),
+                    "power2": (19999.899999499998 + 0j) * (-0.005000025000117603 - 0j).conjugate(),
+                    "potential1": 19999.94999975 + 0j,
+                    "potential2": 19999.899999499998 + 0j,
+                    "series_losses": (
+                        (19999.94999975 + 0j) * (0.005000025000117603 + 0j).conjugate()
+                        + (19999.899999499998 + 0j) * (-0.005000025000117603 - 0j).conjugate()
+                    ),
+                    "series_current": 0.005000025000117603 + 0j,
+                },
+                {
+                    "line_id": "line",
+                    "phase": "n",
+                    "current1": -0.005000025000125 + 0j,
+                    "current2": 0.005000025000125 - 0j,
+                    "power1": (-0.050000250001249996 + 0j) * (-0.005000025000125 + 0j).conjugate(),
+                    "power2": (0j) * (0.005000025000125 - 0j).conjugate(),
+                    "potential1": -0.050000250001249996 + 0j,
+                    "potential2": 0j,
+                    "series_losses": (
+                        (-0.050000250001249996 + 0j) * (-0.005000025000125 + 0j).conjugate()
+                        + (0j) * (0.005000025000125 - 0j).conjugate()
+                    ),
+                    "series_current": -0.005000025000125 + 0j,
+                },
+            ]
+        )
+        .astype(
+            {
+                "phase": _PHASE_DTYPE,
+                "current1": complex,
+                "current2": complex,
+                "power1": complex,
+                "power2": complex,
+                "potential1": complex,
+                "potential2": complex,
+                "series_losses": complex,
+                "series_current": complex,
+            }
+        )
+        .set_index(["line_id", "phase"])
+    )
+    pd.testing.assert_frame_equal(single_phase_network.res_lines, expected_res_lines)
     # Loads results
     pd.testing.assert_frame_equal(
         single_phase_network.res_loads,

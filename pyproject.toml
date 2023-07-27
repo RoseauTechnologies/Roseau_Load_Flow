@@ -83,6 +83,7 @@ line-length = 120
 target-version = "py39"
 show-fixes = true
 namespace-packages = ["roseau"]
+include = ["*.py", "*.pyi", "**/pyproject.toml", "*.ipynb"]
 select = ["E", "F", "C90", "W", "B", "UP", "I", "RUF100", "TID", "SIM", "PT", "PIE", "N", "C4", "NPY"]
 unfixable = ["B"]
 ignore = ["E501", "B024", "N818"]
