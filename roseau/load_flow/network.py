@@ -680,52 +680,88 @@ class ElectricalNetwork(JsonMixin):
         return res_df
 
     @property
-    def res_lines_losses(self) -> pd.DataFrame:
-        """The load flow results of the complex power losses of the network lines.
+    def res_lines(self) -> pd.DataFrame:
+        """The load flow results of the the network lines.
 
-        To get the active power losses, use the real part of the complex power losses.
+        This is similar to the :attr:`res_branches` property but provides more information that
+        only apply to lines. This includes currents and complex power losses in the series
+        components of the lines.
 
         The results are returned as a dataframe with the following index:
             - `line_id`: The id of the line.
             - `phase`: The phase of the line (in ``{'a', 'b', 'c', 'n'}``).
+
         and the following columns:
+            - `current1`: The complex current of the line (in Amps) for the given phase at the
+                first bus.
+            - `current2`: The complex current of the line (in Amps) for the given phase at the
+                second bus.
+            - `power1`: The complex power of the line (in VoltAmps) for the given phase at the
+                first bus.
+            - `power2`: The complex power of the line (in VoltAmps) for the given phase at the
+                second bus.
+            - `potential1`: The complex potential of the first bus (in Volts) for the given phase.
+            - `potential2`: The complex potential of the second bus (in Volts) for the given phase.
             - `series_losses`: The complex power losses of the line (in VoltAmps) for the given
                 phase due to the series and mutual impedances.
-            - `shunt_losses`: The complex power losses of the line (in VoltAmps) for the given
-                phase due to the shunt admittances.
-            - `total_losses`: The complex power losses of the line (in VoltAmps) for the given
-                phase due to the series and mutual impedances and the shunt admittances. This is
-                the sum of the series and shunt losses. It is equal to the power flow through the
-                line; for any line, ``series_losses + shunt_losses == power1 + power2`` is always
-                true.
+            - `series_current`: The complex current in the series impedance of the line (in Amps)
+                for the given phase.
+
+        Additional information can be easily computed from this dataframe. For example:
+
+        * To get the active power losses, use the real part of the complex power losses
+        * To get the total power losses, add the columns ``powers1 + powers2``
+        * To get the power losses in the shunt components of the line, subtract the series losses
+          from the total power losses computed in the previous step:
+          ``(powers1 + powers2) - series_losses``
+        * To get the currents in the shunt components of the line:
+          - For the first bus, subtract the columns ``current1 - series_current``
+          - For the second bus, add the columns ``series_current + current2``
         """
         self._warn_invalid_results()
-        res_dict = {"line_id": [], "phase": [], "series_losses": [], "shunt_losses": [], "total_losses": []}
-        for br_id, branch in self.branches.items():
+        res_dict = {
+            "line_id": [],
+            "phase": [],
+            "current1": [],
+            "current2": [],
+            "power1": [],
+            "power2": [],
+            "potential1": [],
+            "potential2": [],
+            "series_losses": [],
+            "series_current": [],
+        }
+        for branch in self.branches.values():
             if not isinstance(branch, Line):
                 continue
+            potentials = branch._res_potentials_getter(warning=False)
+            currents = branch._res_currents_getter(warning=False)
+            powers = branch._res_powers_getter(warning=False)
             series_losses = branch._res_series_power_losses_getter(warning=False)
-            shunt_losses = branch._res_shunt_power_losses_getter(warning=False)
-            total_losses = series_losses + shunt_losses
-            for series, shunt, total, phase in zip(series_losses, shunt_losses, total_losses, branch.phases):
-                res_dict["line_id"].append(br_id)
+            series_currents = branch._res_series_currents_getter(warning=False)
+            for i1, i2, s1, s2, v1, v2, s_series, i_series, phase in zip(
+                *currents, *powers, *potentials, series_losses, series_currents, branch.phases
+            ):
+                res_dict["line_id"].append(branch.id)
                 res_dict["phase"].append(phase)
-                res_dict["series_losses"].append(series)
-                res_dict["shunt_losses"].append(shunt)
-                res_dict["total_losses"].append(total)
-        res_df = (
-            pd.DataFrame.from_dict(res_dict, orient="columns")
+                res_dict["current1"].append(i1)
+                res_dict["current2"].append(i2)
+                res_dict["power1"].append(s1)
+                res_dict["power2"].append(s2)
+                res_dict["potential1"].append(v1)
+                res_dict["potential2"].append(v2)
+                res_dict["series_losses"].append(s_series)
+                res_dict["series_current"].append(i_series)
+        return (
+            pd.DataFrame(res_dict)
             .astype(
                 {
                     "phase": _PHASE_DTYPE,
-                    "series_losses": complex,
-                    "shunt_losses": complex,
-                    "total_losses": complex,
-                }
+                    **{k: complex for k in res_dict if k not in ("phase", "line_id")},
+                },
             )
             .set_index(["line_id", "phase"])
         )
-        return res_df
 
     @property
     def res_loads(self) -> pd.DataFrame:

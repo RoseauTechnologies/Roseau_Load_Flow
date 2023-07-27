@@ -150,12 +150,33 @@ en.res_branches[["current2"]].transform([np.abs, ft.partial(np.angle, deg=True)]
 # | ('line', 'c') |                5.68434e-14 |                  0      |
 # | ('line', 'n') |               20.6273      |                -12.625  |
 
-# The losses of the line can also be accessed. One can remark that there are shunt losses
-en.res_lines_losses
-# |               |          'series_losses' |       'shunt_losses' | 'total_losses'    |
-# |:--------------|-------------------------:|---------------------:|------------------:|
-# | ('line', 'a') | 171.841+57.2802j         | -1.59017-26.6385j    | 170.251+ 30.6417j |
-# | ('line', 'b') |  38.1291+12.7097j        | 1.01834-28.5657j     | 39.1474 -15.856j  |
-# | ('line', 'c') |  0.00107497+0.000358324j | 3.69511-27.4104j     | 3.69618-27.41j    |
-# | ('line', 'n') |  127.574  +42.5246j      | 0.0351686+0.0139828j | 127.609+42.5385j  |
+# The currents in the series components of the line
+en.res_lines[["series_current"]].transform([np.abs, ft.partial(np.angle, deg=True)])
+# |               |   ('series_current', 'absolute') |   ('series_current', 'angle') |
+# |:--------------|---------------------------------:|------------------------------:|
+# | ('line', 'a') |                       23.9333    |                       15.5496 |
+# | ('line', 'b') |                       11.2737    |                     -104.796  |
+# | ('line', 'c') |                        0.0598601 |                     -157.579  |
+# | ('line', 'n') |                       20.6215    |                      167.376  |
+
+# The losses of the series components of line can also be accessed
+en.res_lines[["series_losses"]].transform([np.real, np.imag])
+# |               |   ('series_losses', 'real') |   ('series_losses', 'imag') |
+# |:--------------|----------------------------:|----------------------------:|
+# | ('line', 'a') |                171.841      |                57.2802      |
+# | ('line', 'b') |                 38.1291     |                12.7097      |
+# | ('line', 'c') |                  0.00107497 |                 0.000358324 |
+# | ('line', 'n') |                127.574      |                42.5246      |
+
+# The shunt losses can be computed. Notice that the shunt losses are not null for the shunt line.
+res_lines = en.res_lines
+total_losses = res_lines["power1"] + res_lines["power2"]  # total = series + shunt
+shunt_losses = total_losses - res_lines["series_losses"]
+shunt_losses.to_frame("shunt_losses").transform([np.real, np.imag])
+# |               |   ('shunt_losses', 'real') |   ('shunt_losses', 'imag') |
+# |:--------------|---------------------------:|---------------------------:|
+# | ('line', 'a') |                 -1.59017   |                -26.6385    |
+# | ('line', 'b') |                  1.01834   |                -28.5657    |
+# | ('line', 'c') |                  3.69511   |                -27.4104    |
+# | ('line', 'n') |                  0.0351686 |                  0.0139828 |
 ```

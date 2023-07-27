@@ -4,6 +4,10 @@
 
 **In development**
 
+* [GH99](https://github.com/RoseauTechnologies/Roseau_Load_Flow/issues/99) Add `Line.res_series_currents`
+  and `Line.res_shunt_currents` properties to get the currents in the series and shunt components
+  of lines. Also added `ElectricalNetwork.res_lines` that contains the series losses and currents
+  of all the lines in the network. The property `ElectricalNetwork.res_lines_losses` was removed.
 * [GH100](https://github.com/RoseauTechnologies/Roseau_Load_Flow/issues/100) Fix the `Yz` transformers
 * [PR97](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/97) Add the model section to the documentation
 * [PR96](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/96)

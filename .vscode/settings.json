@@ -1,6 +1,10 @@
 {
-    // Jupyter
+    // Jupyter Notebook
     "jupyter.notebookFileRoot": "${workspaceFolder}",
+    "notebook.formatOnSave.enabled": true,
+    "notebook.codeActionsOnSave": {
+        "source.organizeImports.ruff": true,
+    },
 
     // Python
     "python.analysis.diagnosticSeverityOverrides": {
