@@ -1302,7 +1302,7 @@ def test_short_circuits():
     vn = 400 / np.sqrt(3)
     voltages = [vn, vn * np.exp(-2 / 3 * np.pi * 1j), vn * np.exp(2 / 3 * np.pi * 1j)]
     bus = Bus("bus", phases="abcn")
-    bus.short_circuit("a", "n")
+    bus.add_short_circuit("a", "n")
     _ = VoltageSource(id="vs", bus=bus, voltages=voltages)
     _ = PotentialRef(id="pref", element=bus)
     en = ElectricalNetwork.from_element(initial_bus=bus)

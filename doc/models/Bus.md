@@ -84,7 +84,7 @@ vs = VoltageSource(id="source", bus=bus1, voltages=voltages)
 pref = PotentialRef(id="pref", element=bus1, phase="n")
 
 # Create a short circuit on bus2 between phases "a" and "b"
-bus2.short_circuit("a", "b")
+bus2.add_short_circuit("a", "b")
 
 # Create a network and solve a load flow
 en = ElectricalNetwork.from_element(bus1)
