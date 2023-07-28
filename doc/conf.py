@@ -47,7 +47,6 @@ extensions = [
 myst_enable_extensions = ["deflist", "smartquotes", "replacements", "dollarmath"]
 add_module_names = False
 napoleon_numpy_docstring = False
-nbsphinx_execute = "never"
 python_use_unqualified_type_names = True
 
 # Add any paths that contain templates here, relative to this directory.
@@ -131,6 +130,20 @@ intersphinx_mapping = {
     "pint": ("https://pint.readthedocs.io/en/stable/", None),
     "typing_extensions": ("https://typing-extensions.readthedocs.io/en/stable/", None),
 }
+
+# -- Options for intersphinx -------------------------------------------------
+nbsphinx_execute = "never"
+# Hide execution count https://nbsphinx.readthedocs.io/en/latest/custom-css.html#For-a-Single-Notebook
+nbsphinx_prolog = """
+.. raw:: html
+
+    <style>
+        .nbinput .prompt,
+        .nboutput .prompt {
+            display: none;
+        }
+    </style>
+"""
 
 # Google Analytics
 googleanalytics_id = "G-Y9QSN78RFV"

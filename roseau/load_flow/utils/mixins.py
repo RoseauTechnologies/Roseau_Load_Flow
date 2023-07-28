@@ -3,7 +3,6 @@ import logging
 import re
 from abc import ABCMeta, abstractmethod
 from pathlib import Path
-from typing import Any
 
 from typing_extensions import Self
 
@@ -32,7 +31,7 @@ class JsonMixin(metaclass=ABCMeta):
 
     @classmethod
     @abstractmethod
-    def from_dict(cls, data: JsonDict, *args: Any) -> Self:
+    def from_dict(cls, data: JsonDict) -> Self:
         """Create an element from a dictionary."""
         raise NotImplementedError
 

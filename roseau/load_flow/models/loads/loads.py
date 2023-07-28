@@ -103,7 +103,7 @@ class AbstractLoad(Element, ABC):
 
     @property
     @ureg.wraps("A", (None,), strict=False)
-    def res_currents(self) -> Q_:
+    def res_currents(self) -> Q_[np.ndarray]:
         """The load flow result of the load currents (A)."""
         return self._res_currents_getter(warning=True)
 
@@ -126,7 +126,7 @@ class AbstractLoad(Element, ABC):
 
     @property
     @ureg.wraps("V", (None,), strict=False)
-    def res_potentials(self) -> Q_:
+    def res_potentials(self) -> Q_[np.ndarray]:
         """The load flow result of the load potentials (V)."""
         return self._res_potentials_getter(warning=True)
 
@@ -136,7 +136,7 @@ class AbstractLoad(Element, ABC):
 
     @property
     @ureg.wraps("V", (None,), strict=False)
-    def res_voltages(self) -> Q_:
+    def res_voltages(self) -> Q_[np.ndarray]:
         """The load flow result of the load voltages (V)."""
         return self._res_voltages_getter(warning=True)
 
@@ -147,7 +147,7 @@ class AbstractLoad(Element, ABC):
 
     @property
     @ureg.wraps("VA", (None,), strict=False)
-    def res_powers(self) -> Q_:
+    def res_powers(self) -> Q_[np.ndarray]:
         """The load flow result of the load powers (VA)."""
         return self._res_powers_getter(warning=True)
 
@@ -265,7 +265,7 @@ class PowerLoad(AbstractLoad):
 
     @property
     @ureg.wraps("VA", (None,), strict=False)
-    def powers(self) -> Q_:
+    def powers(self) -> Q_[np.ndarray]:
         """The powers of the load (VA)."""
         return self._powers
 
@@ -301,7 +301,7 @@ class PowerLoad(AbstractLoad):
 
     @property
     @ureg.wraps("VA", (None,), strict=False)
-    def res_flexible_powers(self) -> Q_:
+    def res_flexible_powers(self) -> Q_[np.ndarray]:
         """The load flow result of the load flexible powers (VA)."""
         return self._res_flexible_powers_getter(warning=True)
 
@@ -373,7 +373,7 @@ class CurrentLoad(AbstractLoad):
 
     @property
     @ureg.wraps("A", (None,), strict=False)
-    def currents(self) -> Q_:
+    def currents(self) -> Q_[np.ndarray]:
         """The currents of the load (Amps)."""
         return self._currents
 
@@ -431,7 +431,7 @@ class ImpedanceLoad(AbstractLoad):
 
     @property
     @ureg.wraps("ohm", (None,), strict=False)
-    def impedances(self) -> Q_:
+    def impedances(self) -> Q_[np.ndarray]:
         """The impedances of the load (Ohms)."""
         return self._impedances
 

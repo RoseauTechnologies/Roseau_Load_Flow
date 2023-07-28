@@ -145,25 +145,25 @@ class Control(JsonMixin):
 
     @property
     @ureg.wraps("V", (None,), strict=False)
-    def u_min(self) -> Q_:
+    def u_min(self) -> Q_[float]:
         """The minimum voltage i.e. the one the control reached the maximum action."""
         return self._u_min
 
     @property
     @ureg.wraps("V", (None,), strict=False)
-    def u_down(self) -> Q_:
+    def u_down(self) -> Q_[float]:
         """The voltage which starts to trigger the control (lower value)."""
         return self._u_down
 
     @property
     @ureg.wraps("V", (None,), strict=False)
-    def u_up(self) -> Q_:
+    def u_up(self) -> Q_[float]:
         """TThe voltage  which starts to trigger the control (upper value)."""
         return self._u_up
 
     @property
     @ureg.wraps("V", (None,), strict=False)
-    def u_max(self) -> Q_:
+    def u_max(self) -> Q_[float]:
         """The maximum voltage i.e. the one the control reached its maximum action."""
         return self._u_max
 
@@ -476,7 +476,7 @@ class FlexibleParameter(JsonMixin):
 
     @property
     @ureg.wraps("VA", (None,), strict=False)
-    def s_max(self) -> Q_:
+    def s_max(self) -> Q_[float]:
         """The apparent power of the flexible load (VA). It is the radius of the feasible circle."""
         return self._s_max
 
