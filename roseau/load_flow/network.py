@@ -149,16 +149,16 @@ class ElectricalNetwork(JsonMixin):
     DEFAULT_WARM_START: bool = True
     DEFAULT_SOLVER: Solver = "newton_goldstein"
 
-    # Default classes to use
-    branch_class = AbstractBranch
-    line_class = Line
-    transformer_class = Transformer
-    switch_class = Switch
-    load_class = AbstractLoad
-    voltage_source_class = VoltageSource
-    bus_class = Bus
-    ground_class = Ground
-    pref_class = PotentialRef
+    # Elements classes (for internal use only)
+    _branch_class = AbstractBranch
+    _line_class = Line
+    _transformer_class = Transformer
+    _switch_class = Switch
+    _load_class = AbstractLoad
+    _voltage_source_class = VoltageSource
+    _bus_class = Bus
+    _ground_class = Ground
+    _pref_class = PotentialRef
 
     #
     # Methods to build an electrical network

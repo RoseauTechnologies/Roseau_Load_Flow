@@ -441,8 +441,8 @@ class FlexibleParameter(JsonMixin):
         :ref:`Flexible Parameters documentation <models-flexible_load-flexible_parameters>`
     """
 
-    control_class: type[Control] = Control
-    projection_class: type[Projection] = Projection
+    _control_class: type[Control] = Control
+    _projection_class: type[Projection] = Projection
 
     @ureg.wraps(None, (None, None, None, None, "VA"), strict=False)
     def __init__(self, control_p: Control, control_q: Control, projection: Projection, s_max: float) -> None:
@@ -489,9 +489,9 @@ class FlexibleParameter(JsonMixin):
             load.
         """
         return cls(
-            control_p=cls.control_class.constant(),
-            control_q=cls.control_class.constant(),
-            projection=cls.projection_class(type="euclidean"),
+            control_p=cls._control_class.constant(),
+            control_q=cls._control_class.constant(),
+            projection=cls._projection_class(type="euclidean"),
             s_max=1.0,
         )
 
@@ -539,11 +539,11 @@ class FlexibleParameter(JsonMixin):
         Returns:
             A flexible parameter which performs "p_max_u_production" control.
         """
-        control_p = cls.control_class.p_max_u_production(u_up=u_up, u_max=u_max, alpha=alpha_control)
+        control_p = cls._control_class.p_max_u_production(u_up=u_up, u_max=u_max, alpha=alpha_control)
         return cls(
             control_p=control_p,
-            control_q=cls.control_class.constant(),
-            projection=cls.projection_class(type="euclidean", alpha=alpha_proj, epsilon=epsilon_proj),
+            control_q=cls._control_class.constant(),
+            projection=cls._projection_class(type="euclidean", alpha=alpha_proj, epsilon=epsilon_proj),
             s_max=s_max,
         )
 
@@ -588,11 +588,11 @@ class FlexibleParameter(JsonMixin):
         Returns:
             A flexible parameter which performs "p_max_u_consumption" control.
         """
-        control_p = cls.control_class.p_max_u_consumption(u_min=u_min, u_down=u_down, alpha=alpha_control)
+        control_p = cls._control_class.p_max_u_consumption(u_min=u_min, u_down=u_down, alpha=alpha_control)
         return cls(
             control_p=control_p,
-            control_q=cls.control_class.constant(),
-            projection=cls.projection_class("euclidean", alpha=alpha_proj, epsilon=epsilon_proj),
+            control_q=cls._control_class.constant(),
+            projection=cls._projection_class("euclidean", alpha=alpha_proj, epsilon=epsilon_proj),
             s_max=s_max,
         )
 
@@ -646,11 +646,11 @@ class FlexibleParameter(JsonMixin):
         Returns:
             A flexible parameter which performs "q_u" control.
         """
-        control_q = cls.control_class.q_u(u_min=u_min, u_down=u_down, u_up=u_up, u_max=u_max, alpha=alpha_control)
+        control_q = cls._control_class.q_u(u_min=u_min, u_down=u_down, u_up=u_up, u_max=u_max, alpha=alpha_control)
         return cls(
-            control_p=cls.control_class.constant(),
+            control_p=cls._control_class.constant(),
             control_q=control_q,
-            projection=cls.projection_class(type="euclidean", alpha=alpha_proj, epsilon=epsilon_proj),
+            projection=cls._projection_class(type="euclidean", alpha=alpha_proj, epsilon=epsilon_proj),
             s_max=s_max,
         )
 
@@ -716,12 +716,12 @@ class FlexibleParameter(JsonMixin):
         .. seealso::
             :meth:`p_max_u_production` and :meth:`q_u` for more details.
         """
-        control_p = cls.control_class.p_max_u_production(u_up=up_up, u_max=up_max, alpha=alpha_control)
-        control_q = cls.control_class.q_u(u_min=uq_min, u_down=uq_down, u_up=uq_up, u_max=uq_max, alpha=alpha_control)
+        control_p = cls._control_class.p_max_u_production(u_up=up_up, u_max=up_max, alpha=alpha_control)
+        control_q = cls._control_class.q_u(u_min=uq_min, u_down=uq_down, u_up=uq_up, u_max=uq_max, alpha=alpha_control)
         return cls(
             control_p=control_p,
             control_q=control_q,
-            projection=cls.projection_class(type="euclidean", alpha=alpha_proj, epsilon=epsilon_proj),
+            projection=cls._projection_class(type="euclidean", alpha=alpha_proj, epsilon=epsilon_proj),
             s_max=s_max,
         )
 
@@ -787,12 +787,12 @@ class FlexibleParameter(JsonMixin):
         .. seealso::
             :meth:`p_max_u_consumption` and :meth:`q_u` for more details.
         """
-        control_p = cls.control_class.p_max_u_consumption(u_min=up_min, u_down=up_down, alpha=alpha_control)
-        control_q = cls.control_class.q_u(u_min=uq_min, u_down=uq_down, u_up=uq_up, u_max=uq_max, alpha=alpha_control)
+        control_p = cls._control_class.p_max_u_consumption(u_min=up_min, u_down=up_down, alpha=alpha_control)
+        control_q = cls._control_class.q_u(u_min=uq_min, u_down=uq_down, u_up=uq_up, u_max=uq_max, alpha=alpha_control)
         return cls(
             control_p=control_p,
             control_q=control_q,
-            projection=cls.projection_class(type="euclidean", alpha=alpha_proj, epsilon=epsilon_proj),
+            projection=cls._projection_class(type="euclidean", alpha=alpha_proj, epsilon=epsilon_proj),
             s_max=s_max,
         )
 
@@ -801,9 +801,9 @@ class FlexibleParameter(JsonMixin):
     #
     @classmethod
     def from_dict(cls, data: JsonDict) -> Self:
-        control_p = cls.control_class.from_dict(data["control_p"])
-        control_q = cls.control_class.from_dict(data["control_q"])
-        projection = cls.projection_class.from_dict(data["projection"])
+        control_p = cls._control_class.from_dict(data["control_p"])
+        control_q = cls._control_class.from_dict(data["control_q"])
+        projection = cls._projection_class.from_dict(data["projection"])
         return cls(control_p=control_p, control_q=control_q, projection=projection, s_max=data["s_max"])
 
     def to_dict(self) -> JsonDict:

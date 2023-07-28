@@ -63,16 +63,16 @@ def network_from_dict(
     transformers_params = {tp["id"]: TransformerParameters.from_dict(tp) for tp in data["transformers_params"]}
 
     # Buses, loads and sources
-    buses = {bd["id"]: en_class.bus_class.from_dict(bd) for bd in data["buses"]}
-    loads = {ld["id"]: en_class.load_class.from_dict(ld | {"bus": buses[ld["bus"]]}) for ld in data["loads"]}
+    buses = {bd["id"]: en_class._bus_class.from_dict(bd) for bd in data["buses"]}
+    loads = {ld["id"]: en_class._load_class.from_dict(ld | {"bus": buses[ld["bus"]]}) for ld in data["loads"]}
     sources = {
-        sd["id"]: en_class.voltage_source_class.from_dict(sd | {"bus": buses[sd["bus"]]}) for sd in data["sources"]
+        sd["id"]: en_class._voltage_source_class.from_dict(sd | {"bus": buses[sd["bus"]]}) for sd in data["sources"]
     }
 
     # Grounds and potential refs
     grounds: dict[Id, Ground] = {}
     for ground_data in data["grounds"]:
-        ground = en_class.ground_class(ground_data["id"])
+        ground = en_class._ground_class(ground_data["id"])
         for ground_bus in ground_data["buses"]:
             ground.connect(buses[ground_bus["id"]], ground_bus["phase"])
         grounds[ground_data["id"]] = ground
@@ -86,7 +86,7 @@ def network_from_dict(
             msg = f"Potential reference data {pref_data['id']} missing bus or ground."
             logger.error(msg)
             raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.JSON_PREF_INVALID)
-        potential_refs[pref_data["id"]] = en_class.pref_class(
+        potential_refs[pref_data["id"]] = en_class._pref_class(
             pref_data["id"], element=bus_or_ground, phase=pref_data.get("phases")
         )
 
@@ -105,17 +105,17 @@ def network_from_dict(
             lp = lines_params[branch_data["params_id"]]
             gid = branch_data.get("ground")
             ground = grounds[gid] if gid is not None else None
-            branches_dict[id] = en_class.line_class(
+            branches_dict[id] = en_class._line_class(
                 id, bus1, bus2, parameters=lp, phases=phases1, length=length, ground=ground, geometry=geometry
             )
         elif branch_data["type"] == "transformer":
             tp = transformers_params[branch_data["params_id"]]
-            branches_dict[id] = en_class.transformer_class(
+            branches_dict[id] = en_class._transformer_class(
                 id, bus1, bus2, parameters=tp, phases1=phases1, phases2=phases2, geometry=geometry
             )
         elif branch_data["type"] == "switch":
             assert phases1 == phases2
-            branches_dict[id] = en_class.switch_class(id, bus1, bus2, phases=phases1, geometry=geometry)
+            branches_dict[id] = en_class._switch_class(id, bus1, bus2, phases=phases1, geometry=geometry)
         else:
             msg = f"Unknown branch type for branch {id}: {branch_data['type']}"
             logger.error(msg)
