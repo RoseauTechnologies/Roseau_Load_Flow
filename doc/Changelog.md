@@ -4,6 +4,7 @@
 
 **In development**
 
+* [PR104](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/104) Remove `roseau.load_flow.utils.BranchType`
 * [GH99](https://github.com/RoseauTechnologies/Roseau_Load_Flow/issues/99) Add `Line.res_series_currents`
   and `Line.res_shunt_currents` properties to get the currents in the series and shunt components
   of lines. Also added `ElectricalNetwork.res_lines` that contains the series losses and currents

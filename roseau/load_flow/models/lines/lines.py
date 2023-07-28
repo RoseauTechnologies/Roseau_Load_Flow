@@ -14,7 +14,6 @@ from roseau.load_flow.models.lines.parameters import LineParameters
 from roseau.load_flow.models.sources import VoltageSource
 from roseau.load_flow.typing import Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
-from roseau.load_flow.utils import BranchType
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +25,7 @@ class Switch(AbstractBranch):
         :doc:`Switch model documentation </models/Switch>`
     """
 
-    branch_type = BranchType.SWITCH
+    branch_type = "switch"
 
     allowed_phases = frozenset(Bus.allowed_phases | {"a", "b", "c", "n"})
     """The allowed phases for a switch are:
@@ -135,7 +134,7 @@ class Line(AbstractBranch):
         :doc:`Line documentation </models/Line/index>`
     """
 
-    branch_type = BranchType.LINE
+    branch_type = "line"
 
     allowed_phases = frozenset(Bus.allowed_phases | {"a", "b", "c", "n"})
     """The allowed phases for a line are:
