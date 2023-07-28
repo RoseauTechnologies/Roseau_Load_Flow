@@ -8,7 +8,6 @@ from roseau.load_flow.models.branches import AbstractBranch
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.transformers.parameters import TransformerParameters
 from roseau.load_flow.typing import Id, JsonDict
-from roseau.load_flow.utils import BranchType
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +21,7 @@ class Transformer(AbstractBranch):
         :doc:`Transformer models documentation </models/Transformer/index>`
     """
 
-    branch_type = BranchType.TRANSFORMER
+    branch_type = "transformer"
 
     allowed_phases = Bus.allowed_phases
     """The allowed phases for a transformer are:

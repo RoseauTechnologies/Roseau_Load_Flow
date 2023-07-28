@@ -10,7 +10,6 @@ from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import Element
 from roseau.load_flow.typing import Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
-from roseau.load_flow.utils import BranchType
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +23,7 @@ class AbstractBranch(Element):
         :doc:`Switch model documentation </models/Switch>`
     """
 
-    branch_type: BranchType
+    branch_type: str
 
     def __init__(
         self,
@@ -130,7 +129,7 @@ class AbstractBranch(Element):
     def to_dict(self) -> JsonDict:
         res = {
             "id": self.id,
-            "type": str(self.branch_type),
+            "type": self.branch_type,
             "phases1": self.phases1,
             "phases2": self.phases2,
             "bus1": self.bus1.id,
