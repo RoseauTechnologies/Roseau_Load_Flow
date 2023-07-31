@@ -1,5 +1,6 @@
 import json
 import logging
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
@@ -10,12 +11,8 @@ from roseau.load_flow.models import (
     AbstractLoad,
     Bus,
     Ground,
-    Line,
     LineParameters,
     PotentialRef,
-    PowerLoad,
-    Switch,
-    Transformer,
     TransformerParameters,
     VoltageSource,
 )
@@ -23,11 +20,15 @@ from roseau.load_flow.typing import StrPath
 from roseau.load_flow.units import Q_
 from roseau.load_flow.utils import LineModel
 
+if TYPE_CHECKING:
+    from roseau.load_flow.network import ElectricalNetwork
+
 logger = logging.getLogger(__name__)
 
 
 def network_from_dgs(  # noqa: C901
     filename: StrPath,
+    en_class: type["ElectricalNetwork"],
 ) -> tuple[
     dict[str, Bus],
     dict[str, AbstractBranch],
@@ -61,8 +62,8 @@ def network_from_dgs(  # noqa: C901
     ) = _read_dgs_json_file(filename=filename)
 
     # Ground and potential reference
-    ground = Ground("ground")
-    p_ref = PotentialRef("pref", element=ground)
+    ground = en_class._ground_class("ground")
+    p_ref = en_class._pref_class("pref", element=ground)
 
     grounds = {ground.id: ground}
     potential_refs = {p_ref.id: p_ref}
@@ -79,7 +80,7 @@ def network_from_dgs(  # noqa: C901
             msg = f"The Ph tech {ph_tech!r} for bus {bus_id!r} cannot be handled."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DGS_BAD_PHASE_TECHNOLOGY)
-        buses[bus_id] = Bus(id=bus_id, phases=phases)
+        buses[bus_id] = en_class._bus_class(id=bus_id, phases=phases)
 
     # Sources
     sources: dict[str, VoltageSource] = {}
@@ -91,23 +92,25 @@ def network_from_dgs(  # noqa: C901
         voltages = [un * tap, un * np.exp(-np.pi * 2 / 3 * 1j) * tap, un * np.exp(np.pi * 2 / 3 * 1j) * tap]
         source_bus = buses[bus_id]
 
-        sources[source_id] = VoltageSource(id=source_id, phases="abcn", bus=source_bus, voltages=voltages)
+        sources[source_id] = en_class._voltage_source_class(
+            id=source_id, phases="abcn", bus=source_bus, voltages=voltages
+        )
         source_bus._connect(ground)
 
     # LV loads
     loads: dict[str, AbstractLoad] = {}
     if elm_lod_lv is not None:
-        _generate_loads(elm_lod_lv, loads, buses, sta_cubic, 1e3, production=False)
+        _generate_loads(en_class, elm_lod_lv, loads, buses, sta_cubic, 1e3, production=False)
 
     # LV Production loads
     if elm_pv_sys is not None:
-        _generate_loads(elm_pv_sys, loads, buses, sta_cubic, 1e3, production=True)
+        _generate_loads(en_class, elm_pv_sys, loads, buses, sta_cubic, 1e3, production=True)
     if elm_gen_stat is not None:
-        _generate_loads(elm_gen_stat, loads, buses, sta_cubic, 1e3, production=True)
+        _generate_loads(en_class, elm_gen_stat, loads, buses, sta_cubic, 1e3, production=True)
 
     # MV loads
     if elm_lod_mv is not None:
-        _generate_loads(elm_lod_mv, loads, buses, sta_cubic, 1e6, production=False)
+        _generate_loads(en_class, elm_lod_mv, loads, buses, sta_cubic, 1e6, production=False)
 
     # Lines
     branches: dict[str, AbstractBranch] = {}
@@ -141,7 +144,7 @@ def network_from_dgs(  # noqa: C901
         for line_id in elm_lne.index:
             type_id = elm_lne.at[line_id, "typ_id"]  # id of the line type
             lp = lines_params_dict[type_id]
-            branches[line_id] = Line(
+            branches[line_id] = en_class._line_class(
                 id=line_id,
                 bus1=buses[sta_cubic.at[elm_lne.at[line_id, "bus1"], "cterm"]],
                 bus2=buses[sta_cubic.at[elm_lne.at[line_id, "bus2"], "cterm"]],
@@ -178,7 +181,7 @@ def network_from_dgs(  # noqa: C901
         for idx in elm_tr.index:
             type_id = elm_tr.at[idx, "typ_id"]  # id of the line type
             tap = 1.0 + elm_tr.at[idx, "nntap"] * transformers_tap[type_id] / 100
-            branches[idx] = Transformer(
+            branches[idx] = en_class._transformer_class(
                 id=idx,
                 bus1=buses[sta_cubic.at[elm_tr.at[idx, "bushv"], "cterm"]],
                 bus2=buses[sta_cubic.at[elm_tr.at[idx, "buslv"], "cterm"]],
@@ -192,7 +195,7 @@ def network_from_dgs(  # noqa: C901
         for switch_id in elm_coup.index:
             # TODO: use the detailed phase information instead of n
             n = elm_coup.at[switch_id, "nphase"] + elm_coup.at[switch_id, "nneutral"]
-            branches[switch_id] = Switch(
+            branches[switch_id] = en_class._switch_class(
                 id=switch_id,
                 phases="abc" if n == 3 else "abcn",
                 bus1=buses[sta_cubic.at[elm_coup.at[switch_id, "bus1"], "cterm"]],
@@ -314,6 +317,7 @@ def _read_dgs_json_file(filename: StrPath):
 
 
 def _generate_loads(
+    en_class: type["ElectricalNetwork"],
     elm_lod: pd.DataFrame,
     loads: dict[str, AbstractLoad],
     buses: dict[str, Bus],
@@ -357,7 +361,7 @@ def _generate_loads(
 
         # Balanced or Unbalanced
         s = [s_phase / 3, s_phase / 3, s_phase / 3] if sa == 0 and sb == 0 and sc == 0 else [sa, sb, sc]
-        loads[load_id] = PowerLoad(id=load_id, phases="abcn", bus=buses[bus_id], powers=s)
+        loads[load_id] = en_class._load_class._power_load_class(id=load_id, phases="abcn", bus=buses[bus_id], powers=s)
 
 
 def _compute_load_power(elm_lod: pd.DataFrame, load_id: str, suffix: str) -> complex:
