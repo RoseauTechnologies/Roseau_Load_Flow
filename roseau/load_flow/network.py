@@ -1175,7 +1175,7 @@ class ElectricalNetwork(JsonMixin):
         Returns:
             The constructed network.
         """
-        buses, branches, loads, sources, grounds, potential_refs = network_from_dgs(path)
+        buses, branches, loads, sources, grounds, potential_refs = network_from_dgs(path, en_class=cls)
         return cls(
             buses=buses,
             branches=branches,
