@@ -341,7 +341,7 @@ class Projection(JsonMixin):
     """
 
     DEFAULT_ALPHA: float = 1000.0
-    DEFAULT_EPSILON: float = 0.01
+    DEFAULT_EPSILON: float = 1e-8
 
     def __init__(self, type: ProjectionType, alpha: float = DEFAULT_ALPHA, epsilon: float = DEFAULT_EPSILON) -> None:
         """Projection constructor.
@@ -357,7 +357,7 @@ class Projection(JsonMixin):
                 This value is used to make soft sign function and to build a soft projection function.
 
             epsilon:
-                This value is used to make a smooth sqrt function. It is only used in the Euclidean projection.
+                This value is used to make a smooth sqrt function.
         """
         self.type = type
         self._alpha = alpha
