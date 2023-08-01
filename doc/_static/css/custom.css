@@ -45,3 +45,8 @@ dl dd:not(:last-child) {
     font-size: var(--toc-font-size);
     text-align: center;
 }
+
+/* Align the copy button in the middle of the first line */
+.highlight button.copybtn {
+    top: 0.25rem;
+}
