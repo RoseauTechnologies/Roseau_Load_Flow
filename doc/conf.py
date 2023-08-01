@@ -13,6 +13,7 @@
 #
 # import os
 # import sys
+from pathlib import Path
 
 # sys.path.insert(0, os.path.abspath("../roseau/"))
 
@@ -133,15 +134,11 @@ intersphinx_mapping = {
 
 # -- Options for intersphinx -------------------------------------------------
 nbsphinx_execute = "never"
-# Hide execution count https://nbsphinx.readthedocs.io/en/latest/custom-css.html#For-a-Single-Notebook
-nbsphinx_prolog = """
+nbsphinx_prolog = f"""
 .. raw:: html
 
     <style>
-        .nbinput .prompt,
-        .nboutput .prompt {
-            display: none;
-        }
+        {"        ".join(Path("_static/css/notebooks.css").read_text().splitlines(keepends=True))}
     </style>
 """
 
