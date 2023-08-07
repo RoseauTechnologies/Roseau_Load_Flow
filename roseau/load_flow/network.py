@@ -422,7 +422,7 @@ class ElectricalNetwork(JsonMixin):
 
         # Get the data
         data = {
-            "network": self.to_dict(),
+            "network": self.to_dict(geometry=False),
             "solver": {
                 "name": solver,
                 "params": solver_params,
@@ -1103,9 +1103,14 @@ class ElectricalNetwork(JsonMixin):
             potential_refs=p_refs,
         )
 
-    def to_dict(self) -> JsonDict:
-        """Convert the electrical network to a dictionary."""
-        return network_to_dict(self)
+    def to_dict(self, geometry: bool = True) -> JsonDict:
+        """Convert the electrical network to a dictionary.
+
+        Args:
+            geometry:
+                If False, the geometry will not be added to the result dictionary.
+        """
+        return network_to_dict(self, geometry)
 
     #
     # Results saving/loading

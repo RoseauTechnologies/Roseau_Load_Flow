@@ -132,12 +132,15 @@ def network_from_dict(
     return buses, branches_dict, loads, sources, grounds, potential_refs
 
 
-def network_to_dict(en: "ElectricalNetwork") -> JsonDict:
+def network_to_dict(en: "ElectricalNetwork", geometry: bool) -> JsonDict:
     """Return a dictionary of the current network data.
 
     Args:
         en:
             The electrical network.
+
+        geometry:
+            If False, the geometry will not be added to the result dictionary.
 
     Returns:
         The created dictionary.
@@ -152,7 +155,7 @@ def network_to_dict(en: "ElectricalNetwork") -> JsonDict:
     sources: list[JsonDict] = []
     short_circuits: list[JsonDict] = []
     for bus in en.buses.values():
-        buses.append(bus.to_dict())
+        buses.append(bus.to_dict(geometry=geometry))
         for element in bus._connected_elements:
             if isinstance(element, AbstractLoad):
                 assert element.bus is bus
@@ -168,7 +171,7 @@ def network_to_dict(en: "ElectricalNetwork") -> JsonDict:
     lines_params_dict: dict[Id, LineParameters] = {}
     transformers_params_dict: dict[Id, TransformerParameters] = {}
     for branch in en.branches.values():
-        branches.append(branch.to_dict())
+        branches.append(branch.to_dict(geometry=geometry))
         if isinstance(branch, Line):
             params_id = branch.parameters.id
             if params_id in lines_params_dict and branch.parameters != lines_params_dict[params_id]:

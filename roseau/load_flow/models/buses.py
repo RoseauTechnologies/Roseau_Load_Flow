@@ -138,11 +138,11 @@ class Bus(Element):
             potentials = [complex(v[0], v[1]) for v in potentials]
         return cls(id=data["id"], phases=data["phases"], geometry=geometry, potentials=potentials)
 
-    def to_dict(self) -> JsonDict:
+    def to_dict(self, geometry: bool = True) -> JsonDict:
         res = {"id": self.id, "phases": self.phases}
         if not np.allclose(self.potentials, 0):
             res["potentials"] = [[v.real, v.imag] for v in self._potentials]
-        if self.geometry is not None:
+        if self.geometry is not None and geometry:
             res["geometry"] = self.geometry.__geo_interface__
         return res
 

@@ -297,7 +297,7 @@ class TransformerParameters(Identifiable, JsonMixin):
             vsc=data["vsc"],
         )
 
-    def to_dict(self) -> JsonDict:
+    def to_dict(self, geometry: bool = True) -> JsonDict:
         return {
             "id": self.id,
             "sn": self._sn,
