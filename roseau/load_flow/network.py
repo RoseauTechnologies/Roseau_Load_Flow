@@ -1110,7 +1110,7 @@ class ElectricalNetwork(JsonMixin):
             geometry:
                 If False, the geometry will not be added to the result dictionary.
         """
-        return network_to_dict(self, geometry)
+        return network_to_dict(self, geometry=geometry)
 
     #
     # Results saving/loading
