@@ -58,7 +58,7 @@ def test_to_dict():
     assert "geometry" in res["branches"][0]
     assert "geometry" in res["branches"][1]
 
-    res = en.to_dict(geometry=False)
+    res = en.to_dict(include_geometry=False)
     assert "geometry" not in res["buses"][0]
     assert "geometry" not in res["buses"][1]
     assert "geometry" not in res["branches"][0]
@@ -109,7 +109,7 @@ def test_to_dict():
     assert "geometry" in res["branches"][0]
     assert "geometry" in res["branches"][1]
 
-    res = en.to_dict(geometry=False)
+    res = en.to_dict(include_geometry=False)
     assert "geometry" not in res["buses"][0]
     assert "geometry" not in res["buses"][1]
     assert "geometry" not in res["branches"][0]

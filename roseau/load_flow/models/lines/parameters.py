@@ -656,7 +656,7 @@ class LineParameters(Identifiable, JsonMixin):
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_MODEL)
 
-    def to_dict(self, geometry: bool = True) -> JsonDict:
+    def to_dict(self, include_geometry: bool = True) -> JsonDict:
         """Return the line parameters information as a dictionary format."""
         res = {
             "id": self.id,

@@ -50,11 +50,11 @@ class JsonMixin(metaclass=ABCMeta):
         return cls.from_dict(data=data)
 
     @abstractmethod
-    def to_dict(self, geometry: bool = True) -> JsonDict:
+    def to_dict(self, include_geometry: bool = True) -> JsonDict:
         """Return the element information as a dictionary format.
 
         Args:
-            geometry:
+            include_geometry:
                 If False, the geometry will not be added to the result dictionary.
         """
         raise NotImplementedError

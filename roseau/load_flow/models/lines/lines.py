@@ -358,8 +358,12 @@ class Line(AbstractBranch):
     #
     # Json Mixin interface
     #
-    def to_dict(self, geometry: bool = True) -> JsonDict:
-        res = {**super().to_dict(geometry=geometry), "length": self._length, "params_id": self.parameters.id}
+    def to_dict(self, include_geometry: bool = True) -> JsonDict:
+        res = {
+            **super().to_dict(include_geometry=include_geometry),
+            "length": self._length,
+            "params_id": self.parameters.id,
+        }
         if self.ground is not None:
             res["ground"] = self.ground.id
         return res

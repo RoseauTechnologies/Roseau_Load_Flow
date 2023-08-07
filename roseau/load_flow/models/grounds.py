@@ -97,7 +97,7 @@ class Ground(Element):
         self._connected_buses = data["buses"]
         return self
 
-    def to_dict(self, geometry: bool = True) -> JsonDict:
+    def to_dict(self, include_geometry: bool = True) -> JsonDict:
         # Shunt lines and potential references will have the ground in their dict not here.
         return {
             "id": self.id,

@@ -296,7 +296,7 @@ class Control(JsonMixin):
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_CONTROL_TYPE)
 
-    def to_dict(self, geometry: bool = True) -> JsonDict:
+    def to_dict(self, include_geometry: bool = True) -> JsonDict:
         if self.type == "constant":
             return {"type": "constant"}
         elif self.type == "p_max_u_production":
@@ -410,7 +410,7 @@ class Projection(JsonMixin):
         epsilon = data["epsilon"] if "epsilon" in data else cls.DEFAULT_EPSILON
         return cls(type=data["type"], alpha=alpha, epsilon=epsilon)
 
-    def to_dict(self, geometry: bool = True) -> JsonDict:
+    def to_dict(self, include_geometry: bool = True) -> JsonDict:
         return {"type": self.type, "alpha": self._alpha, "epsilon": self._epsilon}
 
     def _results_to_dict(self, warning: bool) -> NoReturn:
@@ -806,7 +806,7 @@ class FlexibleParameter(JsonMixin):
         projection = cls._projection_class.from_dict(data["projection"])
         return cls(control_p=control_p, control_q=control_q, projection=projection, s_max=data["s_max"])
 
-    def to_dict(self, geometry: bool = True) -> JsonDict:
+    def to_dict(self, include_geometry: bool = True) -> JsonDict:
         return {
             "control_p": self.control_p.to_dict(),
             "control_q": self.control_q.to_dict(),
