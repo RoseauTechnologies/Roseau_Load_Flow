@@ -130,8 +130,8 @@ class Transformer(AbstractBranch):
         self._parameters = value
         self._invalidate_network_results()
 
-    def to_dict(self) -> JsonDict:
-        return {**super().to_dict(), "params_id": self.parameters.id, "tap": self.tap}
+    def to_dict(self, include_geometry: bool = True) -> JsonDict:
+        return {**super().to_dict(include_geometry=include_geometry), "params_id": self.parameters.id, "tap": self.tap}
 
     def _compute_phases_three(
         self,

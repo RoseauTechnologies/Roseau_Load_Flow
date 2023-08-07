@@ -153,7 +153,7 @@ class VoltageSource(Element):
         voltages = [complex(v[0], v[1]) for v in data["voltages"]]
         return cls(data["id"], data["bus"], voltages=voltages, phases=data["phases"])
 
-    def to_dict(self) -> JsonDict:
+    def to_dict(self, include_geometry: bool = True) -> JsonDict:
         if self.bus is None:
             msg = f"The voltage source {self.id!r} is disconnected and cannot be used anymore."
             logger.error(msg)

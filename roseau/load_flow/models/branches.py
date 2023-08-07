@@ -126,7 +126,7 @@ class AbstractBranch(Element):
     def from_dict(cls, data: JsonDict) -> Self:
         return cls(**data)  # not used anymore
 
-    def to_dict(self) -> JsonDict:
+    def to_dict(self, include_geometry: bool = True) -> JsonDict:
         res = {
             "id": self.id,
             "type": self.branch_type,
@@ -135,7 +135,7 @@ class AbstractBranch(Element):
             "bus1": self.bus1.id,
             "bus2": self.bus2.id,
         }
-        if self.geometry is not None:
+        if self.geometry is not None and include_geometry:
             res["geometry"] = self.geometry.__geo_interface__
         return res
 

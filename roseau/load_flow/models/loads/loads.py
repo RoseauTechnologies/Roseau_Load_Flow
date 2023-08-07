@@ -308,7 +308,7 @@ class PowerLoad(AbstractLoad):
     #
     # Json Mixin interface
     #
-    def to_dict(self) -> JsonDict:
+    def to_dict(self, include_geometry: bool = True) -> JsonDict:
         if self.bus is None:
             msg = f"The load {self.id!r} is disconnected and cannot be used anymore."
             logger.error(msg)
@@ -383,7 +383,7 @@ class CurrentLoad(AbstractLoad):
         self._currents = self._validate_value(value)
         self._invalidate_network_results()
 
-    def to_dict(self) -> JsonDict:
+    def to_dict(self, include_geometry: bool = True) -> JsonDict:
         if self.bus is None:
             msg = f"The load {self.id!r} is disconnected and cannot be used anymore."
             logger.error(msg)
@@ -441,7 +441,7 @@ class ImpedanceLoad(AbstractLoad):
         self._impedances = self._validate_value(impedances)
         self._invalidate_network_results()
 
-    def to_dict(self) -> JsonDict:
+    def to_dict(self, include_geometry: bool = True) -> JsonDict:
         if self.bus is None:
             msg = f"The load {self.id!r} is disconnected and cannot be used anymore."
             logger.error(msg)

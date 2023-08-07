@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from shapely import Point
+from shapely import LineString, Point
 
 from roseau.load_flow import Line
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
@@ -23,8 +23,8 @@ def test_to_dict():
     ground = Ground("ground")
     vn = 400 / np.sqrt(3)
     voltages = [vn, vn * np.exp(-2 / 3 * np.pi * 1j), vn * np.exp(2 / 3 * np.pi * 1j)]
-    source_bus = Bus(id="source", phases="abcn")
-    load_bus = Bus(id="load bus", phases="abcn")
+    source_bus = Bus(id="source", phases="abcn", geometry=Point(0.0, 0.0))
+    load_bus = Bus(id="load bus", phases="abcn", geometry=Point(0.0, 1.0))
     ground.connect(load_bus)
     p_ref = PotentialRef("pref", element=ground)
     vs = VoltageSource("vs", source_bus, phases="abcn", voltages=voltages)
@@ -33,8 +33,9 @@ def test_to_dict():
     lp1 = LineParameters("test", z_line=np.eye(4, dtype=complex), y_shunt=np.eye(4, dtype=complex))
     lp2 = LineParameters("test", z_line=np.eye(4, dtype=complex), y_shunt=np.eye(4, dtype=complex) * 1.1)
 
-    line1 = Line("line1", source_bus, load_bus, phases="abcn", ground=ground, parameters=lp1, length=10)
-    line2 = Line("line2", source_bus, load_bus, phases="abcn", ground=ground, parameters=lp2, length=10)
+    geom = LineString([(0.0, 0.0), (0.0, 1.0)])
+    line1 = Line("line1", source_bus, load_bus, phases="abcn", ground=ground, parameters=lp1, length=10, geometry=geom)
+    line2 = Line("line2", source_bus, load_bus, phases="abcn", ground=ground, parameters=lp2, length=10, geometry=geom)
     en = ElectricalNetwork(
         buses=[source_bus, load_bus],
         branches=[line1, line2],
@@ -51,14 +52,25 @@ def test_to_dict():
     # Same id, same line parameters -> ok
     lp2 = LineParameters("test", z_line=np.eye(4, dtype=complex), y_shunt=np.eye(4, dtype=complex))
     line2.parameters = lp2
-    en.to_dict()
+    res = en.to_dict()
+    assert "geometry" in res["buses"][0]
+    assert "geometry" in res["buses"][1]
+    assert "geometry" in res["branches"][0]
+    assert "geometry" in res["branches"][1]
+
+    res = en.to_dict(include_geometry=False)
+    assert "geometry" not in res["buses"][0]
+    assert "geometry" not in res["buses"][1]
+    assert "geometry" not in res["branches"][0]
+    assert "geometry" not in res["branches"][1]
 
     # Same id, different transformer parameters -> fail
     ground = Ground("ground")
     vn = 400 / np.sqrt(3)
     voltages = [vn, vn * np.exp(-2 / 3 * np.pi * 1j), vn * np.exp(2 / 3 * np.pi * 1j)]
-    source_bus = Bus(id="source", phases="abcn")
-    load_bus = Bus(id="load bus", phases="abcn")
+    geom = Point(0.0, 0.0)
+    source_bus = Bus(id="source", phases="abcn", geometry=geom)
+    load_bus = Bus(id="load bus", phases="abcn", geometry=geom)
     ground.connect(load_bus)
     ground.connect(source_bus)
     p_ref = PotentialRef("pref", element=ground)
@@ -71,8 +83,8 @@ def test_to_dict():
     tp2 = TransformerParameters(
         "t", type="Dyn11", uhv=20000, ulv=400, sn=200 * 1e3, p0=460, i0=2.3 / 100, psc=2350, vsc=4 / 100
     )
-    transformer1 = Transformer(id="Transformer1", bus1=source_bus, bus2=load_bus, parameters=tp1)
-    transformer2 = Transformer(id="Transformer2", bus1=source_bus, bus2=load_bus, parameters=tp2)
+    transformer1 = Transformer(id="Transformer1", bus1=source_bus, bus2=load_bus, parameters=tp1, geometry=geom)
+    transformer2 = Transformer(id="Transformer2", bus1=source_bus, bus2=load_bus, parameters=tp2, geometry=geom)
     en = ElectricalNetwork(
         buses=[source_bus, load_bus],
         branches=[transformer1, transformer2],
@@ -91,7 +103,17 @@ def test_to_dict():
         "t", type="Dyn11", uhv=20000, ulv=400, sn=160 * 1e3, p0=460, i0=2.3 / 100, psc=2350, vsc=4 / 100
     )
     transformer2.parameters = tp2
-    en.to_dict()
+    res = en.to_dict()
+    assert "geometry" in res["buses"][0]
+    assert "geometry" in res["buses"][1]
+    assert "geometry" in res["branches"][0]
+    assert "geometry" in res["branches"][1]
+
+    res = en.to_dict(include_geometry=False)
+    assert "geometry" not in res["buses"][0]
+    assert "geometry" not in res["buses"][1]
+    assert "geometry" not in res["branches"][0]
+    assert "geometry" not in res["branches"][1]
 
 
 def test_v0_to_v1_converter(monkeypatch):
