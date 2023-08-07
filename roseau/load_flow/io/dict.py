@@ -140,7 +140,7 @@ def network_to_dict(en: "ElectricalNetwork", include_geometry: bool) -> JsonDict
             The electrical network.
 
         include_geometry:
-            If False, the geometry will not be added to the result dictionary.
+            If False, the geometry will not be added to the network dictionary.
 
     Returns:
         The created dictionary.

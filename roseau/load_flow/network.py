@@ -1108,7 +1108,7 @@ class ElectricalNetwork(JsonMixin):
 
         Args:
             include_geometry:
-                If False, the geometry will not be added to the result dictionary.
+                If False, the geometry will not be added to the network dictionary.
         """
         return network_to_dict(self, include_geometry=include_geometry)
 
