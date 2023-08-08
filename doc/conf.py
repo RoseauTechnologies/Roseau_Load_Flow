@@ -49,6 +49,8 @@ myst_enable_extensions = ["deflist", "smartquotes", "replacements", "dollarmath"
 add_module_names = False
 napoleon_numpy_docstring = False
 python_use_unqualified_type_names = True
+copybutton_exclude = ".linenos, .gp, .go"
+copybutton_copy_empty_lines = False
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
