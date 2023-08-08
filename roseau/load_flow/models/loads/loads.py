@@ -122,6 +122,7 @@ class AbstractLoad(Element, ABC):
         return np.asarray(value, dtype=complex)
 
     def _res_potentials_getter(self, warning: bool) -> np.ndarray:
+        self._raise_disconnected_error()
         return self.bus._get_potentials_of(self.phases, warning)
 
     @property
@@ -158,6 +159,13 @@ class AbstractLoad(Element, ABC):
         """Disconnect this load from the network. It cannot be used afterwards."""
         self._disconnect()
         self.bus = None
+
+    def _raise_disconnected_error(self) -> None:
+        """Raise an error if the load is disconnected."""
+        if self.bus is None:
+            msg = f"The load {self.id!r} is disconnected and cannot be used anymore."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DISCONNECTED_ELEMENT)
 
     #
     # Json Mixin interface
@@ -309,10 +317,7 @@ class PowerLoad(AbstractLoad):
     # Json Mixin interface
     #
     def to_dict(self, include_geometry: bool = True) -> JsonDict:
-        if self.bus is None:
-            msg = f"The load {self.id!r} is disconnected and cannot be used anymore."
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DISCONNECTED_ELEMENT)
+        self._raise_disconnected_error()
         res = {
             "id": self.id,
             "bus": self.bus.id,
@@ -384,10 +389,7 @@ class CurrentLoad(AbstractLoad):
         self._invalidate_network_results()
 
     def to_dict(self, include_geometry: bool = True) -> JsonDict:
-        if self.bus is None:
-            msg = f"The load {self.id!r} is disconnected and cannot be used anymore."
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DISCONNECTED_ELEMENT)
+        self._raise_disconnected_error()
         return {
             "id": self.id,
             "bus": self.bus.id,
@@ -442,10 +444,7 @@ class ImpedanceLoad(AbstractLoad):
         self._invalidate_network_results()
 
     def to_dict(self, include_geometry: bool = True) -> JsonDict:
-        if self.bus is None:
-            msg = f"The load {self.id!r} is disconnected and cannot be used anymore."
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DISCONNECTED_ELEMENT)
+        self._raise_disconnected_error()
         return {
             "id": self.id,
             "bus": self.bus.id,

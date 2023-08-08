@@ -4,6 +4,8 @@
 
 **In development**
 
+* [PR113](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/113) Raise an error when accessing the results of
+  disconnected elements.
 * [PR112](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/112) Make the geometry serialization optional.
 * [PR106](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/106) Improvements for non-euclidean projections.
 * [PR104](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/104) Remove `roseau.load_flow.utils.BranchType`
@@ -14,14 +16,14 @@
 * [GH100](https://github.com/RoseauTechnologies/Roseau_Load_Flow/issues/100) Fix the `Yz` transformers
 * [PR97](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/97) Add the model section to the documentation
 * [PR96](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/96)
-  * Add single-phase transformer
-  * Add center-tapped transformer
-  * Remove the `TransformerType` enumeration
+    * Add single-phase transformer
+    * Add center-tapped transformer
+    * Remove the `TransformerType` enumeration
 * [PR93](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/93) Add short circuit computation
 * [PR92](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/92)
-  * Add the changelog in the documentation
-  *  Use NodeJs 20 in the Dockerfile
-  *  Correction of a dead link in the README
+    * Add the changelog in the documentation
+    * Use NodeJs 20 in the Dockerfile
+    * Correction of a dead link in the README
 
 ## Version 0.4.0
 
