@@ -74,10 +74,10 @@ class TransformerParameters(Identifiable, JsonMixin):
                 Current during off-load test (%)
 
             psc:
-                Losses during short circuit test (W)
+                Losses during short-circuit test (W)
 
             vsc:
-                Voltages on LV side during short circuit test (%)
+                Voltages on LV side during short-circuit test (%)
         """
         super().__init__(id)
         self._sn = sn
@@ -112,7 +112,7 @@ class TransformerParameters(Identifiable, JsonMixin):
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_PARAMETERS)
         if vsc > 1.0 or vsc < 0.0:
             msg = (
-                f"Transformer type {id!r} has the 'voltages on LV side during short circuit test' "
+                f"Transformer type {id!r} has the 'voltages on LV side during short-circuit test' "
                 f"vsc={vsc}. It is a percentage that should be between 0 and 1."
             )
             logger.error(msg)
@@ -179,13 +179,13 @@ class TransformerParameters(Identifiable, JsonMixin):
     @property
     @ureg_wraps("W", (None,), strict=False)
     def psc(self) -> Q_[float]:
-        """Losses during short circuit test (W)"""
+        """Losses during short-circuit test (W)"""
         return self._psc
 
     @property
     @ureg_wraps("", (None,), strict=False)
     def vsc(self) -> Q_[float]:
-        """Voltages on LV side during short circuit test (%)"""
+        """Voltages on LV side during short-circuit test (%)"""
         return self._vsc
 
     @classmethod
@@ -252,7 +252,7 @@ class TransformerParameters(Identifiable, JsonMixin):
         else:
             ym = 1 / r_iron
 
-        # Short circuit test
+        # Short-circuit test
         r2 = self._psc * (self._ulv / self._sn) ** 2
         l2_omega = np.sqrt((self._vsc * self._ulv**2 / self._sn) ** 2 - r2**2)
         z2 = r2 + 1j * l2_omega
@@ -293,7 +293,7 @@ class TransformerParameters(Identifiable, JsonMixin):
             sn=data["sn"],
             p0=data["p0"],  # Losses during off-load test (W)
             i0=data["i0"],
-            psc=data["psc"],  # Losses during short circuit test (W)
+            psc=data["psc"],  # Losses during short-circuit test (W)
             vsc=data["vsc"],
         )
 

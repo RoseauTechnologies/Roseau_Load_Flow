@@ -201,9 +201,9 @@ class Bus(Element):
 
     @property
     def short_circuits(self) -> list[dict[str, Any]]:
-        """Return the list of short circuits of this bus."""
+        """Return the list of short-circuits of this bus."""
         return self._short_circuits[:]  # return a copy as users should not modify the list directly
 
     def clear_short_circuits(self):
-        """Remove the short circuits."""
+        """Remove the short-circuits."""
         self._short_circuits = []

@@ -166,8 +166,8 @@ def network_from_dgs(  # noqa: C901
             ulv = Q_(typ_tr.at[idx, "utrn_l"], "kV")  # Phase-to-phase nominal voltages of the low voltages side (kV)
             i0 = Q_(typ_tr.at[idx, "curmg"] / 3, "percent")  # Current during off-load test (%)
             p0 = Q_(typ_tr.at[idx, "pfe"] / 3, "kW")  # Losses during off-load test (kW)
-            psc = Q_(typ_tr.at[idx, "pcutr"], "kW")  # Losses during short circuit test (kW)
-            vsc = Q_(typ_tr.at[idx, "uktr"], "percent")  # Voltages on LV side during short circuit test (%)
+            psc = Q_(typ_tr.at[idx, "pcutr"], "kW")  # Losses during short-circuit test (kW)
+            vsc = Q_(typ_tr.at[idx, "uktr"], "percent")  # Voltages on LV side during short-circuit test (%)
             # Windings of the transformer
             windings = f"{typ_tr.at[idx, 'tr2cn_h']}{typ_tr.at[idx, 'tr2cn_l']}{typ_tr.at[idx, 'nt2ag']}"
 

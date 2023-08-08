@@ -20,7 +20,7 @@
     * Add single-phase transformer
     * Add center-tapped transformer
     * Remove the `TransformerType` enumeration
-* [PR93](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/93) Add short circuit computation
+* [PR93](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/93) Add short-circuit computation
 * [PR92](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/92)
     * Add the changelog in the documentation
     * Use NodeJs 20 in the Dockerfile

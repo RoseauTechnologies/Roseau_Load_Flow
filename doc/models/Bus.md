@@ -50,7 +50,7 @@ plots of the results.
 ## Short-circuit
 
 The bus element can also be used to create a short-circuit in the network to perform
-[short circuit analysis](../notebooks/Short_Circuit.ipynb).
+[short-circuit analysis](../notebooks/Short_Circuit.ipynb).
 
 Here is an example of a simple short-circuit between two phases:
 
@@ -83,7 +83,7 @@ vs = VoltageSource(id="source", bus=bus1, voltages=voltages)
 # The neutral of the voltage source is fixed at potential 0
 pref = PotentialRef(id="pref", element=bus1, phase="n")
 
-# Create a short circuit on bus2 between phases "a" and "b"
+# Create a short-circuit on bus2 between phases "a" and "b"
 bus2.add_short_circuit("a", "b")
 
 # Create a network and solve a load flow
