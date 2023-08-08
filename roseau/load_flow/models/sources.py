@@ -118,6 +118,7 @@ class VoltageSource(Element):
         return self._res_currents_getter(warning=True)
 
     def _res_potentials_getter(self, warning: bool) -> np.ndarray:
+        self._raise_disconnected_error()
         return self.bus._get_potentials_of(self.phases, warning)
 
     @property
@@ -145,6 +146,13 @@ class VoltageSource(Element):
         self._disconnect()
         self.bus = None
 
+    def _raise_disconnected_error(self) -> None:
+        """Raise an error if the voltage source is disconnected."""
+        if self.bus is None:
+            msg = f"The voltage source {self.id!r} is disconnected and cannot be used anymore."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DISCONNECTED_ELEMENT)
+
     #
     # Json Mixin interface
     #
@@ -154,10 +162,7 @@ class VoltageSource(Element):
         return cls(data["id"], data["bus"], voltages=voltages, phases=data["phases"])
 
     def to_dict(self, include_geometry: bool = True) -> JsonDict:
-        if self.bus is None:
-            msg = f"The voltage source {self.id!r} is disconnected and cannot be used anymore."
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DISCONNECTED_ELEMENT)
+        self._raise_disconnected_error()
         return {
             "id": self.id,
             "bus": self.bus.id,
