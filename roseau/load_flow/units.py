@@ -33,9 +33,6 @@ else:
     Q_ = ureg.Quantity
     Q_.__class_getitem__ = lambda cls, *args: cls
 
-# Define the percent unit
-ureg.define("percent = 0.01 = %")
-
 
 def ureg_wraps(
     ret: Union[str, Unit, None, Iterable[Union[str, Unit, None]]],
