@@ -4,6 +4,7 @@
 
 **In development**
 
+* [PR114](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/114) Use Pint >=0.21 to have the percent unit.
 * [PR113](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/113) Raise an error when accessing the results of
   disconnected elements.
 * [PR112](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/112) Make the geometry serialization optional.
