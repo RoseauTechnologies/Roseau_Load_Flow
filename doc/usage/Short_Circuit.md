@@ -57,7 +57,7 @@ All the following tables are rounded to 2 decimals to be properly displayed.
 ```
 
 ```pycon
->>> auth=("username", "password")
+>>> auth = ("username", "password")
 >>> en.solve_load_flow(auth=auth)
 1
 >>> en.res_branches

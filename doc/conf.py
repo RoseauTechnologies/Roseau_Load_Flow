@@ -13,7 +13,6 @@
 #
 # import os
 # import sys
-from pathlib import Path
 
 # sys.path.insert(0, os.path.abspath("../roseau/"))
 
@@ -38,7 +37,6 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.napoleon",
     "sphinx.ext.intersphinx",
-    "nbsphinx",
     "autoapi.extension",
     "sphinx_copybutton",
     "sphinx_inline_tabs",
@@ -133,16 +131,6 @@ intersphinx_mapping = {
     "pint": ("https://pint.readthedocs.io/en/stable/", None),
     "typing_extensions": ("https://typing-extensions.readthedocs.io/en/stable/", None),
 }
-
-# -- Options for intersphinx -------------------------------------------------
-nbsphinx_execute = "never"
-nbsphinx_prolog = f"""
-.. raw:: html
-
-    <style>
-        {"        ".join(Path("_static/css/notebooks.css").read_text().splitlines(keepends=True))}
-    </style>
-"""
 
 # Google Analytics
 googleanalytics_id = "G-Y9QSN78RFV"

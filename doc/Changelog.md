@@ -4,6 +4,10 @@
 
 **In development**
 
+* [PR115](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/115)
+    * Reformat the tutorials in the documentation
+    * Split the "Advanced" tutorial in several smaller files
+    * Remove the Docker installation option
 * [PR114](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/114) Use Pint >=0.21 to have the percent unit.
 * [PR113](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/113) Raise an error when accessing the results of
   disconnected elements.
