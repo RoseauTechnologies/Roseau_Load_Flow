@@ -2,7 +2,7 @@
 
 ## Creating a network
 
-Let's take the electrical network of the [Getting started](usage-getting-started).
+Let's take the electrical network of the [Getting started page](usage-getting-started).
 
 ```pycon
 >>> import numpy as np
@@ -29,7 +29,7 @@ Let's take the electrical network of the [Getting started](usage-getting-started
 ... )
 ```
 
-At this point, all the elements are connected but don't belong to a network:
+At this point, all the elements are connected, but they do not belong to a network:
 
 ```pycon
 >>> load.network
@@ -63,7 +63,7 @@ The load flow can be solved:
 
 In order to disconnect an element from the network, the `disconnect` method is available.
 
-```{warning}
+```{note}
 The `disconnect` method is only available for loads and for voltage sources.
 ```
 
@@ -71,7 +71,7 @@ The `disconnect` method is only available for loads and for voltage sources.
 >>> load.disconnect()
 ```
 
-Now, the load does not belong any more to the network `en`. Symmetrically, the network doesn't have this load any more:
+Now, the load does not belong anymore to the network `en`. Symmetrically, the network doesn't have this load anymore:
 
 ```pycon
 >>> load.network
@@ -98,14 +98,13 @@ methods may raise errors.
 
 ## Connecting  an element
 
-The connection of an element to an existing network is automatically done when the elements are built. Let's create
-a new line and a new load at the end of this line.
+Let's create a new line and a new load at the end of this line.
 
 The new bus and the new load are created first.
 
 ```pycon
 >>> new_bus = Bus(id="new_bus", phases="abcn")
->>> new_load = PowerLoad(id="new_load", bus=new_bus, phases="an", powers=[6e3]) #W
+>>> new_load = PowerLoad(id="new_load", bus=new_bus, phases="an", powers=[6e3]) # W
 ```
 
 At this point, they don't belong to any network:

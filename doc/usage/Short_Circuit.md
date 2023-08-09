@@ -74,7 +74,7 @@ All the following tables are rounded to 2 decimals to be properly displayed.
 | line2     | c     |    -0.49-0.21j |                 0j |       14.9-126.71j |                      0j | -117.06+208.26j |   -120.25+224.73j |
 | line2     | n     |         0.1+0j |                 0j |         0.15-0.85j |                      0j |       1.63-8.2j |        4.88-24.6j |
 
-Looking at the line results of the second bus of the line "line2", which is "bus2" where we added the short-circuit,
+Looking at the line results of the second bus of the line `line2`, which is `bus2` where we added the short-circuit,
 one can notice that:
 
 * the potentials of phases "a" and "b" are equal;
@@ -143,7 +143,7 @@ between phase "a" and ground.
 |:----------|----------:|
 | gnd       |        0j |
 
-Here the potential at phase "a" of bus "bus2" is zero, equal to the ground potential. The sum of the currents in the
+Here the potential at phase "a" of bus `bus2` is zero, equal to the ground potential. The sum of the currents in the
 other phases is also zero indicating that the current of phase "a" went through the ground.
 
 ## Additional notes

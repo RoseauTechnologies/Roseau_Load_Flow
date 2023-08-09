@@ -34,17 +34,17 @@ The following is a summary of the available elements:
 * Loads:
   The ZIP load model is available via the following classes:
     * `ImpedanceLoad`: A constant impedance (Z) load: $S = |V|^2 \times \overline{Z}$, $|S|$ is proportional to $|V|^2$.
-    * `CurrentLoad` A constant impedance (I) load: $S = V \times \overline{I}$, $|S|$ is proportional to $|V|^1$.
+    * `CurrentLoad` A constant current (I) load: $S = V \times \overline{I}$, $|S|$ is proportional to $|V|^1$.
     * `PowerLoad`: A constant power (P) load: $S = \mathrm{constant}$, $|S|$ is proportional to $|V|^0$.
 
   A power load can be made flexible (controllable) by using the following class:
     * `FlexibleParameter`: This object defines the parameters of the flexible load's control (Maximum power, projection,
       type, etc.)
 
-  Note that flexible loads are an [advanced](usage-flexible-loads) feature that most users don't need.
+  Note that flexible loads are an advanced feature that most users don't need. They are explained in details [here](usage-flexible-loads).
 
 * Sources:
-    * `VoltageSource`: A voltage source has a constant voltage and an infinite power source.
+    * `VoltageSource`: Represents an infinite power source with a constant voltage.
 
 * Others:
     * `Ground`: A ground acts as a perfect conductor. If two elements are connected to the ground, the potentials at the
@@ -109,7 +109,7 @@ for the load flow resolution to be well-defined. A network MUST have one and onl
 reference per a galvanically isolated section.
 ```
 
-```{note}
+```{tip}
 The `Ground` element is not required in this simple network as it is connected to a single
 element. No current will flow through the ground and no two points in the network will be forced
 to have the same potential. In this scenario you are allowed to define the potential reference
@@ -130,7 +130,7 @@ automatically included into the network.
 ## Solving a load flow
 
 An authentication is required. Please contact us at contact@roseautechnologies.com to get the necessary credentials.
-Then, the load flow can be solved by requesting our server (requires Internet access).
+Then, the load flow can be solved by requesting our server **(requires Internet access)**.
 
 ```{note}
 The server takes some time to warm up the first time it is requested. Subsequent requests will execute faster.
@@ -142,8 +142,8 @@ The server takes some time to warm up the first time it is requested. Subsequent
 2
 ```
 
-It returns the number of iterations performed by the *Newton-Raphson* solver. Here, 2. To have some additional results
-regarding the convergence, the field `res_info` is available in the network.
+It returns the number of iterations performed by the *Newton-Raphson* solver, here *2*. More information about the
+load flow resolution is available via the `res_info` attribute.
 
 ```pycon
 >>> en.res_info
@@ -205,17 +205,17 @@ The results returned by the `res_` properties are also `Quantity` objects.
 The available results depend on the type of element. The following table summarizes the available
 results for each element type:
 
-| Element type                                | Available results                                                                                                                       |
-|---------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------|
-| `Bus`                                       | `res_potentials`, `res_voltages`                                                                                                        |
+| Element type                                | Available results                                                                                                                      |
+|---------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------|
+| `Bus`                                       | `res_potentials`, `res_voltages`                                                                                                       |
 | `Line`                                      | `res_currents`, `res_powers`, `res_potentials`, `res_voltages`, `res_series_power_losses`, `res_shunt_power_losses`, `res_power_losses` |
-| `Transformer`, `Switch`                     | `res_currents`, `res_powers`, `res_potentials`, `res_voltages`                                                                          |
-| `ImpedanceLoad`, `CurrentLoad`, `PowerLoad` | `res_currents`, `res_powers`, `res_potentials`, `res_voltages`, `res_flexible_powers`[^**]                                              |
-| `VoltageSource`                             | `res_currents`, `res_powers`, `res_potentials`, `res_voltages`                                                                          |
-| `Ground`                                    | `res_potential`                                                                                                                         |
-| `PotentialRef`                              | `res_current` *(Always zero for a successful load flow)*                                                                                |
+| `Transformer`, `Switch`                     | `res_currents`, `res_powers`, `res_potentials`, `res_voltages`                                                                         |
+| `ImpedanceLoad`, `CurrentLoad`, `PowerLoad` | `res_currents`, `res_powers`, `res_potentials`, `res_voltages`, `res_flexible_powers`&#8270;                                       |
+| `VoltageSource`                             | `res_currents`, `res_powers`, `res_potentials`, `res_voltages`                                                                         |
+| `Ground`                                    | `res_potential`                                                                                                                        |
+| `PotentialRef`                              | `res_current` *(Always zero for a successful load flow)*                                                                               |
 
-[^**]: `res_flexible_powers` is only available for flexible loads (`PowerLoad`s with `flexible_params`). You'll see
+&#8270;: `res_flexible_powers` is only available for flexible loads (`PowerLoad`s with `flexible_params`). You'll see
 an example on the usage of flexible loads in the *Flexible Loads* section.
 
 ### Getting results per object

@@ -175,16 +175,18 @@ array([243.08225748, 232.46046866, 233.62854073]) <Unit('volt')>
 ```
 
 The actually produced power of the flexible load is a result of the computation and can be
-accessed using the `res_flexible_powers` property of the load. Here, one can note that:
-
-* The active power for the phase `'a'` is negative meaning production;
-* The actual value of this active power is lower that the one requested as the control was activated;
-* The power for phases `'b'` and `'c'` is 0 VA as expected.
+accessed using the `res_flexible_powers` property of the load.
 
 ```pycon
 >>> flexible_load.res_flexible_powers
 array([-2757.8035271+0.j, 0.+0.j, 0.+0.j]) <Unit('volt_ampere')>
 ```
+
+Here, one can note that:
+
+* The active power for the phase `'a'` is negative meaning production;
+* The actual value of this active power is lower that the one requested as the control was activated;
+* The power for phases `'b'` and `'c'` is 0 VA as expected.
 
 ## $PQ(U)$ control
 
@@ -229,14 +231,11 @@ The load flow can be solved again.
 6
 >>> abs(load_bus3.res_voltages)
 array([239.5133208 , 230.2108052 , 237.59184615]) <Unit('volt')>
+>>> flexible_load.res_flexible_powers
+array([-2566.23768012+3068.29336425j, 0.+0.j, 0.+0.j]) <Unit('volt_ampere')>
 ```
 
 One can note that this time, the phase `'a'` consumes reactive power to limit the voltage rise in
 the network. Moreover, the magnitude of the power on phase `'a'` is approximately $4 kVA$ which is
 the maximum allowed apparent power for `load3`. In order to maintain this maximum, a
 [Euclidean projection](models-flexible_load-projection) has been used.
-
-```pycon
->>> flexible_load.res_flexible_powers
-array([-2566.23768012+3068.29336425j, 0.+0.j, 0.+0.j]) <Unit('volt_ampere')>
-```
