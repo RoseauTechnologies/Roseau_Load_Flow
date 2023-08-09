@@ -115,7 +115,7 @@
         to[short, -] (\xfive, \yfour)%
         to[L, mirror, name=y] (\xstep, \yfour)%
         to[short, -] (\xfive, \ytwo);%
-        \draw[red, text=black] (\xzero, \yseven) node [left] {b}%
+        \draw[red, text=black] (\xzero, \yseven) node [left] {c}%
         to[short, -] (\xzero, \yeight)%
         to[short, -] (\xfive, \yeight)%
         to[short, -] (\xfive, \yseven)%
@@ -188,7 +188,7 @@
         to[L, name=y1] (\xtwo, \yfour)%
         to[short, -] (\xfive, \yone)%
         to[L, mirror, name=x2] (\xfour, \yone);%
-        \draw[RoseauGreen, text=black] (\xzero, \yseven) node[left] {b} %
+        \draw[RoseauGreen, text=black] (\xzero, \yseven) node[left] {c} %
         to[L, name=z1] (\xtwo, \yseven)%
         to[short, -] (\xfive, \yfour)%
         to[L, mirror, name=y2] (\xfour, \yfour);%

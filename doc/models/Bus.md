@@ -50,7 +50,7 @@ plots of the results.
 ## Short-circuit
 
 The bus element can also be used to create a short-circuit in the network to perform
-[short-circuit analysis](../notebooks/Short_Circuit.ipynb).
+[short-circuit analysis](../usage/Short_Circuit.md).
 
 Here is an example of a simple short-circuit between two phases:
 

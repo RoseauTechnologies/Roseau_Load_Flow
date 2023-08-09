@@ -23,7 +23,7 @@
 * [PR96](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/96)
     * Add single-phase transformer
     * Add center-tapped transformer
-    * Remove the `TransformerType` enumeration
+    * Remove the `roseau.load_flow.utils.TransformerType` enumeration
 * [PR93](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/93) Add short-circuit computation
 * [PR92](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/92)
     * Add the changelog in the documentation

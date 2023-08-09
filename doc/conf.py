@@ -17,7 +17,6 @@
 # sys.path.insert(0, os.path.abspath("../roseau/"))
 
 # -- Project information -----------------------------------------------------
-
 project = "Roseau Load Flow"
 copyright = "2022--2023, Roseau Technologies SAS"
 # author = "Benoît Vinot"
@@ -47,8 +46,6 @@ myst_enable_extensions = ["deflist", "smartquotes", "replacements", "dollarmath"
 add_module_names = False
 napoleon_numpy_docstring = False
 python_use_unqualified_type_names = True
-copybutton_exclude = ".linenos, .gp, .go"
-copybutton_copy_empty_lines = False
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
@@ -132,8 +129,12 @@ intersphinx_mapping = {
     "typing_extensions": ("https://typing-extensions.readthedocs.io/en/stable/", None),
 }
 
-# Google Analytics
+# -- Options for sphinx_copybutton -------------------------------------------
+copybutton_exclude = ".linenos, .gp, .go"
+copybutton_copy_empty_lines = False
+
+# -- Options for sphinxcontrib.googleanalytics -------------------------------
 googleanalytics_id = "G-Y9QSN78RFV"
 
-# Bibtex
+# -- Options for sphinxcontrib.bibtex ----------------------------------------
 bibtex_bibfiles = ["Bibliography.bib"]
