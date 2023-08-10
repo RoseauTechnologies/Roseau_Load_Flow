@@ -4,6 +4,10 @@
 
 **In development**
 
+* [PR115](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/115)
+    * Reformat the tutorials in the documentation
+    * Split the "Advanced" tutorial in several smaller files
+    * Remove the Docker installation option
 * [PR114](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/114) Use Pint >=0.21 to have the percent unit.
 * [PR113](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/113) Raise an error when accessing the results of
   disconnected elements.
@@ -19,8 +23,8 @@
 * [PR96](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/96)
     * Add single-phase transformer
     * Add center-tapped transformer
-    * Remove the `TransformerType` enumeration
-* [PR93](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/93) Add short circuit computation
+    * Remove the `roseau.load_flow.utils.TransformerType` enumeration
+* [PR93](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/93) Add short-circuit computation
 * [PR92](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/92)
     * Add the changelog in the documentation
     * Use NodeJs 20 in the Dockerfile

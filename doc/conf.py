@@ -13,12 +13,10 @@
 #
 # import os
 # import sys
-from pathlib import Path
 
 # sys.path.insert(0, os.path.abspath("../roseau/"))
 
 # -- Project information -----------------------------------------------------
-
 project = "Roseau Load Flow"
 copyright = "2022--2023, Roseau Technologies SAS"
 # author = "Benoît Vinot"
@@ -38,7 +36,6 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.napoleon",
     "sphinx.ext.intersphinx",
-    "nbsphinx",
     "autoapi.extension",
     "sphinx_copybutton",
     "sphinx_inline_tabs",
@@ -132,18 +129,12 @@ intersphinx_mapping = {
     "typing_extensions": ("https://typing-extensions.readthedocs.io/en/stable/", None),
 }
 
-# -- Options for intersphinx -------------------------------------------------
-nbsphinx_execute = "never"
-nbsphinx_prolog = f"""
-.. raw:: html
+# -- Options for sphinx_copybutton -------------------------------------------
+copybutton_exclude = ".linenos, .gp, .go"
+copybutton_copy_empty_lines = False
 
-    <style>
-        {"        ".join(Path("_static/css/notebooks.css").read_text().splitlines(keepends=True))}
-    </style>
-"""
-
-# Google Analytics
+# -- Options for sphinxcontrib.googleanalytics -------------------------------
 googleanalytics_id = "G-Y9QSN78RFV"
 
-# Bibtex
+# -- Options for sphinxcontrib.bibtex ----------------------------------------
 bibtex_bibfiles = ["Bibliography.bib"]

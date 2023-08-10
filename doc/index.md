@@ -29,7 +29,7 @@ The following tutorials are available to help you get started:
 maxdepth: 2
 caption: Usage
 ---
-notebooks/index
+usage/index
 ```
 
 ## Models

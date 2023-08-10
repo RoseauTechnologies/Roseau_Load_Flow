@@ -40,7 +40,7 @@ logger = logging.getLogger(__name__)
 # Phases dtype for all data frames
 _PHASE_DTYPE = pd.CategoricalDtype(categories=["a", "b", "c", "n"], ordered=True)
 # Phases dtype for voltage data frames
-_VOLTAGE_PHASES_DTYPE = pd.CategoricalDtype(["an", "bn", "cn", "ab", "bc", "ca"], ordered=True)
+_VOLTAGE_PHASES_DTYPE = pd.CategoricalDtype(categories=["an", "bn", "cn", "ab", "bc", "ca"], ordered=True)
 
 _T = TypeVar("_T", bound=Element)
 
@@ -353,7 +353,7 @@ class ElectricalNetwork(JsonMixin):
 
     @property
     def short_circuits_frame(self) -> pd.DataFrame:
-        """The short circuits of the network as a dataframe."""
+        """The short-circuits of the network as a dataframe."""
         return pd.DataFrame.from_records(
             data=[
                 (bus.id, bus.phases, "".join(sorted(sc["phases"])), sc["ground"])
@@ -921,7 +921,7 @@ class ElectricalNetwork(JsonMixin):
         return res_df
 
     def clear_short_circuits(self):
-        """Remove the short circuits of all the buses."""
+        """Remove the short-circuits of all the buses."""
         for bus in self.buses.values():
             bus.clear_short_circuits()
 

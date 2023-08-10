@@ -182,7 +182,7 @@ def test_transformer_parameters():
     }
     with pytest.raises(RoseauLoadFlowException) as e:
         TransformerParameters.from_dict(data)
-    assert "has the 'voltages on LV side during short circuit test' vsc" in e.value.msg
+    assert "has the 'voltages on LV side during short-circuit test' vsc" in e.value.msg
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_PARAMETERS
 
     # Bad l2_omega
