@@ -17,11 +17,9 @@ Let's take the electrical network of the [Getting started page](usage-getting-st
 
 >>> un = 400 / np.sqrt(3)
 ... source_voltages = [un, un * np.exp(-2j * np.pi / 3), un * np.exp(2j * np.pi / 3)]
-... vs = VoltageSource(id="vs", bus=source_bus, phases="abcn", voltages=source_voltages)
+... vs = VoltageSource(id="vs", bus=source_bus, voltages=source_voltages)
 
->>> load = PowerLoad(
-...     id="load", bus=load_bus, phases="abcn", powers=[10e3 + 0j, 10e3, 10e3]
-... )  # VA
+>>> load = PowerLoad(id="load", bus=load_bus, powers=[10e3 + 0j, 10e3, 10e3])  # VA
 
 >>> lp = LineParameters("lp", z_line=(0.1 + 0.0j) * np.eye(4, dtype=complex))
 ... line = Line(

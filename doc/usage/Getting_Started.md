@@ -17,7 +17,7 @@ In this tutorial you will learn how to:
 
 ## Creating a network
 
-An electrical network can be built by assembling basic elements provided in [roseau.load_flow.models][api-models].
+An electrical network can be built by assembling basic elements described in the [Models section](../models/index.md).
 The following is a summary of the available elements:
 
 * Buses:
@@ -52,7 +52,7 @@ The following is a summary of the available elements:
     * `PotentialRef`: A potential reference sets the reference of potentials in the network. It can be connected to
       buses or grounds.
 
-For a more detailed description of the elements, please refer to the [API reference][api-models].
+For a more detailed description of the elements, please refer to the [API reference](../autoapi/roseau/load_flow/models/index).
 
 Let's use some of these elements to build the following network with a voltage source, a simple
 line and a constant power load. This network is a low voltage network (three-phase + neutral wire).
@@ -79,19 +79,15 @@ It leads to the following code
 ... # Volts (phase-to-neutral because the source is connected to the neutral)
 ... un = 400 / np.sqrt(3)
 ... source_voltages = [un, un * np.exp(-2j * np.pi / 3), un * np.exp(2j * np.pi / 3)]
-... vs = VoltageSource(id="vs", bus=source_bus, phases="abcn", voltages=source_voltages)
+... vs = VoltageSource(id="vs", bus=source_bus, voltages=source_voltages)
 
 >>> # Add a load at the second bus
-... load = PowerLoad(
-...     id="load", bus=load_bus, phases="abcn", powers=[10e3 + 0j, 10e3, 10e3]
-... )  # VA
+... load = PowerLoad(id="load", bus=load_bus, powers=[10e3 + 0j, 10e3, 10e3])  # VA
 
 >>> # Add a LV line between the source bus and the load bus
 ... # R = 0.1 Ohm/km, X = 0
 ... lp = LineParameters("lp", z_line=(0.1 + 0.0j) * np.eye(4, dtype=complex))
-... line = Line(
-...     id="line", bus1=source_bus, bus2=load_bus, phases="abcn", parameters=lp, length=2.0
-... )
+... line = Line(id="line", bus1=source_bus, bus2=load_bus, parameters=lp, length=2.0)
 ```
 
 At this point, all the basic elements of the network have been defined and connected. Now,
@@ -171,6 +167,8 @@ The available values are:
 * `iterations`: the number of iterations made by the solver.
 * `residual`: the precision which was reached by the solver (lower than the tolerance if successful solve).
 
+More details on solvers are given in the [Solvers page](../Solvers.md).
+
 (gs-getting-results)=
 
 ## Getting the results
@@ -205,15 +203,15 @@ The results returned by the `res_` properties are also `Quantity` objects.
 The available results depend on the type of element. The following table summarizes the available
 results for each element type:
 
-| Element type                                | Available results                                                                                                                      |
-|---------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------|
-| `Bus`                                       | `res_potentials`, `res_voltages`                                                                                                       |
+| Element type                                | Available results                                                                                                                       |
+|---------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------|
+| `Bus`                                       | `res_potentials`, `res_voltages`                                                                                                        |
 | `Line`                                      | `res_currents`, `res_powers`, `res_potentials`, `res_voltages`, `res_series_power_losses`, `res_shunt_power_losses`, `res_power_losses` |
-| `Transformer`, `Switch`                     | `res_currents`, `res_powers`, `res_potentials`, `res_voltages`                                                                         |
-| `ImpedanceLoad`, `CurrentLoad`, `PowerLoad` | `res_currents`, `res_powers`, `res_potentials`, `res_voltages`, `res_flexible_powers`&#8270;                                       |
-| `VoltageSource`                             | `res_currents`, `res_powers`, `res_potentials`, `res_voltages`                                                                         |
-| `Ground`                                    | `res_potential`                                                                                                                        |
-| `PotentialRef`                              | `res_current` *(Always zero for a successful load flow)*                                                                               |
+| `Transformer`, `Switch`                     | `res_currents`, `res_powers`, `res_potentials`, `res_voltages`                                                                          |
+| `ImpedanceLoad`, `CurrentLoad`, `PowerLoad` | `res_currents`, `res_powers`, `res_potentials`, `res_voltages`, `res_flexible_powers`&#8270;                                            |
+| `VoltageSource`                             | `res_currents`, `res_powers`, `res_potentials`, `res_voltages`                                                                          |
+| `Ground`                                    | `res_potential`                                                                                                                         |
+| `PotentialRef`                              | `res_current` *(Always zero for a successful load flow)*                                                                                |
 
 &#8270;: `res_flexible_powers` is only available for flexible loads (`PowerLoad`s with `flexible_params`). You'll see
 an example on the usage of flexible loads in the *Flexible Loads* section.
@@ -471,5 +469,3 @@ the load flow can then be loaded using the `ElectricalNetwork.results_from_json`
 >>> en = ElectricalNetwork.from_json("my_network.json")
 >>> en.results_from_json("my_network_results.json")
 ```
-
-[api-models]: ../autoapi/roseau/load_flow/models/index
