@@ -28,6 +28,8 @@ start! Each network is given with its summer and winter load point. At *Roseau T
 the major part of the French medium and low voltage networks. For more information, please contact us at
 contact@roseautechnologies.com.
 
+![Catalogue of networks](https://github.com/RoseauTechnologies/Roseau_Load_Flow/blob/catalogues/doc/_static/Network/Catalogue.png?raw=True)
+
 # Bug reports / Feature requests #
 
 If you find a bug or have a feature request, please open an issue on

@@ -127,6 +127,7 @@ intersphinx_mapping = {
     "requests": ("https://requests.readthedocs.io/en/latest/", None),
     "pint": ("https://pint.readthedocs.io/en/stable/", None),
     "typing_extensions": ("https://typing-extensions.readthedocs.io/en/stable/", None),
+    "rich": ("https://rich.readthedocs.io/en/stable/", None),
 }
 
 # -- Options for sphinx_copybutton -------------------------------------------

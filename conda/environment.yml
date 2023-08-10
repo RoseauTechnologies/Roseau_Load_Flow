@@ -12,3 +12,4 @@ dependencies:
   - pint >=0.21.0
   - requests >=2.28.1
   - typing-extensions >=4.6.2
+  - rich >=13.5.2

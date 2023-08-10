@@ -11,4 +11,6 @@ Getting_Started
 Connecting_Elements
 Flexible_Loads
 Short_Circuit
+Catalogues
+Plotting
 ```

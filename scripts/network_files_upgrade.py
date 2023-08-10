@@ -6,7 +6,7 @@ from roseau.load_flow import ElectricalNetwork, RoseauLoadFlowException
 
 PROJECT_ROOT = Path(__file__).parent.parent
 TEST_DATA_DIR = PROJECT_ROOT / "roseau" / "load_flow" / "tests" / "data"
-DATA_DIR = PROJECT_ROOT / "data"
+DATA_DIR = PROJECT_ROOT / "roseau" / "load_flow" / "data" / "networks"
 
 
 def all_network_paths() -> Generator[Path, None, None]:

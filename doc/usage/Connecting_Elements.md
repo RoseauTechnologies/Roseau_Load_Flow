@@ -94,7 +94,7 @@ The load element `load` doesn't belong to a network and a part of its results is
 methods may raise errors.
 ```
 
-## Connecting  an element
+## Connecting an element
 
 Let's create a new line and a new load at the end of this line.
 

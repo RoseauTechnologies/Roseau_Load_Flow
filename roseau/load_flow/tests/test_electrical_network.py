@@ -1,4 +1,5 @@
 import itertools as it
+import re
 import warnings
 from contextlib import contextmanager
 from urllib.parse import urljoin
@@ -26,6 +27,7 @@ from roseau.load_flow.models import (
 )
 from roseau.load_flow.network import _PHASE_DTYPE, _VOLTAGE_PHASES_DTYPE, ElectricalNetwork
 from roseau.load_flow.units import Q_
+from roseau.load_flow.utils import console
 
 
 @pytest.fixture()
@@ -1367,3 +1369,135 @@ def test_short_circuits():
     assert bus.short_circuits
     en.clear_short_circuits()
     assert not bus.short_circuits
+
+
+def test_catalogue_data():
+    # The catalogue data path exists
+    catalogue_path = ElectricalNetwork.catalogue_path()
+    assert catalogue_path.exists()
+
+    # Read it and copy it
+    catalogue_data = ElectricalNetwork.catalogue_data().copy()
+
+    # Iterate over the folder and ensure that the elements are in the catalogue data
+    error_message = (
+        "Something changed in the network catalogue. Please regenerate the Catalogue.json file for the "
+        "network catalogues by using the python file `scripts/generate_network_catalogue_data.py`."
+    )
+    for p in catalogue_path.glob("*.json"):
+        if p.stem == "Catalogue":
+            continue
+
+        # Check that the network exists in the catalogue data
+        network_name, load_point_name = p.stem.split("_")
+        assert network_name in catalogue_data, error_message
+
+        # Check the counts
+        en = ElectricalNetwork.from_json(p)
+        c_data = catalogue_data[network_name]
+        assert len(c_data) == 7
+        assert c_data["nb_buses"] == len(en.buses)
+        assert c_data["nb_branches"] == len(en.branches)
+        assert c_data["nb_loads"] == len(en.loads)
+        assert c_data["nb_sources"] == len(en.sources)
+        assert c_data["nb_grounds"] == len(en.grounds)
+        assert c_data["nb_potential_refs"] == len(en.potential_refs)
+
+        # Check the load point
+        remaining_load_points: list[str] = c_data["load_points"]
+        assert load_point_name in remaining_load_points, error_message
+        remaining_load_points.remove(load_point_name)
+        if not remaining_load_points:
+            catalogue_data.pop(network_name)
+
+    # At the end of the process, the copy of the catalogue data should be empty
+    assert len(catalogue_data) == 0, error_message
+
+
+def test_from_catalogue():
+    # Unknown network name
+    with pytest.raises(RoseauLoadFlowException) as e:
+        ElectricalNetwork.from_catalogue(name="unknown", load_point_name="winter")
+    assert (
+        e.value.args[0]
+        == "No network matching the name 'unknown' has been found. Please look at the catalogue using the "
+        "`print_catalogue` class method."
+    )
+    assert e.value.args[1] == RoseauLoadFlowExceptionCode.CATALOGUE_NOT_FOUND
+
+    # Unknown load point name
+    with pytest.raises(RoseauLoadFlowException) as e:
+        ElectricalNetwork.from_catalogue(name="MVFeeder004", load_point_name="unknown")
+    assert (
+        e.value.args[0]
+        == "No load point matching the name 'unknown' has been found for the network 'MVFeeder004'. Available "
+        "load points are 'Summer', 'Winter'."
+    )
+    assert e.value.args[1] == RoseauLoadFlowExceptionCode.CATALOGUE_NOT_FOUND
+
+    # Several network name matched
+    with pytest.raises(RoseauLoadFlowException) as e:
+        ElectricalNetwork.from_catalogue(name="MVFeeder", load_point_name="winter")
+    assert e.value.args[0] == (
+        "Several networks matching the name 'MVFeeder' have been found: 'MVFeeder004', "
+        "'MVFeeder011', 'MVFeeder015', 'MVFeeder032', 'MVFeeder041', 'MVFeeder063', 'MVFeeder078', 'MVFeeder115', "
+        "'MVFeeder128', 'MVFeeder151', 'MVFeeder159', 'MVFeeder176', 'MVFeeder210', 'MVFeeder217', 'MVFeeder232',"
+        " 'MVFeeder251', 'MVFeeder290', 'MVFeeder312', 'MVFeeder320', 'MVFeeder339'."
+    )
+    assert e.value.args[1] == RoseauLoadFlowExceptionCode.CATALOGUE_SEVERAL_FOUND
+
+    # Several load point name matched
+    with pytest.raises(RoseauLoadFlowException) as e:
+        ElectricalNetwork.from_catalogue(name="MVFeeder004", load_point_name=r".*")
+    assert e.value.args[0] == (
+        "Several load points matching the name '.*' have been found for the network 'MVFeeder004': 'Summer', 'Winter'."
+    )
+    assert e.value.args[1] == RoseauLoadFlowExceptionCode.CATALOGUE_SEVERAL_FOUND
+
+    # Both known
+    ElectricalNetwork.from_catalogue(name="MVFeeder004", load_point_name="winter")
+
+
+def test_print_catalogue():
+    # Print the entire catalogue
+    with console.capture() as capture:
+        ElectricalNetwork.print_catalogue()
+    assert len(capture.get().split("\n")) == 88
+
+    # Filter on the network name
+    with console.capture() as capture:
+        ElectricalNetwork.print_catalogue(name="MV")
+    assert len(capture.get().split("\n")) == 48
+    with console.capture() as capture:
+        ElectricalNetwork.print_catalogue(name=re.compile(r"^MV"))
+    assert len(capture.get().split("\n")) == 48
+
+    # Filter on the load point name
+    with console.capture() as capture:
+        ElectricalNetwork.print_catalogue(load_point_name="winter")
+    assert len(capture.get().split("\n")) == 88
+    with console.capture() as capture:
+        ElectricalNetwork.print_catalogue(load_point_name=re.compile(r"^Winter"))
+    assert len(capture.get().split("\n")) == 88
+
+    # Filter on both
+    with console.capture() as capture:
+        ElectricalNetwork.print_catalogue(name="MV", load_point_name="winter")
+    assert len(capture.get().split("\n")) == 48
+    with console.capture() as capture:
+        ElectricalNetwork.print_catalogue(name="MV", load_point_name=re.compile(r"^Winter"))
+    assert len(capture.get().split("\n")) == 48
+    with console.capture() as capture:
+        ElectricalNetwork.print_catalogue(name=re.compile(r"^MV"), load_point_name="winter")
+    assert len(capture.get().split("\n")) == 48
+    with console.capture() as capture:
+        ElectricalNetwork.print_catalogue(name=re.compile(r"^MV"), load_point_name=re.compile(r"^Winter"))
+    assert len(capture.get().split("\n")) == 48
+
+    # Regexp error
+    with console.capture() as capture:
+        ElectricalNetwork.print_catalogue(name=r"^MV[0-")
+    assert len(capture.get().split("\n")) == 2
+    with console.capture() as capture:
+        ElectricalNetwork.print_catalogue(load_point_name=r"^winter[0-]")
+    assert len(capture.get().split("\n")) == 3

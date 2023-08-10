@@ -3,6 +3,7 @@ import logging
 import re
 from abc import ABCMeta, abstractmethod
 from pathlib import Path
+from typing import Any
 
 from typing_extensions import Self
 
@@ -140,3 +141,42 @@ class JsonMixin(metaclass=ABCMeta):
         """
         data = json.loads(Path(path).read_text())
         self.results_from_dict(data)
+
+
+class CatalogueMixin(metaclass=ABCMeta):
+    """A mixin class for objects which can be built from a catalogue. It adds the `from_catalogue` class method."""
+
+    @classmethod
+    @abstractmethod
+    def catalogue_path(cls) -> Path:
+        """Get the path to the catalogue."""
+        raise NotImplementedError
+
+    @classmethod
+    @abstractmethod
+    def catalogue_data(cls) -> Any:
+        """Get the catalogue data."""
+        raise NotImplementedError
+
+    @classmethod
+    @abstractmethod
+    def from_catalogue(cls, **kwargs) -> Self:
+        """Build an instance from the catalogue.
+
+        Keyword Args:
+            Arguments that can be used to select the options of the instance to create.
+
+        Returns:
+            The instance of the selected object.
+        """
+        raise NotImplementedError
+
+    @classmethod
+    @abstractmethod
+    def print_catalogue(cls, **kwargs) -> None:
+        """Print the catalogue.
+
+        Keyword Args:
+            Arguments that can be used to filter the printed part of the catalogue.
+        """
+        raise NotImplementedError
