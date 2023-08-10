@@ -2,11 +2,11 @@ name: Documentation
 
 on:
   push:
-    branches: [ "main", "develop" ]
+    branches: ["main", "develop"]
   workflow_dispatch:
     inputs:
       forceDeploy:
-        description: 'Deploy?'
+        description: "Deploy?"
         required: true
         default: false
         type: boolean

@@ -3,7 +3,7 @@
 They represent loads for which the power is considered constant, i.e. it is independent of the
 voltage.
 
-*ZIP* equation: $S = s \times V^0 + 0 \times V^1 + 0 \times V^2 \implies S = \mathrm{constant}$
+_ZIP_ equation: $S = s \times V^0 + 0 \times V^1 + 0 \times V^2 \implies S = \mathrm{constant}$
 
 ## Equations
 

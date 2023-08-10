@@ -2,24 +2,26 @@
 
 ## Definition
 
-*Roseau Load Flow* can model single-phase, center-tapped and three-phase transformers.
+_Roseau Load Flow_ can model single-phase, center-tapped and three-phase transformers.
 
 (models-transformer_parameters)=
+
 ## Transformer parameters
 
 Transformers are modeled with the following parameters:
-* $U_{1,\mathrm{nom.}}$: the phase-to-phase nominal voltage of the high voltages side (in V). This
+
+- $U_{1,\mathrm{nom.}}$: the phase-to-phase nominal voltage of the high voltages side (in V). This
   parameter is called `uhv` in the code.
-* $U_{2,\mathrm{nom.}}$: the phase-to-phase nominal voltage of the low voltages side (in V). This
+- $U_{2,\mathrm{nom.}}$: the phase-to-phase nominal voltage of the low voltages side (in V). This
   parameter is called `ulv` in the code.
-* $S_{\mathrm{nom.}}$: the nominal power of the transformer (in VA). This parameter is called `sn`
+- $S_{\mathrm{nom.}}$: the nominal power of the transformer (in VA). This parameter is called `sn`
   in the code.
-* $i_0$: the current during off-load test (in %). This parameter is called  `i0` in the code.
-* $P_0$: the losses during off-load test (in W). This parameter is called  `p0` in the code.
-* $P_{\mathrm{sc}}$: the losses during short-circuit test (in W). This parameter is called  `psc`
+- $i_0$: the current during off-load test (in %). This parameter is called `i0` in the code.
+- $P_0$: the losses during off-load test (in W). This parameter is called `p0` in the code.
+- $P_{\mathrm{sc}}$: the losses during short-circuit test (in W). This parameter is called `psc`
   in the code.
-* $V_{\mathrm{sc}}$: the voltage on LV side during short-circuit test (in %). This parameter is
-  called  `vsc` in the code.
+- $V_{\mathrm{sc}}$: the voltage on LV side during short-circuit test (in %). This parameter is
+  called `vsc` in the code.
 
 For three-phase transformers, the windings configuration is also required. See the dedicated page
 of [three-phase transformers](Three_Phase_Transformer.md) for more details.
@@ -29,9 +31,10 @@ converted into a series impedance $\underline{Z_2}$ and the magnetizing admittan
 $\underline{Y_{\mathrm{m}}}$.
 
 First, we define the following quantities:
-* $i_{1,\mathrm{nom.}}=\dfrac{S_{\mathrm{nom.}}}{U_{1,\mathrm{nom.}}}$: the nominal current of the
+
+- $i_{1,\mathrm{nom.}}=\dfrac{S_{\mathrm{nom.}}}{U_{1,\mathrm{nom.}}}$: the nominal current of the
   winding on the primary side of the transformer
-* $i_{2,\mathrm{nom.}}=\dfrac{S_{\mathrm{nom.}}}{U_{2,\mathrm{nom.}}}$: the nominal current of the
+- $i_{2,\mathrm{nom.}}=\dfrac{S_{\mathrm{nom.}}}{U_{2,\mathrm{nom.}}}$: the nominal current of the
   winding on the secondary side of the transformer.
 
 ### Off-load test
@@ -50,6 +53,7 @@ this test. The following values can be computed:
 ```
 
 Then, $\underline{Y_{\mathrm{m}}}$ can be deduced:
+
 ```{math}
 \underline{Y_{\mathrm{m}}} = \left\{
     \begin{aligned}
@@ -76,6 +80,7 @@ values can be computed:
 ```
 
 Then, $\underline{Z_2}$ can be deduced:
+
 ```{math}
 \underline{Z_2} = R_2+j\cdot X_2
 ```
@@ -87,9 +92,9 @@ arguments the elements described in the previous section and converts them into 
 impedance and the magnetizing admittance. The `type` argument of the constructor can take the
 following values:
 
-* `"single"` to model a single-phase transformer
-* `"center"` to model a center-tapped transformer
-* Any windings (`"Dd0"`, `"Dz6"`, etc.) to model a three-phase transformer.
+- `"single"` to model a single-phase transformer
+- `"center"` to model a center-tapped transformer
+- Any windings (`"Dd0"`, `"Dz6"`, etc.) to model a three-phase transformer.
 
 ```python
 from roseau.load_flow import TransformerParameters, Q_
@@ -136,7 +141,7 @@ center_tapped_transformer_parameters = TransformerParameters(
 
 ## Available models
 
-The following transformer models are available in *Roseau Load Flow*:
+The following transformer models are available in _Roseau Load Flow_:
 
 ```{toctree}
 ---

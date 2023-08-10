@@ -34,13 +34,15 @@ And the following (delta loads):
 ```
 
 The expression $\underline{S}(U)$ depends on four parameters:
-* The theoretical power $\underline{S^{\mathrm{th.}}}$ that the load would have if no control is applied.
-* The maximal power $S^{\max}$ that can be injected/consumed by the load. For a PV installation, this is
+
+- The theoretical power $\underline{S^{\mathrm{th.}}}$ that the load would have if no control is applied.
+- The maximal power $S^{\max}$ that can be injected/consumed by the load. For a PV installation, this is
   usually the rated power of the inverter.
-* The type of control (see below).
-* The type of projection (see below).
+- The type of control (see below).
+- The type of projection (see below).
 
 (models-flexible_load-controls)=
+
 ## Controls
 
 There are four available types of control.
@@ -61,6 +63,7 @@ control = Control.constant()
 ```
 
 (models-flexible_load-p_u_control)=
+
 ### P(U) control
 
 Control the maximum active power of a load (often a PV inverter) based on the voltage $P^{\max}(U)$.
@@ -75,7 +78,7 @@ The functions $s_{\alpha}$ used for the P(U) controls are derived from the *soft
 With this control, the following soft clipping family of functions $s_{\alpha}(U)$ is used. The
 default value of `alpha` is 1000.
 
-```{image}   /_static/Control_PU_Prod.svg
+```{image} /_static/Control_PU_Prod.svg
 :alt: P(U) production control
 :width: 600
 :align: center
@@ -100,7 +103,7 @@ production_control = Control.p_max_u_production(u_up=Q_(240, "V"), u_max=Q_(250,
 With this control, the following soft clipping family of functions $s_{\alpha}(U)$ is used. The
 default value of `alpha` is 1000.
 
-```{image}   /_static/Control_PU_Cons.svg
+```{image} /_static/Control_PU_Cons.svg
 :alt: P(U) consumption control
 :width: 600
 :align: center
@@ -121,12 +124,13 @@ consumption_control = Control.p_max_u_consumption(u_min=Q_(210, "V"), u_down=Q_(
 ```
 
 (models-flexible_load-q_u_control)=
+
 ### Q(U) control
 
 Control the reactive power based on the voltage $Q(U)$. With this control, the following soft
 clipping family of functions $s_{\alpha}(U)$ is used. The default value of `alpha` is 1000.
 
-```{image}   /_static/Control_QU.svg
+```{image} /_static/Control_QU.svg
 :alt: Q(U) control
 :width: 600
 :align: center
@@ -158,18 +162,20 @@ control = Control.q_u(
 ```
 
 (models-flexible_load-projection)=
+
 ## Projection
 
 The different controls may produce values for $P$ and $Q$ that are not feasible. The feasibility
 domain in the $(P, Q)$ space is a part of the circle of radius $S^{\max}$. In these cases, the
 solution found by the control algorithm has to be projected on the feasible domain. That's why we
 need to define how the projection is done. There are three available projection types: the
-*Euclidean* projection, the projection at *Constant $P$* and the projection at *Constant $Q$*.
+_Euclidean_ projection, the projection at _Constant $P$_ and the projection at _Constant $Q$_.
 
 The projection accepts two approximation parameters: `alpha` and `epsilon`.
-* `alpha` is used to compute soft sign function and soft projection function. The higher `alpha`
+
+- `alpha` is used to compute soft sign function and soft projection function. The higher `alpha`
   is, the better the approximations are.
-* `epsilon` is used to approximate a smooth square root function:
+- `epsilon` is used to approximate a smooth square root function:
   ```{math}
   \sqrt{S} = \sqrt{\varepsilon \times \exp\left(\frac{-{|S|}^2}{\varepsilon}\right) + {|S|}^2}
   ```
@@ -222,6 +228,7 @@ projection = Projection(type="keep_q")  # alpha and epsilon can be provided
 ```
 
 (models-flexible_load-flexible_parameters)=
+
 ## Flexible parameters
 
 A flexible parameter is a combination of a control on the active power, a control on the reactive
@@ -230,10 +237,11 @@ power, a projection and a maximal apparent power for one phase.
 ### Example
 
 Here, we define a flexible parameter with:
-* a constant control on $P$ (meaning, no control),
-* a control $Q(U)$ on $Q$,
-* a projection which keeps $P$ constant,
-* an $S^{\max}$ of 5 kVA.
+
+- a constant control on $P$ (meaning, no control),
+- a control $Q(U)$ on $Q$,
+- a projection which keeps $P$ constant,
+- an $S^{\max}$ of 5 kVA.
 
 ```python
 from roseau.load_flow import FlexibleParameter, Control, Projection, Q_
@@ -383,8 +391,8 @@ delta-connected load. In the flexible parameter, one can remark that the $Q(U)$ 
 voltages triggers at 240 V (production) and reaches its maximum at 245 V. The $P(U)$ control
 however triggers at 245 V and is maxed out at 250 V.
 
-Using this configuration, a *sequential PQ(U) control* has been created for this load. A
-*simultaneous PQ(U) control* could have been defined by using the same voltage thresholds for both
+Using this configuration, a _sequential PQ(U) control_ has been created for this load. A
+_simultaneous PQ(U) control_ could have been defined by using the same voltage thresholds for both
 controls.
 
 ## Feasible domains

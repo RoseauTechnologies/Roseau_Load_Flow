@@ -64,7 +64,7 @@ All the following tables are rounded to 2 decimals to be properly displayed.
 ```
 
 | branch_id | phase |       current1 |           current2 |             power1 |                  power2 |      potential1 |        potential2 |
-|:----------|:------|---------------:|-------------------:|-------------------:|------------------------:|----------------:|------------------:|
+| :-------- | :---- | -------------: | -----------------: | -----------------: | ----------------------: | --------------: | ----------------: |
 | line1     | a     |  376.73+75.27j |     -376.51-75.17j |  87001.18-17383.7j |     -69627.17+24139.23j |       230.94+0j |     190.15-26.15j |
 | line1     | b     | -376.14-74.96j |      376.12+74.96j | 58424.25+66571.96j |     -41140.25-59810.05j |    -115.47-200j |    -74.72-173.91j |
 | line1     | c     |    -0.49-0.42j |         0.49+0.21j |        -26.73-147j |           -14.9+126.71j |    -115.47+200j |   -117.06+208.26j |
@@ -77,9 +77,9 @@ All the following tables are rounded to 2 decimals to be properly displayed.
 Looking at the line results of the second bus of the line `line2`, which is `bus2` where we added the short-circuit,
 one can notice that:
 
-* the potentials of phases "a" and "b" are equal;
-* the currents and powers in phases "a" and "b" are equal with opposite signs, i.e. the sum of the currents is zero;
-* the currents and powers in these two phases are very high;
+- the potentials of phases "a" and "b" are equal;
+- the currents and powers in phases "a" and "b" are equal with opposite signs, i.e. the sum of the currents is zero;
+- the currents and powers in these two phases are very high;
 
 which is expected from a short-circuit.
 
@@ -97,7 +97,7 @@ short-circuit then create a new one between phases "a", "b", and "c".
 ```
 
 | branch_id | phase |        current1 |        current2 |             power1 |              power2 |     potential1 |      potential2 |
-|:----------|:------|----------------:|----------------:|-------------------:|--------------------:|---------------:|----------------:|
+| :-------- | :---- | --------------: | --------------: | -----------------: | ------------------: | -------------: | --------------: |
 | line1     | a     |   371.74-146.3j | -371.55+146.39j |  85849.16+33785.8j | -63525.86-24647.08j |      230.94-0j |    170.63-0.89j |
 | line1     | b     | -325.13-309.42j |  325.11+309.42j | 99425.41+29296.84j | -75755.17-20038.48j |   -115.47-200j |  -91.49-148.71j |
 | line1     | c     |   -46.49+455.6j |    46.51-455.8j | 96487.77+43308.67j |  -75409.92-31858.5j |   -115.47+200j |  -85.88+156.68j |
@@ -125,7 +125,7 @@ between phase "a" and ground.
 ```
 
 | branch_id | phase |      current1 |      current2 |             power1 |              power2 |      potential1 |      potential2 |
-|:----------|:------|--------------:|--------------:|-------------------:|--------------------:|----------------:|----------------:|
+| :-------- | :---- | ------------: | ------------: | -----------------: | ------------------: | --------------: | --------------: |
 | line1     | a     | 96.01-188.55j | -95.8+188.65j | 22173.17+43543.72j | -16858.71-29476.66j |       230.94+0j |     160.3-7.97j |
 | line1     | b     |    0.53-0.42j |   -0.54+0.42j |      22.57-153.79j |       -3.39+192.16j |    -115.47-200j | -166.27-225.68j |
 | line1     | c     |   -0.41-0.51j |    0.43+0.28j |     -54.42-141.47j |      -21.19+121.75j |    -115.47+200j | -162.05+176.44j |
@@ -140,7 +140,7 @@ between phase "a" and ground.
 ```
 
 | ground_id | potential |
-|:----------|----------:|
+| :-------- | --------: |
 | gnd       |        0j |
 
 Here the potential at phase "a" of bus `bus2` is zero, equal to the ground potential. The sum of the currents in the

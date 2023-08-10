@@ -18,7 +18,7 @@ Single-phase transformers are modelled as follows:
 ```
 ````
 
-Non-ideal transformer models are used in *Roseau Load Flow*. The series impedances $\underline{Z_2}$
+Non-ideal transformer models are used in _Roseau Load Flow_. The series impedances $\underline{Z_2}$
 and the magnetizing admittances $\underline{Y_{\mathrm{m}}}$ are included in the model.
 
 ```{note}

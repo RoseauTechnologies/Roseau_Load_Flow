@@ -1,12 +1,12 @@
 {
-    "recommendations": [
-        "charliermarsh.ruff",
-        "ms-python.black-formatter",
-        "ms-python.python",
-        "ms-python.vscode-pylance",
-    ],
-    "unwantedRecommendations": [
-        "ms-python.flake8",  // We use ruff
-        "ms-python.isort",  // We use ruff
-    ]
+  "recommendations": [
+    "charliermarsh.ruff",
+    "ms-python.black-formatter",
+    "ms-python.python",
+    "ms-python.vscode-pylance"
+  ],
+  "unwantedRecommendations": [
+    "ms-python.flake8", // We use ruff
+    "ms-python.isort" // We use ruff
+  ]
 }

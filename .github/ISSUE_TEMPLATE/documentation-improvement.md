@@ -1,10 +1,9 @@
 ---
 name: Documentation Improvement
 about: An improvement to the documentation
-title: 'DOC: '
+title: "DOC: "
 labels: documentation
 assignees: benoit9126
-
 ---
 
 **Location of the document**

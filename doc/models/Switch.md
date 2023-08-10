@@ -4,7 +4,7 @@
 
 It represents an ideal switch, a lossless element that connects two buses.
 
-```{image}  /_static/Switch.svg
+```{image} /_static/Switch.svg
 :alt: Switch diagram
 :width: 300px
 :align: center
@@ -13,6 +13,7 @@ It represents an ideal switch, a lossless element that connects two buses.
 ## Equations
 
 The associated equations are:
+
 ```{math}
 \left\{
     \begin{aligned}

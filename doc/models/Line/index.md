@@ -108,6 +108,7 @@ The shunt admittance matrix $\underline{Y}$ is defined from the admittance matri
 ```
 
 (models-line_parameters)=
+
 ## Line parameters
 
 The parameters of the lines are defined using the `LineParameters` class. It takes the series
@@ -157,7 +158,7 @@ shunt_line_parameters = LineParameters(
 
 ## Available models
 
-The following line models are available in *Roseau Load Flow*:
+The following line models are available in _Roseau Load Flow_:
 
 ```{toctree}
 ---

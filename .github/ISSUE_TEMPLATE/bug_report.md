@@ -1,10 +1,9 @@
 ---
 name: Bug report
 about: Something is not working as expected
-title: 'BUG: '
+title: "BUG: "
 labels: bug
 assignees: benoit9126
-
 ---
 
 **Describe the bug**
@@ -26,6 +25,7 @@ A clear and concise description of what you expected to happen.
 **Version details**
 
 Please copy/paste here the output of the function `show_versions`
+
 ```python
 from roseau.load_flow import show_versions
 

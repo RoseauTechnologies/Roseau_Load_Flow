@@ -6,7 +6,7 @@ It represents a multi-phase node in the network that other elements (loads, line
 voltage sources...) can connect to. A bus is a placeholder point where we want the voltage to be
 computed during the load flow.
 
-```{image}  /_static/Bus.svg
+```{image} /_static/Bus.svg
 :alt: Bus diagram
 :width: 100px
 :align: center
