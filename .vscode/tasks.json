@@ -1,44 +1,44 @@
 {
-    // See https://go.microsoft.com/fwlink/?LinkId=733558
-    // for the documentation about the tasks.json format
-    "version": "2.0.0",
-    "options": {"cwd": "${workspaceFolder}"},
-    "presentation": {
-        "showReuseMessage": true,
-        "clear": true
+  // See https://go.microsoft.com/fwlink/?LinkId=733558
+  // for the documentation about the tasks.json format
+  "version": "2.0.0",
+  "options": { "cwd": "${workspaceFolder}" },
+  "presentation": {
+    "showReuseMessage": true,
+    "clear": true
+  },
+  "tasks": [
+    {
+      "label": "Build docs",
+      "detail": "Build the docs using Sphinx.",
+      "type": "shell",
+      "command": "make -C doc html",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "silent",
+        "focus": true
+      }
     },
-    "tasks": [
-        {
-            "label": "Build docs",
-            "detail": "Build the docs using Sphinx.",
-            "type": "shell",
-            "command": "make -C doc html",
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            },
-            "problemMatcher": [],
-            "presentation": {
-                "reveal": "silent",
-                "focus": true,
-            }
-        },
-        {
-          "label": "Open docs",
-          "detail": "Open the docs in the browser.",
-          "type": "shell",
-          "command": "open build/html/index.html",
-          "presentation": {
-            "reveal": "never",
-            "close": true,
-            "focus": false,
-            "panel": "dedicated",
-          },
-          "group": {
-            "kind": "build",
-            "isDefault": true
-          },
-          "isBackground": true,
-        },
-    ],
+    {
+      "label": "Open docs",
+      "detail": "Open the docs in the browser.",
+      "type": "shell",
+      "command": "open build/html/index.html",
+      "presentation": {
+        "reveal": "never",
+        "close": true,
+        "focus": false,
+        "panel": "dedicated"
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "isBackground": true
+    }
+  ]
 }

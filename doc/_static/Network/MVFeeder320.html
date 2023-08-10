@@ -31,18 +31,9 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css" />
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"
-    />
-    <link
-      rel="stylesheet"
-      href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css"
-    />
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css"
-    />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css" />
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"
@@ -175,9 +166,7 @@
         },
         mouseover: function (e) {
           if (typeof e.target.setStyle === "function") {
-            const highlightStyle = geo_json_13b0a60f181688344bebe99e0dccf274_highlighter(
-              e.target.feature,
-            );
+            const highlightStyle = geo_json_13b0a60f181688344bebe99e0dccf274_highlighter(e.target.feature);
             e.target.setStyle(highlightStyle);
           }
         },
@@ -191,9 +180,7 @@
     });
 
     function geo_json_13b0a60f181688344bebe99e0dccf274_add(data) {
-      geo_json_13b0a60f181688344bebe99e0dccf274
-        .addData(data)
-        .addTo(map_907746d50d8dada0abf9270afad20045);
+      geo_json_13b0a60f181688344bebe99e0dccf274.addData(data).addTo(map_907746d50d8dada0abf9270afad20045);
     }
     geo_json_13b0a60f181688344bebe99e0dccf274_add({
       bbox: [-1.123081883206688, 49.10201037753735, -1.10395512797682, 49.11336333911259],
@@ -736,8 +723,7 @@
       function (layer) {
         let div = L.DomUtil.create("div");
 
-        let handleObject = (feature) =>
-          typeof feature == "object" ? JSON.stringify(feature) : feature;
+        let handleObject = (feature) => (typeof feature == "object" ? JSON.stringify(feature) : feature);
         let fields = ["id", "branch_type", "bus1_id", "bus2_id"];
         let aliases = ["Id:", "Type:", "Bus1:", "Bus2:"];
         let table =
@@ -842,9 +828,7 @@
         },
         mouseover: function (e) {
           if (typeof e.target.setStyle === "function") {
-            const highlightStyle = geo_json_70bca73a4dad70d91b5f06d075f4c59b_highlighter(
-              e.target.feature,
-            );
+            const highlightStyle = geo_json_70bca73a4dad70d91b5f06d075f4c59b_highlighter(e.target.feature);
             e.target.setStyle(highlightStyle);
           }
         },
@@ -858,9 +842,7 @@
     });
 
     function geo_json_70bca73a4dad70d91b5f06d075f4c59b_add(data) {
-      geo_json_70bca73a4dad70d91b5f06d075f4c59b
-        .addData(data)
-        .addTo(map_907746d50d8dada0abf9270afad20045);
+      geo_json_70bca73a4dad70d91b5f06d075f4c59b.addData(data).addTo(map_907746d50d8dada0abf9270afad20045);
     }
     geo_json_70bca73a4dad70d91b5f06d075f4c59b_add({
       bbox: [-1.122502301274675, 49.1020702604019, -1.104077900830377, 49.11336333911259],
@@ -1073,8 +1055,7 @@
       function (layer) {
         let div = L.DomUtil.create("div");
 
-        let handleObject = (feature) =>
-          typeof feature == "object" ? JSON.stringify(feature) : feature;
+        let handleObject = (feature) => (typeof feature == "object" ? JSON.stringify(feature) : feature);
         let fields = ["id", "phases"];
         let aliases = ["Id:", "Phases:"];
         let table =

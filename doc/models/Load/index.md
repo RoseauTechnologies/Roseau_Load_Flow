@@ -21,6 +21,7 @@ Here is the diagram of a star-connected three-phase load:
 :align: center
 ```
 ````
+
 ````{tab} American standards
 ```{image}  /_static/Load/American_Star_Load.svg
 :alt: Star load diagram
@@ -29,7 +30,7 @@ Here is the diagram of a star-connected three-phase load:
 ```
 ````
 
-In *Roseau Load Flow*, the `phases` argument of the constructor must contain `"n"` for star loads.
+In _Roseau Load Flow_, the `phases` argument of the constructor must contain `"n"` for star loads.
 
 ### Delta connection
 
@@ -42,6 +43,7 @@ Here is the diagram of a delta-connected three-phase load:
 :align: center
 ```
 ````
+
 ````{tab} American standards
 ```{image}  /_static/Load/American_Delta_Load.svg
 :alt: Delta load diagram
@@ -50,19 +52,19 @@ Here is the diagram of a delta-connected three-phase load:
 ```
 ````
 
-In *Roseau Load Flow*, the `phases` argument of the constructor must **not** contain `"n"` for delta
+In _Roseau Load Flow_, the `phases` argument of the constructor must **not** contain `"n"` for delta
 loads.
 
 ## Available models
 
-The *ZIP* model is commonly used to represent electric loads in static grid analysis. This model
+The _ZIP_ model is commonly used to represent electric loads in static grid analysis. This model
 considers the voltage dependency of loads. ZIP stands for the three load types:
 
-* Z = constant impedance load
-* I = constant current load
-* P = constant power load
+- Z = constant impedance load
+- I = constant current load
+- P = constant power load
 
-The following load models are available in *Roseau Load Flow*:
+The following load models are available in _Roseau Load Flow_:
 
 ```{toctree}
 ---

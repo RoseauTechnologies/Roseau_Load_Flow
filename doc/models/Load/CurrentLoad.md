@@ -3,7 +3,7 @@
 They represent loads for which the current is considered constant, i.e. the power is proportional
 to the voltage.
 
-*ZIP* equation: $S = 0 \times V^0 + i \times V^1 + 0 \times V^2 \implies S \propto V$
+_ZIP_ equation: $S = 0 \times V^0 + i \times V^1 + 0 \times V^2 \implies S \propto V$
 
 ## Equations
 

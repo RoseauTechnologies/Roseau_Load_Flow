@@ -6,7 +6,7 @@ The ground element represents an earth connection where the earth is represented
 conductor. A ground can be used to connect several elements. A ground is mandatory in a line
 model with shunt elements. The symbol of a ground element is:
 
-```{image}  /_static/Ground.svg
+```{image} /_static/Ground.svg
 :alt: A diagram of a ground element
 :width: 100px
 :align: center
@@ -23,15 +23,16 @@ defining a ground element. If you want to do so, you must add a `PotentialRef` e
 
 ## Usage
 
-In *Roseau Load Flow*, several grounds can be defined leading to ground elements with a non-zero
+In _Roseau Load Flow_, several grounds can be defined leading to ground elements with a non-zero
 potential. Here is an example with two ground elements `g1` and `g2`.
 
 After solving this load flow, the following assertions will be verified:
-* The potential of the ground `g1` will be 0V as defined by the potential reference `pref`.
-* There is no reason for the potential of `g2` to be zero too.
-* The sum of currents flowing through the shunt admittances of the second line will be zero as they
+
+- The potential of the ground `g1` will be 0V as defined by the potential reference `pref`.
+- There is no reason for the potential of `g2` to be zero too.
+- The sum of currents flowing through the shunt admittances of the second line will be zero as they
   are all connected to the ground `g2` and no other elements are connected to this ground.
-* The sum of currents flowing through the shunt admittances of the first line will be equal to the
+- The sum of currents flowing through the shunt admittances of the first line will be equal to the
   sum of the currents of the elements connected to phase "a" of the first bus.
   <!-- TODO: add an example when we have the shunt currents of the line -->
 

@@ -12,6 +12,7 @@ The corresponding diagram is:
 :align: center
 ```
 ````
+
 ````{tab} American standards
 ```{image} /_static/Line/American_Simplified_Line.svg
 :alt: Simplified line diagram

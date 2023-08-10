@@ -2,7 +2,7 @@
 
 # Getting started
 
-*Make sure you have followed the* [installation instructions](../Installation.md).
+_Make sure you have followed the_ [installation instructions](../Installation.md).
 
 In this tutorial you will learn how to:
 
@@ -20,37 +20,42 @@ In this tutorial you will learn how to:
 An electrical network can be built by assembling basic elements described in the [Models section](../models/index.md).
 The following is a summary of the available elements:
 
-* Buses:
-    * `Bus`: An electrical bus.
+- Buses:
 
-* Branches:
-    * `Line`: A line connects two buses. The parameters of the line are defined by a `LineParameters` object.
-    * `LineParameters`: This object defines the parameters of a line  (model, impedance, etc.)
-    * `Switch`: A basic switch element.
-    * `Transformer`: A generic transformer. The parameters of the transformer are defined by a `TransformerParameters`
-      object.
-    * `TransformerParameters`: This object defines the parameters of a transformer (model, windings, etc.)
+  - `Bus`: An electrical bus.
 
-* Loads:
+- Branches:
+
+  - `Line`: A line connects two buses. The parameters of the line are defined by a `LineParameters` object.
+  - `LineParameters`: This object defines the parameters of a line (model, impedance, etc.)
+  - `Switch`: A basic switch element.
+  - `Transformer`: A generic transformer. The parameters of the transformer are defined by a `TransformerParameters`
+    object.
+  - `TransformerParameters`: This object defines the parameters of a transformer (model, windings, etc.)
+
+- Loads:
   The ZIP load model is available via the following classes:
-    * `ImpedanceLoad`: A constant impedance (Z) load: $S = |V|^2 \times \overline{Z}$, $|S|$ is proportional to $|V|^2$.
-    * `CurrentLoad` A constant current (I) load: $S = V \times \overline{I}$, $|S|$ is proportional to $|V|^1$.
-    * `PowerLoad`: A constant power (P) load: $S = \mathrm{constant}$, $|S|$ is proportional to $|V|^0$.
+
+  - `ImpedanceLoad`: A constant impedance (Z) load: $S = |V|^2 \times \overline{Z}$, $|S|$ is proportional to $|V|^2$.
+  - `CurrentLoad` A constant current (I) load: $S = V \times \overline{I}$, $|S|$ is proportional to $|V|^1$.
+  - `PowerLoad`: A constant power (P) load: $S = \mathrm{constant}$, $|S|$ is proportional to $|V|^0$.
 
   A power load can be made flexible (controllable) by using the following class:
-    * `FlexibleParameter`: This object defines the parameters of the flexible load's control (Maximum power, projection,
-      type, etc.)
+
+  - `FlexibleParameter`: This object defines the parameters of the flexible load's control (Maximum power, projection,
+    type, etc.)
 
   Note that flexible loads are an advanced feature that most users don't need. They are explained in details [here](usage-flexible-loads).
 
-* Sources:
-    * `VoltageSource`: Represents an infinite power source with a constant voltage.
+- Sources:
 
-* Others:
-    * `Ground`: A ground acts as a perfect conductor. If two elements are connected to the ground, the potentials at the
-      connection points are always equal.
-    * `PotentialRef`: A potential reference sets the reference of potentials in the network. It can be connected to
-      buses or grounds.
+  - `VoltageSource`: Represents an infinite power source with a constant voltage.
+
+- Others:
+  - `Ground`: A ground acts as a perfect conductor. If two elements are connected to the ground, the potentials at the
+    connection points are always equal.
+  - `PotentialRef`: A potential reference sets the reference of potentials in the network. It can be connected to
+    buses or grounds.
 
 For a more detailed description of the elements, please refer to the [API reference](../autoapi/roseau/load_flow/models/index).
 
@@ -138,7 +143,7 @@ The server takes some time to warm up the first time it is requested. Subsequent
 2
 ```
 
-It returns the number of iterations performed by the *Newton-Raphson* solver, here *2*. More information about the
+It returns the number of iterations performed by the _Newton-Raphson_ solver, here _2_. More information about the
 load flow resolution is available via the `res_info` attribute.
 
 ```pycon
@@ -155,17 +160,17 @@ load flow resolution is available via the `res_info` attribute.
 
 The available values are:
 
-* `solver`: it can be `"newton"` for the *Newton* solver or `"newton_goldstein"` for the *Newton* solver using the
-  *Goldstein and Price* linear search;
-* `solver_params`: the parameters used by the solver;
-* `tolerance`: the requested tolerance for the solver. $10^{-6}$ is the default;
-* `max_iterations`: the requested maximum number of iterations for the solver. 20 is the default;
-* `warm_start`: if `True`, the results (potentials of each bus) from the last valid run are used
+- `solver`: it can be `"newton"` for the _Newton_ solver or `"newton_goldstein"` for the _Newton_ solver using the
+  _Goldstein and Price_ linear search;
+- `solver_params`: the parameters used by the solver;
+- `tolerance`: the requested tolerance for the solver. $10^{-6}$ is the default;
+- `max_iterations`: the requested maximum number of iterations for the solver. 20 is the default;
+- `warm_start`: if `True`, the results (potentials of each bus) from the last valid run are used
   as a starting point for the solver. For large networks, using a warm start can lead to performance gains as the
   solver will converge faster. `True` is the default;
-* `status`: the convergence of the load flow. Two possibilities: *success* or *failure*;
-* `iterations`: the number of iterations made by the solver.
-* `residual`: the precision which was reached by the solver (lower than the tolerance if successful solve).
+- `status`: the convergence of the load flow. Two possibilities: _success_ or _failure_;
+- `iterations`: the number of iterations made by the solver.
+- `residual`: the precision which was reached by the solver (lower than the tolerance if successful solve).
 
 More details on solvers are given in the [Solvers page](../Solvers.md).
 
@@ -204,17 +209,17 @@ The available results depend on the type of element. The following table summari
 results for each element type:
 
 | Element type                                | Available results                                                                                                                       |
-|---------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------|
+| ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
 | `Bus`                                       | `res_potentials`, `res_voltages`                                                                                                        |
 | `Line`                                      | `res_currents`, `res_powers`, `res_potentials`, `res_voltages`, `res_series_power_losses`, `res_shunt_power_losses`, `res_power_losses` |
 | `Transformer`, `Switch`                     | `res_currents`, `res_powers`, `res_potentials`, `res_voltages`                                                                          |
 | `ImpedanceLoad`, `CurrentLoad`, `PowerLoad` | `res_currents`, `res_powers`, `res_potentials`, `res_voltages`, `res_flexible_powers`&#8270;                                            |
 | `VoltageSource`                             | `res_currents`, `res_powers`, `res_potentials`, `res_voltages`                                                                          |
 | `Ground`                                    | `res_potential`                                                                                                                         |
-| `PotentialRef`                              | `res_current` *(Always zero for a successful load flow)*                                                                                |
+| `PotentialRef`                              | `res_current` _(Always zero for a successful load flow)_                                                                                |
 
 &#8270;: `res_flexible_powers` is only available for flexible loads (`PowerLoad`s with `flexible_params`). You'll see
-an example on the usage of flexible loads in the *Flexible Loads* section.
+an example on the usage of flexible loads in the _Flexible Loads_ section.
 
 ### Getting results per object
 
@@ -227,7 +232,7 @@ array([ 2.21928183e+02-2.60536682e-18j, -1.10964092e+02-1.92195445e+02j,
        -1.10964092e+02+1.92195445e+02j,  2.68637675e-15-6.67652444e-17j]) <Unit('volt')>
 ```
 
-As the results are *pint quantities*, they can be converted to different units. Here, the magnitudes
+As the results are _pint quantities_, they can be converted to different units. Here, the magnitudes
 of the voltages of the same bus are displayed in kilovolts.
 
 ```pycon
@@ -247,9 +252,9 @@ as the `voltages` parameter to a `VoltageSource`, as well as for the results suc
 The currents of the line are available using the `res_currents` property of the `line` object.
 It contains two arrays:
 
-* the first is the current flowing from the first bus of the line to the second bus of the line.
+- the first is the current flowing from the first bus of the line to the second bus of the line.
   It contains 4 values: one per phase and the neutral current.
-* the second is the current flowing from the second bus of the line to the first bus of the line.
+- the second is the current flowing from the second bus of the line to the first bus of the line.
 
 Here, the sum of these currents is 0 as we have chosen a simple line model, i.e, a line with only
 series impedance elements without shunt components. If shunt components were modelled, the sum
@@ -266,21 +271,21 @@ would have been non-zero.
 ### Dataframe network results
 
 The results can also be retrieved for the entire network using `res_` properties of the
-`ElectricalNetwork` instance as [pandas DataFrames](https://pandas.pydata.org/docs/).
+`ElectricalNetwork` instance as [pandas](https://pandas.pydata.org/docs/) {doc}` DataFrames <pandas:reference/frame>`.
 
 Available results for the network are:
 
-* `res_buses`: Buses potentials indexed by *(bus id, phase)*
-* `res_buses_voltages`: Buses voltages indexed by *(bus id, voltage phase)*
-* `res_branches`: Branches currents, powers, and potentials indexed by *(branch id, phase)*
-* `res_lines`: Lines currents, powers, potentials, series losses, series currents indexed by *(line id, phase)*
-* `res_loads`: Loads currents, powers, and potentials indexed by *(load id, phase)*
-* `res_loads_voltages`: Loads voltages indexed by *(load id, voltage phase)*
-* `res_loads_flexible_powers`: Loads flexible powers (only for flexible loads) indexed by
-  *(load id, phase)*
-* `res_sources`: Sources currents, powers, and potentials indexed by *(source id, phase)*
-* `res_grounds`: Grounds potentials indexed by *ground id*
-* `res_potential_refs`: Potential references currents indexed by *potential ref id* (always zero
+- `res_buses`: Buses potentials indexed by _(bus id, phase)_
+- `res_buses_voltages`: Buses voltages indexed by _(bus id, voltage phase)_
+- `res_branches`: Branches currents, powers, and potentials indexed by _(branch id, phase)_
+- `res_lines`: Lines currents, powers, potentials, series losses, series currents indexed by _(line id, phase)_
+- `res_loads`: Loads currents, powers, and potentials indexed by _(load id, phase)_
+- `res_loads_voltages`: Loads voltages indexed by _(load id, voltage phase)_
+- `res_loads_flexible_powers`: Loads flexible powers (only for flexible loads) indexed by
+  _(load id, phase)_
+- `res_sources`: Sources currents, powers, and potentials indexed by _(source id, phase)_
+- `res_grounds`: Grounds potentials indexed by _ground id_
+- `res_potential_refs`: Potential references currents indexed by _potential ref id_ (always zero
   for a successful load flow)
 
 All the results are complex numbers. You can always access the magnitude of the results using
@@ -298,7 +303,7 @@ All the following tables are rounded to 2 decimals to be properly displayed.
 ```
 
 | bus_id | phase |      potential |
-|:-------|:------|---------------:|
+| :----- | :---- | -------------: |
 | sb     | a     |      230.94+0j |
 | sb     | b     |   -115.47-200j |
 | sb     | c     |   -115.47+200j |
@@ -313,7 +318,7 @@ All the following tables are rounded to 2 decimals to be properly displayed.
 ```
 
 | bus_id | phase |        voltage |
-|:-------|:------|---------------:|
+| :----- | :---- | -------------: |
 | sb     | an    |      230.94+0j |
 | sb     | bn    |   -115.47-200j |
 | sb     | cn    |   -115.47+200j |
@@ -326,7 +331,7 @@ All the following tables are rounded to 2 decimals to be properly displayed.
 ```
 
 | branch_id | phase |      current1 |     current2 |      power1 |    power2 |   potential1 |     potential2 |
-|:----------|:------|--------------:|-------------:|------------:|----------:|-------------:|---------------:|
+| :-------- | :---- | ------------: | -----------: | ----------: | --------: | -----------: | -------------: |
 | line      | a     |      45.06+0j |    -45.06-0j | 10406.07-0j | -10000+0j |    230.94+0j |      221.93-0j |
 | line      | b     | -22.53-39.02j | 22.53+39.02j | 10406.07+0j | -10000-0j | -115.47-200j | -110.96-192.2j |
 | line      | c     | -22.53+39.02j | 22.53-39.02j | 10406.07-0j | -10000+0j | -115.47+200j | -110.96+192.2j |
@@ -337,7 +342,7 @@ All the following tables are rounded to 2 decimals to be properly displayed.
 ```
 
 | branch_id | phase |      current1 |     current2 |      power1 |    power2 |   potential1 |     potential2 | series_losses | series_current |
-|:----------|:------|--------------:|-------------:|------------:|----------:|-------------:|---------------:|--------------:|---------------:|
+| :-------- | :---- | ------------: | -----------: | ----------: | --------: | -----------: | -------------: | ------------: | -------------: |
 | line      | a     |      45.06+0j |    -45.06-0j | 10406.07-0j | -10000+0j |    230.94+0j |      221.93-0j |     406.07-0j |       45.06+0j |
 | line      | b     | -22.53-39.02j | 22.53+39.02j | 10406.07+0j | -10000-0j | -115.47-200j | -110.96-192.2j |     406.07-0j |  -22.53-39.02j |
 | line      | c     | -22.53+39.02j | 22.53-39.02j | 10406.07-0j | -10000+0j | -115.47+200j | -110.96+192.2j |     406.07+0j |  -22.53+39.02j |
@@ -348,7 +353,7 @@ All the following tables are rounded to 2 decimals to be properly displayed.
 ```
 
 | load_id | phase |       current |    power |      potential |
-|:--------|:------|--------------:|---------:|---------------:|
+| :------ | :---- | ------------: | -------: | -------------: |
 | load    | a     |      45.06+0j | 10000-0j |      221.93-0j |
 | load    | b     | -22.53-39.02j | 10000-0j | -110.96-192.2j |
 | load    | c     | -22.53+39.02j | 10000+0j | -110.96+192.2j |
@@ -359,7 +364,7 @@ All the following tables are rounded to 2 decimals to be properly displayed.
 ```
 
 | load_id | phase |        voltage |
-|:--------|:------|---------------:|
+| :------ | :---- | -------------: |
 | load    | an    |      221.93+0j |
 | load    | bn    | -110.96-192.2j |
 | load    | cn    | -110.96+192.2j |
@@ -369,7 +374,7 @@ All the following tables are rounded to 2 decimals to be properly displayed.
 ```
 
 | source_id | phase |      current |         power |    potential |
-|:----------|:------|-------------:|--------------:|-------------:|
+| :-------- | :---- | -----------: | ------------: | -----------: |
 | vs        | a     |    -45.06-0j | -10406.07+0j) |    230.94+0j |
 | vs        | b     | 22.53+39.02j | -10406.07-0j) | -115.47-200j |
 | vs        | c     | 22.53-39.02j | -10406.07+0j) | -115.47+200j |
@@ -380,7 +385,7 @@ All the following tables are rounded to 2 decimals to be properly displayed.
 ```
 
 | ground_id | potential |
-|:----------|----------:|
+| :-------- | --------: |
 | gnd       |        0j |
 
 ```pycon
@@ -388,7 +393,7 @@ All the following tables are rounded to 2 decimals to be properly displayed.
 ```
 
 | potential_ref_id | current |
-|:-----------------|--------:|
+| :--------------- | ------: |
 | pref             |      0j |
 
 Using the `transform` method of data frames, the results can easily be converted from complex values
@@ -399,7 +404,7 @@ to magnitude and angle values.
 ```
 
 | bus_id | phase | ('voltage', 'absolute') | ('voltage', 'angle') |
-|:-------|:------|------------------------:|---------------------:|
+| :----- | :---- | ----------------------: | -------------------: |
 | sb     | an    |                  230.94 |                    0 |
 | sb     | bn    |                  230.94 |              -2.0944 |
 | sb     | cn    |                  230.94 |               2.0944 |
@@ -415,7 +420,7 @@ Or, if you prefer degrees:
 ```
 
 | bus_id | phase | ('voltage', 'absolute') | ('voltage', 'angle') |
-|:-------|:------|------------------------:|---------------------:|
+| :----- | :---- | ----------------------: | -------------------: |
 | sb     | an    |                  230.94 |                    0 |
 | sb     | bn    |                  230.94 |                 -120 |
 | sb     | cn    |                  230.94 |                  120 |

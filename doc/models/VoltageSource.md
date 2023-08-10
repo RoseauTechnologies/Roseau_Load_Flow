@@ -21,6 +21,7 @@ The diagram of the star voltage source is:
 :align: center
 ```
 ````
+
 ````{tab} American standards
 ```{image} /_static/VoltageSource/American_Star_Voltage_Source.svg
 :alt: Star voltage source diagram
@@ -28,6 +29,7 @@ The diagram of the star voltage source is:
 :align: center
 ```
 ````
+
 The equations that model a star voltage source are:
 
 ```{math}
@@ -54,6 +56,7 @@ The diagram of the delta voltage source is:
 :align: center
 ```
 ````
+
 ````{tab} American standards
 ```{image} /_static/VoltageSource/American_Delta_Voltage_Source.svg
 :alt: Delta voltage source diagram
@@ -61,6 +64,7 @@ The diagram of the delta voltage source is:
 :align: center
 ```
 ````
+
 The equations that model a delta voltage source are:
 
 ```{math}
@@ -75,7 +79,6 @@ The equations that model a delta voltage source are:
 
 Where $\underline{U}\in\mathbb{C}^3$ is the voltage vector (user defined parameter) and
 $\underline{V}\in\mathbb{C}^3$ is the node potentials vector (variable).
-
 
 ## Usage
 

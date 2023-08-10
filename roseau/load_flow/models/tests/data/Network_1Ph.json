@@ -1,164 +1,160 @@
 {
-    "network": {
-        "version": 1,
-        "grounds": [
-            {
-                "id": "gnd",
-                "buses": [
-                    {
-                        "id": "bus1",
-                        "phase": "n"
-                    }
-                ]
-            }
-        ],
-        "potential_refs": [
-            {
-                "id": "pref",
-                "ground": "gnd"
-            }
-        ],
+  "network": {
+    "version": 1,
+    "grounds": [
+      {
+        "id": "gnd",
         "buses": [
-            {
-                "id": "bus1",
-                "phases": "an",
-                "potentials": [
-                    [20000.0, 0.0],
-                    [0.0, 0.0]
-                ]
-            },
-            {
-                "id": "bus2",
-                "phases": "an",
-                "potentials": [
-                    [20000.0, 0.0],
-                    [0.0, 0.0]
-                ]
-            }
-        ],
-        "branches": [
-            {
-                "id": "line",
-                "type": "line",
-                "phases1": "an",
-                "phases2": "an",
-                "bus1": "bus1",
-                "bus2": "bus2",
-                "length": 10,
-                "params_id": "lp"
-            }
-        ],
-        "loads": [
-            {
-                "id": "load",
-                "bus": "bus2",
-                "phases": "an",
-                "powers": [
-                    [1500000.0, -500000.0]
-                ]
-            }
-        ],
-        "sources": [
-            {
-                "id": "vs",
-                "bus": "bus1",
-                "phases": "an",
-                "voltages": [
-                    [20000.0, 0.0]
-                ]
-            }
-        ],
-        "lines_params": [
-            {
-                "id": "lp",
-                "model": "z_neutral",
-                "z_line": [
-                    [
-                        [0.05, 0.0],
-                        [0.0, 0.05]
-                    ],
-                    [
-                        [0.05, 0.0],
-                        [0.0, 0.05]
-                    ]
-                ]
-            }
-        ],
-        "transformers_params": []
-    },
-    "results": {
-        "info": {
-            "status": "success",
-            "solver": "newton",
-            "solver_params": {},
-            "iterations": 2,
-            "tolerance": 1e-06,
-            "residual": 1.9468870959826745e-12
-        },
-        "buses": [
-            {
-                "id": "bus1",
-                "phases": "an",
-                "potentials": [
-                    [20000.0, 0.0],
-                    [0.0, 0.0]
-                ]
-            },
-            {
-                "id": "bus2",
-                "phases": "an",
-                "potentials": [
-                    [19974.685919734027, -50.00000000000026],
-                    [25.31408026597291, 50.00000000000026]
-                ]
-            }
-        ],
-        "branches": [
-            {
-                "id": "line",
-                "phases1": "an",
-                "phases2": "an",
-                "currents1": [
-                    [75.31408026597299, 24.68591973402753],
-                    [-75.31408026597317, -24.685919734027355]
-                ],
-                "currents2": [
-                    [-75.31408026597299, -24.68591973402753],
-                    [75.31408026597317, 24.685919734027355]
-                ]
-            }
-        ],
-        "loads": [
-            {
-                "id": "load",
-                "phases": "an",
-                "currents": [
-                    [75.31408026597121, 24.685919734028797],
-                    [-75.31408026597121, -24.685919734028797]
-                ]
-            }
-        ],
-        "sources": [
-            {
-                "id": "vs",
-                "phases": "an",
-                "currents": [
-                    [-75.31408026597317, -24.685919734027358],
-                    [75.31408026597317, 24.685919734027358]
-                ]
-            }
-        ],
-        "grounds": [
-            {
-                "id": "gnd",
-                "potential": [0.0, 0.0]
-            }
-        ],
-        "potential_refs": [
-            {
-                "id": "pref",
-                "current": [0.0, 3.552713678800501e-15]
-            }
+          {
+            "id": "bus1",
+            "phase": "n"
+          }
         ]
-    }
+      }
+    ],
+    "potential_refs": [
+      {
+        "id": "pref",
+        "ground": "gnd"
+      }
+    ],
+    "buses": [
+      {
+        "id": "bus1",
+        "phases": "an",
+        "potentials": [
+          [20000.0, 0.0],
+          [0.0, 0.0]
+        ]
+      },
+      {
+        "id": "bus2",
+        "phases": "an",
+        "potentials": [
+          [20000.0, 0.0],
+          [0.0, 0.0]
+        ]
+      }
+    ],
+    "branches": [
+      {
+        "id": "line",
+        "type": "line",
+        "phases1": "an",
+        "phases2": "an",
+        "bus1": "bus1",
+        "bus2": "bus2",
+        "length": 10,
+        "params_id": "lp"
+      }
+    ],
+    "loads": [
+      {
+        "id": "load",
+        "bus": "bus2",
+        "phases": "an",
+        "powers": [[1500000.0, -500000.0]]
+      }
+    ],
+    "sources": [
+      {
+        "id": "vs",
+        "bus": "bus1",
+        "phases": "an",
+        "voltages": [[20000.0, 0.0]]
+      }
+    ],
+    "lines_params": [
+      {
+        "id": "lp",
+        "model": "z_neutral",
+        "z_line": [
+          [
+            [0.05, 0.0],
+            [0.0, 0.05]
+          ],
+          [
+            [0.05, 0.0],
+            [0.0, 0.05]
+          ]
+        ]
+      }
+    ],
+    "transformers_params": []
+  },
+  "results": {
+    "info": {
+      "status": "success",
+      "solver": "newton",
+      "solver_params": {},
+      "iterations": 2,
+      "tolerance": 1e-6,
+      "residual": 1.9468870959826745e-12
+    },
+    "buses": [
+      {
+        "id": "bus1",
+        "phases": "an",
+        "potentials": [
+          [20000.0, 0.0],
+          [0.0, 0.0]
+        ]
+      },
+      {
+        "id": "bus2",
+        "phases": "an",
+        "potentials": [
+          [19974.685919734027, -50.00000000000026],
+          [25.31408026597291, 50.00000000000026]
+        ]
+      }
+    ],
+    "branches": [
+      {
+        "id": "line",
+        "phases1": "an",
+        "phases2": "an",
+        "currents1": [
+          [75.31408026597299, 24.68591973402753],
+          [-75.31408026597317, -24.685919734027355]
+        ],
+        "currents2": [
+          [-75.31408026597299, -24.68591973402753],
+          [75.31408026597317, 24.685919734027355]
+        ]
+      }
+    ],
+    "loads": [
+      {
+        "id": "load",
+        "phases": "an",
+        "currents": [
+          [75.31408026597121, 24.685919734028797],
+          [-75.31408026597121, -24.685919734028797]
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "id": "vs",
+        "phases": "an",
+        "currents": [
+          [-75.31408026597317, -24.685919734027358],
+          [75.31408026597317, 24.685919734027358]
+        ]
+      }
+    ],
+    "grounds": [
+      {
+        "id": "gnd",
+        "potential": [0.0, 0.0]
+      }
+    ],
+    "potential_refs": [
+      {
+        "id": "pref",
+        "current": [0.0, 3.552713678800501e-15]
+      }
+    ]
+  }
 }

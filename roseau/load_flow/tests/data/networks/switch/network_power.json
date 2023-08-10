@@ -1,78 +1,78 @@
 {
-    "version": 1,
-    "grounds": [
+  "version": 1,
+  "grounds": [
+    {
+      "id": "ground",
+      "buses": [
         {
-            "id": "ground",
-            "buses": [
-                {
-                    "id": 1,
-                    "phase": "n"
-                }
-            ]
+          "id": 1,
+          "phase": "n"
         }
-    ],
-    "potential_refs": [
-        {
-            "id": "pref",
-            "ground": "ground"
-        }
-    ],
-    "buses": [
-        {
-            "id": 1,
-            "phases": "abcn",
-            "geometry": {
-                "type": "Point",
-                "coordinates": [0.0, 0.0]
-            }
-        },
-        {
-            "id": 2,
-            "phases": "abcn",
-            "geometry": {
-                "type": "Point",
-                "coordinates": [1.0, 0.0]
-            }
-        }
-    ],
-    "branches": [
-        {
-            "id": "switch1",
-            "type": "switch",
-            "phases1": "abcn",
-            "phases2": "abcn",
-            "bus1": 1,
-            "bus2": 2,
-            "geometry": {
-                "type": "Point",
-                "coordinates": [0.5, 0.0]
-            }
-        }
-    ],
-    "loads": [
-        {
-            "id": 0,
-            "bus": 2,
-            "phases": "abcn",
-            "powers": [
-                [4266.666666666668, 2133.333333333334],
-                [4266.666675649767, 2133.3333378248835],
-                [4266.666675649767, 2133.3333378248835]
-            ]
-        }
-    ],
-    "sources": [
-        {
-            "id": 1,
-            "bus": 1,
-            "phases": "abcn",
-            "voltages": [
-                [230.94010767585033, 0.0],
-                [-115.47005383792516, -200.00000028072188],
-                [-115.47005383792516, 200.00000028072188]
-            ]
-        }
-    ],
-    "lines_params": [],
-    "transformers_params": []
+      ]
+    }
+  ],
+  "potential_refs": [
+    {
+      "id": "pref",
+      "ground": "ground"
+    }
+  ],
+  "buses": [
+    {
+      "id": 1,
+      "phases": "abcn",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [0.0, 0.0]
+      }
+    },
+    {
+      "id": 2,
+      "phases": "abcn",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [1.0, 0.0]
+      }
+    }
+  ],
+  "branches": [
+    {
+      "id": "switch1",
+      "type": "switch",
+      "phases1": "abcn",
+      "phases2": "abcn",
+      "bus1": 1,
+      "bus2": 2,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [0.5, 0.0]
+      }
+    }
+  ],
+  "loads": [
+    {
+      "id": 0,
+      "bus": 2,
+      "phases": "abcn",
+      "powers": [
+        [4266.666666666668, 2133.333333333334],
+        [4266.666675649767, 2133.3333378248835],
+        [4266.666675649767, 2133.3333378248835]
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "id": 1,
+      "bus": 1,
+      "phases": "abcn",
+      "voltages": [
+        [230.94010767585033, 0.0],
+        [-115.47005383792516, -200.00000028072188],
+        [-115.47005383792516, 200.00000028072188]
+      ]
+    }
+  ],
+  "lines_params": [],
+  "transformers_params": []
 }

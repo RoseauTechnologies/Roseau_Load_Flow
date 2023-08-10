@@ -10,6 +10,7 @@ corresponding diagram is:
 :align: center
 ```
 ````
+
 ````{tab} American standards
 ```{image} /_static/Line/American_Shunt_Line.svg
 :alt: Shunt line diagram

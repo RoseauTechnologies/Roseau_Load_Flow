@@ -1,4 +1,5 @@
 (three-phase-transformer)=
+
 # Three-phase transformer
 
 Three-phase transformers are modeled with three spearate single-phase non-ideal transformers. The
@@ -43,8 +44,8 @@ For example, the windings with a $Dyn11$ configuration are represented by the fo
 
 ## Windings
 
-There are several ways to connect the windings of the individual internal transformers in *Roseau Load
-Flow*. They are represented in the following windings diagrams:
+There are several ways to connect the windings of the individual internal transformers in _Roseau Load
+Flow_. They are represented in the following windings diagrams:
 
 ### Wye secondary
 
@@ -163,6 +164,7 @@ The following matrices are used to model the windings configurations described a
 ```
 
 Where $k$ is the tranformation ratio of the internal transformers defined as:
+
 ```{list-table}
 :class: borderless
 :header-rows: 1

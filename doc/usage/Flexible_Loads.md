@@ -184,9 +184,9 @@ array([-2757.8035271+0.j, 0.+0.j, 0.+0.j]) <Unit('volt_ampere')>
 
 Here, one can note that:
 
-* The active power for the phase `'a'` is negative meaning production;
-* The actual value of this active power is lower that the one requested as the control was activated;
-* The power for phases `'b'` and `'c'` is 0 VA as expected.
+- The active power for the phase `'a'` is negative meaning production;
+- The actual value of this active power is lower that the one requested as the control was activated;
+- The power for phases `'b'` and `'c'` is 0 VA as expected.
 
 ## $PQ(U)$ control
 
@@ -196,13 +196,13 @@ flexible load implementing a $PQ(U)$ control instead.
 As before, we first create a `FlexibleParameter` but this time, we will use the
 `pq_u_production` class method. It requires several arguments:
 
-* `up_up` and `up_max`: the voltages defining the interval of the `P(U)` control activation.
+- `up_up` and `up_max`: the voltages defining the interval of the `P(U)` control activation.
   Below `up_up`, no control is applied and above `u_max`, the production is totally shut down.
-* `uq_min`, `uq_down`, `uq_up` and `uq_max` which are the voltages defining the `Q(U)` control
+- `uq_min`, `uq_down`, `uq_up` and `uq_max` which are the voltages defining the `Q(U)` control
   activation.
-    * Below `uq_min`, the power plant produces the maximum possible reactive power.
-    * Between `uq_down` and `uq_up`, there is no `Q(U)` control.
-    * Above `uq_max`, the power plant consumes the maximum possible reactive power.
+  - Below `uq_min`, the power plant produces the maximum possible reactive power.
+  - Between `uq_down` and `uq_up`, there is no `Q(U)` control.
+  - Above `uq_max`, the power plant consumes the maximum possible reactive power.
 
 In the example below, as the new load is a production load, only the `up_up`, `up_max`, `uq_up`
 and `uq_max` are of interests. The $Q(U)$ control starts its action at 235 V and is fully

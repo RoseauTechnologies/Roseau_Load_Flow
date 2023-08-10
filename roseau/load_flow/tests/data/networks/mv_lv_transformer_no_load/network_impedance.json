@@ -1,85 +1,85 @@
 {
-    "version": 1,
-    "grounds": [
+  "version": 1,
+  "grounds": [
+    {
+      "id": "ground",
+      "buses": [
         {
-            "id": "ground",
-            "buses": [
-                {
-                    "id": 1,
-                    "phase": "n"
-                },
-                {
-                    "id": 2,
-                    "phase": "n"
-                }
-            ]
-        }
-    ],
-    "potential_refs": [
-        {
-            "id": "pref",
-            "ground": "ground"
-        }
-    ],
-    "buses": [
-        {
-            "id": 1,
-            "phases": "abcn",
-            "geometry": {
-                "type": "Point",
-                "coordinates": [0.0, 0.0]
-            }
+          "id": 1,
+          "phase": "n"
         },
         {
-            "id": 2,
-            "phases": "abcn",
-            "geometry": {
-                "type": "Point",
-                "coordinates": [0.0, 0.5]
-            }
+          "id": 2,
+          "phase": "n"
         }
-    ],
-    "branches": [
-        {
-            "id": "transfo1",
-            "type": "transformer",
-            "phases1": "abc",
-            "phases2": "abcn",
-            "bus1": 1,
-            "bus2": 2,
-            "geometry": {
-                "type": "Point",
-                "coordinates": [0.0, 0.0]
-            },
-            "params_id": "160kVA_Dyn11",
-            "tap": 1.0
-        }
-    ],
-    "loads": [],
-    "sources": [
-        {
-            "id": 1,
-            "bus": 1,
-            "phases": "abcn",
-            "voltages": [
-                [11547.005383792515, 0.0],
-                [-5773.502691896258, -10000.000000179687],
-                [-5773.502691896258, 10000.000000179687]
-            ]
-        }
-    ],
-    "lines_params": [],
-    "transformers_params": [
-        {
-            "id": "160kVA_Dyn11",
-            "sn": 160000.0,
-            "uhv": 20000.0,
-            "ulv": 400.0,
-            "i0": 0.023,
-            "p0": 460.0,
-            "psc": 2350.0,
-            "vsc": 0.04,
-            "type": "dyn11"
-        }
-    ]
+      ]
+    }
+  ],
+  "potential_refs": [
+    {
+      "id": "pref",
+      "ground": "ground"
+    }
+  ],
+  "buses": [
+    {
+      "id": 1,
+      "phases": "abcn",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [0.0, 0.0]
+      }
+    },
+    {
+      "id": 2,
+      "phases": "abcn",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [0.0, 0.5]
+      }
+    }
+  ],
+  "branches": [
+    {
+      "id": "transfo1",
+      "type": "transformer",
+      "phases1": "abc",
+      "phases2": "abcn",
+      "bus1": 1,
+      "bus2": 2,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [0.0, 0.0]
+      },
+      "params_id": "160kVA_Dyn11",
+      "tap": 1.0
+    }
+  ],
+  "loads": [],
+  "sources": [
+    {
+      "id": 1,
+      "bus": 1,
+      "phases": "abcn",
+      "voltages": [
+        [11547.005383792515, 0.0],
+        [-5773.502691896258, -10000.000000179687],
+        [-5773.502691896258, 10000.000000179687]
+      ]
+    }
+  ],
+  "lines_params": [],
+  "transformers_params": [
+    {
+      "id": "160kVA_Dyn11",
+      "sn": 160000.0,
+      "uhv": 20000.0,
+      "ulv": 400.0,
+      "i0": 0.023,
+      "p0": 460.0,
+      "psc": 2350.0,
+      "vsc": 0.04,
+      "type": "dyn11"
+    }
+  ]
 }
