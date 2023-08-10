@@ -101,6 +101,11 @@ class RoseauLoadFlowExceptionCode(Enum):
     JSON_PREF_INVALID = auto()
     JSON_NO_RESULTS = auto()
 
+    # Catalogue Mixin
+    CATALOGUE_MISSING = auto()
+    CATALOGUE_NOT_FOUND = auto()
+    CATALOGUE_SEVERAL_FOUND = auto()
+
     @classmethod
     def package_name(cls) -> str:
         return "roseau.load_flow"

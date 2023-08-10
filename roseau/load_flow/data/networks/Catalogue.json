@@ -1,0 +1,362 @@
+{
+  "LVFeeder00939": {
+    "nb_buses": 8,
+    "nb_branches": 7,
+    "nb_loads": 12,
+    "nb_sources": 1,
+    "nb_grounds": 1,
+    "nb_potential_refs": 1,
+    "load_points": ["Winter", "Summer"]
+  },
+  "LVFeeder02639": {
+    "nb_buses": 7,
+    "nb_branches": 6,
+    "nb_loads": 10,
+    "nb_sources": 1,
+    "nb_grounds": 1,
+    "nb_potential_refs": 1,
+    "load_points": ["Winter", "Summer"]
+  },
+  "LVFeeder04790": {
+    "nb_buses": 4,
+    "nb_branches": 3,
+    "nb_loads": 4,
+    "nb_sources": 1,
+    "nb_grounds": 1,
+    "nb_potential_refs": 1,
+    "load_points": ["Winter", "Summer"]
+  },
+  "LVFeeder06713": {
+    "nb_buses": 3,
+    "nb_branches": 2,
+    "nb_loads": 2,
+    "nb_sources": 1,
+    "nb_grounds": 1,
+    "nb_potential_refs": 1,
+    "load_points": ["Summer", "Winter"]
+  },
+  "LVFeeder06926": {
+    "nb_buses": 3,
+    "nb_branches": 2,
+    "nb_loads": 2,
+    "nb_sources": 1,
+    "nb_grounds": 1,
+    "nb_potential_refs": 1,
+    "load_points": ["Winter", "Summer"]
+  },
+  "LVFeeder06975": {
+    "nb_buses": 6,
+    "nb_branches": 5,
+    "nb_loads": 8,
+    "nb_sources": 1,
+    "nb_grounds": 1,
+    "nb_potential_refs": 1,
+    "load_points": ["Winter", "Summer"]
+  },
+  "LVFeeder18498": {
+    "nb_buses": 18,
+    "nb_branches": 17,
+    "nb_loads": 32,
+    "nb_sources": 1,
+    "nb_grounds": 1,
+    "nb_potential_refs": 1,
+    "load_points": ["Winter", "Summer"]
+  },
+  "LVFeeder18769": {
+    "nb_buses": 7,
+    "nb_branches": 6,
+    "nb_loads": 10,
+    "nb_sources": 1,
+    "nb_grounds": 1,
+    "nb_potential_refs": 1,
+    "load_points": ["Winter", "Summer"]
+  },
+  "LVFeeder19558": {
+    "nb_buses": 3,
+    "nb_branches": 2,
+    "nb_loads": 2,
+    "nb_sources": 1,
+    "nb_grounds": 1,
+    "nb_potential_refs": 1,
+    "load_points": ["Winter", "Summer"]
+  },
+  "LVFeeder20256": {
+    "nb_buses": 9,
+    "nb_branches": 8,
+    "nb_loads": 14,
+    "nb_sources": 1,
+    "nb_grounds": 1,
+    "nb_potential_refs": 1,
+    "load_points": ["Winter", "Summer"]
+  },
+  "LVFeeder23832": {
+    "nb_buses": 3,
+    "nb_branches": 2,
+    "nb_loads": 2,
+    "nb_sources": 1,
+    "nb_grounds": 1,
+    "nb_potential_refs": 1,
+    "load_points": ["Winter", "Summer"]
+  },
+  "LVFeeder24400": {
+    "nb_buses": 4,
+    "nb_branches": 3,
+    "nb_loads": 4,
+    "nb_sources": 1,
+    "nb_grounds": 1,
+    "nb_potential_refs": 1,
+    "load_points": ["Summer", "Winter"]
+  },
+  "LVFeeder27429": {
+    "nb_buses": 11,
+    "nb_branches": 10,
+    "nb_loads": 18,
+    "nb_sources": 1,
+    "nb_grounds": 1,
+    "nb_potential_refs": 1,
+    "load_points": ["Winter", "Summer"]
+  },
+  "LVFeeder27681": {
+    "nb_buses": 3,
+    "nb_branches": 2,
+    "nb_loads": 2,
+    "nb_sources": 1,
+    "nb_grounds": 1,
+    "nb_potential_refs": 1,
+    "load_points": ["Winter", "Summer"]
+  },
+  "LVFeeder30216": {
+    "nb_buses": 9,
+    "nb_branches": 8,
+    "nb_loads": 14,
+    "nb_sources": 1,
+    "nb_grounds": 1,
+    "nb_potential_refs": 1,
+    "load_points": ["Summer", "Winter"]
+  },
+  "LVFeeder31441": {
+    "nb_buses": 4,
+    "nb_branches": 3,
+    "nb_loads": 4,
+    "nb_sources": 1,
+    "nb_grounds": 1,
+    "nb_potential_refs": 1,
+    "load_points": ["Summer", "Winter"]
+  },
+  "LVFeeder36284": {
+    "nb_buses": 5,
+    "nb_branches": 4,
+    "nb_loads": 6,
+    "nb_sources": 1,
+    "nb_grounds": 1,
+    "nb_potential_refs": 1,
+    "load_points": ["Winter", "Summer"]
+  },
+  "LVFeeder36360": {
+    "nb_buses": 9,
+    "nb_branches": 8,
+    "nb_loads": 14,
+    "nb_sources": 1,
+    "nb_grounds": 1,
+    "nb_potential_refs": 1,
+    "load_points": ["Summer", "Winter"]
+  },
+  "LVFeeder37263": {
+    "nb_buses": 3,
+    "nb_branches": 2,
+    "nb_loads": 2,
+    "nb_sources": 1,
+    "nb_grounds": 1,
+    "nb_potential_refs": 1,
+    "load_points": ["Summer", "Winter"]
+  },
+  "LVFeeder38211": {
+    "nb_buses": 6,
+    "nb_branches": 5,
+    "nb_loads": 8,
+    "nb_sources": 1,
+    "nb_grounds": 1,
+    "nb_potential_refs": 1,
+    "load_points": ["Winter", "Summer"]
+  },
+  "MVFeeder004": {
+    "nb_buses": 17,
+    "nb_branches": 16,
+    "nb_loads": 10,
+    "nb_sources": 1,
+    "nb_grounds": 1,
+    "nb_potential_refs": 1,
+    "load_points": ["Summer", "Winter"]
+  },
+  "MVFeeder011": {
+    "nb_buses": 50,
+    "nb_branches": 49,
+    "nb_loads": 68,
+    "nb_sources": 1,
+    "nb_grounds": 1,
+    "nb_potential_refs": 1,
+    "load_points": ["Summer", "Winter"]
+  },
+  "MVFeeder015": {
+    "nb_buses": 30,
+    "nb_branches": 29,
+    "nb_loads": 20,
+    "nb_sources": 1,
+    "nb_grounds": 1,
+    "nb_potential_refs": 1,
+    "load_points": ["Winter", "Summer"]
+  },
+  "MVFeeder032": {
+    "nb_buses": 53,
+    "nb_branches": 52,
+    "nb_loads": 40,
+    "nb_sources": 1,
+    "nb_grounds": 1,
+    "nb_potential_refs": 1,
+    "load_points": ["Summer", "Winter"]
+  },
+  "MVFeeder041": {
+    "nb_buses": 88,
+    "nb_branches": 87,
+    "nb_loads": 62,
+    "nb_sources": 1,
+    "nb_grounds": 1,
+    "nb_potential_refs": 1,
+    "load_points": ["Winter", "Summer"]
+  },
+  "MVFeeder063": {
+    "nb_buses": 39,
+    "nb_branches": 38,
+    "nb_loads": 38,
+    "nb_sources": 1,
+    "nb_grounds": 1,
+    "nb_potential_refs": 1,
+    "load_points": ["Summer", "Winter"]
+  },
+  "MVFeeder078": {
+    "nb_buses": 69,
+    "nb_branches": 68,
+    "nb_loads": 46,
+    "nb_sources": 1,
+    "nb_grounds": 1,
+    "nb_potential_refs": 1,
+    "load_points": ["Summer", "Winter"]
+  },
+  "MVFeeder115": {
+    "nb_buses": 4,
+    "nb_branches": 3,
+    "nb_loads": 4,
+    "nb_sources": 1,
+    "nb_grounds": 1,
+    "nb_potential_refs": 1,
+    "load_points": ["Summer", "Winter"]
+  },
+  "MVFeeder128": {
+    "nb_buses": 49,
+    "nb_branches": 48,
+    "nb_loads": 32,
+    "nb_sources": 1,
+    "nb_grounds": 1,
+    "nb_potential_refs": 1,
+    "load_points": ["Winter", "Summer"]
+  },
+  "MVFeeder151": {
+    "nb_buses": 59,
+    "nb_branches": 58,
+    "nb_loads": 44,
+    "nb_sources": 1,
+    "nb_grounds": 1,
+    "nb_potential_refs": 1,
+    "load_points": ["Summer", "Winter"]
+  },
+  "MVFeeder159": {
+    "nb_buses": 8,
+    "nb_branches": 7,
+    "nb_loads": 0,
+    "nb_sources": 1,
+    "nb_grounds": 1,
+    "nb_potential_refs": 1,
+    "load_points": ["Summer", "Winter"]
+  },
+  "MVFeeder176": {
+    "nb_buses": 33,
+    "nb_branches": 32,
+    "nb_loads": 20,
+    "nb_sources": 1,
+    "nb_grounds": 1,
+    "nb_potential_refs": 1,
+    "load_points": ["Summer", "Winter"]
+  },
+  "MVFeeder210": {
+    "nb_buses": 128,
+    "nb_branches": 127,
+    "nb_loads": 82,
+    "nb_sources": 1,
+    "nb_grounds": 1,
+    "nb_potential_refs": 1,
+    "load_points": ["Winter", "Summer"]
+  },
+  "MVFeeder217": {
+    "nb_buses": 44,
+    "nb_branches": 43,
+    "nb_loads": 44,
+    "nb_sources": 1,
+    "nb_grounds": 1,
+    "nb_potential_refs": 1,
+    "load_points": ["Winter", "Summer"]
+  },
+  "MVFeeder232": {
+    "nb_buses": 66,
+    "nb_branches": 65,
+    "nb_loads": 38,
+    "nb_sources": 1,
+    "nb_grounds": 1,
+    "nb_potential_refs": 1,
+    "load_points": ["Summer", "Winter"]
+  },
+  "MVFeeder251": {
+    "nb_buses": 125,
+    "nb_branches": 124,
+    "nb_loads": 106,
+    "nb_sources": 1,
+    "nb_grounds": 1,
+    "nb_potential_refs": 1,
+    "load_points": ["Winter", "Summer"]
+  },
+  "MVFeeder290": {
+    "nb_buses": 12,
+    "nb_branches": 11,
+    "nb_loads": 16,
+    "nb_sources": 1,
+    "nb_grounds": 1,
+    "nb_potential_refs": 1,
+    "load_points": ["Winter", "Summer"]
+  },
+  "MVFeeder312": {
+    "nb_buses": 11,
+    "nb_branches": 10,
+    "nb_loads": 8,
+    "nb_sources": 1,
+    "nb_grounds": 1,
+    "nb_potential_refs": 1,
+    "load_points": ["Winter", "Summer"]
+  },
+  "MVFeeder320": {
+    "nb_buses": 20,
+    "nb_branches": 19,
+    "nb_loads": 12,
+    "nb_sources": 1,
+    "nb_grounds": 1,
+    "nb_potential_refs": 1,
+    "load_points": ["Winter", "Summer"]
+  },
+  "MVFeeder339": {
+    "nb_buses": 33,
+    "nb_branches": 32,
+    "nb_loads": 28,
+    "nb_sources": 1,
+    "nb_grounds": 1,
+    "nb_potential_refs": 1,
+    "load_points": ["Summer", "Winter"]
+  }
+}

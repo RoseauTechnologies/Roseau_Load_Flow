@@ -1,52 +1,53 @@
 /* Google fonts */
-@import url('https://fonts.googleapis.com/css2?family=Raleway&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined');
+@import url("https://fonts.googleapis.com/css2?family=Raleway&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined");
 /* Fontawesome */
-@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/fontawesome.min.css');
-@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/solid.min.css');
-@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/brands.min.css');
+@import url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/fontawesome.min.css");
+@import url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/solid.min.css");
+@import url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/brands.min.css");
 
 body {
-    font-family: 'Raleway', sans-serif;
+  font-family: "Raleway", sans-serif;
 }
 
 dl dd:not(:last-child) {
-    margin-bottom: 0.5em;
+  margin-bottom: 0.5em;
 }
 
 /* Improve inline images: material and actions*/
 .material-symbols-outlined.inline-symbol {
-    font-size: 1.25em;
-    vertical-align: text-top;
-    margin: 0 0.2em;
+  font-size: 1.25em;
+  vertical-align: text-top;
+  margin: 0 0.2em;
 }
 .material-symbols-outlined.inline-symbol.counter {
-    color: #FF0000;
+  color: #ff0000;
 }
 
 .action-icons.inline-icon {
-    vertical-align: middle;
-    margin: 0 -0.5em;
+  vertical-align: middle;
+  margin: 0 -0.5em;
 }
 
 /* Justify the text */
 .content {
-    text-align: justify;
+  text-align: justify;
 }
 
 /* Erase the toctree caption in the main text */
-.toctree-wrapper.compound .caption, .toctree-wrapper.compound :not(.caption) > .caption-text {
-    display: none;
+.toctree-wrapper.compound .caption,
+.toctree-wrapper.compound :not(.caption) > .caption-text {
+  display: none;
 }
 
 /* Style of the version display in the left panel */
 .sidebar-brand-text {
-    color: var(--color-foreground-secondary);
-    font-size: var(--toc-font-size);
-    text-align: center;
+  color: var(--color-foreground-secondary);
+  font-size: var(--toc-font-size);
+  text-align: center;
 }
 
 /* Align the copy button in the middle of the first line */
 .highlight button.copybtn {
-    top: 0.25rem;
+  top: 0.25rem;
 }

@@ -7,6 +7,15 @@ by Roseau Technologies `https://www.roseautechnologies.com/en`.
 <a href="https://github.com/RoseauTechnologies/"><i class="fa-brands fa-github" ></i></a>
 <!-- TODO: reinstate the link to roseautechnologies.com above when it no longer creates problems -->
 
+With this library, there is a sample of 20 low-voltage and 20 medium-voltage feeders included for an easy
+start! Each network is given with its summer and winter load point. At *Roseau Technologies*, we are able to provide
+the major part of the French medium and low voltage networks. For more information, please contact us at
+[contact@roseautechnologies.com](mailto:contact@roseautechnologies.com).
+
+<iframe src="./_static/Network/Catalogue.html" height="600px" width="100%" frameborder="0"></iframe>
+
+More details are given in the [Catalogues page](catalogues-networks).
+
 ## Installation
 
 `roseau-load-flow` is the python interface to the solver. It is compatible with Python version 3.9
