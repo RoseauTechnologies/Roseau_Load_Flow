@@ -139,6 +139,8 @@ center_tapped_transformer_parameters = TransformerParameters(
 )
 ```
 
+A catalogue of transformer parameters is available. More details [here](catalogues-transformers).
+
 ## Available models
 
 The following transformer models are available in _Roseau Load Flow_:
