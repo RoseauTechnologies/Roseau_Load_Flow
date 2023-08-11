@@ -298,9 +298,10 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         return pd.read_csv(cls.catalogue_path() / "Catalogue.csv")
 
     @classmethod
-    @ureg_wraps(None, (None, None, None, None, None, "VA", "V", "V"), strict=False)
+    @ureg_wraps(None, (None, None, None, None, None, None, "VA", "V", "V"), strict=False)
     def from_catalogue(
         cls,
+        id: Optional[Union[str, re.Pattern[str]]] = None,
         manufacturer: Optional[Union[str, re.Pattern[str]]] = None,
         range: Optional[Union[str, re.Pattern[str]]] = None,
         efficiency: Optional[Union[str, re.Pattern[str]]] = None,
@@ -312,6 +313,9 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         """Build a transformer parameters from one in the catalogue.
 
         Args:
+            id:
+                The id of the transformer to get from the catalogue. It can be a regular expression.
+
             manufacturer:
                 The name of the manufacturer to get. It can be a regular expression.
 
@@ -343,6 +347,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         # Filter on string/regular expressions
         query_msg_list = []
         for value, column_name, display_name, display_name_plural in (
+            (id, "id", "id", "ids"),
             (manufacturer, "manufacturer", "manufacturer", "manufacturers"),
             (range, "range", "range", "ranges"),
             (efficiency, "efficiency", "efficiency", "efficiencies"),
@@ -438,9 +443,10 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         return cls.from_json(path=path)
 
     @classmethod
-    @ureg_wraps(None, (None, None, None, None, None, "VA", "V", "V"), strict=False)
+    @ureg_wraps(None, (None, None, None, None, None, None, "VA", "V", "V"), strict=False)
     def print_catalogue(
         cls,
+        id: Optional[Union[str, re.Pattern[str]]] = None,
         manufacturer: Optional[Union[str, re.Pattern[str]]] = None,
         range: Optional[Union[str, re.Pattern[str]]] = None,
         efficiency: Optional[Union[str, re.Pattern[str]]] = None,
@@ -452,6 +458,9 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         """Print the catalogue of available transformers.
 
         Args:
+            id:
+                An optional manufacturer to filter the output. It can be a regular expression.
+
             manufacturer:
                 An optional manufacturer to filter the output. It can be a regular expression.
 
@@ -478,19 +487,21 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
 
         # Start creating a table to display the results
         table = Table(title="Available Transformer Parameters")
-        table.add_column("Manufacturer")
-        table.add_column("Product range", style="color(1)", header_style="color(1)")
-        table.add_column("Efficiency", style="color(2)", header_style="color(2)")
-        table.add_column("Type", style="color(3)", header_style="color(3)")
-        table.add_column("Nominal power (kVA)", justify="right", style="color(4)", header_style="color(4)")
-        table.add_column("High voltage (kV)", justify="right", style="color(5)", header_style="color(5)")
-        table.add_column("Low voltage (kV)", justify="right", style="color(6)", header_style="color(6)")
+        table.add_column("Id")
+        table.add_column("Manufacturer", style="color(1)", header_style="color(1)")
+        table.add_column("Product range", style="color(2)", header_style="color(2)")
+        table.add_column("Efficiency", style="color(3)", header_style="color(3)")
+        table.add_column("Type", style="color(4)", header_style="color(4)")
+        table.add_column("Nominal power (kVA)", justify="right", style="color(5)", header_style="color(5)")
+        table.add_column("High voltage (kV)", justify="right", style="color(6)", header_style="color(6)")
+        table.add_column("Low voltage (kV)", justify="right", style="color(9)", header_style="color(9)")
         empty_table = True
 
         # Match on the manufacturer, range, efficiency and type
         catalogue_mask = pd.Series(True, index=catalogue_data.index)
         query_msg_list = []
         for value, column_name in (
+            (id, "id"),
             (manufacturer, "manufacturer"),
             (range, "range"),
             (efficiency, "efficiency"),
@@ -517,6 +528,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         for idx in selected_index:
             empty_table = False
             table.add_row(
+                catalogue_data.at[idx, "id"],
                 catalogue_data.at[idx, "manufacturer"],
                 catalogue_data.at[idx, "range"],
                 catalogue_data.at[idx, "efficiency"],

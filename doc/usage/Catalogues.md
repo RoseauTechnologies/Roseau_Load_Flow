@@ -168,141 +168,142 @@ This catalogue can be printed to the terminal:
 >>> TransformerParameters.print_catalogue()
 ```
 
-| Manufacturer | Product range | Efficiency           | Type  | Nominal power (kVA) | High voltage (kV) | Low voltage (kV) |
-| :----------- | :------------ | :------------------- | :---- | ------------------: | ----------------: | ---------------: |
-| FT           | Standard      | Standard             | Dyn11 |               100.0 |              20.0 |              0.4 |
-| FT           | Standard      | Standard             | Dyn11 |               160.0 |              20.0 |              0.4 |
-| FT           | Standard      | Standard             | Dyn11 |               250.0 |              20.0 |              0.4 |
-| FT           | Standard      | Standard             | Dyn11 |               315.0 |              20.0 |              0.4 |
-| FT           | Standard      | Standard             | Dyn11 |               400.0 |              20.0 |              0.4 |
-| FT           | Standard      | Standard             | Dyn11 |               500.0 |              20.0 |              0.4 |
-| FT           | Standard      | Standard             | Dyn11 |               630.0 |              20.0 |              0.4 |
-| FT           | Standard      | Standard             | Dyn11 |               800.0 |              20.0 |              0.4 |
-| FT           | Standard      | Standard             | Dyn11 |              1000.0 |              20.0 |              0.4 |
-| FT           | Standard      | Standard             | Dyn11 |              1250.0 |              20.0 |              0.4 |
-| FT           | Standard      | Standard             | Dyn11 |              1600.0 |              20.0 |              0.4 |
-| FT           | Standard      | Standard             | Dyn11 |              2000.0 |              20.0 |              0.4 |
-| FT           | Standard      | Standard             | Dyn11 |              2500.0 |              20.0 |              0.4 |
-| FT           | Standard      | Standard             | Dyn11 |              3150.0 |              20.0 |              0.4 |
-| SE           | Minera        | Standard             | Yzn11 |                50.0 |              20.0 |              0.4 |
-| SE           | Minera        | Standard             | Dyn11 |               100.0 |              20.0 |              0.4 |
-| SE           | Minera        | Standard             | Dyn11 |               160.0 |              20.0 |              0.4 |
-| SE           | Minera        | Standard             | Dyn11 |               250.0 |              20.0 |              0.4 |
-| SE           | Minera        | Standard             | Dyn11 |               315.0 |              20.0 |              0.4 |
-| SE           | Minera        | Standard             | Dyn11 |               400.0 |              20.0 |              0.4 |
-| SE           | Minera        | Standard             | Dyn11 |               500.0 |              20.0 |              0.4 |
-| SE           | Minera        | Standard             | Dyn11 |               630.0 |              20.0 |              0.4 |
-| SE           | Minera        | Standard             | Dyn11 |               800.0 |              20.0 |              0.4 |
-| SE           | Minera        | Standard             | Dyn11 |              1000.0 |              20.0 |              0.4 |
-| SE           | Minera        | Standard             | Dyn11 |              1250.0 |              20.0 |              0.4 |
-| SE           | Minera        | Standard             | Dyn11 |              1600.0 |              20.0 |              0.4 |
-| SE           | Minera        | Standard             | Dyn11 |              2000.0 |              20.0 |              0.4 |
-| SE           | Minera        | Standard             | Dyn11 |              2500.0 |              20.0 |              0.4 |
-| SE           | Minera        | C0Bk                 | Yzn11 |                50.0 |              20.0 |              0.4 |
-| SE           | Minera        | C0Bk                 | Dyn11 |               100.0 |              20.0 |              0.4 |
-| SE           | Minera        | C0Bk                 | Dyn11 |               160.0 |              20.0 |              0.4 |
-| SE           | Minera        | C0Bk                 | Dyn11 |               250.0 |              20.0 |              0.4 |
-| SE           | Minera        | C0Bk                 | Dyn11 |               315.0 |              20.0 |              0.4 |
-| SE           | Minera        | C0Bk                 | Dyn11 |               400.0 |              20.0 |              0.4 |
-| SE           | Minera        | C0Bk                 | Dyn11 |               500.0 |              20.0 |              0.4 |
-| SE           | Minera        | C0Bk                 | Dyn11 |               630.0 |              20.0 |              0.4 |
-| SE           | Minera        | C0Bk                 | Dyn11 |               800.0 |              20.0 |              0.4 |
-| SE           | Minera        | C0Bk                 | Dyn11 |              1000.0 |              20.0 |              0.4 |
-| SE           | Minera        | C0Bk                 | Dyn11 |              1250.0 |              20.0 |              0.4 |
-| SE           | Minera        | C0Bk                 | Dyn11 |              1600.0 |              20.0 |              0.4 |
-| SE           | Minera        | C0Bk                 | Dyn11 |              2000.0 |              20.0 |              0.4 |
-| SE           | Minera        | C0Bk                 | Dyn11 |              2500.0 |              20.0 |              0.4 |
-| SE           | Minera        | B0Bk                 | Yzn11 |                50.0 |              20.0 |              0.4 |
-| SE           | Minera        | B0Bk                 | Dyn11 |               100.0 |              20.0 |              0.4 |
-| SE           | Minera        | B0Bk                 | Dyn11 |               160.0 |              20.0 |              0.4 |
-| SE           | Minera        | B0Bk                 | Dyn11 |               250.0 |              20.0 |              0.4 |
-| SE           | Minera        | B0Bk                 | Dyn11 |               315.0 |              20.0 |              0.4 |
-| SE           | Minera        | B0Bk                 | Dyn11 |               400.0 |              20.0 |              0.4 |
-| SE           | Minera        | B0Bk                 | Dyn11 |               500.0 |              20.0 |              0.4 |
-| SE           | Minera        | B0Bk                 | Dyn11 |               630.0 |              20.0 |              0.4 |
-| SE           | Minera        | B0Bk                 | Dyn11 |               800.0 |              20.0 |              0.4 |
-| SE           | Minera        | B0Bk                 | Dyn11 |              1000.0 |              20.0 |              0.4 |
-| SE           | Minera        | B0Bk                 | Dyn11 |              1250.0 |              20.0 |              0.4 |
-| SE           | Minera        | B0Bk                 | Dyn11 |              1600.0 |              20.0 |              0.4 |
-| SE           | Minera        | B0Bk                 | Dyn11 |              2000.0 |              20.0 |              0.4 |
-| SE           | Minera        | B0Bk                 | Dyn11 |              2500.0 |              20.0 |              0.4 |
-| SE           | Minera        | A0Ak                 | Yzn11 |                50.0 |              20.0 |              0.4 |
-| SE           | Minera        | A0Ak                 | Dyn11 |               100.0 |              20.0 |              0.4 |
-| SE           | Minera        | A0Ak                 | Dyn11 |               160.0 |              20.0 |              0.4 |
-| SE           | Minera        | A0Ak                 | Dyn11 |               250.0 |              20.0 |              0.4 |
-| SE           | Minera        | A0Ak                 | Dyn11 |               315.0 |              20.0 |              0.4 |
-| SE           | Minera        | A0Ak                 | Dyn11 |               400.0 |              20.0 |              0.4 |
-| SE           | Minera        | A0Ak                 | Dyn11 |               500.0 |              20.0 |              0.4 |
-| SE           | Minera        | A0Ak                 | Dyn11 |               630.0 |              20.0 |              0.4 |
-| SE           | Minera        | A0Ak                 | Dyn11 |               800.0 |              20.0 |              0.4 |
-| SE           | Minera        | A0Ak                 | Dyn11 |              1000.0 |              20.0 |              0.4 |
-| SE           | Minera        | A0Ak                 | Dyn11 |              1250.0 |              20.0 |              0.4 |
-| SE           | Minera        | A0Ak                 | Dyn11 |              1600.0 |              20.0 |              0.4 |
-| SE           | Minera        | A0Ak                 | Dyn11 |              2000.0 |              20.0 |              0.4 |
-| SE           | Minera        | A0Ak                 | Dyn11 |              2500.0 |              20.0 |              0.4 |
-| SE           | Trihal        | Standard             | Dyn11 |               160.0 |              20.0 |              0.4 |
-| SE           | Trihal        | Standard             | Dyn11 |               250.0 |              20.0 |              0.4 |
-| SE           | Trihal        | Standard             | Dyn11 |               400.0 |              20.0 |              0.4 |
-| SE           | Trihal        | Standard             | Dyn11 |               630.0 |              20.0 |              0.4 |
-| SE           | Trihal        | Standard             | Dyn11 |               800.0 |              20.0 |              0.4 |
-| SE           | Trihal        | Standard             | Dyn11 |              1000.0 |              20.0 |              0.4 |
-| SE           | Trihal        | Standard             | Dyn11 |              1250.0 |              20.0 |              0.4 |
-| SE           | Trihal        | Standard             | Dyn11 |              1600.0 |              20.0 |              0.4 |
-| SE           | Trihal        | Standard             | Dyn11 |              2000.0 |              20.0 |              0.4 |
-| SE           | Trihal        | Standard             | Dyn11 |              2500.0 |              20.0 |              0.4 |
-| SE           | Trihal        | Reduced_Losses       | Dyn11 |               160.0 |              20.0 |              0.4 |
-| SE           | Trihal        | Reduced_Losses       | Dyn11 |               250.0 |              20.0 |              0.4 |
-| SE           | Trihal        | Reduced_Losses       | Dyn11 |               400.0 |              20.0 |              0.4 |
-| SE           | Trihal        | Reduced_Losses       | Dyn11 |               630.0 |              20.0 |              0.4 |
-| SE           | Trihal        | Reduced_Losses       | Dyn11 |               800.0 |              20.0 |              0.4 |
-| SE           | Trihal        | Reduced_Losses       | Dyn11 |              1000.0 |              20.0 |              0.4 |
-| SE           | Trihal        | Reduced_Losses       | Dyn11 |              1250.0 |              20.0 |              0.4 |
-| SE           | Trihal        | Reduced_Losses       | Dyn11 |              1600.0 |              20.0 |              0.4 |
-| SE           | Trihal        | Reduced_Losses       | Dyn11 |              2000.0 |              20.0 |              0.4 |
-| SE           | Trihal        | Reduced_Losses       | Dyn11 |              2500.0 |              20.0 |              0.4 |
-| SE           | Trihal        | Extra_Reduced_Losses | Dyn11 |               160.0 |              20.0 |              0.4 |
-| SE           | Trihal        | Extra_Reduced_Losses | Dyn11 |               250.0 |              20.0 |              0.4 |
-| SE           | Trihal        | Extra_Reduced_Losses | Dyn11 |               400.0 |              20.0 |              0.4 |
-| SE           | Trihal        | Extra_Reduced_Losses | Dyn11 |               630.0 |              20.0 |              0.4 |
-| SE           | Trihal        | Extra_Reduced_Losses | Dyn11 |               800.0 |              20.0 |              0.4 |
-| SE           | Trihal        | Extra_Reduced_Losses | Dyn11 |              1000.0 |              20.0 |              0.4 |
-| SE           | Trihal        | Extra_Reduced_Losses | Dyn11 |              1250.0 |              20.0 |              0.4 |
-| SE           | Trihal        | Extra_Reduced_Losses | Dyn11 |              1600.0 |              20.0 |              0.4 |
-| SE           | Trihal        | Extra_Reduced_Losses | Dyn11 |              2000.0 |              20.0 |              0.4 |
-| SE           | Trihal        | Extra_Reduced_Losses | Dyn11 |              2500.0 |              20.0 |              0.4 |
-| SE           | Vegeta        | Standard             | Dyn11 |                50.0 |              20.0 |              0.4 |
-| SE           | Vegeta        | Standard             | Dyn11 |               100.0 |              20.0 |              0.4 |
-| SE           | Vegeta        | Standard             | Dyn11 |               160.0 |              20.0 |              0.4 |
-| SE           | Vegeta        | Standard             | Dyn11 |               250.0 |              20.0 |              0.4 |
-| SE           | Vegeta        | Standard             | Dyn11 |               315.0 |              20.0 |              0.4 |
-| SE           | Vegeta        | Standard             | Dyn11 |               400.0 |              20.0 |              0.4 |
-| SE           | Vegeta        | Standard             | Dyn11 |               500.0 |              20.0 |              0.4 |
-| SE           | Vegeta        | Standard             | Dyn11 |               630.0 |              20.0 |              0.4 |
-| SE           | Vegeta        | Standard             | Dyn11 |               800.0 |              20.0 |              0.4 |
-| SE           | Vegeta        | Standard             | Dyn11 |              1000.0 |              20.0 |              0.4 |
-| SE           | Vegeta        | Standard             | Dyn11 |              1250.0 |              20.0 |              0.4 |
-| SE           | Vegeta        | Standard             | Dyn11 |              1600.0 |              20.0 |              0.4 |
-| SE           | Vegeta        | Standard             | Dyn11 |              2000.0 |              20.0 |              0.4 |
-| SE           | Vegeta        | Standard             | Dyn11 |              2500.0 |              20.0 |              0.4 |
-| SE           | Vegeta        | Standard             | Dyn11 |              3150.0 |              20.0 |              0.4 |
-| SE           | Vegeta        | C0Bk                 | Dyn11 |                50.0 |              20.0 |              0.4 |
-| SE           | Vegeta        | C0Bk                 | Dyn11 |               100.0 |              20.0 |              0.4 |
-| SE           | Vegeta        | C0Bk                 | Dyn11 |               160.0 |              20.0 |              0.4 |
-| SE           | Vegeta        | C0Bk                 | Dyn11 |               250.0 |              20.0 |              0.4 |
-| SE           | Vegeta        | C0Bk                 | Dyn11 |               315.0 |              20.0 |              0.4 |
-| SE           | Vegeta        | C0Bk                 | Dyn11 |               400.0 |              20.0 |              0.4 |
-| SE           | Vegeta        | C0Bk                 | Dyn11 |               500.0 |              20.0 |              0.4 |
-| SE           | Vegeta        | C0Bk                 | Dyn11 |               630.0 |              20.0 |              0.4 |
-| SE           | Vegeta        | C0Bk                 | Dyn11 |               800.0 |              20.0 |              0.4 |
-| SE           | Vegeta        | C0Bk                 | Dyn11 |              1000.0 |              20.0 |              0.4 |
-| SE           | Vegeta        | C0Bk                 | Dyn11 |              1250.0 |              20.0 |              0.4 |
-| SE           | Vegeta        | C0Bk                 | Dyn11 |              1600.0 |              20.0 |              0.4 |
-| SE           | Vegeta        | C0Bk                 | Dyn11 |              2000.0 |              20.0 |              0.4 |
-| SE           | Vegeta        | C0Bk                 | Dyn11 |              2500.0 |              20.0 |              0.4 |
-| SE           | Vegeta        | C0Bk                 | Dyn11 |              3150.0 |              20.0 |              0.4 |
+| Id                                     | Manufacturer | Product range | Efficiency           | Type  | Nominal power (kVA) | High voltage (kV) | Low voltage (kV) |
+| :------------------------------------- | :----------- | :------------ | :------------------- | :---- | ------------------: | ----------------: | ---------------: |
+| FT_Standard_Standard_100kVA            | FT           | Standard      | Standard             | Dyn11 |               100.0 |              20.0 |              0.4 |
+| FT_Standard_Standard_160kVA            | FT           | Standard      | Standard             | Dyn11 |               160.0 |              20.0 |              0.4 |
+| FT_Standard_Standard_250kVA            | FT           | Standard      | Standard             | Dyn11 |               250.0 |              20.0 |              0.4 |
+| FT_Standard_Standard_315kVA            | FT           | Standard      | Standard             | Dyn11 |               315.0 |              20.0 |              0.4 |
+| FT_Standard_Standard_400kVA            | FT           | Standard      | Standard             | Dyn11 |               400.0 |              20.0 |              0.4 |
+| FT_Standard_Standard_500kVA            | FT           | Standard      | Standard             | Dyn11 |               500.0 |              20.0 |              0.4 |
+| FT_Standard_Standard_630kVA            | FT           | Standard      | Standard             | Dyn11 |               630.0 |              20.0 |              0.4 |
+| FT_Standard_Standard_800kVA            | FT           | Standard      | Standard             | Dyn11 |               800.0 |              20.0 |              0.4 |
+| FT_Standard_Standard_1000kVA           | FT           | Standard      | Standard             | Dyn11 |              1000.0 |              20.0 |              0.4 |
+| FT_Standard_Standard_1250kVA           | FT           | Standard      | Standard             | Dyn11 |              1250.0 |              20.0 |              0.4 |
+| FT_Standard_Standard_1600kVA           | FT           | Standard      | Standard             | Dyn11 |              1600.0 |              20.0 |              0.4 |
+| FT_Standard_Standard_2000kVA           | FT           | Standard      | Standard             | Dyn11 |              2000.0 |              20.0 |              0.4 |
+| FT_Standard_Standard_2500kVA           | FT           | Standard      | Standard             | Dyn11 |              2500.0 |              20.0 |              0.4 |
+| FT_Standard_Standard_3150kVA           | FT           | Standard      | Standard             | Dyn11 |              3150.0 |              20.0 |              0.4 |
+| SE_Minera_A0Ak_50kVA                   | SE           | Minera        | A0Ak                 | Yzn11 |                50.0 |              20.0 |              0.4 |
+| SE_Minera_A0Ak_100kVA                  | SE           | Minera        | A0Ak                 | Dyn11 |               100.0 |              20.0 |              0.4 |
+| SE_Minera_A0Ak_160kVA                  | SE           | Minera        | A0Ak                 | Dyn11 |               160.0 |              20.0 |              0.4 |
+| SE_Minera_A0Ak_250kVA                  | SE           | Minera        | A0Ak                 | Dyn11 |               250.0 |              20.0 |              0.4 |
+| SE_Minera_A0Ak_315kVA                  | SE           | Minera        | A0Ak                 | Dyn11 |               315.0 |              20.0 |              0.4 |
+| SE_Minera_A0Ak_400kVA                  | SE           | Minera        | A0Ak                 | Dyn11 |               400.0 |              20.0 |              0.4 |
+| SE_Minera_A0Ak_500kVA                  | SE           | Minera        | A0Ak                 | Dyn11 |               500.0 |              20.0 |              0.4 |
+| SE_Minera_A0Ak_630kVA                  | SE           | Minera        | A0Ak                 | Dyn11 |               630.0 |              20.0 |              0.4 |
+| SE_Minera_A0Ak_800kVA                  | SE           | Minera        | A0Ak                 | Dyn11 |               800.0 |              20.0 |              0.4 |
+| SE_Minera_A0Ak_1000kVA                 | SE           | Minera        | A0Ak                 | Dyn11 |              1000.0 |              20.0 |              0.4 |
+| SE_Minera_A0Ak_1250kVA                 | SE           | Minera        | A0Ak                 | Dyn11 |              1250.0 |              20.0 |              0.4 |
+| SE_Minera_A0Ak_1600kVA                 | SE           | Minera        | A0Ak                 | Dyn11 |              1600.0 |              20.0 |              0.4 |
+| SE_Minera_A0Ak_2000kVA                 | SE           | Minera        | A0Ak                 | Dyn11 |              2000.0 |              20.0 |              0.4 |
+| SE_Minera_A0Ak_2500kVA                 | SE           | Minera        | A0Ak                 | Dyn11 |              2500.0 |              20.0 |              0.4 |
+| SE_Minera_B0Bk_50kVA                   | SE           | Minera        | B0Bk                 | Yzn11 |                50.0 |              20.0 |              0.4 |
+| SE_Minera_B0Bk_100kVA                  | SE           | Minera        | B0Bk                 | Dyn11 |               100.0 |              20.0 |              0.4 |
+| SE_Minera_B0Bk_160kVA                  | SE           | Minera        | B0Bk                 | Dyn11 |               160.0 |              20.0 |              0.4 |
+| SE_Minera_B0Bk_250kVA                  | SE           | Minera        | B0Bk                 | Dyn11 |               250.0 |              20.0 |              0.4 |
+| SE_Minera_B0Bk_315kVA                  | SE           | Minera        | B0Bk                 | Dyn11 |               315.0 |              20.0 |              0.4 |
+| SE_Minera_B0Bk_400kVA                  | SE           | Minera        | B0Bk                 | Dyn11 |               400.0 |              20.0 |              0.4 |
+| SE_Minera_B0Bk_500kVA                  | SE           | Minera        | B0Bk                 | Dyn11 |               500.0 |              20.0 |              0.4 |
+| SE_Minera_B0Bk_630kVA                  | SE           | Minera        | B0Bk                 | Dyn11 |               630.0 |              20.0 |              0.4 |
+| SE_Minera_B0Bk_800kVA                  | SE           | Minera        | B0Bk                 | Dyn11 |               800.0 |              20.0 |              0.4 |
+| SE_Minera_B0Bk_1000kVA                 | SE           | Minera        | B0Bk                 | Dyn11 |              1000.0 |              20.0 |              0.4 |
+| SE_Minera_B0Bk_1250kVA                 | SE           | Minera        | B0Bk                 | Dyn11 |              1250.0 |              20.0 |              0.4 |
+| SE_Minera_B0Bk_1600kVA                 | SE           | Minera        | B0Bk                 | Dyn11 |              1600.0 |              20.0 |              0.4 |
+| SE_Minera_B0Bk_2000kVA                 | SE           | Minera        | B0Bk                 | Dyn11 |              2000.0 |              20.0 |              0.4 |
+| SE_Minera_B0Bk_2500kVA                 | SE           | Minera        | B0Bk                 | Dyn11 |              2500.0 |              20.0 |              0.4 |
+| SE_Minera_C0Bk_50kVA                   | SE           | Minera        | C0Bk                 | Yzn11 |                50.0 |              20.0 |              0.4 |
+| SE_Minera_C0Bk_100kVA                  | SE           | Minera        | C0Bk                 | Dyn11 |               100.0 |              20.0 |              0.4 |
+| SE_Minera_C0Bk_160kVA                  | SE           | Minera        | C0Bk                 | Dyn11 |               160.0 |              20.0 |              0.4 |
+| SE_Minera_C0Bk_250kVA                  | SE           | Minera        | C0Bk                 | Dyn11 |               250.0 |              20.0 |              0.4 |
+| SE_Minera_C0Bk_315kVA                  | SE           | Minera        | C0Bk                 | Dyn11 |               315.0 |              20.0 |              0.4 |
+| SE_Minera_C0Bk_400kVA                  | SE           | Minera        | C0Bk                 | Dyn11 |               400.0 |              20.0 |              0.4 |
+| SE_Minera_C0Bk_500kVA                  | SE           | Minera        | C0Bk                 | Dyn11 |               500.0 |              20.0 |              0.4 |
+| SE_Minera_C0Bk_630kVA                  | SE           | Minera        | C0Bk                 | Dyn11 |               630.0 |              20.0 |              0.4 |
+| SE_Minera_C0Bk_800kVA                  | SE           | Minera        | C0Bk                 | Dyn11 |               800.0 |              20.0 |              0.4 |
+| SE_Minera_C0Bk_1000kVA                 | SE           | Minera        | C0Bk                 | Dyn11 |              1000.0 |              20.0 |              0.4 |
+| SE_Minera_C0Bk_1250kVA                 | SE           | Minera        | C0Bk                 | Dyn11 |              1250.0 |              20.0 |              0.4 |
+| SE_Minera_C0Bk_1600kVA                 | SE           | Minera        | C0Bk                 | Dyn11 |              1600.0 |              20.0 |              0.4 |
+| SE_Minera_C0Bk_2000kVA                 | SE           | Minera        | C0Bk                 | Dyn11 |              2000.0 |              20.0 |              0.4 |
+| SE_Minera_C0Bk_2500kVA                 | SE           | Minera        | C0Bk                 | Dyn11 |              2500.0 |              20.0 |              0.4 |
+| SE_Minera_Standard_50kVA               | SE           | Minera        | Standard             | Yzn11 |                50.0 |              20.0 |              0.4 |
+| SE_Minera_Standard_100kVA              | SE           | Minera        | Standard             | Dyn11 |               100.0 |              20.0 |              0.4 |
+| SE_Minera_Standard_160kVA              | SE           | Minera        | Standard             | Dyn11 |               160.0 |              20.0 |              0.4 |
+| SE_Minera_Standard_250kVA              | SE           | Minera        | Standard             | Dyn11 |               250.0 |              20.0 |              0.4 |
+| SE_Minera_Standard_315kVA              | SE           | Minera        | Standard             | Dyn11 |               315.0 |              20.0 |              0.4 |
+| SE_Minera_Standard_400kVA              | SE           | Minera        | Standard             | Dyn11 |               400.0 |              20.0 |              0.4 |
+| SE_Minera_Standard_500kVA              | SE           | Minera        | Standard             | Dyn11 |               500.0 |              20.0 |              0.4 |
+| SE_Minera_Standard_630kVA              | SE           | Minera        | Standard             | Dyn11 |               630.0 |              20.0 |              0.4 |
+| SE_Minera_Standard_800kVA              | SE           | Minera        | Standard             | Dyn11 |               800.0 |              20.0 |              0.4 |
+| SE_Minera_Standard_1000kVA             | SE           | Minera        | Standard             | Dyn11 |              1000.0 |              20.0 |              0.4 |
+| SE_Minera_Standard_1250kVA             | SE           | Minera        | Standard             | Dyn11 |              1250.0 |              20.0 |              0.4 |
+| SE_Minera_Standard_1600kVA             | SE           | Minera        | Standard             | Dyn11 |              1600.0 |              20.0 |              0.4 |
+| SE_Minera_Standard_2000kVA             | SE           | Minera        | Standard             | Dyn11 |              2000.0 |              20.0 |              0.4 |
+| SE_Minera_Standard_2500kVA             | SE           | Minera        | Standard             | Dyn11 |              2500.0 |              20.0 |              0.4 |
+| SE_Trihal_Extra_Reduced_Losses_160kVA  | SE           | Trihal        | Extra_Reduced_Losses | Dyn11 |               160.0 |              20.0 |              0.4 |
+| SE_Trihal_Extra_Reduced_Losses_250kVA  | SE           | Trihal        | Extra_Reduced_Losses | Dyn11 |               250.0 |              20.0 |              0.4 |
+| SE_Trihal_Extra_Reduced_Losses_400kVA  | SE           | Trihal        | Extra_Reduced_Losses | Dyn11 |               400.0 |              20.0 |              0.4 |
+| SE_Trihal_Extra_Reduced_Losses_630kVA  | SE           | Trihal        | Extra_Reduced_Losses | Dyn11 |               630.0 |              20.0 |              0.4 |
+| SE_Trihal_Extra_Reduced_Losses_800kVA  | SE           | Trihal        | Extra_Reduced_Losses | Dyn11 |               800.0 |              20.0 |              0.4 |
+| SE_Trihal_Extra_Reduced_Losses_1000kVA | SE           | Trihal        | Extra_Reduced_Losses | Dyn11 |              1000.0 |              20.0 |              0.4 |
+| SE_Trihal_Extra_Reduced_Losses_1250kVA | SE           | Trihal        | Extra_Reduced_Losses | Dyn11 |              1250.0 |              20.0 |              0.4 |
+| SE_Trihal_Extra_Reduced_Losses_1600kVA | SE           | Trihal        | Extra_Reduced_Losses | Dyn11 |              1600.0 |              20.0 |              0.4 |
+| SE_Trihal_Extra_Reduced_Losses_2000kVA | SE           | Trihal        | Extra_Reduced_Losses | Dyn11 |              2000.0 |              20.0 |              0.4 |
+| SE_Trihal_Extra_Reduced_Losses_2500kVA | SE           | Trihal        | Extra_Reduced_Losses | Dyn11 |              2500.0 |              20.0 |              0.4 |
+| SE_Trihal_Reduced_Losses_160kVA        | SE           | Trihal        | Reduced_Losses       | Dyn11 |               160.0 |              20.0 |              0.4 |
+| SE_Trihal_Reduced_Losses_250kVA        | SE           | Trihal        | Reduced_Losses       | Dyn11 |               250.0 |              20.0 |              0.4 |
+| SE_Trihal_Reduced_Losses_400kVA        | SE           | Trihal        | Reduced_Losses       | Dyn11 |               400.0 |              20.0 |              0.4 |
+| SE_Trihal_Reduced_Losses_630kVA        | SE           | Trihal        | Reduced_Losses       | Dyn11 |               630.0 |              20.0 |              0.4 |
+| SE_Trihal_Reduced_Losses_800kVA        | SE           | Trihal        | Reduced_Losses       | Dyn11 |               800.0 |              20.0 |              0.4 |
+| SE_Trihal_Reduced_Losses_1000kVA       | SE           | Trihal        | Reduced_Losses       | Dyn11 |              1000.0 |              20.0 |              0.4 |
+| SE_Trihal_Reduced_Losses_1250kVA       | SE           | Trihal        | Reduced_Losses       | Dyn11 |              1250.0 |              20.0 |              0.4 |
+| SE_Trihal_Reduced_Losses_1600kVA       | SE           | Trihal        | Reduced_Losses       | Dyn11 |              1600.0 |              20.0 |              0.4 |
+| SE_Trihal_Reduced_Losses_2000kVA       | SE           | Trihal        | Reduced_Losses       | Dyn11 |              2000.0 |              20.0 |              0.4 |
+| SE_Trihal_Reduced_Losses_2500kVA       | SE           | Trihal        | Reduced_Losses       | Dyn11 |              2500.0 |              20.0 |              0.4 |
+| SE_Trihal_Standard_160kVA              | SE           | Trihal        | Standard             | Dyn11 |               160.0 |              20.0 |              0.4 |
+| SE_Trihal_Standard_250kVA              | SE           | Trihal        | Standard             | Dyn11 |               250.0 |              20.0 |              0.4 |
+| SE_Trihal_Standard_400kVA              | SE           | Trihal        | Standard             | Dyn11 |               400.0 |              20.0 |              0.4 |
+| SE_Trihal_Standard_630kVA              | SE           | Trihal        | Standard             | Dyn11 |               630.0 |              20.0 |              0.4 |
+| SE_Trihal_Standard_800kVA              | SE           | Trihal        | Standard             | Dyn11 |               800.0 |              20.0 |              0.4 |
+| SE_Trihal_Standard_1000kVA             | SE           | Trihal        | Standard             | Dyn11 |              1000.0 |              20.0 |              0.4 |
+| SE_Trihal_Standard_1250kVA             | SE           | Trihal        | Standard             | Dyn11 |              1250.0 |              20.0 |              0.4 |
+| SE_Trihal_Standard_1600kVA             | SE           | Trihal        | Standard             | Dyn11 |              1600.0 |              20.0 |              0.4 |
+| SE_Trihal_Standard_2000kVA             | SE           | Trihal        | Standard             | Dyn11 |              2000.0 |              20.0 |              0.4 |
+| SE_Trihal_Standard_2500kVA             | SE           | Trihal        | Standard             | Dyn11 |              2500.0 |              20.0 |              0.4 |
+| SE_Vegeta_C0Bk_50kVA                   | SE           | Vegeta        | C0Bk                 | Dyn11 |                50.0 |              20.0 |              0.4 |
+| SE_Vegeta_C0Bk_100kVA                  | SE           | Vegeta        | C0Bk                 | Dyn11 |               100.0 |              20.0 |              0.4 |
+| SE_Vegeta_C0Bk_160kVA                  | SE           | Vegeta        | C0Bk                 | Dyn11 |               160.0 |              20.0 |              0.4 |
+| SE_Vegeta_C0Bk_250kVA                  | SE           | Vegeta        | C0Bk                 | Dyn11 |               250.0 |              20.0 |              0.4 |
+| SE_Vegeta_C0Bk_315kVA                  | SE           | Vegeta        | C0Bk                 | Dyn11 |               315.0 |              20.0 |              0.4 |
+| SE_Vegeta_C0Bk_400kVA                  | SE           | Vegeta        | C0Bk                 | Dyn11 |               400.0 |              20.0 |              0.4 |
+| SE_Vegeta_C0Bk_500kVA                  | SE           | Vegeta        | C0Bk                 | Dyn11 |               500.0 |              20.0 |              0.4 |
+| SE_Vegeta_C0Bk_630kVA                  | SE           | Vegeta        | C0Bk                 | Dyn11 |               630.0 |              20.0 |              0.4 |
+| SE_Vegeta_C0Bk_800kVA                  | SE           | Vegeta        | C0Bk                 | Dyn11 |               800.0 |              20.0 |              0.4 |
+| SE_Vegeta_C0Bk_1000kVA                 | SE           | Vegeta        | C0Bk                 | Dyn11 |              1000.0 |              20.0 |              0.4 |
+| SE_Vegeta_C0Bk_1250kVA                 | SE           | Vegeta        | C0Bk                 | Dyn11 |              1250.0 |              20.0 |              0.4 |
+| SE_Vegeta_C0Bk_1600kVA                 | SE           | Vegeta        | C0Bk                 | Dyn11 |              1600.0 |              20.0 |              0.4 |
+| SE_Vegeta_C0Bk_2000kVA                 | SE           | Vegeta        | C0Bk                 | Dyn11 |              2000.0 |              20.0 |              0.4 |
+| SE_Vegeta_C0Bk_2500kVA                 | SE           | Vegeta        | C0Bk                 | Dyn11 |              2500.0 |              20.0 |              0.4 |
+| SE_Vegeta_C0Bk_3150kVA                 | SE           | Vegeta        | C0Bk                 | Dyn11 |              3150.0 |              20.0 |              0.4 |
+| SE_Vegeta_Standard_50kVA               | SE           | Vegeta        | Standard             | Dyn11 |                50.0 |              20.0 |              0.4 |
+| SE_Vegeta_Standard_100kVA              | SE           | Vegeta        | Standard             | Dyn11 |               100.0 |              20.0 |              0.4 |
+| SE_Vegeta_Standard_160kVA              | SE           | Vegeta        | Standard             | Dyn11 |               160.0 |              20.0 |              0.4 |
+| SE_Vegeta_Standard_250kVA              | SE           | Vegeta        | Standard             | Dyn11 |               250.0 |              20.0 |              0.4 |
+| SE_Vegeta_Standard_315kVA              | SE           | Vegeta        | Standard             | Dyn11 |               315.0 |              20.0 |              0.4 |
+| SE_Vegeta_Standard_400kVA              | SE           | Vegeta        | Standard             | Dyn11 |               400.0 |              20.0 |              0.4 |
+| SE_Vegeta_Standard_500kVA              | SE           | Vegeta        | Standard             | Dyn11 |               500.0 |              20.0 |              0.4 |
+| SE_Vegeta_Standard_630kVA              | SE           | Vegeta        | Standard             | Dyn11 |               630.0 |              20.0 |              0.4 |
+| SE_Vegeta_Standard_800kVA              | SE           | Vegeta        | Standard             | Dyn11 |               800.0 |              20.0 |              0.4 |
+| SE_Vegeta_Standard_1000kVA             | SE           | Vegeta        | Standard             | Dyn11 |              1000.0 |              20.0 |              0.4 |
+| SE_Vegeta_Standard_1250kVA             | SE           | Vegeta        | Standard             | Dyn11 |              1250.0 |              20.0 |              0.4 |
+| SE_Vegeta_Standard_1600kVA             | SE           | Vegeta        | Standard             | Dyn11 |              1600.0 |              20.0 |              0.4 |
+| SE_Vegeta_Standard_2000kVA             | SE           | Vegeta        | Standard             | Dyn11 |              2000.0 |              20.0 |              0.4 |
+| SE_Vegeta_Standard_2500kVA             | SE           | Vegeta        | Standard             | Dyn11 |              2500.0 |              20.0 |              0.4 |
+| SE_Vegeta_Standard_3150kVA             | SE           | Vegeta        | Standard             | Dyn11 |              3150.0 |              20.0 |              0.4 |
 
 The following data are available in this table:
 
+- the **id**: a unique id among the catalogue.
 - the **manufacturer**: two manufacturers are available. `"SE"` stands for "Schneider-Electric" and `"FT"` stands for
   "France Transfo".
 - the product **range** which depends on the manufacturer
@@ -319,22 +320,22 @@ following command only prints transformer parameters of transformers with an eff
 >>> TransformerParameters.print_catalogue(efficiency="A0Ak")
 ```
 
-| Manufacturer | Product range | Efficiency | Type  | Nominal power (kVA) | High voltage (kV) | Low voltage (kV) |
-| :----------- | :------------ | :--------- | :---- | ------------------: | ----------------: | ---------------: |
-| SE           | Minera        | A0Ak       | Yzn11 |                50.0 |              20.0 |              0.4 |
-| SE           | Minera        | A0Ak       | Dyn11 |               100.0 |              20.0 |              0.4 |
-| SE           | Minera        | A0Ak       | Dyn11 |               160.0 |              20.0 |              0.4 |
-| SE           | Minera        | A0Ak       | Dyn11 |               250.0 |              20.0 |              0.4 |
-| SE           | Minera        | A0Ak       | Dyn11 |               315.0 |              20.0 |              0.4 |
-| SE           | Minera        | A0Ak       | Dyn11 |               400.0 |              20.0 |              0.4 |
-| SE           | Minera        | A0Ak       | Dyn11 |               500.0 |              20.0 |              0.4 |
-| SE           | Minera        | A0Ak       | Dyn11 |               630.0 |              20.0 |              0.4 |
-| SE           | Minera        | A0Ak       | Dyn11 |               800.0 |              20.0 |              0.4 |
-| SE           | Minera        | A0Ak       | Dyn11 |              1000.0 |              20.0 |              0.4 |
-| SE           | Minera        | A0Ak       | Dyn11 |              1250.0 |              20.0 |              0.4 |
-| SE           | Minera        | A0Ak       | Dyn11 |              1600.0 |              20.0 |              0.4 |
-| SE           | Minera        | A0Ak       | Dyn11 |              2000.0 |              20.0 |              0.4 |
-| SE           | Minera        | A0Ak       | Dyn11 |              2500.0 |              20.0 |              0.4 |
+| Id                     | Manufacturer | Product range | Efficiency | Type  | Nominal power (kVA) | High voltage (kV) | Low voltage (kV) |
+| :--------------------- | :----------- | :------------ | :--------- | :---- | ------------------: | ----------------: | ---------------: |
+| SE_Minera_A0Ak_50kVA   | SE           | Minera        | A0Ak       | Yzn11 |                50.0 |              20.0 |              0.4 |
+| SE_Minera_A0Ak_100kVA  | SE           | Minera        | A0Ak       | Dyn11 |               100.0 |              20.0 |              0.4 |
+| SE_Minera_A0Ak_160kVA  | SE           | Minera        | A0Ak       | Dyn11 |               160.0 |              20.0 |              0.4 |
+| SE_Minera_A0Ak_250kVA  | SE           | Minera        | A0Ak       | Dyn11 |               250.0 |              20.0 |              0.4 |
+| SE_Minera_A0Ak_315kVA  | SE           | Minera        | A0Ak       | Dyn11 |               315.0 |              20.0 |              0.4 |
+| SE_Minera_A0Ak_400kVA  | SE           | Minera        | A0Ak       | Dyn11 |               400.0 |              20.0 |              0.4 |
+| SE_Minera_A0Ak_500kVA  | SE           | Minera        | A0Ak       | Dyn11 |               500.0 |              20.0 |              0.4 |
+| SE_Minera_A0Ak_630kVA  | SE           | Minera        | A0Ak       | Dyn11 |               630.0 |              20.0 |              0.4 |
+| SE_Minera_A0Ak_800kVA  | SE           | Minera        | A0Ak       | Dyn11 |               800.0 |              20.0 |              0.4 |
+| SE_Minera_A0Ak_1000kVA | SE           | Minera        | A0Ak       | Dyn11 |              1000.0 |              20.0 |              0.4 |
+| SE_Minera_A0Ak_1250kVA | SE           | Minera        | A0Ak       | Dyn11 |              1250.0 |              20.0 |              0.4 |
+| SE_Minera_A0Ak_1600kVA | SE           | Minera        | A0Ak       | Dyn11 |              1600.0 |              20.0 |              0.4 |
+| SE_Minera_A0Ak_2000kVA | SE           | Minera        | A0Ak       | Dyn11 |              2000.0 |              20.0 |              0.4 |
+| SE_Minera_A0Ak_2500kVA | SE           | Minera        | A0Ak       | Dyn11 |              2500.0 |              20.0 |              0.4 |
 
 or only transformers with a wye winding on the primary side (using a regular expression)
 
@@ -342,12 +343,12 @@ or only transformers with a wye winding on the primary side (using a regular exp
 >>> TransformerParameters.print_catalogue(type=r"^y.*$")
 ```
 
-| Manufacturer | Product range | Efficiency | Type  | Nominal power (kVA) | High voltage (kV) | Low voltage (kV) |
-| :----------- | :------------ | :--------- | :---- | ------------------: | ----------------: | ---------------: |
-| SE           | Minera        | Standard   | Yzn11 |                50.0 |              20.0 |              0.4 |
-| SE           | Minera        | C0Bk       | Yzn11 |                50.0 |              20.0 |              0.4 |
-| SE           | Minera        | B0Bk       | Yzn11 |                50.0 |              20.0 |              0.4 |
-| SE           | Minera        | A0Ak       | Yzn11 |                50.0 |              20.0 |              0.4 |
+| Id                       | Manufacturer | Product range | Efficiency | Type  | Nominal power (kVA) | High voltage (kV) | Low voltage (kV) |
+| :----------------------- | :----------- | :------------ | :--------- | :---- | ------------------: | ----------------: | ---------------: |
+| SE_Minera_A0Ak_50kVA     | SE           | Minera        | A0Ak       | Yzn11 |                50.0 |              20.0 |              0.4 |
+| SE_Minera_B0Bk_50kVA     | SE           | Minera        | B0Bk       | Yzn11 |                50.0 |              20.0 |              0.4 |
+| SE_Minera_C0Bk_50kVA     | SE           | Minera        | C0Bk       | Yzn11 |                50.0 |              20.0 |              0.4 |
+| SE_Minera_Standard_50kVA | SE           | Minera        | Standard   | Yzn11 |                50.0 |              20.0 |              0.4 |
 
 or only transformers meeting both criteria
 
@@ -355,9 +356,9 @@ or only transformers meeting both criteria
 >>> TransformerParameters.print_catalogue(efficiency="A0Ak", type=r"^y.*$")
 ```
 
-| Manufacturer | Product range | Efficiency | Type  | Nominal power (kVA) | High voltage (kV) | Low voltage (kV) |
-| :----------- | :------------ | :--------- | :---- | ------------------: | ----------------: | ---------------: |
-| SE           | Minera        | A0Ak       | Yzn11 |                50.0 |              20.0 |              0.4 |
+| Id                   | Manufacturer | Product range | Efficiency | Type  | Nominal power (kVA) | High voltage (kV) | Low voltage (kV) |
+| :------------------- | :----------- | :------------ | :--------- | :---- | ------------------: | ----------------: | ---------------: |
+| SE_Minera_A0Ak_50kVA | SE           | Minera        | A0Ak       | Yzn11 |                50.0 |              20.0 |              0.4 |
 
 Among all the possible filters, the nominal power and voltages are expected in their default unit (VA and V). The
 [Pint](https://pint.readthedocs.io/en/stable/) library can also be used. For instance, if we want to print
@@ -370,11 +371,11 @@ transformer parameters with a nominal power of 3150 kVA, the following two comma
 ... TransformerParameters.print_catalogue(sn=Q_(3150, "kVA"))
 ```
 
-| Manufacturer | Product range | Efficiency | Type  | Nominal power (kVA) | High voltage (kV) | Low voltage (kV) |
-| :----------- | :------------ | :--------- | :---- | ------------------: | ----------------: | ---------------: |
-| FT           | Standard      | Standard   | Dyn11 |              3150.0 |              20.0 |              0.4 |
-| SE           | Vegeta        | Standard   | Dyn11 |              3150.0 |              20.0 |              0.4 |
-| SE           | Vegeta        | C0Bk       | Dyn11 |              3150.0 |              20.0 |              0.4 |
+| Id                           | Manufacturer | Product range | Efficiency | Type  | Nominal power (kVA) | High voltage (kV) | Low voltage (kV) |
+| :--------------------------- | :----------- | :------------ | :--------- | :---- | ------------------: | ----------------: | ---------------: |
+| FT_Standard_Standard_3150kVA | FT           | Standard      | Standard   | Dyn11 |              3150.0 |              20.0 |              0.4 |
+| SE_Vegeta_C0Bk_3150kVA       | SE           | Vegeta        | C0Bk       | Dyn11 |              3150.0 |              20.0 |              0.4 |
+| SE_Vegeta_Standard_3150kVA   | SE           | Vegeta        | Standard   | Dyn11 |              3150.0 |              20.0 |              0.4 |
 
 ### Getting an instance
 
@@ -386,7 +387,14 @@ For instance, this filter leads to a single transformer parameters in the catalo
 
 ```pycon
 >>> TransformerParameters.from_catalogue(efficiency="A0Ak", type=r"^y.*$")
-TransformerParameters(id='SE_Minera_A0Ak_50')
+TransformerParameters(id='SE_Minera_A0Ak_50kVA')
+```
+
+The `id` filter can be directly used:
+
+```pycon
+>>> TransformerParameters.from_catalogue(id="SE_Minera_A0Ak_50kVA")
+TransformerParameters(id='SE_Minera_A0Ak_50kVA')
 ```
 
 In case of mistakes, an error is raised:

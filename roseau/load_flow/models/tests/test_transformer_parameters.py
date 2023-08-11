@@ -325,10 +325,8 @@ def test_catalogue_data():
     )
 
     # Check that the id is unique
-    catalogue_data["id"] = catalogue_data[["manufacturer", "range", "efficiency", "sn"]].apply(
-        lambda x: f"{x[0]}_{x[1]}_{x[2]}_{int(x[3]/1000)}", axis=1
-    )
     assert catalogue_data["id"].is_unique, error_message
+
     catalogue_data.set_index("id", inplace=True)
     catalogue_data["found"] = False
     for p in catalogue_path.glob("**/*.json"):
@@ -342,7 +340,7 @@ def test_catalogue_data():
         # Check the values are the same
         manufacturer, range, efficiency, filename = p.relative_to(catalogue_path).parts
         sn_kva = int(catalogue_data.at[tp.id, "sn"] / 1000)
-        assert tp.id == f"{manufacturer}_{range}_{efficiency}_{sn_kva}"
+        assert tp.id == f"{manufacturer}_{range}_{efficiency}_{sn_kva}kVA"
         assert tp.type == catalogue_data.at[tp.id, "type"]
         assert np.isclose(tp.uhv.m_as("V"), catalogue_data.at[tp.id, "uhv"])
         assert np.isclose(tp.ulv.m_as("V"), catalogue_data.at[tp.id, "ulv"])
@@ -362,7 +360,7 @@ def test_catalogue_data():
 
 def test_from_catalogue():
     # Unknown strings
-    for field_name in ("manufacturer", "range", "efficiency", "type"):
+    for field_name in ("id", "manufacturer", "range", "efficiency", "type"):
         # String
         with pytest.raises(RoseauLoadFlowException) as e:
             TransformerParameters.from_catalogue(**{field_name: "unknown"})
@@ -414,6 +412,7 @@ def test_print_catalogue():
 
     # Filter on a single attribute
     for field_name, value, expected_lines in (
+        ("id", "SE_Minera_A0Ak_50kVA", 9),
         ("manufacturer", "SE", 124),
         ("range", r"min.*", 64),
         ("efficiency", "c0", 37),
@@ -428,6 +427,7 @@ def test_print_catalogue():
 
     # Filter on two attributes
     for field_name, value, expected_lines in (
+        ("id", "SE_Minera_A0Ak_50kVA", 9),
         ("range", "minera", 64),
         ("efficiency", "c0", 37),
         ("type", r"^d.*11$", 120),
@@ -441,6 +441,7 @@ def test_print_catalogue():
 
     # Filter on three attributes
     for field_name, value, expected_lines in (
+        ("id", "se_VEGETA_C0BK_3150kva", 9),
         ("efficiency", r"c0[abc]k", 23),
         ("type", "dyn", 38),
         ("sn", Q_(160, "kVA"), 10),

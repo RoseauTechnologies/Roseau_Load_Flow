@@ -1,4 +1,4 @@
-"""Generate the catalogue of transformers from the CSV files of manufacturers."""
+"""Generate the catalogue of transformers from the CSV file of transformers."""
 from pathlib import Path
 
 import numpy as np
@@ -14,6 +14,7 @@ if __name__ == "__main__":
     df = pd.read_csv(catalogue_data_path)
 
     for idx in df.index:
+        id = df.at[idx, "id"]
         manufacturer = df.at[idx, "manufacturer"]
         range = df.at[idx, "range"]
         efficiency = df.at[idx, "efficiency"]
@@ -30,12 +31,15 @@ if __name__ == "__main__":
         vsc = Q_(df.at[idx, "vsc"], "")  # Voltages on LV side during short-circuit test
         type = df.at[idx, "type"]
 
-        # Build a name
+        # Check the canonical name
         sn_kva = int(sn.m_as("kVA"))
-        name = f"{manufacturer}_{range}_{efficiency}_{sn_kva}"
+        assert id == f"{manufacturer}_{range}_{efficiency}_{sn_kva}kVA"
 
         # Generate transformer parameters
-        tp = TransformerParameters(id=name, type=type, uhv=uhv, ulv=ulv, sn=sn, p0=p0, i0=i0, psc=psc, vsc=vsc)
+        tp = TransformerParameters(id=id, type=type, uhv=uhv, ulv=ulv, sn=sn, p0=p0, i0=i0, psc=psc, vsc=vsc)
         res = tp.to_zyk()
-        assert all(pd.notna(x) for x in res), name
+        assert all(pd.notna(x) for x in res), id
         tp.to_json(destination_path / f"{sn_kva}.json")
+
+    # Sort the catalogue and write it
+    df.sort_values(by=["manufacturer", "range", "efficiency", "sn"]).to_csv(catalogue_data_path, index=False)
