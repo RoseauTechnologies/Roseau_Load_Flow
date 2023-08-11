@@ -329,9 +329,6 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
     #
     # Catalogue Mixin
     #
-    #
-    # Catalogue of networks
-    #
     @classmethod
     def catalogue_path(cls) -> Path:
         return Path(resources.files("roseau.load_flow") / "data" / "transformers").expanduser().absolute()
@@ -352,11 +349,11 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         uhv: Optional[float] = None,
         ulv: Optional[float] = None,
     ) -> Self:
-        """Build a transformer parameter from one in the catalogue.
+        """Build a transformer parameters from one in the catalogue.
 
         Args:
             manufacturer:
-                The name of the manufacturer. It can be a regular expression.
+                The name of the manufacturer to get. It can be a regular expression.
 
             range:
                 The name of the product range to get. It can be a regular expression.
@@ -368,20 +365,17 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
                 The type of the transformer to get. It can be a regular expression.
 
             sn:
-                The nominal power of the transformer.
+                The nominal power of the transformer to get.
 
             uhv:
-                The primary side voltage of the transformer.
+                The primary side voltage of the transformer to get.
 
             ulv:
-                The secondary side voltage of the transformer.
+                The secondary side voltage of the transformer to get.
 
         Returns:
             The selected transformer. If several transformers fitting the filters are in the catalogue, an error is
             raised.
-
-        Notes:
-            The current catalogue only contains MV/LV three-phase distribution transformers.
         """
         # Get the catalogue data
         catalogue_data = cls.catalogue_data()
@@ -498,12 +492,26 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         """Print the catalogue of available transformers.
 
         Args:
-            name:
-                The name of the networks to display. It can be a regular expression. For instance, `name="lv"` will
-                match all the network name starting with "lv" (ignoring case).
+            manufacturer:
+                An optional manufacturer to filter the output. It can be a regular expression.
 
-            load_point_name:
-                Only networks having a load point matching this string or regular expression will be displayed.
+            range:
+                An optional product range to filter the output. It can be a regular expression.
+
+            efficiency:
+                An optional efficiency to filter the output. It can be a regular expression.
+
+            type:
+                An optional type of the transformer. It can be a regular expression.
+
+            sn:
+                An optional nominal power of the transformer to filter the output.
+
+            uhv:
+                An optional primary side voltage to filter the output.
+
+            ulv:
+                An optional secondary side voltage to filter the output.
         """
         # Get the catalogue data
         catalogue_data = cls.catalogue_data()
