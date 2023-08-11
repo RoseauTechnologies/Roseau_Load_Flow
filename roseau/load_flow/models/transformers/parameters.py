@@ -194,46 +194,6 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         """Voltages on LV side during short-circuit test (%)"""
         return self._vsc
 
-    @classmethod
-    def from_name(cls, name: str, type: str) -> Self:
-        """Construct TransformerParameters from name and types.
-
-        Args:
-            name:
-                The name of the transformer parameters, such as `"160kVA"` or `"H61_50kVA"`.
-
-            type:
-                The type of transformer parameters such as "Dyn11", "single", "center".
-
-        Returns:
-            The constructed transformer parameters.
-        """
-        if name == "H61_50kVA":
-            return cls(id=name, type=type, uhv=20000, ulv=400, sn=50 * 1e3, p0=145, i0=1.8 / 100, psc=1350, vsc=4 / 100)
-        elif name[-3:] == "kVA":
-            try:
-                sn = float(name[:-3])
-            except ValueError:
-                msg = f"The transformer type name does not follow the syntax rule. {name!r} was provided."
-                logger.error(msg)
-                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TYPE_NAME_SYNTAX) from None
-            else:
-                return cls(
-                    id=name,
-                    type=type,
-                    uhv=20000,
-                    ulv=400,
-                    sn=sn * 1e3,
-                    p0=460,
-                    i0=2.3 / 100,
-                    psc=2350,
-                    vsc=4 / 100,
-                )
-        else:
-            msg = f"The transformer type name does not follow the syntax rule. {name!r} was provided."
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TYPE_NAME_SYNTAX)
-
     @ureg_wraps(("ohm", "S", "", None), (None,), strict=False)
     def to_zyk(self) -> tuple[Q_[complex], Q_[complex], Q_[float], float]:
         """Compute the transformer parameters ``z2``, ``ym``, ``k`` and ``orientation`` mandatory

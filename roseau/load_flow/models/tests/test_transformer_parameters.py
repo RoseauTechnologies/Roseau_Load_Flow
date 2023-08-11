@@ -205,28 +205,6 @@ def test_transformer_parameters():
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_PARAMETERS
 
 
-def test_from_name():
-    # Bad ones
-    with pytest.raises(RoseauLoadFlowException) as e:
-        TransformerParameters.from_name("toto", "Dyn11")
-    assert "The transformer type name does not follow the syntax rule" in e.value.msg
-    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_TYPE_NAME_SYNTAX
-
-    with pytest.raises(RoseauLoadFlowException) as e:
-        TransformerParameters.from_name("A160kVA", "Dyn11")
-    assert "The transformer type name does not follow the syntax rule" in e.value.msg
-    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_TYPE_NAME_SYNTAX
-
-    with pytest.raises(RoseauLoadFlowException) as e:
-        TransformerParameters.from_name("160kVA", "totoDyn11")
-    assert "Transformer windings cannot be extracted from the string" in e.value.msg
-    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS
-
-    # Good ones
-    TransformerParameters.from_name("160kVA", "Dyn11")
-    TransformerParameters.from_name("H61_50kVA", "Dyn11")
-
-
 def test_transformers_parameters_units():
     # Example in the "transformers" document of Victor.
     # Yzn11 - 50kVA. Good units
