@@ -3,7 +3,7 @@ import logging
 import re
 from abc import ABCMeta, abstractmethod
 from pathlib import Path
-from typing import Any
+from typing import Generic, TypeVar
 
 from typing_extensions import Self
 
@@ -11,6 +11,8 @@ from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowE
 from roseau.load_flow.typing import Id, JsonDict, StrPath
 
 logger = logging.getLogger(__name__)
+
+_T = TypeVar("_T")
 
 
 class Identifiable(metaclass=ABCMeta):
@@ -143,7 +145,7 @@ class JsonMixin(metaclass=ABCMeta):
         self.results_from_dict(data)
 
 
-class CatalogueMixin(metaclass=ABCMeta):
+class CatalogueMixin(Generic[_T], metaclass=ABCMeta):
     """A mixin class for objects which can be built from a catalogue. It adds the `from_catalogue` class method."""
 
     @classmethod
@@ -154,7 +156,7 @@ class CatalogueMixin(metaclass=ABCMeta):
 
     @classmethod
     @abstractmethod
-    def catalogue_data(cls) -> Any:
+    def catalogue_data(cls) -> _T:
         """Get the catalogue data."""
         raise NotImplementedError
 

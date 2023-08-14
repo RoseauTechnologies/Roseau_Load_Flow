@@ -1,0 +1,11 @@
+{
+  "id": "SE_Trihal_Extra_Reduced_Losses_1000kVA",
+  "sn": 1000000.0,
+  "uhv": 20000.0,
+  "ulv": 400.0,
+  "i0": 0.012,
+  "p0": 1550.0,
+  "psc": 8100.0,
+  "vsc": 0.06,
+  "type": "Dyn11"
+}

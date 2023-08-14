@@ -224,7 +224,9 @@ def test_transformer_three_phases():
     assert Transformer.allowed_phases == Bus.allowed_phases
 
     # Not allowed
-    tp = TransformerParameters.from_name("H61_50kVA", "Dyn11")
+    tp = TransformerParameters(
+        id="H61_50kVA", type="Dyn11", uhv=20000, ulv=400, sn=50 * 1e3, p0=145, i0=1.8 / 100, psc=1350, vsc=4 / 100
+    )
     for ph in ("ba", "nc", "anb", "nabc", "acb"):
         with pytest.raises(RoseauLoadFlowException) as e:
             Transformer("tr1", bus1, bus2, phases1=ph, phases2=ph, parameters=tp)
@@ -269,7 +271,9 @@ def test_transformer_single_phases():
     bus2 = Bus("bus-2", phases="an")
 
     # Not allowed
-    tp = TransformerParameters.from_name("160kVA", "single")
+    tp = TransformerParameters(
+        id="160kVA", type="single", uhv=20000, ulv=400, sn=160 * 1e3, p0=460, i0=2.3 / 100, psc=2350, vsc=4 / 100
+    )
     for ph in ("ba", "nc", "anb", "nabc", "acb"):
         with pytest.raises(RoseauLoadFlowException) as e:
             Transformer("tr1", bus1, bus2, phases1=ph, phases2=ph, parameters=tp)
@@ -340,7 +344,9 @@ def test_transformer_center_phases():
     bus2 = Bus("bus-2", phases="abn")
 
     # Not allowed
-    tp = TransformerParameters.from_name("160kVA", "center")
+    tp = TransformerParameters(
+        id="160kVA", type="center", uhv=20000, ulv=400, sn=160 * 1e3, p0=460, i0=2.3 / 100, psc=2350, vsc=4 / 100
+    )
     for ph in ("ba", "nc", "anb", "nabc", "acb"):
         with pytest.raises(RoseauLoadFlowException) as e:
             Transformer("tr1", bus1, bus2, phases1=ph, phases2=ph, parameters=tp)

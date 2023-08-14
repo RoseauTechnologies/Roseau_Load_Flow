@@ -4,35 +4,38 @@
 
 **In development**
 
+- [PR118](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/118) [GH95](https://github.com/RoseauTechnologies/Roseau_Load_Flow/issues/95)
+  - Add a catalogue of three-phase MV/LV distribution transformers.
+  - Remove the class method `TransformerParameters.from_name`.
 - [PR117](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/117) Add prettier to pre-commit
 - [PR116](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/116)
-  - Add a catalogue of networks
-  - Add a plotting page to the documentation
+  - Add a catalogue of networks.
+  - Add a plotting page to the documentation.
 - [PR115](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/115)
-  - Reformat the tutorials in the documentation
-  - Split the "Advanced" tutorial in several smaller files
-  - Remove the Docker installation option
+  - Reformat the tutorials in the documentation.
+  - Split the "Advanced" tutorial in several smaller files.
+  - Remove the Docker installation option.
 - [PR114](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/114) Use Pint >=0.21 to have the percent unit.
 - [PR113](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/113) Raise an error when accessing the results of
   disconnected elements.
 - [PR112](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/112) Make the geometry serialization optional.
 - [PR106](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/106) Improvements for non-euclidean projections.
-- [PR104](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/104) Remove `roseau.load_flow.utils.BranchType`
+- [PR104](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/104) Remove `roseau.load_flow.utils.BranchType`.
 - [GH99](https://github.com/RoseauTechnologies/Roseau_Load_Flow/issues/99) Add `Line.res_series_currents`
   and `Line.res_shunt_currents` properties to get the currents in the series and shunt components
   of lines. Also added `ElectricalNetwork.res_lines` that contains the series losses and currents
   of all the lines in the network. The property `ElectricalNetwork.res_lines_losses` was removed.
-- [GH100](https://github.com/RoseauTechnologies/Roseau_Load_Flow/issues/100) Fix the `Yz` transformers
-- [PR97](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/97) Add the model section to the documentation
+- [GH100](https://github.com/RoseauTechnologies/Roseau_Load_Flow/issues/100) Fix the `Yz` transformers.
+- [PR97](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/97) Add the model section to the documentation.
 - [PR96](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/96)
-  - Add single-phase transformer
-  - Add center-tapped transformer
-  - Remove the `roseau.load_flow.utils.TransformerType` enumeration
-- [PR93](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/93) Add short-circuit computation
+  - Add single-phase transformer.
+  - Add center-tapped transformer.
+  - Remove the `roseau.load_flow.utils.TransformerType` enumeration.
+- [PR93](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/93) Add short-circuit computation.
 - [PR92](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/92)
-  - Add the changelog in the documentation
-  - Use NodeJs 20 in the Dockerfile
-  - Correction of a dead link in the README
+  - Add the changelog in the documentation.
+  - Use NodeJs 20 in the Dockerfile.
+  - Correction of a dead link in the README.
 
 ## Version 0.4.0
 

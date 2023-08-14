@@ -50,7 +50,7 @@ _VOLTAGE_PHASES_DTYPE = pd.CategoricalDtype(categories=["an", "bn", "cn", "ab", 
 _T = TypeVar("_T", bound=Element)
 
 
-class ElectricalNetwork(JsonMixin, CatalogueMixin):
+class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
     """Electrical network class.
 
     This class represents an electrical network, its elements, and their connections. After
@@ -1248,10 +1248,10 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin):
             msg = f"Several networks matching the name {name!r} have been found: {msg_part}."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.CATALOGUE_SEVERAL_FOUND)
-        match_name = match_names_list[0]
+        name = match_names_list[0]
 
         # Match on the load point
-        c_data = catalogue_data[match_name]
+        c_data = catalogue_data[name]
         available_load_points = c_data["load_points"]
         if isinstance(load_point_name, re.Pattern):
             load_point_name_pattern = load_point_name
@@ -1280,10 +1280,10 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin):
             )
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.CATALOGUE_SEVERAL_FOUND)
-        match_load_point = match_load_point_names_list[0]
+        load_point_name = match_load_point_names_list[0]
 
         # Get the data from the Json file
-        path = cls.catalogue_path() / f"{match_name}_{match_load_point}.json"
+        path = cls.catalogue_path() / f"{name}_{load_point_name}.json"
         if not path.exists():  # pragma: no cover
             msg = f"The file {path} has not been found while it should exist. Please post an issue on GitHub."
             logger.error(msg)
@@ -1323,19 +1323,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin):
         empty_table = True
 
         # Match on the name
-        if name is None:
-            match_names_list = list(catalogue_data)
-        elif isinstance(name, re.Pattern):
-            name_pattern = name
-            name = name.pattern
-            match_names_list = [k for k in catalogue_data if name_pattern.match(k)]
-        else:
-            try:
-                name_pattern = re.compile(pattern=name, flags=re.IGNORECASE)
-                match_names_list = [k for k in catalogue_data if name_pattern.match(k)]
-            except re.error:
-                name_pattern = name.lower()
-                match_names_list = [k for k in catalogue_data if k.lower() == name_pattern]
+        match_names_list = cls._filter_name(name=name, catalogue_data=catalogue_data)
 
         # Match on load point name
         if load_point_name is None:
@@ -1389,3 +1377,31 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin):
             console.print(msg)
         else:
             console.print(table)
+
+    @staticmethod
+    def _filter_name(name: Optional[Union[str, re.Pattern[str]]], catalogue_data: JsonDict) -> list[str]:
+        """Filter the catalogue using the network name.
+
+        Args:
+            name:
+                The optional name to use as a filter.
+
+            catalogue_data:
+                The catalogue of available networks. It avoids an additional read.
+
+        Returns:
+            The list of network names matching the provided one.
+        """
+        if name is None:
+            match_names_list = list(catalogue_data)
+        elif isinstance(name, re.Pattern):
+            match_names_list = [k for k in catalogue_data if name.match(k)]
+        else:
+            try:
+                name_pattern = re.compile(pattern=name, flags=re.IGNORECASE)
+                match_names_list = [k for k in catalogue_data if name_pattern.match(k)]
+            except re.error:
+                name_pattern = name.lower()
+                match_names_list = [k for k in catalogue_data if k.lower() == name_pattern]
+
+        return match_names_list
