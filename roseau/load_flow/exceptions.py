@@ -85,6 +85,7 @@ class RoseauLoadFlowExceptionCode(Enum):
     LOAD_FLOW_NOT_RUN = auto()
     SEVERAL_NETWORKS = auto()
     TOO_MANY_BUSES = auto()
+    BAD_JACOBIAN = auto()
 
     # Solver
     BAD_SOLVER_NAME = auto()
