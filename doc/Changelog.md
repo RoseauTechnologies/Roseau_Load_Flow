@@ -4,6 +4,7 @@
 
 **In development**
 
+- [PR119](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/119) Add explicit error message for singular jacobian.
 - [PR118](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/118) [GH95](https://github.com/RoseauTechnologies/Roseau_Load_Flow/issues/95)
   - Add a catalogue of three-phase MV/LV distribution transformers.
   - Remove the class method `TransformerParameters.from_name`.
@@ -59,13 +60,13 @@
   unique `Transformer` class whose behaviour depends on the provided `TransformerParameter`.
 - The classes `LineCharacteristics` and `TransformerCharacteristics` have been renamed into
   `LineParameters` and `TransformerParameters`.
-- The classes `AdmittanceLoad` and `DelatAdmittanceLoad` have been removed. Please use
+- The classes `AdmittanceLoad` and `DeltaAdmittanceLoad` have been removed. Please use
   `ImpedanceLoad` instead, with the desired `phases` argument.
 - The classes `DeltaImpedanceLoad` and `DeltaPowerLoad` have been removed. Please use the classes
   `ImpedanceLoad` and `PowerLoad` instead with `phases="abc"`.
 - The class `FlexibleLoad` have been removed. Please use the new `flexible_params` argument of the
   `PowerLoad` class constructor.
-- The `VoltageSource` is not any more a subclass of the class `Bus`. It can now be connected to a bus
+- The `VoltageSource` is not anymore a subclass of the class `Bus`. It can now be connected to a bus
   just like a load.
 - All elements are aware of the network they belong to. It helps the user to avoid mistakes
   (connecting elements from different networks). It also allows showing user warnings when accessing
