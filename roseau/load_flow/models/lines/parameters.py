@@ -4,6 +4,7 @@ from typing import NoReturn, Optional
 
 import numpy as np
 import numpy.linalg as nplin
+import pandas as pd
 from typing_extensions import Self
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
@@ -22,7 +23,6 @@ from roseau.load_flow.utils import (
     Identifiable,
     InsulationType,
     JsonMixin,
-    LineModel,
     LineType,
 )
 
@@ -105,7 +105,6 @@ class LineParameters(Identifiable, JsonMixin):
         (
             None,
             None,
-            None,
             "ohm/km",
             "ohm/km",
             "S/km",
@@ -120,7 +119,6 @@ class LineParameters(Identifiable, JsonMixin):
     def from_sym(
         cls,
         id: Id,
-        model: LineModel,
         z0: complex,
         z1: complex,
         y0: complex,
@@ -166,15 +164,12 @@ class LineParameters(Identifiable, JsonMixin):
         Returns:
             The created line parameters.
         """
-        z_line, y_shunt, model = cls._sym_to_zy(
-            id=id, model=model, z0=z0, z1=z1, y0=y0, y1=y1, zn=zn, xpn=xpn, bn=bn, bpn=bpn
-        )
-        return cls(id, z_line=z_line, y_shunt=y_shunt)
+        z_line, y_shunt = cls._sym_to_zy(id=id, z0=z0, z1=z1, y0=y0, y1=y1, zn=zn, xpn=xpn, bn=bn, bpn=bpn)
+        return cls(id=id, z_line=z_line, y_shunt=y_shunt)
 
     @staticmethod
     def _sym_to_zy(
         id: Id,
-        model: LineModel,
         z0: complex,
         z1: complex,
         y0: complex,
@@ -183,15 +178,12 @@ class LineParameters(Identifiable, JsonMixin):
         xpn: Optional[float] = None,
         bn: Optional[float] = None,
         bpn: Optional[float] = None,
-    ) -> tuple[np.ndarray, np.ndarray, LineModel]:
+    ) -> tuple[np.ndarray, np.ndarray]:
         """Create impedance and admittance matrix from a symmetrical model.
 
         Args:
             id:
                 A unique ID of the line parameters, typically its canonical name.
-
-            model:
-                The required model. It can be SYM or SYM_NEUTRAL. Be careful, it can be downgraded...
 
             z0:
                 Impedance - zero sequence - :math:`r_0+x_0\\cdot j` (ohms/km)
@@ -218,10 +210,14 @@ class LineParameters(Identifiable, JsonMixin):
                 Phase to neutral susceptance (siemens/km)
 
         Returns:
-            The impedance and admittance matrices and the line model. The line model may be downgraded from
-            SYM_NEUTRAL to SYM if the model of the neutral is not possible.
+            The impedance and admittance matrices.
         """
-
+        # Compute some values
+        xpn_isna = pd.isna(xpn)
+        bn_isna = pd.isna(bn)
+        bpn_isna = pd.isna(bpn)
+        zn_isna = pd.isna(zn)
+        any_neutral_na = any((xpn_isna, bn_isna, bpn_isna, zn_isna))
         # Two possible choices. The first one is the best but sometimes PwF data forces us to choose the second one
         for choice in (0, 1):
             if choice == 0:
@@ -240,8 +236,12 @@ class LineParameters(Identifiable, JsonMixin):
                 ys = y1  # Series shunt admittance (siemens/km)
                 ym = 0 + 0j  # Mutual shunt admittance (siemens/km)
 
-            if model == LineModel.SYM_NEUTRAL:
-                # Add the neutral
+            # If all the neutral data have not been filled, the matrix is a 3x3 matrix
+            if any_neutral_na:
+                # No neutral data so retrieve a 3x3 matrix
+                z_line = np.array([[zs, zm, zm], [zm, zs, zm], [zm, zm, zs]], dtype=complex)
+                y_shunt = np.array([[ys, ym, ym], [ym, ys, ym], [ym, ym, ys]], dtype=complex)
+            else:
                 # Build the complex
                 # zn: Neutral series impedance (ohm/km)
                 zpn = xpn * 1j  # Phase-to-neutral series impedance (ohm/km)
@@ -250,30 +250,20 @@ class LineParameters(Identifiable, JsonMixin):
 
                 if zpn == 0 and zn == 0:
                     logger.warning(
-                        f"The low voltage line model {id!r} does not have neutral elements. It "
-                        f"will be modelled as a medium voltage line instead."
+                        f"The line model {id!r} does not have neutral elements. It will be modelled as a 3 wires line "
+                        f"instead."
                     )
                     z_line = np.array([[zs, zm, zm], [zm, zs, zm], [zm, zm, zs]], dtype=complex)
-
                     y_shunt = np.array([[ys, ym, ym], [ym, ys, ym], [ym, ym, ys]], dtype=complex)
-                    # We downgrade the model to sym
-                    model = LineModel.SYM
                 else:
                     z_line = np.array(
                         [[zs, zm, zm, zpn], [zm, zs, zm, zpn], [zm, zm, zs, zpn], [zpn, zpn, zpn, zn]],
                         dtype=complex,
                     )
-
                     y_shunt = np.array(
                         [[ys, ym, ym, ypn], [ym, ys, ym, ypn], [ym, ym, ys, ypn], [ypn, ypn, ypn, yn]],
                         dtype=complex,
                     )
-
-            else:
-                assert model == LineModel.SYM
-                z_line = np.array([[zs, zm, zm], [zm, zs, zm], [zm, zm, zs]], dtype=complex)
-
-                y_shunt = np.array([[ys, ym, ym], [ym, ys, ym], [ym, ym, ys]], dtype=complex)
 
             # Check the validity of the resulting matrices
             det_z = nplin.det(z_line)
@@ -293,12 +283,12 @@ class LineParameters(Identifiable, JsonMixin):
                         f"line impedance matrix."
                     )
                     logger.error(msg)
-                    raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Y_SHUNT_VALUE)
+                    raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Z_LINE_VALUE)
             else:
                 # Break: the current choice is good!
                 break
 
-        return z_line, y_shunt, model
+        return z_line, y_shunt
 
     @classmethod
     @ureg_wraps(None, (None, None, None, None, None, "mm**2", "mm**2", "m", "m"), strict=False)
@@ -344,7 +334,7 @@ class LineParameters(Identifiable, JsonMixin):
             The created line parameters.
         """
         # TODO: Add documentation on the LV exact model
-        z_line, y_shunt, model = cls._lv_exact_to_zy(
+        z_line, y_shunt = cls._lv_exact_to_zy(
             type_name,
             line_type=line_type,
             conductor_type=conductor_type,
@@ -366,7 +356,7 @@ class LineParameters(Identifiable, JsonMixin):
         section_neutral: float,
         height: float,
         external_diameter: float,
-    ) -> tuple[np.ndarray, np.ndarray, LineModel]:
+    ) -> tuple[np.ndarray, np.ndarray]:
         """Create impedance and admittance matrix from a LV exact model.
 
         Args:
@@ -395,14 +385,14 @@ class LineParameters(Identifiable, JsonMixin):
                 External diameter of the wire (m).
 
         Returns:
-            The impedance and admittance matrices and the line model.
+            The impedance and admittance matrices.
         """
         # dpp = data["dpp"]  # Distance phase to phase (m)
         # dpn = data["dpn"]  # Distance phase to neutral (m)
         # dsh = data["dsh"]  # Diameter of the sheath (mm)
 
         # Geometric configuration
-        if line_type == LineType.OVERHEAD or line_type == LineType.TWISTED:
+        if line_type in (LineType.OVERHEAD, LineType.TWISTED):
             coord = Q_(
                 np.array(
                     [
@@ -511,7 +501,7 @@ class LineParameters(Identifiable, JsonMixin):
                 if i != j:
                     y_shunt[i, j] = -y[i, j]
 
-        return z_line, y_shunt, LineModel.LV_EXACT
+        return z_line, y_shunt
 
     @classmethod
     @ureg_wraps(None, (None, None, "mm²", "m", "mm"), strict=False)
@@ -634,27 +624,9 @@ class LineParameters(Identifiable, JsonMixin):
         Returns:
             The created line parameters.
         """
-        type_id = data.pop("id")
-        model = LineModel.from_string(data["model"])
-        if model == LineModel.LV_EXACT:
-            if not isinstance(type_id, str):
-                msg = f"The 'id' representing an LV Exact type name must be a string, got {type_id!r}"
-                logger.error(msg)
-                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_ID_TYPE)
-            return cls.from_lv_exact(type_id, **data)
-        elif model in (LineModel.SYM_NEUTRAL, LineModel.SYM):
-            return cls.from_sym(type_id, **data)
-        elif model in (LineModel.ZY_NEUTRAL, LineModel.ZY, LineModel.Z, LineModel.Z_NEUTRAL):
-            z_line = np.asarray(data["z_line"][0]) + 1j * np.asarray(data["z_line"][1])
-            if "y_shunt" in data:
-                y_shunt = np.asarray(data["y_shunt"][0]) + 1j * np.asarray(data["y_shunt"][1])
-            else:
-                y_shunt = None
-            return cls(type_id, z_line=z_line, y_shunt=y_shunt)
-        else:
-            msg = f"The line {type_id!r} has an unknown model {model!r}..."
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_MODEL)
+        z_line = np.asarray(data["z_line"][0]) + 1j * np.asarray(data["z_line"][1])
+        y_shunt = np.asarray(data["y_shunt"][0]) + 1j * np.asarray(data["y_shunt"][1]) if "y_shunt" in data else None
+        return cls(id=data["id"], z_line=z_line, y_shunt=y_shunt)
 
     def to_dict(self, include_geometry: bool = True) -> JsonDict:
         """Return the line parameters information as a dictionary format."""

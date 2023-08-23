@@ -4,6 +4,10 @@
 
 **In development**
 
+- [PR121](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/121) Improvements of the `LineParameters`
+  constructor:
+  - Delete the `LineModel` class
+  - Simplify the `from_dict` method
 - [PR120](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/120) Fix phases of flexible power results.
 - [PR119](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/119) Add explicit error message for singular jacobian.
 - [PR118](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/118) [GH95](https://github.com/RoseauTechnologies/Roseau_Load_Flow/issues/95)
