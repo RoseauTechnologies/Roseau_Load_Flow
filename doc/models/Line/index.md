@@ -156,15 +156,20 @@ shunt_line_parameters = LineParameters(
 )
 ```
 
+There are several alternative constructors for `LineParameters` objects. The description of them can be found in the
+[Parameters page](Parameters.md).
+
 ## Available models
 
-The following line models are available in _Roseau Load Flow_:
+The following line models are available in _Roseau Load Flow_. Please also have a look at the parameters page to
+define the parameters of lines.
 
 ```{toctree}
 ---
 maxdepth: 2
 caption: Lines
 ---
+Parameters
 ShuntLine
 SimplifiedLine
 ```

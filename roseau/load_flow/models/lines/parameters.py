@@ -134,9 +134,6 @@ class LineParameters(Identifiable, JsonMixin):
             id:
                 A unique ID of the line parameters, typically its canonical name.
 
-            model:
-                The required model. It can be SYM or SYM_NEUTRAL. Be careful, it can be downgraded...
-
             z0:
                 Impedance - zero sequence - :math:`r_0+x_0\\cdot j` (ohms/km)
 
