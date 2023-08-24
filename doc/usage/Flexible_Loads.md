@@ -182,6 +182,12 @@ accessed using the `res_flexible_powers` property of the load.
 array([-2757.8035271+0.j, 0.+0.j, 0.+0.j]) <Unit('volt_ampere')>
 ```
 
+```{note}
+The flexible powers are the powers that flow in the load elements and not in the lines. These are
+only different in case of delta loads. To access the powers that flow in the lines, use the
+`res_powers` property instead.
+```
+
 Here, one can note that:
 
 - The active power for the phase `'a'` is negative meaning production;

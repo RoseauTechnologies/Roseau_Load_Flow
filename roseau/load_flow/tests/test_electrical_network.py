@@ -15,6 +15,7 @@ from shapely import LineString, Point
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models import (
     Bus,
+    FlexibleParameter,
     Ground,
     Line,
     LineParameters,
@@ -1266,6 +1267,44 @@ def test_load_flow_results_frames(small_network: ElectricalNetwork, good_json_re
         index=["potential_ref_id"],
     )
     assert_frame_equal(small_network.res_potential_refs, expected_res_potential_refs)
+
+    # No flexible loads
+    assert small_network.res_loads_flexible_powers.empty
+
+    # Let's add a flexible load
+    fp = FlexibleParameter.p_max_u_consumption(u_min=16000, u_down=17000, s_max=1000)
+    load = small_network.loads["load"]
+    assert isinstance(load, PowerLoad)
+    load._flexible_params = [fp, fp, fp]
+    good_json_results = good_json_results.copy()
+    good_json_results["loads"][0]["powers"] = [
+        [99.99999999999994, 0.0],
+        [99.99999999999994, 0.0],
+        [99.99999999999994, 0.0],
+    ]
+    small_network.results_from_dict(good_json_results)
+    expected_res_flex_powers = pd.DataFrame.from_records(
+        [
+            {
+                "load_id": "load",
+                "phase": "an",
+                "power": 99.99999999999994 + 0j,
+            },
+            {
+                "load_id": "load",
+                "phase": "bn",
+                "power": 99.99999999999994 + 0j,
+            },
+            {
+                "load_id": "load",
+                "phase": "cn",
+                "power": 99.99999999999994 + 0j,
+            },
+        ],
+        index=["load_id", "phase"],
+    )
+    set_index_dtype(expected_res_flex_powers, _VOLTAGE_PHASES_DTYPE)
+    assert_frame_equal(small_network.res_loads_flexible_powers, expected_res_flex_powers, rtol=1e-4)
 
 
 def test_solver_warm_start(small_network: ElectricalNetwork, good_json_results):

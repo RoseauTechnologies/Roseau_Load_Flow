@@ -4,6 +4,7 @@
 
 **In development**
 
+- [PR120](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/120) Fix phases of flexible power results.
 - [PR119](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/119) Add explicit error message for singular jacobian.
 - [PR118](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/118) [GH95](https://github.com/RoseauTechnologies/Roseau_Load_Flow/issues/95)
   - Add a catalogue of three-phase MV/LV distribution transformers.

@@ -830,23 +830,26 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
 
         The results are returned as a dataframe with the following index:
             - `load_id`: The id of the load.
-            - `phase`: The phase of the load (in ``{'a', 'b', 'c', 'n'}``).
+            - `phase`: The element phases of the load (in ``{'an', 'bn', 'cn', 'ab', 'bc', 'ca'}``).
         and the following columns:
             - `power`: The complex flexible power of the load (in VoltAmps) for the given phase.
+
+        Note that the flexible powers are the powers that flow in the load elements and not in the
+        lines. These are only different in case of delta loads. To access the powers that flow in
+        the lines, use the ``power`` column from the :attr:`res_loads` property instead.
         """
-        # TODO(Ali): If the flexible power is not per line, but per physical element, update the
-        # docstring and add a note about this
         self._warn_invalid_results()
         loads_dict = {"load_id": [], "phase": [], "power": []}
         for load_id, load in self.loads.items():
-            if isinstance(load, PowerLoad) and load.is_flexible:
-                for power, phase in zip(load._res_flexible_powers_getter(warning=False), load.phases):
-                    loads_dict["load_id"].append(load_id)
-                    loads_dict["phase"].append(phase)
-                    loads_dict["power"].append(power)
+            if not (isinstance(load, PowerLoad) and load.is_flexible):
+                continue
+            for power, phase in zip(load._res_flexible_powers_getter(warning=False), load.voltage_phases):
+                loads_dict["load_id"].append(load_id)
+                loads_dict["phase"].append(phase)
+                loads_dict["power"].append(power)
         powers_df = (
             pd.DataFrame.from_dict(loads_dict, orient="columns")
-            .astype({"phase": _PHASE_DTYPE, "power": complex})
+            .astype({"phase": _VOLTAGE_PHASES_DTYPE, "power": complex})
             .set_index(["load_id", "phase"])
         )
         return powers_df
