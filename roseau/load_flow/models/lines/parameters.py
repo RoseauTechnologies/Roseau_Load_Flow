@@ -289,9 +289,9 @@ class LineParameters(Identifiable, JsonMixin):
 
     @classmethod
     @ureg_wraps(None, (None, None, None, None, None, "mm**2", "mm**2", "m", "m"), strict=False)
-    def from_lv_exact(
+    def from_geometry(
         cls,
-        type_name: str,
+        id: str,
         line_type: LineType,
         conductor_type: ConductorType,
         insulator_type: InsulatorType,
@@ -300,11 +300,11 @@ class LineParameters(Identifiable, JsonMixin):
         height: float,
         external_diameter: float,
     ) -> Self:
-        """Create line parameters from LV exact model.
+        """Create line parameters from its geometry.
 
         Args:
-            type_name:
-                The name of the "LV exact" type.
+            id:
+                The id of the line parameters type.
 
             line_type:
                 Overhead or underground.
@@ -329,10 +329,12 @@ class LineParameters(Identifiable, JsonMixin):
 
         Returns:
             The created line parameters.
+
+        See Also:
+            :ref:`Line parameters alternative constructor documentation <models-line_parameters-alternative_constructors>`
         """
-        # TODO: Add documentation on the LV exact model
-        z_line, y_shunt = cls._lv_exact_to_zy(
-            type_name,
+        z_line, y_shunt = cls._geometry_to_zy(
+            id=id,
             line_type=line_type,
             conductor_type=conductor_type,
             insulator_type=insulator_type,
@@ -341,11 +343,11 @@ class LineParameters(Identifiable, JsonMixin):
             height=height,
             external_diameter=external_diameter,
         )
-        return cls(type_name, z_line=z_line, y_shunt=y_shunt)
+        return cls(id=id, z_line=z_line, y_shunt=y_shunt)
 
     @staticmethod
-    def _lv_exact_to_zy(
-        type_name: str,
+    def _geometry_to_zy(
+        id: str,
         line_type: LineType,
         conductor_type: ConductorType,
         insulator_type: InsulatorType,
@@ -354,11 +356,11 @@ class LineParameters(Identifiable, JsonMixin):
         height: float,
         external_diameter: float,
     ) -> tuple[np.ndarray, np.ndarray]:
-        """Create impedance and admittance matrix from a LV exact model.
+        """Create impedance and admittance matrix using a geometric model.
 
         Args:
-            type_name:
-                The name of the "LV exact" type.
+            id:
+                The id of the line parameters.
 
             line_type:
                 Overhead or underground.
@@ -446,7 +448,7 @@ class LineParameters(Identifiable, JsonMixin):
             )
             epsilon = EPSILON_0 * EPSILON_R[insulator_type]
         else:
-            msg = f"The line type of the line {type_name!r} is unknown. It should have been filled in the reading."
+            msg = f"The line type of the line {id!r} is unknown. It should have been filled in the reading."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_TYPE)
 
@@ -550,7 +552,7 @@ class LineParameters(Identifiable, JsonMixin):
         if external_diameter is None:
             external_diameter = Q_(40, "mm")
 
-        return cls.from_lv_exact(
+        return cls.from_geometry(
             name,
             line_type=line_type,
             conductor_type=conductor_type,

@@ -107,11 +107,11 @@ def test_line_parameters():
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_LINE_MODEL
 
 
-def test_lv_exact():
+def test_geometry():
     # line_data = {"dpp": 0, "dpn": 0, "dsh": 0.04}
 
     # Working example
-    z_line, y_shunt = LineParameters._lv_exact_to_zy(
+    z_line, y_shunt = LineParameters._geometry_to_zy(
         "test",
         line_type=LineType.OVERHEAD,
         conductor_type=ConductorType.AL,
