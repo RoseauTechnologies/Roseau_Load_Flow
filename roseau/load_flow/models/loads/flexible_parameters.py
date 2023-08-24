@@ -7,7 +7,7 @@ from typing_extensions import Self
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.typing import ControlType, JsonDict, ProjectionType
-from roseau.load_flow.units import Q_, ureg
+from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow.utils import JsonMixin
 
 logger = logging.getLogger(__name__)
@@ -36,7 +36,7 @@ class Control(JsonMixin):
 
     DEFAULT_ALPHA: float = 1000.0
 
-    @ureg.wraps(None, (None, None, "V", "V", "V", "V", None), strict=False)
+    @ureg_wraps(None, (None, None, "V", "V", "V", "V", None), strict=False)
     def __init__(
         self,
         type: ControlType,
@@ -144,25 +144,25 @@ class Control(JsonMixin):
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_CONTROL_VALUE)
 
     @property
-    @ureg.wraps("V", (None,), strict=False)
+    @ureg_wraps("V", (None,), strict=False)
     def u_min(self) -> Q_[float]:
         """The minimum voltage i.e. the one the control reached the maximum action."""
         return self._u_min
 
     @property
-    @ureg.wraps("V", (None,), strict=False)
+    @ureg_wraps("V", (None,), strict=False)
     def u_down(self) -> Q_[float]:
         """The voltage which starts to trigger the control (lower value)."""
         return self._u_down
 
     @property
-    @ureg.wraps("V", (None,), strict=False)
+    @ureg_wraps("V", (None,), strict=False)
     def u_up(self) -> Q_[float]:
         """TThe voltage  which starts to trigger the control (upper value)."""
         return self._u_up
 
     @property
-    @ureg.wraps("V", (None,), strict=False)
+    @ureg_wraps("V", (None,), strict=False)
     def u_max(self) -> Q_[float]:
         """The maximum voltage i.e. the one the control reached its maximum action."""
         return self._u_max
@@ -179,7 +179,7 @@ class Control(JsonMixin):
         return cls(type="constant", u_min=0.0, u_down=0.0, u_up=0.0, u_max=0.0)
 
     @classmethod
-    @ureg.wraps(None, (None, "V", "V", None), strict=False)
+    @ureg_wraps(None, (None, "V", "V", None), strict=False)
     def p_max_u_production(cls, u_up: float, u_max: float, alpha: float = DEFAULT_ALPHA) -> Self:
         """Create a control of the type ``"p_max_u_production"``.
 
@@ -208,7 +208,7 @@ class Control(JsonMixin):
         return cls(type="p_max_u_production", u_min=0.0, u_down=0.0, u_up=u_up, u_max=u_max, alpha=alpha)
 
     @classmethod
-    @ureg.wraps(None, (None, "V", "V", None), strict=False)
+    @ureg_wraps(None, (None, "V", "V", None), strict=False)
     def p_max_u_consumption(cls, u_min: float, u_down: float, alpha: float = DEFAULT_ALPHA) -> Self:
         """Create a control of the type ``"p_max_u_consumption"``.
 
@@ -237,7 +237,7 @@ class Control(JsonMixin):
         return cls(type="p_max_u_consumption", u_min=u_min, u_down=u_down, u_up=0.0, u_max=0.0, alpha=alpha)
 
     @classmethod
-    @ureg.wraps(None, (None, "V", "V", "V", "V", None), strict=False)
+    @ureg_wraps(None, (None, "V", "V", "V", "V", None), strict=False)
     def q_u(cls, u_min: float, u_down: float, u_up: float, u_max: float, alpha: float = DEFAULT_ALPHA) -> Self:
         """Create a control of the type ``"q_u"``.
 
@@ -444,7 +444,7 @@ class FlexibleParameter(JsonMixin):
     _control_class: type[Control] = Control
     _projection_class: type[Projection] = Projection
 
-    @ureg.wraps(None, (None, None, None, None, "VA"), strict=False)
+    @ureg_wraps(None, (None, None, None, None, "VA"), strict=False)
     def __init__(self, control_p: Control, control_q: Control, projection: Projection, s_max: float) -> None:
         """FlexibleParameter constructor.
 
@@ -475,7 +475,7 @@ class FlexibleParameter(JsonMixin):
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_SMAX_VALUE)
 
     @property
-    @ureg.wraps("VA", (None,), strict=False)
+    @ureg_wraps("VA", (None,), strict=False)
     def s_max(self) -> Q_[float]:
         """The apparent power of the flexible load (VA). It is the radius of the feasible circle."""
         return self._s_max
@@ -496,7 +496,7 @@ class FlexibleParameter(JsonMixin):
         )
 
     @classmethod
-    @ureg.wraps(None, (None, "V", "V", "VA", None, None, None), strict=False)
+    @ureg_wraps(None, (None, "V", "V", "VA", None, None, None), strict=False)
     def p_max_u_production(
         cls,
         u_up: float,
@@ -548,7 +548,7 @@ class FlexibleParameter(JsonMixin):
         )
 
     @classmethod
-    @ureg.wraps(None, (None, "V", "V", "VA", None, None, None), strict=False)
+    @ureg_wraps(None, (None, "V", "V", "VA", None, None, None), strict=False)
     def p_max_u_consumption(
         cls,
         u_min: float,
@@ -597,7 +597,7 @@ class FlexibleParameter(JsonMixin):
         )
 
     @classmethod
-    @ureg.wraps(None, (None, "V", "V", "V", "V", "VA", None, None, None), strict=False)
+    @ureg_wraps(None, (None, "V", "V", "V", "V", "VA", None, None, None), strict=False)
     def q_u(
         cls,
         u_min: float,
@@ -655,7 +655,7 @@ class FlexibleParameter(JsonMixin):
         )
 
     @classmethod
-    @ureg.wraps(None, (None, "V", "V", "V", "V", "V", "V", "VA", None, None, None), strict=False)
+    @ureg_wraps(None, (None, "V", "V", "V", "V", "V", "V", "VA", None, None, None), strict=False)
     def pq_u_production(
         cls,
         up_up: float,
@@ -726,7 +726,7 @@ class FlexibleParameter(JsonMixin):
         )
 
     @classmethod
-    @ureg.wraps(None, (None, "V", "V", "V", "V", "V", "V", "VA", None, None, None), strict=False)
+    @ureg_wraps(None, (None, "V", "V", "V", "V", "V", "V", "VA", None, None, None), strict=False)
     def pq_u_consumption(
         cls,
         up_min: float,

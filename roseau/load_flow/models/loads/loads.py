@@ -11,7 +11,7 @@ from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import Element
 from roseau.load_flow.models.loads.flexible_parameters import FlexibleParameter
 from roseau.load_flow.typing import Id, JsonDict
-from roseau.load_flow.units import Q_, ureg
+from roseau.load_flow.units import Q_, ureg_wraps
 
 logger = logging.getLogger(__name__)
 
@@ -102,7 +102,7 @@ class AbstractLoad(Element, ABC):
         return self._res_getter(value=self._res_currents, warning=warning)
 
     @property
-    @ureg.wraps("A", (None,), strict=False)
+    @ureg_wraps("A", (None,), strict=False)
     def res_currents(self) -> Q_[np.ndarray]:
         """The load flow result of the load currents (A)."""
         return self._res_currents_getter(warning=True)
@@ -126,7 +126,7 @@ class AbstractLoad(Element, ABC):
         return self.bus._get_potentials_of(self.phases, warning)
 
     @property
-    @ureg.wraps("V", (None,), strict=False)
+    @ureg_wraps("V", (None,), strict=False)
     def res_potentials(self) -> Q_[np.ndarray]:
         """The load flow result of the load potentials (V)."""
         return self._res_potentials_getter(warning=True)
@@ -136,7 +136,7 @@ class AbstractLoad(Element, ABC):
         return calculate_voltages(potentials, self.phases)
 
     @property
-    @ureg.wraps("V", (None,), strict=False)
+    @ureg_wraps("V", (None,), strict=False)
     def res_voltages(self) -> Q_[np.ndarray]:
         """The load flow result of the load voltages (V)."""
         return self._res_voltages_getter(warning=True)
@@ -147,7 +147,7 @@ class AbstractLoad(Element, ABC):
         return pots * curs.conj()
 
     @property
-    @ureg.wraps("VA", (None,), strict=False)
+    @ureg_wraps("VA", (None,), strict=False)
     def res_powers(self) -> Q_[np.ndarray]:
         """The load flow result of the load powers (VA)."""
         return self._res_powers_getter(warning=True)
@@ -272,13 +272,13 @@ class PowerLoad(AbstractLoad):
         return self._flexible_params is not None
 
     @property
-    @ureg.wraps("VA", (None,), strict=False)
+    @ureg_wraps("VA", (None,), strict=False)
     def powers(self) -> Q_[np.ndarray]:
         """The powers of the load (VA)."""
         return self._powers
 
     @powers.setter
-    @ureg.wraps(None, (None, "VA"), strict=False)
+    @ureg_wraps(None, (None, "VA"), strict=False)
     def powers(self, value: Sequence[complex]) -> None:
         value = self._validate_value(value)
         if self.is_flexible:
@@ -308,7 +308,7 @@ class PowerLoad(AbstractLoad):
         return self._res_getter(value=self._res_flexible_powers, warning=warning)
 
     @property
-    @ureg.wraps("VA", (None,), strict=False)
+    @ureg_wraps("VA", (None,), strict=False)
     def res_flexible_powers(self) -> Q_[np.ndarray]:
         """The load flow result of the load flexible powers (VA)."""
         return self._res_flexible_powers_getter(warning=True)
@@ -377,13 +377,13 @@ class CurrentLoad(AbstractLoad):
         self.currents = currents  # handles size checks and unit conversion
 
     @property
-    @ureg.wraps("A", (None,), strict=False)
+    @ureg_wraps("A", (None,), strict=False)
     def currents(self) -> Q_[np.ndarray]:
         """The currents of the load (Amps)."""
         return self._currents
 
     @currents.setter
-    @ureg.wraps(None, (None, "A"), strict=False)
+    @ureg_wraps(None, (None, "A"), strict=False)
     def currents(self, value: Sequence[complex]) -> None:
         self._currents = self._validate_value(value)
         self._invalidate_network_results()
@@ -432,13 +432,13 @@ class ImpedanceLoad(AbstractLoad):
         self.impedances = impedances
 
     @property
-    @ureg.wraps("ohm", (None,), strict=False)
+    @ureg_wraps("ohm", (None,), strict=False)
     def impedances(self) -> Q_[np.ndarray]:
         """The impedances of the load (Ohms)."""
         return self._impedances
 
     @impedances.setter
-    @ureg.wraps(None, (None, "ohm"), strict=False)
+    @ureg_wraps(None, (None, "ohm"), strict=False)
     def impedances(self, impedances: Sequence[complex]) -> None:
         self._impedances = self._validate_value(impedances)
         self._invalidate_network_results()
