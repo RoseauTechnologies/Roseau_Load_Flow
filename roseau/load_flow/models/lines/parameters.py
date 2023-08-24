@@ -291,7 +291,7 @@ class LineParameters(Identifiable, JsonMixin):
     @ureg_wraps(None, (None, None, None, None, None, "mm**2", "mm**2", "m", "m"), strict=False)
     def from_geometry(
         cls,
-        id: str,
+        id: Id,
         line_type: LineType,
         conductor_type: ConductorType,
         insulator_type: InsulatorType,
@@ -347,7 +347,7 @@ class LineParameters(Identifiable, JsonMixin):
 
     @staticmethod
     def _geometry_to_zy(
-        id: str,
+        id: Id,
         line_type: LineType,
         conductor_type: ConductorType,
         insulator_type: InsulatorType,
@@ -392,23 +392,25 @@ class LineParameters(Identifiable, JsonMixin):
 
         # Geometric configuration
         if line_type in (LineType.OVERHEAD, LineType.TWISTED):
+            # TODO This configuration is for twisted lines... Create a overhead configuration.
             coord = Q_(
                 np.array(
                     [
-                        [
-                            -np.sqrt(3) / 8 * external_diameter,
-                            height + external_diameter / 8,
-                            -np.sqrt(3) / 8 * external_diameter,
-                            -height - external_diameter / 8,
-                        ],
-                        [
-                            np.sqrt(3) / 8 * external_diameter,
-                            height + external_diameter / 8,
-                            np.sqrt(3) / 8 * external_diameter,
-                            -height - external_diameter / 8,
-                        ],
-                        [0, height - external_diameter / 4, 0, -height + external_diameter / 4],
-                        [0, height, 0, -height],
+                        [-np.sqrt(3) / 8 * external_diameter, height + external_diameter / 8],
+                        [np.sqrt(3) / 8 * external_diameter, height + external_diameter / 8],
+                        [0, height - external_diameter / 4],
+                        [0, height],
+                    ]
+                ),
+                "m",
+            )
+            coord_prim = Q_(
+                np.array(
+                    [
+                        [-np.sqrt(3) / 8 * external_diameter, -height - external_diameter / 8],
+                        [np.sqrt(3) / 8 * external_diameter, -height - external_diameter / 8],
+                        [0, -height + external_diameter / 4],
+                        [0, -height],
                     ]
                 ),
                 "m",
@@ -418,30 +420,21 @@ class LineParameters(Identifiable, JsonMixin):
             coord = Q_(
                 np.array(
                     [
-                        [
-                            -np.sqrt(2) / 8 * external_diameter,
-                            height - np.sqrt(2) / 8 * external_diameter,
-                            -np.sqrt(2) * 3 / 8 * external_diameter,
-                            height - np.sqrt(2) * 3 / 8 * external_diameter,
-                        ],
-                        [
-                            np.sqrt(2) / 8 * external_diameter,
-                            height - np.sqrt(2) / 8 * external_diameter,
-                            np.sqrt(2) * 3 / 8 * external_diameter,
-                            height - np.sqrt(2) * 3 / 8 * external_diameter,
-                        ],
-                        [
-                            np.sqrt(2) / 8 * external_diameter,
-                            height + np.sqrt(2) / 8 * external_diameter,
-                            np.sqrt(2) * 3 / 8 * external_diameter,
-                            height + np.sqrt(2) * 3 / 8 * external_diameter,
-                        ],
-                        [
-                            -np.sqrt(2) / 8 * external_diameter,
-                            height + np.sqrt(2) / 8 * external_diameter,
-                            -np.sqrt(2) * 3 / 8 * external_diameter,
-                            height + np.sqrt(2) * 3 / 8 * external_diameter,
-                        ],
+                        [-np.sqrt(2) / 8 * external_diameter, height - np.sqrt(2) / 8 * external_diameter],
+                        [np.sqrt(2) / 8 * external_diameter, height - np.sqrt(2) / 8 * external_diameter],
+                        [np.sqrt(2) / 8 * external_diameter, height + np.sqrt(2) / 8 * external_diameter],
+                        [-np.sqrt(2) / 8 * external_diameter, height + np.sqrt(2) / 8 * external_diameter],
+                    ]
+                ),
+                "m",
+            )
+            coord_prim = Q_(
+                np.array(
+                    [
+                        [-np.sqrt(2) * 3 / 8 * external_diameter, height - np.sqrt(2) * 3 / 8 * external_diameter],
+                        [np.sqrt(2) * 3 / 8 * external_diameter, height - np.sqrt(2) * 3 / 8 * external_diameter],
+                        [np.sqrt(2) * 3 / 8 * external_diameter, height + np.sqrt(2) * 3 / 8 * external_diameter],
+                        [-np.sqrt(2) * 3 / 8 * external_diameter, height + np.sqrt(2) * 3 / 8 * external_diameter],
                     ]
                 ),
                 "m",
@@ -452,53 +445,47 @@ class LineParameters(Identifiable, JsonMixin):
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_TYPE)
 
-        # Electrical parameters
+        # Distance computation
         sections = Q_([section, section, section, section_neutral], "mm**2")  # surfaces (m2)
-        radius = Q_(np.zeros(4, dtype=float), "m")  # radius (m)
-        gmr = Q_(np.zeros(4, dtype=float), "m")  # geometric mean radius (m)
-        # d = Q_(np.zeros((4, 4), dtype=float), "m")  # distance between projections of two wires (m)
-        distance = Q_(np.zeros((4, 4), dtype=float), "m")  # distance between two wires (m)
-        distance_prim = Q_(np.zeros((4, 4), dtype=float), "m")  # distance between a wire and the image of another
-        # wire (m)
-        r = Q_(np.zeros((4, 4), dtype=float), "ohm/km")  # resistance (ohm/km)
-        inductance = Q_(np.zeros((4, 4), dtype=float), "H/km")  # inductance (H/km)
-        lambdas = Q_(np.zeros((4, 4), dtype=float), "m/F")  # potential coefficient (m/F)
-        for i in range(4):
-            radius[i] = np.sqrt(sections[i] / PI)
-            gmr[i] = radius[i].to("m") * np.exp(-0.25)
-            r[i, i] = RHO[conductor_type] / sections[i]
-            for j in range(4):
-                # d[i, j] = abs(coord[i][0] - coord[j][0])
-                distance[i, j] = np.sqrt((coord[i][0] - coord[j][0]) ** 2 + (coord[i][1] - coord[j][1]) ** 2)
-                distance_prim[i, j] = np.sqrt((coord[i][0] - coord[j][2]) ** 2 + (coord[i][1] - coord[j][3]) ** 2)
-                if j != i:
-                    inductance[i, j] = MU_0 / (2 * PI) * np.log(Q_(1, "m") / distance[i, j])
-                    inductance[j, i] = inductance[i, j]
-                    lambdas[i, j] = 1 / (2 * PI * epsilon) * np.log(distance_prim[i, j] / distance[i, j])
-                    lambdas[j, i] = lambdas[i, j]
-            inductance[i, i] = MU_0 / (2 * PI) * np.log(Q_(1, "m") / gmr[i])
-            lambdas[i, i] = 1 / (2 * PI * epsilon) * np.log(distance_prim[i, i] / radius[i])
+        radius = np.sqrt(sections / PI)  # radius (m)
+        gmr = radius.to("m") * np.exp(-0.25)  # geometric mean radius (m)
+        # distance between two wires (m)
+        coord_new_dim = coord[:, None, :]
+        diff = coord_new_dim - coord
+        distance = np.sqrt(np.einsum("ijk,ijk->ij", diff, diff))
+        # distance between a wire and the image of another wire (m)
+        diff = coord_new_dim - coord_prim
+        distance_prim = np.sqrt(np.einsum("ijk,ijk->ij", diff, diff))
+
+        # Useful matrices
+        mask_diagonal = np.eye(4, dtype=bool)
+        mask_off_diagonal = ~mask_diagonal
+        minus = -np.ones((4, 4), dtype=float)
+        np.fill_diagonal(minus, 1)
+
+        # Electrical parameters
+        r = RHO[conductor_type] / sections * np.eye(4, dtype=float)  # resistance (ohm/km)
+        distance[mask_diagonal] = gmr
+        inductance = MU_0 / (2 * PI) * np.log(Q_(1, "m") / distance)
+        distance[mask_diagonal] = radius
+        lambdas = 1 / (2 * PI * epsilon) * np.log(distance_prim / distance)
+
+        # Extract the conductivity and the capacities from the lambda (potential coefficients)
         lambda_inv = Q_(nplin.inv(lambdas.magnitude), 1 / lambdas.units).to("F/km")  # capacities (F/km)
         c = Q_(np.zeros((4, 4), dtype=float), "F/km")  # capacities (F/km)
+        c[mask_diagonal] = np.einsum("ij,ij->i", lambda_inv, minus)
+        c[mask_off_diagonal] = -lambda_inv[mask_off_diagonal]
         g = Q_(np.zeros((4, 4), dtype=float), "S/km")  # conductance (S/km)
-        for i in range(4):
-            c[i, i] = lambda_inv[i, i]
-            for j in range(4):
-                if j != i:
-                    c[i, i] -= lambda_inv[i, j]
-                    c[i, j] = -lambda_inv[i, j]
-            g[i, i] = TAN_D[insulator_type] * c[i, i] * OMEGA
+        g[mask_diagonal] = TAN_D[insulator_type] * np.einsum("ii->i", c) * OMEGA
 
+        # Build the impedance and admittance matrices
         z_line = r + inductance * OMEGA * 1j
         y = g + c * OMEGA * 1j
 
+        # Compute the shunt admittance matrix from the admittance matrix
         y_shunt = Q_(np.zeros((4, 4), dtype=complex), "S/km")
-        for i in range(4):
-            for k in range(4):
-                y_shunt[i, i] += y[i, k]
-            for j in range(4):
-                if i != j:
-                    y_shunt[i, j] = -y[i, j]
+        y_shunt[mask_diagonal] = np.einsum("ij->i", y)
+        y_shunt[mask_off_diagonal] = -y[mask_off_diagonal]
 
         return z_line, y_shunt
 
