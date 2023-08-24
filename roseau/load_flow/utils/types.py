@@ -149,40 +149,40 @@ class ConductorType(Enum):
 
 
 @unique
-class InsulationType(Enum):
-    """The type of the insulation for a wire."""
+class InsulatorType(Enum):
+    """The type of the insulator for a wire."""
 
     UNKNOWN = auto()
-    """The insulation of the conductor is made with unknown material."""
+    """The insulator of the conductor is made with unknown material."""
     HDPE = auto()
-    """The insulation of the conductor is made with High-Density PolyEthylene."""
+    """The insulator of the conductor is made with High-Density PolyEthylene."""
     LDPE = auto()
-    """The insulation of the conductor is made with Low-Density PolyEthylene."""
+    """The insulator of the conductor is made with Low-Density PolyEthylene."""
     PEX = auto()
-    """The insulation of the conductor is made with Cross-linked polyethylene."""
+    """The insulator of the conductor is made with Cross-linked polyethylene."""
     EPR = auto()
-    """The insulation of the conductor is made with Ethylene-Propylene Rubber."""
+    """The insulator of the conductor is made with Ethylene-Propylene Rubber."""
     PVC = auto()
-    """The insulation of the conductor is made with PolyVinyl Chloride."""
+    """The insulator of the conductor is made with PolyVinyl Chloride."""
 
     def __str__(self) -> str:
-        """Print a `InsulationType`
+        """Print a `InsulatorType`
 
         Returns:
-            A printable string of the insulation type.
+            A printable string of the insulator type.
         """
         return self.name.upper()
 
     @classmethod
     def from_string(cls, string: str) -> Self:
-        """Convert a string into a InsulationType
+        """Convert a string into a InsulatorType
 
         Args:
             string:
                 The string to convert
 
         Returns:
-            The corresponding InsulationType.
+            The corresponding InsulatorType.
         """
         if string.lower() in ("", "unknown", "nan"):
             return cls.UNKNOWN
@@ -197,6 +197,6 @@ class InsulationType(Enum):
         elif string == "PVC":
             return cls.PVC
         else:
-            msg = f"The string {string!r} cannot be converted into a InsulationType."
+            msg = f"The string {string!r} cannot be converted into a InsulatorType."
             logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_INSULATION_TYPE)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_INSULATOR_TYPE)

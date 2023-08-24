@@ -5,7 +5,7 @@ import pytest
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models import Bus, Ground, Line, LineParameters
-from roseau.load_flow.utils import ConductorType, InsulationType, LineType
+from roseau.load_flow.utils import ConductorType, InsulatorType, LineType
 
 
 def test_line_parameters():
@@ -115,7 +115,7 @@ def test_lv_exact():
         "test",
         line_type=LineType.OVERHEAD,
         conductor_type=ConductorType.AL,
-        insulator_type=InsulationType.PEX,
+        insulator_type=InsulatorType.PEX,
         section=150,
         section_neutral=70,
         height=10,
@@ -172,11 +172,11 @@ def test_lv_exact():
     # line_data = {"dpp": 0, "dpn": 0, "dsh": 0.04}
 
     # Working example
-    z_line, y_shunt = LineParameters._lv_exact_to_zy(
+    z_line, y_shunt = LineParameters._geometry_to_zy(
         "test",
         line_type=LineType.UNDERGROUND,
         conductor_type=ConductorType.AL,
-        insulator_type=InsulationType.PVC,
+        insulator_type=InsulatorType.PVC,
         section=150,
         section_neutral=70,
         height=-1.5,

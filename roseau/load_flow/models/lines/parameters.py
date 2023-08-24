@@ -21,7 +21,7 @@ from roseau.load_flow.utils import (
     TAN_D,
     ConductorType,
     Identifiable,
-    InsulationType,
+    InsulatorType,
     JsonMixin,
     LineType,
 )
@@ -294,7 +294,7 @@ class LineParameters(Identifiable, JsonMixin):
         type_name: str,
         line_type: LineType,
         conductor_type: ConductorType,
-        insulation_type: InsulationType,
+        insulator_type: InsulatorType,
         section: float,
         section_neutral: float,
         height: float,
@@ -312,7 +312,7 @@ class LineParameters(Identifiable, JsonMixin):
             conductor_type:
                 Type of the conductor
 
-            insulation_type:
+            insulator_type:
                 Type of insulator.
 
             section:
@@ -335,7 +335,7 @@ class LineParameters(Identifiable, JsonMixin):
             type_name,
             line_type=line_type,
             conductor_type=conductor_type,
-            insulator_type=insulation_type,
+            insulator_type=insulator_type,
             section=section,
             section_neutral=section_neutral,
             height=height,
@@ -348,7 +348,7 @@ class LineParameters(Identifiable, JsonMixin):
         type_name: str,
         line_type: LineType,
         conductor_type: ConductorType,
-        insulator_type: InsulationType,
+        insulator_type: InsulatorType,
         section: float,
         section_neutral: float,
         height: float,
@@ -511,7 +511,7 @@ class LineParameters(Identifiable, JsonMixin):
     ) -> Self:
         """Method to get the electrical parameters of a LV line from its canonical name.
         Some hypothesis will be made: the section of the neutral is the same as the other sections, the height and
-        external diameter are pre-defined, and the insulation is PVC.
+        external diameter are pre-defined, and the insulator is PVC.
 
         Args:
             name:
@@ -539,7 +539,7 @@ class LineParameters(Identifiable, JsonMixin):
         line_type, conductor_type, section = name.split("_")
         line_type = LineType.from_string(line_type)
         conductor_type = ConductorType.from_string(conductor_type)
-        insulation_type = InsulationType.PVC
+        insulator_type = InsulatorType.PVC
 
         section = float(section)
 
@@ -554,7 +554,7 @@ class LineParameters(Identifiable, JsonMixin):
             name,
             line_type=line_type,
             conductor_type=conductor_type,
-            insulation_type=insulation_type,
+            insulator_type=insulator_type,
             section=section,
             section_neutral=section_neutral,
             height=height,

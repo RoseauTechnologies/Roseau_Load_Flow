@@ -1,9 +1,9 @@
 import pytest
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
-from roseau.load_flow.utils.types import ConductorType, InsulationType, LineType
+from roseau.load_flow.utils.types import ConductorType, InsulatorType, LineType
 
-TYPES = [ConductorType, InsulationType, LineType]
+TYPES = [ConductorType, InsulatorType, LineType]
 TYPES_IDS = [x.__name__ for x in TYPES]
 
 
@@ -32,9 +32,9 @@ def test_line_type():
     assert LineType.from_string("Torsade") == LineType.TWISTED
 
 
-def test_insulation_type():
-    assert InsulationType.from_string("") == InsulationType.UNKNOWN
-    assert InsulationType.from_string("nan") == InsulationType.UNKNOWN
+def test_insulator_type():
+    assert InsulatorType.from_string("") == InsulatorType.UNKNOWN
+    assert InsulatorType.from_string("nan") == InsulatorType.UNKNOWN
 
 
 def test_conductor_type():
