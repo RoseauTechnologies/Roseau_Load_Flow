@@ -9,7 +9,7 @@ of `LineParameters` objects are detailed.
 
 ### Definition
 
-The `LineParameters` class has a static method called `from_sym` which converts zero and direct sequences of
+The `LineParameters` class has a class method called `from_sym` which converts zero and direct sequences of
 impedance and admittance into a line parameters instance. This method requires the following data:
 
 - The zero sequence of the impedance (in $\Omega$/km), noted $\underline{Z_0}$ and `z0` in the code.
@@ -38,7 +38,7 @@ $\underline{Y}$ using the following equations:
 
 with $\underline{Z_{\mathrm{s}}}$ the series impedance, $\underline{Z_{\mathrm{m}}}$ the mutual impedance,
 $\underline{Y_{\mathrm{s}}}$ the series shunt admittance and $\underline{Y_{\mathrm{m}}}$ the mutual shunt admittance
-defined by:
+defined as:
 
 ```{math}
 \begin{aligned}
@@ -54,11 +54,11 @@ three-phase matrices. These optional parameters are:
 
 - The neutral impedance (in $\Omega$/km), noted $\underline{Z_{\mathrm{n}}}$ and `zn` in the code.
 - The phase-to-neutral reactance (in $\Omega$/km), noted $\left(\underline{X_{p\mathrm{n}}}\right)_{p\in\{\mathrm{a},
-  \mathrm{b},\mathrm{c}\}}$. As there are supposed to be the same, this unique value is noted `xpn` in
+  \mathrm{b},\mathrm{c}\}}$. As these are supposed to be the same, this unique value is noted `xpn` in
   the code.
 - The neutral susceptance (in S/km), noted $\underline{B_{\mathrm{n}}}$ and `bn` in the code.
 - The phase-to-neutral susceptance (in S/km), noted $\left(\underline{B_{p\mathrm{n}}}\right)_{p\in\{\mathrm{a},
-  \mathrm{b},\mathrm{c}\}}$. As there are supposed to be the same, this unique value is noted `bpn` in the code.
+  \mathrm{b},\mathrm{c}\}}$. As these are supposed to be the same, this unique value is noted `bpn` in the code.
 
 ```{note}
 If any of those parameters is omitted, the neutral wire is omitted and a 3 phase line parameters is built.
@@ -207,7 +207,7 @@ This class methods accepts the following arguments:
 - the line type to choose between the twisted and the underground options.
 - the conductor type which defines the material of the conductors.
 - the insulator type which is the material used as insulator.
-- the section of the phases (in mm²). The same section is supposed for the three phases.
+- the section of the phase wires (in mm²). The sections of the wires of the three phases are considered equal.
 - the section of the neutral wire (in mm²).
 - the height of the line (in meters).
 - the external diameter of the wire (in meters).
@@ -237,6 +237,8 @@ The following resistivities are used by _Roseau Load Flow_:
 | Alu-Acier     | $4.0587\times10^{-8}$   |
 | Almélec-Acier | $3.26\times10^{-8}$     |
 
+These values are defined in the `utils` module: [](#roseau.load_flow.utils.constants.RHO).
+
 #### Inductance
 
 The inductance matrix in Henry/km is computed using the following formula:
@@ -262,11 +264,14 @@ where for $(i,j)\in \{\mathrm{a}, \mathrm{b}, \mathrm{c}, \mathrm{n}\}^2$
 
 where:
 
+- $\mu_0$ is the vacuum magnetic permeability (H/m);
 - $D_0$ an arbitrary distance taken equal to 1 meter;
 - $D_{ij}$ the distances between the center of the conductor $i$ and the center of the conductor $j$
 - $GMR_i$ the _geometric mean radius_ of the conductor $i$.
 
-- The geometric mean radius is defined for all $i\in \{\mathrm{a}, \mathrm{b}, \mathrm{c}, \mathrm{n}\}$ as
+The vacuum magnetic permeability is defined in the `utils` module [](#roseau.load_flow.utils.constants.MU_0).
+
+The geometric mean radius is defined for all $i\in \{\mathrm{a}, \mathrm{b}, \mathrm{c}, \mathrm{n}\}$ as
 
 ```{math}
 GMR_i=R_i\exp\left(-\dfrac{1}{4}\right)\quad \text{(in m)}
@@ -291,7 +296,7 @@ In order to compute the capacitances of the line, the $(\lambda_{ij})_{(i,j)\in\
 
 where:
 
-- $\varepsilon$ is the permittivity of the insulator in F/m
+- $\varepsilon$ is the permittivity of the insulator in F/m;
 - $D_{ij}$ the distance between the center of the conductor $i$ and the conductor $j$;
 - $R_i$ the radius of the conductor $i$;
 - $D'_i$ the distance between the conductor $i$ and its image with respect to the ground;
@@ -315,6 +320,11 @@ to compute the distances based on the position of wires.
 :align: center
 ```
 ````
+
+The permittivity of the insulator $\varepsilon$ (in F/m) is defined as $\varepsilon_0\varepsilon_{\mathrm{r}}$ with
+$\varepsilon_0$ the permittivity of the vacuum (in F/m) and $\varepsilon_{\mathrm{r}}$ the relative
+permittivity of the insulator (no unit). These values are defined in the `utils` module
+[](#roseau.load_flow.utils.constants.EPSILON_0) and [](#roseau.load_flow.utils.constants.EPSILON_R).
 
 The capacitance matrix $C$ is then defined by:
 
@@ -354,6 +364,8 @@ $\tan\delta$ is the loss tangent and is taken from this table:
 | Low-Density PolyEthylene (LDPE)  | $6\times10^{-4}$          |
 | Cross-linked polyethylene (PEX)  | $30\times10^{-4}$         |
 | Ethylene-Propylene Rubber (EPR)  | $125\times10^{-4}$        |
+
+These values are defined in the `utils` module: [](#roseau.load_flow.utils.constants.TAN_D).
 
 Finally, the impedance matrix and the admittance matrix can be computed.
 

@@ -4,8 +4,8 @@
 
 **In development**
 
-- [PR121](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/121) Improvements of the `LineParameters`
-  constructor:
+- [PR121](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/121) [GH68](https://github.com/RoseauTechnologies/Roseau_Load_Flow/issues/68) Improvements of the
+  `LineParameters` constructor:
   - Delete the `LineModel` class
   - Simplify the `from_dict` method
   - Rename and refactor the method `from_lv_exact` into `from_geometry`.

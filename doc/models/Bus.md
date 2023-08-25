@@ -2,7 +2,7 @@
 
 ## Definition
 
-It represents a multi-phase node in the network that other elements (loads, lines, transformers,
+It represents a multiphase node in the network that other elements (loads, lines, transformers,
 voltage sources...) can connect to. A bus is a placeholder point where we want the voltage to be
 computed during the load flow.
 

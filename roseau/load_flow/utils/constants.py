@@ -6,11 +6,11 @@ from roseau.load_flow.utils.types import ConductorType, InsulatorType, LineType
 PI = np.pi
 """The famous constant :math:`\\pi`."""
 
-MU_0 = Q_(4 * PI * 1e-7, "H/m")
-"""magnetic permeability of the vacuum (H/m)."""
+MU_0 = Q_(1.25663706212e-6, "H/m")
+"""Magnetic permeability of the vacuum (H/m)."""
 
-EPSILON_0 = Q_(1e-9 / (36 * PI), "F/m")
-"""Relative permittivity of the vacuum (F/m)."""
+EPSILON_0 = Q_(8.8541878128e-12, "F/m")
+"""Permittivity of the vacuum (F/m)."""
 
 F = Q_(50.0, "Hz")
 """Network frequency :math:`=50` (Hz)."""
@@ -25,7 +25,7 @@ RHO = {
     ConductorType.AA: Q_(4.0587e-8, "ohm*m"),
     ConductorType.LA: Q_(3.26e-8, "ohm*m"),
 }
-"""Resistivity of certain conductor materials (ohm.m)."""
+"""Resistivity of common conductor materials (ohm.m)."""
 
 CX = {
     LineType.OVERHEAD: Q_(0.35, "ohm/km"),
@@ -41,7 +41,7 @@ MU_R = {
     ConductorType.AA: np.nan,  # TODO
     ConductorType.LA: np.nan,  # TODO
 }
-"""Magnetic permeability of certain conductor materials (H/m)."""
+"""Magnetic permeability of common conductor materials (H/m)."""
 
 DELTA_P = {
     ConductorType.CU: Q_(9.3, "mm"),
@@ -50,7 +50,7 @@ DELTA_P = {
     ConductorType.AA: np.nan,  # TODO
     ConductorType.LA: np.nan,  # TODO
 }
-"""Skin effect of certain conductor materials (mm)."""
+"""Skin effect of common conductor materials (mm)."""
 
 TAN_D = {
     InsulatorType.PVC: Q_(600e-4),
@@ -59,7 +59,7 @@ TAN_D = {
     InsulatorType.PEX: Q_(30e-4),
     InsulatorType.EPR: Q_(125e-4),
 }
-"""Loss angles of certain insulator materials."""
+"""Loss angles of common insulator materials."""
 
 EPSILON_R = {
     InsulatorType.PVC: Q_(6.5),
@@ -68,4 +68,4 @@ EPSILON_R = {
     InsulatorType.PEX: Q_(2.5),
     InsulatorType.EPR: Q_(3.1),
 }
-"""Relative permittivity of certain insulator materials."""
+"""Relative permittivity of common insulator materials."""

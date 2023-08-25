@@ -2,7 +2,7 @@
 
 # Three-phase transformer
 
-Three-phase transformers are modeled with three spearate single-phase non-ideal transformers. The
+Three-phase transformers are modeled with three separate single-phase non-ideal transformers. The
 windings of the individual transformers are connected with different configurations to the primary
 side (generally the high voltage side) and to the secondary side (generally the low voltage side).
 The non-ideal transformer losses are represented by $\underline{Z_2}$ the series impedances and
@@ -163,7 +163,7 @@ The following matrices are used to model the windings configurations described a
     \end{pmatrix}$
 ```
 
-Where $k$ is the tranformation ratio of the internal transformers defined as:
+Where $k$ is the transformation ratio of the internal transformers defined as:
 
 ```{list-table}
 :class: borderless

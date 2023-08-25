@@ -101,20 +101,7 @@ class LineParameters(Identifiable, JsonMixin):
 
     @classmethod
     @ureg_wraps(
-        None,
-        (
-            None,
-            None,
-            "ohm/km",
-            "ohm/km",
-            "S/km",
-            "S/km",
-            "ohm/km",
-            "ohm/km",
-            "S/km",
-            "S/km",
-        ),
-        strict=False,
+        None, (None, None, "ohm/km", "ohm/km", "S/km", "S/km", "ohm/km", "ohm/km", "S/km", "S/km"), strict=False
     )
     def from_sym(
         cls,
@@ -208,13 +195,15 @@ class LineParameters(Identifiable, JsonMixin):
 
         Returns:
             The impedance and admittance matrices.
+
+        Notes:
+            As explained in the :ref:`Line parameters alternative constructor documentation
+            <models-line_parameters-alternative_constructors>`, the model may be "degraded" if the computed impedance
+            matrix is not invertible.
         """
-        # Compute some values
-        xpn_isna = pd.isna(xpn)
-        bn_isna = pd.isna(bn)
-        bpn_isna = pd.isna(bpn)
-        zn_isna = pd.isna(zn)
-        any_neutral_na = any((xpn_isna, bn_isna, bpn_isna, zn_isna))
+        # Check if all neutral parameters are valid
+        any_neutral_na = any(pd.isna([xpn, bn, bpn, zn]))
+
         # Two possible choices. The first one is the best but sometimes PwF data forces us to choose the second one
         for choice in (0, 1):
             if choice == 0:
@@ -606,10 +595,7 @@ class LineParameters(Identifiable, JsonMixin):
 
     def to_dict(self, include_geometry: bool = True) -> JsonDict:
         """Return the line parameters information as a dictionary format."""
-        res = {
-            "id": self.id,
-            "z_line": [self._z_line.real.tolist(), self._z_line.imag.tolist()],
-        }
+        res = {"id": self.id, "z_line": [self._z_line.real.tolist(), self._z_line.imag.tolist()]}
         if self.with_shunt:
             res["y_shunt"] = [self._y_shunt.real.tolist(), self._y_shunt.imag.tolist()]
         return res
