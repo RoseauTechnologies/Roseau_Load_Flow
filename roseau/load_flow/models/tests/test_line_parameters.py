@@ -323,6 +323,10 @@ def test_from_name_lv():
     assert lp.y_shunt.shape == (4, 4)
     assert (lp.z_line.real >= 0).all().all()
 
+    lp2 = LineParameters.from_name_lv("U_AL_150")
+    npt.assert_allclose(lp2.z_line.m_as("ohm/km"), lp.z_line.m_as("ohm/km"))
+    npt.assert_allclose(lp2.y_shunt.m_as("S/km"), lp.y_shunt.m_as("S/km"), rtol=1e-4)
+
 
 def test_from_name_mv():
     with pytest.raises(RoseauLoadFlowException) as e:
@@ -334,5 +338,10 @@ def test_from_name_mv():
     z_line_expected = (0.188 + 0.1j) * np.eye(3)
     y_shunt_expected = 0.00014106j * np.eye(3)
 
+    npt.assert_allclose(lp.z_line.m_as("ohm/km"), z_line_expected)
+    npt.assert_allclose(lp.y_shunt.m_as("S/km"), y_shunt_expected, rtol=1e-4)
+
+    # The same with "underground"
+    lp = LineParameters.from_name_mv("U_AL_150")
     npt.assert_allclose(lp.z_line.m_as("ohm/km"), z_line_expected)
     npt.assert_allclose(lp.y_shunt.m_as("S/km"), y_shunt_expected, rtol=1e-4)

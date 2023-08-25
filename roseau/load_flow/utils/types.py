@@ -61,15 +61,19 @@ class LineType(Enum):
             The code of the enumerated value.
         """
         if self == LineType.OVERHEAD:
-            return "A"
+            return "O"
         elif self == LineType.UNDERGROUND:
-            return "S"
+            return "U"
         elif self == LineType.TWISTED:
             return "T"
         else:  # pragma: no cover
             msg = f"There is code missing here. I do not know the LineType {self!r}."
             logger.error(msg)
             raise NotImplementedError(msg)
+
+
+# Add the list of codes for each line type
+LineType.CODES = {LineType.OVERHEAD: {"A", "O"}, LineType.UNDERGROUND: {"U", "S"}, LineType.TWISTED: {"T"}}
 
 
 @unique

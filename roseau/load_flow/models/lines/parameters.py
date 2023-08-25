@@ -36,7 +36,7 @@ class LineParameters(Identifiable, JsonMixin):
         :ref:`Line parameters documentation <models-line_parameters>`
     """
 
-    _type_re = "|".join(x.code() for x in LineType)
+    _type_re = "|".join("|".join(x) for x in LineType.CODES.values())
     _material_re = "|".join(x.code() for x in ConductorType)
     _section_re = r"[1-9][0-9]*"
     _REGEXP_LINE_TYPE_NAME: re.Pattern = re.compile(
@@ -494,7 +494,7 @@ class LineParameters(Identifiable, JsonMixin):
 
         Args:
             name:
-                The name of the line the parameters must be computed. Eg. "S_AL_150".
+                The name of the line the parameters must be computed. E.g. "U_AL_150".
 
             section_neutral:
                 Surface of the neutral (mm²). If None it will be the same as the section of the other phases.
@@ -546,7 +546,7 @@ class LineParameters(Identifiable, JsonMixin):
 
         Args:
             name:
-                The name of the line the parameters must be computed. Eg. "S_AL_150".
+                The name of the line the parameters must be computed. E.g. "U_AL_150".
 
         Returns:
             The corresponding line parameters.
@@ -582,8 +582,8 @@ class LineParameters(Identifiable, JsonMixin):
         b = (c_b1 + c_b2 * section) * 1e-4 * OMEGA
         b = b.to("S/km")
 
-        z_line = (r + x * 1j) * np.eye(3)  # in ohms/km
-        y_shunt = b * 1j * np.eye(3)  # in siemens/km
+        z_line = (r + x * 1j) * np.eye(3, dtype=float)  # in ohms/km
+        y_shunt = b * 1j * np.eye(3, dtype=float)  # in siemens/km
         return cls(name, z_line=z_line, y_shunt=y_shunt)
 
     #

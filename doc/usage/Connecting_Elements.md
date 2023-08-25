@@ -118,14 +118,14 @@ Creating a line connecting the `load_bus` (belonging to the network `en`) and ou
 belong to a network) will propagate the network to the new elements.
 
 ```pycon
->>> lp_s_al_240 = LineParameters.from_name_lv("S_AL_240")
+>>> lp_u_al_240 = LineParameters.from_name_lv("U_AL_240")
 >>> new_line = Line(
 ...     id="new_line",
 ...     bus1=load_bus,
 ...     bus2=new_bus,
 ...     phases="abcn",
 ...     ground=ground,
-...     parameters=lp_s_al_240,
+...     parameters=lp_u_al_240,
 ...     length=0.5,
 ... )
 >>> new_line.network

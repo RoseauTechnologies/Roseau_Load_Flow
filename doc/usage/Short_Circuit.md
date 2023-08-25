@@ -31,11 +31,11 @@ is impossible.
 ... vs = VoltageSource(id="vs", bus=source_bus, phases="abcn", voltages=source_voltages)
 
 >>> # Add LV lines
-... lp1 = LineParameters.from_name_lv("S_AL_240")
+... lp1 = LineParameters.from_name_lv("U_AL_240")
 ... line1 = Line(
 ...     id="line1", bus1=source_bus, bus2=bus1, parameters=lp1, length=1.0, ground=ground
 ... )
-... lp2 = LineParameters.from_name_lv("S_AL_150")
+... lp2 = LineParameters.from_name_lv("U_AL_150")
 ... line2 = Line(id="line2", bus1=bus1, bus2=bus2, parameters=lp2, length=2.0, ground=ground)
 
 >>> # Create network
