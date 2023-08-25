@@ -5,6 +5,8 @@
 The line parameters are briefly described [here](models-line_parameters). In this page, the alternative constructors
 of `LineParameters` objects are detailed.
 
+(models-line_parameters-alternative_constructors-symmetric)=
+
 ## Symmetric model
 
 ### Definition
@@ -209,12 +211,12 @@ This class methods accepts the following arguments:
 - the insulator type which is the material used as insulator.
 - the section of the phase wires (in mm²). The sections of the wires of the three phases are considered equal.
 - the section of the neutral wire (in mm²).
-- the height of the line (in meters).
+- the height of the line above or below the ground (in meters).
 - the external diameter of the wire (in meters).
 
 #### Resistance
 
-The resistance of the conductors are computed using the following formula:
+The resistances of the conductors are computed using the following formula:
 
 ```{math}
 R_{p}=\frac{\rho}{S_{p}}\quad\forall p\in\{\mathrm{a},\mathrm{b},\mathrm{c},\mathrm{n}\} \qquad(\text{in }

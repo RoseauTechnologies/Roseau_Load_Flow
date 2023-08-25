@@ -115,7 +115,7 @@ class LineParameters(Identifiable, JsonMixin):
         bn: Optional[float] = None,
         bpn: Optional[float] = None,
     ) -> Self:
-        """Create line parameters from sym model.
+        """Create line parameters from a symmetric model.
 
         Args:
             id:
@@ -147,6 +147,11 @@ class LineParameters(Identifiable, JsonMixin):
 
         Returns:
             The created line parameters.
+
+        Notes:
+            As explained in the :ref:`Line parameters alternative constructor documentation
+            <models-line_parameters-alternative_constructors-symmetric>`, the model may be "degraded" if the computed
+            impedance matrix is not invertible.
         """
         z_line, y_shunt = cls._sym_to_zy(id=id, z0=z0, z1=z1, y0=y0, y1=y1, zn=zn, xpn=xpn, bn=bn, bpn=bpn)
         return cls(id=id, z_line=z_line, y_shunt=y_shunt)
@@ -195,11 +200,6 @@ class LineParameters(Identifiable, JsonMixin):
 
         Returns:
             The impedance and admittance matrices.
-
-        Notes:
-            As explained in the :ref:`Line parameters alternative constructor documentation
-            <models-line_parameters-alternative_constructors>`, the model may be "degraded" if the computed impedance
-            matrix is not invertible.
         """
         # Check if all neutral parameters are valid
         any_neutral_na = any(pd.isna([xpn, bn, bpn, zn]))
