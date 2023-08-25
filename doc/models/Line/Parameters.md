@@ -369,6 +369,10 @@ The admittance matrix $\underline{y}$ shouldn't be confused with the shunt admit
 $\underline{Y}$ defined [here](models-line-shunt-admittance-matrix).
 ```
 
+```{note}
+The frequency used to compute $\omega$ is 50 Hz.
+```
+
 ### Twisted line
 
 The following configuration of the wires is supposed:

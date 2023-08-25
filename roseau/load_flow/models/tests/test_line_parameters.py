@@ -138,7 +138,7 @@ def test_geometry():
         ]
     )
 
-    npt.assert_allclose(z_line.m_as("ohm/km"), nplin.inv(y_line_expected))
+    npt.assert_allclose(z_line, nplin.inv(y_line_expected))
     y_shunt_expected = np.array(
         [
             [
@@ -167,7 +167,7 @@ def test_geometry():
             ],
         ]
     )
-    npt.assert_allclose(y_shunt.m_as("S/km"), y_shunt_expected)
+    npt.assert_allclose(y_shunt, y_shunt_expected)
 
     # line_data = {"dpp": 0, "dpn": 0, "dsh": 0.04}
 
@@ -197,7 +197,7 @@ def test_geometry():
             [-0.03859093131793137, 0.20837873067712717, -0.03859093131792582, -0.6182914857776997],
         ]
     )
-    npt.assert_allclose(z_line.m_as("ohm/km"), nplin.inv(y_line_expected))
+    npt.assert_allclose(z_line, nplin.inv(y_line_expected))
     y_shunt_expected = np.array(
         [
             [
@@ -227,7 +227,7 @@ def test_geometry():
         ]
     )
 
-    npt.assert_allclose(y_shunt.m_as("S/km"), y_shunt_expected)
+    npt.assert_allclose(y_shunt, y_shunt_expected)
 
 
 def test_sym():

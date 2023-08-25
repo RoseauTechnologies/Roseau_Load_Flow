@@ -393,62 +393,51 @@ class LineParameters(Identifiable, JsonMixin):
         # Geometric configuration
         if line_type in (LineType.OVERHEAD, LineType.TWISTED):
             # TODO This configuration is for twisted lines... Create a overhead configuration.
-            coord = Q_(
-                np.array(
-                    [
-                        [-np.sqrt(3) / 8 * external_diameter, height + external_diameter / 8],
-                        [np.sqrt(3) / 8 * external_diameter, height + external_diameter / 8],
-                        [0, height - external_diameter / 4],
-                        [0, height],
-                    ]
-                ),
-                "m",
-            )
-            coord_prim = Q_(
-                np.array(
-                    [
-                        [-np.sqrt(3) / 8 * external_diameter, -height - external_diameter / 8],
-                        [np.sqrt(3) / 8 * external_diameter, -height - external_diameter / 8],
-                        [0, -height + external_diameter / 4],
-                        [0, -height],
-                    ]
-                ),
-                "m",
-            )
-            epsilon = EPSILON_0
+            # TODO Add some checks on provided geometric values...
+            coord = np.array(
+                [
+                    [-np.sqrt(3) / 8 * external_diameter, height + external_diameter / 8],
+                    [np.sqrt(3) / 8 * external_diameter, height + external_diameter / 8],
+                    [0, height - external_diameter / 4],
+                    [0, height],
+                ]
+            )  # m
+            coord_prim = np.array(
+                [
+                    [-np.sqrt(3) / 8 * external_diameter, -height - external_diameter / 8],
+                    [np.sqrt(3) / 8 * external_diameter, -height - external_diameter / 8],
+                    [0, -height + external_diameter / 4],
+                    [0, -height],
+                ]
+            )  # m
+            epsilon = EPSILON_0.m_as("F/m")
         elif line_type == LineType.UNDERGROUND:
-            coord = Q_(
-                np.array(
-                    [
-                        [-np.sqrt(2) / 8 * external_diameter, height - np.sqrt(2) / 8 * external_diameter],
-                        [np.sqrt(2) / 8 * external_diameter, height - np.sqrt(2) / 8 * external_diameter],
-                        [np.sqrt(2) / 8 * external_diameter, height + np.sqrt(2) / 8 * external_diameter],
-                        [-np.sqrt(2) / 8 * external_diameter, height + np.sqrt(2) / 8 * external_diameter],
-                    ]
-                ),
-                "m",
-            )
-            coord_prim = Q_(
-                np.array(
-                    [
-                        [-np.sqrt(2) * 3 / 8 * external_diameter, height - np.sqrt(2) * 3 / 8 * external_diameter],
-                        [np.sqrt(2) * 3 / 8 * external_diameter, height - np.sqrt(2) * 3 / 8 * external_diameter],
-                        [np.sqrt(2) * 3 / 8 * external_diameter, height + np.sqrt(2) * 3 / 8 * external_diameter],
-                        [-np.sqrt(2) * 3 / 8 * external_diameter, height + np.sqrt(2) * 3 / 8 * external_diameter],
-                    ]
-                ),
-                "m",
-            )
-            epsilon = EPSILON_0 * EPSILON_R[insulator_type]
+            coord = np.array(
+                [
+                    [-np.sqrt(2) / 8 * external_diameter, height - np.sqrt(2) / 8 * external_diameter],
+                    [np.sqrt(2) / 8 * external_diameter, height - np.sqrt(2) / 8 * external_diameter],
+                    [np.sqrt(2) / 8 * external_diameter, height + np.sqrt(2) / 8 * external_diameter],
+                    [-np.sqrt(2) / 8 * external_diameter, height + np.sqrt(2) / 8 * external_diameter],
+                ]
+            )  # m
+            coord_prim = np.array(
+                [
+                    [-np.sqrt(2) * 3 / 8 * external_diameter, height - np.sqrt(2) * 3 / 8 * external_diameter],
+                    [np.sqrt(2) * 3 / 8 * external_diameter, height - np.sqrt(2) * 3 / 8 * external_diameter],
+                    [np.sqrt(2) * 3 / 8 * external_diameter, height + np.sqrt(2) * 3 / 8 * external_diameter],
+                    [-np.sqrt(2) * 3 / 8 * external_diameter, height + np.sqrt(2) * 3 / 8 * external_diameter],
+                ]
+            )  # m
+            epsilon = (EPSILON_0 * EPSILON_R[insulator_type]).m_as("F/m")
         else:
             msg = f"The line type of the line {id!r} is unknown. It should have been filled in the reading."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_TYPE)
 
         # Distance computation
-        sections = Q_([section, section, section, section_neutral], "mm**2")  # surfaces (m2)
+        sections = np.array([section, section, section, section_neutral], dtype=float) * 1e-6  # surfaces (m2)
         radius = np.sqrt(sections / PI)  # radius (m)
-        gmr = radius.to("m") * np.exp(-0.25)  # geometric mean radius (m)
+        gmr = radius * np.exp(-0.25)  # geometric mean radius (m)
         # distance between two wires (m)
         coord_new_dim = coord[:, None, :]
         diff = coord_new_dim - coord
@@ -464,26 +453,27 @@ class LineParameters(Identifiable, JsonMixin):
         np.fill_diagonal(minus, 1)
 
         # Electrical parameters
-        r = RHO[conductor_type] / sections * np.eye(4, dtype=float)  # resistance (ohm/km)
+        r = RHO[conductor_type].m_as("ohm*m") / sections * np.eye(4, dtype=float) * 1e3  # resistance (ohm/km)
         distance[mask_diagonal] = gmr
-        inductance = MU_0 / (2 * PI) * np.log(Q_(1, "m") / distance)
+        inductance = MU_0.m_as("H/m") / (2 * PI) * np.log(1 / distance) * 1e3  # H/m->H/km
         distance[mask_diagonal] = radius
-        lambdas = 1 / (2 * PI * epsilon) * np.log(distance_prim / distance)
+        lambdas = 1 / (2 * PI * epsilon) * np.log(distance_prim / distance)  # m/F
 
         # Extract the conductivity and the capacities from the lambda (potential coefficients)
-        lambda_inv = Q_(nplin.inv(lambdas.magnitude), 1 / lambdas.units).to("F/km")  # capacities (F/km)
-        c = Q_(np.zeros((4, 4), dtype=float), "F/km")  # capacities (F/km)
+        lambda_inv = nplin.inv(lambdas) * 1e3  # capacities (F/km)
+        c = np.zeros((4, 4), dtype=float)  # capacities (F/km)
         c[mask_diagonal] = np.einsum("ij,ij->i", lambda_inv, minus)
         c[mask_off_diagonal] = -lambda_inv[mask_off_diagonal]
-        g = Q_(np.zeros((4, 4), dtype=float), "S/km")  # conductance (S/km)
-        g[mask_diagonal] = TAN_D[insulator_type] * np.einsum("ii->i", c) * OMEGA
+        g = np.zeros((4, 4), dtype=float)  # conductance (S/km)
+        omega = OMEGA.m_as("rad/s")
+        g[mask_diagonal] = TAN_D[insulator_type] * np.einsum("ii->i", c) * omega
 
         # Build the impedance and admittance matrices
-        z_line = r + inductance * OMEGA * 1j
-        y = g + c * OMEGA * 1j
+        z_line = r + inductance * omega * 1j
+        y = g + c * omega * 1j
 
         # Compute the shunt admittance matrix from the admittance matrix
-        y_shunt = Q_(np.zeros((4, 4), dtype=complex), "S/km")
+        y_shunt = np.zeros((4, 4), dtype=complex)
         y_shunt[mask_diagonal] = np.einsum("ij->i", y)
         y_shunt[mask_off_diagonal] = -y[mask_off_diagonal]
 
