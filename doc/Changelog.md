@@ -4,6 +4,16 @@
 
 **In development**
 
+- [PR121](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/121) [GH68](https://github.com/RoseauTechnologies/Roseau_Load_Flow/issues/68) Improvements of the
+  `LineParameters` constructor:
+  - Delete the `LineModel` class
+  - Simplify the `from_dict` method
+  - Rename and refactor the method `from_lv_exact` into `from_geometry`.
+  - Add documentation for the `LineParameters` alternative constructors.
+  - Rename `InsulationType` into `InsulatorType`.
+  - Allow the letter "U" for "Underground" line type (only "S" for "Souterrain" in French was accepted). The same
+    with the letter "O" for "Overhead" line type (only "A" for "Aérien" in French was accepted).
+  - Remove the field `"model"` from the JSON serialization of `LineParameters`.
 - [PR120](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/120) Fix phases of flexible power results.
 - [PR119](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/119) Add explicit error message for singular jacobian.
 - [PR118](https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/118) [GH95](https://github.com/RoseauTechnologies/Roseau_Load_Flow/issues/95)

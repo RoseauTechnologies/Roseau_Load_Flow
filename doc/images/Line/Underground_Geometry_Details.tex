@@ -1,0 +1,70 @@
+\input{Preambule}%
+
+\begin{document}
+    \begin{tikzpicture}[%
+        show background rectangle,%
+        tight background,%
+        background rectangle/.style={fill=white}%
+    ]
+        \tikzset{%
+            point/.pic={%
+            \fill[black] (0,0) circle[radius=0.05];%
+            }%
+        }%
+
+        %
+        % Conducteurs
+        %
+        \coordinate (wire center) at (0,-1);%
+        \path[draw=black] (wire center) pic {point} circle[radius=3.5];%
+
+        % Neutre
+        \path (wire center) ++(135:1.75) coordinate (n center);%
+        \draw (n center) circle[radius=0.90];%
+        \path (n center) pic {point} node[below right] {N};%
+
+        % Phases
+        \foreach \x/\y/\z/\p in {a/-135/A/above right,b/-45/B/below,c/45/C/above} {%
+            \path (wire center) ++(\y:1.75) coordinate (\x\space center);%
+            \draw (\x\space center) circle[radius=1.1];%
+            \path (\x\space center) pic {point} node[\p] {\z};%
+        }%
+
+        %
+        % Annotations
+        %
+        % Exterior diameter
+        \draw[{Latex[]}-{Latex[]}] (wire center) ++(-4,-3.5)%
+        coordinate (bottom dext)%
+        -- ++(0,7) coordinate(top dext)%
+        node[midway, left] {$d_{\mathrm{ext}}$};%
+        \draw[dashed] (wire center) ++(0,3.5) -- (top dext);%
+        \draw[dashed] (wire center) ++(0,-3.5) -- (bottom dext);%
+
+        % External diameter divided by 4
+        \draw[{Latex[]}-{Latex[]}] (wire center) -- ++(180:1.75) %
+        node [pos=1, left] {$\dfrac{d_{\mathrm{ext}}}{4}$};%
+        \draw[dashed] (wire center) circle[radius=1.75];%
+
+        % Arc
+        \draw[dashed] (wire center) -- ++(45:4);%
+        \draw[dashed] (wire center) -- ++(-45:4) coordinate (start arc);%
+        \draw[{Latex[]}-{Latex[]}] (start arc) arc[start angle=-45, end angle=45, radius=4]%
+        node [midway, right] {$\dfrac{\pi}{2}$};%
+
+        % Radius neutral
+        \draw[{Latex[]}-{Latex[]}] (n center) -- ++(135:0.9) node[midway, above right] {$R_{\nrm}$};%
+
+        % Radius phase
+        \draw[{Latex[]}-{Latex[]}] (a center) -- ++(-135:1.1) node[midway, above left] {$R_{\arm}$};%
+    \end{tikzpicture}
+\end{document}
+% Local Variables:
+% mode: latex
+% TeX-engine: luatex
+% TeX-source-correlate-method-active: synctex
+% ispell-local-dictionary: "british"
+% coding: utf-8
+% LaTeX-indent-level: 4
+% fill-column: 120
+% End:

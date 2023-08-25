@@ -1,0 +1,43 @@
+\input{Preambule}%
+
+\begin{document}
+    \ctikzset{european, straight voltages, cute inductors}%
+    \begin{tikzpicture}[%
+        show background rectangle,%
+        tight background,%
+        background rectangle/.style={fill=white}%
+    ]
+        \tikzset{%
+            wire/.pic={%
+            \fill[RoseauBlue, draw=black] (0,0) circle[radius=0.3];%
+            }%
+        }%
+
+        % Ground
+        \draw[thick] (0,0) circle[radius=5] ++(45:5) node[above right] {Ground};%
+
+        % Wires
+        \path (0:3) coordinate (w1) pic {wire} node[above=0.3] {1};%
+        \path (120:3) coordinate (w2) pic {wire} node[above=0.3] {2};%
+        \path (240:3) coordinate (w3) pic {wire} node[above=0.3] {3};%
+
+        % Images
+        \path (0:7) coordinate (w1p) pic {wire} node[above=0.3] {1'};%
+        \path (120:7) coordinate (w2p) pic {wire} node[above=0.3] {2'};%
+        \path (240:7) coordinate (w3p) pic {wire} node[above=0.3] {3'};%
+
+        % Distances
+        \draw[{Latex[]}-{Latex[]}] (w1) -- (w2) node[midway,above] {$D_{12}$};%
+        \draw[{Latex[]}-{Latex[]}] (w1) -- (w2p) node[pos=0.4,right] {$D'_{12}$};%
+        \draw[{Latex[]}-{Latex[]}] (w3) -- (w3p) node[pos=0.4,right] {$D'_{3}$};%
+    \end{tikzpicture}
+\end{document}
+% Local Variables:
+% mode: latex
+% TeX-engine: luatex
+% TeX-source-correlate-method-active: synctex
+% ispell-local-dictionary: "british"
+% coding: utf-8
+% LaTeX-indent-level: 4
+% fill-column: 120
+% End:

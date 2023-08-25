@@ -95,7 +95,7 @@ load_bus = Bus(id="load_bus", phases="abc")
 mv_load = PowerLoad("mv_load", load_bus, powers=[10000, 10000, 10000])
 
 # Connect the two MV buses with a line
-lp = LineParameters.from_name_mv("S_AL_150")
+lp = LineParameters.from_name_mv("U_AL_150")  # Underground, ALuminium, 150mm²
 line = Line("line", source_bus, load_bus, parameters=lp, length=1.0, ground=ground)
 
 # Create a low-voltage bus and a load

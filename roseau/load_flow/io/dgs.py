@@ -18,7 +18,6 @@ from roseau.load_flow.models import (
 )
 from roseau.load_flow.typing import StrPath
 from roseau.load_flow.units import Q_
-from roseau.load_flow.utils import LineModel
 
 if TYPE_CHECKING:
     from roseau.load_flow.network import ElectricalNetwork
@@ -119,19 +118,14 @@ def network_from_dgs(  # noqa: C901
         for type_id in typ_lne.index:
             # TODO: use the detailed phase information instead of n
             n = typ_lne.at[type_id, "nlnph"] + typ_lne.at[type_id, "nneutral"]
-            if n == 4:
-                line_model = LineModel.SYM_NEUTRAL
-            elif n == 3:
-                line_model = LineModel.SYM
-            else:
+            if n not in (3, 4):
                 msg = f"The number of phases ({n}) of line type {type_id!r} cannot be handled, it should be 3 or 4."
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DGS_BAD_PHASE_NUMBER)
 
-            lines_params_dict[type_id] = LineParameters.from_sym(
+            lp = LineParameters.from_sym(
                 type_id,
                 z0=complex(typ_lne.at[type_id, "rline0"], typ_lne.at[type_id, "xline0"]),
-                model=line_model,
                 z1=complex(typ_lne.at[type_id, "rline"], typ_lne.at[type_id, "xline"]),
                 y0=Q_(complex(typ_lne.at[type_id, "gline0"], typ_lne.at[type_id, "bline0"]), "uS/km"),
                 y1=Q_(complex(typ_lne.at[type_id, "gline"], typ_lne.at[type_id, "bline"]), "uS/km"),
@@ -140,6 +134,27 @@ def network_from_dgs(  # noqa: C901
                 bn=Q_(typ_lne.at[type_id, "bnline"], "uS/km"),
                 bpn=Q_(typ_lne.at[type_id, "bpnline"], "uS/km"),
             )
+
+            actual_shape = lp.z_line.shape[0]
+            if actual_shape > n:  # 4x4 matrix while a 3x3 matrix was expected
+                # Extract the 3x3 underlying matrix
+                lp = LineParameters(
+                    id=lp.id,
+                    z_line=lp.z_line[:actual_shape, :actual_shape],
+                    y_shunt=lp.y_shunt[:actual_shape, :actual_shape] if lp.with_shunt else None,
+                )
+            elif actual_shape == n:
+                # Everything ok
+                pass
+            else:
+                # Something unexpected happened
+                msg = (
+                    f"A {n}x{n} impedance matrix was expected for the line type {type_id!r} but a "
+                    f"{actual_shape}x{actual_shape} matrix was generated."
+                )
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DGS_BAD_PHASE_NUMBER)
+            lines_params_dict[type_id] = lp
 
         for line_id in elm_lne.index:
             type_id = elm_lne.at[line_id, "typ_id"]  # id of the line type

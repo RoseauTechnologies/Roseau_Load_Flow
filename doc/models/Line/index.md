@@ -86,6 +86,8 @@ compute the currents and voltages.
 with $G\in\mathbb{R}^4$ the conductance of the line, $B\in\mathbb{R}^4$ the susceptance of the line and
 $C\in\mathbb{R}^{16}$ the transverse susceptances of the line.
 
+(models-line-shunt-admittance-matrix)=
+
 ### Shunt admittance matrix
 
 The shunt admittance matrix $\underline{Y}$ is defined from the admittance matrix $\underline{y}$ as:
@@ -113,7 +115,7 @@ The shunt admittance matrix $\underline{Y}$ is defined from the admittance matri
 
 The parameters of the lines are defined using the `LineParameters` class. It takes the series
 impedance matrix $\underline{Z}$ and optionally, the shunt admittance matrix $\underline{Y}$. The
-first one must be given in $\Omega/km$ (or an equivalent unit) and the second must be given in
+first one must be given in $\Omega$/km (or an equivalent unit) and the second must be given in
 $S/km$ (or an equivalent unit).
 
 ```python
@@ -156,15 +158,20 @@ shunt_line_parameters = LineParameters(
 )
 ```
 
+There are several alternative constructors for `LineParameters` objects. The description of them can be found in the
+dedicated [Line parameters page](Parameters.md).
+
 ## Available models
 
-The following line models are available in _Roseau Load Flow_:
+The following line models are available in _Roseau Load Flow_. Please also have a look at the parameters page to
+define the parameters of lines.
 
 ```{toctree}
 ---
 maxdepth: 2
 caption: Lines
 ---
+Parameters
 ShuntLine
 SimplifiedLine
 ```

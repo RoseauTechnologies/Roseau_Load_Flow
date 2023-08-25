@@ -1,6 +1,6 @@
 # Impedance loads (Z)
 
-They represent loads for which the impedance is considered constant, i.e the power is proportional
+They represent loads for which the impedance is considered constant, i.e. the power is proportional
 to the square of the voltage.
 
 _ZIP_ equation: $S = 0 \times V^0 + 0 \times V^1 + z \times V^2 \implies S \propto V^2$
