@@ -36,6 +36,7 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.napoleon",
     "sphinx.ext.intersphinx",
+    "sphinx.ext.extlinks",
     "autoapi.extension",
     "sphinx_copybutton",
     "sphinx_inline_tabs",
@@ -139,3 +140,9 @@ googleanalytics_id = "G-Y9QSN78RFV"
 
 # -- Options for sphinxcontrib.bibtex ----------------------------------------
 bibtex_bibfiles = ["Bibliography.bib"]
+
+# -- Options for sphinx.ext.extlinks -----------------------------------------
+extlinks = {
+    "gh-issue": ("https://github.com/RoseauTechnologies/Roseau_Load_Flow/issues/%s", "GH%s"),
+    "gh-pr": ("https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/%s", "PR%s"),
+}
