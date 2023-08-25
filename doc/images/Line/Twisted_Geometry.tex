@@ -18,25 +18,25 @@
             % Conducteurs
             %
             % Neutre
-            \coordinate (neutral center) at (0,8);%
-            \path[fill=RoseauGrey, draw=black] (neutral center) circle[radius=1];%
-            \draw[pattern=north east lines, pattern color=red, preaction={fill, white}] (neutral center) circle[radius=0.90];%
-            \node[shape=circle, draw, fill=white] (neutral center node) at (neutral center) {$\nrm$};%
+            \coordinate (n center) at (0,8);%
+            \path[fill=RoseauGrey, draw=black] (n center) circle[radius=1];%
+            \draw[pattern=north east lines, pattern color=red, preaction={fill, white}] (n center) circle[radius=0.90];%
+            \node[shape=circle, draw, fill=white] (n center node) at (n center) {$\nrm$};%
 
             % Phases
             \foreach \x/\y/\z in {a/135/$\arm$,b/45/$\brm$,c/-90/$\crm$} {%
-                \path (neutral center) ++(\y:2.5) coordinate (\x center);%
-                \path[fill=RoseauGrey, draw=black] (\x center) circle[radius=1.5];%
+                \path (n center) ++(\y:2.5) coordinate (\x\space center);%
+                \path[fill=RoseauGrey, draw=black] (\x\space center) circle[radius=1.5];%
                 \draw[pattern=north east lines, pattern color=RoseauGreen, preaction={fill, white}] %
-                (\x center) circle[radius=1.4];%
-                \node[shape=circle, draw, fill=white] at (\x center) {\z};%
+                (\x\space center) circle[radius=1.4];%
+                \node[shape=circle, draw, fill=white] at (\x\space center) {\z};%
             }%
-            \draw[dashed] (neutral center) circle[radius=4];%
+            \draw[dashed] (n center) circle[radius=4];%
 
             % Hauteur
-            \coordinate (top height) at (neutral center -| {(-4.5,0)});%
+            \coordinate (top height) at (n center -| {(-4.5,0)});%
             \draw[{Latex[]-Latex[]}] (-4.5,0.5) -- (top height) node[midway,right] {$h$};
-            \draw[dashed] (top height) -- (neutral center node);%
+            \draw[dashed] (top height) -- (n center node);%
         \end{scope}
 
         % Légende

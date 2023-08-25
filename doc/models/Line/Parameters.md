@@ -1,6 +1,6 @@
 (models-line_parameters-alternative_constructors)=
 
-# Line Parameters
+# Parameters
 
 The line parameters are briefly described [here](models-line_parameters). In this page, the alternative constructors
 of `LineParameters` objects are detailed.
@@ -56,8 +56,8 @@ three-phase matrices. These optional parameters are:
 - The phase-to-neutral reactance (in $\Omega$/km), noted $\left(\underline{X_{p\mathrm{n}}}\right)_{p\in\{\mathrm{a},
   \mathrm{b},\mathrm{c}\}}$. As there are supposed to be the same, this unique value is noted `xpn` in
   the code.
-- The neutral susceptance (in $S/km$), noted $\underline{B_{\mathrm{n}}}$ and `bn` in the code.
-- The phase-to-neutral susceptance (in $S/km$), noted $\left(\underline{B_{p\mathrm{n}}}\right)_{p\in\{\mathrm{a},
+- The neutral susceptance (in S/km), noted $\underline{B_{\mathrm{n}}}$ and `bn` in the code.
+- The phase-to-neutral susceptance (in S/km), noted $\left(\underline{B_{p\mathrm{n}}}\right)_{p\in\{\mathrm{a},
   \mathrm{b},\mathrm{c}\}}$. As there are supposed to be the same, this unique value is noted `bpn` in the code.
 
 ```{note}
@@ -96,8 +96,8 @@ $\underline{Y_{\mathrm{m}}}$ as before and:
 \end{aligned}
 ```
 
-respectively the phase-to-neutral series impedance (in $\Omega$/km), the neutral shunt admittance (in $S/km$) and
-the phase-to-neutral shunt admittance (in $S/km$).
+respectively the phase-to-neutral series impedance (in $\Omega$/km), the neutral shunt admittance (in S/km) and
+the phase-to-neutral shunt admittance (in S/km).
 
 ````{note}
 The computed impedance matrix may be non-invertible. In this case, the `from_sym` class method builds impedance and
@@ -297,14 +297,24 @@ where:
 - $D'_i$ the distance between the conductor $i$ and its image with respect to the ground;
 - $D'_{ij}$ the distance between the conductor $i$ and the image of the conductor $j$ with respect to the ground.
 
-The method of images is depicted in the following figure. It indicates how to compute the distances based on the
-position of wires.
+The method of images ({cite:p}`wiki:Method_Of_Image_Charges`) is depicted in the following figure. It indicates how
+to compute the distances based on the position of wires.
 
-```{image} /_static/Line/Image_Method.svg
-:alt: Image method
+````{tab} Planar ground
+```{image} /_static/Line/Image_Method_Plane.svg
+:alt: Image method for a planar ground
 :width: 400px
 :align: center
 ```
+````
+
+````{tab} Circular ground
+```{image} /_static/Line/Image_Method_Circle.svg
+:alt: Image method for a circular ground
+:width: 400px
+:align: center
+```
+````
 
 The capacitance matrix $C$ is then defined by:
 
@@ -382,7 +392,7 @@ and located at the distance $\dfrac{d_{\mathrm{ext}}}{4}$ from the center of the
 neutral are separated by the insulator and air. The height distance $h$ is the distance between the center of the
 neutral conductor and the ground.
 
-From these figures, the following geometric positions can be deduced
+From these figures, the following geometric positions can be deduced:
 
 ```{math}
 \begin{aligned}
@@ -402,13 +412,10 @@ the point $B$, etc. The prime positions are the positions of the images of the c
 
 The formulas of the previous sections are used to get the impedance and shunt admittances matrices.
 
-#### Examples
-
 ```pycon
 >>> from roseau.load_flow import LineParameters, Q_, LineType, ConductorType, InsulatorType
 
-
->>> # A twisted example of
+>>> # A twisted line example
 ... line_parameters = LineParameters.from_geometry(
 ...     "twisted_example",
 ...     line_type=LineType.TWISTED,
@@ -439,11 +446,85 @@ array(
 
 ### Underground line
 
-TODO
+The following configuration of the wires is supposed:
 
-#### Examples
+```{image} /_static/Line/Underground_Geometry.svg
+:alt: Underground model geometry
+:width: 600px
+:align: center
+```
 
-TODO
+Here is the details of the parameters used:
+
+```{image} /_static/Line/Underground_Geometry_Details.svg
+:alt: Underground model geometry details
+:width: 600px
+:align: center
+```
+
+In this configuration, the conductors are separated by $\dfrac{\pi}{2}$ angles
+and located at the distance $\dfrac{d_{\mathrm{ext}}}{4}$ from the center of the wire. Phases and
+neutral are separated by the insulator. The height distance $h$ is the distance between the center of the
+wire and the ground.
+
+From these figures, the following geometric positions can be deduced:
+
+```{math}
+\begin{aligned}
+    (x_{\mathrm{a}}, y_{\mathrm{a}}) &= \left(-\dfrac{\sqrt{2}}{8}d_{\mathrm{ext}},h-\dfrac{\sqrt{2}}{8}d_{\mathrm{ext}}\right)\\
+    (x_{\mathrm{b}}, y_{\mathrm{b}}) &= \left(\dfrac{\sqrt{2}}{8}d_{\mathrm{ext}},h-\dfrac{\sqrt{2}}{8}d_{\mathrm{ext}}\right)\\
+    (x_{\mathrm{c}}, y_{\mathrm{c}}) &= \left(\dfrac{\sqrt{2}}{8}d_{\mathrm{ext}},h+\dfrac{\sqrt{2}}{8}d_{\mathrm{ext}}\right)\\
+    (x_{\mathrm{n}}, y_{\mathrm{n}}) &= \left(-\dfrac{\sqrt{2}}{8}d_{\mathrm{ext}},h+\dfrac{\sqrt{2}}{8}d_{\mathrm{ext}}\right)\\
+    (x_{\mathrm{a}}', y_{\mathrm{a}}') &= \left(-\dfrac{3\sqrt{2}}{8}d_{\mathrm{ext}},h-\dfrac{3\sqrt{2}}{8} d_{\mathrm{ext}}\right)\\
+    (x_{\mathrm{b}}', y_{\mathrm{b}}') &= \left(\dfrac{3\sqrt{2}}{8}d_{\mathrm{ext}},h-\dfrac{3\sqrt{2}}{8}d_
+    {\mathrm{ext}}\right)\\
+    (x_{\mathrm{c}}', y_{\mathrm{c}}') &= \left(\dfrac{3\sqrt{2}}{8} d_{\mathrm{ext}},h+\dfrac{3\sqrt{2}}{8} d_
+    {\mathrm{ext}}\right)\\
+    (x_{\mathrm{n}}', y_{\mathrm{n}}') &= \left(-\dfrac{3\sqrt{2}}{8} d_{\mathrm{ext}},h+\dfrac{3\sqrt{2}}{8} d_
+    {\mathrm{ext}}\right)\\
+\end{aligned}
+```
+
+The position $(x_{\mathrm{a}}, y_{\mathrm{a}})$ are the position of the point $A$, $(x_{\mathrm{b}}, y_{\mathrm{b}})$
+the point $B$, etc. The prime positions are the positions of the images of the conductor with respect to the ground.
+
+The formulas of the previous sections are used to get the impedance and shunt admittances matrices.
+
+```{note}
+Please note that for underground lines, the provided height $h$ must be negative as shown in the example below.
+```
+
+```pycon
+>>> from roseau.load_flow import LineParameters, Q_, LineType, ConductorType, InsulatorType
+
+>>> # An underground line example
+... line_parameters = LineParameters.from_geometry(
+...     "underground_example",
+...     line_type=LineType.UNDERGROUND,
+...     conductor_type=ConductorType.AL,
+...     insulator_type=InsulatorType.PVC,
+...     section=150, #mm²
+...     section_neutral=70, #mm²
+...     height=-1.5, # m # Underground so negative!
+...     external_diameter=0.049, #m
+... )
+
+>>> line_parameters.z_line
+array(
+    [[0.188     +0.32828403j, 0.        +0.25482437j, 0.        +0.23304851j, 0.        +0.25482437j],
+     [0.        +0.25482437j, 0.188     +0.32828403j, 0.        +0.25482437j, 0.        +0.23304851j],
+     [0.        +0.23304851j, 0.        +0.25482437j, 0.188     +0.32828403j, 0.        +0.25482437j],
+     [0.        +0.25482437j, 0.        +0.23304851j, 0.        +0.25482437j, 0.40285714+0.35222736j]]
+) <Unit('ohm / kilometer')>
+
+>>> line_parameters.y_shunt.to("uS/km")
+array(
+    [[19.06271927+458.27618628j,  0.         -74.71708551j,  0.         -20.98651877j,  0.         -44.86059415j],
+     [ 0.         -74.71708551j, 20.61057729+499.04239152j,  0.         -74.71708551j,  0.          -6.09859898j],
+     [ 0.         -20.98651877j,  0.         -74.71708551j, 19.06271927+458.27618628j,  0.         -44.86059415j],
+     [ 0.         -44.86059415j,  0.          -6.09859898j,  0.         -44.86059415j, 12.66715195+306.9389864j ]]
+) <Unit('microsiemens / kilometer')>
+```
 
 ## Bibliography
 
