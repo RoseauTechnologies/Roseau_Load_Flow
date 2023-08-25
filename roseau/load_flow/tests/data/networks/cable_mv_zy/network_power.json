@@ -82,7 +82,6 @@
   "lines_params": [
     {
       "id": "S_AL_150_zy",
-      "model": "zy_neutral",
       "z_line": [
         [
           [0.188, 0.0, 0.0],

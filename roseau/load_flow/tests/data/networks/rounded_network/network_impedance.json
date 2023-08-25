@@ -82,7 +82,6 @@
   "lines_params": [
     {
       "id": "test_rounded_line",
-      "model": "zy_neutral",
       "z_line": [
         [
           [1.0, 0.0, 0.0, 0.0],

@@ -82,7 +82,7 @@ class JsonMixin(metaclass=ABCMeta):
             The expanded and resolved path of the written file.
         """
         res = self.to_dict()
-        output = json.dumps(res, ensure_ascii=False, indent=4)
+        output = json.dumps(res, ensure_ascii=False, indent=2)
         output = re.sub(r"\[\s+(.*),\s+(.*)\s+]", r"[\1, \2]", output)
         if not output.endswith("\n"):
             output += "\n"

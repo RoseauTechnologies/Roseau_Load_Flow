@@ -161,8 +161,7 @@
         ]
       },
       "length": 0.5,
-      "params_id": "S_AL_150_z_neutral",
-      "ground": "ground"
+      "params_id": "S_AL_150_z_neutral"
     },
     {
       "id": "line5",
@@ -233,8 +232,7 @@
         ]
       },
       "length": 0.5,
-      "params_id": "A_AL_150_z_neutral",
-      "ground": "ground"
+      "params_id": "A_AL_150_z_neutral"
     }
   ],
   "loads": [
@@ -334,7 +332,6 @@
   "lines_params": [
     {
       "id": "A_AL_150_exact",
-      "model": "zy_neutral",
       "z_line": [
         [
           [0.18800000000000003, 0.0, 0.0, 0.0],
@@ -366,7 +363,6 @@
     },
     {
       "id": "A_AL_150_sym_neutral",
-      "model": "zy_neutral",
       "z_line": [
         [
           [0.18800000000000003, 0.0, 0.0, 0.0],
@@ -398,7 +394,6 @@
     },
     {
       "id": "A_AL_150_z_neutral",
-      "model": "zy_neutral",
       "z_line": [
         [
           [0.188, 0.0, 0.0, 0.0],
@@ -416,7 +411,6 @@
     },
     {
       "id": "A_AL_150_zy_neutral",
-      "model": "zy_neutral",
       "z_line": [
         [
           [0.188, 0.0, 0.0, 0.0],
@@ -448,7 +442,6 @@
     },
     {
       "id": "S_AL_150_exact",
-      "model": "zy_neutral",
       "z_line": [
         [
           [0.18800000000000003, 0.0, 0.0, 0.0],
@@ -480,7 +473,6 @@
     },
     {
       "id": "S_AL_150_sym_neutral",
-      "model": "zy_neutral",
       "z_line": [
         [
           [0.18800000000000003, 0.0, 0.0, 0.0],
@@ -512,7 +504,6 @@
     },
     {
       "id": "S_AL_150_z_neutral",
-      "model": "zy_neutral",
       "z_line": [
         [
           [0.188, 0.0, 0.0, 0.0],
@@ -530,7 +521,6 @@
     },
     {
       "id": "S_AL_150_zy_neutral",
-      "model": "zy_neutral",
       "z_line": [
         [
           [0.188, 0.0, 0.0, 0.0],

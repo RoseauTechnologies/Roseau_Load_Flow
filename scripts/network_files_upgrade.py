@@ -15,7 +15,7 @@ def all_network_paths() -> Generator[Path, None, None]:
     # Benchmark networks
     yield from (TEST_DATA_DIR / "benchmark").glob("**/network*.json")
     # Package data
-    yield from DATA_DIR.glob("*.json")
+    yield from DATA_DIR.glob("[!Catalogue]*.json")
 
 
 def upgrade_network(path: Path) -> None:
@@ -37,7 +37,7 @@ def update_bad_transformer_id(path: Path) -> None:
 
 if __name__ == "__main__":
     # from roseau.load_flow import AbstractLoad, VoltageSource
-
+    #
     # # Allow floating neutral otherwise the upgrade will fail for some files
     # AbstractLoad._floating_neutral_allowed = True
     # VoltageSource._floating_neutral_allowed = True

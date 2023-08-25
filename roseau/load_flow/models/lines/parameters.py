@@ -608,7 +608,6 @@ class LineParameters(Identifiable, JsonMixin):
         """Return the line parameters information as a dictionary format."""
         res = {
             "id": self.id,
-            "model": "zy_neutral" if self._y_shunt is not None else "z_neutral",
             "z_line": [self._z_line.real.tolist(), self._z_line.imag.tolist()],
         }
         if self.with_shunt:

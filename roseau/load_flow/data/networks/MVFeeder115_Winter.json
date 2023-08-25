@@ -315,7 +315,6 @@
   "lines_params": [
     {
       "id": "S_AL_240",
-      "model": "zy_neutral",
       "z_line": [
         [
           [0.12499999999999999, 0.0, 0.0],

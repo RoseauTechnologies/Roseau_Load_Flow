@@ -311,8 +311,7 @@
         ]
       },
       "length": 0.2,
-      "params_id": "S_AL_150_z",
-      "ground": "ground"
+      "params_id": "S_AL_150_z"
     }
   ],
   "loads": [
@@ -382,7 +381,6 @@
   "lines_params": [
     {
       "id": "S_AL_150_sym",
-      "model": "zy_neutral",
       "z_line": [
         [
           [0.18800000000000003, 0.0, 0.0],
@@ -410,7 +408,6 @@
     },
     {
       "id": "S_AL_150_z",
-      "model": "zy_neutral",
       "z_line": [
         [
           [0.188, 0.0, 0.0],
@@ -426,7 +423,6 @@
     },
     {
       "id": "S_AL_150_zy",
-      "model": "zy_neutral",
       "z_line": [
         [
           [0.188, 0.0, 0.0],
