@@ -2,11 +2,11 @@ name: Conda
 
 on:
   push:
-    branches: [main, develop, conda]
+    branches: [main]
     tags:
       - "*"
   pull_request:
-    branches: [main, develop, conda]
+    branches: [main]
 
 env:
   CI: true
