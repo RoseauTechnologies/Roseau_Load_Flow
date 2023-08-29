@@ -47,17 +47,19 @@ jobs:
         with:
           auto-update-conda: true
           python-version: ${{ matrix.python-version }}
+          miniforge-variant: Mambaforge
+          use-mamba: true
 
       - name: Conda Build
         id: conda-build
         shell: bash -l {0}
         run: |
-          conda config --add channels conda-forge
-          conda config --set channel_priority strict
-          conda install --channel conda-forge conda-build conda-verify
+          mamba config --add channels conda-forge
+          mamba config --set channel_priority strict
+          mamba install --channel conda-forge conda-build conda-verify
           mkdir -p dist/
-          conda build --output-folder dist/ conda/
-          echo "CONDA_ARCHIVE=$(conda build --output-folder dist/ --output conda/)" >> $GITHUB_OUTPUT
+          mamba build --output-folder dist/ conda/
+          echo "CONDA_ARCHIVE=$(mamba build --output-folder dist/ --output conda/)" >> $GITHUB_OUTPUT
 
       - name: Upload artifact
         uses: actions/upload-artifact@v3
