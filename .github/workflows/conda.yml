@@ -54,12 +54,12 @@ jobs:
         id: conda-build
         shell: bash -l {0}
         run: |
-          mambaforge config --add channels conda-forge
-          mambaforge config --set channel_priority strict
-          mambaforge install --channel conda-forge conda-build conda-verify
+          mamba config --add channels conda-forge
+          mamba config --set channel_priority strict
+          mamba install --channel conda-forge conda-build conda-verify
           mkdir -p dist/
-          mambaforge build --output-folder dist/ conda/
-          echo "CONDA_ARCHIVE=$(mambaforge build --output-folder dist/ --output conda/)" >> $GITHUB_OUTPUT
+          mamba build --output-folder dist/ conda/
+          echo "CONDA_ARCHIVE=$(mamba build --output-folder dist/ --output conda/)" >> $GITHUB_OUTPUT
 
       - name: Upload artifact
         uses: actions/upload-artifact@v3
