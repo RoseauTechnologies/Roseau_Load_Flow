@@ -132,7 +132,7 @@ def calculate_voltages(potentials: np.ndarray, phases: str) -> np.ndarray:
         # we know "n" is the last phase
         voltages = potentials[:-1] - potentials[-1]
     else:  # Vab, Vbc, Vca
-        if len(phases) == 2:
+        if len(phases) == 2:  # noqa: SIM108
             # V = potentials[0] - potentials[1] (but as array)
             voltages = potentials[:1] - potentials[1:]
         else:

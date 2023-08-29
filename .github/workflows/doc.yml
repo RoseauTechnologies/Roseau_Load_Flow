@@ -2,8 +2,14 @@ name: Documentation
 
 on:
   push:
-    branches: [ "main", "develop" ]
+    branches: ["main", "develop"]
   workflow_dispatch:
+    inputs:
+      forceDeploy:
+        description: "Deploy?"
+        required: true
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -70,20 +76,20 @@ jobs:
           SPHINXBUILD: poetry run sphinx-build
 
       - name: Upload pages artifact
-        if: ${{ github.ref == 'refs/heads/main' }}
-        uses: actions/upload-pages-artifact@v1
+        if: ${{ github.ref == 'refs/heads/main' || inputs.forceDeploy == true }}
+        uses: actions/upload-pages-artifact@v2
         with:
           path: "build/html/"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v3
-        if: ${{ github.ref != 'refs/heads/main' }}
+        if: ${{ !(github.ref == 'refs/heads/main' || inputs.forceDeploy == true) }}
         with:
           path: "build/html/"
 
   # Deployment job
   deploy:
-    if: ${{ github.ref == 'refs/heads/main' }}
+    if: ${{ github.ref == 'refs/heads/main' || inputs.forceDeploy == true }}
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

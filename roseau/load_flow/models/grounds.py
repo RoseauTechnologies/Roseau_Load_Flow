@@ -7,7 +7,7 @@ from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowE
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import Element
 from roseau.load_flow.typing import Id, JsonDict
-from roseau.load_flow.units import Q_, ureg
+from roseau.load_flow.units import Q_, ureg_wraps
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +28,10 @@ class Ground(Element):
 
        To connect a ground to a line with shunt components, pass the ground object to the
        :class:`Line` constructor. Note that the ground connection is mandatory for shunt lines.
+
+
+    See Also:
+        :doc:`Ground model documentation </models/Ground>`
     """
 
     allowed_phases = frozenset({"a", "b", "c", "n"})
@@ -51,8 +55,8 @@ class Ground(Element):
         return self._res_getter(self._res_potential, warning)
 
     @property
-    @ureg.wraps("V", (None,), strict=False)
-    def res_potential(self) -> Q_:
+    @ureg_wraps("V", (None,), strict=False)
+    def res_potential(self) -> Q_[complex]:
         """The load flow result of the ground potential (V)."""
         return self._res_potential_getter(warning=True)
 
@@ -93,7 +97,7 @@ class Ground(Element):
         self._connected_buses = data["buses"]
         return self
 
-    def to_dict(self) -> JsonDict:
+    def to_dict(self, include_geometry: bool = True) -> JsonDict:
         # Shunt lines and potential references will have the ground in their dict not here.
         return {
             "id": self.id,

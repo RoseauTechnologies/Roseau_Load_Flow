@@ -4,11 +4,12 @@ from typing import NoReturn, Optional
 
 import numpy as np
 import numpy.linalg as nplin
+import pandas as pd
 from typing_extensions import Self
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.typing import Id, JsonDict
-from roseau.load_flow.units import Q_, ureg
+from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow.utils import (
     CX,
     EPSILON_0,
@@ -20,9 +21,8 @@ from roseau.load_flow.utils import (
     TAN_D,
     ConductorType,
     Identifiable,
-    InsulationType,
+    InsulatorType,
     JsonMixin,
-    LineModel,
     LineType,
 )
 
@@ -30,16 +30,20 @@ logger = logging.getLogger(__name__)
 
 
 class LineParameters(Identifiable, JsonMixin):
-    """A class to store the line parameters of lines"""
+    """A class to store the line parameters of lines
 
-    _type_re = "|".join(x.code() for x in LineType)
+    See Also:
+        :ref:`Line parameters documentation <models-line_parameters>`
+    """
+
+    _type_re = "|".join("|".join(x) for x in LineType.CODES.values())
     _material_re = "|".join(x.code() for x in ConductorType)
     _section_re = r"[1-9][0-9]*"
     _REGEXP_LINE_TYPE_NAME: re.Pattern = re.compile(
         rf"^({_type_re})_({_material_re})_{_section_re}$", flags=re.IGNORECASE
     )
 
-    @ureg.wraps(None, (None, None, "ohm/km", "S/km"), strict=False)
+    @ureg_wraps(None, (None, None, "ohm/km", "S/km"), strict=False)
     def __init__(self, id: Id, z_line: np.ndarray, y_shunt: Optional[np.ndarray] = None) -> None:
         """LineParameters constructor.
 
@@ -82,13 +86,13 @@ class LineParameters(Identifiable, JsonMixin):
         )
 
     @property
-    @ureg.wraps("ohm/km", (None,), strict=False)
-    def z_line(self) -> Q_:
+    @ureg_wraps("ohm/km", (None,), strict=False)
+    def z_line(self) -> Q_[np.ndarray]:
         return self._z_line
 
     @property
-    @ureg.wraps("S/km", (None,), strict=False)
-    def y_shunt(self) -> Q_:
+    @ureg_wraps("S/km", (None,), strict=False)
+    def y_shunt(self) -> Q_[np.ndarray]:
         return self._y_shunt
 
     @property
@@ -96,27 +100,12 @@ class LineParameters(Identifiable, JsonMixin):
         return self._with_shunt
 
     @classmethod
-    @ureg.wraps(
-        None,
-        (
-            None,
-            None,
-            None,
-            "ohm/km",
-            "ohm/km",
-            "S/km",
-            "S/km",
-            "ohm/km",
-            "ohm/km",
-            "S/km",
-            "S/km",
-        ),
-        strict=False,
+    @ureg_wraps(
+        None, (None, None, "ohm/km", "ohm/km", "S/km", "S/km", "ohm/km", "ohm/km", "S/km", "S/km"), strict=False
     )
     def from_sym(
         cls,
         id: Id,
-        model: LineModel,
         z0: complex,
         z1: complex,
         y0: complex,
@@ -126,14 +115,11 @@ class LineParameters(Identifiable, JsonMixin):
         bn: Optional[float] = None,
         bpn: Optional[float] = None,
     ) -> Self:
-        """Create line parameters from sym model.
+        """Create line parameters from a symmetric model.
 
         Args:
             id:
                 A unique ID of the line parameters, typically its canonical name.
-
-            model:
-                The required model. It can be SYM or SYM_NEUTRAL. Be careful, it can be downgraded...
 
             z0:
                 Impedance - zero sequence - :math:`r_0+x_0\\cdot j` (ohms/km)
@@ -161,16 +147,18 @@ class LineParameters(Identifiable, JsonMixin):
 
         Returns:
             The created line parameters.
+
+        Notes:
+            As explained in the :ref:`Line parameters alternative constructor documentation
+            <models-line_parameters-alternative_constructors-symmetric>`, the model may be "degraded" if the computed
+            impedance matrix is not invertible.
         """
-        z_line, y_shunt, model = cls._sym_to_zy(
-            id=id, model=model, z0=z0, z1=z1, y0=y0, y1=y1, zn=zn, xpn=xpn, bn=bn, bpn=bpn
-        )
-        return cls(id, z_line=z_line, y_shunt=y_shunt)
+        z_line, y_shunt = cls._sym_to_zy(id=id, z0=z0, z1=z1, y0=y0, y1=y1, zn=zn, xpn=xpn, bn=bn, bpn=bpn)
+        return cls(id=id, z_line=z_line, y_shunt=y_shunt)
 
     @staticmethod
     def _sym_to_zy(
         id: Id,
-        model: LineModel,
         z0: complex,
         z1: complex,
         y0: complex,
@@ -179,15 +167,12 @@ class LineParameters(Identifiable, JsonMixin):
         xpn: Optional[float] = None,
         bn: Optional[float] = None,
         bpn: Optional[float] = None,
-    ) -> tuple[np.ndarray, np.ndarray, LineModel]:
+    ) -> tuple[np.ndarray, np.ndarray]:
         """Create impedance and admittance matrix from a symmetrical model.
 
         Args:
             id:
                 A unique ID of the line parameters, typically its canonical name.
-
-            model:
-                The required model. It can be SYM or SYM_NEUTRAL. Be careful, it can be downgraded...
 
             z0:
                 Impedance - zero sequence - :math:`r_0+x_0\\cdot j` (ohms/km)
@@ -214,9 +199,10 @@ class LineParameters(Identifiable, JsonMixin):
                 Phase to neutral susceptance (siemens/km)
 
         Returns:
-            The impedance and admittance matrices and the line model. The line model may be downgraded from
-            SYM_NEUTRAL to SYM if the model of the neutral is not possible.
+            The impedance and admittance matrices.
         """
+        # Check if all neutral parameters are valid
+        any_neutral_na = any(pd.isna([xpn, bn, bpn, zn]))
 
         # Two possible choices. The first one is the best but sometimes PwF data forces us to choose the second one
         for choice in (0, 1):
@@ -236,8 +222,12 @@ class LineParameters(Identifiable, JsonMixin):
                 ys = y1  # Series shunt admittance (siemens/km)
                 ym = 0 + 0j  # Mutual shunt admittance (siemens/km)
 
-            if model == LineModel.SYM_NEUTRAL:
-                # Add the neutral
+            # If all the neutral data have not been filled, the matrix is a 3x3 matrix
+            if any_neutral_na:
+                # No neutral data so retrieve a 3x3 matrix
+                z_line = np.array([[zs, zm, zm], [zm, zs, zm], [zm, zm, zs]], dtype=complex)
+                y_shunt = np.array([[ys, ym, ym], [ym, ys, ym], [ym, ym, ys]], dtype=complex)
+            else:
                 # Build the complex
                 # zn: Neutral series impedance (ohm/km)
                 zpn = xpn * 1j  # Phase-to-neutral series impedance (ohm/km)
@@ -246,30 +236,20 @@ class LineParameters(Identifiable, JsonMixin):
 
                 if zpn == 0 and zn == 0:
                     logger.warning(
-                        f"The low voltage line model {id!r} does not have neutral elements. It "
-                        f"will be modelled as a medium voltage line instead."
+                        f"The line model {id!r} does not have neutral elements. It will be modelled as a 3 wires line "
+                        f"instead."
                     )
                     z_line = np.array([[zs, zm, zm], [zm, zs, zm], [zm, zm, zs]], dtype=complex)
-
                     y_shunt = np.array([[ys, ym, ym], [ym, ys, ym], [ym, ym, ys]], dtype=complex)
-                    # We downgrade the model to sym
-                    model = LineModel.SYM
                 else:
                     z_line = np.array(
                         [[zs, zm, zm, zpn], [zm, zs, zm, zpn], [zm, zm, zs, zpn], [zpn, zpn, zpn, zn]],
                         dtype=complex,
                     )
-
                     y_shunt = np.array(
                         [[ys, ym, ym, ypn], [ym, ys, ym, ypn], [ym, ym, ys, ypn], [ypn, ypn, ypn, yn]],
                         dtype=complex,
                     )
-
-            else:
-                assert model == LineModel.SYM
-                z_line = np.array([[zs, zm, zm], [zm, zs, zm], [zm, zm, zs]], dtype=complex)
-
-                y_shunt = np.array([[ys, ym, ym], [ym, ys, ym], [ym, ym, ys]], dtype=complex)
 
             # Check the validity of the resulting matrices
             det_z = nplin.det(z_line)
@@ -289,85 +269,31 @@ class LineParameters(Identifiable, JsonMixin):
                         f"line impedance matrix."
                     )
                     logger.error(msg)
-                    raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Y_SHUNT_VALUE)
+                    raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Z_LINE_VALUE)
             else:
                 # Break: the current choice is good!
                 break
 
-        return z_line, y_shunt, model
+        return z_line, y_shunt
 
     @classmethod
-    @ureg.wraps(None, (None, None, None, None, None, "mm**2", "mm**2", "m", "m"), strict=False)
-    def from_lv_exact(
+    @ureg_wraps(None, (None, None, None, None, None, "mm**2", "mm**2", "m", "m"), strict=False)
+    def from_geometry(
         cls,
-        type_name: str,
+        id: Id,
         line_type: LineType,
         conductor_type: ConductorType,
-        insulation_type: InsulationType,
+        insulator_type: InsulatorType,
         section: float,
         section_neutral: float,
         height: float,
         external_diameter: float,
     ) -> Self:
-        """Create line parameters from LV exact model.
+        """Create line parameters from its geometry.
 
         Args:
-            type_name:
-                The name of the "LV exact" type.
-
-            line_type:
-                Overhead or underground.
-
-            conductor_type:
-                Type of the conductor
-
-            insulation_type:
-                Type of insulator.
-
-            section:
-                Surface of the phases (mm²).
-
-            section_neutral:
-                Surface of the neutral (mm²).
-
-            height:
-                 Height of the line (m).
-
-            external_diameter:
-                External diameter of the wire (m).
-
-        Returns:
-            The created line parameters.
-        """
-        # TODO: Add documentation on the LV exact model
-        z_line, y_shunt, model = cls._lv_exact_to_zy(
-            type_name,
-            line_type=line_type,
-            conductor_type=conductor_type,
-            insulator_type=insulation_type,
-            section=section,
-            section_neutral=section_neutral,
-            height=height,
-            external_diameter=external_diameter,
-        )
-        return cls(type_name, z_line=z_line, y_shunt=y_shunt)
-
-    @staticmethod
-    def _lv_exact_to_zy(
-        type_name: str,
-        line_type: LineType,
-        conductor_type: ConductorType,
-        insulator_type: InsulationType,
-        section: float,
-        section_neutral: float,
-        height: float,
-        external_diameter: float,
-    ) -> tuple[np.ndarray, np.ndarray, LineModel]:
-        """Create impedance and admittance matrix from a LV exact model.
-
-        Args:
-            type_name:
-                The name of the "LV exact" type.
+            id:
+                The id of the line parameters type.
 
             line_type:
                 Overhead or underground.
@@ -391,126 +317,159 @@ class LineParameters(Identifiable, JsonMixin):
                 External diameter of the wire (m).
 
         Returns:
-            The impedance and admittance matrices and the line model.
+            The created line parameters.
+
+        See Also:
+            :ref:`Line parameters alternative constructor documentation <models-line_parameters-alternative_constructors>`
+        """
+        z_line, y_shunt = cls._geometry_to_zy(
+            id=id,
+            line_type=line_type,
+            conductor_type=conductor_type,
+            insulator_type=insulator_type,
+            section=section,
+            section_neutral=section_neutral,
+            height=height,
+            external_diameter=external_diameter,
+        )
+        return cls(id=id, z_line=z_line, y_shunt=y_shunt)
+
+    @staticmethod
+    def _geometry_to_zy(
+        id: Id,
+        line_type: LineType,
+        conductor_type: ConductorType,
+        insulator_type: InsulatorType,
+        section: float,
+        section_neutral: float,
+        height: float,
+        external_diameter: float,
+    ) -> tuple[np.ndarray, np.ndarray]:
+        """Create impedance and admittance matrix using a geometric model.
+
+        Args:
+            id:
+                The id of the line parameters.
+
+            line_type:
+                Overhead or underground.
+
+            conductor_type:
+                Type of the conductor
+
+            insulator_type:
+                Type of insulator.
+
+            section:
+                Surface of the phases (mm²).
+
+            section_neutral:
+                Surface of the neutral (mm²).
+
+            height:
+                 Height of the line (m).
+
+            external_diameter:
+                External diameter of the wire (m).
+
+        Returns:
+            The impedance and admittance matrices.
         """
         # dpp = data["dpp"]  # Distance phase to phase (m)
         # dpn = data["dpn"]  # Distance phase to neutral (m)
         # dsh = data["dsh"]  # Diameter of the sheath (mm)
 
         # Geometric configuration
-        if line_type == LineType.OVERHEAD or line_type == LineType.TWISTED:
-            coord = Q_(
-                np.array(
-                    [
-                        [
-                            -np.sqrt(3) / 8 * external_diameter,
-                            height + external_diameter / 8,
-                            -np.sqrt(3) / 8 * external_diameter,
-                            -height - external_diameter / 8,
-                        ],
-                        [
-                            np.sqrt(3) / 8 * external_diameter,
-                            height + external_diameter / 8,
-                            np.sqrt(3) / 8 * external_diameter,
-                            -height - external_diameter / 8,
-                        ],
-                        [0, height - external_diameter / 4, 0, -height + external_diameter / 4],
-                        [0, height, 0, -height],
-                    ]
-                ),
-                "m",
-            )
-            epsilon = EPSILON_0
+        if line_type in (LineType.OVERHEAD, LineType.TWISTED):
+            # TODO This configuration is for twisted lines... Create a overhead configuration.
+            # TODO Add some checks on provided geometric values...
+            coord = np.array(
+                [
+                    [-np.sqrt(3) / 8 * external_diameter, height + external_diameter / 8],
+                    [np.sqrt(3) / 8 * external_diameter, height + external_diameter / 8],
+                    [0, height - external_diameter / 4],
+                    [0, height],
+                ]
+            )  # m
+            coord_prim = np.array(
+                [
+                    [-np.sqrt(3) / 8 * external_diameter, -height - external_diameter / 8],
+                    [np.sqrt(3) / 8 * external_diameter, -height - external_diameter / 8],
+                    [0, -height + external_diameter / 4],
+                    [0, -height],
+                ]
+            )  # m
+            epsilon = EPSILON_0.m_as("F/m")
         elif line_type == LineType.UNDERGROUND:
-            coord = Q_(
-                np.array(
-                    [
-                        [
-                            -np.sqrt(2) / 8 * external_diameter,
-                            height - np.sqrt(2) / 8 * external_diameter,
-                            -np.sqrt(2) * 3 / 8 * external_diameter,
-                            height - np.sqrt(2) * 3 / 8 * external_diameter,
-                        ],
-                        [
-                            np.sqrt(2) / 8 * external_diameter,
-                            height - np.sqrt(2) / 8 * external_diameter,
-                            np.sqrt(2) * 3 / 8 * external_diameter,
-                            height - np.sqrt(2) * 3 / 8 * external_diameter,
-                        ],
-                        [
-                            np.sqrt(2) / 8 * external_diameter,
-                            height + np.sqrt(2) / 8 * external_diameter,
-                            np.sqrt(2) * 3 / 8 * external_diameter,
-                            height + np.sqrt(2) * 3 / 8 * external_diameter,
-                        ],
-                        [
-                            -np.sqrt(2) / 8 * external_diameter,
-                            height + np.sqrt(2) / 8 * external_diameter,
-                            -np.sqrt(2) * 3 / 8 * external_diameter,
-                            height + np.sqrt(2) * 3 / 8 * external_diameter,
-                        ],
-                    ]
-                ),
-                "m",
-            )
-            epsilon = EPSILON_0 * EPSILON_R[insulator_type]
+            coord = np.array(
+                [
+                    [-np.sqrt(2) / 8 * external_diameter, height - np.sqrt(2) / 8 * external_diameter],
+                    [np.sqrt(2) / 8 * external_diameter, height - np.sqrt(2) / 8 * external_diameter],
+                    [np.sqrt(2) / 8 * external_diameter, height + np.sqrt(2) / 8 * external_diameter],
+                    [-np.sqrt(2) / 8 * external_diameter, height + np.sqrt(2) / 8 * external_diameter],
+                ]
+            )  # m
+            coord_prim = np.array(
+                [
+                    [-np.sqrt(2) * 3 / 8 * external_diameter, height - np.sqrt(2) * 3 / 8 * external_diameter],
+                    [np.sqrt(2) * 3 / 8 * external_diameter, height - np.sqrt(2) * 3 / 8 * external_diameter],
+                    [np.sqrt(2) * 3 / 8 * external_diameter, height + np.sqrt(2) * 3 / 8 * external_diameter],
+                    [-np.sqrt(2) * 3 / 8 * external_diameter, height + np.sqrt(2) * 3 / 8 * external_diameter],
+                ]
+            )  # m
+            epsilon = (EPSILON_0 * EPSILON_R[insulator_type]).m_as("F/m")
         else:
-            msg = f"The line type of the line {type_name!r} is unknown. It should have been filled in the reading."
+            msg = f"The line type of the line {id!r} is unknown. It should have been filled in the reading."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_TYPE)
 
+        # Distance computation
+        sections = np.array([section, section, section, section_neutral], dtype=float) * 1e-6  # surfaces (m2)
+        radius = np.sqrt(sections / PI)  # radius (m)
+        gmr = radius * np.exp(-0.25)  # geometric mean radius (m)
+        # distance between two wires (m)
+        coord_new_dim = coord[:, None, :]
+        diff = coord_new_dim - coord
+        distance = np.sqrt(np.einsum("ijk,ijk->ij", diff, diff))
+        # distance between a wire and the image of another wire (m)
+        diff = coord_new_dim - coord_prim
+        distance_prim = np.sqrt(np.einsum("ijk,ijk->ij", diff, diff))
+
+        # Useful matrices
+        mask_diagonal = np.eye(4, dtype=bool)
+        mask_off_diagonal = ~mask_diagonal
+        minus = -np.ones((4, 4), dtype=float)
+        np.fill_diagonal(minus, 1)
+
         # Electrical parameters
-        sections = Q_([section, section, section, section_neutral], "mm**2")  # surfaces (m2)
-        radius = Q_(np.zeros(4, dtype=float), "m")  # radius (m)
-        gmr = Q_(np.zeros(4, dtype=float), "m")  # geometric mean radius (m)
-        # d = Q_(np.zeros((4, 4), dtype=float), "m")  # distance between projections of two wires (m)
-        distance = Q_(np.zeros((4, 4), dtype=float), "m")  # distance between two wires (m)
-        distance_prim = Q_(np.zeros((4, 4), dtype=float), "m")  # distance between a wire and the image of another
-        # wire (m)
-        r = Q_(np.zeros((4, 4), dtype=float), "ohm/km")  # resistance (ohm/km)
-        inductance = Q_(np.zeros((4, 4), dtype=float), "H/km")  # inductance (H/km)
-        lambdas = Q_(np.zeros((4, 4), dtype=float), "m/F")  # potential coefficient (m/F)
-        for i in range(4):
-            radius[i] = np.sqrt(sections[i] / PI)
-            gmr[i] = radius[i].to("m") * np.exp(-0.25)
-            r[i, i] = RHO[conductor_type] / sections[i]
-            for j in range(4):
-                # d[i, j] = abs(coord[i][0] - coord[j][0])
-                distance[i, j] = np.sqrt((coord[i][0] - coord[j][0]) ** 2 + (coord[i][1] - coord[j][1]) ** 2)
-                distance_prim[i, j] = np.sqrt((coord[i][0] - coord[j][2]) ** 2 + (coord[i][1] - coord[j][3]) ** 2)
-                if j != i:
-                    inductance[i, j] = MU_0 / (2 * PI) * np.log(Q_(1, "m") / distance[i, j])
-                    inductance[j, i] = inductance[i, j]
-                    lambdas[i, j] = 1 / (2 * PI * epsilon) * np.log(distance_prim[i, j] / distance[i, j])
-                    lambdas[j, i] = lambdas[i, j]
-            inductance[i, i] = MU_0 / (2 * PI) * np.log(Q_(1, "m") / gmr[i])
-            lambdas[i, i] = 1 / (2 * PI * epsilon) * np.log(distance_prim[i, i] / radius[i])
-        lambda_inv = Q_(nplin.inv(lambdas.magnitude), 1 / lambdas.units).to("F/km")  # capacities (F/km)
-        c = Q_(np.zeros((4, 4), dtype=float), "F/km")  # capacities (F/km)
-        g = Q_(np.zeros((4, 4), dtype=float), "S/km")  # conductance (S/km)
-        for i in range(4):
-            c[i, i] = lambda_inv[i, i]
-            for j in range(4):
-                if j != i:
-                    c[i, i] -= lambda_inv[i, j]
-                    c[i, j] = -lambda_inv[i, j]
-            g[i, i] = TAN_D[insulator_type] * c[i, i] * OMEGA
+        r = RHO[conductor_type].m_as("ohm*m") / sections * np.eye(4, dtype=float) * 1e3  # resistance (ohm/km)
+        distance[mask_diagonal] = gmr
+        inductance = MU_0.m_as("H/m") / (2 * PI) * np.log(1 / distance) * 1e3  # H/m->H/km
+        distance[mask_diagonal] = radius
+        lambdas = 1 / (2 * PI * epsilon) * np.log(distance_prim / distance)  # m/F
 
-        z_line = r + inductance * OMEGA * 1j
-        y = g + c * OMEGA * 1j
+        # Extract the conductivity and the capacities from the lambda (potential coefficients)
+        lambda_inv = nplin.inv(lambdas) * 1e3  # capacities (F/km)
+        c = np.zeros((4, 4), dtype=float)  # capacities (F/km)
+        c[mask_diagonal] = np.einsum("ij,ij->i", lambda_inv, minus)
+        c[mask_off_diagonal] = -lambda_inv[mask_off_diagonal]
+        g = np.zeros((4, 4), dtype=float)  # conductance (S/km)
+        omega = OMEGA.m_as("rad/s")
+        g[mask_diagonal] = TAN_D[insulator_type] * np.einsum("ii->i", c) * omega
 
-        y_shunt = Q_(np.zeros((4, 4), dtype=complex), "S/km")
-        for i in range(4):
-            for k in range(4):
-                y_shunt[i, i] += y[i, k]
-            for j in range(4):
-                if i != j:
-                    y_shunt[i, j] = -y[i, j]
+        # Build the impedance and admittance matrices
+        z_line = r + inductance * omega * 1j
+        y = g + c * omega * 1j
 
-        return z_line, y_shunt, LineModel.LV_EXACT
+        # Compute the shunt admittance matrix from the admittance matrix
+        y_shunt = np.zeros((4, 4), dtype=complex)
+        y_shunt[mask_diagonal] = np.einsum("ij->i", y)
+        y_shunt[mask_off_diagonal] = -y[mask_off_diagonal]
+
+        return z_line, y_shunt
 
     @classmethod
-    @ureg.wraps(None, (None, None, "mm²", "m", "mm"), strict=False)
+    @ureg_wraps(None, (None, None, "mm²", "m", "mm"), strict=False)
     def from_name_lv(
         cls,
         name: str,
@@ -520,11 +479,11 @@ class LineParameters(Identifiable, JsonMixin):
     ) -> Self:
         """Method to get the electrical parameters of a LV line from its canonical name.
         Some hypothesis will be made: the section of the neutral is the same as the other sections, the height and
-        external diameter are pre-defined, and the insulation is PVC.
+        external diameter are pre-defined, and the insulator is PVC.
 
         Args:
             name:
-                The name of the line the parameters must be computed. Eg. "S_AL_150".
+                The name of the line the parameters must be computed. E.g. "U_AL_150".
 
             section_neutral:
                 Surface of the neutral (mm²). If None it will be the same as the section of the other phases.
@@ -548,7 +507,7 @@ class LineParameters(Identifiable, JsonMixin):
         line_type, conductor_type, section = name.split("_")
         line_type = LineType.from_string(line_type)
         conductor_type = ConductorType.from_string(conductor_type)
-        insulation_type = InsulationType.PVC
+        insulator_type = InsulatorType.PVC
 
         section = float(section)
 
@@ -559,11 +518,11 @@ class LineParameters(Identifiable, JsonMixin):
         if external_diameter is None:
             external_diameter = Q_(40, "mm")
 
-        return cls.from_lv_exact(
+        return cls.from_geometry(
             name,
             line_type=line_type,
             conductor_type=conductor_type,
-            insulation_type=insulation_type,
+            insulator_type=insulator_type,
             section=section,
             section_neutral=section_neutral,
             height=height,
@@ -576,7 +535,7 @@ class LineParameters(Identifiable, JsonMixin):
 
         Args:
             name:
-                The name of the line the parameters must be computed. Eg. "S_AL_150".
+                The name of the line the parameters must be computed. E.g. "U_AL_150".
 
         Returns:
             The corresponding line parameters.
@@ -612,8 +571,8 @@ class LineParameters(Identifiable, JsonMixin):
         b = (c_b1 + c_b2 * section) * 1e-4 * OMEGA
         b = b.to("S/km")
 
-        z_line = (r + x * 1j) * np.eye(3)  # in ohms/km
-        y_shunt = b * 1j * np.eye(3)  # in siemens/km
+        z_line = (r + x * 1j) * np.eye(3, dtype=float)  # in ohms/km
+        y_shunt = b * 1j * np.eye(3, dtype=float)  # in siemens/km
         return cls(name, z_line=z_line, y_shunt=y_shunt)
 
     #
@@ -630,35 +589,13 @@ class LineParameters(Identifiable, JsonMixin):
         Returns:
             The created line parameters.
         """
-        type_id = data.pop("id")
-        model = LineModel.from_string(data["model"])
-        if model == LineModel.LV_EXACT:
-            if not isinstance(type_id, str):
-                msg = f"The 'id' representing an LV Exact type name must be a string, got {type_id!r}"
-                logger.error(msg)
-                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_ID_TYPE)
-            return cls.from_lv_exact(type_id, **data)
-        elif model in (LineModel.SYM_NEUTRAL, LineModel.SYM):
-            return cls.from_sym(type_id, **data)
-        elif model in (LineModel.ZY_NEUTRAL, LineModel.ZY, LineModel.Z, LineModel.Z_NEUTRAL):
-            z_line = np.asarray(data["z_line"][0]) + 1j * np.asarray(data["z_line"][1])
-            if "y_shunt" in data:
-                y_shunt = np.asarray(data["y_shunt"][0]) + 1j * np.asarray(data["y_shunt"][1])
-            else:
-                y_shunt = None
-            return cls(type_id, z_line=z_line, y_shunt=y_shunt)
-        else:
-            msg = f"The line {type_id!r} has an unknown model {model!r}..."
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_MODEL)
+        z_line = np.asarray(data["z_line"][0]) + 1j * np.asarray(data["z_line"][1])
+        y_shunt = np.asarray(data["y_shunt"][0]) + 1j * np.asarray(data["y_shunt"][1]) if "y_shunt" in data else None
+        return cls(id=data["id"], z_line=z_line, y_shunt=y_shunt)
 
-    def to_dict(self) -> JsonDict:
+    def to_dict(self, include_geometry: bool = True) -> JsonDict:
         """Return the line parameters information as a dictionary format."""
-        res = {
-            "id": self.id,
-            "model": "zy_neutral" if self._y_shunt is not None else "z_neutral",
-            "z_line": [self._z_line.real.tolist(), self._z_line.imag.tolist()],
-        }
+        res = {"id": self.id, "z_line": [self._z_line.real.tolist(), self._z_line.imag.tolist()]}
         if self.with_shunt:
             res["y_shunt"] = [self._y_shunt.real.tolist(), self._y_shunt.imag.tolist()]
         return res

@@ -1,617 +1,617 @@
 {
-    "version": 1,
-    "grounds": [
+  "version": 1,
+  "grounds": [
+    {
+      "id": "ground",
+      "buses": [
         {
-            "id": "ground",
-            "buses": [
-                {
-                    "id": 1,
-                    "phase": "n"
-                },
-                {
-                    "id": 3,
-                    "phase": "n"
-                },
-                {
-                    "id": 4,
-                    "phase": "n"
-                },
-                {
-                    "id": 5,
-                    "phase": "n"
-                },
-                {
-                    "id": 7,
-                    "phase": "n"
-                },
-                {
-                    "id": 9,
-                    "phase": "n"
-                },
-                {
-                    "id": 10,
-                    "phase": "n"
-                },
-                {
-                    "id": 11,
-                    "phase": "n"
-                },
-                {
-                    "id": 13,
-                    "phase": "n"
-                }
-            ]
+          "id": 1,
+          "phase": "n"
+        },
+        {
+          "id": 3,
+          "phase": "n"
+        },
+        {
+          "id": 4,
+          "phase": "n"
+        },
+        {
+          "id": 5,
+          "phase": "n"
+        },
+        {
+          "id": 7,
+          "phase": "n"
+        },
+        {
+          "id": 9,
+          "phase": "n"
+        },
+        {
+          "id": 10,
+          "phase": "n"
+        },
+        {
+          "id": 11,
+          "phase": "n"
+        },
+        {
+          "id": 13,
+          "phase": "n"
         }
-    ],
-    "potential_refs": [
-        {
-            "id": "pref",
-            "ground": "ground"
-        },
-        {
-            "id": "line12",
-            "bus": 2,
-            "phases": null
-        },
-        {
-            "id": "line56",
-            "bus": 6,
-            "phases": null
-        },
-        {
-            "id": "line78",
-            "bus": 8,
-            "phases": null
-        },
-        {
-            "id": "line1112",
-            "bus": 12,
-            "phases": null
-        }
-    ],
-    "buses": [
-        {
-            "id": 1,
-            "phases": "abcn",
-            "geometry": {
-                "type": "Point",
-                "coordinates": [0.0, 0.0]
-            }
-        },
-        {
-            "id": 2,
-            "phases": "abc",
-            "geometry": {
-                "type": "Point",
-                "coordinates": [0.0, 1.0]
-            }
-        },
-        {
-            "id": 3,
-            "phases": "abcn",
-            "geometry": {
-                "type": "Point",
-                "coordinates": [0.0, 1.0]
-            }
-        },
-        {
-            "id": 4,
-            "phases": "abcn",
-            "geometry": {
-                "type": "Point",
-                "coordinates": [0.0, 1.0]
-            }
-        },
-        {
-            "id": 5,
-            "phases": "abcn",
-            "geometry": {
-                "type": "Point",
-                "coordinates": [0.0, 1.0]
-            }
-        },
-        {
-            "id": 6,
-            "phases": "abc",
-            "geometry": {
-                "type": "Point",
-                "coordinates": [0.0, 1.0]
-            }
-        },
-        {
-            "id": 7,
-            "phases": "abcn",
-            "geometry": {
-                "type": "Point",
-                "coordinates": [0.0, 1.0]
-            }
-        },
-        {
-            "id": 8,
-            "phases": "abc",
-            "geometry": {
-                "type": "Point",
-                "coordinates": [0.0, 1.0]
-            }
-        },
-        {
-            "id": 9,
-            "phases": "abcn",
-            "geometry": {
-                "type": "Point",
-                "coordinates": [0.0, 1.0]
-            }
-        },
-        {
-            "id": 10,
-            "phases": "abcn",
-            "geometry": {
-                "type": "Point",
-                "coordinates": [0.0, 1.0]
-            }
-        },
-        {
-            "id": 11,
-            "phases": "abcn",
-            "geometry": {
-                "type": "Point",
-                "coordinates": [0.0, 1.0]
-            }
-        },
-        {
-            "id": 12,
-            "phases": "abc",
-            "geometry": {
-                "type": "Point",
-                "coordinates": [0.0, 1.0]
-            }
-        },
-        {
-            "id": 13,
-            "phases": "abcn",
-            "geometry": {
-                "type": "Point",
-                "coordinates": [0.0, 1.0]
-            }
-        }
-    ],
-    "branches": [
-        {
-            "id": "tr1",
-            "type": "transformer",
-            "phases1": "abc",
-            "phases2": "abc",
-            "bus1": 1,
-            "bus2": 2,
-            "geometry": {
-                "type": "Point",
-                "coordinates": [0.0, 0.5]
-            },
-            "params_id": "160kVA_Dd0",
-            "tap": 1.0
-        },
-        {
-            "id": "tr2",
-            "type": "transformer",
-            "phases1": "abcn",
-            "phases2": "abcn",
-            "bus1": 1,
-            "bus2": 3,
-            "geometry": {
-                "type": "Point",
-                "coordinates": [0.0, 0.5]
-            },
-            "params_id": "160kVA_Yyn0",
-            "tap": 1.0
-        },
-        {
-            "id": "tr3",
-            "type": "transformer",
-            "phases1": "abc",
-            "phases2": "abcn",
-            "bus1": 1,
-            "bus2": 4,
-            "geometry": {
-                "type": "Point",
-                "coordinates": [0.0, 0.5]
-            },
-            "params_id": "160kVA_Dzn0",
-            "tap": 1.0
-        },
-        {
-            "id": "tr4",
-            "type": "transformer",
-            "phases1": "abc",
-            "phases2": "abcn",
-            "bus1": 1,
-            "bus2": 5,
-            "geometry": {
-                "type": "Point",
-                "coordinates": [0.0, 0.5]
-            },
-            "params_id": "160kVA_Dyn11",
-            "tap": 1.0
-        },
-        {
-            "id": "tr5",
-            "type": "transformer",
-            "phases1": "abcn",
-            "phases2": "abc",
-            "bus1": 1,
-            "bus2": 6,
-            "geometry": {
-                "type": "Point",
-                "coordinates": [0.0, 0.5]
-            },
-            "params_id": "160kVA_Yd11",
-            "tap": 1.0
-        },
-        {
-            "id": "tr6",
-            "type": "transformer",
-            "phases1": "abcn",
-            "phases2": "abcn",
-            "bus1": 1,
-            "bus2": 7,
-            "geometry": {
-                "type": "Point",
-                "coordinates": [0.0, 0.5]
-            },
-            "params_id": "160kVA_Yzn11",
-            "tap": 1.0
-        },
-        {
-            "id": "tr7",
-            "type": "transformer",
-            "phases1": "abc",
-            "phases2": "abc",
-            "bus1": 1,
-            "bus2": 8,
-            "geometry": {
-                "type": "Point",
-                "coordinates": [0.0, 0.5]
-            },
-            "params_id": "160kVA_Dd6",
-            "tap": 1.0
-        },
-        {
-            "id": "tr8",
-            "type": "transformer",
-            "phases1": "abcn",
-            "phases2": "abcn",
-            "bus1": 1,
-            "bus2": 9,
-            "geometry": {
-                "type": "Point",
-                "coordinates": [0.0, 0.5]
-            },
-            "params_id": "160kVA_Yyn6",
-            "tap": 1.0
-        },
-        {
-            "id": "tr9",
-            "type": "transformer",
-            "phases1": "abc",
-            "phases2": "abcn",
-            "bus1": 1,
-            "bus2": 10,
-            "geometry": {
-                "type": "Point",
-                "coordinates": [0.0, 0.5]
-            },
-            "params_id": "160kVA_Dzn6",
-            "tap": 1.0
-        },
-        {
-            "id": "tr10",
-            "type": "transformer",
-            "phases1": "abc",
-            "phases2": "abcn",
-            "bus1": 1,
-            "bus2": 11,
-            "geometry": {
-                "type": "Point",
-                "coordinates": [0.0, 0.5]
-            },
-            "params_id": "160kVA_Dyn5",
-            "tap": 1.0
-        },
-        {
-            "id": "tr11",
-            "type": "transformer",
-            "phases1": "abcn",
-            "phases2": "abc",
-            "bus1": 1,
-            "bus2": 12,
-            "geometry": {
-                "type": "Point",
-                "coordinates": [0.0, 0.5]
-            },
-            "params_id": "160kVA_Yd5",
-            "tap": 1.0
-        },
-        {
-            "id": "tr12",
-            "type": "transformer",
-            "phases1": "abcn",
-            "phases2": "abcn",
-            "bus1": 1,
-            "bus2": 13,
-            "geometry": {
-                "type": "Point",
-                "coordinates": [0.0, 0.5]
-            },
-            "params_id": "160kVA_Yzn5",
-            "tap": 1.0
-        }
-    ],
-    "loads": [
-        {
-            "id": 1,
-            "bus": 2,
-            "phases": "abcn",
-            "powers": [
-                [41916.482229647016, 20958.241114823508],
-                [41916.482230776804, 20958.2411153884],
-                [41916.4822307768, 20958.241115388402]
-            ]
-        },
-        {
-            "id": 2,
-            "bus": 3,
-            "phases": "abcn",
-            "powers": [
-                [40459.7989783205, 20229.89948916025],
-                [40459.79897941102, 20229.89948970551],
-                [40459.79897941102, 20229.89948970551]
-            ]
-        },
-        {
-            "id": 3,
-            "bus": 4,
-            "phases": "abcn",
-            "powers": [
-                [37922.04164877094, 18961.020824385465],
-                [37922.04164985974, 18961.020824929874],
-                [37922.04164980375, 18961.02082490188]
-            ]
-        },
-        {
-            "id": 4,
-            "bus": 5,
-            "phases": "abcn",
-            "powers": [
-                [40459.798978684, 20229.899489342002],
-                [40459.79897977451, 20229.89948988726],
-                [40459.798978684004, 20229.899489342002]
-            ]
-        },
-        {
-            "id": 5,
-            "bus": 6,
-            "phases": "abcn",
-            "powers": [
-                [41916.48223002361, 20958.24111501181],
-                [41916.4822311534, 20958.241115576697],
-                [41916.48223002363, 20958.241115011813]
-            ]
-        },
-        {
-            "id": 6,
-            "bus": 7,
-            "phases": "abcn",
-            "powers": [
-                [40932.79932474136, 20466.399662370677],
-                [40932.79932583017, 20466.39966291509],
-                [40932.79932479737, 20466.39966239868]
-            ]
-        },
-        {
-            "id": 7,
-            "bus": 8,
-            "phases": "abcn",
-            "powers": [
-                [41916.482229647016, 20958.241114823508],
-                [41916.482230776804, 20958.241115388402],
-                [41916.4822307768, 20958.241115388402]
-            ]
-        },
-        {
-            "id": 8,
-            "bus": 9,
-            "phases": "abcn",
-            "powers": [
-                [40459.79897832049, 20229.899489160252],
-                [40459.79897941102, 20229.89948970551],
-                [40459.79897941101, 20229.899489705513]
-            ]
-        },
-        {
-            "id": 9,
-            "bus": 10,
-            "phases": "abcn",
-            "powers": [
-                [37922.04164877094, 18961.020824385465],
-                [37922.04164985973, 18961.020824929878],
-                [37922.04164980376, 18961.02082490188]
-            ]
-        },
-        {
-            "id": 10,
-            "bus": 11,
-            "phases": "abcn",
-            "powers": [
-                [40459.798978684, 20229.899489342002],
-                [40459.79897977452, 20229.899489887266],
-                [40459.798978684004, 20229.899489342002]
-            ]
-        },
-        {
-            "id": 11,
-            "bus": 12,
-            "phases": "abcn",
-            "powers": [
-                [41916.48223002361, 20958.24111501181],
-                [41916.4822311534, 20958.241115576693],
-                [41916.48223002362, 20958.241115011817]
-            ]
-        },
-        {
-            "id": 12,
-            "bus": 13,
-            "phases": "abcn",
-            "powers": [
-                [40932.79932474137, 20466.399662370684],
-                [40932.79932583017, 20466.399662915086],
-                [40932.799324797365, 20466.399662398682]
-            ]
-        }
-    ],
-    "sources": [
-        {
-            "id": 1,
-            "bus": 1,
-            "phases": "abcn",
-            "voltages": [
-                [11547.005383792515, 0.0],
-                [-5773.502691896258, -10000.000000179687],
-                [-5773.502691896258, 10000.000000179687]
-            ]
-        }
-    ],
-    "lines_params": [],
-    "transformers_params": [
-        {
-            "id": "160kVA_Dd0",
-            "sn": 160000.0,
-            "uhv": 20000.0,
-            "ulv": 400.0,
-            "i0": 0.023,
-            "p0": 460.0,
-            "psc": 2350.0,
-            "vsc": 0.04,
-            "type": "dd0"
-        },
-        {
-            "id": "160kVA_Dd6",
-            "sn": 160000.0,
-            "uhv": 20000.0,
-            "ulv": 400.0,
-            "i0": 0.023,
-            "p0": 460.0,
-            "psc": 2350.0,
-            "vsc": 0.04,
-            "type": "dd6"
-        },
-        {
-            "id": "160kVA_Dyn11",
-            "sn": 160000.0,
-            "uhv": 20000.0,
-            "ulv": 400.0,
-            "i0": 0.023,
-            "p0": 460.0,
-            "psc": 2350.0,
-            "vsc": 0.04,
-            "type": "dyn11"
-        },
-        {
-            "id": "160kVA_Dyn5",
-            "sn": 160000.0,
-            "uhv": 20000.0,
-            "ulv": 400.0,
-            "i0": 0.023,
-            "p0": 460.0,
-            "psc": 2350.0,
-            "vsc": 0.04,
-            "type": "dyn5"
-        },
-        {
-            "id": "160kVA_Dzn0",
-            "sn": 160000.0,
-            "uhv": 20000.0,
-            "ulv": 400.0,
-            "i0": 0.023,
-            "p0": 460.0,
-            "psc": 2350.0,
-            "vsc": 0.04,
-            "type": "dzn0"
-        },
-        {
-            "id": "160kVA_Dzn6",
-            "sn": 160000.0,
-            "uhv": 20000.0,
-            "ulv": 400.0,
-            "i0": 0.023,
-            "p0": 460.0,
-            "psc": 2350.0,
-            "vsc": 0.04,
-            "type": "dzn6"
-        },
-        {
-            "id": "160kVA_Yd11",
-            "sn": 160000.0,
-            "uhv": 20000.0,
-            "ulv": 400.0,
-            "i0": 0.023,
-            "p0": 460.0,
-            "psc": 2350.0,
-            "vsc": 0.04,
-            "type": "yd11"
-        },
-        {
-            "id": "160kVA_Yd5",
-            "sn": 160000.0,
-            "uhv": 20000.0,
-            "ulv": 400.0,
-            "i0": 0.023,
-            "p0": 460.0,
-            "psc": 2350.0,
-            "vsc": 0.04,
-            "type": "yd5"
-        },
-        {
-            "id": "160kVA_Yyn0",
-            "sn": 160000.0,
-            "uhv": 20000.0,
-            "ulv": 400.0,
-            "i0": 0.023,
-            "p0": 460.0,
-            "psc": 2350.0,
-            "vsc": 0.04,
-            "type": "yyn0"
-        },
-        {
-            "id": "160kVA_Yyn6",
-            "sn": 160000.0,
-            "uhv": 20000.0,
-            "ulv": 400.0,
-            "i0": 0.023,
-            "p0": 460.0,
-            "psc": 2350.0,
-            "vsc": 0.04,
-            "type": "yyn6"
-        },
-        {
-            "id": "160kVA_Yzn11",
-            "sn": 160000.0,
-            "uhv": 20000.0,
-            "ulv": 400.0,
-            "i0": 0.023,
-            "p0": 460.0,
-            "psc": 2350.0,
-            "vsc": 0.04,
-            "type": "yzn11"
-        },
-        {
-            "id": "160kVA_Yzn5",
-            "sn": 160000.0,
-            "uhv": 20000.0,
-            "ulv": 400.0,
-            "i0": 0.023,
-            "p0": 460.0,
-            "psc": 2350.0,
-            "vsc": 0.04,
-            "type": "yzn5"
-        }
-    ]
+      ]
+    }
+  ],
+  "potential_refs": [
+    {
+      "id": "pref",
+      "ground": "ground"
+    },
+    {
+      "id": "line12",
+      "bus": 2,
+      "phases": null
+    },
+    {
+      "id": "line56",
+      "bus": 6,
+      "phases": null
+    },
+    {
+      "id": "line78",
+      "bus": 8,
+      "phases": null
+    },
+    {
+      "id": "line1112",
+      "bus": 12,
+      "phases": null
+    }
+  ],
+  "buses": [
+    {
+      "id": 1,
+      "phases": "abcn",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [0.0, 0.0]
+      }
+    },
+    {
+      "id": 2,
+      "phases": "abc",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [0.0, 1.0]
+      }
+    },
+    {
+      "id": 3,
+      "phases": "abcn",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [0.0, 1.0]
+      }
+    },
+    {
+      "id": 4,
+      "phases": "abcn",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [0.0, 1.0]
+      }
+    },
+    {
+      "id": 5,
+      "phases": "abcn",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [0.0, 1.0]
+      }
+    },
+    {
+      "id": 6,
+      "phases": "abc",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [0.0, 1.0]
+      }
+    },
+    {
+      "id": 7,
+      "phases": "abcn",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [0.0, 1.0]
+      }
+    },
+    {
+      "id": 8,
+      "phases": "abc",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [0.0, 1.0]
+      }
+    },
+    {
+      "id": 9,
+      "phases": "abcn",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [0.0, 1.0]
+      }
+    },
+    {
+      "id": 10,
+      "phases": "abcn",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [0.0, 1.0]
+      }
+    },
+    {
+      "id": 11,
+      "phases": "abcn",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [0.0, 1.0]
+      }
+    },
+    {
+      "id": 12,
+      "phases": "abc",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [0.0, 1.0]
+      }
+    },
+    {
+      "id": 13,
+      "phases": "abcn",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [0.0, 1.0]
+      }
+    }
+  ],
+  "branches": [
+    {
+      "id": "tr1",
+      "type": "transformer",
+      "phases1": "abc",
+      "phases2": "abc",
+      "bus1": 1,
+      "bus2": 2,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [0.0, 0.5]
+      },
+      "params_id": "160kVA_Dd0",
+      "tap": 1.0
+    },
+    {
+      "id": "tr2",
+      "type": "transformer",
+      "phases1": "abcn",
+      "phases2": "abcn",
+      "bus1": 1,
+      "bus2": 3,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [0.0, 0.5]
+      },
+      "params_id": "160kVA_Yyn0",
+      "tap": 1.0
+    },
+    {
+      "id": "tr3",
+      "type": "transformer",
+      "phases1": "abc",
+      "phases2": "abcn",
+      "bus1": 1,
+      "bus2": 4,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [0.0, 0.5]
+      },
+      "params_id": "160kVA_Dzn0",
+      "tap": 1.0
+    },
+    {
+      "id": "tr4",
+      "type": "transformer",
+      "phases1": "abc",
+      "phases2": "abcn",
+      "bus1": 1,
+      "bus2": 5,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [0.0, 0.5]
+      },
+      "params_id": "160kVA_Dyn11",
+      "tap": 1.0
+    },
+    {
+      "id": "tr5",
+      "type": "transformer",
+      "phases1": "abcn",
+      "phases2": "abc",
+      "bus1": 1,
+      "bus2": 6,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [0.0, 0.5]
+      },
+      "params_id": "160kVA_Yd11",
+      "tap": 1.0
+    },
+    {
+      "id": "tr6",
+      "type": "transformer",
+      "phases1": "abcn",
+      "phases2": "abcn",
+      "bus1": 1,
+      "bus2": 7,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [0.0, 0.5]
+      },
+      "params_id": "160kVA_Yzn11",
+      "tap": 1.0
+    },
+    {
+      "id": "tr7",
+      "type": "transformer",
+      "phases1": "abc",
+      "phases2": "abc",
+      "bus1": 1,
+      "bus2": 8,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [0.0, 0.5]
+      },
+      "params_id": "160kVA_Dd6",
+      "tap": 1.0
+    },
+    {
+      "id": "tr8",
+      "type": "transformer",
+      "phases1": "abcn",
+      "phases2": "abcn",
+      "bus1": 1,
+      "bus2": 9,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [0.0, 0.5]
+      },
+      "params_id": "160kVA_Yyn6",
+      "tap": 1.0
+    },
+    {
+      "id": "tr9",
+      "type": "transformer",
+      "phases1": "abc",
+      "phases2": "abcn",
+      "bus1": 1,
+      "bus2": 10,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [0.0, 0.5]
+      },
+      "params_id": "160kVA_Dzn6",
+      "tap": 1.0
+    },
+    {
+      "id": "tr10",
+      "type": "transformer",
+      "phases1": "abc",
+      "phases2": "abcn",
+      "bus1": 1,
+      "bus2": 11,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [0.0, 0.5]
+      },
+      "params_id": "160kVA_Dyn5",
+      "tap": 1.0
+    },
+    {
+      "id": "tr11",
+      "type": "transformer",
+      "phases1": "abcn",
+      "phases2": "abc",
+      "bus1": 1,
+      "bus2": 12,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [0.0, 0.5]
+      },
+      "params_id": "160kVA_Yd5",
+      "tap": 1.0
+    },
+    {
+      "id": "tr12",
+      "type": "transformer",
+      "phases1": "abcn",
+      "phases2": "abcn",
+      "bus1": 1,
+      "bus2": 13,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [0.0, 0.5]
+      },
+      "params_id": "160kVA_Yzn5",
+      "tap": 1.0
+    }
+  ],
+  "loads": [
+    {
+      "id": 1,
+      "bus": 2,
+      "phases": "abcn",
+      "powers": [
+        [41916.482229647016, 20958.241114823508],
+        [41916.482230776804, 20958.2411153884],
+        [41916.4822307768, 20958.241115388402]
+      ]
+    },
+    {
+      "id": 2,
+      "bus": 3,
+      "phases": "abcn",
+      "powers": [
+        [40459.7989783205, 20229.89948916025],
+        [40459.79897941102, 20229.89948970551],
+        [40459.79897941102, 20229.89948970551]
+      ]
+    },
+    {
+      "id": 3,
+      "bus": 4,
+      "phases": "abcn",
+      "powers": [
+        [37922.04164877094, 18961.020824385465],
+        [37922.04164985974, 18961.020824929874],
+        [37922.04164980375, 18961.02082490188]
+      ]
+    },
+    {
+      "id": 4,
+      "bus": 5,
+      "phases": "abcn",
+      "powers": [
+        [40459.798978684, 20229.899489342002],
+        [40459.79897977451, 20229.89948988726],
+        [40459.798978684004, 20229.899489342002]
+      ]
+    },
+    {
+      "id": 5,
+      "bus": 6,
+      "phases": "abcn",
+      "powers": [
+        [41916.48223002361, 20958.24111501181],
+        [41916.4822311534, 20958.241115576697],
+        [41916.48223002363, 20958.241115011813]
+      ]
+    },
+    {
+      "id": 6,
+      "bus": 7,
+      "phases": "abcn",
+      "powers": [
+        [40932.79932474136, 20466.399662370677],
+        [40932.79932583017, 20466.39966291509],
+        [40932.79932479737, 20466.39966239868]
+      ]
+    },
+    {
+      "id": 7,
+      "bus": 8,
+      "phases": "abcn",
+      "powers": [
+        [41916.482229647016, 20958.241114823508],
+        [41916.482230776804, 20958.241115388402],
+        [41916.4822307768, 20958.241115388402]
+      ]
+    },
+    {
+      "id": 8,
+      "bus": 9,
+      "phases": "abcn",
+      "powers": [
+        [40459.79897832049, 20229.899489160252],
+        [40459.79897941102, 20229.89948970551],
+        [40459.79897941101, 20229.899489705513]
+      ]
+    },
+    {
+      "id": 9,
+      "bus": 10,
+      "phases": "abcn",
+      "powers": [
+        [37922.04164877094, 18961.020824385465],
+        [37922.04164985973, 18961.020824929878],
+        [37922.04164980376, 18961.02082490188]
+      ]
+    },
+    {
+      "id": 10,
+      "bus": 11,
+      "phases": "abcn",
+      "powers": [
+        [40459.798978684, 20229.899489342002],
+        [40459.79897977452, 20229.899489887266],
+        [40459.798978684004, 20229.899489342002]
+      ]
+    },
+    {
+      "id": 11,
+      "bus": 12,
+      "phases": "abcn",
+      "powers": [
+        [41916.48223002361, 20958.24111501181],
+        [41916.4822311534, 20958.241115576693],
+        [41916.48223002362, 20958.241115011817]
+      ]
+    },
+    {
+      "id": 12,
+      "bus": 13,
+      "phases": "abcn",
+      "powers": [
+        [40932.79932474137, 20466.399662370684],
+        [40932.79932583017, 20466.399662915086],
+        [40932.799324797365, 20466.399662398682]
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "id": 1,
+      "bus": 1,
+      "phases": "abcn",
+      "voltages": [
+        [11547.005383792515, 0.0],
+        [-5773.502691896258, -10000.000000179687],
+        [-5773.502691896258, 10000.000000179687]
+      ]
+    }
+  ],
+  "lines_params": [],
+  "transformers_params": [
+    {
+      "id": "160kVA_Dd0",
+      "sn": 160000.0,
+      "uhv": 20000.0,
+      "ulv": 400.0,
+      "i0": 0.023,
+      "p0": 460.0,
+      "psc": 2350.0,
+      "vsc": 0.04,
+      "type": "dd0"
+    },
+    {
+      "id": "160kVA_Dd6",
+      "sn": 160000.0,
+      "uhv": 20000.0,
+      "ulv": 400.0,
+      "i0": 0.023,
+      "p0": 460.0,
+      "psc": 2350.0,
+      "vsc": 0.04,
+      "type": "dd6"
+    },
+    {
+      "id": "160kVA_Dyn11",
+      "sn": 160000.0,
+      "uhv": 20000.0,
+      "ulv": 400.0,
+      "i0": 0.023,
+      "p0": 460.0,
+      "psc": 2350.0,
+      "vsc": 0.04,
+      "type": "dyn11"
+    },
+    {
+      "id": "160kVA_Dyn5",
+      "sn": 160000.0,
+      "uhv": 20000.0,
+      "ulv": 400.0,
+      "i0": 0.023,
+      "p0": 460.0,
+      "psc": 2350.0,
+      "vsc": 0.04,
+      "type": "dyn5"
+    },
+    {
+      "id": "160kVA_Dzn0",
+      "sn": 160000.0,
+      "uhv": 20000.0,
+      "ulv": 400.0,
+      "i0": 0.023,
+      "p0": 460.0,
+      "psc": 2350.0,
+      "vsc": 0.04,
+      "type": "dzn0"
+    },
+    {
+      "id": "160kVA_Dzn6",
+      "sn": 160000.0,
+      "uhv": 20000.0,
+      "ulv": 400.0,
+      "i0": 0.023,
+      "p0": 460.0,
+      "psc": 2350.0,
+      "vsc": 0.04,
+      "type": "dzn6"
+    },
+    {
+      "id": "160kVA_Yd11",
+      "sn": 160000.0,
+      "uhv": 20000.0,
+      "ulv": 400.0,
+      "i0": 0.023,
+      "p0": 460.0,
+      "psc": 2350.0,
+      "vsc": 0.04,
+      "type": "yd11"
+    },
+    {
+      "id": "160kVA_Yd5",
+      "sn": 160000.0,
+      "uhv": 20000.0,
+      "ulv": 400.0,
+      "i0": 0.023,
+      "p0": 460.0,
+      "psc": 2350.0,
+      "vsc": 0.04,
+      "type": "yd5"
+    },
+    {
+      "id": "160kVA_Yyn0",
+      "sn": 160000.0,
+      "uhv": 20000.0,
+      "ulv": 400.0,
+      "i0": 0.023,
+      "p0": 460.0,
+      "psc": 2350.0,
+      "vsc": 0.04,
+      "type": "yyn0"
+    },
+    {
+      "id": "160kVA_Yyn6",
+      "sn": 160000.0,
+      "uhv": 20000.0,
+      "ulv": 400.0,
+      "i0": 0.023,
+      "p0": 460.0,
+      "psc": 2350.0,
+      "vsc": 0.04,
+      "type": "yyn6"
+    },
+    {
+      "id": "160kVA_Yzn11",
+      "sn": 160000.0,
+      "uhv": 20000.0,
+      "ulv": 400.0,
+      "i0": 0.023,
+      "p0": 460.0,
+      "psc": 2350.0,
+      "vsc": 0.04,
+      "type": "yzn11"
+    },
+    {
+      "id": "160kVA_Yzn5",
+      "sn": 160000.0,
+      "uhv": 20000.0,
+      "ulv": 400.0,
+      "i0": 0.023,
+      "p0": 460.0,
+      "psc": 2350.0,
+      "vsc": 0.04,
+      "type": "yzn5"
+    }
+  ]
 }

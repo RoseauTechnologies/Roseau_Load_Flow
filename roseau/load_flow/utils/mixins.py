@@ -3,7 +3,7 @@ import logging
 import re
 from abc import ABCMeta, abstractmethod
 from pathlib import Path
-from typing import Any
+from typing import Generic, TypeVar
 
 from typing_extensions import Self
 
@@ -11,6 +11,8 @@ from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowE
 from roseau.load_flow.typing import Id, JsonDict, StrPath
 
 logger = logging.getLogger(__name__)
+
+_T = TypeVar("_T")
 
 
 class Identifiable(metaclass=ABCMeta):
@@ -32,7 +34,7 @@ class JsonMixin(metaclass=ABCMeta):
 
     @classmethod
     @abstractmethod
-    def from_dict(cls, data: JsonDict, *args: Any) -> Self:
+    def from_dict(cls, data: JsonDict) -> Self:
         """Create an element from a dictionary."""
         raise NotImplementedError
 
@@ -51,8 +53,13 @@ class JsonMixin(metaclass=ABCMeta):
         return cls.from_dict(data=data)
 
     @abstractmethod
-    def to_dict(self) -> JsonDict:
-        """Return the element information as a dictionary format."""
+    def to_dict(self, include_geometry: bool = True) -> JsonDict:
+        """Return the element information as a dictionary format.
+
+        Args:
+            include_geometry:
+                If False, the geometry will not be added to the result dictionary.
+        """
         raise NotImplementedError
 
     def to_json(self, path: StrPath) -> Path:
@@ -75,7 +82,7 @@ class JsonMixin(metaclass=ABCMeta):
             The expanded and resolved path of the written file.
         """
         res = self.to_dict()
-        output = json.dumps(res, ensure_ascii=False, indent=4)
+        output = json.dumps(res, ensure_ascii=False, indent=2)
         output = re.sub(r"\[\s+(.*),\s+(.*)\s+]", r"[\1, \2]", output)
         if not output.endswith("\n"):
             output += "\n"
@@ -136,3 +143,42 @@ class JsonMixin(metaclass=ABCMeta):
         """
         data = json.loads(Path(path).read_text())
         self.results_from_dict(data)
+
+
+class CatalogueMixin(Generic[_T], metaclass=ABCMeta):
+    """A mixin class for objects which can be built from a catalogue. It adds the `from_catalogue` class method."""
+
+    @classmethod
+    @abstractmethod
+    def catalogue_path(cls) -> Path:
+        """Get the path to the catalogue."""
+        raise NotImplementedError
+
+    @classmethod
+    @abstractmethod
+    def catalogue_data(cls) -> _T:
+        """Get the catalogue data."""
+        raise NotImplementedError
+
+    @classmethod
+    @abstractmethod
+    def from_catalogue(cls, **kwargs) -> Self:
+        """Build an instance from the catalogue.
+
+        Keyword Args:
+            Arguments that can be used to select the options of the instance to create.
+
+        Returns:
+            The instance of the selected object.
+        """
+        raise NotImplementedError
+
+    @classmethod
+    @abstractmethod
+    def print_catalogue(cls, **kwargs) -> None:
+        """Print the catalogue.
+
+        Keyword Args:
+            Arguments that can be used to filter the printed part of the catalogue.
+        """
+        raise NotImplementedError

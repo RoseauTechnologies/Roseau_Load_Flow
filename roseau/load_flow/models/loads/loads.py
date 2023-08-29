@@ -11,7 +11,7 @@ from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import Element
 from roseau.load_flow.models.loads.flexible_parameters import FlexibleParameter
 from roseau.load_flow.typing import Id, JsonDict
-from roseau.load_flow.units import Q_, ureg
+from roseau.load_flow.units import Q_, ureg_wraps
 
 logger = logging.getLogger(__name__)
 
@@ -21,32 +21,10 @@ class AbstractLoad(Element, ABC):
 
     The subclasses of this class can be used to depict:
         * star-connected loads using a `phases` constructor argument containing a `"n"`
-
-        .. tab:: European Standards
-
-            .. image:: /_static/European_Star_Load.svg
-              :width: 300px
-              :align: center
-
-        .. tab:: American Standards
-
-            .. image:: /_static/American_Star_Load.svg
-              :width: 300px
-              :align: center
-
         * delta-connected loads using a `phases` constructor argument which doesn't contain `"n"`
 
-        .. tab:: European Standards
-
-            .. image:: /_static/European_Delta_Load.svg
-              :width: 300px
-              :align: center
-
-        .. tab:: American Standards
-
-            .. image:: /_static/American_Delta_Load.svg
-              :width: 300px
-              :align: center
+    See Also:
+        :doc:`Load documentation </models/Load/index>`
     """
 
     _power_load_class: type["PowerLoad"]
@@ -124,8 +102,8 @@ class AbstractLoad(Element, ABC):
         return self._res_getter(value=self._res_currents, warning=warning)
 
     @property
-    @ureg.wraps("A", (None,), strict=False)
-    def res_currents(self) -> Q_:
+    @ureg_wraps("A", (None,), strict=False)
+    def res_currents(self) -> Q_[np.ndarray]:
         """The load flow result of the load currents (A)."""
         return self._res_currents_getter(warning=True)
 
@@ -144,11 +122,12 @@ class AbstractLoad(Element, ABC):
         return np.asarray(value, dtype=complex)
 
     def _res_potentials_getter(self, warning: bool) -> np.ndarray:
+        self._raise_disconnected_error()
         return self.bus._get_potentials_of(self.phases, warning)
 
     @property
-    @ureg.wraps("V", (None,), strict=False)
-    def res_potentials(self) -> Q_:
+    @ureg_wraps("V", (None,), strict=False)
+    def res_potentials(self) -> Q_[np.ndarray]:
         """The load flow result of the load potentials (V)."""
         return self._res_potentials_getter(warning=True)
 
@@ -157,8 +136,8 @@ class AbstractLoad(Element, ABC):
         return calculate_voltages(potentials, self.phases)
 
     @property
-    @ureg.wraps("V", (None,), strict=False)
-    def res_voltages(self) -> Q_:
+    @ureg_wraps("V", (None,), strict=False)
+    def res_voltages(self) -> Q_[np.ndarray]:
         """The load flow result of the load voltages (V)."""
         return self._res_voltages_getter(warning=True)
 
@@ -168,8 +147,8 @@ class AbstractLoad(Element, ABC):
         return pots * curs.conj()
 
     @property
-    @ureg.wraps("VA", (None,), strict=False)
-    def res_powers(self) -> Q_:
+    @ureg_wraps("VA", (None,), strict=False)
+    def res_powers(self) -> Q_[np.ndarray]:
         """The load flow result of the load powers (VA)."""
         return self._res_powers_getter(warning=True)
 
@@ -180,6 +159,13 @@ class AbstractLoad(Element, ABC):
         """Disconnect this load from the network. It cannot be used afterwards."""
         self._disconnect()
         self.bus = None
+
+    def _raise_disconnected_error(self) -> None:
+        """Raise an error if the load is disconnected."""
+        if self.bus is None:
+            msg = f"The load {self.id!r} is disconnected and cannot be used anymore."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DISCONNECTED_ELEMENT)
 
     #
     # Json Mixin interface
@@ -218,21 +204,10 @@ class AbstractLoad(Element, ABC):
 
 
 class PowerLoad(AbstractLoad):
-    r"""A constant power load.
+    """A constant power load.
 
-    The equations are the following (star loads):
-
-    .. math::
-        I_{\mathrm{abc}} &= \left(\frac{S_{\mathrm{abc}}}{V_{\mathrm{abc}}-V_{\mathrm{n}}}\right)^{\star} \\
-        I_{\mathrm{n}} &= -\sum_{p\in\{\mathrm{a},\mathrm{b},\mathrm{c}\}}I_{p}
-
-    and the following (delta loads):
-
-    .. math::
-        I_{\mathrm{ab}} &= \left(\frac{S_{\mathrm{ab}}}{V_{\mathrm{a}}-V_{\mathrm{b}}}\right)^{\star} \\
-        I_{\mathrm{bc}} &= \left(\frac{S_{\mathrm{bc}}}{V_{\mathrm{b}}-V_{\mathrm{c}}}\right)^{\star} \\
-        I_{\mathrm{ca}} &= \left(\frac{S_{\mathrm{ca}}}{V_{\mathrm{c}}-V_{\mathrm{a}}}\right)^{\star}
-
+    See Also:
+        :doc:`Power Load documentation </models/Load/PowerLoad>`
     """
 
     _type = "power"
@@ -272,11 +247,17 @@ class PowerLoad(AbstractLoad):
         """
         super().__init__(id=id, bus=bus, phases=phases, **kwargs)
 
-        if flexible_params:
-            if len(flexible_params) != self._size:
-                msg = f"Incorrect number of parameters: {len(flexible_params)} instead of {self._size}"
-                logger.error(msg)
-                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PARAMETERS_SIZE)
+        if bus.short_circuits:
+            msg = (
+                f"The power load {self.id!r} is connected on bus {bus.id!r} that already has a short-circuit. "
+                f"It makes the short-circuit calculation impossible."
+            )
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_SHORT_CIRCUIT)
+        if flexible_params and len(flexible_params) != self._size:
+            msg = f"Incorrect number of parameters: {len(flexible_params)} instead of {self._size}"
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PARAMETERS_SIZE)
 
         self._flexible_params = flexible_params
         self.powers = powers
@@ -291,13 +272,13 @@ class PowerLoad(AbstractLoad):
         return self._flexible_params is not None
 
     @property
-    @ureg.wraps("VA", (None,), strict=False)
-    def powers(self) -> Q_:
+    @ureg_wraps("VA", (None,), strict=False)
+    def powers(self) -> Q_[np.ndarray]:
         """The powers of the load (VA)."""
         return self._powers
 
     @powers.setter
-    @ureg.wraps(None, (None, "VA"), strict=False)
+    @ureg_wraps(None, (None, "VA"), strict=False)
     def powers(self, value: Sequence[complex]) -> None:
         value = self._validate_value(value)
         if self.is_flexible:
@@ -327,19 +308,16 @@ class PowerLoad(AbstractLoad):
         return self._res_getter(value=self._res_flexible_powers, warning=warning)
 
     @property
-    @ureg.wraps("VA", (None,), strict=False)
-    def res_flexible_powers(self) -> Q_:
+    @ureg_wraps("VA", (None,), strict=False)
+    def res_flexible_powers(self) -> Q_[np.ndarray]:
         """The load flow result of the load flexible powers (VA)."""
         return self._res_flexible_powers_getter(warning=True)
 
     #
     # Json Mixin interface
     #
-    def to_dict(self) -> JsonDict:
-        if self.bus is None:
-            msg = f"The load {self.id!r} is disconnected and can not be used anymore."
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DISCONNECTED_ELEMENT)
+    def to_dict(self, include_geometry: bool = True) -> JsonDict:
+        self._raise_disconnected_error()
         res = {
             "id": self.id,
             "bus": self.bus.id,
@@ -366,20 +344,10 @@ class PowerLoad(AbstractLoad):
 
 
 class CurrentLoad(AbstractLoad):
-    r"""A constant current load.
+    """A constant current load.
 
-    The equations are the following (star loads):
-
-    .. math::
-        I_{\mathrm{abc}} &= \mathrm{constant} \\
-        I_{\mathrm{n}} &= -\sum_{p\in\{\mathrm{a},\mathrm{b},\mathrm{c}\}}I_{p}
-
-    and the following (delta loads):
-
-    .. math::
-        I_{\mathrm{ab}} &= \mathrm{constant} \\
-        I_{\mathrm{bc}} &= \mathrm{constant} \\
-        I_{\mathrm{ca}} &= \mathrm{constant}
+    See Also:
+        :doc:`Current Load documentation </models/Load/CurrentLoad>`
     """
 
     _type = "current"
@@ -409,22 +377,19 @@ class CurrentLoad(AbstractLoad):
         self.currents = currents  # handles size checks and unit conversion
 
     @property
-    @ureg.wraps("A", (None,), strict=False)
-    def currents(self) -> Q_:
+    @ureg_wraps("A", (None,), strict=False)
+    def currents(self) -> Q_[np.ndarray]:
         """The currents of the load (Amps)."""
         return self._currents
 
     @currents.setter
-    @ureg.wraps(None, (None, "A"), strict=False)
+    @ureg_wraps(None, (None, "A"), strict=False)
     def currents(self, value: Sequence[complex]) -> None:
         self._currents = self._validate_value(value)
         self._invalidate_network_results()
 
-    def to_dict(self) -> JsonDict:
-        if self.bus is None:
-            msg = f"The load {self.id!r} is disconnected and can not be used anymore."
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DISCONNECTED_ELEMENT)
+    def to_dict(self, include_geometry: bool = True) -> JsonDict:
+        self._raise_disconnected_error()
         return {
             "id": self.id,
             "bus": self.bus.id,
@@ -434,21 +399,10 @@ class CurrentLoad(AbstractLoad):
 
 
 class ImpedanceLoad(AbstractLoad):
-    r"""A constant impedance load.
+    """A constant impedance load.
 
-    The equations are the following (star loads):
-
-    .. math::
-        I_{\mathrm{abc}} &= \frac{\left(V_{\mathrm{abc}}-V_{\mathrm{n}}\right)}{Z_{\mathrm{abc}}} \\
-        I_{\mathrm{n}} &= -\sum_{p\in\{\mathrm{a},\mathrm{b},\mathrm{c}\}}I_{p}
-
-    and the following (delta loads):
-
-    .. math::
-        I_{\mathrm{ab}} &= \frac{\left(V_{\mathrm{a}}-V_{\mathrm{b}}\right)}{Z_{\mathrm{ab}}} \\
-        I_{\mathrm{bc}} &= \frac{\left(V_{\mathrm{b}}-V_{\mathrm{c}}\right)}{Z_{\mathrm{bc}}} \\
-        I_{\mathrm{ca}} &= \frac{\left(V_{\mathrm{c}}-V_{\mathrm{a}}\right)}{Z_{\mathrm{ca}}}
-
+    See Also:
+        :doc:`Impedance Load documentation </models/Load/ImpedanceLoad>`
     """
 
     _type = "impedance"
@@ -478,22 +432,19 @@ class ImpedanceLoad(AbstractLoad):
         self.impedances = impedances
 
     @property
-    @ureg.wraps("ohm", (None,), strict=False)
-    def impedances(self) -> Q_:
+    @ureg_wraps("ohm", (None,), strict=False)
+    def impedances(self) -> Q_[np.ndarray]:
         """The impedances of the load (Ohms)."""
         return self._impedances
 
     @impedances.setter
-    @ureg.wraps(None, (None, "ohm"), strict=False)
+    @ureg_wraps(None, (None, "ohm"), strict=False)
     def impedances(self, impedances: Sequence[complex]) -> None:
         self._impedances = self._validate_value(impedances)
         self._invalidate_network_results()
 
-    def to_dict(self) -> JsonDict:
-        if self.bus is None:
-            msg = f"The load {self.id!r} is disconnected and can not be used anymore."
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DISCONNECTED_ELEMENT)
+    def to_dict(self, include_geometry: bool = True) -> JsonDict:
+        self._raise_disconnected_error()
         return {
             "id": self.id,
             "bus": self.bus.id,

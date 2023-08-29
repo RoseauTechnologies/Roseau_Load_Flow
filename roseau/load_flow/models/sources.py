@@ -10,31 +10,16 @@ from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowE
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import Element
 from roseau.load_flow.typing import Id, JsonDict
-from roseau.load_flow.units import Q_, ureg
+from roseau.load_flow.units import Q_, ureg_wraps
 
 logger = logging.getLogger(__name__)
 
 
 class VoltageSource(Element):
-    r"""A voltage source.
+    """A voltage source.
 
-    The voltage equations are the following:
-
-    For a Star (wye) connected source:
-
-    .. math::
-        \left(V_{\mathrm{a}}-V_{\mathrm{n}}\right) &= U_{\mathrm{an}} \\
-        \left(V_{\mathrm{b}}-V_{\mathrm{n}}\right) &= U_{\mathrm{bn}} \\
-        \left(V_{\mathrm{c}}-V_{\mathrm{n}}\right) &= U_{\mathrm{cn}}
-
-    For a Delta connected source:
-
-    .. math::
-        \left(V_{\mathrm{a}}-V_{\mathrm{b}}\right) &= U_{\mathrm{ab}} \\
-        \left(V_{\mathrm{b}}-V_{\mathrm{c}}\right) &= U_{\mathrm{bc}} \\
-        \left(V_{\mathrm{c}}-V_{\mathrm{a}}\right) &= U_{\mathrm{ca}}
-
-    Where $U$ is the voltage and $V$ is the node potential.
+    See Also:
+        :doc:`Voltage source model documentation </models/VoltageSource>`
     """
 
     allowed_phases = Bus.allowed_phases
@@ -103,13 +88,13 @@ class VoltageSource(Element):
         )
 
     @property
-    @ureg.wraps("V", (None,), strict=False)
-    def voltages(self) -> Q_:
+    @ureg_wraps("V", (None,), strict=False)
+    def voltages(self) -> Q_[np.ndarray]:
         """The voltages of the source (V)."""
         return self._voltages
 
     @voltages.setter
-    @ureg.wraps(None, (None, "V"), strict=False)
+    @ureg_wraps(None, (None, "V"), strict=False)
     def voltages(self, voltages: Sequence[complex]) -> None:
         if len(voltages) != self._size:
             msg = f"Incorrect number of voltages: {len(voltages)} instead of {self._size}"
@@ -127,17 +112,18 @@ class VoltageSource(Element):
         return self._res_getter(value=self._res_currents, warning=warning)
 
     @property
-    @ureg.wraps("A", (None,), strict=False)
-    def res_currents(self) -> Q_:
+    @ureg_wraps("A", (None,), strict=False)
+    def res_currents(self) -> Q_[np.ndarray]:
         """The load flow result of the source currents (A)."""
         return self._res_currents_getter(warning=True)
 
     def _res_potentials_getter(self, warning: bool) -> np.ndarray:
+        self._raise_disconnected_error()
         return self.bus._get_potentials_of(self.phases, warning)
 
     @property
-    @ureg.wraps("V", (None,), strict=False)
-    def res_potentials(self) -> Q_:
+    @ureg_wraps("V", (None,), strict=False)
+    def res_potentials(self) -> Q_[np.ndarray]:
         """The load flow result of the source potentials (V)."""
         return self._res_potentials_getter(warning=True)
 
@@ -147,8 +133,8 @@ class VoltageSource(Element):
         return pots * curs.conj()
 
     @property
-    @ureg.wraps("VA", (None,), strict=False)
-    def res_powers(self) -> np.ndarray:
+    @ureg_wraps("VA", (None,), strict=False)
+    def res_powers(self) -> Q_[np.ndarray]:
         """The load flow result of the source powers (VA)."""
         return self._res_powers_getter(warning=True)
 
@@ -160,6 +146,13 @@ class VoltageSource(Element):
         self._disconnect()
         self.bus = None
 
+    def _raise_disconnected_error(self) -> None:
+        """Raise an error if the voltage source is disconnected."""
+        if self.bus is None:
+            msg = f"The voltage source {self.id!r} is disconnected and cannot be used anymore."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DISCONNECTED_ELEMENT)
+
     #
     # Json Mixin interface
     #
@@ -168,11 +161,8 @@ class VoltageSource(Element):
         voltages = [complex(v[0], v[1]) for v in data["voltages"]]
         return cls(data["id"], data["bus"], voltages=voltages, phases=data["phases"])
 
-    def to_dict(self) -> JsonDict:
-        if self.bus is None:
-            msg = f"The voltage source {self.id!r} is disconnected and can not be used anymore."
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DISCONNECTED_ELEMENT)
+    def to_dict(self, include_geometry: bool = True) -> JsonDict:
+        self._raise_disconnected_error()
         return {
             "id": self.id,
             "bus": self.bus.id,

@@ -1,10 +1,9 @@
 ---
 name: Feature request
 about: A proposal for a new feature
-title: 'ENH: '
+title: "ENH: "
 labels: enhancement
 assignees: benoit9126
-
 ---
 
 **Describe the feature you want. What problem does it solve?**

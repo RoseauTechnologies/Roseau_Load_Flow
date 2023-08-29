@@ -17,14 +17,13 @@
 # sys.path.insert(0, os.path.abspath("../roseau/"))
 
 # -- Project information -----------------------------------------------------
-
 project = "Roseau Load Flow"
 copyright = "2022--2023, Roseau Technologies SAS"
 # author = "Benoît Vinot"
 
 # The full version, including alpha/beta/rc tags
-version = "0.4"
-release = "0.4.0"
+version = "0.5"
+release = "0.5.0"
 
 # -- General configuration ---------------------------------------------------
 
@@ -37,15 +36,16 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.napoleon",
     "sphinx.ext.intersphinx",
-    "nbsphinx",
+    "sphinx.ext.extlinks",
     "autoapi.extension",
     "sphinx_copybutton",
     "sphinx_inline_tabs",
+    "sphinxcontrib.googleanalytics",
+    "sphinxcontrib.bibtex",
 ]
 myst_enable_extensions = ["deflist", "smartquotes", "replacements", "dollarmath"]
 add_module_names = False
 napoleon_numpy_docstring = False
-nbsphinx_execute = "never"
 python_use_unqualified_type_names = True
 
 # Add any paths that contain templates here, relative to this directory.
@@ -128,4 +128,21 @@ intersphinx_mapping = {
     "requests": ("https://requests.readthedocs.io/en/latest/", None),
     "pint": ("https://pint.readthedocs.io/en/stable/", None),
     "typing_extensions": ("https://typing-extensions.readthedocs.io/en/stable/", None),
+    "rich": ("https://rich.readthedocs.io/en/stable/", None),
+}
+
+# -- Options for sphinx_copybutton -------------------------------------------
+copybutton_exclude = ".linenos, .gp, .go"
+copybutton_copy_empty_lines = False
+
+# -- Options for sphinxcontrib.googleanalytics -------------------------------
+googleanalytics_id = "G-Y9QSN78RFV"
+
+# -- Options for sphinxcontrib.bibtex ----------------------------------------
+bibtex_bibfiles = ["Bibliography.bib"]
+
+# -- Options for sphinx.ext.extlinks -----------------------------------------
+extlinks = {
+    "gh-issue": ("https://github.com/RoseauTechnologies/Roseau_Load_Flow/issues/%s", "GH%s"),
+    "gh-pr": ("https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/%s", "PR%s"),
 }

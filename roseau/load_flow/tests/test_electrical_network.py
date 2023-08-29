@@ -1,4 +1,5 @@
 import itertools as it
+import re
 import warnings
 from contextlib import contextmanager
 from urllib.parse import urljoin
@@ -14,6 +15,7 @@ from shapely import LineString, Point
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models import (
     Bus,
+    FlexibleParameter,
     Ground,
     Line,
     LineParameters,
@@ -26,6 +28,7 @@ from roseau.load_flow.models import (
 )
 from roseau.load_flow.network import _PHASE_DTYPE, _VOLTAGE_PHASES_DTYPE, ElectricalNetwork
 from roseau.load_flow.units import Q_
+from roseau.load_flow.utils import console
 
 
 @pytest.fixture()
@@ -95,7 +98,7 @@ def single_phase_network() -> ElectricalNetwork:
     )
 
 
-@pytest.fixture
+@pytest.fixture()
 def good_json_results() -> dict:
     return {
         "info": {
@@ -209,7 +212,7 @@ def test_connect_and_disconnect():
     assert load.bus is None
     with pytest.raises(RoseauLoadFlowException) as e:
         load.to_dict()
-    assert e.value.args[0] == "The load 'power load' is disconnected and can not be used anymore."
+    assert e.value.args[0] == "The load 'power load' is disconnected and cannot be used anymore."
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.DISCONNECTED_ELEMENT
     new_load = PowerLoad(id="power load", phases="abcn", bus=load_bus, powers=[100 + 0j, 100 + 0j, 100 + 0j])
     assert new_load.network == en
@@ -221,7 +224,7 @@ def test_connect_and_disconnect():
     assert vs.bus is None
     with pytest.raises(RoseauLoadFlowException) as e:
         vs.to_dict()
-    assert e.value.args[0] == "The voltage source 'vs' is disconnected and can not be used anymore."
+    assert e.value.args[0] == "The voltage source 'vs' is disconnected and cannot be used anymore."
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.DISCONNECTED_ELEMENT
 
     # Bad key
@@ -242,7 +245,7 @@ def test_connect_and_disconnect():
         en._disconnect_element(line)
     assert (
         e.value.msg
-        == "Line(id='line', phases1='abcn', phases2='abcn', bus1='source', bus2='load bus') is a Line and it can not "
+        == "Line(id='line', phases1='abcn', phases2='abcn', bus1='source', bus2='load bus') is a Line and it cannot "
         "be disconnected from a network."
     )
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT
@@ -447,7 +450,7 @@ def test_bad_networks():
     # No potential reference
     bus3 = Bus("bus3", phases="abcn")
     tp = TransformerParameters(
-        "t", windings="Dyn11", uhv=20000, ulv=400, sn=160 * 1e3, p0=460, i0=2.3 / 100, psc=2350, vsc=4 / 100
+        "t", type="Dyn11", uhv=20000, ulv=400, sn=160 * 1e3, p0=460, i0=2.3 / 100, psc=2350, vsc=4 / 100
     )
     t = Transformer("transfo", bus2, bus3, parameters=tp)
     with pytest.raises(RoseauLoadFlowException) as e:
@@ -608,17 +611,19 @@ def test_solve_load_flow_error(small_network):
 
     # Parse RLF error
     json_result = {"msg": "toto", "code": "roseau.load_flow.bad_branch_type"}
-    with requests_mock.Mocker() as m, pytest.raises(RoseauLoadFlowException) as e:
+    with requests_mock.Mocker() as m:
         m.post(solve_url, status_code=400, json=json_result, headers={"content-type": "application/json"})
-        small_network.solve_load_flow(auth=("", ""))
+        with pytest.raises(RoseauLoadFlowException) as e:
+            small_network.solve_load_flow(auth=("", ""))
     assert e.value.msg == json_result["msg"]
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_BRANCH_TYPE
 
     # Load flow error (other than official exceptions of RoseauLoadFlowException)
     json_result = {"msg": "Error while solving the load flow", "code": "load_flow_error"}
-    with requests_mock.Mocker() as m, pytest.raises(RoseauLoadFlowException) as e:
+    with requests_mock.Mocker() as m:
         m.post(solve_url, status_code=400, json=json_result, headers={"content-type": "application/json"})
-        small_network.solve_load_flow(auth=("", ""))
+        with pytest.raises(RoseauLoadFlowException) as e:
+            small_network.solve_load_flow(auth=("", ""))
     assert json_result["msg"] in e.value.msg
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_REQUEST
 
@@ -854,6 +859,58 @@ def test_single_phase_network(single_phase_network: ElectricalNetwork):
         )
         .set_index(["branch_id", "phase"]),
     )
+    # Lines results
+    expected_res_lines = (
+        pd.DataFrame.from_records(
+            [
+                {
+                    "line_id": "line",
+                    "phase": "b",
+                    "current1": 0.005000025000117603 + 0j,
+                    "current2": -0.005000025000117603 - 0j,
+                    "power1": (19999.94999975 + 0j) * (0.005000025000117603 + 0j).conjugate(),
+                    "power2": (19999.899999499998 + 0j) * (-0.005000025000117603 - 0j).conjugate(),
+                    "potential1": 19999.94999975 + 0j,
+                    "potential2": 19999.899999499998 + 0j,
+                    "series_losses": (
+                        (19999.94999975 + 0j) * (0.005000025000117603 + 0j).conjugate()
+                        + (19999.899999499998 + 0j) * (-0.005000025000117603 - 0j).conjugate()
+                    ),
+                    "series_current": 0.005000025000117603 + 0j,
+                },
+                {
+                    "line_id": "line",
+                    "phase": "n",
+                    "current1": -0.005000025000125 + 0j,
+                    "current2": 0.005000025000125 - 0j,
+                    "power1": (-0.050000250001249996 + 0j) * (-0.005000025000125 + 0j).conjugate(),
+                    "power2": (0j) * (0.005000025000125 - 0j).conjugate(),
+                    "potential1": -0.050000250001249996 + 0j,
+                    "potential2": 0j,
+                    "series_losses": (
+                        (-0.050000250001249996 + 0j) * (-0.005000025000125 + 0j).conjugate()
+                        + (0j) * (0.005000025000125 - 0j).conjugate()
+                    ),
+                    "series_current": -0.005000025000125 + 0j,
+                },
+            ]
+        )
+        .astype(
+            {
+                "phase": _PHASE_DTYPE,
+                "current1": complex,
+                "current2": complex,
+                "power1": complex,
+                "power2": complex,
+                "potential1": complex,
+                "potential2": complex,
+                "series_losses": complex,
+                "series_current": complex,
+            }
+        )
+        .set_index(["line_id", "phase"])
+    )
+    pd.testing.assert_frame_equal(single_phase_network.res_lines, expected_res_lines)
     # Loads results
     pd.testing.assert_frame_equal(
         single_phase_network.res_loads,
@@ -1211,6 +1268,44 @@ def test_load_flow_results_frames(small_network: ElectricalNetwork, good_json_re
     )
     assert_frame_equal(small_network.res_potential_refs, expected_res_potential_refs)
 
+    # No flexible loads
+    assert small_network.res_loads_flexible_powers.empty
+
+    # Let's add a flexible load
+    fp = FlexibleParameter.p_max_u_consumption(u_min=16000, u_down=17000, s_max=1000)
+    load = small_network.loads["load"]
+    assert isinstance(load, PowerLoad)
+    load._flexible_params = [fp, fp, fp]
+    good_json_results = good_json_results.copy()
+    good_json_results["loads"][0]["powers"] = [
+        [99.99999999999994, 0.0],
+        [99.99999999999994, 0.0],
+        [99.99999999999994, 0.0],
+    ]
+    small_network.results_from_dict(good_json_results)
+    expected_res_flex_powers = pd.DataFrame.from_records(
+        [
+            {
+                "load_id": "load",
+                "phase": "an",
+                "power": 99.99999999999994 + 0j,
+            },
+            {
+                "load_id": "load",
+                "phase": "bn",
+                "power": 99.99999999999994 + 0j,
+            },
+            {
+                "load_id": "load",
+                "phase": "cn",
+                "power": 99.99999999999994 + 0j,
+            },
+        ],
+        index=["load_id", "phase"],
+    )
+    set_index_dtype(expected_res_flex_powers, _VOLTAGE_PHASES_DTYPE)
+    assert_frame_equal(small_network.res_loads_flexible_powers, expected_res_flex_powers, rtol=1e-4)
+
 
 def test_solver_warm_start(small_network: ElectricalNetwork, good_json_results):
     load: PowerLoad = small_network.loads["load"]
@@ -1294,3 +1389,154 @@ def test_solver_warm_start(small_network: ElectricalNetwork, good_json_results):
         assert not small_network._results_valid
         small_network.solve_load_flow(auth=("", ""), warm_start=True)
     assert small_network.results_to_dict() == good_json_results
+
+
+def test_short_circuits():
+    vn = 400 / np.sqrt(3)
+    voltages = [vn, vn * np.exp(-2 / 3 * np.pi * 1j), vn * np.exp(2 / 3 * np.pi * 1j)]
+    bus = Bus("bus", phases="abcn")
+    bus.add_short_circuit("a", "n")
+    _ = VoltageSource(id="vs", bus=bus, voltages=voltages)
+    _ = PotentialRef(id="pref", element=bus)
+    en = ElectricalNetwork.from_element(initial_bus=bus)
+    df = pd.DataFrame.from_records(
+        data=[("bus", "abcn", "an", None)],
+        columns=["bus_id", "phases", "short_circuit", "ground"],
+    )
+    assert_frame_equal(en.short_circuits_frame, df)
+
+    assert bus.short_circuits
+    en.clear_short_circuits()
+    assert not bus.short_circuits
+
+
+def test_catalogue_data():
+    # The catalogue data path exists
+    catalogue_path = ElectricalNetwork.catalogue_path()
+    assert catalogue_path.exists()
+
+    # Read it and copy it
+    catalogue_data = ElectricalNetwork.catalogue_data().copy()
+
+    # Iterate over the folder and ensure that the elements are in the catalogue data
+    error_message = (
+        "Something changed in the network catalogue. Please regenerate the Catalogue.json file for the "
+        "network catalogues by using the python file `scripts/generate_network_catalogue_data.py`."
+    )
+    for p in catalogue_path.glob("*.json"):
+        if p.stem == "Catalogue":
+            continue
+
+        # Check that the network exists in the catalogue data
+        network_name, load_point_name = p.stem.split("_")
+        assert network_name in catalogue_data, error_message
+
+        # Check the counts
+        en = ElectricalNetwork.from_json(p)
+        c_data = catalogue_data[network_name]
+        assert len(c_data) == 7
+        assert c_data["nb_buses"] == len(en.buses)
+        assert c_data["nb_branches"] == len(en.branches)
+        assert c_data["nb_loads"] == len(en.loads)
+        assert c_data["nb_sources"] == len(en.sources)
+        assert c_data["nb_grounds"] == len(en.grounds)
+        assert c_data["nb_potential_refs"] == len(en.potential_refs)
+
+        # Check the load point
+        remaining_load_points: list[str] = c_data["load_points"]
+        assert load_point_name in remaining_load_points, error_message
+        remaining_load_points.remove(load_point_name)
+        if not remaining_load_points:
+            catalogue_data.pop(network_name)
+
+    # At the end of the process, the copy of the catalogue data should be empty
+    assert len(catalogue_data) == 0, error_message
+
+
+def test_from_catalogue():
+    # Unknown network name
+    with pytest.raises(RoseauLoadFlowException) as e:
+        ElectricalNetwork.from_catalogue(name="unknown", load_point_name="winter")
+    assert (
+        e.value.args[0]
+        == "No network matching the name 'unknown' has been found. Please look at the catalogue using the "
+        "`print_catalogue` class method."
+    )
+    assert e.value.args[1] == RoseauLoadFlowExceptionCode.CATALOGUE_NOT_FOUND
+
+    # Unknown load point name
+    with pytest.raises(RoseauLoadFlowException) as e:
+        ElectricalNetwork.from_catalogue(name="MVFeeder004", load_point_name="unknown")
+    assert (
+        e.value.args[0]
+        == "No load point matching the name 'unknown' has been found for the network 'MVFeeder004'. Available "
+        "load points are 'Summer', 'Winter'."
+    )
+    assert e.value.args[1] == RoseauLoadFlowExceptionCode.CATALOGUE_NOT_FOUND
+
+    # Several network name matched
+    with pytest.raises(RoseauLoadFlowException) as e:
+        ElectricalNetwork.from_catalogue(name="MVFeeder", load_point_name="winter")
+    assert e.value.args[0] == (
+        "Several networks matching the name 'MVFeeder' have been found: 'MVFeeder004', "
+        "'MVFeeder011', 'MVFeeder015', 'MVFeeder032', 'MVFeeder041', 'MVFeeder063', 'MVFeeder078', 'MVFeeder115', "
+        "'MVFeeder128', 'MVFeeder151', 'MVFeeder159', 'MVFeeder176', 'MVFeeder210', 'MVFeeder217', 'MVFeeder232',"
+        " 'MVFeeder251', 'MVFeeder290', 'MVFeeder312', 'MVFeeder320', 'MVFeeder339'."
+    )
+    assert e.value.args[1] == RoseauLoadFlowExceptionCode.CATALOGUE_SEVERAL_FOUND
+
+    # Several load point name matched
+    with pytest.raises(RoseauLoadFlowException) as e:
+        ElectricalNetwork.from_catalogue(name="MVFeeder004", load_point_name=r".*")
+    assert e.value.args[0] == (
+        "Several load points matching the name '.*' have been found for the network 'MVFeeder004': 'Summer', 'Winter'."
+    )
+    assert e.value.args[1] == RoseauLoadFlowExceptionCode.CATALOGUE_SEVERAL_FOUND
+
+    # Both known
+    ElectricalNetwork.from_catalogue(name="MVFeeder004", load_point_name="winter")
+
+
+def test_print_catalogue():
+    # Print the entire catalogue
+    with console.capture() as capture:
+        ElectricalNetwork.print_catalogue()
+    assert len(capture.get().split("\n")) == 88
+
+    # Filter on the network name
+    with console.capture() as capture:
+        ElectricalNetwork.print_catalogue(name="MV")
+    assert len(capture.get().split("\n")) == 48
+    with console.capture() as capture:
+        ElectricalNetwork.print_catalogue(name=re.compile(r"^MV"))
+    assert len(capture.get().split("\n")) == 48
+
+    # Filter on the load point name
+    with console.capture() as capture:
+        ElectricalNetwork.print_catalogue(load_point_name="winter")
+    assert len(capture.get().split("\n")) == 88
+    with console.capture() as capture:
+        ElectricalNetwork.print_catalogue(load_point_name=re.compile(r"^Winter"))
+    assert len(capture.get().split("\n")) == 88
+
+    # Filter on both
+    with console.capture() as capture:
+        ElectricalNetwork.print_catalogue(name="MV", load_point_name="winter")
+    assert len(capture.get().split("\n")) == 48
+    with console.capture() as capture:
+        ElectricalNetwork.print_catalogue(name="MV", load_point_name=re.compile(r"^Winter"))
+    assert len(capture.get().split("\n")) == 48
+    with console.capture() as capture:
+        ElectricalNetwork.print_catalogue(name=re.compile(r"^MV"), load_point_name="winter")
+    assert len(capture.get().split("\n")) == 48
+    with console.capture() as capture:
+        ElectricalNetwork.print_catalogue(name=re.compile(r"^MV"), load_point_name=re.compile(r"^Winter"))
+    assert len(capture.get().split("\n")) == 48
+
+    # Regexp error
+    with console.capture() as capture:
+        ElectricalNetwork.print_catalogue(name=r"^MV[0-")
+    assert len(capture.get().split("\n")) == 2
+    with console.capture() as capture:
+        ElectricalNetwork.print_catalogue(load_point_name=r"^winter[0-]")
+    assert len(capture.get().split("\n")) == 3

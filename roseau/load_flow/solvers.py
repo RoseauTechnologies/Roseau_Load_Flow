@@ -26,10 +26,7 @@ def check_solver_params(solver: Solver, params: Optional[JsonDict]) -> JsonDict:
     Returns:
         The updated solver parameters.
     """
-    if params is None:
-        params = {}
-    else:
-        params = params.copy()
+    params = {} if params is None else params.copy()
 
     # Check the solver
     if solver not in _SOLVERS_PARAMS:
@@ -51,10 +48,9 @@ def check_solver_params(solver: Solver, params: Optional[JsonDict]) -> JsonDict:
     # Extra checks per solver
     if solver == "newton":
         pass  # Nothing more to check
-    elif solver == "newton_goldstein":
-        if params.get("m1", 0.1) >= params.get("m2", 0.9):
-            msg = "For the 'newton_goldstein' solver, the inequality m1 < m2 should be respected."
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_SOLVER_PARAMS)
+    elif solver == "newton_goldstein" and params.get("m1", 0.1) >= params.get("m2", 0.9):
+        msg = "For the 'newton_goldstein' solver, the inequality m1 < m2 should be respected."
+        logger.error(msg)
+        raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_SOLVER_PARAMS)
 
     return params

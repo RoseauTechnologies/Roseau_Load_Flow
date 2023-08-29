@@ -1,0 +1,178 @@
+\input{Preambule}%
+
+\begin{document}
+    \ctikzset{american, bipoles/length=1cm}%
+    \begin{tikzpicture}[%
+        show background rectangle,%
+        tight background,%
+        background rectangle/.style={fill=white}%
+    ]
+        %
+        % Définitions
+        %
+        % No European transformer in circuitikz [BV, 17/07/2023]
+        \tikzset{
+            transformer/.pic={
+                \draw (-0.2,0) circle[radius=0.4] (0.2,0) circle[radius=0.4];
+            },
+        }
+        \pgfmathsetmacro{\xzero}{0};%
+        \pgfmathsetmacro{\xone}{1};%
+        \pgfmathsetmacro{\xtwo}{3};%
+        \pgfmathsetmacro{\xthree}{5};%
+        \pgfmathsetmacro{\xym}{7};%
+        \pgfmathsetmacro{\xtransformer}{10};%
+        \pgfmathsetmacro{\xtransformerm}{\xtransformer-1};%
+        \pgfmathsetmacro{\xtransformerp}{\xtransformer+1};%
+        \pgfmathsetmacro{\xztwom}{11.5};%
+        \pgfmathsetmacro{\xztwop}{13.5};%
+        \pgfmathsetmacro{\xfour}{15};%
+        \pgfmathsetmacro{\xfive}{17};%
+        \pgfmathsetmacro{\xsix}{19};%
+        \pgfmathsetmacro{\xseven}{20};%
+        \pgfmathsetmacro{\yn}{0};%
+        \pgfmathsetmacro{\yc}{2.5};%
+        \pgfmathsetmacro{\yb}{5};%
+        \pgfmathsetmacro{\ya}{7.5};%
+        \pgfmathsetmacro{\yxp}{\ya+0.25};%
+        \pgfmathsetmacro{\yxm}{\yxp-2};%
+        \pgfmathsetmacro{\yyp}{\yxm-1};%
+        \pgfmathsetmacro{\yym}{\yyp-2};%
+        \pgfmathsetmacro{\yzp}{\yym-1};%
+        \pgfmathsetmacro{\yzm}{\yzp-2};%
+        \pgfmathsetmacro{\yzero}{\yn-1};%
+        \pgfmathsetmacro{\yone}{\ya+1};%
+        \pgfmathsetmacro{\transformerheight}{\yxp-\yxm};%
+        \ctikzset{quadpoles/transformer/height=\transformerheight};%
+
+        % Rectangles
+        \pgfmathsetmacro{\xtmp}{\xone+0.75*(\xtwo-\xone)};%
+        \draw[blue,dashed] (\xzero, \yzero) rectangle (\xtmp,\yone);%
+        \draw[blue] (\xtwo,\yzero) rectangle (\xthree,\yone);%
+        \draw[blue] (\xfour, \yzero) rectangle (\xfive,\yone);%
+        \pgfmathsetmacro{\xtmp}{\xsix-0.75*(\xsix-\xfive)};%
+        \draw[blue,dashed] (\xtmp, \yzero) rectangle (\xseven,\yone);%
+
+        \pgfmathsetmacro{\xtmpleft}{\xthree+0.5};%
+        \pgfmathsetmacro{\xtmpright}{\xfour-0.5};%
+        \draw[blue,dashed] (\xtmpleft, \yzero) rectangle (\xtmpright,\yone);%
+
+        % ABCN
+        \draw (\xone,\ya) node[left] {$\underline{V_{1,\arm}}$}%
+        to[short,-*,i=$\underline{I_{1,\arm}}$] (\xtwo,\ya) node[right] {$\Arm$};%
+        \draw (\xone,\yb) node[left] {$\underline{V_{1,\brm}}$}%
+        to[short,-*,i=$\underline{I_{1,\brm}}$] (\xtwo,\yb) node[right] {$\Brm$};%
+        \draw (\xone,\yc) node[left] {$\underline{V_{1,\crm}}$}%
+        to[short,-*,i=$\underline{I_{1,\crm}}$] (\xtwo,\yc) node[right] {$\Crm$};%
+        \draw (\xone,\yn) node[left] {$\underline{V_{1,\nrm}}$}%
+        to[short,-*,i=$\underline{I_{1,\nrm}}$] (\xtwo,\yn) node[right] {$\Nrm$};%
+
+        % XYZ
+        % First winding (X)
+        \pgfmathsetmacro{\ytmp}{0.5*(\yxp+\yxm)};%
+        \node[transformer] (TX) at (\xtransformer,\ytmp) {};
+        \draw (\xthree,\yxp) node[left] {$\Xrm^+$}%
+        to[short,*-,i=$\underline{I_{\Xrm}}$] (\xym,\yxp)%
+        to[short] (TX.A1);%
+        \draw (\xthree,\yxm) node[left] {$\Xrm^-$}%
+        to[short,*-] (\xym,\yxm)%
+        to[short] (TX.A2);%
+        \draw (\xym,\yxp) to[generic,%
+        i>^=$\underline{I_{\mathrm{m},\arm}}$,%
+        l=$\underline{Y_{\mathrm{m},\arm}}$,%
+        v>=$\underline{U_{\Xrm}}$%
+        ] (\xym,\yxm);%
+        \node[above] at ($(TX.base)-(0,0.2)$) {$k$};%
+        \draw (TX.inner dot A1) node[circ] {}; %
+        \draw (TX.inner dot B1) node[circ] {}; %
+
+        % First winding (Y)
+        \pgfmathsetmacro{\ytmp}{0.5*(\yyp+\yym)};%
+        \node[transformer] (TY) at (\xtransformer,\ytmp) {};%
+        \draw (\xthree,\yyp) node[left] {$\Yrm^+$}%
+        to[short,*-,i=$\underline{I_{\Yrm}}$] (\xym,\yyp)%
+        to[short] (TY.A1);%
+        \draw (\xthree,\yym) node[left] {$\Yrm^-$}%
+        to[short,*-] (\xym,\yym)%
+        to[short] (TY.A2);%
+        \draw (\xym,\yyp) to[generic,%
+        i>^=$\underline{I_{\mathrm{m},\brm}}$,%
+        l=$\underline{Y_{\mathrm{m},\brm}}$,%
+        v>=$\underline{U_{\Yrm}}$%
+        ] (\xym,\yym);%
+        \node[above] at ($(TY.base)-(0,0.2)$) {$k$};%
+        \draw (TY.inner dot A1) node[circ] {}; %
+        \draw (TY.inner dot B1) node[circ] {}; %
+
+        % First winding (Z)
+        \pgfmathsetmacro{\ytmp}{0.5*(\yzp+\yzm)};%
+        \node[transformer] (TZ) at (\xtransformer,\ytmp) {};%
+        \draw (\xthree,\yzp) node[left] {$\Zrm^+$}%
+        to[short,*-,i=$\underline{I_{\Zrm}}$] (\xym,\yzp)%
+        to[short] (TZ.A1);%
+        \draw (\xthree,\yzm) node[left] {$\Zrm^-$}%
+        to[short,*-] (\xym,\yzm)%
+        to[short] (TZ.A2);%
+        \draw (\xym,\yzp) to[generic,%
+        i>^=$\underline{I_{\mathrm{m},\crm}}$,%
+        l=$\underline{Y_{\mathrm{m},\crm}}$,%
+        v>=$\underline{U_{\Zrm}}$%
+        ] (\xym,\yzm);%
+        \node[above] at ($(TZ.base)-(0,0.2)$) {$k$};%
+        \draw (TZ.inner dot A1) node[circ] {}; %
+        \draw (TZ.inner dot B1) node[circ] {}; %
+
+        % xyz
+        % Second winding (x)
+        \pgfmathsetmacro{\ytmp}{0.5*(\yxp+\yxm)};%
+        \draw (\xfour,\yxp) node[right] {$\xrm^+$}%
+        to[short,*-,i>_=$\underline{I_{\xrm}}$] (\xztwop, \yxp)
+        to[generic,l=$\underline{Z_{2,\arm}}$] (\xztwom, \yxp)
+        to[short] (TX.B1);%
+        \draw (\xfour,\yxm) node[right] {$\xrm^-$}%
+        to[short,*-] (TX.B2);%
+        \draw (\xztwop, \yxm) to[open,v<=$\underline{U_{\xrm}}$] (\xztwop, \yxp);%
+        \draw (\xztwom, \yxm) to[open,v<=$\underline{U_{0,\xrm}}$] (\xztwom, \yxp);%
+
+        % Second winding (y)
+        \pgfmathsetmacro{\ytmp}{0.5*(\yyp+\yym)};%
+        \draw (\xfour,\yyp) node[right] {$\yrm^+$}%
+        to[short,*-,i>_=$\underline{I_{\yrm}}$] (\xztwop, \yyp)%
+        to[generic,l=$\underline{Z_{2,\brm}}$] (\xztwom, \yyp)%
+        to[short] (TY.B1);%
+        \draw (\xfour,\yym) node[right] {$\yrm^-$}%
+        to[short,*-] (TY.B2);%
+        \draw (\xztwop, \yym) to[open,v<=$\underline{U_{\yrm}}$] (\xztwop, \yyp);%
+        \draw (\xztwom, \yym) to[open,v<=$\underline{U_{0,\yrm}}$] (\xztwom, \yyp);%
+
+        % Second winding (z)
+        \pgfmathsetmacro{\ytmp}{0.5*(\yzp+\yzm)};%
+        \draw (\xfour,\yzp) node[right] {$\zrm^+$}%
+        to[short,*-,i>_=$\underline{I_{\zrm}}$]  (\xztwop, \yzp)%
+        to[generic,l=$\underline{Z_{2,\crm}}$] (\xztwom, \yzp)%
+        to[short] (TZ.B1);%
+        \draw (\xfour,\yzm) node[right] {$\zrm^-$}%
+        to[short,*-] (TZ.B2);%
+        \draw (\xztwop, \yzm) to[open,v<=$\underline{U_{\zrm}}$] (\xztwop, \yzp);%
+        \draw (\xztwom, \yzm) to[open,v<=$\underline{U_{0,\zrm}}$] (\xztwom, \yzp);%
+
+        % abcn
+        \draw (\xsix,\ya) node[right] {$\underline{V_{2,\arm}}$}%
+        to[short,-*,i_=$\underline{I_{2,\arm}}$] (\xfive,\ya) node[left] {$\arm$};%
+        \draw (\xsix,\yb) node[right] {$\underline{V_{2,\brm}}$}%
+        to[short,-*,i_=$\underline{I_{2,\brm}}$] (\xfive,\yb) node[left] {$\brm$};%
+        \draw (\xsix,\yc) node[right] {$\underline{V_{2,\crm}}$}%
+        to[short,-*,i_=$\underline{I_{2,\crm}}$] (\xfive,\yc) node[left] {$\crm$};%
+        \draw (\xsix,\yn) node[right] {$\underline{V_{2,\nrm}}$}%
+        to[short,-*,i_=$\underline{I_{2,\nrm}}$] (\xfive,\yn) node[left] {$\nrm$};%
+    \end{tikzpicture}
+\end{document}
+% Local Variables:
+% mode: latex
+% TeX-engine: luatex
+% TeX-source-correlate-method-active: synctex
+% ispell-local-dictionary: "british"
+% coding: utf-8
+% LaTeX-indent-level: 4
+% fill-column: 100
+% End:

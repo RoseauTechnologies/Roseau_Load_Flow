@@ -1,0 +1,26 @@
+\input{Preambule}%
+
+\begin{document}
+\ctikzset{european, straight voltages, cute inductors}%
+\begin{tikzpicture}[%
+    show background rectangle,%
+    tight background,%
+    background rectangle/.style={fill=white}%
+    ]
+
+    \coordinate (g) at (0,0);
+    \node[ground] at (g) {};%
+    \node[left] at (g) {$\underline{V_{\grm}} = 0$};%
+    \draw (g) to[short,*-] (0, 0.5);
+
+\end{tikzpicture}
+\end{document}
+% Local Variables:
+% mode: latex
+% TeX-engine: luatex
+% TeX-source-correlate-method-active: synctex
+% ispell-local-dictionary: "british"
+% coding: utf-8
+% LaTeX-indent-level: 4
+% fill-column: 120
+% End:

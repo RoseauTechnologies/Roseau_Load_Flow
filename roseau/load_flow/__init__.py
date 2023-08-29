@@ -40,9 +40,10 @@ from roseau.load_flow.models import (
 )
 from roseau.load_flow.network import ElectricalNetwork
 from roseau.load_flow.units import Q_, ureg
+from roseau.load_flow.utils import ConductorType, InsulatorType, LineType
 from roseau.load_flow.utils._versions import show_versions
 
-__version__ = importlib.metadata.version("roseau_load_flow")
+__version__ = importlib.metadata.version("roseau-load-flow")
 
 __all__ = [
     "__author__",
@@ -86,4 +87,8 @@ __all__ = [
     # Units
     "Q_",
     "ureg",
+    # Types
+    "LineType",
+    "ConductorType",
+    "InsulatorType",
 ]

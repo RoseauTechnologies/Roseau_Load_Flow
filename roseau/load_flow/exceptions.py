@@ -25,6 +25,7 @@ class RoseauLoadFlowExceptionCode(Enum):
     BAD_BUS_TYPE = auto()
     BAD_POTENTIALS_SIZE = auto()
     BAD_VOLTAGES_SIZE = auto()
+    BAD_SHORT_CIRCUIT = auto()
 
     # Branches
     BAD_BRANCH_ID = auto()
@@ -34,7 +35,7 @@ class RoseauLoadFlowExceptionCode(Enum):
     BAD_LINE_MODEL = auto()
     BAD_LINE_TYPE = auto()
     BAD_CONDUCTOR_TYPE = auto()
-    BAD_INSULATION_TYPE = auto()
+    BAD_INSULATOR_TYPE = auto()
     BAD_Z_LINE_VALUE = auto()
     BAD_Y_SHUNT_VALUE = auto()
     BAD_TRANSFORMER_WINDINGS = auto()
@@ -84,6 +85,7 @@ class RoseauLoadFlowExceptionCode(Enum):
     LOAD_FLOW_NOT_RUN = auto()
     SEVERAL_NETWORKS = auto()
     TOO_MANY_BUSES = auto()
+    BAD_JACOBIAN = auto()
 
     # Solver
     BAD_SOLVER_NAME = auto()
@@ -99,6 +101,11 @@ class RoseauLoadFlowExceptionCode(Enum):
     JSON_TRANSFORMER_PARAMETERS_DUPLICATES = auto()
     JSON_PREF_INVALID = auto()
     JSON_NO_RESULTS = auto()
+
+    # Catalogue Mixin
+    CATALOGUE_MISSING = auto()
+    CATALOGUE_NOT_FOUND = auto()
+    CATALOGUE_SEVERAL_FOUND = auto()
 
     @classmethod
     def package_name(cls) -> str:

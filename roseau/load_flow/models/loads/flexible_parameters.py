@@ -7,7 +7,7 @@ from typing_extensions import Self
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.typing import ControlType, JsonDict, ProjectionType
-from roseau.load_flow.units import Q_, ureg
+from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow.utils import JsonMixin
 
 logger = logging.getLogger(__name__)
@@ -23,32 +23,20 @@ class Control(JsonMixin):
         * ``"constant"``: no control is applied. In this case, a simple :class:`PowerLoad` without `flexible_params`
           could have been used instead.
         * ``"p_max_u_production"``: control the maximum production active power of the load (inverter) based on the
-          voltage :math:`P^{\\max}_{\\mathrm{prod}}(U)`. With this control, the following functions are used
-          (depending on the :math:`\\alpha` value).
-
-          .. image:: /_static/Control_PU_Prod.svg
-              :width: 600
-              :align: center
+          voltage :math:`P^{\\max}_{\\mathrm{prod}}(U)`.
 
         * ``"p_max_u_consumption"``: control the maximum consumption active power of the load based on the voltage
-          :math:`P^{\\max}_{\\mathrm{cons}}(U)`. With this control, the following functions are used
-          (depending on the :math:`\\alpha` value).
+          :math:`P^{\\max}_{\\mathrm{cons}}(U)`.
 
-          .. image:: /_static/Control_PU_Cons.svg
-              :width: 600
-              :align: center
+        * ``"q_u"``: control the reactive power based on the voltage :math:`Q(U)`.
 
-        * ``"q_u"``: control the reactive power based on the voltage :math:`Q(U)`. With this control, the following
-          functions are used  (depending on the :math:`\\alpha` value).
-
-          .. image:: /_static/Control_QU.svg
-              :width: 600
-              :align: center
+    See Also:
+        :ref:`Control documentation <models-flexible_load-controls>`
     """
 
     DEFAULT_ALPHA: float = 1000.0
 
-    @ureg.wraps(None, (None, None, "V", "V", "V", "V", None), strict=False)
+    @ureg_wraps(None, (None, None, "V", "V", "V", "V", None), strict=False)
     def __init__(
         self,
         type: ControlType,
@@ -103,14 +91,14 @@ class Control(JsonMixin):
         elif self.type == "p_max_u_consumption":
             useless_values = {"u_max": self._u_max, "u_up": self._u_up}
         elif self.type == "q_u":
-            useless_values = dict()
+            useless_values = {}
         else:
             msg = f"Unsupported control type {self.type!r}"
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_CONTROL_TYPE)
 
         # Warn the user if a value different from 0 was given to the control for a useless value
-        msg_list = list()
+        msg_list = []
         for name, value in useless_values.items():
             if not np.isclose(value, 0):
                 msg_list.append(f"{name!r} ({value:.1f} V)")
@@ -156,26 +144,26 @@ class Control(JsonMixin):
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_CONTROL_VALUE)
 
     @property
-    @ureg.wraps("V", (None,), strict=False)
-    def u_min(self) -> Q_:
+    @ureg_wraps("V", (None,), strict=False)
+    def u_min(self) -> Q_[float]:
         """The minimum voltage i.e. the one the control reached the maximum action."""
         return self._u_min
 
     @property
-    @ureg.wraps("V", (None,), strict=False)
-    def u_down(self) -> Q_:
+    @ureg_wraps("V", (None,), strict=False)
+    def u_down(self) -> Q_[float]:
         """The voltage which starts to trigger the control (lower value)."""
         return self._u_down
 
     @property
-    @ureg.wraps("V", (None,), strict=False)
-    def u_up(self) -> Q_:
+    @ureg_wraps("V", (None,), strict=False)
+    def u_up(self) -> Q_[float]:
         """TThe voltage  which starts to trigger the control (upper value)."""
         return self._u_up
 
     @property
-    @ureg.wraps("V", (None,), strict=False)
-    def u_max(self) -> Q_:
+    @ureg_wraps("V", (None,), strict=False)
+    def u_max(self) -> Q_[float]:
         """The maximum voltage i.e. the one the control reached its maximum action."""
         return self._u_max
 
@@ -191,13 +179,12 @@ class Control(JsonMixin):
         return cls(type="constant", u_min=0.0, u_down=0.0, u_up=0.0, u_max=0.0)
 
     @classmethod
-    @ureg.wraps(None, (None, "V", "V", None), strict=False)
+    @ureg_wraps(None, (None, "V", "V", None), strict=False)
     def p_max_u_production(cls, u_up: float, u_max: float, alpha: float = DEFAULT_ALPHA) -> Self:
         """Create a control of the type ``"p_max_u_production"``.
 
-        .. image:: /_static/Control_PU_Prod.svg
-            :width: 600
-            :align: center
+        See Also:
+            :ref:`$P(U)$ control documentation <models-flexible_load-p_u_control>`
 
         Args:
             u_up:
@@ -221,13 +208,12 @@ class Control(JsonMixin):
         return cls(type="p_max_u_production", u_min=0.0, u_down=0.0, u_up=u_up, u_max=u_max, alpha=alpha)
 
     @classmethod
-    @ureg.wraps(None, (None, "V", "V", None), strict=False)
+    @ureg_wraps(None, (None, "V", "V", None), strict=False)
     def p_max_u_consumption(cls, u_min: float, u_down: float, alpha: float = DEFAULT_ALPHA) -> Self:
         """Create a control of the type ``"p_max_u_consumption"``.
 
-        .. image:: /_static/Control_PU_Cons.svg
-            :width: 600
-            :align: center
+        See Also:
+            :ref:`$P(U)$ control documentation <models-flexible_load-p_u_control>`
 
         Args:
             u_min:
@@ -251,13 +237,12 @@ class Control(JsonMixin):
         return cls(type="p_max_u_consumption", u_min=u_min, u_down=u_down, u_up=0.0, u_max=0.0, alpha=alpha)
 
     @classmethod
-    @ureg.wraps(None, (None, "V", "V", "V", "V", None), strict=False)
+    @ureg_wraps(None, (None, "V", "V", "V", "V", None), strict=False)
     def q_u(cls, u_min: float, u_down: float, u_up: float, u_max: float, alpha: float = DEFAULT_ALPHA) -> Self:
         """Create a control of the type ``"q_u"``.
 
-        .. image:: /_static/Control_QU.svg
-            :width: 600
-            :align: center
+        See Also:
+            :ref:`$Q(U)$ control documentation <models-flexible_load-q_u_control>`
 
         Args:
             u_min:
@@ -311,7 +296,7 @@ class Control(JsonMixin):
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_CONTROL_TYPE)
 
-    def to_dict(self) -> JsonDict:
+    def to_dict(self, include_geometry: bool = True) -> JsonDict:
         if self.type == "constant":
             return {"type": "constant"}
         elif self.type == "p_max_u_production":
@@ -348,26 +333,15 @@ class Projection(JsonMixin):
 
     The three possible projection types are:
         * ``"euclidean"``: for an Euclidean projection on the feasible space;
-
-        .. image:: /_static/Euclidean_Projection.svg
-            :width: 300
-            :align: center
-
         * ``"keep_p"``: for maintaining a constant P;
-
-        .. image:: /_static/Constant_P_Projection.svg
-            :width: 300
-            :align: center
-
         * ``"keep_q"``: for maintaining a constant Q.
 
-        .. image:: /_static/Constant_Q_Projection.svg
-            :width: 300
-            :align: center
+    See Also:
+        :ref:`Projection documentation <models-flexible_load-projection>`
     """
 
     DEFAULT_ALPHA: float = 1000.0
-    DEFAULT_EPSILON: float = 0.01
+    DEFAULT_EPSILON: float = 1e-8
 
     def __init__(self, type: ProjectionType, alpha: float = DEFAULT_ALPHA, epsilon: float = DEFAULT_EPSILON) -> None:
         """Projection constructor.
@@ -383,11 +357,7 @@ class Projection(JsonMixin):
                 This value is used to make soft sign function and to build a soft projection function.
 
             epsilon:
-                This value is used to make a smooth sqrt function. It is only used in the Euclidean projection.
-
-                .. math::
-                    \\sqrt{S} = \\sqrt{\\varepsilon \\times
-                    \\exp\\left(\\frac{-{|S|}^2}{\\varepsilon}\\right) + {|S|}^2}
+                This value is used to make a smooth sqrt function.
         """
         self.type = type
         self._alpha = alpha
@@ -440,7 +410,7 @@ class Projection(JsonMixin):
         epsilon = data["epsilon"] if "epsilon" in data else cls.DEFAULT_EPSILON
         return cls(type=data["type"], alpha=alpha, epsilon=epsilon)
 
-    def to_dict(self) -> JsonDict:
+    def to_dict(self, include_geometry: bool = True) -> JsonDict:
         return {"type": self.type, "alpha": self._alpha, "epsilon": self._epsilon}
 
     def _results_to_dict(self, warning: bool) -> NoReturn:
@@ -467,36 +437,14 @@ class FlexibleParameter(JsonMixin):
 
     For multi-phase loads, you need to use a `FlexibleParameter` instance per phase.
 
-    Depending on the mix of controls and projection used through this class, the feasible domains in the :math:`(P, Q)`
-    space changes. Here is an illustration with a theoretical power depicting a production (negative
-    :math:`P^{\\mathrm{theo.}}`).
-
-    .. list-table::
-        :class: borderless
-        :header-rows: 1
-        :widths: 20 20 20 20 20
-
-        * -
-          - :math:`Q^{\\mathrm{const.}}`
-          - :math:`Q(U)` with an Euclidean projection
-          - :math:`Q(U)` with a constant P projection
-          - :math:`Q(U)` with a constant Q projection
-        * - :math:`P^{\\mathrm{const.}}`
-          - .. image:: /_static/Domain_Pconst_Qconst.svg
-          - .. image:: /_static/Domain_Pconst_QU_Eucl.svg
-          - .. image:: /_static/Domain_Pconst_QU_P.svg
-          - .. image:: /_static/Domain_Pconst_QU_Q.svg
-        * - :math:`P^{\\max}(U)`
-          - .. image:: /_static/Domain_PmaxU_Qconst.svg
-          - .. image:: /_static/Domain_PmaxU_QU.svg
-          - .. image:: /_static/Domain_PmaxU_QU.svg
-          - .. image:: /_static/Domain_PmaxU_QU.svg
+    See Also:
+        :ref:`Flexible Parameters documentation <models-flexible_load-flexible_parameters>`
     """
 
-    control_class: type[Control] = Control
-    projection_class: type[Projection] = Projection
+    _control_class: type[Control] = Control
+    _projection_class: type[Projection] = Projection
 
-    @ureg.wraps(None, (None, None, None, None, "VA"), strict=False)
+    @ureg_wraps(None, (None, None, None, None, "VA"), strict=False)
     def __init__(self, control_p: Control, control_q: Control, projection: Projection, s_max: float) -> None:
         """FlexibleParameter constructor.
 
@@ -527,8 +475,8 @@ class FlexibleParameter(JsonMixin):
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_SMAX_VALUE)
 
     @property
-    @ureg.wraps("VA", (None,), strict=False)
-    def s_max(self) -> Q_:
+    @ureg_wraps("VA", (None,), strict=False)
+    def s_max(self) -> Q_[float]:
         """The apparent power of the flexible load (VA). It is the radius of the feasible circle."""
         return self._s_max
 
@@ -541,14 +489,14 @@ class FlexibleParameter(JsonMixin):
             load.
         """
         return cls(
-            control_p=cls.control_class.constant(),
-            control_q=cls.control_class.constant(),
-            projection=cls.projection_class(type="euclidean"),
+            control_p=cls._control_class.constant(),
+            control_q=cls._control_class.constant(),
+            projection=cls._projection_class(type="euclidean"),
             s_max=1.0,
         )
 
     @classmethod
-    @ureg.wraps(None, (None, "V", "V", "VA", None, None, None), strict=False)
+    @ureg_wraps(None, (None, "V", "V", "VA", None, None, None), strict=False)
     def p_max_u_production(
         cls,
         u_up: float,
@@ -560,9 +508,8 @@ class FlexibleParameter(JsonMixin):
     ) -> Self:
         """Build flexible parameters for production ``P(U)`` control with a Euclidean projection.
 
-        .. image:: /_static/Control_PU_Prod.svg
-            :width: 600
-            :align: center
+        See Also:
+            :ref:`$P(U)$ control documentation <models-flexible_load-p_u_control>`
 
         Args:
             u_up:
@@ -592,16 +539,16 @@ class FlexibleParameter(JsonMixin):
         Returns:
             A flexible parameter which performs "p_max_u_production" control.
         """
-        control_p = cls.control_class.p_max_u_production(u_up=u_up, u_max=u_max, alpha=alpha_control)
+        control_p = cls._control_class.p_max_u_production(u_up=u_up, u_max=u_max, alpha=alpha_control)
         return cls(
             control_p=control_p,
-            control_q=cls.control_class.constant(),
-            projection=cls.projection_class(type="euclidean", alpha=alpha_proj, epsilon=epsilon_proj),
+            control_q=cls._control_class.constant(),
+            projection=cls._projection_class(type="euclidean", alpha=alpha_proj, epsilon=epsilon_proj),
             s_max=s_max,
         )
 
     @classmethod
-    @ureg.wraps(None, (None, "V", "V", "VA", None, None, None), strict=False)
+    @ureg_wraps(None, (None, "V", "V", "VA", None, None, None), strict=False)
     def p_max_u_consumption(
         cls,
         u_min: float,
@@ -613,9 +560,8 @@ class FlexibleParameter(JsonMixin):
     ) -> Self:
         """Build flexible parameters for consumption ``P(U)`` control with a Euclidean projection.
 
-        .. image:: /_static/Control_PU_Cons.svg
-            :width: 600
-            :align: center
+        See Also:
+            :ref:`$P(U)$ control documentation <models-flexible_load-p_u_control>`
 
         Args:
             u_min:
@@ -642,16 +588,16 @@ class FlexibleParameter(JsonMixin):
         Returns:
             A flexible parameter which performs "p_max_u_consumption" control.
         """
-        control_p = cls.control_class.p_max_u_consumption(u_min=u_min, u_down=u_down, alpha=alpha_control)
+        control_p = cls._control_class.p_max_u_consumption(u_min=u_min, u_down=u_down, alpha=alpha_control)
         return cls(
             control_p=control_p,
-            control_q=cls.control_class.constant(),
-            projection=cls.projection_class("euclidean", alpha=alpha_proj, epsilon=epsilon_proj),
+            control_q=cls._control_class.constant(),
+            projection=cls._projection_class("euclidean", alpha=alpha_proj, epsilon=epsilon_proj),
             s_max=s_max,
         )
 
     @classmethod
-    @ureg.wraps(None, (None, "V", "V", "V", "V", "VA", None, None, None), strict=False)
+    @ureg_wraps(None, (None, "V", "V", "V", "V", "VA", None, None, None), strict=False)
     def q_u(
         cls,
         u_min: float,
@@ -665,9 +611,8 @@ class FlexibleParameter(JsonMixin):
     ) -> Self:
         """Build flexible parameters for ``Q(U)`` control with a Euclidean projection.
 
-        .. image:: /_static/Control_QU.svg
-            :width: 600
-            :align: center
+        See Also:
+            :ref:`$Q(U)$ control documentation <models-flexible_load-q_u_control>`
 
         Args:
             u_min:
@@ -701,16 +646,16 @@ class FlexibleParameter(JsonMixin):
         Returns:
             A flexible parameter which performs "q_u" control.
         """
-        control_q = cls.control_class.q_u(u_min=u_min, u_down=u_down, u_up=u_up, u_max=u_max, alpha=alpha_control)
+        control_q = cls._control_class.q_u(u_min=u_min, u_down=u_down, u_up=u_up, u_max=u_max, alpha=alpha_control)
         return cls(
-            control_p=cls.control_class.constant(),
+            control_p=cls._control_class.constant(),
             control_q=control_q,
-            projection=cls.projection_class(type="euclidean", alpha=alpha_proj, epsilon=epsilon_proj),
+            projection=cls._projection_class(type="euclidean", alpha=alpha_proj, epsilon=epsilon_proj),
             s_max=s_max,
         )
 
     @classmethod
-    @ureg.wraps(None, (None, "V", "V", "V", "V", "V", "V", "VA", None, None, None), strict=False)
+    @ureg_wraps(None, (None, "V", "V", "V", "V", "V", "V", "VA", None, None, None), strict=False)
     def pq_u_production(
         cls,
         up_up: float,
@@ -771,17 +716,17 @@ class FlexibleParameter(JsonMixin):
         .. seealso::
             :meth:`p_max_u_production` and :meth:`q_u` for more details.
         """
-        control_p = cls.control_class.p_max_u_production(u_up=up_up, u_max=up_max, alpha=alpha_control)
-        control_q = cls.control_class.q_u(u_min=uq_min, u_down=uq_down, u_up=uq_up, u_max=uq_max, alpha=alpha_control)
+        control_p = cls._control_class.p_max_u_production(u_up=up_up, u_max=up_max, alpha=alpha_control)
+        control_q = cls._control_class.q_u(u_min=uq_min, u_down=uq_down, u_up=uq_up, u_max=uq_max, alpha=alpha_control)
         return cls(
             control_p=control_p,
             control_q=control_q,
-            projection=cls.projection_class(type="euclidean", alpha=alpha_proj, epsilon=epsilon_proj),
+            projection=cls._projection_class(type="euclidean", alpha=alpha_proj, epsilon=epsilon_proj),
             s_max=s_max,
         )
 
     @classmethod
-    @ureg.wraps(None, (None, "V", "V", "V", "V", "V", "V", "VA", None, None, None), strict=False)
+    @ureg_wraps(None, (None, "V", "V", "V", "V", "V", "V", "VA", None, None, None), strict=False)
     def pq_u_consumption(
         cls,
         up_min: float,
@@ -842,12 +787,12 @@ class FlexibleParameter(JsonMixin):
         .. seealso::
             :meth:`p_max_u_consumption` and :meth:`q_u` for more details.
         """
-        control_p = cls.control_class.p_max_u_consumption(u_min=up_min, u_down=up_down, alpha=alpha_control)
-        control_q = cls.control_class.q_u(u_min=uq_min, u_down=uq_down, u_up=uq_up, u_max=uq_max, alpha=alpha_control)
+        control_p = cls._control_class.p_max_u_consumption(u_min=up_min, u_down=up_down, alpha=alpha_control)
+        control_q = cls._control_class.q_u(u_min=uq_min, u_down=uq_down, u_up=uq_up, u_max=uq_max, alpha=alpha_control)
         return cls(
             control_p=control_p,
             control_q=control_q,
-            projection=cls.projection_class(type="euclidean", alpha=alpha_proj, epsilon=epsilon_proj),
+            projection=cls._projection_class(type="euclidean", alpha=alpha_proj, epsilon=epsilon_proj),
             s_max=s_max,
         )
 
@@ -856,12 +801,12 @@ class FlexibleParameter(JsonMixin):
     #
     @classmethod
     def from_dict(cls, data: JsonDict) -> Self:
-        control_p = cls.control_class.from_dict(data["control_p"])
-        control_q = cls.control_class.from_dict(data["control_q"])
-        projection = cls.projection_class.from_dict(data["projection"])
+        control_p = cls._control_class.from_dict(data["control_p"])
+        control_q = cls._control_class.from_dict(data["control_q"])
+        projection = cls._projection_class.from_dict(data["projection"])
         return cls(control_p=control_p, control_q=control_q, projection=projection, s_max=data["s_max"])
 
-    def to_dict(self) -> JsonDict:
+    def to_dict(self, include_geometry: bool = True) -> JsonDict:
         return {
             "control_p": self.control_p.to_dict(),
             "control_q": self.control_q.to_dict(),

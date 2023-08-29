@@ -65,23 +65,23 @@ def test_loads():
     assert "Incorrect number of impedances" in e.value.msg
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_Z_SIZE
 
+    fp = [FlexibleParameter.constant()] * 3
     with pytest.raises(RoseauLoadFlowException) as e:
-        fp = [FlexibleParameter.constant()] * 3
         PowerLoad("load", bus, phases="abcn", powers=[100, 100], flexible_params=fp)
     assert "Incorrect number of powers" in e.value.msg
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_S_SIZE
+    fp = [FlexibleParameter.constant()] * 3
     with pytest.raises(RoseauLoadFlowException) as e:
-        fp = [FlexibleParameter.constant()] * 3
         PowerLoad("load", bus, phases="abcn", powers=[100, 100, 100, 100], flexible_params=fp)
     assert "Incorrect number of powers" in e.value.msg
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_S_SIZE
+    fp = [FlexibleParameter.constant()] * 2
     with pytest.raises(RoseauLoadFlowException) as e:
-        fp = [FlexibleParameter.constant()] * 2
         PowerLoad("load", bus, phases="abcn", powers=[100, 100, 100], flexible_params=fp)
     assert "Incorrect number of parameters" in e.value.msg
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PARAMETERS_SIZE
+    fp = [FlexibleParameter.constant()] * 4
     with pytest.raises(RoseauLoadFlowException) as e:
-        fp = [FlexibleParameter.constant()] * 4
         PowerLoad("load", bus, phases="abcn", powers=[100, 100, 100], flexible_params=fp)
     assert "Incorrect number of parameters" in e.value.msg
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PARAMETERS_SIZE
@@ -143,6 +143,14 @@ def test_loads():
             load.impedances = [100, 100, 0.0]
         assert "An impedance of the load" in e.value.msg
         assert e.value.code == RoseauLoadFlowExceptionCode.BAD_Z_VALUE
+
+    # Short-circuit
+    bus = Bus(id="bus", phases="abcn")
+    bus.add_short_circuit("a", "b")
+    with pytest.raises(RoseauLoadFlowException) as e:
+        PowerLoad(id="load", bus=bus, powers=[10, 10, 10])
+    assert "that already has a short-circuit. It makes the short-circuit calculation impossible." in e.value.msg
+    assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_SHORT_CIRCUIT
 
 
 def test_flexible_load():

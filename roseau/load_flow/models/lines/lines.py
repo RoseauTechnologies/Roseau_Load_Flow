@@ -13,16 +13,19 @@ from roseau.load_flow.models.grounds import Ground
 from roseau.load_flow.models.lines.parameters import LineParameters
 from roseau.load_flow.models.sources import VoltageSource
 from roseau.load_flow.typing import Id, JsonDict
-from roseau.load_flow.units import Q_, ureg
-from roseau.load_flow.utils import BranchType
+from roseau.load_flow.units import Q_, ureg_wraps
 
 logger = logging.getLogger(__name__)
 
 
 class Switch(AbstractBranch):
-    """A general purpose switch branch."""
+    """A general purpose switch branch.
 
-    branch_type = BranchType.SWITCH
+    See Also:
+        :doc:`Switch model documentation </models/Switch>`
+    """
+
+    branch_type = "switch"
 
     allowed_phases = frozenset(Bus.allowed_phases | {"a", "b", "c", "n"})
     """The allowed phases for a switch are:
@@ -96,7 +99,7 @@ class Switch(AbstractBranch):
             element = elements.pop(-1)
             visited_1.add(element)
             for e in element._connected_elements:
-                if e not in visited_1 and (isinstance(e, Bus) or isinstance(e, Switch)) and e != self:
+                if e not in visited_1 and (isinstance(e, (Bus, Switch))) and e != self:
                     elements.append(e)
         visited_2: set[Element] = set()
         elements = [self.bus2]
@@ -104,7 +107,7 @@ class Switch(AbstractBranch):
             element = elements.pop(-1)
             visited_2.add(element)
             for e in element._connected_elements:
-                if e not in visited_2 and (isinstance(e, Bus) or isinstance(e, Switch)) and e != self:
+                if e not in visited_2 and (isinstance(e, (Bus, Switch))) and e != self:
                     elements.append(e)
         if visited_1.intersection(visited_2):
             msg = f"There is a loop of switch involving the switch {self.id!r}. It is not allowed."
@@ -127,32 +130,11 @@ class Switch(AbstractBranch):
 class Line(AbstractBranch):
     """An electrical line PI model with series impedance and optional shunt admittance.
 
-    .. math::
-        V_1 &= a \\cdot V_2 - b \\cdot I_2 + g \\cdot V_{\\mathrm{g}} \\\\
-        I_1 &= c \\cdot V_2 - d \\cdot I_2 + h \\cdot V_{\\mathrm{g}} \\\\
-        I_{\\mathrm{g}} &= f^t \\cdot \\left(V_1 + V_2 - 2\\cdot V_{\\mathrm{g}}\\right)
-
-    where
-
-    .. math::
-        a &= \\mathcal{I}_4 + \\dfrac{1}{2} \\cdot Z \\cdot Y  \\\\
-        b &= Z  \\\\
-        c &= Y + \\dfrac{1}{4}\\cdot Y \\cdot Z \\cdot Y  \\\\
-        d &= \\mathcal{I}_4 + \\dfrac{1}{2} \\cdot Y \\cdot Z  \\\\
-        f &= -\\dfrac{1}{2} \\cdot \\begin{pmatrix} y_{\\mathrm{ag}} & y_{\\mathrm{bg}} & y_{\\mathrm{cg}} &
-        y_{\\mathrm{ng}} \\end{pmatrix} ^t  \\\\
-        g &= Z \\cdot f  \\\\
-        h &= 2 \\cdot f + \\frac{1}{2}\\cdot Y \\cdot Z \\cdot f  \\\\
-
-    If the line does not define a shunt admittance, the following simplified equations are used
-    instead:
-
-    .. math::
-        \\left(V_1 - V_2\\right) &= Z \\cdot I_1 \\\\
-        I_2 &= -I_1
+    See Also:
+        :doc:`Line documentation </models/Line/index>`
     """
 
-    branch_type = BranchType.LINE
+    branch_type = "line"
 
     allowed_phases = frozenset(Bus.allowed_phases | {"a", "b", "c", "n"})
     """The allowed phases for a line are:
@@ -250,12 +232,12 @@ class Line(AbstractBranch):
             self._connect(self.ground)
 
     @property
-    @ureg.wraps("km", (None,), strict=False)
-    def length(self) -> Q_:
+    @ureg_wraps("km", (None,), strict=False)
+    def length(self) -> Q_[float]:
         return self._length
 
     @length.setter
-    @ureg.wraps(None, (None, "km"), strict=False)
+    @ureg_wraps(None, (None, "km"), strict=False)
     def length(self, value: float) -> None:
         if value <= 0:
             msg = f"A line length must be greater than 0. {value:.2f} km provided."
@@ -298,22 +280,35 @@ class Line(AbstractBranch):
         self._parameters = value
         self._invalidate_network_results()
 
-    def _res_series_power_losses_getter(self, warning: bool) -> np.ndarray:
+    def _res_series_values_getter(self, warning: bool) -> tuple[np.ndarray, np.ndarray]:
         pot1, pot2 = self._res_potentials_getter(warning)  # V
         du_line = pot1 - pot2
         z_line = self.parameters.z_line * self.length
         i_line = np.linalg.inv(z_line.m_as("ohm")) @ du_line  # Zₗ x Iₗ = ΔU -> I = Zₗ⁻¹ x ΔU
+        return du_line, i_line
+
+    def _res_series_currents_getter(self, warning: bool) -> np.ndarray:
+        _, i_line = self._res_series_values_getter(warning)
+        return i_line
+
+    @property
+    @ureg_wraps("A", (None,), strict=False)
+    def res_series_currents(self) -> Q_[np.ndarray]:
+        """Get the current in the series elements of the line (A)."""
+        return self._res_series_currents_getter(warning=True)
+
+    def _res_series_power_losses_getter(self, warning: bool) -> np.ndarray:
+        du_line, i_line = self._res_series_values_getter(warning)
         return du_line * i_line.conj()  # Sₗ = ΔU.Iₗ*
 
     @property
-    @ureg.wraps("VA", (None,), strict=False)
-    def res_series_power_losses(self) -> Q_:
+    @ureg_wraps("VA", (None,), strict=False)
+    def res_series_power_losses(self) -> Q_[np.ndarray]:
         """Get the power losses in the series elements of the line (VA)."""
         return self._res_series_power_losses_getter(warning=True)
 
-    def _res_shunt_power_losses_getter(self, warning: bool) -> np.ndarray:
-        if not self.parameters.with_shunt:
-            return np.zeros(len(self.phases), dtype=complex)
+    def _res_shunt_values_getter(self, warning: bool) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+        assert self.parameters.with_shunt, "this method only works when there is a shunt"
         y_shunt = self.parameters.y_shunt
         assert self.ground is not None
         pot1, pot2 = self._res_potentials_getter(warning)
@@ -322,11 +317,30 @@ class Line(AbstractBranch):
         yg = y_shunt.sum(axis=1)  # y_ig = Y_ia + Y_ib + Y_ic + Y_in for i in {a, b, c, n}
         i1_shunt = (y_shunt @ pot1 - yg * vg) / 2
         i2_shunt = (y_shunt @ pot2 - yg * vg) / 2
-        return pot1 * i1_shunt.conj() + pot2 * i2_shunt.conj()
+        return pot1, pot2, i1_shunt, i2_shunt
+
+    def _res_shunt_currents_getter(self, warning: bool) -> tuple[np.ndarray, np.ndarray]:
+        if not self.parameters.with_shunt:
+            zeros = np.zeros(len(self.phases), dtype=complex)
+            return zeros[:], zeros[:]
+        _, _, cur1, cur2 = self._res_shunt_values_getter(warning)
+        return cur1, cur2
 
     @property
-    @ureg.wraps("VA", (None,), strict=False)
-    def res_shunt_power_losses(self) -> Q_:
+    @ureg_wraps(("A", "A"), (None,), strict=False)
+    def res_shunt_currents(self) -> tuple[Q_[np.ndarray], Q_[np.ndarray]]:
+        """Get the currents in the shunt elements of the line (A)."""
+        return self._res_shunt_currents_getter(warning=True)
+
+    def _res_shunt_power_losses_getter(self, warning: bool) -> np.ndarray:
+        if not self.parameters.with_shunt:
+            return np.zeros(len(self.phases), dtype=complex)
+        pot1, pot2, cur1, cur2 = self._res_shunt_values_getter(warning)
+        return pot1 * cur1.conj() + pot2 * cur2.conj()
+
+    @property
+    @ureg_wraps("VA", (None,), strict=False)
+    def res_shunt_power_losses(self) -> Q_[np.ndarray]:
         """Get the power losses in the shunt elements of the line (VA)."""
         return self._res_shunt_power_losses_getter(warning=True)
 
@@ -336,16 +350,20 @@ class Line(AbstractBranch):
         return series_losses + shunt_losses
 
     @property
-    @ureg.wraps("VA", (None,), strict=False)
-    def res_power_losses(self) -> Q_:
+    @ureg_wraps("VA", (None,), strict=False)
+    def res_power_losses(self) -> Q_[np.ndarray]:
         """Get the power losses in the line (VA)."""
         return self._res_power_losses_getter(warning=True)
 
     #
     # Json Mixin interface
     #
-    def to_dict(self) -> JsonDict:
-        res = {**super().to_dict(), "length": self._length, "params_id": self.parameters.id}
+    def to_dict(self, include_geometry: bool = True) -> JsonDict:
+        res = {
+            **super().to_dict(include_geometry=include_geometry),
+            "length": self._length,
+            "params_id": self.parameters.id,
+        }
         if self.ground is not None:
             res["ground"] = self.ground.id
         return res

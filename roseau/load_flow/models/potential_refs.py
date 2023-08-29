@@ -8,7 +8,7 @@ from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import Element
 from roseau.load_flow.models.grounds import Ground
 from roseau.load_flow.typing import Id, JsonDict
-from roseau.load_flow.units import Q_, ureg
+from roseau.load_flow.units import Q_, ureg_wraps
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +21,9 @@ class PotentialRef(Element):
     can be set on any bus or ground elements. If set on a bus with no neutral and without
     specifying the phase, the reference will be set as ``Va + Vb + Vc = 0``. For other buses, the
     default is ``Vn = 0``.
+
+    See Also:
+        :doc:`Potential reference model documentation </models/PotentialRef>`
     """
 
     allowed_phases = frozenset({"a", "b", "c", "n"})
@@ -68,8 +71,8 @@ class PotentialRef(Element):
         return self._res_getter(self._res_current, warning)
 
     @property
-    @ureg.wraps("A", (None,), strict=False)
-    def res_current(self) -> Q_:
+    @ureg_wraps("A", (None,), strict=False)
+    def res_current(self) -> Q_[complex]:
         """The sum of the currents (A) of the connection associated to the potential reference.
 
         This sum should be equal to 0 after the load flow.
@@ -83,7 +86,7 @@ class PotentialRef(Element):
     def from_dict(cls, data: JsonDict) -> Self:
         return cls(data["id"], data["element"], phase=data.get("phases"))
 
-    def to_dict(self) -> JsonDict:
+    def to_dict(self, include_geometry: bool = True) -> JsonDict:
         res = {"id": self.id}
         e = self.element
         if isinstance(e, Bus):
