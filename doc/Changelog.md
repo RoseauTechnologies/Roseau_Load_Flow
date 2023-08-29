@@ -2,8 +2,6 @@
 
 ## Version 0.5.0
 
-**In development**
-
 - {gh-pr}`121` {gh-issue}`68` Improvements of the `LineParameters` constructor:
   - Delete the `LineModel` class
   - Simplify the `from_dict` method
