@@ -8,8 +8,8 @@ $\underline{Y}$.
 
 ## Matrices definition
 
-Before diving into the different line models, lets define the series impedance matrix $Z$, and the
-shunt admittance matrix $Y$ used to model the lines.
+Before diving into the different line models, lets define the series impedance matrix $\underline{Z}$, and the
+shunt admittance matrix $\underline{Y}$ used to model the lines.
 
 ### Series impedance matrix
 
@@ -156,6 +156,11 @@ simple_line_parameters = LineParameters(id="simple_line_parameters", z_line=z_li
 shunt_line_parameters = LineParameters(
     id="shunt_line_parameters", z_line=z_line, y_shunt=y_shunt
 )
+```
+
+```{tip}
+The `Line` instance itself has the `z_line` and `y_shunt` properties. They retrieve the line impedance in $\Omega$
+and the line shunt admittance in Siemens (taking into account the length of the line).
 ```
 
 There are several alternative constructors for `LineParameters` objects. The description of them can be found in the

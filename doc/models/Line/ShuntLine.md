@@ -128,6 +128,28 @@ load = PowerLoad(
     id="load", bus=bus2, powers=Q_(np.array([5.0, 2.5, 0]) * (1 - 0.3j), "kVA")
 )
 
+# The impedance matrix (in Ohm) can be accessed from the line instance
+line.z_line
+# array(
+#     [[0.3+0.35j, 0. +0.25j, 0. +0.25j, 0. +0.25j],
+#      [0. +0.25j, 0.3+0.35j, 0. +0.25j, 0. +0.25j],
+#      [0. +0.25j, 0. +0.25j, 0.3+0.35j, 0. +0.25j],
+#      [0. +0.25j, 0. +0.25j, 0. +0.25j, 0.3+0.35j]]
+# ) <Unit('ohm')>
+
+# The shunt admittance matrix (in Siemens) can be accessed from the line instance
+line.y_shunt
+# array(
+#     [[2.e-05+4.75e-04j, 0.e+00-6.80e-05j, 0.e+00-1.00e-05j, 0.e+00-6.80e-05j],
+#      [0.e+00-6.80e-05j, 2.e-05+4.75e-04j, 0.e+00-6.80e-05j, 0.e+00-1.00e-05j],
+#      [0.e+00-1.00e-05j, 0.e+00-6.80e-05j, 2.e-05+4.75e-04j, 0.e+00-6.80e-05j],
+#      [0.e+00-6.80e-05j, 0.e+00-1.00e-05j, 0.e+00-6.80e-05j, 2.e-05+4.75e-04j]]
+# ) <Unit('siemens')>
+
+# For a shunt line, the property `with_shunt` is True
+line.with_shunt
+# True
+
 # Create a network and solve a load flow
 en = ElectricalNetwork.from_element(bus1)
 auth = ("username", "password")
