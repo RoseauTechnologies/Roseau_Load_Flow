@@ -4,6 +4,7 @@
 
 **In development**
 
+- {gh-pr}`128` Add the properties `z_line`, `y_shunt` and `with_shunt` to the `Line` class.
 - {gh-pr}`125` Speed-up build of conda workflow using mamba.
 
 ## Version 0.5.0

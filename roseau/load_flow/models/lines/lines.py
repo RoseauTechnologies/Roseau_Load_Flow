@@ -217,7 +217,7 @@ class Line(AbstractBranch):
         self._initialized = True
 
         # Handle the ground
-        if self.ground is not None and not self.parameters.with_shunt:
+        if self.ground is not None and not self.with_shunt:
             warnings.warn(
                 message=(
                     f"The ground element must not be provided for line {self.id!r} as it does not have a shunt "
@@ -227,7 +227,7 @@ class Line(AbstractBranch):
                 stacklevel=2,
             )
             self.ground = None
-        elif self.parameters.with_shunt:
+        elif self.with_shunt:
             # Connect the ground
             self._connect(self.ground)
 
@@ -260,7 +260,7 @@ class Line(AbstractBranch):
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Z_LINE_SHAPE)
 
         if value.with_shunt:
-            if self._initialized and not self.parameters.with_shunt:
+            if self._initialized and not self.with_shunt:
                 msg = "Cannot set line parameters with a shunt to a line that does not have shunt components."
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_MODEL)
@@ -273,18 +273,33 @@ class Line(AbstractBranch):
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_TYPE)
         else:
-            if self._initialized and self.parameters.with_shunt:
+            if self._initialized and self.with_shunt:
                 msg = "Cannot set line parameters without a shunt to a line that has shunt components."
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_MODEL)
         self._parameters = value
         self._invalidate_network_results()
 
+    @property
+    @ureg_wraps("ohm", (None,), strict=False)
+    def z_line(self) -> Q_[np.ndarray]:
+        """Impedance of the line in Ohm"""
+        return self.parameters._z_line * self._length
+
+    @property
+    @ureg_wraps("S", (None,), strict=False)
+    def y_shunt(self) -> Q_[np.ndarray]:
+        """Shunt admittance of the line in Siemens"""
+        return self.parameters._y_shunt * self._length
+
+    @property
+    def with_shunt(self) -> bool:
+        return self.parameters.with_shunt
+
     def _res_series_values_getter(self, warning: bool) -> tuple[np.ndarray, np.ndarray]:
         pot1, pot2 = self._res_potentials_getter(warning)  # V
         du_line = pot1 - pot2
-        z_line = self.parameters.z_line * self.length
-        i_line = np.linalg.inv(z_line.m_as("ohm")) @ du_line  # Zₗ x Iₗ = ΔU -> I = Zₗ⁻¹ x ΔU
+        i_line = np.linalg.inv(self.z_line.m_as("ohm")) @ du_line  # Zₗ x Iₗ = ΔU -> I = Zₗ⁻¹ x ΔU
         return du_line, i_line
 
     def _res_series_currents_getter(self, warning: bool) -> np.ndarray:
@@ -308,19 +323,18 @@ class Line(AbstractBranch):
         return self._res_series_power_losses_getter(warning=True)
 
     def _res_shunt_values_getter(self, warning: bool) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-        assert self.parameters.with_shunt, "this method only works when there is a shunt"
-        y_shunt = self.parameters.y_shunt
+        assert self.with_shunt, "This method only works when there is a shunt"
         assert self.ground is not None
         pot1, pot2 = self._res_potentials_getter(warning)
         vg = self.ground.res_potential.m_as("V")
-        y_shunt = (y_shunt * self.length).m_as("S")
+        y_shunt = self.y_shunt.m_as("S")
         yg = y_shunt.sum(axis=1)  # y_ig = Y_ia + Y_ib + Y_ic + Y_in for i in {a, b, c, n}
         i1_shunt = (y_shunt @ pot1 - yg * vg) / 2
         i2_shunt = (y_shunt @ pot2 - yg * vg) / 2
         return pot1, pot2, i1_shunt, i2_shunt
 
     def _res_shunt_currents_getter(self, warning: bool) -> tuple[np.ndarray, np.ndarray]:
-        if not self.parameters.with_shunt:
+        if not self.with_shunt:
             zeros = np.zeros(len(self.phases), dtype=complex)
             return zeros[:], zeros[:]
         _, _, cur1, cur2 = self._res_shunt_values_getter(warning)
@@ -333,7 +347,7 @@ class Line(AbstractBranch):
         return self._res_shunt_currents_getter(warning=True)
 
     def _res_shunt_power_losses_getter(self, warning: bool) -> np.ndarray:
-        if not self.parameters.with_shunt:
+        if not self.with_shunt:
             return np.zeros(len(self.phases), dtype=complex)
         pot1, pot2, cur1, cur2 = self._res_shunt_values_getter(warning)
         return pot1 * cur1.conj() + pot2 * cur2.conj()

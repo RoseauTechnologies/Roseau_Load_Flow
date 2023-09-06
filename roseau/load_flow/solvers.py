@@ -1,7 +1,7 @@
 import logging
 from typing import Optional
 
-from roseau.load_flow import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
+from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.typing import JsonDict, Solver
 
 logger = logging.getLogger(__name__)
