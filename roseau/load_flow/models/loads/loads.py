@@ -286,19 +286,19 @@ class PowerLoad(AbstractLoad):
                 if fp.control_p.type == "constant" and fp.control_q.type == "constant":
                     continue  # No checks for this case
                 if abs(power) > fp.s_max.m_as("VA"):
-                    msg = f"The power is greater than the parameter s_max for flexible load {id!r}"
+                    msg = f"The power is greater than the parameter s_max for flexible load {self.id!r}"
                     logger.error(msg)
                     raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_S_VALUE)
                 if fp.control_p.type == "p_max_u_production" and power.real > 0:
-                    msg = f"There is a production control but a positive power for flexible load {id!r}"
+                    msg = f"There is a production control but a positive power for flexible load {self.id!r}"
                     logger.error(msg)
                     raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_S_VALUE)
                 if fp.control_p.type == "p_max_u_consumption" and power.real < 0:
-                    msg = f"There is a consumption control but a negative power for flexible load {id!r}"
+                    msg = f"There is a consumption control but a negative power for flexible load {self.id!r}"
                     logger.error(msg)
                     raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_S_VALUE)
                 if fp.control_p.type != "constant" and power.real == 0:
-                    msg = f"There is a P control but a null active power for flexible load {id!r}"
+                    msg = f"There is a P control but a null active power for flexible load {self.id!r}"
                     logger.error(msg)
                     raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_S_VALUE)
         self._powers = value
