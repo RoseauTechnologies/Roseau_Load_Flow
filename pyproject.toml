@@ -56,8 +56,8 @@ coverage = { version = "^7.0.5", extras = ["toml"] }
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^3.0.0"
-black = { version = "==23.7.0", extras = ["jupyter"] } # keep in sync with .pre-commit-config.yaml
-ruff = "==0.0.286" # keep in sync with .pre-commit-config.yaml
+black = { version = "==23.9.1", extras = ["jupyter"] } # keep in sync with .pre-commit-config.yaml
+ruff = "==0.0.289" # keep in sync with .pre-commit-config.yaml
 
 [tool.poetry.group.doc.dependencies]
 sphinx = "^7.0.1"
