@@ -202,12 +202,12 @@ flexible load implementing a $PQ(U)$ control instead.
 As before, we first create a `FlexibleParameter` but this time, we will use the
 `pq_u_production` class method. It requires several arguments:
 
-- `up_up` and `up_max`: the voltages defining the interval of the `P(U)` control activation.
+- `up_up` and `up_max`: the voltages defining the interval of the $P(U)$ control activation.
   Below `up_up`, no control is applied and above `u_max`, the production is totally shut down.
-- `uq_min`, `uq_down`, `uq_up` and `uq_max` which are the voltages defining the `Q(U)` control
+- `uq_min`, `uq_down`, `uq_up` and `uq_max` which are the voltages defining the $Q(U)$ control
   activation.
   - Below `uq_min`, the power plant produces the maximum possible reactive power.
-  - Between `uq_down` and `uq_up`, there is no `Q(U)` control.
+  - Between `uq_down` and `uq_up`, there is no $Q(U)$ control.
   - Above `uq_max`, the power plant consumes the maximum possible reactive power.
 
 In the example below, as the new load is a production load, only the `up_up`, `up_max`, `uq_up`
@@ -216,7 +216,7 @@ exhausted at 240 V. After that, the $P(U)$ is activated and is exhausted at 250 
 production is totally shut down.
 
 ```pycon
->>> # Let's try with pq(u) control, by injecting reactive power before reducing active power
+>>> # Let's try with PQ(u) control, by injecting reactive power before reducing active power
 ... en.loads["load3"].disconnect()
 ... fp = FlexibleParameter.pq_u_production(
 ...     up_up=240, up_max=250, uq_min=200, uq_down=210, uq_up=235, uq_max=240, s_max=4000  # V and VA
@@ -244,4 +244,4 @@ array([-2566.23768012+3068.29336425j, 0.+0.j, 0.+0.j]) <Unit('volt_ampere')>
 One can note that this time, the phase `'a'` consumes reactive power to limit the voltage rise in
 the network. Moreover, the magnitude of the power on phase `'a'` is approximately $4 kVA$ which is
 the maximum allowed apparent power for `load3`. In order to maintain this maximum, a
-[Euclidean projection](models-flexible_load-projection) has been used.
+[Euclidean projection](models-flexible_load-projections) has been used.

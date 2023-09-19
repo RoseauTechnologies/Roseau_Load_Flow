@@ -1,0 +1,81 @@
+\input{Preambule}%
+
+\usepackage{pgfplots}%
+\pgfplotsset{compat=newest}%
+
+\begin{document}
+    \begin{tikzpicture}[%
+        show background rectangle,%
+        tight background,%
+        background rectangle/.style={fill=white}%
+    ]
+        \begin{axis}
+            [%
+            xlabel={Voltages (V)},%
+            x label style={at={(axis description cs:0.5,-0.1)},anchor=north},%
+            ylabel={Reactive power (VAr)},%
+            y label style={at={(axis description cs:-0.1,0.5)},anchor=south},%
+            grid=both,%
+            legend entries={Effective power,Non-smooth theoretical control},%
+            legend style={%
+                legend cell align=left,%
+                legend pos=north west,%
+            },%
+            sharp plot,%
+            mark size=0.5mm,%
+            height=9cm,%
+            width=16cm,%
+            ytick={-5000,-2500,0,2500,5000},%
+            minor tick num=1,
+            scaled y ticks=base 10:-3,%
+            xticklabel style={align=center},%
+            xticklabel={%
+                $\pgfmathprintnumber{\tick}$
+                \pgfmathifthenelse{\tick==210}{%
+                    "\\$\umin$"%
+                }{""}%
+                \pgfmathresult%
+                \pgfmathifthenelse{\tick==220}{%
+                    "\\$\udown$"%
+                }{""}%
+                \pgfmathresult%
+                \pgfmathifthenelse{\tick==240}{%
+                    "\\$\uup$"%
+                }{""}%
+                \pgfmathresult%
+                \pgfmathifthenelse{\tick==250}{%
+                    "\\$\umax$"%
+                }{""}%
+                \pgfmathresult%
+            },%
+            yticklabel style={align=center},%
+            yticklabel={%
+                \pgfmathifthenelse{\tick==0}{%
+                    "$Q^{\theo}$\hspace{3mm}"%
+                }{""}%
+                \pgfmathresult%
+                \pgfmathifthenelse{\tick==5}{%
+                    "$\smax$\hspace{3mm}"%
+                }{""}%
+                \pgfmathresult%
+                \pgfmathifthenelse{\tick==-5}{%
+                    "$-\smax$\hspace{3mm}"%
+                }{""}%
+                \pgfmathresult%
+                $\pgfmathprintnumber{\tick}$
+            },%
+            ]
+            \addplot+[only marks] table[x=v, y=q, col sep=comma] {Load/FlexibleLoad/Pconst_QU_P_Example.csv};%
+            \addplot+ coordinates {(205,-5000) (210,-5000) (220,0) (240,0) (250,5000) (255,5000)};%
+        \end{axis}
+    \end{tikzpicture}
+\end{document}
+% Local Variables:
+% mode: latex
+% TeX-engine: luatex
+% TeX-source-correlate-method-active: synctex
+% ispell-local-dictionary: "british"
+% coding: utf-8
+% LaTeX-indent-level: 4
+% fill-column: 100
+% End:

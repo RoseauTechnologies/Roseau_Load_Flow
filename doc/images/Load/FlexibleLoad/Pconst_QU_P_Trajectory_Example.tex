@@ -1,0 +1,94 @@
+\input{Preambule}%
+
+\usepackage{pgfplots}%
+\pgfplotsset{compat=newest}%
+
+\begin{document}
+    \begin{tikzpicture}[%
+        show background rectangle,%
+        tight background,%
+        background rectangle/.style={fill=white}%
+    ]
+        \tikzset{%
+            pin style/.style={pin distance=1mm},%
+        }%
+
+        \begin{axis}
+            [%
+            xlabel={Active power (W)},%
+            x label style={at={(axis description cs:0.5,-0.1)},anchor=north},%
+            ylabel={Reactive power (VAr)},%
+            y label style={at={(axis description cs:-0.2,0.5)},anchor=south},%
+            grid=both,%
+            scatter,%
+            only marks,%
+            mark size=0.5mm,%
+            height=9cm,%
+            width=9cm,%
+            axis equal=true,%
+            enlarge y limits,%
+            enlarge x limits,%
+            xmin=-5000,%
+            xmax=5000,%
+            ymin=-5000,%
+            ymax=5000,%
+            xtick={-5000,-2500,0,2500,5000},%
+            ytick={-5000,-2500,0,2500,5000},%
+            minor tick num=1,
+            scaled x ticks=base 10:-3,%
+            every x tick scale label/.style={at={(axis description cs:1,-0.05)}},%
+            scaled y ticks=base 10:-3,%
+            xticklabel style={align=center},%
+            xticklabel={%
+                $\pgfmathprintnumber{\tick}$
+                \pgfmathifthenelse{\tick==-2.5}{%
+                    "\\$P^{\theo}$"%
+                }{""}%
+                \pgfmathresult%
+            },%
+            yticklabel style={align=center},%
+            yticklabel={%
+                \pgfmathifthenelse{\tick==0}{%
+                    "$Q^{\theo}$\hspace{3mm}"%
+                }{""}%
+                \pgfmathresult%
+                $\pgfmathprintnumber{\tick}$
+            },%
+            colorbar,%
+            colorbar style={%
+                ylabel=Voltage (V),%
+            },%
+            nodes near coords*={},% By default, nothing
+            nodes near coords style={%
+                anchor=center,%
+            },%
+            coordinate style/.condition={\thisrow{v}==205}{pin={[pin style] below left:{\mylabel}}},%
+            coordinate style/.condition={\thisrow{v}==210}{pin={[pin style] right:\mylabel}},%
+            coordinate style/.condition={\thisrow{v}==215}{pin={[pin style] right:\mylabel}},%
+            coordinate style/.condition={\thisrow{v}==220}{pin={[pin style] below left:\mylabel}},%
+            coordinate style/.condition={\thisrow{v}==225}{pin={[pin style] below right:\mylabel}},%
+            coordinate style/.condition={\thisrow{v}==230}{pin={[pin style] right:\mylabel}},%
+            coordinate style/.condition={\thisrow{v}==235}{pin={[pin style] above right:\mylabel}},%
+            coordinate style/.condition={\thisrow{v}==240}{pin={[pin style] above left:\mylabel}},%
+            coordinate style/.condition={\thisrow{v}==245}{pin={[pin style] right:\mylabel}},%
+            coordinate style/.condition={\thisrow{v}==250}{pin={[pin style] right:\mylabel}},%
+            coordinate style/.condition={\thisrow{v}==255}{pin={[pin style] above left:\mylabel}},%
+            visualization depends on={\thisrow{v} \as \myvalue},% Required to use the "v" column for two usages
+            visualization depends on={%
+                value $\qty[parse-numbers=false]{\pgfmathprintnumber{\thisrow{v}}}{V}$\as\mylabel%
+            },%
+            ]
+            \addplot[point meta={\thisrow{v}}] table[x=p, y=q, col sep=comma] {Load/FlexibleLoad/Pconst_QU_P_Example.csv};%
+            \draw[black] (axis cs:0,0) circle[radius=5000];%
+        \end{axis}
+    \end{tikzpicture}
+\end{document}
+% Local Variables:
+% mode: latex
+% TeX-engine: luatex
+% TeX-source-correlate-method-active: synctex
+% ispell-local-dictionary: "british"
+% coding: utf-8
+% LaTeX-indent-level: 4
+% fill-column: 100
+% End:
