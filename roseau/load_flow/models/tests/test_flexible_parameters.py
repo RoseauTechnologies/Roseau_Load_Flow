@@ -234,10 +234,11 @@ def flexible_parameter(control_p, control_q, projection):
 
 
 @pytest.fixture()
-def monkeypatch_flexible_parameter_compute_powers(rg):
+def monkeypatch_flexible_parameter_compute_powers(monkeypatch, rg):
     @contextmanager
     def inner():
-        with pytest.MonkeyPatch.context() as m:
+        nonlocal monkeypatch
+        with monkeypatch.context() as m:
             m.setattr(target=ElectricalNetwork, name="solve_load_flow", value=lambda *args, **kwargs: 2)
             m.setattr(
                 target=PowerLoad,

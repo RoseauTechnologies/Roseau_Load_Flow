@@ -494,7 +494,7 @@ class FlexibleParameter(JsonMixin):
         return cls(
             control_p=cls._control_class.constant(),
             control_q=cls._control_class.constant(),
-            projection=cls._projection_class(type=cls._projection_class.DEFAULT_TYPE),
+            projection=cls._projection_class(type=cls._projection_class._DEFAULT_TYPE),
             s_max=1.0,
         )
 
