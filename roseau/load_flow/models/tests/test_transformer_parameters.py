@@ -1,5 +1,6 @@
+import numbers
+
 import numpy as np
-import pandas as pd
 import pytest
 from pint import DimensionalityError
 
@@ -350,9 +351,12 @@ def test_catalogue_data():
         assert np.isclose(tp.psc.m_as("W"), catalogue_data.at[tp.id, "psc"])
         assert np.isclose(tp.vsc.m_as(""), catalogue_data.at[tp.id, "vsc"])
 
-        # Check that the transformer can be used
-        res = tp.to_zyk()
-        assert all(pd.notna(x) for x in res)
+        # Check that the parameters are valid
+        z, y, k, orientation = tp.to_zyk()
+        assert isinstance(z.m_as("ohm"), numbers.Number)
+        assert isinstance(y.m_as("S"), numbers.Number)
+        assert isinstance(k.m_as(""), numbers.Number)
+        assert orientation in (-1.0, 1.0)
 
     # At the end of the process, the found column must be full of True
     assert catalogue_data["found"].all(), error_message

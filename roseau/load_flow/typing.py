@@ -26,15 +26,9 @@ Type Aliases used by Roseau Load Flow.
     Available solvers for the load flow computation.
 """
 import os
-import sys
-from typing import TYPE_CHECKING, Any, Literal, Union
+from typing import Any, Literal, Union
 
-if sys.version_info >= (3, 10):
-    from typing import TypeAlias as TypeAlias
-elif TYPE_CHECKING:
-    from typing_extensions import TypeAlias as TypeAlias
-else:
-    TypeAlias = Any
+from typing_extensions import TypeAlias
 
 Id: TypeAlias = Union[int, str]
 JsonDict: TypeAlias = dict[str, Any]
