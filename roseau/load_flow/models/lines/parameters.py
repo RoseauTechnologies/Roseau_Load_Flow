@@ -455,7 +455,7 @@ class LineParameters(Identifiable, JsonMixin):
         c[mask_off_diagonal] = -lambda_inv[mask_off_diagonal]
         g = np.zeros((4, 4), dtype=float)  # conductance (S/km)
         omega = OMEGA.m_as("rad/s")
-        g[mask_diagonal] = TAN_D[insulator_type] * np.einsum("ii->i", c) * omega
+        g[mask_diagonal] = TAN_D[insulator_type].magnitude * np.einsum("ii->i", c) * omega
 
         # Build the impedance and admittance matrices
         z_line = r + inductance * omega * 1j
