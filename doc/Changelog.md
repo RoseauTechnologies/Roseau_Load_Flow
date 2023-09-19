@@ -4,6 +4,13 @@
 
 **In development**
 
+- {gh-pr}`131` {gh-issue}`127` Improve the documentation of the flexible loads.
+  - Add the method `compute_powers` method to the `FlexibleParameter` class to compute the resulting flexible powers
+    for a given theoretical power and a list of voltage norms.
+  - Add the `plot_control_p`, `plot_control_q` and `plot_pq` methods to the `FlexibleParameter` class to plot the
+    control curves and control trajectories.
+  - Add the extra `plot` to install `matplotlib` alongside `roseau-load-flow`.
+- {gh-pr}`131` Correction of a bug in the error message of the powers setter method.
 - {gh-pr}`130` Mark some internal attributes as private, they were previously marked as public.
 - {gh-pr}`128` Add the properties `z_line`, `y_shunt` and `with_shunt` to the `Line` class.
 - {gh-pr}`125` Speed-up build of conda workflow using mamba.

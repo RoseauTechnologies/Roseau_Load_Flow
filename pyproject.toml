@@ -61,7 +61,7 @@ matplotlib = "^3.7.2"
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^3.0.0"
 black = { version = "==23.9.1", extras = ["jupyter"] } # keep in sync with .pre-commit-config.yaml
-ruff = "==0.0.289" # keep in sync with .pre-commit-config.yaml
+ruff = "==0.0.290" # keep in sync with .pre-commit-config.yaml
 
 [tool.poetry.group.doc.dependencies]
 sphinx = "^7.0.1"
