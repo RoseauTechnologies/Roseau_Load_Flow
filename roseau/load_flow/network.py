@@ -669,7 +669,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
 
     @property
     def res_lines(self) -> pd.DataFrame:
-        """The load flow results of the the network lines.
+        """The load flow results of the network lines.
 
         This is similar to the :attr:`res_branches` property but provides more information that
         only apply to lines. This includes currents and complex power losses in the series
