@@ -47,6 +47,9 @@ pint = ">=0.21.0"
 typing-extensions = ">=4.6.2"
 rich = ">=13.5.1"
 
+# Plot Extra
+matplotlib = { version = "^3.7.2", extras = ["plot"] }
+
 [tool.poetry.group.test.dependencies]
 pytest = "^7.1.2"
 pytest-cov = "^4.0.0"

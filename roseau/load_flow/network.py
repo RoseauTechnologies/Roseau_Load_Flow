@@ -17,7 +17,6 @@ import pandas as pd
 import requests
 from pyproj import CRS
 from requests import Response
-from requests.auth import HTTPBasicAuth
 from rich.table import Table
 from typing_extensions import Self
 
@@ -37,7 +36,7 @@ from roseau.load_flow.models import (
     VoltageSource,
 )
 from roseau.load_flow.solvers import check_solver_params
-from roseau.load_flow.typing import Id, JsonDict, Solver, StrPath
+from roseau.load_flow.typing import Authentication, Id, JsonDict, Solver, StrPath
 from roseau.load_flow.utils import CatalogueMixin, JsonMixin, console
 
 logger = logging.getLogger(__name__)
@@ -357,7 +356,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
     #
     def solve_load_flow(
         self,
-        auth: Union[tuple[str, str], HTTPBasicAuth],
+        auth: Authentication,
         base_url: str = _DEFAULT_BASE_URL,
         max_iterations: int = _DEFAULT_MAX_ITERATIONS,
         tolerance: float = _DEFAULT_TOLERANCE,

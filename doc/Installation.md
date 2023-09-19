@@ -50,6 +50,13 @@ To upgrade to the latest version (recommended), use:
 $ python -m pip install --upgrade roseau-load-flow
 ```
 
+Moreover, using the `pip` installation, some plot functions requires additional dependencies that are not installed by
+default. If you need these functions, you can install the `plot` extra using
+
+```console
+$ python -m pip install roseau-load-flow[plot]
+```
+
 ## Using `conda`
 
 `roseau-load-flow` is also available on [conda-forge](https://anaconda.org/conda-forge/roseau-load-flow).

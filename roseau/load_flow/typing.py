@@ -24,10 +24,15 @@ Type Aliases used by Roseau Load Flow.
 .. class:: Solver
 
     Available solvers for the load flow computation.
+
+.. class:: Authentication
+
+    Valid authentication objects
 """
 import os
 from typing import Any, Literal, Union
 
+from requests.auth import HTTPBasicAuth
 from typing_extensions import TypeAlias
 
 Id: TypeAlias = Union[int, str]
@@ -36,6 +41,7 @@ StrPath: TypeAlias = Union[str, os.PathLike[str]]
 ControlType: TypeAlias = Literal["constant", "p_max_u_production", "p_max_u_consumption", "q_u"]
 ProjectionType: TypeAlias = Literal["euclidean", "keep_p", "keep_q"]
 Solver: TypeAlias = Literal["newton", "newton_goldstein"]
+Authentication: TypeAlias = Union[tuple[str, str], HTTPBasicAuth]
 
 
-__all__ = ["Id", "JsonDict", "StrPath", "ControlType", "ProjectionType", "Solver"]
+__all__ = ["Id", "JsonDict", "StrPath", "ControlType", "ProjectionType", "Solver", "Authentication"]
