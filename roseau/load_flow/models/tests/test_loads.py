@@ -305,8 +305,8 @@ def test_loads_to_dict():
                 "control_q": {"type": "constant"},
                 "projection": {
                     "type": "euclidean",
-                    "alpha": Projection.DEFAULT_ALPHA,
-                    "epsilon": Projection.DEFAULT_EPSILON,
+                    "alpha": Projection._DEFAULT_ALPHA,
+                    "epsilon": Projection._DEFAULT_EPSILON,
                 },
                 "s_max": 1.0,
             },

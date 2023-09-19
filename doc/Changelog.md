@@ -4,6 +4,7 @@
 
 **In development**
 
+- {gh-pr}`130` Mark some internal attributes as private, they were previously marked as public.
 - {gh-pr}`128` Add the properties `z_line`, `y_shunt` and `with_shunt` to the `Line` class.
 - {gh-pr}`125` Speed-up build of conda workflow using mamba.
 

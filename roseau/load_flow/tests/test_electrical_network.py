@@ -520,7 +520,7 @@ def test_solve_load_flow(small_network, good_json_results):
 
     # Good result
     # Request the server
-    solve_url = urljoin(ElectricalNetwork.DEFAULT_BASE_URL, "solve/")
+    solve_url = urljoin(ElectricalNetwork._DEFAULT_BASE_URL, "solve/")
     with requests_mock.Mocker() as m:
         m.post(solve_url, status_code=200, json=good_json_results, headers={"content-type": "application/json"})
         small_network.solve_load_flow(auth=("", ""))
@@ -607,7 +607,7 @@ def test_solve_load_flow(small_network, good_json_results):
 
 def test_solve_load_flow_error(small_network):
     # Solve url
-    solve_url = urljoin(ElectricalNetwork.DEFAULT_BASE_URL, "solve/")
+    solve_url = urljoin(ElectricalNetwork._DEFAULT_BASE_URL, "solve/")
 
     # Parse RLF error
     json_result = {"msg": "toto", "code": "roseau.load_flow.bad_branch_type"}
@@ -778,7 +778,7 @@ def test_single_phase_network(single_phase_network: ElectricalNetwork):
             {"id": "pref", "current": [-1.2500243895541274e-13, 0.0]},
         ],
     }
-    solve_url = urljoin(ElectricalNetwork.DEFAULT_BASE_URL, "solve/")
+    solve_url = urljoin(ElectricalNetwork._DEFAULT_BASE_URL, "solve/")
     with requests_mock.Mocker() as m:
         m.post(solve_url, status_code=200, json=json_results, headers={"content-type": "application/json"})
         single_phase_network.solve_load_flow(auth=("", ""))
@@ -1036,7 +1036,7 @@ def test_network_results_warning(small_network: ElectricalNetwork, good_json_res
         assert e.value.args[1] == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
 
     # Solve a load flow
-    solve_url = urljoin(ElectricalNetwork.DEFAULT_BASE_URL, "solve/")
+    solve_url = urljoin(ElectricalNetwork._DEFAULT_BASE_URL, "solve/")
     with requests_mock.Mocker() as m:
         m.post(solve_url, status_code=200, json=good_json_results, headers={"content-type": "application/json"})
         small_network.solve_load_flow(auth=("", ""))
@@ -1310,7 +1310,7 @@ def test_load_flow_results_frames(small_network: ElectricalNetwork, good_json_re
 def test_solver_warm_start(small_network: ElectricalNetwork, good_json_results):
     load: PowerLoad = small_network.loads["load"]
     load_bus = small_network.buses["bus1"]
-    solve_url = urljoin(ElectricalNetwork.DEFAULT_BASE_URL, "solve/")
+    solve_url = urljoin(ElectricalNetwork._DEFAULT_BASE_URL, "solve/")
     headers = {"Content-Type": "application/json"}
 
     def json_callback(request, context):
