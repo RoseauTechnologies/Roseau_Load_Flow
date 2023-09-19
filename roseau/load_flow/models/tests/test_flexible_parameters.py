@@ -1,11 +1,17 @@
 import warnings
+from contextlib import contextmanager
 
+import numpy as np
+import numpy.testing as npt
 import pytest
+from matplotlib import pyplot as plt
 
 from roseau.load_flow import (
     Q_,
     Control,
+    ElectricalNetwork,
     FlexibleParameter,
+    PowerLoad,
     Projection,
     RoseauLoadFlowException,
     RoseauLoadFlowExceptionCode,
@@ -195,3 +201,112 @@ def test_flexible_parameter():
         )
     assert e.value.msg == "'s_max' must be greater than 0 but -1.0 MVA was provided."
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_SMAX_VALUE
+
+
+@pytest.fixture(params=["constant", "p_max_u_production", "p_max_u_consumption"])
+def control_p(request) -> Control:
+    if request.param == "constant":
+        return Control.constant()
+    elif request.param == "p_max_u_production":
+        return Control.p_max_u_production(u_up=Q_(240, "V"), u_max=Q_(250, "V"))
+    elif request.param == "p_max_u_consumption":
+        return Control.p_max_u_production(u_up=Q_(210, "V"), u_max=Q_(220, "V"))
+    raise NotImplementedError(request.param)
+
+
+@pytest.fixture(params=["constant", "q_u"])
+def control_q(request) -> Control:
+    if request.param == "constant":
+        return Control.constant()
+    elif request.param == "q_u":
+        return Control.q_u(u_min=Q_(210, "V"), u_down=Q_(220, "V"), u_up=Q_(240, "V"), u_max=Q_(250, "V"))
+    raise NotImplementedError(request.param)
+
+
+@pytest.fixture(params=["keep_p", "keep_q", "euclidean"])
+def projection(request) -> Projection:
+    return Projection(type=request.param)
+
+
+@pytest.fixture()
+def flexible_parameter(control_p, control_q, projection):
+    return FlexibleParameter(control_p=control_p, control_q=control_q, projection=projection, s_max=Q_(5, "kVA"))
+
+
+@pytest.fixture()
+def monkeypatch_flexible_parameter_compute_powers(rg):
+    @contextmanager
+    def inner():
+        with pytest.MonkeyPatch.context() as m:
+            m.setattr(target=ElectricalNetwork, name="solve_load_flow", value=lambda *args, **kwargs: 2)
+            m.setattr(
+                target=PowerLoad,
+                name="res_flexible_powers",
+                value=property(
+                    lambda x: Q_([rg.normal(loc=-2500, scale=1000) + 1j * rg.normal(loc=0, scale=2500)], "VA")
+                ),
+            )
+            yield m
+
+    return inner
+
+
+def test_plot(flexible_parameter, monkeypatch_flexible_parameter_compute_powers):
+    voltages = np.array(range(205, 256, 1), dtype=float)
+    power = Q_(-2.5 + 1j, "kVA")
+    auth = ("username", "password")
+
+    #
+    # Test compute powers
+    #
+    with monkeypatch_flexible_parameter_compute_powers():
+        res_flexible_powers = flexible_parameter.compute_powers(auth=auth, voltages=voltages, power=power)
+
+    #
+    # Plot control P
+    #
+    fig, ax = plt.subplots()
+    ax, res_flexible_powers_1 = flexible_parameter.plot_control_p(
+        auth=auth, voltages=voltages, power=power, res_flexible_powers=res_flexible_powers, ax=ax
+    )
+    npt.assert_allclose(res_flexible_powers, res_flexible_powers_1)
+
+    # The same but do not provide the res_flexible_powers
+    fig, ax = plt.subplots()
+    with monkeypatch_flexible_parameter_compute_powers():
+        ax, res_flexible_powers_2 = flexible_parameter.plot_control_p(auth=auth, voltages=voltages, power=power, ax=ax)
+    assert not np.allclose(res_flexible_powers, res_flexible_powers_2)
+
+    # Plot control Q
+    ax, res_flexible_powers = flexible_parameter.plot_control_q(
+        auth=auth, voltages=voltages, power=power, res_flexible_powers=res_flexible_powers, ax=ax
+    )
+
+    # The same but do not provide the res_flexible_powers
+    fig, ax = plt.subplots()
+    with monkeypatch_flexible_parameter_compute_powers():
+        ax, res_flexible_powers_3 = flexible_parameter.plot_control_q(auth=auth, voltages=voltages, power=power, ax=ax)
+    assert not np.allclose(res_flexible_powers, res_flexible_powers_3)
+
+    # Plot trajectory in the (P, Q) plane
+    fig, ax = plt.subplots()
+    ax, res_flexible_powers_4 = flexible_parameter.plot_pq(
+        auth=auth,
+        voltages=voltages,
+        power=power,
+        res_flexible_powers=res_flexible_powers,
+        voltages_labels_mask=np.isin(voltages, [240, 250]),
+        ax=ax,
+    )
+    npt.assert_allclose(res_flexible_powers, res_flexible_powers_4)
+
+    # The same but do not provide the res_flexible_powers
+    fig, ax = plt.subplots()  # Create a new ax that is not used directly in the following function call
+    with monkeypatch_flexible_parameter_compute_powers():
+        ax, res_flexible_powers_5 = flexible_parameter.plot_pq(
+            auth=auth,
+            voltages=voltages,
+            power=power,
+            voltages_labels_mask=np.isin(voltages, [240, 250]),
+        )
+    assert not np.allclose(res_flexible_powers, res_flexible_powers_5)

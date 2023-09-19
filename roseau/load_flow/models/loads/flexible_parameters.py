@@ -901,7 +901,7 @@ class FlexibleParameter(JsonMixin):
 
         return np.array(res_flexible_powers, dtype=complex)
 
-    @ureg_wraps(None, (None, None, "V", "VA", None, None, None, "VA"), strict=False)
+    @ureg_wraps((None, "VA"), (None, None, "V", "VA", None, None, None, "VA"), strict=False)
     def plot_pq(
         self,
         auth: Authentication,
@@ -1020,7 +1020,7 @@ class FlexibleParameter(JsonMixin):
 
         return ax, res_flexible_powers
 
-    @ureg_wraps(None, (None, None, "V", "VA", None, None, "VA"), strict=False)
+    @ureg_wraps((None, "VA"), (None, None, "V", "VA", None, None, "VA"), strict=False)
     def plot_control_p(
         self,
         auth: Authentication,
@@ -1092,7 +1092,7 @@ class FlexibleParameter(JsonMixin):
 
         return ax, res_flexible_powers
 
-    @ureg_wraps(None, (None, None, "V", "VA", None, None, "VA"), strict=False)
+    @ureg_wraps((None, "VA"), (None, None, "V", "VA", None, None, "VA"), strict=False)
     def plot_control_q(
         self,
         auth: Authentication,
