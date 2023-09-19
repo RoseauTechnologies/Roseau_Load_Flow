@@ -92,22 +92,6 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             be connected to a bus or to a ground.
 
     Attributes:
-        DEFAULT_TOLERANCE (float):
-            The default tolerance needed for the convergence of the load flow solver. At each
-            iteration, the solver computes the residuals of the equations of the problem. When the
-            maximum of the absolute values of the residuals vector is lower than the provided
-            tolerance, the solver stops. Default is 1e-6.
-
-        DEFAULT_MAX_ITERATIONS (int):
-            Maximum number of iterations to perform the load flow analysis. The solver stops when
-            this number of iterations is reached. Default is 20.
-
-        DEFAULT_BASE_URL (str):
-            Base URL of the Roseau Load Flow API endpoint.
-
-        DEFAULT_SOLVER (str):
-            The default solver to compute the load flow.
-
         buses (dict[Id, roseau.load_flow.Bus]):
             Dictionary of buses of the network indexed by their IDs. Also available as a
             :attr:`GeoDataFrame<buses_frame>`.
@@ -148,11 +132,11 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                 }
     """
 
-    DEFAULT_TOLERANCE: float = 1e-6
-    DEFAULT_MAX_ITERATIONS: int = 20
-    DEFAULT_BASE_URL: str = "https://load-flow-api-dev.roseautechnologies.com/"
-    DEFAULT_WARM_START: bool = True
-    DEFAULT_SOLVER: Solver = "newton_goldstein"
+    _DEFAULT_TOLERANCE: float = 1e-6
+    _DEFAULT_MAX_ITERATIONS: int = 20
+    _DEFAULT_BASE_URL: str = "https://load-flow-api-dev.roseautechnologies.com/"
+    _DEFAULT_WARM_START: bool = True
+    _DEFAULT_SOLVER: Solver = "newton_goldstein"
 
     # Elements classes (for internal use only)
     _branch_class = AbstractBranch
@@ -374,11 +358,11 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
     def solve_load_flow(
         self,
         auth: Union[tuple[str, str], HTTPBasicAuth],
-        base_url: str = DEFAULT_BASE_URL,
-        max_iterations: int = DEFAULT_MAX_ITERATIONS,
-        tolerance: float = DEFAULT_TOLERANCE,
-        warm_start: bool = DEFAULT_WARM_START,
-        solver: Solver = DEFAULT_SOLVER,
+        base_url: str = _DEFAULT_BASE_URL,
+        max_iterations: int = _DEFAULT_MAX_ITERATIONS,
+        tolerance: float = _DEFAULT_TOLERANCE,
+        warm_start: bool = _DEFAULT_WARM_START,
+        solver: Solver = _DEFAULT_SOLVER,
         solver_params: Optional[JsonDict] = None,
     ) -> int:
         """Solve the load flow for this network (Requires internet access).

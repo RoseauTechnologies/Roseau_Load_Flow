@@ -34,7 +34,7 @@ class Control(JsonMixin):
         :ref:`Control documentation <models-flexible_load-controls>`
     """
 
-    DEFAULT_ALPHA: float = 1000.0
+    _DEFAULT_ALPHA: float = 1000.0
 
     @ureg_wraps(None, (None, None, "V", "V", "V", "V", None), strict=False)
     def __init__(
@@ -44,7 +44,7 @@ class Control(JsonMixin):
         u_down: float,
         u_up: float,
         u_max: float,
-        alpha: float = DEFAULT_ALPHA,
+        alpha: float = _DEFAULT_ALPHA,
     ) -> None:
         """Control constructor.
 
@@ -180,7 +180,7 @@ class Control(JsonMixin):
 
     @classmethod
     @ureg_wraps(None, (None, "V", "V", None), strict=False)
-    def p_max_u_production(cls, u_up: float, u_max: float, alpha: float = DEFAULT_ALPHA) -> Self:
+    def p_max_u_production(cls, u_up: float, u_max: float, alpha: float = _DEFAULT_ALPHA) -> Self:
         """Create a control of the type ``"p_max_u_production"``.
 
         See Also:
@@ -209,7 +209,7 @@ class Control(JsonMixin):
 
     @classmethod
     @ureg_wraps(None, (None, "V", "V", None), strict=False)
-    def p_max_u_consumption(cls, u_min: float, u_down: float, alpha: float = DEFAULT_ALPHA) -> Self:
+    def p_max_u_consumption(cls, u_min: float, u_down: float, alpha: float = _DEFAULT_ALPHA) -> Self:
         """Create a control of the type ``"p_max_u_consumption"``.
 
         See Also:
@@ -238,7 +238,7 @@ class Control(JsonMixin):
 
     @classmethod
     @ureg_wraps(None, (None, "V", "V", "V", "V", None), strict=False)
-    def q_u(cls, u_min: float, u_down: float, u_up: float, u_max: float, alpha: float = DEFAULT_ALPHA) -> Self:
+    def q_u(cls, u_min: float, u_down: float, u_up: float, u_max: float, alpha: float = _DEFAULT_ALPHA) -> Self:
         """Create a control of the type ``"q_u"``.
 
         See Also:
@@ -280,7 +280,7 @@ class Control(JsonMixin):
     #
     @classmethod
     def from_dict(cls, data: JsonDict) -> Self:
-        alpha = data["alpha"] if "alpha" in data else cls.DEFAULT_ALPHA
+        alpha = data["alpha"] if "alpha" in data else cls._DEFAULT_ALPHA
         if data["type"] == "constant":
             return cls.constant()
         elif data["type"] == "p_max_u_production":
@@ -340,10 +340,10 @@ class Projection(JsonMixin):
         :ref:`Projection documentation <models-flexible_load-projection>`
     """
 
-    DEFAULT_ALPHA: float = 1000.0
-    DEFAULT_EPSILON: float = 1e-8
+    _DEFAULT_ALPHA: float = 1000.0
+    _DEFAULT_EPSILON: float = 1e-8
 
-    def __init__(self, type: ProjectionType, alpha: float = DEFAULT_ALPHA, epsilon: float = DEFAULT_EPSILON) -> None:
+    def __init__(self, type: ProjectionType, alpha: float = _DEFAULT_ALPHA, epsilon: float = _DEFAULT_EPSILON) -> None:
         """Projection constructor.
 
         Args:
@@ -406,8 +406,8 @@ class Projection(JsonMixin):
     #
     @classmethod
     def from_dict(cls, data: JsonDict) -> Self:
-        alpha = data["alpha"] if "alpha" in data else cls.DEFAULT_ALPHA
-        epsilon = data["epsilon"] if "epsilon" in data else cls.DEFAULT_EPSILON
+        alpha = data["alpha"] if "alpha" in data else cls._DEFAULT_ALPHA
+        epsilon = data["epsilon"] if "epsilon" in data else cls._DEFAULT_EPSILON
         return cls(type=data["type"], alpha=alpha, epsilon=epsilon)
 
     def to_dict(self, include_geometry: bool = True) -> JsonDict:
@@ -502,9 +502,9 @@ class FlexibleParameter(JsonMixin):
         u_up: float,
         u_max: float,
         s_max: float,
-        alpha_control: float = Control.DEFAULT_ALPHA,
-        alpha_proj: float = Projection.DEFAULT_ALPHA,
-        epsilon_proj: float = Projection.DEFAULT_EPSILON,
+        alpha_control: float = Control._DEFAULT_ALPHA,
+        alpha_proj: float = Projection._DEFAULT_ALPHA,
+        epsilon_proj: float = Projection._DEFAULT_EPSILON,
     ) -> Self:
         """Build flexible parameters for production ``P(U)`` control with a Euclidean projection.
 
@@ -554,9 +554,9 @@ class FlexibleParameter(JsonMixin):
         u_min: float,
         u_down: float,
         s_max: float,
-        alpha_control: float = Control.DEFAULT_ALPHA,
-        alpha_proj: float = Projection.DEFAULT_ALPHA,
-        epsilon_proj: float = Projection.DEFAULT_EPSILON,
+        alpha_control: float = Control._DEFAULT_ALPHA,
+        alpha_proj: float = Projection._DEFAULT_ALPHA,
+        epsilon_proj: float = Projection._DEFAULT_EPSILON,
     ) -> Self:
         """Build flexible parameters for consumption ``P(U)`` control with a Euclidean projection.
 
@@ -605,9 +605,9 @@ class FlexibleParameter(JsonMixin):
         u_up: float,
         u_max: float,
         s_max: float,
-        alpha_control: float = Control.DEFAULT_ALPHA,
-        alpha_proj: float = Projection.DEFAULT_ALPHA,
-        epsilon_proj: float = Projection.DEFAULT_EPSILON,
+        alpha_control: float = Control._DEFAULT_ALPHA,
+        alpha_proj: float = Projection._DEFAULT_ALPHA,
+        epsilon_proj: float = Projection._DEFAULT_EPSILON,
     ) -> Self:
         """Build flexible parameters for ``Q(U)`` control with a Euclidean projection.
 
@@ -665,9 +665,9 @@ class FlexibleParameter(JsonMixin):
         uq_up: float,
         uq_max: float,
         s_max: float,
-        alpha_control=Control.DEFAULT_ALPHA,
-        alpha_proj=Projection.DEFAULT_ALPHA,
-        epsilon_proj=Projection.DEFAULT_EPSILON,
+        alpha_control=Control._DEFAULT_ALPHA,
+        alpha_proj=Projection._DEFAULT_ALPHA,
+        epsilon_proj=Projection._DEFAULT_EPSILON,
     ) -> Self:
         """Build flexible parameters for production ``P(U)`` control and ``Q(U)`` control with a
         Euclidean projection.
@@ -736,9 +736,9 @@ class FlexibleParameter(JsonMixin):
         uq_up: float,
         uq_max: float,
         s_max: float,
-        alpha_control: float = Control.DEFAULT_ALPHA,
-        alpha_proj: float = Projection.DEFAULT_ALPHA,
-        epsilon_proj: float = Projection.DEFAULT_EPSILON,
+        alpha_control: float = Control._DEFAULT_ALPHA,
+        alpha_proj: float = Projection._DEFAULT_ALPHA,
+        epsilon_proj: float = Projection._DEFAULT_EPSILON,
     ) -> Self:
         """Build flexible parameters for consumption ``P(U)`` control and ``Q(U)`` control with a
         Euclidean projection.
