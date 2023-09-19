@@ -662,7 +662,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                     "potential2": complex,
                 }
             )
-            .groupby(["branch_id", "phase"])  # aggregate x1 and x2 for the same phase
+            .groupby(["branch_id", "phase"], observed=True)  # aggregate x1 and x2 for the same phase
             .mean()  # 2 values; only one is not nan -> keep it
             .dropna(how="all")  # if all values are nan -> drop the row (the phase does not exist)
         )
