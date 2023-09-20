@@ -13,7 +13,20 @@ from roseau.load_flow.utils import JsonMixin
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
-    from matplotlib import Axes
+    from matplotlib.axes import Axes
+
+
+def _import_matplotlib_pyplot():
+    try:
+        import matplotlib.pyplot
+    except ImportError as e:
+        msg = (
+            'matplotlib is required for plotting. Install it with the "plot" extra using '
+            '`pip install -U "roseau-load-flow[plot]"`'
+        )
+        logger.error(msg)
+        raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.IMPORT_ERROR) from e
+    return matplotlib.pyplot
 
 
 class Control(JsonMixin):
@@ -941,18 +954,12 @@ class FlexibleParameter(JsonMixin):
             The axis on which the plot has been drawn and the resulting flexible powers (the input if not `None` else
             the computed values).
         """
-        try:
-            from matplotlib import colormaps, patheffects
-            from matplotlib import pyplot as plt
-            from matplotlib.pyplot import Axes
-        except ImportError:
-            msg = 'The extra dependency "plot" is required. Please use `pip install -U roseau-load-flow[plot]`.'
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.IMPORT_ERROR) from None
+        plt = _import_matplotlib_pyplot()  # this line first for better error handling
+        from matplotlib import colormaps, patheffects
 
         # Get the axes
         if ax is None:
-            ax: Axes = plt.gca()
+            ax: "Axes" = plt.gca()
 
         # Initialise some variables
         if voltages_labels_mask is None:
@@ -1055,17 +1062,11 @@ class FlexibleParameter(JsonMixin):
             The axis on which the plot has been drawn and the resulting flexible powers (the input if not `None` else
             the computed values).
         """
-        try:
-            from matplotlib import pyplot as plt
-            from matplotlib.pyplot import Axes
-        except ImportError:
-            msg = 'The extra dependency "plot" is required. Please use `pip install -U roseau-load-flow[plot]`.'
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.IMPORT_ERROR) from None
+        plt = _import_matplotlib_pyplot()
 
         # Get the axes
         if ax is None:
-            ax: Axes = plt.gca()
+            ax: "Axes" = plt.gca()
 
         # Depending on the type of the control, several options
         x, y, x_ticks = self._theoretical_control_data(
@@ -1127,17 +1128,11 @@ class FlexibleParameter(JsonMixin):
             The axis on which the plot has been drawn and the resulting flexible powers (the input if not `None` else
             the computed values).
         """
-        try:
-            from matplotlib import pyplot as plt
-            from matplotlib.pyplot import Axes
-        except ImportError:
-            msg = 'The extra dependency "plot" is required. Please use `pip install -U roseau-load-flow[plot]`.'
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.IMPORT_ERROR) from None
+        plt = _import_matplotlib_pyplot()
 
         # Get the axes
         if ax is None:
-            ax: Axes = plt.gca()
+            ax: "Axes" = plt.gca()
 
         # Depending on the type of the control, several options
         x, y, x_ticks = self._theoretical_control_data(
@@ -1191,7 +1186,7 @@ class FlexibleParameter(JsonMixin):
                 The `s_max` parameter to scale the control functions.
 
         Returns:
-            The x- and y-values of the theoretical control function with x tixks to use for the plot.
+            The x- and y-values of the theoretical control function with x-ticks to use for the plot.
         """
         # Depending on the type of the control, several options
         if control.type == "constant":

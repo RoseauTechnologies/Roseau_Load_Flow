@@ -229,7 +229,7 @@ def projection(request) -> Projection:
 
 
 @pytest.fixture()
-def flexible_parameter(control_p, control_q, projection):
+def flexible_parameter(control_p, control_q, projection) -> FlexibleParameter:
     return FlexibleParameter(control_p=control_p, control_q=control_q, projection=projection, s_max=Q_(5, "kVA"))
 
 
@@ -270,13 +270,15 @@ def test_plot(flexible_parameter, monkeypatch_flexible_parameter_compute_powers)
     ax, res_flexible_powers_1 = flexible_parameter.plot_control_p(
         auth=auth, voltages=voltages, power=power, res_flexible_powers=res_flexible_powers, ax=ax
     )
-    npt.assert_allclose(res_flexible_powers, res_flexible_powers_1)
+    npt.assert_allclose(res_flexible_powers.m_as("VA"), res_flexible_powers_1.m_as("VA"))
+    plt.close(fig)
 
     # The same but do not provide the res_flexible_powers
     fig, ax = plt.subplots()
     with monkeypatch_flexible_parameter_compute_powers():
         ax, res_flexible_powers_2 = flexible_parameter.plot_control_p(auth=auth, voltages=voltages, power=power, ax=ax)
-    assert not np.allclose(res_flexible_powers, res_flexible_powers_2)
+    assert not np.allclose(res_flexible_powers.m_as("VA"), res_flexible_powers_2.m_as("VA"))
+    plt.close(fig)
 
     # Plot control Q
     ax, res_flexible_powers = flexible_parameter.plot_control_q(
@@ -287,7 +289,8 @@ def test_plot(flexible_parameter, monkeypatch_flexible_parameter_compute_powers)
     fig, ax = plt.subplots()
     with monkeypatch_flexible_parameter_compute_powers():
         ax, res_flexible_powers_3 = flexible_parameter.plot_control_q(auth=auth, voltages=voltages, power=power, ax=ax)
-    assert not np.allclose(res_flexible_powers, res_flexible_powers_3)
+    assert not np.allclose(res_flexible_powers.m_as("VA"), res_flexible_powers_3.m_as("VA"))
+    plt.close(fig)
 
     # Plot trajectory in the (P, Q) plane
     fig, ax = plt.subplots()
@@ -299,7 +302,8 @@ def test_plot(flexible_parameter, monkeypatch_flexible_parameter_compute_powers)
         voltages_labels_mask=np.isin(voltages, [240, 250]),
         ax=ax,
     )
-    npt.assert_allclose(res_flexible_powers, res_flexible_powers_4)
+    npt.assert_allclose(res_flexible_powers.m_as("VA"), res_flexible_powers_4.m_as("VA"))
+    plt.close(fig)
 
     # The same but do not provide the res_flexible_powers
     fig, ax = plt.subplots()  # Create a new ax that is not used directly in the following function call
@@ -310,4 +314,5 @@ def test_plot(flexible_parameter, monkeypatch_flexible_parameter_compute_powers)
             power=power,
             voltages_labels_mask=np.isin(voltages, [240, 250]),
         )
-    assert not np.allclose(res_flexible_powers, res_flexible_powers_5)
+    assert not np.allclose(res_flexible_powers.m_as("VA"), res_flexible_powers_5.m_as("VA"))
+    plt.close(fig)
