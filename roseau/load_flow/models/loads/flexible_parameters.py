@@ -867,7 +867,7 @@ class FlexibleParameter(JsonMixin):
     def compute_powers(
         self, auth: Authentication, voltages: np.ndarray[float], power: complex, solve_kwargs: Optional[JsonDict] = None
     ) -> Q_[np.ndarray[complex]]:
-        """Compute the effective powers for different voltages (norms)
+        """Compute the flexible powers for different voltages (norms)
 
         Args:
             auth:
@@ -880,7 +880,7 @@ class FlexibleParameter(JsonMixin):
                 The input theoretical power of the load.
 
             solve_kwargs:
-                The keywords arguments of the :meth:`solve_load_flow<ElectricalNetwork.solve_load_flow>` method.
+                Keywords arguments passed to the :meth:`~roseau.load_flow.ElectricalNetwork.solve_load_flow` method.
 
         Returns:
             The flexible powers really consumed taking into account the control. One value per provided voltage norm.
@@ -942,7 +942,7 @@ class FlexibleParameter(JsonMixin):
                 The optional axis to use for the plot. The current axis is used by default.
 
             solve_kwargs:
-                The keywords arguments of the :meth:`solve_load_flow<ElectricalNetwork.solve_load_flow>` method.
+                The keywords arguments of the :meth:`~roseau.load_flow.ElectricalNetwork.solve_load_flow` method.
 
             voltages_labels_mask:
                 A mask to activate the plot of voltages labels. By default, no voltages annotations.
@@ -1037,7 +1037,7 @@ class FlexibleParameter(JsonMixin):
         solve_kwargs: Optional[JsonDict] = None,
         res_flexible_powers: Optional[np.ndarray[complex]] = None,
     ) -> tuple["Axes", np.ndarray[complex]]:
-        """Plot the effective active power consumed (or produced) for the provided voltages and theoretical power.
+        """Plot the flexible active power consumed (or produced) for the provided voltages and theoretical power.
 
         Args:
             auth:
@@ -1053,7 +1053,7 @@ class FlexibleParameter(JsonMixin):
                 The optional axis to use for the plot. The current axis is used by default.
 
             solve_kwargs:
-                The keywords arguments of the :meth:`solve_load_flow<ElectricalNetwork.solve_load_flow>` method.
+                The keywords arguments of the :meth:`~roseau.load_flow.ElectricalNetwork.solve_load_flow` method.
 
             res_flexible_powers:
                 If None, is provided, the `res_flexible_powers` are computed. Other
@@ -1078,7 +1078,7 @@ class FlexibleParameter(JsonMixin):
             res_flexible_powers = self._compute_powers(
                 auth=auth, voltages=voltages, power=power, solve_kwargs=solve_kwargs
             )
-        ax.scatter(voltages, res_flexible_powers.real, marker=".", c="blue", zorder=2, label="Effective power")
+        ax.scatter(voltages, res_flexible_powers.real, marker=".", c="blue", zorder=2, label="Actual power")
 
         # Add the theoretical non-smooth curve
         ax.plot(x, y, marker="s", c="red", zorder=1.9, label="Non-smooth theoretical control")
@@ -1103,7 +1103,7 @@ class FlexibleParameter(JsonMixin):
         solve_kwargs: Optional[JsonDict] = None,
         res_flexible_powers: Optional[np.ndarray[complex]] = None,
     ) -> tuple["Axes", np.ndarray[complex]]:
-        """Plot the effective reactive power consumed (or produced) for the provided voltages and theoretical power.
+        """Plot the flexible reactive power consumed (or produced) for the provided voltages and theoretical power.
 
         Args:
             auth:
@@ -1119,7 +1119,7 @@ class FlexibleParameter(JsonMixin):
                 The optional axis to use for the plot. The current axis is used by default.
 
             solve_kwargs:
-                The keywords arguments of the :meth:`solve_load_flow<ElectricalNetwork.solve_load_flow>` method
+                The keywords arguments of the :meth:`~roseau.load_flow.ElectricalNetwork.solve_load_flow` method
 
             res_flexible_powers:
                 If None, is provided, the `res_flexible_powers` are computed. Other
@@ -1144,7 +1144,7 @@ class FlexibleParameter(JsonMixin):
             res_flexible_powers = self._compute_powers(
                 auth=auth, voltages=voltages, power=power, solve_kwargs=solve_kwargs
             )
-        ax.scatter(voltages, res_flexible_powers.imag, marker=".", c="blue", zorder=2, label="Effective power")
+        ax.scatter(voltages, res_flexible_powers.imag, marker=".", c="blue", zorder=2, label="Actual power")
 
         # Add the theoretical non-smooth curve
         ax.plot(x, y, marker="s", c="red", zorder=1.9, label="Non-smooth theoretical control")

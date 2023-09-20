@@ -27,7 +27,7 @@ Type Aliases used by Roseau Load Flow.
 
 .. class:: Authentication
 
-    Valid authentication objects
+    Valid authentication types.
 """
 import os
 from typing import Any, Literal, Union

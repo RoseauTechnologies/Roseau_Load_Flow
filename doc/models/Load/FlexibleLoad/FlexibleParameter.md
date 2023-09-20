@@ -152,7 +152,7 @@ fp = FlexibleParameter.pq_u_production(
 load = PowerLoad(
     id="load",
     bus=bus,
-    powers=Q_(-np.array([1000, 1000, 1000]), "VA"),
+    powers=Q_(-np.array([1000, 1000, 1000]), "VA"),  # <- negative powers (generator)
     flexible_params=[fp, fp, fp],
 )
 ```

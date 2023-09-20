@@ -1,6 +1,6 @@
 # Flexible loads
 
-They are a special case of power loads: instead of being constant, the power will depend on the
+They are a special type of power loads: instead of being constant, the power will depend on the
 voltage measured at the load and the control applied to the load.
 
 ## Equations

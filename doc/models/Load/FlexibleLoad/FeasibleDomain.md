@@ -2,7 +2,7 @@
 
 # Feasible domains
 
-Depending on the mix of controls and projection used through the class `FlexibleParameter`, the feasible domains in
+Depending on the mix of controls and projection used through the class `FlexibleParameter`, the feasible domain in
 the $(P, Q)$ space changes.
 
 ```{note}
@@ -13,7 +13,7 @@ On this page, all the images are drawn for a producer so $P^{\text{th.}}\leqslan
 
 If there is no control at all, i.e. the `flexible_params` argument is **not** given to the `PowerLoad` constructor or
 `constant` control used for both active and reactive powers, the consumed (or produced) power will be the one
-provided by the user, noted $\underline{S^{\mathrm{th.}}}=P^{\mathrm{th.}}+jQ^{\mathrm{th.}}$. The feasible domain
+provided to the load, noted $\underline{S^{\mathrm{th.}}}=P^{\mathrm{th.}}+jQ^{\mathrm{th.}}$. The feasible domain
 is reduced to a single point as depicted in the figure below.
 
 ```{image} /_static/Load/FlexibleLoad/Domain_Pconst_Qconst.svg
@@ -114,12 +114,11 @@ vs.res_powers
 
 ## Active power control only
 
-When the reactive power is constant, only the active power may be modulated by the local voltage. Thus, the active
-power may vary between 0 and $P^{\mathrm{th.}}$ (if the load is a consumer i.e. $P^{\mathrm{th.}}\geqslant 0$) or
-between $P^{\mathrm{th.}}$ and 0 (if the load is a producer i.e. $P^{\mathrm{th.}}\leqslant0$).
+When the reactive power is constant, only the active power changes as a function of the local
+voltage. Thus, the active power may vary between 0 and $P^{\mathrm{th.}}$.
 
-When a control is activated for a load, the theoretical power can not be outside the disc of radius $S^{\max}$. Here
-is a small example of such error:
+When a control is activated, the load's "theoretical" power **must** always be inside the disc of
+radius $S^{\max}$, otherwise an error is thrown:
 
 ```python
 import numpy as np
@@ -140,23 +139,20 @@ fp = FlexibleParameter(
 load = PowerLoad(
     id="load",
     bus=bus,
-    powers=Q_(
-        np.array([-5 + 5j], dtype=complex), "kVA"
-    ),  # Point outside the circle of radius s_max
+    powers=Q_(np.array([-5 + 5j], dtype=complex), "kVA"),  # > s_max
     flexible_params=[fp],
 )
 # RoseauLoadFlowException: The power is greater than the parameter s_max
 # for flexible load "load" [bad_s_value]
 ```
 
-Thus, the given $\underline{S^{\text{th.}}}=P^{\text{th.}}+jQ^{\text{th.}}$ lies in the disk of radius $S^{\max}$.
-The resulting flexible power is the minimum absolute value between, on the one hand, the active power control function
-(which takes values between 0 and 1) multiplied by $S^{\max}$ and, on the other hand, $P^{\mathrm{th.}}$.
-As a consequence, the resulting power lies in the segment between the points $(0, Q^{\text{th.}})$ and
-$(P^{\text{th.}}, Q^{\text{th.}})$.
+The active power control algorithm produces a factor between 0 and 1 that gets multiplied by $S^{\max}$.
+The resulting flexible power is the minimum absolute value between this result and $P^{\mathrm{th.}}$.
+As a consequence, the resulting power lies on the horizontal segment between the points
+$(0, Q^{\text{th.}})$ and $(P^{\text{th.}}, Q^{\text{th.}})$.
 
 ```{important}
-The projection is useless when there is only an active power control as no point can lie outside the disc of radius
+The projection is useless when only active power control is applied as no point can lie outside the disc of radius
 $S^{\max}$.
 ```
 
@@ -167,8 +163,13 @@ This domain of feasible points is depicted in the figure below:
 :align: center
 ```
 
-In the `FlexibleParameter` class, there is a method `compute_powers` which allows to compute the resulting voltages
-powers
+The `FlexibleParameter` class has a method {meth}`~roseau.load_flow.FlexibleParameter.compute_powers`
+that allows to compute the resulting powers of the control at different voltage levels for a given
+theoretical power.
+
+In the following example, we define a flexible parameter with a $P(U)$ control, a constant $P$
+projection, and a $5kVA$ maximum power. We want to know what would the control produce for all
+voltages between 205 V and 255 V if given a theoretical power of $-2.5 + j$ kVA.
 
 ```python
 import numpy as np
@@ -184,7 +185,7 @@ fp = FlexibleParameter(
 )
 
 # We want to get the res_flexible_powers for a set of voltages norms
-voltages = np.array(range(205, 256, 1), dtype=float)
+voltages = np.arange(205, 256, dtype=float)
 
 # and when the theoretical power is the following
 power = Q_(-2.5 + 1j, "kVA")
@@ -194,22 +195,29 @@ auth = ("username", "password")
 res_flexible_powers = fp.compute_powers(auth=auth, voltages=voltages, power=power)
 ```
 
-Plotting the control curve $P(U)$ using the variables `voltages` and `res_flexible_powers` of the script above leads to
-the following plot:
+Plotting the control curve $P(U)$ using the variables `voltages` and `res_flexible_powers` of the
+example above produces the following plot:
 
 ```{image} /_static/Load/FlexibleLoad/PmaxU_Qconst_Control_Curve_Example.svg
 :width: 700
 :align: center
 ```
 
-The non-smooth theoretical control function is the control function applied to $S^{\max}$. The effective power has been
-plotted using the powers really produced by the load. Below 240 V, there is no variation in the produced power which is
-expected. Between 240 V and approximately 245 V, there is no reduction of the produced power because the curtailment
-factor (computed from the voltage) times $S^{\max}$ is lower than $P^{\mathrm{th.}}$. As a consequence,
-$P^{\mathrm{th.}}$ is produced. Starting at approximately 245 V, the comparison changes and the really produced
-power starts to decrease. It reaches 0 W above 250 V.
+```{note}
+Using `compute_powers` actually requests the solver to solve a load flow for each voltage in the list.
+It needs an internet connection to access the server and may take some time (similar to the
+{meth}`roseau.load_flow.ElectricalNetwork.solve_load_flow` method).
+```
 
-The same plot can be obtained using the following command:
+The non-smooth theoretical control function is the control function applied to $S^{\max}$. The
+"Actual power" plotted is the power actually produced by the load for each voltage. Below 240 V,
+there is no variation in the produced power which is expected. Between 240 V and approximately
+245 V, there is no reduction of the produced power because the curtailment
+factor (computed from the voltage) times $S^{\max}$ is lower than $P^{\mathrm{th.}}$. As a consequence,
+$P^{\mathrm{th.}}$ is produced. Starting at approximately 245 V, the comparison changes and the
+actually produced power starts to decrease until it reaches 0 W at 250 V.
+
+The same plot can be obtained with:
 
 ```python
 from matplotlib import pyplot as plt
@@ -220,35 +228,39 @@ ax, res_flexible_powers = fp.plot_control_p(
 plt.show()
 ```
 
-In the above example, `res_flexible_powers` is provided as input. It could have been forgotten, and the flexible
-powers would have been computed by requesting the server. The computed values are retrieved with the axis on which
-the plot was drawn.
+Note that in this example, `res_flexible_powers` is provided as input to the plotting function. If
+it was not provided, the powers would have been computed by requesting the server (using the
+`compute_powers()` method above). The method returns a 2-tuple with the _matplotlib axis_ of the
+plot and the computed powers.
 
 `````{tip}
-To install matplotlib along side with roseau-load-flow, you can type
+To install _matplotlib_ along side _roseau-load-flow_, you can use the `plot` extra:
 
-````{tab}  Linux
+````{tab}  Linux/MacOS
 ```console
-$ python -m pip install roseau-load-flow[plot]
+$ python -m pip install "roseau-load-flow[plot]"
 ```
 ````
 
 ````{tab} Windows
-Matplotlib is always installed when `conda` is used.
+```doscon
+C:> py -m pip install "roseau-load-flow[plot]"
+```
 ````
 
+Matplotlib is always installed when `conda` is used.
 `````
 
-If now, we plot the trajectory of the control in the $(P, Q)$ space, the following result is obtained:
+If we plot the trajectory of the control in the $(P, Q)$ space, we get:
 
 ```{image} /_static/Load/FlexibleLoad/PmaxU_Qconst_Trajectory_Example.svg
 :width: 700
 :align: center
 ```
 
-All the points have been plotted (1 per volt between 205 V and 255 V). A lot of points are overlapping.
+All the points have been plotted (1 per volt between 205 V and 255 V). Many points overlap.
 
-The same plot could have been obtained using the following command:
+The same plot can be obtained with:
 
 ```python
 from matplotlib import pyplot as plt
@@ -267,21 +279,24 @@ plt.show()
 
 ## Reactive power control only
 
-When the active power is constant, only the reactive power may be modulated by the local voltage. Thus, the reactive
-power may vary between $-S^{\max}$ and $+S^{\max}$. In this segment, there are points outside the disc of radius
-$S^{\max}$ (when $P^{\mathrm{th.}}\neq 0$). Those points are projected on the circle of radius $S^{\max}$ and
-depending on the projection, the feasible domains change.
+When the active power is constant (no $P$ control), only the reactive power changes as a function
+of the local voltage. Thus, the reactive power may vary between $-S^{\max}$ and $+S^{\max}$. When
+$P^{\mathrm{th.}}\neq 0$, the point $(P, Q) produced by the control might lie outside the disc of
+radius $S^{\max}$ (when $P^{\mathrm{th.}}\neq 0$). Those points are projected on the circle of
+radius $S^{\max}$ and depending on the projection, the feasible domains change.
 
 ### Constant $P$
 
-If the _constant $P$_ (`keep_p`) projection is chosen, the feasible domain is limited to a segment as defined below.
+If the _constant $P$_ (`keep_p`) projection is chosen, the feasible domain is limited to a vertical
+segment as shown below.
 
 ```{image} /_static/Load/FlexibleLoad/Domain_Pconst_QU_P.svg
 :width: 300
 :align: center
 ```
 
-Here is an example of a reactive power control (without active power control) flexible parameter creation:
+Here is an example of a flexible parameter with a reactive power control and without active power
+control:
 
 ```python
 import numpy as np
@@ -299,7 +314,7 @@ fp = FlexibleParameter(
 )
 
 # We want to get the res_flexible_powers for a set of voltages norms
-voltages = np.array(range(205, 256, 1), dtype=float)
+voltages = np.arange(205, 256, dtype=float)
 
 # and when the theoretical power is the following
 power = Q_(-2.5, "kVA")
@@ -309,21 +324,21 @@ auth = ("username", "password")
 res_flexible_powers = fp.compute_powers(auth=auth, voltages=voltages, power=power)
 ```
 
-At the end of the script, the variable `res_flexible_powers` contains the powers that has been really produced by
+The variable `res_flexible_powers` contains the powers that have been actually produced by
 the flexible load for the voltages stored in the variable named `voltages`.
 
-Plotting the control curve $Q(U)$ lead to the following plot:
+Plotting the control curve $Q(U)$ gives:
 
 ```{image} /_static/Load/FlexibleLoad/Pconst_QU_P_Control_Curve_Example.svg
 :width: 700
 :align: center
 ```
 
-One can remark that, even with a voltage lower than $U^{\min}$ or greater than $U^{\max}$ the available reactive
-power (by default taken in the interval $[-S^{\max}, S^{\max}]$) was never totally used because of the choice of the
+Notice that, even with a voltage lower than $U^{\min}$ or greater than $U^{\max}$, the available reactive
+power (by default taken in the interval $[-S^{\max}, S^{\max}]$) was never fully used because of the choice of the
 projection.
 
-The same plot can be obtained using the following command:
+The same plot can be obtained with:
 
 ```python
 from matplotlib import pyplot as plt
@@ -339,7 +354,7 @@ ax, res_flexible_powers = fp.plot_control_q(
 plt.show()
 ```
 
-If now, we plot the trajectory of the control in the $(P, Q)$ space, the following result is obtained:
+If we plot the trajectory of the control in the $(P, Q)$ space, we get:
 
 ```{image} /_static/Load/FlexibleLoad/Pconst_QU_P_Trajectory_Example.svg
 :width: 700
@@ -350,11 +365,11 @@ As in the previous plot, there is one point per volt from 205 V to 255 V. Severa
 
 1. All the points are aligned on the straight line $P=-2.5$ kVA because it was the power provided to the flexible
    load and because the projection used was at _Constant P_.
-2. One can remark that several points are overlapping for low and high voltages. For these extremities, the
+2. Several points are overlapping for low and high voltages. For these extremities, the
    theoretical control curves would have forced the point of operation to be outside the disc of radius $S^{\max}$ (5
-   kVA in the example).
+   kVA in this example).
 
-The same plot could have been obtained using the following command:
+The same plot can be obtained with:
 
 ```python
 from matplotlib import pyplot as plt
@@ -382,11 +397,11 @@ defined below.
 ```
 
 ```{warning}
-Note that using this projection with a constant active power may result in a final active power lower than the one
-provided (even 0 W in the worst cases)!
+Note that using this projection with a constant active power may result in a final active power
+lower than the one provided (could reach 0 W in the worst-case)!
 ```
 
-Here is an example the creattion of such control with a constant $Q$ projection:
+Here is an example the creation of such control with a constant $Q$ projection:
 
 ```python
 import numpy as np
@@ -404,7 +419,7 @@ fp = FlexibleParameter(
 )
 
 # We want to get the res_flexible_powers for a set of voltages norms
-voltages = np.array(range(205, 256, 1), dtype=float)
+voltages = np.arange(205, 256, dtype=float)
 
 # and when the theoretical power is the following
 power = Q_(-2.5, "kVA")
@@ -414,20 +429,20 @@ auth = ("username", "password")
 res_flexible_powers = fp.compute_powers(auth=auth, voltages=voltages, power=power)
 ```
 
-At the end of the script, the variable `res_flexible_powers` contains the powers that has been really produced by
+The variable `res_flexible_powers` contains the powers that have been actually produced by
 the flexible load for the voltages stored in the variable named `voltages`.
 
-Plotting the control curve $Q(U)$ leads to the following plot:
+Plotting the control curve $Q(U)$ gives:
 
 ```{image} /_static/Load/FlexibleLoad/Pconst_QU_Q_Control_Curve_Example.svg
 :width: 700
 :align: center
 ```
 
-Here, the complete possible range of reactive power was used. Nevertheless, it was achieved with some active power
-reduction because of the projection.
+Here, the complete possible range of reactive power is used. When the control finds an infeasible
+solution, it reduces the active power because the projection type is _Constant Q_.
 
-The same plot can be obtained using the following command:
+The same plot can be obtained with:
 
 ```python
 from matplotlib import pyplot as plt
@@ -443,14 +458,14 @@ ax, res_flexible_powers = fp.plot_control_q(
 plt.show()
 ```
 
-If now, we plot the trajectory of the control in the $(P, Q)$ space, the following result is obtained:
+If we plot the trajectory of the control in the $(P, Q)$ space, we get:
 
 ```{image} /_static/Load/FlexibleLoad/Pconst_QU_Q_Trajectory_Example.svg
 :width: 700
 :align: center
 ```
 
-The same plot could have been obtained using the following command:
+The same plot can be obtained with:
 
 ```python
 from matplotlib import pyplot as plt
@@ -467,9 +482,9 @@ ax, res_flexible_powers = fp.plot_pq(
 plt.show()
 ```
 
-One can remark that when the voltages were too low or too high, the projection at constant $Q$ forces us to reduce
-the produced active power to ensure a feasible point i.e. a point which is in the disc of radius $S^{\max}$. As
-before, there is one point per volt. Several points of operation are overlapping near the coordinates (0,5 kVA) and
+Notice that when the voltages were too low or too high, the projection at constant $Q$ forces the
+reduction of the produced active power to ensure a feasible solution. Like before, there is one
+point per volt. Several points overlap at the extremities near the coordinates (0,5 kVA) and
 (0, -5 kVA).
 
 ### Euclidean projection
@@ -487,8 +502,6 @@ Note that using this projection with a constant active power may result in a fin
 provided!
 ```
 
-Here is an example of this usage with a single phase network limited to a single bus:
-
 ```python
 import numpy as np
 
@@ -505,7 +518,7 @@ fp = FlexibleParameter(
 )
 
 # We want to get the res_flexible_powers for a set of voltages norms
-voltages = np.array(range(205, 256, 1), dtype=float)
+voltages = np.arange(205, 256, dtype=float)
 
 # and when the theoretical power is the following
 power = Q_(-2.5, "kVA")
@@ -515,10 +528,10 @@ auth = ("username", "password")
 res_flexible_powers = fp.compute_powers(auth=auth, voltages=voltages, power=power)
 ```
 
-At the end of the script, the variable `res_flexible_powers` contains the powers that has been really produced by
+The variable `res_flexible_powers` contains the powers that have been really produced by
 the flexible load for the voltages stored in the variable named `voltages`.
 
-Plotting the control curve $Q(U)$ lead to the following plot:
+Plotting the control curve $Q(U)$ gives:
 
 ```{image} /_static/Load/FlexibleLoad/Pconst_QU_Eucl_Control_Curve_Example.svg
 :width: 700
@@ -527,7 +540,7 @@ Plotting the control curve $Q(U)$ lead to the following plot:
 
 Here, again the complete reactive power range is not fully used.
 
-The same plot can be obtained using the following command:
+The same plot can be obtained with:
 
 ```python
 from matplotlib import pyplot as plt
@@ -543,14 +556,14 @@ ax, res_flexible_powers = fp.plot_control_q(
 plt.show()
 ```
 
-If now, we plot the trajectory of the control in the $(P, Q)$ space, the following result is obtained:
+If we plot the trajectory of the control in the $(P, Q)$ space, we get:
 
 ```{image} /_static/Load/FlexibleLoad/Pconst_QU_Eucl_Trajectory_Example.svg
 :width: 700
 :align: center
 ```
 
-The same plot could have been obtained using the following command:
+The same plot can be obtained with:
 
 ```python
 from matplotlib import pyplot as plt
@@ -567,36 +580,32 @@ ax, res_flexible_powers = fp.plot_pq(
 plt.show()
 ```
 
-One can remark that when the voltages were too low or too high, the Euclidean projection forces us to
-reduce the produced active power and the (produced and consumed) reactive power to ensure a feasible point i.e. a point
-which is in the disc of radius $S^{\max}$. As before, there is one point per volt thus one can remark that several
-points of operation are overlapping.
+Notice that when the voltages were too low or too high, the Euclidean projection forces the
+reduction of the produced active power and the (produced and consumed) reactive power to ensure a
+feasible solution. Like before, there is one point per volt and several points overlap.
 
 ## Both active and reactive powers control
 
-When both active and reactive powers are activated, the feasible domains is the following:
+When both active and reactive power controls are activated, the feasible domain is the following:
 
 ```{image} /_static/Load/FlexibleLoad/Domain_PmaxU_QU.svg
 :width: 300
 :align: center
 ```
 
-Every point whose abscissa is between $P^{\mathrm{th.}}$ and 0, whose ordinate is between $-S^{\max}$ and $+S^{\max}$
-and which lies in the disc of radius $S^{\max}$ is reachable. Let's look at two examples: in the first one, the
-controls are activated sequentially (reactive power first and then active power) and, in the other example, there
-are used together.
+Every point whose abscissa is between $P^{\mathrm{th.}}$ and 0, whose ordinate is between $-S^{\max}$
+and $+S^{\max}$ and which lies in the disc of radius $S^{\max}$ (blue shaded area) is reachable.
+Let's look at two examples: in the first one, the controls are activated sequentially (reactive power
+first and then active power) and, in the other example, they are used together.
 
 ### Sequentially activated controls
 
-Let's play with the voltage thresholds of the control in order to fully activate a first control and then starts to
-activate the second.
+Let's define different voltage thresholds for each control so that one triggers before the other.
 
 #### Reactive power control first
 
-In this section, the reactive power control is activated at 230 V and fully used above 240 V. Then, at 245 V, the
-active control power starts and is fully activated at 250 V.
-
-In the following script such control is used on a network with a single-phase load connected to a single bus:
+Here, the reactive power control is activated at 230 V and fully used above 240 V. Then, at 245 V, the
+active power control starts and is fully used at 250 V:
 
 ```python
 import numpy as np
@@ -609,15 +618,15 @@ fp = FlexibleParameter(
     control_q=Control.q_u(
         u_min=Q_(210, "V"),
         u_down=Q_(220, "V"),
-        u_up=Q_(230, "V"),  # <----
-        u_max=Q_(240, "V"),  # <----
+        u_up=Q_(230, "V"),  # <---- lower than U_up of the P(U) control
+        u_max=Q_(240, "V"),  # <---- lower than U_up of the P(U) control
     ),
     projection=Projection(type="euclidean"),  # <---- Euclidean
     s_max=Q_(5, "kVA"),
 )
 
 # We want to get the res_flexible_powers for a set of voltages norms
-voltages = np.array(range(205, 256, 1), dtype=float)
+voltages = np.arange(205, 256, dtype=float)
 
 # and when the theoretical power is the following
 power = Q_(-2.5, "kVA")
@@ -627,14 +636,14 @@ auth = ("username", "password")
 res_flexible_powers = fp.compute_powers(auth=auth, voltages=voltages, power=power)
 ```
 
-If we plot the trajectory of the control in the $(P, Q)$ space, the following result is obtained:
+If we plot the trajectory of the control in the $(P, Q)$ space, we get:
 
 ```{image} /_static/Load/FlexibleLoad/PmaxU_QU_Sequential_1_Trajectory_Example.svg
 :width: 700
 :align: center
 ```
 
-The same plot could have been obtained using the following command:
+The same plot can be obtained with:
 
 ```python
 from matplotlib import pyplot as plt
@@ -651,28 +660,25 @@ ax, res_flexible_powers = fp.plot_pq(
 plt.show()
 ```
 
-When the voltage is low, there is only a reactive power control which is activated. Thus, everything works as
-depicted in the previous dedicated section and the choice of the projection may change the operation points for the
-lowest voltages.
+When the voltage is low, only the reactive power control is activated (vertical segment at
+$P^{\mathrm{th.}}$); similar to what we saw in the $Q(U)$ control section.
 
-When the voltage is high, there are two phases:
+When the voltage is high, there are two stages:
 
-1. Between 230 V and 240 V, only the reactive power decreases to reach the symmetrical point (with respect to the
-   x-axis) of the 205 V operation point.
-2. Between 245 V and 250 V, the active power control reduces the active power to reach 0 W above 250 V.
+1. Between 230 V and 240 V, only the reactive power changes: It increases on the vertical segment
+   to reach the perimeter of the disk.
+2. Between 245 V and 250 V, the active power control starts reducing the active power until it
+   reaches 0 W at 250 V.
 
 #### Active power control first
 
-In this section, the active power control is activated at 240 V and fully used above 245 V. Then, at 245 V, the
-reactive control power starts and is fully activated at 250 V.
-
-In the following script such control is used on a network with a single-phase load connected to a single bus:
+Here, the active power control is activated at 240 V and fully used above 245 V. Then, at 245 V, the
+reactive power control starts and is fully activated at 250 V.
 
 ```python
 import numpy as np
 
 from roseau.load_flow import Q_, FlexibleParameter, Control, Projection
-
 
 # Flexible parameter
 fp = FlexibleParameter(
@@ -680,15 +686,15 @@ fp = FlexibleParameter(
     control_q=Control.q_u(
         u_min=Q_(210, "V"),
         u_down=Q_(220, "V"),
-        u_up=Q_(245, "V"),  # <----
-        u_max=Q_(250, "V"),  # <----
+        u_up=Q_(245, "V"),  # <---- higher than U_max of the P(U) control
+        u_max=Q_(250, "V"),  # <---- higher than U_max of the P(U) control
     ),
     projection=Projection(type="euclidean"),  # <---- Euclidean
     s_max=Q_(5, "kVA"),
 )
 
 # We want to get the res_flexible_powers for a set of voltages norms
-voltages = np.array(range(205, 256, 1), dtype=float)
+voltages = np.arange(205, 256, dtype=float)
 
 # and when the theoretical power is the following
 power = Q_(-2.5, "kVA")
@@ -698,14 +704,14 @@ auth = ("username", "password")
 res_flexible_powers = fp.compute_powers(auth=auth, voltages=voltages, power=power)
 ```
 
-If we plot the trajectory of the control in the $(P, Q)$ space, the following result is obtained:
+If we plot the trajectory of the control in the $(P, Q)$ space, we get:
 
 ```{image} /_static/Load/FlexibleLoad/PmaxU_QU_Sequential_2_Trajectory_Example.svg
 :width: 700
 :align: center
 ```
 
-The same plot could have been obtained using the following command:
+The same plot can be obtained with:
 
 ```python
 from matplotlib import pyplot as plt
@@ -722,21 +728,19 @@ ax, res_flexible_powers = fp.plot_pq(
 plt.show()
 ```
 
-When the voltage is low, there is only a reactive power control which is activated. Thus, everything works as
-depicted in the previous dedicated section and the choice of the projection may change the operation points for the
-lowest voltages.
+When the voltage is low, only the reactive power control is activated (vertical segment at
+$P^{\mathrm{th.}}$); similar to what we saw in the $Q(U)$ control section.
 
-When the voltage is high, there are two phases:
+When the voltage is high, there are two stages:
 
-1. Between 230 V and 240 V, only the active power decreases to reach a production of nearly 0 W.
-2. Between 245 V and 250 V, the reactive power control increased the consumed the reactive power at 250 V.
+1. Between 230 V and 240 V, only the active power changes. It decreases to about 0 W.
+2. Between 245 V and 250 V, the reactive power control increases the reactive power until it
+   reaches $S^{max}$ at 250 V.
 
 ### Simultaneously activated controls
 
-In this second subsection, the active and the reactive powers controls are activated at 240 V and reach their full
+Here, the active and the reactive powers controls are both activated at 240 V and reach their full
 effect at 250 V.
-
-Here is a small single phase network limited to a single bus to model the behaviour of the flexible load:
 
 ```python
 import numpy as np
@@ -749,15 +753,15 @@ fp = FlexibleParameter(
     control_q=Control.q_u(
         u_min=Q_(210, "V"),
         u_down=Q_(220, "V"),
-        u_up=Q_(240, "V"),  # <----
-        u_max=Q_(250, "V"),  # <----
+        u_up=Q_(240, "V"),  # <---- same as U_up of the P(U) control
+        u_max=Q_(250, "V"),  # <---- same as U_max of the P(U) control
     ),
     projection=Projection(type="euclidean"),  # <---- Euclidean
     s_max=Q_(5, "kVA"),
 )
 
 # We want to get the res_flexible_powers for a set of voltages norms
-voltages = np.array(range(205, 256, 1), dtype=float)
+voltages = np.arange(205, 256, dtype=float)
 
 # and when the theoretical power is the following
 power = Q_(-2.5, "kVA")
@@ -767,14 +771,14 @@ auth = ("username", "password")
 res_flexible_powers = fp.compute_powers(auth=auth, voltages=voltages, power=power)
 ```
 
-If we plot the trajectory of the control in the $(P, Q)$ space, the following result is obtained:
+If we plot the trajectory of the control in the $(P, Q)$ space, we get:
 
 ```{image} /_static/Load/FlexibleLoad/PmaxU_QU_Simultaneous_Trajectory_Example.svg
 :width: 700
 :align: center
 ```
 
-The same plot could have been obtained using the following command:
+The same plot can be obtained with:
 
 ```python
 from matplotlib import pyplot as plt
@@ -791,19 +795,18 @@ ax, res_flexible_powers = fp.plot_pq(
 plt.show()
 ```
 
-When the voltage is low, there is only a reactive power control which is activated. Thus, everything works as
-depicted in the previous dedicated section and the choice of the projection may change the operation points for the
-lowest voltages.
+When the voltage is low, only the reactive power control is activated (vertical segment at
+$P^{\mathrm{th.}}$); similar to what we saw in the $Q(U)$ control section.
 
-When the voltage is high, there are two phases:
+When the voltage is high, there are two stages:
 
-1. Between 240 V and 245 V, the active power control doesn't modify the value of the produced active power while the
-   reactive power control starts to increase the consumed reactive power.
-2. Between 245 V and 250 V, the active power control starts to have effects on the produced active power. The
-   consumed reactive power continues to increase.
-3. Above 250 V, no active power is produced.
+1. Between 240 V and 245 V, the active power control does not modify the produced active power
+   while the reactive power control starts to increase the reactive power.
+2. Between 245 V and 250 V, the active power control starts decreasing the active power while the
+   reactive power continues to increase.
+3. Above 250 V, active power is reduced to 0 W and the reactive power is set to $S^{max}$.
 
-If now, the theoretical power is changed to 4 kVA of production.
+If we change the theoretical power to 4 kVA.
 
 ```python
 from matplotlib import pyplot as plt
@@ -820,7 +823,7 @@ ax, res_flexible_powers = fp.plot_pq(
 plt.show()
 ```
 
-The following result is obtained:
+Now we get a different result:
 
 ```{image} /_static/Load/FlexibleLoad/PmaxU_QU_Simultaneous_2_Trajectory_Example.svg
 :width: 700

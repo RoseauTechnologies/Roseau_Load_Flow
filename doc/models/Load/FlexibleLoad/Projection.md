@@ -2,11 +2,13 @@
 
 # Projections
 
-The different controls may produce values for $P$ and $Q$ that are not feasible. The feasibility
-domain in the $(P, Q)$ space is a part of the disc of radius $S^{\max}$. In these cases, the
-solution found by the control algorithm has to be projected on the feasible domain. That's why we
-need to define how the projection is done. There are three available projection types: the
-_Euclidean_ projection, the projection at _Constant $P$_ and the projection at _Constant $Q$_.
+When the control algorithm is trying to find the best control for given voltage constraints, it
+could find a solution that is not "feasible" by the load. This means that the active and reactive
+powers $P$ and $Q$ that constitute the solution lie outside the feasible domain defined by a part
+of the disc of radius $S^{\max}$ in the $(P, Q)$ space. In these cases, the solution has to be
+projected into the feasible domain. We can choose how the projection is performed using three
+available projection types:
+the _Euclidean_ projection, the projection at _Constant $P$_ and the projection at _Constant $Q$_.
 
 The projection accepts two approximation parameters: `alpha` and `epsilon`.
 
@@ -19,7 +21,7 @@ The projection accepts two approximation parameters: `alpha` and `epsilon`.
   The lower `epsilon` is, the better the approximations are.
 
 ```{important}
-Please note that no projection is performed in the final $\underline{S(U)}$ point lies in the disc of radius $S^{\max}$.
+Please note that no projection is performed if the final $\underline{S(U)}$ point lies in the disc of radius $S^{\max}$.
 ```
 
 ## Euclidean projection
@@ -79,6 +81,6 @@ projection = Projection(type="keep_q")  # alpha and epsilon can be provided
 ```
 
 ```{important}
-Please note that using the _Constant $Q$_ may reduce the provided $P^{\mathrm{th.}}$ of the load. See the [Feasible
-Domain page](models-flexible_load-feasible_domains) for more details.
+Please note that using the _Constant $Q$_ projection may reduce the provided $P^{\mathrm{th.}}$ of
+the load. See the [Feasible Domain page](models-flexible_load-feasible_domains) for more details.
 ```
