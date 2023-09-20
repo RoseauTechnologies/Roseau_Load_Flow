@@ -461,8 +461,16 @@ class FlexibleParameter(JsonMixin):
     _control_class: type[Control] = Control
     _projection_class: type[Projection] = Projection
 
-    @ureg_wraps(None, (None, None, None, None, "VA"), strict=False)
-    def __init__(self, control_p: Control, control_q: Control, projection: Projection, s_max: float) -> None:
+    @ureg_wraps(None, (None, None, None, None, "VA", "VAr", "VAr"), strict=False)
+    def __init__(
+        self,
+        control_p: Control,
+        control_q: Control,
+        projection: Projection,
+        s_max: float,
+        q_min: Optional[float] = None,
+        q_max: Optional[float] = None,
+    ) -> None:
         """FlexibleParameter constructor.
 
         Args:
@@ -477,11 +485,21 @@ class FlexibleParameter(JsonMixin):
 
             s_max:
                 The apparent power of the flexible load (VA). It is the radius of the feasible circle.
+
+            q_min:
+                The minimum reactive power of the flexible load (VAr). By default it is equal to -s_max, but it can
+                be further constrained.
+
+            q_max:
+                The maximum reactive power of the flexible load (VAr). By default it is equal to s_max, but it can
+                be further constrained.
         """
         self.control_p = control_p
         self.control_q = control_q
         self.projection = projection
         self._s_max = s_max
+        self._q_min = q_min if q_min is not None else -s_max
+        self._q_max = q_max if q_max is not None else s_max
         self._check_values()
 
     def _check_values(self) -> None:
@@ -489,13 +507,33 @@ class FlexibleParameter(JsonMixin):
         if self._s_max <= 0:
             msg = f"'s_max' must be greater than 0 but {self.s_max:P#~} was provided."
             logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_SMAX_VALUE)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_FLEXIBLE_PARAMETER_VALUE)
+        if self._q_min < -self._s_max:
+            msg = f"'q_min' must be greater than -s_max ({-self.s_max:P#~}) but {self.q_min:P#~} was provided."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_FLEXIBLE_PARAMETER_VALUE)
+        if self._q_max > self._s_max:
+            msg = f"'q_max' must be lesser than s_max ({self.s_max:P#~}) but {self.q_max:P#~} was provided."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_FLEXIBLE_PARAMETER_VALUE)
 
     @property
     @ureg_wraps("VA", (None,), strict=False)
     def s_max(self) -> Q_[float]:
         """The apparent power of the flexible load (VA). It is the radius of the feasible circle."""
         return self._s_max
+
+    @property
+    @ureg_wraps("VAr", (None,), strict=False)
+    def q_min(self) -> Q_[float]:
+        """The minimum reactive power of the flexible load (VAr)."""
+        return self._q_min
+
+    @property
+    @ureg_wraps("VAr", (None,), strict=False)
+    def q_max(self) -> Q_[float]:
+        """The maximum reactive power of the flexible load (VAr)."""
+        return self._q_max
 
     @classmethod
     def constant(cls) -> Self:
@@ -621,7 +659,7 @@ class FlexibleParameter(JsonMixin):
         )
 
     @classmethod
-    @ureg_wraps(None, (None, "V", "V", "V", "V", "VA", None, None, None, None), strict=False)
+    @ureg_wraps(None, (None, "V", "V", "V", "V", "VA", "Var", "Var", None, None, None, None), strict=False)
     def q_u(
         cls,
         u_min: float,
@@ -629,6 +667,8 @@ class FlexibleParameter(JsonMixin):
         u_up: float,
         u_max: float,
         s_max: float,
+        q_min: Optional[float] = None,
+        q_max: Optional[float] = None,
         alpha_control: float = Control._DEFAULT_ALPHA,
         type_proj: ProjectionType = Projection._DEFAULT_TYPE,
         alpha_proj: float = Projection._DEFAULT_ALPHA,
@@ -656,6 +696,14 @@ class FlexibleParameter(JsonMixin):
                 The apparent power of the flexible load (VA). It is the radius of the feasible
                 circle.
 
+            q_min:
+                The minimum reactive power of the flexible load (VAr). By default it is equal to -s_max, but it can
+                be further constrained.
+
+            q_max:
+                The maximum reactive power of the flexible load (VAr). By default it is equal to s_max, but it can
+                be further constrained.
+
             alpha_control:
                 An approximation factor used by the family function (soft clip). The greater, the
                 closer the function are from the non-differentiable function.
@@ -680,10 +728,12 @@ class FlexibleParameter(JsonMixin):
             control_q=control_q,
             projection=cls._projection_class(type=type_proj, alpha=alpha_proj, epsilon=epsilon_proj),
             s_max=s_max,
+            q_min=q_min,
+            q_max=q_max,
         )
 
     @classmethod
-    @ureg_wraps(None, (None, "V", "V", "V", "V", "V", "V", "VA", None, None, None, None), strict=False)
+    @ureg_wraps(None, (None, "V", "V", "V", "V", "V", "V", "VA", "VAr", "VAr", None, None, None, None), strict=False)
     def pq_u_production(
         cls,
         up_up: float,
@@ -693,6 +743,8 @@ class FlexibleParameter(JsonMixin):
         uq_up: float,
         uq_max: float,
         s_max: float,
+        q_min: Optional[float] = None,
+        q_max: Optional[float] = None,
         alpha_control=Control._DEFAULT_ALPHA,
         type_proj: ProjectionType = Projection._DEFAULT_TYPE,
         alpha_proj=Projection._DEFAULT_ALPHA,
@@ -727,6 +779,14 @@ class FlexibleParameter(JsonMixin):
                 The apparent power of the flexible load (VA). It is the radius of the feasible
                 circle.
 
+            q_min:
+                The minimum reactive power of the flexible load (VAr). By default it is equal to -s_max, but it can
+                be further constrained.
+
+            q_max:
+                The maximum reactive power of the flexible load (VAr). By default it is equal to s_max, but it can
+                be further constrained.
+
             alpha_control:
                 An approximation factor used by the family function (soft clip). The greater, the
                 closer the function are from the non-differentiable function.
@@ -755,10 +815,12 @@ class FlexibleParameter(JsonMixin):
             control_q=control_q,
             projection=cls._projection_class(type=type_proj, alpha=alpha_proj, epsilon=epsilon_proj),
             s_max=s_max,
+            q_min=q_min,
+            q_max=q_max,
         )
 
     @classmethod
-    @ureg_wraps(None, (None, "V", "V", "V", "V", "V", "V", "VA", None, None, None, None), strict=False)
+    @ureg_wraps(None, (None, "V", "V", "V", "V", "V", "V", "VA", "VAr", "VAr", None, None, None, None), strict=False)
     def pq_u_consumption(
         cls,
         up_min: float,
@@ -768,6 +830,8 @@ class FlexibleParameter(JsonMixin):
         uq_up: float,
         uq_max: float,
         s_max: float,
+        q_min: Optional[float] = None,
+        q_max: Optional[float] = None,
         alpha_control: float = Control._DEFAULT_ALPHA,
         type_proj: ProjectionType = Projection._DEFAULT_TYPE,
         alpha_proj: float = Projection._DEFAULT_ALPHA,
@@ -802,6 +866,14 @@ class FlexibleParameter(JsonMixin):
                 The apparent power of the flexible load (VA). It is the radius of the feasible
                 circle.
 
+            q_min:
+                The minimum reactive power of the flexible load (VAr). By default it is equal to -s_max, but it can
+                be further constrained.
+
+            q_max:
+                The maximum reactive power of the flexible load (VAr). By default it is equal to s_max, but it can
+                be further constrained.
+
             alpha_control:
                 An approximation factor used by the family function (soft clip). The greater, the
                 closer the function are from the non-differentiable function.
@@ -830,6 +902,8 @@ class FlexibleParameter(JsonMixin):
             control_q=control_q,
             projection=cls._projection_class(type=type_proj, alpha=alpha_proj, epsilon=epsilon_proj),
             s_max=s_max,
+            q_min=q_min,
+            q_max=q_max,
         )
 
     #
@@ -840,7 +914,16 @@ class FlexibleParameter(JsonMixin):
         control_p = cls._control_class.from_dict(data["control_p"])
         control_q = cls._control_class.from_dict(data["control_q"])
         projection = cls._projection_class.from_dict(data["projection"])
-        return cls(control_p=control_p, control_q=control_q, projection=projection, s_max=data["s_max"])
+        q_min = data.get("q_min", None)
+        q_max = data.get("q_max", None)
+        return cls(
+            control_p=control_p,
+            control_q=control_q,
+            projection=projection,
+            s_max=data["s_max"],
+            q_min=q_min,
+            q_max=q_max,
+        )
 
     def to_dict(self, include_geometry: bool = True) -> JsonDict:
         return {
@@ -848,6 +931,8 @@ class FlexibleParameter(JsonMixin):
             "control_q": self.control_q.to_dict(),
             "projection": self.projection.to_dict(),
             "s_max": self._s_max,
+            "q_min": self._q_min,
+            "q_max": self._q_max,
         }
 
     def _results_to_dict(self, warning: bool) -> NoReturn:
