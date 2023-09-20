@@ -38,8 +38,8 @@ MU_R = {
     ConductorType.CU: Q_(1.2566e-8, "H/m"),
     ConductorType.AL: Q_(1.2566e-8, "H/m"),
     ConductorType.AM: Q_(1.2566e-8, "H/m"),
-    ConductorType.AA: np.nan,  # TODO
-    ConductorType.LA: np.nan,  # TODO
+    ConductorType.AA: Q_(np.nan, "H/m"),  # TODO
+    ConductorType.LA: Q_(np.nan, "H/m"),  # TODO
 }
 """Magnetic permeability of common conductor materials (H/m)."""
 
@@ -47,8 +47,8 @@ DELTA_P = {
     ConductorType.CU: Q_(9.3, "mm"),
     ConductorType.AL: Q_(112, "mm"),
     ConductorType.AM: Q_(12.9, "mm"),
-    ConductorType.AA: np.nan,  # TODO
-    ConductorType.LA: np.nan,  # TODO
+    ConductorType.AA: Q_(np.nan, "mm"),  # TODO
+    ConductorType.LA: Q_(np.nan, "mm"),  # TODO
 }
 """Skin effect of common conductor materials (mm)."""
 

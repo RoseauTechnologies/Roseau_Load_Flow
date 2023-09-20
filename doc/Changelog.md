@@ -4,6 +4,7 @@
 
 **In development**
 
+- {gh-pr}`132` {gh-issue}`101` Document extra utilities including converters and constants.
 - {gh-pr}`131` {gh-issue}`127` Improve the documentation of the flexible loads.
   - Add the method `compute_powers` method to the `FlexibleParameter` class to compute the resulting flexible powers
     for a given theoretical power and a list of voltage norms.
