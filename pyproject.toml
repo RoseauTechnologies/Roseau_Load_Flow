@@ -47,17 +47,21 @@ pint = ">=0.21.0"
 typing-extensions = ">=4.6.2"
 rich = ">=13.5.1"
 
+# Plot Extra
+matplotlib = { version = "^3.7.2", extras = ["plot"] }
+
 [tool.poetry.group.test.dependencies]
 pytest = "^7.1.2"
 pytest-cov = "^4.0.0"
 pytest-xdist = "^3.1.0"
 requests-mock = "^1.9.3"
 coverage = { version = "^7.0.5", extras = ["toml"] }
+matplotlib = "^3.7.2"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^3.0.0"
-black = { version = "==23.7.0", extras = ["jupyter"] } # keep in sync with .pre-commit-config.yaml
-ruff = "==0.0.286" # keep in sync with .pre-commit-config.yaml
+black = { version = "==23.9.1", extras = ["jupyter"] } # keep in sync with .pre-commit-config.yaml
+ruff = "==0.0.290" # keep in sync with .pre-commit-config.yaml
 
 [tool.poetry.group.doc.dependencies]
 sphinx = "^7.0.1"

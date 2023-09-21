@@ -107,6 +107,9 @@ class RoseauLoadFlowExceptionCode(Enum):
     CATALOGUE_NOT_FOUND = auto()
     CATALOGUE_SEVERAL_FOUND = auto()
 
+    # Import Error
+    IMPORT_ERROR = auto()
+
     @classmethod
     def package_name(cls) -> str:
         return "roseau.load_flow"

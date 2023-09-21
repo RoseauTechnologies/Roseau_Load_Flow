@@ -1,0 +1,78 @@
+\input{Preambule}%
+
+\usepackage{pgfplots}%
+\pgfplotsset{compat=newest}%
+
+\begin{document}
+    \begin{tikzpicture}[%
+        show background rectangle,%
+        tight background,%
+        background rectangle/.style={fill=white}%
+    ]
+        \begin{axis}
+            [%
+            xlabel={Voltages (V)},%
+            x label style={at={(axis description cs:0.5,-0.15)},anchor=north},%
+            ylabel={Active power (W)},%
+            y label style={at={(axis description cs:-0.15,0.5)},anchor=south},%
+            grid=both,%
+            legend entries={Actual power,Non-smooth theoretical control},%
+            legend style={%
+                legend cell align=left,%
+                legend pos=north west,%
+            },%
+            sharp plot,%
+            mark size=0.5mm,%
+            height=9cm,%
+            width=16cm,%
+            ytick={-5000,-4000,-3000,-2000,-1000,0},%
+            extra y ticks={-2500},%
+            minor tick num=1,%
+            scaled y ticks=base 10:-3,%
+            xticklabel style={align=center},%
+            xticklabel={%
+                $\pgfmathprintnumber{\tick}$
+                \pgfmathifthenelse{\tick==240}{%
+                    "\\$\uup$"%
+                }{""}%
+                \pgfmathresult%
+                \pgfmathifthenelse{\tick==250}{%
+                    "\\$\umax$"%
+                }{""}%
+                \pgfmathresult%
+            },%
+            yticklabel style={align=center},%
+            yticklabel={%
+                \pgfmathifthenelse{\tick==-5}{%
+                    "$-\smax$\hspace{3mm}"%
+                }{""}%
+                \pgfmathresult%
+                $\pgfmathprintnumber{\tick}$
+            },%
+            extra y tick label={%
+                \pgfmathifthenelse{\tick==-2500}{%
+                    "$P^{\theo}$\hspace{3mm}"%
+                }{""}%
+                \pgfmathresult%
+                \pgfmathifthenelse{\tick==-5000}{%
+                    "$-\smax$\hspace{3mm}"%
+                }{""}%
+                \pgfmathresult%
+                \pgfmathparse{\tick/1000}%
+                $\pgfmathprintnumber{\pgfmathresult}$
+            },%
+            ]
+            \addplot+[only marks] table[x=v, y=p, col sep=comma] {Load/FlexibleLoad/PmaxU_Qconst_Example.csv};%
+            \addplot+ coordinates {(205,-5000) (240,-5000) (250,0) (255,0)};%
+        \end{axis}
+    \end{tikzpicture}
+\end{document}
+% Local Variables:
+% mode: latex
+% TeX-engine: luatex
+% TeX-source-correlate-method-active: synctex
+% ispell-local-dictionary: "british"
+% coding: utf-8
+% LaTeX-indent-level: 4
+% fill-column: 100
+% End:

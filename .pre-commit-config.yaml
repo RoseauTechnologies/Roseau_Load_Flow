@@ -17,11 +17,11 @@ repos:
     hooks:
       - id: poetry-check
   - repo: https://github.com/psf/black-pre-commit-mirror
-    rev: 23.7.0 # keep in sync with pyproject.toml
+    rev: 23.9.1 # keep in sync with pyproject.toml
     hooks:
       - id: black-jupyter
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: v0.0.286 # keep in sync with pyproject.toml
+    rev: v0.0.290 # keep in sync with pyproject.toml
     hooks:
       - id: ruff
         types_or: [python, pyi, jupyter]
@@ -32,9 +32,9 @@ repos:
       - id: blacken-docs
         entry: bash -c "blacken-docs -l 90 $(find doc/ -name '*.md')"
         args: [-l 90]
-        additional_dependencies: [black==23.7.0] # keep in sync with black above
+        additional_dependencies: [black==23.9.1] # keep in sync with black above
   - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: v3.0.2
+    rev: v3.0.3
     hooks:
       - id: prettier
         args: ["--print-width", "120"]

@@ -68,11 +68,11 @@ The following load models are available in _Roseau Load Flow_:
 
 ```{toctree}
 ---
-maxdepth: 2
+maxdepth: 3
 caption: Loads
 ---
 ImpedanceLoad
 CurrentLoad
 PowerLoad
-FlexibleLoad
+FlexibleLoad/index
 ```
