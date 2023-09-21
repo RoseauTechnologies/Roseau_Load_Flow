@@ -497,25 +497,11 @@ class FlexibleParameter(JsonMixin):
         self.control_p = control_p
         self.control_q = control_q
         self.projection = projection
-        self._s_max = s_max
-        self._q_min = q_min if q_min is not None else -s_max
-        self._q_max = q_max if q_max is not None else s_max
-        self._check_values()
-
-    def _check_values(self) -> None:
-        """Check the provided values."""
-        if self._s_max <= 0:
-            msg = f"'s_max' must be greater than 0 but {self.s_max:P#~} was provided."
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_FLEXIBLE_PARAMETER_VALUE)
-        if self._q_min < -self._s_max:
-            msg = f"'q_min' must be greater than -s_max ({-self.s_max:P#~}) but {self.q_min:P#~} was provided."
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_FLEXIBLE_PARAMETER_VALUE)
-        if self._q_max > self._s_max:
-            msg = f"'q_max' must be lesser than s_max ({self.s_max:P#~}) but {self.q_max:P#~} was provided."
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_FLEXIBLE_PARAMETER_VALUE)
+        self._q_min = None
+        self._q_max = None
+        self.s_max = s_max
+        self.q_min = q_min
+        self.q_max = q_max
 
     @property
     @ureg_wraps("VA", (None,), strict=False)
@@ -523,17 +509,50 @@ class FlexibleParameter(JsonMixin):
         """The apparent power of the flexible load (VA). It is the radius of the feasible circle."""
         return self._s_max
 
+    @s_max.setter
+    @ureg_wraps(None, (None, "VA"), strict=False)
+    def s_max(self, value: float) -> None:
+        self._s_max = value
+        if value <= 0:
+            msg = f"'s_max' must be greater than 0 but {self.s_max:P#~} was provided."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_FLEXIBLE_PARAMETER_VALUE)
+        if self._q_max is not None and self._q_max > self._s_max:
+            logger.warning("'s_max' has been updated but now 'q_max' is greater than s_max. 'q_max' is set to s_max")
+            self._q_max = self._s_max
+        if self._q_min is not None and self._q_min < -self._s_max:
+            logger.warning("'s_max' has been updated but now 'q_min' is lesser than -s_max. 'q_min' is set to -s_max")
+            self._q_min = -self._s_max
+
     @property
     @ureg_wraps("VAr", (None,), strict=False)
     def q_min(self) -> Q_[float]:
         """The minimum reactive power of the flexible load (VAr)."""
-        return self._q_min
+        return self._q_min if self._q_min is not None else -self._s_max
+
+    @q_min.setter
+    @ureg_wraps(None, (None, "VAr"), strict=False)
+    def q_min(self, value: Optional[float]) -> None:
+        self._q_min = value
+        if value is not None and value < -self._s_max:
+            msg = f"'q_min' must be greater than -s_max ({-self.s_max:P#~}) but {self.q_min:P#~} was provided."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_FLEXIBLE_PARAMETER_VALUE)
 
     @property
     @ureg_wraps("VAr", (None,), strict=False)
     def q_max(self) -> Q_[float]:
         """The maximum reactive power of the flexible load (VAr)."""
-        return self._q_max
+        return self._q_max if self._q_max is not None else self._s_max
+
+    @q_max.setter
+    @ureg_wraps(None, (None, "VAr"), strict=False)
+    def q_max(self, value: Optional[float]) -> None:
+        self._q_max = value
+        if value is not None and value > self._s_max:
+            msg = f"'q_max' must be lesser than s_max ({self.s_max:P#~}) but {self.q_max:P#~} was provided."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_FLEXIBLE_PARAMETER_VALUE)
 
     @classmethod
     def constant(cls) -> Self:
