@@ -528,7 +528,7 @@ auth = ("username", "password")
 res_flexible_powers = fp.compute_powers(auth=auth, voltages=voltages, power=power)
 ```
 
-The variable `res_flexible_powers` contains the powers that have been really produced by
+The variable `res_flexible_powers` contains the powers that have been actually produced by
 the flexible load for the voltages stored in the variable named `voltages`.
 
 Plotting the control curve $Q(U)$ gives:
@@ -586,7 +586,7 @@ feasible solution. Like before, there is one point per volt and several points o
 
 ### $Q^{\min}$ and $Q^{\max}$ limits
 
-It is also possible to define a minimum and maximum reactive power value. In that case, the feasible domain is
+It is also possible to define a minimum and maximum reactive power values. In that case, the feasible domain is
 constrained between those two values.
 
 ```{image} /_static/Load/FlexibleLoad/Domain_Pconst_QU_Qmin_Qmax.svg
@@ -622,7 +622,7 @@ auth = ("username", "password")
 res_flexible_powers = fp.compute_powers(auth=auth, voltages=voltages, power=power)
 ```
 
-The variable `res_flexible_powers` contains the powers that have been really produced by
+The variable `res_flexible_powers` contains the powers that have been actually produced by
 the flexible load for the voltages stored in the variable named `voltages`.
 
 Plotting the control curve $Q(U)$ gives:
@@ -632,7 +632,8 @@ Plotting the control curve $Q(U)$ gives:
 :align: center
 ```
 
-Here, again the complete reactive power range is not fully used.
+Here, again the complete reactive power range is not fully used as it is constrained between the $Q^{\min}$ and
+$Q^{\max}$ values defined.
 
 The same plot can be obtained with:
 

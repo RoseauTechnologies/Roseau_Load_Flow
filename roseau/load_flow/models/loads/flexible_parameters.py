@@ -512,16 +512,17 @@ class FlexibleParameter(JsonMixin):
     @s_max.setter
     @ureg_wraps(None, (None, "VA"), strict=False)
     def s_max(self, value: float) -> None:
-        self._s_max = value
         if value <= 0:
-            msg = f"'s_max' must be greater than 0 but {self.s_max:P#~} was provided."
+            s_max = Q_(value, "VA")
+            msg = f"'s_max' must be greater than 0 but {s_max:P#~} was provided."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_FLEXIBLE_PARAMETER_VALUE)
+        self._s_max = value
         if self._q_max is not None and self._q_max > self._s_max:
             logger.warning("'s_max' has been updated but now 'q_max' is greater than s_max. 'q_max' is set to s_max")
             self._q_max = self._s_max
         if self._q_min is not None and self._q_min < -self._s_max:
-            logger.warning("'s_max' has been updated but now 'q_min' is lesser than -s_max. 'q_min' is set to -s_max")
+            logger.warning("'s_max' has been updated but now 'q_min' is less than -s_max. 'q_min' is set to -s_max")
             self._q_min = -self._s_max
 
     @property
@@ -533,11 +534,17 @@ class FlexibleParameter(JsonMixin):
     @q_min.setter
     @ureg_wraps(None, (None, "VAr"), strict=False)
     def q_min(self, value: Optional[float]) -> None:
-        self._q_min = value
         if value is not None and value < -self._s_max:
-            msg = f"'q_min' must be greater than -s_max ({-self.s_max:P#~}) but {self.q_min:P#~} was provided."
+            q_min = Q_(value, "VAr")
+            msg = f"'q_min' must be greater than -s_max ({-self.s_max:P#~}) but {q_min:P#~} was provided."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_FLEXIBLE_PARAMETER_VALUE)
+        if value is not None and self._q_max is not None and value > self._q_max:
+            q_min = Q_(value, "VAr")
+            msg = f"'q_min' must be greater than q_max ({self.q_max:P#~}) but {q_min:P#~} was provided."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_FLEXIBLE_PARAMETER_VALUE)
+        self._q_min = value
 
     @property
     @ureg_wraps("VAr", (None,), strict=False)
@@ -548,11 +555,17 @@ class FlexibleParameter(JsonMixin):
     @q_max.setter
     @ureg_wraps(None, (None, "VAr"), strict=False)
     def q_max(self, value: Optional[float]) -> None:
-        self._q_max = value
         if value is not None and value > self._s_max:
-            msg = f"'q_max' must be lesser than s_max ({self.s_max:P#~}) but {self.q_max:P#~} was provided."
+            q_max = Q_(value, "VAr")
+            msg = f"'q_max' must be less than s_max ({self.s_max:P#~}) but {q_max:P#~} was provided."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_FLEXIBLE_PARAMETER_VALUE)
+        if value is not None and self._q_min is not None and value < self._q_min:
+            q_max = Q_(value, "VAr")
+            msg = f"'q_max' must be greater than q_min ({self.q_min:P#~}) but {q_max:P#~} was provided."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_FLEXIBLE_PARAMETER_VALUE)
+        self._q_max = value
 
     @classmethod
     def constant(cls) -> Self:
@@ -945,14 +958,17 @@ class FlexibleParameter(JsonMixin):
         )
 
     def to_dict(self, include_geometry: bool = True) -> JsonDict:
-        return {
+        res = {
             "control_p": self.control_p.to_dict(),
             "control_q": self.control_q.to_dict(),
             "projection": self.projection.to_dict(),
             "s_max": self._s_max,
-            "q_min": self._q_min,
-            "q_max": self._q_max,
         }
+        if self._q_min is not None:
+            res["q_min"] = self._q_min
+        if self._q_max is not None:
+            res["q_max"] = self._q_max
+        return res
 
     def _results_to_dict(self, warning: bool) -> NoReturn:
         msg = f"The {type(self).__name__} has no results to export."
