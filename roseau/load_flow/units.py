@@ -26,6 +26,7 @@ ureg: UnitRegistry = UnitRegistry(
         lambda s: s.replace("%", " percent "),
     ]
 )
+ureg.define("volt_ampere_reactive = 1 * volt_ampere = VAr")
 
 if TYPE_CHECKING:
     Q_: TypeAlias = PlainQuantity[T]

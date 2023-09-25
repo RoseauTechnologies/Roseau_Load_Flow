@@ -281,7 +281,7 @@ plt.show()
 
 When the active power is constant (no $P$ control), only the reactive power changes as a function
 of the local voltage. Thus, the reactive power may vary between $-S^{\max}$ and $+S^{\max}$. When
-$P^{\mathrm{th.}}\neq 0$, the point $(P, Q) produced by the control might lie outside the disc of
+$P^{\mathrm{th.}}\neq 0$, the point $(P, Q)$ produced by the control might lie outside the disc of
 radius $S^{\max}$ (when $P^{\mathrm{th.}}\neq 0$). Those points are projected on the circle of
 radius $S^{\max}$ and depending on the projection, the feasible domains change.
 
@@ -528,7 +528,7 @@ auth = ("username", "password")
 res_flexible_powers = fp.compute_powers(auth=auth, voltages=voltages, power=power)
 ```
 
-The variable `res_flexible_powers` contains the powers that have been really produced by
+The variable `res_flexible_powers` contains the powers that have been actually produced by
 the flexible load for the voltages stored in the variable named `voltages`.
 
 Plotting the control curve $Q(U)$ gives:
@@ -583,6 +583,97 @@ plt.show()
 Notice that when the voltages were too low or too high, the Euclidean projection forces the
 reduction of the produced active power and the (produced and consumed) reactive power to ensure a
 feasible solution. Like before, there is one point per volt and several points overlap.
+
+### $Q^{\min}$ and $Q^{\max}$ limits
+
+It is also possible to define a minimum and maximum reactive power values. In that case, the feasible domain is
+constrained between those two values.
+
+```{image} /_static/Load/FlexibleLoad/Domain_Pconst_QU_Qmin_Qmax.svg
+:width: 300
+:align: center
+```
+
+```python
+import numpy as np
+
+from roseau.load_flow import Q_, FlexibleParameter, Control, Projection
+
+# Flexible parameter
+fp = FlexibleParameter(
+    control_p=Control.constant(),
+    control_q=Control.q_u(
+        u_min=Q_(210, "V"), u_down=Q_(220, "V"), u_up=Q_(240, "V"), u_max=Q_(250, "V")
+    ),
+    projection=Projection(type="euclidean"),
+    s_max=Q_(5, "kVA"),
+    q_min=Q_(-3, "kVAr"),  # <---- set Q_min >= -S_max
+    q_max=Q_(4, "kVAr"),  # <---- set Q_max <= S_max
+)
+
+# We want to get the res_flexible_powers for a set of voltages norms
+voltages = np.arange(205, 256, dtype=float)
+
+# and when the theoretical power is the following
+power = Q_(-2.5, "kVA")
+
+# Get the resulting flexible powers for the given theoretical power and voltages list.
+auth = ("username", "password")
+res_flexible_powers = fp.compute_powers(auth=auth, voltages=voltages, power=power)
+```
+
+The variable `res_flexible_powers` contains the powers that have been actually produced by
+the flexible load for the voltages stored in the variable named `voltages`.
+
+Plotting the control curve $Q(U)$ gives:
+
+```{image} /_static/Load/FlexibleLoad/Pconst_QU_Qmin_Qmax_Control_Curve_Example.svg
+:width: 700
+:align: center
+```
+
+Here, again the complete reactive power range is not fully used as it is constrained between the $Q^{\min}$ and
+$Q^{\max}$ values defined.
+
+The same plot can be obtained with:
+
+```python
+from matplotlib import pyplot as plt
+
+ax = plt.subplot()  # New axes
+ax, res_flexible_powers = fp.plot_control_q(
+    auth=auth,
+    voltages=voltages,
+    power=power,
+    res_flexible_powers=res_flexible_powers,
+    ax=ax,
+)
+plt.show()
+```
+
+If we plot the trajectory of the control in the $(P, Q)$ space, we get:
+
+```{image} /_static/Load/FlexibleLoad/Pconst_QU_Qmin_Qmax_Trajectory_Example.svg
+:width: 700
+:align: center
+```
+
+The same plot can be obtained with:
+
+```python
+from matplotlib import pyplot as plt
+
+ax = plt.subplot()  # New axes
+ax, res_flexible_powers = fp.plot_pq(
+    auth=auth,
+    voltages=voltages,
+    power=power,
+    res_flexible_powers=res_flexible_powers,
+    voltages_labels_mask=np.isin(voltages, [210, 215, 230, 245, 250]),
+    ax=ax,
+)
+plt.show()
+```
 
 ## Both active and reactive powers control
 

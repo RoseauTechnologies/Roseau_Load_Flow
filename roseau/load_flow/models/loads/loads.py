@@ -289,6 +289,14 @@ class PowerLoad(AbstractLoad):
                     msg = f"The power is greater than the parameter s_max for flexible load {self.id!r}"
                     logger.error(msg)
                     raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_S_VALUE)
+                if power.imag < fp.q_min.m_as("VAr"):
+                    msg = f"The reactive power is lesser than the parameter q_min for flexible load {id!r}"
+                    logger.error(msg)
+                    raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_S_VALUE)
+                if power.imag > fp.q_max.m_as("VAr"):
+                    msg = f"The reactive power is greater than the parameter q_max for flexible load {id!r}"
+                    logger.error(msg)
+                    raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_S_VALUE)
                 if fp.control_p.type == "p_max_u_production" and power.real > 0:
                     msg = f"There is a production control but a positive power for flexible load {self.id!r}"
                     logger.error(msg)

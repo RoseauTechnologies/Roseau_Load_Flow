@@ -54,7 +54,7 @@ class RoseauLoadFlowExceptionCode(Enum):
     BAD_PROJECTION_VALUE = auto()
 
     # Flexible parameter
-    BAD_SMAX_VALUE = auto()
+    BAD_FLEXIBLE_PARAMETER_VALUE = auto()
 
     # Load
     BAD_LOAD_ID = auto()

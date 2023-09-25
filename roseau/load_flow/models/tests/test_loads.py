@@ -163,6 +163,8 @@ def test_flexible_load():
         uq_up=240,
         uq_max=250,
         s_max=300,
+        q_min=-200,
+        q_max=200,
         alpha_control=100.0,
         alpha_proj=100.0,
         epsilon_proj=0.01,
@@ -175,6 +177,8 @@ def test_flexible_load():
         uq_up=240,
         uq_max=250,
         s_max=300,
+        q_min=-200,
+        q_max=200,
         alpha_control=100.0,
         alpha_proj=100.0,
         epsilon_proj=0.01,
@@ -189,6 +193,18 @@ def test_flexible_load():
     with pytest.raises(RoseauLoadFlowException) as e:
         PowerLoad("flexible load", bus, powers=[300 + 50j, 0, 0j], phases="abcn", flexible_params=fp)
     assert "The power is greater than the parameter s_max for flexible load" in e.value.msg
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_S_VALUE
+
+    fp = [fp_pq_prod, fp_const, fp_const]
+    with pytest.raises(RoseauLoadFlowException) as e:
+        PowerLoad("flexible load", bus, powers=[10 + 250j, 0, 0j], phases="abcn", flexible_params=fp)
+    assert "The reactive power is greater than the parameter q_max for flexible load" in e.value.msg
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_S_VALUE
+
+    fp = [fp_pq_prod, fp_const, fp_const]
+    with pytest.raises(RoseauLoadFlowException) as e:
+        PowerLoad("flexible load", bus, powers=[10 - 250j, 0, 0j], phases="abcn", flexible_params=fp)
+    assert "The reactive power is lesser than the parameter q_min for flexible load" in e.value.msg
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_S_VALUE
 
     fp = [fp_pq_prod, fp_const, fp_const]
