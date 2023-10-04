@@ -373,12 +373,12 @@ All the following tables are rounded to 2 decimals to be properly displayed.
 >>> en.res_sources
 ```
 
-| source_id | phase |      current |         power |    potential |
-| :-------- | :---- | -----------: | ------------: | -----------: |
-| vs        | a     |    -45.06-0j | -10406.07+0j) |    230.94+0j |
-| vs        | b     | 22.53+39.02j | -10406.07-0j) | -115.47-200j |
-| vs        | c     | 22.53-39.02j | -10406.07+0j) | -115.47+200j |
-| vs        | n     |           0j |            0j |           0j |
+| source_id | phase |      current |        power |    potential |
+| :-------- | :---- | -----------: | -----------: | -----------: |
+| vs        | a     |    -45.06-0j | -10406.07+0j |    230.94+0j |
+| vs        | b     | 22.53+39.02j | -10406.07-0j | -115.47-200j |
+| vs        | c     | 22.53-39.02j | -10406.07+0j | -115.47+200j |
+| vs        | n     |           0j |           0j |           0j |
 
 ```pycon
 >>> en.res_grounds

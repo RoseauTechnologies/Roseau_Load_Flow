@@ -41,7 +41,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
     )
     """The pattern to extract the winding of the primary and of the secondary of the transformer."""
 
-    @ureg_wraps(None, (None, None, None, "V", "V", "VA", "W", "", "W", ""), strict=False)
+    @ureg_wraps(None, (None, None, None, "V", "V", "VA", "W", "", "W", "", "VA"), strict=False)
     def __init__(
         self,
         id: Id,
@@ -53,6 +53,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         i0: float,
         psc: float,
         vsc: float,
+        max_power: Optional[float] = None,
     ) -> None:
         """TransformerParameters constructor.
 
@@ -85,22 +86,11 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
 
             vsc:
                 Voltages on LV side during short-circuit test (%)
+
+            max_power:
+                The maximum power loading of the transformer (VA). It is not used in the load flow.
         """
         super().__init__(id)
-        self._sn = sn
-        self._uhv = uhv
-        self._ulv = ulv
-        self._i0 = i0
-        self._p0 = p0
-        self._psc = psc
-        self._vsc = vsc
-        self.type = type
-        if type in ("single", "center"):
-            self.winding1 = None
-            self.winding2 = None
-            self.phase_displacement = None
-        else:
-            self.winding1, self.winding2, self.phase_displacement = self.extract_windings(string=type)
 
         # Check
         if uhv < ulv:
@@ -136,6 +126,22 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
                 f"Transformer type {id!r} doesn't respect the inequality: i0 * sn > p0. The magnetizing admittance "
                 f"imaginary part will be null."
             )
+
+        self._sn = sn
+        self._uhv = uhv
+        self._ulv = ulv
+        self._i0 = i0
+        self._p0 = p0
+        self._psc = psc
+        self._vsc = vsc
+        self.type = type
+        if type in ("single", "center"):
+            self.winding1 = None
+            self.winding2 = None
+            self.phase_displacement = None
+        else:
+            self.winding1, self.winding2, self.phase_displacement = self.extract_windings(string=type)
+        self.max_power = max_power
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, TransformerParameters):
@@ -194,6 +200,16 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
     def vsc(self) -> Q_[float]:
         """Voltages on LV side during short-circuit test (%)"""
         return self._vsc
+
+    @property
+    def max_power(self) -> Optional[Q_[float]]:
+        """The maximum power loading of the transformer (VA) if it is set."""
+        return None if self._max_power is None else Q_(self._max_power, "VA")
+
+    @max_power.setter
+    @ureg_wraps(None, (None, "VA"), strict=False)
+    def max_power(self, value: Optional[float]) -> None:
+        self._max_power = value
 
     @ureg_wraps(("ohm", "S", "", None), (None,), strict=False)
     def to_zyk(self) -> tuple[Q_[complex], Q_[complex], Q_[float], float]:
@@ -262,10 +278,11 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             i0=data["i0"],  # Current during off-load test (%)
             psc=data["psc"],  # Losses during short-circuit test (W)
             vsc=data["vsc"],  # Voltages on LV side during short-circuit test (%)
+            max_power=data.get("max_power"),  # Maximum power loading (VA)
         )
 
-    def to_dict(self, include_geometry: bool = True) -> JsonDict:
-        return {
+    def to_dict(self, *, _lf_only: bool = False) -> JsonDict:
+        res = {
             "id": self.id,
             "sn": self._sn,
             "uhv": self._uhv,
@@ -276,6 +293,9 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             "vsc": self._vsc,
             "type": self.type,
         }
+        if not _lf_only and self.max_power is not None:
+            res["max_power"] = self.max_power.magnitude
+        return res
 
     def _results_to_dict(self, warning: bool) -> NoReturn:
         msg = f"The {type(self).__name__} has no results to export."

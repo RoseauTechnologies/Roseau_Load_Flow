@@ -8,6 +8,7 @@ from roseau.load_flow.models.branches import AbstractBranch
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.transformers.parameters import TransformerParameters
 from roseau.load_flow.typing import Id, JsonDict
+from roseau.load_flow.units import Q_
 
 logger = logging.getLogger(__name__)
 
@@ -130,8 +131,15 @@ class Transformer(AbstractBranch):
         self._parameters = value
         self._invalidate_network_results()
 
-    def to_dict(self, include_geometry: bool = True) -> JsonDict:
-        return {**super().to_dict(include_geometry=include_geometry), "params_id": self.parameters.id, "tap": self.tap}
+    @property
+    def max_power(self) -> Optional[Q_[float]]:
+        """The maximum power loading of the transformer (in VA)."""
+        # Do not add a setter. The user must know that if they change the max_power, it changes
+        # for all transformers that share the parameters. It is better to set it on the parameters.
+        return self.parameters.max_power
+
+    def to_dict(self, *, _lf_only: bool = False) -> JsonDict:
+        return {**super().to_dict(_lf_only=_lf_only), "params_id": self.parameters.id, "tap": self.tap}
 
     def _compute_phases_three(
         self,
@@ -245,3 +253,16 @@ class Transformer(AbstractBranch):
             )
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
+
+    @property
+    def res_violated(self) -> bool | None:
+        """Whether the transformer power exceeds the maximum power (loading > 100%).
+
+        Returns ``None`` if the maximum power is not set.
+        """
+        s_max = self.parameters._max_power
+        if s_max is None:
+            return None
+        powers1, powers2 = self._res_powers_getter(warning=True)
+        # True if either the primary or secondary is overloaded
+        return float(max(abs(sum(powers1)), abs(sum(powers2)))) > s_max

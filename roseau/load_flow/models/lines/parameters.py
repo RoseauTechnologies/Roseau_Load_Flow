@@ -43,8 +43,10 @@ class LineParameters(Identifiable, JsonMixin):
         rf"^({_type_re})_({_material_re})_{_section_re}$", flags=re.IGNORECASE
     )
 
-    @ureg_wraps(None, (None, None, "ohm/km", "S/km"), strict=False)
-    def __init__(self, id: Id, z_line: np.ndarray, y_shunt: Optional[np.ndarray] = None) -> None:
+    @ureg_wraps(None, (None, None, "ohm/km", "S/km", "A"), strict=False)
+    def __init__(
+        self, id: Id, z_line: np.ndarray, y_shunt: Optional[np.ndarray] = None, max_current: Optional[float] = None
+    ) -> None:
         """LineParameters constructor.
 
         Args:
@@ -56,6 +58,9 @@ class LineParameters(Identifiable, JsonMixin):
 
             y_shunt:
                 The Y matrix of the line (Siemens/km). This field is optional if the line has no shunt part.
+
+            max_current:
+                An optional maximum current loading of the line (A). It is not used in the load flow.
         """
         super().__init__(id)
         self._z_line = np.asarray(z_line, dtype=complex)
@@ -65,6 +70,7 @@ class LineParameters(Identifiable, JsonMixin):
         else:
             self._with_shunt = not np.allclose(y_shunt, 0)
             self._y_shunt = np.asarray(y_shunt, dtype=complex)
+        self.max_current = max_current
         self._check_matrix()
 
     def __eq__(self, other: object) -> bool:
@@ -99,9 +105,19 @@ class LineParameters(Identifiable, JsonMixin):
     def with_shunt(self) -> bool:
         return self._with_shunt
 
+    @property
+    def max_current(self) -> Optional[Q_[float]]:
+        """The maximum current loading of the line (A) if it is set."""
+        return None if self._max_current is None else Q_(self._max_current, "A")
+
+    @max_current.setter
+    @ureg_wraps(None, (None, "A"), strict=False)
+    def max_current(self, value: Optional[float]) -> None:
+        self._max_current = value
+
     @classmethod
     @ureg_wraps(
-        None, (None, None, "ohm/km", "ohm/km", "S/km", "S/km", "ohm/km", "ohm/km", "S/km", "S/km"), strict=False
+        None, (None, None, "ohm/km", "ohm/km", "S/km", "S/km", "ohm/km", "ohm/km", "S/km", "S/km", "A"), strict=False
     )
     def from_sym(
         cls,
@@ -114,6 +130,7 @@ class LineParameters(Identifiable, JsonMixin):
         xpn: Optional[float] = None,
         bn: Optional[float] = None,
         bpn: Optional[float] = None,
+        max_current: Optional[float] = None,
     ) -> Self:
         """Create line parameters from a symmetric model.
 
@@ -145,6 +162,9 @@ class LineParameters(Identifiable, JsonMixin):
             bpn:
                 Phase to neutral susceptance (siemens/km)
 
+            max_current:
+                An optional maximum current loading of the line (A). It is not used in the load flow.
+
         Returns:
             The created line parameters.
 
@@ -154,7 +174,7 @@ class LineParameters(Identifiable, JsonMixin):
             impedance matrix is not invertible.
         """
         z_line, y_shunt = cls._sym_to_zy(id=id, z0=z0, z1=z1, y0=y0, y1=y1, zn=zn, xpn=xpn, bn=bn, bpn=bpn)
-        return cls(id=id, z_line=z_line, y_shunt=y_shunt)
+        return cls(id=id, z_line=z_line, y_shunt=y_shunt, max_current=max_current)
 
     @staticmethod
     def _sym_to_zy(
@@ -277,7 +297,7 @@ class LineParameters(Identifiable, JsonMixin):
         return z_line, y_shunt
 
     @classmethod
-    @ureg_wraps(None, (None, None, None, None, None, "mm**2", "mm**2", "m", "m"), strict=False)
+    @ureg_wraps(None, (None, None, None, None, None, "mm**2", "mm**2", "m", "m", "A"), strict=False)
     def from_geometry(
         cls,
         id: Id,
@@ -288,6 +308,7 @@ class LineParameters(Identifiable, JsonMixin):
         section_neutral: float,
         height: float,
         external_diameter: float,
+        max_current: Optional[float] = None,
     ) -> Self:
         """Create line parameters from its geometry.
 
@@ -316,6 +337,9 @@ class LineParameters(Identifiable, JsonMixin):
             external_diameter:
                 External diameter of the wire (m).
 
+            max_current:
+                An optional maximum current loading of the line (A). It is not used in the load flow.
+
         Returns:
             The created line parameters.
 
@@ -332,7 +356,7 @@ class LineParameters(Identifiable, JsonMixin):
             height=height,
             external_diameter=external_diameter,
         )
-        return cls(id=id, z_line=z_line, y_shunt=y_shunt)
+        return cls(id=id, z_line=z_line, y_shunt=y_shunt, max_current=max_current)
 
     @staticmethod
     def _geometry_to_zy(
@@ -469,13 +493,14 @@ class LineParameters(Identifiable, JsonMixin):
         return z_line, y_shunt
 
     @classmethod
-    @ureg_wraps(None, (None, None, "mm²", "m", "mm"), strict=False)
+    @ureg_wraps(None, (None, None, "mm²", "m", "mm", "A"), strict=False)
     def from_name_lv(
         cls,
         name: str,
         section_neutral: Optional[float] = None,
         height: Optional[float] = None,
         external_diameter: Optional[float] = None,
+        max_current: Optional[float] = None,
     ) -> Self:
         """Method to get the electrical parameters of a LV line from its canonical name.
         Some hypothesis will be made: the section of the neutral is the same as the other sections, the height and
@@ -493,6 +518,9 @@ class LineParameters(Identifiable, JsonMixin):
 
             external_diameter:
                 External diameter of the wire (mm). If None a default value will be used.
+
+            max_current:
+                An optional maximum current loading of the line (A). It is not used in the load flow.
 
         Returns:
             The corresponding line parameters.
@@ -527,15 +555,19 @@ class LineParameters(Identifiable, JsonMixin):
             section_neutral=section_neutral,
             height=height,
             external_diameter=external_diameter,
+            max_current=max_current,
         )
 
     @classmethod
-    def from_name_mv(cls, name: str) -> Self:
+    def from_name_mv(cls, name: str, max_current: Optional[float] = None) -> Self:
         """Method to get the electrical parameters of a MV line from its canonical name.
 
         Args:
             name:
                 The name of the line the parameters must be computed. E.g. "U_AL_150".
+
+            max_current:
+                An optional maximum current loading of the line (A). It is not used in the load flow.
 
         Returns:
             The corresponding line parameters.
@@ -573,7 +605,7 @@ class LineParameters(Identifiable, JsonMixin):
 
         z_line = (r + x * 1j) * np.eye(3, dtype=float)  # in ohms/km
         y_shunt = b * 1j * np.eye(3, dtype=float)  # in siemens/km
-        return cls(name, z_line=z_line, y_shunt=y_shunt)
+        return cls(name, z_line=z_line, y_shunt=y_shunt, max_current=max_current)
 
     #
     # Json Mixin interface
@@ -591,13 +623,15 @@ class LineParameters(Identifiable, JsonMixin):
         """
         z_line = np.asarray(data["z_line"][0]) + 1j * np.asarray(data["z_line"][1])
         y_shunt = np.asarray(data["y_shunt"][0]) + 1j * np.asarray(data["y_shunt"][1]) if "y_shunt" in data else None
-        return cls(id=data["id"], z_line=z_line, y_shunt=y_shunt)
+        return cls(id=data["id"], z_line=z_line, y_shunt=y_shunt, max_current=data.get("max_current"))
 
-    def to_dict(self, include_geometry: bool = True) -> JsonDict:
+    def to_dict(self, *, _lf_only: bool = False) -> JsonDict:
         """Return the line parameters information as a dictionary format."""
         res = {"id": self.id, "z_line": [self._z_line.real.tolist(), self._z_line.imag.tolist()]}
         if self.with_shunt:
             res["y_shunt"] = [self._y_shunt.real.tolist(), self._y_shunt.imag.tolist()]
+        if not _lf_only and self.max_current is not None:
+            res["max_current"] = self.max_current.magnitude
         return res
 
     def _results_to_dict(self, warning: bool) -> NoReturn:

@@ -1,13 +1,15 @@
 import logging
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
 from typing_extensions import Self
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
-from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import Element
 from roseau.load_flow.typing import Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
+
+if TYPE_CHECKING:
+    from roseau.load_flow.models.buses import Bus
 
 logger = logging.getLogger(__name__)
 
@@ -65,7 +67,7 @@ class Ground(Element):
         """The bus ID and phase of the buses connected to this ground."""
         return self._connected_buses.copy()  # copy so that the user does not change it
 
-    def connect(self, bus: Bus, phase: str = "n") -> None:
+    def connect(self, bus: "Bus", phase: str = "n") -> None:
         """Connect the ground to a bus on the given phase.
 
         Args:
@@ -97,7 +99,7 @@ class Ground(Element):
         self._connected_buses = data["buses"]
         return self
 
-    def to_dict(self, include_geometry: bool = True) -> JsonDict:
+    def to_dict(self, *, _lf_only: bool = False) -> JsonDict:
         # Shunt lines and potential references will have the ground in their dict not here.
         return {
             "id": self.id,

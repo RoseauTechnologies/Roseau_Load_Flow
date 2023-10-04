@@ -4,6 +4,14 @@
 
 **In development**
 
+- {gh-pr}`138` Add network constraints for analysis of the results.
+  - Buses can define minimum and maximum voltages. Use `bus.res_violated` to see if the bus has
+    over- or under-voltage.
+  - Lines can define a maximum current. Use `line.res_violated` to see if the loading of any of the
+    line's cables is too high.
+  - Transformers can define a maximum power. Use `transformer.res_violated` to see if the transformer
+    loading is too high.
+  - The new fields also appear in the data frames of the network.
 - {gh-pr}`133` {gh-issue}`126` Add Qmin and Qmax limits of flexible parameters.
 - {gh-pr}`132` {gh-issue}`101` Document extra utilities including converters and constants.
 - {gh-pr}`131` {gh-issue}`127` Improve the documentation of the flexible loads.

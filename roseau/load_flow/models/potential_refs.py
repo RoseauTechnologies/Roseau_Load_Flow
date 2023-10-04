@@ -86,7 +86,7 @@ class PotentialRef(Element):
     def from_dict(cls, data: JsonDict) -> Self:
         return cls(data["id"], data["element"], phase=data.get("phases"))
 
-    def to_dict(self, include_geometry: bool = True) -> JsonDict:
+    def to_dict(self, *, _lf_only: bool = False) -> JsonDict:
         res = {"id": self.id}
         e = self.element
         if isinstance(e, Bus):

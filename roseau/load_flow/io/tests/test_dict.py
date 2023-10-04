@@ -23,8 +23,8 @@ def test_to_dict():
     ground = Ground("ground")
     vn = 400 / np.sqrt(3)
     voltages = [vn, vn * np.exp(-2 / 3 * np.pi * 1j), vn * np.exp(2 / 3 * np.pi * 1j)]
-    source_bus = Bus(id="source", phases="abcn", geometry=Point(0.0, 0.0))
-    load_bus = Bus(id="load bus", phases="abcn", geometry=Point(0.0, 1.0))
+    source_bus = Bus(id="source", phases="abcn", geometry=Point(0.0, 0.0), min_voltage=0.9 * vn)
+    load_bus = Bus(id="load bus", phases="abcn", geometry=Point(0.0, 1.0), max_voltage=1.1 * vn)
     ground.connect(load_bus)
     p_ref = PotentialRef("pref", element=ground)
     vs = VoltageSource("vs", source_bus, phases="abcn", voltages=voltages)
@@ -44,6 +44,8 @@ def test_to_dict():
         grounds=[ground],
         potential_refs=[p_ref],
     )
+
+    # Same id, different line parameters -> fail
     with pytest.raises(RoseauLoadFlowException) as e:
         en.to_dict()
     assert "There are multiple line parameters with id 'test'" in e.value.msg
@@ -52,17 +54,28 @@ def test_to_dict():
     # Same id, same line parameters -> ok
     lp2 = LineParameters("test", z_line=np.eye(4, dtype=complex), y_shunt=np.eye(4, dtype=complex))
     line2.parameters = lp2
+    en.to_dict()
+
+    # Dict content
+    line2.parameters = lp1
+    lp1.max_current = 1000
     res = en.to_dict()
     assert "geometry" in res["buses"][0]
     assert "geometry" in res["buses"][1]
     assert "geometry" in res["branches"][0]
     assert "geometry" in res["branches"][1]
+    assert np.isclose(res["buses"][0]["min_voltage"], 0.9 * vn)
+    assert np.isclose(res["buses"][1]["max_voltage"], 1.1 * vn)
+    assert np.isclose(res["lines_params"][0]["max_current"], 1000)
 
-    res = en.to_dict(include_geometry=False)
+    res = en.to_dict(_lf_only=True)
     assert "geometry" not in res["buses"][0]
     assert "geometry" not in res["buses"][1]
     assert "geometry" not in res["branches"][0]
     assert "geometry" not in res["branches"][1]
+    assert "min_voltage" not in res["buses"][0]
+    assert "max_voltage" not in res["buses"][1]
+    assert "max_current" not in res["lines_params"][0]
 
     # Same id, different transformer parameters -> fail
     ground = Ground("ground")
@@ -93,6 +106,8 @@ def test_to_dict():
         grounds=[ground],
         potential_refs=[p_ref],
     )
+
+    # Same id, different transformer parameters -> fail
     with pytest.raises(RoseauLoadFlowException) as e:
         en.to_dict()
     assert "There are multiple transformer parameters with id 't'" in e.value.msg
@@ -103,17 +118,24 @@ def test_to_dict():
         "t", type="Dyn11", uhv=20000, ulv=400, sn=160 * 1e3, p0=460, i0=2.3 / 100, psc=2350, vsc=4 / 100
     )
     transformer2.parameters = tp2
+    en.to_dict()
+
+    # Dict content
+    transformer2.parameters = tp1
+    tp1.max_power = 180_000
     res = en.to_dict()
     assert "geometry" in res["buses"][0]
     assert "geometry" in res["buses"][1]
     assert "geometry" in res["branches"][0]
     assert "geometry" in res["branches"][1]
+    assert np.isclose(res["transformers_params"][0]["max_power"], 180_000)
 
-    res = en.to_dict(include_geometry=False)
+    res = en.to_dict(_lf_only=True)
     assert "geometry" not in res["buses"][0]
     assert "geometry" not in res["buses"][1]
     assert "geometry" not in res["branches"][0]
     assert "geometry" not in res["branches"][1]
+    assert "max_power" not in res["transformers_params"][0]
 
 
 def test_v0_to_v1_converter(monkeypatch):

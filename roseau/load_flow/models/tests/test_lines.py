@@ -95,3 +95,43 @@ def test_line_parameters_shortcut():
     # Y
     assert line.with_shunt
     assert np.allclose(line.y_shunt.m_as("S"), 0.05 * y_shunt)
+
+
+def test_res_violated():
+    bus1 = Bus("bus1", phases="abc")
+    bus2 = Bus("bus1", phases="abc")
+    lp = LineParameters("lp", z_line=np.eye(3, dtype=complex))
+    line = Line("line", bus1=bus1, bus2=bus2, parameters=lp, length=Q_(50, "m"))
+    direct_seq = np.exp([0, -2 / 3 * np.pi * 1j, 2 / 3 * np.pi * 1j])
+
+    bus1._res_potentials = 230 * direct_seq
+    bus2._res_potentials = 225 * direct_seq
+    line._res_currents = 10 * direct_seq, -10 * direct_seq
+
+    # No limits
+    assert line.res_violated is None
+
+    # No constraint violated
+    lp.max_current = 11
+    assert line.res_violated is False
+
+    # Two violations
+    lp.max_current = 9
+    assert line.res_violated is True
+
+    # Side 1 violation
+    lp.max_current = 11
+    line._res_currents = 12 * direct_seq, -10 * direct_seq
+    assert line.res_violated is True
+
+    # Side 2 violation
+    lp.max_current = 11
+    line._res_currents = 10 * direct_seq, -12 * direct_seq
+    assert line.res_violated is True
+
+    # A single phase violation
+    lp.max_current = 11
+    line._res_currents = 10 * direct_seq, -10 * direct_seq
+    line._res_currents[0][0] = 12 * direct_seq[0]
+    line._res_currents[1][0] = -12 * direct_seq[0]
+    assert line.res_violated is True
