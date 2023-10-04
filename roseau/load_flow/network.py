@@ -8,6 +8,7 @@ import textwrap
 import warnings
 from collections.abc import Sized
 from importlib import resources
+from itertools import cycle
 from pathlib import Path
 from typing import NoReturn, Optional, TypeVar, Union
 from urllib.parse import urljoin
@@ -37,7 +38,7 @@ from roseau.load_flow.models import (
 )
 from roseau.load_flow.solvers import check_solver_params
 from roseau.load_flow.typing import Authentication, Id, JsonDict, Solver, StrPath
-from roseau.load_flow.utils import CatalogueMixin, JsonMixin, console
+from roseau.load_flow.utils import CatalogueMixin, JsonMixin, console, palette
 
 logger = logging.getLogger(__name__)
 
@@ -1298,14 +1299,14 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
 
         # Start creating a table to display the results
         table = Table(title="Available Networks")
-        table.add_column("Name")
-        table.add_column("Nb buses", justify="right", style="color(1)", header_style="color(1)")
-        table.add_column("Nb branches", justify="right", style="color(2)", header_style="color(2)")
-        table.add_column("Nb loads", justify="right", style="color(3)", header_style="color(3)")
-        table.add_column("Nb sources", justify="right", style="color(4)", header_style="color(4)")
-        table.add_column("Nb grounds", justify="right", style="color(5)", header_style="color(5)")
-        table.add_column("Nb potential refs", justify="right", style="color(6)", header_style="color(6)")
-        table.add_column("Available load points", justify="right", style="color(9)", header_style="color(9)")
+        table.add_column("Name", overflow="fold")
+        table.add_column("Nb buses", justify="right", overflow="fold")
+        table.add_column("Nb branches", justify="right", overflow="fold")
+        table.add_column("Nb loads", justify="right", overflow="fold")
+        table.add_column("Nb sources", justify="right", overflow="fold")
+        table.add_column("Nb grounds", justify="right", overflow="fold")
+        table.add_column("Nb potential refs", justify="right", overflow="fold")
+        table.add_column("Available load points", overflow="fold")
         empty_table = True
 
         # Match on the name
@@ -1334,6 +1335,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                     return x.lower() == load_point_name_pattern
 
         # Iterate over the networks
+        cycler = cycle(palette)
         for c_name in match_names_list:
             c_data = catalogue_data[c_name]
             available_load_points = c_data["load_points"]
@@ -1348,6 +1350,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                     str(c_data["nb_grounds"]),
                     str(c_data["nb_potential_refs"]),
                     ", ".join(repr(x) for x in sorted(c_data["load_points"])),
+                    style=next(cycler),
                 )
 
         # Handle the case of an empty table
