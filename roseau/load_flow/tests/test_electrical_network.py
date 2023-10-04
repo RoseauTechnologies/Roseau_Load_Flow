@@ -1501,37 +1501,37 @@ def test_print_catalogue():
     # Print the entire catalogue
     with console.capture() as capture:
         ElectricalNetwork.print_catalogue()
-    assert len(capture.get().split("\n")) == 88
+    assert len(capture.get().split("\n")) == 46
 
     # Filter on the network name
     with console.capture() as capture:
         ElectricalNetwork.print_catalogue(name="MV")
-    assert len(capture.get().split("\n")) == 48
+    assert len(capture.get().split("\n")) == 26
     with console.capture() as capture:
         ElectricalNetwork.print_catalogue(name=re.compile(r"^MV"))
-    assert len(capture.get().split("\n")) == 48
+    assert len(capture.get().split("\n")) == 26
 
     # Filter on the load point name
     with console.capture() as capture:
         ElectricalNetwork.print_catalogue(load_point_name="winter")
-    assert len(capture.get().split("\n")) == 88
+    assert len(capture.get().split("\n")) == 46
     with console.capture() as capture:
         ElectricalNetwork.print_catalogue(load_point_name=re.compile(r"^Winter"))
-    assert len(capture.get().split("\n")) == 88
+    assert len(capture.get().split("\n")) == 46
 
     # Filter on both
     with console.capture() as capture:
         ElectricalNetwork.print_catalogue(name="MV", load_point_name="winter")
-    assert len(capture.get().split("\n")) == 48
+    assert len(capture.get().split("\n")) == 26
     with console.capture() as capture:
         ElectricalNetwork.print_catalogue(name="MV", load_point_name=re.compile(r"^Winter"))
-    assert len(capture.get().split("\n")) == 48
+    assert len(capture.get().split("\n")) == 26
     with console.capture() as capture:
         ElectricalNetwork.print_catalogue(name=re.compile(r"^MV"), load_point_name="winter")
-    assert len(capture.get().split("\n")) == 48
+    assert len(capture.get().split("\n")) == 26
     with console.capture() as capture:
         ElectricalNetwork.print_catalogue(name=re.compile(r"^MV"), load_point_name=re.compile(r"^Winter"))
-    assert len(capture.get().split("\n")) == 48
+    assert len(capture.get().split("\n")) == 26
 
     # Regexp error
     with console.capture() as capture:
@@ -1539,4 +1539,4 @@ def test_print_catalogue():
     assert len(capture.get().split("\n")) == 2
     with console.capture() as capture:
         ElectricalNetwork.print_catalogue(load_point_name=r"^winter[0-]")
-    assert len(capture.get().split("\n")) == 3
+    assert len(capture.get().split("\n")) == 2

@@ -2,6 +2,7 @@ import logging
 import re
 import textwrap
 from importlib import resources
+from itertools import cycle
 from pathlib import Path
 from typing import NoReturn, Optional, Union
 
@@ -14,7 +15,7 @@ from typing_extensions import Self
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.typing import Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
-from roseau.load_flow.utils import CatalogueMixin, Identifiable, JsonMixin, console
+from roseau.load_flow.utils import CatalogueMixin, Identifiable, JsonMixin, console, palette
 
 logger = logging.getLogger(__name__)
 
@@ -487,14 +488,14 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
 
         # Start creating a table to display the results
         table = Table(title="Available Transformer Parameters")
-        table.add_column("Id")
-        table.add_column("Manufacturer", style="color(1)", header_style="color(1)")
-        table.add_column("Product range", style="color(2)", header_style="color(2)")
-        table.add_column("Efficiency", style="color(3)", header_style="color(3)")
-        table.add_column("Type", style="color(4)", header_style="color(4)")
-        table.add_column("Nominal power (kVA)", justify="right", style="color(5)", header_style="color(5)")
-        table.add_column("High voltage (kV)", justify="right", style="color(6)", header_style="color(6)")
-        table.add_column("Low voltage (kV)", justify="right", style="color(9)", header_style="color(9)")
+        table.add_column("Id", overflow="fold")
+        table.add_column("Manufacturer", overflow="fold")
+        table.add_column("Product range", overflow="fold")
+        table.add_column("Efficiency", overflow="fold")
+        table.add_column("Type", overflow="fold")
+        table.add_column("Nominal power (kVA)", justify="right", overflow="fold")
+        table.add_column("High voltage (kV)", justify="right", overflow="fold")
+        table.add_column("Low voltage (kV)", justify="right", overflow="fold")
         empty_table = True
 
         # Match on the manufacturer, range, efficiency and type
@@ -525,6 +526,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
 
         # Iterate over the transformers
         selected_index = catalogue_mask[catalogue_mask].index
+        cycler = cycle(palette)
         for idx in selected_index:
             empty_table = False
             table.add_row(
@@ -536,6 +538,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
                 f"{catalogue_data.at[idx, 'sn']/1000:.1f}",  # VA to kVA
                 f"{catalogue_data.at[idx, 'uhv']/1000:.1f}",  # V to kV
                 f"{catalogue_data.at[idx, 'ulv']/1000:.1f}",  # V to kV
+                style=next(cycler),
             )
 
         # Handle the case of an empty table

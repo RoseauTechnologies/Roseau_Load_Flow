@@ -412,18 +412,18 @@ def test_print_catalogue():
     # Print the entire catalogue
     with console.capture() as capture:
         TransformerParameters.print_catalogue()
-    assert len(capture.get().split("\n")) == 138
+    assert len(capture.get().split("\n")) == 136
 
     # Filter on a single attribute
     for field_name, value, expected_lines in (
-        ("id", "SE_Minera_A0Ak_50kVA", 9),
-        ("manufacturer", "SE", 124),
-        ("range", r"min.*", 64),
-        ("efficiency", "c0", 37),
-        ("type", "dy", 134),
-        ("sn", Q_(160, "kVA"), 18),
-        ("uhv", Q_(20, "kV"), 138),
-        ("ulv", 400, 138),
+        ("id", "SE_Minera_A0Ak_50kVA", 7),
+        ("manufacturer", "SE", 122),
+        ("range", r"min.*", 62),
+        ("efficiency", "c0", 35),
+        ("type", "dy", 132),
+        ("sn", Q_(160, "kVA"), 16),
+        ("uhv", Q_(20, "kV"), 136),
+        ("ulv", 400, 136),
     ):
         with console.capture() as capture:
             TransformerParameters.print_catalogue(**{field_name: value})
@@ -431,13 +431,13 @@ def test_print_catalogue():
 
     # Filter on two attributes
     for field_name, value, expected_lines in (
-        ("id", "SE_Minera_A0Ak_50kVA", 9),
-        ("range", "minera", 64),
-        ("efficiency", "c0", 37),
-        ("type", r"^d.*11$", 120),
-        ("sn", Q_(160, "kVA"), 17),
-        ("uhv", Q_(20, "kV"), 124),
-        ("ulv", 400, 124),
+        ("id", "SE_Minera_A0Ak_50kVA", 7),
+        ("range", "minera", 62),
+        ("efficiency", "c0", 35),
+        ("type", r"^d.*11$", 118),
+        ("sn", Q_(160, "kVA"), 15),
+        ("uhv", Q_(20, "kV"), 122),
+        ("ulv", 400, 122),
     ):
         with console.capture() as capture:
             TransformerParameters.print_catalogue(**{field_name: value}, manufacturer="se")
@@ -445,12 +445,12 @@ def test_print_catalogue():
 
     # Filter on three attributes
     for field_name, value, expected_lines in (
-        ("id", "se_VEGETA_C0BK_3150kva", 9),
-        ("efficiency", r"c0[abc]k", 23),
-        ("type", "dyn", 38),
-        ("sn", Q_(160, "kVA"), 10),
-        ("uhv", Q_(20, "kV"), 38),
-        ("ulv", 400, 38),
+        ("id", "se_VEGETA_C0BK_3150kva", 7),
+        ("efficiency", r"c0[abc]k", 21),
+        ("type", "dyn", 36),
+        ("sn", Q_(160, "kVA"), 8),
+        ("uhv", Q_(20, "kV"), 36),
+        ("ulv", 400, 36),
     ):
         with console.capture() as capture:
             TransformerParameters.print_catalogue(**{field_name: value}, manufacturer="se", range=r"^vegeta$")
