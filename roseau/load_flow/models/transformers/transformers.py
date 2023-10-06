@@ -255,7 +255,7 @@ class Transformer(AbstractBranch):
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
 
     @property
-    def res_violated(self) -> bool | None:
+    def res_violated(self) -> Optional[bool]:
         """Whether the transformer power exceeds the maximum power (loading > 100%).
 
         Returns ``None`` if the maximum power is not set.

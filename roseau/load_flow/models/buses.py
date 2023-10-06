@@ -178,7 +178,7 @@ class Bus(Element):
         self._max_voltage = value
 
     @property
-    def res_violated(self) -> bool | None:
+    def res_violated(self) -> Optional[bool]:
         """Whether the bus has voltage limits violations.
 
         Returns ``None`` if the bus has no voltage limits are not set.

@@ -377,7 +377,7 @@ class Line(AbstractBranch):
         return self._res_power_losses_getter(warning=True)
 
     @property
-    def res_violated(self) -> bool | None:
+    def res_violated(self) -> Optional[bool]:
         """Whether the line current exceeds the maximum current (loading > 100%).
 
         Returns ``None`` if the maximum current is not set.
