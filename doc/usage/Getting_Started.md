@@ -435,14 +435,14 @@ to magnitude and angle values.
 >>> en.res_buses_voltages["voltage"].transform([np.abs, np.angle])
 ```
 
-| bus_id | phase | ('voltage', 'absolute') | ('voltage', 'angle') |
-| :----- | :---- | ----------------------: | -------------------: |
-| sb     | an    |                  230.94 |                    0 |
-| sb     | bn    |                  230.94 |              -2.0944 |
-| sb     | cn    |                  230.94 |               2.0944 |
-| lb     | an    |                 221.928 |          2.89102e-19 |
-| lb     | bn    |                 221.928 |              -2.0944 |
-| lb     | cn    |                 221.928 |               2.0944 |
+| bus_id | phase | absolute |       angle |
+| :----- | :---- | -------: | ----------: |
+| sb     | an    |   230.94 |           0 |
+| sb     | bn    |   230.94 |     -2.0944 |
+| sb     | cn    |   230.94 |      2.0944 |
+| lb     | an    |  221.928 | 2.89102e-19 |
+| lb     | bn    |  221.928 |     -2.0944 |
+| lb     | cn    |  221.928 |      2.0944 |
 
 Or, if you prefer degrees:
 
@@ -451,14 +451,14 @@ Or, if you prefer degrees:
 ... en.res_buses_voltages["voltage"].transform([np.abs, ft.partial(np.angle, deg=True)])
 ```
 
-| bus_id | phase | ('voltage', 'absolute') | ('voltage', 'angle') |
-| :----- | :---- | ----------------------: | -------------------: |
-| sb     | an    |                  230.94 |                    0 |
-| sb     | bn    |                  230.94 |                 -120 |
-| sb     | cn    |                  230.94 |                  120 |
-| lb     | an    |                 221.928 |          1.65643e-17 |
-| lb     | bn    |                 221.928 |                 -120 |
-| lb     | cn    |                 221.928 |                  120 |
+| bus_id | phase | absolute |       angle |
+| :----- | :---- | -------: | ----------: |
+| sb     | an    |   230.94 |           0 |
+| sb     | bn    |   230.94 |        -120 |
+| sb     | cn    |   230.94 |         120 |
+| lb     | an    |  221.928 | 1.65643e-17 |
+| lb     | bn    |  221.928 |        -120 |
+| lb     | cn    |  221.928 |         120 |
 
 (gs-analysis-and-violations)=
 
