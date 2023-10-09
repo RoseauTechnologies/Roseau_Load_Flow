@@ -71,9 +71,17 @@ It leads to the following code
 >>> import numpy as np
 ... from roseau.load_flow import *
 
+>>> # Nominal phase-to-neutral voltage
+... un = 400 / np.sqrt(3)  # In Volts
+
+>>> # Optional network limits (for results analysis only)
+... u_min = 0.9 * un  # V
+... u_max = 1.1 * un  # V
+... i_max = 500.0  # A
+
 >>> # Create two buses
-... source_bus = Bus(id="sb", phases="abcn")
-... load_bus = Bus(id="lb", phases="abcn")
+... source_bus = Bus(id="sb", phases="abcn", min_voltage=u_min, max_voltage=u_max)
+... load_bus = Bus(id="lb", phases="abcn", min_voltage=u_min, max_voltage=u_max)
 
 >>> # Define the reference of potentials to be the neutral of the source bus
 ... ground = Ground(id="gnd")
@@ -82,17 +90,20 @@ It leads to the following code
 ... ground.connect(source_bus, phase="n")
 
 >>> # Create a LV source at the first bus
-... # Volts (phase-to-neutral because the source is connected to the neutral)
-... un = 400 / np.sqrt(3)
-... source_voltages = [un, un * np.exp(-2j * np.pi / 3), un * np.exp(2j * np.pi / 3)]
-... vs = VoltageSource(id="vs", bus=source_bus, voltages=source_voltages)
+... # (phase-to-neutral voltage because the source is connected to the neutral)
+... source_voltages = un * np.exp([0, -2j * np.pi / 3, 2j * np.pi / 3])
+... vs = VoltageSource(
+...     id="vs", bus=source_bus, voltages=source_voltages
+... )  # phases="abcn" inferred from the bus
 
 >>> # Add a load at the second bus
 ... load = PowerLoad(id="load", bus=load_bus, powers=[10e3 + 0j, 10e3, 10e3])  # VA
 
 >>> # Add a LV line between the source bus and the load bus
 ... # R = 0.1 Ohm/km, X = 0
-... lp = LineParameters("lp", z_line=(0.1 + 0.0j) * np.eye(4, dtype=complex))
+... lp = LineParameters(
+...     "lp", z_line=(0.1 + 0.0j) * np.eye(4, dtype=complex), max_current=i_max
+... )
 ... line = Line(id="line", bus1=source_bus, bus2=load_bus, parameters=lp, length=2.0)
 ```
 
