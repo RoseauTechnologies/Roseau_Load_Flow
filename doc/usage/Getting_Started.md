@@ -58,8 +58,6 @@ The following is a summary of the available elements:
   - `PotentialRef`: A potential reference sets the reference of potentials in the network. It can be connected to
     buses or grounds.
 
-For a more detailed description of the elements, please refer to the [API reference](../autoapi/roseau/load_flow/models/index).
-
 Let's use some of these elements to build the following network with a voltage source, a simple
 line and a constant power load. This network is a low voltage network (three-phase + neutral wire).
 

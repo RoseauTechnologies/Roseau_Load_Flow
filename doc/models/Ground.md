@@ -147,3 +147,12 @@ en.res_buses_voltages.transform([np.abs, ft.partial(np.angle, deg=True)])
 # | ('bus3', 'bc') |                   385.429 |         -121.026       |
 # | ('bus3', 'ca') |                   399.18  |          118.807       |
 ```
+
+## API Reference
+
+```{eval-rst}
+.. autoclass:: roseau.load_flow.models.Ground
+   :members:
+   :show-inheritance:
+   :no-index:
+```

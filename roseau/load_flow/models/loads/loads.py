@@ -20,11 +20,8 @@ class AbstractLoad(Element, ABC):
     """An abstract class of an electric load.
 
     The subclasses of this class can be used to depict:
-        * star-connected loads using a `phases` constructor argument containing a `"n"`
-        * delta-connected loads using a `phases` constructor argument which doesn't contain `"n"`
-
-    See Also:
-        :doc:`Load documentation </models/Load/index>`
+        * star-connected loads using a `phases` constructor argument containing `"n"`
+        * delta-connected loads using a `phases` constructor argument not containing `"n"`
     """
 
     _power_load_class: type["PowerLoad"]
@@ -204,11 +201,7 @@ class AbstractLoad(Element, ABC):
 
 
 class PowerLoad(AbstractLoad):
-    """A constant power load.
-
-    See Also:
-        :doc:`Power Load documentation </models/Load/PowerLoad>`
-    """
+    """A constant power load."""
 
     _type = "power"
 
@@ -352,11 +345,7 @@ class PowerLoad(AbstractLoad):
 
 
 class CurrentLoad(AbstractLoad):
-    """A constant current load.
-
-    See Also:
-        :doc:`Current Load documentation </models/Load/CurrentLoad>`
-    """
+    """A constant current load."""
 
     _type = "current"
 
@@ -407,11 +396,7 @@ class CurrentLoad(AbstractLoad):
 
 
 class ImpedanceLoad(AbstractLoad):
-    """A constant impedance load.
-
-    See Also:
-        :doc:`Impedance Load documentation </models/Load/ImpedanceLoad>`
-    """
+    """A constant impedance load."""
 
     _type = "impedance"
 

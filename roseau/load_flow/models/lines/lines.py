@@ -19,11 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 class Switch(AbstractBranch):
-    """A general purpose switch branch.
-
-    See Also:
-        :doc:`Switch model documentation </models/Switch>`
-    """
+    """A general purpose switch branch."""
 
     branch_type = "switch"
 
@@ -128,11 +124,7 @@ class Switch(AbstractBranch):
 
 
 class Line(AbstractBranch):
-    """An electrical line PI model with series impedance and optional shunt admittance.
-
-    See Also:
-        :doc:`Line documentation </models/Line/index>`
-    """
+    """An electrical line PI model with series impedance and optional shunt admittance."""
 
     branch_type = "line"
 
@@ -171,7 +163,8 @@ class Line(AbstractBranch):
                 The second bus (aka `"to_bus"`) to connect to the line.
 
             parameters:
-                The parameters of the line, an instance of :class:`LineParameters`.
+                Parameters defining the electrical model of the line. This is an instance of the
+                :class:`LineParameters` class and can be used by multiple lines.
 
             length:
                 The length of the line in km.

@@ -55,3 +55,20 @@ Projection
 FlexibleParameter
 FeasibleDomain
 ```
+
+## API Reference
+
+```{eval-rst}
+.. autoclass:: roseau.load_flow.models.Control
+   :members:
+   :show-inheritance:
+   :no-index:
+.. autoclass:: roseau.load_flow.models.Projection
+   :members:
+   :show-inheritance:
+   :no-index:
+.. autoclass:: roseau.load_flow.models.FlexibleParameter
+    :members:
+    :show-inheritance:
+    :no-index:
+```

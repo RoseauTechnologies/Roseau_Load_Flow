@@ -76,3 +76,24 @@ CurrentLoad
 PowerLoad
 FlexibleLoad/index
 ```
+
+## API Reference
+
+```{eval-rst}
+.. autoclass:: roseau.load_flow.models.AbstractLoad
+   :members:
+   :show-inheritance:
+   :no-index:
+.. autoclass:: roseau.load_flow.models.ImpedanceLoad
+   :members:
+   :show-inheritance:
+   :no-index:
+.. autoclass:: roseau.load_flow.models.CurrentLoad
+    :members:
+    :show-inheritance:
+    :no-index:
+.. autoclass:: roseau.load_flow.models.PowerLoad
+    :members:
+    :show-inheritance:
+    :no-index:
+```

@@ -16,11 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 class VoltageSource(Element):
-    """A voltage source.
-
-    See Also:
-        :doc:`Voltage source model documentation </models/VoltageSource>`
-    """
+    """A voltage source."""
 
     allowed_phases = Bus.allowed_phases
     """The allowed phases for a voltage source are the same as for a :attr:`bus<Bus.allowed_phases>`."""

@@ -54,8 +54,12 @@ class JsonMixin(metaclass=ABCMeta):
 
     @abstractmethod
     def to_dict(self, *, _lf_only: bool = False) -> JsonDict:
-        """Return the element information as a dictionary format."""
-        # _lf_only is used internally by Roseau Load Flow. Please do not use.
+        """Return the element information as a dictionary format.
+
+        Args:
+            _lf_only:
+                Internal argument, please do not use.
+        """
         raise NotImplementedError
 
     def to_json(self, path: StrPath) -> Path:
