@@ -3,6 +3,7 @@ from collections.abc import Sequence
 from typing import TYPE_CHECKING, Any, Optional
 
 import numpy as np
+import pandas as pd
 from shapely import Point
 from typing_extensions import Self
 
@@ -40,6 +41,8 @@ class Bus(Element):
         phases: str,
         geometry: Optional[Point] = None,
         potentials: Optional[Sequence[complex]] = None,
+        min_voltage: Optional[float] = None,
+        max_voltage: Optional[float] = None,
         **kwargs: Any,
     ) -> None:
         """Bus constructor.
@@ -60,8 +63,13 @@ class Bus(Element):
             potentials:
                 An optional list of initial potentials of each phase of the bus.
 
-            ground:
-                The ground of the bus.
+            min_voltage:
+                An optional minimum voltage of the bus (V). It is not used in the load flow.
+                It must be a phase-neutral voltage if the bus has a neutral, phase-phase otherwise.
+
+            max_voltage:
+                An optional maximum voltage of the bus (V). It is not used in the load flow.
+                It must be a phase-neutral voltage if the bus has a neutral, phase-phase otherwise.
         """
         super().__init__(id, **kwargs)
         self._check_phases(id, phases=phases)
@@ -70,6 +78,10 @@ class Bus(Element):
             potentials = [0] * len(phases)
         self.potentials = potentials
         self.geometry = geometry
+        self._min_voltage: Optional[float] = None
+        self._max_voltage: Optional[float] = None
+        self.min_voltage = min_voltage
+        self.max_voltage = max_voltage
 
         self._res_potentials: Optional[np.ndarray] = None
         self._short_circuits: list[dict[str, Any]] = []
@@ -127,6 +139,124 @@ class Bus(Element):
         potentials = self._res_potentials_getter(warning)
         return np.array([potentials[self.phases.index(p)] for p in phases])
 
+    @property
+    def min_voltage(self) -> Optional[Q_[float]]:
+        """The minimum voltage of the bus (V) if it is set."""
+        return None if self._min_voltage is None else Q_(self._min_voltage, "V")
+
+    @min_voltage.setter
+    @ureg_wraps(None, (None, "V"), strict=False)
+    def min_voltage(self, value: Optional[float]) -> None:
+        if value is not None and self._max_voltage is not None and value > self._max_voltage:
+            msg = (
+                f"Cannot set min voltage of bus {self.id!r} to {value} V as it is higher than its "
+                f"max voltage ({self._max_voltage} V)."
+            )
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_VOLTAGES)
+        if pd.isna(value):
+            value = None
+        self._min_voltage = value
+
+    @property
+    def max_voltage(self) -> Optional[Q_[float]]:
+        """The maximum voltage of the bus (V) if it is set."""
+        return None if self._max_voltage is None else Q_(self._max_voltage, "V")
+
+    @max_voltage.setter
+    @ureg_wraps(None, (None, "V"), strict=False)
+    def max_voltage(self, value: Optional[float]) -> None:
+        if value is not None and self._min_voltage is not None and value < self._min_voltage:
+            msg = (
+                f"Cannot set max voltage of bus {self.id!r} to {value} V as it is lower than its "
+                f"min voltage ({self._min_voltage} V)."
+            )
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_VOLTAGES)
+        if pd.isna(value):
+            value = None
+        self._max_voltage = value
+
+    @property
+    def res_violated(self) -> Optional[bool]:
+        """Whether the bus has voltage limits violations.
+
+        Returns ``None`` if the bus has no voltage limits are not set.
+        """
+        if self._min_voltage is None and self._max_voltage is None:
+            return None
+        voltages = abs(self._res_voltages_getter(warning=True))
+        if self._min_voltage is None:
+            assert self._max_voltage is not None
+            return float(max(voltages)) > self._max_voltage
+        elif self._max_voltage is None:
+            return float(min(voltages)) < self._min_voltage
+        else:
+            return float(min(voltages)) < self._min_voltage or float(max(voltages)) > self._max_voltage
+
+    def propagate_limits(self, force: bool = False) -> None:
+        """Propagate the voltage limits to neighbor buses.
+
+        Neighbor buses here refers to buses connected to this bus through lines or switches. This
+        ensures that these voltage limits are only applied to buses with the same voltage level. If
+        a bus is connected to this bus through a transformer, the voltage limits are not propagated
+        to that bus.
+
+        If this bus does not define any voltage limits, calling this method will unset the limits
+        of the neighbor buses.
+
+        Args:
+            force:
+                If ``False`` (default), an exception is raised if connected buses already have
+                limits different from this bus. If ``True``, the limits are propagated even if
+                connected buses have different limits.
+        """
+        from roseau.load_flow.models.lines import Line, Switch
+
+        buses: set[Bus] = set()
+        visited: set[Element] = set()
+        remaining = set(self._connected_elements)
+
+        while remaining:
+            branch = remaining.pop()
+            visited.add(branch)
+            if not isinstance(branch, (Line, Switch)):
+                continue
+            for element in branch._connected_elements:
+                if not isinstance(element, Bus) or element is self or element in buses:
+                    continue
+                buses.add(element)
+                to_add = set(element._connected_elements).difference(visited)
+                remaining.update(to_add)
+                if not (
+                    force
+                    or self._min_voltage is None
+                    or element._min_voltage is None
+                    or np.isclose(element._min_voltage, self._min_voltage)
+                ):
+                    msg = (
+                        f"Cannot propagate the minimum voltage ({self._min_voltage} V) of bus {self.id!r} "
+                        f"to bus {element.id!r} with different minimum voltage ({element._min_voltage} V)."
+                    )
+                    logger.error(msg)
+                    raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_VOLTAGES)
+                if not (
+                    force
+                    or self._max_voltage is None
+                    or element._max_voltage is None
+                    or np.isclose(element._max_voltage, self._max_voltage)
+                ):
+                    msg = (
+                        f"Cannot propagate the maximum voltage ({self._max_voltage} V) of bus {self.id!r} "
+                        f"to bus {element.id!r} with different maximum voltage ({element._max_voltage} V)."
+                    )
+                    logger.error(msg)
+                    raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_VOLTAGES)
+
+        for bus in buses:
+            bus._min_voltage = self._min_voltage
+            bus._max_voltage = self._max_voltage
+
     #
     # Json Mixin interface
     #
@@ -136,14 +266,26 @@ class Bus(Element):
         potentials = data.get("potentials")
         if potentials is not None:
             potentials = [complex(v[0], v[1]) for v in potentials]
-        return cls(id=data["id"], phases=data["phases"], geometry=geometry, potentials=potentials)
+        return cls(
+            id=data["id"],
+            phases=data["phases"],
+            geometry=geometry,
+            potentials=potentials,
+            min_voltage=data.get("min_voltage"),
+            max_voltage=data.get("max_voltage"),
+        )
 
-    def to_dict(self, include_geometry: bool = True) -> JsonDict:
+    def to_dict(self, *, _lf_only: bool = False) -> JsonDict:
         res = {"id": self.id, "phases": self.phases}
         if not np.allclose(self.potentials, 0):
             res["potentials"] = [[v.real, v.imag] for v in self._potentials]
-        if self.geometry is not None and include_geometry:
-            res["geometry"] = self.geometry.__geo_interface__
+        if not _lf_only:
+            if self.geometry is not None:
+                res["geometry"] = self.geometry.__geo_interface__
+            if self.min_voltage is not None:
+                res["min_voltage"] = self.min_voltage.magnitude
+            if self.max_voltage is not None:
+                res["max_voltage"] = self.max_voltage.magnitude
         return res
 
     def results_from_dict(self, data: JsonDict) -> None:
@@ -204,6 +346,6 @@ class Bus(Element):
         """Return the list of short-circuits of this bus."""
         return self._short_circuits[:]  # return a copy as users should not modify the list directly
 
-    def clear_short_circuits(self):
+    def clear_short_circuits(self) -> None:
         """Remove the short-circuits."""
         self._short_circuits = []

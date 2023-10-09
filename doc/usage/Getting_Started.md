@@ -9,9 +9,10 @@ In this tutorial you will learn how to:
 1. [Create a simple electrical network with one source and one load](gs-creating-network);
 2. [Solve a load flow](gs-solving-load-flow);
 3. [Get the results of the load flow](gs-getting-results);
-4. [Update the elements of the network](gs-updating-elements);
-5. [Save the network and the results to the disk for later analysis](gs-saving-network);
-6. [Load the saved network and the results from the disk](gs-loading-network).
+4. [Analyze the results](gs-analysis-and-violations);
+5. [Update the elements of the network](gs-updating-elements);
+6. [Save the network and the results to the disk for later analysis](gs-saving-network);
+7. [Load the saved network and the results from the disk](gs-loading-network).
 
 (gs-creating-network)=
 
@@ -70,9 +71,17 @@ It leads to the following code
 >>> import numpy as np
 ... from roseau.load_flow import *
 
+>>> # Nominal phase-to-neutral voltage
+... un = 400 / np.sqrt(3)  # In Volts
+
+>>> # Optional network limits (for results analysis only)
+... u_min = 0.9 * un  # V
+... u_max = 1.1 * un  # V
+... i_max = 500.0  # A
+
 >>> # Create two buses
-... source_bus = Bus(id="sb", phases="abcn")
-... load_bus = Bus(id="lb", phases="abcn")
+... source_bus = Bus(id="sb", phases="abcn", min_voltage=u_min, max_voltage=u_max)
+... load_bus = Bus(id="lb", phases="abcn", min_voltage=u_min, max_voltage=u_max)
 
 >>> # Define the reference of potentials to be the neutral of the source bus
 ... ground = Ground(id="gnd")
@@ -81,17 +90,20 @@ It leads to the following code
 ... ground.connect(source_bus, phase="n")
 
 >>> # Create a LV source at the first bus
-... # Volts (phase-to-neutral because the source is connected to the neutral)
-... un = 400 / np.sqrt(3)
-... source_voltages = [un, un * np.exp(-2j * np.pi / 3), un * np.exp(2j * np.pi / 3)]
-... vs = VoltageSource(id="vs", bus=source_bus, voltages=source_voltages)
+... # (phase-to-neutral voltage because the source is connected to the neutral)
+... source_voltages = un * np.exp([0, -2j * np.pi / 3, 2j * np.pi / 3])
+... vs = VoltageSource(
+...     id="vs", bus=source_bus, voltages=source_voltages
+... )  # phases="abcn" inferred from the bus
 
 >>> # Add a load at the second bus
 ... load = PowerLoad(id="load", bus=load_bus, powers=[10e3 + 0j, 10e3, 10e3])  # VA
 
 >>> # Add a LV line between the source bus and the load bus
 ... # R = 0.1 Ohm/km, X = 0
-... lp = LineParameters("lp", z_line=(0.1 + 0.0j) * np.eye(4, dtype=complex))
+... lp = LineParameters(
+...     "lp", z_line=(0.1 + 0.0j) * np.eye(4, dtype=complex), max_current=i_max
+... )
 ... line = Line(id="line", bus1=source_bus, bus2=load_bus, parameters=lp, length=2.0)
 ```
 
@@ -208,15 +220,16 @@ The results returned by the `res_` properties are also `Quantity` objects.
 The available results depend on the type of element. The following table summarizes the available
 results for each element type:
 
-| Element type                                | Available results                                                                                                                       |
-| ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `Bus`                                       | `res_potentials`, `res_voltages`                                                                                                        |
-| `Line`                                      | `res_currents`, `res_powers`, `res_potentials`, `res_voltages`, `res_series_power_losses`, `res_shunt_power_losses`, `res_power_losses` |
-| `Transformer`, `Switch`                     | `res_currents`, `res_powers`, `res_potentials`, `res_voltages`                                                                          |
-| `ImpedanceLoad`, `CurrentLoad`, `PowerLoad` | `res_currents`, `res_powers`, `res_potentials`, `res_voltages`, `res_flexible_powers`&#8270;                                            |
-| `VoltageSource`                             | `res_currents`, `res_powers`, `res_potentials`, `res_voltages`                                                                          |
-| `Ground`                                    | `res_potential`                                                                                                                         |
-| `PotentialRef`                              | `res_current` _(Always zero for a successful load flow)_                                                                                |
+| Element type                                | Available results                                                                                                                                       |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Bus`                                       | `res_potentials`, `res_voltages`, `res_violated`                                                                                                        |
+| `Line`                                      | `res_currents`, `res_powers`, `res_potentials`, `res_voltages`, `res_series_power_losses`, `res_shunt_power_losses`, `res_power_losses`, `res_violated` |
+| `Transformer`                               | `res_currents`, `res_powers`, `res_potentials`, `res_voltages`, `res_violated`                                                                          |
+| `Switch`                                    | `res_currents`, `res_powers`, `res_potentials`, `res_voltages`                                                                                          |
+| `ImpedanceLoad`, `CurrentLoad`, `PowerLoad` | `res_currents`, `res_powers`, `res_potentials`, `res_voltages`, `res_flexible_powers`&#8270;                                                            |
+| `VoltageSource`                             | `res_currents`, `res_powers`, `res_potentials`, `res_voltages`                                                                                          |
+| `Ground`                                    | `res_potential`                                                                                                                                         |
+| `PotentialRef`                              | `res_current` _(Always zero for a successful load flow)_                                                                                                |
 
 &#8270;: `res_flexible_powers` is only available for flexible loads (`PowerLoad`s with `flexible_params`). You'll see
 an example on the usage of flexible loads in the _Flexible Loads_ section.
@@ -242,7 +255,8 @@ array([0.22192818, 0.22192818, 0.22192818]) <Unit('kilovolt')>
 
 ```{important}
 Everywhere in `roseau-load-flow`, the `voltages` of an element depend on the element's `phases`.
-Voltages of elements connected in a *Star (wye)* configuration (elements that have a neutral connection indicated by the presence of the `'n'` char in their `phases` attribute) are the
+Voltages of elements connected in a *Star (wye)* configuration (elements that have a neutral
+connection indicated by the presence of the `'n'` char in their `phases` attribute) are the
 **phase-to-neutral** voltages. Voltages of elements connected in a *Delta* configuration (elements
 that do not have a neutral connection indicated by the absence of the `'n'` char from their
 `phases` attribute) are the **phase-to-phase** voltages. This is true for *input* voltages, such
@@ -276,9 +290,13 @@ The results can also be retrieved for the entire network using `res_` properties
 Available results for the network are:
 
 - `res_buses`: Buses potentials indexed by _(bus id, phase)_
-- `res_buses_voltages`: Buses voltages indexed by _(bus id, voltage phase)_
+- `res_buses_voltages`: Buses voltages and voltage limits indexed by _(bus id, voltage phase)_
 - `res_branches`: Branches currents, powers, and potentials indexed by _(branch id, phase)_
-- `res_lines`: Lines currents, powers, potentials, series losses, series currents indexed by _(line id, phase)_
+- `res_transformers`: Transformers currents, powers, potentials, and power limits indexed by
+  _(transformer id, phase)_
+- `res_lines`: Lines currents, powers, potentials, series losses, series currents, and current
+  limits indexed by _(line id, phase)_
+- `res_switches`: Switches currents, powers, and potentials indexed by _(switch id, phase)_
 - `res_loads`: Loads currents, powers, and potentials indexed by _(load id, phase)_
 - `res_loads_voltages`: Loads voltages indexed by _(load id, voltage phase)_
 - `res_loads_flexible_powers`: Loads flexible powers (only for flexible loads) indexed by
@@ -317,14 +335,14 @@ All the following tables are rounded to 2 decimals to be properly displayed.
 >>> en.res_buses_voltages
 ```
 
-| bus_id | phase |        voltage |
-| :----- | :---- | -------------: |
-| sb     | an    |      230.94+0j |
-| sb     | bn    |   -115.47-200j |
-| sb     | cn    |   -115.47+200j |
-| lb     | an    |      221.93+0j |
-| lb     | bn    | -110.96-192.2j |
-| lb     | cn    | -110.96+192.2j |
+| bus_id | phase |        voltage | min_voltage | max_voltage | violated |
+| :----- | :---- | -------------: | ----------: | ----------: | :------- |
+| sb     | an    |      230.94+0j |     207.846 |     254.034 | False    |
+| sb     | bn    |   -115.47-200j |     207.846 |     254.034 | False    |
+| sb     | cn    |   -115.47+200j |     207.846 |     254.034 | False    |
+| lb     | an    |      221.93-0j |     207.846 |     254.034 | False    |
+| lb     | bn    | -110.96-192.2j |     207.846 |     254.034 | False    |
+| lb     | cn    | -110.96+192.2j |     207.846 |     254.034 | False    |
 
 ```pycon
 >>> en.res_branches
@@ -341,12 +359,26 @@ All the following tables are rounded to 2 decimals to be properly displayed.
 >>> en.res_lines
 ```
 
-| branch_id | phase |      current1 |     current2 |      power1 |    power2 |   potential1 |     potential2 | series_losses | series_current |
-| :-------- | :---- | ------------: | -----------: | ----------: | --------: | -----------: | -------------: | ------------: | -------------: |
-| line      | a     |      45.06+0j |    -45.06-0j | 10406.07-0j | -10000+0j |    230.94+0j |      221.93-0j |     406.07-0j |       45.06+0j |
-| line      | b     | -22.53-39.02j | 22.53+39.02j | 10406.07+0j | -10000-0j | -115.47-200j | -110.96-192.2j |     406.07-0j |  -22.53-39.02j |
-| line      | c     | -22.53+39.02j | 22.53-39.02j | 10406.07-0j | -10000+0j | -115.47+200j | -110.96+192.2j |     406.07+0j |  -22.53+39.02j |
-| line      | n     |            0j |          -0j |         -0j |       -0j |           0j |            -0j |           -0j |          -0+0j |
+| line_id | phase |      current1 |     current2 |      power1 |    power2 |   potential1 |     potential2 | series_losses | series_current | max_current | violated |
+| :------ | :---- | ------------: | -----------: | ----------: | --------: | -----------: | -------------: | ------------: | -------------: | ----------: | :------- |
+| line    | a     |      45.06-0j |    -45.06+0j | 10406.07+0j | -10000-0j |    230.94+0j |      221.93+0j |     406.07-0j |       45.06-0j |         500 | False    |
+| line    | b     | -22.53-39.02j | 22.53+39.02j | 10406.07+0j | -10000-0j | -115.47-200j | -110.96-192.2j |     406.07-0j |  -22.53-39.02j |         500 | False    |
+| line    | c     | -22.53+39.02j | 22.53-39.02j | 10406.07-0j | -10000+0j | -115.47+200j | -110.96+192.2j |     406.07+0j |  -22.53+39.02j |         500 | False    |
+| line    | n     |         -0-0j |           0j |       -0+0j |       -0j |           0j |             0j |           -0j |          -0-0j |         500 | False    |
+
+```pycon
+>>> en.res_transformers
+```
+
+| transformer_id | phase | current1 | current2 | power1 | power2 | potential1 | potential2 | max_power | violated |
+| -------------- | ----- | -------- | -------- | ------ | ------ | ---------- | ---------- | --------- | -------- |
+
+```pycon
+>>> en.res_switches
+```
+
+| switch_id | phase | current1 | current2 | power1 | power2 | potential1 | potential2 |
+| --------- | ----- | -------- | -------- | ------ | ------ | ---------- | ---------- |
 
 ```pycon
 >>> en.res_loads
@@ -373,12 +405,12 @@ All the following tables are rounded to 2 decimals to be properly displayed.
 >>> en.res_sources
 ```
 
-| source_id | phase |      current |         power |    potential |
-| :-------- | :---- | -----------: | ------------: | -----------: |
-| vs        | a     |    -45.06-0j | -10406.07+0j) |    230.94+0j |
-| vs        | b     | 22.53+39.02j | -10406.07-0j) | -115.47-200j |
-| vs        | c     | 22.53-39.02j | -10406.07+0j) | -115.47+200j |
-| vs        | n     |           0j |            0j |           0j |
+| source_id | phase |      current |        power |    potential |
+| :-------- | :---- | -----------: | -----------: | -----------: |
+| vs        | a     |    -45.06-0j | -10406.07+0j |    230.94+0j |
+| vs        | b     | 22.53+39.02j | -10406.07-0j | -115.47-200j |
+| vs        | c     | 22.53-39.02j | -10406.07+0j | -115.47+200j |
+| vs        | n     |           0j |           0j |           0j |
 
 ```pycon
 >>> en.res_grounds
@@ -400,33 +432,71 @@ Using the `transform` method of data frames, the results can easily be converted
 to magnitude and angle values.
 
 ```pycon
->>> en.res_buses_voltages.transform([np.abs, np.angle])
+>>> en.res_buses_voltages["voltage"].transform([np.abs, np.angle])
 ```
 
-| bus_id | phase | ('voltage', 'absolute') | ('voltage', 'angle') |
-| :----- | :---- | ----------------------: | -------------------: |
-| sb     | an    |                  230.94 |                    0 |
-| sb     | bn    |                  230.94 |              -2.0944 |
-| sb     | cn    |                  230.94 |               2.0944 |
-| lb     | an    |                 221.928 |          2.89102e-19 |
-| lb     | bn    |                 221.928 |              -2.0944 |
-| lb     | cn    |                 221.928 |               2.0944 |
+| bus_id | phase | absolute |       angle |
+| :----- | :---- | -------: | ----------: |
+| sb     | an    |   230.94 |           0 |
+| sb     | bn    |   230.94 |     -2.0944 |
+| sb     | cn    |   230.94 |      2.0944 |
+| lb     | an    |  221.928 | 2.89102e-19 |
+| lb     | bn    |  221.928 |     -2.0944 |
+| lb     | cn    |  221.928 |      2.0944 |
 
 Or, if you prefer degrees:
 
 ```pycon
 >>> import functools as ft
-... en.res_buses_voltages.transform([np.abs, ft.partial(np.angle, deg=True)])
+... en.res_buses_voltages["voltage"].transform([np.abs, ft.partial(np.angle, deg=True)])
 ```
 
-| bus_id | phase | ('voltage', 'absolute') | ('voltage', 'angle') |
-| :----- | :---- | ----------------------: | -------------------: |
-| sb     | an    |                  230.94 |                    0 |
-| sb     | bn    |                  230.94 |                 -120 |
-| sb     | cn    |                  230.94 |                  120 |
-| lb     | an    |                 221.928 |          1.65643e-17 |
-| lb     | bn    |                 221.928 |                 -120 |
-| lb     | cn    |                 221.928 |                  120 |
+| bus_id | phase | absolute |       angle |
+| :----- | :---- | -------: | ----------: |
+| sb     | an    |   230.94 |           0 |
+| sb     | bn    |   230.94 |        -120 |
+| sb     | cn    |   230.94 |         120 |
+| lb     | an    |  221.928 | 1.65643e-17 |
+| lb     | bn    |  221.928 |        -120 |
+| lb     | cn    |  221.928 |         120 |
+
+(gs-analysis-and-violations)=
+
+## Analyzing the results and detecting violations
+
+In the example network above, `min_voltage` and `max_voltage` arguments were passed to the `Bus`
+constructor and `max_current` was passed to the `LineParameters` constructor. These arguments
+define the limits of the network that can be used to check if the network is in a valid state
+or not. Note that these limits have no effect on the load flow calculation.
+
+If you set `min_voltage` or `max_voltage` on a bus, the `res_violated` property will tell you if
+the voltage limits are violated or not at this bus. Here, the voltage limits are not violated.
+
+```pycon
+>>> load_bus.res_violated
+False
+```
+
+Similarly, if you set `max_current` on a line, the `res_violated` property will tell you if the
+current loading of the line in any phase exceeds the limit. Here, the current limit is not violated.
+
+```pycon
+>>> line.res_violated
+False
+```
+
+The power limit of the transformer can be defined using the `max_power` argument of the
+`TransformerParameters`. Transformers also have a `res_violated` property that indicates if the
+power loading of the transformer exceeds the limit.
+
+The data frame results on the electrical network also include a `violated` column that indicates if
+the limits are violated or not for the corresponding element.
+
+```{tip}
+You can use the {meth}`Bus.propagate_limits() <roseau.load_flow.Bus.propagate_limits>` method to
+propagate the limits from a bus to its neighboring buses, that is, buses on the same side of a
+transformer.
+```
 
 (gs-updating-elements)=
 

@@ -1,12 +1,55 @@
 import logging
 from enum import Enum, auto, unique
 
+import pandas as pd
 from typing_extensions import Self
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 
 # The local logger
 logger = logging.getLogger(__name__)
+
+
+# pandas dtypes used in the data frames
+PhaseDtype = pd.CategoricalDtype(categories=["a", "b", "c", "n"], ordered=True)
+"""Categorical data type used for the phase of potentials, currents, powers, etc."""
+VoltagePhaseDtype = pd.CategoricalDtype(categories=["an", "bn", "cn", "ab", "bc", "ca"], ordered=True)
+"""Categorical data type used for the phase of voltages and flexible powers only."""
+BranchTypeDtype = pd.CategoricalDtype(categories=["line", "transformer", "switch"], ordered=True)
+"""Categorical data type used for branch types."""
+_DTYPES = {
+    "bus_id": object,
+    "branch_id": object,
+    "transformer_id": object,
+    "line_id": object,
+    "switch_id": object,
+    "load_id": object,
+    "source_id": object,
+    "ground_id": object,
+    "potential_ref_id": object,
+    "branch_type": BranchTypeDtype,
+    "phase": PhaseDtype,
+    "current": complex,
+    "current1": complex,
+    "current2": complex,
+    "power": complex,
+    "power1": complex,
+    "power2": complex,
+    "potential": complex,
+    "potential1": complex,
+    "potential2": complex,
+    "voltage": complex,
+    "voltage1": complex,
+    "voltage2": complex,
+    "max_power": float,
+    "series_losses": complex,
+    "shunt_losses": complex,
+    "series_current": complex,
+    "max_current": float,
+    "min_voltage": float,
+    "max_voltage": float,
+    "violated": pd.BooleanDtype(),
+}
 
 
 @unique

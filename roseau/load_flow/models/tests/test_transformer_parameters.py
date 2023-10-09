@@ -460,3 +460,30 @@ def test_print_catalogue():
     with console.capture() as capture:
         TransformerParameters.print_catalogue(ulv=250)
     assert len(capture.get().split("\n")) == 2
+
+
+def test_max_power():
+    kwds = {
+        "type": "yzn11",
+        "psc": 1350.0,
+        "p0": 145.0,
+        "i0": 1.8 / 100,
+        "ulv": 400,
+        "uhv": 20000,
+        "sn": 50 * 1e3,
+        "vsc": 4 / 100,
+    }
+    tp = TransformerParameters("test", **kwds)
+    assert tp.max_power is None
+
+    tp = TransformerParameters("test", **kwds, max_power=60_000)
+    assert tp.max_power == Q_(60_000, "VA")
+
+    tp.max_power = 55_000
+    assert tp.max_power == Q_(55_000, "VA")
+
+    tp.max_power = None
+    assert tp.max_power is None
+
+    tp.max_power = Q_(65, "kVA")
+    assert tp.max_power == Q_(65_000, "VA")

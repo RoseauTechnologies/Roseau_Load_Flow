@@ -312,7 +312,7 @@ class Control(JsonMixin):
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_CONTROL_TYPE)
 
-    def to_dict(self, include_geometry: bool = True) -> JsonDict:
+    def to_dict(self, *, _lf_only: bool = False) -> JsonDict:
         if self.type == "constant":
             return {"type": "constant"}
         elif self.type == "p_max_u_production":
@@ -427,7 +427,7 @@ class Projection(JsonMixin):
         epsilon = data["epsilon"] if "epsilon" in data else cls._DEFAULT_EPSILON
         return cls(type=data["type"], alpha=alpha, epsilon=epsilon)
 
-    def to_dict(self, include_geometry: bool = True) -> JsonDict:
+    def to_dict(self, *, _lf_only: bool = False) -> JsonDict:
         return {"type": self.type, "alpha": self._alpha, "epsilon": self._epsilon}
 
     def _results_to_dict(self, warning: bool) -> NoReturn:
@@ -957,7 +957,7 @@ class FlexibleParameter(JsonMixin):
             q_max=q_max,
         )
 
-    def to_dict(self, include_geometry: bool = True) -> JsonDict:
+    def to_dict(self, *, _lf_only: bool = False) -> JsonDict:
         res = {
             "control_p": self.control_p.to_dict(),
             "control_q": self.control_q.to_dict(),
@@ -1021,7 +1021,7 @@ class FlexibleParameter(JsonMixin):
         bus = Bus(id="bus", phases="an")
         vs = VoltageSource(id="source", bus=bus, voltages=[voltages[0]])
         PotentialRef(id="pref", element=bus, phase="n")
-        fp = FlexibleParameter.from_dict(data=self.to_dict(include_geometry=False))
+        fp = FlexibleParameter.from_dict(data=self.to_dict(_lf_only=True))
         load = PowerLoad(id="load", bus=bus, powers=[power], flexible_params=[fp])
         en = ElectricalNetwork.from_element(bus)
 

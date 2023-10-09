@@ -5,6 +5,7 @@ import pytest
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models import Bus, Ground, Line, LineParameters
+from roseau.load_flow.units import Q_
 from roseau.load_flow.utils import ConductorType, InsulatorType, LineType
 
 
@@ -345,3 +346,20 @@ def test_from_name_mv():
     lp = LineParameters.from_name_mv("U_AL_150")
     npt.assert_allclose(lp.z_line.m_as("ohm/km"), z_line_expected)
     npt.assert_allclose(lp.y_shunt.m_as("S/km"), y_shunt_expected, rtol=1e-4)
+
+
+def test_max_current():
+    lp = LineParameters("test", z_line=np.eye(3))
+    assert lp.max_current is None
+
+    lp = LineParameters("test", z_line=np.eye(3), max_current=100)
+    assert lp.max_current == Q_(100, "A")
+
+    lp.max_current = 200
+    assert lp.max_current == Q_(200, "A")
+
+    lp.max_current = None
+    assert lp.max_current is None
+
+    lp.max_current = Q_(3, "kA")
+    assert lp.max_current == Q_(3_000, "A")

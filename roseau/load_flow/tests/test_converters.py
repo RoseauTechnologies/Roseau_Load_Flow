@@ -3,7 +3,7 @@ import pandas as pd
 from pandas.testing import assert_series_equal
 
 from roseau.load_flow.converters import phasor_to_sym, series_phasor_to_sym, sym_to_phasor
-from roseau.load_flow.network import _PHASE_DTYPE
+from roseau.load_flow.utils import PhaseDtype
 
 
 def test_phasor_to_sym():
@@ -88,7 +88,7 @@ def test_series_phasor_to_sym():
         [("bus1", "a"), ("bus1", "b"), ("bus1", "c"), ("bus2", "a"), ("bus2", "b"), ("bus2", "c")],
         names=["bus_id", "phase"],
     )
-    index = index.set_levels(index.levels[-1].astype(_PHASE_DTYPE), level=-1)
+    index = index.set_levels(index.levels[-1].astype(PhaseDtype), level=-1)
     voltage = pd.Series([va, vb, vc, va / 2, vb / 2, vc / 2], index=index, name="voltage")
 
     seq_dtype = pd.CategoricalDtype(categories=["zero", "pos", "neg"], ordered=True)

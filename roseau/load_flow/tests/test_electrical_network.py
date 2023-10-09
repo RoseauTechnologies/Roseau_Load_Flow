@@ -26,9 +26,9 @@ from roseau.load_flow.models import (
     TransformerParameters,
     VoltageSource,
 )
-from roseau.load_flow.network import _PHASE_DTYPE, _VOLTAGE_PHASES_DTYPE, ElectricalNetwork
+from roseau.load_flow.network import ElectricalNetwork
 from roseau.load_flow.units import Q_
-from roseau.load_flow.utils import console
+from roseau.load_flow.utils import BranchTypeDtype, PhaseDtype, VoltagePhaseDtype, console
 
 
 @pytest.fixture()
@@ -647,12 +647,12 @@ def test_solve_load_flow_error(small_network):
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_REQUEST
 
 
-def test_frame(small_network):
+def test_frame(small_network: ElectricalNetwork):
     # Buses
     buses_gdf = small_network.buses_frame
     assert isinstance(buses_gdf, gpd.GeoDataFrame)
-    assert buses_gdf.shape == (2, 2)
-    assert set(buses_gdf.columns) == {"phases", "geometry"}
+    assert buses_gdf.shape == (2, 4)
+    assert set(buses_gdf.columns) == {"phases", "min_voltage", "max_voltage", "geometry"}
     assert buses_gdf.index.name == "id"
 
     # Branches
@@ -661,6 +661,33 @@ def test_frame(small_network):
     assert branches_gdf.shape == (1, 6)
     assert set(branches_gdf.columns) == {"branch_type", "phases1", "phases2", "bus1_id", "bus2_id", "geometry"}
     assert branches_gdf.index.name == "id"
+
+    # Transformers
+    transformers_gdf = small_network.transformers_frame
+    assert isinstance(transformers_gdf, gpd.GeoDataFrame)
+    assert transformers_gdf.shape == (0, 7)
+    assert set(transformers_gdf.columns) == {
+        "phases1",
+        "phases2",
+        "bus1_id",
+        "bus2_id",
+        "parameters_id",
+        "max_power",
+        "geometry",
+    }
+    assert transformers_gdf.index.name == "id"
+
+    # Lines
+    lines_gdf = small_network.lines_frame
+    assert isinstance(lines_gdf, gpd.GeoDataFrame)
+    assert lines_gdf.shape == (1, 6)
+    assert set(lines_gdf.columns) == {"phases", "bus1_id", "bus2_id", "parameters_id", "max_current", "geometry"}
+
+    # Switches
+    switches_gdf = small_network.switches_frame
+    assert isinstance(switches_gdf, gpd.GeoDataFrame)
+    assert switches_gdf.shape == (0, 4)
+    assert set(switches_gdf.columns) == {"phases", "bus1_id", "bus2_id", "geometry"}
 
     # Loads
     loads_df = small_network.loads_frame
@@ -677,30 +704,169 @@ def test_frame(small_network):
     assert sources_df.index.name == "id"
 
 
-def test_buses_voltages(small_network, good_json_results):
+def test_frame_empty_network(monkeypatch):
+    # Test that we can create dataframes even if a certain element is not present in the network
+    monkeypatch.setattr(ElectricalNetwork, "_check_validity", lambda self, constructed: None)
+    monkeypatch.setattr(ElectricalNetwork, "_warn_invalid_results", lambda self: None)
+    empty_network = ElectricalNetwork(
+        buses={},
+        branches={},
+        loads={},
+        sources={},
+        grounds={},
+        potential_refs={},
+    )
+    # Buses
+    buses = empty_network.buses_frame
+    assert buses.shape == (0, 4)
+    assert buses.empty
+
+    # Branches
+    branches = empty_network.branches_frame
+    assert branches.shape == (0, 6)
+    assert branches.empty
+
+    # Transformers
+    transformers = empty_network.transformers_frame
+    assert transformers.shape == (0, 7)
+    assert transformers.empty
+
+    # Lines
+    lines = empty_network.lines_frame
+    assert lines.shape == (0, 6)
+    assert lines.empty
+
+    # Switches
+    switches = empty_network.switches_frame
+    assert switches.shape == (0, 4)
+    assert switches.empty
+
+    # Loads
+    loads = empty_network.loads_frame
+    assert loads.shape == (0, 2)
+    assert loads.empty
+
+    # Sources
+    sources = empty_network.sources_frame
+    assert sources.shape == (0, 2)
+    assert sources.empty
+
+    # Res buses
+    res_buses = empty_network.res_buses
+    assert res_buses.shape == (0, 1)
+    assert res_buses.empty
+    res_buses_voltages = empty_network.res_buses_voltages
+    assert res_buses_voltages.shape == (0, 4)
+    assert res_buses_voltages.empty
+
+    # Res branches
+    res_branches = empty_network.res_branches
+    assert res_branches.shape == (0, 7)
+    assert res_branches.empty
+
+    # Res transformers
+    res_transformers = empty_network.res_transformers
+    assert res_transformers.shape == (0, 8)
+    assert res_transformers.empty
+
+    # Res lines
+    res_lines = empty_network.res_lines
+    assert res_lines.shape == (0, 10)
+    assert res_lines.empty
+
+    # Res switches
+    res_switches = empty_network.res_switches
+    assert res_switches.shape == (0, 6)
+    assert res_switches.empty
+
+    # Res loads
+    res_loads = empty_network.res_loads
+    assert res_loads.shape == (0, 3)
+    assert res_loads.empty
+
+    # Res sources
+    res_sources = empty_network.res_sources
+    assert res_sources.shape == (0, 3)
+    assert res_sources.empty
+
+
+def test_buses_voltages(small_network: ElectricalNetwork, good_json_results):
     assert isinstance(small_network, ElectricalNetwork)
     small_network.results_from_dict(good_json_results)
+    small_network.buses["bus0"].max_voltage = 21_000
+    small_network.buses["bus1"].min_voltage = 20_000
 
     voltage_records = [
-        {"bus_id": "bus0", "phase": "an", "voltage": 20000.0 + 0.0j},
-        {"bus_id": "bus0", "phase": "bn", "voltage": -10000.0 + -17320.508076j},
-        {"bus_id": "bus0", "phase": "cn", "voltage": -10000.0 + 17320.508076j},
-        {"bus_id": "bus1", "phase": "an", "voltage": 19999.949999875 + 0.0j},
-        {"bus_id": "bus1", "phase": "bn", "voltage": -9999.9749999375 + -17320.464774621556j},
-        {"bus_id": "bus1", "phase": "cn", "voltage": -9999.9749999375 + 17320.464774621556j},
+        {
+            "bus_id": "bus0",
+            "phase": "an",
+            "voltage": 20000.0 + 0.0j,
+            "min_voltage": np.nan,
+            "max_voltage": 21000,
+            "violated": False,
+        },
+        {
+            "bus_id": "bus0",
+            "phase": "bn",
+            "voltage": -10000.0 + -17320.508076j,
+            "min_voltage": np.nan,
+            "max_voltage": 21000,
+            "violated": False,
+        },
+        {
+            "bus_id": "bus0",
+            "phase": "cn",
+            "voltage": -10000.0 + 17320.508076j,
+            "min_voltage": np.nan,
+            "max_voltage": 21000,
+            "violated": False,
+        },
+        {
+            "bus_id": "bus1",
+            "phase": "an",
+            "voltage": 19999.949999875 + 0.0j,
+            "min_voltage": 20000,
+            "max_voltage": np.nan,
+            "violated": True,
+        },
+        {
+            "bus_id": "bus1",
+            "phase": "bn",
+            "voltage": -9999.9749999375 + -17320.464774621556j,
+            "min_voltage": 20000,
+            "max_voltage": np.nan,
+            "violated": True,
+        },
+        {
+            "bus_id": "bus1",
+            "phase": "cn",
+            "voltage": -9999.9749999375 + 17320.464774621556j,
+            "min_voltage": 20000,
+            "max_voltage": np.nan,
+            "violated": True,
+        },
     ]
 
-    def set_index_dtype(idx: pd.MultiIndex) -> pd.MultiIndex:
-        return idx.set_levels(idx.levels[1].astype(_VOLTAGE_PHASES_DTYPE), level=1)
-
     buses_voltages = small_network.res_buses_voltages
-    expected_buses_voltages = pd.DataFrame.from_records(voltage_records, index=["bus_id", "phase"])
-    expected_buses_voltages.index = set_index_dtype(expected_buses_voltages.index)
+    expected_buses_voltages = (
+        pd.DataFrame.from_records(voltage_records)
+        .astype(
+            {
+                "bus_id": str,
+                "phase": VoltagePhaseDtype,
+                "voltage": complex,
+                "min_voltage": float,
+                "max_voltage": float,
+                "violated": pd.BooleanDtype(),
+            }
+        )
+        .set_index(["bus_id", "phase"])
+    )
 
     assert isinstance(buses_voltages, pd.DataFrame)
-    assert buses_voltages.shape == (6, 1)
+    assert buses_voltages.shape == (6, 4)
     assert buses_voltages.index.names == ["bus_id", "phase"]
-    assert list(buses_voltages.columns) == ["voltage"]
+    assert list(buses_voltages.columns) == ["voltage", "min_voltage", "max_voltage", "violated"]
     assert_frame_equal(buses_voltages, expected_buses_voltages)
 
 
@@ -720,6 +886,9 @@ def test_single_phase_network(single_phase_network: ElectricalNetwork):
     new_net = ElectricalNetwork.from_dict(net_dict)
     assert_frame_equal(single_phase_network.buses_frame, new_net.buses_frame)
     assert_frame_equal(single_phase_network.branches_frame, new_net.branches_frame)
+    assert_frame_equal(single_phase_network.transformers_frame, new_net.transformers_frame)
+    assert_frame_equal(single_phase_network.lines_frame, new_net.lines_frame)
+    assert_frame_equal(single_phase_network.switches_frame, new_net.switches_frame)
     assert_frame_equal(single_phase_network.loads_frame, new_net.loads_frame)
     assert_frame_equal(single_phase_network.sources_frame, new_net.sources_frame)
 
@@ -804,7 +973,7 @@ def test_single_phase_network(single_phase_network: ElectricalNetwork):
                 {"bus_id": "bus1", "phase": "n", "potential": 0j},
             ]
         )
-        .astype({"phase": _PHASE_DTYPE, "potential": complex})
+        .astype({"phase": PhaseDtype, "potential": complex})
         .set_index(["bus_id", "phase"]),
     )
     # Buses voltages results
@@ -812,11 +981,33 @@ def test_single_phase_network(single_phase_network: ElectricalNetwork):
         single_phase_network.res_buses_voltages,
         pd.DataFrame.from_records(
             [
-                {"bus_id": "bus0", "phase": "bn", "voltage": (19999.94999975 + 0j) - (-0.050000250001249996 + 0j)},
-                {"bus_id": "bus1", "phase": "bn", "voltage": (19999.899999499998 + 0j) - (0j)},
+                {
+                    "bus_id": "bus0",
+                    "phase": "bn",
+                    "voltage": (19999.94999975 + 0j) - (-0.050000250001249996 + 0j),
+                    "min_voltage": np.nan,
+                    "max_voltage": np.nan,
+                    "violated": None,
+                },
+                {
+                    "bus_id": "bus1",
+                    "phase": "bn",
+                    "voltage": (19999.899999499998 + 0j) - (0j),
+                    "min_voltage": np.nan,
+                    "max_voltage": np.nan,
+                    "violated": None,
+                },
             ]
         )
-        .astype({"phase": _VOLTAGE_PHASES_DTYPE, "voltage": complex})
+        .astype(
+            {
+                "phase": VoltagePhaseDtype,
+                "voltage": complex,
+                "min_voltage": float,
+                "max_voltage": float,
+                "violated": pd.BooleanDtype(),
+            }
+        )
         .set_index(["bus_id", "phase"]),
     )
     # Branches results
@@ -827,6 +1018,7 @@ def test_single_phase_network(single_phase_network: ElectricalNetwork):
                 {
                     "branch_id": "line",
                     "phase": "b",
+                    "branch_type": "line",
                     "current1": 0.005000025000117603 + 0j,
                     "current2": -0.005000025000117603 - 0j,
                     "power1": (19999.94999975 + 0j) * (0.005000025000117603 + 0j).conjugate(),
@@ -837,6 +1029,7 @@ def test_single_phase_network(single_phase_network: ElectricalNetwork):
                 {
                     "branch_id": "line",
                     "phase": "n",
+                    "branch_type": "line",
                     "current1": -0.005000025000125 + 0j,
                     "current2": 0.005000025000125 - 0j,
                     "power1": (-0.050000250001249996 + 0j) * (-0.005000025000125 + 0j).conjugate(),
@@ -848,7 +1041,8 @@ def test_single_phase_network(single_phase_network: ElectricalNetwork):
         )
         .astype(
             {
-                "phase": _PHASE_DTYPE,
+                "phase": PhaseDtype,
+                "branch_type": BranchTypeDtype,
                 "current1": complex,
                 "current2": complex,
                 "power1": complex,
@@ -859,8 +1053,43 @@ def test_single_phase_network(single_phase_network: ElectricalNetwork):
         )
         .set_index(["branch_id", "phase"]),
     )
+
+    # Transformers results
+    pd.testing.assert_frame_equal(
+        single_phase_network.res_transformers,
+        pd.DataFrame.from_records(
+            [],
+            columns=[
+                "transformer_id",
+                "phase",
+                "current1",
+                "current2",
+                "power1",
+                "power2",
+                "potential1",
+                "potential2",
+                "max_power",
+                "violated",
+            ],
+        )
+        .astype(
+            {
+                "phase": PhaseDtype,
+                "current1": complex,
+                "current2": complex,
+                "power1": complex,
+                "power2": complex,
+                "potential1": complex,
+                "potential2": complex,
+                "max_power": float,
+                "violated": pd.BooleanDtype(),
+            }
+        )
+        .set_index(["transformer_id", "phase"]),
+    )
     # Lines results
-    expected_res_lines = (
+    pd.testing.assert_frame_equal(
+        single_phase_network.res_lines,
         pd.DataFrame.from_records(
             [
                 {
@@ -877,6 +1106,8 @@ def test_single_phase_network(single_phase_network: ElectricalNetwork):
                         + (19999.899999499998 + 0j) * (-0.005000025000117603 - 0j).conjugate()
                     ),
                     "series_current": 0.005000025000117603 + 0j,
+                    "max_current": np.nan,
+                    "violated": None,
                 },
                 {
                     "line_id": "line",
@@ -892,12 +1123,14 @@ def test_single_phase_network(single_phase_network: ElectricalNetwork):
                         + (0j) * (0.005000025000125 - 0j).conjugate()
                     ),
                     "series_current": -0.005000025000125 + 0j,
+                    "max_current": np.nan,
+                    "violated": None,
                 },
             ]
         )
         .astype(
             {
-                "phase": _PHASE_DTYPE,
+                "phase": PhaseDtype,
                 "current1": complex,
                 "current2": complex,
                 "power1": complex,
@@ -906,11 +1139,41 @@ def test_single_phase_network(single_phase_network: ElectricalNetwork):
                 "potential2": complex,
                 "series_losses": complex,
                 "series_current": complex,
+                "max_current": float,
+                "violated": pd.BooleanDtype(),
             }
         )
-        .set_index(["line_id", "phase"])
+        .set_index(["line_id", "phase"]),
     )
-    pd.testing.assert_frame_equal(single_phase_network.res_lines, expected_res_lines)
+    # Switches results
+    pd.testing.assert_frame_equal(
+        single_phase_network.res_switches,
+        pd.DataFrame.from_records(
+            [],
+            columns=[
+                "switch_id",
+                "phase",
+                "current1",
+                "current2",
+                "power1",
+                "power2",
+                "potential1",
+                "potential2",
+            ],
+        )
+        .astype(
+            {
+                "phase": PhaseDtype,
+                "current1": complex,
+                "current2": complex,
+                "power1": complex,
+                "power2": complex,
+                "potential1": complex,
+                "potential2": complex,
+            }
+        )
+        .set_index(["switch_id", "phase"]),
+    )
     # Loads results
     pd.testing.assert_frame_equal(
         single_phase_network.res_loads,
@@ -932,12 +1195,12 @@ def test_single_phase_network(single_phase_network: ElectricalNetwork):
                 },
             ]
         )
-        .astype({"phase": _PHASE_DTYPE, "current": complex, "power": complex, "potential": complex})
+        .astype({"phase": PhaseDtype, "current": complex, "power": complex, "potential": complex})
         .set_index(["load_id", "phase"]),
     )
 
 
-def test_network_elements(small_network):
+def test_network_elements(small_network: ElectricalNetwork):
     # Add a line to the network ("bus2" constructor belongs to the network)
     bus1 = small_network.buses["bus1"]
     bus2 = Bus("bus2", phases="abcn")
@@ -1112,159 +1375,447 @@ def test_network_results_warning(small_network: ElectricalNetwork, good_json_res
 
 def test_load_flow_results_frames(small_network: ElectricalNetwork, good_json_results: dict):
     small_network.results_from_dict(good_json_results)
+    small_network.buses["bus0"].min_voltage = 21_000
 
-    def set_index_dtype(df, dtype):
-        df.index = df.index.set_levels(df.index.levels[1].astype(dtype), level=1)
-
-    expected_res_buses = pd.DataFrame.from_records(
-        [
-            {"bus_id": "bus0", "phase": "a", "potential": 20000 + 2.89120e-18j},
-            {"bus_id": "bus0", "phase": "b", "potential": -10000.00000 - 17320.50807j},
-            {"bus_id": "bus0", "phase": "c", "potential": -10000.00000 + 17320.50807j},
-            {"bus_id": "bus0", "phase": "n", "potential": -1.34764e-12 + 2.89120e-18j},
-            {"bus_id": "bus1", "phase": "a", "potential": 19999.94999 + 2.89119e-18j},
-            {"bus_id": "bus1", "phase": "b", "potential": -9999.97499 - 17320.46477j},
-            {"bus_id": "bus1", "phase": "c", "potential": -9999.97499 + 17320.46477j},
-            {"bus_id": "bus1", "phase": "n", "potential": 0j},
-        ],
-        index=["bus_id", "phase"],
+    # Buses results
+    expected_res_buses = (
+        pd.DataFrame.from_records(
+            [
+                {"bus_id": "bus0", "phase": "a", "potential": 20000 + 2.89120e-18j},
+                {"bus_id": "bus0", "phase": "b", "potential": -10000.00000 - 17320.50807j},
+                {"bus_id": "bus0", "phase": "c", "potential": -10000.00000 + 17320.50807j},
+                {"bus_id": "bus0", "phase": "n", "potential": -1.34764e-12 + 2.89120e-18j},
+                {"bus_id": "bus1", "phase": "a", "potential": 19999.94999 + 2.89119e-18j},
+                {"bus_id": "bus1", "phase": "b", "potential": -9999.97499 - 17320.46477j},
+                {"bus_id": "bus1", "phase": "c", "potential": -9999.97499 + 17320.46477j},
+                {"bus_id": "bus1", "phase": "n", "potential": 0j},
+            ]
+        )
+        .astype({"bus_id": object, "phase": PhaseDtype, "potential": complex})
+        .set_index(["bus_id", "phase"])
     )
-    set_index_dtype(expected_res_buses, _PHASE_DTYPE)
     assert_frame_equal(small_network.res_buses, expected_res_buses, rtol=1e-4)
 
-    expected_res_branches = pd.DataFrame.from_records(
-        [
+    # Buses voltages results
+    expected_res_buses_voltages = (
+        pd.DataFrame.from_records(
+            [
+                {
+                    "bus_id": "bus0",
+                    "phase": "an",
+                    "voltage": (20000 + 2.89120e-18j) - (-1.34764e-12 + 2.89120e-18j),
+                    "min_voltage": 21_000,
+                    "max_voltage": np.nan,
+                    "violated": True,
+                },
+                {
+                    "bus_id": "bus0",
+                    "phase": "bn",
+                    "voltage": (-10000.00000 - 17320.50807j) - (-1.34764e-12 + 2.89120e-18j),
+                    "min_voltage": 21_000,
+                    "max_voltage": np.nan,
+                    "violated": True,
+                },
+                {
+                    "bus_id": "bus0",
+                    "phase": "cn",
+                    "voltage": (-10000.00000 + 17320.50807j) - (-1.34764e-12 + 2.89120e-18j),
+                    "min_voltage": 21_000,
+                    "max_voltage": np.nan,
+                    "violated": True,
+                },
+                {
+                    "bus_id": "bus1",
+                    "phase": "an",
+                    "voltage": (19999.94999 + 2.89119e-18j) - (0j),
+                    "min_voltage": np.nan,
+                    "max_voltage": np.nan,
+                    "violated": None,
+                },
+                {
+                    "bus_id": "bus1",
+                    "phase": "bn",
+                    "voltage": (-9999.97499 - 17320.46477j) - (0j),
+                    "min_voltage": np.nan,
+                    "max_voltage": np.nan,
+                    "violated": None,
+                },
+                {
+                    "bus_id": "bus1",
+                    "phase": "cn",
+                    "voltage": (-9999.97499 + 17320.46477j) - (0j),
+                    "min_voltage": np.nan,
+                    "max_voltage": np.nan,
+                    "violated": None,
+                },
+            ]
+        )
+        .astype(
             {
-                "branch_id": "line",
-                "phase": "a",
-                "current1": 0.00500 + 7.22799e-25j,
-                "current2": -0.00500 - 7.22799e-25j,
-                "power1": (20000 + 2.89120e-18j) * (0.00500 + 7.22799e-25j).conjugate(),
-                "power2": (19999.94999 + 2.89119e-18j) * (-0.00500 - 7.22799e-25j).conjugate(),
-                "potential1": 20000 + 2.89120e-18j,
-                "potential2": 19999.94999 + 2.89119e-18j,
-            },
-            {
-                "branch_id": "line",
-                "phase": "b",
-                "current1": -0.00250 - 0.00433j,
-                "current2": 0.00250 + 0.00433j,
-                "power1": (-10000.00000 - 17320.50807j) * (-0.00250 - 0.00433j).conjugate(),
-                "power2": (-9999.97499 - 17320.46477j) * (0.00250 + 0.00433j).conjugate(),
-                "potential1": -10000.00000 - 17320.50807j,
-                "potential2": -9999.97499 - 17320.46477j,
-            },
-            {
-                "branch_id": "line",
-                "phase": "c",
-                "current1": -0.00250 + 0.00433j,
-                "current2": 0.00250 - 0.00433j,
-                "power1": (-10000.00000 + 17320.50807j) * (-0.00250 + 0.00433j).conjugate(),
-                "power2": (-9999.97499 + 17320.46477j) * (0.00250 - 0.00433j).conjugate(),
-                "potential1": -10000.00000 + 17320.50807j,
-                "potential2": -9999.97499 + 17320.46477j,
-            },
-            {
-                "branch_id": "line",
-                "phase": "n",
-                "current1": -1.34764e-13 + 2.89120e-19j,
-                "current2": 1.34764e-13 - 2.89120e-19j,
-                "power1": (-1.34764e-12 + 2.89120e-18j) * (-1.34764e-13 + 2.89120e-19j).conjugate(),
-                "power2": (0j) * (1.34764e-13 - 2.89120e-19j).conjugate(),
-                "potential1": -1.34764e-12 + 2.89120e-18j,
-                "potential2": 0j,
-            },
-        ],
-        index=["branch_id", "phase"],
+                "bus_id": object,
+                "phase": VoltagePhaseDtype,
+                "voltage": complex,
+                "min_voltage": float,
+                "max_voltage": float,
+                "violated": pd.BooleanDtype(),
+            }
+        )
+        .set_index(["bus_id", "phase"])
     )
-    set_index_dtype(expected_res_branches, _PHASE_DTYPE)
+    assert_frame_equal(small_network.res_buses_voltages, expected_res_buses_voltages, rtol=1e-4)
+
+    # Branches results
+    expected_res_branches = (
+        pd.DataFrame.from_records(
+            [
+                {
+                    "branch_id": "line",
+                    "phase": "a",
+                    "branch_type": "line",
+                    "current1": 0.00500 + 7.22799e-25j,
+                    "current2": -0.00500 - 7.22799e-25j,
+                    "power1": (20000 + 2.89120e-18j) * (0.00500 + 7.22799e-25j).conjugate(),
+                    "power2": (19999.94999 + 2.89119e-18j) * (-0.00500 - 7.22799e-25j).conjugate(),
+                    "potential1": 20000 + 2.89120e-18j,
+                    "potential2": 19999.94999 + 2.89119e-18j,
+                },
+                {
+                    "branch_id": "line",
+                    "phase": "b",
+                    "branch_type": "line",
+                    "current1": -0.00250 - 0.00433j,
+                    "current2": 0.00250 + 0.00433j,
+                    "power1": (-10000.00000 - 17320.50807j) * (-0.00250 - 0.00433j).conjugate(),
+                    "power2": (-9999.97499 - 17320.46477j) * (0.00250 + 0.00433j).conjugate(),
+                    "potential1": -10000.00000 - 17320.50807j,
+                    "potential2": -9999.97499 - 17320.46477j,
+                },
+                {
+                    "branch_id": "line",
+                    "phase": "c",
+                    "branch_type": "line",
+                    "current1": -0.00250 + 0.00433j,
+                    "current2": 0.00250 - 0.00433j,
+                    "power1": (-10000.00000 + 17320.50807j) * (-0.00250 + 0.00433j).conjugate(),
+                    "power2": (-9999.97499 + 17320.46477j) * (0.00250 - 0.00433j).conjugate(),
+                    "potential1": -10000.00000 + 17320.50807j,
+                    "potential2": -9999.97499 + 17320.46477j,
+                },
+                {
+                    "branch_id": "line",
+                    "phase": "n",
+                    "branch_type": "line",
+                    "current1": -1.34764e-13 + 2.89120e-19j,
+                    "current2": 1.34764e-13 - 2.89120e-19j,
+                    "power1": (-1.34764e-12 + 2.89120e-18j) * (-1.34764e-13 + 2.89120e-19j).conjugate(),
+                    "power2": (0j) * (1.34764e-13 - 2.89120e-19j).conjugate(),
+                    "potential1": -1.34764e-12 + 2.89120e-18j,
+                    "potential2": 0j,
+                },
+            ],
+        )
+        .astype(
+            {
+                "branch_id": object,
+                "phase": PhaseDtype,
+                "branch_type": BranchTypeDtype,
+                "current1": complex,
+                "current2": complex,
+                "power1": complex,
+                "power2": complex,
+                "potential1": complex,
+                "potential2": complex,
+            }
+        )
+        .set_index(["branch_id", "phase"])
+    )
     assert_frame_equal(small_network.res_branches, expected_res_branches, rtol=1e-4)
 
-    expected_res_loads = pd.DataFrame.from_records(
-        [
+    # Transformers results
+    expected_res_transformers = (
+        pd.DataFrame.from_records(
+            [],
+            columns=[
+                "transformer_id",
+                "phase",
+                "current1",
+                "current2",
+                "power1",
+                "power2",
+                "potential1",
+                "potential2",
+                "max_power",
+                "violated",
+            ],
+        )
+        .astype(
             {
-                "load_id": "load",
-                "phase": "a",
-                "current": 0.00500 + 7.22802e-25j,
-                "power": (19999.94999 + 2.89119e-18j) * (0.00500 + 7.22802e-25j).conjugate(),
-                "potential": 19999.94999 + 2.89119e-18j,
-            },
-            {
-                "load_id": "load",
-                "phase": "b",
-                "current": -0.00250 - 0.00433j,
-                "power": (-9999.97499 - 17320.46477j) * (-0.00250 - 0.00433j).conjugate(),
-                "potential": -9999.97499 - 17320.46477j,
-            },
-            {
-                "load_id": "load",
-                "phase": "c",
-                "current": -0.00250 + 0.00433j,
-                "power": (-9999.97499 + 17320.46477j) * (-0.00250 + 0.00433j).conjugate(),
-                "potential": -9999.97499 + 17320.46477j,
-            },
-            {
-                "load_id": "load",
-                "phase": "n",
-                "current": -1.34763e-13 + 0j,
-                "power": (0j) * (-1.34763e-13 + 0j).conjugate(),
-                "potential": 0j,
-            },
-        ],
-        index=["load_id", "phase"],
+                "transformer_id": object,
+                "phase": PhaseDtype,
+                "current1": complex,
+                "current2": complex,
+                "power1": complex,
+                "power2": complex,
+                "potential1": complex,
+                "potential2": complex,
+                "max_power": float,
+                "violated": pd.BooleanDtype(),
+            }
+        )
+        .set_index(["transformer_id", "phase"])
     )
-    set_index_dtype(expected_res_loads, _PHASE_DTYPE)
+    assert_frame_equal(small_network.res_transformers, expected_res_transformers)
+
+    # Lines results
+    expected_res_lines_records = [
+        {
+            "line_id": "line",
+            "phase": "a",
+            "current1": 0.00500 + 7.22799e-25j,
+            "current2": -0.00500 - 7.22799e-25j,
+            "power1": (20000 + 2.89120e-18j) * (0.00500 + 7.22799e-25j).conjugate(),
+            "power2": (19999.94999 + 2.89119e-18j) * (-0.00500 - 7.22799e-25j).conjugate(),
+            "potential1": 20000 + 2.89120e-18j,
+            "potential2": 19999.94999 + 2.89119e-18j,
+            "series_losses": (
+                (20000 + 2.89120e-18j) * (0.00500 + 7.22799e-25j).conjugate()
+                + (19999.94999 + 2.89119e-18j) * (-0.00500 - 7.22799e-25j).conjugate()
+            ),
+            "series_current": 0.00500 + 7.22799e-25j,
+            "max_current": np.nan,
+            "violated": None,
+        },
+        {
+            "line_id": "line",
+            "phase": "b",
+            "current1": -0.00250 - 0.00433j,
+            "current2": 0.00250 + 0.00433j,
+            "power1": (-10000.00000 - 17320.50807j) * (-0.00250 - 0.00433j).conjugate(),
+            "power2": (-9999.97499 - 17320.46477j) * (0.00250 + 0.00433j).conjugate(),
+            "potential1": -10000.00000 - 17320.50807j,
+            "potential2": -9999.97499 - 17320.46477j,
+            "series_losses": (
+                (-10000.00000 - 17320.50807j) * (-0.00250 - 0.00433j).conjugate()
+                + (-9999.97499 - 17320.46477j) * (0.00250 + 0.00433j).conjugate()
+            ),
+            "series_current": -0.00250 - 0.00433j,
+            "max_current": np.nan,
+            "violated": None,
+        },
+        {
+            "line_id": "line",
+            "phase": "c",
+            "current1": -0.00250 + 0.00433j,
+            "current2": 0.00250 - 0.00433j,
+            "power1": (-10000.00000 + 17320.50807j) * (-0.00250 + 0.00433j).conjugate(),
+            "power2": (-9999.97499 + 17320.46477j) * (0.00250 - 0.00433j).conjugate(),
+            "potential1": -10000.00000 + 17320.50807j,
+            "potential2": -9999.97499 + 17320.46477j,
+            "series_losses": (
+                (-10000.00000 + 17320.50807j) * (-0.00250 + 0.00433j).conjugate()
+                + (-9999.97499 + 17320.46477j) * (0.00250 - 0.00433j).conjugate()
+            ),
+            "series_current": -0.00250 + 0.00433j,
+            "max_current": np.nan,
+            "violated": None,
+        },
+        {
+            "line_id": "line",
+            "phase": "n",
+            "current1": -1.34764e-13 + 2.89120e-19j,
+            "current2": 1.34764e-13 - 2.89120e-19j,
+            "power1": (-1.34764e-12 + 2.89120e-18j) * (-1.34764e-13 + 2.89120e-19j).conjugate(),
+            "power2": (0j) * (1.34764e-13 - 2.89120e-19j).conjugate(),
+            "potential1": -1.34764e-12 + 2.89120e-18j,
+            "potential2": 0j,
+            "series_losses": (
+                (-1.34764e-12 + 2.89120e-18j) * (-1.34764e-13 + 2.89120e-19j).conjugate()
+                + (0j) * (1.34764e-13 - 2.89120e-19j).conjugate()
+            ),
+            "series_current": -1.34764e-13 + 2.89120e-19j,
+            "max_current": np.nan,
+            "violated": None,
+        },
+    ]
+    expected_res_lines_dtypes = {
+        "line_id": object,
+        "phase": PhaseDtype,
+        "current1": complex,
+        "current2": complex,
+        "power1": complex,
+        "power2": complex,
+        "potential1": complex,
+        "potential2": complex,
+        "series_losses": complex,
+        "series_current": complex,
+        "max_current": float,
+        "violated": pd.BooleanDtype(),
+    }
+    expected_res_lines = (
+        pd.DataFrame.from_records(expected_res_lines_records)
+        .astype(expected_res_lines_dtypes)
+        .set_index(["line_id", "phase"])
+    )
+    assert_frame_equal(small_network.res_lines, expected_res_lines, rtol=1e-4, atol=1e-5)
+
+    # Lines with violated max current
+    small_network.branches["line"].parameters.max_current = 0.002
+    expected_res_lines_violated_records = [
+        d | {"max_current": 0.002, "violated": d["phase"] != "n"} for d in expected_res_lines_records
+    ]
+    expected_res_violated_lines = (
+        pd.DataFrame.from_records(expected_res_lines_violated_records)
+        .astype(expected_res_lines_dtypes)
+        .set_index(["line_id", "phase"])
+    )
+    assert_frame_equal(small_network.res_lines, expected_res_violated_lines, rtol=1e-4, atol=1e-5)
+
+    # Switches results
+    expected_res_switches = (
+        pd.DataFrame.from_records(
+            [],
+            columns=[
+                "switch_id",
+                "phase",
+                "current1",
+                "current2",
+                "power1",
+                "power2",
+                "potential1",
+                "potential2",
+            ],
+        )
+        .astype(
+            {
+                "switch_id": object,
+                "phase": PhaseDtype,
+                "current1": complex,
+                "current2": complex,
+                "power1": complex,
+                "power2": complex,
+                "potential1": complex,
+                "potential2": complex,
+            }
+        )
+        .set_index(["switch_id", "phase"])
+    )
+    assert_frame_equal(small_network.res_switches, expected_res_switches)
+
+    # Loads results
+    expected_res_loads = (
+        pd.DataFrame.from_records(
+            [
+                {
+                    "load_id": "load",
+                    "phase": "a",
+                    "current": 0.00500 + 7.22802e-25j,
+                    "power": (19999.94999 + 2.89119e-18j) * (0.00500 + 7.22802e-25j).conjugate(),
+                    "potential": 19999.94999 + 2.89119e-18j,
+                },
+                {
+                    "load_id": "load",
+                    "phase": "b",
+                    "current": -0.00250 - 0.00433j,
+                    "power": (-9999.97499 - 17320.46477j) * (-0.00250 - 0.00433j).conjugate(),
+                    "potential": -9999.97499 - 17320.46477j,
+                },
+                {
+                    "load_id": "load",
+                    "phase": "c",
+                    "current": -0.00250 + 0.00433j,
+                    "power": (-9999.97499 + 17320.46477j) * (-0.00250 + 0.00433j).conjugate(),
+                    "potential": -9999.97499 + 17320.46477j,
+                },
+                {
+                    "load_id": "load",
+                    "phase": "n",
+                    "current": -1.34763e-13 + 0j,
+                    "power": (0j) * (-1.34763e-13 + 0j).conjugate(),
+                    "potential": 0j,
+                },
+            ]
+        )
+        .astype(
+            {
+                "load_id": object,
+                "phase": PhaseDtype,
+                "current": complex,
+                "power": complex,
+                "potential": complex,
+            }
+        )
+        .set_index(["load_id", "phase"])
+    )
     assert_frame_equal(small_network.res_loads, expected_res_loads, rtol=1e-4)
 
-    expected_res_sources = pd.DataFrame.from_records(
-        [
+    # Sources results
+    expected_res_sources = (
+        pd.DataFrame.from_records(
+            [
+                {
+                    "source_id": "vs",
+                    "phase": "a",
+                    "current": -0.00500 + 0j,
+                    "power": (20000 + 2.89120e-18j) * (-0.00500 + 0j).conjugate(),
+                    "potential": 20000 + 2.89120e-18j,
+                },
+                {
+                    "source_id": "vs",
+                    "phase": "b",
+                    "current": 0.00250 + 0.00433j,
+                    "power": (-10000.00000 - 17320.50807j) * (0.00250 + 0.00433j).conjugate(),
+                    "potential": -10000.00000 - 17320.50807j,
+                },
+                {
+                    "source_id": "vs",
+                    "phase": "c",
+                    "current": 0.00250 - 0.00433j,
+                    "power": (-10000.00000 + 17320.50807j) * (0.00250 - 0.00433j).conjugate(),
+                    "potential": -10000.00000 + 17320.50807j,
+                },
+                {
+                    "source_id": "vs",
+                    "phase": "n",
+                    "current": 1.34764e-13 - 2.89121e-19j,
+                    "power": (-1.34764e-12 + 2.89120e-18j) * (1.34764e-13 - 2.89121e-19j).conjugate(),
+                    "potential": -1.34764e-12 + 2.89120e-18j,
+                },
+            ]
+        )
+        .astype(
             {
-                "source_id": "vs",
-                "phase": "a",
-                "current": -0.00500 + 0j,
-                "power": (20000 + 2.89120e-18j) * (-0.00500 + 0j).conjugate(),
-                "potential": 20000 + 2.89120e-18j,
-            },
-            {
-                "source_id": "vs",
-                "phase": "b",
-                "current": 0.00250 + 0.00433j,
-                "power": (-10000.00000 - 17320.50807j) * (0.00250 + 0.00433j).conjugate(),
-                "potential": -10000.00000 - 17320.50807j,
-            },
-            {
-                "source_id": "vs",
-                "phase": "c",
-                "current": 0.00250 - 0.00433j,
-                "power": (-10000.00000 + 17320.50807j) * (0.00250 - 0.00433j).conjugate(),
-                "potential": -10000.00000 + 17320.50807j,
-            },
-            {
-                "source_id": "vs",
-                "phase": "n",
-                "current": 1.34764e-13 - 2.89121e-19j,
-                "power": (-1.34764e-12 + 2.89120e-18j) * (1.34764e-13 - 2.89121e-19j).conjugate(),
-                "potential": -1.34764e-12 + 2.89120e-18j,
-            },
-        ],
-        index=["source_id", "phase"],
+                "source_id": object,
+                "phase": PhaseDtype,
+                "current": complex,
+                "power": complex,
+                "potential": complex,
+            }
+        )
+        .set_index(["source_id", "phase"])
     )
-    set_index_dtype(expected_res_sources, _PHASE_DTYPE)
     assert_frame_equal(small_network.res_sources, expected_res_sources, rtol=1e-4)
 
-    expected_res_grounds = pd.DataFrame.from_records(
-        [
-            {"ground_id": "ground", "potential": 0j},
-        ],
-        index=["ground_id"],
+    # Grounds results
+    expected_res_grounds = (
+        pd.DataFrame.from_records(
+            [
+                {"ground_id": "ground", "potential": 0j},
+            ]
+        )
+        .astype({"ground_id": object, "potential": complex})
+        .set_index(["ground_id"])
     )
     assert_frame_equal(small_network.res_grounds, expected_res_grounds)
 
-    expected_res_potential_refs = pd.DataFrame.from_records(
-        [
-            {"potential_ref_id": "pref", "current": 1.08420e-18 - 2.89120e-19j},
-        ],
-        index=["potential_ref_id"],
+    # Potential refs results
+    expected_res_potential_refs = (
+        pd.DataFrame.from_records(
+            [
+                {"potential_ref_id": "pref", "current": 1.08420e-18 - 2.89120e-19j},
+            ]
+        )
+        .astype({"potential_ref_id": object, "current": complex})
+        .set_index(["potential_ref_id"])
     )
     assert_frame_equal(small_network.res_potential_refs, expected_res_potential_refs)
 
@@ -1283,27 +1834,29 @@ def test_load_flow_results_frames(small_network: ElectricalNetwork, good_json_re
         [99.99999999999994, 0.0],
     ]
     small_network.results_from_dict(good_json_results)
-    expected_res_flex_powers = pd.DataFrame.from_records(
-        [
-            {
-                "load_id": "load",
-                "phase": "an",
-                "power": 99.99999999999994 + 0j,
-            },
-            {
-                "load_id": "load",
-                "phase": "bn",
-                "power": 99.99999999999994 + 0j,
-            },
-            {
-                "load_id": "load",
-                "phase": "cn",
-                "power": 99.99999999999994 + 0j,
-            },
-        ],
-        index=["load_id", "phase"],
+    expected_res_flex_powers = (
+        pd.DataFrame.from_records(
+            [
+                {
+                    "load_id": "load",
+                    "phase": "an",
+                    "power": 99.99999999999994 + 0j,
+                },
+                {
+                    "load_id": "load",
+                    "phase": "bn",
+                    "power": 99.99999999999994 + 0j,
+                },
+                {
+                    "load_id": "load",
+                    "phase": "cn",
+                    "power": 99.99999999999994 + 0j,
+                },
+            ]
+        )
+        .astype({"load_id": object, "phase": VoltagePhaseDtype, "power": complex})
+        .set_index(["load_id", "phase"])
     )
-    set_index_dtype(expected_res_flex_powers, _VOLTAGE_PHASES_DTYPE)
     assert_frame_equal(small_network.res_loads_flexible_powers, expected_res_flex_powers, rtol=1e-4)
 
 

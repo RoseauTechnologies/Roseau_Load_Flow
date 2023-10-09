@@ -24,6 +24,7 @@ class RoseauLoadFlowExceptionCode(Enum):
     BAD_BUS_ID = auto()
     BAD_BUS_TYPE = auto()
     BAD_POTENTIALS_SIZE = auto()
+    BAD_VOLTAGES = auto()
     BAD_VOLTAGES_SIZE = auto()
     BAD_SHORT_CIRCUIT = auto()
 

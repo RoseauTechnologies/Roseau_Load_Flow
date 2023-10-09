@@ -132,15 +132,15 @@ def network_from_dict(
     return buses, branches_dict, loads, sources, grounds, potential_refs
 
 
-def network_to_dict(en: "ElectricalNetwork", include_geometry: bool) -> JsonDict:
+def network_to_dict(en: "ElectricalNetwork", *, _lf_only: bool) -> JsonDict:
     """Return a dictionary of the current network data.
 
     Args:
         en:
             The electrical network.
 
-        include_geometry:
-            If False, the geometry will not be added to the network dictionary.
+        _lf_only:
+            Internal argument, please do not use.
 
     Returns:
         The created dictionary.
@@ -155,7 +155,7 @@ def network_to_dict(en: "ElectricalNetwork", include_geometry: bool) -> JsonDict
     sources: list[JsonDict] = []
     short_circuits: list[JsonDict] = []
     for bus in en.buses.values():
-        buses.append(bus.to_dict(include_geometry=include_geometry))
+        buses.append(bus.to_dict(_lf_only=_lf_only))
         for element in bus._connected_elements:
             if isinstance(element, AbstractLoad):
                 assert element.bus is bus
@@ -171,7 +171,7 @@ def network_to_dict(en: "ElectricalNetwork", include_geometry: bool) -> JsonDict
     lines_params_dict: dict[Id, LineParameters] = {}
     transformers_params_dict: dict[Id, TransformerParameters] = {}
     for branch in en.branches.values():
-        branches.append(branch.to_dict(include_geometry=include_geometry))
+        branches.append(branch.to_dict(_lf_only=_lf_only))
         if isinstance(branch, Line):
             params_id = branch.parameters.id
             if params_id in lines_params_dict and branch.parameters != lines_params_dict[params_id]:
@@ -192,13 +192,13 @@ def network_to_dict(en: "ElectricalNetwork", include_geometry: bool) -> JsonDict
     # Line parameters
     line_params: list[JsonDict] = []
     for lp in lines_params_dict.values():
-        line_params.append(lp.to_dict())
+        line_params.append(lp.to_dict(_lf_only=_lf_only))
     line_params.sort(key=lambda x: x["id"])  # Always keep the same order
 
     # Transformer parameters
     transformer_params: list[JsonDict] = []
     for tp in transformers_params_dict.values():
-        transformer_params.append(tp.to_dict())
+        transformer_params.append(tp.to_dict(_lf_only=_lf_only))
     transformer_params.sort(key=lambda x: x["id"])  # Always keep the same order
 
     res = {

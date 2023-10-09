@@ -38,3 +38,4 @@ repos:
     hooks:
       - id: prettier
         args: ["--print-width", "120"]
+        exclude: ^.vscode/

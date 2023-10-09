@@ -324,7 +324,7 @@ class PowerLoad(AbstractLoad):
     #
     # Json Mixin interface
     #
-    def to_dict(self, include_geometry: bool = True) -> JsonDict:
+    def to_dict(self, *, _lf_only: bool = False) -> JsonDict:
         self._raise_disconnected_error()
         res = {
             "id": self.id,
@@ -396,7 +396,7 @@ class CurrentLoad(AbstractLoad):
         self._currents = self._validate_value(value)
         self._invalidate_network_results()
 
-    def to_dict(self, include_geometry: bool = True) -> JsonDict:
+    def to_dict(self, *, _lf_only: bool = False) -> JsonDict:
         self._raise_disconnected_error()
         return {
             "id": self.id,
@@ -451,7 +451,7 @@ class ImpedanceLoad(AbstractLoad):
         self._impedances = self._validate_value(impedances)
         self._invalidate_network_results()
 
-    def to_dict(self, include_geometry: bool = True) -> JsonDict:
+    def to_dict(self, *, _lf_only: bool = False) -> JsonDict:
         self._raise_disconnected_error()
         return {
             "id": self.id,

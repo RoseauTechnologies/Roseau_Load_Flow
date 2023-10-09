@@ -293,6 +293,13 @@ class Line(AbstractBranch):
         return self.parameters._y_shunt * self._length
 
     @property
+    def max_current(self) -> Optional[Q_[float]]:
+        """The maximum current loading of the line in A."""
+        # Do not add a setter. The user must know that if they change the max_current, it changes
+        # for all lines that share the parameters. It is better to set it on the parameters.
+        return self.parameters.max_current
+
+    @property
     def with_shunt(self) -> bool:
         return self.parameters.with_shunt
 
@@ -369,12 +376,25 @@ class Line(AbstractBranch):
         """Get the power losses in the line (VA)."""
         return self._res_power_losses_getter(warning=True)
 
+    @property
+    def res_violated(self) -> Optional[bool]:
+        """Whether the line current exceeds the maximum current (loading > 100%).
+
+        Returns ``None`` if the maximum current is not set.
+        """
+        i_max = self.parameters._max_current
+        if i_max is None:
+            return None
+        currents1, currents2 = self._res_currents_getter(warning=True)
+        # True if any phase is overloaded
+        return float(np.max([abs(currents1), abs(currents2)])) > i_max
+
     #
     # Json Mixin interface
     #
-    def to_dict(self, include_geometry: bool = True) -> JsonDict:
+    def to_dict(self, *, _lf_only: bool = False) -> JsonDict:
         res = {
-            **super().to_dict(include_geometry=include_geometry),
+            **super().to_dict(_lf_only=_lf_only),
             "length": self._length,
             "params_id": self.parameters.id,
         }

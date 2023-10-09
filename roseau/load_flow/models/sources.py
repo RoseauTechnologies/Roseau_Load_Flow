@@ -161,7 +161,7 @@ class VoltageSource(Element):
         voltages = [complex(v[0], v[1]) for v in data["voltages"]]
         return cls(data["id"], data["bus"], voltages=voltages, phases=data["phases"])
 
-    def to_dict(self, include_geometry: bool = True) -> JsonDict:
+    def to_dict(self, *, _lf_only: bool = False) -> JsonDict:
         self._raise_disconnected_error()
         return {
             "id": self.id,
