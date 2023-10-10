@@ -16,10 +16,7 @@ logger = logging.getLogger(__name__)
 class Transformer(AbstractBranch):
     """A generic transformer model.
 
-    The model parameters are defined in the ``parameters``.
-
-    See Also:
-        :doc:`Transformer models documentation </models/Transformer/index>`
+    The model parameters are defined using the ``parameters`` argument.
     """
 
     branch_type = "transformer"
@@ -65,7 +62,8 @@ class Transformer(AbstractBranch):
                 The tap of the transformer, for example 1.02.
 
             parameters:
-                The parameters of the transformer.
+                Parameters defining the electrical model of the transformer. This is an instance of
+                the :class:`TransformerParameters` class and can be used by multiple transformers.
 
             phases1:
                 The phases of the first extremity of the transformer. A string like ``"abc"`` or

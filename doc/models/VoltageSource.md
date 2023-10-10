@@ -111,3 +111,12 @@ un = 400
 voltages = un * np.exp([0, -2j * np.pi / 3])  # Only two elements!!
 VoltageSource(id="vs", bus=bus, phases="abc", voltages=voltages)  # Error
 ```
+
+## API Reference
+
+```{eval-rst}
+.. autoclass:: roseau.load_flow.models.VoltageSource
+   :members:
+   :show-inheritance:
+   :no-index:
+```

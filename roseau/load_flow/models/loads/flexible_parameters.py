@@ -45,9 +45,6 @@ class Control(JsonMixin):
           :math:`P^{\\max}_{\\mathrm{cons}}(U)`.
 
         * ``"q_u"``: control the reactive power based on the voltage :math:`Q(U)`.
-
-    See Also:
-        :ref:`Control documentation <models-flexible_load-controls>`
     """
 
     _DEFAULT_ALPHA: float = 1000.0
@@ -351,9 +348,6 @@ class Projection(JsonMixin):
         * ``"euclidean"``: for a Euclidean projection on the feasible space;
         * ``"keep_p"``: for maintaining a constant P;
         * ``"keep_q"``: for maintaining a constant Q.
-
-    See Also:
-        :ref:`Projection documentation <models-flexible_load-projections>`
     """
 
     _DEFAULT_ALPHA: float = 1000.0
@@ -453,9 +447,6 @@ class FlexibleParameter(JsonMixin):
             the radius of the feasible circle used by the projection
 
     For multi-phase loads, you need to use a `FlexibleParameter` instance per phase.
-
-    See Also:
-        :ref:`Flexible Parameters documentation <models-flexible_load-flexible_parameters>`
     """
 
     _control_class: type[Control] = Control

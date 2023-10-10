@@ -101,3 +101,12 @@ en.res_branches[["current1"]].transform([np.abs, ft.partial(np.angle, deg=True)]
 # | ('line', 'c') |                      0     |                  0      |
 # | ('line', 'n') |                      0     |                  0      |
 ```
+
+## API Reference
+
+```{eval-rst}
+.. autoclass:: roseau.load_flow.models.Bus
+   :members:
+   :show-inheritance:
+   :no-index:
+```

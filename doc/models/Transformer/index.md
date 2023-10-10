@@ -154,3 +154,16 @@ Single_Phase_Transformer
 Three_Phase_Transformer
 Center_Tapped_Transformer
 ```
+
+## API Reference
+
+```{eval-rst}
+.. autoclass:: roseau.load_flow.models.TransformerParameters
+   :members:
+   :show-inheritance:
+   :no-index:
+.. autoclass:: roseau.load_flow.models.Transformer
+   :members:
+   :show-inheritance:
+   :no-index:
+```

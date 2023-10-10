@@ -84,7 +84,7 @@ en.res_branches[["current2"]].transform([np.abs, ft.partial(np.angle, deg=True)]
 # The two currents are equal in magnitude and opposite in phase, as expected
 
 # The two buses have the same voltages
-en.res_buses_voltages.transform([np.abs, ft.partial(np.angle, deg=True)])
+en.res_buses_voltages[["voltage"]].transform([np.abs, ft.partial(np.angle, deg=True)])
 # |                |   ('voltage', 'absolute') |   ('voltage', 'angle') |
 # |:---------------|--------------------------:|-----------------------:|
 # | ('bus1', 'an') |                    230.94 |                      0 |
@@ -93,4 +93,13 @@ en.res_buses_voltages.transform([np.abs, ft.partial(np.angle, deg=True)])
 # | ('bus2', 'an') |                    230.94 |                      0 |
 # | ('bus2', 'bn') |                    230.94 |                   -120 |
 # | ('bus2', 'cn') |                    230.94 |                    120 |
+```
+
+## API Reference
+
+```{eval-rst}
+.. autoclass:: roseau.load_flow.models.Switch
+   :members:
+   :show-inheritance:
+   :no-index:
 ```

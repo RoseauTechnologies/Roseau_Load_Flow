@@ -68,6 +68,7 @@ autodoc_default_options = {"ignore-module-all": False}
 autodoc_member_order = "bysource"
 autodoc_typehints = "signature"
 autodoc_inherit_docstrings = True
+autoclass_content = "both"  # show both class and __init__ docstrings
 
 # -- Options for HTML output -------------------------------------------------
 

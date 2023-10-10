@@ -20,11 +20,7 @@ if TYPE_CHECKING:
 
 
 class Bus(Element):
-    """An electrical bus.
-
-    See Also:
-        :doc:`Bus model documentation </models/Bus>`
-    """
+    """A multi-phase electrical bus."""
 
     allowed_phases = frozenset({"ab", "bc", "ca", "an", "bn", "cn", "abn", "bcn", "can", "abc", "abcn"})
     """The allowed phases for a bus are:
@@ -54,7 +50,7 @@ class Bus(Element):
             phases:
                 The phases of the bus. A string like ``"abc"`` or ``"an"`` etc. The order of the
                 phases is important. For a full list of supported phases, see the class attribute
-                :attr:`Bus.allowed_phases`.
+                :attr:`.allowed_phases`.
 
             geometry:
                 An optional geometry of the bus; a :class:`~shapely.Point` that represents the
@@ -347,5 +343,5 @@ class Bus(Element):
         return self._short_circuits[:]  # return a copy as users should not modify the list directly
 
     def clear_short_circuits(self) -> None:
-        """Remove the short-circuits."""
+        """Remove the short-circuits of this bus."""
         self._short_circuits = []

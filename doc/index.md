@@ -42,7 +42,8 @@ usage/index
 
 ## Models
 
-A description of the electrical models used for each component is available:
+A description of the electrical models used for each component, an example usage, and a reference
+to the API of the classes are available here:
 
 ```{toctree}
 ---

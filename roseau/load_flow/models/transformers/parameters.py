@@ -21,11 +21,7 @@ logger = logging.getLogger(__name__)
 
 
 class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
-    """A class to store the parameters of the transformers.
-
-    See Also:
-        :ref:`Transformer parameters documentation <models-transformer_parameters>`
-    """
+    """Parameters that define electrical models of transformers."""
 
     _EXTRACT_WINDINGS_RE = regex.compile(
         "(?(DEFINE)(?P<y_winding>yn?)(?P<d_winding>d)(?P<z_winding>zn?)(?P<p_set_1>[06])"

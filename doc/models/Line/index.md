@@ -180,3 +180,16 @@ Parameters
 ShuntLine
 SimplifiedLine
 ```
+
+## API Reference
+
+```{eval-rst}
+.. autoclass:: roseau.load_flow.models.LineParameters
+   :members:
+   :show-inheritance:
+   :no-index:
+.. autoclass:: roseau.load_flow.models.Line
+   :members:
+   :show-inheritance:
+   :no-index:
+```
