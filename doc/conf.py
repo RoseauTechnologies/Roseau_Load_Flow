@@ -130,6 +130,8 @@ intersphinx_mapping = {
     "pint": ("https://pint.readthedocs.io/en/stable/", None),
     "typing_extensions": ("https://typing-extensions.readthedocs.io/en/stable/", None),
     "rich": ("https://rich.readthedocs.io/en/stable/", None),
+    "matplotlib": ("https://matplotlib.org/stable/", None),
+    "networkx": ("https://networkx.org/documentation/stable/", None),
 }
 
 # -- Options for sphinx_copybutton -------------------------------------------

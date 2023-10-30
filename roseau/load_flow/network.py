@@ -10,7 +10,7 @@ from collections.abc import Sized
 from importlib import resources
 from itertools import cycle
 from pathlib import Path
-from typing import NoReturn, Optional, TypeVar, Union
+from typing import TYPE_CHECKING, NoReturn, Optional, TypeVar, Union
 from urllib.parse import urljoin
 
 import geopandas as gpd
@@ -38,8 +38,11 @@ from roseau.load_flow.models import (
 )
 from roseau.load_flow.solvers import check_solver_params
 from roseau.load_flow.typing import Authentication, Id, JsonDict, Solver, StrPath
-from roseau.load_flow.utils import CatalogueMixin, JsonMixin, console, palette
+from roseau.load_flow.utils import CatalogueMixin, JsonMixin, _optional_deps, console, palette
 from roseau.load_flow.utils.types import _DTYPES, VoltagePhaseDtype
+
+if TYPE_CHECKING:
+    from networkx import Graph
 
 logger = logging.getLogger(__name__)
 
@@ -440,6 +443,48 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             ],
             columns=["bus_id", "phases", "short_circuit", "ground"],
         )
+
+    #
+    # Helpers to analyze the network
+    #
+    @property
+    def buses_clusters(self) -> list[set[Id]]:
+        """Sets of galvanically connected buses, i.e buses connected by lines or a switches.
+
+        This can be useful to isolate parts of the network for localized analysis. For example, to
+        study a LV subnetwork of a MV feeder.
+
+        See Also:
+            :meth:`Bus.get_connected_buses() <roseau.load_flow.models.Bus.get_connected_buses>`: Get
+            the buses in the same galvanically isolated section as a certain bus.
+        """
+        visited: set[Id] = set()
+        result: list[set[Id]] = []
+        for bus in self.buses.values():
+            if bus.id in visited:
+                continue
+            bus_cluster = set(bus.get_connected_buses())
+            visited |= bus_cluster
+            result.append(bus_cluster)
+        return result
+
+    def to_graph(self) -> "Graph":
+        """Create a networkx graph from this electrical network.
+
+        The graph contains the geometries of the buses in the nodes data and the geometries and
+        branch types in the edges data.
+
+        Note:
+            This method requires *networkx* to be installed. You can install it with the ``"graph"``
+            extra if you are using pip: ``pip install "roseau-load-flow[graph]"``.
+        """
+        nx = _optional_deps.networkx
+        graph = nx.Graph()
+        for bus in self.buses.values():
+            graph.add_node(bus.id, geom=bus.geometry)
+        for branch in self.branches.values():
+            graph.add_edge(branch.bus1.id, branch.bus2.id, id=branch.id, type=branch.branch_type, geom=branch.geometry)
+        return graph
 
     #
     # Method to solve a load flow

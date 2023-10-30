@@ -1,5 +1,5 @@
 import logging
-from collections.abc import Sequence
+from collections.abc import Iterator, Sequence
 from typing import TYPE_CHECKING, Any, Optional
 
 import numpy as np
@@ -191,15 +191,15 @@ class Bus(Element):
             return float(min(voltages)) < self._min_voltage or float(max(voltages)) > self._max_voltage
 
     def propagate_limits(self, force: bool = False) -> None:
-        """Propagate the voltage limits to neighbor buses.
+        """Propagate the voltage limits to galvanically connected buses.
 
-        Neighbor buses here refers to buses connected to this bus through lines or switches. This
+        Galvanically connected buses are buses connected to this bus through lines or switches. This
         ensures that these voltage limits are only applied to buses with the same voltage level. If
         a bus is connected to this bus through a transformer, the voltage limits are not propagated
         to that bus.
 
         If this bus does not define any voltage limits, calling this method will unset the limits
-        of the neighbor buses.
+        of the connected buses.
 
         Args:
             force:
@@ -252,6 +252,32 @@ class Bus(Element):
         for bus in buses:
             bus._min_voltage = self._min_voltage
             bus._max_voltage = self._max_voltage
+
+    def get_connected_buses(self) -> Iterator[Id]:
+        """Get IDs of all the buses galvanically connected to this bus.
+
+        These are all the buses connected via one or more lines or switches to this bus.
+        """
+        from roseau.load_flow.models.lines import Line, Switch
+
+        visited_buses = {self.id}
+        yield self.id
+
+        visited: set[Element] = set()
+        remaining = set(self._connected_elements)
+
+        while remaining:
+            branch = remaining.pop()
+            visited.add(branch)
+            if not isinstance(branch, (Line, Switch)):
+                continue
+            for element in branch._connected_elements:
+                if not isinstance(element, Bus) or element.id in visited_buses:
+                    continue
+                visited_buses.add(element.id)
+                yield element.id
+                to_add = set(element._connected_elements).difference(visited)
+                remaining.update(to_add)
 
     #
     # Json Mixin interface

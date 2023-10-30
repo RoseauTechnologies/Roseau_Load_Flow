@@ -2,6 +2,40 @@
 
 `roseau-load-flow` comes with some extra features that can be useful for some users.
 
+## Graph theory
+
+{meth}`ElectricalNetwork.to_graph() <roseau.load_flow.ElectricalNetwork.to_graph>` can be used to
+get a {class}`networkx.Graph` object from the electrical network.
+
+The graph contains the geometries of the buses in the nodes data and the geometries and branch
+types in the edges data.
+
+```{note}
+This method requires *networkx* which is not installed by default in pip managed installs. You can
+install it with the `"graph"` extra if you are using pip: `pip install "roseau-load-flow[graph]"`.
+```
+
+In addition, you can use the property
+{meth}`ElectricalNetwork.buses_clusters <roseau.load_flow.ElectricalNetwork.buses_clusters>` to
+get a list of sets of IDs of buses in galvanically isolated sections of the network. In other terms,
+to get groups of buses connected by one or more lines or a switches, stopping at transformers. For
+example, for a network with a MV feeder, this property returns a list containing a set of MV buses
+IDs and all sets of LV subnetworks buses IDs. If you want to get the cluster of only one bus, you
+can use {meth}`Bus.get_connected_buses <roseau.load_flow.models.Bus.get_connected_buses>`
+
+If we take the example network from the [Getting Started page](gs-creating-network):
+
+```pycon
+>>> set(source_bus.get_connected_buses())
+{'sb', 'lb'}
+>>> set(load_bus.get_connected_buses())
+{'sb', 'lb'}
+>>> en.buses_clusters
+[{'sb', 'lb'}]
+```
+
+As there are no transformers between the two buses, they all belong to the same cluster.
+
 ## Conversion to symmetrical components
 
 {mod}`roseau.load_flow.converters` contains helpers to convert between phasor and symmetrical
