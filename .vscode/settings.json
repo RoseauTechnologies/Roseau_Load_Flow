@@ -20,4 +20,10 @@
       "source.organizeImports.ruff": "explicit",
     },
   },
+  // Prettier
+  "prettier.printWidth": 120,
+  "[markdown][yaml][html][css]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+  }
 }

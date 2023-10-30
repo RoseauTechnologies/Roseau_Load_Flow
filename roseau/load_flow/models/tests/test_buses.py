@@ -324,3 +324,34 @@ def test_get_connected_buses():
         assert sorted(mvb.get_connected_buses()) == mv_bus_ids
     for lvb in lv_buses:
         assert sorted(lvb.get_connected_buses()) == lv_bus_ids
+
+
+def test_res_voltage_unbalance():
+    bus = Bus("b3", phases="abc")
+
+    va = 230 + 0j
+    vb = 230 * np.exp(4j * np.pi / 3)
+    vc = 230 * np.exp(2j * np.pi / 3)
+
+    # Balanced system
+    bus._res_potentials = np.array([va, vb, vc])
+    assert np.isclose(bus.res_voltage_unbalance().magnitude, 0)
+
+    # Unbalanced system
+    bus._res_potentials = np.array([va, vb, vb])
+    assert np.isclose(bus.res_voltage_unbalance().magnitude, 100)
+
+    # With neutral
+    bus = Bus("b3n", phases="abcn")
+    bus._res_potentials = np.array([va, vb, vc, 0])
+    assert np.isclose(bus.res_voltage_unbalance().magnitude, 0)
+    bus._res_potentials = np.array([va, vb, vb, 0])
+    assert np.isclose(bus.res_voltage_unbalance().magnitude, 100)
+
+    # Non 3-phase bus
+    bus = Bus("b1", phases="an")
+    bus._res_potentials = np.array([va, 0])
+    with pytest.raises(RoseauLoadFlowException) as e:
+        bus.res_voltage_unbalance()
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
+    assert e.value.msg == "Voltage unbalance is only available for 3-phases buses, bus 'b1' has phases 'an'"

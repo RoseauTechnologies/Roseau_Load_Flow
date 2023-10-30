@@ -7,7 +7,7 @@ import pandas as pd
 from shapely import Point
 from typing_extensions import Self
 
-from roseau.load_flow.converters import calculate_voltage_phases, calculate_voltages
+from roseau.load_flow.converters import calculate_voltage_phases, calculate_voltages, phasor_to_sym
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.core import Element
 from roseau.load_flow.typing import Id, JsonDict
@@ -278,6 +278,29 @@ class Bus(Element):
                 yield element.id
                 to_add = set(element._connected_elements).difference(visited)
                 remaining.update(to_add)
+
+    @ureg_wraps("percent", (None,), strict=False)
+    def res_voltage_unbalance(self) -> Q_[float]:
+        """Calculate the voltage unbalance on this bus according to the IEC definition.
+
+        Voltage Unbalance Factor:
+
+        :math:`VUF = \\frac{|V_n|}{|V_p|} * 100 (\\%)`
+
+        Where :math:`V_n` is the negative-sequence voltage and :math:`V_p` is the positive-sequence
+        voltage.
+        """
+        # https://std.iec.ch/terms/terms.nsf/3385f156e728849bc1256e8c00278ad2/771c5188e62fade5c125793a0043f2a5?OpenDocument
+        if self.phases not in {"abc", "abcn"}:
+            msg = f"Voltage unbalance is only available for 3-phases buses, bus {self.id!r} has phases {self.phases!r}"
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
+        # We use the potentials here which is equivalent to using the "line to neutral" voltages as
+        # defined by the standard. The standard also has this note:
+        # NOTE 1 Phase-to-phase voltages may also be used instead of line to neutral voltages.
+        potentials = self._res_potentials_getter(warning=True)
+        _, vp, vn = phasor_to_sym(potentials[:3])  # (0, +, -)
+        return abs(vn) / abs(vp) * 100
 
     #
     # Json Mixin interface
