@@ -449,14 +449,14 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
     #
     @property
     def buses_clusters(self) -> list[set[Id]]:
-        """Sets of buses connected together by a line or a switch.
+        """Sets of galvanically connected buses, i.e buses connected by lines or a switches.
 
         This can be useful to isolate parts of the network for localized analysis. For example, to
         study a LV subnetwork of a MV feeder.
 
         See Also:
-            :meth:`Bus.get_connected_buses() <roseau.load_flow.models.Bus.get_connected_buses>`: Find the
-            buses in the same cluster as a certain bus.
+            :meth:`Bus.get_connected_buses() <roseau.load_flow.models.Bus.get_connected_buses>`: Get
+            the buses in the same galvanically isolated section as a certain bus.
         """
         visited: set[Id] = set()
         result: list[set[Id]] = []
