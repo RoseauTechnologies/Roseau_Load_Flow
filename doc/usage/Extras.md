@@ -135,3 +135,27 @@ the module documentation for more details.
 
 An enumeration of available conductor types can be found in the {mod}`roseau.load_flow.utils.types`
 module.
+
+## Voltage unbalance
+
+It is possible to calculate the voltage unbalance due to asymmetric operation. There are many
+definitions of voltage unbalance (see {cite:p}`Girigoudar_2019`). In `roseau-load-flow`, you can
+use the {meth}`~roseau.load_flow.models.Bus.res_voltage_unbalance` method on a 3-phase bus to get
+the Voltage Unbalance Factor (VUF) as per the IEC definition:
+
+```{math}
+VUF = \frac{|V_n|}{|V_p|} * 100 (\%)
+```
+
+Where $V_n$ is the negative-sequence voltage and $V_p$ is the positive-sequence voltage.
+
+```{note}
+Other definitions of voltage unbalance could be added in the future. If you need a specific
+definition, please open an issue on the GitHub repository.
+```
+
+## Bibliography
+
+```{bibliography}
+:filter: docname in docnames
+```

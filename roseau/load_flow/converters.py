@@ -30,14 +30,18 @@ _A_INV = np.linalg.inv(A)
 
 def phasor_to_sym(v_abc: Sequence[complex]) -> np.ndarray[complex]:
     """Compute the symmetrical components `(0, +, -)` from the phasor components `(a, b, c)`."""
-    v_012 = _A_INV @ np.asarray(v_abc).reshape((3, 1))
-    return v_012
+    v_abc_array = np.asarray(v_abc)
+    orig_shape = v_abc_array.shape
+    v_012 = _A_INV @ v_abc_array.reshape((3, 1))
+    return v_012.reshape(orig_shape)
 
 
 def sym_to_phasor(v_012: Sequence[complex]) -> np.ndarray[complex]:
     """Compute the phasor components `(a, b, c)` from the symmetrical components `(0, +, -)`."""
-    v_abc = A @ np.asarray(v_012).reshape((3, 1))
-    return v_abc
+    v_012_array = np.asarray(v_012)
+    orig_shape = v_012_array.shape
+    v_abc = A @ v_012_array.reshape((3, 1))
+    return v_abc.reshape(orig_shape)
 
 
 def series_phasor_to_sym(s_abc: pd.Series) -> pd.Series:
