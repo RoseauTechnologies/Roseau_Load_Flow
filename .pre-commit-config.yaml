@@ -1,7 +1,7 @@
 exclude: ^.idea/|^conda/meta.yaml
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.4.0
+    rev: v4.5.0
     hooks:
       - id: check-builtin-literals
       - id: check-json
@@ -17,11 +17,11 @@ repos:
     hooks:
       - id: poetry-check
   - repo: https://github.com/psf/black-pre-commit-mirror
-    rev: 23.9.1 # keep in sync with pyproject.toml
+    rev: 23.10.1 # keep in sync with pyproject.toml
     hooks:
       - id: black-jupyter
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: v0.0.290 # keep in sync with pyproject.toml
+    rev: v0.1.3 # keep in sync with pyproject.toml
     hooks:
       - id: ruff
         types_or: [python, pyi, jupyter]
