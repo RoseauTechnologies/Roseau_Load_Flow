@@ -283,7 +283,7 @@ def test_propagate_limits():  # noqa: C901
         assert bus.max_voltage == Q_(253, "V")
 
 
-def test_find_neighbors():
+def test_get_connected_buses():
     b1_mv = Bus("b1_mv", phases="abc")
     b2_mv = Bus("b2_mv", phases="abc")
     b3_mv = Bus("b3_mv", phases="abc")
@@ -321,6 +321,6 @@ def test_find_neighbors():
     lv_buses = (b1_lv, b2_lv, b3_lv)
     lv_bus_ids = sorted(b.id for b in lv_buses)
     for mvb in mv_buses:
-        assert sorted(mvb.find_neighbors()) == mv_bus_ids
+        assert sorted(mvb.get_connected_buses()) == mv_bus_ids
     for lvb in lv_buses:
-        assert sorted(lvb.find_neighbors()) == lv_bus_ids
+        assert sorted(lvb.get_connected_buses()) == lv_bus_ids

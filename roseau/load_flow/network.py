@@ -455,7 +455,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         study a LV subnetwork of a MV feeder.
 
         See Also:
-            :meth:`Bus.find_neighbors() <roseau.load_flow.models.Bus.find_neighbors>`: Find the
+            :meth:`Bus.get_connected_buses() <roseau.load_flow.models.Bus.get_connected_buses>`: Find the
             buses in the same cluster as a certain bus.
         """
         visited: set[Id] = set()
@@ -463,7 +463,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         for bus in self.buses.values():
             if bus.id in visited:
                 continue
-            bus_cluster = set(bus.find_neighbors())
+            bus_cluster = set(bus.get_connected_buses())
             visited |= bus_cluster
             result.append(bus_cluster)
         return result

@@ -492,8 +492,7 @@ the limits are violated or not for the corresponding element.
 
 ```{tip}
 You can use the {meth}`Bus.propagate_limits() <roseau.load_flow.Bus.propagate_limits>` method to
-propagate the limits from a bus to its neighboring buses, that is, buses on the same side of a
-transformer.
+propagate the limits from a bus to buses connected to it galvanically (i.e. via lines or switches).
 ```
 
 (gs-updating-elements)=

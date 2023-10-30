@@ -17,17 +17,18 @@ install it with the `"graph"` extra if you are using pip: `pip install "roseau-l
 
 In addition, you can use the property
 {meth}`ElectricalNetwork.buses_clusters <roseau.load_flow.ElectricalNetwork.buses_clusters>` to
-get a list of sets of IDs of buses connected by a line or a switch. For example, with a network
-with a MV feeder, this property returns a list containing a set of MV buses IDs and all sets of
-LV subnetworks buses IDs. If you want to get the cluster of only one bus, you can use
-{meth}`Bus.find_neighbors <roseau.load_flow.models.Bus.find_neighbors>`
+get a list of sets of IDs of buses in galvanically isolated sections of the network. In other terms,
+to get groups of buses connected by one or more lines or a switches, stopping at transformers. For
+example, for a network with a MV feeder, this property returns a list containing a set of MV buses
+IDs and all sets of LV subnetworks buses IDs. If you want to get the cluster of only one bus, you
+can use {meth}`Bus.get_connected_buses <roseau.load_flow.models.Bus.get_connected_buses>`
 
 If we take the example network from the [Getting Started page](gs-creating-network):
 
 ```pycon
->>> set(source_bus.find_neighbors())
+>>> set(source_bus.get_connected_buses())
 {'sb', 'lb'}
->>> set(load_bus.find_neighbors())
+>>> set(load_bus.get_connected_buses())
 {'sb', 'lb'}
 >>> en.buses_clusters
 [{'sb', 'lb'}]

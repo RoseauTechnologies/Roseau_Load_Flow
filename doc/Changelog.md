@@ -10,7 +10,7 @@
   `ElectricalNetwork` also gained a new `buses_clusters` property that returns a list of sets of
   IDs of buses that are connected by a line or a switch. This can be useful to isolate parts of the
   network for localized analysis. For example, to study a LV subnetwork of a MV feeder. Alternatively,
-  to get the cluster certain bus belongs to, you can use `Bus.find_neighbors()`.
+  to get the cluster certain bus belongs to, you can use `Bus.get_connected_buses()`.
 - {gh-pr}`141` Add official support for Python 3.12. This is the last release to support Python 3.9.
 - {gh-pr}`138` Add network constraints for analysis of the results.
   - Buses can define minimum and maximum voltages. Use `bus.res_violated` to see if the bus has
