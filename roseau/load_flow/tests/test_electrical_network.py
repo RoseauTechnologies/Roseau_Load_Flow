@@ -5,6 +5,7 @@ from contextlib import contextmanager
 from urllib.parse import urljoin
 
 import geopandas as gpd
+import networkx as nx
 import numpy as np
 import pandas as pd
 import pytest
@@ -2093,3 +2094,18 @@ def test_print_catalogue():
     with console.capture() as capture:
         ElectricalNetwork.print_catalogue(load_point_name=r"^winter[0-]")
     assert len(capture.get().split("\n")) == 2
+
+
+def test_to_graph(small_network: ElectricalNetwork):
+    g = small_network.to_graph()
+    assert isinstance(g, nx.Graph)
+    assert sorted(g.nodes) == sorted(small_network.buses)
+    assert sorted(g.edges) == sorted((b.bus1.id, b.bus2.id) for b in small_network.branches.values())
+
+    for bus in small_network.buses.values():
+        node_data = g.nodes[bus.id]
+        assert node_data["geom"] == bus.geometry
+
+    for branch in small_network.branches.values():
+        edge_data = g.edges[branch.bus1.id, branch.bus2.id]
+        assert edge_data == {"id": branch.id, "type": branch.branch_type, "geom": branch.geometry}

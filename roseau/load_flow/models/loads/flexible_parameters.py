@@ -8,25 +8,12 @@ from typing_extensions import Self
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.typing import Authentication, ControlType, JsonDict, ProjectionType
 from roseau.load_flow.units import Q_, ureg_wraps
-from roseau.load_flow.utils import JsonMixin
+from roseau.load_flow.utils import JsonMixin, _optional_deps
 
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from matplotlib.axes import Axes
-
-
-def _import_matplotlib_pyplot():
-    try:
-        import matplotlib.pyplot
-    except ImportError as e:
-        msg = (
-            'matplotlib is required for plotting. Install it with the "plot" extra using '
-            '`pip install -U "roseau-load-flow[plot]"`'
-        )
-        logger.error(msg)
-        raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.IMPORT_ERROR) from e
-    return matplotlib.pyplot
 
 
 class Control(JsonMixin):
@@ -1065,12 +1052,12 @@ class FlexibleParameter(JsonMixin):
             The axis on which the plot has been drawn and the resulting flexible powers (the input if not `None` else
             the computed values).
         """
-        plt = _import_matplotlib_pyplot()  # this line first for better error handling
+        plt = _optional_deps.pyplot  # this line first for better error handling
         from matplotlib import colormaps, patheffects
 
         # Get the axes
         if ax is None:
-            ax: "Axes" = plt.gca()
+            ax = plt.gca()
 
         # Initialise some variables
         if voltages_labels_mask is None:
@@ -1173,11 +1160,11 @@ class FlexibleParameter(JsonMixin):
             The axis on which the plot has been drawn and the resulting flexible powers (the input if not `None` else
             the computed values).
         """
-        plt = _import_matplotlib_pyplot()
+        plt = _optional_deps.pyplot
 
         # Get the axes
         if ax is None:
-            ax: "Axes" = plt.gca()
+            ax = plt.gca()
 
         # Depending on the type of the control, several options
         x, y, x_ticks = self._theoretical_control_data(
@@ -1239,11 +1226,11 @@ class FlexibleParameter(JsonMixin):
             The axis on which the plot has been drawn and the resulting flexible powers (the input if not `None` else
             the computed values).
         """
-        plt = _import_matplotlib_pyplot()
+        plt = _optional_deps.pyplot
 
         # Get the axes
         if ax is None:
-            ax: "Axes" = plt.gca()
+            ax = plt.gca()
 
         # Depending on the type of the control, several options
         x, y, x_ticks = self._theoretical_control_data(

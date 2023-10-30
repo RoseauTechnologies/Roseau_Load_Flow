@@ -281,3 +281,46 @@ def test_propagate_limits():  # noqa: C901
     for bus in (b1_lv, b2_lv):
         assert bus.min_voltage == Q_(217, "V")
         assert bus.max_voltage == Q_(253, "V")
+
+
+def test_find_neighbors():
+    b1_mv = Bus("b1_mv", phases="abc")
+    b2_mv = Bus("b2_mv", phases="abc")
+    b3_mv = Bus("b3_mv", phases="abc")
+    b4_mv = Bus("b4_mv", phases="abc")
+    b1_lv = Bus("b1_lv", phases="abcn")
+    b2_lv = Bus("b2_lv", phases="abcn")
+    b3_lv = Bus("b3_lv", phases="abcn")
+
+    PotentialRef("pref_mv", element=b1_mv)
+    g = Ground("g")
+    PotentialRef("pref_lv", element=g)
+
+    lp_mv = LineParameters("lp_mv", z_line=np.eye(3), y_shunt=0.1 * np.eye(3))
+    lp_lv = LineParameters("lp_lv", z_line=np.eye(4))
+    tp = TransformerParameters.from_catalogue(id="SE_Minera_A0Ak_100kVA", manufacturer="SE")
+
+    Line("l1_mv", b1_mv, b2_mv, length=1.5, parameters=lp_mv, ground=g)
+    Line("l2_mv", b2_mv, b3_mv, length=2, parameters=lp_mv, ground=g)
+    Line("l3_mv", b2_mv, b4_mv, length=0.5, parameters=lp_mv, ground=g)  # creates a loop
+    Switch("sw_mv", b3_mv, b4_mv)
+    Transformer("tr", b3_mv, b1_lv, parameters=tp)
+    Line("l1_lv", b1_lv, b2_lv, length=1, parameters=lp_lv)
+    Switch("sw_lv", b2_lv, b3_lv)
+
+    voltages = 20_000 * np.exp([0, -2 / 3 * np.pi * 1j, 2 / 3 * np.pi * 1j])
+    VoltageSource("s_mv", bus=b1_mv, voltages=voltages)
+
+    PowerLoad("pl1_mv", bus=b2_mv, powers=[10e3, 10e3, 10e3])
+    PowerLoad("pl2_mv", bus=b3_mv, powers=[10e3, 10e3, 10e3])
+    PowerLoad("pl1_lv", bus=b1_lv, powers=[1e3, 1e3, 1e3])
+    PowerLoad("pl2_lv", bus=b2_lv, powers=[1e3, 1e3, 1e3])
+
+    mv_buses = (b1_mv, b2_mv, b3_mv, b4_mv)
+    mv_bus_ids = sorted(b.id for b in mv_buses)
+    lv_buses = (b1_lv, b2_lv, b3_lv)
+    lv_bus_ids = sorted(b.id for b in lv_buses)
+    for mvb in mv_buses:
+        assert sorted(mvb.find_neighbors()) == mv_bus_ids
+    for lvb in lv_buses:
+        assert sorted(lvb.find_neighbors()) == lv_bus_ids

@@ -14,3 +14,4 @@ dependencies:
   - typing-extensions >=4.6.2
   - rich >=13.5.1
   - matplotlib >=3.7.2
+  - networkx >=3.0.0

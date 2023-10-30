@@ -1,5 +1,5 @@
 import logging
-from collections.abc import Sequence
+from collections.abc import Iterator, Sequence
 from typing import TYPE_CHECKING, Any, Optional
 
 import numpy as np
@@ -252,6 +252,29 @@ class Bus(Element):
         for bus in buses:
             bus._min_voltage = self._min_voltage
             bus._max_voltage = self._max_voltage
+
+    def find_neighbors(self) -> Iterator[Id]:
+        """Find the buses connected to this bus via a line or switch recursively."""
+        from roseau.load_flow.models.lines import Line, Switch
+
+        visited_buses = {self.id}
+        yield self.id
+
+        visited: set[Element] = set()
+        remaining = set(self._connected_elements)
+
+        while remaining:
+            branch = remaining.pop()
+            visited.add(branch)
+            if not isinstance(branch, (Line, Switch)):
+                continue
+            for element in branch._connected_elements:
+                if not isinstance(element, Bus) or element.id in visited_buses:
+                    continue
+                visited_buses.add(element.id)
+                yield element.id
+                to_add = set(element._connected_elements).difference(visited)
+                remaining.update(to_add)
 
     #
     # Json Mixin interface
