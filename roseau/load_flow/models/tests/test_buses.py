@@ -335,18 +335,18 @@ def test_res_voltage_unbalance():
 
     # Balanced system
     bus._res_potentials = np.array([va, vb, vc])
-    assert np.isclose(bus.res_voltage_unbalance(), 0)
+    assert np.isclose(bus.res_voltage_unbalance().m_as("percent"), 0)
 
     # Unbalanced system
     bus._res_potentials = np.array([va, vb, vb])
-    assert np.isclose(bus.res_voltage_unbalance(), 100)
+    assert np.isclose(bus.res_voltage_unbalance().m_as("percent"), 100)
 
     # With neutral
     bus = Bus("b3n", phases="abcn")
     bus._res_potentials = np.array([va, vb, vc, 0])
-    assert np.isclose(bus.res_voltage_unbalance(), 0)
+    assert np.isclose(bus.res_voltage_unbalance().m_as("percent"), 0)
     bus._res_potentials = np.array([va, vb, vb, 0])
-    assert np.isclose(bus.res_voltage_unbalance(), 100)
+    assert np.isclose(bus.res_voltage_unbalance().m_as("percent"), 100)
 
     # Non 3-phase bus
     bus = Bus("b1", phases="an")

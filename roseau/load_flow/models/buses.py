@@ -279,7 +279,8 @@ class Bus(Element):
                 to_add = set(element._connected_elements).difference(visited)
                 remaining.update(to_add)
 
-    def res_voltage_unbalance(self) -> float:
+    @ureg_wraps("percent", (None,), strict=False)
+    def res_voltage_unbalance(self) -> Q_[float]:
         """Calculate the voltage unbalance on this bus according to the IEC definition.
 
         Voltage Unbalance Factor:
