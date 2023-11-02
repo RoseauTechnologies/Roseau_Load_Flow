@@ -12,7 +12,7 @@ from roseau.load_flow.models.core import Element
 from roseau.load_flow.models.grounds import Ground
 from roseau.load_flow.models.lines.parameters import LineParameters
 from roseau.load_flow.models.sources import VoltageSource
-from roseau.load_flow.typing import Id, JsonDict
+from roseau.load_flow.typing import ComplexArray, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
 
 logger = logging.getLogger(__name__)
@@ -275,13 +275,13 @@ class Line(AbstractBranch):
 
     @property
     @ureg_wraps("ohm", (None,), strict=False)
-    def z_line(self) -> Q_[np.ndarray]:
+    def z_line(self) -> Q_[ComplexArray]:
         """Impedance of the line in Ohm"""
         return self.parameters._z_line * self._length
 
     @property
     @ureg_wraps("S", (None,), strict=False)
-    def y_shunt(self) -> Q_[np.ndarray]:
+    def y_shunt(self) -> Q_[ComplexArray]:
         """Shunt admittance of the line in Siemens"""
         return self.parameters._y_shunt * self._length
 
@@ -296,33 +296,33 @@ class Line(AbstractBranch):
     def with_shunt(self) -> bool:
         return self.parameters.with_shunt
 
-    def _res_series_values_getter(self, warning: bool) -> tuple[np.ndarray, np.ndarray]:
+    def _res_series_values_getter(self, warning: bool) -> tuple[ComplexArray, ComplexArray]:
         pot1, pot2 = self._res_potentials_getter(warning)  # V
         du_line = pot1 - pot2
         i_line = np.linalg.inv(self.z_line.m_as("ohm")) @ du_line  # Zₗ x Iₗ = ΔU -> I = Zₗ⁻¹ x ΔU
         return du_line, i_line
 
-    def _res_series_currents_getter(self, warning: bool) -> np.ndarray:
+    def _res_series_currents_getter(self, warning: bool) -> ComplexArray:
         _, i_line = self._res_series_values_getter(warning)
         return i_line
 
     @property
     @ureg_wraps("A", (None,), strict=False)
-    def res_series_currents(self) -> Q_[np.ndarray]:
+    def res_series_currents(self) -> Q_[ComplexArray]:
         """Get the current in the series elements of the line (A)."""
         return self._res_series_currents_getter(warning=True)
 
-    def _res_series_power_losses_getter(self, warning: bool) -> np.ndarray:
+    def _res_series_power_losses_getter(self, warning: bool) -> ComplexArray:
         du_line, i_line = self._res_series_values_getter(warning)
         return du_line * i_line.conj()  # Sₗ = ΔU.Iₗ*
 
     @property
     @ureg_wraps("VA", (None,), strict=False)
-    def res_series_power_losses(self) -> Q_[np.ndarray]:
+    def res_series_power_losses(self) -> Q_[ComplexArray]:
         """Get the power losses in the series elements of the line (VA)."""
         return self._res_series_power_losses_getter(warning=True)
 
-    def _res_shunt_values_getter(self, warning: bool) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    def _res_shunt_values_getter(self, warning: bool) -> tuple[ComplexArray, ComplexArray, ComplexArray, ComplexArray]:
         assert self.with_shunt, "This method only works when there is a shunt"
         assert self.ground is not None
         pot1, pot2 = self._res_potentials_getter(warning)
@@ -333,7 +333,7 @@ class Line(AbstractBranch):
         i2_shunt = (y_shunt @ pot2 - yg * vg) / 2
         return pot1, pot2, i1_shunt, i2_shunt
 
-    def _res_shunt_currents_getter(self, warning: bool) -> tuple[np.ndarray, np.ndarray]:
+    def _res_shunt_currents_getter(self, warning: bool) -> tuple[ComplexArray, ComplexArray]:
         if not self.with_shunt:
             zeros = np.zeros(len(self.phases), dtype=complex)
             return zeros[:], zeros[:]
@@ -342,11 +342,11 @@ class Line(AbstractBranch):
 
     @property
     @ureg_wraps(("A", "A"), (None,), strict=False)
-    def res_shunt_currents(self) -> tuple[Q_[np.ndarray], Q_[np.ndarray]]:
+    def res_shunt_currents(self) -> tuple[Q_[ComplexArray], Q_[ComplexArray]]:
         """Get the currents in the shunt elements of the line (A)."""
         return self._res_shunt_currents_getter(warning=True)
 
-    def _res_shunt_power_losses_getter(self, warning: bool) -> np.ndarray:
+    def _res_shunt_power_losses_getter(self, warning: bool) -> ComplexArray:
         if not self.with_shunt:
             return np.zeros(len(self.phases), dtype=complex)
         pot1, pot2, cur1, cur2 = self._res_shunt_values_getter(warning)
@@ -354,18 +354,18 @@ class Line(AbstractBranch):
 
     @property
     @ureg_wraps("VA", (None,), strict=False)
-    def res_shunt_power_losses(self) -> Q_[np.ndarray]:
+    def res_shunt_power_losses(self) -> Q_[ComplexArray]:
         """Get the power losses in the shunt elements of the line (VA)."""
         return self._res_shunt_power_losses_getter(warning=True)
 
-    def _res_power_losses_getter(self, warning: bool) -> np.ndarray:
+    def _res_power_losses_getter(self, warning: bool) -> ComplexArray:
         series_losses = self._res_series_power_losses_getter(warning)
         shunt_losses = self._res_shunt_power_losses_getter(warning=False)  # we warn on the previous line
         return series_losses + shunt_losses
 
     @property
     @ureg_wraps("VA", (None,), strict=False)
-    def res_power_losses(self) -> Q_[np.ndarray]:
+    def res_power_losses(self) -> Q_[ComplexArray]:
         """Get the power losses in the line (VA)."""
         return self._res_power_losses_getter(warning=True)
 

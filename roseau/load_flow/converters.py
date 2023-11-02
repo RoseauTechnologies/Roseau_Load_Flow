@@ -11,6 +11,8 @@ from collections.abc import Sequence
 import numpy as np
 import pandas as pd
 
+from roseau.load_flow.typing import ComplexArray
+
 ALPHA = np.exp(2 / 3 * np.pi * 1j)
 """complex: Phasor rotation operator `alpha`, which rotates a phasor vector counterclockwise by 120
 degrees when multiplied by it."""
@@ -28,7 +30,7 @@ A = np.array(
 _A_INV = np.linalg.inv(A)
 
 
-def phasor_to_sym(v_abc: Sequence[complex]) -> np.ndarray[complex]:
+def phasor_to_sym(v_abc: Sequence[complex]) -> ComplexArray:
     """Compute the symmetrical components `(0, +, -)` from the phasor components `(a, b, c)`."""
     v_abc_array = np.asarray(v_abc)
     orig_shape = v_abc_array.shape
@@ -36,7 +38,7 @@ def phasor_to_sym(v_abc: Sequence[complex]) -> np.ndarray[complex]:
     return v_012.reshape(orig_shape)
 
 
-def sym_to_phasor(v_012: Sequence[complex]) -> np.ndarray[complex]:
+def sym_to_phasor(v_012: Sequence[complex]) -> ComplexArray:
     """Compute the phasor components `(a, b, c)` from the symmetrical components `(0, +, -)`."""
     v_012_array = np.asarray(v_012)
     orig_shape = v_012_array.shape
@@ -107,7 +109,7 @@ def series_phasor_to_sym(s_abc: pd.Series) -> pd.Series:
     return s_012
 
 
-def calculate_voltages(potentials: np.ndarray, phases: str) -> np.ndarray:
+def calculate_voltages(potentials: ComplexArray, phases: str) -> ComplexArray:
     """Calculate the voltages between phases given the potentials of each phase.
 
     Args:

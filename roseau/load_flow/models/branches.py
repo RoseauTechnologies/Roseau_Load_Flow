@@ -8,7 +8,7 @@ from typing_extensions import Self
 from roseau.load_flow.converters import calculate_voltages
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import Element
-from roseau.load_flow.typing import Id, JsonDict
+from roseau.load_flow.typing import ComplexArray, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
 
 logger = logging.getLogger(__name__)
@@ -66,7 +66,7 @@ class AbstractBranch(Element):
         self.bus2 = bus2
         self.geometry = geometry
         self._connect(bus1, bus2)
-        self._res_currents: Optional[tuple[np.ndarray, np.ndarray]] = None
+        self._res_currents: Optional[tuple[ComplexArray, ComplexArray]] = None
 
     def __repr__(self) -> str:
         s = f"{type(self).__name__}(id={self.id!r}, phases1={self.phases1!r}, phases2={self.phases2!r}"
@@ -76,16 +76,16 @@ class AbstractBranch(Element):
         s += ")"
         return s
 
-    def _res_currents_getter(self, warning: bool) -> tuple[np.ndarray, np.ndarray]:
+    def _res_currents_getter(self, warning: bool) -> tuple[ComplexArray, ComplexArray]:
         return self._res_getter(value=self._res_currents, warning=warning)
 
     @property
     @ureg_wraps(("A", "A"), (None,), strict=False)
-    def res_currents(self) -> tuple[Q_[np.ndarray], Q_[np.ndarray]]:
+    def res_currents(self) -> tuple[Q_[ComplexArray], Q_[ComplexArray]]:
         """The load flow result of the branch currents (A)."""
         return self._res_currents_getter(warning=True)
 
-    def _res_powers_getter(self, warning: bool) -> tuple[np.ndarray, np.ndarray]:
+    def _res_powers_getter(self, warning: bool) -> tuple[ComplexArray, ComplexArray]:
         cur1, cur2 = self._res_currents_getter(warning)
         pot1, pot2 = self._res_potentials_getter(warning=False)  # we warn on the previous line
         powers1 = pot1 * cur1.conj()
@@ -94,28 +94,28 @@ class AbstractBranch(Element):
 
     @property
     @ureg_wraps(("VA", "VA"), (None,), strict=False)
-    def res_powers(self) -> tuple[Q_[np.ndarray], Q_[np.ndarray]]:
+    def res_powers(self) -> tuple[Q_[ComplexArray], Q_[ComplexArray]]:
         """The load flow result of the branch powers (VA)."""
         return self._res_powers_getter(warning=True)
 
-    def _res_potentials_getter(self, warning: bool) -> tuple[np.ndarray, np.ndarray]:
+    def _res_potentials_getter(self, warning: bool) -> tuple[ComplexArray, ComplexArray]:
         pot1 = self.bus1._get_potentials_of(self.phases1, warning)
         pot2 = self.bus2._get_potentials_of(self.phases2, warning=False)  # we warn on the previous line
         return pot1, pot2
 
     @property
     @ureg_wraps(("V", "V"), (None,), strict=False)
-    def res_potentials(self) -> tuple[Q_[np.ndarray], Q_[np.ndarray]]:
+    def res_potentials(self) -> tuple[Q_[ComplexArray], Q_[ComplexArray]]:
         """The load flow result of the branch potentials (V)."""
         return self._res_potentials_getter(warning=True)
 
-    def _res_voltages_getter(self, warning: bool) -> tuple[np.ndarray, np.ndarray]:
+    def _res_voltages_getter(self, warning: bool) -> tuple[ComplexArray, ComplexArray]:
         pot1, pot2 = self._res_potentials_getter(warning)
         return calculate_voltages(pot1, self.phases1), calculate_voltages(pot2, self.phases2)
 
     @property
     @ureg_wraps(("V", "V"), (None,), strict=False)
-    def res_voltages(self) -> tuple[Q_[np.ndarray], Q_[np.ndarray]]:
+    def res_voltages(self) -> tuple[Q_[ComplexArray], Q_[ComplexArray]]:
         """The load flow result of the branch voltages (V)."""
         return self._res_voltages_getter(warning=True)
 

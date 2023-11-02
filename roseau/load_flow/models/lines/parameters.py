@@ -8,7 +8,7 @@ import pandas as pd
 from typing_extensions import Self
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
-from roseau.load_flow.typing import Id, JsonDict
+from roseau.load_flow.typing import ComplexArray, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow.utils import (
     CX,
@@ -41,7 +41,11 @@ class LineParameters(Identifiable, JsonMixin):
 
     @ureg_wraps(None, (None, None, "ohm/km", "S/km", "A"), strict=False)
     def __init__(
-        self, id: Id, z_line: np.ndarray, y_shunt: Optional[np.ndarray] = None, max_current: Optional[float] = None
+        self,
+        id: Id,
+        z_line: ComplexArray,
+        y_shunt: Optional[ComplexArray] = None,
+        max_current: Optional[float] = None,
     ) -> None:
         """LineParameters constructor.
 
@@ -89,12 +93,12 @@ class LineParameters(Identifiable, JsonMixin):
 
     @property
     @ureg_wraps("ohm/km", (None,), strict=False)
-    def z_line(self) -> Q_[np.ndarray]:
+    def z_line(self) -> Q_[ComplexArray]:
         return self._z_line
 
     @property
     @ureg_wraps("S/km", (None,), strict=False)
-    def y_shunt(self) -> Q_[np.ndarray]:
+    def y_shunt(self) -> Q_[ComplexArray]:
         return self._y_shunt
 
     @property
@@ -183,7 +187,7 @@ class LineParameters(Identifiable, JsonMixin):
         xpn: Optional[float] = None,
         bn: Optional[float] = None,
         bpn: Optional[float] = None,
-    ) -> tuple[np.ndarray, np.ndarray]:
+    ) -> tuple[ComplexArray, ComplexArray]:
         """Create impedance and admittance matrix from a symmetrical model.
 
         Args:
@@ -364,7 +368,7 @@ class LineParameters(Identifiable, JsonMixin):
         section_neutral: float,
         height: float,
         external_diameter: float,
-    ) -> tuple[np.ndarray, np.ndarray]:
+    ) -> tuple[ComplexArray, ComplexArray]:
         """Create impedance and admittance matrix using a geometric model.
 
         Args:

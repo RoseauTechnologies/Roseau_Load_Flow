@@ -9,7 +9,7 @@ from roseau.load_flow.converters import calculate_voltage_phases
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import Element
-from roseau.load_flow.typing import Id, JsonDict
+from roseau.load_flow.typing import ComplexArray, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
 
 logger = logging.getLogger(__name__)
@@ -74,7 +74,7 @@ class VoltageSource(Element):
         self.voltages = voltages
 
         # Results
-        self._res_currents: Optional[np.ndarray] = None
+        self._res_currents: Optional[ComplexArray] = None
 
     def __repr__(self) -> str:
         bus_id = self.bus.id if self.bus is not None else None
@@ -85,7 +85,7 @@ class VoltageSource(Element):
 
     @property
     @ureg_wraps("V", (None,), strict=False)
-    def voltages(self) -> Q_[np.ndarray]:
+    def voltages(self) -> Q_[ComplexArray]:
         """The voltages of the source (V)."""
         return self._voltages
 
@@ -104,33 +104,33 @@ class VoltageSource(Element):
         """The phases of the source voltages."""
         return calculate_voltage_phases(self.phases)
 
-    def _res_currents_getter(self, warning: bool) -> np.ndarray:
+    def _res_currents_getter(self, warning: bool) -> ComplexArray:
         return self._res_getter(value=self._res_currents, warning=warning)
 
     @property
     @ureg_wraps("A", (None,), strict=False)
-    def res_currents(self) -> Q_[np.ndarray]:
+    def res_currents(self) -> Q_[ComplexArray]:
         """The load flow result of the source currents (A)."""
         return self._res_currents_getter(warning=True)
 
-    def _res_potentials_getter(self, warning: bool) -> np.ndarray:
+    def _res_potentials_getter(self, warning: bool) -> ComplexArray:
         self._raise_disconnected_error()
         return self.bus._get_potentials_of(self.phases, warning)
 
     @property
     @ureg_wraps("V", (None,), strict=False)
-    def res_potentials(self) -> Q_[np.ndarray]:
+    def res_potentials(self) -> Q_[ComplexArray]:
         """The load flow result of the source potentials (V)."""
         return self._res_potentials_getter(warning=True)
 
-    def _res_powers_getter(self, warning: bool) -> np.ndarray:
+    def _res_powers_getter(self, warning: bool) -> ComplexArray:
         curs = self._res_currents_getter(warning)
         pots = self._res_potentials_getter(warning=False)  # we warn on the previous line
         return pots * curs.conj()
 
     @property
     @ureg_wraps("VA", (None,), strict=False)
-    def res_powers(self) -> Q_[np.ndarray]:
+    def res_powers(self) -> Q_[ComplexArray]:
         """The load flow result of the source powers (VA)."""
         return self._res_powers_getter(warning=True)
 
