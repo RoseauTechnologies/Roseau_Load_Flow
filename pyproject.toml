@@ -57,6 +57,7 @@ matplotlib = { version = ">=3.7.2", optional = true }
 networkx = { version = ">=3.0.0", optional = true }
 
 [tool.poetry.extras]
+# DO NOT forget to update the installation page in the documentation when extras change
 plot = ["matplotlib"]
 graph = ["networkx"]
 
