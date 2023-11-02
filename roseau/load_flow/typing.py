@@ -28,10 +28,16 @@ Type Aliases used by Roseau Load Flow.
 .. class:: Authentication
 
     Valid authentication types.
+
+.. class:: ComplexArray
+
+    A numpy array of complex numbers.
 """
 import os
 from typing import Any, Literal, Union
 
+import numpy as np
+from numpy.typing import NDArray
 from requests.auth import HTTPBasicAuth
 from typing_extensions import TypeAlias
 
@@ -42,6 +48,16 @@ ControlType: TypeAlias = Literal["constant", "p_max_u_production", "p_max_u_cons
 ProjectionType: TypeAlias = Literal["euclidean", "keep_p", "keep_q"]
 Solver: TypeAlias = Literal["newton", "newton_goldstein"]
 Authentication: TypeAlias = Union[tuple[str, str], HTTPBasicAuth]
+ComplexArray: TypeAlias = NDArray[np.complex_]
 
 
-__all__ = ["Id", "JsonDict", "StrPath", "ControlType", "ProjectionType", "Solver", "Authentication"]
+__all__ = [
+    "Id",
+    "JsonDict",
+    "StrPath",
+    "ControlType",
+    "ProjectionType",
+    "Solver",
+    "Authentication",
+    "ComplexArray",
+]

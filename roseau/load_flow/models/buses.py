@@ -10,7 +10,7 @@ from typing_extensions import Self
 from roseau.load_flow.converters import calculate_voltage_phases, calculate_voltages, phasor_to_sym
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.core import Element
-from roseau.load_flow.typing import Id, JsonDict
+from roseau.load_flow.typing import ComplexArray, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
 
 logger = logging.getLogger(__name__)
@@ -79,7 +79,7 @@ class Bus(Element):
         self.min_voltage = min_voltage
         self.max_voltage = max_voltage
 
-        self._res_potentials: Optional[np.ndarray] = None
+        self._res_potentials: Optional[ComplexArray] = None
         self._short_circuits: list[dict[str, Any]] = []
 
     def __repr__(self) -> str:
@@ -87,7 +87,7 @@ class Bus(Element):
 
     @property
     @ureg_wraps("V", (None,), strict=False)
-    def potentials(self) -> Q_[np.ndarray]:
+    def potentials(self) -> Q_[ComplexArray]:
         """The potentials of the bus (V)."""
         return self._potentials
 
@@ -101,22 +101,22 @@ class Bus(Element):
         self._potentials = np.asarray(value, dtype=complex)
         self._invalidate_network_results()
 
-    def _res_potentials_getter(self, warning: bool) -> np.ndarray:
+    def _res_potentials_getter(self, warning: bool) -> ComplexArray:
         return self._res_getter(value=self._res_potentials, warning=warning)
 
     @property
     @ureg_wraps("V", (None,), strict=False)
-    def res_potentials(self) -> Q_[np.ndarray]:
+    def res_potentials(self) -> Q_[ComplexArray]:
         """The load flow result of the bus potentials (V)."""
         return self._res_potentials_getter(warning=True)
 
-    def _res_voltages_getter(self, warning: bool) -> np.ndarray:
+    def _res_voltages_getter(self, warning: bool) -> ComplexArray:
         potentials = np.asarray(self._res_potentials_getter(warning=warning))
         return calculate_voltages(potentials, self.phases)
 
     @property
     @ureg_wraps("V", (None,), strict=False)
-    def res_voltages(self) -> Q_[np.ndarray]:
+    def res_voltages(self) -> Q_[ComplexArray]:
         """The load flow result of the bus voltages (V).
 
         If the bus has a neutral, the voltages are phase-neutral voltages for existing phases in
@@ -130,7 +130,7 @@ class Bus(Element):
         """The phases of the voltages."""
         return calculate_voltage_phases(self.phases)
 
-    def _get_potentials_of(self, phases: str, warning: bool) -> np.ndarray:
+    def _get_potentials_of(self, phases: str, warning: bool) -> ComplexArray:
         """Get the potentials of the given phases."""
         potentials = self._res_potentials_getter(warning)
         return np.array([potentials[self.phases.index(p)] for p in phases])

@@ -3,10 +3,11 @@ import warnings
 from typing import TYPE_CHECKING, NoReturn, Optional
 
 import numpy as np
+from numpy.typing import NDArray
 from typing_extensions import Self
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
-from roseau.load_flow.typing import Authentication, ControlType, JsonDict, ProjectionType
+from roseau.load_flow.typing import Authentication, ComplexArray, ControlType, JsonDict, ProjectionType
 from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow.utils import JsonMixin, _optional_deps
 
@@ -963,8 +964,12 @@ class FlexibleParameter(JsonMixin):
     #
     @ureg_wraps("VA", (None, None, "V", "VA", None), strict=False)
     def compute_powers(
-        self, auth: Authentication, voltages: np.ndarray[float], power: complex, solve_kwargs: Optional[JsonDict] = None
-    ) -> Q_[np.ndarray[complex]]:
+        self,
+        auth: Authentication,
+        voltages: NDArray[np.float_],
+        power: complex,
+        solve_kwargs: Optional[JsonDict] = None,
+    ) -> Q_[ComplexArray]:
         """Compute the flexible powers for different voltages (norms)
 
         Args:
@@ -986,8 +991,8 @@ class FlexibleParameter(JsonMixin):
         return self._compute_powers(auth=auth, voltages=voltages, power=power, solve_kwargs=solve_kwargs)
 
     def _compute_powers(
-        self, auth: Authentication, voltages: np.ndarray[float], power: complex, solve_kwargs: Optional[JsonDict]
-    ) -> np.ndarray[complex]:
+        self, auth: Authentication, voltages: NDArray[np.float_], power: complex, solve_kwargs: Optional[JsonDict]
+    ) -> ComplexArray:
         from roseau.load_flow import Bus, ElectricalNetwork, PotentialRef, PowerLoad, VoltageSource
 
         # Format the input
@@ -1016,13 +1021,13 @@ class FlexibleParameter(JsonMixin):
     def plot_pq(
         self,
         auth: Authentication,
-        voltages: np.ndarray[float],
+        voltages: NDArray[np.float_],
         power: complex,
         ax: Optional["Axes"] = None,
         solve_kwargs: Optional[JsonDict] = None,
-        voltages_labels_mask: Optional[np.ndarray[bool]] = None,
-        res_flexible_powers: Optional[np.ndarray[complex]] = None,
-    ) -> tuple["Axes", np.ndarray[complex]]:
+        voltages_labels_mask: Optional[NDArray[np.bool_]] = None,
+        res_flexible_powers: Optional[ComplexArray] = None,
+    ) -> tuple["Axes", ComplexArray]:
         """Plot the "trajectory" of the flexible powers (in the (P, Q) plane) for the provided voltages and theoretical
         power.
 
@@ -1129,12 +1134,12 @@ class FlexibleParameter(JsonMixin):
     def plot_control_p(
         self,
         auth: Authentication,
-        voltages: np.ndarray[float],
+        voltages: NDArray[np.float_],
         power: complex,
         ax: Optional["Axes"] = None,
         solve_kwargs: Optional[JsonDict] = None,
-        res_flexible_powers: Optional[np.ndarray[complex]] = None,
-    ) -> tuple["Axes", np.ndarray[complex]]:
+        res_flexible_powers: Optional[ComplexArray] = None,
+    ) -> tuple["Axes", ComplexArray]:
         """Plot the flexible active power consumed (or produced) for the provided voltages and theoretical power.
 
         Args:
@@ -1195,12 +1200,12 @@ class FlexibleParameter(JsonMixin):
     def plot_control_q(
         self,
         auth: Authentication,
-        voltages: np.ndarray[float],
+        voltages: NDArray[np.float_],
         power: complex,
         ax: Optional["Axes"] = None,
         solve_kwargs: Optional[JsonDict] = None,
-        res_flexible_powers: Optional[np.ndarray[complex]] = None,
-    ) -> tuple["Axes", np.ndarray[complex]]:
+        res_flexible_powers: Optional[ComplexArray] = None,
+    ) -> tuple["Axes", ComplexArray]:
         """Plot the flexible reactive power consumed (or produced) for the provided voltages and theoretical power.
 
         Args:
@@ -1263,7 +1268,7 @@ class FlexibleParameter(JsonMixin):
     @staticmethod
     def _theoretical_control_data(
         control: Control, v_min: float, v_max: float, power: float, s_max: float
-    ) -> tuple[np.ndarray[float], np.ndarray[float], np.ndarray[object]]:
+    ) -> tuple[NDArray[np.float_], NDArray[np.float_], NDArray[np.object_]]:
         """Helper to get data for the different plots of the class. It provides the theoretical control curve
         abscissas and ordinates values. It also provides ticks for the abscissa axis.
 

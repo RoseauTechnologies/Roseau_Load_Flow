@@ -10,7 +10,7 @@ from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowE
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import Element
 from roseau.load_flow.models.loads.flexible_parameters import FlexibleParameter
-from roseau.load_flow.typing import Id, JsonDict
+from roseau.load_flow.typing import ComplexArray, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
 
 logger = logging.getLogger(__name__)
@@ -79,7 +79,7 @@ class AbstractLoad(Element, ABC):
             self._size = len(set(phases) - {"n"})
 
         # Results
-        self._res_currents: Optional[np.ndarray] = None
+        self._res_currents: Optional[ComplexArray] = None
 
     def __repr__(self) -> str:
         bus_id = self.bus.id if self.bus is not None else None
@@ -95,16 +95,16 @@ class AbstractLoad(Element, ABC):
         """The phases of the load voltages."""
         return calculate_voltage_phases(self.phases)
 
-    def _res_currents_getter(self, warning: bool) -> np.ndarray:
+    def _res_currents_getter(self, warning: bool) -> ComplexArray:
         return self._res_getter(value=self._res_currents, warning=warning)
 
     @property
     @ureg_wraps("A", (None,), strict=False)
-    def res_currents(self) -> Q_[np.ndarray]:
+    def res_currents(self) -> Q_[ComplexArray]:
         """The load flow result of the load currents (A)."""
         return self._res_currents_getter(warning=True)
 
-    def _validate_value(self, value: Sequence[complex]) -> np.ndarray:
+    def _validate_value(self, value: Sequence[complex]) -> ComplexArray:
         if len(value) != self._size:
             msg = f"Incorrect number of {self._type}s: {len(value)} instead of {self._size}"
             logger.error(msg)
@@ -118,34 +118,34 @@ class AbstractLoad(Element, ABC):
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Z_VALUE)
         return np.asarray(value, dtype=complex)
 
-    def _res_potentials_getter(self, warning: bool) -> np.ndarray:
+    def _res_potentials_getter(self, warning: bool) -> ComplexArray:
         self._raise_disconnected_error()
         return self.bus._get_potentials_of(self.phases, warning)
 
     @property
     @ureg_wraps("V", (None,), strict=False)
-    def res_potentials(self) -> Q_[np.ndarray]:
+    def res_potentials(self) -> Q_[ComplexArray]:
         """The load flow result of the load potentials (V)."""
         return self._res_potentials_getter(warning=True)
 
-    def _res_voltages_getter(self, warning: bool) -> np.ndarray:
+    def _res_voltages_getter(self, warning: bool) -> ComplexArray:
         potentials = self._res_potentials_getter(warning)
         return calculate_voltages(potentials, self.phases)
 
     @property
     @ureg_wraps("V", (None,), strict=False)
-    def res_voltages(self) -> Q_[np.ndarray]:
+    def res_voltages(self) -> Q_[ComplexArray]:
         """The load flow result of the load voltages (V)."""
         return self._res_voltages_getter(warning=True)
 
-    def _res_powers_getter(self, warning: bool) -> np.ndarray:
+    def _res_powers_getter(self, warning: bool) -> ComplexArray:
         curs = self._res_currents_getter(warning)
         pots = self._res_potentials_getter(warning=False)  # we warn on the previous line
         return pots * curs.conj()
 
     @property
     @ureg_wraps("VA", (None,), strict=False)
-    def res_powers(self) -> Q_[np.ndarray]:
+    def res_powers(self) -> Q_[ComplexArray]:
         """The load flow result of the load powers (VA)."""
         return self._res_powers_getter(warning=True)
 
@@ -254,7 +254,7 @@ class PowerLoad(AbstractLoad):
 
         self._flexible_params = flexible_params
         self.powers = powers
-        self._res_flexible_powers: Optional[np.ndarray] = None
+        self._res_flexible_powers: Optional[ComplexArray] = None
 
     @property
     def flexible_params(self) -> Optional[list[FlexibleParameter]]:
@@ -266,7 +266,7 @@ class PowerLoad(AbstractLoad):
 
     @property
     @ureg_wraps("VA", (None,), strict=False)
-    def powers(self) -> Q_[np.ndarray]:
+    def powers(self) -> Q_[ComplexArray]:
         """The powers of the load (VA)."""
         return self._powers
 
@@ -305,12 +305,12 @@ class PowerLoad(AbstractLoad):
         self._powers = value
         self._invalidate_network_results()
 
-    def _res_flexible_powers_getter(self, warning: bool) -> np.ndarray:
+    def _res_flexible_powers_getter(self, warning: bool) -> ComplexArray:
         return self._res_getter(value=self._res_flexible_powers, warning=warning)
 
     @property
     @ureg_wraps("VA", (None,), strict=False)
-    def res_flexible_powers(self) -> Q_[np.ndarray]:
+    def res_flexible_powers(self) -> Q_[ComplexArray]:
         """The load flow result of the load flexible powers (VA)."""
         return self._res_flexible_powers_getter(warning=True)
 
@@ -375,7 +375,7 @@ class CurrentLoad(AbstractLoad):
 
     @property
     @ureg_wraps("A", (None,), strict=False)
-    def currents(self) -> Q_[np.ndarray]:
+    def currents(self) -> Q_[ComplexArray]:
         """The currents of the load (Amps)."""
         return self._currents
 
@@ -426,7 +426,7 @@ class ImpedanceLoad(AbstractLoad):
 
     @property
     @ureg_wraps("ohm", (None,), strict=False)
-    def impedances(self) -> Q_[np.ndarray]:
+    def impedances(self) -> Q_[ComplexArray]:
         """The impedances of the load (Ohms)."""
         return self._impedances
 
