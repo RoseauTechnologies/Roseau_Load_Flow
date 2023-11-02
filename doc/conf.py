@@ -137,6 +137,9 @@ intersphinx_mapping = {
 # -- Options for sphinx_copybutton -------------------------------------------
 copybutton_exclude = ".linenos, .gp, .go"
 copybutton_copy_empty_lines = False
+# https://sphinx-copybutton.readthedocs.io/en/latest/use.html#strip-and-configure-input-prompts-for-code-cells
+copybutton_prompt_text = r">>> |\.\.\. |\$ |C:> |In \[\d*\]: | {2,5}\.\.\.: | {5,8}: "
+copybutton_prompt_is_regexp = True
 
 # -- Options for sphinxcontrib.googleanalytics -------------------------------
 googleanalytics_id = "G-Y9QSN78RFV"
