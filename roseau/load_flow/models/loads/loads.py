@@ -72,6 +72,7 @@ class AbstractLoad(Element, ABC):
         self.phases = phases
         self.bus = bus
         self._symbol = {"power": "S", "current": "I", "impedance": "Z"}[self._type]
+        self._unit = {"power": "VA", "current": "A", "impedance": "ohm"}[self._type]
         if len(phases) == 2 and "n" not in phases:
             # This is a delta load that has one element connected between two phases
             self._size = 1
@@ -111,12 +112,13 @@ class AbstractLoad(Element, ABC):
             raise RoseauLoadFlowException(
                 msg=msg, code=RoseauLoadFlowExceptionCode.from_string(f"BAD_{self._symbol}_SIZE")
             )
+        value = np.array([Q_(v, self._unit).m for v in value], dtype=complex)
         # A load cannot have any zero impedance
         if self._type == "impedance" and np.isclose(value, 0).any():
             msg = f"An impedance of the load {self.id!r} is null"
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Z_VALUE)
-        return np.asarray(value, dtype=complex)
+        return value
 
     def _res_potentials_getter(self, warning: bool) -> ComplexArray:
         self._raise_disconnected_error()
@@ -271,7 +273,6 @@ class PowerLoad(AbstractLoad):
         return self._powers
 
     @powers.setter
-    @ureg_wraps(None, (None, "VA"), strict=False)
     def powers(self, value: Sequence[complex]) -> None:
         value = self._validate_value(value)
         if self.is_flexible:
@@ -380,7 +381,6 @@ class CurrentLoad(AbstractLoad):
         return self._currents
 
     @currents.setter
-    @ureg_wraps(None, (None, "A"), strict=False)
     def currents(self, value: Sequence[complex]) -> None:
         self._currents = self._validate_value(value)
         self._invalidate_network_results()
@@ -431,7 +431,6 @@ class ImpedanceLoad(AbstractLoad):
         return self._impedances
 
     @impedances.setter
-    @ureg_wraps(None, (None, "ohm"), strict=False)
     def impedances(self, impedances: Sequence[complex]) -> None:
         self._impedances = self._validate_value(impedances)
         self._invalidate_network_results()

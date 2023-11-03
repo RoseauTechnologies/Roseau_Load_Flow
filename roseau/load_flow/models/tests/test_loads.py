@@ -354,13 +354,25 @@ def test_loads_units():
     load.powers = Q_([1, 1, 1], "kVA")
     assert np.allclose(load._powers, [1000, 1000, 1000])
 
+    # Also works as a quantity array
+    load = PowerLoad("load", bus, powers=Q_(10, "kVA") * np.ones(3), phases="abcn")
+    assert np.allclose(load._powers, [10000, 10000, 10000])
+
+    # Units in a list
+    load = PowerLoad("load", bus, powers=[Q_(1_000, "VA"), Q_(1, "kVA"), Q_(0.001, "MVA")], phases="abcn")
+    assert np.allclose(load._powers, [1000, 1000, 1000])
+    load = CurrentLoad("load", bus, currents=[Q_(1_000, "A"), Q_(1, "kA"), Q_(0.001, "MA")], phases="abcn")
+    assert np.allclose(load._currents, [1000, 1000, 1000])
+    load = ImpedanceLoad("load", bus, impedances=[Q_(1_000, "ohm"), Q_(1, "kohm"), Q_(0.001, "Mohm")], phases="abcn")
+    assert np.allclose(load._impedances, [1000, 1000, 1000])
+
     # Bad unit constructor
-    with pytest.raises(DimensionalityError, match=r"Cannot convert from 'ampere' \(\[current\]\) to 'VA'"):
+    with pytest.raises(DimensionalityError, match=r"Cannot convert from 'ampere' \(\[current\]\) to 'volt_ampere'"):
         PowerLoad("load", bus, powers=Q_([100, 100, 100], "A"), phases="abcn")
 
     # Bad unit setter
     load = PowerLoad("load", bus, powers=[100, 100, 100], phases="abcn")
-    with pytest.raises(DimensionalityError, match=r"Cannot convert from 'ampere' \(\[current\]\) to 'VA'"):
+    with pytest.raises(DimensionalityError, match=r"Cannot convert from 'ampere' \(\[current\]\) to 'volt_ampere'"):
         load.powers = Q_([100, 100, 100], "A")
 
 

@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import pytest
+from pint.errors import DimensionalityError
 
 from roseau.load_flow import (
     Q_,
@@ -18,6 +19,31 @@ from roseau.load_flow import (
     TransformerParameters,
     VoltageSource,
 )
+
+
+def test_bus_units():
+    # Good unit constructor
+    bus = Bus("bus", phases="abc", potentials=Q_([1, 1, 1], "kV"))
+    assert np.allclose(bus._potentials, [1000, 1000, 1000])
+
+    # Good unit setter
+    bus = Bus("bus", phases="abc", potentials=[100, 100, 100])
+    assert np.allclose(bus._potentials, [100, 100, 100])
+    bus.potentials = Q_([1, 1, 1], "kV")
+    assert np.allclose(bus._potentials, [1000, 1000, 1000])
+
+    # Units in a list
+    bus = Bus("bus", phases="abc", potentials=[Q_(1_000, "V"), Q_(1, "kV"), Q_(0.001, "MV")])
+    assert np.allclose(bus._potentials, [1000, 1000, 1000])
+
+    # Bad unit constructor
+    with pytest.raises(DimensionalityError, match=r"Cannot convert from 'ampere' \(\[current\]\) to 'volt'"):
+        Bus("bus", phases="abc", potentials=Q_([100, 100, 100], "A"))
+
+    # Bad unit setter
+    bus = Bus("bus", phases="abc", potentials=[100, 100, 100])
+    with pytest.raises(DimensionalityError, match=r"Cannot convert from 'ampere' \(\[current\]\) to 'volt'"):
+        bus.potentials = Q_([100, 100, 100], "A")
 
 
 def test_bus_potentials_of_phases():

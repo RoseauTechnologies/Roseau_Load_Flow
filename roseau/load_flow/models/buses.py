@@ -92,13 +92,12 @@ class Bus(Element):
         return self._potentials
 
     @potentials.setter
-    @ureg_wraps(None, (None, "V"), strict=False)
     def potentials(self, value: Sequence[complex]) -> None:
         if len(value) != len(self.phases):
             msg = f"Incorrect number of potentials: {len(value)} instead of {len(self.phases)}"
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_POTENTIALS_SIZE)
-        self._potentials = np.asarray(value, dtype=complex)
+        self._potentials = np.array([Q_(v, "V").m for v in value], dtype=complex)
         self._invalidate_network_results()
 
     def _res_potentials_getter(self, warning: bool) -> ComplexArray:

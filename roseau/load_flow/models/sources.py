@@ -90,13 +90,12 @@ class VoltageSource(Element):
         return self._voltages
 
     @voltages.setter
-    @ureg_wraps(None, (None, "V"), strict=False)
     def voltages(self, voltages: Sequence[complex]) -> None:
         if len(voltages) != self._size:
             msg = f"Incorrect number of voltages: {len(voltages)} instead of {self._size}"
             logger.error(msg)
             raise RoseauLoadFlowException(msg, code=RoseauLoadFlowExceptionCode.BAD_VOLTAGES_SIZE)
-        self._voltages = np.asarray(voltages, dtype=complex)
+        self._voltages = np.array([Q_(v, "V").m for v in voltages], dtype=complex)
         self._invalidate_network_results()
 
     @property
