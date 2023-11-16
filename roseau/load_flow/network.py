@@ -6,7 +6,7 @@ import logging
 import re
 import textwrap
 import warnings
-from collections.abc import Sized
+from collections.abc import Mapping, Sized
 from importlib import resources
 from itertools import cycle
 from pathlib import Path
@@ -37,7 +37,7 @@ from roseau.load_flow.models import (
     VoltageSource,
 )
 from roseau.load_flow.solvers import check_solver_params
-from roseau.load_flow.typing import Authentication, Id, JsonDict, Solver, StrPath
+from roseau.load_flow.typing import Authentication, Id, JsonDict, MapOrSeq, Solver, StrPath
 from roseau.load_flow.utils import CatalogueMixin, JsonMixin, _optional_deps, console, palette
 from roseau.load_flow.utils.types import _DTYPES, VoltagePhaseDtype
 
@@ -46,7 +46,7 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-_T = TypeVar("_T", bound=Element)
+_E = TypeVar("_E", bound=Element)
 
 
 class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
@@ -153,12 +153,12 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
     #
     def __init__(
         self,
-        buses: Union[list[Bus], dict[Id, Bus]],
-        branches: Union[list[AbstractBranch], dict[Id, AbstractBranch]],
-        loads: Union[list[AbstractLoad], dict[Id, AbstractLoad]],
-        sources: Union[list[VoltageSource], dict[Id, VoltageSource]],
-        grounds: Union[list[Ground], dict[Id, Ground]],
-        potential_refs: Union[list[PotentialRef], dict[Id, PotentialRef]],
+        buses: MapOrSeq[Bus],
+        branches: MapOrSeq[AbstractBranch],
+        loads: MapOrSeq[AbstractLoad],
+        sources: MapOrSeq[VoltageSource],
+        grounds: MapOrSeq[Ground],
+        potential_refs: MapOrSeq[PotentialRef],
         **kwargs,
     ) -> None:
         self.buses = self._elements_as_dict(buses, RoseauLoadFlowExceptionCode.BAD_BUS_ID)
@@ -194,25 +194,24 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         )
 
     @staticmethod
-    def _elements_as_dict(
-        elements: Union[list[_T], dict[Id, _T]], error_code: RoseauLoadFlowExceptionCode
-    ) -> dict[Id, _T]:
-        """Convert a list of elements to a dictionary of elements with their IDs as keys."""
+    def _elements_as_dict(elements: MapOrSeq[_E], error_code: RoseauLoadFlowExceptionCode) -> dict[Id, _E]:
+        """Convert a sequence or a mapping of elements to a dictionary of elements with their IDs as keys."""
         typ = error_code.name.removeprefix("BAD_").removesuffix("_ID").replace("_", " ")
-        if isinstance(elements, dict):
+        elements_dict: dict[Id, _E] = {}
+        if isinstance(elements, Mapping):
             for element_id, element in elements.items():
                 if element.id != element_id:
                     msg = f"{typ.capitalize()} ID mismatch: {element_id!r} != {element.id!r}."
                     logger.error(msg)
                     raise RoseauLoadFlowException(msg, code=error_code)
-            return elements
-        elements_dict: dict[Id, _T] = {}
-        for element in elements:
-            if element.id in elements_dict:
-                msg = f"Duplicate ID for an {typ.lower()} in this network: {element.id!r}."
-                logger.error(msg)
-                raise RoseauLoadFlowException(msg, code=error_code)
-            elements_dict[element.id] = element
+                elements_dict[element_id] = element
+        else:
+            for element in elements:
+                if element.id in elements_dict:
+                    msg = f"Duplicate ID for an {typ.lower()} in this network: {element.id!r}."
+                    logger.error(msg)
+                    raise RoseauLoadFlowException(msg, code=error_code)
+                elements_dict[element.id] = element
         return elements_dict
 
     @classmethod

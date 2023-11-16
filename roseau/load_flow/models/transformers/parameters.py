@@ -42,14 +42,14 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         self,
         id: Id,
         type: str,
-        uhv: float,
-        ulv: float,
-        sn: float,
-        p0: float,
-        i0: float,
-        psc: float,
-        vsc: float,
-        max_power: Optional[float] = None,
+        uhv: Union[float, Q_[float]],
+        ulv: Union[float, Q_[float]],
+        sn: Union[float, Q_[float]],
+        p0: Union[float, Q_[float]],
+        i0: Union[float, Q_[float]],
+        psc: Union[float, Q_[float]],
+        vsc: Union[float, Q_[float]],
+        max_power: Optional[Union[float, Q_[float]]] = None,
     ) -> None:
         """TransformerParameters constructor.
 
@@ -204,7 +204,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
 
     @max_power.setter
     @ureg_wraps(None, (None, "VA"), strict=False)
-    def max_power(self, value: Optional[float]) -> None:
+    def max_power(self, value: Optional[Union[float, Q_[float]]]) -> None:
         self._max_power = value
 
     @ureg_wraps(("ohm", "S", "", None), (None,), strict=False)

@@ -23,7 +23,7 @@ A = np.array(
         [1, ALPHA**2, ALPHA],
         [1, ALPHA, ALPHA**2],
     ],
-    dtype=complex,
+    dtype=np.complex128,
 )
 """numpy.ndarray[complex]: "A" matrix: transformation matrix from phasor to symmetrical components."""
 
@@ -32,7 +32,7 @@ _A_INV = np.linalg.inv(A)
 
 def phasor_to_sym(v_abc: Sequence[complex]) -> ComplexArray:
     """Compute the symmetrical components `(0, +, -)` from the phasor components `(a, b, c)`."""
-    v_abc_array = np.asarray(v_abc)
+    v_abc_array = np.array(v_abc)
     orig_shape = v_abc_array.shape
     v_012 = _A_INV @ v_abc_array.reshape((3, 1))
     return v_012.reshape(orig_shape)
@@ -40,7 +40,7 @@ def phasor_to_sym(v_abc: Sequence[complex]) -> ComplexArray:
 
 def sym_to_phasor(v_012: Sequence[complex]) -> ComplexArray:
     """Compute the phasor components `(a, b, c)` from the symmetrical components `(0, +, -)`."""
-    v_012_array = np.asarray(v_012)
+    v_012_array = np.array(v_012)
     orig_shape = v_012_array.shape
     v_abc = A @ v_012_array.reshape((3, 1))
     return v_abc.reshape(orig_shape)
@@ -124,13 +124,13 @@ def calculate_voltages(potentials: ComplexArray, phases: str) -> ComplexArray:
         Otherwise, the voltages are Phase-Phase.
 
     Example:
-        >>> potentials = 230 * np.array([1, np.exp(-2j*np.pi/3), np.exp(2j*np.pi/3), 0], dtype=complex)
+        >>> potentials = 230 * np.array([1, np.exp(-2j*np.pi/3), np.exp(2j*np.pi/3), 0], dtype=np.complex128)
         >>> calculate_voltages(potentials, "abcn")
         array([ 230.  +0.j        , -115.-199.18584287j, -115.+199.18584287j])
-        >>> potentials = np.array([230, 230 * np.exp(-2j*np.pi/3)], dtype=complex)
+        >>> potentials = np.array([230, 230 * np.exp(-2j*np.pi/3)], dtype=np.complex128)
         >>> calculate_voltages(potentials, "ab")
         array([345.+199.18584287j])
-        >>> calculate_voltages(np.array([230, 0], dtype=complex), "an")
+        >>> calculate_voltages(np.array([230, 0], dtype=np.complex128), "an")
         array([230.+0.j])
     """
     assert len(potentials) == len(phases), "Number of potentials must match number of phases."

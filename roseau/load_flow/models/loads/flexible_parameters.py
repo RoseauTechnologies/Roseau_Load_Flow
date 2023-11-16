@@ -1,13 +1,20 @@
 import logging
 import warnings
-from typing import TYPE_CHECKING, NoReturn, Optional
+from typing import TYPE_CHECKING, NoReturn, Optional, Union
 
 import numpy as np
 from numpy.typing import NDArray
 from typing_extensions import Self
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
-from roseau.load_flow.typing import Authentication, ComplexArray, ControlType, JsonDict, ProjectionType
+from roseau.load_flow.typing import (
+    Authentication,
+    ComplexArray,
+    ComplexArrayLike1D,
+    ControlType,
+    JsonDict,
+    ProjectionType,
+)
 from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow.utils import JsonMixin, _optional_deps
 
@@ -41,11 +48,11 @@ class Control(JsonMixin):
     def __init__(
         self,
         type: ControlType,
-        u_min: float,
-        u_down: float,
-        u_up: float,
-        u_max: float,
-        alpha: float = _DEFAULT_ALPHA,
+        u_min: Union[float, Q_[float]],
+        u_down: Union[float, Q_[float]],
+        u_up: Union[float, Q_[float]],
+        u_max: Union[float, Q_[float]],
+        alpha: Union[float, Q_[float]] = _DEFAULT_ALPHA,
     ) -> None:
         """Control constructor.
 
@@ -181,7 +188,9 @@ class Control(JsonMixin):
 
     @classmethod
     @ureg_wraps(None, (None, "V", "V", None), strict=False)
-    def p_max_u_production(cls, u_up: float, u_max: float, alpha: float = _DEFAULT_ALPHA) -> Self:
+    def p_max_u_production(
+        cls, u_up: Union[float, Q_[float]], u_max: Union[float, Q_[float]], alpha: float = _DEFAULT_ALPHA
+    ) -> Self:
         """Create a control of the type ``"p_max_u_production"``.
 
         See Also:
@@ -210,7 +219,9 @@ class Control(JsonMixin):
 
     @classmethod
     @ureg_wraps(None, (None, "V", "V", None), strict=False)
-    def p_max_u_consumption(cls, u_min: float, u_down: float, alpha: float = _DEFAULT_ALPHA) -> Self:
+    def p_max_u_consumption(
+        cls, u_min: Union[float, Q_[float]], u_down: Union[float, Q_[float]], alpha: float = _DEFAULT_ALPHA
+    ) -> Self:
         """Create a control of the type ``"p_max_u_consumption"``.
 
         See Also:
@@ -239,7 +250,14 @@ class Control(JsonMixin):
 
     @classmethod
     @ureg_wraps(None, (None, "V", "V", "V", "V", None), strict=False)
-    def q_u(cls, u_min: float, u_down: float, u_up: float, u_max: float, alpha: float = _DEFAULT_ALPHA) -> Self:
+    def q_u(
+        cls,
+        u_min: Union[float, Q_[float]],
+        u_down: Union[float, Q_[float]],
+        u_up: Union[float, Q_[float]],
+        u_max: Union[float, Q_[float]],
+        alpha: float = _DEFAULT_ALPHA,
+    ) -> Self:
         """Create a control of the type ``"q_u"``.
 
         See Also:
@@ -446,9 +464,9 @@ class FlexibleParameter(JsonMixin):
         control_p: Control,
         control_q: Control,
         projection: Projection,
-        s_max: float,
-        q_min: Optional[float] = None,
-        q_max: Optional[float] = None,
+        s_max: Union[float, Q_[float]],
+        q_min: Optional[Union[float, Q_[float]]] = None,
+        q_max: Optional[Union[float, Q_[float]]] = None,
     ) -> None:
         """FlexibleParameter constructor.
 
@@ -490,7 +508,7 @@ class FlexibleParameter(JsonMixin):
 
     @s_max.setter
     @ureg_wraps(None, (None, "VA"), strict=False)
-    def s_max(self, value: float) -> None:
+    def s_max(self, value: Union[float, Q_[float]]) -> None:
         if value <= 0:
             s_max = Q_(value, "VA")
             msg = f"'s_max' must be greater than 0 but {s_max:P#~} was provided."
@@ -512,7 +530,7 @@ class FlexibleParameter(JsonMixin):
 
     @q_min.setter
     @ureg_wraps(None, (None, "VAr"), strict=False)
-    def q_min(self, value: Optional[float]) -> None:
+    def q_min(self, value: Optional[Union[float, Q_[float]]]) -> None:
         if value is not None and value < -self._s_max:
             q_min = Q_(value, "VAr")
             msg = f"'q_min' must be greater than -s_max ({-self.s_max:P#~}) but {q_min:P#~} was provided."
@@ -533,7 +551,7 @@ class FlexibleParameter(JsonMixin):
 
     @q_max.setter
     @ureg_wraps(None, (None, "VAr"), strict=False)
-    def q_max(self, value: Optional[float]) -> None:
+    def q_max(self, value: Optional[Union[float, Q_[float]]]) -> None:
         if value is not None and value > self._s_max:
             q_max = Q_(value, "VAr")
             msg = f"'q_max' must be less than s_max ({self.s_max:P#~}) but {q_max:P#~} was provided."
@@ -564,9 +582,9 @@ class FlexibleParameter(JsonMixin):
     @ureg_wraps(None, (None, "V", "V", "VA", None, None, None, None), strict=False)
     def p_max_u_production(
         cls,
-        u_up: float,
-        u_max: float,
-        s_max: float,
+        u_up: Union[float, Q_[float]],
+        u_max: Union[float, Q_[float]],
+        s_max: Union[float, Q_[float]],
         alpha_control: float = Control._DEFAULT_ALPHA,
         type_proj: ProjectionType = Projection._DEFAULT_TYPE,
         alpha_proj: float = Projection._DEFAULT_ALPHA,
@@ -620,9 +638,9 @@ class FlexibleParameter(JsonMixin):
     @ureg_wraps(None, (None, "V", "V", "VA", None, None, None, None), strict=False)
     def p_max_u_consumption(
         cls,
-        u_min: float,
-        u_down: float,
-        s_max: float,
+        u_min: Union[float, Q_[float]],
+        u_down: Union[float, Q_[float]],
+        s_max: Union[float, Q_[float]],
         alpha_control: float = Control._DEFAULT_ALPHA,
         type_proj: ProjectionType = Projection._DEFAULT_TYPE,
         alpha_proj: float = Projection._DEFAULT_ALPHA,
@@ -673,13 +691,13 @@ class FlexibleParameter(JsonMixin):
     @ureg_wraps(None, (None, "V", "V", "V", "V", "VA", "Var", "Var", None, None, None, None), strict=False)
     def q_u(
         cls,
-        u_min: float,
-        u_down: float,
-        u_up: float,
-        u_max: float,
-        s_max: float,
-        q_min: Optional[float] = None,
-        q_max: Optional[float] = None,
+        u_min: Union[float, Q_[float]],
+        u_down: Union[float, Q_[float]],
+        u_up: Union[float, Q_[float]],
+        u_max: Union[float, Q_[float]],
+        s_max: Union[float, Q_[float]],
+        q_min: Optional[Union[float, Q_[float]]] = None,
+        q_max: Optional[Union[float, Q_[float]]] = None,
         alpha_control: float = Control._DEFAULT_ALPHA,
         type_proj: ProjectionType = Projection._DEFAULT_TYPE,
         alpha_proj: float = Projection._DEFAULT_ALPHA,
@@ -747,15 +765,15 @@ class FlexibleParameter(JsonMixin):
     @ureg_wraps(None, (None, "V", "V", "V", "V", "V", "V", "VA", "VAr", "VAr", None, None, None, None), strict=False)
     def pq_u_production(
         cls,
-        up_up: float,
-        up_max: float,
-        uq_min: float,
-        uq_down: float,
-        uq_up: float,
-        uq_max: float,
-        s_max: float,
-        q_min: Optional[float] = None,
-        q_max: Optional[float] = None,
+        up_up: Union[float, Q_[float]],
+        up_max: Union[float, Q_[float]],
+        uq_min: Union[float, Q_[float]],
+        uq_down: Union[float, Q_[float]],
+        uq_up: Union[float, Q_[float]],
+        uq_max: Union[float, Q_[float]],
+        s_max: Union[float, Q_[float]],
+        q_min: Optional[Union[float, Q_[float]]] = None,
+        q_max: Optional[Union[float, Q_[float]]] = None,
         alpha_control=Control._DEFAULT_ALPHA,
         type_proj: ProjectionType = Projection._DEFAULT_TYPE,
         alpha_proj=Projection._DEFAULT_ALPHA,
@@ -834,16 +852,16 @@ class FlexibleParameter(JsonMixin):
     @ureg_wraps(None, (None, "V", "V", "V", "V", "V", "V", "VA", "VAr", "VAr", None, None, None, None), strict=False)
     def pq_u_consumption(
         cls,
-        up_min: float,
-        up_down: float,
-        uq_min: float,
-        uq_down: float,
-        uq_up: float,
-        uq_max: float,
-        s_max: float,
-        q_min: Optional[float] = None,
-        q_max: Optional[float] = None,
-        alpha_control: float = Control._DEFAULT_ALPHA,
+        up_min: Union[float, Q_[float]],
+        up_down: Union[float, Q_[float]],
+        uq_min: Union[float, Q_[float]],
+        uq_down: Union[float, Q_[float]],
+        uq_up: Union[float, Q_[float]],
+        uq_max: Union[float, Q_[float]],
+        s_max: Union[float, Q_[float]],
+        q_min: Optional[Union[float, Q_[float]]] = None,
+        q_max: Optional[Union[float, Q_[float]]] = None,
+        alpha_control: Union[float, Q_[float]] = Control._DEFAULT_ALPHA,
         type_proj: ProjectionType = Projection._DEFAULT_TYPE,
         alpha_proj: float = Projection._DEFAULT_ALPHA,
         epsilon_proj: float = Projection._DEFAULT_EPSILON,
@@ -966,8 +984,8 @@ class FlexibleParameter(JsonMixin):
     def compute_powers(
         self,
         auth: Authentication,
-        voltages: NDArray[np.float_],
-        power: complex,
+        voltages: ComplexArrayLike1D,
+        power: Union[complex, Q_[complex]],
         solve_kwargs: Optional[JsonDict] = None,
     ) -> Q_[ComplexArray]:
         """Compute the flexible powers for different voltages (norms)
@@ -991,14 +1009,14 @@ class FlexibleParameter(JsonMixin):
         return self._compute_powers(auth=auth, voltages=voltages, power=power, solve_kwargs=solve_kwargs)
 
     def _compute_powers(
-        self, auth: Authentication, voltages: NDArray[np.float_], power: complex, solve_kwargs: Optional[JsonDict]
+        self, auth: Authentication, voltages: ComplexArrayLike1D, power: complex, solve_kwargs: Optional[JsonDict]
     ) -> ComplexArray:
         from roseau.load_flow import Bus, ElectricalNetwork, PotentialRef, PowerLoad, VoltageSource
 
         # Format the input
         if solve_kwargs is None:
             solve_kwargs = {}
-        voltages = np.array(np.abs(voltages), dtype=float)
+        voltages = np.array(np.abs(voltages), dtype=np.float64)
 
         # Simple network
         bus = Bus(id="bus", phases="an")
@@ -1015,14 +1033,14 @@ class FlexibleParameter(JsonMixin):
             en.solve_load_flow(auth=auth, **solve_kwargs)
             res_flexible_powers.append(load.res_flexible_powers.m_as("VA")[0])
 
-        return np.array(res_flexible_powers, dtype=complex)
+        return np.array(res_flexible_powers, dtype=np.complex128)
 
     @ureg_wraps((None, "VA"), (None, None, "V", "VA", None, None, None, "VA"), strict=False)
     def plot_pq(
         self,
         auth: Authentication,
-        voltages: NDArray[np.float_],
-        power: complex,
+        voltages: Union[NDArray[np.float64], Q_[NDArray[np.float64]]],
+        power: Union[complex, Q_[complex]],
         ax: Optional["Axes"] = None,
         solve_kwargs: Optional[JsonDict] = None,
         voltages_labels_mask: Optional[NDArray[np.bool_]] = None,
@@ -1051,7 +1069,7 @@ class FlexibleParameter(JsonMixin):
                 A mask to activate the plot of voltages labels. By default, no voltages annotations.
 
             res_flexible_powers:
-                If None, is provided, the `res_flexible_powers` are computed. Other
+                If None is provided, the `res_flexible_powers` are computed. Otherwise, the provided values are used.
 
         Returns:
             The axis on which the plot has been drawn and the resulting flexible powers (the input if not `None` else
@@ -1066,9 +1084,9 @@ class FlexibleParameter(JsonMixin):
 
         # Initialise some variables
         if voltages_labels_mask is None:
-            voltages_labels_mask = np.zeros_like(voltages, dtype=bool)
+            voltages_labels_mask = np.zeros_like(voltages, dtype=np.bool_)
         else:
-            voltages_labels_mask = np.array(voltages_labels_mask, dtype=bool)
+            voltages_labels_mask = np.array(voltages_labels_mask, dtype=np.bool_)
         s_max = self._s_max
         v_min = voltages.min()
         v_max = voltages.max()
@@ -1134,8 +1152,8 @@ class FlexibleParameter(JsonMixin):
     def plot_control_p(
         self,
         auth: Authentication,
-        voltages: NDArray[np.float_],
-        power: complex,
+        voltages: Union[NDArray[np.float64], Q_[NDArray[np.float64]]],
+        power: Union[complex, Q_[complex]],
         ax: Optional["Axes"] = None,
         solve_kwargs: Optional[JsonDict] = None,
         res_flexible_powers: Optional[ComplexArray] = None,
@@ -1159,7 +1177,7 @@ class FlexibleParameter(JsonMixin):
                 The keywords arguments of the :meth:`~roseau.load_flow.ElectricalNetwork.solve_load_flow` method.
 
             res_flexible_powers:
-                If None, is provided, the `res_flexible_powers` are computed. Other
+                If None is provided, the `res_flexible_powers` are computed. Otherwise, the provided values are used.
 
         Returns:
             The axis on which the plot has been drawn and the resulting flexible powers (the input if not `None` else
@@ -1200,8 +1218,8 @@ class FlexibleParameter(JsonMixin):
     def plot_control_q(
         self,
         auth: Authentication,
-        voltages: NDArray[np.float_],
-        power: complex,
+        voltages: Union[NDArray[np.float64], Q_[NDArray[np.float64]]],
+        power: Union[complex, Q_[complex]],
         ax: Optional["Axes"] = None,
         solve_kwargs: Optional[JsonDict] = None,
         res_flexible_powers: Optional[ComplexArray] = None,
@@ -1225,7 +1243,7 @@ class FlexibleParameter(JsonMixin):
                 The keywords arguments of the :meth:`~roseau.load_flow.ElectricalNetwork.solve_load_flow` method
 
             res_flexible_powers:
-                If None, is provided, the `res_flexible_powers` are computed. Other
+                If None is provided, the `res_flexible_powers` are computed. Otherwise, the provided values are used.
 
         Returns:
             The axis on which the plot has been drawn and the resulting flexible powers (the input if not `None` else
@@ -1268,7 +1286,7 @@ class FlexibleParameter(JsonMixin):
     @staticmethod
     def _theoretical_control_data(
         control: Control, v_min: float, v_max: float, power: float, s_max: float
-    ) -> tuple[NDArray[np.float_], NDArray[np.float_], NDArray[np.object_]]:
+    ) -> tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.object_]]:
         """Helper to get data for the different plots of the class. It provides the theoretical control curve
         abscissas and ordinates values. It also provides ticks for the abscissa axis.
 
@@ -1293,27 +1311,27 @@ class FlexibleParameter(JsonMixin):
         """
         # Depending on the type of the control, several options
         if control.type == "constant":
-            x = np.array([v_min, v_max], dtype=float)
-            y = np.array([power, power], dtype=float)
-            x_ticks = np.array([f"{v_min:.1f}", f"{v_max:.1f}"], dtype=object)
+            x = np.array([v_min, v_max], dtype=np.float64)
+            y = np.array([power, power], dtype=np.float64)
+            x_ticks = np.array([f"{v_min:.1f}", f"{v_max:.1f}"], dtype=np.object_)
         elif control.type == "p_max_u_production":
             u_up = control._u_up
             u_max = control._u_max
-            x = np.array([u_up, u_max, v_min, v_max], dtype=float)
-            y = np.zeros_like(x, dtype=float)
+            x = np.array([u_up, u_max, v_min, v_max], dtype=np.float64)
+            y = np.zeros_like(x, dtype=np.float64)
             y[x < u_up] = -s_max
             mask = np.logical_and(u_up <= x, x < u_max)
             y[mask] = -s_max * (x[mask] - u_max) / (u_up - u_max)
             y[x >= u_max] = 0
             x_ticks = np.array(
                 [f"{u_up:.1f}\n$U^{{\\mathrm{{up}}}}$", f"{u_max:.1f}\n$U^{{\\max}}$", f"{v_min:.1f}", f"{v_max:.1f}"],
-                dtype=object,
+                dtype=np.object_,
             )
         elif control.type == "p_max_u_consumption":
             u_min = control._u_min
             u_down = control._u_down
-            x = np.array([u_min, u_down, v_min, v_max], dtype=float)
-            y = np.zeros_like(x, dtype=float)
+            x = np.array([u_min, u_down, v_min, v_max], dtype=np.float64)
+            y = np.zeros_like(x, dtype=np.float64)
             y[x < u_min] = 0
             y[x >= u_down] = s_max
             mask = np.logical_and(u_min <= x, x < u_down)
@@ -1325,15 +1343,15 @@ class FlexibleParameter(JsonMixin):
                     f"{v_min:.1f}",
                     f"{v_max:.1f}",
                 ],
-                dtype=object,
+                dtype=np.object_,
             )
         elif control.type == "q_u":
             u_min = control._u_min
             u_down = control._u_down
             u_up = control._u_up
             u_max = control._u_max
-            x = np.array([u_min, u_down, u_up, u_max, v_min, v_max], dtype=float)
-            y = np.zeros_like(x, dtype=float)
+            x = np.array([u_min, u_down, u_up, u_max, v_min, v_max], dtype=np.float64)
+            y = np.zeros_like(x, dtype=np.float64)
             y[x < u_min] = -s_max
             mask = np.logical_and(u_min <= x, x < u_down)
             y[mask] = -s_max * (x[mask] - u_down) / (u_min - u_down)
@@ -1350,7 +1368,7 @@ class FlexibleParameter(JsonMixin):
                     f"{v_min:.1f}",
                     f"{v_max:.1f}",
                 ],
-                dtype=object,
+                dtype=np.object_,
             )
         else:  # pragma: no-cover
             msg = f"Unsupported control type {control.type!r}"

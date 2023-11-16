@@ -1,6 +1,6 @@
 import logging
 import warnings
-from typing import Any, Optional
+from typing import Any, Optional, Union
 
 import numpy as np
 from shapely import LineString, Point
@@ -144,7 +144,7 @@ class Line(AbstractBranch):
         bus2: Bus,
         *,
         parameters: LineParameters,
-        length: float,
+        length: Union[float, Q_[float]],
         phases: Optional[str] = None,
         ground: Optional[Ground] = None,
         geometry: Optional[LineString] = None,
@@ -231,7 +231,7 @@ class Line(AbstractBranch):
 
     @length.setter
     @ureg_wraps(None, (None, "km"), strict=False)
-    def length(self, value: float) -> None:
+    def length(self, value: Union[float, Q_[float]]) -> None:
         if value <= 0:
             msg = f"A line length must be greater than 0. {value:.2f} km provided."
             logger.error(msg)
@@ -335,7 +335,7 @@ class Line(AbstractBranch):
 
     def _res_shunt_currents_getter(self, warning: bool) -> tuple[ComplexArray, ComplexArray]:
         if not self.with_shunt:
-            zeros = np.zeros(len(self.phases), dtype=complex)
+            zeros = np.zeros(len(self.phases), dtype=np.complex128)
             return zeros[:], zeros[:]
         _, _, cur1, cur2 = self._res_shunt_values_getter(warning)
         return cur1, cur2
@@ -348,7 +348,7 @@ class Line(AbstractBranch):
 
     def _res_shunt_power_losses_getter(self, warning: bool) -> ComplexArray:
         if not self.with_shunt:
-            return np.zeros(len(self.phases), dtype=complex)
+            return np.zeros(len(self.phases), dtype=np.complex128)
         pot1, pot2, cur1, cur2 = self._res_shunt_values_getter(warning)
         return pot1 * cur1.conj() + pot2 * cur2.conj()
 

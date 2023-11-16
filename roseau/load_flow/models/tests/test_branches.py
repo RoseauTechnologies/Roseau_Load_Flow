@@ -225,9 +225,9 @@ def test_powers_equal(network_with_results):
 def test_lines_results(phases, z_line, y_shunt, len_line, bus_pot, line_cur, ground_pot, expected_pow):
     bus1 = Bus("bus1", phases=phases["bus1"])
     bus2 = Bus("bus2", phases=phases["bus2"])
-    y_shunt = np.asarray(y_shunt, dtype=complex) if y_shunt is not None else None
+    y_shunt = np.array(y_shunt, dtype=np.complex128) if y_shunt is not None else None
     ground = Ground("gnd")
-    lp = LineParameters("lp", z_line=np.asarray(z_line, dtype=complex), y_shunt=y_shunt)
+    lp = LineParameters("lp", z_line=np.array(z_line, dtype=np.complex128), y_shunt=y_shunt)
     line = Line(
         "line",
         bus1,

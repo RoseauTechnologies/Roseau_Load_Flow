@@ -1,6 +1,6 @@
 import logging
-from collections.abc import Iterator, Sequence
-from typing import TYPE_CHECKING, Any, Optional
+from collections.abc import Iterator
+from typing import TYPE_CHECKING, Any, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -10,7 +10,7 @@ from typing_extensions import Self
 from roseau.load_flow.converters import calculate_voltage_phases, calculate_voltages, phasor_to_sym
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.core import Element
-from roseau.load_flow.typing import ComplexArray, Id, JsonDict
+from roseau.load_flow.typing import ComplexArray, ComplexArrayLike1D, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
 
 logger = logging.getLogger(__name__)
@@ -36,7 +36,7 @@ class Bus(Element):
         *,
         phases: str,
         geometry: Optional[Point] = None,
-        potentials: Optional[Sequence[complex]] = None,
+        potentials: Optional[ComplexArrayLike1D] = None,
         min_voltage: Optional[float] = None,
         max_voltage: Optional[float] = None,
         **kwargs: Any,
@@ -57,15 +57,20 @@ class Bus(Element):
                 x-y coordinates of the bus.
 
             potentials:
-                An optional list of initial potentials of each phase of the bus.
+                An optional array-like of initial potentials of each phase of the bus. If given,
+                these potentials are used as the starting point of the load flow computation.
+                Either complex values (V) or a :data:`Quantity <roseau.load_flow.units.Q_>` of
+                complex values.
 
             min_voltage:
                 An optional minimum voltage of the bus (V). It is not used in the load flow.
                 It must be a phase-neutral voltage if the bus has a neutral, phase-phase otherwise.
+                Either a float (V) or a :data:`Quantity <roseau.load_flow.units.Q_>` of float.
 
             max_voltage:
                 An optional maximum voltage of the bus (V). It is not used in the load flow.
                 It must be a phase-neutral voltage if the bus has a neutral, phase-phase otherwise.
+                Either a float (V) or a :data:`Quantity <roseau.load_flow.units.Q_>` of float.
         """
         super().__init__(id, **kwargs)
         self._check_phases(id, phases=phases)
@@ -88,17 +93,17 @@ class Bus(Element):
     @property
     @ureg_wraps("V", (None,), strict=False)
     def potentials(self) -> Q_[ComplexArray]:
-        """The potentials of the bus (V)."""
+        """An array of initial potentials of the bus (V)."""
         return self._potentials
 
     @potentials.setter
     @ureg_wraps(None, (None, "V"), strict=False)
-    def potentials(self, value: Sequence[complex]) -> None:
+    def potentials(self, value: ComplexArrayLike1D) -> None:
         if len(value) != len(self.phases):
             msg = f"Incorrect number of potentials: {len(value)} instead of {len(self.phases)}"
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_POTENTIALS_SIZE)
-        self._potentials = np.asarray(value, dtype=complex)
+        self._potentials = np.array(value, dtype=np.complex128)
         self._invalidate_network_results()
 
     def _res_potentials_getter(self, warning: bool) -> ComplexArray:
@@ -111,7 +116,7 @@ class Bus(Element):
         return self._res_potentials_getter(warning=True)
 
     def _res_voltages_getter(self, warning: bool) -> ComplexArray:
-        potentials = np.asarray(self._res_potentials_getter(warning=warning))
+        potentials = np.array(self._res_potentials_getter(warning=warning))
         return calculate_voltages(potentials, self.phases)
 
     @property
@@ -142,7 +147,7 @@ class Bus(Element):
 
     @min_voltage.setter
     @ureg_wraps(None, (None, "V"), strict=False)
-    def min_voltage(self, value: Optional[float]) -> None:
+    def min_voltage(self, value: Optional[Union[float, Q_[float]]]) -> None:
         if value is not None and self._max_voltage is not None and value > self._max_voltage:
             msg = (
                 f"Cannot set min voltage of bus {self.id!r} to {value} V as it is higher than its "
@@ -161,7 +166,7 @@ class Bus(Element):
 
     @max_voltage.setter
     @ureg_wraps(None, (None, "V"), strict=False)
-    def max_voltage(self, value: Optional[float]) -> None:
+    def max_voltage(self, value: Optional[Union[float, Q_[float]]]) -> None:
         if value is not None and self._min_voltage is not None and value < self._min_voltage:
             msg = (
                 f"Cannot set max voltage of bus {self.id!r} to {value} V as it is lower than its "
@@ -334,7 +339,7 @@ class Bus(Element):
         return res
 
     def results_from_dict(self, data: JsonDict) -> None:
-        self._res_potentials = np.array([complex(v[0], v[1]) for v in data["potentials"]], dtype=complex)
+        self._res_potentials = np.array([complex(v[0], v[1]) for v in data["potentials"]], dtype=np.complex128)
 
     def _results_to_dict(self, warning: bool) -> JsonDict:
         return {
