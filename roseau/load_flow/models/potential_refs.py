@@ -68,7 +68,7 @@ class PotentialRef(Element):
         return self._res_getter(self._res_current, warning)
 
     @property
-    @ureg_wraps("A", (None,), strict=False)
+    @ureg_wraps("A", (None,))
     def res_current(self) -> Q_[complex]:
         """The sum of the currents (A) of the connection associated to the potential reference.
 

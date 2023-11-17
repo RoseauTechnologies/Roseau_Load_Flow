@@ -80,7 +80,7 @@ class AbstractBranch(Element):
         return self._res_getter(value=self._res_currents, warning=warning)
 
     @property
-    @ureg_wraps(("A", "A"), (None,), strict=False)
+    @ureg_wraps(("A", "A"), (None,))
     def res_currents(self) -> tuple[Q_[ComplexArray], Q_[ComplexArray]]:
         """The load flow result of the branch currents (A)."""
         return self._res_currents_getter(warning=True)
@@ -93,7 +93,7 @@ class AbstractBranch(Element):
         return powers1, powers2
 
     @property
-    @ureg_wraps(("VA", "VA"), (None,), strict=False)
+    @ureg_wraps(("VA", "VA"), (None,))
     def res_powers(self) -> tuple[Q_[ComplexArray], Q_[ComplexArray]]:
         """The load flow result of the branch powers (VA)."""
         return self._res_powers_getter(warning=True)
@@ -104,7 +104,7 @@ class AbstractBranch(Element):
         return pot1, pot2
 
     @property
-    @ureg_wraps(("V", "V"), (None,), strict=False)
+    @ureg_wraps(("V", "V"), (None,))
     def res_potentials(self) -> tuple[Q_[ComplexArray], Q_[ComplexArray]]:
         """The load flow result of the branch potentials (V)."""
         return self._res_potentials_getter(warning=True)
@@ -114,7 +114,7 @@ class AbstractBranch(Element):
         return calculate_voltages(pot1, self.phases1), calculate_voltages(pot2, self.phases2)
 
     @property
-    @ureg_wraps(("V", "V"), (None,), strict=False)
+    @ureg_wraps(("V", "V"), (None,))
     def res_voltages(self) -> tuple[Q_[ComplexArray], Q_[ComplexArray]]:
         """The load flow result of the branch voltages (V)."""
         return self._res_voltages_getter(warning=True)

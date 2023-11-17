@@ -4,6 +4,7 @@
 
 **In development**
 
+- {gh-pr}`149` {gh-issue}`145` Add custom pint wrapper for better handling of pint arrays.
 - {gh-pr}`148` {gh-issue}`122` deprecate `LineParameters.from_name_lv()` in favor of the more generic
   `LineParameters.from_geometry()`. The method will be removed in a future release.
 - {gh-pr}`142` {gh-issue}`136` Add `Bus.res_voltage_unbalance()` method to get the Voltage Unbalance

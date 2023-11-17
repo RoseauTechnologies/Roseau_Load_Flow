@@ -84,13 +84,13 @@ class VoltageSource(Element):
         )
 
     @property
-    @ureg_wraps("V", (None,), strict=False)
+    @ureg_wraps("V", (None,))
     def voltages(self) -> Q_[ComplexArray]:
         """The voltages of the source (V)."""
         return self._voltages
 
     @voltages.setter
-    @ureg_wraps(None, (None, "V"), strict=False)
+    @ureg_wraps(None, (None, "V"))
     def voltages(self, voltages: ComplexArrayLike1D) -> None:
         if len(voltages) != self._size:
             msg = f"Incorrect number of voltages: {len(voltages)} instead of {self._size}"
@@ -108,7 +108,7 @@ class VoltageSource(Element):
         return self._res_getter(value=self._res_currents, warning=warning)
 
     @property
-    @ureg_wraps("A", (None,), strict=False)
+    @ureg_wraps("A", (None,))
     def res_currents(self) -> Q_[ComplexArray]:
         """The load flow result of the source currents (A)."""
         return self._res_currents_getter(warning=True)
@@ -118,7 +118,7 @@ class VoltageSource(Element):
         return self.bus._get_potentials_of(self.phases, warning)
 
     @property
-    @ureg_wraps("V", (None,), strict=False)
+    @ureg_wraps("V", (None,))
     def res_potentials(self) -> Q_[ComplexArray]:
         """The load flow result of the source potentials (V)."""
         return self._res_potentials_getter(warning=True)
@@ -129,7 +129,7 @@ class VoltageSource(Element):
         return pots * curs.conj()
 
     @property
-    @ureg_wraps("VA", (None,), strict=False)
+    @ureg_wraps("VA", (None,))
     def res_powers(self) -> Q_[ComplexArray]:
         """The load flow result of the source powers (VA)."""
         return self._res_powers_getter(warning=True)

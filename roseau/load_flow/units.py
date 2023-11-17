@@ -28,6 +28,8 @@ from pint import Unit, UnitRegistry
 from pint.facets.plain import PlainQuantity
 from typing_extensions import TypeAlias
 
+from roseau.load_flow._wrapper import wraps
+
 T = TypeVar("T")
 FuncT = TypeVar("FuncT", bound=Callable)
 
@@ -53,8 +55,6 @@ def ureg_wraps(
     """Wraps a function to become pint-aware.
 
     Args:
-        ureg:
-            a UnitRegistry instance.
         ret:
             Units of each of the return values. Use `None` to skip argument conversion.
         args:
@@ -62,4 +62,4 @@ def ureg_wraps(
         strict:
             Indicates that only quantities are accepted. (Default value = True)
     """
-    return ureg.wraps(ret, args, strict)
+    return wraps(ureg, ret, args)

@@ -225,12 +225,12 @@ class Line(AbstractBranch):
             self._connect(self.ground)
 
     @property
-    @ureg_wraps("km", (None,), strict=False)
+    @ureg_wraps("km", (None,))
     def length(self) -> Q_[float]:
         return self._length
 
     @length.setter
-    @ureg_wraps(None, (None, "km"), strict=False)
+    @ureg_wraps(None, (None, "km"))
     def length(self, value: Union[float, Q_[float]]) -> None:
         if value <= 0:
             msg = f"A line length must be greater than 0. {value:.2f} km provided."
@@ -274,13 +274,13 @@ class Line(AbstractBranch):
         self._invalidate_network_results()
 
     @property
-    @ureg_wraps("ohm", (None,), strict=False)
+    @ureg_wraps("ohm", (None,))
     def z_line(self) -> Q_[ComplexArray]:
         """Impedance of the line in Ohm"""
         return self.parameters._z_line * self._length
 
     @property
-    @ureg_wraps("S", (None,), strict=False)
+    @ureg_wraps("S", (None,))
     def y_shunt(self) -> Q_[ComplexArray]:
         """Shunt admittance of the line in Siemens"""
         return self.parameters._y_shunt * self._length
@@ -307,7 +307,7 @@ class Line(AbstractBranch):
         return i_line
 
     @property
-    @ureg_wraps("A", (None,), strict=False)
+    @ureg_wraps("A", (None,))
     def res_series_currents(self) -> Q_[ComplexArray]:
         """Get the current in the series elements of the line (A)."""
         return self._res_series_currents_getter(warning=True)
@@ -317,7 +317,7 @@ class Line(AbstractBranch):
         return du_line * i_line.conj()  # Sₗ = ΔU.Iₗ*
 
     @property
-    @ureg_wraps("VA", (None,), strict=False)
+    @ureg_wraps("VA", (None,))
     def res_series_power_losses(self) -> Q_[ComplexArray]:
         """Get the power losses in the series elements of the line (VA)."""
         return self._res_series_power_losses_getter(warning=True)
@@ -341,7 +341,7 @@ class Line(AbstractBranch):
         return cur1, cur2
 
     @property
-    @ureg_wraps(("A", "A"), (None,), strict=False)
+    @ureg_wraps(("A", "A"), (None,))
     def res_shunt_currents(self) -> tuple[Q_[ComplexArray], Q_[ComplexArray]]:
         """Get the currents in the shunt elements of the line (A)."""
         return self._res_shunt_currents_getter(warning=True)
@@ -353,7 +353,7 @@ class Line(AbstractBranch):
         return pot1 * cur1.conj() + pot2 * cur2.conj()
 
     @property
-    @ureg_wraps("VA", (None,), strict=False)
+    @ureg_wraps("VA", (None,))
     def res_shunt_power_losses(self) -> Q_[ComplexArray]:
         """Get the power losses in the shunt elements of the line (VA)."""
         return self._res_shunt_power_losses_getter(warning=True)
@@ -364,7 +364,7 @@ class Line(AbstractBranch):
         return series_losses + shunt_losses
 
     @property
-    @ureg_wraps("VA", (None,), strict=False)
+    @ureg_wraps("VA", (None,))
     def res_power_losses(self) -> Q_[ComplexArray]:
         """Get the power losses in the line (VA)."""
         return self._res_power_losses_getter(warning=True)

@@ -37,7 +37,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
     )
     """The pattern to extract the winding of the primary and of the secondary of the transformer."""
 
-    @ureg_wraps(None, (None, None, None, "V", "V", "VA", "W", "", "W", "", "VA"), strict=False)
+    @ureg_wraps(None, (None, None, None, "V", "V", "VA", "W", "", "W", "", "VA"))
     def __init__(
         self,
         id: Id,
@@ -156,43 +156,43 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             )
 
     @property
-    @ureg_wraps("V", (None,), strict=False)
+    @ureg_wraps("V", (None,))
     def uhv(self) -> Q_[float]:
         """Phase-to-phase nominal voltages of the high voltages side (V)"""
         return self._uhv
 
     @property
-    @ureg_wraps("V", (None,), strict=False)
+    @ureg_wraps("V", (None,))
     def ulv(self) -> Q_[float]:
         """Phase-to-phase nominal voltages of the low voltages side (V)"""
         return self._ulv
 
     @property
-    @ureg_wraps("VA", (None,), strict=False)
+    @ureg_wraps("VA", (None,))
     def sn(self) -> Q_[float]:
         """The nominal power of the transformer (VA)"""
         return self._sn
 
     @property
-    @ureg_wraps("W", (None,), strict=False)
+    @ureg_wraps("W", (None,))
     def p0(self) -> Q_[float]:
         """Losses during off-load test (W)"""
         return self._p0
 
     @property
-    @ureg_wraps("", (None,), strict=False)
+    @ureg_wraps("", (None,))
     def i0(self) -> Q_[float]:
         """Current during off-load test (%)"""
         return self._i0
 
     @property
-    @ureg_wraps("W", (None,), strict=False)
+    @ureg_wraps("W", (None,))
     def psc(self) -> Q_[float]:
         """Losses during short-circuit test (W)"""
         return self._psc
 
     @property
-    @ureg_wraps("", (None,), strict=False)
+    @ureg_wraps("", (None,))
     def vsc(self) -> Q_[float]:
         """Voltages on LV side during short-circuit test (%)"""
         return self._vsc
@@ -203,11 +203,11 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         return None if self._max_power is None else Q_(self._max_power, "VA")
 
     @max_power.setter
-    @ureg_wraps(None, (None, "VA"), strict=False)
+    @ureg_wraps(None, (None, "VA"))
     def max_power(self, value: Optional[Union[float, Q_[float]]]) -> None:
         self._max_power = value
 
-    @ureg_wraps(("ohm", "S", "", None), (None,), strict=False)
+    @ureg_wraps(("ohm", "S", "", None), (None,))
     def to_zyk(self) -> tuple[Q_[complex], Q_[complex], Q_[float], float]:
         """Compute the transformer parameters ``z2``, ``ym``, ``k`` and ``orientation`` mandatory
         for some models.
@@ -315,7 +315,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         return pd.read_csv(cls.catalogue_path() / "Catalogue.csv")
 
     @classmethod
-    @ureg_wraps(None, (None, None, None, None, None, None, "VA", "V", "V"), strict=False)
+    @ureg_wraps(None, (None, None, None, None, None, None, "VA", "V", "V"))
     def from_catalogue(
         cls,
         id: Optional[Union[str, re.Pattern[str]]] = None,
@@ -460,7 +460,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         return cls.from_json(path=path)
 
     @classmethod
-    @ureg_wraps(None, (None, None, None, None, None, None, "VA", "V", "V"), strict=False)
+    @ureg_wraps(None, (None, None, None, None, None, None, "VA", "V", "V"))
     def print_catalogue(
         cls,
         id: Optional[Union[str, re.Pattern[str]]] = None,

@@ -39,7 +39,7 @@ class LineParameters(Identifiable, JsonMixin):
         rf"^({_type_re})_({_material_re})_{_section_re}$", flags=re.IGNORECASE
     )
 
-    @ureg_wraps(None, (None, None, "ohm/km", "S/km", "A"), strict=False)
+    @ureg_wraps(None, (None, None, "ohm/km", "S/km", "A"))
     def __init__(
         self,
         id: Id,
@@ -92,12 +92,12 @@ class LineParameters(Identifiable, JsonMixin):
         )
 
     @property
-    @ureg_wraps("ohm/km", (None,), strict=False)
+    @ureg_wraps("ohm/km", (None,))
     def z_line(self) -> Q_[ComplexArray]:
         return self._z_line
 
     @property
-    @ureg_wraps("S/km", (None,), strict=False)
+    @ureg_wraps("S/km", (None,))
     def y_shunt(self) -> Q_[ComplexArray]:
         return self._y_shunt
 
@@ -111,14 +111,12 @@ class LineParameters(Identifiable, JsonMixin):
         return None if self._max_current is None else Q_(self._max_current, "A")
 
     @max_current.setter
-    @ureg_wraps(None, (None, "A"), strict=False)
+    @ureg_wraps(None, (None, "A"))
     def max_current(self, value: Optional[Union[float, Q_[float]]]) -> None:
         self._max_current = value
 
     @classmethod
-    @ureg_wraps(
-        None, (None, None, "ohm/km", "ohm/km", "S/km", "S/km", "ohm/km", "ohm/km", "S/km", "S/km", "A"), strict=False
-    )
+    @ureg_wraps(None, (None, None, "ohm/km", "ohm/km", "S/km", "S/km", "ohm/km", "ohm/km", "S/km", "S/km", "A"))
     def from_sym(
         cls,
         id: Id,
@@ -297,7 +295,7 @@ class LineParameters(Identifiable, JsonMixin):
         return z_line, y_shunt
 
     @classmethod
-    @ureg_wraps(None, (None, None, None, None, None, "mm**2", "mm**2", "m", "m", "A"), strict=False)
+    @ureg_wraps(None, (None, None, None, None, None, "mm**2", "mm**2", "m", "m", "A"))
     def from_geometry(
         cls,
         id: Id,
@@ -498,7 +496,7 @@ class LineParameters(Identifiable, JsonMixin):
         "version. Use LineParameters.from_geometry() instead.",
         category=FutureWarning,
     )
-    @ureg_wraps(None, (None, None, "mm²", "m", "mm", "A"), strict=False)
+    @ureg_wraps(None, (None, None, "mm²", "m", "mm", "A"))
     def from_name_lv(
         cls,
         name: str,
@@ -567,7 +565,7 @@ class LineParameters(Identifiable, JsonMixin):
         )
 
     @classmethod
-    @ureg_wraps(None, (None, None, "A"), strict=False)
+    @ureg_wraps(None, (None, None, "A"))
     def from_name_mv(cls, name: str, max_current: Optional[Union[float, Q_[float]]] = None) -> Self:
         """Method to get the electrical parameters of a MV line from its canonical name.
 

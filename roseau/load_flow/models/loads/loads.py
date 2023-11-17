@@ -98,7 +98,7 @@ class AbstractLoad(Element, ABC):
         return self._res_getter(value=self._res_currents, warning=warning)
 
     @property
-    @ureg_wraps("A", (None,), strict=False)
+    @ureg_wraps("A", (None,))
     def res_currents(self) -> Q_[ComplexArray]:
         """The load flow result of the load currents (A)."""
         return self._res_currents_getter(warning=True)
@@ -122,7 +122,7 @@ class AbstractLoad(Element, ABC):
         return self.bus._get_potentials_of(self.phases, warning)
 
     @property
-    @ureg_wraps("V", (None,), strict=False)
+    @ureg_wraps("V", (None,))
     def res_potentials(self) -> Q_[ComplexArray]:
         """The load flow result of the load potentials (V)."""
         return self._res_potentials_getter(warning=True)
@@ -132,7 +132,7 @@ class AbstractLoad(Element, ABC):
         return calculate_voltages(potentials, self.phases)
 
     @property
-    @ureg_wraps("V", (None,), strict=False)
+    @ureg_wraps("V", (None,))
     def res_voltages(self) -> Q_[ComplexArray]:
         """The load flow result of the load voltages (V)."""
         return self._res_voltages_getter(warning=True)
@@ -143,7 +143,7 @@ class AbstractLoad(Element, ABC):
         return pots * curs.conj()
 
     @property
-    @ureg_wraps("VA", (None,), strict=False)
+    @ureg_wraps("VA", (None,))
     def res_powers(self) -> Q_[ComplexArray]:
         """The load flow result of the load powers (VA)."""
         return self._res_powers_getter(warning=True)
@@ -265,13 +265,13 @@ class PowerLoad(AbstractLoad):
         return self._flexible_params is not None
 
     @property
-    @ureg_wraps("VA", (None,), strict=False)
+    @ureg_wraps("VA", (None,))
     def powers(self) -> Q_[ComplexArray]:
         """The powers of the load (VA)."""
         return self._powers
 
     @powers.setter
-    @ureg_wraps(None, (None, "VA"), strict=False)
+    @ureg_wraps(None, (None, "VA"))
     def powers(self, value: ComplexArrayLike1D) -> None:
         value = self._validate_value(value)
         if self.is_flexible:
@@ -309,7 +309,7 @@ class PowerLoad(AbstractLoad):
         return self._res_getter(value=self._res_flexible_powers, warning=warning)
 
     @property
-    @ureg_wraps("VA", (None,), strict=False)
+    @ureg_wraps("VA", (None,))
     def res_flexible_powers(self) -> Q_[ComplexArray]:
         """The load flow result of the load flexible powers (VA)."""
         return self._res_flexible_powers_getter(warning=True)
@@ -375,13 +375,13 @@ class CurrentLoad(AbstractLoad):
         self.currents = currents  # handles size checks and unit conversion
 
     @property
-    @ureg_wraps("A", (None,), strict=False)
+    @ureg_wraps("A", (None,))
     def currents(self) -> Q_[ComplexArray]:
         """The currents of the load (Amps)."""
         return self._currents
 
     @currents.setter
-    @ureg_wraps(None, (None, "A"), strict=False)
+    @ureg_wraps(None, (None, "A"))
     def currents(self, value: ComplexArrayLike1D) -> None:
         self._currents = self._validate_value(value)
         self._invalidate_network_results()
@@ -427,13 +427,13 @@ class ImpedanceLoad(AbstractLoad):
         self.impedances = impedances
 
     @property
-    @ureg_wraps("ohm", (None,), strict=False)
+    @ureg_wraps("ohm", (None,))
     def impedances(self) -> Q_[ComplexArray]:
         """The impedances of the load (Ohms)."""
         return self._impedances
 
     @impedances.setter
-    @ureg_wraps(None, (None, "ohm"), strict=False)
+    @ureg_wraps(None, (None, "ohm"))
     def impedances(self, impedances: ComplexArrayLike1D) -> None:
         self._impedances = self._validate_value(impedances)
         self._invalidate_network_results()
