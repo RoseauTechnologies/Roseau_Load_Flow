@@ -91,13 +91,13 @@ class Bus(Element):
         return f"{type(self).__name__}(id={self.id!r}, phases={self.phases!r})"
 
     @property
-    @ureg_wraps("V", (None,), strict=False)
+    @ureg_wraps("V", (None,))
     def potentials(self) -> Q_[ComplexArray]:
         """An array of initial potentials of the bus (V)."""
         return self._potentials
 
     @potentials.setter
-    @ureg_wraps(None, (None, "V"), strict=False)
+    @ureg_wraps(None, (None, "V"))
     def potentials(self, value: ComplexArrayLike1D) -> None:
         if len(value) != len(self.phases):
             msg = f"Incorrect number of potentials: {len(value)} instead of {len(self.phases)}"
@@ -110,7 +110,7 @@ class Bus(Element):
         return self._res_getter(value=self._res_potentials, warning=warning)
 
     @property
-    @ureg_wraps("V", (None,), strict=False)
+    @ureg_wraps("V", (None,))
     def res_potentials(self) -> Q_[ComplexArray]:
         """The load flow result of the bus potentials (V)."""
         return self._res_potentials_getter(warning=True)
@@ -120,7 +120,7 @@ class Bus(Element):
         return calculate_voltages(potentials, self.phases)
 
     @property
-    @ureg_wraps("V", (None,), strict=False)
+    @ureg_wraps("V", (None,))
     def res_voltages(self) -> Q_[ComplexArray]:
         """The load flow result of the bus voltages (V).
 
@@ -146,7 +146,7 @@ class Bus(Element):
         return None if self._min_voltage is None else Q_(self._min_voltage, "V")
 
     @min_voltage.setter
-    @ureg_wraps(None, (None, "V"), strict=False)
+    @ureg_wraps(None, (None, "V"))
     def min_voltage(self, value: Optional[Union[float, Q_[float]]]) -> None:
         if value is not None and self._max_voltage is not None and value > self._max_voltage:
             msg = (
@@ -165,7 +165,7 @@ class Bus(Element):
         return None if self._max_voltage is None else Q_(self._max_voltage, "V")
 
     @max_voltage.setter
-    @ureg_wraps(None, (None, "V"), strict=False)
+    @ureg_wraps(None, (None, "V"))
     def max_voltage(self, value: Optional[Union[float, Q_[float]]]) -> None:
         if value is not None and self._min_voltage is not None and value < self._min_voltage:
             msg = (
@@ -284,7 +284,7 @@ class Bus(Element):
                 to_add = set(element._connected_elements).difference(visited)
                 remaining.update(to_add)
 
-    @ureg_wraps("percent", (None,), strict=False)
+    @ureg_wraps("percent", (None,))
     def res_voltage_unbalance(self) -> Q_[float]:
         """Calculate the voltage unbalance on this bus according to the IEC definition.
 

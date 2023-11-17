@@ -53,7 +53,7 @@ class Ground(Element):
         return self._res_getter(self._res_potential, warning)
 
     @property
-    @ureg_wraps("V", (None,), strict=False)
+    @ureg_wraps("V", (None,))
     def res_potential(self) -> Q_[complex]:
         """The load flow result of the ground potential (V)."""
         return self._res_potential_getter(warning=True)
