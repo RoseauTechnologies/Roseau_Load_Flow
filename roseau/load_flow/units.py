@@ -28,7 +28,7 @@ from pint import Unit, UnitRegistry
 from pint.facets.plain import PlainQuantity
 from typing_extensions import TypeAlias
 
-from roseau.load_flow.wrapper import wraps
+from roseau.load_flow._wrapper import wraps
 
 T = TypeVar("T")
 FuncT = TypeVar("FuncT", bound=Callable)

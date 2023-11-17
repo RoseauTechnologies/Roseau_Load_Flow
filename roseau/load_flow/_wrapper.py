@@ -1,6 +1,5 @@
-import collections
 import functools
-from collections.abc import Iterable
+from collections.abc import Iterable, MutableSequence
 from inspect import Parameter, Signature, signature
 from itertools import zip_longest
 from typing import Any, Callable, Optional, TypeVar, Union
@@ -15,16 +14,11 @@ FuncT = TypeVar("FuncT", bound=Callable)
 
 def _parse_wrap_args(args: Iterable[Optional[Union[str, Unit]]]) -> Callable:
     """Create a converter function for the wrapper"""
-    # Arguments which have units.
-    unit_args_ndx = set()
-
     # _to_units_container
     args_as_uc = [to_units_container(arg) for arg in args]
 
     # Check for references in args, remove None values
-    for ndx_, arg in enumerate(args_as_uc):
-        if arg is not None:
-            unit_args_ndx.add(ndx_)
+    unit_args_ndx = {ndx for ndx, arg in enumerate(args_as_uc) if arg is not None}
 
     def _converter(ureg: UnitRegistry, sig: Signature, values: list[Any], kw: dict[Any]):
         len_initial_values = len(values)
@@ -36,12 +30,13 @@ def _parse_wrap_args(args: Iterable[Optional[Union[str, Unit]]]) -> Callable:
 
         # convert arguments
         for ndx in unit_args_ndx:
-            if isinstance(values[ndx], ureg.Quantity):
-                values[ndx] = ureg.convert(values[ndx].magnitude, values[ndx].units, args_as_uc[ndx])
-            elif isinstance(values[ndx], collections.abc.MutableSequence):
-                for i, val in enumerate(values[ndx]):
+            value = values[ndx]
+            if isinstance(value, ureg.Quantity):
+                values[ndx] = ureg.convert(value.magnitude, value.units, args_as_uc[ndx])
+            elif isinstance(value, MutableSequence):
+                for i, val in enumerate(value):
                     if isinstance(val, ureg.Quantity):
-                        values[ndx][i] = ureg.convert(val.magnitude, val.units, args_as_uc[ndx])
+                        value[i] = ureg.convert(val.magnitude, val.units, args_as_uc[ndx])
 
         # unpack kwargs
         for i, param_name in enumerate(sig.parameters):
@@ -53,14 +48,15 @@ def _parse_wrap_args(args: Iterable[Optional[Union[str, Unit]]]) -> Callable:
     return _converter
 
 
-def _apply_defaults(sig: Signature, args: tuple[Any], kwargs: dict[Any]) -> tuple[list[Any], dict[Any]]:
+def _apply_defaults(sig: Signature, args: tuple[Any], kwargs: dict[str, Any]) -> tuple[list[Any], dict[str, Any]]:
     """Apply default keyword arguments.
 
     Named keywords may have been left blank. This function applies the default
     values so that every argument is defined.
     """
+    n = len(args)
     for i, param in enumerate(sig.parameters.values()):
-        if i >= len(args) and param.default != Parameter.empty and param.name not in kwargs:
+        if i >= n and param.default != Parameter.empty and param.name not in kwargs:
             kwargs[param.name] = param.default
     return list(args), kwargs
 
