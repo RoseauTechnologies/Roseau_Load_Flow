@@ -5,7 +5,7 @@ from typing import NoReturn, Optional, Union
 import numpy as np
 import numpy.linalg as nplin
 import pandas as pd
-from typing_extensions import Self
+from typing_extensions import Self, deprecated
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.typing import ComplexArray, ComplexArrayLike2D, Id, JsonDict
@@ -493,6 +493,11 @@ class LineParameters(Identifiable, JsonMixin):
         return z_line, y_shunt
 
     @classmethod
+    @deprecated(
+        "The method LineParameters.from_name_lv() is deprecated and will be removed in a future "
+        "version. Use LineParameters.from_geometry() instead.",
+        category=FutureWarning,
+    )
     @ureg_wraps(None, (None, None, "mm²", "m", "mm", "A"), strict=False)
     def from_name_lv(
         cls,
@@ -524,6 +529,9 @@ class LineParameters(Identifiable, JsonMixin):
 
         Returns:
             The corresponding line parameters.
+
+        .. deprecated:: 0.6.0
+            Use :meth:`LineParameters.from_geometry` instead.
         """
         match = cls._REGEXP_LINE_TYPE_NAME.fullmatch(string=name)
         if not match:

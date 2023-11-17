@@ -4,6 +4,8 @@
 
 **In development**
 
+- {gh-pr}`148` {gh-issue}`122` deprecate `LineParameters.from_name_lv()` in favor of the more generic
+  `LineParameters.from_geometry()`. The method will be removed in a future release.
 - {gh-pr}`142` {gh-issue}`136` Add `Bus.res_voltage_unbalance()` method to get the Voltage Unbalance
   Factor (VUF) as defined by the IEC standard IEC 61000-3-14.
 - {gh-pr}`141` {gh-issue}`137` Add `ElectricalNetwork.to_graph()` to get a `networkx.Graph` object

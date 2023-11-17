@@ -56,7 +56,16 @@ a Delta-Wye transformer and a small LV network.
 ... )
 
 >>> # Add the LV network elements
-... lp = LineParameters.from_name_lv("U_AL_150")
+... lp = LineParameters.from_geometry(
+...     "U_AL_150",
+...     line_type=LineType.UNDERGROUND,
+...     conductor_type=ConductorType.AL,
+...     insulator_type=InsulatorType.PVC,
+...     section=150,
+...     section_neutral=150,
+...     height=Q_(-1.5, "m"),
+...     external_diameter=Q_(40, "mm"),
+... )
 ... bus1 = Bus(id="bus1", phases="abcn")
 ... bus2 = Bus(id="bus2", phases="abcn")
 ... load_bus1 = Bus(id="load_bus1", phases="abcn")
