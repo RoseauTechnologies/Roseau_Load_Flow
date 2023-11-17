@@ -37,7 +37,7 @@ class VoltageSource(Element):
                 An array-like of the voltages of the source. They will be set on the connected bus.
                 If the source has a neutral connection, the voltages are considered phase-to-neutral
                 voltages, otherwise they are the phase-to-phase voltages. Either complex values (V)
-                or a :data:`Quantity <roseau.load_flow.units.Q_>` of complex values.
+                or a :class:`Quantity <roseau.load_flow.units.Q_>` of complex values.
 
             phases:
                 The phases of the source. A string like ``"abc"`` or ``"an"`` etc. The order of the

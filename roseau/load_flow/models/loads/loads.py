@@ -225,7 +225,7 @@ class PowerLoad(AbstractLoad):
 
             powers:
                 An array-like of the powers for each phase component. Either complex values (VA)
-                or a :data:`Quantity <roseau.load_flow.units.Q_>` of complex values.
+                or a :class:`Quantity <roseau.load_flow.units.Q_>` of complex values.
 
             phases:
                 The phases of the load. A string like ``"abc"`` or ``"an"`` etc. The order of the
@@ -363,7 +363,7 @@ class CurrentLoad(AbstractLoad):
 
             currents:
                 An array-like of the currents for each phase component. Either complex values (A)
-                or a :data:`Quantity <roseau.load_flow.units.Q_>` of complex values.
+                or a :class:`Quantity <roseau.load_flow.units.Q_>` of complex values.
 
             phases:
                 The phases of the load. A string like ``"abc"`` or ``"an"`` etc. The order of the
@@ -415,7 +415,7 @@ class ImpedanceLoad(AbstractLoad):
 
             impedances:
                 An array-like of the impedances for each phase component. Either complex values
-                (Ohms) or a :data:`Quantity <roseau.load_flow.units.Q_>` of complex values.
+                (Ohms) or a :class:`Quantity <roseau.load_flow.units.Q_>` of complex values.
 
             phases:
                 The phases of the load. A string like ``"abc"`` or ``"an"`` etc. The order of the

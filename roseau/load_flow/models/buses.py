@@ -59,18 +59,18 @@ class Bus(Element):
             potentials:
                 An optional array-like of initial potentials of each phase of the bus. If given,
                 these potentials are used as the starting point of the load flow computation.
-                Either complex values (V) or a :data:`Quantity <roseau.load_flow.units.Q_>` of
+                Either complex values (V) or a :class:`Quantity <roseau.load_flow.units.Q_>` of
                 complex values.
 
             min_voltage:
                 An optional minimum voltage of the bus (V). It is not used in the load flow.
                 It must be a phase-neutral voltage if the bus has a neutral, phase-phase otherwise.
-                Either a float (V) or a :data:`Quantity <roseau.load_flow.units.Q_>` of float.
+                Either a float (V) or a :class:`Quantity <roseau.load_flow.units.Q_>` of float.
 
             max_voltage:
                 An optional maximum voltage of the bus (V). It is not used in the load flow.
                 It must be a phase-neutral voltage if the bus has a neutral, phase-phase otherwise.
-                Either a float (V) or a :data:`Quantity <roseau.load_flow.units.Q_>` of float.
+                Either a float (V) or a :class:`Quantity <roseau.load_flow.units.Q_>` of float.
         """
         super().__init__(id, **kwargs)
         self._check_phases(id, phases=phases)

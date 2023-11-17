@@ -9,7 +9,7 @@ Units registry used by Roseau Load Flow using the `pint`_ package.
 .. class:: Q_
 
     The :class:`pint.Quantity` class to use in this project. You can use it to provide quantities
-    in units different than the default ones. For example, to create a constant power load of 1 MVA,
+    in units different from the default ones. For example, to create a constant power load of 1 MVA,
     you can do:
 
     >>> load = lf.PowerLoad("load", bus=bus, powers=Q_([1, 1, 1], "MVA"))
