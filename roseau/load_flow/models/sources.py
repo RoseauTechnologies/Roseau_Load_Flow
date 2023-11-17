@@ -1,5 +1,4 @@
 import logging
-from collections.abc import Sequence
 from typing import Any, Optional
 
 import numpy as np
@@ -9,7 +8,7 @@ from roseau.load_flow.converters import calculate_voltage_phases
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import Element
-from roseau.load_flow.typing import ComplexArray, Id, JsonDict
+from roseau.load_flow.typing import ComplexArray, ComplexArrayLike1D, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
 
 logger = logging.getLogger(__name__)
@@ -23,7 +22,7 @@ class VoltageSource(Element):
     _floating_neutral_allowed: bool = False
 
     def __init__(
-        self, id: Id, bus: Bus, *, voltages: Sequence[complex], phases: Optional[str] = None, **kwargs: Any
+        self, id: Id, bus: Bus, *, voltages: ComplexArrayLike1D, phases: Optional[str] = None, **kwargs: Any
     ) -> None:
         """Voltage source constructor.
 
@@ -35,9 +34,10 @@ class VoltageSource(Element):
                 The bus of the voltage source.
 
             voltages:
-                The voltages of the source. They will be fixed on the connected bus. If the source
-                has a neutral connection, the voltages are the phase-to-neutral voltages, otherwise
-                they are the phase-to-phase voltages.
+                An array-like of the voltages of the source. They will be set on the connected bus.
+                If the source has a neutral connection, the voltages are considered phase-to-neutral
+                voltages, otherwise they are the phase-to-phase voltages. Either complex values (V)
+                or a :class:`Quantity <roseau.load_flow.units.Q_>` of complex values.
 
             phases:
                 The phases of the source. A string like ``"abc"`` or ``"an"`` etc. The order of the
@@ -91,12 +91,12 @@ class VoltageSource(Element):
 
     @voltages.setter
     @ureg_wraps(None, (None, "V"), strict=False)
-    def voltages(self, voltages: Sequence[complex]) -> None:
+    def voltages(self, voltages: ComplexArrayLike1D) -> None:
         if len(voltages) != self._size:
             msg = f"Incorrect number of voltages: {len(voltages)} instead of {self._size}"
             logger.error(msg)
             raise RoseauLoadFlowException(msg, code=RoseauLoadFlowExceptionCode.BAD_VOLTAGES_SIZE)
-        self._voltages = np.asarray(voltages, dtype=complex)
+        self._voltages = np.array(voltages, dtype=np.complex128)
         self._invalidate_network_results()
 
     @property
@@ -167,7 +167,7 @@ class VoltageSource(Element):
         }
 
     def results_from_dict(self, data: JsonDict) -> None:
-        self._res_currents = np.array([complex(i[0], i[1]) for i in data["currents"]], dtype=complex)
+        self._res_currents = np.array([complex(i[0], i[1]) for i in data["currents"]], dtype=np.complex128)
 
     def _results_to_dict(self, warning: bool) -> JsonDict:
         return {

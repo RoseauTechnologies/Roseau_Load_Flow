@@ -140,8 +140,8 @@ class AbstractBranch(Element):
         return res
 
     def results_from_dict(self, data: JsonDict) -> None:
-        currents1 = np.array([complex(i[0], i[1]) for i in data["currents1"]], dtype=complex)
-        currents2 = np.array([complex(i[0], i[1]) for i in data["currents2"]], dtype=complex)
+        currents1 = np.array([complex(i[0], i[1]) for i in data["currents1"]], dtype=np.complex128)
+        currents2 = np.array([complex(i[0], i[1]) for i in data["currents2"]], dtype=np.complex128)
         self._res_currents = (currents1, currents2)
 
     def _results_to_dict(self, warning: bool) -> JsonDict:

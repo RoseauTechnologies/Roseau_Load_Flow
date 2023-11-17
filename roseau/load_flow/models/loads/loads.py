@@ -1,6 +1,5 @@
 import logging
 from abc import ABC
-from collections.abc import Sequence
 from typing import Any, Literal, Optional
 
 import numpy as np
@@ -10,7 +9,7 @@ from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowE
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import Element
 from roseau.load_flow.models.loads.flexible_parameters import FlexibleParameter
-from roseau.load_flow.typing import ComplexArray, Id, JsonDict
+from roseau.load_flow.typing import ComplexArray, ComplexArrayLike1D, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
 
 logger = logging.getLogger(__name__)
@@ -104,7 +103,7 @@ class AbstractLoad(Element, ABC):
         """The load flow result of the load currents (A)."""
         return self._res_currents_getter(warning=True)
 
-    def _validate_value(self, value: Sequence[complex]) -> ComplexArray:
+    def _validate_value(self, value: ComplexArrayLike1D) -> ComplexArray:
         if len(value) != self._size:
             msg = f"Incorrect number of {self._type}s: {len(value)} instead of {self._size}"
             logger.error(msg)
@@ -116,7 +115,7 @@ class AbstractLoad(Element, ABC):
             msg = f"An impedance of the load {self.id!r} is null"
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Z_VALUE)
-        return np.asarray(value, dtype=complex)
+        return np.array(value, dtype=np.complex128)
 
     def _res_potentials_getter(self, warning: bool) -> ComplexArray:
         self._raise_disconnected_error()
@@ -190,7 +189,7 @@ class AbstractLoad(Element, ABC):
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LOAD_TYPE)
 
     def results_from_dict(self, data: JsonDict) -> None:
-        self._res_currents = np.array([complex(i[0], i[1]) for i in data["currents"]], dtype=complex)
+        self._res_currents = np.array([complex(i[0], i[1]) for i in data["currents"]], dtype=np.complex128)
 
     def _results_to_dict(self, warning: bool) -> JsonDict:
         return {
@@ -210,7 +209,7 @@ class PowerLoad(AbstractLoad):
         id: Id,
         bus: Bus,
         *,
-        powers: Sequence[complex],
+        powers: ComplexArrayLike1D,
         phases: Optional[str] = None,
         flexible_params: Optional[list[FlexibleParameter]] = None,
         **kwargs: Any,
@@ -225,7 +224,8 @@ class PowerLoad(AbstractLoad):
                 The bus to connect the load to.
 
             powers:
-                List of power for each phase (VA).
+                An array-like of the powers for each phase component. Either complex values (VA)
+                or a :class:`Quantity <roseau.load_flow.units.Q_>` of complex values.
 
             phases:
                 The phases of the load. A string like ``"abc"`` or ``"an"`` etc. The order of the
@@ -272,7 +272,7 @@ class PowerLoad(AbstractLoad):
 
     @powers.setter
     @ureg_wraps(None, (None, "VA"), strict=False)
-    def powers(self, value: Sequence[complex]) -> None:
+    def powers(self, value: ComplexArrayLike1D) -> None:
         value = self._validate_value(value)
         if self.is_flexible:
             for power, fp in zip(value, self._flexible_params):
@@ -332,7 +332,7 @@ class PowerLoad(AbstractLoad):
     def results_from_dict(self, data: JsonDict) -> None:
         super().results_from_dict(data=data)
         if self.is_flexible:
-            self._res_flexible_powers = np.array([complex(p[0], p[1]) for p in data["powers"]], dtype=complex)
+            self._res_flexible_powers = np.array([complex(p[0], p[1]) for p in data["powers"]], dtype=np.complex128)
 
     def _results_to_dict(self, warning: bool) -> JsonDict:
         if self.is_flexible:
@@ -350,7 +350,7 @@ class CurrentLoad(AbstractLoad):
     _type = "current"
 
     def __init__(
-        self, id: Id, bus: Bus, *, currents: Sequence[complex], phases: Optional[str] = None, **kwargs: Any
+        self, id: Id, bus: Bus, *, currents: ComplexArrayLike1D, phases: Optional[str] = None, **kwargs: Any
     ) -> None:
         """CurrentLoad constructor.
 
@@ -362,7 +362,8 @@ class CurrentLoad(AbstractLoad):
                 The bus to connect the load to.
 
             currents:
-                List of currents for each phase (Amps).
+                An array-like of the currents for each phase component. Either complex values (A)
+                or a :class:`Quantity <roseau.load_flow.units.Q_>` of complex values.
 
             phases:
                 The phases of the load. A string like ``"abc"`` or ``"an"`` etc. The order of the
@@ -381,7 +382,7 @@ class CurrentLoad(AbstractLoad):
 
     @currents.setter
     @ureg_wraps(None, (None, "A"), strict=False)
-    def currents(self, value: Sequence[complex]) -> None:
+    def currents(self, value: ComplexArrayLike1D) -> None:
         self._currents = self._validate_value(value)
         self._invalidate_network_results()
 
@@ -401,7 +402,7 @@ class ImpedanceLoad(AbstractLoad):
     _type = "impedance"
 
     def __init__(
-        self, id: Id, bus: Bus, *, impedances: Sequence[complex], phases: Optional[str] = None, **kwargs: Any
+        self, id: Id, bus: Bus, *, impedances: ComplexArrayLike1D, phases: Optional[str] = None, **kwargs: Any
     ) -> None:
         """ImpedanceLoad constructor.
 
@@ -413,7 +414,8 @@ class ImpedanceLoad(AbstractLoad):
                 The bus to connect the load to.
 
             impedances:
-                List of impedances for each phase (Ohms).
+                An array-like of the impedances for each phase component. Either complex values
+                (Ohms) or a :class:`Quantity <roseau.load_flow.units.Q_>` of complex values.
 
             phases:
                 The phases of the load. A string like ``"abc"`` or ``"an"`` etc. The order of the
@@ -432,7 +434,7 @@ class ImpedanceLoad(AbstractLoad):
 
     @impedances.setter
     @ureg_wraps(None, (None, "ohm"), strict=False)
-    def impedances(self, impedances: Sequence[complex]) -> None:
+    def impedances(self, impedances: ComplexArrayLike1D) -> None:
         self._impedances = self._validate_value(impedances)
         self._invalidate_network_results()
 
