@@ -168,8 +168,8 @@ that allows to compute the resulting powers of the control at different voltage 
 theoretical power.
 
 In the following example, we define a flexible parameter with a $P(U)$ control, a constant $P$
-projection, and a $5kVA$ maximum power. We want to know what would the control produce for all
-voltages between 205 V and 255 V if given a theoretical power of $-2.5 + j$ kVA.
+projection, and a 5 kVA maximum power. We want to know what would the control produce for all
+voltages between 205 V and 255 V if given a theoretical power of $-2.5 + 1j$ kVA.
 
 ```python
 import numpy as np
