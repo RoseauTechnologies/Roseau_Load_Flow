@@ -1,12 +1,13 @@
 [tool.poetry]
 name = "roseau-load-flow"
-version = "0.5.0"
+version = "0.6.0"
 description = "Highly capable three-phase load flow solver"
 authors = [
     "Ali Hamdan <ali.hamdan@roseautechnologies.com>",
     "Sébastien Vallet <sebastien.vallet@roseautechnologies.com>",
     "Benoît Vinot <benoit.vinot@roseautechnologies.com>",
-    "Victor Gouin <victor.gouin@roseautechnologies.com>",
+    "Florent Cadoux <florent.cadoux@roseautechnologies.com>",
+    "Victor Gouin",
 ]
 maintainers = ["Ali Hamdan <ali.hamdan@roseautechnologies.com>"]
 license = "Proprietary"
@@ -28,6 +29,7 @@ classifiers = [
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering :: Physics",
 ]
 
@@ -37,7 +39,11 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.dependencies]
 python = "^3.9"
-numpy = ">=1.21.5"
+numpy = [
+    { version = ">=1.21.5", python = "<3.12" },
+    { version = ">=1.26.0", python = ">=3.12,<3.13" },
+    { version = "*", python = ">=3.13" },
+]
 pandas = ">=1.4.0"
 geopandas = ">=0.10.2"
 shapely = ">=2.0.0"
@@ -47,39 +53,45 @@ pint = ">=0.21.0"
 typing-extensions = ">=4.6.2"
 rich = ">=13.5.1"
 
+# Optional dependencies
+matplotlib = { version = ">=3.7.2", optional = true }
+networkx = { version = ">=3.0.0", optional = true }
+
+[tool.poetry.extras]
+# DO NOT forget to update the installation page in the documentation when extras change
+plot = ["matplotlib"]
+graph = ["networkx"]
+
 [tool.poetry.group.test.dependencies]
 pytest = "^7.1.2"
 pytest-cov = "^4.0.0"
 pytest-xdist = "^3.1.0"
 requests-mock = "^1.9.3"
 coverage = { version = "^7.0.5", extras = ["toml"] }
+matplotlib = ">=3.7.2"
+networkx = ">=3.0.0"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^3.0.0"
-black = { version = "==23.7.0", extras = ["jupyter"] } # keep in sync with .pre-commit-config.yaml
-ruff = "==0.0.286" # keep in sync with .pre-commit-config.yaml
+ruff = "==0.1.6" # keep in sync with .pre-commit-config.yaml
 
 [tool.poetry.group.doc.dependencies]
 sphinx = "^7.0.1"
 myst-parser = ">=0.16.1"
 sphinx-math-dollar = "^1.2.1"
-sphinx-autoapi = "^2.0.0"
+sphinx-autoapi = "^3.0.0"
 sphinx-copybutton = ">=0.5.1"
 sphinx-inline-tabs = ">=2022.1.2b11"
 furo = ">=2022.9.29"
 sphinxcontrib-googleanalytics = ">=0.3"
 sphinxcontrib-bibtex = "^2.5.0"
 
-[tool.black]
-line-length = 120
-target-version = ["py39", "py310", "py311"]
-
 [tool.ruff]
 line-length = 120
 target-version = "py39"
 show-fixes = true
 namespace-packages = ["roseau"]
-include = ["*.py", "*.pyi", "**/pyproject.toml", "*.ipynb"]
+extend-include = ["*.ipynb"]
 select = ["E", "F", "C90", "W", "B", "UP", "I", "RUF100", "TID", "SIM", "PT", "PIE", "N", "C4", "NPY"]
 unfixable = ["B"]
 ignore = ["E501", "B024", "N818"]
@@ -131,3 +143,6 @@ directory = "htmlcov"
 [tool.pytest.ini_options]
 addopts = "--color=yes -vv -n=0"
 testpaths = ["roseau/load_flow/"]
+filterwarnings = [
+    'ignore:.*utcfromtimestamp:DeprecationWarning:dateutil.*', # dateutil is imported by pandas, not us
+]

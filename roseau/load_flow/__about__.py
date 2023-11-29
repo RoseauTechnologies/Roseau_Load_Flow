@@ -1,4 +1,12 @@
-__author__ = "Benoît Vinot, Victor Gouin, Florent Cadoux, Sébastien Vallet, Ali Hamdan"
+__authors__ = ", ".join(
+    (
+        "Ali Hamdan <ali.hamdan@roseautechnologies.com>",
+        "Sébastien Vallet <sebastien.vallet@roseautechnologies.com>",
+        "Benoît Vinot <benoit.vinot@roseautechnologies.com>",
+        "Florent Cadoux <florent.cadoux@roseautechnologies.com>",
+        "Victor Gouin",
+    )
+)
 __copyright__ = "Roseau Technologies 2018--2023"
 __credits__ = "Roseau Technologies"
 __license__ = "Proprietary"

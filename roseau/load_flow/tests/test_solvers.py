@@ -1,6 +1,6 @@
 import pytest
 
-from roseau.load_flow import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
+from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.solvers import check_solver_params
 
 

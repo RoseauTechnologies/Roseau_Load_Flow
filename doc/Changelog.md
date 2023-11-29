@@ -1,5 +1,41 @@
 # Changelog
 
+## Version 0.6.0
+
+- {gh-pr}`149` {gh-issue}`145` Add custom pint wrapper for better handling of pint arrays.
+- {gh-pr}`148` {gh-issue}`122` deprecate `LineParameters.from_name_lv()` in favor of the more generic
+  `LineParameters.from_geometry()`. The method will be removed in a future release.
+- {gh-pr}`142` {gh-issue}`136` Add `Bus.res_voltage_unbalance()` method to get the Voltage Unbalance
+  Factor (VUF) as defined by the IEC standard IEC 61000-3-14.
+- {gh-pr}`141` {gh-issue}`137` Add `ElectricalNetwork.to_graph()` to get a `networkx.Graph` object
+  representing the electrical network for graph theory studies. Install with the `"graph"` extra to
+  get _networkx_.
+  `ElectricalNetwork` also gained a new `buses_clusters` property that returns a list of sets of
+  IDs of buses that are connected by a line or a switch. This can be useful to isolate parts of the
+  network for localized analysis. For example, to study a LV subnetwork of a MV feeder. Alternatively,
+  to get the cluster certain bus belongs to, you can use `Bus.get_connected_buses()`.
+- {gh-pr}`141` Add official support for Python 3.12. This is the last release to support Python 3.9.
+- {gh-pr}`138` Add network constraints for analysis of the results.
+  - Buses can define minimum and maximum voltages. Use `bus.res_violated` to see if the bus has
+    over- or under-voltage.
+  - Lines can define a maximum current. Use `line.res_violated` to see if the loading of any of the
+    line's cables is too high.
+  - Transformers can define a maximum power. Use `transformer.res_violated` to see if the transformer
+    loading is too high.
+  - The new fields also appear in the data frames of the network.
+- {gh-pr}`133` {gh-issue}`126` Add Qmin and Qmax limits of flexible parameters.
+- {gh-pr}`132` {gh-issue}`101` Document extra utilities including converters and constants.
+- {gh-pr}`131` {gh-issue}`127` Improve the documentation of the flexible loads.
+  - Add the method `compute_powers` method to the `FlexibleParameter` class to compute the resulting flexible powers
+    for a given theoretical power and a list of voltage norms.
+  - Add the `plot_control_p`, `plot_control_q` and `plot_pq` methods to the `FlexibleParameter` class to plot the
+    control curves and control trajectories.
+  - Add the extra `plot` to install `matplotlib` alongside `roseau-load-flow`.
+- {gh-pr}`131` Correction of a bug in the error message of the powers setter method.
+- {gh-pr}`130` Mark some internal attributes as private, they were previously marked as public.
+- {gh-pr}`128` Add the properties `z_line`, `y_shunt` and `with_shunt` to the `Line` class.
+- {gh-pr}`125` Speed-up build of conda workflow using mamba.
+
 ## Version 0.5.0
 
 - {gh-pr}`121` {gh-issue}`68` Improvements of the `LineParameters` constructor:

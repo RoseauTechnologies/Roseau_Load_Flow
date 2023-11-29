@@ -1,6 +1,6 @@
 import logging
 import warnings
-from typing import Any, Optional
+from typing import Any, Optional, Union
 
 import numpy as np
 from shapely import LineString, Point
@@ -12,18 +12,14 @@ from roseau.load_flow.models.core import Element
 from roseau.load_flow.models.grounds import Ground
 from roseau.load_flow.models.lines.parameters import LineParameters
 from roseau.load_flow.models.sources import VoltageSource
-from roseau.load_flow.typing import Id, JsonDict
+from roseau.load_flow.typing import ComplexArray, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
 
 logger = logging.getLogger(__name__)
 
 
 class Switch(AbstractBranch):
-    """A general purpose switch branch.
-
-    See Also:
-        :doc:`Switch model documentation </models/Switch>`
-    """
+    """A general purpose switch branch."""
 
     branch_type = "switch"
 
@@ -128,11 +124,7 @@ class Switch(AbstractBranch):
 
 
 class Line(AbstractBranch):
-    """An electrical line PI model with series impedance and optional shunt admittance.
-
-    See Also:
-        :doc:`Line documentation </models/Line/index>`
-    """
+    """An electrical line PI model with series impedance and optional shunt admittance."""
 
     branch_type = "line"
 
@@ -152,7 +144,7 @@ class Line(AbstractBranch):
         bus2: Bus,
         *,
         parameters: LineParameters,
-        length: float,
+        length: Union[float, Q_[float]],
         phases: Optional[str] = None,
         ground: Optional[Ground] = None,
         geometry: Optional[LineString] = None,
@@ -171,7 +163,8 @@ class Line(AbstractBranch):
                 The second bus (aka `"to_bus"`) to connect to the line.
 
             parameters:
-                The parameters of the line, an instance of :class:`LineParameters`.
+                Parameters defining the electrical model of the line. This is an instance of the
+                :class:`LineParameters` class and can be used by multiple lines.
 
             length:
                 The length of the line in km.
@@ -217,7 +210,7 @@ class Line(AbstractBranch):
         self._initialized = True
 
         # Handle the ground
-        if self.ground is not None and not self.parameters.with_shunt:
+        if self.ground is not None and not self.with_shunt:
             warnings.warn(
                 message=(
                     f"The ground element must not be provided for line {self.id!r} as it does not have a shunt "
@@ -227,18 +220,18 @@ class Line(AbstractBranch):
                 stacklevel=2,
             )
             self.ground = None
-        elif self.parameters.with_shunt:
+        elif self.with_shunt:
             # Connect the ground
             self._connect(self.ground)
 
     @property
-    @ureg_wraps("km", (None,), strict=False)
+    @ureg_wraps("km", (None,))
     def length(self) -> Q_[float]:
         return self._length
 
     @length.setter
-    @ureg_wraps(None, (None, "km"), strict=False)
-    def length(self, value: float) -> None:
+    @ureg_wraps(None, (None, "km"))
+    def length(self, value: Union[float, Q_[float]]) -> None:
         if value <= 0:
             msg = f"A line length must be greater than 0. {value:.2f} km provided."
             logger.error(msg)
@@ -260,7 +253,7 @@ class Line(AbstractBranch):
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Z_LINE_SHAPE)
 
         if value.with_shunt:
-            if self._initialized and not self.parameters.with_shunt:
+            if self._initialized and not self.with_shunt:
                 msg = "Cannot set line parameters with a shunt to a line that does not have shunt components."
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_MODEL)
@@ -273,94 +266,128 @@ class Line(AbstractBranch):
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_TYPE)
         else:
-            if self._initialized and self.parameters.with_shunt:
+            if self._initialized and self.with_shunt:
                 msg = "Cannot set line parameters without a shunt to a line that has shunt components."
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_MODEL)
         self._parameters = value
         self._invalidate_network_results()
 
-    def _res_series_values_getter(self, warning: bool) -> tuple[np.ndarray, np.ndarray]:
+    @property
+    @ureg_wraps("ohm", (None,))
+    def z_line(self) -> Q_[ComplexArray]:
+        """Impedance of the line in Ohm"""
+        return self.parameters._z_line * self._length
+
+    @property
+    @ureg_wraps("S", (None,))
+    def y_shunt(self) -> Q_[ComplexArray]:
+        """Shunt admittance of the line in Siemens"""
+        return self.parameters._y_shunt * self._length
+
+    @property
+    def max_current(self) -> Optional[Q_[float]]:
+        """The maximum current loading of the line in A."""
+        # Do not add a setter. The user must know that if they change the max_current, it changes
+        # for all lines that share the parameters. It is better to set it on the parameters.
+        return self.parameters.max_current
+
+    @property
+    def with_shunt(self) -> bool:
+        return self.parameters.with_shunt
+
+    def _res_series_values_getter(self, warning: bool) -> tuple[ComplexArray, ComplexArray]:
         pot1, pot2 = self._res_potentials_getter(warning)  # V
         du_line = pot1 - pot2
-        z_line = self.parameters.z_line * self.length
-        i_line = np.linalg.inv(z_line.m_as("ohm")) @ du_line  # Zₗ x Iₗ = ΔU -> I = Zₗ⁻¹ x ΔU
+        i_line = np.linalg.inv(self.z_line.m_as("ohm")) @ du_line  # Zₗ x Iₗ = ΔU -> I = Zₗ⁻¹ x ΔU
         return du_line, i_line
 
-    def _res_series_currents_getter(self, warning: bool) -> np.ndarray:
+    def _res_series_currents_getter(self, warning: bool) -> ComplexArray:
         _, i_line = self._res_series_values_getter(warning)
         return i_line
 
     @property
-    @ureg_wraps("A", (None,), strict=False)
-    def res_series_currents(self) -> Q_[np.ndarray]:
+    @ureg_wraps("A", (None,))
+    def res_series_currents(self) -> Q_[ComplexArray]:
         """Get the current in the series elements of the line (A)."""
         return self._res_series_currents_getter(warning=True)
 
-    def _res_series_power_losses_getter(self, warning: bool) -> np.ndarray:
+    def _res_series_power_losses_getter(self, warning: bool) -> ComplexArray:
         du_line, i_line = self._res_series_values_getter(warning)
         return du_line * i_line.conj()  # Sₗ = ΔU.Iₗ*
 
     @property
-    @ureg_wraps("VA", (None,), strict=False)
-    def res_series_power_losses(self) -> Q_[np.ndarray]:
+    @ureg_wraps("VA", (None,))
+    def res_series_power_losses(self) -> Q_[ComplexArray]:
         """Get the power losses in the series elements of the line (VA)."""
         return self._res_series_power_losses_getter(warning=True)
 
-    def _res_shunt_values_getter(self, warning: bool) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-        assert self.parameters.with_shunt, "this method only works when there is a shunt"
-        y_shunt = self.parameters.y_shunt
+    def _res_shunt_values_getter(self, warning: bool) -> tuple[ComplexArray, ComplexArray, ComplexArray, ComplexArray]:
+        assert self.with_shunt, "This method only works when there is a shunt"
         assert self.ground is not None
         pot1, pot2 = self._res_potentials_getter(warning)
         vg = self.ground.res_potential.m_as("V")
-        y_shunt = (y_shunt * self.length).m_as("S")
+        y_shunt = self.y_shunt.m_as("S")
         yg = y_shunt.sum(axis=1)  # y_ig = Y_ia + Y_ib + Y_ic + Y_in for i in {a, b, c, n}
         i1_shunt = (y_shunt @ pot1 - yg * vg) / 2
         i2_shunt = (y_shunt @ pot2 - yg * vg) / 2
         return pot1, pot2, i1_shunt, i2_shunt
 
-    def _res_shunt_currents_getter(self, warning: bool) -> tuple[np.ndarray, np.ndarray]:
-        if not self.parameters.with_shunt:
-            zeros = np.zeros(len(self.phases), dtype=complex)
+    def _res_shunt_currents_getter(self, warning: bool) -> tuple[ComplexArray, ComplexArray]:
+        if not self.with_shunt:
+            zeros = np.zeros(len(self.phases), dtype=np.complex128)
             return zeros[:], zeros[:]
         _, _, cur1, cur2 = self._res_shunt_values_getter(warning)
         return cur1, cur2
 
     @property
-    @ureg_wraps(("A", "A"), (None,), strict=False)
-    def res_shunt_currents(self) -> tuple[Q_[np.ndarray], Q_[np.ndarray]]:
+    @ureg_wraps(("A", "A"), (None,))
+    def res_shunt_currents(self) -> tuple[Q_[ComplexArray], Q_[ComplexArray]]:
         """Get the currents in the shunt elements of the line (A)."""
         return self._res_shunt_currents_getter(warning=True)
 
-    def _res_shunt_power_losses_getter(self, warning: bool) -> np.ndarray:
-        if not self.parameters.with_shunt:
-            return np.zeros(len(self.phases), dtype=complex)
+    def _res_shunt_power_losses_getter(self, warning: bool) -> ComplexArray:
+        if not self.with_shunt:
+            return np.zeros(len(self.phases), dtype=np.complex128)
         pot1, pot2, cur1, cur2 = self._res_shunt_values_getter(warning)
         return pot1 * cur1.conj() + pot2 * cur2.conj()
 
     @property
-    @ureg_wraps("VA", (None,), strict=False)
-    def res_shunt_power_losses(self) -> Q_[np.ndarray]:
+    @ureg_wraps("VA", (None,))
+    def res_shunt_power_losses(self) -> Q_[ComplexArray]:
         """Get the power losses in the shunt elements of the line (VA)."""
         return self._res_shunt_power_losses_getter(warning=True)
 
-    def _res_power_losses_getter(self, warning: bool) -> np.ndarray:
+    def _res_power_losses_getter(self, warning: bool) -> ComplexArray:
         series_losses = self._res_series_power_losses_getter(warning)
         shunt_losses = self._res_shunt_power_losses_getter(warning=False)  # we warn on the previous line
         return series_losses + shunt_losses
 
     @property
-    @ureg_wraps("VA", (None,), strict=False)
-    def res_power_losses(self) -> Q_[np.ndarray]:
+    @ureg_wraps("VA", (None,))
+    def res_power_losses(self) -> Q_[ComplexArray]:
         """Get the power losses in the line (VA)."""
         return self._res_power_losses_getter(warning=True)
+
+    @property
+    def res_violated(self) -> Optional[bool]:
+        """Whether the line current exceeds the maximum current (loading > 100%).
+
+        Returns ``None`` if the maximum current is not set.
+        """
+        i_max = self.parameters._max_current
+        if i_max is None:
+            return None
+        currents1, currents2 = self._res_currents_getter(warning=True)
+        # True if any phase is overloaded
+        return float(np.max([abs(currents1), abs(currents2)])) > i_max
 
     #
     # Json Mixin interface
     #
-    def to_dict(self, include_geometry: bool = True) -> JsonDict:
+    def to_dict(self, *, _lf_only: bool = False) -> JsonDict:
         res = {
-            **super().to_dict(include_geometry=include_geometry),
+            **super().to_dict(_lf_only=_lf_only),
             "length": self._length,
             "params_id": self.parameters.id,
         }

@@ -1,9 +1,10 @@
 {
   "recommendations": [
     "charliermarsh.ruff",
+    "esbenp.prettier-vscode",
     "ms-python.black-formatter",
     "ms-python.python",
-    "ms-python.vscode-pylance"
+    "ms-python.vscode-pylance",
   ],
   "unwantedRecommendations": [
     "ms-python.flake8", // We use ruff

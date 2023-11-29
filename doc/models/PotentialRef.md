@@ -47,3 +47,12 @@ from roseau.load_flow.models import Bus, PotentialRef
 bus = Bus(id="bus", phases="abcn")
 p_ref = PotentialRef(id="pref", element=bus, phase="a")
 ```
+
+## API Reference
+
+```{eval-rst}
+.. autoclass:: roseau.load_flow.models.PotentialRef
+   :members:
+   :show-inheritance:
+   :no-index:
+```

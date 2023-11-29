@@ -1,6 +1,5 @@
 import logging
 from abc import ABC
-from collections.abc import Sequence
 from typing import Any, Literal, Optional
 
 import numpy as np
@@ -10,7 +9,7 @@ from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowE
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import Element
 from roseau.load_flow.models.loads.flexible_parameters import FlexibleParameter
-from roseau.load_flow.typing import Id, JsonDict
+from roseau.load_flow.typing import ComplexArray, ComplexArrayLike1D, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
 
 logger = logging.getLogger(__name__)
@@ -20,11 +19,8 @@ class AbstractLoad(Element, ABC):
     """An abstract class of an electric load.
 
     The subclasses of this class can be used to depict:
-        * star-connected loads using a `phases` constructor argument containing a `"n"`
-        * delta-connected loads using a `phases` constructor argument which doesn't contain `"n"`
-
-    See Also:
-        :doc:`Load documentation </models/Load/index>`
+        * star-connected loads using a `phases` constructor argument containing `"n"`
+        * delta-connected loads using a `phases` constructor argument not containing `"n"`
     """
 
     _power_load_class: type["PowerLoad"]
@@ -82,7 +78,7 @@ class AbstractLoad(Element, ABC):
             self._size = len(set(phases) - {"n"})
 
         # Results
-        self._res_currents: Optional[np.ndarray] = None
+        self._res_currents: Optional[ComplexArray] = None
 
     def __repr__(self) -> str:
         bus_id = self.bus.id if self.bus is not None else None
@@ -98,16 +94,16 @@ class AbstractLoad(Element, ABC):
         """The phases of the load voltages."""
         return calculate_voltage_phases(self.phases)
 
-    def _res_currents_getter(self, warning: bool) -> np.ndarray:
+    def _res_currents_getter(self, warning: bool) -> ComplexArray:
         return self._res_getter(value=self._res_currents, warning=warning)
 
     @property
-    @ureg_wraps("A", (None,), strict=False)
-    def res_currents(self) -> Q_[np.ndarray]:
+    @ureg_wraps("A", (None,))
+    def res_currents(self) -> Q_[ComplexArray]:
         """The load flow result of the load currents (A)."""
         return self._res_currents_getter(warning=True)
 
-    def _validate_value(self, value: Sequence[complex]) -> np.ndarray:
+    def _validate_value(self, value: ComplexArrayLike1D) -> ComplexArray:
         if len(value) != self._size:
             msg = f"Incorrect number of {self._type}s: {len(value)} instead of {self._size}"
             logger.error(msg)
@@ -119,36 +115,36 @@ class AbstractLoad(Element, ABC):
             msg = f"An impedance of the load {self.id!r} is null"
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Z_VALUE)
-        return np.asarray(value, dtype=complex)
+        return np.array(value, dtype=np.complex128)
 
-    def _res_potentials_getter(self, warning: bool) -> np.ndarray:
+    def _res_potentials_getter(self, warning: bool) -> ComplexArray:
         self._raise_disconnected_error()
         return self.bus._get_potentials_of(self.phases, warning)
 
     @property
-    @ureg_wraps("V", (None,), strict=False)
-    def res_potentials(self) -> Q_[np.ndarray]:
+    @ureg_wraps("V", (None,))
+    def res_potentials(self) -> Q_[ComplexArray]:
         """The load flow result of the load potentials (V)."""
         return self._res_potentials_getter(warning=True)
 
-    def _res_voltages_getter(self, warning: bool) -> np.ndarray:
+    def _res_voltages_getter(self, warning: bool) -> ComplexArray:
         potentials = self._res_potentials_getter(warning)
         return calculate_voltages(potentials, self.phases)
 
     @property
-    @ureg_wraps("V", (None,), strict=False)
-    def res_voltages(self) -> Q_[np.ndarray]:
+    @ureg_wraps("V", (None,))
+    def res_voltages(self) -> Q_[ComplexArray]:
         """The load flow result of the load voltages (V)."""
         return self._res_voltages_getter(warning=True)
 
-    def _res_powers_getter(self, warning: bool) -> np.ndarray:
+    def _res_powers_getter(self, warning: bool) -> ComplexArray:
         curs = self._res_currents_getter(warning)
         pots = self._res_potentials_getter(warning=False)  # we warn on the previous line
         return pots * curs.conj()
 
     @property
-    @ureg_wraps("VA", (None,), strict=False)
-    def res_powers(self) -> Q_[np.ndarray]:
+    @ureg_wraps("VA", (None,))
+    def res_powers(self) -> Q_[ComplexArray]:
         """The load flow result of the load powers (VA)."""
         return self._res_powers_getter(warning=True)
 
@@ -193,7 +189,7 @@ class AbstractLoad(Element, ABC):
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LOAD_TYPE)
 
     def results_from_dict(self, data: JsonDict) -> None:
-        self._res_currents = np.array([complex(i[0], i[1]) for i in data["currents"]], dtype=complex)
+        self._res_currents = np.array([complex(i[0], i[1]) for i in data["currents"]], dtype=np.complex128)
 
     def _results_to_dict(self, warning: bool) -> JsonDict:
         return {
@@ -204,11 +200,7 @@ class AbstractLoad(Element, ABC):
 
 
 class PowerLoad(AbstractLoad):
-    """A constant power load.
-
-    See Also:
-        :doc:`Power Load documentation </models/Load/PowerLoad>`
-    """
+    """A constant power load."""
 
     _type = "power"
 
@@ -217,7 +209,7 @@ class PowerLoad(AbstractLoad):
         id: Id,
         bus: Bus,
         *,
-        powers: Sequence[complex],
+        powers: ComplexArrayLike1D,
         phases: Optional[str] = None,
         flexible_params: Optional[list[FlexibleParameter]] = None,
         **kwargs: Any,
@@ -232,7 +224,8 @@ class PowerLoad(AbstractLoad):
                 The bus to connect the load to.
 
             powers:
-                List of power for each phase (VA).
+                An array-like of the powers for each phase component. Either complex values (VA)
+                or a :class:`Quantity <roseau.load_flow.units.Q_>` of complex values.
 
             phases:
                 The phases of the load. A string like ``"abc"`` or ``"an"`` etc. The order of the
@@ -261,7 +254,7 @@ class PowerLoad(AbstractLoad):
 
         self._flexible_params = flexible_params
         self.powers = powers
-        self._res_flexible_powers: Optional[np.ndarray] = None
+        self._res_flexible_powers: Optional[ComplexArray] = None
 
     @property
     def flexible_params(self) -> Optional[list[FlexibleParameter]]:
@@ -272,51 +265,59 @@ class PowerLoad(AbstractLoad):
         return self._flexible_params is not None
 
     @property
-    @ureg_wraps("VA", (None,), strict=False)
-    def powers(self) -> Q_[np.ndarray]:
+    @ureg_wraps("VA", (None,))
+    def powers(self) -> Q_[ComplexArray]:
         """The powers of the load (VA)."""
         return self._powers
 
     @powers.setter
-    @ureg_wraps(None, (None, "VA"), strict=False)
-    def powers(self, value: Sequence[complex]) -> None:
+    @ureg_wraps(None, (None, "VA"))
+    def powers(self, value: ComplexArrayLike1D) -> None:
         value = self._validate_value(value)
         if self.is_flexible:
             for power, fp in zip(value, self._flexible_params):
                 if fp.control_p.type == "constant" and fp.control_q.type == "constant":
                     continue  # No checks for this case
                 if abs(power) > fp.s_max.m_as("VA"):
-                    msg = f"The power is greater than the parameter s_max for flexible load {id!r}"
+                    msg = f"The power is greater than the parameter s_max for flexible load {self.id!r}"
+                    logger.error(msg)
+                    raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_S_VALUE)
+                if power.imag < fp.q_min.m_as("VAr"):
+                    msg = f"The reactive power is lesser than the parameter q_min for flexible load {id!r}"
+                    logger.error(msg)
+                    raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_S_VALUE)
+                if power.imag > fp.q_max.m_as("VAr"):
+                    msg = f"The reactive power is greater than the parameter q_max for flexible load {id!r}"
                     logger.error(msg)
                     raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_S_VALUE)
                 if fp.control_p.type == "p_max_u_production" and power.real > 0:
-                    msg = f"There is a production control but a positive power for flexible load {id!r}"
+                    msg = f"There is a production control but a positive power for flexible load {self.id!r}"
                     logger.error(msg)
                     raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_S_VALUE)
                 if fp.control_p.type == "p_max_u_consumption" and power.real < 0:
-                    msg = f"There is a consumption control but a negative power for flexible load {id!r}"
+                    msg = f"There is a consumption control but a negative power for flexible load {self.id!r}"
                     logger.error(msg)
                     raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_S_VALUE)
                 if fp.control_p.type != "constant" and power.real == 0:
-                    msg = f"There is a P control but a null active power for flexible load {id!r}"
+                    msg = f"There is a P control but a null active power for flexible load {self.id!r}"
                     logger.error(msg)
                     raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_S_VALUE)
         self._powers = value
         self._invalidate_network_results()
 
-    def _res_flexible_powers_getter(self, warning: bool) -> np.ndarray:
+    def _res_flexible_powers_getter(self, warning: bool) -> ComplexArray:
         return self._res_getter(value=self._res_flexible_powers, warning=warning)
 
     @property
-    @ureg_wraps("VA", (None,), strict=False)
-    def res_flexible_powers(self) -> Q_[np.ndarray]:
+    @ureg_wraps("VA", (None,))
+    def res_flexible_powers(self) -> Q_[ComplexArray]:
         """The load flow result of the load flexible powers (VA)."""
         return self._res_flexible_powers_getter(warning=True)
 
     #
     # Json Mixin interface
     #
-    def to_dict(self, include_geometry: bool = True) -> JsonDict:
+    def to_dict(self, *, _lf_only: bool = False) -> JsonDict:
         self._raise_disconnected_error()
         res = {
             "id": self.id,
@@ -331,7 +332,7 @@ class PowerLoad(AbstractLoad):
     def results_from_dict(self, data: JsonDict) -> None:
         super().results_from_dict(data=data)
         if self.is_flexible:
-            self._res_flexible_powers = np.array([complex(p[0], p[1]) for p in data["powers"]], dtype=complex)
+            self._res_flexible_powers = np.array([complex(p[0], p[1]) for p in data["powers"]], dtype=np.complex128)
 
     def _results_to_dict(self, warning: bool) -> JsonDict:
         if self.is_flexible:
@@ -344,16 +345,12 @@ class PowerLoad(AbstractLoad):
 
 
 class CurrentLoad(AbstractLoad):
-    """A constant current load.
-
-    See Also:
-        :doc:`Current Load documentation </models/Load/CurrentLoad>`
-    """
+    """A constant current load."""
 
     _type = "current"
 
     def __init__(
-        self, id: Id, bus: Bus, *, currents: Sequence[complex], phases: Optional[str] = None, **kwargs: Any
+        self, id: Id, bus: Bus, *, currents: ComplexArrayLike1D, phases: Optional[str] = None, **kwargs: Any
     ) -> None:
         """CurrentLoad constructor.
 
@@ -365,7 +362,8 @@ class CurrentLoad(AbstractLoad):
                 The bus to connect the load to.
 
             currents:
-                List of currents for each phase (Amps).
+                An array-like of the currents for each phase component. Either complex values (A)
+                or a :class:`Quantity <roseau.load_flow.units.Q_>` of complex values.
 
             phases:
                 The phases of the load. A string like ``"abc"`` or ``"an"`` etc. The order of the
@@ -377,18 +375,18 @@ class CurrentLoad(AbstractLoad):
         self.currents = currents  # handles size checks and unit conversion
 
     @property
-    @ureg_wraps("A", (None,), strict=False)
-    def currents(self) -> Q_[np.ndarray]:
+    @ureg_wraps("A", (None,))
+    def currents(self) -> Q_[ComplexArray]:
         """The currents of the load (Amps)."""
         return self._currents
 
     @currents.setter
-    @ureg_wraps(None, (None, "A"), strict=False)
-    def currents(self, value: Sequence[complex]) -> None:
+    @ureg_wraps(None, (None, "A"))
+    def currents(self, value: ComplexArrayLike1D) -> None:
         self._currents = self._validate_value(value)
         self._invalidate_network_results()
 
-    def to_dict(self, include_geometry: bool = True) -> JsonDict:
+    def to_dict(self, *, _lf_only: bool = False) -> JsonDict:
         self._raise_disconnected_error()
         return {
             "id": self.id,
@@ -399,16 +397,12 @@ class CurrentLoad(AbstractLoad):
 
 
 class ImpedanceLoad(AbstractLoad):
-    """A constant impedance load.
-
-    See Also:
-        :doc:`Impedance Load documentation </models/Load/ImpedanceLoad>`
-    """
+    """A constant impedance load."""
 
     _type = "impedance"
 
     def __init__(
-        self, id: Id, bus: Bus, *, impedances: Sequence[complex], phases: Optional[str] = None, **kwargs: Any
+        self, id: Id, bus: Bus, *, impedances: ComplexArrayLike1D, phases: Optional[str] = None, **kwargs: Any
     ) -> None:
         """ImpedanceLoad constructor.
 
@@ -420,7 +414,8 @@ class ImpedanceLoad(AbstractLoad):
                 The bus to connect the load to.
 
             impedances:
-                List of impedances for each phase (Ohms).
+                An array-like of the impedances for each phase component. Either complex values
+                (Ohms) or a :class:`Quantity <roseau.load_flow.units.Q_>` of complex values.
 
             phases:
                 The phases of the load. A string like ``"abc"`` or ``"an"`` etc. The order of the
@@ -432,18 +427,18 @@ class ImpedanceLoad(AbstractLoad):
         self.impedances = impedances
 
     @property
-    @ureg_wraps("ohm", (None,), strict=False)
-    def impedances(self) -> Q_[np.ndarray]:
+    @ureg_wraps("ohm", (None,))
+    def impedances(self) -> Q_[ComplexArray]:
         """The impedances of the load (Ohms)."""
         return self._impedances
 
     @impedances.setter
-    @ureg_wraps(None, (None, "ohm"), strict=False)
-    def impedances(self, impedances: Sequence[complex]) -> None:
+    @ureg_wraps(None, (None, "ohm"))
+    def impedances(self, impedances: ComplexArrayLike1D) -> None:
         self._impedances = self._validate_value(impedances)
         self._invalidate_network_results()
 
-    def to_dict(self, include_geometry: bool = True) -> JsonDict:
+    def to_dict(self, *, _lf_only: bool = False) -> JsonDict:
         self._raise_disconnected_error()
         return {
             "id": self.id,

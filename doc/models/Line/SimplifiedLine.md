@@ -74,6 +74,27 @@ load = PowerLoad(
     id="load", bus=bus2, powers=Q_(np.array([5.0, 2.5, 0]) * (1 - 0.3j), "kVA")
 )
 
+# The impedance matrix (in Ohm) can be accessed from the line instance
+line.z_line
+# array(
+#     [[0.35+0.j, 0.  +0.j, 0.  +0.j, 0.  +0.j],
+#      [0.  +0.j, 0.35+0.j, 0.  +0.j, 0.  +0.j],
+#      [0.  +0.j, 0.  +0.j, 0.35+0.j, 0.  +0.j],
+#      [0.  +0.j, 0.  +0.j, 0.  +0.j, 0.35+0.j]]
+# ) <Unit('ohm')>
+
+# For a simplified line, the property `with_shunt` is False and the `y_shunt` matrix is zero
+line.with_shunt
+# False
+
+line.y_shunt
+# array(
+#     [[0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
+#      [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
+#      [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
+#      [0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j]]
+# ) <Unit('siemens')>
+
 # Create a network and solve a load flow
 en = ElectricalNetwork.from_element(bus1)
 auth = ("username", "password")

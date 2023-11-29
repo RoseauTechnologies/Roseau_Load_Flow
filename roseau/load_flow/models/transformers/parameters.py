@@ -2,6 +2,7 @@ import logging
 import re
 import textwrap
 from importlib import resources
+from itertools import cycle
 from pathlib import Path
 from typing import NoReturn, Optional, Union
 
@@ -14,17 +15,13 @@ from typing_extensions import Self
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.typing import Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
-from roseau.load_flow.utils import CatalogueMixin, Identifiable, JsonMixin, console
+from roseau.load_flow.utils import CatalogueMixin, Identifiable, JsonMixin, console, palette
 
 logger = logging.getLogger(__name__)
 
 
 class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
-    """A class to store the parameters of the transformers.
-
-    See Also:
-        :ref:`Transformer parameters documentation <models-transformer_parameters>`
-    """
+    """Parameters that define electrical models of transformers."""
 
     _EXTRACT_WINDINGS_RE = regex.compile(
         "(?(DEFINE)(?P<y_winding>yn?)(?P<d_winding>d)(?P<z_winding>zn?)(?P<p_set_1>[06])"
@@ -40,18 +37,19 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
     )
     """The pattern to extract the winding of the primary and of the secondary of the transformer."""
 
-    @ureg_wraps(None, (None, None, None, "V", "V", "VA", "W", "", "W", ""), strict=False)
+    @ureg_wraps(None, (None, None, None, "V", "V", "VA", "W", "", "W", "", "VA"))
     def __init__(
         self,
         id: Id,
         type: str,
-        uhv: float,
-        ulv: float,
-        sn: float,
-        p0: float,
-        i0: float,
-        psc: float,
-        vsc: float,
+        uhv: Union[float, Q_[float]],
+        ulv: Union[float, Q_[float]],
+        sn: Union[float, Q_[float]],
+        p0: Union[float, Q_[float]],
+        i0: Union[float, Q_[float]],
+        psc: Union[float, Q_[float]],
+        vsc: Union[float, Q_[float]],
+        max_power: Optional[Union[float, Q_[float]]] = None,
     ) -> None:
         """TransformerParameters constructor.
 
@@ -84,22 +82,11 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
 
             vsc:
                 Voltages on LV side during short-circuit test (%)
+
+            max_power:
+                The maximum power loading of the transformer (VA). It is not used in the load flow.
         """
         super().__init__(id)
-        self._sn = sn
-        self._uhv = uhv
-        self._ulv = ulv
-        self._i0 = i0
-        self._p0 = p0
-        self._psc = psc
-        self._vsc = vsc
-        self.type = type
-        if type in ("single", "center"):
-            self.winding1 = None
-            self.winding2 = None
-            self.phase_displacement = None
-        else:
-            self.winding1, self.winding2, self.phase_displacement = self.extract_windings(string=type)
 
         # Check
         if uhv < ulv:
@@ -136,6 +123,22 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
                 f"imaginary part will be null."
             )
 
+        self._sn = sn
+        self._uhv = uhv
+        self._ulv = ulv
+        self._i0 = i0
+        self._p0 = p0
+        self._psc = psc
+        self._vsc = vsc
+        self.type = type
+        if type in ("single", "center"):
+            self.winding1 = None
+            self.winding2 = None
+            self.phase_displacement = None
+        else:
+            self.winding1, self.winding2, self.phase_displacement = self.extract_windings(string=type)
+        self.max_power = max_power
+
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, TransformerParameters):
             return NotImplemented
@@ -153,48 +156,58 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             )
 
     @property
-    @ureg_wraps("V", (None,), strict=False)
+    @ureg_wraps("V", (None,))
     def uhv(self) -> Q_[float]:
         """Phase-to-phase nominal voltages of the high voltages side (V)"""
         return self._uhv
 
     @property
-    @ureg_wraps("V", (None,), strict=False)
+    @ureg_wraps("V", (None,))
     def ulv(self) -> Q_[float]:
         """Phase-to-phase nominal voltages of the low voltages side (V)"""
         return self._ulv
 
     @property
-    @ureg_wraps("VA", (None,), strict=False)
+    @ureg_wraps("VA", (None,))
     def sn(self) -> Q_[float]:
         """The nominal power of the transformer (VA)"""
         return self._sn
 
     @property
-    @ureg_wraps("W", (None,), strict=False)
+    @ureg_wraps("W", (None,))
     def p0(self) -> Q_[float]:
         """Losses during off-load test (W)"""
         return self._p0
 
     @property
-    @ureg_wraps("", (None,), strict=False)
+    @ureg_wraps("", (None,))
     def i0(self) -> Q_[float]:
         """Current during off-load test (%)"""
         return self._i0
 
     @property
-    @ureg_wraps("W", (None,), strict=False)
+    @ureg_wraps("W", (None,))
     def psc(self) -> Q_[float]:
         """Losses during short-circuit test (W)"""
         return self._psc
 
     @property
-    @ureg_wraps("", (None,), strict=False)
+    @ureg_wraps("", (None,))
     def vsc(self) -> Q_[float]:
         """Voltages on LV side during short-circuit test (%)"""
         return self._vsc
 
-    @ureg_wraps(("ohm", "S", "", None), (None,), strict=False)
+    @property
+    def max_power(self) -> Optional[Q_[float]]:
+        """The maximum power loading of the transformer (VA) if it is set."""
+        return None if self._max_power is None else Q_(self._max_power, "VA")
+
+    @max_power.setter
+    @ureg_wraps(None, (None, "VA"))
+    def max_power(self, value: Optional[Union[float, Q_[float]]]) -> None:
+        self._max_power = value
+
+    @ureg_wraps(("ohm", "S", "", None), (None,))
     def to_zyk(self) -> tuple[Q_[complex], Q_[complex], Q_[float], float]:
         """Compute the transformer parameters ``z2``, ``ym``, ``k`` and ``orientation`` mandatory
         for some models.
@@ -261,10 +274,11 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             i0=data["i0"],  # Current during off-load test (%)
             psc=data["psc"],  # Losses during short-circuit test (W)
             vsc=data["vsc"],  # Voltages on LV side during short-circuit test (%)
+            max_power=data.get("max_power"),  # Maximum power loading (VA)
         )
 
-    def to_dict(self, include_geometry: bool = True) -> JsonDict:
-        return {
+    def to_dict(self, *, _lf_only: bool = False) -> JsonDict:
+        res = {
             "id": self.id,
             "sn": self._sn,
             "uhv": self._uhv,
@@ -275,6 +289,9 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             "vsc": self._vsc,
             "type": self.type,
         }
+        if not _lf_only and self.max_power is not None:
+            res["max_power"] = self.max_power.magnitude
+        return res
 
     def _results_to_dict(self, warning: bool) -> NoReturn:
         msg = f"The {type(self).__name__} has no results to export."
@@ -298,7 +315,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         return pd.read_csv(cls.catalogue_path() / "Catalogue.csv")
 
     @classmethod
-    @ureg_wraps(None, (None, None, None, None, None, None, "VA", "V", "V"), strict=False)
+    @ureg_wraps(None, (None, None, None, None, None, None, "VA", "V", "V"))
     def from_catalogue(
         cls,
         id: Optional[Union[str, re.Pattern[str]]] = None,
@@ -443,7 +460,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         return cls.from_json(path=path)
 
     @classmethod
-    @ureg_wraps(None, (None, None, None, None, None, None, "VA", "V", "V"), strict=False)
+    @ureg_wraps(None, (None, None, None, None, None, None, "VA", "V", "V"))
     def print_catalogue(
         cls,
         id: Optional[Union[str, re.Pattern[str]]] = None,
@@ -487,14 +504,14 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
 
         # Start creating a table to display the results
         table = Table(title="Available Transformer Parameters")
-        table.add_column("Id")
-        table.add_column("Manufacturer", style="color(1)", header_style="color(1)")
-        table.add_column("Product range", style="color(2)", header_style="color(2)")
-        table.add_column("Efficiency", style="color(3)", header_style="color(3)")
-        table.add_column("Type", style="color(4)", header_style="color(4)")
-        table.add_column("Nominal power (kVA)", justify="right", style="color(5)", header_style="color(5)")
-        table.add_column("High voltage (kV)", justify="right", style="color(6)", header_style="color(6)")
-        table.add_column("Low voltage (kV)", justify="right", style="color(9)", header_style="color(9)")
+        table.add_column("Id", overflow="fold")
+        table.add_column("Manufacturer", overflow="fold")
+        table.add_column("Product range", overflow="fold")
+        table.add_column("Efficiency", overflow="fold")
+        table.add_column("Type", overflow="fold")
+        table.add_column("Nominal power (kVA)", justify="right", overflow="fold")
+        table.add_column("High voltage (kV)", justify="right", overflow="fold")
+        table.add_column("Low voltage (kV)", justify="right", overflow="fold")
         empty_table = True
 
         # Match on the manufacturer, range, efficiency and type
@@ -525,6 +542,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
 
         # Iterate over the transformers
         selected_index = catalogue_mask[catalogue_mask].index
+        cycler = cycle(palette)
         for idx in selected_index:
             empty_table = False
             table.add_row(
@@ -536,6 +554,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
                 f"{catalogue_data.at[idx, 'sn']/1000:.1f}",  # VA to kVA
                 f"{catalogue_data.at[idx, 'uhv']/1000:.1f}",  # V to kV
                 f"{catalogue_data.at[idx, 'ulv']/1000:.1f}",  # V to kV
+                style=next(cycler),
             )
 
         # Handle the case of an empty table

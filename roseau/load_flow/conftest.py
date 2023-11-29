@@ -4,6 +4,8 @@ import numpy as np
 import pytest
 from pandas.testing import assert_frame_equal
 
+from roseau.load_flow.utils import console
+
 # Variable to test the network
 HERE = Path(__file__).parent.expanduser().absolute()
 TEST_ALL_NETWORKS_DATA_FOLDER = HERE / "tests" / "data" / "networks"
@@ -76,6 +78,11 @@ def some_network_result(some_network_folder, network_load_data_name) -> Path:
 @pytest.fixture(params=TEST_DGS_NETWORKS, ids=TEST_DGS_NETWORKS_IDS)
 def dgs_network_path(request) -> Path:
     return request.param
+
+
+@pytest.fixture(autouse=True, scope="session")
+def _set_console_width() -> None:
+    console.width = 210
 
 
 #

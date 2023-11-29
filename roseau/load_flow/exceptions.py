@@ -24,6 +24,7 @@ class RoseauLoadFlowExceptionCode(Enum):
     BAD_BUS_ID = auto()
     BAD_BUS_TYPE = auto()
     BAD_POTENTIALS_SIZE = auto()
+    BAD_VOLTAGES = auto()
     BAD_VOLTAGES_SIZE = auto()
     BAD_SHORT_CIRCUIT = auto()
 
@@ -54,7 +55,7 @@ class RoseauLoadFlowExceptionCode(Enum):
     BAD_PROJECTION_VALUE = auto()
 
     # Flexible parameter
-    BAD_SMAX_VALUE = auto()
+    BAD_FLEXIBLE_PARAMETER_VALUE = auto()
 
     # Load
     BAD_LOAD_ID = auto()
@@ -106,6 +107,9 @@ class RoseauLoadFlowExceptionCode(Enum):
     CATALOGUE_MISSING = auto()
     CATALOGUE_NOT_FOUND = auto()
     CATALOGUE_SEVERAL_FOUND = auto()
+
+    # Import Error
+    IMPORT_ERROR = auto()
 
     @classmethod
     def package_name(cls) -> str:

@@ -5,6 +5,7 @@ import pytest
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models import Bus, Ground, Line, LineParameters
+from roseau.load_flow.units import Q_
 from roseau.load_flow.utils import ConductorType, InsulatorType, LineType
 
 
@@ -313,17 +314,19 @@ def test_sym():
 
 
 def test_from_name_lv():
-    with pytest.raises(RoseauLoadFlowException) as e:
+    with pytest.raises(RoseauLoadFlowException) as e, pytest.warns(FutureWarning):
         LineParameters.from_name_lv("totoS_Al_150")
     assert "The line type name does not follow the syntax rule." in e.value.msg
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_TYPE_NAME_SYNTAX
 
-    lp = LineParameters.from_name_lv("S_AL_150")
+    with pytest.warns(FutureWarning):
+        lp = LineParameters.from_name_lv("S_AL_150")
     assert lp.z_line.shape == (4, 4)
     assert lp.y_shunt.shape == (4, 4)
     assert (lp.z_line.real >= 0).all().all()
 
-    lp2 = LineParameters.from_name_lv("U_AL_150")
+    with pytest.warns(FutureWarning):
+        lp2 = LineParameters.from_name_lv("U_AL_150")
     npt.assert_allclose(lp2.z_line.m_as("ohm/km"), lp.z_line.m_as("ohm/km"))
     npt.assert_allclose(lp2.y_shunt.m_as("S/km"), lp.y_shunt.m_as("S/km"), rtol=1e-4)
 
@@ -345,3 +348,20 @@ def test_from_name_mv():
     lp = LineParameters.from_name_mv("U_AL_150")
     npt.assert_allclose(lp.z_line.m_as("ohm/km"), z_line_expected)
     npt.assert_allclose(lp.y_shunt.m_as("S/km"), y_shunt_expected, rtol=1e-4)
+
+
+def test_max_current():
+    lp = LineParameters("test", z_line=np.eye(3))
+    assert lp.max_current is None
+
+    lp = LineParameters("test", z_line=np.eye(3), max_current=100)
+    assert lp.max_current == Q_(100, "A")
+
+    lp.max_current = 200
+    assert lp.max_current == Q_(200, "A")
+
+    lp.max_current = None
+    assert lp.max_current is None
+
+    lp.max_current = Q_(3, "kA")
+    assert lp.max_current == Q_(3_000, "A")

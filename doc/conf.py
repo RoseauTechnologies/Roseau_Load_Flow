@@ -22,8 +22,8 @@ copyright = "2022--2023, Roseau Technologies SAS"
 # author = "Benoît Vinot"
 
 # The full version, including alpha/beta/rc tags
-version = "0.5"
-release = "0.5.0"
+version = "0.6"
+release = "0.6.0"
 
 # -- General configuration ---------------------------------------------------
 
@@ -68,6 +68,7 @@ autodoc_default_options = {"ignore-module-all": False}
 autodoc_member_order = "bysource"
 autodoc_typehints = "signature"
 autodoc_inherit_docstrings = True
+autoclass_content = "both"  # show both class and __init__ docstrings
 
 # -- Options for HTML output -------------------------------------------------
 
@@ -129,11 +130,16 @@ intersphinx_mapping = {
     "pint": ("https://pint.readthedocs.io/en/stable/", None),
     "typing_extensions": ("https://typing-extensions.readthedocs.io/en/stable/", None),
     "rich": ("https://rich.readthedocs.io/en/stable/", None),
+    "matplotlib": ("https://matplotlib.org/stable/", None),
+    "networkx": ("https://networkx.org/documentation/stable/", None),
 }
 
 # -- Options for sphinx_copybutton -------------------------------------------
 copybutton_exclude = ".linenos, .gp, .go"
 copybutton_copy_empty_lines = False
+# https://sphinx-copybutton.readthedocs.io/en/latest/use.html#strip-and-configure-input-prompts-for-code-cells
+copybutton_prompt_text = r">>> |\.\.\. |\$ |C:> |In \[\d*\]: | {2,5}\.\.\.: | {5,8}: "
+copybutton_prompt_is_regexp = True
 
 # -- Options for sphinxcontrib.googleanalytics -------------------------------
 googleanalytics_id = "G-Y9QSN78RFV"

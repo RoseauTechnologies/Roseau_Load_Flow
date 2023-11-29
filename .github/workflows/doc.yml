@@ -29,7 +29,7 @@ jobs:
           sudo apt update
           sudo apt -yq --no-install-suggests --no-install-recommends install pandoc make
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           lfs: false
 
@@ -57,20 +57,20 @@ jobs:
       - name: Install poetry
         run: pipx install poetry
 
-      - name: Set up Python 3.11
+      - name: Set up Python 3.12
         uses: actions/setup-python@v4
         with:
-          python-version: "3.11"
+          python-version: "3.12"
           cache: "poetry"
 
       - name: Install dependencies
         run: |
-          poetry env use "3.11"
+          poetry env use "3.12"
           poetry install --only doc
 
       - name: Build with Sphinx
         run: |
-          poetry env use "3.11"
+          poetry env use "3.12"
           cd doc && make html
         env:
           SPHINXBUILD: poetry run sphinx-build

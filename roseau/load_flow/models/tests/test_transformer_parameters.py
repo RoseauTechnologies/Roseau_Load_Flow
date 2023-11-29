@@ -1,5 +1,6 @@
+import numbers
+
 import numpy as np
-import pandas as pd
 import pytest
 from pint import DimensionalityError
 
@@ -350,9 +351,12 @@ def test_catalogue_data():
         assert np.isclose(tp.psc.m_as("W"), catalogue_data.at[tp.id, "psc"])
         assert np.isclose(tp.vsc.m_as(""), catalogue_data.at[tp.id, "vsc"])
 
-        # Check that the transformer can be used
-        res = tp.to_zyk()
-        assert all(pd.notna(x) for x in res)
+        # Check that the parameters are valid
+        z, y, k, orientation = tp.to_zyk()
+        assert isinstance(z.m_as("ohm"), numbers.Number)
+        assert isinstance(y.m_as("S"), numbers.Number)
+        assert isinstance(k.m_as(""), numbers.Number)
+        assert orientation in (-1.0, 1.0)
 
     # At the end of the process, the found column must be full of True
     assert catalogue_data["found"].all(), error_message
@@ -408,18 +412,18 @@ def test_print_catalogue():
     # Print the entire catalogue
     with console.capture() as capture:
         TransformerParameters.print_catalogue()
-    assert len(capture.get().split("\n")) == 138
+    assert len(capture.get().split("\n")) == 136
 
     # Filter on a single attribute
     for field_name, value, expected_lines in (
-        ("id", "SE_Minera_A0Ak_50kVA", 9),
-        ("manufacturer", "SE", 124),
-        ("range", r"min.*", 64),
-        ("efficiency", "c0", 37),
-        ("type", "dy", 134),
-        ("sn", Q_(160, "kVA"), 18),
-        ("uhv", Q_(20, "kV"), 138),
-        ("ulv", 400, 138),
+        ("id", "SE_Minera_A0Ak_50kVA", 7),
+        ("manufacturer", "SE", 122),
+        ("range", r"min.*", 62),
+        ("efficiency", "c0", 35),
+        ("type", "dy", 132),
+        ("sn", Q_(160, "kVA"), 16),
+        ("uhv", Q_(20, "kV"), 136),
+        ("ulv", 400, 136),
     ):
         with console.capture() as capture:
             TransformerParameters.print_catalogue(**{field_name: value})
@@ -427,13 +431,13 @@ def test_print_catalogue():
 
     # Filter on two attributes
     for field_name, value, expected_lines in (
-        ("id", "SE_Minera_A0Ak_50kVA", 9),
-        ("range", "minera", 64),
-        ("efficiency", "c0", 37),
-        ("type", r"^d.*11$", 120),
-        ("sn", Q_(160, "kVA"), 17),
-        ("uhv", Q_(20, "kV"), 124),
-        ("ulv", 400, 124),
+        ("id", "SE_Minera_A0Ak_50kVA", 7),
+        ("range", "minera", 62),
+        ("efficiency", "c0", 35),
+        ("type", r"^d.*11$", 118),
+        ("sn", Q_(160, "kVA"), 15),
+        ("uhv", Q_(20, "kV"), 122),
+        ("ulv", 400, 122),
     ):
         with console.capture() as capture:
             TransformerParameters.print_catalogue(**{field_name: value}, manufacturer="se")
@@ -441,12 +445,12 @@ def test_print_catalogue():
 
     # Filter on three attributes
     for field_name, value, expected_lines in (
-        ("id", "se_VEGETA_C0BK_3150kva", 9),
-        ("efficiency", r"c0[abc]k", 23),
-        ("type", "dyn", 38),
-        ("sn", Q_(160, "kVA"), 10),
-        ("uhv", Q_(20, "kV"), 38),
-        ("ulv", 400, 38),
+        ("id", "se_VEGETA_C0BK_3150kva", 7),
+        ("efficiency", r"c0[abc]k", 21),
+        ("type", "dyn", 36),
+        ("sn", Q_(160, "kVA"), 8),
+        ("uhv", Q_(20, "kV"), 36),
+        ("ulv", 400, 36),
     ):
         with console.capture() as capture:
             TransformerParameters.print_catalogue(**{field_name: value}, manufacturer="se", range=r"^vegeta$")
@@ -456,3 +460,30 @@ def test_print_catalogue():
     with console.capture() as capture:
         TransformerParameters.print_catalogue(ulv=250)
     assert len(capture.get().split("\n")) == 2
+
+
+def test_max_power():
+    kwds = {
+        "type": "yzn11",
+        "psc": 1350.0,
+        "p0": 145.0,
+        "i0": 1.8 / 100,
+        "ulv": 400,
+        "uhv": 20000,
+        "sn": 50 * 1e3,
+        "vsc": 4 / 100,
+    }
+    tp = TransformerParameters("test", **kwds)
+    assert tp.max_power is None
+
+    tp = TransformerParameters("test", **kwds, max_power=60_000)
+    assert tp.max_power == Q_(60_000, "VA")
+
+    tp.max_power = 55_000
+    assert tp.max_power == Q_(55_000, "VA")
+
+    tp.max_power = None
+    assert tp.max_power is None
+
+    tp.max_power = Q_(65, "kVA")
+    assert tp.max_power == Q_(65_000, "VA")

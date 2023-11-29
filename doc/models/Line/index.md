@@ -8,8 +8,8 @@ $\underline{Y}$.
 
 ## Matrices definition
 
-Before diving into the different line models, lets define the series impedance matrix $Z$, and the
-shunt admittance matrix $Y$ used to model the lines.
+Before diving into the different line models, lets define the series impedance matrix $\underline{Z}$, and the
+shunt admittance matrix $\underline{Y}$ used to model the lines.
 
 ### Series impedance matrix
 
@@ -158,6 +158,11 @@ shunt_line_parameters = LineParameters(
 )
 ```
 
+```{tip}
+The `Line` instance itself has the `z_line` and `y_shunt` properties. They retrieve the line impedance in $\Omega$
+and the line shunt admittance in Siemens (taking into account the length of the line).
+```
+
 There are several alternative constructors for `LineParameters` objects. The description of them can be found in the
 dedicated [Line parameters page](Parameters.md).
 
@@ -174,4 +179,17 @@ caption: Lines
 Parameters
 ShuntLine
 SimplifiedLine
+```
+
+## API Reference
+
+```{eval-rst}
+.. autoclass:: roseau.load_flow.models.LineParameters
+   :members:
+   :show-inheritance:
+   :no-index:
+.. autoclass:: roseau.load_flow.models.Line
+   :members:
+   :show-inheritance:
+   :no-index:
 ```

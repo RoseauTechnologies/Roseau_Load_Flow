@@ -68,11 +68,32 @@ The following load models are available in _Roseau Load Flow_:
 
 ```{toctree}
 ---
-maxdepth: 2
+maxdepth: 3
 caption: Loads
 ---
 ImpedanceLoad
 CurrentLoad
 PowerLoad
-FlexibleLoad
+FlexibleLoad/index
+```
+
+## API Reference
+
+```{eval-rst}
+.. autoclass:: roseau.load_flow.models.AbstractLoad
+   :members:
+   :show-inheritance:
+   :no-index:
+.. autoclass:: roseau.load_flow.models.ImpedanceLoad
+   :members:
+   :show-inheritance:
+   :no-index:
+.. autoclass:: roseau.load_flow.models.CurrentLoad
+    :members:
+    :show-inheritance:
+    :no-index:
+.. autoclass:: roseau.load_flow.models.PowerLoad
+    :members:
+    :show-inheritance:
+    :no-index:
 ```

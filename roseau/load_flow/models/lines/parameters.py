@@ -1,14 +1,14 @@
 import logging
 import re
-from typing import NoReturn, Optional
+from typing import NoReturn, Optional, Union
 
 import numpy as np
 import numpy.linalg as nplin
 import pandas as pd
-from typing_extensions import Self
+from typing_extensions import Self, deprecated
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
-from roseau.load_flow.typing import Id, JsonDict
+from roseau.load_flow.typing import ComplexArray, ComplexArrayLike2D, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow.utils import (
     CX,
@@ -30,11 +30,7 @@ logger = logging.getLogger(__name__)
 
 
 class LineParameters(Identifiable, JsonMixin):
-    """A class to store the line parameters of lines
-
-    See Also:
-        :ref:`Line parameters documentation <models-line_parameters>`
-    """
+    """Parameters that define electrical models of lines."""
 
     _type_re = "|".join("|".join(x) for x in LineType.CODES.values())
     _material_re = "|".join(x.code() for x in ConductorType)
@@ -43,8 +39,14 @@ class LineParameters(Identifiable, JsonMixin):
         rf"^({_type_re})_({_material_re})_{_section_re}$", flags=re.IGNORECASE
     )
 
-    @ureg_wraps(None, (None, None, "ohm/km", "S/km"), strict=False)
-    def __init__(self, id: Id, z_line: np.ndarray, y_shunt: Optional[np.ndarray] = None) -> None:
+    @ureg_wraps(None, (None, None, "ohm/km", "S/km", "A"))
+    def __init__(
+        self,
+        id: Id,
+        z_line: ComplexArrayLike2D,
+        y_shunt: Optional[ComplexArrayLike2D] = None,
+        max_current: Optional[float] = None,
+    ) -> None:
         """LineParameters constructor.
 
         Args:
@@ -56,15 +58,19 @@ class LineParameters(Identifiable, JsonMixin):
 
             y_shunt:
                 The Y matrix of the line (Siemens/km). This field is optional if the line has no shunt part.
+
+            max_current:
+                An optional maximum current loading of the line (A). It is not used in the load flow.
         """
         super().__init__(id)
-        self._z_line = np.asarray(z_line, dtype=complex)
+        self._z_line = np.array(z_line, dtype=np.complex128)
         if y_shunt is None:
             self._with_shunt = False
-            self._y_shunt = np.zeros_like(z_line, dtype=complex)
+            self._y_shunt = np.zeros_like(self._z_line, dtype=np.complex128)
         else:
             self._with_shunt = not np.allclose(y_shunt, 0)
-            self._y_shunt = np.asarray(y_shunt, dtype=complex)
+            self._y_shunt = np.array(y_shunt, dtype=np.complex128)
+        self.max_current = max_current
         self._check_matrix()
 
     def __eq__(self, other: object) -> bool:
@@ -86,34 +92,43 @@ class LineParameters(Identifiable, JsonMixin):
         )
 
     @property
-    @ureg_wraps("ohm/km", (None,), strict=False)
-    def z_line(self) -> Q_[np.ndarray]:
+    @ureg_wraps("ohm/km", (None,))
+    def z_line(self) -> Q_[ComplexArray]:
         return self._z_line
 
     @property
-    @ureg_wraps("S/km", (None,), strict=False)
-    def y_shunt(self) -> Q_[np.ndarray]:
+    @ureg_wraps("S/km", (None,))
+    def y_shunt(self) -> Q_[ComplexArray]:
         return self._y_shunt
 
     @property
     def with_shunt(self) -> bool:
         return self._with_shunt
 
+    @property
+    def max_current(self) -> Optional[Q_[float]]:
+        """The maximum current loading of the line (A) if it is set."""
+        return None if self._max_current is None else Q_(self._max_current, "A")
+
+    @max_current.setter
+    @ureg_wraps(None, (None, "A"))
+    def max_current(self, value: Optional[Union[float, Q_[float]]]) -> None:
+        self._max_current = value
+
     @classmethod
-    @ureg_wraps(
-        None, (None, None, "ohm/km", "ohm/km", "S/km", "S/km", "ohm/km", "ohm/km", "S/km", "S/km"), strict=False
-    )
+    @ureg_wraps(None, (None, None, "ohm/km", "ohm/km", "S/km", "S/km", "ohm/km", "ohm/km", "S/km", "S/km", "A"))
     def from_sym(
         cls,
         id: Id,
-        z0: complex,
-        z1: complex,
-        y0: complex,
-        y1: complex,
-        zn: Optional[complex] = None,
-        xpn: Optional[float] = None,
-        bn: Optional[float] = None,
-        bpn: Optional[float] = None,
+        z0: Union[complex, Q_[complex]],
+        z1: Union[complex, Q_[complex]],
+        y0: Union[complex, Q_[complex]],
+        y1: Union[complex, Q_[complex]],
+        zn: Optional[Union[complex, Q_[complex]]] = None,
+        xpn: Optional[Union[float, Q_[float]]] = None,
+        bn: Optional[Union[float, Q_[float]]] = None,
+        bpn: Optional[Union[float, Q_[float]]] = None,
+        max_current: Optional[Union[float, Q_[float]]] = None,
     ) -> Self:
         """Create line parameters from a symmetric model.
 
@@ -145,6 +160,9 @@ class LineParameters(Identifiable, JsonMixin):
             bpn:
                 Phase to neutral susceptance (siemens/km)
 
+            max_current:
+                An optional maximum current loading of the line (A). It is not used in the load flow.
+
         Returns:
             The created line parameters.
 
@@ -154,7 +172,7 @@ class LineParameters(Identifiable, JsonMixin):
             impedance matrix is not invertible.
         """
         z_line, y_shunt = cls._sym_to_zy(id=id, z0=z0, z1=z1, y0=y0, y1=y1, zn=zn, xpn=xpn, bn=bn, bpn=bpn)
-        return cls(id=id, z_line=z_line, y_shunt=y_shunt)
+        return cls(id=id, z_line=z_line, y_shunt=y_shunt, max_current=max_current)
 
     @staticmethod
     def _sym_to_zy(
@@ -167,7 +185,7 @@ class LineParameters(Identifiable, JsonMixin):
         xpn: Optional[float] = None,
         bn: Optional[float] = None,
         bpn: Optional[float] = None,
-    ) -> tuple[np.ndarray, np.ndarray]:
+    ) -> tuple[ComplexArray, ComplexArray]:
         """Create impedance and admittance matrix from a symmetrical model.
 
         Args:
@@ -225,8 +243,8 @@ class LineParameters(Identifiable, JsonMixin):
             # If all the neutral data have not been filled, the matrix is a 3x3 matrix
             if any_neutral_na:
                 # No neutral data so retrieve a 3x3 matrix
-                z_line = np.array([[zs, zm, zm], [zm, zs, zm], [zm, zm, zs]], dtype=complex)
-                y_shunt = np.array([[ys, ym, ym], [ym, ys, ym], [ym, ym, ys]], dtype=complex)
+                z_line = np.array([[zs, zm, zm], [zm, zs, zm], [zm, zm, zs]], dtype=np.complex128)
+                y_shunt = np.array([[ys, ym, ym], [ym, ys, ym], [ym, ym, ys]], dtype=np.complex128)
             else:
                 # Build the complex
                 # zn: Neutral series impedance (ohm/km)
@@ -239,16 +257,16 @@ class LineParameters(Identifiable, JsonMixin):
                         f"The line model {id!r} does not have neutral elements. It will be modelled as a 3 wires line "
                         f"instead."
                     )
-                    z_line = np.array([[zs, zm, zm], [zm, zs, zm], [zm, zm, zs]], dtype=complex)
-                    y_shunt = np.array([[ys, ym, ym], [ym, ys, ym], [ym, ym, ys]], dtype=complex)
+                    z_line = np.array([[zs, zm, zm], [zm, zs, zm], [zm, zm, zs]], dtype=np.complex128)
+                    y_shunt = np.array([[ys, ym, ym], [ym, ys, ym], [ym, ym, ys]], dtype=np.complex128)
                 else:
                     z_line = np.array(
                         [[zs, zm, zm, zpn], [zm, zs, zm, zpn], [zm, zm, zs, zpn], [zpn, zpn, zpn, zn]],
-                        dtype=complex,
+                        dtype=np.complex128,
                     )
                     y_shunt = np.array(
                         [[ys, ym, ym, ypn], [ym, ys, ym, ypn], [ym, ym, ys, ypn], [ypn, ypn, ypn, yn]],
-                        dtype=complex,
+                        dtype=np.complex128,
                     )
 
             # Check the validity of the resulting matrices
@@ -277,17 +295,18 @@ class LineParameters(Identifiable, JsonMixin):
         return z_line, y_shunt
 
     @classmethod
-    @ureg_wraps(None, (None, None, None, None, None, "mm**2", "mm**2", "m", "m"), strict=False)
+    @ureg_wraps(None, (None, None, None, None, None, "mm**2", "mm**2", "m", "m", "A"))
     def from_geometry(
         cls,
         id: Id,
         line_type: LineType,
         conductor_type: ConductorType,
         insulator_type: InsulatorType,
-        section: float,
-        section_neutral: float,
-        height: float,
-        external_diameter: float,
+        section: Union[float, Q_[float]],
+        section_neutral: Union[float, Q_[float]],
+        height: Union[float, Q_[float]],
+        external_diameter: Union[float, Q_[float]],
+        max_current: Optional[Union[float, Q_[float]]] = None,
     ) -> Self:
         """Create line parameters from its geometry.
 
@@ -316,6 +335,9 @@ class LineParameters(Identifiable, JsonMixin):
             external_diameter:
                 External diameter of the wire (m).
 
+            max_current:
+                An optional maximum current loading of the line (A). It is not used in the load flow.
+
         Returns:
             The created line parameters.
 
@@ -332,7 +354,7 @@ class LineParameters(Identifiable, JsonMixin):
             height=height,
             external_diameter=external_diameter,
         )
-        return cls(id=id, z_line=z_line, y_shunt=y_shunt)
+        return cls(id=id, z_line=z_line, y_shunt=y_shunt, max_current=max_current)
 
     @staticmethod
     def _geometry_to_zy(
@@ -344,7 +366,7 @@ class LineParameters(Identifiable, JsonMixin):
         section_neutral: float,
         height: float,
         external_diameter: float,
-    ) -> tuple[np.ndarray, np.ndarray]:
+    ) -> tuple[ComplexArray, ComplexArray]:
         """Create impedance and admittance matrix using a geometric model.
 
         Args:
@@ -424,7 +446,7 @@ class LineParameters(Identifiable, JsonMixin):
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_TYPE)
 
         # Distance computation
-        sections = np.array([section, section, section, section_neutral], dtype=float) * 1e-6  # surfaces (m2)
+        sections = np.array([section, section, section, section_neutral], dtype=np.float64) * 1e-6  # surfaces (m2)
         radius = np.sqrt(sections / PI)  # radius (m)
         gmr = radius * np.exp(-0.25)  # geometric mean radius (m)
         # distance between two wires (m)
@@ -436,13 +458,13 @@ class LineParameters(Identifiable, JsonMixin):
         distance_prim = np.sqrt(np.einsum("ijk,ijk->ij", diff, diff))
 
         # Useful matrices
-        mask_diagonal = np.eye(4, dtype=bool)
+        mask_diagonal = np.eye(4, dtype=np.bool_)
         mask_off_diagonal = ~mask_diagonal
-        minus = -np.ones((4, 4), dtype=float)
+        minus = -np.ones((4, 4), dtype=np.float64)
         np.fill_diagonal(minus, 1)
 
         # Electrical parameters
-        r = RHO[conductor_type].m_as("ohm*m") / sections * np.eye(4, dtype=float) * 1e3  # resistance (ohm/km)
+        r = RHO[conductor_type].m_as("ohm*m") / sections * np.eye(4, dtype=np.float64) * 1e3  # resistance (ohm/km)
         distance[mask_diagonal] = gmr
         inductance = MU_0.m_as("H/m") / (2 * PI) * np.log(1 / distance) * 1e3  # H/m->H/km
         distance[mask_diagonal] = radius
@@ -450,32 +472,38 @@ class LineParameters(Identifiable, JsonMixin):
 
         # Extract the conductivity and the capacities from the lambda (potential coefficients)
         lambda_inv = nplin.inv(lambdas) * 1e3  # capacities (F/km)
-        c = np.zeros((4, 4), dtype=float)  # capacities (F/km)
+        c = np.zeros((4, 4), dtype=np.float64)  # capacities (F/km)
         c[mask_diagonal] = np.einsum("ij,ij->i", lambda_inv, minus)
         c[mask_off_diagonal] = -lambda_inv[mask_off_diagonal]
-        g = np.zeros((4, 4), dtype=float)  # conductance (S/km)
+        g = np.zeros((4, 4), dtype=np.float64)  # conductance (S/km)
         omega = OMEGA.m_as("rad/s")
-        g[mask_diagonal] = TAN_D[insulator_type] * np.einsum("ii->i", c) * omega
+        g[mask_diagonal] = TAN_D[insulator_type].magnitude * np.einsum("ii->i", c) * omega
 
         # Build the impedance and admittance matrices
         z_line = r + inductance * omega * 1j
         y = g + c * omega * 1j
 
         # Compute the shunt admittance matrix from the admittance matrix
-        y_shunt = np.zeros((4, 4), dtype=complex)
+        y_shunt = np.zeros((4, 4), dtype=np.complex128)
         y_shunt[mask_diagonal] = np.einsum("ij->i", y)
         y_shunt[mask_off_diagonal] = -y[mask_off_diagonal]
 
         return z_line, y_shunt
 
     @classmethod
-    @ureg_wraps(None, (None, None, "mm²", "m", "mm"), strict=False)
+    @deprecated(
+        "The method LineParameters.from_name_lv() is deprecated and will be removed in a future "
+        "version. Use LineParameters.from_geometry() instead.",
+        category=FutureWarning,
+    )
+    @ureg_wraps(None, (None, None, "mm²", "m", "mm", "A"))
     def from_name_lv(
         cls,
         name: str,
-        section_neutral: Optional[float] = None,
-        height: Optional[float] = None,
-        external_diameter: Optional[float] = None,
+        section_neutral: Optional[Union[float, Q_[float]]] = None,
+        height: Optional[Union[float, Q_[float]]] = None,
+        external_diameter: Optional[Union[float, Q_[float]]] = None,
+        max_current: Optional[Union[float, Q_[float]]] = None,
     ) -> Self:
         """Method to get the electrical parameters of a LV line from its canonical name.
         Some hypothesis will be made: the section of the neutral is the same as the other sections, the height and
@@ -494,8 +522,14 @@ class LineParameters(Identifiable, JsonMixin):
             external_diameter:
                 External diameter of the wire (mm). If None a default value will be used.
 
+            max_current:
+                An optional maximum current loading of the line (A). It is not used in the load flow.
+
         Returns:
             The corresponding line parameters.
+
+        .. deprecated:: 0.6.0
+            Use :meth:`LineParameters.from_geometry` instead.
         """
         match = cls._REGEXP_LINE_TYPE_NAME.fullmatch(string=name)
         if not match:
@@ -527,15 +561,20 @@ class LineParameters(Identifiable, JsonMixin):
             section_neutral=section_neutral,
             height=height,
             external_diameter=external_diameter,
+            max_current=max_current,
         )
 
     @classmethod
-    def from_name_mv(cls, name: str) -> Self:
+    @ureg_wraps(None, (None, None, "A"))
+    def from_name_mv(cls, name: str, max_current: Optional[Union[float, Q_[float]]] = None) -> Self:
         """Method to get the electrical parameters of a MV line from its canonical name.
 
         Args:
             name:
                 The name of the line the parameters must be computed. E.g. "U_AL_150".
+
+            max_current:
+                An optional maximum current loading of the line (A). It is not used in the load flow.
 
         Returns:
             The corresponding line parameters.
@@ -571,9 +610,9 @@ class LineParameters(Identifiable, JsonMixin):
         b = (c_b1 + c_b2 * section) * 1e-4 * OMEGA
         b = b.to("S/km")
 
-        z_line = (r + x * 1j) * np.eye(3, dtype=float)  # in ohms/km
-        y_shunt = b * 1j * np.eye(3, dtype=float)  # in siemens/km
-        return cls(name, z_line=z_line, y_shunt=y_shunt)
+        z_line = (r + x * 1j) * np.eye(3, dtype=np.float64)  # in ohms/km
+        y_shunt = b * 1j * np.eye(3, dtype=np.float64)  # in siemens/km
+        return cls(name, z_line=z_line, y_shunt=y_shunt, max_current=max_current)
 
     #
     # Json Mixin interface
@@ -589,15 +628,17 @@ class LineParameters(Identifiable, JsonMixin):
         Returns:
             The created line parameters.
         """
-        z_line = np.asarray(data["z_line"][0]) + 1j * np.asarray(data["z_line"][1])
-        y_shunt = np.asarray(data["y_shunt"][0]) + 1j * np.asarray(data["y_shunt"][1]) if "y_shunt" in data else None
-        return cls(id=data["id"], z_line=z_line, y_shunt=y_shunt)
+        z_line = np.array(data["z_line"][0]) + 1j * np.array(data["z_line"][1])
+        y_shunt = np.array(data["y_shunt"][0]) + 1j * np.array(data["y_shunt"][1]) if "y_shunt" in data else None
+        return cls(id=data["id"], z_line=z_line, y_shunt=y_shunt, max_current=data.get("max_current"))
 
-    def to_dict(self, include_geometry: bool = True) -> JsonDict:
+    def to_dict(self, *, _lf_only: bool = False) -> JsonDict:
         """Return the line parameters information as a dictionary format."""
         res = {"id": self.id, "z_line": [self._z_line.real.tolist(), self._z_line.imag.tolist()]}
         if self.with_shunt:
             res["y_shunt"] = [self._y_shunt.real.tolist(), self._y_shunt.imag.tolist()]
+        if not _lf_only and self.max_current is not None:
+            res["max_current"] = self.max_current.magnitude
         return res
 
     def _results_to_dict(self, warning: bool) -> NoReturn:
