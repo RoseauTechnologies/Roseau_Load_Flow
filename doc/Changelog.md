@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- {gh-pr}`151` Require Python 3.10 or newer.
+
 ## Version 0.6.0
 
 - {gh-pr}`149` {gh-issue}`145` Add custom pint wrapper for better handling of pint arrays.

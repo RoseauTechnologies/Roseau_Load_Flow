@@ -1,7 +1,7 @@
 import logging
 import warnings
 from abc import ABC
-from typing import TYPE_CHECKING, Any, ClassVar, NoReturn, Optional, TypeVar, Union
+from typing import TYPE_CHECKING, Any, ClassVar, NoReturn, Optional, TypeVar
 
 import shapely
 from shapely.geometry import shape
@@ -39,7 +39,7 @@ class Element(ABC, Identifiable, JsonMixin):
         """
         super().__init__(id)
         self._connected_elements: list[Element] = []
-        self._network: Optional[ElectricalNetwork] = None
+        self._network: ElectricalNetwork | None = None
 
     @property
     def network(self) -> Optional["ElectricalNetwork"]:
@@ -47,7 +47,7 @@ class Element(ABC, Identifiable, JsonMixin):
         return self._network
 
     @classmethod
-    def _check_phases(cls, id: Id, allowed_phases: Optional[frozenset[str]] = None, **kwargs: str) -> None:
+    def _check_phases(cls, id: Id, allowed_phases: frozenset[str] | None = None, **kwargs: str) -> None:
         if allowed_phases is None:
             allowed_phases = cls.allowed_phases
         name, phases = kwargs.popitem()  # phases, phases1 or phases2
@@ -131,7 +131,7 @@ class Element(ABC, Identifiable, JsonMixin):
         if self.network is not None:
             self.network._results_valid = False
 
-    def _res_getter(self, value: Optional[_T], warning: bool) -> _T:
+    def _res_getter(self, value: _T | None, warning: bool) -> _T:
         """A safe getter for load flow results.
 
         Args:
@@ -163,7 +163,7 @@ class Element(ABC, Identifiable, JsonMixin):
         return value
 
     @staticmethod
-    def _parse_geometry(geometry: Union[str, None, Any]) -> Optional[BaseGeometry]:
+    def _parse_geometry(geometry: str | None | Any) -> BaseGeometry | None:
         if geometry is None:
             return None
         elif isinstance(geometry, str):

@@ -4,7 +4,7 @@
 [![Documentation](https://github.com/RoseauTechnologies/Roseau_Load_Flow/actions/workflows/doc.yml/badge.svg)](https://github.com/RoseauTechnologies/Roseau_Load_Flow/actions/workflows/doc.yml)
 [![pre-commit](https://github.com/RoseauTechnologies/Roseau_Load_Flow/actions/workflows/pre-commit.yml/badge.svg)](https://github.com/RoseauTechnologies/Roseau_Load_Flow/actions/workflows/pre-commit.yml)
 
-_Roseau Load Flow_ is a highly capable three-phase load flow solver. This project is compatible with Python 3.9 and
+_Roseau Load Flow_ is a highly capable three-phase load flow solver. This project is compatible with Python 3.10 and
 above.
 
 Please take a look at our documentation to see how to install and use `roseau-load-flow`.

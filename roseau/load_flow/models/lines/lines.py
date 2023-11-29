@@ -1,6 +1,6 @@
 import logging
 import warnings
-from typing import Any, Optional, Union
+from typing import Any
 
 import numpy as np
 from shapely import LineString, Point
@@ -38,8 +38,8 @@ class Switch(AbstractBranch):
         bus1: Bus,
         bus2: Bus,
         *,
-        phases: Optional[str] = None,
-        geometry: Optional[Point] = None,
+        phases: str | None = None,
+        geometry: Point | None = None,
         **kwargs: Any,
     ) -> None:
         """Switch constructor.
@@ -95,7 +95,7 @@ class Switch(AbstractBranch):
             element = elements.pop(-1)
             visited_1.add(element)
             for e in element._connected_elements:
-                if e not in visited_1 and (isinstance(e, (Bus, Switch))) and e != self:
+                if e not in visited_1 and (isinstance(e, Bus | Switch)) and e != self:
                     elements.append(e)
         visited_2: set[Element] = set()
         elements = [self.bus2]
@@ -103,7 +103,7 @@ class Switch(AbstractBranch):
             element = elements.pop(-1)
             visited_2.add(element)
             for e in element._connected_elements:
-                if e not in visited_2 and (isinstance(e, (Bus, Switch))) and e != self:
+                if e not in visited_2 and (isinstance(e, Bus | Switch)) and e != self:
                     elements.append(e)
         if visited_1.intersection(visited_2):
             msg = f"There is a loop of switch involving the switch {self.id!r}. It is not allowed."
@@ -144,10 +144,10 @@ class Line(AbstractBranch):
         bus2: Bus,
         *,
         parameters: LineParameters,
-        length: Union[float, Q_[float]],
-        phases: Optional[str] = None,
-        ground: Optional[Ground] = None,
-        geometry: Optional[LineString] = None,
+        length: float | Q_[float],
+        phases: str | None = None,
+        ground: Ground | None = None,
+        geometry: LineString | None = None,
         **kwargs: Any,
     ) -> None:
         """Line constructor.
@@ -231,7 +231,7 @@ class Line(AbstractBranch):
 
     @length.setter
     @ureg_wraps(None, (None, "km"))
-    def length(self, value: Union[float, Q_[float]]) -> None:
+    def length(self, value: float | Q_[float]) -> None:
         if value <= 0:
             msg = f"A line length must be greater than 0. {value:.2f} km provided."
             logger.error(msg)
@@ -286,7 +286,7 @@ class Line(AbstractBranch):
         return self.parameters._y_shunt * self._length
 
     @property
-    def max_current(self) -> Optional[Q_[float]]:
+    def max_current(self) -> Q_[float] | None:
         """The maximum current loading of the line in A."""
         # Do not add a setter. The user must know that if they change the max_current, it changes
         # for all lines that share the parameters. It is better to set it on the parameters.
@@ -370,7 +370,7 @@ class Line(AbstractBranch):
         return self._res_power_losses_getter(warning=True)
 
     @property
-    def res_violated(self) -> Optional[bool]:
+    def res_violated(self) -> bool | None:
         """Whether the line current exceeds the maximum current (loading > 100%).
 
         Returns ``None`` if the maximum current is not set.

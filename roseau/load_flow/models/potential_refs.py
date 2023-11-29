@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Optional, Union
+from typing import Any
 
 from typing_extensions import Self
 
@@ -25,7 +25,7 @@ class PotentialRef(Element):
 
     allowed_phases = frozenset({"a", "b", "c", "n"})
 
-    def __init__(self, id: Id, element: Union[Bus, Ground], *, phase: Optional[str] = None, **kwargs: Any) -> None:
+    def __init__(self, id: Id, element: Bus | Ground, *, phase: str | None = None, **kwargs: Any) -> None:
         """PotentialRef constructor.
 
         Args:
@@ -59,7 +59,7 @@ class PotentialRef(Element):
         self.phase = phase
         self.element = element
         self._connect(element)
-        self._res_current: Optional[complex] = None
+        self._res_current: complex | None = None
 
     def __repr__(self) -> str:
         return f"{type(self).__name__}(id={self.id!r}, element={self.element!r}, phase={self.phase!r})"

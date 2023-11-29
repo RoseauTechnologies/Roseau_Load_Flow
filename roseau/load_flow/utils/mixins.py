@@ -19,7 +19,7 @@ class Identifiable(metaclass=ABCMeta):
     """An identifiable object."""
 
     def __init__(self, id: Id) -> None:
-        if not isinstance(id, (int, str)):
+        if not isinstance(id, int | str):
             msg = f"{type(self).__name__} expected id to be int or str, got {type(id)}"
             logger.error(msg)
             raise RoseauLoadFlowException(msg, code=RoseauLoadFlowExceptionCode.BAD_ID_TYPE)

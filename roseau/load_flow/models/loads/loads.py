@@ -1,6 +1,6 @@
 import logging
 from abc import ABC
-from typing import Any, Literal, Optional
+from typing import Any, Literal
 
 import numpy as np
 
@@ -34,7 +34,7 @@ class AbstractLoad(Element, ABC):
     allowed_phases = Bus.allowed_phases
     """The allowed phases for a load are the same as for a :attr:`bus<Bus.allowed_phases>`."""
 
-    def __init__(self, id: Id, bus: Bus, *, phases: Optional[str] = None, **kwargs: Any) -> None:
+    def __init__(self, id: Id, bus: Bus, *, phases: str | None = None, **kwargs: Any) -> None:
         """AbstractLoad constructor.
 
         Args:
@@ -78,7 +78,7 @@ class AbstractLoad(Element, ABC):
             self._size = len(set(phases) - {"n"})
 
         # Results
-        self._res_currents: Optional[ComplexArray] = None
+        self._res_currents: ComplexArray | None = None
 
     def __repr__(self) -> str:
         bus_id = self.bus.id if self.bus is not None else None
@@ -210,8 +210,8 @@ class PowerLoad(AbstractLoad):
         bus: Bus,
         *,
         powers: ComplexArrayLike1D,
-        phases: Optional[str] = None,
-        flexible_params: Optional[list[FlexibleParameter]] = None,
+        phases: str | None = None,
+        flexible_params: list[FlexibleParameter] | None = None,
         **kwargs: Any,
     ) -> None:
         """PowerLoad constructor.
@@ -254,10 +254,10 @@ class PowerLoad(AbstractLoad):
 
         self._flexible_params = flexible_params
         self.powers = powers
-        self._res_flexible_powers: Optional[ComplexArray] = None
+        self._res_flexible_powers: ComplexArray | None = None
 
     @property
-    def flexible_params(self) -> Optional[list[FlexibleParameter]]:
+    def flexible_params(self) -> list[FlexibleParameter] | None:
         return self._flexible_params
 
     @property
@@ -275,7 +275,7 @@ class PowerLoad(AbstractLoad):
     def powers(self, value: ComplexArrayLike1D) -> None:
         value = self._validate_value(value)
         if self.is_flexible:
-            for power, fp in zip(value, self._flexible_params):
+            for power, fp in zip(value, self._flexible_params, strict=True):
                 if fp.control_p.type == "constant" and fp.control_q.type == "constant":
                     continue  # No checks for this case
                 if abs(power) > fp.s_max.m_as("VA"):
@@ -350,7 +350,7 @@ class CurrentLoad(AbstractLoad):
     _type = "current"
 
     def __init__(
-        self, id: Id, bus: Bus, *, currents: ComplexArrayLike1D, phases: Optional[str] = None, **kwargs: Any
+        self, id: Id, bus: Bus, *, currents: ComplexArrayLike1D, phases: str | None = None, **kwargs: Any
     ) -> None:
         """CurrentLoad constructor.
 
@@ -402,7 +402,7 @@ class ImpedanceLoad(AbstractLoad):
     _type = "impedance"
 
     def __init__(
-        self, id: Id, bus: Bus, *, impedances: ComplexArrayLike1D, phases: Optional[str] = None, **kwargs: Any
+        self, id: Id, bus: Bus, *, impedances: ComplexArrayLike1D, phases: str | None = None, **kwargs: Any
     ) -> None:
         """ImpedanceLoad constructor.
 

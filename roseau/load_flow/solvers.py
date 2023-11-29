@@ -1,5 +1,4 @@
 import logging
-from typing import Optional
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.typing import JsonDict, Solver
@@ -13,7 +12,7 @@ _SOLVERS_PARAMS: dict[Solver, list[str]] = {
 SOLVERS = list(_SOLVERS_PARAMS)
 
 
-def check_solver_params(solver: Solver, params: Optional[JsonDict]) -> JsonDict:
+def check_solver_params(solver: Solver, params: JsonDict | None) -> JsonDict:
     """Strip and check the solver parameters.
 
     Args:

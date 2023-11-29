@@ -4,7 +4,7 @@ import textwrap
 from importlib import resources
 from itertools import cycle
 from pathlib import Path
-from typing import NoReturn, Optional, Union
+from typing import NoReturn
 
 import numpy as np
 import pandas as pd
@@ -42,14 +42,14 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         self,
         id: Id,
         type: str,
-        uhv: Union[float, Q_[float]],
-        ulv: Union[float, Q_[float]],
-        sn: Union[float, Q_[float]],
-        p0: Union[float, Q_[float]],
-        i0: Union[float, Q_[float]],
-        psc: Union[float, Q_[float]],
-        vsc: Union[float, Q_[float]],
-        max_power: Optional[Union[float, Q_[float]]] = None,
+        uhv: float | Q_[float],
+        ulv: float | Q_[float],
+        sn: float | Q_[float],
+        p0: float | Q_[float],
+        i0: float | Q_[float],
+        psc: float | Q_[float],
+        vsc: float | Q_[float],
+        max_power: float | Q_[float] | None = None,
     ) -> None:
         """TransformerParameters constructor.
 
@@ -198,13 +198,13 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         return self._vsc
 
     @property
-    def max_power(self) -> Optional[Q_[float]]:
+    def max_power(self) -> Q_[float] | None:
         """The maximum power loading of the transformer (VA) if it is set."""
         return None if self._max_power is None else Q_(self._max_power, "VA")
 
     @max_power.setter
     @ureg_wraps(None, (None, "VA"))
-    def max_power(self, value: Optional[Union[float, Q_[float]]]) -> None:
+    def max_power(self, value: float | Q_[float] | None) -> None:
         self._max_power = value
 
     @ureg_wraps(("ohm", "S", "", None), (None,))
@@ -318,14 +318,14 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
     @ureg_wraps(None, (None, None, None, None, None, None, "VA", "V", "V"))
     def from_catalogue(
         cls,
-        id: Optional[Union[str, re.Pattern[str]]] = None,
-        manufacturer: Optional[Union[str, re.Pattern[str]]] = None,
-        range: Optional[Union[str, re.Pattern[str]]] = None,
-        efficiency: Optional[Union[str, re.Pattern[str]]] = None,
-        type: Optional[Union[str, re.Pattern[str]]] = None,
-        sn: Optional[float] = None,
-        uhv: Optional[float] = None,
-        ulv: Optional[float] = None,
+        id: str | re.Pattern[str] | None = None,
+        manufacturer: str | re.Pattern[str] | None = None,
+        range: str | re.Pattern[str] | None = None,
+        efficiency: str | re.Pattern[str] | None = None,
+        type: str | re.Pattern[str] | None = None,
+        sn: float | None = None,
+        uhv: float | None = None,
+        ulv: float | None = None,
     ) -> Self:
         """Build a transformer parameters from one in the catalogue.
 
@@ -463,14 +463,14 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
     @ureg_wraps(None, (None, None, None, None, None, None, "VA", "V", "V"))
     def print_catalogue(
         cls,
-        id: Optional[Union[str, re.Pattern[str]]] = None,
-        manufacturer: Optional[Union[str, re.Pattern[str]]] = None,
-        range: Optional[Union[str, re.Pattern[str]]] = None,
-        efficiency: Optional[Union[str, re.Pattern[str]]] = None,
-        type: Optional[Union[str, re.Pattern[str]]] = None,
-        sn: Optional[float] = None,
-        uhv: Optional[float] = None,
-        ulv: Optional[float] = None,
+        id: str | re.Pattern[str] | None = None,
+        manufacturer: str | re.Pattern[str] | None = None,
+        range: str | re.Pattern[str] | None = None,
+        efficiency: str | re.Pattern[str] | None = None,
+        type: str | re.Pattern[str] | None = None,
+        sn: float | None = None,
+        uhv: float | None = None,
+        ulv: float | None = None,
     ) -> None:
         """Print the catalogue of available transformers.
 
@@ -567,7 +567,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
 
     @staticmethod
     def _filter_catalogue_str(
-        value: Union[str, re.Pattern[str]], catalogue_data: pd.DataFrame, column_name: str
+        value: str | re.Pattern[str], catalogue_data: pd.DataFrame, column_name: str
     ) -> pd.Series:
         """Filter the catalogue using a string/regexp value.
 

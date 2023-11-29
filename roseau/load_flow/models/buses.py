@@ -1,6 +1,6 @@
 import logging
 from collections.abc import Iterator
-from typing import TYPE_CHECKING, Any, Optional, Union
+from typing import TYPE_CHECKING, Any, Optional
 
 import numpy as np
 import pandas as pd
@@ -35,10 +35,10 @@ class Bus(Element):
         id: Id,
         *,
         phases: str,
-        geometry: Optional[Point] = None,
-        potentials: Optional[ComplexArrayLike1D] = None,
-        min_voltage: Optional[float] = None,
-        max_voltage: Optional[float] = None,
+        geometry: Point | None = None,
+        potentials: ComplexArrayLike1D | None = None,
+        min_voltage: float | None = None,
+        max_voltage: float | None = None,
         **kwargs: Any,
     ) -> None:
         """Bus constructor.
@@ -79,12 +79,12 @@ class Bus(Element):
             potentials = [0] * len(phases)
         self.potentials = potentials
         self.geometry = geometry
-        self._min_voltage: Optional[float] = None
-        self._max_voltage: Optional[float] = None
+        self._min_voltage: float | None = None
+        self._max_voltage: float | None = None
         self.min_voltage = min_voltage
         self.max_voltage = max_voltage
 
-        self._res_potentials: Optional[ComplexArray] = None
+        self._res_potentials: ComplexArray | None = None
         self._short_circuits: list[dict[str, Any]] = []
 
     def __repr__(self) -> str:
@@ -141,13 +141,13 @@ class Bus(Element):
         return np.array([potentials[self.phases.index(p)] for p in phases])
 
     @property
-    def min_voltage(self) -> Optional[Q_[float]]:
+    def min_voltage(self) -> Q_[float] | None:
         """The minimum voltage of the bus (V) if it is set."""
         return None if self._min_voltage is None else Q_(self._min_voltage, "V")
 
     @min_voltage.setter
     @ureg_wraps(None, (None, "V"))
-    def min_voltage(self, value: Optional[Union[float, Q_[float]]]) -> None:
+    def min_voltage(self, value: float | Q_[float] | None) -> None:
         if value is not None and self._max_voltage is not None and value > self._max_voltage:
             msg = (
                 f"Cannot set min voltage of bus {self.id!r} to {value} V as it is higher than its "
@@ -160,13 +160,13 @@ class Bus(Element):
         self._min_voltage = value
 
     @property
-    def max_voltage(self) -> Optional[Q_[float]]:
+    def max_voltage(self) -> Q_[float] | None:
         """The maximum voltage of the bus (V) if it is set."""
         return None if self._max_voltage is None else Q_(self._max_voltage, "V")
 
     @max_voltage.setter
     @ureg_wraps(None, (None, "V"))
-    def max_voltage(self, value: Optional[Union[float, Q_[float]]]) -> None:
+    def max_voltage(self, value: float | Q_[float] | None) -> None:
         if value is not None and self._min_voltage is not None and value < self._min_voltage:
             msg = (
                 f"Cannot set max voltage of bus {self.id!r} to {value} V as it is lower than its "
@@ -179,7 +179,7 @@ class Bus(Element):
         self._max_voltage = value
 
     @property
-    def res_violated(self) -> Optional[bool]:
+    def res_violated(self) -> bool | None:
         """Whether the bus has voltage limits violations.
 
         Returns ``None`` if the bus has no voltage limits are not set.
@@ -221,7 +221,7 @@ class Bus(Element):
         while remaining:
             branch = remaining.pop()
             visited.add(branch)
-            if not isinstance(branch, (Line, Switch)):
+            if not isinstance(branch, Line | Switch):
                 continue
             for element in branch._connected_elements:
                 if not isinstance(element, Bus) or element is self or element in buses:
@@ -274,7 +274,7 @@ class Bus(Element):
         while remaining:
             branch = remaining.pop()
             visited.add(branch)
-            if not isinstance(branch, (Line, Switch)):
+            if not isinstance(branch, Line | Switch):
                 continue
             for element in branch._connected_elements:
                 if not isinstance(element, Bus) or element.id in visited_buses:

@@ -173,4 +173,4 @@ def calculate_voltage_phases(phases: str) -> list[str]:
         if len(phases) == 2:
             return [phases]
         else:
-            return [p1 + p2 for p1, p2 in zip(phases, np.roll(list(phases), -1))]
+            return [p1 + p2 for p1, p2 in zip(phases, np.roll(list(phases), -1), strict=True)]
