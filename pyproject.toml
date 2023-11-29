@@ -52,6 +52,7 @@ requests = ">=2.28.1"
 pint = ">=0.21.0"
 typing-extensions = ">=4.6.2"
 rich = ">=13.5.1"
+pyproj = "^3.3.0"
 
 # Optional dependencies
 matplotlib = { version = ">=3.7.2", optional = true }
@@ -141,7 +142,7 @@ directory = "htmlcov"
 
 # Pytest
 [tool.pytest.ini_options]
-addopts = "--color=yes -vv -n=0"
+addopts = "--color=yes -vv -n=0 --import-mode=importlib"
 testpaths = ["roseau/load_flow/"]
 filterwarnings = [
     'ignore:.*utcfromtimestamp:DeprecationWarning:dateutil.*', # dateutil is imported by pandas, not us
