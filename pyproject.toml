@@ -6,6 +6,7 @@ authors = [
     "Ali Hamdan <ali.hamdan@roseautechnologies.com>",
     "Sébastien Vallet <sebastien.vallet@roseautechnologies.com>",
     "Benoît Vinot <benoit.vinot@roseautechnologies.com>",
+    "Florent Cadoux <florent.cadoux@roseautechnologies.com>",
     "Victor Gouin",
 ]
 maintainers = ["Ali Hamdan <ali.hamdan@roseautechnologies.com>"]
@@ -143,5 +144,5 @@ directory = "htmlcov"
 addopts = "--color=yes -vv -n=0"
 testpaths = ["roseau/load_flow/"]
 filterwarnings = [
-    'ignore:.*utcfromtimestamp:DeprecationWarning:dateutil.*',  # dateutil is imported by pandas, not us
+    'ignore:.*utcfromtimestamp:DeprecationWarning:dateutil.*', # dateutil is imported by pandas, not us
 ]

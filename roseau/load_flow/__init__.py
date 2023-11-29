@@ -8,7 +8,7 @@ See Package Contents below for a list of available classes and functions.
 import importlib.metadata
 
 from roseau.load_flow.__about__ import (
-    __author__,
+    __authors__,
     __copyright__,
     __credits__,
     __email__,
@@ -46,7 +46,7 @@ from roseau.load_flow.utils._versions import show_versions
 __version__ = importlib.metadata.version("roseau-load-flow")
 
 __all__ = [
-    "__author__",
+    "__authors__",
     "__copyright__",
     "__credits__",
     "__email__",
