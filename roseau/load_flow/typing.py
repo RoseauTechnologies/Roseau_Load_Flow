@@ -54,39 +54,32 @@ Type Aliases used by Roseau Load Flow.
 """
 import os
 from collections.abc import Mapping, Sequence
-from typing import Any, Literal, TypeVar, Union
+from typing import Any, Literal, TypeAlias, TypeVar
 
 import numpy as np
 from numpy.typing import NDArray
 from requests.auth import HTTPBasicAuth
-from typing_extensions import TypeAlias
 
 from roseau.load_flow.units import Q_
 
 T = TypeVar("T")
 
-Id: TypeAlias = Union[int, str]
+Id: TypeAlias = int | str
 JsonDict: TypeAlias = dict[str, Any]
-StrPath: TypeAlias = Union[str, os.PathLike[str]]
+StrPath: TypeAlias = str | os.PathLike[str]
 ControlType: TypeAlias = Literal["constant", "p_max_u_production", "p_max_u_consumption", "q_u"]
 ProjectionType: TypeAlias = Literal["euclidean", "keep_p", "keep_q"]
 Solver: TypeAlias = Literal["newton", "newton_goldstein"]
-Authentication: TypeAlias = Union[tuple[str, str], HTTPBasicAuth]
-MapOrSeq: TypeAlias = Union[Mapping[Id, T], Sequence[T]]
+Authentication: TypeAlias = tuple[str, str] | HTTPBasicAuth
+MapOrSeq: TypeAlias = Mapping[Id, T] | Sequence[T]
 ComplexArray: TypeAlias = NDArray[np.complex128]
 # TODO: improve the types below when shape-typing becomes supported
-ComplexArrayLike1D: TypeAlias = Union[
-    ComplexArray,
-    Q_[ComplexArray],
-    Q_[Sequence[complex]],
-    Sequence[Union[complex, Q_[complex]]],
-]
-ComplexArrayLike2D: TypeAlias = Union[
-    ComplexArray,
-    Q_[ComplexArray],
-    Q_[Sequence[Sequence[complex]]],
-    Sequence[Sequence[Union[complex, Q_[complex]]]],
-]
+ComplexArrayLike1D: TypeAlias = (
+    ComplexArray | Q_[ComplexArray] | Q_[Sequence[complex]] | Sequence[complex | Q_[complex]]
+)
+ComplexArrayLike2D: TypeAlias = (
+    ComplexArray | Q_[ComplexArray] | Q_[Sequence[Sequence[complex]]] | Sequence[Sequence[complex | Q_[complex]]]
+)
 
 
 __all__ = [

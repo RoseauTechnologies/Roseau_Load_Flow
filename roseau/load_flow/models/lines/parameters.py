@@ -1,6 +1,6 @@
 import logging
 import re
-from typing import NoReturn, Optional, Union
+from typing import NoReturn
 
 import numpy as np
 import numpy.linalg as nplin
@@ -44,8 +44,8 @@ class LineParameters(Identifiable, JsonMixin):
         self,
         id: Id,
         z_line: ComplexArrayLike2D,
-        y_shunt: Optional[ComplexArrayLike2D] = None,
-        max_current: Optional[float] = None,
+        y_shunt: ComplexArrayLike2D | None = None,
+        max_current: float | None = None,
     ) -> None:
         """LineParameters constructor.
 
@@ -106,13 +106,13 @@ class LineParameters(Identifiable, JsonMixin):
         return self._with_shunt
 
     @property
-    def max_current(self) -> Optional[Q_[float]]:
+    def max_current(self) -> Q_[float] | None:
         """The maximum current loading of the line (A) if it is set."""
         return None if self._max_current is None else Q_(self._max_current, "A")
 
     @max_current.setter
     @ureg_wraps(None, (None, "A"))
-    def max_current(self, value: Optional[Union[float, Q_[float]]]) -> None:
+    def max_current(self, value: float | Q_[float] | None) -> None:
         self._max_current = value
 
     @classmethod
@@ -120,15 +120,15 @@ class LineParameters(Identifiable, JsonMixin):
     def from_sym(
         cls,
         id: Id,
-        z0: Union[complex, Q_[complex]],
-        z1: Union[complex, Q_[complex]],
-        y0: Union[complex, Q_[complex]],
-        y1: Union[complex, Q_[complex]],
-        zn: Optional[Union[complex, Q_[complex]]] = None,
-        xpn: Optional[Union[float, Q_[float]]] = None,
-        bn: Optional[Union[float, Q_[float]]] = None,
-        bpn: Optional[Union[float, Q_[float]]] = None,
-        max_current: Optional[Union[float, Q_[float]]] = None,
+        z0: complex | Q_[complex],
+        z1: complex | Q_[complex],
+        y0: complex | Q_[complex],
+        y1: complex | Q_[complex],
+        zn: complex | Q_[complex] | None = None,
+        xpn: float | Q_[float] | None = None,
+        bn: float | Q_[float] | None = None,
+        bpn: float | Q_[float] | None = None,
+        max_current: float | Q_[float] | None = None,
     ) -> Self:
         """Create line parameters from a symmetric model.
 
@@ -181,10 +181,10 @@ class LineParameters(Identifiable, JsonMixin):
         z1: complex,
         y0: complex,
         y1: complex,
-        zn: Optional[complex] = None,
-        xpn: Optional[float] = None,
-        bn: Optional[float] = None,
-        bpn: Optional[float] = None,
+        zn: complex | None = None,
+        xpn: float | None = None,
+        bn: float | None = None,
+        bpn: float | None = None,
     ) -> tuple[ComplexArray, ComplexArray]:
         """Create impedance and admittance matrix from a symmetrical model.
 
@@ -302,11 +302,11 @@ class LineParameters(Identifiable, JsonMixin):
         line_type: LineType,
         conductor_type: ConductorType,
         insulator_type: InsulatorType,
-        section: Union[float, Q_[float]],
-        section_neutral: Union[float, Q_[float]],
-        height: Union[float, Q_[float]],
-        external_diameter: Union[float, Q_[float]],
-        max_current: Optional[Union[float, Q_[float]]] = None,
+        section: float | Q_[float],
+        section_neutral: float | Q_[float],
+        height: float | Q_[float],
+        external_diameter: float | Q_[float],
+        max_current: float | Q_[float] | None = None,
     ) -> Self:
         """Create line parameters from its geometry.
 
@@ -500,10 +500,10 @@ class LineParameters(Identifiable, JsonMixin):
     def from_name_lv(
         cls,
         name: str,
-        section_neutral: Optional[Union[float, Q_[float]]] = None,
-        height: Optional[Union[float, Q_[float]]] = None,
-        external_diameter: Optional[Union[float, Q_[float]]] = None,
-        max_current: Optional[Union[float, Q_[float]]] = None,
+        section_neutral: float | Q_[float] | None = None,
+        height: float | Q_[float] | None = None,
+        external_diameter: float | Q_[float] | None = None,
+        max_current: float | Q_[float] | None = None,
     ) -> Self:
         """Method to get the electrical parameters of a LV line from its canonical name.
         Some hypothesis will be made: the section of the neutral is the same as the other sections, the height and
@@ -566,7 +566,7 @@ class LineParameters(Identifiable, JsonMixin):
 
     @classmethod
     @ureg_wraps(None, (None, None, "A"))
-    def from_name_mv(cls, name: str, max_current: Optional[Union[float, Q_[float]]] = None) -> Self:
+    def from_name_mv(cls, name: str, max_current: float | Q_[float] | None = None) -> Self:
         """Method to get the electrical parameters of a MV line from its canonical name.
 
         Args:

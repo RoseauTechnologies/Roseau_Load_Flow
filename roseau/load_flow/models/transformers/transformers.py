@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Optional
+from typing import Any
 
 from shapely import Point
 
@@ -41,9 +41,9 @@ class Transformer(AbstractBranch):
         *,
         parameters: TransformerParameters,
         tap: float = 1.0,
-        phases1: Optional[str] = None,
-        phases2: Optional[str] = None,
-        geometry: Optional[Point] = None,
+        phases1: str | None = None,
+        phases2: str | None = None,
+        geometry: Point | None = None,
         **kwargs: Any,
     ) -> None:
         """Transformer constructor.
@@ -130,7 +130,7 @@ class Transformer(AbstractBranch):
         self._invalidate_network_results()
 
     @property
-    def max_power(self) -> Optional[Q_[float]]:
+    def max_power(self) -> Q_[float] | None:
         """The maximum power loading of the transformer (in VA)."""
         # Do not add a setter. The user must know that if they change the max_power, it changes
         # for all transformers that share the parameters. It is better to set it on the parameters.
@@ -145,8 +145,8 @@ class Transformer(AbstractBranch):
         bus1: Bus,
         bus2: Bus,
         parameters: TransformerParameters,
-        phases1: Optional[str],
-        phases2: Optional[str],
+        phases1: str | None,
+        phases2: str | None,
     ) -> tuple[str, str]:
         w1_has_neutral = "y" in parameters.winding1.lower() or "z" in parameters.winding1.lower()
         w2_has_neutral = "y" in parameters.winding2.lower() or "z" in parameters.winding2.lower()
@@ -187,7 +187,7 @@ class Transformer(AbstractBranch):
         return phases1, phases2
 
     def _compute_phases_single(
-        self, id: Id, bus1: Bus, bus2: Bus, phases1: Optional[str], phases2: Optional[str]
+        self, id: Id, bus1: Bus, bus2: Bus, phases1: str | None, phases2: str | None
     ) -> tuple[str, str]:
         if phases1 is None:
             phases1 = "".join(p for p in bus1.phases if p in bus2.phases)  # can't use set because order is important
@@ -214,7 +214,7 @@ class Transformer(AbstractBranch):
         return phases1, phases2
 
     def _compute_phases_center(
-        self, id: Id, bus1: Bus, bus2: Bus, phases1: Optional[str], phases2: Optional[str]
+        self, id: Id, bus1: Bus, bus2: Bus, phases1: str | None, phases2: str | None
     ) -> tuple[str, str]:
         if phases1 is None:
             phases1 = "".join(p for p in bus2.phases if p in bus1.phases and p != "n")
@@ -253,7 +253,7 @@ class Transformer(AbstractBranch):
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
 
     @property
-    def res_violated(self) -> Optional[bool]:
+    def res_violated(self) -> bool | None:
         """Whether the transformer power exceeds the maximum power (loading > 100%).
 
         Returns ``None`` if the maximum power is not set.

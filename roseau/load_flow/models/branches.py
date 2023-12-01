@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Optional, Union
+from typing import Any
 
 import numpy as np
 from shapely import LineString, Point
@@ -33,7 +33,7 @@ class AbstractBranch(Element):
         *,
         phases1: str,
         phases2: str,
-        geometry: Optional[Union[Point, LineString]] = None,
+        geometry: Point | LineString | None = None,
         **kwargs: Any,
     ) -> None:
         """AbstractBranch constructor.
@@ -66,7 +66,7 @@ class AbstractBranch(Element):
         self.bus2 = bus2
         self.geometry = geometry
         self._connect(bus1, bus2)
-        self._res_currents: Optional[tuple[ComplexArray, ComplexArray]] = None
+        self._res_currents: tuple[ComplexArray, ComplexArray] | None = None
 
     def __repr__(self) -> str:
         s = f"{type(self).__name__}(id={self.id!r}, phases1={self.phases1!r}, phases2={self.phases2!r}"

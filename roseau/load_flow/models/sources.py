@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 from typing_extensions import Self
@@ -22,7 +22,7 @@ class VoltageSource(Element):
     _floating_neutral_allowed: bool = False
 
     def __init__(
-        self, id: Id, bus: Bus, *, voltages: ComplexArrayLike1D, phases: Optional[str] = None, **kwargs: Any
+        self, id: Id, bus: Bus, *, voltages: ComplexArrayLike1D, phases: str | None = None, **kwargs: Any
     ) -> None:
         """Voltage source constructor.
 
@@ -74,7 +74,7 @@ class VoltageSource(Element):
         self.voltages = voltages
 
         # Results
-        self._res_currents: Optional[ComplexArray] = None
+        self._res_currents: ComplexArray | None = None
 
     def __repr__(self) -> str:
         bus_id = self.bus.id if self.bus is not None else None

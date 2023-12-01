@@ -10,7 +10,7 @@ from collections.abc import Mapping, Sized
 from importlib import resources
 from itertools import cycle
 from pathlib import Path
-from typing import TYPE_CHECKING, NoReturn, Optional, TypeVar, Union
+from typing import TYPE_CHECKING, NoReturn, TypeVar
 from urllib.parse import urljoin
 
 import geopandas as gpd
@@ -175,7 +175,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         self.res_info: JsonDict = {}
 
     def __repr__(self) -> str:
-        def count_repr(__o: Sized, /, singular: str, plural: Optional[str] = None) -> str:
+        def count_repr(__o: Sized, /, singular: str, plural: str | None = None) -> str:
             """Singular/plural count representation: `1 bus` or `2 buses`."""
             n = len(__o)
             if n == 1:
@@ -496,7 +496,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         tolerance: float = _DEFAULT_TOLERANCE,
         warm_start: bool = _DEFAULT_WARM_START,
         solver: Solver = _DEFAULT_SOLVER,
-        solver_params: Optional[JsonDict] = None,
+        solver_params: JsonDict | None = None,
     ) -> int:
         """Solve the load flow for this network (Requires internet access).
 
@@ -692,7 +692,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         res_dict = {"bus_id": [], "phase": [], "potential": []}
         dtypes = {c: _DTYPES[c] for c in res_dict}
         for bus_id, bus in self.buses.items():
-            for potential, phase in zip(bus._res_potentials_getter(warning=False), bus.phases):
+            for potential, phase in zip(bus._res_potentials_getter(warning=False), bus.phases, strict=True):
                 res_dict["bus_id"].append(bus_id)
                 res_dict["phase"].append(phase)
                 res_dict["potential"].append(potential)
@@ -737,7 +737,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                 max_voltage = float("nan")
             else:
                 voltage_limits_set = True
-            for voltage, phase in zip(bus._res_voltages_getter(warning=False), bus.voltage_phases):
+            for voltage, phase in zip(bus._res_voltages_getter(warning=False), bus.voltage_phases, strict=True):
                 voltage_abs = abs(voltage)
                 violated = (voltage_abs < min_voltage or voltage_abs > max_voltage) if voltage_limits_set else None
                 voltages_dict["bus_id"].append(bus_id)
@@ -786,7 +786,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                     "potential1": v1,
                     "potential2": None,
                 }
-                for i1, s1, v1, phase in zip(currents1, powers1, potentials1, branch.phases1)
+                for i1, s1, v1, phase in zip(currents1, powers1, potentials1, branch.phases1, strict=True)
             )
             res_list.extend(
                 {
@@ -800,7 +800,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                     "potential1": None,
                     "potential2": v2,
                 }
-                for i2, s2, v2, phase in zip(currents2, powers2, potentials2, branch.phases2)
+                for i2, s2, v2, phase in zip(currents2, powers2, potentials2, branch.phases2, strict=True)
             )
 
         columns = [
@@ -876,7 +876,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                     "max_power": s_max,
                     "violated": violated,
                 }
-                for i1, s1, v1, phase in zip(currents1, powers1, potentials1, branch.phases1)
+                for i1, s1, v1, phase in zip(currents1, powers1, potentials1, branch.phases1, strict=True)
             )
             res_list.extend(
                 {
@@ -891,7 +891,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                     "max_power": s_max,
                     "violated": violated,
                 }
-                for i2, s2, v2, phase in zip(currents2, powers2, potentials2, branch.phases2)
+                for i2, s2, v2, phase in zip(currents2, powers2, potentials2, branch.phases2, strict=True)
             )
 
         columns = [
@@ -988,7 +988,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             series_currents = branch._res_series_currents_getter(warning=False)
             i_max = branch.parameters._max_current
             for i1, i2, s1, s2, v1, v2, s_series, i_series, phase in zip(
-                *currents, *powers, *potentials, series_losses, series_currents, branch.phases
+                *currents, *powers, *potentials, series_losses, series_currents, branch.phases, strict=True
             ):
                 violated = None if i_max is None else max(abs(i1), abs(i2)) > i_max
                 res_dict["line_id"].append(branch.id)
@@ -1045,7 +1045,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             potentials = branch._res_potentials_getter(warning=False)
             currents = branch._res_currents_getter(warning=False)
             powers = branch._res_powers_getter(warning=False)
-            for i1, i2, s1, s2, v1, v2, phase in zip(*currents, *powers, *potentials, branch.phases):
+            for i1, i2, s1, s2, v1, v2, phase in zip(*currents, *powers, *potentials, branch.phases, strict=True):
                 res_dict["switch_id"].append(branch.id)
                 res_dict["phase"].append(phase)
                 res_dict["current1"].append(i1)
@@ -1075,7 +1075,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             currents = load._res_currents_getter(warning=False)
             powers = load._res_powers_getter(warning=False)
             potentials = load._res_potentials_getter(warning=False)
-            for i, s, v, phase in zip(currents, powers, potentials, load.phases):
+            for i, s, v, phase in zip(currents, powers, potentials, load.phases, strict=True):
                 res_dict["load_id"].append(load_id)
                 res_dict["phase"].append(phase)
                 res_dict["current"].append(i)
@@ -1098,7 +1098,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         voltages_dict = {"load_id": [], "phase": [], "voltage": []}
         dtypes = {c: _DTYPES[c] for c in voltages_dict} | {"phase": VoltagePhaseDtype}
         for load_id, load in self.loads.items():
-            for voltage, phase in zip(load._res_voltages_getter(warning=False), load.voltage_phases):
+            for voltage, phase in zip(load._res_voltages_getter(warning=False), load.voltage_phases, strict=True):
                 voltages_dict["load_id"].append(load_id)
                 voltages_dict["phase"].append(phase)
                 voltages_dict["voltage"].append(voltage)
@@ -1124,7 +1124,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         for load_id, load in self.loads.items():
             if not (isinstance(load, PowerLoad) and load.is_flexible):
                 continue
-            for power, phase in zip(load._res_flexible_powers_getter(warning=False), load.voltage_phases):
+            for power, phase in zip(load._res_flexible_powers_getter(warning=False), load.voltage_phases, strict=True):
                 loads_dict["load_id"].append(load_id)
                 loads_dict["phase"].append(phase)
                 loads_dict["power"].append(power)
@@ -1149,7 +1149,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             currents = source._res_currents_getter(warning=False)
             powers = source._res_powers_getter(warning=False)
             potentials = source._res_potentials_getter(warning=False)
-            for i, s, v, phase in zip(currents, powers, potentials, source.phases):
+            for i, s, v, phase in zip(currents, powers, potentials, source.phases, strict=True):
                 res_dict["source_id"].append(source_id)
                 res_dict["phase"].append(phase)
                 res_dict["current"].append(i)
@@ -1242,7 +1242,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                 The element to remove.
         """
         # The C++ electrical network and the tape will be recomputed
-        if isinstance(element, (Bus, AbstractBranch)):
+        if isinstance(element, Bus | AbstractBranch):
             msg = f"{element!r} is a {type(element).__name__} and it cannot be disconnected from a network."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT)
@@ -1476,7 +1476,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         return json.loads((cls.catalogue_path() / "Catalogue.json").read_text())
 
     @classmethod
-    def from_catalogue(cls, name: Union[str, re.Pattern[str]], load_point_name: Union[str, re.Pattern[str]]) -> Self:
+    def from_catalogue(cls, name: str | re.Pattern[str], load_point_name: str | re.Pattern[str]) -> Self:
         """Build a network from one in the catalogue.
 
         Args:
@@ -1563,8 +1563,8 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
     @classmethod
     def print_catalogue(
         cls,
-        name: Optional[Union[str, re.Pattern[str]]] = None,
-        load_point_name: Optional[Union[str, re.Pattern[str]]] = None,
+        name: str | re.Pattern[str] | None = None,
+        load_point_name: str | re.Pattern[str] | None = None,
     ) -> None:
         """Print the catalogue of available networks.
 
@@ -1650,7 +1650,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             console.print(table)
 
     @staticmethod
-    def _filter_name(name: Optional[Union[str, re.Pattern[str]]], catalogue_data: JsonDict) -> list[str]:
+    def _filter_name(name: str | re.Pattern[str] | None, catalogue_data: JsonDict) -> list[str]:
         """Filter the catalogue using the network name.
 
         Args:

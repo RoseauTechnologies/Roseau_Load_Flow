@@ -1,5 +1,5 @@
 import logging
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any
 
 from typing_extensions import Self
 
@@ -44,7 +44,7 @@ class Ground(Element):
         super().__init__(id, **kwargs)
         # A map of bus id to phase connected to this ground.
         self._connected_buses: dict[Id, str] = {}
-        self._res_potential: Optional[complex] = None
+        self._res_potential: complex | None = None
 
     def __repr__(self) -> str:
         return f"{type(self).__name__}(id={self.id!r})"

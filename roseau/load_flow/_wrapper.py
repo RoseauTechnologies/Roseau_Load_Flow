@@ -1,8 +1,8 @@
 import functools
-from collections.abc import Iterable, MutableSequence
+from collections.abc import Callable, Iterable, MutableSequence
 from inspect import Parameter, Signature, signature
 from itertools import zip_longest
-from typing import Any, Callable, Optional, TypeVar, Union
+from typing import Any, TypeVar
 
 from pint import Quantity, Unit
 from pint.registry import UnitRegistry
@@ -12,7 +12,7 @@ T = TypeVar("T")
 FuncT = TypeVar("FuncT", bound=Callable)
 
 
-def _parse_wrap_args(args: Iterable[Optional[Union[str, Unit]]]) -> Callable:
+def _parse_wrap_args(args: Iterable[str | Unit | None]) -> Callable:
     """Create a converter function for the wrapper"""
     # _to_units_container
     args_as_uc = [to_units_container(arg) for arg in args]
@@ -63,8 +63,8 @@ def _apply_defaults(sig: Signature, args: tuple[Any], kwargs: dict[str, Any]) ->
 
 def wraps(
     ureg: UnitRegistry,
-    ret: Optional[Union[str, Unit, Iterable[Optional[Union[str, Unit]]]]],
-    args: Optional[Union[str, Unit, Iterable[Optional[Union[str, Unit]]]]],
+    ret: str | Unit | Iterable[str | Unit | None] | None,
+    args: str | Unit | Iterable[str | Unit | None] | None,
 ) -> Callable[[FuncT], FuncT]:
     """Wraps a function to become pint-aware.
 
@@ -94,23 +94,23 @@ def wraps(
             if the number of given arguments does not match the number of function parameters.
             if any of the provided arguments is not a unit a string or Quantity
     """
-    if not isinstance(args, (list, tuple)):
+    if not isinstance(args, list | tuple):
         args = (args,)
 
     for arg in args:
-        if arg is not None and not isinstance(arg, (ureg.Unit, str)):
+        if arg is not None and not isinstance(arg, ureg.Unit | str):
             raise TypeError(f"wraps arguments must by of type str or Unit, not {type(arg)} ({arg})")
 
     converter = _parse_wrap_args(args)
 
-    is_ret_container = isinstance(ret, (list, tuple))
+    is_ret_container = isinstance(ret, list | tuple)
     if is_ret_container:
         for arg in ret:
-            if arg is not None and not isinstance(arg, (ureg.Unit, str)):
+            if arg is not None and not isinstance(arg, ureg.Unit | str):
                 raise TypeError(f"wraps 'ret' argument must by of type str or Unit, not {type(arg)} ({arg})")
         ret = ret.__class__([to_units_container(arg, ureg) for arg in ret])
     else:
-        if ret is not None and not isinstance(ret, (ureg.Unit, str)):
+        if ret is not None and not isinstance(ret, ureg.Unit | str):
             raise TypeError(f"wraps 'ret' argument must by of type str or Unit, not {type(ret)} ({ret})")
         ret = to_units_container(ret, ureg)
 

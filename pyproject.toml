@@ -26,7 +26,6 @@ packages = [
 ]
 classifiers = [
     "Development Status :: 3 - Alpha",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -38,7 +37,7 @@ requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.10"
 numpy = [
     { version = ">=1.21.5", python = "<3.12" },
     { version = ">=1.26.0", python = ">=3.12,<3.13" },
@@ -89,11 +88,11 @@ sphinxcontrib-bibtex = "^2.5.0"
 
 [tool.ruff]
 line-length = 120
-target-version = "py39"
+target-version = "py310"
 show-fixes = true
 namespace-packages = ["roseau"]
 extend-include = ["*.ipynb"]
-select = ["E", "F", "C90", "W", "B", "UP", "I", "RUF100", "TID", "SIM", "PT", "PIE", "N", "C4", "NPY"]
+select = ["E", "F", "C90", "W", "B", "UP", "I", "RUF100", "TID", "SIM", "PT", "PIE", "N", "C4", "NPY", "T10"]
 unfixable = ["B"]
 ignore = ["E501", "B024", "N818"]
 
