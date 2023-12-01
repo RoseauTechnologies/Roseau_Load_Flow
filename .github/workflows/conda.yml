@@ -43,7 +43,7 @@ jobs:
           git lfs pull
           git lfs prune --verify-remote
 
-      - uses: conda-incubator/setup-miniconda@v2
+      - uses: conda-incubator/setup-miniconda@v3
         with:
           auto-update-conda: true
           python-version: ${{ matrix.python-version }}
