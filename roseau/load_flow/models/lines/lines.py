@@ -14,6 +14,7 @@ from roseau.load_flow.models.lines.parameters import LineParameters
 from roseau.load_flow.models.sources import VoltageSource
 from roseau.load_flow.typing import ComplexArray, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
+from roseau.load_flow_engine.models.lines.cy_lines import CyShuntLine, CySimplifiedLine, CySwitch
 
 logger = logging.getLogger(__name__)
 
@@ -86,6 +87,9 @@ class Switch(AbstractBranch):
         self.phases = phases
         self._check_elements()
         self._check_loop()
+        self.n = len(self.phases)
+        self.cy_element = CySwitch(self.n)
+        self._cy_connect()
 
     def _check_loop(self) -> None:
         """Check that there are no switch loop, raise an exception if it is the case"""
@@ -224,6 +228,21 @@ class Line(AbstractBranch):
             # Connect the ground
             self._connect(self.ground)
 
+        self.n = len(self.phases)
+        if parameters.with_shunt:
+            self.cy_element = CyShuntLine(
+                n=self.n,
+                y_shunt=(parameters.y_shunt.reshape(self.n * self.n) * self.length).m_as("S"),
+                z_line=(parameters.z_line.reshape(self.n * self.n) * self.length).m_as("ohm"),
+            )
+        else:
+            self.cy_element = CySimplifiedLine(
+                n=self.n, z_line=(parameters.z_line.reshape(self.n * self.n) * self.length).m_as("ohm")
+            )
+        self._cy_connect()
+        if parameters.with_shunt:
+            ground.cy_element.connect(self.cy_element, [(0, self.n + self.n)])
+
     @property
     @ureg_wraps("km", (None,))
     def length(self) -> Q_[float]:
@@ -238,6 +257,10 @@ class Line(AbstractBranch):
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LENGTH_VALUE)
         self._length = value
         self._invalidate_network_results()
+
+        if hasattr(self, "cy_element"):
+            # Reassign the same parameters with the new length
+            self.parameters = self.parameters
 
     @property
     def parameters(self) -> LineParameters:
@@ -272,6 +295,17 @@ class Line(AbstractBranch):
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_MODEL)
         self._parameters = value
         self._invalidate_network_results()
+
+        if hasattr(self, "cy_element"):
+            if value.with_shunt:
+                self.cy_element.update_line_parameters(
+                    (value.y_shunt.reshape(self.n * self.n) * self.length).m_as("S"),
+                    (value.z_line.reshape(self.n * self.n) * self.length).m_as("ohm"),
+                )
+            else:
+                self.cy_element.update_line_parameters(
+                    (value.z_line.reshape(self.n * self.n) * self.length).m_as("ohm")
+                )
 
     @property
     @ureg_wraps("ohm", (None,))

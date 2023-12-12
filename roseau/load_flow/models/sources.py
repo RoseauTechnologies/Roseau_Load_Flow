@@ -10,6 +10,7 @@ from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import Element
 from roseau.load_flow.typing import ComplexArray, ComplexArrayLike1D, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
+from roseau.load_flow_engine.models.sources.cy_sources import CyDeltaVoltageSource, CyVoltageSource
 
 logger = logging.getLogger(__name__)
 
@@ -73,6 +74,13 @@ class VoltageSource(Element):
         self.bus = bus
         self.voltages = voltages
 
+        self.n = len(self.phases)
+        if self.phases == "abc":
+            self.cy_element = CyDeltaVoltageSource(n=self.n, voltages=self._voltages)
+        else:
+            self.cy_element = CyVoltageSource(n=self.n, voltages=self._voltages)
+        self._cy_connect()
+
         # Results
         self._res_currents: ComplexArray | None = None
 
@@ -98,6 +106,8 @@ class VoltageSource(Element):
             raise RoseauLoadFlowException(msg, code=RoseauLoadFlowExceptionCode.BAD_VOLTAGES_SIZE)
         self._voltages = np.array(voltages, dtype=np.complex128)
         self._invalidate_network_results()
+        if hasattr(self, "cy_element"):
+            self.cy_element.update_voltages(self._voltages)
 
     @property
     def voltage_phases(self) -> list[str]:
@@ -105,6 +115,7 @@ class VoltageSource(Element):
         return calculate_voltage_phases(self.phases)
 
     def _res_currents_getter(self, warning: bool) -> ComplexArray:
+        self._res_currents = self.cy_element.get_currents(self.n)
         return self._res_getter(value=self._res_currents, warning=warning)
 
     @property
@@ -133,6 +144,14 @@ class VoltageSource(Element):
     def res_powers(self) -> Q_[ComplexArray]:
         """The load flow result of the source powers (VA)."""
         return self._res_powers_getter(warning=True)
+
+    def _cy_connect(self):
+        connections = []
+        for i, phase in enumerate(self.bus.phases):
+            if phase in self.phases:
+                j = self.phases.find(phase)
+                connections.append((i, j))
+        self.bus.cy_element.connect(self.cy_element, connections)
 
     #
     # Disconnect

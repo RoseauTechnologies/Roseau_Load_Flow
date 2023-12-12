@@ -77,6 +77,7 @@ class AbstractBranch(Element):
         return s
 
     def _res_currents_getter(self, warning: bool) -> tuple[ComplexArray, ComplexArray]:
+        self._res_currents = self.cy_element.get_currents(len(self.phases1), len(self.phases2))
         return self._res_getter(value=self._res_currents, warning=warning)
 
     @property
@@ -118,6 +119,24 @@ class AbstractBranch(Element):
     def res_voltages(self) -> tuple[Q_[ComplexArray], Q_[ComplexArray]]:
         """The load flow result of the branch voltages (V)."""
         return self._res_voltages_getter(warning=True)
+
+    def _cy_connect(self) -> None:
+        """Connect the Cython elements of the buses and the branch"""
+        connections = []
+        assert isinstance(self.bus1, Bus)
+        for i, phase in enumerate(self.phases1):
+            if phase in self.bus1.phases:
+                j = self.bus1.phases.find(phase)
+                connections.append((i, j))
+        self.cy_element.connect(self.bus1.cy_element, connections, True)
+
+        connections = []
+        assert isinstance(self.bus2, Bus)
+        for i, phase in enumerate(self.phases2):
+            if phase in self.bus2.phases:
+                j = self.bus2.phases.find(phase)
+                connections.append((i, j))
+        self.cy_element.connect(self.bus2.cy_element, connections, False)
 
     #
     # Json Mixin interface

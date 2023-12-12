@@ -7,6 +7,7 @@ from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowE
 from roseau.load_flow.models.core import Element
 from roseau.load_flow.typing import Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
+from roseau.load_flow_engine.models.grounds.cy_grounds import CyGround
 
 if TYPE_CHECKING:
     from roseau.load_flow.models.buses import Bus
@@ -45,11 +46,13 @@ class Ground(Element):
         # A map of bus id to phase connected to this ground.
         self._connected_buses: dict[Id, str] = {}
         self._res_potential: complex | None = None
+        self.cy_element = CyGround()
 
     def __repr__(self) -> str:
         return f"{type(self).__name__}(id={self.id!r})"
 
     def _res_potential_getter(self, warning: bool) -> complex:
+        self._res_potential = self.cy_element.get_potentials(1)[0]
         return self._res_getter(self._res_potential, warning)
 
     @property
@@ -85,6 +88,8 @@ class Ground(Element):
             raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.BAD_PHASE)
         self._connect(bus)
         self._connected_buses[bus.id] = phase
+        p = bus.phases.find(phase)
+        bus.cy_element.connect(self.cy_element, [(p, 0)])
 
     #
     # Json Mixin interface

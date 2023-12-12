@@ -5,17 +5,17 @@ import json
 import logging
 import re
 import textwrap
+import time
 import warnings
 from collections.abc import Mapping, Sized
 from importlib import resources
 from itertools import cycle
 from pathlib import Path
 from typing import TYPE_CHECKING, NoReturn, TypeVar
-from urllib.parse import urljoin
 
 import geopandas as gpd
+import numpy as np
 import pandas as pd
-import requests
 from pyproj import CRS
 from requests import Response
 from rich.table import Table
@@ -36,10 +36,11 @@ from roseau.load_flow.models import (
     Transformer,
     VoltageSource,
 )
-from roseau.load_flow.solvers import check_solver_params
-from roseau.load_flow.typing import Authentication, Id, JsonDict, MapOrSeq, Solver, StrPath
+from roseau.load_flow.solvers import AbstractSolver, NewtonGoldstein
+from roseau.load_flow.typing import Id, JsonDict, MapOrSeq, Solver, StrPath
 from roseau.load_flow.utils import CatalogueMixin, JsonMixin, _optional_deps, console, palette
 from roseau.load_flow.utils.types import _DTYPES, VoltagePhaseDtype
+from roseau.load_flow_engine.network.cy_network import CyElectricalNetwork
 
 if TYPE_CHECKING:
     from networkx import Graph
@@ -168,11 +169,13 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         self.grounds = self._elements_as_dict(grounds, RoseauLoadFlowExceptionCode.BAD_GROUND_ID)
         self.potential_refs = self._elements_as_dict(potential_refs, RoseauLoadFlowExceptionCode.BAD_POTENTIAL_REF_ID)
 
+        self._elements: list[Element] = []
         self._check_validity(constructed=False)
         self._create_network()
         self._valid = True
         self._results_valid: bool = False
         self.res_info: JsonDict = {}
+        self._solver: AbstractSolver | None = None
 
     def __repr__(self) -> str:
         def count_repr(__o: Sized, /, singular: str, plural: str | None = None) -> str:
@@ -490,116 +493,124 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
     #
     def solve_load_flow(
         self,
-        auth: Authentication,
-        base_url: str = _DEFAULT_BASE_URL,
         max_iterations: int = _DEFAULT_MAX_ITERATIONS,
         tolerance: float = _DEFAULT_TOLERANCE,
         warm_start: bool = _DEFAULT_WARM_START,
-        solver: Solver = _DEFAULT_SOLVER,
-        solver_params: JsonDict | None = None,
+        solver: AbstractSolver | None = None,
+        **kwargs,
     ) -> int:
-        """Solve the load flow for this network (Requires internet access).
+        """Solve the load flow for this network.
 
         To get the results of the load flow for the whole network, use the `res_` properties on the
         network (e.g. ``print(net.res_buses``). To get the results for a specific element, use the
         `res_` properties on the element (e.g. ``print(net.buses["bus1"].res_potentials)``.
 
         Args:
-            auth:
-                The login and password for the roseau load flow api.
-
-            base_url:
-                The base url to request the load flow solver.
-
             max_iterations:
-                The maximum number of allowed iterations.
+                The maximum number of allowed iterations
 
             tolerance:
-                Tolerance needed for the convergence.
+                Required tolerance value on the residuals for the convergence.
 
             warm_start:
-                If true, initialize the solver with the potentials of the last successful load flow
-                result (if any).
+                Should we use the values of potentials of the last successful load flow result (if any)?
 
             solver:
-                The name of the solver to use for the load flow. The options are:
-                    - ``'newton'``: the classical Newton-Raphson solver.
-                    - ``'newton_goldstein'``: the Newton-Raphson solver with the Goldstein and
-                      Price linear search.
-
-            solver_params:
-                A dictionary of parameters used by the solver. Available parameters depend on the
-                solver chosen. For more information, see the :ref:`solvers` page.
+                The solver to use for the load flow. By default, a Newton-Raphson algorithm is performed with the
+                Goldstein and Price linear search.
 
         Returns:
-            The number of iterations taken.
+            The number of iterations taken
         """
-        from roseau.load_flow import __version__
-
-        solver_params = check_solver_params(solver=solver, params=solver_params)
         if not self._valid:
-            warm_start = False  # Otherwise, we may get an error when calling self.results_to_dict()
-            self._check_validity(constructed=True)
+            self._check_validity(constructed=False)
             self._create_network()
+            if self._solver is not None:
+                self._solver.update_network(self)
 
-        # Get the data
-        data = {
-            "network": self.to_dict(_lf_only=True),
-            "solver": {
-                "name": solver,
-                "params": solver_params,
-                "max_iterations": max_iterations,
-                "tolerance": tolerance,
-                "warm_start": warm_start,
-            },
-        }
-        if warm_start and self.res_info.get("status", "failure") == "success":
-            # Ignore warnings because results may be invalid (a load power has been changed, etc.)
-            data["results"] = self._results_to_dict(False)
+        # Update solver TODO solver params
+        if solver is not None:
+            self._solver = solver
+        if self._solver is None:
+            self._solver = NewtonGoldstein(self)
+        if self._solver.network != self:
+            msg = "The solver has been constructed with a different network than the one it is intending to solve."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.NETWORK_SOLVER_MISMATCH)
 
-        # Request the server
-        response = requests.post(
-            url=urljoin(base_url, "solve/"),
-            json=data,
-            auth=auth,
-            headers={"accept": "application/json", "rlf-version": __version__},
-        )
+        if not warm_start:
+            self._propagate_potentials(force=True)
 
-        # Read the response
-        # Check the response headers
-        remote_rlf_version = response.headers.get("rlf-new-version")
-        if remote_rlf_version is not None:
-            warnings.warn(
-                message=f"A new version ({remote_rlf_version}) of the library roseau-load-flow is available. Please "
-                f"visit https://roseautechnologies.github.io/Roseau_Load_Flow/Installation.html for more information.",
-                category=UserWarning,
-                stacklevel=2,
-            )
+        start = time.perf_counter()
+        try:
+            iterations, residual = self._solver.solve_load_flow(max_iterations=max_iterations, tolerance=tolerance)
+        except RuntimeError as e:
+            msg = e.args[0]
+            zero_elements_index, inf_elements_index = self._solver.cy_solver.analyse_jacobian()
+            if zero_elements_index:
+                zero_elements = [self._elements[i] for i in zero_elements_index]
+                printable_elements = ", ".join(f"{type(e).__name__}({e.id!r})" for e in zero_elements)
+                msg += (
+                    f"The problem seems to come from the elements [{printable_elements}] that have at least one "
+                    f"disconnected phase. "
+                )
+            if inf_elements_index:
+                inf_elements = [self._elements[i] for i in inf_elements_index]
+                printable_elements = ", ".join(f"{type(e).__name__}({e.id!r})" for e in inf_elements)
+                msg += (
+                    f"The problem seems to come from the elements [{printable_elements}] that induce infinite "
+                    f"values. This might be caused by flexible loads with very high alpha."
+                )
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_JACOBIAN) from e
 
-        # HTTP 4xx,5xx
-        if not response.ok:
-            self._parse_error(response=response)
+        end = time.perf_counter()
 
-        # HTTP 200
-        results: JsonDict = response.json()
-        self.res_info = results["info"]
-        if self.res_info["status"] != "success":
+        if iterations == max_iterations:
             msg = (
-                f"The load flow did not converge after {self.res_info['iterations']} iterations. The norm of "
-                f"the residuals is {self.res_info['residual']:.5n}"
+                f"The load flow did not converge after {iterations} iterations. The norm of the residuals is "
+                f"{residual:5n}"
             )
             logger.error(msg=msg)
+
+            self.res_info = {
+                # Input
+                "solver": self._solver.name,
+                "solver_params": self._solver.params(),
+                "tolerance": tolerance,
+                "max_iterations": max_iterations,
+                "warm_start": warm_start,
+                # Output
+                "status": "failure",
+                "iterations": iterations,
+                "residual": residual,
+            }
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.NO_LOAD_FLOW_CONVERGENCE)
 
-        logger.info(
-            f"The load flow converged after {self.res_info['iterations']} iterations (residual="
-            f"{self.res_info['residual']:.5n})."
-        )
+        logger.debug(f"The load flow converged after {iterations} iterations and {end - start:.3n} s.")
 
-        # Dispatch the results
-        self._results_from_dict(data=results)
+        self.res_info = {
+            # Input
+            "solver": self._solver.name,
+            "solver_params": self._solver.params(),
+            "tolerance": tolerance,
+            "max_iterations": max_iterations,
+            "warm_start": warm_start,
+            # Output
+            "status": "success",
+            "iterations": iterations,
+            "residual": residual,
+        }
 
-        return self.res_info["iterations"]
+        # The results are now valid
+        self._results_valid = True
+
+        return iterations
+
+    def reset_inputs(self) -> None:
+        """Reset the input vector (which is used for the first step of the newton algorithm) to its initial value"""
+        if self._solver is not None:
+            self._solver.reset_inputs()
 
     @staticmethod
     def _parse_error(response: Response) -> NoReturn:
@@ -1261,6 +1272,28 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
     def _create_network(self) -> None:
         """Create the Cython and C++ electrical network of all the passed elements."""
         self._valid = True
+        cy_elements = []
+        self._elements = []
+        for bus in self.buses.values():
+            cy_elements.append(bus.cy_element)
+            self._elements.append(bus)
+        for line in self.branches.values():
+            cy_elements.append(line.cy_element)
+            self._elements.append(line)
+        for load in self.loads.values():
+            cy_elements.append(load.cy_element)
+            self._elements.append(load)
+        for ground in self.grounds.values():
+            cy_elements.append(ground.cy_element)
+            self._elements.append(ground)
+        for p_ref in self.potential_refs.values():
+            cy_elements.append(p_ref.cy_element)
+            self._elements.append(p_ref)
+        for source in self.sources.values():
+            cy_elements.append(source.cy_element)
+            self._elements.append(source)
+        self._propagate_potentials(force=False)
+        self.cy_electrical_network = CyElectricalNetwork(elements=np.array(cy_elements), nb_elements=len(cy_elements))
 
     def _check_validity(self, constructed: bool) -> None:
         """Check the validity of the network to avoid having a singular jacobian matrix. It also assigns the `self`
@@ -1314,6 +1347,68 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                 element._network = self
             elif element.network != self:
                 element._raise_several_network()
+
+    def _propagate_potentials(self, force: bool) -> None:
+        """Set the bus potentials that have not been initialized yet
+
+        Args:
+            force:
+                If True, the `_initialized` status of the buses are ignored. If False, only uninitialized
+                potentials of buses will be overwritten.
+        """
+        if force:
+            uninitialized = True
+        else:
+            uninitialized = False
+            for bus in self.buses.values():
+                if not bus._initialized:
+                    uninitialized = True
+
+        if uninitialized:
+            max_voltages = 0.0
+            voltage_source = None
+            potentials = None
+            for source in self.sources.values():
+                # if there are multiple voltage sources, start from the higher one
+                source_voltages = source.voltages.m_as("V")
+                if np.average(np.abs(source_voltages)) > max_voltages:
+                    max_voltages = np.average(np.abs(source_voltages))
+                    voltage_source = source
+                    if "n" in source.phases:
+                        # Assume Vn = 0
+                        potentials = np.append(source_voltages, 0.0)
+                    elif len(source.phases) == 2:
+                        # Assume V1 + V2 = 0
+                        u = source_voltages[0]
+                        potentials = np.array([u / 2, -u / 2])
+                    else:
+                        assert len(source.phases) == 3
+                        # Assume Va + Vb + Vc = 0
+                        u_ab = source_voltages[0]
+                        u_bc = source_voltages[1]
+                        v_b = (u_bc - u_ab) / 3
+                        v_c = v_b - u_bc
+                        v_a = v_b + u_ab
+                        potentials = np.array([v_a, v_b, v_c, 0.0])
+
+            elements = [(voltage_source, potentials)]
+            visited = set()
+            while elements:
+                element, potentials = elements.pop(-1)
+                visited.add(element)
+                if isinstance(element, Bus) and (force or not element._initialized):
+                    bus_n = element.n
+                    element.potentials = potentials[0:bus_n]
+                for e in element._connected_elements:
+                    if e not in visited:
+                        if isinstance(element, Transformer):
+                            k = (element.parameters.ulv / element.parameters.uhv).m_as("")
+                            phase_displacement = element.parameters.phase_displacement
+                            if phase_displacement is None:
+                                phase_displacement = 0
+                            elements.append((e, potentials * k * np.exp(phase_displacement * -1j * np.pi / 6.0)))
+                        else:
+                            elements.append((e, potentials))
 
     @staticmethod
     def _check_ref(elements: list[Element]) -> None:

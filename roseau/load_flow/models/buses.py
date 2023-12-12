@@ -12,6 +12,7 @@ from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowE
 from roseau.load_flow.models.core import Element
 from roseau.load_flow.typing import ComplexArray, ComplexArrayLike1D, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
+from roseau.load_flow_engine.models.buses.cy_buses import CyBus
 
 logger = logging.getLogger(__name__)
 
@@ -75,6 +76,7 @@ class Bus(Element):
         super().__init__(id, **kwargs)
         self._check_phases(id, phases=phases)
         self.phases = phases
+        initialized = potentials is not None
         if potentials is None:
             potentials = [0] * len(phases)
         self.potentials = potentials
@@ -86,6 +88,10 @@ class Bus(Element):
 
         self._res_potentials: ComplexArray | None = None
         self._short_circuits: list[dict[str, Any]] = []
+
+        self.n = len(self.phases)
+        self._initialized = initialized
+        self.cy_element = CyBus(n=self.n, potentials=self._potentials)
 
     def __repr__(self) -> str:
         return f"{type(self).__name__}(id={self.id!r}, phases={self.phases!r})"
@@ -105,8 +111,12 @@ class Bus(Element):
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_POTENTIALS_SIZE)
         self._potentials = np.array(value, dtype=np.complex128)
         self._invalidate_network_results()
+        self._initialized = True
+        if hasattr(self, "cy_element"):
+            self.cy_element.initialize_potentials(self._potentials)
 
     def _res_potentials_getter(self, warning: bool) -> ComplexArray:
+        self._res_potentials = self.cy_element.get_potentials(self.n)
         return self._res_getter(value=self._res_potentials, warning=warning)
 
     @property
@@ -391,6 +401,12 @@ class Bus(Element):
         if self.network is not None:
             self.network._valid = False
 
+        phases_index = np.array([self.phases.find(p) for p in phases], dtype=np.int32)
+        self.cy_element.connect_ports(phases_index, len(phases))
+
+        if ground is not None:
+            self.cy_element.connect(ground.cy_element, [(phases_index[0], 0)])
+
     @property
     def short_circuits(self) -> list[dict[str, Any]]:
         """Return the list of short-circuits of this bus."""
@@ -399,3 +415,6 @@ class Bus(Element):
     def clear_short_circuits(self) -> None:
         """Remove the short-circuits of this bus."""
         self._short_circuits = []
+        msg = "Short circuits cannot be cleared for the engine part."
+        logger.error(msg)
+        raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_SHORT_CIRCUIT)  # TODO

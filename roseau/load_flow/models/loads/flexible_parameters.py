@@ -17,6 +17,7 @@ from roseau.load_flow.typing import (
 )
 from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow.utils import JsonMixin, _optional_deps
+from roseau.load_flow_engine.models.loads.cy_loads import CyControl, CyFlexibleParameter, CyProjection
 
 logger = logging.getLogger(__name__)
 
@@ -89,6 +90,9 @@ class Control(JsonMixin):
         self._u_max = u_max
         self._alpha = alpha
         self._check_values()
+        self.cy_control = CyControl(
+            t=type, u_min=self._u_min, u_down=self._u_down, u_up=self._u_up, u_max=self._u_max, alpha=self._alpha
+        )
 
     def _check_values(self) -> None:
         """Check the provided values."""
@@ -380,6 +384,7 @@ class Projection(JsonMixin):
         self._alpha = alpha
         self._epsilon = epsilon
         self._check_values()
+        self.cy_projection = CyProjection(t=type, alpha=self._alpha, epsilon=self._epsilon)
 
     def _check_values(self) -> None:
         """Check the provided values."""
@@ -499,6 +504,14 @@ class FlexibleParameter(JsonMixin):
         self.s_max = s_max
         self.q_min = q_min
         self.q_max = q_max
+        self.cy_fp = CyFlexibleParameter(
+            control_p=control_p.cy_control,
+            control_q=control_q.cy_control,
+            projection=projection.cy_projection,
+            s_max=self._s_max,
+            q_min=self.q_min.m_as("VAr"),
+            q_max=self.q_max.m_as("VAr"),
+        )
 
     @property
     @ureg_wraps("VA", (None,))
@@ -521,6 +534,8 @@ class FlexibleParameter(JsonMixin):
         if self._q_min is not None and self._q_min < -self._s_max:
             logger.warning("'s_max' has been updated but now 'q_min' is less than -s_max. 'q_min' is set to -s_max")
             self._q_min = -self._s_max
+        if hasattr(self, "cy_fp"):
+            self.cy_fp.update_parameters(self._s_max, self.q_min.m_as("VAr"), self.q_max.m_as("VAr"))
 
     @property
     @ureg_wraps("VAr", (None,))
@@ -542,6 +557,8 @@ class FlexibleParameter(JsonMixin):
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_FLEXIBLE_PARAMETER_VALUE)
         self._q_min = value
+        if hasattr(self, "cy_fp"):
+            self.cy_fp.update_parameters(self._s_max, self.q_min.m_as("VAr"), self.q_max.m_as("VAr"))
 
     @property
     @ureg_wraps("VAr", (None,))
@@ -563,6 +580,8 @@ class FlexibleParameter(JsonMixin):
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_FLEXIBLE_PARAMETER_VALUE)
         self._q_max = value
+        if hasattr(self, "cy_fp"):
+            self.cy_fp.update_parameters(self._s_max, self.q_min.m_as("VAr"), self.q_max.m_as("VAr"))
 
     @classmethod
     def constant(cls) -> Self:
@@ -1011,29 +1030,16 @@ class FlexibleParameter(JsonMixin):
     def _compute_powers(
         self, auth: Authentication, voltages: ComplexArrayLike1D, power: complex, solve_kwargs: JsonDict | None
     ) -> ComplexArray:
-        from roseau.load_flow import Bus, ElectricalNetwork, PotentialRef, PowerLoad, VoltageSource
-
         # Format the input
-        if solve_kwargs is None:
-            solve_kwargs = {}
-        voltages = np.array(np.abs(voltages), dtype=np.float64)
-
-        # Simple network
-        bus = Bus(id="bus", phases="an")
-        vs = VoltageSource(id="source", bus=bus, voltages=[voltages[0]])
-        PotentialRef(id="pref", element=bus, phase="n")
-        fp = FlexibleParameter.from_dict(data=self.to_dict(_lf_only=True))
-        load = PowerLoad(id="load", bus=bus, powers=[power], flexible_params=[fp])
-        en = ElectricalNetwork.from_element(bus)
+        voltages = np.array(np.abs(voltages), dtype=float)
 
         # Iterate over the provided voltages to get the associated flexible powers
         res_flexible_powers = []
         for v in voltages:
-            vs.voltages = [v]
-            en.solve_load_flow(auth=auth, **solve_kwargs)
-            res_flexible_powers.append(load.res_flexible_powers.m_as("VA")[0])
+            s = self.cy_fp.compute_power(v, power)
+            res_flexible_powers.append(s)
 
-        return np.array(res_flexible_powers, dtype=np.complex128)
+        return np.array(res_flexible_powers, dtype=complex)
 
     @ureg_wraps((None, "VA"), (None, None, "V", "VA", None, None, None, "VA"))
     def plot_pq(
