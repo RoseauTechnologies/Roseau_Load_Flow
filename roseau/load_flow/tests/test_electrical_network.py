@@ -515,139 +515,6 @@ def test_bad_networks():
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_BUS_ID
 
 
-def test_solve_load_flow(small_network, good_json_results):
-    load: PowerLoad = small_network.loads["load"]
-    load_bus = small_network.buses["bus1"]
-
-    # Good result
-    # Request the server
-    solve_url = urljoin(ElectricalNetwork._DEFAULT_BASE_URL, "solve/")
-    with requests_mock.Mocker() as m:
-        m.post(solve_url, status_code=200, json=good_json_results, headers={"content-type": "application/json"})
-        small_network.solve_load_flow(auth=("", ""))
-    assert len(load_bus.res_potentials) == 4
-    assert small_network.results_to_dict() == good_json_results
-
-    # No convergence
-    load.powers = [10000000, 100, 100]
-    json_result = {
-        "info": {
-            "status": "failure",
-            "solver": "newton",
-            "iterations": 50,
-            "wam_start": False,
-            "tolerance": 1e-06,
-            "residual": 14037.977318668112,
-            "max_iterations": 20,
-        },
-        "buses": [
-            {
-                "id": "bus0",
-                "phases": "abcn",
-                "potentials": [
-                    [20000.0, 0.0],
-                    [-10000.0, -17320.508076],
-                    [-10000.0, 17320.508076],
-                    [0.0, 0.0],
-                ],
-            },
-            {
-                "id": "bus1",
-                "phases": "abcn",
-                "potentials": [
-                    [110753.81558442864, 1.5688245436058308e-26],
-                    [-9999.985548801811, -17320.50568183019],
-                    [-9999.985548801811, 17320.50568183019],
-                    [-90753.844486825, -2.6687106473172017e-26],
-                ],
-            },
-        ],
-        "branches": [
-            {
-                "id": "line",
-                "phases1": "abcn",
-                "phases2": "abcn",
-                "currents1": [[0.0, 0.0], [0.0, 0.0], [0.0, 0.0], [0.0, 0.0]],
-                "currents2": [[0.0, 0.0], [0.0, 0.0], [0.0, 0.0], [0.0, 0.0]],
-            }
-        ],
-        "loads": [
-            {
-                "id": "load",
-                "phases": "abcn",
-                "currents": [[0.0, 0.0], [0.0, 0.0], [0.0, 0.0], [0.0, 0.0]],
-            },
-        ],
-        "sources": [
-            {
-                "id": "vs",
-                "phases": "abcn",
-                "currents": [[0.0, 0.0], [0.0, 0.0], [0.0, 0.0], [0.0, 0.0]],
-            },
-        ],
-        "grounds": [
-            {
-                "id": "ground",
-                "potential": [1.3476526914363477e-12, 0.0],
-            }
-        ],
-        "potential_refs": [
-            {
-                "id": "pref",
-                "current": [0.0, 0.0],
-            },
-        ],
-    }
-    with requests_mock.Mocker() as m:
-        m.post(solve_url, status_code=200, json=json_result, headers={"content-type": "application/json"})
-        with pytest.raises(RoseauLoadFlowException) as e:
-            small_network.solve_load_flow(auth=("", ""))
-        assert "The load flow did not converge after 50 iterations" in e.value.msg
-        assert e.value.code == RoseauLoadFlowExceptionCode.NO_LOAD_FLOW_CONVERGENCE
-
-
-def test_solve_load_flow_error(small_network):
-    # Solve url
-    solve_url = urljoin(ElectricalNetwork._DEFAULT_BASE_URL, "solve/")
-
-    # Parse RLF error
-    json_result = {"msg": "toto", "code": "roseau.load_flow.bad_branch_type"}
-    with requests_mock.Mocker() as m:
-        m.post(solve_url, status_code=400, json=json_result, headers={"content-type": "application/json"})
-        with pytest.raises(RoseauLoadFlowException) as e:
-            small_network.solve_load_flow(auth=("", ""))
-    assert e.value.msg == json_result["msg"]
-    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_BRANCH_TYPE
-
-    # Load flow error (other than official exceptions of RoseauLoadFlowException)
-    json_result = {"msg": "Error while solving the load flow", "code": "load_flow_error"}
-    with requests_mock.Mocker() as m:
-        m.post(solve_url, status_code=400, json=json_result, headers={"content-type": "application/json"})
-        with pytest.raises(RoseauLoadFlowException) as e:
-            small_network.solve_load_flow(auth=("", ""))
-    assert json_result["msg"] in e.value.msg
-    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_REQUEST
-
-    # Authentication fail
-    json_result = {"detail": "not_authenticated"}
-    with requests_mock.Mocker() as m:
-        m.post(solve_url, status_code=401, json=json_result, headers={"content-type": "application/json"})
-        with pytest.raises(RoseauLoadFlowException) as e:
-            small_network.solve_load_flow(auth=("", ""))
-    assert "Authentication failed." in e.value.msg
-    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_REQUEST
-
-    # Bad request
-    json_result = {"msg": "Error while parsing the provided JSON", "code": "parse_error"}
-    with requests_mock.Mocker() as m:
-        m.post(solve_url, status_code=400, json=json_result, headers={"content-type": "application/json"})
-        with pytest.raises(RoseauLoadFlowException) as e:
-            small_network.solve_load_flow(auth=("", ""))
-    assert "There is a problem in the request" in e.value.msg
-    assert "Error while parsing the provided JSON" in e.value.msg
-    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_REQUEST
-
-
 def test_frame(small_network: ElectricalNetwork):
     # Buses
     buses_gdf = small_network.buses_frame
@@ -951,7 +818,7 @@ def test_single_phase_network(single_phase_network: ElectricalNetwork):
     solve_url = urljoin(ElectricalNetwork._DEFAULT_BASE_URL, "solve/")
     with requests_mock.Mocker() as m:
         m.post(solve_url, status_code=200, json=json_results, headers={"content-type": "application/json"})
-        single_phase_network.solve_load_flow(auth=("", ""))
+        single_phase_network.solve_load_flow()
 
     # Test results of elements
     # ------------------------
