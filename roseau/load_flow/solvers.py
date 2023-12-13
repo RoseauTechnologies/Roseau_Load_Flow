@@ -17,7 +17,7 @@ _SOLVERS_PARAMS: dict[Solver, list[str]] = {
 SOLVERS = list(_SOLVERS_PARAMS)
 
 if TYPE_CHECKING:
-    from roseau.load_flow_engine.network import ElectricalNetwork
+    from roseau.load_flow.network import ElectricalNetwork
 
 
 class AbstractSolver(ABC):
@@ -81,6 +81,11 @@ class AbstractSolver(ABC):
 
     @abstractmethod
     def update_network(self, network: "ElectricalNetwork") -> None:
+        """If the network has changed, we need to re-create a solver for this new network."""
+        raise NotImplementedError
+
+    @abstractmethod
+    def update_params(self, params: JsonDict) -> None:
         """If the network has changed, we need to re-create a solver for this new network."""
         raise NotImplementedError
 
@@ -155,6 +160,9 @@ class Newton(AbstractNewton):
     def update_network(self, network: "ElectricalNetwork") -> None:
         self.cy_solver = CyNewton(network=network.cy_electrical_network, optimize_tape=self.optimize_tape)
 
+    def update_params(self, params: JsonDict) -> None:
+        pass
+
 
 class NewtonGoldstein(AbstractNewton):
     """The Newton-Raphson algorithm with the Goldstein and Price linear search. It has better stability than the
@@ -206,48 +214,13 @@ class NewtonGoldstein(AbstractNewton):
             network=network.cy_electrical_network, optimize_tape=self.optimize_tape, m1=self.m1, m2=self.m2
         )
 
+    def update_params(self, params: JsonDict) -> None:
+        m1 = params.get("m1", NewtonGoldstein.DEFAULT_M1)
+        m2 = params.get("m2", NewtonGoldstein.DEFAULT_M2)
+        if m1 != self.m1 or m2 != self.m2:
+            self.cy_solver.update_params(m1=m1, m2=m2)
+            self.m1 = m1
+            self.m2 = m2
+
     def params(self) -> JsonDict:
         return {"m1": self.m1, "m2": self.m2}
-
-
-def check_solver_params(solver: Solver, params: JsonDict | None) -> JsonDict:
-    """Strip and check the solver parameters.
-
-    Args:
-        solver:
-            The name of the solver used by the solver.
-
-        params:
-            The solver parameters dictionary.
-
-    Returns:
-        The updated solver parameters.
-    """
-    params = {} if params is None else params.copy()
-
-    # Check the solver
-    if solver not in _SOLVERS_PARAMS:
-        msg = f"Solver {solver!r} is not implemented. Available solvers are: {SOLVERS}"
-        logger.error(msg)
-        raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_SOLVER_NAME)
-
-    # Warn about and remove unexpected parameters
-    param_list = _SOLVERS_PARAMS[solver]
-    to_delete: list[str] = []
-    for key in params:
-        if key not in param_list:
-            msg = "Unexpected solver parameter %r for the %r solver. Available params are: %s"
-            logger.warning(msg, key, solver, param_list)
-            to_delete.append(key)
-    for key in to_delete:
-        del params[key]
-
-    # Extra checks per solver
-    if solver == "newton":
-        pass  # Nothing more to check
-    elif solver == "newton_goldstein" and params.get("m1", 0.1) >= params.get("m2", 0.9):
-        msg = "For the 'newton_goldstein' solver, the inequality m1 < m2 should be respected."
-        logger.error(msg)
-        raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_SOLVER_PARAMS)
-
-    return params

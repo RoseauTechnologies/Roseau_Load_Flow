@@ -36,7 +36,7 @@ from roseau.load_flow.models import (
     Transformer,
     VoltageSource,
 )
-from roseau.load_flow.solvers import AbstractSolver, NewtonGoldstein
+from roseau.load_flow.solvers import AbstractSolver
 from roseau.load_flow.typing import Id, JsonDict, MapOrSeq, Solver, StrPath
 from roseau.load_flow.utils import CatalogueMixin, JsonMixin, _optional_deps, console, palette
 from roseau.load_flow.utils.types import _DTYPES, VoltagePhaseDtype
@@ -175,7 +175,9 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         self._valid = True
         self._results_valid: bool = False
         self.res_info: JsonDict = {}
-        self._solver: AbstractSolver | None = None
+        self._solver: AbstractSolver = AbstractSolver.from_dict(
+            data={"name": self._DEFAULT_SOLVER, "params": {}}, network=self
+        )
 
     def __repr__(self) -> str:
         def count_repr(__o: Sized, /, singular: str, plural: str | None = None) -> str:
@@ -496,8 +498,8 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         max_iterations: int = _DEFAULT_MAX_ITERATIONS,
         tolerance: float = _DEFAULT_TOLERANCE,
         warm_start: bool = _DEFAULT_WARM_START,
-        solver: AbstractSolver | None = None,
-        **kwargs,
+        solver: Solver = _DEFAULT_SOLVER,
+        solver_params: JsonDict | None = None,
     ) -> int:
         """Solve the load flow for this network.
 
@@ -507,36 +509,39 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
 
         Args:
             max_iterations:
-                The maximum number of allowed iterations
+                The maximum number of allowed iterations.
 
             tolerance:
-                Required tolerance value on the residuals for the convergence.
+                Tolerance needed for the convergence.
 
             warm_start:
-                Should we use the values of potentials of the last successful load flow result (if any)?
+                If true, initialize the solver with the potentials of the last successful load flow
+                result (if any).
 
             solver:
-                The solver to use for the load flow. By default, a Newton-Raphson algorithm is performed with the
-                Goldstein and Price linear search.
+                The name of the solver to use for the load flow. The options are:
+                    - ``'newton'``: the classical Newton-Raphson solver.
+                    - ``'newton_goldstein'``: the Newton-Raphson solver with the Goldstein and
+                      Price linear search.
+
+            solver_params:
+                A dictionary of parameters used by the solver. Available parameters depend on the
+                solver chosen. For more information, see the :ref:`solvers` page.
 
         Returns:
-            The number of iterations taken
+            The number of iterations taken.
         """
         if not self._valid:
             self._check_validity(constructed=False)
             self._create_network()
-            if self._solver is not None:
-                self._solver.update_network(self)
+            self._solver.update_network(self)
 
-        # Update solver TODO solver params
-        if solver is not None:
-            self._solver = solver
-        if self._solver is None:
-            self._solver = NewtonGoldstein(self)
-        if self._solver.network != self:
-            msg = "The solver has been constructed with a different network than the one it is intending to solve."
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.NETWORK_SOLVER_MISMATCH)
+        # Update solver
+        if solver != self._solver.name:
+            solver_params = solver_params if solver_params is not None else {}
+            self._solver = AbstractSolver.from_dict(data={"name": solver, "params": solver_params}, network=self)
+        elif solver_params is not None:
+            self._solver.update_params(solver_params)
 
         if not warm_start:
             self._propagate_potentials(force=True)
