@@ -77,7 +77,7 @@ class AbstractBranch(Element):
         return s
 
     def _res_currents_getter(self, warning: bool) -> tuple[ComplexArray, ComplexArray]:
-        self._res_currents = self.cy_element.get_currents(len(self.phases1), len(self.phases2))
+        self._res_currents = self._cy_element.get_currents(len(self.phases1), len(self.phases2))
         return self._res_getter(value=self._res_currents, warning=warning)
 
     @property
@@ -128,7 +128,7 @@ class AbstractBranch(Element):
             if phase in self.bus1.phases:
                 j = self.bus1.phases.find(phase)
                 connections.append((i, j))
-        self.cy_element.connect(self.bus1.cy_element, connections, True)
+        self._cy_element.connect(self.bus1._cy_element, connections, True)
 
         connections = []
         assert isinstance(self.bus2, Bus)
@@ -136,7 +136,7 @@ class AbstractBranch(Element):
             if phase in self.bus2.phases:
                 j = self.bus2.phases.find(phase)
                 connections.append((i, j))
-        self.cy_element.connect(self.bus2.cy_element, connections, False)
+        self._cy_element.connect(self.bus2._cy_element, connections, False)
 
     #
     # Json Mixin interface

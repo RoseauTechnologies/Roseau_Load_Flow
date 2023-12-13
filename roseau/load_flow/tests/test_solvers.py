@@ -8,7 +8,7 @@ from roseau.load_flow import (
     RoseauLoadFlowExceptionCode,
     VoltageSource,
 )
-from roseau.load_flow.solvers import AbstractSolver, Newton, NewtonGoldstein
+from roseau.load_flow._solvers import AbstractSolver, Newton, NewtonGoldstein
 
 
 def test_solver():

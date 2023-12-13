@@ -106,7 +106,7 @@ class AbstractLoad(Element, ABC):
         return calculate_voltage_phases(self.phases)
 
     def _res_currents_getter(self, warning: bool) -> ComplexArray:
-        self._res_currents = self.cy_element.get_currents(self.n)
+        self._res_currents = self._cy_element.get_currents(self.n)
         return self._res_getter(value=self._res_currents, warning=warning)
 
     @property
@@ -166,7 +166,7 @@ class AbstractLoad(Element, ABC):
             if phase in self.phases:
                 j = self.phases.find(phase)
                 connections.append((i, j))
-        self.bus.cy_element.connect(self.cy_element, connections)
+        self.bus._cy_element.connect(self._cy_element, connections)
 
     #
     # Disconnect
@@ -279,16 +279,18 @@ class PowerLoad(AbstractLoad):
         if self.is_flexible:
             cy_parameters = []
             for p in flexible_params:
-                cy_parameters.append(p.cy_fp)
+                cy_parameters.append(p._cy_fp)
             if self.phases == "abc":
-                self.cy_element = CyDeltaFlexibleLoad(n=self.n, powers=self._powers, parameters=np.array(cy_parameters))
+                self._cy_element = CyDeltaFlexibleLoad(
+                    n=self.n, powers=self._powers, parameters=np.array(cy_parameters)
+                )
             else:
-                self.cy_element = CyFlexibleLoad(n=self.n, powers=self._powers, parameters=np.array(cy_parameters))
+                self._cy_element = CyFlexibleLoad(n=self.n, powers=self._powers, parameters=np.array(cy_parameters))
         else:
             if self.phases == "abc":
-                self.cy_element = CyDeltaPowerLoad(n=self.n, powers=self._powers)
+                self._cy_element = CyDeltaPowerLoad(n=self.n, powers=self._powers)
             else:
-                self.cy_element = CyPowerLoad(n=self.n, powers=self._powers)
+                self._cy_element = CyPowerLoad(n=self.n, powers=self._powers)
         self._cy_connect()
 
     @property
@@ -339,11 +341,11 @@ class PowerLoad(AbstractLoad):
                     raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_S_VALUE)
         self._powers = value
         self._invalidate_network_results()
-        if hasattr(self, "cy_element"):
-            self.cy_element.update_powers(self._powers)
+        if self._cy_element is not None:
+            self._cy_element.update_powers(self._powers)
 
     def _res_flexible_powers_getter(self, warning: bool) -> ComplexArray:
-        self._res_flexible_powers = self.cy_element.get_powers(self.n)
+        self._res_flexible_powers = self._cy_element.get_powers(self.n)
         return self._res_getter(value=self._res_flexible_powers, warning=warning)
 
     @property
@@ -412,9 +414,9 @@ class CurrentLoad(AbstractLoad):
         super().__init__(id=id, phases=phases, bus=bus, **kwargs)
         self.currents = currents  # handles size checks and unit conversion
         if self.phases == "abc":
-            self.cy_element = CyDeltaCurrentLoad(n=self.n, currents=self._currents)
+            self._cy_element = CyDeltaCurrentLoad(n=self.n, currents=self._currents)
         else:
-            self.cy_element = CyCurrentLoad(n=self.n, currents=self._currents)
+            self._cy_element = CyCurrentLoad(n=self.n, currents=self._currents)
         self._cy_connect()
 
     @property
@@ -428,8 +430,8 @@ class CurrentLoad(AbstractLoad):
     def currents(self, value: ComplexArrayLike1D) -> None:
         self._currents = self._validate_value(value)
         self._invalidate_network_results()
-        if hasattr(self, "cy_element"):
-            self.cy_element.update_currents(self._currents)
+        if self._cy_element is not None:
+            self._cy_element.update_currents(self._currents)
 
     def to_dict(self, *, _lf_only: bool = False) -> JsonDict:
         self._raise_disconnected_error()
@@ -471,9 +473,9 @@ class ImpedanceLoad(AbstractLoad):
         super().__init__(id=id, phases=phases, bus=bus, **kwargs)
         self.impedances = impedances
         if self.phases == "abc":
-            self.cy_element = CyDeltaAdmittanceLoad(n=self.n, admittances=1.0 / self._impedances)
+            self._cy_element = CyDeltaAdmittanceLoad(n=self.n, admittances=1.0 / self._impedances)
         else:
-            self.cy_element = CyAdmittanceLoad(n=self.n, admittances=1.0 / self._impedances)
+            self._cy_element = CyAdmittanceLoad(n=self.n, admittances=1.0 / self._impedances)
         self._cy_connect()
 
     @property
@@ -487,8 +489,8 @@ class ImpedanceLoad(AbstractLoad):
     def impedances(self, impedances: ComplexArrayLike1D) -> None:
         self._impedances = self._validate_value(impedances)
         self._invalidate_network_results()
-        if hasattr(self, "cy_element"):
-            self.cy_element.update_admittances(1.0 / self._impedances)
+        if self._cy_element is not None:
+            self._cy_element.update_admittances(1.0 / self._impedances)
 
     def to_dict(self, *, _lf_only: bool = False) -> JsonDict:
         self._raise_disconnected_error()

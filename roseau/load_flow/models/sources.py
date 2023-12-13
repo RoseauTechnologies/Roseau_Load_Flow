@@ -76,9 +76,9 @@ class VoltageSource(Element):
 
         self.n = len(self.phases)
         if self.phases == "abc":
-            self.cy_element = CyDeltaVoltageSource(n=self.n, voltages=self._voltages)
+            self._cy_element = CyDeltaVoltageSource(n=self.n, voltages=self._voltages)
         else:
-            self.cy_element = CyVoltageSource(n=self.n, voltages=self._voltages)
+            self._cy_element = CyVoltageSource(n=self.n, voltages=self._voltages)
         self._cy_connect()
 
         # Results
@@ -106,8 +106,8 @@ class VoltageSource(Element):
             raise RoseauLoadFlowException(msg, code=RoseauLoadFlowExceptionCode.BAD_VOLTAGES_SIZE)
         self._voltages = np.array(voltages, dtype=np.complex128)
         self._invalidate_network_results()
-        if hasattr(self, "cy_element"):
-            self.cy_element.update_voltages(self._voltages)
+        if self._cy_element is not None:
+            self._cy_element.update_voltages(self._voltages)
 
     @property
     def voltage_phases(self) -> list[str]:
@@ -115,7 +115,7 @@ class VoltageSource(Element):
         return calculate_voltage_phases(self.phases)
 
     def _res_currents_getter(self, warning: bool) -> ComplexArray:
-        self._res_currents = self.cy_element.get_currents(self.n)
+        self._res_currents = self._cy_element.get_currents(self.n)
         return self._res_getter(value=self._res_currents, warning=warning)
 
     @property
@@ -151,7 +151,7 @@ class VoltageSource(Element):
             if phase in self.phases:
                 j = self.phases.find(phase)
                 connections.append((i, j))
-        self.bus.cy_element.connect(self.cy_element, connections)
+        self.bus._cy_element.connect(self._cy_element, connections)
 
     #
     # Disconnect

@@ -90,7 +90,7 @@ class Control(JsonMixin):
         self._u_max = u_max
         self._alpha = alpha
         self._check_values()
-        self.cy_control = CyControl(
+        self._cy_control = CyControl(
             t=type, u_min=self._u_min, u_down=self._u_down, u_up=self._u_up, u_max=self._u_max, alpha=self._alpha
         )
 
@@ -384,7 +384,7 @@ class Projection(JsonMixin):
         self._alpha = alpha
         self._epsilon = epsilon
         self._check_values()
-        self.cy_projection = CyProjection(t=type, alpha=self._alpha, epsilon=self._epsilon)
+        self._cy_projection = CyProjection(t=type, alpha=self._alpha, epsilon=self._epsilon)
 
     def _check_values(self) -> None:
         """Check the provided values."""
@@ -499,15 +499,16 @@ class FlexibleParameter(JsonMixin):
         self.control_p = control_p
         self.control_q = control_q
         self.projection = projection
+        self._cy_fp = None
         self._q_min = None
         self._q_max = None
         self.s_max = s_max
         self.q_min = q_min
         self.q_max = q_max
-        self.cy_fp = CyFlexibleParameter(
-            control_p=control_p.cy_control,
-            control_q=control_q.cy_control,
-            projection=projection.cy_projection,
+        self._cy_fp = CyFlexibleParameter(
+            control_p=control_p._cy_control,
+            control_q=control_q._cy_control,
+            projection=projection._cy_projection,
             s_max=self._s_max,
             q_min=self.q_min.m_as("VAr"),
             q_max=self.q_max.m_as("VAr"),
@@ -534,8 +535,8 @@ class FlexibleParameter(JsonMixin):
         if self._q_min is not None and self._q_min < -self._s_max:
             logger.warning("'s_max' has been updated but now 'q_min' is less than -s_max. 'q_min' is set to -s_max")
             self._q_min = -self._s_max
-        if hasattr(self, "cy_fp"):
-            self.cy_fp.update_parameters(self._s_max, self.q_min.m_as("VAr"), self.q_max.m_as("VAr"))
+        if self._cy_fp is not None:
+            self._cy_fp.update_parameters(self._s_max, self.q_min.m_as("VAr"), self.q_max.m_as("VAr"))
 
     @property
     @ureg_wraps("VAr", (None,))
@@ -557,8 +558,8 @@ class FlexibleParameter(JsonMixin):
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_FLEXIBLE_PARAMETER_VALUE)
         self._q_min = value
-        if hasattr(self, "cy_fp"):
-            self.cy_fp.update_parameters(self._s_max, self.q_min.m_as("VAr"), self.q_max.m_as("VAr"))
+        if self._cy_fp is not None:
+            self._cy_fp.update_parameters(self._s_max, self.q_min.m_as("VAr"), self.q_max.m_as("VAr"))
 
     @property
     @ureg_wraps("VAr", (None,))
@@ -580,8 +581,8 @@ class FlexibleParameter(JsonMixin):
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_FLEXIBLE_PARAMETER_VALUE)
         self._q_max = value
-        if hasattr(self, "cy_fp"):
-            self.cy_fp.update_parameters(self._s_max, self.q_min.m_as("VAr"), self.q_max.m_as("VAr"))
+        if self._cy_fp is not None:
+            self._cy_fp.update_parameters(self._s_max, self.q_min.m_as("VAr"), self.q_max.m_as("VAr"))
 
     @classmethod
     def constant(cls) -> Self:
@@ -1036,7 +1037,7 @@ class FlexibleParameter(JsonMixin):
         # Iterate over the provided voltages to get the associated flexible powers
         res_flexible_powers = []
         for v in voltages:
-            s = self.cy_fp.compute_power(v, power)
+            s = self._cy_fp.compute_power(v, power)
             res_flexible_powers.append(s)
 
         return np.array(res_flexible_powers, dtype=complex)

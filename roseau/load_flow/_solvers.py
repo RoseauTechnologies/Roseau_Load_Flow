@@ -33,7 +33,7 @@ class AbstractSolver(ABC):
                 The electrical network for which the load flow needs to be solved.
         """
         self.network = network
-        self.cy_solver: CyAbstractSolver | None = None
+        self._cy_solver: CyAbstractSolver | None = None
 
     @classmethod
     def from_dict(cls, data: JsonDict, network: "ElectricalNetwork") -> Self:
@@ -73,11 +73,11 @@ class AbstractSolver(ABC):
         Returns:
             The number of iterations and the final residual
         """
-        return self.cy_solver.solve_load_flow(max_iterations=max_iterations, tolerance=tolerance)
+        return self._cy_solver.solve_load_flow(max_iterations=max_iterations, tolerance=tolerance)
 
     def reset_inputs(self):
         """Reset the input vector (which is used for the first step of the newton algorithm) to its initial value"""
-        self.cy_solver.reset_inputs()
+        self._cy_solver.reset_inputs()
 
     @abstractmethod
     def update_network(self, network: "ElectricalNetwork") -> None:
@@ -126,11 +126,11 @@ class AbstractNewton(AbstractSolver, ABC):
                 The prefix of the name of the files. They will be output as prefix.mtx and prefix_m.mtx to follow Eigen
                 solver benchmark convention.
         """
-        self.cy_solver.save_matrix(prefix)
+        self._cy_solver.save_matrix(prefix)
 
     def current_jacobian(self) -> np.ndarray:
         """Show the jacobian of the current iteration (useful for debugging)"""
-        return self.cy_solver.current_jacobian()
+        return self._cy_solver.current_jacobian()
 
 
 class Newton(AbstractNewton):
@@ -155,10 +155,10 @@ class Newton(AbstractNewton):
                 every subsequent load flow to run faster.
         """
         super().__init__(network=network, optimize_tape=optimize_tape, **kwargs)
-        self.cy_solver = CyNewton(network=network.cy_electrical_network, optimize_tape=optimize_tape)
+        self._cy_solver = CyNewton(network=network._cy_electrical_network, optimize_tape=optimize_tape)
 
     def update_network(self, network: "ElectricalNetwork") -> None:
-        self.cy_solver = CyNewton(network=network.cy_electrical_network, optimize_tape=self.optimize_tape)
+        self._cy_solver = CyNewton(network=network._cy_electrical_network, optimize_tape=self.optimize_tape)
 
     def update_params(self, params: JsonDict) -> None:
         pass
@@ -205,20 +205,20 @@ class NewtonGoldstein(AbstractNewton):
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_SOLVER_PARAMS)
         self.m1 = m1
         self.m2 = m2
-        self.cy_solver = CyNewtonGoldstein(
-            network=network.cy_electrical_network, optimize_tape=optimize_tape, m1=m1, m2=m2
+        self._cy_solver = CyNewtonGoldstein(
+            network=network._cy_electrical_network, optimize_tape=optimize_tape, m1=m1, m2=m2
         )
 
     def update_network(self, network: "ElectricalNetwork") -> None:
-        self.cy_solver = CyNewtonGoldstein(
-            network=network.cy_electrical_network, optimize_tape=self.optimize_tape, m1=self.m1, m2=self.m2
+        self._cy_solver = CyNewtonGoldstein(
+            network=network._cy_electrical_network, optimize_tape=self.optimize_tape, m1=self.m1, m2=self.m2
         )
 
     def update_params(self, params: JsonDict) -> None:
         m1 = params.get("m1", NewtonGoldstein.DEFAULT_M1)
         m2 = params.get("m2", NewtonGoldstein.DEFAULT_M2)
         if m1 != self.m1 or m2 != self.m2:
-            self.cy_solver.update_params(m1=m1, m2=m2)
+            self._cy_solver.update_params(m1=m1, m2=m2)
             self.m1 = m1
             self.m2 = m2
 

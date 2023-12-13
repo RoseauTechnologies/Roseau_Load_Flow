@@ -63,22 +63,22 @@ class PotentialRef(Element):
         self._res_current: complex | None = None
         if isinstance(element, Bus) and self.phase is None:
             n = len(element.phases)
-            self.cy_element = CyDeltaPotentialRef(n)
+            self._cy_element = CyDeltaPotentialRef(n)
             connections = [(i, i) for i in range(n)]
-            element.cy_element.connect(self.cy_element, connections)
+            element._cy_element.connect(self._cy_element, connections)
         else:
-            self.cy_element = CyPotentialRef()
+            self._cy_element = CyPotentialRef()
             if isinstance(element, Ground):
-                element.cy_element.connect(self.cy_element, [(0, 0)])
+                element._cy_element.connect(self._cy_element, [(0, 0)])
             else:
                 p = element.phases.find(self.phase)
-                element.cy_element.connect(self.cy_element, [(p, 0)])
+                element._cy_element.connect(self._cy_element, [(p, 0)])
 
     def __repr__(self) -> str:
         return f"{type(self).__name__}(id={self.id!r}, element={self.element!r}, phase={self.phase!r})"
 
     def _res_current_getter(self, warning: bool) -> complex:
-        self._res_current = self.cy_element.get_current()
+        self._res_current = self._cy_element.get_current()
         return self._res_getter(self._res_current, warning)
 
     @property

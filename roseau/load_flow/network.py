@@ -21,6 +21,7 @@ from requests import Response
 from rich.table import Table
 from typing_extensions import Self
 
+from roseau.load_flow._solvers import AbstractSolver
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.io import network_from_dgs, network_from_dict, network_to_dict
 from roseau.load_flow.models import (
@@ -36,7 +37,6 @@ from roseau.load_flow.models import (
     Transformer,
     VoltageSource,
 )
-from roseau.load_flow.solvers import AbstractSolver
 from roseau.load_flow.typing import Id, JsonDict, MapOrSeq, Solver, StrPath
 from roseau.load_flow.utils import CatalogueMixin, JsonMixin, _optional_deps, console, palette
 from roseau.load_flow.utils.types import _DTYPES, VoltagePhaseDtype
@@ -551,7 +551,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             iterations, residual = self._solver.solve_load_flow(max_iterations=max_iterations, tolerance=tolerance)
         except RuntimeError as e:
             msg = e.args[0]
-            zero_elements_index, inf_elements_index = self._solver.cy_solver.analyse_jacobian()
+            zero_elements_index, inf_elements_index = self._solver._cy_solver.analyse_jacobian()
             if zero_elements_index:
                 zero_elements = [self._elements[i] for i in zero_elements_index]
                 printable_elements = ", ".join(f"{type(e).__name__}({e.id!r})" for e in zero_elements)
@@ -1280,25 +1280,25 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         cy_elements = []
         self._elements = []
         for bus in self.buses.values():
-            cy_elements.append(bus.cy_element)
+            cy_elements.append(bus._cy_element)
             self._elements.append(bus)
         for line in self.branches.values():
-            cy_elements.append(line.cy_element)
+            cy_elements.append(line._cy_element)
             self._elements.append(line)
         for load in self.loads.values():
-            cy_elements.append(load.cy_element)
+            cy_elements.append(load._cy_element)
             self._elements.append(load)
         for ground in self.grounds.values():
-            cy_elements.append(ground.cy_element)
+            cy_elements.append(ground._cy_element)
             self._elements.append(ground)
         for p_ref in self.potential_refs.values():
-            cy_elements.append(p_ref.cy_element)
+            cy_elements.append(p_ref._cy_element)
             self._elements.append(p_ref)
         for source in self.sources.values():
-            cy_elements.append(source.cy_element)
+            cy_elements.append(source._cy_element)
             self._elements.append(source)
         self._propagate_potentials(force=False)
-        self.cy_electrical_network = CyElectricalNetwork(elements=np.array(cy_elements), nb_elements=len(cy_elements))
+        self._cy_electrical_network = CyElectricalNetwork(elements=np.array(cy_elements), nb_elements=len(cy_elements))
 
     def _check_validity(self, constructed: bool) -> None:
         """Check the validity of the network to avoid having a singular jacobian matrix. It also assigns the `self`

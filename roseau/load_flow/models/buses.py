@@ -91,7 +91,7 @@ class Bus(Element):
 
         self.n = len(self.phases)
         self._initialized = initialized
-        self.cy_element = CyBus(n=self.n, potentials=self._potentials)
+        self._cy_element = CyBus(n=self.n, potentials=self._potentials)
 
     def __repr__(self) -> str:
         return f"{type(self).__name__}(id={self.id!r}, phases={self.phases!r})"
@@ -112,11 +112,11 @@ class Bus(Element):
         self._potentials = np.array(value, dtype=np.complex128)
         self._invalidate_network_results()
         self._initialized = True
-        if hasattr(self, "cy_element"):
-            self.cy_element.initialize_potentials(self._potentials)
+        if self._cy_element is not None:
+            self._cy_element.initialize_potentials(self._potentials)
 
     def _res_potentials_getter(self, warning: bool) -> ComplexArray:
-        self._res_potentials = self.cy_element.get_potentials(self.n)
+        self._res_potentials = self._cy_element.get_potentials(self.n)
         return self._res_getter(value=self._res_potentials, warning=warning)
 
     @property
@@ -402,10 +402,10 @@ class Bus(Element):
             self.network._valid = False
 
         phases_index = np.array([self.phases.find(p) for p in phases], dtype=np.int32)
-        self.cy_element.connect_ports(phases_index, len(phases))
+        self._cy_element.connect_ports(phases_index, len(phases))
 
         if ground is not None:
-            self.cy_element.connect(ground.cy_element, [(phases_index[0], 0)])
+            self._cy_element.connect(ground._cy_element, [(phases_index[0], 0)])
 
     @property
     def short_circuits(self) -> list[dict[str, Any]]:
