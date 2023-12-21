@@ -14,7 +14,7 @@ from roseau.load_flow.models.lines.parameters import LineParameters
 from roseau.load_flow.models.sources import VoltageSource
 from roseau.load_flow.typing import ComplexArray, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
-from roseau.load_flow_engine.models.lines.cy_lines import CyShuntLine, CySimplifiedLine, CySwitch
+from roseau.load_flow_engine.cy_engine import CyShuntLine, CySimplifiedLine, CySwitch
 
 logger = logging.getLogger(__name__)
 

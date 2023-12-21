@@ -1,3 +1,5 @@
+import contextlib
+
 import pytest
 
 from roseau.load_flow import (
@@ -53,18 +55,22 @@ def test_network_solver():
     PotentialRef(id="pref", element=bus)
     en = ElectricalNetwork.from_element(bus)
 
-    en.solve_load_flow()
+    with contextlib.suppress(RoseauLoadFlowException):  # No valid license
+        en.solve_load_flow()
     solver = en._solver
     assert isinstance(solver, NewtonGoldstein)
 
-    en.solve_load_flow(solver="newton_goldstein", solver_params={"m1": 0.2})
+    with contextlib.suppress(RoseauLoadFlowException):  # No valid license
+        en.solve_load_flow(solver="newton_goldstein", solver_params={"m1": 0.2})
     assert solver == en._solver  # Solver did not change
     assert solver.m1 == 0.2
     assert solver.m2 == NewtonGoldstein.DEFAULT_M2
 
-    en.solve_load_flow(solver="newton")
+    with contextlib.suppress(RoseauLoadFlowException):  # No valid license
+        en.solve_load_flow(solver="newton")
     assert solver != en._solver
     assert isinstance(en._solver, Newton)
 
-    en.solve_load_flow()  # Reset to default
+    with contextlib.suppress(RoseauLoadFlowException):  # No valid license
+        en.solve_load_flow()  # Reset to default
     assert isinstance(en._solver, NewtonGoldstein)

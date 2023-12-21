@@ -6,7 +6,7 @@ import numpy as np
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.typing import JsonDict, Solver
-from roseau.load_flow_engine.network.cy_network import CyAbstractSolver, CyNewton, CyNewtonGoldstein
+from roseau.load_flow_engine.cy_engine import CyAbstractSolver, CyNewton, CyNewtonGoldstein
 
 logger = logging.getLogger(__name__)
 

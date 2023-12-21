@@ -40,7 +40,7 @@ from roseau.load_flow.models import (
 from roseau.load_flow.typing import Id, JsonDict, MapOrSeq, Solver, StrPath
 from roseau.load_flow.utils import CatalogueMixin, JsonMixin, _optional_deps, console, palette
 from roseau.load_flow.utils.types import _DTYPES, VoltagePhaseDtype
-from roseau.load_flow_engine.network.cy_network import CyElectricalNetwork
+from roseau.load_flow_engine.cy_engine import CyElectricalNetwork
 
 if TYPE_CHECKING:
     from networkx import Graph

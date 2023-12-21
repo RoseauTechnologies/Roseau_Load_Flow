@@ -17,7 +17,7 @@ from roseau.load_flow.typing import (
 )
 from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow.utils import JsonMixin, _optional_deps
-from roseau.load_flow_engine.models.loads.cy_loads import CyControl, CyFlexibleParameter, CyProjection
+from roseau.load_flow_engine.cy_engine import CyControl, CyFlexibleParameter, CyProjection
 
 logger = logging.getLogger(__name__)
 

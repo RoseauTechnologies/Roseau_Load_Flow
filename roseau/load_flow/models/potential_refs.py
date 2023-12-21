@@ -9,7 +9,7 @@ from roseau.load_flow.models.core import Element
 from roseau.load_flow.models.grounds import Ground
 from roseau.load_flow.typing import Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
-from roseau.load_flow_engine.models.potential_refs.cy_potential_refs import CyDeltaPotentialRef, CyPotentialRef
+from roseau.load_flow_engine.cy_engine import CyDeltaPotentialRef, CyPotentialRef
 
 logger = logging.getLogger(__name__)
 

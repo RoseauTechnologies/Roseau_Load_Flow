@@ -7,7 +7,7 @@ from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowE
 from roseau.load_flow.models.core import Element
 from roseau.load_flow.typing import Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
-from roseau.load_flow_engine.models.grounds.cy_grounds import CyGround
+from roseau.load_flow_engine.cy_engine import CyGround
 
 if TYPE_CHECKING:
     from roseau.load_flow.models.buses import Bus

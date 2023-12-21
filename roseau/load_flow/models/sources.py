@@ -10,7 +10,7 @@ from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import Element
 from roseau.load_flow.typing import ComplexArray, ComplexArrayLike1D, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
-from roseau.load_flow_engine.models.sources.cy_sources import CyDeltaVoltageSource, CyVoltageSource
+from roseau.load_flow_engine.cy_engine import CyDeltaVoltageSource, CyVoltageSource
 
 logger = logging.getLogger(__name__)
 

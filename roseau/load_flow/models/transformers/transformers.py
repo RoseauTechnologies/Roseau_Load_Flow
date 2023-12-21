@@ -9,7 +9,7 @@ from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.transformers.parameters import TransformerParameters
 from roseau.load_flow.typing import Id, JsonDict
 from roseau.load_flow.units import Q_
-from roseau.load_flow_engine.models.transformers.cy_transformers import (
+from roseau.load_flow_engine.cy_engine import (
     CyCenterTransformer,
     CyExtendedTransformer,
     CyReducedTransformer,

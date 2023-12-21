@@ -18,6 +18,7 @@ from roseau.load_flow.__about__ import (
     __url__,
 )
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
+from roseau.load_flow.license import License, activate_license, deactivate_license, get_license
 from roseau.load_flow.models import (
     AbstractBranch,
     AbstractLoad,
@@ -91,4 +92,9 @@ __all__ = [
     "LineType",
     "ConductorType",
     "InsulatorType",
+    # License
+    "activate_license",
+    "deactivate_license",
+    "get_license",
+    "License",
 ]
