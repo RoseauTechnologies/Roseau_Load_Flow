@@ -62,7 +62,7 @@ jobs:
           echo "CONDA_ARCHIVE=$(mamba build --output-folder dist/ --output conda/)" >> $GITHUB_OUTPUT
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: package-python-${{ matrix.python-version }}
           path: ${{ steps.conda-build.outputs.CONDA_ARCHIVE }}
