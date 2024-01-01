@@ -77,7 +77,7 @@ jobs:
 
       - name: Upload pages artifact
         if: ${{ github.ref == 'refs/heads/main' || inputs.forceDeploy == true }}
-        uses: actions/upload-pages-artifact@v2
+        uses: actions/upload-pages-artifact@v3
         with:
           path: "build/html/"
 
