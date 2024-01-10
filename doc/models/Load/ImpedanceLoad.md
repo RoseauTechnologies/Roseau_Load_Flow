@@ -70,8 +70,7 @@ load = ImpedanceLoad(
 
 # Create a network and solve a load flow
 en = ElectricalNetwork.from_element(bus1)
-auth = ("username", "password")
-en.solve_load_flow(auth=auth)
+en.solve_load_flow()
 
 # Get the impedances of the load (the result is equal to the provided impedance
 load.res_voltages / load.res_currents[:3]
@@ -90,7 +89,7 @@ en.res_buses_voltages.transform([np.abs, ft.partial(np.angle, deg=True)])
 
 # Modify the load value to create an unbalanced load
 load.impedances = Q_(np.array([40 + 4j, 20 + 2j, 10 + 1j]), "ohm")
-en.solve_load_flow(auth=auth)
+en.solve_load_flow()
 
 # Get the impedance of the load
 load.res_voltages / load.res_currents[:3]

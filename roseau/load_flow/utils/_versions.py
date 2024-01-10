@@ -18,7 +18,7 @@ def _get_sys_info() -> JsonDict:
 
 def _get_dependency_info() -> JsonDict:
     """Get versions of dependencies."""
-    return {dist: version(dist) for dist in ("pandas", "numpy", "geopandas", "shapely", "regex", "pint", "requests")}
+    return {dist: version(dist) for dist in ("pandas", "numpy", "geopandas", "shapely", "regex", "pint")}
 
 
 def show_versions() -> None:

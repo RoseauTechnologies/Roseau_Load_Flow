@@ -84,12 +84,17 @@ class Switch(AbstractBranch):
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_GEOMETRY_TYPE)
         super().__init__(id=id, phases1=phases, phases2=phases, bus1=bus1, bus2=bus2, geometry=geometry, **kwargs)
-        self.phases = phases
+        self._phases = phases
         self._check_elements()
         self._check_loop()
-        self.n = len(self.phases)
-        self._cy_element = CySwitch(self.n)
+        self._n = len(self._phases)
+        self._cy_element = CySwitch(self._n)
         self._cy_connect()
+
+    @property
+    def phases(self) -> str:
+        """The phases of the source."""
+        return self._phases
 
     def _check_loop(self) -> None:
         """Check that there are no switch loop, raise an exception if it is the case"""
@@ -207,7 +212,7 @@ class Line(AbstractBranch):
 
         self._initialized = False
         super().__init__(id, bus1, bus2, phases1=phases, phases2=phases, geometry=geometry, **kwargs)
-        self.phases = phases
+        self._phases = phases
         self.ground = ground
         self.length = length
         self.parameters = parameters
@@ -228,20 +233,25 @@ class Line(AbstractBranch):
             # Connect the ground
             self._connect(self.ground)
 
-        self.n = len(self.phases)
+        self._n = len(self._phases)
         if parameters.with_shunt:
             self._cy_element = CyShuntLine(
-                n=self.n,
-                y_shunt=(parameters.y_shunt.reshape(self.n * self.n) * self.length).m_as("S"),
-                z_line=(parameters.z_line.reshape(self.n * self.n) * self.length).m_as("ohm"),
+                n=self._n,
+                y_shunt=(parameters.y_shunt.reshape(self._n * self._n) * self.length).m_as("S"),
+                z_line=(parameters.z_line.reshape(self._n * self._n) * self.length).m_as("ohm"),
             )
         else:
             self._cy_element = CySimplifiedLine(
-                n=self.n, z_line=(parameters.z_line.reshape(self.n * self.n) * self.length).m_as("ohm")
+                n=self._n, z_line=(parameters.z_line.reshape(self._n * self._n) * self.length).m_as("ohm")
             )
         self._cy_connect()
         if parameters.with_shunt:
-            ground._cy_element.connect(self._cy_element, [(0, self.n + self.n)])
+            ground._cy_element.connect(self._cy_element, [(0, self._n + self._n)])
+
+    @property
+    def phases(self) -> str:
+        """The phases of the source."""
+        return self._phases
 
     @property
     @ureg_wraps("km", (None,))
@@ -299,12 +309,12 @@ class Line(AbstractBranch):
         if self._cy_element is not None:
             if value.with_shunt:
                 self._cy_element.update_line_parameters(
-                    (value.y_shunt.reshape(self.n * self.n) * self.length).m_as("S"),
-                    (value.z_line.reshape(self.n * self.n) * self.length).m_as("ohm"),
+                    (value.y_shunt.reshape(self._n * self._n) * self.length).m_as("S"),
+                    (value.z_line.reshape(self._n * self._n) * self.length).m_as("ohm"),
                 )
             else:
                 self._cy_element.update_line_parameters(
-                    (value.z_line.reshape(self.n * self.n) * self.length).m_as("ohm")
+                    (value.z_line.reshape(self._n * self._n) * self.length).m_as("ohm")
                 )
 
     @property

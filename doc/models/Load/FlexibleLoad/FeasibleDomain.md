@@ -56,8 +56,7 @@ load = PowerLoad(
 
 # Build a network and solve a load flow
 en = ElectricalNetwork.from_element(bus)
-auth = ("username", "password")
-en.solve_load_flow(auth=auth)
+en.solve_load_flow()
 
 # The voltage source provided 1 kVA per phase for the load
 vs.res_powers
@@ -85,7 +84,7 @@ load = PowerLoad(
     powers=Q_(np.array([1000, 1000, 1000]), "VA"),
     flexible_params=[fp, fp, fp],
 )
-en.solve_load_flow(auth=auth)
+en.solve_load_flow()
 
 # Again the voltage source provided 1 kVA per phase
 vs.res_powers
@@ -103,7 +102,7 @@ load = PowerLoad(
     powers=Q_(np.array([6, 4.5, 6]), "kVA"),  # Above 5 kVA -> also OK!
     flexible_params=[fp, fp, fp],
 )
-en.solve_load_flow(auth=auth)
+en.solve_load_flow()
 
 # The load provides exactly the power consumed by the load even if it is greater than s_max
 vs.res_powers
@@ -191,8 +190,7 @@ voltages = np.arange(205, 256, dtype=float)
 power = Q_(-2.5 + 1j, "kVA")
 
 # Get the resulting flexible powers for the given theoretical power and voltages list.
-auth = ("username", "password")
-res_flexible_powers = fp.compute_powers(auth=auth, voltages=voltages, power=power)
+res_flexible_powers = fp.compute_powers(voltages=voltages, power=power)
 ```
 
 Plotting the control curve $P(U)$ using the variables `voltages` and `res_flexible_powers` of the
@@ -201,12 +199,6 @@ example above produces the following plot:
 ```{image} /_static/Load/FlexibleLoad/PmaxU_Qconst_Control_Curve_Example.svg
 :width: 700
 :align: center
-```
-
-```{note}
-Using `compute_powers` actually requests the solver to solve a load flow for each voltage in the list.
-It needs an internet connection to access the server and may take some time (similar to the
-{meth}`roseau.load_flow.ElectricalNetwork.solve_load_flow` method).
 ```
 
 The non-smooth theoretical control function is the control function applied to $S^{\max}$. The
@@ -222,16 +214,11 @@ The same plot can be obtained with:
 ```python
 from matplotlib import pyplot as plt
 
-ax, res_flexible_powers = fp.plot_control_p(
-    auth=auth, voltages=voltages, power=power, res_flexible_powers=res_flexible_powers
-)
+ax, res_flexible_powers = fp.plot_control_p(voltages=voltages, power=power)
 plt.show()
 ```
 
-Note that in this example, `res_flexible_powers` is provided as input to the plotting function. If
-it was not provided, the powers would have been computed by requesting the server (using the
-`compute_powers()` method above). The method returns a 2-tuple with the _matplotlib axis_ of the
-plot and the computed powers.
+The method returns a 2-tuple with the _matplotlib axis_ of the plot and the computed powers.
 
 `````{tip}
 To install _matplotlib_ along side _roseau-load-flow_, you can use the `plot` extra:
@@ -267,10 +254,8 @@ from matplotlib import pyplot as plt
 
 ax = plt.subplot()  # New axes
 ax, res_flexible_powers = fp.plot_pq(
-    auth=auth,
     voltages=voltages,
     power=power,
-    res_flexible_powers=res_flexible_powers,
     voltages_labels_mask=np.isin(voltages, [240, 250]),
     ax=ax,
 )
@@ -320,8 +305,7 @@ voltages = np.arange(205, 256, dtype=float)
 power = Q_(-2.5, "kVA")
 
 # Get the resulting flexible powers for the given theoretical power and voltages list.
-auth = ("username", "password")
-res_flexible_powers = fp.compute_powers(auth=auth, voltages=voltages, power=power)
+res_flexible_powers = fp.compute_powers(voltages=voltages, power=power)
 ```
 
 The variable `res_flexible_powers` contains the powers that have been actually produced by
@@ -344,13 +328,7 @@ The same plot can be obtained with:
 from matplotlib import pyplot as plt
 
 ax = plt.subplot()  # New axes
-ax, res_flexible_powers = fp.plot_control_q(
-    auth=auth,
-    voltages=voltages,
-    power=power,
-    res_flexible_powers=res_flexible_powers,
-    ax=ax,
-)
+ax, res_flexible_powers = fp.plot_control_q(voltages=voltages, power=power, ax=ax)
 plt.show()
 ```
 
@@ -376,10 +354,8 @@ from matplotlib import pyplot as plt
 
 ax = plt.subplot()  # New axes
 ax, res_flexible_powers = fp.plot_pq(
-    auth=auth,
     voltages=voltages,
     power=power,
-    res_flexible_powers=res_flexible_powers,
     voltages_labels_mask=np.isin(voltages, [210, 215, 230, 245, 250]),
     ax=ax,
 )
@@ -425,8 +401,7 @@ voltages = np.arange(205, 256, dtype=float)
 power = Q_(-2.5, "kVA")
 
 # Get the resulting flexible powers for the given theoretical power and voltages list.
-auth = ("username", "password")
-res_flexible_powers = fp.compute_powers(auth=auth, voltages=voltages, power=power)
+res_flexible_powers = fp.compute_powers(voltages=voltages, power=power)
 ```
 
 The variable `res_flexible_powers` contains the powers that have been actually produced by
@@ -448,13 +423,7 @@ The same plot can be obtained with:
 from matplotlib import pyplot as plt
 
 ax = plt.subplot()  # New axes
-ax, res_flexible_powers = fp.plot_control_q(
-    auth=auth,
-    voltages=voltages,
-    power=power,
-    res_flexible_powers=res_flexible_powers,
-    ax=ax,
-)
+ax, res_flexible_powers = fp.plot_control_q(voltages=voltages, power=power, ax=ax)
 plt.show()
 ```
 
@@ -472,10 +441,8 @@ from matplotlib import pyplot as plt
 
 ax = plt.subplot()  # New axes
 ax, res_flexible_powers = fp.plot_pq(
-    auth=auth,
     voltages=voltages,
     power=power,
-    res_flexible_powers=res_flexible_powers,
     voltages_labels_mask=np.isin(voltages, [210, 215, 230, 245, 250]),
     ax=ax,
 )
@@ -524,8 +491,7 @@ voltages = np.arange(205, 256, dtype=float)
 power = Q_(-2.5, "kVA")
 
 # Get the resulting flexible powers for the given theoretical power and voltages list.
-auth = ("username", "password")
-res_flexible_powers = fp.compute_powers(auth=auth, voltages=voltages, power=power)
+res_flexible_powers = fp.compute_powers(voltages=voltages, power=power)
 ```
 
 The variable `res_flexible_powers` contains the powers that have been actually produced by
@@ -546,13 +512,7 @@ The same plot can be obtained with:
 from matplotlib import pyplot as plt
 
 ax = plt.subplot()  # New axes
-ax, res_flexible_powers = fp.plot_control_q(
-    auth=auth,
-    voltages=voltages,
-    power=power,
-    res_flexible_powers=res_flexible_powers,
-    ax=ax,
-)
+ax, res_flexible_powers = fp.plot_control_q(voltages=voltages, power=power, ax=ax)
 plt.show()
 ```
 
@@ -570,10 +530,8 @@ from matplotlib import pyplot as plt
 
 ax = plt.subplot()  # New axes
 ax, res_flexible_powers = fp.plot_pq(
-    auth=auth,
     voltages=voltages,
     power=power,
-    res_flexible_powers=res_flexible_powers,
     voltages_labels_mask=np.isin(voltages, [210, 215, 230, 245, 250]),
     ax=ax,
 )
@@ -618,8 +576,7 @@ voltages = np.arange(205, 256, dtype=float)
 power = Q_(-2.5, "kVA")
 
 # Get the resulting flexible powers for the given theoretical power and voltages list.
-auth = ("username", "password")
-res_flexible_powers = fp.compute_powers(auth=auth, voltages=voltages, power=power)
+res_flexible_powers = fp.compute_powers(voltages=voltages, power=power)
 ```
 
 The variable `res_flexible_powers` contains the powers that have been actually produced by
@@ -641,13 +598,7 @@ The same plot can be obtained with:
 from matplotlib import pyplot as plt
 
 ax = plt.subplot()  # New axes
-ax, res_flexible_powers = fp.plot_control_q(
-    auth=auth,
-    voltages=voltages,
-    power=power,
-    res_flexible_powers=res_flexible_powers,
-    ax=ax,
-)
+ax, res_flexible_powers = fp.plot_control_q(voltages=voltages, power=power, ax=ax)
 plt.show()
 ```
 
@@ -665,10 +616,8 @@ from matplotlib import pyplot as plt
 
 ax = plt.subplot()  # New axes
 ax, res_flexible_powers = fp.plot_pq(
-    auth=auth,
     voltages=voltages,
     power=power,
-    res_flexible_powers=res_flexible_powers,
     voltages_labels_mask=np.isin(voltages, [210, 215, 230, 245, 250]),
     ax=ax,
 )
@@ -723,8 +672,7 @@ voltages = np.arange(205, 256, dtype=float)
 power = Q_(-2.5, "kVA")
 
 # Get the resulting flexible powers for the given theoretical power and voltages list.
-auth = ("username", "password")
-res_flexible_powers = fp.compute_powers(auth=auth, voltages=voltages, power=power)
+res_flexible_powers = fp.compute_powers(voltages=voltages, power=power)
 ```
 
 If we plot the trajectory of the control in the $(P, Q)$ space, we get:
@@ -741,10 +689,8 @@ from matplotlib import pyplot as plt
 
 ax = plt.subplot()  # New axes
 ax, res_flexible_powers = fp.plot_pq(
-    auth=auth,
     voltages=voltages,
     power=power,
-    res_flexible_powers=res_flexible_powers,
     voltages_labels_mask=np.isin(voltages, [210, 215, 230, 245, 250]),
     ax=ax,
 )
@@ -791,8 +737,7 @@ voltages = np.arange(205, 256, dtype=float)
 power = Q_(-2.5, "kVA")
 
 # Get the resulting flexible powers for the given theoretical power and voltages list.
-auth = ("username", "password")
-res_flexible_powers = fp.compute_powers(auth=auth, voltages=voltages, power=power)
+res_flexible_powers = fp.compute_powers(voltages=voltages, power=power)
 ```
 
 If we plot the trajectory of the control in the $(P, Q)$ space, we get:
@@ -809,10 +754,8 @@ from matplotlib import pyplot as plt
 
 ax = plt.subplot()  # New axes
 ax, res_flexible_powers = fp.plot_pq(
-    auth=auth,
     voltages=voltages,
     power=power,
-    res_flexible_powers=res_flexible_powers,
     voltages_labels_mask=np.isin(voltages, [210, 215, 230, 245, 250]),
     ax=ax,
 )
@@ -858,8 +801,7 @@ voltages = np.arange(205, 256, dtype=float)
 power = Q_(-2.5, "kVA")
 
 # Get the resulting flexible powers for the given theoretical power and voltages list.
-auth = ("username", "password")
-res_flexible_powers = fp.compute_powers(auth=auth, voltages=voltages, power=power)
+res_flexible_powers = fp.compute_powers(voltages=voltages, power=power)
 ```
 
 If we plot the trajectory of the control in the $(P, Q)$ space, we get:
@@ -876,10 +818,8 @@ from matplotlib import pyplot as plt
 
 ax = plt.subplot()  # New axes
 ax, res_flexible_powers = fp.plot_pq(
-    auth=auth,
     voltages=voltages,
     power=power,
-    res_flexible_powers=res_flexible_powers,
     voltages_labels_mask=np.isin(voltages, [210, 215, 230, 245, 250]),
     ax=ax,
 )
@@ -904,10 +844,8 @@ from matplotlib import pyplot as plt
 
 ax = plt.subplot()  # New axes
 ax, res_flexible_powers = fp.plot_pq(
-    auth=auth,
     voltages=voltages,
     power=Q_(-4, "kVA"),  # <------ New power
-    # res_flexible_powers=res_flexible_powers, # Must be computed again!
     voltages_labels_mask=np.isin(voltages, [210, 215, 230, 245, 250]),
     ax=ax,
 )

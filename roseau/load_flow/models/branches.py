@@ -60,10 +60,10 @@ class AbstractBranch(Element):
         super().__init__(id, **kwargs)
         self._check_phases(id, phases1=phases1)
         self._check_phases(id, phases2=phases2)
-        self.phases1 = phases1
-        self.phases2 = phases2
-        self.bus1 = bus1
-        self.bus2 = bus2
+        self._phases1 = phases1
+        self._phases2 = phases2
+        self._bus1 = bus1
+        self._bus2 = bus2
         self.geometry = geometry
         self._connect(bus1, bus2)
         self._res_currents: tuple[ComplexArray, ComplexArray] | None = None
@@ -76,8 +76,29 @@ class AbstractBranch(Element):
         s += ")"
         return s
 
+    @property
+    def phases1(self) -> str:
+        """The phases of the branch at the first bus."""
+        return self._phases1
+
+    @property
+    def phases2(self) -> str:
+        """The phases of the branch at the second bus."""
+        return self._phases2
+
+    @property
+    def bus1(self) -> Bus:
+        """The first bus of the branch."""
+        return self._bus1
+
+    @property
+    def bus2(self) -> Bus:
+        """The second bus of the branch."""
+        return self._bus2
+
     def _res_currents_getter(self, warning: bool) -> tuple[ComplexArray, ComplexArray]:
-        self._res_currents = self._cy_element.get_currents(len(self.phases1), len(self.phases2))
+        if self._fetch_results:
+            self._res_currents = self._cy_element.get_currents(len(self.phases1), len(self.phases2))
         return self._res_getter(value=self._res_currents, warning=warning)
 
     @property
@@ -162,6 +183,7 @@ class AbstractBranch(Element):
         currents1 = np.array([complex(i[0], i[1]) for i in data["currents1"]], dtype=np.complex128)
         currents2 = np.array([complex(i[0], i[1]) for i in data["currents2"]], dtype=np.complex128)
         self._res_currents = (currents1, currents2)
+        self._fetch_results = False
 
     def _results_to_dict(self, warning: bool) -> JsonDict:
         currents1, currents2 = self._res_currents_getter(warning)

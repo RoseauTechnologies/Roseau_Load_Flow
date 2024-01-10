@@ -52,7 +52,8 @@ class Ground(Element):
         return f"{type(self).__name__}(id={self.id!r})"
 
     def _res_potential_getter(self, warning: bool) -> complex:
-        self._res_potential = self._cy_element.get_potentials(1)[0]
+        if self._fetch_results:
+            self._res_potential = self._cy_element.get_potentials(1)[0]
         return self._res_getter(self._res_potential, warning)
 
     @property
@@ -109,6 +110,7 @@ class Ground(Element):
 
     def results_from_dict(self, data: JsonDict) -> None:
         self._res_potential = complex(*data["potential"])
+        self._fetch_results = False
 
     def _results_to_dict(self, warning: bool) -> JsonDict:
         v = self._res_potential_getter(warning)

@@ -75,6 +75,7 @@ class RoseauLoadFlowExceptionCode(Enum):
     SWITCHES_LOOP = auto()
     NO_POTENTIAL_REFERENCE = auto()
     SEVERAL_POTENTIAL_REFERENCE = auto()
+    EMPTY_NETWORK = auto()
     UNKNOWN_ELEMENT = auto()
     NO_VOLTAGE_SOURCE = auto()
     BAD_ELEMENT_OBJECT = auto()

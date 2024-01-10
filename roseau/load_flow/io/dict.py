@@ -1,3 +1,10 @@
+"""
+This module is not for public use.
+
+Use the `ElectricalNetwork.from_dict` and `ElectricalNetwork.to_dict` methods to serialize networks
+from and to dictionaries, or the methods `ElectricalNetwork.from_json` and `ElectricalNetwork.to_json`
+to read and write networks from and to JSON files.
+"""
 import logging
 from typing import TYPE_CHECKING
 
@@ -10,6 +17,7 @@ from roseau.load_flow.models import (
     Line,
     LineParameters,
     PotentialRef,
+    Switch,
     Transformer,
     TransformerParameters,
     VoltageSource,
@@ -26,7 +34,7 @@ NETWORK_JSON_VERSION = 1
 
 
 def network_from_dict(
-    data: JsonDict, en_class: type["ElectricalNetwork"]
+    data: JsonDict,
 ) -> tuple[
     dict[Id, Bus],
     dict[Id, AbstractBranch],
@@ -40,9 +48,6 @@ def network_from_dict(
     Args:
         data:
             The dictionary containing the network data.
-
-        en_class:
-            The ElectricalNetwork class to create.
 
     Returns:
         The buses, branches, loads, sources, grounds and potential refs to construct the electrical
@@ -63,16 +68,14 @@ def network_from_dict(
     transformers_params = {tp["id"]: TransformerParameters.from_dict(tp) for tp in data["transformers_params"]}
 
     # Buses, loads and sources
-    buses = {bd["id"]: en_class._bus_class.from_dict(bd) for bd in data["buses"]}
-    loads = {ld["id"]: en_class._load_class.from_dict(ld | {"bus": buses[ld["bus"]]}) for ld in data["loads"]}
-    sources = {
-        sd["id"]: en_class._voltage_source_class.from_dict(sd | {"bus": buses[sd["bus"]]}) for sd in data["sources"]
-    }
+    buses = {bd["id"]: Bus.from_dict(bd) for bd in data["buses"]}
+    loads = {ld["id"]: AbstractLoad.from_dict(ld | {"bus": buses[ld["bus"]]}) for ld in data["loads"]}
+    sources = {sd["id"]: VoltageSource.from_dict(sd | {"bus": buses[sd["bus"]]}) for sd in data["sources"]}
 
     # Grounds and potential refs
     grounds: dict[Id, Ground] = {}
     for ground_data in data["grounds"]:
-        ground = en_class._ground_class(ground_data["id"])
+        ground = Ground(ground_data["id"])
         for ground_bus in ground_data["buses"]:
             ground.connect(buses[ground_bus["id"]], ground_bus["phase"])
         grounds[ground_data["id"]] = ground
@@ -86,7 +89,7 @@ def network_from_dict(
             msg = f"Potential reference data {pref_data['id']} missing bus or ground."
             logger.error(msg)
             raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.JSON_PREF_INVALID)
-        potential_refs[pref_data["id"]] = en_class._pref_class(
+        potential_refs[pref_data["id"]] = PotentialRef(
             pref_data["id"], element=bus_or_ground, phase=pref_data.get("phases")
         )
 
@@ -105,17 +108,17 @@ def network_from_dict(
             lp = lines_params[branch_data["params_id"]]
             gid = branch_data.get("ground")
             ground = grounds[gid] if gid is not None else None
-            branches_dict[id] = en_class._line_class(
+            branches_dict[id] = Line(
                 id, bus1, bus2, parameters=lp, phases=phases1, length=length, ground=ground, geometry=geometry
             )
         elif branch_data["type"] == "transformer":
             tp = transformers_params[branch_data["params_id"]]
-            branches_dict[id] = en_class._transformer_class(
+            branches_dict[id] = Transformer(
                 id, bus1, bus2, parameters=tp, phases1=phases1, phases2=phases2, geometry=geometry
             )
         elif branch_data["type"] == "switch":
             assert phases1 == phases2
-            branches_dict[id] = en_class._switch_class(id, bus1, bus2, phases=phases1, geometry=geometry)
+            branches_dict[id] = Switch(id, bus1, bus2, phases=phases1, geometry=geometry)
         else:
             msg = f"Unknown branch type for branch {id}: {branch_data['type']}"
             logger.error(msg)

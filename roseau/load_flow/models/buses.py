@@ -75,7 +75,7 @@ class Bus(Element):
         """
         super().__init__(id, **kwargs)
         self._check_phases(id, phases=phases)
-        self.phases = phases
+        self._phases = phases
         initialized = potentials is not None
         if potentials is None:
             potentials = [0] * len(phases)
@@ -89,12 +89,18 @@ class Bus(Element):
         self._res_potentials: ComplexArray | None = None
         self._short_circuits: list[dict[str, Any]] = []
 
-        self.n = len(self.phases)
+        self._n = len(self._phases)
         self._initialized = initialized
-        self._cy_element = CyBus(n=self.n, potentials=self._potentials)
+        self._initialized_by_the_user = initialized  # only used for serialization
+        self._cy_element = CyBus(n=self._n, potentials=self._potentials)
 
     def __repr__(self) -> str:
         return f"{type(self).__name__}(id={self.id!r}, phases={self.phases!r})"
+
+    @property
+    def phases(self) -> str:
+        """The phases of the bus."""
+        return self._phases
 
     @property
     @ureg_wraps("V", (None,))
@@ -112,11 +118,13 @@ class Bus(Element):
         self._potentials = np.array(value, dtype=np.complex128)
         self._invalidate_network_results()
         self._initialized = True
+        self._initialized_by_the_user = True
         if self._cy_element is not None:
             self._cy_element.initialize_potentials(self._potentials)
 
     def _res_potentials_getter(self, warning: bool) -> ComplexArray:
-        self._res_potentials = self._cy_element.get_potentials(self.n)
+        if self._fetch_results:
+            self._res_potentials = self._cy_element.get_potentials(self._n)
         return self._res_getter(value=self._res_potentials, warning=warning)
 
     @property
@@ -337,7 +345,7 @@ class Bus(Element):
 
     def to_dict(self, *, _lf_only: bool = False) -> JsonDict:
         res = {"id": self.id, "phases": self.phases}
-        if not np.allclose(self.potentials, 0):
+        if self._initialized_by_the_user:
             res["potentials"] = [[v.real, v.imag] for v in self._potentials]
         if not _lf_only:
             if self.geometry is not None:
@@ -350,6 +358,7 @@ class Bus(Element):
 
     def results_from_dict(self, data: JsonDict) -> None:
         self._res_potentials = np.array([complex(v[0], v[1]) for v in data["potentials"]], dtype=np.complex128)
+        self._fetch_results = False
 
     def _results_to_dict(self, warning: bool) -> JsonDict:
         return {
@@ -414,7 +423,7 @@ class Bus(Element):
 
     def clear_short_circuits(self) -> None:
         """Remove the short-circuits of this bus."""
-        self._short_circuits = []
-        msg = "Short circuits cannot be cleared for the engine part."
+        # self._short_circuits = []
+        msg = "Short circuits cannot be cleared for now. Please recreate the bus without the short circuits instead."
         logger.error(msg)
         raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_SHORT_CIRCUIT)  # TODO

@@ -65,6 +65,18 @@ caption: Solvers
 Solvers
 ```
 
+## License
+
+Read more about the license of this project:
+
+```{toctree}
+---
+maxdepth: 2
+caption: License
+---
+License
+```
+
 ## Changelog
 
 ```{toctree}
@@ -86,4 +98,13 @@ maxdepth: 3
 caption: API Reference
 ---
 autoapi/roseau/load_flow/index
+```
+
+<!-- Suppress warning for autoapi/index -->
+
+```{toctree}
+---
+hidden:
+---
+autoapi/index
 ```

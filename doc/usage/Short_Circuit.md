@@ -71,12 +71,17 @@ We can now add a short-circuit. Let's first create a phase-to-phase short-circui
 Let's run the load flow, and get the current results.
 
 ```{note}
+If you get an error saying
+`roseau.load_flow.RoseauLoadFlowException: The license is not valid. Please use the activate_license(key="...")`,
+make sure you follow the instructions in [Solving a load flow](gs-solving-load-flow).
+```
+
+```{note}
 All the following tables are rounded to 2 decimals to be properly displayed.
 ```
 
 ```pycon
->>> auth = ("username", "password")
->>> en.solve_load_flow(auth=auth)
+>>> en.solve_load_flow()
 1
 >>> en.res_branches
 ```
@@ -109,7 +114,7 @@ short-circuit then create a new one between phases "a", "b", and "c".
 ```pycon
 >>> bus2.clear_short_circuits()
 >>> bus2.add_short_circuit("a", "b", "c")
->>> en.solve_load_flow(auth=auth)
+>>> en.solve_load_flow()
 1
 >>> en.res_branches
 ```
@@ -137,7 +142,7 @@ between phase "a" and ground.
 >>> bus2.clear_short_circuits()
 >>> # ground MUST be passed as a keyword argument
 ... bus2.add_short_circuit("a", ground=ground)
->>> en.solve_load_flow(auth=auth)
+>>> en.solve_load_flow()
 1
 >>> en.res_branches
 ```

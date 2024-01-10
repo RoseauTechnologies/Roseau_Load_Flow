@@ -52,8 +52,7 @@ roseau.load_flow.exceptions.RoseauLoadFlowException: The Bus 'lb' is already ass
 The load flow can be solved:
 
 ```pycon
->>> auth = ("username", "password")
->>> en.solve_load_flow(auth=auth)
+>>> en.solve_load_flow()
 2
 ```
 
@@ -161,7 +160,7 @@ Line(id='new_line', phases1='abcn', phases2='abcn', bus1='lb', bus2='new_bus')
 And now if you run the load flow, you can see that the new elements are taken into account.
 
 ```pycon
->>> en.solve_load_flow(auth=auth)
+>>> en.solve_load_flow()
 3
 >>> abs(new_load.res_voltages)
 array([216.54956226]) <Unit('volt')>

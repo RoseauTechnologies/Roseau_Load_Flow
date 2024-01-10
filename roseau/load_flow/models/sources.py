@@ -70,15 +70,15 @@ class VoltageSource(Element):
         else:
             self._size = len(set(phases) - {"n"})
 
-        self.phases = phases
-        self.bus = bus
+        self._phases = phases
+        self._bus = bus
         self.voltages = voltages
 
-        self.n = len(self.phases)
+        self._n = len(self._phases)
         if self.phases == "abc":
-            self._cy_element = CyDeltaVoltageSource(n=self.n, voltages=self._voltages)
+            self._cy_element = CyDeltaVoltageSource(n=self._n, voltages=self._voltages)
         else:
-            self._cy_element = CyVoltageSource(n=self.n, voltages=self._voltages)
+            self._cy_element = CyVoltageSource(n=self._n, voltages=self._voltages)
         self._cy_connect()
 
         # Results
@@ -90,6 +90,16 @@ class VoltageSource(Element):
             f"{type(self).__name__}(id={self.id!r}, bus={bus_id!r}, voltages={self.voltages!r}, "
             f"phases={self.phases!r})"
         )
+
+    @property
+    def phases(self) -> str:
+        """The phases of the source."""
+        return self._phases
+
+    @property
+    def bus(self) -> Bus:
+        """The bus of the source."""
+        return self._bus
 
     @property
     @ureg_wraps("V", (None,))
@@ -115,7 +125,8 @@ class VoltageSource(Element):
         return calculate_voltage_phases(self.phases)
 
     def _res_currents_getter(self, warning: bool) -> ComplexArray:
-        self._res_currents = self._cy_element.get_currents(self.n)
+        if self._fetch_results:
+            self._res_currents = self._cy_element.get_currents(self._n)
         return self._res_getter(value=self._res_currents, warning=warning)
 
     @property
@@ -159,7 +170,7 @@ class VoltageSource(Element):
     def disconnect(self) -> None:
         """Disconnect this voltage source from the network. It cannot be used afterwards."""
         self._disconnect()
-        self.bus = None
+        self._bus = None
 
     def _raise_disconnected_error(self) -> None:
         """Raise an error if the voltage source is disconnected."""
@@ -187,6 +198,7 @@ class VoltageSource(Element):
 
     def results_from_dict(self, data: JsonDict) -> None:
         self._res_currents = np.array([complex(i[0], i[1]) for i in data["currents"]], dtype=np.complex128)
+        self._fetch_results = False
 
     def _results_to_dict(self, warning: bool) -> JsonDict:
         return {

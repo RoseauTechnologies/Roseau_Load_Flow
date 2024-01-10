@@ -1,10 +1,15 @@
+import os
 from pathlib import Path
 
 import numpy as np
 import pytest
 from pandas.testing import assert_frame_equal
 
+from roseau.load_flow import activate_license
 from roseau.load_flow.utils import console
+
+if "ROSEAU_LOAD_FLOW_TEST_LICENSE_KEY" in os.environ:
+    activate_license(os.environ["ROSEAU_LOAD_FLOW_TEST_LICENSE_KEY"])
 
 # Variable to test the network
 HERE = Path(__file__).parent.expanduser().absolute()

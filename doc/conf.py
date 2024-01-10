@@ -18,7 +18,7 @@
 
 # -- Project information -----------------------------------------------------
 project = "Roseau Load Flow"
-copyright = "2022--2023, Roseau Technologies SAS"
+copyright = "2022--2024, Roseau Technologies SAS"
 # author = "Benoît Vinot"
 
 # The full version, including alpha/beta/rc tags
@@ -126,7 +126,6 @@ intersphinx_mapping = {
     "numpy": ("https://numpy.org/doc/stable/", None),
     "pandas": ("https://pandas.pydata.org/docs/", None),
     "geopandas": ("https://geopandas.org/en/stable/", None),
-    "requests": ("https://requests.readthedocs.io/en/latest/", None),
     "pint": ("https://pint.readthedocs.io/en/stable/", None),
     "typing_extensions": ("https://typing-extensions.readthedocs.io/en/stable/", None),
     "rich": ("https://rich.readthedocs.io/en/stable/", None),

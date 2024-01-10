@@ -19,7 +19,7 @@ __all__ = ["activate_license", "deactivate_license", "get_license", "License"]
 class License:
     """A class to access the main data of the License."""
 
-    def __init__(self, cy_license: CyLicense):
+    def __init__(self, cy_license: CyLicense) -> None:
         """Constructor for a License
 
         Args:
@@ -49,16 +49,9 @@ class License:
         """Is the license valid?"""
         return self.cy_license.valid
 
-    def validate(self) -> None:
-        """Validate the license."""
-        return self.cy_license.validate()
-
-    #
-    # The following methods are used to identify your PC
-    #
     @staticmethod
     def get_machine_fingerprint() -> str:
-        """This method retrieves your machine fingerprint."""
+        """This method retrieves your machine fingerprint for license validation."""
         return CyLicense.get_machine_fingerprint()
 
     @staticmethod
@@ -73,7 +66,7 @@ class License:
 
 
 def activate_license(key: str) -> None:
-    """Activate the license from the given key.
+    """Activate the license with the given key in the current process.
 
     Args:
         key:
@@ -83,7 +76,7 @@ def activate_license(key: str) -> None:
 
 
 def deactivate_license() -> None:
-    """Deactivate the license of the current process."""
+    """Deactivate the license in the current process."""
     cy_deactivate_license()
 
 

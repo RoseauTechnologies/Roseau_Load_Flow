@@ -107,8 +107,7 @@ pref = PotentialRef(id="pref", element=g1)
 
 # Create a network and solve a load flow
 en = ElectricalNetwork.from_element(bus1)
-auth = ("username", "password")
-en.solve_load_flow(auth=auth)
+en.solve_load_flow()
 
 # Get the ground potentials
 # The potential of g1 is 0 as defined by the potential reference element

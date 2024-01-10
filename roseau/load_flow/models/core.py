@@ -42,6 +42,7 @@ class Element(ABC, Identifiable, JsonMixin):
         self._connected_elements: list[Element] = []
         self._network: ElectricalNetwork | None = None
         self._cy_element: CyElement | None = None
+        self._fetch_results = False
 
     @property
     def network(self) -> Optional["ElectricalNetwork"]:
@@ -165,6 +166,7 @@ class Element(ABC, Identifiable, JsonMixin):
                 category=UserWarning,
                 stacklevel=2,
             )
+        self._fetch_results = False
         return value
 
     @staticmethod

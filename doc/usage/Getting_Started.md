@@ -140,16 +140,14 @@ automatically included into the network.
 
 ## Solving a load flow
 
-An authentication is required. Please contact us at contact@roseautechnologies.com to get the necessary credentials.
-Then, the load flow can be solved by requesting our server **(requires Internet access)**.
+A license is required. Please contact us at contact@roseautechnologies.com to get a license key.
+Once you have a license key, you can activate by following the instructions in the
+[License activation page](license-activation).
 
-```{note}
-The server takes some time to warm up the first time it is requested. Subsequent requests will execute faster.
-```
+Then, the load flow can be solved by calling the `solve_load_flow` method of the `ElectricalNetwork`
 
 ```pycon
->>> auth = ("username", "password")
->>> en.solve_load_flow(auth=auth)
+>>> en.solve_load_flow()
 2
 ```
 
@@ -504,7 +502,7 @@ unbalanced situation.
 
 ```pycon
 >>> load.powers = Q_([15, 0, 0], "kVA")
->>> en.solve_load_flow(auth=auth)
+>>> en.solve_load_flow()
 3
 >>> load_bus.res_potentials
 array([ 216.02252269  +0.j, -115.47005384-200.j, -115.47005384+200.j, 14.91758499  +0.j]) <Unit('volt')>
