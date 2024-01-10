@@ -1,16 +1,15 @@
 import datetime as dt
+import os
 
 import certifi
 from platformdirs import user_cache_dir
 
-from roseau.load_flow_engine.cy_engine import (
-    CyLicense,
-    cy_activate_license,
-    cy_deactivate_license,
-    cy_get_license,
-)
+from roseau.load_flow_engine.cy_engine import CyLicense, cy_activate_license, cy_deactivate_license, cy_get_license
 
 __all__ = ["activate_license", "deactivate_license", "get_license", "License"]
+
+_license = None
+"""str|None: The Python copy of the activated license."""
 
 
 #
@@ -65,25 +64,33 @@ class License:
         return CyLicense.get_username()
 
 
-def activate_license(key: str) -> None:
+def activate_license(key: str | None) -> None:
     """Activate the license with the given key in the current process.
 
     Args:
         key:
-            The key of the license to activate.
+            The key of the license to activate. If None is provided, the environment variable
+            `ROSEAU_LOAD_FLOW_LICENSE_KEY` is read.
     """
+    if key is None:
+        key = os.getenv("ROSEAU_LOAD_FLOW_LICENSE_KEY", "")
     cy_activate_license(key=key, cacert_filepath=certifi.where(), cache_folderpath=user_cache_dir())
 
 
 def deactivate_license() -> None:
     """Deactivate the license in the current process."""
+    global _license
     cy_deactivate_license()
+    _license = None
 
 
 def get_license() -> License | None:
     """A function to retrieve the currently active license."""
-    cy_license = cy_get_license()
-    if cy_license is None:
-        return None
-    else:
-        return License(cy_license=cy_license)
+    global _license
+    if _license is None:
+        cy_license = cy_get_license()
+        if cy_license is None:
+            return None
+        else:
+            _license = License(cy_license=cy_license)
+    return _license

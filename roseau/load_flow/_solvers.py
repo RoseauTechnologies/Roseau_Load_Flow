@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Any, Self
 import numpy as np
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
+from roseau.load_flow.license import activate_license, get_license
 from roseau.load_flow.typing import JsonDict, Solver
 from roseau.load_flow_engine.cy_engine import CyAbstractSolver, CyNewton, CyNewtonGoldstein
 
@@ -73,6 +74,8 @@ class AbstractSolver(ABC):
         Returns:
             The number of iterations and the final residual
         """
+        if get_license() is None:
+            activate_license(None)
         return self._cy_solver.solve_load_flow(max_iterations=max_iterations, tolerance=tolerance)
 
     def reset_inputs(self):
