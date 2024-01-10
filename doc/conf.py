@@ -18,7 +18,7 @@
 
 # -- Project information -----------------------------------------------------
 project = "Roseau Load Flow"
-copyright = "2022--2024, Roseau Technologies SAS"
+copyright = "2018--2024, Roseau Technologies SAS"
 # author = "Benoît Vinot"
 
 # The full version, including alpha/beta/rc tags
