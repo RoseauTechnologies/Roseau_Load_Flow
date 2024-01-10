@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- {gh-pr}`163` {gh-issue}`158` Fix `ElectricalNetwork.res_transformers` returning an empty dataframe
+  when max_power is not set.
 - {gh-pr}`151` Require Python 3.10 or newer.
 
 ## Version 0.6.0
