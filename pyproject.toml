@@ -10,7 +10,7 @@ authors = [
     "Victor Gouin",
 ]
 maintainers = ["Ali Hamdan <ali.hamdan@roseautechnologies.com>"]
-license = "Proprietary"
+license = "BSD-3-Clause"
 repository = "https://github.com/RoseauTechnologies/Roseau_Load_Flow/"
 readme = "README.md"
 include = [
