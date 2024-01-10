@@ -1709,10 +1709,6 @@ def test_short_circuits():
 
     assert bus.short_circuits
 
-    # TODO: clear_short_circuits no longer works
-    # en.clear_short_circuits()
-    # assert not bus.short_circuits
-
 
 def test_catalogue_data():
     # The catalogue data path exists

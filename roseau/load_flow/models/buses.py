@@ -384,11 +384,13 @@ class Bus(Element):
                 msg = f"Phase {phase!r} is not in the phases {set(self.phases)} of bus {self.id!r}."
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
-        if len(phases) < 1 or (len(phases) == 1 and ground is None):
-            msg = (
-                f"For the short-circuit on bus {self.id!r}, at least two phases (or a phase and a ground) should be "
-                f"given (only {phases} is given)."
-            )
+        if not phases or (len(phases) == 1 and ground is None):
+            msg = f"For the short-circuit on bus {self.id!r}, expected at least two phases or a phase and a ground."
+            if not phases:
+                msg += " No phase was given."
+            else:
+                msg += f" Only phase {phases[0]!r} is given."
+
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
         duplicates = [item for item in set(phases) if phases.count(item) > 1]
@@ -420,10 +422,3 @@ class Bus(Element):
     def short_circuits(self) -> list[dict[str, Any]]:
         """Return the list of short-circuits of this bus."""
         return self._short_circuits[:]  # return a copy as users should not modify the list directly
-
-    def clear_short_circuits(self) -> None:
-        """Remove the short-circuits of this bus."""
-        # self._short_circuits = []
-        msg = "Short circuits cannot be cleared for now. Please recreate the bus without the short circuits instead."
-        logger.error(msg)
-        raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_SHORT_CIRCUIT)  # TODO

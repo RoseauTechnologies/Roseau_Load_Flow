@@ -1181,17 +1181,6 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             res_dict["current"].append(current)
         return pd.DataFrame(res_dict).astype(dtypes).set_index(["potential_ref_id"])
 
-    def clear_short_circuits(self) -> None:
-        """Remove the short-circuits of all the buses."""
-        # for bus in self.buses.values():
-        #     bus.clear_short_circuits()
-        msg = (
-            "Short circuits cannot be cleared for now. Please recreate the network without the "
-            "short circuits instead."
-        )
-        logger.error(msg)
-        raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_SHORT_CIRCUIT)  # TODO
-
     #
     # Internal methods, please do not use
     #
