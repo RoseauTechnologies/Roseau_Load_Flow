@@ -752,63 +752,44 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             - `potential2`: The complex potential of the second bus (in Volts) for the given phase.
         """
         self._warn_invalid_results()
-        res_list = []
+        res_dict = {
+            "branch_id": [],
+            "phase": [],
+            "branch_type": [],
+            "current1": [],
+            "current2": [],
+            "power1": [],
+            "power2": [],
+            "potential1": [],
+            "potential2": [],
+        }
+        dtypes = {c: _DTYPES[c] for c in res_dict}
         for branch_id, branch in self.branches.items():
             currents1, currents2 = branch._res_currents_getter(warning=False)
             powers1, powers2 = branch._res_powers_getter(warning=False)
             potentials1, potentials2 = branch._res_potentials_getter(warning=False)
-            res_list.extend(
-                {
-                    "branch_id": branch_id,
-                    "phase": phase,
-                    "branch_type": branch.branch_type,
-                    "current1": i1,
-                    "current2": None,
-                    "power1": s1,
-                    "power2": None,
-                    "potential1": v1,
-                    "potential2": None,
-                }
-                for i1, s1, v1, phase in zip(currents1, powers1, potentials1, branch.phases1, strict=True)
-            )
-            res_list.extend(
-                {
-                    "branch_id": branch_id,
-                    "phase": phase,
-                    "branch_type": branch.branch_type,
-                    "current1": None,
-                    "current2": i2,
-                    "power1": None,
-                    "power2": s2,
-                    "potential1": None,
-                    "potential2": v2,
-                }
-                for i2, s2, v2, phase in zip(currents2, powers2, potentials2, branch.phases2, strict=True)
-            )
-
-        columns = [
-            "branch_id",
-            "phase",
-            "branch_type",
-            "current1",
-            "current2",
-            "power1",
-            "power2",
-            "potential1",
-            "potential2",
-        ]
-        dtypes = {c: _DTYPES[c] for c in columns}
-        return (
-            pd.DataFrame.from_records(res_list, columns=columns)
-            .astype(dtypes)
-            # aggregate x1 and x2 for the same phase for I, V, S, ...
-            .groupby(["branch_id", "phase", "branch_type"], observed=True)
-            # there are 2 values of I, V, S, ...; only one is not nan -> keep it
-            .mean()
-            # if all values are nan -> drop the row (the phase does not exist)
-            .dropna(how="all")
-            .reset_index(level="branch_type")
-        )
+            phases = sorted(set(branch.phases1) | set(branch.phases2))
+            for phase in phases:
+                if phase in branch.phases1:
+                    idx1 = branch.phases2.index(phase)
+                    i1, s1, v1 = currents1[idx1], powers1[idx1], potentials1[idx1]
+                else:
+                    i1, s1, v1 = None, None, None
+                if phase in branch.phases2:
+                    idx2 = branch.phases2.index(phase)
+                    i2, s2, v2 = currents2[idx2], powers2[idx2], potentials2[idx2]
+                else:
+                    i2, s2, v2 = None, None, None
+                res_dict["branch_id"].append(branch_id)
+                res_dict["phase"].append(phase)
+                res_dict["branch_type"].append(branch.branch_type)
+                res_dict["current1"].append(i1)
+                res_dict["current2"].append(i2)
+                res_dict["power1"].append(s1)
+                res_dict["power2"].append(s2)
+                res_dict["potential1"].append(v1)
+                res_dict["potential2"].append(v2)
+        return pd.DataFrame(res_dict).astype(dtypes).set_index(["branch_id", "phase"])
 
     @property
     def res_transformers(self) -> pd.DataFrame:
@@ -839,7 +820,19 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         side values for current, power, and potential for phase "n" will be ``nan``.
         """
         self._warn_invalid_results()
-        res_list = []
+        res_dict = {
+            "transformer_id": [],
+            "phase": [],
+            "current1": [],
+            "current2": [],
+            "power1": [],
+            "power2": [],
+            "potential1": [],
+            "potential2": [],
+            "max_power": [],
+            "violated": [],
+        }
+        dtypes = {c: _DTYPES[c] for c in res_dict}
         for branch in self.branches.values():
             if not isinstance(branch, Transformer):
                 continue
@@ -850,65 +843,29 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             violated = None
             if s_max is not None:
                 violated = max(abs(sum(powers1)), abs(sum(powers2))) > s_max
-            res_list.extend(
-                {
-                    "transformer_id": branch.id,
-                    "phase": phase,
-                    "current1": i1,
-                    "current2": None,
-                    "power1": s1,
-                    "power2": None,
-                    "potential1": v1,
-                    "potential2": None,
-                    "max_power": s_max,
-                    "violated": violated,
-                }
-                for i1, s1, v1, phase in zip(currents1, powers1, potentials1, branch.phases1, strict=True)
-            )
-            res_list.extend(
-                {
-                    "transformer_id": branch.id,
-                    "phase": phase,
-                    "current1": None,
-                    "current2": i2,
-                    "power1": None,
-                    "power2": s2,
-                    "potential1": None,
-                    "potential2": v2,
-                    "max_power": s_max,
-                    "violated": violated,
-                }
-                for i2, s2, v2, phase in zip(currents2, powers2, potentials2, branch.phases2, strict=True)
-            )
-
-        columns = [
-            "transformer_id",
-            "phase",
-            "current1",
-            "current2",
-            "power1",
-            "power2",
-            "potential1",
-            "potential2",
-            "max_power",
-            "violated",
-        ]
-        dtypes = {c: _DTYPES[c] for c in columns}
-        res = (
-            pd.DataFrame.from_records(res_list, columns=columns)
-            .astype(dtypes)
-            # aggregate x1 and x2 for the same phase for I, V, S, ...
-            .groupby(["transformer_id", "phase", "max_power", "violated"], observed=True)
-            # there are 2 values of I, V, S, ...; only one is not nan -> keep it
-            .mean()
-            # if all values are nan -> drop the row (the phase does not exist)
-            .dropna(how="all")
-            .reset_index(level=["max_power", "violated"])
-        )
-        # move the max_power and violated columns to the end
-        res["max_power"] = res.pop("max_power")
-        res["violated"] = res.pop("violated")
-        return res
+            phases = sorted(set(branch.phases1) | set(branch.phases2))
+            for phase in phases:
+                if phase in branch.phases1:
+                    idx1 = branch.phases2.index(phase)
+                    i1, s1, v1 = currents1[idx1], powers1[idx1], potentials1[idx1]
+                else:
+                    i1, s1, v1 = None, None, None
+                if phase in branch.phases2:
+                    idx2 = branch.phases2.index(phase)
+                    i2, s2, v2 = currents2[idx2], powers2[idx2], potentials2[idx2]
+                else:
+                    i2, s2, v2 = None, None, None
+                res_dict["transformer_id"].append(branch.id)
+                res_dict["phase"].append(phase)
+                res_dict["current1"].append(i1)
+                res_dict["current2"].append(i2)
+                res_dict["power1"].append(s1)
+                res_dict["power2"].append(s2)
+                res_dict["potential1"].append(v1)
+                res_dict["potential2"].append(v2)
+                res_dict["max_power"].append(s_max)
+                res_dict["violated"].append(violated)
+        return pd.DataFrame(res_dict).astype(dtypes).set_index(["transformer_id", "phase"])
 
     @property
     def res_lines(self) -> pd.DataFrame:
@@ -990,8 +947,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                 res_dict["series_current"].append(i_series)
                 res_dict["max_current"].append(i_max)
                 res_dict["violated"].append(violated)
-        res = pd.DataFrame(res_dict).astype(dtypes).set_index(["line_id", "phase"])
-        return res
+        return pd.DataFrame(res_dict).astype(dtypes).set_index(["line_id", "phase"])
 
     @property
     def res_switches(self) -> pd.DataFrame:
