@@ -112,6 +112,9 @@ class RoseauLoadFlowExceptionCode(Enum):
     # Import Error
     IMPORT_ERROR = auto()
 
+    # License errors
+    LICENSE_ERROR = auto()
+
     @classmethod
     def package_name(cls) -> str:
         return "roseau.load_flow"

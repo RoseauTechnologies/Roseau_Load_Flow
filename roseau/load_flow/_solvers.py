@@ -74,7 +74,8 @@ class AbstractSolver(ABC):
         Returns:
             The number of iterations and the final residual
         """
-        if get_license() is None:
+        lic = get_license()
+        if lic is None:
             activate_license(None)
         return self._cy_solver.solve_load_flow(max_iterations=max_iterations, tolerance=tolerance)
 

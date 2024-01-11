@@ -1,10 +1,14 @@
 import datetime as dt
+import logging
 import os
 
 import certifi
 from platformdirs import user_cache_dir
 
+from roseau.load_flow import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow_engine.cy_engine import CyLicense, cy_activate_license, cy_deactivate_license, cy_get_license
+
+logger = logging.getLogger(__name__)
 
 __all__ = ["activate_license", "deactivate_license", "get_license", "License"]
 
@@ -48,6 +52,11 @@ class License:
         """Is the license valid?"""
         return self.cy_license.valid
 
+    @property
+    def max_nb_buses(self) -> int | None:
+        """The maximum allowed number of buses for a network. If `None`, the license has no limitation."""
+        return self.cy_license.max_nb_buses
+
     @staticmethod
     def get_machine_fingerprint() -> str:
         """This method retrieves your machine fingerprint for license validation."""
@@ -64,17 +73,22 @@ class License:
         return CyLicense.get_username()
 
 
-def activate_license(key: str | None) -> None:
+def activate_license(key: str | None = None) -> None:
     """Activate the license with the given key in the current process.
 
     Args:
         key:
-            The key of the license to activate. If None is provided, the environment variable
+            The key of the license to activate. If `None` is provided, the environment variable
             `ROSEAU_LOAD_FLOW_LICENSE_KEY` is read.
     """
     if key is None:
         key = os.getenv("ROSEAU_LOAD_FLOW_LICENSE_KEY", "")
-    cy_activate_license(key=key, cacert_filepath=certifi.where(), cache_folderpath=user_cache_dir())
+    try:
+        cy_activate_license(key=key, cacert_filepath=certifi.where(), cache_folderpath=user_cache_dir())
+    except RuntimeError as e:
+        msg = f"The license can not be activated. The detailed error message is {e.args[0]!r}."
+        logger.error(msg)
+        raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.LICENSE_ERROR) from e
 
 
 def deactivate_license() -> None:
