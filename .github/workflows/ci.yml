@@ -2,11 +2,15 @@ name: CI
 
 on:
   push:
+    # TODO: rerun on develop when we have the required dependencies
+    # branches: [main, develop]
     branches: [main, develop]
     tags:
       - "*"
   pull_request:
-    branches: [main, develop]
+    # TODO: rerun on develop when we have the required dependencies
+    # branches: [main, develop]
+    branches: [main]
 
 env:
   CI: true

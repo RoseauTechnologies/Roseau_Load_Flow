@@ -2,7 +2,9 @@ name: Documentation
 
 on:
   push:
-    branches: ["main", "develop"]
+    # TODO: rerun on develop when we have the required dependencies
+    # branches: ["main", "develop"]
+    branches: ["main"]
   workflow_dispatch:
     inputs:
       forceDeploy:
