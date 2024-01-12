@@ -53,7 +53,7 @@ The load flow can be solved:
 
 ```pycon
 >>> en.solve_load_flow()
-2
+(2, 1.8595619621919468e-07)
 ```
 
 ## Disconnecting an element
@@ -161,7 +161,7 @@ And now if you run the load flow, you can see that the new elements are taken in
 
 ```pycon
 >>> en.solve_load_flow()
-3
+(3, 1.216767654e-07)
 >>> abs(new_load.res_voltages)
 array([216.54956226]) <Unit('volt')>
 ```

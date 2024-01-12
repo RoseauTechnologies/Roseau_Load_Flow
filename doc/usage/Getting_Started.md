@@ -148,39 +148,12 @@ Then, the load flow can be solved by calling the `solve_load_flow` method of the
 
 ```pycon
 >>> en.solve_load_flow()
-2
+(2, 1.8595619621919468e-07)
 ```
 
-It returns the number of iterations performed by the _Newton-Raphson_ solver, here _2_. More information about the
-load flow resolution is available via the `res_info` attribute.
-
-```pycon
->>> en.res_info
-{'solver': 'newton_goldstein',
- 'solver_params': {'m1': 0.1, 'm2': 0.9},
- 'tolerance': 1e-06,
- 'max_iterations': 20,
- 'warm_start': True,
- 'status': 'success',
- 'iterations': 2,
- 'residual': 1.8595619621919468e-07}
-```
-
-The available values are:
-
-- `solver`: it can be `"newton"` for the _Newton_ solver or `"newton_goldstein"` for the _Newton_ solver using the
-  _Goldstein and Price_ linear search;
-- `solver_params`: the parameters used by the solver;
-- `tolerance`: the requested tolerance for the solver. $10^{-6}$ is the default;
-- `max_iterations`: the requested maximum number of iterations for the solver. 20 is the default;
-- `warm_start`: if `True`, the results (potentials of each bus) from the last valid run are used
-  as a starting point for the solver. For large networks, using a warm start can lead to performance gains as the
-  solver will converge faster. `True` is the default;
-- `status`: the convergence of the load flow. Two possibilities: _success_ or _failure_;
-- `iterations`: the number of iterations made by the solver.
-- `residual`: the precision which was reached by the solver (lower than the tolerance if successful solve).
-
-More details on solvers are given in the [Solvers page](../Solvers.md).
+It returns the number of iterations performed by the _Newton-Raphson_ solver, and the residual
+error after convergence. Here, the load flow converged in 2 iterations with a residual error of
+$1.86 \times 10^{-7}$.
 
 (gs-getting-results)=
 
@@ -503,7 +476,7 @@ unbalanced situation.
 ```pycon
 >>> load.powers = Q_([15, 0, 0], "kVA")
 >>> en.solve_load_flow()
-3
+(3, 1.686343545e-07)
 >>> load_bus.res_potentials
 array([ 216.02252269  +0.j, -115.47005384-200.j, -115.47005384+200.j, 14.91758499  +0.j]) <Unit('volt')>
 ```

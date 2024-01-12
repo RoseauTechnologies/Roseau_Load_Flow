@@ -157,7 +157,6 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         self._create_network()
         self._valid = True
         self._results_valid: bool = False
-        self.res_info: JsonDict = {}
         self._solver = AbstractSolver.from_dict(data={"name": self._DEFAULT_SOLVER, "params": {}}, network=self)
 
     def __repr__(self) -> str:
@@ -516,16 +515,12 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                 solver chosen. For more information, see the :ref:`solvers` page.
 
         Returns:
-            The number of iterations taken.
+            The number of iterations performed and the residual error at the last iteration.
         """
-        did_warm_start = warm_start
         if not self._valid:
             self._check_validity(constructed=False)
             self._create_network()  # <-- calls _propagate_potentials, no warm start
             self._solver.update_network(self)
-            did_warm_start = False
-        if not self.res_info:
-            did_warm_start = False
 
         # Update solver
         if solver != self._solver.name:
@@ -568,37 +563,11 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                 f"{residual:5n}"
             )
             logger.error(msg=msg)
-
-            self.res_info = {
-                # Input
-                "solver": self._solver.name,
-                "solver_params": self._solver.params(),
-                "tolerance": tolerance,
-                "max_iterations": max_iterations,
-                "warm_start": warm_start,
-                # Output
-                "status": "failure",
-                "iterations": iterations,
-                "residual": residual,
-                "warm_started": did_warm_start,
-            }
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.NO_LOAD_FLOW_CONVERGENCE)
+            raise RoseauLoadFlowException(
+                msg, RoseauLoadFlowExceptionCode.NO_LOAD_FLOW_CONVERGENCE, iterations, residual
+            )
 
         logger.debug(f"The load flow converged after {iterations} iterations and {end - start:.3n} s.")
-
-        self.res_info = {
-            # Input
-            "solver": self._solver.name,
-            "solver_params": self._solver.params(),
-            "tolerance": tolerance,
-            "max_iterations": max_iterations,
-            "warm_start": warm_start,
-            # Output
-            "status": "success",
-            "iterations": iterations,
-            "residual": residual,
-            "warm_started": did_warm_start,
-        }
 
         # Lazily update the results of the elements
         for element in chain(
@@ -614,7 +583,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         # The results are now valid
         self._results_valid = True
 
-        return iterations
+        return iterations, residual
 
     def _results_from_dict(self, data: JsonDict) -> None:
         """Dispatch the results to all the elements of the network.
@@ -1454,7 +1423,6 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         if warning:
             self._warn_invalid_results()  # Warn only once if asked
         return {
-            "info": self.res_info,
             "buses": [bus._results_to_dict(False) for bus in self.buses.values()],
             "branches": [branch._results_to_dict(False) for branch in self.branches.values()],
             "loads": [load._results_to_dict(False) for load in self.loads.values()],

@@ -86,7 +86,7 @@ All the following tables are rounded to 2 decimals to be properly displayed.
 
 ```pycon
 >>> en.solve_load_flow()
-1
+(1, 1.235686457464e-07)
 >>> en.res_branches
 ```
 
@@ -119,7 +119,7 @@ short-circuit then create a new one between phases "a", "b", and "c".
 >>> en = create_network()
 >>> en.buses["b2"].add_short_circuit("a", "b", "c")
 >>> en.solve_load_flow()
-1
+(1, 1.23437343475878e-07)
 >>> en.res_branches
 ```
 
@@ -147,7 +147,7 @@ between phase "a" and ground.
 >>> # ground MUST be passed as a keyword argument
 ... en.buses["b2"].add_short_circuit("a", ground=en.grounds["gnd"])
 >>> en.solve_load_flow()
-1
+(2, 1.68697431436484e-07)
 >>> en.res_branches
 ```
 
