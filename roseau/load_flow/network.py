@@ -724,7 +724,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             phases = sorted(set(branch.phases1) | set(branch.phases2))
             for phase in phases:
                 if phase in branch.phases1:
-                    idx1 = branch.phases2.index(phase)
+                    idx1 = branch.phases1.index(phase)
                     i1, s1, v1 = currents1[idx1], powers1[idx1], potentials1[idx1]
                 else:
                     i1, s1, v1 = None, None, None
@@ -799,7 +799,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             phases = sorted(set(branch.phases1) | set(branch.phases2))
             for phase in phases:
                 if phase in branch.phases1:
-                    idx1 = branch.phases2.index(phase)
+                    idx1 = branch.phases1.index(phase)
                     i1, s1, v1 = currents1[idx1], powers1[idx1], potentials1[idx1]
                 else:
                     i1, s1, v1 = None, None, None
