@@ -114,21 +114,6 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         potential_refs (dict[Id, roseau.load_flow.PotentialRef]):
             Dictionary of potential references of the network indexed by their IDs. Also available
             as a :attr:`DataFrame<potential_refs_frame>`.
-
-        res_info (JsonDict):
-            Dictionary containing solver information on the last run of the load flow analysis.
-            Empty if the load flow analysis has not been run yet.
-            Example::
-
-                {
-                    "solver": "newton",
-                    "tolerance": 1e-06,
-                    "max_iterations": 20,
-                    "warm_start": True,
-                    "status": "success",
-                    "iterations": 2,
-                    "residual": 1.8595619621919468e-07
-                }
     """
 
     _DEFAULT_SOLVER: Solver = "newton_goldstein"
