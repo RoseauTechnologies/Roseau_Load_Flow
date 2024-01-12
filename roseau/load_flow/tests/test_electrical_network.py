@@ -109,6 +109,7 @@ def good_json_results() -> dict:
             "status": "success",
             "iterations": 1,
             "residual": 6.296829377361313e-14,
+            "warm_started": True,
         },
         "buses": [
             {
@@ -1605,8 +1606,6 @@ def test_solver_warm_start(small_network: ElectricalNetwork, good_json_results, 
     load: PowerLoad = small_network.loads["load"]
     load_bus = small_network.buses["bus1"]
 
-    original_propagate_potentials = small_network._propagate_potentials
-
     def compare_results(expected, obtained):
         if isinstance(expected, dict):
             assert isinstance(obtained, dict)
@@ -1617,6 +1616,9 @@ def test_solver_warm_start(small_network: ElectricalNetwork, good_json_results, 
             assert isinstance(obtained, list | tuple)
             for i, item in enumerate(expected):
                 compare_results(item, obtained[i])
+        elif isinstance(expected, bool):
+            assert isinstance(obtained, bool)
+            assert expected == obtained
         elif isinstance(expected, complex | float | int):
             assert isinstance(obtained, complex | float | int)
             assert np.isclose(expected, obtained, atol=1e-1)
@@ -1624,16 +1626,27 @@ def test_solver_warm_start(small_network: ElectricalNetwork, good_json_results, 
             assert isinstance(obtained, type(expected))
             assert expected == obtained
 
-    def _propagate_potentials(force):
-        if should_not_propagate_potentials:
-            raise AssertionError("Should not propagate potentials")
-        return original_propagate_potentials(force)
+    original_propagate_potentials = small_network._propagate_potentials
+    original_reset_inputs = small_network._reset_inputs
+
+    def _propagate_potentials():
+        nonlocal propagate_potentials_called
+        propagate_potentials_called = True
+        return original_propagate_potentials()
+
+    def _reset_inputs():
+        nonlocal reset_inputs_called
+        reset_inputs_called = True
+        return original_reset_inputs()
 
     monkeypatch.setattr(small_network, "_propagate_potentials", _propagate_potentials)
+    monkeypatch.setattr(small_network, "_reset_inputs", _reset_inputs)
 
     # First case: network is valid, no results yet -> no warm start
-    should_not_propagate_potentials = False
-    good_json_results["info"]["warm_start"] = False
+    propagate_potentials_called = False
+    reset_inputs_called = False
+    good_json_results["info"]["warm_start"] = True
+    good_json_results["info"]["warm_started"] = False
     assert small_network._valid
     assert not small_network.res_info  # No results
     assert not small_network._results_valid  # Results are not valid by default
@@ -1641,30 +1654,42 @@ def test_solver_warm_start(small_network: ElectricalNetwork, good_json_results, 
         warnings.simplefilter("error")  # Make sure there is no warning
         good_json_results["info"]["iterations"] = small_network.solve_load_flow(warm_start=True)
     compare_results(good_json_results, small_network.results_to_dict())
+    assert not propagate_potentials_called  # Is not called because it was already called in the constructor
+    assert not reset_inputs_called
 
     # Second case: the user requested no warm start (even though the network and results are valid)
-    should_not_propagate_potentials = False
+    propagate_potentials_called = False
+    reset_inputs_called = False
     good_json_results["info"]["warm_start"] = False
+    good_json_results["info"]["warm_started"] = False
     assert small_network._valid
     assert small_network._results_valid
     with warnings.catch_warnings():
         warnings.simplefilter("error")  # Make sure there is no warning
         good_json_results["info"]["iterations"] = small_network.solve_load_flow(warm_start=False)
     compare_results(good_json_results, small_network.results_to_dict())
+    assert not propagate_potentials_called
+    assert reset_inputs_called
 
     # Third case: network is valid, results are valid -> warm start
-    should_not_propagate_potentials = True
+    propagate_potentials_called = False
+    reset_inputs_called = False
     good_json_results["info"]["warm_start"] = True
+    good_json_results["info"]["warm_started"] = True
     assert small_network._valid
     assert small_network._results_valid
     with warnings.catch_warnings():
         warnings.simplefilter("error")  # Make sure there is no warning
         good_json_results["info"]["iterations"] = small_network.solve_load_flow(warm_start=True)
     compare_results(good_json_results, small_network.results_to_dict())
+    assert not propagate_potentials_called
+    assert not reset_inputs_called
 
     # Fourth case (load powers changes): network is valid, results are not valid -> warm start
-    should_not_propagate_potentials = True
+    propagate_potentials_called = False
+    reset_inputs_called = False
     good_json_results["info"]["warm_start"] = True
+    good_json_results["info"]["warm_started"] = True
     load.powers = load.powers + Q_(1 + 1j, "VA")
     assert small_network._valid
     assert not small_network._results_valid
@@ -1672,10 +1697,14 @@ def test_solver_warm_start(small_network: ElectricalNetwork, good_json_results, 
         warnings.simplefilter("error")  # Make sure there is no warning
         good_json_results["info"]["iterations"] = small_network.solve_load_flow(warm_start=True)
     compare_results(good_json_results, small_network.results_to_dict())
+    assert not propagate_potentials_called
+    assert not reset_inputs_called
 
     # Fifth case: network is not valid -> no warm start
-    should_not_propagate_potentials = False
-    good_json_results["info"]["warm_start"] = False
+    propagate_potentials_called = False
+    reset_inputs_called = False
+    good_json_results["info"]["warm_start"] = True
+    good_json_results["info"]["warm_started"] = False
     new_load = PowerLoad("new_load", load_bus, powers=[100, 200, 300], phases=load.phases)
     new_load_result = good_json_results["loads"][0].copy()
     new_load_result["id"] = "new_load"
@@ -1691,6 +1720,8 @@ def test_solver_warm_start(small_network: ElectricalNetwork, good_json_results, 
         assert not small_network._results_valid
         good_json_results["info"]["iterations"] = small_network.solve_load_flow(warm_start=True)
     compare_results(good_json_results, small_network.results_to_dict())
+    assert propagate_potentials_called
+    assert not reset_inputs_called
 
 
 def test_short_circuits():

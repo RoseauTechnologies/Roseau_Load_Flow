@@ -501,8 +501,9 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                 Tolerance needed for the convergence.
 
             warm_start:
-                If true, initialize the solver with the potentials of the last successful load flow
-                result (if any).
+                If true (the default), the solver is initialized with the potentials of the last
+                successful load flow result (if any). Otherwise, the potentials are reset to their
+                initial values.
 
             solver:
                 The name of the solver to use for the load flow. The options are:
@@ -517,13 +518,14 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         Returns:
             The number of iterations taken.
         """
+        did_warm_start = warm_start
         if not self._valid:
             self._check_validity(constructed=False)
-            self._create_network()
+            self._create_network()  # <-- calls _propagate_potentials, no warm start
             self._solver.update_network(self)
-            warm_start = False
+            did_warm_start = False
         if not self.res_info:
-            warm_start = False
+            did_warm_start = False
 
         # Update solver
         if solver != self._solver.name:
@@ -533,7 +535,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             self._solver.update_params(solver_params)
 
         if not warm_start:
-            self._propagate_potentials(force=True)
+            self._reset_inputs()
 
         start = time.perf_counter()
         try:
@@ -578,6 +580,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                 "status": "failure",
                 "iterations": iterations,
                 "residual": residual,
+                "warm_started": did_warm_start,
             }
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.NO_LOAD_FLOW_CONVERGENCE)
 
@@ -594,6 +597,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             "status": "success",
             "iterations": iterations,
             "residual": residual,
+            "warm_started": did_warm_start,
         }
 
         # Lazily update the results of the elements
@@ -611,11 +615,6 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         self._results_valid = True
 
         return iterations
-
-    def reset_inputs(self) -> None:
-        """Reset the input vector which is used for the first step of the newton algorithm to its initial value."""
-        if self._solver is not None:
-            self._solver.reset_inputs()
 
     def _results_from_dict(self, data: JsonDict) -> None:
         """Dispatch the results to all the elements of the network.
@@ -1219,7 +1218,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         for source in self.sources.values():
             cy_elements.append(source._cy_element)
             self._elements.append(source)
-        self._propagate_potentials(force=False)
+        self._propagate_potentials()
         self._cy_electrical_network = CyElectricalNetwork(elements=np.array(cy_elements), nb_elements=len(cy_elements))
 
     def _check_validity(self, constructed: bool) -> None:
@@ -1280,21 +1279,17 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             elif element.network != self:
                 element._raise_several_network()
 
-    def _propagate_potentials(self, force: bool) -> None:
-        """Set the bus potentials that have not been initialized yet
+    def _reset_inputs(self) -> None:
+        """Reset the input vector used for the first step of the newton algorithm to its initial value."""
+        if self._solver is not None:
+            self._solver.reset_inputs()
 
-        Args:
-            force:
-                If True, the `_initialized` status of the buses are ignored. If False, only uninitialized
-                potentials of buses will be overwritten.
-        """
-        if force:
-            uninitialized = True
-        else:
-            uninitialized = False
-            for bus in self.buses.values():
-                if not bus._initialized:
-                    uninitialized = True
+    def _propagate_potentials(self) -> None:
+        """Set the bus potentials that have not been initialized yet."""
+        uninitialized = False
+        for bus in self.buses.values():
+            if not bus._initialized:
+                uninitialized = True
 
         if uninitialized:
             max_voltages = 0.0
@@ -1328,15 +1323,14 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             while elements:
                 element, potentials = elements.pop(-1)
                 visited.add(element)
-                if isinstance(element, Bus) and (force or not element._initialized):
+                if isinstance(element, Bus) and not element._initialized:
                     bus_n = element._n
-                    bus_initialized_by_the_user = element._initialized
                     element.potentials = potentials[0:bus_n]
-                    element._initialized_by_the_user = bus_initialized_by_the_user
+                    element._initialized_by_the_user = False  # only used for serialization
                 for e in element._connected_elements:
                     if e not in visited:
                         if isinstance(element, Transformer):
-                            k = (element.parameters.ulv / element.parameters.uhv).m_as("")
+                            k = element.parameters._ulv / element.parameters._uhv
                             phase_displacement = element.parameters.phase_displacement
                             if phase_displacement is None:
                                 phase_displacement = 0
