@@ -61,6 +61,8 @@ jobs:
         run: |
           poetry run pytest -vv -n=auto --durations=25 --cov-report html \
           --cov-config pyproject.toml roseau
+        env:
+          ROSEAU_LOAD_FLOW_LICENSE_KEY: ${{ secrets.ROSEAU_LOAD_FLOW_LICENSE_KEY }}
 
       - name: Archive code coverage results
         uses: actions/upload-artifact@v4
