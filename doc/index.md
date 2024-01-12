@@ -99,12 +99,3 @@ caption: API Reference
 ---
 autoapi/roseau/load_flow/index
 ```
-
-<!-- Suppress warning for autoapi/index -->
-
-```{toctree}
----
-hidden:
----
-autoapi/index
-```

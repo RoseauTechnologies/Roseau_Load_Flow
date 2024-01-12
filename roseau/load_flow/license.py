@@ -12,8 +12,8 @@ logger = logging.getLogger(__name__)
 
 __all__ = ["activate_license", "deactivate_license", "get_license", "License"]
 
-_license = None
-"""str|None: The Python copy of the activated license."""
+# Cache the license object. Cache cleared when the license is deactivated
+_license: "License | None" = None
 
 
 #
@@ -33,12 +33,12 @@ class License:
 
     @property
     def key(self) -> str:
-        """The key of the license"""
+        """The key of the license. Please do not share this key."""
         return self.cy_license.key
 
     @property
     def expiry_datetime(self) -> dt.datetime | None:
-        """The expiry date of the license."""
+        """The expiry date of the license or ``None`` if the license has no expiry date."""
         exp_dt = self.cy_license.expiry_datetime
         if exp_dt is None:
             return None
@@ -57,10 +57,10 @@ class License:
         """The maximum allowed number of buses for a network. If `None`, the license has no limitation."""
         return self.cy_license.max_nb_buses
 
-    @staticmethod
-    def get_machine_fingerprint() -> str:
-        """This method retrieves your machine fingerprint for license validation."""
-        return CyLicense.get_machine_fingerprint()
+    @property
+    def machine_fingerprint(self) -> str:
+        """The anonymized machine fingerprint for license validation."""
+        return self.cy_license.machine_fingerprint
 
     @staticmethod
     def get_hostname() -> str:
@@ -74,12 +74,13 @@ class License:
 
 
 def activate_license(key: str | None = None) -> None:
-    """Activate the license with the given key in the current process.
+    """Activate a license in the current process.
 
     Args:
         key:
-            The key of the license to activate. If `None` is provided, the environment variable
-            `ROSEAU_LOAD_FLOW_LICENSE_KEY` is read.
+            The key of the license to activate. If ``None`` is provided (default), the environment
+            variable `ROSEAU_LOAD_FLOW_LICENSE_KEY` is used. If this variable is not set, an error
+            is raised.
     """
     if key is None:
         key = os.getenv("ROSEAU_LOAD_FLOW_LICENSE_KEY", "")
@@ -92,14 +93,14 @@ def activate_license(key: str | None = None) -> None:
 
 
 def deactivate_license() -> None:
-    """Deactivate the license in the current process."""
+    """Deactivate the currently active license."""
     global _license
     cy_deactivate_license()
     _license = None
 
 
 def get_license() -> License | None:
-    """A function to retrieve the currently active license."""
+    """Get the currently active license or ``None`` if no license is activated."""
     global _license
     if _license is None:
         cy_license = cy_get_license()

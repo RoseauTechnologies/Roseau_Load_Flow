@@ -19,12 +19,15 @@ You can find the complete documentation at https://roseautechnologies.github.io/
 
 ## License
 
-The project is _partially_ open source but to use the solver you will need a license. Please contact
-us at contact@roseautechnologies.com to obtain a license.
+The project is _partially_ open source but using the solver requires a license. The license key
+`A8C6DA-9405FB-E74FB9-C71C3C-207661-V3` can be used free of charge with networks containing up to 10
+buses. To obtain a personal or commercial license, please contact us at contact@roseautechnologies.com.
 
 > [!NOTE]
 > Licenses are given free of charge for **students and teachers**. Please contact us at
 > contact@roseautechnologies.com for more information.
+
+Read more at [License](https://roseautechnologies.github.io/Roseau_Load_Flow/License.html).
 
 ## Network data
 
