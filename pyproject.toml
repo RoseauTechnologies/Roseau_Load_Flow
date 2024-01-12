@@ -131,13 +131,14 @@ exclude_lines = [
     "if TYPE_CHECKING:",
 ]
 ignore_errors = true
+fail_under = 90
 
 [tool.coverage.html]
 directory = "htmlcov"
 
 # Pytest
 [tool.pytest.ini_options]
-addopts = "--color=yes -vv -n=0 --import-mode=importlib"
+addopts = "--color=yes -n=0 --import-mode=importlib"
 testpaths = ["roseau/load_flow/"]
 filterwarnings = [
     'ignore:.*utcfromtimestamp:DeprecationWarning:dateutil.*', # dateutil is imported by pandas, not us
