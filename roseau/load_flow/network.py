@@ -11,7 +11,7 @@ from collections.abc import Mapping, Sized
 from importlib import resources
 from itertools import chain, cycle
 from pathlib import Path
-from typing import TYPE_CHECKING, TypeVar
+from typing import TYPE_CHECKING, NoReturn, TypeVar
 
 import geopandas as gpd
 import numpy as np
@@ -465,7 +465,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         warm_start: bool = True,
         solver: Solver = _DEFAULT_SOLVER,
         solver_params: JsonDict | None = None,
-    ) -> int:
+    ) -> tuple[int, float]:
         """Solve the load flow for this network.
 
         To get the results of the load flow for the whole network, use the `res_` properties on the
@@ -521,24 +521,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         try:
             iterations, residual = self._solver.solve_load_flow(max_iterations=max_iterations, tolerance=tolerance)
         except RuntimeError as e:
-            msg = e.args[0]
-            zero_elements_index, inf_elements_index = self._solver._cy_solver.analyse_jacobian()
-            if zero_elements_index:
-                zero_elements = [self._elements[i] for i in zero_elements_index]
-                printable_elements = ", ".join(f"{type(e).__name__}({e.id!r})" for e in zero_elements)
-                msg += (
-                    f"The problem seems to come from the elements [{printable_elements}] that have at least one "
-                    f"disconnected phase. "
-                )
-            if inf_elements_index:
-                inf_elements = [self._elements[i] for i in inf_elements_index]
-                printable_elements = ", ".join(f"{type(e).__name__}({e.id!r})" for e in inf_elements)
-                msg += (
-                    f"The problem seems to come from the elements [{printable_elements}] that induce infinite "
-                    f"values. This might be caused by flexible loads with very high alpha."
-                )
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_JACOBIAN) from e
+            self._handle_error(e)
 
         end = time.perf_counter()
 
@@ -569,6 +552,32 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         self._results_valid = True
 
         return iterations, residual
+
+    def _handle_error(self, e: RuntimeError) -> NoReturn:
+        msg = e.args[0]
+        if msg.startswith("0 "):
+            msg = f"The license can not be validated. The detailed error message is {msg[2:]!r}"
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.LICENSE_ERROR) from e
+        else:
+            assert msg.startswith("1 ")
+            msg = msg[2:]
+            zero_elements_index, inf_elements_index = self._solver._cy_solver.analyse_jacobian()
+            if zero_elements_index:
+                zero_elements = [self._elements[i] for i in zero_elements_index]
+                printable_elements = ", ".join(f"{type(e).__name__}({e.id!r})" for e in zero_elements)
+                msg += (
+                    f"The problem seems to come from the elements [{printable_elements}] that have at least one "
+                    f"disconnected phase. "
+                )
+            if inf_elements_index:
+                inf_elements = [self._elements[i] for i in inf_elements_index]
+                printable_elements = ", ".join(f"{type(e).__name__}({e.id!r})" for e in inf_elements)
+                msg += (
+                    f"The problem seems to come from the elements [{printable_elements}] that induce infinite "
+                    f"values. This might be caused by flexible loads with very high alpha."
+                )
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_JACOBIAN) from e
 
     def _results_from_dict(self, data: JsonDict) -> None:
         """Dispatch the results to all the elements of the network.
