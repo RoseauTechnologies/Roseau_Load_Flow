@@ -83,8 +83,10 @@ class Bus(Element):
         self.geometry = geometry
         self._min_voltage: float | None = None
         self._max_voltage: float | None = None
-        self.min_voltage = min_voltage
-        self.max_voltage = max_voltage
+        if min_voltage is not None:
+            self.min_voltage = min_voltage
+        if max_voltage is not None:
+            self.max_voltage = max_voltage
 
         self._res_potentials: ComplexArray | None = None
         self._short_circuits: list[dict[str, Any]] = []
