@@ -107,9 +107,12 @@ class AbstractBranch(Element):
         """The load flow result of the branch currents (A)."""
         return self._res_currents_getter(warning=True)
 
-    def _res_powers_getter(self, warning: bool) -> tuple[ComplexArray, ComplexArray]:
+    def _res_powers_getter(
+        self, warning: bool, pot1: ComplexArray | None = None, pot2: ComplexArray | None = None
+    ) -> tuple[ComplexArray, ComplexArray]:
         cur1, cur2 = self._res_currents_getter(warning)
-        pot1, pot2 = self._res_potentials_getter(warning=False)  # we warn on the previous line
+        if pot1 is None or pot2 is None:
+            pot1, pot2 = self._res_potentials_getter(warning=False)  # we warn on the previous line
         powers1 = pot1 * cur1.conj()
         powers2 = pot2 * cur2.conj()
         return powers1, powers2

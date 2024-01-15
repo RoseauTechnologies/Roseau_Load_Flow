@@ -719,8 +719,8 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         dtypes = {c: _DTYPES[c] for c in res_dict}
         for branch_id, branch in self.branches.items():
             currents1, currents2 = branch._res_currents_getter(warning=False)
-            powers1, powers2 = branch._res_powers_getter(warning=False)
             potentials1, potentials2 = branch._res_potentials_getter(warning=False)
+            powers1, powers2 = branch._res_powers_getter(warning=False, pot1=potentials1, pot2=potentials2)
             phases = sorted(set(branch.phases1) | set(branch.phases2))
             for phase in phases:
                 if phase in branch.phases1:
@@ -790,8 +790,8 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             if not isinstance(branch, Transformer):
                 continue
             currents1, currents2 = branch._res_currents_getter(warning=False)
-            powers1, powers2 = branch._res_powers_getter(warning=False)
             potentials1, potentials2 = branch._res_potentials_getter(warning=False)
+            powers1, powers2 = branch._res_powers_getter(warning=False, pot1=potentials1, pot2=potentials2)
             s_max = branch.parameters._max_power
             violated = None
             if s_max is not None:
@@ -880,7 +880,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                 continue
             potentials = branch._res_potentials_getter(warning=False)
             currents = branch._res_currents_getter(warning=False)
-            powers = branch._res_powers_getter(warning=False)
+            powers = branch._res_powers_getter(warning=False, pot1=potentials[0], pot2=potentials[1])
             series_losses = branch._res_series_power_losses_getter(warning=False)
             series_currents = branch._res_series_currents_getter(warning=False)
             i_max = branch.parameters._max_current
@@ -940,7 +940,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                 continue
             potentials = branch._res_potentials_getter(warning=False)
             currents = branch._res_currents_getter(warning=False)
-            powers = branch._res_powers_getter(warning=False)
+            powers = branch._res_powers_getter(warning=False, pot1=potentials[0], pot2=potentials[1])
             for i1, i2, s1, s2, v1, v2, phase in zip(*currents, *powers, *potentials, branch.phases, strict=True):
                 res_dict["switch_id"].append(branch.id)
                 res_dict["phase"].append(phase)
