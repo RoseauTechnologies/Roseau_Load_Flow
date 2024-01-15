@@ -22,7 +22,6 @@ class RoseauLoadFlowExceptionCode(Enum):
 
     # Buses
     BAD_BUS_ID = auto()
-    BAD_BUS_TYPE = auto()
     BAD_POTENTIALS_SIZE = auto()
     BAD_VOLTAGES = auto()
     BAD_VOLTAGES_SIZE = auto()
@@ -80,19 +79,15 @@ class RoseauLoadFlowExceptionCode(Enum):
     NO_VOLTAGE_SOURCE = auto()
     BAD_ELEMENT_OBJECT = auto()
     DISCONNECTED_ELEMENT = auto()
-    BAD_ELEMENT_ID = auto()
     NO_LOAD_FLOW_CONVERGENCE = auto()
-    BAD_REQUEST = auto()
     BAD_LOAD_FLOW_RESULT = auto()
     LOAD_FLOW_NOT_RUN = auto()
     SEVERAL_NETWORKS = auto()
-    TOO_MANY_BUSES = auto()
     BAD_JACOBIAN = auto()
 
     # Solver
     BAD_SOLVER_NAME = auto()
     BAD_SOLVER_PARAMS = auto()
-    NETWORK_SOLVER_MISMATCH = auto()
 
     # DGS export
     DGS_BAD_PHASE_TECHNOLOGY = auto()
