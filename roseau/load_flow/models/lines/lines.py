@@ -237,12 +237,12 @@ class Line(AbstractBranch):
         if parameters.with_shunt:
             self._cy_element = CyShuntLine(
                 n=self._n,
-                y_shunt=(parameters.y_shunt.reshape(self._n * self._n) * self.length).m_as("S"),
-                z_line=(parameters.z_line.reshape(self._n * self._n) * self.length).m_as("ohm"),
+                y_shunt=parameters._y_shunt.reshape(self._n * self._n) * self._length,
+                z_line=parameters._z_line.reshape(self._n * self._n) * self._length,
             )
         else:
             self._cy_element = CySimplifiedLine(
-                n=self._n, z_line=(parameters.z_line.reshape(self._n * self._n) * self.length).m_as("ohm")
+                n=self._n, z_line=parameters._z_line.reshape(self._n * self._n) * self._length
             )
         self._cy_connect()
         if parameters.with_shunt:
@@ -280,7 +280,7 @@ class Line(AbstractBranch):
     @parameters.setter
     def parameters(self, value: LineParameters) -> None:
         shape = (len(self.phases),) * 2
-        if value.z_line.shape != shape:
+        if value._z_line.shape != shape:
             msg = f"Incorrect z_line dimensions for line {self.id!r}: {value.z_line.shape} instead of {shape}"
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Z_LINE_SHAPE)
@@ -290,7 +290,7 @@ class Line(AbstractBranch):
                 msg = "Cannot set line parameters with a shunt to a line that does not have shunt components."
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_MODEL)
-            if value.y_shunt.shape != shape:
+            if value._y_shunt.shape != shape:
                 msg = f"Incorrect y_shunt dimensions for line {self.id!r}: {value.y_shunt.shape} instead of {shape}"
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Y_SHUNT_SHAPE)

@@ -138,13 +138,31 @@ def calculate_voltages(potentials: ComplexArray, phases: str) -> ComplexArray:
         # we know "n" is the last phase
         voltages = potentials[:-1] - potentials[-1]
     else:  # Vab, Vbc, Vca
-        if len(phases) == 2:  # noqa: SIM108
+        if len(phases) == 2:
             # V = potentials[0] - potentials[1] (but as array)
             voltages = potentials[:1] - potentials[1:]
         else:
-            # np.roll(["a", "b", "c"], -1) -> ["b", "c", "a"]
-            voltages = potentials - np.roll(potentials, -1)
+            assert phases == "abc"
+            voltages = np.array(
+                [potentials[0] - potentials[1], potentials[1] - potentials[2], potentials[2] - potentials[0]],
+                dtype=np.complex128,
+            )
     return voltages
+
+
+def _calculate_voltage_phases(phases: str) -> list[str]:
+    if "n" in phases:  # "an", "bn", "cn"
+        return [p + "n" for p in phases[:-1]]
+    else:  # "ab", "bc", "ca"
+        if len(phases) == 2:
+            return [phases]
+        else:
+            return [p1 + p2 for p1, p2 in zip(phases, np.roll(list(phases), -1), strict=True)]
+
+
+_voltage_cache: dict[str, list[str]] = {}
+for _phases in ("ab", "bc", "ca", "an", "bn", "cn", "abn", "bcn", "can", "abc", "abcn"):
+    _voltage_cache[_phases] = _calculate_voltage_phases(_phases)
 
 
 def calculate_voltage_phases(phases: str) -> list[str]:
@@ -167,10 +185,4 @@ def calculate_voltage_phases(phases: str) -> list[str]:
         >>> calculate_voltage_phases("abcn")
         ['an', 'bn', 'cn']
     """
-    if "n" in phases:  # "an", "bn", "cn"
-        return [p + "n" for p in phases[:-1]]
-    else:  # "ab", "bc", "ca"
-        if len(phases) == 2:
-            return [phases]
-        else:
-            return [p1 + p2 for p1, p2 in zip(phases, np.roll(list(phases), -1), strict=True)]
+    return _voltage_cache[phases]

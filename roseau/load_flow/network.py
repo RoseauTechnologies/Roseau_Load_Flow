@@ -11,7 +11,7 @@ from collections.abc import Mapping, Sized
 from importlib import resources
 from itertools import chain, cycle
 from pathlib import Path
-from typing import TYPE_CHECKING, TypeVar
+from typing import TYPE_CHECKING, NoReturn, TypeVar
 
 import geopandas as gpd
 import numpy as np
@@ -465,7 +465,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         warm_start: bool = True,
         solver: Solver = _DEFAULT_SOLVER,
         solver_params: JsonDict | None = None,
-    ) -> int:
+    ) -> tuple[int, float]:
         """Solve the load flow for this network.
 
         To get the results of the load flow for the whole network, use the `res_` properties on the
@@ -521,24 +521,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         try:
             iterations, residual = self._solver.solve_load_flow(max_iterations=max_iterations, tolerance=tolerance)
         except RuntimeError as e:
-            msg = e.args[0]
-            zero_elements_index, inf_elements_index = self._solver._cy_solver.analyse_jacobian()
-            if zero_elements_index:
-                zero_elements = [self._elements[i] for i in zero_elements_index]
-                printable_elements = ", ".join(f"{type(e).__name__}({e.id!r})" for e in zero_elements)
-                msg += (
-                    f"The problem seems to come from the elements [{printable_elements}] that have at least one "
-                    f"disconnected phase. "
-                )
-            if inf_elements_index:
-                inf_elements = [self._elements[i] for i in inf_elements_index]
-                printable_elements = ", ".join(f"{type(e).__name__}({e.id!r})" for e in inf_elements)
-                msg += (
-                    f"The problem seems to come from the elements [{printable_elements}] that induce infinite "
-                    f"values. This might be caused by flexible loads with very high alpha."
-                )
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_JACOBIAN) from e
+            self._handle_error(e)
 
         end = time.perf_counter()
 
@@ -569,6 +552,32 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         self._results_valid = True
 
         return iterations, residual
+
+    def _handle_error(self, e: RuntimeError) -> NoReturn:
+        msg = e.args[0]
+        if msg.startswith("0 "):
+            msg = f"The license can not be validated. The detailed error message is {msg[2:]!r}"
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.LICENSE_ERROR) from e
+        else:
+            assert msg.startswith("1 ")
+            msg = msg[2:]
+            zero_elements_index, inf_elements_index = self._solver._cy_solver.analyse_jacobian()
+            if zero_elements_index:
+                zero_elements = [self._elements[i] for i in zero_elements_index]
+                printable_elements = ", ".join(f"{type(e).__name__}({e.id!r})" for e in zero_elements)
+                msg += (
+                    f"The problem seems to come from the elements [{printable_elements}] that have at least one "
+                    f"disconnected phase. "
+                )
+            if inf_elements_index:
+                inf_elements = [self._elements[i] for i in inf_elements_index]
+                printable_elements = ", ".join(f"{type(e).__name__}({e.id!r})" for e in inf_elements)
+                msg += (
+                    f"The problem seems to come from the elements [{printable_elements}] that induce infinite "
+                    f"values. This might be caused by flexible loads with very high alpha."
+                )
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_JACOBIAN) from e
 
     def _results_from_dict(self, data: JsonDict) -> None:
         """Dispatch the results to all the elements of the network.
@@ -719,8 +728,8 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         dtypes = {c: _DTYPES[c] for c in res_dict}
         for branch_id, branch in self.branches.items():
             currents1, currents2 = branch._res_currents_getter(warning=False)
-            powers1, powers2 = branch._res_powers_getter(warning=False)
             potentials1, potentials2 = branch._res_potentials_getter(warning=False)
+            powers1, powers2 = branch._res_powers_getter(warning=False, pot1=potentials1, pot2=potentials2)
             phases = sorted(set(branch.phases1) | set(branch.phases2))
             for phase in phases:
                 if phase in branch.phases1:
@@ -790,8 +799,8 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             if not isinstance(branch, Transformer):
                 continue
             currents1, currents2 = branch._res_currents_getter(warning=False)
-            powers1, powers2 = branch._res_powers_getter(warning=False)
             potentials1, potentials2 = branch._res_potentials_getter(warning=False)
+            powers1, powers2 = branch._res_powers_getter(warning=False, pot1=potentials1, pot2=potentials2)
             s_max = branch.parameters._max_power
             violated = None
             if s_max is not None:
@@ -880,7 +889,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                 continue
             potentials = branch._res_potentials_getter(warning=False)
             currents = branch._res_currents_getter(warning=False)
-            powers = branch._res_powers_getter(warning=False)
+            powers = branch._res_powers_getter(warning=False, pot1=potentials[0], pot2=potentials[1])
             series_losses = branch._res_series_power_losses_getter(warning=False)
             series_currents = branch._res_series_currents_getter(warning=False)
             i_max = branch.parameters._max_current
@@ -940,7 +949,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                 continue
             potentials = branch._res_potentials_getter(warning=False)
             currents = branch._res_currents_getter(warning=False)
-            powers = branch._res_powers_getter(warning=False)
+            powers = branch._res_powers_getter(warning=False, pot1=potentials[0], pot2=potentials[1])
             for i1, i2, s1, s2, v1, v2, phase in zip(*currents, *powers, *potentials, branch.phases, strict=True):
                 res_dict["switch_id"].append(branch.id)
                 res_dict["phase"].append(phase)
