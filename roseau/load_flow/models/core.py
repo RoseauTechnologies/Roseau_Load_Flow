@@ -10,6 +10,7 @@ from shapely.geometry.base import BaseGeometry
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.typing import Id
 from roseau.load_flow.utils import Identifiable, JsonMixin
+from roseau.load_flow_engine.cy_engine import CyElement
 
 if TYPE_CHECKING:
     from roseau.load_flow.network import ElectricalNetwork
@@ -40,6 +41,8 @@ class Element(ABC, Identifiable, JsonMixin):
         super().__init__(id)
         self._connected_elements: list[Element] = []
         self._network: ElectricalNetwork | None = None
+        self._cy_element: CyElement | None = None
+        self._fetch_results = False
 
     @property
     def network(self) -> Optional["ElectricalNetwork"]:
@@ -125,6 +128,9 @@ class Element(ABC, Identifiable, JsonMixin):
             element._connected_elements.remove(self)
         self._connected_elements = []
         self._set_network(None)
+        self._cy_element.disconnect()
+        # The cpp element has been disconnected and can't be reconnected easily, it's safer to delete it
+        self._cy_element = None
 
     def _invalidate_network_results(self) -> None:
         """Invalidate the network making the result"""
@@ -160,6 +166,7 @@ class Element(ABC, Identifiable, JsonMixin):
                 category=UserWarning,
                 stacklevel=2,
             )
+        self._fetch_results = False
         return value
 
     @staticmethod

@@ -12,6 +12,7 @@ from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowE
 from roseau.load_flow.models.core import Element
 from roseau.load_flow.typing import ComplexArray, ComplexArrayLike1D, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
+from roseau.load_flow_engine.cy_engine import CyBus
 
 logger = logging.getLogger(__name__)
 
@@ -74,7 +75,8 @@ class Bus(Element):
         """
         super().__init__(id, **kwargs)
         self._check_phases(id, phases=phases)
-        self.phases = phases
+        self._phases = phases
+        initialized = potentials is not None
         if potentials is None:
             potentials = [0] * len(phases)
         self.potentials = potentials
@@ -87,8 +89,18 @@ class Bus(Element):
         self._res_potentials: ComplexArray | None = None
         self._short_circuits: list[dict[str, Any]] = []
 
+        self._n = len(self._phases)
+        self._initialized = initialized
+        self._initialized_by_the_user = initialized  # only used for serialization
+        self._cy_element = CyBus(n=self._n, potentials=self._potentials)
+
     def __repr__(self) -> str:
         return f"{type(self).__name__}(id={self.id!r}, phases={self.phases!r})"
+
+    @property
+    def phases(self) -> str:
+        """The phases of the bus."""
+        return self._phases
 
     @property
     @ureg_wraps("V", (None,))
@@ -105,8 +117,14 @@ class Bus(Element):
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_POTENTIALS_SIZE)
         self._potentials = np.array(value, dtype=np.complex128)
         self._invalidate_network_results()
+        self._initialized = True
+        self._initialized_by_the_user = True
+        if self._cy_element is not None:
+            self._cy_element.initialize_potentials(self._potentials)
 
     def _res_potentials_getter(self, warning: bool) -> ComplexArray:
+        if self._fetch_results:
+            self._res_potentials = self._cy_element.get_potentials(self._n)
         return self._res_getter(value=self._res_potentials, warning=warning)
 
     @property
@@ -327,7 +345,7 @@ class Bus(Element):
 
     def to_dict(self, *, _lf_only: bool = False) -> JsonDict:
         res = {"id": self.id, "phases": self.phases}
-        if not np.allclose(self.potentials, 0):
+        if self._initialized_by_the_user:
             res["potentials"] = [[v.real, v.imag] for v in self._potentials]
         if not _lf_only:
             if self.geometry is not None:
@@ -340,6 +358,7 @@ class Bus(Element):
 
     def results_from_dict(self, data: JsonDict) -> None:
         self._res_potentials = np.array([complex(v[0], v[1]) for v in data["potentials"]], dtype=np.complex128)
+        self._fetch_results = False
 
     def _results_to_dict(self, warning: bool) -> JsonDict:
         return {
@@ -365,11 +384,13 @@ class Bus(Element):
                 msg = f"Phase {phase!r} is not in the phases {set(self.phases)} of bus {self.id!r}."
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
-        if len(phases) < 1 or (len(phases) == 1 and ground is None):
-            msg = (
-                f"For the short-circuit on bus {self.id!r}, at least two phases (or a phase and a ground) should be "
-                f"given (only {phases} is given)."
-            )
+        if not phases or (len(phases) == 1 and ground is None):
+            msg = f"For the short-circuit on bus {self.id!r}, expected at least two phases or a phase and a ground."
+            if not phases:
+                msg += " No phase was given."
+            else:
+                msg += f" Only phase {phases[0]!r} is given."
+
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
         duplicates = [item for item in set(phases) if phases.count(item) > 1]
@@ -391,11 +412,13 @@ class Bus(Element):
         if self.network is not None:
             self.network._valid = False
 
+        phases_index = np.array([self.phases.find(p) for p in phases], dtype=np.int32)
+        self._cy_element.connect_ports(phases_index, len(phases))
+
+        if ground is not None:
+            self._cy_element.connect(ground._cy_element, [(phases_index[0], 0)])
+
     @property
     def short_circuits(self) -> list[dict[str, Any]]:
         """Return the list of short-circuits of this bus."""
         return self._short_circuits[:]  # return a copy as users should not modify the list directly
-
-    def clear_short_circuits(self) -> None:
-        """Remove the short-circuits of this bus."""
-        self._short_circuits = []

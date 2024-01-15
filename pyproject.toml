@@ -10,7 +10,7 @@ authors = [
     "Victor Gouin",
 ]
 maintainers = ["Ali Hamdan <ali.hamdan@roseautechnologies.com>"]
-license = "Proprietary"
+license = "BSD-3-Clause"
 repository = "https://github.com/RoseauTechnologies/Roseau_Load_Flow/"
 readme = "README.md"
 include = [
@@ -38,20 +38,17 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.dependencies]
 python = "^3.10"
-numpy = [
-    { version = ">=1.21.5", python = "<3.12" },
-    { version = ">=1.26.0", python = ">=3.12,<3.13" },
-    { version = "*", python = ">=3.13" },
-]
+numpy = ">=1.21.5"
 pandas = ">=1.4.0"
 geopandas = ">=0.10.2"
 shapely = ">=2.0.0"
 regex = ">=2022.1.18"
-requests = ">=2.28.1"
 pint = ">=0.21.0"
 typing-extensions = ">=4.6.2"
 rich = ">=13.5.1"
-pyproj = "^3.3.0"
+pyproj = ">=3.3.0"
+certifi = ">=2023.5.7"
+platformdirs = ">=4.0.0"
 
 # Optional dependencies
 matplotlib = { version = ">=3.7.2", optional = true }
@@ -66,14 +63,13 @@ graph = ["networkx"]
 pytest = "^7.1.2"
 pytest-cov = "^4.0.0"
 pytest-xdist = "^3.1.0"
-requests-mock = "^1.9.3"
 coverage = { version = "^7.0.5", extras = ["toml"] }
 matplotlib = ">=3.7.2"
 networkx = ">=3.0.0"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^3.0.0"
-ruff = "==0.1.6" # keep in sync with .pre-commit-config.yaml
+ruff = "==0.1.11" # keep in sync with .pre-commit-config.yaml
 
 [tool.poetry.group.doc.dependencies]
 sphinx = "^7.0.1"
@@ -135,13 +131,14 @@ exclude_lines = [
     "if TYPE_CHECKING:",
 ]
 ignore_errors = true
+fail_under = 90
 
 [tool.coverage.html]
 directory = "htmlcov"
 
 # Pytest
 [tool.pytest.ini_options]
-addopts = "--color=yes -vv -n=0 --import-mode=importlib"
+addopts = "--color=yes -n=0 --import-mode=importlib"
 testpaths = ["roseau/load_flow/"]
 filterwarnings = [
     'ignore:.*utcfromtimestamp:DeprecationWarning:dateutil.*', # dateutil is imported by pandas, not us

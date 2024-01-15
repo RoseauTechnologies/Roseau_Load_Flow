@@ -30,10 +30,6 @@ Type Aliases used by Roseau Load Flow.
 
     Available solvers for the load flow computation.
 
-.. class:: Authentication
-
-    Valid authentication types used to connect to the Roseau Load Flow solver API.
-
 .. class:: MapOrSeq
 
     A mapping from element IDs to elements or a sequence of elements of unique IDs.
@@ -58,7 +54,6 @@ from typing import Any, Literal, TypeAlias, TypeVar
 
 import numpy as np
 from numpy.typing import NDArray
-from requests.auth import HTTPBasicAuth
 
 from roseau.load_flow.units import Q_
 
@@ -70,7 +65,6 @@ StrPath: TypeAlias = str | os.PathLike[str]
 ControlType: TypeAlias = Literal["constant", "p_max_u_production", "p_max_u_consumption", "q_u"]
 ProjectionType: TypeAlias = Literal["euclidean", "keep_p", "keep_q"]
 Solver: TypeAlias = Literal["newton", "newton_goldstein"]
-Authentication: TypeAlias = tuple[str, str] | HTTPBasicAuth
 MapOrSeq: TypeAlias = Mapping[Id, T] | Sequence[T]
 ComplexArray: TypeAlias = NDArray[np.complex128]
 # TODO: improve the types below when shape-typing becomes supported
@@ -89,7 +83,6 @@ __all__ = [
     "ControlType",
     "ProjectionType",
     "Solver",
-    "Authentication",
     "MapOrSeq",
     "ComplexArray",
     "ComplexArrayLike1D",

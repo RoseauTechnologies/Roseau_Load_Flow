@@ -10,6 +10,7 @@ from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import Element
 from roseau.load_flow.typing import ComplexArray, ComplexArrayLike1D, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
+from roseau.load_flow_engine.cy_engine import CyDeltaVoltageSource, CyVoltageSource
 
 logger = logging.getLogger(__name__)
 
@@ -69,9 +70,16 @@ class VoltageSource(Element):
         else:
             self._size = len(set(phases) - {"n"})
 
-        self.phases = phases
-        self.bus = bus
+        self._phases = phases
+        self._bus = bus
         self.voltages = voltages
+
+        self._n = len(self._phases)
+        if self.phases == "abc":
+            self._cy_element = CyDeltaVoltageSource(n=self._n, voltages=self._voltages)
+        else:
+            self._cy_element = CyVoltageSource(n=self._n, voltages=self._voltages)
+        self._cy_connect()
 
         # Results
         self._res_currents: ComplexArray | None = None
@@ -82,6 +90,16 @@ class VoltageSource(Element):
             f"{type(self).__name__}(id={self.id!r}, bus={bus_id!r}, voltages={self.voltages!r}, "
             f"phases={self.phases!r})"
         )
+
+    @property
+    def phases(self) -> str:
+        """The phases of the source."""
+        return self._phases
+
+    @property
+    def bus(self) -> Bus:
+        """The bus of the source."""
+        return self._bus
 
     @property
     @ureg_wraps("V", (None,))
@@ -98,6 +116,8 @@ class VoltageSource(Element):
             raise RoseauLoadFlowException(msg, code=RoseauLoadFlowExceptionCode.BAD_VOLTAGES_SIZE)
         self._voltages = np.array(voltages, dtype=np.complex128)
         self._invalidate_network_results()
+        if self._cy_element is not None:
+            self._cy_element.update_voltages(self._voltages)
 
     @property
     def voltage_phases(self) -> list[str]:
@@ -105,6 +125,8 @@ class VoltageSource(Element):
         return calculate_voltage_phases(self.phases)
 
     def _res_currents_getter(self, warning: bool) -> ComplexArray:
+        if self._fetch_results:
+            self._res_currents = self._cy_element.get_currents(self._n)
         return self._res_getter(value=self._res_currents, warning=warning)
 
     @property
@@ -134,13 +156,21 @@ class VoltageSource(Element):
         """The load flow result of the source powers (VA)."""
         return self._res_powers_getter(warning=True)
 
+    def _cy_connect(self):
+        connections = []
+        for i, phase in enumerate(self.bus.phases):
+            if phase in self.phases:
+                j = self.phases.find(phase)
+                connections.append((i, j))
+        self.bus._cy_element.connect(self._cy_element, connections)
+
     #
     # Disconnect
     #
     def disconnect(self) -> None:
         """Disconnect this voltage source from the network. It cannot be used afterwards."""
         self._disconnect()
-        self.bus = None
+        self._bus = None
 
     def _raise_disconnected_error(self) -> None:
         """Raise an error if the voltage source is disconnected."""
@@ -168,6 +198,7 @@ class VoltageSource(Element):
 
     def results_from_dict(self, data: JsonDict) -> None:
         self._res_currents = np.array([complex(i[0], i[1]) for i in data["currents"]], dtype=np.complex128)
+        self._fetch_results = False
 
     def _results_to_dict(self, warning: bool) -> JsonDict:
         return {

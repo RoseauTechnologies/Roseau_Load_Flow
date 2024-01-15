@@ -71,8 +71,7 @@ load = PowerLoad(id="load", bus=bus2, powers=Q_((1000 - 300j) * np.ones(3), "VA"
 
 # Create a network and solve a load flow
 en = ElectricalNetwork.from_element(bus1)
-auth = ("username", "password")
-en.solve_load_flow(auth=auth)
+en.solve_load_flow()
 
 # Get the powers of the loads in the network
 en.res_loads["power"]
@@ -96,7 +95,7 @@ en.res_buses_voltages.transform([np.abs, ft.partial(np.angle, deg=True)])
 
 # Modify the load value to create an unbalanced load
 load.powers = Q_(np.array([5.0, 2.5, 0]) * (1 - 0.3j), "kVA")
-en.solve_load_flow(auth=auth)
+en.solve_load_flow()
 
 # Get the powers of the loads in the network
 en.res_loads["power"]

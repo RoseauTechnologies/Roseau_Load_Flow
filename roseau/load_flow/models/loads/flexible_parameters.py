@@ -7,16 +7,10 @@ from numpy.typing import NDArray
 from typing_extensions import Self
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
-from roseau.load_flow.typing import (
-    Authentication,
-    ComplexArray,
-    ComplexArrayLike1D,
-    ControlType,
-    JsonDict,
-    ProjectionType,
-)
+from roseau.load_flow.typing import ComplexArray, ComplexArrayLike1D, ControlType, JsonDict, ProjectionType
 from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow.utils import JsonMixin, _optional_deps
+from roseau.load_flow_engine.cy_engine import CyControl, CyFlexibleParameter, CyProjection
 
 logger = logging.getLogger(__name__)
 
@@ -89,6 +83,9 @@ class Control(JsonMixin):
         self._u_max = u_max
         self._alpha = alpha
         self._check_values()
+        self._cy_control = CyControl(
+            t=type, u_min=self._u_min, u_down=self._u_down, u_up=self._u_up, u_max=self._u_max, alpha=self._alpha
+        )
 
     def _check_values(self) -> None:
         """Check the provided values."""
@@ -380,6 +377,7 @@ class Projection(JsonMixin):
         self._alpha = alpha
         self._epsilon = epsilon
         self._check_values()
+        self._cy_projection = CyProjection(t=type, alpha=self._alpha, epsilon=self._epsilon)
 
     def _check_values(self) -> None:
         """Check the provided values."""
@@ -455,9 +453,6 @@ class FlexibleParameter(JsonMixin):
     For multi-phase loads, you need to use a `FlexibleParameter` instance per phase.
     """
 
-    _control_class: type[Control] = Control
-    _projection_class: type[Projection] = Projection
-
     @ureg_wraps(None, (None, None, None, None, "VA", "VAr", "VAr"))
     def __init__(
         self,
@@ -494,11 +489,20 @@ class FlexibleParameter(JsonMixin):
         self.control_p = control_p
         self.control_q = control_q
         self.projection = projection
+        self._cy_fp = None
         self._q_min = None
         self._q_max = None
         self.s_max = s_max
         self.q_min = q_min
         self.q_max = q_max
+        self._cy_fp = CyFlexibleParameter(
+            control_p=control_p._cy_control,
+            control_q=control_q._cy_control,
+            projection=projection._cy_projection,
+            s_max=self._s_max,
+            q_min=self.q_min.m_as("VAr"),
+            q_max=self.q_max.m_as("VAr"),
+        )
 
     @property
     @ureg_wraps("VA", (None,))
@@ -521,6 +525,8 @@ class FlexibleParameter(JsonMixin):
         if self._q_min is not None and self._q_min < -self._s_max:
             logger.warning("'s_max' has been updated but now 'q_min' is less than -s_max. 'q_min' is set to -s_max")
             self._q_min = -self._s_max
+        if self._cy_fp is not None:
+            self._cy_fp.update_parameters(self._s_max, self.q_min.m_as("VAr"), self.q_max.m_as("VAr"))
 
     @property
     @ureg_wraps("VAr", (None,))
@@ -542,6 +548,8 @@ class FlexibleParameter(JsonMixin):
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_FLEXIBLE_PARAMETER_VALUE)
         self._q_min = value
+        if self._cy_fp is not None:
+            self._cy_fp.update_parameters(self._s_max, self.q_min.m_as("VAr"), self.q_max.m_as("VAr"))
 
     @property
     @ureg_wraps("VAr", (None,))
@@ -563,6 +571,8 @@ class FlexibleParameter(JsonMixin):
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_FLEXIBLE_PARAMETER_VALUE)
         self._q_max = value
+        if self._cy_fp is not None:
+            self._cy_fp.update_parameters(self._s_max, self.q_min.m_as("VAr"), self.q_max.m_as("VAr"))
 
     @classmethod
     def constant(cls) -> Self:
@@ -572,9 +582,9 @@ class FlexibleParameter(JsonMixin):
             A constant control i.e. no control at all. It is an equivalent of the constant power load.
         """
         return cls(
-            control_p=cls._control_class.constant(),
-            control_q=cls._control_class.constant(),
-            projection=cls._projection_class(type=cls._projection_class._DEFAULT_TYPE),
+            control_p=Control.constant(),
+            control_q=Control.constant(),
+            projection=Projection(type=Projection._DEFAULT_TYPE),
             s_max=1.0,
         )
 
@@ -626,11 +636,11 @@ class FlexibleParameter(JsonMixin):
         Returns:
             A flexible parameter which performs "p_max_u_production" control.
         """
-        control_p = cls._control_class.p_max_u_production(u_up=u_up, u_max=u_max, alpha=alpha_control)
+        control_p = Control.p_max_u_production(u_up=u_up, u_max=u_max, alpha=alpha_control)
         return cls(
             control_p=control_p,
-            control_q=cls._control_class.constant(),
-            projection=cls._projection_class(type=type_proj, alpha=alpha_proj, epsilon=epsilon_proj),
+            control_q=Control.constant(),
+            projection=Projection(type=type_proj, alpha=alpha_proj, epsilon=epsilon_proj),
             s_max=s_max,
         )
 
@@ -679,11 +689,11 @@ class FlexibleParameter(JsonMixin):
         Returns:
             A flexible parameter which performs "p_max_u_consumption" control.
         """
-        control_p = cls._control_class.p_max_u_consumption(u_min=u_min, u_down=u_down, alpha=alpha_control)
+        control_p = Control.p_max_u_consumption(u_min=u_min, u_down=u_down, alpha=alpha_control)
         return cls(
             control_p=control_p,
-            control_q=cls._control_class.constant(),
-            projection=cls._projection_class(type=type_proj, alpha=alpha_proj, epsilon=epsilon_proj),
+            control_q=Control.constant(),
+            projection=Projection(type=type_proj, alpha=alpha_proj, epsilon=epsilon_proj),
             s_max=s_max,
         )
 
@@ -751,11 +761,11 @@ class FlexibleParameter(JsonMixin):
         Returns:
             A flexible parameter which performs "q_u" control.
         """
-        control_q = cls._control_class.q_u(u_min=u_min, u_down=u_down, u_up=u_up, u_max=u_max, alpha=alpha_control)
+        control_q = Control.q_u(u_min=u_min, u_down=u_down, u_up=u_up, u_max=u_max, alpha=alpha_control)
         return cls(
-            control_p=cls._control_class.constant(),
+            control_p=Control.constant(),
             control_q=control_q,
-            projection=cls._projection_class(type=type_proj, alpha=alpha_proj, epsilon=epsilon_proj),
+            projection=Projection(type=type_proj, alpha=alpha_proj, epsilon=epsilon_proj),
             s_max=s_max,
             q_min=q_min,
             q_max=q_max,
@@ -837,12 +847,12 @@ class FlexibleParameter(JsonMixin):
         See Also:
             :meth:`p_max_u_production` and :meth:`q_u` for more details.
         """
-        control_p = cls._control_class.p_max_u_production(u_up=up_up, u_max=up_max, alpha=alpha_control)
-        control_q = cls._control_class.q_u(u_min=uq_min, u_down=uq_down, u_up=uq_up, u_max=uq_max, alpha=alpha_control)
+        control_p = Control.p_max_u_production(u_up=up_up, u_max=up_max, alpha=alpha_control)
+        control_q = Control.q_u(u_min=uq_min, u_down=uq_down, u_up=uq_up, u_max=uq_max, alpha=alpha_control)
         return cls(
             control_p=control_p,
             control_q=control_q,
-            projection=cls._projection_class(type=type_proj, alpha=alpha_proj, epsilon=epsilon_proj),
+            projection=Projection(type=type_proj, alpha=alpha_proj, epsilon=epsilon_proj),
             s_max=s_max,
             q_min=q_min,
             q_max=q_max,
@@ -924,12 +934,12 @@ class FlexibleParameter(JsonMixin):
         See Also:
             :meth:`p_max_u_consumption` and :meth:`q_u` for more details.
         """
-        control_p = cls._control_class.p_max_u_consumption(u_min=up_min, u_down=up_down, alpha=alpha_control)
-        control_q = cls._control_class.q_u(u_min=uq_min, u_down=uq_down, u_up=uq_up, u_max=uq_max, alpha=alpha_control)
+        control_p = Control.p_max_u_consumption(u_min=up_min, u_down=up_down, alpha=alpha_control)
+        control_q = Control.q_u(u_min=uq_min, u_down=uq_down, u_up=uq_up, u_max=uq_max, alpha=alpha_control)
         return cls(
             control_p=control_p,
             control_q=control_q,
-            projection=cls._projection_class(type=type_proj, alpha=alpha_proj, epsilon=epsilon_proj),
+            projection=Projection(type=type_proj, alpha=alpha_proj, epsilon=epsilon_proj),
             s_max=s_max,
             q_min=q_min,
             q_max=q_max,
@@ -940,9 +950,9 @@ class FlexibleParameter(JsonMixin):
     #
     @classmethod
     def from_dict(cls, data: JsonDict) -> Self:
-        control_p = cls._control_class.from_dict(data["control_p"])
-        control_q = cls._control_class.from_dict(data["control_q"])
-        projection = cls._projection_class.from_dict(data["projection"])
+        control_p = Control.from_dict(data["control_p"])
+        control_q = Control.from_dict(data["control_q"])
+        projection = Projection.from_dict(data["projection"])
         q_min = data.get("q_min", None)
         q_max = data.get("q_max", None)
         return cls(
@@ -980,79 +990,42 @@ class FlexibleParameter(JsonMixin):
     #
     # Equivalent Python method
     #
-    @ureg_wraps("VA", (None, None, "V", "VA", None))
-    def compute_powers(
-        self,
-        auth: Authentication,
-        voltages: ComplexArrayLike1D,
-        power: complex | Q_[complex],
-        solve_kwargs: JsonDict | None = None,
-    ) -> Q_[ComplexArray]:
+    @ureg_wraps("VA", (None, "V", "VA"))
+    def compute_powers(self, voltages: ComplexArrayLike1D, power: complex | Q_[complex]) -> Q_[ComplexArray]:
         """Compute the flexible powers for different voltages (norms)
 
         Args:
-            auth:
-                The login and password for the roseau load flow api.
-
             voltages:
                 The array of voltage norms to test with this flexible parameter.
 
             power:
                 The input theoretical power of the load.
 
-            solve_kwargs:
-                Keywords arguments passed to the :meth:`~roseau.load_flow.ElectricalNetwork.solve_load_flow` method.
-
         Returns:
             The flexible powers really consumed taking into account the control. One value per provided voltage norm.
         """
-        return self._compute_powers(auth=auth, voltages=voltages, power=power, solve_kwargs=solve_kwargs)
+        return self._compute_powers(voltages=voltages, power=power)
 
-    def _compute_powers(
-        self, auth: Authentication, voltages: ComplexArrayLike1D, power: complex, solve_kwargs: JsonDict | None
-    ) -> ComplexArray:
-        from roseau.load_flow import Bus, ElectricalNetwork, PotentialRef, PowerLoad, VoltageSource
-
+    def _compute_powers(self, voltages: ComplexArrayLike1D, power: complex) -> ComplexArray:
         # Format the input
-        if solve_kwargs is None:
-            solve_kwargs = {}
-        voltages = np.array(np.abs(voltages), dtype=np.float64)
-
-        # Simple network
-        bus = Bus(id="bus", phases="an")
-        vs = VoltageSource(id="source", bus=bus, voltages=[voltages[0]])
-        PotentialRef(id="pref", element=bus, phase="n")
-        fp = FlexibleParameter.from_dict(data=self.to_dict(_lf_only=True))
-        load = PowerLoad(id="load", bus=bus, powers=[power], flexible_params=[fp])
-        en = ElectricalNetwork.from_element(bus)
+        voltages = np.array(np.abs(voltages), dtype=float)
 
         # Iterate over the provided voltages to get the associated flexible powers
-        res_flexible_powers = []
-        for v in voltages:
-            vs.voltages = [v]
-            en.solve_load_flow(auth=auth, **solve_kwargs)
-            res_flexible_powers.append(load.res_flexible_powers.m_as("VA")[0])
+        res_flexible_powers = [self._cy_fp.compute_power(v, power) for v in voltages]
+        return np.array(res_flexible_powers, dtype=complex)
 
-        return np.array(res_flexible_powers, dtype=np.complex128)
-
-    @ureg_wraps((None, "VA"), (None, None, "V", "VA", None, None, None, "VA"))
+    @ureg_wraps((None, "VA"), (None, "V", "VA", None, None))
     def plot_pq(
         self,
-        auth: Authentication,
         voltages: NDArray[np.float64] | Q_[NDArray[np.float64]],
         power: complex | Q_[complex],
         ax: Optional["Axes"] = None,
-        solve_kwargs: JsonDict | None = None,
         voltages_labels_mask: NDArray[np.bool_] | None = None,
-        res_flexible_powers: ComplexArray | None = None,
     ) -> tuple["Axes", ComplexArray]:
         """Plot the "trajectory" of the flexible powers (in the (P, Q) plane) for the provided voltages and theoretical
         power.
 
         Args:
-            auth:
-                The login and password for the roseau load flow api.
-
             voltages:
                 The array of voltage norms to test with this flexible parameter.
 
@@ -1062,14 +1035,8 @@ class FlexibleParameter(JsonMixin):
             ax:
                 The optional axis to use for the plot. The current axis is used by default.
 
-            solve_kwargs:
-                The keywords arguments of the :meth:`~roseau.load_flow.ElectricalNetwork.solve_load_flow` method.
-
             voltages_labels_mask:
                 A mask to activate the plot of voltages labels. By default, no voltages annotations.
-
-            res_flexible_powers:
-                If None is provided, the `res_flexible_powers` are computed. Otherwise, the provided values are used.
 
         Returns:
             The axis on which the plot has been drawn and the resulting flexible powers (the input if not `None` else
@@ -1092,10 +1059,7 @@ class FlexibleParameter(JsonMixin):
         v_max = voltages.max()
 
         # Compute the powers for the voltages norms
-        if res_flexible_powers is None:
-            res_flexible_powers = self._compute_powers(
-                auth=auth, voltages=voltages, power=power, solve_kwargs=solve_kwargs
-            )
+        res_flexible_powers = self._compute_powers(voltages=voltages, power=power)
 
         # Draw a circle
         circle = plt.Circle((0, 0), radius=s_max, color="black", fill=False)
@@ -1150,22 +1114,16 @@ class FlexibleParameter(JsonMixin):
 
         return ax, res_flexible_powers
 
-    @ureg_wraps((None, "VA"), (None, None, "V", "VA", None, None, "VA"))
+    @ureg_wraps((None, "VA"), (None, "V", "VA", None))
     def plot_control_p(
         self,
-        auth: Authentication,
         voltages: NDArray[np.float64] | Q_[NDArray[np.float64]],
         power: complex | Q_[complex],
         ax: Optional["Axes"] = None,
-        solve_kwargs: JsonDict | None = None,
-        res_flexible_powers: ComplexArray | None = None,
     ) -> tuple["Axes", ComplexArray]:
         """Plot the flexible active power consumed (or produced) for the provided voltages and theoretical power.
 
         Args:
-            auth:
-                The login and password for the roseau load flow api.
-
             voltages:
                 The array of voltage norms to test with this flexible parameter.
 
@@ -1174,12 +1132,6 @@ class FlexibleParameter(JsonMixin):
 
             ax:
                 The optional axis to use for the plot. The current axis is used by default.
-
-            solve_kwargs:
-                The keywords arguments of the :meth:`~roseau.load_flow.ElectricalNetwork.solve_load_flow` method.
-
-            res_flexible_powers:
-                If None is provided, the `res_flexible_powers` are computed. Otherwise, the provided values are used.
 
         Returns:
             The axis on which the plot has been drawn and the resulting flexible powers (the input if not `None` else
@@ -1197,10 +1149,7 @@ class FlexibleParameter(JsonMixin):
         )
 
         # Compute the powers for the voltages norms
-        if res_flexible_powers is None:
-            res_flexible_powers = self._compute_powers(
-                auth=auth, voltages=voltages, power=power, solve_kwargs=solve_kwargs
-            )
+        res_flexible_powers = self._compute_powers(voltages=voltages, power=power)
         ax.scatter(voltages, res_flexible_powers.real, marker=".", c="blue", zorder=2, label="Actual power")
 
         # Add the theoretical non-smooth curve
@@ -1216,22 +1165,16 @@ class FlexibleParameter(JsonMixin):
 
         return ax, res_flexible_powers
 
-    @ureg_wraps((None, "VA"), (None, None, "V", "VA", None, None, "VA"))
+    @ureg_wraps((None, "VA"), (None, "V", "VA", None))
     def plot_control_q(
         self,
-        auth: Authentication,
         voltages: NDArray[np.float64] | Q_[NDArray[np.float64]],
         power: complex | Q_[complex],
         ax: Optional["Axes"] = None,
-        solve_kwargs: JsonDict | None = None,
-        res_flexible_powers: ComplexArray | None = None,
     ) -> tuple["Axes", ComplexArray]:
         """Plot the flexible reactive power consumed (or produced) for the provided voltages and theoretical power.
 
         Args:
-            auth:
-                The login and password for the roseau load flow api.
-
             voltages:
                 The array of voltage norms to test with this flexible parameter.
 
@@ -1240,12 +1183,6 @@ class FlexibleParameter(JsonMixin):
 
             ax:
                 The optional axis to use for the plot. The current axis is used by default.
-
-            solve_kwargs:
-                The keywords arguments of the :meth:`~roseau.load_flow.ElectricalNetwork.solve_load_flow` method
-
-            res_flexible_powers:
-                If None is provided, the `res_flexible_powers` are computed. Otherwise, the provided values are used.
 
         Returns:
             The axis on which the plot has been drawn and the resulting flexible powers (the input if not `None` else
@@ -1263,10 +1200,7 @@ class FlexibleParameter(JsonMixin):
         )
 
         # Compute the powers for the voltages norms
-        if res_flexible_powers is None:
-            res_flexible_powers = self._compute_powers(
-                auth=auth, voltages=voltages, power=power, solve_kwargs=solve_kwargs
-            )
+        res_flexible_powers = self._compute_powers(voltages=voltages, power=power)
         ax.scatter(voltages, res_flexible_powers.imag, marker=".", c="blue", zorder=2, label="Actual power")
 
         # Add the theoretical non-smooth curve

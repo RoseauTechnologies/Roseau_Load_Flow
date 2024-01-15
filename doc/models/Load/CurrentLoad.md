@@ -71,8 +71,7 @@ load = CurrentLoad(
 
 # Create a network and solve a load flow
 en = ElectricalNetwork.from_element(bus1)
-auth = ("username", "password")
-en.solve_load_flow(auth=auth)
+en.solve_load_flow()
 
 # Get the current of the load (equal to the one provided)
 en.res_loads["current"].transform([np.abs, ft.partial(np.angle, deg=True)])
@@ -98,7 +97,7 @@ en.res_buses_voltages.transform([np.abs, ft.partial(np.angle, deg=True)])
 load.currents = Q_(
     np.array([5.0, 2.5, 0]) * np.exp([0, -2j * np.pi / 3, 2j * np.pi / 3]), "A"
 )
-en.solve_load_flow(auth=auth)
+en.solve_load_flow()
 
 # Get the currents of the loads of the network
 en.res_loads["current"].transform([np.abs, ft.partial(np.angle, deg=True)])

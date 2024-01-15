@@ -75,6 +75,7 @@ class RoseauLoadFlowExceptionCode(Enum):
     SWITCHES_LOOP = auto()
     NO_POTENTIAL_REFERENCE = auto()
     SEVERAL_POTENTIAL_REFERENCE = auto()
+    EMPTY_NETWORK = auto()
     UNKNOWN_ELEMENT = auto()
     NO_VOLTAGE_SOURCE = auto()
     BAD_ELEMENT_OBJECT = auto()
@@ -110,6 +111,9 @@ class RoseauLoadFlowExceptionCode(Enum):
 
     # Import Error
     IMPORT_ERROR = auto()
+
+    # License errors
+    LICENSE_ERROR = auto()
 
     @classmethod
     def package_name(cls) -> str:

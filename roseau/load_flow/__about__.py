@@ -7,7 +7,7 @@ __authors__ = ", ".join(
         "Victor Gouin",
     )
 )
-__copyright__ = "Roseau Technologies 2018--2023"
+__copyright__ = "Roseau Technologies 2018"
 __credits__ = "Roseau Technologies"
 __license__ = "Proprietary"
 __maintainer__ = "Ali Hamdan"

@@ -128,9 +128,8 @@ a Delta-Wye transformer and a small LV network.
 Then, the load flow can be solved and the results can be retrieved.
 
 ```pycon
->>> auth = ("username", "password")
->>> en.solve_load_flow(auth=auth)
-2
+>>> en.solve_load_flow()
+(2, 1.8595619621919468e-07)
 >>> abs(load_bus3.res_voltages)
 array([243.66463933, 232.20612714, 233.55093129]) <Unit('volt')>
 ```
@@ -177,8 +176,8 @@ the voltage magnitude for phase `'a'` was 240 V above without the $P(U)$ control
 has been activated in this run.
 
 ```pycon
->>> en.solve_load_flow(auth=auth)
-4
+>>> en.solve_load_flow()
+(4, 1.453686784545e-07)
 >>> abs(load_bus3.res_voltages)
 array([243.08225748, 232.46046866, 233.62854073]) <Unit('volt')>
 ```
@@ -242,8 +241,8 @@ production is totally shut down.
 The load flow can be solved again.
 
 ```pycon
->>> en.solve_load_flow(auth=auth)
-6
+>>> en.solve_load_flow()
+(6, 1.8576776876-07)
 >>> abs(load_bus3.res_voltages)
 array([239.5133208 , 230.2108052 , 237.59184615]) <Unit('volt')>
 >>> flexible_load.res_flexible_powers

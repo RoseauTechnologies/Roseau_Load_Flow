@@ -9,6 +9,12 @@ from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.transformers.parameters import TransformerParameters
 from roseau.load_flow.typing import Id, JsonDict
 from roseau.load_flow.units import Q_
+from roseau.load_flow_engine.cy_engine import (
+    CyCenterTransformer,
+    CyExtendedTransformer,
+    CyReducedTransformer,
+    CySingleTransformer,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -99,6 +105,44 @@ class Transformer(AbstractBranch):
         self.tap = tap
         self._parameters = parameters
 
+        z2, ym, k, orientation = parameters.to_zyk()
+        z2 = z2.m_as("ohm")
+        ym = ym.m_as("S")
+        if parameters.type == "single":
+            self._cy_element = CySingleTransformer(z2=z2, ym=ym, k=k * tap)
+        elif parameters.type == "center":
+            self._cy_element = CyCenterTransformer(z2=z2, ym=ym, k=k * tap)
+        else:
+            if "Y" in parameters.winding1 and "y" in parameters.winding2:
+                self._cy_element = CyReducedTransformer(
+                    n1=4, n2=4, prim="Y", sec="y", z2=z2, ym=ym, k=k * tap, orientation=orientation
+                )
+            elif "D" in parameters.winding1 and "y" in parameters.winding2:
+                self._cy_element = CyReducedTransformer(
+                    n1=3, n2=4, prim="D", sec="y", z2=z2, ym=ym, k=k * tap, orientation=orientation
+                )
+            elif "D" in parameters.winding1 and "d" in parameters.winding2:
+                self._cy_element = CyReducedTransformer(
+                    n1=3, n2=3, prim="D", sec="d", z2=z2, ym=ym, k=k * tap, orientation=orientation
+                )
+            elif "Y" in parameters.winding1 and "d" in parameters.winding2:
+                self._cy_element = CyReducedTransformer(
+                    n1=4, n2=3, prim="Y", sec="d", z2=z2, ym=ym, k=k * tap, orientation=orientation
+                )
+            elif "Y" in parameters.winding1 and "z" in parameters.winding2:
+                self._cy_element = CyExtendedTransformer(
+                    n1=4, n2=4, prim="Y", sec="z", z2=z2, ym=ym, k=k * tap, orientation=orientation
+                )
+            elif "D" in parameters.winding1 and "z" in parameters.winding2:
+                self._cy_element = CyExtendedTransformer(
+                    n1=3, n2=4, prim="D", sec="z", z2=z2, ym=ym, k=k * tap, orientation=orientation
+                )
+            else:
+                msg = f"Transformer {parameters.type} is not implemented yet..."
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS)
+        self._cy_connect()
+
     @property
     def tap(self) -> float:
         """The tap of the transformer, for example 1.02."""
@@ -112,6 +156,9 @@ class Transformer(AbstractBranch):
             logger.warning(f"The provided tap {value:.2f} is lower than 0.9. A good value is between 0.9 and 1.1.")
         self._tap = value
         self._invalidate_network_results()
+        if self._cy_element is not None:
+            z2, ym, k, _ = self.parameters.to_zyk()
+            self._cy_element.update_transformer_parameters(z2.m_as("ohm"), ym.m_as("S"), k * value)
 
     @property
     def parameters(self) -> TransformerParameters:
@@ -128,6 +175,9 @@ class Transformer(AbstractBranch):
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_TYPE)
         self._parameters = value
         self._invalidate_network_results()
+        if self._cy_element is not None:
+            z2, ym, k, _ = value.to_zyk()
+            self._cy_element.update_transformer_parameters(z2.m_as("ohm"), ym.m_as("S"), k * self.tap)
 
     @property
     def max_power(self) -> Q_[float] | None:
