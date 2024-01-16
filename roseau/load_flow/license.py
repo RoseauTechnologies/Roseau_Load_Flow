@@ -87,7 +87,7 @@ def activate_license(key: str | None = None) -> None:
     try:
         cy_activate_license(key=key, cacert_filepath=certifi.where(), cache_folderpath=user_cache_dir())
     except RuntimeError as e:
-        msg = f"The license can not be activated. The detailed error message is {e.args[0][2:]!r}."
+        msg = f"The license cannot be activated. The detailed error message is {e.args[0][2:]!r}."
         logger.error(msg)
         raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.LICENSE_ERROR) from e
 

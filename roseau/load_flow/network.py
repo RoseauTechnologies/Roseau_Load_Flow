@@ -556,7 +556,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
     def _handle_error(self, e: RuntimeError) -> NoReturn:
         msg = e.args[0]
         if msg.startswith("0 "):
-            msg = f"The license can not be validated. The detailed error message is {msg[2:]!r}"
+            msg = f"The license cannot be validated. The detailed error message is {msg[2:]!r}"
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.LICENSE_ERROR) from e
         else:
