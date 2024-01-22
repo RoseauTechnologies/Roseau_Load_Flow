@@ -695,6 +695,9 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
 
         Returns:
             The corresponding line parameters.
+
+        .. deprecated:: 0.7.0
+            Use :meth:`LineParameters.from_catalogue(..., model='coiffier') <LineParameters.from_catalogue>` instead.
         """
         match = cls._REGEXP_LINE_TYPE_NAME.fullmatch(string=name)
         if not match:
