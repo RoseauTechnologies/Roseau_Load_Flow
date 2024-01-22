@@ -1292,7 +1292,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                     element.potentials = potentials[0:bus_n]
                     element._initialized_by_the_user = False  # only used for serialization
                 for e in element._connected_elements:
-                    if e not in visited:
+                    if e not in visited and not isinstance(e, Ground):
                         if isinstance(element, Transformer):
                             k = element.parameters._ulv / element.parameters._uhv
                             phase_displacement = element.parameters.phase_displacement
