@@ -10,7 +10,6 @@ from typing import Generic, NoReturn, TypeVar, overload
 import pandas as pd
 from typing_extensions import Self
 
-from roseau.load_flow._compat import Traversable
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.typing import Id, JsonDict, StrPath
 
@@ -154,7 +153,7 @@ class CatalogueMixin(Generic[_T], metaclass=ABCMeta):
 
     @classmethod
     @abstractmethod
-    def catalogue_path(cls) -> Traversable:
+    def catalogue_path(cls) -> Path:
         """Get the path to the catalogue."""
         raise NotImplementedError
 

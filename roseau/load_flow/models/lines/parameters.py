@@ -1,6 +1,7 @@
 import logging
 import re
 from importlib import resources
+from pathlib import Path
 from typing import NoReturn
 
 import numpy as np
@@ -8,7 +9,6 @@ import numpy.linalg as nplin
 import pandas as pd
 from typing_extensions import Self, deprecated
 
-from roseau.load_flow._compat import Traversable
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.typing import ComplexArray, ComplexArrayLike2D, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
@@ -738,14 +738,13 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
     # Catalogue Mixin
     #
     @classmethod
-    def catalogue_path(cls) -> Traversable:
-        return resources.files("roseau.load_flow") / "data" / "lines"
+    def catalogue_path(cls) -> Path:
+        return Path(resources.files("roseau.load_flow") / "data" / "lines").expanduser().absolute()
 
     @classmethod
     def catalogue_data(cls) -> pd.DataFrame:
         file = cls.catalogue_path() / "Catalogue.csv"
-        with file.open("rb") as f:
-            return pd.read_csv(f, parse_dates=False).fillna({"insulator": ""})
+        return pd.read_csv(file, parse_dates=False).fillna({"insulator": ""})
 
     @classmethod
     def _get_catalogue(

@@ -5,9 +5,7 @@ from typing_extensions import Self
 
 if sys.version_info >= (3, 11):
     from enum import StrEnum as StrEnum
-    from importlib.resources.abc import Traversable as Traversable
 else:
-    from importlib.abc import Traversable as Traversable  # deprecated in 3.12
 
     class StrEnum(str, Enum):
         """

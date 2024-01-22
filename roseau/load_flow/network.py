@@ -9,6 +9,7 @@ import warnings
 from collections.abc import Iterable, Mapping, Sized
 from importlib import resources
 from itertools import chain
+from pathlib import Path
 from typing import TYPE_CHECKING, NoReturn, TypeVar
 
 import geopandas as gpd
@@ -17,7 +18,6 @@ import pandas as pd
 from pyproj import CRS
 from typing_extensions import Self
 
-from roseau.load_flow._compat import Traversable
 from roseau.load_flow._solvers import AbstractSolver
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.io import network_from_dgs, network_from_dict, network_to_dict
@@ -1452,8 +1452,8 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
     # Catalogue of networks
     #
     @classmethod
-    def catalogue_path(cls) -> Traversable:
-        return resources.files("roseau.load_flow") / "data" / "networks"
+    def catalogue_path(cls) -> Path:
+        return Path(resources.files("roseau.load_flow") / "data" / "networks").expanduser().absolute()
 
     @classmethod
     def catalogue_data(cls) -> JsonDict:
