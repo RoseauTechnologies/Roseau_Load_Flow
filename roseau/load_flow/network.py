@@ -1123,8 +1123,12 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             self.branches[element.id] = element
         elif isinstance(element, VoltageSource):
             self.sources[element.id] = element
+        elif isinstance(element, Ground):
+            self.grounds[element.id] = element
+        elif isinstance(element, PotentialRef):
+            self.potential_refs[element.id] = element
         else:
-            msg = "Only lines, loads, buses and sources can be added to the network."
+            msg = f"Unknown element {element} can not be added to the network."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT)
         element._network = self
@@ -1292,7 +1296,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                     element.potentials = potentials[0:bus_n]
                     element._initialized_by_the_user = False  # only used for serialization
                 for e in element._connected_elements:
-                    if e not in visited:
+                    if e not in visited and isinstance(e, AbstractBranch | Bus):
                         if isinstance(element, Transformer):
                             k = element.parameters._ulv / element.parameters._uhv
                             phase_displacement = element.parameters.phase_displacement

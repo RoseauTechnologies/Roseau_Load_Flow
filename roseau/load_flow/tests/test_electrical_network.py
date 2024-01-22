@@ -196,6 +196,21 @@ def test_connect_and_disconnect():
     line = Line(id="line", bus1=source_bus, bus2=load_bus, phases="abcn", parameters=lp, length=10)
     PotentialRef("pref", element=ground)
     en = ElectricalNetwork.from_element(source_bus)
+
+    # Connection of a new connected component
+    load_bus2 = Bus(id="load_bus2", phases="abcn")
+    ground2 = Ground("ground2")
+    ground2.connect(bus=load_bus2)
+    tp = TransformerParameters.from_catalogue(id="SE_Minera_A0Ak_50kVA")
+    Transformer(id="transfo", bus1=load_bus, bus2=load_bus2, parameters=tp)
+    with pytest.raises(RoseauLoadFlowException) as e:
+        en._check_validity(constructed=False)
+    assert "does not have a potential reference" in e.value.args[0]
+    assert e.value.args[1] == RoseauLoadFlowExceptionCode.NO_POTENTIAL_REFERENCE
+    PotentialRef("pref2", element=ground2)  # Add potential ref
+    en._check_validity(constructed=False)
+
+    # Disconnection of a load
     assert load.network == en
     load.disconnect()
     assert load.network is None
@@ -223,11 +238,10 @@ def test_connect_and_disconnect():
     assert e.value.msg == "Ground(id='a separate ground element') is not a valid load or source."
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT
 
-    # Adding ground => impossible
-    ground2 = Ground("ground2")
+    # Adding unknown element
     with pytest.raises(RoseauLoadFlowException) as e:
-        en._connect_element(ground2)
-    assert e.value.msg == "Only lines, loads, buses and sources can be added to the network."
+        en._connect_element(3)
+    assert "Unknown element" in e.value.msg
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT
 
     # Remove line => impossible

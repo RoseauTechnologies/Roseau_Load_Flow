@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- {gh-pr}`168` {gh-issue}`166` Fix initial potentials propagation.
 - {gh-pr}`163` {gh-issue}`158` Fix `ElectricalNetwork.res_transformers` returning an empty dataframe
   when max_power is not set.
 - {gh-pr}`151` Require Python 3.10 or newer.
