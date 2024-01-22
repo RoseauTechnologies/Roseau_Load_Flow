@@ -3,17 +3,13 @@ from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowE
 
 def test_exceptions():
     for x in RoseauLoadFlowExceptionCode:
-        # String starts with the package name
-        assert str(x).startswith("roseau.load_flow.")
-
-        # String equality
-        assert str(x) == x
-
-        # No equality without the prefix
-        assert str(x).removeprefix("roseau.load_flow.") != x
-
         # Case-insensitive
         assert str(x).upper() == x
+        assert str(x).lower() == x
+    # Case-insensitive constructor (with or without spaces or dashes)
+    assert RoseauLoadFlowExceptionCode("BaD_bus_ID") == RoseauLoadFlowExceptionCode.BAD_BUS_ID
+    assert RoseauLoadFlowExceptionCode("bad bus id") == RoseauLoadFlowExceptionCode.BAD_BUS_ID
+    assert RoseauLoadFlowExceptionCode("BAD-BUS-ID") == RoseauLoadFlowExceptionCode.BAD_BUS_ID
 
     r = RoseauLoadFlowException(msg="toto", code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS)
     assert r.msg == "toto"

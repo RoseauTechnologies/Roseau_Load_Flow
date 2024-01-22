@@ -172,11 +172,12 @@ class Line(AbstractBranch):
                 The second bus (aka `"to_bus"`) to connect to the line.
 
             parameters:
-                Parameters defining the electrical model of the line. This is an instance of the
-                :class:`LineParameters` class and can be used by multiple lines.
+                Parameters defining the electric model of the line using its impedance and shunt
+                admittance matrices. This is an instance of the :class:`LineParameters` class and
+                can be used by multiple lines.
 
             length:
-                The length of the line in km.
+                The length of the line (in km).
 
             phases:
                 The phases of the line. A string like ``"abc"`` or ``"an"`` etc. The order of the
@@ -256,6 +257,7 @@ class Line(AbstractBranch):
     @property
     @ureg_wraps("km", (None,))
     def length(self) -> Q_[float]:
+        """The length of the line (in km)."""
         return self._length
 
     @length.setter
@@ -274,7 +276,7 @@ class Line(AbstractBranch):
 
     @property
     def parameters(self) -> LineParameters:
-        """The parameters of the line."""
+        """The parameters defining the impedance and shunt admittance matrices of line model."""
         return self._parameters
 
     @parameters.setter
@@ -320,18 +322,18 @@ class Line(AbstractBranch):
     @property
     @ureg_wraps("ohm", (None,))
     def z_line(self) -> Q_[ComplexArray]:
-        """Impedance of the line in Ohm"""
+        """Impedance of the line (in Ohm)."""
         return self.parameters._z_line * self._length
 
     @property
     @ureg_wraps("S", (None,))
     def y_shunt(self) -> Q_[ComplexArray]:
-        """Shunt admittance of the line in Siemens"""
+        """Shunt admittance of the line (in Siemens)."""
         return self.parameters._y_shunt * self._length
 
     @property
     def max_current(self) -> Q_[float] | None:
-        """The maximum current loading of the line in A."""
+        """The maximum current loading of the line (in A)."""
         # Do not add a setter. The user must know that if they change the max_current, it changes
         # for all lines that share the parameters. It is better to set it on the parameters.
         return self.parameters.max_current
@@ -353,7 +355,7 @@ class Line(AbstractBranch):
     @property
     @ureg_wraps("A", (None,))
     def res_series_currents(self) -> Q_[ComplexArray]:
-        """Get the current in the series elements of the line (A)."""
+        """Get the current in the series elements of the line (in A)."""
         return self._res_series_currents_getter(warning=True)
 
     def _res_series_power_losses_getter(self, warning: bool) -> ComplexArray:
@@ -363,7 +365,7 @@ class Line(AbstractBranch):
     @property
     @ureg_wraps("VA", (None,))
     def res_series_power_losses(self) -> Q_[ComplexArray]:
-        """Get the power losses in the series elements of the line (VA)."""
+        """Get the power losses in the series elements of the line (in VA)."""
         return self._res_series_power_losses_getter(warning=True)
 
     def _res_shunt_values_getter(self, warning: bool) -> tuple[ComplexArray, ComplexArray, ComplexArray, ComplexArray]:
@@ -387,7 +389,7 @@ class Line(AbstractBranch):
     @property
     @ureg_wraps(("A", "A"), (None,))
     def res_shunt_currents(self) -> tuple[Q_[ComplexArray], Q_[ComplexArray]]:
-        """Get the currents in the shunt elements of the line (A)."""
+        """Get the currents in the shunt elements of the line (in A)."""
         return self._res_shunt_currents_getter(warning=True)
 
     def _res_shunt_power_losses_getter(self, warning: bool) -> ComplexArray:
@@ -399,7 +401,7 @@ class Line(AbstractBranch):
     @property
     @ureg_wraps("VA", (None,))
     def res_shunt_power_losses(self) -> Q_[ComplexArray]:
-        """Get the power losses in the shunt elements of the line (VA)."""
+        """Get the power losses in the shunt elements of the line (in VA)."""
         return self._res_shunt_power_losses_getter(warning=True)
 
     def _res_power_losses_getter(self, warning: bool) -> ComplexArray:
@@ -410,7 +412,7 @@ class Line(AbstractBranch):
     @property
     @ureg_wraps("VA", (None,))
     def res_power_losses(self) -> Q_[ComplexArray]:
-        """Get the power losses in the line (VA)."""
+        """Get the power losses in the line (in VA)."""
         return self._res_power_losses_getter(warning=True)
 
     @property

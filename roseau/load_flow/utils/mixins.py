@@ -1,12 +1,16 @@
 import json
 import logging
 import re
+import textwrap
 from abc import ABCMeta, abstractmethod
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Generic, TypeVar
+from typing import Generic, NoReturn, TypeVar, overload
 
+import pandas as pd
 from typing_extensions import Self
 
+from roseau.load_flow._compat import Traversable
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.typing import Id, JsonDict, StrPath
 
@@ -150,7 +154,7 @@ class CatalogueMixin(Generic[_T], metaclass=ABCMeta):
 
     @classmethod
     @abstractmethod
-    def catalogue_path(cls) -> Path:
+    def catalogue_path(cls) -> Traversable:
         """Get the path to the catalogue."""
         raise NotImplementedError
 
@@ -173,12 +177,101 @@ class CatalogueMixin(Generic[_T], metaclass=ABCMeta):
         """
         raise NotImplementedError
 
-    @classmethod
-    @abstractmethod
-    def print_catalogue(cls, **kwargs) -> None:
-        """Print the catalogue.
+    @overload
+    @staticmethod
+    def _filter_catalogue_str(value: str | re.Pattern[str], strings: pd.Series) -> "pd.Series[bool]":
+        ...
 
-        Keyword Args:
-            Arguments that can be used to filter the printed part of the catalogue.
+    @overload
+    @staticmethod
+    def _filter_catalogue_str(value: str | re.Pattern[str], strings: list[str]) -> list[str]:
+        ...
+
+    @staticmethod
+    def _filter_catalogue_str(
+        value: str | re.Pattern[str], strings: list[str] | pd.Series
+    ) -> "pd.Series[bool] | list[str]":
+        """Filter the catalogue using a string/regexp value.
+
+        Args:
+            value:
+                The string or regular expression to use as a filter.
+
+            strings:
+                The catalogue data to filter. Either a :class:`pandas.Series` or a list of strings.
+
+        Returns:
+            The mask of matching results if `strings` is a :class:`pandas.Series`, otherwise
+            the list of matching results.
         """
-        raise NotImplementedError
+        vector = pd.Series(strings)
+        if isinstance(value, re.Pattern):
+            result = vector.str.match(value)
+        else:
+            try:
+                pattern = re.compile(pattern=value, flags=re.IGNORECASE)
+                result = vector.str.match(pattern)
+            except re.error:
+                # fallback to string comparison
+                result = vector.str.lower() == value.lower()
+        if isinstance(strings, pd.Series):
+            return result
+        else:
+            return vector[result].tolist()
+
+    @staticmethod
+    def _raise_not_found_in_catalogue(
+        value: object, name: str, name_plural: str, strings: pd.Series, query_msg_list: list[str]
+    ) -> NoReturn:
+        """Raise an exception when no element has been found in the catalogue.
+
+        Args:
+            value:
+                The value that has been searched in the catalogue.
+
+            name:
+                The name of the element to display in the error message.
+
+            name_plural:
+                The plural form of the name of the element to display in the error message.
+
+            strings:
+                The catalogue data to filter.
+
+            query_msg_list:
+                The query information to display in the error message.
+        """
+        available_values = textwrap.shorten(", ".join(map(repr, strings.unique().tolist())), width=500)
+        msg = f"No {name} matching {value} has been found"
+        if query_msg_list:
+            msg += f" for the query {', '.join(query_msg_list)}"
+        msg += f". Available {name_plural} are {available_values}."
+        logger.error(msg)
+        raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.CATALOGUE_NOT_FOUND)
+
+    @staticmethod
+    def _assert_one_found(found_data: Sequence[object], display_name: str, query_info: str) -> None:
+        """Assert that only one element has been found in the catalogue.
+
+        Args:
+            found_data:
+                The data found in the catalogue. If multiple elements have been found, they are
+                displayed in the error message.
+
+            display_name:
+                The name of the element to display in the error message.
+
+            query_info:
+                The query information to display in the error message.
+        """
+        if len(found_data) == 1:
+            return
+        msg_middle = f"{display_name} matching the query ({query_info}) have been found"
+        if len(found_data) == 0:
+            msg = f"No {msg_middle}. Please look at the catalogue using the `get_catalogue` class method."
+            code = RoseauLoadFlowExceptionCode.CATALOGUE_NOT_FOUND
+        else:
+            msg = f"Several {msg_middle}: {textwrap.shorten(', '.join(map(repr, found_data)), width=500)}."
+            code = RoseauLoadFlowExceptionCode.CATALOGUE_SEVERAL_FOUND
+        logger.error(msg)
+        raise RoseauLoadFlowException(msg=msg, code=code)

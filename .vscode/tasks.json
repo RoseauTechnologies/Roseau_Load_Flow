@@ -5,7 +5,7 @@
   "options": { "cwd": "${workspaceFolder}" },
   "presentation": {
     "showReuseMessage": true,
-    "clear": true
+    "clear": true,
   },
   "tasks": [
     {
@@ -15,13 +15,13 @@
       "command": "make -C doc html",
       "group": {
         "kind": "build",
-        "isDefault": true
+        "isDefault": true,
       },
       "problemMatcher": [],
       "presentation": {
         "reveal": "silent",
-        "focus": true
-      }
+        "focus": true,
+      },
     },
     {
       "label": "Open docs",
@@ -32,13 +32,13 @@
         "reveal": "never",
         "close": true,
         "focus": false,
-        "panel": "dedicated"
+        "panel": "dedicated",
       },
       "group": {
         "kind": "build",
-        "isDefault": true
+        "isDefault": true,
       },
-      "isBackground": true
-    }
-  ]
+      "isBackground": true,
+    },
+  ],
 }

@@ -25,5 +25,9 @@
   "[markdown][yaml][html][css]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode",
     "editor.formatOnSave": true,
-  }
+  },
+  // Json
+  "[json]": {
+    "editor.indentSize": 2,
+  },
 }

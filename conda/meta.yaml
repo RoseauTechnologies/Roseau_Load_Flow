@@ -33,7 +33,6 @@ requirements:
     - regex >=2022.1.18
     - pint >=0.21.0
     - typing_extensions >=4.6.2
-    - rich >=13.5.1
     - pyproj >=3.3.0
     - matplotlib-base >=3.7.2
     - networkx >=3.0.0

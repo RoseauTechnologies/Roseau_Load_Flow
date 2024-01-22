@@ -1,14 +1,12 @@
 """
 This module contains the exceptions used by Roseau Load Flow.
 """
-import unicodedata
-from enum import Enum, auto
-from typing import Union
+from enum import auto
 
-from typing_extensions import Self
+from roseau.load_flow._compat import StrEnum
 
 
-class RoseauLoadFlowExceptionCode(Enum):
+class RoseauLoadFlowExceptionCode(StrEnum):
     """Error codes used by Roseau Load Flow."""
 
     # Generic
@@ -110,44 +108,18 @@ class RoseauLoadFlowExceptionCode(Enum):
     # License errors
     LICENSE_ERROR = auto()
 
-    @classmethod
-    def package_name(cls) -> str:
-        return "roseau.load_flow"
-
-    def __str__(self) -> str:
-        return f"{self.package_name()}.{self.name}".lower()
-
     def __eq__(self, other) -> bool:
         if isinstance(other, str):
-            return other.lower() == str(self).lower()
+            return other.lower() == self.lower()
         return super().__eq__(other)
 
     @classmethod
-    def from_string(cls, string: Union[str, "RoseauLoadFlowExceptionCode"]) -> Self:
-        """A method to convert a string into an error code enumerated type.
-
-        Args:
-            string:
-                The string depicted the error code. If a good element is given
-
-        Returns:
-            The enumerated type value corresponding with `string`.
-        """
-        if isinstance(string, cls):
-            return string
-        elif isinstance(string, str):
-            pass
-        else:
-            string = str(string)
-
-        # Withdraw accents and make lowercase
-        string = unicodedata.normalize("NFKD", string.lower()).encode("ASCII", "ignore").decode()
-
-        # Withdraw the package prefix (e.g. roseau.core)
-        error_str = string.removeprefix(f"{cls.package_name()}.")
-
-        # Get the value of this string
-        return cls[error_str.upper()]
+    def _missing_(cls, value: object) -> "RoseauLoadFlowExceptionCode | None":
+        if isinstance(value, str):
+            try:
+                return cls[value.upper().replace(" ", "_").replace("-", "_")]
+            except KeyError:
+                return None
 
 
 class RoseauLoadFlowException(Exception):

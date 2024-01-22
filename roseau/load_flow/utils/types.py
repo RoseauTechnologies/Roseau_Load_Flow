@@ -1,9 +1,9 @@
 import logging
-from enum import Enum, auto, unique
+from enum import auto
 
 import pandas as pd
-from typing_extensions import Self
 
+from roseau.load_flow._compat import StrEnum
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 
 # The local logger
@@ -52,198 +52,181 @@ _DTYPES = {
 }
 
 
-@unique
-class LineType(Enum):
+class LineType(StrEnum):
     """The type of a line."""
 
     OVERHEAD = auto()
-    """The line is an overhead line."""
+    """An overhead line that can be vertically or horizontally configured -- Fr = Aérien."""
     UNDERGROUND = auto()
-    """The line is an underground line."""
+    """An underground or a submarine cable -- Fr = Souterrain/Sous-Marin."""
     TWISTED = auto()
-    """The line is a twisted line."""
+    """A twisted line commonly known as Aerial Cable or Aerial Bundled Conductor (ABC) -- Fr = Torsadé."""
 
-    def __str__(self) -> str:
-        """Print a `LineType`
-
-        Returns:
-             A printable string of the line type.
-        """
-        return self.name.lower()
+    # aliases
+    O = OVERHEAD  # noqa: E741
+    U = UNDERGROUND
+    T = TWISTED
 
     @classmethod
-    def from_string(cls, string: str) -> Self:
-        """Convert a string into a LineType
+    def _missing_(cls, value: object) -> "LineType | None":
+        if isinstance(value, str):
+            try:
+                return cls[value.upper()]
+            except KeyError:
+                pass
+        msg = f"{value!r} cannot be converted into a LineType."
+        logger.error(msg)
+        raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.BAD_LINE_TYPE)
 
-        Args:
-            string:
-                The string to convert
-
-        Returns:
-            The corresponding LineType.
-        """
-        string = string.lower()
-        if string in ("overhead", "aérien", "aerien", "galerie", "a", "o"):
-            return cls.OVERHEAD
-        elif string in ("underground", "souterrain", "sous-marin", "s", "u"):
-            return cls.UNDERGROUND
-        elif string in ("twisted", "torsadé", "torsade", "t"):
-            return cls.TWISTED
-        else:
-            msg = f"The string {string!r} cannot be converted into a LineType."
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_TYPE)
-
-    #
-    # WordingCodeMixin
-    #
     def code(self) -> str:
-        """The code method is modified to retrieve a code that can be used in line type names.
-
-        Returns:
-            The code of the enumerated value.
-        """
-        if self == LineType.OVERHEAD:
-            return "O"
-        elif self == LineType.UNDERGROUND:
-            return "U"
-        elif self == LineType.TWISTED:
-            return "T"
-        else:  # pragma: no cover
-            msg = f"There is code missing here. I do not know the LineType {self!r}."
-            logger.error(msg)
-            raise NotImplementedError(msg)
+        """A code that can be used in line type names."""
+        return self.name[0]
 
 
-# Add the list of codes for each line type
-LineType.CODES = {LineType.OVERHEAD: {"A", "O"}, LineType.UNDERGROUND: {"U", "S"}, LineType.TWISTED: {"T"}}
+class ConductorType(StrEnum):
+    """The type of the material of the conductor."""
 
-
-@unique
-class ConductorType(Enum):
-    """The type of conductor."""
-
-    AL = auto()
-    """The conductor is in Aluminium."""
     CU = auto()
-    """The conductor is in Copper."""
+    """Copper -- Fr = Cuivre."""
+    AL = auto()
+    """All Aluminum Conductor (AAC) -- Fr = Aluminium."""
     AM = auto()
-    """The conductor is in Almélec."""
+    """All Aluminum Alloy Conductor (AAAC) -- Fr = Almélec."""
     AA = auto()
-    """The conductor is in Alu-Acier."""
+    """Aluminum Conductor Steel Reinforced (ACSR) -- Fr = Alu-Acier."""
     LA = auto()
-    """The conductor is in Almélec-Acier."""
+    """Aluminum Alloy Conductor Steel Reinforced (AACSR) -- Fr = Almélec-Acier."""
 
-    def __str__(self) -> str:
-        """Print a `ConductorType`
+    # aliases
+    AAC = AL  # 1350-H19 (Standard Round of Compact Round)
+    """All Aluminum Conductor (AAC) -- Fr = Aluminium."""
+    # AAC/TW  # 1380-H19 (Trapezoidal Wire)
 
-        Returns:
-            A printable string of the conductor type.
-        """
-        if self == ConductorType.AL:
-            return "Al"
-        elif self == ConductorType.CU:
-            return "Cu"
-        elif self == ConductorType.AM:
-            return "AM"
-        elif self == ConductorType.AA:
-            return "AA"
-        elif self == ConductorType.LA:
-            return "LA"
-        else:
-            s = super().__str__()
-            msg = f"The ConductorType {s} is not known..."
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_CONDUCTOR_TYPE)
+    AAAC = AM
+    """All Aluminum Alloy Conductor (AAAC) -- Fr = Almélec."""
+    # Aluminum alloy 6201-T81.
+    # Concentric-lay-stranded
+    # conforms to ASTM Specification B-399
+    # Applications: Overhead
+
+    ACSR = AA
+    """Aluminum Conductor Steel Reinforced (ACSR) -- Fr = Alu-Acier."""
+    # Aluminum alloy 1350-H-19
+    # Applications: Bare overhead transmission cable and primary and secondary distribution cable
+
+    AACSR = LA
+    """Aluminum Alloy Conductor Steel Reinforced (AACSR) -- Fr = Almélec-Acier."""
 
     @classmethod
-    def from_string(cls, string: str) -> Self:
-        """Convert a string into a ConductorType
+    def _missing_(cls, value: object) -> "ConductorType | None":
+        if isinstance(value, str):
+            try:
+                return cls[value.upper()]
+            except KeyError:
+                pass
+        msg = f"{value!r} cannot be converted into a ConductorType."
+        logger.error(msg)
+        raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.BAD_CONDUCTOR_TYPE)
 
-        Args:
-            string:
-                The string to convert
-
-        Returns:
-            The corresponding ConductorType.
-        """
-        string = string.lower()
-        if string == "al":
-            return cls.AL
-        elif string == "cu":
-            return cls.CU
-        elif string == "am":
-            return cls.AM
-        elif string == "aa":
-            return cls.AA
-        elif string == "la":
-            return cls.LA
-        else:
-            msg = f"The string {string!r} cannot be converted into a ConductorType."
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_CONDUCTOR_TYPE)
-
-    #
-    # WordingCodeMixin
-    #
     def code(self) -> str:
-        """The code method is modified to retrieve a code that can be used in line type names.
-
-        Returns:
-            The code of the enumerated value.
-        """
-        return self.name.upper()
+        """A code that can be used in conductor type names."""
+        return self.name
 
 
-@unique
-class InsulatorType(Enum):
+class InsulatorType(StrEnum):
     """The type of the insulator for a wire."""
 
     UNKNOWN = auto()
-    """The insulator of the conductor is made with unknown material."""
+    """The material of the insulator is unknown."""
+
+    # General insulators (IEC 60287)
     HDPE = auto()
-    """The insulator of the conductor is made with High-Density PolyEthylene."""
+    """High-Density PolyEthylene (HDPE) insulation."""
+    MDPE = auto()
+    """Medium-Density PolyEthylene (MDPE) insulation."""
     LDPE = auto()
-    """The insulator of the conductor is made with Low-Density PolyEthylene."""
-    PEX = auto()
-    """The insulator of the conductor is made with Cross-linked polyethylene."""
+    """Low-Density PolyEthylene (LDPE) insulation."""
+    XLPE = auto()
+    """Cross-linked polyethylene (XLPE) insulation."""
     EPR = auto()
-    """The insulator of the conductor is made with Ethylene-Propylene Rubber."""
+    """Ethylene-Propylene Rubber (EPR) insulation."""
     PVC = auto()
-    """The insulator of the conductor is made with PolyVinyl Chloride."""
+    """PolyVinyl Chloride (PVC) insulation."""
+    IP = auto()
+    """Impregnated Paper (IP) insulation."""
 
-    def __str__(self) -> str:
-        """Print a `InsulatorType`
+    # Coiffier's insulators (French standards)
+    SR = auto()  # IEC equivalent -> EPR
+    """Synthétique HN-33S22 (Pr ou EP); équivalent à NF C 33-220. Diélectriques massifs extrudés."""
+    SO = auto()  # IEC equivalent -> XLPE
+    """SYNTHE. UTE C 33-223 (CABLE 2000). Polyéthylène réticulé."""
+    SE = auto()  # IEC equivalent -> PVC
+    """Synthétique HN-33S22 (Pe ou PVC); équivalent à NF C 33-220. Diélectriques massifs extrudés."""
+    SC = auto()  # IEC equivalent -> XLPE
+    """Synthétique NF C 33-223 SS Cablette. Polyéthylène réticulé."""
+    S3 = auto()  # IEC equivalent -> XLPE
+    """Synthétique HN-33S23 (PR); équivalent à NF C 33-223. Polyéthylène réticulé."""
+    S6 = auto()  # IEC equivalent -> XLPE
+    """Synthétique NF C 33-226. Polyethylène réticulé à gradient fixé."""
+    PU = auto()  # IEC equivalent -> IP
+    """Unipolar impregnated paper under lead -- Fr = Papier imprégné unipolaire sous plomb."""
+    PP = auto()  # IEC equivalent -> IP
+    """Tri-polar tri-lead metalized paper -- Fr = Papier métallisé tripolaire triplomb."""
+    PM = auto()  # IEC equivalent -> IP
+    """Tri-polar metallic paper radial field -- Fr = Papier métallisé tripolaire champ radial."""
+    PC = auto()  # IEC equivalent -> IP
+    """Tri-polar belt paper -- Fr = Papier ceinture tripolaire."""
 
-        Returns:
-            A printable string of the insulator type.
-        """
-        return self.name.upper()
+    # Aliases
+    PEX = XLPE
+    """Alias -- Cross-linked polyethylene (XLPE) insulation."""
+    PE = MDPE
+    """Alias -- Medium-Density PolyEthylene (MDPE) insulation."""
 
     @classmethod
-    def from_string(cls, string: str) -> Self:
-        """Convert a string into a InsulatorType
+    def _missing_(cls, value: object) -> "InsulatorType | None":
+        if isinstance(value, str):
+            string = value.upper()
+            if string in {"", "NAN"}:
+                return cls.UNKNOWN
+            try:
+                return cls[string]
+            except KeyError:
+                pass
+        msg = f"{value!r} cannot be converted into a InsulatorType."
+        logger.error(msg)
+        raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.BAD_INSULATOR_TYPE)
 
-        Args:
-            string:
-                The string to convert
+    def code(self) -> str:
+        """A code that can be used in insulator type names."""
+        return self.name
 
-        Returns:
-            The corresponding InsulatorType.
-        """
-        if string.lower() in ("", "unknown", "nan"):
-            return cls.UNKNOWN
-        elif string == "HDPE":
-            return cls.HDPE
-        elif string == "LDPE":
-            return cls.LDPE
-        elif string == "PEX":
-            return cls.PEX
-        elif string == "EPR":
-            return cls.EPR
-        elif string == "PVC":
-            return cls.PVC
+    def is_compatible_with(self, model: str) -> bool:
+        """A model that can be used in insulator type names."""
+        if self == InsulatorType.UNKNOWN:
+            return True
+        elif self in {
+            InsulatorType.HDPE,
+            InsulatorType.MDPE,
+            InsulatorType.LDPE,
+            InsulatorType.XLPE,
+            InsulatorType.EPR,
+            InsulatorType.PVC,
+            InsulatorType.IP,
+        }:
+            return model == "iec"
+        elif self in {
+            InsulatorType.SR,
+            InsulatorType.SO,
+            InsulatorType.SE,
+            InsulatorType.SC,
+            InsulatorType.S3,
+            InsulatorType.S6,
+            InsulatorType.PU,
+            InsulatorType.PP,
+            InsulatorType.PM,
+            InsulatorType.PC,
+        }:
+            return model == "coiffier"
         else:
-            msg = f"The string {string!r} cannot be converted into a InsulatorType."
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_INSULATOR_TYPE)
+            raise NotImplementedError(f"InsulatorType {self} is not implemented.")

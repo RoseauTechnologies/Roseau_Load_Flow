@@ -1,21 +1,19 @@
+import json
 import logging
 import re
-import textwrap
 from importlib import resources
-from itertools import cycle
-from pathlib import Path
 from typing import NoReturn
 
 import numpy as np
 import pandas as pd
 import regex
-from rich.table import Table
 from typing_extensions import Self
 
+from roseau.load_flow._compat import Traversable
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.typing import Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
-from roseau.load_flow.utils import CatalogueMixin, Identifiable, JsonMixin, console, palette
+from roseau.load_flow.utils import CatalogueMixin, Identifiable, JsonMixin
 
 logger = logging.getLogger(__name__)
 
@@ -307,12 +305,77 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
     # Catalogue Mixin
     #
     @classmethod
-    def catalogue_path(cls) -> Path:
-        return Path(resources.files("roseau.load_flow") / "data" / "transformers").expanduser().absolute()
+    def catalogue_path(cls) -> Traversable:
+        return resources.files("roseau.load_flow") / "data" / "transformers"
 
     @classmethod
     def catalogue_data(cls) -> pd.DataFrame:
-        return pd.read_csv(cls.catalogue_path() / "Catalogue.csv")
+        file = cls.catalogue_path() / "Catalogue.csv"
+        with file.open("rb") as f:
+            return pd.read_csv(f, parse_dates=False)
+
+    @classmethod
+    def _get_catalogue(
+        cls,
+        id: str | re.Pattern[str] | None,
+        manufacturer: str | re.Pattern[str] | None,
+        range: str | re.Pattern[str] | None,
+        efficiency: str | re.Pattern[str] | None,
+        type: str | re.Pattern[str] | None,
+        sn: float | None,
+        uhv: float | None,
+        ulv: float | None,
+        raise_if_not_found: bool,
+    ) -> tuple[pd.DataFrame, str]:
+        # Get the catalogue data
+        catalogue_data = cls.catalogue_data()
+
+        # Filter on string/regular expressions
+        query_msg_list = []
+        for value, column_name, display_name, display_name_plural in (
+            (id, "id", "id", "ids"),
+            (manufacturer, "manufacturer", "manufacturer", "manufacturers"),
+            (range, "range", "range", "ranges"),
+            (efficiency, "efficiency", "efficiency", "efficiencies"),
+            (type, "type", "type", "types"),
+        ):
+            if pd.isna(value):
+                continue
+
+            mask = cls._filter_catalogue_str(value=value, strings=catalogue_data[column_name])
+            if raise_if_not_found and mask.sum() == 0:
+                cls._raise_not_found_in_catalogue(
+                    value=repr(value),
+                    name=display_name,
+                    name_plural=display_name_plural,
+                    strings=catalogue_data[column_name],
+                    query_msg_list=query_msg_list,
+                )
+            catalogue_data = catalogue_data.loc[mask, :]
+            query_msg_list.append(f"{display_name}={value!r}")
+
+        # Filter on float
+        for value, column_name, display_name, display_name_plural, display_unit in (
+            (sn, "sn", "nominal power", "nominal powers", "kVA"),
+            (uhv, "uhv", "primary side voltage", "primary side voltages", "kV"),
+            (ulv, "ulv", "secondary side voltage", "secondary side voltages", "kV"),
+        ):
+            if pd.isna(value):
+                continue
+
+            mask = np.isclose(catalogue_data[column_name], value)
+            if raise_if_not_found and mask.sum() == 0:
+                cls._raise_not_found_in_catalogue(
+                    value=f"{value / 1000:.1f} {display_unit}",
+                    name=display_name,
+                    name_plural=display_name_plural,
+                    strings=catalogue_data[column_name].apply(lambda x: f"{x/1000:.1f} {display_unit}"),  # noqa: B023
+                    query_msg_list=query_msg_list,
+                )
+            catalogue_data = catalogue_data.loc[mask, :]
+            query_msg_list.append(f"{display_name}={value/1000:.1f} {display_unit}")
+
+        return catalogue_data, ", ".join(query_msg_list)
 
     @classmethod
     @ureg_wraps(None, (None, None, None, None, None, None, "VA", "V", "V"))
@@ -323,9 +386,9 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         range: str | re.Pattern[str] | None = None,
         efficiency: str | re.Pattern[str] | None = None,
         type: str | re.Pattern[str] | None = None,
-        sn: float | None = None,
-        uhv: float | None = None,
-        ulv: float | None = None,
+        sn: float | Q_[float] | None = None,
+        uhv: float | Q_[float] | None = None,
+        ulv: float | Q_[float] | None = None,
     ) -> Self:
         """Build a transformer parameters from one in the catalogue.
 
@@ -359,120 +422,57 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             raised.
         """
         # Get the catalogue data
-        catalogue_data = cls.catalogue_data()
+        catalogue_data, query_info = cls._get_catalogue(
+            id=id,
+            manufacturer=manufacturer,
+            range=range,
+            efficiency=efficiency,
+            type=type,
+            sn=sn,
+            uhv=uhv,
+            ulv=ulv,
+            raise_if_not_found=True,
+        )
 
-        # Filter on string/regular expressions
-        query_msg_list = []
-        for value, column_name, display_name, display_name_plural in (
-            (id, "id", "id", "ids"),
-            (manufacturer, "manufacturer", "manufacturer", "manufacturers"),
-            (range, "range", "range", "ranges"),
-            (efficiency, "efficiency", "efficiency", "efficiencies"),
-            (type, "type", "type", "types"),
-        ):
-            if pd.isna(value):
-                continue
-
-            mask = cls._filter_catalogue_str(value=value, catalogue_data=catalogue_data, column_name=column_name)
-            if mask.sum() == 0:
-                available_values = catalogue_data[column_name].unique().tolist()
-                msg_part = textwrap.shorten(", ".join(repr(x) for x in available_values), width=500)
-                if query_msg_list:
-                    query_msg_part = ", ".join(query_msg_list)
-                    msg = (
-                        f"No {display_name} matching the name {value!r} has been found for the query {query_msg_part}. "
-                        f"Available {display_name_plural} are {msg_part}."
-                    )
-                else:
-                    msg = (
-                        f"No {display_name} matching the name {value!r} has been found. "
-                        f"Available {display_name_plural} are {msg_part}."
-                    )
-                logger.error(msg)
-                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.CATALOGUE_NOT_FOUND)
-            catalogue_data = catalogue_data.loc[mask, :]
-            query_msg_list.append(f"{display_name}={value!r}")
-
-        # Filter on float
-        for value, column_name, display_name, display_name_plural, display_unit in (
-            (sn, "sn", "nominal power", "nominal powers", "kVA"),
-            (uhv, "uhv", "primary side voltage", "primary side voltages", "kV"),
-            (ulv, "ulv", "secondary side voltage", "secondary side voltages", "kV"),
-        ):
-            if pd.isna(value):
-                continue
-
-            mask = cls._filter_catalogue_float(value=value, catalogue_data=catalogue_data, column_name=column_name)
-            if mask.sum() == 0:
-                available_values = catalogue_data[column_name].unique().tolist()
-                msg_part = textwrap.shorten(
-                    ", ".join(f"{x/1000:.1f} {display_unit}" for x in available_values), width=500
-                )
-                if query_msg_list:
-                    query_msg_part = ", ".join(query_msg_list)
-                    msg = (
-                        f"No {display_name} matching {value/1000:.1f} {display_unit} has been found for the query"
-                        f" {query_msg_part}. Available {display_name_plural} are {msg_part}."
-                    )
-                else:
-                    msg = (
-                        f"No {display_name} matching {value/1000:.1f} {display_unit} has been found. "
-                        f"Available {display_name_plural} are {msg_part}."
-                    )
-                logger.error(msg)
-                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.CATALOGUE_NOT_FOUND)
-            catalogue_data = catalogue_data.loc[mask, :]
-            query_msg_list.append(f"{display_name}={value/1000:.1f} {display_unit}")
-
-        # Final check
-        if len(catalogue_data) == 0:  # pragma: no cover
-            # This option should never happen as an error is raised when a filter is empty
-            query_msg_part = ", ".join(query_msg_list)
-            msg = (
-                f"No transformers matching the query ({query_msg_part!r}) have been found. Please look at the "
-                f"catalogue using the `print_catalogue` class method."
-            )
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.CATALOGUE_NOT_FOUND)
-        elif len(catalogue_data) > 1:
-            query_msg_part = ", ".join(query_msg_list)
-            msg = (
-                f"Several transformers matching the query ({query_msg_part!r}) have been found. Please look at the "
-                f"catalogue using the `print_catalogue` class method."
-            )
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.CATALOGUE_SEVERAL_FOUND)
+        cls._assert_one_found(
+            found_data=catalogue_data["id"].tolist(), display_name="transformers", query_info=query_info
+        )
 
         # A single one has been chosen
         idx = catalogue_data.index[0]
-        manufacturer = catalogue_data.at[idx, "manufacturer"]
-        range = catalogue_data.at[idx, "range"]
-        efficiency = catalogue_data.at[idx, "efficiency"]
+        manufacturer = str(catalogue_data.at[idx, "manufacturer"])
+        range = str(catalogue_data.at[idx, "range"])
+        efficiency = str(catalogue_data.at[idx, "efficiency"])
         nominal_power = int(catalogue_data.at[idx, "sn"] / 1000)
 
         # Get the data from the Json file
         path = cls.catalogue_path() / manufacturer / range / efficiency / f"{nominal_power}.json"
-        if not path.exists():  # pragma: no cover
+        try:
+            json_dict = json.loads(path.read_text())
+        except FileNotFoundError:
             msg = f"The file {path} has not been found while it should exist. Please post an issue on GitHub."
             logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.CATALOGUE_MISSING)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.CATALOGUE_MISSING) from None
 
-        return cls.from_json(path=path)
+        return cls.from_dict(json_dict)
 
     @classmethod
     @ureg_wraps(None, (None, None, None, None, None, None, "VA", "V", "V"))
-    def print_catalogue(
+    def get_catalogue(
         cls,
         id: str | re.Pattern[str] | None = None,
         manufacturer: str | re.Pattern[str] | None = None,
         range: str | re.Pattern[str] | None = None,
         efficiency: str | re.Pattern[str] | None = None,
         type: str | re.Pattern[str] | None = None,
-        sn: float | None = None,
-        uhv: float | None = None,
-        ulv: float | None = None,
-    ) -> None:
-        """Print the catalogue of available transformers.
+        sn: float | Q_[float] | None = None,
+        uhv: float | Q_[float] | None = None,
+        ulv: float | Q_[float] | None = None,
+    ) -> pd.DataFrame:
+        """Get the catalogue of available transformers.
+
+        You can use the parameters below to filter the catalogue. If you do not specify any
+        parameter, all the catalogue will be returned.
 
         Args:
             id:
@@ -498,122 +498,45 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
 
             ulv:
                 An optional secondary side voltage to filter the output.
-        """
-        # Get the catalogue data
-        catalogue_data = cls.catalogue_data()
-
-        # Start creating a table to display the results
-        table = Table(title="Available Transformer Parameters")
-        table.add_column("Id", overflow="fold")
-        table.add_column("Manufacturer", overflow="fold")
-        table.add_column("Product range", overflow="fold")
-        table.add_column("Efficiency", overflow="fold")
-        table.add_column("Type", overflow="fold")
-        table.add_column("Nominal power (kVA)", justify="right", overflow="fold")
-        table.add_column("High voltage (kV)", justify="right", overflow="fold")
-        table.add_column("Low voltage (kV)", justify="right", overflow="fold")
-        empty_table = True
-
-        # Match on the manufacturer, range, efficiency and type
-        catalogue_mask = pd.Series(True, index=catalogue_data.index)
-        query_msg_list = []
-        for value, column_name in (
-            (id, "id"),
-            (manufacturer, "manufacturer"),
-            (range, "range"),
-            (efficiency, "efficiency"),
-            (type, "type"),
-        ):
-            if pd.isna(value):
-                continue
-            catalogue_mask &= cls._filter_catalogue_str(
-                value=value, catalogue_data=catalogue_data, column_name=column_name
-            )
-            query_msg_list.append(f"{column_name}={value!r}")
-
-        # Mask on nominal power, primary and secondary voltages
-        for value, column_name, display_unit in ((uhv, "uhv", "kV"), (ulv, "ulv", "kV"), (sn, "sn", "kVA")):
-            if pd.isna(value):
-                continue
-            catalogue_mask &= cls._filter_catalogue_float(
-                value=value, catalogue_data=catalogue_data, column_name=column_name
-            )
-            query_msg_list.append(f"{column_name}={value/1000:.1f} {display_unit}")
-
-        # Iterate over the transformers
-        selected_index = catalogue_mask[catalogue_mask].index
-        cycler = cycle(palette)
-        for idx in selected_index:
-            empty_table = False
-            table.add_row(
-                catalogue_data.at[idx, "id"],
-                catalogue_data.at[idx, "manufacturer"],
-                catalogue_data.at[idx, "range"],
-                catalogue_data.at[idx, "efficiency"],
-                catalogue_data.at[idx, "type"],
-                f"{catalogue_data.at[idx, 'sn']/1000:.1f}",  # VA to kVA
-                f"{catalogue_data.at[idx, 'uhv']/1000:.1f}",  # V to kV
-                f"{catalogue_data.at[idx, 'ulv']/1000:.1f}",  # V to kV
-                style=next(cycler),
-            )
-
-        # Handle the case of an empty table
-        if empty_table:
-            query_msg_part = ", ".join(query_msg_list)
-            msg = f"No transformers can be found in the catalogue matching your query: {query_msg_part}."
-            console.print(msg)
-        else:
-            console.print(table)
-
-    @staticmethod
-    def _filter_catalogue_str(
-        value: str | re.Pattern[str], catalogue_data: pd.DataFrame, column_name: str
-    ) -> pd.Series:
-        """Filter the catalogue using a string/regexp value.
-
-        Args:
-            value:
-                The string or regular expression to use as a filter.
-
-            catalogue_data:
-                The catalogue data to use.
-
-            column_name:
-                The name of the column to use for the filter.
 
         Returns:
-            The mask of matching results.
+            The catalogue data as a dataframe.
         """
-        if isinstance(value, re.Pattern):
-            return catalogue_data[column_name].str.match(value)
-        else:
-            try:
-                pattern = re.compile(pattern=value, flags=re.IGNORECASE)
-                return catalogue_data[column_name].str.match(pattern)
-            except re.error:
-                return catalogue_data[column_name].str.lower() == value.lower()
-
-    @staticmethod
-    def _filter_catalogue_float(value: float, catalogue_data: pd.DataFrame, column_name: str) -> pd.Series:
-        """Filter the catalogue using a float/int value.
-
-        Args:
-            value:
-                The float or integer to use as a filter.
-
-            catalogue_data:
-                The catalogue data to use.
-
-            column_name:
-                The name of the column to use for the filter.
-
-        Returns:
-            The mask of matching results.
-        """
-        if isinstance(value, int):
-            return catalogue_data[column_name] == value
-        else:
-            return np.isclose(catalogue_data[column_name], value)
+        catalogue_data, _ = cls._get_catalogue(
+            id=id,
+            manufacturer=manufacturer,
+            range=range,
+            efficiency=efficiency,
+            type=type,
+            sn=sn,
+            uhv=uhv,
+            ulv=ulv,
+            raise_if_not_found=False,
+        )
+        catalogue_data["sn"] /= 1000  # kVA
+        catalogue_data["uhv"] /= 1000  # kV
+        catalogue_data["ulv"] /= 1000  # kV
+        return (
+            catalogue_data.drop(columns=["i0", "p0", "psc", "vsc"])
+            .rename(
+                columns={
+                    "id": "Id",
+                    "manufacturer": "Manufacturer",
+                    "range": "Product range",
+                    "efficiency": "Efficiency",
+                    "type": "Type",
+                    "sn": "Nominal power (kVA)",
+                    "uhv": "High voltage (kV)",
+                    "ulv": "Low voltage (kV)",
+                    # # If we ever want to display these columns
+                    # "i0": "No-load current (%)",
+                    # "p0": "No-load losses (W)",
+                    # "psc": "Load Losses at 75°C  (W)",
+                    # "vsc": "Impedance voltage (%)",
+                }
+            )
+            .set_index("Id")
+        )
 
     #
     # Utils
