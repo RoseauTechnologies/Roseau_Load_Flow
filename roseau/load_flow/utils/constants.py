@@ -1,7 +1,7 @@
 import numpy as np
 
 from roseau.load_flow.units import Q_
-from roseau.load_flow.utils.types import ConductorType, InsulatorType, LineType
+from roseau.load_flow.utils.types import ConductorType, InsulatorType
 
 PI = np.pi
 """The famous mathematical constant :math:`\\pi = 3.141592\\ldots`."""
@@ -18,16 +18,9 @@ F = Q_(50.0, "Hz")
 OMEGA = Q_(2 * PI * F, "rad/s")
 """Angular frequency :math:`\\omega = 2 \\pi f` (rad/s)."""
 
-CX = {
-    LineType.OVERHEAD: Q_(0.35, "ohm/km"),
-    LineType.UNDERGROUND: Q_(0.1, "ohm/km"),
-    LineType.TWISTED: Q_(0.1, "ohm/km"),
-}
-"""Coiffier's reactance parameter for a typical line in France (Ohm/km)."""
-
 RHO = {
-    ConductorType.CU: Q_(1.72e-8, "ohm*m"),  # verified
-    ConductorType.AL: Q_(2.65e-8, "ohm*m"),  # verified
+    ConductorType.CU: Q_(1.7241e-8, "ohm*m"),  # IEC 60287-1-1 Table 1
+    ConductorType.AL: Q_(2.8264e-8, "ohm*m"),  # IEC 60287-1-1 Table 1
     ConductorType.AM: Q_(3.26e-8, "ohm*m"),  # verified
     ConductorType.AA: Q_(4.0587e-8, "ohm*m"),  # verified (approx. AS 3607 ACSR/GZ)
     ConductorType.LA: Q_(3.26e-8, "ohm*m"),
@@ -59,24 +52,26 @@ DELTA_P = {
 # for material in ConductorType:
 #     print(material, delta_p(RHO[material], MU_R[material]).m_as("mm"))
 
-TAN_D = {it: Q_(np.nan) for it in InsulatorType}
-"""Loss angles of common insulator materials."""
-TAN_D |= {
-    InsulatorType.PVC: Q_(600e-4),
-    InsulatorType.HDPE: Q_(6e-4),
-    InsulatorType.MDPE: Q_(6e-4),
-    InsulatorType.LDPE: Q_(6e-4),
-    InsulatorType.XLPE: Q_(30e-4),
-    InsulatorType.EPR: Q_(125e-4),
+TAN_D = {
+    InsulatorType.PVC: Q_(1000e-4),
+    InsulatorType.HDPE: Q_(10e-4),
+    InsulatorType.MDPE: Q_(10e-4),
+    InsulatorType.LDPE: Q_(10e-4),
+    InsulatorType.XLPE: Q_(40e-4),
+    InsulatorType.EPR: Q_(200e-4),
+    InsulatorType.IP: Q_(100e-4),
 }
+"""Loss angles of common insulator materials according to the IEC 60287 standard."""
+# IEC 60287-1-1 Table 3. We only include the MV values.
 
-EPSILON_R = {it: Q_(np.nan) for it in InsulatorType}
-"""Relative permittivity of common insulator materials."""
-EPSILON_R |= {
-    InsulatorType.PVC: Q_(6.5),
+EPSILON_R = {
+    InsulatorType.PVC: Q_(8),
     InsulatorType.HDPE: Q_(2.3),
     InsulatorType.MDPE: Q_(2.3),
-    InsulatorType.LDPE: Q_(2.2),
+    InsulatorType.LDPE: Q_(2.3),
     InsulatorType.XLPE: Q_(2.5),
-    InsulatorType.EPR: Q_(3.1),
+    InsulatorType.EPR: Q_(3),
+    InsulatorType.IP: Q_(4),
 }
+"""Relative permittivity of common insulator materials according to the IEC 60287 standard."""
+# IEC 60287-1-1 Table 3. We only include the MV values.

@@ -13,7 +13,6 @@ from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowE
 from roseau.load_flow.typing import ComplexArray, ComplexArrayLike2D, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow.utils import (
-    CX,
     EPSILON_0,
     EPSILON_R,
     MU_0,
@@ -676,14 +675,14 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         )
 
     @classmethod
-    @deprecated(
-        "The method LineParameters.from_name_mv() is deprecated and will be removed in a future "
-        "version. Use LineParameters.from_catalogue() instead.",
-        category=FutureWarning,
-    )
+    # @deprecated(
+    #     "The method LineParameters.from_name_mv() is deprecated and will be removed in a future "
+    #     "version. Use LineParameters.from_catalogue() instead.",
+    #     category=FutureWarning,
+    # )
     @ureg_wraps(None, (None, None, "A"))
     def from_name_mv(cls, name: str, max_current: float | Q_[float] | None = None) -> Self:
-        """Get the electrical parameters of a MV line from its canonical name according to Coiffier's method.
+        """Get the electrical parameters of a MV line from its canonical name (France specific model)
 
         Args:
             name:
@@ -695,9 +694,6 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
 
         Returns:
             The corresponding line parameters.
-
-        .. deprecated:: 0.7.0
-            Use :meth:`LineParameters.from_catalogue(..., model='coiffier') <LineParameters.from_catalogue>` instead.
         """
         match = cls._REGEXP_LINE_TYPE_NAME.fullmatch(string=name)
         if not match:
@@ -712,13 +708,14 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         section = Q_(float(section), "mm**2")
 
         r = RHO[conductor_type] / section
-        x = CX[line_type]
         if line_type == LineType.OVERHEAD:
             c_b1 = Q_(50, "µF/km")
             c_b2 = Q_(0, "µF/(km*mm**2)")
+            x = Q_(0.35, "ohm/km")
         elif line_type == LineType.TWISTED:
             c_b1 = Q_(1750, "µF/km")
             c_b2 = Q_(5, "µF/(km*mm**2)")
+            x = Q_(0.1, "ohm/km")
         elif line_type == LineType.UNDERGROUND:
             if section <= Q_(50, "mm**2"):
                 c_b1 = Q_(1120, "µF/km")
@@ -726,6 +723,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             else:
                 c_b1 = Q_(2240, "µF/km")
                 c_b2 = Q_(15, "µF/(km*mm**2)")
+            x = Q_(0.1, "ohm/km")
         else:
             msg = f"The line type {line_type!r} of the line {name!r} is unknown."
             logger.error(msg)
@@ -753,7 +751,6 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
     def _get_catalogue(
         cls,
         name: str | re.Pattern[str] | None,
-        model: str | None,
         line_type: str | None,
         conductor_type: str | None,
         insulator_type: str | None,
@@ -764,10 +761,9 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
 
         # Filter on strings/regular expressions
         query_msg_list = []
-        for value, column_name, display_name, display_name_plural in (
+        for value, column_name, display_name, display_name_plural in [
             (name, "name", "name", "names"),
-            (model, "model", "model", "models"),
-        ):
+        ]:
             if value is None:
                 continue
 
@@ -830,11 +826,10 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         return catalogue_data, ", ".join(query_msg_list)
 
     @classmethod
-    @ureg_wraps(None, (None, None, None, None, None, None, "mm²", None))
+    @ureg_wraps(None, (None, None, None, None, None, "mm²", None))
     def from_catalogue(
         cls,
         name: str | re.Pattern[str] | None = None,
-        model: str | None = None,
         line_type: str | None = None,
         conductor_type: str | None = None,
         insulator_type: str | None = None,
@@ -847,10 +842,6 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             name:
                 The name of the line parameters to get from the catalogue. It can be a regular
                 expression.
-
-            model:
-                The model of the line parameters to get. It can be either ``"iec"`` to use IEC
-                parameters or ``"coiffier"`` to use Coiffier's parameters.
 
             line_type:
                 The type of the line parameters to get. It can be ``"overhead"``, ``"twisted"``, or
@@ -868,14 +859,13 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
 
             id:
                 A unique ID for the created line parameters object (optional). If ``None``
-                (default), the id of the created object will be ``{name}_{model}``.
+                (default), the id of the created object will be its name in the catalogue.
 
         Returns:
             The created line parameters.
         """
         catalogue_data, query_info = cls._get_catalogue(
             name=name,
-            model=model,
             line_type=line_type,
             conductor_type=conductor_type,
             insulator_type=insulator_type,
@@ -888,7 +878,6 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         )
         idx = catalogue_data.index[0]
         name = str(catalogue_data.at[idx, "name"])
-        model = str(catalogue_data.at[idx, "model"])
         r = catalogue_data.at[idx, "r"]
         x = catalogue_data.at[idx, "x"]
         b = catalogue_data.at[idx, "b"]
@@ -902,7 +891,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         z_line = (r + x * 1j) * np.eye(3, dtype=np.complex128)
         y_shunt = (b * 1j) * np.eye(3, dtype=np.complex128)
         if id is None:
-            id = f"{name}_{model}"
+            id = name
         return cls(
             id=id,
             z_line=z_line,
@@ -915,11 +904,10 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         )
 
     @classmethod
-    @ureg_wraps(None, (None, None, None, None, None, None, "mm²"))
+    @ureg_wraps(None, (None, None, None, None, None, "mm²"))
     def get_catalogue(
         cls,
         name: str | re.Pattern[str] | None = None,
-        model: str | None = None,
         line_type: str | None = None,
         conductor_type: str | None = None,
         insulator_type: str | None = None,
@@ -934,10 +922,6 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             name:
                 The name of the line parameters to get from the catalogue. It can be a regular
                 expression.
-
-            model:
-                The model of the line parameters to get. It can be either ``"iec"`` to use IEC
-                parameters or ``"coiffier"`` to use Coiffier's parameters.
 
             line_type:
                 The type of the line parameters to get. It can be ``"overhead"``, ``"twisted"``, or
@@ -958,7 +942,6 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         """
         catalogue_data, _ = cls._get_catalogue(
             name=name,
-            model=model,
             line_type=line_type,
             conductor_type=conductor_type,
             insulator_type=insulator_type,
@@ -976,7 +959,6 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
                 "material": "Conductor material",
                 "insulator": "Insulator type",
                 "section": "Cross-section (mm²)",
-                "model": "Model",
             }
         ).set_index("Name")
 

@@ -97,7 +97,7 @@ class ConductorType(StrEnum):
     LA = auto()
     """Aluminum Alloy Conductor Steel Reinforced (AACSR) -- Fr = Almélec-Acier."""
 
-    # aliases
+    # Aliases
     AAC = AL  # 1350-H19 (Standard Round of Compact Round)
     """All Aluminum Conductor (AAC) -- Fr = Aluminium."""
     # AAC/TW  # 1380-H19 (Trapezoidal Wire)
@@ -155,28 +155,6 @@ class InsulatorType(StrEnum):
     IP = auto()
     """Impregnated Paper (IP) insulation."""
 
-    # Coiffier's insulators (French standards)
-    SR = auto()  # IEC equivalent -> EPR
-    """Synthétique HN-33S22 (Pr ou EP); équivalent à NF C 33-220. Diélectriques massifs extrudés."""
-    SO = auto()  # IEC equivalent -> XLPE
-    """SYNTHE. UTE C 33-223 (CABLE 2000). Polyéthylène réticulé."""
-    SE = auto()  # IEC equivalent -> PVC
-    """Synthétique HN-33S22 (Pe ou PVC); équivalent à NF C 33-220. Diélectriques massifs extrudés."""
-    SC = auto()  # IEC equivalent -> XLPE
-    """Synthétique NF C 33-223 SS Cablette. Polyéthylène réticulé."""
-    S3 = auto()  # IEC equivalent -> XLPE
-    """Synthétique HN-33S23 (PR); équivalent à NF C 33-223. Polyéthylène réticulé."""
-    S6 = auto()  # IEC equivalent -> XLPE
-    """Synthétique NF C 33-226. Polyethylène réticulé à gradient fixé."""
-    PU = auto()  # IEC equivalent -> IP
-    """Unipolar impregnated paper under lead -- Fr = Papier imprégné unipolaire sous plomb."""
-    PP = auto()  # IEC equivalent -> IP
-    """Tri-polar tri-lead metalized paper -- Fr = Papier métallisé tripolaire triplomb."""
-    PM = auto()  # IEC equivalent -> IP
-    """Tri-polar metallic paper radial field -- Fr = Papier métallisé tripolaire champ radial."""
-    PC = auto()  # IEC equivalent -> IP
-    """Tri-polar belt paper -- Fr = Papier ceinture tripolaire."""
-
     # Aliases
     PEX = XLPE
     """Alias -- Cross-linked polyethylene (XLPE) insulation."""
@@ -200,33 +178,3 @@ class InsulatorType(StrEnum):
     def code(self) -> str:
         """A code that can be used in insulator type names."""
         return self.name
-
-    def is_compatible_with(self, model: str) -> bool:
-        """A model that can be used in insulator type names."""
-        if self == InsulatorType.UNKNOWN:
-            return True
-        elif self in {
-            InsulatorType.HDPE,
-            InsulatorType.MDPE,
-            InsulatorType.LDPE,
-            InsulatorType.XLPE,
-            InsulatorType.EPR,
-            InsulatorType.PVC,
-            InsulatorType.IP,
-        }:
-            return model == "iec"
-        elif self in {
-            InsulatorType.SR,
-            InsulatorType.SO,
-            InsulatorType.SE,
-            InsulatorType.SC,
-            InsulatorType.S3,
-            InsulatorType.S6,
-            InsulatorType.PU,
-            InsulatorType.PP,
-            InsulatorType.PM,
-            InsulatorType.PC,
-        }:
-            return model == "coiffier"
-        else:
-            raise NotImplementedError(f"InsulatorType {self} is not implemented.")

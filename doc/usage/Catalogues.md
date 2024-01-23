@@ -428,7 +428,6 @@ The available lines data are based on the following sources:
 
 - IEC standards including: IEC-60228, IEC-60287, IEC-60364
 - Technique de l'ingénieur (French technical and scientific documentation)
-- A model of cables used in the French public grid based on the work of Alain Coiffier
 
 ### Inspecting the catalogue
 
@@ -439,60 +438,30 @@ This catalogue can be retrieved in the form of a dataframe using:
 >>> LineParameters.get_catalogue()
 ```
 
-_Truncated to the first 50 lines_
+_Truncated output_
 
-| Name        | Resistance (ohm/km) | Reactance (ohm/km) | Susceptance (µS/km) | Maximal current (A) | Line type   | Conductor material | Cross-section (mm²) | Insulator type | Model    |
-| :---------- | ------------------: | -----------------: | ------------------: | ------------------: | :---------- | :----------------- | ------------------: | :------------- | :------- |
-| U_CU_75_PC  |                0.24 |                0.1 |         4.68097e-05 |             290.782 | UNDERGROUND | Cu                 |                  75 | PC             | coiffier |
-| U_AL_147_PC |            0.204082 |                0.1 |         5.58575e-05 |               364.1 | UNDERGROUND | Al                 |                 147 | PC             | coiffier |
-| U_CU_95_PP  |            0.189474 |                0.1 |          4.9323e-05 |             336.681 | UNDERGROUND | Cu                 |                  95 | PP             | coiffier |
-| U_AL_116_PP |            0.258621 |                0.1 |         5.19619e-05 |             314.375 | UNDERGROUND | Al                 |                 116 | PP             | coiffier |
-| U_CU_75_PU  |                0.24 |                0.1 |         0.000105715 |             290.782 | UNDERGROUND | Cu                 |                  75 | PU             | coiffier |
-| U_CU_150_PU |                0.12 |                0.1 |         0.000141058 |             446.896 | UNDERGROUND | Cu                 |                 150 | PU             | coiffier |
-| U_CU_150_PC |                0.12 |                0.1 |         5.62345e-05 |             446.896 | UNDERGROUND | Cu                 |                 150 | PC             | coiffier |
-| U_AL_50_PP  |                 0.6 |                0.1 |         4.36681e-05 |             186.572 | UNDERGROUND | Al                 |                  50 | PP             | coiffier |
-| U_AL_147_PP |            0.204082 |                0.1 |         5.58575e-05 |               364.1 | UNDERGROUND | Al                 |                 147 | PP             | coiffier |
-| U_AL_50_SR  |                 0.6 |                0.1 |         4.86947e-05 |             186.572 | UNDERGROUND | Al                 |                  50 | SR             | coiffier |
-| U_CU_95_PM  |            0.189474 |                0.1 |         0.000115139 |             336.681 | UNDERGROUND | Cu                 |                  95 | PM             | coiffier |
-| U_CU_150    |               0.124 |          0.0960503 |         3.41234e-05 |                 420 | UNDERGROUND | Cu                 |                 150 |                | iec      |
-| O_AL_55     |              0.5915 |           0.359804 |         3.18697e-06 |              195.25 | OVERHEAD    | Al                 |                  55 |                | iec      |
-| O_AA_37     |             1.09695 |               0.35 |          1.5708e-06 |             133.221 | OVERHEAD    | AA                 |                  37 |                | coiffier |
-| U_AL_2440   |           0.0122951 |                0.1 |          0.00122019 |              2078.1 | UNDERGROUND | Al                 |                2440 |                | coiffier |
-| U_CU_38     |              0.4966 |           0.118845 |         2.65816e-05 |               198.6 | UNDERGROUND | Cu                 |                  38 |                | iec      |
-| U_CU_35_SE  |            0.514286 |                0.1 |         4.63385e-05 |             181.281 | UNDERGROUND | Cu                 |                  35 | SE             | coiffier |
-| U_CU_150_SE |                0.12 |                0.1 |         6.44026e-05 |             446.896 | UNDERGROUND | Cu                 |                 150 | SE             | coiffier |
-| O_CU_33     |              0.5646 |           0.375852 |         3.04496e-06 |               183.4 | OVERHEAD    | Cu                 |                  33 |                | iec      |
-| O_LA_37     |             1.28057 |               0.35 |          1.5708e-06 |             127.592 | OVERHEAD    | LA                 |                  37 |                | coiffier |
-| O_AM_148    |            0.223649 |               0.35 |          1.5708e-06 |             363.418 | OVERHEAD    | AM                 |                 148 |                | coiffier |
-| T_AL_95     |                0.32 |           0.102817 |         3.14727e-05 |                 227 | TWISTED     | Al                 |                  95 |                | iec      |
-| O_CU_12     |             1.60333 |           0.407632 |         2.79805e-06 |                  90 | OVERHEAD    | Cu                 |                  12 |                | iec      |
-| O_AA_80     |            0.507337 |               0.35 |          1.5708e-06 |             183.105 | OVERHEAD    | AA                 |                  80 |                | coiffier |
-| T_AL_50     |               0.641 |           0.113705 |         2.79758e-05 |                 146 | TWISTED     | Al                 |                  50 |                | iec      |
-| O_CU_29     |              0.6458 |           0.379911 |         3.01102e-06 |               170.2 | OVERHEAD    | Cu                 |                  29 |                | iec      |
-| O_CU_22     |               0.868 |            0.38859 |         2.94094e-06 |             144.667 | OVERHEAD    | Cu                 |                  22 |                | iec      |
-| O_AM_43     |            0.769767 |               0.35 |          1.5708e-06 |             168.886 | OVERHEAD    | AM                 |                  43 |                | coiffier |
-| O_AM_117    |            0.282906 |               0.35 |          1.5708e-06 |             314.137 | OVERHEAD    | AM                 |                 117 |                | coiffier |
-| O_AM_34     |            0.973529 |               0.35 |          1.5708e-06 |             146.003 | OVERHEAD    | AM                 |                  34 |                | coiffier |
-| O_LA_147    |             0.32232 |               0.35 |          1.5708e-06 |              344.24 | OVERHEAD    | LA                 |                 147 |                | coiffier |
-| O_AA_116    |            0.349888 |               0.35 |          1.5708e-06 |             299.133 | OVERHEAD    | AA                 |                 116 |                | coiffier |
-| O_AA_147    |            0.276102 |               0.35 |          1.5708e-06 |             346.447 | OVERHEAD    | AA                 |                 147 |                | coiffier |
-| O_AA_22     |             1.84486 |               0.35 |          1.5708e-06 |              96.514 | OVERHEAD    | AA                 |                  22 |                | coiffier |
-| O_CU_38     |              0.4966 |            0.37142 |          3.0829e-06 |               198.6 | OVERHEAD    | Cu                 |                  38 |                | iec      |
-| T_AL_150    |               0.206 |          0.0960503 |         3.41234e-05 |                 304 | TWISTED     | Al                 |                 150 |                | iec      |
-| U_AL_70     |               0.443 |           0.107797 |         2.97707e-05 |                 214 | UNDERGROUND | Al                 |                  70 |                | iec      |
-| O_AM_22     |             1.50455 |               0.35 |          1.5708e-06 |             111.467 | OVERHEAD    | AM                 |                  22 |                | coiffier |
-| U_CU_16     |                1.15 |           0.136834 |         2.26339e-05 |                 126 | UNDERGROUND | Cu                 |                  16 |                | iec      |
-| O_LA_228    |            0.207811 |               0.35 |          1.5708e-06 |             451.902 | OVERHEAD    | LA                 |                 228 |                | coiffier |
-| U_AL_29     |              1.0672 |           0.124182 |         2.52738e-05 |               134.6 | UNDERGROUND | Al                 |                  29 |                | iec      |
-| O_AM_55     |            0.601818 |               0.35 |          1.5708e-06 |             196.729 | OVERHEAD    | AM                 |                  55 |                | coiffier |
-| O_LA_60     |            0.789683 |               0.35 |          1.5708e-06 |             153.193 | OVERHEAD    | LA                 |                  60 |                | coiffier |
-| O_AA_38     |             1.06808 |               0.35 |          1.5708e-06 |             135.442 | OVERHEAD    | AA                 |                  38 |                | coiffier |
-| O_AA_55     |            0.737945 |               0.35 |          1.5708e-06 |             145.148 | OVERHEAD    | AA                 |                  55 |                | coiffier |
-| O_LA_38     |             1.24687 |               0.35 |          1.5708e-06 |             129.719 | OVERHEAD    | LA                 |                  38 |                | coiffier |
-| O_CU_14     |             1.37667 |           0.402789 |         2.83305e-06 |                 105 | OVERHEAD    | Cu                 |                  14 |                | iec      |
-| O_AA_60     |             0.67645 |               0.35 |          1.5708e-06 |             153.193 | OVERHEAD    | AA                 |                  60 |                | coiffier |
-| O_AM_76     |            0.435526 |               0.35 |          1.5708e-06 |             240.408 | OVERHEAD    | AM                 |                  76 |                | coiffier |
-| O_CU_7      |              2.7675 |           0.424565 |         2.68217e-06 |               59.25 | OVERHEAD    | Cu                 |                   7 |                | iec      |
+| Name     | Line type   | Conductor material | Insulator type | Cross-section (mm²) | Resistance (ohm/km) | Reactance (ohm/km) | Susceptance (µS/km) | Maximal current (A) |
+| :------- | :---------- | :----------------- | :------------- | ------------------: | ------------------: | -----------------: | ------------------: | ------------------: |
+| T_AM_80  | twisted     | am                 |                |                  80 |            0.457596 |           0.105575 |          3.0507e-05 |                 203 |
+| U_CU_19  | underground | cu                 |                |                  19 |               1.009 |           0.133054 |         2.33629e-05 |                 138 |
+| O_AM_33  | overhead    | am                 |                |                  33 |             1.08577 |           0.375852 |           3.045e-06 |                 142 |
+| U_CU_150 | underground | cu                 |                |                 150 |               0.124 |          0.0960503 |         3.41234e-05 |                 420 |
+| O_AM_74  | overhead    | am                 |                |                  74 |            0.491898 |           0.350482 |          3.2757e-06 |                 232 |
+| T_AM_34  | twisted     | am                 |                |                  34 |             1.04719 |           0.121009 |         2.60354e-05 |                 118 |
+| T_AM_50  | twisted     | am                 |                |                  50 |            0.744842 |           0.113705 |         2.79758e-05 |                 146 |
+| O_AM_95  | overhead    | am                 |                |                  95 |             0.37184 |           0.342634 |          3.3543e-06 |                 266 |
+| U_CU_100 | underground | cu                 |                |                 100 |               0.185 |           0.102016 |         3.17647e-05 |                 339 |
+| T_CU_38  | twisted     | cu                 |                |                  38 |              0.4966 |           0.118845 |         2.65816e-05 |                 165 |
+| O_AM_100 | overhead    | am                 |                |                 100 |            0.356269 |           0.341022 |           3.371e-06 |                 276 |
+| U_AM_60  | underground | am                 |                |                  60 |            0.629804 |            0.11045 |         2.89372e-05 |                 194 |
+| T_AM_79  | twisted     | am                 |                |                  79 |            0.463313 |           0.105781 |         3.04371e-05 |                 201 |
+| T_CU_60  | twisted     | cu                 |                |                  60 |              0.3275 |            0.11045 |         2.89372e-05 |                 219 |
+| U_AM_240 | underground | am                 |                |                 240 |             0.14525 |          0.0899296 |         3.69374e-05 |                 428 |
+| O_AL_37  | overhead    | al                 |                |                  37 |            0.837733 |           0.372257 |          3.0757e-06 |                 152 |
+| U_AM_93  | underground | am                 |                |                  93 |            0.383274 |           0.103152 |         3.13521e-05 |                 249 |
+| O_AM_28  | overhead    | am                 |                |                  28 |             1.27866 |           0.381013 |          3.0019e-06 |                 130 |
+| T_AL_90  | twisted     | al                 |                |                  90 |              0.3446 |           0.103672 |         3.11668e-05 |                 219 |
+| O_AM_79  | overhead    | am                 |                |                  79 |            0.463313 |           0.348428 |          3.2959e-06 |                 240 |
 
 The following data are available in this table:
 
@@ -503,9 +472,8 @@ The following data are available in this table:
 - the **conductor material**. See the {class}`~roseau.load_flow.ConductorType` class.
 - the **insulator type**. See the {class}`~roseau.load_flow.InsulatorType` class.
 - the **cross-section** of the conductor in mm².
-- the **model** of the line parameters. It can be either `"iec"` or `"coiffier"`.
 
-in addition to the following physical parameters:
+in addition to the following calculated physical parameters:
 
 - the _resistance_ of the line in ohm/km.
 - the _reactance_ of the line in ohm/km.
@@ -513,26 +481,26 @@ in addition to the following physical parameters:
 - the _maximal current_ of the line in A.
 
 The `get_catalogue` method accepts arguments (in bold above) that can be used to filter the returned
-table. The following command only returns line parameters made of Aluminum using the IEC model:
+table. The following command only returns line parameters made of Aluminum:
 
 ```pycon
->>> LineParameters.get_catalogue(conductor_type="al", model="iec")
+>>> LineParameters.get_catalogue(conductor_type="al")
 ```
 
-_Truncated to the first 10 lines_
+_Truncated output_
 
-| Name     | Resistance (ohm/km) | Reactance (ohm/km) | Susceptance (µS/km) | Maximal current (A) | Line type   | Conductor material | Cross-section (mm²) | Insulator type | Model |
-| :------- | ------------------: | -----------------: | ------------------: | ------------------: | :---------- | :----------------- | ------------------: | :------------- | :---- |
-| O_AL_55  |              0.5915 |           0.359804 |         3.18697e-06 |              195.25 | OVERHEAD    | Al                 |                  55 |                | iec   |
-| T_AL_95  |                0.32 |           0.102817 |         3.14727e-05 |                 227 | TWISTED     | Al                 |                  95 |                | iec   |
-| T_AL_50  |               0.641 |           0.113705 |         2.79758e-05 |                 146 | TWISTED     | Al                 |                  50 |                | iec   |
-| T_AL_150 |               0.206 |          0.0960503 |         3.41234e-05 |                 304 | TWISTED     | Al                 |                 150 |                | iec   |
-| U_AL_70  |               0.443 |           0.107797 |         2.97707e-05 |                 214 | UNDERGROUND | Al                 |                  70 |                | iec   |
-| U_AL_29  |              1.0672 |           0.124182 |         2.52738e-05 |               134.6 | UNDERGROUND | Al                 |                  29 |                | iec   |
-| U_AL_150 |               0.206 |          0.0960503 |         3.41234e-05 |                 325 | UNDERGROUND | Al                 |                 150 |                | iec   |
-| U_AL_240 |               0.125 |          0.0899296 |         3.69374e-05 |                 428 | UNDERGROUND | Al                 |                 240 |                | iec   |
-| U_AL_50  |               0.641 |           0.113705 |         2.79758e-05 |                 175 | UNDERGROUND | Al                 |                  50 |                | iec   |
-| U_AL_95  |                0.32 |           0.102817 |         3.14727e-05 |                 252 | UNDERGROUND | Al                 |                  95 |                | iec   |
+| Name     | Line type   | Conductor material | Insulator type | Cross-section (mm²) | Resistance (ohm/km) | Reactance (ohm/km) | Susceptance (µS/km) | Maximal current (A) |
+| :------- | :---------- | :----------------- | :------------- | ------------------: | ------------------: | -----------------: | ------------------: | ------------------: |
+| U_AL_117 | underground | al                 |                |                 117 |             0.26104 |          0.0996298 |          3.2668e-05 |                 286 |
+| U_AL_33  | underground | al                 |                |                  33 |              0.9344 |           0.121598 |         2.58907e-05 |                 144 |
+| U_AL_69  | underground | al                 |                |                  69 |              0.4529 |           0.108041 |         2.96921e-05 |                 212 |
+| T_AL_228 | twisted     | al                 |                |                 228 |            0.133509 |          0.0905569 |         3.66279e-05 |                 395 |
+| U_AL_150 | underground | al                 |                |                 150 |               0.206 |          0.0960503 |         3.41234e-05 |                 325 |
+| T_AL_69  | twisted     | al                 |                |                  69 |              0.4529 |           0.108041 |         2.96921e-05 |                 185 |
+| O_AL_116 | overhead    | al                 |                |                 116 |             0.26372 |           0.336359 |            3.42e-06 |                 310 |
+| U_AL_50  | underground | al                 |                |                  50 |               0.641 |           0.113705 |         2.79758e-05 |                 175 |
+| U_AL_93  | underground | al                 |                |                  93 |             0.32984 |           0.103152 |         3.13521e-05 |                 249 |
+| T_AL_59  | twisted     | al                 |                |                  59 |              0.5519 |           0.110744 |         2.88474e-05 |                 164 |
 
 or only lines with a cross section of 240 mm² (using a regular expression)
 
@@ -540,32 +508,29 @@ or only lines with a cross section of 240 mm² (using a regular expression)
 >>> LineParameters.get_catalogue(section=240)
 ```
 
-_Truncated to the first 10 lines_
-
-| Name        | Resistance (ohm/km) | Reactance (ohm/km) | Susceptance (µS/km) | Maximal current (A) | Line type   | Conductor material | Cross-section (mm²) | Insulator type | Model    |
-| :---------- | ------------------: | -----------------: | ------------------: | ------------------: | :---------- | :----------------- | ------------------: | :------------- | :------- |
-| U_AL_240    |               0.125 |          0.0899296 |         3.69374e-05 |                 428 | UNDERGROUND | Al                 |                 240 |                | iec      |
-| U_CU_240    |              0.0775 |          0.0899296 |         3.69374e-05 |                 549 | UNDERGROUND | Cu                 |                 240 |                | iec      |
-| U_AL_240_S3 |               0.125 |                0.1 |         7.85398e-05 |             493.418 | UNDERGROUND | Al                 |                 240 | S3             | coiffier |
-| U_AL_240_SC |               0.125 |                0.1 |         9.80177e-05 |             493.418 | UNDERGROUND | Al                 |                 240 | SC             | coiffier |
-| U_AL_240_S6 |               0.125 |                0.1 |         7.85398e-05 |             493.418 | UNDERGROUND | Al                 |                 240 | S6             | coiffier |
-| U_AL_240_SO |               0.125 |                0.1 |         0.000115611 |             493.418 | UNDERGROUND | Al                 |                 240 | SO             | coiffier |
-| T_AL_240    |               0.125 |          0.0899296 |         3.69374e-05 |                 409 | TWISTED     | Al                 |                 240 |                | iec      |
-| U_CU_240_SO |               0.075 |                0.1 |         0.000115611 |             598.082 | UNDERGROUND | Cu                 |                 240 | SO             | coiffier |
-| U_CU_240_S6 |               0.075 |                0.1 |         7.85398e-05 |             598.082 | UNDERGROUND | Cu                 |                 240 | S6             | coiffier |
-| U_AL_240_PU |               0.125 |                0.1 |         0.000183469 |             493.418 | UNDERGROUND | Al                 |                 240 | PU             | coiffier |
+| Name     | Line type   | Conductor material | Insulator type | Cross-section (mm²) | Resistance (ohm/km) | Reactance (ohm/km) | Susceptance (µS/km) | Maximal current (A) |
+| :------- | :---------- | :----------------- | :------------- | ------------------: | ------------------: | -----------------: | ------------------: | ------------------: |
+| O_AL_240 | overhead    | al                 |                |                 240 |               0.125 |           0.313518 |          3.6823e-06 |                 490 |
+| O_CU_240 | overhead    | cu                 |                |                 240 |              0.0775 |           0.313518 |          3.6823e-06 |                 630 |
+| O_AM_240 | overhead    | am                 |                |                 240 |             0.14525 |           0.313518 |          3.6823e-06 |                 490 |
+| U_AL_240 | underground | al                 |                |                 240 |               0.125 |          0.0899296 |         3.69374e-05 |                 428 |
+| U_CU_240 | underground | cu                 |                |                 240 |              0.0775 |          0.0899296 |         3.69374e-05 |                 549 |
+| U_AM_240 | underground | am                 |                |                 240 |             0.14525 |          0.0899296 |         3.69374e-05 |                 428 |
+| T_AL_240 | twisted     | al                 |                |                 240 |               0.125 |          0.0899296 |         3.69374e-05 |                 409 |
+| T_CU_240 | twisted     | cu                 |                |                 240 |              0.0775 |          0.0899296 |         3.69374e-05 |                 538 |
+| T_AM_240 | twisted     | am                 |                |                 240 |             0.14525 |          0.0899296 |         3.69374e-05 |                 409 |
 
 or only lines meeting both criteria
 
 ```pycon
->>> LineParameters.get_catalogue(conductor_type="al", model="iec", section=240)
+>>> LineParameters.get_catalogue(conductor_type="al", section=240)
 ```
 
-| Name     | Resistance (ohm/km) | Reactance (ohm/km) | Susceptance (µS/km) | Maximal current (A) | Line type   | Conductor material | Cross-section (mm²) | Insulator type | Model |
-| :------- | ------------------: | -----------------: | ------------------: | ------------------: | :---------- | :----------------- | ------------------: | :------------- | :---- |
-| U_AL_240 |               0.125 |          0.0899296 |         3.69374e-05 |                 428 | UNDERGROUND | Al                 |                 240 |                | iec   |
-| T_AL_240 |               0.125 |          0.0899296 |         3.69374e-05 |                 409 | TWISTED     | Al                 |                 240 |                | iec   |
-| O_AL_240 |               0.125 |           0.313518 |         3.68228e-06 |                 490 | OVERHEAD    | Al                 |                 240 |                | iec   |
+| Name     | Line type   | Conductor material | Insulator type | Cross-section (mm²) | Resistance (ohm/km) | Reactance (ohm/km) | Susceptance (µS/km) | Maximal current (A) |
+| :------- | :---------- | :----------------- | :------------- | ------------------: | ------------------: | -----------------: | ------------------: | ------------------: |
+| O_AL_240 | overhead    | al                 |                |                 240 |               0.125 |           0.313518 |          3.6823e-06 |                 490 |
+| U_AL_240 | underground | al                 |                |                 240 |               0.125 |          0.0899296 |         3.69374e-05 |                 428 |
+| T_AL_240 | twisted     | al                 |                |                 240 |               0.125 |          0.0899296 |         3.69374e-05 |                 409 |
 
 When filtering by the cross-section area, it is expected to provide a numeric value in mm² or to use a pint quantity.
 
@@ -578,35 +543,40 @@ the method `get_catalogue` to narrow down the result to a single line in the cat
 For instance, these parameters filter the results down to a single line parameters:
 
 ```pycon
->>> LineParameters.from_catalogue(line_type="underground", conductor_type="al", model="iec", section=240)
+>>> LineParameters.from_catalogue(line_type="underground", conductor_type="al", section=240)
 LineParameters(id='U_AL_240')
 ```
 
-Or you can use the `id` filter directly:
+Or you can use the `name` filter directly:
 
 ```pycon
->>> LineParameters.from_catalogue(id="U_AL_240", model="iec")
+>>> LineParameters.from_catalogue(name="U_AL_240")
 LineParameters(id='U_AL_240')
 ```
+
+As you can see, the `id` of the created instance is the same as the name in the catalogue. You can
+override this behaviour by passing the `id` parameter to `from_catalogue`.
 
 In case no or several results match the parameters, an error is raised:
 
 ```pycon
->>> LineParameters.from_catalogue(id= r"^U_AL", model="iec")
-RoseauLoadFlowException: Several line parameters matching the query (id='^U_AL', model='iec') have been found:
-'U_AL_70', 'U_AL_29', 'U_AL_150', 'U_AL_240', 'U_AL_50', 'U_AL_95', 'U_AL_75', 'U_AL_147', 'U_AL_116',
-'U_AL_40', 'U_AL_38', 'U_AL_22', 'U_AL_37', 'U_AL_630', 'U_AL_120', 'U_AL_35', 'U_AL_60', 'U_AL_34',
-'U_AL_25', 'U_AL_16', 'U_AL_600', 'U_AL_239', 'U_AL_149', 'U_AL_80', 'U_AL_500'. [catalogue_several_found]
+>>> LineParameters.from_catalogue(name= r"^U_AL")
+RoseauLoadFlowException: Several line parameters matching the query (name='^U_AL_') have been found:
+'U_AL_19', 'U_AL_20', 'U_AL_22', 'U_AL_25', 'U_AL_28', 'U_AL_29', 'U_AL_33', 'U_AL_34', 'U_AL_37',
+'U_AL_38', 'U_AL_40', 'U_AL_43', 'U_AL_48', 'U_AL_50', 'U_AL_54', 'U_AL_55', 'U_AL_59', 'U_AL_60',
+'U_AL_69', 'U_AL_70', 'U_AL_74', 'U_AL_75', 'U_AL_79', 'U_AL_80', 'U_AL_90', 'U_AL_93', 'U_AL_95',
+'U_AL_100', 'U_AL_116', 'U_AL_117', 'U_AL_120', 'U_AL_147', 'U_AL_148', 'U_AL_150', 'U_AL_228',
+'U_AL_240', 'U_AL_288'. [catalogue_several_found]
 ```
 
 or if no results:
 
 ```pycon
->>> LineParameters.from_catalogue(id="unknown")
-RoseauLoadFlowException: No id matching 'unknown' has been found. Available ids are 'U_CU_75_PC',
-'U_AL_147_PC', 'U_CU_95_PP', 'U_AL_116_PP', 'U_CU_75_PU', 'U_CU_150_PU', 'U_CU_150_PC', 'U_AL_50_PP',
-'U_AL_147_PP', 'U_AL_50_SR', 'U_CU_95_PM', 'U_CU_150', 'O_AL_55', 'O_AA_37', 'U_AL_2440', 'U_CU_38',
-'U_CU_35_SE', 'U_CU_150_SE', 'O_CU_33', 'O_LA_37', 'O_AM_148', 'T_AL_95', 'O_CU_12', 'O_AA_80',
-'T_AL_50', 'O_CU_29', 'O_CU_22', 'O_AM_43', 'O_AM_117', 'O_AM_34', 'O_LA_147', 'O_AA_116', 'O_AA_147',
-'O_AA_22', 'O_CU_38', 'T_AL_150', 'U_AL_70', 'O_AM_22', 'U_CU_16', 'O_LA_228', [...]. [catalogue_not_found]
+>>> LineParameters.from_catalogue(name="unknown")
+RoseauLoadFlowException: No name matching 'unknown' has been found. Available names are 'O_AL_12',
+'O_AL_13', 'O_AL_14', 'O_AL_19', 'O_AL_20', 'O_AL_22', 'O_AL_25', 'O_AL_28', 'O_AL_29', 'O_AL_33',
+'O_AL_34', 'O_AL_37', 'O_AL_38', 'O_AL_40', 'O_AL_43', 'O_AL_48', 'O_AL_50', 'O_AL_54', 'O_AL_55',
+'O_AL_59', 'O_AL_60', 'O_AL_69', 'O_AL_70', 'O_AL_74', 'O_AL_75', 'O_AL_79', 'O_AL_80', 'O_AL_90',
+'O_AL_93', 'O_AL_95', 'O_AL_100', 'O_AL_116', 'O_AL_117', 'O_AL_120', 'O_AL_147', 'O_AL_148', 'O_AL_150',
+'O_AL_228', 'O_AL_240', 'O_AL_288', 'O_CU_3', 'O_CU_7', 'O_CU_12', 'O_CU_13', [...]. [catalogue_not_found]
 ```
