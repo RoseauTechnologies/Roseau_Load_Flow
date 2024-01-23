@@ -1,13 +1,13 @@
 import numbers
 
 import numpy as np
+import pandas as pd
 import pytest
 from pint import DimensionalityError
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models import TransformerParameters
 from roseau.load_flow.units import Q_
-from roseau.load_flow.utils import console
 
 
 def test_transformer_parameters():
@@ -302,7 +302,7 @@ def test_transformer_type():
                     else:
                         with pytest.raises(RoseauLoadFlowException) as e:
                             TransformerParameters.extract_windings(t)
-                        assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS
+                        assert e.value.code == RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS
             else:
                 with pytest.raises(RoseauLoadFlowException) as e:
                     TransformerParameters.extract_windings(t)
@@ -368,16 +368,14 @@ def test_from_catalogue():
         # String
         with pytest.raises(RoseauLoadFlowException) as e:
             TransformerParameters.from_catalogue(**{field_name: "unknown"})
-        assert e.value.args[0].startswith(f"No {field_name} matching the name 'unknown' has been found. Available ")
-        assert e.value.args[1] == RoseauLoadFlowExceptionCode.CATALOGUE_NOT_FOUND
+        assert e.value.msg.startswith(f"No {field_name} matching 'unknown' has been found. Available ")
+        assert e.value.code == RoseauLoadFlowExceptionCode.CATALOGUE_NOT_FOUND
 
         # Regexp
         with pytest.raises(RoseauLoadFlowException) as e:
             TransformerParameters.from_catalogue(**{field_name: r"unknown[a-z]+"})
-        assert e.value.args[0].startswith(
-            f"No {field_name} matching the name 'unknown[a-z]+' has been found. " f"Available "
-        )
-        assert e.value.args[1] == RoseauLoadFlowExceptionCode.CATALOGUE_NOT_FOUND
+        assert e.value.msg.startswith(f"No {field_name} matching 'unknown[a-z]+' has been found. Available ")
+        assert e.value.code == RoseauLoadFlowExceptionCode.CATALOGUE_NOT_FOUND
 
     # Unknown floats
     for field_name, display_name, display_unit in (
@@ -388,78 +386,76 @@ def test_from_catalogue():
         # Without unit
         with pytest.raises(RoseauLoadFlowException) as e:
             TransformerParameters.from_catalogue(**{field_name: 3141.5})
-        assert e.value.args[0].startswith(f"No {display_name} matching 3.1 {display_unit} has been found. Available ")
-        assert e.value.args[1] == RoseauLoadFlowExceptionCode.CATALOGUE_NOT_FOUND
+        assert e.value.msg.startswith(f"No {display_name} matching 3.1 {display_unit} has been found. Available ")
+        assert e.value.code == RoseauLoadFlowExceptionCode.CATALOGUE_NOT_FOUND
 
         # With unit
         with pytest.raises(RoseauLoadFlowException) as e:
             TransformerParameters.from_catalogue(**{field_name: Q_(3141.5, display_unit.removeprefix("k"))})
-        assert e.value.args[0].startswith(f"No {display_name} matching 3.1 {display_unit} has been found. Available ")
-        assert e.value.args[1] == RoseauLoadFlowExceptionCode.CATALOGUE_NOT_FOUND
+        assert e.value.msg.startswith(f"No {display_name} matching 3.1 {display_unit} has been found. Available ")
+        assert e.value.code == RoseauLoadFlowExceptionCode.CATALOGUE_NOT_FOUND
 
     # Several transformers
     with pytest.raises(RoseauLoadFlowException) as e:
         TransformerParameters.from_catalogue(type="yzn", sn=50e3)
-    assert (
-        e.value.args[0]
-        == "Several transformers matching the query (\"type='yzn', nominal power=50.0 kVA\") have been found. Please "
-        "look at the catalogue using the `print_catalogue` class method."
+    assert e.value.msg == (
+        "Several transformers matching the query (type='yzn', nominal power=50.0 kVA) have been "
+        "found: 'SE_Minera_A0Ak_50kVA', 'SE_Minera_B0Bk_50kVA', 'SE_Minera_C0Bk_50kVA', "
+        "'SE_Minera_Standard_50kVA'."
     )
-    assert e.value.args[1] == RoseauLoadFlowExceptionCode.CATALOGUE_SEVERAL_FOUND
+    assert e.value.code == RoseauLoadFlowExceptionCode.CATALOGUE_SEVERAL_FOUND
 
 
-def test_print_catalogue():
-    # Print the entire catalogue
-    with console.capture() as capture:
-        TransformerParameters.print_catalogue()
-    assert len(capture.get().split("\n")) == 136
+def test_get_catalogue():
+    # Get the entire catalogue
+    catalogue = TransformerParameters.get_catalogue()
+    assert isinstance(catalogue, pd.DataFrame)
+    assert catalogue.shape == (130, 7)
 
     # Filter on a single attribute
-    for field_name, value, expected_lines in (
-        ("id", "SE_Minera_A0Ak_50kVA", 7),
-        ("manufacturer", "SE", 122),
-        ("range", r"min.*", 62),
-        ("efficiency", "c0", 35),
-        ("type", "dy", 132),
-        ("sn", Q_(160, "kVA"), 16),
-        ("uhv", Q_(20, "kV"), 136),
-        ("ulv", 400, 136),
+    for field_name, value, expected_size in (
+        ("id", "SE_Minera_A0Ak_50kVA", 1),
+        ("manufacturer", "SE", 116),
+        ("range", r"min.*", 56),
+        ("efficiency", "c0", 29),
+        ("type", "dy", 126),
+        ("sn", Q_(160, "kVA"), 10),
+        ("uhv", Q_(20, "kV"), 130),
+        ("ulv", 400, 130),
     ):
-        with console.capture() as capture:
-            TransformerParameters.print_catalogue(**{field_name: value})
-        assert len(capture.get().split("\n")) == expected_lines
+        filtered_catalogue = TransformerParameters.get_catalogue(**{field_name: value})
+        assert filtered_catalogue.shape == (expected_size, 7)
 
     # Filter on two attributes
-    for field_name, value, expected_lines in (
-        ("id", "SE_Minera_A0Ak_50kVA", 7),
-        ("range", "minera", 62),
-        ("efficiency", "c0", 35),
-        ("type", r"^d.*11$", 118),
-        ("sn", Q_(160, "kVA"), 15),
-        ("uhv", Q_(20, "kV"), 122),
-        ("ulv", 400, 122),
+    for field_name, value, expected_size in (
+        ("id", "SE_Minera_A0Ak_50kVA", 1),
+        ("range", "minera", 56),
+        ("efficiency", "c0", 29),
+        ("type", r"^d.*11$", 112),
+        ("sn", Q_(160, "kVA"), 9),
+        ("uhv", Q_(20, "kV"), 116),
+        ("ulv", 400, 116),
     ):
-        with console.capture() as capture:
-            TransformerParameters.print_catalogue(**{field_name: value}, manufacturer="se")
-        assert len(capture.get().split("\n")) == expected_lines
+        filtered_catalogue = TransformerParameters.get_catalogue(**{field_name: value}, manufacturer="se")
+        assert filtered_catalogue.shape == (expected_size, 7)
 
     # Filter on three attributes
-    for field_name, value, expected_lines in (
-        ("id", "se_VEGETA_C0BK_3150kva", 7),
-        ("efficiency", r"c0[abc]k", 21),
-        ("type", "dyn", 36),
-        ("sn", Q_(160, "kVA"), 8),
-        ("uhv", Q_(20, "kV"), 36),
-        ("ulv", 400, 36),
+    for field_name, value, expected_size in (
+        ("id", "se_VEGETA_C0BK_3150kva", 1),
+        ("efficiency", r"c0[abc]k", 15),
+        ("type", "dyn", 30),
+        ("sn", Q_(160, "kVA"), 2),
+        ("uhv", Q_(20, "kV"), 30),
+        ("ulv", 400, 30),
     ):
-        with console.capture() as capture:
-            TransformerParameters.print_catalogue(**{field_name: value}, manufacturer="se", range=r"^vegeta$")
-        assert len(capture.get().split("\n")) == expected_lines
+        filtered_catalogue = TransformerParameters.get_catalogue(
+            **{field_name: value}, manufacturer="se", range=r"^vegeta$"
+        )
+        assert filtered_catalogue.shape == (expected_size, 7)
 
     # No results
-    with console.capture() as capture:
-        TransformerParameters.print_catalogue(ulv=250)
-    assert len(capture.get().split("\n")) == 2
+    empty_catalogue = TransformerParameters.get_catalogue(ulv=250)
+    assert empty_catalogue.shape == (0, 7)
 
 
 def test_max_power():

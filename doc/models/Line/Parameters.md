@@ -2,8 +2,15 @@
 
 # Parameters
 
-The line parameters are briefly described [here](models-line_parameters). In this page, the alternative constructors
-of `LineParameters` objects are detailed.
+As described [in the previous page](models-line_parameters), a line parameters object contains the
+impedance and shunt admittance matrices representing the line model. Sometimes you do not have
+these matrices available but you have other data such as symmetric components or geometric
+configurations and material types.
+
+This page describes how to build the impedance and shunt admittance matrices and thus the line
+parameters object using these alternative data. This is achieved via the alternative constructors
+of the `LineParameters` class. Note that only 3-phase lines are supported by the alternative
+constructors.
 
 (models-line_parameters-alternative_constructors-symmetric)=
 
@@ -11,16 +18,16 @@ of `LineParameters` objects are detailed.
 
 ### Definition
 
-The `LineParameters` class has a class method called `from_sym` which converts zero and direct sequences of
-impedance and admittance into a line parameters instance. This method requires the following data:
+Line parameters can be built from a symmetric model of the line using the `LineParameters.from_sym`
+class method. This method takes the following data:
 
 - The zero sequence of the impedance (in $\Omega$/km), noted $\underline{Z_0}$ and `z0` in the code.
 - The direct sequence of the impedance (in $\Omega$/km), noted $\underline{Z_1}$ and `z1` in the code.
 - The zero sequence of the admittance (in S/km), noted $\underline{Y_0}$ and `y0` in the code.
 - The direct sequence of the admittance (in S/km), noted $\underline{Y_1}$ and `y1` in the code.
 
-Then, it combines them in order to build the series impedance matrix $\underline{Z}$ and the shunt admittance matrix
-$\underline{Y}$ using the following equations:
+The symmetric componenets are then used to build the series impedance matrix $\underline{Z}$ and
+the shunt admittance matrix $\underline{Y}$ using the following equations:
 
 ```{math}
 \begin{aligned}
@@ -51,8 +58,7 @@ defined as:
 \end{aligned}
 ```
 
-This class method also takes optional parameters which are used to add a neutral wire to the previously seen
-three-phase matrices. These optional parameters are:
+For lines with a neutral, this method also takes the following optional extra parameters:
 
 - The neutral impedance (in $\Omega$/km), noted $\underline{Z_{\mathrm{n}}}$ and `zn` in the code.
 - The phase-to-neutral reactance (in $\Omega$/km), noted $\left(\underline{X_{p\mathrm{n}}}\right)_{p\in\{\mathrm{a},
@@ -63,8 +69,9 @@ three-phase matrices. These optional parameters are:
   \mathrm{b},\mathrm{c}\}}$. As these are supposed to be the same, this unique value is noted `bpn` in the code.
 
 ```{note}
-If any of those parameters is omitted, the neutral wire is omitted and a 3 phase line parameters is built.
-If $\underline{Z_{\mathrm{n}}}$ and $\underline{X_{p\mathrm{n}}}$ are zeros, the same happens.
+If any of those parameters is omitted or if $\underline{Z_{\mathrm{n}}}$ and
+$\underline{X_{p\mathrm{n}}}$ are zeros, the neutral wire is omitted and a 3-phase line parameters
+is built.
 ```
 
 In this case, the following matrices are built:
@@ -102,8 +109,8 @@ respectively the phase-to-neutral series impedance (in $\Omega$/km), the neutral
 the phase-to-neutral shunt admittance (in S/km).
 
 ````{note}
-The computed impedance matrix may be non-invertible. In this case, the `from_sym` class method builds impedance and
-shunt admittance matrices using the following definitions:
+If the computed impedance matrix is be non-invertible, the `from_sym` class method builds impedance
+and shunt admittance matrices using the following definitions:
 
 ```{math}
 \begin{aligned}
@@ -204,7 +211,7 @@ matrices from dimensions and materials used for the insulator and the conductors
 proposed: the first one is for a twisted line and the second is for an underground line. Both of them include a
 neutral wire.
 
-This class methods accepts the following arguments:
+This class method accepts the following arguments:
 
 - the line type to choose between the twisted and the underground options.
 - the conductor type which defines the material of the conductors.
@@ -231,15 +238,15 @@ where:
 
 The following resistivities are used by _Roseau Load Flow_:
 
-| Material      | Resistivity ($\Omega$m) |
-| :------------ | :---------------------- |
-| Copper        | $1.72\times10^{-8}$     |
-| Aluminium     | $2.82\times10^{-8}$     |
-| Almélec       | $3.26\times10^{-8}$     |
-| Alu-Acier     | $4.0587\times10^{-8}$   |
-| Almélec-Acier | $3.26\times10^{-8}$     |
+| Material                   | Resistivity ($\Omega$m) |
+| :------------------------- | :---------------------- |
+| Copper -- Fr: Cuivre       | $1.72\times10^{-8}$     |
+| Aluminum -- Fr: Aluminium  | $2.82\times10^{-8}$     |
+| Al-Mg Alloy -- Fr: Almélec | $3.26\times10^{-8}$     |
+| ACSR -- Fr: Alu-Acier      | $4.0587\times10^{-8}$   |
+| AACSR -- Fr: Almélec-Acier | $3.26\times10^{-8}$     |
 
-These values are defined in the `utils` module: [](#roseau.load_flow.utils.constants.RHO).
+These values are defined in the `utils` module: {data}`roseau.load_flow.utils.constants.RHO`.
 
 #### Inductance
 
@@ -271,7 +278,7 @@ where:
 - $D_{ij}$ the distances between the center of the conductor $i$ and the center of the conductor $j$
 - $GMR_i$ the _geometric mean radius_ of the conductor $i$.
 
-The vacuum magnetic permeability is defined in the `utils` module [](#roseau.load_flow.utils.constants.MU_0).
+The vacuum magnetic permeability is defined in the `utils` module {data}`roseau.load_flow.utils.constants.MU_0`.
 
 The geometric mean radius is defined for all $i\in \{\mathrm{a}, \mathrm{b}, \mathrm{c}, \mathrm{n}\}$ as
 

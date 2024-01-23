@@ -125,9 +125,7 @@ class AbstractLoad(Element, ABC):
         if len(value) != self._size:
             msg = f"Incorrect number of {self._type}s: {len(value)} instead of {self._size}"
             logger.error(msg)
-            raise RoseauLoadFlowException(
-                msg=msg, code=RoseauLoadFlowExceptionCode.from_string(f"BAD_{self._symbol}_SIZE")
-            )
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode[f"BAD_{self._symbol}_SIZE"])
         # A load cannot have any zero impedance
         if self._type == "impedance" and np.isclose(value, 0).any():
             msg = f"An impedance of the load {self.id!r} is null"

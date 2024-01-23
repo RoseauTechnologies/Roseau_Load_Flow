@@ -170,7 +170,7 @@ class Element(ABC, Identifiable, JsonMixin):
         return value
 
     @staticmethod
-    def _parse_geometry(geometry: str | None | Any) -> BaseGeometry | None:
+    def _parse_geometry(geometry: str | dict[str, Any] | None) -> BaseGeometry | None:
         if geometry is None:
             return None
         elif isinstance(geometry, str):

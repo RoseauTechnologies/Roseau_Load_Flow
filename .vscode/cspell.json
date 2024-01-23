@@ -7,6 +7,7 @@
   "words": [
     "abcn",
     "absolufy",
+    "acsr",
     "asarray",
     "astype",
     "bysource",
@@ -34,10 +35,13 @@
     "susceptance",
     "transfo",
     "ureg",
+    "xlpe",
     "yesqa"
   ],
   // flagWords - list of words to be always considered incorrect
   // This is useful for offensive words and common spelling errors.
   // For example "hte" should be "the"
-  "flagWords": ["hte"]
+  "flagWords": [
+    "hte"
+  ]
 }

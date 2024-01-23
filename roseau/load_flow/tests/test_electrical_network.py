@@ -27,7 +27,7 @@ from roseau.load_flow.models import (
 )
 from roseau.load_flow.network import ElectricalNetwork
 from roseau.load_flow.units import Q_
-from roseau.load_flow.utils import BranchTypeDtype, PhaseDtype, VoltagePhaseDtype, console
+from roseau.load_flow.utils import BranchTypeDtype, PhaseDtype, VoltagePhaseDtype
 
 
 @pytest.fixture()
@@ -217,8 +217,8 @@ def test_connect_and_disconnect():
     assert load.bus is None
     with pytest.raises(RoseauLoadFlowException) as e:
         load.to_dict()
-    assert e.value.args[0] == "The load 'power load' is disconnected and cannot be used anymore."
-    assert e.value.args[1] == RoseauLoadFlowExceptionCode.DISCONNECTED_ELEMENT
+    assert e.value.msg == "The load 'power load' is disconnected and cannot be used anymore."
+    assert e.value.code == RoseauLoadFlowExceptionCode.DISCONNECTED_ELEMENT
     new_load = PowerLoad(id="power load", phases="abcn", bus=load_bus, powers=[100 + 0j, 100 + 0j, 100 + 0j])
     assert new_load.network == en
 
@@ -229,8 +229,8 @@ def test_connect_and_disconnect():
     assert vs.bus is None
     with pytest.raises(RoseauLoadFlowException) as e:
         vs.to_dict()
-    assert e.value.args[0] == "The voltage source 'vs' is disconnected and cannot be used anymore."
-    assert e.value.args[1] == RoseauLoadFlowExceptionCode.DISCONNECTED_ELEMENT
+    assert e.value.msg == "The voltage source 'vs' is disconnected and cannot be used anymore."
+    assert e.value.code == RoseauLoadFlowExceptionCode.DISCONNECTED_ELEMENT
 
     # Bad key
     with pytest.raises(RoseauLoadFlowException) as e:
@@ -275,7 +275,7 @@ def test_recursive_connect_disconnect():
     new_load2 = PowerLoad(id="new_load2", bus=new_bus2, phases="abcn", powers=Q_([100, 0, 0], "VA"))
     new_bus = Bus(id="new_bus", phases="abcn")
     new_load = PowerLoad(id="new_load", bus=new_bus, phases="abcn", powers=Q_([100, 0, 0], "VA"))
-    lp = LineParameters("S_AL_240_without_shunt", z_line=Q_(0.1 * np.eye(4), "ohm/km"), y_shunt=None)
+    lp = LineParameters("U_AL_240_without_shunt", z_line=Q_(0.1 * np.eye(4), "ohm/km"), y_shunt=None)
     new_line2 = Line(
         id="new_line2",
         bus1=new_bus2,
@@ -380,7 +380,7 @@ def test_recursive_connect_disconnect_ground():
     assert new_load2.id not in en.loads
 
     lp = LineParameters(
-        "S_AL_240_with_shunt", z_line=Q_(0.1 * np.eye(4), "ohm/km"), y_shunt=Q_(0.1 * np.eye(4), "S/km")
+        "U_AL_240_with_shunt", z_line=Q_(0.1 * np.eye(4), "ohm/km"), y_shunt=Q_(0.1 * np.eye(4), "S/km")
     )
     new_line2 = Line(
         id="new_line2",
@@ -976,8 +976,8 @@ def test_network_elements(small_network: ElectricalNetwork):
     # Connect the two networks
     with pytest.raises(RoseauLoadFlowException) as e:
         Switch("switch2", bus1=bus2, bus2=bus_vs)
-    assert e.value.args[0] == "The Bus 'bus_vs' is already assigned to another network."
-    assert e.value.args[1] == RoseauLoadFlowExceptionCode.SEVERAL_NETWORKS
+    assert e.value.msg == "The Bus 'bus_vs' is already assigned to another network."
+    assert e.value.code == RoseauLoadFlowExceptionCode.SEVERAL_NETWORKS
 
     # Every object have their good network after this failure
     for element in it.chain(
@@ -1017,34 +1017,34 @@ def test_network_results_warning(small_network: ElectricalNetwork, recwarn):  # 
     for bus in small_network.buses.values():
         with pytest.raises(RoseauLoadFlowException) as e:
             _ = bus.res_potentials
-        assert e.value.args[1] == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
+        assert e.value.code == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
         with pytest.raises(RoseauLoadFlowException) as e:
             _ = bus.res_voltages
-        assert e.value.args[1] == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
+        assert e.value.code == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
     for branch in small_network.branches.values():
         with pytest.raises(RoseauLoadFlowException) as e:
             _ = branch.res_currents
-        assert e.value.args[1] == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
+        assert e.value.code == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
     for load in small_network.loads.values():
         with pytest.raises(RoseauLoadFlowException) as e:
             _ = load.res_currents
-        assert e.value.args[1] == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
+        assert e.value.code == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
         if load.is_flexible and isinstance(load, PowerLoad):
             with pytest.raises(RoseauLoadFlowException) as e:
                 _ = load.res_flexible_powers
-            assert e.value.args[1] == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
+            assert e.value.code == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
     for source in small_network.sources.values():
         with pytest.raises(RoseauLoadFlowException) as e:
             _ = source.res_currents
-        assert e.value.args[1] == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
+        assert e.value.code == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
     for ground in small_network.grounds.values():
         with pytest.raises(RoseauLoadFlowException) as e:
             _ = ground.res_potential
-        assert e.value.args[1] == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
+        assert e.value.code == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
     for p_ref in small_network.potential_refs.values():
         with pytest.raises(RoseauLoadFlowException) as e:
             _ = p_ref.res_current
-        assert e.value.args[1] == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
+        assert e.value.code == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
 
     # Solve a load flow
     small_network.solve_load_flow()
@@ -1753,89 +1753,78 @@ def test_from_catalogue():
     # Unknown network name
     with pytest.raises(RoseauLoadFlowException) as e:
         ElectricalNetwork.from_catalogue(name="unknown", load_point_name="winter")
-    assert (
-        e.value.args[0]
-        == "No network matching the name 'unknown' has been found. Please look at the catalogue using the "
-        "`print_catalogue` class method."
+    assert e.value.msg == (
+        "No networks matching the query (name='unknown') have been found. Please look at the "
+        "catalogue using the `get_catalogue` class method."
     )
-    assert e.value.args[1] == RoseauLoadFlowExceptionCode.CATALOGUE_NOT_FOUND
+    assert e.value.code == RoseauLoadFlowExceptionCode.CATALOGUE_NOT_FOUND
 
     # Unknown load point name
     with pytest.raises(RoseauLoadFlowException) as e:
         ElectricalNetwork.from_catalogue(name="MVFeeder004", load_point_name="unknown")
-    assert (
-        e.value.args[0]
-        == "No load point matching the name 'unknown' has been found for the network 'MVFeeder004'. Available "
-        "load points are 'Summer', 'Winter'."
+    assert e.value.msg == (
+        "No load points for network 'MVFeeder004' matching the query (load_point_name='unknown') have "
+        "been found. Please look at the catalogue using the `get_catalogue` class method."
     )
-    assert e.value.args[1] == RoseauLoadFlowExceptionCode.CATALOGUE_NOT_FOUND
+    assert e.value.code == RoseauLoadFlowExceptionCode.CATALOGUE_NOT_FOUND
 
     # Several network name matched
     with pytest.raises(RoseauLoadFlowException) as e:
         ElectricalNetwork.from_catalogue(name="MVFeeder", load_point_name="winter")
-    assert e.value.args[0] == (
-        "Several networks matching the name 'MVFeeder' have been found: 'MVFeeder004', "
-        "'MVFeeder011', 'MVFeeder015', 'MVFeeder032', 'MVFeeder041', 'MVFeeder063', 'MVFeeder078', 'MVFeeder115', "
-        "'MVFeeder128', 'MVFeeder151', 'MVFeeder159', 'MVFeeder176', 'MVFeeder210', 'MVFeeder217', 'MVFeeder232',"
-        " 'MVFeeder251', 'MVFeeder290', 'MVFeeder312', 'MVFeeder320', 'MVFeeder339'."
+    assert e.value.msg == (
+        "Several networks matching the query (name='MVFeeder') have been found: 'MVFeeder004', "
+        "'MVFeeder011', 'MVFeeder015', 'MVFeeder032', 'MVFeeder041', 'MVFeeder063', 'MVFeeder078', "
+        "'MVFeeder115', 'MVFeeder128', 'MVFeeder151', 'MVFeeder159', 'MVFeeder176', 'MVFeeder210', "
+        "'MVFeeder217', 'MVFeeder232', 'MVFeeder251', 'MVFeeder290', 'MVFeeder312', 'MVFeeder320', "
+        "'MVFeeder339'."
     )
-    assert e.value.args[1] == RoseauLoadFlowExceptionCode.CATALOGUE_SEVERAL_FOUND
+    assert e.value.code == RoseauLoadFlowExceptionCode.CATALOGUE_SEVERAL_FOUND
 
     # Several load point name matched
     with pytest.raises(RoseauLoadFlowException) as e:
         ElectricalNetwork.from_catalogue(name="MVFeeder004", load_point_name=r".*")
-    assert e.value.args[0] == (
-        "Several load points matching the name '.*' have been found for the network 'MVFeeder004': 'Summer', 'Winter'."
+    assert e.value.msg == (
+        "Several load points for network 'MVFeeder004' matching the query (load_point_name='.*') have "
+        "been found: 'Summer', 'Winter'."
     )
-    assert e.value.args[1] == RoseauLoadFlowExceptionCode.CATALOGUE_SEVERAL_FOUND
+    assert e.value.code == RoseauLoadFlowExceptionCode.CATALOGUE_SEVERAL_FOUND
 
     # Both known
     ElectricalNetwork.from_catalogue(name="MVFeeder004", load_point_name="winter")
 
 
-def test_print_catalogue():
-    # Print the entire catalogue
-    with console.capture() as capture:
-        ElectricalNetwork.print_catalogue()
-    assert len(capture.get().split("\n")) == 46
+def test_get_catalogue():
+    # Get the entire catalogue
+    catalogue = ElectricalNetwork.get_catalogue()
+    assert catalogue.shape == (40, 7)
 
     # Filter on the network name
-    with console.capture() as capture:
-        ElectricalNetwork.print_catalogue(name="MV")
-    assert len(capture.get().split("\n")) == 26
-    with console.capture() as capture:
-        ElectricalNetwork.print_catalogue(name=re.compile(r"^MV"))
-    assert len(capture.get().split("\n")) == 26
+    catalogue = ElectricalNetwork.get_catalogue(name="MV")
+    assert catalogue.shape == (20, 7)
+    catalogue = ElectricalNetwork.get_catalogue(name=re.compile(r"^MV"))
+    assert catalogue.shape == (20, 7)
 
     # Filter on the load point name
-    with console.capture() as capture:
-        ElectricalNetwork.print_catalogue(load_point_name="winter")
-    assert len(capture.get().split("\n")) == 46
-    with console.capture() as capture:
-        ElectricalNetwork.print_catalogue(load_point_name=re.compile(r"^Winter"))
-    assert len(capture.get().split("\n")) == 46
+    catalogue = ElectricalNetwork.get_catalogue(load_point_name="winter")
+    assert catalogue.shape == (40, 7)
+    catalogue = ElectricalNetwork.get_catalogue(load_point_name=re.compile(r"^Winter"))
+    assert catalogue.shape == (40, 7)
 
     # Filter on both
-    with console.capture() as capture:
-        ElectricalNetwork.print_catalogue(name="MV", load_point_name="winter")
-    assert len(capture.get().split("\n")) == 26
-    with console.capture() as capture:
-        ElectricalNetwork.print_catalogue(name="MV", load_point_name=re.compile(r"^Winter"))
-    assert len(capture.get().split("\n")) == 26
-    with console.capture() as capture:
-        ElectricalNetwork.print_catalogue(name=re.compile(r"^MV"), load_point_name="winter")
-    assert len(capture.get().split("\n")) == 26
-    with console.capture() as capture:
-        ElectricalNetwork.print_catalogue(name=re.compile(r"^MV"), load_point_name=re.compile(r"^Winter"))
-    assert len(capture.get().split("\n")) == 26
+    catalogue = ElectricalNetwork.get_catalogue(name="MV", load_point_name="winter")
+    assert catalogue.shape == (20, 7)
+    catalogue = ElectricalNetwork.get_catalogue(name="MV", load_point_name=re.compile(r"^Winter"))
+    assert catalogue.shape == (20, 7)
+    catalogue = ElectricalNetwork.get_catalogue(name=re.compile(r"^MV"), load_point_name="winter")
+    assert catalogue.shape == (20, 7)
+    catalogue = ElectricalNetwork.get_catalogue(name=re.compile(r"^MV"), load_point_name=re.compile(r"^Winter"))
+    assert catalogue.shape == (20, 7)
 
     # Regexp error
-    with console.capture() as capture:
-        ElectricalNetwork.print_catalogue(name=r"^MV[0-")
-    assert len(capture.get().split("\n")) == 2
-    with console.capture() as capture:
-        ElectricalNetwork.print_catalogue(load_point_name=r"^winter[0-]")
-    assert len(capture.get().split("\n")) == 2
+    catalogue = ElectricalNetwork.get_catalogue(name=r"^MV[0-")
+    assert catalogue.empty
+    catalogue = ElectricalNetwork.get_catalogue(load_point_name=r"^winter[0-]")
+    assert catalogue.empty
 
 
 def test_to_graph(small_network: ElectricalNetwork):

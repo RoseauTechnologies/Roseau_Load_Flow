@@ -17,6 +17,7 @@ from roseau.load_flow.models import (
     VoltageSource,
 )
 from roseau.load_flow.network import ElectricalNetwork
+from roseau.load_flow.utils import ConductorType, InsulatorType, LineType
 
 
 def test_to_dict():
@@ -30,7 +31,15 @@ def test_to_dict():
     vs = VoltageSource("vs", source_bus, phases="abcn", voltages=voltages)
 
     # Same id, different line parameters -> fail
-    lp1 = LineParameters("test", z_line=np.eye(4, dtype=complex), y_shunt=np.eye(4, dtype=complex))
+    lp1 = LineParameters(
+        "test",
+        z_line=np.eye(4, dtype=complex),
+        y_shunt=np.eye(4, dtype=complex),
+        line_type=LineType.UNDERGROUND,
+        conductor_type=ConductorType.AA,
+        insulator_type=InsulatorType.PVC,
+        section=120,
+    )
     lp2 = LineParameters("test", z_line=np.eye(4, dtype=complex), y_shunt=np.eye(4, dtype=complex) * 1.1)
 
     geom = LineString([(0.0, 0.0), (0.0, 1.0)])
@@ -66,7 +75,12 @@ def test_to_dict():
     assert "geometry" in res["branches"][1]
     assert np.isclose(res["buses"][0]["min_voltage"], 0.9 * vn)
     assert np.isclose(res["buses"][1]["max_voltage"], 1.1 * vn)
-    assert np.isclose(res["lines_params"][0]["max_current"], 1000)
+    lp_dict = res["lines_params"][0]
+    assert np.isclose(lp_dict["max_current"], 1000)
+    assert lp_dict["line_type"] == "UNDERGROUND"
+    assert lp_dict["conductor_type"] == "AA"
+    assert lp_dict["insulator_type"] == "PVC"
+    assert np.isclose(lp_dict["section"], 120)
 
     res = en.to_dict(_lf_only=True)
     assert "geometry" not in res["buses"][0]
@@ -75,7 +89,12 @@ def test_to_dict():
     assert "geometry" not in res["branches"][1]
     assert "min_voltage" not in res["buses"][0]
     assert "max_voltage" not in res["buses"][1]
-    assert "max_current" not in res["lines_params"][0]
+    lp_dict = res["lines_params"][0]
+    assert "max_current" not in lp_dict
+    assert "line_type" not in lp_dict
+    assert "conductor_type" not in lp_dict
+    assert "insulator_type" not in lp_dict
+    assert "section" not in lp_dict
 
     # Same id, different transformer parameters -> fail
     ground = Ground("ground")

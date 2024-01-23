@@ -4,12 +4,11 @@ This module defines the electrical network class.
 import json
 import logging
 import re
-import textwrap
 import time
 import warnings
-from collections.abc import Mapping, Sized
+from collections.abc import Iterable, Mapping, Sized
 from importlib import resources
-from itertools import chain, cycle
+from itertools import chain
 from pathlib import Path
 from typing import TYPE_CHECKING, NoReturn, TypeVar
 
@@ -17,7 +16,6 @@ import geopandas as gpd
 import numpy as np
 import pandas as pd
 from pyproj import CRS
-from rich.table import Table
 from typing_extensions import Self
 
 from roseau.load_flow._solvers import AbstractSolver
@@ -37,7 +35,7 @@ from roseau.load_flow.models import (
     VoltageSource,
 )
 from roseau.load_flow.typing import Id, JsonDict, MapOrSeq, Solver, StrPath
-from roseau.load_flow.utils import CatalogueMixin, JsonMixin, _optional_deps, console, palette
+from roseau.load_flow.utils import CatalogueMixin, JsonMixin, _optional_deps
 from roseau.load_flow.utils.types import _DTYPES, VoltagePhaseDtype
 from roseau.load_flow_engine.cy_engine import CyElectricalNetwork
 
@@ -1307,7 +1305,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                             elements.append((e, potentials))
 
     @staticmethod
-    def _check_ref(elements: list[Element]) -> None:
+    def _check_ref(elements: Iterable[Element]) -> None:
         """Check the number of potential references to avoid having a singular jacobian matrix."""
         visited_elements: set[Element] = set()
         for initial_element in elements:
@@ -1466,6 +1464,68 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         return json.loads((cls.catalogue_path() / "Catalogue.json").read_text())
 
     @classmethod
+    def _get_catalogue(
+        cls, name: str | re.Pattern[str] | None, load_point_name: str | re.Pattern[str] | None, raise_if_not_found: bool
+    ) -> tuple[pd.DataFrame, str]:
+        # Get the catalogue data
+        catalogue_data = cls.catalogue_data()
+
+        catalogue_dict = {
+            "name": [],
+            "nb_buses": [],
+            "nb_branches": [],
+            "nb_loads": [],
+            "nb_sources": [],
+            "nb_grounds": [],
+            "nb_potential_refs": [],
+            "load_points": [],
+        }
+        query_msg_list = []
+
+        # Match on the name
+        available_names = list(catalogue_data)
+        match_names_list = available_names
+        if name is not None:
+            match_names_list = cls._filter_catalogue_str(name, strings=available_names)
+            if isinstance(name, re.Pattern):
+                name = name.pattern
+            query_msg_list.append(f"{name=!r}")
+        if raise_if_not_found:
+            cls._assert_one_found(found_data=match_names_list, display_name="networks", query_info=f"{name=!r}")
+
+        if load_point_name is not None:
+            load_point_name_str = load_point_name if isinstance(load_point_name, str) else load_point_name.pattern
+            query_msg_list.append(f"load_point_name={load_point_name_str!r}")
+
+        for name in match_names_list:
+            network_data = catalogue_data[name]
+
+            # Match on the load point
+            available_load_points: list[str] = network_data["load_points"]
+            match_load_point_names_list = available_load_points
+            if load_point_name is not None:
+                match_load_point_names_list = cls._filter_catalogue_str(load_point_name, strings=available_load_points)
+                if raise_if_not_found:
+                    cls._assert_one_found(
+                        found_data=match_load_point_names_list,
+                        display_name=f"load points for network {name!r}",
+                        query_info=query_msg_list[-1],
+                    )
+                elif not match_load_point_names_list:
+                    continue
+
+            catalogue_dict["name"].append(name)
+            catalogue_dict["nb_buses"].append(network_data["nb_buses"])
+            catalogue_dict["nb_branches"].append(network_data["nb_branches"])
+            catalogue_dict["nb_loads"].append(network_data["nb_loads"])
+            catalogue_dict["nb_sources"].append(network_data["nb_sources"])
+            catalogue_dict["nb_grounds"].append(network_data["nb_grounds"])
+            catalogue_dict["nb_potential_refs"].append(network_data["nb_potential_refs"])
+            catalogue_dict["load_points"].append(match_load_point_names_list)
+
+        return pd.DataFrame(catalogue_dict), ", ".join(query_msg_list)
+
+    @classmethod
     def from_catalogue(cls, name: str | re.Pattern[str], load_point_name: str | re.Pattern[str]) -> Self:
         """Build a network from one in the catalogue.
 
@@ -1481,188 +1541,62 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             The selected network
         """
         # Get the catalogue data
-        catalogue_data = cls.catalogue_data()
+        catalogue_data, _ = cls._get_catalogue(
+            name=name,
+            load_point_name=load_point_name,
+            raise_if_not_found=True,
+        )
 
-        # Match on the name
-        if isinstance(name, re.Pattern):
-            name_pattern = name
-            name = name.pattern
-            match_names_list = [k for k in catalogue_data if name_pattern.match(k)]
-        else:
-            try:
-                name_pattern = re.compile(pattern=name, flags=re.IGNORECASE)
-                match_names_list = [k for k in catalogue_data if name_pattern.match(k)]
-            except re.error:
-                name_pattern = name.lower()
-                match_names_list = [k for k in catalogue_data if k.lower() == name_pattern]
-        if not match_names_list:
-            msg = (
-                f"No network matching the name {name!r} has been found. "
-                f"Please look at the catalogue using the `print_catalogue` class method."
-            )
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.CATALOGUE_NOT_FOUND)
-        elif len(match_names_list) > 1:
-            msg_part = textwrap.shorten(", ".join(repr(x) for x in sorted(match_names_list)), width=500)
-            msg = f"Several networks matching the name {name!r} have been found: {msg_part}."
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.CATALOGUE_SEVERAL_FOUND)
-        name = match_names_list[0]
-
-        # Match on the load point
-        c_data = catalogue_data[name]
-        available_load_points = c_data["load_points"]
-        if isinstance(load_point_name, re.Pattern):
-            load_point_name_pattern = load_point_name
-            load_point_name = load_point_name.pattern
-            match_load_point_names_list = [k for k in available_load_points if load_point_name_pattern.match(k)]
-        else:
-            try:
-                load_point_name_pattern = re.compile(pattern=load_point_name, flags=re.IGNORECASE)
-                match_load_point_names_list = [k for k in available_load_points if load_point_name_pattern.match(k)]
-            except re.error:
-                load_point_name_pattern = load_point_name.lower()
-                match_load_point_names_list = [k for k in available_load_points if k.lower() == load_point_name_pattern]
-        if not match_load_point_names_list:
-            msg_part = textwrap.shorten(", ".join(repr(x) for x in sorted(available_load_points)), width=500)
-            msg = (
-                f"No load point matching the name {load_point_name!r} has been found for the network {name!r}. "
-                f"Available load points are {msg_part}."
-            )
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.CATALOGUE_NOT_FOUND)
-        elif len(match_load_point_names_list) > 1:
-            msg_part = textwrap.shorten(", ".join(repr(x) for x in sorted(match_load_point_names_list)), width=500)
-            msg = (
-                f"Several load points matching the name {load_point_name!r} have been found for the network "
-                f"{name!r}: {msg_part}."
-            )
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.CATALOGUE_SEVERAL_FOUND)
-        load_point_name = match_load_point_names_list[0]
+        name = catalogue_data["name"].item()
+        load_point_name = catalogue_data["load_points"].item()[0]
 
         # Get the data from the Json file
         path = cls.catalogue_path() / f"{name}_{load_point_name}.json"
-        if not path.exists():  # pragma: no cover
+        try:
+            json_dict = json.loads(path.read_text())
+        except FileNotFoundError:
             msg = f"The file {path} has not been found while it should exist. Please post an issue on GitHub."
             logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.CATALOGUE_MISSING)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.CATALOGUE_MISSING) from None
 
-        return cls.from_json(path=path)
+        return cls.from_dict(json_dict)
 
     @classmethod
-    def print_catalogue(
-        cls,
-        name: str | re.Pattern[str] | None = None,
-        load_point_name: str | re.Pattern[str] | None = None,
-    ) -> None:
-        """Print the catalogue of available networks.
+    def get_catalogue(
+        cls, name: str | re.Pattern[str] | None = None, load_point_name: str | re.Pattern[str] | None = None
+    ) -> pd.DataFrame:
+        """Read a network dictionary from the catalogue.
 
         Args:
             name:
-                The name of the networks to display. It can be a regular expression. For instance, `name="lv"` will
-                match all the network name starting with "lv" (ignoring case).
+                The name of the network to get from the catalogue. It can be a regular expression.
 
             load_point_name:
-                Only networks having a load point matching this string or regular expression will be displayed.
-        """
-        # Get the catalogue data
-        catalogue_data = cls.catalogue_data()
-
-        # Start creating a table to display the results
-        table = Table(title="Available Networks")
-        table.add_column("Name", overflow="fold")
-        table.add_column("Nb buses", justify="right", overflow="fold")
-        table.add_column("Nb branches", justify="right", overflow="fold")
-        table.add_column("Nb loads", justify="right", overflow="fold")
-        table.add_column("Nb sources", justify="right", overflow="fold")
-        table.add_column("Nb grounds", justify="right", overflow="fold")
-        table.add_column("Nb potential refs", justify="right", overflow="fold")
-        table.add_column("Available load points", overflow="fold")
-        empty_table = True
-
-        # Match on the name
-        match_names_list = cls._filter_name(name=name, catalogue_data=catalogue_data)
-
-        # Match on load point name
-        if load_point_name is None:
-            load_point_name_pattern = None
-
-            def match_load_point_function(x: str) -> bool:
-                return True
-
-        elif isinstance(load_point_name, re.Pattern):
-            load_point_name_pattern = load_point_name
-            load_point_name = load_point_name.pattern
-            match_load_point_function = load_point_name_pattern.match
-        else:
-            try:
-                load_point_name_pattern = re.compile(pattern=load_point_name, flags=re.IGNORECASE)
-                match_load_point_function = load_point_name_pattern.match
-            except re.error:
-                load_point_name_pattern = name.lower()
-
-                def match_load_point_function(x: str) -> bool:
-                    nonlocal load_point_name_pattern
-                    return x.lower() == load_point_name_pattern
-
-        # Iterate over the networks
-        cycler = cycle(palette)
-        for c_name in match_names_list:
-            c_data = catalogue_data[c_name]
-            available_load_points = c_data["load_points"]
-            if any(match_load_point_function(x) for x in available_load_points):
-                empty_table = False
-                table.add_row(
-                    c_name,
-                    str(c_data["nb_buses"]),
-                    str(c_data["nb_branches"]),
-                    str(c_data["nb_loads"]),
-                    str(c_data["nb_sources"]),
-                    str(c_data["nb_grounds"]),
-                    str(c_data["nb_potential_refs"]),
-                    ", ".join(repr(x) for x in sorted(c_data["load_points"])),
-                    style=next(cycler),
-                )
-
-        # Handle the case of an empty table
-        if empty_table:
-            msg = "No networks can be found in the catalogue"
-            if name is not None and load_point_name is not None:
-                msg += f" with the name {name!r} and having a load point named {load_point_name!r}"
-            elif name is not None:
-                msg += f" with the name {name!r}"
-            elif load_point_name is not None:
-                msg += f" having a load point named {load_point_name!r}"
-            msg += "!"
-            console.print(msg)
-        else:
-            console.print(table)
-
-    @staticmethod
-    def _filter_name(name: str | re.Pattern[str] | None, catalogue_data: JsonDict) -> list[str]:
-        """Filter the catalogue using the network name.
-
-        Args:
-            name:
-                The optional name to use as a filter.
-
-            catalogue_data:
-                The catalogue of available networks. It avoids an additional read.
+                The name of the load point to get. For each network, several load points may be available. It can be
+                a regular expression.
 
         Returns:
-            The list of network names matching the provided one.
+            The dictionary containing the network data.
         """
-        if name is None:
-            match_names_list = list(catalogue_data)
-        elif isinstance(name, re.Pattern):
-            match_names_list = [k for k in catalogue_data if name.match(k)]
-        else:
-            try:
-                name_pattern = re.compile(pattern=name, flags=re.IGNORECASE)
-                match_names_list = [k for k in catalogue_data if name_pattern.match(k)]
-            except re.error:
-                name_pattern = name.lower()
-                match_names_list = [k for k in catalogue_data if k.lower() == name_pattern]
 
-        return match_names_list
+        catalogue_data, _ = cls._get_catalogue(
+            name=name,
+            load_point_name=load_point_name,
+            raise_if_not_found=False,
+        )
+        return (
+            catalogue_data.reset_index(drop=True)
+            .rename(
+                columns={
+                    "name": "Name",
+                    "nb_buses": "Nb buses",
+                    "nb_branches": "Nb branches",
+                    "nb_loads": "Nb loads",
+                    "nb_sources": "Nb sources",
+                    "nb_grounds": "Nb grounds",
+                    "nb_potential_refs": "Nb potential refs",
+                    "load_points": "Available load points",
+                }
+            )
+            .set_index("Name")
+        )

@@ -1,5 +1,7 @@
 import logging
 import re
+from importlib import resources
+from pathlib import Path
 from typing import NoReturn
 
 import numpy as np
@@ -11,7 +13,6 @@ from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowE
 from roseau.load_flow.typing import ComplexArray, ComplexArrayLike2D, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow.utils import (
-    CX,
     EPSILON_0,
     EPSILON_R,
     MU_0,
@@ -19,6 +20,7 @@ from roseau.load_flow.utils import (
     PI,
     RHO,
     TAN_D,
+    CatalogueMixin,
     ConductorType,
     Identifiable,
     InsulatorType,
@@ -28,24 +30,38 @@ from roseau.load_flow.utils import (
 
 logger = logging.getLogger(__name__)
 
+_DEFAULT_CONDUCTOR_TYPE = {
+    LineType.OVERHEAD: ConductorType.ACSR,
+    LineType.TWISTED: ConductorType.AL,
+    LineType.UNDERGROUND: ConductorType.AL,
+}
 
-class LineParameters(Identifiable, JsonMixin):
+_DEFAULT_INSULATION_TYPE = {
+    LineType.OVERHEAD: InsulatorType.UNKNOWN,  # Not used for overhead lines
+    LineType.TWISTED: InsulatorType.XLPE,
+    LineType.UNDERGROUND: InsulatorType.PVC,
+}
+
+
+class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
     """Parameters that define electrical models of lines."""
 
-    _type_re = "|".join("|".join(x) for x in LineType.CODES.values())
+    _type_re = "|".join(x.code() for x in LineType)
     _material_re = "|".join(x.code() for x in ConductorType)
     _section_re = r"[1-9][0-9]*"
-    _REGEXP_LINE_TYPE_NAME: re.Pattern = re.compile(
-        rf"^({_type_re})_({_material_re})_{_section_re}$", flags=re.IGNORECASE
-    )
+    _REGEXP_LINE_TYPE_NAME = re.compile(rf"^({_type_re})_({_material_re})_{_section_re}$", flags=re.IGNORECASE)
 
-    @ureg_wraps(None, (None, None, "ohm/km", "S/km", "A"))
+    @ureg_wraps(None, (None, None, "ohm/km", "S/km", "A", None, None, None, "mm²"))
     def __init__(
         self,
         id: Id,
         z_line: ComplexArrayLike2D,
         y_shunt: ComplexArrayLike2D | None = None,
         max_current: float | None = None,
+        line_type: LineType | None = None,
+        conductor_type: ConductorType | None = None,
+        insulator_type: InsulatorType | None = None,
+        section: float | Q_[float] | None = None,
     ) -> None:
         """LineParameters constructor.
 
@@ -60,7 +76,27 @@ class LineParameters(Identifiable, JsonMixin):
                 The Y matrix of the line (Siemens/km). This field is optional if the line has no shunt part.
 
             max_current:
-                An optional maximum current loading of the line (A). It is not used in the load flow.
+                The maximum current loading of the line (A). The maximum current is optional, it is
+                not used in the load flow but can be used to check for overloading.
+                See also :meth:`Line.res_violated <roseau.load_flow.Line.res_violated>`.
+
+            line_type:
+                The type of the line (overhead, underground, twisted). The line type is optional,
+                it is informative only and is not used in the load flow. This field gets
+                automatically filled when the line parameters are created from a geometric model or
+                from the catalogue.
+
+            conductor_type:
+                The type of the conductor material (Aluminum, Copper, ...). The conductor type is
+                optional, it is informative only and is not used in the load flow. This field gets
+                automatically filled when the line parameters are created from a geometric model or
+                from the catalogue.
+
+            insulator_type:
+                The type of the cable insulator (PVC, XLPE, ...). The insulator type is optional,
+                it is informative only and is not used in the load flow. This field gets
+                automatically filled when the line parameters are created from a geometric model or
+                from the catalogue.
         """
         super().__init__(id)
         self._z_line = np.array(z_line, dtype=np.complex128)
@@ -71,6 +107,10 @@ class LineParameters(Identifiable, JsonMixin):
             self._with_shunt = not np.allclose(y_shunt, 0)
             self._y_shunt = np.array(y_shunt, dtype=np.complex128)
         self.max_current = max_current
+        self._line_type = line_type
+        self._conductor_type = conductor_type
+        self._insulator_type = insulator_type
+        self._section: float = section
         self._check_matrix()
 
     def __eq__(self, other: object) -> bool:
@@ -109,6 +149,26 @@ class LineParameters(Identifiable, JsonMixin):
     def max_current(self) -> Q_[float] | None:
         """The maximum current loading of the line (A) if it is set."""
         return None if self._max_current is None else Q_(self._max_current, "A")
+
+    @property
+    def line_type(self) -> LineType | None:
+        """The type of the line. Informative only, it has no impact on the load flow."""
+        return self._line_type
+
+    @property
+    def conductor_type(self) -> ConductorType | None:
+        """The type of the conductor material. Informative only, it has no impact on the load flow."""
+        return self._conductor_type
+
+    @property
+    def insulator_type(self) -> InsulatorType | None:
+        """The type of the cable insulator. Informative only, it has no impact on the load flow."""
+        return self._insulator_type
+
+    @property
+    def section(self) -> Q_[float] | None:
+        """The cross section area of the cable (in mm²). Informative only, it has no impact on the load flow."""
+        return None if self._section is None else Q_(self._section, "mm**2")
 
     @max_current.setter
     @ureg_wraps(None, (None, "A"))
@@ -299,11 +359,12 @@ class LineParameters(Identifiable, JsonMixin):
     def from_geometry(
         cls,
         id: Id,
+        *,
         line_type: LineType,
-        conductor_type: ConductorType,
-        insulator_type: InsulatorType,
+        conductor_type: ConductorType | None = None,
+        insulator_type: InsulatorType | None = None,
         section: float | Q_[float],
-        section_neutral: float | Q_[float],
+        section_neutral: float | Q_[float] | None = None,
         height: float | Q_[float],
         external_diameter: float | Q_[float],
         max_current: float | Q_[float] | None = None,
@@ -315,25 +376,29 @@ class LineParameters(Identifiable, JsonMixin):
                 The id of the line parameters type.
 
             line_type:
-                Overhead or underground.
+                Overhead or underground. See also :class:`~roseau.load_flow.LineType`.
 
             conductor_type:
-                Type of the conductor
+                Type of the conductor. If ``None``, ``ACSR`` is used for overhead lines and ``AL``
+                for underground or twisted lines. See also :class:`~roseau.load_flow.ConductorType`.
 
             insulator_type:
-                Type of insulator.
+                Type of insulator. If ``None``, ``XLPE`` is used for twisted lines and ``PVC`` for
+                underground lines. See also :class:`~roseau.load_flow.InsulatorType`.
 
             section:
-                Surface of the phases (mm²).
+                Cross-section surface area of the phases (mm²).
 
             section_neutral:
-                Surface of the neutral (mm²).
+                Cross-section surface area of the neutral (mm²). If None it will be the same as the
+                section of the other phases.
 
             height:
-                 Height of the line (m).
+                Height of the line (m). It must be positive for overhead lines and negative for
+                underground lines.
 
             external_diameter:
-                External diameter of the wire (m).
+                External diameter of the cable (m).
 
             max_current:
                 An optional maximum current loading of the line (A). It is not used in the load flow.
@@ -344,7 +409,7 @@ class LineParameters(Identifiable, JsonMixin):
         See Also:
             :ref:`Line parameters alternative constructor documentation <models-line_parameters-alternative_constructors>`
         """
-        z_line, y_shunt = cls._geometry_to_zy(
+        z_line, y_shunt, line_type, conductor_type, insulator_type, section = cls._from_geometry(
             id=id,
             line_type=line_type,
             conductor_type=conductor_type,
@@ -354,30 +419,39 @@ class LineParameters(Identifiable, JsonMixin):
             height=height,
             external_diameter=external_diameter,
         )
-        return cls(id=id, z_line=z_line, y_shunt=y_shunt, max_current=max_current)
+        return cls(
+            id=id,
+            z_line=z_line,
+            y_shunt=y_shunt,
+            max_current=max_current,
+            line_type=line_type,
+            conductor_type=conductor_type,
+            insulator_type=insulator_type,
+            section=section,
+        )
 
     @staticmethod
-    def _geometry_to_zy(
+    def _from_geometry(
         id: Id,
         line_type: LineType,
-        conductor_type: ConductorType,
-        insulator_type: InsulatorType,
+        conductor_type: ConductorType | None,
+        insulator_type: InsulatorType | None,
         section: float,
-        section_neutral: float,
+        section_neutral: float | None,
         height: float,
         external_diameter: float,
-    ) -> tuple[ComplexArray, ComplexArray]:
-        """Create impedance and admittance matrix using a geometric model.
+    ) -> tuple[ComplexArray, ComplexArray, LineType, ConductorType, InsulatorType, float]:
+        """Create impedance and admittance matrices using a geometric model.
 
         Args:
             id:
                 The id of the line parameters.
 
             line_type:
-                Overhead or underground.
+                Overhead, twisted overhead, or underground.
 
             conductor_type:
-                Type of the conductor
+                Type of the conductor material (Aluminum, Copper, ...).
 
             insulator_type:
                 Type of insulator.
@@ -386,10 +460,12 @@ class LineParameters(Identifiable, JsonMixin):
                 Surface of the phases (mm²).
 
             section_neutral:
-                Surface of the neutral (mm²).
+                Surface of the neutral (mm²). If None it will be the same as the section of the
+                other phases.
 
             height:
-                 Height of the line (m).
+                Height of the line (m). Positive for overhead lines and negative for underground
+                lines.
 
             external_diameter:
                 External diameter of the wire (m).
@@ -401,53 +477,87 @@ class LineParameters(Identifiable, JsonMixin):
         # dpn = data["dpn"]  # Distance phase to neutral (m)
         # dsh = data["dsh"]  # Diameter of the sheath (mm)
 
+        if conductor_type is None:
+            conductor_type = _DEFAULT_CONDUCTOR_TYPE[line_type]
+        if insulator_type is None:
+            insulator_type = _DEFAULT_INSULATION_TYPE[line_type]
+        if section_neutral is None:
+            section_neutral = section
+        line_type = LineType(line_type)
+        conductor_type = ConductorType(conductor_type)
+        insulator_type = InsulatorType(insulator_type)
+
         # Geometric configuration
         if line_type in (LineType.OVERHEAD, LineType.TWISTED):
             # TODO This configuration is for twisted lines... Create a overhead configuration.
-            # TODO Add some checks on provided geometric values...
+            if height <= 0:
+                msg = f"The height of a '{line_type}' line must be a positive number."
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_MODEL)
+            x = np.sqrt(3) * external_diameter / 8
             coord = np.array(
                 [
-                    [-np.sqrt(3) / 8 * external_diameter, height + external_diameter / 8],
-                    [np.sqrt(3) / 8 * external_diameter, height + external_diameter / 8],
+                    [-x, height + external_diameter / 8],
+                    [x, height + external_diameter / 8],
                     [0, height - external_diameter / 4],
                     [0, height],
                 ]
             )  # m
             coord_prim = np.array(
                 [
-                    [-np.sqrt(3) / 8 * external_diameter, -height - external_diameter / 8],
-                    [np.sqrt(3) / 8 * external_diameter, -height - external_diameter / 8],
+                    [-x, -height - external_diameter / 8],
+                    [x, -height - external_diameter / 8],
                     [0, -height + external_diameter / 4],
                     [0, -height],
                 ]
             )  # m
             epsilon = EPSILON_0.m_as("F/m")
         elif line_type == LineType.UNDERGROUND:
-            coord = np.array(
-                [
-                    [-np.sqrt(2) / 8 * external_diameter, height - np.sqrt(2) / 8 * external_diameter],
-                    [np.sqrt(2) / 8 * external_diameter, height - np.sqrt(2) / 8 * external_diameter],
-                    [np.sqrt(2) / 8 * external_diameter, height + np.sqrt(2) / 8 * external_diameter],
-                    [-np.sqrt(2) / 8 * external_diameter, height + np.sqrt(2) / 8 * external_diameter],
-                ]
-            )  # m
-            coord_prim = np.array(
-                [
-                    [-np.sqrt(2) * 3 / 8 * external_diameter, height - np.sqrt(2) * 3 / 8 * external_diameter],
-                    [np.sqrt(2) * 3 / 8 * external_diameter, height - np.sqrt(2) * 3 / 8 * external_diameter],
-                    [np.sqrt(2) * 3 / 8 * external_diameter, height + np.sqrt(2) * 3 / 8 * external_diameter],
-                    [-np.sqrt(2) * 3 / 8 * external_diameter, height + np.sqrt(2) * 3 / 8 * external_diameter],
-                ]
-            )  # m
+            if height >= 0:
+                msg = f"The height of a '{line_type}' line must be a negative number."
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_MODEL)
+            x = np.sqrt(2) * external_diameter / 8
+            coord = np.array([[-x, height - x], [x, height - x], [x, height + x], [-x, height + x]])  # m
+            xp = x * 3
+            coord_prim = np.array([[-xp, height - xp], [xp, height - xp], [xp, height + xp], [-xp, height + xp]])  # m
             epsilon = (EPSILON_0 * EPSILON_R[insulator_type]).m_as("F/m")
         else:
-            msg = f"The line type of the line {id!r} is unknown. It should have been filled in the reading."
+            msg = f"The line type {line_type!r} of the line {id!r} is unknown."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_TYPE)
 
         # Distance computation
         sections = np.array([section, section, section, section_neutral], dtype=np.float64) * 1e-6  # surfaces (m2)
         radius = np.sqrt(sections / PI)  # radius (m)
+        phase_radius, neutral_radius = radius[0], radius[3]
+        if line_type == LineType.TWISTED:
+            max_radii = external_diameter / 4
+            if phase_radius + neutral_radius > max_radii:
+                msg = (
+                    f"Conductors too big for 'twisted' line parameter of id {id!r}. Inequality "
+                    f"`neutral_radius + phase_radius <= external_diameter / 4` is not satisfied."
+                )
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_MODEL)
+        elif line_type == LineType.UNDERGROUND:
+            max_radii = external_diameter / 4 * np.sqrt(2)
+            if phase_radius + neutral_radius > max_radii:
+                msg = (
+                    f"Conductors too big for 'underground' line parameter of id {id!r}. Inequality "
+                    f"`neutral_radius + phase_radius <= external_diameter * sqrt(2) / 4` is not satisfied."
+                )
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_MODEL)
+            if phase_radius * 2 > max_radii:
+                msg = (
+                    f"Conductors too big for 'underground' line parameter of id {id!r}. Inequality "
+                    f"`phase_radius*2 <= external_diameter * sqrt(2) / 4` is not satisfied."
+                )
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_MODEL)
+        else:
+            pass  # TODO Overhead lines check
         gmr = radius * np.exp(-0.25)  # geometric mean radius (m)
         # distance between two wires (m)
         coord_new_dim = coord[:, None, :]
@@ -488,7 +598,7 @@ class LineParameters(Identifiable, JsonMixin):
         y_shunt[mask_diagonal] = np.einsum("ij->i", y)
         y_shunt[mask_off_diagonal] = -y[mask_off_diagonal]
 
-        return z_line, y_shunt
+        return z_line, y_shunt, line_type, conductor_type, insulator_type, section
 
     @classmethod
     @deprecated(
@@ -539,8 +649,8 @@ class LineParameters(Identifiable, JsonMixin):
 
         # Check the user input and retrieve enumerated types
         line_type, conductor_type, section = name.split("_")
-        line_type = LineType.from_string(line_type)
-        conductor_type = ConductorType.from_string(conductor_type)
+        line_type = LineType(line_type)
+        conductor_type = ConductorType(conductor_type)
         insulator_type = InsulatorType.PVC
 
         section = float(section)
@@ -565,13 +675,19 @@ class LineParameters(Identifiable, JsonMixin):
         )
 
     @classmethod
+    # @deprecated(
+    #     "The method LineParameters.from_name_mv() is deprecated and will be removed in a future "
+    #     "version. Use LineParameters.from_catalogue() instead.",
+    #     category=FutureWarning,
+    # )
     @ureg_wraps(None, (None, None, "A"))
     def from_name_mv(cls, name: str, max_current: float | Q_[float] | None = None) -> Self:
-        """Method to get the electrical parameters of a MV line from its canonical name.
+        """Get the electrical parameters of a MV line from its canonical name (France specific model)
 
         Args:
             name:
-                The name of the line the parameters must be computed. E.g. "U_AL_150".
+                The canonical name of the line parameters. It must be in the format
+                `lineType_conductorType_crossSection`. E.g. "U_AL_150".
 
             max_current:
                 An optional maximum current loading of the line (A). It is not used in the load flow.
@@ -587,32 +703,264 @@ class LineParameters(Identifiable, JsonMixin):
 
         # Check the user input and retrieve enumerated types
         line_type, conductor_type, section = name.split("_")
-        line_type = LineType.from_string(string=line_type)
-        conductor_type = ConductorType.from_string(conductor_type)
+        line_type = LineType(line_type)
+        conductor_type = ConductorType(conductor_type)
         section = Q_(float(section), "mm**2")
 
         r = RHO[conductor_type] / section
-        x = CX[line_type]
-        if type == LineType.OVERHEAD:
+        if line_type == LineType.OVERHEAD:
             c_b1 = Q_(50, "µF/km")
             c_b2 = Q_(0, "µF/(km*mm**2)")
-        elif type == LineType.TWISTED:
-            # Twisted line
+            x = Q_(0.35, "ohm/km")
+        elif line_type == LineType.TWISTED:
             c_b1 = Q_(1750, "µF/km")
             c_b2 = Q_(5, "µF/(km*mm**2)")
-        else:
+            x = Q_(0.1, "ohm/km")
+        elif line_type == LineType.UNDERGROUND:
             if section <= Q_(50, "mm**2"):
                 c_b1 = Q_(1120, "µF/km")
                 c_b2 = Q_(33, "µF/(km*mm**2)")
             else:
                 c_b1 = Q_(2240, "µF/km")
                 c_b2 = Q_(15, "µF/(km*mm**2)")
+            x = Q_(0.1, "ohm/km")
+        else:
+            msg = f"The line type {line_type!r} of the line {name!r} is unknown."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_TYPE)
         b = (c_b1 + c_b2 * section) * 1e-4 * OMEGA
         b = b.to("S/km")
 
         z_line = (r + x * 1j) * np.eye(3, dtype=np.float64)  # in ohms/km
         y_shunt = b * 1j * np.eye(3, dtype=np.float64)  # in siemens/km
         return cls(name, z_line=z_line, y_shunt=y_shunt, max_current=max_current)
+
+    #
+    # Catalogue Mixin
+    #
+    @classmethod
+    def catalogue_path(cls) -> Path:
+        return Path(resources.files("roseau.load_flow") / "data" / "lines").expanduser().absolute()
+
+    @classmethod
+    def catalogue_data(cls) -> pd.DataFrame:
+        file = cls.catalogue_path() / "Catalogue.csv"
+        return pd.read_csv(file, parse_dates=False).fillna({"insulator": ""})
+
+    @classmethod
+    def _get_catalogue(
+        cls,
+        name: str | re.Pattern[str] | None,
+        line_type: str | None,
+        conductor_type: str | None,
+        insulator_type: str | None,
+        section: float | None,
+        raise_if_not_found: bool,
+    ) -> tuple[pd.DataFrame, str]:
+        catalogue_data = cls.catalogue_data()
+
+        # Filter on strings/regular expressions
+        query_msg_list = []
+        for value, column_name, display_name, display_name_plural in [
+            (name, "name", "name", "names"),
+        ]:
+            if value is None:
+                continue
+
+            mask = cls._filter_catalogue_str(value, strings=catalogue_data[column_name])
+            if raise_if_not_found and mask.sum() == 0:
+                cls._raise_not_found_in_catalogue(
+                    value=repr(value),
+                    name=display_name,
+                    name_plural=display_name_plural,
+                    strings=catalogue_data[column_name],
+                    query_msg_list=query_msg_list,
+                )
+            catalogue_data = catalogue_data.loc[mask, :]
+            query_msg_list.append(f"{display_name}={value!r}")
+
+        # Filter on enumerated types
+        for value, column_name, display_name, enum_class in (
+            (line_type, "type", "line_type", LineType),
+            (conductor_type, "material", "conductor_type", ConductorType),
+            (insulator_type, "insulator", "insulator_type", InsulatorType),
+        ):
+            if value is None:
+                continue
+
+            enum_series = catalogue_data[column_name].apply(enum_class)
+            try:
+                mask = enum_series == enum_class(value)
+            except RoseauLoadFlowException:
+                mask = pd.Series(False, index=catalogue_data.index)
+            if raise_if_not_found and mask.sum() == 0:
+                cls._raise_not_found_in_catalogue(
+                    value=repr(value),
+                    name=display_name,
+                    name_plural=display_name + "s",
+                    strings=enum_series,
+                    query_msg_list=query_msg_list,
+                )
+            catalogue_data = catalogue_data.loc[mask, :]
+            query_msg_list.append(f"{display_name}={value!r}")
+
+        # Filter on floats
+        for value, column_name, display_name, display_name_plural, unit in [
+            (section, "section", "cross-section", "cross-sections", "mm²"),
+        ]:
+            if value is None:
+                continue
+
+            mask = np.isclose(catalogue_data[column_name], value)
+            if raise_if_not_found and mask.sum() == 0:
+                cls._raise_not_found_in_catalogue(
+                    value=f"{value:.1f} {unit}",
+                    name=display_name,
+                    name_plural=display_name_plural,
+                    strings=catalogue_data[column_name].apply(lambda x: f"{x:.1f} {unit}"),  # noqa: B023
+                    query_msg_list=query_msg_list,
+                )
+            catalogue_data = catalogue_data.loc[mask, :]
+            query_msg_list.append(f"{display_name}={value!r} {unit}")
+
+        return catalogue_data, ", ".join(query_msg_list)
+
+    @classmethod
+    @ureg_wraps(None, (None, None, None, None, None, "mm²", None))
+    def from_catalogue(
+        cls,
+        name: str | re.Pattern[str] | None = None,
+        line_type: str | None = None,
+        conductor_type: str | None = None,
+        insulator_type: str | None = None,
+        section: float | Q_[float] | None = None,
+        id: Id | None = None,
+    ) -> Self:
+        """Create line parameters from a catalogue.
+
+        Args:
+            name:
+                The name of the line parameters to get from the catalogue. It can be a regular
+                expression.
+
+            line_type:
+                The type of the line parameters to get. It can be ``"overhead"``, ``"twisted"``, or
+                ``"underground"``. See also :class:`~roseau.load_flow.LineType`.
+
+            conductor_type:
+                The type of the conductor material (Al, Cu, ...). See also
+                :class:`~roseau.load_flow.ConductorType`.
+
+            insulator_type:
+                The type of insulator. See also :class:`~roseau.load_flow.InsulatorType`.
+
+            section:
+                The cross-section surface area of the phases (mm²).
+
+            id:
+                A unique ID for the created line parameters object (optional). If ``None``
+                (default), the id of the created object will be its name in the catalogue.
+
+        Returns:
+            The created line parameters.
+        """
+        catalogue_data, query_info = cls._get_catalogue(
+            name=name,
+            line_type=line_type,
+            conductor_type=conductor_type,
+            insulator_type=insulator_type,
+            section=section,
+            raise_if_not_found=True,
+        )
+
+        cls._assert_one_found(
+            found_data=catalogue_data["name"].tolist(), display_name="line parameters", query_info=query_info
+        )
+        idx = catalogue_data.index[0]
+        name = str(catalogue_data.at[idx, "name"])
+        r = catalogue_data.at[idx, "r"]
+        x = catalogue_data.at[idx, "x"]
+        b = catalogue_data.at[idx, "b"]
+        line_type = LineType(catalogue_data.at[idx, "type"])
+        conductor_type = ConductorType(catalogue_data.at[idx, "material"])
+        insulator_type = InsulatorType(catalogue_data.at[idx, "insulator"])
+        section = catalogue_data.at[idx, "section"]
+        max_current = catalogue_data.at[idx, "maximal_current"]
+        if pd.isna(max_current):
+            max_current = None
+        z_line = (r + x * 1j) * np.eye(3, dtype=np.complex128)
+        y_shunt = (b * 1j) * np.eye(3, dtype=np.complex128)
+        if id is None:
+            id = name
+        return cls(
+            id=id,
+            z_line=z_line,
+            y_shunt=y_shunt,
+            max_current=max_current,
+            line_type=line_type,
+            conductor_type=conductor_type,
+            insulator_type=insulator_type,
+            section=section,
+        )
+
+    @classmethod
+    @ureg_wraps(None, (None, None, None, None, None, "mm²"))
+    def get_catalogue(
+        cls,
+        name: str | re.Pattern[str] | None = None,
+        line_type: str | None = None,
+        conductor_type: str | None = None,
+        insulator_type: str | None = None,
+        section: float | Q_[float] | None = None,
+    ) -> pd.DataFrame:
+        """Get the catalogue of available lines.
+
+        You can use the parameters below to filter the catalogue. If you do not specify any
+        parameter, all the catalogue will be returned.
+
+        Args:
+            name:
+                The name of the line parameters to get from the catalogue. It can be a regular
+                expression.
+
+            line_type:
+                The type of the line parameters to get. It can be ``"overhead"``, ``"twisted"``, or
+                ``"underground"``. See also :class:`~roseau.load_flow.LineType`.
+
+            conductor_type:
+                The type of the conductor material (Al, Cu, ...). See also
+                :class:`~roseau.load_flow.ConductorType`.
+
+            insulator_type:
+                The type of insulator. See also :class:`~roseau.load_flow.InsulatorType`.
+
+            section:
+                The cross-section surface area of the phases (mm²).
+
+        Returns:
+            The catalogue data as a dataframe.
+        """
+        catalogue_data, _ = cls._get_catalogue(
+            name=name,
+            line_type=line_type,
+            conductor_type=conductor_type,
+            insulator_type=insulator_type,
+            section=section,
+            raise_if_not_found=False,
+        )
+        return catalogue_data.rename(
+            columns={
+                "name": "Name",
+                "r": "Resistance (ohm/km)",
+                "x": "Reactance (ohm/km)",
+                "b": "Susceptance (µS/km)",
+                "maximal_current": "Maximal current (A)",
+                "type": "Line type",
+                "material": "Conductor material",
+                "insulator": "Insulator type",
+                "section": "Cross-section (mm²)",
+            }
+        ).set_index("Name")
 
     #
     # Json Mixin interface
@@ -630,7 +978,19 @@ class LineParameters(Identifiable, JsonMixin):
         """
         z_line = np.array(data["z_line"][0]) + 1j * np.array(data["z_line"][1])
         y_shunt = np.array(data["y_shunt"][0]) + 1j * np.array(data["y_shunt"][1]) if "y_shunt" in data else None
-        return cls(id=data["id"], z_line=z_line, y_shunt=y_shunt, max_current=data.get("max_current"))
+        line_type = LineType(data["line_type"]) if "line_type" in data else None
+        conductor_type = ConductorType(data["conductor_type"]) if "conductor_type" in data else None
+        insulator_type = InsulatorType(data["insulator_type"]) if "insulator_type" in data else None
+        return cls(
+            id=data["id"],
+            z_line=z_line,
+            y_shunt=y_shunt,
+            max_current=data.get("max_current"),
+            line_type=line_type,
+            conductor_type=conductor_type,
+            insulator_type=insulator_type,
+            section=data.get("section"),
+        )
 
     def to_dict(self, *, _lf_only: bool = False) -> JsonDict:
         """Return the line parameters information as a dictionary format."""
@@ -639,6 +999,14 @@ class LineParameters(Identifiable, JsonMixin):
             res["y_shunt"] = [self._y_shunt.real.tolist(), self._y_shunt.imag.tolist()]
         if not _lf_only and self.max_current is not None:
             res["max_current"] = self.max_current.magnitude
+        if not _lf_only and self._line_type is not None:
+            res["line_type"] = self._line_type.name
+        if not _lf_only and self._conductor_type is not None:
+            res["conductor_type"] = self._conductor_type.name
+        if not _lf_only and self._insulator_type is not None:
+            res["insulator_type"] = self._insulator_type.name
+        if not _lf_only and self._section is not None:
+            res["section"] = self._section
         return res
 
     def _results_to_dict(self, warning: bool) -> NoReturn:

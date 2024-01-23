@@ -1,10 +1,9 @@
-exclude: ^.idea/|^conda/meta.yaml
+exclude: ^.idea/|.vscode/|^conda/meta.yaml
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0
     hooks:
       - id: check-json
-        exclude: ^.vscode/
       - id: check-merge-conflict
       - id: check-toml
       - id: check-yaml
@@ -35,4 +34,3 @@ repos:
     hooks:
       - id: prettier
         args: ["--print-width", "120"]
-        exclude: ^.vscode/
