@@ -3,8 +3,42 @@
 ## Unreleased
 
 - {gh-pr}`168` {gh-issue}`166` Fix initial potentials propagation.
+- {gh-pr}`167` {gh-issue}`161` Add a catalogue of lines using the IEC standards. You can use the method
+  `LineParameters.get_catalogue()` to get a data frame of the available lines and the method
+  `LineParameters.from_catalogue()` to create a line from the catalogue. Several line types, conductor
+  material, and insulation types have been updated. Physical constants have been updated to match the
+  IEC standards where applicable.
+- {gh-pr}`167` The class `LineParameters` now takes optional arguments `line_type`, `conductor_type`,
+  `insulator_type` and `section`. These parameters are accessible as properties. They are filled
+  automatically when creating a line from the catalogue or from a geometry.
+- {gh-pr}`167` Replace all `print_catalogue()` methods by `get_catalogue()` methods that return a
+  data frame instead of printing the catalogue to the console.
+- {gh-pr}`167` Enumeration classes no longer have a `from_string` method, you can call the enumeration
+  class directly with the string value to get the corresponding enumeration member. Case insensitive
+  behavior is preserved.
+- {gh-pr}`167` {gh-issue}`122` Add checks on line height and diameter in the `LineParameters.from_geometry()`
+  alternative constructor. This method will try to guess a default conductor and insulation type if
+  none is provided.
+- {gh-pr}`163` **BREAKING CHANGE:** roseau-load-flow is no longer a SaaS project. Starting with version
+  0.7.0, the software is distributed as a standalone Python package. You need a license to use it for
+  commercial purposes. See the documentation for more details. This comes with a huge performance
+  improvement but requires a breaking change to the API:
+  - The `ElectricalNetwork.solve_load_flow()` method no longer takes an `auth` argument.
+  - To activate the license, you need to call `roseau.load_flow.activate_license("MY LICENSE KEY")`
+    or set the environment variable `ROSEAU_LOAD_FLOW_LICENSE_KEY` (preferred) before calling
+    `ElectricalNetwork.solve_load_flow()`. More information in the documentation.
+  - Several methods on the `FlexibleParameter` class that previously required `auth` are changed. Make
+    sure to follow the documentation to update your code.
 - {gh-pr}`163` {gh-issue}`158` Fix `ElectricalNetwork.res_transformers` returning an empty dataframe
   when max_power is not set.
+- {gh-pr}`163` Several unused exception codes were removed. An `EMPTY_NETWORK` code was added to indicate
+  that a network is being created with no elements.
+- {gh-pr}`163` Remove the `ElectricalNetwork.res_info` attribute. `ElectricalNetwork.solve_load_flow()` now
+  returns the tuple (number of iterations, residual).
+- {gh-pr}`163` Remove the `Bus.clear_short_circuits()` and `ElectricalNetwork.clear_short_circuits()`
+  methods. It is currently not possible to clear short-circuits from the network.
+- {gh-pr}`163` Improve performance of network creation and results access.
+- {gh-pr}`163` Attributes `phases` and `bus` are now read-only on all elements.
 - {gh-pr}`151` Require Python 3.10 or newer.
 
 ## Version 0.6.0
