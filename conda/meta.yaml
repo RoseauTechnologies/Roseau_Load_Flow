@@ -1,6 +1,6 @@
 # prettier-ignore
 {% set name = "roseau-load-flow" %}
-{% set version = "0.6.0" %}
+{% set version = "0.7.0-alpha" %}
 
 package:
   name: "{{ name|lower }}"
@@ -32,11 +32,12 @@ requirements:
     - shapely >=2.0.0
     - regex >=2022.1.18
     - pint >=0.21.0
-    - requests >=2.28.1
-    - typing-extensions >=4.6.2
-    - rich >=13.5.1
-    - matplotlib >=3.7.2
+    - typing_extensions >=4.6.2
+    - pyproj >=3.3.0
+    - matplotlib-base >=3.7.2
     - networkx >=3.0.0
+    - certifi >=2023.5.7
+    - platformdirs >=4.0.0
 
 test:
   imports:
@@ -45,13 +46,17 @@ test:
     - roseau.load_flow.io
     - roseau.load_flow.models
     - roseau.load_flow.utils
+  commands:
+    - pip check
+  requires:
+    - pip
 
 about:
   home: https://github.com/RoseauTechnologies/Roseau_Load_Flow/
   license: BSD-3-Clause
   license_file: LICENSE.md
   summary: Highly capable three-phase load flow solver of Roseau Technologies.
-  doc_url: https://roseautechnologies.github.io/Roseau_Load_Flow/
+  doc_url: https://roseau-load-flow.roseautechnologies.com/
 
 extra:
   recipe-maintainers:

@@ -1,6 +1,6 @@
 import logging
 import warnings
-from typing import Any, Optional, Union
+from typing import Any
 
 import numpy as np
 from shapely import LineString, Point
@@ -14,6 +14,7 @@ from roseau.load_flow.models.lines.parameters import LineParameters
 from roseau.load_flow.models.sources import VoltageSource
 from roseau.load_flow.typing import ComplexArray, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
+from roseau.load_flow_engine.cy_engine import CyShuntLine, CySimplifiedLine, CySwitch
 
 logger = logging.getLogger(__name__)
 
@@ -38,8 +39,8 @@ class Switch(AbstractBranch):
         bus1: Bus,
         bus2: Bus,
         *,
-        phases: Optional[str] = None,
-        geometry: Optional[Point] = None,
+        phases: str | None = None,
+        geometry: Point | None = None,
         **kwargs: Any,
     ) -> None:
         """Switch constructor.
@@ -83,9 +84,17 @@ class Switch(AbstractBranch):
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_GEOMETRY_TYPE)
         super().__init__(id=id, phases1=phases, phases2=phases, bus1=bus1, bus2=bus2, geometry=geometry, **kwargs)
-        self.phases = phases
+        self._phases = phases
         self._check_elements()
         self._check_loop()
+        self._n = len(self._phases)
+        self._cy_element = CySwitch(self._n)
+        self._cy_connect()
+
+    @property
+    def phases(self) -> str:
+        """The phases of the source."""
+        return self._phases
 
     def _check_loop(self) -> None:
         """Check that there are no switch loop, raise an exception if it is the case"""
@@ -95,7 +104,7 @@ class Switch(AbstractBranch):
             element = elements.pop(-1)
             visited_1.add(element)
             for e in element._connected_elements:
-                if e not in visited_1 and (isinstance(e, (Bus, Switch))) and e != self:
+                if e not in visited_1 and (isinstance(e, Bus | Switch)) and e != self:
                     elements.append(e)
         visited_2: set[Element] = set()
         elements = [self.bus2]
@@ -103,7 +112,7 @@ class Switch(AbstractBranch):
             element = elements.pop(-1)
             visited_2.add(element)
             for e in element._connected_elements:
-                if e not in visited_2 and (isinstance(e, (Bus, Switch))) and e != self:
+                if e not in visited_2 and (isinstance(e, Bus | Switch)) and e != self:
                     elements.append(e)
         if visited_1.intersection(visited_2):
             msg = f"There is a loop of switch involving the switch {self.id!r}. It is not allowed."
@@ -144,10 +153,10 @@ class Line(AbstractBranch):
         bus2: Bus,
         *,
         parameters: LineParameters,
-        length: Union[float, Q_[float]],
-        phases: Optional[str] = None,
-        ground: Optional[Ground] = None,
-        geometry: Optional[LineString] = None,
+        length: float | Q_[float],
+        phases: str | None = None,
+        ground: Ground | None = None,
+        geometry: LineString | None = None,
         **kwargs: Any,
     ) -> None:
         """Line constructor.
@@ -163,11 +172,12 @@ class Line(AbstractBranch):
                 The second bus (aka `"to_bus"`) to connect to the line.
 
             parameters:
-                Parameters defining the electrical model of the line. This is an instance of the
-                :class:`LineParameters` class and can be used by multiple lines.
+                Parameters defining the electric model of the line using its impedance and shunt
+                admittance matrices. This is an instance of the :class:`LineParameters` class and
+                can be used by multiple lines.
 
             length:
-                The length of the line in km.
+                The length of the line (in km).
 
             phases:
                 The phases of the line. A string like ``"abc"`` or ``"an"`` etc. The order of the
@@ -203,7 +213,7 @@ class Line(AbstractBranch):
 
         self._initialized = False
         super().__init__(id, bus1, bus2, phases1=phases, phases2=phases, geometry=geometry, **kwargs)
-        self.phases = phases
+        self._phases = phases
         self.ground = ground
         self.length = length
         self.parameters = parameters
@@ -224,14 +234,35 @@ class Line(AbstractBranch):
             # Connect the ground
             self._connect(self.ground)
 
+        self._n = len(self._phases)
+        if parameters.with_shunt:
+            self._cy_element = CyShuntLine(
+                n=self._n,
+                y_shunt=parameters._y_shunt.reshape(self._n * self._n) * self._length,
+                z_line=parameters._z_line.reshape(self._n * self._n) * self._length,
+            )
+        else:
+            self._cy_element = CySimplifiedLine(
+                n=self._n, z_line=parameters._z_line.reshape(self._n * self._n) * self._length
+            )
+        self._cy_connect()
+        if parameters.with_shunt:
+            ground._cy_element.connect(self._cy_element, [(0, self._n + self._n)])
+
+    @property
+    def phases(self) -> str:
+        """The phases of the source."""
+        return self._phases
+
     @property
     @ureg_wraps("km", (None,))
     def length(self) -> Q_[float]:
+        """The length of the line (in km)."""
         return self._length
 
     @length.setter
     @ureg_wraps(None, (None, "km"))
-    def length(self, value: Union[float, Q_[float]]) -> None:
+    def length(self, value: float | Q_[float]) -> None:
         if value <= 0:
             msg = f"A line length must be greater than 0. {value:.2f} km provided."
             logger.error(msg)
@@ -239,15 +270,19 @@ class Line(AbstractBranch):
         self._length = value
         self._invalidate_network_results()
 
+        if self._cy_element is not None:
+            # Reassign the same parameters with the new length
+            self.parameters = self.parameters
+
     @property
     def parameters(self) -> LineParameters:
-        """The parameters of the line."""
+        """The parameters defining the impedance and shunt admittance matrices of line model."""
         return self._parameters
 
     @parameters.setter
     def parameters(self, value: LineParameters) -> None:
         shape = (len(self.phases),) * 2
-        if value.z_line.shape != shape:
+        if value._z_line.shape != shape:
             msg = f"Incorrect z_line dimensions for line {self.id!r}: {value.z_line.shape} instead of {shape}"
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Z_LINE_SHAPE)
@@ -257,7 +292,7 @@ class Line(AbstractBranch):
                 msg = "Cannot set line parameters with a shunt to a line that does not have shunt components."
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_MODEL)
-            if value.y_shunt.shape != shape:
+            if value._y_shunt.shape != shape:
                 msg = f"Incorrect y_shunt dimensions for line {self.id!r}: {value.y_shunt.shape} instead of {shape}"
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Y_SHUNT_SHAPE)
@@ -273,21 +308,32 @@ class Line(AbstractBranch):
         self._parameters = value
         self._invalidate_network_results()
 
+        if self._cy_element is not None:
+            if value.with_shunt:
+                self._cy_element.update_line_parameters(
+                    (value.y_shunt.reshape(self._n * self._n) * self.length).m_as("S"),
+                    (value.z_line.reshape(self._n * self._n) * self.length).m_as("ohm"),
+                )
+            else:
+                self._cy_element.update_line_parameters(
+                    (value.z_line.reshape(self._n * self._n) * self.length).m_as("ohm")
+                )
+
     @property
     @ureg_wraps("ohm", (None,))
     def z_line(self) -> Q_[ComplexArray]:
-        """Impedance of the line in Ohm"""
+        """Impedance of the line (in Ohm)."""
         return self.parameters._z_line * self._length
 
     @property
     @ureg_wraps("S", (None,))
     def y_shunt(self) -> Q_[ComplexArray]:
-        """Shunt admittance of the line in Siemens"""
+        """Shunt admittance of the line (in Siemens)."""
         return self.parameters._y_shunt * self._length
 
     @property
-    def max_current(self) -> Optional[Q_[float]]:
-        """The maximum current loading of the line in A."""
+    def max_current(self) -> Q_[float] | None:
+        """The maximum current loading of the line (in A)."""
         # Do not add a setter. The user must know that if they change the max_current, it changes
         # for all lines that share the parameters. It is better to set it on the parameters.
         return self.parameters.max_current
@@ -309,7 +355,7 @@ class Line(AbstractBranch):
     @property
     @ureg_wraps("A", (None,))
     def res_series_currents(self) -> Q_[ComplexArray]:
-        """Get the current in the series elements of the line (A)."""
+        """Get the current in the series elements of the line (in A)."""
         return self._res_series_currents_getter(warning=True)
 
     def _res_series_power_losses_getter(self, warning: bool) -> ComplexArray:
@@ -319,7 +365,7 @@ class Line(AbstractBranch):
     @property
     @ureg_wraps("VA", (None,))
     def res_series_power_losses(self) -> Q_[ComplexArray]:
-        """Get the power losses in the series elements of the line (VA)."""
+        """Get the power losses in the series elements of the line (in VA)."""
         return self._res_series_power_losses_getter(warning=True)
 
     def _res_shunt_values_getter(self, warning: bool) -> tuple[ComplexArray, ComplexArray, ComplexArray, ComplexArray]:
@@ -343,7 +389,7 @@ class Line(AbstractBranch):
     @property
     @ureg_wraps(("A", "A"), (None,))
     def res_shunt_currents(self) -> tuple[Q_[ComplexArray], Q_[ComplexArray]]:
-        """Get the currents in the shunt elements of the line (A)."""
+        """Get the currents in the shunt elements of the line (in A)."""
         return self._res_shunt_currents_getter(warning=True)
 
     def _res_shunt_power_losses_getter(self, warning: bool) -> ComplexArray:
@@ -355,7 +401,7 @@ class Line(AbstractBranch):
     @property
     @ureg_wraps("VA", (None,))
     def res_shunt_power_losses(self) -> Q_[ComplexArray]:
-        """Get the power losses in the shunt elements of the line (VA)."""
+        """Get the power losses in the shunt elements of the line (in VA)."""
         return self._res_shunt_power_losses_getter(warning=True)
 
     def _res_power_losses_getter(self, warning: bool) -> ComplexArray:
@@ -366,11 +412,11 @@ class Line(AbstractBranch):
     @property
     @ureg_wraps("VA", (None,))
     def res_power_losses(self) -> Q_[ComplexArray]:
-        """Get the power losses in the line (VA)."""
+        """Get the power losses in the line (in VA)."""
         return self._res_power_losses_getter(warning=True)
 
     @property
-    def res_violated(self) -> Optional[bool]:
+    def res_violated(self) -> bool | None:
         """Whether the line current exceeds the maximum current (loading > 100%).
 
         Returns ``None`` if the maximum current is not set.

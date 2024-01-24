@@ -646,8 +646,7 @@ load = PowerLoad(id="load", bus=bus_lv, phases="abcn", powers=[3e3, 3e3, 3e3])
 
 # Create the network and solve the load flow
 en = ElectricalNetwork.from_element(bus_mv)
-auth = ("username", "password")
-en.solve_load_flow(auth=auth)
+en.solve_load_flow()
 
 # The current flowing into the transformer from the MV bus
 en.res_branches[["current1"]].dropna().transform([np.abs, ft.partial(np.angle, deg=True)])

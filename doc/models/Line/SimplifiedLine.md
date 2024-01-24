@@ -97,8 +97,7 @@ line.y_shunt
 
 # Create a network and solve a load flow
 en = ElectricalNetwork.from_element(bus1)
-auth = ("username", "password")
-en.solve_load_flow(auth=auth)
+en.solve_load_flow()
 
 # The current flowing into the line from bus1
 en.res_branches[["current1"]].transform([np.abs, ft.partial(np.angle, deg=True)])

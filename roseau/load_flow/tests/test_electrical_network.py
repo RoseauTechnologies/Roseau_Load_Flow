@@ -2,14 +2,12 @@ import itertools as it
 import re
 import warnings
 from contextlib import contextmanager
-from urllib.parse import urljoin
 
 import geopandas as gpd
 import networkx as nx
 import numpy as np
 import pandas as pd
 import pytest
-import requests_mock
 from pandas.testing import assert_frame_equal
 from shapely import LineString, Point
 
@@ -29,7 +27,7 @@ from roseau.load_flow.models import (
 )
 from roseau.load_flow.network import ElectricalNetwork
 from roseau.load_flow.units import Q_
-from roseau.load_flow.utils import BranchTypeDtype, PhaseDtype, VoltagePhaseDtype, console
+from roseau.load_flow.utils import BranchTypeDtype, PhaseDtype, VoltagePhaseDtype
 
 
 @pytest.fixture()
@@ -102,15 +100,6 @@ def single_phase_network() -> ElectricalNetwork:
 @pytest.fixture()
 def good_json_results() -> dict:
     return {
-        "info": {
-            "solver": "newton",
-            "tolerance": 1e-06,
-            "max_iterations": 20,
-            "warm_start": True,
-            "status": "success",
-            "iterations": 1,
-            "residual": 6.296829377361313e-14,
-        },
         "buses": [
             {
                 "id": "bus0",
@@ -169,10 +158,10 @@ def good_json_results() -> dict:
                 "id": "vs",
                 "phases": "abcn",
                 "currents": [
-                    [-0.005000012500031251, 0.0],
+                    [-0.00500001250003125, -8.673617379884035e-19],
                     [0.0025000062499482426, 0.004330137844227901],
-                    [0.0025000062499482435, -0.004330137844227901],
-                    [1.3476481215690672e-13, -2.891210611954938e-19],
+                    [0.0025000062499482426, -0.0043301378442279],
+                    [1.3476481215690672e-13, -2.891203383964549e-19],
                 ],
             }
         ],
@@ -207,14 +196,29 @@ def test_connect_and_disconnect():
     line = Line(id="line", bus1=source_bus, bus2=load_bus, phases="abcn", parameters=lp, length=10)
     PotentialRef("pref", element=ground)
     en = ElectricalNetwork.from_element(source_bus)
+
+    # Connection of a new connected component
+    load_bus2 = Bus(id="load_bus2", phases="abcn")
+    ground2 = Ground("ground2")
+    ground2.connect(bus=load_bus2)
+    tp = TransformerParameters.from_catalogue(id="SE_Minera_A0Ak_50kVA")
+    Transformer(id="transfo", bus1=load_bus, bus2=load_bus2, parameters=tp)
+    with pytest.raises(RoseauLoadFlowException) as e:
+        en._check_validity(constructed=False)
+    assert "does not have a potential reference" in e.value.args[0]
+    assert e.value.args[1] == RoseauLoadFlowExceptionCode.NO_POTENTIAL_REFERENCE
+    PotentialRef("pref2", element=ground2)  # Add potential ref
+    en._check_validity(constructed=False)
+
+    # Disconnection of a load
     assert load.network == en
     load.disconnect()
     assert load.network is None
     assert load.bus is None
     with pytest.raises(RoseauLoadFlowException) as e:
         load.to_dict()
-    assert e.value.args[0] == "The load 'power load' is disconnected and cannot be used anymore."
-    assert e.value.args[1] == RoseauLoadFlowExceptionCode.DISCONNECTED_ELEMENT
+    assert e.value.msg == "The load 'power load' is disconnected and cannot be used anymore."
+    assert e.value.code == RoseauLoadFlowExceptionCode.DISCONNECTED_ELEMENT
     new_load = PowerLoad(id="power load", phases="abcn", bus=load_bus, powers=[100 + 0j, 100 + 0j, 100 + 0j])
     assert new_load.network == en
 
@@ -225,8 +229,8 @@ def test_connect_and_disconnect():
     assert vs.bus is None
     with pytest.raises(RoseauLoadFlowException) as e:
         vs.to_dict()
-    assert e.value.args[0] == "The voltage source 'vs' is disconnected and cannot be used anymore."
-    assert e.value.args[1] == RoseauLoadFlowExceptionCode.DISCONNECTED_ELEMENT
+    assert e.value.msg == "The voltage source 'vs' is disconnected and cannot be used anymore."
+    assert e.value.code == RoseauLoadFlowExceptionCode.DISCONNECTED_ELEMENT
 
     # Bad key
     with pytest.raises(RoseauLoadFlowException) as e:
@@ -234,11 +238,10 @@ def test_connect_and_disconnect():
     assert e.value.msg == "Ground(id='a separate ground element') is not a valid load or source."
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT
 
-    # Adding ground => impossible
-    ground2 = Ground("ground2")
+    # Adding unknown element
     with pytest.raises(RoseauLoadFlowException) as e:
-        en._connect_element(ground2)
-    assert e.value.msg == "Only lines, loads, buses and sources can be added to the network."
+        en._connect_element(3)
+    assert "Unknown element" in e.value.msg
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT
 
     # Remove line => impossible
@@ -272,7 +275,7 @@ def test_recursive_connect_disconnect():
     new_load2 = PowerLoad(id="new_load2", bus=new_bus2, phases="abcn", powers=Q_([100, 0, 0], "VA"))
     new_bus = Bus(id="new_bus", phases="abcn")
     new_load = PowerLoad(id="new_load", bus=new_bus, phases="abcn", powers=Q_([100, 0, 0], "VA"))
-    lp = LineParameters("S_AL_240_without_shunt", z_line=Q_(0.1 * np.eye(4), "ohm/km"), y_shunt=None)
+    lp = LineParameters("U_AL_240_without_shunt", z_line=Q_(0.1 * np.eye(4), "ohm/km"), y_shunt=None)
     new_line2 = Line(
         id="new_line2",
         bus1=new_bus2,
@@ -377,7 +380,7 @@ def test_recursive_connect_disconnect_ground():
     assert new_load2.id not in en.loads
 
     lp = LineParameters(
-        "S_AL_240_with_shunt", z_line=Q_(0.1 * np.eye(4), "ohm/km"), y_shunt=Q_(0.1 * np.eye(4), "S/km")
+        "U_AL_240_with_shunt", z_line=Q_(0.1 * np.eye(4), "ohm/km"), y_shunt=Q_(0.1 * np.eye(4), "S/km")
     )
     new_line2 = Line(
         id="new_line2",
@@ -515,139 +518,6 @@ def test_bad_networks():
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_BUS_ID
 
 
-def test_solve_load_flow(small_network, good_json_results):
-    load: PowerLoad = small_network.loads["load"]
-    load_bus = small_network.buses["bus1"]
-
-    # Good result
-    # Request the server
-    solve_url = urljoin(ElectricalNetwork._DEFAULT_BASE_URL, "solve/")
-    with requests_mock.Mocker() as m:
-        m.post(solve_url, status_code=200, json=good_json_results, headers={"content-type": "application/json"})
-        small_network.solve_load_flow(auth=("", ""))
-    assert len(load_bus.res_potentials) == 4
-    assert small_network.results_to_dict() == good_json_results
-
-    # No convergence
-    load.powers = [10000000, 100, 100]
-    json_result = {
-        "info": {
-            "status": "failure",
-            "solver": "newton",
-            "iterations": 50,
-            "wam_start": False,
-            "tolerance": 1e-06,
-            "residual": 14037.977318668112,
-            "max_iterations": 20,
-        },
-        "buses": [
-            {
-                "id": "bus0",
-                "phases": "abcn",
-                "potentials": [
-                    [20000.0, 0.0],
-                    [-10000.0, -17320.508076],
-                    [-10000.0, 17320.508076],
-                    [0.0, 0.0],
-                ],
-            },
-            {
-                "id": "bus1",
-                "phases": "abcn",
-                "potentials": [
-                    [110753.81558442864, 1.5688245436058308e-26],
-                    [-9999.985548801811, -17320.50568183019],
-                    [-9999.985548801811, 17320.50568183019],
-                    [-90753.844486825, -2.6687106473172017e-26],
-                ],
-            },
-        ],
-        "branches": [
-            {
-                "id": "line",
-                "phases1": "abcn",
-                "phases2": "abcn",
-                "currents1": [[0.0, 0.0], [0.0, 0.0], [0.0, 0.0], [0.0, 0.0]],
-                "currents2": [[0.0, 0.0], [0.0, 0.0], [0.0, 0.0], [0.0, 0.0]],
-            }
-        ],
-        "loads": [
-            {
-                "id": "load",
-                "phases": "abcn",
-                "currents": [[0.0, 0.0], [0.0, 0.0], [0.0, 0.0], [0.0, 0.0]],
-            },
-        ],
-        "sources": [
-            {
-                "id": "vs",
-                "phases": "abcn",
-                "currents": [[0.0, 0.0], [0.0, 0.0], [0.0, 0.0], [0.0, 0.0]],
-            },
-        ],
-        "grounds": [
-            {
-                "id": "ground",
-                "potential": [1.3476526914363477e-12, 0.0],
-            }
-        ],
-        "potential_refs": [
-            {
-                "id": "pref",
-                "current": [0.0, 0.0],
-            },
-        ],
-    }
-    with requests_mock.Mocker() as m:
-        m.post(solve_url, status_code=200, json=json_result, headers={"content-type": "application/json"})
-        with pytest.raises(RoseauLoadFlowException) as e:
-            small_network.solve_load_flow(auth=("", ""))
-        assert "The load flow did not converge after 50 iterations" in e.value.msg
-        assert e.value.code == RoseauLoadFlowExceptionCode.NO_LOAD_FLOW_CONVERGENCE
-
-
-def test_solve_load_flow_error(small_network):
-    # Solve url
-    solve_url = urljoin(ElectricalNetwork._DEFAULT_BASE_URL, "solve/")
-
-    # Parse RLF error
-    json_result = {"msg": "toto", "code": "roseau.load_flow.bad_branch_type"}
-    with requests_mock.Mocker() as m:
-        m.post(solve_url, status_code=400, json=json_result, headers={"content-type": "application/json"})
-        with pytest.raises(RoseauLoadFlowException) as e:
-            small_network.solve_load_flow(auth=("", ""))
-    assert e.value.msg == json_result["msg"]
-    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_BRANCH_TYPE
-
-    # Load flow error (other than official exceptions of RoseauLoadFlowException)
-    json_result = {"msg": "Error while solving the load flow", "code": "load_flow_error"}
-    with requests_mock.Mocker() as m:
-        m.post(solve_url, status_code=400, json=json_result, headers={"content-type": "application/json"})
-        with pytest.raises(RoseauLoadFlowException) as e:
-            small_network.solve_load_flow(auth=("", ""))
-    assert json_result["msg"] in e.value.msg
-    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_REQUEST
-
-    # Authentication fail
-    json_result = {"detail": "not_authenticated"}
-    with requests_mock.Mocker() as m:
-        m.post(solve_url, status_code=401, json=json_result, headers={"content-type": "application/json"})
-        with pytest.raises(RoseauLoadFlowException) as e:
-            small_network.solve_load_flow(auth=("", ""))
-    assert "Authentication failed." in e.value.msg
-    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_REQUEST
-
-    # Bad request
-    json_result = {"msg": "Error while parsing the provided JSON", "code": "parse_error"}
-    with requests_mock.Mocker() as m:
-        m.post(solve_url, status_code=400, json=json_result, headers={"content-type": "application/json"})
-        with pytest.raises(RoseauLoadFlowException) as e:
-            small_network.solve_load_flow(auth=("", ""))
-    assert "There is a problem in the request" in e.value.msg
-    assert "Error while parsing the provided JSON" in e.value.msg
-    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_REQUEST
-
-
 def test_frame(small_network: ElectricalNetwork):
     # Buses
     buses_gdf = small_network.buses_frame
@@ -705,90 +575,18 @@ def test_frame(small_network: ElectricalNetwork):
     assert sources_df.index.name == "id"
 
 
-def test_frame_empty_network(monkeypatch):
-    # Test that we can create dataframes even if a certain element is not present in the network
-    monkeypatch.setattr(ElectricalNetwork, "_check_validity", lambda self, constructed: None)
-    monkeypatch.setattr(ElectricalNetwork, "_warn_invalid_results", lambda self: None)
-    empty_network = ElectricalNetwork(
-        buses={},
-        branches={},
-        loads={},
-        sources={},
-        grounds={},
-        potential_refs={},
-    )
-    # Buses
-    buses = empty_network.buses_frame
-    assert buses.shape == (0, 4)
-    assert buses.empty
-
-    # Branches
-    branches = empty_network.branches_frame
-    assert branches.shape == (0, 6)
-    assert branches.empty
-
-    # Transformers
-    transformers = empty_network.transformers_frame
-    assert transformers.shape == (0, 7)
-    assert transformers.empty
-
-    # Lines
-    lines = empty_network.lines_frame
-    assert lines.shape == (0, 6)
-    assert lines.empty
-
-    # Switches
-    switches = empty_network.switches_frame
-    assert switches.shape == (0, 4)
-    assert switches.empty
-
-    # Loads
-    loads = empty_network.loads_frame
-    assert loads.shape == (0, 2)
-    assert loads.empty
-
-    # Sources
-    sources = empty_network.sources_frame
-    assert sources.shape == (0, 2)
-    assert sources.empty
-
-    # Res buses
-    res_buses = empty_network.res_buses
-    assert res_buses.shape == (0, 1)
-    assert res_buses.empty
-    res_buses_voltages = empty_network.res_buses_voltages
-    assert res_buses_voltages.shape == (0, 4)
-    assert res_buses_voltages.empty
-
-    # Res branches
-    res_branches = empty_network.res_branches
-    assert res_branches.shape == (0, 7)
-    assert res_branches.empty
-
-    # Res transformers
-    res_transformers = empty_network.res_transformers
-    assert res_transformers.shape == (0, 8)
-    assert res_transformers.empty
-
-    # Res lines
-    res_lines = empty_network.res_lines
-    assert res_lines.shape == (0, 10)
-    assert res_lines.empty
-
-    # Res switches
-    res_switches = empty_network.res_switches
-    assert res_switches.shape == (0, 6)
-    assert res_switches.empty
-
-    # Res loads
-    res_loads = empty_network.res_loads
-    assert res_loads.shape == (0, 3)
-    assert res_loads.empty
-
-    # Res sources
-    res_sources = empty_network.res_sources
-    assert res_sources.shape == (0, 3)
-    assert res_sources.empty
+def test_empty_network():
+    with pytest.raises(RoseauLoadFlowException) as exc_info:
+        ElectricalNetwork(
+            buses={},
+            branches={},
+            loads={},
+            sources={},
+            grounds={},
+            potential_refs={},
+        )
+    assert exc_info.value.code == RoseauLoadFlowExceptionCode.EMPTY_NETWORK
+    assert exc_info.value.msg == "Cannot create a network without elements."
 
 
 def test_buses_voltages(small_network: ElectricalNetwork, good_json_results):
@@ -868,7 +666,7 @@ def test_buses_voltages(small_network: ElectricalNetwork, good_json_results):
     assert buses_voltages.shape == (6, 4)
     assert buses_voltages.index.names == ["bus_id", "phase"]
     assert list(buses_voltages.columns) == ["voltage", "min_voltage", "max_voltage", "violated"]
-    assert_frame_equal(buses_voltages, expected_buses_voltages)
+    assert_frame_equal(buses_voltages, expected_buses_voltages, check_exact=False)
 
 
 def test_to_from_dict_roundtrip(small_network: ElectricalNetwork):
@@ -900,58 +698,7 @@ def test_single_phase_network(single_phase_network: ElectricalNetwork):
     line = single_phase_network.branches["line"]
     load = single_phase_network.loads["load"]
 
-    json_results = {
-        "info": {
-            "solver": "newton",
-            "tolerance": 1e-06,
-            "max_iterations": 20,
-            "status": "success",
-            "iterations": 1,
-            "warm_start": True,
-            "residual": 1.3239929985697785e-13,
-        },
-        "buses": [
-            {
-                "id": "bus0",
-                "phases": "bn",
-                "potentials": [[19999.94999975, 0.0], [-0.050000250001249996, 0.0]],
-            },
-            {"id": "bus1", "phases": "bn", "potentials": [[19999.899999499998, 0.0], [0.0, 0.0]]},
-        ],
-        "branches": [
-            {
-                "id": "line",
-                "phases1": "bn",
-                "phases2": "bn",
-                "currents1": [[0.005000025000117603, 0.0], [-0.005000025000125, 0.0]],
-                "currents2": [[-0.005000025000117603, -0.0], [0.005000025000125, -0.0]],
-            }
-        ],
-        "loads": [
-            {
-                "id": "load",
-                "phases": "bn",
-                "currents": [[0.005000025000250002, -0.0], [-0.005000025000250002, 0.0]],
-            }
-        ],
-        "sources": [
-            {
-                "id": "vs",
-                "phases": "bn",
-                "currents": [[-0.005000025000125, 0.0], [0.005000025000125, 0.0]],
-            },
-        ],
-        "grounds": [
-            {"id": "ground", "potential": [0.0, 0.0]},
-        ],
-        "potential_refs": [
-            {"id": "pref", "current": [-1.2500243895541274e-13, 0.0]},
-        ],
-    }
-    solve_url = urljoin(ElectricalNetwork._DEFAULT_BASE_URL, "solve/")
-    with requests_mock.Mocker() as m:
-        m.post(solve_url, status_code=200, json=json_results, headers={"content-type": "application/json"})
-        single_phase_network.solve_load_flow(auth=("", ""))
+    single_phase_network.solve_load_flow()
 
     # Test results of elements
     # ------------------------
@@ -1145,6 +892,7 @@ def test_single_phase_network(single_phase_network: ElectricalNetwork):
             }
         )
         .set_index(["line_id", "phase"]),
+        check_exact=False,
     )
     # Switches results
     pd.testing.assert_frame_equal(
@@ -1229,8 +977,8 @@ def test_network_elements(small_network: ElectricalNetwork):
     # Connect the two networks
     with pytest.raises(RoseauLoadFlowException) as e:
         Switch("switch2", bus1=bus2, bus2=bus_vs)
-    assert e.value.args[0] == "The Bus 'bus_vs' is already assigned to another network."
-    assert e.value.args[1] == RoseauLoadFlowExceptionCode.SEVERAL_NETWORKS
+    assert e.value.msg == "The Bus 'bus_vs' is already assigned to another network."
+    assert e.value.code == RoseauLoadFlowExceptionCode.SEVERAL_NETWORKS
 
     # Every object have their good network after this failure
     for element in it.chain(
@@ -1251,7 +999,7 @@ def test_network_elements(small_network: ElectricalNetwork):
         assert element.network == small_network_2
 
 
-def test_network_results_warning(small_network: ElectricalNetwork, good_json_results, recwarn):  # noqa: C901
+def test_network_results_warning(small_network: ElectricalNetwork, recwarn):  # noqa: C901
     # network well-defined using the constructor
     for bus in small_network.buses.values():
         assert bus.network == small_network
@@ -1270,40 +1018,37 @@ def test_network_results_warning(small_network: ElectricalNetwork, good_json_res
     for bus in small_network.buses.values():
         with pytest.raises(RoseauLoadFlowException) as e:
             _ = bus.res_potentials
-        assert e.value.args[1] == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
+        assert e.value.code == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
         with pytest.raises(RoseauLoadFlowException) as e:
             _ = bus.res_voltages
-        assert e.value.args[1] == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
+        assert e.value.code == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
     for branch in small_network.branches.values():
         with pytest.raises(RoseauLoadFlowException) as e:
             _ = branch.res_currents
-        assert e.value.args[1] == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
+        assert e.value.code == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
     for load in small_network.loads.values():
         with pytest.raises(RoseauLoadFlowException) as e:
             _ = load.res_currents
-        assert e.value.args[1] == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
+        assert e.value.code == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
         if load.is_flexible and isinstance(load, PowerLoad):
             with pytest.raises(RoseauLoadFlowException) as e:
                 _ = load.res_flexible_powers
-            assert e.value.args[1] == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
+            assert e.value.code == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
     for source in small_network.sources.values():
         with pytest.raises(RoseauLoadFlowException) as e:
             _ = source.res_currents
-        assert e.value.args[1] == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
+        assert e.value.code == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
     for ground in small_network.grounds.values():
         with pytest.raises(RoseauLoadFlowException) as e:
             _ = ground.res_potential
-        assert e.value.args[1] == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
+        assert e.value.code == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
     for p_ref in small_network.potential_refs.values():
         with pytest.raises(RoseauLoadFlowException) as e:
             _ = p_ref.res_current
-        assert e.value.args[1] == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
+        assert e.value.code == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
 
     # Solve a load flow
-    solve_url = urljoin(ElectricalNetwork._DEFAULT_BASE_URL, "solve/")
-    with requests_mock.Mocker() as m:
-        m.post(solve_url, status_code=200, json=good_json_results, headers={"content-type": "application/json"})
-        small_network.solve_load_flow(auth=("", ""))
+    small_network.solve_load_flow()
 
     # No warning when getting results (they are up-to-date)
     recwarn.clear()
@@ -1818,7 +1563,7 @@ def test_load_flow_results_frames(small_network: ElectricalNetwork, good_json_re
         .astype({"potential_ref_id": object, "current": complex})
         .set_index(["potential_ref_id"])
     )
-    assert_frame_equal(small_network.res_potential_refs, expected_res_potential_refs)
+    assert_frame_equal(small_network.res_potential_refs, expected_res_potential_refs, check_exact=False)
 
     # No flexible loads
     assert small_network.res_loads_flexible_powers.empty
@@ -1861,72 +1606,74 @@ def test_load_flow_results_frames(small_network: ElectricalNetwork, good_json_re
     assert_frame_equal(small_network.res_loads_flexible_powers, expected_res_flex_powers, rtol=1e-4)
 
 
-def test_solver_warm_start(small_network: ElectricalNetwork, good_json_results):
+def test_solver_warm_start(small_network: ElectricalNetwork, good_json_results, monkeypatch):
     load: PowerLoad = small_network.loads["load"]
     load_bus = small_network.buses["bus1"]
-    solve_url = urljoin(ElectricalNetwork._DEFAULT_BASE_URL, "solve/")
-    headers = {"Content-Type": "application/json"}
 
-    def json_callback(request, context):
-        request_json_data = request.json()
-        warm_start = request_json_data["solver"]["warm_start"]
-        assert isinstance(request_json_data, dict)
-        assert "network" in request_json_data
-        if should_warm_start:
-            assert warm_start  # Make sure the warm start flag is set by the user
-            assert "results" in request_json_data
-        else:
-            assert "results" not in request_json_data
-        if not warm_start:
-            # Make sure to not warm start if the user does not want warm start
-            assert not should_warm_start
-            assert "results" not in request_json_data
-        return good_json_results
+    original_propagate_potentials = small_network._propagate_potentials
+    original_reset_inputs = small_network._reset_inputs
+
+    def _propagate_potentials():
+        nonlocal propagate_potentials_called
+        propagate_potentials_called = True
+        return original_propagate_potentials()
+
+    def _reset_inputs():
+        nonlocal reset_inputs_called
+        reset_inputs_called = True
+        return original_reset_inputs()
+
+    monkeypatch.setattr(small_network, "_propagate_potentials", _propagate_potentials)
+    monkeypatch.setattr(small_network, "_reset_inputs", _reset_inputs)
 
     # First case: network is valid, no results yet -> no warm start
-    should_warm_start = False
+    propagate_potentials_called = False
+    reset_inputs_called = False
     assert small_network._valid
-    assert not small_network.res_info  # No results
     assert not small_network._results_valid  # Results are not valid by default
-    with requests_mock.Mocker() as m, warnings.catch_warnings():
+    with warnings.catch_warnings():
         warnings.simplefilter("error")  # Make sure there is no warning
-        m.post(solve_url, status_code=200, json=json_callback, headers=headers)
-        small_network.solve_load_flow(auth=("", ""), warm_start=True)
-    assert small_network.results_to_dict() == good_json_results
+        small_network.solve_load_flow(warm_start=True)
+    assert not propagate_potentials_called  # Is not called because it was already called in the constructor
+    assert not reset_inputs_called
 
     # Second case: the user requested no warm start (even though the network and results are valid)
-    should_warm_start = False
+    propagate_potentials_called = False
+    reset_inputs_called = False
     assert small_network._valid
     assert small_network._results_valid
-    with requests_mock.Mocker() as m, warnings.catch_warnings():
+    with warnings.catch_warnings():
         warnings.simplefilter("error")  # Make sure there is no warning
-        m.post(solve_url, status_code=200, json=json_callback, headers=headers)
-        small_network.solve_load_flow(auth=("", ""), warm_start=False)
-    assert small_network.results_to_dict() == good_json_results
+        small_network.solve_load_flow(warm_start=False)
+    assert not propagate_potentials_called
+    assert reset_inputs_called
 
     # Third case: network is valid, results are valid -> warm start
-    should_warm_start = True
+    propagate_potentials_called = False
+    reset_inputs_called = False
     assert small_network._valid
     assert small_network._results_valid
-    with requests_mock.Mocker() as m, warnings.catch_warnings():
+    with warnings.catch_warnings():
         warnings.simplefilter("error")  # Make sure there is no warning
-        m.post(solve_url, status_code=200, json=json_callback, headers=headers)
-        small_network.solve_load_flow(auth=("", ""), warm_start=True)
-    assert small_network.results_to_dict() == good_json_results
+        small_network.solve_load_flow(warm_start=True)
+    assert not propagate_potentials_called
+    assert not reset_inputs_called
 
     # Fourth case (load powers changes): network is valid, results are not valid -> warm start
-    should_warm_start = True
+    propagate_potentials_called = False
+    reset_inputs_called = False
     load.powers = load.powers + Q_(1 + 1j, "VA")
     assert small_network._valid
     assert not small_network._results_valid
-    with requests_mock.Mocker() as m, warnings.catch_warnings():
+    with warnings.catch_warnings():
         warnings.simplefilter("error")  # Make sure there is no warning
-        m.post(solve_url, status_code=200, json=json_callback, headers=headers)
-        small_network.solve_load_flow(auth=("", ""), warm_start=True)
-    assert small_network.results_to_dict() == good_json_results
+        small_network.solve_load_flow(warm_start=True)
+    assert not propagate_potentials_called
+    assert not reset_inputs_called
 
     # Fifth case: network is not valid -> no warm start
-    should_warm_start = False
+    propagate_potentials_called = False
+    reset_inputs_called = False
     new_load = PowerLoad("new_load", load_bus, powers=[100, 200, 300], phases=load.phases)
     new_load_result = good_json_results["loads"][0].copy()
     new_load_result["id"] = "new_load"
@@ -1934,15 +1681,13 @@ def test_solver_warm_start(small_network: ElectricalNetwork, good_json_results):
     assert new_load.network is small_network
     assert not small_network._valid
     assert not small_network._results_valid
-    with requests_mock.Mocker() as m, warnings.catch_warnings():
+    with warnings.catch_warnings():
         # We could warn here that the user requested warm start but the network is not valid
         # but this will be disruptive for the user especially that warm start is the default
         warnings.simplefilter("error")  # Make sure there is no warning
-        m.post(solve_url, status_code=200, json=json_callback, headers=headers)
-        assert not small_network._valid
-        assert not small_network._results_valid
-        small_network.solve_load_flow(auth=("", ""), warm_start=True)
-    assert small_network.results_to_dict() == good_json_results
+        small_network.solve_load_flow(warm_start=True)
+    assert propagate_potentials_called
+    assert not reset_inputs_called
 
 
 def test_short_circuits():
@@ -1960,8 +1705,6 @@ def test_short_circuits():
     assert_frame_equal(en.short_circuits_frame, df)
 
     assert bus.short_circuits
-    en.clear_short_circuits()
-    assert not bus.short_circuits
 
 
 def test_catalogue_data():
@@ -2011,89 +1754,78 @@ def test_from_catalogue():
     # Unknown network name
     with pytest.raises(RoseauLoadFlowException) as e:
         ElectricalNetwork.from_catalogue(name="unknown", load_point_name="winter")
-    assert (
-        e.value.args[0]
-        == "No network matching the name 'unknown' has been found. Please look at the catalogue using the "
-        "`print_catalogue` class method."
+    assert e.value.msg == (
+        "No networks matching the query (name='unknown') have been found. Please look at the "
+        "catalogue using the `get_catalogue` class method."
     )
-    assert e.value.args[1] == RoseauLoadFlowExceptionCode.CATALOGUE_NOT_FOUND
+    assert e.value.code == RoseauLoadFlowExceptionCode.CATALOGUE_NOT_FOUND
 
     # Unknown load point name
     with pytest.raises(RoseauLoadFlowException) as e:
         ElectricalNetwork.from_catalogue(name="MVFeeder004", load_point_name="unknown")
-    assert (
-        e.value.args[0]
-        == "No load point matching the name 'unknown' has been found for the network 'MVFeeder004'. Available "
-        "load points are 'Summer', 'Winter'."
+    assert e.value.msg == (
+        "No load points for network 'MVFeeder004' matching the query (load_point_name='unknown') have "
+        "been found. Please look at the catalogue using the `get_catalogue` class method."
     )
-    assert e.value.args[1] == RoseauLoadFlowExceptionCode.CATALOGUE_NOT_FOUND
+    assert e.value.code == RoseauLoadFlowExceptionCode.CATALOGUE_NOT_FOUND
 
     # Several network name matched
     with pytest.raises(RoseauLoadFlowException) as e:
         ElectricalNetwork.from_catalogue(name="MVFeeder", load_point_name="winter")
-    assert e.value.args[0] == (
-        "Several networks matching the name 'MVFeeder' have been found: 'MVFeeder004', "
-        "'MVFeeder011', 'MVFeeder015', 'MVFeeder032', 'MVFeeder041', 'MVFeeder063', 'MVFeeder078', 'MVFeeder115', "
-        "'MVFeeder128', 'MVFeeder151', 'MVFeeder159', 'MVFeeder176', 'MVFeeder210', 'MVFeeder217', 'MVFeeder232',"
-        " 'MVFeeder251', 'MVFeeder290', 'MVFeeder312', 'MVFeeder320', 'MVFeeder339'."
+    assert e.value.msg == (
+        "Several networks matching the query (name='MVFeeder') have been found: 'MVFeeder004', "
+        "'MVFeeder011', 'MVFeeder015', 'MVFeeder032', 'MVFeeder041', 'MVFeeder063', 'MVFeeder078', "
+        "'MVFeeder115', 'MVFeeder128', 'MVFeeder151', 'MVFeeder159', 'MVFeeder176', 'MVFeeder210', "
+        "'MVFeeder217', 'MVFeeder232', 'MVFeeder251', 'MVFeeder290', 'MVFeeder312', 'MVFeeder320', "
+        "'MVFeeder339'."
     )
-    assert e.value.args[1] == RoseauLoadFlowExceptionCode.CATALOGUE_SEVERAL_FOUND
+    assert e.value.code == RoseauLoadFlowExceptionCode.CATALOGUE_SEVERAL_FOUND
 
     # Several load point name matched
     with pytest.raises(RoseauLoadFlowException) as e:
         ElectricalNetwork.from_catalogue(name="MVFeeder004", load_point_name=r".*")
-    assert e.value.args[0] == (
-        "Several load points matching the name '.*' have been found for the network 'MVFeeder004': 'Summer', 'Winter'."
+    assert e.value.msg == (
+        "Several load points for network 'MVFeeder004' matching the query (load_point_name='.*') have "
+        "been found: 'Summer', 'Winter'."
     )
-    assert e.value.args[1] == RoseauLoadFlowExceptionCode.CATALOGUE_SEVERAL_FOUND
+    assert e.value.code == RoseauLoadFlowExceptionCode.CATALOGUE_SEVERAL_FOUND
 
     # Both known
     ElectricalNetwork.from_catalogue(name="MVFeeder004", load_point_name="winter")
 
 
-def test_print_catalogue():
-    # Print the entire catalogue
-    with console.capture() as capture:
-        ElectricalNetwork.print_catalogue()
-    assert len(capture.get().split("\n")) == 46
+def test_get_catalogue():
+    # Get the entire catalogue
+    catalogue = ElectricalNetwork.get_catalogue()
+    assert catalogue.shape == (40, 7)
 
     # Filter on the network name
-    with console.capture() as capture:
-        ElectricalNetwork.print_catalogue(name="MV")
-    assert len(capture.get().split("\n")) == 26
-    with console.capture() as capture:
-        ElectricalNetwork.print_catalogue(name=re.compile(r"^MV"))
-    assert len(capture.get().split("\n")) == 26
+    catalogue = ElectricalNetwork.get_catalogue(name="MV")
+    assert catalogue.shape == (20, 7)
+    catalogue = ElectricalNetwork.get_catalogue(name=re.compile(r"^MV"))
+    assert catalogue.shape == (20, 7)
 
     # Filter on the load point name
-    with console.capture() as capture:
-        ElectricalNetwork.print_catalogue(load_point_name="winter")
-    assert len(capture.get().split("\n")) == 46
-    with console.capture() as capture:
-        ElectricalNetwork.print_catalogue(load_point_name=re.compile(r"^Winter"))
-    assert len(capture.get().split("\n")) == 46
+    catalogue = ElectricalNetwork.get_catalogue(load_point_name="winter")
+    assert catalogue.shape == (40, 7)
+    catalogue = ElectricalNetwork.get_catalogue(load_point_name=re.compile(r"^Winter"))
+    assert catalogue.shape == (40, 7)
 
     # Filter on both
-    with console.capture() as capture:
-        ElectricalNetwork.print_catalogue(name="MV", load_point_name="winter")
-    assert len(capture.get().split("\n")) == 26
-    with console.capture() as capture:
-        ElectricalNetwork.print_catalogue(name="MV", load_point_name=re.compile(r"^Winter"))
-    assert len(capture.get().split("\n")) == 26
-    with console.capture() as capture:
-        ElectricalNetwork.print_catalogue(name=re.compile(r"^MV"), load_point_name="winter")
-    assert len(capture.get().split("\n")) == 26
-    with console.capture() as capture:
-        ElectricalNetwork.print_catalogue(name=re.compile(r"^MV"), load_point_name=re.compile(r"^Winter"))
-    assert len(capture.get().split("\n")) == 26
+    catalogue = ElectricalNetwork.get_catalogue(name="MV", load_point_name="winter")
+    assert catalogue.shape == (20, 7)
+    catalogue = ElectricalNetwork.get_catalogue(name="MV", load_point_name=re.compile(r"^Winter"))
+    assert catalogue.shape == (20, 7)
+    catalogue = ElectricalNetwork.get_catalogue(name=re.compile(r"^MV"), load_point_name="winter")
+    assert catalogue.shape == (20, 7)
+    catalogue = ElectricalNetwork.get_catalogue(name=re.compile(r"^MV"), load_point_name=re.compile(r"^Winter"))
+    assert catalogue.shape == (20, 7)
 
     # Regexp error
-    with console.capture() as capture:
-        ElectricalNetwork.print_catalogue(name=r"^MV[0-")
-    assert len(capture.get().split("\n")) == 2
-    with console.capture() as capture:
-        ElectricalNetwork.print_catalogue(load_point_name=r"^winter[0-]")
-    assert len(capture.get().split("\n")) == 2
+    catalogue = ElectricalNetwork.get_catalogue(name=r"^MV[0-")
+    assert catalogue.empty
+    catalogue = ElectricalNetwork.get_catalogue(load_point_name=r"^winter[0-]")
+    assert catalogue.empty
 
 
 def test_to_graph(small_network: ElectricalNetwork):

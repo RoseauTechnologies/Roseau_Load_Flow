@@ -18,12 +18,12 @@
 
 # -- Project information -----------------------------------------------------
 project = "Roseau Load Flow"
-copyright = "2022--2023, Roseau Technologies SAS"
+copyright = "2018, Roseau Technologies SAS"
 # author = "Benoît Vinot"
 
 # The full version, including alpha/beta/rc tags
-version = "0.6"
-release = "0.6.0"
+version = "0.7"
+release = "0.7.0-alpha"
 
 # -- General configuration ---------------------------------------------------
 
@@ -69,6 +69,7 @@ autodoc_member_order = "bysource"
 autodoc_typehints = "signature"
 autodoc_inherit_docstrings = True
 autoclass_content = "both"  # show both class and __init__ docstrings
+autodoc_mock_imports = ["roseau.load_flow_engine"]  # Ignore missing dependencies when building the documentation
 
 # -- Options for HTML output -------------------------------------------------
 
@@ -126,10 +127,8 @@ intersphinx_mapping = {
     "numpy": ("https://numpy.org/doc/stable/", None),
     "pandas": ("https://pandas.pydata.org/docs/", None),
     "geopandas": ("https://geopandas.org/en/stable/", None),
-    "requests": ("https://requests.readthedocs.io/en/latest/", None),
     "pint": ("https://pint.readthedocs.io/en/stable/", None),
     "typing_extensions": ("https://typing-extensions.readthedocs.io/en/stable/", None),
-    "rich": ("https://rich.readthedocs.io/en/stable/", None),
     "matplotlib": ("https://matplotlib.org/stable/", None),
     "networkx": ("https://networkx.org/documentation/stable/", None),
 }

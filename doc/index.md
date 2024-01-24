@@ -17,7 +17,7 @@ More details are given in the [Catalogues page](catalogues-networks).
 
 ## Installation
 
-`roseau-load-flow` is the python interface to the solver. It is compatible with Python version 3.9
+`roseau-load-flow` is the python interface to the solver. It is compatible with Python version 3.10
 and newer and can be installed with:
 
 ```{toctree}
@@ -63,6 +63,18 @@ maxdepth: 2
 caption: Solvers
 ---
 Solvers
+```
+
+## License
+
+Read more about the license of this project:
+
+```{toctree}
+---
+maxdepth: 2
+caption: License
+---
+License
 ```
 
 ## Changelog

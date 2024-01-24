@@ -1,7 +1,7 @@
 import logging
 import warnings
 from abc import ABC
-from typing import TYPE_CHECKING, Any, ClassVar, NoReturn, Optional, TypeVar, Union
+from typing import TYPE_CHECKING, Any, ClassVar, NoReturn, Optional, TypeVar
 
 import shapely
 from shapely.geometry import shape
@@ -10,6 +10,7 @@ from shapely.geometry.base import BaseGeometry
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.typing import Id
 from roseau.load_flow.utils import Identifiable, JsonMixin
+from roseau.load_flow_engine.cy_engine import CyElement
 
 if TYPE_CHECKING:
     from roseau.load_flow.network import ElectricalNetwork
@@ -39,7 +40,9 @@ class Element(ABC, Identifiable, JsonMixin):
         """
         super().__init__(id)
         self._connected_elements: list[Element] = []
-        self._network: Optional[ElectricalNetwork] = None
+        self._network: ElectricalNetwork | None = None
+        self._cy_element: CyElement | None = None
+        self._fetch_results = False
 
     @property
     def network(self) -> Optional["ElectricalNetwork"]:
@@ -47,7 +50,7 @@ class Element(ABC, Identifiable, JsonMixin):
         return self._network
 
     @classmethod
-    def _check_phases(cls, id: Id, allowed_phases: Optional[frozenset[str]] = None, **kwargs: str) -> None:
+    def _check_phases(cls, id: Id, allowed_phases: frozenset[str] | None = None, **kwargs: str) -> None:
         if allowed_phases is None:
             allowed_phases = cls.allowed_phases
         name, phases = kwargs.popitem()  # phases, phases1 or phases2
@@ -125,13 +128,16 @@ class Element(ABC, Identifiable, JsonMixin):
             element._connected_elements.remove(self)
         self._connected_elements = []
         self._set_network(None)
+        self._cy_element.disconnect()
+        # The cpp element has been disconnected and can't be reconnected easily, it's safer to delete it
+        self._cy_element = None
 
     def _invalidate_network_results(self) -> None:
         """Invalidate the network making the result"""
         if self.network is not None:
             self.network._results_valid = False
 
-    def _res_getter(self, value: Optional[_T], warning: bool) -> _T:
+    def _res_getter(self, value: _T | None, warning: bool) -> _T:
         """A safe getter for load flow results.
 
         Args:
@@ -160,10 +166,11 @@ class Element(ABC, Identifiable, JsonMixin):
                 category=UserWarning,
                 stacklevel=2,
             )
+        self._fetch_results = False
         return value
 
     @staticmethod
-    def _parse_geometry(geometry: Union[str, None, Any]) -> Optional[BaseGeometry]:
+    def _parse_geometry(geometry: str | dict[str, Any] | None) -> BaseGeometry | None:
         if geometry is None:
             return None
         elif isinstance(geometry, str):

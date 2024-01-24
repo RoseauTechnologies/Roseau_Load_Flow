@@ -14,7 +14,7 @@
   },
   "python.testing.pytestEnabled": true,
   "[python]": {
-    "editor.defaultFormatter": "ms-python.black-formatter",
+    "editor.defaultFormatter": "charliermarsh.ruff",
     "editor.formatOnSave": true,
     "editor.codeActionsOnSave": {
       "source.organizeImports.ruff": "explicit",
@@ -25,5 +25,9 @@
   "[markdown][yaml][html][css]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode",
     "editor.formatOnSave": true,
-  }
+  },
+  // Json
+  "[json]": {
+    "editor.indentSize": 2,
+  },
 }

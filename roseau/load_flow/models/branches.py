@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Optional, Union
+from typing import Any
 
 import numpy as np
 from shapely import LineString, Point
@@ -33,7 +33,7 @@ class AbstractBranch(Element):
         *,
         phases1: str,
         phases2: str,
-        geometry: Optional[Union[Point, LineString]] = None,
+        geometry: Point | LineString | None = None,
         **kwargs: Any,
     ) -> None:
         """AbstractBranch constructor.
@@ -60,13 +60,13 @@ class AbstractBranch(Element):
         super().__init__(id, **kwargs)
         self._check_phases(id, phases1=phases1)
         self._check_phases(id, phases2=phases2)
-        self.phases1 = phases1
-        self.phases2 = phases2
-        self.bus1 = bus1
-        self.bus2 = bus2
+        self._phases1 = phases1
+        self._phases2 = phases2
+        self._bus1 = bus1
+        self._bus2 = bus2
         self.geometry = geometry
         self._connect(bus1, bus2)
-        self._res_currents: Optional[tuple[ComplexArray, ComplexArray]] = None
+        self._res_currents: tuple[ComplexArray, ComplexArray] | None = None
 
     def __repr__(self) -> str:
         s = f"{type(self).__name__}(id={self.id!r}, phases1={self.phases1!r}, phases2={self.phases2!r}"
@@ -76,7 +76,29 @@ class AbstractBranch(Element):
         s += ")"
         return s
 
+    @property
+    def phases1(self) -> str:
+        """The phases of the branch at the first bus."""
+        return self._phases1
+
+    @property
+    def phases2(self) -> str:
+        """The phases of the branch at the second bus."""
+        return self._phases2
+
+    @property
+    def bus1(self) -> Bus:
+        """The first bus of the branch."""
+        return self._bus1
+
+    @property
+    def bus2(self) -> Bus:
+        """The second bus of the branch."""
+        return self._bus2
+
     def _res_currents_getter(self, warning: bool) -> tuple[ComplexArray, ComplexArray]:
+        if self._fetch_results:
+            self._res_currents = self._cy_element.get_currents(len(self.phases1), len(self.phases2))
         return self._res_getter(value=self._res_currents, warning=warning)
 
     @property
@@ -85,9 +107,12 @@ class AbstractBranch(Element):
         """The load flow result of the branch currents (A)."""
         return self._res_currents_getter(warning=True)
 
-    def _res_powers_getter(self, warning: bool) -> tuple[ComplexArray, ComplexArray]:
+    def _res_powers_getter(
+        self, warning: bool, pot1: ComplexArray | None = None, pot2: ComplexArray | None = None
+    ) -> tuple[ComplexArray, ComplexArray]:
         cur1, cur2 = self._res_currents_getter(warning)
-        pot1, pot2 = self._res_potentials_getter(warning=False)  # we warn on the previous line
+        if pot1 is None or pot2 is None:
+            pot1, pot2 = self._res_potentials_getter(warning=False)  # we warn on the previous line
         powers1 = pot1 * cur1.conj()
         powers2 = pot2 * cur2.conj()
         return powers1, powers2
@@ -119,6 +144,24 @@ class AbstractBranch(Element):
         """The load flow result of the branch voltages (V)."""
         return self._res_voltages_getter(warning=True)
 
+    def _cy_connect(self) -> None:
+        """Connect the Cython elements of the buses and the branch"""
+        connections = []
+        assert isinstance(self.bus1, Bus)
+        for i, phase in enumerate(self.phases1):
+            if phase in self.bus1.phases:
+                j = self.bus1.phases.find(phase)
+                connections.append((i, j))
+        self._cy_element.connect(self.bus1._cy_element, connections, True)
+
+        connections = []
+        assert isinstance(self.bus2, Bus)
+        for i, phase in enumerate(self.phases2):
+            if phase in self.bus2.phases:
+                j = self.bus2.phases.find(phase)
+                connections.append((i, j))
+        self._cy_element.connect(self.bus2._cy_element, connections, False)
+
     #
     # Json Mixin interface
     #
@@ -143,6 +186,7 @@ class AbstractBranch(Element):
         currents1 = np.array([complex(i[0], i[1]) for i in data["currents1"]], dtype=np.complex128)
         currents2 = np.array([complex(i[0], i[1]) for i in data["currents2"]], dtype=np.complex128)
         self._res_currents = (currents1, currents2)
+        self._fetch_results = False
 
     def _results_to_dict(self, warning: bool) -> JsonDict:
         currents1, currents2 = self._res_currents_getter(warning)

@@ -22,11 +22,10 @@ Units registry used by Roseau Load Flow using the `pint`_ package.
 """
 from collections.abc import Callable, Iterable
 from types import GenericAlias
-from typing import TYPE_CHECKING, TypeVar, Union
+from typing import TYPE_CHECKING, TypeAlias, TypeVar
 
 from pint import Unit, UnitRegistry
 from pint.facets.plain import PlainQuantity
-from typing_extensions import TypeAlias
 
 from roseau.load_flow._wrapper import wraps
 
@@ -48,8 +47,8 @@ else:
 
 
 def ureg_wraps(
-    ret: Union[str, Unit, None, Iterable[Union[str, Unit, None]]],
-    args: Union[str, Unit, None, Iterable[Union[str, Unit, None]]],
+    ret: str | Unit | None | Iterable[str | Unit | None],
+    args: str | Unit | None | Iterable[str | Unit | None],
     strict: bool = True,
 ) -> Callable[[FuncT], FuncT]:
     """Wraps a function to become pint-aware.

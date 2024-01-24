@@ -88,8 +88,7 @@ bus2.add_short_circuit("a", "b")
 
 # Create a network and solve a load flow
 en = ElectricalNetwork.from_element(bus1)
-auth = ("username", "password")
-en.solve_load_flow(auth=auth)
+en.solve_load_flow()
 
 # Get the currents flowing to the line from bus1
 # Notice the extremely high currents in phases "a" and "b"

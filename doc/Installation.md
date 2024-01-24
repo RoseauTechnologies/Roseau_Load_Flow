@@ -106,6 +106,9 @@ This installs the package in the correct environment for the active notebook ker
 
 ## 3. Using `conda`
 
+Installations using `conda` is temporarily unavailable. Please use `pip` instead.
+
+<!--
 `roseau-load-flow` is also available on [conda-forge](https://anaconda.org/conda-forge/roseau-load-flow).
 It can be installed using conda with:
 
@@ -131,6 +134,7 @@ This installs the package and all its required and optional dependencies.
 If you use *conda* to manage your project, it is recommended to use the `conda` package manager
 instead of `pip`.
 ```
+-->
 
 <!-- Local Variables: -->
 <!-- mode: markdown -->

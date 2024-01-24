@@ -1,5 +1,5 @@
 import logging
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any
 
 from typing_extensions import Self
 
@@ -7,6 +7,7 @@ from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowE
 from roseau.load_flow.models.core import Element
 from roseau.load_flow.typing import Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
+from roseau.load_flow_engine.cy_engine import CyGround
 
 if TYPE_CHECKING:
     from roseau.load_flow.models.buses import Bus
@@ -44,12 +45,15 @@ class Ground(Element):
         super().__init__(id, **kwargs)
         # A map of bus id to phase connected to this ground.
         self._connected_buses: dict[Id, str] = {}
-        self._res_potential: Optional[complex] = None
+        self._res_potential: complex | None = None
+        self._cy_element = CyGround()
 
     def __repr__(self) -> str:
         return f"{type(self).__name__}(id={self.id!r})"
 
     def _res_potential_getter(self, warning: bool) -> complex:
+        if self._fetch_results:
+            self._res_potential = self._cy_element.get_potentials(1)[0]
         return self._res_getter(self._res_potential, warning)
 
     @property
@@ -85,6 +89,8 @@ class Ground(Element):
             raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.BAD_PHASE)
         self._connect(bus)
         self._connected_buses[bus.id] = phase
+        p = bus.phases.find(phase)
+        bus._cy_element.connect(self._cy_element, [(p, 0)])
 
     #
     # Json Mixin interface
@@ -104,6 +110,7 @@ class Ground(Element):
 
     def results_from_dict(self, data: JsonDict) -> None:
         self._res_potential = complex(*data["potential"])
+        self._fetch_results = False
 
     def _results_to_dict(self, warning: bool) -> JsonDict:
         v = self._res_potential_getter(warning)

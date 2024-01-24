@@ -40,19 +40,22 @@ def test_short_circuit():
     with pytest.raises(RoseauLoadFlowException) as e:
         bus.add_short_circuit("a", "n")
     assert "Phase 'n' is not in the phases" in e.value.msg
-    assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_PHASE
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
     with pytest.raises(RoseauLoadFlowException) as e:
         bus.add_short_circuit("n", "a")
     assert "Phase 'n' is not in the phases" in e.value.msg
-    assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_PHASE
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
     with pytest.raises(RoseauLoadFlowException) as e:
         bus.add_short_circuit("a", "a")
     assert "some phases are duplicated" in e.value.msg
-    assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_PHASE
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
     with pytest.raises(RoseauLoadFlowException) as e:
         bus.add_short_circuit("a")
-    assert "at least two phases (or a phase and a ground) should be given" in e.value.msg
-    assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_PHASE
+    assert e.value.msg == (
+        "For the short-circuit on bus 'bus', expected at least two phases or a phase and a ground. "
+        "Only phase 'a' is given."
+    )
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
 
     assert not bus._short_circuits
     bus.add_short_circuit("c", "a", "b")
@@ -73,14 +76,20 @@ def test_short_circuit():
     bus.add_short_circuit("a", ground=ground)  # ok
     assert len(bus.short_circuits) == 2
 
-    # With power load
-    bus.clear_short_circuits()
+    # Cannot connect a load on a short-circuited bus
+    with pytest.raises(RoseauLoadFlowException) as e:
+        PowerLoad(id="load", bus=bus, powers=[10, 10, 10])
+    assert "is connected on bus" in e.value.msg
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_SHORT_CIRCUIT
+
+    # Cannot short-circuit a bus with a power load
+    bus = Bus("bus", phases="abc")
     assert not bus.short_circuits
-    PowerLoad(id="load", bus=bus, powers=[10, 10, 10])
+    _ = PowerLoad(id="load", bus=bus, powers=[10, 10, 10])
     with pytest.raises(RoseauLoadFlowException) as e:
         bus.add_short_circuit("a", "b")
     assert "is already connected on bus" in e.value.msg
-    assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_SHORT_CIRCUIT
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_SHORT_CIRCUIT
 
 
 def test_voltage_limits():

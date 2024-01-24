@@ -4,23 +4,21 @@ This module defines the electrical network class.
 import json
 import logging
 import re
-import textwrap
+import time
 import warnings
-from collections.abc import Mapping, Sized
+from collections.abc import Iterable, Mapping, Sized
 from importlib import resources
-from itertools import cycle
+from itertools import chain
 from pathlib import Path
-from typing import TYPE_CHECKING, NoReturn, Optional, TypeVar, Union
-from urllib.parse import urljoin
+from typing import TYPE_CHECKING, NoReturn, TypeVar
 
 import geopandas as gpd
+import numpy as np
 import pandas as pd
-import requests
 from pyproj import CRS
-from requests import Response
-from rich.table import Table
 from typing_extensions import Self
 
+from roseau.load_flow._solvers import AbstractSolver
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.io import network_from_dgs, network_from_dict, network_to_dict
 from roseau.load_flow.models import (
@@ -36,10 +34,10 @@ from roseau.load_flow.models import (
     Transformer,
     VoltageSource,
 )
-from roseau.load_flow.solvers import check_solver_params
-from roseau.load_flow.typing import Authentication, Id, JsonDict, MapOrSeq, Solver, StrPath
-from roseau.load_flow.utils import CatalogueMixin, JsonMixin, _optional_deps, console, palette
+from roseau.load_flow.typing import Id, JsonDict, MapOrSeq, Solver, StrPath
+from roseau.load_flow.utils import CatalogueMixin, JsonMixin, _optional_deps
 from roseau.load_flow.utils.types import _DTYPES, VoltagePhaseDtype
+from roseau.load_flow_engine.cy_engine import CyElectricalNetwork
 
 if TYPE_CHECKING:
     from networkx import Graph
@@ -114,39 +112,9 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         potential_refs (dict[Id, roseau.load_flow.PotentialRef]):
             Dictionary of potential references of the network indexed by their IDs. Also available
             as a :attr:`DataFrame<potential_refs_frame>`.
-
-        res_info (JsonDict):
-            Dictionary containing solver information on the last run of the load flow analysis.
-            Empty if the load flow analysis has not been run yet.
-            Example::
-
-                {
-                    "solver": "newton",
-                    "tolerance": 1e-06,
-                    "max_iterations": 20,
-                    "warm_start": True,
-                    "status": "success",
-                    "iterations": 2,
-                    "residual": 1.8595619621919468e-07
-                }
     """
 
-    _DEFAULT_TOLERANCE: float = 1e-6
-    _DEFAULT_MAX_ITERATIONS: int = 20
-    _DEFAULT_BASE_URL: str = "https://load-flow-api-dev.roseautechnologies.com/"
-    _DEFAULT_WARM_START: bool = True
     _DEFAULT_SOLVER: Solver = "newton_goldstein"
-
-    # Elements classes (for internal use only)
-    _branch_class = AbstractBranch
-    _line_class = Line
-    _transformer_class = Transformer
-    _switch_class = Switch
-    _load_class = AbstractLoad
-    _voltage_source_class = VoltageSource
-    _bus_class = Bus
-    _ground_class = Ground
-    _pref_class = PotentialRef
 
     #
     # Methods to build an electrical network
@@ -159,7 +127,6 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         sources: MapOrSeq[VoltageSource],
         grounds: MapOrSeq[Ground],
         potential_refs: MapOrSeq[PotentialRef],
-        **kwargs,
     ) -> None:
         self.buses = self._elements_as_dict(buses, RoseauLoadFlowExceptionCode.BAD_BUS_ID)
         self.branches = self._elements_as_dict(branches, RoseauLoadFlowExceptionCode.BAD_BRANCH_ID)
@@ -168,14 +135,15 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         self.grounds = self._elements_as_dict(grounds, RoseauLoadFlowExceptionCode.BAD_GROUND_ID)
         self.potential_refs = self._elements_as_dict(potential_refs, RoseauLoadFlowExceptionCode.BAD_POTENTIAL_REF_ID)
 
+        self._elements: list[Element] = []
         self._check_validity(constructed=False)
         self._create_network()
         self._valid = True
         self._results_valid: bool = False
-        self.res_info: JsonDict = {}
+        self._solver = AbstractSolver.from_dict(data={"name": self._DEFAULT_SOLVER, "params": {}}, network=self)
 
     def __repr__(self) -> str:
-        def count_repr(__o: Sized, /, singular: str, plural: Optional[str] = None) -> str:
+        def count_repr(__o: Sized, /, singular: str, plural: str | None = None) -> str:
             """Singular/plural count representation: `1 bus` or `2 buses`."""
             n = len(__o)
             if n == 1:
@@ -490,27 +458,24 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
     #
     def solve_load_flow(
         self,
-        auth: Authentication,
-        base_url: str = _DEFAULT_BASE_URL,
-        max_iterations: int = _DEFAULT_MAX_ITERATIONS,
-        tolerance: float = _DEFAULT_TOLERANCE,
-        warm_start: bool = _DEFAULT_WARM_START,
+        max_iterations: int = 20,
+        tolerance: float = 1e-6,
+        warm_start: bool = True,
         solver: Solver = _DEFAULT_SOLVER,
-        solver_params: Optional[JsonDict] = None,
-    ) -> int:
-        """Solve the load flow for this network (Requires internet access).
+        solver_params: JsonDict | None = None,
+    ) -> tuple[int, float]:
+        """Solve the load flow for this network.
 
         To get the results of the load flow for the whole network, use the `res_` properties on the
         network (e.g. ``print(net.res_buses``). To get the results for a specific element, use the
         `res_` properties on the element (e.g. ``print(net.buses["bus1"].res_potentials)``.
 
+        You need to activate the license before calling this method. Alternatively you may set the
+        environment variable ``ROSEAU_LOAD_FLOW_LICENSE_KEY`` to your license key and it will be
+        picked automatically when calling this method. See the :ref:`license` page for more
+        information.
+
         Args:
-            auth:
-                The login and password for the roseau load flow api.
-
-            base_url:
-                The base url to request the load flow solver.
-
             max_iterations:
                 The maximum number of allowed iterations.
 
@@ -518,8 +483,9 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                 Tolerance needed for the convergence.
 
             warm_start:
-                If true, initialize the solver with the potentials of the last successful load flow
-                result (if any).
+                If true (the default), the solver is initialized with the potentials of the last
+                successful load flow result (if any). Otherwise, the potentials are reset to their
+                initial values.
 
             solver:
                 The name of the solver to use for the load flow. The options are:
@@ -532,107 +498,85 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                 solver chosen. For more information, see the :ref:`solvers` page.
 
         Returns:
-            The number of iterations taken.
+            The number of iterations performed and the residual error at the last iteration.
         """
-        from roseau.load_flow import __version__
-
-        solver_params = check_solver_params(solver=solver, params=solver_params)
         if not self._valid:
-            warm_start = False  # Otherwise, we may get an error when calling self.results_to_dict()
-            self._check_validity(constructed=True)
-            self._create_network()
+            self._check_validity(constructed=False)
+            self._create_network()  # <-- calls _propagate_potentials, no warm start
+            self._solver.update_network(self)
 
-        # Get the data
-        data = {
-            "network": self.to_dict(_lf_only=True),
-            "solver": {
-                "name": solver,
-                "params": solver_params,
-                "max_iterations": max_iterations,
-                "tolerance": tolerance,
-                "warm_start": warm_start,
-            },
-        }
-        if warm_start and self.res_info.get("status", "failure") == "success":
-            # Ignore warnings because results may be invalid (a load power has been changed, etc.)
-            data["results"] = self._results_to_dict(False)
+        # Update solver
+        if solver != self._solver.name:
+            solver_params = solver_params if solver_params is not None else {}
+            self._solver = AbstractSolver.from_dict(data={"name": solver, "params": solver_params}, network=self)
+        elif solver_params is not None:
+            self._solver.update_params(solver_params)
 
-        # Request the server
-        response = requests.post(
-            url=urljoin(base_url, "solve/"),
-            json=data,
-            auth=auth,
-            headers={"accept": "application/json", "rlf-version": __version__},
-        )
+        if not warm_start:
+            self._reset_inputs()
 
-        # Read the response
-        # Check the response headers
-        remote_rlf_version = response.headers.get("rlf-new-version")
-        if remote_rlf_version is not None:
-            warnings.warn(
-                message=f"A new version ({remote_rlf_version}) of the library roseau-load-flow is available. Please "
-                f"visit https://roseautechnologies.github.io/Roseau_Load_Flow/Installation.html for more information.",
-                category=UserWarning,
-                stacklevel=2,
-            )
+        start = time.perf_counter()
+        try:
+            iterations, residual = self._solver.solve_load_flow(max_iterations=max_iterations, tolerance=tolerance)
+        except RuntimeError as e:
+            self._handle_error(e)
 
-        # HTTP 4xx,5xx
-        if not response.ok:
-            self._parse_error(response=response)
+        end = time.perf_counter()
 
-        # HTTP 200
-        results: JsonDict = response.json()
-        self.res_info = results["info"]
-        if self.res_info["status"] != "success":
+        if iterations == max_iterations:
             msg = (
-                f"The load flow did not converge after {self.res_info['iterations']} iterations. The norm of "
-                f"the residuals is {self.res_info['residual']:.5n}"
+                f"The load flow did not converge after {iterations} iterations. The norm of the residuals is "
+                f"{residual:5n}"
             )
             logger.error(msg=msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.NO_LOAD_FLOW_CONVERGENCE)
+            raise RoseauLoadFlowException(
+                msg, RoseauLoadFlowExceptionCode.NO_LOAD_FLOW_CONVERGENCE, iterations, residual
+            )
 
-        logger.info(
-            f"The load flow converged after {self.res_info['iterations']} iterations (residual="
-            f"{self.res_info['residual']:.5n})."
-        )
+        logger.debug(f"The load flow converged after {iterations} iterations and {end - start:.3n} s.")
 
-        # Dispatch the results
-        self._results_from_dict(data=results)
+        # Lazily update the results of the elements
+        for element in chain(
+            self.buses.values(),
+            self.branches.values(),
+            self.loads.values(),
+            self.sources.values(),
+            self.grounds.values(),
+            self.potential_refs.values(),
+        ):
+            element._fetch_results = True
 
-        return self.res_info["iterations"]
+        # The results are now valid
+        self._results_valid = True
 
-    @staticmethod
-    def _parse_error(response: Response) -> NoReturn:
-        """Parse a response when its status is not "ok".
+        return iterations, residual
 
-        Args:
-            response:
-                The response to parse.
-        """
-        content_type = response.headers.get("content-type", None)
-        code = RoseauLoadFlowExceptionCode.BAD_REQUEST
-        if response.status_code == 401:
-            msg = "Authentication failed."
+    def _handle_error(self, e: RuntimeError) -> NoReturn:
+        msg = e.args[0]
+        if msg.startswith("0 "):
+            msg = f"The license cannot be validated. The detailed error message is {msg[2:]!r}"
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.LICENSE_ERROR) from e
         else:
-            msg = f"There is a problem in the request. Error code {response.status_code}."
-            if content_type == "application/json":
-                result_dict: JsonDict = response.json()
-                if "msg" in result_dict and "code" in result_dict:
-                    # If we have a valid Roseau Load Flow Exception, raise it
-                    try:
-                        code = RoseauLoadFlowExceptionCode.from_string(result_dict["code"])
-                    except Exception:
-                        msg += f" {result_dict['code']!r} - {result_dict['msg']!r}"
-                    else:
-                        msg = result_dict["msg"]
-                else:
-                    # Otherwise, raise a generic "Bad request"
-                    msg += response.text
-            else:
-                # Non JSON response, raise a generic "Bad request"
-                msg += response.text
-        logger.error(msg=msg)
-        raise RoseauLoadFlowException(msg=msg, code=code)
+            assert msg.startswith("1 ")
+            msg = msg[2:]
+            zero_elements_index, inf_elements_index = self._solver._cy_solver.analyse_jacobian()
+            if zero_elements_index:
+                zero_elements = [self._elements[i] for i in zero_elements_index]
+                printable_elements = ", ".join(f"{type(e).__name__}({e.id!r})" for e in zero_elements)
+                msg += (
+                    f"The problem seems to come from the elements [{printable_elements}] that have at least one "
+                    f"disconnected phase. "
+                )
+            if inf_elements_index:
+                inf_elements = [self._elements[i] for i in inf_elements_index]
+                printable_elements = ", ".join(f"{type(e).__name__}({e.id!r})" for e in inf_elements)
+                msg += (
+                    f"The problem seems to come from the elements [{printable_elements}] that induce infinite "
+                    f"values. This might be caused by flexible loads with very high alpha."
+                )
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_JACOBIAN) from e
 
     def _results_from_dict(self, data: JsonDict) -> None:
         """Dispatch the results to all the elements of the network.
@@ -692,7 +636,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         res_dict = {"bus_id": [], "phase": [], "potential": []}
         dtypes = {c: _DTYPES[c] for c in res_dict}
         for bus_id, bus in self.buses.items():
-            for potential, phase in zip(bus._res_potentials_getter(warning=False), bus.phases):
+            for potential, phase in zip(bus._res_potentials_getter(warning=False), bus.phases, strict=True):
                 res_dict["bus_id"].append(bus_id)
                 res_dict["phase"].append(phase)
                 res_dict["potential"].append(potential)
@@ -737,7 +681,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                 max_voltage = float("nan")
             else:
                 voltage_limits_set = True
-            for voltage, phase in zip(bus._res_voltages_getter(warning=False), bus.voltage_phases):
+            for voltage, phase in zip(bus._res_voltages_getter(warning=False), bus.voltage_phases, strict=True):
                 voltage_abs = abs(voltage)
                 violated = (voltage_abs < min_voltage or voltage_abs > max_voltage) if voltage_limits_set else None
                 voltages_dict["bus_id"].append(bus_id)
@@ -769,63 +713,44 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             - `potential2`: The complex potential of the second bus (in Volts) for the given phase.
         """
         self._warn_invalid_results()
-        res_list = []
+        res_dict = {
+            "branch_id": [],
+            "phase": [],
+            "branch_type": [],
+            "current1": [],
+            "current2": [],
+            "power1": [],
+            "power2": [],
+            "potential1": [],
+            "potential2": [],
+        }
+        dtypes = {c: _DTYPES[c] for c in res_dict}
         for branch_id, branch in self.branches.items():
             currents1, currents2 = branch._res_currents_getter(warning=False)
-            powers1, powers2 = branch._res_powers_getter(warning=False)
             potentials1, potentials2 = branch._res_potentials_getter(warning=False)
-            res_list.extend(
-                {
-                    "branch_id": branch_id,
-                    "phase": phase,
-                    "branch_type": branch.branch_type,
-                    "current1": i1,
-                    "current2": None,
-                    "power1": s1,
-                    "power2": None,
-                    "potential1": v1,
-                    "potential2": None,
-                }
-                for i1, s1, v1, phase in zip(currents1, powers1, potentials1, branch.phases1)
-            )
-            res_list.extend(
-                {
-                    "branch_id": branch_id,
-                    "phase": phase,
-                    "branch_type": branch.branch_type,
-                    "current1": None,
-                    "current2": i2,
-                    "power1": None,
-                    "power2": s2,
-                    "potential1": None,
-                    "potential2": v2,
-                }
-                for i2, s2, v2, phase in zip(currents2, powers2, potentials2, branch.phases2)
-            )
-
-        columns = [
-            "branch_id",
-            "phase",
-            "branch_type",
-            "current1",
-            "current2",
-            "power1",
-            "power2",
-            "potential1",
-            "potential2",
-        ]
-        dtypes = {c: _DTYPES[c] for c in columns}
-        return (
-            pd.DataFrame.from_records(res_list, columns=columns)
-            .astype(dtypes)
-            # aggregate x1 and x2 for the same phase for I, V, S, ...
-            .groupby(["branch_id", "phase", "branch_type"], observed=True)
-            # there are 2 values of I, V, S, ...; only one is not nan -> keep it
-            .mean()
-            # if all values are nan -> drop the row (the phase does not exist)
-            .dropna(how="all")
-            .reset_index(level="branch_type")
-        )
+            powers1, powers2 = branch._res_powers_getter(warning=False, pot1=potentials1, pot2=potentials2)
+            phases = sorted(set(branch.phases1) | set(branch.phases2))
+            for phase in phases:
+                if phase in branch.phases1:
+                    idx1 = branch.phases1.index(phase)
+                    i1, s1, v1 = currents1[idx1], powers1[idx1], potentials1[idx1]
+                else:
+                    i1, s1, v1 = None, None, None
+                if phase in branch.phases2:
+                    idx2 = branch.phases2.index(phase)
+                    i2, s2, v2 = currents2[idx2], powers2[idx2], potentials2[idx2]
+                else:
+                    i2, s2, v2 = None, None, None
+                res_dict["branch_id"].append(branch_id)
+                res_dict["phase"].append(phase)
+                res_dict["branch_type"].append(branch.branch_type)
+                res_dict["current1"].append(i1)
+                res_dict["current2"].append(i2)
+                res_dict["power1"].append(s1)
+                res_dict["power2"].append(s2)
+                res_dict["potential1"].append(v1)
+                res_dict["potential2"].append(v2)
+        return pd.DataFrame(res_dict).astype(dtypes).set_index(["branch_id", "phase"])
 
     @property
     def res_transformers(self) -> pd.DataFrame:
@@ -850,78 +775,58 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             - `potential1`: The complex potential of the first bus (in Volts) for the given phase.
             - `potential2`: The complex potential of the second bus (in Volts) for the given phase.
             - `max_power`: The maximum power loading (in VoltAmps) of the transformer.
+
+        Note that values for missing phases are set to ``nan``. For example, a "Dyn" transformer
+        has the phases "abc" on the primary side and "abcn" on the secondary side, so the primary
+        side values for current, power, and potential for phase "n" will be ``nan``.
         """
         self._warn_invalid_results()
-        res_list = []
+        res_dict = {
+            "transformer_id": [],
+            "phase": [],
+            "current1": [],
+            "current2": [],
+            "power1": [],
+            "power2": [],
+            "potential1": [],
+            "potential2": [],
+            "max_power": [],
+            "violated": [],
+        }
+        dtypes = {c: _DTYPES[c] for c in res_dict}
         for branch in self.branches.values():
             if not isinstance(branch, Transformer):
                 continue
             currents1, currents2 = branch._res_currents_getter(warning=False)
-            powers1, powers2 = branch._res_powers_getter(warning=False)
             potentials1, potentials2 = branch._res_potentials_getter(warning=False)
+            powers1, powers2 = branch._res_powers_getter(warning=False, pot1=potentials1, pot2=potentials2)
             s_max = branch.parameters._max_power
             violated = None
             if s_max is not None:
                 violated = max(abs(sum(powers1)), abs(sum(powers2))) > s_max
-            res_list.extend(
-                {
-                    "transformer_id": branch.id,
-                    "phase": phase,
-                    "current1": i1,
-                    "current2": None,
-                    "power1": s1,
-                    "power2": None,
-                    "potential1": v1,
-                    "potential2": None,
-                    "max_power": s_max,
-                    "violated": violated,
-                }
-                for i1, s1, v1, phase in zip(currents1, powers1, potentials1, branch.phases1)
-            )
-            res_list.extend(
-                {
-                    "transformer_id": branch.id,
-                    "phase": phase,
-                    "current1": None,
-                    "current2": i2,
-                    "power1": None,
-                    "power2": s2,
-                    "potential1": None,
-                    "potential2": v2,
-                    "max_power": s_max,
-                    "violated": violated,
-                }
-                for i2, s2, v2, phase in zip(currents2, powers2, potentials2, branch.phases2)
-            )
-
-        columns = [
-            "transformer_id",
-            "phase",
-            "current1",
-            "current2",
-            "power1",
-            "power2",
-            "potential1",
-            "potential2",
-            "max_power",
-            "violated",
-        ]
-        dtypes = {c: _DTYPES[c] for c in columns}
-        res = (
-            pd.DataFrame.from_records(res_list, columns=columns)
-            .astype(dtypes)
-            # aggregate x1 and x2 for the same phase for I, V, S, ...
-            .groupby(["transformer_id", "phase", "max_power", "violated"], observed=True)
-            # there are 2 values of I, V, S, ...; only one is not nan -> keep it
-            .mean()
-            # if all values are nan -> drop the row (the phase does not exist)
-            .dropna(how="all")
-            .reset_index(level=["max_power", "violated"])
-        )
-        # move the max_power and violated columns to the end
-        res["max_power"] = res.pop("max_power")
-        res["violated"] = res.pop("violated")
-        return res
+            phases = sorted(set(branch.phases1) | set(branch.phases2))
+            for phase in phases:
+                if phase in branch.phases1:
+                    idx1 = branch.phases1.index(phase)
+                    i1, s1, v1 = currents1[idx1], powers1[idx1], potentials1[idx1]
+                else:
+                    i1, s1, v1 = None, None, None
+                if phase in branch.phases2:
+                    idx2 = branch.phases2.index(phase)
+                    i2, s2, v2 = currents2[idx2], powers2[idx2], potentials2[idx2]
+                else:
+                    i2, s2, v2 = None, None, None
+                res_dict["transformer_id"].append(branch.id)
+                res_dict["phase"].append(phase)
+                res_dict["current1"].append(i1)
+                res_dict["current2"].append(i2)
+                res_dict["power1"].append(s1)
+                res_dict["power2"].append(s2)
+                res_dict["potential1"].append(v1)
+                res_dict["potential2"].append(v2)
+                res_dict["max_power"].append(s_max)
+                res_dict["violated"].append(violated)
+        return pd.DataFrame(res_dict).astype(dtypes).set_index(["transformer_id", "phase"])
 
     @property
     def res_lines(self) -> pd.DataFrame:
@@ -983,12 +888,12 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                 continue
             potentials = branch._res_potentials_getter(warning=False)
             currents = branch._res_currents_getter(warning=False)
-            powers = branch._res_powers_getter(warning=False)
+            powers = branch._res_powers_getter(warning=False, pot1=potentials[0], pot2=potentials[1])
             series_losses = branch._res_series_power_losses_getter(warning=False)
             series_currents = branch._res_series_currents_getter(warning=False)
             i_max = branch.parameters._max_current
             for i1, i2, s1, s2, v1, v2, s_series, i_series, phase in zip(
-                *currents, *powers, *potentials, series_losses, series_currents, branch.phases
+                *currents, *powers, *potentials, series_losses, series_currents, branch.phases, strict=True
             ):
                 violated = None if i_max is None else max(abs(i1), abs(i2)) > i_max
                 res_dict["line_id"].append(branch.id)
@@ -1003,8 +908,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                 res_dict["series_current"].append(i_series)
                 res_dict["max_current"].append(i_max)
                 res_dict["violated"].append(violated)
-        res = pd.DataFrame(res_dict).astype(dtypes).set_index(["line_id", "phase"])
-        return res
+        return pd.DataFrame(res_dict).astype(dtypes).set_index(["line_id", "phase"])
 
     @property
     def res_switches(self) -> pd.DataFrame:
@@ -1044,8 +948,8 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                 continue
             potentials = branch._res_potentials_getter(warning=False)
             currents = branch._res_currents_getter(warning=False)
-            powers = branch._res_powers_getter(warning=False)
-            for i1, i2, s1, s2, v1, v2, phase in zip(*currents, *powers, *potentials, branch.phases):
+            powers = branch._res_powers_getter(warning=False, pot1=potentials[0], pot2=potentials[1])
+            for i1, i2, s1, s2, v1, v2, phase in zip(*currents, *powers, *potentials, branch.phases, strict=True):
                 res_dict["switch_id"].append(branch.id)
                 res_dict["phase"].append(phase)
                 res_dict["current1"].append(i1)
@@ -1075,7 +979,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             currents = load._res_currents_getter(warning=False)
             powers = load._res_powers_getter(warning=False)
             potentials = load._res_potentials_getter(warning=False)
-            for i, s, v, phase in zip(currents, powers, potentials, load.phases):
+            for i, s, v, phase in zip(currents, powers, potentials, load.phases, strict=True):
                 res_dict["load_id"].append(load_id)
                 res_dict["phase"].append(phase)
                 res_dict["current"].append(i)
@@ -1098,7 +1002,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         voltages_dict = {"load_id": [], "phase": [], "voltage": []}
         dtypes = {c: _DTYPES[c] for c in voltages_dict} | {"phase": VoltagePhaseDtype}
         for load_id, load in self.loads.items():
-            for voltage, phase in zip(load._res_voltages_getter(warning=False), load.voltage_phases):
+            for voltage, phase in zip(load._res_voltages_getter(warning=False), load.voltage_phases, strict=True):
                 voltages_dict["load_id"].append(load_id)
                 voltages_dict["phase"].append(phase)
                 voltages_dict["voltage"].append(voltage)
@@ -1124,7 +1028,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         for load_id, load in self.loads.items():
             if not (isinstance(load, PowerLoad) and load.is_flexible):
                 continue
-            for power, phase in zip(load._res_flexible_powers_getter(warning=False), load.voltage_phases):
+            for power, phase in zip(load._res_flexible_powers_getter(warning=False), load.voltage_phases, strict=True):
                 loads_dict["load_id"].append(load_id)
                 loads_dict["phase"].append(phase)
                 loads_dict["power"].append(power)
@@ -1149,7 +1053,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             currents = source._res_currents_getter(warning=False)
             powers = source._res_powers_getter(warning=False)
             potentials = source._res_potentials_getter(warning=False)
-            for i, s, v, phase in zip(currents, powers, potentials, source.phases):
+            for i, s, v, phase in zip(currents, powers, potentials, source.phases, strict=True):
                 res_dict["source_id"].append(source_id)
                 res_dict["phase"].append(phase)
                 res_dict["current"].append(i)
@@ -1194,11 +1098,6 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             res_dict["current"].append(current)
         return pd.DataFrame(res_dict).astype(dtypes).set_index(["potential_ref_id"])
 
-    def clear_short_circuits(self) -> None:
-        """Remove the short-circuits of all the buses."""
-        for bus in self.buses.values():
-            bus.clear_short_circuits()
-
     #
     # Internal methods, please do not use
     #
@@ -1222,8 +1121,12 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             self.branches[element.id] = element
         elif isinstance(element, VoltageSource):
             self.sources[element.id] = element
+        elif isinstance(element, Ground):
+            self.grounds[element.id] = element
+        elif isinstance(element, PotentialRef):
+            self.potential_refs[element.id] = element
         else:
-            msg = "Only lines, loads, buses and sources can be added to the network."
+            msg = f"Unknown element {element} can not be added to the network."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT)
         element._network = self
@@ -1242,7 +1145,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                 The element to remove.
         """
         # The C++ electrical network and the tape will be recomputed
-        if isinstance(element, (Bus, AbstractBranch)):
+        if isinstance(element, Bus | AbstractBranch):
             msg = f"{element!r} is a {type(element).__name__} and it cannot be disconnected from a network."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT)
@@ -1261,6 +1164,28 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
     def _create_network(self) -> None:
         """Create the Cython and C++ electrical network of all the passed elements."""
         self._valid = True
+        cy_elements = []
+        self._elements = []
+        for bus in self.buses.values():
+            cy_elements.append(bus._cy_element)
+            self._elements.append(bus)
+        for line in self.branches.values():
+            cy_elements.append(line._cy_element)
+            self._elements.append(line)
+        for load in self.loads.values():
+            cy_elements.append(load._cy_element)
+            self._elements.append(load)
+        for ground in self.grounds.values():
+            cy_elements.append(ground._cy_element)
+            self._elements.append(ground)
+        for p_ref in self.potential_refs.values():
+            cy_elements.append(p_ref._cy_element)
+            self._elements.append(p_ref)
+        for source in self.sources.values():
+            cy_elements.append(source._cy_element)
+            self._elements.append(source)
+        self._propagate_potentials()
+        self._cy_electrical_network = CyElectricalNetwork(elements=np.array(cy_elements), nb_elements=len(cy_elements))
 
     def _check_validity(self, constructed: bool) -> None:
         """Check the validity of the network to avoid having a singular jacobian matrix. It also assigns the `self`
@@ -1278,6 +1203,11 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         elements.update(self.sources.values())
         elements.update(self.grounds.values())
         elements.update(self.potential_refs.values())
+
+        if not elements:
+            msg = "Cannot create a network without elements."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.EMPTY_NETWORK)
 
         found_source = False
         for element in elements:
@@ -1315,8 +1245,67 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             elif element.network != self:
                 element._raise_several_network()
 
+    def _reset_inputs(self) -> None:
+        """Reset the input vector used for the first step of the newton algorithm to its initial value."""
+        if self._solver is not None:
+            self._solver.reset_inputs()
+
+    def _propagate_potentials(self) -> None:
+        """Set the bus potentials that have not been initialized yet."""
+        uninitialized = False
+        for bus in self.buses.values():
+            if not bus._initialized:
+                uninitialized = True
+
+        if uninitialized:
+            max_voltages = 0.0
+            voltage_source = None
+            potentials = None
+            for source in self.sources.values():
+                # if there are multiple voltage sources, start from the higher one
+                source_voltages = source.voltages.m_as("V")
+                if np.average(np.abs(source_voltages)) > max_voltages:
+                    max_voltages = np.average(np.abs(source_voltages))
+                    voltage_source = source
+                    if "n" in source.phases:
+                        # Assume Vn = 0
+                        potentials = np.append(source_voltages, 0.0)
+                    elif len(source.phases) == 2:
+                        # Assume V1 + V2 = 0
+                        u = source_voltages[0]
+                        potentials = np.array([u / 2, -u / 2])
+                    else:
+                        assert len(source.phases) == 3
+                        # Assume Va + Vb + Vc = 0
+                        u_ab = source_voltages[0]
+                        u_bc = source_voltages[1]
+                        v_b = (u_bc - u_ab) / 3
+                        v_c = v_b - u_bc
+                        v_a = v_b + u_ab
+                        potentials = np.array([v_a, v_b, v_c, 0.0])
+
+            elements = [(voltage_source, potentials)]
+            visited = set()
+            while elements:
+                element, potentials = elements.pop(-1)
+                visited.add(element)
+                if isinstance(element, Bus) and not element._initialized:
+                    bus_n = element._n
+                    element.potentials = potentials[0:bus_n]
+                    element._initialized_by_the_user = False  # only used for serialization
+                for e in element._connected_elements:
+                    if e not in visited and isinstance(e, AbstractBranch | Bus):
+                        if isinstance(element, Transformer):
+                            k = element.parameters._ulv / element.parameters._uhv
+                            phase_displacement = element.parameters.phase_displacement
+                            if phase_displacement is None:
+                                phase_displacement = 0
+                            elements.append((e, potentials * k * np.exp(phase_displacement * -1j * np.pi / 6.0)))
+                        else:
+                            elements.append((e, potentials))
+
     @staticmethod
-    def _check_ref(elements: list[Element]) -> None:
+    def _check_ref(elements: Iterable[Element]) -> None:
         """Check the number of potential references to avoid having a singular jacobian matrix."""
         visited_elements: set[Element] = set()
         for initial_element in elements:
@@ -1367,7 +1356,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         Returns:
             The constructed network.
         """
-        buses, branches, loads, sources, grounds, p_refs = network_from_dict(data, en_class=cls)
+        buses, branches, loads, sources, grounds, p_refs = network_from_dict(data)
         return cls(
             buses=buses,
             branches=branches,
@@ -1431,7 +1420,6 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         if warning:
             self._warn_invalid_results()  # Warn only once if asked
         return {
-            "info": self.res_info,
             "buses": [bus._results_to_dict(False) for bus in self.buses.values()],
             "branches": [branch._results_to_dict(False) for branch in self.branches.values()],
             "loads": [load._results_to_dict(False) for load in self.loads.values()],
@@ -1454,7 +1442,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         Returns:
             The constructed network.
         """
-        buses, branches, loads, sources, grounds, potential_refs = network_from_dgs(path, en_class=cls)
+        buses, branches, loads, sources, grounds, potential_refs = network_from_dgs(path)
         return cls(
             buses=buses,
             branches=branches,
@@ -1476,7 +1464,69 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         return json.loads((cls.catalogue_path() / "Catalogue.json").read_text())
 
     @classmethod
-    def from_catalogue(cls, name: Union[str, re.Pattern[str]], load_point_name: Union[str, re.Pattern[str]]) -> Self:
+    def _get_catalogue(
+        cls, name: str | re.Pattern[str] | None, load_point_name: str | re.Pattern[str] | None, raise_if_not_found: bool
+    ) -> tuple[pd.DataFrame, str]:
+        # Get the catalogue data
+        catalogue_data = cls.catalogue_data()
+
+        catalogue_dict = {
+            "name": [],
+            "nb_buses": [],
+            "nb_branches": [],
+            "nb_loads": [],
+            "nb_sources": [],
+            "nb_grounds": [],
+            "nb_potential_refs": [],
+            "load_points": [],
+        }
+        query_msg_list = []
+
+        # Match on the name
+        available_names = list(catalogue_data)
+        match_names_list = available_names
+        if name is not None:
+            match_names_list = cls._filter_catalogue_str(name, strings=available_names)
+            if isinstance(name, re.Pattern):
+                name = name.pattern
+            query_msg_list.append(f"{name=!r}")
+        if raise_if_not_found:
+            cls._assert_one_found(found_data=match_names_list, display_name="networks", query_info=f"{name=!r}")
+
+        if load_point_name is not None:
+            load_point_name_str = load_point_name if isinstance(load_point_name, str) else load_point_name.pattern
+            query_msg_list.append(f"load_point_name={load_point_name_str!r}")
+
+        for name in match_names_list:
+            network_data = catalogue_data[name]
+
+            # Match on the load point
+            available_load_points: list[str] = network_data["load_points"]
+            match_load_point_names_list = available_load_points
+            if load_point_name is not None:
+                match_load_point_names_list = cls._filter_catalogue_str(load_point_name, strings=available_load_points)
+                if raise_if_not_found:
+                    cls._assert_one_found(
+                        found_data=match_load_point_names_list,
+                        display_name=f"load points for network {name!r}",
+                        query_info=query_msg_list[-1],
+                    )
+                elif not match_load_point_names_list:
+                    continue
+
+            catalogue_dict["name"].append(name)
+            catalogue_dict["nb_buses"].append(network_data["nb_buses"])
+            catalogue_dict["nb_branches"].append(network_data["nb_branches"])
+            catalogue_dict["nb_loads"].append(network_data["nb_loads"])
+            catalogue_dict["nb_sources"].append(network_data["nb_sources"])
+            catalogue_dict["nb_grounds"].append(network_data["nb_grounds"])
+            catalogue_dict["nb_potential_refs"].append(network_data["nb_potential_refs"])
+            catalogue_dict["load_points"].append(match_load_point_names_list)
+
+        return pd.DataFrame(catalogue_dict), ", ".join(query_msg_list)
+
+    @classmethod
+    def from_catalogue(cls, name: str | re.Pattern[str], load_point_name: str | re.Pattern[str]) -> Self:
         """Build a network from one in the catalogue.
 
         Args:
@@ -1491,188 +1541,62 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             The selected network
         """
         # Get the catalogue data
-        catalogue_data = cls.catalogue_data()
+        catalogue_data, _ = cls._get_catalogue(
+            name=name,
+            load_point_name=load_point_name,
+            raise_if_not_found=True,
+        )
 
-        # Match on the name
-        if isinstance(name, re.Pattern):
-            name_pattern = name
-            name = name.pattern
-            match_names_list = [k for k in catalogue_data if name_pattern.match(k)]
-        else:
-            try:
-                name_pattern = re.compile(pattern=name, flags=re.IGNORECASE)
-                match_names_list = [k for k in catalogue_data if name_pattern.match(k)]
-            except re.error:
-                name_pattern = name.lower()
-                match_names_list = [k for k in catalogue_data if k.lower() == name_pattern]
-        if not match_names_list:
-            msg = (
-                f"No network matching the name {name!r} has been found. "
-                f"Please look at the catalogue using the `print_catalogue` class method."
-            )
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.CATALOGUE_NOT_FOUND)
-        elif len(match_names_list) > 1:
-            msg_part = textwrap.shorten(", ".join(repr(x) for x in sorted(match_names_list)), width=500)
-            msg = f"Several networks matching the name {name!r} have been found: {msg_part}."
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.CATALOGUE_SEVERAL_FOUND)
-        name = match_names_list[0]
-
-        # Match on the load point
-        c_data = catalogue_data[name]
-        available_load_points = c_data["load_points"]
-        if isinstance(load_point_name, re.Pattern):
-            load_point_name_pattern = load_point_name
-            load_point_name = load_point_name.pattern
-            match_load_point_names_list = [k for k in available_load_points if load_point_name_pattern.match(k)]
-        else:
-            try:
-                load_point_name_pattern = re.compile(pattern=load_point_name, flags=re.IGNORECASE)
-                match_load_point_names_list = [k for k in available_load_points if load_point_name_pattern.match(k)]
-            except re.error:
-                load_point_name_pattern = load_point_name.lower()
-                match_load_point_names_list = [k for k in available_load_points if k.lower() == load_point_name_pattern]
-        if not match_load_point_names_list:
-            msg_part = textwrap.shorten(", ".join(repr(x) for x in sorted(available_load_points)), width=500)
-            msg = (
-                f"No load point matching the name {load_point_name!r} has been found for the network {name!r}. "
-                f"Available load points are {msg_part}."
-            )
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.CATALOGUE_NOT_FOUND)
-        elif len(match_load_point_names_list) > 1:
-            msg_part = textwrap.shorten(", ".join(repr(x) for x in sorted(match_load_point_names_list)), width=500)
-            msg = (
-                f"Several load points matching the name {load_point_name!r} have been found for the network "
-                f"{name!r}: {msg_part}."
-            )
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.CATALOGUE_SEVERAL_FOUND)
-        load_point_name = match_load_point_names_list[0]
+        name = catalogue_data["name"].item()
+        load_point_name = catalogue_data["load_points"].item()[0]
 
         # Get the data from the Json file
         path = cls.catalogue_path() / f"{name}_{load_point_name}.json"
-        if not path.exists():  # pragma: no cover
+        try:
+            json_dict = json.loads(path.read_text())
+        except FileNotFoundError:
             msg = f"The file {path} has not been found while it should exist. Please post an issue on GitHub."
             logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.CATALOGUE_MISSING)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.CATALOGUE_MISSING) from None
 
-        return cls.from_json(path=path)
+        return cls.from_dict(json_dict)
 
     @classmethod
-    def print_catalogue(
-        cls,
-        name: Optional[Union[str, re.Pattern[str]]] = None,
-        load_point_name: Optional[Union[str, re.Pattern[str]]] = None,
-    ) -> None:
-        """Print the catalogue of available networks.
+    def get_catalogue(
+        cls, name: str | re.Pattern[str] | None = None, load_point_name: str | re.Pattern[str] | None = None
+    ) -> pd.DataFrame:
+        """Read a network dictionary from the catalogue.
 
         Args:
             name:
-                The name of the networks to display. It can be a regular expression. For instance, `name="lv"` will
-                match all the network name starting with "lv" (ignoring case).
+                The name of the network to get from the catalogue. It can be a regular expression.
 
             load_point_name:
-                Only networks having a load point matching this string or regular expression will be displayed.
-        """
-        # Get the catalogue data
-        catalogue_data = cls.catalogue_data()
-
-        # Start creating a table to display the results
-        table = Table(title="Available Networks")
-        table.add_column("Name", overflow="fold")
-        table.add_column("Nb buses", justify="right", overflow="fold")
-        table.add_column("Nb branches", justify="right", overflow="fold")
-        table.add_column("Nb loads", justify="right", overflow="fold")
-        table.add_column("Nb sources", justify="right", overflow="fold")
-        table.add_column("Nb grounds", justify="right", overflow="fold")
-        table.add_column("Nb potential refs", justify="right", overflow="fold")
-        table.add_column("Available load points", overflow="fold")
-        empty_table = True
-
-        # Match on the name
-        match_names_list = cls._filter_name(name=name, catalogue_data=catalogue_data)
-
-        # Match on load point name
-        if load_point_name is None:
-            load_point_name_pattern = None
-
-            def match_load_point_function(x: str) -> bool:
-                return True
-
-        elif isinstance(load_point_name, re.Pattern):
-            load_point_name_pattern = load_point_name
-            load_point_name = load_point_name.pattern
-            match_load_point_function = load_point_name_pattern.match
-        else:
-            try:
-                load_point_name_pattern = re.compile(pattern=load_point_name, flags=re.IGNORECASE)
-                match_load_point_function = load_point_name_pattern.match
-            except re.error:
-                load_point_name_pattern = name.lower()
-
-                def match_load_point_function(x: str) -> bool:
-                    nonlocal load_point_name_pattern
-                    return x.lower() == load_point_name_pattern
-
-        # Iterate over the networks
-        cycler = cycle(palette)
-        for c_name in match_names_list:
-            c_data = catalogue_data[c_name]
-            available_load_points = c_data["load_points"]
-            if any(match_load_point_function(x) for x in available_load_points):
-                empty_table = False
-                table.add_row(
-                    c_name,
-                    str(c_data["nb_buses"]),
-                    str(c_data["nb_branches"]),
-                    str(c_data["nb_loads"]),
-                    str(c_data["nb_sources"]),
-                    str(c_data["nb_grounds"]),
-                    str(c_data["nb_potential_refs"]),
-                    ", ".join(repr(x) for x in sorted(c_data["load_points"])),
-                    style=next(cycler),
-                )
-
-        # Handle the case of an empty table
-        if empty_table:
-            msg = "No networks can be found in the catalogue"
-            if name is not None and load_point_name is not None:
-                msg += f" with the name {name!r} and having a load point named {load_point_name!r}"
-            elif name is not None:
-                msg += f" with the name {name!r}"
-            elif load_point_name is not None:
-                msg += f" having a load point named {load_point_name!r}"
-            msg += "!"
-            console.print(msg)
-        else:
-            console.print(table)
-
-    @staticmethod
-    def _filter_name(name: Optional[Union[str, re.Pattern[str]]], catalogue_data: JsonDict) -> list[str]:
-        """Filter the catalogue using the network name.
-
-        Args:
-            name:
-                The optional name to use as a filter.
-
-            catalogue_data:
-                The catalogue of available networks. It avoids an additional read.
+                The name of the load point to get. For each network, several load points may be available. It can be
+                a regular expression.
 
         Returns:
-            The list of network names matching the provided one.
+            The dictionary containing the network data.
         """
-        if name is None:
-            match_names_list = list(catalogue_data)
-        elif isinstance(name, re.Pattern):
-            match_names_list = [k for k in catalogue_data if name.match(k)]
-        else:
-            try:
-                name_pattern = re.compile(pattern=name, flags=re.IGNORECASE)
-                match_names_list = [k for k in catalogue_data if name_pattern.match(k)]
-            except re.error:
-                name_pattern = name.lower()
-                match_names_list = [k for k in catalogue_data if k.lower() == name_pattern]
 
-        return match_names_list
+        catalogue_data, _ = cls._get_catalogue(
+            name=name,
+            load_point_name=load_point_name,
+            raise_if_not_found=False,
+        )
+        return (
+            catalogue_data.reset_index(drop=True)
+            .rename(
+                columns={
+                    "name": "Name",
+                    "nb_buses": "Nb buses",
+                    "nb_branches": "Nb branches",
+                    "nb_loads": "Nb loads",
+                    "nb_sources": "Nb sources",
+                    "nb_grounds": "Nb grounds",
+                    "nb_potential_refs": "Nb potential refs",
+                    "load_points": "Available load points",
+                }
+            )
+            .set_index("Name")
+        )
