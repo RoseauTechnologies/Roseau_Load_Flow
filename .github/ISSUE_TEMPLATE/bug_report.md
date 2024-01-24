@@ -16,7 +16,7 @@ Minimal Working Example to understand the problem
 from roseau.load_flow import *
 
 # Your code here
-# Please do not add username/or password here
+# Please do not add username, password or API keys here
 ```
 
 **Expected behavior**
