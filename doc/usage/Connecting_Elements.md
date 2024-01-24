@@ -123,9 +123,9 @@ belong to a network) will propagate the network to the new elements.
 ...     conductor_type=ConductorType.AL,
 ...     insulator_type=InsulatorType.PVC,
 ...     section=240,
-...     section_neutral=240,
+...     section_neutral=120,
 ...     height=Q_(-1.5, "m"),
-...     external_diameter=Q_(40, "mm"),
+...     external_diameter=Q_(50, "mm"),
 ... )
 >>> new_line = Line(
 ...     id="new_line",
@@ -161,9 +161,9 @@ And now if you run the load flow, you can see that the new elements are taken in
 
 ```pycon
 >>> en.solve_load_flow()
-(3, 1.216767654e-07)
+(3, 5.209166431541234e-13)
 >>> abs(new_load.res_voltages)
-array([216.54956226]) <Unit('volt')>
+array([214.8358114]) <Unit('volt')>
 ```
 
 ## Modifying an element
