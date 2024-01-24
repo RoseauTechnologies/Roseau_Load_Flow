@@ -8,10 +8,10 @@ _Roseau Load Flow_ is a highly capable three-phase load flow solver with an ergo
 for unbalanced power flow analysis.
 
 This project is compatible with Python version 3.10 and newer. The
-[installation instructions](https://roseautechnologies.github.io/Roseau_Load_Flow/Installation.html)
+[installation instructions](https://roseau-load-flow.roseautechnologies.com/Installation.html)
 will guide you through the installation process. If you are new to _Roseau Load Flow_, we recommend you start with the
-[getting started tutorial](https://roseautechnologies.github.io/Roseau_Load_Flow/usage/Getting_Started.html).
-You can find the complete documentation at https://roseautechnologies.github.io/Roseau_Load_Flow.
+[getting started tutorial](https://roseau-load-flow.roseautechnologies.com/usage/Getting_Started.html).
+You can find the complete documentation at https://roseau-load-flow.roseautechnologies.com/.
 
 > [!IMPORTANT]
 > Starting with version 0.7.0, Roseau Load Flow will no longer be supplied as a SaaS. The software will
@@ -21,13 +21,14 @@ You can find the complete documentation at https://roseautechnologies.github.io/
 
 The project is _partially_ open source but using the solver requires a license. The license key
 `A8C6DA-9405FB-E74FB9-C71C3C-207661-V3` can be used free of charge with networks containing up to 10
-buses. To obtain a personal or commercial license, please contact us at contact@roseautechnologies.com.
+buses. To obtain a personal or commercial license, please contact us
+at [contact@roseautechnologies.com](mailto:contact@roseautechnologies.com).
 
 > [!NOTE]
 > Licenses are given free of charge for **students and teachers**. Please contact us at
 > contact@roseautechnologies.com for more information.
 
-Read more at [License](https://roseautechnologies.github.io/Roseau_Load_Flow/License.html).
+Read more at [License](https://roseau-load-flow.roseautechnologies.com/License.html).
 
 ## Network data
 

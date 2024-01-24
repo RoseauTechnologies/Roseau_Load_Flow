@@ -56,7 +56,7 @@ about:
   license: BSD-3-Clause
   license_file: LICENSE.md
   summary: Highly capable three-phase load flow solver of Roseau Technologies.
-  doc_url: https://roseautechnologies.github.io/Roseau_Load_Flow/
+  doc_url: https://roseau-load-flow.roseautechnologies.com/
 
 extra:
   recipe-maintainers:

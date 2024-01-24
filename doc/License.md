@@ -28,19 +28,18 @@ There are two ways to activate the license in your project:
    **This is the recommended approach.**
    ```{note}
    If you need help setting an environment variable, refer to the section
-   [How to set an environment variable](license-environment-variable)
+   [How to set an environment variable?](license-environment-variable)
    ```
 2. Call the function `activate_license` with the license key as argument. This function will
    activate the license for the current session. If you use this approach, it is recommended to
-   store the license key in a file and read it from there to avoid hardcoding it in your code and
+   store the license key in a file and read it from there to avoid hard coding it in your code and
    accidentally committing it to your repository. Example:
 
    ```python
+   from pathlib import Path
    import roseau.load_flow as lf
 
-   with open("my_license_key.txt", "r") as f:
-       license_key = f.read().strip()
-   lf.activate_license(license_key)
+   lf.activate_license(Path("my_license_key.txt").read_text().strip())
 
    # Rest of your code here
    ```
@@ -50,7 +49,7 @@ There are two ways to activate the license in your project:
 
 (license-environment-variable)=
 
-## How to set an environment variable
+## How to set an environment variable?
 
 If you are not sure how to set an environment variable, [this article](https://www.bitecode.dev/p/environment-variables-for-beginners)
 has instructions for Windows, MacOS and Linux. The section [Persisting an environment variable](https://www.bitecode.dev/i/121864947/persisting-an-environment-variable)
