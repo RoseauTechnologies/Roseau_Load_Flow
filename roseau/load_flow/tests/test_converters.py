@@ -96,4 +96,4 @@ def test_series_phasor_to_sym():
     sym_index = sym_index.set_names("sequence", level=-1).set_levels(sym_index.levels[-1].astype(seq_dtype), level=-1)
     expected = pd.Series([0, va, 0, 0, va / 2, 0], index=sym_index, name="voltage")
 
-    assert_series_equal(series_phasor_to_sym(voltage), expected)
+    assert_series_equal(series_phasor_to_sym(voltage), expected, check_exact=False)

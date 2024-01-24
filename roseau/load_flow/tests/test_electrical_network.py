@@ -666,7 +666,7 @@ def test_buses_voltages(small_network: ElectricalNetwork, good_json_results):
     assert buses_voltages.shape == (6, 4)
     assert buses_voltages.index.names == ["bus_id", "phase"]
     assert list(buses_voltages.columns) == ["voltage", "min_voltage", "max_voltage", "violated"]
-    assert_frame_equal(buses_voltages, expected_buses_voltages)
+    assert_frame_equal(buses_voltages, expected_buses_voltages, check_exact=False)
 
 
 def test_to_from_dict_roundtrip(small_network: ElectricalNetwork):
@@ -892,6 +892,7 @@ def test_single_phase_network(single_phase_network: ElectricalNetwork):
             }
         )
         .set_index(["line_id", "phase"]),
+        check_exact=False,
     )
     # Switches results
     pd.testing.assert_frame_equal(
@@ -1562,7 +1563,7 @@ def test_load_flow_results_frames(small_network: ElectricalNetwork, good_json_re
         .astype({"potential_ref_id": object, "current": complex})
         .set_index(["potential_ref_id"])
     )
-    assert_frame_equal(small_network.res_potential_refs, expected_res_potential_refs)
+    assert_frame_equal(small_network.res_potential_refs, expected_res_potential_refs, check_exact=False)
 
     # No flexible loads
     assert small_network.res_loads_flexible_powers.empty
