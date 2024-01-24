@@ -9,7 +9,7 @@ __authors__ = ", ".join(
 )
 __copyright__ = "Roseau Technologies 2018"
 __credits__ = "Roseau Technologies"
-__license__ = "Proprietary"
+__license__ = "BSD-3-Clause"
 __maintainer__ = "Ali Hamdan"
 __email__ = "ali.hamdan@roseautechnologies.com"
 __status__ = "In development"

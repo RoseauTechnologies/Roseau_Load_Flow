@@ -1,6 +1,6 @@
 # prettier-ignore
 {% set name = "roseau-load-flow" %}
-{% set version = "0.6.0" %}
+{% set version = "0.7.0-alpha" %}
 
 package:
   name: "{{ name|lower }}"

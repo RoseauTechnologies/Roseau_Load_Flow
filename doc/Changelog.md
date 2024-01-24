@@ -1,8 +1,13 @@
 # Changelog
 
-## Unreleased
+## Version 0.7.0-alpha
 
-- {gh-pr}`168` {gh-issue}`166` Fix initial potentials propagation.
+```{important}
+Starting with version 0.7.0, Roseau Load Flow will no longer be supplied as a SaaS. The software will be available as
+a standalone Python library.
+```
+
+- {gh-pr}`168` {gh-issue}`166` Fix initial potentials' propagation.
 - {gh-pr}`167` {gh-issue}`161` Add a catalogue of lines using the IEC standards. You can use the method
   `LineParameters.get_catalogue()` to get a data frame of the available lines and the method
   `LineParameters.from_catalogue()` to create a line from the catalogue. Several line types, conductor
@@ -14,7 +19,7 @@
 - {gh-pr}`167` Replace all `print_catalogue()` methods by `get_catalogue()` methods that return a
   data frame instead of printing the catalogue to the console.
 - {gh-pr}`167` Enumeration classes no longer have a `from_string` method, you can call the enumeration
-  class directly with the string value to get the corresponding enumeration member. Case insensitive
+  class directly with the string value to get the corresponding enumeration member. Case-insensitive
   behavior is preserved.
 - {gh-pr}`167` {gh-issue}`122` Add checks on line height and diameter in the `LineParameters.from_geometry()`
   alternative constructor. This method will try to guess a default conductor and insulation type if

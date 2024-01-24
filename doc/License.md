@@ -13,12 +13,12 @@ can be used free of charge. For example, this key can be used to follow the gett
 
 ```{note}
 Licenses are given **free of charge** for _students and teachers_. Please contact us at
-contact@roseautechnologies.com to get a license key.
+[contact@roseautechnologies.com](mailto:contact@roseautechnologies.com) to get a license key.
 ```
 
 (license-activation)=
 
-## How to activate the license in your project
+## How to activate the license in your project?
 
 There are two ways to activate the license in your project:
 

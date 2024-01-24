@@ -22,8 +22,8 @@ copyright = "2018, Roseau Technologies SAS"
 # author = "Benoît Vinot"
 
 # The full version, including alpha/beta/rc tags
-version = "0.6"
-release = "0.6.0"
+version = "0.7"
+release = "0.7.0-alpha"
 
 # -- General configuration ---------------------------------------------------
 

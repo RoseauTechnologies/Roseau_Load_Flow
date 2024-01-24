@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "roseau-load-flow"
-version = "0.6.0"
+version = "0.7.0-alpha"
 description = "Highly capable three-phase load flow solver"
 authors = [
     "Ali Hamdan <ali.hamdan@roseautechnologies.com>",
@@ -26,6 +26,7 @@ packages = [
 ]
 classifiers = [
     "Development Status :: 3 - Alpha",
+    # "License :: OSI Approved :: The 3-Clause BSD License (BSD-3-Clause)", # https://github.com/pypa/trove-classifiers/issues/70
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -48,6 +49,7 @@ typing-extensions = ">=4.6.2"
 pyproj = ">=3.3.0"
 certifi = ">=2023.5.7"
 platformdirs = ">=4.0.0"
+roseau-load-flow-engine = "==0.12.0-alpha"
 
 # Optional dependencies
 matplotlib = { version = ">=3.7.2", optional = true }
@@ -68,7 +70,7 @@ networkx = ">=3.0.0"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^3.0.0"
-ruff = "==0.1.11" # keep in sync with .pre-commit-config.yaml
+ruff = "==0.1.14" # keep in sync with .pre-commit-config.yaml
 
 [tool.poetry.group.doc.dependencies]
 sphinx = "^7.0.1"
@@ -90,15 +92,9 @@ extend-include = ["*.ipynb"]
 select = ["E", "F", "C90", "W", "B", "UP", "I", "RUF100", "TID", "SIM", "PT", "PIE", "N", "C4", "NPY", "T10"]
 unfixable = ["B"]
 ignore = ["E501", "B024", "N818"]
-
-[tool.ruff.flake8-tidy-imports]
-ban-relative-imports = "all"
-
-[tool.ruff.flake8-pytest-style]
-parametrize-values-type = "tuple"
-
-[tool.ruff.mccabe]
-max-complexity = 15
+flake8-tidy-imports.ban-relative-imports = "all"
+flake8-pytest-style.parametrize-values-type = "tuple"
+mccabe.max-complexity = 15
 
 [tool.ruff.per-file-ignores]
 "*.ipynb" = ["E402", "F403", "F405", "B018"]
