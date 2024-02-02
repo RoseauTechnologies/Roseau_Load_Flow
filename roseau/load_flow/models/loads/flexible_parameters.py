@@ -296,7 +296,7 @@ class Control(JsonMixin):
     #
     @classmethod
     def from_dict(cls, data: JsonDict) -> Self:
-        alpha = data["alpha"] if "alpha" in data else cls._DEFAULT_ALPHA
+        alpha = data.get("alpha", cls._DEFAULT_ALPHA)
         if data["type"] == "constant":
             return cls.constant()
         elif data["type"] == "p_max_u_production":
@@ -421,8 +421,8 @@ class Projection(JsonMixin):
     #
     @classmethod
     def from_dict(cls, data: JsonDict) -> Self:
-        alpha = data["alpha"] if "alpha" in data else cls._DEFAULT_ALPHA
-        epsilon = data["epsilon"] if "epsilon" in data else cls._DEFAULT_EPSILON
+        alpha = data.get("alpha", cls._DEFAULT_ALPHA)
+        epsilon = data.get("epsilon", cls._DEFAULT_EPSILON)
         return cls(type=data["type"], alpha=alpha, epsilon=epsilon)
 
     def to_dict(self, *, _lf_only: bool = False) -> JsonDict:
