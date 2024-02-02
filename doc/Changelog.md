@@ -1,12 +1,13 @@
 # Changelog
 
-## Version 0.7.0-alpha
+## Version 0.7.0
 
 ```{important}
 Starting with version 0.7.0, Roseau Load Flow will no longer be supplied as a SaaS. The software will be available as
 a standalone Python library.
 ```
 
+- {gh-pr}`173` Remove the conda installation option.
 - {gh-pr}`168` {gh-issue}`166` Fix initial potentials' propagation.
 - {gh-pr}`167` {gh-issue}`161` Add a catalogue of lines using the IEC standards. You can use the method
   `LineParameters.get_catalogue()` to get a data frame of the available lines and the method
