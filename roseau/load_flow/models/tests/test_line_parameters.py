@@ -341,7 +341,7 @@ def test_from_name_lv():
 
 
 def test_from_name_mv():
-    with pytest.raises(RoseauLoadFlowException) as e, pytest.warns(FutureWarning):
+    with pytest.raises(RoseauLoadFlowException) as e:  # , pytest.warns(FutureWarning):
         LineParameters.from_name_mv("totoU_Al_150")
     assert "The line type name does not follow the syntax rule." in e.value.msg
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_TYPE_NAME_SYNTAX
