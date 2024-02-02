@@ -5,7 +5,7 @@ import os
 import certifi
 from platformdirs import user_cache_dir
 
-from roseau.load_flow import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
+from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow_engine.cy_engine import CyLicense, cy_activate_license, cy_deactivate_license, cy_get_license
 
 logger = logging.getLogger(__name__)
