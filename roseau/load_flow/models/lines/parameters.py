@@ -1007,6 +1007,11 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             res["insulator_type"] = self._insulator_type.name
         if not _lf_only and self._section is not None:
             res["section"] = self._section
+        for k, v in res.items():
+            if isinstance(v, np.integer):
+                res[k] = int(v)
+            elif isinstance(v, np.floating):
+                res[k] = float(v)
         return res
 
     def _results_to_dict(self, warning: bool) -> NoReturn:

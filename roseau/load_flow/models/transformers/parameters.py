@@ -289,6 +289,11 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         }
         if not _lf_only and self.max_power is not None:
             res["max_power"] = self.max_power.magnitude
+        for k, v in res.items():
+            if isinstance(v, np.integer):
+                res[k] = int(v)
+            elif isinstance(v, np.floating):
+                res[k] = float(v)
         return res
 
     def _results_to_dict(self, warning: bool) -> NoReturn:
