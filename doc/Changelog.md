@@ -7,6 +7,8 @@ Starting with version 0.7.0, Roseau Load Flow will no longer be supplied as a Sa
 a standalone Python library.
 ```
 
+- {gh-pr}`175` {gh-issue}`174` Fix JSON serialization of network with line parameters created from the
+  catalogue.
 - {gh-pr}`173` Remove the conda installation option.
 - {gh-pr}`168` {gh-issue}`166` Fix initial potentials' propagation.
 - {gh-pr}`167` {gh-issue}`161` Add a catalogue of lines using the IEC standards. You can use the method
