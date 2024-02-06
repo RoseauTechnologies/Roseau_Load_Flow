@@ -966,7 +966,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
     # Json Mixin interface
     #
     @classmethod
-    def from_dict(cls, data: JsonDict) -> Self:
+    def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
         """Line parameters constructor from dict.
 
         Args:
@@ -992,20 +992,19 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             section=data.get("section"),
         )
 
-    def to_dict(self, *, _lf_only: bool = False) -> JsonDict:
-        """Return the line parameters information as a dictionary format."""
+    def _to_dict(self, include_results: bool) -> JsonDict:
         res = {"id": self.id, "z_line": [self._z_line.real.tolist(), self._z_line.imag.tolist()]}
         if self.with_shunt:
             res["y_shunt"] = [self._y_shunt.real.tolist(), self._y_shunt.imag.tolist()]
-        if not _lf_only and self.max_current is not None:
+        if self.max_current is not None:
             res["max_current"] = self.max_current.magnitude
-        if not _lf_only and self._line_type is not None:
+        if self._line_type is not None:
             res["line_type"] = self._line_type.name
-        if not _lf_only and self._conductor_type is not None:
+        if self._conductor_type is not None:
             res["conductor_type"] = self._conductor_type.name
-        if not _lf_only and self._insulator_type is not None:
+        if self._insulator_type is not None:
             res["insulator_type"] = self._insulator_type.name
-        if not _lf_only and self._section is not None:
+        if self._section is not None:
             res["section"] = self._section
         for k, v in res.items():
             if isinstance(v, np.integer):
@@ -1019,7 +1018,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         logger.error(msg)
         raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.JSON_NO_RESULTS)
 
-    def results_from_dict(self, data: JsonDict) -> None:
+    def _results_from_dict(self, data: JsonDict) -> None:
         msg = f"The {type(self).__name__} has no results to import."
         logger.error(msg)
         raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.JSON_NO_RESULTS)

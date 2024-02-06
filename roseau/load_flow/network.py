@@ -139,7 +139,6 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         self._check_validity(constructed=False)
         self._create_network()
         self._valid = True
-        self._results_valid: bool = False
         self._solver = AbstractSolver.from_dict(data={"name": self._DEFAULT_SOLVER, "params": {}}, network=self)
 
     def __repr__(self) -> str:
@@ -184,11 +183,15 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
 
     @classmethod
     def from_element(cls, initial_bus: Bus) -> Self:
-        """Construct the network from only one element and add the others automatically.
+        """Construct the network from only one element (bus) and add the others automatically.
 
         Args:
             initial_bus:
-                Any bus of the network.
+                Any bus of the network. The network is constructed from this bus and all the
+                elements connected to it. This is usually the main source bus of the network.
+
+        Returns:
+            The network constructed from the given bus and all the elements connected to it.
         """
         buses: list[Bus] = []
         branches: list[AbstractBranch] = []
@@ -534,6 +537,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             )
 
         logger.debug(f"The load flow converged after {iterations} iterations and {end - start:.3n} s.")
+        self._no_results = False
 
         # Lazily update the results of the elements
         for element in chain(
@@ -545,6 +549,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             self.potential_refs.values(),
         ):
             element._fetch_results = True
+            element._no_results = False
 
         # The results are now valid
         self._results_valid = True
@@ -577,35 +582,6 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                 )
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_JACOBIAN) from e
-
-    def _results_from_dict(self, data: JsonDict) -> None:
-        """Dispatch the results to all the elements of the network.
-
-        Args:
-            data:
-                The results returned by the solver.
-        """
-        for bus_data in data["buses"]:
-            bus = self.buses[bus_data["id"]]
-            bus.results_from_dict(bus_data)
-        for branch_data in data["branches"]:
-            branch = self.branches[branch_data["id"]]
-            branch.results_from_dict(branch_data)
-        for load_data in data["loads"]:
-            load = self.loads[load_data["id"]]
-            load.results_from_dict(load_data)
-        for source_data in data["sources"]:
-            source = self.sources[source_data["id"]]
-            source.results_from_dict(data=source_data)
-        for ground_data in data["grounds"]:
-            ground = self.grounds[ground_data["id"]]
-            ground.results_from_dict(ground_data)
-        for p_ref_data in data["potential_refs"]:
-            p_ref = self.potential_refs[p_ref_data["id"]]
-            p_ref.results_from_dict(p_ref_data)
-
-        # The results are now valid
-        self._results_valid = True
 
     #
     # Properties to access the load flow results as dataframes
@@ -1346,18 +1322,24 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
     # Network saving/loading
     #
     @classmethod
-    def from_dict(cls, data: JsonDict) -> Self:
+    def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
         """Construct an electrical network from a dict created with :meth:`to_dict`.
 
         Args:
             data:
                 The dictionary containing the network data.
 
+            include_results:
+                If True (default) and the results of the load flow are included in the dictionary,
+                the results are also loaded into the element.
+
         Returns:
             The constructed network.
         """
-        buses, branches, loads, sources, grounds, p_refs = network_from_dict(data)
-        return cls(
+        buses, branches, loads, sources, grounds, p_refs, has_results = network_from_dict(
+            data, include_results=include_results
+        )
+        network = cls(
             buses=buses,
             branches=branches,
             loads=loads,
@@ -1365,27 +1347,24 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             grounds=grounds,
             potential_refs=p_refs,
         )
+        network._no_results = not has_results
+        network._results_valid = has_results
+        return network
 
-    def to_dict(self, *, _lf_only: bool = False) -> JsonDict:
-        """Convert the electrical network to a dictionary.
-
-        Args:
-            _lf_only:
-                Internal argument, please do not use.
-        """
-        return network_to_dict(self, _lf_only=_lf_only)
+    def _to_dict(self, include_results: bool) -> JsonDict:
+        return network_to_dict(self, include_results=include_results)
 
     #
     # Results saving/loading
     #
-    def results_from_dict(self, data: JsonDict) -> None:
+    def _results_from_dict(self, data: JsonDict) -> None:
         """Load the results of a load flow from a dict created by :meth:`results_to_dict`.
 
         The results are stored in the network elements.
 
         Args:
             data:
-                The dictionary containing the results as returned by the solver.
+                The dictionary containing the load flow results.
         """
         # Checks on the provided data
         for key, self_elements, name in (
@@ -1413,7 +1392,28 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LOAD_FLOW_RESULT)
 
         # The results are assigned to all elements
-        self._results_from_dict(data)
+        for bus_data in data["buses"]:
+            bus = self.buses[bus_data["id"]]
+            bus._results_from_dict(bus_data)
+        for branch_data in data["branches"]:
+            branch = self.branches[branch_data["id"]]
+            branch._results_from_dict(branch_data)
+        for load_data in data["loads"]:
+            load = self.loads[load_data["id"]]
+            load._results_from_dict(load_data)
+        for source_data in data["sources"]:
+            source = self.sources[source_data["id"]]
+            source._results_from_dict(data=source_data)
+        for ground_data in data["grounds"]:
+            ground = self.grounds[ground_data["id"]]
+            ground._results_from_dict(ground_data)
+        for p_ref_data in data["potential_refs"]:
+            p_ref = self.potential_refs[p_ref_data["id"]]
+            p_ref._results_from_dict(p_ref_data)
+
+        # The results are now valid
+        self._results_valid = True
+        self._no_results = False
 
     def _results_to_dict(self, warning: bool) -> JsonDict:
         """Get the voltages and currents computed by the load flow and return them as a dict."""

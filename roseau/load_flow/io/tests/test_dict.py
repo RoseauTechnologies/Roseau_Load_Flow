@@ -56,45 +56,37 @@ def test_to_dict():
 
     # Same id, different line parameters -> fail
     with pytest.raises(RoseauLoadFlowException) as e:
-        en.to_dict()
+        en.to_dict(include_results=False)
     assert "There are multiple line parameters with id 'test'" in e.value.msg
     assert e.value.code == RoseauLoadFlowExceptionCode.JSON_LINE_PARAMETERS_DUPLICATES
 
     # Same id, same line parameters -> ok
     lp2 = LineParameters("test", z_line=np.eye(4, dtype=complex), y_shunt=np.eye(4, dtype=complex))
     line2.parameters = lp2
-    en.to_dict()
+    en.to_dict(include_results=False)
 
     # Dict content
     line2.parameters = lp1
     lp1.max_current = 1000
-    res = en.to_dict()
-    assert "geometry" in res["buses"][0]
-    assert "geometry" in res["buses"][1]
-    assert "geometry" in res["branches"][0]
-    assert "geometry" in res["branches"][1]
-    assert np.isclose(res["buses"][0]["min_voltage"], 0.9 * vn)
-    assert np.isclose(res["buses"][1]["max_voltage"], 1.1 * vn)
+    res = en.to_dict(include_results=False)
+    res_bus0, res_bus1 = res["buses"]
+    res_line0, res_line1 = res["branches"]
+    assert "geometry" in res_bus0
+    assert "geometry" in res_bus1
+    assert "geometry" in res_line0
+    assert "geometry" in res_line1
+    assert np.isclose(res_bus0["min_voltage"], 0.9 * vn)
+    assert np.isclose(res_bus1["max_voltage"], 1.1 * vn)
     lp_dict = res["lines_params"][0]
     assert np.isclose(lp_dict["max_current"], 1000)
     assert lp_dict["line_type"] == "UNDERGROUND"
     assert lp_dict["conductor_type"] == "AA"
     assert lp_dict["insulator_type"] == "PVC"
     assert np.isclose(lp_dict["section"], 120)
-
-    res = en.to_dict(_lf_only=True)
-    assert "geometry" not in res["buses"][0]
-    assert "geometry" not in res["buses"][1]
-    assert "geometry" not in res["branches"][0]
-    assert "geometry" not in res["branches"][1]
-    assert "min_voltage" not in res["buses"][0]
-    assert "max_voltage" not in res["buses"][1]
-    lp_dict = res["lines_params"][0]
-    assert "max_current" not in lp_dict
-    assert "line_type" not in lp_dict
-    assert "conductor_type" not in lp_dict
-    assert "insulator_type" not in lp_dict
-    assert "section" not in lp_dict
+    assert "results" not in res_bus0
+    assert "results" not in res_bus1
+    assert "results" not in res_line0
+    assert "results" not in res_line1
 
     # Same id, different transformer parameters -> fail
     ground = Ground("ground")
@@ -128,7 +120,7 @@ def test_to_dict():
 
     # Same id, different transformer parameters -> fail
     with pytest.raises(RoseauLoadFlowException) as e:
-        en.to_dict()
+        en.to_dict(include_results=False)
     assert "There are multiple transformer parameters with id 't'" in e.value.msg
     assert e.value.code == RoseauLoadFlowExceptionCode.JSON_TRANSFORMER_PARAMETERS_DUPLICATES
 
@@ -137,24 +129,17 @@ def test_to_dict():
         "t", type="Dyn11", uhv=20000, ulv=400, sn=160 * 1e3, p0=460, i0=2.3 / 100, psc=2350, vsc=4 / 100
     )
     transformer2.parameters = tp2
-    en.to_dict()
+    en.to_dict(include_results=False)
 
     # Dict content
     transformer2.parameters = tp1
     tp1.max_power = 180_000
-    res = en.to_dict()
+    res = en.to_dict(include_results=False)
     assert "geometry" in res["buses"][0]
     assert "geometry" in res["buses"][1]
     assert "geometry" in res["branches"][0]
     assert "geometry" in res["branches"][1]
     assert np.isclose(res["transformers_params"][0]["max_power"], 180_000)
-
-    res = en.to_dict(_lf_only=True)
-    assert "geometry" not in res["buses"][0]
-    assert "geometry" not in res["buses"][1]
-    assert "geometry" not in res["branches"][0]
-    assert "geometry" not in res["branches"][1]
-    assert "max_power" not in res["transformers_params"][0]
 
 
 def test_v0_to_v1_converter(monkeypatch):
@@ -962,7 +947,7 @@ def test_v0_to_v1_converter(monkeypatch):
         potential_refs=potential_refs,
     )
 
-    net_dict = net.to_dict()
+    net_dict = net.to_dict(include_results=False)
     expected_dict = dict_v0
     expected_dict = v0_to_v1_converter(expected_dict)
     # Uncomment the following lines as needed when new versions are added

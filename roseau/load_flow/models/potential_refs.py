@@ -100,10 +100,15 @@ class PotentialRef(Element):
     # Jso Mixin interface
     #
     @classmethod
-    def from_dict(cls, data: JsonDict) -> Self:
-        return cls(data["id"], data["element"], phase=data.get("phases"))
+    def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
+        self = cls(data["id"], data["element"], phase=data.get("phases"))
+        if include_results and "results" in data:
+            self._res_current = complex(*data["results"]["current"])
+            self._fetch_results = False
+            self._no_results = False
+        return self
 
-    def to_dict(self, *, _lf_only: bool = False) -> JsonDict:
+    def _to_dict(self, include_results: bool) -> JsonDict:
         res = {"id": self.id}
         e = self.element
         if isinstance(e, Bus):
@@ -113,11 +118,15 @@ class PotentialRef(Element):
             res["ground"] = e.id
         else:
             raise AssertionError(f"Unexpected element type {type(e).__name__}")
+        if include_results:
+            i = self._res_current_getter(warning=True)
+            res["results"] = {"current": [i.real, i.imag]}
         return res
 
-    def results_from_dict(self, data: JsonDict) -> None:
+    def _results_from_dict(self, data: JsonDict) -> None:
         self._res_current = complex(*data["current"])
         self._fetch_results = False
+        self._no_results = False
 
     def _results_to_dict(self, warning: bool) -> JsonDict:
         i = self._res_current_getter(warning)

@@ -78,6 +78,11 @@ def dgs_network_path(request) -> Path:
     return request.param
 
 
+@pytest.fixture()
+def test_networks_path() -> Path:
+    return TEST_ALL_NETWORKS_DATA_FOLDER
+
+
 #
 # Utils
 #

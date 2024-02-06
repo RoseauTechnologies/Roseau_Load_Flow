@@ -1,0 +1,129 @@
+{
+  "version": 1,
+  "grounds": [
+    {
+      "id": "ground",
+      "buses": [
+        {
+          "id": "bus1",
+          "phase": "n"
+        }
+      ],
+      "results": {
+        "potential": [0.0, 0.0]
+      }
+    }
+  ],
+  "potential_refs": [
+    {
+      "id": "pref",
+      "ground": "ground",
+      "results": {
+        "current": [-1.2500243895541274e-13, 0.0]
+      }
+    }
+  ],
+  "buses": [
+    {
+      "id": "bus0",
+      "phases": "bn",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-1.318375372111463, 48.64794139348595]
+      },
+      "results": {
+        "potentials": [
+          [19999.94999975, 0.0],
+          [-0.050000250001249996, 0.0]
+        ]
+      }
+    },
+    {
+      "id": "bus1",
+      "phases": "bn",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-1.320149235966572, 48.64971306653889]
+      },
+      "results": {
+        "potentials": [
+          [19999.899999499998, 0.0],
+          [0.0, 0.0]
+        ]
+      }
+    }
+  ],
+  "branches": [
+    {
+      "id": "line",
+      "type": "line",
+      "phases1": "bn",
+      "phases2": "bn",
+      "bus1": "bus0",
+      "bus2": "bus1",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [-1.318375372111463, 48.64794139348595],
+          [-1.320149235966572, 48.64971306653889]
+        ]
+      },
+      "results": {
+        "currents1": [
+          [0.005000025000117603, 0.0],
+          [-0.005000025000125, 0.0]
+        ],
+        "currents2": [
+          [-0.005000025000117603, -0.0],
+          [0.005000025000125, -0.0]
+        ]
+      },
+      "length": 1.0,
+      "params_id": "test"
+    }
+  ],
+  "loads": [
+    {
+      "id": "load",
+      "bus": "bus1",
+      "phases": "bn",
+      "powers": [[100.0, 0.0]],
+      "results": {
+        "currents": [
+          [0.005000025000250002, -0.0],
+          [-0.005000025000250002, 0.0]
+        ]
+      }
+    }
+  ],
+  "sources": [
+    {
+      "id": "vs",
+      "bus": "bus0",
+      "phases": "bn",
+      "voltages": [[20000.0, 0.0]],
+      "results": {
+        "currents": [
+          [-0.005000025000125, 0.0],
+          [0.005000025000125, 0.0]
+        ]
+      }
+    }
+  ],
+  "lines_params": [
+    {
+      "id": "test",
+      "z_line": [
+        [
+          [10.0, 0.0],
+          [0.0, 10.0]
+        ],
+        [
+          [0.0, 0.0],
+          [0.0, 0.0]
+        ]
+      ]
+    }
+  ],
+  "transformers_params": []
+}
