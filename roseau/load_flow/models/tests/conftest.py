@@ -1,4 +1,3 @@
-import json
 from pathlib import Path
 
 import pytest
@@ -12,8 +11,4 @@ NETWORK_FILES = list(DATA_FOLDER.glob("Network_*.json"))
 
 @pytest.fixture(scope="session", params=NETWORK_FILES, ids=[x.stem for x in NETWORK_FILES])
 def network_with_results(request) -> ElectricalNetwork:
-    with open(request.param) as f:
-        data = json.load(f)
-    net = ElectricalNetwork.from_dict(data["network"])
-    net.results_from_dict(data["results"])
-    return net
+    return ElectricalNetwork.from_json(request.param, include_results=True)

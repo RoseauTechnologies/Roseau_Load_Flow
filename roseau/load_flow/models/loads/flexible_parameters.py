@@ -295,7 +295,7 @@ class Control(JsonMixin):
     # Json Mixin interface
     #
     @classmethod
-    def from_dict(cls, data: JsonDict) -> Self:
+    def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
         alpha = data.get("alpha", cls._DEFAULT_ALPHA)
         if data["type"] == "constant":
             return cls.constant()
@@ -312,7 +312,7 @@ class Control(JsonMixin):
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_CONTROL_TYPE)
 
-    def to_dict(self, *, _lf_only: bool = False) -> JsonDict:
+    def _to_dict(self, include_results: bool) -> JsonDict:
         if self.type == "constant":
             return {"type": "constant"}
         elif self.type == "p_max_u_production":
@@ -338,7 +338,7 @@ class Control(JsonMixin):
         logger.error(msg)
         raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.JSON_NO_RESULTS)
 
-    def results_from_dict(self, data: JsonDict) -> NoReturn:
+    def _results_from_dict(self, data: JsonDict) -> NoReturn:
         msg = f"The {type(self).__name__} has no results to import."
         logger.error(msg)
         raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.JSON_NO_RESULTS)
@@ -420,12 +420,12 @@ class Projection(JsonMixin):
     # Json Mixin interface
     #
     @classmethod
-    def from_dict(cls, data: JsonDict) -> Self:
+    def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
         alpha = data.get("alpha", cls._DEFAULT_ALPHA)
         epsilon = data.get("epsilon", cls._DEFAULT_EPSILON)
         return cls(type=data["type"], alpha=alpha, epsilon=epsilon)
 
-    def to_dict(self, *, _lf_only: bool = False) -> JsonDict:
+    def _to_dict(self, include_results: bool) -> JsonDict:
         return {"type": self.type, "alpha": self._alpha, "epsilon": self._epsilon}
 
     def _results_to_dict(self, warning: bool) -> NoReturn:
@@ -433,7 +433,7 @@ class Projection(JsonMixin):
         logger.error(msg)
         raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.JSON_NO_RESULTS)
 
-    def results_from_dict(self, data: JsonDict) -> NoReturn:
+    def _results_from_dict(self, data: JsonDict) -> NoReturn:
         msg = f"The {type(self).__name__} has no results to import."
         logger.error(msg)
         raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.JSON_NO_RESULTS)
@@ -949,10 +949,10 @@ class FlexibleParameter(JsonMixin):
     # Json Mixin interface
     #
     @classmethod
-    def from_dict(cls, data: JsonDict) -> Self:
-        control_p = Control.from_dict(data["control_p"])
-        control_q = Control.from_dict(data["control_q"])
-        projection = Projection.from_dict(data["projection"])
+    def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
+        control_p = Control.from_dict(data["control_p"], include_results=include_results)
+        control_q = Control.from_dict(data["control_q"], include_results=include_results)
+        projection = Projection.from_dict(data["projection"], include_results=include_results)
         q_min = data.get("q_min", None)
         q_max = data.get("q_max", None)
         return cls(
@@ -964,11 +964,11 @@ class FlexibleParameter(JsonMixin):
             q_max=q_max,
         )
 
-    def to_dict(self, *, _lf_only: bool = False) -> JsonDict:
+    def _to_dict(self, include_results: bool) -> JsonDict:
         res = {
-            "control_p": self.control_p.to_dict(),
-            "control_q": self.control_q.to_dict(),
-            "projection": self.projection.to_dict(),
+            "control_p": self.control_p.to_dict(include_results=include_results),
+            "control_q": self.control_q.to_dict(include_results=include_results),
+            "projection": self.projection.to_dict(include_results=include_results),
             "s_max": self._s_max,
         }
         if self._q_min is not None:
@@ -982,7 +982,7 @@ class FlexibleParameter(JsonMixin):
         logger.error(msg)
         raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.JSON_NO_RESULTS)
 
-    def results_from_dict(self, data: JsonDict) -> NoReturn:
+    def _results_from_dict(self, data: JsonDict) -> NoReturn:
         msg = f"The {type(self).__name__} has no results to import."
         logger.error(msg)
         raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.JSON_NO_RESULTS)

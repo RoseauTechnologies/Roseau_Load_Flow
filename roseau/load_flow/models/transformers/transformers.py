@@ -186,8 +186,11 @@ class Transformer(AbstractBranch):
         # for all transformers that share the parameters. It is better to set it on the parameters.
         return self.parameters.max_power
 
-    def to_dict(self, *, _lf_only: bool = False) -> JsonDict:
-        return {**super().to_dict(_lf_only=_lf_only), "params_id": self.parameters.id, "tap": self.tap}
+    def _to_dict(self, include_results: bool) -> JsonDict:
+        res = super()._to_dict(include_results=include_results)
+        res["tap"] = self.tap
+        res["params_id"] = self.parameters.id
+        return res
 
     def _compute_phases_three(
         self,

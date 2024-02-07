@@ -137,4 +137,5 @@ addopts = "--color=yes -n=0 --import-mode=importlib"
 testpaths = ["roseau/load_flow/"]
 filterwarnings = [
     'ignore:.*utcfromtimestamp:DeprecationWarning:dateutil.*', # dateutil is imported by pandas, not us
+    'ignore:Pyarrow will become a required dependency of pandas:DeprecationWarning:.*',
 ]

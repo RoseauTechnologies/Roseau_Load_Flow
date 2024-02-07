@@ -183,22 +183,34 @@ class VoltageSource(Element):
     # Json Mixin interface
     #
     @classmethod
-    def from_dict(cls, data: JsonDict) -> Self:
+    def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
         voltages = [complex(v[0], v[1]) for v in data["voltages"]]
-        return cls(data["id"], data["bus"], voltages=voltages, phases=data["phases"])
+        self = cls(data["id"], data["bus"], voltages=voltages, phases=data["phases"])
+        if include_results and "results" in data:
+            self._res_currents = np.array(
+                [complex(i[0], i[1]) for i in data["results"]["currents"]], dtype=np.complex128
+            )
+            self._fetch_results = False
+            self._no_results = False
+        return self
 
-    def to_dict(self, *, _lf_only: bool = False) -> JsonDict:
+    def _to_dict(self, include_results: bool) -> JsonDict:
         self._raise_disconnected_error()
-        return {
+        res = {
             "id": self.id,
             "bus": self.bus.id,
             "phases": self.phases,
             "voltages": [[v.real, v.imag] for v in self._voltages],
         }
+        if include_results:
+            currents = self._res_currents_getter(warning=True)
+            res["results"] = {"currents": [[i.real, i.imag] for i in currents]}
+        return res
 
-    def results_from_dict(self, data: JsonDict) -> None:
+    def _results_from_dict(self, data: JsonDict) -> None:
         self._res_currents = np.array([complex(i[0], i[1]) for i in data["currents"]], dtype=np.complex128)
         self._fetch_results = False
+        self._no_results = False
 
     def _results_to_dict(self, warning: bool) -> JsonDict:
         return {

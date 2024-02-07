@@ -331,12 +331,11 @@ class Bus(Element):
     # Json Mixin interface
     #
     @classmethod
-    def from_dict(cls, data: JsonDict) -> Self:
+    def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
         geometry = cls._parse_geometry(data.get("geometry"))
-        potentials = data.get("potentials")
-        if potentials is not None:
+        if (potentials := data.get("potentials")) is not None:
             potentials = [complex(v[0], v[1]) for v in potentials]
-        return cls(
+        self = cls(
             id=data["id"],
             phases=data["phases"],
             geometry=geometry,
@@ -344,23 +343,33 @@ class Bus(Element):
             min_voltage=data.get("min_voltage"),
             max_voltage=data.get("max_voltage"),
         )
+        if include_results and "results" in data:
+            self._res_potentials = np.array(
+                [complex(v[0], v[1]) for v in data["results"]["potentials"]], dtype=np.complex128
+            )
+            self._fetch_results = False
+            self._no_results = False
+        return self
 
-    def to_dict(self, *, _lf_only: bool = False) -> JsonDict:
+    def _to_dict(self, include_results: bool) -> JsonDict:
         res = {"id": self.id, "phases": self.phases}
         if self._initialized_by_the_user:
             res["potentials"] = [[v.real, v.imag] for v in self._potentials]
-        if not _lf_only:
-            if self.geometry is not None:
-                res["geometry"] = self.geometry.__geo_interface__
-            if self.min_voltage is not None:
-                res["min_voltage"] = self.min_voltage.magnitude
-            if self.max_voltage is not None:
-                res["max_voltage"] = self.max_voltage.magnitude
+        if self.geometry is not None:
+            res["geometry"] = self.geometry.__geo_interface__
+        if self.min_voltage is not None:
+            res["min_voltage"] = self.min_voltage.magnitude
+        if self.max_voltage is not None:
+            res["max_voltage"] = self.max_voltage.magnitude
+        if include_results:
+            potentials = self._res_potentials_getter(warning=True)
+            res["results"] = {"potentials": [[v.real, v.imag] for v in potentials]}
         return res
 
-    def results_from_dict(self, data: JsonDict) -> None:
+    def _results_from_dict(self, data: JsonDict) -> None:
         self._res_potentials = np.array([complex(v[0], v[1]) for v in data["potentials"]], dtype=np.complex128)
         self._fetch_results = False
+        self._no_results = False
 
     def _results_to_dict(self, warning: bool) -> JsonDict:
         return {

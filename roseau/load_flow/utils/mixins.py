@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Generic, NoReturn, TypeVar, overload
 
 import pandas as pd
-from typing_extensions import Self
+from typing_extensions import Self, deprecated
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.typing import Id, JsonDict, StrPath
@@ -35,38 +35,84 @@ class Identifiable(metaclass=ABCMeta):
 class JsonMixin(metaclass=ABCMeta):
     """Mixin for classes that can be serialized to and from JSON."""
 
+    _no_results = True
+    _results_valid = False
+
     @classmethod
     @abstractmethod
-    def from_dict(cls, data: JsonDict) -> Self:
-        """Create an element from a dictionary."""
+    def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
+        """Create an element from a dictionary created with :meth:`to_dict`.
+
+        Note:
+            This method does not work on all classes that define it as some of them require
+            additional information to be constructed. It can only be safely used on the
+            `ElectricNetwork`, `LineParameters` and `TransformerParameters` classes.
+
+        Args:
+            data:
+                The dictionary containing the element's data.
+
+            include_results:
+                If True (default) and the results of the load flow are included in the dictionary,
+                the results are also loaded into the element.
+
+        Returns:
+            The constructed element.
+        """
         raise NotImplementedError
 
     @classmethod
-    def from_json(cls, path: StrPath) -> Self:
-        """Construct an electrical network from a json file created with :meth:`to_json`.
+    def from_json(cls, path: StrPath, *, include_results: bool = True) -> Self:
+        """Construct an element from a JSON file created with :meth:`to_json`.
+
+        Note:
+            This method does not work on all classes that define it as some of them require
+            additional information to be constructed. It can only be safely used on the
+            `ElectricNetwork`, `LineParameters` and `TransformerParameters` classes.
 
         Args:
             path:
                 The path to the network data file.
 
+            include_results:
+                If True (default) and the results of the load flow are included in the file,
+                the results are also loaded into the element.
+
         Returns:
-            The constructed network.
+            The constructed element.
         """
         data = json.loads(Path(path).read_text())
-        return cls.from_dict(data=data)
+        return cls.from_dict(data=data, include_results=include_results)
 
     @abstractmethod
-    def to_dict(self, *, _lf_only: bool = False) -> JsonDict:
-        """Return the element information as a dictionary format.
-
-        Args:
-            _lf_only:
-                Internal argument, please do not use.
-        """
+    def _to_dict(self, include_results: bool) -> JsonDict:
+        """Return the element information as a dictionary format."""
         raise NotImplementedError
 
-    def to_json(self, path: StrPath) -> Path:
-        """Save the current network to a json file.
+    def to_dict(self, *, include_results: bool = True) -> JsonDict:
+        """Convert the element to a dictionary.
+
+        Args:
+            include_results:
+                If True (default), the results of the load flow are included in the dictionary.
+                If no results are available, this option is ignored.
+
+        Returns:
+            A JSON serializable dictionary with the element's data.
+        """
+        if include_results and self._no_results:
+            include_results = False
+        if include_results and not self._results_valid:
+            msg = (
+                f"Trying to convert {type(self).__name__} with invalid results to a dict. Either "
+                f"call `en.solve_load_flow()` before converting or pass `include_results=False`."
+            )
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg, code=RoseauLoadFlowExceptionCode.BAD_LOAD_FLOW_RESULT)
+        return self._to_dict(include_results=include_results)
+
+    def to_json(self, path: StrPath, *, include_results: bool = True) -> Path:
+        """Save this element to a JSON file.
 
         .. note::
             The path is `expanded`_ then `resolved`_ before writing the file.
@@ -81,27 +127,41 @@ class JsonMixin(metaclass=ABCMeta):
             path:
                 The path to the output file to write the network to.
 
+            include_results:
+                If True (default), the results of the load flow are included in the JSON file.
+                If no results are available, this option is ignored.
+
         Returns:
             The expanded and resolved path of the written file.
         """
-        res = self.to_dict()
+        res = self.to_dict(include_results=include_results)
         output = json.dumps(res, ensure_ascii=False, indent=2)
-        output = re.sub(r"\[\s+(.*),\s+(.*)\s+]", r"[\1, \2]", output)
+        # Collapse multi-line arrays of 2-to-4 elements into single line
+        # e.g complex value represented as [real, imag] or rows of the z_line matrix
+        output = re.sub(r"\[(?:\s+(\S+,))?(?:\s+?( \S+,))??(?:\s+?( \S+,))??\s+?( \S+)\s+\]", r"[\1\2\3\4]", output)
         if not output.endswith("\n"):
             output += "\n"
         path = Path(path).expanduser().resolve()
         path.write_text(output)
         return path
 
-    def results_to_dict(self) -> JsonDict:
-        """Return the results of the element as a dictionary format"""
-        return self._results_to_dict(True)
-
     @abstractmethod
     def _results_to_dict(self, warning: bool) -> JsonDict:
         """Return the results of the element as a dictionary format"""
         raise NotImplementedError
 
+    @deprecated(
+        "Method `results_to_dict()` is deprecated. Method `to_dict()` now includes the results by default.",
+        category=DeprecationWarning,
+    )
+    def results_to_dict(self) -> JsonDict:
+        """Return the results of the element as a dictionary format"""
+        return self._results_to_dict(warning=True)
+
+    @deprecated(
+        "Method `results_to_json()` is deprecated. Method `to_json()` now includes the results by default.",
+        category=DeprecationWarning,
+    )
     def results_to_json(self, path: StrPath) -> Path:
         """Write the results of the load flow to a json file.
 
@@ -121,7 +181,7 @@ class JsonMixin(metaclass=ABCMeta):
         Returns:
             The expanded and resolved path of the written file.
         """
-        dict_results = self.results_to_dict()
+        dict_results = self._results_to_dict(warning=True)
         output = json.dumps(dict_results, indent=4)
         output = re.sub(r"\[\s+(.*),\s+(.*)\s+]", r"[\1, \2]", output)
         path = Path(path).expanduser().resolve()
@@ -131,10 +191,23 @@ class JsonMixin(metaclass=ABCMeta):
         return path
 
     @abstractmethod
-    def results_from_dict(self, data: JsonDict) -> None:
+    def _results_from_dict(self, data: JsonDict) -> None:
         """Fill an element with the provided results' dictionary."""
         raise NotImplementedError
 
+    @deprecated(
+        "Method `results_from_dict()` is deprecated. Method `from_dict()` now includes the results by default.",
+        category=DeprecationWarning,
+    )
+    def results_from_dict(self, data: JsonDict) -> None:
+        """Fill an element with the provided results' dictionary."""
+        self._no_results = False
+        return self._results_from_dict(data)
+
+    @deprecated(
+        "Method `results_from_json()` is deprecated. Method `from_json()` now includes the results by default.",
+        category=DeprecationWarning,
+    )
     def results_from_json(self, path: StrPath) -> None:
         """Load the results of a load flow from a json file created by :meth:`results_to_json`.
 
@@ -145,7 +218,7 @@ class JsonMixin(metaclass=ABCMeta):
                 The path to the JSON file containing the results.
         """
         data = json.loads(Path(path).read_text())
-        self.results_from_dict(data)
+        self._results_from_dict(data)
 
 
 class CatalogueMixin(Generic[_T], metaclass=ABCMeta):

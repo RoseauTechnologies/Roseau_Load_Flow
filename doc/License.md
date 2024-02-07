@@ -23,7 +23,7 @@ Licenses are given **free of charge** for _students and teachers_. Please contac
 There are two ways to activate the license in your project:
 
 1. Set the environment variable `ROSEAU_LOAD_FLOW_LICENSE_KEY` to the license key. When this
-   environment variable is defined, it will be automatically used by the solver to validate the
+   environment variable is defined, it will automatically be used by the solver to validate the
    license, no further action is required.
    **This is the recommended approach.**
    ```{note}

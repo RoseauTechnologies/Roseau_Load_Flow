@@ -84,17 +84,16 @@ class Switch(AbstractBranch):
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_GEOMETRY_TYPE)
         super().__init__(id=id, phases1=phases, phases2=phases, bus1=bus1, bus2=bus2, geometry=geometry, **kwargs)
-        self._phases = phases
         self._check_elements()
         self._check_loop()
-        self._n = len(self._phases)
+        self._n = len(phases)
         self._cy_element = CySwitch(self._n)
         self._cy_connect()
 
     @property
     def phases(self) -> str:
-        """The phases of the source."""
-        return self._phases
+        """The phases of the switch. This is an alias for :attr:`phases1` and :attr:`phases2`."""
+        return self._phases1
 
     def _check_loop(self) -> None:
         """Check that there are no switch loop, raise an exception if it is the case"""
@@ -213,7 +212,6 @@ class Line(AbstractBranch):
 
         self._initialized = False
         super().__init__(id, bus1, bus2, phases1=phases, phases2=phases, geometry=geometry, **kwargs)
-        self._phases = phases
         self.ground = ground
         self.length = length
         self.parameters = parameters
@@ -234,7 +232,7 @@ class Line(AbstractBranch):
             # Connect the ground
             self._connect(self.ground)
 
-        self._n = len(self._phases)
+        self._n = len(phases)
         if parameters.with_shunt:
             self._cy_element = CyShuntLine(
                 n=self._n,
@@ -251,8 +249,8 @@ class Line(AbstractBranch):
 
     @property
     def phases(self) -> str:
-        """The phases of the source."""
-        return self._phases
+        """The phases of the line. This is an alias for :attr:`phases1` and :attr:`phases2`."""
+        return self._phases1
 
     @property
     @ureg_wraps("km", (None,))
@@ -431,12 +429,10 @@ class Line(AbstractBranch):
     #
     # Json Mixin interface
     #
-    def to_dict(self, *, _lf_only: bool = False) -> JsonDict:
-        res = {
-            **super().to_dict(_lf_only=_lf_only),
-            "length": self._length,
-            "params_id": self.parameters.id,
-        }
+    def _to_dict(self, include_results: bool) -> JsonDict:
+        res = super()._to_dict(include_results=include_results)
+        res["length"] = self._length
+        res["params_id"] = self.parameters.id
         if self.ground is not None:
             res["ground"] = self.ground.id
         return res
