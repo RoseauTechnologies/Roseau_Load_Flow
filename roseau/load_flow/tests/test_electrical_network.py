@@ -28,37 +28,12 @@ from roseau.load_flow.network import ElectricalNetwork
 from roseau.load_flow.units import Q_
 from roseau.load_flow.utils import BranchTypeDtype, PhaseDtype, VoltagePhaseDtype
 
+# The following networks are generated using the scripts/genereate_test_networks.py script
+
 
 @pytest.fixture()
 def small_network(test_networks_path) -> ElectricalNetwork:
-    # # Build a small network
-    # point1 = Point(-1.318375372111463, 48.64794139348595)
-    # point2 = Point(-1.320149235966572, 48.64971306653889)
-    # line_string = LineString([point1, point2])
-
-    # ground = Ground("ground")
-    # source_bus = Bus("bus0", phases="abcn", geometry=point1)
-    # load_bus = Bus("bus1", phases="abcn", geometry=point2)
-    # ground.connect(load_bus)
-
-    # voltages = [20000.0 + 0.0j, -10000.0 - 17320.508076j, -10000.0 + 17320.508076j]
-    # vs = VoltageSource("vs", source_bus, voltages=voltages, phases="abcn")
-    # load = PowerLoad("load", load_bus, powers=[100, 100, 100], phases="abcn")
-    # pref = PotentialRef("pref", element=ground)
-
-    # lp = LineParameters("test", z_line=10 * np.eye(4, dtype=complex))
-    # line = Line("line", source_bus, load_bus, phases="abcn", parameters=lp, length=1.0, geometry=line_string)
-
-    # return ElectricalNetwork(
-    #     buses=[source_bus, load_bus],
-    #     branches=[line],
-    #     loads=[load],
-    #     sources=[vs],
-    #     grounds=[ground],
-    #     potential_refs=[pref],
-    # )
-
-    # Load the network from the JSON file
+    # Loadthe network from the JSON file (without results)
     return ElectricalNetwork.from_json(test_networks_path / "small_network.json", include_results=False)
 
 
@@ -70,39 +45,6 @@ def small_network_with_results(test_networks_path) -> ElectricalNetwork:
 
 @pytest.fixture()
 def single_phase_network(test_networks_path) -> ElectricalNetwork:
-    # # Build a small single-phase network
-    # # ----------------------------------
-
-    # # Phase "b" is chosen to catch errors where the index of the first phase may be assumed to be 0
-    # phases = "bn"
-
-    # # Network geometry
-    # point1 = Point(-1.318375372111463, 48.64794139348595)
-    # point2 = Point(-1.320149235966572, 48.64971306653889)
-    # line_string = LineString([point1, point2])
-
-    # # Network elements
-    # bus0 = Bus("bus0", phases=phases, geometry=point1)
-    # bus1 = Bus("bus1", phases=phases, geometry=point2)
-
-    # ground = Ground("ground")
-    # ground.connect(bus1)
-    # pref = PotentialRef("pref", element=ground)
-
-    # vs = VoltageSource("vs", bus0, voltages=[20000.0 + 0.0j], phases=phases)
-    # load = PowerLoad("load", bus1, powers=[100], phases=phases)
-
-    # lp = LineParameters("test", z_line=10 * np.eye(2, dtype=complex))
-    # line = Line("line", bus0, bus1, phases=phases, parameters=lp, length=1.0, geometry=line_string)
-
-    # return ElectricalNetwork(
-    #     buses=[bus0, bus1],
-    #     branches=[line],
-    #     loads=[load],
-    #     sources=[vs],
-    #     grounds=[ground],
-    #     potential_refs=[pref],
-    # )
     return ElectricalNetwork.from_json(test_networks_path / "single_phase_network.json", include_results=True)
 
 

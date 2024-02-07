@@ -34,3 +34,4 @@ repos:
     hooks:
       - id: prettier
         args: ["--print-width", "120"]
+        require_serial: true
