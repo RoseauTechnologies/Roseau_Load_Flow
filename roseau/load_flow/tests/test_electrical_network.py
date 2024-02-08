@@ -1743,7 +1743,7 @@ def test_serialization(small_network, small_network_with_results):
     assert_results(en_dict_with_results, included=True)
     assert_results(en_dict_without_results, included=False)
     assert en_dict_with_results != en_dict_without_results
-    # round tripping
+    # round triping
     assert ElectricalNetwork.from_dict(en_dict_with_results).to_dict() == en_dict_with_results
     assert ElectricalNetwork.from_dict(en_dict_without_results).to_dict() == en_dict_without_results
     # default is to include the results
@@ -1759,7 +1759,7 @@ def test_serialization(small_network, small_network_with_results):
     )
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_LOAD_FLOW_RESULT
     en_dict_without_results = en.to_dict(include_results=False)
-    # round tripping without the results should still work
+    # round triping without the results should still work
     assert ElectricalNetwork.from_dict(en_dict_without_results).to_dict() == en_dict_without_results
 
 
