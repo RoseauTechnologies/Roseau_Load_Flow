@@ -97,7 +97,7 @@ lint.flake8-pytest-style.parametrize-values-type = "tuple"
 lint.mccabe.max-complexity = 15
 
 [tool.ruff.lint.per-file-ignores]
-"*.ipynb" = ["E402", "F403", "F405", "B018"]
+"*.ipynb" = ["E402", "F403", "F405"]
 
 [tool.coverage.run]
 branch = true
@@ -137,5 +137,5 @@ addopts = "--color=yes -n=0 --import-mode=importlib"
 testpaths = ["roseau/load_flow/"]
 filterwarnings = [
     'ignore:.*utcfromtimestamp:DeprecationWarning:dateutil.*', # dateutil is imported by pandas, not us
-    'ignore:Pyarrow will become a required dependency of pandas:DeprecationWarning:.*',
+    'ignore:(?s).*Pyarrow will become a required dependency of pandas:DeprecationWarning:.*',
 ]
