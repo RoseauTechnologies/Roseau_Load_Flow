@@ -1,8 +1,10 @@
-# (Dis)Connecting elements
+(usage-modifying-network)=
+
+# Modifying a network
 
 ## Creating a network
 
-Let's take the electrical network of the [Getting started page](usage-getting-started).
+Let's take the electrical network of the [Getting started page](usage-getting-started) as an example.
 
 ```pycon
 >>> import numpy as np
@@ -89,15 +91,14 @@ UserWarning: The results of this element may be outdated. Please re-run a load f
 ```
 
 ```{danger}
-The load element `load` doesn't belong to a network and a part of its results is not accessible any more. `res_`
-methods may raise errors.
+The load element `load` doesn't belong to a network and a some of its results are not accessible
+anymore. Accessing `res_` properties may raise errors.
 ```
 
 ## Connecting an element
 
-Let's create a new line and a new load at the end of this line.
-
-The new bus and the new load are created first.
+Let's extend the network with a new line and add a load at its end. First, we create a new bus and
+the new load.
 
 ```pycon
 >>> new_bus = Bus(id="new_bus", phases="abcn")
@@ -175,7 +176,7 @@ a voltage source.
 
 ### Modifying a voltage source
 
-You can change the voltage of the voltage source:
+You can change the voltage of the voltage source using the `voltages` attribute:
 
 ```pycon
 >>> vs.voltages
@@ -222,10 +223,10 @@ For a line, you can also change the length:
 ```pycon
 >>> line.length
 2.0 <Unit('kilometer')>
->>> line.length = 1.0
+>>> line.length = 1.0  # <-- shorten the line by half
 >>> line.length
 1.0 <Unit('kilometer')>
->>> line.z_line  # <-- the impedance is divided by 2
+>>> line.z_line  # <-- the impedance gets divided by 2
 array([[0.5+0.1j, 0. +0.j , 0. +0.j , 0. +0.j ],
        [0. +0.j , 0.5+0.1j, 0. +0.j , 0. +0.j ],
        [0. +0.j , 0. +0.j , 0.5+0.1j, 0. +0.j ],

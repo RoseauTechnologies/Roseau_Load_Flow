@@ -166,10 +166,10 @@ class AbstractBranch(Element):
     # Json Mixin interface
     #
     @classmethod
-    def from_dict(cls, data: JsonDict) -> Self:
+    def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
         return cls(**data)  # not used anymore
 
-    def to_dict(self, *, _lf_only: bool = False) -> JsonDict:
+    def _to_dict(self, include_results: bool) -> JsonDict:
         res = {
             "id": self.id,
             "type": self.branch_type,
@@ -178,15 +178,22 @@ class AbstractBranch(Element):
             "bus1": self.bus1.id,
             "bus2": self.bus2.id,
         }
-        if not _lf_only and self.geometry is not None:
+        if self.geometry is not None:
             res["geometry"] = self.geometry.__geo_interface__
+        if include_results:
+            currents1, currents2 = self._res_currents_getter(warning=True)
+            res["results"] = {
+                "currents1": [[i.real, i.imag] for i in currents1],
+                "currents2": [[i.real, i.imag] for i in currents2],
+            }
         return res
 
-    def results_from_dict(self, data: JsonDict) -> None:
+    def _results_from_dict(self, data: JsonDict) -> None:
         currents1 = np.array([complex(i[0], i[1]) for i in data["currents1"]], dtype=np.complex128)
         currents2 = np.array([complex(i[0], i[1]) for i in data["currents2"]], dtype=np.complex128)
         self._res_currents = (currents1, currents2)
         self._fetch_results = False
+        self._no_results = False
 
     def _results_to_dict(self, warning: bool) -> JsonDict:
         currents1, currents2 = self._res_currents_getter(warning)

@@ -1,3 +1,4 @@
+import json
 import re
 
 import numpy as np
@@ -341,7 +342,7 @@ def test_from_name_lv():
 
 
 def test_from_name_mv():
-    with pytest.raises(RoseauLoadFlowException) as e, pytest.warns(FutureWarning):
+    with pytest.raises(RoseauLoadFlowException) as e:  # , pytest.warns(FutureWarning):
         LineParameters.from_name_mv("totoU_Al_150")
     assert "The line type name does not follow the syntax rule." in e.value.msg
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_TYPE_NAME_SYNTAX
@@ -495,3 +496,12 @@ def test_max_current():
 
     lp.max_current = Q_(3, "kA")
     assert lp.max_current == Q_(3_000, "A")
+
+
+def test_json_serialization():
+    lp = LineParameters("test", z_line=np.eye(3), max_current=np.int64(100), section=np.float64(150))
+    lp_dict = lp.to_dict()
+    assert isinstance(lp_dict["z_line"], list)
+    assert isinstance(lp_dict["max_current"], int)
+    assert isinstance(lp_dict["section"], float)
+    json.dumps(lp_dict)

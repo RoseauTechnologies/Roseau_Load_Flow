@@ -43,6 +43,8 @@ class Element(ABC, Identifiable, JsonMixin):
         self._network: ElectricalNetwork | None = None
         self._cy_element: CyElement | None = None
         self._fetch_results = False
+        self._no_results = True
+        self._results_valid = True
 
     @property
     def network(self) -> Optional["ElectricalNetwork"]:

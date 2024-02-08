@@ -1,12 +1,24 @@
 # Changelog
 
-## Version 0.7.0-alpha
+## Version 0.7.0
 
 ```{important}
 Starting with version 0.7.0, Roseau Load Flow will no longer be supplied as a SaaS. The software will be available as
 a standalone Python library.
 ```
 
+- The documentation is moved from GitHub Pages to https://www.roseau-load-flow.roseautechnologies.com/.
+- Fix a bug in the engine: it was impossible to change the parameters of center-tapped and single phase transformers.
+- {gh-pr}`179` Fix a bug in the propagation of potentials when a center-tapped transformer is used without neutral at
+  the primary side.
+- {gh-pr}`178` {gh-issue}`176` Merge the `results_to_json`, `results_from_json`, `results_to_dict`
+  and `results_from_dict` methods of the `ElectricalNetwork` and `Element`s classes into the methods
+  `to_json`, `from_json`, `to_dict` and `from_dict` respectively. The old `results_` methods are
+  **deprecated** and will be removed in a future release. The new methods will include the results by
+  default, but you can pass `include_results=False` to exclude them.
+- {gh-pr}`175` {gh-issue}`174` Fix JSON serialization of network with line parameters created from the
+  catalogue.
+- {gh-pr}`173` Remove the conda installation option.
 - {gh-pr}`168` {gh-issue}`166` Fix initial potentials' propagation.
 - {gh-pr}`167` {gh-issue}`161` Add a catalogue of lines using the IEC standards. You can use the method
   `LineParameters.get_catalogue()` to get a data frame of the available lines and the method

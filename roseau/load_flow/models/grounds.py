@@ -96,21 +96,31 @@ class Ground(Element):
     # Json Mixin interface
     #
     @classmethod
-    def from_dict(cls, data: JsonDict) -> Self:
+    def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
         self = cls(data["id"])
-        self._connected_buses = data["buses"]
+        for bus_data in data["buses"]:
+            self.connect(bus_data["bus"], bus_data["phase"])
+        if include_results and "results" in data:
+            self._res_potential = complex(*data["results"]["potential"])
+            self._fetch_results = False
+            self._no_results = False
         return self
 
-    def to_dict(self, *, _lf_only: bool = False) -> JsonDict:
+    def _to_dict(self, include_results: bool) -> JsonDict:
         # Shunt lines and potential references will have the ground in their dict not here.
-        return {
+        res = {
             "id": self.id,
             "buses": [{"id": bus_id, "phase": phase} for bus_id, phase in self._connected_buses.items()],
         }
+        if include_results:
+            v = self._res_potential_getter(warning=True)
+            res["results"] = {"potential": [v.real, v.imag]}
+        return res
 
-    def results_from_dict(self, data: JsonDict) -> None:
+    def _results_from_dict(self, data: JsonDict) -> None:
         self._res_potential = complex(*data["potential"])
         self._fetch_results = False
+        self._no_results = False
 
     def _results_to_dict(self, warning: bool) -> JsonDict:
         v = self._res_potential_getter(warning)

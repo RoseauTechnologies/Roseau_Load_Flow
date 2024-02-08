@@ -5,8 +5,14 @@ on:
     branches: [main, develop]
     tags:
       - "*"
+    paths-ignore:
+      - "doc/**"
+      - ".vscode/**"
   pull_request:
     branches: [main, develop]
+    paths-ignore:
+      - "doc/**"
+      - ".vscode/**"
 
 env:
   CI: true
@@ -28,7 +34,7 @@ jobs:
         run: git lfs ls-files -l | cut -d' ' -f1 | sort > .lfs-assets-id
 
       - name: Cache git LFS
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: .git/lfs
           key: git-lfs-v1-${{ matrix.python-version }}-${{ hashFiles('.lfs-assets-id') }}

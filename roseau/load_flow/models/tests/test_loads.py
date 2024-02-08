@@ -268,13 +268,13 @@ def test_loads_to_dict():
     values = [1 + 2j, 3 + 4j, 5 + 6j]
 
     # Power load
-    assert PowerLoad("load_s1", bus, phases="abcn", powers=values).to_dict() == {
+    assert PowerLoad("load_s1", bus, phases="abcn", powers=values).to_dict(include_results=False) == {
         "id": "load_s1",
         "bus": "bus",
         "phases": "abcn",
         "powers": [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
     }
-    assert PowerLoad("load_s2", bus, phases="abc", powers=values).to_dict() == {
+    assert PowerLoad("load_s2", bus, phases="abc", powers=values).to_dict(include_results=False) == {
         "id": "load_s2",
         "bus": "bus",
         "phases": "abc",
@@ -282,13 +282,13 @@ def test_loads_to_dict():
     }
 
     # Current load
-    assert CurrentLoad("load_i1", bus, phases="abcn", currents=values).to_dict() == {
+    assert CurrentLoad("load_i1", bus, phases="abcn", currents=values).to_dict(include_results=False) == {
         "id": "load_i1",
         "bus": "bus",
         "phases": "abcn",
         "currents": [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
     }
-    assert CurrentLoad("load_i2", bus, phases="abc", currents=values).to_dict() == {
+    assert CurrentLoad("load_i2", bus, phases="abc", currents=values).to_dict(include_results=False) == {
         "id": "load_i2",
         "bus": "bus",
         "phases": "abc",
@@ -296,13 +296,13 @@ def test_loads_to_dict():
     }
 
     # Impedance load
-    assert ImpedanceLoad("load_z1", bus, phases="abcn", impedances=values).to_dict() == {
+    assert ImpedanceLoad("load_z1", bus, phases="abcn", impedances=values).to_dict(include_results=False) == {
         "id": "load_z1",
         "bus": "bus",
         "phases": "abcn",
         "impedances": [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
     }
-    assert ImpedanceLoad("load_z2", bus, phases="abc", impedances=values).to_dict() == {
+    assert ImpedanceLoad("load_z2", bus, phases="abc", impedances=values).to_dict(include_results=False) == {
         "id": "load_z2",
         "bus": "bus",
         "phases": "abc",
@@ -331,14 +331,16 @@ def test_loads_to_dict():
     }
     fp = [FlexibleParameter.constant()] * 3
     flex_load = PowerLoad("load_f1", bus, phases="abcn", powers=values, flexible_params=fp)
-    assert flex_load.to_dict() == expected_dict
+    assert flex_load.to_dict(include_results=False) == expected_dict
     parsed_flex_load = PowerLoad.from_dict(expected_dict | {"bus": bus})
     assert isinstance(parsed_flex_load, PowerLoad)
     assert parsed_flex_load.id == flex_load.id
     assert parsed_flex_load.bus.id == flex_load.bus.id
     assert parsed_flex_load.phases == flex_load.phases
     assert np.allclose(parsed_flex_load.powers, flex_load.powers)
-    assert [p.to_dict() for p in parsed_flex_load.flexible_params] == [p.to_dict() for p in flex_load.flexible_params]
+    assert [p.to_dict(include_results=False) for p in parsed_flex_load.flexible_params] == [
+        p.to_dict(include_results=False) for p in flex_load.flexible_params
+    ]
 
 
 def test_loads_units():

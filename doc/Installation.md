@@ -104,38 +104,6 @@ In [1]: %pip install roseau-load-flow
 
 This installs the package in the correct environment for the active notebook kernel.
 
-## 3. Using `conda`
-
-Installations using `conda` is temporarily unavailable. Please use `pip` instead.
-
-<!--
-`roseau-load-flow` is also available on [conda-forge](https://anaconda.org/conda-forge/roseau-load-flow).
-It can be installed using conda with:
-
-````{tab} Windows
-
-```doscon
-C:> conda install -c conda-forge roseau-load-flow
-```
-
-````
-
-````{tab} Linux/MacOS
-
-```console
-$ conda install -c conda-forge roseau-load-flow
-```
-
-````
-
-This installs the package and all its required and optional dependencies.
-
-```{tip}
-If you use *conda* to manage your project, it is recommended to use the `conda` package manager
-instead of `pip`.
-```
--->
-
 <!-- Local Variables: -->
 <!-- mode: markdown -->
 <!-- coding: utf-8-unix -->

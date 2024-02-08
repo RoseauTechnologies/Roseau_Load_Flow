@@ -70,14 +70,14 @@ class AbstractSolver(ABC):
                 Required tolerance value on the residuals for the convergence.
 
             max_iterations:
-                The maximum number of allowed iterations
+                The maximum number of allowed iterations.
 
         Returns:
-            The number of iterations and the final residual
+            The number of iterations and the final residual.
         """
         lic = get_license()
         if lic is None:
-            activate_license(None)
+            activate_license(key=None)
         return self._cy_solver.solve_load_flow(max_iterations=max_iterations, tolerance=tolerance)
 
     def reset_inputs(self):

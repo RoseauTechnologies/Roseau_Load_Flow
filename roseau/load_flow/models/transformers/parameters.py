@@ -261,7 +261,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
     # Json Mixin interface
     #
     @classmethod
-    def from_dict(cls, data: JsonDict) -> Self:
+    def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
         return cls(
             id=data["id"],
             type=data["type"],  # Type of the transformer
@@ -275,7 +275,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             max_power=data.get("max_power"),  # Maximum power loading (VA)
         )
 
-    def to_dict(self, *, _lf_only: bool = False) -> JsonDict:
+    def _to_dict(self, include_results: bool) -> JsonDict:
         res = {
             "id": self.id,
             "sn": self._sn,
@@ -287,8 +287,13 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             "vsc": self._vsc,
             "type": self.type,
         }
-        if not _lf_only and self.max_power is not None:
+        if self.max_power is not None:
             res["max_power"] = self.max_power.magnitude
+        for k, v in res.items():
+            if isinstance(v, np.integer):
+                res[k] = int(v)
+            elif isinstance(v, np.floating):
+                res[k] = float(v)
         return res
 
     def _results_to_dict(self, warning: bool) -> NoReturn:
@@ -296,7 +301,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         logger.error(msg)
         raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.JSON_NO_RESULTS)
 
-    def results_from_dict(self, data: JsonDict) -> NoReturn:
+    def _results_from_dict(self, data: JsonDict) -> NoReturn:
         msg = f"The {type(self).__name__} has no results to import."
         logger.error(msg)
         raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.JSON_NO_RESULTS)

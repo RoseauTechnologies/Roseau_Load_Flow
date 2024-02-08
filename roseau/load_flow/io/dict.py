@@ -5,8 +5,11 @@ Use the `ElectricalNetwork.from_dict` and `ElectricalNetwork.to_dict` methods to
 from and to dictionaries, or the methods `ElectricalNetwork.from_json` and `ElectricalNetwork.to_json`
 to read and write networks from and to JSON files.
 """
+import copy
 import logging
 from typing import TYPE_CHECKING
+
+import numpy as np
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models import (
@@ -33,8 +36,8 @@ NETWORK_JSON_VERSION = 1
 """The current version of the network JSON file format."""
 
 
-def network_from_dict(
-    data: JsonDict,
+def network_from_dict(  # noqa: C901
+    data: JsonDict, *, include_results: bool = True
 ) -> tuple[
     dict[Id, Bus],
     dict[Id, AbstractBranch],
@@ -42,6 +45,7 @@ def network_from_dict(
     dict[Id, VoltageSource],
     dict[Id, Ground],
     dict[Id, PotentialRef],
+    bool,
 ]:
     """Create the electrical network elements from a dictionary.
 
@@ -49,9 +53,13 @@ def network_from_dict(
         data:
             The dictionary containing the network data.
 
+        include_results:
+            If True (default) and the results of the load flow are included in the dictionary,
+            the results are also loaded into the network.
+
     Returns:
         The buses, branches, loads, sources, grounds and potential refs to construct the electrical
-        network.
+        network and a boolean indicating if the network has results.
     """
     version = data.get("version", 0)
     if version == 0:
@@ -60,38 +68,66 @@ def network_from_dict(
             f"(version {NETWORK_JSON_VERSION}). Please save the network again."
         )
         data = v0_to_v1_converter(data)
+        include_results = False  # V0 network dictionaries didn't have results
     else:
         # If we arrive here, we dealt with all legacy versions, it must be the current one
         assert version == NETWORK_JSON_VERSION, f"Unsupported network file version {version}."
+
+    data = copy.deepcopy(data)  # Make a copy to avoid modifying the original
+
+    # Track if ALL results are included in the network
+    has_results = include_results
+
     # Lines and transformers parameters
-    lines_params = {lp["id"]: LineParameters.from_dict(lp) for lp in data["lines_params"]}
-    transformers_params = {tp["id"]: TransformerParameters.from_dict(tp) for tp in data["transformers_params"]}
+    lines_params = {
+        lp["id"]: LineParameters.from_dict(lp, include_results=include_results) for lp in data["lines_params"]
+    }
+    transformers_params = {
+        tp["id"]: TransformerParameters.from_dict(tp, include_results=include_results)
+        for tp in data["transformers_params"]
+    }
 
     # Buses, loads and sources
-    buses = {bd["id"]: Bus.from_dict(bd) for bd in data["buses"]}
-    loads = {ld["id"]: AbstractLoad.from_dict(ld | {"bus": buses[ld["bus"]]}) for ld in data["loads"]}
-    sources = {sd["id"]: VoltageSource.from_dict(sd | {"bus": buses[sd["bus"]]}) for sd in data["sources"]}
+    buses: dict[Id, Bus] = {}
+    for bus_data in data["buses"]:
+        bus = Bus.from_dict(bus_data, include_results=include_results)
+        buses[bus.id] = bus
+        has_results = has_results and not bus._no_results
+    loads: dict[Id, AbstractLoad] = {}
+    for load_data in data["loads"]:
+        load_data["bus"] = buses[load_data["bus"]]
+        load = AbstractLoad.from_dict(load_data, include_results=include_results)
+        loads[load.id] = load
+        has_results = has_results and not load._no_results
+    sources: dict[Id, VoltageSource] = {}
+    for source_data in data["sources"]:
+        source_data["bus"] = buses[source_data["bus"]]
+        source = VoltageSource.from_dict(source_data, include_results=include_results)
+        sources[source.id] = source
+        has_results = has_results and not source._no_results
 
     # Grounds and potential refs
     grounds: dict[Id, Ground] = {}
     for ground_data in data["grounds"]:
-        ground = Ground(ground_data["id"])
-        for ground_bus in ground_data["buses"]:
-            ground.connect(buses[ground_bus["id"]], ground_bus["phase"])
-        grounds[ground_data["id"]] = ground
+        for ground_bus_data in ground_data["buses"]:
+            ground_bus_data["bus"] = buses[ground_bus_data.pop("id")]
+        ground = Ground.from_dict(ground_data, include_results=include_results)
+        grounds[ground.id] = ground
+        has_results = has_results and not ground._no_results
+
     potential_refs: dict[Id, PotentialRef] = {}
     for pref_data in data["potential_refs"]:
         if "bus" in pref_data:
-            bus_or_ground = buses[pref_data["bus"]]
+            pref_data["element"] = buses[pref_data.pop("bus")]
         elif "ground" in pref_data:
-            bus_or_ground = grounds[pref_data["ground"]]
+            pref_data["element"] = grounds[pref_data.pop("ground")]
         else:
             msg = f"Potential reference data {pref_data['id']} missing bus or ground."
             logger.error(msg)
             raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.JSON_PREF_INVALID)
-        potential_refs[pref_data["id"]] = PotentialRef(
-            pref_data["id"], element=bus_or_ground, phase=pref_data.get("phases")
-        )
+        p_ref = PotentialRef.from_dict(pref_data, include_results=include_results)
+        potential_refs[p_ref.id] = p_ref
+        has_results = has_results and not p_ref._no_results
 
     # Branches
     branches_dict: dict[Id, AbstractBranch] = {}
@@ -102,27 +138,38 @@ def network_from_dict(
         bus1 = buses[branch_data["bus1"]]
         bus2 = buses[branch_data["bus2"]]
         geometry = AbstractBranch._parse_geometry(branch_data.get("geometry"))
+        branch: AbstractBranch
         if branch_data["type"] == "line":
-            assert phases1 == phases2
+            assert phases1 == phases2, "Line phases1 and phases2 must be the same"
             length = branch_data["length"]
             lp = lines_params[branch_data["params_id"]]
             gid = branch_data.get("ground")
             ground = grounds[gid] if gid is not None else None
-            branches_dict[id] = Line(
+            branch = Line(
                 id, bus1, bus2, parameters=lp, phases=phases1, length=length, ground=ground, geometry=geometry
             )
         elif branch_data["type"] == "transformer":
             tp = transformers_params[branch_data["params_id"]]
-            branches_dict[id] = Transformer(
-                id, bus1, bus2, parameters=tp, phases1=phases1, phases2=phases2, geometry=geometry
-            )
+            branch = Transformer(id, bus1, bus2, parameters=tp, phases1=phases1, phases2=phases2, geometry=geometry)
         elif branch_data["type"] == "switch":
-            assert phases1 == phases2
-            branches_dict[id] = Switch(id, bus1, bus2, phases=phases1, geometry=geometry)
+            assert phases1 == phases2, "Switch phases1 and phases2 must be the same"
+            branch = Switch(id, bus1, bus2, phases=phases1, geometry=geometry)
         else:
             msg = f"Unknown branch type for branch {id}: {branch_data['type']}"
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_BRANCH_TYPE)
+        if include_results and "results" in branch_data:
+            currents1 = np.array(
+                [complex(i[0], i[1]) for i in branch_data["results"]["currents1"]], dtype=np.complex128
+            )
+            currents2 = np.array(
+                [complex(i[0], i[1]) for i in branch_data["results"]["currents2"]], dtype=np.complex128
+            )
+            branch._res_currents = (currents1, currents2)
+            branch._fetch_results = False
+            branch._no_results = False
+        branches_dict[id] = branch
+        has_results = has_results and not branch._no_results
 
     # Short-circuits
     short_circuits = data.get("short_circuits")
@@ -132,25 +179,26 @@ def network_from_dict(
             ground = grounds[ground_id] if ground_id is not None else None
             buses[sc["bus_id"]].add_short_circuit(*sc["short_circuit"]["phases"], ground=ground)
 
-    return buses, branches_dict, loads, sources, grounds, potential_refs
+    return buses, branches_dict, loads, sources, grounds, potential_refs, has_results
 
 
-def network_to_dict(en: "ElectricalNetwork", *, _lf_only: bool) -> JsonDict:
+def network_to_dict(en: "ElectricalNetwork", *, include_results: bool) -> JsonDict:
     """Return a dictionary of the current network data.
 
     Args:
         en:
             The electrical network.
 
-        _lf_only:
-            Internal argument, please do not use.
+        include_results:
+            If True (default), the results of the load flow are included in the dictionary.
+            If no results are available, this option is ignored.
 
     Returns:
         The created dictionary.
     """
     # Export the grounds and the pref
-    grounds = [ground.to_dict() for ground in en.grounds.values()]
-    potential_refs = [p_ref.to_dict() for p_ref in en.potential_refs.values()]
+    grounds = [ground.to_dict(include_results=include_results) for ground in en.grounds.values()]
+    potential_refs = [p_ref.to_dict(include_results=include_results) for p_ref in en.potential_refs.values()]
 
     # Export the buses, loads and sources
     buses: list[JsonDict] = []
@@ -158,14 +206,14 @@ def network_to_dict(en: "ElectricalNetwork", *, _lf_only: bool) -> JsonDict:
     sources: list[JsonDict] = []
     short_circuits: list[JsonDict] = []
     for bus in en.buses.values():
-        buses.append(bus.to_dict(_lf_only=_lf_only))
+        buses.append(bus.to_dict(include_results=include_results))
         for element in bus._connected_elements:
             if isinstance(element, AbstractLoad):
                 assert element.bus is bus
-                loads.append(element.to_dict())
+                loads.append(element.to_dict(include_results=include_results))
             elif isinstance(element, VoltageSource):
                 assert element.bus is bus
-                sources.append(element.to_dict())
+                sources.append(element.to_dict(include_results=include_results))
         for sc in bus.short_circuits:
             short_circuits.append({"bus_id": bus.id, "short_circuit": sc})
 
@@ -174,7 +222,7 @@ def network_to_dict(en: "ElectricalNetwork", *, _lf_only: bool) -> JsonDict:
     lines_params_dict: dict[Id, LineParameters] = {}
     transformers_params_dict: dict[Id, TransformerParameters] = {}
     for branch in en.branches.values():
-        branches.append(branch.to_dict(_lf_only=_lf_only))
+        branches.append(branch.to_dict(include_results=include_results))
         if isinstance(branch, Line):
             params_id = branch.parameters.id
             if params_id in lines_params_dict and branch.parameters != lines_params_dict[params_id]:
@@ -195,13 +243,13 @@ def network_to_dict(en: "ElectricalNetwork", *, _lf_only: bool) -> JsonDict:
     # Line parameters
     line_params: list[JsonDict] = []
     for lp in lines_params_dict.values():
-        line_params.append(lp.to_dict(_lf_only=_lf_only))
+        line_params.append(lp.to_dict(include_results=include_results))
     line_params.sort(key=lambda x: x["id"])  # Always keep the same order
 
     # Transformer parameters
     transformer_params: list[JsonDict] = []
     for tp in transformers_params_dict.values():
-        transformer_params.append(tp.to_dict(_lf_only=_lf_only))
+        transformer_params.append(tp.to_dict(include_results=include_results))
     transformer_params.sort(key=lambda x: x["id"])  # Always keep the same order
 
     res = {
