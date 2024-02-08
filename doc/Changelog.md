@@ -7,11 +7,13 @@ Starting with version 0.7.0, Roseau Load Flow will no longer be supplied as a Sa
 a standalone Python library.
 ```
 
+- {gh-pr}`179` Fix a bug in the propagation of potentials when a center-tapped transformer is used without neutral at
+  the primary side.
 - {gh-pr}`178` {gh-issue}`176` Merge the `results_to_json`, `results_from_json`, `results_to_dict`
   and `results_from_dict` methods of the `ElectricalNetwork` and `Element`s classes into the methods
   `to_json`, `from_json`, `to_dict` and `from_dict` respectively. The old `results_` methods are
   **deprecated** and will be removed in a future release. The new methods will include the results by
-  default but you can pass `include_results=False` to exclude them.
+  default, but you can pass `include_results=False` to exclude them.
 - {gh-pr}`175` {gh-issue}`174` Fix JSON serialization of network with line parameters created from the
   catalogue.
 - {gh-pr}`173` Remove the conda installation option.
