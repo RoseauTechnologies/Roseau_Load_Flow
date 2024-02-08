@@ -7,6 +7,7 @@ Starting with version 0.7.0, Roseau Load Flow will no longer be supplied as a Sa
 a standalone Python library.
 ```
 
+- Fix a bug in the engine: it was impossible to change the parameters of center-tapped and single phase transformers.
 - {gh-pr}`179` Fix a bug in the propagation of potentials when a center-tapped transformer is used without neutral at
   the primary side.
 - {gh-pr}`178` {gh-issue}`176` Merge the `results_to_json`, `results_from_json`, `results_to_dict`
