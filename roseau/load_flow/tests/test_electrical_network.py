@@ -1,3 +1,4 @@
+import contextlib
 import itertools as it
 import re
 import warnings
@@ -6,6 +7,7 @@ from contextlib import contextmanager
 import geopandas as gpd
 import networkx as nx
 import numpy as np
+import numpy.testing as npt
 import pandas as pd
 import pytest
 from pandas.testing import assert_frame_equal
@@ -1741,7 +1743,7 @@ def test_serialization(small_network, small_network_with_results):
     assert_results(en_dict_with_results, included=True)
     assert_results(en_dict_without_results, included=False)
     assert en_dict_with_results != en_dict_without_results
-    # round triping
+    # round tripping
     assert ElectricalNetwork.from_dict(en_dict_with_results).to_dict() == en_dict_with_results
     assert ElectricalNetwork.from_dict(en_dict_without_results).to_dict() == en_dict_without_results
     # default is to include the results
@@ -1757,7 +1759,7 @@ def test_serialization(small_network, small_network_with_results):
     )
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_LOAD_FLOW_RESULT
     en_dict_without_results = en.to_dict(include_results=False)
-    # round triping without the results should still work
+    # round tripping without the results should still work
     assert ElectricalNetwork.from_dict(en_dict_without_results).to_dict() == en_dict_without_results
 
 
@@ -1798,3 +1800,20 @@ def test_deprecated_results_methods(small_network_with_results, tmp_path):
         "Method `results_from_json()` is deprecated. Method `from_json()` now includes the results by default."
     )
     assert new_en.to_dict() == en_dict_res
+
+
+def test_propagate_potentials_center_transformers():
+    # Source is located at the primary side of the transformer
+    bus1 = Bus(id="bus1", phases="ab")
+    PotentialRef(id="pref", element=bus1)
+    VoltageSource(id="vs", bus=bus1, voltages=[20000])
+    tp = TransformerParameters(
+        id="test", type="center", sn=160000, uhv=20000.0, ulv=400.0, i0=0.023, p0=460.0, psc=2350.0, vsc=0.04
+    )
+    bus2 = Bus(id="bus2", phases="abn")
+    PotentialRef(id="pref2", element=bus2)
+    Transformer(id="transfo", bus1=bus1, bus2=bus2, parameters=tp)
+    en = ElectricalNetwork.from_element(bus2)
+    with contextlib.suppress(RoseauLoadFlowException):  # No valid license
+        en.solve_load_flow()  # propagate the potentials
+    npt.assert_allclose(bus2.potentials.m_as("V"), np.array([200, -200, 0], dtype=np.complex128))

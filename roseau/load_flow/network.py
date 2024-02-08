@@ -1276,6 +1276,9 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                             phase_displacement = element.parameters.phase_displacement
                             if phase_displacement is None:
                                 phase_displacement = 0
+                            if element.parameters.type == "center" and "n" not in element.bus1.phases:
+                                # "n" is mandatory in the bus2 but not in the bus1
+                                potentials = np.append(potentials, 0.0)
                             elements.append((e, potentials * k * np.exp(phase_displacement * -1j * np.pi / 6.0)))
                         else:
                             elements.append((e, potentials))
