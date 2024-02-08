@@ -7,7 +7,7 @@ Starting with version 0.7.0, Roseau Load Flow will no longer be supplied as a Sa
 a standalone Python library.
 ```
 
-- {gh-pr}`179` Solve a bug in the propagation of potentials when a center-tapped transformer is used without neutral at
+- {gh-pr}`179` Fix a bug in the propagation of potentials when a center-tapped transformer is used without neutral at
   the primary side.
 - {gh-pr}`178` {gh-issue}`176` Merge the `results_to_json`, `results_from_json`, `results_to_dict`
   and `results_from_dict` methods of the `ElectricalNetwork` and `Element`s classes into the methods
