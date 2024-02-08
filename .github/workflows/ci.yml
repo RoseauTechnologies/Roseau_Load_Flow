@@ -5,8 +5,14 @@ on:
     branches: [main, develop]
     tags:
       - "*"
+    paths-ignore:
+      - "doc/**"
+      - ".vscode/**"
   pull_request:
     branches: [main, develop]
+    paths-ignore:
+      - "doc/**"
+      - ".vscode/**"
 
 env:
   CI: true
