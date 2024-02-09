@@ -1,3 +1,16 @@
+---
+myst:
+  html_meta:
+    "description lang=en": |
+      Impedance load models in Roseau Load Flow - Three-phase unbalanced load flow solver in a Python API by Roseau
+      Technologies.
+    "description lang=fr": |
+      Les modèles de charge d'impédance dans Roseau Load Flow - Solveur d'écoulement de charge triphasé et
+      déséquilibré dans une API Python par Roseau Technologies.
+    "keywords lang=fr": simulation, réseau, électrique, bus, roseau load flow, charges, modèle, impédance
+    "keywords lang=en": simulation, distribution grid, switch, load, model, impedance
+---
+
 # Impedance loads (Z)
 
 They represent loads for which the impedance is considered constant, i.e. the power is proportional

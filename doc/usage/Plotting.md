@@ -1,4 +1,17 @@
-# Plotting
+---
+myst:
+  html_meta:
+    "description lang=en": |
+      Learn how to plot an MV or LV network with Roseau Load Flow, a powerful load flow solver for the electrical
+      calculation of smart grids.
+    "description lang=fr": |
+      Apprenez à tracer une carte du réseau MT ou BT avec Roseau Load Flow, solveur d'écoulements de charge pour le
+      calcul électrique des réseaux intelligents.
+    "keywords lang=fr": simulation, réseau, électrique, carte
+    "keywords lang=en": simulation, distribution grid, map,
+---
+
+# Plotting a distribution network
 
 On this page, the [folium](https://python-visualization.github.io/folium/index.html) library is used to plot an
 `ElectricalNetwork`.

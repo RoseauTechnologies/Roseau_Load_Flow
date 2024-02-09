@@ -1,4 +1,16 @@
-# Extras
+---
+myst:
+  html_meta:
+    "description lang=en": |
+      Additional Roseau Load Flow features: graph theory, conversions to symmetrical components, constants, etc.
+    "description lang=fr": |
+      Fonctionnalités supplémentaires de Roseau Load Flow: affichage du graphe, conversions vers des composantes
+      symétriques, constantes, etc.
+    "keywords lang=fr": simulation, réseau, électrique, composantes symétriques, conversions
+    "keywords lang=en": simulation, distribution grid, symmetrical components, conversion
+---
+
+# Extra features
 
 `roseau-load-flow` comes with some extra features that can be useful for some users.
 

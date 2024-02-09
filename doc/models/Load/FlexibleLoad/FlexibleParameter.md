@@ -1,3 +1,16 @@
+---
+myst:
+  html_meta:
+    "description lang=en": |
+      Flexible load parameters in Roseau Load Flow - Three-phase unbalanced load flow solver in a Python API by Roseau
+      Technologies.
+    "description lang=fr": |
+      Paramètres des charges flexibles dans Roseau Load Flow - Solveur d'écoulement de charge triphasé et déséquilibré
+      dans une API Python par Roseau Technologies.
+    "keywords lang=fr": simulation, réseau, électrique, charge flexible, bus, roseau load flow, paramètres
+    "keywords lang=en": simulation, distribution grid, flexible load, load, parameters
+---
+
 (models-flexible_load-flexible_parameters)=
 
 # Flexible parameters

@@ -1,3 +1,16 @@
+---
+myst:
+  html_meta:
+    "description lang=en": |
+      Learn how to define the potential reference point of your medium-voltage or low-voltage network for a load flow
+      calculation with Roseau Load Flow.
+    "description lang=fr": |
+      Apprenez à définir le point de référence des potentiels de votre réseau électrique pour un calcul d'écoulement
+      de charge avec Roseau Load Flow.
+    "keywords lang=fr": simulation, réseau, électrique,  potentiel, référence
+    "keywords lang=en": simulation, distribution grid, potentials, reference
+---
+
 # Potential Reference
 
 ## Definition

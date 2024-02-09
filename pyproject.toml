@@ -82,6 +82,7 @@ sphinx-inline-tabs = ">=2022.1.2b11"
 furo = ">=2022.9.29"
 sphinxcontrib-googleanalytics = ">=0.3"
 sphinxcontrib-bibtex = "^2.5.0"
+sphinx-sitemap = "^2.5.1"
 
 [tool.ruff]
 line-length = 120

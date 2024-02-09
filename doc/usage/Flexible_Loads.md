@@ -1,6 +1,18 @@
+---
+myst:
+  html_meta:
+    "description lang=en": |
+      Roseau Load Flow enables fine modelling of loads and flexible sources with fully parameterisable control laws.
+    "description lang=fr": |
+      Roseau Load Flow permet la modélisation fine des charges et des sources flexibles avec des lois de contrôle
+      entièrement paramétrables.
+    "keywords lang=fr": simulation, charge, source, flexible, contrôle, P(U), PQ(U), écoulement de charge
+    "keywords lang=en": simulation, flexible, control, load, source, P(U), PQ(U), load flow
+---
+
 (usage-flexible-loads)=
 
-# Flexible loads
+# Connecting flexible loads
 
 Make sure you have followed the [getting started guide](Getting_Started.md) first.
 
@@ -242,7 +254,7 @@ The load flow can be solved again.
 
 ```pycon
 >>> en.solve_load_flow()
-(6, 1.8576776876-07)
+(6, 1.8576776876e-07)
 >>> abs(load_bus3.res_voltages)
 array([239.5133208 , 230.2108052 , 237.59184615]) <Unit('volt')>
 >>> flexible_load.res_flexible_powers

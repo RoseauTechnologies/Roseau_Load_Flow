@@ -1,3 +1,18 @@
+---
+myst:
+  html_meta:
+    "description lang=en": |
+      The different types of projection of the control of a flexible load onto the domain of technical feasibility:
+      Euclidean, constant P or constant Q.
+    "description lang=fr": |
+      Les différents types de projection du contrôle d'une charge flexible sur le domaine de faisabilités technique:
+      euclidienne, P constant ou Q constant.
+    "keywords lang=fr": |
+      simulation, réseau, électrique, charge flexible, domaine de faisabilité, projection, euclidienne, P constant,
+      Q constant
+    "keywords lang=en": simulation, distribution grid, flexible load, projection, euclidian, constant P, constant Q
+---
+
 (models-flexible_load-projections)=
 
 # Projections

@@ -1,12 +1,30 @@
-(license)=
+---
+myst:
+  html_meta:
+    "description lang=en": |
+      Depending on your status, Roseau Load Flow is available with several types of free or paid licences. A trial
+       key is also available.
+    "description lang=fr": |
+      En fonction de votre statut, Roseau Load Flow est disponible avec plusieurs types de licences gratuites ou
+       payantes. Une clef d'essai est également disponible.
+    "keywords lang=fr": solveur, simulation, réseau, électrique, licence, open-source, gratuit, essai
+    "keywords lang=en": simulation, distribution grid, solver, open-source, free, test
+---
 
-# License
+(license-page)=
+
+# Get and activate your licence
+
+(license-types)=
+
+## Commercial and free licences
 
 This project is partially open source. The source code of this repository is available under the
 [BSD 3-Clause License](https://github.com/RoseauTechnologies/Roseau_Load_Flow/blob/main/LICENSE.md).
 
 The solver used in this project is not open source. A license has to be purchased to use it. To
-obtain a personal or commercial license, please contact us at contact@roseautechnologies.com.
+obtain a personal or commercial license, please contact us at
+[contact@roseautechnologies.com](mailto:contact@roseautechnologies.com).
 
 For networks with less than 11 buses (up to 10 buses), the license key `A8C6DA-9405FB-E74FB9-C71C3C-207661-V3`
 can be used free of charge. For example, this key can be used to follow the getting started guide.

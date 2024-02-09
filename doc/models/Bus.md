@@ -1,3 +1,15 @@
+---
+myst:
+  html_meta:
+    "description lang=en": |
+      Buses in Roseau Load Flow - Three-phase unbalanced load flow solver in a Python API by Roseau Technologies.
+    "description lang=fr": |
+      Les bus dans Roseau Load Flow - Solveur d'écoulement de charge triphasé et déséquilibré dans une API Python par
+      Roseau Technologies.
+    "keywords lang=fr": simulation, réseau, électrique, bus, roseau load flow, modèle
+    "keywords lang=en": simulation, distribution grid, bus, model
+---
+
 # Bus
 
 ## Definition

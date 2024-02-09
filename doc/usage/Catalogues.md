@@ -1,3 +1,17 @@
+---
+myst:
+  html_meta:
+    "description lang=en": |
+      Roseau Load Flow comes with a catalogue of components including numerous models of medium and low voltage
+      networks, transformers and lines.
+    "description lang=fr": |
+      Roseau Load Flow est livré avec un catalogue de composants comportant de nombreux modèles de réseaux
+      moyenne-tension et basse tension, de transformateurs et de lignes.
+    "keywords lang=fr": |
+      simulation, réseau, électrique, réseaux, MT, BT, moyenne tension, basse tension, transformateurs, lignes, modèle
+    "keywords lang=en": simulation, distribution grid, MT, LV, transformer, cables, model
+---
+
 # Catalogues
 
 In _Roseau Load Flow_, some classes are provided with a catalogue. This page describes how to use them.
@@ -16,8 +30,9 @@ interactive map.
 
 ### Source of data
 
-All these networks are built from open data available in France. The entire France can be provided on demand. Please
-email us at [contact@roseautechnologies.com](mailto:contact@roseautechnologies.com).
+All these networks are built from open data available in France. **The complete model of the French distribution
+network can be provided on demand**. Please email us at
+[contact@roseautechnologies.com](mailto:contact@roseautechnologies.com).
 
 ### Inspecting the catalogue
 
@@ -502,7 +517,7 @@ _Truncated output_
 | U_AL_93  | underground | al                 |                |                  93 |             0.32984 |           0.103152 |         3.13521e-05 |                 249 |
 | T_AL_59  | twisted     | al                 |                |                  59 |              0.5519 |           0.110744 |         2.88474e-05 |                 164 |
 
-or only lines with a cross section of 240 mm² (using a regular expression)
+or only lines with a cross-section of 240 mm² (using a regular expression)
 
 ```pycon
 >>> LineParameters.get_catalogue(section=240)

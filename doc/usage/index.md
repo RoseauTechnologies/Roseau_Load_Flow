@@ -1,5 +1,3 @@
-# Usage
-
 This section provides some tutorials to start using _Roseau_Load_Flow_:
 
 ```{toctree}
