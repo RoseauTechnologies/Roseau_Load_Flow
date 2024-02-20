@@ -994,6 +994,19 @@ def test_network_results_warning(small_network, small_network_with_results, recw
         _ = en.res_loads_flexible_powers
 
 
+def test_network_results_error(small_network):
+    en = small_network
+
+    # Test all results
+    for attr_name in dir(en):
+        if not attr_name.startswith("res_"):
+            continue
+        with pytest.raises(RoseauLoadFlowException) as e:
+            getattr(en, attr_name)
+        assert e.value.code == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
+        assert e.value.msg == "The load flow results are not available because the load flow has not been run yet."
+
+
 def test_load_flow_results_frames(small_network_with_results):
     en = small_network_with_results
     en.buses["bus0"].min_voltage = 21_000

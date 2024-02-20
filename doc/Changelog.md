@@ -1,9 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- {gh-pr}`182` Improve the error message when trying to access results on the network before running the load flow.
+
 ## Version 0.7.0
 
 ```{important}
-Starting with version 0.7.0, Roseau Load Flow will no longer be supplied as a SaaS. The software will be available as
+Starting with version 0.7.0, Roseau Load Flow is no longer supplied as a SaaS. The software is now available as
 a standalone Python library.
 ```
 
