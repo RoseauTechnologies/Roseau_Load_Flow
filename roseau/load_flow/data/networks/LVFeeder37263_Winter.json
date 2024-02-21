@@ -106,6 +106,12 @@
       "bus": "LVBus173891",
       "phases": "an",
       "powers": [[7000.0, 2300.0]]
+    },
+    {
+      "id": "LVBus173891_production",
+      "bus": "LVBus173891",
+      "phases": "cn",
+      "powers": [[0.0, 0.0]]
     }
   ],
   "sources": [

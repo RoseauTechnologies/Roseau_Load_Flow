@@ -205,16 +205,52 @@
   ],
   "loads": [
     {
+      "id": "LVBus031726_consumption",
+      "bus": "LVBus031726",
+      "phases": "bn",
+      "powers": [[0.0, 0.0]]
+    },
+    {
+      "id": "LVBus031726_production",
+      "bus": "LVBus031726",
+      "phases": "cn",
+      "powers": [[0.0, 0.0]]
+    },
+    {
+      "id": "LVBus031727_consumption",
+      "bus": "LVBus031727",
+      "phases": "cn",
+      "powers": [[0.0, 0.0]]
+    },
+    {
+      "id": "LVBus031727_production",
+      "bus": "LVBus031727",
+      "phases": "bn",
+      "powers": [[0.0, 0.0]]
+    },
+    {
       "id": "LVBus031729_consumption",
       "bus": "LVBus031729",
       "phases": "bn",
       "powers": [[22000.0, 7200.0]]
     },
     {
+      "id": "LVBus031729_production",
+      "bus": "LVBus031729",
+      "phases": "an",
+      "powers": [[0.0, 0.0]]
+    },
+    {
       "id": "LVBus031728_consumption",
       "bus": "LVBus031728",
       "phases": "an",
       "powers": [[22000.0, 7200.0]]
+    },
+    {
+      "id": "LVBus031728_production",
+      "bus": "LVBus031728",
+      "phases": "an",
+      "powers": [[0.0, 0.0]]
     }
   ],
   "sources": [

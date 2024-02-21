@@ -287,6 +287,42 @@
   ],
   "loads": [
     {
+      "id": "LVBus140700_consumption",
+      "bus": "LVBus140700",
+      "phases": "cn",
+      "powers": [[0.0, 0.0]]
+    },
+    {
+      "id": "LVBus140700_production",
+      "bus": "LVBus140700",
+      "phases": "bn",
+      "powers": [[0.0, 0.0]]
+    },
+    {
+      "id": "LVBus140702_consumption",
+      "bus": "LVBus140702",
+      "phases": "bn",
+      "powers": [[0.0, 0.0]]
+    },
+    {
+      "id": "LVBus140702_production",
+      "bus": "LVBus140702",
+      "phases": "bn",
+      "powers": [[0.0, 0.0]]
+    },
+    {
+      "id": "LVBus140703_consumption",
+      "bus": "LVBus140703",
+      "phases": "cn",
+      "powers": [[0.0, 0.0]]
+    },
+    {
+      "id": "LVBus140703_production",
+      "bus": "LVBus140703",
+      "phases": "cn",
+      "powers": [[0.0, 0.0]]
+    },
+    {
       "id": "LVBus140704_consumption",
       "bus": "LVBus140704",
       "phases": "cn",

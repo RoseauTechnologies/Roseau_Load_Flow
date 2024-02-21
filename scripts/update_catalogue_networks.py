@@ -17,11 +17,13 @@ df = lf.ElectricalNetwork.get_catalogue()
 
 if __name__ == "__main__":
     catalogue_path = lf.ElectricalNetwork.catalogue_path()
+    rng = np.random.default_rng(len("Roseau_Load_Flow old networks are getting a rewrite") ** 5)
     name: str
     for name in df.index:
         feeder_type = name[:2]  # "MV" or "LV"
         load_points: list[str] = df.at[name, "Available load points"]
         for lp in load_points:
+            print(f"Processing network {name}_{lp}")
             en = lf.ElectricalNetwork.from_catalogue(name, load_point_name=lp)
 
             source_bus_id: str | None = None
@@ -161,9 +163,12 @@ if __name__ == "__main__":
                     nb_powers = sum(power_mask)
                     assert nb_powers <= 1, load.powers  # only one phase has power (or none)
                     if nb_powers == 0:
-                        continue  # dummy load, skip
-                    new_phases = "abc"[power_mask.argmax(axis=0)] + "n"
-                    new_powers = np.round(load.powers[power_mask].m, -2)
+                        # Dummy load with power=0, choose a random phase
+                        new_phases = rng.choice(["a", "b", "c"]) + "n"
+                        new_powers = np.array([0j])
+                    else:
+                        new_phases = "abc"[power_mask.argmax(axis=0)] + "n"
+                        new_powers = np.round(load.powers[power_mask].m, -2)
                 else:
                     new_phases = "abc"
                     new_powers = np.round(load.powers.m, -2)
@@ -211,3 +216,4 @@ if __name__ == "__main__":
 
             # Test the new network
             new_en.solve_load_flow()
+    print("Done")

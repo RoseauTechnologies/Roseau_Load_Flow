@@ -100,6 +100,12 @@
       "bus": "LVBus031502",
       "phases": "cn",
       "powers": [[17200.0, 5700.0]]
+    },
+    {
+      "id": "LVBus031502_production",
+      "bus": "LVBus031502",
+      "phases": "cn",
+      "powers": [[0.0, 0.0]]
     }
   ],
   "sources": [

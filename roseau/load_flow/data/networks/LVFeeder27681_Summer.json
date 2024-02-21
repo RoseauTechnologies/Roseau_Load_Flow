@@ -100,6 +100,12 @@
       "bus": "LVBus128601",
       "phases": "bn",
       "powers": [[1800.0, 600.0]]
+    },
+    {
+      "id": "LVBus128601_production",
+      "bus": "LVBus128601",
+      "phases": "cn",
+      "powers": [[0.0, 0.0]]
     }
   ],
   "sources": [

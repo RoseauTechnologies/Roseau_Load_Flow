@@ -192,6 +192,18 @@
   ],
   "loads": [
     {
+      "id": "LVBus178129_consumption",
+      "bus": "LVBus178129",
+      "phases": "an",
+      "powers": [[0.0, 0.0]]
+    },
+    {
+      "id": "LVBus178129_production",
+      "bus": "LVBus178129",
+      "phases": "bn",
+      "powers": [[0.0, 0.0]]
+    },
+    {
       "id": "LVBus178131_consumption",
       "bus": "LVBus178131",
       "phases": "cn",

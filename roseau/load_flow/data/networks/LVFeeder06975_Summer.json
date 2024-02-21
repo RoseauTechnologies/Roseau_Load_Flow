@@ -205,6 +205,30 @@
   ],
   "loads": [
     {
+      "id": "LVBus031726_consumption",
+      "bus": "LVBus031726",
+      "phases": "bn",
+      "powers": [[0.0, 0.0]]
+    },
+    {
+      "id": "LVBus031726_production",
+      "bus": "LVBus031726",
+      "phases": "bn",
+      "powers": [[0.0, 0.0]]
+    },
+    {
+      "id": "LVBus031727_consumption",
+      "bus": "LVBus031727",
+      "phases": "an",
+      "powers": [[0.0, 0.0]]
+    },
+    {
+      "id": "LVBus031727_production",
+      "bus": "LVBus031727",
+      "phases": "bn",
+      "powers": [[0.0, 0.0]]
+    },
+    {
       "id": "LVBus031729_consumption",
       "bus": "LVBus031729",
       "phases": "an",

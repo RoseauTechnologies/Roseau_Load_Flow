@@ -103,6 +103,12 @@
       "bus": "LVBus110873",
       "phases": "bn",
       "powers": [[12700.0, 4200.0]]
+    },
+    {
+      "id": "LVBus110873_production",
+      "bus": "LVBus110873",
+      "phases": "an",
+      "powers": [[0.0, 0.0]]
     }
   ],
   "sources": [
