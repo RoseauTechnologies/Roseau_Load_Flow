@@ -5,11 +5,7 @@
       "id": "ground",
       "buses": [
         {
-          "id": "VoltageSource",
-          "phase": "n"
-        },
-        {
-          "id": "MVLV11757",
+          "id": "MVLVFeeder11757",
           "phase": "n"
         }
       ]
@@ -17,26 +13,35 @@
   ],
   "potential_refs": [
     {
+      "id": "MV_pref",
+      "bus": "MVLV11757",
+      "phases": null
+    },
+    {
       "id": "pref",
       "ground": "ground"
     }
   ],
   "buses": [
     {
-      "id": "VoltageSource",
-      "phases": "abcn",
+      "id": "MVLV11757",
+      "phases": "abc",
       "geometry": {
         "type": "Point",
         "coordinates": [-0.872844643374193, 49.325171742226196]
-      }
+      },
+      "min_voltage": 19000,
+      "max_voltage": 21000
     },
     {
-      "id": "MVLV11757",
+      "id": "MVLVFeeder11757",
       "phases": "abcn",
       "geometry": {
         "type": "Point",
         "coordinates": [-0.872844643374193, 49.325171742226196]
-      }
+      },
+      "min_voltage": 207,
+      "max_voltage": 253
     },
     {
       "id": "LVBus128601",
@@ -44,7 +49,9 @@
       "geometry": {
         "type": "Point",
         "coordinates": [-0.872690668569252, 49.325398961209295]
-      }
+      },
+      "min_voltage": 207,
+      "max_voltage": 253
     }
   ],
   "branches": [
@@ -53,21 +60,21 @@
       "type": "transformer",
       "phases1": "abc",
       "phases2": "abcn",
-      "bus1": "VoltageSource",
-      "bus2": "MVLV11757",
+      "bus1": "MVLV11757",
+      "bus2": "MVLVFeeder11757",
       "geometry": {
         "type": "Point",
         "coordinates": [-0.872844643374193, 49.325171742226196]
       },
-      "params_id": "Dyn11_160kVA",
-      "tap": 1.0
+      "tap": 1.0,
+      "params_id": "Dyn11_160kVA"
     },
     {
       "id": "LVBranch101340",
       "type": "line",
       "phases1": "abcn",
       "phases2": "abcn",
-      "bus1": "MVLV11757",
+      "bus1": "MVLVFeeder11757",
       "bus2": "LVBus128601",
       "geometry": {
         "type": "LineString",
@@ -83,47 +90,33 @@
         ]
       },
       "length": 0.03074722558197331,
-      "params_id": "S_AL_150",
+      "params_id": "U_AL_150",
       "ground": "ground"
     }
   ],
   "loads": [
     {
-      "id": "LVBus128601_production",
-      "bus": "LVBus128601",
-      "phases": "abcn",
-      "powers": [
-        [-0.0, 0.0],
-        [0.0, 0.0],
-        [0.0, 0.0]
-      ]
-    },
-    {
       "id": "LVBus128601_consumption",
       "bus": "LVBus128601",
-      "phases": "abcn",
-      "powers": [
-        [9086.745982588003, 2986.6689722745677],
-        [0.0, 0.0],
-        [0.0, 0.0]
-      ]
+      "phases": "an",
+      "powers": [[9100.0, 3000.0]]
     }
   ],
   "sources": [
     {
       "id": "VoltageSource",
-      "bus": "VoltageSource",
-      "phases": "abcn",
+      "bus": "MVLV11757",
+      "phases": "abc",
       "voltages": [
-        [11547.005383792515, 0.0],
-        [-5773.502691896255, -10000.0],
-        [-5773.502691896255, 10000.0]
+        [17320.50807568877, 10000.0],
+        [0.0, -20000.0],
+        [-17320.50807568877, 10000.0]
       ]
     }
   ],
   "lines_params": [
     {
-      "id": "S_AL_150",
+      "id": "U_AL_150",
       "z_line": [
         [
           [0.188, 0.0, 0.0, 0.0],
@@ -151,7 +144,12 @@
           [4.85783749893248e-5, -0.00018518179657458453, 0.000999065642180513, -0.00018518179657458602],
           [-0.00018518179657458456, 4.85783749893247e-5, -0.00018518179657458597, 0.0009990656421805131]
         ]
-      ]
+      ],
+      "max_current": 325,
+      "line_type": "UNDERGROUND",
+      "conductor_type": "AL",
+      "insulator_type": "UNKNOWN",
+      "section": 150.0
     }
   ],
   "transformers_params": [
@@ -164,7 +162,8 @@
       "p0": 460.0,
       "psc": 2350.0,
       "vsc": 0.04,
-      "type": "Dyn11"
+      "type": "Dyn11",
+      "max_power": 160000
     }
   ]
 }

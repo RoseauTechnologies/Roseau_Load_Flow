@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- {gh-pr}`183` {gh-issue}`181` Update the networks catalogue to better represent the real networks.
+  LV loads are made single-phase, MV sources are connected in delta, and MV buses lost their neutral.
+  Voltage, current, and power limits are added to the buses, lines, and transformers.
+  The line parameters IDs are also updated to match the new line parameters catalogue.
 - {gh-pr}`182` Improve the error message when trying to access results on the network before running the load flow.
 
 ## Version 0.7.0

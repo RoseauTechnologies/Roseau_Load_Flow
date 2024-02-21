@@ -3,12 +3,7 @@
   "grounds": [
     {
       "id": "ground",
-      "buses": [
-        {
-          "id": "VoltageSource",
-          "phase": "n"
-        }
-      ]
+      "buses": []
     }
   ],
   "potential_refs": [
@@ -19,28 +14,24 @@
   ],
   "buses": [
     {
-      "id": "VoltageSource",
-      "phases": "abcn",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [-1.687159292228112, 49.48974276829431]
-      }
-    },
-    {
       "id": "HVMV07",
       "phases": "abc",
       "geometry": {
         "type": "Point",
         "coordinates": [-1.687159292228112, 49.48974276829431]
-      }
+      },
+      "min_voltage": 19000,
+      "max_voltage": 21000
     },
     {
-      "id": "MVLV14092",
+      "id": "HVMVFeeder07",
       "phases": "abc",
       "geometry": {
         "type": "Point",
-        "coordinates": [-1.6650298238154546, 49.46180069059946]
-      }
+        "coordinates": [-1.687159292228112, 49.48974276829431]
+      },
+      "min_voltage": 19000,
+      "max_voltage": 21000
     },
     {
       "id": "MVLV05996",
@@ -48,7 +39,19 @@
       "geometry": {
         "type": "Point",
         "coordinates": [-1.626239709998294, 49.43249717368583]
-      }
+      },
+      "min_voltage": 19000,
+      "max_voltage": 21000
+    },
+    {
+      "id": "MVLV14092",
+      "phases": "abc",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-1.6650298238154546, 49.46180069059946]
+      },
+      "min_voltage": 19000,
+      "max_voltage": 21000
     }
   ],
   "branches": [
@@ -57,19 +60,15 @@
       "type": "switch",
       "phases1": "abc",
       "phases2": "abc",
-      "bus1": "VoltageSource",
-      "bus2": "HVMV07",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [-1.687159292228112, 49.48974276829431]
-      }
+      "bus1": "HVMV07",
+      "bus2": "HVMVFeeder07"
     },
     {
       "id": "MVBranch48268",
       "type": "line",
       "phases1": "abc",
       "phases2": "abc",
-      "bus1": "HVMV07",
+      "bus1": "HVMVFeeder07",
       "bus2": "MVLV14092",
       "geometry": {
         "type": "LineString",
@@ -137,7 +136,7 @@
         ]
       },
       "length": 5.766634582124083,
-      "params_id": "S_AL_240",
+      "params_id": "U_AL_240",
       "ground": "ground"
     },
     {
@@ -254,24 +253,14 @@
         ]
       },
       "length": 6.070765210726548,
-      "params_id": "S_AL_240",
+      "params_id": "U_AL_240",
       "ground": "ground"
     }
   ],
   "loads": [
     {
-      "id": "MVLV14092_production",
-      "bus": "MVLV14092",
-      "phases": "abc",
-      "powers": [
-        [0.0, 0.0],
-        [0.0, 0.0],
-        [0.0, 0.0]
-      ]
-    },
-    {
-      "id": "MVLV14092_consumption",
-      "bus": "MVLV14092",
+      "id": "MVLV05996_consumption",
+      "bus": "MVLV05996",
       "phases": "abc",
       "powers": [
         [0.0, 0.0],
@@ -290,8 +279,18 @@
       ]
     },
     {
-      "id": "MVLV05996_consumption",
-      "bus": "MVLV05996",
+      "id": "MVLV14092_consumption",
+      "bus": "MVLV14092",
+      "phases": "abc",
+      "powers": [
+        [0.0, 0.0],
+        [0.0, 0.0],
+        [0.0, 0.0]
+      ]
+    },
+    {
+      "id": "MVLV14092_production",
+      "bus": "MVLV14092",
       "phases": "abc",
       "powers": [
         [0.0, 0.0],
@@ -303,18 +302,18 @@
   "sources": [
     {
       "id": "VoltageSource",
-      "bus": "VoltageSource",
-      "phases": "abcn",
+      "bus": "HVMV07",
+      "phases": "abc",
       "voltages": [
-        [11547.005383792515, 0.0],
-        [-5773.502691896255, -10000.0],
-        [-5773.502691896255, 10000.0]
+        [17320.50807568877, 10000.0],
+        [0.0, -20000.0],
+        [-17320.50807568877, 10000.0]
       ]
     }
   ],
   "lines_params": [
     {
-      "id": "S_AL_240",
+      "id": "U_AL_240",
       "z_line": [
         [
           [0.12499999999999999, 0.0, 0.0],
@@ -338,7 +337,12 @@
           [0.0, 0.00018346901096964396, 0.0],
           [0.0, 0.0, 0.00018346901096964396]
         ]
-      ]
+      ],
+      "max_current": 428,
+      "line_type": "UNDERGROUND",
+      "conductor_type": "AL",
+      "insulator_type": "UNKNOWN",
+      "section": 240.0
     }
   ],
   "transformers_params": []
