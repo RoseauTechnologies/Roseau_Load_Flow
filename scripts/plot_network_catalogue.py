@@ -1,7 +1,11 @@
+from pathlib import Path
+
 import folium
 import pandas as pd
 
 from roseau.load_flow import ElectricalNetwork
+
+OUTPUT_DIR = Path("doc") / "_static" / "Network"
 
 
 def buses_style_function(feature):
@@ -83,6 +87,7 @@ if __name__ == "__main__":
     aggregated_buses_gdf_list = []
     aggregated_branches_gdf_list = []
     for network_name in catalogue_data:
+        print(f"Plotting network {network_name}")
         # Read the network data
         en = ElectricalNetwork.from_catalogue(name=network_name, load_point_name="Winter")
         buses_gdf = en.buses_frame.reset_index()
@@ -112,13 +117,14 @@ if __name__ == "__main__":
         folium.LayerControl().add_to(m)
 
         # Save the map
-        m.save(f"{network_name}.html")
+        m.save(OUTPUT_DIR / f"{network_name}.html")
 
         # Aggregate the data frame
         aggregated_buses_gdf_list.append(buses_gdf)
         aggregated_branches_gdf_list.append(branches_gdf)
 
     # Create the global map
+    print("Plotting the global map")
     buses_gdf = pd.concat(aggregated_buses_gdf_list, ignore_index=True)
     branches_gdf = pd.concat(aggregated_branches_gdf_list, ignore_index=True)
 
@@ -161,4 +167,4 @@ if __name__ == "__main__":
     folium.LayerControl().add_to(m)
 
     # Save the map
-    m.save("Catalogue.html")
+    m.save(OUTPUT_DIR / "Catalogue.html")
