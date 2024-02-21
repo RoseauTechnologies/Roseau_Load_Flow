@@ -15,6 +15,8 @@ myst:
 
 ## Unreleased
 
+- {gh-pr}`184` Improve the documentation to have a better SEO (sitemap, metadata and canonical URLs). The navigation
+  menu has also been improved.
 - {gh-pr}`183` {gh-issue}`181` Update the networks catalogue to better represent the real networks.
   LV loads are made single-phase, MV sources are connected in delta, and MV buses lost their neutral.
   Voltage, current, and power limits are added to the buses, lines, and transformers.
