@@ -3,13 +3,15 @@ myst:
   html_meta:
     "description lang=en": |
       A first simple example to introduce you to power flow calculation with Roseau Load Flow: simulate a small
-      network with a flexible source.
+      network with a voltage source, a line and a load.
     "description lang=fr": |
       Un premier exemple simple pour s'initier au calcul d'écoulement de puissance avec Roseau Load Flow. Simulez un
-      petit réseau comportant une source flexible.
+      petit réseau comportant une source de tension, une ligne and une charge.
     "keywords lang=fr": |
-      load flow, python, écoulement de charge, écoulement de puissance, réseau de distribution, source flexible, exemple
-    "keywords lang=en": Roseau, Load flow, python, power flow, distribution grid, flexible source, example
+      load flow, python, écoulement de charge, écoulement de puissance, réseau de distribution, source, charge, ligne,
+      exemple
+    "keywords lang=en": |
+      Roseau, Load flow, python, power flow, distribution grid, voltage source, power load, line, example
 ---
 
 (usage-getting-started)=

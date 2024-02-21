@@ -2,7 +2,7 @@
 myst:
   html_meta:
     "description lang=en": |
-      Installation of Roseau Load Flow in a Python environment - Simulation of intelligent and unbalanced electrical
+      Installation of Roseau Load Flow in a Python environment - Simulation of smart and unbalanced electrical
       distribution networks.
     "description lang=fr": |
       Installation de Roseau Load Flow dans un environnement Python - Simulation des réseaux de distribution
