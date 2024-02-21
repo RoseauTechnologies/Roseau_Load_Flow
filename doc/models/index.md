@@ -1,5 +1,3 @@
-# Models
-
 A description of the electrical models used for each component is available:
 
 ```{toctree}

@@ -1,7 +1,22 @@
+---
+myst:
+  html_meta:
+    "description lang=en": |
+      Release History of Roseau Load Flow - Three-phase unbalanced load flow solver in a Python API by Roseau
+      Technologies.
+    "description lang=fr": |
+      Historique des versions de Roseau Load Flow - Solveur d'écoulement de charge triphasé et déséquilibré dans une
+      API Python par Roseau Technologies.
+    "keywords lang=fr": version, solveur, simulation, réseau, électrique, bus
+    "keywords lang=en": changelog, solver, simulation, distribution grid, bus, model
+---
+
 # Changelog
 
 ## Unreleased
 
+- {gh-pr}`184` Improve the documentation to have a better SEO (sitemap, metadata and canonical URLs). The navigation
+  menu has also been improved.
 - {gh-pr}`183` {gh-issue}`181` Update the networks catalogue to better represent the real networks.
   LV loads are made single-phase, MV sources are connected in delta, and MV buses lost their neutral.
   Voltage, current, and power limits are added to the buses, lines, and transformers.
@@ -15,7 +30,7 @@ Starting with version 0.7.0, Roseau Load Flow is no longer supplied as a SaaS. T
 a standalone Python library.
 ```
 
-- The documentation is moved from GitHub Pages to https://www.roseau-load-flow.roseautechnologies.com/.
+- The documentation is moved from GitHub Pages to <https://www.roseau-load-flow.roseautechnologies.com/>.
 - Fix a bug in the engine: it was impossible to change the parameters of center-tapped and single phase transformers.
 - {gh-pr}`179` Fix a bug in the propagation of potentials when a center-tapped transformer is used without neutral at
   the primary side.
@@ -145,7 +160,7 @@ a standalone Python library.
 - {gh-pr}`93` Add short-circuit computation.
 - {gh-pr}`92`
   - Add the changelog in the documentation.
-  - Use NodeJs 20 in the Dockerfile.
+  - Use Node.js 20 in the Dockerfile.
   - Correction of a dead link in the README.
 
 ## Version 0.4.0
@@ -191,7 +206,7 @@ a standalone Python library.
 
 <!-- Local Variables: -->
 <!-- mode: gfm -->
-<!-- fill-column: 100 -->
+<!-- fill-column: 120 -->
 <!-- coding: utf-8 -->
 <!-- ispell-local-dictionary: "british" -->
 <!-- End: -->

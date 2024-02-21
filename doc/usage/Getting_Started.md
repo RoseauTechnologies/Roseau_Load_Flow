@@ -1,6 +1,22 @@
+---
+myst:
+  html_meta:
+    "description lang=en": |
+      A first simple example to introduce you to power flow calculation with Roseau Load Flow: simulate a small
+      network with a voltage source, a line and a load.
+    "description lang=fr": |
+      Un premier exemple simple pour s'initier au calcul d'écoulement de puissance avec Roseau Load Flow. Simulez un
+      petit réseau comportant une source de tension, une ligne and une charge.
+    "keywords lang=fr": |
+      load flow, python, écoulement de charge, écoulement de puissance, réseau de distribution, source, charge, ligne,
+      exemple
+    "keywords lang=en": |
+      Roseau, Load flow, python, power flow, distribution grid, voltage source, power load, line, example
+---
+
 (usage-getting-started)=
 
-# Getting started
+# Getting started with Roseau Load Flow
 
 _Make sure you have followed the_ [installation instructions](../Installation.md).
 
@@ -156,8 +172,9 @@ automatically included into the network.
 
 ## Solving a load flow
 
-A license is required. Please contact us at contact@roseautechnologies.com to get a license key.
-Once you have a license key, you can activate by following the instructions in the
+A [license](license-page) is required. You can use the [free, limited licence key](license-types) or get a private and unlimited one
+by contacting us at [contact@roseautechnologies.com](mailto:contact@roseautechnologies.com).
+Once you have a license key, you can activate it by following the instructions in the
 [License activation page](license-activation).
 
 Then, the load flow can be solved by calling the `solve_load_flow` method of the `ElectricalNetwork`
@@ -522,7 +539,7 @@ available and are valid. If you want to save/load the network without the result
 
 Note that calling the `to_json()` method on a network with invalid results (say after an element
 has been modified) will raise an exception. In this case, you can use the `include_results=False`
-option to save the network without the results or you can call the `solve_load_flow()` method to
+option to save the network without the results, or you can call the `solve_load_flow()` method to
 update the results before saving the network.
 
 ```{important}

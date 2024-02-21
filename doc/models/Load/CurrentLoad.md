@@ -1,3 +1,16 @@
+---
+myst:
+  html_meta:
+    "description lang=en": |
+      Current load models in Roseau Load Flow - three-phase unbalanced load flow solver in a Python API by Roseau
+      Technologies.
+    "description lang=fr": |
+      Les modèles de charge de courant dans Roseau Load Flow - Solveur d'écoulement de charge triphasé et déséquilibré
+      dans une API Python par Roseau Technologies.
+    "keywords lang=fr": simulation, réseau, électrique, bus, roseau load flow, charges, modèle, courant, intensité
+    "keywords lang=en": simulation, distribution grid, switch, load, model, current, intensity
+---
+
 # Current loads (I)
 
 They represent loads for which the current is considered constant, i.e. the power is proportional

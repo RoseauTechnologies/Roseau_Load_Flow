@@ -42,8 +42,10 @@ extensions = [
     "sphinx_inline_tabs",
     "sphinxcontrib.googleanalytics",
     "sphinxcontrib.bibtex",
+    "sphinx_sitemap",
 ]
 myst_enable_extensions = ["deflist", "smartquotes", "replacements", "dollarmath"]
+myst_html_meta = {"robots": "all"}
 add_module_names = False
 napoleon_numpy_docstring = False
 python_use_unqualified_type_names = True
@@ -62,6 +64,12 @@ language = "en"
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ["images/*"]
+
+# A list of paths that contain extra files not directly related to the documentation, such as robots.txt or .htaccess.
+# Relative paths are taken as relative to the configuration directory. They are copied to the output directory.
+# They will overwrite any existing file of the same name.
+# As these files are not meant to be built, they are automatically excluded from source files.
+html_extra_path = ["robots.txt", ".htaccess"]
 
 # -- Options for autodoc ----------------------------------------------------
 autodoc_default_options = {"ignore-module-all": False}
@@ -151,3 +159,8 @@ extlinks = {
     "gh-issue": ("https://github.com/RoseauTechnologies/Roseau_Load_Flow/issues/%s", "GH%s"),
     "gh-pr": ("https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/%s", "PR%s"),
 }
+
+
+# -- Options for sphinx-sitemap -----------------------------------------
+html_baseurl = "https://roseau-load-flow.roseautechnologies.com/"
+sitemap_url_scheme = "{link}"  # default is {lang}{version}{link}
