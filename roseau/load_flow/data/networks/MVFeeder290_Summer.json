@@ -141,7 +141,11 @@
       "phases1": "abc",
       "phases2": "abc",
       "bus1": "HVMV20",
-      "bus2": "HVMVFeeder20"
+      "bus2": "HVMVFeeder20",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-1.110304663668984, 48.57658336890665]
+      }
     },
     {
       "id": "MVBranch47143",

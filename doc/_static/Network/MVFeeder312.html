@@ -27,7 +27,7 @@
       }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
-    <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css" />
@@ -49,7 +49,7 @@
                 initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
     <style>
-      #map_10750295fb6475ad7d05bf96dbe0adcc {
+      #map_f482918ccaf04725f3c523cd30886f57 {
         position: relative;
         width: 100%;
         height: 100%;
@@ -92,10 +92,10 @@
     </style>
   </head>
   <body>
-    <div class="folium-map" id="map_10750295fb6475ad7d05bf96dbe0adcc"></div>
+    <div class="folium-map" id="map_f482918ccaf04725f3c523cd30886f57"></div>
   </body>
   <script>
-    var map_10750295fb6475ad7d05bf96dbe0adcc = L.map("map_10750295fb6475ad7d05bf96dbe0adcc", {
+    var map_f482918ccaf04725f3c523cd30886f57 = L.map("map_f482918ccaf04725f3c523cd30886f57", {
       center: [49.24378663111061, -0.8849851344781836],
       crs: L.CRS.EPSG3857,
       zoom: 12,
@@ -103,23 +103,22 @@
       preferCanvas: false,
     });
 
-    var tile_layer_e57deb1d41ce33061e0287b56cb79ca1 = L.tileLayer(
-      "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-      {
-        attribution:
-          'Data by \u0026copy; \u003ca target="_blank" href="http://openstreetmap.org"\u003eOpenStreetMap\u003c/a\u003e, under \u003ca target="_blank" href="http://www.openstreetmap.org/copyright"\u003eODbL\u003c/a\u003e.',
-        detectRetina: false,
-        maxNativeZoom: 18,
-        maxZoom: 18,
-        minZoom: 0,
-        noWrap: false,
-        opacity: 1,
-        subdomains: "abc",
-        tms: false,
-      },
-    ).addTo(map_10750295fb6475ad7d05bf96dbe0adcc);
+    var tile_layer_41d84ffa66ee9d3e030949243720f378 = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution:
+        '\u0026copy; \u003ca href="https://www.openstreetmap.org/copyright"\u003eOpenStreetMap\u003c/a\u003e contributors',
+      detectRetina: false,
+      maxNativeZoom: 19,
+      maxZoom: 19,
+      minZoom: 0,
+      noWrap: false,
+      opacity: 1,
+      subdomains: "abc",
+      tms: false,
+    });
 
-    function geo_json_42bb9be0b0b5f1346a47003dcad1d9d1_styler(feature) {
+    tile_layer_41d84ffa66ee9d3e030949243720f378.addTo(map_f482918ccaf04725f3c523cd30886f57);
+
+    function geo_json_558c510462dea3d4a1fe6e2943d74db9_styler(feature) {
       switch (feature.id) {
         case "0":
           return { opacity: 0 };
@@ -127,13 +126,13 @@
           return { color: "#234e83", weight: 4 };
       }
     }
-    function geo_json_42bb9be0b0b5f1346a47003dcad1d9d1_highlighter(feature) {
+    function geo_json_558c510462dea3d4a1fe6e2943d74db9_highlighter(feature) {
       switch (feature.id) {
         default:
           return { color: "#cad40e" };
       }
     }
-    function geo_json_42bb9be0b0b5f1346a47003dcad1d9d1_pointToLayer(feature, latlng) {
+    function geo_json_558c510462dea3d4a1fe6e2943d74db9_pointToLayer(feature, latlng) {
       var opts = {
         bubblingMouseEvents: true,
         color: "#3388ff",
@@ -151,38 +150,38 @@
         weight: 3,
       };
 
-      let style = geo_json_42bb9be0b0b5f1346a47003dcad1d9d1_styler(feature);
+      let style = geo_json_558c510462dea3d4a1fe6e2943d74db9_styler(feature);
       Object.assign(opts, style);
 
       return new L.CircleMarker(latlng, opts);
     }
 
-    function geo_json_42bb9be0b0b5f1346a47003dcad1d9d1_onEachFeature(feature, layer) {
+    function geo_json_558c510462dea3d4a1fe6e2943d74db9_onEachFeature(feature, layer) {
       layer.on({
         mouseout: function (e) {
           if (typeof e.target.setStyle === "function") {
-            geo_json_42bb9be0b0b5f1346a47003dcad1d9d1.resetStyle(e.target);
+            geo_json_558c510462dea3d4a1fe6e2943d74db9.resetStyle(e.target);
           }
         },
         mouseover: function (e) {
           if (typeof e.target.setStyle === "function") {
-            const highlightStyle = geo_json_42bb9be0b0b5f1346a47003dcad1d9d1_highlighter(e.target.feature);
+            const highlightStyle = geo_json_558c510462dea3d4a1fe6e2943d74db9_highlighter(e.target.feature);
             e.target.setStyle(highlightStyle);
           }
         },
       });
     }
-    var geo_json_42bb9be0b0b5f1346a47003dcad1d9d1 = L.geoJson(null, {
-      onEachFeature: geo_json_42bb9be0b0b5f1346a47003dcad1d9d1_onEachFeature,
+    var geo_json_558c510462dea3d4a1fe6e2943d74db9 = L.geoJson(null, {
+      onEachFeature: geo_json_558c510462dea3d4a1fe6e2943d74db9_onEachFeature,
 
-      style: geo_json_42bb9be0b0b5f1346a47003dcad1d9d1_styler,
-      pointToLayer: geo_json_42bb9be0b0b5f1346a47003dcad1d9d1_pointToLayer,
+      style: geo_json_558c510462dea3d4a1fe6e2943d74db9_styler,
+      pointToLayer: geo_json_558c510462dea3d4a1fe6e2943d74db9_pointToLayer,
     });
 
-    function geo_json_42bb9be0b0b5f1346a47003dcad1d9d1_add(data) {
-      geo_json_42bb9be0b0b5f1346a47003dcad1d9d1.addData(data).addTo(map_10750295fb6475ad7d05bf96dbe0adcc);
+    function geo_json_558c510462dea3d4a1fe6e2943d74db9_add(data) {
+      geo_json_558c510462dea3d4a1fe6e2943d74db9.addData(data);
     }
-    geo_json_42bb9be0b0b5f1346a47003dcad1d9d1_add({
+    geo_json_558c510462dea3d4a1fe6e2943d74db9_add({
       bbox: [-0.892959225255736, 49.236383896582225, -0.877253910292094, 49.258920126012626],
       features: [
         {
@@ -191,8 +190,8 @@
           id: "0",
           properties: {
             branch_type: "switch",
-            bus1_id: "VoltageSource",
-            bus2_id: "HVMV23",
+            bus1_id: "HVMV23",
+            bus2_id: "HVMVFeeder23",
             id: "Switch",
             network: "MVFeeder312",
             phases1: "abc",
@@ -217,9 +216,275 @@
           id: "1",
           properties: {
             branch_type: "line",
-            bus1_id: "HVMV23",
+            bus1_id: "HVMVFeeder23",
             bus2_id: "MVBus03246",
             id: "MVBranch33893",
+            network: "MVFeeder312",
+            phases1: "abc",
+            phases2: "abc",
+          },
+          type: "Feature",
+        },
+        {
+          bbox: [-0.886163224026916, 49.23811159939885, -0.886134334135075, 49.23814376086724],
+          geometry: {
+            coordinates: [
+              [-0.886163224026916, 49.23814376086724],
+              [-0.886163224026916, 49.23814376086724],
+              [-0.886134334135075, 49.23811159939885],
+              [-0.886134334135075, 49.23811159939885],
+            ],
+            type: "LineString",
+          },
+          id: "2",
+          properties: {
+            branch_type: "line",
+            bus1_id: "MVBus07867",
+            bus2_id: "MVLV12316",
+            id: "MVBranch42705",
+            network: "MVFeeder312",
+            phases1: "abc",
+            phases2: "abc",
+          },
+          type: "Feature",
+        },
+        {
+          bbox: [-0.880607514550805, 49.23979992811692, -0.877253910292094, 49.2408818422678],
+          geometry: {
+            coordinates: [
+              [-0.880607514550805, 49.2408818422678],
+              [-0.880607514550805, 49.2408818422678],
+              [-0.880588158110897, 49.24087318061059],
+              [-0.880388072555058, 49.24060875229094],
+              [-0.879301575042177, 49.24026381041191],
+              [-0.87918880904727, 49.24017875737017],
+              [-0.87917790005823, 49.24011696047202],
+              [-0.879044422507606, 49.23998837503634],
+              [-0.878929411297452, 49.239932192117024],
+              [-0.878768337070381, 49.2398862896597],
+              [-0.877929661223324, 49.23979992811692],
+              [-0.877253910292094, 49.23987192292139],
+              [-0.877256069750912, 49.23990516219053],
+              [-0.877255282173517, 49.23990552498414],
+              [-0.877273257127134, 49.23991209308561],
+              [-0.877273257127134, 49.23991209308561],
+            ],
+            type: "LineString",
+          },
+          id: "3",
+          properties: {
+            branch_type: "line",
+            bus1_id: "MVBus09362",
+            bus2_id: "MVLV18592",
+            id: "MVBranch34205",
+            network: "MVFeeder312",
+            phases1: "abc",
+            phases2: "abc",
+          },
+          type: "Feature",
+        },
+        {
+          bbox: [-0.880642256929955, 49.2408818422678, -0.880607514550805, 49.24089738375072],
+          geometry: {
+            coordinates: [
+              [-0.880642256929955, 49.24089738375072],
+              [-0.880642256929955, 49.24089738375072],
+              [-0.880607514550805, 49.2408818422678],
+              [-0.880607514550805, 49.2408818422678],
+            ],
+            type: "LineString",
+          },
+          id: "4",
+          properties: {
+            branch_type: "line",
+            bus1_id: "MVBus09361",
+            bus2_id: "MVBus09362",
+            id: "MVBranch46357",
+            network: "MVFeeder312",
+            phases1: "abc",
+            phases2: "abc",
+          },
+          type: "Feature",
+        },
+        {
+          bbox: [-0.881835000987274, 49.24089738375072, -0.880642256929955, 49.241389848492354],
+          geometry: {
+            coordinates: [
+              [-0.881835000987274, 49.241389848492354],
+              [-0.881799859691425, 49.24138977971393],
+              [-0.881783109182248, 49.24138194753422],
+              [-0.881290970711528, 49.241152340683676],
+              [-0.881010013171883, 49.24101799318286],
+              [-0.880919519389735, 49.241021427522504],
+              [-0.880642256929955, 49.24089738375072],
+              [-0.880642256929955, 49.24089738375072],
+            ],
+            type: "LineString",
+          },
+          id: "5",
+          properties: {
+            branch_type: "line",
+            bus1_id: "MVLV07687",
+            bus2_id: "MVBus09361",
+            id: "MVBranch47021",
+            network: "MVFeeder312",
+            phases1: "abc",
+            phases2: "abc",
+          },
+          type: "Feature",
+        },
+        {
+          bbox: [-0.886163224026916, 49.23814376086724, -0.881835000987274, 49.24138991727078],
+          geometry: {
+            coordinates: [
+              [-0.886163224026916, 49.23814376086724],
+              [-0.886163224026916, 49.23814376086724],
+              [-0.88579212988692, 49.2382402334419],
+              [-0.885437117959917, 49.2383490234728],
+              [-0.885244443040563, 49.2384111899376],
+              [-0.884773324545714, 49.23855361518243],
+              [-0.884320691583989, 49.23866715446074],
+              [-0.883992062841363, 49.238744497018786],
+              [-0.883849963879515, 49.23878672581352],
+              [-0.88373978923198, 49.23880761366753],
+              [-0.883627000983091, 49.23883369700478],
+              [-0.883432997528276, 49.238876239646544],
+              [-0.883448143987773, 49.23899555213153],
+              [-0.883541794869655, 49.23914591058355],
+              [-0.883625503967794, 49.2393601000593],
+              [-0.883677136783881, 49.23954582776682],
+              [-0.883607307645389, 49.23970862254284],
+              [-0.88352877522092, 49.239850861459324],
+              [-0.883364382462172, 49.24005516561823],
+              [-0.88318068466099, 49.24029925552247],
+              [-0.882920174694278, 49.240579315266835],
+              [-0.882805536356202, 49.24070732613978],
+              [-0.882606657751963, 49.24092683367392],
+              [-0.882412269177766, 49.24108733204784],
+              [-0.88207392802604, 49.24129987140639],
+              [-0.881882674199694, 49.2413792762798],
+              [-0.881870142283123, 49.24138991727078],
+              [-0.881835000987274, 49.241389848492354],
+            ],
+            type: "LineString",
+          },
+          id: "6",
+          properties: {
+            branch_type: "line",
+            bus1_id: "MVBus07867",
+            bus2_id: "MVLV07687",
+            id: "MVBranch46354",
+            network: "MVFeeder312",
+            phases1: "abc",
+            phases2: "abc",
+          },
+          type: "Feature",
+        },
+        {
+          bbox: [-0.892906181541801, 49.2363866831773, -0.886163224026916, 49.23814376086724],
+          geometry: {
+            coordinates: [
+              [-0.892897202229386, 49.2363866831773],
+              [-0.892891726402435, 49.23638946977238],
+              [-0.892906181541801, 49.2364031710963],
+              [-0.892897418234313, 49.23640794802007],
+              [-0.89287831429588, 49.236416438313334],
+              [-0.892594095271773, 49.23651611478945],
+              [-0.891571448149967, 49.23680718012721],
+              [-0.891153662298, 49.236918423557036],
+              [-0.889561481750273, 49.237381427460804],
+              [-0.888959529819191, 49.237514700928216],
+              [-0.887966942411736, 49.23775138750242],
+              [-0.886163224026916, 49.23814376086724],
+              [-0.886163224026916, 49.23814376086724],
+            ],
+            type: "LineString",
+          },
+          id: "7",
+          properties: {
+            branch_type: "line",
+            bus1_id: "MVLV14607",
+            bus2_id: "MVBus07867",
+            id: "MVBranch42704",
+            network: "MVFeeder312",
+            phases1: "abc",
+            phases2: "abc",
+          },
+          type: "Feature",
+        },
+        {
+          bbox: [-0.892959225255736, 49.236383896582225, -0.883709467593089, 49.24446960503848],
+          geometry: {
+            coordinates: [
+              [-0.883709467593089, 49.24446960503848],
+              [-0.883709467593089, 49.24446960503848],
+              [-0.884184229377249, 49.244010545618714],
+              [-0.884330881137206, 49.24392258770365],
+              [-0.884682522315761, 49.243770300221065],
+              [-0.88502384170455, 49.24362910611965],
+              [-0.885374604185673, 49.24349245006394],
+              [-0.885406500452197, 49.24347478746522],
+              [-0.885436166361273, 49.24339237085228],
+              [-0.885493273565053, 49.24333802736923],
+              [-0.885779430387922, 49.24298944761374],
+              [-0.885831885825315, 49.24291961886043],
+              [-0.886164112754665, 49.24254580086654],
+              [-0.886354586289205, 49.24233782522554],
+              [-0.886371224582025, 49.24231097783463],
+              [-0.886509038735172, 49.24214042941683],
+              [-0.886623276090726, 49.24197412004918],
+              [-0.886735087767808, 49.24179826329924],
+              [-0.887084452681715, 49.24120071996567],
+              [-0.887281830779827, 49.240840124926464],
+              [-0.887338878309803, 49.24075576670856],
+              [-0.887412617238388, 49.24067456563303],
+              [-0.887478774906847, 49.240618772762986],
+              [-0.887504173552536, 49.24061448434506],
+              [-0.887550969524801, 49.24057121609662],
+              [-0.887623000603809, 49.24052127191131],
+              [-0.887807014143259, 49.240415498813725],
+              [-0.888031231731437, 49.240307439737606],
+              [-0.888165587445624, 49.24022821441154],
+              [-0.888576885925707, 49.23991707640471],
+              [-0.888675855847016, 49.2398291893856],
+              [-0.888854016809171, 49.23962994726778],
+              [-0.888868208037688, 49.239622363098995],
+              [-0.888905092184681, 49.239567356439665],
+              [-0.888965537672147, 49.23950811941095],
+              [-0.889198492793863, 49.23924738168518],
+              [-0.889230159906052, 49.239226127259265],
+              [-0.889483595096178, 49.23899965509596],
+              [-0.889621281678398, 49.23885671092865],
+              [-0.889773868064895, 49.23868816122689],
+              [-0.889970587020718, 49.23843440289482],
+              [-0.890085420145151, 49.238277676570675],
+              [-0.89049528613681, 49.23773970977248],
+              [-0.890868526992405, 49.23724979077323],
+              [-0.890922335597395, 49.23715445726995],
+              [-0.89109859106332, 49.237012882985105],
+              [-0.891141386916112, 49.23699372036682],
+              [-0.891627821958223, 49.2368582033284],
+              [-0.891670542549248, 49.23683784659613],
+              [-0.891883165266933, 49.23677930475295],
+              [-0.891955920594196, 49.23677014386174],
+              [-0.891993068686999, 49.23674874105849],
+              [-0.892576733828613, 49.23658538921702],
+              [-0.892618444722289, 49.23657826860371],
+              [-0.892724085024723, 49.23653821549101],
+              [-0.892959225255736, 49.23645866249661],
+              [-0.892932972563738, 49.236417160731015],
+              [-0.892923854707593, 49.236402731224274],
+              [-0.892902678056337, 49.236383896582225],
+              [-0.892897202229386, 49.2363866831773],
+            ],
+            type: "LineString",
+          },
+          id: "8",
+          properties: {
+            branch_type: "line",
+            bus1_id: "MVBus03247",
+            bus2_id: "MVLV14607",
+            id: "MVBranch45456",
             network: "MVFeeder312",
             phases1: "abc",
             phases2: "abc",
@@ -325,7 +590,7 @@
             ],
             type: "LineString",
           },
-          id: "2",
+          id: "9",
           properties: {
             branch_type: "line",
             bus1_id: "MVBus03246",
@@ -337,277 +602,11 @@
           },
           type: "Feature",
         },
-        {
-          bbox: [-0.892959225255736, 49.236383896582225, -0.883709467593089, 49.24446960503848],
-          geometry: {
-            coordinates: [
-              [-0.883709467593089, 49.24446960503848],
-              [-0.883709467593089, 49.24446960503848],
-              [-0.884184229377249, 49.244010545618714],
-              [-0.884330881137206, 49.24392258770365],
-              [-0.884682522315761, 49.243770300221065],
-              [-0.88502384170455, 49.24362910611965],
-              [-0.885374604185673, 49.24349245006394],
-              [-0.885406500452197, 49.24347478746522],
-              [-0.885436166361273, 49.24339237085228],
-              [-0.885493273565053, 49.24333802736923],
-              [-0.885779430387922, 49.24298944761374],
-              [-0.885831885825315, 49.24291961886043],
-              [-0.886164112754665, 49.24254580086654],
-              [-0.886354586289205, 49.24233782522554],
-              [-0.886371224582025, 49.24231097783463],
-              [-0.886509038735172, 49.24214042941683],
-              [-0.886623276090726, 49.24197412004918],
-              [-0.886735087767808, 49.24179826329924],
-              [-0.887084452681715, 49.24120071996567],
-              [-0.887281830779827, 49.240840124926464],
-              [-0.887338878309803, 49.24075576670856],
-              [-0.887412617238388, 49.24067456563303],
-              [-0.887478774906847, 49.240618772762986],
-              [-0.887504173552536, 49.24061448434506],
-              [-0.887550969524801, 49.24057121609662],
-              [-0.887623000603809, 49.24052127191131],
-              [-0.887807014143259, 49.240415498813725],
-              [-0.888031231731437, 49.240307439737606],
-              [-0.888165587445624, 49.24022821441154],
-              [-0.888576885925707, 49.23991707640471],
-              [-0.888675855847016, 49.2398291893856],
-              [-0.888854016809171, 49.23962994726778],
-              [-0.888868208037688, 49.239622363098995],
-              [-0.888905092184681, 49.239567356439665],
-              [-0.888965537672147, 49.23950811941095],
-              [-0.889198492793863, 49.23924738168518],
-              [-0.889230159906052, 49.239226127259265],
-              [-0.889483595096178, 49.23899965509596],
-              [-0.889621281678398, 49.23885671092865],
-              [-0.889773868064895, 49.23868816122689],
-              [-0.889970587020718, 49.23843440289482],
-              [-0.890085420145151, 49.238277676570675],
-              [-0.89049528613681, 49.23773970977248],
-              [-0.890868526992405, 49.23724979077323],
-              [-0.890922335597395, 49.23715445726995],
-              [-0.89109859106332, 49.237012882985105],
-              [-0.891141386916112, 49.23699372036682],
-              [-0.891627821958223, 49.2368582033284],
-              [-0.891670542549248, 49.23683784659613],
-              [-0.891883165266933, 49.23677930475295],
-              [-0.891955920594196, 49.23677014386174],
-              [-0.891993068686999, 49.23674874105849],
-              [-0.892576733828613, 49.23658538921702],
-              [-0.892618444722289, 49.23657826860371],
-              [-0.892724085024723, 49.23653821549101],
-              [-0.892959225255736, 49.23645866249661],
-              [-0.892932972563738, 49.236417160731015],
-              [-0.892923854707593, 49.236402731224274],
-              [-0.892902678056337, 49.236383896582225],
-              [-0.892897202229386, 49.2363866831773],
-            ],
-            type: "LineString",
-          },
-          id: "3",
-          properties: {
-            branch_type: "line",
-            bus1_id: "MVBus03247",
-            bus2_id: "MVLV14607",
-            id: "MVBranch45456",
-            network: "MVFeeder312",
-            phases1: "abc",
-            phases2: "abc",
-          },
-          type: "Feature",
-        },
-        {
-          bbox: [-0.892906181541801, 49.2363866831773, -0.886163224026916, 49.23814376086724],
-          geometry: {
-            coordinates: [
-              [-0.892897202229386, 49.2363866831773],
-              [-0.892891726402435, 49.23638946977238],
-              [-0.892906181541801, 49.2364031710963],
-              [-0.892897418234313, 49.23640794802007],
-              [-0.89287831429588, 49.236416438313334],
-              [-0.892594095271773, 49.23651611478945],
-              [-0.891571448149967, 49.23680718012721],
-              [-0.891153662298, 49.236918423557036],
-              [-0.889561481750273, 49.237381427460804],
-              [-0.888959529819191, 49.237514700928216],
-              [-0.887966942411736, 49.23775138750242],
-              [-0.886163224026916, 49.23814376086724],
-              [-0.886163224026916, 49.23814376086724],
-            ],
-            type: "LineString",
-          },
-          id: "4",
-          properties: {
-            branch_type: "line",
-            bus1_id: "MVLV14607",
-            bus2_id: "MVBus07867",
-            id: "MVBranch42704",
-            network: "MVFeeder312",
-            phases1: "abc",
-            phases2: "abc",
-          },
-          type: "Feature",
-        },
-        {
-          bbox: [-0.886163224026916, 49.23814376086724, -0.881835000987274, 49.24138991727078],
-          geometry: {
-            coordinates: [
-              [-0.886163224026916, 49.23814376086724],
-              [-0.886163224026916, 49.23814376086724],
-              [-0.88579212988692, 49.2382402334419],
-              [-0.885437117959917, 49.2383490234728],
-              [-0.885244443040563, 49.2384111899376],
-              [-0.884773324545714, 49.23855361518243],
-              [-0.884320691583989, 49.23866715446074],
-              [-0.883992062841363, 49.238744497018786],
-              [-0.883849963879515, 49.23878672581352],
-              [-0.88373978923198, 49.23880761366753],
-              [-0.883627000983091, 49.23883369700478],
-              [-0.883432997528276, 49.238876239646544],
-              [-0.883448143987773, 49.23899555213153],
-              [-0.883541794869655, 49.23914591058355],
-              [-0.883625503967794, 49.2393601000593],
-              [-0.883677136783881, 49.23954582776682],
-              [-0.883607307645389, 49.23970862254284],
-              [-0.88352877522092, 49.239850861459324],
-              [-0.883364382462172, 49.24005516561823],
-              [-0.88318068466099, 49.24029925552247],
-              [-0.882920174694278, 49.240579315266835],
-              [-0.882805536356202, 49.24070732613978],
-              [-0.882606657751963, 49.24092683367392],
-              [-0.882412269177766, 49.24108733204784],
-              [-0.88207392802604, 49.24129987140639],
-              [-0.881882674199694, 49.2413792762798],
-              [-0.881870142283123, 49.24138991727078],
-              [-0.881835000987274, 49.241389848492354],
-            ],
-            type: "LineString",
-          },
-          id: "5",
-          properties: {
-            branch_type: "line",
-            bus1_id: "MVBus07867",
-            bus2_id: "MVLV07687",
-            id: "MVBranch46354",
-            network: "MVFeeder312",
-            phases1: "abc",
-            phases2: "abc",
-          },
-          type: "Feature",
-        },
-        {
-          bbox: [-0.881835000987274, 49.24089738375072, -0.880642256929955, 49.241389848492354],
-          geometry: {
-            coordinates: [
-              [-0.881835000987274, 49.241389848492354],
-              [-0.881799859691425, 49.24138977971393],
-              [-0.881783109182248, 49.24138194753422],
-              [-0.881290970711528, 49.241152340683676],
-              [-0.881010013171883, 49.24101799318286],
-              [-0.880919519389735, 49.241021427522504],
-              [-0.880642256929955, 49.24089738375072],
-              [-0.880642256929955, 49.24089738375072],
-            ],
-            type: "LineString",
-          },
-          id: "6",
-          properties: {
-            branch_type: "line",
-            bus1_id: "MVLV07687",
-            bus2_id: "MVBus09361",
-            id: "MVBranch47021",
-            network: "MVFeeder312",
-            phases1: "abc",
-            phases2: "abc",
-          },
-          type: "Feature",
-        },
-        {
-          bbox: [-0.880642256929955, 49.2408818422678, -0.880607514550805, 49.24089738375072],
-          geometry: {
-            coordinates: [
-              [-0.880642256929955, 49.24089738375072],
-              [-0.880642256929955, 49.24089738375072],
-              [-0.880607514550805, 49.2408818422678],
-              [-0.880607514550805, 49.2408818422678],
-            ],
-            type: "LineString",
-          },
-          id: "7",
-          properties: {
-            branch_type: "line",
-            bus1_id: "MVBus09361",
-            bus2_id: "MVBus09362",
-            id: "MVBranch46357",
-            network: "MVFeeder312",
-            phases1: "abc",
-            phases2: "abc",
-          },
-          type: "Feature",
-        },
-        {
-          bbox: [-0.880607514550805, 49.23979992811692, -0.877253910292094, 49.2408818422678],
-          geometry: {
-            coordinates: [
-              [-0.880607514550805, 49.2408818422678],
-              [-0.880607514550805, 49.2408818422678],
-              [-0.880588158110897, 49.24087318061059],
-              [-0.880388072555058, 49.24060875229094],
-              [-0.879301575042177, 49.24026381041191],
-              [-0.87918880904727, 49.24017875737017],
-              [-0.87917790005823, 49.24011696047202],
-              [-0.879044422507606, 49.23998837503634],
-              [-0.878929411297452, 49.239932192117024],
-              [-0.878768337070381, 49.2398862896597],
-              [-0.877929661223324, 49.23979992811692],
-              [-0.877253910292094, 49.23987192292139],
-              [-0.877256069750912, 49.23990516219053],
-              [-0.877255282173517, 49.23990552498414],
-              [-0.877273257127134, 49.23991209308561],
-              [-0.877273257127134, 49.23991209308561],
-            ],
-            type: "LineString",
-          },
-          id: "8",
-          properties: {
-            branch_type: "line",
-            bus1_id: "MVBus09362",
-            bus2_id: "MVLV18592",
-            id: "MVBranch34205",
-            network: "MVFeeder312",
-            phases1: "abc",
-            phases2: "abc",
-          },
-          type: "Feature",
-        },
-        {
-          bbox: [-0.886163224026916, 49.23811159939885, -0.886134334135075, 49.23814376086724],
-          geometry: {
-            coordinates: [
-              [-0.886163224026916, 49.23814376086724],
-              [-0.886163224026916, 49.23814376086724],
-              [-0.886134334135075, 49.23811159939885],
-              [-0.886134334135075, 49.23811159939885],
-            ],
-            type: "LineString",
-          },
-          id: "9",
-          properties: {
-            branch_type: "line",
-            bus1_id: "MVBus07867",
-            bus2_id: "MVLV12316",
-            id: "MVBranch42705",
-            network: "MVFeeder312",
-            phases1: "abc",
-            phases2: "abc",
-          },
-          type: "Feature",
-        },
       ],
       type: "FeatureCollection",
     });
 
-    geo_json_42bb9be0b0b5f1346a47003dcad1d9d1.bindTooltip(
+    geo_json_558c510462dea3d4a1fe6e2943d74db9.bindTooltip(
       function (layer) {
         let div = L.DomUtil.create("div");
 
@@ -636,52 +635,29 @@
       { className: "foliumtooltip", maxWidth: 800, sticky: false },
     );
 
-    function geo_json_c0c6a4e6196b1867a149d0dd09f251fa_styler(feature) {
+    geo_json_558c510462dea3d4a1fe6e2943d74db9.addTo(map_f482918ccaf04725f3c523cd30886f57);
+
+    function geo_json_52db9a0fec6d139ce675e9143e3398e1_styler(feature) {
       switch (feature.id) {
         case "0":
-          return {
-            color: "#adb9cb",
-            fill: true,
-            fillColor: "#adb9cb",
-            fillOpacity: 1,
-            radius: 1,
-          };
         case "1":
-          return {
-            color: "#000000",
-            fill: true,
-            fillColor: "#000000",
-            fillOpacity: 1,
-            radius: 7,
-          };
+          return { color: "#000000", fill: true, fillColor: "#000000", fillOpacity: 1, radius: 7 };
+        case "2":
         case "4":
-        case "6":
-        case "9":
-        case "10":
-          return {
-            color: "#234e83",
-            fill: true,
-            fillColor: "#234e83",
-            fillOpacity: 1,
-            radius: 5,
-          };
+        case "7":
+        case "8":
+          return { color: "#234e83", fill: true, fillColor: "#234e83", fillOpacity: 1, radius: 5 };
         default:
-          return {
-            color: "#234e83",
-            fill: true,
-            fillColor: "#234e83",
-            fillOpacity: 1,
-            radius: 3,
-          };
+          return { color: "#234e83", fill: true, fillColor: "#234e83", fillOpacity: 1, radius: 3 };
       }
     }
-    function geo_json_c0c6a4e6196b1867a149d0dd09f251fa_highlighter(feature) {
+    function geo_json_52db9a0fec6d139ce675e9143e3398e1_highlighter(feature) {
       switch (feature.id) {
         default:
           return { color: "#cad40e", fillColor: "#cad40e" };
       }
     }
-    function geo_json_c0c6a4e6196b1867a149d0dd09f251fa_pointToLayer(feature, latlng) {
+    function geo_json_52db9a0fec6d139ce675e9143e3398e1_pointToLayer(feature, latlng) {
       var opts = {
         bubblingMouseEvents: true,
         color: "#3388ff",
@@ -699,149 +675,182 @@
         weight: 3,
       };
 
-      let style = geo_json_c0c6a4e6196b1867a149d0dd09f251fa_styler(feature);
+      let style = geo_json_52db9a0fec6d139ce675e9143e3398e1_styler(feature);
       Object.assign(opts, style);
 
       return new L.CircleMarker(latlng, opts);
     }
 
-    function geo_json_c0c6a4e6196b1867a149d0dd09f251fa_onEachFeature(feature, layer) {
+    function geo_json_52db9a0fec6d139ce675e9143e3398e1_onEachFeature(feature, layer) {
       layer.on({
         mouseout: function (e) {
           if (typeof e.target.setStyle === "function") {
-            geo_json_c0c6a4e6196b1867a149d0dd09f251fa.resetStyle(e.target);
+            geo_json_52db9a0fec6d139ce675e9143e3398e1.resetStyle(e.target);
           }
         },
         mouseover: function (e) {
           if (typeof e.target.setStyle === "function") {
-            const highlightStyle = geo_json_c0c6a4e6196b1867a149d0dd09f251fa_highlighter(e.target.feature);
+            const highlightStyle = geo_json_52db9a0fec6d139ce675e9143e3398e1_highlighter(e.target.feature);
             e.target.setStyle(highlightStyle);
           }
         },
       });
     }
-    var geo_json_c0c6a4e6196b1867a149d0dd09f251fa = L.geoJson(null, {
-      onEachFeature: geo_json_c0c6a4e6196b1867a149d0dd09f251fa_onEachFeature,
+    var geo_json_52db9a0fec6d139ce675e9143e3398e1 = L.geoJson(null, {
+      onEachFeature: geo_json_52db9a0fec6d139ce675e9143e3398e1_onEachFeature,
 
-      style: geo_json_c0c6a4e6196b1867a149d0dd09f251fa_styler,
-      pointToLayer: geo_json_c0c6a4e6196b1867a149d0dd09f251fa_pointToLayer,
+      style: geo_json_52db9a0fec6d139ce675e9143e3398e1_styler,
+      pointToLayer: geo_json_52db9a0fec6d139ce675e9143e3398e1_pointToLayer,
     });
 
-    function geo_json_c0c6a4e6196b1867a149d0dd09f251fa_add(data) {
-      geo_json_c0c6a4e6196b1867a149d0dd09f251fa.addData(data).addTo(map_10750295fb6475ad7d05bf96dbe0adcc);
+    function geo_json_52db9a0fec6d139ce675e9143e3398e1_add(data) {
+      geo_json_52db9a0fec6d139ce675e9143e3398e1.addData(data);
     }
-    geo_json_c0c6a4e6196b1867a149d0dd09f251fa_add({
+    geo_json_52db9a0fec6d139ce675e9143e3398e1_add({
       bbox: [-0.892897202229386, 49.2363866831773, -0.877273257127134, 49.25885604408974],
       features: [
         {
           bbox: [-0.8900710079343, 49.258817450938, -0.8900710079343, 49.258817450938],
           geometry: { coordinates: [-0.8900710079343, 49.258817450938], type: "Point" },
           id: "0",
-          properties: { id: "VoltageSource", network: "MVFeeder312", phases: "abcn" },
+          properties: { id: "HVMV23", max_voltage: 21000, min_voltage: 19000, network: "MVFeeder312", phases: "abc" },
           type: "Feature",
         },
         {
           bbox: [-0.8900710079343, 49.258817450938, -0.8900710079343, 49.258817450938],
           geometry: { coordinates: [-0.8900710079343, 49.258817450938], type: "Point" },
           id: "1",
-          properties: { id: "HVMV23", network: "MVFeeder312", phases: "abc" },
-          type: "Feature",
-        },
-        {
-          bbox: [-0.890518079267901, 49.25885604408974, -0.890518079267901, 49.25885604408974],
-          geometry: {
-            coordinates: [-0.890518079267901, 49.25885604408974],
-            type: "Point",
+          properties: {
+            id: "HVMVFeeder23",
+            max_voltage: 21000,
+            min_voltage: 19000,
+            network: "MVFeeder312",
+            phases: "abc",
           },
-          id: "2",
-          properties: { id: "MVBus03246", network: "MVFeeder312", phases: "abc" },
-          type: "Feature",
-        },
-        {
-          bbox: [-0.883709467593089, 49.24446960503848, -0.883709467593089, 49.24446960503848],
-          geometry: {
-            coordinates: [-0.883709467593089, 49.24446960503848],
-            type: "Point",
-          },
-          id: "3",
-          properties: { id: "MVBus03247", network: "MVFeeder312", phases: "abc" },
-          type: "Feature",
-        },
-        {
-          bbox: [-0.892897202229386, 49.2363866831773, -0.892897202229386, 49.2363866831773],
-          geometry: {
-            coordinates: [-0.892897202229386, 49.2363866831773],
-            type: "Point",
-          },
-          id: "4",
-          properties: { id: "MVLV14607", network: "MVFeeder312", phases: "abc" },
-          type: "Feature",
-        },
-        {
-          bbox: [-0.886163224026916, 49.23814376086724, -0.886163224026916, 49.23814376086724],
-          geometry: {
-            coordinates: [-0.886163224026916, 49.23814376086724],
-            type: "Point",
-          },
-          id: "5",
-          properties: { id: "MVBus07867", network: "MVFeeder312", phases: "abc" },
-          type: "Feature",
-        },
-        {
-          bbox: [-0.881835000987274, 49.241389848492354, -0.881835000987274, 49.241389848492354],
-          geometry: {
-            coordinates: [-0.881835000987274, 49.241389848492354],
-            type: "Point",
-          },
-          id: "6",
-          properties: { id: "MVLV07687", network: "MVFeeder312", phases: "abc" },
-          type: "Feature",
-        },
-        {
-          bbox: [-0.880642256929955, 49.24089738375072, -0.880642256929955, 49.24089738375072],
-          geometry: {
-            coordinates: [-0.880642256929955, 49.24089738375072],
-            type: "Point",
-          },
-          id: "7",
-          properties: { id: "MVBus09361", network: "MVFeeder312", phases: "abc" },
-          type: "Feature",
-        },
-        {
-          bbox: [-0.880607514550805, 49.2408818422678, -0.880607514550805, 49.2408818422678],
-          geometry: {
-            coordinates: [-0.880607514550805, 49.2408818422678],
-            type: "Point",
-          },
-          id: "8",
-          properties: { id: "MVBus09362", network: "MVFeeder312", phases: "abc" },
-          type: "Feature",
-        },
-        {
-          bbox: [-0.877273257127134, 49.23991209308561, -0.877273257127134, 49.23991209308561],
-          geometry: {
-            coordinates: [-0.877273257127134, 49.23991209308561],
-            type: "Point",
-          },
-          id: "9",
-          properties: { id: "MVLV18592", network: "MVFeeder312", phases: "abc" },
           type: "Feature",
         },
         {
           bbox: [-0.886134334135075, 49.23811159939885, -0.886134334135075, 49.23811159939885],
-          geometry: {
-            coordinates: [-0.886134334135075, 49.23811159939885],
-            type: "Point",
+          geometry: { coordinates: [-0.886134334135075, 49.23811159939885], type: "Point" },
+          id: "2",
+          properties: {
+            id: "MVLV12316",
+            max_voltage: 21000,
+            min_voltage: 19000,
+            network: "MVFeeder312",
+            phases: "abc",
           },
+          type: "Feature",
+        },
+        {
+          bbox: [-0.886163224026916, 49.23814376086724, -0.886163224026916, 49.23814376086724],
+          geometry: { coordinates: [-0.886163224026916, 49.23814376086724], type: "Point" },
+          id: "3",
+          properties: {
+            id: "MVBus07867",
+            max_voltage: 21000,
+            min_voltage: 19000,
+            network: "MVFeeder312",
+            phases: "abc",
+          },
+          type: "Feature",
+        },
+        {
+          bbox: [-0.877273257127134, 49.23991209308561, -0.877273257127134, 49.23991209308561],
+          geometry: { coordinates: [-0.877273257127134, 49.23991209308561], type: "Point" },
+          id: "4",
+          properties: {
+            id: "MVLV18592",
+            max_voltage: 21000,
+            min_voltage: 19000,
+            network: "MVFeeder312",
+            phases: "abc",
+          },
+          type: "Feature",
+        },
+        {
+          bbox: [-0.880607514550805, 49.2408818422678, -0.880607514550805, 49.2408818422678],
+          geometry: { coordinates: [-0.880607514550805, 49.2408818422678], type: "Point" },
+          id: "5",
+          properties: {
+            id: "MVBus09362",
+            max_voltage: 21000,
+            min_voltage: 19000,
+            network: "MVFeeder312",
+            phases: "abc",
+          },
+          type: "Feature",
+        },
+        {
+          bbox: [-0.880642256929955, 49.24089738375072, -0.880642256929955, 49.24089738375072],
+          geometry: { coordinates: [-0.880642256929955, 49.24089738375072], type: "Point" },
+          id: "6",
+          properties: {
+            id: "MVBus09361",
+            max_voltage: 21000,
+            min_voltage: 19000,
+            network: "MVFeeder312",
+            phases: "abc",
+          },
+          type: "Feature",
+        },
+        {
+          bbox: [-0.881835000987274, 49.241389848492354, -0.881835000987274, 49.241389848492354],
+          geometry: { coordinates: [-0.881835000987274, 49.241389848492354], type: "Point" },
+          id: "7",
+          properties: {
+            id: "MVLV07687",
+            max_voltage: 21000,
+            min_voltage: 19000,
+            network: "MVFeeder312",
+            phases: "abc",
+          },
+          type: "Feature",
+        },
+        {
+          bbox: [-0.892897202229386, 49.2363866831773, -0.892897202229386, 49.2363866831773],
+          geometry: { coordinates: [-0.892897202229386, 49.2363866831773], type: "Point" },
+          id: "8",
+          properties: {
+            id: "MVLV14607",
+            max_voltage: 21000,
+            min_voltage: 19000,
+            network: "MVFeeder312",
+            phases: "abc",
+          },
+          type: "Feature",
+        },
+        {
+          bbox: [-0.883709467593089, 49.24446960503848, -0.883709467593089, 49.24446960503848],
+          geometry: { coordinates: [-0.883709467593089, 49.24446960503848], type: "Point" },
+          id: "9",
+          properties: {
+            id: "MVBus03247",
+            max_voltage: 21000,
+            min_voltage: 19000,
+            network: "MVFeeder312",
+            phases: "abc",
+          },
+          type: "Feature",
+        },
+        {
+          bbox: [-0.890518079267901, 49.25885604408974, -0.890518079267901, 49.25885604408974],
+          geometry: { coordinates: [-0.890518079267901, 49.25885604408974], type: "Point" },
           id: "10",
-          properties: { id: "MVLV12316", network: "MVFeeder312", phases: "abc" },
+          properties: {
+            id: "MVBus03246",
+            max_voltage: 21000,
+            min_voltage: 19000,
+            network: "MVFeeder312",
+            phases: "abc",
+          },
           type: "Feature",
         },
       ],
       type: "FeatureCollection",
     });
 
-    geo_json_c0c6a4e6196b1867a149d0dd09f251fa.bindTooltip(
+    geo_json_52db9a0fec6d139ce675e9143e3398e1.bindTooltip(
       function (layer) {
         let div = L.DomUtil.create("div");
 
@@ -870,21 +879,23 @@
       { className: "foliumtooltip", maxWidth: 800, sticky: false },
     );
 
-    var layer_control_f6b71e2aaecadad4a126a417a552e524 = {
+    geo_json_52db9a0fec6d139ce675e9143e3398e1.addTo(map_f482918ccaf04725f3c523cd30886f57);
+
+    var layer_control_302c970ab669e45045478d59b3aa3d14_layers = {
       base_layers: {
-        openstreetmap: tile_layer_e57deb1d41ce33061e0287b56cb79ca1,
+        openstreetmap: tile_layer_41d84ffa66ee9d3e030949243720f378,
       },
       overlays: {
-        branches: geo_json_42bb9be0b0b5f1346a47003dcad1d9d1,
-        buses: geo_json_c0c6a4e6196b1867a149d0dd09f251fa,
+        branches: geo_json_558c510462dea3d4a1fe6e2943d74db9,
+        buses: geo_json_52db9a0fec6d139ce675e9143e3398e1,
       },
     };
-    L.control
+    let layer_control_302c970ab669e45045478d59b3aa3d14 = L.control
       .layers(
-        layer_control_f6b71e2aaecadad4a126a417a552e524.base_layers,
-        layer_control_f6b71e2aaecadad4a126a417a552e524.overlays,
+        layer_control_302c970ab669e45045478d59b3aa3d14_layers.base_layers,
+        layer_control_302c970ab669e45045478d59b3aa3d14_layers.overlays,
         { autoZIndex: true, collapsed: true, position: "topright" },
       )
-      .addTo(map_10750295fb6475ad7d05bf96dbe0adcc);
+      .addTo(map_f482918ccaf04725f3c523cd30886f57);
   </script>
 </html>

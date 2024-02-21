@@ -145,9 +145,11 @@ if __name__ == "__main__":
                         bus1=new_buses[source_bus_id],
                         bus2=new_buses[feeder_bus_id],
                         phases=branch.phases,
+                        geometry=branch.geometry,
                     )
                 else:
                     raise AssertionError(branch)
+                assert new_branch.geometry == branch.geometry
                 new_branches[branch_id] = new_branch
 
             new_loads = {}
