@@ -22,6 +22,7 @@ myst:
   Voltage, current, and power limits are added to the buses, lines, and transformers.
   The line parameters IDs are also updated to match the new line parameters catalogue.
 - {gh-pr}`182` Improve the error message when trying to access results on the network before running the load flow.
+- {gh-pr}`189` Allow flexible loads to have a null active theoretical power.
 
 ## Version 0.7.0
 
