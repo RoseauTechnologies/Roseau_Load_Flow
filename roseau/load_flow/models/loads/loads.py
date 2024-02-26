@@ -360,10 +360,6 @@ class PowerLoad(AbstractLoad):
                     msg = f"There is a consumption control but a negative power for flexible load {self.id!r}"
                     logger.error(msg)
                     raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_S_VALUE)
-                if fp.control_p.type != "constant" and power.real == 0:
-                    msg = f"There is a P control but a null active power for flexible load {self.id!r}"
-                    logger.error(msg)
-                    raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_S_VALUE)
         self._powers = value
         self._invalidate_network_results()
         if self._cy_element is not None:
