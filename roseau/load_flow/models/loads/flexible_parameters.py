@@ -154,9 +154,15 @@ class Control(JsonMixin):
             previous_value = value
             previous_name = name
 
-        # Check on alpha
-        if self._alpha <= 0:
-            msg = f"'alpha' must be greater than 0 but {self._alpha:.1f} was provided."
+        # Values greater than 0
+        if self._epsilon <= 0.0:
+            msg = f"'epsilon' must be greater than 0 but {self._epsilon:.1f} was provided."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_CONTROL_VALUE)
+
+        # alpha must be "large"
+        if self._alpha < 1.0:
+            msg = f"'alpha' must be greater than 1 but {self._alpha:.1f} was provided."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_CONTROL_VALUE)
 

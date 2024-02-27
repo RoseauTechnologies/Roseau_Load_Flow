@@ -42,7 +42,7 @@ def test_control():
 
     with pytest.raises(RoseauLoadFlowException) as e:
         Control(type="p_max_u_production", u_min=0, u_down=0, u_up=240, u_max=Q_(0.250, "kV"), alpha=0)
-    assert e.value.msg == "'alpha' must be greater than 0 but 0.0 was provided."
+    assert e.value.msg == "'alpha' must be greater than 1 but 0.0 was provided."
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_CONTROL_VALUE
 
     # Warning if values provided to useless values
@@ -78,7 +78,17 @@ def test_control():
 
     with pytest.raises(RoseauLoadFlowException) as e:
         Control(type="p_max_u_consumption", u_min=Q_(210, "V"), u_down=Q_(0.220, "kV"), u_up=0, u_max=0, alpha=0)
-    assert e.value.msg == "'alpha' must be greater than 0 but 0.0 was provided."
+    assert e.value.msg == "'alpha' must be greater than 1 but 0.0 was provided."
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_CONTROL_VALUE
+
+    with pytest.raises(RoseauLoadFlowException) as e:
+        Control(type="p_max_u_consumption", u_min=Q_(210, "V"), u_down=Q_(0.220, "kV"), u_up=0, u_max=0, epsilon=0)
+    assert e.value.msg == "'epsilon' must be greater than 0 but 0.0 was provided."
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_CONTROL_VALUE
+
+    with pytest.raises(RoseauLoadFlowException) as e:
+        Control(type="p_max_u_consumption", u_min=Q_(210, "V"), u_down=Q_(0.220, "kV"), u_up=0, u_max=0, epsilon=1.2)
+    assert e.value.msg == "'epsilon' must be lower than 1 but 1.200 was provided."
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_CONTROL_VALUE
 
     # Warning if values provided to useless values
@@ -142,7 +152,7 @@ def test_control():
             u_max=Q_(2400.5, "dV"),
             alpha=0,
         )
-    assert e.value.msg == "'alpha' must be greater than 0 but 0.0 was provided."
+    assert e.value.msg == "'alpha' must be greater than 1 but 0.0 was provided."
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_CONTROL_VALUE
 
 
