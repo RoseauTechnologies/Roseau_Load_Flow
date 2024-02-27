@@ -38,6 +38,15 @@ control = Control.constant()
 
 Control the maximum active power of a load (often a PV inverter) based on the voltage $P^{\max}(U)$.
 
+The $P(U)$ control accepts two approximation parameters: `alpha` and `epsilon`.
+
+- `alpha` is used to compute soft clipping functions. The higher `alpha` is, the better the approximations are.
+- `epsilon` is used to approximate a smooth inverse function:
+  ```{math}
+  \forall x \geq 0, \frac{1}{x} \approx \frac{1}{\varepsilon \times \exp\left(\frac{-x}{\varepsilon}\right) + {x}}
+  ```
+  The lower `epsilon` is, the better the approximations are.
+
 ```{note}
 The functions $s_{\alpha}$ used for the $P(U)$ controls are derived from the *soft clipping function* of
 {cite:p}`Klimek_2020`.
