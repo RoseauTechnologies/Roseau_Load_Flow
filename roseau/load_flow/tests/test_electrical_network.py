@@ -1827,6 +1827,6 @@ def test_propagate_potentials_center_transformers():
     PotentialRef(id="pref2", element=bus2)
     Transformer(id="transfo", bus1=bus1, bus2=bus2, parameters=tp)
     en = ElectricalNetwork.from_element(bus2)
-    with contextlib.suppress(RoseauLoadFlowException):  # No valid license
+    with contextlib.suppress(TypeError):  # cython solve_load_flow method has been patched
         en.solve_load_flow()  # propagate the potentials
     npt.assert_allclose(bus2.potentials.m_as("V"), np.array([200, -200, 0], dtype=np.complex128))

@@ -55,22 +55,22 @@ def test_network_solver():
     PotentialRef(id="pref", element=bus)
     en = ElectricalNetwork.from_element(bus)
 
-    with contextlib.suppress(RoseauLoadFlowException):  # No valid license
+    with contextlib.suppress(TypeError):  # cython solve_load_flow method has been patched
         en.solve_load_flow()
     solver = en._solver
     assert isinstance(solver, NewtonGoldstein)
 
-    with contextlib.suppress(RoseauLoadFlowException):  # No valid license
+    with contextlib.suppress(TypeError):  # cython solve_load_flow method has been patched
         en.solve_load_flow(solver="newton_goldstein", solver_params={"m1": 0.2})
     assert solver == en._solver  # Solver did not change
     assert solver.m1 == 0.2
     assert solver.m2 == NewtonGoldstein.DEFAULT_M2
 
-    with contextlib.suppress(RoseauLoadFlowException):  # No valid license
+    with contextlib.suppress(TypeError):  # cython solve_load_flow method has been patched
         en.solve_load_flow(solver="newton")
     assert solver != en._solver
     assert isinstance(en._solver, Newton)
 
-    with contextlib.suppress(RoseauLoadFlowException):  # No valid license
+    with contextlib.suppress(TypeError):  # cython solve_load_flow method has been patched
         en.solve_load_flow()  # Reset to default
     assert isinstance(en._solver, NewtonGoldstein)

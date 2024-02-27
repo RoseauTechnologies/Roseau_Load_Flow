@@ -37,8 +37,9 @@ class Control(JsonMixin):
     """
 
     _DEFAULT_ALPHA: float = 1000.0
+    _DEFAULT_EPSILON: float = 1e-8
 
-    @ureg_wraps(None, (None, None, "V", "V", "V", "V", None))
+    @ureg_wraps(None, (None, None, "V", "V", "V", "V", None, None))
     def __init__(
         self,
         type: ControlType,
@@ -46,7 +47,8 @@ class Control(JsonMixin):
         u_down: float | Q_[float],
         u_up: float | Q_[float],
         u_max: float | Q_[float],
-        alpha: float | Q_[float] = _DEFAULT_ALPHA,
+        alpha: float = _DEFAULT_ALPHA,
+        epsilon: float = _DEFAULT_EPSILON,
     ) -> None:
         """Control constructor.
 
@@ -75,6 +77,9 @@ class Control(JsonMixin):
             alpha:
                 An approximation factor used by the family function (soft clip). The bigger the
                 factor is the closer the function is to the non-differentiable function.
+
+            epsilon:
+                This value is used to make a smooth inverse function. It is only useful for P control.
         """
         self.type = type
         self._u_min = u_min
@@ -82,9 +87,16 @@ class Control(JsonMixin):
         self._u_up = u_up
         self._u_max = u_max
         self._alpha = alpha
+        self._epsilon = epsilon
         self._check_values()
         self._cy_control = CyControl(
-            t=type, u_min=self._u_min, u_down=self._u_down, u_up=self._u_up, u_max=self._u_max, alpha=self._alpha
+            t=type,
+            u_min=self._u_min,
+            u_down=self._u_down,
+            u_up=self._u_up,
+            u_max=self._u_max,
+            alpha=self._alpha,
+            epsilon=self._epsilon,
         )
 
     def _check_values(self) -> None:
@@ -142,9 +154,21 @@ class Control(JsonMixin):
             previous_value = value
             previous_name = name
 
-        # Check on alpha
-        if self._alpha <= 0:
-            msg = f"'alpha' must be greater than 0 but {self._alpha:.1f} was provided."
+        # Values greater than 0
+        if self._epsilon <= 0.0:
+            msg = f"'epsilon' must be greater than 0 but {self._epsilon:.1f} was provided."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_CONTROL_VALUE)
+
+        # alpha must be "large"
+        if self._alpha < 1.0:
+            msg = f"'alpha' must be greater than 1 but {self._alpha:.1f} was provided."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_CONTROL_VALUE)
+
+        # epsilon must be "small"
+        if self._epsilon > 1.0:
+            msg = f"'epsilon' must be lower than 1 but {self._epsilon:.3f} was provided."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_CONTROL_VALUE)
 
@@ -178,15 +202,24 @@ class Control(JsonMixin):
         function is to the non-differentiable function."""
         return self._alpha
 
+    @property
+    def epsilon(self) -> float:
+        """This value is used to make a smooth inverse function."""
+        return self._epsilon
+
     @classmethod
     def constant(cls) -> Self:
         """Create a constant control i.e no control."""
         return cls(type="constant", u_min=0.0, u_down=0.0, u_up=0.0, u_max=0.0)
 
     @classmethod
-    @ureg_wraps(None, (None, "V", "V", None))
+    @ureg_wraps(None, (None, "V", "V", None, None))
     def p_max_u_production(
-        cls, u_up: float | Q_[float], u_max: float | Q_[float], alpha: float = _DEFAULT_ALPHA
+        cls,
+        u_up: float | Q_[float],
+        u_max: float | Q_[float],
+        alpha: float = _DEFAULT_ALPHA,
+        epsilon: float = _DEFAULT_EPSILON,
     ) -> Self:
         """Create a control of the type ``"p_max_u_production"``.
 
@@ -209,15 +242,24 @@ class Control(JsonMixin):
                 differentiable. The bigger alpha is, the closer the function is to the
                 non-differentiable function. This parameter is noted :math:`\\alpha` on the figure.
 
+            epsilon:
+                This value is used to make a smooth inverse function.
+
         Returns:
             The ``"p_max_u_production"`` control using the provided parameters.
         """
-        return cls(type="p_max_u_production", u_min=0.0, u_down=0.0, u_up=u_up, u_max=u_max, alpha=alpha)
+        return cls(
+            type="p_max_u_production", u_min=0.0, u_down=0.0, u_up=u_up, u_max=u_max, alpha=alpha, epsilon=epsilon
+        )
 
     @classmethod
-    @ureg_wraps(None, (None, "V", "V", None))
+    @ureg_wraps(None, (None, "V", "V", None, None))
     def p_max_u_consumption(
-        cls, u_min: float | Q_[float], u_down: float | Q_[float], alpha: float = _DEFAULT_ALPHA
+        cls,
+        u_min: float | Q_[float],
+        u_down: float | Q_[float],
+        alpha: float = _DEFAULT_ALPHA,
+        epsilon: float = _DEFAULT_EPSILON,
     ) -> Self:
         """Create a control of the type ``"p_max_u_consumption"``.
 
@@ -240,10 +282,15 @@ class Control(JsonMixin):
                 differentiable. The bigger alpha is, the closer the function is to the
                 non-differentiable function. This parameter is noted :math:`\\alpha` on the figure.
 
+            epsilon:
+                This value is used to make a smooth inverse function.
+
         Returns:
             The ``"p_max_u_consumption"`` control using the provided parameters.
         """
-        return cls(type="p_max_u_consumption", u_min=u_min, u_down=u_down, u_up=0.0, u_max=0.0, alpha=alpha)
+        return cls(
+            type="p_max_u_consumption", u_min=u_min, u_down=u_down, u_up=0.0, u_max=0.0, alpha=alpha, epsilon=epsilon
+        )
 
     @classmethod
     @ureg_wraps(None, (None, "V", "V", "V", "V", None))
@@ -297,12 +344,13 @@ class Control(JsonMixin):
     @classmethod
     def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
         alpha = data.get("alpha", cls._DEFAULT_ALPHA)
+        epsilon = data.get("epsilon", cls._DEFAULT_EPSILON)
         if data["type"] == "constant":
             return cls.constant()
         elif data["type"] == "p_max_u_production":
-            return cls.p_max_u_production(u_up=data["u_up"], u_max=data["u_max"], alpha=alpha)
+            return cls.p_max_u_production(u_up=data["u_up"], u_max=data["u_max"], alpha=alpha, epsilon=epsilon)
         elif data["type"] == "p_max_u_consumption":
-            return cls.p_max_u_consumption(u_min=data["u_min"], u_down=data["u_down"], alpha=alpha)
+            return cls.p_max_u_consumption(u_min=data["u_min"], u_down=data["u_down"], alpha=alpha, epsilon=epsilon)
         elif data["type"] == "q_u":
             return cls.q_u(
                 u_min=data["u_min"], u_down=data["u_down"], u_up=data["u_up"], u_max=data["u_max"], alpha=alpha
@@ -316,9 +364,21 @@ class Control(JsonMixin):
         if self.type == "constant":
             return {"type": "constant"}
         elif self.type == "p_max_u_production":
-            return {"type": "p_max_u_production", "u_up": self._u_up, "u_max": self._u_max, "alpha": self._alpha}
+            return {
+                "type": "p_max_u_production",
+                "u_up": self._u_up,
+                "u_max": self._u_max,
+                "alpha": self._alpha,
+                "epsilon": self._epsilon,
+            }
         elif self.type == "p_max_u_consumption":
-            return {"type": "p_max_u_consumption", "u_min": self._u_min, "u_down": self._u_down, "alpha": self._alpha}
+            return {
+                "type": "p_max_u_consumption",
+                "u_min": self._u_min,
+                "u_down": self._u_down,
+                "alpha": self._alpha,
+                "epsilon": self._epsilon,
+            }
         elif self.type == "q_u":
             return {
                 "type": "q_u",
@@ -589,13 +649,14 @@ class FlexibleParameter(JsonMixin):
         )
 
     @classmethod
-    @ureg_wraps(None, (None, "V", "V", "VA", None, None, None, None))
+    @ureg_wraps(None, (None, "V", "V", "VA", None, None, None, None, None))
     def p_max_u_production(
         cls,
         u_up: float | Q_[float],
         u_max: float | Q_[float],
         s_max: float | Q_[float],
         alpha_control: float = Control._DEFAULT_ALPHA,
+        epsilon_control: float = Control._DEFAULT_EPSILON,
         type_proj: ProjectionType = Projection._DEFAULT_TYPE,
         alpha_proj: float = Projection._DEFAULT_ALPHA,
         epsilon_proj: float = Projection._DEFAULT_EPSILON,
@@ -622,6 +683,9 @@ class FlexibleParameter(JsonMixin):
                 An approximation factor used by the family function (soft clip). The greater, the
                 closer the function are from the non-differentiable function.
 
+            epsilon_control:
+                This value is used to make a smooth inverse function for the control.
+
             type_proj:
                 The type of the projection to use.
 
@@ -636,7 +700,7 @@ class FlexibleParameter(JsonMixin):
         Returns:
             A flexible parameter which performs "p_max_u_production" control.
         """
-        control_p = Control.p_max_u_production(u_up=u_up, u_max=u_max, alpha=alpha_control)
+        control_p = Control.p_max_u_production(u_up=u_up, u_max=u_max, alpha=alpha_control, epsilon=epsilon_control)
         return cls(
             control_p=control_p,
             control_q=Control.constant(),
@@ -645,13 +709,14 @@ class FlexibleParameter(JsonMixin):
         )
 
     @classmethod
-    @ureg_wraps(None, (None, "V", "V", "VA", None, None, None, None))
+    @ureg_wraps(None, (None, "V", "V", "VA", None, None, None, None, None))
     def p_max_u_consumption(
         cls,
         u_min: float | Q_[float],
         u_down: float | Q_[float],
         s_max: float | Q_[float],
         alpha_control: float = Control._DEFAULT_ALPHA,
+        epsilon_control: float = Control._DEFAULT_EPSILON,
         type_proj: ProjectionType = Projection._DEFAULT_TYPE,
         alpha_proj: float = Projection._DEFAULT_ALPHA,
         epsilon_proj: float = Projection._DEFAULT_EPSILON,
@@ -675,6 +740,9 @@ class FlexibleParameter(JsonMixin):
                 An approximation factor used by the family function (soft clip). The greater, the
                 closer the function are from the non-differentiable function.
 
+            epsilon_control:
+                This value is used to make a smooth inverse function for the control.
+
             type_proj:
                 The type of the projection to use.
 
@@ -689,7 +757,9 @@ class FlexibleParameter(JsonMixin):
         Returns:
             A flexible parameter which performs "p_max_u_consumption" control.
         """
-        control_p = Control.p_max_u_consumption(u_min=u_min, u_down=u_down, alpha=alpha_control)
+        control_p = Control.p_max_u_consumption(
+            u_min=u_min, u_down=u_down, alpha=alpha_control, epsilon=epsilon_control
+        )
         return cls(
             control_p=control_p,
             control_q=Control.constant(),
@@ -772,7 +842,7 @@ class FlexibleParameter(JsonMixin):
         )
 
     @classmethod
-    @ureg_wraps(None, (None, "V", "V", "V", "V", "V", "V", "VA", "VAr", "VAr", None, None, None, None))
+    @ureg_wraps(None, (None, "V", "V", "V", "V", "V", "V", "VA", "VAr", "VAr", None, None, None, None, None))
     def pq_u_production(
         cls,
         up_up: float | Q_[float],
@@ -785,6 +855,7 @@ class FlexibleParameter(JsonMixin):
         q_min: float | Q_[float] | None = None,
         q_max: float | Q_[float] | None = None,
         alpha_control=Control._DEFAULT_ALPHA,
+        epsilon_control: float = Control._DEFAULT_EPSILON,
         type_proj: ProjectionType = Projection._DEFAULT_TYPE,
         alpha_proj=Projection._DEFAULT_ALPHA,
         epsilon_proj=Projection._DEFAULT_EPSILON,
@@ -830,6 +901,9 @@ class FlexibleParameter(JsonMixin):
                 An approximation factor used by the family function (soft clip). The greater, the
                 closer the function are from the non-differentiable function.
 
+            epsilon_control:
+                This value is used to make a smooth inverse function for the control.
+
             type_proj:
                 The type of the projection to use.
 
@@ -847,7 +921,7 @@ class FlexibleParameter(JsonMixin):
         See Also:
             :meth:`p_max_u_production` and :meth:`q_u` for more details.
         """
-        control_p = Control.p_max_u_production(u_up=up_up, u_max=up_max, alpha=alpha_control)
+        control_p = Control.p_max_u_production(u_up=up_up, u_max=up_max, alpha=alpha_control, epsilon=epsilon_control)
         control_q = Control.q_u(u_min=uq_min, u_down=uq_down, u_up=uq_up, u_max=uq_max, alpha=alpha_control)
         return cls(
             control_p=control_p,
@@ -859,7 +933,7 @@ class FlexibleParameter(JsonMixin):
         )
 
     @classmethod
-    @ureg_wraps(None, (None, "V", "V", "V", "V", "V", "V", "VA", "VAr", "VAr", None, None, None, None))
+    @ureg_wraps(None, (None, "V", "V", "V", "V", "V", "V", "VA", "VAr", "VAr", None, None, None, None, None))
     def pq_u_consumption(
         cls,
         up_min: float | Q_[float],
@@ -872,6 +946,7 @@ class FlexibleParameter(JsonMixin):
         q_min: float | Q_[float] | None = None,
         q_max: float | Q_[float] | None = None,
         alpha_control: float | Q_[float] = Control._DEFAULT_ALPHA,
+        epsilon_control: float = Control._DEFAULT_EPSILON,
         type_proj: ProjectionType = Projection._DEFAULT_TYPE,
         alpha_proj: float = Projection._DEFAULT_ALPHA,
         epsilon_proj: float = Projection._DEFAULT_EPSILON,
@@ -917,6 +992,9 @@ class FlexibleParameter(JsonMixin):
                 An approximation factor used by the family function (soft clip). The greater, the
                 closer the function are from the non-differentiable function.
 
+            epsilon_control:
+                This value is used to make a smooth inverse function for the control.
+
             type_proj:
                 The type of the projection to use.
 
@@ -934,7 +1012,9 @@ class FlexibleParameter(JsonMixin):
         See Also:
             :meth:`p_max_u_consumption` and :meth:`q_u` for more details.
         """
-        control_p = Control.p_max_u_consumption(u_min=up_min, u_down=up_down, alpha=alpha_control)
+        control_p = Control.p_max_u_consumption(
+            u_min=up_min, u_down=up_down, alpha=alpha_control, epsilon=epsilon_control
+        )
         control_q = Control.q_u(u_min=uq_min, u_down=uq_down, u_up=uq_up, u_max=uq_max, alpha=alpha_control)
         return cls(
             control_p=control_p,

@@ -1,8 +1,6 @@
 import warnings
 
-import numpy as np
 import pytest
-from matplotlib import pyplot as plt
 
 from roseau.load_flow import (
     Q_,
@@ -44,7 +42,7 @@ def test_control():
 
     with pytest.raises(RoseauLoadFlowException) as e:
         Control(type="p_max_u_production", u_min=0, u_down=0, u_up=240, u_max=Q_(0.250, "kV"), alpha=0)
-    assert e.value.msg == "'alpha' must be greater than 0 but 0.0 was provided."
+    assert e.value.msg == "'alpha' must be greater than 1 but 0.0 was provided."
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_CONTROL_VALUE
 
     # Warning if values provided to useless values
@@ -80,7 +78,17 @@ def test_control():
 
     with pytest.raises(RoseauLoadFlowException) as e:
         Control(type="p_max_u_consumption", u_min=Q_(210, "V"), u_down=Q_(0.220, "kV"), u_up=0, u_max=0, alpha=0)
-    assert e.value.msg == "'alpha' must be greater than 0 but 0.0 was provided."
+    assert e.value.msg == "'alpha' must be greater than 1 but 0.0 was provided."
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_CONTROL_VALUE
+
+    with pytest.raises(RoseauLoadFlowException) as e:
+        Control(type="p_max_u_consumption", u_min=Q_(210, "V"), u_down=Q_(0.220, "kV"), u_up=0, u_max=0, epsilon=0)
+    assert e.value.msg == "'epsilon' must be greater than 0 but 0.0 was provided."
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_CONTROL_VALUE
+
+    with pytest.raises(RoseauLoadFlowException) as e:
+        Control(type="p_max_u_consumption", u_min=Q_(210, "V"), u_down=Q_(0.220, "kV"), u_up=0, u_max=0, epsilon=1.2)
+    assert e.value.msg == "'epsilon' must be lower than 1 but 1.200 was provided."
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_CONTROL_VALUE
 
     # Warning if values provided to useless values
@@ -144,7 +152,7 @@ def test_control():
             u_max=Q_(2400.5, "dV"),
             alpha=0,
         )
-    assert e.value.msg == "'alpha' must be greater than 0 but 0.0 was provided."
+    assert e.value.msg == "'alpha' must be greater than 1 but 0.0 was provided."
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_CONTROL_VALUE
 
 
@@ -254,63 +262,3 @@ def test_flexible_parameter():
         fp.q_min = Q_(2.5e3, "kVAr")
     assert e.value.msg == "'q_min' must be greater than q_max (2.0 MVAr) but 2.5 MVAr was provided."
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_FLEXIBLE_PARAMETER_VALUE
-
-
-@pytest.fixture(params=["constant", "p_max_u_production"])
-def control_p(request) -> Control:
-    if request.param == "constant":
-        return Control.constant()
-    elif request.param == "p_max_u_production":
-        return Control.p_max_u_production(u_up=Q_(240, "V"), u_max=Q_(250, "V"))
-    elif request.param == "p_max_u_consumption":
-        return Control.p_max_u_production(u_up=Q_(210, "V"), u_max=Q_(220, "V"))
-    raise NotImplementedError(request.param)
-
-
-@pytest.fixture(params=["constant", "q_u"])
-def control_q(request) -> Control:
-    if request.param == "constant":
-        return Control.constant()
-    elif request.param == "q_u":
-        return Control.q_u(u_min=Q_(210, "V"), u_down=Q_(220, "V"), u_up=Q_(240, "V"), u_max=Q_(250, "V"))
-    raise NotImplementedError(request.param)
-
-
-@pytest.fixture(params=["keep_p", "euclidean"])
-def projection(request) -> Projection:
-    return Projection(type=request.param)
-
-
-@pytest.fixture()
-def flexible_parameter(control_p, control_q, projection) -> FlexibleParameter:
-    return FlexibleParameter(control_p=control_p, control_q=control_q, projection=projection, s_max=Q_(5, "kVA"))
-
-
-def test_plot(flexible_parameter):
-    voltages = np.array(range(205, 256, 1), dtype=float)
-    power = Q_(-2.5 + 1j, "kVA")
-
-    # Test compute powers
-    res_flexible_powers = flexible_parameter.compute_powers(voltages=voltages, power=power)
-
-    # Plot control P
-    fig, ax = plt.subplots()
-    ax, res_flexible_powers_1 = flexible_parameter.plot_control_p(voltages=voltages, power=power, ax=ax)
-    assert np.allclose(res_flexible_powers.m_as("VA"), res_flexible_powers_1.m_as("VA"))
-    plt.close(fig)
-
-    # Plot control Q
-    fig, ax = plt.subplots()
-    ax, res_flexible_powers_2 = flexible_parameter.plot_control_q(voltages=voltages, power=power, ax=ax)
-    assert np.allclose(res_flexible_powers.m_as("VA"), res_flexible_powers_2.m_as("VA"))
-    plt.close(fig)
-
-    # Plot trajectory in the (P, Q) plane
-    fig, ax = plt.subplots()  # Create a new ax that is not used directly in the following function call
-    ax, res_flexible_powers_3 = flexible_parameter.plot_pq(
-        voltages=voltages,
-        power=power,
-        voltages_labels_mask=np.isin(voltages, [240, 250]),
-    )
-    assert np.allclose(res_flexible_powers.m_as("VA"), res_flexible_powers_3.m_as("VA"))
-    plt.close(fig)

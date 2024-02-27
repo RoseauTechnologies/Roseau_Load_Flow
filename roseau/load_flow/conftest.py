@@ -1,8 +1,14 @@
+import inspect
+import os
 from pathlib import Path
 
 import numpy as np
 import pytest
+import setuptools
+from _pytest.monkeypatch import MonkeyPatch
 from pandas.testing import assert_frame_equal
+
+import roseau
 
 # Variable to test the network
 HERE = Path(__file__).parent.expanduser().absolute()
@@ -29,6 +35,45 @@ TEST_SOME_NETWORKS_DATA_IDS = [x.name for x in TEST_SOME_NETWORKS_DATA_PARAMS]
 TEST_COMPARISON_DATA_FOLDER = HERE / "tests" / "data" / "comparison"
 TEST_COMPARISON_DATA_PARAMS = [x for x in TEST_COMPARISON_DATA_FOLDER.glob("*") if x.is_dir()]
 TEST_COMPARISON_DATA_IDS = [x.name for x in TEST_COMPARISON_DATA_PARAMS]
+
+
+@pytest.fixture(scope="session", autouse=True)
+def patch_engine():
+    class Foo:
+        def __init__(self, *args, **kwargs):  # Accept all constructor parameters
+            pass
+
+        def __getattr__(self, attr):  # Accept all methods
+            if attr.startswith("__array"):  # Let numpy interface
+                return object.__getattr__(self, attr)
+            else:
+                return self.foo
+
+        def foo(self, *args, **kwargs):
+            pass
+
+    # Get all roseau.load_flow submodules
+    package_names = [
+        f"{roseau.load_flow.__name__}.{x}" for x in setuptools.find_packages(os.path.dirname(roseau.load_flow.__file__))
+    ]
+    modules = [roseau.load_flow]
+    final_modules = []
+    while modules:
+        module = modules.pop(-1)
+        new_modules = [m[1] for m in inspect.getmembers(module, predicate=inspect.ismodule)]
+        final_modules.extend(new_modules)
+        for m in new_modules:
+            if m.__name__ in package_names:
+                modules.append(m)
+    # Patch all cython classes
+    mpatch = MonkeyPatch()
+    for module in final_modules:
+        classes = inspect.getmembers(module, predicate=inspect.isclass)
+        for class_name, _class in classes:
+            if class_name.startswith("Cy"):
+                mpatch.setattr(f"{module.__name__}.{_class.__name__}", Foo)
+    yield mpatch
+    mpatch.undo()
 
 
 @pytest.fixture(scope="module")
