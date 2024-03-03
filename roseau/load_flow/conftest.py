@@ -1,5 +1,6 @@
 import importlib
 import inspect
+import os
 from pathlib import Path
 
 import numpy as np
@@ -59,7 +60,8 @@ def patch_engine():
     rlf_directory_path = Path(roseau.load_flow.__file__).parent
     rlf_engine_prefix = "roseau.load_flow_engine."
     relative_to = Path(roseau.load_flow.__file__).parents[2]
-    for dirpath, _, filenames in rlf_directory_path.walk(follow_symlinks=False):
+    for dirpath, _, filenames in os.walk(rlf_directory_path):  # TODO In Python 3.12 use rlf_directory_path.walk()
+        dirpath = Path(dirpath)  # TODO Useless in Python 3.12
         for p in dirpath.parts:
             if p in {"tests", "__pycache__", "data"}:
                 break
