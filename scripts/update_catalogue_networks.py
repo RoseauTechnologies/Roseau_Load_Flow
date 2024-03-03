@@ -2,6 +2,7 @@
 
 See https://github.com/RoseauTechnologies/Roseau_Load_Flow/issues/181
 """
+
 import re
 
 import numpy as np

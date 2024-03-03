@@ -70,7 +70,7 @@ networkx = ">=3.0.0"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^3.0.0"
-ruff = ">=0.2.0"
+ruff = ">=0.3.0"
 
 [tool.poetry.group.doc.dependencies]
 sphinx = "^7.0.1"

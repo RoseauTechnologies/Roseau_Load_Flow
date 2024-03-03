@@ -251,13 +251,11 @@ class CatalogueMixin(Generic[_T], metaclass=ABCMeta):
 
     @overload
     @staticmethod
-    def _filter_catalogue_str(value: str | re.Pattern[str], strings: pd.Series) -> "pd.Series[bool]":
-        ...
+    def _filter_catalogue_str(value: str | re.Pattern[str], strings: pd.Series) -> "pd.Series[bool]": ...
 
     @overload
     @staticmethod
-    def _filter_catalogue_str(value: str | re.Pattern[str], strings: list[str]) -> list[str]:
-        ...
+    def _filter_catalogue_str(value: str | re.Pattern[str], strings: list[str]) -> list[str]: ...
 
     @staticmethod
     def _filter_catalogue_str(

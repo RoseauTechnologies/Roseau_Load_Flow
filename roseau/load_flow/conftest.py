@@ -1,10 +1,10 @@
+import importlib
 import inspect
 import os
 from pathlib import Path
 
 import numpy as np
 import pytest
-import setuptools
 from _pytest.monkeypatch import MonkeyPatch
 from pandas.testing import assert_frame_equal
 
@@ -52,26 +52,35 @@ def patch_engine():
         def foo(self, *args, **kwargs):
             pass
 
+    def bar(*args, **kwargs):
+        pass
+
     # Get all roseau.load_flow submodules
-    package_names = [
-        f"{roseau.load_flow.__name__}.{x}" for x in setuptools.find_packages(os.path.dirname(roseau.load_flow.__file__))
-    ]
-    modules = [roseau.load_flow]
-    final_modules = []
-    while modules:
-        module = modules.pop(-1)
-        new_modules = [m[1] for m in inspect.getmembers(module, predicate=inspect.ismodule)]
-        final_modules.extend(new_modules)
-        for m in new_modules:
-            if m.__name__ in package_names:
-                modules.append(m)
-    # Patch all cython classes
     mpatch = MonkeyPatch()
-    for module in final_modules:
-        classes = inspect.getmembers(module, predicate=inspect.isclass)
-        for class_name, _class in classes:
-            if class_name.startswith("Cy"):
-                mpatch.setattr(f"{module.__name__}.{_class.__name__}", Foo)
+    rlf_directory_path = Path(roseau.load_flow.__file__).parent
+    rlf_engine_prefix = "roseau.load_flow_engine."
+    relative_to = Path(roseau.load_flow.__file__).parents[2]
+    for dirpath, _, filenames in os.walk(rlf_directory_path):  # TODO In Python 3.12 use rlf_directory_path.walk()
+        dirpath = Path(dirpath)  # TODO Useless in Python 3.12
+        for p in dirpath.parts:
+            if p in {"tests", "__pycache__", "data"}:
+                break
+        else:
+            base_module = str(dirpath.relative_to(relative_to)).replace("/", ".")
+            for f in filenames:
+                if not f.endswith(".py"):
+                    continue
+                module = importlib.import_module(f"{base_module}.{f.removesuffix('.py')}")
+                for _, klass in inspect.getmembers(
+                    module,
+                    lambda member: inspect.isclass(member)
+                    and member.__module__.startswith(rlf_engine_prefix)
+                    and member.__name__.startswith("Cy"),
+                ):
+                    mpatch.setattr(f"{module.__name__}.{klass.__name__}", Foo)
+
+    # Also patch the activate license function of the _solvers module
+    mpatch.setattr("roseau.load_flow._solvers.activate_license", bar)
     yield mpatch
     mpatch.undo()
 

@@ -1,6 +1,7 @@
 """
 This module defines the electrical network class.
 """
+
 import json
 import logging
 import re

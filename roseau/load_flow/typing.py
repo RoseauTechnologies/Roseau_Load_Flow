@@ -48,6 +48,7 @@ Type Aliases used by Roseau Load Flow.
     A 2D array-like of complex numbers or a quantity of complex numbers. An array-like is a
     sequence or a numpy array.
 """
+
 import os
 from collections.abc import Mapping, Sequence
 from typing import Any, Literal, TypeAlias, TypeVar

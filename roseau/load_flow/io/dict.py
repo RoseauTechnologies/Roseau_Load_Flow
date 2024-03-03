@@ -5,6 +5,7 @@ Use the `ElectricalNetwork.from_dict` and `ElectricalNetwork.to_dict` methods to
 from and to dictionaries, or the methods `ElectricalNetwork.from_json` and `ElectricalNetwork.to_json`
 to read and write networks from and to JSON files.
 """
+
 import copy
 import logging
 from typing import TYPE_CHECKING
