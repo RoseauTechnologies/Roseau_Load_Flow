@@ -1,5 +1,6 @@
 """Generate the catalogue data of the networks folder. This json file contains some statistics on the available
 networks."""
+
 import json
 from pathlib import Path
 

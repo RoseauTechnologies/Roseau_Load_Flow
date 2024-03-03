@@ -1,6 +1,7 @@
 """
 This module contains the exceptions used by Roseau Load Flow.
 """
+
 from enum import auto
 
 from roseau.load_flow._compat import StrEnum

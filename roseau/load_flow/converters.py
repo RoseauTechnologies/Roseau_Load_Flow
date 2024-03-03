@@ -6,6 +6,7 @@ Available functions:
 * convert between phasor and symmetrical components
 * convert potentials to voltages
 """
+
 from collections.abc import Sequence
 
 import numpy as np
