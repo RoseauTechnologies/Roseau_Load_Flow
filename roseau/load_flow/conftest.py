@@ -80,7 +80,7 @@ def patch_engine():
                     mpatch.setattr(f"{module.__name__}.{klass.__name__}", Foo)
 
     # Also patch the activate license function of the _solvers module
-    mpatch.setattr("roseau.load_flow._solvers.activate_license", bar)
+    mpatch.setattr("roseau.load_flow.license.cy_activate_license", bar)
     yield mpatch
     mpatch.undo()
 
