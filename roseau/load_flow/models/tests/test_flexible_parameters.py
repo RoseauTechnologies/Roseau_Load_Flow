@@ -228,7 +228,7 @@ def test_flexible_parameter():
             s_max=Q_(1e3, "kVA"),
             q_min=Q_(2e3, "kVAr"),
         )
-    assert e.value.msg == "q_min must be less than s_max (1.0 MVA) but 2.0 MVAr was provided."
+    assert e.value.msg == "q_min must be lower than s_max (1.0 MVA) but 2.0 MVAr was provided."
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_FLEXIBLE_PARAMETER_VALUE
 
     # q_max <= s_max
@@ -240,7 +240,7 @@ def test_flexible_parameter():
             s_max=Q_(1e3, "kVA"),
             q_max=Q_(2e3, "kVAr"),
         )
-    assert e.value.msg == "q_max must be less than s_max (1.0 MVA) but 2.0 MVAr was provided."
+    assert e.value.msg == "q_max must be lower than s_max (1.0 MVA) but 2.0 MVAr was provided."
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_FLEXIBLE_PARAMETER_VALUE
 
     # q_max >= -s_max
@@ -284,5 +284,5 @@ def test_flexible_parameter():
 
     with pytest.raises(RoseauLoadFlowException) as e:
         fp.q_min = Q_(2.5e3, "kVAr")
-    assert e.value.msg == "q_min must be less than q_max (2.0 MVAr) but 2.5 MVAr was provided."
+    assert e.value.msg == "q_min must be lower than q_max (2.0 MVAr) but 2.5 MVAr was provided."
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_FLEXIBLE_PARAMETER_VALUE

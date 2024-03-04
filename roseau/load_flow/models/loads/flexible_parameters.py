@@ -583,7 +583,7 @@ class FlexibleParameter(JsonMixin):
             logger.warning("'s_max' has been updated but now 'q_max' is greater than s_max. 'q_max' is set to s_max")
             self._q_max_value = self._s_max
         if self._q_min_value is not None and self._q_min_value < -self._s_max:
-            logger.warning("'s_max' has been updated but now 'q_min' is less than -s_max. 'q_min' is set to -s_max")
+            logger.warning("'s_max' has been updated but now 'q_min' is lower than -s_max. 'q_min' is set to -s_max")
             self._q_min_value = -self._s_max
         if self._cy_fp is not None:
             self._cy_fp.update_parameters(self._s_max, self._q_min, self._q_max)
@@ -609,12 +609,12 @@ class FlexibleParameter(JsonMixin):
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_FLEXIBLE_PARAMETER_VALUE)
             if value > self._s_max:
                 q_min = Q_(value, "VAr")
-                msg = f"q_min must be less than s_max ({self.s_max:P#~}) but {q_min:P#~} was provided."
+                msg = f"q_min must be lower than s_max ({self.s_max:P#~}) but {q_min:P#~} was provided."
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_FLEXIBLE_PARAMETER_VALUE)
             if self._q_max_value is not None and value > self._q_max_value:
                 q_min = Q_(value, "VAr")
-                msg = f"q_min must be less than q_max ({self.q_max:P#~}) but {q_min:P#~} was provided."
+                msg = f"q_min must be lower than q_max ({self.q_max:P#~}) but {q_min:P#~} was provided."
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_FLEXIBLE_PARAMETER_VALUE)
         self._q_min_value = value
@@ -637,7 +637,7 @@ class FlexibleParameter(JsonMixin):
         if value is not None:
             if value > self._s_max:
                 q_max = Q_(value, "VAr")
-                msg = f"q_max must be less than s_max ({self.s_max:P#~}) but {q_max:P#~} was provided."
+                msg = f"q_max must be lower than s_max ({self.s_max:P#~}) but {q_max:P#~} was provided."
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_FLEXIBLE_PARAMETER_VALUE)
             if value < -self._s_max:

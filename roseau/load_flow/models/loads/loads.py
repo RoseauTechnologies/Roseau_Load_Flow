@@ -346,7 +346,7 @@ class PowerLoad(AbstractLoad):
                     logger.error(msg)
                     raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_S_VALUE)
                 if power.imag < fp._q_min:
-                    msg = f"The reactive power is less than the parameter q_min for flexible load {self.id!r}"
+                    msg = f"The reactive power is lower than the parameter q_min for flexible load {self.id!r}"
                     logger.error(msg)
                     raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_S_VALUE)
                 if power.imag > fp._q_max:
