@@ -204,7 +204,7 @@ def test_flexible_load():
     fp = [fp_pq_prod, fp_const, fp_const]
     with pytest.raises(RoseauLoadFlowException) as e:
         PowerLoad("flexible load", bus, powers=[10 - 250j, 0, 0j], phases="abcn", flexible_params=fp)
-    assert "The reactive power is lesser than the parameter q_min for flexible load" in e.value.msg
+    assert "The reactive power is less than the parameter q_min for flexible load" in e.value.msg
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_S_VALUE
 
     fp = [fp_pq_prod, fp_const, fp_const]

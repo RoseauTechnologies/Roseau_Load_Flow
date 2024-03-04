@@ -1,5 +1,6 @@
 import logging
 from abc import ABC
+from functools import cached_property
 from typing import Any, Literal
 
 import numpy as np
@@ -90,7 +91,7 @@ class AbstractLoad(Element, ABC):
         bus_id = self.bus.id if self.bus is not None else None
         return f"{type(self).__name__}(id={self.id!r}, phases={self.phases!r}, bus={bus_id!r})"
 
-    @property
+    @cached_property
     def phases(self) -> str:
         """The phases of the load."""
         return self._phases
@@ -105,7 +106,7 @@ class AbstractLoad(Element, ABC):
         """Whether the load is flexible or not. Only :class:`PowerLoad` can be flexible."""
         return False
 
-    @property
+    @cached_property
     def voltage_phases(self) -> list[str]:
         """The phases of the load voltages."""
         return calculate_voltage_phases(self.phases)
@@ -336,20 +337,20 @@ class PowerLoad(AbstractLoad):
     @ureg_wraps(None, (None, "VA"))
     def powers(self, value: ComplexArrayLike1D) -> None:
         value = self._validate_value(value)
-        if self.is_flexible:
+        if self._flexible_params is not None:
             for power, fp in zip(value, self._flexible_params, strict=True):
                 if fp.control_p.type == "constant" and fp.control_q.type == "constant":
                     continue  # No checks for this case
-                if abs(power) > fp.s_max.m_as("VA"):
+                if abs(power) > fp._s_max:
                     msg = f"The power is greater than the parameter s_max for flexible load {self.id!r}"
                     logger.error(msg)
                     raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_S_VALUE)
-                if power.imag < fp.q_min.m_as("VAr"):
-                    msg = f"The reactive power is lesser than the parameter q_min for flexible load {id!r}"
+                if power.imag < fp._q_min:
+                    msg = f"The reactive power is less than the parameter q_min for flexible load {self.id!r}"
                     logger.error(msg)
                     raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_S_VALUE)
-                if power.imag > fp.q_max.m_as("VAr"):
-                    msg = f"The reactive power is greater than the parameter q_max for flexible load {id!r}"
+                if power.imag > fp._q_max:
+                    msg = f"The reactive power is greater than the parameter q_max for flexible load {self.id!r}"
                     logger.error(msg)
                     raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_S_VALUE)
                 if fp.control_p.type == "p_max_u_production" and power.real > 0:

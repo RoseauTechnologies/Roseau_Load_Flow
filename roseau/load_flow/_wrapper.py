@@ -20,7 +20,7 @@ def _parse_wrap_args(args: Iterable[str | Unit | None]) -> Callable:
     # Check for references in args, remove None values
     unit_args_ndx = {ndx for ndx, arg in enumerate(args_as_uc) if arg is not None}
 
-    def _converter(ureg: UnitRegistry, sig: Signature, values: list[Any], kw: dict[Any]):
+    def _converter(ureg: "UnitRegistry", sig: "Signature", values: "list[Any]", kw: "dict[Any]"):
         len_initial_values = len(values)
 
         # pack kwargs
@@ -55,8 +55,9 @@ def _apply_defaults(sig: Signature, args: tuple[Any], kwargs: dict[str, Any]) ->
     values so that every argument is defined.
     """
     n = len(args)
+    empty = Parameter.empty
     for i, param in enumerate(sig.parameters.values()):
-        if i >= n and param.default != Parameter.empty and param.name not in kwargs:
+        if i >= n and param.default != empty and param.name not in kwargs:
             kwargs[param.name] = param.default
     return list(args), kwargs
 
@@ -94,27 +95,27 @@ def wraps(
             if the number of given arguments does not match the number of function parameters.
             if any of the provided arguments is not a unit a string or Quantity
     """
-    if not isinstance(args, list | tuple):
+    if not isinstance(args, (list, tuple)):
         args = (args,)
 
     for arg in args:
-        if arg is not None and not isinstance(arg, ureg.Unit | str):
+        if arg is not None and not isinstance(arg, (ureg.Unit, str)):
             raise TypeError(f"wraps arguments must by of type str or Unit, not {type(arg)} ({arg})")
 
     converter = _parse_wrap_args(args)
 
-    is_ret_container = isinstance(ret, list | tuple)
+    is_ret_container = isinstance(ret, (list, tuple))
     if is_ret_container:
         for arg in ret:
-            if arg is not None and not isinstance(arg, ureg.Unit | str):
+            if arg is not None and not isinstance(arg, (ureg.Unit, str)):
                 raise TypeError(f"wraps 'ret' argument must by of type str or Unit, not {type(arg)} ({arg})")
         ret = ret.__class__([to_units_container(arg, ureg) for arg in ret])
     else:
-        if ret is not None and not isinstance(ret, ureg.Unit | str):
+        if ret is not None and not isinstance(ret, (ureg.Unit, str)):
             raise TypeError(f"wraps 'ret' argument must by of type str or Unit, not {type(ret)} ({ret})")
         ret = to_units_container(ret, ureg)
 
-    def decorator(func: Callable[..., Any]) -> Callable[..., Quantity]:
+    def decorator(func: "Callable[..., Any]") -> "Callable[..., Quantity]":
         sig = signature(func)
         count_params = len(sig.parameters)
         if len(args) != count_params:
@@ -124,7 +125,7 @@ def wraps(
         updated = tuple(attr for attr in functools.WRAPPER_UPDATES if hasattr(func, attr))
 
         @functools.wraps(func, assigned=assigned, updated=updated)
-        def wrapper(*values, **kw) -> Quantity:
+        def wrapper(*values, **kw) -> "Quantity":
             values, kw = _apply_defaults(sig, values, kw)
 
             # In principle, the values are used as is

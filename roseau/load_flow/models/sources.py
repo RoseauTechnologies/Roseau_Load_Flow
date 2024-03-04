@@ -1,4 +1,5 @@
 import logging
+from functools import cached_property
 from typing import Any
 
 import numpy as np
@@ -91,7 +92,7 @@ class VoltageSource(Element):
             f"phases={self.phases!r})"
         )
 
-    @property
+    @cached_property
     def phases(self) -> str:
         """The phases of the source."""
         return self._phases
@@ -119,7 +120,7 @@ class VoltageSource(Element):
         if self._cy_element is not None:
             self._cy_element.update_voltages(self._voltages)
 
-    @property
+    @cached_property
     def voltage_phases(self) -> list[str]:
         """The phases of the source voltages."""
         return calculate_voltage_phases(self.phases)
