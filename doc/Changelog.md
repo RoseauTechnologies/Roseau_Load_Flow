@@ -15,6 +15,8 @@ myst:
 
 ## Unreleased
 
+- {gh-pr}`191` Speed up results access by up to 3x using several optimization techniques. This is especially
+  noticeable in timeseries simulations and when accessing results of large networks.
 - {gh-pr}`184` Improve the documentation to have a better SEO (sitemap, metadata and canonical URLs). The navigation
   menu has also been improved.
 - {gh-pr}`183` {gh-issue}`181` Update the networks catalogue to better represent the real networks.
