@@ -1,5 +1,6 @@
 import logging
 from collections.abc import Iterator
+from functools import cached_property
 from typing import TYPE_CHECKING, Any, Optional
 
 import numpy as np
@@ -150,7 +151,7 @@ class Bus(Element):
         """
         return self._res_voltages_getter(warning=True)
 
-    @property
+    @cached_property
     def voltage_phases(self) -> list[str]:
         """The phases of the voltages."""
         return calculate_voltage_phases(self.phases)
@@ -241,7 +242,7 @@ class Bus(Element):
         while remaining:
             branch = remaining.pop()
             visited.add(branch)
-            if not isinstance(branch, Line | Switch):
+            if not isinstance(branch, (Line, Switch)):
                 continue
             for element in branch._connected_elements:
                 if not isinstance(element, Bus) or element is self or element in buses:
@@ -294,7 +295,7 @@ class Bus(Element):
         while remaining:
             branch = remaining.pop()
             visited.add(branch)
-            if not isinstance(branch, Line | Switch):
+            if not isinstance(branch, (Line, Switch)):
                 continue
             for element in branch._connected_elements:
                 if not isinstance(element, Bus) or element.id in visited_buses:

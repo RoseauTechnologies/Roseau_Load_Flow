@@ -1,4 +1,5 @@
 import logging
+from functools import cached_property
 from typing import Any
 
 import numpy as np
@@ -60,6 +61,8 @@ class AbstractBranch(Element):
         super().__init__(id, **kwargs)
         self._check_phases(id, phases1=phases1)
         self._check_phases(id, phases2=phases2)
+        self._n1 = len(phases1)
+        self._n2 = len(phases2)
         self._phases1 = phases1
         self._phases2 = phases2
         self._bus1 = bus1
@@ -86,6 +89,10 @@ class AbstractBranch(Element):
         """The phases of the branch at the second bus."""
         return self._phases2
 
+    @cached_property
+    def _all_phases(self) -> str:
+        return "".join(sorted(set(self._phases1) | set(self._phases2)))
+
     @property
     def bus1(self) -> Bus:
         """The first bus of the branch."""
@@ -98,7 +105,7 @@ class AbstractBranch(Element):
 
     def _res_currents_getter(self, warning: bool) -> tuple[ComplexArray, ComplexArray]:
         if self._fetch_results:
-            self._res_currents = self._cy_element.get_currents(len(self.phases1), len(self.phases2))
+            self._res_currents = self._cy_element.get_currents(self._n1, self._n2)
         return self._res_getter(value=self._res_currents, warning=warning)
 
     @property

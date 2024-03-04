@@ -219,6 +219,10 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         Returns:
             The parameters (``z2``, ``ym``, ``k``, ``orientation``).
         """
+        return self._to_zyk()
+
+    def _to_zyk(self) -> tuple[complex, complex, float, float]:
+        """Compute the transformer parameters ``z2``, ``ym``, ``k`` and ``orientation``."""
         # Off-load test
         # Iron losses resistance (Ohm)
         r_iron = self._uhv**2 / self._p0

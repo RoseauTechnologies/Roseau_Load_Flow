@@ -611,6 +611,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         The results are returned as a dataframe with the following index:
             - `bus_id`: The id of the bus.
             - `phase`: The phase of the bus (in ``{'a', 'b', 'c', 'n'}``).
+
         and the following columns:
             - `potential`: The complex potential of the bus (in Volts) for the given phase.
         """
@@ -635,6 +636,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         The results are returned as a dataframe with the following index:
             - `bus_id`: The id of the bus.
             - `phase`: The phase of the bus (in ``{'an', 'bn', 'cn', 'ab', 'bc', 'ca'}``).
+
         and the following columns:
             - `voltage`: The complex voltage of the bus (in Volts) for the given phase.
             - `min_voltage`: The minimum voltage of the bus (in Volts).
@@ -681,6 +683,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         The results are returned as a dataframe with the following index:
             - `branch_id`: The id of the branch.
             - `phase`: The phase of the branch (in ``{'a', 'b', 'c', 'n'}``).
+
         and the following columns:
             - `branch_type`: The type of the branch, can be ``{'line', 'transformer', 'switch'}``.
             - `current1`: The complex current of the branch (in Amps) for the given phase at the
@@ -710,7 +713,8 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         for branch_id, branch in self.branches.items():
             currents1, currents2 = branch._res_currents_getter(warning=False)
             potentials1, potentials2 = branch._res_potentials_getter(warning=False)
-            powers1, powers2 = branch._res_powers_getter(warning=False, pot1=potentials1, pot2=potentials2)
+            powers1 = potentials1 * currents1.conj()
+            powers2 = potentials2 * currents2.conj()
             phases = sorted(set(branch.phases1) | set(branch.phases2))
             for phase in phases:
                 if phase in branch.phases1:
@@ -781,13 +785,11 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                 continue
             currents1, currents2 = branch._res_currents_getter(warning=False)
             potentials1, potentials2 = branch._res_potentials_getter(warning=False)
-            powers1, powers2 = branch._res_powers_getter(warning=False, pot1=potentials1, pot2=potentials2)
+            powers1 = potentials1 * currents1.conj()
+            powers2 = potentials2 * currents2.conj()
             s_max = branch.parameters._max_power
-            violated = None
-            if s_max is not None:
-                violated = max(abs(sum(powers1)), abs(sum(powers2))) > s_max
-            phases = sorted(set(branch.phases1) | set(branch.phases2))
-            for phase in phases:
+            violated = (abs(powers1.sum()) > s_max or abs(powers2.sum()) > s_max) if s_max is not None else None
+            for phase in branch._all_phases:
                 if phase in branch.phases1:
                     idx1 = branch.phases1.index(phase)
                     i1, s1, v1 = currents1[idx1], powers1[idx1], potentials1[idx1]
@@ -868,16 +870,26 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         for branch in self.branches.values():
             if not isinstance(branch, Line):
                 continue
-            potentials = branch._res_potentials_getter(warning=False)
-            currents = branch._res_currents_getter(warning=False)
-            powers = branch._res_powers_getter(warning=False, pot1=potentials[0], pot2=potentials[1])
-            series_losses = branch._res_series_power_losses_getter(warning=False)
-            series_currents = branch._res_series_currents_getter(warning=False)
+            currents1, currents2 = branch._res_currents_getter(warning=False)
+            potentials1, potentials2 = branch._res_potentials_getter(warning=False)
+            du_line, series_currents = branch._res_series_values_getter(warning=False)
+            powers1 = potentials1 * currents1.conj()
+            powers2 = potentials2 * currents2.conj()
+            series_losses = du_line * series_currents.conj()
             i_max = branch.parameters._max_current
             for i1, i2, s1, s2, v1, v2, s_series, i_series, phase in zip(
-                *currents, *powers, *potentials, series_losses, series_currents, branch.phases, strict=True
+                currents1,
+                currents2,
+                powers1,
+                powers2,
+                potentials1,
+                potentials2,
+                series_losses,
+                series_currents,
+                branch.phases,
+                strict=True,
             ):
-                violated = None if i_max is None else max(abs(i1), abs(i2)) > i_max
+                violated = None if i_max is None else (abs(i1) > i_max or abs(i2) > i_max)
                 res_dict["line_id"].append(branch.id)
                 res_dict["phase"].append(phase)
                 res_dict["current1"].append(i1)
@@ -901,6 +913,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         The results are returned as a dataframe with the following index:
             - `switch_id`: The id of the switch.
             - `phase`: The phase of the switch (in ``{'a', 'b', 'c', 'n'}``).
+
         and the following columns:
             - `current1`: The complex current of the switch (in Amps) for the given phase at the
                 first bus.
@@ -928,10 +941,13 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         for branch in self.branches.values():
             if not isinstance(branch, Switch):
                 continue
-            potentials = branch._res_potentials_getter(warning=False)
-            currents = branch._res_currents_getter(warning=False)
-            powers = branch._res_powers_getter(warning=False, pot1=potentials[0], pot2=potentials[1])
-            for i1, i2, s1, s2, v1, v2, phase in zip(*currents, *powers, *potentials, branch.phases, strict=True):
+            currents1, currents2 = branch._res_currents_getter(warning=False)
+            potentials1, potentials2 = branch._res_potentials_getter(warning=False)
+            powers1 = potentials1 * currents1.conj()
+            powers2 = potentials2 * currents2.conj()
+            for i1, i2, s1, s2, v1, v2, phase in zip(
+                currents1, currents2, powers1, powers2, potentials1, potentials2, branch.phases, strict=True
+            ):
                 res_dict["switch_id"].append(branch.id)
                 res_dict["phase"].append(phase)
                 res_dict["current1"].append(i1)
@@ -959,8 +975,8 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         dtypes = {c: _DTYPES[c] for c in res_dict}
         for load_id, load in self.loads.items():
             currents = load._res_currents_getter(warning=False)
-            powers = load._res_powers_getter(warning=False)
             potentials = load._res_potentials_getter(warning=False)
+            powers = potentials * currents.conj()
             for i, s, v, phase in zip(currents, powers, potentials, load.phases, strict=True):
                 res_dict["load_id"].append(load_id)
                 res_dict["phase"].append(phase)
@@ -977,6 +993,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             - `load_id`: The id of the load.
             - `phase`: The phase of the load (in ``{'an', 'bn', 'cn'}`` for wye loads and in
                 ``{'ab', 'bc', 'ca'}`` for delta loads.).
+
         and the following columns:
             - `voltage`: The complex voltage of the load (in Volts) for the given *phase*.
         """
@@ -997,6 +1014,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         The results are returned as a dataframe with the following index:
             - `load_id`: The id of the load.
             - `phase`: The element phases of the load (in ``{'an', 'bn', 'cn', 'ab', 'bc', 'ca'}``).
+
         and the following columns:
             - `power`: The complex flexible power of the load (in VoltAmps) for the given phase.
 
@@ -1023,6 +1041,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         The results are returned as a dataframe with the following index:
             - `source_id`: The id of the source.
             - `phase`: The phase of the source (in ``{'a', 'b', 'c', 'n'}``).
+
         and the following columns:
             - `current`: The complex current of the source (in Amps) for the given phase.
             - `power`: The complex power of the source (in VoltAmps) for the given phase.
@@ -1033,8 +1052,8 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         dtypes = {c: _DTYPES[c] for c in res_dict}
         for source_id, source in self.sources.items():
             currents = source._res_currents_getter(warning=False)
-            powers = source._res_powers_getter(warning=False)
             potentials = source._res_potentials_getter(warning=False)
+            powers = potentials * currents.conj()
             for i, s, v, phase in zip(currents, powers, potentials, source.phases, strict=True):
                 res_dict["source_id"].append(source_id)
                 res_dict["phase"].append(phase)
@@ -1245,9 +1264,10 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             potentials = None
             for source in self.sources.values():
                 # if there are multiple voltage sources, start from the higher one
-                source_voltages = source.voltages.m_as("V")
-                if np.average(np.abs(source_voltages)) > max_voltages:
-                    max_voltages = np.average(np.abs(source_voltages))
+                source_voltages = source._voltages
+                source_voltages_avg = np.average(np.abs(source_voltages))
+                if source_voltages_avg > max_voltages:
+                    max_voltages = source_voltages_avg
                     voltage_source = source
                     if "n" in source.phases:
                         # Assume Vn = 0
@@ -1276,7 +1296,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                     element.potentials = potentials[0:bus_n]
                     element._initialized_by_the_user = False  # only used for serialization
                 for e in element._connected_elements:
-                    if e not in visited and isinstance(e, AbstractBranch | Bus):
+                    if e not in visited and isinstance(e, (AbstractBranch, Bus)):
                         if isinstance(element, Transformer):
                             k = element.parameters._ulv / element.parameters._uhv
                             phase_displacement = element.parameters.phase_displacement

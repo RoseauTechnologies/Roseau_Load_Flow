@@ -511,7 +511,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
                     [0, -height],
                 ]
             )  # m
-            epsilon = EPSILON_0.m_as("F/m")
+            epsilon = EPSILON_0.m
         elif line_type == LineType.UNDERGROUND:
             if height >= 0:
                 msg = f"The height of a '{line_type}' line must be a negative number."
@@ -521,7 +521,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             coord = np.array([[-x, height - x], [x, height - x], [x, height + x], [-x, height + x]])  # m
             xp = x * 3
             coord_prim = np.array([[-xp, height - xp], [xp, height - xp], [xp, height + xp], [-xp, height + xp]])  # m
-            epsilon = (EPSILON_0 * EPSILON_R[insulator_type]).m_as("F/m")
+            epsilon = (EPSILON_0 * EPSILON_R[insulator_type]).m
         else:
             msg = f"The line type {line_type!r} of the line {id!r} is unknown."
             logger.error(msg)
@@ -574,9 +574,9 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         np.fill_diagonal(minus, 1)
 
         # Electrical parameters
-        r = RHO[conductor_type].m_as("ohm*m") / sections * np.eye(4, dtype=np.float64) * 1e3  # resistance (ohm/km)
+        r = RHO[conductor_type].m / sections * np.eye(4, dtype=np.float64) * 1e3  # resistance (ohm/km)
         distance[mask_diagonal] = gmr
-        inductance = MU_0.m_as("H/m") / (2 * PI) * np.log(1 / distance) * 1e3  # H/m->H/km
+        inductance = MU_0.m / (2 * PI) * np.log(1 / distance) * 1e3  # H/m->H/km
         distance[mask_diagonal] = radius
         lambdas = 1 / (2 * PI * epsilon) * np.log(distance_prim / distance)  # m/F
 
@@ -586,7 +586,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         c[mask_diagonal] = np.einsum("ij,ij->i", lambda_inv, minus)
         c[mask_off_diagonal] = -lambda_inv[mask_off_diagonal]
         g = np.zeros((4, 4), dtype=np.float64)  # conductance (S/km)
-        omega = OMEGA.m_as("rad/s")
+        omega = OMEGA.m
         g[mask_diagonal] = TAN_D[insulator_type].magnitude * np.einsum("ii->i", c) * omega
 
         # Build the impedance and admittance matrices

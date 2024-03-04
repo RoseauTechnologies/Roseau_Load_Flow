@@ -105,9 +105,7 @@ class Transformer(AbstractBranch):
         self.tap = tap
         self._parameters = parameters
 
-        z2, ym, k, orientation = parameters.to_zyk()
-        z2 = z2.m_as("ohm")
-        ym = ym.m_as("S")
+        z2, ym, k, orientation = parameters._to_zyk()
         if parameters.type == "single":
             self._cy_element = CySingleTransformer(z2=z2, ym=ym, k=k * tap)
         elif parameters.type == "center":
@@ -157,8 +155,8 @@ class Transformer(AbstractBranch):
         self._tap = value
         self._invalidate_network_results()
         if self._cy_element is not None:
-            z2, ym, k, _ = self.parameters.to_zyk()
-            self._cy_element.update_transformer_parameters(z2.m_as("ohm"), ym.m_as("S"), k * value)
+            z2, ym, k, _ = self.parameters._to_zyk()
+            self._cy_element.update_transformer_parameters(z2, ym, k * value)
 
     @property
     def parameters(self) -> TransformerParameters:
@@ -176,8 +174,8 @@ class Transformer(AbstractBranch):
         self._parameters = value
         self._invalidate_network_results()
         if self._cy_element is not None:
-            z2, ym, k, _ = value.to_zyk()
-            self._cy_element.update_transformer_parameters(z2.m_as("ohm"), ym.m_as("S"), k * self.tap)
+            z2, ym, k, _ = value._to_zyk()
+            self._cy_element.update_transformer_parameters(z2, ym, k * self.tap)
 
     @property
     def max_power(self) -> Q_[float] | None:
@@ -316,4 +314,6 @@ class Transformer(AbstractBranch):
             return None
         powers1, powers2 = self._res_powers_getter(warning=True)
         # True if either the primary or secondary is overloaded
-        return float(max(abs(sum(powers1)), abs(sum(powers2)))) > s_max
+        if abs(powers1.sum()) > s_max or abs(powers2.sum()) > s_max:
+            return True
+        return False
