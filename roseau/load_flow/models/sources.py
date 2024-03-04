@@ -92,7 +92,7 @@ class VoltageSource(Element):
             f"phases={self.phases!r})"
         )
 
-    @cached_property
+    @property
     def phases(self) -> str:
         """The phases of the source."""
         return self._phases

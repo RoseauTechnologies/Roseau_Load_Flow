@@ -55,9 +55,8 @@ def _apply_defaults(sig: Signature, args: tuple[Any], kwargs: dict[str, Any]) ->
     values so that every argument is defined.
     """
     n = len(args)
-    empty = Parameter.empty
     for i, param in enumerate(sig.parameters.values()):
-        if i >= n and param.default != empty and param.name not in kwargs:
+        if i >= n and param.default != Parameter.empty and param.name not in kwargs:
             kwargs[param.name] = param.default
     return list(args), kwargs
 

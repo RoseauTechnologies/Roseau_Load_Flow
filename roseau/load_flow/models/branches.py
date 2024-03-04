@@ -79,12 +79,12 @@ class AbstractBranch(Element):
         s += ")"
         return s
 
-    @cached_property
+    @property
     def phases1(self) -> str:
         """The phases of the branch at the first bus."""
         return self._phases1
 
-    @cached_property
+    @property
     def phases2(self) -> str:
         """The phases of the branch at the second bus."""
         return self._phases2

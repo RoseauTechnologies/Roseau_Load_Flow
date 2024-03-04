@@ -91,7 +91,7 @@ class AbstractLoad(Element, ABC):
         bus_id = self.bus.id if self.bus is not None else None
         return f"{type(self).__name__}(id={self.id!r}, phases={self.phases!r}, bus={bus_id!r})"
 
-    @cached_property
+    @property
     def phases(self) -> str:
         """The phases of the load."""
         return self._phases

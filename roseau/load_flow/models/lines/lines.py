@@ -1,6 +1,5 @@
 import logging
 import warnings
-from functools import cached_property
 from typing import Any
 
 import numpy as np
@@ -90,7 +89,7 @@ class Switch(AbstractBranch):
         self._cy_element = CySwitch(self._n1)
         self._cy_connect()
 
-    @cached_property
+    @property
     def phases(self) -> str:
         """The phases of the switch. This is an alias for :attr:`phases1` and :attr:`phases2`."""
         return self._phases1
@@ -234,10 +233,14 @@ class Line(AbstractBranch):
 
         if parameters.with_shunt:
             self._cy_element = CyShuntLine(
-                n=self._n1, y_shunt=parameters._y_shunt * self._length, z_line=parameters._z_line * self._length
+                n=self._n1,
+                y_shunt=parameters._y_shunt.reshape(self._n1 * self._n2) * self._length,
+                z_line=parameters._z_line * self._length,
             )
         else:
-            self._cy_element = CySimplifiedLine(n=self._n1, z_line=parameters._z_line * self._length)
+            self._cy_element = CySimplifiedLine(
+                n=self._n1, z_line=parameters._z_line.reshape(self._n1 * self._n2) * self._length
+            )
         self._cy_connect()
         if parameters.with_shunt:
             ground._cy_element.connect(self._cy_element, [(0, self._n1 + self._n1)])
@@ -248,7 +251,7 @@ class Line(AbstractBranch):
         self._z_line_inv = np.linalg.inv(self._z_line)
         self._yg = self._y_shunt.sum(axis=1)  # y_ig = Y_ia + Y_ib + Y_ic + Y_in for i in {a, b, c, n}
 
-    @cached_property
+    @property
     def phases(self) -> str:
         """The phases of the line. This is an alias for :attr:`phases1` and :attr:`phases2`."""
         return self._phases1
@@ -265,9 +268,11 @@ class Line(AbstractBranch):
 
         if self._cy_element is not None:
             if self._parameters.with_shunt:
-                self._cy_element.update_line_parameters(y_shunt=self._y_shunt, z_line=self._z_line)
+                self._cy_element.update_line_parameters(
+                    y_shunt=self._y_shunt.reshape(self._n1 * self._n2), z_line=self._z_line
+                )
             else:
-                self._cy_element.update_line_parameters(z_line=self._z_line)
+                self._cy_element.update_line_parameters(z_line=self._z_line.reshape(self._n1 * self._n2))
 
     @property
     @ureg_wraps("km", (None,))

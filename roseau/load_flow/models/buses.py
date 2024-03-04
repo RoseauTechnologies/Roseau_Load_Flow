@@ -100,7 +100,7 @@ class Bus(Element):
     def __repr__(self) -> str:
         return f"{type(self).__name__}(id={self.id!r}, phases={self.phases!r})"
 
-    @cached_property
+    @property
     def phases(self) -> str:
         """The phases of the bus."""
         return self._phases
