@@ -235,7 +235,7 @@ class Line(AbstractBranch):
             self._cy_element = CyShuntLine(
                 n=self._n1,
                 y_shunt=parameters._y_shunt.reshape(self._n1 * self._n2) * self._length,
-                z_line=parameters._z_line * self._length,
+                z_line=parameters._z_line.reshape(self._n1 * self._n2) * self._length,
             )
         else:
             self._cy_element = CySimplifiedLine(
@@ -269,7 +269,7 @@ class Line(AbstractBranch):
         if self._cy_element is not None:
             if self._parameters.with_shunt:
                 self._cy_element.update_line_parameters(
-                    y_shunt=self._y_shunt.reshape(self._n1 * self._n2), z_line=self._z_line
+                    y_shunt=self._y_shunt.reshape(self._n1 * self._n2), z_line=self._z_line.reshape(self._n1 * self._n2)
                 )
             else:
                 self._cy_element.update_line_parameters(z_line=self._z_line.reshape(self._n1 * self._n2))
