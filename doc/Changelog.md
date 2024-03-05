@@ -15,6 +15,7 @@ myst:
 
 ## Unreleased
 
+- {gh-pr}`195` Use `latexindent.pl` to automatically indent LaTeX files in the documentation.
 - {gh-pr}`192` Speed up results access by up to 3x using several optimization techniques. This is especially
   noticeable in timeseries simulations and when accessing results of large networks.
 - {gh-pr}`184` Improve the documentation to have a better SEO (sitemap, metadata and canonical URLs). The navigation

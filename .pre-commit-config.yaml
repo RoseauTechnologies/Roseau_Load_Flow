@@ -28,7 +28,7 @@ repos:
       - id: blacken-docs
         files: ^doc/.*\.md$
         args: [-l 90]
-        additional_dependencies: [black==23.12.1]
+        additional_dependencies: [black==24.2.0]
   - repo: https://github.com/pre-commit/mirrors-prettier
     rev: v4.0.0-alpha.8
     hooks:
@@ -39,4 +39,4 @@ repos:
     rev: V3.23.6
     hooks:
       - id: latexindent
-        args: [-l, -m, -s, -w]
+        args: [-l, -m, -s, -wd]
