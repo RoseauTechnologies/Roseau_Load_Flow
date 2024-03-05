@@ -1,7 +1,7 @@
 \input{Preambule}%
 
 \begin{document}
-\ctikzset{european, straight voltages, cute inductors, bipoles/length=1cm}%
+\ctikzset{european, straight voltages, cute inductors, bipoles/length=1cm, voltage shift=0.5mm}%
 \begin{tikzpicture}[%
     show background rectangle,%
     tight background,%
@@ -54,28 +54,28 @@
   \draw (\xl,\ya) to[short,*-*,i=$\underline{I_{1,\arm}}$]
   (\xy,\ya) to[short] (\xtransformerm,\ya) to[short] node[near start,above=0.25cm,circ] {} (T);%
   \draw (\xtransformerp,\ya) to[short] node[near start,above=0.25cm,circ] {} (T);%
-  \draw (\xtransformerp,\ya) -- (\xrt,\ya) to [generic, l=$\dfrac{\underline{Z_2}}{2}$, label distance=6pt, -]
+  \draw (\xtransformerp,\ya) -- (\xrt,\ya) to[generic, l=$\dfrac{\underline{Z_2}}{2}$, label distance=6pt, -]
   (\xz,\ya) to[short,-*,i<=$\underline{I_{2,\arm}}$] (\xm,\ya);%
 
   % B
   \draw (\xl,\yb) to[short,*-*,i=$\underline{I_{1,\brm}}$]
   (\xy,\yb) to[short] (\xtransformerm,\yb) to[short] (T);%
   \draw (\xtransformerp,\yb) to[short] (T);%
-  \draw (\xtransformerp,\yb) -- (\xrt,\yb) to [generic, l_=$\dfrac{\underline{Z_2}}{2}$, -]
+  \draw (\xtransformerp,\yb) -- (\xrt,\yb) to[generic, l_=$\dfrac{\underline{Z_2}}{2}$, -]
   (\xz,\yb) to[short,-*,i<=$\underline{I_{2,\brm}}$] (\xm,\yb);%
 
   % Neutre
   \draw (T.east) to[short] (\xtransformerp,\yn) -- (\xz,\yn) to[short,-*,i<=$\underline{I_{2,\nrm}}$] (\xm,\yn);%
 
   % Ym
-  \draw (\xy,\ya) to [generic, l=$\underline{Y_{\mathrm{m}}}$, v<=$\underline{U_{1,\abrm}}$, -] (\xy,\yb);%
+  \draw (\xy,\ya) to[generic, l=$\underline{Y_{\mathrm{m}}}$, v<=$\underline{U_{1,\abrm}}$, -] (\xy,\yb);%
 
   % Tensions
-  \draw (\xz,\ya) to [open, v^<=$\underline{U_{2,\arm}}$] (\xz,\yn);%
-  \draw (\xz,\yb) to [open, v<=$\underline{U_{2,\brm}}$] (\xz,\yn);%
+  \draw (\xz,\ya) to[open, v^<=$\underline{U_{2,\arm}}$] (\xz,\yn);%
+  \draw (\xz,\yb) to[open, v<=$\underline{U_{2,\brm}}$] (\xz,\yn);%
   \pgfmathsetmacro{\xr}{\xrt + 0.25};%
-  \draw (\xr,\ya) to [open, v^<=$\underline{U_{2,\arm}^0}$] (\xr,\yn);%
-  \draw (\xr,\yb) to [open, v<=$\underline{U_{2,\brm}^0}$] (\xr,\yn);%
+  \draw (\xr,\ya) to[open, v^<=$\underline{U_{2,\arm}^0}$] (\xr,\yn);%
+  \draw (\xr,\yb) to[open, v<=$\underline{U_{2,\brm}^0}$] (\xr,\yn);%
 
 \end{tikzpicture}
 \end{document}

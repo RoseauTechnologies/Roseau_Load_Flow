@@ -53,7 +53,7 @@
   % A
   \draw (\xl,\ya) to[short,*-*,i=$\underline{I_{1,\arm}}$]
   (\xy,\ya) to[short,-] (T.A1);
-  \draw (T.B1) -- (\xrt,\ya) to [generic, l=$\underline{Z_2}$, -]
+  \draw (T.B1) -- (\xrt,\ya) to[generic, l=$\underline{Z_2}$, -]
   (\xz,\ya) to[short,-*,i<=$\underline{I_{2,\arm}}$] (\xm,\ya);%
 
   % Neutre
@@ -62,8 +62,8 @@
   \draw (T.B2) to[short, -] (\xz,\yn) to[short,-*,i<=$\underline{I_{2,\nrm}}$] (\xm,\yn);%
 
   % Ym
-  \draw (\xy,\ya) to [generic, l=$\underline{Y_{\mathrm{m}}}$, v>=$\underline{U_{1,\arm}}$, -] (\xy,\yn);%
-  \draw (\xz,\ya) to [open, v>=$\underline{U_{2,\arm}}$] (\xz,\yn);%
+  \draw (\xy,\ya) to[generic, l=$\underline{Y_{\mathrm{m}}}$, v>=$\underline{U_{1,\arm}}$, -] (\xy,\yn);%
+  \draw (\xz,\ya) to[open, v>=$\underline{U_{2,\arm}}$] (\xz,\yn);%
 
 \end{tikzpicture}
 \end{document}

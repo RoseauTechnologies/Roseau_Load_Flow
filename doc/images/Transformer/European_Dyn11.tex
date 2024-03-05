@@ -1,7 +1,7 @@
 \input{Preambule}%
 
 \begin{document}
-\ctikzset{european, straight voltages, cute inductors, bipoles/length=1cm}%
+\ctikzset{european, straight voltages, cute inductors, bipoles/length=1cm, voltage shift=0.5mm}%
 \begin{tikzpicture}[%
     show background rectangle,%
     tight background,%
@@ -84,7 +84,7 @@
   \pic[local bounding box=TX] at (\xtransformer,\ytmp) {transformer};%
   \draw (\xtransformerm, \yxp)%
   to[short] node[near start,above=0.25cm,circ] {} (TX);%
-  \draw (4.5,\yb) to [short, *-] (4.5,\yxm)%
+  \draw (4.5,\yb) to[short, *-] (4.5,\yxm)%
   to[short, -] (\xym,\yxm)%
   to[short] (\xtransformerm,\yxm)%
   to[short] (TX);%
@@ -100,7 +100,7 @@
   \pic[local bounding box=TY] at (\xtransformer,\ytmp) {transformer};%
   \draw (\xtransformerm,\yyp)%
   to[short] node[near start,above=0.25cm,circ] {} (TY);%
-  \draw (4.5,\yc) to [short, *-] (4.5,\yym)%
+  \draw (4.5,\yc) to[short, *-] (4.5,\yym)%
   to[short,-] (\xym,\yym)%
   to[short] (\xtransformerm,\yym)%
   to[short] (TY);%
@@ -167,7 +167,7 @@
   to[short,-,i_=$\underline{I_{2,\crm}}$] (\xfive,\yc)%
   to[short, -] (z jump.south)%
   (z jump.north)%
-  to [short,-] (\xfour,\yc)%
+  to[short,-] (\xfour,\yc)%
   to[short,-,i>_=$\underline{I_{\zrm}}$]  (\xztwop, \yc)%
   to[generic,l=$\underline{Z_{2,\crm}}$] (\xztwom, \yc)%
   to[short] (\xtransformerp,\yc)%
