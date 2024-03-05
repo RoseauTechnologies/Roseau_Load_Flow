@@ -180,13 +180,13 @@
 <path style="fill:none;stroke-width:0.3985;stroke-linecap:butt;stroke-linejoin:miter;stroke:rgb(0%,0%,0%);stroke-opacity:1;stroke-miterlimit:10;" d="M 170.081156 8.470062 L 170.081156 48.223969 " transform="matrix(1,0,0,-1,23.954,75.556)"/>
 <path style="fill-rule:nonzero;fill:rgb(0%,0%,0%);fill-opacity:1;stroke-width:0.3985;stroke-linecap:butt;stroke-linejoin:miter;stroke:rgb(0%,0%,0%);stroke-opacity:1;stroke-miterlimit:10;" d="M 170.081156 45.21225 L 171.499125 45.21225 L 170.081156 48.223969 L 168.663187 45.21225 Z M 170.081156 45.21225 " transform="matrix(1,0,0,-1,23.954,75.556)"/>
 <g style="fill:rgb(0%,0%,0%);fill-opacity:1;">
-  <use xlink:href="#glyph1-5" x="172.539" y="48.68"/>
+  <use xlink:href="#glyph1-5" x="176.762" y="48.68"/>
 </g>
 <g style="fill:rgb(0%,0%,0%);fill-opacity:1;">
-  <use xlink:href="#glyph2-5" x="180.061" y="50.174"/>
-  <use xlink:href="#glyph2-2" x="184.213427" y="50.174"/>
-  <use xlink:href="#glyph2-3" x="186.006702" y="50.174"/>
+  <use xlink:href="#glyph2-5" x="184.284" y="50.174"/>
+  <use xlink:href="#glyph2-2" x="188.436427" y="50.174"/>
+  <use xlink:href="#glyph2-3" x="190.229702" y="50.174"/>
 </g>
-<path style="fill:none;stroke-width:0.398;stroke-linecap:butt;stroke-linejoin:miter;stroke:rgb(0%,0%,0%);stroke-opacity:1;stroke-miterlimit:10;" d="M 0.0000625 -0.00084375 L 18.308656 -0.00084375 " transform="matrix(1,0,0,-1,172.539,52.214)"/>
+<path style="fill:none;stroke-width:0.398;stroke-linecap:butt;stroke-linejoin:miter;stroke:rgb(0%,0%,0%);stroke-opacity:1;stroke-miterlimit:10;" d="M -0.00028125 -0.00084375 L 18.308312 -0.00084375 " transform="matrix(1,0,0,-1,176.762,52.214)"/>
 </g>
 </svg>

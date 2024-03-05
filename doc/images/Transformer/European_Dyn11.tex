@@ -1,195 +1,195 @@
 \input{Preambule}%
 
 \begin{document}
-    \ctikzset{european, straight voltages, cute inductors, bipoles/length=1cm}%
-    \begin{tikzpicture}[%
-        show background rectangle,%
-        tight background,%
-        background rectangle/.style={fill=white}%
-    ]
-        %
-        % Définitions
-        %
-        % No European transformer in circuitikz [BV, 17/07/2023]
-        \tikzset{
-            transformer/.pic={
-                \draw (-0.2,0) circle[radius=0.4] (0.2,0) circle[radius=0.4];
-            },
-        }
-        \pgfmathsetmacro{\xzero}{0};%
-        \pgfmathsetmacro{\xone}{1};%
-        \pgfmathsetmacro{\xtwo}{3};%
-        \pgfmathsetmacro{\xthree}{5};%
-        \pgfmathsetmacro{\xym}{7};%
-        \pgfmathsetmacro{\xtransformer}{10};%
-        \pgfmathsetmacro{\xtransformerm}{\xtransformer-1};%
-        \pgfmathsetmacro{\xtransformerp}{\xtransformer+1};%
-        \pgfmathsetmacro{\xztwom}{11.5};%
-        \pgfmathsetmacro{\xztwop}{13.5};%
-        \pgfmathsetmacro{\xfour}{15};%
-        \pgfmathsetmacro{\xfive}{17};%
-        \pgfmathsetmacro{\xsix}{19};%
-        \pgfmathsetmacro{\xseven}{20};%
-        \pgfmathsetmacro{\yn}{0};%
-        \pgfmathsetmacro{\yc}{2.5};%
-        \pgfmathsetmacro{\yb}{5};%
-        \pgfmathsetmacro{\ya}{7.5};%
-        \pgfmathsetmacro{\yxp}{\ya};%
-        \pgfmathsetmacro{\yxm}{\yb+0.6};%
-        \pgfmathsetmacro{\yyp}{\yb};%
-        \pgfmathsetmacro{\yym}{\yc+0.6};%
-        \pgfmathsetmacro{\yzp}{\yc};%
-        \pgfmathsetmacro{\yzm}{\yn+0.6};%
-        \pgfmathsetmacro{\yzero}{\yn-1};%
-        \pgfmathsetmacro{\yone}{\ya+1};%
+\ctikzset{european, straight voltages, cute inductors, bipoles/length=1cm}%
+\begin{tikzpicture}[%
+    show background rectangle,%
+    tight background,%
+    background rectangle/.style={fill=white}%
+  ]
+  %
+  % Définitions
+  %
+  % No European transformer in circuitikz [BV, 17/07/2023]
+  \tikzset{
+    transformer/.pic={
+      \draw (-0.2,0) circle[radius=0.4] (0.2,0) circle[radius=0.4];
+    },
+  }
+  \pgfmathsetmacro{\xzero}{0};%
+  \pgfmathsetmacro{\xone}{1};%
+  \pgfmathsetmacro{\xtwo}{3};%
+  \pgfmathsetmacro{\xthree}{5};%
+  \pgfmathsetmacro{\xym}{7};%
+  \pgfmathsetmacro{\xtransformer}{10};%
+  \pgfmathsetmacro{\xtransformerm}{\xtransformer-1};%
+  \pgfmathsetmacro{\xtransformerp}{\xtransformer+1};%
+  \pgfmathsetmacro{\xztwom}{11.5};%
+  \pgfmathsetmacro{\xztwop}{13.5};%
+  \pgfmathsetmacro{\xfour}{15};%
+  \pgfmathsetmacro{\xfive}{17};%
+  \pgfmathsetmacro{\xsix}{19};%
+  \pgfmathsetmacro{\xseven}{20};%
+  \pgfmathsetmacro{\yn}{0};%
+  \pgfmathsetmacro{\yc}{2.5};%
+  \pgfmathsetmacro{\yb}{5};%
+  \pgfmathsetmacro{\ya}{7.5};%
+  \pgfmathsetmacro{\yxp}{\ya};%
+  \pgfmathsetmacro{\yxm}{\yb+0.6};%
+  \pgfmathsetmacro{\yyp}{\yb};%
+  \pgfmathsetmacro{\yym}{\yc+0.6};%
+  \pgfmathsetmacro{\yzp}{\yc};%
+  \pgfmathsetmacro{\yzm}{\yn+0.6};%
+  \pgfmathsetmacro{\yzero}{\yn-1};%
+  \pgfmathsetmacro{\yone}{\ya+1};%
 
-        % Rectangles
-        \pgfmathsetmacro{\xtmp}{\xone+0.75*(\xtwo-\xone)};%
-        \draw[blue,dashed] (\xzero, \yzero) rectangle (\xtmp, \yone);%
-        \draw[blue] (\xtwo, \yzero) rectangle (\xthree, \yone);%
-        \draw[blue] (\xfour, \yzero) rectangle (\xfive, \yone);%
-        \pgfmathsetmacro{\xtmp}{\xsix-0.75*(\xsix-\xfive)};%
-        \draw[blue,dashed] (\xtmp, \yzero) rectangle (\xseven, \yone);%
+  % Rectangles
+  \pgfmathsetmacro{\xtmp}{\xone+0.75*(\xtwo-\xone)};%
+  \draw[blue,dashed] (\xzero, \yzero) rectangle (\xtmp, \yone);%
+  \draw[blue] (\xtwo, \yzero) rectangle (\xthree, \yone);%
+  \draw[blue] (\xfour, \yzero) rectangle (\xfive, \yone);%
+  \pgfmathsetmacro{\xtmp}{\xsix-0.75*(\xsix-\xfive)};%
+  \draw[blue,dashed] (\xtmp, \yzero) rectangle (\xseven, \yone);%
 
-        \pgfmathsetmacro{\xtmpleft}{\xthree+0.5};%
-        \pgfmathsetmacro{\xtmpright}{\xfour-0.5};%
-        \draw[blue,dashed] (\xtmpleft, \yzero) rectangle (\xtmpright,\yone);%
+  \pgfmathsetmacro{\xtmpleft}{\xthree+0.5};%
+  \pgfmathsetmacro{\xtmpright}{\xfour-0.5};%
+  \draw[blue,dashed] (\xtmpleft, \yzero) rectangle (\xtmpright,\yone);%
 
-        % ABCN
-        \node at (3.5,\yb) [jump crossing,rotate=90](Y jump) {};%
-        \node at (3.5,\yc) [jump crossing,rotate=90](Z jump) {};%
-        \draw (\xone,\ya) node[left] {$\underline{V_{1,\arm}}$}%
-        to[short,-,i=$\underline{I_{1,\arm}}$] (\xtwo,\ya)%
-        to[short,-] (\xthree,\ya)%
-        to[short,-,i=$\underline{I_{\Xrm}}$] (\xym, \ya)%
-        to[short,-] (\xtransformerm, \ya);%
-        \draw (\xone,\yb) node[left] {$\underline{V_{1,\brm}}$}%
-        to[short,-,i=$\underline{I_{1,\brm}}$] (\xtwo,\yb)%
-        to[short, -] (Y jump.north)%
-        (Y jump.south)%
-        to[short,-] (\xthree,\yb)%
-        to[short,-,i=$\underline{I_{\Yrm}}$] (\xym, \yb)%
-        to[short,-] (\xtransformerm,\yb);%
-        \draw (\xone,\yc) node[left] {$\underline{V_{1,\crm}}$}%
-        to[short,-,i=$\underline{I_{1,\crm}}$] (\xtwo,\yc)%
-        to[short, -] (Z jump.north)%
-        (Z jump.south)%
-        to[short,-] (\xthree,\yc)%
-        to[short,-,i=$\underline{I_{\Zrm}}$] (\xym, \yc)%
-        to[short,-] (\xtransformerm,\yc);%
+  % ABCN
+  \node at (3.5,\yb) [jump crossing,rotate=90](Y jump) {};%
+  \node at (3.5,\yc) [jump crossing,rotate=90](Z jump) {};%
+  \draw (\xone,\ya) node[left] {$\underline{V_{1,\arm}}$}%
+  to[short,-,i=$\underline{I_{1,\arm}}$] (\xtwo,\ya)%
+  to[short,-] (\xthree,\ya)%
+  to[short,-,i=$\underline{I_{\Xrm}}$] (\xym, \ya)%
+  to[short,-] (\xtransformerm, \ya);%
+  \draw (\xone,\yb) node[left] {$\underline{V_{1,\brm}}$}%
+  to[short,-,i=$\underline{I_{1,\brm}}$] (\xtwo,\yb)%
+  to[short, -] (Y jump.north)%
+  (Y jump.south)%
+  to[short,-] (\xthree,\yb)%
+  to[short,-,i=$\underline{I_{\Yrm}}$] (\xym, \yb)%
+  to[short,-] (\xtransformerm,\yb);%
+  \draw (\xone,\yc) node[left] {$\underline{V_{1,\crm}}$}%
+  to[short,-,i=$\underline{I_{1,\crm}}$] (\xtwo,\yc)%
+  to[short, -] (Z jump.north)%
+  (Z jump.south)%
+  to[short,-] (\xthree,\yc)%
+  to[short,-,i=$\underline{I_{\Zrm}}$] (\xym, \yc)%
+  to[short,-] (\xtransformerm,\yc);%
 
-        % XYZ
-        % First winding (X)
-        \pgfmathsetmacro{\ytmp}{0.5*(\yxp+\yxm)};%
-        \pic[local bounding box=TX] at (\xtransformer,\ytmp) {transformer};%
-        \draw (\xtransformerm, \yxp)%
-        to[short] node[near start,above=0.25cm,circ] {} (TX);%
-        \draw (4.5,\yb) to [short, *-] (4.5,\yxm)%
-        to[short, -] (\xym,\yxm)%
-        to[short] (\xtransformerm,\yxm)%
-        to[short] (TX);%
-        \draw (\xym,\yxp) to[generic,%
-        i>^=$\underline{I_{\mathrm{m},\arm}}$,%
-        l=$\underline{Y_{\mathrm{m},\arm}}$,%
-        v<=$\underline{U_{\Xrm}}$%
-        ] (\xym,\yxm);%
-        \node[above] at (TX.north) {$k$};%
+  % XYZ
+  % First winding (X)
+  \pgfmathsetmacro{\ytmp}{0.5*(\yxp+\yxm)};%
+  \pic[local bounding box=TX] at (\xtransformer,\ytmp) {transformer};%
+  \draw (\xtransformerm, \yxp)%
+  to[short] node[near start,above=0.25cm,circ] {} (TX);%
+  \draw (4.5,\yb) to [short, *-] (4.5,\yxm)%
+  to[short, -] (\xym,\yxm)%
+  to[short] (\xtransformerm,\yxm)%
+  to[short] (TX);%
+  \draw (\xym,\yxp) to[generic,%
+    i>^=$\underline{I_{\mathrm{m},\arm}}$,%
+    l=$\underline{Y_{\mathrm{m},\arm}}$,%
+    v<=$\underline{U_{\Xrm}}$%
+  ] (\xym,\yxm);%
+  \node[above] at (TX.north) {$k$};%
 
-        % First winding (Y)
-        \pgfmathsetmacro{\ytmp}{0.5*(\yyp+\yym)};%
-        \pic[local bounding box=TY] at (\xtransformer,\ytmp) {transformer};%
-        \draw (\xtransformerm,\yyp)%
-        to[short] node[near start,above=0.25cm,circ] {} (TY);%
-        \draw (4.5,\yc) to [short, *-] (4.5,\yym)%
-        to[short,-] (\xym,\yym)%
-        to[short] (\xtransformerm,\yym)%
-        to[short] (TY);%
-        \draw (\xym,\yyp) to[generic,%
-        i>^=$\underline{I_{\mathrm{m},\brm}}$,%
-        l=$\underline{Y_{\mathrm{m},\brm}}$,%
-        v<=$\underline{U_{\Yrm}}$%
-        ] (\xym,\yym);%
-        \node[above] at (TY.north) {$k$};%
+  % First winding (Y)
+  \pgfmathsetmacro{\ytmp}{0.5*(\yyp+\yym)};%
+  \pic[local bounding box=TY] at (\xtransformer,\ytmp) {transformer};%
+  \draw (\xtransformerm,\yyp)%
+  to[short] node[near start,above=0.25cm,circ] {} (TY);%
+  \draw (4.5,\yc) to [short, *-] (4.5,\yym)%
+  to[short,-] (\xym,\yym)%
+  to[short] (\xtransformerm,\yym)%
+  to[short] (TY);%
+  \draw (\xym,\yyp) to[generic,%
+    i>^=$\underline{I_{\mathrm{m},\brm}}$,%
+    l=$\underline{Y_{\mathrm{m},\brm}}$,%
+    v<=$\underline{U_{\Yrm}}$%
+  ] (\xym,\yym);%
+  \node[above] at (TY.north) {$k$};%
 
-        % First winding (Z)
-        \pgfmathsetmacro{\ytmp}{0.5*(\yzp+\yzm)};%
-        \pic[local bounding box=TZ] at (\xtransformer,\ytmp) {transformer};%
-        \draw (\xtransformerm,\yzp)%
-        to[short] node[near start,above=0.25cm,circ] {} (TZ);%
-        \draw (3.5,\ya) to[short,*-] (Y jump.east)%
-        (Y jump.west)%
-        to[short, -] (Z jump.east)%
-        (Z jump.west)%
-        to[short,-] (3.5,\yzm)%
-        to[short] (\xym,\yzm)%
-        to[short] (\xtransformerm,\yzm)%
-        to[short] (TZ);%
-        \draw (\xym,\yzp) to[generic,%
-        i>^=$\underline{I_{\mathrm{m},\crm}}$,%
-        l=$\underline{Y_{\mathrm{m},\crm}}$,%
-        v<=$\underline{U_{\Zrm}}$%
-        ] (\xym,\yzm);%
-        \node[above] at (TZ.north) {$k$};%
+  % First winding (Z)
+  \pgfmathsetmacro{\ytmp}{0.5*(\yzp+\yzm)};%
+  \pic[local bounding box=TZ] at (\xtransformer,\ytmp) {transformer};%
+  \draw (\xtransformerm,\yzp)%
+  to[short] node[near start,above=0.25cm,circ] {} (TZ);%
+  \draw (3.5,\ya) to[short,*-] (Y jump.east)%
+  (Y jump.west)%
+  to[short, -] (Z jump.east)%
+  (Z jump.west)%
+  to[short,-] (3.5,\yzm)%
+  to[short] (\xym,\yzm)%
+  to[short] (\xtransformerm,\yzm)%
+  to[short] (TZ);%
+  \draw (\xym,\yzp) to[generic,%
+    i>^=$\underline{I_{\mathrm{m},\crm}}$,%
+    l=$\underline{Y_{\mathrm{m},\crm}}$,%
+    v<=$\underline{U_{\Zrm}}$%
+  ] (\xym,\yzm);%
+  \node[above] at (TZ.north) {$k$};%
 
-        % xyz
-        % Second winding (x)
-        \pgfmathsetmacro{\ytmp}{0.5*(\yxp+\yxm)};%
-        \draw (\xsix,\ya) node[right] {$\underline{V_{2,\arm}}$}%
-        to[short,-,i_=$\underline{I_{2,\arm}}$] (\xfive,\ya) %
-        to[short, -] (\xfour,\ya)%
-        to[short,-,i>_=$\underline{I_{\xrm}}$] (\xztwop, \ya)%
-        to[generic,l=$\underline{Z_{2,\arm}}$] (\xztwom, \ya)%
-        to[short] (\xtransformerp,\ya) %
-        to[short] node[near start,above=0.25cm,circ] {} (TX);%
-        \draw (\xztwop, \yxm) to[open,v=$\underline{U_{\xrm}}$] (\xztwop, \yxp);%
-        \draw (\xztwom, \yxm) to[open,v=$\underline{U_{0,\xrm}}$] (\xztwom, \yxp);%
+  % xyz
+  % Second winding (x)
+  \pgfmathsetmacro{\ytmp}{0.5*(\yxp+\yxm)};%
+  \draw (\xsix,\ya) node[right] {$\underline{V_{2,\arm}}$}%
+  to[short,-,i_=$\underline{I_{2,\arm}}$] (\xfive,\ya) %
+  to[short, -] (\xfour,\ya)%
+  to[short,-,i>_=$\underline{I_{\xrm}}$] (\xztwop, \ya)%
+  to[generic,l=$\underline{Z_{2,\arm}}$] (\xztwom, \ya)%
+  to[short] (\xtransformerp,\ya) %
+  to[short] node[near start,above=0.25cm,circ] {} (TX);%
+  \draw (\xztwop, \yxm) to[open,v=$\underline{U_{\xrm}}$] (\xztwop, \yxp);%
+  \draw (\xztwom, \yxm) to[open,v=$\underline{U_{0,\xrm}}$] (\xztwom, \yxp);%
 
-        % Second winding (y)
-        \node at (16,\yb) [jump crossing,rotate=90](y jump) {};%
-        \pgfmathsetmacro{\ytmp}{0.5*(\yyp+\yym)};%
-        \draw (\xsix,\yb) node[right] {$\underline{V_{2,\brm}}$}%
-        to[short,-,i_=$\underline{I_{2,\brm}}$] (\xfive,\yb)%
-        to[short, -] (y jump.south)%
-        (y jump.north)%
-        to[short, -] (\xfour,\yb)%
-        to[short,-,i>_=$\underline{I_{\yrm}}$] (\xztwop, \yb)%
-        to[generic,l=$\underline{Z_{2,\brm}}$] (\xztwom, \yb)%
-        to[short] (\xtransformerp,\yb)%
-        to[short] node[near start,above=0.25cm,circ] {} (TY);%
-        \draw (16,\yym) to[short,*-] (\xtransformerp,\yym) to[short] (TY);%
-        \draw (\xztwop, \yym) to[open,v=$\underline{U_{\yrm}}$] (\xztwop, \yb);%
-        \draw (\xztwom, \yym) to[open,v=$\underline{U_{0,\yrm}}$] (\xztwom, \yb);%
+  % Second winding (y)
+  \node at (16,\yb) [jump crossing,rotate=90](y jump) {};%
+  \pgfmathsetmacro{\ytmp}{0.5*(\yyp+\yym)};%
+  \draw (\xsix,\yb) node[right] {$\underline{V_{2,\brm}}$}%
+  to[short,-,i_=$\underline{I_{2,\brm}}$] (\xfive,\yb)%
+  to[short, -] (y jump.south)%
+  (y jump.north)%
+  to[short, -] (\xfour,\yb)%
+  to[short,-,i>_=$\underline{I_{\yrm}}$] (\xztwop, \yb)%
+  to[generic,l=$\underline{Z_{2,\brm}}$] (\xztwom, \yb)%
+  to[short] (\xtransformerp,\yb)%
+  to[short] node[near start,above=0.25cm,circ] {} (TY);%
+  \draw (16,\yym) to[short,*-] (\xtransformerp,\yym) to[short] (TY);%
+  \draw (\xztwop, \yym) to[open,v=$\underline{U_{\yrm}}$] (\xztwop, \yb);%
+  \draw (\xztwom, \yym) to[open,v=$\underline{U_{0,\yrm}}$] (\xztwom, \yb);%
 
-        % Second winding (z)
-        \node at (16,\yc) [jump crossing,rotate=90](z jump) {};%
-        \pgfmathsetmacro{\ytmp}{0.5*(\yzp+\yzm)};%
-        \draw (\xsix,\yc) node[right] {$\underline{V_{2,\crm}}$}%
-        to[short,-,i_=$\underline{I_{2,\crm}}$] (\xfive,\yc)%
-        to[short, -] (z jump.south)%
-        (z jump.north)%
-        to [short,-] (\xfour,\yc)%
-        to[short,-,i>_=$\underline{I_{\zrm}}$]  (\xztwop, \yc)%
-        to[generic,l=$\underline{Z_{2,\crm}}$] (\xztwom, \yc)%
-        to[short] (\xtransformerp,\yc)%
-        to[short] node[near start,above=0.25cm,circ] {} (TZ);%
-        \draw (16,\yzm) to[short,*-] (\xtransformerp,\yzm) to[short] (TZ);%
-        \draw (\xztwop, \yzm) to[open,v=$\underline{U_{\zrm}}$] (\xztwop, \yc);%
-        \draw (\xztwom, \yzm) to[open,v=$\underline{U_{0,\zrm}}$] (\xztwom, \yc);%
+  % Second winding (z)
+  \node at (16,\yc) [jump crossing,rotate=90](z jump) {};%
+  \pgfmathsetmacro{\ytmp}{0.5*(\yzp+\yzm)};%
+  \draw (\xsix,\yc) node[right] {$\underline{V_{2,\crm}}$}%
+  to[short,-,i_=$\underline{I_{2,\crm}}$] (\xfive,\yc)%
+  to[short, -] (z jump.south)%
+  (z jump.north)%
+  to [short,-] (\xfour,\yc)%
+  to[short,-,i>_=$\underline{I_{\zrm}}$]  (\xztwop, \yc)%
+  to[generic,l=$\underline{Z_{2,\crm}}$] (\xztwom, \yc)%
+  to[short] (\xtransformerp,\yc)%
+  to[short] node[near start,above=0.25cm,circ] {} (TZ);%
+  \draw (16,\yzm) to[short,*-] (\xtransformerp,\yzm) to[short] (TZ);%
+  \draw (\xztwop, \yzm) to[open,v=$\underline{U_{\zrm}}$] (\xztwop, \yc);%
+  \draw (\xztwom, \yzm) to[open,v=$\underline{U_{0,\zrm}}$] (\xztwom, \yc);%
 
-        % Close the yn
-        \draw (\xsix,\yn) node[right] {$\underline{V_{2,\nrm}}$}%
-        to[short,-,i_=$\underline{I_{2,\nrm}}$] (\xfive,\yn)%
-        to[short,-] (16,\yn)%
-        to[short,-] (16,\yzm)%
-        to[short,-] (z jump.west)%
-        (z jump.east)%
-        to[short,-] (16,\yym)%
-        to[short,-] (y jump.west)%
-        (y jump.east)%
-        to[short,-] (16,\yxm)%%
-        to[short,-] (\xtransformerp,\yxm)%
-        to[short] (TX);%
-    \end{tikzpicture}
+  % Close the yn
+  \draw (\xsix,\yn) node[right] {$\underline{V_{2,\nrm}}$}%
+  to[short,-,i_=$\underline{I_{2,\nrm}}$] (\xfive,\yn)%
+  to[short,-] (16,\yn)%
+  to[short,-] (16,\yzm)%
+  to[short,-] (z jump.west)%
+  (z jump.east)%
+  to[short,-] (16,\yym)%
+  to[short,-] (y jump.west)%
+  (y jump.east)%
+  to[short,-] (16,\yxm)%%
+  to[short,-] (\xtransformerp,\yxm)%
+  to[short] (TX);%
+\end{tikzpicture}
 \end{document}
 % Local Variables:
 % mode: latex
@@ -197,6 +197,6 @@
 % TeX-source-correlate-method-active: synctex
 % ispell-local-dictionary: "british"
 % coding: utf-8
-% LaTeX-indent-level: 4
-% fill-column: 100
+% LaTeX-indent-level: 2
+% fill-column: 120
 % End:

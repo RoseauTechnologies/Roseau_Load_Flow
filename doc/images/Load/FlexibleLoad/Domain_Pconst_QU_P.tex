@@ -1,18 +1,18 @@
 \input{Preambule}%
 
 \begin{document}
-    \begin{tikzpicture}[%
-        show background rectangle,%
-        tight background,%
-        background rectangle/.style={fill=white}%
-    ]
-        \input{Load/FlexibleLoad/Domain_Common.tikz}%
+\begin{tikzpicture}[%
+    show background rectangle,%
+    tight background,%
+    background rectangle/.style={fill=white}%
+  ]
+  \input{Load/FlexibleLoad/Domain_Common.tex}%
 
-        % The domain is a segment
-        \draw[domaine] (\pthvaleur,-\qthmaxvaleur) -- (\pthvaleur,\qthmaxvaleur);%
+  % The domain is a segment
+  \draw[domaine] (\pthvaleur,-\qthmaxvaleur) -- (\pthvaleur,\qthmaxvaleur);%
 
-        \pic[domaine] at (\pthvaleur,\qthvaleur) {point};%
-    \end{tikzpicture}
+  \pic[domaine] at (\pthvaleur,\qthvaleur) {point};%
+\end{tikzpicture}
 \end{document}
 % Local Variables:
 % mode: latex
@@ -20,6 +20,6 @@
 % TeX-source-correlate-method-active: synctex
 % ispell-local-dictionary: "british"
 % coding: utf-8
-% LaTeX-indent-level: 4
-% fill-column: 100
+% LaTeX-indent-level: 2
+% fill-column: 120
 % End:

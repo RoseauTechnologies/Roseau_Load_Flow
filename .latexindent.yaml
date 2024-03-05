@@ -1,0 +1,46 @@
+defaultIndent: "  "
+
+maxNumberOfBackUps: 0
+onlyOneBackUp: 1
+backupExtension: .tex.bak
+
+removeTrailingWhitespace:
+  beforeProcessing: 0
+  afterProcessing: 1
+
+indentAfterItems:
+  itemize: 1
+  enumerate: 1
+  description: 1
+  list: 1
+
+noAdditionalIndentGlobal:
+  keyEqualsValuesBracesBrackets: 1
+
+indentAfterHeadings:
+  section:
+    indentAfterThisHeading: 1
+    level: 2
+  subsection:
+    indentAfterThisHeading: 1
+    level: 4
+  subsection*:
+    indentAfterThisHeading: 1
+    level: 4
+  subsubsection:
+    indentAfterThisHeading: 1
+    level: 6
+
+indentRules:
+  chapter: "  "
+  section: "  "
+  item: "  "
+
+modifyLineBreaks:
+  textWrapOptions:
+    columns: 120
+  environments:
+    BeginStartsOnOwnLine: 1
+    BodyStartsOnOwnLine: 1
+    EndStartsOnOwnLine: 1
+    EndFinishesWithLineBreak: 1

@@ -1,23 +1,23 @@
 \input{Preambule}%
 
 \begin{document}
-    \begin{tikzpicture}[%
-        show background rectangle,%
-        tight background,%
-        background rectangle/.style={fill=white}%
-    ]
-        \input{Load/FlexibleLoad/Domain_Common.tikz}%
+\begin{tikzpicture}[%
+    show background rectangle,%
+    tight background,%
+    background rectangle/.style={fill=white}%
+  ]
+  \input{Load/FlexibleLoad/Domain_Common.tex}%
 
-        % The domain is a segment with two arc circle
-        \draw[domaine] (-\angeuclthvaleur:\r) arc[start angle=-\angeuclthvaleur, end
-        angle=-\angthvaleur, radius=\r] -- (\pthvaleur,\qthmaxvaleur) arc [start angle=\angthvaleur, end
-        angle=\angeuclthvaleur, radius=\r];%
+  % The domain is a segment with two arc circle
+  \draw[domaine] (-\angeuclthvaleur:\r) arc[start angle=-\angeuclthvaleur, end
+      angle=-\angthvaleur, radius=\r] -- (\pthvaleur,\qthmaxvaleur) arc [start angle=\angthvaleur, end
+      angle=\angeuclthvaleur, radius=\r];%
 
-        \pic[domaine] at (\pthvaleur,\qthvaleur) {point};%
+  \pic[domaine] at (\pthvaleur,\qthvaleur) {point};%
 
-        \draw[dashed] (0,0) -- (\pthvaleur,\r);%
-        \draw[dashed] (0,0) -- (\pthvaleur,-\r);%
-    \end{tikzpicture}
+  \draw[dashed] (0,0) -- (\pthvaleur,\r);%
+  \draw[dashed] (0,0) -- (\pthvaleur,-\r);%
+\end{tikzpicture}
 \end{document}
 % Local Variables:
 % mode: latex
@@ -25,6 +25,6 @@
 % TeX-source-correlate-method-active: synctex
 % ispell-local-dictionary: "british"
 % coding: utf-8
-% LaTeX-indent-level: 4
-% fill-column: 100
+% LaTeX-indent-level: 2
+% fill-column: 120
 % End:

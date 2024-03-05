@@ -1,19 +1,19 @@
 \input{Preambule}%
 
 \begin{document}
-    \begin{tikzpicture}[%
-        show background rectangle,%
-        tight background,%
-        background rectangle/.style={fill=white}%
-    ]
-        \input{Load/FlexibleLoad/Domain_Common.tikz}%
+\begin{tikzpicture}[%
+    show background rectangle,%
+    tight background,%
+    background rectangle/.style={fill=white}%
+  ]
+  \input{Load/FlexibleLoad/Domain_Common.tex}%
 
-        % The domain is a prtion of the circle
-        \filldraw[domaine hache] (0,-\r) arc[start angle=-90, end angle=-\angthvaleur, radius=\r] --
-        (\pthvaleur, \qthmaxvaleur) arc[start angle=\angthvaleur, end angle=90, radius=\r] --cycle;%
+  % The domain is a prtion of the circle
+  \filldraw[domaine hache] (0,-\r) arc[start angle=-90, end angle=-\angthvaleur, radius=\r] --
+  (\pthvaleur, \qthmaxvaleur) arc[start angle=\angthvaleur, end angle=90, radius=\r] --cycle;%
 
-        \pic[domaine] at (\pthvaleur,\qthvaleur) {point};%
-    \end{tikzpicture}
+  \pic[domaine] at (\pthvaleur,\qthvaleur) {point};%
+\end{tikzpicture}
 \end{document}
 % Local Variables:
 % mode: latex
@@ -21,6 +21,6 @@
 % TeX-source-correlate-method-active: synctex
 % ispell-local-dictionary: "british"
 % coding: utf-8
-% LaTeX-indent-level: 4
-% fill-column: 100
+% LaTeX-indent-level: 2
+% fill-column: 120
 % End:
