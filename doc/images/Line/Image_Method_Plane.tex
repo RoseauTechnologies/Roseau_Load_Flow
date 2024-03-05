@@ -1,37 +1,37 @@
 \input{Preambule}%
 
 \begin{document}
-    \ctikzset{european, straight voltages, cute inductors}%
-    \begin{tikzpicture}[%
-        show background rectangle,%
-        tight background,%
-        background rectangle/.style={fill=white}%
-    ]
-        \tikzset{%
-            wire/.pic={%
-            \fill[RoseauBlue, draw=black] (0,0) circle[radius=0.3];%
-            }%
-        }%
+\ctikzset{european, straight voltages, cute inductors}%
+\begin{tikzpicture}[%
+    show background rectangle,%
+    tight background,%
+    background rectangle/.style={fill=white}%
+  ]
+  \tikzset{%
+    wire/.pic={%
+      \fill[RoseauBlue, draw=black] (0,0) circle[radius=0.3];%
+    }%
+  }%
 
-        % Ground
-        \draw[thick] (-5,0) -- (5,0) node[right] {Ground};%
+  % Ground
+  \draw[thick] (-5,0) -- (5,0) node[right] {Ground};%
 
-        % Wires
-        \path (-4,5) coordinate (w1) pic {wire} node[above=0.3] {1};%
-        \path (0,5) coordinate (w2) pic {wire} node[above=0.3] {2};%
-        \path (4,5) coordinate (w3) pic {wire} node[above=0.3] {3};%
+  % Wires
+  \path (-4,5) coordinate (w1) pic {wire} node[above=0.3] {1};%
+  \path (0,5) coordinate (w2) pic {wire} node[above=0.3] {2};%
+  \path (4,5) coordinate (w3) pic {wire} node[above=0.3] {3};%
 
-        % Images
-        \path (-4,-5) coordinate (w1p) pic {wire} node[above=0.3] {1'};%
-        \path (0,-5) coordinate (w2p) pic {wire} node[above=0.3] {2'};%
-        \path (4,-5) coordinate (w3p) pic {wire} node[above right=0.3] {3'};%
+  % Images
+  \path (-4,-5) coordinate (w1p) pic {wire} node[above=0.3] {1'};%
+  \path (0,-5) coordinate (w2p) pic {wire} node[above=0.3] {2'};%
+  \path (4,-5) coordinate (w3p) pic {wire} node[above right=0.3] {3'};%
 
-        % Distances
-        \draw[{Latex[]}-{Latex[]}] (w1) -- (w1 |- {(0,0)}) node[midway,left] {$h$};%
-        \draw[{Latex[]}-{Latex[]}] (w1) -- (w2) node[midway,above] {$D_{12}$};%
-        \draw[{Latex[]}-{Latex[]}] (w1) -- (w2p) node[pos=0.4,right] {$D'_{12}$};%
-        \draw[{Latex[]}-{Latex[]}] (w3) -- (w3p) node[pos=0.4,right] {$D'_{3}$};%
-    \end{tikzpicture}
+  % Distances
+  \draw[{Latex[]}-{Latex[]}] (w1) -- (w1 |- {(0,0)}) node[midway,left] {$h$};%
+  \draw[{Latex[]}-{Latex[]}] (w1) -- (w2) node[midway,above] {$D_{12}$};%
+  \draw[{Latex[]}-{Latex[]}] (w1) -- (w2p) node[pos=0.4,right] {$D'_{12}$};%
+  \draw[{Latex[]}-{Latex[]}] (w3) -- (w3p) node[pos=0.4,right] {$D'_{3}$};%
+\end{tikzpicture}
 \end{document}
 % Local Variables:
 % mode: latex
@@ -39,6 +39,6 @@
 % TeX-source-correlate-method-active: synctex
 % ispell-local-dictionary: "british"
 % coding: utf-8
-% LaTeX-indent-level: 4
+% LaTeX-indent-level: 2
 % fill-column: 120
 % End:

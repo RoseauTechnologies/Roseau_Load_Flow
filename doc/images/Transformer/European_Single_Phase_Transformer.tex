@@ -1,69 +1,69 @@
 \input{Preambule}%
 
 \begin{document}
-\ctikzset{european, straight voltages, cute inductors, bipoles/length=1cm}%
+\ctikzset{european, straight voltages, cute inductors, bipoles/length=1cm, voltage shift=0.5mm}%
 \begin{tikzpicture}[%
     show background rectangle,%
     tight background,%
     background rectangle/.style={fill=white}%
-    ]
-    % Version multifilaire
+  ]
+  % Version multifilaire
 
-    %
-    % Définitions
-    %
-    % No European transformer in circuitikz [BV, 17/07/2023]
-    \tikzset{
-        transformer/.pic={
-            \draw (-0.2,0) circle[radius=0.4] (0.2,0) circle[radius=0.4];
-        },
-    }
-    \pgfmathsetmacro{\xl}{0};%
-    \pgfmathsetmacro{\xy}{1.75};%
-    \pgfmathsetmacro{\xlt}{2.5};%
-    \pgfmathsetmacro{\xrt}{4.5};%
-    \pgfmathsetmacro{\xz}{6};%
-    \pgfmathsetmacro{\xm}{7.5};%
-    \pgfmathsetmacro{\xtransformer}{0.5*(\xlt+\xrt)};%
-    \pgfmathsetmacro{\xtransformerm}{\xtransformer-1};%
-    \pgfmathsetmacro{\xtransformerp}{\xtransformer+1};%
+  %
+  % Définitions
+  %
+  % No European transformer in circuitikz [BV, 17/07/2023]
+  \tikzset{
+    transformer/.pic={
+      \draw (-0.2,0) circle[radius=0.4] (0.2,0) circle[radius=0.4];
+    },
+  }
+  \pgfmathsetmacro{\xl}{0};%
+  \pgfmathsetmacro{\xy}{1.75};%
+  \pgfmathsetmacro{\xlt}{2.5};%
+  \pgfmathsetmacro{\xrt}{4.5};%
+  \pgfmathsetmacro{\xz}{6};%
+  \pgfmathsetmacro{\xm}{7.5};%
+  \pgfmathsetmacro{\xtransformer}{0.5*(\xlt+\xrt)};%
+  \pgfmathsetmacro{\xtransformerm}{\xtransformer-1};%
+  \pgfmathsetmacro{\xtransformerp}{\xtransformer+1};%
 
-    \pgfmathsetmacro{\yn}{0};%
-    \pgfmathsetmacro{\ya}{2};%
-    \pgfmathsetmacro{\yt}{0.5*(\ya+\yn)};%
+  \pgfmathsetmacro{\yn}{0};%
+  \pgfmathsetmacro{\ya}{2};%
+  \pgfmathsetmacro{\yt}{0.5*(\ya+\yn)};%
 
-    %
-    % Dessin
-    %
-    % Transformer
-    \pic[local bounding box=T] at (\xtransformer,\yt) {transformer};%
-    \node[above] at (T.north) {$k$};%
+  %
+  % Dessin
+  %
+  % Transformer
+  \pic[local bounding box=T] at (\xtransformer,\yt) {transformer};%
+  \node[above] at (T.north) {$k$};%
 
-    % Tensions amont
-    \node[left] at (\xl,\ya) {$\underline{V_{1,\arm}}$};
-    \node[left] at (\xl,\yn) {$\underline{V_{1,\nrm}}$};
+  % Tensions amont
+  \node[left] at (\xl,\ya) {$\underline{V_{1,\arm}}$};
+  \node[left] at (\xl,\yn) {$\underline{V_{1,\nrm}}$};
 
-    % Tensions aval
-    \node[right] at (\xm,\ya) {$\underline{V_{2,\arm}}$};
-    \node[right] at (\xm,\yn) {$\underline{V_{2,\nrm}}$};
+  % Tensions aval
+  \node[right] at (\xm,\ya) {$\underline{V_{2,\arm}}$};
+  \node[right] at (\xm,\yn) {$\underline{V_{2,\nrm}}$};
 
-    % Câbles principaux
-    % A
-    \draw (\xl,\ya) to[short,*-*,i=$\underline{I_{1,\arm}}$]
-    (\xy,\ya) to[short] (\xtransformerm,\ya) to[short] node[near start,above=0.25cm,circ] {} (T);%
-    \draw (\xtransformerp,\ya) to[short] node[near start,above=0.25cm,circ] {} (T);%
-    \draw (\xtransformerp,\ya) -- (\xrt,\ya) to [generic, l=$\underline{Z_2}$, -]
-    (\xz,\ya) to[short,-*,i<=$\underline{I_{2,\arm}}$] (\xm,\ya);%
+  % Câbles principaux
+  % A
+  \draw (\xl,\ya) to[short,*-*,i=$\underline{I_{1,\arm}}$]
+  (\xy,\ya) to[short] (\xtransformerm,\ya) to[short] node[near start,above=0.25cm,circ] {} (T);%
+  \draw (\xtransformerp,\ya) to[short] node[near start,above=0.25cm,circ] {} (T);%
+  \draw (\xtransformerp,\ya) -- (\xrt,\ya) to[generic, l=$\underline{Z_2}$, -]
+  (\xz,\ya) to[short,-*,i<=$\underline{I_{2,\arm}}$] (\xm,\ya);%
 
-    % Neutre
-    \draw (\xl,\yn) to[short,*-*,i=$\underline{I_{1,\nrm}}$]
-    (\xy,\yn) to[short] (\xtransformerm,\yn) to[short] (T);%
-    \draw (\xtransformerp,\yn) to[short] (T);%
-    \draw (\xtransformerp,\yn) -- (\xz,\yn) to[short,-*,i<=$\underline{I_{2,\nrm}}$] (\xm,\yn);%
+  % Neutre
+  \draw (\xl,\yn) to[short,*-*,i=$\underline{I_{1,\nrm}}$]
+  (\xy,\yn) to[short] (\xtransformerm,\yn) to[short] (T);%
+  \draw (\xtransformerp,\yn) to[short] (T);%
+  \draw (\xtransformerp,\yn) -- (\xz,\yn) to[short,-*,i<=$\underline{I_{2,\nrm}}$] (\xm,\yn);%
 
-    % Ym
-    \draw (\xy,\ya) to [generic, l=$\underline{Y_{\mathrm{m}}}$, v<=$\underline{U_{1,\arm}}$, -] (\xy,\yn);%
-    \draw (\xz,\ya) to [open, v<=$\underline{U_{2,\arm}}$] (\xz,\yn);%
+  % Ym
+  \draw (\xy,\ya) to[generic, l=$\underline{Y_{\mathrm{m}}}$, v<=$\underline{U_{1,\arm}}$, -] (\xy,\yn);%
+  \draw (\xz,\ya) to[open, v<=$\underline{U_{2,\arm}}$] (\xz,\yn);%
 
 \end{tikzpicture}
 \end{document}
@@ -71,9 +71,8 @@
 % mode: latex
 % TeX-engine: luatex
 % TeX-source-correlate-method-active: synctex
-% ispell-local-dictionary: "francais"
+% ispell-local-dictionary: "british"
 % coding: utf-8
-% TeX-master: "../../Manuscrit.tex"
-% LaTeX-indent-level: 4
-% compile-command: "make -k -C ../../"
+% LaTeX-indent-level: 2
+% fill-column: 120
 % End:

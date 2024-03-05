@@ -3,70 +3,68 @@
 \usetikzlibrary{patterns}%
 
 \begin{document}
-    \begin{tikzpicture}[%
-        show background rectangle,%
-        tight background,%
-        background rectangle/.style={fill=white}%
-    ]
-        \tikzset{%
-            point/.pic={%
-            \fill[black] (0,0) circle[radius=0.05];%
-            }%
-        }%
+\begin{tikzpicture}[%
+    show background rectangle,%
+    tight background,%
+    background rectangle/.style={fill=white}%
+  ]
+  \tikzset{%
+    point/.pic={%
+      \fill[black] (0,0) circle[radius=0.05];%
+    }%
+  }%
 
-        \begin{scope}[local bounding box=dessin]
-            %
-            % Terre
-            %
-            \filldraw[pattern=north west lines] (-5,-5) rectangle (5,5);%
-            \filldraw[fill=white,draw=black] (0, 0) circle[radius=4.5];%
+  \begin{scope}[local bounding box=dessin]
+    %
+    % Terre
+    %
+    \filldraw[pattern=north west lines] (-5,-5) rectangle (5,5);%
+    \filldraw[fill=white,draw=black] (0, 0) circle[radius=4.5];%
 
-            %
-            % Conducteurs
-            %
-            \coordinate (wire center) at (0,-1);%
-            \path[fill=RoseauGrey, draw=black] (wire center) pic {point} circle[radius=3.5];%
+    %
+    % Conducteurs
+    %
+    \coordinate (wire center) at (0,-1);%
+    \path[fill=RoseauGrey, draw=black] (wire center) pic {point} circle[radius=3.5];%
 
-            % Neutre
-            \path (wire center) ++(135:1.75) coordinate (n center);%
-            \draw[pattern=north east lines, pattern color=red, preaction={fill, white}]%
-            (n center) circle[radius=0.90];%
-            \node[shape=circle, draw, fill=white] (n center node) at (n center) {$\nrm$};%
+    % Neutre
+    \path (wire center) ++(135:1.75) coordinate (n center);%
+    \draw[pattern=north east lines, pattern color=red, preaction={fill, white}]%
+    (n center) circle[radius=0.90];%
+    \node[shape=circle, draw, fill=white] (n center node) at (n center) {$\nrm$};%
 
+    % Phases
+    \foreach \x/\y/\z in {a/-135/$\arm$,b/-45/$\brm$,c/45/$\crm$} {%
+        \path (wire center) ++(\y:1.75) coordinate (\x\space center);%
+        \draw[pattern=north east lines, pattern color=RoseauGreen, preaction={fill, white}] %
+        (\x\space center) circle[radius=1.1];%
+        \node[shape=circle, draw, fill=white] at (\x\space center) {\z};%
+      }%
 
-            % Phases
-            \foreach \x/\y/\z in {a/-135/$\arm$,b/-45/$\brm$,c/45/$\crm$} {%
-                \path (wire center) ++(\y:1.75) coordinate (\x\space center);%
-                \draw[pattern=north east lines, pattern color=RoseauGreen, preaction={fill, white}] %
-                (\x\space center) circle[radius=1.1];%
-                \node[shape=circle, draw, fill=white] at (\x\space center) {\z};%
-            }%
+    % Hauteur
+    \coordinate (top height) at (5.5, 5);%
+    \draw[{Latex[]-Latex[]}] (wire center -| top height) -- (top height) node[midway, right] {$h$};
+    \draw[dashed] (5, 5) -- (top height);%
+    \draw[dashed] (wire center) -- (wire center -| top height);%
+  \end{scope}
 
-            % Hauteur
-            \coordinate (top height) at (5.5, 5);%
-            \draw[{Latex[]-Latex[]}] (wire center -| top height) -- (top height) node[midway, right] {$h$};
-            \draw[dashed] (5, 5) -- (top height);%
-            \draw[dashed] (wire center) -- (wire center -| top height);%
-        \end{scope}
-
-        % Légende
-        \path let \p1=($(dessin.north)!0.5!(dessin.south)$) in %
-        coordinate (ancre legende) at (7,\y1);%
-        \begin{scope}
-            [shift={(ancre legende)}, local bounding box=legende]
-            \path[pattern=north east lines, pattern color=red] (0, 2) circle[radius=0.25];%
-            \node[right] at (0.3, 2) {Neutral conductor};%
-            \path[pattern=north east lines, pattern color=RoseauGreen] (0, 1) circle[radius=0.25];%
-            \node[right] at (0.3, 1) {Phase conductor};%
-            \path[fill=RoseauGrey, draw=black] (0, 0) circle[radius=0.25];%
-            \node[right] at (0.3, 0) {Insulator};%
-            \filldraw[pattern=north west lines] (-0.25, -1.25) rectangle +(0.5, 0.5);%
-            \node[right] at (0.3, -1) {Ground};%
-            \node[shape=circle, draw, fill=white] at (0, -2) {$\arm$};%
-            \node[right] at (0.3, -2) {Identifier (phase or neutral)};%
-        \end{scope}
-        \draw ($(legende.south west)-(0.25,0.25)$) rectangle ($(legende.north east)+(0.25,0.25)$);%
-    \end{tikzpicture}
+  % Légende
+  \path let \p1=($(dessin.north)!0.5!(dessin.south)$) in %
+  coordinate (ancre legende) at (7,\y1);%
+  \begin{scope}[shift={(ancre legende)}, local bounding box=legende]
+    \path[pattern=north east lines, pattern color=red] (0, 2) circle[radius=0.25];%
+    \node[right] at (0.3, 2) {Neutral conductor};%
+    \path[pattern=north east lines, pattern color=RoseauGreen] (0, 1) circle[radius=0.25];%
+    \node[right] at (0.3, 1) {Phase conductor};%
+    \path[fill=RoseauGrey, draw=black] (0, 0) circle[radius=0.25];%
+    \node[right] at (0.3, 0) {Insulator};%
+    \filldraw[pattern=north west lines] (-0.25, -1.25) rectangle +(0.5, 0.5);%
+    \node[right] at (0.3, -1) {Ground};%
+    \node[shape=circle, draw, fill=white] at (0, -2) {$\arm$};%
+    \node[right] at (0.3, -2) {Identifier (phase or neutral)};%
+  \end{scope}
+  \draw ($(legende.south west)-(0.25,0.25)$) rectangle ($(legende.north east)+(0.25,0.25)$);%
+\end{tikzpicture}
 \end{document}
 % Local Variables:
 % mode: latex
@@ -74,6 +72,6 @@
 % TeX-source-correlate-method-active: synctex
 % ispell-local-dictionary: "british"
 % coding: utf-8
-% LaTeX-indent-level: 4
+% LaTeX-indent-level: 2
 % fill-column: 120
 % End:

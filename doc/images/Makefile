@@ -10,7 +10,7 @@ INPUT_FOLDER:=$(shell realpath .)
 OUTPUT_FOLDER:=$(shell realpath ../_static/)
 
 # Files
-TEX_FILES:=$(filter-out Preambule.tex, $(shell find . -name '*.tex' -type f | sed -r 's/^\.\///'))
+TEX_FILES:=$(filter-out Preambule.tex Load/FlexibleLoad/Domain_Common.tex Transformer/Windings_Common.tex, $(shell find . -name '*.tex' -type f | sed -r 's/^\.\///'))
 PDF_FILES:=$(TEX_FILES:%.tex=%.pdf)
 SVG_FILES:=$(TEX_FILES:%.tex=$(OUTPUT_FOLDER)/%.svg)
 AUX_FILES:=$(shell find $(OUTPUT_FOLDER) -name '*.aux' -type f | sed -r 's/^\.\///')
@@ -22,8 +22,8 @@ LOG_FILES:=$(shell find $(OUTPUT_FOLDER) -name '*.log' -type f | sed -r 's/^\.\/
 
 all: | checks $(SVG_FILES)
 
-$(OUTPUT_FOLDER)/Domain_%.svg: $(INPUT_FOLDER)/Load/FlexibleLoad/Domain_%.tex $(INPUT_FOLDER)/Load/FlexibleLoad/Domain_Common.tikz Preambule.tex
-$(OUTPUT_FOLDER)/Transformer/Winding%.svg: $(INPUT_FOLDER)/Transformer/Winding%.tex $(INPUT_FOLDER)/Transformer/Windings_Common.tikz Preambule.tex
+$(OUTPUT_FOLDER)/Domain_%.svg: $(INPUT_FOLDER)/Load/FlexibleLoad/Domain_%.tex $(INPUT_FOLDER)/Load/FlexibleLoad/Domain_Common.tex Preambule.tex
+$(OUTPUT_FOLDER)/Transformer/Winding%.svg: $(INPUT_FOLDER)/Transformer/Winding%.tex $(INPUT_FOLDER)/Transformer/Windings_Common.tex Preambule.tex
 $(OUTPUT_FOLDER)/Load/FlexibleLoad/%_Control_Curve_Example.svg: $(INPUT_FOLDER)/Load/FlexibleLoad/%_Control_Curve_Example.tex $(INPUT_FOLDER)/Load/FlexibleLoad/%_Example.csv Preambule.tex
 $(OUTPUT_FOLDER)/Load/FlexibleLoad/%_Trajectory_Example.svg: $(INPUT_FOLDER)/Load/FlexibleLoad/%_Trajectory_Example.tex $(INPUT_FOLDER)/Load/FlexibleLoad/%_Example.csv Preambule.tex
 $(OUTPUT_FOLDER)/%.svg: %.tex Preambule.tex
