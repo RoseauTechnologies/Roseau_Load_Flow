@@ -1153,12 +1153,13 @@ class FlexibleParameter(JsonMixin):
         if ax is None:
             ax = plt.gca()
 
+        voltages = np.array(voltages, dtype=np.float64)
+
         # Initialise some variables
         if voltages_labels_mask is None:
             voltages_labels_mask = np.zeros_like(voltages, dtype=np.bool_)
         else:
             voltages_labels_mask = np.array(voltages_labels_mask, dtype=np.bool_)
-        voltages = np.array(voltages, dtype=np.float64)
         s_max = self._s_max
         v_min = voltages.min()
         v_max = voltages.max()
