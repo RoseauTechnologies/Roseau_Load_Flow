@@ -15,6 +15,8 @@ myst:
 
 ## Unreleased
 
+- {gh-pr}`196` {gh-issue}`194` Improve the error message when accessing `res_flexible_powers` on a non-flexible load
+  and relax the flexible parameters plotting methods to accept an array-like of voltages.
 - {gh-pr}`195` Use `latexindent.pl` to automatically indent LaTeX files in the documentation.
 - {gh-pr}`192` Speed up results access by up to 3x using several optimization techniques. This is especially
   noticeable in timeseries simulations and when accessing results of large networks.

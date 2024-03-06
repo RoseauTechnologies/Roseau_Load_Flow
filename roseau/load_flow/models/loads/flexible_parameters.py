@@ -1,13 +1,20 @@
 import logging
 import warnings
-from typing import TYPE_CHECKING, NoReturn, Optional
+from typing import TYPE_CHECKING, NoReturn
 
 import numpy as np
 from numpy.typing import NDArray
 from typing_extensions import Self
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
-from roseau.load_flow.typing import ComplexArray, ComplexArrayLike1D, ControlType, JsonDict, ProjectionType
+from roseau.load_flow.typing import (
+    ComplexArray,
+    ComplexArrayLike1D,
+    ControlType,
+    FloatArrayLike1D,
+    JsonDict,
+    ProjectionType,
+)
 from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow.utils import JsonMixin, _optional_deps
 from roseau.load_flow_engine.cy_engine import CyControl, CyFlexibleParameter, CyProjection
@@ -1104,12 +1111,9 @@ class FlexibleParameter(JsonMixin):
         Returns:
             The flexible powers really consumed taking into account the control. One value per provided voltage norm.
         """
-        return self._compute_powers(voltages=voltages, power=power)
+        return self._compute_powers(voltages=np.abs(np.array(voltages, dtype=complex)), power=power)
 
-    def _compute_powers(self, voltages: ComplexArrayLike1D, power: complex) -> ComplexArray:
-        # Format the input
-        voltages = np.array(np.abs(voltages), dtype=float)
-
+    def _compute_powers(self, voltages: FloatArrayLike1D, power: complex) -> ComplexArray:
         # Iterate over the provided voltages to get the associated flexible powers
         res_flexible_powers = [self._cy_fp.compute_power(v, power) for v in voltages]
         return np.array(res_flexible_powers, dtype=complex)
@@ -1117,9 +1121,9 @@ class FlexibleParameter(JsonMixin):
     @ureg_wraps((None, "VA"), (None, "V", "VA", None, None))
     def plot_pq(
         self,
-        voltages: NDArray[np.float64] | Q_[NDArray[np.float64]],
+        voltages: FloatArrayLike1D,
         power: complex | Q_[complex],
-        ax: Optional["Axes"] = None,
+        ax: "Axes | None" = None,
         voltages_labels_mask: NDArray[np.bool_] | None = None,
     ) -> tuple["Axes", ComplexArray]:
         """Plot the "trajectory" of the flexible powers (in the (P, Q) plane) for the provided voltages and theoretical
@@ -1127,7 +1131,7 @@ class FlexibleParameter(JsonMixin):
 
         Args:
             voltages:
-                The array of voltage norms to test with this flexible parameter.
+                Array-like of voltage norms to test with this flexible parameter.
 
             power:
                 The input theoretical power of the load.
@@ -1148,6 +1152,8 @@ class FlexibleParameter(JsonMixin):
         # Get the axes
         if ax is None:
             ax = plt.gca()
+
+        voltages = np.array(voltages, dtype=np.float64)
 
         # Initialise some variables
         if voltages_labels_mask is None:
@@ -1216,16 +1222,13 @@ class FlexibleParameter(JsonMixin):
 
     @ureg_wraps((None, "VA"), (None, "V", "VA", None))
     def plot_control_p(
-        self,
-        voltages: NDArray[np.float64] | Q_[NDArray[np.float64]],
-        power: complex | Q_[complex],
-        ax: Optional["Axes"] = None,
+        self, voltages: FloatArrayLike1D, power: complex | Q_[complex], ax: "Axes | None" = None
     ) -> tuple["Axes", ComplexArray]:
         """Plot the flexible active power consumed (or produced) for the provided voltages and theoretical power.
 
         Args:
             voltages:
-                The array of voltage norms to test with this flexible parameter.
+                Array-like of voltage norms to test with this flexible parameter.
 
             power:
                 The input theoretical power of the load.
@@ -1242,6 +1245,8 @@ class FlexibleParameter(JsonMixin):
         # Get the axes
         if ax is None:
             ax = plt.gca()
+
+        voltages = np.array(voltages, dtype=np.float64)
 
         # Depending on the type of the control, several options
         x, y, x_ticks = self._theoretical_control_data(
@@ -1267,16 +1272,13 @@ class FlexibleParameter(JsonMixin):
 
     @ureg_wraps((None, "VA"), (None, "V", "VA", None))
     def plot_control_q(
-        self,
-        voltages: NDArray[np.float64] | Q_[NDArray[np.float64]],
-        power: complex | Q_[complex],
-        ax: Optional["Axes"] = None,
+        self, voltages: FloatArrayLike1D, power: complex | Q_[complex], ax: "Axes | None" = None
     ) -> tuple["Axes", ComplexArray]:
         """Plot the flexible reactive power consumed (or produced) for the provided voltages and theoretical power.
 
         Args:
             voltages:
-                The array of voltage norms to test with this flexible parameter.
+                Array-like of voltage norms to test with this flexible parameter.
 
             power:
                 The input theoretical power of the load.
@@ -1293,6 +1295,8 @@ class FlexibleParameter(JsonMixin):
         # Get the axes
         if ax is None:
             ax = plt.gca()
+
+        voltages = np.array(voltages, dtype=np.float64)
 
         # Depending on the type of the control, several options
         x, y, x_ticks = self._theoretical_control_data(
