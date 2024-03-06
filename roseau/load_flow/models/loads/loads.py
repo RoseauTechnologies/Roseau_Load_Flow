@@ -162,7 +162,7 @@ class AbstractLoad(Element, ABC):
     @property
     @ureg_wraps("VA", (None,))
     def res_powers(self) -> Q_[ComplexArray]:
-        """The load flow result of the load powers (VA)."""
+        """The load flow result of the "line powers" flowing into the load (VA)."""
         return self._res_powers_getter(warning=True)
 
     def _cy_connect(self):
@@ -374,7 +374,19 @@ class PowerLoad(AbstractLoad):
     @property
     @ureg_wraps("VA", (None,))
     def res_flexible_powers(self) -> Q_[ComplexArray]:
-        """The load flow result of the load flexible powers (VA)."""
+        """The load flow result of the load flexible powers (VA).
+
+        This property is only available for flexible loads.
+
+        It returns the powers actually consumed or produced by each component of the load instead
+        of the "line powers" flowing into the load connection points (as the :meth:`res_powers`
+        property does). The two properties are the same for Wye-connected loads but are different
+        for Delta-connected loads.
+        """
+        if not self.is_flexible:
+            msg = f"The load {self.id!r} is not flexible and does not have flexible powers"
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LOAD_TYPE)
         return self._res_flexible_powers_getter(warning=True)
 
     #

@@ -661,3 +661,14 @@ def test_load_voltages(bus_ph, load_ph, bus_vph, load_vph):
 
     assert load.voltage_phases == load_vph
     assert len(load.res_voltages) == len(load.voltage_phases)
+
+
+def test_non_flexible_load_res_flexible_powers():
+    bus = Bus("bus", phases="an")
+    load = PowerLoad("load", bus, powers=[2300], phases="an")
+    bus._res_potentials = np.array([230, 0], dtype=complex)
+    load._res_currents = np.array([10, -10], dtype=complex)
+    with pytest.raises(RoseauLoadFlowException) as e:
+        _ = load.res_flexible_powers
+    assert e.value.msg == "The load 'load' is not flexible and does not have flexible powers"
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_LOAD_TYPE

@@ -47,6 +47,11 @@ Type Aliases used by Roseau Load Flow.
 
     A 2D array-like of complex numbers or a quantity of complex numbers. An array-like is a
     sequence or a numpy array.
+
+.. class:: FloatArrayLike1D
+
+    A 1D array-like of floating numbers or a quantity of floating numbers. An array-like is a
+    sequence or a numpy array.
 """
 
 import os
@@ -75,7 +80,9 @@ ComplexArrayLike1D: TypeAlias = (
 ComplexArrayLike2D: TypeAlias = (
     ComplexArray | Q_[ComplexArray] | Q_[Sequence[Sequence[complex]]] | Sequence[Sequence[complex | Q_[complex]]]
 )
-
+FloatArrayLike1D: TypeAlias = (
+    NDArray[np.float64] | Q_[NDArray[np.float64]] | Q_[Sequence[float]] | Sequence[float | Q_[float]]
+)
 
 __all__ = [
     "Id",
@@ -88,4 +95,5 @@ __all__ = [
     "ComplexArray",
     "ComplexArrayLike1D",
     "ComplexArrayLike2D",
+    "FloatArrayLike1D",
 ]
