@@ -69,7 +69,7 @@ Then, $\underline{Y_{\mathrm{m}}}$ can be deduced:
 ```{math}
 \underline{Y_{\mathrm{m}}} = \left\{
     \begin{aligned}
-        \frac{1}{R_{\mathrm{iron}}+j\omega L_{\mathrm{m}}} & \qquad \text{if } i_0\cdot S_{\mathrm{nom.}} > P_0 \\
+        \frac{1}{R_{\mathrm{iron}}} + \frac{1}{j\omega L_{\mathrm{m}}} & \qquad \text{if } S_0 > P_0 \\
         \frac{1}{R_{\mathrm{iron}}} & \qquad \text{otherwise}
     \end{aligned}
 \right.
