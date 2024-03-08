@@ -60,7 +60,7 @@ this test. The following values can be computed:
     S_0 &= U_0\cdot i_1^0 = U_{1,\mathrm{nom.}}\cdot (i_0\cdot i_{1,\mathrm{nom.}}) = i_0\cdot S_{\mathrm{nom.}}
       \qquad \text{(in VA)}\\
     R_{\mathrm{iron}} &= \dfrac{U_{1,\mathrm{nom.}}^2}{P_0} \qquad \text{(in Ohm)}\\
-    L_{\mathrm{m}} &= \dfrac{U_{1,\mathrm{nom.}}}{\omega\sqrt{S_0^2-P_0^2}} \text{(in H)}
+    L_{\mathrm{m}} &= \dfrac{U_{1,\mathrm{nom.}}^2}{\omega\sqrt{S_0^2-P_0^2}} \text{(in H)}
 \end{aligned}
 ```
 

@@ -223,12 +223,20 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
 
     def _to_zyk(self) -> tuple[complex, complex, float, float]:
         """Compute the transformer parameters ``z2``, ``ym``, ``k`` and ``orientation``."""
+        is_three_phase = self.type not in ("single", "center")
+        i0 = self._i0
+        p0 = self._p0
+        if is_three_phase:
+            i0 /= 3
+            p0 /= 3
+
         # Off-load test
         # Iron losses resistance (Ohm)
-        r_iron = self._uhv**2 / self._p0
+        r_iron = self._uhv**2 / p0
         # Magnetizing inductance (Henry) * omega (rad/s)
-        if self._i0 * self._sn > self._p0:
-            lm_omega = self._uhv**2 / (np.sqrt((self._i0 * self._sn) ** 2 - self._p0**2))
+        s0 = i0 * self._sn
+        if s0 > p0:
+            lm_omega = self._uhv**2 / np.sqrt(s0**2 - p0**2)
             ym = 1 / r_iron + 1 / (1j * lm_omega)
         else:
             ym = 1 / r_iron
@@ -241,9 +249,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         # Change the voltages if the reference voltages is phase to neutral
         uhv = self._uhv
         ulv = self._ulv
-        if self.type == "single" or self.type == "center":
-            orientation = 1.0
-        else:
+        if is_three_phase:
             # Extract the windings of the primary and the secondary of the transformer
             if self.winding1[0] in ("y", "Y"):
                 uhv /= np.sqrt(3.0)
@@ -258,6 +264,8 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             else:  # Reverse winding
                 assert self.phase_displacement in (5, 6)
                 orientation = -1.0
+        else:
+            orientation = 1.0
 
         return z2, ym, ulv / uhv, orientation
 
