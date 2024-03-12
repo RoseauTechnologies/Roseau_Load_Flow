@@ -1,4 +1,3 @@
-import json
 import logging
 import re
 from importlib import resources
@@ -456,21 +455,17 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
 
         # A single one has been chosen
         idx = catalogue_data.index[0]
-        manufacturer = str(catalogue_data.at[idx, "manufacturer"])
-        range = str(catalogue_data.at[idx, "range"])
-        efficiency = str(catalogue_data.at[idx, "efficiency"])
-        nominal_power = int(catalogue_data.at[idx, "sn"] / 1000)
-
-        # Get the data from the Json file
-        path = cls.catalogue_path() / manufacturer / range / efficiency / f"{nominal_power}.json"
-        try:
-            json_dict = json.loads(path.read_text())
-        except FileNotFoundError:
-            msg = f"The file {path} has not been found while it should exist. Please post an issue on GitHub."
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.CATALOGUE_MISSING) from None
-
-        return cls.from_dict(json_dict)
+        return cls(
+            id=catalogue_data.at[idx, "id"],
+            type=catalogue_data.at[idx, "type"],
+            uhv=catalogue_data.at[idx, "uhv"],
+            ulv=catalogue_data.at[idx, "ulv"],
+            sn=catalogue_data.at[idx, "sn"],
+            p0=catalogue_data.at[idx, "p0"],
+            i0=catalogue_data.at[idx, "i0"],
+            psc=catalogue_data.at[idx, "psc"],
+            vsc=catalogue_data.at[idx, "vsc"],
+        )
 
     @classmethod
     @ureg_wraps(None, (None, None, None, None, None, None, "VA", "V", "V"))

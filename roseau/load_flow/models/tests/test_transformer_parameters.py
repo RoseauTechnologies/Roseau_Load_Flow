@@ -329,37 +329,28 @@ def test_catalogue_data():
     assert catalogue_data["id"].is_unique, error_message
 
     catalogue_data.set_index("id", inplace=True)
-    catalogue_data["found"] = False
-    for p in catalogue_path.glob("**/*.json"):
-        # The file can be read
-        tp = TransformerParameters.from_json(p)
+    for idx in catalogue_data.index:
+        tp = TransformerParameters.from_catalogue(id=idx)
 
         # The entry of the catalogue has been found
         assert tp.id in catalogue_data.index, error_message
-        catalogue_data.at[tp.id, "found"] = True
 
         # Check the values are the same
-        manufacturer, range, efficiency, filename = p.relative_to(catalogue_path).parts
-        sn_kva = int(catalogue_data.at[tp.id, "sn"] / 1000)
-        assert tp.id == f"{manufacturer}_{range}_{efficiency}_{sn_kva}kVA"
         assert tp.type == catalogue_data.at[tp.id, "type"]
-        assert np.isclose(tp.uhv.m_as("V"), catalogue_data.at[tp.id, "uhv"])
-        assert np.isclose(tp.ulv.m_as("V"), catalogue_data.at[tp.id, "ulv"])
-        assert np.isclose(tp.sn.m_as("VA"), catalogue_data.at[tp.id, "sn"])
-        assert np.isclose(tp.p0.m_as("W"), catalogue_data.at[tp.id, "p0"])
-        assert np.isclose(tp.i0.m_as(""), catalogue_data.at[tp.id, "i0"])
-        assert np.isclose(tp.psc.m_as("W"), catalogue_data.at[tp.id, "psc"])
-        assert np.isclose(tp.vsc.m_as(""), catalogue_data.at[tp.id, "vsc"])
+        assert np.isclose(tp.uhv.m, catalogue_data.at[tp.id, "uhv"])
+        assert np.isclose(tp.ulv.m, catalogue_data.at[tp.id, "ulv"])
+        assert np.isclose(tp.sn.m, catalogue_data.at[tp.id, "sn"])
+        assert np.isclose(tp.p0.m, catalogue_data.at[tp.id, "p0"])
+        assert np.isclose(tp.i0.m, catalogue_data.at[tp.id, "i0"])
+        assert np.isclose(tp.psc.m, catalogue_data.at[tp.id, "psc"])
+        assert np.isclose(tp.vsc.m, catalogue_data.at[tp.id, "vsc"])
 
         # Check that the parameters are valid
         z, y, k, orientation = tp.to_zyk()
-        assert isinstance(z.m_as("ohm"), numbers.Number)
-        assert isinstance(y.m_as("S"), numbers.Number)
-        assert isinstance(k.m_as(""), numbers.Number)
+        assert isinstance(z.m, numbers.Complex)
+        assert isinstance(y.m, numbers.Complex)
+        assert isinstance(k.m, numbers.Real)
         assert orientation in (-1.0, 1.0)
-
-    # At the end of the process, the found column must be full of True
-    assert catalogue_data["found"].all(), error_message
 
 
 def test_from_catalogue():
