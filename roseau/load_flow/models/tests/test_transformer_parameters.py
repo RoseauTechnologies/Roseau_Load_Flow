@@ -38,8 +38,8 @@ def test_transformer_parameters():
     k_expected = 400 / (np.sqrt(3.0) * 20e3)
     orientation_expected = 1.0
 
-    assert np.isclose(z2.m_as("ohm"), z2_expected)
-    assert np.isclose(ym.m_as("S"), ym_expected)
+    assert np.isclose(z2.m, z2_expected)
+    assert np.isclose(ym.m, ym_expected)
     assert np.isclose(k, k_expected)
     assert np.isclose(orientation, orientation_expected)
 
@@ -57,8 +57,8 @@ def test_transformer_parameters():
     }
     tp = TransformerParameters.from_dict(data)
     z2, ym, k, orientation = tp.to_zyk()
-    r_iron = 20e3**2 / 210  # Ohm
-    lm_omega = 20e3**2 / (np.sqrt((3.5 / 100 * 100e3) ** 2 - 210**2))  # H*rad/s
+    r_iron = 3 * 20e3**2 / 210  # Ohm
+    lm_omega = 3 * 20e3**2 / (np.sqrt((3.5 / 100 * 100e3) ** 2 - 210**2))  # H*rad/s
     z2_norm = 4 / 100 * 400**2 / 100e3
     r2 = 2150 * 400**2 / 100e3**2  # Ohm
     l2_omega = np.sqrt(z2_norm**2 - r2**2)  # H*rad/s
@@ -68,8 +68,8 @@ def test_transformer_parameters():
     k_expected = (400 / np.sqrt(3)) / 20e3
     orientation_expected = 1.0
 
-    assert np.isclose(z2.m_as("ohm"), z2_expected)
-    assert np.isclose(ym.m_as("S"), ym_expected)
+    assert np.isclose(z2.m, z2_expected)
+    assert np.isclose(ym.m, ym_expected)
     assert np.isclose(k, k_expected)
     assert np.isclose(orientation, orientation_expected)
 
@@ -87,8 +87,8 @@ def test_transformer_parameters():
     }
     tp = TransformerParameters.from_dict(data)
     z2, ym, k, orientation = tp.to_zyk()
-    r_iron = 20e3**2 / 460  # Ohm
-    lm_omega = 20e3**2 / (np.sqrt((5.6 / 100 * 160e3) ** 2 - 460**2))  # H*rad/s
+    r_iron = 3 * 20e3**2 / 460  # Ohm
+    lm_omega = 3 * 20e3**2 / (np.sqrt((5.6 / 100 * 160e3) ** 2 - 460**2))  # H*rad/s
     z2_norm = 4 / 100 * 400**2 / 160e3
     r2 = 2350 * 400**2 / 160e3**2  # Ohm
     l2_omega = np.sqrt(z2_norm**2 - r2**2)  # H*rad/s
@@ -98,8 +98,8 @@ def test_transformer_parameters():
     k_expected = 400 / np.sqrt(3) / 20e3
     orientation_expected = -1.0
 
-    assert np.isclose(z2.m_as("ohm"), z2_expected)
-    assert np.isclose(ym.m_as("S"), ym_expected)
+    assert np.isclose(z2.m, z2_expected)
+    assert np.isclose(ym.m, ym_expected)
     assert np.isclose(k, k_expected)
     assert np.isclose(orientation, orientation_expected)
 

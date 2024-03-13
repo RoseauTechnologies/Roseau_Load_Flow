@@ -60,7 +60,7 @@ this test. The following values can be computed:
     S_0 &= U_0\cdot i_1^0 = U_{1,\mathrm{nom.}}\cdot (i_0\cdot i_{1,\mathrm{nom.}}) = i_0\cdot S_{\mathrm{nom.}}
       \qquad \text{(in VA)}\\
     R_{\mathrm{iron}} &= \dfrac{U_{1,\mathrm{nom.}}^2}{P_0} \qquad \text{(in Ohm)}\\
-    L_{\mathrm{m}} &= \dfrac{U_{1,\mathrm{nom.}}}{\omega\sqrt{S_0^2-P_0^2}} \text{(in H)}
+    L_{\mathrm{m}} &= \dfrac{U_{1,\mathrm{nom.}}^2}{\omega\sqrt{S_0^2-P_0^2}} \text{(in H)}
 \end{aligned}
 ```
 
@@ -69,7 +69,7 @@ Then, $\underline{Y_{\mathrm{m}}}$ can be deduced:
 ```{math}
 \underline{Y_{\mathrm{m}}} = \left\{
     \begin{aligned}
-        \frac{1}{R_{\mathrm{iron}}+j\omega L_{\mathrm{m}}} & \qquad \text{if } i_0\cdot S_{\mathrm{nom.}} > P_0 \\
+        \frac{1}{R_{\mathrm{iron}}} + \frac{1}{j\omega L_{\mathrm{m}}} & \qquad \text{if } S_0 > P_0 \\
         \frac{1}{R_{\mathrm{iron}}} & \qquad \text{otherwise}
     \end{aligned}
 \right.
