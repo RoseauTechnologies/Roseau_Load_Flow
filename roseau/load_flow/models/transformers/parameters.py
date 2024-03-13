@@ -343,7 +343,9 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         raise_if_not_found: bool,
     ) -> tuple[pd.DataFrame, str]:
         # Get the catalogue data
-        catalogue_data = cls.catalogue_data()
+        catalogue_data = cls.catalogue_data().drop(
+            columns=["du1", "du0.8", "eff1 100%", "eff0.8 100%", "eff1 75%", "eff0.8 75%"]
+        )
 
         # Filter on string/regular expressions
         query_msg_list = []

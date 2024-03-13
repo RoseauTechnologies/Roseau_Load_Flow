@@ -401,48 +401,48 @@ def test_get_catalogue():
     # Get the entire catalogue
     catalogue = TransformerParameters.get_catalogue()
     assert isinstance(catalogue, pd.DataFrame)
-    assert catalogue.shape == (130, 7)
+    assert catalogue.shape == (162, 7)
 
     # Filter on a single attribute
     for field_name, value, expected_size in (
         ("id", "SE_Minera_A0Ak_50kVA", 1),
-        ("manufacturer", "SE", 116),
-        ("range", r"min.*", 56),
+        ("manufacturer", "SE", 148),
+        ("range", r"min.*", 67),
         ("efficiency", "c0", 29),
-        ("type", "dy", 126),
-        ("sn", Q_(160, "kVA"), 10),
-        ("uhv", Q_(20, "kV"), 130),
-        ("ulv", 400, 130),
+        ("type", "dy", 158),
+        ("sn", Q_(160, "kVA"), 12),
+        ("uhv", Q_(20, "kV"), 162),
+        ("ulv", 400, 162),
     ):
         filtered_catalogue = TransformerParameters.get_catalogue(**{field_name: value})
-        assert filtered_catalogue.shape == (expected_size, 7)
+        assert filtered_catalogue.shape == (expected_size, 7), f"{field_name}={value!r}"
 
     # Filter on two attributes
     for field_name, value, expected_size in (
         ("id", "SE_Minera_A0Ak_50kVA", 1),
-        ("range", "minera", 56),
+        ("range", "minera", 67),
         ("efficiency", "c0", 29),
-        ("type", r"^d.*11$", 112),
-        ("sn", Q_(160, "kVA"), 9),
-        ("uhv", Q_(20, "kV"), 116),
-        ("ulv", 400, 116),
+        ("type", r"^d.*11$", 144),
+        ("sn", Q_(160, "kVA"), 11),
+        ("uhv", Q_(20, "kV"), 148),
+        ("ulv", 400, 148),
     ):
         filtered_catalogue = TransformerParameters.get_catalogue(**{field_name: value}, manufacturer="se")
-        assert filtered_catalogue.shape == (expected_size, 7)
+        assert filtered_catalogue.shape == (expected_size, 7), f"{field_name}={value!r}"
 
     # Filter on three attributes
     for field_name, value, expected_size in (
         ("id", "se_VEGETA_C0BK_3150kva", 1),
         ("efficiency", r"c0[abc]k", 15),
-        ("type", "dyn", 30),
-        ("sn", Q_(160, "kVA"), 2),
-        ("uhv", Q_(20, "kV"), 30),
-        ("ulv", 400, 30),
+        ("type", "dyn", 41),
+        ("sn", Q_(160, "kVA"), 3),
+        ("uhv", Q_(20, "kV"), 41),
+        ("ulv", 400, 41),
     ):
         filtered_catalogue = TransformerParameters.get_catalogue(
             **{field_name: value}, manufacturer="se", range=r"^vegeta$"
         )
-        assert filtered_catalogue.shape == (expected_size, 7)
+        assert filtered_catalogue.shape == (expected_size, 7), f"{field_name}={value!r}"
 
     # No results
     empty_catalogue = TransformerParameters.get_catalogue(ulv=250)

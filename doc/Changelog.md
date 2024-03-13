@@ -16,6 +16,8 @@ myst:
 ## Unreleased
 
 - {gh-pr}`197` Fix a bug in three-phase transformer models that led to excessive reactive power flow in the transformer.
+- {gh-pr}`199` Add Schneider Electric EcoDesign transformers to the catalogue. These are tagged with the _AA0Ak_
+  efficiency class. Other internal data have been added to the catalogue for testing purposes.
 - {gh-pr}`198` Simplify the storage of the transformer catalogues. This is an internal change that should not have
   effects on user code.
 - {gh-pr}`196` {gh-issue}`194` Improve the error message when accessing `res_flexible_powers` on a non-flexible load
