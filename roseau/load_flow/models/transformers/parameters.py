@@ -222,20 +222,20 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
 
     def _to_zyk(self) -> tuple[complex, complex, float, float]:
         """Compute the transformer parameters ``z2``, ``ym``, ``k`` and ``orientation``."""
-        is_three_phase = self.type not in ("single", "center")
-        i0 = self._i0
-        p0 = self._p0
-        if is_three_phase:
-            i0 /= 3
-            p0 /= 3
+        if self.type in ("single", "center"):
+            is_three_phase = False
+            winding1, winding2 = None, None
+        else:
+            is_three_phase = True
+            winding1, winding2 = self.winding1[0].upper(), self.winding2[0].lower()
 
         # Off-load test
         # Iron losses resistance (Ohm)
-        r_iron = self._uhv**2 / p0
+        r_iron = self._uhv**2 / self._p0
         # Magnetizing inductance (Henry) * omega (rad/s)
-        s0 = i0 * self._sn
-        if s0 > p0:
-            lm_omega = self._uhv**2 / np.sqrt(s0**2 - p0**2)
+        s0 = self._i0 * self._sn
+        if s0 > self._p0:
+            lm_omega = self._uhv**2 / np.sqrt(s0**2 - self._p0**2)
             ym = 1 / r_iron + 1 / (1j * lm_omega)
         else:
             ym = 1 / r_iron
@@ -245,18 +245,23 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         l2_omega = np.sqrt((self._vsc * self._ulv**2 / self._sn) ** 2 - r2**2)
         z2 = r2 + 1j * l2_omega
 
+        if winding1 == "D":
+            ym /= 3
+        if winding2 == "d":
+            z2 *= 3
+
         # Change the voltages if the reference voltages is phase to neutral
         uhv = self._uhv
         ulv = self._ulv
         if is_three_phase:
             # Extract the windings of the primary and the secondary of the transformer
-            if self.winding1[0] in ("y", "Y"):
+            if winding1 == "Y":
                 uhv /= np.sqrt(3.0)
-            if self.winding2[0] in ("y", "Y"):
-                ulv /= np.sqrt(3.0)
-            if self.winding1[0] in ("z", "Z"):
+            if winding1 == "Z":
                 uhv /= 3.0
-            if self.winding2[0] in ("z", "Z"):
+            if winding2 == "y":
+                ulv /= np.sqrt(3.0)
+            if winding2 == "z":
                 ulv /= 3.0
             if self.phase_displacement in (0, 11):  # Normal winding
                 orientation = 1.0

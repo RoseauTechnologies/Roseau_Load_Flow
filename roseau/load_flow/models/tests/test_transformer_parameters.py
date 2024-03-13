@@ -27,8 +27,8 @@ def test_transformer_parameters():
     tp = TransformerParameters.from_dict(data)
 
     z2, ym, k, orientation = tp.to_zyk()
-    r_iron = 3 * 20e3**2 / 145  # Ohm
-    lm_omega = 3 * 20e3**2 / (np.sqrt((1.8 / 100 * 50e3) ** 2 - 145**2))  # H *rad/s
+    r_iron = 20e3**2 / 145  # Ohm
+    lm_omega = 20e3**2 / (np.sqrt((1.8 / 100 * 50e3) ** 2 - 145**2))  # H *rad/s
     z2_norm = 4 / 100 * 400**2 / 50e3
     r2 = 1350 * 400**2 / 50e3**2  # Ohm
     l2_omega = np.sqrt(z2_norm**2 - r2**2)  # H*rad/s
