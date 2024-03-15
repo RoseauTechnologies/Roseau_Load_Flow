@@ -189,7 +189,7 @@
           geometry: { coordinates: [-1.687159292228112, 49.48974276829431], type: "Point" },
           id: "0",
           properties: {
-            branch_type: "switch",
+            type: "switch",
             bus1_id: "HVMV07",
             bus2_id: "HVMVFeeder07",
             id: "Switch",
@@ -268,7 +268,7 @@
           },
           id: "1",
           properties: {
-            branch_type: "line",
+            type: "line",
             bus1_id: "HVMVFeeder07",
             bus2_id: "MVLV14092",
             id: "MVBranch48268",
@@ -388,7 +388,7 @@
           },
           id: "2",
           properties: {
-            branch_type: "line",
+            type: "line",
             bus1_id: "MVLV14092",
             bus2_id: "MVLV05996",
             id: "MVBranch39083",
@@ -407,7 +407,7 @@
         let div = L.DomUtil.create("div");
 
         let handleObject = (feature) => (typeof feature == "object" ? JSON.stringify(feature) : feature);
-        let fields = ["id", "branch_type", "bus1_id", "bus2_id"];
+        let fields = ["id", "type", "bus1_id", "bus2_id"];
         let aliases = ["Id:", "Type:", "Bus1:", "Bus2:"];
         let table =
           "<table>" +

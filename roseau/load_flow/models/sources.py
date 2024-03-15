@@ -1,6 +1,6 @@
 import logging
 from functools import cached_property
-from typing import Any
+from typing import Any, Final
 
 import numpy as np
 from typing_extensions import Self
@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 class VoltageSource(Element):
     """A voltage source."""
 
-    allowed_phases = Bus.allowed_phases
+    allowed_phases: Final = Bus.allowed_phases
     """The allowed phases for a voltage source are the same as for a :attr:`bus<Bus.allowed_phases>`."""
     _floating_neutral_allowed: bool = False
 

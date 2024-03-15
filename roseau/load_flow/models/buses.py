@@ -1,7 +1,7 @@
 import logging
 from collections.abc import Iterator
 from functools import cached_property
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any, Final
 
 import numpy as np
 import pandas as pd
@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 class Bus(Element):
     """A multi-phase electrical bus."""
 
-    allowed_phases = frozenset({"ab", "bc", "ca", "an", "bn", "cn", "abn", "bcn", "can", "abc", "abcn"})
+    allowed_phases: Final = frozenset({"ab", "bc", "ca", "an", "bn", "cn", "abn", "bcn", "can", "abc", "abcn"})
     """The allowed phases for a bus are:
 
     - P-P-P or P-P-P-N: ``"abc"``, ``"abcn"``
@@ -379,7 +379,7 @@ class Bus(Element):
             "potentials": [[v.real, v.imag] for v in self._res_potentials_getter(warning)],
         }
 
-    def add_short_circuit(self, *phases: str, ground: Optional["Ground"] = None) -> None:
+    def add_short_circuit(self, *phases: str, ground: "Ground | None" = None) -> None:
         """Add a short-circuit by connecting multiple phases together optionally with a ground.
 
         Args:

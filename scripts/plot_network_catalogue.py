@@ -58,13 +58,13 @@ buses_tooltip = folium.GeoJsonTooltip(
 
 
 def branches_style_function(feature):
-    if feature["properties"]["branch_type"] == "line":
+    if feature["properties"]["type"] == "line":
         if feature["properties"]["network"].startswith("MV"):
             return {"color": "#234e83", "weight": 4}
         else:
             return {"color": "#adb9cb", "weight": 2}
     else:
-        # feature["properties"]["branch_type"] in ("transformer", "switch")
+        # feature["properties"]["type"] in ("transformer", "switch")
         return {"opacity": 0}
 
 
@@ -73,7 +73,7 @@ def branches_highlight_function(feature):
 
 
 branches_tooltip = folium.GeoJsonTooltip(
-    fields=["id", "branch_type", "bus1_id", "bus2_id"],
+    fields=["id", "type", "bus1_id", "bus2_id"],
     aliases=["Id:", "Type:", "Bus1:", "Bus2:"],
     localize=True,
     sticky=False,
@@ -138,7 +138,7 @@ if __name__ == "__main__":
         max_width=800,
     )
     branches_tooltip = folium.GeoJsonTooltip(
-        fields=["network", "id", "branch_type", "bus1_id", "bus2_id"],
+        fields=["network", "id", "type", "bus1_id", "bus2_id"],
         aliases=["Network:", "Id:", "Type:", "Bus1:", "Bus2:"],
         localize=True,
         sticky=False,

@@ -37,7 +37,7 @@ from roseau.load_flow.models import (
 )
 from roseau.load_flow.typing import Id, JsonDict, MapOrSeq, Solver, StrPath
 from roseau.load_flow.utils import CatalogueMixin, JsonMixin, _optional_deps
-from roseau.load_flow.utils.types import _DTYPES, VoltagePhaseDtype
+from roseau.load_flow.utils.types import _DTYPES, BranchTypeDtype, LoadTypeDtype, VoltagePhaseDtype
 from roseau.load_flow_engine.cy_engine import CyElectricalNetwork
 
 if TYPE_CHECKING:
@@ -259,7 +259,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                 data=[
                     (
                         branch_id,
-                        branch.branch_type,
+                        branch.type,
                         branch.phases1,
                         branch.phases2,
                         branch.bus1.id,
@@ -268,7 +268,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                     )
                     for branch_id, branch in self.branches.items()
                 ],
-                columns=["id", "branch_type", "phases1", "phases2", "bus1_id", "bus2_id", "geometry"],
+                columns=["id", "type", "phases1", "phases2", "bus1_id", "bus2_id", "geometry"],
                 index="id",
             ),
             geometry="geometry",
@@ -367,8 +367,10 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
     def loads_frame(self) -> pd.DataFrame:
         """The :attr:`loads` of the network as a dataframe."""
         return pd.DataFrame.from_records(
-            data=[(load_id, load.phases, load.bus.id) for load_id, load in self.loads.items()],
-            columns=["id", "phases", "bus_id"],
+            data=[
+                (load_id, load.type, load.phases, load.bus.id, load.is_flexible) for load_id, load in self.loads.items()
+            ],
+            columns=["id", "type", "phases", "bus_id", "flexible"],
             index="id",
         )
 
@@ -454,7 +456,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         for bus in self.buses.values():
             graph.add_node(bus.id, geom=bus.geometry)
         for branch in self.branches.values():
-            graph.add_edge(branch.bus1.id, branch.bus2.id, id=branch.id, type=branch.branch_type, geom=branch.geometry)
+            graph.add_edge(branch.bus1.id, branch.bus2.id, id=branch.id, type=branch.type, geom=branch.geometry)
         return graph
 
     #
@@ -685,7 +687,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             - `phase`: The phase of the branch (in ``{'a', 'b', 'c', 'n'}``).
 
         and the following columns:
-            - `branch_type`: The type of the branch, can be ``{'line', 'transformer', 'switch'}``.
+            - `type`: The type of the branch, can be ``{'line', 'transformer', 'switch'}``.
             - `current1`: The complex current of the branch (in Amps) for the given phase at the
                 first bus.
             - `current2`: The complex current of the branch (in Amps) for the given phase at the
@@ -701,7 +703,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         res_dict = {
             "branch_id": [],
             "phase": [],
-            "branch_type": [],
+            "type": [],
             "current1": [],
             "current2": [],
             "power1": [],
@@ -709,7 +711,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             "potential1": [],
             "potential2": [],
         }
-        dtypes = {c: _DTYPES[c] for c in res_dict}
+        dtypes = {c: _DTYPES[c] for c in res_dict} | {"type": BranchTypeDtype}
         for branch_id, branch in self.branches.items():
             currents1, currents2 = branch._res_currents_getter(warning=False)
             potentials1, potentials2 = branch._res_potentials_getter(warning=False)
@@ -729,7 +731,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                     i2, s2, v2 = None, None, None
                 res_dict["branch_id"].append(branch_id)
                 res_dict["phase"].append(phase)
-                res_dict["branch_type"].append(branch.branch_type)
+                res_dict["type"].append(branch.type)
                 res_dict["current1"].append(i1)
                 res_dict["current2"].append(i2)
                 res_dict["power1"].append(s1)
@@ -965,14 +967,16 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         The results are returned as a dataframe with the following index:
             - `load_id`: The id of the load.
             - `phase`: The phase of the load (in ``{'a', 'b', 'c', 'n'}``).
+
         and the following columns:
+            - `type`: The type of the load, can be ``{'power', 'current', 'impedance'}``.
             - `current`: The complex current of the load (in Amps) for the given phase.
             - `power`: The complex power of the load (in VoltAmps) for the given phase.
             - `potential`: The complex potential of the load (in Volts) for the given phase.
         """
         self._check_valid_results()
-        res_dict = {"load_id": [], "phase": [], "current": [], "power": [], "potential": []}
-        dtypes = {c: _DTYPES[c] for c in res_dict}
+        res_dict = {"load_id": [], "phase": [], "type": [], "current": [], "power": [], "potential": []}
+        dtypes = {c: _DTYPES[c] for c in res_dict} | {"type": LoadTypeDtype}
         for load_id, load in self.loads.items():
             currents = load._res_currents_getter(warning=False)
             potentials = load._res_potentials_getter(warning=False)
@@ -980,6 +984,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             for i, s, v, phase in zip(currents, powers, potentials, load.phases, strict=True):
                 res_dict["load_id"].append(load_id)
                 res_dict["phase"].append(phase)
+                res_dict["type"].append(load.type)
                 res_dict["current"].append(i)
                 res_dict["power"].append(s)
                 res_dict["potential"].append(v)
@@ -995,15 +1000,17 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                 ``{'ab', 'bc', 'ca'}`` for delta loads.).
 
         and the following columns:
+            - `type`: The type of the load, can be ``{'power', 'current', 'impedance'}``.s
             - `voltage`: The complex voltage of the load (in Volts) for the given *phase*.
         """
         self._check_valid_results()
-        voltages_dict = {"load_id": [], "phase": [], "voltage": []}
-        dtypes = {c: _DTYPES[c] for c in voltages_dict} | {"phase": VoltagePhaseDtype}
+        voltages_dict = {"load_id": [], "phase": [], "type": [], "voltage": []}
+        dtypes = {c: _DTYPES[c] for c in voltages_dict} | {"phase": VoltagePhaseDtype, "type": LoadTypeDtype}
         for load_id, load in self.loads.items():
             for voltage, phase in zip(load._res_voltages_getter(warning=False), load.voltage_phases, strict=True):
                 voltages_dict["load_id"].append(load_id)
                 voltages_dict["phase"].append(phase)
+                voltages_dict["type"].append(load.type)
                 voltages_dict["voltage"].append(voltage)
         return pd.DataFrame(voltages_dict).astype(dtypes).set_index(["load_id", "phase"])
 

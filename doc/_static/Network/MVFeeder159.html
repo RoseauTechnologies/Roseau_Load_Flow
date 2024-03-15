@@ -189,7 +189,7 @@
           geometry: { coordinates: [-0.823722473264189, 49.08918556668978], type: "Point" },
           id: "0",
           properties: {
-            branch_type: "switch",
+            type: "switch",
             bus1_id: "HVMV11",
             bus2_id: "HVMVFeeder11",
             id: "Switch",
@@ -227,7 +227,7 @@
           },
           id: "1",
           properties: {
-            branch_type: "line",
+            type: "line",
             bus1_id: "HVMVFeeder11",
             bus2_id: "MVBus01228",
             id: "MVBranch42220",
@@ -250,7 +250,7 @@
           },
           id: "2",
           properties: {
-            branch_type: "line",
+            type: "line",
             bus1_id: "MVBus01232",
             bus2_id: "MVBus15631",
             id: "MVBranch16925",
@@ -279,7 +279,7 @@
           },
           id: "3",
           properties: {
-            branch_type: "line",
+            type: "line",
             bus1_id: "MVBus01231",
             bus2_id: "MVBus01232",
             id: "MVBranch28505",
@@ -302,7 +302,7 @@
           },
           id: "4",
           properties: {
-            branch_type: "line",
+            type: "line",
             bus1_id: "MVBus01230",
             bus2_id: "MVBus01231",
             id: "MVBranch28504",
@@ -329,7 +329,7 @@
           },
           id: "5",
           properties: {
-            branch_type: "line",
+            type: "line",
             bus1_id: "MVBus01229",
             bus2_id: "MVBus01230",
             id: "MVBranch14190",
@@ -352,7 +352,7 @@
           },
           id: "6",
           properties: {
-            branch_type: "line",
+            type: "line",
             bus1_id: "MVBus01228",
             bus2_id: "MVBus01229",
             id: "MVBranch45106",
@@ -371,7 +371,7 @@
         let div = L.DomUtil.create("div");
 
         let handleObject = (feature) => (typeof feature == "object" ? JSON.stringify(feature) : feature);
-        let fields = ["id", "branch_type", "bus1_id", "bus2_id"];
+        let fields = ["id", "type", "bus1_id", "bus2_id"];
         let aliases = ["Id:", "Type:", "Bus1:", "Bus2:"];
         let table =
           "<table>" +

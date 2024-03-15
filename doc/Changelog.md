@@ -15,6 +15,11 @@ myst:
 
 ## Unreleased
 
+- {gh-pr}`201` {gh-issue}`185` Add `type` attribute to the load classes and rename branches `branch_type`
+  attribute to `type` for consistency. Please replace `branch.branch_type` by `branch.type` in your code.
+  In addition, loads data frames gained two new columns:
+  1. `type` indicating the load type: constant-(`power`, `current`, `impedance`);
+  2. and `flexible` indicating if the load is flexible.
 - {gh-pr}`197` Fix a bug in three-phase transformer models that led to excessive reactive power flow in the transformer.
 - {gh-pr}`199` Add Schneider Electric EcoDesign transformers to the catalogue. These are tagged with the _AA0Ak_
   efficiency class. Other internal data have been added to the catalogue for testing purposes.

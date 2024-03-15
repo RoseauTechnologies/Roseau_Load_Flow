@@ -1,6 +1,6 @@
 import logging
 import warnings
-from typing import Any
+from typing import Any, Final
 
 import numpy as np
 from shapely import LineString, Point
@@ -22,9 +22,9 @@ logger = logging.getLogger(__name__)
 class Switch(AbstractBranch):
     """A general purpose switch branch."""
 
-    branch_type = "switch"
+    type: Final = "switch"
 
-    allowed_phases = frozenset(Bus.allowed_phases | {"a", "b", "c", "n"})
+    allowed_phases: Final = frozenset(Bus.allowed_phases | {"a", "b", "c", "n"})
     """The allowed phases for a switch are:
 
     - P-P-P or P-P-P-N: ``"abc"``, ``"abcn"``
@@ -133,9 +133,9 @@ class Switch(AbstractBranch):
 class Line(AbstractBranch):
     """An electrical line PI model with series impedance and optional shunt admittance."""
 
-    branch_type = "line"
+    type: Final = "line"
 
-    allowed_phases = frozenset(Bus.allowed_phases | {"a", "b", "c", "n"})
+    allowed_phases: Final = frozenset(Bus.allowed_phases | {"a", "b", "c", "n"})
     """The allowed phases for a line are:
 
     - P-P-P or P-P-P-N: ``"abc"``, ``"abcn"``

@@ -343,12 +343,12 @@ All the following tables are rounded to 2 decimals to be properly displayed.
 >>> en.res_branches
 ```
 
-| branch_id | phase |      current1 |     current2 |      power1 |    power2 |   potential1 |     potential2 |
-| :-------- | :---- | ------------: | -----------: | ----------: | --------: | -----------: | -------------: |
-| line      | a     |      45.06+0j |    -45.06-0j | 10406.07-0j | -10000+0j |    230.94+0j |      221.93-0j |
-| line      | b     | -22.53-39.02j | 22.53+39.02j | 10406.07+0j | -10000-0j | -115.47-200j | -110.96-192.2j |
-| line      | c     | -22.53+39.02j | 22.53-39.02j | 10406.07-0j | -10000+0j | -115.47+200j | -110.96+192.2j |
-| line      | n     |            0j |          -0j |          0j |       -0j |           0j |            -0j |
+| branch_id | phase | type |      current1 |     current2 |      power1 |    power2 |   potential1 |     potential2 |
+| :-------- | :---- | :--- | ------------: | -----------: | ----------: | --------: | -----------: | -------------: |
+| line      | a     | line |      45.06+0j |    -45.06-0j | 10406.07-0j | -10000+0j |    230.94+0j |      221.93-0j |
+| line      | b     | line | -22.53-39.02j | 22.53+39.02j | 10406.07+0j | -10000-0j | -115.47-200j | -110.96-192.2j |
+| line      | c     | line | -22.53+39.02j | 22.53-39.02j | 10406.07-0j | -10000+0j | -115.47+200j | -110.96+192.2j |
+| line      | n     | line |            0j |          -0j |          0j |       -0j |           0j |            -0j |
 
 ```pycon
 >>> en.res_lines
@@ -379,22 +379,22 @@ All the following tables are rounded to 2 decimals to be properly displayed.
 >>> en.res_loads
 ```
 
-| load_id | phase |       current |    power |      potential |
-| :------ | :---- | ------------: | -------: | -------------: |
-| load    | a     |      45.06+0j | 10000-0j |      221.93-0j |
-| load    | b     | -22.53-39.02j | 10000-0j | -110.96-192.2j |
-| load    | c     | -22.53+39.02j | 10000+0j | -110.96+192.2j |
-| load    | n     |            0j |       0j |            -0j |
+| load_id | phase | type  |       current |    power |      potential |
+| :------ | :---- | :---- | ------------: | -------: | -------------: |
+| load    | a     | power |      45.06+0j | 10000-0j |      221.93-0j |
+| load    | b     | power | -22.53-39.02j | 10000-0j | -110.96-192.2j |
+| load    | c     | power | -22.53+39.02j | 10000+0j | -110.96+192.2j |
+| load    | n     | power |            0j |       0j |            -0j |
 
 ```pycon
 >>> en.res_loads_voltages
 ```
 
-| load_id | phase |        voltage |
-| :------ | :---- | -------------: |
-| load    | an    |      221.93+0j |
-| load    | bn    | -110.96-192.2j |
-| load    | cn    | -110.96+192.2j |
+| load_id | phase | type  |        voltage |
+| :------ | :---- | :---- | -------------: |
+| load    | an    | power |      221.93+0j |
+| load    | bn    | power | -110.96-192.2j |
+| load    | cn    | power | -110.96+192.2j |
 
 ```pycon
 >>> en.res_sources
