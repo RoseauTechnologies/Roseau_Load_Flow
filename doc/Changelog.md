@@ -15,6 +15,7 @@ myst:
 
 ## Unreleased
 
+- {gh-pr}`202` {gh-issue}`188` Explicitly prevent instantiation of abstract classes.
 - {gh-pr}`201` {gh-issue}`185` Add `type` attribute to the load classes and rename branches `branch_type`
   attribute to `type` for consistency. Please replace `branch.branch_type` by `branch.type` in your code.
   In addition, loads data frames gained two new columns:
