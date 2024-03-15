@@ -189,7 +189,7 @@
           geometry: { coordinates: [-1.113772280167845, 49.11691122611608], type: "Point" },
           id: "0",
           properties: {
-            branch_type: "transformer",
+            type: "transformer",
             bus1_id: "MVLV13030",
             bus2_id: "MVLVFeeder13030",
             id: "Transformer",
@@ -228,7 +228,7 @@
           },
           id: "1",
           properties: {
-            branch_type: "line",
+            type: "line",
             bus1_id: "MVLVFeeder13030",
             bus2_id: "LVBus012331",
             id: "LVBranch089497",
@@ -254,7 +254,7 @@
           },
           id: "2",
           properties: {
-            branch_type: "line",
+            type: "line",
             bus1_id: "LVBus012331",
             bus2_id: "LVBus012332",
             id: "LVBranch089528",
@@ -277,7 +277,7 @@
           },
           id: "3",
           properties: {
-            branch_type: "line",
+            type: "line",
             bus1_id: "LVBus012332",
             bus2_id: "LVBus012333",
             id: "LVBranch095409",
@@ -304,7 +304,7 @@
           },
           id: "4",
           properties: {
-            branch_type: "line",
+            type: "line",
             bus1_id: "LVBus012333",
             bus2_id: "LVBus012334",
             id: "LVBranch136047",
@@ -331,7 +331,7 @@
           },
           id: "5",
           properties: {
-            branch_type: "line",
+            type: "line",
             bus1_id: "LVBus012333",
             bus2_id: "LVBus012335",
             id: "LVBranch136046",
@@ -350,7 +350,7 @@
         let div = L.DomUtil.create("div");
 
         let handleObject = (feature) => (typeof feature == "object" ? JSON.stringify(feature) : feature);
-        let fields = ["id", "branch_type", "bus1_id", "bus2_id"];
+        let fields = ["id", "type", "bus1_id", "bus2_id"];
         let aliases = ["Id:", "Type:", "Bus1:", "Bus2:"];
         let table =
           "<table>" +

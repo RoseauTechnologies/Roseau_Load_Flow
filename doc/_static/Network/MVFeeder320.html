@@ -189,7 +189,7 @@
           geometry: { coordinates: [-1.122502301274675, 49.11336333911259], type: "Point" },
           id: "0",
           properties: {
-            branch_type: "switch",
+            type: "switch",
             bus1_id: "HVMV24",
             bus2_id: "HVMVFeeder24",
             id: "Switch",
@@ -223,7 +223,7 @@
           },
           id: "1",
           properties: {
-            branch_type: "line",
+            type: "line",
             bus1_id: "HVMVFeeder24",
             bus2_id: "MVBus03272",
             id: "MVBranch35480",
@@ -250,7 +250,7 @@
           },
           id: "2",
           properties: {
-            branch_type: "line",
+            type: "line",
             bus1_id: "MVBus08244",
             bus2_id: "MVBus08245",
             id: "MVBranch48195",
@@ -281,7 +281,7 @@
           },
           id: "3",
           properties: {
-            branch_type: "line",
+            type: "line",
             bus1_id: "MVBus08243",
             bus2_id: "MVBus08244",
             id: "MVBranch45547",
@@ -307,7 +307,7 @@
           },
           id: "4",
           properties: {
-            branch_type: "line",
+            type: "line",
             bus1_id: "MVLV02667",
             bus2_id: "MVBus08243",
             id: "MVBranch36674",
@@ -333,7 +333,7 @@
           },
           id: "5",
           properties: {
-            branch_type: "line",
+            type: "line",
             bus1_id: "MVBus07719",
             bus2_id: "MVLV02667",
             id: "MVBranch36060",
@@ -370,7 +370,7 @@
           },
           id: "6",
           properties: {
-            branch_type: "line",
+            type: "line",
             bus1_id: "MVLV05633",
             bus2_id: "MVBus07719",
             id: "MVBranch37628",
@@ -406,7 +406,7 @@
           },
           id: "7",
           properties: {
-            branch_type: "line",
+            type: "line",
             bus1_id: "MVBus07251",
             bus2_id: "MVLV05633",
             id: "MVBranch36406",
@@ -431,7 +431,7 @@
           },
           id: "8",
           properties: {
-            branch_type: "line",
+            type: "line",
             bus1_id: "MVLV15887",
             bus2_id: "MVBus07251",
             id: "MVBranch37774",
@@ -456,7 +456,7 @@
           },
           id: "9",
           properties: {
-            branch_type: "line",
+            type: "line",
             bus1_id: "MVBus06697",
             bus2_id: "MVLV15887",
             id: "MVBranch47752",
@@ -482,7 +482,7 @@
           },
           id: "10",
           properties: {
-            branch_type: "line",
+            type: "line",
             bus1_id: "MVLV15889",
             bus2_id: "MVBus06697",
             id: "MVBranch38163",
@@ -508,7 +508,7 @@
           },
           id: "11",
           properties: {
-            branch_type: "line",
+            type: "line",
             bus1_id: "MVBus06394",
             bus2_id: "MVLV15889",
             id: "MVBranch46735",
@@ -533,7 +533,7 @@
           },
           id: "12",
           properties: {
-            branch_type: "line",
+            type: "line",
             bus1_id: "MVBus06393",
             bus2_id: "MVBus06394",
             id: "MVBranch44199",
@@ -558,7 +558,7 @@
           },
           id: "13",
           properties: {
-            branch_type: "line",
+            type: "line",
             bus1_id: "MVLV04536",
             bus2_id: "MVBus06393",
             id: "MVBranch41589",
@@ -583,7 +583,7 @@
           },
           id: "14",
           properties: {
-            branch_type: "line",
+            type: "line",
             bus1_id: "MVBus06241",
             bus2_id: "MVLV04536",
             id: "MVBranch46734",
@@ -612,7 +612,7 @@
           },
           id: "15",
           properties: {
-            branch_type: "line",
+            type: "line",
             bus1_id: "MVLV15900",
             bus2_id: "MVBus06241",
             id: "MVBranch39762",
@@ -648,7 +648,7 @@
           },
           id: "16",
           properties: {
-            branch_type: "line",
+            type: "line",
             bus1_id: "MVBus03274",
             bus2_id: "MVLV15900",
             id: "MVBranch37396",
@@ -672,7 +672,7 @@
           },
           id: "17",
           properties: {
-            branch_type: "line",
+            type: "line",
             bus1_id: "MVBus03273",
             bus2_id: "MVBus03274",
             id: "MVBranch47785",
@@ -701,7 +701,7 @@
           },
           id: "18",
           properties: {
-            branch_type: "line",
+            type: "line",
             bus1_id: "MVBus03272",
             bus2_id: "MVBus03273",
             id: "MVBranch43080",
@@ -720,7 +720,7 @@
         let div = L.DomUtil.create("div");
 
         let handleObject = (feature) => (typeof feature == "object" ? JSON.stringify(feature) : feature);
-        let fields = ["id", "branch_type", "bus1_id", "bus2_id"];
+        let fields = ["id", "type", "bus1_id", "bus2_id"];
         let aliases = ["Id:", "Type:", "Bus1:", "Bus2:"];
         let table =
           "<table>" +

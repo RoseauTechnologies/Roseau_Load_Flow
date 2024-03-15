@@ -28,7 +28,7 @@ from roseau.load_flow.models import (
 )
 from roseau.load_flow.network import ElectricalNetwork
 from roseau.load_flow.units import Q_
-from roseau.load_flow.utils import BranchTypeDtype, PhaseDtype, VoltagePhaseDtype
+from roseau.load_flow.utils import BranchTypeDtype, LoadTypeDtype, PhaseDtype, VoltagePhaseDtype
 
 # The following networks are generated using the scripts/genereate_test_networks.py script
 
@@ -399,21 +399,21 @@ def test_frame(small_network: ElectricalNetwork):
     buses_gdf = small_network.buses_frame
     assert isinstance(buses_gdf, gpd.GeoDataFrame)
     assert buses_gdf.shape == (2, 4)
-    assert set(buses_gdf.columns) == {"phases", "min_voltage", "max_voltage", "geometry"}
+    assert buses_gdf.columns.tolist() == ["phases", "min_voltage", "max_voltage", "geometry"]
     assert buses_gdf.index.name == "id"
 
     # Branches
     branches_gdf = small_network.branches_frame
     assert isinstance(branches_gdf, gpd.GeoDataFrame)
     assert branches_gdf.shape == (1, 6)
-    assert set(branches_gdf.columns) == {"branch_type", "phases1", "phases2", "bus1_id", "bus2_id", "geometry"}
+    assert branches_gdf.columns.tolist() == ["type", "phases1", "phases2", "bus1_id", "bus2_id", "geometry"]
     assert branches_gdf.index.name == "id"
 
     # Transformers
     transformers_gdf = small_network.transformers_frame
     assert isinstance(transformers_gdf, gpd.GeoDataFrame)
     assert transformers_gdf.shape == (0, 7)
-    assert set(transformers_gdf.columns) == {
+    assert transformers_gdf.columns.tolist() == [
         "phases1",
         "phases2",
         "bus1_id",
@@ -421,33 +421,33 @@ def test_frame(small_network: ElectricalNetwork):
         "parameters_id",
         "max_power",
         "geometry",
-    }
+    ]
     assert transformers_gdf.index.name == "id"
 
     # Lines
     lines_gdf = small_network.lines_frame
     assert isinstance(lines_gdf, gpd.GeoDataFrame)
     assert lines_gdf.shape == (1, 6)
-    assert set(lines_gdf.columns) == {"phases", "bus1_id", "bus2_id", "parameters_id", "max_current", "geometry"}
+    assert lines_gdf.columns.tolist() == ["phases", "bus1_id", "bus2_id", "parameters_id", "max_current", "geometry"]
 
     # Switches
     switches_gdf = small_network.switches_frame
     assert isinstance(switches_gdf, gpd.GeoDataFrame)
     assert switches_gdf.shape == (0, 4)
-    assert set(switches_gdf.columns) == {"phases", "bus1_id", "bus2_id", "geometry"}
+    assert switches_gdf.columns.tolist() == ["phases", "bus1_id", "bus2_id", "geometry"]
 
     # Loads
     loads_df = small_network.loads_frame
     assert isinstance(loads_df, pd.DataFrame)
-    assert loads_df.shape == (1, 2)
-    assert set(loads_df.columns) == {"phases", "bus_id"}
+    assert loads_df.shape == (1, 4)
+    assert loads_df.columns.tolist() == ["type", "phases", "bus_id", "flexible"]
     assert loads_df.index.name == "id"
 
     # Sources
     sources_df = small_network.sources_frame
     assert isinstance(sources_df, pd.DataFrame)
     assert sources_df.shape == (1, 2)
-    assert set(sources_df.columns) == {"phases", "bus_id"}
+    assert sources_df.columns.tolist() == ["phases", "bus_id"]
     assert sources_df.index.name == "id"
 
 
@@ -640,7 +640,7 @@ def test_single_phase_network(single_phase_network: ElectricalNetwork):
                 {
                     "branch_id": "line",
                     "phase": "b",
-                    "branch_type": "line",
+                    "type": "line",
                     "current1": 0.005000025000117603 + 0j,
                     "current2": -0.005000025000117603 - 0j,
                     "power1": (19999.94999975 + 0j) * (0.005000025000117603 + 0j).conjugate(),
@@ -651,7 +651,7 @@ def test_single_phase_network(single_phase_network: ElectricalNetwork):
                 {
                     "branch_id": "line",
                     "phase": "n",
-                    "branch_type": "line",
+                    "type": "line",
                     "current1": -0.005000025000125 + 0j,
                     "current2": 0.005000025000125 - 0j,
                     "power1": (-0.050000250001249996 + 0j) * (-0.005000025000125 + 0j).conjugate(),
@@ -664,7 +664,7 @@ def test_single_phase_network(single_phase_network: ElectricalNetwork):
         .astype(
             {
                 "phase": PhaseDtype,
-                "branch_type": BranchTypeDtype,
+                "type": BranchTypeDtype,
                 "current1": complex,
                 "current2": complex,
                 "power1": complex,
@@ -805,6 +805,7 @@ def test_single_phase_network(single_phase_network: ElectricalNetwork):
                 {
                     "load_id": "load",
                     "phase": "b",
+                    "type": "power",
                     "current": 0.005000025000250002 - 0j,
                     "power": (19999.899999499998 + 0j) * (0.005000025000250002 - 0j).conjugate(),
                     "potential": 19999.899999499998 + 0j,
@@ -812,13 +813,16 @@ def test_single_phase_network(single_phase_network: ElectricalNetwork):
                 {
                     "load_id": "load",
                     "phase": "n",
+                    "type": "power",
                     "current": -0.005000025000250002 - 0j,
                     "power": (0j) * (-0.005000025000250002 - 0j).conjugate(),
                     "potential": 0j,
                 },
             ]
         )
-        .astype({"phase": PhaseDtype, "current": complex, "power": complex, "potential": complex})
+        .astype(
+            {"phase": PhaseDtype, "type": LoadTypeDtype, "current": complex, "power": complex, "potential": complex}
+        )
         .set_index(["load_id", "phase"]),
     )
 
@@ -1105,7 +1109,7 @@ def test_load_flow_results_frames(small_network_with_results):
                 {
                     "branch_id": "line",
                     "phase": "a",
-                    "branch_type": "line",
+                    "type": "line",
                     "current1": 0.00500 + 7.22799e-25j,
                     "current2": -0.00500 - 7.22799e-25j,
                     "power1": (20000 + 2.89120e-18j) * (0.00500 + 7.22799e-25j).conjugate(),
@@ -1116,7 +1120,7 @@ def test_load_flow_results_frames(small_network_with_results):
                 {
                     "branch_id": "line",
                     "phase": "b",
-                    "branch_type": "line",
+                    "type": "line",
                     "current1": -0.00250 - 0.00433j,
                     "current2": 0.00250 + 0.00433j,
                     "power1": (-10000.00000 - 17320.50807j) * (-0.00250 - 0.00433j).conjugate(),
@@ -1127,7 +1131,7 @@ def test_load_flow_results_frames(small_network_with_results):
                 {
                     "branch_id": "line",
                     "phase": "c",
-                    "branch_type": "line",
+                    "type": "line",
                     "current1": -0.00250 + 0.00433j,
                     "current2": 0.00250 - 0.00433j,
                     "power1": (-10000.00000 + 17320.50807j) * (-0.00250 + 0.00433j).conjugate(),
@@ -1138,7 +1142,7 @@ def test_load_flow_results_frames(small_network_with_results):
                 {
                     "branch_id": "line",
                     "phase": "n",
-                    "branch_type": "line",
+                    "type": "line",
                     "current1": -1.34764e-13 + 2.89120e-19j,
                     "current2": 1.34764e-13 - 2.89120e-19j,
                     "power1": (-1.34764e-12 + 2.89120e-18j) * (-1.34764e-13 + 2.89120e-19j).conjugate(),
@@ -1152,7 +1156,7 @@ def test_load_flow_results_frames(small_network_with_results):
             {
                 "branch_id": object,
                 "phase": PhaseDtype,
-                "branch_type": BranchTypeDtype,
+                "type": BranchTypeDtype,
                 "current1": complex,
                 "current2": complex,
                 "power1": complex,
@@ -1342,6 +1346,7 @@ def test_load_flow_results_frames(small_network_with_results):
                 {
                     "load_id": "load",
                     "phase": "a",
+                    "type": "power",
                     "current": 0.00500 + 7.22802e-25j,
                     "power": (19999.94999 + 2.89119e-18j) * (0.00500 + 7.22802e-25j).conjugate(),
                     "potential": 19999.94999 + 2.89119e-18j,
@@ -1349,6 +1354,7 @@ def test_load_flow_results_frames(small_network_with_results):
                 {
                     "load_id": "load",
                     "phase": "b",
+                    "type": "power",
                     "current": -0.00250 - 0.00433j,
                     "power": (-9999.97499 - 17320.46477j) * (-0.00250 - 0.00433j).conjugate(),
                     "potential": -9999.97499 - 17320.46477j,
@@ -1356,6 +1362,7 @@ def test_load_flow_results_frames(small_network_with_results):
                 {
                     "load_id": "load",
                     "phase": "c",
+                    "type": "power",
                     "current": -0.00250 + 0.00433j,
                     "power": (-9999.97499 + 17320.46477j) * (-0.00250 + 0.00433j).conjugate(),
                     "potential": -9999.97499 + 17320.46477j,
@@ -1363,6 +1370,7 @@ def test_load_flow_results_frames(small_network_with_results):
                 {
                     "load_id": "load",
                     "phase": "n",
+                    "type": "power",
                     "current": -1.34763e-13 + 0j,
                     "power": (0j) * (-1.34763e-13 + 0j).conjugate(),
                     "potential": 0j,
@@ -1373,6 +1381,7 @@ def test_load_flow_results_frames(small_network_with_results):
             {
                 "load_id": object,
                 "phase": PhaseDtype,
+                "type": LoadTypeDtype,
                 "current": complex,
                 "power": complex,
                 "potential": complex,
@@ -1721,7 +1730,7 @@ def test_to_graph(small_network: ElectricalNetwork):
 
     for branch in small_network.branches.values():
         edge_data = g.edges[branch.bus1.id, branch.bus2.id]
-        assert edge_data == {"id": branch.id, "type": branch.branch_type, "geom": branch.geometry}
+        assert edge_data == {"id": branch.id, "type": branch.type, "geom": branch.geometry}
 
 
 def test_serialization(small_network, small_network_with_results):

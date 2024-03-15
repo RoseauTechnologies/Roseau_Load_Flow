@@ -1,5 +1,5 @@
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Final
 
 from typing_extensions import Self
 
@@ -33,7 +33,7 @@ class Ground(Element):
        :class:`Line` constructor. Note that the ground connection is mandatory for shunt lines.
     """
 
-    allowed_phases = frozenset({"a", "b", "c", "n"})
+    allowed_phases: Final = frozenset({"a", "b", "c", "n"})
 
     def __init__(self, id: Id, **kwargs: Any) -> None:
         """Ground constructor.

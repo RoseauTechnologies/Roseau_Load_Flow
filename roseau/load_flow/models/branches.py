@@ -1,6 +1,6 @@
 import logging
 from functools import cached_property
-from typing import Any
+from typing import Any, ClassVar, Literal
 
 import numpy as np
 from shapely import LineString, Point
@@ -24,7 +24,7 @@ class AbstractBranch(Element):
         :doc:`Switch model documentation </models/Switch>`
     """
 
-    branch_type: str
+    type: ClassVar[Literal["line", "transformer", "switch"]]
 
     def __init__(
         self,
@@ -179,7 +179,7 @@ class AbstractBranch(Element):
     def _to_dict(self, include_results: bool) -> JsonDict:
         res = {
             "id": self.id,
-            "type": self.branch_type,
+            "type": self.type,
             "phases1": self.phases1,
             "phases2": self.phases2,
             "bus1": self.bus1.id,

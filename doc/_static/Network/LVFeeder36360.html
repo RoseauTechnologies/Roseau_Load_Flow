@@ -189,7 +189,7 @@
           geometry: { coordinates: [-1.5931237327892096, 49.0456724037415], type: "Point" },
           id: "0",
           properties: {
-            branch_type: "transformer",
+            type: "transformer",
             bus1_id: "MVLV14716",
             bus2_id: "MVLVFeeder14716",
             id: "Transformer",
@@ -217,7 +217,7 @@
           },
           id: "1",
           properties: {
-            branch_type: "line",
+            type: "line",
             bus1_id: "MVLVFeeder14716",
             bus2_id: "LVBus169862",
             id: "LVBranch124792",
@@ -242,7 +242,7 @@
           },
           id: "2",
           properties: {
-            branch_type: "line",
+            type: "line",
             bus1_id: "LVBus169862",
             bus2_id: "LVBus169863",
             id: "LVBranch028144",
@@ -272,7 +272,7 @@
           },
           id: "3",
           properties: {
-            branch_type: "line",
+            type: "line",
             bus1_id: "LVBus169863",
             bus2_id: "LVBus169868",
             id: "LVBranch041667",
@@ -295,7 +295,7 @@
           },
           id: "4",
           properties: {
-            branch_type: "line",
+            type: "line",
             bus1_id: "LVBus169863",
             bus2_id: "LVBus169864",
             id: "LVBranch028145",
@@ -321,7 +321,7 @@
           },
           id: "5",
           properties: {
-            branch_type: "line",
+            type: "line",
             bus1_id: "LVBus169864",
             bus2_id: "LVBus169867",
             id: "LVBranch062605",
@@ -346,7 +346,7 @@
           },
           id: "6",
           properties: {
-            branch_type: "line",
+            type: "line",
             bus1_id: "LVBus169864",
             bus2_id: "LVBus169865",
             id: "LVBranch061323",
@@ -374,7 +374,7 @@
           },
           id: "7",
           properties: {
-            branch_type: "line",
+            type: "line",
             bus1_id: "LVBus169864",
             bus2_id: "LVBus169866",
             id: "LVBranch041668",
@@ -393,7 +393,7 @@
         let div = L.DomUtil.create("div");
 
         let handleObject = (feature) => (typeof feature == "object" ? JSON.stringify(feature) : feature);
-        let fields = ["id", "branch_type", "bus1_id", "bus2_id"];
+        let fields = ["id", "type", "bus1_id", "bus2_id"];
         let aliases = ["Id:", "Type:", "Bus1:", "Bus2:"];
         let table =
           "<table>" +

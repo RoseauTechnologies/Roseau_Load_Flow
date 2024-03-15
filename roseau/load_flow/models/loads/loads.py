@@ -1,7 +1,7 @@
 import logging
 from abc import ABC
 from functools import cached_property
-from typing import Any, Literal
+from typing import Any, ClassVar, Final, Literal
 
 import numpy as np
 
@@ -34,10 +34,10 @@ class AbstractLoad(Element, ABC):
         * delta-connected loads using a `phases` constructor argument not containing `"n"`
     """
 
-    _type: Literal["power", "current", "impedance"]
+    type: ClassVar[Literal["power", "current", "impedance"]]
     _floating_neutral_allowed: bool = False
 
-    allowed_phases = Bus.allowed_phases
+    allowed_phases: Final = Bus.allowed_phases
     """The allowed phases for a load are the same as for a :attr:`bus<Bus.allowed_phases>`."""
 
     def __init__(self, id: Id, bus: Bus, *, phases: str | None = None, **kwargs: Any) -> None:
@@ -77,7 +77,7 @@ class AbstractLoad(Element, ABC):
         self._phases = phases
         self._bus = bus
         self._n = len(self._phases)
-        self._symbol = {"power": "S", "current": "I", "impedance": "Z"}[self._type]
+        self._symbol = {"power": "S", "current": "I", "impedance": "Z"}[self.type]
         if len(phases) == 2 and "n" not in phases:
             # This is a delta load that has one element connected between two phases
             self._size = 1
@@ -124,11 +124,11 @@ class AbstractLoad(Element, ABC):
 
     def _validate_value(self, value: ComplexArrayLike1D) -> ComplexArray:
         if len(value) != self._size:
-            msg = f"Incorrect number of {self._type}s: {len(value)} instead of {self._size}"
+            msg = f"Incorrect number of {self.type}s: {len(value)} instead of {self._size}"
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode[f"BAD_{self._symbol}_SIZE"])
         # A load cannot have any zero impedance
-        if self._type == "impedance" and np.isclose(value, 0).any():
+        if self.type == "impedance" and np.isclose(value, 0).any():
             msg = f"An impedance of the load {self.id!r} is null"
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Z_VALUE)
@@ -220,12 +220,12 @@ class AbstractLoad(Element, ABC):
 
     def _to_dict(self, include_results: bool) -> JsonDict:
         self._raise_disconnected_error()
-        complex_array = getattr(self, f"_{self._type}s")
+        complex_array = getattr(self, f"_{self.type}s")
         res = {
             "id": self.id,
             "bus": self.bus.id,
             "phases": self.phases,
-            f"{self._type}s": [[value.real, value.imag] for value in complex_array],
+            f"{self.type}s": [[value.real, value.imag] for value in complex_array],
         }
         if include_results:
             currents = self._res_currents_getter(warning=True)
@@ -248,7 +248,7 @@ class AbstractLoad(Element, ABC):
 class PowerLoad(AbstractLoad):
     """A constant power load."""
 
-    _type = "power"
+    type: Final = "power"
 
     def __init__(
         self,
@@ -428,7 +428,7 @@ class PowerLoad(AbstractLoad):
 class CurrentLoad(AbstractLoad):
     """A constant current load."""
 
-    _type = "current"
+    type: Final = "current"
 
     def __init__(
         self, id: Id, bus: Bus, *, currents: ComplexArrayLike1D, phases: str | None = None, **kwargs: Any
@@ -478,7 +478,7 @@ class CurrentLoad(AbstractLoad):
 class ImpedanceLoad(AbstractLoad):
     """A constant impedance load."""
 
-    _type = "impedance"
+    type: Final = "impedance"
 
     def __init__(
         self, id: Id, bus: Bus, *, impedances: ComplexArrayLike1D, phases: str | None = None, **kwargs: Any

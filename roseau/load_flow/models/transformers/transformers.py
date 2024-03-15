@@ -1,5 +1,5 @@
 import logging
-from typing import Any
+from typing import Any, Final
 
 from shapely import Point
 
@@ -25,9 +25,9 @@ class Transformer(AbstractBranch):
     The model parameters are defined using the ``parameters`` argument.
     """
 
-    branch_type = "transformer"
+    type: Final = "transformer"
 
-    allowed_phases = Bus.allowed_phases
+    allowed_phases: Final = Bus.allowed_phases
     """The allowed phases for a transformer are:
 
     - P-P-P or P-P-P-N: ``"abc"``, ``"abcn"`` (three-phase transformer)

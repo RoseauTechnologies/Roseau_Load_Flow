@@ -189,7 +189,7 @@
           geometry: { coordinates: [-0.8900710079343, 49.258817450938], type: "Point" },
           id: "0",
           properties: {
-            branch_type: "switch",
+            type: "switch",
             bus1_id: "HVMV23",
             bus2_id: "HVMVFeeder23",
             id: "Switch",
@@ -215,7 +215,7 @@
           },
           id: "1",
           properties: {
-            branch_type: "line",
+            type: "line",
             bus1_id: "HVMVFeeder23",
             bus2_id: "MVBus03246",
             id: "MVBranch33893",
@@ -238,7 +238,7 @@
           },
           id: "2",
           properties: {
-            branch_type: "line",
+            type: "line",
             bus1_id: "MVBus07867",
             bus2_id: "MVLV12316",
             id: "MVBranch42705",
@@ -273,7 +273,7 @@
           },
           id: "3",
           properties: {
-            branch_type: "line",
+            type: "line",
             bus1_id: "MVBus09362",
             bus2_id: "MVLV18592",
             id: "MVBranch34205",
@@ -296,7 +296,7 @@
           },
           id: "4",
           properties: {
-            branch_type: "line",
+            type: "line",
             bus1_id: "MVBus09361",
             bus2_id: "MVBus09362",
             id: "MVBranch46357",
@@ -323,7 +323,7 @@
           },
           id: "5",
           properties: {
-            branch_type: "line",
+            type: "line",
             bus1_id: "MVLV07687",
             bus2_id: "MVBus09361",
             id: "MVBranch47021",
@@ -370,7 +370,7 @@
           },
           id: "6",
           properties: {
-            branch_type: "line",
+            type: "line",
             bus1_id: "MVBus07867",
             bus2_id: "MVLV07687",
             id: "MVBranch46354",
@@ -402,7 +402,7 @@
           },
           id: "7",
           properties: {
-            branch_type: "line",
+            type: "line",
             bus1_id: "MVLV14607",
             bus2_id: "MVBus07867",
             id: "MVBranch42704",
@@ -481,7 +481,7 @@
           },
           id: "8",
           properties: {
-            branch_type: "line",
+            type: "line",
             bus1_id: "MVBus03247",
             bus2_id: "MVLV14607",
             id: "MVBranch45456",
@@ -592,7 +592,7 @@
           },
           id: "9",
           properties: {
-            branch_type: "line",
+            type: "line",
             bus1_id: "MVBus03246",
             bus2_id: "MVBus03247",
             id: "MVBranch46168",
@@ -611,7 +611,7 @@
         let div = L.DomUtil.create("div");
 
         let handleObject = (feature) => (typeof feature == "object" ? JSON.stringify(feature) : feature);
-        let fields = ["id", "branch_type", "bus1_id", "bus2_id"];
+        let fields = ["id", "type", "bus1_id", "bus2_id"];
         let aliases = ["Id:", "Type:", "Bus1:", "Bus2:"];
         let table =
           "<table>" +

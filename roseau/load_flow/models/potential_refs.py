@@ -1,5 +1,5 @@
 import logging
-from typing import Any
+from typing import Any, Final
 
 from typing_extensions import Self
 
@@ -24,7 +24,7 @@ class PotentialRef(Element):
     default is ``Vn = 0``.
     """
 
-    allowed_phases = frozenset({"a", "b", "c", "n"})
+    allowed_phases: Final = frozenset({"a", "b", "c", "n"})
 
     def __init__(self, id: Id, element: Bus | Ground, *, phase: str | None = None, **kwargs: Any) -> None:
         """PotentialRef constructor.
