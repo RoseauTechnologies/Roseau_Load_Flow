@@ -38,6 +38,8 @@ class Element(ABC, Identifiable, JsonMixin):
                 A unique ID of the element in the network. Two elements of the same type cannot
                 have the same ID.
         """
+        if type(self) is Element:
+            raise TypeError("Can't instantiate abstract class Element")
         super().__init__(id)
         self._connected_elements: list[Element] = []
         self._network: ElectricalNetwork | None = None

@@ -56,6 +56,8 @@ class AbstractLoad(Element, ABC):
                 :attr:`allowed_phases`. All phases of the load, except ``"n"``, must be present in
                 the phases of the connected bus. By default, the phases of the bus are used.
         """
+        if type(self) is AbstractLoad:
+            raise TypeError("Can't instantiate abstract class AbstractLoad")
         super().__init__(id, **kwargs)
         if phases is None:
             phases = bus.phases

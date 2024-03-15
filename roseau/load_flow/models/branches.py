@@ -58,6 +58,8 @@ class AbstractBranch(Element):
             geometry:
                 The geometry of the branch.
         """
+        if type(self) is AbstractBranch:
+            raise TypeError("Can't instantiate abstract class AbstractBranch")
         super().__init__(id, **kwargs)
         self._check_phases(id, phases1=phases1)
         self._check_phases(id, phases2=phases2)
