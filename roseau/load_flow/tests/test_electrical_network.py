@@ -180,46 +180,46 @@ def test_recursive_connect_disconnect():
         parameters=lp,
         length=0.5,
     )
-    assert load_bus._connected_elements == [ground, load, line, new_line]
+    assert list(load_bus._iter_connected_elements()) == [ground, load, line, new_line]
     assert new_bus.network == en
-    assert new_bus._connected_elements == [new_load, new_line2, new_line]
+    assert list(new_bus._iter_connected_elements()) == [new_load, new_line2, new_line]
     assert new_bus.id in en.buses
     assert new_line.network == en
-    assert new_line._connected_elements == [new_bus, load_bus]
+    assert list(new_line._iter_connected_elements()) == [new_bus, load_bus]
     assert new_line.id in en.branches
     assert new_load.network == en
-    assert new_load._connected_elements == [new_bus]
+    assert list(new_load._iter_connected_elements()) == [new_bus]
     assert new_load.id in en.loads
     assert new_bus2.network == en
-    assert new_bus2._connected_elements == [new_load2, new_line2]
+    assert list(new_bus2._iter_connected_elements()) == [new_load2, new_line2]
     assert new_bus2.id in en.buses
     assert new_line2.network == en
-    assert new_line2._connected_elements == [new_bus2, new_bus]
+    assert list(new_line2._iter_connected_elements()) == [new_bus2, new_bus]
     assert new_line2.id in en.branches
     assert new_load2.network == en
-    assert new_load2._connected_elements == [new_bus2]
+    assert list(new_load2._iter_connected_elements()) == [new_bus2]
     assert new_load2.id in en.loads
 
     # Disconnect a load
     new_load.disconnect()
-    assert load_bus._connected_elements == [ground, load, line, new_line]
+    assert list(load_bus._iter_connected_elements()) == [ground, load, line, new_line]
     assert new_bus.network == en
-    assert new_bus._connected_elements == [new_line2, new_line]
+    assert list(new_bus._iter_connected_elements()) == [new_line2, new_line]
     assert new_bus.id in en.buses
     assert new_line.network == en
-    assert new_line._connected_elements == [new_bus, load_bus]
+    assert list(new_line._iter_connected_elements()) == [new_bus, load_bus]
     assert new_line.id in en.branches
     assert new_load.network is None
-    assert new_load._connected_elements == []
+    assert list(new_load._iter_connected_elements()) == []
     assert new_load.id not in en.loads
     assert new_bus2.network == en
-    assert new_bus2._connected_elements == [new_load2, new_line2]
+    assert list(new_bus2._iter_connected_elements()) == [new_load2, new_line2]
     assert new_bus2.id in en.buses
     assert new_line2.network == en
-    assert new_line2._connected_elements == [new_bus2, new_bus]
+    assert list(new_line2._iter_connected_elements()) == [new_bus2, new_bus]
     assert new_line2.id in en.branches
     assert new_load2.network == en
-    assert new_load2._connected_elements == [new_bus2]
+    assert list(new_load2._iter_connected_elements()) == [new_bus2]
     assert new_load2.id in en.loads
 
 

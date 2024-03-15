@@ -1,3 +1,5 @@
+from itertools import count
+
 import numpy as np
 import pytest
 
@@ -56,29 +58,34 @@ def test_loads_phases():
 
     assert PowerLoad.allowed_phases == Bus.allowed_phases
 
+    load_ids = count(1)
     # Not allowed
     for ph in ("a", "n", "ba", "nc", "anb", "nabc", "acb"):
+        i = next(load_ids)
         with pytest.raises(RoseauLoadFlowException) as e:
-            PowerLoad("load1", bus, phases=ph, powers=[100, 100, 100])
+            PowerLoad(f"load{i}", bus, phases=ph, powers=[100, 100, 100])
         assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
-        assert e.value.msg.startswith(f"PowerLoad of id 'load1' got invalid phases '{ph}', allowed values are")
+        assert e.value.msg.startswith(f"PowerLoad of id 'load{i}' got invalid phases '{ph}', allowed values are")
 
     # Allowed
     for ph, n in (("ab", 1), ("abc", 3), ("abcn", 3)):
-        PowerLoad("load1", bus, phases=ph, powers=[100] * n)
+        i = next(load_ids)
+        PowerLoad(f"load{i}", bus, phases=ph, powers=[100] * n)
 
     # Not in bus
     bus = Bus("bus", phases="ab")
     for phase, missing, n in (("abc", "c", 3), ("abn", "n", 2), ("an", "n", 1)):
+        i = next(load_ids)
         with pytest.raises(RoseauLoadFlowException) as e:
-            PowerLoad("load1", bus, phases=phase, powers=[100] * n)
+            PowerLoad(f"load{i}", bus, phases=phase, powers=[100] * n)
         assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
-        assert e.value.msg == f"Phases ['{missing}'] of load 'load1' are not in bus 'bus' phases 'ab'"
+        assert e.value.msg == f"Phases ['{missing}'] of load 'load{i}' are not in bus 'bus' phases 'ab'"
 
     # Default
     for ph, n in (("ab", 1), ("abc", 3), ("abcn", 3)):
+        i = next(load_ids)
         bus = Bus("bus", phases=ph)
-        load = PowerLoad("load1", bus, phases=ph, powers=[100] * n)
+        load = PowerLoad(f"load{i}", bus, phases=ph, powers=[100] * n)
         assert load.phases == ph
 
     # Floating neutral (disallowed by default)
@@ -86,12 +93,14 @@ def test_loads_phases():
         _floating_neutral_allowed = True
 
     bus = Bus("bus", phases="ab")
-    PowerLoadEngine("load1", bus, phases="abn", powers=[100, 100])
+    i = next(load_ids)
+    PowerLoadEngine(f"load{i}", bus, phases="abn", powers=[100, 100])
     # single-phase floating neutral does not make sense
+    i = next(load_ids)
     with pytest.raises(RoseauLoadFlowException) as e:
-        PowerLoadEngine("load1", bus, phases="an", powers=[100])
+        PowerLoadEngine(f"load{i}", bus, phases="an", powers=[100])
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
-    assert e.value.msg == "Phases ['n'] of load 'load1' are not in bus 'bus' phases 'ab'"
+    assert e.value.msg == f"Phases ['n'] of load 'load{i}' are not in bus 'bus' phases 'ab'"
 
 
 def test_sources_phases():
@@ -99,29 +108,34 @@ def test_sources_phases():
 
     assert VoltageSource.allowed_phases == Bus.allowed_phases
 
+    source_ids = count(1)
     # Not allowed
     for ph in ("a", "n", "ba", "nc", "anb", "nabc", "acb"):
+        i = next(source_ids)
         with pytest.raises(RoseauLoadFlowException) as e:
-            VoltageSource("source1", bus, phases=ph, voltages=[100, 100, 100])
+            VoltageSource(f"source{i}", bus, phases=ph, voltages=[100, 100, 100])
         assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
-        assert e.value.msg.startswith(f"VoltageSource of id 'source1' got invalid phases '{ph}', allowed values are")
+        assert e.value.msg.startswith(f"VoltageSource of id 'source{i}' got invalid phases '{ph}', allowed values are")
 
     # Allowed
     for ph, n in (("ab", 1), ("abc", 3), ("abcn", 3)):
-        VoltageSource("source1", bus, phases=ph, voltages=[100] * n)
+        i = next(source_ids)
+        VoltageSource(f"source{i}", bus, phases=ph, voltages=[100] * n)
 
     # Not in bus
     bus = Bus("bus", phases="ab")
     for phase, missing, n in (("abc", "c", 3), ("abn", "n", 2), ("an", "n", 1)):
+        i = next(source_ids)
         with pytest.raises(RoseauLoadFlowException) as e:
-            VoltageSource("source1", bus, phases=phase, voltages=[100] * n)
+            VoltageSource(f"source{i}", bus, phases=phase, voltages=[100] * n)
         assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
-        assert e.value.msg == f"Phases ['{missing}'] of source 'source1' are not in bus 'bus' phases 'ab'"
+        assert e.value.msg == f"Phases ['{missing}'] of source 'source{i}' are not in bus 'bus' phases 'ab'"
 
     # Default
     for ph, n in (("ab", 1), ("abc", 3), ("abcn", 3)):
+        i = next(source_ids)
         bus = Bus("bus", phases=ph)
-        vs = VoltageSource("source1", bus, voltages=[100] * n)
+        vs = VoltageSource(f"source{i}", bus, voltages=[100] * n)
         assert vs.phases == ph
 
     # Floating neutral (disallowed by default)
@@ -129,12 +143,14 @@ def test_sources_phases():
         _floating_neutral_allowed = True
 
     bus = Bus("bus", phases="ab")
-    VoltageSourceEngine("source1", bus, phases="abn", voltages=[100, 100])
+    i = next(source_ids)
+    VoltageSourceEngine(f"source{i}", bus, phases="abn", voltages=[100, 100])
     # single-phase floating neutral does not make sense
+    i = next(source_ids)
     with pytest.raises(RoseauLoadFlowException) as e:
-        VoltageSourceEngine("source1", bus, phases="an", voltages=[100])
+        VoltageSourceEngine(f"source{i}", bus, phases="an", voltages=[100])
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
-    assert e.value.msg == "Phases ['n'] of source 'source1' are not in bus 'bus' phases 'ab'"
+    assert e.value.msg == f"Phases ['n'] of source 'source{i}' are not in bus 'bus' phases 'ab'"
 
 
 def test_lines_phases():
@@ -143,42 +159,47 @@ def test_lines_phases():
 
     assert Line.allowed_phases == Bus.allowed_phases | {"a", "b", "c", "n"}
 
+    line_ids = count(1)
     # Not allowed
     lp = LineParameters("test", z_line=10 * np.eye(4, dtype=complex))
     for ph in ("ba", "nc", "anb", "nabc", "acb"):
+        i = next(line_ids)
         with pytest.raises(RoseauLoadFlowException) as e:
-            Line("line1", bus1, bus2, phases=ph, parameters=lp, length=10)
+            Line(f"line{i}", bus1, bus2, phases=ph, parameters=lp, length=10)
         assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
-        assert e.value.msg.startswith(f"Line of id 'line1' got invalid phases '{ph}', allowed values are")
+        assert e.value.msg.startswith(f"Line of id 'line{i}' got invalid phases '{ph}', allowed values are")
 
     # Allowed
     for ph in ("ab", "abc", "a", "n"):
+        i = next(line_ids)
         lp = LineParameters("test", z_line=10 * np.eye(len(ph), dtype=complex))
-        Line("line1", bus1, bus2, phases=ph, parameters=lp, length=10)
+        Line(f"line{i}", bus1, bus2, phases=ph, parameters=lp, length=10)
 
     # Not in bus
     bus1 = Bus("bus-1", phases="abc")
+    i = next(line_ids)
     with pytest.raises(RoseauLoadFlowException) as e:
-        Line("line1", bus1, bus2, phases="abcn", parameters=lp, length=10)
+        Line(f"line{i}", bus1, bus2, phases="abcn", parameters=lp, length=10)
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
-    assert (
-        e.value.msg
-        == "Phases ['n'] of line 'line1' are not in the common phases ['a', 'b', 'c'] of buses 'bus-1' and 'bus-2'."
+    assert e.value.msg == (
+        f"Phases ['n'] of line 'line{i}' are not in the common phases ['a', 'b', 'c'] of buses 'bus-1' and 'bus-2'."
     )
 
     # Default
     bus1 = Bus("bus-1", phases="abcn")
     bus2 = Bus("bus-2", phases="ca")
+    i = next(line_ids)
     lp = LineParameters("test", z_line=10 * np.eye(2, dtype=complex))
-    line = Line("line1", bus1, bus2, parameters=lp, length=10)
+    line = Line(f"line{i}", bus1, bus2, parameters=lp, length=10)
     assert line.phases == line.phases1 == line.phases2 == "ca"
 
     # Bad default
     lp = LineParameters("test", z_line=10 * np.eye(3, dtype=complex))  # bad
+    i = next(line_ids)
     with pytest.raises(RoseauLoadFlowException) as e:
-        Line("line1", bus1, bus2, parameters=lp, length=10)
+        Line(f"line{i}", bus1, bus2, parameters=lp, length=10)
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_Z_LINE_SHAPE
-    assert e.value.msg == "Incorrect z_line dimensions for line 'line1': (3, 3) instead of (2, 2)"
+    assert e.value.msg == f"Incorrect z_line dimensions for line 'line{i}': (3, 3) instead of (2, 2)"
 
 
 def test_switches_phases():
@@ -414,34 +435,34 @@ def test_voltage_phases():
 
     # Load
     bus = Bus("bus", phases="abcn")
-    load = PowerLoad("load", bus, powers=[100, 100, 100], phases="abcn")
+    load = PowerLoad("load1", bus, powers=[100, 100, 100], phases="abcn")
     assert load.voltage_phases == ["an", "bn", "cn"]
 
-    load = PowerLoad("load", bus, powers=[100, 100], phases="bcn")
+    load = PowerLoad("load2", bus, powers=[100, 100], phases="bcn")
     assert load.voltage_phases == ["bn", "cn"]
 
-    load = PowerLoad("load", bus, powers=[100], phases="bn")
+    load = PowerLoad("load3", bus, powers=[100], phases="bn")
     assert load.voltage_phases == ["bn"]
 
-    load = PowerLoad("load", bus, powers=[100, 100, 100], phases="abc")
+    load = PowerLoad("load4", bus, powers=[100, 100, 100], phases="abc")
     assert load.voltage_phases == ["ab", "bc", "ca"]
 
-    load = PowerLoad("load", bus, powers=[100], phases="ab")
+    load = PowerLoad("load5", bus, powers=[100], phases="ab")
     assert load.voltage_phases == ["ab"]
 
     # Source
     bus = Bus("bus", phases="abcn")
-    load = VoltageSource("vs", bus, voltages=[100, 100, 100], phases="abcn")
+    load = VoltageSource("vs1", bus, voltages=[100, 100, 100], phases="abcn")
     assert load.voltage_phases == ["an", "bn", "cn"]
 
-    load = VoltageSource("vs", bus, voltages=[100, 100], phases="bcn")
+    load = VoltageSource("vs2", bus, voltages=[100, 100], phases="bcn")
     assert load.voltage_phases == ["bn", "cn"]
 
-    load = VoltageSource("vs", bus, voltages=[100], phases="bn")
+    load = VoltageSource("vs3", bus, voltages=[100], phases="bn")
     assert load.voltage_phases == ["bn"]
 
-    load = VoltageSource("vs", bus, voltages=[100, 100, 100], phases="abc")
+    load = VoltageSource("vs4", bus, voltages=[100, 100, 100], phases="abc")
     assert load.voltage_phases == ["ab", "bc", "ca"]
 
-    load = VoltageSource("vs", bus, voltages=[100], phases="ab")
+    load = VoltageSource("vs5", bus, voltages=[100], phases="ab")
     assert load.voltage_phases == ["ab"]

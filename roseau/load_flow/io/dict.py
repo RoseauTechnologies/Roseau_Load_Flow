@@ -208,7 +208,7 @@ def network_to_dict(en: "ElectricalNetwork", *, include_results: bool) -> JsonDi
     short_circuits: list[JsonDict] = []
     for bus in en.buses.values():
         buses.append(bus.to_dict(include_results=include_results))
-        for element in bus._connected_elements:
+        for element in bus._iter_connected_elements():
             if isinstance(element, AbstractLoad):
                 assert element.bus is bus
                 loads.append(element.to_dict(include_results=include_results))

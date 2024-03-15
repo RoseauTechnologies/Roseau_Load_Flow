@@ -20,13 +20,13 @@ def test_switch_loop():
     assert e.value.code == RoseauLoadFlowExceptionCode.SWITCHES_LOOP
 
     with pytest.raises(RoseauLoadFlowException) as e:
-        Switch("switch2", bus2, bus1, phases="abcn")
+        Switch("switch3", bus2, bus1, phases="abcn")
     assert "There is a loop of switch" in e.value.msg
     assert e.value.code == RoseauLoadFlowExceptionCode.SWITCHES_LOOP
 
-    Switch("switch2", bus2, bus3, phases="abcn")
+    Switch("switch4", bus2, bus3, phases="abcn")
     with pytest.raises(RoseauLoadFlowException) as e:
-        Switch("switch3", bus1, bus3, phases="abcn")
+        Switch("switch5", bus1, bus3, phases="abcn")
     assert "There is a loop of switch" in e.value.msg
     assert e.value.code == RoseauLoadFlowExceptionCode.SWITCHES_LOOP
 

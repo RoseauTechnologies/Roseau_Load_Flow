@@ -1,7 +1,8 @@
 import logging
 import warnings
 from abc import ABC
-from typing import TYPE_CHECKING, Any, ClassVar, NoReturn, Optional, TypeVar
+from collections.abc import Iterator
+from typing import TYPE_CHECKING, Any, ClassVar, Literal, NoReturn, Optional, TypeVar
 
 import shapely
 from shapely.geometry import shape
@@ -18,11 +19,13 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 _T = TypeVar("_T")
+_ElementType = Literal["Bus", "Branch", "Load", "Source", "Ground", "PotentialRef"]
 
 
 class Element(ABC, Identifiable, JsonMixin):
     """An abstract class of an element in an Electrical network."""
 
+    _element_type_: _ElementType
     allowed_phases: ClassVar[frozenset[str]]  # frozenset for immutability and uniqueness
     """The allowed phases for this element type.
 
@@ -41,17 +44,34 @@ class Element(ABC, Identifiable, JsonMixin):
         if type(self) is Element:
             raise TypeError("Can't instantiate abstract class Element")
         super().__init__(id)
-        self._connected_elements: list[Element] = []
         self._network: ElectricalNetwork | None = None
         self._cy_element: CyElement | None = None
         self._fetch_results = False
         self._no_results = True
         self._results_valid = True
+        self._connected_elements: dict[_ElementType, dict[Id, "Element"]] = {
+            "Bus": {},
+            "Branch": {},
+            "Load": {},
+            "Source": {},
+            "Ground": {},
+            "PotentialRef": {},
+        }
+
+    def __init_subclass__(cls) -> None:
+        super().__init_subclass__()
+        if not hasattr(cls, "_element_type_"):
+            cls._element_type_ = cls.__name__
 
     @property
     def network(self) -> Optional["ElectricalNetwork"]:
         """Return the network the element belong to (if any)."""
         return self._network
+
+    def _iter_connected_elements(self) -> Iterator["Element"]:
+        """Iterate over the connected elements."""
+        for container in self._connected_elements.values():
+            yield from container.values()
 
     @classmethod
     def _check_phases(cls, id: Id, allowed_phases: frozenset[str] | None = None, **kwargs: str) -> None:
@@ -93,7 +113,7 @@ class Element(ABC, Identifiable, JsonMixin):
             return
 
         # Recursively call this method to the elements connected to self
-        for e in self._connected_elements:
+        for e in self._iter_connected_elements():
             if e.network == value:
                 continue
             else:
@@ -117,20 +137,31 @@ class Element(ABC, Identifiable, JsonMixin):
 
         # Modify objects. Append to the connected_elements
         for element in elements:
-            if element not in self._connected_elements:
-                self._connected_elements.append(element)
-            if self not in element._connected_elements:
-                element._connected_elements.append(self)
+            self._connect_internal(what=element, to=self)
+            self._connect_internal(what=self, to=element)
 
         # Propagate the new network to `self` and other newly connected elements (recursively)`
         if network is not None:
             self._set_network(network)
 
+    @staticmethod
+    def _connect_internal(what: "Element", to: "Element") -> None:
+        container = to._connected_elements[what._element_type_]
+        if what.id not in container:
+            container[what.id] = what
+        elif container[what.id] != what:
+            msg = (
+                f"An element of type {what._element_type_} and ID {what.id!r} is already "
+                f"connected to {type(to).__name__} {to.id!r}."
+            )
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT)
+
     def _disconnect(self) -> None:
         """Remove all the connections with the other elements."""
-        for element in self._connected_elements:
-            element._connected_elements.remove(self)
-        self._connected_elements = []
+        for element in self._iter_connected_elements():
+            del element._connected_elements[self._element_type_][self.id]
+        self._connected_elements = {k: {} for k in self._connected_elements}
         self._set_network(None)
         self._cy_element.disconnect()
         # The cpp element has been disconnected and can't be reconnected easily, it's safer to delete it

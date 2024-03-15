@@ -237,18 +237,18 @@ class Bus(Element):
 
         buses: set[Bus] = set()
         visited: set[Element] = set()
-        remaining = set(self._connected_elements)
+        remaining = set(self._iter_connected_elements())
 
         while remaining:
             branch = remaining.pop()
             visited.add(branch)
             if not isinstance(branch, (Line, Switch)):
                 continue
-            for element in branch._connected_elements:
+            for element in branch._iter_connected_elements():
                 if not isinstance(element, Bus) or element is self or element in buses:
                     continue
                 buses.add(element)
-                to_add = set(element._connected_elements).difference(visited)
+                to_add = set(element._iter_connected_elements()).difference(visited)
                 remaining.update(to_add)
                 if not (
                     force
@@ -290,19 +290,19 @@ class Bus(Element):
         yield self.id
 
         visited: set[Element] = set()
-        remaining = set(self._connected_elements)
+        remaining = set(self._iter_connected_elements())
 
         while remaining:
             branch = remaining.pop()
             visited.add(branch)
             if not isinstance(branch, (Line, Switch)):
                 continue
-            for element in branch._connected_elements:
+            for element in branch._iter_connected_elements():
                 if not isinstance(element, Bus) or element.id in visited_buses:
                     continue
                 visited_buses.add(element.id)
                 yield element.id
-                to_add = set(element._connected_elements).difference(visited)
+                to_add = set(element._iter_connected_elements()).difference(visited)
                 remaining.update(to_add)
 
     @ureg_wraps("percent", (None,))
@@ -410,7 +410,7 @@ class Bus(Element):
             msg = f"For the short-circuit on bus {self.id!r}, some phases are duplicated: {duplicates}."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
-        for element in self._connected_elements:
+        for element in self._iter_connected_elements():
             if isinstance(element, PowerLoad):
                 msg = (
                     f"A power load {element.id!r} is already connected on bus {self.id!r}. "

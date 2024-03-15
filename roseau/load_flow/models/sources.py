@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 class VoltageSource(Element):
     """A voltage source."""
 
+    _element_type_ = "Source"
     allowed_phases: Final = Bus.allowed_phases
     """The allowed phases for a voltage source are the same as for a :attr:`bus<Bus.allowed_phases>`."""
     _floating_neutral_allowed: bool = False

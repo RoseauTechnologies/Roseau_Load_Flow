@@ -9,23 +9,23 @@ from roseau.load_flow.units import Q_
 
 def test_lines_length():
     bus1 = Bus("bus1", phases="abcn")
-    bus2 = Bus("bus1", phases="abcn")
+    bus2 = Bus("bus2", phases="abcn")
     lp = LineParameters("lp", z_line=np.eye(4, dtype=complex))
 
     # Negative value for length in the constructor
     with pytest.raises(RoseauLoadFlowException) as e:
-        Line("line", bus1=bus1, bus2=bus2, parameters=lp, length=-5)
+        Line("line1", bus1=bus1, bus2=bus2, parameters=lp, length=-5)
     assert "A line length must be greater than 0." in e.value.msg
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_LENGTH_VALUE
 
     # The same with a unit
     with pytest.raises(RoseauLoadFlowException) as e:
-        Line("line", bus1=bus1, bus2=bus2, parameters=lp, length=Q_(-5, "m"))
+        Line("line2", bus1=bus1, bus2=bus2, parameters=lp, length=Q_(-5, "m"))
     assert "A line length must be greater than 0." in e.value.msg
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_LENGTH_VALUE
 
     # Test on the length setter
-    line = Line("line", bus1=bus1, bus2=bus2, parameters=lp, length=Q_(5, "m"))
+    line = Line("line3", bus1=bus1, bus2=bus2, parameters=lp, length=Q_(5, "m"))
     with pytest.raises(RoseauLoadFlowException) as e:
         line.length = -6.5
     assert "A line length must be greater than 0." in e.value.msg
@@ -40,32 +40,32 @@ def test_lines_length():
 
 def test_lines_units():
     bus1 = Bus("bus1", phases="abcn")
-    bus2 = Bus("bus1", phases="abcn")
+    bus2 = Bus("bus2", phases="abcn")
     lp = LineParameters("lp", z_line=np.eye(4, dtype=complex))
 
     # Good unit constructor
-    line = Line("line", bus1=bus1, bus2=bus2, parameters=lp, length=Q_(5, "km"))
+    line = Line("line1", bus1=bus1, bus2=bus2, parameters=lp, length=Q_(5, "km"))
     assert np.isclose(line._length, 5)
 
     # Good unit setter
-    line = Line("line", bus1=bus1, bus2=bus2, parameters=lp, length=5)
+    line = Line("line2", bus1=bus1, bus2=bus2, parameters=lp, length=5)
     assert np.allclose(line._length, 5)
     line.length = Q_(6.5, "m")
     assert np.isclose(line._length, 6.5e-3)
 
     # Bad unit constructor
     with pytest.raises(DimensionalityError, match=r"Cannot convert from 'ampere' \(\[current\]\) to 'km'"):
-        Line("line", bus1=bus1, bus2=bus2, parameters=lp, length=Q_(5, "A"))
+        Line("line3", bus1=bus1, bus2=bus2, parameters=lp, length=Q_(5, "A"))
 
     # Bad unit setter
-    line = Line("line", bus1=bus1, bus2=bus2, parameters=lp, length=5)
+    line = Line("line4", bus1=bus1, bus2=bus2, parameters=lp, length=5)
     with pytest.raises(DimensionalityError, match=r"Cannot convert from 'ampere' \(\[current\]\) to 'km'"):
         line.length = Q_(6.5, "A")
 
 
 def test_line_parameters_shortcut():
     bus1 = Bus("bus1", phases="abcn")
-    bus2 = Bus("bus1", phases="abcn")
+    bus2 = Bus("bus2", phases="abcn")
 
     #
     # Without shunt
@@ -73,7 +73,7 @@ def test_line_parameters_shortcut():
     lp = LineParameters("lp", z_line=np.eye(4, dtype=complex))
 
     # Z
-    line = Line("line", bus1=bus1, bus2=bus2, parameters=lp, length=Q_(50, "m"))
+    line = Line("line1", bus1=bus1, bus2=bus2, parameters=lp, length=Q_(50, "m"))
     assert np.allclose(line.z_line.m_as("ohm"), 0.05 * np.eye(4, dtype=complex))
 
     # Y
@@ -89,7 +89,7 @@ def test_line_parameters_shortcut():
 
     # Z
     ground = Ground("ground")
-    line = Line("line", bus1=bus1, bus2=bus2, parameters=lp, length=Q_(50, "m"), ground=ground)
+    line = Line("line2", bus1=bus1, bus2=bus2, parameters=lp, length=Q_(50, "m"), ground=ground)
     assert np.allclose(line.z_line.m_as("ohm"), 0.05 * z_line)
 
     # Y
@@ -99,7 +99,7 @@ def test_line_parameters_shortcut():
 
 def test_res_violated():
     bus1 = Bus("bus1", phases="abc")
-    bus2 = Bus("bus1", phases="abc")
+    bus2 = Bus("bus2", phases="abc")
     lp = LineParameters("lp", z_line=np.eye(3, dtype=complex))
     line = Line("line", bus1=bus1, bus2=bus2, parameters=lp, length=Q_(50, "m"))
     direct_seq = np.exp([0, -2 / 3 * np.pi * 1j, 2 / 3 * np.pi * 1j])
