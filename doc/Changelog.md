@@ -15,7 +15,7 @@ myst:
 
 ## Unreleased
 
-- {gh-pr}`200` {gh-issue}`185` Add `type` attribute to the load classes and rename branches `branch_type`
+- {gh-pr}`201` {gh-issue}`185` Add `type` attribute to the load classes and rename branches `branch_type`
   attribute to `type` for consistency. Please replace `branch.branch_type` by `branch.type` in your code.
   In addition, loads data frames gained two new columns:
   1. `type` indicating the load type: constant-(`power`, `current`, `impedance`);
