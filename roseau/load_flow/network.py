@@ -1142,7 +1142,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT)
         if element.id in container and container[element.id] is not element:
-            element._disconnect()  # Don't leave it lingering in other elemnets' _connected_elements
+            element._disconnect()  # Don't leave it lingering in other elemnets _connected_elements
             msg = f"A {element_type} of ID {element.id!r} is already connected to the network."
             if can_disconnect:
                 msg += f" Disconnect the old {element_type} first if you meant to replace it."
