@@ -182,46 +182,46 @@ def test_recursive_connect_disconnect():
         parameters=lp,
         length=0.5,
     )
-    assert list(load_bus._iter_connected_elements()) == [line, new_line, load, ground]
+    assert load_bus._connected_elements == [ground, load, line, new_line]
     assert new_bus.network == en
-    assert list(new_bus._iter_connected_elements()) == [new_line2, new_line, new_load]
+    assert new_bus._connected_elements == [new_load, new_line2, new_line]
     assert new_bus.id in en.buses
     assert new_line.network == en
-    assert list(new_line._iter_connected_elements()) == [new_bus, load_bus]
+    assert new_line._connected_elements == [new_bus, load_bus]
     assert new_line.id in en.branches
     assert new_load.network == en
-    assert list(new_load._iter_connected_elements()) == [new_bus]
+    assert new_load._connected_elements == [new_bus]
     assert new_load.id in en.loads
     assert new_bus2.network == en
-    assert list(new_bus2._iter_connected_elements()) == [new_line2, new_load2]
+    assert new_bus2._connected_elements == [new_load2, new_line2]
     assert new_bus2.id in en.buses
     assert new_line2.network == en
-    assert list(new_line2._iter_connected_elements()) == [new_bus2, new_bus]
+    assert new_line2._connected_elements == [new_bus2, new_bus]
     assert new_line2.id in en.branches
     assert new_load2.network == en
-    assert list(new_load2._iter_connected_elements()) == [new_bus2]
+    assert new_load2._connected_elements == [new_bus2]
     assert new_load2.id in en.loads
 
     # Disconnect a load
     new_load.disconnect()
-    assert list(load_bus._iter_connected_elements()) == [line, new_line, load, ground]
+    assert load_bus._connected_elements == [ground, load, line, new_line]
     assert new_bus.network == en
-    assert list(new_bus._iter_connected_elements()) == [new_line2, new_line]
+    assert new_bus._connected_elements == [new_line2, new_line]
     assert new_bus.id in en.buses
     assert new_line.network == en
-    assert list(new_line._iter_connected_elements()) == [new_bus, load_bus]
+    assert new_line._connected_elements == [new_bus, load_bus]
     assert new_line.id in en.branches
     assert new_load.network is None
-    assert list(new_load._iter_connected_elements()) == []
+    assert new_load._connected_elements == []
     assert new_load.id not in en.loads
     assert new_bus2.network == en
-    assert list(new_bus2._iter_connected_elements()) == [new_line2, new_load2]
+    assert new_bus2._connected_elements == [new_load2, new_line2]
     assert new_bus2.id in en.buses
     assert new_line2.network == en
-    assert list(new_line2._iter_connected_elements()) == [new_bus2, new_bus]
+    assert new_line2._connected_elements == [new_bus2, new_bus]
     assert new_line2.id in en.branches
     assert new_load2.network == en
-    assert list(new_load2._iter_connected_elements()) == [new_bus2]
+    assert new_load2._connected_elements == [new_bus2]
     assert new_load2.id in en.loads
 
 
@@ -411,8 +411,8 @@ def test_invalid_element_overrides():
         CurrentLoad("load", bus1, currents=[1])
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT
     assert e.value.msg == (
-        "A Load of ID 'load' is already connected to the network. Disconnect the old element first "
-        "if you mean to replace it."
+        "A load of ID 'load' is already connected to the network. Disconnect the old load first "
+        "if you meant to replace it."
     )
 
     # Disconnect the old element first: OK
@@ -424,8 +424,8 @@ def test_invalid_element_overrides():
         VoltageSource("source", bus2, voltages=[230])
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT
     assert e.value.msg == (
-        "A Source of ID 'source' is already connected to the network. Disconnect the old element first "
-        "if you mean to replace it."
+        "A source of ID 'source' is already connected to the network. Disconnect the old source first "
+        "if you meant to replace it."
     )
 
     # Case of a different branch type on different buses
@@ -435,7 +435,7 @@ def test_invalid_element_overrides():
     with pytest.raises(RoseauLoadFlowException) as e:
         Switch("line", bus3, bus4)
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT
-    assert e.value.msg == "A Branch of ID 'line' is already connected to the network."
+    assert e.value.msg == "A branch of ID 'line' is already connected to the network."
 
 
 def test_frame(small_network: ElectricalNetwork):

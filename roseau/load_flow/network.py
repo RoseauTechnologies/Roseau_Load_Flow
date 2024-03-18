@@ -218,7 +218,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                 grounds.append(e)
             elif isinstance(e, PotentialRef):
                 potential_refs.append(e)
-            for connected_element in e._iter_connected_elements():
+            for connected_element in e._connected_elements:
                 if connected_element not in visited_elements and connected_element not in elements:
                     elements.append(connected_element)
         return cls(
@@ -1124,28 +1124,28 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         container: dict[Id, Element]
         can_disconnect = False
         if isinstance(element, Bus):
-            container = self.buses
+            container, element_type = self.buses, "bus"
         elif isinstance(element, AbstractLoad):
-            container = self.loads
+            container, element_type = self.loads, "load"
             can_disconnect = True
         elif isinstance(element, AbstractBranch):
-            container = self.branches
+            container, element_type = self.branches, "branch"
         elif isinstance(element, VoltageSource):
-            container = self.sources
+            container, element_type = self.sources, "source"
             can_disconnect = True
         elif isinstance(element, Ground):
-            container = self.grounds
+            container, element_type = self.grounds, "ground"
         elif isinstance(element, PotentialRef):
-            container = self.potential_refs
+            container, element_type = self.potential_refs, "potential reference"
         else:
             msg = f"Unknown element {element} can not be added to the network."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT)
         if element.id in container and container[element.id] is not element:
             element._disconnect()  # Don't leave it lingering in other elemnets' _connected_elements
-            msg = f"A {element._element_type_} of ID {element.id!r} is already connected to the network."
+            msg = f"A {element_type} of ID {element.id!r} is already connected to the network."
             if can_disconnect:
-                msg += " Disconnect the old element first if you mean to replace it."
+                msg += f" Disconnect the old {element_type} first if you meant to replace it."
             logger.error(msg)
             raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT)
         container[element.id] = element
@@ -1232,7 +1232,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         found_source = False
         for element in elements:
             # Check connected elements and check network assignment
-            for adj_element in element._iter_connected_elements():
+            for adj_element in element._connected_elements:
                 if adj_element not in elements:
                     msg = (
                         f"{type(adj_element).__name__} element ({adj_element.id!r}) is connected "
@@ -1314,7 +1314,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                     bus_n = element._n
                     element.potentials = potentials[0:bus_n]
                     element._initialized_by_the_user = False  # only used for serialization
-                for e in element._iter_connected_elements():
+                for e in element._connected_elements:
                     if e not in visited and isinstance(e, (AbstractBranch, Bus)):
                         if isinstance(element, Transformer):
                             k = element.parameters._ulv / element.parameters._uhv
@@ -1341,7 +1341,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             while to_visit:
                 element = to_visit.pop(-1)
                 connected_component.append(element)
-                for connected_element in element._iter_connected_elements():
+                for connected_element in element._connected_elements:
                     if connected_element not in visited_elements and not isinstance(connected_element, Transformer):
                         to_visit.append(connected_element)
                         visited_elements.add(connected_element)

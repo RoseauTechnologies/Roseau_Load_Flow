@@ -101,7 +101,7 @@ class Switch(AbstractBranch):
         while elements:
             element = elements.pop(-1)
             visited_1.add(element)
-            for e in element._iter_connected_elements():
+            for e in element._connected_elements:
                 if e not in visited_1 and (isinstance(e, (Bus, Switch))) and e != self:
                     elements.append(e)
         visited_2: set[Element] = set()
@@ -109,7 +109,7 @@ class Switch(AbstractBranch):
         while elements:
             element = elements.pop(-1)
             visited_2.add(element)
-            for e in element._iter_connected_elements():
+            for e in element._connected_elements:
                 if e not in visited_2 and (isinstance(e, (Bus, Switch))) and e != self:
                     elements.append(e)
         if visited_1.intersection(visited_2):
@@ -119,9 +119,8 @@ class Switch(AbstractBranch):
 
     def _check_elements(self) -> None:
         """Check that we can connect both elements."""
-        # TODO: this check should take into account the phases of the voltage sources
-        if any(isinstance(e, VoltageSource) for e in self.bus1._connected_elements["Source"].values()) and any(
-            isinstance(e, VoltageSource) for e in self.bus2._connected_elements["Source"].values()
+        if any(isinstance(e, VoltageSource) for e in self.bus1._connected_elements) and any(
+            isinstance(e, VoltageSource) for e in self.bus2._connected_elements
         ):
             msg = (
                 f"The buses {self.bus1.id!r} and {self.bus2.id!r} both have a voltage source and "

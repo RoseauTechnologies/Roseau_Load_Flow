@@ -24,8 +24,6 @@ class AbstractBranch(Element):
         :doc:`Switch model documentation </models/Switch>`
     """
 
-    _element_type_ = "Branch"
-
     type: ClassVar[Literal["line", "transformer", "switch"]]
 
     def __init__(

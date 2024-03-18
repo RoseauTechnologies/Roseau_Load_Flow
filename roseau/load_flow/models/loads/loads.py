@@ -34,7 +34,6 @@ class AbstractLoad(Element, ABC):
         * delta-connected loads using a `phases` constructor argument not containing `"n"`
     """
 
-    _element_type_ = "Load"
     type: ClassVar[Literal["power", "current", "impedance"]]
     _floating_neutral_allowed: bool = False
 

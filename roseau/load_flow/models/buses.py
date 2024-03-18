@@ -237,41 +237,40 @@ class Bus(Element):
 
         buses: set[Bus] = set()
         visited: set[Element] = set()
-        remaining = set(self._connected_elements["Branch"].values())
+        remaining = set(self._connected_elements)
 
-        bus: Bus
         while remaining:
             branch = remaining.pop()
             visited.add(branch)
             if not isinstance(branch, (Line, Switch)):
                 continue
-            for bus in branch._connected_elements["Bus"].values():
-                if bus is self or bus in buses:
+            for element in branch._connected_elements:
+                if not isinstance(element, Bus) or element is self or element in buses:
                     continue
-                buses.add(bus)
-                to_add = set(bus._connected_elements["Branch"].values()).difference(visited)
+                buses.add(element)
+                to_add = set(element._connected_elements).difference(visited)
                 remaining.update(to_add)
                 if not (
                     force
                     or self._min_voltage is None
-                    or bus._min_voltage is None
-                    or np.isclose(bus._min_voltage, self._min_voltage)
+                    or element._min_voltage is None
+                    or np.isclose(element._min_voltage, self._min_voltage)
                 ):
                     msg = (
                         f"Cannot propagate the minimum voltage ({self._min_voltage} V) of bus {self.id!r} "
-                        f"to bus {bus.id!r} with different minimum voltage ({bus._min_voltage} V)."
+                        f"to bus {element.id!r} with different minimum voltage ({element._min_voltage} V)."
                     )
                     logger.error(msg)
                     raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_VOLTAGES)
                 if not (
                     force
                     or self._max_voltage is None
-                    or bus._max_voltage is None
-                    or np.isclose(bus._max_voltage, self._max_voltage)
+                    or element._max_voltage is None
+                    or np.isclose(element._max_voltage, self._max_voltage)
                 ):
                     msg = (
                         f"Cannot propagate the maximum voltage ({self._max_voltage} V) of bus {self.id!r} "
-                        f"to bus {bus.id!r} with different maximum voltage ({bus._max_voltage} V)."
+                        f"to bus {element.id!r} with different maximum voltage ({element._max_voltage} V)."
                     )
                     logger.error(msg)
                     raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_VOLTAGES)
@@ -291,19 +290,19 @@ class Bus(Element):
         yield self.id
 
         visited: set[Element] = set()
-        remaining = set(self._connected_elements["Branch"].values())
+        remaining = set(self._connected_elements)
 
         while remaining:
             branch = remaining.pop()
             visited.add(branch)
             if not isinstance(branch, (Line, Switch)):
                 continue
-            for bus in branch._connected_elements["Bus"].values():
-                if bus.id in visited_buses:
+            for element in branch._connected_elements:
+                if not isinstance(element, Bus) or element.id in visited_buses:
                     continue
-                visited_buses.add(bus.id)
-                yield bus.id
-                to_add = set(bus._connected_elements["Branch"].values()).difference(visited)
+                visited_buses.add(element.id)
+                yield element.id
+                to_add = set(element._connected_elements).difference(visited)
                 remaining.update(to_add)
 
     @ureg_wraps("percent", (None,))
@@ -411,7 +410,7 @@ class Bus(Element):
             msg = f"For the short-circuit on bus {self.id!r}, some phases are duplicated: {duplicates}."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
-        for element in self._connected_elements["Load"].values():
+        for element in self._connected_elements:
             if isinstance(element, PowerLoad):
                 msg = (
                     f"A power load {element.id!r} is already connected on bus {self.id!r}. "
