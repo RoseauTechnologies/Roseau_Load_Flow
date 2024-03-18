@@ -1121,22 +1121,34 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                 The element to add. Only lines, loads, buses and sources can be added.
         """
         # The C++ electrical network and the tape will be recomputed
+        container: dict[Id, Element]
+        can_disconnect = False
         if isinstance(element, Bus):
-            self.buses[element.id] = element
+            container, element_type = self.buses, "bus"
         elif isinstance(element, AbstractLoad):
-            self.loads[element.id] = element
+            container, element_type = self.loads, "load"
+            can_disconnect = True
         elif isinstance(element, AbstractBranch):
-            self.branches[element.id] = element
+            container, element_type = self.branches, "branch"
         elif isinstance(element, VoltageSource):
-            self.sources[element.id] = element
+            container, element_type = self.sources, "source"
+            can_disconnect = True
         elif isinstance(element, Ground):
-            self.grounds[element.id] = element
+            container, element_type = self.grounds, "ground"
         elif isinstance(element, PotentialRef):
-            self.potential_refs[element.id] = element
+            container, element_type = self.potential_refs, "potential reference"
         else:
             msg = f"Unknown element {element} can not be added to the network."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT)
+        if element.id in container and container[element.id] is not element:
+            element._disconnect()  # Don't leave it lingering in other elemnets _connected_elements
+            msg = f"A {element_type} of ID {element.id!r} is already connected to the network."
+            if can_disconnect:
+                msg += f" Disconnect the old {element_type} first if you meant to replace it."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT)
+        container[element.id] = element
         element._network = self
         self._valid = False
         self._results_valid = False

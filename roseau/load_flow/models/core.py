@@ -132,9 +132,10 @@ class Element(ABC, Identifiable, JsonMixin):
             element._connected_elements.remove(self)
         self._connected_elements = []
         self._set_network(None)
-        self._cy_element.disconnect()
-        # The cpp element has been disconnected and can't be reconnected easily, it's safer to delete it
-        self._cy_element = None
+        if self._cy_element is not None:
+            self._cy_element.disconnect()
+            # The cpp element has been disconnected and can't be reconnected easily, it's safer to delete it
+            self._cy_element = None
 
     def _invalidate_network_results(self) -> None:
         """Invalidate the network making the result"""
