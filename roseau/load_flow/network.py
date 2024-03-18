@@ -1281,46 +1281,21 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
     def _propagate_potentials(self) -> None:
         """Set the bus potentials that have not been initialized yet."""
         uninitialized = False
+        all_phases = set()
         for bus in self.buses.values():
             if not bus._initialized:
                 uninitialized = True
+                all_phases |= set(bus.phases)
 
         if uninitialized:
-            max_voltages = 0.0
-            voltage_source = None
-            potentials = None
-            for source in self.sources.values():
-                # if there are multiple voltage sources, start from the higher one
-                source_voltages = source._voltages
-                source_voltages_avg = np.average(np.abs(source_voltages))
-                if source_voltages_avg > max_voltages:
-                    max_voltages = source_voltages_avg
-                    voltage_source = source
-                    if "n" in source.phases:
-                        # Assume Vn = 0
-                        potentials = np.append(source_voltages, 0.0)
-                    elif len(source.phases) == 2:
-                        # Assume V1 + V2 = 0
-                        u = source_voltages[0]
-                        potentials = np.array([u / 2, -u / 2])
-                    else:
-                        assert len(source.phases) == 3
-                        # Assume Va + Vb + Vc = 0
-                        u_ab = source_voltages[0]
-                        u_bc = source_voltages[1]
-                        v_b = (u_bc - u_ab) / 3
-                        v_c = v_b - u_bc
-                        v_a = v_b + u_ab
-                        potentials = np.array([v_a, v_b, v_c, 0.0])
-
-            elements = [(voltage_source, potentials)]
+            potentials, starting_source = self._get_potentials(all_phases)
+            elements = [(starting_source, potentials)]
             visited = set()
             while elements:
                 element, potentials = elements.pop(-1)
                 visited.add(element)
                 if isinstance(element, Bus) and not element._initialized:
-                    bus_n = element._n
-                    element.potentials = potentials[0:bus_n]
+                    element.potentials = np.array([potentials[p] for p in element.phases], dtype=np.complex128)
                     element._initialized_by_the_user = False  # only used for serialization
                 for e in element._connected_elements:
                     if e not in visited and isinstance(e, (AbstractBranch, Bus)):
@@ -1329,12 +1304,51 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                             phase_displacement = element.parameters.phase_displacement
                             if phase_displacement is None:
                                 phase_displacement = 0
-                            if element.parameters.type == "center" and "n" not in element.bus1.phases:
-                                # "n" is mandatory in the bus2 but not in the bus1
-                                potentials = np.append(potentials, 0.0)
-                            elements.append((e, potentials * k * np.exp(phase_displacement * -1j * np.pi / 6.0)))
+                            new_potentials = potentials.copy()
+                            for key, p in new_potentials.items():
+                                new_potentials[key] = p * k * np.exp(phase_displacement * -1j * np.pi / 6.0)
+                            elements.append((e, new_potentials))
                         else:
                             elements.append((e, potentials))
+
+    def _get_potentials(self, all_phases: set[str]) -> tuple[dict[str, complex], VoltageSource]:
+        """Compute initial potentials from the voltages sources of the network, get also the starting source"""
+        starting_source = None
+        potentials = {"n": 0.0}
+        # if there are multiple voltage sources, start from the higher one (the last one in the sorted below)
+        for source in sorted(self.sources.values(), key=lambda x: np.average(np.abs(x._voltages))):
+            source_voltages = source._voltages
+            starting_source = source
+            if "n" in source.phases:
+                # Assume Vn = 0
+                for phase, voltage in zip(source.phases[:-1], source_voltages, strict=True):
+                    potentials[phase] = voltage
+            elif len(source.phases) == 2:
+                # Assume V1 + V2 = 0
+                u = source_voltages[0]
+                potentials[source.phases[0]] = u / 2
+                potentials[source.phases[1]] = -u / 2
+            else:
+                assert source.phases == "abc"
+                # Assume Va + Vb + Vc = 0
+                u_ab = source_voltages[0]
+                u_bc = source_voltages[1]
+                v_b = (u_bc - u_ab) / 3
+                v_c = v_b - u_bc
+                v_a = v_b + u_ab
+                potentials["a"] = v_a
+                potentials["b"] = v_b
+                potentials["c"] = v_c
+
+        if len(potentials) < len(all_phases):
+            # We failed to determine all the potentials (the sources are strange), fallback to something simple
+            v = np.average(np.abs(starting_source._voltages))
+            potentials["a"] = v
+            potentials["b"] = v * np.exp(-2j * np.pi / 3)
+            potentials["c"] = v * np.exp(2j * np.pi / 3)
+            potentials["n"] = 0.0
+
+        return potentials, starting_source
 
     @staticmethod
     def _check_ref(elements: Iterable[Element]) -> None:
