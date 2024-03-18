@@ -120,8 +120,8 @@ class Switch(AbstractBranch):
     def _check_elements(self) -> None:
         """Check that we can connect both elements."""
         # TODO: this check should take into account the phases of the voltage sources
-        if any(isinstance(e, VoltageSource) for e in self.bus1._iter_connected_elements()) and any(
-            isinstance(e, VoltageSource) for e in self.bus2._iter_connected_elements()
+        if any(isinstance(e, VoltageSource) for e in self.bus1._connected_elements["Source"].values()) and any(
+            isinstance(e, VoltageSource) for e in self.bus2._connected_elements["Source"].values()
         ):
             msg = (
                 f"The buses {self.bus1.id!r} and {self.bus2.id!r} both have a voltage source and "

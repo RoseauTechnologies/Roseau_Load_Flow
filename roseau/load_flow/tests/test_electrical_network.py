@@ -15,8 +15,10 @@ from pandas.testing import assert_frame_equal
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models import (
     Bus,
+    CurrentLoad,
     FlexibleParameter,
     Ground,
+    ImpedanceLoad,
     Line,
     LineParameters,
     PotentialRef,
@@ -180,9 +182,9 @@ def test_recursive_connect_disconnect():
         parameters=lp,
         length=0.5,
     )
-    assert list(load_bus._iter_connected_elements()) == [ground, load, line, new_line]
+    assert list(load_bus._iter_connected_elements()) == [line, new_line, load, ground]
     assert new_bus.network == en
-    assert list(new_bus._iter_connected_elements()) == [new_load, new_line2, new_line]
+    assert list(new_bus._iter_connected_elements()) == [new_line2, new_line, new_load]
     assert new_bus.id in en.buses
     assert new_line.network == en
     assert list(new_line._iter_connected_elements()) == [new_bus, load_bus]
@@ -191,7 +193,7 @@ def test_recursive_connect_disconnect():
     assert list(new_load._iter_connected_elements()) == [new_bus]
     assert new_load.id in en.loads
     assert new_bus2.network == en
-    assert list(new_bus2._iter_connected_elements()) == [new_load2, new_line2]
+    assert list(new_bus2._iter_connected_elements()) == [new_line2, new_load2]
     assert new_bus2.id in en.buses
     assert new_line2.network == en
     assert list(new_line2._iter_connected_elements()) == [new_bus2, new_bus]
@@ -202,7 +204,7 @@ def test_recursive_connect_disconnect():
 
     # Disconnect a load
     new_load.disconnect()
-    assert list(load_bus._iter_connected_elements()) == [ground, load, line, new_line]
+    assert list(load_bus._iter_connected_elements()) == [line, new_line, load, ground]
     assert new_bus.network == en
     assert list(new_bus._iter_connected_elements()) == [new_line2, new_line]
     assert new_bus.id in en.buses
@@ -213,7 +215,7 @@ def test_recursive_connect_disconnect():
     assert list(new_load._iter_connected_elements()) == []
     assert new_load.id not in en.loads
     assert new_bus2.network == en
-    assert list(new_bus2._iter_connected_elements()) == [new_load2, new_line2]
+    assert list(new_bus2._iter_connected_elements()) == [new_line2, new_load2]
     assert new_bus2.id in en.buses
     assert new_line2.network == en
     assert list(new_line2._iter_connected_elements()) == [new_bus2, new_bus]
@@ -392,6 +394,48 @@ def test_bad_networks():
         )
     assert e.value.msg == "Bus ID mismatch: 'foo' != 'sb'."
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_BUS_ID
+
+
+def test_invalid_element_overrides():
+    bus1 = Bus("bus1", phases="an")
+    bus2 = Bus("bus2", phases="an")
+    PotentialRef("pr", element=bus1)
+    lp = LineParameters("lp", z_line=np.eye(2, dtype=complex))
+    Line("line", bus1, bus2, parameters=lp, length=1)
+    VoltageSource("source", bus1, voltages=[230])
+    old_load = PowerLoad("load", bus2, powers=[1000])
+    ElectricalNetwork.from_element(bus1)
+
+    # Case of a different load type on a different bus
+    with pytest.raises(RoseauLoadFlowException) as e:
+        CurrentLoad("load", bus1, currents=[1])
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT
+    assert e.value.msg == (
+        "A Load of ID 'load' is already connected to the network. Disconnect the old element first "
+        "if you mean to replace it."
+    )
+
+    # Disconnect the old element first: OK
+    old_load.disconnect()
+    ImpedanceLoad("load", bus1, impedances=[500])
+
+    # Case of a source (also suggests disconnecting first)
+    with pytest.raises(RoseauLoadFlowException) as e:
+        VoltageSource("source", bus2, voltages=[230])
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT
+    assert e.value.msg == (
+        "A Source of ID 'source' is already connected to the network. Disconnect the old element first "
+        "if you mean to replace it."
+    )
+
+    # Case of a different branch type on different buses
+    bus3 = Bus("bus3", phases="an")
+    bus4 = Bus("bus4", phases="an")
+    Line("line2", bus2, bus3, parameters=lp, length=1)
+    with pytest.raises(RoseauLoadFlowException) as e:
+        Switch("line", bus3, bus4)
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT
+    assert e.value.msg == "A Branch of ID 'line' is already connected to the network."
 
 
 def test_frame(small_network: ElectricalNetwork):
@@ -838,7 +882,7 @@ def test_network_elements(small_network: ElectricalNetwork):
     assert bus2.network == small_network
 
     # Add a switch ("bus1" constructor belongs to the network)
-    bus3 = Bus("bus2", phases="abcn")
+    bus3 = Bus("bus3", phases="abcn")
     assert bus3.network is None
     s = Switch(id="switch", bus1=bus2, bus2=bus3)
     assert s.network == small_network

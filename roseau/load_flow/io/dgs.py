@@ -97,7 +97,7 @@ def network_from_dgs(  # noqa: C901
         source_bus = buses[bus_id]
 
         sources[source_id] = VoltageSource(id=source_id, phases="abcn", bus=source_bus, voltages=voltages)
-        ground.connect(bus=source_bus)
+        source_bus._connect(ground)
 
     # LV loads
     loads: dict[Id, AbstractLoad] = {}

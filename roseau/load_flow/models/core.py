@@ -150,10 +150,8 @@ class Element(ABC, Identifiable, JsonMixin):
         if what.id not in container:
             container[what.id] = what
         elif container[what.id] != what:
-            msg = (
-                f"An element of type {what._element_type_} and ID {what.id!r} is already "
-                f"connected to {type(to).__name__} {to.id!r}."
-            )
+            what._disconnect()  # don't leave the element lingering in _connected_elements
+            msg = f"A {what._element_type_} of ID {what.id!r} is already connected to {type(to).__name__} {to.id!r}."
             logger.error(msg)
             raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT)
 
@@ -163,9 +161,10 @@ class Element(ABC, Identifiable, JsonMixin):
             del element._connected_elements[self._element_type_][self.id]
         self._connected_elements = {k: {} for k in self._connected_elements}
         self._set_network(None)
-        self._cy_element.disconnect()
-        # The cpp element has been disconnected and can't be reconnected easily, it's safer to delete it
-        self._cy_element = None
+        if self._cy_element is not None:
+            self._cy_element.disconnect()
+            # The cpp element has been disconnected and can't be reconnected easily, it's safer to delete it
+            self._cy_element = None
 
     def _invalidate_network_results(self) -> None:
         """Invalidate the network making the result"""
