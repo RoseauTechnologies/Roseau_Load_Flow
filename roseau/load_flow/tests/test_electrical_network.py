@@ -1623,6 +1623,50 @@ def test_solver_warm_start(small_network: ElectricalNetwork, monkeypatch):
     assert not reset_inputs_called
 
 
+def test_propagate_potentials():
+    # Delta source
+    source_bus = Bus("source_bus", phases="abc")
+    _ = VoltageSource(id="source", bus=source_bus, voltages=20e3 * np.array([np.exp(1j * np.pi / 6), -1j, 0.0]))
+    _ = PotentialRef("pref", element=source_bus)
+    load_bus = Bus("load_bus", phases="abc")
+    _ = Switch("switch", bus1=source_bus, bus2=load_bus)
+
+    assert not load_bus._initialized
+    assert not source_bus._initialized
+    _ = ElectricalNetwork.from_element(source_bus)
+    assert load_bus._initialized
+    assert source_bus._initialized
+    un = 20e3 / np.sqrt(3)
+    expected_potentials = un * np.array([1, np.exp(-2j * np.pi / 3), np.exp(2j * np.pi / 3)])
+    assert np.allclose(load_bus.potentials.m, expected_potentials)
+    assert np.allclose(source_bus.potentials.m, expected_potentials)
+
+    # Multiple sources
+    source_bus = Bus("source_bus", phases="abcn")
+    _ = VoltageSource(id="VSa", bus=source_bus, voltages=[100], phases="an")
+    _ = VoltageSource(id="VSbc", bus=source_bus, voltages=[200, 300], phases="bcn")
+    _ = PotentialRef("pref", element=source_bus)
+    load_bus = Bus("load_bus", phases="abcn")
+    _ = Switch("switch", bus1=source_bus, bus2=load_bus)
+
+    assert not load_bus._initialized
+    _ = ElectricalNetwork.from_element(source_bus)
+    assert load_bus._initialized
+    assert np.allclose(load_bus.potentials.m, [100, 200, 300, 0])
+
+    # Do not define a source for all phases
+    source_bus = Bus("source_bus", phases="abcn")
+    _ = VoltageSource(id="VSa", bus=source_bus, voltages=[100], phases="an")
+    _ = PotentialRef("pref", element=source_bus)
+    load_bus = Bus("load_bus", phases="abcn")
+    _ = Switch("switch", bus1=source_bus, bus2=load_bus)
+
+    assert not load_bus._initialized
+    _ = ElectricalNetwork.from_element(source_bus)
+    assert load_bus._initialized
+    assert np.allclose(load_bus.potentials.m, 100 * np.array([1, np.exp(-2j * np.pi / 3), np.exp(2j * np.pi / 3), 0]))
+
+
 def test_short_circuits():
     vn = 400 / np.sqrt(3)
     voltages = [vn, vn * np.exp(-2 / 3 * np.pi * 1j), vn * np.exp(2 / 3 * np.pi * 1j)]
