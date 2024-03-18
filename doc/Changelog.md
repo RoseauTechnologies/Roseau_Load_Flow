@@ -15,6 +15,8 @@ myst:
 
 ## Unreleased
 
+- {gh-pr}`203` {gh-issue}`186` Detect invalid element overrides when connecting a new element with the
+  same ID and type of an existing element.
 - {gh-pr}`202` {gh-issue}`188` Explicitly prevent instantiation of abstract classes.
 - {gh-pr}`201` {gh-issue}`185` Add `type` attribute to the load classes and rename branches `branch_type`
   attribute to `type` for consistency. Please replace `branch.branch_type` by `branch.type` in your code.
