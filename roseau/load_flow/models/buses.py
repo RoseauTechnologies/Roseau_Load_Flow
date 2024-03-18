@@ -366,11 +366,6 @@ class Bus(Element):
             res["results"] = {"potentials": [[v.real, v.imag] for v in potentials]}
         return res
 
-    def _results_from_dict(self, data: JsonDict) -> None:
-        self._res_potentials = np.array([complex(v[0], v[1]) for v in data["potentials"]], dtype=np.complex128)
-        self._fetch_results = False
-        self._no_results = False
-
     def _results_to_dict(self, warning: bool) -> JsonDict:
         return {
             "id": self.id,

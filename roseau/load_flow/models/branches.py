@@ -2,7 +2,6 @@ import logging
 from functools import cached_property
 from typing import ClassVar, Literal
 
-import numpy as np
 from shapely.geometry.base import BaseGeometry
 from typing_extensions import Self
 
@@ -186,13 +185,6 @@ class AbstractBranch(Element):
                 "currents2": [[i.real, i.imag] for i in currents2],
             }
         return res
-
-    def _results_from_dict(self, data: JsonDict) -> None:
-        currents1 = np.array([complex(i[0], i[1]) for i in data["currents1"]], dtype=np.complex128)
-        currents2 = np.array([complex(i[0], i[1]) for i in data["currents2"]], dtype=np.complex128)
-        self._res_currents = (currents1, currents2)
-        self._fetch_results = False
-        self._no_results = False
 
     def _results_to_dict(self, warning: bool) -> JsonDict:
         currents1, currents2 = self._res_currents_getter(warning)

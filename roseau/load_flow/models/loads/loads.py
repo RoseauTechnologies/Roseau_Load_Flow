@@ -234,11 +234,6 @@ class AbstractLoad(Element, ABC):
             res["results"] = {"currents": [[i.real, i.imag] for i in currents]}
         return res
 
-    def _results_from_dict(self, data: JsonDict) -> None:
-        self._res_currents = np.array([complex(i[0], i[1]) for i in data["currents"]], dtype=np.complex128)
-        self._fetch_results = False
-        self._no_results = False
-
     def _results_to_dict(self, warning: bool) -> JsonDict:
         return {
             "id": self.id,
@@ -410,11 +405,6 @@ class PowerLoad(AbstractLoad):
             flexible_powers = self._res_flexible_powers_getter(warning=False)
             res["results"]["powers"] = [[s.real, s.imag] for s in flexible_powers]
         return res
-
-    def _results_from_dict(self, data: JsonDict) -> None:
-        super()._results_from_dict(data=data)
-        if self.is_flexible:
-            self._res_flexible_powers = np.array([complex(p[0], p[1]) for p in data["powers"]], dtype=np.complex128)
 
     def _results_to_dict(self, warning: bool) -> JsonDict:
         if self.is_flexible:
