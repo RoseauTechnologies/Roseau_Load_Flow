@@ -15,6 +15,7 @@ myst:
 
 ## Unreleased
 
+- {gh-pr}`204` {gh-issue}`193` Remove restrictions on geometry types. Allow specifying the CRS of the geometries.
 - {gh-pr}`203` {gh-issue}`186` Detect invalid element overrides when connecting a new element with the
   same ID and type of an existing element.
 - {gh-pr}`202` {gh-issue}`188` Explicitly prevent instantiation of abstract classes.
