@@ -1,5 +1,5 @@
 import logging
-from typing import TYPE_CHECKING, Any, Final
+from typing import TYPE_CHECKING, Final
 
 from typing_extensions import Self
 
@@ -35,14 +35,14 @@ class Ground(Element):
 
     allowed_phases: Final = frozenset({"a", "b", "c", "n"})
 
-    def __init__(self, id: Id, **kwargs: Any) -> None:
+    def __init__(self, id: Id) -> None:
         """Ground constructor.
 
         Args:
             id:
                 A unique ID of the ground in the network grounds.
         """
-        super().__init__(id, **kwargs)
+        super().__init__(id)
         # A map of bus id to phase connected to this ground.
         self._connected_buses: dict[Id, str] = {}
         self._res_potential: complex | None = None

@@ -1,7 +1,7 @@
 import logging
 from abc import ABC
 from functools import cached_property
-from typing import Any, ClassVar, Final, Literal
+from typing import ClassVar, Final, Literal
 
 import numpy as np
 
@@ -40,7 +40,7 @@ class AbstractLoad(Element, ABC):
     allowed_phases: Final = Bus.allowed_phases
     """The allowed phases for a load are the same as for a :attr:`bus<Bus.allowed_phases>`."""
 
-    def __init__(self, id: Id, bus: Bus, *, phases: str | None = None, **kwargs: Any) -> None:
+    def __init__(self, id: Id, bus: Bus, *, phases: str | None = None) -> None:
         """AbstractLoad constructor.
 
         Args:
@@ -58,7 +58,7 @@ class AbstractLoad(Element, ABC):
         """
         if type(self) is AbstractLoad:
             raise TypeError("Can't instantiate abstract class AbstractLoad")
-        super().__init__(id, **kwargs)
+        super().__init__(id)
         if phases is None:
             phases = bus.phases
         else:
@@ -260,7 +260,6 @@ class PowerLoad(AbstractLoad):
         powers: ComplexArrayLike1D,
         phases: str | None = None,
         flexible_params: list[FlexibleParameter] | None = None,
-        **kwargs: Any,
     ) -> None:
         """PowerLoad constructor.
 
@@ -286,7 +285,7 @@ class PowerLoad(AbstractLoad):
                 the load is considered as flexible (or controllable) and the parameters are used
                 to compute the flexible power of the load.
         """
-        super().__init__(id=id, bus=bus, phases=phases, **kwargs)
+        super().__init__(id=id, bus=bus, phases=phases)
 
         if bus.short_circuits:
             msg = (
@@ -432,9 +431,7 @@ class CurrentLoad(AbstractLoad):
 
     type: Final = "current"
 
-    def __init__(
-        self, id: Id, bus: Bus, *, currents: ComplexArrayLike1D, phases: str | None = None, **kwargs: Any
-    ) -> None:
+    def __init__(self, id: Id, bus: Bus, *, currents: ComplexArrayLike1D, phases: str | None = None) -> None:
         """CurrentLoad constructor.
 
         Args:
@@ -454,7 +451,7 @@ class CurrentLoad(AbstractLoad):
                 :attr:`allowed_phases`. All phases of the load, except ``"n"``, must be present in
                 the phases of the connected bus. By default, the phases of the bus are used.
         """
-        super().__init__(id=id, phases=phases, bus=bus, **kwargs)
+        super().__init__(id=id, phases=phases, bus=bus)
         self.currents = currents  # handles size checks and unit conversion
         if self.phases == "abc":
             self._cy_element = CyDeltaCurrentLoad(n=self._n, currents=self._currents)
@@ -482,9 +479,7 @@ class ImpedanceLoad(AbstractLoad):
 
     type: Final = "impedance"
 
-    def __init__(
-        self, id: Id, bus: Bus, *, impedances: ComplexArrayLike1D, phases: str | None = None, **kwargs: Any
-    ) -> None:
+    def __init__(self, id: Id, bus: Bus, *, impedances: ComplexArrayLike1D, phases: str | None = None) -> None:
         """ImpedanceLoad constructor.
 
         Args:
@@ -504,7 +499,7 @@ class ImpedanceLoad(AbstractLoad):
                 :attr:`allowed_phases`. All phases of the load, except ``"n"``, must be present in
                 the phases of the connected bus. By default, the phases of the bus are used.
         """
-        super().__init__(id=id, phases=phases, bus=bus, **kwargs)
+        super().__init__(id=id, phases=phases, bus=bus)
         self.impedances = impedances
         if self.phases == "abc":
             self._cy_element = CyDeltaAdmittanceLoad(n=self._n, admittances=1.0 / self._impedances)

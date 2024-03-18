@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any, Final
 
 import numpy as np
 import pandas as pd
-from shapely import Point
+from shapely.geometry.base import BaseGeometry
 from typing_extensions import Self
 
 from roseau.load_flow.converters import calculate_voltage_phases, calculate_voltages, phasor_to_sym
@@ -37,11 +37,10 @@ class Bus(Element):
         id: Id,
         *,
         phases: str,
-        geometry: Point | None = None,
+        geometry: BaseGeometry | None = None,
         potentials: ComplexArrayLike1D | None = None,
         min_voltage: float | None = None,
         max_voltage: float | None = None,
-        **kwargs: Any,
     ) -> None:
         """Bus constructor.
 
@@ -55,7 +54,7 @@ class Bus(Element):
                 :attr:`.allowed_phases`.
 
             geometry:
-                An optional geometry of the bus; a :class:`~shapely.Point` that represents the
+                An optional geometry of the bus; a :class:`~shapely.Geometry` that represents the
                 x-y coordinates of the bus.
 
             potentials:
@@ -74,7 +73,7 @@ class Bus(Element):
                 It must be a phase-neutral voltage if the bus has a neutral, phase-phase otherwise.
                 Either a float (V) or a :class:`Quantity <roseau.load_flow.units.Q_>` of float.
         """
-        super().__init__(id, **kwargs)
+        super().__init__(id)
         self._check_phases(id, phases=phases)
         self._phases = phases
         initialized = potentials is not None

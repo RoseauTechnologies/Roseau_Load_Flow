@@ -1,6 +1,6 @@
 import logging
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 import numpy as np
 from typing_extensions import Self
@@ -27,7 +27,7 @@ class AbstractSolver(ABC):
 
     name: str | None = None
 
-    def __init__(self, network: "ElectricalNetwork", **kwargs):
+    def __init__(self, network: "ElectricalNetwork") -> None:
         """AbstractSolver constructor.
 
         Args:
@@ -80,7 +80,7 @@ class AbstractSolver(ABC):
             activate_license(key=None)
         return self._cy_solver.solve_load_flow(max_iterations=max_iterations, tolerance=tolerance)
 
-    def reset_inputs(self):
+    def reset_inputs(self) -> None:
         """Reset the input vector (which is used for the first step of the newton algorithm) to its initial value"""
         self._cy_solver.reset_inputs()
 
@@ -108,7 +108,7 @@ class AbstractNewton(AbstractSolver, ABC):
 
     DEFAULT_TAPE_OPTIMIZATION: bool = True
 
-    def __init__(self, network: "ElectricalNetwork", optimize_tape: bool = DEFAULT_TAPE_OPTIMIZATION, **kwargs: Any):
+    def __init__(self, network: "ElectricalNetwork", optimize_tape: bool = DEFAULT_TAPE_OPTIMIZATION) -> None:
         """AbstractNewton constructor.
 
         Args:
@@ -119,7 +119,7 @@ class AbstractNewton(AbstractSolver, ABC):
                 If True, a tape optimization will be performed. This operation might take a bit of time, but will make
                 every subsequent load flow to run faster.
         """
-        super().__init__(network=network, **kwargs)
+        super().__init__(network=network)
         self.optimize_tape = optimize_tape
 
     def save_matrix(self, prefix: str) -> None:
@@ -144,11 +144,8 @@ class Newton(AbstractNewton):
     name = "newton"
 
     def __init__(
-        self,
-        network: "ElectricalNetwork",
-        optimize_tape: bool = AbstractNewton.DEFAULT_TAPE_OPTIMIZATION,
-        **kwargs: Any,
-    ):
+        self, network: "ElectricalNetwork", optimize_tape: bool = AbstractNewton.DEFAULT_TAPE_OPTIMIZATION
+    ) -> None:
         """Newton constructor.
 
         Args:
@@ -159,7 +156,7 @@ class Newton(AbstractNewton):
                 If True, a tape optimization will be performed. This operation might take a bit of time, but will make
                 every subsequent load flow to run faster.
         """
-        super().__init__(network=network, optimize_tape=optimize_tape, **kwargs)
+        super().__init__(network=network, optimize_tape=optimize_tape)
         self._cy_solver = CyNewton(network=network._cy_electrical_network, optimize_tape=optimize_tape)
 
     def update_network(self, network: "ElectricalNetwork") -> None:
@@ -185,8 +182,7 @@ class NewtonGoldstein(AbstractNewton):
         m1: float = DEFAULT_M1,
         m2: float = DEFAULT_M2,
         optimize_tape: bool = AbstractNewton.DEFAULT_TAPE_OPTIMIZATION,
-        **kwargs: Any,
-    ):
+    ) -> None:
         """NewtonGoldstein constructor.
 
         Args:
@@ -203,7 +199,7 @@ class NewtonGoldstein(AbstractNewton):
             m2:
                 The second constant of the Goldstein and Price linear search.
         """
-        super().__init__(network=network, optimize_tape=optimize_tape, **kwargs)
+        super().__init__(network=network, optimize_tape=optimize_tape)
         if m1 >= m2:
             msg = "For the 'newton_goldstein' solver, the inequality m1 < m2 should be respected."
             logger.error(msg)

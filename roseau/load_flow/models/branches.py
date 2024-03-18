@@ -1,9 +1,9 @@
 import logging
 from functools import cached_property
-from typing import Any, ClassVar, Literal
+from typing import ClassVar, Literal
 
 import numpy as np
-from shapely import LineString, Point
+from shapely.geometry.base import BaseGeometry
 from typing_extensions import Self
 
 from roseau.load_flow.converters import calculate_voltages
@@ -27,15 +27,7 @@ class AbstractBranch(Element):
     type: ClassVar[Literal["line", "transformer", "switch"]]
 
     def __init__(
-        self,
-        id: Id,
-        bus1: Bus,
-        bus2: Bus,
-        *,
-        phases1: str,
-        phases2: str,
-        geometry: Point | LineString | None = None,
-        **kwargs: Any,
+        self, id: Id, bus1: Bus, bus2: Bus, *, phases1: str, phases2: str, geometry: BaseGeometry | None = None
     ) -> None:
         """AbstractBranch constructor.
 
@@ -60,7 +52,7 @@ class AbstractBranch(Element):
         """
         if type(self) is AbstractBranch:
             raise TypeError("Can't instantiate abstract class AbstractBranch")
-        super().__init__(id, **kwargs)
+        super().__init__(id)
         self._check_phases(id, phases1=phases1)
         self._check_phases(id, phases2=phases2)
         self._n1 = len(phases1)
@@ -74,12 +66,10 @@ class AbstractBranch(Element):
         self._res_currents: tuple[ComplexArray, ComplexArray] | None = None
 
     def __repr__(self) -> str:
-        s = f"{type(self).__name__}(id={self.id!r}, phases1={self.phases1!r}, phases2={self.phases2!r}"
-        s += f", bus1={self.bus1.id!r}, bus2={self.bus2.id!r}"
-        if self.geometry is not None:
-            s += f", geometry={self.geometry}"
-        s += ")"
-        return s
+        return (
+            f"{type(self).__name__}(id={self.id!r}, bus1={self.bus1!r}, bus2={self.bus2!r}, "
+            f"phases1={self.phases1!r}, phases2={self.phases2!r})"
+        )
 
     @property
     def phases1(self) -> str:

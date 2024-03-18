@@ -1,6 +1,6 @@
 import logging
 from functools import cached_property
-from typing import Any, Final
+from typing import Final
 
 import numpy as np
 from typing_extensions import Self
@@ -23,9 +23,7 @@ class VoltageSource(Element):
     """The allowed phases for a voltage source are the same as for a :attr:`bus<Bus.allowed_phases>`."""
     _floating_neutral_allowed: bool = False
 
-    def __init__(
-        self, id: Id, bus: Bus, *, voltages: ComplexArrayLike1D, phases: str | None = None, **kwargs: Any
-    ) -> None:
+    def __init__(self, id: Id, bus: Bus, *, voltages: ComplexArrayLike1D, phases: str | None = None) -> None:
         """Voltage source constructor.
 
         Args:
@@ -47,7 +45,7 @@ class VoltageSource(Element):
                 :attr:`allowed_phases`. All phases of the source, except ``"n"``, must be present in
                 the phases of the connected bus. By default, the phases of the bus are used.
         """
-        super().__init__(id, **kwargs)
+        super().__init__(id)
         self._connect(bus)
 
         if phases is None:

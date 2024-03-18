@@ -30,7 +30,7 @@ class Element(ABC, Identifiable, JsonMixin):
     important. For a full list of supported phases, use ``print(<Element class>.allowed_phases)``.
     """
 
-    def __init__(self, id: Id, **kwargs: Any) -> None:
+    def __init__(self, id: Id) -> None:
         """Element constructor.
 
         Args:

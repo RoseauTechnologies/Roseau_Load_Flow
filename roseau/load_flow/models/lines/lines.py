@@ -1,9 +1,9 @@
 import logging
 import warnings
-from typing import Any, Final
+from typing import Final
 
 import numpy as np
-from shapely import LineString, Point
+from shapely.geometry.base import BaseGeometry
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.branches import AbstractBranch
@@ -34,14 +34,7 @@ class Switch(AbstractBranch):
     """
 
     def __init__(
-        self,
-        id: Id,
-        bus1: Bus,
-        bus2: Bus,
-        *,
-        phases: str | None = None,
-        geometry: Point | None = None,
-        **kwargs: Any,
+        self, id: Id, bus1: Bus, bus2: Bus, *, phases: str | None = None, geometry: BaseGeometry | None = None
     ) -> None:
         """Switch constructor.
 
@@ -79,11 +72,8 @@ class Switch(AbstractBranch):
                 )
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
-        if geometry is not None and not isinstance(geometry, Point):
-            msg = f"The geometry for a {type(self)} must be a point: {geometry.geom_type} provided."
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_GEOMETRY_TYPE)
-        super().__init__(id=id, phases1=phases, phases2=phases, bus1=bus1, bus2=bus2, geometry=geometry, **kwargs)
+
+        super().__init__(id=id, phases1=phases, phases2=phases, bus1=bus1, bus2=bus2, geometry=geometry)
         self._check_elements()
         self._check_loop()
         self._cy_element = CySwitch(self._n1)
@@ -154,8 +144,7 @@ class Line(AbstractBranch):
         length: float | Q_[float],
         phases: str | None = None,
         ground: Ground | None = None,
-        geometry: LineString | None = None,
-        **kwargs: Any,
+        geometry: BaseGeometry | None = None,
     ) -> None:
         """Line constructor.
 
@@ -204,13 +193,9 @@ class Line(AbstractBranch):
                 )
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
-        if geometry is not None and not isinstance(geometry, LineString):
-            msg = f"The geometry for a {type(self).__name__} must be a linestring: {geometry.geom_type} provided."
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_GEOMETRY_TYPE)
 
         self._initialized = False
-        super().__init__(id, bus1, bus2, phases1=phases, phases2=phases, geometry=geometry, **kwargs)
+        super().__init__(id, bus1, bus2, phases1=phases, phases2=phases, geometry=geometry)
         self.ground = ground
         self.length = length
         self.parameters = parameters

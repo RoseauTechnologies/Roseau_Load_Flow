@@ -89,6 +89,10 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             galvanically isolated section of the network is expected. A potential reference can
             be connected to a bus or to a ground.
 
+        crs:
+            An optional Coordinate Reference System to use with geo data frames. If not provided,
+            the ``EPSG:4326`` CRS will be used.
+
     Attributes:
         buses (dict[Id, roseau.load_flow.Bus]):
             Dictionary of buses of the network indexed by their IDs. Also available as a
@@ -128,6 +132,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         sources: MapOrSeq[VoltageSource],
         grounds: MapOrSeq[Ground],
         potential_refs: MapOrSeq[PotentialRef],
+        crs: str | CRS | None = None,
     ) -> None:
         self.buses = self._elements_as_dict(buses, RoseauLoadFlowExceptionCode.BAD_BUS_ID)
         self.branches = self._elements_as_dict(branches, RoseauLoadFlowExceptionCode.BAD_BRANCH_ID)
@@ -141,6 +146,9 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         self._create_network()
         self._valid = True
         self._solver = AbstractSolver.from_dict(data={"name": self._DEFAULT_SOLVER, "params": {}}, network=self)
+        if crs is None:
+            crs = "EPSG:4326"
+        self.crs = CRS(crs)
 
     def __repr__(self) -> str:
         def count_repr(__o: Sized, /, singular: str, plural: str | None = None) -> str:
@@ -248,7 +256,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                 index="id",
             ),
             geometry="geometry",
-            crs=CRS("EPSG:4326"),
+            crs=self.crs,
         )
 
     @property
@@ -272,7 +280,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                 index="id",
             ),
             geometry="geometry",
-            crs=CRS("EPSG:4326"),
+            crs=self.crs,
         )
 
     @property
@@ -306,7 +314,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                 index="id",
             ),
             geometry="geometry",
-            crs=CRS("EPSG:4326"),
+            crs=self.crs,
         )
 
     @property
@@ -339,7 +347,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                 index="id",
             ),
             geometry="geometry",
-            crs=CRS("EPSG:4326"),
+            crs=self.crs,
         )
 
     @property
@@ -360,7 +368,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                 index="id",
             ),
             geometry="geometry",
-            crs=CRS("EPSG:4326"),
+            crs=self.crs,
         )
 
     @property
