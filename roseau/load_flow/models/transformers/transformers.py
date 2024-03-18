@@ -1,7 +1,7 @@
 import logging
-from typing import Any, Final
+from typing import Final
 
-from shapely import Point
+from shapely.geometry.base import BaseGeometry
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.branches import AbstractBranch
@@ -49,8 +49,7 @@ class Transformer(AbstractBranch):
         tap: float = 1.0,
         phases1: str | None = None,
         phases2: str | None = None,
-        geometry: Point | None = None,
-        **kwargs: Any,
+        geometry: BaseGeometry | None = None,
     ) -> None:
         """Transformer constructor.
 
@@ -83,11 +82,6 @@ class Transformer(AbstractBranch):
             geometry:
                 The geometry of the transformer.
         """
-        if geometry is not None and not isinstance(geometry, Point):
-            msg = f"The geometry for a {type(self)} must be a point: {geometry.geom_type} provided."
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_GEOMETRY_TYPE)
-
         if parameters.type == "single":
             phases1, phases2 = self._compute_phases_single(
                 id=id, bus1=bus1, bus2=bus2, phases1=phases1, phases2=phases2
@@ -101,7 +95,7 @@ class Transformer(AbstractBranch):
                 id=id, bus1=bus1, bus2=bus2, parameters=parameters, phases1=phases1, phases2=phases2
             )
 
-        super().__init__(id, bus1, bus2, phases1=phases1, phases2=phases2, geometry=geometry, **kwargs)
+        super().__init__(id, bus1, bus2, phases1=phases1, phases2=phases2, geometry=geometry)
         self.tap = tap
         self._parameters = parameters
 
