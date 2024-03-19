@@ -1,5 +1,6 @@
 import contextlib
 import itertools as it
+import json
 import re
 import warnings
 from contextlib import contextmanager
@@ -1852,7 +1853,7 @@ def test_serialization(small_network, small_network_with_results):
     assert_results(en_dict_with_results, included=True)
     assert_results(en_dict_without_results, included=False)
     assert en_dict_with_results != en_dict_without_results
-    # round triping
+    # round tripping
     assert ElectricalNetwork.from_dict(en_dict_with_results).to_dict() == en_dict_with_results
     assert ElectricalNetwork.from_dict(en_dict_without_results).to_dict() == en_dict_without_results
     # default is to include the results
@@ -1868,47 +1869,60 @@ def test_serialization(small_network, small_network_with_results):
     )
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_LOAD_FLOW_RESULT
     en_dict_without_results = en.to_dict(include_results=False)
-    # round triping without the results should still work
+    # round tripping without the results should still work
     assert ElectricalNetwork.from_dict(en_dict_without_results).to_dict() == en_dict_without_results
 
 
-def test_deprecated_results_methods(small_network_with_results, tmp_path):
+def test_results_to_dict(small_network_with_results):
     en = small_network_with_results
-    en_dict_res = en.to_dict(include_results=True)
-    en_dict_no_res = en.to_dict(include_results=False)
 
-    with pytest.warns(DeprecationWarning) as record:
-        res_dict = en.results_to_dict()
-    assert len(record) == 1
-    assert record[0].message.args[0] == (
-        "Method `results_to_dict()` is deprecated. Method `to_dict()` now includes the results by default."
-    )
+    res_network = en.results_to_dict()
+    assert set(res_network) == {"buses", "branches", "loads", "sources", "grounds", "potential_refs"}
+    for v in res_network.values():
+        assert isinstance(v, list)
+    for res_bus in res_network["buses"]:
+        bus = en.buses[res_bus["id"]]
+        assert res_bus["phases"] == bus.phases
+        complex_potentials = [v_r + 1j * v_i for v_r, v_i in res_bus["potentials"]]
+        np.testing.assert_allclose(complex_potentials, bus.res_potentials.m)
+    for res_branch in res_network["branches"]:
+        branch = en.branches[res_branch["id"]]
+        assert res_branch["phases1"] == branch.phases1
+        assert res_branch["phases2"] == branch.phases2
+        complex_currents1 = [i_r + 1j * i_i for i_r, i_i in res_branch["currents1"]]
+        np.testing.assert_allclose(complex_currents1, branch.res_currents[0].m)
+        complex_currents2 = [i_r + 1j * i_i for i_r, i_i in res_branch["currents2"]]
+        np.testing.assert_allclose(complex_currents2, branch.res_currents[1].m)
+    for res_load in res_network["loads"]:
+        load = en.loads[res_load["id"]]
+        assert res_load["phases"] == load.phases
+        complex_currents = [i_r + 1j * i_i for i_r, i_i in res_load["currents"]]
+        np.testing.assert_allclose(complex_currents, load.res_currents.m)
+    for res_source in res_network["sources"]:
+        source = en.sources[res_source["id"]]
+        assert res_source["phases"] == source.phases
+        complex_currents = [i_r + 1j * i_i for i_r, i_i in res_source["currents"]]
+        np.testing.assert_allclose(complex_currents, source.res_currents.m)
+    for res_ground in res_network["grounds"]:
+        ground = en.grounds[res_ground["id"]]
+        complex_potential = complex(*res_ground["potential"])
+        np.testing.assert_allclose(complex_potential, ground.res_potential.m)
+    for res_potential_ref in res_network["potential_refs"]:
+        potential_ref = en.potential_refs[res_potential_ref["id"]]
+        complex_current = complex(*res_potential_ref["current"])
+        np.testing.assert_allclose(complex_current, potential_ref.res_current.m)
 
-    new_en = ElectricalNetwork.from_dict(en_dict_no_res)
-    with pytest.warns(DeprecationWarning) as record:
-        new_en.results_from_dict(res_dict)
-    assert len(record) == 1
-    assert record[0].message.args[0] == (
-        "Method `results_from_dict()` is deprecated. Method `from_dict()` now includes the results by default."
-    )
-    assert new_en.to_dict() == en_dict_res
 
+def test_results_to_json(small_network_with_results, tmp_path):
+    en = small_network_with_results
+    res_network_expected = en.results_to_dict()
     tmp_file = tmp_path / "results.json"
-    with pytest.warns(DeprecationWarning) as record:
-        en.results_to_json(tmp_file)
-    assert len(record) == 1
-    assert record[0].message.args[0] == (
-        "Method `results_to_json()` is deprecated. Method `to_json()` now includes the results by default."
-    )
+    en.results_to_json(tmp_file)
 
-    new_en = ElectricalNetwork.from_dict(en_dict_no_res)
-    with pytest.warns(DeprecationWarning) as record:
-        new_en.results_from_json(tmp_file)
-    assert len(record) == 1
-    assert record[0].message.args[0] == (
-        "Method `results_from_json()` is deprecated. Method `from_json()` now includes the results by default."
-    )
-    assert new_en.to_dict() == en_dict_res
+    with open(tmp_file) as fp:
+        res_network = json.load(fp)
+
+    assert res_network == res_network_expected
 
 
 def test_propagate_potentials_center_transformers():

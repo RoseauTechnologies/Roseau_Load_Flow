@@ -117,11 +117,6 @@ class Ground(Element):
             res["results"] = {"potential": [v.real, v.imag]}
         return res
 
-    def _results_from_dict(self, data: JsonDict) -> None:
-        self._res_potential = complex(*data["potential"])
-        self._fetch_results = False
-        self._no_results = False
-
     def _results_to_dict(self, warning: bool) -> JsonDict:
         v = self._res_potential_getter(warning)
         return {"id": self.id, "potential": [v.real, v.imag]}

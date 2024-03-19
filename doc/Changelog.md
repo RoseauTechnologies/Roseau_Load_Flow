@@ -15,6 +15,10 @@ myst:
 
 ## Unreleased
 
+- {gh-pr}`206` {gh-issue}`187` Un-deprecate `results_to_dict/json` methods and remove deprecated
+  `results_from_dict/json` methods.
+- {gh-pr}`205` {gh-issue}`200` Fix error when propagating the potentials from a voltage source with fewer phases
+  than the bus.
 - {gh-pr}`204` {gh-issue}`193` Remove restrictions on geometry types. Allow specifying the CRS of the geometries.
 - {gh-pr}`203` {gh-issue}`186` Detect invalid element overrides when connecting a new element with the
   same ID and type of an existing element.

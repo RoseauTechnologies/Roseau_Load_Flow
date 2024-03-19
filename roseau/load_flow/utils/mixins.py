@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Generic, NoReturn, TypeVar, overload
 
 import pandas as pd
-from typing_extensions import Self, deprecated
+from typing_extensions import Self
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.typing import Id, JsonDict, StrPath
@@ -150,18 +150,33 @@ class JsonMixin(metaclass=ABCMeta):
         """Return the results of the element as a dictionary format"""
         raise NotImplementedError
 
-    @deprecated(
-        "Method `results_to_dict()` is deprecated. Method `to_dict()` now includes the results by default.",
-        category=DeprecationWarning,
-    )
     def results_to_dict(self) -> JsonDict:
-        """Return the results of the element as a dictionary format"""
+        """Return the results of the element as a dictionary.
+
+        The results dictionary of an element contains the ID of the element, its phases, and the
+        result. For example, `bus.results_to_dict()` returns a dictionary with the form::
+
+            {"id": "bus1", "phases": "an", "potentials": [[230.0, 0.0]]}
+
+        Note that complex values (like `potentials` in the example above) are stored as list of
+        [real part, imaginary part] so that it is JSON-serializable.
+
+        The results dictionary of the network contains the results of all of its elements grouped
+        by the element type. It has the form::
+
+            {
+                "buses": [bus1_dict, bus2_dict, ...],
+                "branches": [branch1_dict, branch2_dict, ...],
+                "loads": [load1_dict, load2_dict, ...],
+                "sources": [source1_dict, source2_dict, ...],
+                "grounds": [ground1_dict, ground2_dict, ...],
+                "potential_refs": [p_ref1_dict, p_ref2_dict, ...],
+            }
+
+        where each dict is produced by the element's `results_to_dict()` method.
+        """
         return self._results_to_dict(warning=True)
 
-    @deprecated(
-        "Method `results_to_json()` is deprecated. Method `to_json()` now includes the results by default.",
-        category=DeprecationWarning,
-    )
     def results_to_json(self, path: StrPath) -> Path:
         """Write the results of the load flow to a json file.
 
@@ -189,36 +204,6 @@ class JsonMixin(metaclass=ABCMeta):
             output += "\n"
         path.write_text(output)
         return path
-
-    @abstractmethod
-    def _results_from_dict(self, data: JsonDict) -> None:
-        """Fill an element with the provided results' dictionary."""
-        raise NotImplementedError
-
-    @deprecated(
-        "Method `results_from_dict()` is deprecated. Method `from_dict()` now includes the results by default.",
-        category=DeprecationWarning,
-    )
-    def results_from_dict(self, data: JsonDict) -> None:
-        """Fill an element with the provided results' dictionary."""
-        self._no_results = False
-        return self._results_from_dict(data)
-
-    @deprecated(
-        "Method `results_from_json()` is deprecated. Method `from_json()` now includes the results by default.",
-        category=DeprecationWarning,
-    )
-    def results_from_json(self, path: StrPath) -> None:
-        """Load the results of a load flow from a json file created by :meth:`results_to_json`.
-
-        The results are stored in the network elements.
-
-        Args:
-            path:
-                The path to the JSON file containing the results.
-        """
-        data = json.loads(Path(path).read_text())
-        self._results_from_dict(data)
 
 
 class CatalogueMixin(Generic[_T], metaclass=ABCMeta):

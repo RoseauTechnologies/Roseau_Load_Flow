@@ -206,11 +206,6 @@ class VoltageSource(Element):
             res["results"] = {"currents": [[i.real, i.imag] for i in currents]}
         return res
 
-    def _results_from_dict(self, data: JsonDict) -> None:
-        self._res_currents = np.array([complex(i[0], i[1]) for i in data["currents"]], dtype=np.complex128)
-        self._fetch_results = False
-        self._no_results = False
-
     def _results_to_dict(self, warning: bool) -> JsonDict:
         return {
             "id": self.id,
