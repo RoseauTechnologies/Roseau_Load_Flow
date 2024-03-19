@@ -6,55 +6,55 @@
     show background rectangle,%
     tight background,%
     background rectangle/.style={fill=white}%
-    ]
-    % Version multifilaire
+  ]
+  % Version multifilaire
 
-    %
-    % Définitions
-    %
-    \pgfmathsetmacro{\xl}{0};%
-    \pgfmathsetmacro{\xlc}{1};%
-    \pgfmathsetmacro{\xrc}{3};%
-    \pgfmathsetmacro{\xr}{4};%
-    \pgfmathsetmacro{\yn}{0};%
-    \pgfmathsetmacro{\yc}{1};%
-    \pgfmathsetmacro{\yb}{2};%
-    \pgfmathsetmacro{\ya}{3};%
+  %
+  % Définitions
+  %
+  \pgfmathsetmacro{\xl}{0};%
+  \pgfmathsetmacro{\xlc}{1};%
+  \pgfmathsetmacro{\xrc}{3};%
+  \pgfmathsetmacro{\xr}{4};%
+  \pgfmathsetmacro{\yn}{0};%
+  \pgfmathsetmacro{\yc}{1};%
+  \pgfmathsetmacro{\yb}{2};%
+  \pgfmathsetmacro{\ya}{3};%
 
-    % Début de ligne
-    \coordinate (vln) at (\xl,\yn);
-    \coordinate (vlc) at (\xl,\yc);
-    \coordinate (vlb) at (\xl,\yb);
-    \coordinate (vla) at (\xl,\ya);
+  % Début de ligne
+  \coordinate (vln) at (\xl,\yn);
+  \coordinate (vlc) at (\xl,\yc);
+  \coordinate (vlb) at (\xl,\yb);
+  \coordinate (vla) at (\xl,\ya);
 
-    % Fin de ligne
-    \coordinate (vrn) at (\xr,\yn);
-    \coordinate (vrc) at (\xr,\yc);
-    \coordinate (vrb) at (\xr,\yb);
-    \coordinate (vra) at (\xr,\ya);
+  % Fin de ligne
+  \coordinate (vrn) at (\xr,\yn);
+  \coordinate (vrc) at (\xr,\yc);
+  \coordinate (vrb) at (\xr,\yb);
+  \coordinate (vra) at (\xr,\ya);
 
-    % Tensions amont
-    \node[left] at (vla) {$\underline{V_{1,\arm}}$};
-    \node[left] at (vlb) {$\underline{V_{1,\brm}}$};
-    \node[left] at (vlc) {$\underline{V_{1,\crm}}$};
-    \node[left] at (vln) {$\underline{V_{1,\nrm}}$};
+  % Tensions amont
+  \node[left] at (vla) {$\underline{V_{1,\arm}}$};
+  \node[left] at (vlb) {$\underline{V_{1,\brm}}$};
+  \node[left] at (vlc) {$\underline{V_{1,\crm}}$};
+  \node[left] at (vln) {$\underline{V_{1,\nrm}}$};
 
-    % Tensions aval
-    \node[right] at (vra) {$\underline{V_{2,\arm}}$};
-    \node[right] at (vrb) {$\underline{V_{2,\brm}}$};
-    \node[right] at (vrc) {$\underline{V_{2,\crm}}$};
-    \node[right] at (vrn) {$\underline{V_{2,\nrm}}$};
+  % Tensions aval
+  \node[right] at (vra) {$\underline{V_{2,\arm}}$};
+  \node[right] at (vrb) {$\underline{V_{2,\brm}}$};
+  \node[right] at (vrc) {$\underline{V_{2,\crm}}$};
+  \node[right] at (vrn) {$\underline{V_{2,\nrm}}$};
 
-    % Câbles
-    \draw (vla) to[short, i=$\underline{I_{1,\arm}}$, *-] (\xlc, \ya) -- (\xrc, \ya);
-    \draw (vlb) to[short, i=$\underline{I_{1,\brm}}$, *-] (\xlc, \yb) -- (\xrc, \yb);
-    \draw (vlc) to[short, i=$\underline{I_{1,\crm}}$, *-] (\xlc, \yc) -- (\xrc, \yc);
-    \draw (vln) to[short, i=$\underline{I_{1,\nrm}}$, *-] (\xlc, \yn) -- (\xrc, \yn);
+  % Câbles
+  \draw (vla) to[short, i=$\underline{I_{1,\arm}}$, *-] (\xlc, \ya) -- (\xrc, \ya);
+  \draw (vlb) to[short, i=$\underline{I_{1,\brm}}$, *-] (\xlc, \yb) -- (\xrc, \yb);
+  \draw (vlc) to[short, i=$\underline{I_{1,\crm}}$, *-] (\xlc, \yc) -- (\xrc, \yc);
+  \draw (vln) to[short, i=$\underline{I_{1,\nrm}}$, *-] (\xlc, \yn) -- (\xrc, \yn);
 
-    \draw (vra) to[short, i_=$\underline{I_{2,\arm}}$, *-] (\xrc, \ya);
-    \draw (vrb) to[short, i_=$\underline{I_{2,\brm}}$, *-] (\xrc, \yb);
-    \draw (vrc) to[short, i_=$\underline{I_{2,\crm}}$, *-] (\xrc, \yc);
-    \draw (vrn) to[short, i_=$\underline{I_{2,\nrm}}$, *-] (\xrc, \yn);
+  \draw (vra) to[short, i_=$\underline{I_{2,\arm}}$, *-] (\xrc, \ya);
+  \draw (vrb) to[short, i_=$\underline{I_{2,\brm}}$, *-] (\xrc, \yb);
+  \draw (vrc) to[short, i_=$\underline{I_{2,\crm}}$, *-] (\xrc, \yc);
+  \draw (vrn) to[short, i_=$\underline{I_{2,\nrm}}$, *-] (\xrc, \yn);
 
 \end{tikzpicture}
 \end{document}
@@ -64,6 +64,6 @@
 % TeX-source-correlate-method-active: synctex
 % ispell-local-dictionary: "british"
 % coding: utf-8
-% LaTeX-indent-level: 4
+% LaTeX-indent-level: 2
 % fill-column: 120
 % End:

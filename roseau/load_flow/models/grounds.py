@@ -1,5 +1,5 @@
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Final
 
 from typing_extensions import Self
 
@@ -33,16 +33,16 @@ class Ground(Element):
        :class:`Line` constructor. Note that the ground connection is mandatory for shunt lines.
     """
 
-    allowed_phases = frozenset({"a", "b", "c", "n"})
+    allowed_phases: Final = frozenset({"a", "b", "c", "n"})
 
-    def __init__(self, id: Id, **kwargs: Any) -> None:
+    def __init__(self, id: Id) -> None:
         """Ground constructor.
 
         Args:
             id:
                 A unique ID of the ground in the network grounds.
         """
-        super().__init__(id, **kwargs)
+        super().__init__(id)
         # A map of bus id to phase connected to this ground.
         self._connected_buses: dict[Id, str] = {}
         self._res_potential: complex | None = None
@@ -116,11 +116,6 @@ class Ground(Element):
             v = self._res_potential_getter(warning=True)
             res["results"] = {"potential": [v.real, v.imag]}
         return res
-
-    def _results_from_dict(self, data: JsonDict) -> None:
-        self._res_potential = complex(*data["potential"])
-        self._fetch_results = False
-        self._no_results = False
 
     def _results_to_dict(self, warning: bool) -> JsonDict:
         v = self._res_potential_getter(warning)

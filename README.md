@@ -13,8 +13,8 @@ will guide you through the installation process. If you are new to _Roseau Load 
 You can find the complete documentation at https://roseau-load-flow.roseautechnologies.com/.
 
 > [!IMPORTANT]
-> Starting with version 0.7.0, Roseau Load Flow will no longer be supplied as a SaaS. The software will
-> be available as a standalone Python library.
+> Starting with version 0.7.0, Roseau Load Flow is no longer supplied as a SaaS. The software is now
+> available as a standalone Python library.
 
 ## License
 

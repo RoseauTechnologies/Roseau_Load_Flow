@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "roseau-load-flow"
-version = "0.7.0"
+version = "0.8.0"
 description = "Highly capable three-phase load flow solver"
 authors = [
     "Ali Hamdan <ali.hamdan@roseautechnologies.com>",
@@ -49,7 +49,7 @@ typing-extensions = ">=4.6.2"
 pyproj = ">=3.3.0"
 certifi = ">=2023.5.7"
 platformdirs = ">=4.0.0"
-roseau-load-flow-engine = "==0.12.0"
+roseau-load-flow-engine = "==0.13.0"
 
 # Optional dependencies
 matplotlib = { version = ">=3.7.2", optional = true }
@@ -70,7 +70,7 @@ networkx = ">=3.0.0"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^3.0.0"
-ruff = ">=0.2.0"
+ruff = ">=0.3.0"
 
 [tool.poetry.group.doc.dependencies]
 sphinx = "^7.0.1"
@@ -82,6 +82,7 @@ sphinx-inline-tabs = ">=2022.1.2b11"
 furo = ">=2022.9.29"
 sphinxcontrib-googleanalytics = ">=0.3"
 sphinxcontrib-bibtex = "^2.5.0"
+sphinx-sitemap = "^2.5.1"
 
 [tool.ruff]
 line-length = 120
@@ -91,7 +92,7 @@ extend-include = ["*.ipynb"]
 namespace-packages = ["roseau"]
 lint.select = ["E", "F", "C90", "W", "B", "UP", "I", "RUF100", "TID", "SIM", "PT", "PIE", "N", "C4", "NPY", "T10"]
 lint.unfixable = ["B"]
-lint.ignore = ["E501", "B024", "N818"]
+lint.ignore = ["E501", "B024", "N818", "UP038"]
 lint.flake8-tidy-imports.ban-relative-imports = "all"
 lint.flake8-pytest-style.parametrize-values-type = "tuple"
 lint.mccabe.max-complexity = 15
@@ -135,7 +136,4 @@ directory = "htmlcov"
 [tool.pytest.ini_options]
 addopts = "--color=yes -n=0 --import-mode=importlib"
 testpaths = ["roseau/load_flow/"]
-filterwarnings = [
-    'ignore:.*utcfromtimestamp:DeprecationWarning:dateutil.*', # dateutil is imported by pandas, not us
-    'ignore:(?s).*Pyarrow will become a required dependency of pandas:DeprecationWarning:.*',
-]
+filterwarnings = []

@@ -38,8 +38,8 @@ def test_transformer_parameters():
     k_expected = 400 / (np.sqrt(3.0) * 20e3)
     orientation_expected = 1.0
 
-    assert np.isclose(z2.m_as("ohm"), z2_expected)
-    assert np.isclose(ym.m_as("S"), ym_expected)
+    assert np.isclose(z2.m, z2_expected)
+    assert np.isclose(ym.m, ym_expected)
     assert np.isclose(k, k_expected)
     assert np.isclose(orientation, orientation_expected)
 
@@ -57,8 +57,8 @@ def test_transformer_parameters():
     }
     tp = TransformerParameters.from_dict(data)
     z2, ym, k, orientation = tp.to_zyk()
-    r_iron = 20e3**2 / 210  # Ohm
-    lm_omega = 20e3**2 / (np.sqrt((3.5 / 100 * 100e3) ** 2 - 210**2))  # H*rad/s
+    r_iron = 3 * 20e3**2 / 210  # Ohm
+    lm_omega = 3 * 20e3**2 / (np.sqrt((3.5 / 100 * 100e3) ** 2 - 210**2))  # H*rad/s
     z2_norm = 4 / 100 * 400**2 / 100e3
     r2 = 2150 * 400**2 / 100e3**2  # Ohm
     l2_omega = np.sqrt(z2_norm**2 - r2**2)  # H*rad/s
@@ -68,8 +68,8 @@ def test_transformer_parameters():
     k_expected = (400 / np.sqrt(3)) / 20e3
     orientation_expected = 1.0
 
-    assert np.isclose(z2.m_as("ohm"), z2_expected)
-    assert np.isclose(ym.m_as("S"), ym_expected)
+    assert np.isclose(z2.m, z2_expected)
+    assert np.isclose(ym.m, ym_expected)
     assert np.isclose(k, k_expected)
     assert np.isclose(orientation, orientation_expected)
 
@@ -87,8 +87,8 @@ def test_transformer_parameters():
     }
     tp = TransformerParameters.from_dict(data)
     z2, ym, k, orientation = tp.to_zyk()
-    r_iron = 20e3**2 / 460  # Ohm
-    lm_omega = 20e3**2 / (np.sqrt((5.6 / 100 * 160e3) ** 2 - 460**2))  # H*rad/s
+    r_iron = 3 * 20e3**2 / 460  # Ohm
+    lm_omega = 3 * 20e3**2 / (np.sqrt((5.6 / 100 * 160e3) ** 2 - 460**2))  # H*rad/s
     z2_norm = 4 / 100 * 400**2 / 160e3
     r2 = 2350 * 400**2 / 160e3**2  # Ohm
     l2_omega = np.sqrt(z2_norm**2 - r2**2)  # H*rad/s
@@ -98,8 +98,8 @@ def test_transformer_parameters():
     k_expected = 400 / np.sqrt(3) / 20e3
     orientation_expected = -1.0
 
-    assert np.isclose(z2.m_as("ohm"), z2_expected)
-    assert np.isclose(ym.m_as("S"), ym_expected)
+    assert np.isclose(z2.m, z2_expected)
+    assert np.isclose(ym.m, ym_expected)
     assert np.isclose(k, k_expected)
     assert np.isclose(orientation, orientation_expected)
 
@@ -329,37 +329,28 @@ def test_catalogue_data():
     assert catalogue_data["id"].is_unique, error_message
 
     catalogue_data.set_index("id", inplace=True)
-    catalogue_data["found"] = False
-    for p in catalogue_path.glob("**/*.json"):
-        # The file can be read
-        tp = TransformerParameters.from_json(p)
+    for idx in catalogue_data.index:
+        tp = TransformerParameters.from_catalogue(id=idx)
 
         # The entry of the catalogue has been found
         assert tp.id in catalogue_data.index, error_message
-        catalogue_data.at[tp.id, "found"] = True
 
         # Check the values are the same
-        manufacturer, range, efficiency, filename = p.relative_to(catalogue_path).parts
-        sn_kva = int(catalogue_data.at[tp.id, "sn"] / 1000)
-        assert tp.id == f"{manufacturer}_{range}_{efficiency}_{sn_kva}kVA"
         assert tp.type == catalogue_data.at[tp.id, "type"]
-        assert np.isclose(tp.uhv.m_as("V"), catalogue_data.at[tp.id, "uhv"])
-        assert np.isclose(tp.ulv.m_as("V"), catalogue_data.at[tp.id, "ulv"])
-        assert np.isclose(tp.sn.m_as("VA"), catalogue_data.at[tp.id, "sn"])
-        assert np.isclose(tp.p0.m_as("W"), catalogue_data.at[tp.id, "p0"])
-        assert np.isclose(tp.i0.m_as(""), catalogue_data.at[tp.id, "i0"])
-        assert np.isclose(tp.psc.m_as("W"), catalogue_data.at[tp.id, "psc"])
-        assert np.isclose(tp.vsc.m_as(""), catalogue_data.at[tp.id, "vsc"])
+        assert np.isclose(tp.uhv.m, catalogue_data.at[tp.id, "uhv"])
+        assert np.isclose(tp.ulv.m, catalogue_data.at[tp.id, "ulv"])
+        assert np.isclose(tp.sn.m, catalogue_data.at[tp.id, "sn"])
+        assert np.isclose(tp.p0.m, catalogue_data.at[tp.id, "p0"])
+        assert np.isclose(tp.i0.m, catalogue_data.at[tp.id, "i0"])
+        assert np.isclose(tp.psc.m, catalogue_data.at[tp.id, "psc"])
+        assert np.isclose(tp.vsc.m, catalogue_data.at[tp.id, "vsc"])
 
         # Check that the parameters are valid
         z, y, k, orientation = tp.to_zyk()
-        assert isinstance(z.m_as("ohm"), numbers.Number)
-        assert isinstance(y.m_as("S"), numbers.Number)
-        assert isinstance(k.m_as(""), numbers.Number)
+        assert isinstance(z.m, numbers.Complex)
+        assert isinstance(y.m, numbers.Complex)
+        assert isinstance(k.m, numbers.Real)
         assert orientation in (-1.0, 1.0)
-
-    # At the end of the process, the found column must be full of True
-    assert catalogue_data["found"].all(), error_message
 
 
 def test_from_catalogue():
@@ -410,48 +401,48 @@ def test_get_catalogue():
     # Get the entire catalogue
     catalogue = TransformerParameters.get_catalogue()
     assert isinstance(catalogue, pd.DataFrame)
-    assert catalogue.shape == (130, 7)
+    assert catalogue.shape == (162, 7)
 
     # Filter on a single attribute
     for field_name, value, expected_size in (
         ("id", "SE_Minera_A0Ak_50kVA", 1),
-        ("manufacturer", "SE", 116),
-        ("range", r"min.*", 56),
+        ("manufacturer", "SE", 148),
+        ("range", r"min.*", 67),
         ("efficiency", "c0", 29),
-        ("type", "dy", 126),
-        ("sn", Q_(160, "kVA"), 10),
-        ("uhv", Q_(20, "kV"), 130),
-        ("ulv", 400, 130),
+        ("type", "dy", 158),
+        ("sn", Q_(160, "kVA"), 12),
+        ("uhv", Q_(20, "kV"), 162),
+        ("ulv", 400, 162),
     ):
         filtered_catalogue = TransformerParameters.get_catalogue(**{field_name: value})
-        assert filtered_catalogue.shape == (expected_size, 7)
+        assert filtered_catalogue.shape == (expected_size, 7), f"{field_name}={value!r}"
 
     # Filter on two attributes
     for field_name, value, expected_size in (
         ("id", "SE_Minera_A0Ak_50kVA", 1),
-        ("range", "minera", 56),
+        ("range", "minera", 67),
         ("efficiency", "c0", 29),
-        ("type", r"^d.*11$", 112),
-        ("sn", Q_(160, "kVA"), 9),
-        ("uhv", Q_(20, "kV"), 116),
-        ("ulv", 400, 116),
+        ("type", r"^d.*11$", 144),
+        ("sn", Q_(160, "kVA"), 11),
+        ("uhv", Q_(20, "kV"), 148),
+        ("ulv", 400, 148),
     ):
         filtered_catalogue = TransformerParameters.get_catalogue(**{field_name: value}, manufacturer="se")
-        assert filtered_catalogue.shape == (expected_size, 7)
+        assert filtered_catalogue.shape == (expected_size, 7), f"{field_name}={value!r}"
 
     # Filter on three attributes
     for field_name, value, expected_size in (
         ("id", "se_VEGETA_C0BK_3150kva", 1),
         ("efficiency", r"c0[abc]k", 15),
-        ("type", "dyn", 30),
-        ("sn", Q_(160, "kVA"), 2),
-        ("uhv", Q_(20, "kV"), 30),
-        ("ulv", 400, 30),
+        ("type", "dyn", 41),
+        ("sn", Q_(160, "kVA"), 3),
+        ("uhv", Q_(20, "kV"), 41),
+        ("ulv", 400, 41),
     ):
         filtered_catalogue = TransformerParameters.get_catalogue(
             **{field_name: value}, manufacturer="se", range=r"^vegeta$"
         )
-        assert filtered_catalogue.shape == (expected_size, 7)
+        assert filtered_catalogue.shape == (expected_size, 7), f"{field_name}={value!r}"
 
     # No results
     empty_catalogue = TransformerParameters.get_catalogue(ulv=250)

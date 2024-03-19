@@ -5,7 +5,7 @@
     "nb_loads": 12,
     "nb_sources": 1,
     "nb_grounds": 1,
-    "nb_potential_refs": 1,
+    "nb_potential_refs": 2,
     "load_points": ["Winter", "Summer"]
   },
   "LVFeeder02639": {
@@ -14,7 +14,7 @@
     "nb_loads": 10,
     "nb_sources": 1,
     "nb_grounds": 1,
-    "nb_potential_refs": 1,
+    "nb_potential_refs": 2,
     "load_points": ["Winter", "Summer"]
   },
   "LVFeeder04790": {
@@ -23,7 +23,7 @@
     "nb_loads": 4,
     "nb_sources": 1,
     "nb_grounds": 1,
-    "nb_potential_refs": 1,
+    "nb_potential_refs": 2,
     "load_points": ["Winter", "Summer"]
   },
   "LVFeeder06713": {
@@ -32,7 +32,7 @@
     "nb_loads": 2,
     "nb_sources": 1,
     "nb_grounds": 1,
-    "nb_potential_refs": 1,
+    "nb_potential_refs": 2,
     "load_points": ["Summer", "Winter"]
   },
   "LVFeeder06926": {
@@ -41,7 +41,7 @@
     "nb_loads": 2,
     "nb_sources": 1,
     "nb_grounds": 1,
-    "nb_potential_refs": 1,
+    "nb_potential_refs": 2,
     "load_points": ["Winter", "Summer"]
   },
   "LVFeeder06975": {
@@ -50,7 +50,7 @@
     "nb_loads": 8,
     "nb_sources": 1,
     "nb_grounds": 1,
-    "nb_potential_refs": 1,
+    "nb_potential_refs": 2,
     "load_points": ["Winter", "Summer"]
   },
   "LVFeeder18498": {
@@ -59,7 +59,7 @@
     "nb_loads": 32,
     "nb_sources": 1,
     "nb_grounds": 1,
-    "nb_potential_refs": 1,
+    "nb_potential_refs": 2,
     "load_points": ["Winter", "Summer"]
   },
   "LVFeeder18769": {
@@ -68,7 +68,7 @@
     "nb_loads": 10,
     "nb_sources": 1,
     "nb_grounds": 1,
-    "nb_potential_refs": 1,
+    "nb_potential_refs": 2,
     "load_points": ["Winter", "Summer"]
   },
   "LVFeeder19558": {
@@ -77,7 +77,7 @@
     "nb_loads": 2,
     "nb_sources": 1,
     "nb_grounds": 1,
-    "nb_potential_refs": 1,
+    "nb_potential_refs": 2,
     "load_points": ["Winter", "Summer"]
   },
   "LVFeeder20256": {
@@ -86,7 +86,7 @@
     "nb_loads": 14,
     "nb_sources": 1,
     "nb_grounds": 1,
-    "nb_potential_refs": 1,
+    "nb_potential_refs": 2,
     "load_points": ["Winter", "Summer"]
   },
   "LVFeeder23832": {
@@ -95,7 +95,7 @@
     "nb_loads": 2,
     "nb_sources": 1,
     "nb_grounds": 1,
-    "nb_potential_refs": 1,
+    "nb_potential_refs": 2,
     "load_points": ["Winter", "Summer"]
   },
   "LVFeeder24400": {
@@ -104,7 +104,7 @@
     "nb_loads": 4,
     "nb_sources": 1,
     "nb_grounds": 1,
-    "nb_potential_refs": 1,
+    "nb_potential_refs": 2,
     "load_points": ["Summer", "Winter"]
   },
   "LVFeeder27429": {
@@ -113,7 +113,7 @@
     "nb_loads": 18,
     "nb_sources": 1,
     "nb_grounds": 1,
-    "nb_potential_refs": 1,
+    "nb_potential_refs": 2,
     "load_points": ["Winter", "Summer"]
   },
   "LVFeeder27681": {
@@ -122,7 +122,7 @@
     "nb_loads": 2,
     "nb_sources": 1,
     "nb_grounds": 1,
-    "nb_potential_refs": 1,
+    "nb_potential_refs": 2,
     "load_points": ["Winter", "Summer"]
   },
   "LVFeeder30216": {
@@ -131,7 +131,7 @@
     "nb_loads": 14,
     "nb_sources": 1,
     "nb_grounds": 1,
-    "nb_potential_refs": 1,
+    "nb_potential_refs": 2,
     "load_points": ["Summer", "Winter"]
   },
   "LVFeeder31441": {
@@ -140,7 +140,7 @@
     "nb_loads": 4,
     "nb_sources": 1,
     "nb_grounds": 1,
-    "nb_potential_refs": 1,
+    "nb_potential_refs": 2,
     "load_points": ["Summer", "Winter"]
   },
   "LVFeeder36284": {
@@ -149,7 +149,7 @@
     "nb_loads": 6,
     "nb_sources": 1,
     "nb_grounds": 1,
-    "nb_potential_refs": 1,
+    "nb_potential_refs": 2,
     "load_points": ["Winter", "Summer"]
   },
   "LVFeeder36360": {
@@ -158,7 +158,7 @@
     "nb_loads": 14,
     "nb_sources": 1,
     "nb_grounds": 1,
-    "nb_potential_refs": 1,
+    "nb_potential_refs": 2,
     "load_points": ["Summer", "Winter"]
   },
   "LVFeeder37263": {
@@ -167,7 +167,7 @@
     "nb_loads": 2,
     "nb_sources": 1,
     "nb_grounds": 1,
-    "nb_potential_refs": 1,
+    "nb_potential_refs": 2,
     "load_points": ["Summer", "Winter"]
   },
   "LVFeeder38211": {
@@ -176,7 +176,7 @@
     "nb_loads": 8,
     "nb_sources": 1,
     "nb_grounds": 1,
-    "nb_potential_refs": 1,
+    "nb_potential_refs": 2,
     "load_points": ["Winter", "Summer"]
   },
   "MVFeeder004": {

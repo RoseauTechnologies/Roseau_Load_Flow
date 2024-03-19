@@ -1,3 +1,16 @@
+---
+myst:
+  html_meta:
+    "description lang=en": |
+      Flexible load controls in Roseau Load Flow - Three-phase unbalanced load flow solver in a Python API by Roseau
+      Technologies.
+    "description lang=fr": |
+      Les contrôles des charge flexibles dans Roseau Load Flow - Solveur d'écoulement de charge triphasé et
+      déséquilibré dans une API Python par Roseau Technologies.
+    "keywords lang=fr": simulation, réseau, électrique, charge flexible, bus, roseau load flow, modèle, contrôles
+    "keywords lang=en": simulation, distribution grid, flexible load, load, model, controls
+---
+
 (models-flexible_load-controls)=
 
 # Controls
@@ -24,6 +37,15 @@ control = Control.constant()
 ## $P(U)$ control
 
 Control the maximum active power of a load (often a PV inverter) based on the voltage $P^{\max}(U)$.
+
+The $P(U)$ control accepts two approximation parameters: `alpha` and `epsilon`.
+
+- `alpha` is used to compute soft clipping functions. The higher `alpha` is, the better the approximations are.
+- `epsilon` is used to approximate a smooth inverse function:
+  ```{math}
+  \forall x \geq 0, \frac{1}{x} \approx \frac{1}{\varepsilon \times \exp\left(\frac{-x}{\varepsilon}\right) + {x}}
+  ```
+  The lower `epsilon` is, the better the approximations are.
 
 ```{note}
 The functions $s_{\alpha}$ used for the $P(U)$ controls are derived from the *soft clipping function* of

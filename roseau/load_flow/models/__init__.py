@@ -4,6 +4,7 @@ build the network and to perform the load flow analysis.
 
 Equations, diagrams, and examples can be found in the :doc:`/models/index` page.
 """
+
 from roseau.load_flow.models.branches import AbstractBranch
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import Element

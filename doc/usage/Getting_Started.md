@@ -1,6 +1,22 @@
+---
+myst:
+  html_meta:
+    "description lang=en": |
+      A first simple example to introduce you to power flow calculation with Roseau Load Flow: simulate a small
+      network with a voltage source, a line and a load.
+    "description lang=fr": |
+      Un premier exemple simple pour s'initier au calcul d'écoulement de puissance avec Roseau Load Flow. Simulez un
+      petit réseau comportant une source de tension, une ligne and une charge.
+    "keywords lang=fr": |
+      load flow, python, écoulement de charge, écoulement de puissance, réseau de distribution, source, charge, ligne,
+      exemple
+    "keywords lang=en": |
+      Roseau, Load flow, python, power flow, distribution grid, voltage source, power load, line, example
+---
+
 (usage-getting-started)=
 
-# Getting started
+# Getting started with Roseau Load Flow
 
 _Make sure you have followed the_ [installation instructions](../Installation.md).
 
@@ -156,8 +172,9 @@ automatically included into the network.
 
 ## Solving a load flow
 
-A license is required. Please contact us at contact@roseautechnologies.com to get a license key.
-Once you have a license key, you can activate by following the instructions in the
+A [license](license-page) is required. You can use the [free, limited licence key](license-types) or get a private and unlimited one
+by contacting us at [contact@roseautechnologies.com](mailto:contact@roseautechnologies.com).
+Once you have a license key, you can activate it by following the instructions in the
 [License activation page](license-activation).
 
 Then, the load flow can be solved by calling the `solve_load_flow` method of the `ElectricalNetwork`
@@ -326,12 +343,12 @@ All the following tables are rounded to 2 decimals to be properly displayed.
 >>> en.res_branches
 ```
 
-| branch_id | phase |      current1 |     current2 |      power1 |    power2 |   potential1 |     potential2 |
-| :-------- | :---- | ------------: | -----------: | ----------: | --------: | -----------: | -------------: |
-| line      | a     |      45.06+0j |    -45.06-0j | 10406.07-0j | -10000+0j |    230.94+0j |      221.93-0j |
-| line      | b     | -22.53-39.02j | 22.53+39.02j | 10406.07+0j | -10000-0j | -115.47-200j | -110.96-192.2j |
-| line      | c     | -22.53+39.02j | 22.53-39.02j | 10406.07-0j | -10000+0j | -115.47+200j | -110.96+192.2j |
-| line      | n     |            0j |          -0j |          0j |       -0j |           0j |            -0j |
+| branch_id | phase | type |      current1 |     current2 |      power1 |    power2 |   potential1 |     potential2 |
+| :-------- | :---- | :--- | ------------: | -----------: | ----------: | --------: | -----------: | -------------: |
+| line      | a     | line |      45.06+0j |    -45.06-0j | 10406.07-0j | -10000+0j |    230.94+0j |      221.93-0j |
+| line      | b     | line | -22.53-39.02j | 22.53+39.02j | 10406.07+0j | -10000-0j | -115.47-200j | -110.96-192.2j |
+| line      | c     | line | -22.53+39.02j | 22.53-39.02j | 10406.07-0j | -10000+0j | -115.47+200j | -110.96+192.2j |
+| line      | n     | line |            0j |          -0j |          0j |       -0j |           0j |            -0j |
 
 ```pycon
 >>> en.res_lines
@@ -362,22 +379,22 @@ All the following tables are rounded to 2 decimals to be properly displayed.
 >>> en.res_loads
 ```
 
-| load_id | phase |       current |    power |      potential |
-| :------ | :---- | ------------: | -------: | -------------: |
-| load    | a     |      45.06+0j | 10000-0j |      221.93-0j |
-| load    | b     | -22.53-39.02j | 10000-0j | -110.96-192.2j |
-| load    | c     | -22.53+39.02j | 10000+0j | -110.96+192.2j |
-| load    | n     |            0j |       0j |            -0j |
+| load_id | phase | type  |       current |    power |      potential |
+| :------ | :---- | :---- | ------------: | -------: | -------------: |
+| load    | a     | power |      45.06+0j | 10000-0j |      221.93-0j |
+| load    | b     | power | -22.53-39.02j | 10000-0j | -110.96-192.2j |
+| load    | c     | power | -22.53+39.02j | 10000+0j | -110.96+192.2j |
+| load    | n     | power |            0j |       0j |            -0j |
 
 ```pycon
 >>> en.res_loads_voltages
 ```
 
-| load_id | phase |        voltage |
-| :------ | :---- | -------------: |
-| load    | an    |      221.93+0j |
-| load    | bn    | -110.96-192.2j |
-| load    | cn    | -110.96+192.2j |
+| load_id | phase | type  |        voltage |
+| :------ | :---- | :---- | -------------: |
+| load    | an    | power |      221.93+0j |
+| load    | bn    | power | -110.96-192.2j |
+| load    | cn    | power | -110.96+192.2j |
 
 ```pycon
 >>> en.res_sources
@@ -522,7 +539,7 @@ available and are valid. If you want to save/load the network without the result
 
 Note that calling the `to_json()` method on a network with invalid results (say after an element
 has been modified) will raise an exception. In this case, you can use the `include_results=False`
-option to save the network without the results or you can call the `solve_load_flow()` method to
+option to save the network without the results, or you can call the `solve_load_flow()` method to
 update the results before saving the network.
 
 ```{important}

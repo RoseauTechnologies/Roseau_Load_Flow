@@ -1,3 +1,16 @@
+---
+myst:
+  html_meta:
+    "description lang=en": |
+      Power load models in Roseau Load Flow - Three-phase unbalanced load flow solver in a Python API by Roseau
+      Technologies.
+    "description lang=fr": |
+      Les modèles de charge de puissance dans Roseau Load Flow - Solveur d'écoulement de charge triphasé et
+      déséquilibré dans une API Python par Roseau Technologies.
+    "keywords lang=fr": simulation, réseau, électrique, bus, roseau load flow, charges, modèle, puissance
+    "keywords lang=en": simulation, distribution grid, switch, power load, model
+---
+
 # Power loads (P)
 
 They represent loads for which the power is considered constant, i.e. it is independent of the

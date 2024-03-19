@@ -14,7 +14,8 @@ from roseau.load_flow.utils import ConductorType, InsulatorType, LineType
 
 
 def test_line_parameters():
-    bus = Bus(id="junction", phases="abcn")
+    bus1 = Bus(id="junction1", phases="abcn")
+    bus2 = Bus(id="junction2", phases="abcn")
     ground = Ground("ground")
 
     # Real element off the diagonal (Z)
@@ -63,9 +64,9 @@ def test_line_parameters():
     y_shunt = np.eye(3, dtype=complex)
     lp = LineParameters("test", z_line=z_line, y_shunt=y_shunt)
     with pytest.raises(RoseauLoadFlowException) as e:
-        Line("line", bus, bus, phases="abcn", ground=ground, parameters=lp, length=2.4)
+        Line("line1", bus1, bus2, phases="abcn", ground=ground, parameters=lp, length=2.4)
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_Y_SHUNT_SHAPE
-    assert e.value.msg == "Incorrect y_shunt dimensions for line 'line': (3, 3) instead of (4, 4)"
+    assert e.value.msg == "Incorrect y_shunt dimensions for line 'line1': (3, 3) instead of (4, 4)"
 
     # Bad shape (MV - Z)
     z_line = np.eye(4, dtype=complex)[:, :2]
@@ -80,18 +81,18 @@ def test_line_parameters():
     y_shunt = np.eye(6, dtype=complex)
     lp = LineParameters("test", z_line=z_line, y_shunt=y_shunt)
     with pytest.raises(RoseauLoadFlowException) as e:
-        Line("line", bus, bus, phases="abc", ground=ground, parameters=lp, length=2.4)
+        Line("line2", bus1, bus2, phases="abc", ground=ground, parameters=lp, length=2.4)
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_Y_SHUNT_SHAPE
-    assert e.value.msg == "Incorrect y_shunt dimensions for line 'line': (6, 6) instead of (3, 3)"
+    assert e.value.msg == "Incorrect y_shunt dimensions for line 'line2': (6, 6) instead of (3, 3)"
 
     # LV line with not zero shunt admittance
     z_line = np.eye(3, dtype=complex)
     y_shunt = np.eye(3, dtype=complex)
     lp = LineParameters("test", z_line=z_line, y_shunt=y_shunt)
     with pytest.raises(RoseauLoadFlowException) as e:
-        Line("line", bus, bus, phases="abcn", ground=ground, parameters=lp, length=2.4)
+        Line("line3", bus1, bus2, phases="abcn", ground=ground, parameters=lp, length=2.4)
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_Z_LINE_SHAPE
-    assert e.value.msg == "Incorrect z_line dimensions for line 'line': (3, 3) instead of (4, 4)"
+    assert e.value.msg == "Incorrect z_line dimensions for line 'line3': (3, 3) instead of (4, 4)"
 
     # Adding/Removing a shunt to a line is not allowed
     mat = np.eye(3, dtype=complex)

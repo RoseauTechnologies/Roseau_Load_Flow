@@ -1,3 +1,16 @@
+---
+myst:
+  html_meta:
+    "description lang=en": |
+      Three-phase transformers in Roseau Load Flow - Three-phase unbalanced load flow solver in a Python API by
+      Roseau Technologies.
+    "description lang=fr": |
+      Les transformateurs triphasés dans Roseau Load Flow - Solveur d'écoulement de charge triphasé et déséquilibré
+      dans une API Python par Roseau Technologies.
+    "keywords lang=fr": simulation, réseau, électrique, bus, roseau load flow, transformateurs, triphasé, modèle
+    "keywords lang=en": simulation, distribution grid, switch, transformers, three-phase, 3-phase, model
+---
+
 (three-phase-transformer)=
 
 # Three-phase transformer
@@ -93,8 +106,8 @@ The following equations are used to model 3-phase transformers:
     \begin{aligned}
         K_{\mathrm{UXYZ}} \cdot \underline{U_{\mathrm{XYZ}}}
         &= K_{\mathrm{VABC}} \cdot \underline{V_{\mathrm{ABC}}} - K_{\mathrm{N}} \cdot \underline{V_{\mathrm{N}}} \\
-        K_{\mathrm{Uxyz}} \cdot \left( M_{\mathrm{TV}}\cdot \underline{U_{\mathrm{XYZ}}} + \underline{Z_2} \cdot
-        \underline{I_{\mathrm{xyz}}} \right)
+        K_{\mathrm{Uxyz}} \cdot M_{\mathrm{TV}}\cdot \underline{U_{\mathrm{XYZ}}} + o_r \cdot \underline{Z_2} \cdot
+        \underline{I_{\mathrm{xyz}}}
             &= K_{\mathrm{Vabc}} \cdot \underline{V_{\mathrm{abc}}} - K_{\mathrm{n}} \cdot \underline{V_{\mathrm{n}}} \\
         K_{\mathrm{IABC}} \cdot \underline{I_{\mathrm{ABC}}} &= K_{\mathrm{IXYZ}} \cdot
             \left( \underline{Y_{\mathrm{m}}} \cdot \underline{U_{\mathrm{XYZ}}} + M_{\mathrm{TI}} \cdot
@@ -108,7 +121,8 @@ The following equations are used to model 3-phase transformers:
 ```
 
 Where $\underline{Z_2}$ is the series impedance and $\underline{Y_{\mathrm{m}}}$ is the magnetizing
-admittance of the transformer. The other quantities are the matrices defined below.
+admittance of the transformer. $o_r$ is the orientation variable, equal to $1$ for direct windings and $-1$ for
+inverse windings. The other quantities are the matrices defined below.
 
 ## Matrices
 
@@ -597,7 +611,6 @@ import numpy as np
 from roseau.load_flow import (
     Bus,
     ElectricalNetwork,
-    Ground,
     PotentialRef,
     PowerLoad,
     Transformer,

@@ -1,3 +1,16 @@
+---
+myst:
+  html_meta:
+    "description lang=en": |
+      Flexible load models in Roseau Load Flow - Three-phase unbalanced load flow solver in a Python API by Roseau
+      Technologies.
+    "description lang=fr": |
+      Les modèles de charge flexibles dans Roseau Load Flow - Solveur d'écoulement de charge triphasé et déséquilibré
+      dans une API Python par Roseau Technologies.
+    "keywords lang=fr": simulation, réseau, électrique, charge flexible, bus, roseau load flow, modèle
+    "keywords lang=en": simulation, distribution grid, flexible load, load, model
+---
+
 # Flexible loads
 
 They are a special type of power loads: instead of being constant, the power will depend on the

@@ -1,13 +1,62 @@
+---
+myst:
+  html_meta:
+    "description lang=en": |
+      Release History of Roseau Load Flow - Three-phase unbalanced load flow solver in a Python API by Roseau
+      Technologies.
+    "description lang=fr": |
+      Historique des versions de Roseau Load Flow - Solveur d'écoulement de charge triphasé et déséquilibré dans une
+      API Python par Roseau Technologies.
+    "keywords lang=fr": version, solveur, simulation, réseau, électrique, bus
+    "keywords lang=en": changelog, solver, simulation, distribution grid, bus, model
+---
+
 # Changelog
+
+## Version 0.8.0
+
+- {gh-pr}`207` Fix a bug in the zig-zag three-phase transformer model that led to incorrect active power flow in the
+  transformer. The bug affected the 50 kVA transformers that have the type `Yzn11` in the catalogue.
+- {gh-pr}`206` {gh-issue}`187` Un-deprecate `results_to_dict/json` methods and remove deprecated
+  `results_from_dict/json` methods.
+- {gh-pr}`205` {gh-issue}`200` Fix error when propagating the potentials from a voltage source with fewer phases
+  than the bus.
+- {gh-pr}`204` {gh-issue}`193` Remove restrictions on geometry types. Allow specifying the CRS of the geometries.
+- {gh-pr}`203` {gh-issue}`186` Detect invalid element overrides when connecting a new element with the
+  same ID and type of an existing element.
+- {gh-pr}`202` {gh-issue}`188` Explicitly prevent instantiation of abstract classes.
+- {gh-pr}`201` {gh-issue}`185` Add `type` attribute to the load classes and rename branches `branch_type`
+  attribute to `type` for consistency. Please replace `branch.branch_type` by `branch.type` in your code.
+  In addition, loads data frames gained two new columns:
+  1. `type` indicating the load type: constant-(`power`, `current`, `impedance`);
+  2. and `flexible` indicating if the load is flexible.
+- {gh-pr}`197` Fix a bug in three-phase transformer models that led to excessive reactive power flow in the transformer.
+- {gh-pr}`199` Add Schneider Electric EcoDesign transformers to the catalogue. These are tagged with the _AA0Ak_
+  efficiency class. Other internal data have been added to the catalogue for testing purposes.
+- {gh-pr}`198` Simplify the storage of the transformer catalogues. This is an internal change that should not have
+  effects on user code.
+- {gh-pr}`196` {gh-issue}`194` Improve the error message when accessing `res_flexible_powers` on a non-flexible load
+  and relax the flexible parameters plotting methods to accept an array-like of voltages.
+- {gh-pr}`195` Use `latexindent.pl` to automatically indent LaTeX files in the documentation.
+- {gh-pr}`192` Speed up results access by up to 3x using several optimization techniques. This is especially
+  noticeable in timeseries simulations and when accessing results of large networks.
+- {gh-pr}`184` Improve the documentation to have a better SEO (sitemap, metadata and canonical URLs). The navigation
+  menu has also been improved.
+- {gh-pr}`183` {gh-issue}`181` Update the networks catalogue to better represent the real networks.
+  LV loads are made single-phase, MV sources are connected in delta, and MV buses lost their neutral.
+  Voltage, current, and power limits are added to the buses, lines, and transformers.
+  The line parameters IDs are also updated to match the new line parameters catalogue.
+- {gh-pr}`182` Improve the error message when trying to access results on the network before running the load flow.
+- {gh-pr}`189` Allow flexible loads to have a null active theoretical power.
 
 ## Version 0.7.0
 
 ```{important}
-Starting with version 0.7.0, Roseau Load Flow will no longer be supplied as a SaaS. The software will be available as
+Starting with version 0.7.0, Roseau Load Flow is no longer supplied as a SaaS. The software is now available as
 a standalone Python library.
 ```
 
-- The documentation is moved from GitHub Pages to https://www.roseau-load-flow.roseautechnologies.com/.
+- The documentation is moved from GitHub Pages to <https://www.roseau-load-flow.roseautechnologies.com/>.
 - Fix a bug in the engine: it was impossible to change the parameters of center-tapped and single phase transformers.
 - {gh-pr}`179` Fix a bug in the propagation of potentials when a center-tapped transformer is used without neutral at
   the primary side.
@@ -137,7 +186,7 @@ a standalone Python library.
 - {gh-pr}`93` Add short-circuit computation.
 - {gh-pr}`92`
   - Add the changelog in the documentation.
-  - Use NodeJs 20 in the Dockerfile.
+  - Use Node.js 20 in the Dockerfile.
   - Correction of a dead link in the README.
 
 ## Version 0.4.0
@@ -183,7 +232,7 @@ a standalone Python library.
 
 <!-- Local Variables: -->
 <!-- mode: gfm -->
-<!-- fill-column: 100 -->
+<!-- fill-column: 120 -->
 <!-- coding: utf-8 -->
 <!-- ispell-local-dictionary: "british" -->
 <!-- End: -->

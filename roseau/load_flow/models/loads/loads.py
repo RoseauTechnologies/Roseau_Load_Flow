@@ -1,6 +1,7 @@
 import logging
 from abc import ABC
-from typing import Any, Literal
+from functools import cached_property
+from typing import ClassVar, Final, Literal
 
 import numpy as np
 
@@ -33,13 +34,13 @@ class AbstractLoad(Element, ABC):
         * delta-connected loads using a `phases` constructor argument not containing `"n"`
     """
 
-    _type: Literal["power", "current", "impedance"]
+    type: ClassVar[Literal["power", "current", "impedance"]]
     _floating_neutral_allowed: bool = False
 
-    allowed_phases = Bus.allowed_phases
+    allowed_phases: Final = Bus.allowed_phases
     """The allowed phases for a load are the same as for a :attr:`bus<Bus.allowed_phases>`."""
 
-    def __init__(self, id: Id, bus: Bus, *, phases: str | None = None, **kwargs: Any) -> None:
+    def __init__(self, id: Id, bus: Bus, *, phases: str | None = None) -> None:
         """AbstractLoad constructor.
 
         Args:
@@ -55,7 +56,9 @@ class AbstractLoad(Element, ABC):
                 :attr:`allowed_phases`. All phases of the load, except ``"n"``, must be present in
                 the phases of the connected bus. By default, the phases of the bus are used.
         """
-        super().__init__(id, **kwargs)
+        if type(self) is AbstractLoad:
+            raise TypeError("Can't instantiate abstract class AbstractLoad")
+        super().__init__(id)
         if phases is None:
             phases = bus.phases
         else:
@@ -76,7 +79,7 @@ class AbstractLoad(Element, ABC):
         self._phases = phases
         self._bus = bus
         self._n = len(self._phases)
-        self._symbol = {"power": "S", "current": "I", "impedance": "Z"}[self._type]
+        self._symbol = {"power": "S", "current": "I", "impedance": "Z"}[self.type]
         if len(phases) == 2 and "n" not in phases:
             # This is a delta load that has one element connected between two phases
             self._size = 1
@@ -105,7 +108,7 @@ class AbstractLoad(Element, ABC):
         """Whether the load is flexible or not. Only :class:`PowerLoad` can be flexible."""
         return False
 
-    @property
+    @cached_property
     def voltage_phases(self) -> list[str]:
         """The phases of the load voltages."""
         return calculate_voltage_phases(self.phases)
@@ -123,11 +126,11 @@ class AbstractLoad(Element, ABC):
 
     def _validate_value(self, value: ComplexArrayLike1D) -> ComplexArray:
         if len(value) != self._size:
-            msg = f"Incorrect number of {self._type}s: {len(value)} instead of {self._size}"
+            msg = f"Incorrect number of {self.type}s: {len(value)} instead of {self._size}"
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode[f"BAD_{self._symbol}_SIZE"])
         # A load cannot have any zero impedance
-        if self._type == "impedance" and np.isclose(value, 0).any():
+        if self.type == "impedance" and np.isclose(value, 0).any():
             msg = f"An impedance of the load {self.id!r} is null"
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Z_VALUE)
@@ -161,7 +164,7 @@ class AbstractLoad(Element, ABC):
     @property
     @ureg_wraps("VA", (None,))
     def res_powers(self) -> Q_[ComplexArray]:
-        """The load flow result of the load powers (VA)."""
+        """The load flow result of the "line powers" flowing into the load (VA)."""
         return self._res_powers_getter(warning=True)
 
     def _cy_connect(self):
@@ -219,22 +222,17 @@ class AbstractLoad(Element, ABC):
 
     def _to_dict(self, include_results: bool) -> JsonDict:
         self._raise_disconnected_error()
-        complex_array = getattr(self, f"_{self._type}s")
+        complex_array = getattr(self, f"_{self.type}s")
         res = {
             "id": self.id,
             "bus": self.bus.id,
             "phases": self.phases,
-            f"{self._type}s": [[value.real, value.imag] for value in complex_array],
+            f"{self.type}s": [[value.real, value.imag] for value in complex_array],
         }
         if include_results:
             currents = self._res_currents_getter(warning=True)
             res["results"] = {"currents": [[i.real, i.imag] for i in currents]}
         return res
-
-    def _results_from_dict(self, data: JsonDict) -> None:
-        self._res_currents = np.array([complex(i[0], i[1]) for i in data["currents"]], dtype=np.complex128)
-        self._fetch_results = False
-        self._no_results = False
 
     def _results_to_dict(self, warning: bool) -> JsonDict:
         return {
@@ -247,7 +245,7 @@ class AbstractLoad(Element, ABC):
 class PowerLoad(AbstractLoad):
     """A constant power load."""
 
-    _type = "power"
+    type: Final = "power"
 
     def __init__(
         self,
@@ -257,7 +255,6 @@ class PowerLoad(AbstractLoad):
         powers: ComplexArrayLike1D,
         phases: str | None = None,
         flexible_params: list[FlexibleParameter] | None = None,
-        **kwargs: Any,
     ) -> None:
         """PowerLoad constructor.
 
@@ -283,7 +280,7 @@ class PowerLoad(AbstractLoad):
                 the load is considered as flexible (or controllable) and the parameters are used
                 to compute the flexible power of the load.
         """
-        super().__init__(id=id, bus=bus, phases=phases, **kwargs)
+        super().__init__(id=id, bus=bus, phases=phases)
 
         if bus.short_circuits:
             msg = (
@@ -336,20 +333,20 @@ class PowerLoad(AbstractLoad):
     @ureg_wraps(None, (None, "VA"))
     def powers(self, value: ComplexArrayLike1D) -> None:
         value = self._validate_value(value)
-        if self.is_flexible:
+        if self._flexible_params is not None:
             for power, fp in zip(value, self._flexible_params, strict=True):
                 if fp.control_p.type == "constant" and fp.control_q.type == "constant":
                     continue  # No checks for this case
-                if abs(power) > fp.s_max.m_as("VA"):
+                if abs(power) > fp._s_max:
                     msg = f"The power is greater than the parameter s_max for flexible load {self.id!r}"
                     logger.error(msg)
                     raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_S_VALUE)
-                if power.imag < fp.q_min.m_as("VAr"):
-                    msg = f"The reactive power is lesser than the parameter q_min for flexible load {id!r}"
+                if power.imag < fp._q_min:
+                    msg = f"The reactive power is lower than the parameter q_min for flexible load {self.id!r}"
                     logger.error(msg)
                     raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_S_VALUE)
-                if power.imag > fp.q_max.m_as("VAr"):
-                    msg = f"The reactive power is greater than the parameter q_max for flexible load {id!r}"
+                if power.imag > fp._q_max:
+                    msg = f"The reactive power is greater than the parameter q_max for flexible load {self.id!r}"
                     logger.error(msg)
                     raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_S_VALUE)
                 if fp.control_p.type == "p_max_u_production" and power.real > 0:
@@ -358,10 +355,6 @@ class PowerLoad(AbstractLoad):
                     raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_S_VALUE)
                 if fp.control_p.type == "p_max_u_consumption" and power.real < 0:
                     msg = f"There is a consumption control but a negative power for flexible load {self.id!r}"
-                    logger.error(msg)
-                    raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_S_VALUE)
-                if fp.control_p.type != "constant" and power.real == 0:
-                    msg = f"There is a P control but a null active power for flexible load {self.id!r}"
                     logger.error(msg)
                     raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_S_VALUE)
         self._powers = value
@@ -377,7 +370,19 @@ class PowerLoad(AbstractLoad):
     @property
     @ureg_wraps("VA", (None,))
     def res_flexible_powers(self) -> Q_[ComplexArray]:
-        """The load flow result of the load flexible powers (VA)."""
+        """The load flow result of the load flexible powers (VA).
+
+        This property is only available for flexible loads.
+
+        It returns the powers actually consumed or produced by each component of the load instead
+        of the "line powers" flowing into the load connection points (as the :meth:`res_powers`
+        property does). The two properties are the same for Wye-connected loads but are different
+        for Delta-connected loads.
+        """
+        if not self.is_flexible:
+            msg = f"The load {self.id!r} is not flexible and does not have flexible powers"
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LOAD_TYPE)
         return self._res_flexible_powers_getter(warning=True)
 
     #
@@ -401,11 +406,6 @@ class PowerLoad(AbstractLoad):
             res["results"]["powers"] = [[s.real, s.imag] for s in flexible_powers]
         return res
 
-    def _results_from_dict(self, data: JsonDict) -> None:
-        super()._results_from_dict(data=data)
-        if self.is_flexible:
-            self._res_flexible_powers = np.array([complex(p[0], p[1]) for p in data["powers"]], dtype=np.complex128)
-
     def _results_to_dict(self, warning: bool) -> JsonDict:
         if self.is_flexible:
             return {
@@ -419,11 +419,9 @@ class PowerLoad(AbstractLoad):
 class CurrentLoad(AbstractLoad):
     """A constant current load."""
 
-    _type = "current"
+    type: Final = "current"
 
-    def __init__(
-        self, id: Id, bus: Bus, *, currents: ComplexArrayLike1D, phases: str | None = None, **kwargs: Any
-    ) -> None:
+    def __init__(self, id: Id, bus: Bus, *, currents: ComplexArrayLike1D, phases: str | None = None) -> None:
         """CurrentLoad constructor.
 
         Args:
@@ -443,7 +441,7 @@ class CurrentLoad(AbstractLoad):
                 :attr:`allowed_phases`. All phases of the load, except ``"n"``, must be present in
                 the phases of the connected bus. By default, the phases of the bus are used.
         """
-        super().__init__(id=id, phases=phases, bus=bus, **kwargs)
+        super().__init__(id=id, phases=phases, bus=bus)
         self.currents = currents  # handles size checks and unit conversion
         if self.phases == "abc":
             self._cy_element = CyDeltaCurrentLoad(n=self._n, currents=self._currents)
@@ -469,11 +467,9 @@ class CurrentLoad(AbstractLoad):
 class ImpedanceLoad(AbstractLoad):
     """A constant impedance load."""
 
-    _type = "impedance"
+    type: Final = "impedance"
 
-    def __init__(
-        self, id: Id, bus: Bus, *, impedances: ComplexArrayLike1D, phases: str | None = None, **kwargs: Any
-    ) -> None:
+    def __init__(self, id: Id, bus: Bus, *, impedances: ComplexArrayLike1D, phases: str | None = None) -> None:
         """ImpedanceLoad constructor.
 
         Args:
@@ -493,7 +489,7 @@ class ImpedanceLoad(AbstractLoad):
                 :attr:`allowed_phases`. All phases of the load, except ``"n"``, must be present in
                 the phases of the connected bus. By default, the phases of the bus are used.
         """
-        super().__init__(id=id, phases=phases, bus=bus, **kwargs)
+        super().__init__(id=id, phases=phases, bus=bus)
         self.impedances = impedances
         if self.phases == "abc":
             self._cy_element = CyDeltaAdmittanceLoad(n=self._n, admittances=1.0 / self._impedances)

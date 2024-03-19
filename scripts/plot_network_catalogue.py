@@ -1,7 +1,11 @@
+from pathlib import Path
+
 import folium
 import pandas as pd
 
 from roseau.load_flow import ElectricalNetwork
+
+OUTPUT_DIR = Path("doc") / "_static" / "Network"
 
 
 def buses_style_function(feature):
@@ -54,13 +58,13 @@ buses_tooltip = folium.GeoJsonTooltip(
 
 
 def branches_style_function(feature):
-    if feature["properties"]["branch_type"] == "line":
+    if feature["properties"]["type"] == "line":
         if feature["properties"]["network"].startswith("MV"):
             return {"color": "#234e83", "weight": 4}
         else:
             return {"color": "#adb9cb", "weight": 2}
     else:
-        # feature["properties"]["branch_type"] in ("transformer", "switch")
+        # feature["properties"]["type"] in ("transformer", "switch")
         return {"opacity": 0}
 
 
@@ -69,7 +73,7 @@ def branches_highlight_function(feature):
 
 
 branches_tooltip = folium.GeoJsonTooltip(
-    fields=["id", "branch_type", "bus1_id", "bus2_id"],
+    fields=["id", "type", "bus1_id", "bus2_id"],
     aliases=["Id:", "Type:", "Bus1:", "Bus2:"],
     localize=True,
     sticky=False,
@@ -83,6 +87,7 @@ if __name__ == "__main__":
     aggregated_buses_gdf_list = []
     aggregated_branches_gdf_list = []
     for network_name in catalogue_data:
+        print(f"Plotting network {network_name}")
         # Read the network data
         en = ElectricalNetwork.from_catalogue(name=network_name, load_point_name="Winter")
         buses_gdf = en.buses_frame.reset_index()
@@ -112,13 +117,14 @@ if __name__ == "__main__":
         folium.LayerControl().add_to(m)
 
         # Save the map
-        m.save(f"{network_name}.html")
+        m.save(OUTPUT_DIR / f"{network_name}.html")
 
         # Aggregate the data frame
         aggregated_buses_gdf_list.append(buses_gdf)
         aggregated_branches_gdf_list.append(branches_gdf)
 
     # Create the global map
+    print("Plotting the global map")
     buses_gdf = pd.concat(aggregated_buses_gdf_list, ignore_index=True)
     branches_gdf = pd.concat(aggregated_branches_gdf_list, ignore_index=True)
 
@@ -132,7 +138,7 @@ if __name__ == "__main__":
         max_width=800,
     )
     branches_tooltip = folium.GeoJsonTooltip(
-        fields=["network", "id", "branch_type", "bus1_id", "bus2_id"],
+        fields=["network", "id", "type", "bus1_id", "bus2_id"],
         aliases=["Network:", "Id:", "Type:", "Bus1:", "Bus2:"],
         localize=True,
         sticky=False,
@@ -161,4 +167,4 @@ if __name__ == "__main__":
     folium.LayerControl().add_to(m)
 
     # Save the map
-    m.save("Catalogue.html")
+    m.save(OUTPUT_DIR / "Catalogue.html")

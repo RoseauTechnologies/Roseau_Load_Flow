@@ -20,6 +20,7 @@ Units registry used by Roseau Load Flow using the `pint`_ package.
 
 .. _pint: https://pint.readthedocs.io/en/stable/getting/overview.html
 """
+
 from collections.abc import Callable, Iterable
 from types import GenericAlias
 from typing import TYPE_CHECKING, TypeAlias, TypeVar

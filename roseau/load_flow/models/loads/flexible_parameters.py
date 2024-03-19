@@ -1,13 +1,20 @@
 import logging
 import warnings
-from typing import TYPE_CHECKING, NoReturn, Optional
+from typing import TYPE_CHECKING, NoReturn
 
 import numpy as np
 from numpy.typing import NDArray
 from typing_extensions import Self
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
-from roseau.load_flow.typing import ComplexArray, ComplexArrayLike1D, ControlType, JsonDict, ProjectionType
+from roseau.load_flow.typing import (
+    ComplexArray,
+    ComplexArrayLike1D,
+    ControlType,
+    FloatArrayLike1D,
+    JsonDict,
+    ProjectionType,
+)
 from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow.utils import JsonMixin, _optional_deps
 from roseau.load_flow_engine.cy_engine import CyControl, CyFlexibleParameter, CyProjection
@@ -37,8 +44,9 @@ class Control(JsonMixin):
     """
 
     _DEFAULT_ALPHA: float = 1000.0
+    _DEFAULT_EPSILON: float = 1e-8
 
-    @ureg_wraps(None, (None, None, "V", "V", "V", "V", None))
+    @ureg_wraps(None, (None, None, "V", "V", "V", "V", None, None))
     def __init__(
         self,
         type: ControlType,
@@ -46,7 +54,8 @@ class Control(JsonMixin):
         u_down: float | Q_[float],
         u_up: float | Q_[float],
         u_max: float | Q_[float],
-        alpha: float | Q_[float] = _DEFAULT_ALPHA,
+        alpha: float = _DEFAULT_ALPHA,
+        epsilon: float = _DEFAULT_EPSILON,
     ) -> None:
         """Control constructor.
 
@@ -75,6 +84,9 @@ class Control(JsonMixin):
             alpha:
                 An approximation factor used by the family function (soft clip). The bigger the
                 factor is the closer the function is to the non-differentiable function.
+
+            epsilon:
+                This value is used to make a smooth inverse function. It is only useful for P control.
         """
         self.type = type
         self._u_min = u_min
@@ -82,9 +94,16 @@ class Control(JsonMixin):
         self._u_up = u_up
         self._u_max = u_max
         self._alpha = alpha
+        self._epsilon = epsilon
         self._check_values()
         self._cy_control = CyControl(
-            t=type, u_min=self._u_min, u_down=self._u_down, u_up=self._u_up, u_max=self._u_max, alpha=self._alpha
+            t=type,
+            u_min=self._u_min,
+            u_down=self._u_down,
+            u_up=self._u_up,
+            u_max=self._u_max,
+            alpha=self._alpha,
+            epsilon=self._epsilon,
         )
 
     def _check_values(self) -> None:
@@ -142,9 +161,21 @@ class Control(JsonMixin):
             previous_value = value
             previous_name = name
 
-        # Check on alpha
-        if self._alpha <= 0:
-            msg = f"'alpha' must be greater than 0 but {self._alpha:.1f} was provided."
+        # Values greater than 0
+        if self._epsilon <= 0.0:
+            msg = f"'epsilon' must be greater than 0 but {self._epsilon:.1f} was provided."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_CONTROL_VALUE)
+
+        # alpha must be "large"
+        if self._alpha < 1.0:
+            msg = f"'alpha' must be greater than 1 but {self._alpha:.1f} was provided."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_CONTROL_VALUE)
+
+        # epsilon must be "small"
+        if self._epsilon > 1.0:
+            msg = f"'epsilon' must be lower than 1 but {self._epsilon:.3f} was provided."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_CONTROL_VALUE)
 
@@ -178,15 +209,24 @@ class Control(JsonMixin):
         function is to the non-differentiable function."""
         return self._alpha
 
+    @property
+    def epsilon(self) -> float:
+        """This value is used to make a smooth inverse function."""
+        return self._epsilon
+
     @classmethod
     def constant(cls) -> Self:
         """Create a constant control i.e no control."""
         return cls(type="constant", u_min=0.0, u_down=0.0, u_up=0.0, u_max=0.0)
 
     @classmethod
-    @ureg_wraps(None, (None, "V", "V", None))
+    @ureg_wraps(None, (None, "V", "V", None, None))
     def p_max_u_production(
-        cls, u_up: float | Q_[float], u_max: float | Q_[float], alpha: float = _DEFAULT_ALPHA
+        cls,
+        u_up: float | Q_[float],
+        u_max: float | Q_[float],
+        alpha: float = _DEFAULT_ALPHA,
+        epsilon: float = _DEFAULT_EPSILON,
     ) -> Self:
         """Create a control of the type ``"p_max_u_production"``.
 
@@ -209,15 +249,24 @@ class Control(JsonMixin):
                 differentiable. The bigger alpha is, the closer the function is to the
                 non-differentiable function. This parameter is noted :math:`\\alpha` on the figure.
 
+            epsilon:
+                This value is used to make a smooth inverse function.
+
         Returns:
             The ``"p_max_u_production"`` control using the provided parameters.
         """
-        return cls(type="p_max_u_production", u_min=0.0, u_down=0.0, u_up=u_up, u_max=u_max, alpha=alpha)
+        return cls(
+            type="p_max_u_production", u_min=0.0, u_down=0.0, u_up=u_up, u_max=u_max, alpha=alpha, epsilon=epsilon
+        )
 
     @classmethod
-    @ureg_wraps(None, (None, "V", "V", None))
+    @ureg_wraps(None, (None, "V", "V", None, None))
     def p_max_u_consumption(
-        cls, u_min: float | Q_[float], u_down: float | Q_[float], alpha: float = _DEFAULT_ALPHA
+        cls,
+        u_min: float | Q_[float],
+        u_down: float | Q_[float],
+        alpha: float = _DEFAULT_ALPHA,
+        epsilon: float = _DEFAULT_EPSILON,
     ) -> Self:
         """Create a control of the type ``"p_max_u_consumption"``.
 
@@ -240,10 +289,15 @@ class Control(JsonMixin):
                 differentiable. The bigger alpha is, the closer the function is to the
                 non-differentiable function. This parameter is noted :math:`\\alpha` on the figure.
 
+            epsilon:
+                This value is used to make a smooth inverse function.
+
         Returns:
             The ``"p_max_u_consumption"`` control using the provided parameters.
         """
-        return cls(type="p_max_u_consumption", u_min=u_min, u_down=u_down, u_up=0.0, u_max=0.0, alpha=alpha)
+        return cls(
+            type="p_max_u_consumption", u_min=u_min, u_down=u_down, u_up=0.0, u_max=0.0, alpha=alpha, epsilon=epsilon
+        )
 
     @classmethod
     @ureg_wraps(None, (None, "V", "V", "V", "V", None))
@@ -297,12 +351,13 @@ class Control(JsonMixin):
     @classmethod
     def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
         alpha = data.get("alpha", cls._DEFAULT_ALPHA)
+        epsilon = data.get("epsilon", cls._DEFAULT_EPSILON)
         if data["type"] == "constant":
             return cls.constant()
         elif data["type"] == "p_max_u_production":
-            return cls.p_max_u_production(u_up=data["u_up"], u_max=data["u_max"], alpha=alpha)
+            return cls.p_max_u_production(u_up=data["u_up"], u_max=data["u_max"], alpha=alpha, epsilon=epsilon)
         elif data["type"] == "p_max_u_consumption":
-            return cls.p_max_u_consumption(u_min=data["u_min"], u_down=data["u_down"], alpha=alpha)
+            return cls.p_max_u_consumption(u_min=data["u_min"], u_down=data["u_down"], alpha=alpha, epsilon=epsilon)
         elif data["type"] == "q_u":
             return cls.q_u(
                 u_min=data["u_min"], u_down=data["u_down"], u_up=data["u_up"], u_max=data["u_max"], alpha=alpha
@@ -316,9 +371,21 @@ class Control(JsonMixin):
         if self.type == "constant":
             return {"type": "constant"}
         elif self.type == "p_max_u_production":
-            return {"type": "p_max_u_production", "u_up": self._u_up, "u_max": self._u_max, "alpha": self._alpha}
+            return {
+                "type": "p_max_u_production",
+                "u_up": self._u_up,
+                "u_max": self._u_max,
+                "alpha": self._alpha,
+                "epsilon": self._epsilon,
+            }
         elif self.type == "p_max_u_consumption":
-            return {"type": "p_max_u_consumption", "u_min": self._u_min, "u_down": self._u_down, "alpha": self._alpha}
+            return {
+                "type": "p_max_u_consumption",
+                "u_min": self._u_min,
+                "u_down": self._u_down,
+                "alpha": self._alpha,
+                "epsilon": self._epsilon,
+            }
         elif self.type == "q_u":
             return {
                 "type": "q_u",
@@ -335,11 +402,6 @@ class Control(JsonMixin):
 
     def _results_to_dict(self, warning: bool) -> NoReturn:
         msg = f"The {type(self).__name__} has no results to export."
-        logger.error(msg)
-        raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.JSON_NO_RESULTS)
-
-    def _results_from_dict(self, data: JsonDict) -> NoReturn:
-        msg = f"The {type(self).__name__} has no results to import."
         logger.error(msg)
         raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.JSON_NO_RESULTS)
 
@@ -433,11 +495,6 @@ class Projection(JsonMixin):
         logger.error(msg)
         raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.JSON_NO_RESULTS)
 
-    def _results_from_dict(self, data: JsonDict) -> NoReturn:
-        msg = f"The {type(self).__name__} has no results to import."
-        logger.error(msg)
-        raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.JSON_NO_RESULTS)
-
 
 class FlexibleParameter(JsonMixin):
     """Flexible parameters of a flexible load.
@@ -490,8 +547,8 @@ class FlexibleParameter(JsonMixin):
         self.control_q = control_q
         self.projection = projection
         self._cy_fp = None
-        self._q_min = None
-        self._q_max = None
+        self._q_min_value: float | None = None
+        self._q_max_value: float | None = None
         self.s_max = s_max
         self.q_min = q_min
         self.q_max = q_max
@@ -500,8 +557,8 @@ class FlexibleParameter(JsonMixin):
             control_q=control_q._cy_control,
             projection=projection._cy_projection,
             s_max=self._s_max,
-            q_min=self.q_min.m_as("VAr"),
-            q_max=self.q_max.m_as("VAr"),
+            q_min=self._q_min,
+            q_max=self._q_max,
         )
 
     @property
@@ -519,60 +576,80 @@ class FlexibleParameter(JsonMixin):
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_FLEXIBLE_PARAMETER_VALUE)
         self._s_max = value
-        if self._q_max is not None and self._q_max > self._s_max:
+        if self._q_max_value is not None and self._q_max_value > self._s_max:
             logger.warning("'s_max' has been updated but now 'q_max' is greater than s_max. 'q_max' is set to s_max")
-            self._q_max = self._s_max
-        if self._q_min is not None and self._q_min < -self._s_max:
-            logger.warning("'s_max' has been updated but now 'q_min' is less than -s_max. 'q_min' is set to -s_max")
-            self._q_min = -self._s_max
+            self._q_max_value = self._s_max
+        if self._q_min_value is not None and self._q_min_value < -self._s_max:
+            logger.warning("'s_max' has been updated but now 'q_min' is lower than -s_max. 'q_min' is set to -s_max")
+            self._q_min_value = -self._s_max
         if self._cy_fp is not None:
-            self._cy_fp.update_parameters(self._s_max, self.q_min.m_as("VAr"), self.q_max.m_as("VAr"))
+            self._cy_fp.update_parameters(self._s_max, self._q_min, self._q_max)
+
+    @property
+    def _q_min(self) -> float:
+        return self._q_min_value if self._q_min_value is not None else -self._s_max
 
     @property
     @ureg_wraps("VAr", (None,))
     def q_min(self) -> Q_[float]:
         """The minimum reactive power of the flexible load (VAr)."""
-        return self._q_min if self._q_min is not None else -self._s_max
+        return self._q_min
 
     @q_min.setter
     @ureg_wraps(None, (None, "VAr"))
     def q_min(self, value: float | Q_[float] | None) -> None:
-        if value is not None and value < -self._s_max:
-            q_min = Q_(value, "VAr")
-            msg = f"'q_min' must be greater than -s_max ({-self.s_max:P#~}) but {q_min:P#~} was provided."
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_FLEXIBLE_PARAMETER_VALUE)
-        if value is not None and self._q_max is not None and value > self._q_max:
-            q_min = Q_(value, "VAr")
-            msg = f"'q_min' must be greater than q_max ({self.q_max:P#~}) but {q_min:P#~} was provided."
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_FLEXIBLE_PARAMETER_VALUE)
-        self._q_min = value
+        if value is not None:
+            if value < -self._s_max:
+                q_min = Q_(value, "VAr")
+                msg = f"q_min must be greater than -s_max ({-self.s_max:P#~}) but {q_min:P#~} was provided."
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_FLEXIBLE_PARAMETER_VALUE)
+            if value > self._s_max:
+                q_min = Q_(value, "VAr")
+                msg = f"q_min must be lower than s_max ({self.s_max:P#~}) but {q_min:P#~} was provided."
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_FLEXIBLE_PARAMETER_VALUE)
+            if self._q_max_value is not None and value > self._q_max_value:
+                q_min = Q_(value, "VAr")
+                msg = f"q_min must be lower than q_max ({self.q_max:P#~}) but {q_min:P#~} was provided."
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_FLEXIBLE_PARAMETER_VALUE)
+        self._q_min_value = value
         if self._cy_fp is not None:
-            self._cy_fp.update_parameters(self._s_max, self.q_min.m_as("VAr"), self.q_max.m_as("VAr"))
+            self._cy_fp.update_parameters(self._s_max, self._q_min, self._q_max)
+
+    @property
+    def _q_max(self) -> float:
+        return self._q_max_value if self._q_max_value is not None else self._s_max
 
     @property
     @ureg_wraps("VAr", (None,))
     def q_max(self) -> Q_[float]:
         """The maximum reactive power of the flexible load (VAr)."""
-        return self._q_max if self._q_max is not None else self._s_max
+        return self._q_max
 
     @q_max.setter
     @ureg_wraps(None, (None, "VAr"))
     def q_max(self, value: float | Q_[float] | None) -> None:
-        if value is not None and value > self._s_max:
-            q_max = Q_(value, "VAr")
-            msg = f"'q_max' must be less than s_max ({self.s_max:P#~}) but {q_max:P#~} was provided."
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_FLEXIBLE_PARAMETER_VALUE)
-        if value is not None and self._q_min is not None and value < self._q_min:
-            q_max = Q_(value, "VAr")
-            msg = f"'q_max' must be greater than q_min ({self.q_min:P#~}) but {q_max:P#~} was provided."
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_FLEXIBLE_PARAMETER_VALUE)
-        self._q_max = value
+        if value is not None:
+            if value > self._s_max:
+                q_max = Q_(value, "VAr")
+                msg = f"q_max must be lower than s_max ({self.s_max:P#~}) but {q_max:P#~} was provided."
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_FLEXIBLE_PARAMETER_VALUE)
+            if value < -self._s_max:
+                q_max = Q_(value, "VAr")
+                msg = f"q_max must be greater than -s_max ({-self.s_max:P#~}) but {q_max:P#~} was provided."
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_FLEXIBLE_PARAMETER_VALUE)
+            if self._q_min_value is not None and value < self._q_min_value:
+                q_max = Q_(value, "VAr")
+                msg = f"q_max must be greater than q_min ({self.q_min:P#~}) but {q_max:P#~} was provided."
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_FLEXIBLE_PARAMETER_VALUE)
+        self._q_max_value = value
         if self._cy_fp is not None:
-            self._cy_fp.update_parameters(self._s_max, self.q_min.m_as("VAr"), self.q_max.m_as("VAr"))
+            self._cy_fp.update_parameters(self._s_max, self._q_min, self._q_max)
 
     @classmethod
     def constant(cls) -> Self:
@@ -589,13 +666,14 @@ class FlexibleParameter(JsonMixin):
         )
 
     @classmethod
-    @ureg_wraps(None, (None, "V", "V", "VA", None, None, None, None))
+    @ureg_wraps(None, (None, "V", "V", "VA", None, None, None, None, None))
     def p_max_u_production(
         cls,
         u_up: float | Q_[float],
         u_max: float | Q_[float],
         s_max: float | Q_[float],
         alpha_control: float = Control._DEFAULT_ALPHA,
+        epsilon_control: float = Control._DEFAULT_EPSILON,
         type_proj: ProjectionType = Projection._DEFAULT_TYPE,
         alpha_proj: float = Projection._DEFAULT_ALPHA,
         epsilon_proj: float = Projection._DEFAULT_EPSILON,
@@ -622,6 +700,9 @@ class FlexibleParameter(JsonMixin):
                 An approximation factor used by the family function (soft clip). The greater, the
                 closer the function are from the non-differentiable function.
 
+            epsilon_control:
+                This value is used to make a smooth inverse function for the control.
+
             type_proj:
                 The type of the projection to use.
 
@@ -636,7 +717,7 @@ class FlexibleParameter(JsonMixin):
         Returns:
             A flexible parameter which performs "p_max_u_production" control.
         """
-        control_p = Control.p_max_u_production(u_up=u_up, u_max=u_max, alpha=alpha_control)
+        control_p = Control.p_max_u_production(u_up=u_up, u_max=u_max, alpha=alpha_control, epsilon=epsilon_control)
         return cls(
             control_p=control_p,
             control_q=Control.constant(),
@@ -645,13 +726,14 @@ class FlexibleParameter(JsonMixin):
         )
 
     @classmethod
-    @ureg_wraps(None, (None, "V", "V", "VA", None, None, None, None))
+    @ureg_wraps(None, (None, "V", "V", "VA", None, None, None, None, None))
     def p_max_u_consumption(
         cls,
         u_min: float | Q_[float],
         u_down: float | Q_[float],
         s_max: float | Q_[float],
         alpha_control: float = Control._DEFAULT_ALPHA,
+        epsilon_control: float = Control._DEFAULT_EPSILON,
         type_proj: ProjectionType = Projection._DEFAULT_TYPE,
         alpha_proj: float = Projection._DEFAULT_ALPHA,
         epsilon_proj: float = Projection._DEFAULT_EPSILON,
@@ -675,6 +757,9 @@ class FlexibleParameter(JsonMixin):
                 An approximation factor used by the family function (soft clip). The greater, the
                 closer the function are from the non-differentiable function.
 
+            epsilon_control:
+                This value is used to make a smooth inverse function for the control.
+
             type_proj:
                 The type of the projection to use.
 
@@ -689,7 +774,9 @@ class FlexibleParameter(JsonMixin):
         Returns:
             A flexible parameter which performs "p_max_u_consumption" control.
         """
-        control_p = Control.p_max_u_consumption(u_min=u_min, u_down=u_down, alpha=alpha_control)
+        control_p = Control.p_max_u_consumption(
+            u_min=u_min, u_down=u_down, alpha=alpha_control, epsilon=epsilon_control
+        )
         return cls(
             control_p=control_p,
             control_q=Control.constant(),
@@ -772,7 +859,7 @@ class FlexibleParameter(JsonMixin):
         )
 
     @classmethod
-    @ureg_wraps(None, (None, "V", "V", "V", "V", "V", "V", "VA", "VAr", "VAr", None, None, None, None))
+    @ureg_wraps(None, (None, "V", "V", "V", "V", "V", "V", "VA", "VAr", "VAr", None, None, None, None, None))
     def pq_u_production(
         cls,
         up_up: float | Q_[float],
@@ -785,6 +872,7 @@ class FlexibleParameter(JsonMixin):
         q_min: float | Q_[float] | None = None,
         q_max: float | Q_[float] | None = None,
         alpha_control=Control._DEFAULT_ALPHA,
+        epsilon_control: float = Control._DEFAULT_EPSILON,
         type_proj: ProjectionType = Projection._DEFAULT_TYPE,
         alpha_proj=Projection._DEFAULT_ALPHA,
         epsilon_proj=Projection._DEFAULT_EPSILON,
@@ -830,6 +918,9 @@ class FlexibleParameter(JsonMixin):
                 An approximation factor used by the family function (soft clip). The greater, the
                 closer the function are from the non-differentiable function.
 
+            epsilon_control:
+                This value is used to make a smooth inverse function for the control.
+
             type_proj:
                 The type of the projection to use.
 
@@ -847,7 +938,7 @@ class FlexibleParameter(JsonMixin):
         See Also:
             :meth:`p_max_u_production` and :meth:`q_u` for more details.
         """
-        control_p = Control.p_max_u_production(u_up=up_up, u_max=up_max, alpha=alpha_control)
+        control_p = Control.p_max_u_production(u_up=up_up, u_max=up_max, alpha=alpha_control, epsilon=epsilon_control)
         control_q = Control.q_u(u_min=uq_min, u_down=uq_down, u_up=uq_up, u_max=uq_max, alpha=alpha_control)
         return cls(
             control_p=control_p,
@@ -859,7 +950,7 @@ class FlexibleParameter(JsonMixin):
         )
 
     @classmethod
-    @ureg_wraps(None, (None, "V", "V", "V", "V", "V", "V", "VA", "VAr", "VAr", None, None, None, None))
+    @ureg_wraps(None, (None, "V", "V", "V", "V", "V", "V", "VA", "VAr", "VAr", None, None, None, None, None))
     def pq_u_consumption(
         cls,
         up_min: float | Q_[float],
@@ -872,6 +963,7 @@ class FlexibleParameter(JsonMixin):
         q_min: float | Q_[float] | None = None,
         q_max: float | Q_[float] | None = None,
         alpha_control: float | Q_[float] = Control._DEFAULT_ALPHA,
+        epsilon_control: float = Control._DEFAULT_EPSILON,
         type_proj: ProjectionType = Projection._DEFAULT_TYPE,
         alpha_proj: float = Projection._DEFAULT_ALPHA,
         epsilon_proj: float = Projection._DEFAULT_EPSILON,
@@ -917,6 +1009,9 @@ class FlexibleParameter(JsonMixin):
                 An approximation factor used by the family function (soft clip). The greater, the
                 closer the function are from the non-differentiable function.
 
+            epsilon_control:
+                This value is used to make a smooth inverse function for the control.
+
             type_proj:
                 The type of the projection to use.
 
@@ -934,7 +1029,9 @@ class FlexibleParameter(JsonMixin):
         See Also:
             :meth:`p_max_u_consumption` and :meth:`q_u` for more details.
         """
-        control_p = Control.p_max_u_consumption(u_min=up_min, u_down=up_down, alpha=alpha_control)
+        control_p = Control.p_max_u_consumption(
+            u_min=up_min, u_down=up_down, alpha=alpha_control, epsilon=epsilon_control
+        )
         control_q = Control.q_u(u_min=uq_min, u_down=uq_down, u_up=uq_up, u_max=uq_max, alpha=alpha_control)
         return cls(
             control_p=control_p,
@@ -971,19 +1068,14 @@ class FlexibleParameter(JsonMixin):
             "projection": self.projection.to_dict(include_results=include_results),
             "s_max": self._s_max,
         }
-        if self._q_min is not None:
-            res["q_min"] = self._q_min
-        if self._q_max is not None:
-            res["q_max"] = self._q_max
+        if self._q_min_value is not None:
+            res["q_min"] = self._q_min_value
+        if self._q_max_value is not None:
+            res["q_max"] = self._q_max_value
         return res
 
     def _results_to_dict(self, warning: bool) -> NoReturn:
         msg = f"The {type(self).__name__} has no results to export."
-        logger.error(msg)
-        raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.JSON_NO_RESULTS)
-
-    def _results_from_dict(self, data: JsonDict) -> NoReturn:
-        msg = f"The {type(self).__name__} has no results to import."
         logger.error(msg)
         raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.JSON_NO_RESULTS)
 
@@ -1004,12 +1096,9 @@ class FlexibleParameter(JsonMixin):
         Returns:
             The flexible powers really consumed taking into account the control. One value per provided voltage norm.
         """
-        return self._compute_powers(voltages=voltages, power=power)
+        return self._compute_powers(voltages=np.abs(np.array(voltages, dtype=complex)), power=power)
 
-    def _compute_powers(self, voltages: ComplexArrayLike1D, power: complex) -> ComplexArray:
-        # Format the input
-        voltages = np.array(np.abs(voltages), dtype=float)
-
+    def _compute_powers(self, voltages: FloatArrayLike1D, power: complex) -> ComplexArray:
         # Iterate over the provided voltages to get the associated flexible powers
         res_flexible_powers = [self._cy_fp.compute_power(v, power) for v in voltages]
         return np.array(res_flexible_powers, dtype=complex)
@@ -1017,9 +1106,9 @@ class FlexibleParameter(JsonMixin):
     @ureg_wraps((None, "VA"), (None, "V", "VA", None, None))
     def plot_pq(
         self,
-        voltages: NDArray[np.float64] | Q_[NDArray[np.float64]],
+        voltages: FloatArrayLike1D,
         power: complex | Q_[complex],
-        ax: Optional["Axes"] = None,
+        ax: "Axes | None" = None,
         voltages_labels_mask: NDArray[np.bool_] | None = None,
     ) -> tuple["Axes", ComplexArray]:
         """Plot the "trajectory" of the flexible powers (in the (P, Q) plane) for the provided voltages and theoretical
@@ -1027,7 +1116,7 @@ class FlexibleParameter(JsonMixin):
 
         Args:
             voltages:
-                The array of voltage norms to test with this flexible parameter.
+                Array-like of voltage norms to test with this flexible parameter.
 
             power:
                 The input theoretical power of the load.
@@ -1048,6 +1137,8 @@ class FlexibleParameter(JsonMixin):
         # Get the axes
         if ax is None:
             ax = plt.gca()
+
+        voltages = np.array(voltages, dtype=np.float64)
 
         # Initialise some variables
         if voltages_labels_mask is None:
@@ -1116,16 +1207,13 @@ class FlexibleParameter(JsonMixin):
 
     @ureg_wraps((None, "VA"), (None, "V", "VA", None))
     def plot_control_p(
-        self,
-        voltages: NDArray[np.float64] | Q_[NDArray[np.float64]],
-        power: complex | Q_[complex],
-        ax: Optional["Axes"] = None,
+        self, voltages: FloatArrayLike1D, power: complex | Q_[complex], ax: "Axes | None" = None
     ) -> tuple["Axes", ComplexArray]:
         """Plot the flexible active power consumed (or produced) for the provided voltages and theoretical power.
 
         Args:
             voltages:
-                The array of voltage norms to test with this flexible parameter.
+                Array-like of voltage norms to test with this flexible parameter.
 
             power:
                 The input theoretical power of the load.
@@ -1142,6 +1230,8 @@ class FlexibleParameter(JsonMixin):
         # Get the axes
         if ax is None:
             ax = plt.gca()
+
+        voltages = np.array(voltages, dtype=np.float64)
 
         # Depending on the type of the control, several options
         x, y, x_ticks = self._theoretical_control_data(
@@ -1167,16 +1257,13 @@ class FlexibleParameter(JsonMixin):
 
     @ureg_wraps((None, "VA"), (None, "V", "VA", None))
     def plot_control_q(
-        self,
-        voltages: NDArray[np.float64] | Q_[NDArray[np.float64]],
-        power: complex | Q_[complex],
-        ax: Optional["Axes"] = None,
+        self, voltages: FloatArrayLike1D, power: complex | Q_[complex], ax: "Axes | None" = None
     ) -> tuple["Axes", ComplexArray]:
         """Plot the flexible reactive power consumed (or produced) for the provided voltages and theoretical power.
 
         Args:
             voltages:
-                The array of voltage norms to test with this flexible parameter.
+                Array-like of voltage norms to test with this flexible parameter.
 
             power:
                 The input theoretical power of the load.
@@ -1193,6 +1280,8 @@ class FlexibleParameter(JsonMixin):
         # Get the axes
         if ax is None:
             ax = plt.gca()
+
+        voltages = np.array(voltages, dtype=np.float64)
 
         # Depending on the type of the control, several options
         x, y, x_ticks = self._theoretical_control_data(

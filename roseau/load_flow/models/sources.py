@@ -1,5 +1,6 @@
 import logging
-from typing import Any
+from functools import cached_property
+from typing import Final
 
 import numpy as np
 from typing_extensions import Self
@@ -18,13 +19,11 @@ logger = logging.getLogger(__name__)
 class VoltageSource(Element):
     """A voltage source."""
 
-    allowed_phases = Bus.allowed_phases
+    allowed_phases: Final = Bus.allowed_phases
     """The allowed phases for a voltage source are the same as for a :attr:`bus<Bus.allowed_phases>`."""
     _floating_neutral_allowed: bool = False
 
-    def __init__(
-        self, id: Id, bus: Bus, *, voltages: ComplexArrayLike1D, phases: str | None = None, **kwargs: Any
-    ) -> None:
+    def __init__(self, id: Id, bus: Bus, *, voltages: ComplexArrayLike1D, phases: str | None = None) -> None:
         """Voltage source constructor.
 
         Args:
@@ -46,7 +45,7 @@ class VoltageSource(Element):
                 :attr:`allowed_phases`. All phases of the source, except ``"n"``, must be present in
                 the phases of the connected bus. By default, the phases of the bus are used.
         """
-        super().__init__(id, **kwargs)
+        super().__init__(id)
         self._connect(bus)
 
         if phases is None:
@@ -119,7 +118,7 @@ class VoltageSource(Element):
         if self._cy_element is not None:
             self._cy_element.update_voltages(self._voltages)
 
-    @property
+    @cached_property
     def voltage_phases(self) -> list[str]:
         """The phases of the source voltages."""
         return calculate_voltage_phases(self.phases)
@@ -206,11 +205,6 @@ class VoltageSource(Element):
             currents = self._res_currents_getter(warning=True)
             res["results"] = {"currents": [[i.real, i.imag] for i in currents]}
         return res
-
-    def _results_from_dict(self, data: JsonDict) -> None:
-        self._res_currents = np.array([complex(i[0], i[1]) for i in data["currents"]], dtype=np.complex128)
-        self._fetch_results = False
-        self._no_results = False
 
     def _results_to_dict(self, warning: bool) -> JsonDict:
         return {

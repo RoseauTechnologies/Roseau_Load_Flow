@@ -1,0 +1,37 @@
+%
+% Styles
+%
+\tikzset{every node/.style={font=\small}};%
+\tikzset{fleche/.style={->, -{Latex}}};%
+\tikzset{point/.pic={\filldraw[#1] (0,0) circle[radius=0.05];}};%
+\tikzset{domaine/.style={blue, line width=0.75mm}};%
+\tikzset{domaine hache/.style={domaine, pattern=north east lines, pattern color=blue}};%
+
+%
+% Macros
+%
+\pgfmathsetmacro{\r}{1.6};%
+\pgfmathsetmacro{\R}{2};%
+\pgfmathsetmacro{\pthvaleur}{-0.55*\r};%
+\pgfmathsetmacro{\qthvaleur}{0.6*\r};%
+\pgfmathsetmacro{\angthvaleur}{acos(\pthvaleur/\r)}%
+\pgfmathsetmacro{\angeuclthvaleur}{180+atan(\r/\pthvaleur)}%
+\pgfmathsetmacro{\qthmaxvaleur}{\r*sin(\angthvaleur)}%
+
+%
+% Common part of the picture
+%
+\draw (0,0) circle[radius=\r];%
+\draw[fleche] (-\R,0) -- (\R,0) node[below right] {$P$};%
+\draw[fleche] (0,-\R) -- (0,\R) node[above left] {$Q$};%
+\node[above left] at (\pthvaleur,\qthvaleur) {$\underline{S^{\theo}}$};%
+\draw (0,-\r) -- (\pthvaleur,-\r) -- (\pthvaleur,\r) -- (0,\r);%
+% Local Variables:
+% mode: latex
+% TeX-engine: luatex
+% TeX-source-correlate-method-active: synctex
+% ispell-local-dictionary: "british"
+% coding: utf-8
+% LaTeX-indent-level: 2
+% fill-column: 120
+% End:

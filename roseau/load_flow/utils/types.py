@@ -1,5 +1,6 @@
 import logging
 from enum import auto
+from typing import Final
 
 import pandas as pd
 
@@ -17,7 +18,9 @@ VoltagePhaseDtype = pd.CategoricalDtype(categories=["an", "bn", "cn", "ab", "bc"
 """Categorical data type used for the phase of voltages and flexible powers only."""
 BranchTypeDtype = pd.CategoricalDtype(categories=["line", "transformer", "switch"], ordered=True)
 """Categorical data type used for branch types."""
-_DTYPES = {
+LoadTypeDtype = pd.CategoricalDtype(categories=["power", "current", "impedance"], ordered=True)
+"""Categorical data type used for load types."""
+_DTYPES: Final = {
     "bus_id": object,
     "branch_id": object,
     "transformer_id": object,
@@ -27,7 +30,7 @@ _DTYPES = {
     "source_id": object,
     "ground_id": object,
     "potential_ref_id": object,
-    "branch_type": BranchTypeDtype,
+    "type": object,
     "phase": PhaseDtype,
     "current": complex,
     "current1": complex,
@@ -49,6 +52,7 @@ _DTYPES = {
     "min_voltage": float,
     "max_voltage": float,
     "violated": pd.BooleanDtype(),
+    "flexible": pd.BooleanDtype(),
 }
 
 

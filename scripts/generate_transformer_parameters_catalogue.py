@@ -1,4 +1,5 @@
 """Generate the catalogue of transformers from the CSV file of transformers."""
+
 from pathlib import Path
 
 import numpy as np

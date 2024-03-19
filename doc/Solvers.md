@@ -1,6 +1,19 @@
+---
+myst:
+  html_meta:
+    "description lang=en": |
+      With Roseau Load Flow you can choose between two methods: Newton-Raphson and Goldstein and Price - Three-phase
+      unbalanced load flow solver in a Python API by Roseau Technologies.
+    "description lang=fr": |
+      Avec Roseau Load Flow choisissez entre deux méthodes: Newton-Raphson et Goldstein and Price. Solveur
+      d'écoulement de charge triphasé et déséquilibré dans une API Python par Roseau Technologies.
+    "keywords lang=fr": simulation, réseau, électrique, Goldstein and Price, Newton-Raphson, solveur
+    "keywords lang=en": simulation, distribution grid, Goldstein and Price, Newton-Raphson, solver
+---
+
 (solvers)=
 
-# Solvers
+# General information
 
 The goal is to compute the voltages at each bus and the currents and powers flow in each branch of
 the network. The computation must respect the Kirchhoff's laws and the constraints of the network.
@@ -29,7 +42,7 @@ In code, $\varepsilon$ can be set with `en.solve_load_flow(tolerance=...)` (by d
 There are several solvers to solve this kind of problems. In _Roseau Load Flow_, the following
 solvers are available:
 
-## Newton-Raphson
+# Newton-Raphson
 
 This is the classical [_Newton-Raphson_ method](https://en.wikipedia.org/wiki/Newton%27s_method).
 
@@ -51,11 +64,11 @@ within a maximum number of iterations (modify with `en.solve_load_flow(max_itera
 the maximum number of iterations is exceeded, the solver did not converge and the execution
 fails.
 
-### Parameters
+## Parameters
 
 The _Newton-Raphson_ solver doesn't accept any parameter.
 
-## Goldstein and Price
+# Goldstein and Price
 
 This is a variant of the classical _Newton-Raphson_ solver with a linear search.
 
@@ -109,7 +122,7 @@ $t$ is then used to compute $x_{k+1} = x_k + t d(x_k)$
 The _Goldstein and Price_ variant is thus as fast as the classical _Newton-Raphson_ while being
 more robust.
 
-### Parameters
+## Parameters
 
 The _Goldstein and Price_ solver accepts the following parameters:
 

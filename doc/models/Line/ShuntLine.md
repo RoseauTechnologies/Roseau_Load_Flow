@@ -1,3 +1,16 @@
+---
+myst:
+  html_meta:
+    "description lang=en": |
+      Shunt line models in Roseau Load Flow - three-phase unbalanced load flow solver in a Python API by Roseau
+      Technologies.
+    "description lang=fr": |
+      Les modèles de ligne Shunt dans Roseau Load Flow - solveur d'écoulement de charge triphasé et déséquilibré dans
+      une API Python par Roseau Technologies.
+    "keywords lang=fr": simulation, réseau, électrique, bus, roseau load flow, lignes, modèle
+    "keywords lang=en": simulation, distribution grid, switch, lines, model
+---
+
 # Shunt line
 
 The first model of line which can be used is a PI model with series impedance and shunt admittance. The

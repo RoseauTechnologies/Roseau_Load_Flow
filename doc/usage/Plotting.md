@@ -1,4 +1,17 @@
-# Plotting
+---
+myst:
+  html_meta:
+    "description lang=en": |
+      Learn how to plot an MV or LV network with Roseau Load Flow, a powerful load flow solver for the electrical
+      calculation of smart grids.
+    "description lang=fr": |
+      Apprenez à tracer une carte du réseau MT ou BT avec Roseau Load Flow, solveur d'écoulements de charge pour le
+      calcul électrique des réseaux intelligents.
+    "keywords lang=fr": simulation, réseau, électrique, carte
+    "keywords lang=en": simulation, distribution grid, map,
+---
+
+# Plotting a distribution network
 
 On this page, the [folium](https://python-visualization.github.io/folium/index.html) library is used to plot an
 `ElectricalNetwork`.
@@ -68,17 +81,17 @@ lines are plotted so the opacity of others is set to 0.
 
 ```pycon
 >>> def branches_style_function(feature):
-...     if feature["properties"]["branch_type"] == "line":
+...     if feature["properties"]["type"] == "line":
 ...         return {"color": "#234e83", "weight": 4}
 ...     else:
-...         # feature["properties"]["branch_type"] in ("transformer", "switch")
+...         # feature["properties"]["type"] in ("transformer", "switch")
 ...         return {"opacity": 0}
 
 >>> def branches_highlight_function(feature):
 ...     return {"color": "#cad40e"}
 
 >>> branches_tooltip = folium.GeoJsonTooltip(
-...     fields=["id", "branch_type", "bus1_id", "bus2_id"],
+...     fields=["id", "type", "bus1_id", "bus2_id"],
 ...     aliases=["Id:", "Type:", "Bus1:", "Bus2:"],
 ...     localize=True,
 ...     sticky=False,

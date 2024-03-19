@@ -1,3 +1,18 @@
+---
+myst:
+  html_meta:
+    "description lang=en": |
+      Installation of Roseau Load Flow in a Python environment - Simulation of smart and unbalanced electrical
+      distribution networks.
+    "description lang=fr": |
+      Installation de Roseau Load Flow dans un environnement Python - Simulation des réseaux de distribution
+      électriques intelligents et déséquilibrés.
+    "keywords lang=fr": |
+      Roseau, load flow, python, écoulement de charge, écoulement de puissance, réseau de distribution, triphasé,
+      déséquilibré
+    "keywords lang=en": Roseau, Load flow, python, power flow, distribution grid, three-phase, multiphase, unbalanced
+---
+
 # Installation
 
 Please select one of the following installation methods that best suits your workflow.
@@ -8,7 +23,7 @@ If you are a beginner in Python, please note that the commands below must be exe
 to the Python console prompt `>>>`.
 ```
 
-## 1. Using `pip`
+## Using `pip`
 
 `roseau-load-flow` is available on [PyPI](https://pypi.org/project/roseau-load-flow/). It can be
 installed using pip with:
@@ -30,7 +45,8 @@ $ python -m pip install roseau-load-flow
 ````
 
 `````{tip}
-It is recommended to work in a virtual environment to isolate your project. Create and activate a virtual environment before installing the package. You can create one with:
+It is recommended to work in a virtual environment to isolate your project. Create and activate a virtual environment
+before installing the package. You can create one with:
 
 ````{tab} Windows
 
@@ -93,7 +109,7 @@ the corresponding functions. They can be installed with the
 1. `plot`: installs _matplotlib_ for the plotting functions
 2. `graph` installs _networkx_ for graph theory analysis functions
 
-## 2. Using `pip` in Jupyter Notebooks
+## Using `pip` in Jupyter Notebooks
 
 If you are using Jupyter Notebooks, you can install `roseau-load-flow` directly from a notebook
 cell with:

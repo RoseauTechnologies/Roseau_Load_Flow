@@ -1,7 +1,7 @@
 import logging
-from typing import Any
+from typing import Final
 
-from shapely import Point
+from shapely.geometry.base import BaseGeometry
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.branches import AbstractBranch
@@ -11,9 +11,8 @@ from roseau.load_flow.typing import Id, JsonDict
 from roseau.load_flow.units import Q_
 from roseau.load_flow_engine.cy_engine import (
     CyCenterTransformer,
-    CyExtendedTransformer,
-    CyReducedTransformer,
     CySingleTransformer,
+    CyThreePhaseTransformer,
 )
 
 logger = logging.getLogger(__name__)
@@ -25,9 +24,9 @@ class Transformer(AbstractBranch):
     The model parameters are defined using the ``parameters`` argument.
     """
 
-    branch_type = "transformer"
+    type: Final = "transformer"
 
-    allowed_phases = Bus.allowed_phases
+    allowed_phases: Final = Bus.allowed_phases
     """The allowed phases for a transformer are:
 
     - P-P-P or P-P-P-N: ``"abc"``, ``"abcn"`` (three-phase transformer)
@@ -49,8 +48,7 @@ class Transformer(AbstractBranch):
         tap: float = 1.0,
         phases1: str | None = None,
         phases2: str | None = None,
-        geometry: Point | None = None,
-        **kwargs: Any,
+        geometry: BaseGeometry | None = None,
     ) -> None:
         """Transformer constructor.
 
@@ -83,11 +81,6 @@ class Transformer(AbstractBranch):
             geometry:
                 The geometry of the transformer.
         """
-        if geometry is not None and not isinstance(geometry, Point):
-            msg = f"The geometry for a {type(self)} must be a point: {geometry.geom_type} provided."
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_GEOMETRY_TYPE)
-
         if parameters.type == "single":
             phases1, phases2 = self._compute_phases_single(
                 id=id, bus1=bus1, bus2=bus2, phases1=phases1, phases2=phases2
@@ -101,40 +94,38 @@ class Transformer(AbstractBranch):
                 id=id, bus1=bus1, bus2=bus2, parameters=parameters, phases1=phases1, phases2=phases2
             )
 
-        super().__init__(id, bus1, bus2, phases1=phases1, phases2=phases2, geometry=geometry, **kwargs)
+        super().__init__(id, bus1, bus2, phases1=phases1, phases2=phases2, geometry=geometry)
         self.tap = tap
         self._parameters = parameters
 
-        z2, ym, k, orientation = parameters.to_zyk()
-        z2 = z2.m_as("ohm")
-        ym = ym.m_as("S")
+        z2, ym, k, orientation = parameters._to_zyk()
         if parameters.type == "single":
             self._cy_element = CySingleTransformer(z2=z2, ym=ym, k=k * tap)
         elif parameters.type == "center":
             self._cy_element = CyCenterTransformer(z2=z2, ym=ym, k=k * tap)
         else:
             if "Y" in parameters.winding1 and "y" in parameters.winding2:
-                self._cy_element = CyReducedTransformer(
+                self._cy_element = CyThreePhaseTransformer(
                     n1=4, n2=4, prim="Y", sec="y", z2=z2, ym=ym, k=k * tap, orientation=orientation
                 )
             elif "D" in parameters.winding1 and "y" in parameters.winding2:
-                self._cy_element = CyReducedTransformer(
+                self._cy_element = CyThreePhaseTransformer(
                     n1=3, n2=4, prim="D", sec="y", z2=z2, ym=ym, k=k * tap, orientation=orientation
                 )
             elif "D" in parameters.winding1 and "d" in parameters.winding2:
-                self._cy_element = CyReducedTransformer(
+                self._cy_element = CyThreePhaseTransformer(
                     n1=3, n2=3, prim="D", sec="d", z2=z2, ym=ym, k=k * tap, orientation=orientation
                 )
             elif "Y" in parameters.winding1 and "d" in parameters.winding2:
-                self._cy_element = CyReducedTransformer(
+                self._cy_element = CyThreePhaseTransformer(
                     n1=4, n2=3, prim="Y", sec="d", z2=z2, ym=ym, k=k * tap, orientation=orientation
                 )
             elif "Y" in parameters.winding1 and "z" in parameters.winding2:
-                self._cy_element = CyExtendedTransformer(
+                self._cy_element = CyThreePhaseTransformer(
                     n1=4, n2=4, prim="Y", sec="z", z2=z2, ym=ym, k=k * tap, orientation=orientation
                 )
             elif "D" in parameters.winding1 and "z" in parameters.winding2:
-                self._cy_element = CyExtendedTransformer(
+                self._cy_element = CyThreePhaseTransformer(
                     n1=3, n2=4, prim="D", sec="z", z2=z2, ym=ym, k=k * tap, orientation=orientation
                 )
             else:
@@ -157,8 +148,8 @@ class Transformer(AbstractBranch):
         self._tap = value
         self._invalidate_network_results()
         if self._cy_element is not None:
-            z2, ym, k, _ = self.parameters.to_zyk()
-            self._cy_element.update_transformer_parameters(z2.m_as("ohm"), ym.m_as("S"), k * value)
+            z2, ym, k, _ = self.parameters._to_zyk()
+            self._cy_element.update_transformer_parameters(z2, ym, k * value)
 
     @property
     def parameters(self) -> TransformerParameters:
@@ -176,8 +167,8 @@ class Transformer(AbstractBranch):
         self._parameters = value
         self._invalidate_network_results()
         if self._cy_element is not None:
-            z2, ym, k, _ = value.to_zyk()
-            self._cy_element.update_transformer_parameters(z2.m_as("ohm"), ym.m_as("S"), k * self.tap)
+            z2, ym, k, _ = value._to_zyk()
+            self._cy_element.update_transformer_parameters(z2, ym, k * self.tap)
 
     @property
     def max_power(self) -> Q_[float] | None:
@@ -316,4 +307,6 @@ class Transformer(AbstractBranch):
             return None
         powers1, powers2 = self._res_powers_getter(warning=True)
         # True if either the primary or secondary is overloaded
-        return float(max(abs(sum(powers1)), abs(sum(powers2)))) > s_max
+        if abs(powers1.sum()) > s_max or abs(powers2.sum()) > s_max:
+            return True
+        return False

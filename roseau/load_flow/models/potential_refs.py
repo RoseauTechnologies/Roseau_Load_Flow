@@ -1,5 +1,5 @@
 import logging
-from typing import Any
+from typing import Final
 
 from typing_extensions import Self
 
@@ -24,9 +24,9 @@ class PotentialRef(Element):
     default is ``Vn = 0``.
     """
 
-    allowed_phases = frozenset({"a", "b", "c", "n"})
+    allowed_phases: Final = frozenset({"a", "b", "c", "n"})
 
-    def __init__(self, id: Id, element: Bus | Ground, *, phase: str | None = None, **kwargs: Any) -> None:
+    def __init__(self, id: Id, element: Bus | Ground, *, phase: str | None = None) -> None:
         """PotentialRef constructor.
 
         Args:
@@ -42,7 +42,7 @@ class PotentialRef(Element):
                 if the bus has a neutral otherwise the equation ``Va + Vb + Vc = 0`` of the bus
                 sets the potential reference.
         """
-        super().__init__(id, **kwargs)
+        super().__init__(id)
         if isinstance(element, Bus):
             if phase is None:
                 phase = "n" if "n" in element.phases else None
@@ -122,11 +122,6 @@ class PotentialRef(Element):
             i = self._res_current_getter(warning=True)
             res["results"] = {"current": [i.real, i.imag]}
         return res
-
-    def _results_from_dict(self, data: JsonDict) -> None:
-        self._res_current = complex(*data["current"])
-        self._fetch_results = False
-        self._no_results = False
 
     def _results_to_dict(self, warning: bool) -> JsonDict:
         i = self._res_current_getter(warning)

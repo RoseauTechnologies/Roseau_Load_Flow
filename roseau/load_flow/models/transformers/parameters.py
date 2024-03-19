@@ -1,4 +1,3 @@
-import json
 import logging
 import re
 from importlib import resources
@@ -219,12 +218,24 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         Returns:
             The parameters (``z2``, ``ym``, ``k``, ``orientation``).
         """
+        return self._to_zyk()
+
+    def _to_zyk(self) -> tuple[complex, complex, float, float]:
+        """Compute the transformer parameters ``z2``, ``ym``, ``k`` and ``orientation``."""
+        if self.type in ("single", "center"):
+            is_three_phase = False
+            winding1, winding2 = None, None
+        else:
+            is_three_phase = True
+            winding1, winding2 = self.winding1[0].upper(), self.winding2[0].lower()
+
         # Off-load test
         # Iron losses resistance (Ohm)
         r_iron = self._uhv**2 / self._p0
         # Magnetizing inductance (Henry) * omega (rad/s)
-        if self._i0 * self._sn > self._p0:
-            lm_omega = self._uhv**2 / (np.sqrt((self._i0 * self._sn) ** 2 - self._p0**2))
+        s0 = self._i0 * self._sn
+        if s0 > self._p0:
+            lm_omega = self._uhv**2 / np.sqrt(s0**2 - self._p0**2)
             ym = 1 / r_iron + 1 / (1j * lm_omega)
         else:
             ym = 1 / r_iron
@@ -234,26 +245,31 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         l2_omega = np.sqrt((self._vsc * self._ulv**2 / self._sn) ** 2 - r2**2)
         z2 = r2 + 1j * l2_omega
 
+        if winding1 == "D":
+            ym /= 3
+        if winding2 == "d":
+            z2 *= 3
+
         # Change the voltages if the reference voltages is phase to neutral
         uhv = self._uhv
         ulv = self._ulv
-        if self.type == "single" or self.type == "center":
-            orientation = 1.0
-        else:
+        if is_three_phase:
             # Extract the windings of the primary and the secondary of the transformer
-            if self.winding1[0] in ("y", "Y"):
+            if winding1 == "Y":
                 uhv /= np.sqrt(3.0)
-            if self.winding2[0] in ("y", "Y"):
-                ulv /= np.sqrt(3.0)
-            if self.winding1[0] in ("z", "Z"):
+            if winding1 == "Z":
                 uhv /= 3.0
-            if self.winding2[0] in ("z", "Z"):
+            if winding2 == "y":
+                ulv /= np.sqrt(3.0)
+            if winding2 == "z":
                 ulv /= 3.0
             if self.phase_displacement in (0, 11):  # Normal winding
                 orientation = 1.0
             else:  # Reverse winding
                 assert self.phase_displacement in (5, 6)
                 orientation = -1.0
+        else:
+            orientation = 1.0
 
         return z2, ym, ulv / uhv, orientation
 
@@ -301,11 +317,6 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         logger.error(msg)
         raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.JSON_NO_RESULTS)
 
-    def _results_from_dict(self, data: JsonDict) -> NoReturn:
-        msg = f"The {type(self).__name__} has no results to import."
-        logger.error(msg)
-        raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.JSON_NO_RESULTS)
-
     #
     # Catalogue Mixin
     #
@@ -332,7 +343,9 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         raise_if_not_found: bool,
     ) -> tuple[pd.DataFrame, str]:
         # Get the catalogue data
-        catalogue_data = cls.catalogue_data()
+        catalogue_data = cls.catalogue_data().drop(
+            columns=["du1", "du0.8", "eff1 100%", "eff0.8 100%", "eff1 75%", "eff0.8 75%"]
+        )
 
         # Filter on string/regular expressions
         query_msg_list = []
@@ -444,21 +457,17 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
 
         # A single one has been chosen
         idx = catalogue_data.index[0]
-        manufacturer = str(catalogue_data.at[idx, "manufacturer"])
-        range = str(catalogue_data.at[idx, "range"])
-        efficiency = str(catalogue_data.at[idx, "efficiency"])
-        nominal_power = int(catalogue_data.at[idx, "sn"] / 1000)
-
-        # Get the data from the Json file
-        path = cls.catalogue_path() / manufacturer / range / efficiency / f"{nominal_power}.json"
-        try:
-            json_dict = json.loads(path.read_text())
-        except FileNotFoundError:
-            msg = f"The file {path} has not been found while it should exist. Please post an issue on GitHub."
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.CATALOGUE_MISSING) from None
-
-        return cls.from_dict(json_dict)
+        return cls(
+            id=catalogue_data.at[idx, "id"],
+            type=catalogue_data.at[idx, "type"],
+            uhv=catalogue_data.at[idx, "uhv"],
+            ulv=catalogue_data.at[idx, "ulv"],
+            sn=catalogue_data.at[idx, "sn"],
+            p0=catalogue_data.at[idx, "p0"],
+            i0=catalogue_data.at[idx, "i0"],
+            psc=catalogue_data.at[idx, "psc"],
+            vsc=catalogue_data.at[idx, "vsc"],
+        )
 
     @classmethod
     @ureg_wraps(None, (None, None, None, None, None, None, "VA", "V", "V"))

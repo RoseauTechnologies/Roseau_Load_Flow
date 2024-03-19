@@ -1,3 +1,16 @@
+---
+myst:
+  html_meta:
+    "description lang=en": |
+      Simplified line models in Roseau Load Flow - Three-phase unbalanced load flow solver in a Python API by Roseau
+      Technologies.
+    "description lang=fr": |
+      Les modèles de ligne simplifiés dans Roseau Load Flow - Solveur d'écoulement de charge triphasé et déséquilibré
+      dans une API Python par Roseau Technologies.
+    "keywords lang=fr": simulation, réseau, électrique, bus, roseau load flow, lignes, modèle
+    "keywords lang=en": simulation, distribution grid, switch, lines, model
+---
+
 # Simplified line
 
 If the line is modeled with only series impedance, the model is simplified as there is no coupling

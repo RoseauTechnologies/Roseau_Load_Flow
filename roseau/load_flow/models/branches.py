@@ -1,8 +1,8 @@
 import logging
-from typing import Any
+from functools import cached_property
+from typing import ClassVar, Literal
 
-import numpy as np
-from shapely import LineString, Point
+from shapely.geometry.base import BaseGeometry
 from typing_extensions import Self
 
 from roseau.load_flow.converters import calculate_voltages
@@ -23,18 +23,10 @@ class AbstractBranch(Element):
         :doc:`Switch model documentation </models/Switch>`
     """
 
-    branch_type: str
+    type: ClassVar[Literal["line", "transformer", "switch"]]
 
     def __init__(
-        self,
-        id: Id,
-        bus1: Bus,
-        bus2: Bus,
-        *,
-        phases1: str,
-        phases2: str,
-        geometry: Point | LineString | None = None,
-        **kwargs: Any,
+        self, id: Id, bus1: Bus, bus2: Bus, *, phases1: str, phases2: str, geometry: BaseGeometry | None = None
     ) -> None:
         """AbstractBranch constructor.
 
@@ -57,9 +49,13 @@ class AbstractBranch(Element):
             geometry:
                 The geometry of the branch.
         """
-        super().__init__(id, **kwargs)
+        if type(self) is AbstractBranch:
+            raise TypeError("Can't instantiate abstract class AbstractBranch")
+        super().__init__(id)
         self._check_phases(id, phases1=phases1)
         self._check_phases(id, phases2=phases2)
+        self._n1 = len(phases1)
+        self._n2 = len(phases2)
         self._phases1 = phases1
         self._phases2 = phases2
         self._bus1 = bus1
@@ -69,12 +65,10 @@ class AbstractBranch(Element):
         self._res_currents: tuple[ComplexArray, ComplexArray] | None = None
 
     def __repr__(self) -> str:
-        s = f"{type(self).__name__}(id={self.id!r}, phases1={self.phases1!r}, phases2={self.phases2!r}"
-        s += f", bus1={self.bus1.id!r}, bus2={self.bus2.id!r}"
-        if self.geometry is not None:
-            s += f", geometry={self.geometry}"
-        s += ")"
-        return s
+        return (
+            f"{type(self).__name__}(id={self.id!r}, bus1={self.bus1!r}, bus2={self.bus2!r}, "
+            f"phases1={self.phases1!r}, phases2={self.phases2!r})"
+        )
 
     @property
     def phases1(self) -> str:
@@ -85,6 +79,10 @@ class AbstractBranch(Element):
     def phases2(self) -> str:
         """The phases of the branch at the second bus."""
         return self._phases2
+
+    @cached_property
+    def _all_phases(self) -> str:
+        return "".join(sorted(set(self._phases1) | set(self._phases2)))
 
     @property
     def bus1(self) -> Bus:
@@ -98,7 +96,7 @@ class AbstractBranch(Element):
 
     def _res_currents_getter(self, warning: bool) -> tuple[ComplexArray, ComplexArray]:
         if self._fetch_results:
-            self._res_currents = self._cy_element.get_currents(len(self.phases1), len(self.phases2))
+            self._res_currents = self._cy_element.get_currents(self._n1, self._n2)
         return self._res_getter(value=self._res_currents, warning=warning)
 
     @property
@@ -172,7 +170,7 @@ class AbstractBranch(Element):
     def _to_dict(self, include_results: bool) -> JsonDict:
         res = {
             "id": self.id,
-            "type": self.branch_type,
+            "type": self.type,
             "phases1": self.phases1,
             "phases2": self.phases2,
             "bus1": self.bus1.id,
@@ -187,13 +185,6 @@ class AbstractBranch(Element):
                 "currents2": [[i.real, i.imag] for i in currents2],
             }
         return res
-
-    def _results_from_dict(self, data: JsonDict) -> None:
-        currents1 = np.array([complex(i[0], i[1]) for i in data["currents1"]], dtype=np.complex128)
-        currents2 = np.array([complex(i[0], i[1]) for i in data["currents2"]], dtype=np.complex128)
-        self._res_currents = (currents1, currents2)
-        self._fetch_results = False
-        self._no_results = False
 
     def _results_to_dict(self, warning: bool) -> JsonDict:
         currents1, currents2 = self._res_currents_getter(warning)

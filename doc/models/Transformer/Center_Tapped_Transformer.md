@@ -1,3 +1,16 @@
+---
+myst:
+  html_meta:
+    "description lang=en": |
+      Center-tapped transformers in Roseau Load Flow - Three-phase unbalanced load flow solver in a Python API by
+      Roseau Technologies.
+    "description lang=fr": |
+      Transformateur à prise centrale dans Roseau Load Flow - Solveur d'écoulement de charge triphasé et déséquilibré
+      dans une API Python par Roseau Technologies.
+    "keywords lang=fr": simulation, réseau, électrique, bus, roseau load flow, transformateurs, prise centrale, modèle
+    "keywords lang=en": simulation, distribution grid, switch, transformers, Center-tapped, model
+---
+
 # Center-tapped transformer
 
 Center-tapped transformers allow to convert two phases primary connection into a split-phase

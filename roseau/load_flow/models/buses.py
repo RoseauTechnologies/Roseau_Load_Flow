@@ -1,10 +1,11 @@
 import logging
 from collections.abc import Iterator
-from typing import TYPE_CHECKING, Any, Optional
+from functools import cached_property
+from typing import TYPE_CHECKING, Any, Final
 
 import numpy as np
 import pandas as pd
-from shapely import Point
+from shapely.geometry.base import BaseGeometry
 from typing_extensions import Self
 
 from roseau.load_flow.converters import calculate_voltage_phases, calculate_voltages, phasor_to_sym
@@ -23,7 +24,7 @@ if TYPE_CHECKING:
 class Bus(Element):
     """A multi-phase electrical bus."""
 
-    allowed_phases = frozenset({"ab", "bc", "ca", "an", "bn", "cn", "abn", "bcn", "can", "abc", "abcn"})
+    allowed_phases: Final = frozenset({"ab", "bc", "ca", "an", "bn", "cn", "abn", "bcn", "can", "abc", "abcn"})
     """The allowed phases for a bus are:
 
     - P-P-P or P-P-P-N: ``"abc"``, ``"abcn"``
@@ -36,11 +37,10 @@ class Bus(Element):
         id: Id,
         *,
         phases: str,
-        geometry: Point | None = None,
+        geometry: BaseGeometry | None = None,
         potentials: ComplexArrayLike1D | None = None,
         min_voltage: float | None = None,
         max_voltage: float | None = None,
-        **kwargs: Any,
     ) -> None:
         """Bus constructor.
 
@@ -54,7 +54,7 @@ class Bus(Element):
                 :attr:`.allowed_phases`.
 
             geometry:
-                An optional geometry of the bus; a :class:`~shapely.Point` that represents the
+                An optional geometry of the bus; a :class:`~shapely.Geometry` that represents the
                 x-y coordinates of the bus.
 
             potentials:
@@ -73,7 +73,7 @@ class Bus(Element):
                 It must be a phase-neutral voltage if the bus has a neutral, phase-phase otherwise.
                 Either a float (V) or a :class:`Quantity <roseau.load_flow.units.Q_>` of float.
         """
-        super().__init__(id, **kwargs)
+        super().__init__(id)
         self._check_phases(id, phases=phases)
         self._phases = phases
         initialized = potentials is not None
@@ -150,7 +150,7 @@ class Bus(Element):
         """
         return self._res_voltages_getter(warning=True)
 
-    @property
+    @cached_property
     def voltage_phases(self) -> list[str]:
         """The phases of the voltages."""
         return calculate_voltage_phases(self.phases)
@@ -241,7 +241,7 @@ class Bus(Element):
         while remaining:
             branch = remaining.pop()
             visited.add(branch)
-            if not isinstance(branch, Line | Switch):
+            if not isinstance(branch, (Line, Switch)):
                 continue
             for element in branch._connected_elements:
                 if not isinstance(element, Bus) or element is self or element in buses:
@@ -294,7 +294,7 @@ class Bus(Element):
         while remaining:
             branch = remaining.pop()
             visited.add(branch)
-            if not isinstance(branch, Line | Switch):
+            if not isinstance(branch, (Line, Switch)):
                 continue
             for element in branch._connected_elements:
                 if not isinstance(element, Bus) or element.id in visited_buses:
@@ -366,11 +366,6 @@ class Bus(Element):
             res["results"] = {"potentials": [[v.real, v.imag] for v in potentials]}
         return res
 
-    def _results_from_dict(self, data: JsonDict) -> None:
-        self._res_potentials = np.array([complex(v[0], v[1]) for v in data["potentials"]], dtype=np.complex128)
-        self._fetch_results = False
-        self._no_results = False
-
     def _results_to_dict(self, warning: bool) -> JsonDict:
         return {
             "id": self.id,
@@ -378,7 +373,7 @@ class Bus(Element):
             "potentials": [[v.real, v.imag] for v in self._res_potentials_getter(warning)],
         }
 
-    def add_short_circuit(self, *phases: str, ground: Optional["Ground"] = None) -> None:
+    def add_short_circuit(self, *phases: str, ground: "Ground | None" = None) -> None:
         """Add a short-circuit by connecting multiple phases together optionally with a ground.
 
         Args:

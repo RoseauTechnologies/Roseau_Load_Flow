@@ -1,3 +1,16 @@
+---
+myst:
+  html_meta:
+    "description lang=en": |
+      Include Ground elements in your electrical model with Roseau Load Flow - Three-phase unbalanced load flow solver
+      in a Python API by Roseau Technologies.
+    "description lang=fr": |
+      Inclure des éléments Terre dans votre modèle de électrique avec Roseau Load Flow - Solveur d'écoulement de
+      charge triphasé et déséquilibré dans une API Python par Roseau Technologies.
+    "keywords lang=fr": simulation, réseau, électrique, terre, roseau load flow, modèle
+    "keywords lang=en": simulation, distribution grid, ground, earth, model
+---
+
 # Ground
 
 ## Definition

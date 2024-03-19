@@ -1,17 +1,26 @@
 \input{Preambule}%
 
 \begin{document}
-    \begin{tikzpicture}[%
-        show background rectangle,%
-        tight background,%
-        background rectangle/.style={fill=white}%
-    ]
-        \input{Transformer/Windings_Common.tikz}%
+\begin{tikzpicture}[%
+    show background rectangle,%
+    tight background,%
+    background rectangle/.style={fill=white}%
+  ]
+  \input{Transformer/Windings_Common.tex}%
 
-        \begin{scope}[local bounding box=Dz0]
-            \pic at (0,0) {left d};%
-            \pic at (5,0) {right z0};%
-        \end{scope}
-        \node[left=0.1 of Dz0] {\textcolor{red}{D}\textcolor{RoseauGreen}{z}0};%
-    \end{tikzpicture}
+  \begin{scope}[local bounding box=Dz0]
+    \pic at (0,0) {left d};%
+    \pic at (5,0) {right z0};%
+  \end{scope}
+  \node[left=0.1 of Dz0] {\textcolor{red}{D}\textcolor{RoseauGreen}{z}0};%
+\end{tikzpicture}
 \end{document}
+% Local Variables:
+% mode: latex
+% TeX-engine: luatex
+% TeX-source-correlate-method-active: synctex
+% ispell-local-dictionary: "british"
+% coding: utf-8
+% LaTeX-indent-level: 2
+% fill-column: 120
+% End:

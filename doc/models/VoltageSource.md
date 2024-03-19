@@ -1,3 +1,16 @@
+---
+myst:
+  html_meta:
+    "description lang=en": |
+      Define an ideal voltage source and its connection type in Roseau Load Flow - Three-phase unbalanced load flow
+      solver in a Python API by Roseau Technologies.
+    "description lang=fr": |
+      Définir une source de tension idéale et son type de connexion dans Roseau Load Flow - Solveur d'écoulement de
+      charge triphasé et déséquilibré dans une API Python par Roseau Technologies.
+    "keywords lang=fr": simulation, réseau, électrique, source, tension, idéale, connexion, modèle
+    "keywords lang=en": simulation, distribution grid, voltage source, ideal, connection, model
+---
+
 # Voltage source
 
 ## Definition
