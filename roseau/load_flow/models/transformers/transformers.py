@@ -11,9 +11,8 @@ from roseau.load_flow.typing import Id, JsonDict
 from roseau.load_flow.units import Q_
 from roseau.load_flow_engine.cy_engine import (
     CyCenterTransformer,
-    CyExtendedTransformer,
-    CyReducedTransformer,
     CySingleTransformer,
+    CyThreePhaseTransformer,
 )
 
 logger = logging.getLogger(__name__)
@@ -106,27 +105,27 @@ class Transformer(AbstractBranch):
             self._cy_element = CyCenterTransformer(z2=z2, ym=ym, k=k * tap)
         else:
             if "Y" in parameters.winding1 and "y" in parameters.winding2:
-                self._cy_element = CyReducedTransformer(
+                self._cy_element = CyThreePhaseTransformer(
                     n1=4, n2=4, prim="Y", sec="y", z2=z2, ym=ym, k=k * tap, orientation=orientation
                 )
             elif "D" in parameters.winding1 and "y" in parameters.winding2:
-                self._cy_element = CyReducedTransformer(
+                self._cy_element = CyThreePhaseTransformer(
                     n1=3, n2=4, prim="D", sec="y", z2=z2, ym=ym, k=k * tap, orientation=orientation
                 )
             elif "D" in parameters.winding1 and "d" in parameters.winding2:
-                self._cy_element = CyReducedTransformer(
+                self._cy_element = CyThreePhaseTransformer(
                     n1=3, n2=3, prim="D", sec="d", z2=z2, ym=ym, k=k * tap, orientation=orientation
                 )
             elif "Y" in parameters.winding1 and "d" in parameters.winding2:
-                self._cy_element = CyReducedTransformer(
+                self._cy_element = CyThreePhaseTransformer(
                     n1=4, n2=3, prim="Y", sec="d", z2=z2, ym=ym, k=k * tap, orientation=orientation
                 )
             elif "Y" in parameters.winding1 and "z" in parameters.winding2:
-                self._cy_element = CyExtendedTransformer(
+                self._cy_element = CyThreePhaseTransformer(
                     n1=4, n2=4, prim="Y", sec="z", z2=z2, ym=ym, k=k * tap, orientation=orientation
                 )
             elif "D" in parameters.winding1 and "z" in parameters.winding2:
-                self._cy_element = CyExtendedTransformer(
+                self._cy_element = CyThreePhaseTransformer(
                     n1=3, n2=4, prim="D", sec="z", z2=z2, ym=ym, k=k * tap, orientation=orientation
                 )
             else:
