@@ -15,7 +15,7 @@ myst:
 
 ## Version 0.8.0
 
-- Fix the zig-zag model three-phase transformer.
+- Fix a bug in the zig-zag three-phase transformer model that led to incorrect active power flow in the transformer. The bug affected the 50 kVA transformers that have the type `Yzn11` in the catalogue.
 - {gh-pr}`206` {gh-issue}`187` Un-deprecate `results_to_dict/json` methods and remove deprecated
   `results_from_dict/json` methods.
 - {gh-pr}`205` {gh-issue}`200` Fix error when propagating the potentials from a voltage source with fewer phases
