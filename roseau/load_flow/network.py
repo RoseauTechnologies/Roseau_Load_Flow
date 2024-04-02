@@ -1280,38 +1280,44 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
 
     def _propagate_potentials(self) -> None:
         """Set the bus potentials that have not been initialized yet."""
-        uninitialized = False
         all_phases = set()
         for bus in self.buses.values():
             if not bus._initialized:
-                uninitialized = True
                 all_phases |= set(bus.phases)
 
-        if uninitialized:
-            potentials, starting_source = self._get_potentials(all_phases)
-            elements = [(starting_source, potentials)]
-            visited = set()
-            while elements:
-                element, potentials = elements.pop(-1)
-                visited.add(element)
-                if isinstance(element, Bus) and not element._initialized:
-                    element.potentials = np.array([potentials[p] for p in element.phases], dtype=np.complex128)
-                    element._initialized_by_the_user = False  # only used for serialization
-                for e in element._connected_elements:
-                    if e not in visited and isinstance(e, (AbstractBranch, Bus)):
-                        if isinstance(element, Transformer):
-                            k = element.parameters._ulv / element.parameters._uhv
-                            phase_displacement = element.parameters.phase_displacement
-                            if phase_displacement is None:
-                                phase_displacement = 0
-                            new_potentials = potentials.copy()
-                            for key, p in new_potentials.items():
-                                new_potentials[key] = p * k * np.exp(phase_displacement * -1j * np.pi / 6.0)
-                            elements.append((e, new_potentials))
-                        else:
-                            elements.append((e, potentials))
+        starting_potentials, starting_bus = self._get_potentials(all_phases)
+        elements = [(starting_bus, starting_potentials)]
+        visited = set()
+        while elements:
+            element, potentials = elements.pop(-1)
+            visited.add(element)
+            if isinstance(element, Bus) and not element._initialized:
+                element.potentials = np.array([potentials[p] for p in element.phases], dtype=np.complex128)
+                element._initialized_by_the_user = False  # only used for serialization
+            for e in element._connected_elements:
+                if e not in visited and isinstance(e, (AbstractBranch, Bus)):
+                    if isinstance(element, Transformer):
+                        k = element.parameters._ulv / element.parameters._uhv
+                        phase_displacement = element.parameters.phase_displacement
+                        if phase_displacement is None:
+                            phase_displacement = 0
+                        new_potentials = potentials.copy()
+                        for key, p in new_potentials.items():
+                            new_potentials[key] = p * k * np.exp(phase_displacement * -1j * np.pi / 6.0)
+                        elements.append((e, new_potentials))
+                    else:
+                        elements.append((e, potentials))
 
-    def _get_potentials(self, all_phases: set[str]) -> tuple[dict[str, complex], VoltageSource]:
+        if len(visited) < len(self.buses) + len(self.branches):
+            unconnected_elements = [
+                element for element in chain(self.buses.values(), self.branches.values()) if element not in visited
+            ]
+            printable_elements = ", ".join(f"{type(e).__name__}({e.id!r})" for e in unconnected_elements)
+            msg = f"The elements [[{printable_elements}] are not electrically connected to the network."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.UNCONNECTED_ELEMENT)
+
+    def _get_potentials(self, all_phases: set[str]) -> tuple[dict[str, complex], Bus]:
         """Compute initial potentials from the voltages sources of the network, get also the starting source"""
         starting_source = None
         potentials = {"n": 0.0}
@@ -1348,7 +1354,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             potentials["c"] = v * np.exp(2j * np.pi / 3)
             potentials["n"] = 0.0
 
-        return potentials, starting_source
+        return potentials, starting_source.bus
 
     @staticmethod
     def _check_ref(elements: Iterable[Element]) -> None:
