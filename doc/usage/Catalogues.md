@@ -381,28 +381,28 @@ This catalogue can be retrieved in the form of a dataframe using:
 
 _Truncated output_
 
-| Name     | Line type   | Conductor material | Insulator type | Cross-section (mm²) | Resistance (ohm/km) | Reactance (ohm/km) | Susceptance (µS/km) | Maximal current (A) |
-| :------- | :---------- | :----------------- | :------------- | ------------------: | ------------------: | -----------------: | ------------------: | ------------------: |
-| T_AM_80  | twisted     | am                 |                |                  80 |            0.457596 |           0.105575 |          3.0507e-05 |                 203 |
-| U_CU_19  | underground | cu                 |                |                  19 |               1.009 |           0.133054 |         2.33629e-05 |                 138 |
-| O_AM_33  | overhead    | am                 |                |                  33 |             1.08577 |           0.375852 |           3.045e-06 |                 142 |
-| U_CU_150 | underground | cu                 |                |                 150 |               0.124 |          0.0960503 |         3.41234e-05 |                 420 |
-| O_AM_74  | overhead    | am                 |                |                  74 |            0.491898 |           0.350482 |          3.2757e-06 |                 232 |
-| T_AM_34  | twisted     | am                 |                |                  34 |             1.04719 |           0.121009 |         2.60354e-05 |                 118 |
-| T_AM_50  | twisted     | am                 |                |                  50 |            0.744842 |           0.113705 |         2.79758e-05 |                 146 |
-| O_AM_95  | overhead    | am                 |                |                  95 |             0.37184 |           0.342634 |          3.3543e-06 |                 266 |
-| U_CU_100 | underground | cu                 |                |                 100 |               0.185 |           0.102016 |         3.17647e-05 |                 339 |
-| T_CU_38  | twisted     | cu                 |                |                  38 |              0.4966 |           0.118845 |         2.65816e-05 |                 165 |
-| O_AM_100 | overhead    | am                 |                |                 100 |            0.356269 |           0.341022 |           3.371e-06 |                 276 |
-| U_AM_60  | underground | am                 |                |                  60 |            0.629804 |            0.11045 |         2.89372e-05 |                 194 |
-| T_AM_79  | twisted     | am                 |                |                  79 |            0.463313 |           0.105781 |         3.04371e-05 |                 201 |
-| T_CU_60  | twisted     | cu                 |                |                  60 |              0.3275 |            0.11045 |         2.89372e-05 |                 219 |
-| U_AM_240 | underground | am                 |                |                 240 |             0.14525 |          0.0899296 |         3.69374e-05 |                 428 |
-| O_AL_37  | overhead    | al                 |                |                  37 |            0.837733 |           0.372257 |          3.0757e-06 |                 152 |
-| U_AM_93  | underground | am                 |                |                  93 |            0.383274 |           0.103152 |         3.13521e-05 |                 249 |
-| O_AM_28  | overhead    | am                 |                |                  28 |             1.27866 |           0.381013 |          3.0019e-06 |                 130 |
-| T_AL_90  | twisted     | al                 |                |                  90 |              0.3446 |           0.103672 |         3.11668e-05 |                 219 |
-| O_AM_79  | overhead    | am                 |                |                  79 |            0.463313 |           0.348428 |          3.2959e-06 |                 240 |
+| Name     | Line type   | Conductor material | Insulator type | Cross-section (mm²) | Resistance (ohm/km) | Reactance (ohm/km) | Susceptance (S/km) | Maximal current (A) |
+| :------- | :---------- | :----------------- | :------------- | ------------------: | ------------------: | -----------------: | -----------------: | ------------------: |
+| T_AM_80  | twisted     | am                 |                |                  80 |            0.457596 |           0.105575 |         3.0507e-05 |                 203 |
+| U_CU_19  | underground | cu                 |                |                  19 |               1.009 |           0.133054 |        2.33629e-05 |                 138 |
+| O_AM_33  | overhead    | am                 |                |                  33 |             1.08577 |           0.375852 |          3.045e-06 |                 142 |
+| U_CU_150 | underground | cu                 |                |                 150 |               0.124 |          0.0960503 |        3.41234e-05 |                 420 |
+| O_AM_74  | overhead    | am                 |                |                  74 |            0.491898 |           0.350482 |         3.2757e-06 |                 232 |
+| T_AM_34  | twisted     | am                 |                |                  34 |             1.04719 |           0.121009 |        2.60354e-05 |                 118 |
+| T_AM_50  | twisted     | am                 |                |                  50 |            0.744842 |           0.113705 |        2.79758e-05 |                 146 |
+| O_AM_95  | overhead    | am                 |                |                  95 |             0.37184 |           0.342634 |         3.3543e-06 |                 266 |
+| U_CU_100 | underground | cu                 |                |                 100 |               0.185 |           0.102016 |        3.17647e-05 |                 339 |
+| T_CU_38  | twisted     | cu                 |                |                  38 |              0.4966 |           0.118845 |        2.65816e-05 |                 165 |
+| O_AM_100 | overhead    | am                 |                |                 100 |            0.356269 |           0.341022 |          3.371e-06 |                 276 |
+| U_AM_60  | underground | am                 |                |                  60 |            0.629804 |            0.11045 |        2.89372e-05 |                 194 |
+| T_AM_79  | twisted     | am                 |                |                  79 |            0.463313 |           0.105781 |        3.04371e-05 |                 201 |
+| T_CU_60  | twisted     | cu                 |                |                  60 |              0.3275 |            0.11045 |        2.89372e-05 |                 219 |
+| U_AM_240 | underground | am                 |                |                 240 |             0.14525 |          0.0899296 |        3.69374e-05 |                 428 |
+| O_AL_37  | overhead    | al                 |                |                  37 |            0.837733 |           0.372257 |         3.0757e-06 |                 152 |
+| U_AM_93  | underground | am                 |                |                  93 |            0.383274 |           0.103152 |        3.13521e-05 |                 249 |
+| O_AM_28  | overhead    | am                 |                |                  28 |             1.27866 |           0.381013 |         3.0019e-06 |                 130 |
+| T_AL_90  | twisted     | al                 |                |                  90 |              0.3446 |           0.103672 |        3.11668e-05 |                 219 |
+| O_AM_79  | overhead    | am                 |                |                  79 |            0.463313 |           0.348428 |         3.2959e-06 |                 240 |
 
 The following data are available in this table:
 
@@ -418,7 +418,7 @@ in addition to the following calculated physical parameters:
 
 - the _resistance_ of the line in ohm/km.
 - the _reactance_ of the line in ohm/km.
-- the _susceptance_ of the line in µS/km.
+- the _susceptance_ of the line in S/km.
 - the _maximal current_ of the line in A.
 
 The `get_catalogue` method accepts arguments (in bold above) that can be used to filter the returned
@@ -430,18 +430,18 @@ table. The following command only returns line parameters made of Aluminum:
 
 _Truncated output_
 
-| Name     | Line type   | Conductor material | Insulator type | Cross-section (mm²) | Resistance (ohm/km) | Reactance (ohm/km) | Susceptance (µS/km) | Maximal current (A) |
-| :------- | :---------- | :----------------- | :------------- | ------------------: | ------------------: | -----------------: | ------------------: | ------------------: |
-| U_AL_117 | underground | al                 |                |                 117 |             0.26104 |          0.0996298 |          3.2668e-05 |                 286 |
-| U_AL_33  | underground | al                 |                |                  33 |              0.9344 |           0.121598 |         2.58907e-05 |                 144 |
-| U_AL_69  | underground | al                 |                |                  69 |              0.4529 |           0.108041 |         2.96921e-05 |                 212 |
-| T_AL_228 | twisted     | al                 |                |                 228 |            0.133509 |          0.0905569 |         3.66279e-05 |                 395 |
-| U_AL_150 | underground | al                 |                |                 150 |               0.206 |          0.0960503 |         3.41234e-05 |                 325 |
-| T_AL_69  | twisted     | al                 |                |                  69 |              0.4529 |           0.108041 |         2.96921e-05 |                 185 |
-| O_AL_116 | overhead    | al                 |                |                 116 |             0.26372 |           0.336359 |            3.42e-06 |                 310 |
-| U_AL_50  | underground | al                 |                |                  50 |               0.641 |           0.113705 |         2.79758e-05 |                 175 |
-| U_AL_93  | underground | al                 |                |                  93 |             0.32984 |           0.103152 |         3.13521e-05 |                 249 |
-| T_AL_59  | twisted     | al                 |                |                  59 |              0.5519 |           0.110744 |         2.88474e-05 |                 164 |
+| Name     | Line type   | Conductor material | Insulator type | Cross-section (mm²) | Resistance (ohm/km) | Reactance (ohm/km) | Susceptance (S/km) | Maximal current (A) |
+| :------- | :---------- | :----------------- | :------------- | ------------------: | ------------------: | -----------------: | -----------------: | ------------------: |
+| U_AL_117 | underground | al                 |                |                 117 |             0.26104 |          0.0996298 |         3.2668e-05 |                 286 |
+| U_AL_33  | underground | al                 |                |                  33 |              0.9344 |           0.121598 |        2.58907e-05 |                 144 |
+| U_AL_69  | underground | al                 |                |                  69 |              0.4529 |           0.108041 |        2.96921e-05 |                 212 |
+| T_AL_228 | twisted     | al                 |                |                 228 |            0.133509 |          0.0905569 |        3.66279e-05 |                 395 |
+| U_AL_150 | underground | al                 |                |                 150 |               0.206 |          0.0960503 |        3.41234e-05 |                 325 |
+| T_AL_69  | twisted     | al                 |                |                  69 |              0.4529 |           0.108041 |        2.96921e-05 |                 185 |
+| O_AL_116 | overhead    | al                 |                |                 116 |             0.26372 |           0.336359 |           3.42e-06 |                 310 |
+| U_AL_50  | underground | al                 |                |                  50 |               0.641 |           0.113705 |        2.79758e-05 |                 175 |
+| U_AL_93  | underground | al                 |                |                  93 |             0.32984 |           0.103152 |        3.13521e-05 |                 249 |
+| T_AL_59  | twisted     | al                 |                |                  59 |              0.5519 |           0.110744 |        2.88474e-05 |                 164 |
 
 or only lines with a cross-section of 240 mm² (using a regular expression)
 
@@ -449,17 +449,17 @@ or only lines with a cross-section of 240 mm² (using a regular expression)
 >>> LineParameters.get_catalogue(section=240)
 ```
 
-| Name     | Line type   | Conductor material | Insulator type | Cross-section (mm²) | Resistance (ohm/km) | Reactance (ohm/km) | Susceptance (µS/km) | Maximal current (A) |
-| :------- | :---------- | :----------------- | :------------- | ------------------: | ------------------: | -----------------: | ------------------: | ------------------: |
-| O_AL_240 | overhead    | al                 |                |                 240 |               0.125 |           0.313518 |          3.6823e-06 |                 490 |
-| O_CU_240 | overhead    | cu                 |                |                 240 |              0.0775 |           0.313518 |          3.6823e-06 |                 630 |
-| O_AM_240 | overhead    | am                 |                |                 240 |             0.14525 |           0.313518 |          3.6823e-06 |                 490 |
-| U_AL_240 | underground | al                 |                |                 240 |               0.125 |          0.0899296 |         3.69374e-05 |                 428 |
-| U_CU_240 | underground | cu                 |                |                 240 |              0.0775 |          0.0899296 |         3.69374e-05 |                 549 |
-| U_AM_240 | underground | am                 |                |                 240 |             0.14525 |          0.0899296 |         3.69374e-05 |                 428 |
-| T_AL_240 | twisted     | al                 |                |                 240 |               0.125 |          0.0899296 |         3.69374e-05 |                 409 |
-| T_CU_240 | twisted     | cu                 |                |                 240 |              0.0775 |          0.0899296 |         3.69374e-05 |                 538 |
-| T_AM_240 | twisted     | am                 |                |                 240 |             0.14525 |          0.0899296 |         3.69374e-05 |                 409 |
+| Name     | Line type   | Conductor material | Insulator type | Cross-section (mm²) | Resistance (ohm/km) | Reactance (ohm/km) | Susceptance (S/km) | Maximal current (A) |
+| :------- | :---------- | :----------------- | :------------- | ------------------: | ------------------: | -----------------: | -----------------: | ------------------: |
+| O_AL_240 | overhead    | al                 |                |                 240 |               0.125 |           0.313518 |         3.6823e-06 |                 490 |
+| O_CU_240 | overhead    | cu                 |                |                 240 |              0.0775 |           0.313518 |         3.6823e-06 |                 630 |
+| O_AM_240 | overhead    | am                 |                |                 240 |             0.14525 |           0.313518 |         3.6823e-06 |                 490 |
+| U_AL_240 | underground | al                 |                |                 240 |               0.125 |          0.0899296 |        3.69374e-05 |                 428 |
+| U_CU_240 | underground | cu                 |                |                 240 |              0.0775 |          0.0899296 |        3.69374e-05 |                 549 |
+| U_AM_240 | underground | am                 |                |                 240 |             0.14525 |          0.0899296 |        3.69374e-05 |                 428 |
+| T_AL_240 | twisted     | al                 |                |                 240 |               0.125 |          0.0899296 |        3.69374e-05 |                 409 |
+| T_CU_240 | twisted     | cu                 |                |                 240 |              0.0775 |          0.0899296 |        3.69374e-05 |                 538 |
+| T_AM_240 | twisted     | am                 |                |                 240 |             0.14525 |          0.0899296 |        3.69374e-05 |                 409 |
 
 or only lines meeting both criteria
 
@@ -467,11 +467,11 @@ or only lines meeting both criteria
 >>> LineParameters.get_catalogue(conductor_type="al", section=240)
 ```
 
-| Name     | Line type   | Conductor material | Insulator type | Cross-section (mm²) | Resistance (ohm/km) | Reactance (ohm/km) | Susceptance (µS/km) | Maximal current (A) |
-| :------- | :---------- | :----------------- | :------------- | ------------------: | ------------------: | -----------------: | ------------------: | ------------------: |
-| O_AL_240 | overhead    | al                 |                |                 240 |               0.125 |           0.313518 |          3.6823e-06 |                 490 |
-| U_AL_240 | underground | al                 |                |                 240 |               0.125 |          0.0899296 |         3.69374e-05 |                 428 |
-| T_AL_240 | twisted     | al                 |                |                 240 |               0.125 |          0.0899296 |         3.69374e-05 |                 409 |
+| Name     | Line type   | Conductor material | Insulator type | Cross-section (mm²) | Resistance (ohm/km) | Reactance (ohm/km) | Susceptance (S/km) | Maximal current (A) |
+| :------- | :---------- | :----------------- | :------------- | ------------------: | ------------------: | -----------------: | -----------------: | ------------------: |
+| O_AL_240 | overhead    | al                 |                |                 240 |               0.125 |           0.313518 |         3.6823e-06 |                 490 |
+| U_AL_240 | underground | al                 |                |                 240 |               0.125 |          0.0899296 |        3.69374e-05 |                 428 |
+| T_AL_240 | twisted     | al                 |                |                 240 |               0.125 |          0.0899296 |        3.69374e-05 |                 409 |
 
 When filtering by the cross-section area, it is expected to provide a numeric value in mm² or to use a pint quantity.
 
