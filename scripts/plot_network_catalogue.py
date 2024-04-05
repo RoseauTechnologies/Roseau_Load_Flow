@@ -168,3 +168,14 @@ if __name__ == "__main__":
 
     # Save the map
     m.save(OUTPUT_DIR / "Catalogue.html")
+
+    # Complete <html>
+    # <html lang="en">
+
+    # In <head>
+    # <title>MV network #ID </title>
+    # <meta content="The Roseau Load Flow solver includes 40 medium and low voltage distribution networks." lang="en" name="description" xml:lang="en" />
+    # <meta content="distribution grid, network data, lv network, mv network, free" lang="en" name="keywords" xml:lang="en" />
+    
+    # In <body>
+    # <h1>MV network #ID </h1>
