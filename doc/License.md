@@ -9,6 +9,12 @@ myst:
        payantes. Une clef d'essai est également disponible.
     "keywords lang=fr": solveur, simulation, réseau, électrique, licence, open-source, gratuit, essai
     "keywords lang=en": simulation, distribution grid, solver, open-source, free, test
+og:image: /_static/Bus.svg
+og:image:alt: A wonderful bus
+og:title: A specific OG title
+og:type: music.song
+og:description: A specific description for this page of type song
+ogp_description_length: 500
 ---
 
 (license-page)=
