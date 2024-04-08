@@ -9,11 +9,10 @@ myst:
        payantes. Une clef d'essai est également disponible.
     "keywords lang=fr": solveur, simulation, réseau, électrique, licence, open-source, gratuit, essai
     "keywords lang=en": simulation, distribution grid, solver, open-source, free, test
-og:image: /_static/Bus.svg
-og:image:alt: A wonderful bus
-og:title: A specific OG title
-og:type: music.song
-og:description: A specific description for this page of type song
+og:image: https://www.roseautechnologies.com/wp-content/uploads/2024/04/DSCF0265-scaled.webp
+og:image:alt: An engineer uses Roseau Load Flow to perform compute the electric state of a LV/MV transformer
+og:title: Free public licence key
+og:description: You can try out RLF without registration on a distribution network of up to ten nodes by using the public licence key provided below.
 ogp_description_length: 500
 ---
 

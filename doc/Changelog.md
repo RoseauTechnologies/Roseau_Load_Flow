@@ -2,13 +2,18 @@
 myst:
   html_meta:
     "description lang=en": |
-      Release History of Roseau Load Flow - Three-phase unbalanced load flow solver in a Python API by Roseau
+      Release history of Roseau Load Flow - Three-phase unbalanced load flow solver in a Python API by Roseau
       Technologies.
     "description lang=fr": |
       Historique des versions de Roseau Load Flow - Solveur d'écoulement de charge triphasé et déséquilibré dans une
       API Python par Roseau Technologies.
     "keywords lang=fr": version, solveur, simulation, réseau, électrique, bus
     "keywords lang=en": changelog, solver, simulation, distribution grid, bus, model
+og:image: https://www.roseautechnologies.com/wp-content/uploads/2024/04/DSCF0091-scaled.webp
+og:image:alt: An engineer uses Roseau Load Flow to perform unbalanced electric calculation
+og:title: Roseau Load Flow - Unbalanced and multiphase load flow solver
+og:description: See what's new in the latest release of Roseau Load Flow !
+ogp_description_length: 500
 ---
 
 # Changelog
