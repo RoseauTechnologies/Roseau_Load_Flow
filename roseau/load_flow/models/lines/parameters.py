@@ -953,7 +953,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
                 "name": "Name",
                 "r": "Resistance (ohm/km)",
                 "x": "Reactance (ohm/km)",
-                "b": "Susceptance (µS/km)",
+                "b": "Susceptance (S/km)",
                 "maximal_current": "Maximal current (A)",
                 "type": "Line type",
                 "material": "Conductor material",

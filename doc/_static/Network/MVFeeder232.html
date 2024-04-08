@@ -1,7 +1,25 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
+    <title>MV Feeder 232</title>
     <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <meta
+      content="The Roseau Load Flow solver includes 40 medium and low voltage distribution networks."
+      lang="en"
+      name="description"
+      xml:lang="en"
+    />
+    <meta
+      content="distribution grid, network data, lv network, mv network, free"
+      lang="en"
+      name="keywords"
+      xml:lang="en"
+    />
+    <style>
+      h1 {
+        text-align: center;
+      }
+    </style>
 
     <script>
       L_NO_TOUCH = false;
@@ -49,7 +67,7 @@
                 initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
     <style>
-      #map_5fec54661fc067191727813a05891d1a {
+      #map_97a727b9c92559bdc33375c389face2f {
         position: relative;
         width: 100%;
         height: 100%;
@@ -90,12 +108,16 @@
         padding-right: 8px;
       }
     </style>
+
+    <link rel="stylesheet" href="../css/custom.css" />
   </head>
   <body>
-    <div class="folium-map" id="map_5fec54661fc067191727813a05891d1a"></div>
+    <h1>MV Feeder 232</h1>
+
+    <div class="folium-map" id="map_97a727b9c92559bdc33375c389face2f"></div>
   </body>
   <script>
-    var map_5fec54661fc067191727813a05891d1a = L.map("map_5fec54661fc067191727813a05891d1a", {
+    var map_97a727b9c92559bdc33375c389face2f = L.map("map_97a727b9c92559bdc33375c389face2f", {
       center: [48.51763097702638, -1.5514107977307698],
       crs: L.CRS.EPSG3857,
       zoom: 12,
@@ -103,7 +125,7 @@
       preferCanvas: false,
     });
 
-    var tile_layer_ea8b78d7c36459dc151fa2997bf1563a = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    var tile_layer_46403c1395ee306720c4a6e11446e145 = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution:
         '\u0026copy; \u003ca href="https://www.openstreetmap.org/copyright"\u003eOpenStreetMap\u003c/a\u003e contributors',
       detectRetina: false,
@@ -116,23 +138,21 @@
       tms: false,
     });
 
-    tile_layer_ea8b78d7c36459dc151fa2997bf1563a.addTo(map_5fec54661fc067191727813a05891d1a);
+    tile_layer_46403c1395ee306720c4a6e11446e145.addTo(map_97a727b9c92559bdc33375c389face2f);
 
-    function geo_json_37887bb842b7d8b4ee214e20037f3ef1_styler(feature) {
+    function geo_json_12f7f742e5d093049593471a2f2c7420_styler(feature) {
       switch (feature.id) {
-        case "0":
-          return { opacity: 0 };
         default:
           return { color: "#234e83", weight: 4 };
       }
     }
-    function geo_json_37887bb842b7d8b4ee214e20037f3ef1_highlighter(feature) {
+    function geo_json_12f7f742e5d093049593471a2f2c7420_highlighter(feature) {
       switch (feature.id) {
         default:
           return { color: "#cad40e" };
       }
     }
-    function geo_json_37887bb842b7d8b4ee214e20037f3ef1_pointToLayer(feature, latlng) {
+    function geo_json_12f7f742e5d093049593471a2f2c7420_pointToLayer(feature, latlng) {
       var opts = {
         bubblingMouseEvents: true,
         color: "#3388ff",
@@ -150,55 +170,40 @@
         weight: 3,
       };
 
-      let style = geo_json_37887bb842b7d8b4ee214e20037f3ef1_styler(feature);
+      let style = geo_json_12f7f742e5d093049593471a2f2c7420_styler(feature);
       Object.assign(opts, style);
 
       return new L.CircleMarker(latlng, opts);
     }
 
-    function geo_json_37887bb842b7d8b4ee214e20037f3ef1_onEachFeature(feature, layer) {
+    function geo_json_12f7f742e5d093049593471a2f2c7420_onEachFeature(feature, layer) {
       layer.on({
         mouseout: function (e) {
           if (typeof e.target.setStyle === "function") {
-            geo_json_37887bb842b7d8b4ee214e20037f3ef1.resetStyle(e.target);
+            geo_json_12f7f742e5d093049593471a2f2c7420.resetStyle(e.target);
           }
         },
         mouseover: function (e) {
           if (typeof e.target.setStyle === "function") {
-            const highlightStyle = geo_json_37887bb842b7d8b4ee214e20037f3ef1_highlighter(e.target.feature);
+            const highlightStyle = geo_json_12f7f742e5d093049593471a2f2c7420_highlighter(e.target.feature);
             e.target.setStyle(highlightStyle);
           }
         },
       });
     }
-    var geo_json_37887bb842b7d8b4ee214e20037f3ef1 = L.geoJson(null, {
-      onEachFeature: geo_json_37887bb842b7d8b4ee214e20037f3ef1_onEachFeature,
+    var geo_json_12f7f742e5d093049593471a2f2c7420 = L.geoJson(null, {
+      onEachFeature: geo_json_12f7f742e5d093049593471a2f2c7420_onEachFeature,
 
-      style: geo_json_37887bb842b7d8b4ee214e20037f3ef1_styler,
-      pointToLayer: geo_json_37887bb842b7d8b4ee214e20037f3ef1_pointToLayer,
+      style: geo_json_12f7f742e5d093049593471a2f2c7420_styler,
+      pointToLayer: geo_json_12f7f742e5d093049593471a2f2c7420_pointToLayer,
     });
 
-    function geo_json_37887bb842b7d8b4ee214e20037f3ef1_add(data) {
-      geo_json_37887bb842b7d8b4ee214e20037f3ef1.addData(data);
+    function geo_json_12f7f742e5d093049593471a2f2c7420_add(data) {
+      geo_json_12f7f742e5d093049593471a2f2c7420.addData(data);
     }
-    geo_json_37887bb842b7d8b4ee214e20037f3ef1_add({
+    geo_json_12f7f742e5d093049593471a2f2c7420_add({
       bbox: [-1.572574753072218, 48.489233170871124, -1.480931435591994, 48.55306081426247],
       features: [
-        {
-          bbox: [-1.480951121955717, 48.55306081426247, -1.480951121955717, 48.55306081426247],
-          geometry: { coordinates: [-1.480951121955717, 48.55306081426247], type: "Point" },
-          id: "0",
-          properties: {
-            type: "switch",
-            bus1_id: "HVMV16",
-            bus2_id: "HVMVFeeder16",
-            id: "Switch",
-            network: "MVFeeder232",
-            phases1: "abc",
-            phases2: "abc",
-          },
-          type: "Feature",
-        },
         {
           bbox: [-1.481478941947719, 48.5516792566919, -1.480931435591994, 48.55306081426247],
           geometry: {
@@ -212,15 +217,15 @@
             ],
             type: "LineString",
           },
-          id: "1",
+          id: "0",
           properties: {
-            type: "line",
             bus1_id: "HVMVFeeder16",
             bus2_id: "MVBus02065",
             id: "MVBranch41967",
+            max_current: 325,
             network: "MVFeeder232",
-            phases1: "abc",
-            phases2: "abc",
+            parameters_id: "U_AL_150",
+            phases: "abc",
           },
           type: "Feature",
         },
@@ -235,15 +240,15 @@
             ],
             type: "LineString",
           },
-          id: "2",
+          id: "1",
           properties: {
-            type: "line",
             bus1_id: "MVBus16272",
             bus2_id: "MVLV04950",
             id: "MVBranch05817",
+            max_current: 193,
             network: "MVFeeder232",
-            phases1: "abc",
-            phases2: "abc",
+            parameters_id: "O_AM_54",
+            phases: "abc",
           },
           type: "Feature",
         },
@@ -260,15 +265,15 @@
             ],
             type: "LineString",
           },
-          id: "3",
+          id: "2",
           properties: {
-            type: "line",
             bus1_id: "MVBus16274",
             bus2_id: "MVLV13936",
             id: "MVBranch13639",
+            max_current: 193,
             network: "MVFeeder232",
-            phases1: "abc",
-            phases2: "abc",
+            parameters_id: "O_AM_54",
+            phases: "abc",
           },
           type: "Feature",
         },
@@ -300,15 +305,15 @@
             ],
             type: "LineString",
           },
-          id: "4",
+          id: "3",
           properties: {
-            type: "line",
             bus1_id: "MVLV11702",
             bus2_id: "MVBus26847",
             id: "MVBranch42182",
+            max_current: 325,
             network: "MVFeeder232",
-            phases1: "abc",
-            phases2: "abc",
+            parameters_id: "U_AL_150",
+            phases: "abc",
           },
           type: "Feature",
         },
@@ -326,15 +331,15 @@
             ],
             type: "LineString",
           },
-          id: "5",
+          id: "4",
           properties: {
-            type: "line",
             bus1_id: "MVBus25989",
             bus2_id: "MVLV11702",
             id: "MVBranch33472",
+            max_current: 325,
             network: "MVFeeder232",
-            phases1: "abc",
-            phases2: "abc",
+            parameters_id: "U_AL_150",
+            phases: "abc",
           },
           type: "Feature",
         },
@@ -361,15 +366,15 @@
             ],
             type: "LineString",
           },
-          id: "6",
+          id: "5",
           properties: {
-            type: "line",
             bus1_id: "MVLV16629",
             bus2_id: "MVBus25989",
             id: "MVBranch37631",
+            max_current: 325,
             network: "MVFeeder232",
-            phases1: "abc",
-            phases2: "abc",
+            parameters_id: "U_AL_150",
+            phases: "abc",
           },
           type: "Feature",
         },
@@ -395,15 +400,15 @@
             ],
             type: "LineString",
           },
-          id: "7",
+          id: "6",
           properties: {
-            type: "line",
             bus1_id: "MVBus16292",
             bus2_id: "MVLV16629",
             id: "MVBranch47818",
+            max_current: 325,
             network: "MVFeeder232",
-            phases1: "abc",
-            phases2: "abc",
+            parameters_id: "U_AL_150",
+            phases: "abc",
           },
           type: "Feature",
         },
@@ -418,15 +423,15 @@
             ],
             type: "LineString",
           },
-          id: "8",
+          id: "7",
           properties: {
-            type: "line",
             bus1_id: "MVBus16291",
             bus2_id: "MVBus16292",
             id: "MVBranch13645",
+            max_current: 193,
             network: "MVFeeder232",
-            phases1: "abc",
-            phases2: "abc",
+            parameters_id: "O_AM_54",
+            phases: "abc",
           },
           type: "Feature",
         },
@@ -441,15 +446,15 @@
             ],
             type: "LineString",
           },
-          id: "9",
+          id: "8",
           properties: {
-            type: "line",
             bus1_id: "MVBus16291",
             bus2_id: "MVLV17142",
             id: "MVBranch24311",
+            max_current: 193,
             network: "MVFeeder232",
-            phases1: "abc",
-            phases2: "abc",
+            parameters_id: "O_AM_54",
+            phases: "abc",
           },
           type: "Feature",
         },
@@ -464,15 +469,15 @@
             ],
             type: "LineString",
           },
-          id: "10",
+          id: "9",
           properties: {
-            type: "line",
             bus1_id: "MVBus16290",
             bus2_id: "MVBus16291",
             id: "MVBranch05214",
+            max_current: 193,
             network: "MVFeeder232",
-            phases1: "abc",
-            phases2: "abc",
+            parameters_id: "O_AM_54",
+            phases: "abc",
           },
           type: "Feature",
         },
@@ -487,15 +492,15 @@
             ],
             type: "LineString",
           },
-          id: "11",
+          id: "10",
           properties: {
-            type: "line",
             bus1_id: "MVBus16289",
             bus2_id: "MVBus16290",
             id: "MVBranch05217",
+            max_current: 193,
             network: "MVFeeder232",
-            phases1: "abc",
-            phases2: "abc",
+            parameters_id: "O_AM_54",
+            phases: "abc",
           },
           type: "Feature",
         },
@@ -511,15 +516,15 @@
             ],
             type: "LineString",
           },
-          id: "12",
+          id: "11",
           properties: {
-            type: "line",
             bus1_id: "MVBus16278",
             bus2_id: "MVBus16289",
             id: "MVBranch13642",
+            max_current: 193,
             network: "MVFeeder232",
-            phases1: "abc",
-            phases2: "abc",
+            parameters_id: "O_AM_54",
+            phases: "abc",
           },
           type: "Feature",
         },
@@ -534,15 +539,15 @@
             ],
             type: "LineString",
           },
-          id: "13",
+          id: "12",
           properties: {
-            type: "line",
             bus1_id: "MVBus16278",
             bus2_id: "MVLV17075",
             id: "MVBranch05814",
+            max_current: 193,
             network: "MVFeeder232",
-            phases1: "abc",
-            phases2: "abc",
+            parameters_id: "O_AM_54",
+            phases: "abc",
           },
           type: "Feature",
         },
@@ -557,15 +562,15 @@
             ],
             type: "LineString",
           },
-          id: "14",
+          id: "13",
           properties: {
-            type: "line",
             bus1_id: "MVBus16282",
             bus2_id: "MVLV13935",
             id: "MVBranch24310",
+            max_current: 193,
             network: "MVFeeder232",
-            phases1: "abc",
-            phases2: "abc",
+            parameters_id: "O_AM_54",
+            phases: "abc",
           },
           type: "Feature",
         },
@@ -590,15 +595,15 @@
             ],
             type: "LineString",
           },
-          id: "15",
+          id: "14",
           properties: {
-            type: "line",
             bus1_id: "MVBus16285",
             bus2_id: "MVBus16286",
             id: "MVBranch42587",
+            max_current: 325,
             network: "MVFeeder232",
-            phases1: "abc",
-            phases2: "abc",
+            parameters_id: "U_AL_150",
+            phases: "abc",
           },
           type: "Feature",
         },
@@ -620,15 +625,15 @@
             ],
             type: "LineString",
           },
-          id: "16",
+          id: "15",
           properties: {
-            type: "line",
             bus1_id: "MVBus16284",
             bus2_id: "MVBus16285",
             id: "MVBranch45763",
+            max_current: 325,
             network: "MVFeeder232",
-            phases1: "abc",
-            phases2: "abc",
+            parameters_id: "U_AL_150",
+            phases: "abc",
           },
           type: "Feature",
         },
@@ -648,15 +653,15 @@
             ],
             type: "LineString",
           },
-          id: "17",
+          id: "16",
           properties: {
-            type: "line",
             bus1_id: "MVBus16283",
             bus2_id: "MVBus16284",
             id: "MVBranch41113",
+            max_current: 325,
             network: "MVFeeder232",
-            phases1: "abc",
-            phases2: "abc",
+            parameters_id: "U_AL_150",
+            phases: "abc",
           },
           type: "Feature",
         },
@@ -671,15 +676,15 @@
             ],
             type: "LineString",
           },
-          id: "18",
+          id: "17",
           properties: {
-            type: "line",
             bus1_id: "MVBus16282",
             bus2_id: "MVBus16283",
             id: "MVBranch01014",
+            max_current: 193,
             network: "MVFeeder232",
-            phases1: "abc",
-            phases2: "abc",
+            parameters_id: "O_AM_54",
+            phases: "abc",
           },
           type: "Feature",
         },
@@ -694,15 +699,15 @@
             ],
             type: "LineString",
           },
-          id: "19",
+          id: "18",
           properties: {
-            type: "line",
             bus1_id: "MVBus16281",
             bus2_id: "MVBus16282",
             id: "MVBranch05472",
+            max_current: 193,
             network: "MVFeeder232",
-            phases1: "abc",
-            phases2: "abc",
+            parameters_id: "O_AM_54",
+            phases: "abc",
           },
           type: "Feature",
         },
@@ -719,15 +724,15 @@
             ],
             type: "LineString",
           },
-          id: "20",
+          id: "19",
           properties: {
-            type: "line",
             bus1_id: "MVBus16280",
             bus2_id: "MVBus16281",
             id: "MVBranch05494",
+            max_current: 193,
             network: "MVFeeder232",
-            phases1: "abc",
-            phases2: "abc",
+            parameters_id: "O_AM_54",
+            phases: "abc",
           },
           type: "Feature",
         },
@@ -742,15 +747,15 @@
             ],
             type: "LineString",
           },
-          id: "21",
+          id: "20",
           properties: {
-            type: "line",
             bus1_id: "MVBus16280",
             bus2_id: "MVLV14272",
             id: "MVBranch28782",
+            max_current: 193,
             network: "MVFeeder232",
-            phases1: "abc",
-            phases2: "abc",
+            parameters_id: "O_AM_54",
+            phases: "abc",
           },
           type: "Feature",
         },
@@ -765,15 +770,15 @@
             ],
             type: "LineString",
           },
-          id: "22",
+          id: "21",
           properties: {
-            type: "line",
             bus1_id: "MVBus16278",
             bus2_id: "MVBus16280",
             id: "MVBranch01013",
+            max_current: 193,
             network: "MVFeeder232",
-            phases1: "abc",
-            phases2: "abc",
+            parameters_id: "O_AM_54",
+            phases: "abc",
           },
           type: "Feature",
         },
@@ -788,15 +793,15 @@
             ],
             type: "LineString",
           },
-          id: "23",
+          id: "22",
           properties: {
-            type: "line",
             bus1_id: "MVBus16277",
             bus2_id: "MVBus16278",
             id: "MVBranch05812",
+            max_current: 193,
             network: "MVFeeder232",
-            phases1: "abc",
-            phases2: "abc",
+            parameters_id: "O_AM_54",
+            phases: "abc",
           },
           type: "Feature",
         },
@@ -811,15 +816,15 @@
             ],
             type: "LineString",
           },
-          id: "24",
+          id: "23",
           properties: {
-            type: "line",
             bus1_id: "MVBus16276",
             bus2_id: "MVBus16277",
             id: "MVBranch05813",
+            max_current: 193,
             network: "MVFeeder232",
-            phases1: "abc",
-            phases2: "abc",
+            parameters_id: "O_AM_54",
+            phases: "abc",
           },
           type: "Feature",
         },
@@ -834,15 +839,15 @@
             ],
             type: "LineString",
           },
-          id: "25",
+          id: "24",
           properties: {
-            type: "line",
             bus1_id: "MVBus16276",
             bus2_id: "MVLV17143",
             id: "MVBranch20713",
+            max_current: 193,
             network: "MVFeeder232",
-            phases1: "abc",
-            phases2: "abc",
+            parameters_id: "O_AM_54",
+            phases: "abc",
           },
           type: "Feature",
         },
@@ -857,15 +862,15 @@
             ],
             type: "LineString",
           },
-          id: "26",
+          id: "25",
           properties: {
-            type: "line",
             bus1_id: "MVBus16274",
             bus2_id: "MVBus16276",
             id: "MVBranch20712",
+            max_current: 193,
             network: "MVFeeder232",
-            phases1: "abc",
-            phases2: "abc",
+            parameters_id: "O_AM_54",
+            phases: "abc",
           },
           type: "Feature",
         },
@@ -880,15 +885,15 @@
             ],
             type: "LineString",
           },
-          id: "27",
+          id: "26",
           properties: {
-            type: "line",
             bus1_id: "MVBus16272",
             bus2_id: "MVBus16274",
             id: "MVBranch20711",
+            max_current: 193,
             network: "MVFeeder232",
-            phases1: "abc",
-            phases2: "abc",
+            parameters_id: "O_AM_54",
+            phases: "abc",
           },
           type: "Feature",
         },
@@ -904,15 +909,15 @@
             ],
             type: "LineString",
           },
-          id: "28",
+          id: "27",
           properties: {
-            type: "line",
             bus1_id: "MVBus16271",
             bus2_id: "MVBus16272",
             id: "MVBranch05215",
+            max_current: 193,
             network: "MVFeeder232",
-            phases1: "abc",
-            phases2: "abc",
+            parameters_id: "O_AM_54",
+            phases: "abc",
           },
           type: "Feature",
         },
@@ -940,15 +945,15 @@
             ],
             type: "LineString",
           },
-          id: "29",
+          id: "28",
           properties: {
-            type: "line",
             bus1_id: "MVLV19187",
             bus2_id: "MVBus16271",
             id: "MVBranch38453",
+            max_current: 325,
             network: "MVFeeder232",
-            phases1: "abc",
-            phases2: "abc",
+            parameters_id: "U_AL_150",
+            phases: "abc",
           },
           type: "Feature",
         },
@@ -963,15 +968,15 @@
             ],
             type: "LineString",
           },
-          id: "30",
+          id: "29",
           properties: {
-            type: "line",
             bus1_id: "MVBus18155",
             bus2_id: "MVLV17074",
             id: "MVBranch11802",
+            max_current: 193,
             network: "MVFeeder232",
-            phases1: "abc",
-            phases2: "abc",
+            parameters_id: "O_AM_54",
+            phases: "abc",
           },
           type: "Feature",
         },
@@ -986,15 +991,15 @@
             ],
             type: "LineString",
           },
-          id: "31",
+          id: "30",
           properties: {
-            type: "line",
             bus1_id: "MVBus18126",
             bus2_id: "MVBus18155",
             id: "MVBranch13643",
+            max_current: 193,
             network: "MVFeeder232",
-            phases1: "abc",
-            phases2: "abc",
+            parameters_id: "O_AM_54",
+            phases: "abc",
           },
           type: "Feature",
         },
@@ -1009,15 +1014,15 @@
             ],
             type: "LineString",
           },
-          id: "32",
+          id: "31",
           properties: {
-            type: "line",
             bus1_id: "MVBus18137",
             bus2_id: "MVBus18138",
             id: "MVBranch20767",
+            max_current: 193,
             network: "MVFeeder232",
-            phases1: "abc",
-            phases2: "abc",
+            parameters_id: "O_AM_54",
+            phases: "abc",
           },
           type: "Feature",
         },
@@ -1036,15 +1041,15 @@
             ],
             type: "LineString",
           },
-          id: "33",
+          id: "32",
           properties: {
-            type: "line",
             bus1_id: "MVBus18140",
             bus2_id: "MVBus18141",
             id: "MVBranch42241",
+            max_current: 325,
             network: "MVFeeder232",
-            phases1: "abc",
-            phases2: "abc",
+            parameters_id: "U_AL_150",
+            phases: "abc",
           },
           type: "Feature",
         },
@@ -1059,15 +1064,15 @@
             ],
             type: "LineString",
           },
-          id: "34",
+          id: "33",
           properties: {
-            type: "line",
             bus1_id: "MVBus18139",
             bus2_id: "MVBus18140",
             id: "MVBranch00657",
+            max_current: 193,
             network: "MVFeeder232",
-            phases1: "abc",
-            phases2: "abc",
+            parameters_id: "O_AM_54",
+            phases: "abc",
           },
           type: "Feature",
         },
@@ -1094,15 +1099,15 @@
             ],
             type: "LineString",
           },
-          id: "35",
+          id: "34",
           properties: {
-            type: "line",
             bus1_id: "MVBus18144",
             bus2_id: "MVLV06933",
             id: "MVBranch33658",
+            max_current: 325,
             network: "MVFeeder232",
-            phases1: "abc",
-            phases2: "abc",
+            parameters_id: "U_AL_150",
+            phases: "abc",
           },
           type: "Feature",
         },
@@ -1117,15 +1122,15 @@
             ],
             type: "LineString",
           },
-          id: "36",
+          id: "35",
           properties: {
-            type: "line",
             bus1_id: "MVBus18145",
             bus2_id: "MVBus18146",
             id: "MVBranch30133",
+            max_current: 193,
             network: "MVFeeder232",
-            phases1: "abc",
-            phases2: "abc",
+            parameters_id: "O_AM_54",
+            phases: "abc",
           },
           type: "Feature",
         },
@@ -1141,15 +1146,15 @@
             ],
             type: "LineString",
           },
-          id: "37",
+          id: "36",
           properties: {
-            type: "line",
             bus1_id: "MVBus18145",
             bus2_id: "MVBus18147",
             id: "MVBranch13480",
+            max_current: 193,
             network: "MVFeeder232",
-            phases1: "abc",
-            phases2: "abc",
+            parameters_id: "O_AM_54",
+            phases: "abc",
           },
           type: "Feature",
         },
@@ -1164,15 +1169,15 @@
             ],
             type: "LineString",
           },
-          id: "38",
+          id: "37",
           properties: {
-            type: "line",
             bus1_id: "MVBus18144",
             bus2_id: "MVBus18145",
             id: "MVBranch20644",
+            max_current: 193,
             network: "MVFeeder232",
-            phases1: "abc",
-            phases2: "abc",
+            parameters_id: "O_AM_54",
+            phases: "abc",
           },
           type: "Feature",
         },
@@ -1187,15 +1192,15 @@
             ],
             type: "LineString",
           },
-          id: "39",
+          id: "38",
           properties: {
-            type: "line",
             bus1_id: "MVBus18143",
             bus2_id: "MVBus18144",
             id: "MVBranch24251",
+            max_current: 193,
             network: "MVFeeder232",
-            phases1: "abc",
-            phases2: "abc",
+            parameters_id: "O_AM_54",
+            phases: "abc",
           },
           type: "Feature",
         },
@@ -1210,15 +1215,15 @@
             ],
             type: "LineString",
           },
-          id: "40",
+          id: "39",
           properties: {
-            type: "line",
             bus1_id: "MVBus18142",
             bus2_id: "MVBus18143",
             id: "MVBranch05388",
+            max_current: 193,
             network: "MVFeeder232",
-            phases1: "abc",
-            phases2: "abc",
+            parameters_id: "O_AM_54",
+            phases: "abc",
           },
           type: "Feature",
         },
@@ -1233,15 +1238,15 @@
             ],
             type: "LineString",
           },
-          id: "41",
+          id: "40",
           properties: {
-            type: "line",
             bus1_id: "MVBus18142",
             bus2_id: "MVLV04549",
             id: "MVBranch30134",
+            max_current: 193,
             network: "MVFeeder232",
-            phases1: "abc",
-            phases2: "abc",
+            parameters_id: "O_AM_54",
+            phases: "abc",
           },
           type: "Feature",
         },
@@ -1256,15 +1261,15 @@
             ],
             type: "LineString",
           },
-          id: "42",
+          id: "41",
           properties: {
-            type: "line",
             bus1_id: "MVBus18139",
             bus2_id: "MVBus18142",
             id: "MVBranch05387",
+            max_current: 193,
             network: "MVFeeder232",
-            phases1: "abc",
-            phases2: "abc",
+            parameters_id: "O_AM_54",
+            phases: "abc",
           },
           type: "Feature",
         },
@@ -1279,15 +1284,15 @@
             ],
             type: "LineString",
           },
-          id: "43",
+          id: "42",
           properties: {
-            type: "line",
             bus1_id: "MVBus18137",
             bus2_id: "MVBus18139",
             id: "MVBranch00912",
+            max_current: 193,
             network: "MVFeeder232",
-            phases1: "abc",
-            phases2: "abc",
+            parameters_id: "O_AM_54",
+            phases: "abc",
           },
           type: "Feature",
         },
@@ -1303,15 +1308,15 @@
             ],
             type: "LineString",
           },
-          id: "44",
+          id: "43",
           properties: {
-            type: "line",
             bus1_id: "MVBus18136",
             bus2_id: "MVBus18137",
             id: "MVBranch13477",
+            max_current: 193,
             network: "MVFeeder232",
-            phases1: "abc",
-            phases2: "abc",
+            parameters_id: "O_AM_54",
+            phases: "abc",
           },
           type: "Feature",
         },
@@ -1326,15 +1331,15 @@
             ],
             type: "LineString",
           },
-          id: "45",
+          id: "44",
           properties: {
-            type: "line",
             bus1_id: "MVBus18151",
             bus2_id: "MVLV04916",
             id: "MVBranch22620",
+            max_current: 193,
             network: "MVFeeder232",
-            phases1: "abc",
-            phases2: "abc",
+            parameters_id: "O_AM_54",
+            phases: "abc",
           },
           type: "Feature",
         },
@@ -1349,15 +1354,15 @@
             ],
             type: "LineString",
           },
-          id: "46",
+          id: "45",
           properties: {
-            type: "line",
             bus1_id: "MVBus18151",
             bus2_id: "MVLV16510",
             id: "MVBranch13479",
+            max_current: 193,
             network: "MVFeeder232",
-            phases1: "abc",
-            phases2: "abc",
+            parameters_id: "O_AM_54",
+            phases: "abc",
           },
           type: "Feature",
         },
@@ -1372,15 +1377,15 @@
             ],
             type: "LineString",
           },
-          id: "47",
+          id: "46",
           properties: {
-            type: "line",
             bus1_id: "MVBus18136",
             bus2_id: "MVBus18151",
             id: "MVBranch13856",
+            max_current: 193,
             network: "MVFeeder232",
-            phases1: "abc",
-            phases2: "abc",
+            parameters_id: "O_AM_54",
+            phases: "abc",
           },
           type: "Feature",
         },
@@ -1395,15 +1400,15 @@
             ],
             type: "LineString",
           },
-          id: "48",
+          id: "47",
           properties: {
-            type: "line",
             bus1_id: "MVBus18136",
             bus2_id: "MVLV12206",
             id: "MVBranch20766",
+            max_current: 193,
             network: "MVFeeder232",
-            phases1: "abc",
-            phases2: "abc",
+            parameters_id: "O_AM_54",
+            phases: "abc",
           },
           type: "Feature",
         },
@@ -1419,15 +1424,15 @@
             ],
             type: "LineString",
           },
-          id: "49",
+          id: "48",
           properties: {
-            type: "line",
             bus1_id: "MVBus18135",
             bus2_id: "MVBus18136",
             id: "MVBranch13478",
+            max_current: 193,
             network: "MVFeeder232",
-            phases1: "abc",
-            phases2: "abc",
+            parameters_id: "O_AM_54",
+            phases: "abc",
           },
           type: "Feature",
         },
@@ -1443,15 +1448,15 @@
             ],
             type: "LineString",
           },
-          id: "50",
+          id: "49",
           properties: {
-            type: "line",
             bus1_id: "MVBus18134",
             bus2_id: "MVBus18135",
             id: "MVBranch05797",
+            max_current: 193,
             network: "MVFeeder232",
-            phases1: "abc",
-            phases2: "abc",
+            parameters_id: "O_AM_54",
+            phases: "abc",
           },
           type: "Feature",
         },
@@ -1466,15 +1471,15 @@
             ],
             type: "LineString",
           },
-          id: "51",
+          id: "50",
           properties: {
-            type: "line",
             bus1_id: "MVBus18134",
             bus2_id: "MVLV11692",
             id: "MVBranch05386",
+            max_current: 193,
             network: "MVFeeder232",
-            phases1: "abc",
-            phases2: "abc",
+            parameters_id: "O_AM_54",
+            phases: "abc",
           },
           type: "Feature",
         },
@@ -1489,15 +1494,15 @@
             ],
             type: "LineString",
           },
-          id: "52",
+          id: "51",
           properties: {
-            type: "line",
             bus1_id: "MVBus18132",
             bus2_id: "MVBus18134",
             id: "MVBranch24250",
+            max_current: 193,
             network: "MVFeeder232",
-            phases1: "abc",
-            phases2: "abc",
+            parameters_id: "O_AM_54",
+            phases: "abc",
           },
           type: "Feature",
         },
@@ -1512,15 +1517,15 @@
             ],
             type: "LineString",
           },
-          id: "53",
+          id: "52",
           properties: {
-            type: "line",
             bus1_id: "MVBus18132",
             bus2_id: "MVLV11693",
             id: "MVBranch05798",
+            max_current: 193,
             network: "MVFeeder232",
-            phases1: "abc",
-            phases2: "abc",
+            parameters_id: "O_AM_54",
+            phases: "abc",
           },
           type: "Feature",
         },
@@ -1535,15 +1540,15 @@
             ],
             type: "LineString",
           },
-          id: "54",
+          id: "53",
           properties: {
-            type: "line",
             bus1_id: "MVBus18131",
             bus2_id: "MVBus18132",
             id: "MVBranch13476",
+            max_current: 193,
             network: "MVFeeder232",
-            phases1: "abc",
-            phases2: "abc",
+            parameters_id: "O_AM_54",
+            phases: "abc",
           },
           type: "Feature",
         },
@@ -1558,15 +1563,15 @@
             ],
             type: "LineString",
           },
-          id: "55",
+          id: "54",
           properties: {
-            type: "line",
             bus1_id: "MVBus18129",
             bus2_id: "MVBus18131",
             id: "MVBranch48379",
+            max_current: 325,
             network: "MVFeeder232",
-            phases1: "abc",
-            phases2: "abc",
+            parameters_id: "U_AL_150",
+            phases: "abc",
           },
           type: "Feature",
         },
@@ -1582,15 +1587,15 @@
             ],
             type: "LineString",
           },
-          id: "56",
+          id: "55",
           properties: {
-            type: "line",
             bus1_id: "MVBus18129",
             bus2_id: "MVLV08087",
             id: "MVBranch37318",
+            max_current: 325,
             network: "MVFeeder232",
-            phases1: "abc",
-            phases2: "abc",
+            parameters_id: "U_AL_150",
+            phases: "abc",
           },
           type: "Feature",
         },
@@ -1607,15 +1612,15 @@
             ],
             type: "LineString",
           },
-          id: "57",
+          id: "56",
           properties: {
-            type: "line",
             bus1_id: "MVBus18128",
             bus2_id: "MVBus18129",
             id: "MVBranch41934",
+            max_current: 325,
             network: "MVFeeder232",
-            phases1: "abc",
-            phases2: "abc",
+            parameters_id: "U_AL_150",
+            phases: "abc",
           },
           type: "Feature",
         },
@@ -1631,15 +1636,15 @@
             ],
             type: "LineString",
           },
-          id: "58",
+          id: "57",
           properties: {
-            type: "line",
             bus1_id: "MVBus18127",
             bus2_id: "MVBus18128",
             id: "MVBranch11801",
+            max_current: 193,
             network: "MVFeeder232",
-            phases1: "abc",
-            phases2: "abc",
+            parameters_id: "O_AM_54",
+            phases: "abc",
           },
           type: "Feature",
         },
@@ -1654,15 +1659,15 @@
             ],
             type: "LineString",
           },
-          id: "59",
+          id: "58",
           properties: {
-            type: "line",
             bus1_id: "MVBus18126",
             bus2_id: "MVBus18127",
             id: "MVBranch05816",
+            max_current: 193,
             network: "MVFeeder232",
-            phases1: "abc",
-            phases2: "abc",
+            parameters_id: "O_AM_54",
+            phases: "abc",
           },
           type: "Feature",
         },
@@ -1677,15 +1682,15 @@
             ],
             type: "LineString",
           },
-          id: "60",
+          id: "59",
           properties: {
-            type: "line",
             bus1_id: "MVBus18125",
             bus2_id: "MVBus18126",
             id: "MVBranch05815",
+            max_current: 193,
             network: "MVFeeder232",
-            phases1: "abc",
-            phases2: "abc",
+            parameters_id: "O_AM_54",
+            phases: "abc",
           },
           type: "Feature",
         },
@@ -1701,15 +1706,15 @@
             ],
             type: "LineString",
           },
-          id: "61",
+          id: "60",
           properties: {
-            type: "line",
             bus1_id: "MVBus18124",
             bus2_id: "MVBus18125",
             id: "MVBranch32488",
+            max_current: 193,
             network: "MVFeeder232",
-            phases1: "abc",
-            phases2: "abc",
+            parameters_id: "O_AM_54",
+            phases: "abc",
           },
           type: "Feature",
         },
@@ -1732,15 +1737,15 @@
             ],
             type: "LineString",
           },
-          id: "62",
+          id: "61",
           properties: {
-            type: "line",
             bus1_id: "MVLV19187",
             bus2_id: "MVBus18124",
             id: "MVBranch45749",
+            max_current: 325,
             network: "MVFeeder232",
-            phases1: "abc",
-            phases2: "abc",
+            parameters_id: "U_AL_150",
+            phases: "abc",
           },
           type: "Feature",
         },
@@ -1759,15 +1764,15 @@
             ],
             type: "LineString",
           },
-          id: "63",
+          id: "62",
           properties: {
-            type: "line",
             bus1_id: "MVBus02066",
             bus2_id: "MVLV19187",
             id: "MVBranch39425",
+            max_current: 325,
             network: "MVFeeder232",
-            phases1: "abc",
-            phases2: "abc",
+            parameters_id: "U_AL_150",
+            phases: "abc",
           },
           type: "Feature",
         },
@@ -1786,15 +1791,15 @@
             ],
             type: "LineString",
           },
-          id: "64",
+          id: "63",
           properties: {
-            type: "line",
             bus1_id: "MVBus02065",
             bus2_id: "MVBus02066",
             id: "MVBranch13860",
+            max_current: 357,
             network: "MVFeeder232",
-            phases1: "abc",
-            phases2: "abc",
+            parameters_id: "O_AM_148",
+            phases: "abc",
           },
           type: "Feature",
         },
@@ -1802,13 +1807,13 @@
       type: "FeatureCollection",
     });
 
-    geo_json_37887bb842b7d8b4ee214e20037f3ef1.bindTooltip(
+    geo_json_12f7f742e5d093049593471a2f2c7420.bindTooltip(
       function (layer) {
         let div = L.DomUtil.create("div");
 
         let handleObject = (feature) => (typeof feature == "object" ? JSON.stringify(feature) : feature);
-        let fields = ["id", "type", "bus1_id", "bus2_id"];
-        let aliases = ["Id:", "Type:", "Bus1:", "Bus2:"];
+        let fields = ["id", "bus1_id", "bus2_id", "parameters_id"];
+        let aliases = ["Id:", "Bus1:", "Bus2:", "Parameters:"];
         let table =
           "<table>" +
           String(
@@ -1831,9 +1836,9 @@
       { className: "foliumtooltip", maxWidth: 800, sticky: false },
     );
 
-    geo_json_37887bb842b7d8b4ee214e20037f3ef1.addTo(map_5fec54661fc067191727813a05891d1a);
+    geo_json_12f7f742e5d093049593471a2f2c7420.addTo(map_97a727b9c92559bdc33375c389face2f);
 
-    function geo_json_7186442e3c72b33565c709a04cab7b0f_styler(feature) {
+    function geo_json_8c1916976ff5b7a66dd917a655febba1_styler(feature) {
       switch (feature.id) {
         case "0":
         case "1":
@@ -1862,13 +1867,13 @@
           return { color: "#234e83", fill: true, fillColor: "#234e83", fillOpacity: 1, radius: 3 };
       }
     }
-    function geo_json_7186442e3c72b33565c709a04cab7b0f_highlighter(feature) {
+    function geo_json_8c1916976ff5b7a66dd917a655febba1_highlighter(feature) {
       switch (feature.id) {
         default:
           return { color: "#cad40e", fillColor: "#cad40e" };
       }
     }
-    function geo_json_7186442e3c72b33565c709a04cab7b0f_pointToLayer(feature, latlng) {
+    function geo_json_8c1916976ff5b7a66dd917a655febba1_pointToLayer(feature, latlng) {
       var opts = {
         bubblingMouseEvents: true,
         color: "#3388ff",
@@ -1886,38 +1891,38 @@
         weight: 3,
       };
 
-      let style = geo_json_7186442e3c72b33565c709a04cab7b0f_styler(feature);
+      let style = geo_json_8c1916976ff5b7a66dd917a655febba1_styler(feature);
       Object.assign(opts, style);
 
       return new L.CircleMarker(latlng, opts);
     }
 
-    function geo_json_7186442e3c72b33565c709a04cab7b0f_onEachFeature(feature, layer) {
+    function geo_json_8c1916976ff5b7a66dd917a655febba1_onEachFeature(feature, layer) {
       layer.on({
         mouseout: function (e) {
           if (typeof e.target.setStyle === "function") {
-            geo_json_7186442e3c72b33565c709a04cab7b0f.resetStyle(e.target);
+            geo_json_8c1916976ff5b7a66dd917a655febba1.resetStyle(e.target);
           }
         },
         mouseover: function (e) {
           if (typeof e.target.setStyle === "function") {
-            const highlightStyle = geo_json_7186442e3c72b33565c709a04cab7b0f_highlighter(e.target.feature);
+            const highlightStyle = geo_json_8c1916976ff5b7a66dd917a655febba1_highlighter(e.target.feature);
             e.target.setStyle(highlightStyle);
           }
         },
       });
     }
-    var geo_json_7186442e3c72b33565c709a04cab7b0f = L.geoJson(null, {
-      onEachFeature: geo_json_7186442e3c72b33565c709a04cab7b0f_onEachFeature,
+    var geo_json_8c1916976ff5b7a66dd917a655febba1 = L.geoJson(null, {
+      onEachFeature: geo_json_8c1916976ff5b7a66dd917a655febba1_onEachFeature,
 
-      style: geo_json_7186442e3c72b33565c709a04cab7b0f_styler,
-      pointToLayer: geo_json_7186442e3c72b33565c709a04cab7b0f_pointToLayer,
+      style: geo_json_8c1916976ff5b7a66dd917a655febba1_styler,
+      pointToLayer: geo_json_8c1916976ff5b7a66dd917a655febba1_pointToLayer,
     });
 
-    function geo_json_7186442e3c72b33565c709a04cab7b0f_add(data) {
-      geo_json_7186442e3c72b33565c709a04cab7b0f.addData(data);
+    function geo_json_8c1916976ff5b7a66dd917a655febba1_add(data) {
+      geo_json_8c1916976ff5b7a66dd917a655febba1.addData(data);
     }
-    geo_json_7186442e3c72b33565c709a04cab7b0f_add({
+    geo_json_8c1916976ff5b7a66dd917a655febba1_add({
       bbox: [-1.572574753072218, 48.489233170871124, -1.480951121955717, 48.55306081426247],
       features: [
         {
@@ -2776,7 +2781,7 @@
       type: "FeatureCollection",
     });
 
-    geo_json_7186442e3c72b33565c709a04cab7b0f.bindTooltip(
+    geo_json_8c1916976ff5b7a66dd917a655febba1.bindTooltip(
       function (layer) {
         let div = L.DomUtil.create("div");
 
@@ -2805,23 +2810,23 @@
       { className: "foliumtooltip", maxWidth: 800, sticky: false },
     );
 
-    geo_json_7186442e3c72b33565c709a04cab7b0f.addTo(map_5fec54661fc067191727813a05891d1a);
+    geo_json_8c1916976ff5b7a66dd917a655febba1.addTo(map_97a727b9c92559bdc33375c389face2f);
 
-    var layer_control_ffc6eeac8b82d17fd472895c54fa6247_layers = {
+    var layer_control_3126411772ceeca419e5e04b3bd06399_layers = {
       base_layers: {
-        openstreetmap: tile_layer_ea8b78d7c36459dc151fa2997bf1563a,
+        openstreetmap: tile_layer_46403c1395ee306720c4a6e11446e145,
       },
       overlays: {
-        branches: geo_json_37887bb842b7d8b4ee214e20037f3ef1,
-        buses: geo_json_7186442e3c72b33565c709a04cab7b0f,
+        lines: geo_json_12f7f742e5d093049593471a2f2c7420,
+        buses: geo_json_8c1916976ff5b7a66dd917a655febba1,
       },
     };
-    let layer_control_ffc6eeac8b82d17fd472895c54fa6247 = L.control
+    let layer_control_3126411772ceeca419e5e04b3bd06399 = L.control
       .layers(
-        layer_control_ffc6eeac8b82d17fd472895c54fa6247_layers.base_layers,
-        layer_control_ffc6eeac8b82d17fd472895c54fa6247_layers.overlays,
+        layer_control_3126411772ceeca419e5e04b3bd06399_layers.base_layers,
+        layer_control_3126411772ceeca419e5e04b3bd06399_layers.overlays,
         { autoZIndex: true, collapsed: true, position: "topright" },
       )
-      .addTo(map_5fec54661fc067191727813a05891d1a);
+      .addTo(map_97a727b9c92559bdc33375c389face2f);
   </script>
 </html>
