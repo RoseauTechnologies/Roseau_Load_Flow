@@ -13,10 +13,17 @@ og:image: https://www.roseautechnologies.com/wp-content/uploads/2024/04/DSCF0091
 og:image:alt: An engineer uses Roseau Load Flow to perform unbalanced electric calculation
 og:title: Roseau Load Flow - Unbalanced and multiphase load flow solver
 og:description: See what's new in the latest release of Roseau Load Flow !
-ogp_description_length: 500
 ---
 
 # Changelog
+
+## Under development
+
+- {gh-pr}`211` Several improvements of the documentation:
+  - Add Open Graph metadata to the documentation page.
+  - Error on the susceptance unit in the tables of the `LineParameters`' catalogue.
+  - Replot the networks of the catalogue (add a `H1` title, use the Raleway font, only plot the lines to add their
+    parameters id in the tooltip)
 
 ## Version 0.8.0
 

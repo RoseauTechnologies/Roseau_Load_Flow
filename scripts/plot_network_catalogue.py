@@ -164,8 +164,6 @@ if __name__ == "__main__":
         en = ElectricalNetwork.from_catalogue(name=network_name, load_point_name="Winter")
         buses_gdf = en.buses_frame.reset_index()
         lines_gdf = en.lines_frame.reset_index()
-        transformers_gdf = en.transformers_frame.reset_index()
-        switches_gdf = en.switches_frame.reset_index()
         buses_gdf["network"] = network_name
         lines_gdf["network"] = network_name
 

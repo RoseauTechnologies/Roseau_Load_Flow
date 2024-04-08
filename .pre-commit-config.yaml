@@ -1,7 +1,7 @@
 exclude: ^.idea/|.vscode/
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
+    rev: v4.6.0
     hooks:
       - id: check-json
       - id: check-merge-conflict
@@ -35,7 +35,7 @@ repos:
         args: ["--print-width", "120"]
         require_serial: true
   - repo: https://github.com/cmhughes/latexindent.pl
-    rev: V3.23.8
+    rev: V3.23.9
     hooks:
       - id: latexindent
         args: [-l, -m, -s, -wd]
