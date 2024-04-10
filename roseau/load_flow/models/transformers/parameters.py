@@ -400,6 +400,11 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             in_ = self._sn / self._uhv
         else:
             in_ = self._sn / (np.sqrt(3) * self._uhv)
+
+        # Additional checks
+        # u_secondary = abs(calculate_voltages(bus_lv.res_potentials.m, phases_lv))
+        # np.testing.assert_allclose(u_secondary, self._ulv/np.sqrt(3))
+
         return p_primary, i_primary / in_
 
     @property
@@ -476,6 +481,11 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         en = ElectricalNetwork.from_element(bus_hv)
         en.solve_load_flow(**solve_kwargs)
         p_primary = transformer.res_powers[0].m.sum().real
+
+        # Additional check
+        # in_ = self._sn / (np.sqrt(3) * self._ulv)
+        # i_secondary = abs(transformer.res_currents[1].m[0])
+        # np.testing.assert_allclose(i_secondary, in_)
 
         return p_primary, vsc
 
