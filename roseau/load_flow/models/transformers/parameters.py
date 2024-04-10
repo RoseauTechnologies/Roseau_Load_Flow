@@ -343,8 +343,8 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
     # Off-load tests
     #
     @ureg_wraps(("W", ""), (None, None))
-    def compute_no_load_parameters(self, solve_kwargs: JsonDict | None = None) -> tuple[Q_[float], Q_[float]]:
-        """Compute the no-load parameters of the transformer parameters solving a load flow on a small circuit.
+    def compute_off_load_parameters(self, solve_kwargs: JsonDict | None = None) -> tuple[Q_[float], Q_[float]]:
+        """Compute the off-load parameters of the transformer parameters solving a load flow on a small circuit.
 
         Args:
             solve_kwargs:
@@ -354,9 +354,9 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         Returns:
             The values ``p0``, the losses (in W), and ``i0``, the current (in %) during off-load test.
         """
-        return self._compute_no_load_parameters(solve_kwargs=solve_kwargs)
+        return self._compute_off_load_parameters(solve_kwargs=solve_kwargs)
 
-    def _compute_no_load_parameters(self, solve_kwargs: JsonDict | None = None) -> tuple[float, float]:
+    def _compute_off_load_parameters(self, solve_kwargs: JsonDict | None = None) -> tuple[float, float]:
         from roseau.load_flow.converters import calculate_voltages
         from roseau.load_flow.models import Bus, PotentialRef, Transformer, VoltageSource
         from roseau.load_flow.network import ElectricalNetwork
@@ -365,9 +365,9 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             solve_kwargs = {}
 
         if self.type == "single":
-            phases_hv = "an"
-            phases_lv = "an"
-            voltages = [self._uhv / np.sqrt(3)]
+            phases_hv = "ab"
+            phases_lv = "ab"
+            voltages = [self._uhv]
         elif self.type == "center":
             phases_hv = "ab"
             phases_lv = "abn"
@@ -394,16 +394,17 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         en.solve_load_flow(**solve_kwargs)
         p_primary = transformer.res_powers[0].m.sum().real
         i_primary = abs(transformer.res_currents[0].m[0])
-        if self.type == "single":
-            in_ = self._sn / (self._uhv / np.sqrt(3))
-        elif self.type == "center":
-            in_ = self._sn / self._uhv
-        else:
-            in_ = self._sn / (np.sqrt(3) * self._uhv)
+        in_ = self._sn / self._uhv if self.type in ("single", "center") else self._sn / (np.sqrt(3) * self._uhv)
 
         # Additional checks
-        # u_secondary = abs(calculate_voltages(bus_lv.res_potentials.m, phases_lv))
-        # np.testing.assert_allclose(u_secondary, self._ulv/np.sqrt(3))
+        u_secondary = abs(calculate_voltages(potentials=bus_lv.res_potentials.m, phases=phases_lv))
+        if self.type == "single":
+            expected_u_secondary = self._ulv
+        elif self.type == "center":
+            expected_u_secondary = self._ulv / 2
+        else:
+            expected_u_secondary = self._ulv / np.sqrt(3)
+        np.testing.assert_allclose(u_secondary, expected_u_secondary)
 
         return p_primary, i_primary / in_
 
@@ -412,7 +413,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
     def p0(self) -> Q_[float]:
         """Losses during off-load test (W)"""
         if self._p0 is None:
-            self._p0, self._i0 = self._compute_no_load_parameters()
+            self._p0, self._i0 = self._compute_off_load_parameters()
         return self._p0
 
     @property
@@ -420,7 +421,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
     def i0(self) -> Q_[float]:
         """Current during off-load test (%)"""
         if self._i0 is None:
-            self._p0, self._i0 = self._compute_no_load_parameters()
+            self._p0, self._i0 = self._compute_off_load_parameters()
         return self._i0
 
     #
@@ -449,21 +450,24 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         if solve_kwargs is None:
             solve_kwargs = {}
 
+        potentials_hv = None
+        potentials_lv = None
+        vsc = abs(self._z2) * self._sn / self._ulv**2
         if self.type == "single":
-            phases_hv = "an"
-            phases_lv = "an"
-            vsc = abs(self._z2) * self._sn / self._ulv**2
-            voltages = vsc * self._uhv / np.sqrt(3)
+            phases_hv = "ab"
+            phases_lv = "ab"
+            voltages = [vsc * self._uhv]
         elif self.type == "center":
             phases_hv = "ab"
             phases_lv = "abn"
-            vsc = abs(self._z2) * self._sn / self._ulv**2
-            voltages = vsc * self._uhv
+            voltages = [vsc * self._uhv]
+            # TODO: The initialization of potentials seems very bad in the case of such short-circuit...
+            potentials_hv = [vsc * self._uhv, -vsc * self._uhv]
+            potentials_lv = [0, 0, 0]
         else:
             # Three-phase transformer
             phases_hv = "abc" if self.winding1.lower().startswith("d") else "abcn"
             phases_lv = "abc" if self.winding2.lower().startswith("d") else "abcn"
-            vsc = abs(self._z2) * self._sn / self._ulv**2
             if "n" in phases_hv:
                 voltages = vsc * self._uhv / np.sqrt(3) * np.exp([0, -2j * np.pi / 3, 2j * np.pi / 3])
             else:
@@ -471,8 +475,8 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
                     potentials=vsc * self._uhv / np.sqrt(3) * np.exp([0, -2j * np.pi / 3, 2j * np.pi / 3]), phases="abc"
                 )
 
-        bus_hv = Bus(id="BusHV", phases=phases_hv)
-        bus_lv = Bus(id="BusLV", phases=phases_lv)
+        bus_hv = Bus(id="BusHV", phases=phases_hv, potentials=potentials_hv)
+        bus_lv = Bus(id="BusLV", phases=phases_lv, potentials=potentials_lv)
         PotentialRef(id="PRefHV", element=bus_hv)
         PotentialRef(id="PRefLV", element=bus_lv)
         VoltageSource(id="VS", bus=bus_hv, voltages=voltages)
@@ -483,9 +487,9 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         p_primary = transformer.res_powers[0].m.sum().real
 
         # Additional check
-        # in_ = self._sn / (np.sqrt(3) * self._ulv)
-        # i_secondary = abs(transformer.res_currents[1].m[0])
-        # np.testing.assert_allclose(i_secondary, in_)
+        in_ = self._sn / self._ulv if self.type in ("single", "center") else self._sn / (np.sqrt(3) * self._ulv)
+        i_secondary = abs(transformer.res_currents[1].m[0])
+        np.testing.assert_allclose(i_secondary, in_)
 
         return p_primary, vsc
 
