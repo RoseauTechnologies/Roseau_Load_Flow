@@ -6,10 +6,10 @@ from roseau.load_flow.models import Bus, Transformer, TransformerParameters
 def test_res_violated():
     bus1 = Bus("bus1", phases="abc")
     bus2 = Bus("bus2", phases="abcn")
-    tp = TransformerParameters(
+    tp = TransformerParameters.from_tests(
         id="tp", psc=1350.0, p0=145.0, i0=1.8 / 100, ulv=400, uhv=20000, sn=50 * 1e3, vsc=4 / 100, type="yzn11"
     )
-    transformer = Transformer("transformer", bus1=bus1, bus2=bus2, parameters=tp)
+    transformer = Transformer(id="transformer", bus1=bus1, bus2=bus2, parameters=tp)
     direct_seq = np.exp([0, -2 / 3 * np.pi * 1j, 2 / 3 * np.pi * 1j])
     direct_seq_neutral = np.concatenate([direct_seq, [0]])
 

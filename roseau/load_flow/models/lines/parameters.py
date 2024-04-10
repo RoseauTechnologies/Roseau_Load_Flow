@@ -167,7 +167,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
 
     @property
     def section(self) -> Q_[float] | None:
-        """The cross section area of the cable (in mm²). Informative only, it has no impact on the load flow."""
+        """The cross-section area of the cable (in mm²). Informative only, it has no impact on the load flow."""
         return None if self._section is None else Q_(self._section, "mm**2")
 
     @max_current.setter

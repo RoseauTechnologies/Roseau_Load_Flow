@@ -40,7 +40,7 @@ def test_transformer_parameters():
 
     assert np.isclose(z2.m, z2_expected)
     assert np.isclose(ym.m, ym_expected)
-    assert np.isclose(k, k_expected)
+    assert np.isclose(k.m, k_expected)
     assert np.isclose(orientation, orientation_expected)
 
     # Dyn11 - 100kVA
@@ -70,7 +70,7 @@ def test_transformer_parameters():
 
     assert np.isclose(z2.m, z2_expected)
     assert np.isclose(ym.m, ym_expected)
-    assert np.isclose(k, k_expected)
+    assert np.isclose(k.m, k_expected)
     assert np.isclose(orientation, orientation_expected)
 
     # Dyn5 - 160kVA
@@ -100,7 +100,7 @@ def test_transformer_parameters():
 
     assert np.isclose(z2.m, z2_expected)
     assert np.isclose(ym.m, ym_expected)
-    assert np.isclose(k, k_expected)
+    assert np.isclose(k.m, k_expected)
     assert np.isclose(orientation, orientation_expected)
 
     # Check that there is an error if the winding is not good
@@ -211,6 +211,41 @@ def test_transformers_parameters_units():
     # Yzn11 - 50kVA. Good units
     data = {
         "id": "Yzn11 - 50kVA",
+        "z2": Q_(8.64 + 9.444j, "centiohm"),  # Ohm
+        "ym": Q_(0.3625 - 2.2206j, "uS"),  # S
+        "ulv": Q_(400, "V"),  # V
+        "uhv": Q_(20, "kV"),  # V
+        "sn": Q_(50, "kVA"),  # VA
+        "type": "yzn11",
+    }
+    tp = TransformerParameters(**data)
+    assert np.isclose(tp._z2, (0.0864 + 0.0944406692j))
+    assert np.isclose(tp._ym, (3.625e-07 - 2.2206e-06j))
+    assert np.isclose(tp._ulv, 400)
+    assert np.isclose(tp._uhv, 20000)
+    assert np.isclose(tp._sn, 50e3)
+
+    # Bad unit for each of them
+    for param, fake_quantity in (
+        ("z2", Q_(1350.0, "A")),
+        ("ym", Q_(145.0, "A")),
+        ("ulv", Q_(400, "A")),
+        ("uhv", Q_(20, "A")),
+        ("sn", Q_(50, "A")),
+    ):
+        copy_data = data.copy()
+        copy_data[param] = fake_quantity
+        with pytest.raises(
+            DimensionalityError, match=r"Cannot convert from 'ampere' \(\[current\]\) to '\w+?' \(.+?\)"
+        ):
+            TransformerParameters(**copy_data)
+
+
+def test_transformers_parameters_units_from_tests():
+    # Example in the "transformers" document of Victor.
+    # Yzn11 - 50kVA. Good units
+    data = {
+        "id": "Yzn11 - 50kVA",
         "psc": Q_(1350.0, "W"),  # W
         "p0": Q_(145.0, "W"),  # W
         "i0": Q_(1.8, "percent"),  # %
@@ -220,7 +255,7 @@ def test_transformers_parameters_units():
         "vsc": Q_(4, "percent"),  # %
         "type": "yzn11",
     }
-    tp = TransformerParameters.from_dict(data)
+    tp = TransformerParameters.from_tests(**data)
     assert np.isclose(tp._psc, 1350.0)
     assert np.isclose(tp._p0, 145.0)
     assert np.isclose(tp._i0, 1.8e-2)
@@ -244,7 +279,7 @@ def test_transformers_parameters_units():
         with pytest.raises(
             DimensionalityError, match=r"Cannot convert from 'ampere' \(\[current\]\) to '\w+?' \(.+?\)"
         ):
-            TransformerParameters.from_dict(copy_data)
+            TransformerParameters.from_tests(**copy_data)
 
 
 def test_transformer_type():
@@ -460,10 +495,10 @@ def test_max_power():
         "sn": 50 * 1e3,
         "vsc": 4 / 100,
     }
-    tp = TransformerParameters("test", **kwds)
+    tp = TransformerParameters.from_tests(id="test", **kwds)
     assert tp.max_power is None
 
-    tp = TransformerParameters("test", **kwds, max_power=60_000)
+    tp = TransformerParameters.from_tests(id="test", **kwds, max_power=60_000)
     assert tp.max_power == Q_(60_000, "VA")
 
     tp.max_power = 55_000
