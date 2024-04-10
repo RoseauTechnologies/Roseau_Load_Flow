@@ -633,7 +633,7 @@ voltages = 20e3 * np.exp([0, -2j * np.pi / 3, 2j * np.pi / 3])
 vs = VoltageSource(id="vs", bus=bus_mv, voltages=voltages)
 
 # Create a MV/LV transformer
-tp = TransformerParameters(
+tp = TransformerParameters.from_tests(
     id="SE_Minera_A0Ak_100_kVA",
     type="Dyn11",
     sn=100.0 * 1e3,

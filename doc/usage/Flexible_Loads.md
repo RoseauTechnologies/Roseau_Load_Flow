@@ -46,7 +46,7 @@ a Delta-Wye transformer and a small LV network.
 ... ground.connect(bus0_lv)
 
 >>> # Add a MV/LV transformer
-... tp = TransformerParameters(
+... tp = TransformerParameters.from_tests(
 ...     "160_kVA",
 ...     "Dyn11",
 ...     sn=160.0 * 1e3,

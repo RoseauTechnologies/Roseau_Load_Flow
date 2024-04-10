@@ -119,7 +119,7 @@ ground.connect(lv_bus)
 lv_load = PowerLoad("lv_load", lv_bus, powers=[-2000, 0])
 
 # Create a transformer
-tp = TransformerParameters(
+tp = TransformerParameters.from_tests(
     "t",
     "center",  # <--- Center-tapped transformer
     sn=630e3,

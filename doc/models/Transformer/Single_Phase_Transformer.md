@@ -93,7 +93,7 @@ pref2 = PotentialRef(id="pref2", element=bus2)
 load = PowerLoad(id="load", bus=bus2, powers=[100], phases="an")
 
 # Create the transformer
-tp = TransformerParameters(
+tp = TransformerParameters.from_tests(
     id="Example_TP",
     type="single",  # <--- Single-phase transformer
     sn=800,

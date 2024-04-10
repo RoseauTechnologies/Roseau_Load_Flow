@@ -112,7 +112,7 @@ following values:
 from roseau.load_flow import TransformerParameters, Q_
 
 # The transformer parameters for a single-phase transformer
-single_phase_transformer_parameters = TransformerParameters(
+single_phase_transformer_parameters = TransformerParameters.from_tests(
     id="single_phase_transformer_parameters",
     type="single",  # <--- single-phase transformer
     uhv=Q_(20, "kV"),
@@ -125,7 +125,7 @@ single_phase_transformer_parameters = TransformerParameters(
 )
 
 # The transformer parameters for a three-phase transformer
-three_phase_transformer_parameters = TransformerParameters(
+three_phase_transformer_parameters = TransformerParameters.from_tests(
     id="three_phase_transformer_parameters",
     type="Dyn11",  # <--- three-phase transformer with delta primary and wye secondary
     uhv=Q_(20, "kV"),
@@ -138,7 +138,7 @@ three_phase_transformer_parameters = TransformerParameters(
 )
 
 # The transformer parameters for a center-tapped transformer
-center_tapped_transformer_parameters = TransformerParameters(
+center_tapped_transformer_parameters = TransformerParameters.from_tests(
     id="center_tapped_transformer_parameters",
     type="center",  # <--- center-tapped transformer
     uhv=Q_(20, "kV"),
