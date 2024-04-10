@@ -396,7 +396,7 @@ def test_bad_networks():
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_BUS_ID
 
 
-def test_unconnected_elements():
+def test_poorly_connected_elements():
     bus1 = Bus(id="b1", phases="abc")
     bus2 = Bus(id="b2", phases="abc")
     bus3 = Bus(id="b3", phases="abc")
@@ -410,9 +410,10 @@ def test_unconnected_elements():
     with pytest.raises(RoseauLoadFlowException) as e:
         ElectricalNetwork.from_element(initial_bus=bus1)
     assert (
-        e.value.msg == "The elements [[Bus('b4'), Bus('b3'), Line('l2')] are not electrically connected to the network."
+        e.value.msg
+        == "The elements [\"Bus('b4'), Bus('b3'), Line('l2')\"] are not electrically connected to a voltage source."
     )
-    assert e.value.code == RoseauLoadFlowExceptionCode.UNCONNECTED_ELEMENT
+    assert e.value.code == RoseauLoadFlowExceptionCode.POORLY_CONNECTED_ELEMENT
 
 
 def test_invalid_element_overrides():

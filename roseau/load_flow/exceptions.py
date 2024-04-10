@@ -78,7 +78,7 @@ class RoseauLoadFlowExceptionCode(StrEnum):
     NO_VOLTAGE_SOURCE = auto()
     BAD_ELEMENT_OBJECT = auto()
     DISCONNECTED_ELEMENT = auto()
-    UNCONNECTED_ELEMENT = auto()
+    POORLY_CONNECTED_ELEMENT = auto()
     NO_LOAD_FLOW_CONVERGENCE = auto()
     BAD_LOAD_FLOW_RESULT = auto()
     LOAD_FLOW_NOT_RUN = auto()

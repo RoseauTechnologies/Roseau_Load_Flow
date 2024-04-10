@@ -5,6 +5,7 @@ This module defines the electrical network class.
 import json
 import logging
 import re
+import textwrap
 import time
 import warnings
 from collections.abc import Iterable, Mapping, Sized
@@ -1312,10 +1313,12 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             unconnected_elements = [
                 element for element in chain(self.buses.values(), self.branches.values()) if element not in visited
             ]
-            printable_elements = ", ".join(f"{type(e).__name__}({e.id!r})" for e in unconnected_elements)
-            msg = f"The elements [[{printable_elements}] are not electrically connected to the network."
+            printable_elements = textwrap.wrap(
+                ", ".join(f"{type(e).__name__}({e.id!r})" for e in unconnected_elements), 500
+            )
+            msg = f"The elements {printable_elements} are not electrically connected to a voltage source."
             logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.UNCONNECTED_ELEMENT)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.POORLY_CONNECTED_ELEMENT)
 
     def _get_potentials(self, all_phases: set[str]) -> tuple[dict[str, complex], Bus]:
         """Compute initial potentials from the voltages sources of the network, get also the starting source"""
