@@ -4,6 +4,7 @@ __authors__ = ", ".join(
         "Sébastien Vallet <sebastien.vallet@roseautechnologies.com>",
         "Benoît Vinot <benoit.vinot@roseautechnologies.com>",
         "Florent Cadoux <florent.cadoux@roseautechnologies.com>",
+        "Louise Muller <louise.muller@roseautechnologies.com>",
         "Victor Gouin",
     )
 )

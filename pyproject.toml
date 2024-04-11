@@ -1,12 +1,13 @@
 [tool.poetry]
 name = "roseau-load-flow"
-version = "0.8.0"
+version = "0.8.1"
 description = "Highly capable three-phase load flow solver"
 authors = [
     "Ali Hamdan <ali.hamdan@roseautechnologies.com>",
     "Sébastien Vallet <sebastien.vallet@roseautechnologies.com>",
     "Benoît Vinot <benoit.vinot@roseautechnologies.com>",
     "Florent Cadoux <florent.cadoux@roseautechnologies.com>",
+    "Louise Muller <louise.muller@roseautechnologies.com>",
     "Victor Gouin",
 ]
 maintainers = ["Ali Hamdan <ali.hamdan@roseautechnologies.com>"]
@@ -49,7 +50,7 @@ typing-extensions = ">=4.6.2"
 pyproj = ">=3.3.0"
 certifi = ">=2023.5.7"
 platformdirs = ">=4.0.0"
-roseau-load-flow-engine = ">=0.13.0"
+roseau-load-flow-engine = "==0.13.1"
 
 # Optional dependencies
 matplotlib = { version = ">=3.7.2", optional = true }

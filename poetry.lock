@@ -1703,17 +1703,17 @@ use-chardet-on-py3 = ["chardet (>=3.0.2,<6)"]
 
 [[package]]
 name = "roseau-load-flow-engine"
-version = "0.13.0"
+version = "0.13.1"
 description = "Highly capable three-phase load flow solver"
 optional = false
-python-versions = ">=3.10,<4.0"
+python-versions = "<4.0,>=3.10"
 files = [
-    {file = "roseau_load_flow_engine-0.13.0-cp310-cp310-manylinux_2_28_x86_64.whl", hash = "sha256:5e70408b440cf1f7f237d7f1429dccf0bffe0de347934c0198c0aa22571f5820"},
-    {file = "roseau_load_flow_engine-0.13.0-cp310-cp310-win_amd64.whl", hash = "sha256:4a32a7b6ae2558dd128c99a7de2bd0f2d550fefeaff9515998b9eb66c62d6dea"},
-    {file = "roseau_load_flow_engine-0.13.0-cp311-cp311-manylinux_2_28_x86_64.whl", hash = "sha256:d8a5819743e7ec56089960d0873869132c28cace8ce4f98686a9df5a2cbe7763"},
-    {file = "roseau_load_flow_engine-0.13.0-cp311-cp311-win_amd64.whl", hash = "sha256:d185a2dda04d51f257e4386dda30cfa4a8d7232eeea9d77253fb7c7d57725496"},
-    {file = "roseau_load_flow_engine-0.13.0-cp312-cp312-manylinux_2_28_x86_64.whl", hash = "sha256:7bf6ef35112030339a1ac5c4b5ee25971b7cb16abcafcf0c307ef75bddfbee4f"},
-    {file = "roseau_load_flow_engine-0.13.0-cp312-cp312-win_amd64.whl", hash = "sha256:a0ce26c6fa9e4c486b4a060751177a4be68bc2461256bab6204a336939f69c49"},
+    {file = "roseau_load_flow_engine-0.13.1-cp310-cp310-manylinux_2_28_x86_64.whl", hash = "sha256:c8288821536c2ebe64190915d7091aaf8b354ae4082fa7f5ae007c2cbce67d0f"},
+    {file = "roseau_load_flow_engine-0.13.1-cp310-cp310-win_amd64.whl", hash = "sha256:fc4d8d13bc6b714effc487f8603573d524d3c751645ccf6a978d76955e9f7078"},
+    {file = "roseau_load_flow_engine-0.13.1-cp311-cp311-manylinux_2_28_x86_64.whl", hash = "sha256:55ab558d9ae52d1ef1b556b0dfcdb47766e3fff40f438b581680852b1d211a67"},
+    {file = "roseau_load_flow_engine-0.13.1-cp311-cp311-win_amd64.whl", hash = "sha256:81ecbdc6562e91903b1db4e7f43eb51d991380ad2f8b6ce51e0a4304915d6186"},
+    {file = "roseau_load_flow_engine-0.13.1-cp312-cp312-manylinux_2_28_x86_64.whl", hash = "sha256:11db12cd8738bedd6c41c6198a06841f77fff8f9c7025409bf5bbf91194d7a3a"},
+    {file = "roseau_load_flow_engine-0.13.1-cp312-cp312-win_amd64.whl", hash = "sha256:5af4d3f0857ad23f78b595ae46e7d7456b44541c52327a430390a22999c8b882"},
 ]
 
 [package.dependencies]
@@ -2206,4 +2206,4 @@ plot = ["matplotlib"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "a2867a430b5b9fdd8d084ef4ec9843b536339cf568667297e00f476a71bede48"
+content-hash = "04a45f59eff72ef97b7cc67228560151a472709a25af043bd9b54fa6f2417805"
