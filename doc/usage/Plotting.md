@@ -23,11 +23,12 @@ Let's take a MV network from the catalogue:
 >>> en = ElectricalNetwork.from_catalogue(name="MVFeeder210", load_point_name="Winter")
 ```
 
-The plot will be done from the {doc}`GeoDataFrame <geopandas:docs/reference/geodataframe>` of buses and branches.
+The plot will be done from the {doc}`GeoDataFrame <geopandas:docs/reference/geodataframe>` of buses and lines (we
+ignore transformers and switches in this tutorial).
 
 ```pycon
 >>> buses_gdf = en.buses_frame.reset_index()
->>> branches_gdf = en.branches_frame.reset_index()
+>>> lines_gdf = en.lines_frame.reset_index()
 ```
 
 In order to style the buses, a style function, a highlight function and a tooltip are defined. The `"id"` property of
@@ -54,7 +55,7 @@ are junction buses. The color of the buses is changed when highlighted.
 ...             "fillOpacity": 1,
 ...             "radius": 5,
 ...         }
-...     else: # Junctions buses
+...     else: # Junction buses
 ...         return {
 ...             "fill": True,
 ...             "fillColor": "#234e83",
@@ -76,23 +77,20 @@ are junction buses. The color of the buses is changed when highlighted.
 ... )
 ```
 
-The same is done for the branches. There are three types of branches: `"line"`, `"transformer"` and `"switch"`. Only
-lines are plotted so the opacity of others is set to 0.
+The same is done for the lines.
 
 ```pycon
->>> def branches_style_function(feature):
-...     if feature["properties"]["type"] == "line":
-...         return {"color": "#234e83", "weight": 4}
-...     else:
-...         # feature["properties"]["type"] in ("transformer", "switch")
-...         return {"opacity": 0}
+>>> def lines_style_function(feature):
+...     return {"color": "#234e83", "weight": 4}
 
->>> def branches_highlight_function(feature):
+
+>>> def lines_highlight_function(feature):
 ...     return {"color": "#cad40e"}
 
->>> branches_tooltip = folium.GeoJsonTooltip(
-...     fields=["id", "type", "bus1_id", "bus2_id"],
-...     aliases=["Id:", "Type:", "Bus1:", "Bus2:"],
+
+>>> lines_tooltip = folium.GeoJsonTooltip(
+...     fields=["id", "bus1_id", "bus2_id", "parameters_id"],
+...     aliases=["Id:", "Bus1:", "Bus2:", "Parameters:"],
 ...     localize=True,
 ...     sticky=False,
 ...     labels=True,
@@ -108,12 +106,12 @@ Finally, the two geojson layers are added in a folium map.
 ... )
 
 >>> folium.GeoJson(
-...     branches_gdf,
-...     name="branches",
+...     data=lines_gdf,
+...     name="lines",
 ...     marker=folium.CircleMarker(),
-...     style_function=branches_style_function,
-...     highlight_function=branches_highlight_function,
-...     tooltip=branches_tooltip,
+...     style_function=lines_style_function,
+...     highlight_function=lines_highlight_function,
+...     tooltip=lines_tooltip,
 ... ).add_to(m)
 
 >>> folium.GeoJson(
@@ -131,4 +129,4 @@ Finally, the two geojson layers are added in a folium map.
 
 It leads to this result:
 
-<iframe src="../_static/Network/MVFeeder210.html" height="600px" width="100%" frameborder="0"></iframe>
+<iframe src="../_static/Plotting_MVFeeder210.html" height="600px" width="100%" frameborder="0"></iframe>

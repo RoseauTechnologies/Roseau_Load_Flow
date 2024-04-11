@@ -20,6 +20,7 @@ dl dd:not(:last-child) {
   vertical-align: text-top;
   margin: 0 0.2em;
 }
+
 .material-symbols-outlined.inline-symbol.counter {
   color: #ff0000;
 }
@@ -50,4 +51,29 @@ dl dd:not(:last-child) {
 /* Align the copy button in the middle of the first line */
 .highlight button.copybtn {
   top: 0.25rem;
+}
+
+/* Override some leaflet values */
+.leaflet-container {
+  font-family: "Raleway", sans-serif;
+  font-size: unset;
+  line-height: unset;
+}
+
+/* Override some bootstrap values */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.h1,
+.h2,
+.h3,
+.h4,
+.h5,
+.h6 {
+  font-family: "Raleway", sans-serif;
+  font-weight: unset;
+  line-height: unset;
 }

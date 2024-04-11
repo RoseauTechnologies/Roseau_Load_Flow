@@ -23,7 +23,7 @@ copyright = "2018, Roseau Technologies SAS"
 
 # The full version, including alpha/beta/rc tags
 version = "0.8"
-release = "0.8.0"
+release = "0.8.1"
 
 # -- General configuration ---------------------------------------------------
 
@@ -43,6 +43,7 @@ extensions = [
     "sphinxcontrib.googleanalytics",
     "sphinxcontrib.bibtex",
     "sphinx_sitemap",
+    "sphinxext.opengraph",
 ]
 myst_enable_extensions = ["deflist", "smartquotes", "replacements", "dollarmath"]
 myst_html_meta = {"robots": "all"}
@@ -164,3 +165,7 @@ extlinks = {
 # -- Options for sphinx-sitemap -----------------------------------------
 html_baseurl = "https://roseau-load-flow.roseautechnologies.com/"
 sitemap_url_scheme = "{link}"  # default is {lang}{version}{link}
+
+# -- Options for sphinx-opengraph -----------------------------------------
+ogp_site_url = "https://roseau-load-flow.roseautechnologies.com/"
+ogp_image = "https://roseau-load-flow.roseautechnologies.com/_static/Roseau_Load_Flow_Stacked.svg"

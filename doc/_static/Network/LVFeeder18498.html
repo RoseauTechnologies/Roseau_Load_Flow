@@ -1,7 +1,25 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
+    <title>LV Feeder 18498</title>
     <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <meta
+      content="The Roseau Load Flow solver includes 40 medium and low voltage distribution networks."
+      lang="en"
+      name="description"
+      xml:lang="en"
+    />
+    <meta
+      content="distribution grid, network data, lv network, mv network, free"
+      lang="en"
+      name="keywords"
+      xml:lang="en"
+    />
+    <style>
+      h1 {
+        text-align: center;
+      }
+    </style>
 
     <script>
       L_NO_TOUCH = false;
@@ -49,7 +67,7 @@
                 initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
     <style>
-      #map_0fdac6c31dae8733c7261967e153215d {
+      #map_a2b82a314a78d4903c2aa95c6ab172cb {
         position: relative;
         width: 100%;
         height: 100%;
@@ -90,12 +108,16 @@
         padding-right: 8px;
       }
     </style>
+
+    <link rel="stylesheet" href="../css/custom.css" />
   </head>
   <body>
-    <div class="folium-map" id="map_0fdac6c31dae8733c7261967e153215d"></div>
+    <h1>LV Feeder 18498</h1>
+
+    <div class="folium-map" id="map_a2b82a314a78d4903c2aa95c6ab172cb"></div>
   </body>
   <script>
-    var map_0fdac6c31dae8733c7261967e153215d = L.map("map_0fdac6c31dae8733c7261967e153215d", {
+    var map_a2b82a314a78d4903c2aa95c6ab172cb = L.map("map_a2b82a314a78d4903c2aa95c6ab172cb", {
       center: [48.79610201117909, -1.5606903717137843],
       crs: L.CRS.EPSG3857,
       zoom: 16,
@@ -103,7 +125,7 @@
       preferCanvas: false,
     });
 
-    var tile_layer_3526cf167ffacf0c5de6a60685c900f8 = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    var tile_layer_74698657042c7df5dc03940b8e6236df = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution:
         '\u0026copy; \u003ca href="https://www.openstreetmap.org/copyright"\u003eOpenStreetMap\u003c/a\u003e contributors',
       detectRetina: false,
@@ -116,23 +138,21 @@
       tms: false,
     });
 
-    tile_layer_3526cf167ffacf0c5de6a60685c900f8.addTo(map_0fdac6c31dae8733c7261967e153215d);
+    tile_layer_74698657042c7df5dc03940b8e6236df.addTo(map_a2b82a314a78d4903c2aa95c6ab172cb);
 
-    function geo_json_94638aea5fa026ebf186333e82790f10_styler(feature) {
+    function geo_json_7aa1f2d01668416cd36170126e5c439f_styler(feature) {
       switch (feature.id) {
-        case "0":
-          return { opacity: 0 };
         default:
-          return { color: "#adb9cb", weight: 2 };
+          return { color: "#adb9cb", weight: 3 };
       }
     }
-    function geo_json_94638aea5fa026ebf186333e82790f10_highlighter(feature) {
+    function geo_json_7aa1f2d01668416cd36170126e5c439f_highlighter(feature) {
       switch (feature.id) {
         default:
           return { color: "#cad40e" };
       }
     }
-    function geo_json_94638aea5fa026ebf186333e82790f10_pointToLayer(feature, latlng) {
+    function geo_json_7aa1f2d01668416cd36170126e5c439f_pointToLayer(feature, latlng) {
       var opts = {
         bubblingMouseEvents: true,
         color: "#3388ff",
@@ -150,55 +170,40 @@
         weight: 3,
       };
 
-      let style = geo_json_94638aea5fa026ebf186333e82790f10_styler(feature);
+      let style = geo_json_7aa1f2d01668416cd36170126e5c439f_styler(feature);
       Object.assign(opts, style);
 
       return new L.CircleMarker(latlng, opts);
     }
 
-    function geo_json_94638aea5fa026ebf186333e82790f10_onEachFeature(feature, layer) {
+    function geo_json_7aa1f2d01668416cd36170126e5c439f_onEachFeature(feature, layer) {
       layer.on({
         mouseout: function (e) {
           if (typeof e.target.setStyle === "function") {
-            geo_json_94638aea5fa026ebf186333e82790f10.resetStyle(e.target);
+            geo_json_7aa1f2d01668416cd36170126e5c439f.resetStyle(e.target);
           }
         },
         mouseover: function (e) {
           if (typeof e.target.setStyle === "function") {
-            const highlightStyle = geo_json_94638aea5fa026ebf186333e82790f10_highlighter(e.target.feature);
+            const highlightStyle = geo_json_7aa1f2d01668416cd36170126e5c439f_highlighter(e.target.feature);
             e.target.setStyle(highlightStyle);
           }
         },
       });
     }
-    var geo_json_94638aea5fa026ebf186333e82790f10 = L.geoJson(null, {
-      onEachFeature: geo_json_94638aea5fa026ebf186333e82790f10_onEachFeature,
+    var geo_json_7aa1f2d01668416cd36170126e5c439f = L.geoJson(null, {
+      onEachFeature: geo_json_7aa1f2d01668416cd36170126e5c439f_onEachFeature,
 
-      style: geo_json_94638aea5fa026ebf186333e82790f10_styler,
-      pointToLayer: geo_json_94638aea5fa026ebf186333e82790f10_pointToLayer,
+      style: geo_json_7aa1f2d01668416cd36170126e5c439f_styler,
+      pointToLayer: geo_json_7aa1f2d01668416cd36170126e5c439f_pointToLayer,
     });
 
-    function geo_json_94638aea5fa026ebf186333e82790f10_add(data) {
-      geo_json_94638aea5fa026ebf186333e82790f10.addData(data);
+    function geo_json_7aa1f2d01668416cd36170126e5c439f_add(data) {
+      geo_json_7aa1f2d01668416cd36170126e5c439f.addData(data);
     }
-    geo_json_94638aea5fa026ebf186333e82790f10_add({
+    geo_json_7aa1f2d01668416cd36170126e5c439f_add({
       bbox: [-1.563987942067012, 48.79419143030816, -1.557940893282149, 48.79767735448237],
       features: [
-        {
-          bbox: [-1.5639210563669224, 48.79419143030816, -1.5639210563669224, 48.79419143030816],
-          geometry: { coordinates: [-1.5639210563669224, 48.79419143030816], type: "Point" },
-          id: "0",
-          properties: {
-            type: "transformer",
-            bus1_id: "MVLV00326",
-            bus2_id: "MVLVFeeder00326",
-            id: "Transformer",
-            network: "LVFeeder18498",
-            phases1: "abc",
-            phases2: "abcn",
-          },
-          type: "Feature",
-        },
         {
           bbox: [-1.563987942067012, 48.79419143030816, -1.562476265032381, 48.7949240921263],
           geometry: {
@@ -225,15 +230,15 @@
             ],
             type: "LineString",
           },
-          id: "1",
+          id: "0",
           properties: {
-            type: "line",
             bus1_id: "MVLVFeeder00326",
             bus2_id: "LVBus085930",
             id: "LVBranch095269",
+            max_current: 325,
             network: "LVFeeder18498",
-            phases1: "abcn",
-            phases2: "abcn",
+            parameters_id: "U_AL_150",
+            phases: "abcn",
           },
           type: "Feature",
         },
@@ -250,15 +255,15 @@
             ],
             type: "LineString",
           },
-          id: "2",
+          id: "1",
           properties: {
-            type: "line",
             bus1_id: "LVBus085930",
             bus2_id: "LVBus085931",
             id: "LVBranch068329",
+            max_current: 187,
             network: "LVFeeder18498",
-            phases1: "abcn",
-            phases2: "abcn",
+            parameters_id: "T_AL_70",
+            phases: "abcn",
           },
           type: "Feature",
         },
@@ -278,15 +283,15 @@
             ],
             type: "LineString",
           },
-          id: "3",
+          id: "2",
           properties: {
-            type: "line",
             bus1_id: "LVBus085931",
             bus2_id: "LVBus085932",
             id: "LVBranch143411",
+            max_current: 325,
             network: "LVFeeder18498",
-            phases1: "abcn",
-            phases2: "abcn",
+            parameters_id: "U_AL_150",
+            phases: "abcn",
           },
           type: "Feature",
         },
@@ -304,15 +309,15 @@
             ],
             type: "LineString",
           },
-          id: "4",
+          id: "3",
           properties: {
-            type: "line",
             bus1_id: "LVBus085932",
             bus2_id: "LVBus085933",
             id: "LVBranch143412",
+            max_current: 325,
             network: "LVFeeder18498",
-            phases1: "abcn",
-            phases2: "abcn",
+            parameters_id: "U_AL_150",
+            phases: "abcn",
           },
           type: "Feature",
         },
@@ -332,15 +337,15 @@
             ],
             type: "LineString",
           },
-          id: "5",
+          id: "4",
           properties: {
-            type: "line",
             bus1_id: "LVBus085933",
             bus2_id: "LVBus085934",
             id: "LVBranch159777",
+            max_current: 325,
             network: "LVFeeder18498",
-            phases1: "abcn",
-            phases2: "abcn",
+            parameters_id: "U_AL_150",
+            phases: "abcn",
           },
           type: "Feature",
         },
@@ -358,15 +363,15 @@
             ],
             type: "LineString",
           },
-          id: "6",
+          id: "5",
           properties: {
-            type: "line",
             bus1_id: "LVBus085934",
             bus2_id: "LVBus085944",
             id: "LVBranch120207",
+            max_current: 325,
             network: "LVFeeder18498",
-            phases1: "abcn",
-            phases2: "abcn",
+            parameters_id: "U_AL_150",
+            phases: "abcn",
           },
           type: "Feature",
         },
@@ -388,15 +393,15 @@
             ],
             type: "LineString",
           },
-          id: "7",
+          id: "6",
           properties: {
-            type: "line",
             bus1_id: "LVBus085944",
             bus2_id: "LVBus085945",
             id: "LVBranch085664",
+            max_current: 325,
             network: "LVFeeder18498",
-            phases1: "abcn",
-            phases2: "abcn",
+            parameters_id: "U_AL_150",
+            phases: "abcn",
           },
           type: "Feature",
         },
@@ -417,15 +422,15 @@
             ],
             type: "LineString",
           },
-          id: "8",
+          id: "7",
           properties: {
-            type: "line",
             bus1_id: "LVBus085934",
             bus2_id: "LVBus085935",
             id: "LVBranch134684",
+            max_current: 325,
             network: "LVFeeder18498",
-            phases1: "abcn",
-            phases2: "abcn",
+            parameters_id: "U_AL_150",
+            phases: "abcn",
           },
           type: "Feature",
         },
@@ -445,15 +450,15 @@
             ],
             type: "LineString",
           },
-          id: "9",
+          id: "8",
           properties: {
-            type: "line",
             bus1_id: "LVBus085935",
             bus2_id: "LVBus085943",
             id: "LVBranch103976",
+            max_current: 325,
             network: "LVFeeder18498",
-            phases1: "abcn",
-            phases2: "abcn",
+            parameters_id: "U_AL_150",
+            phases: "abcn",
           },
           type: "Feature",
         },
@@ -476,15 +481,15 @@
             ],
             type: "LineString",
           },
-          id: "10",
+          id: "9",
           properties: {
-            type: "line",
             bus1_id: "LVBus085935",
             bus2_id: "LVBus085936",
             id: "LVBranch120208",
+            max_current: 325,
             network: "LVFeeder18498",
-            phases1: "abcn",
-            phases2: "abcn",
+            parameters_id: "U_AL_150",
+            phases: "abcn",
           },
           type: "Feature",
         },
@@ -505,15 +510,15 @@
             ],
             type: "LineString",
           },
-          id: "11",
+          id: "10",
           properties: {
-            type: "line",
             bus1_id: "LVBus085936",
             bus2_id: "LVBus085937",
             id: "LVBranch120206",
+            max_current: 325,
             network: "LVFeeder18498",
-            phases1: "abcn",
-            phases2: "abcn",
+            parameters_id: "U_AL_150",
+            phases: "abcn",
           },
           type: "Feature",
         },
@@ -530,15 +535,15 @@
             ],
             type: "LineString",
           },
-          id: "12",
+          id: "11",
           properties: {
-            type: "line",
             bus1_id: "LVBus085937",
             bus2_id: "LVBus085938",
             id: "LVBranch095315",
+            max_current: 325,
             network: "LVFeeder18498",
-            phases1: "abcn",
-            phases2: "abcn",
+            parameters_id: "U_AL_150",
+            phases: "abcn",
           },
           type: "Feature",
         },
@@ -592,15 +597,15 @@
             ],
             type: "LineString",
           },
-          id: "13",
+          id: "12",
           properties: {
-            type: "line",
             bus1_id: "LVBus085938",
             bus2_id: "LVBus085940",
             id: "LVBranch085710",
+            max_current: 325,
             network: "LVFeeder18498",
-            phases1: "abcn",
-            phases2: "abcn",
+            parameters_id: "U_AL_150",
+            phases: "abcn",
           },
           type: "Feature",
         },
@@ -622,15 +627,15 @@
             ],
             type: "LineString",
           },
-          id: "14",
+          id: "13",
           properties: {
-            type: "line",
             bus1_id: "LVBus085938",
             bus2_id: "LVBus085939",
             id: "LVBranch095286",
+            max_current: 325,
             network: "LVFeeder18498",
-            phases1: "abcn",
-            phases2: "abcn",
+            parameters_id: "U_AL_150",
+            phases: "abcn",
           },
           type: "Feature",
         },
@@ -649,15 +654,15 @@
             ],
             type: "LineString",
           },
-          id: "15",
+          id: "14",
           properties: {
-            type: "line",
             bus1_id: "LVBus085937",
             bus2_id: "LVBus085941",
             id: "LVBranch120205",
+            max_current: 325,
             network: "LVFeeder18498",
-            phases1: "abcn",
-            phases2: "abcn",
+            parameters_id: "U_AL_150",
+            phases: "abcn",
           },
           type: "Feature",
         },
@@ -676,15 +681,15 @@
             ],
             type: "LineString",
           },
-          id: "16",
+          id: "15",
           properties: {
-            type: "line",
             bus1_id: "LVBus085941",
             bus2_id: "LVBus085942",
             id: "LVBranch078641",
+            max_current: 187,
             network: "LVFeeder18498",
-            phases1: "abcn",
-            phases2: "abcn",
+            parameters_id: "T_AL_70",
+            phases: "abcn",
           },
           type: "Feature",
         },
@@ -692,13 +697,13 @@
       type: "FeatureCollection",
     });
 
-    geo_json_94638aea5fa026ebf186333e82790f10.bindTooltip(
+    geo_json_7aa1f2d01668416cd36170126e5c439f.bindTooltip(
       function (layer) {
         let div = L.DomUtil.create("div");
 
         let handleObject = (feature) => (typeof feature == "object" ? JSON.stringify(feature) : feature);
-        let fields = ["id", "type", "bus1_id", "bus2_id"];
-        let aliases = ["Id:", "Type:", "Bus1:", "Bus2:"];
+        let fields = ["id", "bus1_id", "bus2_id", "parameters_id"];
+        let aliases = ["Id:", "Bus1:", "Bus2:", "Parameters:"];
         let table =
           "<table>" +
           String(
@@ -721,9 +726,9 @@
       { className: "foliumtooltip", maxWidth: 800, sticky: false },
     );
 
-    geo_json_94638aea5fa026ebf186333e82790f10.addTo(map_0fdac6c31dae8733c7261967e153215d);
+    geo_json_7aa1f2d01668416cd36170126e5c439f.addTo(map_a2b82a314a78d4903c2aa95c6ab172cb);
 
-    function geo_json_7aab612ab2e1a4384bef3f9ff41577e7_styler(feature) {
+    function geo_json_c0a7dbfe902c51b9aace03e31f001105_styler(feature) {
       switch (feature.id) {
         case "0":
         case "1":
@@ -732,13 +737,13 @@
           return { color: "#adb9cb", fill: true, fillColor: "#adb9cb", fillOpacity: 1, radius: 1 };
       }
     }
-    function geo_json_7aab612ab2e1a4384bef3f9ff41577e7_highlighter(feature) {
+    function geo_json_c0a7dbfe902c51b9aace03e31f001105_highlighter(feature) {
       switch (feature.id) {
         default:
           return { color: "#cad40e", fillColor: "#cad40e" };
       }
     }
-    function geo_json_7aab612ab2e1a4384bef3f9ff41577e7_pointToLayer(feature, latlng) {
+    function geo_json_c0a7dbfe902c51b9aace03e31f001105_pointToLayer(feature, latlng) {
       var opts = {
         bubblingMouseEvents: true,
         color: "#3388ff",
@@ -756,38 +761,38 @@
         weight: 3,
       };
 
-      let style = geo_json_7aab612ab2e1a4384bef3f9ff41577e7_styler(feature);
+      let style = geo_json_c0a7dbfe902c51b9aace03e31f001105_styler(feature);
       Object.assign(opts, style);
 
       return new L.CircleMarker(latlng, opts);
     }
 
-    function geo_json_7aab612ab2e1a4384bef3f9ff41577e7_onEachFeature(feature, layer) {
+    function geo_json_c0a7dbfe902c51b9aace03e31f001105_onEachFeature(feature, layer) {
       layer.on({
         mouseout: function (e) {
           if (typeof e.target.setStyle === "function") {
-            geo_json_7aab612ab2e1a4384bef3f9ff41577e7.resetStyle(e.target);
+            geo_json_c0a7dbfe902c51b9aace03e31f001105.resetStyle(e.target);
           }
         },
         mouseover: function (e) {
           if (typeof e.target.setStyle === "function") {
-            const highlightStyle = geo_json_7aab612ab2e1a4384bef3f9ff41577e7_highlighter(e.target.feature);
+            const highlightStyle = geo_json_c0a7dbfe902c51b9aace03e31f001105_highlighter(e.target.feature);
             e.target.setStyle(highlightStyle);
           }
         },
       });
     }
-    var geo_json_7aab612ab2e1a4384bef3f9ff41577e7 = L.geoJson(null, {
-      onEachFeature: geo_json_7aab612ab2e1a4384bef3f9ff41577e7_onEachFeature,
+    var geo_json_c0a7dbfe902c51b9aace03e31f001105 = L.geoJson(null, {
+      onEachFeature: geo_json_c0a7dbfe902c51b9aace03e31f001105_onEachFeature,
 
-      style: geo_json_7aab612ab2e1a4384bef3f9ff41577e7_styler,
-      pointToLayer: geo_json_7aab612ab2e1a4384bef3f9ff41577e7_pointToLayer,
+      style: geo_json_c0a7dbfe902c51b9aace03e31f001105_styler,
+      pointToLayer: geo_json_c0a7dbfe902c51b9aace03e31f001105_pointToLayer,
     });
 
-    function geo_json_7aab612ab2e1a4384bef3f9ff41577e7_add(data) {
-      geo_json_7aab612ab2e1a4384bef3f9ff41577e7.addData(data);
+    function geo_json_c0a7dbfe902c51b9aace03e31f001105_add(data) {
+      geo_json_c0a7dbfe902c51b9aace03e31f001105.addData(data);
     }
-    geo_json_7aab612ab2e1a4384bef3f9ff41577e7_add({
+    geo_json_c0a7dbfe902c51b9aace03e31f001105_add({
       bbox: [-1.5639210563669224, 48.79419143030816, -1.557940893282149, 48.79767431513093],
       features: [
         {
@@ -1028,7 +1033,7 @@
       type: "FeatureCollection",
     });
 
-    geo_json_7aab612ab2e1a4384bef3f9ff41577e7.bindTooltip(
+    geo_json_c0a7dbfe902c51b9aace03e31f001105.bindTooltip(
       function (layer) {
         let div = L.DomUtil.create("div");
 
@@ -1057,23 +1062,23 @@
       { className: "foliumtooltip", maxWidth: 800, sticky: false },
     );
 
-    geo_json_7aab612ab2e1a4384bef3f9ff41577e7.addTo(map_0fdac6c31dae8733c7261967e153215d);
+    geo_json_c0a7dbfe902c51b9aace03e31f001105.addTo(map_a2b82a314a78d4903c2aa95c6ab172cb);
 
-    var layer_control_69de07f7f025280debb53252aff79589_layers = {
+    var layer_control_c08c1ed338172bf00f2256fc4420cb7f_layers = {
       base_layers: {
-        openstreetmap: tile_layer_3526cf167ffacf0c5de6a60685c900f8,
+        openstreetmap: tile_layer_74698657042c7df5dc03940b8e6236df,
       },
       overlays: {
-        branches: geo_json_94638aea5fa026ebf186333e82790f10,
-        buses: geo_json_7aab612ab2e1a4384bef3f9ff41577e7,
+        lines: geo_json_7aa1f2d01668416cd36170126e5c439f,
+        buses: geo_json_c0a7dbfe902c51b9aace03e31f001105,
       },
     };
-    let layer_control_69de07f7f025280debb53252aff79589 = L.control
+    let layer_control_c08c1ed338172bf00f2256fc4420cb7f = L.control
       .layers(
-        layer_control_69de07f7f025280debb53252aff79589_layers.base_layers,
-        layer_control_69de07f7f025280debb53252aff79589_layers.overlays,
+        layer_control_c08c1ed338172bf00f2256fc4420cb7f_layers.base_layers,
+        layer_control_c08c1ed338172bf00f2256fc4420cb7f_layers.overlays,
         { autoZIndex: true, collapsed: true, position: "topright" },
       )
-      .addTo(map_0fdac6c31dae8733c7261967e153215d);
+      .addTo(map_a2b82a314a78d4903c2aa95c6ab172cb);
   </script>
 </html>

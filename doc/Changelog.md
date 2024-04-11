@@ -2,16 +2,31 @@
 myst:
   html_meta:
     "description lang=en": |
-      Release History of Roseau Load Flow - Three-phase unbalanced load flow solver in a Python API by Roseau
+      Release history of Roseau Load Flow - Three-phase unbalanced load flow solver in a Python API by Roseau
       Technologies.
     "description lang=fr": |
       Historique des versions de Roseau Load Flow - Solveur d'écoulement de charge triphasé et déséquilibré dans une
       API Python par Roseau Technologies.
     "keywords lang=fr": version, solveur, simulation, réseau, électrique, bus
     "keywords lang=en": changelog, solver, simulation, distribution grid, bus, model
+og:image: https://www.roseautechnologies.com/wp-content/uploads/2024/04/DSCF0091-scaled.webp
+og:image:alt: An engineer uses Roseau Load Flow to perform unbalanced electric calculation
+og:title: Roseau Load Flow - Unbalanced and multiphase load flow solver
+og:description: See what's new in the latest release of Roseau Load Flow !
 ---
 
 # Changelog
+
+## Version 0.8.1
+
+- {gh-issue}`214` Solve a bug in the engine when using delta connected flexible loads.
+- {gh-pr}`213` Better detection of poorly connected elements as described in {gh-issue}`209`. It raises a proper error
+  message.
+- {gh-pr}`211` Several improvements of the documentation:
+  - Add Open Graph metadata to the documentation page.
+  - Error on the susceptance unit in the tables of the `LineParameters`' catalogue.
+  - Replot the networks of the catalogue (add a `H1` title, use the Raleway font, only plot the lines to add their
+    parameters id in the tooltip)
 
 ## Version 0.8.0
 

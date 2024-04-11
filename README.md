@@ -1,7 +1,7 @@
 # Roseau Load Flow
 
 ![CI](https://github.com/RoseauTechnologies/Roseau_Load_Flow/workflows/CI/badge.svg)
-[![pre-commit](https://github.com/RoseauTechnologies/Roseau_Load_Flow/actions/workflows/pre-commit.yml/badge.svg)](https://github.com/RoseauTechnologies/Roseau_Load_Flow/actions/workflows/pre-commit.yml)
+![pre-commit](https://github.com/RoseauTechnologies/Roseau_Load_Flow/actions/workflows/pre-commit.yml/badge.svg)
 
 _Roseau Load Flow_ is a highly capable three-phase load flow solver with an ergonomic Python API
 for unbalanced power flow analysis.
