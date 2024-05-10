@@ -37,7 +37,9 @@ if __name__ == "__main__":
         assert id == f"{manufacturer}_{range}_{efficiency}_{sn_kva}kVA"
 
         # Generate transformer parameters
-        tp = TransformerParameters.from_tests(id=id, type=type, uhv=uhv, ulv=ulv, sn=sn, p0=p0, i0=i0, psc=psc, vsc=vsc)
+        tp = TransformerParameters.from_open_and_short_circuit_tests(
+            id=id, type=type, uhv=uhv, ulv=ulv, sn=sn, p0=p0, i0=i0, psc=psc, vsc=vsc
+        )
         res = tp.to_zyk()
         assert all(pd.notna(x) for x in res), id
         tp.to_json(destination_path / f"{sn_kva}.json")

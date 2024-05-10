@@ -45,7 +45,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         z2: complex | Q_[complex],
         ym: complex | Q_[complex],
         max_power: float | Q_[float] | None = None,
-    ):
+    ) -> None:
         """TransformerParameters constructor.
 
         Args:
@@ -103,7 +103,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         # Compute the ratio of transformation and the orientation (direct or reverse windings)
         self._k, self._orientation = self._to_k()
 
-        # Computed on demand or filled using alternative construction `from_tests`
+        # Computed on demand or filled using alternative construction `from_open_and_short_circuit_tests`
         self._from_tests = False
         self._p0 = None
         self._i0 = None
@@ -112,7 +112,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
 
     @classmethod
     @ureg_wraps(None, (None, None, None, "V", "V", "VA", "W", "", "W", "", "VA"))
-    def from_tests(
+    def from_open_and_short_circuit_tests(
         cls,
         id: Id,
         type: str,
@@ -515,7 +515,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
     @classmethod
     def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
         if "p0" in data:
-            return cls.from_tests(
+            return cls.from_open_and_short_circuit_tests(
                 id=data["id"],
                 type=data["type"],  # Type of the transformer
                 uhv=data["uhv"],  # Phase-to-phase nominal voltages of the high voltages side (V)
@@ -701,7 +701,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
 
         # A single one has been chosen
         idx = catalogue_data.index[0]
-        return cls.from_tests(
+        return cls.from_open_and_short_circuit_tests(
             id=catalogue_data.at[idx, "id"],
             type=catalogue_data.at[idx, "type"],
             uhv=catalogue_data.at[idx, "uhv"],

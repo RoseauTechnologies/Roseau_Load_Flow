@@ -255,7 +255,7 @@ def test_transformers_parameters_units_from_tests():
         "vsc": Q_(4, "percent"),  # %
         "type": "yzn11",
     }
-    tp = TransformerParameters.from_tests(**data)
+    tp = TransformerParameters.from_open_and_short_circuit_tests(**data)
     assert np.isclose(tp._psc, 1350.0)
     assert np.isclose(tp._p0, 145.0)
     assert np.isclose(tp._i0, 1.8e-2)
@@ -279,7 +279,7 @@ def test_transformers_parameters_units_from_tests():
         with pytest.raises(
             DimensionalityError, match=r"Cannot convert from 'ampere' \(\[current\]\) to '\w+?' \(.+?\)"
         ):
-            TransformerParameters.from_tests(**copy_data)
+            TransformerParameters.from_open_and_short_circuit_tests(**copy_data)
 
 
 def test_transformer_type():
@@ -495,10 +495,10 @@ def test_max_power():
         "sn": 50 * 1e3,
         "vsc": 4 / 100,
     }
-    tp = TransformerParameters.from_tests(id="test", **kwds)
+    tp = TransformerParameters.from_open_and_short_circuit_tests(id="test", **kwds)
     assert tp.max_power is None
 
-    tp = TransformerParameters.from_tests(id="test", **kwds, max_power=60_000)
+    tp = TransformerParameters.from_open_and_short_circuit_tests(id="test", **kwds, max_power=60_000)
     assert tp.max_power == Q_(60_000, "VA")
 
     tp.max_power = 55_000

@@ -112,42 +112,48 @@ following values:
 from roseau.load_flow import TransformerParameters, Q_
 
 # The transformer parameters for a single-phase transformer
-single_phase_transformer_parameters = TransformerParameters.from_tests(
-    id="single_phase_transformer_parameters",
-    type="single",  # <--- single-phase transformer
-    uhv=Q_(20, "kV"),
-    ulv=Q_(400, "V"),
-    sn=Q_(160, "kVA"),
-    p0=Q_(300, "W"),
-    i0=Q_(1.4, "%"),
-    psc=Q_(2000, "W"),
-    vsc=Q_(4, "%"),
+single_phase_transformer_parameters = (
+    TransformerParameters.from_open_and_short_circuit_tests(
+        id="single_phase_transformer_parameters",
+        type="single",  # <--- single-phase transformer
+        uhv=Q_(20, "kV"),
+        ulv=Q_(400, "V"),
+        sn=Q_(160, "kVA"),
+        p0=Q_(300, "W"),
+        i0=Q_(1.4, "%"),
+        psc=Q_(2000, "W"),
+        vsc=Q_(4, "%"),
+    )
 )
 
 # The transformer parameters for a three-phase transformer
-three_phase_transformer_parameters = TransformerParameters.from_tests(
-    id="three_phase_transformer_parameters",
-    type="Dyn11",  # <--- three-phase transformer with delta primary and wye secondary
-    uhv=Q_(20, "kV"),
-    ulv=Q_(400, "V"),
-    sn=Q_(160, "kVA"),
-    p0=Q_(300, "W"),
-    i0=Q_(1.4, "%"),
-    psc=Q_(2000, "W"),
-    vsc=Q_(4, "%"),
+three_phase_transformer_parameters = (
+    TransformerParameters.from_open_and_short_circuit_tests(
+        id="three_phase_transformer_parameters",
+        type="Dyn11",  # <--- three-phase transformer with delta primary and wye secondary
+        uhv=Q_(20, "kV"),
+        ulv=Q_(400, "V"),
+        sn=Q_(160, "kVA"),
+        p0=Q_(300, "W"),
+        i0=Q_(1.4, "%"),
+        psc=Q_(2000, "W"),
+        vsc=Q_(4, "%"),
+    )
 )
 
 # The transformer parameters for a center-tapped transformer
-center_tapped_transformer_parameters = TransformerParameters.from_tests(
-    id="center_tapped_transformer_parameters",
-    type="center",  # <--- center-tapped transformer
-    uhv=Q_(20, "kV"),
-    ulv=Q_(400, "V"),
-    sn=Q_(160, "kVA"),
-    p0=Q_(300, "W"),
-    i0=Q_(1.4, "%"),
-    psc=Q_(2000, "W"),
-    vsc=Q_(4, "%"),
+center_tapped_transformer_parameters = (
+    TransformerParameters.from_open_and_short_circuit_tests(
+        id="center_tapped_transformer_parameters",
+        type="center",  # <--- center-tapped transformer
+        uhv=Q_(20, "kV"),
+        ulv=Q_(400, "V"),
+        sn=Q_(160, "kVA"),
+        p0=Q_(300, "W"),
+        i0=Q_(1.4, "%"),
+        psc=Q_(2000, "W"),
+        vsc=Q_(4, "%"),
+    )
 )
 ```
 

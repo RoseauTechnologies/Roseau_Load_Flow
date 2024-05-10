@@ -101,10 +101,10 @@ def test_to_dict():
     vs = VoltageSource("vs", source_bus, phases="abcn", voltages=voltages)
 
     # Same id, different transformer parameters -> fail
-    tp1 = TransformerParameters.from_tests(
+    tp1 = TransformerParameters.from_open_and_short_circuit_tests(
         id="t", type="Dyn11", uhv=20000, ulv=400, sn=160 * 1e3, p0=460, i0=2.3 / 100, psc=2350, vsc=4 / 100
     )
-    tp2 = TransformerParameters.from_tests(
+    tp2 = TransformerParameters.from_open_and_short_circuit_tests(
         id="t", type="Dyn11", uhv=20000, ulv=400, sn=200 * 1e3, p0=460, i0=2.3 / 100, psc=2350, vsc=4 / 100
     )
     transformer1 = Transformer(id="Transformer1", bus1=source_bus, bus2=load_bus, parameters=tp1, geometry=geom)
@@ -125,7 +125,7 @@ def test_to_dict():
     assert e.value.code == RoseauLoadFlowExceptionCode.JSON_TRANSFORMER_PARAMETERS_DUPLICATES
 
     # Same id, same transformer parameters -> ok
-    tp2 = TransformerParameters.from_tests(
+    tp2 = TransformerParameters.from_open_and_short_circuit_tests(
         id="t", type="Dyn11", uhv=20000, ulv=400, sn=160 * 1e3, p0=460, i0=2.3 / 100, psc=2350, vsc=4 / 100
     )
     transformer2.parameters = tp2
@@ -765,7 +765,7 @@ def test_v0_to_v1_converter(monkeypatch):
 
     # Branches
     tp = {
-        "160kVA_Dd0": TransformerParameters.from_tests(
+        "160kVA_Dd0": TransformerParameters.from_open_and_short_circuit_tests(
             id="160kVA_Dd0",
             type="dd0",
             sn=160000.0,
@@ -776,7 +776,7 @@ def test_v0_to_v1_converter(monkeypatch):
             psc=2350.0,
             vsc=0.04,
         ),
-        "160kVA_Dd6": TransformerParameters.from_tests(
+        "160kVA_Dd6": TransformerParameters.from_open_and_short_circuit_tests(
             id="160kVA_Dd6",
             type="dd6",
             sn=160000.0,
@@ -787,7 +787,7 @@ def test_v0_to_v1_converter(monkeypatch):
             psc=2350.0,
             vsc=0.04,
         ),
-        "160kVA_Dyn11": TransformerParameters.from_tests(
+        "160kVA_Dyn11": TransformerParameters.from_open_and_short_circuit_tests(
             id="160kVA_Dyn11",
             type="dyn11",
             sn=160000.0,
@@ -798,7 +798,7 @@ def test_v0_to_v1_converter(monkeypatch):
             psc=2350.0,
             vsc=0.04,
         ),
-        "160kVA_Dyn5": TransformerParameters.from_tests(
+        "160kVA_Dyn5": TransformerParameters.from_open_and_short_circuit_tests(
             id="160kVA_Dyn5",
             type="dyn5",
             sn=160000.0,
@@ -809,7 +809,7 @@ def test_v0_to_v1_converter(monkeypatch):
             psc=2350.0,
             vsc=0.04,
         ),
-        "160kVA_Dzn0": TransformerParameters.from_tests(
+        "160kVA_Dzn0": TransformerParameters.from_open_and_short_circuit_tests(
             id="160kVA_Dzn0",
             type="dzn0",
             sn=160000.0,
@@ -820,7 +820,7 @@ def test_v0_to_v1_converter(monkeypatch):
             psc=2350.0,
             vsc=0.04,
         ),
-        "160kVA_Dzn6": TransformerParameters.from_tests(
+        "160kVA_Dzn6": TransformerParameters.from_open_and_short_circuit_tests(
             id="160kVA_Dzn6",
             type="dzn6",
             sn=160000.0,
@@ -831,7 +831,7 @@ def test_v0_to_v1_converter(monkeypatch):
             psc=2350.0,
             vsc=0.04,
         ),
-        "160kVA_Yd11": TransformerParameters.from_tests(
+        "160kVA_Yd11": TransformerParameters.from_open_and_short_circuit_tests(
             id="160kVA_Yd11",
             type="yd11",
             sn=160000.0,
@@ -842,7 +842,7 @@ def test_v0_to_v1_converter(monkeypatch):
             psc=2350.0,
             vsc=0.04,
         ),
-        "160kVA_Yd5": TransformerParameters.from_tests(
+        "160kVA_Yd5": TransformerParameters.from_open_and_short_circuit_tests(
             id="160kVA_Yd5",
             type="yd5",
             sn=160000.0,
@@ -853,7 +853,7 @@ def test_v0_to_v1_converter(monkeypatch):
             psc=2350.0,
             vsc=0.04,
         ),
-        "160kVA_Yyn0": TransformerParameters.from_tests(
+        "160kVA_Yyn0": TransformerParameters.from_open_and_short_circuit_tests(
             id="160kVA_Yyn0",
             type="yyn0",
             sn=160000.0,
@@ -864,7 +864,7 @@ def test_v0_to_v1_converter(monkeypatch):
             psc=2350.0,
             vsc=0.04,
         ),
-        "160kVA_Yyn6": TransformerParameters.from_tests(
+        "160kVA_Yyn6": TransformerParameters.from_open_and_short_circuit_tests(
             id="160kVA_Yyn6",
             type="yyn6",
             sn=160000.0,
@@ -875,7 +875,7 @@ def test_v0_to_v1_converter(monkeypatch):
             psc=2350.0,
             vsc=0.04,
         ),
-        "160kVA_Yzn11": TransformerParameters.from_tests(
+        "160kVA_Yzn11": TransformerParameters.from_open_and_short_circuit_tests(
             id="160kVA_Yzn11",
             type="yzn11",
             sn=160000.0,
@@ -886,7 +886,7 @@ def test_v0_to_v1_converter(monkeypatch):
             psc=2350.0,
             vsc=0.04,
         ),
-        "160kVA_Yzn5": TransformerParameters.from_tests(
+        "160kVA_Yzn5": TransformerParameters.from_open_and_short_circuit_tests(
             id="160kVA_Yzn5",
             type="yzn5",
             sn=160000.0,

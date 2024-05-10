@@ -6,7 +6,7 @@ from roseau.load_flow.models import Bus, Transformer, TransformerParameters
 def test_res_violated():
     bus1 = Bus("bus1", phases="abc")
     bus2 = Bus("bus2", phases="abcn")
-    tp = TransformerParameters.from_tests(
+    tp = TransformerParameters.from_open_and_short_circuit_tests(
         id="tp", psc=1350.0, p0=145.0, i0=1.8 / 100, ulv=400, uhv=20000, sn=50 * 1e3, vsc=4 / 100, type="yzn11"
     )
     transformer = Transformer(id="transformer", bus1=bus1, bus2=bus2, parameters=tp)
