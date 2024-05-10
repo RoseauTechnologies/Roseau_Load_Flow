@@ -26,7 +26,6 @@ def test_transformer_parameters():
     }
     tp = TransformerParameters.from_dict(data)
 
-    z2, ym, k, orientation = tp.to_zyk()
     r_iron = 20e3**2 / 145  # Ohm
     lm_omega = 20e3**2 / (np.sqrt((1.8 / 100 * 50e3) ** 2 - 145**2))  # H *rad/s
     z2_norm = 4 / 100 * 400**2 / 50e3
@@ -38,10 +37,10 @@ def test_transformer_parameters():
     k_expected = 400 / (np.sqrt(3.0) * 20e3)
     orientation_expected = 1.0
 
-    assert np.isclose(z2.m, z2_expected)
-    assert np.isclose(ym.m, ym_expected)
-    assert np.isclose(k.m, k_expected)
-    assert np.isclose(orientation, orientation_expected)
+    assert np.isclose(tp.z2.m, z2_expected)
+    assert np.isclose(tp.ym.m, ym_expected)
+    assert np.isclose(tp.k.m, k_expected)
+    assert np.isclose(tp.orientation, orientation_expected)
 
     # Dyn11 - 100kVA
     data = {
@@ -56,7 +55,6 @@ def test_transformer_parameters():
         "type": "dyn11",
     }
     tp = TransformerParameters.from_dict(data)
-    z2, ym, k, orientation = tp.to_zyk()
     r_iron = 3 * 20e3**2 / 210  # Ohm
     lm_omega = 3 * 20e3**2 / (np.sqrt((3.5 / 100 * 100e3) ** 2 - 210**2))  # H*rad/s
     z2_norm = 4 / 100 * 400**2 / 100e3
@@ -68,10 +66,10 @@ def test_transformer_parameters():
     k_expected = (400 / np.sqrt(3)) / 20e3
     orientation_expected = 1.0
 
-    assert np.isclose(z2.m, z2_expected)
-    assert np.isclose(ym.m, ym_expected)
-    assert np.isclose(k.m, k_expected)
-    assert np.isclose(orientation, orientation_expected)
+    assert np.isclose(tp.z2.m, z2_expected)
+    assert np.isclose(tp.ym.m, ym_expected)
+    assert np.isclose(tp.k.m, k_expected)
+    assert np.isclose(tp.orientation, orientation_expected)
 
     # Dyn5 - 160kVA
     data = {
@@ -86,7 +84,6 @@ def test_transformer_parameters():
         "type": "dyn5",
     }
     tp = TransformerParameters.from_dict(data)
-    z2, ym, k, orientation = tp.to_zyk()
     r_iron = 3 * 20e3**2 / 460  # Ohm
     lm_omega = 3 * 20e3**2 / (np.sqrt((5.6 / 100 * 160e3) ** 2 - 460**2))  # H*rad/s
     z2_norm = 4 / 100 * 400**2 / 160e3
@@ -98,10 +95,10 @@ def test_transformer_parameters():
     k_expected = 400 / np.sqrt(3) / 20e3
     orientation_expected = -1.0
 
-    assert np.isclose(z2.m, z2_expected)
-    assert np.isclose(ym.m, ym_expected)
-    assert np.isclose(k.m, k_expected)
-    assert np.isclose(orientation, orientation_expected)
+    assert np.isclose(tp.z2.m, z2_expected)
+    assert np.isclose(tp.ym.m, ym_expected)
+    assert np.isclose(tp.k.m, k_expected)
+    assert np.isclose(tp.orientation, orientation_expected)
 
     # Check that there is an error if the winding is not good
     data = {
@@ -168,7 +165,7 @@ def test_transformer_parameters():
     }
     with pytest.raises(RoseauLoadFlowException) as e:
         TransformerParameters.from_dict(data)
-    assert "has the 'current during off-load test' i0" in e.value.msg
+    assert "Invalid open-circuit test current i0=" in e.value.msg
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_PARAMETERS
 
     # Bad vsc
@@ -185,7 +182,7 @@ def test_transformer_parameters():
     }
     with pytest.raises(RoseauLoadFlowException) as e:
         TransformerParameters.from_dict(data)
-    assert "has the 'voltages on LV side during short-circuit test' vsc" in e.value.msg
+    assert "Invalid short-circuit test voltage vsc=" in e.value.msg
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_PARAMETERS
 
     # Bad l2_omega
@@ -202,7 +199,7 @@ def test_transformer_parameters():
     }
     with pytest.raises(RoseauLoadFlowException) as e:
         TransformerParameters.from_dict(data)
-    assert "The following inequality should be respected: psc/sn <= vsc" in e.value.msg
+    assert "The following inequality must be respected: psc/sn <= vsc" in e.value.msg
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_PARAMETERS
 
 
@@ -381,11 +378,10 @@ def test_catalogue_data():
         assert np.isclose(tp.vsc.m, catalogue_data.at[tp.id, "vsc"])
 
         # Check that the parameters are valid
-        z, y, k, orientation = tp.to_zyk()
-        assert isinstance(z.m, numbers.Complex)
-        assert isinstance(y.m, numbers.Complex)
-        assert isinstance(k.m, numbers.Real)
-        assert orientation in (-1.0, 1.0)
+        assert isinstance(tp.z2.m, numbers.Complex)
+        assert isinstance(tp.ym.m, numbers.Complex)
+        assert isinstance(tp.k.m, numbers.Real)
+        assert tp.orientation in (-1.0, 1.0)
 
 
 def test_from_catalogue():

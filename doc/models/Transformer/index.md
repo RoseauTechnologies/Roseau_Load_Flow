@@ -28,8 +28,8 @@ Transformers are modeled with the following parameters:
   parameter is called `ulv` in the code.
 - $S_{\mathrm{nom.}}$: the nominal power of the transformer (in VA). This parameter is called `sn`
   in the code.
-- $i_0$: the current during off-load test (in %). This parameter is called `i0` in the code.
-- $P_0$: the losses during off-load test (in W). This parameter is called `p0` in the code.
+- $i_0$: the current during open-circuit test (in %). This parameter is called `i0` in the code.
+- $P_0$: the losses during open-circuit test (in W). This parameter is called `p0` in the code.
 - $P_{\mathrm{sc}}$: the losses during short-circuit test (in W). This parameter is called `psc`
   in the code.
 - $V_{\mathrm{sc}}$: the voltage on LV side during short-circuit test (in %). This parameter is
@@ -38,7 +38,7 @@ Transformers are modeled with the following parameters:
 For three-phase transformers, the windings configuration is also required. See the dedicated page
 of [three-phase transformers](Three_Phase_Transformer.md) for more details.
 
-These parameters come from off-load and short-circuit tests. Internally, these parameters are
+These parameters come from open-circuit and short-circuit tests. Internally, these parameters are
 converted into a series impedance $\underline{Z_2}$ and the magnetizing admittance
 $\underline{Y_{\mathrm{m}}}$.
 
