@@ -19,10 +19,16 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
-- {gh-pr}`212` Modify the constructor of `TransformerParameters` to take the `z2` and `ym` parameters
-  directly instead of the open and short circuit tests parameters. You can still create an object from
-  these tests using the `from_open_and_short_circuit_tests` constructor. This change comes with other
-  changes to `TransformerParameters`, notably:
+- {gh-pr}`217` Add an ID override to `TransformerParameters.from_catalogue` similar to
+  `LineParameters.from_catalogue`.
+- {gh-issue}`216` {gh-pr}`217` **BREAKING CHANGE**: Rename the `id` parameter of `TransformerParameters`
+  catalogue methods to `name` to be consistent with `LineParameters`.
+  **If you call these methods by keyword arguments**, make sure to update your usage of
+  `TransformerParameters.from_catalogue(id="xxx")` to `TransformerParameters.from_catalogue(name="xxx")`.
+- {gh-pr}`212` **BREAKING CHANGE**: Modify the constructor of `TransformerParameters` to take the `z2`
+  and `ym` parameters directly instead of the open and short circuit tests parameters. You can still
+  create an object from these tests using the `from_open_and_short_circuit_tests` constructor. This
+  change comes with other changes to `TransformerParameters`, notably:
   - The `z2`, `ym`, `k`, and `orientation` are now always available as attributes on the instance
   - The `to_zyk` method is deprecated in favour of the direct attribute access on the instance. This
     method will be removed in a future version
