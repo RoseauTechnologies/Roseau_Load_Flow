@@ -186,7 +186,7 @@ This catalogue can be retrieved in the form of a dataframe using:
 
 _Truncated output_
 
-| Id                           | Manufacturer | Product range | Efficiency | Nominal power (kVA) | Type  | High voltage (kV) | Low voltage (kV) |
+| Name                         | Manufacturer | Product range | Efficiency | Nominal power (kVA) | Type  | High voltage (kV) | Low voltage (kV) |
 | :--------------------------- | :----------- | :------------ | :--------- | ------------------: | :---- | ----------------: | ---------------: |
 | FT_Standard_Standard_100kVA  | FT           | Standard      | Standard   |                 100 | Dyn11 |                20 |              0.4 |
 | FT_Standard_Standard_160kVA  | FT           | Standard      | Standard   |                 160 | Dyn11 |                20 |              0.4 |
@@ -241,7 +241,7 @@ _Truncated output_
 
 The following data are available in this table:
 
-- the **id**: a unique id among the catalogue.
+- the **name**: a unique name of the transformer in the catalogue.
 - the **manufacturer**: two manufacturers are available. `"SE"` stands for "Schneider-Electric" and `"FT"` stands for
   "France Transfo".
 - the product **range** which depends on the manufacturer
@@ -258,7 +258,7 @@ following command only retrieves transformer parameters of transformers with an 
 >>> TransformerParameters.get_catalogue(efficiency="A0Ak")
 ```
 
-| Id                     | Manufacturer | Product range | Efficiency | Type  | Nominal power (kVA) | High voltage (kV) | Low voltage (kV) |
+| Name                   | Manufacturer | Product range | Efficiency | Type  | Nominal power (kVA) | High voltage (kV) | Low voltage (kV) |
 | :--------------------- | :----------- | :------------ | :--------- | :---- | ------------------: | ----------------: | ---------------: |
 | SE_Minera_A0Ak_50kVA   | SE           | Minera        | A0Ak       | Yzn11 |                50.0 |              20.0 |              0.4 |
 | SE_Minera_A0Ak_100kVA  | SE           | Minera        | A0Ak       | Dyn11 |               100.0 |              20.0 |              0.4 |
@@ -281,7 +281,7 @@ or only transformers with a wye winding on the primary side (using a regular exp
 >>> TransformerParameters.get_catalogue(type=r"^y.*$")
 ```
 
-| Id                       | Manufacturer | Product range | Efficiency | Type  | Nominal power (kVA) | High voltage (kV) | Low voltage (kV) |
+| Name                     | Manufacturer | Product range | Efficiency | Type  | Nominal power (kVA) | High voltage (kV) | Low voltage (kV) |
 | :----------------------- | :----------- | :------------ | :--------- | :---- | ------------------: | ----------------: | ---------------: |
 | SE_Minera_A0Ak_50kVA     | SE           | Minera        | A0Ak       | Yzn11 |                50.0 |              20.0 |              0.4 |
 | SE_Minera_B0Bk_50kVA     | SE           | Minera        | B0Bk       | Yzn11 |                50.0 |              20.0 |              0.4 |
@@ -294,7 +294,7 @@ or only transformers meeting both criteria
 >>> TransformerParameters.get_catalogue(efficiency="A0Ak", type=r"^y.*$")
 ```
 
-| Id                   | Manufacturer | Product range | Efficiency | Type  | Nominal power (kVA) | High voltage (kV) | Low voltage (kV) |
+| Name                 | Manufacturer | Product range | Efficiency | Type  | Nominal power (kVA) | High voltage (kV) | Low voltage (kV) |
 | :------------------- | :----------- | :------------ | :--------- | :---- | ------------------: | ----------------: | ---------------: |
 | SE_Minera_A0Ak_50kVA | SE           | Minera        | A0Ak       | Yzn11 |                50.0 |              20.0 |              0.4 |
 
@@ -310,7 +310,7 @@ nominal power of 3150 kVA, the following two commands return the same table:
 ... TransformerParameters.get_catalogue(sn=Q_(3150, "kVA"))
 ```
 
-| Id                           | Manufacturer | Product range | Efficiency | Type  | Nominal power (kVA) | High voltage (kV) | Low voltage (kV) |
+| Name                         | Manufacturer | Product range | Efficiency | Type  | Nominal power (kVA) | High voltage (kV) | Low voltage (kV) |
 | :--------------------------- | :----------- | :------------ | :--------- | :---- | ------------------: | ----------------: | ---------------: |
 | FT_Standard_Standard_3150kVA | FT           | Standard      | Standard   | Dyn11 |              3150.0 |              20.0 |              0.4 |
 | SE_Vegeta_C0Bk_3150kVA       | SE           | Vegeta        | C0Bk       | Dyn11 |              3150.0 |              20.0 |              0.4 |
@@ -329,10 +329,10 @@ For instance, these parameters filter the catalogue down to a single transformer
 TransformerParameters(id='SE_Minera_A0Ak_50kVA')
 ```
 
-The `id` filter can be directly used:
+The `name` filter can be directly used:
 
 ```pycon
->>> TransformerParameters.from_catalogue(id="SE_Minera_A0Ak_50kVA")
+>>> TransformerParameters.from_catalogue(name="SE_Minera_A0Ak_50kVA")
 TransformerParameters(id='SE_Minera_A0Ak_50kVA')
 ```
 

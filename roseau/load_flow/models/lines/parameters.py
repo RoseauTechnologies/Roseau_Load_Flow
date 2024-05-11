@@ -859,7 +859,8 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
 
             id:
                 A unique ID for the created line parameters object (optional). If ``None``
-                (default), the id of the created object will be its name in the catalogue.
+                (default), the id of the created object will be its name in the catalogue. Note
+                that this parameter is not used in the data filtering.
 
         Returns:
             The created line parameters.
@@ -873,9 +874,14 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             raise_if_not_found=True,
         )
 
-        cls._assert_one_found(
-            found_data=catalogue_data["name"].tolist(), display_name="line parameters", query_info=query_info
-        )
+        try:
+            cls._assert_one_found(
+                found_data=catalogue_data["name"].tolist(), display_name="line parameters", query_info=query_info
+            )
+        except RoseauLoadFlowException as e:
+            if name is None and id is not None:
+                e.msg += " Did you mean to filter by name instead of id?"
+            raise
         idx = catalogue_data.index[0]
         name = str(catalogue_data.at[idx, "name"])
         r = catalogue_data.at[idx, "r"]

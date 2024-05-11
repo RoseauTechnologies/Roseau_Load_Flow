@@ -561,7 +561,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
     @classmethod
     def _get_catalogue(
         cls,
-        id: str | re.Pattern[str] | None,
+        name: str | re.Pattern[str] | None,
         manufacturer: str | re.Pattern[str] | None,
         range: str | re.Pattern[str] | None,
         efficiency: str | re.Pattern[str] | None,
@@ -579,7 +579,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         # Filter on string/regular expressions
         query_msg_list = []
         for value, column_name, display_name, display_name_plural in (
-            (id, "id", "id", "ids"),
+            (name, "name", "name", "names"),
             (manufacturer, "manufacturer", "manufacturer", "manufacturers"),
             (range, "range", "range", "ranges"),
             (efficiency, "efficiency", "efficiency", "efficiencies"),
@@ -624,10 +624,10 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         return catalogue_data, ", ".join(query_msg_list)
 
     @classmethod
-    @ureg_wraps(None, (None, None, None, None, None, None, "VA", "V", "V"))
+    @ureg_wraps(None, (None, None, None, None, None, None, "VA", "V", "V", None))
     def from_catalogue(
         cls,
-        id: str | re.Pattern[str] | None = None,
+        name: str | re.Pattern[str] | None = None,
         manufacturer: str | re.Pattern[str] | None = None,
         range: str | re.Pattern[str] | None = None,
         efficiency: str | re.Pattern[str] | None = None,
@@ -635,12 +635,13 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         sn: float | Q_[float] | None = None,
         uhv: float | Q_[float] | None = None,
         ulv: float | Q_[float] | None = None,
+        id: Id | None = None,
     ) -> Self:
         """Build a transformer parameters from one in the catalogue.
 
         Args:
-            id:
-                The id of the transformer to get from the catalogue. It can be a regular expression.
+            name:
+                The name of the transformer to get from the catalogue. It can be a regular expression.
 
             manufacturer:
                 The name of the manufacturer to get. It can be a regular expression.
@@ -663,13 +664,18 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             ulv:
                 The secondary side voltage of the transformer to get.
 
+            id:
+                A unique ID for the created line parameters object (optional). If ``None``
+                (default), the id of the created object will be its name in the catalogue. Note that
+                this parameter is not used in the data filtering.
+
         Returns:
             The selected transformer. If several transformers fitting the filters are in the catalogue, an error is
             raised.
         """
         # Get the catalogue data
         catalogue_data, query_info = cls._get_catalogue(
-            id=id,
+            name=name,
             manufacturer=manufacturer,
             range=range,
             efficiency=efficiency,
@@ -680,14 +686,21 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             raise_if_not_found=True,
         )
 
-        cls._assert_one_found(
-            found_data=catalogue_data["id"].tolist(), display_name="transformers", query_info=query_info
-        )
+        try:
+            cls._assert_one_found(
+                found_data=catalogue_data["name"].tolist(), display_name="transformers", query_info=query_info
+            )
+        except RoseauLoadFlowException as e:
+            if name is None and id is not None:
+                e.msg += " Did you mean to filter by name instead of id?"
+            raise
 
         # A single one has been chosen
         idx = catalogue_data.index[0]
+        if id is None:
+            id = catalogue_data.at[idx, "name"]
         return cls.from_open_and_short_circuit_tests(
-            id=catalogue_data.at[idx, "id"],
+            id=id,
             type=catalogue_data.at[idx, "type"],
             uhv=catalogue_data.at[idx, "uhv"],
             ulv=catalogue_data.at[idx, "ulv"],
@@ -702,7 +715,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
     @ureg_wraps(None, (None, None, None, None, None, None, "VA", "V", "V"))
     def get_catalogue(
         cls,
-        id: str | re.Pattern[str] | None = None,
+        name: str | re.Pattern[str] | None = None,
         manufacturer: str | re.Pattern[str] | None = None,
         range: str | re.Pattern[str] | None = None,
         efficiency: str | re.Pattern[str] | None = None,
@@ -717,8 +730,8 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         parameter, all the catalogue will be returned.
 
         Args:
-            id:
-                An optional manufacturer to filter the output. It can be a regular expression.
+            name:
+                An optional name to filter the output. It can be a regular expression.
 
             manufacturer:
                 An optional manufacturer to filter the output. It can be a regular expression.
@@ -745,7 +758,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             The catalogue data as a dataframe.
         """
         catalogue_data, _ = cls._get_catalogue(
-            id=id,
+            name=name,
             manufacturer=manufacturer,
             range=range,
             efficiency=efficiency,
@@ -762,7 +775,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             catalogue_data.drop(columns=["i0", "p0", "psc", "vsc"])
             .rename(
                 columns={
-                    "id": "Id",
+                    "name": "Name",
                     "manufacturer": "Manufacturer",
                     "range": "Product range",
                     "efficiency": "Efficiency",
@@ -777,7 +790,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
                     # "vsc": "Impedance voltage (%)",
                 }
             )
-            .set_index("Id")
+            .set_index("Name")
         )
 
     #
