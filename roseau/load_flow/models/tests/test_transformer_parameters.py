@@ -427,6 +427,12 @@ def test_from_catalogue():
     )
     assert e.value.code == RoseauLoadFlowExceptionCode.CATALOGUE_SEVERAL_FOUND
 
+    # Success
+    tp = TransformerParameters.from_catalogue(name="SE_Minera_AA0Ak_160kVA")
+    assert tp.id == "SE_Minera_AA0Ak_160kVA"
+    tp = TransformerParameters.from_catalogue(name="SE_Minera_AA0Ak_160kVA", id="tp-test1")
+    assert tp.id == "tp-test1"
+
 
 def test_get_catalogue():
     # Get the entire catalogue
