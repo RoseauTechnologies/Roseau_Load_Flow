@@ -226,7 +226,7 @@ results for each element type:
 | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `Bus`                                       | `res_potentials`, `res_voltages`, `res_violated`                                                                                                        |
 | `Line`                                      | `res_currents`, `res_powers`, `res_potentials`, `res_voltages`, `res_series_power_losses`, `res_shunt_power_losses`, `res_power_losses`, `res_violated` |
-| `Transformer`                               | `res_currents`, `res_powers`, `res_potentials`, `res_voltages`, `res_violated`                                                                          |
+| `Transformer`                               | `res_currents`, `res_powers`, `res_potentials`, `res_voltages`, `res_power_losses`, `res_violated`                                                      |
 | `Switch`                                    | `res_currents`, `res_powers`, `res_potentials`, `res_voltages`                                                                                          |
 | `ImpedanceLoad`, `CurrentLoad`, `PowerLoad` | `res_currents`, `res_powers`, `res_potentials`, `res_voltages`, `res_flexible_powers`&#8270;                                                            |
 | `VoltageSource`                             | `res_currents`, `res_powers`, `res_potentials`, `res_voltages`                                                                                          |
