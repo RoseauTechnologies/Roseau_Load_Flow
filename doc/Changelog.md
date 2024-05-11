@@ -19,6 +19,7 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`218` Add `Transformer.res_power_losses` to get the total power losses in a transformer.
 - {gh-pr}`217` Add an ID override to `TransformerParameters.from_catalogue` similar to
   `LineParameters.from_catalogue`.
 - {gh-issue}`216` {gh-pr}`217` **BREAKING CHANGE**: Rename the `id` parameter of `TransformerParameters`

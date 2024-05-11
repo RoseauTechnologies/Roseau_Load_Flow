@@ -8,7 +8,7 @@ from roseau.load_flow.models.branches import AbstractBranch
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.transformers.parameters import TransformerParameters
 from roseau.load_flow.typing import Id, JsonDict
-from roseau.load_flow.units import Q_
+from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow_engine.cy_engine import (
     CyCenterTransformer,
     CySingleTransformer,
@@ -295,6 +295,13 @@ class Transformer(AbstractBranch):
             )
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
+
+    @property
+    @ureg_wraps("VA", (None,))
+    def res_power_losses(self) -> Q_[complex]:
+        """Get the total power losses in the transformer (in VA)."""
+        powers1, powers2 = self._res_powers_getter(warning=True)
+        return sum(powers1) + sum(powers2)
 
     @property
     def res_violated(self) -> bool | None:
