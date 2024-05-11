@@ -28,6 +28,14 @@ Transformers are modeled with the following parameters:
   parameter is called `ulv` in the code.
 - $S_{\mathrm{nom.}}$: the nominal power of the transformer (in VA). This parameter is called `sn`
   in the code.
+- $Z_2$: the series impedance located at the secondary side of the transformer. It represents
+  non-ideal transformer losses due to winding resistance and leakage reactance.
+- $Y_m$: the magnetizing admittance located at the primary side of the transformer. It represents
+  non-ideal transformer losses due to core magnetizing inductance and iron losses.
+
+$Z_2$ and $Y_m$ parameters come from open-circuit and short-circuit tests. They can be obtained
+using the following tests results:
+
 - $i_0$: the current during open-circuit test (in %). This parameter is called `i0` in the code.
 - $P_0$: the losses during open-circuit test (in W). This parameter is called `p0` in the code.
 - $P_{\mathrm{sc}}$: the losses during short-circuit test (in W). This parameter is called `psc`
@@ -38,10 +46,6 @@ Transformers are modeled with the following parameters:
 For three-phase transformers, the windings configuration is also required. See the dedicated page
 of [three-phase transformers](Three_Phase_Transformer.md) for more details.
 
-These parameters come from open-circuit and short-circuit tests. Internally, these parameters are
-converted into a series impedance $\underline{Z_2}$ and the magnetizing admittance
-$\underline{Y_{\mathrm{m}}}$.
-
 First, we define the following quantities:
 
 - $i_{1,\mathrm{nom.}}=\dfrac{S_{\mathrm{nom.}}}{U_{1,\mathrm{nom.}}}$: the nominal current of the
@@ -49,7 +53,7 @@ First, we define the following quantities:
 - $i_{2,\mathrm{nom.}}=\dfrac{S_{\mathrm{nom.}}}{U_{2,\mathrm{nom.}}}$: the nominal current of the
   winding on the secondary side of the transformer.
 
-### Off-load test
+### Open-circuit test
 
 We note $P_0$ the losses and $i_1^0$ the current in the primary winding of the transformer during
 this test. The following values can be computed:
@@ -125,6 +129,17 @@ single_phase_transformer_parameters = (
         vsc=Q_(4, "%"),
     )
 )
+# Alternatively, if you have z2 and ym already:
+# single_phase_transformer_parameters = TransformerParameters(
+#     id="single_phase_transformer_parameters",
+#     type="single",
+#     uhv=Q_(20, "kV"),
+#     ulv=Q_(400, "V"),
+#     sn=Q_(160, "kVA"),
+#     z2=Q_(0.0125+0.038j, "ohm"),
+#     ym=Q_(7.5e-7-5.5e-6j, "S"),
+# )
+
 
 # The transformer parameters for a three-phase transformer
 three_phase_transformer_parameters = (

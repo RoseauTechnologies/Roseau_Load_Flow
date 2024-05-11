@@ -212,7 +212,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
     @deprecated(
         "The to_zyk method of TransformerParameters is deprecated. The parameters"
         "`z2`, `ym`, `k`, and `orientation` are now accessible on the object directly",
-        category=DeprecationWarning,
+        category=FutureWarning,
     )
     @ureg_wraps(("ohm", "S", "", None), (None,))
     def to_zyk(self) -> tuple[Q_[complex], Q_[complex], Q_[float], float]:
