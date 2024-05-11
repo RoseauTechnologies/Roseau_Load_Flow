@@ -859,7 +859,8 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
 
             id:
                 A unique ID for the created line parameters object (optional). If ``None``
-                (default), the id of the created object will be its name in the catalogue.
+                (default), the id of the created object will be its name in the catalogue. Note
+                that this parameter is not used in the data filtering.
 
         Returns:
             The created line parameters.

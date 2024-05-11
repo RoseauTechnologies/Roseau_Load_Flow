@@ -624,7 +624,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         return catalogue_data, ", ".join(query_msg_list)
 
     @classmethod
-    @ureg_wraps(None, (None, None, None, None, None, None, "VA", "V", "V"))
+    @ureg_wraps(None, (None, None, None, None, None, None, "VA", "V", "V", None))
     def from_catalogue(
         cls,
         name: str | re.Pattern[str] | None = None,
@@ -635,6 +635,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         sn: float | Q_[float] | None = None,
         uhv: float | Q_[float] | None = None,
         ulv: float | Q_[float] | None = None,
+        id: Id | None = None,
     ) -> Self:
         """Build a transformer parameters from one in the catalogue.
 
@@ -663,6 +664,11 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             ulv:
                 The secondary side voltage of the transformer to get.
 
+            id:
+                A unique ID for the created line parameters object (optional). If ``None``
+                (default), the id of the created object will be its name in the catalogue. Note that
+                this parameter is not used in the data filtering.
+
         Returns:
             The selected transformer. If several transformers fitting the filters are in the catalogue, an error is
             raised.
@@ -680,14 +686,21 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             raise_if_not_found=True,
         )
 
-        cls._assert_one_found(
-            found_data=catalogue_data["name"].tolist(), display_name="transformers", query_info=query_info
-        )
+        try:
+            cls._assert_one_found(
+                found_data=catalogue_data["name"].tolist(), display_name="transformers", query_info=query_info
+            )
+        except RoseauLoadFlowException as e:
+            if name is None and id is not None:
+                e.msg += " Did you mean to filter by name instead of id?"
+            raise
 
         # A single one has been chosen
         idx = catalogue_data.index[0]
+        if id is None:
+            id = catalogue_data.at[idx, "name"]
         return cls.from_open_and_short_circuit_tests(
-            id=catalogue_data.at[idx, "name"],
+            id=id,
             type=catalogue_data.at[idx, "type"],
             uhv=catalogue_data.at[idx, "uhv"],
             ulv=catalogue_data.at[idx, "ulv"],
