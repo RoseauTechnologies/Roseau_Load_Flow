@@ -80,7 +80,7 @@ def test_connect_and_disconnect():
     load_bus2 = Bus(id="load_bus2", phases="abcn")
     ground2 = Ground("ground2")
     ground2.connect(bus=load_bus2)
-    tp = TransformerParameters.from_catalogue(id="SE_Minera_A0Ak_50kVA")
+    tp = TransformerParameters.from_catalogue(name="SE_Minera_A0Ak_50kVA")
     Transformer(id="transfo", bus1=load_bus, bus2=load_bus2, parameters=tp)
     with pytest.raises(RoseauLoadFlowException) as e:
         en._check_validity(constructed=False)

@@ -357,12 +357,12 @@ def test_catalogue_data():
         "Don't forget to delete files that are useless too."
     )
 
-    # Check that the id is unique
-    assert catalogue_data["id"].is_unique, error_message
+    # Check that the name is unique
+    assert catalogue_data["name"].is_unique, error_message
 
-    catalogue_data.set_index("id", inplace=True)
+    catalogue_data.set_index("name", inplace=True)
     for idx in catalogue_data.index:
-        tp = TransformerParameters.from_catalogue(id=idx)
+        tp = TransformerParameters.from_catalogue(name=idx)
 
         # The entry of the catalogue has been found
         assert tp.id in catalogue_data.index, error_message
@@ -386,7 +386,7 @@ def test_catalogue_data():
 
 def test_from_catalogue():
     # Unknown strings
-    for field_name in ("id", "manufacturer", "range", "efficiency", "type"):
+    for field_name in ("name", "manufacturer", "range", "efficiency", "type"):
         # String
         with pytest.raises(RoseauLoadFlowException) as e:
             TransformerParameters.from_catalogue(**{field_name: "unknown"})
@@ -436,7 +436,7 @@ def test_get_catalogue():
 
     # Filter on a single attribute
     for field_name, value, expected_size in (
-        ("id", "SE_Minera_A0Ak_50kVA", 1),
+        ("name", "SE_Minera_A0Ak_50kVA", 1),
         ("manufacturer", "SE", 148),
         ("range", r"min.*", 67),
         ("efficiency", "c0", 29),
@@ -450,7 +450,7 @@ def test_get_catalogue():
 
     # Filter on two attributes
     for field_name, value, expected_size in (
-        ("id", "SE_Minera_A0Ak_50kVA", 1),
+        ("name", "SE_Minera_A0Ak_50kVA", 1),
         ("range", "minera", 67),
         ("efficiency", "c0", 29),
         ("type", r"^d.*11$", 144),
@@ -463,7 +463,7 @@ def test_get_catalogue():
 
     # Filter on three attributes
     for field_name, value, expected_size in (
-        ("id", "se_VEGETA_C0BK_3150kva", 1),
+        ("name", "se_VEGETA_C0BK_3150kva", 1),
         ("efficiency", r"c0[abc]k", 15),
         ("type", "dyn", 41),
         ("sn", Q_(160, "kVA"), 3),
