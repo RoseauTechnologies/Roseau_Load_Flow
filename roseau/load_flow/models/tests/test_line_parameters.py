@@ -446,8 +446,14 @@ def test_from_catalogue():
     assert lp.insulator_type == InsulatorType.UNKNOWN
     assert lp.section.m == 150
 
+    # Success, overridden ID
     lp = LineParameters.from_catalogue(name="U_AL_150", id="lp1")
     assert lp.id == "lp1"
+
+    # Success, single-phase line
+    lp = LineParameters.from_catalogue(name="U_AL_150", nb_phases=2)
+    assert lp.z_line.shape == (2, 2)
+    assert lp.y_shunt.shape == (2, 2)
 
 
 def test_get_catalogue():
