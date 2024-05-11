@@ -366,7 +366,6 @@ def v0_to_v1_converter(data: JsonDict) -> JsonDict:  # noqa: C901
         lines_params[lp["id"]] = lp
     for transformer_type in data["transformer_types"]:
         tp = {
-            "id": transformer_type["name"],
             "sn": transformer_type["sn"],
             "uhv": transformer_type["uhv"],
             "ulv": transformer_type["ulv"],
@@ -376,6 +375,10 @@ def v0_to_v1_converter(data: JsonDict) -> JsonDict:  # noqa: C901
             "vsc": transformer_type["vsc"],
             "type": transformer_type["type"],
         }
+        z2, ym = TransformerParameters._compute_zy(**tp)
+        tp["id"] = transformer_type["name"]
+        tp["z2"] = [z2.real, z2.imag]
+        tp["ym"] = [ym.real, ym.imag]
         transformers_params[tp["id"]] = tp
     for old_branch in data["branches"]:
         branch_id = old_branch["id"]

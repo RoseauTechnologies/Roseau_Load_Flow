@@ -190,7 +190,7 @@ def network_from_dgs(  # noqa: C901
             windings = f"{typ_tr.at[idx, 'tr2cn_h']}{typ_tr.at[idx, 'tr2cn_l']}{typ_tr.at[idx, 'nt2ag']}"
 
             # Generate transformer parameters
-            transformers_params_dict[idx] = TransformerParameters(
+            transformers_params_dict[idx] = TransformerParameters.from_open_and_short_circuit_tests(
                 id=name, type=windings, uhv=uhv, ulv=ulv, sn=sn, p0=p0, i0=i0, psc=psc, vsc=vsc
             )
             transformers_tap[idx] = typ_tr.at[idx, "dutap"]

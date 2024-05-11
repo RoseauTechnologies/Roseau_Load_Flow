@@ -331,7 +331,7 @@ def test_bad_networks():
 
     # No potential reference
     bus3 = Bus("bus3", phases="abcn")
-    tp = TransformerParameters(
+    tp = TransformerParameters.from_open_and_short_circuit_tests(
         "t", type="Dyn11", uhv=20000, ulv=400, sn=160 * 1e3, p0=460, i0=2.3 / 100, psc=2350, vsc=4 / 100
     )
     t = Transformer("transfo", bus2, bus3, parameters=tp)
@@ -1950,7 +1950,7 @@ def test_propagate_potentials_center_transformers():
     bus1 = Bus(id="bus1", phases="ab")
     PotentialRef(id="pref", element=bus1)
     VoltageSource(id="vs", bus=bus1, voltages=[20000])
-    tp = TransformerParameters(
+    tp = TransformerParameters.from_open_and_short_circuit_tests(
         id="test", type="center", sn=160000, uhv=20000.0, ulv=400.0, i0=0.023, p0=460.0, psc=2350.0, vsc=0.04
     )
     bus2 = Bus(id="bus2", phases="abn")
