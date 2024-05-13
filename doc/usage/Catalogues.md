@@ -496,7 +496,26 @@ LineParameters(id='U_AL_240')
 ```
 
 As you can see, the `id` of the created instance is the same as the name in the catalogue. You can
-override this behaviour by passing the `id` parameter to `from_catalogue`.
+override this behaviour by passing the `id` parameter to `from_catalogue`:
+
+```pycon
+>>> LineParameters.from_catalogue(name="U_AL_240", id="lp-special")
+LineParameters(id='lp-special')
+```
+
+Line parameters created from the catalogue are 3-phase without a neutral by default. It is possible
+to create line parameters with different numbers of phases using the `nb_phases` parameter.
+
+```pycon
+>>> LineParameters.from_catalogue(name="U_AL_240").z_line.shape
+(3, 3)
+>>> # For 3-phase with neutral lines
+... LineParameters.from_catalogue(name="U_AL_240", nb_phases=4).z_line.shape
+(4, 4)
+>>> # For single-phase lines
+... LineParameters.from_catalogue(name="U_AL_240", nb_phases=2).z_line.shape
+(2, 2)
+```
 
 In case no or several results match the parameters, an error is raised:
 

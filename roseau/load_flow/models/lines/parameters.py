@@ -826,7 +826,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         return catalogue_data, ", ".join(query_msg_list)
 
     @classmethod
-    @ureg_wraps(None, (None, None, None, None, None, "mm²", None))
+    @ureg_wraps(None, (None, None, None, None, None, "mm²", None, None))
     def from_catalogue(
         cls,
         name: str | re.Pattern[str] | None = None,
@@ -835,6 +835,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         insulator_type: str | None = None,
         section: float | Q_[float] | None = None,
         id: Id | None = None,
+        nb_phases: int = 3,
     ) -> Self:
         """Create line parameters from a catalogue.
 
@@ -862,9 +863,17 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
                 (default), the id of the created object will be its name in the catalogue. Note
                 that this parameter is not used in the data filtering.
 
+            nb_phases:
+                The number of phases of the line between 1 and 4, defaults to 3. It represents the
+                size of the ``z_line`` and ``y_shunt`` matrices.
+
         Returns:
             The created line parameters.
         """
+        if nb_phases not in {1, 2, 3, 4}:
+            msg = f"Expected nb_phases to be one of (1, 2, 3, 4), got {nb_phases!r} instead."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
         catalogue_data, query_info = cls._get_catalogue(
             name=name,
             line_type=line_type,
@@ -894,8 +903,8 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         max_current = catalogue_data.at[idx, "maximal_current"]
         if pd.isna(max_current):
             max_current = None
-        z_line = (r + x * 1j) * np.eye(3, dtype=np.complex128)
-        y_shunt = (b * 1j) * np.eye(3, dtype=np.complex128)
+        z_line = (r + x * 1j) * np.eye(nb_phases, dtype=np.complex128)
+        y_shunt = (b * 1j) * np.eye(nb_phases, dtype=np.complex128)
         if id is None:
             id = name
         return cls(

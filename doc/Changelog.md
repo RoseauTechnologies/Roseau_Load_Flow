@@ -19,6 +19,8 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-issue}`210` {gh-pr}`219` Add a parameter to `LineParameters.from_catalogue` to choose the number
+  of phases of the created line parameters object.
 - {gh-pr}`218` Add `Transformer.res_power_losses` to get the total power losses in a transformer.
 - {gh-pr}`217` Add an ID override to `TransformerParameters.from_catalogue` similar to
   `LineParameters.from_catalogue`.
