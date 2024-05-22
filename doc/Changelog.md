@@ -19,6 +19,9 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-issue}`220` {gh-pr}`221` Add `LineParameters.from_open_dss` and `TransformerParameters.from_open_dss` methods to
+  easily import OpenDSS lines and transformer models into Roseau Load Flow. More information is
+  available in the documentation of these methods.
 - {gh-issue}`210` {gh-pr}`219` Add a parameter to `LineParameters.from_catalogue` to choose the number
   of phases of the created line parameters object.
 - {gh-pr}`218` Add `Transformer.res_power_losses` to get the total power losses in a transformer.

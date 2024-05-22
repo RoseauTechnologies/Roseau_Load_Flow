@@ -511,3 +511,68 @@ def test_max_power():
 
     tp.max_power = Q_(65, "kVA")
     assert tp.max_power == Q_(65_000, "VA")
+
+
+def test_from_open_dss():
+    """https://sourceforge.net/p/electricdss/discussion/beginners/thread/742e6c9665/
+
+    Main input data for transformer:
+
+    - Type: two windings transformer
+    - Phases numbers: 3
+    - Apparent rated power: 1800 kVA
+    - Frequency = 50 Hz
+    - Rated line voltage in = 33 kV
+    - Rated line voltage out = 0.405 kV
+    - Short circuit voltage: 6%
+    - Short circuit losses: 0.902%
+    - No load current: 0.3%
+    - No load losses: 0.136%
+    - Connections: DYn
+    - Group No: 11
+    - Neutral: distributed at side out (low voltage level)
+    - Impedance to earth in = 1 MΩ (insulated)
+    - Impedance to earth out = 0 Ω
+    - Impedance to earth common = 5 Ω "
+
+    OpenDss Model::
+
+        New Transformer.Isacco phases=3 windings=2 XHL=6
+        ~ wdg=1 bus=MVbusname kV=33 kVA=1800 conn=delta
+        ~ Wdg=2 bus=LVBusname.1.2.3.4 kV=0.405 kVA=1800 conn=wye
+        ~ %Loadloss=0.902 %imag=0.3 %noload=.136  LeadLag=Euro
+
+        // Neutral reactor
+        New Reactor.5-ohm phases=1 bus=LVBusname.4  R=0 X=5
+    """
+    sn = Q_(1800, "kVA")
+    tp_rlf = TransformerParameters.from_open_and_short_circuit_tests(
+        id="tp-test",
+        type="Dyn11",
+        uhv=Q_(33, "kV"),
+        ulv=Q_(0.405, "kV"),
+        sn=sn,
+        p0=Q_(0.136, "percent") * sn,
+        i0=Q_(0.3, "percent"),
+        psc=Q_(0.902, "percent") * sn,
+        vsc=Q_(6, "percent"),
+    )
+
+    tp_dss = TransformerParameters.from_open_dss(
+        id="tp-test",
+        conns=("delta", "wye"),
+        kvs=(33, 0.405),
+        kvas=1800,
+        leadlag="euro",
+        xhl=6,
+        loadloss=0.902,
+        noloadloss=0.136,
+        imag=0.3,
+    )
+    assert tp_rlf.uhv == tp_dss.uhv
+    assert tp_rlf.ulv == tp_dss.ulv
+    assert tp_rlf.sn == tp_dss.sn
+    assert tp_rlf.k == tp_dss.k
+    assert tp_rlf.orientation == tp_dss.orientation
+    np.testing.assert_allclose(tp_rlf.z2.m, tp_dss.z2.m)
+    np.testing.assert_allclose(tp_rlf.ym.m, tp_dss.ym.m)

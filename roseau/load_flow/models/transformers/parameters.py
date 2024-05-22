@@ -10,7 +10,7 @@ import regex
 from typing_extensions import Self, deprecated
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
-from roseau.load_flow.typing import Id, JsonDict
+from roseau.load_flow.typing import FloatArrayLike1D, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow.utils import CatalogueMixin, Identifiable, JsonMixin
 
@@ -241,14 +241,19 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
 
         # Off-load test
         # Iron losses resistance (Ohm)
-        r_iron = uhv**2 / p0
+        if p0 > 0:
+            r_iron = uhv**2 / p0
+            y_iron = 1 / r_iron
+        else:  # no iron losses
+            y_iron = 0
         # Magnetizing inductance (Henry) * omega (rad/s)
         s0 = i0 * sn
         if s0 > p0:
             lm_omega = uhv**2 / np.sqrt(s0**2 - p0**2)
-            ym = 1 / r_iron + 1 / (1j * lm_omega)
-        else:
-            ym = 1 / r_iron
+            y_lm = 1 / (1j * lm_omega)
+        else:  # no magnetizing reactance
+            y_lm = 0j
+        ym = y_iron + y_lm
 
         # Short-circuit test
         r2 = psc * (ulv / sn) ** 2
@@ -261,6 +266,181 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             z2 *= 3
 
         return z2, ym
+
+    @classmethod
+    @ureg_wraps(
+        None, (None, None, None, "kV", "kVA", None, "percent", "percent", "percent", "percent", "percent", "kVA")
+    )
+    def from_open_dss(
+        cls,
+        id: Id,
+        *,
+        conns: tuple[str, str],
+        kvs: tuple[float, float] | FloatArrayLike1D,
+        kvas: float | Q_[float] | tuple[float, float] | FloatArrayLike1D,
+        leadlag: str,
+        xhl: float,
+        loadloss: float | Q_[float] | None = None,
+        noloadloss: float | Q_[float] = 0,
+        imag: float | Q_[float] = 0,
+        rs: float | Q_[float] | tuple[float, float] | FloatArrayLike1D | None = None,
+        normhkva: float | Q_[float] | None = None,
+    ) -> Self:
+        """Create a transformer parameters object from OpenDSS "Transformer" data.
+
+        Note that only two-winding three-phase transformers are currently supported.
+
+        Args:
+            id:
+                The unique ID of the transformer parameters.
+
+            conns:
+                OpenDSS parameter: `Conns`. Connection of the windings. One of {wye | ln} for wye
+                connected banks or {delta | ll} for delta (line-line) connected banks.
+
+            kvs:
+                OpenDSS parameter: `KVs`. Rated phase-to-phase voltage of the windings, kV. This is
+                a sequence of two values equivalent to (Uhv, Ulv).
+
+            kvas:
+                OpenDSS parameter: `KVAs`. Base kVA rating (OA rating) of the windings. Note that
+                only one value is accepted as only two-winding transformers are accepted.
+
+            xhl:
+                OpenDSS parameter: `XHL`. Percent reactance high-to-low (winding 1 to winding 2).
+
+            loadloss:
+                OpenDSS parameter: `%Loadloss`. Percent Losses at rated load. Causes the %r values
+                (cf. the `%Rs` parameter) to be set for windings 1 and 2.
+
+            noloadloss:
+                OpenDSS parameter: `%Noloadloss`. Percent No load losses at nominal voltage. Default
+                is 0. Causes a resistive branch to be added in parallel with the magnetizing inductance.
+
+            imag:
+                OpenDSS parameter: `%Imag`. Percent magnetizing current. Default is 0. An inductance
+                is used to represent the magnetizing current. This is embedded within the transformer
+                model as the primitive Y matrix is being computed.
+
+            leadlag:
+                OpenDSS parameter: `LeadLag`. {Lead | Lag | ANSI | Euro} Designation in mixed
+                Delta-wye connections signifying the relationship between HV to LV winding.
+                Default is ANSI 30 deg lag, e.g., Dy1 of Yd1 vector group. To get typical European Dy11
+                connection, specify either "lead" or "Euro".
+
+            rs:
+                OpenDSS parameter: `%Rs`. [OPTIONAL] Percent resistance of the windings on the rated
+                kVA base. Only required if `loadloss` is not passed. Note that if `rs` is used along
+                with `loadloss`, they have to have equivalent values. For a two-winding transformer,
+                `%rs=[0.1, 0.1]` is equivalent to `%loadloss=0.2`.
+
+            normhkva:
+                OpenDSS parameter: `NormHKVA`. Normal maximum kVA rating for H winding (1). Usually
+                100 - 110% of maximum nameplate rating.
+                This value is passed to `max_current` and used for violation checks.
+
+        Returns:
+            The corresponding transformer parameters object.
+
+        Example usage::
+
+            # DSS command: `DSSText.Command = "New transformer.LVTR Buses=[sourcebus, A.1.2.3] Conns=[delta wye] KVs=[11, 0.4] KVAs=[250 250] %Rs=0.00 xhl=2.5 %loadloss=0 "`
+            tp = rlf.TransformerParameters.from_open_dss(
+                id="dss-tp",
+                conns=("delta", "wye"),
+                kvs=(11, 0.4),
+                kvas=(250, 250),  # alternatively pass a scalar `kvas=250`
+                leadlag="euro",  # THE ONLY OPENDSS MODEL WE CURRENTLY SUPPORT
+                xhl=2.5,
+                loadloss=0,
+                noloadloss=0,  # default value used in OpenDSS
+                imag=0,  # default value used in OpenDSS
+                rs=0,  # redundant with `loadloss=0`
+            )
+        """
+        # Windings
+        w1, w2 = (c.lower() for c in conns)
+        wye_names = ("wye", "ln")
+        delta_names = ("delta", "ll")
+        if w1 in wye_names:
+            w1 = "Y"
+        elif w1 in delta_names:
+            w1 = "D"
+        else:
+            msg = f"Got unknown winding (1) connection {conns[0]!r}, expected one of ('wye', 'ln', 'delta', 'll')."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS)
+        if w2 in wye_names:
+            w2 = "yn"
+        elif w2 in delta_names:
+            w2 = "d"
+        else:
+            msg = f"Got unknown winding (2) connection {conns[1]!r}, expected one of ('wye', 'ln', 'delta', 'll')."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS)
+
+        # Lead lag
+        leadlag_l = leadlag.lower()
+        if (w1 == "D" and w2[0] == "y") or (w1[0] == "Y" and w2 == "d"):
+            if leadlag_l in ("lead", "euro"):
+                phase_displacement = 11
+            elif leadlag_l in ("lag", "ansi"):
+                msg = f"{w1}{w2}1 transformers are not supported yet, pass `leadlag='euro'` to create a {w1}{w2}11 instead."
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS)
+            else:
+                msg = f"Got unknown leadlag value {leadlag!r}, expected one of ('lead', 'lag', 'ansi', 'euro')"
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS)
+        else:
+            phase_displacement = 0  # TODO is leadlag used with Dd or Yy transformers?
+
+        # Type: from winding and lead-lag parameters
+        type = f"{w1}{w2}{phase_displacement}"
+
+        # High and low rated voltages
+        uhv, ulv = (u * 1000 for u in kvs)  # in Volts
+
+        # Nominal power
+        sn: float  # in Watts
+        if np.isscalar(kvas):
+            sn = kvas * 1000
+        else:
+            kvs_uniq = np.unique(kvas)
+            if len(kvs_uniq) > 1:
+                logger.warning(
+                    f"Only one base kVA rating is expected, got {kvs_uniq!r}. Only the first one will be used"
+                )
+            sn = kvs_uniq[0] * 1000
+
+        # Z2 and Ym
+        rs_array = [rs, rs] if np.isscalar(rs) else rs
+        if loadloss is None:
+            if rs is None:
+                raise TypeError("from_open_dss() missing 1 required keyword argument: 'loadloss' or 'rs'")
+            else:
+                r1, r2 = rs_array
+                loadloss = r1 + r2
+        elif not np.isscalar(loadloss):
+            msg = f"%Loadloss must be a scalar, got {loadloss!r}"
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DSS_BAD_LOSS)
+        elif rs is not None and not np.isclose(sum(rs_array), loadloss):
+            msg = f"The values of rs={rs!r} are not equivalent to the value of loadloss={loadloss!r}"
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DSS_BAD_LOSS)
+
+        p0 = (noloadloss / 100) * sn
+        i0 = imag / 100
+        psc = (loadloss / 100) * sn
+        vsc = xhl / 100
+        z2, ym = cls._compute_zy(type=type, uhv=uhv, ulv=ulv, sn=sn, p0=p0, i0=i0, psc=psc, vsc=vsc)
+
+        # Max power
+        max_power = normhkva * 1000 if normhkva is not None else None
+
+        obj = cls(id=id, type=type, uhv=uhv, ulv=ulv, sn=sn, z2=z2, ym=ym, max_power=max_power)
+        return obj
 
     #
     # Open and short circuit tests
@@ -279,7 +459,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         psc: float | Q_[float],
         vsc: float | Q_[float],
         max_power: float | Q_[float] | None = None,
-    ) -> "TransformerParameters":
+    ) -> Self:
         """Create a TransformerParameters object using the results of open-circuit and short-circuit tests.
 
         Args:

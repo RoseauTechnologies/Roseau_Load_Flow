@@ -53,7 +53,9 @@ First, we define the following quantities:
 - $i_{2,\mathrm{nom.}}=\dfrac{S_{\mathrm{nom.}}}{U_{2,\mathrm{nom.}}}$: the nominal current of the
   winding on the secondary side of the transformer.
 
-### Open-circuit test
+### Open-circuit and short-circuit tests
+
+#### Open-circuit test
 
 We note $P_0$ the losses and $i_1^0$ the current in the primary winding of the transformer during
 this test. The following values can be computed:
@@ -79,7 +81,7 @@ Then, $\underline{Y_{\mathrm{m}}}$ can be deduced:
 \right.
 ```
 
-### Short-circuit test
+#### Short-circuit test
 
 We note $P_{\mathrm{sc}}$ the losses, $U_{2,\mathrm{sc}}$ the voltage on LV side during this test. The following
 values can be computed:
@@ -100,6 +102,13 @@ Then, $\underline{Z_2}$ can be deduced:
 ```{math}
 \underline{Z_2} = R_2+j\cdot X_2
 ```
+
+### Import from OpenDSS
+
+Transformer parameters can also be created using an OpenDSS transformer parameters. Only two-winding
+three-phase transformers are currently supported. For more information and an example, see the
+{meth}`TransformerParameters.from_open_dss() <roseau.load_flow.TransformerParameters.from_open_dss>`
+method.
 
 ## Usage
 
