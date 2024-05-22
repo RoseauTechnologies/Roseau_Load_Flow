@@ -126,28 +126,26 @@ def network_from_dgs(  # noqa: C901
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DGS_BAD_PHASE_NUMBER)
 
-            with LineParameters._allow_off_diag_resistance():
-                lp = LineParameters.from_sym(
-                    type_id,
-                    z0=complex(typ_lne.at[type_id, "rline0"], typ_lne.at[type_id, "xline0"]),
-                    z1=complex(typ_lne.at[type_id, "rline"], typ_lne.at[type_id, "xline"]),
-                    y0=Q_(complex(typ_lne.at[type_id, "gline0"], typ_lne.at[type_id, "bline0"]), "uS/km"),
-                    y1=Q_(complex(typ_lne.at[type_id, "gline"], typ_lne.at[type_id, "bline"]), "uS/km"),
-                    zn=complex(typ_lne.at[type_id, "rnline"], typ_lne.at[type_id, "xnline"]),
-                    xpn=typ_lne.at[type_id, "xpnline"],
-                    bn=Q_(typ_lne.at[type_id, "bnline"], "uS/km"),
-                    bpn=Q_(typ_lne.at[type_id, "bpnline"], "uS/km"),
-                )
+            lp = LineParameters.from_sym(
+                type_id,
+                z0=complex(typ_lne.at[type_id, "rline0"], typ_lne.at[type_id, "xline0"]),
+                z1=complex(typ_lne.at[type_id, "rline"], typ_lne.at[type_id, "xline"]),
+                y0=Q_(complex(typ_lne.at[type_id, "gline0"], typ_lne.at[type_id, "bline0"]), "uS/km"),
+                y1=Q_(complex(typ_lne.at[type_id, "gline"], typ_lne.at[type_id, "bline"]), "uS/km"),
+                zn=complex(typ_lne.at[type_id, "rnline"], typ_lne.at[type_id, "xnline"]),
+                xpn=typ_lne.at[type_id, "xpnline"],
+                bn=Q_(typ_lne.at[type_id, "bnline"], "uS/km"),
+                bpn=Q_(typ_lne.at[type_id, "bpnline"], "uS/km"),
+            )
 
             actual_shape = lp.z_line.shape[0]
             if actual_shape > n:  # 4x4 matrix while a 3x3 matrix was expected
                 # Extract the 3x3 underlying matrix
-                with LineParameters._allow_off_diag_resistance():
-                    lp = LineParameters(
-                        id=lp.id,
-                        z_line=lp.z_line[:actual_shape, :actual_shape],
-                        y_shunt=lp.y_shunt[:actual_shape, :actual_shape] if lp.with_shunt else None,
-                    )
+                lp = LineParameters(
+                    id=lp.id,
+                    z_line=lp.z_line[:actual_shape, :actual_shape],
+                    y_shunt=lp.y_shunt[:actual_shape, :actual_shape] if lp.with_shunt else None,
+                )
             elif actual_shape == n:
                 # Everything ok
                 pass

@@ -1,8 +1,6 @@
-import contextlib
 import logging
 import re
 import warnings
-from collections.abc import Iterator
 from importlib import resources
 from pathlib import Path
 from typing import NoReturn
@@ -54,7 +52,6 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
     _material_re = "|".join(x.code() for x in ConductorType)
     _section_re = r"[1-9][0-9]*"
     _REGEXP_LINE_TYPE_NAME = re.compile(rf"^({_type_re})_({_material_re})_{_section_re}$", flags=re.IGNORECASE)
-    _off_diag_resistance_allowed = False
 
     @ureg_wraps(None, (None, None, "ohm/km", "S/km", "A", None, None, None, "mm²"))
     def __init__(
@@ -751,8 +748,8 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         r0: float | Q_[float],
         x1: float | Q_[float],
         x0: float | Q_[float],
-        c1: float | Q_[float],
-        c0: float | Q_[float],
+        c1: float | Q_[float] = 3.4,  # default value used in OpenDSS
+        c0: float | Q_[float] = 1.6,  # default value used in OpenDSS
         basefreq: float | Q_[float] = F,
         normamps: float | Q_[float] | None = None,
         linetype: str | None = None,
@@ -875,15 +872,10 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
                 line_type = None
 
         # Create the RLF line parameters with off-diagonal resistance allowed
-        with cls._allow_off_diag_resistance():
-            lp = cls(
-                id=id,
-                z_line=z,
-                y_shunt=yc,
-                max_current=normamps,
-                line_type=line_type,
-            )
-        return lp
+        with warnings.catch_warnings():
+            warnings.filterwarnings(action="ignore", message=r".* off-diagonal elements ", category=UserWarning)
+            obj = cls(id=id, z_line=z, y_shunt=yc, max_current=normamps, line_type=line_type)
+        return obj
 
     #
     # Catalogue Mixin
@@ -1146,19 +1138,16 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         line_type = LineType(data["line_type"]) if "line_type" in data else None
         conductor_type = ConductorType(data["conductor_type"]) if "conductor_type" in data else None
         insulator_type = InsulatorType(data["insulator_type"]) if "insulator_type" in data else None
-        off_diag_resistance_allowed: bool = data.get("off_diagonal_resistance_allowed", False)
-        with cls._allow_off_diag_resistance() if off_diag_resistance_allowed else contextlib.nullcontext():
-            obj = cls(
-                id=data["id"],
-                z_line=z_line,
-                y_shunt=y_shunt,
-                max_current=data.get("max_current"),
-                line_type=line_type,
-                conductor_type=conductor_type,
-                insulator_type=insulator_type,
-                section=data.get("section"),
-            )
-            # obj._off_diag_resistance_allowed = off_diag_resistance_allowed
+        obj = cls(
+            id=data["id"],
+            z_line=z_line,
+            y_shunt=y_shunt,
+            max_current=data.get("max_current"),
+            line_type=line_type,
+            conductor_type=conductor_type,
+            insulator_type=insulator_type,
+            section=data.get("section"),
+        )
         return obj
 
     def _to_dict(self, include_results: bool) -> JsonDict:
@@ -1175,8 +1164,6 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             res["insulator_type"] = self._insulator_type.name
         if self._section is not None:
             res["section"] = self._section
-        if self._off_diag_resistance_allowed:
-            res["off_diagonal_resistance_allowed"] = True
         for k, v in res.items():
             if isinstance(v, np.integer):
                 res[k] = int(v)
@@ -1214,25 +1201,14 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
                 continue
             # Check that the off-diagonal element have a zero real part
             off_diagonal_elements = matrix[~np.eye(*matrix.shape, dtype=np.bool_)]
-            if not self._off_diag_resistance_allowed and not np.allclose(off_diagonal_elements.real, 0):
+            if not np.allclose(off_diagonal_elements.real, 0):
                 msg = (
                     f"The {matrix_name} matrix of line type {self.id!r} has off-diagonal elements "
                     f"with a non-zero real part."
                 )
-                warnings.warn(msg, category=UserWarning, stacklevel=3)
+                warnings.warn(msg, category=UserWarning, stacklevel=4)
             # Check that the real coefficients are non-negative
             if (matrix.real < 0.0).any():
                 msg = f"The {matrix_name} matrix of line type {self.id!r} has coefficients with negative real part."
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=code)
-
-    @classmethod
-    @contextlib.contextmanager
-    def _allow_off_diag_resistance(cls) -> Iterator[None]:
-        """Lines imported from PwF or OpenDSS usually have non-zero off diagonal resistances."""
-        old_off_diag_resistance_allowed = cls._off_diag_resistance_allowed
-        try:
-            cls._off_diag_resistance_allowed = True
-            yield
-        finally:
-            cls._off_diag_resistance_allowed = old_off_diag_resistance_allowed
