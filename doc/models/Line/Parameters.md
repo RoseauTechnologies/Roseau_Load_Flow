@@ -564,6 +564,12 @@ array(
 ) <Unit('microsiemens / kilometer')>
 ```
 
+## Import from OpenDSS
+
+Line parameters can also be created using an OpenDSS line code parameters using the
+`LineParameters.from_open_dss` class method. For more information and usage examples,
+see the {meth}`method's documentation <roseau.load_flow.LineParameters.from_open_dss>`.
+
 ## Bibliography
 
 ```{bibliography}

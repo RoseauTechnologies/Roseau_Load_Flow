@@ -1,5 +1,8 @@
+import contextlib
 import logging
 import re
+import warnings
+from collections.abc import Iterator
 from importlib import resources
 from pathlib import Path
 from typing import NoReturn
@@ -22,6 +25,7 @@ from roseau.load_flow.utils import (
     TAN_D,
     CatalogueMixin,
     ConductorType,
+    F,
     Identifiable,
     InsulatorType,
     JsonMixin,
@@ -50,6 +54,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
     _material_re = "|".join(x.code() for x in ConductorType)
     _section_re = r"[1-9][0-9]*"
     _REGEXP_LINE_TYPE_NAME = re.compile(rf"^({_type_re})_({_material_re})_{_section_re}$", flags=re.IGNORECASE)
+    _off_diag_resistance_allowed = False
 
     @ureg_wraps(None, (None, None, "ohm/km", "S/km", "A", None, None, None, "mm²"))
     def __init__(
@@ -735,6 +740,151 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         y_shunt = b * 1j * np.eye(3, dtype=np.float64)  # in siemens/km
         return cls(name, z_line=z_line, y_shunt=y_shunt, max_current=max_current)
 
+    @classmethod
+    @ureg_wraps(None, (None, None, None, "ohm/km", "ohm/km", "ohm/km", "ohm/km", "nF/km", "nF/km", "Hz", "A", None))
+    def from_open_dss(
+        cls,
+        id: Id,
+        *,
+        nphases: int,
+        r1: float | Q_[float],
+        r0: float | Q_[float],
+        x1: float | Q_[float],
+        x0: float | Q_[float],
+        c1: float | Q_[float],
+        c0: float | Q_[float],
+        basefreq: float | Q_[float] = F,
+        normamps: float | Q_[float] | None = None,
+        linetype: str | None = None,
+    ) -> Self:
+        """Create a line parameters object from OpenDSS "LineCode" data.
+
+        Args:
+            id:
+                The unique ID of the line parameters.
+
+            nphases:
+                OpenDSS parameter: `NPhases`. Number of phases in the line this line code represents.
+                To create single-phase lines with a neutral pass nphases=2, for three-phase lines with
+                a neutral nphases=4, etc.
+
+            r1:
+                OpenDSS parameter: `R1`. Positive-sequence resistance in (ohm/km).
+
+            r0:
+                OpenDSS parameter: `R0`. Positive-sequence resistance in (ohm/km).
+
+            x1:
+                OpenDSS parameter: `X1`. Positive-sequence reactance in (ohm/km).
+
+            x0:
+                OpenDSS parameter: `X0`. Positive-sequence reactance in (ohm/km).
+
+            c1:
+                OpenDSS parameter: `C1`. Positive-sequence capacitance in (nF/km).
+
+            c0:
+                OpenDSS parameter: `C0`. Positive-sequence capacitance in (nF/km).
+
+            basefreq:
+                OpenDSS parameter: `BaseFreq`. Frequency at which impedances are specified (Hz).
+                Defaults to 50 Hz.
+
+            normamps:
+                OpenDSS parameter: `NormAmps`. Normal ampere limit on line (A). This is the so-called
+                Planning Limit. It may also be the value above which load will have to be dropped
+                in a contingency. Usually about 75% - 80% of the emergency (one-hour) rating.
+                This value is passed to `max_current` and used for violation checks.
+
+            linetype:
+                OpenDSS parameter: `LineType`. Code designating the type of line. Only ``"OH"``
+                (overhead) and ``"UG"`` (underground) are currently supported.
+
+        Returns:
+            The corresponding line parameters object.
+
+        Example usage::
+
+            # DSS command: `New linecode.240sq nphases=3 R1=0.127 X1=0.072 R0=0.342 X0=0.089 units=km`
+            lp = LineParameters.from_open_dss(
+                id="linecode-240sq",
+                nphases=3,  #  creates 3x3 Z,Y matrices
+                r1=Q_(0.127, "ohm/km"),
+                x1=Q_(0.072, "ohm/km"),
+                r0=Q_(0.342, "ohm/km"),
+                x0=Q_(0.089, "ohm/km"),
+                c1=Q_(3.4, "nF/km"),  # default value used in OpenDSS code
+                c0=Q_(1.6, "nF/km"),  # default value used in OpenDSS code
+            )
+
+            # DSS command: `New LineCode.16sq NPhases=1 R1=0.350, X1=0.025, R0=0.366, X0=0.025, C1=1.036, C0=0.488 Units=kft NormAmps=400`
+            lp = LineParameters.from_open_dss(
+                id="linecode-16sq",
+                nphases=1,  # creates 1x1 Z,Y matrices
+                r1=Q_(0.350, "ohm/kft"),
+                x1=Q_(0.025, "ohm/kft"),
+                r0=Q_(0.366, "ohm/kft"),
+                x0=Q_(0.025, "ohm/kft"),
+                c1=Q_(1.036, "nF/kft"),
+                c0=Q_(0.488, "nF/kft"),
+                normamps=Q_(400, "A"),
+            )
+        """
+        if nphases not in {1, 2, 3, 4}:
+            msg = f"Expected 'nphases' from OpenDSS to be in (1, 2, 3, 4), got {nphases}."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
+
+        # Create the symmetric components
+        omega = 2 * np.pi * basefreq
+        z1 = r1 + 1j * x1
+        z0 = r0 + 1j * x0
+        yc1 = 1j * omega * c1 * 1e-9  # C is in nF
+        yc0 = 1j * omega * c0 * 1e-9  # C is in nF
+
+        # Create the values of the series impedance and shunt admittance in ohm/km
+        zs = (2 * z1 + z0) / 3
+        zm = (z0 - z1) / 3
+        ys = (2 * yc1 + yc0) / 3
+        ym = (yc0 - yc1) / 3
+
+        # Get the number of conductors
+        # OpenDSS says in a comment: "For a line, NPhases = NCond, for now"
+        n_cond = nphases
+
+        # Create the matrices of the series impedance and shunt admittance in ohm/km
+        z = np.full((n_cond, n_cond), fill_value=zm, dtype=np.complex128)
+        yc = np.full((n_cond, n_cond), fill_value=ym, dtype=np.complex128)
+        np.fill_diagonal(z, zs)
+        np.fill_diagonal(yc, ys)
+
+        # Convert OpenDSS line type to RLF line type
+        if linetype is None:
+            line_type = None
+        else:
+            line_type_upper = linetype.upper()
+            if line_type_upper == "OH":
+                line_type = LineType.OVERHEAD
+            elif line_type_upper == "UG":
+                line_type = LineType.UNDERGROUND
+            else:
+                # TODO other line types
+                # ['OH', 'UG', 'UG_TS', 'UG_CN', 'SWT_LDBRK', 'SWT_FUSE', 'SWT_SECT',
+                #  'SWT_REC', 'SWT_DISC', 'SWT_BRK', 'SWT_ELBOW', 'BUSBAR']
+                logger.warning(f"Line type {linetype} from OpenDSS is not supported, it is ignored.")
+                line_type = None
+
+        # Create the RLF line parameters with off-diagonal resistance allowed
+        with cls._allow_off_diag_resistance():
+            lp = cls(
+                id=id,
+                z_line=z,
+                y_shunt=yc,
+                max_current=normamps,
+                line_type=line_type,
+            )
+        return lp
+
     #
     # Catalogue Mixin
     #
@@ -996,16 +1146,20 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         line_type = LineType(data["line_type"]) if "line_type" in data else None
         conductor_type = ConductorType(data["conductor_type"]) if "conductor_type" in data else None
         insulator_type = InsulatorType(data["insulator_type"]) if "insulator_type" in data else None
-        return cls(
-            id=data["id"],
-            z_line=z_line,
-            y_shunt=y_shunt,
-            max_current=data.get("max_current"),
-            line_type=line_type,
-            conductor_type=conductor_type,
-            insulator_type=insulator_type,
-            section=data.get("section"),
-        )
+        off_diag_resistance_allowed: bool = data.get("off_diagonal_resistance_allowed", False)
+        with cls._allow_off_diag_resistance() if off_diag_resistance_allowed else contextlib.nullcontext():
+            obj = cls(
+                id=data["id"],
+                z_line=z_line,
+                y_shunt=y_shunt,
+                max_current=data.get("max_current"),
+                line_type=line_type,
+                conductor_type=conductor_type,
+                insulator_type=insulator_type,
+                section=data.get("section"),
+            )
+            # obj._off_diag_resistance_allowed = off_diag_resistance_allowed
+        return obj
 
     def _to_dict(self, include_results: bool) -> JsonDict:
         res = {"id": self.id, "z_line": [self._z_line.real.tolist(), self._z_line.imag.tolist()]}
@@ -1021,6 +1175,8 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             res["insulator_type"] = self._insulator_type.name
         if self._section is not None:
             res["section"] = self._section
+        if self._off_diag_resistance_allowed:
+            res["off_diagonal_resistance_allowed"] = True
         for k, v in res.items():
             if isinstance(v, np.integer):
                 res[k] = int(v)
@@ -1058,15 +1214,25 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
                 continue
             # Check that the off-diagonal element have a zero real part
             off_diagonal_elements = matrix[~np.eye(*matrix.shape, dtype=np.bool_)]
-            if not np.allclose(off_diagonal_elements.real, 0):
+            if not self._off_diag_resistance_allowed and not np.allclose(off_diagonal_elements.real, 0):
                 msg = (
                     f"The {matrix_name} matrix of line type {self.id!r} has off-diagonal elements "
                     f"with a non-zero real part."
                 )
-                logger.error(msg)
-                raise RoseauLoadFlowException(msg=msg, code=code)
+                warnings.warn(msg, category=UserWarning, stacklevel=3)
             # Check that the real coefficients are non-negative
             if (matrix.real < 0.0).any():
                 msg = f"The {matrix_name} matrix of line type {self.id!r} has coefficients with negative real part."
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=code)
+
+    @classmethod
+    @contextlib.contextmanager
+    def _allow_off_diag_resistance(cls) -> Iterator[None]:
+        """Lines imported from PwF or OpenDSS usually have non-zero off diagonal resistances."""
+        old_off_diag_resistance_allowed = cls._off_diag_resistance_allowed
+        try:
+            cls._off_diag_resistance_allowed = True
+            yield
+        finally:
+            cls._off_diag_resistance_allowed = old_off_diag_resistance_allowed
