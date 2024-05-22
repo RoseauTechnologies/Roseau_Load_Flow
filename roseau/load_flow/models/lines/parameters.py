@@ -1138,7 +1138,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         line_type = LineType(data["line_type"]) if "line_type" in data else None
         conductor_type = ConductorType(data["conductor_type"]) if "conductor_type" in data else None
         insulator_type = InsulatorType(data["insulator_type"]) if "insulator_type" in data else None
-        obj = cls(
+        return cls(
             id=data["id"],
             z_line=z_line,
             y_shunt=y_shunt,
@@ -1148,7 +1148,6 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             insulator_type=insulator_type,
             section=data.get("section"),
         )
-        return obj
 
     def _to_dict(self, include_results: bool) -> JsonDict:
         res = {"id": self.id, "z_line": [self._z_line.real.tolist(), self._z_line.imag.tolist()]}
