@@ -19,6 +19,9 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-issue}`222` {gh-pr}`223` `from_catalogue()` methods of the electrical network and transformer
+  and line parameters now perform "full match" comparison on textual inputs. If you need the old
+  behavior, use regular expression wild cards `.*` in the input string.
 - {gh-issue}`220` {gh-pr}`221` Add `LineParameters.from_open_dss` and `TransformerParameters.from_open_dss` methods to
   easily import OpenDSS lines and transformer models into Roseau Load Flow. More information is
   available in the documentation of these methods.

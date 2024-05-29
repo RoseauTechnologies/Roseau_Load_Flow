@@ -419,9 +419,9 @@ def test_from_catalogue():
 
     # Several line parameters
     with pytest.raises(RoseauLoadFlowException) as e:
-        LineParameters.from_catalogue(name=r"U_AL_")
+        LineParameters.from_catalogue(name=r"U_AL_.*")
     assert e.value.msg == (
-        "Several line parameters matching the query (name='U_AL_') have been found: "
+        "Several line parameters matching the query (name='U_AL_.*') have been found: "
         "'U_AL_19', 'U_AL_20', 'U_AL_22', 'U_AL_25', 'U_AL_28', 'U_AL_29', 'U_AL_33', "
         "'U_AL_34', 'U_AL_37', 'U_AL_38', 'U_AL_40', 'U_AL_43', 'U_AL_48', 'U_AL_50', "
         "'U_AL_54', 'U_AL_55', 'U_AL_59', 'U_AL_60', 'U_AL_69', 'U_AL_70', 'U_AL_74', "
