@@ -96,7 +96,7 @@ The arguments of the method `get_catalogue` can be used to filter the output. If
 only, you can call:
 
 ```pycon
->>> ElectricalNetwork.get_catalogue(name="LVFeeder")
+>>> ElectricalNetwork.get_catalogue(name=r"LVFeeder.*")
 ```
 
 | Name          | Nb buses | Nb branches | Nb loads | Nb sources | Nb grounds | Nb potential refs | Available load points |
@@ -278,7 +278,7 @@ following command only retrieves transformer parameters of transformers with an 
 or only transformers with a wye winding on the primary side (using a regular expression)
 
 ```pycon
->>> TransformerParameters.get_catalogue(type=r"^y.*$")
+>>> TransformerParameters.get_catalogue(type=r"y.*")
 ```
 
 | Name                     | Manufacturer | Product range | Efficiency | Type  | Nominal power (kVA) | High voltage (kV) | Low voltage (kV) |
@@ -291,7 +291,7 @@ or only transformers with a wye winding on the primary side (using a regular exp
 or only transformers meeting both criteria
 
 ```pycon
->>> TransformerParameters.get_catalogue(efficiency="A0Ak", type=r"^y.*$")
+>>> TransformerParameters.get_catalogue(efficiency="A0Ak", type=r"y.*")
 ```
 
 | Name                 | Manufacturer | Product range | Efficiency | Type  | Nominal power (kVA) | High voltage (kV) | Low voltage (kV) |
@@ -520,8 +520,8 @@ to create line parameters with different numbers of phases using the `nb_phases`
 In case no or several results match the parameters, an error is raised:
 
 ```pycon
->>> LineParameters.from_catalogue(name= r"^U_AL")
-RoseauLoadFlowException: Several line parameters matching the query (name='^U_AL_') have been found:
+>>> LineParameters.from_catalogue(name= r"U_AL.*")
+RoseauLoadFlowException: Several line parameters matching the query (name='U_AL.*') have been found:
 'U_AL_19', 'U_AL_20', 'U_AL_22', 'U_AL_25', 'U_AL_28', 'U_AL_29', 'U_AL_33', 'U_AL_34', 'U_AL_37',
 'U_AL_38', 'U_AL_40', 'U_AL_43', 'U_AL_48', 'U_AL_50', 'U_AL_54', 'U_AL_55', 'U_AL_59', 'U_AL_60',
 'U_AL_69', 'U_AL_70', 'U_AL_74', 'U_AL_75', 'U_AL_79', 'U_AL_80', 'U_AL_90', 'U_AL_93', 'U_AL_95',

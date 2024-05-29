@@ -419,9 +419,9 @@ def test_from_catalogue():
 
     # Several transformers
     with pytest.raises(RoseauLoadFlowException) as e:
-        TransformerParameters.from_catalogue(type="yzn", sn=50e3)
+        TransformerParameters.from_catalogue(type=r"yzn.*", sn=50e3)
     assert e.value.msg == (
-        "Several transformers matching the query (type='yzn', nominal power=50.0 kVA) have been "
+        "Several transformers matching the query (type='yzn.*', nominal power=50.0 kVA) have been "
         "found: 'SE_Minera_A0Ak_50kVA', 'SE_Minera_B0Bk_50kVA', 'SE_Minera_C0Bk_50kVA', "
         "'SE_Minera_Standard_50kVA'."
     )
@@ -445,8 +445,8 @@ def test_get_catalogue():
         ("name", "SE_Minera_A0Ak_50kVA", 1),
         ("manufacturer", "SE", 148),
         ("range", r"min.*", 67),
-        ("efficiency", "c0", 29),
-        ("type", "dy", 158),
+        ("efficiency", r"c0.*", 29),
+        ("type", r"dy.*", 158),
         ("sn", Q_(160, "kVA"), 12),
         ("uhv", Q_(20, "kV"), 162),
         ("ulv", 400, 162),
@@ -458,7 +458,7 @@ def test_get_catalogue():
     for field_name, value, expected_size in (
         ("name", "SE_Minera_A0Ak_50kVA", 1),
         ("range", "minera", 67),
-        ("efficiency", "c0", 29),
+        ("efficiency", r"c0.*", 29),
         ("type", r"^d.*11$", 144),
         ("sn", Q_(160, "kVA"), 11),
         ("uhv", Q_(20, "kV"), 148),
@@ -471,7 +471,7 @@ def test_get_catalogue():
     for field_name, value, expected_size in (
         ("name", "se_VEGETA_C0BK_3150kva", 1),
         ("efficiency", r"c0[abc]k", 15),
-        ("type", "dyn", 41),
+        ("type", r"dyn\d+", 41),
         ("sn", Q_(160, "kVA"), 3),
         ("uhv", Q_(20, "kV"), 41),
         ("ulv", 400, 41),
