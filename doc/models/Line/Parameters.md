@@ -141,10 +141,10 @@ It means that we try to define $\underline{Z_0}=\underline{Z_1}$ and $\underline
 
 ```pycon
 >>> import numpy as np
-... from roseau.load_flow import LineParameters, Q_
+... import roseau.load_flow as rlf
 
 >>> # A basic example when z0=z1
-... line_parameters = LineParameters.from_sym(
+... line_parameters = rlf.LineParameters.from_sym(
 ...     "sym_line_example", z0=0.2 + 0.1j, z1=0.2 + 0.1j, y0=0.00014106j, y1=0.00014106j
 ... )
 
@@ -164,7 +164,7 @@ array(
 
 
 >>> # Simple example in "downgraded" model
-... line_parameters = LineParameters.from_sym(
+... line_parameters = rlf.LineParameters.from_sym(
 ...     "NKBA NOR  25.00 kV", z0=0.0j, z1=1.0 + 1.0j, y0=0.0j, y1=1e-06j
 ... )
 The symmetric model data provided for line type 'NKBA NOR  25.00 kV' produces invalid line impedance matrix... It is
@@ -186,7 +186,7 @@ array(
 
 
 >>> # 4x4 matrix
-... line_parameters = LineParameters.from_sym(
+... line_parameters = rlf.LineParameters.from_sym(
 ...     "sym_neutral_underground_line_example",
 ...     z0=0.188 + 0.8224j,
 ...     z1=0.188 + 0.0812j,
@@ -451,18 +451,18 @@ the point $B$, etc. The prime positions are the positions of the images of the c
 The formulas of the previous sections are used to get the impedance and shunt admittances matrices.
 
 ```pycon
->>> from roseau.load_flow import LineParameters, Q_, LineType, ConductorType, InsulatorType
+>>> import roseau.load_flow as rlf
 
 >>> # A twisted line example
-... line_parameters = LineParameters.from_geometry(
+... line_parameters = rlf.LineParameters.from_geometry(
 ...     "twisted_example",
-...     line_type=LineType.TWISTED,
-...     conductor_type=ConductorType.AL,
-...     insulator_type=InsulatorType.PEX,
+...     line_type=rlf.LineType.TWISTED,
+...     conductor_type=rlf.ConductorType.AL,
+...     insulator_type=rlf.InsulatorType.PEX,
 ...     section=150,  # mm²
 ...     section_neutral=70,  # mm²
 ...     height=10,  # m
-...     external_diameter=Q_(4, "cm"),
+...     external_diameter=rlf.Q_(4, "cm"),
 ... )
 
 >>> line_parameters.z_line
@@ -533,14 +533,14 @@ Please note that for underground lines, the provided height $h$ must be negative
 ```
 
 ```pycon
->>> from roseau.load_flow import LineParameters, Q_, LineType, ConductorType, InsulatorType
+>>> import roseau.load_flow as rlf
 
 >>> # An underground line example
-... line_parameters = LineParameters.from_geometry(
+... line_parameters = rlf.LineParameters.from_geometry(
 ...     "underground_example",
-...     line_type=LineType.UNDERGROUND,
-...     conductor_type=ConductorType.AL,
-...     insulator_type=InsulatorType.PVC,
+...     line_type=rlf.LineType.UNDERGROUND,
+...     conductor_type=rlf.ConductorType.AL,
+...     insulator_type=rlf.InsulatorType.PVC,
 ...     section=150, #mm²
 ...     section_neutral=70, #mm²
 ...     height=-1.5, # m # Underground so negative!

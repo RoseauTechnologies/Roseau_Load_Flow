@@ -69,31 +69,23 @@ to a three-phase voltage source.
 ```python
 import functools as ft
 import numpy as np
-from roseau.load_flow import (
-    Bus,
-    ElectricalNetwork,
-    PotentialRef,
-    PowerLoad,
-    Transformer,
-    TransformerParameters,
-    VoltageSource,
-)
+import roseau.load_flow as rlf
 
 # Create the source bus and the voltage source
-bus1 = Bus(id="bus1", phases="abcn")
-pref1 = PotentialRef(id="pref1", element=bus1)
+bus1 = rlf.Bus(id="bus1", phases="abcn")
+pref1 = rlf.PotentialRef(id="pref1", element=bus1)
 
 voltages = 400 / np.sqrt(3) * np.exp([0, -2j * np.pi / 3, 2j * np.pi / 3])
-vs = VoltageSource(id="vs", bus=bus1, voltages=voltages)
+vs = rlf.VoltageSource(id="vs", bus=bus1, voltages=voltages)
 
 # Create the load bus and the load
-bus2 = Bus(id="bus2", phases="an")
-pref2 = PotentialRef(id="pref2", element=bus2)
+bus2 = rlf.Bus(id="bus2", phases="an")
+pref2 = rlf.PotentialRef(id="pref2", element=bus2)
 
-load = PowerLoad(id="load", bus=bus2, powers=[100], phases="an")
+load = rlf.PowerLoad(id="load", bus=bus2, powers=[100], phases="an")
 
 # Create the transformer
-tp = TransformerParameters.from_open_and_short_circuit_tests(
+tp = rlf.TransformerParameters.from_open_and_short_circuit_tests(
     id="Example_TP",
     type="single",  # <--- Single-phase transformer
     sn=800,
@@ -104,7 +96,7 @@ tp = TransformerParameters.from_open_and_short_circuit_tests(
     psc=25,
     vsc=0.032,
 )
-transformer = Transformer(
+transformer = rlf.Transformer(
     id="transfo",
     bus1=bus1,
     bus2=bus2,
@@ -114,7 +106,7 @@ transformer = Transformer(
 )
 
 # Create the network and solve the load flow
-en = ElectricalNetwork.from_element(bus1)
+en = rlf.ElectricalNetwork.from_element(bus1)
 en.solve_load_flow()
 
 # The current flowing into the transformer from the source side

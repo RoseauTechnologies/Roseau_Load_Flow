@@ -13,10 +13,10 @@ A clear and concise description of what the bug is.
 Minimal Working Example to understand the problem
 
 ```python
-from roseau.load_flow import *
+import roseau.load_flow as rlf
 
 # Your code here
-# Please do not add username, password or API keys here
+# PLEASE DO NOT ADD LICENSE KEYS HERE
 ```
 
 **Expected behavior**
@@ -27,9 +27,9 @@ A clear and concise description of what you expected to happen.
 Please copy/paste here the output of the function `show_versions`
 
 ```python
-from roseau.load_flow import show_versions
+import roseau.load_flow as rlf
 
-show_versions()
+rlf.show_versions()
 ```
 
 ```

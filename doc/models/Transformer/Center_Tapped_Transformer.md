@@ -80,46 +80,35 @@ admittance of the transformer, $k$ the transformation ratio, and:
 ```python
 import functools as ft
 import numpy as np
-from roseau.load_flow import (
-    Bus,
-    ElectricalNetwork,
-    Ground,
-    Line,
-    LineParameters,
-    PotentialRef,
-    PowerLoad,
-    Transformer,
-    TransformerParameters,
-    VoltageSource,
-)
+import roseau.load_flow as rlf
 
 # Create a ground and set it as the reference potential
-ground = Ground("ground")
-pref = PotentialRef("pref", ground)
+ground = rlf.Ground("ground")
+pref = rlf.PotentialRef("pref", ground)
 
 # Create a source bus and voltage source (MV)
-source_bus = Bus("source_bus", phases="abcn")
+source_bus = rlf.Bus("source_bus", phases="abcn")
 ground.connect(source_bus)
 voltages = 20e3 / np.sqrt(3) * np.exp([0, -2j * np.pi / 3, 2j * np.pi / 3])
-vs = VoltageSource(id="vs", bus=source_bus, voltages=voltages)
+vs = rlf.VoltageSource(id="vs", bus=source_bus, voltages=voltages)
 
 # Create a load bus and a load (MV)
-load_bus = Bus(id="load_bus", phases="abc")
-mv_load = PowerLoad("mv_load", load_bus, powers=[10000, 10000, 10000])
+load_bus = rlf.Bus(id="load_bus", phases="abc")
+mv_load = rlf.PowerLoad("mv_load", load_bus, powers=[10000, 10000, 10000])
 
 # Connect the two MV buses with a line
-lp = LineParameters.from_catalogue(
+lp = rlf.LineParameters.from_catalogue(
     name="U_AL_150", model="iec"
 )  # Underground, ALuminium, 150mm²
-line = Line("line", source_bus, load_bus, parameters=lp, length=1.0, ground=ground)
+line = rlf.Line("line", source_bus, load_bus, parameters=lp, length=1.0, ground=ground)
 
 # Create a low-voltage bus and a load
-lv_bus = Bus(id="lv_bus", phases="abn")
+lv_bus = rlf.Bus(id="lv_bus", phases="abn")
 ground.connect(lv_bus)
-lv_load = PowerLoad("lv_load", lv_bus, powers=[-2000, 0])
+lv_load = rlf.PowerLoad("lv_load", lv_bus, powers=[-2000, 0])
 
 # Create a transformer
-tp = TransformerParameters.from_open_and_short_circuit_tests(
+tp = rlf.TransformerParameters.from_open_and_short_circuit_tests(
     "t",
     "center",  # <--- Center-tapped transformer
     sn=630e3,
@@ -130,10 +119,10 @@ tp = TransformerParameters.from_open_and_short_circuit_tests(
     psc=6500.0,
     vsc=0.04,
 )
-transformer = Transformer("transfo", load_bus, lv_bus, parameters=tp)
+transformer = rlf.Transformer("transfo", load_bus, lv_bus, parameters=tp)
 
 # Create the network and solve the load flow
-en = ElectricalNetwork.from_element(source_bus)
+en = rlf.ElectricalNetwork.from_element(source_bus)
 en.solve_load_flow()
 
 # The current flowing into the the line and transformer from the source side

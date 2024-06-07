@@ -54,11 +54,11 @@ def single_phase_network(test_networks_path) -> ElectricalNetwork:
 
 
 @contextmanager
-def check_result_warning(expected_message: str):
+def check_result_warning(expected_message: str | re.Pattern[str]):
     with warnings.catch_warnings(record=True) as records:
         yield
     assert len(records) == 1
-    assert records[0].message.args[0] == expected_message
+    assert re.match(expected_message, records[0].message.args[0])
     assert records[0].category == UserWarning
 
 
@@ -1018,7 +1018,7 @@ def test_network_results_warning(small_network, small_network_with_results, recw
 
     # Ensure that a warning is raised no matter which result is requested
     expected_message = (
-        "The results of this element may be outdated. Please re-run a load flow to ensure the validity of results."
+        r"The results of \w+ '\w+' may be outdated. Please re-run a load flow to ensure the validity of results."
     )
     for bus in en.buses.values():
         with check_result_warning(expected_message=expected_message):

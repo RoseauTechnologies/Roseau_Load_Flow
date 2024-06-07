@@ -122,61 +122,61 @@ following values:
 - Any windings (`"Dd0"`, `"Dz6"`, etc.) to model a three-phase transformer.
 
 ```python
-from roseau.load_flow import TransformerParameters, Q_
+import roseau.load_flow as rlf
 
 # The transformer parameters for a single-phase transformer
 single_phase_transformer_parameters = (
-    TransformerParameters.from_open_and_short_circuit_tests(
+    rlf.TransformerParameters.from_open_and_short_circuit_tests(
         id="single_phase_transformer_parameters",
         type="single",  # <--- single-phase transformer
-        uhv=Q_(20, "kV"),
-        ulv=Q_(400, "V"),
-        sn=Q_(160, "kVA"),
-        p0=Q_(300, "W"),
-        i0=Q_(1.4, "%"),
-        psc=Q_(2000, "W"),
-        vsc=Q_(4, "%"),
+        uhv=rlf.Q_(20, "kV"),
+        ulv=rlf.Q_(400, "V"),
+        sn=rlf.Q_(160, "kVA"),
+        p0=rlf.Q_(300, "W"),
+        i0=rlf.Q_(1.4, "%"),
+        psc=rlf.Q_(2000, "W"),
+        vsc=rlf.Q_(4, "%"),
     )
 )
 # Alternatively, if you have z2 and ym already:
-# single_phase_transformer_parameters = TransformerParameters(
+# single_phase_transformer_parameters = rlf.TransformerParameters(
 #     id="single_phase_transformer_parameters",
 #     type="single",
-#     uhv=Q_(20, "kV"),
-#     ulv=Q_(400, "V"),
-#     sn=Q_(160, "kVA"),
-#     z2=Q_(0.0125+0.038j, "ohm"),
-#     ym=Q_(7.5e-7-5.5e-6j, "S"),
+#     uhv=rlf.Q_(20, "kV"),
+#     ulv=rlf.Q_(400, "V"),
+#     sn=rlf.Q_(160, "kVA"),
+#     z2=rlf.Q_(0.0125+0.038j, "ohm"),
+#     ym=rlf.Q_(7.5e-7-5.5e-6j, "S"),
 # )
 
 
 # The transformer parameters for a three-phase transformer
 three_phase_transformer_parameters = (
-    TransformerParameters.from_open_and_short_circuit_tests(
+    rlf.TransformerParameters.from_open_and_short_circuit_tests(
         id="three_phase_transformer_parameters",
         type="Dyn11",  # <--- three-phase transformer with delta primary and wye secondary
-        uhv=Q_(20, "kV"),
-        ulv=Q_(400, "V"),
-        sn=Q_(160, "kVA"),
-        p0=Q_(300, "W"),
-        i0=Q_(1.4, "%"),
-        psc=Q_(2000, "W"),
-        vsc=Q_(4, "%"),
+        uhv=rlf.Q_(20, "kV"),
+        ulv=rlf.Q_(400, "V"),
+        sn=rlf.Q_(160, "kVA"),
+        p0=rlf.Q_(300, "W"),
+        i0=rlf.Q_(1.4, "%"),
+        psc=rlf.Q_(2000, "W"),
+        vsc=rlf.Q_(4, "%"),
     )
 )
 
 # The transformer parameters for a center-tapped transformer
 center_tapped_transformer_parameters = (
-    TransformerParameters.from_open_and_short_circuit_tests(
+    rlf.TransformerParameters.from_open_and_short_circuit_tests(
         id="center_tapped_transformer_parameters",
         type="center",  # <--- center-tapped transformer
-        uhv=Q_(20, "kV"),
-        ulv=Q_(400, "V"),
-        sn=Q_(160, "kVA"),
-        p0=Q_(300, "W"),
-        i0=Q_(1.4, "%"),
-        psc=Q_(2000, "W"),
-        vsc=Q_(4, "%"),
+        uhv=rlf.Q_(20, "kV"),
+        ulv=rlf.Q_(400, "V"),
+        sn=rlf.Q_(160, "kVA"),
+        p0=rlf.Q_(300, "W"),
+        i0=rlf.Q_(1.4, "%"),
+        psc=rlf.Q_(2000, "W"),
+        vsc=rlf.Q_(4, "%"),
     )
 )
 ```

@@ -101,28 +101,28 @@ or phase-to-neutral connections of the source.
 
 ```python
 import numpy as np
-from roseau.load_flow import Bus, VoltageSource
+import roseau.load_flow as rlf
 
-bus = Bus(id="bus", phases="abcn")
+bus = rlf.Bus(id="bus", phases="abcn")
 
 # Star connection
 un = 400 / np.sqrt(3)  # 400V phase-to-phase -> 230V phase-to-neutral
 voltages = un * np.exp([0, -2j * np.pi / 3, 2j * np.pi / 3])
-VoltageSource(
+rlf.VoltageSource(
     id="vs", bus=bus, phases="abcn", voltages=voltages
 )  # Voltages are considered phase-to-neutral because phases="abcn"
 
 # Delta connection
 un = 400  # 400V phase-to-phase
 voltages = un * np.exp([0, -2j * np.pi / 3, 2j * np.pi / 3])
-VoltageSource(
+rlf.VoltageSource(
     id="vs", bus=bus, phases="abc", voltages=voltages
 )  # Voltages are considered phase-to-phase because phases="abc"
 
 # Incorrect voltage vector
 un = 400
 voltages = un * np.exp([0, -2j * np.pi / 3])  # Only two elements!!
-VoltageSource(id="vs", bus=bus, phases="abc", voltages=voltages)  # Error
+rlf.VoltageSource(id="vs", bus=bus, phases="abc", voltages=voltages)  # Error
 ```
 
 ## API Reference
