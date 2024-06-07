@@ -165,11 +165,17 @@ class Element(ABC, Identifiable, JsonMixin):
         if warning and self.network is not None and not self.network._results_valid:
             warnings.warn(
                 message=(
-                    "The results of this element may be outdated. Please re-run a load flow to "
+                    f"The results of {type(self).__name__} {self.id!r} may be outdated. Please re-run a load flow to "
                     "ensure the validity of results."
                 ),
                 category=UserWarning,
-                stacklevel=2,
+                # Ignore all private RLF stacks:
+                # - this method
+                # - _res_..._getter caller function
+                # - res_... property
+                # - ureg wrappers
+                # TODO: dynamic stacklevel computation similar to pandas and matplotlib
+                stacklevel=6,
             )
         self._fetch_results = False
         return value

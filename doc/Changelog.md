@@ -19,6 +19,10 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- MacOS wheels roseau-load-flow-engine are now published on PyPI. This means that `pip install roseau-load-flow`
+  should now work on MacOS.
+- Added support for running in Google Colab documents.
+- Fixed a bug in license checks caching on Windows.
 - {gh-issue}`222` {gh-pr}`223` `from_catalogue()` methods of the electrical network and transformer
   and line parameters now perform "full match" comparison on textual inputs. If you need the old
   behavior, use regular expression wild cards `.*` in the input string.

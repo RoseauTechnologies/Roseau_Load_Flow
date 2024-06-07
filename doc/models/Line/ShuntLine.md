@@ -77,28 +77,18 @@ connects a constant power load to a voltage source.
 ```python
 import functools as ft
 import numpy as np
-from roseau.load_flow import (
-    Bus,
-    ElectricalNetwork,
-    Line,
-    LineParameters,
-    PotentialRef,
-    PowerLoad,
-    Q_,
-    VoltageSource,
-    Ground,
-)
+import roseau.load_flow as rlf
 
 # Two buses
-bus1 = Bus(id="bus1", phases="abcn")
-bus2 = Bus(id="bus2", phases="abcn")
+bus1 = rlf.Bus(id="bus1", phases="abcn")
+bus2 = rlf.Bus(id="bus2", phases="abcn")
 
 # Create a ground element and set its potential to zero
-ground = Ground(id="ground")
-pref = PotentialRef(id="pref", element=ground)
+ground = rlf.Ground(id="ground")
+pref = rlf.PotentialRef(id="pref", element=ground)
 
 # A shunt line
-z_line = Q_(
+z_line = rlf.Q_(
     np.array(
         [
             [0.3 + 0.35j, 0.25j, 0.25j, 0.25j],
@@ -109,7 +99,7 @@ z_line = Q_(
     ),
     "ohm/km",
 )
-y_shunt = Q_(
+y_shunt = rlf.Q_(
     np.array(
         [
             [20 + 475j, -68j, -10j, -68j],
@@ -120,25 +110,25 @@ y_shunt = Q_(
     ),
     "uS/km",  # micro Siemens per kilometer
 )
-line_parameters = LineParameters(id="line_parameters", z_line=z_line, y_shunt=y_shunt)
-line = Line(
+line_parameters = rlf.LineParameters(id="line_parameters", z_line=z_line, y_shunt=y_shunt)
+line = rlf.Line(
     id="line",
     bus1=bus1,
     bus2=bus2,
     parameters=line_parameters,
-    length=Q_(1, "km"),
+    length=rlf.Q_(1, "km"),
     ground=ground,
 )
 
 # A voltage source on the first bus
 un = 400 / np.sqrt(3)
-voltages = Q_(un * np.exp([0, -2j * np.pi / 3, 2j * np.pi / 3]), "V")
-vs = VoltageSource(id="source", bus=bus1, voltages=voltages)
+voltages = rlf.Q_(un * np.exp([0, -2j * np.pi / 3, 2j * np.pi / 3]), "V")
+vs = rlf.VoltageSource(id="source", bus=bus1, voltages=voltages)
 
 
 # A power load on the second bus
-load = PowerLoad(
-    id="load", bus=bus2, powers=Q_(np.array([5.0, 2.5, 0]) * (1 - 0.3j), "kVA")
+load = rlf.PowerLoad(
+    id="load", bus=bus2, powers=rlf.Q_(np.array([5.0, 2.5, 0]) * (1 - 0.3j), "kVA")
 )
 
 # The impedance matrix (in Ohm) can be accessed from the line instance
@@ -164,7 +154,7 @@ line.with_shunt
 # True
 
 # Create a network and solve a load flow
-en = ElectricalNetwork.from_element(bus1)
+en = rlf.ElectricalNetwork.from_element(bus1)
 en.solve_load_flow()
 
 # The current "entering" into the line from the bus1

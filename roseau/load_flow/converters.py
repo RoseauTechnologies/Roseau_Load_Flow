@@ -125,10 +125,10 @@ def calculate_voltages(potentials: ComplexArray, phases: str) -> ComplexArray:
         Otherwise, the voltages are Phase-Phase.
 
     Example:
-        >>> potentials = 230 * np.array([1, np.exp(-2j*np.pi/3), np.exp(2j*np.pi/3), 0], dtype=np.complex128)
+        >>> potentials = 230 * np.array([1, np.exp(-2j * np.pi / 3), np.exp(2j * np.pi / 3), 0], dtype=np.complex128)
         >>> calculate_voltages(potentials, "abcn")
         array([ 230.  +0.j        , -115.-199.18584287j, -115.+199.18584287j])
-        >>> potentials = np.array([230, 230 * np.exp(-2j*np.pi/3)], dtype=np.complex128)
+        >>> potentials = np.array([230, 230 * np.exp(-2j * np.pi / 3)], dtype=np.complex128)
         >>> calculate_voltages(potentials, "ab")
         array([345.+199.18584287j])
         >>> calculate_voltages(np.array([230, 0], dtype=np.complex128), "an")

@@ -22,23 +22,23 @@ Let's take the electrical network of the [Getting started page](usage-getting-st
 
 ```pycon
 >>> import numpy as np
-... from roseau.load_flow import *
+... import roseau.load_flow as rlf
 
->>> source_bus = Bus(id="sb", phases="abcn")
-... load_bus = Bus(id="lb", phases="abcn")
+>>> source_bus = rlf.Bus(id="sb", phases="abcn")
+... load_bus = rlf.Bus(id="lb", phases="abcn")
 
->>> ground = Ground(id="gnd")
-... pref = PotentialRef(id="pref", element=ground)
+>>> ground = rlf.Ground(id="gnd")
+... pref = rlf.PotentialRef(id="pref", element=ground)
 ... ground.connect(source_bus, phase="n")
 
 >>> un = 400 / np.sqrt(3)
 ... source_voltages = [un, un * np.exp(-2j * np.pi / 3), un * np.exp(2j * np.pi / 3)]
-... vs = VoltageSource(id="vs", bus=source_bus, voltages=source_voltages)
+... vs = rlf.VoltageSource(id="vs", bus=source_bus, voltages=source_voltages)
 
->>> load = PowerLoad(id="load", bus=load_bus, powers=[10e3 + 0j, 10e3, 10e3])  # VA
+>>> load = rlf.PowerLoad(id="load", bus=load_bus, powers=[10e3 + 0j, 10e3, 10e3])  # VA
 
->>> lp = LineParameters("lp", z_line=(0.1 + 0.0j) * np.eye(4, dtype=complex))
-... line = Line(
+>>> lp = rlf.LineParameters("lp", z_line=(0.1 + 0.0j) * np.eye(4))
+... line = rlf.Line(
 ...     id="line", bus1=source_bus, bus2=load_bus, phases="abcn", parameters=lp, length=2.0
 ... )
 ```
@@ -53,7 +53,7 @@ None
 Then, creating an electrical network populates all the `network` fields of elements belonging to this network:
 
 ```pycon
->>> en = ElectricalNetwork.from_element(source_bus)
+>>> en = rlf.ElectricalNetwork.from_element(source_bus)
 >>> load.network
 <ElectricalNetwork: 2 buses, 1 branch, 1 load, 1 source, 1 ground, 1 potential ref>
 ```
@@ -61,7 +61,7 @@ Then, creating an electrical network populates all the `network` fields of eleme
 Obviously, an element can only belong to a single network:
 
 ```pycon
->>> ElectricalNetwork.from_element(load)
+>>> rlf.ElectricalNetwork.from_element(load)
 roseau.load_flow.exceptions.RoseauLoadFlowException: The Bus 'lb' is already assigned to another network. [several_networks]
 ```
 
@@ -84,7 +84,7 @@ The `disconnect` method is only available for loads and for voltage sources.
 >>> load.disconnect()
 ```
 
-Now, the load does not belong anymore to the network `en`. Symmetrically, the network doesn't have this load anymore:
+Now, the loads no longer belongs to the network `en`. Symmetrically, the network doesn't have this load anymore:
 
 ```pycon
 >>> load.network
@@ -93,7 +93,7 @@ None
 <ElectricalNetwork: 2 buses, 1 branch, 0 loads, 1 source, 1 ground, 1 potential ref>
 ```
 
-When accessing to a result, a warning is emitted because the results are now outdated:
+When accessing a result, a warning is emitted because the results are now outdated:
 
 ```pycon
 >>> line.res_powers
@@ -115,8 +115,8 @@ Let's extend the network with a new line and add a load at its end. First, we cr
 the new load.
 
 ```pycon
->>> new_bus = Bus(id="new_bus", phases="abcn")
->>> new_load = PowerLoad(id="new_load", bus=new_bus, phases="an", powers=[6e3]) # W
+>>> new_bus = rlf.Bus(id="new_bus", phases="abcn")
+>>> new_load = rlf.PowerLoad(id="new_load", bus=new_bus, phases="an", powers=[6e3]) # W
 ```
 
 At this point, they don't belong to any network:
@@ -132,17 +132,8 @@ Creating a line connecting the `load_bus` (belonging to the network `en`) and ou
 belong to a network) will propagate the network to the new elements.
 
 ```pycon
->>> lp_u_al_240 = LineParameters.from_geometry(
-...     "U_AL_240",
-...     line_type=LineType.UNDERGROUND,
-...     conductor_type=ConductorType.AL,
-...     insulator_type=InsulatorType.PVC,
-...     section=240,
-...     section_neutral=120,
-...     height=Q_(-1.5, "m"),
-...     external_diameter=Q_(50, "mm"),
-... )
->>> new_line = Line(
+>>> lp_u_al_240 = rlf.LineParameters.from_catalogue("U_AL_240", nb_phases=4)
+>>> new_line = rlf.Line(
 ...     id="new_line",
 ...     bus1=load_bus,
 ...     bus2=new_bus,
@@ -176,9 +167,9 @@ And now if you run the load flow, you can see that the new elements are taken in
 
 ```pycon
 >>> en.solve_load_flow()
-(3, 5.209166431541234e-13)
+(3, 3.5349501104064984e-13)
 >>> abs(new_load.res_voltages)
-array([214.8358114]) <Unit('volt')>
+array([216.36821144]) <Unit('volt')>
 ```
 
 ## Modifying an element
@@ -194,10 +185,10 @@ You can change the voltage of the voltage source using the `voltages` attribute:
 
 ```pycon
 >>> vs.voltages
-array([ 254.03411844  +0.j, -127.01705922-220.j, -127.01705922+220.j]) <Unit('volt')>
+array([ 230.94010768  +0.j, -115.47005384-200.j, -115.47005384+200.j]) <Unit('volt')>
 >>> vs.voltages = vs.voltages * 1.1
 >>> vs.voltages
-array([ 279.43753029  +0.j, -139.71876514-242.j, -139.71876514+242.j]) <Unit('volt')>
+array([ 254.03411844  +0.j, -127.01705922-220.j, -127.01705922+220.j]) <Unit('volt')>
 ```
 
 ### Modifying a load
@@ -209,6 +200,7 @@ load", and the impedances of a "constant impedance load".
 >>> new_load.powers
 array([6000.+0.j]) <Unit('volt_ampere')>
 >>> new_load.powers = [3e3 + 1e3j]
+>>> new_load.powers
 array([3000.+1000.j]) <Unit('volt_ampere')>
 ```
 
@@ -224,7 +216,7 @@ array([[0.2+0.j, 0. +0.j, 0. +0.j, 0. +0.j],
        [0. +0.j, 0.2+0.j, 0. +0.j, 0. +0.j],
        [0. +0.j, 0. +0.j, 0.2+0.j, 0. +0.j],
        [0. +0.j, 0. +0.j, 0. +0.j, 0.2+0.j]]) <Unit('ohm')>
->>> line.parameters = LineParameters("lp_modified", z_line=(0.5 + 0.1j) * np.eye(4, dtype=complex))
+>>> line.parameters = rlf.LineParameters("lp_modified", z_line=(0.5 + 0.1j) * np.eye(4))
 >>> line.z_line
 array([[1.+0.2j, 0.+0.j , 0.+0.j , 0.+0.j ],
        [0.+0.j , 1.+0.2j, 0.+0.j , 0.+0.j ],

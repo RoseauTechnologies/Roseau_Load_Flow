@@ -27,26 +27,26 @@ a Delta-Wye transformer and a small LV network.
 
 ```pycon
 >>> import numpy as np
-... from roseau.load_flow import *
+... import roseau.load_flow as rlf
 
 >>> # Create a MV bus with a voltage source
-... bus0_mv = Bus(id="bus0_mv", phases="abc")
+... bus0_mv = rlf.Bus(id="bus0_mv", phases="abc")
 ... un = 20e3  # V
 ... source_voltages = [un, un * np.exp(-2j * np.pi / 3), un * np.exp(2j * np.pi / 3)]
-... vs = VoltageSource(id="vs", bus=bus0_mv, phases="abc", voltages=source_voltages)
+... vs = rlf.VoltageSource(id="vs", bus=bus0_mv, phases="abc", voltages=source_voltages)
 ... # Set the MV potential reference
-... pref_mv = PotentialRef(id="pref_mv", element=bus0_mv)
+... pref_mv = rlf.PotentialRef(id="pref_mv", element=bus0_mv)
 
 >>> # Create a LV bus and connect its neutral to the ground
-... bus0_lv = Bus(id="bus0_lv", phases="abcn")
-... ground = Ground(id="gnd")
+... bus0_lv = rlf.Bus(id="bus0_lv", phases="abcn")
+... ground = rlf.Ground(id="gnd")
 ... # Set the ground potential to 0V
-... pref_lv = PotentialRef(id="pref_lv", element=ground)
+... pref_lv = rlf.PotentialRef(id="pref_lv", element=ground)
 ... # Connect the ground to the neutral of the LV bus
 ... ground.connect(bus0_lv)
 
 >>> # Add a MV/LV transformer
-... tp = TransformerParameters.from_open_and_short_circuit_tests(
+... tp = rlf.TransformerParameters.from_open_and_short_circuit_tests(
 ...     "160_kVA",
 ...     "Dyn11",
 ...     sn=160.0 * 1e3,
@@ -57,7 +57,7 @@ a Delta-Wye transformer and a small LV network.
 ...     psc=2350.0,
 ...     vsc=4.0 / 100,
 ... )
-... transformer = Transformer(
+... transformer = rlf.Transformer(
 ...     id="transfo",
 ...     bus1=bus0_mv,
 ...     bus2=bus0_lv,
@@ -68,22 +68,22 @@ a Delta-Wye transformer and a small LV network.
 ... )
 
 >>> # Add the LV network elements
-... lp = LineParameters.from_geometry(
+... lp = rlf.LineParameters.from_geometry(
 ...     "U_AL_150",
-...     line_type=LineType.UNDERGROUND,
-...     conductor_type=ConductorType.AL,
-...     insulator_type=InsulatorType.PVC,
+...     line_type=rlf.LineType.UNDERGROUND,
+...     conductor_type=rlf.ConductorType.AL,
+...     insulator_type=rlf.InsulatorType.PVC,
 ...     section=150,
 ...     section_neutral=150,
-...     height=Q_(-1.5, "m"),
-...     external_diameter=Q_(40, "mm"),
+...     height=rlf.Q_(-1.5, "m"),
+...     external_diameter=rlf.Q_(40, "mm"),
 ... )
-... bus1 = Bus(id="bus1", phases="abcn")
-... bus2 = Bus(id="bus2", phases="abcn")
-... load_bus1 = Bus(id="load_bus1", phases="abcn")
-... load_bus2 = Bus(id="load_bus2", phases="abcn")
-... load_bus3 = Bus(id="load_bus3", phases="abcn")
-... line1 = Line(
+... bus1 = rlf.Bus(id="bus1", phases="abcn")
+... bus2 = rlf.Bus(id="bus2", phases="abcn")
+... load_bus1 = rlf.Bus(id="load_bus1", phases="abcn")
+... load_bus2 = rlf.Bus(id="load_bus2", phases="abcn")
+... load_bus3 = rlf.Bus(id="load_bus3", phases="abcn")
+... line1 = rlf.Line(
 ...     id="line1",
 ...     bus1=bus0_lv,
 ...     bus2=bus1,
@@ -92,7 +92,7 @@ a Delta-Wye transformer and a small LV network.
 ...     parameters=lp,
 ...     length=0.5,
 ... )  # km
-... line2 = Line(
+... line2 = rlf.Line(
 ...     id="line2",
 ...     bus1=bus1,
 ...     bus2=bus2,
@@ -101,7 +101,7 @@ a Delta-Wye transformer and a small LV network.
 ...     parameters=lp,
 ...     length=0.4,
 ... )
-... line3 = Line(
+... line3 = rlf.Line(
 ...     id="line3",
 ...     bus1=bus1,
 ...     bus2=load_bus1,
@@ -110,7 +110,7 @@ a Delta-Wye transformer and a small LV network.
 ...     parameters=lp,
 ...     length=0.3,
 ... )
-... line4 = Line(
+... line4 = rlf.Line(
 ...     id="line4",
 ...     bus1=bus2,
 ...     bus2=load_bus2,
@@ -119,7 +119,7 @@ a Delta-Wye transformer and a small LV network.
 ...     parameters=lp,
 ...     length=0.3,
 ... )
-... line5 = Line(
+... line5 = rlf.Line(
 ...     id="line5",
 ...     bus1=load_bus2,
 ...     bus2=load_bus3,
@@ -129,12 +129,12 @@ a Delta-Wye transformer and a small LV network.
 ...     length=0.4,
 ... )
 ... si = -3e3  # VA, negative as it is production
-... load1 = PowerLoad(id="load1", bus=load_bus1, phases="abcn", powers=[si, si, si])
-... load2 = PowerLoad(id="load2", bus=load_bus2, phases="abcn", powers=[si, si, si])
-... load3 = PowerLoad(id="load3", bus=load_bus3, phases="abcn", powers=[si, 0, 0])
+... load1 = rlf.PowerLoad(id="load1", bus=load_bus1, phases="abcn", powers=[si, si, si])
+... load2 = rlf.PowerLoad(id="load2", bus=load_bus2, phases="abcn", powers=[si, si, si])
+... load3 = rlf.PowerLoad(id="load3", bus=load_bus3, phases="abcn", powers=[si, 0, 0])
 
 >>> # Create the network
-... en = ElectricalNetwork.from_element(bus0_mv)
+... en = rlf.ElectricalNetwork.from_element(bus0_mv)
 ```
 
 Then, the load flow can be solved and the results can be retrieved.
@@ -173,13 +173,13 @@ As a consequence, the provided apparent power for phase `'a'` is the maximum tha
 ```pycon
 >>> # Let's make the load 3 flexible with a p(u) control to reduce the voltages constraints
 ... en.loads["load3"].disconnect()
-... fp = FlexibleParameter.p_max_u_production(u_up=240, u_max=250, s_max=4000)  # V and VA
-... flexible_load = PowerLoad(
+... fp = rlf.FlexibleParameter.p_max_u_production(u_up=240, u_max=250, s_max=4000)  # V and VA
+... flexible_load = rlf.PowerLoad(
 ...     id="load3",
 ...     bus=load_bus3,
 ...     phases="abcn",
 ...     powers=[si, 0, 0],  # W
-...     flexible_params=[fp, FlexibleParameter.constant(), FlexibleParameter.constant()],
+...     flexible_params=[fp, rlf.FlexibleParameter.constant(), rlf.FlexibleParameter.constant()],
 ... )
 ```
 
@@ -238,15 +238,15 @@ production is totally shut down.
 ```pycon
 >>> # Let's try with PQ(u) control, by injecting reactive power before reducing active power
 ... en.loads["load3"].disconnect()
-... fp = FlexibleParameter.pq_u_production(
+... fp = rlf.FlexibleParameter.pq_u_production(
 ...     up_up=240, up_max=250, uq_min=200, uq_down=210, uq_up=235, uq_max=240, s_max=4000  # V and VA
 ... )
-... flexible_load = PowerLoad(
+... flexible_load = rlf.PowerLoad(
 ...     id="load3",
 ...     bus=load_bus3,
 ...     phases="abcn",
 ...     powers=[si, 0, 0],
-...     flexible_params=[fp, FlexibleParameter.constant(), FlexibleParameter.constant()],
+...     flexible_params=[fp, rlf.FlexibleParameter.constant(), rlf.FlexibleParameter.constant()],
 ... )
 ```
 

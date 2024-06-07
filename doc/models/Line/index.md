@@ -132,11 +132,10 @@ $S/km$ (or an equivalent unit).
 
 ```python
 import numpy as np
-
-from roseau.load_flow import LineParameters, Q_
+import roseau.load_flow as rlf
 
 # An impedance matrix
-z_line = Q_(
+z_line = rlf.Q_(
     np.array(
         [
             [0.3 + 0.35j, 0.25j, 0.25j, 0.25j],
@@ -149,7 +148,7 @@ z_line = Q_(
 )
 
 # A shunt admittance matrix
-y_shunt = Q_(
+y_shunt = rlf.Q_(
     np.array(
         [
             [20 + 475j, -68j, -10j, -68j],
@@ -162,10 +161,10 @@ y_shunt = Q_(
 )
 
 # The line parameter for a simple line (no shunt)
-simple_line_parameters = LineParameters(id="simple_line_parameters", z_line=z_line)
+simple_line_parameters = rlf.LineParameters(id="simple_line_parameters", z_line=z_line)
 
 # The line parameter for a line with a shunt
-shunt_line_parameters = LineParameters(
+shunt_line_parameters = rlf.LineParameters(
     id="shunt_line_parameters", z_line=z_line, y_shunt=y_shunt
 )
 ```

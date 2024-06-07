@@ -37,10 +37,10 @@ i.e. its potential is not fixed at $0V$. If you want to set its potential to $0V
 a potential reference element explicitly:
 
 ```python
-from roseau.load_flow.models import Ground, PotentialRef
+import roseau.load_flow as rlf
 
-g = Ground(id="ground")
-p_ref = PotentialRef(id="pref", element=g)
+g = rlf.Ground(id="ground")
+p_ref = rlf.PotentialRef(id="pref", element=g)
 ```
 
 With this code snippet, you have defined the following element:
@@ -55,10 +55,10 @@ It is also possible to set the reference of potentials to any phase of any bus i
 For example, to fix the potential of phase "a" of some bus to $0V$:
 
 ```python
-from roseau.load_flow.models import Bus, PotentialRef
+import roseau.load_flow as rlf
 
-bus = Bus(id="bus", phases="abcn")
-p_ref = PotentialRef(id="pref", element=bus, phase="a")
+bus = rlf.Bus(id="bus", phases="abcn")
+p_ref = rlf.PotentialRef(id="pref", element=bus, phase="a")
 ```
 
 ## API Reference

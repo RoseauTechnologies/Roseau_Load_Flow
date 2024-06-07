@@ -52,74 +52,64 @@ After solving this load flow, the following assertions will be verified:
 ```python
 import functools as ft
 import numpy as np
-from roseau.load_flow import (
-    Q_,
-    Bus,
-    ElectricalNetwork,
-    Ground,
-    Line,
-    LineParameters,
-    PotentialRef,
-    PowerLoad,
-    VoltageSource,
-)
+import roseau.load_flow as rlf
 
 # Define two grounds elements
-g1 = Ground(id="g1")
-g2 = Ground(id="g2")
+g1 = rlf.Ground(id="g1")
+g2 = rlf.Ground(id="g2")
 
 # Define three buses
-bus1 = Bus(id="bus1", phases="abc")
-bus2 = Bus(id="bus2", phases="abc")
-bus3 = Bus(id="bus3", phases="abc")
+bus1 = rlf.Bus(id="bus1", phases="abc")
+bus2 = rlf.Bus(id="bus2", phases="abc")
+bus3 = rlf.Bus(id="bus3", phases="abc")
 
 # Define a voltage source on the first bus
 un = 400
-voltages = Q_(un * np.exp([0, -2j * np.pi / 3, 2j * np.pi / 3]), "V")
-vs = VoltageSource(id="source", bus=bus1, voltages=voltages)
+voltages = rlf.Q_(un * np.exp([0, -2j * np.pi / 3, 2j * np.pi / 3]), "V")
+vs = rlf.VoltageSource(id="source", bus=bus1, voltages=voltages)
 
 # Define the impedance and admittance parameters of the lines (can be reused)
-parameters = LineParameters(
+parameters = rlf.LineParameters(
     id="parameters",
-    z_line=Q_((0.12 + 0.1j) * np.eye(3), "ohm/km"),
-    y_shunt=Q_(2e-4j * np.eye(3), "S/km"),
+    z_line=rlf.Q_((0.12 + 0.1j) * np.eye(3), "ohm/km"),
+    y_shunt=rlf.Q_(2e-4j * np.eye(3), "S/km"),
 )
 
 # Define a line between bus1 and bus2 (using g1 for the shunt connections)
-line1 = Line(
+line1 = rlf.Line(
     id="line1",
     bus1=bus1,
     bus2=bus2,
     parameters=parameters,
-    length=Q_(2, "km"),
+    length=rlf.Q_(2, "km"),
     ground=g1,
 )
 
 # Define a line between bus2 and bus3 (using g2 for the shunt connections)
-line2 = Line(
+line2 = rlf.Line(
     id="line2",
     bus1=bus2,
     bus2=bus3,
     parameters=parameters,
-    length=Q_(2.5, "km"),
+    length=rlf.Q_(2.5, "km"),
     ground=g2,
 )
 
 # Add a load on bus3
-load = PowerLoad(
+load = rlf.PowerLoad(
     id="load",
     bus=bus3,
-    powers=Q_(np.array([5.0, 2.5, 0]) * (1 - 0.3j), "kVA"),
+    powers=rlf.Q_(np.array([5.0, 2.5, 0]) * (1 - 0.3j), "kVA"),
 )
 
 # Set the phase "a" of the first bus to the ground g1
 g1.connect(bus=bus1, phase="a")
 
 # Set the potential of the ground element g1 to 0V
-pref = PotentialRef(id="pref", element=g1)
+pref = rlf.PotentialRef(id="pref", element=g1)
 
 # Create a network and solve a load flow
-en = ElectricalNetwork.from_element(bus1)
+en = rlf.ElectricalNetwork.from_element(bus1)
 en.solve_load_flow()
 
 # Get the ground potentials
