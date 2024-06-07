@@ -84,7 +84,7 @@ The `disconnect` method is only available for loads and for voltage sources.
 >>> load.disconnect()
 ```
 
-Now, the loads no longer belongs to the network `en`. Symmetrically, the network doesn't have this load anymore:
+Now, the load no longer belongs to the network `en`. Symmetrically, the network doesn't have this load anymore:
 
 ```pycon
 >>> load.network
