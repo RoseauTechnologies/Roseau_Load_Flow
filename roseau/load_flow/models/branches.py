@@ -5,7 +5,7 @@ from typing import ClassVar, Literal
 from shapely.geometry.base import BaseGeometry
 from typing_extensions import Self
 
-from roseau.load_flow.converters import calculate_voltages
+from roseau.load_flow.converters import _calculate_voltages
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import Element
 from roseau.load_flow.typing import ComplexArray, Id, JsonDict
@@ -134,7 +134,7 @@ class AbstractBranch(Element):
 
     def _res_voltages_getter(self, warning: bool) -> tuple[ComplexArray, ComplexArray]:
         pot1, pot2 = self._res_potentials_getter(warning)
-        return calculate_voltages(pot1, self.phases1), calculate_voltages(pot2, self.phases2)
+        return _calculate_voltages(pot1, self.phases1), _calculate_voltages(pot2, self.phases2)
 
     @property
     @ureg_wraps(("V", "V"), (None,))

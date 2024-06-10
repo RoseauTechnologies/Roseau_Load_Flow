@@ -103,10 +103,10 @@ vector of voltages. Example:
 >>> potentials = 230 * np.array([1, np.exp(-2j * np.pi / 3), np.exp(2j * np.pi / 3), 0])
 >>> potentials
 array([ 230.  +0.j        , -115.-199.18584287j, -115.+199.18584287j,
-          0.  +0.j        ])
+          0.  +0.j        ]) <Unit('volt')>
 >>> phases = "abcn"
 >>> calculate_voltages(potentials, phases)
-array([ 230.  +0.j        , -115.-199.18584287j, -115.+199.18584287j])
+array([ 230.  +0.j        , -115.-199.18584287j, -115.+199.18584287j]) <Unit('volt')>
 ```
 
 Because the phases include the neutral, the voltages calculated are phase-to-neutral voltages.
@@ -114,7 +114,7 @@ You can also calculate phase-to-phase voltages by omitting the neutral:
 
 ```pycon
 >>> calculate_voltages(potentials[:-1], phases[:-1])
-array([ 345.+199.18584287j,    0.-398.37168574j, -345.+199.18584287j])
+array([ 345.+199.18584287j,    0.-398.37168574j, -345.+199.18584287j]) <Unit('volt')>
 ```
 
 To get the phases of the voltage, you can use `calculate_voltage_phases`:
@@ -127,7 +127,7 @@ To get the phases of the voltage, you can use `calculate_voltage_phases`:
 Of course these functions work with arbitrary phases:
 
 ```pycon
->>> calculate_voltages(potentials[:2], phases[:2])
+>>> calculate_voltages(potentials[:2], phases[:2]) <Unit('volt')>
 array([345.+199.18584287j])
 >>> calculate_voltage_phases(phases[:2])
 ['ab']

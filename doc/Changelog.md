@@ -19,7 +19,8 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
-- MacOS wheels roseau-load-flow-engine are now published on PyPI. This means that `pip install roseau-load-flow`
+- {gh-pr}`224` The `calculate_voltages` function now accepts and return pint quantities.
+- MacOS wheels for roseau-load-flow-engine are now published on PyPI. This means that `pip install roseau-load-flow`
   should now work on MacOS.
 - Added support for running in Google Colab documents.
 - Fixed a bug in license checks caching on Windows.
