@@ -544,7 +544,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         Returns:
             The values ``p0``, the losses (in W), and ``i0``, the current (in %) during open-circuit test.
         """
-        from roseau.load_flow.converters import calculate_voltages
+        from roseau.load_flow.converters import _calculate_voltages
         from roseau.load_flow.models import Bus, PotentialRef, Transformer, VoltageSource
         from roseau.load_flow.network import ElectricalNetwork
 
@@ -566,7 +566,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             if "n" in phases_hv:
                 voltages = self._uhv / np.sqrt(3) * np.exp([0, -2j * np.pi / 3, 2j * np.pi / 3])
             else:
-                voltages = calculate_voltages(
+                voltages = _calculate_voltages(
                     potentials=self._uhv / np.sqrt(3) * np.exp([0, -2j * np.pi / 3, 2j * np.pi / 3]), phases="abc"
                 )
 
@@ -584,7 +584,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         in_ = self._sn / self._uhv if self.type in ("single", "center") else self._sn / (np.sqrt(3) * self._uhv)
 
         # Additional checks
-        u_secondary = abs(calculate_voltages(potentials=bus_lv.res_potentials.m, phases=phases_lv))
+        u_secondary = abs(_calculate_voltages(potentials=bus_lv.res_potentials.m, phases=phases_lv))
         if self.type == "single":
             expected_u_secondary = self._ulv
         elif self.type == "center":
@@ -608,7 +608,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             The values ``psc``, the losses (in W), and ``vsc``, the voltages on LV side (in %) during short-circuit
             test.
         """
-        from roseau.load_flow.converters import calculate_voltages
+        from roseau.load_flow.converters import _calculate_voltages
         from roseau.load_flow.models import Bus, PotentialRef, Transformer, VoltageSource
         from roseau.load_flow.network import ElectricalNetwork
 
@@ -636,7 +636,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             if "n" in phases_hv:
                 voltages = vsc * self._uhv / np.sqrt(3) * np.exp([0, -2j * np.pi / 3, 2j * np.pi / 3])
             else:
-                voltages = calculate_voltages(
+                voltages = _calculate_voltages(
                     potentials=vsc * self._uhv / np.sqrt(3) * np.exp([0, -2j * np.pi / 3, 2j * np.pi / 3]), phases="abc"
                 )
 

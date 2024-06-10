@@ -2,7 +2,8 @@ import numpy as np
 import pandas as pd
 from pandas.testing import assert_series_equal
 
-from roseau.load_flow.converters import phasor_to_sym, series_phasor_to_sym, sym_to_phasor
+from roseau.load_flow.converters import calculate_voltages, phasor_to_sym, series_phasor_to_sym, sym_to_phasor
+from roseau.load_flow.units import Q_, ureg
 from roseau.load_flow.utils import PhaseDtype
 
 
@@ -97,3 +98,19 @@ def test_series_phasor_to_sym():
     expected = pd.Series([0, va, 0, 0, va / 2, 0], index=sym_index, name="voltage")
 
     assert_series_equal(series_phasor_to_sym(voltage), expected, check_exact=False)
+
+
+def test_calculate_voltages():
+    potentials = 230 * np.array([1, np.exp(-2j * np.pi / 3), np.exp(2j * np.pi / 3), 0], dtype=np.complex128)
+    voltages = calculate_voltages(potentials, "abcn").m
+    np.testing.assert_allclose(voltages, np.array([230.0 + 0.0j, -115.0 - 199.18584287j, -115.0 + 199.18584287j]))
+    potentials = np.array([230, 230 * np.exp(-2j * np.pi / 3)], dtype=np.complex128)
+    voltages = calculate_voltages(potentials, "ab").m
+    np.testing.assert_allclose(voltages, np.array([345.0 + 199.18584287j]))
+    voltages = calculate_voltages(np.array([230, 0], dtype=np.complex128), "an").m
+    np.testing.assert_allclose(voltages, np.array([230.0 + 0.0j]))
+
+    # Quantities
+    voltages = calculate_voltages(Q_([20, 0], "kV"), "an")
+    np.testing.assert_allclose(voltages.m, np.array([20000.0 + 0.0j]))
+    assert voltages.units == ureg.Unit("V")

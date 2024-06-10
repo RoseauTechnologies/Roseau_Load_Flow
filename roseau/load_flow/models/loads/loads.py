@@ -5,7 +5,7 @@ from typing import ClassVar, Final, Literal
 
 import numpy as np
 
-from roseau.load_flow.converters import calculate_voltage_phases, calculate_voltages
+from roseau.load_flow.converters import _calculate_voltages, calculate_voltage_phases
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import Element
@@ -148,7 +148,7 @@ class AbstractLoad(Element, ABC):
 
     def _res_voltages_getter(self, warning: bool) -> ComplexArray:
         potentials = self._res_potentials_getter(warning)
-        return calculate_voltages(potentials, self.phases)
+        return _calculate_voltages(potentials, self.phases)
 
     @property
     @ureg_wraps("V", (None,))
