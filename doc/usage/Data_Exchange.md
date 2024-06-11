@@ -42,7 +42,48 @@ The following components are currently supported:
 | ElmGenStat | Static Generator           | PowerLoad (P<=0)            |
 | ElmPvsys   | PV System                  | PowerLoad (P<=0)            |
 
-<!-- TODO: add screenshots -->
+### Export from PowerFactory
+
+`roseau-load-flow` provides an "Export Definition Folder" to configure the DGS export in the form
+of a `pfd` file called `DGS-RLF.pfd`. This file contains a "Monitor Variable" (`IntMon`) object for
+each class that should be exported.
+
+Use the
+{meth}`ElectricalNetwork.dgs_export_definition_folder_path() <roseau.load_flow.ElectricalNetwork.dgs_export_definition_folder_path>`
+method to get the location of this file:
+
+```pycon
+>>> print(rlf.ElectricalNetwork.dgs_export_definition_folder_path())
+/home/my_user/my_project/.venv/lib/python3.12/site-packages/roseau/load_flow/data/io/DGS-RLF.pfd
+```
+
+Then drag-and-drop this file into your PowerFactory project to use it as "Export Definition Folder".
+
+With the folder now available in PowerFactory, make sure you have your project activated then export
+the network to DGS, click on the `File` menu then hover over `Export` and choose `DGS Format...`
+from the list like so:
+
+```{image} /_static/IO/DGS_How_To_Export.png
+:alt: Screenshot showing PowerFactory's "File/Export/DGS Format..." menu
+:width: 500px
+:align: center
+```
+
+A "DGS-Export" window will open, set the "Export Options" and "Export Definition" as shown in the
+following picture:
+
+```{image} /_static/IO/DGS_Export_Window.png
+:alt: Screenshot showing PowerFactory's "DGS-Export" window
+:width: 800px
+:align: center
+```
+
+Note that the "Variable Sets" field in the "Export Definition" section is set to the `DGS-RLF` file
+provided by `roseau-load-flow`.
+
+Click on `Execute` to finish the export.
+
+### Import into Roseau Load Flow
 
 To import a PowerFactory network in `roseau-load-flow`, use the
 {meth}`ElectricalNetwork.from_dgs() <roseau.load_flow.ElectricalNetwork.from_dgs>` method:
@@ -51,6 +92,18 @@ To import a PowerFactory network in `roseau-load-flow`, use the
 >>> rlf.ElectricalNetwork.from_dgs("my_dgs_network.json")
 <ElectricalNetwork: 6 buses, 5 branches, 8 loads, 1 source, 1 ground, 1 potential ref>
 ```
+
+### Limitations
+
+Please note that there are some limitations in the supported features:
+
+- **Required elements**: the network is expected to have at least one of the following elements:
+  - _External Grid_ (`ElmXnet`)
+  - _Terminal_ (`ElmTerm`)
+  - _Cubicle_ (`StaCubic`)
+- **Ignored elements**: elements that are not mentioned in the table above are ignored;
+- **Ignored attributes**: functionality that is not yet available in `roseau-load-flow` is ignored.
+  This includes the state of the switches (switches are considered to be always closed);
 
 ## OpenDSS
 

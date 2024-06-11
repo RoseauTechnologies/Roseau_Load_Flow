@@ -96,7 +96,7 @@ def network_from_dgs(  # noqa: C901
         voltages = [un * tap, un * np.exp(-np.pi * 2 / 3 * 1j) * tap, un * np.exp(np.pi * 2 / 3 * 1j) * tap]
         source_bus = buses[bus_id]
 
-        sources[source_id] = VoltageSource(id=source_id, phases="abcn", bus=source_bus, voltages=voltages)
+        sources[source_id] = VoltageSource(id=source_id, bus=source_bus, voltages=voltages)
         source_bus._connect(ground)
 
     # LV loads
@@ -247,13 +247,30 @@ def _read_dgs_json_file(filename: StrPath):
         data = json.load(f)
 
     # External sources
-    elm_xnet = pd.DataFrame(columns=data["ElmXnet"]["Attributes"], data=data["ElmXnet"]["Values"]).set_index("FID")
+    if "ElmXnet" in data:
+        elm_xnet = pd.DataFrame(columns=data["ElmXnet"]["Attributes"], data=data["ElmXnet"]["Values"]).set_index("FID")
+    else:
+        msg = "The network is expected to have at least one 'External Grid' (ElmXnet)"
+        logger.error(msg)
+        raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DGS_MISSING_ELEMENT)
 
     # Terminals (buses)
-    elm_term = pd.DataFrame(columns=data["ElmTerm"]["Attributes"], data=data["ElmTerm"]["Values"]).set_index("FID")
+    if "ElmTerm" in data:
+        elm_term = pd.DataFrame(columns=data["ElmTerm"]["Attributes"], data=data["ElmTerm"]["Values"]).set_index("FID")
+    else:
+        msg = "The network is expected to have at least one 'Terminal' (ElmTerm)"
+        logger.error(msg)
+        raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DGS_MISSING_ELEMENT)
 
     # Cubicles
-    sta_cubic = pd.DataFrame(columns=data["StaCubic"]["Attributes"], data=data["StaCubic"]["Values"]).set_index("FID")
+    if "StaCubic" in data:
+        sta_cubic = pd.DataFrame(columns=data["StaCubic"]["Attributes"], data=data["StaCubic"]["Values"]).set_index(
+            "FID"
+        )
+    else:
+        msg = "The network is expected to have at least one 'Cubicle' (StaCubic)"
+        logger.error(msg)
+        raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DGS_MISSING_ELEMENT)
 
     # Transformers
     if "ElmTr2" in data:
@@ -378,7 +395,7 @@ def _generate_loads(
 
         # Balanced or Unbalanced
         s = [s_phase / 3, s_phase / 3, s_phase / 3] if sa == 0 and sb == 0 and sc == 0 else [sa, sb, sc]
-        loads[load_id] = PowerLoad(id=load_id, phases="abcn", bus=buses[bus_id], powers=s)
+        loads[load_id] = PowerLoad(id=load_id, bus=buses[bus_id], powers=s)
 
 
 def _compute_load_power(elm_lod: pd.DataFrame, load_id: str, suffix: str) -> complex:
