@@ -1456,6 +1456,9 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
     def from_dgs(cls, path: StrPath) -> Self:
         """Construct an electrical network from json DGS file (PowerFactory).
 
+        Only JSON format of DGS is currently supported. A list of supported Power Factory components
+        can be found in the :ref:`Data Exchange page <data-exchange-power-factory>`.
+
         Args:
             path:
                 The path to the network DGS data file.
