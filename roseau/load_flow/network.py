@@ -1453,8 +1453,16 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
     # DGS interface
     #
     @classmethod
+    def dgs_export_definition_folder_path(cls) -> Path:
+        """Returns the path to the DGS pfd file to use as "Export Definition Folder"."""
+        return Path(resources.files("roseau.load_flow") / "data" / "io" / "DGS-RLF.pfd").expanduser().absolute()
+
+    @classmethod
     def from_dgs(cls, path: StrPath) -> Self:
         """Construct an electrical network from json DGS file (PowerFactory).
+
+        Only JSON format of DGS is currently supported. See the
+        :ref:`Data Exchange page <data-exchange-power-factory>` for more information.
 
         Args:
             path:

@@ -511,28 +511,4 @@ using the {meth}`~roseau.load_flow.ElectricalNetwork.to_json` method.
 >>> en.to_json("my_network.json")
 ```
 
-```{warning}
-The `to_json` method will overwrite the file if it already exists.
-```
-
-To load the network from a JSON file, use the {meth}`~roseau.load_flow.ElectricalNetwork.from_json` method.
-
-```pycon
->>> en = rlf.ElectricalNetwork.from_json("my_network.json")
-```
-
-By default, the `to_json` and `from_json` methods will include the load flow results if they are
-available and valid. If you want to save/load the network without the results, you can pass
-`include_results=False` to these methods.
-
-Note that calling the `to_json()` method on a network with invalid results (say after an element
-has been modified) will raise an exception. In this case, you can use the `include_results=False`
-option to ignore the results, or you can call the `solve_load_flow()` method to
-update the results before saving the network.
-
-```{important}
-We do not recommend modifying the JSON file manually. The content of the JSON file is not
-guaranteed to be stable across different versions of the library and should be considered an
-implementation detail. Any changes to the JSON file should be done through the
-`ElectricalNetwork` object otherwise it may lead to unexpected behavior.
-```
+For more information see this section on [network JSON serialization](data-exchange-rlf).
