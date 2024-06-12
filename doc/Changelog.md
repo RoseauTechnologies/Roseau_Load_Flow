@@ -19,6 +19,8 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`227` Sources and loads are now allowed to have floating neutrals. This means that a load/source
+  with `phases="abcn"` can now be connected to a bus with `phases="abc"`.
 - {gh-pr}`225` The `calculate_voltages` function now accepts and return pint quantities.
 - MacOS wheels for roseau-load-flow-engine are now published on PyPI. This means that `pip install roseau-load-flow`
   should now work on MacOS.

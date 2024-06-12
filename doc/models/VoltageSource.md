@@ -58,6 +58,11 @@ The equations that model a star voltage source are:
 Where $\underline{U}\in\mathbb{C}^3$ is the voltage vector (user defined parameter) and
 $\underline{V}\in\mathbb{C}^4$ is the node potentials vector (variable).
 
+```{note}
+You can create star connected sources even on buses that don't have a neutral. In this case, the
+source's neutral will be floating and its potential can be accessed similar to normal star sources.
+```
+
 ### Delta connection
 
 The diagram of the delta voltage source is:

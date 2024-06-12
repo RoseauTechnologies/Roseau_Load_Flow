@@ -457,6 +457,7 @@ def test_power_load_res_powers(bus_ph, load_ph, s, res_pot, res_cur):
     load = PowerLoad("load", bus, powers=s, phases=load_ph)
     bus._res_potentials = np.array(res_pot, dtype=complex)
     load._res_currents = np.array(res_cur, dtype=complex)
+    load._res_potentials = bus._get_potentials_of(load.phases, warning=False)
     assert np.allclose(sum(load.res_powers), sum(load.powers))
 
 
@@ -526,6 +527,7 @@ def test_current_load_res_powers(bus_ph, load_ph, i, res_pot, res_cur):
     load = CurrentLoad("load", bus, currents=i, phases=load_ph)
     bus._res_potentials = np.array(res_pot, dtype=complex)
     load._res_currents = np.array(res_cur, dtype=complex)
+    load._res_potentials = bus._get_potentials_of(load.phases, warning=False)
     load_powers = load.res_voltages * load.currents.conj()  # S = V * I*
     assert np.allclose(sum(load.res_powers), sum(load_powers))
 
@@ -626,6 +628,7 @@ def test_impedance_load_res_powers(bus_ph, load_ph, z, res_pot, res_cur):
     load = ImpedanceLoad("load", bus, impedances=z, phases=load_ph)
     bus._res_potentials = np.array(res_pot, dtype=complex)
     load._res_currents = np.array(res_cur, dtype=complex)
+    load._res_potentials = bus._get_potentials_of(load.phases, warning=False)
     load_powers = np.abs(load.res_voltages) ** 2 / load.impedances.conj()  # S = |V|² / Z*
     assert np.allclose(sum(load.res_powers), sum(load_powers))
 
@@ -655,6 +658,7 @@ def test_load_voltages(bus_ph, load_ph, bus_vph, load_vph):
 
     res_cur = [0.1 + 0j, 0.2 + 0j, 0.3 + 0j, 0.6 + 0j]
     load._res_currents = np.array(res_cur[: len(load_ph)], dtype=complex)
+    load._res_potentials = bus._get_potentials_of(load.phases, warning=False)
 
     assert bus.voltage_phases == bus_vph
     assert len(bus.res_voltages) == len(bus.voltage_phases)
@@ -668,6 +672,7 @@ def test_non_flexible_load_res_flexible_powers():
     load = PowerLoad("load", bus, powers=[2300], phases="an")
     bus._res_potentials = np.array([230, 0], dtype=complex)
     load._res_currents = np.array([10, -10], dtype=complex)
+    load._res_potentials = bus._get_potentials_of(load.phases, warning=False)
     with pytest.raises(RoseauLoadFlowException) as e:
         _ = load.res_flexible_powers
     assert e.value.msg == "The load 'load' is not flexible and does not have flexible powers"
