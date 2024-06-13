@@ -35,7 +35,6 @@ class AbstractLoad(Element, ABC):
     """
 
     type: ClassVar[Literal["power", "current", "impedance"]]
-    _floating_neutral_allowed: bool = False
 
     allowed_phases: Final = Bus.allowed_phases
     """The allowed phases for a load are the same as for a :attr:`bus<Bus.allowed_phases>`."""
@@ -51,10 +50,11 @@ class AbstractLoad(Element, ABC):
                 The bus to connect the load to.
 
             phases:
-                The phases of the load. A string like ``"abc"`` or ``"an"`` etc. The order of the
-                phases is important. For a full list of supported phases, see the class attribute
-                :attr:`allowed_phases`. All phases of the load, except ``"n"``, must be present in
-                the phases of the connected bus. By default, the phases of the bus are used.
+                The phases of the load. A string like ``"abc"`` or ``"an"`` etc. The bus phases are
+                used by default. The order of the phases is important. For a full list of supported
+                phases, see the class attribute :attr:`allowed_phases`. All phases of the load must
+                be present in the phases of the connected bus. Multiphase loads are allowed to have
+                a floating neutral (i.e. they can be connected to buses that don't have a neutral).
         """
         if type(self) is AbstractLoad:
             raise TypeError("Can't instantiate abstract class AbstractLoad")
@@ -66,7 +66,7 @@ class AbstractLoad(Element, ABC):
             # Also check they are in the bus phases
             phases_not_in_bus = set(phases) - set(bus.phases)
             # "n" is allowed to be absent from the bus only if the load has more than 2 phases
-            floating_neutral = self._floating_neutral_allowed and phases_not_in_bus == {"n"} and len(phases) > 2
+            floating_neutral = phases_not_in_bus == {"n"} and len(phases) > 2
             if phases_not_in_bus and not floating_neutral:
                 msg = (
                     f"Phases {sorted(phases_not_in_bus)} of load {id!r} are not in bus {bus.id!r} "
@@ -88,6 +88,7 @@ class AbstractLoad(Element, ABC):
 
         # Results
         self._res_currents: ComplexArray | None = None
+        self._res_potentials: ComplexArray | None = None
 
     def __repr__(self) -> str:
         bus_id = self.bus.id if self.bus is not None else None
@@ -108,14 +109,23 @@ class AbstractLoad(Element, ABC):
         """Whether the load is flexible or not. Only :class:`PowerLoad` can be flexible."""
         return False
 
+    @property
+    def has_floating_neutral(self) -> bool:
+        """Does this load have a floating neutral?"""
+        return "n" in self._phases and "n" not in self._bus._phases
+
     @cached_property
     def voltage_phases(self) -> list[str]:
         """The phases of the load voltages."""
         return calculate_voltage_phases(self.phases)
 
+    def _refresh_results(self) -> None:
+        self._res_currents = self._cy_element.get_currents(self._n)
+        self._res_potentials = self._cy_element.get_potentials(self._n)
+
     def _res_currents_getter(self, warning: bool) -> ComplexArray:
         if self._fetch_results:
-            self._res_currents = self._cy_element.get_currents(self._n)
+            self._refresh_results()
         return self._res_getter(value=self._res_currents, warning=warning)
 
     @property
@@ -137,8 +147,9 @@ class AbstractLoad(Element, ABC):
         return np.array(value, dtype=np.complex128)
 
     def _res_potentials_getter(self, warning: bool) -> ComplexArray:
-        self._raise_disconnected_error()
-        return self.bus._get_potentials_of(self.phases, warning)
+        if self._fetch_results:
+            self._refresh_results()
+        return self._res_getter(value=self._res_potentials, warning=warning)
 
     @property
     @ureg_wraps("V", (None,))
@@ -216,6 +227,16 @@ class AbstractLoad(Element, ABC):
             self._res_currents = np.array(
                 [complex(i[0], i[1]) for i in data["results"]["currents"]], dtype=np.complex128
             )
+            if "potentials" in data["results"]:
+                self._res_potentials = np.array(
+                    [complex(i[0], i[1]) for i in data["results"]["potentials"]], dtype=np.complex128
+                )
+            elif not self.has_floating_neutral:
+                self._res_potentials = data["bus"]._get_potentials_of(self.phases, warning=False)
+            else:
+                msg = f"{type(self).__name__} {self.id!r} with floating neutral is missing results of potentials."
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.JSON_NO_RESULTS)
             self._fetch_results = False
             self._no_results = False
         return self
@@ -232,14 +253,21 @@ class AbstractLoad(Element, ABC):
         if include_results:
             currents = self._res_currents_getter(warning=True)
             res["results"] = {"currents": [[i.real, i.imag] for i in currents]}
+            if self.has_floating_neutral:
+                potentials = self._res_potentials_getter(warning=True)
+                res["results"]["potentials"] = [[v.real, v.imag] for v in potentials]
         return res
 
     def _results_to_dict(self, warning: bool) -> JsonDict:
-        return {
+        results = {
             "id": self.id,
             "phases": self.phases,
             "currents": [[i.real, i.imag] for i in self._res_currents_getter(warning)],
         }
+        if self.has_floating_neutral:
+            potentials = self._res_potentials_getter(warning=True)
+            results["potentials"] = [[v.real, v.imag] for v in potentials]
+        return results
 
 
 class PowerLoad(AbstractLoad):
@@ -270,10 +298,11 @@ class PowerLoad(AbstractLoad):
                 or a :class:`Quantity <roseau.load_flow.units.Q_>` of complex values.
 
             phases:
-                The phases of the load. A string like ``"abc"`` or ``"an"`` etc. The order of the
-                phases is important. For a full list of supported phases, see the class attribute
-                :attr:`allowed_phases`. All phases of the load, except ``"n"``, must be present in
-                the phases of the connected bus. By default, the phases of the bus are used.
+                The phases of the load. A string like ``"abc"`` or ``"an"`` etc. The bus phases are
+                used by default. The order of the phases is important. For a full list of supported
+                phases, see the class attribute :attr:`allowed_phases`. All phases of the load must
+                be present in the phases of the connected bus. Multiphase loads are allowed to have
+                a floating neutral (i.e. they can be connected to buses that don't have a neutral).
 
             flexible_params:
                 A list of :class:`FlexibleParameters` object, one for each phase. When provided,
@@ -436,12 +465,19 @@ class CurrentLoad(AbstractLoad):
                 or a :class:`Quantity <roseau.load_flow.units.Q_>` of complex values.
 
             phases:
-                The phases of the load. A string like ``"abc"`` or ``"an"`` etc. The order of the
-                phases is important. For a full list of supported phases, see the class attribute
-                :attr:`allowed_phases`. All phases of the load, except ``"n"``, must be present in
-                the phases of the connected bus. By default, the phases of the bus are used.
+                The phases of the load. A string like ``"abc"`` or ``"an"`` etc. The bus phases are
+                used by default. The order of the phases is important. For a full list of supported
+                phases, see the class attribute :attr:`allowed_phases`. All phases of the load must
+                be present in the phases of the connected bus.
         """
         super().__init__(id=id, phases=phases, bus=bus)
+        if self.has_floating_neutral:
+            msg = (
+                f"Constant current loads cannot have a floating neutral. {type(self).__name__} "
+                f"{id!r} has phases {phases!r} while bus {bus.id!r} has phases {bus.phases!r}."
+            )
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
         self.currents = currents  # handles size checks and unit conversion
         if self.phases == "abc":
             self._cy_element = CyDeltaCurrentLoad(n=self._n, currents=self._currents)
@@ -484,10 +520,11 @@ class ImpedanceLoad(AbstractLoad):
                 (Ohms) or a :class:`Quantity <roseau.load_flow.units.Q_>` of complex values.
 
             phases:
-                The phases of the load. A string like ``"abc"`` or ``"an"`` etc. The order of the
-                phases is important. For a full list of supported phases, see the class attribute
-                :attr:`allowed_phases`. All phases of the load, except ``"n"``, must be present in
-                the phases of the connected bus. By default, the phases of the bus are used.
+                The phases of the load. A string like ``"abc"`` or ``"an"`` etc. The bus phases are
+                used by default. The order of the phases is important. For a full list of supported
+                phases, see the class attribute :attr:`allowed_phases`. All phases of the load must
+                be present in the phases of the connected bus. Multiphase loads are allowed to have
+                a floating neutral (i.e. they can be connected to buses that don't have a neutral).
         """
         super().__init__(id=id, phases=phases, bus=bus)
         self.impedances = impedances

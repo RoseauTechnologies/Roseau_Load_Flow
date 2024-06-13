@@ -21,7 +21,6 @@ class VoltageSource(Element):
 
     allowed_phases: Final = Bus.allowed_phases
     """The allowed phases for a voltage source are the same as for a :attr:`bus<Bus.allowed_phases>`."""
-    _floating_neutral_allowed: bool = False
 
     def __init__(self, id: Id, bus: Bus, *, voltages: ComplexArrayLike1D, phases: str | None = None) -> None:
         """Voltage source constructor.
@@ -40,10 +39,11 @@ class VoltageSource(Element):
                 or a :class:`Quantity <roseau.load_flow.units.Q_>` of complex values.
 
             phases:
-                The phases of the source. A string like ``"abc"`` or ``"an"`` etc. The order of the
-                phases is important. For a full list of supported phases, see the class attribute
-                :attr:`allowed_phases`. All phases of the source, except ``"n"``, must be present in
-                the phases of the connected bus. By default, the phases of the bus are used.
+                The phases of the source. A string like ``"abc"`` or ``"an"`` etc. The bus phases are
+                used by default. The order of the phases is important. For a full list of supported
+                phases, see the class attribute :attr:`allowed_phases`. All phases of the source must
+                be present in the phases of the connected bus. Multiphase sources are allowed to have
+                a floating neutral (i.e. they can be connected to buses that don't have a neutral).
         """
         super().__init__(id)
         self._connect(bus)
@@ -54,8 +54,8 @@ class VoltageSource(Element):
             self._check_phases(id, phases=phases)
             # Also check they are in the bus phases
             phases_not_in_bus = set(phases) - set(bus.phases)
-            # "n" is allowed to be absent from the bus only if the load has more than 2 phases
-            floating_neutral = self._floating_neutral_allowed and phases_not_in_bus == {"n"} and len(phases) > 2
+            # "n" is allowed to be absent from the bus only if the source has more than 2 phases
+            floating_neutral = phases_not_in_bus == {"n"} and len(phases) > 2
             if phases_not_in_bus and not floating_neutral:
                 msg = (
                     f"Phases {sorted(phases_not_in_bus)} of source {id!r} are not in bus "
@@ -82,6 +82,7 @@ class VoltageSource(Element):
 
         # Results
         self._res_currents: ComplexArray | None = None
+        self._res_potentials: ComplexArray | None = None
 
     def __repr__(self) -> str:
         bus_id = self.bus.id if self.bus is not None else None
@@ -118,14 +119,23 @@ class VoltageSource(Element):
         if self._cy_element is not None:
             self._cy_element.update_voltages(self._voltages)
 
+    @property
+    def has_floating_neutral(self) -> bool:
+        """Does this source have a floating neutral?"""
+        return "n" in self._phases and "n" not in self._bus._phases
+
     @cached_property
     def voltage_phases(self) -> list[str]:
         """The phases of the source voltages."""
         return calculate_voltage_phases(self.phases)
 
+    def _refresh_results(self) -> None:
+        self._res_currents = self._cy_element.get_currents(self._n)
+        self._res_potentials = self._cy_element.get_potentials(self._n)
+
     def _res_currents_getter(self, warning: bool) -> ComplexArray:
         if self._fetch_results:
-            self._res_currents = self._cy_element.get_currents(self._n)
+            self._refresh_results()
         return self._res_getter(value=self._res_currents, warning=warning)
 
     @property
@@ -135,8 +145,9 @@ class VoltageSource(Element):
         return self._res_currents_getter(warning=True)
 
     def _res_potentials_getter(self, warning: bool) -> ComplexArray:
-        self._raise_disconnected_error()
-        return self.bus._get_potentials_of(self.phases, warning)
+        if self._fetch_results:
+            self._refresh_results()
+        return self._res_getter(value=self._res_potentials, warning=warning)
 
     @property
     @ureg_wraps("V", (None,))
@@ -189,6 +200,16 @@ class VoltageSource(Element):
             self._res_currents = np.array(
                 [complex(i[0], i[1]) for i in data["results"]["currents"]], dtype=np.complex128
             )
+            if "potentials" in data["results"]:
+                self._res_potentials = np.array(
+                    [complex(i[0], i[1]) for i in data["results"]["potentials"]], dtype=np.complex128
+                )
+            elif not self.has_floating_neutral:
+                self._res_potentials = data["bus"]._get_potentials_of(self.phases, warning=False)
+            else:
+                msg = f"{type(self).__name__} {self.id!r} with floating neutral is missing results of potentials."
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.JSON_NO_RESULTS)
             self._fetch_results = False
             self._no_results = False
         return self
@@ -204,11 +225,18 @@ class VoltageSource(Element):
         if include_results:
             currents = self._res_currents_getter(warning=True)
             res["results"] = {"currents": [[i.real, i.imag] for i in currents]}
+            if self.has_floating_neutral:
+                potentials = self._res_potentials_getter(warning=True)
+                res["results"]["potentials"] = [[v.real, v.imag] for v in potentials]
         return res
 
     def _results_to_dict(self, warning: bool) -> JsonDict:
-        return {
+        results = {
             "id": self.id,
             "phases": self.phases,
             "currents": [[i.real, i.imag] for i in self._res_currents_getter(warning)],
         }
+        if self.has_floating_neutral:
+            potentials = self._res_potentials_getter(warning=True)
+            results["potentials"] = [[v.real, v.imag] for v in potentials]
+        return results
