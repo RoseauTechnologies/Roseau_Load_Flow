@@ -115,6 +115,20 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         self._section: float = section
         self._check_matrix()
 
+    def __repr__(self) -> str:
+        s = f"<{type(self).__name__}: id={self.id!r}"
+        for attr, val, tp in (
+            ("max_current", self._max_current, float),
+            ("line_type", self._line_type, str),
+            ("conductor_type", self._conductor_type, str),
+            ("insulator_type", self._insulator_type, str),
+            ("section", self._section, float),
+        ):
+            if val is not None:
+                s += f", {attr}={tp(val)!r}"
+        s += ">"
+        return s
+
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, LineParameters):
             return NotImplemented
@@ -1163,11 +1177,6 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             res["insulator_type"] = self._insulator_type.name
         if self._section is not None:
             res["section"] = self._section
-        for k, v in res.items():
-            if isinstance(v, np.integer):
-                res[k] = int(v)
-            elif isinstance(v, np.floating):
-                res[k] = float(v)
         return res
 
     def _results_to_dict(self, warning: bool) -> NoReturn:

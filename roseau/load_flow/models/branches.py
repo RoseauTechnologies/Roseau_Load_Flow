@@ -66,8 +66,8 @@ class AbstractBranch(Element):
 
     def __repr__(self) -> str:
         return (
-            f"{type(self).__name__}(id={self.id!r}, bus1={self.bus1!r}, bus2={self.bus2!r}, "
-            f"phases1={self.phases1!r}, phases2={self.phases2!r})"
+            f"<{type(self).__name__}: id={self.id!r}, bus1={self.bus1.id!r}, bus2={self.bus2.id!r}, "
+            f"phases1={self.phases1!r}, phases2={self.phases2!r}>"
         )
 
     @property

@@ -7,6 +7,7 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Generic, NoReturn, TypeVar, overload
 
+import numpy as np
 import pandas as pd
 from typing_extensions import Self
 
@@ -16,6 +17,18 @@ from roseau.load_flow.typing import Id, JsonDict, StrPath
 logger = logging.getLogger(__name__)
 
 _T = TypeVar("_T")
+
+
+def _json_encoder_default(obj: object) -> object:
+    """Numpy compatible JSON serialization hook."""
+    if isinstance(obj, np.integer):
+        return int(obj)
+    elif isinstance(obj, np.floating):
+        return float(obj)
+    elif np.isscalar(obj) and pd.isna(obj):
+        return None
+    # raise the default error from the json module
+    raise TypeError(f"Object of type {type(obj).__name__} is not JSON serializable")
 
 
 class Identifiable(metaclass=ABCMeta):
@@ -135,7 +148,7 @@ class JsonMixin(metaclass=ABCMeta):
             The expanded and resolved path of the written file.
         """
         res = self.to_dict(include_results=include_results)
-        output = json.dumps(res, ensure_ascii=False, indent=2)
+        output = json.dumps(res, ensure_ascii=False, indent=2, default=_json_encoder_default)
         # Collapse multi-line arrays of 2-to-4 elements into single line
         # e.g complex value represented as [real, imag] or rows of the z_line matrix
         output = re.sub(r"\[(?:\s+(\S+,))?(?:\s+?( \S+,))??(?:\s+?( \S+,))??\s+?( \S+)\s+\]", r"[\1\2\3\4]", output)
@@ -197,7 +210,7 @@ class JsonMixin(metaclass=ABCMeta):
             The expanded and resolved path of the written file.
         """
         dict_results = self._results_to_dict(warning=True)
-        output = json.dumps(dict_results, indent=4)
+        output = json.dumps(dict_results, indent=4, default=_json_encoder_default)
         output = re.sub(r"\[\s+(.*),\s+(.*)\s+]", r"[\1, \2]", output)
         path = Path(path).expanduser().resolve()
         if not output.endswith("\n"):
