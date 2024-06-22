@@ -19,8 +19,8 @@ On this page, the [folium](https://python-visualization.github.io/folium/index.h
 Let's take a MV network from the catalogue:
 
 ```pycon
->>> from roseau.load_flow import ElectricalNetwork
->>> en = ElectricalNetwork.from_catalogue(name="MVFeeder210", load_point_name="Winter")
+>>> import roseau.load_flow as rlf
+>>> en = rlf.ElectricalNetwork.from_catalogue(name="MVFeeder210", load_point_name="Winter")
 ```
 
 The plot will be done from the {doc}`GeoDataFrame <geopandas:docs/reference/geodataframe>` of buses and lines (we

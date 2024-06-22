@@ -29,6 +29,7 @@ def _get_dependency_info() -> JsonDict:
             "pint",
             "platformdirs",
             "certifi",
+            "roseau-load-flow",
             "roseau-load-flow-engine",
         )
     }
@@ -43,10 +44,10 @@ def show_versions() -> None:
     print("System Information")
     print("------------------")
     for k, v in sys_info.items():
-        print(f"{k:<20} {v}")
+        print(f"{k:<25} {v}")
 
     print()
     print("Installed Dependencies")
     print("----------------------")
     for k, v in deps.items():
-        print(f"{k:<20} {v}")
+        print(f"{k:<25} {v}")

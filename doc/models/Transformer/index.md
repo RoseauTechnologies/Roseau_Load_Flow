@@ -28,8 +28,16 @@ Transformers are modeled with the following parameters:
   parameter is called `ulv` in the code.
 - $S_{\mathrm{nom.}}$: the nominal power of the transformer (in VA). This parameter is called `sn`
   in the code.
-- $i_0$: the current during off-load test (in %). This parameter is called `i0` in the code.
-- $P_0$: the losses during off-load test (in W). This parameter is called `p0` in the code.
+- $Z_2$: the series impedance located at the secondary side of the transformer. It represents
+  non-ideal transformer losses due to winding resistance and leakage reactance.
+- $Y_m$: the magnetizing admittance located at the primary side of the transformer. It represents
+  non-ideal transformer losses due to core magnetizing inductance and iron losses.
+
+$Z_2$ and $Y_m$ parameters come from open-circuit and short-circuit tests. They can be obtained
+using the following tests results:
+
+- $i_0$: the current during open-circuit test (in %). This parameter is called `i0` in the code.
+- $P_0$: the losses during open-circuit test (in W). This parameter is called `p0` in the code.
 - $P_{\mathrm{sc}}$: the losses during short-circuit test (in W). This parameter is called `psc`
   in the code.
 - $V_{\mathrm{sc}}$: the voltage on LV side during short-circuit test (in %). This parameter is
@@ -38,10 +46,6 @@ Transformers are modeled with the following parameters:
 For three-phase transformers, the windings configuration is also required. See the dedicated page
 of [three-phase transformers](Three_Phase_Transformer.md) for more details.
 
-These parameters come from off-load and short-circuit tests. Internally, these parameters are
-converted into a series impedance $\underline{Z_2}$ and the magnetizing admittance
-$\underline{Y_{\mathrm{m}}}$.
-
 First, we define the following quantities:
 
 - $i_{1,\mathrm{nom.}}=\dfrac{S_{\mathrm{nom.}}}{U_{1,\mathrm{nom.}}}$: the nominal current of the
@@ -49,7 +53,9 @@ First, we define the following quantities:
 - $i_{2,\mathrm{nom.}}=\dfrac{S_{\mathrm{nom.}}}{U_{2,\mathrm{nom.}}}$: the nominal current of the
   winding on the secondary side of the transformer.
 
-### Off-load test
+### Open-circuit and short-circuit tests
+
+#### Open-circuit test
 
 We note $P_0$ the losses and $i_1^0$ the current in the primary winding of the transformer during
 this test. The following values can be computed:
@@ -75,7 +81,7 @@ Then, $\underline{Y_{\mathrm{m}}}$ can be deduced:
 \right.
 ```
 
-### Short-circuit test
+#### Short-circuit test
 
 We note $P_{\mathrm{sc}}$ the losses, $U_{2,\mathrm{sc}}$ the voltage on LV side during this test. The following
 values can be computed:
@@ -97,6 +103,13 @@ Then, $\underline{Z_2}$ can be deduced:
 \underline{Z_2} = R_2+j\cdot X_2
 ```
 
+### Import from OpenDSS
+
+Transformer parameters can also be created using an OpenDSS transformer parameters. Only two-winding
+three-phase transformers are currently supported. For more information and an example, see the
+{meth}`TransformerParameters.from_open_dss() <roseau.load_flow.TransformerParameters.from_open_dss>`
+method.
+
 ## Usage
 
 To define the parameters of the transformers, use the `TransformerParameters` class. It takes as
@@ -109,45 +122,62 @@ following values:
 - Any windings (`"Dd0"`, `"Dz6"`, etc.) to model a three-phase transformer.
 
 ```python
-from roseau.load_flow import TransformerParameters, Q_
+import roseau.load_flow as rlf
 
 # The transformer parameters for a single-phase transformer
-single_phase_transformer_parameters = TransformerParameters(
-    id="single_phase_transformer_parameters",
-    type="single",  # <--- single-phase transformer
-    uhv=Q_(20, "kV"),
-    ulv=Q_(400, "V"),
-    sn=Q_(160, "kVA"),
-    p0=Q_(300, "W"),
-    i0=Q_(1.4, "%"),
-    psc=Q_(2000, "W"),
-    vsc=Q_(4, "%"),
+single_phase_transformer_parameters = (
+    rlf.TransformerParameters.from_open_and_short_circuit_tests(
+        id="single_phase_transformer_parameters",
+        type="single",  # <--- single-phase transformer
+        uhv=rlf.Q_(20, "kV"),
+        ulv=rlf.Q_(400, "V"),
+        sn=rlf.Q_(160, "kVA"),
+        p0=rlf.Q_(300, "W"),
+        i0=rlf.Q_(1.4, "%"),
+        psc=rlf.Q_(2000, "W"),
+        vsc=rlf.Q_(4, "%"),
+    )
 )
+# Alternatively, if you have z2 and ym already:
+# single_phase_transformer_parameters = rlf.TransformerParameters(
+#     id="single_phase_transformer_parameters",
+#     type="single",
+#     uhv=rlf.Q_(20, "kV"),
+#     ulv=rlf.Q_(400, "V"),
+#     sn=rlf.Q_(160, "kVA"),
+#     z2=rlf.Q_(0.0125+0.038j, "ohm"),
+#     ym=rlf.Q_(7.5e-7-5.5e-6j, "S"),
+# )
+
 
 # The transformer parameters for a three-phase transformer
-three_phase_transformer_parameters = TransformerParameters(
-    id="three_phase_transformer_parameters",
-    type="Dyn11",  # <--- three-phase transformer with delta primary and wye secondary
-    uhv=Q_(20, "kV"),
-    ulv=Q_(400, "V"),
-    sn=Q_(160, "kVA"),
-    p0=Q_(300, "W"),
-    i0=Q_(1.4, "%"),
-    psc=Q_(2000, "W"),
-    vsc=Q_(4, "%"),
+three_phase_transformer_parameters = (
+    rlf.TransformerParameters.from_open_and_short_circuit_tests(
+        id="three_phase_transformer_parameters",
+        type="Dyn11",  # <--- three-phase transformer with delta primary and wye secondary
+        uhv=rlf.Q_(20, "kV"),
+        ulv=rlf.Q_(400, "V"),
+        sn=rlf.Q_(160, "kVA"),
+        p0=rlf.Q_(300, "W"),
+        i0=rlf.Q_(1.4, "%"),
+        psc=rlf.Q_(2000, "W"),
+        vsc=rlf.Q_(4, "%"),
+    )
 )
 
 # The transformer parameters for a center-tapped transformer
-center_tapped_transformer_parameters = TransformerParameters(
-    id="center_tapped_transformer_parameters",
-    type="center",  # <--- center-tapped transformer
-    uhv=Q_(20, "kV"),
-    ulv=Q_(400, "V"),
-    sn=Q_(160, "kVA"),
-    p0=Q_(300, "W"),
-    i0=Q_(1.4, "%"),
-    psc=Q_(2000, "W"),
-    vsc=Q_(4, "%"),
+center_tapped_transformer_parameters = (
+    rlf.TransformerParameters.from_open_and_short_circuit_tests(
+        id="center_tapped_transformer_parameters",
+        type="center",  # <--- center-tapped transformer
+        uhv=rlf.Q_(20, "kV"),
+        ulv=rlf.Q_(400, "V"),
+        sn=rlf.Q_(160, "kVA"),
+        p0=rlf.Q_(300, "W"),
+        i0=rlf.Q_(1.4, "%"),
+        psc=rlf.Q_(2000, "W"),
+        vsc=rlf.Q_(4, "%"),
+    )
 )
 ```
 

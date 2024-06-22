@@ -26,8 +26,8 @@ if __name__ == "__main__":
         uhv = Q_(df.at[idx, "uhv"], "V")  # Phase-to-phase nominal voltages of the high voltages side
         ulv = Q_(df.at[idx, "ulv"], "V")  # Phase-to-phase nominal voltages of the low voltages side
         sn = Q_(df.at[idx, "sn"], "VA")  # Nominal power
-        i0 = Q_(np.round(df.at[idx, "i0"], decimals=3), "")  # Current during off-load test
-        p0 = Q_(df.at[idx, "p0"], "W")  # Losses during off-load test
+        i0 = Q_(np.round(df.at[idx, "i0"], decimals=3), "")  # Current during open-circuit test
+        p0 = Q_(df.at[idx, "p0"], "W")  # Losses during open-circuit test
         psc = Q_(df.at[idx, "psc"], "W")  # Losses during short-circuit test
         vsc = Q_(df.at[idx, "vsc"], "")  # Voltages on LV side during short-circuit test
         type = df.at[idx, "type"]
@@ -37,9 +37,13 @@ if __name__ == "__main__":
         assert id == f"{manufacturer}_{range}_{efficiency}_{sn_kva}kVA"
 
         # Generate transformer parameters
-        tp = TransformerParameters(id=id, type=type, uhv=uhv, ulv=ulv, sn=sn, p0=p0, i0=i0, psc=psc, vsc=vsc)
-        res = tp.to_zyk()
-        assert all(pd.notna(x) for x in res), id
+        tp = TransformerParameters.from_open_and_short_circuit_tests(
+            id=id, type=type, uhv=uhv, ulv=ulv, sn=sn, p0=p0, i0=i0, psc=psc, vsc=vsc
+        )
+        assert tp.z2 is not None, id
+        assert tp.ym is not None, id
+        assert tp.k is not None, id
+        assert tp.orientation is not None, id
         tp.to_json(destination_path / f"{sn_kva}.json")
 
     # Sort the catalogue and write it

@@ -27,50 +27,52 @@ is impossible.
 
 ```pycon
 >>> import numpy as np
-... from roseau.load_flow import *
+... import roseau.load_flow as rlf
 
 >>> def create_network():
 ...     # Create three buses
-...     source_bus = Bus(id="sb", phases="abcn")
-...     bus1 = Bus(id="b1", phases="abcn")
-...     bus2 = Bus(id="b2", phases="abcn")
+...     source_bus = rlf.Bus(id="sb", phases="abcn")
+...     bus1 = rlf.Bus(id="b1", phases="abcn")
+...     bus2 = rlf.Bus(id="b2", phases="abcn")
 ...     # Define the reference of potentials
-...     ground = Ground(id="gnd")
-...     pref = PotentialRef(id="pref", element=ground)
+...     ground = rlf.Ground(id="gnd")
+...     pref = rlf.PotentialRef(id="pref", element=ground)
 ...     ground.connect(bus=source_bus)
 ...     # Create a LV source at the first bus
 ...     un = 400 / np.sqrt(3)
 ...     source_voltages = [un, un * np.exp(-2j * np.pi / 3), un * np.exp(2j * np.pi / 3)]
-...     vs = VoltageSource(id="vs", bus=source_bus, phases="abcn", voltages=source_voltages)
+...     vs = rlf.VoltageSource(
+...         id="vs", bus=source_bus, phases="abcn", voltages=source_voltages
+...     )
 ...     # Add LV lines
-...     lp1 = LineParameters.from_geometry(
+...     lp1 = rlf.LineParameters.from_geometry(
 ...         "U_AL_240",
-...         line_type=LineType.UNDERGROUND,
-...         conductor_type=ConductorType.AL,
-...         insulator_type=InsulatorType.PVC,
+...         line_type=rlf.LineType.UNDERGROUND,
+...         conductor_type=rlf.ConductorType.AL,
+...         insulator_type=rlf.InsulatorType.PVC,
 ...         section=240,
 ...         section_neutral=120,
-...         height=Q_(-1.5, "m"),
-...         external_diameter=Q_(50, "mm"),
+...         height=rlf.Q_(-1.5, "m"),
+...         external_diameter=rlf.Q_(50, "mm"),
 ...     )
-...     line1 = Line(
+...     line1 = rlf.Line(
 ...         id="line1", bus1=source_bus, bus2=bus1, parameters=lp1, length=1.0, ground=ground
 ...     )
-...     lp2 = LineParameters.from_geometry(
+...     lp2 = rlf.LineParameters.from_geometry(
 ...         "U_AL_150",
-...         line_type=LineType.UNDERGROUND,
-...         conductor_type=ConductorType.AL,
-...         insulator_type=InsulatorType.PVC,
+...         line_type=rlf.LineType.UNDERGROUND,
+...         conductor_type=rlf.ConductorType.AL,
+...         insulator_type=rlf.InsulatorType.PVC,
 ...         section=150,
 ...         section_neutral=150,
-...         height=Q_(-1.5, "m"),
-...         external_diameter=Q_(40, "mm"),
+...         height=rlf.Q_(-1.5, "m"),
+...         external_diameter=rlf.Q_(40, "mm"),
 ...     )
-...     line2 = Line(
+...     line2 = rlf.Line(
 ...         id="line2", bus1=bus1, bus2=bus2, parameters=lp2, length=2.0, ground=ground
 ...     )
 ...     # Create network
-...     en = ElectricalNetwork.from_element(source_bus)
+...     en = rlf.ElectricalNetwork.from_element(source_bus)
 ...     return en
 ...
 
@@ -194,7 +196,7 @@ short-circuit, or when forgetting parameters.
 
 ```pycon
 >>> try:
-...     load = PowerLoad("load", bus=en.buses["b2"], powers=[10, 10, 10])
+...     load = rlf.PowerLoad("load", bus=en.buses["b2"], powers=[10, 10, 10])
 ... except RoseauLoadFlowException as e:
 ...     print(e)
 The power load 'load' is connected on bus 'b2' that already has a short-circuit.

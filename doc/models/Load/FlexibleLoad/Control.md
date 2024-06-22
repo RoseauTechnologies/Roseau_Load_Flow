@@ -23,13 +23,13 @@ No control is applied, this is equivalent to a classical power load. The constan
 built like this:
 
 ```python
-from roseau.load_flow import Control
+import roseau.load_flow as rlf
 
 # Use the constructor. Note that the voltages are not important in this case.
-control = Control(type="constant", u_min=0.0, u_down=0.0, u_up=0.0, u_max=0.0)
+control = rlf.Control(type="constant", u_min=0.0, u_down=0.0, u_up=0.0, u_max=0.0)
 
 # Or prefer using the shortcut
-control = Control.constant()
+control = rlf.Control.constant()
 ```
 
 (models-flexible_load-p_u_control)=
@@ -68,15 +68,21 @@ $\underline{S(U)}$ point may lie outside the disc of radius $S^{\max}$ in the $(
 [Projection page](models-flexible_load-projections) for more details about this case.
 
 ```python
-from roseau.load_flow import Control, Q_
+import roseau.load_flow as rlf
 
 # Use the constructor. Note that u_min and u_down are useless with the production control
-production_control = Control(
-    type="p_max_u_production", u_min=0, u_down=0, u_up=Q_(240, "V"), u_max=Q_(250, "V")
+production_control = rlf.Control(
+    type="p_max_u_production",
+    u_min=0,
+    u_down=0,
+    u_up=rlf.Q_(240, "V"),
+    u_max=rlf.Q_(250, "V"),
 )
 
 # Or prefer the shortcut
-production_control = Control.p_max_u_production(u_up=Q_(240, "V"), u_max=Q_(250, "V"))
+production_control = rlf.Control.p_max_u_production(
+    u_up=rlf.Q_(240, "V"), u_max=rlf.Q_(250, "V")
+)
 ```
 
 ### Consumption
@@ -95,15 +101,21 @@ $\underline{S(U)}$ point may lie outside the disc of radius $S^{\max}$ in the $(
 [Projection page](models-flexible_load-projections) for more details about this case.
 
 ```python
-from roseau.load_flow import Control, Q_
+import roseau.load_flow as rlf
 
 # Use the constructor. Note that u_max and u_up are useless with the consumption control
-consumption_control = Control(
-    type="p_max_u_consumption", u_min=Q_(210, "V"), u_down=Q_(220, "V"), u_up=0, u_max=0
+consumption_control = rlf.Control(
+    type="p_max_u_consumption",
+    u_min=rlf.Q_(210, "V"),
+    u_down=rlf.Q_(220, "V"),
+    u_up=0,
+    u_max=0,
 )
 
 # Or prefer the shortcut
-consumption_control = Control.p_max_u_consumption(u_min=Q_(210, "V"), u_down=Q_(220, "V"))
+consumption_control = rlf.Control.p_max_u_consumption(
+    u_min=rlf.Q_(210, "V"), u_down=rlf.Q_(220, "V")
+)
 ```
 
 (models-flexible_load-q_u_control)=
@@ -129,20 +141,23 @@ The function $s_{\alpha}$ used for the $Q(U)$ control is derived from the *soft 
 ```
 
 ```python
-from roseau.load_flow import Control, Q_
+import roseau.load_flow as rlf
 
 # Use the constructor. Note that all the voltages are important.
-control = Control(
+control = rlf.Control(
     type="q_u",
-    u_min=Q_(210, "V"),
-    u_down=Q_(220, "V"),
-    u_up=Q_(240, "V"),
-    u_max=Q_(250, "V"),
+    u_min=rlf.Q_(210, "V"),
+    u_down=rlf.Q_(220, "V"),
+    u_up=rlf.Q_(240, "V"),
+    u_max=rlf.Q_(250, "V"),
 )
 
 # Or prefer the shortcut
-control = Control.q_u(
-    u_min=Q_(210, "V"), u_down=Q_(220, "V"), u_up=Q_(240, "V"), u_max=Q_(250, "V")
+control = rlf.Control.q_u(
+    u_min=rlf.Q_(210, "V"),
+    u_down=rlf.Q_(220, "V"),
+    u_up=rlf.Q_(240, "V"),
+    u_max=rlf.Q_(250, "V"),
 )
 ```
 

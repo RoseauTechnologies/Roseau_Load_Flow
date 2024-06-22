@@ -26,7 +26,6 @@ def test_transformer_parameters():
     }
     tp = TransformerParameters.from_dict(data)
 
-    z2, ym, k, orientation = tp.to_zyk()
     r_iron = 20e3**2 / 145  # Ohm
     lm_omega = 20e3**2 / (np.sqrt((1.8 / 100 * 50e3) ** 2 - 145**2))  # H *rad/s
     z2_norm = 4 / 100 * 400**2 / 50e3
@@ -38,10 +37,10 @@ def test_transformer_parameters():
     k_expected = 400 / (np.sqrt(3.0) * 20e3)
     orientation_expected = 1.0
 
-    assert np.isclose(z2.m, z2_expected)
-    assert np.isclose(ym.m, ym_expected)
-    assert np.isclose(k, k_expected)
-    assert np.isclose(orientation, orientation_expected)
+    assert np.isclose(tp.z2.m, z2_expected)
+    assert np.isclose(tp.ym.m, ym_expected)
+    assert np.isclose(tp.k.m, k_expected)
+    assert np.isclose(tp.orientation, orientation_expected)
 
     # Dyn11 - 100kVA
     data = {
@@ -56,7 +55,6 @@ def test_transformer_parameters():
         "type": "dyn11",
     }
     tp = TransformerParameters.from_dict(data)
-    z2, ym, k, orientation = tp.to_zyk()
     r_iron = 3 * 20e3**2 / 210  # Ohm
     lm_omega = 3 * 20e3**2 / (np.sqrt((3.5 / 100 * 100e3) ** 2 - 210**2))  # H*rad/s
     z2_norm = 4 / 100 * 400**2 / 100e3
@@ -68,10 +66,10 @@ def test_transformer_parameters():
     k_expected = (400 / np.sqrt(3)) / 20e3
     orientation_expected = 1.0
 
-    assert np.isclose(z2.m, z2_expected)
-    assert np.isclose(ym.m, ym_expected)
-    assert np.isclose(k, k_expected)
-    assert np.isclose(orientation, orientation_expected)
+    assert np.isclose(tp.z2.m, z2_expected)
+    assert np.isclose(tp.ym.m, ym_expected)
+    assert np.isclose(tp.k.m, k_expected)
+    assert np.isclose(tp.orientation, orientation_expected)
 
     # Dyn5 - 160kVA
     data = {
@@ -86,7 +84,6 @@ def test_transformer_parameters():
         "type": "dyn5",
     }
     tp = TransformerParameters.from_dict(data)
-    z2, ym, k, orientation = tp.to_zyk()
     r_iron = 3 * 20e3**2 / 460  # Ohm
     lm_omega = 3 * 20e3**2 / (np.sqrt((5.6 / 100 * 160e3) ** 2 - 460**2))  # H*rad/s
     z2_norm = 4 / 100 * 400**2 / 160e3
@@ -98,10 +95,10 @@ def test_transformer_parameters():
     k_expected = 400 / np.sqrt(3) / 20e3
     orientation_expected = -1.0
 
-    assert np.isclose(z2.m, z2_expected)
-    assert np.isclose(ym.m, ym_expected)
-    assert np.isclose(k, k_expected)
-    assert np.isclose(orientation, orientation_expected)
+    assert np.isclose(tp.z2.m, z2_expected)
+    assert np.isclose(tp.ym.m, ym_expected)
+    assert np.isclose(tp.k.m, k_expected)
+    assert np.isclose(tp.orientation, orientation_expected)
 
     # Check that there is an error if the winding is not good
     data = {
@@ -168,7 +165,7 @@ def test_transformer_parameters():
     }
     with pytest.raises(RoseauLoadFlowException) as e:
         TransformerParameters.from_dict(data)
-    assert "has the 'current during off-load test' i0" in e.value.msg
+    assert "Invalid open-circuit test current i0=" in e.value.msg
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_PARAMETERS
 
     # Bad vsc
@@ -185,7 +182,7 @@ def test_transformer_parameters():
     }
     with pytest.raises(RoseauLoadFlowException) as e:
         TransformerParameters.from_dict(data)
-    assert "has the 'voltages on LV side during short-circuit test' vsc" in e.value.msg
+    assert "Invalid short-circuit test voltage vsc=" in e.value.msg
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_PARAMETERS
 
     # Bad l2_omega
@@ -202,11 +199,46 @@ def test_transformer_parameters():
     }
     with pytest.raises(RoseauLoadFlowException) as e:
         TransformerParameters.from_dict(data)
-    assert "The following inequality should be respected: psc/sn <= vsc" in e.value.msg
+    assert "The following inequality must be respected: psc/sn <= vsc" in e.value.msg
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_PARAMETERS
 
 
 def test_transformers_parameters_units():
+    # Example in the "transformers" document of Victor.
+    # Yzn11 - 50kVA. Good units
+    data = {
+        "id": "Yzn11 - 50kVA",
+        "z2": Q_(8.64 + 9.444j, "centiohm"),  # Ohm
+        "ym": Q_(0.3625 - 2.2206j, "uS"),  # S
+        "ulv": Q_(400, "V"),  # V
+        "uhv": Q_(20, "kV"),  # V
+        "sn": Q_(50, "kVA"),  # VA
+        "type": "yzn11",
+    }
+    tp = TransformerParameters(**data)
+    assert np.isclose(tp._z2, (0.0864 + 0.0944406692j))
+    assert np.isclose(tp._ym, (3.625e-07 - 2.2206e-06j))
+    assert np.isclose(tp._ulv, 400)
+    assert np.isclose(tp._uhv, 20000)
+    assert np.isclose(tp._sn, 50e3)
+
+    # Bad unit for each of them
+    for param, fake_quantity in (
+        ("z2", Q_(1350.0, "A")),
+        ("ym", Q_(145.0, "A")),
+        ("ulv", Q_(400, "A")),
+        ("uhv", Q_(20, "A")),
+        ("sn", Q_(50, "A")),
+    ):
+        copy_data = data.copy()
+        copy_data[param] = fake_quantity
+        with pytest.raises(
+            DimensionalityError, match=r"Cannot convert from 'ampere' \(\[current\]\) to '\w+?' \(.+?\)"
+        ):
+            TransformerParameters(**copy_data)
+
+
+def test_transformers_parameters_units_from_tests():
     # Example in the "transformers" document of Victor.
     # Yzn11 - 50kVA. Good units
     data = {
@@ -220,7 +252,7 @@ def test_transformers_parameters_units():
         "vsc": Q_(4, "percent"),  # %
         "type": "yzn11",
     }
-    tp = TransformerParameters.from_dict(data)
+    tp = TransformerParameters.from_open_and_short_circuit_tests(**data)
     assert np.isclose(tp._psc, 1350.0)
     assert np.isclose(tp._p0, 145.0)
     assert np.isclose(tp._i0, 1.8e-2)
@@ -244,7 +276,7 @@ def test_transformers_parameters_units():
         with pytest.raises(
             DimensionalityError, match=r"Cannot convert from 'ampere' \(\[current\]\) to '\w+?' \(.+?\)"
         ):
-            TransformerParameters.from_dict(copy_data)
+            TransformerParameters.from_open_and_short_circuit_tests(**copy_data)
 
 
 def test_transformer_type():
@@ -325,12 +357,12 @@ def test_catalogue_data():
         "Don't forget to delete files that are useless too."
     )
 
-    # Check that the id is unique
-    assert catalogue_data["id"].is_unique, error_message
+    # Check that the name is unique
+    assert catalogue_data["name"].is_unique, error_message
 
-    catalogue_data.set_index("id", inplace=True)
+    catalogue_data.set_index("name", inplace=True)
     for idx in catalogue_data.index:
-        tp = TransformerParameters.from_catalogue(id=idx)
+        tp = TransformerParameters.from_catalogue(name=idx)
 
         # The entry of the catalogue has been found
         assert tp.id in catalogue_data.index, error_message
@@ -346,16 +378,15 @@ def test_catalogue_data():
         assert np.isclose(tp.vsc.m, catalogue_data.at[tp.id, "vsc"])
 
         # Check that the parameters are valid
-        z, y, k, orientation = tp.to_zyk()
-        assert isinstance(z.m, numbers.Complex)
-        assert isinstance(y.m, numbers.Complex)
-        assert isinstance(k.m, numbers.Real)
-        assert orientation in (-1.0, 1.0)
+        assert isinstance(tp.z2.m, numbers.Complex)
+        assert isinstance(tp.ym.m, numbers.Complex)
+        assert isinstance(tp.k.m, numbers.Real)
+        assert tp.orientation in (-1.0, 1.0)
 
 
 def test_from_catalogue():
     # Unknown strings
-    for field_name in ("id", "manufacturer", "range", "efficiency", "type"):
+    for field_name in ("name", "manufacturer", "range", "efficiency", "type"):
         # String
         with pytest.raises(RoseauLoadFlowException) as e:
             TransformerParameters.from_catalogue(**{field_name: "unknown"})
@@ -388,13 +419,19 @@ def test_from_catalogue():
 
     # Several transformers
     with pytest.raises(RoseauLoadFlowException) as e:
-        TransformerParameters.from_catalogue(type="yzn", sn=50e3)
+        TransformerParameters.from_catalogue(type=r"yzn.*", sn=50e3)
     assert e.value.msg == (
-        "Several transformers matching the query (type='yzn', nominal power=50.0 kVA) have been "
+        "Several transformers matching the query (type='yzn.*', nominal power=50.0 kVA) have been "
         "found: 'SE_Minera_A0Ak_50kVA', 'SE_Minera_B0Bk_50kVA', 'SE_Minera_C0Bk_50kVA', "
         "'SE_Minera_Standard_50kVA'."
     )
     assert e.value.code == RoseauLoadFlowExceptionCode.CATALOGUE_SEVERAL_FOUND
+
+    # Success
+    tp = TransformerParameters.from_catalogue(name="SE_Minera_AA0Ak_160kVA")
+    assert tp.id == "SE_Minera_AA0Ak_160kVA"
+    tp = TransformerParameters.from_catalogue(name="SE_Minera_AA0Ak_160kVA", id="tp-test1")
+    assert tp.id == "tp-test1"
 
 
 def test_get_catalogue():
@@ -405,11 +442,11 @@ def test_get_catalogue():
 
     # Filter on a single attribute
     for field_name, value, expected_size in (
-        ("id", "SE_Minera_A0Ak_50kVA", 1),
+        ("name", "SE_Minera_A0Ak_50kVA", 1),
         ("manufacturer", "SE", 148),
         ("range", r"min.*", 67),
-        ("efficiency", "c0", 29),
-        ("type", "dy", 158),
+        ("efficiency", r"c0.*", 29),
+        ("type", r"dy.*", 158),
         ("sn", Q_(160, "kVA"), 12),
         ("uhv", Q_(20, "kV"), 162),
         ("ulv", 400, 162),
@@ -419,9 +456,9 @@ def test_get_catalogue():
 
     # Filter on two attributes
     for field_name, value, expected_size in (
-        ("id", "SE_Minera_A0Ak_50kVA", 1),
+        ("name", "SE_Minera_A0Ak_50kVA", 1),
         ("range", "minera", 67),
-        ("efficiency", "c0", 29),
+        ("efficiency", r"c0.*", 29),
         ("type", r"^d.*11$", 144),
         ("sn", Q_(160, "kVA"), 11),
         ("uhv", Q_(20, "kV"), 148),
@@ -432,9 +469,9 @@ def test_get_catalogue():
 
     # Filter on three attributes
     for field_name, value, expected_size in (
-        ("id", "se_VEGETA_C0BK_3150kva", 1),
+        ("name", "se_VEGETA_C0BK_3150kva", 1),
         ("efficiency", r"c0[abc]k", 15),
-        ("type", "dyn", 41),
+        ("type", r"dyn\d+", 41),
         ("sn", Q_(160, "kVA"), 3),
         ("uhv", Q_(20, "kV"), 41),
         ("ulv", 400, 41),
@@ -460,10 +497,10 @@ def test_max_power():
         "sn": 50 * 1e3,
         "vsc": 4 / 100,
     }
-    tp = TransformerParameters("test", **kwds)
+    tp = TransformerParameters.from_open_and_short_circuit_tests(id="test", **kwds)
     assert tp.max_power is None
 
-    tp = TransformerParameters("test", **kwds, max_power=60_000)
+    tp = TransformerParameters.from_open_and_short_circuit_tests(id="test", **kwds, max_power=60_000)
     assert tp.max_power == Q_(60_000, "VA")
 
     tp.max_power = 55_000
@@ -474,3 +511,68 @@ def test_max_power():
 
     tp.max_power = Q_(65, "kVA")
     assert tp.max_power == Q_(65_000, "VA")
+
+
+def test_from_open_dss():
+    """https://sourceforge.net/p/electricdss/discussion/beginners/thread/742e6c9665/
+
+    Main input data for transformer:
+
+    - Type: two windings transformer
+    - Phases numbers: 3
+    - Apparent rated power: 1800 kVA
+    - Frequency = 50 Hz
+    - Rated line voltage in = 33 kV
+    - Rated line voltage out = 0.405 kV
+    - Short circuit voltage: 6%
+    - Short circuit losses: 0.902%
+    - No load current: 0.3%
+    - No load losses: 0.136%
+    - Connections: DYn
+    - Group No: 11
+    - Neutral: distributed at side out (low voltage level)
+    - Impedance to earth in = 1 MΩ (insulated)
+    - Impedance to earth out = 0 Ω
+    - Impedance to earth common = 5 Ω "
+
+    OpenDss Model::
+
+        New Transformer.Isacco phases=3 windings=2 XHL=6
+        ~ wdg=1 bus=MVbusname kV=33 kVA=1800 conn=delta
+        ~ Wdg=2 bus=LVBusname.1.2.3.4 kV=0.405 kVA=1800 conn=wye
+        ~ %Loadloss=0.902 %imag=0.3 %noload=.136  LeadLag=Euro
+
+        // Neutral reactor
+        New Reactor.5-ohm phases=1 bus=LVBusname.4  R=0 X=5
+    """
+    sn = Q_(1800, "kVA")
+    tp_rlf = TransformerParameters.from_open_and_short_circuit_tests(
+        id="tp-test",
+        type="Dyn11",
+        uhv=Q_(33, "kV"),
+        ulv=Q_(0.405, "kV"),
+        sn=sn,
+        p0=Q_(0.136, "percent") * sn,
+        i0=Q_(0.3, "percent"),
+        psc=Q_(0.902, "percent") * sn,
+        vsc=Q_(6, "percent"),
+    )
+
+    tp_dss = TransformerParameters.from_open_dss(
+        id="tp-test",
+        conns=("delta", "wye"),
+        kvs=(33, 0.405),
+        kvas=1800,
+        leadlag="euro",
+        xhl=6,
+        loadloss=0.902,
+        noloadloss=0.136,
+        imag=0.3,
+    )
+    assert tp_rlf.uhv == tp_dss.uhv
+    assert tp_rlf.ulv == tp_dss.ulv
+    assert tp_rlf.sn == tp_dss.sn
+    assert tp_rlf.k == tp_dss.k
+    assert tp_rlf.orientation == tp_dss.orientation
+    np.testing.assert_allclose(tp_rlf.z2.m, tp_dss.z2.m)
+    np.testing.assert_allclose(tp_rlf.ym.m, tp_dss.ym.m)

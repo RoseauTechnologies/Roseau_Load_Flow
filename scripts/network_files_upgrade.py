@@ -24,7 +24,7 @@ def upgrade_network(path: Path) -> None:
 
 
 def update_bad_transformer_id(path: Path) -> None:
-    with open(path) as f:
+    with path.open() as f:
         data = json.load(f)
     for branch in data["branches"]:
         branch_id = branch["id"]
@@ -36,12 +36,6 @@ def update_bad_transformer_id(path: Path) -> None:
 
 
 if __name__ == "__main__":
-    # from roseau.load_flow import AbstractLoad, VoltageSource
-    #
-    # # Allow floating neutral otherwise the upgrade will fail for some files
-    # AbstractLoad._floating_neutral_allowed = True
-    # VoltageSource._floating_neutral_allowed = True
-
     for path in all_network_paths():
         try:
             upgrade_network(path)

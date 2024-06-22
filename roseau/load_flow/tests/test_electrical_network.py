@@ -54,11 +54,11 @@ def single_phase_network(test_networks_path) -> ElectricalNetwork:
 
 
 @contextmanager
-def check_result_warning(expected_message: str):
+def check_result_warning(expected_message: str | re.Pattern[str]):
     with warnings.catch_warnings(record=True) as records:
         yield
     assert len(records) == 1
-    assert records[0].message.args[0] == expected_message
+    assert re.match(expected_message, records[0].message.args[0])
     assert records[0].category == UserWarning
 
 
@@ -80,7 +80,7 @@ def test_connect_and_disconnect():
     load_bus2 = Bus(id="load_bus2", phases="abcn")
     ground2 = Ground("ground2")
     ground2.connect(bus=load_bus2)
-    tp = TransformerParameters.from_catalogue(id="SE_Minera_A0Ak_50kVA")
+    tp = TransformerParameters.from_catalogue(name="SE_Minera_A0Ak_50kVA")
     Transformer(id="transfo", bus1=load_bus, bus2=load_bus2, parameters=tp)
     with pytest.raises(RoseauLoadFlowException) as e:
         en._check_validity(constructed=False)
@@ -331,7 +331,7 @@ def test_bad_networks():
 
     # No potential reference
     bus3 = Bus("bus3", phases="abcn")
-    tp = TransformerParameters(
+    tp = TransformerParameters.from_open_and_short_circuit_tests(
         "t", type="Dyn11", uhv=20000, ulv=400, sn=160 * 1e3, p0=460, i0=2.3 / 100, psc=2350, vsc=4 / 100
     )
     t = Transformer("transfo", bus2, bus3, parameters=tp)
@@ -1018,7 +1018,7 @@ def test_network_results_warning(small_network, small_network_with_results, recw
 
     # Ensure that a warning is raised no matter which result is requested
     expected_message = (
-        "The results of this element may be outdated. Please re-run a load flow to ensure the validity of results."
+        r"The results of \w+ '\w+' may be outdated. Please re-run a load flow to ensure the validity of results."
     )
     for bus in en.buses.values():
         with check_result_warning(expected_message=expected_message):
@@ -1769,9 +1769,9 @@ def test_from_catalogue():
 
     # Several network name matched
     with pytest.raises(RoseauLoadFlowException) as e:
-        ElectricalNetwork.from_catalogue(name="MVFeeder", load_point_name="winter")
+        ElectricalNetwork.from_catalogue(name=r"MVFeeder.*", load_point_name="winter")
     assert e.value.msg == (
-        "Several networks matching the query (name='MVFeeder') have been found: 'MVFeeder004', "
+        "Several networks matching the query (name='MVFeeder.*') have been found: 'MVFeeder004', "
         "'MVFeeder011', 'MVFeeder015', 'MVFeeder032', 'MVFeeder041', 'MVFeeder063', 'MVFeeder078', "
         "'MVFeeder115', 'MVFeeder128', 'MVFeeder151', 'MVFeeder159', 'MVFeeder176', 'MVFeeder210', "
         "'MVFeeder217', 'MVFeeder232', 'MVFeeder251', 'MVFeeder290', 'MVFeeder312', 'MVFeeder320', "
@@ -1798,9 +1798,9 @@ def test_get_catalogue():
     assert catalogue.shape == (40, 7)
 
     # Filter on the network name
-    catalogue = ElectricalNetwork.get_catalogue(name="MV")
+    catalogue = ElectricalNetwork.get_catalogue(name=r"MV.*")
     assert catalogue.shape == (20, 7)
-    catalogue = ElectricalNetwork.get_catalogue(name=re.compile(r"^MV"))
+    catalogue = ElectricalNetwork.get_catalogue(name=re.compile(r"^MV.*"))
     assert catalogue.shape == (20, 7)
 
     # Filter on the load point name
@@ -1810,13 +1810,13 @@ def test_get_catalogue():
     assert catalogue.shape == (40, 7)
 
     # Filter on both
-    catalogue = ElectricalNetwork.get_catalogue(name="MV", load_point_name="winter")
+    catalogue = ElectricalNetwork.get_catalogue(name=r"MV.*", load_point_name="winter")
     assert catalogue.shape == (20, 7)
-    catalogue = ElectricalNetwork.get_catalogue(name="MV", load_point_name=re.compile(r"^Winter"))
+    catalogue = ElectricalNetwork.get_catalogue(name=r"MV.*", load_point_name=re.compile(r"^Winter"))
     assert catalogue.shape == (20, 7)
-    catalogue = ElectricalNetwork.get_catalogue(name=re.compile(r"^MV"), load_point_name="winter")
+    catalogue = ElectricalNetwork.get_catalogue(name=re.compile(r"^MV.*"), load_point_name="winter")
     assert catalogue.shape == (20, 7)
-    catalogue = ElectricalNetwork.get_catalogue(name=re.compile(r"^MV"), load_point_name=re.compile(r"^Winter"))
+    catalogue = ElectricalNetwork.get_catalogue(name=re.compile(r"^MV.*"), load_point_name=re.compile(r"^Winter"))
     assert catalogue.shape == (20, 7)
 
     # Regexp error
@@ -1939,7 +1939,7 @@ def test_results_to_json(small_network_with_results, tmp_path):
     tmp_file = tmp_path / "results.json"
     en.results_to_json(tmp_file)
 
-    with open(tmp_file) as fp:
+    with tmp_file.open() as fp:
         res_network = json.load(fp)
 
     assert res_network == res_network_expected
@@ -1950,7 +1950,7 @@ def test_propagate_potentials_center_transformers():
     bus1 = Bus(id="bus1", phases="ab")
     PotentialRef(id="pref", element=bus1)
     VoltageSource(id="vs", bus=bus1, voltages=[20000])
-    tp = TransformerParameters(
+    tp = TransformerParameters.from_open_and_short_circuit_tests(
         id="test", type="center", sn=160000, uhv=20000.0, ulv=400.0, i0=0.023, p0=460.0, psc=2350.0, vsc=0.04
     )
     bus2 = Bus(id="bus2", phases="abn")

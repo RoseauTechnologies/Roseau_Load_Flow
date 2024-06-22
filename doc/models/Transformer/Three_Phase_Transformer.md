@@ -608,32 +608,24 @@ connects a voltage source on the MV network to a load on the LV network.
 ```python
 import functools as ft
 import numpy as np
-from roseau.load_flow import (
-    Bus,
-    ElectricalNetwork,
-    PotentialRef,
-    PowerLoad,
-    Transformer,
-    TransformerParameters,
-    VoltageSource,
-)
+import roseau.load_flow as rlf
 
 # Create a MV bus
-bus_mv = Bus(id="bus_mv", phases="abc")
+bus_mv = rlf.Bus(id="bus_mv", phases="abc")
 
 # Create a LV bus
-bus_lv = Bus(id="bus_lv", phases="abcn")
+bus_lv = rlf.Bus(id="bus_lv", phases="abcn")
 
 # Set the potential references of the MV and LV networks
-pref_mv = PotentialRef(id="pref_mv", element=bus_mv)
-pref_lv = PotentialRef(id="pref_lv", element=bus_lv, phase="n")
+pref_mv = rlf.PotentialRef(id="pref_mv", element=bus_mv)
+pref_lv = rlf.PotentialRef(id="pref_lv", element=bus_lv, phase="n")
 
 # Create a voltage source and connect it to the MV bus
 voltages = 20e3 * np.exp([0, -2j * np.pi / 3, 2j * np.pi / 3])
-vs = VoltageSource(id="vs", bus=bus_mv, voltages=voltages)
+vs = rlf.VoltageSource(id="vs", bus=bus_mv, voltages=voltages)
 
 # Create a MV/LV transformer
-tp = TransformerParameters(
+tp = rlf.TransformerParameters.from_open_and_short_circuit_tests(
     id="SE_Minera_A0Ak_100_kVA",
     type="Dyn11",
     sn=100.0 * 1e3,
@@ -644,7 +636,7 @@ tp = TransformerParameters(
     psc=1250.0,
     vsc=4.0 / 100,
 )
-transformer = Transformer(
+transformer = rlf.Transformer(
     id="transfo",
     bus1=bus_mv,
     bus2=bus_lv,
@@ -655,10 +647,10 @@ transformer = Transformer(
 )
 
 # Create a LV load
-load = PowerLoad(id="load", bus=bus_lv, phases="abcn", powers=[3e3, 3e3, 3e3])
+load = rlf.PowerLoad(id="load", bus=bus_lv, phases="abcn", powers=[3e3, 3e3, 3e3])
 
 # Create the network and solve the load flow
-en = ElectricalNetwork.from_element(bus_mv)
+en = rlf.ElectricalNetwork.from_element(bus_mv)
 en.solve_load_flow()
 
 # The current flowing into the transformer from the MV bus

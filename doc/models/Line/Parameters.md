@@ -17,7 +17,7 @@ myst:
 
 As described [in the previous page](models-line_parameters), a line parameters object contains the
 impedance and shunt admittance matrices representing the line model. Sometimes you do not have
-these matrices available but you have other data such as symmetric components or geometric
+these matrices available, but you have other data such as symmetric components or geometric
 configurations and material types.
 
 This page describes how to build the impedance and shunt admittance matrices and thus the line
@@ -39,7 +39,7 @@ class method. This method takes the following data:
 - The zero sequence of the admittance (in S/km), noted $\underline{Y_0}$ and `y0` in the code.
 - The direct sequence of the admittance (in S/km), noted $\underline{Y_1}$ and `y1` in the code.
 
-The symmetric componenets are then used to build the series impedance matrix $\underline{Z}$ and
+The symmetric components are then used to build the series impedance matrix $\underline{Z}$ and
 the shunt admittance matrix $\underline{Y}$ using the following equations:
 
 ```{math}
@@ -141,10 +141,10 @@ It means that we try to define $\underline{Z_0}=\underline{Z_1}$ and $\underline
 
 ```pycon
 >>> import numpy as np
-... from roseau.load_flow import LineParameters, Q_
+... import roseau.load_flow as rlf
 
 >>> # A basic example when z0=z1
-... line_parameters = LineParameters.from_sym(
+... line_parameters = rlf.LineParameters.from_sym(
 ...     "sym_line_example", z0=0.2 + 0.1j, z1=0.2 + 0.1j, y0=0.00014106j, y1=0.00014106j
 ... )
 
@@ -164,7 +164,7 @@ array(
 
 
 >>> # Simple example in "downgraded" model
-... line_parameters = LineParameters.from_sym(
+... line_parameters = rlf.LineParameters.from_sym(
 ...     "NKBA NOR  25.00 kV", z0=0.0j, z1=1.0 + 1.0j, y0=0.0j, y1=1e-06j
 ... )
 The symmetric model data provided for line type 'NKBA NOR  25.00 kV' produces invalid line impedance matrix... It is
@@ -186,7 +186,7 @@ array(
 
 
 >>> # 4x4 matrix
-... line_parameters = LineParameters.from_sym(
+... line_parameters = rlf.LineParameters.from_sym(
 ...     "sym_neutral_underground_line_example",
 ...     z0=0.188 + 0.8224j,
 ...     z1=0.188 + 0.0812j,
@@ -259,7 +259,7 @@ The following resistivities are used by _Roseau Load Flow_:
 | ACSR -- Fr: Alu-Acier      | $4.0587\times10^{-8}$   |
 | AACSR -- Fr: Almélec-Acier | $3.26\times10^{-8}$     |
 
-These values are defined in the `utils` module: {data}`roseau.load_flow.utils.constants.RHO`.
+These values are defined in the `utils` module: {data}`roseau.load_flow.utils.RHO`.
 
 #### Inductance
 
@@ -291,7 +291,7 @@ where:
 - $D_{ij}$ the distances between the center of the conductor $i$ and the center of the conductor $j$
 - $GMR_i$ the _geometric mean radius_ of the conductor $i$.
 
-The vacuum magnetic permeability is defined in the `utils` module {data}`roseau.load_flow.utils.constants.MU_0`.
+The vacuum magnetic permeability is defined in the `utils` module {data}`roseau.load_flow.utils.MU_0`.
 
 The geometric mean radius is defined for all $i\in \{\mathrm{a}, \mathrm{b}, \mathrm{c}, \mathrm{n}\}$ as
 
@@ -346,7 +346,7 @@ to compute the distances based on the position of wires.
 The permittivity of the insulator $\varepsilon$ (in F/m) is defined as $\varepsilon_0\varepsilon_{\mathrm{r}}$ with
 $\varepsilon_0$ the permittivity of the vacuum (in F/m) and $\varepsilon_{\mathrm{r}}$ the relative
 permittivity of the insulator (no unit). These values are defined in the `utils` module
-[](#roseau.load_flow.utils.constants.EPSILON_0) and [](#roseau.load_flow.utils.constants.EPSILON_R).
+{data}`roseau.load_flow.utils.EPSILON_0` and {data}`roseau.load_flow.utilsEPSILON_R`.
 
 The capacitance matrix $C$ is then defined by:
 
@@ -387,7 +387,7 @@ $\tan\delta$ is the loss tangent and is taken from this table:
 | Cross-linked polyethylene (PEX)  | $30\times10^{-4}$         |
 | Ethylene-Propylene Rubber (EPR)  | $125\times10^{-4}$        |
 
-These values are defined in the `utils` module: [](#roseau.load_flow.utils.constants.TAN_D).
+These values are defined in the `utils` module: {data}`roseau.load_flow.utils.TAN_D`.
 
 Finally, the impedance matrix and the admittance matrix can be computed.
 
@@ -451,18 +451,18 @@ the point $B$, etc. The prime positions are the positions of the images of the c
 The formulas of the previous sections are used to get the impedance and shunt admittances matrices.
 
 ```pycon
->>> from roseau.load_flow import LineParameters, Q_, LineType, ConductorType, InsulatorType
+>>> import roseau.load_flow as rlf
 
 >>> # A twisted line example
-... line_parameters = LineParameters.from_geometry(
+... line_parameters = rlf.LineParameters.from_geometry(
 ...     "twisted_example",
-...     line_type=LineType.TWISTED,
-...     conductor_type=ConductorType.AL,
-...     insulator_type=InsulatorType.PEX,
+...     line_type=rlf.LineType.TWISTED,
+...     conductor_type=rlf.ConductorType.AL,
+...     insulator_type=rlf.InsulatorType.PEX,
 ...     section=150,  # mm²
 ...     section_neutral=70,  # mm²
 ...     height=10,  # m
-...     external_diameter=Q_(4, "cm"),
+...     external_diameter=rlf.Q_(4, "cm"),
 ... )
 
 >>> line_parameters.z_line
@@ -533,14 +533,14 @@ Please note that for underground lines, the provided height $h$ must be negative
 ```
 
 ```pycon
->>> from roseau.load_flow import LineParameters, Q_, LineType, ConductorType, InsulatorType
+>>> import roseau.load_flow as rlf
 
 >>> # An underground line example
-... line_parameters = LineParameters.from_geometry(
+... line_parameters = rlf.LineParameters.from_geometry(
 ...     "underground_example",
-...     line_type=LineType.UNDERGROUND,
-...     conductor_type=ConductorType.AL,
-...     insulator_type=InsulatorType.PVC,
+...     line_type=rlf.LineType.UNDERGROUND,
+...     conductor_type=rlf.ConductorType.AL,
+...     insulator_type=rlf.InsulatorType.PVC,
 ...     section=150, #mm²
 ...     section_neutral=70, #mm²
 ...     height=-1.5, # m # Underground so negative!
@@ -563,6 +563,12 @@ array(
      [ 0.         -44.86059415j,  0.          -6.09859898j,  0.         -44.86059415j, 12.66715195+306.9389864j ]]
 ) <Unit('microsiemens / kilometer')>
 ```
+
+## Import from OpenDSS
+
+Line parameters can also be created using an OpenDSS line code parameters using the
+`LineParameters.from_open_dss` class method. For more information and usage examples,
+see the {meth}`method's documentation <roseau.load_flow.LineParameters.from_open_dss>`.
 
 ## Bibliography
 

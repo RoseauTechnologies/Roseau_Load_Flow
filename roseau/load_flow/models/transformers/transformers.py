@@ -8,7 +8,7 @@ from roseau.load_flow.models.branches import AbstractBranch
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.transformers.parameters import TransformerParameters
 from roseau.load_flow.typing import Id, JsonDict
-from roseau.load_flow.units import Q_
+from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow_engine.cy_engine import (
     CyCenterTransformer,
     CySingleTransformer,
@@ -73,7 +73,7 @@ class Transformer(AbstractBranch):
                 The phases of the first extremity of the transformer. A string like ``"abc"`` or
                 ``"abcn"`` etc. The order of the phases is important. For a full list of supported
                 phases, see the class attribute :attr:`allowed_phases`. All phases must be present
-                in the connected bus. By default determined from the transformer type.
+                in the connected bus. By default, determined from the transformer type.
 
             phases2:
                 The phases of the second extremity of the transformer. See ``phases1``.
@@ -94,11 +94,11 @@ class Transformer(AbstractBranch):
                 id=id, bus1=bus1, bus2=bus2, parameters=parameters, phases1=phases1, phases2=phases2
             )
 
-        super().__init__(id, bus1, bus2, phases1=phases1, phases2=phases2, geometry=geometry)
+        super().__init__(id=id, bus1=bus1, bus2=bus2, phases1=phases1, phases2=phases2, geometry=geometry)
         self.tap = tap
         self._parameters = parameters
 
-        z2, ym, k, orientation = parameters._to_zyk()
+        z2, ym, k, orientation = parameters._z2, parameters._ym, parameters._k, parameters._orientation
         if parameters.type == "single":
             self._cy_element = CySingleTransformer(z2=z2, ym=ym, k=k * tap)
         elif parameters.type == "center":
@@ -148,7 +148,7 @@ class Transformer(AbstractBranch):
         self._tap = value
         self._invalidate_network_results()
         if self._cy_element is not None:
-            z2, ym, k, _ = self.parameters._to_zyk()
+            z2, ym, k = self.parameters._z2, self.parameters._ym, self.parameters._k
             self._cy_element.update_transformer_parameters(z2, ym, k * value)
 
     @property
@@ -167,7 +167,7 @@ class Transformer(AbstractBranch):
         self._parameters = value
         self._invalidate_network_results()
         if self._cy_element is not None:
-            z2, ym, k, _ = value._to_zyk()
+            z2, ym, k = value._z2, value._ym, value._k
             self._cy_element.update_transformer_parameters(z2, ym, k * self.tap)
 
     @property
@@ -295,6 +295,13 @@ class Transformer(AbstractBranch):
             )
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
+
+    @property
+    @ureg_wraps("VA", (None,))
+    def res_power_losses(self) -> Q_[complex]:
+        """Get the total power losses in the transformer (in VA)."""
+        powers1, powers2 = self._res_powers_getter(warning=True)
+        return sum(powers1) + sum(powers2)
 
     @property
     def res_violated(self) -> bool | None:

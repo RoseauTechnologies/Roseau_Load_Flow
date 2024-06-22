@@ -10,7 +10,7 @@ myst:
     "keywords lang=fr": |
       simulation, réseau, électrique, charge flexible, domaine de faisabilité, projection, euclidienne, P constant,
       Q constant
-    "keywords lang=en": simulation, distribution grid, flexible load, projection, euclidian, constant P, constant Q
+    "keywords lang=en": simulation, distribution grid, flexible load, projection, euclidean, constant P, constant Q
 ---
 
 (models-flexible_load-projections)=
@@ -50,9 +50,9 @@ not specified.
 ```
 
 ```python
-from roseau.load_flow import Projection
+import roseau.load_flow as rlf
 
-projection = Projection(type="euclidean")  # alpha and epsilon can be provided
+projection = rlf.Projection(type="euclidean")  # alpha and epsilon can be provided
 ```
 
 ```{important}
@@ -70,9 +70,9 @@ Keep the value of $P$ computed by the control and project $Q$ on the feasible do
 ```
 
 ```python
-from roseau.load_flow import Projection
+import roseau.load_flow as rlf
 
-projection = Projection(type="keep_p")  # alpha and epsilon can be provided
+projection = rlf.Projection(type="keep_p")  # alpha and epsilon can be provided
 ```
 
 ```{important}
@@ -90,9 +90,9 @@ Keep the value of $Q$ computed by the control and project $P$ on the feasible do
 ```
 
 ```python
-from roseau.load_flow import Projection
+import roseau.load_flow as rlf
 
-projection = Projection(type="keep_q")  # alpha and epsilon can be provided
+projection = rlf.Projection(type="keep_q")  # alpha and epsilon can be provided
 ```
 
 ```{important}

@@ -42,36 +42,28 @@ Here is a switch connecting a constant power load to a voltage source.
 ```python
 import functools as ft
 import numpy as np
-from roseau.load_flow import (
-    Q_,
-    Bus,
-    ElectricalNetwork,
-    PotentialRef,
-    PowerLoad,
-    Switch,
-    VoltageSource,
-)
+import roseau.load_flow as rlf
 
 # Two buses
-bus1 = Bus(id="bus1", phases="abcn")
-bus2 = Bus(id="bus2", phases="abcn")
+bus1 = rlf.Bus(id="bus1", phases="abcn")
+bus2 = rlf.Bus(id="bus2", phases="abcn")
 
 # A line
-switch = Switch(id="switch", bus1=bus1, bus2=bus2)
+switch = rlf.Switch(id="switch", bus1=bus1, bus2=bus2)
 
 # A voltage source on the first bus
 un = 400 / np.sqrt(3)
 voltages = un * np.exp([0, -2j * np.pi / 3, 2j * np.pi / 3])
-vs = VoltageSource(id="source", bus=bus1, voltages=voltages)
+vs = rlf.VoltageSource(id="source", bus=bus1, voltages=voltages)
 
 # The neutral of the voltage source is fixed at potential 0
-pref = PotentialRef(id="pref", element=bus1, phase="n")
+pref = rlf.PotentialRef(id="pref", element=bus1, phase="n")
 
 # A power load on the second bus
-load = PowerLoad(id="load", bus=bus2, powers=[5000 + 1600j, 2500 + 800j, 0])
+load = rlf.PowerLoad(id="load", bus=bus2, powers=[5000 + 1600j, 2500 + 800j, 0])
 
 # Create a network and solve a load flow
-en = ElectricalNetwork.from_element(bus1)
+en = rlf.ElectricalNetwork.from_element(bus1)
 en.solve_load_flow()
 
 # The current flowing into the line from bus1

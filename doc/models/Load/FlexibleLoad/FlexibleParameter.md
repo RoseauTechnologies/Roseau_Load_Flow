@@ -28,15 +28,18 @@ Here, we define a flexible parameter with:
 - an $S^{\max}$ of 5 kVA.
 
 ```python
-from roseau.load_flow import FlexibleParameter, Control, Projection, Q_
+import roseau.load_flow as rlf
 
-fp = FlexibleParameter(
-    control_p=Control.constant(),
-    control_q=Control.q_u(
-        u_min=Q_(210, "V"), u_down=Q_(220, "V"), u_up=Q_(240, "V"), u_max=Q_(250, "V")
+fp = rlf.FlexibleParameter(
+    control_p=rlf.Control.constant(),
+    control_q=rlf.Control.q_u(
+        u_min=rlf.Q_(210, "V"),
+        u_down=rlf.Q_(220, "V"),
+        u_up=rlf.Q_(240, "V"),
+        u_max=rlf.Q_(250, "V"),
     ),
-    projection=Projection(type="keep_p"),
-    s_max=Q_(5, "kVA"),
+    projection=rlf.Projection(type="keep_p"),
+    s_max=rlf.Q_(5, "kVA"),
 )
 ```
 
@@ -52,26 +55,28 @@ flexible parameter with constant $P$ control and use it three times in the load 
 
 ```python
 import numpy as np
+import roseau.load_flow as rlf
 
-from roseau.load_flow import FlexibleParameter, Control, Projection, Q_, PowerLoad, Bus
-
-bus = Bus(id="bus", phases="abcn")
+bus = rlf.Bus(id="bus", phases="abcn")
 
 # Create a flexible parameter object
-fp = FlexibleParameter(
-    control_p=Control.constant(),
-    control_q=Control.q_u(
-        u_min=Q_(210, "V"), u_down=Q_(220, "V"), u_up=Q_(240, "V"), u_max=Q_(250, "V")
+fp = rlf.FlexibleParameter(
+    control_p=rlf.Control.constant(),
+    control_q=rlf.Control.q_u(
+        u_min=rlf.Q_(210, "V"),
+        u_down=rlf.Q_(220, "V"),
+        u_up=rlf.Q_(240, "V"),
+        u_max=rlf.Q_(250, "V"),
     ),
-    projection=Projection(type="keep_p"),
-    s_max=Q_(5, "kVA"),
+    projection=rlf.Projection(type="keep_p"),
+    s_max=rlf.Q_(5, "kVA"),
 )
 
 # Use it for the three phases of the load
-load = PowerLoad(
+load = rlf.PowerLoad(
     id="load",
     bus=bus,
-    powers=Q_(np.array([1000, 1000, 1000]) * (1 - 0.3j), "VA"),
+    powers=rlf.Q_(np.array([1000, 1000, 1000]) * (1 - 0.3j), "VA"),
     flexible_params=[fp, fp, fp],  # <- this makes the load "flexible"
 )
 ```
@@ -88,35 +93,39 @@ bus with a neutral. Two different controls are applied by the load on the two ph
 
 ```python
 import numpy as np
+import roseau.load_flow as rlf
 
-from roseau.load_flow import FlexibleParameter, Control, Projection, Q_, PowerLoad, Bus
-
-bus = Bus(id="bus", phases="abcn")
+bus = rlf.Bus(id="bus", phases="abcn")
 
 # Create a first flexible parameter (Q(U) control)
-fp1 = FlexibleParameter(
-    control_p=Control.constant(),
-    control_q=Control.q_u(
-        u_min=Q_(210, "V"), u_down=Q_(220, "V"), u_up=Q_(240, "V"), u_max=Q_(250, "V")
+fp1 = rlf.FlexibleParameter(
+    control_p=rlf.Control.constant(),
+    control_q=rlf.Control.q_u(
+        u_min=rlf.Q_(210, "V"),
+        u_down=rlf.Q_(220, "V"),
+        u_up=rlf.Q_(240, "V"),
+        u_max=rlf.Q_(250, "V"),
     ),
-    projection=Projection(type="keep_p"),
-    s_max=Q_(5, "kVA"),
+    projection=rlf.Projection(type="keep_p"),
+    s_max=rlf.Q_(5, "kVA"),
 )
 
 # Create a second flexible parameter (P(U) control)
-fp2 = FlexibleParameter(
-    control_p=Control.p_max_u_consumption(u_min=Q_(210, "V"), u_down=Q_(220, "V")),
-    control_q=Control.constant(),
-    projection=Projection(type="euclidean"),
-    s_max=Q_(3, "kVA"),
+fp2 = rlf.FlexibleParameter(
+    control_p=rlf.Control.p_max_u_consumption(
+        u_min=rlf.Q_(210, "V"), u_down=rlf.Q_(220, "V")
+    ),
+    control_q=rlf.Control.constant(),
+    projection=rlf.Projection(type="euclidean"),
+    s_max=rlf.Q_(3, "kVA"),
 )
 
 # Use them in a load
-load = PowerLoad(
+load = rlf.PowerLoad(
     id="load",
     bus=bus,
     phases="abn",
-    powers=Q_(np.array([1000, 1000]) * (1 - 0.3j), "VA"),
+    powers=rlf.Q_(np.array([1000, 1000]) * (1 - 0.3j), "VA"),
     flexible_params=[fp1, fp2],
 )
 ```
@@ -135,37 +144,41 @@ client.
 
 ```python
 import numpy as np
+import roseau.load_flow as rlf
 
-from roseau.load_flow import FlexibleParameter, Control, Projection, Q_, PowerLoad, Bus
-
-bus = Bus(id="bus", phases="abc")
+bus = rlf.Bus(id="bus", phases="abc")
 
 # Create a flexible parameter
-fp = FlexibleParameter(
-    control_p=Control.p_max_u_production(u_up=Q_(245, "V"), u_max=Q_(250, "V")),
-    control_q=Control.q_u(
-        u_min=Q_(210, "V"), u_down=Q_(220, "V"), u_up=Q_(240, "V"), u_max=Q_(245, "V")
+fp = rlf.FlexibleParameter(
+    control_p=rlf.Control.p_max_u_production(
+        u_up=rlf.Q_(245, "V"), u_max=rlf.Q_(250, "V")
     ),
-    projection=Projection(type="euclidean"),
-    s_max=Q_(5, "kVA"),
+    control_q=rlf.Control.q_u(
+        u_min=rlf.Q_(210, "V"),
+        u_down=rlf.Q_(220, "V"),
+        u_up=rlf.Q_(240, "V"),
+        u_max=rlf.Q_(245, "V"),
+    ),
+    projection=rlf.Projection(type="euclidean"),
+    s_max=rlf.Q_(5, "kVA"),
 )
 
 # Or using the shortcut
-fp = FlexibleParameter.pq_u_production(
-    up_up=Q_(245, "V"),
-    up_max=Q_(250, "V"),
-    uq_min=Q_(210, "V"),
-    uq_down=Q_(220, "V"),
-    uq_up=Q_(240, "V"),
-    uq_max=Q_(245, "V"),
-    s_max=Q_(5, "kVA"),
+fp = rlf.FlexibleParameter.pq_u_production(
+    up_up=rlf.Q_(245, "V"),
+    up_max=rlf.Q_(250, "V"),
+    uq_min=rlf.Q_(210, "V"),
+    uq_down=rlf.Q_(220, "V"),
+    uq_up=rlf.Q_(240, "V"),
+    uq_max=rlf.Q_(245, "V"),
+    s_max=rlf.Q_(5, "kVA"),
 )
 
 # Use it in a load
-load = PowerLoad(
+load = rlf.PowerLoad(
     id="load",
     bus=bus,
-    powers=Q_(-np.array([1000, 1000, 1000]), "VA"),  # <- negative powers (generator)
+    powers=rlf.Q_(-np.array([1000, 1000, 1000]), "VA"),  # <- negative powers (generator)
     flexible_params=[fp, fp, fp],
 )
 ```

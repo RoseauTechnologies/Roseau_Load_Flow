@@ -39,8 +39,8 @@ network can be provided on demand**. Please email us at
 This catalogue can be retrieved in the form of a dataframe using:
 
 ```pycon
->>> from roseau.load_flow import ElectricalNetwork
->>> ElectricalNetwork.get_catalogue()
+>>> import roseau.load_flow as rlf
+>>> rlf.ElectricalNetwork.get_catalogue()
 ```
 
 | Name                                                                              | Nb buses | Nb branches | Nb loads | Nb sources | Nb grounds | Nb potential refs | Available load points |
@@ -96,7 +96,7 @@ The arguments of the method `get_catalogue` can be used to filter the output. If
 only, you can call:
 
 ```pycon
->>> ElectricalNetwork.get_catalogue(name="LVFeeder")
+>>> rlf.ElectricalNetwork.get_catalogue(name=r"LVFeeder.*")
 ```
 
 | Name          | Nb buses | Nb branches | Nb loads | Nb sources | Nb grounds | Nb potential refs | Available load points |
@@ -125,7 +125,7 @@ only, you can call:
 A regular expression can also be used:
 
 ```pycon
->>> ElectricalNetwork.get_catalogue(name=r"LVFeeder38[0-9]+")
+>>> rlf.ElectricalNetwork.get_catalogue(name=r"LVFeeder38[0-9]+")
 ```
 
 | Name          | Nb buses | Nb branches | Nb loads | Nb sources | Nb grounds | Nb potential refs | Available load points |
@@ -138,14 +138,14 @@ You can build an `ElectricalNetwork` instance from the catalogue using the class
 `from_catalogue`. The name of the network and the name of the load point must be provided:
 
 ```pycon
->>> en = ElectricalNetwork.from_catalogue(name="LVFeeder38211", load_point_name="Summer")
+>>> en = rlf.ElectricalNetwork.from_catalogue(name="LVFeeder38211", load_point_name="Summer")
 <ElectricalNetwork: 6 buses, 5 branches, 8 loads, 1 source, 1 ground, 1 potential ref>
 ```
 
 In case no or several results match the parameters, an error is raised:
 
 ```pycon
->>> ElectricalNetwork.from_catalogue(name="LVFeeder38211", load_point_name="Unknown")
+>>> rlf.ElectricalNetwork.from_catalogue(name="LVFeeder38211", load_point_name="Unknown")
 RoseauLoadFlowException: No load points for network 'LVFeeder38211' matching the query (load_point_name='Unknown')
 have been found. Please look at the catalogue using the `get_catalogue` class method. [catalogue_not_found]
 ```
@@ -180,13 +180,13 @@ Pull requests to add some other sources are welcome!
 This catalogue can be retrieved in the form of a dataframe using:
 
 ```pycon
->>> from roseau.load_flow import TransformerParameters
->>> TransformerParameters.get_catalogue()
+>>> import roseau.load_flow as rlf
+>>> rlf.TransformerParameters.get_catalogue()
 ```
 
 _Truncated output_
 
-| Id                           | Manufacturer | Product range | Efficiency | Nominal power (kVA) | Type  | High voltage (kV) | Low voltage (kV) |
+| Name                         | Manufacturer | Product range | Efficiency | Nominal power (kVA) | Type  | High voltage (kV) | Low voltage (kV) |
 | :--------------------------- | :----------- | :------------ | :--------- | ------------------: | :---- | ----------------: | ---------------: |
 | FT_Standard_Standard_100kVA  | FT           | Standard      | Standard   |                 100 | Dyn11 |                20 |              0.4 |
 | FT_Standard_Standard_160kVA  | FT           | Standard      | Standard   |                 160 | Dyn11 |                20 |              0.4 |
@@ -241,7 +241,7 @@ _Truncated output_
 
 The following data are available in this table:
 
-- the **id**: a unique id among the catalogue.
+- the **name**: a unique name of the transformer in the catalogue.
 - the **manufacturer**: two manufacturers are available. `"SE"` stands for "Schneider-Electric" and `"FT"` stands for
   "France Transfo".
 - the product **range** which depends on the manufacturer
@@ -249,16 +249,16 @@ The following data are available in this table:
 - the **type** of the transformer.
 - the nominal power, noted **sn**.
 - the primary side phase to phase voltage, noted **uhv**.
-- the secondary side phase to phase volage, noted **ulv**.
+- the secondary side phase to phase voltage, noted **ulv**.
 
 The `get_catalogue` method accepts arguments (in bold above) that can be used to filter the returned table. The
 following command only retrieves transformer parameters of transformers with an efficiency of "A0Ak":
 
 ```pycon
->>> TransformerParameters.get_catalogue(efficiency="A0Ak")
+>>> rlf.TransformerParameters.get_catalogue(efficiency="A0Ak")
 ```
 
-| Id                     | Manufacturer | Product range | Efficiency | Type  | Nominal power (kVA) | High voltage (kV) | Low voltage (kV) |
+| Name                   | Manufacturer | Product range | Efficiency | Type  | Nominal power (kVA) | High voltage (kV) | Low voltage (kV) |
 | :--------------------- | :----------- | :------------ | :--------- | :---- | ------------------: | ----------------: | ---------------: |
 | SE_Minera_A0Ak_50kVA   | SE           | Minera        | A0Ak       | Yzn11 |                50.0 |              20.0 |              0.4 |
 | SE_Minera_A0Ak_100kVA  | SE           | Minera        | A0Ak       | Dyn11 |               100.0 |              20.0 |              0.4 |
@@ -278,10 +278,10 @@ following command only retrieves transformer parameters of transformers with an 
 or only transformers with a wye winding on the primary side (using a regular expression)
 
 ```pycon
->>> TransformerParameters.get_catalogue(type=r"^y.*$")
+>>> rlf.TransformerParameters.get_catalogue(type=r"y.*")
 ```
 
-| Id                       | Manufacturer | Product range | Efficiency | Type  | Nominal power (kVA) | High voltage (kV) | Low voltage (kV) |
+| Name                     | Manufacturer | Product range | Efficiency | Type  | Nominal power (kVA) | High voltage (kV) | Low voltage (kV) |
 | :----------------------- | :----------- | :------------ | :--------- | :---- | ------------------: | ----------------: | ---------------: |
 | SE_Minera_A0Ak_50kVA     | SE           | Minera        | A0Ak       | Yzn11 |                50.0 |              20.0 |              0.4 |
 | SE_Minera_B0Bk_50kVA     | SE           | Minera        | B0Bk       | Yzn11 |                50.0 |              20.0 |              0.4 |
@@ -291,10 +291,10 @@ or only transformers with a wye winding on the primary side (using a regular exp
 or only transformers meeting both criteria
 
 ```pycon
->>> TransformerParameters.get_catalogue(efficiency="A0Ak", type=r"^y.*$")
+>>> rlf.TransformerParameters.get_catalogue(efficiency="A0Ak", type=r"y.*")
 ```
 
-| Id                   | Manufacturer | Product range | Efficiency | Type  | Nominal power (kVA) | High voltage (kV) | Low voltage (kV) |
+| Name                 | Manufacturer | Product range | Efficiency | Type  | Nominal power (kVA) | High voltage (kV) | Low voltage (kV) |
 | :------------------- | :----------- | :------------ | :--------- | :---- | ------------------: | ----------------: | ---------------: |
 | SE_Minera_A0Ak_50kVA | SE           | Minera        | A0Ak       | Yzn11 |                50.0 |              20.0 |              0.4 |
 
@@ -304,13 +304,13 @@ the values in different units. For instance, if you want to get transformer para
 nominal power of 3150 kVA, the following two commands return the same table:
 
 ```pycon
->>> TransformerParameters.get_catalogue(sn=3150e3) # in VA by default
+>>> rlf.TransformerParameters.get_catalogue(sn=3150e3) # in VA by default
 
->>> from roseau.load_flow import Q_
-... TransformerParameters.get_catalogue(sn=Q_(3150, "kVA"))
+>>> import roseau.load_flow as rlf
+... rlf.TransformerParameters.get_catalogue(sn=rlf.Q_(3150, "kVA"))
 ```
 
-| Id                           | Manufacturer | Product range | Efficiency | Type  | Nominal power (kVA) | High voltage (kV) | Low voltage (kV) |
+| Name                         | Manufacturer | Product range | Efficiency | Type  | Nominal power (kVA) | High voltage (kV) | Low voltage (kV) |
 | :--------------------------- | :----------- | :------------ | :--------- | :---- | ------------------: | ----------------: | ---------------: |
 | FT_Standard_Standard_3150kVA | FT           | Standard      | Standard   | Dyn11 |              3150.0 |              20.0 |              0.4 |
 | SE_Vegeta_C0Bk_3150kVA       | SE           | Vegeta        | C0Bk       | Dyn11 |              3150.0 |              20.0 |              0.4 |
@@ -325,21 +325,21 @@ the method `get_catalogue` to narrow down the result to a single transformer in 
 For instance, these parameters filter the catalogue down to a single transformer parameters:
 
 ```pycon
->>> TransformerParameters.from_catalogue(efficiency="A0Ak", type=r"^y.*$")
+>>> rlf.TransformerParameters.from_catalogue(efficiency="A0Ak", type=r"^y.*$")
 TransformerParameters(id='SE_Minera_A0Ak_50kVA')
 ```
 
-The `id` filter can be directly used:
+The `name` filter can be directly used:
 
 ```pycon
->>> TransformerParameters.from_catalogue(id="SE_Minera_A0Ak_50kVA")
+>>> rlf.TransformerParameters.from_catalogue(name="SE_Minera_A0Ak_50kVA")
 TransformerParameters(id='SE_Minera_A0Ak_50kVA')
 ```
 
 In case no or several results match the parameters, an error is raised:
 
 ```pycon
->>> TransformerParameters.from_catalogue(manufacturer="ft")
+>>> rlf.TransformerParameters.from_catalogue(manufacturer="ft")
 RoseauLoadFlowException: Several transformers matching the query (manufacturer='ft') have been found:
 'FT_Standard_Standard_100kVA', 'FT_Standard_Standard_160kVA', 'FT_Standard_Standard_250kVA',
 'FT_Standard_Standard_315kVA', 'FT_Standard_Standard_400kVA', 'FT_Standard_Standard_500kVA',
@@ -351,7 +351,7 @@ RoseauLoadFlowException: Several transformers matching the query (manufacturer='
 or if no results:
 
 ```pycon
->>> TransformerParameters.from_catalogue(manufacturer="unknown")
+>>> rlf.TransformerParameters.from_catalogue(manufacturer="unknown")
 RoseauLoadFlowException: No manufacturer matching 'unknown' has been found. Available manufacturers
 are 'FT', 'SE'. [catalogue_not_found]
 ```
@@ -375,8 +375,8 @@ The available lines data are based on the following sources:
 This catalogue can be retrieved in the form of a dataframe using:
 
 ```pycon
->>> from roseau.load_flow import LineParameters
->>> LineParameters.get_catalogue()
+>>> import roseau.load_flow as rlf
+>>> rlf.LineParameters.get_catalogue()
 ```
 
 _Truncated output_
@@ -425,7 +425,7 @@ The `get_catalogue` method accepts arguments (in bold above) that can be used to
 table. The following command only returns line parameters made of Aluminum:
 
 ```pycon
->>> LineParameters.get_catalogue(conductor_type="al")
+>>> rlf.LineParameters.get_catalogue(conductor_type="al")
 ```
 
 _Truncated output_
@@ -446,7 +446,7 @@ _Truncated output_
 or only lines with a cross-section of 240 mm² (using a regular expression)
 
 ```pycon
->>> LineParameters.get_catalogue(section=240)
+>>> rlf.LineParameters.get_catalogue(section=240)
 ```
 
 | Name     | Line type   | Conductor material | Insulator type | Cross-section (mm²) | Resistance (ohm/km) | Reactance (ohm/km) | Susceptance (S/km) | Maximal current (A) |
@@ -464,7 +464,7 @@ or only lines with a cross-section of 240 mm² (using a regular expression)
 or only lines meeting both criteria
 
 ```pycon
->>> LineParameters.get_catalogue(conductor_type="al", section=240)
+>>> rlf.LineParameters.get_catalogue(conductor_type="al", section=240)
 ```
 
 | Name     | Line type   | Conductor material | Insulator type | Cross-section (mm²) | Resistance (ohm/km) | Reactance (ohm/km) | Susceptance (S/km) | Maximal current (A) |
@@ -484,25 +484,44 @@ the method `get_catalogue` to narrow down the result to a single line in the cat
 For instance, these parameters filter the results down to a single line parameters:
 
 ```pycon
->>> LineParameters.from_catalogue(line_type="underground", conductor_type="al", section=240)
+>>> rlf.LineParameters.from_catalogue(line_type="underground", conductor_type="al", section=240)
 LineParameters(id='U_AL_240')
 ```
 
 Or you can use the `name` filter directly:
 
 ```pycon
->>> LineParameters.from_catalogue(name="U_AL_240")
+>>> rlf.LineParameters.from_catalogue(name="U_AL_240")
 LineParameters(id='U_AL_240')
 ```
 
 As you can see, the `id` of the created instance is the same as the name in the catalogue. You can
-override this behaviour by passing the `id` parameter to `from_catalogue`.
+override this behaviour by passing the `id` parameter to `from_catalogue`:
+
+```pycon
+>>> rlf.LineParameters.from_catalogue(name="U_AL_240", id="lp-special")
+LineParameters(id='lp-special')
+```
+
+Line parameters created from the catalogue are 3-phase without a neutral by default. It is possible
+to create line parameters with different numbers of phases using the `nb_phases` parameter.
+
+```pycon
+>>> rlf.LineParameters.from_catalogue(name="U_AL_240").z_line.shape
+(3, 3)
+>>> # For 3-phase with neutral lines
+... rlf.LineParameters.from_catalogue(name="U_AL_240", nb_phases=4).z_line.shape
+(4, 4)
+>>> # For single-phase lines
+... rlf.LineParameters.from_catalogue(name="U_AL_240", nb_phases=2).z_line.shape
+(2, 2)
+```
 
 In case no or several results match the parameters, an error is raised:
 
 ```pycon
->>> LineParameters.from_catalogue(name= r"^U_AL")
-RoseauLoadFlowException: Several line parameters matching the query (name='^U_AL_') have been found:
+>>> rlf.LineParameters.from_catalogue(name= r"U_AL.*")
+RoseauLoadFlowException: Several line parameters matching the query (name='U_AL.*') have been found:
 'U_AL_19', 'U_AL_20', 'U_AL_22', 'U_AL_25', 'U_AL_28', 'U_AL_29', 'U_AL_33', 'U_AL_34', 'U_AL_37',
 'U_AL_38', 'U_AL_40', 'U_AL_43', 'U_AL_48', 'U_AL_50', 'U_AL_54', 'U_AL_55', 'U_AL_59', 'U_AL_60',
 'U_AL_69', 'U_AL_70', 'U_AL_74', 'U_AL_75', 'U_AL_79', 'U_AL_80', 'U_AL_90', 'U_AL_93', 'U_AL_95',
@@ -513,7 +532,7 @@ RoseauLoadFlowException: Several line parameters matching the query (name='^U_AL
 or if no results:
 
 ```pycon
->>> LineParameters.from_catalogue(name="unknown")
+>>> rlf.LineParameters.from_catalogue(name="unknown")
 RoseauLoadFlowException: No name matching 'unknown' has been found. Available names are 'O_AL_12',
 'O_AL_13', 'O_AL_14', 'O_AL_19', 'O_AL_20', 'O_AL_22', 'O_AL_25', 'O_AL_28', 'O_AL_29', 'O_AL_33',
 'O_AL_34', 'O_AL_37', 'O_AL_38', 'O_AL_40', 'O_AL_43', 'O_AL_48', 'O_AL_50', 'O_AL_54', 'O_AL_55',

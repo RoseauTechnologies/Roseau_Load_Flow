@@ -12,7 +12,8 @@ from collections.abc import Sequence
 import numpy as np
 import pandas as pd
 
-from roseau.load_flow.typing import ComplexArray
+from roseau.load_flow.typing import ComplexArray, ComplexArrayLike1D
+from roseau.load_flow.units import Q_, ureg_wraps
 
 ALPHA = np.exp(2 / 3 * np.pi * 1j)
 """complex: Phasor rotation operator `alpha`, which rotates a phasor vector counterclockwise by 120
@@ -110,30 +111,7 @@ def series_phasor_to_sym(s_abc: pd.Series) -> pd.Series:
     return s_012
 
 
-def calculate_voltages(potentials: ComplexArray, phases: str) -> ComplexArray:
-    """Calculate the voltages between phases given the potentials of each phase.
-
-    Args:
-        potentials:
-            Array of the complex potentials of each phase.
-
-        phases:
-            String of the phases in order. If a neutral exists, it must be the last.
-
-    Returns:
-        Array of the voltages between phases. If a neutral exists, the voltages are Phase-Neutral.
-        Otherwise, the voltages are Phase-Phase.
-
-    Example:
-        >>> potentials = 230 * np.array([1, np.exp(-2j*np.pi/3), np.exp(2j*np.pi/3), 0], dtype=np.complex128)
-        >>> calculate_voltages(potentials, "abcn")
-        array([ 230.  +0.j        , -115.-199.18584287j, -115.+199.18584287j])
-        >>> potentials = np.array([230, 230 * np.exp(-2j*np.pi/3)], dtype=np.complex128)
-        >>> calculate_voltages(potentials, "ab")
-        array([345.+199.18584287j])
-        >>> calculate_voltages(np.array([230, 0], dtype=np.complex128), "an")
-        array([230.+0.j])
-    """
+def _calculate_voltages(potentials: ComplexArray, phases: str) -> ComplexArray:
     assert len(potentials) == len(phases), "Number of potentials must match number of phases."
     if "n" in phases:  # Van, Vbn, Vcn
         # we know "n" is the last phase
@@ -149,6 +127,34 @@ def calculate_voltages(potentials: ComplexArray, phases: str) -> ComplexArray:
                 dtype=np.complex128,
             )
     return voltages
+
+
+@ureg_wraps("V", ("V", None))
+def calculate_voltages(potentials: ComplexArrayLike1D, phases: str) -> Q_[ComplexArray]:
+    """Calculate the voltages between phases given the potentials of each phase.
+
+    Args:
+        potentials:
+            Array of the complex potentials of each phase.
+
+        phases:
+            String of the phases in order. If a neutral exists, it must be the last.
+
+    Returns:
+        Array of the voltages between phases. If a neutral exists, the voltages are Phase-Neutral.
+        Otherwise, the voltages are Phase-Phase.
+
+    Example:
+        >>> potentials = 230 * np.array([1, np.exp(-2j * np.pi / 3), np.exp(2j * np.pi / 3), 0], dtype=np.complex128)
+        >>> calculate_voltages(potentials, "abcn")
+        array([ 230.  +0.j        , -115.-199.18584287j, -115.+199.18584287j]) <Unit('volt')>
+        >>> potentials = np.array([230, 230 * np.exp(-2j * np.pi / 3)], dtype=np.complex128)
+        >>> calculate_voltages(potentials, "ab")
+        array([345.+199.18584287j]) <Unit('volt')>
+        >>> calculate_voltages(np.array([230, 0], dtype=np.complex128), "an")
+        array([230.+0.j]) <Unit('volt')>
+    """
+    return _calculate_voltages(potentials, phases)
 
 
 def _calculate_voltage_phases(phases: str) -> list[str]:

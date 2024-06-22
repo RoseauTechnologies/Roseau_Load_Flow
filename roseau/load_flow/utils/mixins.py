@@ -261,11 +261,11 @@ class CatalogueMixin(Generic[_T], metaclass=ABCMeta):
         """
         vector = pd.Series(strings)
         if isinstance(value, re.Pattern):
-            result = vector.str.match(value)
+            result = vector.str.fullmatch(value)
         else:
             try:
                 pattern = re.compile(pattern=value, flags=re.IGNORECASE)
-                result = vector.str.match(pattern)
+                result = vector.str.fullmatch(pattern)
             except re.error:
                 # fallback to string comparison
                 result = vector.str.lower() == value.lower()

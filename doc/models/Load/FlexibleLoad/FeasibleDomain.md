@@ -38,37 +38,26 @@ Here is a small example of usage of the constant control for active and reactive
 
 ```python
 import numpy as np
-
-from roseau.load_flow import (
-    PowerLoad,
-    Bus,
-    Q_,
-    FlexibleParameter,
-    Control,
-    Projection,
-    VoltageSource,
-    ElectricalNetwork,
-    PotentialRef,
-)
+import roseau.load_flow as rlf
 
 # A voltage source
-bus = Bus(id="bus", phases="abcn")
+bus = rlf.Bus(id="bus", phases="abcn")
 un = 400 / np.sqrt(3)
-voltages = Q_(un * np.exp([0, -2j * np.pi / 3, 2j * np.pi / 3]), "V")
-vs = VoltageSource(id="source", bus=bus, voltages=voltages)
+voltages = rlf.Q_(un * np.exp([0, -2j * np.pi / 3, 2j * np.pi / 3]), "V")
+vs = rlf.VoltageSource(id="source", bus=bus, voltages=voltages)
 
 # A potential ref
-pref = PotentialRef("pref", element=bus, phase="n")
+pref = rlf.PotentialRef("pref", element=bus, phase="n")
 
 # No flexible params
-load = PowerLoad(
+load = rlf.PowerLoad(
     id="load",
     bus=bus,
-    powers=Q_(np.array([1000, 1000, 1000]), "VA"),
+    powers=rlf.Q_(np.array([1000, 1000, 1000]), "VA"),
 )
 
 # Build a network and solve a load flow
-en = ElectricalNetwork.from_element(bus)
+en = rlf.ElectricalNetwork.from_element(bus)
 en.solve_load_flow()
 
 # The voltage source provided 1 kVA per phase for the load
@@ -83,18 +72,18 @@ load.disconnect()
 # Constant flexible params
 # The projection is useless as there are only constant controls
 # The s_max is useless as there are only constant controls
-fp = FlexibleParameter(
-    control_p=Control.constant(),
-    control_q=Control.constant(),
-    projection=Projection(type="euclidean"),
-    s_max=Q_(5, "kVA"),
+fp = rlf.FlexibleParameter(
+    control_p=rlf.Control.constant(),
+    control_q=rlf.Control.constant(),
+    projection=rlf.Projection(type="euclidean"),
+    s_max=rlf.Q_(5, "kVA"),
 )
 
 # For each phase, the provided `powers` are lower than 5 kVA.
-load = PowerLoad(
+load = rlf.PowerLoad(
     id="load",
     bus=bus,
-    powers=Q_(np.array([1000, 1000, 1000]), "VA"),
+    powers=rlf.Q_(np.array([1000, 1000, 1000]), "VA"),
     flexible_params=[fp, fp, fp],
 )
 en.solve_load_flow()
@@ -109,10 +98,10 @@ vs.res_powers
 load.disconnect()
 
 # For some phases, the provided `powers` are greater than 5 kVA. The projection is still useless.
-load = PowerLoad(
+load = rlf.PowerLoad(
     id="load",
     bus=bus,
-    powers=Q_(np.array([6, 4.5, 6]), "kVA"),  # Above 5 kVA -> also OK!
+    powers=rlf.Q_(np.array([6, 4.5, 6]), "kVA"),  # Above 5 kVA -> also OK!
     flexible_params=[fp, fp, fp],
 )
 en.solve_load_flow()
@@ -134,24 +123,25 @@ radius $S^{\max}$, otherwise an error is thrown:
 
 ```python
 import numpy as np
+import roseau.load_flow as rlf
 
-from roseau.load_flow import PowerLoad, Bus, Q_, FlexibleParameter, Control, Projection
-
-bus = Bus(id="bus", phases="an")
+bus = rlf.Bus(id="bus", phases="an")
 
 # Flexible load
-fp = FlexibleParameter(
-    control_p=Control.p_max_u_production(u_up=Q_(240, "V"), u_max=Q_(250, "V")),
-    control_q=Control.constant(),
-    projection=Projection(type="keep_p"),
-    s_max=Q_(5, "kVA"),
+fp = rlf.FlexibleParameter(
+    control_p=rlf.Control.p_max_u_production(
+        u_up=rlf.Q_(240, "V"), u_max=rlf.Q_(250, "V")
+    ),
+    control_q=rlf.Control.constant(),
+    projection=rlf.Projection(type="keep_p"),
+    s_max=rlf.Q_(5, "kVA"),
 )
 
 # Raises an error!
-load = PowerLoad(
+load = rlf.PowerLoad(
     id="load",
     bus=bus,
-    powers=Q_(np.array([-5 + 5j], dtype=complex), "kVA"),  # > s_max
+    powers=rlf.Q_(np.array([-5 + 5j], dtype=complex), "kVA"),  # > s_max
     flexible_params=[fp],
 )
 # RoseauLoadFlowException: The power is greater than the parameter s_max
@@ -185,22 +175,23 @@ voltages between 205 V and 255 V if given a theoretical power of $-2.5 + 1j$ kVA
 
 ```python
 import numpy as np
-
-from roseau.load_flow import Q_, FlexibleParameter, Control, Projection
+import roseau.load_flow as rlf
 
 # A flexible parameter
-fp = FlexibleParameter(
-    control_p=Control.p_max_u_production(u_up=Q_(240, "V"), u_max=Q_(250, "V")),
-    control_q=Control.constant(),
-    projection=Projection(type="keep_p"),  # <----- No consequence
-    s_max=Q_(5, "kVA"),
+fp = rlf.FlexibleParameter(
+    control_p=rlf.Control.p_max_u_production(
+        u_up=rlf.Q_(240, "V"), u_max=rlf.Q_(250, "V")
+    ),
+    control_q=rlf.Control.constant(),
+    projection=rlf.Projection(type="keep_p"),  # <----- No consequence
+    s_max=rlf.Q_(5, "kVA"),
 )
 
 # We want to get the res_flexible_powers for a set of voltages norms
 voltages = np.arange(205, 256, dtype=float)
 
 # and when the theoretical power is the following
-power = Q_(-2.5 + 1j, "kVA")
+power = rlf.Q_(-2.5 + 1j, "kVA")
 
 # Get the resulting flexible powers for the given theoretical power and voltages list.
 res_flexible_powers = fp.compute_powers(voltages=voltages, power=power)
@@ -298,24 +289,26 @@ control:
 
 ```python
 import numpy as np
-
-from roseau.load_flow import Q_, FlexibleParameter, Control, Projection
+import roseau.load_flow as rlf
 
 # Flexible parameter
-fp = FlexibleParameter(
-    control_p=Control.constant(),
-    control_q=Control.q_u(
-        u_min=Q_(210, "V"), u_down=Q_(220, "V"), u_up=Q_(240, "V"), u_max=Q_(250, "V")
+fp = rlf.FlexibleParameter(
+    control_p=rlf.Control.constant(),
+    control_q=rlf.Control.q_u(
+        u_min=rlf.Q_(210, "V"),
+        u_down=rlf.Q_(220, "V"),
+        u_up=rlf.Q_(240, "V"),
+        u_max=rlf.Q_(250, "V"),
     ),
-    projection=Projection(type="keep_p"),  # <---- Keep P
-    s_max=Q_(5, "kVA"),
+    projection=rlf.Projection(type="keep_p"),  # <---- Keep P
+    s_max=rlf.Q_(5, "kVA"),
 )
 
 # We want to get the res_flexible_powers for a set of voltages norms
 voltages = np.arange(205, 256, dtype=float)
 
 # and when the theoretical power is the following
-power = Q_(-2.5, "kVA")
+power = rlf.Q_(-2.5, "kVA")
 
 # Get the resulting flexible powers for the given theoretical power and voltages list.
 res_flexible_powers = fp.compute_powers(voltages=voltages, power=power)
@@ -394,24 +387,26 @@ Here is an example the creation of such control with a constant $Q$ projection:
 
 ```python
 import numpy as np
-
-from roseau.load_flow import Q_, FlexibleParameter, Control, Projection
+import roseau.load_flow as rlf
 
 # Flexible parameter
-fp = FlexibleParameter(
-    control_p=Control.constant(),
-    control_q=Control.q_u(
-        u_min=Q_(210, "V"), u_down=Q_(220, "V"), u_up=Q_(240, "V"), u_max=Q_(250, "V")
+fp = rlf.FlexibleParameter(
+    control_p=rlf.Control.constant(),
+    control_q=rlf.Control.q_u(
+        u_min=rlf.Q_(210, "V"),
+        u_down=rlf.Q_(220, "V"),
+        u_up=rlf.Q_(240, "V"),
+        u_max=rlf.Q_(250, "V"),
     ),
-    projection=Projection(type="keep_q"),  # <---- Keep Q
-    s_max=Q_(5, "kVA"),
+    projection=rlf.Projection(type="keep_q"),  # <---- Keep Q
+    s_max=rlf.Q_(5, "kVA"),
 )
 
 # We want to get the res_flexible_powers for a set of voltages norms
 voltages = np.arange(205, 256, dtype=float)
 
 # and when the theoretical power is the following
-power = Q_(-2.5, "kVA")
+power = rlf.Q_(-2.5, "kVA")
 
 # Get the resulting flexible powers for the given theoretical power and voltages list.
 res_flexible_powers = fp.compute_powers(voltages=voltages, power=power)
@@ -484,24 +479,26 @@ provided!
 
 ```python
 import numpy as np
-
-from roseau.load_flow import Q_, FlexibleParameter, Control, Projection
+import roseau.load_flow as rlf
 
 # Flexible parameter
-fp = FlexibleParameter(
-    control_p=Control.constant(),
-    control_q=Control.q_u(
-        u_min=Q_(210, "V"), u_down=Q_(220, "V"), u_up=Q_(240, "V"), u_max=Q_(250, "V")
+fp = rlf.FlexibleParameter(
+    control_p=rlf.Control.constant(),
+    control_q=rlf.Control.q_u(
+        u_min=rlf.Q_(210, "V"),
+        u_down=rlf.Q_(220, "V"),
+        u_up=rlf.Q_(240, "V"),
+        u_max=rlf.Q_(250, "V"),
     ),
-    projection=Projection(type="euclidean"),  # <---- Euclidean
-    s_max=Q_(5, "kVA"),
+    projection=rlf.Projection(type="euclidean"),  # <---- Euclidean
+    s_max=rlf.Q_(5, "kVA"),
 )
 
 # We want to get the res_flexible_powers for a set of voltages norms
 voltages = np.arange(205, 256, dtype=float)
 
 # and when the theoretical power is the following
-power = Q_(-2.5, "kVA")
+power = rlf.Q_(-2.5, "kVA")
 
 # Get the resulting flexible powers for the given theoretical power and voltages list.
 res_flexible_powers = fp.compute_powers(voltages=voltages, power=power)
@@ -567,26 +564,28 @@ constrained between those two values.
 
 ```python
 import numpy as np
-
-from roseau.load_flow import Q_, FlexibleParameter, Control, Projection
+import roseau.load_flow as rlf
 
 # Flexible parameter
-fp = FlexibleParameter(
-    control_p=Control.constant(),
-    control_q=Control.q_u(
-        u_min=Q_(210, "V"), u_down=Q_(220, "V"), u_up=Q_(240, "V"), u_max=Q_(250, "V")
+fp = rlf.FlexibleParameter(
+    control_p=rlf.Control.constant(),
+    control_q=rlf.Control.q_u(
+        u_min=rlf.Q_(210, "V"),
+        u_down=rlf.Q_(220, "V"),
+        u_up=rlf.Q_(240, "V"),
+        u_max=rlf.Q_(250, "V"),
     ),
-    projection=Projection(type="euclidean"),
-    s_max=Q_(5, "kVA"),
-    q_min=Q_(-3, "kVAr"),  # <---- set Q_min >= -S_max
-    q_max=Q_(4, "kVAr"),  # <---- set Q_max <= S_max
+    projection=rlf.Projection(type="euclidean"),
+    s_max=rlf.Q_(5, "kVA"),
+    q_min=rlf.Q_(-3, "kVAr"),  # <---- set Q_min >= -S_max
+    q_max=rlf.Q_(4, "kVAr"),  # <---- set Q_max <= S_max
 )
 
 # We want to get the res_flexible_powers for a set of voltages norms
 voltages = np.arange(205, 256, dtype=float)
 
 # and when the theoretical power is the following
-power = Q_(-2.5, "kVA")
+power = rlf.Q_(-2.5, "kVA")
 
 # Get the resulting flexible powers for the given theoretical power and voltages list.
 res_flexible_powers = fp.compute_powers(voltages=voltages, power=power)
@@ -662,27 +661,28 @@ active power control starts and is fully used at 250 V:
 
 ```python
 import numpy as np
-
-from roseau.load_flow import Q_, FlexibleParameter, Control, Projection
+import roseau.load_flow as rlf
 
 # Flexible parameter
-fp = FlexibleParameter(
-    control_p=Control.p_max_u_production(u_up=Q_(245, "V"), u_max=Q_(250, "V")),  # <----
-    control_q=Control.q_u(
-        u_min=Q_(210, "V"),
-        u_down=Q_(220, "V"),
-        u_up=Q_(230, "V"),  # <---- lower than U_up of the P(U) control
-        u_max=Q_(240, "V"),  # <---- lower than U_up of the P(U) control
+fp = rlf.FlexibleParameter(
+    control_p=rlf.Control.p_max_u_production(
+        u_up=rlf.Q_(245, "V"), u_max=rlf.Q_(250, "V")  # <----
     ),
-    projection=Projection(type="euclidean"),  # <---- Euclidean
-    s_max=Q_(5, "kVA"),
+    control_q=rlf.Control.q_u(
+        u_min=rlf.Q_(210, "V"),
+        u_down=rlf.Q_(220, "V"),
+        u_up=rlf.Q_(230, "V"),  # <---- lower than U_up of the P(U) control
+        u_max=rlf.Q_(240, "V"),  # <---- lower than U_up of the P(U) control
+    ),
+    projection=rlf.Projection(type="euclidean"),  # <---- Euclidean
+    s_max=rlf.Q_(5, "kVA"),
 )
 
 # We want to get the res_flexible_powers for a set of voltages norms
 voltages = np.arange(205, 256, dtype=float)
 
 # and when the theoretical power is the following
-power = Q_(-2.5, "kVA")
+power = rlf.Q_(-2.5, "kVA")
 
 # Get the resulting flexible powers for the given theoretical power and voltages list.
 res_flexible_powers = fp.compute_powers(voltages=voltages, power=power)
@@ -727,27 +727,28 @@ reactive power control starts and is fully activated at 250 V.
 
 ```python
 import numpy as np
-
-from roseau.load_flow import Q_, FlexibleParameter, Control, Projection
+import roseau.load_flow as rlf
 
 # Flexible parameter
-fp = FlexibleParameter(
-    control_p=Control.p_max_u_production(u_up=Q_(230, "V"), u_max=Q_(240, "V")),  # <----
-    control_q=Control.q_u(
-        u_min=Q_(210, "V"),
-        u_down=Q_(220, "V"),
-        u_up=Q_(245, "V"),  # <---- higher than U_max of the P(U) control
-        u_max=Q_(250, "V"),  # <---- higher than U_max of the P(U) control
+fp = rlf.FlexibleParameter(
+    control_p=rlf.Control.p_max_u_production(
+        u_up=rlf.Q_(230, "V"), u_max=rlf.Q_(240, "V")  # <----
     ),
-    projection=Projection(type="euclidean"),  # <---- Euclidean
-    s_max=Q_(5, "kVA"),
+    control_q=rlf.Control.q_u(
+        u_min=rlf.Q_(210, "V"),
+        u_down=rlf.Q_(220, "V"),
+        u_up=rlf.Q_(245, "V"),  # <---- higher than U_max of the P(U) control
+        u_max=rlf.Q_(250, "V"),  # <---- higher than U_max of the P(U) control
+    ),
+    projection=rlf.Projection(type="euclidean"),  # <---- Euclidean
+    s_max=rlf.Q_(5, "kVA"),
 )
 
 # We want to get the res_flexible_powers for a set of voltages norms
 voltages = np.arange(205, 256, dtype=float)
 
 # and when the theoretical power is the following
-power = Q_(-2.5, "kVA")
+power = rlf.Q_(-2.5, "kVA")
 
 # Get the resulting flexible powers for the given theoretical power and voltages list.
 res_flexible_powers = fp.compute_powers(voltages=voltages, power=power)
@@ -791,27 +792,28 @@ effect at 250 V.
 
 ```python
 import numpy as np
-
-from roseau.load_flow import Q_, FlexibleParameter, Control, Projection
+import roseau.load_flow as rlf
 
 # Flexible parameter
-fp = FlexibleParameter(
-    control_p=Control.p_max_u_production(u_up=Q_(240, "V"), u_max=Q_(250, "V")),  # <----
-    control_q=Control.q_u(
-        u_min=Q_(210, "V"),
-        u_down=Q_(220, "V"),
-        u_up=Q_(240, "V"),  # <---- same as U_up of the P(U) control
-        u_max=Q_(250, "V"),  # <---- same as U_max of the P(U) control
+fp = rlf.FlexibleParameter(
+    control_p=rlf.Control.p_max_u_production(
+        u_up=rlf.Q_(240, "V"), u_max=rlf.Q_(250, "V")  # <----
     ),
-    projection=Projection(type="euclidean"),  # <---- Euclidean
-    s_max=Q_(5, "kVA"),
+    control_q=rlf.Control.q_u(
+        u_min=rlf.Q_(210, "V"),
+        u_down=rlf.Q_(220, "V"),
+        u_up=rlf.Q_(240, "V"),  # <---- same as U_up of the P(U) control
+        u_max=rlf.Q_(250, "V"),  # <---- same as U_max of the P(U) control
+    ),
+    projection=rlf.Projection(type="euclidean"),  # <---- Euclidean
+    s_max=rlf.Q_(5, "kVA"),
 )
 
 # We want to get the res_flexible_powers for a set of voltages norms
 voltages = np.arange(205, 256, dtype=float)
 
 # and when the theoretical power is the following
-power = Q_(-2.5, "kVA")
+power = rlf.Q_(-2.5, "kVA")
 
 # Get the resulting flexible powers for the given theoretical power and voltages list.
 res_flexible_powers = fp.compute_powers(voltages=voltages, power=power)
@@ -858,7 +860,7 @@ from matplotlib import pyplot as plt
 ax = plt.subplot()  # New axes
 ax, res_flexible_powers = fp.plot_pq(
     voltages=voltages,
-    power=Q_(-4, "kVA"),  # <------ New power
+    power=rlf.Q_(-4, "kVA"),  # <------ New power
     voltages_labels_mask=np.isin(voltages, [210, 215, 230, 245, 250]),
     ax=ax,
 )

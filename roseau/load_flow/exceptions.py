@@ -110,6 +110,9 @@ class RoseauLoadFlowExceptionCode(StrEnum):
     # License errors
     LICENSE_ERROR = auto()
 
+    # OpenDSS import
+    DSS_BAD_LOSS = auto()
+
     def __eq__(self, other) -> bool:
         if isinstance(other, str):
             return other.lower() == self.lower()

@@ -21,18 +21,14 @@ def test_line_parameters():
     # Real element off the diagonal (Z)
     z_line = np.ones(shape=(4, 4), dtype=complex)
     y_shunt = np.eye(4, dtype=complex)
-    with pytest.raises(RoseauLoadFlowException) as e:
+    with pytest.warns(UserWarning, match=r"z_line .* has off-diagonal elements with a non-zero"):
         LineParameters("test", z_line=z_line, y_shunt=y_shunt)
-    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_Z_LINE_VALUE
-    assert e.value.msg == "The z_line matrix of line type 'test' has off-diagonal elements with a non-zero real part."
 
     # Real element off the diagonal (Y)
     z_line = np.eye(3, dtype=complex)
     y_shunt = np.ones(shape=(3, 3), dtype=complex)
-    with pytest.raises(RoseauLoadFlowException) as e:
+    with pytest.warns(UserWarning, match=r"y_shunt .* has off-diagonal elements with a non-zero"):
         LineParameters("test", z_line=z_line, y_shunt=y_shunt)
-    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_Y_SHUNT_VALUE
-    assert e.value.msg == "The y_shunt matrix of line type 'test' has off-diagonal elements with a non-zero real part."
 
     # Negative real values (Z)
     z_line = 2 * np.eye(4, dtype=complex)
@@ -423,9 +419,9 @@ def test_from_catalogue():
 
     # Several line parameters
     with pytest.raises(RoseauLoadFlowException) as e:
-        LineParameters.from_catalogue(name=r"U_AL_")
+        LineParameters.from_catalogue(name=r"U_AL_.*")
     assert e.value.msg == (
-        "Several line parameters matching the query (name='U_AL_') have been found: "
+        "Several line parameters matching the query (name='U_AL_.*') have been found: "
         "'U_AL_19', 'U_AL_20', 'U_AL_22', 'U_AL_25', 'U_AL_28', 'U_AL_29', 'U_AL_33', "
         "'U_AL_34', 'U_AL_37', 'U_AL_38', 'U_AL_40', 'U_AL_43', 'U_AL_48', 'U_AL_50', "
         "'U_AL_54', 'U_AL_55', 'U_AL_59', 'U_AL_60', 'U_AL_69', 'U_AL_70', 'U_AL_74', "
@@ -446,8 +442,14 @@ def test_from_catalogue():
     assert lp.insulator_type == InsulatorType.UNKNOWN
     assert lp.section.m == 150
 
+    # Success, overridden ID
     lp = LineParameters.from_catalogue(name="U_AL_150", id="lp1")
     assert lp.id == "lp1"
+
+    # Success, single-phase line
+    lp = LineParameters.from_catalogue(name="U_AL_150", nb_phases=2)
+    assert lp.z_line.shape == (2, 2)
+    assert lp.y_shunt.shape == (2, 2)
 
 
 def test_get_catalogue():
@@ -506,3 +508,51 @@ def test_json_serialization():
     assert isinstance(lp_dict["max_current"], int)
     assert isinstance(lp_dict["section"], float)
     json.dumps(lp_dict)
+
+
+def test_from_open_dss():
+    # DSS command: `New linecode.240sq nphases=3 R1=0.127 X1=0.072 R0=0.342 X0=0.089 units=km`
+    lp240sq = LineParameters.from_open_dss(
+        id="linecode-240sq",
+        nphases=3,
+        r1=Q_(0.127, "ohm/km"),
+        x1=Q_(0.072, "ohm/km"),
+        r0=Q_(0.342, "ohm/km"),
+        x0=Q_(0.089, "ohm/km"),
+        c1=Q_(3.4, "nF/km"),
+        c0=Q_(1.6, "nF/km"),
+    )
+    assert lp240sq.id == "linecode-240sq"
+    zs_e = 0.19866666666666669 + 0.07766666666666666j
+    zm_e = 0.07166666666666667 + 0.005666666666666667j
+    z_line_expected = [[zs_e, zm_e, zm_e], [zm_e, zs_e, zm_e], [zm_e, zm_e, zs_e]]
+    np.testing.assert_allclose(lp240sq.z_line.m, z_line_expected)
+    ys_e = 8.796459430051418e-07j
+    ym_e = -1.8849555921538752e-07j
+    y_shunt_expected = [[ys_e, ym_e, ym_e], [ym_e, ys_e, ym_e], [ym_e, ym_e, ys_e]]
+    np.testing.assert_allclose(lp240sq.y_shunt.m, y_shunt_expected)
+    assert lp240sq.line_type is None
+    assert lp240sq.max_current is None
+
+    # DSS command: `New LineCode.16sq NPhases=1 R1=0.350, X1=0.025, R0=0.366, X0=0.025, C1=1.036, C0=0.488 Units=kft NormAmps=400 LineType=OH`
+    lp16sq = LineParameters.from_open_dss(
+        id="linecode-16sq",
+        nphases=1,
+        r1=Q_(0.350, "ohm/kft"),
+        x1=Q_(0.025, "ohm/kft"),
+        r0=Q_(0.366, "ohm/kft"),
+        x0=Q_(0.025, "ohm/kft"),
+        c1=Q_(1.036, "nF/kft"),
+        c0=Q_(0.488, "nF/kft"),
+        linetype="OH",
+        normamps=Q_(400, "A"),
+    )
+    assert lp16sq.id == "linecode-16sq"
+    zs_e = 1.1657917760279966 + 0.08202099737532809j
+    z_line_expected = [[zs_e]]
+    np.testing.assert_allclose(lp16sq.z_line.m, z_line_expected)
+    ys_e = 8.795360010050165e-07j
+    y_shunt_expected = [[ys_e]]
+    np.testing.assert_allclose(lp16sq.y_shunt.m, y_shunt_expected)
+    assert lp16sq.line_type == LineType.OVERHEAD
+    assert lp16sq.max_current.m == 400

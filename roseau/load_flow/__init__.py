@@ -8,6 +8,7 @@ See Package Contents below for a list of available classes and functions.
 
 import importlib.metadata
 
+from roseau.load_flow import converters
 from roseau.load_flow.__about__ import (
     __authors__,
     __copyright__,
@@ -58,6 +59,7 @@ __all__ = [
     "__url__",
     "__version__",
     "show_versions",
+    "converters",
     # Electrical Network
     "ElectricalNetwork",
     # Buses

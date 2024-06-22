@@ -44,6 +44,12 @@ Here is the diagram of a star-connected three-phase load:
 
 In _Roseau Load Flow_, the `phases` argument of the constructor must contain `"n"` for star loads.
 
+```{note}
+You can create star connected constant-power or constant-impedance loads even on buses that don't
+have a neutral. In this case, the load's neutral will be floating and its potential can be accessed
+similar to normal star loads.
+```
+
 ### Delta connection
 
 Here is the diagram of a delta-connected three-phase load:

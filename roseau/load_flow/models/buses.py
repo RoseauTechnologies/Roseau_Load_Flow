@@ -8,7 +8,7 @@ import pandas as pd
 from shapely.geometry.base import BaseGeometry
 from typing_extensions import Self
 
-from roseau.load_flow.converters import calculate_voltage_phases, calculate_voltages, phasor_to_sym
+from roseau.load_flow.converters import _calculate_voltages, calculate_voltage_phases, phasor_to_sym
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.core import Element
 from roseau.load_flow.typing import ComplexArray, ComplexArrayLike1D, Id, JsonDict
@@ -137,7 +137,7 @@ class Bus(Element):
 
     def _res_voltages_getter(self, warning: bool) -> ComplexArray:
         potentials = np.array(self._res_potentials_getter(warning=warning))
-        return calculate_voltages(potentials, self.phases)
+        return _calculate_voltages(potentials, self.phases)
 
     @property
     @ureg_wraps("V", (None,))

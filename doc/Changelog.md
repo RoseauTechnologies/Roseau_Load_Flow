@@ -17,6 +17,43 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 # Changelog
 
+## Version 0.9.0
+
+- {gh-pr}`227` Sources and loads are now allowed to have floating neutrals. This means that a load/source
+  with `phases="abcn"` can now be connected to a bus with `phases="abc"`.
+- {gh-pr}`225` The `calculate_voltages` function now accepts and return pint quantities.
+- MacOS wheels for roseau-load-flow-engine are now published on PyPI. This means that `pip install roseau-load-flow`
+  should now work on macOS.
+- Added support for running in Google Colab documents.
+- Fixed a bug in license checks caching on Windows.
+- Added support for Numpy 2.0.
+- {gh-issue}`222` {gh-pr}`223` `from_catalogue()` methods of the electrical network and transformer
+  and line parameters now perform "full match" comparison on textual inputs. If you need the old
+  behavior, use regular expression wild cards `.*` in the input string.
+- {gh-issue}`220` {gh-pr}`221` Add `LineParameters.from_open_dss` and `TransformerParameters.from_open_dss` methods to
+  easily import OpenDSS lines and transformer models into Roseau Load Flow. More information is
+  available in the documentation of these methods.
+- {gh-issue}`210` {gh-pr}`219` Add a parameter to `LineParameters.from_catalogue` to choose the number
+  of phases of the created line parameters object.
+- {gh-pr}`218` Add `Transformer.res_power_losses` to get the total power losses in a transformer.
+- {gh-pr}`217` Add an ID override to `TransformerParameters.from_catalogue` similar to
+  `LineParameters.from_catalogue`.
+- {gh-issue}`216` {gh-pr}`217` **BREAKING CHANGE**: Rename the `id` parameter of `TransformerParameters`
+  catalogue methods to `name` to be consistent with `LineParameters`.
+  **If you call these methods by keyword arguments**, make sure to update your usage of
+  `TransformerParameters.from_catalogue(id="xxx")` to `TransformerParameters.from_catalogue(name="xxx")`.
+- {gh-pr}`212` **BREAKING CHANGE**: Modify the constructor of `TransformerParameters` to take the `z2`
+  and `ym` parameters directly instead of the open and short circuit tests parameters. You can still
+  create an object from these tests using the `from_open_and_short_circuit_tests` constructor. This
+  change comes with other changes to `TransformerParameters`, notably:
+  - The `z2`, `ym`, `k`, and `orientation` are now always available as attributes on the instance
+  - The `to_zyk` method is deprecated in favour of the direct attribute access on the instance. This
+    method will be removed in a future version
+  - The parameters `i0`, `p0`, `psc`, and `vsc` are now optional. They return None for instances
+    created using `z2` and `ym` directly
+  - The JSON representation of `TransformerParameters` has changed, but it is still compatible with
+    the old representation.
+
 ## Version 0.8.1
 
 - {gh-issue}`214` Solve a bug in the engine when using delta connected flexible loads.
