@@ -24,7 +24,7 @@ def upgrade_network(path: Path) -> None:
 
 
 def update_bad_transformer_id(path: Path) -> None:
-    with open(path) as f:
+    with path.open() as f:
         data = json.load(f)
     for branch in data["branches"]:
         branch_id = branch["id"]

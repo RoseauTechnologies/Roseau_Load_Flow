@@ -50,7 +50,7 @@ typing-extensions = ">=4.6.2"
 pyproj = ">=3.3.0"
 certifi = ">=2023.5.7"
 platformdirs = ">=4.0.0"
-roseau-load-flow-engine = "==0.13.1"
+roseau-load-flow-engine = ">=0.13.1"
 
 # Optional dependencies
 matplotlib = { version = ">=3.7.2", optional = true }
@@ -71,7 +71,7 @@ networkx = ">=3.0.0"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^3.0.0"
-ruff = ">=0.3.0"
+ruff = ">=0.4.0"
 
 [tool.poetry.group.doc.dependencies]
 sphinx = "^7.0.1"
@@ -94,7 +94,7 @@ extend-include = ["*.ipynb"]
 namespace-packages = ["roseau"]
 
 [tool.ruff.lint]
-select = ["E", "F", "C90", "W", "B", "UP", "I", "RUF100", "TID", "SIM", "PT", "PIE", "N", "C4", "NPY", "T10"]
+select = ["E", "F", "C90", "W", "B", "UP", "I", "RUF100", "TID", "SIM", "PT", "PIE", "N", "C4", "NPY", "T10", "PTH"]
 unfixable = ["B"]
 ignore = ["E501", "B024", "N818", "UP038"]
 flake8-tidy-imports.ban-relative-imports = "all"

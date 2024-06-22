@@ -39,7 +39,7 @@ class method. This method takes the following data:
 - The zero sequence of the admittance (in S/km), noted $\underline{Y_0}$ and `y0` in the code.
 - The direct sequence of the admittance (in S/km), noted $\underline{Y_1}$ and `y1` in the code.
 
-The symmetric componenets are then used to build the series impedance matrix $\underline{Z}$ and
+The symmetric components are then used to build the series impedance matrix $\underline{Z}$ and
 the shunt admittance matrix $\underline{Y}$ using the following equations:
 
 ```{math}
@@ -259,7 +259,7 @@ The following resistivities are used by _Roseau Load Flow_:
 | ACSR -- Fr: Alu-Acier      | $4.0587\times10^{-8}$   |
 | AACSR -- Fr: Almélec-Acier | $3.26\times10^{-8}$     |
 
-These values are defined in the `utils` module: {data}`roseau.load_flow.utils.constants.RHO`.
+These values are defined in the `utils` module: {data}`roseau.load_flow.utils.RHO`.
 
 #### Inductance
 
@@ -291,7 +291,7 @@ where:
 - $D_{ij}$ the distances between the center of the conductor $i$ and the center of the conductor $j$
 - $GMR_i$ the _geometric mean radius_ of the conductor $i$.
 
-The vacuum magnetic permeability is defined in the `utils` module {data}`roseau.load_flow.utils.constants.MU_0`.
+The vacuum magnetic permeability is defined in the `utils` module {data}`roseau.load_flow.utils.MU_0`.
 
 The geometric mean radius is defined for all $i\in \{\mathrm{a}, \mathrm{b}, \mathrm{c}, \mathrm{n}\}$ as
 
@@ -346,7 +346,7 @@ to compute the distances based on the position of wires.
 The permittivity of the insulator $\varepsilon$ (in F/m) is defined as $\varepsilon_0\varepsilon_{\mathrm{r}}$ with
 $\varepsilon_0$ the permittivity of the vacuum (in F/m) and $\varepsilon_{\mathrm{r}}$ the relative
 permittivity of the insulator (no unit). These values are defined in the `utils` module
-[](#roseau.load_flow.utils.constants.EPSILON_0) and [](#roseau.load_flow.utils.constants.EPSILON_R).
+{data}`roseau.load_flow.utils.EPSILON_0` and {data}`roseau.load_flow.utilsEPSILON_R`.
 
 The capacitance matrix $C$ is then defined by:
 
@@ -387,7 +387,7 @@ $\tan\delta$ is the loss tangent and is taken from this table:
 | Cross-linked polyethylene (PEX)  | $30\times10^{-4}$         |
 | Ethylene-Propylene Rubber (EPR)  | $125\times10^{-4}$        |
 
-These values are defined in the `utils` module: [](#roseau.load_flow.utils.constants.TAN_D).
+These values are defined in the `utils` module: {data}`roseau.load_flow.utils.TAN_D`.
 
 Finally, the impedance matrix and the admittance matrix can be computed.
 

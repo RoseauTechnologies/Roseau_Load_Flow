@@ -6,6 +6,7 @@ Use the `ElectricalNetwork.from_dgs` method to read a network from a dgs file.
 
 import json
 import logging
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -243,7 +244,7 @@ def _read_dgs_json_file(filename: StrPath):
         elm_gen_stat: dataframe of generators
     """
     # Create dataframe from JSON file
-    with open(filename, encoding="ISO-8859-10") as f:
+    with Path(filename).open(encoding="ISO-8859-10") as f:
         data = json.load(f)
 
     # External sources

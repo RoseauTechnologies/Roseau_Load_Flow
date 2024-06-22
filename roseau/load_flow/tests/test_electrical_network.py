@@ -1939,7 +1939,7 @@ def test_results_to_json(small_network_with_results, tmp_path):
     tmp_file = tmp_path / "results.json"
     en.results_to_json(tmp_file)
 
-    with open(tmp_file) as fp:
+    with tmp_file.open() as fp:
         res_network = json.load(fp)
 
     assert res_network == res_network_expected
