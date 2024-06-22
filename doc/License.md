@@ -61,9 +61,9 @@ There are two ways to activate the license in your project:
 
    ```python
    from pathlib import Path
-   import roseau.load_flow as lf
+   import roseau.load_flow as rlf
 
-   lf.activate_license(Path("my_license_key.txt").read_text().strip())
+   rlf.activate_license(Path("my_license_key.txt").read_text().strip())
 
    # Rest of your code here
    ```

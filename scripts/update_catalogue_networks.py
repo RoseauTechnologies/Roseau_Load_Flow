@@ -7,17 +7,17 @@ import re
 
 import numpy as np
 
-import roseau.load_flow as lf
+import roseau.load_flow as rlf
 
 PHASES = {"MV": "abc", "LV": "abcn"}
 U_N = {"MV": 20_000, "LV": 230}
 U_MAX = {"MV": int(20_000 * 1.05), "LV": int(230 * 1.1)}
 U_MIN = {"MV": int(20_000 * 0.95), "LV": int(230 * 0.9)}
 
-df = lf.ElectricalNetwork.get_catalogue()
+df = rlf.ElectricalNetwork.get_catalogue()
 
 if __name__ == "__main__":
-    catalogue_path = lf.ElectricalNetwork.catalogue_path()
+    catalogue_path = rlf.ElectricalNetwork.catalogue_path()
     rng = np.random.default_rng(len("Roseau_Load_Flow old networks are getting a rewrite") ** 5)
     name: str
     for name in df.index:
@@ -25,7 +25,7 @@ if __name__ == "__main__":
         load_points: list[str] = df.at[name, "Available load points"]
         for lp in load_points:
             print(f"Processing network {name}_{lp}")
-            en = lf.ElectricalNetwork.from_catalogue(name, load_point_name=lp)
+            en = rlf.ElectricalNetwork.from_catalogue(name, load_point_name=lp)
 
             source_bus_id: str | None = None
             feeder_bus_id: str | None = None
@@ -60,7 +60,7 @@ if __name__ == "__main__":
                 else:
                     raise AssertionError(bus_id)
                 assert bus_id not in new_buses, bus_id
-                new_bus = lf.Bus(
+                new_bus = rlf.Bus(
                     bus_id,
                     phases=PHASES[bus_type],
                     geometry=bus.geometry,
@@ -75,7 +75,7 @@ if __name__ == "__main__":
             assert len(en.grounds) == 1, en.grounds
             for ground_id in en.grounds:
                 ground = en.grounds[ground_id]
-                new_ground = lf.Ground(ground_id)
+                new_ground = rlf.Ground(ground_id)
                 if feeder_type == "LV":
                     new_ground.connect(new_buses[feeder_bus_id], phase="n")
                 new_grounds[ground_id] = new_ground
@@ -84,7 +84,7 @@ if __name__ == "__main__":
             for branch_id in en.branches:
                 assert isinstance(branch_id, str), repr(branch_id)
                 branch = en.branches[branch_id]
-                if isinstance(branch, lf.Line):
+                if isinstance(branch, rlf.Line):
                     assert branch.phases == PHASES[feeder_type], branch.phases
                     assert branch_id.startswith(feeder_type)
                     ground = new_grounds[branch.ground.id] if branch.ground is not None else None
@@ -96,8 +96,8 @@ if __name__ == "__main__":
                     bus2_id = branch.bus2.id  # Always a regular bus
                     assert bus2_id not in ("VoltageSource", source_bus_id), bus2_id
                     new_params_id = branch.parameters.id.replace("S_", "U_").replace("A_", "O_")
-                    iec_params = lf.LineParameters.from_catalogue(new_params_id)
-                    new_params = lf.LineParameters(
+                    iec_params = rlf.LineParameters.from_catalogue(new_params_id)
+                    new_params = rlf.LineParameters(
                         new_params_id,
                         z_line=branch.parameters.z_line,
                         y_shunt=branch.parameters.y_shunt,
@@ -108,7 +108,7 @@ if __name__ == "__main__":
                         insulator_type=iec_params.insulator_type,
                         section=iec_params.section,
                     )
-                    new_branch = lf.Line(
+                    new_branch = rlf.Line(
                         branch_id,
                         bus1=new_buses[bus1_id],
                         bus2=new_buses[bus2_id],
@@ -118,12 +118,12 @@ if __name__ == "__main__":
                         ground=ground,
                         geometry=branch.geometry,
                     )
-                elif isinstance(branch, lf.Transformer):
+                elif isinstance(branch, rlf.Transformer):
                     assert branch.bus1.id == "VoltageSource"  # This was the source bus
                     assert branch.bus2.id == source_bus_id  # This was the feeder bus
                     assert branch.phases1 == "abc"
                     assert branch.phases2 == "abcn"
-                    new_branch = lf.Transformer(
+                    new_branch = rlf.Transformer(
                         branch_id,
                         bus1=new_buses[source_bus_id],
                         bus2=new_buses[feeder_bus_id],
@@ -137,11 +137,11 @@ if __name__ == "__main__":
                     m = re.match(r"^.*_(\d+)kVA$", branch.parameters.id)
                     assert m, branch.parameters.id
                     branch.parameters.max_power = int(m.group(1)) * 1_000
-                elif isinstance(branch, lf.Switch):
+                elif isinstance(branch, rlf.Switch):
                     assert branch.bus1.id == "VoltageSource"  # This was the source bus
                     assert branch.bus2.id == source_bus_id  # This was the feeder bus
                     assert branch.phases == "abc"
-                    new_branch = lf.Switch(
+                    new_branch = rlf.Switch(
                         branch_id,
                         bus1=new_buses[source_bus_id],
                         bus2=new_buses[feeder_bus_id],
@@ -159,7 +159,7 @@ if __name__ == "__main__":
                 assert load.phases == PHASES[feeder_type]
                 assert isinstance(load.bus.id, str), repr(load.bus.id)
                 assert load.bus.id.startswith(feeder_type), load.bus.id
-                assert isinstance(load, lf.PowerLoad), repr(load)
+                assert isinstance(load, rlf.PowerLoad), repr(load)
                 assert load.flexible_params is None, repr(load.flexible_params)
                 if feeder_type == "LV":
                     power_mask = np.not_equal(load.powers.m, 0)
@@ -176,7 +176,7 @@ if __name__ == "__main__":
                     new_phases = "abc"
                     new_powers = np.round(load.powers.m, -2)
 
-                new_load = lf.PowerLoad(
+                new_load = rlf.PowerLoad(
                     load_id,
                     bus=new_buses[load.bus.id],
                     powers=new_powers,
@@ -192,7 +192,7 @@ if __name__ == "__main__":
                 assert source.bus.id == "VoltageSource"
                 v = source.voltages.m
                 new_voltages = np.array([v[0] - v[1], v[1] - v[2], v[2] - v[0]])  # phase-to-phase
-                new_source = lf.VoltageSource(
+                new_source = rlf.VoltageSource(
                     source_id,
                     bus=new_buses[source_bus_id],
                     voltages=new_voltages,
@@ -207,14 +207,14 @@ if __name__ == "__main__":
                 potential_ref = en.potential_refs[potential_ref_id]
                 assert potential_ref.phase is None
                 assert potential_ref.element.id == "ground"
-                new_potential_ref = lf.PotentialRef(potential_ref_id, element=new_grounds[potential_ref.element.id])
+                new_potential_ref = rlf.PotentialRef(potential_ref_id, element=new_grounds[potential_ref.element.id])
                 new_potential_refs[potential_ref_id] = new_potential_ref
             if feeder_type == "LV":
                 # Add a potential ref for the MV source bus
-                new_potential_ref = lf.PotentialRef("MV_pref", element=new_buses[source_bus_id])
+                new_potential_ref = rlf.PotentialRef("MV_pref", element=new_buses[source_bus_id])
                 new_potential_refs["MV_pref"] = new_potential_ref
 
-            new_en = lf.ElectricalNetwork.from_element(new_buses[source_bus_id])
+            new_en = rlf.ElectricalNetwork.from_element(new_buses[source_bus_id])
             new_en.to_json(catalogue_path / f"{name}_{lp}.json", include_results=False)
 
             # Test the new network

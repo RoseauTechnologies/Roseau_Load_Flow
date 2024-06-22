@@ -17,15 +17,16 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 # Changelog
 
-## Unreleased
+## Version 0.9.0
 
 - {gh-pr}`227` Sources and loads are now allowed to have floating neutrals. This means that a load/source
   with `phases="abcn"` can now be connected to a bus with `phases="abc"`.
 - {gh-pr}`225` The `calculate_voltages` function now accepts and return pint quantities.
 - MacOS wheels for roseau-load-flow-engine are now published on PyPI. This means that `pip install roseau-load-flow`
-  should now work on MacOS.
+  should now work on macOS.
 - Added support for running in Google Colab documents.
 - Fixed a bug in license checks caching on Windows.
+- Added support for Numpy 2.0.
 - {gh-issue}`222` {gh-pr}`223` `from_catalogue()` methods of the electrical network and transformer
   and line parameters now perform "full match" comparison on textual inputs. If you need the old
   behavior, use regular expression wild cards `.*` in the input string.
@@ -50,7 +51,7 @@ og:description: See what's new in the latest release of Roseau Load Flow !
     method will be removed in a future version
   - The parameters `i0`, `p0`, `psc`, and `vsc` are now optional. They return None for instances
     created using `z2` and `ym` directly
-  - The JSON representation of `TransformerParameters` has changed but it is still compatible with
+  - The JSON representation of `TransformerParameters` has changed, but it is still compatible with
     the old representation.
 
 ## Version 0.8.1

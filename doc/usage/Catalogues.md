@@ -249,7 +249,7 @@ The following data are available in this table:
 - the **type** of the transformer.
 - the nominal power, noted **sn**.
 - the primary side phase to phase voltage, noted **uhv**.
-- the secondary side phase to phase volage, noted **ulv**.
+- the secondary side phase to phase voltage, noted **ulv**.
 
 The `get_catalogue` method accepts arguments (in bold above) that can be used to filter the returned table. The
 following command only retrieves transformer parameters of transformers with an efficiency of "A0Ak":

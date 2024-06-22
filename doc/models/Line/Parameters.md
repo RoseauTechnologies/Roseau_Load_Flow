@@ -17,7 +17,7 @@ myst:
 
 As described [in the previous page](models-line_parameters), a line parameters object contains the
 impedance and shunt admittance matrices representing the line model. Sometimes you do not have
-these matrices available but you have other data such as symmetric components or geometric
+these matrices available, but you have other data such as symmetric components or geometric
 configurations and material types.
 
 This page describes how to build the impedance and shunt admittance matrices and thus the line
