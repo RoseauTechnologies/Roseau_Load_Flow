@@ -27,20 +27,21 @@ for Geographical Informations Systems_ (DGS) JSON format.
 
 The following components are currently supported:
 
-| Name       | Description                | RLF Element                 |
-| ---------- | -------------------------- | --------------------------- |
-| ElmXnet    | External Grid              | VoltageSource               |
-| ElmTerm    | Terminal                   | Bus                         |
-| StaCubic   | Cubicle                    | N/A _(included in the bus)_ |
-| ElmTr2     | 2-Winding Transformer      | Transformer                 |
-| TypTr2     | 2-Winding Transformer Type | TransformerParameters       |
-| ElmCoup    | Switch                     | Switch                      |
-| ElmLne     | Line/Cable                 | Line                        |
-| TypLne     | Line/Cable Type            | LineParameters              |
-| ElmLodLV   | Load, low voltage          | PowerLoad (P>=0)            |
-| ElmLodmv   | Load, medium voltage       | PowerLoad (P>=0)            |
-| ElmGenStat | Static Generator           | PowerLoad (P<=0)            |
-| ElmPvsys   | PV System                  | PowerLoad (P<=0)            |
+| Name       | Description                | RLF Element             |
+| ---------- | -------------------------- | ----------------------- |
+| ElmXnet    | External Grid              | VoltageSource           |
+| ElmTerm    | Terminal                   | Bus                     |
+| StaCubic   | Cubicle                    | N/A                     |
+| ElmTr2     | 2-Winding Transformer      | Transformer             |
+| TypTr2     | 2-Winding Transformer Type | TransformerParameters   |
+| ElmCoup    | Switch                     | Switch                  |
+| ElmLne     | Line/Cable                 | Line                    |
+| TypLne     | Line/Cable Type            | LineParameters          |
+| ElmLodLV   | Load, low voltage          | PowerLoad (P>=0)        |
+| ElmLodmv   | Load, medium voltage       | PowerLoad (P>=0 or P<0) |
+| ElmLod     | Load, medium voltage       | PowerLoad (P>=0)        |
+| ElmGenStat | Static Generator           | PowerLoad (P<=0)        |
+| ElmPvsys   | PV System                  | PowerLoad (P<=0)        |
 
 ### Export from PowerFactory
 
