@@ -17,6 +17,25 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 # Changelog
 
+## Unreleased
+
+- {gh-pr}`229` Several fixes and improvements to the PowerFactory import:
+
+  - Fix the "Export Definition Folder" bundled with _Roseau Load Flow_ as a pfd file;
+  - Lines with missing types will create a LineParameters automatically. This is the case when the
+    `TypLne` objects are inherited from an external library in PowerFactory and not included in the
+    project being exported;
+  - Importing "General Load (`ElmLod`)" elements in now supported;
+  - Improve handling of phases of several elements. Previously, phases were hard-coded.
+  - Fix the unit of the power of static generators;
+  - Fix the re-sizing of the matrices of line types without neutral elements;
+  - Fix the total power of "MV Loads (`ElmLodmv`)" to take into account the generation power;
+  - Fix all loads to no longer ignore the scale factor of the power;
+  - Fix the sign of the reactive power of MV and LV loads
+  - Fix the ground connection to the source bus
+
+  And many more...
+
 ## Version 0.9.0
 
 - {gh-pr}`227` Sources and loads are now allowed to have floating neutrals. This means that a load/source
