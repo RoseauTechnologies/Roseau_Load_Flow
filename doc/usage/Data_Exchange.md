@@ -39,7 +39,7 @@ The following components are currently supported:
 | TypLne     | Line/Cable Type            | LineParameters          |
 | ElmLodLV   | Load, low voltage          | PowerLoad (P>=0)        |
 | ElmLodmv   | Load, medium voltage       | PowerLoad (P>=0 or P<0) |
-| ElmLod     | Load, medium voltage       | PowerLoad (P>=0)        |
+| ElmLod     | General load               | PowerLoad (P>=0)        |
 | ElmGenStat | Static Generator           | PowerLoad (P<=0)        |
 | ElmPvsys   | PV System                  | PowerLoad (P<=0)        |
 
