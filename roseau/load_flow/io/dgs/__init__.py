@@ -49,7 +49,7 @@ def network_from_dgs(
         filename: name of the JSON file
 
     Returns:
-        The elements of the network: buses, branches, loads, sources, grounds and potential refs.
+        The elements of the network -- buses, branches, loads, sources, grounds and potential refs.
     """
     # Create dataframes from JSON file
     with open(filename, encoding="ISO-8859-10") as f:
