@@ -92,6 +92,8 @@ class RoseauLoadFlowExceptionCode(StrEnum):
     # DGS export
     DGS_BAD_PHASE_TECHNOLOGY = auto()
     DGS_BAD_PHASE_NUMBER = auto()
+    DGS_BAD_TYPE_ID = auto()
+    DGS_MISSING_REQUIRED_DATA = auto()
 
     # JSON export
     JSON_LINE_PARAMETERS_DUPLICATES = auto()

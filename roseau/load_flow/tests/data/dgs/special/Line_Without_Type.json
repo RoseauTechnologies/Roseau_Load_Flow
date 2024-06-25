@@ -1,0 +1,194 @@
+{
+  "General": {
+    "Attributes": ["FID", "Descr", "Val"],
+    "Values": [["1", "Version", "7.0"]]
+  },
+  "ElmLne": {
+    "Attributes": [
+      "FID",
+      "OP",
+      "loc_name",
+      "fold_id",
+      "typ_id",
+      "inAir",
+      "crosssec",
+      "bus1",
+      "bus2",
+      "dline",
+      "nlnum",
+      "Unom",
+      "Inom",
+      "R0",
+      "X0",
+      "X1",
+      "R1",
+      "B1",
+      "G1",
+      "B0",
+      "G0",
+      "c_pcond",
+      "GPScoords:SIZEROW",
+      "GPScoords:SIZECOL"
+    ],
+    "Values": [
+      [
+        "2",
+        "C",
+        "Line",
+        "4",
+        null,
+        0,
+        300,
+        "9",
+        "12",
+        10,
+        1,
+        20,
+        0.475,
+        4.167,
+        4.272568,
+        1.068142,
+        1.042,
+        1068.141,
+        0,
+        1097.044,
+        0,
+        null,
+        "0",
+        "0"
+      ]
+    ]
+  },
+  "ElmLodmv": {
+    "Attributes": [
+      "FID",
+      "OP",
+      "loc_name",
+      "scale0",
+      "gscale",
+      "typ_id",
+      "mode_inp",
+      "ci_sym",
+      "fold_id",
+      "phtech",
+      "bus1",
+      "slini",
+      "plini",
+      "pf_recap",
+      "slinir",
+      "plinir",
+      "pf_recapr",
+      "slinis",
+      "plinis",
+      "pf_recaps",
+      "slinit",
+      "plinit",
+      "pf_recapt",
+      "pgini",
+      "sgini",
+      "pfg_recap",
+      "pginir",
+      "sginir",
+      "pfg_recapr",
+      "pginis",
+      "sginis",
+      "pfg_recaps",
+      "pginit",
+      "sginit",
+      "pfg_recapt"
+    ],
+    "Values": [
+      [
+        "3",
+        "C",
+        "Load",
+        1,
+        1,
+        null,
+        "SC",
+        1,
+        "4",
+        "3PH-'D'",
+        "11",
+        1.931321,
+        1.925,
+        0,
+        1,
+        0.95,
+        0,
+        0.5,
+        0.5,
+        0,
+        0.5,
+        0.475,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    ]
+  },
+  "ElmNet": {
+    "Attributes": ["FID", "OP", "loc_name", "fold_id", "frnom"],
+    "Values": [["4", "C", "Grid", null, 50]]
+  },
+  "ElmTerm": {
+    "Attributes": [
+      "FID",
+      "OP",
+      "loc_name",
+      "fold_id",
+      "typ_id",
+      "iUsage",
+      "phtech",
+      "uknom",
+      "outserv",
+      "GPSlat",
+      "GPSlon",
+      "iEarth"
+    ],
+    "Values": [
+      ["5", "C", "Bus1", "4", null, 0, 0, 20, 0, 5.77958386307, 45.209634406, 0],
+      ["6", "C", "Bus2", "4", null, 0, 0, 20, 0, 5.7932142993348, 45.20858538078, 0]
+    ]
+  },
+  "ElmXnet": {
+    "Attributes": [
+      "FID",
+      "OP",
+      "loc_name",
+      "fold_id",
+      "bus1",
+      "pgini",
+      "qgini",
+      "sgini",
+      "bustp",
+      "uset_mode",
+      "usetp",
+      "iintgnd"
+    ],
+    "Values": [["7", "C", "External grid", "4", "10", 0, 0, 0, "SL", 0, 1, 0]]
+  },
+  "IntCase": {
+    "Attributes": ["FID", "OP", "loc_name", "cpowexp", "campexp", "cpexpshc"],
+    "Values": [["8", "C", "Use case", "M", "k", "M"]]
+  },
+  "StaCubic": {
+    "Attributes": ["FID", "OP", "loc_name", "fold_id", "cterm", "obj_bus", "obj_id", "chr_name", "nphase", "cPhInfo"],
+    "Values": [
+      ["9", "C", "Cub_1", "5", "5", 0, "2", "", 3, "abc"],
+      ["10", "C", "Cub_2", "5", "5", 0, "7", "", 3, "abc"],
+      ["11", "C", "Cub_3", "6", "6", 0, "3", "", 3, "abc"],
+      ["12", "C", "Cub_4", "6", "6", 1, "2", "", 3, "abc"]
+    ]
+  }
+}

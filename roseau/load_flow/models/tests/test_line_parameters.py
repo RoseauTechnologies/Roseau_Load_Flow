@@ -1,4 +1,3 @@
-import json
 import re
 
 import numpy as np
@@ -501,13 +500,14 @@ def test_max_current():
     assert lp.max_current == Q_(3_000, "A")
 
 
-def test_json_serialization():
+def test_json_serialization(tmp_path):
     lp = LineParameters("test", z_line=np.eye(3), max_current=np.int64(100), section=np.float64(150))
-    lp_dict = lp.to_dict()
+    path = tmp_path / "lp.json"
+    lp.to_json(path)
+    lp_dict = LineParameters.from_json(path).to_dict()
     assert isinstance(lp_dict["z_line"], list)
     assert isinstance(lp_dict["max_current"], int)
     assert isinstance(lp_dict["section"], float)
-    json.dumps(lp_dict)
 
 
 def test_from_open_dss():

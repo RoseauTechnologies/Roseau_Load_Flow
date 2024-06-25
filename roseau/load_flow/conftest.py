@@ -15,8 +15,9 @@ HERE = Path(__file__).parent.expanduser().absolute()
 TEST_ALL_NETWORKS_DATA_FOLDER = HERE / "tests" / "data" / "networks"
 TEST_ALL_NETWORKS_DATA_PARAMS = [x for x in TEST_ALL_NETWORKS_DATA_FOLDER.glob("*") if x.is_dir()]
 TEST_ALL_NETWORKS_DATA_IDS = [x.name for x in TEST_ALL_NETWORKS_DATA_PARAMS]
-TEST_DGS_NETWORKS = list((HERE / "tests" / "data" / "dgs").glob("*"))
+TEST_DGS_NETWORKS = list((HERE / "tests" / "data" / "dgs").rglob("*.json"))
 TEST_DGS_NETWORKS_IDS = [x.stem for x in TEST_DGS_NETWORKS]
+TEST_DGS_SPECIAL_NETWORKS_DIR = HERE / "tests" / "data" / "dgs" / "special"
 
 TEST_SOME_NETWORKS_NAMES_SET = {
     "mv_network_12_buses",
@@ -130,6 +131,11 @@ def some_network_result(some_network_folder, network_load_data_name) -> Path:
 @pytest.fixture(params=TEST_DGS_NETWORKS, ids=TEST_DGS_NETWORKS_IDS)
 def dgs_network_path(request) -> Path:
     return request.param
+
+
+@pytest.fixture()
+def dgs_special_network_dir() -> Path:
+    return TEST_DGS_SPECIAL_NETWORKS_DIR
 
 
 @pytest.fixture()

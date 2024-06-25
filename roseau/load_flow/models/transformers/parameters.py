@@ -124,6 +124,23 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         self._psc: float | None = None
         self._vsc: float | None = None
 
+    def __repr__(self) -> str:
+        s = (
+            f"<{type(self).__name__}: id={self.id!r}, type={self.type!r}"
+            f", sn={self._sn}, uhv={self._uhv}, ulv={self._ulv}"
+        )
+        for attr, val, tp in (
+            ("max_power", self._max_power, float),
+            ("p0", self._p0, float),
+            ("i0", self._i0, float),
+            ("psc", self._psc, float),
+            ("vsc", self._vsc, float),
+        ):
+            if val is not None:
+                s += f", {attr}={tp(val)!r}"
+        s += ">"
+        return s
+
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, TransformerParameters):
             return NotImplemented
@@ -714,11 +731,6 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             res["vsc"] = self._vsc
         if self.max_power is not None:
             res["max_power"] = self.max_power.magnitude
-        for k, v in res.items():
-            if isinstance(v, np.integer):
-                res[k] = int(v)
-            elif isinstance(v, np.floating):
-                res[k] = float(v)
         return res
 
     def _results_to_dict(self, warning: bool) -> NoReturn:
