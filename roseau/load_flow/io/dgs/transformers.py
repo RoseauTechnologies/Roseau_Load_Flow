@@ -3,7 +3,7 @@ import logging
 import pandas as pd
 import shapely
 
-from roseau.load_flow.models import AbstractBranch, Bus, Ground, Transformer, TransformerParameters
+from roseau.load_flow.models import AbstractBranch, Bus, Transformer, TransformerParameters
 from roseau.load_flow.typing import Id
 from roseau.load_flow.units import Q_
 
@@ -52,7 +52,6 @@ def generate_transformers(
     sta_cubic: pd.DataFrame,
     transformers_tap: dict[Id, int],
     transformers_params: dict[Id, TransformerParameters],
-    ground: Ground,
 ) -> None:
     """Generate the transformers of the network.
 
@@ -74,9 +73,6 @@ def generate_transformers(
 
         transformers_params:
             The dictionary of all transformers parameters.
-
-        ground:
-            The ground object to connect to secondary bus of the transformer.
     """
     for idx in elm_tr.index:
         type_id = elm_tr.at[idx, "typ_id"]  # id of the transformer type
@@ -92,4 +88,3 @@ def generate_transformers(
         branches[idx] = Transformer(
             id=idx, bus1=bus1, bus2=bus2, parameters=transformers_params[type_id], tap=tap, geometry=geometry
         )
-        ground.connect(bus=bus2)

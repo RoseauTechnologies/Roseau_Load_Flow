@@ -18,8 +18,30 @@ def test_from_dgs(dgs_network_path):
         if dgs_network_path.stem == "Line_Without_Type":
             warnings.filterwarnings("ignore", message=r".*is missing line types", category=UserWarning)
         en = ElectricalNetwork.from_dgs(dgs_network_path)
+
     # Check the validity of the network
     en._check_validity(constructed=False)
+
+    pref_ids = set(en.potential_refs)
+    source_id = next(iter(en.sources))
+
+    # Check that if there is a ground, it is always used as potential ref
+    if "pref (ground)" in pref_ids:
+        assert en.grounds
+    else:
+        assert not en.grounds
+
+    # Check the created potential refs
+    match dgs_network_path.stem:
+        case "MV_LV_Transformer_LV_grid" | "MV_LV_Transformer_unbalanced" | "MV_LV_Transformer" | "Exemple_exhaustif":
+            # MV/LV networks => ground on the LV side and no ground on the MV side
+            assert pref_ids == {"pref (ground)", f"pref (source '{source_id}')"}, pref_ids
+        case "MV_Network":
+            # MV network: no neutral conductor (and no lines shunt here) => no ground
+            assert pref_ids == {f"pref (source '{source_id}')"}, pref_ids
+        case _:
+            # All other test networks have lines with shunt => ground
+            assert pref_ids == {"pref (ground)"}, pref_ids
 
 
 def test_from_dgs_no_line_type(dgs_special_network_dir):

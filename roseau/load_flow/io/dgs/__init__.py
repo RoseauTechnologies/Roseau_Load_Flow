@@ -7,6 +7,7 @@ Use the `ElectricalNetwork.from_dgs` method to read a network from a dgs file.
 import json
 import logging
 import warnings
+from itertools import chain, islice
 from typing import Any
 
 import pandas as pd
@@ -22,9 +23,11 @@ from roseau.load_flow.models import (
     AbstractBranch,
     AbstractLoad,
     Bus,
+    Element,
     Ground,
     LineParameters,
     PotentialRef,
+    Transformer,
     TransformerParameters,
     VoltageSource,
 )
@@ -80,14 +83,13 @@ def network_from_dgs(
 
     # Ground and potential reference
     ground = Ground("ground")
+    p_ref = PotentialRef("pref (ground)", element=ground)
 
     # Buses
     generate_buses(elm_term, buses)
 
     # Sources
-    generate_sources(
-        elm_xnet, sources, buses, potential_refs, sta_cubic, elm_term, ground, has_transfomers=elm_tr is not None
-    )
+    generate_sources(elm_xnet, sources, buses, sta_cubic, elm_term)
 
     # Loads
     if elm_lod is not None:  # General loads
@@ -128,19 +130,16 @@ def network_from_dgs(
             raise RoseauLoadFlowException(msg=msg, e=RoseauLoadFlowExceptionCode.DGS_MISSING_REQUIRED_DATA)
         else:
             generate_typ_tr(typ_tr, transformers_params, transformers_tap)
-        generate_transformers(elm_tr, branches, buses, sta_cubic, transformers_tap, transformers_params, ground)
+        generate_transformers(elm_tr, branches, buses, sta_cubic, transformers_tap, transformers_params)
 
     # Switches
     if elm_coup is not None:
         generate_switches(elm_coup, branches, buses, sta_cubic)
 
-    if ground._connected_elements:  # Is the ground used?
+    _add_potential_refs(buses, branches, sources, potential_refs, ground)
+
+    if len(ground._connected_elements) > 1:  # Is the ground used? (Are there connected elements aside from pref)
         grounds[ground.id] = ground
-        p_ref = PotentialRef("pref", element=ground)
-        potential_refs[p_ref.id] = p_ref
-    elif not potential_refs:  # No potential refs, define 1
-        source_bus = buses[sources[next(iter(sources))].bus.id]
-        p_ref = PotentialRef("pref", element=source_bus)
         potential_refs[p_ref.id] = p_ref
 
     return buses, branches, loads, sources, grounds, potential_refs
@@ -163,3 +162,93 @@ def _parse_dgs_version(data: dict[str, Any]) -> tuple[int, ...]:
         )
         warnings.warn(msg, stacklevel=4)
     return dgs_version_tuple
+
+
+def _add_potential_refs(  # noqa: C901
+    buses: dict[Id, Bus],
+    branches: dict[Id, AbstractBranch],
+    sources: dict[Id, VoltageSource],
+    potential_refs: dict[Id, PotentialRef],
+    ground: Ground,
+) -> None:
+    """Add potential reference(s) to a DGS network."""
+    # Note this function is adapted from the ElectricalNetwork._check_ref method
+    elements = chain(buses.values(), branches.values())
+    visited_elements: set[Element] = set()
+    for initial_element in elements:
+        if initial_element in visited_elements:
+            continue
+        if isinstance(initial_element, Transformer):
+            continue
+        visited_elements.add(initial_element)
+        connected_component: set[Element] = set()
+        has_potential_ref = False
+        transformer = None
+        to_visit = [initial_element]
+        while to_visit:
+            element = to_visit.pop(-1)
+            connected_component.add(element)
+            if isinstance(element, PotentialRef):
+                has_potential_ref = True
+            for connected_element in element._connected_elements:
+                if isinstance(connected_element, Transformer):
+                    transformer = connected_element
+                elif connected_element not in visited_elements:
+                    to_visit.append(connected_element)
+                    visited_elements.add(connected_element)
+
+        if not has_potential_ref:
+            # This subnetwork does not have a potential reference, create a new one
+            for vs in sources.values():
+                # First: prefer creating the reference at a source (if any)
+                if vs.bus in connected_component:
+                    if "n" in vs.bus._phases:
+                        ground.connect(vs.bus)
+                    else:
+                        pref = PotentialRef(f"pref (source {vs.id!r})", element=vs.bus)
+                        potential_refs[pref.id] = pref
+                    has_potential_ref = True
+                    break
+            else:
+                # No sources in this subnetwork
+                for element in connected_component:
+                    # Second: prefer connecting a bus with neutral to the ground (if any)
+                    if not isinstance(element, Bus):
+                        continue
+                    if "n" in element._phases:
+                        ground.connect(element)
+                        has_potential_ref = True
+                        break
+                else:
+                    # No buses with neutral
+                    if transformer is not None:
+                        # Third: prefer creating the reference at a transformer bus (if any)
+                        transformer_bus = (
+                            transformer.bus2 if transformer.bus2 in connected_component else transformer.bus1
+                        )
+                        assert transformer_bus in connected_component
+                        if "n" in transformer_bus._phases:
+                            ground.connect(transformer_bus)
+                        else:
+                            pref = PotentialRef(f"pref (transformer {transformer.id!r})", element=transformer_bus)
+                            potential_refs[pref.id] = pref
+                        has_potential_ref = True
+                    else:
+                        # Fourth: create the reference at the first bus in the subnetwork
+                        first_bus = next(
+                            element
+                            for element in sorted(connected_component, key=lambda e: str(e.id))
+                            if isinstance(element, Bus)
+                        )
+                        pref = PotentialRef(f"pref (bus {first_bus.id!r})", element=first_bus)
+                        potential_refs[pref.id] = pref
+                        has_potential_ref = True
+        # At this point we have a potential ref, do a sanity check with clear error message
+        if not has_potential_ref:
+            buses_without_pref = list(islice((e.id for e in connected_component if isinstance(e, Bus)), 10))
+            msg = (
+                f"Internal error: failed to assign a potential reference to elements connected to "
+                f"buses {buses_without_pref}. Please open an issue on GitHub."
+            )
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.NO_POTENTIAL_REFERENCE)

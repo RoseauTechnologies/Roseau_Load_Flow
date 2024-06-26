@@ -19,13 +19,16 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`230` Improve the algorithm for assigning potential references for DGS networks.
+
 - {gh-pr}`229` Several fixes and improvements to the PowerFactory import:
 
-  - Fix the "Export Definition Folder" bundled with _Roseau Load Flow_ as a pfd file;
-  - Lines with missing types will create a LineParameters automatically. This is the case when the
-    `TypLne` objects are inherited from an external library in PowerFactory and not included in the
-    project being exported;
-  - Importing "General Load (`ElmLod`)" elements in now supported;
+  - Update the "Export Definition Folder" bundled with _Roseau Load Flow_ as a pfd file;
+  - Support lines with missing type ID. This is the case when the `TypLne` objects are inherited
+    from an external library in PowerFactory and not included in the project being exported; A
+    `LineParameters` object is automatically created for these lines;
+  - Support "General Load (`ElmLod`)" elements;
+  - Preserve Geometry information on buses and branches;
   - Improve handling of phases of several elements. Previously, phases were hard-coded.
   - Fix the unit of the power of static generators;
   - Fix the re-sizing of the matrices of line types without neutral elements;
