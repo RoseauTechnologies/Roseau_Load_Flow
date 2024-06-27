@@ -19,8 +19,9 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`231` Add `LineParameters.from_power_factory` and `TransformerParameters.from_power_factory`
+  methods to easily import PowerFactory lines and transformer models into Roseau Load Flow.
 - {gh-pr}`230` Improve the algorithm for assigning potential references for DGS networks.
-
 - {gh-pr}`229` Several fixes and improvements to the PowerFactory import:
 
   - Update the "Export Definition Folder" bundled with _Roseau Load Flow_ as a pfd file;

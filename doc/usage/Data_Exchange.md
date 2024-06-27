@@ -106,6 +106,19 @@ Please note that there are some limitations in the supported features:
 - **Ignored attributes**: functionality that is not yet available in `roseau-load-flow` is ignored.
   This includes the state of the switches (switches are considered to be always closed);
 
+### Lines and Transformers
+
+In addition to the DGS import support, `roseau-load-flow` supports creating lines and transformers
+parameters from PowerFactory data. This is useful when you don't want to import a whole network but
+would like to use some of the lines and transformers models you have in a power factory project.
+
+To create line parameters from a PowerFactory Line Type (`TypLne`) object, use the
+{meth}`LineParameters.from_power_factory() roseau.load_flow.LineParameters.from_power_factory` method.
+
+To create transformer parameters from a PowerFactory 2-Winding Transformer Type (`TypTr2`) object, use the
+{meth}`TransformerParameters.from_power_factory() roseau.load_flow.TransformerParameters.from_power_factory`
+method.
+
 ## OpenDSS
 
 `roseau-load-flow` supports creating lines and transformers from OpenDSS data.

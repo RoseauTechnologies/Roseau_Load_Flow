@@ -576,3 +576,41 @@ def test_from_open_dss():
     assert tp_rlf.orientation == tp_dss.orientation
     np.testing.assert_allclose(tp_rlf.z2.m, tp_dss.z2.m)
     np.testing.assert_allclose(tp_rlf.ym.m, tp_dss.ym.m)
+
+
+def test_from_power_factory():
+    tp_pwf = TransformerParameters.from_power_factory(
+        id="Transformer 100 kVA Dyn11",
+        tech=3,  # Three Phase Transformer
+        sn=0.1,  # MVA
+        uhv=20,  # kV
+        ulv=0.4,  # kV
+        vg_hv="D",
+        vg_lv="yn",
+        phase_shift=11,
+        uk=4,  # Vsc (%)
+        pc=2.15,  # Psc (kW)
+        curmg=2.5,  # i0 (%)
+        pfe=0.21,  # P0 (kW)
+    )
+    tp_rlf = TransformerParameters.from_open_and_short_circuit_tests(
+        id="Transformer 100 kVA Dyn11",
+        type="Dyn11",
+        uhv=Q_(20, "kV"),
+        ulv=Q_(0.4, "kV"),
+        sn=Q_(0.1, "MVA"),
+        p0=Q_(0.21, "kW"),
+        i0=Q_(2.5, "percent"),
+        psc=Q_(2.15, "kW"),
+        vsc=Q_(4, "percent"),
+        max_power=Q_(0.1, "MVA"),  # 100% of nominal power by default in PwF
+    )
+
+    assert tp_pwf.uhv == tp_rlf.uhv
+    assert tp_pwf.ulv == tp_rlf.ulv
+    assert tp_pwf.sn == tp_rlf.sn
+    assert tp_pwf.k == tp_rlf.k
+    assert tp_pwf.orientation == tp_rlf.orientation
+    assert tp_pwf.max_power == tp_rlf.max_power
+    np.testing.assert_allclose(tp_pwf.z2.m, tp_rlf.z2.m)
+    np.testing.assert_allclose(tp_pwf.ym.m, tp_rlf.ym.m)

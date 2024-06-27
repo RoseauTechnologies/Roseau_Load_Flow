@@ -7,12 +7,17 @@ LINE_TYPES: Final[dict[int, LineType]] = {
     0: LineType.UNDERGROUND,  # inAir=Ground
     1: LineType.OVERHEAD,  # inAir=Air
 }
-CONDUCTOR_TYPES: Final[dict[int, ConductorType]] = {
+CONDUCTOR_TYPES: Final[dict[int | str, ConductorType]] = {
     0: ConductorType.AL,
+    "Al": ConductorType.AL,
     1: ConductorType.CU,
+    "Cu": ConductorType.CU,
     2: ConductorType.AM,
+    "Ad": ConductorType.AM,
     3: ConductorType.AA,
+    "As": ConductorType.AA,
     4: ConductorType.LA,
+    "Ds": ConductorType.LA,
 }
 INSULATOR_TYPES: Final[dict[int, InsulatorType]] = {
     0: InsulatorType.PVC,  # PVC
