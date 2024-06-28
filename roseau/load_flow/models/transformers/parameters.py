@@ -308,7 +308,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         cls,
         id: Id,
         *,
-        tech: Literal["single-phase", "three-phase"],
+        tech: Literal[2, "single-phase", 3, "three-phase"],
         sn: float | Q_[float],
         uhv: float | Q_[float],
         ulv: float | Q_[float],
@@ -331,7 +331,8 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
 
             tech:
                 PwF parameter `nt2ph` (Technology). The technology of the transformer; either
-                "single-phase" or "three-phase".
+                `'single-phase'` or `2` for single-phase transformers or `'three-phase'` or `3` for
+                three-phase transformers.
 
             sn:
                 PwF parameter `strn` (Rated Power). The rated power of the transformer in (MVA).
@@ -346,11 +347,11 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
 
             vg_hv:
                 PwF parameter `tr2cn_h` (Vector Group HV-Side). The vector group of the high voltage
-                side. It can be one of "D", "Y", "Yn", "Z", "Zn".
+                side. It can be one of `'D'`, `'Y'`, `'Yn'`, `'Z'`, `'Zn'`.
 
             vg_lv:
                 PwF parameter `tr2cn_l` (Vector Group LV-Side). The vector group of the low voltage
-                side. It can be one of "d", "y", "yn", "z", "zn".
+                side. It can be one of `'d'`, `'y'`, `'yn'`, `'z'`, `'zn'`.
 
             phase_shift:
                 PwF parameter `nt2ag` (Vector Group Phase Shift). The phase shift of the vector
@@ -390,7 +391,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         elif tech_norm.startswith("THREE-PHASE") or tech_norm == "3":
             type = f"{vg_hv.upper()}{vg_lv.lower()}{phase_shift}"
         else:
-            msg = f"Expected type='single-phase' or 'three-phase', got {type!r} for transformer parameters {id!r}."
+            msg = f"Expected tech='single-phase' or 'three-phase', got {tech!r} for transformer parameters {id!r}."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_TYPE)
 

@@ -579,6 +579,7 @@ def test_from_open_dss():
 
 
 def test_from_power_factory():
+    # Parameters from tests/data/dgs/MV_LV_Transformer.json
     tp_pwf = TransformerParameters.from_power_factory(
         id="Transformer 100 kVA Dyn11",
         tech=3,  # Three Phase Transformer

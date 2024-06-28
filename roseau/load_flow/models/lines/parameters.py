@@ -818,8 +818,8 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         nneutral: int = 0,
         inom: float | Q_[float] | None = None,
         cohl: Literal[0, "Cable", 1, "OHL"] = "Cable",
-        conductor: str | None = None,
-        insulation: str | None = None,
+        conductor: Literal["Al", "Cu", "Ad", "As", "Ds"] | None = None,
+        insulation: Literal[0, "PVC", 1, "XLPE", 2, "Mineral", 3, "Paper", 4, "EPR"] | None = None,
         section: float | Q_[float] | None = None,
     ) -> Self:
         """Create a line parameters object from PowerFactory "TypLne" data.
@@ -870,27 +870,28 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
 
             nneutral:
                 PwF parameter `nneutral` (Number of Neutrals). The number of neutrals of the line.
-                It can be either 0 or 1.
+                It can be either `0` or `1`.
 
             cohl:
-                PwF parameter `cohl_` (Cable/OHL). The type of the line, either "Cable" meaning an
-                underground cable or "OHL" meaning an overhead line.
+                PwF parameter `cohl_` (Cable/OHL). The type of the line; `'Cable'` or `0` means an
+                underground cable and `'OHL'` or `1` meaning an overhead line.
 
             inom:
                 PwF parameter `sline` or `InomAir` (Rated Current in ground or in air). The rated
                 current in (kA) of the line. It is used as the maximum current for analysis of network
                 constraint violations. Pass the `sline` parameter if the line is an underground
-                cable (cohl="Cable") or the `InomAir` parameter if the line is an overhead line
-                (cohl="OHL").
+                cable (cohl='Cable') or the `InomAir` parameter if the line is an overhead line
+                (cohl='OHL').
 
             conductor:
                 PwF parameter `mlei` (Conductor Material). The material used for the conductors.
-                It can be one of: "Al" (Aluminium), "Cu" (Copper), "Ad" (Aldrey AlMgSi), "As"
-                (Aluminium-Steel), "Ds" (Aldrey-Steel).
+                It can be one of: `'Al'` (Aluminium), `'Cu'` (Copper), `'Ad'` (Aldrey AlMgSi),
+                `'As'` (Aluminium-Steel), `'Ds'` (Aldrey-Steel).
 
             insulation:
                 PwF parameter `imiso` (Insulation Material). The material used for the conductor's
-                insulation. It can be one of 'PVC', 'XLPE', 'MIneral', 'Paper' or 'EPR'.
+                insulation. It can be one of `'PVC'` (`0`), `'XLPE'` (`1`), `'Mineral'` (`2`),
+                `'Paper'` (`3`) or `'EPR'` (`4`).
 
             section:
                 PwF parameter `qurs` (Nominal Cross Section). The nominal cross-sectional area of
