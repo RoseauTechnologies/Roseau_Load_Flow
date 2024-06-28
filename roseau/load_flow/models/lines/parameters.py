@@ -873,8 +873,8 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
                 It can be either `0` or `1`.
 
             cohl:
-                PwF parameter `cohl_` (Cable/OHL). The type of the line; `'Cable'` or `0` means an
-                underground cable and `'OHL'` or `1` meaning an overhead line.
+                PwF parameter `cohl_` (Cable/OHL). The type of the line; `'Cable'` or `0` mean an
+                underground cable and `'OHL'` or `1` mean an overhead line.
 
             inom:
                 PwF parameter `sline` or `InomAir` (Rated Current in ground or in air). The rated
