@@ -3,7 +3,7 @@ import re
 import warnings
 from importlib import resources
 from pathlib import Path
-from typing import NoReturn
+from typing import Literal, NoReturn
 
 import numpy as np
 import numpy.linalg as nplin
@@ -191,6 +191,42 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
     def max_current(self, value: float | Q_[float] | None) -> None:
         self._max_current = value
 
+    @staticmethod
+    def _sym_to_zy_simple(n, z0: complex, z1: complex, y0: complex, y1: complex) -> tuple[ComplexArray, ComplexArray]:
+        """Symmetrical components to Z/Y matrices.
+
+        Args:
+            n:
+                The number of conductors. The produced matrices are always `n x n`.
+
+            z0, y0:
+                The zero sequence impedance and admittance.
+
+            z1, y1:
+                The direct sequence impedance and admittance.
+
+        Returns:
+            The line impedance and shunt admittance matrices.
+        """
+        zs = (z0 + 2 * z1) / 3
+        zm = (z0 - z1) / 3
+        ys = (y0 + 2 * y1) / 3
+        ym = (y0 - y1) / 3
+
+        z = np.full((n, n), fill_value=zm, dtype=np.complex128)
+        y = np.full((n, n), fill_value=ym, dtype=np.complex128)
+        np.fill_diagonal(z, zs)
+        np.fill_diagonal(y, ys)
+        return z, y
+
+    @staticmethod
+    def _check_z_line_matrix(id: Id, z_line: ComplexArray) -> None:
+        """Check that the z_line matrix is not singular."""
+        if nplin.det(z_line) == 0:
+            msg = f"The symmetric model data provided for line type {id!r} produces invalid line impedance matrix."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Z_LINE_VALUE)
+
     @classmethod
     @ureg_wraps(None, (None, None, "ohm/km", "ohm/km", "S/km", "S/km", "ohm/km", "ohm/km", "S/km", "S/km", "A"))
     def from_sym(
@@ -247,18 +283,19 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             <models-line_parameters-alternative_constructors-symmetric>`, the model may be "degraded" if the computed
             impedance matrix is not invertible.
         """
-        z_line, y_shunt = cls._sym_to_zy(id=id, z0=z0, z1=z1, y0=y0, y1=y1, zn=zn, xpn=xpn, bn=bn, bpn=bpn)
+        z_line, y_shunt = cls._sym_to_zy(id=id, z0=z0, z1=z1, y0=y0, y1=y1, zn=zn, zpn=1j * xpn, bn=bn, bpn=bpn)
         return cls(id=id, z_line=z_line, y_shunt=y_shunt, max_current=max_current)
 
-    @staticmethod
+    @classmethod
     def _sym_to_zy(
+        cls,
         id: Id,
         z0: complex,
         z1: complex,
         y0: complex,
         y1: complex,
         zn: complex | None = None,
-        xpn: float | None = None,
+        zpn: float | None = None,
         bn: float | None = None,
         bpn: float | None = None,
     ) -> tuple[ComplexArray, ComplexArray]:
@@ -283,8 +320,8 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             zn:
                 Neutral impedance - :math:`r_{\\mathrm{n}}+x_{\\mathrm{n}}\\cdot j` (ohms/km)
 
-            xpn:
-                Phase to neutral reactance (ohms/km)
+            zpn:
+                Phase to neutral impedance (ohms/km)
 
             bn:
                 Neutral susceptance (siemens/km)
@@ -296,35 +333,21 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             The impedance and admittance matrices.
         """
         # Check if all neutral parameters are valid
-        any_neutral_na = any(pd.isna([xpn, bn, bpn, zn]))
+        any_neutral_na = any(pd.isna([zpn, bn, bpn, zn]))
 
         # Two possible choices. The first one is the best but sometimes PwF data forces us to choose the second one
         for choice in (0, 1):
             if choice == 0:
                 # We trust the manual !!! can give singular matrix !!!
-                zs = (z0 + 2 * z1) / 3  # Series impedance (ohms/km)
-                zm = (z0 - z1) / 3  # Mutual impedance (ohms/km)
-
-                ys = (y0 + 2 * y1) / 3  # Series shunt admittance (siemens/km)
-                ym = (y0 - y1) / 3  # Mutual shunt admittance (siemens/km)
+                z_line, y_shunt = cls._sym_to_zy_simple(n=3, z0=z0, y0=y0, z1=z1, y1=y1)
             else:
                 # Do not read the manual, it is useless: in pwf we trust
-                # NB (Ali): this is equivalent to setting z0 to z1 and y0 to y1
-                zs = z1  # Series impedance (ohms/km)
-                zm = 0 + 0j  # Mutual impedance (ohms/km)
-
-                ys = y1  # Series shunt admittance (siemens/km)
-                ym = 0 + 0j  # Mutual shunt admittance (siemens/km)
+                # No mutual components (z0=z1 and y0=y1)
+                z_line, y_shunt = cls._sym_to_zy_simple(n=3, z0=z1, y0=y1, z1=z1, y1=y1)
 
             # If all the neutral data have not been filled, the matrix is a 3x3 matrix
-            if any_neutral_na:
-                # No neutral data so retrieve a 3x3 matrix
-                z_line = np.array([[zs, zm, zm], [zm, zs, zm], [zm, zm, zs]], dtype=np.complex128)
-                y_shunt = np.array([[ys, ym, ym], [ym, ys, ym], [ym, ym, ys]], dtype=np.complex128)
-            else:
+            if not any_neutral_na:
                 # Build the complex
-                # zn: Neutral series impedance (ohm/km)
-                zpn = xpn * 1j  # Phase-to-neutral series impedance (ohm/km)
                 yn = bn * 1j  # Neutral shunt admittance (Siemens/km)
                 ypn = bpn * 1j  # Phase to neutral shunt admittance (Siemens/km)
 
@@ -333,17 +356,11 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
                         f"The line model {id!r} does not have neutral elements. It will be modelled as a 3 wires line "
                         f"instead."
                     )
-                    z_line = np.array([[zs, zm, zm], [zm, zs, zm], [zm, zm, zs]], dtype=np.complex128)
-                    y_shunt = np.array([[ys, ym, ym], [ym, ys, ym], [ym, ym, ys]], dtype=np.complex128)
                 else:
-                    z_line = np.array(
-                        [[zs, zm, zm, zpn], [zm, zs, zm, zpn], [zm, zm, zs, zpn], [zpn, zpn, zpn, zn]],
-                        dtype=np.complex128,
-                    )
-                    y_shunt = np.array(
-                        [[ys, ym, ym, ypn], [ym, ys, ym, ypn], [ym, ym, ys, ypn], [ypn, ypn, ypn, yn]],
-                        dtype=np.complex128,
-                    )
+                    z_line = np.pad(z_line, (0, 1), mode="constant", constant_values=zpn)
+                    z_line[-1, -1] = zn
+                    y_shunt = np.pad(y_shunt, (0, 1), mode="constant", constant_values=ypn)
+                    y_shunt[-1, -1] = yn
 
             # Check the validity of the resulting matrices
             det_z = nplin.det(z_line)
@@ -751,6 +768,226 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         y_shunt = b * 1j * np.eye(3, dtype=np.float64)  # in siemens/km
         return cls(name, z_line=z_line, y_shunt=y_shunt, max_current=max_current)
 
+    #
+    # Constructors from other software
+    #
+    @classmethod
+    @ureg_wraps(
+        None,
+        (
+            None,
+            None,
+            "ohm/km",
+            "ohm/km",
+            "ohm/km",
+            "ohm/km",
+            "µS/km",
+            "µS/km",
+            "ohm/km",
+            "ohm/km",
+            "µS/km",
+            "ohm/km",
+            "ohm/km",
+            "µS/km",
+            None,
+            None,
+            None,
+            "kA",
+            None,
+            None,
+            "mm²",
+        ),
+    )
+    def from_power_factory(  # noqa: C901
+        cls,
+        id: Id,
+        *,
+        r0: float | Q_[float],
+        r1: float | Q_[float],
+        x0: float | Q_[float],
+        x1: float | Q_[float],
+        b0: float | Q_[float],
+        b1: float | Q_[float],
+        rn: float | Q_[float] | None = None,
+        xn: float | Q_[float] | None = None,
+        bn: float | Q_[float] | None = None,
+        rpn: float | Q_[float] | None = None,
+        xpn: float | Q_[float] | None = None,
+        bpn: float | Q_[float] | None = None,
+        nphase: int = 3,
+        nneutral: int = 0,
+        inom: float | Q_[float] | None = None,
+        cohl: Literal[0, "Cable", 1, "OHL"] = "Cable",
+        conductor: Literal["Al", "Cu", "Ad", "As", "Ds"] | None = None,
+        insulation: Literal[0, "PVC", 1, "XLPE", 2, "Mineral", 3, "Paper", 4, "EPR"] | None = None,
+        section: float | Q_[float] | None = None,
+    ) -> Self:
+        """Create a line parameters object from PowerFactory "TypLne" data.
+
+        Args:
+            id:
+                A unique ID of the line parameters.
+
+            r0:
+                PwF parameter `rline0` (AC-Resistance R0'). Zero sequence resistance in (ohms/km).
+
+            r1:
+                PwF parameter `rline` (AC-Resistance R1'). Direct sequence resistance in (ohms/km).
+
+            x0:
+                PwF parameter `xline0` (Reactance X0'). Zero sequence reactance in (ohms/km).
+
+            x1:
+                PwF parameter `xline` (Reactance X1'). Direct sequence reactance in (ohms/km).
+
+            b0:
+                PwF parameter `bline0` (Susceptance B0'). Zero sequence susceptance in (µS/km).
+
+            b1:
+                PwF parameter `bline` (Susceptance B'). Direct sequence susceptance in (µS/km).
+
+            rn:
+                PwF parameter `rnline` (AC-Resistance Rn'). Neutral resistance in (ohms/km).
+
+            xn:
+                PwF parameter `xnline` (Reactance Xn'). Neutral reactance in (ohms/km).
+
+            bn:
+                PwF parameter `bnline` (Susceptance Bn'). Neutral susceptance in (µS/km).
+
+            rpn:
+                PwF parameter `rnpline` (AC-Resistance Rpn'). Phase-Neutral coupling resistance in (ohms/km).
+
+            xpn:
+                PwF parameter `xnpline` (Reactance Xpn'). Phase-Neutral coupling reactance in (ohms/km).
+
+            bpn:
+                PwF parameter `bnpline` (Susceptance Bpn'). Phase-Neutral coupling susceptance in (µS/km).
+
+            nphase:
+                PwF parameter `nlnph` (Phases). The number of phases of the line between 1 and 3.
+                This should not count the neutral conductor.
+
+            nneutral:
+                PwF parameter `nneutral` (Number of Neutrals). The number of neutrals of the line.
+                It can be either `0` or `1`.
+
+            cohl:
+                PwF parameter `cohl_` (Cable/OHL). The type of the line; `'Cable'` or `0` mean an
+                underground cable and `'OHL'` or `1` mean an overhead line.
+
+            inom:
+                PwF parameter `sline` or `InomAir` (Rated Current in ground or in air). The rated
+                current in (kA) of the line. It is used as the maximum current for analysis of network
+                constraint violations. Pass the `sline` parameter if the line is an underground
+                cable (cohl='Cable') or the `InomAir` parameter if the line is an overhead line
+                (cohl='OHL').
+
+            conductor:
+                PwF parameter `mlei` (Conductor Material). The material used for the conductors.
+                It can be one of: `'Al'` (Aluminium), `'Cu'` (Copper), `'Ad'` (Aldrey AlMgSi),
+                `'As'` (Aluminium-Steel), `'Ds'` (Aldrey-Steel).
+
+            insulation:
+                PwF parameter `imiso` (Insulation Material). The material used for the conductor's
+                insulation. It can be one of `'PVC'` (`0`), `'XLPE'` (`1`), `'Mineral'` (`2`),
+                `'Paper'` (`3`) or `'EPR'` (`4`).
+
+            section:
+                PwF parameter `qurs` (Nominal Cross Section). The nominal cross-sectional area of
+                the conductors in (mm²).
+
+        Returns:
+            The created line parameters.
+        """
+        if nphase not in {1, 2, 3}:
+            msg = f"Expected nphase=1, 2 or 3, got {nphase!r} for line parameters {id!r}."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
+        if nneutral not in {0, 1}:
+            msg = f"Expected nneutral=0 or 1, got {nneutral!r} for line parameters {id!r}."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
+
+        cohl_norm = str(cohl).upper()
+        if cohl_norm == "CABLE" or cohl_norm == "0":
+            line_type = LineType.UNDERGROUND
+        elif cohl_norm == "OHL" or cohl_norm == "1":
+            line_type = LineType.OVERHEAD
+        else:
+            msg = f"Expected cohl='Cable' or 'OHL', got {cohl!r} for line parameters {id!r}."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_TYPE)
+
+        mlei_norm = conductor.upper() if conductor is not None else None
+        if mlei_norm is None:
+            conductor_type = None
+        elif mlei_norm in ("AL", "ALUMINIUM", "ALUMINUM"):
+            conductor_type = ConductorType.AL
+        elif mlei_norm in ("CU", "COPPER"):
+            conductor_type = ConductorType.CU
+        elif mlei_norm in ("AD", "ALDREY"):
+            conductor_type = ConductorType.AM
+        elif mlei_norm in ("AS", "ALUMINIUM-STEEL", "ALUMINUM-STEEL"):
+            conductor_type = ConductorType.AA
+        elif mlei_norm in ("DS", "ALDREY-STEEL"):
+            conductor_type = ConductorType.LA
+        else:
+            msg = f"Expected conductor='Al', 'Cu', 'Ad', 'As' or 'Ds', got {conductor!r} for line parameters {id!r}."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_CONDUCTOR_TYPE)
+
+        imiso_norm = str(insulation).upper() if insulation is not None else None
+        if imiso_norm is None:
+            insulator_type = None
+        elif imiso_norm == "PVC" or imiso_norm == "0":
+            insulator_type = InsulatorType.PVC
+        elif imiso_norm == "XLPE" or imiso_norm == "1":
+            insulator_type = InsulatorType.XLPE
+        elif imiso_norm == "MINERAL" or imiso_norm == "2":
+            insulator_type = InsulatorType.UNKNOWN  # not supported yet
+        elif imiso_norm == "PAPER" or imiso_norm == "3":
+            insulator_type = InsulatorType.IP
+        elif imiso_norm == "EPR" or imiso_norm == "4":
+            insulator_type = InsulatorType.EPR
+        else:
+            msg = (
+                f"Expected insulation='PVC', 'XLPE', 'MINERAL', 'PAPER' or 'EPR', got {insulation!r} "
+                f"for line parameters {id!r}."
+            )
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_INSULATOR_TYPE)
+
+        max_current = inom * 1e3 if inom is not None else None
+
+        z_line, y_shunt = cls._sym_to_zy_simple(
+            n=nphase, z0=r0 + 1j * x0, z1=r1 + 1j * x1, y0=1j * b0 * 1e-6, y1=1j * b1 * 1e-6
+        )
+        if nneutral:
+            if pd.isna([rn, xn, bn, rpn, xpn, bpn]).any():
+                msg = f"Missing rn, xn, bn, rpn, xpn or bpn required with nneutral=1 for line parameters {id!r}."
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_MODEL)
+            z_line = np.pad(z_line, (0, 1), mode="constant", constant_values=rpn + 1j * xpn)
+            z_line[-1, -1] = rn + 1j * xn
+            y_shunt = np.pad(y_shunt, (0, 1), mode="constant", constant_values=1j * bpn * 1e-6)
+            y_shunt[-1, -1] = 1j * bn * 1e-6
+        cls._check_z_line_matrix(id=id, z_line=z_line)
+
+        with warnings.catch_warnings():
+            warnings.filterwarnings(action="ignore", message=r".* off-diagonal elements ", category=UserWarning)
+            obj = cls(
+                id=id,
+                z_line=z_line,
+                y_shunt=y_shunt,
+                max_current=max_current,
+                line_type=line_type,
+                conductor_type=conductor_type,
+                insulator_type=insulator_type,
+                section=section,
+            )
+        return obj
+
     @classmethod
     @ureg_wraps(None, (None, None, None, "ohm/km", "ohm/km", "ohm/km", "ohm/km", "nF/km", "nF/km", "Hz", "A", None))
     def from_open_dss(
@@ -853,21 +1090,13 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         yc1 = 1j * omega * c1 * 1e-9  # C is in nF
         yc0 = 1j * omega * c0 * 1e-9  # C is in nF
 
-        # Create the values of the series impedance and shunt admittance in ohm/km
-        zs = (2 * z1 + z0) / 3
-        zm = (z0 - z1) / 3
-        ys = (2 * yc1 + yc0) / 3
-        ym = (yc0 - yc1) / 3
-
         # Get the number of conductors
         # OpenDSS says in a comment: "For a line, NPhases = NCond, for now"
         n_cond = nphases
 
         # Create the matrices of the series impedance and shunt admittance in ohm/km
-        z = np.full((n_cond, n_cond), fill_value=zm, dtype=np.complex128)
-        yc = np.full((n_cond, n_cond), fill_value=ym, dtype=np.complex128)
-        np.fill_diagonal(z, zs)
-        np.fill_diagonal(yc, ys)
+        z, yc = cls._sym_to_zy_simple(n=n_cond, z0=z0, y0=yc0, z1=z1, y1=yc1)
+        cls._check_z_line_matrix(id=id, z_line=z)
 
         # Convert OpenDSS line type to RLF line type
         if linetype is None:

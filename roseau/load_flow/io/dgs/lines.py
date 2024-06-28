@@ -1,7 +1,6 @@
 import logging
 import warnings
 
-import numpy as np
 import pandas as pd
 import shapely
 
@@ -9,7 +8,6 @@ from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowE
 from roseau.load_flow.io.dgs.constants import CONDUCTOR_TYPES, INSULATOR_TYPES, LINE_TYPES
 from roseau.load_flow.models import AbstractBranch, Bus, Ground, Line, LineParameters
 from roseau.load_flow.typing import Id
-from roseau.load_flow.utils import ConductorType
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +39,7 @@ def generate_typ_lne(typ_lne: pd.DataFrame, lines_params: dict[Id, LineParameter
             y0=complex(this_typ_lne["gline0"], this_typ_lne["bline0"]) * 1e-6,
             y1=complex(this_typ_lne["gline"], this_typ_lne["bline"]) * 1e-6,
             zn=complex(this_typ_lne["rnline"], this_typ_lne["xnline"]) if nneutral else None,
-            xpn=this_typ_lne["xpnline"] if nneutral else None,
+            zpn=complex(this_typ_lne["rpnline"], this_typ_lne["xpnline"]) if nneutral else None,
             bn=(this_typ_lne["bnline"] * 1e-6) if nneutral else None,
             bpn=(this_typ_lne["bpnline"] * 1e-6) if nneutral else None,
         )
@@ -67,8 +65,7 @@ def generate_typ_lne(typ_lne: pd.DataFrame, lines_params: dict[Id, LineParameter
         sline = this_typ_lne.get("sline")
         max_current = sline * 1e3 if sline is not None else None
         line_type = LINE_TYPES.get(this_typ_lne.get("cohl_"))
-        mlei = this_typ_lne.get("mlei")  # int | str | None
-        conductor_type = ConductorType(mlei) if isinstance(mlei, str) else CONDUCTOR_TYPES.get(mlei)
+        conductor_type = CONDUCTOR_TYPES.get(this_typ_lne.get("mlei"))
         insulator_type = INSULATOR_TYPES.get(this_typ_lne.get("imiso"))
         section = this_typ_lne.get("qurs") or None  # Sometimes it is zero!! replace by None in this case
 
@@ -130,14 +127,8 @@ def generate_typ_lne_from_elm_lne(
     z1 = (lne_series["R1"] + 1j * lne_series["X1"]) / length  # Ω/km
     y0 = (lne_series["G0"] + 1j * lne_series["B0"]) / length * 1e-6  # µS/km -> S/km
     y1 = (lne_series["G1"] + 1j * lne_series["B1"]) / length * 1e-6  # µS/km -> S/km
-    z3x3, y3x3 = LineParameters._sym_to_zy(id=typ_id, z0=z0, z1=z1, y0=y0, y1=y1)
-    zs, zm = z3x3[0, :2]
-    ys, ym = y3x3[0, :2]
-    n_phases = len(phases)
-    z_line = np.full((n_phases, n_phases), fill_value=zm, dtype=np.complex128)
-    y_shunt = np.full((n_phases, n_phases), fill_value=ym, dtype=np.complex128)
-    np.fill_diagonal(z_line, zs)
-    np.fill_diagonal(y_shunt, ys)
+    z_line, y_shunt = LineParameters._sym_to_zy_simple(n=len(phases), z0=z0, y0=y0, z1=z1, y1=y1)
+    LineParameters._check_z_line_matrix(id=typ_id, z_line=z_line)
 
     with warnings.catch_warnings():
         warnings.filterwarnings(action="ignore", message=r".* off-diagonal elements ", category=UserWarning)
