@@ -113,10 +113,10 @@ parameters from PowerFactory data. This is useful when you don't want to import 
 would like to use some of the lines and transformers models you have in a power factory project.
 
 To create line parameters from a PowerFactory Line Type (`TypLne`) object, use the
-{meth}`LineParameters.from_power_factory() roseau.load_flow.LineParameters.from_power_factory` method.
+{meth}`LineParameters.from_power_factory() <roseau.load_flow.LineParameters.from_power_factory>` method.
 
 To create transformer parameters from a PowerFactory 2-Winding Transformer Type (`TypTr2`) object, use the
-{meth}`TransformerParameters.from_power_factory() roseau.load_flow.TransformerParameters.from_power_factory`
+{meth}`TransformerParameters.from_power_factory() <roseau.load_flow.TransformerParameters.from_power_factory>`
 method.
 
 ## OpenDSS
@@ -124,7 +124,7 @@ method.
 `roseau-load-flow` supports creating lines and transformers from OpenDSS data.
 
 To create line parameters from an OpenDSS `LineCode` object, use the
-{meth}`LineParameters.from_open_dss() roseau.load_flow.LineParameters.from_open_dss` method. For
+{meth}`LineParameters.from_open_dss() <roseau.load_flow.LineParameters.from_open_dss>` method. For
 example, the DSS command `New linecode.240sq nphases=3 R1=0.127 X1=0.072 R0=0.342 X0=0.089 units=km`
 translates to:
 
@@ -142,7 +142,7 @@ translates to:
 ```
 
 To create a transformer from an OpenDSS 2-winding `Transformer` object, use the
-{meth}`TransformerParameters.from_open_dss() roseau.load_flow.TransformerParameters.from_open_dss`
+{meth}`TransformerParameters.from_open_dss() <roseau.load_flow.TransformerParameters.from_open_dss>`
 method to create the transformer parameters. For example, the DSS command
 `DSSText.Command = "New transformer.LVTR Buses=[sourcebus, A.1.2.3] Conns=[delta wye] KVs=[11, 0.4] KVAs=[250 250] %Rs=0.00 xhl=2.5 %loadloss=0 "`
 translates to:

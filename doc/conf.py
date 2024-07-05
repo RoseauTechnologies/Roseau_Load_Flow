@@ -92,8 +92,8 @@ html_logo = "_static/Roseau_Load_Flow_Stacked.svg"
 html_favicon = "_static/Favicon_Roseau_Technologies.ico"
 html_theme_options = {
     "source_repository": "https://github.com/RoseauTechnologies/Roseau_Load_Flow/",
-    # "source_branch": "main",
-    # "source_directory": "source/",
+    "source_branch": "main",
+    "source_directory": "doc/",
     # "sidebar_hide_name": True,
     "navigation_with_keys": True,
     "light_css_variables": {"color-announcement-background": "#222798"},
