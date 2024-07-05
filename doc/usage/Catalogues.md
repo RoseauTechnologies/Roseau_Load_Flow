@@ -304,7 +304,7 @@ the values in different units. For instance, if you want to get transformer para
 nominal power of 3150 kVA, the following two commands return the same table:
 
 ```pycon
->>> rlf.TransformerParameters.get_catalogue(sn=3150e3) # in VA by default
+>>> rlf.TransformerParameters.get_catalogue(sn=3150e3)  # in VA by default
 
 >>> import roseau.load_flow as rlf
 ... rlf.TransformerParameters.get_catalogue(sn=rlf.Q_(3150, "kVA"))
@@ -484,7 +484,9 @@ the method `get_catalogue` to narrow down the result to a single line in the cat
 For instance, these parameters filter the results down to a single line parameters:
 
 ```pycon
->>> rlf.LineParameters.from_catalogue(line_type="underground", conductor_type="al", section=240)
+>>> rlf.LineParameters.from_catalogue(
+...     line_type="underground", conductor_type="al", section=240
+... )
 LineParameters(id='U_AL_240')
 ```
 
@@ -520,7 +522,7 @@ to create line parameters with different numbers of phases using the `nb_phases`
 In case no or several results match the parameters, an error is raised:
 
 ```pycon
->>> rlf.LineParameters.from_catalogue(name= r"U_AL.*")
+>>> rlf.LineParameters.from_catalogue(name=r"U_AL.*")
 RoseauLoadFlowException: Several line parameters matching the query (name='U_AL.*') have been found:
 'U_AL_19', 'U_AL_20', 'U_AL_22', 'U_AL_25', 'U_AL_28', 'U_AL_29', 'U_AL_33', 'U_AL_34', 'U_AL_37',
 'U_AL_38', 'U_AL_40', 'U_AL_43', 'U_AL_48', 'U_AL_50', 'U_AL_54', 'U_AL_55', 'U_AL_59', 'U_AL_60',

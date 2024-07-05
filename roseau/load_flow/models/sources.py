@@ -86,10 +86,7 @@ class VoltageSource(Element):
 
     def __repr__(self) -> str:
         bus_id = self.bus.id if self.bus is not None else None
-        return (
-            f"{type(self).__name__}(id={self.id!r}, bus={bus_id!r}, voltages={self.voltages!r}, "
-            f"phases={self.phases!r})"
-        )
+        return f"<{type(self).__name__}: id={self.id!r}, bus={bus_id!r}, phases={self.phases!r}>"
 
     @property
     def phases(self) -> str:

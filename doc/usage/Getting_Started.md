@@ -489,7 +489,9 @@ Network elements can be updated. Here, the load's power values are changed to cr
 unbalanced situation.
 
 ```pycon
->>> load.powers = rlf.Q_([15, 0, 0], "kVA")  # <- 15 kW on phase "a", 0 W on phases "b" and "c"
+>>> load.powers = rlf.Q_(
+...     [15, 0, 0], "kVA"
+... )  # <- 15 kW on phase "a", 0 W on phases "b" and "c"
 >>> en.solve_load_flow()
 (3, 1.686343545e-07)
 >>> load_bus.res_potentials

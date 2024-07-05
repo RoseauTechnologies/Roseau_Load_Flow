@@ -17,6 +17,33 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 # Changelog
 
+## Version 0.9.1
+
+```{note}
+The wheels for Windows are temporarily unavailable anymore. If you need them, please post an issue on GitHub.
+```
+
+- {gh-pr}`231` Add `LineParameters.from_power_factory` and `TransformerParameters.from_power_factory`
+  methods to easily import PowerFactory lines and transformer models into Roseau Load Flow.
+- {gh-pr}`230` Improve the algorithm for assigning potential references for DGS networks.
+- {gh-pr}`229` Several fixes and improvements to the PowerFactory import:
+
+  - Update the "Export Definition Folder" bundled with _Roseau Load Flow_ as a pfd file;
+  - Support lines with missing type ID. This is the case when the `TypLne` objects are inherited
+    from an external library in PowerFactory and not included in the project being exported; A
+    `LineParameters` object is automatically created for these lines;
+  - Support "General Load (`ElmLod`)" elements;
+  - Preserve Geometry information on buses and branches;
+  - Improve handling of phases of several elements. Previously, phases were hard-coded.
+  - Fix the unit of the power of static generators;
+  - Fix the re-sizing of the matrices of line types without neutral elements;
+  - Fix the total power of "MV Loads (`ElmLodmv`)" to take into account the generation power;
+  - Fix all loads to no longer ignore the scale factor of the power;
+  - Fix the sign of the reactive power of MV and LV loads
+  - Fix the ground connection to the source bus
+
+  And many more...
+
 ## Version 0.9.0
 
 - {gh-pr}`227` Sources and loads are now allowed to have floating neutrals. This means that a load/source

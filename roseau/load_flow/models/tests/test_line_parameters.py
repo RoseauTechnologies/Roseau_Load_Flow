@@ -1,4 +1,3 @@
-import json
 import re
 
 import numpy as np
@@ -248,7 +247,7 @@ def test_sym():
     # line_data = {"id": "NKBA NOR  25.00 kV", "un": 25000.0, "in": 277.0000100135803}
 
     z_line, y_shunt = LineParameters._sym_to_zy(
-        "NKBA NOR  25.00 kV", z0=0.0j, z1=1.0 + 1.0j, zn=0.0j, xpn=0.0, y0=0.0j, y1=1e-06j, bn=0.0, bpn=0.0
+        "NKBA NOR  25.00 kV", z0=0.0j, z1=1.0 + 1.0j, zn=0.0j, zpn=0.0j, y0=0.0j, y1=1e-06j, bn=0.0, bpn=0.0
     )
     z_line_expected = (1 + 1j) * np.eye(3)
     npt.assert_allclose(z_line, z_line_expected)
@@ -262,7 +261,7 @@ def test_sym():
         z0=0.5 + 0.3050000071525574j,
         z1=0.125 + 0.0860000029206276j,
         zn=0.0j,
-        xpn=0.0,
+        zpn=0.0j,
         y0=0.0j,
         y1=0.0j,
         bn=0.0,
@@ -288,7 +287,7 @@ def test_sym():
         z0=0.188 + 0.8224j,
         z1=0.188 + 0.0812j,
         zn=0.4029 + 0.3522j,
-        xpn=0.2471,
+        zpn=0.2471j,
         y0=0.000010462 + 0.000063134j,
         y1=0.000010462 + 0.00022999j,
         bn=0.00011407,
@@ -501,13 +500,14 @@ def test_max_current():
     assert lp.max_current == Q_(3_000, "A")
 
 
-def test_json_serialization():
+def test_json_serialization(tmp_path):
     lp = LineParameters("test", z_line=np.eye(3), max_current=np.int64(100), section=np.float64(150))
-    lp_dict = lp.to_dict()
+    path = tmp_path / "lp.json"
+    lp.to_json(path)
+    lp_dict = LineParameters.from_json(path).to_dict()
     assert isinstance(lp_dict["z_line"], list)
     assert isinstance(lp_dict["max_current"], int)
     assert isinstance(lp_dict["section"], float)
-    json.dumps(lp_dict)
 
 
 def test_from_open_dss():
@@ -556,3 +556,78 @@ def test_from_open_dss():
     np.testing.assert_allclose(lp16sq.y_shunt.m, y_shunt_expected)
     assert lp16sq.line_type == LineType.OVERHEAD
     assert lp16sq.max_current.m == 400
+
+
+def test_from_power_factory():
+    # Parameters from tests/data/dgs/special/MV_Load.json
+    pwf_params = {
+        "id": "NA2YSY 1x95rm 12/20kV it",
+        "nphase": 3,
+        "nneutral": 0,
+        "r1": 0.3225,  # Ohm/km
+        "x1": 0.125663,  # Ohm/km
+        "b1": 72.25663,  # µS/km
+        "r0": 1.29,  # Ohm/km
+        "x0": 0.502654,  # Ohm/km
+        "b0": 75.05265,  # µS/km
+        "rn": 0,  # Ohm/km
+        "xn": 0,  # Ohm/km
+        "bn": 0,  # µS/km
+        "rpn": 0,  # Ohm/km
+        "xpn": 0,  # Ohm/km
+        "bpn": 0,  # µS/km
+        "inom": 0.235,  # kA
+        "cohl": 0,  # Cable (underground)
+        "conductor": "Al",  # Aluminium
+        "insulation": 0,  # PVC
+        "section": 95,  # mm²
+    }
+    na2ysy1x95rm = LineParameters.from_power_factory(**pwf_params)
+
+    assert na2ysy1x95rm.id == "NA2YSY 1x95rm 12/20kV it"
+
+    zs_e = 0.645 + 0.2513266666666667j
+    zm_e = 0.3225 + 0.1256636666666667j
+    z_line_expected = [[zs_e, zm_e, zm_e], [zm_e, zs_e, zm_e], [zm_e, zm_e, zs_e]]
+    np.testing.assert_allclose(na2ysy1x95rm.z_line.m, z_line_expected)
+    ys_e = 7.318863666666666e-05j
+    ym_e = 9.320066666666643e-07j
+    y_shunt_expected = [[ys_e, ym_e, ym_e], [ym_e, ys_e, ym_e], [ym_e, ym_e, ys_e]]
+    np.testing.assert_allclose(na2ysy1x95rm.y_shunt.m, y_shunt_expected)
+
+    assert na2ysy1x95rm.max_current.m == 235, na2ysy1x95rm.max_current
+    assert na2ysy1x95rm.line_type == LineType.UNDERGROUND
+    assert na2ysy1x95rm.conductor_type == ConductorType.AL
+    assert na2ysy1x95rm.insulator_type == InsulatorType.PVC
+    assert na2ysy1x95rm.section.m == 95
+
+    # Bad phases
+    new_pwf_params = pwf_params | {"nphase": 4}
+    with pytest.raises(RoseauLoadFlowException) as e:
+        LineParameters.from_power_factory(**new_pwf_params)
+    assert e.value.msg == "Expected nphase=1, 2 or 3, got 4 for line parameters 'NA2YSY 1x95rm 12/20kV it'."
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
+    new_pwf_params = pwf_params | {"nneutral": 2}
+    with pytest.raises(RoseauLoadFlowException) as e:
+        LineParameters.from_power_factory(**new_pwf_params)
+    assert e.value.msg == "Expected nneutral=0 or 1, got 2 for line parameters 'NA2YSY 1x95rm 12/20kV it'."
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
+
+    # Line has no neutral, OK to not pass neutral impedances
+    new_pwf_params = {k: v for k, v in pwf_params.items() if k not in {"rn", "xn", "bn", "rpn", "xpn", "bpn"}}
+    LineParameters.from_power_factory(**new_pwf_params)
+
+    # This time with neutral, should raise an error
+    new_pwf_params["nneutral"] = 1
+    with pytest.raises(RoseauLoadFlowException) as e:
+        LineParameters.from_power_factory(**new_pwf_params)
+    assert e.value.msg == (
+        "Missing rn, xn, bn, rpn, xpn or bpn required with nneutral=1 for line parameters 'NA2YSY 1x95rm 12/20kV it'."
+    )
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_LINE_MODEL
+
+    # String versions of line/insulator type are also accepted
+    new_pwf_params = pwf_params | {"cohl": "OHL", "insulation": "XLPE"}
+    lp = LineParameters.from_power_factory(**new_pwf_params)
+    assert lp.line_type == LineType.OVERHEAD
+    assert lp.insulator_type == InsulatorType.XLPE

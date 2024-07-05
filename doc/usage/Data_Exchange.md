@@ -27,20 +27,21 @@ for Geographical Informations Systems_ (DGS) JSON format.
 
 The following components are currently supported:
 
-| Name       | Description                | RLF Element                 |
-| ---------- | -------------------------- | --------------------------- |
-| ElmXnet    | External Grid              | VoltageSource               |
-| ElmTerm    | Terminal                   | Bus                         |
-| StaCubic   | Cubicle                    | N/A _(included in the bus)_ |
-| ElmTr2     | 2-Winding Transformer      | Transformer                 |
-| TypTr2     | 2-Winding Transformer Type | TransformerParameters       |
-| ElmCoup    | Switch                     | Switch                      |
-| ElmLne     | Line/Cable                 | Line                        |
-| TypLne     | Line/Cable Type            | LineParameters              |
-| ElmLodLV   | Load, low voltage          | PowerLoad (P>=0)            |
-| ElmLodmv   | Load, medium voltage       | PowerLoad (P>=0)            |
-| ElmGenStat | Static Generator           | PowerLoad (P<=0)            |
-| ElmPvsys   | PV System                  | PowerLoad (P<=0)            |
+| Name       | Description                | RLF Element             |
+| ---------- | -------------------------- | ----------------------- |
+| ElmXnet    | External Grid              | VoltageSource           |
+| ElmTerm    | Terminal                   | Bus                     |
+| StaCubic   | Cubicle                    | N/A                     |
+| ElmTr2     | 2-Winding Transformer      | Transformer             |
+| TypTr2     | 2-Winding Transformer Type | TransformerParameters   |
+| ElmCoup    | Switch                     | Switch                  |
+| ElmLne     | Line/Cable                 | Line                    |
+| TypLne     | Line/Cable Type            | LineParameters          |
+| ElmLodLV   | Load, low voltage          | PowerLoad (P>=0)        |
+| ElmLodmv   | Load, medium voltage       | PowerLoad (P>=0 or P<0) |
+| ElmLod     | General load               | PowerLoad (P>=0)        |
+| ElmGenStat | Static Generator           | PowerLoad (P<=0)        |
+| ElmPvsys   | PV System                  | PowerLoad (P<=0)        |
 
 ### Export from PowerFactory
 
@@ -104,6 +105,19 @@ Please note that there are some limitations in the supported features:
 - **Ignored elements**: elements that are not mentioned in the table above are ignored;
 - **Ignored attributes**: functionality that is not yet available in `roseau-load-flow` is ignored.
   This includes the state of the switches (switches are considered to be always closed);
+
+### Lines and Transformers
+
+In addition to the DGS import support, `roseau-load-flow` supports creating lines and transformers
+parameters from PowerFactory data. This is useful when you don't want to import a whole network but
+would like to use some of the lines and transformers models you have in a power factory project.
+
+To create line parameters from a PowerFactory Line Type (`TypLne`) object, use the
+{meth}`LineParameters.from_power_factory() roseau.load_flow.LineParameters.from_power_factory` method.
+
+To create transformer parameters from a PowerFactory 2-Winding Transformer Type (`TypTr2`) object, use the
+{meth}`TransformerParameters.from_power_factory() roseau.load_flow.TransformerParameters.from_power_factory`
+method.
 
 ## OpenDSS
 

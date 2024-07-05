@@ -124,6 +124,23 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         self._psc: float | None = None
         self._vsc: float | None = None
 
+    def __repr__(self) -> str:
+        s = (
+            f"<{type(self).__name__}: id={self.id!r}, type={self.type!r}"
+            f", sn={self._sn}, uhv={self._uhv}, ulv={self._ulv}"
+        )
+        for attr, val, tp in (
+            ("max_power", self._max_power, float),
+            ("p0", self._p0, float),
+            ("i0", self._i0, float),
+            ("psc", self._psc, float),
+            ("vsc", self._vsc, float),
+        ):
+            if val is not None:
+                s += f", {attr}={tp(val)!r}"
+        s += ">"
+        return s
+
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, TransformerParameters):
             return NotImplemented
@@ -266,6 +283,132 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             z2 *= 3
 
         return z2, ym
+
+    @classmethod
+    @ureg_wraps(
+        None,
+        (
+            None,
+            None,
+            None,
+            "MVA",
+            "kV",
+            "kV",
+            None,
+            None,
+            None,
+            "percent",
+            "kW",
+            "percent",
+            "kW",
+            "percent",
+        ),
+    )
+    def from_power_factory(
+        cls,
+        id: Id,
+        *,
+        tech: Literal[2, "single-phase", 3, "three-phase"],
+        sn: float | Q_[float],
+        uhv: float | Q_[float],
+        ulv: float | Q_[float],
+        vg_hv: str,
+        vg_lv: str,
+        phase_shift: int,
+        uk: float | Q_[float],
+        pc: float | Q_[float],
+        curmg: float | Q_[float],
+        pfe: float | Q_[float],
+        maxload: float | Q_[float] | None = 100,
+    ) -> Self:
+        """Create a transformer parameters object from PowerFactory "TypTr2" data.
+
+        Note that only two-winding three-phase transformers are currently supported.
+
+        Args:
+            id:
+                A unique ID of the transformer parameters.
+
+            tech:
+                PwF parameter `nt2ph` (Technology). The technology of the transformer; either
+                `'single-phase'` or `2` for single-phase transformers or `'three-phase'` or `3` for
+                three-phase transformers.
+
+            sn:
+                PwF parameter `strn` (Rated Power). The rated power of the transformer in (MVA).
+
+            uhv:
+                PwF parameter `utrn_h` (Rated Voltage HV-Side). The rated phase to phase voltage of
+                the transformer on the high voltage side.
+
+            ulv:
+                PwF parameter `utrn_l` (Rated Voltage LV-Side). The rated phase to phase voltage of
+                the transformer on the low voltage side.
+
+            vg_hv:
+                PwF parameter `tr2cn_h` (Vector Group HV-Side). The vector group of the high voltage
+                side. It can be one of `'D'`, `'Y'`, `'Yn'`, `'Z'`, `'Zn'`.
+
+            vg_lv:
+                PwF parameter `tr2cn_l` (Vector Group LV-Side). The vector group of the low voltage
+                side. It can be one of `'d'`, `'y'`, `'yn'`, `'z'`, `'zn'`.
+
+            phase_shift:
+                PwF parameter `nt2ag` (Vector Group Phase Shift). The phase shift of the vector
+                group in (degrees).
+
+            uk:
+                PwF parameter `uktr` (Positive Sequence Impedance Short-Circuit Voltage). The
+                positive sequence impedance i.e the voltage in (%) obtained from the short-circuit
+                test.
+
+            pc:
+                PwF parameter `pcutr` (Positive Sequence Impedance Copper Losses). The positive
+                sequence impedance copper losses i.e the power in (kW) obtained from the short
+                circuit test.
+
+            curmg:
+                PwF parameter `curmg` (Magnetizing Impedance - No Load Current). The magnetizing
+                current i.e the current in (%) obtained from the no-load (open-circuit) test.
+
+            pfe:
+                PwF parameter `pfe` (Magnetizing Impedance - No Load Losses). The magnetizing
+                impedance i.e the power losses in (kW) obtained from the no-load test.
+
+            maxload:
+                PwF parameter `maxload` (Max. Thermal Loading Limit). The maximum loading of the
+                transformer in (%) of the nominal power. This parameter is defined on the transformer
+                element (`ElmTr2`) in PwF instead of the transformer type (`TypTr2`).
+                This is used to compute `max_current` and is used for violation checks.
+
+        Returns:
+            The corresponding transformer parameters object.
+        """
+        # Type: from vector group data and technology
+        tech_norm = str(tech).upper().replace(" ", "-")
+        if tech_norm.startswith("SINGLE-PHASE") or tech_norm == "2":
+            type = "single"
+        elif tech_norm.startswith("THREE-PHASE") or tech_norm == "3":
+            type = f"{vg_hv.upper()}{vg_lv.lower()}{phase_shift}"
+        else:
+            msg = f"Expected tech='single-phase' or 'three-phase', got {tech!r} for transformer parameters {id!r}."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_TYPE)
+
+        uhv *= 1e3
+        ulv *= 1e3
+        sn *= 1e6
+        p0 = pfe * 1e3
+        psc = pc * 1e3
+        i0 = curmg / 100
+        vsc = uk / 100
+
+        z2, ym = cls._compute_zy(type=type, uhv=uhv, ulv=ulv, sn=sn, p0=p0, i0=i0, psc=psc, vsc=vsc)
+
+        max_power = (sn * maxload / 100) if maxload is not None else None
+
+        obj = cls(id=id, type=type, uhv=uhv, ulv=ulv, sn=sn, z2=z2, ym=ym, max_power=max_power)
+        return obj
 
     @classmethod
     @ureg_wraps(
@@ -714,11 +857,6 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             res["vsc"] = self._vsc
         if self.max_power is not None:
             res["max_power"] = self.max_power.magnitude
-        for k, v in res.items():
-            if isinstance(v, np.integer):
-                res[k] = int(v)
-            elif isinstance(v, np.floating):
-                res[k] = float(v)
         return res
 
     def _results_to_dict(self, warning: bool) -> NoReturn:

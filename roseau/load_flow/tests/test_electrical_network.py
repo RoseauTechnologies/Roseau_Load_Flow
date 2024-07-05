@@ -59,7 +59,7 @@ def check_result_warning(expected_message: str | re.Pattern[str]):
         yield
     assert len(records) == 1
     assert re.match(expected_message, records[0].message.args[0])
-    assert records[0].category == UserWarning
+    assert records[0].category is UserWarning
 
 
 def test_connect_and_disconnect():
@@ -127,8 +127,8 @@ def test_connect_and_disconnect():
     with pytest.raises(RoseauLoadFlowException) as e:
         en._disconnect_element(line)
     assert e.value.msg == (
-        "Line(id='line', bus1=Bus(id='source', phases='abcn'), bus2=Bus(id='load bus', phases='abcn'), "
-        "phases1='abcn', phases2='abcn') is a Line and it cannot be disconnected from a network."
+        "<Line: id='line', bus1='source', bus2='load bus', phases1='abcn', phases2='abcn'> "
+        "is a Line and it cannot be disconnected from a network."
     )
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT
 

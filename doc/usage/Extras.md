@@ -156,10 +156,10 @@ use the {meth}`~roseau.load_flow.models.Bus.res_voltage_unbalance` method on a 3
 the Voltage Unbalance Factor (VUF) as per the IEC definition:
 
 ```{math}
-VUF = \frac{|V_n|}{|V_p|} * 100 (\%)
+VUF = \frac{|V_{\mathrm{n}}|}{|V_{\mathrm{p}}|} \times 100 (\%)
 ```
 
-Where $V_n$ is the negative-sequence voltage and $V_p$ is the positive-sequence voltage.
+Where $V_{\mathrm{n}}$ is the negative-sequence voltage and $V_{\mathrm{p}}$ is the positive-sequence voltage.
 
 ```{note}
 Other definitions of voltage unbalance could be added in the future. If you need a specific

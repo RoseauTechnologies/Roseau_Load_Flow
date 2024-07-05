@@ -39,7 +39,7 @@ are junction buses. The color of the buses is changed when highlighted.
 >>> import folium
 
 >>> def buses_style_function(feature):
-...     if feature["properties"]["id"].startswith("HVMV"): # HV/MV substation
+...     if feature["properties"]["id"].startswith("HVMV"):  # HV/MV substation
 ...         return {
 ...             "fill": True,
 ...             "fillColor": "#000000",
@@ -47,7 +47,7 @@ are junction buses. The color of the buses is changed when highlighted.
 ...             "fillOpacity": 1,
 ...             "radius": 7,
 ...         }
-...     elif feature["properties"]["id"].startswith("MVLV"): # MV/LV substations
+...     elif feature["properties"]["id"].startswith("MVLV"):  # MV/LV substations
 ...         return {
 ...             "fill": True,
 ...             "fillColor": "#234e83",
@@ -55,7 +55,7 @@ are junction buses. The color of the buses is changed when highlighted.
 ...             "fillOpacity": 1,
 ...             "radius": 5,
 ...         }
-...     else: # Junction buses
+...     else:  # Junction buses
 ...         return {
 ...             "fill": True,
 ...             "fillColor": "#234e83",
@@ -63,9 +63,11 @@ are junction buses. The color of the buses is changed when highlighted.
 ...             "fillOpacity": 1,
 ...             "radius": 3,
 ...         }
+...
 
 >>> def buses_highlight_function(feature):
 ...     return {"color": "#cad40e", "fillColor": "#cad40e"}
+...
 
 >>> buses_tooltip = folium.GeoJsonTooltip(
 ...     fields=["id", "phases"],
@@ -82,10 +84,12 @@ The same is done for the lines.
 ```pycon
 >>> def lines_style_function(feature):
 ...     return {"color": "#234e83", "weight": 4}
+...
 
 
 >>> def lines_highlight_function(feature):
 ...     return {"color": "#cad40e"}
+...
 
 
 >>> lines_tooltip = folium.GeoJsonTooltip(
