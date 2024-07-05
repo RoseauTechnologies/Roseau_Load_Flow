@@ -179,7 +179,11 @@ As a consequence, the provided apparent power for phase `'a'` is the maximum tha
 ...     bus=load_bus3,
 ...     phases="abcn",
 ...     powers=[si, 0, 0],  # W
-...     flexible_params=[fp, rlf.FlexibleParameter.constant(), rlf.FlexibleParameter.constant()],
+...     flexible_params=[
+...         fp,
+...         rlf.FlexibleParameter.constant(),
+...         rlf.FlexibleParameter.constant(),
+...     ],
 ... )
 ```
 
@@ -239,14 +243,24 @@ production is totally shut down.
 >>> # Let's try with PQ(u) control, by injecting reactive power before reducing active power
 ... en.loads["load3"].disconnect()
 ... fp = rlf.FlexibleParameter.pq_u_production(
-...     up_up=240, up_max=250, uq_min=200, uq_down=210, uq_up=235, uq_max=240, s_max=4000  # V and VA
+...     up_up=240,
+...     up_max=250,
+...     uq_min=200,
+...     uq_down=210,
+...     uq_up=235,
+...     uq_max=240,
+...     s_max=4000,  # V and VA
 ... )
 ... flexible_load = rlf.PowerLoad(
 ...     id="load3",
 ...     bus=load_bus3,
 ...     phases="abcn",
 ...     powers=[si, 0, 0],
-...     flexible_params=[fp, rlf.FlexibleParameter.constant(), rlf.FlexibleParameter.constant()],
+...     flexible_params=[
+...         fp,
+...         rlf.FlexibleParameter.constant(),
+...         rlf.FlexibleParameter.constant(),
+...     ],
 ... )
 ```
 

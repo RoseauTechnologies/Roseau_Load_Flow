@@ -53,7 +53,7 @@ def test_control():
         records[0].message.args[0] == "Some voltage norm value(s) will not be used by the 'p_max_u_production' "
         "control. Nevertheless, values different from 0 were given: 'u_min' (2.0 V), 'u_down' (1.0 V)"
     )
-    assert records[0].category == UserWarning
+    assert records[0].category is UserWarning
 
     # Bad control value for p_max_u_consumption
     with pytest.raises(RoseauLoadFlowException) as e:
@@ -100,7 +100,7 @@ def test_control():
         "control. Nevertheless, values different from 0 were given: 'u_max' (-1.0 "
         "V), 'u_up' (2.3 V)"
     )
-    assert records[0].category == UserWarning
+    assert records[0].category is UserWarning
 
     # Bad control value for q_u
     with pytest.raises(RoseauLoadFlowException) as e:

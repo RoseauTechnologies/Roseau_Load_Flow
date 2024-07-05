@@ -541,10 +541,10 @@ Please note that for underground lines, the provided height $h$ must be negative
 ...     line_type=rlf.LineType.UNDERGROUND,
 ...     conductor_type=rlf.ConductorType.AL,
 ...     insulator_type=rlf.InsulatorType.PVC,
-...     section=150, #mm²
-...     section_neutral=70, #mm²
-...     height=-1.5, # m # Underground so negative!
-...     external_diameter=0.049, #m
+...     section=150,  # mm²
+...     section_neutral=70,  # mm²
+...     height=-1.5,  # m # Underground so negative!
+...     external_diameter=0.049,  # m
 ... )
 
 >>> line_parameters.z_line

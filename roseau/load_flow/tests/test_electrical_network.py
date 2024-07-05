@@ -59,7 +59,7 @@ def check_result_warning(expected_message: str | re.Pattern[str]):
         yield
     assert len(records) == 1
     assert re.match(expected_message, records[0].message.args[0])
-    assert records[0].category == UserWarning
+    assert records[0].category is UserWarning
 
 
 def test_connect_and_disconnect():

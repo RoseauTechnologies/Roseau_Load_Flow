@@ -17,7 +17,11 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 # Changelog
 
-## Unreleased
+## Version 0.9.1
+
+```{note}
+The wheels for Windows are temporarily unavailable anymore. If you need them, please post an issue on GitHub.
+```
 
 - {gh-pr}`231` Add `LineParameters.from_power_factory` and `TransformerParameters.from_power_factory`
   methods to easily import PowerFactory lines and transformer models into Roseau Load Flow.

@@ -314,6 +314,4 @@ class Transformer(AbstractBranch):
             return None
         powers1, powers2 = self._res_powers_getter(warning=True)
         # True if either the primary or secondary is overloaded
-        if abs(powers1.sum()) > s_max or abs(powers2.sum()) > s_max:
-            return True
-        return False
+        return bool((abs(powers1.sum()) > s_max) or (abs(powers2.sum()) > s_max))

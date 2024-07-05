@@ -116,7 +116,7 @@ the new load.
 
 ```pycon
 >>> new_bus = rlf.Bus(id="new_bus", phases="abcn")
->>> new_load = rlf.PowerLoad(id="new_load", bus=new_bus, phases="an", powers=[6e3]) # W
+>>> new_load = rlf.PowerLoad(id="new_load", bus=new_bus, phases="an", powers=[6e3])  # W
 ```
 
 At this point, they don't belong to any network:
