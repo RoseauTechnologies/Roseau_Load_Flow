@@ -29,6 +29,8 @@ classifiers = [
     "Development Status :: 3 - Alpha",
     # "License :: OSI Approved :: The 3-Clause BSD License (BSD-3-Clause)", # https://github.com/pypa/trove-classifiers/issues/70
     "Operating System :: MacOS :: MacOS X",
+    # I [BV] have met some diffuculties generating usable wheels for Windows... If you need it, please post an issue
+    # on GitHub
     "Operating System :: Microsoft :: Windows",
     "Operating System :: POSIX :: Linux",
     "Programming Language :: Python :: 3.10",
@@ -45,7 +47,7 @@ build-backend = "poetry.core.masonry.api"
 python = "^3.10"
 numpy = ">=1.21.5"
 pandas = ">=1.4.0"
-geopandas = ">=0.10.2"
+geopandas = ">=1.0.0"
 shapely = ">=2.0.0"
 regex = ">=2022.1.18"
 pint = ">=0.21.0"
@@ -53,7 +55,7 @@ typing-extensions = ">=4.6.2"
 pyproj = ">=3.3.0"
 certifi = ">=2023.5.7"
 platformdirs = ">=4.0.0"
-roseau-load-flow-engine = "==0.14.0"
+roseau-load-flow-engine = ">=0.14.0"
 
 # Optional dependencies
 matplotlib = { version = ">=3.7.2", optional = true }
@@ -74,7 +76,7 @@ networkx = ">=3.0.0"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^3.0.0"
-ruff = ">=0.4.0"
+ruff = ">=0.5.0"
 
 [tool.poetry.group.doc.dependencies]
 sphinx = "^7.0.1"
