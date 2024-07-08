@@ -123,6 +123,6 @@ class PotentialRef(Element):
             res["results"] = {"current": [i.real, i.imag]}
         return res
 
-    def _results_to_dict(self, warning: bool) -> JsonDict:
+    def _results_to_dict(self, warning: bool, full: bool) -> JsonDict:
         i = self._res_current_getter(warning)
         return {"id": self.id, "current": [i.real, i.imag]}

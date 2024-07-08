@@ -117,6 +117,6 @@ class Ground(Element):
             res["results"] = {"potential": [v.real, v.imag]}
         return res
 
-    def _results_to_dict(self, warning: bool) -> JsonDict:
+    def _results_to_dict(self, warning: bool, full: bool) -> JsonDict:
         v = self._res_potential_getter(warning)
         return {"id": self.id, "potential": [v.real, v.imag]}

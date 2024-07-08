@@ -228,17 +228,22 @@ class VoltageSource(Element):
             currents = self._res_currents_getter(warning=True)
             res["results"] = {"currents": [[i.real, i.imag] for i in currents]}
             if self.has_floating_neutral:
-                potentials = self._res_potentials_getter(warning=True)
+                potentials = self._res_potentials_getter(warning=False)
                 res["results"]["potentials"] = [[v.real, v.imag] for v in potentials]
         return res
 
-    def _results_to_dict(self, warning: bool) -> JsonDict:
+    def _results_to_dict(self, warning: bool, full: bool) -> JsonDict:
+        currents = self._res_currents_getter(warning)
         results = {
             "id": self.id,
             "phases": self.phases,
-            "currents": [[i.real, i.imag] for i in self._res_currents_getter(warning)],
+            "currents": [[i.real, i.imag] for i in currents],
         }
-        if self.has_floating_neutral:
-            potentials = self._res_potentials_getter(warning=True)
+        if self.has_floating_neutral or full:
+            potentials = self._res_potentials_getter(warning=False)
             results["potentials"] = [[v.real, v.imag] for v in potentials]
+
+            if full:
+                powers = self._res_powers_getter(warning=False, currents=currents, potentials=potentials)
+                results["powers"] = [[s.real, s.imag] for s in powers]
         return results

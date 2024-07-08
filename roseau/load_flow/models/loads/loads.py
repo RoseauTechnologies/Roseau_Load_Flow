@@ -62,7 +62,7 @@ class AbstractLoad(Element, ABC):
         if phases is None:
             phases = bus.phases
         else:
-            self._check_phases(id, phases=phases)
+            self._check_phases(id=id, phases=phases)
             # Also check they are in the bus phases
             phases_not_in_bus = set(phases) - set(bus.phases)
             # "n" is allowed to be absent from the bus only if the load has more than 2 phases
@@ -272,15 +272,19 @@ class AbstractLoad(Element, ABC):
                 res["results"]["potentials"] = [[v.real, v.imag] for v in potentials]
         return res
 
-    def _results_to_dict(self, warning: bool) -> JsonDict:
+    def _results_to_dict(self, warning: bool, full: bool) -> JsonDict:
+        currents = self._res_currents_getter(warning)
         results = {
             "id": self.id,
             "phases": self.phases,
-            "currents": [[i.real, i.imag] for i in self._res_currents_getter(warning)],
+            "currents": [[i.real, i.imag] for i in currents],
         }
-        if self.has_floating_neutral:
-            potentials = self._res_potentials_getter(warning=True)
+        if self.has_floating_neutral or full:
+            potentials = self._res_potentials_getter(warning=False)
             results["potentials"] = [[v.real, v.imag] for v in potentials]
+            if full:
+                powers = self._res_powers_getter(warning=False, currents=currents, potentials=potentials)
+                results["powers"] = [[s.real, s.imag] for s in powers]
         return results
 
 
@@ -446,14 +450,14 @@ class PowerLoad(AbstractLoad):
                 ]
         return res
 
-    def _results_to_dict(self, warning: bool) -> JsonDict:
+    def _results_to_dict(self, warning: bool, full: bool) -> JsonDict:
         if self.is_flexible:
             return {
-                **super()._results_to_dict(warning=warning),
+                **super()._results_to_dict(warning=warning, full=full),
                 "flexible_powers": [[s.real, s.imag] for s in self._res_flexible_powers_getter(False)],
             }
         else:
-            return super()._results_to_dict(warning)
+            return super()._results_to_dict(warning=warning, full=full)
 
 
 class CurrentLoad(AbstractLoad):

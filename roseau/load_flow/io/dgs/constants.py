@@ -65,7 +65,7 @@ GEN_STAT_PHASES: Final[dict[int, str]] = {
     # 3: "an",  # "1PH PH-N" # which phases?
     # 4: "ab",  # "1PH PH-PH" # which phases?
 }
-GENERAL_LOAD_INPUT_MODE: Final[dict[str, str]] = {
+GENERAL_LOAD_INPUT_MODE: Final[dict[str, tuple[str, str]]] = {
     "DEF": ("plini", "qlini"),  # Can the default be changed?
     "PQ": ("plini", "qlini"),
     "PC": ("plini", "coslini", "pf_recap"),
@@ -76,7 +76,7 @@ GENERAL_LOAD_INPUT_MODE: Final[dict[str, str]] = {
     "SP": ("slini", "plini", "pf_recap"),
     "SQ": ("slini", "qlini", "p_direc"),
 }
-GEN_STAT_INPUT_MODE: Final[dict[str, str]] = {
+GEN_STAT_INPUT_MODE: Final[dict[str, tuple[str, str] | tuple[str, str, str]]] = {
     "DEF": ("pgini", "qgini"),  # Can the default be changed?
     "PQ": ("pgini", "qgini"),
     "PC": ("pgini", "cosgini", "pf_recap"),
@@ -87,7 +87,7 @@ GEN_STAT_INPUT_MODE: Final[dict[str, str]] = {
 }
 
 # Buses
-BUS_PHASES: Final[dict[str, str]] = {
+BUS_PHASES: Final[dict[int, str]] = {
     0: "abc",  # "ABC"
     1: "abcn",  # "ABC-N"
     # 2: "ab",  # "BI" # which phases?

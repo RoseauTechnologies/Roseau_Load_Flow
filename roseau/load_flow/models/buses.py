@@ -369,12 +369,18 @@ class Bus(Element):
             res["results"] = {"potentials": [[v.real, v.imag] for v in potentials]}
         return res
 
-    def _results_to_dict(self, warning: bool) -> JsonDict:
-        return {
+    def _results_to_dict(self, warning: bool, full: bool) -> JsonDict:
+        potentials = np.array(self._res_potentials_getter(warning))
+        res = {
             "id": self.id,
             "phases": self.phases,
-            "potentials": [[v.real, v.imag] for v in self._res_potentials_getter(warning)],
+            "potentials": [[v.real, v.imag] for v in potentials],
         }
+        if full:
+            res["voltages"] = [
+                [v.real, v.imag] for v in self._res_voltages_getter(warning=False, potentials=potentials)
+            ]
+        return res
 
     def add_short_circuit(self, *phases: str, ground: "Ground | None" = None) -> None:
         """Add a short-circuit by connecting multiple phases together optionally with a ground.

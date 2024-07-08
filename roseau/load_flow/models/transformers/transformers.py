@@ -9,11 +9,7 @@ from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.transformers.parameters import TransformerParameters
 from roseau.load_flow.typing import Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
-from roseau.load_flow_engine.cy_engine import (
-    CyCenterTransformer,
-    CySingleTransformer,
-    CyThreePhaseTransformer,
-)
+from roseau.load_flow_engine.cy_engine import CyCenterTransformer, CySingleTransformer, CyThreePhaseTransformer
 
 logger = logging.getLogger(__name__)
 
@@ -317,3 +313,12 @@ class Transformer(AbstractBranch):
         res["params_id"] = self.parameters.id
 
         return res
+
+    def _results_to_dict(self, warning: bool, full: bool) -> JsonDict:
+        results = super()._results_to_dict(warning=warning, full=full)
+        if full:
+            powers1, powers2 = self._res_powers_getter(warning=False)
+            power_losses = sum(powers1) + sum(powers2)
+            results["power_losses"] = [power_losses.real, power_losses.imag]
+
+        return results

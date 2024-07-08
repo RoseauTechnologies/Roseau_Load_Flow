@@ -339,3 +339,34 @@ class Line(AbstractBranch):
                 "currents2": [[i.real, i.imag] for i in currents2],
             }
         return res
+
+    def _results_to_dict(self, warning: bool, full: bool) -> JsonDict:
+        currents1, currents2 = self._res_currents_getter(warning)
+        results = {
+            "id": self.id,
+            "phases": self.phases,
+            "currents1": [[i.real, i.imag] for i in currents1],
+            "currents2": [[i.real, i.imag] for i in currents2],
+        }
+        if full:
+            pot1, pot2 = self._res_potentials_getter(warning=False)
+            results["potentials1"] = [[v.real, v.imag] for v in pot1]
+            results["potentials2"] = [[v.real, v.imag] for v in pot2]
+            powers1, powers2 = self._res_powers_getter(warning=False, pot1=pot1, pot2=pot2)
+            results["powers1"] = [[s.real, s.imag] for s in powers1]
+            results["powers2"] = [[s.real, s.imag] for s in powers2]
+            voltages1, voltages2 = self._res_voltages_getter(warning=False, pot1=pot1, pot2=pot2)
+            results["voltages1"] = [[v.real, v.imag] for v in voltages1]
+            results["voltages2"] = [[v.real, v.imag] for v in voltages2]
+            results["power_losses"] = [[s.real, s.imag] for s in self._res_power_losses_getter(warning=False)]
+            results["series_currents"] = [[i.real, i.imag] for i in self._res_series_currents_getter(warning=False)]
+            results["series_power_losses"] = [
+                [s.real, s.imag] for s in self._res_series_power_losses_getter(warning=False)
+            ]
+            shunt_currents1, shunt_currents2 = self._res_shunt_currents_getter(warning=False)
+            results["shunt_currents1"] = [[i.real, i.imag] for i in shunt_currents1]
+            results["shunt_currents2"] = [[i.real, i.imag] for i in shunt_currents2]
+            results["shunt_power_losses"] = [
+                [s.real, s.imag] for s in self._res_shunt_power_losses_getter(warning=False)
+            ]
+        return results

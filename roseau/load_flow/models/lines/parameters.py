@@ -1412,7 +1412,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             res["section"] = self._section
         return res
 
-    def _results_to_dict(self, warning: bool) -> NoReturn:
+    def _results_to_dict(self, warning: bool, full: bool) -> NoReturn:
         msg = f"The {type(self).__name__} has no results to export."
         logger.error(msg)
         raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.JSON_NO_RESULTS)

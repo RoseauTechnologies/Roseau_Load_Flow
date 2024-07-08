@@ -8,7 +8,7 @@ to read and write networks from and to JSON files.
 
 import copy
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypeVar
 
 import numpy as np
 
@@ -35,6 +35,31 @@ logger = logging.getLogger(__name__)
 
 NETWORK_JSON_VERSION = 2
 """The current version of the network JSON file format."""
+
+_T = TypeVar("_T", bound=AbstractBranch)
+
+
+def _assign_branch_currents(branch: _T, branch_data: JsonDict) -> _T:
+    """Small helper to assign the currents results to a branch object.
+
+    Args:
+        branch:
+            The object to assign the results.
+
+        branch_data:
+            The data of the branch which may contain the results.
+
+    Returns:
+        The updated `branch` object.
+    """
+    if "results" in branch_data:
+        currents1 = np.array([complex(i[0], i[1]) for i in branch_data["results"]["currents1"]], dtype=np.complex128)
+        currents2 = np.array([complex(i[0], i[1]) for i in branch_data["results"]["currents2"]], dtype=np.complex128)
+        branch._res_currents = (currents1, currents2)
+        branch._fetch_results = False
+        branch._no_results = False
+
+    return branch
 
 
 def network_from_dict(  # noqa: C901
@@ -150,12 +175,8 @@ def network_from_dict(  # noqa: C901
         line = Line(
             id=id, bus1=bus1, bus2=bus2, parameters=lp, phases=phases, length=length, ground=ground, geometry=geometry
         )
-        if include_results and "results" in line_data:
-            currents1 = np.array([complex(i[0], i[1]) for i in line_data["results"]["currents1"]], dtype=np.complex128)
-            currents2 = np.array([complex(i[0], i[1]) for i in line_data["results"]["currents2"]], dtype=np.complex128)
-            line._res_currents = (currents1, currents2)
-            line._fetch_results = False
-            line._no_results = False
+        if include_results:
+            line = _assign_branch_currents(branch=line, branch_data=line_data)
 
         has_results = has_results and not line._no_results
         lines_dict[id] = line
@@ -173,16 +194,8 @@ def network_from_dict(  # noqa: C901
         transformer = Transformer(
             id=id, bus1=bus1, bus2=bus2, parameters=tp, phases1=phases1, phases2=phases2, geometry=geometry
         )
-        if include_results and "results" in transformer_data:
-            currents1 = np.array(
-                [complex(i[0], i[1]) for i in transformer_data["results"]["currents1"]], dtype=np.complex128
-            )
-            currents2 = np.array(
-                [complex(i[0], i[1]) for i in transformer_data["results"]["currents2"]], dtype=np.complex128
-            )
-            transformer._res_currents = (currents1, currents2)
-            transformer._fetch_results = False
-            transformer._no_results = False
+        if include_results:
+            transformer = _assign_branch_currents(branch=transformer, branch_data=transformer_data)
 
         has_results = has_results and not transformer._no_results
         transformers_dict[id] = transformer
@@ -196,16 +209,8 @@ def network_from_dict(  # noqa: C901
         bus2 = buses[switch_data["bus2"]]
         geometry = Switch._parse_geometry(switch_data.get("geometry"))
         switch = Switch(id=id, bus1=bus1, bus2=bus2, phases=phases, geometry=geometry)
-        if include_results and "results" in switch_data:
-            currents1 = np.array(
-                [complex(i[0], i[1]) for i in switch_data["results"]["currents1"]], dtype=np.complex128
-            )
-            currents2 = np.array(
-                [complex(i[0], i[1]) for i in switch_data["results"]["currents2"]], dtype=np.complex128
-            )
-            switch._res_currents = (currents1, currents2)
-            switch._fetch_results = False
-            switch._no_results = False
+        if include_results:
+            switch = _assign_branch_currents(branch=switch, branch_data=switch_data)
 
         has_results = has_results and not switch._no_results
         switches_dict[id] = switch

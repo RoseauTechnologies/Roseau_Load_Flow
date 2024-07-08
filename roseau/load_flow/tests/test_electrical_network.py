@@ -1899,8 +1899,18 @@ def test_serialization(small_network, small_network_with_results):
 def test_results_to_dict(small_network_with_results):
     en = small_network_with_results
 
+    # By default full=False
     res_network = en.results_to_dict()
-    assert set(res_network) == {"buses", "branches", "loads", "sources", "grounds", "potential_refs"}
+    assert set(res_network) == {
+        "buses",
+        "lines",
+        "transformers",
+        "switches",
+        "loads",
+        "sources",
+        "grounds",
+        "potential_refs",
+    }
     for v in res_network.values():
         assert isinstance(v, list)
     for res_bus in res_network["buses"]:
@@ -1908,14 +1918,28 @@ def test_results_to_dict(small_network_with_results):
         assert res_bus["phases"] == bus.phases
         complex_potentials = [v_r + 1j * v_i for v_r, v_i in res_bus["potentials"]]
         np.testing.assert_allclose(complex_potentials, bus.res_potentials.m)
-    for res_branch in res_network["branches"]:
-        branch = en.branches[res_branch["id"]]
-        assert res_branch["phases1"] == branch.phases1
-        assert res_branch["phases2"] == branch.phases2
-        complex_currents1 = [i_r + 1j * i_i for i_r, i_i in res_branch["currents1"]]
-        np.testing.assert_allclose(complex_currents1, branch.res_currents[0].m)
-        complex_currents2 = [i_r + 1j * i_i for i_r, i_i in res_branch["currents2"]]
-        np.testing.assert_allclose(complex_currents2, branch.res_currents[1].m)
+    for res_line in res_network["lines"]:
+        line = en.lines[res_line["id"]]
+        assert res_line["phases"] == line.phases
+        complex_currents1 = [i_r + 1j * i_i for i_r, i_i in res_line["currents1"]]
+        np.testing.assert_allclose(complex_currents1, line.res_currents[0].m)
+        complex_currents2 = [i_r + 1j * i_i for i_r, i_i in res_line["currents2"]]
+        np.testing.assert_allclose(complex_currents2, line.res_currents[1].m)
+    for res_transformer in res_network["transformers"]:
+        transformer = en.transformers[res_transformer["id"]]
+        assert res_transformer["phases1"] == transformer.phases1
+        assert res_transformer["phases2"] == transformer.phases2
+        complex_currents1 = [i_r + 1j * i_i for i_r, i_i in res_transformer["currents1"]]
+        np.testing.assert_allclose(complex_currents1, transformer.res_currents[0].m)
+        complex_currents2 = [i_r + 1j * i_i for i_r, i_i in res_transformer["currents2"]]
+        np.testing.assert_allclose(complex_currents2, transformer.res_currents[1].m)
+    for res_switch in res_network["switches"]:
+        switch = en.switches[res_switch["id"]]
+        assert res_switch["phases"] == switch.phases
+        complex_currents1 = [i_r + 1j * i_i for i_r, i_i in res_switch["currents1"]]
+        np.testing.assert_allclose(complex_currents1, switch.res_currents[0].m)
+        complex_currents2 = [i_r + 1j * i_i for i_r, i_i in res_switch["currents2"]]
+        np.testing.assert_allclose(complex_currents2, switch.res_currents[1].m)
     for res_load in res_network["loads"]:
         load = en.loads[res_load["id"]]
         assert res_load["phases"] == load.phases
@@ -1926,6 +1950,143 @@ def test_results_to_dict(small_network_with_results):
         assert res_source["phases"] == source.phases
         complex_currents = [i_r + 1j * i_i for i_r, i_i in res_source["currents"]]
         np.testing.assert_allclose(complex_currents, source.res_currents.m)
+    for res_ground in res_network["grounds"]:
+        ground = en.grounds[res_ground["id"]]
+        complex_potential = complex(*res_ground["potential"])
+        np.testing.assert_allclose(complex_potential, ground.res_potential.m)
+    for res_potential_ref in res_network["potential_refs"]:
+        potential_ref = en.potential_refs[res_potential_ref["id"]]
+        complex_current = complex(*res_potential_ref["current"])
+        np.testing.assert_allclose(complex_current, potential_ref.res_current.m)
+
+
+def test_results_to_dict_full(small_network_with_results):
+    en = small_network_with_results
+
+    # Here, `full` is True
+    res_network = en.results_to_dict(full=True)
+    assert set(res_network) == {
+        "buses",
+        "lines",
+        "transformers",
+        "switches",
+        "loads",
+        "sources",
+        "grounds",
+        "potential_refs",
+    }
+    for v in res_network.values():
+        assert isinstance(v, list)
+    for res_bus in res_network["buses"]:
+        bus = en.buses[res_bus["id"]]
+        assert res_bus["phases"] == bus.phases
+        complex_potentials = [v_r + 1j * v_i for v_r, v_i in res_bus["potentials"]]
+        np.testing.assert_allclose(complex_potentials, bus.res_potentials.m)
+        complex_voltages = [v_r + 1j * v_i for v_r, v_i in res_bus["voltages"]]
+        np.testing.assert_allclose(complex_voltages, bus.res_voltages.m)
+    for res_line in res_network["lines"]:
+        line = en.lines[res_line["id"]]
+        assert res_line["phases"] == line.phases
+        # Currents
+        complex_currents1 = [i_r + 1j * i_i for i_r, i_i in res_line["currents1"]]
+        np.testing.assert_allclose(complex_currents1, line.res_currents[0].m)
+        complex_currents2 = [i_r + 1j * i_i for i_r, i_i in res_line["currents2"]]
+        np.testing.assert_allclose(complex_currents2, line.res_currents[1].m)
+        # Potentials
+        complex_potentials1 = [i_r + 1j * i_i for i_r, i_i in res_line["potentials1"]]
+        np.testing.assert_allclose(complex_potentials1, line.res_potentials[0].m)
+        complex_potentials2 = [i_r + 1j * i_i for i_r, i_i in res_line["potentials2"]]
+        np.testing.assert_allclose(complex_potentials2, line.res_potentials[1].m)
+        # Powers
+        complex_powers1 = [i_r + 1j * i_i for i_r, i_i in res_line["powers1"]]
+        np.testing.assert_allclose(complex_powers1, line.res_powers[0].m)
+        complex_powers2 = [i_r + 1j * i_i for i_r, i_i in res_line["powers2"]]
+        np.testing.assert_allclose(complex_powers2, line.res_powers[1].m)
+        # Voltages
+        complex_voltages1 = [i_r + 1j * i_i for i_r, i_i in res_line["voltages1"]]
+        np.testing.assert_allclose(complex_voltages1, line.res_voltages[0].m)
+        complex_voltages2 = [i_r + 1j * i_i for i_r, i_i in res_line["voltages2"]]
+        np.testing.assert_allclose(complex_voltages2, line.res_voltages[1].m)
+        # Power losses
+        complex_power_losses = [i_r + 1j * i_i for i_r, i_i in res_line["power_losses"]]
+        np.testing.assert_allclose(complex_power_losses, line.res_power_losses.m)
+        # Series currents
+        complex_series_currents = [i_r + 1j * i_i for i_r, i_i in res_line["series_currents"]]
+        np.testing.assert_allclose(complex_series_currents, line.res_series_currents.m)
+        # Shunt currents
+        complex_shunt_currents1 = [i_r + 1j * i_i for i_r, i_i in res_line["shunt_currents1"]]
+        np.testing.assert_allclose(complex_shunt_currents1, line.res_shunt_currents[0].m)
+        complex_shunt_currents2 = [i_r + 1j * i_i for i_r, i_i in res_line["shunt_currents2"]]
+        np.testing.assert_allclose(complex_shunt_currents2, line.res_shunt_currents[1].m)
+        # Shunt power losses
+        complex_shunt_power_losses = [i_r + 1j * i_i for i_r, i_i in res_line["shunt_power_losses"]]
+        np.testing.assert_allclose(complex_shunt_power_losses, line.res_shunt_power_losses.m)
+
+    for res_transformer in res_network["transformers"]:
+        transformer = en.transformers[res_transformer["id"]]
+        assert res_transformer["phases1"] == transformer.phases1
+        assert res_transformer["phases2"] == transformer.phases2
+        # Currents
+        complex_currents1 = [i_r + 1j * i_i for i_r, i_i in res_transformer["currents1"]]
+        np.testing.assert_allclose(complex_currents1, transformer.res_currents[0].m)
+        complex_currents2 = [i_r + 1j * i_i for i_r, i_i in res_transformer["currents2"]]
+        np.testing.assert_allclose(complex_currents2, transformer.res_currents[1].m)
+        # Power losses
+        complex_power_losses = complex(*res_transformer["power_losses"])
+        np.testing.assert_allclose(complex_power_losses, transformer.res_power_losses.m)
+    for res_switch in res_network["switches"]:
+        switch = en.switches[res_switch["id"]]
+        assert res_switch["phases"] == switch.phases
+        # Currents
+        complex_currents1 = [i_r + 1j * i_i for i_r, i_i in res_switch["currents1"]]
+        np.testing.assert_allclose(complex_currents1, switch.res_currents[0].m)
+        complex_currents2 = [i_r + 1j * i_i for i_r, i_i in res_switch["currents2"]]
+        np.testing.assert_allclose(complex_currents2, switch.res_currents[1].m)
+        # Potentials
+        complex_potentials1 = [i_r + 1j * i_i for i_r, i_i in res_switch["potentials1"]]
+        np.testing.assert_allclose(complex_potentials1, switch.res_potentials[0].m)
+        complex_potentials2 = [i_r + 1j * i_i for i_r, i_i in res_switch["potentials2"]]
+        np.testing.assert_allclose(complex_potentials2, switch.res_potentials[1].m)
+        # Powers
+        complex_powers1 = [i_r + 1j * i_i for i_r, i_i in res_switch["powers1"]]
+        np.testing.assert_allclose(complex_powers1, switch.res_powers[0].m)
+        complex_powers2 = [i_r + 1j * i_i for i_r, i_i in res_switch["powers2"]]
+        np.testing.assert_allclose(complex_powers2, switch.res_powers[1].m)
+        # Voltages
+        complex_voltages1 = [i_r + 1j * i_i for i_r, i_i in res_switch["voltages1"]]
+        np.testing.assert_allclose(complex_voltages1, switch.res_voltages[0].m)
+        complex_voltages2 = [i_r + 1j * i_i for i_r, i_i in res_switch["voltages2"]]
+        np.testing.assert_allclose(complex_voltages2, switch.res_voltages[1].m)
+    for res_load in res_network["loads"]:
+        load = en.loads[res_load["id"]]
+        assert res_load["phases"] == load.phases
+        # Currents
+        complex_currents = [i_r + 1j * i_i for i_r, i_i in res_load["currents"]]
+        np.testing.assert_allclose(complex_currents, load.res_currents.m)
+        # Powers
+        complex_powers = [i_r + 1j * i_i for i_r, i_i in res_load["powers"]]
+        np.testing.assert_allclose(complex_powers, load.res_powers.m)
+        # Potentials
+        if "potentials" in res_load:
+            complex_potentials = [i_r + 1j * i_i for i_r, i_i in res_load["potentials"]]
+            np.testing.assert_allclose(complex_potentials, load.res_potentials.m)
+        # Flexible powers
+        if "flexible_powers" in res_load:
+            complex_flexible_powers = [i_r + 1j * i_i for i_r, i_i in res_load["flexible_powers"]]
+            np.testing.assert_allclose(complex_flexible_powers, load.res_flexible_powers.m)
+    for res_source in res_network["sources"]:
+        source = en.sources[res_source["id"]]
+        assert res_source["phases"] == source.phases
+        # Currents
+        complex_currents = [i_r + 1j * i_i for i_r, i_i in res_source["currents"]]
+        np.testing.assert_allclose(complex_currents, source.res_currents.m)
+        # Powers
+        complex_powers = [i_r + 1j * i_i for i_r, i_i in res_source["powers"]]
+        np.testing.assert_allclose(complex_powers, source.res_powers.m)
+        # Potentials
+        if "potentials" in res_source:
+            complex_potentials = [i_r + 1j * i_i for i_r, i_i in res_source["potentials"]]
+            np.testing.assert_allclose(complex_potentials, source.res_potentials.m)
     for res_ground in res_network["grounds"]:
         ground = en.grounds[res_ground["id"]]
         complex_potential = complex(*res_ground["potential"])
