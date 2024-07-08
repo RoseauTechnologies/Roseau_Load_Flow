@@ -1,5 +1,6 @@
 {
-  "version": 1,
+  "version": 2,
+  "is_multiphase": true,
   "grounds": [
     {
       "id": "ground",
@@ -115,205 +116,185 @@
       }
     }
   ],
-  "branches": [
+  "lines": [
     {
       "id": "line1",
-      "type": "line",
-      "phases1": "abcn",
-      "phases2": "abcn",
+      "phases": "abcn",
       "bus1": 1,
       "bus2": 2,
+      "length": 0.2,
+      "params_id": "S_AL_150_lv_exact",
+      "ground": "ground",
       "geometry": {
         "type": "LineString",
         "coordinates": [
           [1.0, -2.0],
           [1.0, -3.0]
         ]
-      },
-      "length": 0.2,
-      "params_id": "S_AL_150_lv_exact",
-      "ground": "ground"
+      }
     },
     {
       "id": "line2",
-      "type": "line",
-      "phases1": "abcn",
-      "phases2": "abcn",
+      "phases": "abcn",
       "bus1": 2,
       "bus2": 3,
+      "length": 0.2,
+      "params_id": "S_AL_150_lv_exact",
+      "ground": "ground",
       "geometry": {
         "type": "LineString",
         "coordinates": [
           [1.0, -3.0],
           [2.0, -3.0]
         ]
-      },
-      "length": 0.2,
-      "params_id": "S_AL_150_lv_exact",
-      "ground": "ground"
+      }
     },
     {
       "id": "line3",
-      "type": "line",
-      "phases1": "abcn",
-      "phases2": "abcn",
+      "phases": "abcn",
       "bus1": 2,
       "bus2": 4,
+      "length": 0.2,
+      "params_id": "S_AL_150_lv_exact",
+      "ground": "ground",
       "geometry": {
         "type": "LineString",
         "coordinates": [
           [1.0, -3.0],
           [1.0, -4.0]
         ]
-      },
-      "length": 0.2,
-      "params_id": "S_AL_150_lv_exact",
-      "ground": "ground"
+      }
     },
     {
       "id": "line4",
-      "type": "line",
-      "phases1": "abcn",
-      "phases2": "abcn",
+      "phases": "abcn",
       "bus1": 4,
       "bus2": 5,
+      "length": 0.2,
+      "params_id": "S_AL_150_lv_exact",
+      "ground": "ground",
       "geometry": {
         "type": "LineString",
         "coordinates": [
           [1.0, -4.0],
           [0.0, -4.0]
         ]
-      },
-      "length": 0.2,
-      "params_id": "S_AL_150_lv_exact",
-      "ground": "ground"
+      }
     },
     {
       "id": "line5",
-      "type": "line",
-      "phases1": "abcn",
-      "phases2": "abcn",
+      "phases": "abcn",
       "bus1": 5,
       "bus2": 6,
+      "length": 0.2,
+      "params_id": "S_AL_150_lv_exact",
+      "ground": "ground",
       "geometry": {
         "type": "LineString",
         "coordinates": [
           [0.0, -4.0],
           [-1.0, -4.0]
         ]
-      },
-      "length": 0.2,
-      "params_id": "S_AL_150_lv_exact",
-      "ground": "ground"
+      }
     },
     {
       "id": "line6",
-      "type": "line",
-      "phases1": "abcn",
-      "phases2": "abcn",
+      "phases": "abcn",
       "bus1": 6,
       "bus2": 7,
+      "length": 0.2,
+      "params_id": "S_AL_150_lv_exact",
+      "ground": "ground",
       "geometry": {
         "type": "LineString",
         "coordinates": [
           [-1.0, -4.0],
           [-2.0, -4.0]
         ]
-      },
-      "length": 0.2,
-      "params_id": "S_AL_150_lv_exact",
-      "ground": "ground"
+      }
     },
     {
       "id": "line7",
-      "type": "line",
-      "phases1": "abcn",
-      "phases2": "abcn",
+      "phases": "abcn",
       "bus1": 4,
       "bus2": 8,
+      "length": 0.2,
+      "params_id": "S_AL_150_lv_exact",
+      "ground": "ground",
       "geometry": {
         "type": "LineString",
         "coordinates": [
           [1.0, -4.0],
           [1.0, -5.0]
         ]
-      },
-      "length": 0.2,
-      "params_id": "S_AL_150_lv_exact",
-      "ground": "ground"
+      }
     },
     {
       "id": "line8",
-      "type": "line",
-      "phases1": "abcn",
-      "phases2": "abcn",
+      "phases": "abcn",
       "bus1": 8,
       "bus2": 9,
+      "length": 0.2,
+      "params_id": "S_AL_150_lv_exact",
+      "ground": "ground",
       "geometry": {
         "type": "LineString",
         "coordinates": [
           [1.0, -5.0],
           [2.0, -5.0]
         ]
-      },
-      "length": 0.2,
-      "params_id": "S_AL_150_lv_exact",
-      "ground": "ground"
+      }
     },
     {
       "id": "line9",
-      "type": "line",
-      "phases1": "abcn",
-      "phases2": "abcn",
+      "phases": "abcn",
       "bus1": 8,
       "bus2": 10,
+      "length": 0.2,
+      "params_id": "S_AL_150_z_neutral",
       "geometry": {
         "type": "LineString",
         "coordinates": [
           [1.0, -5.0],
           [1.0, -6.0]
         ]
-      },
-      "length": 0.2,
-      "params_id": "S_AL_150_z_neutral"
+      }
     },
     {
       "id": "line10",
-      "type": "line",
-      "phases1": "abcn",
-      "phases2": "abcn",
+      "phases": "abcn",
       "bus1": 10,
       "bus2": 11,
+      "length": 0.2,
+      "params_id": "S_AL_150_zy_neutral",
+      "ground": "ground",
       "geometry": {
         "type": "LineString",
         "coordinates": [
           [1.0, -6.0],
           [1.0, -7.0]
         ]
-      },
-      "length": 0.2,
-      "params_id": "S_AL_150_zy_neutral",
-      "ground": "ground"
+      }
     },
     {
       "id": "line11",
-      "type": "line",
-      "phases1": "abcn",
-      "phases2": "abcn",
+      "phases": "abcn",
       "bus1": 11,
       "bus2": 12,
+      "length": 0.2,
+      "params_id": "S_AL_150_sym_neutral",
+      "ground": "ground",
       "geometry": {
         "type": "LineString",
         "coordinates": [
           [1.0, -7.0],
           [1.0, -8.0]
         ]
-      },
-      "length": 0.2,
-      "params_id": "S_AL_150_sym_neutral",
-      "ground": "ground"
+      }
     }
   ],
+  "transformers": [],
+  "switches": [],
   "loads": [
     {
       "id": 1,

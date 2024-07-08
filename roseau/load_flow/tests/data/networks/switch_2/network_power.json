@@ -1,5 +1,6 @@
 {
-  "version": 1,
+  "version": 2,
+  "is_multiphase": true,
   "grounds": [
     {
       "id": "ground",
@@ -67,30 +68,61 @@
       }
     }
   ],
-  "branches": [
+  "lines": [
     {
       "id": "line1",
-      "type": "line",
-      "phases1": "abcn",
-      "phases2": "abcn",
+      "phases": "abcn",
       "bus1": 1,
       "bus2": 2,
+      "length": 0.5,
+      "params_id": "A_AL_150_sym_neutral",
+      "ground": "ground",
       "geometry": {
         "type": "LineString",
         "coordinates": [
           [0.0, 0.0],
           [1.0, 0.0]
         ]
-      },
-      "length": 0.5,
-      "params_id": "A_AL_150_sym_neutral",
-      "ground": "ground"
+      }
     },
     {
+      "id": "line2",
+      "phases": "abcn",
+      "bus1": 3,
+      "bus2": 4,
+      "length": 0.5,
+      "params_id": "A_AL_150_sym_neutral",
+      "ground": "ground",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [2.0, 0.0],
+          [2.0, 1.0]
+        ]
+      }
+    },
+    {
+      "id": "line3",
+      "phases": "abcn",
+      "bus1": 3,
+      "bus2": 6,
+      "length": 0.5,
+      "params_id": "A_AL_150_sym_neutral",
+      "ground": "ground",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [2.0, 0.0],
+          [2.0, -1.0]
+        ]
+      }
+    }
+  ],
+  "transformers": [],
+  "switches": [
+    {
       "id": "switch1",
-      "type": "switch",
-      "phases1": "abcn",
-      "phases2": "abcn",
+      "phases": "abcn",
       "bus1": 2,
       "bus2": 3,
       "geometry": {
@@ -99,52 +131,14 @@
       }
     },
     {
-      "id": "line2",
-      "type": "line",
-      "phases1": "abcn",
-      "phases2": "abcn",
-      "bus1": 3,
-      "bus2": 4,
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [2.0, 0.0],
-          [2.0, 1.0]
-        ]
-      },
-      "length": 0.5,
-      "params_id": "A_AL_150_sym_neutral",
-      "ground": "ground"
-    },
-    {
       "id": "switch2",
-      "type": "switch",
-      "phases1": "abcn",
-      "phases2": "abcn",
+      "phases": "abcn",
       "bus1": 3,
       "bus2": 5,
       "geometry": {
         "type": "Point",
         "coordinates": [2.5, 0.0]
       }
-    },
-    {
-      "id": "line3",
-      "type": "line",
-      "phases1": "abcn",
-      "phases2": "abcn",
-      "bus1": 3,
-      "bus2": 6,
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [2.0, 0.0],
-          [2.0, -1.0]
-        ]
-      },
-      "length": 0.5,
-      "params_id": "A_AL_150_sym_neutral",
-      "ground": "ground"
     }
   ],
   "loads": [

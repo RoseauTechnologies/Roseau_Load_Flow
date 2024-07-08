@@ -1,5 +1,6 @@
 {
-  "version": 1,
+  "version": 2,
+  "is_multiphase": true,
   "grounds": [
     {
       "id": "ground",
@@ -67,98 +68,90 @@
       }
     }
   ],
-  "branches": [
+  "lines": [
     {
       "id": "line1",
-      "type": "line",
-      "phases1": "abcn",
-      "phases2": "abcn",
+      "phases": "abcn",
       "bus1": 1,
       "bus2": 2,
+      "length": 1.0,
+      "params_id": "S_AL_150_exact",
+      "ground": "ground",
       "geometry": {
         "type": "LineString",
         "coordinates": [
           [0.0, 0.0],
           [0.0, 0.25]
         ]
-      },
-      "length": 1.0,
-      "params_id": "S_AL_150_exact",
-      "ground": "ground"
+      }
     },
     {
       "id": "line2",
-      "type": "line",
-      "phases1": "abcn",
-      "phases2": "abcn",
+      "phases": "abcn",
       "bus1": 2,
       "bus2": 3,
+      "length": 1.0,
+      "params_id": "S_AL_150_exact",
+      "ground": "ground",
       "geometry": {
         "type": "LineString",
         "coordinates": [
           [0.0, 0.25],
           [0.0, 0.5]
         ]
-      },
-      "length": 1.0,
-      "params_id": "S_AL_150_exact",
-      "ground": "ground"
+      }
     },
     {
       "id": "line3",
-      "type": "line",
-      "phases1": "abcn",
-      "phases2": "abcn",
+      "phases": "abcn",
       "bus1": 1,
       "bus2": 4,
+      "length": 0.5,
+      "params_id": "A_AL_150_exact",
+      "ground": "ground",
       "geometry": {
         "type": "LineString",
         "coordinates": [
           [0.0, 0.0],
           [0.4, 0.0]
         ]
-      },
-      "length": 0.5,
-      "params_id": "A_AL_150_exact",
-      "ground": "ground"
+      }
     },
     {
       "id": "line4",
-      "type": "line",
-      "phases1": "abcn",
-      "phases2": "abcn",
+      "phases": "abcn",
       "bus1": 2,
       "bus2": 5,
+      "length": 0.5,
+      "params_id": "A_AL_150_exact",
+      "ground": "ground",
       "geometry": {
         "type": "LineString",
         "coordinates": [
           [0.0, 0.25],
           [-0.4, 0.25]
         ]
-      },
-      "length": 0.5,
-      "params_id": "A_AL_150_exact",
-      "ground": "ground"
+      }
     },
     {
       "id": "line5",
-      "type": "line",
-      "phases1": "abcn",
-      "phases2": "abcn",
+      "phases": "abcn",
       "bus1": 3,
       "bus2": 6,
+      "length": 0.5,
+      "params_id": "A_AL_150_exact",
+      "ground": "ground",
       "geometry": {
         "type": "LineString",
         "coordinates": [
           [0.0, 0.5],
           [0.4, 0.5]
         ]
-      },
-      "length": 0.5,
-      "params_id": "A_AL_150_exact",
-      "ground": "ground"
+      }
     }
   ],
+  "transformers": [],
+  "switches": [],
   "loads": [
     {
       "id": 1,

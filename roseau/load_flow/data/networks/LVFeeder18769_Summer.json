@@ -1,5 +1,6 @@
 {
-  "version": 1,
+  "version": 2,
+  "is_multiphase": true,
   "grounds": [
     {
       "id": "ground",
@@ -94,28 +95,15 @@
       "max_voltage": 253
     }
   ],
-  "branches": [
-    {
-      "id": "Transformer",
-      "type": "transformer",
-      "phases1": "abc",
-      "phases2": "abcn",
-      "bus1": "MVLV12730",
-      "bus2": "MVLVFeeder12730",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [-1.1327275629390434, 49.16774480064011]
-      },
-      "tap": 1.0,
-      "params_id": "Dyn11_160kVA"
-    },
+  "lines": [
     {
       "id": "LVBranch139447",
-      "type": "line",
-      "phases1": "abcn",
-      "phases2": "abcn",
+      "phases": "abcn",
       "bus1": "MVLVFeeder12730",
       "bus2": "LVBus087076",
+      "length": 0.04187235159546076,
+      "params_id": "U_AL_150",
+      "ground": "ground",
       "geometry": {
         "type": "LineString",
         "coordinates": [
@@ -128,18 +116,16 @@
           [-1.133194683772453, 49.167570340123746],
           [-1.133194683772453, 49.167570340123746]
         ]
-      },
-      "length": 0.04187235159546076,
-      "params_id": "U_AL_150",
-      "ground": "ground"
+      }
     },
     {
       "id": "LVBranch059442",
-      "type": "line",
-      "phases1": "abcn",
-      "phases2": "abcn",
+      "phases": "abcn",
       "bus1": "LVBus087076",
       "bus2": "LVBus087078",
+      "length": 0.10847194755352463,
+      "params_id": "T_AL_70",
+      "ground": "ground",
       "geometry": {
         "type": "LineString",
         "coordinates": [
@@ -150,18 +136,16 @@
           [-1.132412649513897, 49.16674157666],
           [-1.132412649513897, 49.16674157666]
         ]
-      },
-      "length": 0.10847194755352463,
-      "params_id": "T_AL_70",
-      "ground": "ground"
+      }
     },
     {
       "id": "LVBranch009111",
-      "type": "line",
-      "phases1": "abcn",
-      "phases2": "abcn",
+      "phases": "abcn",
       "bus1": "LVBus087078",
       "bus2": "LVBus087079",
+      "length": 0.02607998376353147,
+      "params_id": "T_AL_70",
+      "ground": "ground",
       "geometry": {
         "type": "LineString",
         "coordinates": [
@@ -171,18 +155,16 @@
           [-1.132234747056438, 49.16694500576106],
           [-1.132234747056438, 49.16694500576106]
         ]
-      },
-      "length": 0.02607998376353147,
-      "params_id": "T_AL_70",
-      "ground": "ground"
+      }
     },
     {
       "id": "LVBranch016717",
-      "type": "line",
-      "phases1": "abcn",
-      "phases2": "abcn",
+      "phases": "abcn",
       "bus1": "LVBus087078",
       "bus2": "LVBus087080",
+      "length": 0.04020726221453102,
+      "params_id": "T_AL_70",
+      "ground": "ground",
       "geometry": {
         "type": "LineString",
         "coordinates": [
@@ -194,18 +176,16 @@
           [-1.132061025225172, 49.166463131093245],
           [-1.132061025225172, 49.166463131093245]
         ]
-      },
-      "length": 0.04020726221453102,
-      "params_id": "T_AL_70",
-      "ground": "ground"
+      }
     },
     {
       "id": "LVBranch040995",
-      "type": "line",
-      "phases1": "abcn",
-      "phases2": "abcn",
+      "phases": "abcn",
       "bus1": "LVBus087076",
       "bus2": "LVBus087077",
+      "length": 0.01566142289245769,
+      "params_id": "T_AL_70",
+      "ground": "ground",
       "geometry": {
         "type": "LineString",
         "coordinates": [
@@ -216,12 +196,25 @@
           [-1.133319188207094, 49.167685073690194],
           [-1.133319188207094, 49.167685073690194]
         ]
-      },
-      "length": 0.01566142289245769,
-      "params_id": "T_AL_70",
-      "ground": "ground"
+      }
     }
   ],
+  "transformers": [
+    {
+      "id": "Transformer",
+      "phases1": "abc",
+      "phases2": "abcn",
+      "bus1": "MVLV12730",
+      "bus2": "MVLVFeeder12730",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-1.1327275629390434, 49.16774480064011]
+      },
+      "tap": 1.0,
+      "params_id": "Dyn11_160kVA"
+    }
+  ],
+  "switches": [],
   "loads": [
     {
       "id": "LVBus087076_consumption",
@@ -376,11 +369,13 @@
       "sn": 160000.0,
       "uhv": 20000.0,
       "ulv": 400.0,
+      "type": "Dyn11",
+      "z2": [0.014687500000000001, 0.037205877811845804],
+      "ym": [3.8333333333333335e-7, -3.0426140077242796e-6],
       "i0": 0.023,
       "p0": 460.0,
       "psc": 2350.0,
       "vsc": 0.04,
-      "type": "Dyn11",
       "max_power": 160000
     }
   ]
