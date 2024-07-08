@@ -871,11 +871,11 @@ class FlexibleParameter(JsonMixin):
         s_max: float | Q_[float],
         q_min: float | Q_[float] | None = None,
         q_max: float | Q_[float] | None = None,
-        alpha_control=Control._DEFAULT_ALPHA,
+        alpha_control: float = Control._DEFAULT_ALPHA,
         epsilon_control: float = Control._DEFAULT_EPSILON,
         type_proj: ProjectionType = Projection._DEFAULT_TYPE,
-        alpha_proj=Projection._DEFAULT_ALPHA,
-        epsilon_proj=Projection._DEFAULT_EPSILON,
+        alpha_proj: float = Projection._DEFAULT_ALPHA,
+        epsilon_proj: float = Projection._DEFAULT_EPSILON,
     ) -> Self:
         """Build flexible parameters for production ``P(U)`` control and ``Q(U)`` control with a
         Euclidean projection.
@@ -962,7 +962,7 @@ class FlexibleParameter(JsonMixin):
         s_max: float | Q_[float],
         q_min: float | Q_[float] | None = None,
         q_max: float | Q_[float] | None = None,
-        alpha_control: float | Q_[float] = Control._DEFAULT_ALPHA,
+        alpha_control: float = Control._DEFAULT_ALPHA,
         epsilon_control: float = Control._DEFAULT_EPSILON,
         type_proj: ProjectionType = Projection._DEFAULT_TYPE,
         alpha_proj: float = Projection._DEFAULT_ALPHA,

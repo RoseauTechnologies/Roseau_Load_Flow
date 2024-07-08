@@ -237,6 +237,12 @@ class AbstractLoad(Element, ABC):
                 msg = f"{type(self).__name__} {self.id!r} with floating neutral is missing results of potentials."
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.JSON_NO_RESULTS)
+
+            if "flexible_powers" in data["results"]:
+                self._res_flexible_powers = np.array(
+                    [complex(p[0], p[1]) for p in data["results"]["powers"]], dtype=np.complex128
+                )
+
             self._fetch_results = False
             self._no_results = False
         return self
@@ -391,9 +397,14 @@ class PowerLoad(AbstractLoad):
         if self._cy_element is not None:
             self._cy_element.update_powers(self._powers)
 
+    def _refresh_results(self) -> None:
+        super()._refresh_results()
+        if self.is_flexible:
+            self._res_flexible_powers = self._cy_element.get_powers(self._n)
+
     def _res_flexible_powers_getter(self, warning: bool) -> ComplexArray:
         if self._fetch_results:
-            self._res_flexible_powers = self._cy_element.get_powers(self._n)
+            self._refresh_results()
         return self._res_getter(value=self._res_flexible_powers, warning=warning)
 
     @property
@@ -417,15 +428,6 @@ class PowerLoad(AbstractLoad):
     #
     # Json Mixin interface
     #
-    @classmethod
-    def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> AbstractLoad:
-        self = super().from_dict(data, include_results=include_results)
-        if self.is_flexible and include_results and "results" in data:
-            self._res_flexible_powers = np.array(
-                [complex(p[0], p[1]) for p in data["results"]["powers"]], dtype=np.complex128
-            )
-        return self
-
     def _to_dict(self, include_results: bool) -> JsonDict:
         res = super()._to_dict(include_results=include_results)
         if self.flexible_params is not None:
