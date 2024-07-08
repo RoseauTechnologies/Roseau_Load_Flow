@@ -32,7 +32,9 @@ og:description: See what's new in the latest release of Roseau Load Flow !
     - The accessor `res_branches` is removed from the class `ElectricalNetwork`. Please use `res_lines`,
       `res_transformers` or `res_switches`.
     - A key `"is_multiphase"` has also been added in the JSON file format for a future single-phase format.
-  - A bug concerning the accessors to the flexible powers result of flexible power loads has also been solved.
+  - Solve a bug concerning the accessors to the flexible powers result of flexible power loads. An unwanted error was
+    raised.
+  - Solve a bug when updating JSON file format. The short-circuits were unfortunately removed.
 
 ## Version 0.9.1
 
