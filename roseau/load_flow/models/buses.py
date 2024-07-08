@@ -232,7 +232,8 @@ class Bus(Element):
                 limits different from this bus. If ``True``, the limits are propagated even if
                 connected buses have different limits.
         """
-        from roseau.load_flow.models.lines import Line, Switch
+        from roseau.load_flow.models.lines import Line
+        from roseau.load_flow.models.switches import Switch
 
         buses: set[Bus] = set()
         visited: set[Element] = set()
@@ -283,7 +284,8 @@ class Bus(Element):
 
         These are all the buses connected via one or more lines or switches to this bus.
         """
-        from roseau.load_flow.models.lines import Line, Switch
+        from roseau.load_flow.models.lines import Line
+        from roseau.load_flow.models.switches import Switch
 
         visited_buses = {self.id}
         yield self.id
