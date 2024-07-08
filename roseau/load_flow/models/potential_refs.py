@@ -101,7 +101,7 @@ class PotentialRef(Element):
     #
     @classmethod
     def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
-        self = cls(data["id"], data["element"], phase=data.get("phases"))
+        self = cls(id=data["id"], element=data["element"], phase=data.get("phases"))
         if include_results and "results" in data:
             self._res_current = complex(*data["results"]["current"])
             self._fetch_results = False

@@ -3,7 +3,7 @@ import logging
 import numpy as np
 import pandas as pd
 
-from roseau.load_flow.models import AbstractLoad, Bus, VoltageSource
+from roseau.load_flow.models import Bus, VoltageSource
 from roseau.load_flow.typing import Id
 
 logger = logging.getLogger(__name__)
@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 def generate_sources(
     elm_xnet: pd.DataFrame,
-    sources: dict[Id, AbstractLoad],
+    sources: dict[Id, VoltageSource],
     buses: dict[Id, Bus],
     sta_cubic: pd.DataFrame,
     elm_term: pd.DataFrame,

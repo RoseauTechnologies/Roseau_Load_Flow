@@ -1,6 +1,5 @@
 import logging
 from functools import cached_property
-from typing import ClassVar, Literal
 
 from shapely.geometry.base import BaseGeometry
 from typing_extensions import Self
@@ -22,8 +21,6 @@ class AbstractBranch(Element):
         :doc:`Transformer models documentation </models/Transformer/index>` and
         :doc:`Switch model documentation </models/Switch>`
     """
-
-    type: ClassVar[Literal["line", "transformer", "switch"]]
 
     def __init__(
         self, id: Id, bus1: Bus, bus2: Bus, *, phases1: str, phases2: str, geometry: BaseGeometry | None = None
@@ -52,8 +49,8 @@ class AbstractBranch(Element):
         if type(self) is AbstractBranch:
             raise TypeError("Can't instantiate abstract class AbstractBranch")
         super().__init__(id)
-        self._check_phases(id, phases1=phases1)
-        self._check_phases(id, phases2=phases2)
+        self._check_phases(id=id, phases1=phases1)
+        self._check_phases(id=id, phases2=phases2)
         self._n1 = len(phases1)
         self._n2 = len(phases2)
         self._phases1 = phases1
@@ -122,8 +119,8 @@ class AbstractBranch(Element):
         return self._res_powers_getter(warning=True)
 
     def _res_potentials_getter(self, warning: bool) -> tuple[ComplexArray, ComplexArray]:
-        pot1 = self.bus1._get_potentials_of(self.phases1, warning)
-        pot2 = self.bus2._get_potentials_of(self.phases2, warning=False)  # we warn on the previous line
+        pot1 = self.bus1._get_potentials_of(phases=self.phases1, warning=warning)
+        pot2 = self.bus2._get_potentials_of(phases=self.phases2, warning=False)  # we warn on the previous line
         return pot1, pot2
 
     @property
@@ -132,9 +129,14 @@ class AbstractBranch(Element):
         """The load flow result of the branch potentials (V)."""
         return self._res_potentials_getter(warning=True)
 
-    def _res_voltages_getter(self, warning: bool) -> tuple[ComplexArray, ComplexArray]:
-        pot1, pot2 = self._res_potentials_getter(warning)
-        return _calculate_voltages(pot1, self.phases1), _calculate_voltages(pot2, self.phases2)
+    def _res_voltages_getter(
+        self, warning: bool, pot1: ComplexArray | None = None, pot2: ComplexArray | None = None
+    ) -> tuple[ComplexArray, ComplexArray]:
+        if pot1 is None or pot2 is None:
+            pot1, pot2 = self._res_potentials_getter(warning)
+        return _calculate_voltages(potentials=pot1, phases=self.phases1), _calculate_voltages(
+            potentials=pot2, phases=self.phases2
+        )
 
     @property
     @ureg_wraps(("V", "V"), (None,))
@@ -170,7 +172,6 @@ class AbstractBranch(Element):
     def _to_dict(self, include_results: bool) -> JsonDict:
         res = {
             "id": self.id,
-            "type": self.type,
             "phases1": self.phases1,
             "phases2": self.phases2,
             "bus1": self.bus1.id,

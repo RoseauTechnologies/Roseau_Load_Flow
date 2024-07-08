@@ -99,7 +99,7 @@ class Ground(Element):
     def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
         self = cls(data["id"])
         for bus_data in data["buses"]:
-            self.connect(bus_data["bus"], bus_data["phase"])
+            self.connect(bus=bus_data["bus"], phase=bus_data["phase"])
         if include_results and "results" in data:
             self._res_potential = complex(*data["results"]["potential"])
             self._fetch_results = False

@@ -24,8 +24,6 @@ class Transformer(AbstractBranch):
     The model parameters are defined using the ``parameters`` argument.
     """
 
-    type: Final = "transformer"
-
     allowed_phases: Final = Bus.allowed_phases
     """The allowed phases for a transformer are:
 
@@ -177,12 +175,6 @@ class Transformer(AbstractBranch):
         # for all transformers that share the parameters. It is better to set it on the parameters.
         return self.parameters.max_power
 
-    def _to_dict(self, include_results: bool) -> JsonDict:
-        res = super()._to_dict(include_results=include_results)
-        res["tap"] = self.tap
-        res["params_id"] = self.parameters.id
-        return res
-
     def _compute_phases_three(
         self,
         id: Id,
@@ -197,10 +189,10 @@ class Transformer(AbstractBranch):
         if phases1 is None:
             phases1 = "abcn" if w1_has_neutral else "abc"
             phases1 = "".join(p for p in bus1.phases if p in phases1)
-            self._check_phases(id, allowed_phases=self._allowed_phases_three, phases1=phases1)
+            self._check_phases(id=id, allowed_phases=self._allowed_phases_three, phases1=phases1)
         else:
-            self._check_phases(id, allowed_phases=self._allowed_phases_three, phases1=phases1)
-            self._check_bus_phases(id, bus1, phases1=phases1)
+            self._check_phases(id=id, allowed_phases=self._allowed_phases_three, phases1=phases1)
+            self._check_bus_phases(id=id, bus=bus1, phases1=phases1)
             transformer_phases = "abcn" if w1_has_neutral else "abc"
             phases_not_in_transformer = set(phases1) - set(transformer_phases)
             if phases_not_in_transformer:
@@ -214,10 +206,10 @@ class Transformer(AbstractBranch):
         if phases2 is None:
             phases2 = "abcn" if w2_has_neutral else "abc"
             phases2 = "".join(p for p in bus2.phases if p in phases2)
-            self._check_phases(id, allowed_phases=self._allowed_phases_three, phases2=phases2)
+            self._check_phases(id=id, allowed_phases=self._allowed_phases_three, phases2=phases2)
         else:
-            self._check_phases(id, allowed_phases=self._allowed_phases_three, phases2=phases2)
-            self._check_bus_phases(id, bus2, phases2=phases2)
+            self._check_phases(id=id, allowed_phases=self._allowed_phases_three, phases2=phases2)
+            self._check_bus_phases(id=id, bus=bus2, phases2=phases2)
             transformer_phases = "abcn" if w2_has_neutral else "abc"
             phases_not_in_transformer = set(phases2) - set(transformer_phases)
             if phases_not_in_transformer:
@@ -241,8 +233,8 @@ class Transformer(AbstractBranch):
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
         else:
-            self._check_phases(id, allowed_phases=self._allowed_phases_single, phases1=phases1)
-            self._check_bus_phases(id, bus1, phases1=phases1)
+            self._check_phases(id=id, allowed_phases=self._allowed_phases_single, phases1=phases1)
+            self._check_bus_phases(id=id, bus=bus1, phases1=phases1)
 
         if phases2 is None:
             phases2 = "".join(p for p in bus1.phases if p in bus2.phases)  # can't use set because order is important
@@ -252,8 +244,8 @@ class Transformer(AbstractBranch):
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
         else:
-            self._check_phases(id, allowed_phases=self._allowed_phases_single, phases2=phases2)
-            self._check_bus_phases(id, bus2, phases2=phases2)
+            self._check_phases(id=id, allowed_phases=self._allowed_phases_single, phases2=phases2)
+            self._check_bus_phases(id=id, bus=bus2, phases2=phases2)
 
         return phases1, phases2
 
@@ -268,8 +260,8 @@ class Transformer(AbstractBranch):
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
         else:
-            self._check_phases(id, allowed_phases=self._allowed_phases_single, phases1=phases1)
-            self._check_bus_phases(id, bus1, phases1=phases1)
+            self._check_phases(id=id, allowed_phases=self._allowed_phases_single, phases1=phases1)
+            self._check_bus_phases(id=id, bus=bus1, phases1=phases1)
 
         if phases2 is None:
             phases2 = "".join(p for p in bus2.phases if p in bus1.phases or p == "n")
@@ -278,8 +270,8 @@ class Transformer(AbstractBranch):
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
         else:
-            self._check_phases(id, allowed_phases=self._allowed_phases_center_secondary, phases2=phases2)
-            self._check_bus_phases(id, bus2, phases2=phases2)
+            self._check_phases(id=id, allowed_phases=self._allowed_phases_center_secondary, phases2=phases2)
+            self._check_bus_phases(id=id, bus=bus2, phases2=phases2)
 
         return phases1, phases2
 
@@ -315,3 +307,13 @@ class Transformer(AbstractBranch):
         powers1, powers2 = self._res_powers_getter(warning=True)
         # True if either the primary or secondary is overloaded
         return bool((abs(powers1.sum()) > s_max) or (abs(powers2.sum()) > s_max))
+
+    #
+    # Json Mixin interface
+    #
+    def _to_dict(self, include_results: bool) -> JsonDict:
+        res = super()._to_dict(include_results=include_results)
+        res["tap"] = self.tap
+        res["params_id"] = self.parameters.id
+
+        return res

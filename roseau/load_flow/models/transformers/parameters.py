@@ -369,11 +369,11 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
 
             curmg:
                 PwF parameter `curmg` (Magnetizing Impedance - No Load Current). The magnetizing
-                current i.e the current in (%) obtained from the no-load (open-circuit) test.
+                current i.e. the current in (%) obtained from the no-load (open-circuit) test.
 
             pfe:
                 PwF parameter `pfe` (Magnetizing Impedance - No Load Losses). The magnetizing
-                impedance i.e the power losses in (kW) obtained from the no-load test.
+                impedance i.e. the power losses in (kW) obtained from the no-load test.
 
             maxload:
                 PwF parameter `maxload` (Max. Thermal Loading Limit). The maximum loading of the

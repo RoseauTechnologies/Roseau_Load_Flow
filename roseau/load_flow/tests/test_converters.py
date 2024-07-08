@@ -82,20 +82,22 @@ def test_phasor_sym_roundtrip():
 
 def test_series_phasor_to_sym():
     va = 230 + 0j
-    vb = 230 * np.e ** (1j * 4 * np.pi / 3)
-    vc = 230 * np.e ** (1j * 2 * np.pi / 3)
+    vb = 230 * np.exp(1j * 4 * np.pi / 3)
+    vc = 230 * np.exp(1j * 2 * np.pi / 3)
 
     index = pd.MultiIndex.from_tuples(
-        [("bus1", "a"), ("bus1", "b"), ("bus1", "c"), ("bus2", "a"), ("bus2", "b"), ("bus2", "c")],
+        tuples=[("bus1", "a"), ("bus1", "b"), ("bus1", "c"), ("bus2", "a"), ("bus2", "b"), ("bus2", "c")],
         names=["bus_id", "phase"],
     )
-    index = index.set_levels(index.levels[-1].astype(PhaseDtype), level=-1)
-    voltage = pd.Series([va, vb, vc, va / 2, vb / 2, vc / 2], index=index, name="voltage")
+    index = index.set_levels(levels=index.levels[-1].astype(PhaseDtype), level=-1)
+    voltage = pd.Series(data=[va, vb, vc, va / 2, vb / 2, vc / 2], index=index, name="voltage")
 
     seq_dtype = pd.CategoricalDtype(categories=["zero", "pos", "neg"], ordered=True)
-    sym_index = index.set_levels(["zero", "pos", "neg"], level=-1)
-    sym_index = sym_index.set_names("sequence", level=-1).set_levels(sym_index.levels[-1].astype(seq_dtype), level=-1)
-    expected = pd.Series([0, va, 0, 0, va / 2, 0], index=sym_index, name="voltage")
+    sym_index = index.set_levels(levels=["zero", "pos", "neg"], level=-1)
+    sym_index = sym_index.set_names(names="sequence", level=-1).set_levels(
+        sym_index.levels[-1].astype(seq_dtype), level=-1
+    )
+    expected = pd.Series(data=[0, va, 0, 0, va / 2, 0], index=sym_index, name="voltage")
 
     assert_series_equal(series_phasor_to_sym(voltage), expected, check_exact=False)
 

@@ -295,7 +295,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         y0: complex,
         y1: complex,
         zn: complex | None = None,
-        zpn: float | None = None,
+        zpn: complex | None = None,
         bn: float | None = None,
         bpn: float | None = None,
     ) -> tuple[ComplexArray, ComplexArray]:
@@ -696,7 +696,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             external_diameter = Q_(40, "mm")
 
         return cls.from_geometry(
-            name,
+            id=name,
             line_type=line_type,
             conductor_type=conductor_type,
             insulator_type=insulator_type,
@@ -766,7 +766,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
 
         z_line = (r + x * 1j) * np.eye(3, dtype=np.float64)  # in ohms/km
         y_shunt = b * 1j * np.eye(3, dtype=np.float64)  # in siemens/km
-        return cls(name, z_line=z_line, y_shunt=y_shunt, max_current=max_current)
+        return cls(id=name, z_line=z_line, y_shunt=y_shunt, max_current=max_current)
 
     #
     # Constructors from other software
@@ -1372,6 +1372,10 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         Args:
             data:
                 The dictionary data of the line parameters.
+
+            include_results:
+                If True (default) and the results of the load flow are included in the dictionary,
+                the results are also loaded into the element. Useless here as line parameters don't contain results.
 
         Returns:
             The created line parameters.

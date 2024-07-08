@@ -20,8 +20,6 @@ logger = logging.getLogger(__name__)
 class Line(AbstractBranch):
     """An electrical line PI model with series impedance and optional shunt admittance."""
 
-    type: Final = "line"
-
     allowed_phases: Final = frozenset(Bus.allowed_phases | {"a", "b", "c", "n"})
     """The allowed phases for a line are:
 
@@ -322,9 +320,22 @@ class Line(AbstractBranch):
     # Json Mixin interface
     #
     def _to_dict(self, include_results: bool) -> JsonDict:
-        res = super()._to_dict(include_results=include_results)
-        res["length"] = self._length
-        res["params_id"] = self._parameters.id
+        res = {
+            "id": self.id,
+            "phases": self.phases,
+            "bus1": self.bus1.id,
+            "bus2": self.bus2.id,
+            "length": self._length,
+            "params_id": self._parameters.id,
+        }
         if self.ground is not None:
             res["ground"] = self.ground.id
+        if self.geometry is not None:
+            res["geometry"] = self.geometry.__geo_interface__
+        if include_results:
+            currents1, currents2 = self._res_currents_getter(warning=True)
+            res["results"] = {
+                "currents1": [[i.real, i.imag] for i in currents1],
+                "currents2": [[i.real, i.imag] for i in currents2],
+            }
         return res

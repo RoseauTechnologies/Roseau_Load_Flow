@@ -3,14 +3,14 @@ import logging
 import pandas as pd
 import shapely
 
-from roseau.load_flow.models import AbstractBranch, Bus, Switch
+from roseau.load_flow.models import Bus, Switch
 from roseau.load_flow.typing import Id
 
 logger = logging.getLogger(__name__)
 
 
 def generate_switches(
-    elm_coup: pd.DataFrame, branches: dict[Id, AbstractBranch], buses: dict[Id, Bus], sta_cubic: pd.DataFrame
+    elm_coup: pd.DataFrame, switches: dict[Id, Switch], buses: dict[Id, Bus], sta_cubic: pd.DataFrame
 ) -> None:
     """Generate the switches of the network.
 
@@ -18,7 +18,7 @@ def generate_switches(
         elm_coup:
             The "ElmCoup" dataframe containing the switch data.
 
-        branches:
+        switches:
             The dictionary to store the switches into.
 
         buses:
@@ -37,4 +37,4 @@ def generate_switches(
         geometry = (
             shapely.Point(elm_coup.at[switch_id, "GPSlon"], elm_coup.at[switch_id, "GPSlat"]) if has_geometry else None
         )
-        branches[switch_id] = Switch(id=switch_id, phases=phases, bus1=bus1, bus2=bus2, geometry=geometry)
+        switches[switch_id] = Switch(id=switch_id, phases=phases, bus1=bus1, bus2=bus2, geometry=geometry)

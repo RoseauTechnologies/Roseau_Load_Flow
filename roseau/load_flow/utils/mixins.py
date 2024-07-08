@@ -121,7 +121,7 @@ class JsonMixin(metaclass=ABCMeta):
                 f"call `en.solve_load_flow()` before converting or pass `include_results=False`."
             )
             logger.error(msg)
-            raise RoseauLoadFlowException(msg, code=RoseauLoadFlowExceptionCode.BAD_LOAD_FLOW_RESULT)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LOAD_FLOW_RESULT)
         return self._to_dict(include_results=include_results)
 
     def to_json(self, path: StrPath, *, include_results: bool = True) -> Path:
@@ -151,7 +151,7 @@ class JsonMixin(metaclass=ABCMeta):
         output = json.dumps(res, ensure_ascii=False, indent=2, default=_json_encoder_default)
         # Collapse multi-line arrays of 2-to-4 elements into single line
         # e.g complex value represented as [real, imag] or rows of the z_line matrix
-        output = re.sub(r"\[(?:\s+(\S+,))?(?:\s+?( \S+,))??(?:\s+?( \S+,))??\s+?( \S+)\s+\]", r"[\1\2\3\4]", output)
+        output = re.sub(r"\[(?:\s+(\S+,))?(?:\s+?( \S+,))??(?:\s+?( \S+,))??\s+?( \S+)\s+]", r"[\1\2\3\4]", output)
         if not output.endswith("\n"):
             output += "\n"
         path = Path(path).expanduser().resolve()

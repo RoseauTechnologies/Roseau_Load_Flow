@@ -135,8 +135,9 @@ class Bus(Element):
         """The load flow result of the bus potentials (V)."""
         return self._res_potentials_getter(warning=True)
 
-    def _res_voltages_getter(self, warning: bool) -> ComplexArray:
-        potentials = np.array(self._res_potentials_getter(warning=warning))
+    def _res_voltages_getter(self, warning: bool, potentials: ComplexArray | None = None) -> ComplexArray:
+        if potentials is None:
+            potentials = np.array(self._res_potentials_getter(warning=warning))
         return _calculate_voltages(potentials, self.phases)
 
     @property

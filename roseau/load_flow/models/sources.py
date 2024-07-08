@@ -152,10 +152,15 @@ class VoltageSource(Element):
         """The load flow result of the source potentials (V)."""
         return self._res_potentials_getter(warning=True)
 
-    def _res_powers_getter(self, warning: bool) -> ComplexArray:
-        curs = self._res_currents_getter(warning)
-        pots = self._res_potentials_getter(warning=False)  # we warn on the previous line
-        return pots * curs.conj()
+    def _res_powers_getter(
+        self, warning: bool, currents: ComplexArray | None = None, potentials: ComplexArray | None = None
+    ) -> ComplexArray:
+        if currents is None:
+            currents = self._res_currents_getter(warning=warning)
+            warning = False  # we warn only once
+        if potentials is None:
+            potentials = self._res_potentials_getter(warning=warning)
+        return potentials * currents.conj()
 
     @property
     @ureg_wraps("VA", (None,))
@@ -192,7 +197,7 @@ class VoltageSource(Element):
     @classmethod
     def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
         voltages = [complex(v[0], v[1]) for v in data["voltages"]]
-        self = cls(data["id"], data["bus"], voltages=voltages, phases=data["phases"])
+        self = cls(id=data["id"], bus=data["bus"], voltages=voltages, phases=data["phases"])
         if include_results and "results" in data:
             self._res_currents = np.array(
                 [complex(i[0], i[1]) for i in data["results"]["currents"]], dtype=np.complex128

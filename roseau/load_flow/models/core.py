@@ -161,7 +161,7 @@ class Element(ABC, Identifiable, JsonMixin):
                 f"flow has not been run yet."
             )
             logger.error(msg)
-            raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN)
         if warning and self.network is not None and not self.network._results_valid:
             warnings.warn(
                 message=(

@@ -167,10 +167,15 @@ class AbstractLoad(Element, ABC):
         """The load flow result of the load voltages (V)."""
         return self._res_voltages_getter(warning=True)
 
-    def _res_powers_getter(self, warning: bool) -> ComplexArray:
-        curs = self._res_currents_getter(warning)
-        pots = self._res_potentials_getter(warning=False)  # we warn on the previous line
-        return pots * curs.conj()
+    def _res_powers_getter(
+        self, warning: bool, currents: ComplexArray | None = None, potentials: ComplexArray | None = None
+    ) -> ComplexArray:
+        if currents is None:
+            currents = self._res_currents_getter(warning=warning)
+            warning = False  # we warn only one
+        if potentials is None:
+            potentials = self._res_potentials_getter(warning=warning)
+        return potentials * currents.conj()
 
     @property
     @ureg_wraps("VA", (None,))
@@ -209,16 +214,19 @@ class AbstractLoad(Element, ABC):
         if (s_list := data.get("powers")) is not None:
             powers = [complex(s[0], s[1]) for s in s_list]
             if (fp_data_list := data.get("flexible_params")) is not None:
-                fp = [FlexibleParameter.from_dict(fp_dict, include_results=include_results) for fp_dict in fp_data_list]
+                fp = [
+                    FlexibleParameter.from_dict(data=fp_dict, include_results=include_results)
+                    for fp_dict in fp_data_list
+                ]
             else:
                 fp = None
-            self = PowerLoad(data["id"], data["bus"], powers=powers, phases=data["phases"], flexible_params=fp)
+            self = PowerLoad(id=data["id"], bus=data["bus"], powers=powers, phases=data["phases"], flexible_params=fp)
         elif (i_list := data.get("currents")) is not None:
             currents = [complex(i[0], i[1]) for i in i_list]
-            self = CurrentLoad(data["id"], data["bus"], currents=currents, phases=data["phases"])
+            self = CurrentLoad(id=data["id"], bus=data["bus"], currents=currents, phases=data["phases"])
         elif (z_list := data.get("impedances")) is not None:
             impedances = [complex(z[0], z[1]) for z in z_list]
-            self = ImpedanceLoad(data["id"], data["bus"], impedances=impedances, phases=data["phases"])
+            self = ImpedanceLoad(id=data["id"], bus=data["bus"], impedances=impedances, phases=data["phases"])
         else:
             msg = f"Unknown load type for load {data['id']!r}"
             logger.error(msg)
@@ -240,7 +248,7 @@ class AbstractLoad(Element, ABC):
 
             if "flexible_powers" in data["results"]:
                 self._res_flexible_powers = np.array(
-                    [complex(p[0], p[1]) for p in data["results"]["powers"]], dtype=np.complex128
+                    [complex(p[0], p[1]) for p in data["results"]["flexible_powers"]], dtype=np.complex128
                 )
 
             self._fetch_results = False
@@ -432,16 +440,17 @@ class PowerLoad(AbstractLoad):
         res = super()._to_dict(include_results=include_results)
         if self.flexible_params is not None:
             res["flexible_params"] = [fp.to_dict(include_results=include_results) for fp in self.flexible_params]
-        if self.is_flexible and include_results:
-            flexible_powers = self._res_flexible_powers_getter(warning=False)
-            res["results"]["powers"] = [[s.real, s.imag] for s in flexible_powers]
+            if include_results:
+                res["results"]["flexible_powers"] = [
+                    [s.real, s.imag] for s in self._res_flexible_powers_getter(warning=False)
+                ]
         return res
 
     def _results_to_dict(self, warning: bool) -> JsonDict:
         if self.is_flexible:
             return {
-                **super()._results_to_dict(warning),
-                "powers": [[s.real, s.imag] for s in self._res_flexible_powers_getter(False)],
+                **super()._results_to_dict(warning=warning),
+                "flexible_powers": [[s.real, s.imag] for s in self._res_flexible_powers_getter(False)],
             }
         else:
             return super()._results_to_dict(warning)

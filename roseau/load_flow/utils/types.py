@@ -36,6 +36,7 @@ _DTYPES: Final = {
     "current1": complex,
     "current2": complex,
     "power": complex,
+    "flexible_power": complex,
     "power1": complex,
     "power2": complex,
     "potential": complex,

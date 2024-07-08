@@ -61,9 +61,11 @@ def test_from_dgs_no_line_type(dgs_special_network_dir):
         en = ElectricalNetwork.from_dgs(path)
     en._check_validity(constructed=False)
 
-    assert len(en.branches) == 1
+    assert len(en.lines) == 1
+    assert len(en.transformers) == 0
+    assert len(en.switches) == 0
     line_id = elm_lne.index[0]
-    line = en.branches[line_id]
+    line = en.lines[line_id]
     assert isinstance(line, Line)
     assert line.parameters.id == f"line {line.id!r}"
     assert line.length.m == elm_lne.at[line.id, "dline"]

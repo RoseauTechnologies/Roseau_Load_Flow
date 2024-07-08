@@ -20,7 +20,9 @@ if __name__ == "__main__":
             en = ElectricalNetwork.from_json(p)
             network_data[network_name] = {
                 "nb_buses": len(en.buses),
-                "nb_branches": len(en.branches),
+                "nb_lines": len(en.lines),
+                "nb_transformers": len(en.transformers),
+                "nb_switches": len(en.switches),
                 "nb_loads": len(en.loads),
                 "nb_sources": len(en.sources),
                 "nb_grounds": len(en.grounds),

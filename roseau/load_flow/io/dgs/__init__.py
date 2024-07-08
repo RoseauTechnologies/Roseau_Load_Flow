@@ -20,13 +20,14 @@ from roseau.load_flow.io.dgs.sources import generate_sources
 from roseau.load_flow.io.dgs.switches import generate_switches
 from roseau.load_flow.io.dgs.transformers import generate_transformers, generate_typ_tr
 from roseau.load_flow.models import (
-    AbstractBranch,
     AbstractLoad,
     Bus,
     Element,
     Ground,
+    Line,
     LineParameters,
     PotentialRef,
+    Switch,
     Transformer,
     TransformerParameters,
     VoltageSource,
@@ -40,7 +41,9 @@ def network_from_dgs(
     filename: StrPath,
 ) -> tuple[
     dict[Id, Bus],
-    dict[Id, AbstractBranch],
+    dict[Id, Line],
+    dict[Id, Transformer],
+    dict[Id, Switch],
     dict[Id, AbstractLoad],
     dict[Id, VoltageSource],
     dict[Id, Ground],
@@ -52,7 +55,7 @@ def network_from_dgs(
         filename: name of the JSON file
 
     Returns:
-        The elements of the network -- buses, branches, loads, sources, grounds and potential refs.
+        The elements of the network -- buses, lines, transformers, switches, loads, sources, grounds and potential refs.
     """
     # Create dataframes from JSON file
     with open(filename, encoding="ISO-8859-10") as f:
@@ -74,34 +77,38 @@ def network_from_dgs(
     elm_pv_sys = _dgs_dict_to_df(data, "ElmPvsys") if "ElmPvsys" in data else None  # LV generators
 
     # ElectricalNetwork elements
-    grounds: dict[Id, PotentialRef] = {}
+    grounds: dict[Id, Ground] = {}
     buses: dict[Id, Bus] = {}
     potential_refs: dict[Id, PotentialRef] = {}
     sources: dict[Id, VoltageSource] = {}
     loads: dict[Id, AbstractLoad] = {}
-    branches: dict[Id, AbstractBranch] = {}
+    lines: dict[Id, Line] = {}
+    transformers: dict[Id, Transformer] = {}
+    switches: dict[Id, Switch] = {}
 
     # Ground and potential reference
     ground = Ground("ground")
-    p_ref = PotentialRef("pref (ground)", element=ground)
+    p_ref = PotentialRef(id="pref (ground)", element=ground)
 
     # Buses
-    generate_buses(elm_term, buses)
+    generate_buses(elm_term=elm_term, buses=buses)
 
     # Sources
-    generate_sources(elm_xnet, sources, buses, sta_cubic, elm_term)
+    generate_sources(elm_xnet=elm_xnet, sources=sources, buses=buses, sta_cubic=sta_cubic, elm_term=elm_term)
 
     # Loads
     if elm_lod is not None:  # General loads
-        generate_loads(elm_lod, loads, buses, sta_cubic, factor=1e6, load_type="General")
+        generate_loads(elm_lod=elm_lod, loads=loads, buses=buses, sta_cubic=sta_cubic, factor=1e6, load_type="General")
     if elm_lod_mv is not None:  # MV loads
-        generate_loads(elm_lod_mv, loads, buses, sta_cubic, factor=1e6, load_type="MV")
+        generate_loads(elm_lod=elm_lod_mv, loads=loads, buses=buses, sta_cubic=sta_cubic, factor=1e6, load_type="MV")
     if elm_lod_lv is not None:  # LV loads
-        generate_loads(elm_lod_lv, loads, buses, sta_cubic, factor=1e3, load_type="LV")
+        generate_loads(elm_lod=elm_lod_lv, loads=loads, buses=buses, sta_cubic=sta_cubic, factor=1e3, load_type="LV")
     if elm_pv_sys is not None:  # PV systems
-        generate_loads(elm_pv_sys, loads, buses, sta_cubic, factor=1e3, load_type="PV")
+        generate_loads(elm_lod=elm_pv_sys, loads=loads, buses=buses, sta_cubic=sta_cubic, factor=1e3, load_type="PV")
     if elm_gen_stat is not None:  # Static generators
-        generate_loads(elm_gen_stat, loads, buses, sta_cubic, factor=1e6, load_type="GenStat")
+        generate_loads(
+            elm_lod=elm_gen_stat, loads=loads, buses=buses, sta_cubic=sta_cubic, factor=1e6, load_type="GenStat"
+        )
 
     # Lines
     if elm_lne is not None:
@@ -115,7 +122,9 @@ def network_from_dgs(
             warnings.warn(msg, stacklevel=3)
         else:
             generate_typ_lne(typ_lne=typ_lne, lines_params=lines_params)
-        generate_lines(elm_lne, branches, buses, sta_cubic, lines_params, ground)
+        generate_lines(
+            elm_lne=elm_lne, lines=lines, buses=buses, sta_cubic=sta_cubic, lines_params=lines_params, ground=ground
+        )
 
     # Transformers
     if elm_tr is not None:
@@ -127,22 +136,37 @@ def network_from_dgs(
                 "transformer types from the library to the project before exporting and try again."
             )
             logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, e=RoseauLoadFlowExceptionCode.DGS_MISSING_REQUIRED_DATA)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DGS_MISSING_REQUIRED_DATA)
         else:
-            generate_typ_tr(typ_tr, transformers_params, transformers_tap)
-        generate_transformers(elm_tr, branches, buses, sta_cubic, transformers_tap, transformers_params)
+            generate_typ_tr(typ_tr=typ_tr, transformers_params=transformers_params, transformers_tap=transformers_tap)
+        generate_transformers(
+            elm_tr=elm_tr,
+            transformers=transformers,
+            buses=buses,
+            sta_cubic=sta_cubic,
+            transformers_tap=transformers_tap,
+            transformers_params=transformers_params,
+        )
 
     # Switches
     if elm_coup is not None:
-        generate_switches(elm_coup, branches, buses, sta_cubic)
+        generate_switches(elm_coup=elm_coup, switches=switches, buses=buses, sta_cubic=sta_cubic)
 
-    _add_potential_refs(buses, branches, sources, potential_refs, ground)
+    _add_potential_refs(
+        buses=buses,
+        lines=lines,
+        transformers=transformers,
+        switches=switches,
+        sources=sources,
+        potential_refs=potential_refs,
+        ground=ground,
+    )
 
     if len(ground._connected_elements) > 1:  # Is the ground used? (Are there connected elements aside from pref)
         grounds[ground.id] = ground
         potential_refs[p_ref.id] = p_ref
 
-    return buses, branches, loads, sources, grounds, potential_refs
+    return buses, lines, transformers, switches, loads, sources, grounds, potential_refs
 
 
 def _dgs_dict_to_df(data: dict[str, Any], name: str) -> pd.DataFrame:
@@ -166,14 +190,16 @@ def _parse_dgs_version(data: dict[str, Any]) -> tuple[int, ...]:
 
 def _add_potential_refs(  # noqa: C901
     buses: dict[Id, Bus],
-    branches: dict[Id, AbstractBranch],
+    lines: dict[Id, Line],
+    transformers: dict[Id, Transformer],
+    switches: dict[Id, Switch],
     sources: dict[Id, VoltageSource],
     potential_refs: dict[Id, PotentialRef],
     ground: Ground,
 ) -> None:
     """Add potential reference(s) to a DGS network."""
     # Note this function is adapted from the ElectricalNetwork._check_ref method
-    elements = chain(buses.values(), branches.values())
+    elements = chain(buses.values(), lines.values(), transformers.values(), switches.values())
     visited_elements: set[Element] = set()
     for initial_element in elements:
         if initial_element in visited_elements:
@@ -205,7 +231,7 @@ def _add_potential_refs(  # noqa: C901
                     if "n" in vs.bus._phases:
                         ground.connect(vs.bus)
                     else:
-                        pref = PotentialRef(f"pref (source {vs.id!r})", element=vs.bus)
+                        pref = PotentialRef(id=f"pref (source {vs.id!r})", element=vs.bus)
                         potential_refs[pref.id] = pref
                     has_potential_ref = True
                     break
@@ -230,7 +256,7 @@ def _add_potential_refs(  # noqa: C901
                         if "n" in transformer_bus._phases:
                             ground.connect(transformer_bus)
                         else:
-                            pref = PotentialRef(f"pref (transformer {transformer.id!r})", element=transformer_bus)
+                            pref = PotentialRef(id=f"pref (transformer {transformer.id!r})", element=transformer_bus)
                             potential_refs[pref.id] = pref
                         has_potential_ref = True
                     else:
@@ -240,7 +266,7 @@ def _add_potential_refs(  # noqa: C901
                             for element in sorted(connected_component, key=lambda e: str(e.id))
                             if isinstance(element, Bus)
                         )
-                        pref = PotentialRef(f"pref (bus {first_bus.id!r})", element=first_bus)
+                        pref = PotentialRef(id=f"pref (bus {first_bus.id!r})", element=first_bus)
                         potential_refs[pref.id] = pref
                         has_potential_ref = True
         # At this point we have a potential ref, do a sanity check with clear error message

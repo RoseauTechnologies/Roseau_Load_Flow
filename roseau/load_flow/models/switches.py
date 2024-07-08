@@ -8,7 +8,7 @@ from roseau.load_flow.models.branches import AbstractBranch
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import Element
 from roseau.load_flow.models.sources import VoltageSource
-from roseau.load_flow.typing import Id
+from roseau.load_flow.typing import Id, JsonDict
 from roseau.load_flow_engine.cy_engine import CySwitch
 
 logger = logging.getLogger(__name__)
@@ -111,3 +111,18 @@ class Switch(AbstractBranch):
             )
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_VOLTAGES_SOURCES_CONNECTION)
+
+    #
+    # Json Mixin interface
+    #
+    def _to_dict(self, include_results: bool) -> JsonDict:
+        res = {"id": self.id, "phases": self.phases, "bus1": self.bus1.id, "bus2": self.bus2.id}
+        if self.geometry is not None:
+            res["geometry"] = self.geometry.__geo_interface__
+        if include_results:
+            currents1, currents2 = self._res_currents_getter(warning=True)
+            res["results"] = {
+                "currents1": [[i.real, i.imag] for i in currents1],
+                "currents2": [[i.real, i.imag] for i in currents2],
+            }
+        return res
