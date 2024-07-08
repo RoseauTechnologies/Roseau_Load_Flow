@@ -106,6 +106,10 @@ def network_from_dict(  # noqa: C901
         # If we arrive here, we dealt with all legacy versions, it must be the current one
         assert version == NETWORK_JSON_VERSION, f"Unsupported network file version {version}."
 
+    # Check that the network is multiphase
+    is_multiphase = data.get("is_multiphase", True)
+    assert is_multiphase, f"Unsupported phase selection {is_multiphase=}."
+
     # Track if ALL results are included in the network
     has_results = include_results
 
@@ -304,6 +308,7 @@ def network_to_dict(en: "ElectricalNetwork", *, include_results: bool) -> JsonDi
 
     res = {
         "version": NETWORK_JSON_VERSION,
+        "is_multiphase": True,
         "grounds": grounds,
         "potential_refs": potential_refs,
         "buses": buses,
@@ -549,6 +554,7 @@ def v1_to_v2_converter(data: JsonDict) -> JsonDict:
 
     return {
         "version": 2,
+        "is_multiphase": True,  # Always True before the version 2
         "grounds": data["grounds"],  # Unchanged
         "potential_refs": data["potential_refs"],  # Unchanged
         "buses": data["buses"],  # Unchanged
