@@ -17,6 +17,23 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 # Changelog
 
+## Unreleased
+
+- {gh-pr}`235` **BREAKING CHANGE**: Several improvements of the JSON file format and of the serialization methods.
+  - Move the `Switch` class into its own file `roseau/load_flow/models/switches.py`.
+  - The JSON file format number is upgraded to the version 2. In this version:
+    - The `"branches"` key is replaced by the keys `"lines"`, `"transformers"` and `"switches"` to split the different
+      types of branches.
+    - The key `"type"` in each branch is not necessary anymore and is then removed.
+    - The keys `"phases1"` and `"phases2"` are removed in favour of the key `"phases"` for the lines and switches.
+    - The key `"powers"` in the results part of a flexible power load is renamed `"flexible_powers"` to avoid confusion.
+    - The constructor of an `ElectricalNetwork` now takes the arguments `lines`, `transformers` and `switches` instead
+      of the parameters `branches`.
+    - The accessor `res_branches` is removed from the class `ElectricalNetwork`. Please use `res_lines`,
+      `res_transformers` or `res_switches`.
+    - A key `"is_multiphase"` has also been added in the JSON file format for a future single-phase format.
+  - A bug concerning the accessors to the flexible powers result of flexible power loads has also been solved.
+
 ## Version 0.9.1
 
 ```{note}
