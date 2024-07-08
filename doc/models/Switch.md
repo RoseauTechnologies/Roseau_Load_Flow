@@ -66,8 +66,8 @@ load = rlf.PowerLoad(id="load", bus=bus2, powers=[5000 + 1600j, 2500 + 800j, 0])
 en = rlf.ElectricalNetwork.from_element(bus1)
 en.solve_load_flow()
 
-# The current flowing into the line from bus1
-en.res_branches[["current1"]].transform([np.abs, ft.partial(np.angle, deg=True)])
+# The current flowing into the switch from bus1
+en.res_switches[["current1"]].transform([np.abs, ft.partial(np.angle, deg=True)])
 # |                 |   ('current1', 'absolute') |   ('current1', 'angle') |
 # |:----------------|---------------------------:|------------------------:|
 # | ('switch', 'a') |                    22.7321 |                -17.7447 |
@@ -75,8 +75,8 @@ en.res_branches[["current1"]].transform([np.abs, ft.partial(np.angle, deg=True)]
 # | ('switch', 'c') |                     0      |                  0      |
 # | ('switch', 'n') |                    19.6866 |                132.255  |
 
-# The current flowing into the line from bus2
-en.res_branches[["current2"]].transform([np.abs, ft.partial(np.angle, deg=True)])
+# The current flowing into the switch from bus2
+en.res_switches[["current2"]].transform([np.abs, ft.partial(np.angle, deg=True)])
 # |                 |   ('current2', 'absolute') |   ('current2', 'angle') |
 # |:----------------|---------------------------:|------------------------:|
 # | ('switch', 'a') |                    22.7321 |                162.255  |

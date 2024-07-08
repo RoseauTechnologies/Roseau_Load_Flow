@@ -277,7 +277,6 @@ Available results for the network are:
 
 - `res_buses`: Buses potentials indexed by _(bus id, phase)_
 - `res_buses_voltages`: Buses voltages and voltage limits indexed by _(bus id, voltage phase²)_
-- `res_branches`: Branches currents, powers, and potentials indexed by _(branch id, phase)_
 - `res_transformers`: Transformers currents, powers, potentials, and power limits indexed by
   _(transformer id, phase)_
 - `res_lines`: Lines currents, powers, potentials, series losses, series currents, and current
@@ -327,17 +326,6 @@ Below are the results of the load flow for `en`, rounded to 2 decimal places:
 | lb     | an    |      221.93-0j |     207.846 |     254.034 | False    |
 | lb     | bn    | -110.96-192.2j |     207.846 |     254.034 | False    |
 | lb     | cn    | -110.96+192.2j |     207.846 |     254.034 | False    |
-
-```pycon
->>> en.res_branches
-```
-
-| branch_id | phase | type |      current1 |     current2 |      power1 |    power2 |   potential1 |     potential2 |
-| :-------- | :---- | :--- | ------------: | -----------: | ----------: | --------: | -----------: | -------------: |
-| line      | a     | line |      45.06+0j |    -45.06-0j | 10406.07-0j | -10000+0j |    230.94+0j |      221.93-0j |
-| line      | b     | line | -22.53-39.02j | 22.53+39.02j | 10406.07+0j | -10000-0j | -115.47-200j | -110.96-192.2j |
-| line      | c     | line | -22.53+39.02j | 22.53-39.02j | 10406.07-0j | -10000+0j | -115.47+200j | -110.96+192.2j |
-| line      | n     | line |            0j |          -0j |          0j |       -0j |           0j |            -0j |
 
 ```pycon
 >>> en.res_lines
