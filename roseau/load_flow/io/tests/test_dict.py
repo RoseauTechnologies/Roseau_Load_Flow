@@ -1,3 +1,5 @@
+import copy
+
 import numpy as np
 import pytest
 from shapely import LineString, Point
@@ -16,6 +18,7 @@ from roseau.load_flow.models import (
     VoltageSource,
 )
 from roseau.load_flow.network import ElectricalNetwork
+from roseau.load_flow.typing import JsonDict
 from roseau.load_flow.utils import ConductorType, InsulatorType, LineType
 
 
@@ -1301,9 +1304,25 @@ def test_v1_to_v2_converter():
     #     potential_refs=[potential_ref],
     # )
 
-    net = ElectricalNetwork.from_dict(data=dict_v1, include_results=True)
+    # Include results=True
+    net = ElectricalNetwork.from_dict(data=copy.deepcopy(dict_v1), include_results=True)
     net_dict = net.to_dict(include_results=True)
+    expected_dict = copy.deepcopy(dict_v1)
+    expected_dict = v1_to_v2_converter(expected_dict)
+    assert net_dict == expected_dict
 
-    expected_dict = dict_v1
+    # Include results=False
+    def _delete(d: JsonDict, k: str) -> JsonDict:
+        if k in d:
+            d.pop(k)
+        return d
+
+    net = ElectricalNetwork.from_dict(data=copy.deepcopy(dict_v1), include_results=False)
+    net_dict = net.to_dict(include_results=False)
+    dict_v1_without_results = {
+        k: [_delete(d=x, k="results") for x in v] if isinstance(v, list) else v
+        for k, v in copy.deepcopy(dict_v1).items()
+    }
+    expected_dict = copy.deepcopy(dict_v1_without_results)
     expected_dict = v1_to_v2_converter(expected_dict)
     assert net_dict == expected_dict

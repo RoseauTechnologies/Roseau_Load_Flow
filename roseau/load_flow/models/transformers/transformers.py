@@ -315,9 +315,33 @@ class Transformer(AbstractBranch):
         return res
 
     def _results_to_dict(self, warning: bool, full: bool) -> JsonDict:
-        results = super()._results_to_dict(warning=warning, full=full)
+        currents1, currents2 = self._res_currents_getter(warning)
+        results = {
+            "id": self.id,
+            "phases1": self.phases1,
+            "phases2": self.phases2,
+            "currents1": [[i.real, i.imag] for i in currents1],
+            "currents2": [[i.real, i.imag] for i in currents2],
+        }
         if full:
-            powers1, powers2 = self._res_powers_getter(warning=False)
+            potentials1, potentials2 = self._res_potentials_getter(warning=False)
+            results["potentials1"] = [[v.real, v.imag] for v in potentials1]
+            results["potentials2"] = [[v.real, v.imag] for v in potentials2]
+            powers1, powers2 = self._res_powers_getter(
+                warning=False,
+                potentials1=potentials1,
+                potentials2=potentials2,
+                currents1=currents1,
+                currents2=currents2,
+            )
+            results["powers1"] = [[s.real, s.imag] for s in powers1]
+            results["powers2"] = [[s.real, s.imag] for s in powers2]
+            voltages1, voltages2 = self._res_voltages_getter(
+                warning=False, potentials1=potentials1, potentials2=potentials2
+            )
+            results["voltages1"] = [[v.real, v.imag] for v in voltages1]
+            results["voltages2"] = [[v.real, v.imag] for v in voltages2]
+
             power_losses = sum(powers1) + sum(powers2)
             results["power_losses"] = [power_losses.real, power_losses.imag]
 

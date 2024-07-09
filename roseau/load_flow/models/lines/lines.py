@@ -349,13 +349,21 @@ class Line(AbstractBranch):
             "currents2": [[i.real, i.imag] for i in currents2],
         }
         if full:
-            pot1, pot2 = self._res_potentials_getter(warning=False)
-            results["potentials1"] = [[v.real, v.imag] for v in pot1]
-            results["potentials2"] = [[v.real, v.imag] for v in pot2]
-            powers1, powers2 = self._res_powers_getter(warning=False, pot1=pot1, pot2=pot2)
+            potentials1, potentials2 = self._res_potentials_getter(warning=False)
+            results["potentials1"] = [[v.real, v.imag] for v in potentials1]
+            results["potentials2"] = [[v.real, v.imag] for v in potentials2]
+            powers1, powers2 = self._res_powers_getter(
+                warning=False,
+                potentials1=potentials1,
+                potentials2=potentials2,
+                currents1=currents1,
+                currents2=currents2,
+            )
             results["powers1"] = [[s.real, s.imag] for s in powers1]
             results["powers2"] = [[s.real, s.imag] for s in powers2]
-            voltages1, voltages2 = self._res_voltages_getter(warning=False, pot1=pot1, pot2=pot2)
+            voltages1, voltages2 = self._res_voltages_getter(
+                warning=False, potentials1=potentials1, potentials2=potentials2
+            )
             results["voltages1"] = [[v.real, v.imag] for v in voltages1]
             results["voltages2"] = [[v.real, v.imag] for v in voltages2]
             results["power_losses"] = [[s.real, s.imag] for s in self._res_power_losses_getter(warning=False)]

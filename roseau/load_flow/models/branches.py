@@ -103,13 +103,19 @@ class AbstractBranch(Element):
         return self._res_currents_getter(warning=True)
 
     def _res_powers_getter(
-        self, warning: bool, pot1: ComplexArray | None = None, pot2: ComplexArray | None = None
+        self,
+        warning: bool,
+        potentials1: ComplexArray | None = None,
+        potentials2: ComplexArray | None = None,
+        currents1: ComplexArray | None = None,
+        currents2: ComplexArray | None = None,
     ) -> tuple[ComplexArray, ComplexArray]:
-        cur1, cur2 = self._res_currents_getter(warning)
-        if pot1 is None or pot2 is None:
-            pot1, pot2 = self._res_potentials_getter(warning=False)  # we warn on the previous line
-        powers1 = pot1 * cur1.conj()
-        powers2 = pot2 * cur2.conj()
+        if currents1 is None or currents2 is None:
+            currents1, currents2 = self._res_currents_getter(warning)
+        if potentials1 is None or potentials2 is None:
+            potentials1, potentials2 = self._res_potentials_getter(warning=False)  # we warn on the previous line
+        powers1 = potentials1 * currents1.conj()
+        powers2 = potentials2 * currents2.conj()
         return powers1, powers2
 
     @property
@@ -130,12 +136,12 @@ class AbstractBranch(Element):
         return self._res_potentials_getter(warning=True)
 
     def _res_voltages_getter(
-        self, warning: bool, pot1: ComplexArray | None = None, pot2: ComplexArray | None = None
+        self, warning: bool, potentials1: ComplexArray | None = None, potentials2: ComplexArray | None = None
     ) -> tuple[ComplexArray, ComplexArray]:
-        if pot1 is None or pot2 is None:
-            pot1, pot2 = self._res_potentials_getter(warning)
-        return _calculate_voltages(potentials=pot1, phases=self.phases1), _calculate_voltages(
-            potentials=pot2, phases=self.phases2
+        if potentials1 is None or potentials2 is None:
+            potentials1, potentials2 = self._res_potentials_getter(warning)
+        return _calculate_voltages(potentials=potentials1, phases=self.phases1), _calculate_voltages(
+            potentials=potentials2, phases=self.phases2
         )
 
     @property
@@ -186,24 +192,3 @@ class AbstractBranch(Element):
                 "currents2": [[i.real, i.imag] for i in currents2],
             }
         return res
-
-    def _results_to_dict(self, warning: bool, full: bool) -> JsonDict:
-        currents1, currents2 = self._res_currents_getter(warning)
-        results = {
-            "id": self.id,
-            "phases1": self.phases1,
-            "phases2": self.phases2,
-            "currents1": [[i.real, i.imag] for i in currents1],
-            "currents2": [[i.real, i.imag] for i in currents2],
-        }
-        if full:
-            pot1, pot2 = self._res_potentials_getter(warning=False)
-            results["potentials1"] = [[v.real, v.imag] for v in pot1]
-            results["potentials2"] = [[v.real, v.imag] for v in pot2]
-            powers1, powers2 = self._res_powers_getter(warning=False, pot1=pot1, pot2=pot2)
-            results["powers1"] = [[s.real, s.imag] for s in powers1]
-            results["powers2"] = [[s.real, s.imag] for s in powers2]
-            voltages1, voltages2 = self._res_voltages_getter(warning=False, pot1=pot1, pot2=pot2)
-            results["voltages1"] = [[v.real, v.imag] for v in voltages1]
-            results["voltages2"] = [[v.real, v.imag] for v in voltages2]
-        return results

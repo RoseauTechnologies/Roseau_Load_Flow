@@ -202,16 +202,9 @@ class VoltageSource(Element):
             self._res_currents = np.array(
                 [complex(i[0], i[1]) for i in data["results"]["currents"]], dtype=np.complex128
             )
-            if "potentials" in data["results"]:
-                self._res_potentials = np.array(
-                    [complex(i[0], i[1]) for i in data["results"]["potentials"]], dtype=np.complex128
-                )
-            elif not self.has_floating_neutral:
-                self._res_potentials = data["bus"]._get_potentials_of(self.phases, warning=False)
-            else:
-                msg = f"{type(self).__name__} {self.id!r} with floating neutral is missing results of potentials."
-                logger.error(msg)
-                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.JSON_NO_RESULTS)
+            self._res_potentials = np.array(
+                [complex(i[0], i[1]) for i in data["results"]["potentials"]], dtype=np.complex128
+            )
             self._fetch_results = False
             self._no_results = False
         return self
@@ -227,9 +220,8 @@ class VoltageSource(Element):
         if include_results:
             currents = self._res_currents_getter(warning=True)
             res["results"] = {"currents": [[i.real, i.imag] for i in currents]}
-            if self.has_floating_neutral:
-                potentials = self._res_potentials_getter(warning=False)
-                res["results"]["potentials"] = [[v.real, v.imag] for v in potentials]
+            potentials = self._res_potentials_getter(warning=False)
+            res["results"]["potentials"] = [[v.real, v.imag] for v in potentials]
         return res
 
     def _results_to_dict(self, warning: bool, full: bool) -> JsonDict:
@@ -239,11 +231,9 @@ class VoltageSource(Element):
             "phases": self.phases,
             "currents": [[i.real, i.imag] for i in currents],
         }
-        if self.has_floating_neutral or full:
-            potentials = self._res_potentials_getter(warning=False)
-            results["potentials"] = [[v.real, v.imag] for v in potentials]
-
-            if full:
-                powers = self._res_powers_getter(warning=False, currents=currents, potentials=potentials)
-                results["powers"] = [[s.real, s.imag] for s in powers]
+        potentials = self._res_potentials_getter(warning=False)
+        results["potentials"] = [[v.real, v.imag] for v in potentials]
+        if full:
+            powers = self._res_powers_getter(warning=False, currents=currents, potentials=potentials)
+            results["powers"] = [[s.real, s.imag] for s in powers]
         return results

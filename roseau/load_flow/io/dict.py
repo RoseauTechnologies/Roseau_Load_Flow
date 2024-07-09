@@ -515,13 +515,36 @@ def v1_to_v2_converter(data: JsonDict) -> JsonDict:
     assert data.get("version", 0) == 1, data["version"]
 
     # In the results of flexible PowerLoad, the key "powers" is renamed "flexible_powers"
+    # The potentials of loads are always stored in the results part of loads
+    buses = data.get("buses", [])
+    buses_dict = {b["id"]: b for b in buses}
     old_loads = data.get("loads", [])
     loads = []
     for load_data in old_loads:
         load_data_result = load_data.get("results", None)
-        if load_data_result is not None and "powers" in load_data_result:
-            load_data_result["flexible_powers"] = load_data_result.pop("powers")
+        if load_data_result is not None:
+            if "potentials" not in load_data_result:
+                bus_data = buses_dict[load_data["bus"]]
+                bus_phases = bus_data["phases"]
+                bus_potentials = bus_data["results"]["potentials"]
+                load_phases = load_data["phases"]
+                load_data_result["potentials"] = [bus_potentials[bus_phases.index(p)] for p in load_phases]
+            if "powers" in load_data_result:
+                load_data_result["flexible_powers"] = load_data_result.pop("powers")
         loads.append(load_data)
+
+    # The potentials of sources are always stored in the results part of sources
+    old_sources = data.get("sources", [])
+    sources = []
+    for source_data in old_sources:
+        source_data_result = source_data.get("results", None)
+        if source_data_result is not None and "potentials" not in source_data_result:
+            bus_data = buses_dict[source_data["bus"]]
+            bus_phases = bus_data["phases"]
+            bus_potentials = bus_data["results"]["potentials"]
+            source_phases = source_data["phases"]
+            source_data_result["potentials"] = [bus_potentials[bus_phases.index(p)] for p in source_phases]
+        sources.append(source_data)
 
     # The old key "branches" is replaced by the keys "lines", "transformers" and "switches"
     # The key "branch_type" is not necessary anymore
@@ -562,7 +585,7 @@ def v1_to_v2_converter(data: JsonDict) -> JsonDict:
         "switches": switches,
         "transformers": transformers,
         "loads": loads,
-        "sources": data["sources"],  # Unchanged
+        "sources": sources,
         "lines_params": data["lines_params"],  # Unchanged
         "transformers_params": data["transformers_params"],  # Unchanged
     }
