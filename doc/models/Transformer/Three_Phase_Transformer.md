@@ -654,7 +654,9 @@ en = rlf.ElectricalNetwork.from_element(bus_mv)
 en.solve_load_flow()
 
 # The current flowing into the transformer from the MV bus
-en.res_branches[["current1"]].dropna().transform([np.abs, ft.partial(np.angle, deg=True)])
+en.res_transformers[["current1"]].dropna().transform(
+    [np.abs, ft.partial(np.angle, deg=True)]
+)
 # |                  |   ('current1', 'absolute') |   ('current1', 'angle') |
 # |:-----------------|---------------------------:|------------------------:|
 # | ('transfo', 'a') |                   0.275904 |                -38.8165 |
@@ -662,7 +664,7 @@ en.res_branches[["current1"]].dropna().transform([np.abs, ft.partial(np.angle, d
 # | ('transfo', 'c') |                   0.275904 |                 81.1835 |
 
 # The current flowing into the transformer from the LV bus
-en.res_branches[["current2"]].transform([np.abs, ft.partial(np.angle, deg=True)])
+en.res_transformers[["current2"]].transform([np.abs, ft.partial(np.angle, deg=True)])
 # |                  |   ('current2', 'absolute') |   ('current2', 'angle') |
 # |:-----------------|---------------------------:|------------------------:|
 # | ('transfo', 'a') |               12.6872      |                179.813  |

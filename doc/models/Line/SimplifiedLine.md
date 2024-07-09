@@ -104,7 +104,7 @@ en = rlf.ElectricalNetwork.from_element(bus1)
 en.solve_load_flow()
 
 # The current flowing into the line from bus1
-en.res_branches[["current1"]].transform([np.abs, ft.partial(np.angle, deg=True)])
+en.res_lines[["current1"]].transform([np.abs, ft.partial(np.angle, deg=True)])
 # |               |   ('current1', 'absolute') |   ('current1', 'angle') |
 # |:--------------|---------------------------:|------------------------:|
 # | ('line', 'a') |                    24.1958 |                 16.4456 |
@@ -113,7 +113,7 @@ en.res_branches[["current1"]].transform([np.abs, ft.partial(np.angle, deg=True)]
 # | ('line', 'n') |                    20.628  |                168.476  |
 
 # The current flowing into the line from bus2
-en.res_branches[["current2"]].transform([np.abs, ft.partial(np.angle, deg=True)])
+en.res_lines[["current2"]].transform([np.abs, ft.partial(np.angle, deg=True)])
 # |               |   ('current2', 'absolute') |   ('current2', 'angle') |
 # |:--------------|---------------------------:|------------------------:|
 # | ('line', 'a') |                    24.1958 |               -163.554  |

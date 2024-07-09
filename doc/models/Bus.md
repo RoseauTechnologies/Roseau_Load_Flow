@@ -96,7 +96,7 @@ en.solve_load_flow()
 
 # Get the currents flowing to the line from bus1
 # Notice the extremely high currents in phases "a" and "b"
-en.res_branches[["current1"]].transform([np.abs, ft.partial(np.angle, deg=True)])
+en.res_lines[["current1"]].transform([np.abs, ft.partial(np.angle, deg=True)])
 # |               |   ('current1', 'absolute') |   ('current1', 'angle') |
 # |:--------------|---------------------------:|------------------------:|
 # | ('line', 'a') |                    433.861 |                -19.3987 |

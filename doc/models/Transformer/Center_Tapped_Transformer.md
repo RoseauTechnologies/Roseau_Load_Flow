@@ -125,23 +125,35 @@ transformer = rlf.Transformer("transfo", load_bus, lv_bus, parameters=tp)
 en = rlf.ElectricalNetwork.from_element(source_bus)
 en.solve_load_flow()
 
-# The current flowing into the the line and transformer from the source side
-en.res_branches[["current1"]].dropna().transform([np.abs, ft.partial(np.angle, deg=True)])
+# The current flowing into the line from the source side
+en.res_lines[["current1"]].dropna().transform([np.abs, ft.partial(np.angle, deg=True)])
 # |                  |   ('current1', 'absolute') |   ('current1', 'angle') |
 # |:-----------------|---------------------------:|------------------------:|
 # | ('line', 'a')    |                   1.58451  |                 45.1554 |
 # | ('line', 'b')    |                   1.28415  |                -55.5618 |
 # | ('line', 'c')    |                   1.84471  |               -178      |
+
+# The current flowing into the transformer from the source side
+en.res_transformers[["current1"]].dropna().transform(
+    [np.abs, ft.partial(np.angle, deg=True)]
+)
+# |                  |   ('current1', 'absolute') |   ('current1', 'angle') |
+# |:-----------------|---------------------------:|------------------------:|
 # | ('transfo', 'a') |                   0.564366 |                -63.5557 |
 # | ('transfo', 'b') |                   0.564366 |                116.444  |
 
-# The current flowing into the line and transformer from the load side
-en.res_branches[["current2"]].transform([np.abs, ft.partial(np.angle, deg=True)])
+# The current flowing into the line from the load side
+en.res_lines[["current2"]].transform([np.abs, ft.partial(np.angle, deg=True)])
 # |                  |   ('current2', 'absolute') |   ('current2', 'angle') |
 # |:-----------------|---------------------------:|------------------------:|
 # | ('line', 'a')    |                   1.22632  |                155.665  |
 # | ('line', 'b')    |                   0.726784 |                 19.6741 |
 # | ('line', 'c')    |                   0.866034 |                -60.0009 |
+
+# The current flowing into the transformer from the load side
+en.res_transformers[["current2"]].transform([np.abs, ft.partial(np.angle, deg=True)])
+# |                  |   ('current2', 'absolute') |   ('current2', 'angle') |
+# |:-----------------|---------------------------:|------------------------:|
 # | ('transfo', 'a') |                  17.3904   |                 30.0135 |
 # | ('transfo', 'b') |                   0        |                  0      |
 # | ('transfo', 'n') |                  17.3904   |               -149.987  |

@@ -16,21 +16,25 @@ def generate_small_network() -> None:
     line_string = LineString([point1, point2])
 
     ground = rlf.Ground("ground")
-    source_bus = rlf.Bus("bus0", phases="abcn", geometry=point1)
-    load_bus = rlf.Bus("bus1", phases="abcn", geometry=point2)
+    source_bus = rlf.Bus(id="bus0", phases="abcn", geometry=point1)
+    load_bus = rlf.Bus(id="bus1", phases="abcn", geometry=point2)
     ground.connect(load_bus)
 
     voltages = [20000.0 + 0.0j, -10000.0 - 17320.508076j, -10000.0 + 17320.508076j]
-    vs = rlf.VoltageSource("vs", source_bus, voltages=voltages, phases="abcn")
-    load = rlf.PowerLoad("load", load_bus, powers=[100, 100, 100], phases="abcn")
-    pref = rlf.PotentialRef("pref", element=ground)
+    vs = rlf.VoltageSource(id="vs", bus=source_bus, voltages=voltages, phases="abcn")
+    load = rlf.PowerLoad(id="load", bus=load_bus, powers=[100, 100, 100], phases="abcn")
+    pref = rlf.PotentialRef(id="pref", element=ground)
 
-    lp = rlf.LineParameters("test", z_line=10 * np.eye(4, dtype=complex))
-    line = rlf.Line("line", source_bus, load_bus, phases="abcn", parameters=lp, length=1.0, geometry=line_string)
+    lp = rlf.LineParameters(id="test", z_line=10 * np.eye(4, dtype=complex))
+    line = rlf.Line(
+        id="line", bus1=source_bus, bus2=load_bus, phases="abcn", parameters=lp, length=1.0, geometry=line_string
+    )
 
     en = rlf.ElectricalNetwork(
         buses=[source_bus, load_bus],
-        branches=[line],
+        lines=[line],
+        transformers=[],
+        switches=[],
         loads=[load],
         sources=[vs],
         grounds=[ground],
@@ -53,22 +57,24 @@ def generate_single_phase_network() -> None:
     line_string = LineString([point1, point2])
 
     # Network elements
-    bus0 = rlf.Bus("bus0", phases=phases, geometry=point1)
-    bus1 = rlf.Bus("bus1", phases=phases, geometry=point2)
+    bus0 = rlf.Bus(id="bus0", phases=phases, geometry=point1)
+    bus1 = rlf.Bus(id="bus1", phases=phases, geometry=point2)
 
     ground = rlf.Ground("ground")
     ground.connect(bus1)
-    pref = rlf.PotentialRef("pref", element=ground)
+    pref = rlf.PotentialRef(id="pref", element=ground)
 
-    vs = rlf.VoltageSource("vs", bus0, voltages=[20000.0 + 0.0j], phases=phases)
-    load = rlf.PowerLoad("load", bus1, powers=[100], phases=phases)
+    vs = rlf.VoltageSource(id="vs", bus=bus0, voltages=[20000.0 + 0.0j], phases=phases)
+    load = rlf.PowerLoad(id="load", bus=bus1, powers=[100], phases=phases)
 
-    lp = rlf.LineParameters("test", z_line=10 * np.eye(2, dtype=complex))
-    line = rlf.Line("line", bus0, bus1, phases=phases, parameters=lp, length=1.0, geometry=line_string)
+    lp = rlf.LineParameters(id="test", z_line=10 * np.eye(2, dtype=complex))
+    line = rlf.Line(id="line", bus1=bus0, bus2=bus1, phases=phases, parameters=lp, length=1.0, geometry=line_string)
 
     en = rlf.ElectricalNetwork(
         buses=[bus0, bus1],
-        branches=[line],
+        lines=[line],
+        transformers=[],
+        switches=[],
         loads=[load],
         sources=[vs],
         grounds=[ground],

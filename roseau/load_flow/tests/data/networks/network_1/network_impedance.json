@@ -1,5 +1,6 @@
 {
-  "version": 1,
+  "version": 2,
+  "is_multiphase": true,
   "grounds": [
     {
       "id": "ground",
@@ -63,10 +64,43 @@
       }
     }
   ],
-  "branches": [
+  "lines": [
+    {
+      "id": "line2",
+      "phases": "abcn",
+      "bus1": 2,
+      "bus2": 3,
+      "length": 1.0,
+      "params_id": "A_AL_150_exact",
+      "ground": "ground",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [0.0, 0.25],
+          [0.0, 0.5]
+        ]
+      }
+    },
+    {
+      "id": "line4",
+      "phases": "abc",
+      "bus1": 4,
+      "bus2": 5,
+      "length": 0.5,
+      "params_id": "S_AL_150_sym",
+      "ground": "ground",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [0.0, 0.0],
+          [-0.4, 0.25]
+        ]
+      }
+    }
+  ],
+  "transformers": [
     {
       "id": "tr1",
-      "type": "transformer",
       "phases1": "abc",
       "phases2": "abcn",
       "bus1": 1,
@@ -75,56 +109,20 @@
         "type": "Point",
         "coordinates": [0.0, 0.125]
       },
-      "params_id": "H61_50kVA_Dyn11",
-      "tap": 1.0
-    },
-    {
-      "id": "line2",
-      "type": "line",
-      "phases1": "abcn",
-      "phases2": "abcn",
-      "bus1": 2,
-      "bus2": 3,
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [0.0, 0.25],
-          [0.0, 0.5]
-        ]
-      },
-      "length": 1.0,
-      "params_id": "A_AL_150_exact",
-      "ground": "ground"
-    },
+      "tap": 1.0,
+      "params_id": "H61_50kVA_Dyn11"
+    }
+  ],
+  "switches": [
     {
       "id": "line3",
-      "type": "switch",
-      "phases1": "abc",
-      "phases2": "abc",
+      "phases": "abc",
       "bus1": 1,
       "bus2": 4,
       "geometry": {
         "type": "Point",
         "coordinates": [0.2, 0.0]
       }
-    },
-    {
-      "id": "line4",
-      "type": "line",
-      "phases1": "abc",
-      "phases2": "abc",
-      "bus1": 4,
-      "bus2": 5,
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [0.0, 0.0],
-          [-0.4, 0.25]
-        ]
-      },
-      "length": 0.5,
-      "params_id": "S_AL_150_sym",
-      "ground": "ground"
     }
   ],
   "loads": [
@@ -227,11 +225,13 @@
       "sn": 50000.0,
       "uhv": 20000.0,
       "ulv": 400.0,
+      "type": "dyn11",
+      "z2": [0.08639999999999999, 0.09444066920559172],
+      "ym": [1.2083333333333332e-7, -7.402022058569914e-7],
       "i0": 0.018000000000000002,
       "p0": 145.0,
       "psc": 1350.0,
-      "vsc": 0.04,
-      "type": "dyn11"
+      "vsc": 0.04
     }
   ]
 }

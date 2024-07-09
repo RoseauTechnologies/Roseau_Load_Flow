@@ -17,6 +17,30 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 # Changelog
 
+## Unreleased
+
+- {gh-pr}`235` **BREAKING CHANGE**: The constructor of the class `ElectricalNetwork` has changed:
+  - it accepts keyword arguments only.
+  - it accepts the arguments `lines`, `transformers` and `switches` in replacement of the argument `branches`.
+  - As a consequence,
+    - the results method `res_branches` has been removed. Please use `res_lines`, `res_transformers`
+      and `res_switches` methods instead.
+    - the field `branches` does not exist anymore. Please use the fields `lines`, `transformers` and `switches`.
+- {gh-pr}`235` Move the `Switch` class into its own file `roseau/load_flow/models/switches.py`.
+- {gh-pr}`235` The JSON file format number is upgraded to the version 2. All the files in version 0 or 1 can still be
+  read. Please upgrade them manually using the following code:
+  ```python
+  path = "my_json_file.json"
+  ElectricalNetwork.from_json(path).to_json(path)
+  ```
+- {gh-pr}`235` The method `results_to_dict` now accepts the keyword-only argument `full` which allows the export of all
+  the results of an element.
+- {gh-pr}`235` Solve a bug concerning the accessors to the flexible powers result of flexible power loads. An unwanted
+  error was raised.
+- {gh-pr}`235` Replace the occurrences of the `str.find` method by the `str.index` function.
+- {gh-pr}`235` The method `to_graph` of the class `ElectricalNetwork` now retrieves a graph with additional data store in the edges depending on the edge type: line,
+  transformer or switch.
+
 ## Version 0.9.1
 
 ```{note}

@@ -6,7 +6,7 @@ import shapely
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.io.dgs.constants import CONDUCTOR_TYPES, INSULATOR_TYPES, LINE_TYPES
-from roseau.load_flow.models import AbstractBranch, Bus, Ground, Line, LineParameters
+from roseau.load_flow.models import Bus, Ground, Line, LineParameters
 from roseau.load_flow.typing import Id
 
 logger = logging.getLogger(__name__)
@@ -86,7 +86,7 @@ def generate_typ_lne(typ_lne: pd.DataFrame, lines_params: dict[Id, LineParameter
 
 def generate_typ_lne_from_elm_lne(
     elm_lne: pd.DataFrame, line_id: Id, phases: str, lines_params: dict[Id, LineParameters]
-) -> None:
+) -> LineParameters:
     """Generate line parameters for a certain line.
 
     Args:
@@ -96,10 +96,15 @@ def generate_typ_lne_from_elm_lne(
         line_id:
             The ID of the line in the dataframe.
 
+        phases:
+            The phases of the line.
+
         lines_params:
             The dictionary to store the line parameters into.
-    """
 
+    Returns:
+        The generated line parameters.
+    """
     lne_series = elm_lne.loc[line_id]
 
     # Get a unique ID for the line parameters (contains the ID of the line)
@@ -139,7 +144,7 @@ def generate_typ_lne_from_elm_lne(
 
 def generate_lines(
     elm_lne: pd.DataFrame,
-    branches: dict[Id, AbstractBranch],
+    lines: dict[Id, Line],
     buses: dict[Id, Bus],
     sta_cubic: pd.DataFrame,
     lines_params: dict[Id, LineParameters],
@@ -151,7 +156,7 @@ def generate_lines(
         elm_lne:
             The "ElmLne" dataframe containing the line data.
 
-        branches:
+        lines:
             The dictionary to store the lines into.
 
         buses:
@@ -204,7 +209,7 @@ def generate_lines(
                 warnings.warn(
                     f"Failed to read geometry data for line {line_id!r}: {type(e).__name__}: {e}", stacklevel=4
                 )
-        branches[line_id] = Line(
+        lines[line_id] = Line(
             id=line_id,
             bus1=bus1,
             bus2=bus2,

@@ -89,7 +89,7 @@ class Ground(Element):
             raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.BAD_PHASE)
         self._connect(bus)
         self._connected_buses[bus.id] = phase
-        p = bus.phases.find(phase)
+        p = bus.phases.index(phase)
         bus._cy_element.connect(self._cy_element, [(p, 0)])
 
     #
@@ -99,7 +99,7 @@ class Ground(Element):
     def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
         self = cls(data["id"])
         for bus_data in data["buses"]:
-            self.connect(bus_data["bus"], bus_data["phase"])
+            self.connect(bus=bus_data["bus"], phase=bus_data["phase"])
         if include_results and "results" in data:
             self._res_potential = complex(*data["results"]["potential"])
             self._fetch_results = False
@@ -117,6 +117,6 @@ class Ground(Element):
             res["results"] = {"potential": [v.real, v.imag]}
         return res
 
-    def _results_to_dict(self, warning: bool) -> JsonDict:
+    def _results_to_dict(self, warning: bool, full: bool) -> JsonDict:
         v = self._res_potential_getter(warning)
         return {"id": self.id, "potential": [v.real, v.imag]}

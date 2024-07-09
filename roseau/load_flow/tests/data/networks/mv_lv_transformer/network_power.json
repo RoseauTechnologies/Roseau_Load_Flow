@@ -1,5 +1,6 @@
 {
-  "version": 1,
+  "version": 2,
+  "is_multiphase": true,
   "grounds": [
     {
       "id": "ground",
@@ -39,10 +40,10 @@
       }
     }
   ],
-  "branches": [
+  "lines": [],
+  "transformers": [
     {
       "id": "transfo1",
-      "type": "transformer",
       "phases1": "abc",
       "phases2": "abcn",
       "bus1": 1,
@@ -51,10 +52,11 @@
         "type": "Point",
         "coordinates": [0.0, 0.0]
       },
-      "params_id": "160kVA_Dyn11",
-      "tap": 1.0
+      "tap": 1.0,
+      "params_id": "160kVA_Dyn11"
     }
   ],
+  "switches": [],
   "loads": [
     {
       "id": 2,
@@ -86,11 +88,13 @@
       "sn": 160000.0,
       "uhv": 20000.0,
       "ulv": 400.0,
+      "type": "dyn11",
+      "z2": [0.014687500000000001, 0.037205877811845804],
+      "ym": [3.8333333333333335e-7, -3.0426140077242796e-6],
       "i0": 0.023,
       "p0": 460.0,
       "psc": 2350.0,
-      "vsc": 0.04,
-      "type": "dyn11"
+      "vsc": 0.04
     }
   ]
 }

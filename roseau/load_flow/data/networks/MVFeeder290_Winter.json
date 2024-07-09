@@ -1,5 +1,6 @@
 {
-  "version": 1,
+  "version": 2,
+  "is_multiphase": true,
   "grounds": [
     {
       "id": "ground",
@@ -134,26 +135,15 @@
       "max_voltage": 21000
     }
   ],
-  "branches": [
-    {
-      "id": "Switch",
-      "type": "switch",
-      "phases1": "abc",
-      "phases2": "abc",
-      "bus1": "HVMV20",
-      "bus2": "HVMVFeeder20",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [-1.110304663668984, 48.57658336890665]
-      }
-    },
+  "lines": [
     {
       "id": "MVBranch47143",
-      "type": "line",
-      "phases1": "abc",
-      "phases2": "abc",
+      "phases": "abc",
       "bus1": "HVMVFeeder20",
       "bus2": "MVLV04478",
+      "length": 0.9863054390973716,
+      "params_id": "U_AL_150",
+      "ground": "ground",
       "geometry": {
         "type": "LineString",
         "coordinates": [
@@ -174,18 +164,16 @@
           [-1.099023211929418, 48.572276379750605],
           [-1.0990179748058666, 48.57227231621206]
         ]
-      },
-      "length": 0.9863054390973716,
-      "params_id": "U_AL_150",
-      "ground": "ground"
+      }
     },
     {
       "id": "MVBranch36934",
-      "type": "line",
-      "phases1": "abc",
-      "phases2": "abc",
+      "phases": "abc",
       "bus1": "MVBus07781",
       "bus2": "MVLV15809",
+      "length": 0.10556655982771243,
+      "params_id": "U_AL_150",
+      "ground": "ground",
       "geometry": {
         "type": "LineString",
         "coordinates": [
@@ -199,18 +187,16 @@
           [-1.092676858882234, 48.57786175424816],
           [-1.092676858882234, 48.57786175424816]
         ]
-      },
-      "length": 0.10556655982771243,
-      "params_id": "U_AL_150",
-      "ground": "ground"
+      }
     },
     {
       "id": "MVBranch35377",
-      "type": "line",
-      "phases1": "abc",
-      "phases2": "abc",
+      "phases": "abc",
       "bus1": "MVLV08671",
       "bus2": "MVBus07781",
+      "length": 0.0757359998583347,
+      "params_id": "U_AL_150",
+      "ground": "ground",
       "geometry": {
         "type": "LineString",
         "coordinates": [
@@ -222,18 +208,16 @@
           [-1.092144808206271, 48.57724086102603],
           [-1.092144808206271, 48.57724086102603]
         ]
-      },
-      "length": 0.0757359998583347,
-      "params_id": "U_AL_150",
-      "ground": "ground"
+      }
     },
     {
       "id": "MVBranch36383",
-      "type": "line",
-      "phases1": "abc",
-      "phases2": "abc",
+      "phases": "abc",
       "bus1": "MVBus07231",
       "bus2": "MVLV08671",
+      "length": 0.05733663538018223,
+      "params_id": "U_AL_150",
+      "ground": "ground",
       "geometry": {
         "type": "LineString",
         "coordinates": [
@@ -244,18 +228,16 @@
           [-1.091521663984228, 48.5770568429947],
           [-1.0915269953777949, 48.577059455453295]
         ]
-      },
-      "length": 0.05733663538018223,
-      "params_id": "U_AL_150",
-      "ground": "ground"
+      }
     },
     {
       "id": "MVBranch40213",
-      "type": "line",
-      "phases1": "abc",
-      "phases2": "abc",
+      "phases": "abc",
       "bus1": "MVLV12940",
       "bus2": "MVBus07231",
+      "length": 0.29381782841035065,
+      "params_id": "U_AL_150",
+      "ground": "ground",
       "geometry": {
         "type": "LineString",
         "coordinates": [
@@ -271,18 +253,16 @@
           [-1.092214809134924, 48.57695669474363],
           [-1.092214809134924, 48.57695669474363]
         ]
-      },
-      "length": 0.29381782841035065,
-      "params_id": "U_AL_150",
-      "ground": "ground"
+      }
     },
     {
       "id": "MVBranch39250",
-      "type": "line",
-      "phases1": "abc",
-      "phases2": "abc",
+      "phases": "abc",
       "bus1": "MVLV08672",
       "bus2": "MVLV12940",
+      "length": 0.42704930125149193,
+      "params_id": "U_AL_150",
+      "ground": "ground",
       "geometry": {
         "type": "LineString",
         "coordinates": [
@@ -302,18 +282,16 @@
           [-1.090044343947815, 48.576111539249986],
           [-1.0900227394716775, 48.576108592491494]
         ]
-      },
-      "length": 0.42704930125149193,
-      "params_id": "U_AL_150",
-      "ground": "ground"
+      }
     },
     {
       "id": "MVBranch38144",
-      "type": "line",
-      "phases1": "abc",
-      "phases2": "abc",
+      "phases": "abc",
       "bus1": "MVLV15808",
       "bus2": "MVLV08672",
+      "length": 0.2358136357626263,
+      "params_id": "U_AL_150",
+      "ground": "ground",
       "geometry": {
         "type": "LineString",
         "coordinates": [
@@ -330,18 +308,16 @@
           [-1.094321277827, 48.575381739131466],
           [-1.0943209415004231, 48.57538064663255]
         ]
-      },
-      "length": 0.2358136357626263,
-      "params_id": "U_AL_150",
-      "ground": "ground"
+      }
     },
     {
       "id": "MVBranch46721",
-      "type": "line",
-      "phases1": "abc",
-      "phases2": "abc",
+      "phases": "abc",
       "bus1": "MVLV15816",
       "bus2": "MVLV15808",
+      "length": 0.32103748257947046,
+      "params_id": "U_AL_150",
+      "ground": "ground",
       "geometry": {
         "type": "LineString",
         "coordinates": [
@@ -362,18 +338,16 @@
           [-1.094961417525105, 48.57688261038158],
           [-1.0949562874472534, 48.57688161636299]
         ]
-      },
-      "length": 0.32103748257947046,
-      "params_id": "U_AL_150",
-      "ground": "ground"
+      }
     },
     {
       "id": "MVBranch32782",
-      "type": "line",
-      "phases1": "abc",
-      "phases2": "abc",
+      "phases": "abc",
       "bus1": "MVLV01189",
       "bus2": "MVLV15816",
+      "length": 0.27826011633328457,
+      "params_id": "U_AL_150",
+      "ground": "ground",
       "geometry": {
         "type": "LineString",
         "coordinates": [
@@ -397,18 +371,16 @@
           [-1.095434033111804, 48.57453961147086],
           [-1.0954203403982659, 48.57453799744745]
         ]
-      },
-      "length": 0.27826011633328457,
-      "params_id": "U_AL_150",
-      "ground": "ground"
+      }
     },
     {
       "id": "MVBranch47406",
-      "type": "line",
-      "phases1": "abc",
-      "phases2": "abc",
+      "phases": "abc",
       "bus1": "MVLV04478",
       "bus2": "MVLV01189",
+      "length": 0.6216146977045005,
+      "params_id": "U_AL_150",
+      "ground": "ground",
       "geometry": {
         "type": "LineString",
         "coordinates": [
@@ -426,10 +398,20 @@
           [-1.095108033684014, 48.57331251993099],
           [-1.0951039520830765, 48.57331117610068]
         ]
-      },
-      "length": 0.6216146977045005,
-      "params_id": "U_AL_150",
-      "ground": "ground"
+      }
+    }
+  ],
+  "transformers": [],
+  "switches": [
+    {
+      "id": "Switch",
+      "phases": "abc",
+      "bus1": "HVMV20",
+      "bus2": "HVMVFeeder20",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-1.110304663668984, 48.57658336890665]
+      }
     }
   ],
   "loads": [

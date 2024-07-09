@@ -1,5 +1,6 @@
 {
-  "version": 1,
+  "version": 2,
+  "is_multiphase": true,
   "grounds": [
     {
       "id": "ground",
@@ -35,26 +36,26 @@
       }
     }
   ],
-  "branches": [
+  "lines": [
     {
       "id": "line1",
-      "type": "line",
-      "phases1": "abcn",
-      "phases2": "abcn",
+      "phases": "abcn",
       "bus1": 1,
       "bus2": 2,
+      "length": 0.5,
+      "params_id": "test_rounded_line",
+      "ground": "ground",
       "geometry": {
         "type": "LineString",
         "coordinates": [
           [0.0, 0.0],
           [1.0, 0.0]
         ]
-      },
-      "length": 0.5,
-      "params_id": "test_rounded_line",
-      "ground": "ground"
+      }
     }
   ],
+  "transformers": [],
+  "switches": [],
   "loads": [
     {
       "id": 0,

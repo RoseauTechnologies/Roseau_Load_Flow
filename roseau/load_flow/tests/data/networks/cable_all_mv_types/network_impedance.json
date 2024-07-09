@@ -1,5 +1,6 @@
 {
-  "version": 1,
+  "version": 2,
+  "is_multiphase": true,
   "grounds": [
     {
       "id": "ground",
@@ -75,114 +76,104 @@
       }
     }
   ],
-  "branches": [
+  "lines": [
     {
       "id": "line1",
-      "type": "line",
-      "phases1": "abc",
-      "phases2": "abc",
+      "phases": "abc",
       "bus1": 1,
       "bus2": 2,
+      "length": 5.0,
+      "params_id": "S_AL_150_sym",
+      "ground": "ground",
       "geometry": {
         "type": "LineString",
         "coordinates": [
           [0.0, 0.0],
           [0.0, 1.0]
         ]
-      },
-      "length": 5.0,
-      "params_id": "S_AL_150_sym",
-      "ground": "ground"
+      }
     },
     {
       "id": "line2",
-      "type": "line",
-      "phases1": "abc",
-      "phases2": "abc",
+      "phases": "abc",
       "bus1": 1,
       "bus2": 3,
+      "length": 5.0,
+      "params_id": "S_AL_150_zy",
+      "ground": "ground",
       "geometry": {
         "type": "LineString",
         "coordinates": [
           [0.0, 0.0],
           [1.0, 1.0]
         ]
-      },
-      "length": 5.0,
-      "params_id": "S_AL_150_zy",
-      "ground": "ground"
+      }
     },
     {
       "id": "line3",
-      "type": "line",
-      "phases1": "abc",
-      "phases2": "abc",
+      "phases": "abc",
       "bus1": 1,
       "bus2": 4,
+      "length": 5.0,
+      "params_id": "S_AL_150_z",
       "geometry": {
         "type": "LineString",
         "coordinates": [
           [0.0, 0.0],
           [1.0, 0.0]
         ]
-      },
-      "length": 5.0,
-      "params_id": "S_AL_150_z"
+      }
     },
     {
       "id": "line4",
-      "type": "line",
-      "phases1": "abc",
-      "phases2": "abc",
+      "phases": "abc",
       "bus1": 1,
       "bus2": 5,
+      "length": 5.0,
+      "params_id": "A_AL_150_sym",
+      "ground": "ground",
       "geometry": {
         "type": "LineString",
         "coordinates": [
           [0.0, 0.0],
           [1.0, -1.0]
         ]
-      },
-      "length": 5.0,
-      "params_id": "A_AL_150_sym",
-      "ground": "ground"
+      }
     },
     {
       "id": "line5",
-      "type": "line",
-      "phases1": "abc",
-      "phases2": "abc",
+      "phases": "abc",
       "bus1": 1,
       "bus2": 6,
+      "length": 5.0,
+      "params_id": "A_AL_150_zy",
+      "ground": "ground",
       "geometry": {
         "type": "LineString",
         "coordinates": [
           [0.0, 0.0],
           [0.0, -1.0]
         ]
-      },
-      "length": 5.0,
-      "params_id": "A_AL_150_zy",
-      "ground": "ground"
+      }
     },
     {
       "id": "line6",
-      "type": "line",
-      "phases1": "abc",
-      "phases2": "abc",
+      "phases": "abc",
       "bus1": 1,
       "bus2": 7,
+      "length": 5.0,
+      "params_id": "A_AL_150_z",
       "geometry": {
         "type": "LineString",
         "coordinates": [
           [0.0, 0.0],
           [-1.0, -1.0]
         ]
-      },
-      "length": 5.0,
-      "params_id": "A_AL_150_z"
+      }
     }
   ],
+  "transformers": [],
+  "switches": [],
   "loads": [
     {
       "id": 1,

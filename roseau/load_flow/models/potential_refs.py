@@ -71,7 +71,7 @@ class PotentialRef(Element):
             if isinstance(element, Ground):
                 element._cy_element.connect(self._cy_element, [(0, 0)])
             else:
-                p = element.phases.find(self.phase)
+                p = element.phases.index(self.phase)
                 element._cy_element.connect(self._cy_element, [(p, 0)])
 
     def __repr__(self) -> str:
@@ -101,7 +101,7 @@ class PotentialRef(Element):
     #
     @classmethod
     def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
-        self = cls(data["id"], data["element"], phase=data.get("phases"))
+        self = cls(id=data["id"], element=data["element"], phase=data.get("phases"))
         if include_results and "results" in data:
             self._res_current = complex(*data["results"]["current"])
             self._fetch_results = False
@@ -123,6 +123,6 @@ class PotentialRef(Element):
             res["results"] = {"current": [i.real, i.imag]}
         return res
 
-    def _results_to_dict(self, warning: bool) -> JsonDict:
+    def _results_to_dict(self, warning: bool, full: bool) -> JsonDict:
         i = self._res_current_getter(warning)
         return {"id": self.id, "current": [i.real, i.imag]}

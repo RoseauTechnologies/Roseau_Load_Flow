@@ -3,7 +3,7 @@ import logging
 import pandas as pd
 import shapely
 
-from roseau.load_flow.models import AbstractBranch, Bus, Transformer, TransformerParameters
+from roseau.load_flow.models import Bus, Transformer, TransformerParameters
 from roseau.load_flow.typing import Id
 from roseau.load_flow.units import Q_
 
@@ -16,7 +16,7 @@ def generate_typ_tr(
     """Generate transformer parameters from the "TypTr2" dataframe.
 
     Args:
-        typ_lne:
+        typ_tr:
             The "TypTr2" dataframe containing transformer parameters data.
 
         transformers_params:
@@ -47,7 +47,7 @@ def generate_typ_tr(
 
 def generate_transformers(
     elm_tr: pd.DataFrame,
-    branches: dict[Id, AbstractBranch],
+    transformers: dict[Id, Transformer],
     buses: dict[Id, Bus],
     sta_cubic: pd.DataFrame,
     transformers_tap: dict[Id, int],
@@ -56,10 +56,10 @@ def generate_transformers(
     """Generate the transformers of the network.
 
     Args:
-        elm_tr2:
+        elm_tr:
             The "ElmTr2" dataframe containing the transformer data.
 
-        branches:
+        transformers:
             The dictionary to store the transformers into.
 
         buses:
@@ -85,6 +85,6 @@ def generate_transformers(
             if bus1.geometry is not None and bus2.geometry is not None
             else None
         )
-        branches[idx] = Transformer(
+        transformers[idx] = Transformer(
             id=idx, bus1=bus1, bus2=bus2, parameters=transformers_params[type_id], tap=tap, geometry=geometry
         )

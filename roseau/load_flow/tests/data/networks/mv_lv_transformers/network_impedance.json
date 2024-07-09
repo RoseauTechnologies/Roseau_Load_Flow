@@ -1,5 +1,6 @@
 {
-  "version": 1,
+  "version": 2,
+  "is_multiphase": true,
   "grounds": [
     {
       "id": "ground",
@@ -175,10 +176,10 @@
       }
     }
   ],
-  "branches": [
+  "lines": [],
+  "transformers": [
     {
       "id": "tr1",
-      "type": "transformer",
       "phases1": "abc",
       "phases2": "abc",
       "bus1": 1,
@@ -187,12 +188,11 @@
         "type": "Point",
         "coordinates": [0.0, 0.5]
       },
-      "params_id": "160kVA_Dd0",
-      "tap": 1.0
+      "tap": 1.0,
+      "params_id": "160kVA_Dd0"
     },
     {
       "id": "tr2",
-      "type": "transformer",
       "phases1": "abcn",
       "phases2": "abcn",
       "bus1": 1,
@@ -201,12 +201,11 @@
         "type": "Point",
         "coordinates": [0.0, 0.5]
       },
-      "params_id": "160kVA_Yyn0",
-      "tap": 1.0
+      "tap": 1.0,
+      "params_id": "160kVA_Yyn0"
     },
     {
       "id": "tr3",
-      "type": "transformer",
       "phases1": "abc",
       "phases2": "abcn",
       "bus1": 1,
@@ -215,12 +214,11 @@
         "type": "Point",
         "coordinates": [0.0, 0.5]
       },
-      "params_id": "160kVA_Dzn0",
-      "tap": 1.0
+      "tap": 1.0,
+      "params_id": "160kVA_Dzn0"
     },
     {
       "id": "tr4",
-      "type": "transformer",
       "phases1": "abc",
       "phases2": "abcn",
       "bus1": 1,
@@ -229,12 +227,11 @@
         "type": "Point",
         "coordinates": [0.0, 0.5]
       },
-      "params_id": "160kVA_Dyn11",
-      "tap": 1.0
+      "tap": 1.0,
+      "params_id": "160kVA_Dyn11"
     },
     {
       "id": "tr5",
-      "type": "transformer",
       "phases1": "abcn",
       "phases2": "abc",
       "bus1": 1,
@@ -243,12 +240,11 @@
         "type": "Point",
         "coordinates": [0.0, 0.5]
       },
-      "params_id": "160kVA_Yd11",
-      "tap": 1.0
+      "tap": 1.0,
+      "params_id": "160kVA_Yd11"
     },
     {
       "id": "tr6",
-      "type": "transformer",
       "phases1": "abcn",
       "phases2": "abcn",
       "bus1": 1,
@@ -257,12 +253,11 @@
         "type": "Point",
         "coordinates": [0.0, 0.5]
       },
-      "params_id": "160kVA_Yzn11",
-      "tap": 1.0
+      "tap": 1.0,
+      "params_id": "160kVA_Yzn11"
     },
     {
       "id": "tr7",
-      "type": "transformer",
       "phases1": "abc",
       "phases2": "abc",
       "bus1": 1,
@@ -271,12 +266,11 @@
         "type": "Point",
         "coordinates": [0.0, 0.5]
       },
-      "params_id": "160kVA_Dd6",
-      "tap": 1.0
+      "tap": 1.0,
+      "params_id": "160kVA_Dd6"
     },
     {
       "id": "tr8",
-      "type": "transformer",
       "phases1": "abcn",
       "phases2": "abcn",
       "bus1": 1,
@@ -285,12 +279,11 @@
         "type": "Point",
         "coordinates": [0.0, 0.5]
       },
-      "params_id": "160kVA_Yyn6",
-      "tap": 1.0
+      "tap": 1.0,
+      "params_id": "160kVA_Yyn6"
     },
     {
       "id": "tr9",
-      "type": "transformer",
       "phases1": "abc",
       "phases2": "abcn",
       "bus1": 1,
@@ -299,12 +292,11 @@
         "type": "Point",
         "coordinates": [0.0, 0.5]
       },
-      "params_id": "160kVA_Dzn6",
-      "tap": 1.0
+      "tap": 1.0,
+      "params_id": "160kVA_Dzn6"
     },
     {
       "id": "tr10",
-      "type": "transformer",
       "phases1": "abc",
       "phases2": "abcn",
       "bus1": 1,
@@ -313,12 +305,11 @@
         "type": "Point",
         "coordinates": [0.0, 0.5]
       },
-      "params_id": "160kVA_Dyn5",
-      "tap": 1.0
+      "tap": 1.0,
+      "params_id": "160kVA_Dyn5"
     },
     {
       "id": "tr11",
-      "type": "transformer",
       "phases1": "abcn",
       "phases2": "abc",
       "bus1": 1,
@@ -327,12 +318,11 @@
         "type": "Point",
         "coordinates": [0.0, 0.5]
       },
-      "params_id": "160kVA_Yd5",
-      "tap": 1.0
+      "tap": 1.0,
+      "params_id": "160kVA_Yd5"
     },
     {
       "id": "tr12",
-      "type": "transformer",
       "phases1": "abcn",
       "phases2": "abcn",
       "bus1": 1,
@@ -341,10 +331,11 @@
         "type": "Point",
         "coordinates": [0.0, 0.5]
       },
-      "params_id": "160kVA_Yzn5",
-      "tap": 1.0
+      "tap": 1.0,
+      "params_id": "160kVA_Yzn5"
     }
   ],
+  "switches": [],
   "loads": [
     {
       "id": 1,
@@ -486,132 +477,156 @@
       "sn": 160000.0,
       "uhv": 20000.0,
       "ulv": 400.0,
+      "type": "dd0",
+      "z2": [0.044062500000000004, 0.1116176334355374],
+      "ym": [3.8333333333333335e-7, -3.0426140077242796e-6],
       "i0": 0.023,
       "p0": 460.0,
       "psc": 2350.0,
-      "vsc": 0.04,
-      "type": "dd0"
+      "vsc": 0.04
     },
     {
       "id": "160kVA_Dd6",
       "sn": 160000.0,
       "uhv": 20000.0,
       "ulv": 400.0,
+      "type": "dd6",
+      "z2": [0.044062500000000004, 0.1116176334355374],
+      "ym": [3.8333333333333335e-7, -3.0426140077242796e-6],
       "i0": 0.023,
       "p0": 460.0,
       "psc": 2350.0,
-      "vsc": 0.04,
-      "type": "dd6"
+      "vsc": 0.04
     },
     {
       "id": "160kVA_Dyn11",
       "sn": 160000.0,
       "uhv": 20000.0,
       "ulv": 400.0,
+      "type": "dyn11",
+      "z2": [0.014687500000000001, 0.037205877811845804],
+      "ym": [3.8333333333333335e-7, -3.0426140077242796e-6],
       "i0": 0.023,
       "p0": 460.0,
       "psc": 2350.0,
-      "vsc": 0.04,
-      "type": "dyn11"
+      "vsc": 0.04
     },
     {
       "id": "160kVA_Dyn5",
       "sn": 160000.0,
       "uhv": 20000.0,
       "ulv": 400.0,
+      "type": "dyn5",
+      "z2": [0.014687500000000001, 0.037205877811845804],
+      "ym": [3.8333333333333335e-7, -3.0426140077242796e-6],
       "i0": 0.023,
       "p0": 460.0,
       "psc": 2350.0,
-      "vsc": 0.04,
-      "type": "dyn5"
+      "vsc": 0.04
     },
     {
       "id": "160kVA_Dzn0",
       "sn": 160000.0,
       "uhv": 20000.0,
       "ulv": 400.0,
+      "type": "dzn0",
+      "z2": [0.014687500000000001, 0.037205877811845804],
+      "ym": [3.8333333333333335e-7, -3.0426140077242796e-6],
       "i0": 0.023,
       "p0": 460.0,
       "psc": 2350.0,
-      "vsc": 0.04,
-      "type": "dzn0"
+      "vsc": 0.04
     },
     {
       "id": "160kVA_Dzn6",
       "sn": 160000.0,
       "uhv": 20000.0,
       "ulv": 400.0,
+      "type": "dzn6",
+      "z2": [0.014687500000000001, 0.037205877811845804],
+      "ym": [3.8333333333333335e-7, -3.0426140077242796e-6],
       "i0": 0.023,
       "p0": 460.0,
       "psc": 2350.0,
-      "vsc": 0.04,
-      "type": "dzn6"
+      "vsc": 0.04
     },
     {
       "id": "160kVA_Yd11",
       "sn": 160000.0,
       "uhv": 20000.0,
       "ulv": 400.0,
+      "type": "yd11",
+      "z2": [0.044062500000000004, 0.1116176334355374],
+      "ym": [1.15e-6, -9.127842023172839e-6],
       "i0": 0.023,
       "p0": 460.0,
       "psc": 2350.0,
-      "vsc": 0.04,
-      "type": "yd11"
+      "vsc": 0.04
     },
     {
       "id": "160kVA_Yd5",
       "sn": 160000.0,
       "uhv": 20000.0,
       "ulv": 400.0,
+      "type": "yd5",
+      "z2": [0.044062500000000004, 0.1116176334355374],
+      "ym": [1.15e-6, -9.127842023172839e-6],
       "i0": 0.023,
       "p0": 460.0,
       "psc": 2350.0,
-      "vsc": 0.04,
-      "type": "yd5"
+      "vsc": 0.04
     },
     {
       "id": "160kVA_Yyn0",
       "sn": 160000.0,
       "uhv": 20000.0,
       "ulv": 400.0,
+      "type": "yyn0",
+      "z2": [0.014687500000000001, 0.037205877811845804],
+      "ym": [1.15e-6, -9.127842023172839e-6],
       "i0": 0.023,
       "p0": 460.0,
       "psc": 2350.0,
-      "vsc": 0.04,
-      "type": "yyn0"
+      "vsc": 0.04
     },
     {
       "id": "160kVA_Yyn6",
       "sn": 160000.0,
       "uhv": 20000.0,
       "ulv": 400.0,
+      "type": "yyn6",
+      "z2": [0.014687500000000001, 0.037205877811845804],
+      "ym": [1.15e-6, -9.127842023172839e-6],
       "i0": 0.023,
       "p0": 460.0,
       "psc": 2350.0,
-      "vsc": 0.04,
-      "type": "yyn6"
+      "vsc": 0.04
     },
     {
       "id": "160kVA_Yzn11",
       "sn": 160000.0,
       "uhv": 20000.0,
       "ulv": 400.0,
+      "type": "yzn11",
+      "z2": [0.014687500000000001, 0.037205877811845804],
+      "ym": [1.15e-6, -9.127842023172839e-6],
       "i0": 0.023,
       "p0": 460.0,
       "psc": 2350.0,
-      "vsc": 0.04,
-      "type": "yzn11"
+      "vsc": 0.04
     },
     {
       "id": "160kVA_Yzn5",
       "sn": 160000.0,
       "uhv": 20000.0,
       "ulv": 400.0,
+      "type": "yzn5",
+      "z2": [0.014687500000000001, 0.037205877811845804],
+      "ym": [1.15e-6, -9.127842023172839e-6],
       "i0": 0.023,
       "p0": 460.0,
       "psc": 2350.0,
-      "vsc": 0.04,
-      "type": "yzn5"
+      "vsc": 0.04
     }
   ]
 }

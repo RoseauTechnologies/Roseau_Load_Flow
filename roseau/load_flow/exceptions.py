@@ -27,8 +27,10 @@ class RoseauLoadFlowExceptionCode(StrEnum):
     BAD_SHORT_CIRCUIT = auto()
 
     # Branches
-    BAD_BRANCH_ID = auto()
     BAD_BRANCH_TYPE = auto()
+
+    # Lines
+    BAD_LINE_ID = auto()
     BAD_Z_LINE_SHAPE = auto()
     BAD_Y_SHUNT_SHAPE = auto()
     BAD_LINE_MODEL = auto()
@@ -37,12 +39,18 @@ class RoseauLoadFlowExceptionCode(StrEnum):
     BAD_INSULATOR_TYPE = auto()
     BAD_Z_LINE_VALUE = auto()
     BAD_Y_SHUNT_VALUE = auto()
+    BAD_TYPE_NAME_SYNTAX = auto()
+    BAD_LENGTH_VALUE = auto()
+
+    # Transformer
+    BAD_TRANSFORMER_ID = auto()
     BAD_TRANSFORMER_WINDINGS = auto()
     BAD_TRANSFORMER_TYPE = auto()
     BAD_TRANSFORMER_VOLTAGES = auto()
     BAD_TRANSFORMER_PARAMETERS = auto()
-    BAD_TYPE_NAME_SYNTAX = auto()
-    BAD_LENGTH_VALUE = auto()
+
+    # Switch
+    BAD_SWITCH_ID = auto()
 
     # Control
     BAD_CONTROL_TYPE = auto()

@@ -400,7 +400,7 @@ class Control(JsonMixin):
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_CONTROL_TYPE)
 
-    def _results_to_dict(self, warning: bool) -> NoReturn:
+    def _results_to_dict(self, warning: bool, full: bool) -> NoReturn:
         msg = f"The {type(self).__name__} has no results to export."
         logger.error(msg)
         raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.JSON_NO_RESULTS)
@@ -490,7 +490,7 @@ class Projection(JsonMixin):
     def _to_dict(self, include_results: bool) -> JsonDict:
         return {"type": self.type, "alpha": self._alpha, "epsilon": self._epsilon}
 
-    def _results_to_dict(self, warning: bool) -> NoReturn:
+    def _results_to_dict(self, warning: bool, full: bool) -> NoReturn:
         msg = f"The {type(self).__name__} has no results to export."
         logger.error(msg)
         raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.JSON_NO_RESULTS)
@@ -823,11 +823,11 @@ class FlexibleParameter(JsonMixin):
                 circle.
 
             q_min:
-                The minimum reactive power of the flexible load (VAr). By default it is equal to -s_max, but it can
+                The minimum reactive power of the flexible load (VAr). By default, it is equal to -s_max, but it can
                 be further constrained.
 
             q_max:
-                The maximum reactive power of the flexible load (VAr). By default it is equal to s_max, but it can
+                The maximum reactive power of the flexible load (VAr). By default, it is equal to s_max, but it can
                 be further constrained.
 
             alpha_control:
@@ -871,11 +871,11 @@ class FlexibleParameter(JsonMixin):
         s_max: float | Q_[float],
         q_min: float | Q_[float] | None = None,
         q_max: float | Q_[float] | None = None,
-        alpha_control=Control._DEFAULT_ALPHA,
+        alpha_control: float = Control._DEFAULT_ALPHA,
         epsilon_control: float = Control._DEFAULT_EPSILON,
         type_proj: ProjectionType = Projection._DEFAULT_TYPE,
-        alpha_proj=Projection._DEFAULT_ALPHA,
-        epsilon_proj=Projection._DEFAULT_EPSILON,
+        alpha_proj: float = Projection._DEFAULT_ALPHA,
+        epsilon_proj: float = Projection._DEFAULT_EPSILON,
     ) -> Self:
         """Build flexible parameters for production ``P(U)`` control and ``Q(U)`` control with a
         Euclidean projection.
@@ -907,11 +907,11 @@ class FlexibleParameter(JsonMixin):
                 circle.
 
             q_min:
-                The minimum reactive power of the flexible load (VAr). By default it is equal to -s_max, but it can
+                The minimum reactive power of the flexible load (VAr). By default, it is equal to -s_max, but it can
                 be further constrained.
 
             q_max:
-                The maximum reactive power of the flexible load (VAr). By default it is equal to s_max, but it can
+                The maximum reactive power of the flexible load (VAr). By default, it is equal to s_max, but it can
                 be further constrained.
 
             alpha_control:
@@ -962,7 +962,7 @@ class FlexibleParameter(JsonMixin):
         s_max: float | Q_[float],
         q_min: float | Q_[float] | None = None,
         q_max: float | Q_[float] | None = None,
-        alpha_control: float | Q_[float] = Control._DEFAULT_ALPHA,
+        alpha_control: float = Control._DEFAULT_ALPHA,
         epsilon_control: float = Control._DEFAULT_EPSILON,
         type_proj: ProjectionType = Projection._DEFAULT_TYPE,
         alpha_proj: float = Projection._DEFAULT_ALPHA,
@@ -998,11 +998,11 @@ class FlexibleParameter(JsonMixin):
                 circle.
 
             q_min:
-                The minimum reactive power of the flexible load (VAr). By default it is equal to -s_max, but it can
+                The minimum reactive power of the flexible load (VAr). By default, it is equal to -s_max, but it can
                 be further constrained.
 
             q_max:
-                The maximum reactive power of the flexible load (VAr). By default it is equal to s_max, but it can
+                The maximum reactive power of the flexible load (VAr). By default, it is equal to s_max, but it can
                 be further constrained.
 
             alpha_control:
@@ -1047,9 +1047,9 @@ class FlexibleParameter(JsonMixin):
     #
     @classmethod
     def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
-        control_p = Control.from_dict(data["control_p"], include_results=include_results)
-        control_q = Control.from_dict(data["control_q"], include_results=include_results)
-        projection = Projection.from_dict(data["projection"], include_results=include_results)
+        control_p = Control.from_dict(data=data["control_p"], include_results=include_results)
+        control_q = Control.from_dict(data=data["control_q"], include_results=include_results)
+        projection = Projection.from_dict(data=data["projection"], include_results=include_results)
         q_min = data.get("q_min", None)
         q_max = data.get("q_max", None)
         return cls(
@@ -1074,7 +1074,7 @@ class FlexibleParameter(JsonMixin):
             res["q_max"] = self._q_max_value
         return res
 
-    def _results_to_dict(self, warning: bool) -> NoReturn:
+    def _results_to_dict(self, warning: bool, full: bool) -> NoReturn:
         msg = f"The {type(self).__name__} has no results to export."
         logger.error(msg)
         raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.JSON_NO_RESULTS)

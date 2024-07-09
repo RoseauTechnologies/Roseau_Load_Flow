@@ -121,7 +121,7 @@ class JsonMixin(metaclass=ABCMeta):
                 f"call `en.solve_load_flow()` before converting or pass `include_results=False`."
             )
             logger.error(msg)
-            raise RoseauLoadFlowException(msg, code=RoseauLoadFlowExceptionCode.BAD_LOAD_FLOW_RESULT)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LOAD_FLOW_RESULT)
         return self._to_dict(include_results=include_results)
 
     def to_json(self, path: StrPath, *, include_results: bool = True) -> Path:
@@ -151,7 +151,7 @@ class JsonMixin(metaclass=ABCMeta):
         output = json.dumps(res, ensure_ascii=False, indent=2, default=_json_encoder_default)
         # Collapse multi-line arrays of 2-to-4 elements into single line
         # e.g complex value represented as [real, imag] or rows of the z_line matrix
-        output = re.sub(r"\[(?:\s+(\S+,))?(?:\s+?( \S+,))??(?:\s+?( \S+,))??\s+?( \S+)\s+\]", r"[\1\2\3\4]", output)
+        output = re.sub(r"\[(?:\s+(\S+,))?(?:\s+?( \S+,))??(?:\s+?( \S+,))??\s+?( \S+)\s+]", r"[\1\2\3\4]", output)
         if not output.endswith("\n"):
             output += "\n"
         path = Path(path).expanduser().resolve()
@@ -159,11 +159,11 @@ class JsonMixin(metaclass=ABCMeta):
         return path
 
     @abstractmethod
-    def _results_to_dict(self, warning: bool) -> JsonDict:
+    def _results_to_dict(self, warning: bool, full: bool) -> JsonDict:
         """Return the results of the element as a dictionary format"""
         raise NotImplementedError
 
-    def results_to_dict(self) -> JsonDict:
+    def results_to_dict(self, full: bool = False) -> JsonDict:
         """Return the results of the element as a dictionary.
 
         The results dictionary of an element contains the ID of the element, its phases, and the
@@ -172,14 +172,20 @@ class JsonMixin(metaclass=ABCMeta):
             {"id": "bus1", "phases": "an", "potentials": [[230.0, 0.0]]}
 
         Note that complex values (like `potentials` in the example above) are stored as list of
-        [real part, imaginary part] so that it is JSON-serializable.
+        [real part, imaginary part] so that it is JSON-serializable
+
+        Using the `full` argument, `bus.results_to_dict(full=True)` leads to the following results::
+
+            {"id": "bus1", "phases": "an", "potentials": [[230.0, 0.0]], "voltages": [[230.0, 0.0]]}
 
         The results dictionary of the network contains the results of all of its elements grouped
         by the element type. It has the form::
 
             {
                 "buses": [bus1_dict, bus2_dict, ...],
-                "branches": [branch1_dict, branch2_dict, ...],
+                "lines": [line1_dict, line2_dict, ...],
+                "transformers": [transformer1_dict, transformer2_dict, ...],
+                "switches": [switch1_dict, switch2_dict, ...],
                 "loads": [load1_dict, load2_dict, ...],
                 "sources": [source1_dict, source2_dict, ...],
                 "grounds": [ground1_dict, ground2_dict, ...],
@@ -187,10 +193,17 @@ class JsonMixin(metaclass=ABCMeta):
             }
 
         where each dict is produced by the element's `results_to_dict()` method.
-        """
-        return self._results_to_dict(warning=True)
 
-    def results_to_json(self, path: StrPath) -> Path:
+        Args:
+            full:
+                If `True`, all the results are added in the resulting dictionary. `False` by default.
+
+        Returns:
+            The dictionary of results.
+        """
+        return self._results_to_dict(warning=True, full=full)
+
+    def results_to_json(self, path: StrPath, *, full: bool = False) -> Path:
         """Write the results of the load flow to a json file.
 
         .. note::
@@ -206,10 +219,14 @@ class JsonMixin(metaclass=ABCMeta):
             path:
                 The path to the output file to write the results to.
 
+            full:
+                If `True`, all the results are added in the resulting dictionary, including results computed from other
+                results (such as voltages that could be computed from potentials). `False` by default.
+
         Returns:
             The expanded and resolved path of the written file.
         """
-        dict_results = self._results_to_dict(warning=True)
+        dict_results = self._results_to_dict(warning=True, full=full)
         output = json.dumps(dict_results, indent=4, default=_json_encoder_default)
         output = re.sub(r"\[\s+(.*),\s+(.*)\s+]", r"[\1, \2]", output)
         path = Path(path).expanduser().resolve()

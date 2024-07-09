@@ -4,8 +4,8 @@ from roseau.load_flow.models import Bus, Transformer, TransformerParameters
 
 
 def test_res_violated():
-    bus1 = Bus("bus1", phases="abc")
-    bus2 = Bus("bus2", phases="abcn")
+    bus1 = Bus(id="bus1", phases="abc")
+    bus2 = Bus(id="bus2", phases="abcn")
     tp = TransformerParameters.from_open_and_short_circuit_tests(
         id="tp", psc=1350.0, p0=145.0, i0=1.8 / 100, ulv=400, uhv=20000, sn=50 * 1e3, vsc=4 / 100, type="yzn11"
     )
@@ -39,8 +39,8 @@ def test_res_violated():
 
 
 def test_transformer_results():
-    bus1 = Bus("bus1", phases="abc")
-    bus2 = Bus("bus2", phases="abcn")
+    bus1 = Bus(id="bus1", phases="abc")
+    bus2 = Bus(id="bus2", phases="abcn")
     tp = TransformerParameters.from_open_and_short_circuit_tests(
         id="tp", psc=1350, p0=145, i0=0.018, ulv=400, uhv=20e3, sn=50e3, vsc=0.04, type="yzn11"
     )

@@ -1,5 +1,6 @@
 {
-  "version": 1,
+  "version": 2,
+  "is_multiphase": true,
   "grounds": [
     {
       "id": "ground",
@@ -35,12 +36,12 @@
       }
     }
   ],
-  "branches": [
+  "lines": [],
+  "transformers": [],
+  "switches": [
     {
       "id": "switch1",
-      "type": "switch",
-      "phases1": "abcn",
-      "phases2": "abcn",
+      "phases": "abcn",
       "bus1": 1,
       "bus2": 2,
       "geometry": {

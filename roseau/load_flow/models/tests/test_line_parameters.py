@@ -42,7 +42,7 @@ def test_line_parameters():
     y_shunt = 2 * np.eye(3, dtype=complex)
     y_shunt[1, 1] = -3
     with pytest.raises(RoseauLoadFlowException):
-        LineParameters("test", z_line=z_line, y_shunt=y_shunt)
+        LineParameters(id="test", z_line=z_line, y_shunt=y_shunt)
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_Z_LINE_VALUE
     assert e.value.msg == "The z_line matrix of line type 'test' has coefficients with negative real part."
 
@@ -50,16 +50,16 @@ def test_line_parameters():
     z_line = np.eye(4, dtype=complex)[:, :2]
     y_shunt = np.eye(4, dtype=complex)
     with pytest.raises(RoseauLoadFlowException) as e:
-        LineParameters("test", z_line=z_line, y_shunt=y_shunt)
+        LineParameters(id="test", z_line=z_line, y_shunt=y_shunt)
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_Z_LINE_SHAPE
     assert e.value.msg == "The z_line matrix of line type 'test' has incorrect dimensions (4, 2)."
 
     # Bad shape (LV - Y)
     z_line = np.eye(4, dtype=complex)
     y_shunt = np.eye(3, dtype=complex)
-    lp = LineParameters("test", z_line=z_line, y_shunt=y_shunt)
+    lp = LineParameters(id="test", z_line=z_line, y_shunt=y_shunt)
     with pytest.raises(RoseauLoadFlowException) as e:
-        Line("line1", bus1, bus2, phases="abcn", ground=ground, parameters=lp, length=2.4)
+        Line(id="line1", bus1=bus1, bus2=bus2, phases="abcn", ground=ground, parameters=lp, length=2.4)
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_Y_SHUNT_SHAPE
     assert e.value.msg == "Incorrect y_shunt dimensions for line 'line1': (3, 3) instead of (4, 4)"
 
@@ -74,9 +74,9 @@ def test_line_parameters():
     # Bad shape (MV - Y)
     z_line = np.eye(3, dtype=complex)
     y_shunt = np.eye(6, dtype=complex)
-    lp = LineParameters("test", z_line=z_line, y_shunt=y_shunt)
+    lp = LineParameters(id="test", z_line=z_line, y_shunt=y_shunt)
     with pytest.raises(RoseauLoadFlowException) as e:
-        Line("line2", bus1, bus2, phases="abc", ground=ground, parameters=lp, length=2.4)
+        Line(id="line2", bus1=bus1, bus2=bus2, phases="abc", ground=ground, parameters=lp, length=2.4)
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_Y_SHUNT_SHAPE
     assert e.value.msg == "Incorrect y_shunt dimensions for line 'line2': (6, 6) instead of (3, 3)"
 
@@ -85,16 +85,16 @@ def test_line_parameters():
     y_shunt = np.eye(3, dtype=complex)
     lp = LineParameters("test", z_line=z_line, y_shunt=y_shunt)
     with pytest.raises(RoseauLoadFlowException) as e:
-        Line("line3", bus1, bus2, phases="abcn", ground=ground, parameters=lp, length=2.4)
+        Line(id="line3", bus1=bus1, bus2=bus2, phases="abcn", ground=ground, parameters=lp, length=2.4)
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_Z_LINE_SHAPE
     assert e.value.msg == "Incorrect z_line dimensions for line 'line3': (3, 3) instead of (4, 4)"
 
     # Adding/Removing a shunt to a line is not allowed
     mat = np.eye(3, dtype=complex)
-    lp1 = LineParameters("lp1", z_line=mat.copy(), y_shunt=mat.copy())
-    lp2 = LineParameters("lp2", z_line=mat.copy())
-    bus1 = Bus("bus1", phases="abc")
-    bus2 = Bus("bus2", phases="abc")
+    lp1 = LineParameters(id="lp1", z_line=mat.copy(), y_shunt=mat.copy())
+    lp2 = LineParameters(id="lp2", z_line=mat.copy())
+    bus1 = Bus(id="bus1", phases="abc")
+    bus2 = Bus(id="bus2", phases="abc")
     ground = Ground("ground")
     line1 = Line(id="line1", bus1=bus1, bus2=bus2, parameters=lp1, length=1.0, ground=ground)
     line2 = Line(id="line2", bus1=bus1, bus2=bus2, parameters=lp2, length=1.0, ground=None)
@@ -180,7 +180,7 @@ def test_geometry():
 
     # Working example
     z_line, y_shunt, line_type, conductor_type, insulator_type, section = LineParameters._from_geometry(
-        "test",
+        id="test",
         line_type=LineType.UNDERGROUND,
         conductor_type=ConductorType.AL,
         insulator_type=InsulatorType.PVC,
@@ -247,7 +247,7 @@ def test_sym():
     # line_data = {"id": "NKBA NOR  25.00 kV", "un": 25000.0, "in": 277.0000100135803}
 
     z_line, y_shunt = LineParameters._sym_to_zy(
-        "NKBA NOR  25.00 kV", z0=0.0j, z1=1.0 + 1.0j, zn=0.0j, zpn=0.0j, y0=0.0j, y1=1e-06j, bn=0.0, bpn=0.0
+        id="NKBA NOR  25.00 kV", z0=0.0j, z1=1.0 + 1.0j, zn=0.0j, zpn=0.0j, y0=0.0j, y1=1e-06j, bn=0.0, bpn=0.0
     )
     z_line_expected = (1 + 1j) * np.eye(3)
     npt.assert_allclose(z_line, z_line_expected)
@@ -257,7 +257,7 @@ def test_sym():
     # line_data = {"id": "NKBA 4x150   1.00 kV", "un": 1000.0, "in": 361.0000014305115}
     # Downgraded model because of PwF bad data
     z_line, y_shunt = LineParameters._sym_to_zy(
-        "NKBA 4x150   1.00 kV",
+        id="NKBA 4x150   1.00 kV",
         z0=0.5 + 0.3050000071525574j,
         z1=0.125 + 0.0860000029206276j,
         zn=0.0j,
@@ -283,7 +283,7 @@ def test_sym():
     # line_data = {"id": "sym_neutral_underground_line_example", "un": 400.0, "in": 150}
 
     z_line, y_shunt = LineParameters._sym_to_zy(
-        "sym_neutral_underground_line_example",
+        id="sym_neutral_underground_line_example",
         z0=0.188 + 0.8224j,
         z1=0.188 + 0.0812j,
         zn=0.4029 + 0.3522j,
@@ -316,7 +316,7 @@ def test_sym():
     # line_data = {"id": "sym_line_example", "un": 20000.0, "in": 309}
 
     z_line, y_shunt = LineParameters._sym_to_zy(
-        "sym_line_example", z0=0.2 + 0.1j, z1=0.2 + 0.1j, zn=0.4029, y0=0.00014106j, y1=0.00014106j
+        id="sym_line_example", z0=0.2 + 0.1j, z1=0.2 + 0.1j, zn=0.4029, y0=0.00014106j, y1=0.00014106j
     )
     z_line_expected = (0.2 + 0.1j) * np.eye(3)
     npt.assert_allclose(z_line, z_line_expected)
@@ -362,7 +362,7 @@ def test_catalogue_data():
     assert catalogue_data["name"].is_unique, "Regenerate catalogue."
 
     for row in catalogue_data.itertuples():
-        assert re.match(r"^(?:U|O|T)_[A-Z]+_\d+(?:_\w+)?$", row.name)
+        assert re.match(r"^[UOT]_[A-Z]+_\d+(?:_\w+)?$", row.name)
         assert isinstance(row.r, float)
         assert isinstance(row.x, float)
         assert isinstance(row.b, float)
@@ -484,10 +484,10 @@ def test_get_catalogue():
 
 
 def test_max_current():
-    lp = LineParameters("test", z_line=np.eye(3))
+    lp = LineParameters(id="test", z_line=np.eye(3))
     assert lp.max_current is None
 
-    lp = LineParameters("test", z_line=np.eye(3), max_current=100)
+    lp = LineParameters(id="test", z_line=np.eye(3), max_current=100)
     assert lp.max_current == Q_(100, "A")
 
     lp.max_current = 200
@@ -501,7 +501,7 @@ def test_max_current():
 
 
 def test_json_serialization(tmp_path):
-    lp = LineParameters("test", z_line=np.eye(3), max_current=np.int64(100), section=np.float64(150))
+    lp = LineParameters(id="test", z_line=np.eye(3), max_current=np.int64(100), section=np.float64(150))
     path = tmp_path / "lp.json"
     lp.to_json(path)
     lp_dict = LineParameters.from_json(path).to_dict()
