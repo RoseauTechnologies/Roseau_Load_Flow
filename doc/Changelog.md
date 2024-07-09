@@ -40,6 +40,7 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 - {gh-pr}`235` Replace the occurrences of the `str.find` method by the `str.index` function.
 - {gh-pr}`235` The method `to_graph` of the class `ElectricalNetwork` now retrieves a graph with additional data store in the edges depending on the edge type: line,
   transformer or switch.
+- {gh-pr}`236` Improvements of the Sphinx configuration.
 
 ## Version 0.9.1
 
