@@ -32,11 +32,13 @@ og:description: See what's new in the latest release of Roseau Load Flow !
     - The accessor `res_branches` is removed from the class `ElectricalNetwork`. Please use `res_lines`,
       `res_transformers` or `res_switches`.
     - A key `"is_multiphase"` has also been added in the JSON file format for a future single-phase format.
+    - The `"potentials"` of loads and sources are always stored in the `"results"` section of the JSON file.
+      Previously, it was stored when the load or the source has a floating neutral only.
   - The method `results_to_dict` now accepts the argument `full` which allow the export of all the results of an
     element.
   - Solve a bug concerning the accessors to the flexible powers result of flexible power loads. An unwanted error was
     raised.
-  - Solve a bug when updating JSON file format. The short-circuits were unfortunately removed.
+  - Replace the occurrences of the `str.find` method by the `str.index` function.
 
 ## Version 0.9.1
 
