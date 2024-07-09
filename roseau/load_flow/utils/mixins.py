@@ -203,7 +203,7 @@ class JsonMixin(metaclass=ABCMeta):
         """
         return self._results_to_dict(warning=True, full=full)
 
-    def results_to_json(self, path: StrPath, full: bool = False) -> Path:
+    def results_to_json(self, path: StrPath, *, full: bool = False) -> Path:
         """Write the results of the load flow to a json file.
 
         .. note::

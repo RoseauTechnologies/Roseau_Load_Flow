@@ -139,6 +139,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
     #
     def __init__(
         self,
+        *,
         buses: MapOrSeq[Bus],
         lines: MapOrSeq[Line],
         transformers: MapOrSeq[Transformer],
