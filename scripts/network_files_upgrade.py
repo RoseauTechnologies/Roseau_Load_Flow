@@ -6,16 +6,19 @@ from roseau.load_flow import ElectricalNetwork, RoseauLoadFlowException
 
 PROJECT_ROOT = Path(__file__).parent.parent
 TEST_DATA_DIR = PROJECT_ROOT / "roseau" / "load_flow" / "tests" / "data"
+MODELS_TEST_DATA_DIR = PROJECT_ROOT / "roseau" / "load_flow" / "models" / "tests" / "data"
 DATA_DIR = PROJECT_ROOT / "roseau" / "load_flow" / "data" / "networks"
 
 
 def all_network_paths() -> Generator[Path, None, None]:
     # Test networks
-    yield from (TEST_DATA_DIR / "networks").glob("**/network*.json")
+    yield from (TEST_DATA_DIR / "networks").glob("**/*network*.json")
     # Benchmark networks
     yield from (TEST_DATA_DIR / "benchmark").glob("**/network*.json")
     # Package data
     yield from DATA_DIR.glob("[!Catalogue]*.json")
+    # Models test data
+    yield from MODELS_TEST_DATA_DIR.glob("*.json")
 
 
 def upgrade_network(path: Path) -> None:

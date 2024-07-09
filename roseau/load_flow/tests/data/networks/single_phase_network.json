@@ -1,5 +1,6 @@
 {
-  "version": 1,
+  "version": 2,
+  "is_multiphase": true,
   "grounds": [
     {
       "id": "ground",
@@ -53,14 +54,14 @@
       }
     }
   ],
-  "branches": [
+  "lines": [
     {
       "id": "line",
-      "type": "line",
-      "phases1": "bn",
-      "phases2": "bn",
+      "phases": "bn",
       "bus1": "bus0",
       "bus2": "bus1",
+      "length": 1.0,
+      "params_id": "test",
       "geometry": {
         "type": "LineString",
         "coordinates": [
@@ -77,11 +78,11 @@
           [-0.005000025000117603, -0.0],
           [0.005000025000125, -0.0]
         ]
-      },
-      "length": 1.0,
-      "params_id": "test"
+      }
     }
   ],
+  "transformers": [],
+  "switches": [],
   "loads": [
     {
       "id": "load",
@@ -92,6 +93,10 @@
         "currents": [
           [0.005000025000250002, -0.0],
           [-0.005000025000250002, 0.0]
+        ],
+        "potentials": [
+          [19999.899999499998, 0.0],
+          [0.0, 0.0]
         ]
       }
     }
@@ -106,6 +111,10 @@
         "currents": [
           [-0.005000025000125, 0.0],
           [0.005000025000125, 0.0]
+        ],
+        "potentials": [
+          [19999.94999975, 0.0],
+          [-0.050000250001249996, 0.0]
         ]
       }
     }
