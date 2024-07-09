@@ -489,7 +489,7 @@ def v0_to_v1_converter(data: JsonDict) -> JsonDict:  # noqa: C901
         branch["phases2"] = phases2
         branches.append(branch)
 
-    results = {
+    return {
         "version": 1,
         "grounds": grounds,
         "potential_refs": potential_refs,
@@ -500,10 +500,6 @@ def v0_to_v1_converter(data: JsonDict) -> JsonDict:  # noqa: C901
         "lines_params": list(lines_params.values()),
         "transformers_params": list(transformers_params.values()),
     }
-    if "short_circuits" in data:
-        results["short_circuits"] = data["short_circuits"]
-
-    return results
 
 
 def v1_to_v2_converter(data: JsonDict) -> JsonDict:
