@@ -19,26 +19,25 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
-- {gh-pr}`235` **BREAKING CHANGE**: Several improvements of the JSON file format and of the serialization methods.
-  - Move the `Switch` class into its own file `roseau/load_flow/models/switches.py`.
-  - The JSON file format number is upgraded to the version 2. In this version:
-    - The `"branches"` key is replaced by the keys `"lines"`, `"transformers"` and `"switches"` to split the different
-      types of branches.
-    - The key `"type"` in each branch is not necessary anymore and is then removed.
-    - The keys `"phases1"` and `"phases2"` are removed in favour of the key `"phases"` for the lines and switches.
-    - The key `"powers"` in the results part of a flexible power load is renamed `"flexible_powers"` to avoid confusion.
-    - The constructor of an `ElectricalNetwork` now takes the arguments `lines`, `transformers` and `switches` instead
-      of the parameters `branches`.
-    - The accessor `res_branches` is removed from the class `ElectricalNetwork`. Please use `res_lines`,
-      `res_transformers` or `res_switches`.
-    - A key `"is_multiphase"` has also been added in the JSON file format for a future single-phase format.
-    - The `"potentials"` of loads and sources are always stored in the `"results"` section of the JSON file.
-      Previously, it was stored when the load or the source has a floating neutral only.
-  - The method `results_to_dict` now accepts the argument `full` which allow the export of all the results of an
-    element.
-  - Solve a bug concerning the accessors to the flexible powers result of flexible power loads. An unwanted error was
-    raised.
-  - Replace the occurrences of the `str.find` method by the `str.index` function.
+- {gh-pr}`235` **BREAKING CHANGE**: The constructor of the class `ElectricalNetwork` has changed:
+  - it accepts keyword arguments only.
+  - it accepts the arguments `lines`, `transformers` and `switches` in replacement of the argument `branches`.
+  - As a consequence,
+    - the results method `res_branches` has been removed. Please use `res_lines`, `res_transformers`
+      and `res_switches` methods instead.
+    - the field `branches` does not exist anymore. Please use the fields `lines`, `transformers` and `switches`.
+- {gh-pr}`235` Move the `Switch` class into its own file `roseau/load_flow/models/switches.py`.
+- {gh-pr}`235` The JSON file format number is upgraded to the version 2. All the files in version 0 or 1 can still be
+  read. Please upgrade them manually using the following code:
+  ```python
+  path = "my_json_file.json"
+  ElectricalNetwork.from_json(path).to_json(path)
+  ```
+- {gh-pr}`235` The method `results_to_dict` now accepts the keyword-only argument `full` which allows the export of all
+  the results of an element.
+- {gh-pr}`235` Solve a bug concerning the accessors to the flexible powers result of flexible power loads. An unwanted
+  error was raised.
+- {gh-pr}`235` Replace the occurrences of the `str.find` method by the `str.index` function.
 
 ## Version 0.9.1
 

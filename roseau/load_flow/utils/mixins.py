@@ -218,8 +218,10 @@ class JsonMixin(metaclass=ABCMeta):
         Args:
             path:
                 The path to the output file to write the results to.
+
             full:
-                If `True`, all the results are added in the resulting dictionary. `False` by default.
+                If `True`, all the results are added in the resulting dictionary, including results computed from other
+                results (such as voltages that could be computed from potentials). `False` by default.
 
         Returns:
             The expanded and resolved path of the written file.
