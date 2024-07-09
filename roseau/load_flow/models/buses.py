@@ -427,7 +427,7 @@ class Bus(Element):
         if self.network is not None:
             self.network._valid = False
 
-        phases_index = np.array([self.phases.find(p) for p in phases], dtype=np.int32)
+        phases_index = np.array([self.phases.index(p) for p in phases], dtype=np.int32)
         self._cy_element.connect_ports(phases_index, len(phases))
 
         if ground is not None:

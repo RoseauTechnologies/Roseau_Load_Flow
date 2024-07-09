@@ -71,7 +71,7 @@ class PotentialRef(Element):
             if isinstance(element, Ground):
                 element._cy_element.connect(self._cy_element, [(0, 0)])
             else:
-                p = element.phases.find(self.phase)
+                p = element.phases.index(self.phase)
                 element._cy_element.connect(self._cy_element, [(p, 0)])
 
     def __repr__(self) -> str:

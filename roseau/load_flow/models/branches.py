@@ -156,7 +156,7 @@ class AbstractBranch(Element):
         assert isinstance(self.bus1, Bus)
         for i, phase in enumerate(self.phases1):
             if phase in self.bus1.phases:
-                j = self.bus1.phases.find(phase)
+                j = self.bus1.phases.index(phase)
                 connections.append((i, j))
         self._cy_element.connect(self.bus1._cy_element, connections, True)
 
@@ -164,7 +164,7 @@ class AbstractBranch(Element):
         assert isinstance(self.bus2, Bus)
         for i, phase in enumerate(self.phases2):
             if phase in self.bus2.phases:
-                j = self.bus2.phases.find(phase)
+                j = self.bus2.phases.index(phase)
                 connections.append((i, j))
         self._cy_element.connect(self.bus2._cy_element, connections, False)
 

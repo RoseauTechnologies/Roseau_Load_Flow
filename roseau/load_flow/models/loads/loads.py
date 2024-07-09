@@ -187,7 +187,7 @@ class AbstractLoad(Element, ABC):
         connections = []
         for i, phase in enumerate(self.bus.phases):
             if phase in self.phases:
-                j = self.phases.find(phase)
+                j = self.phases.index(phase)
                 connections.append((i, j))
         self.bus._cy_element.connect(self._cy_element, connections)
 

@@ -89,7 +89,7 @@ class Ground(Element):
             raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.BAD_PHASE)
         self._connect(bus)
         self._connected_buses[bus.id] = phase
-        p = bus.phases.find(phase)
+        p = bus.phases.index(phase)
         bus._cy_element.connect(self._cy_element, [(p, 0)])
 
     #
