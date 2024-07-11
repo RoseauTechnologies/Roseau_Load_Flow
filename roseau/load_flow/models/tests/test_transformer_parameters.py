@@ -360,7 +360,7 @@ def test_catalogue_data():
     # Check that the name is unique
     assert catalogue_data["name"].is_unique, error_message
 
-    catalogue_data.set_index("name", inplace=True)
+    catalogue_data.set_index(keys=["name"], inplace=True)
     for idx in catalogue_data.index:
         tp = TransformerParameters.from_catalogue(name=idx)
 
@@ -376,6 +376,9 @@ def test_catalogue_data():
         assert np.isclose(tp.i0.m, catalogue_data.at[tp.id, "i0"])
         assert np.isclose(tp.psc.m, catalogue_data.at[tp.id, "psc"])
         assert np.isclose(tp.vsc.m, catalogue_data.at[tp.id, "vsc"])
+        assert tp.manufacturer == catalogue_data.at[tp.id, "manufacturer"]
+        assert tp.range == catalogue_data.at[tp.id, "range"]
+        assert tp.efficiency == catalogue_data.at[tp.id, "efficiency"]
 
         # Check that the parameters are valid
         assert isinstance(tp.z2.m, numbers.Complex)
@@ -548,6 +551,7 @@ def test_from_open_dss():
     sn = Q_(1800, "kVA")
     tp_rlf = TransformerParameters.from_open_and_short_circuit_tests(
         id="tp-test",
+        # Electrical parameters
         type="Dyn11",
         uhv=Q_(33, "kV"),
         ulv=Q_(0.405, "kV"),
@@ -556,10 +560,15 @@ def test_from_open_dss():
         i0=Q_(0.3, "percent"),
         psc=Q_(0.902, "percent") * sn,
         vsc=Q_(6, "percent"),
+        # Optional parameters
+        manufacturer="Roseau",
+        range="Tech+",
+        efficiency="Wonderful",
     )
 
     tp_dss = TransformerParameters.from_open_dss(
         id="tp-test",
+        # Electrical parameters
         conns=("delta", "wye"),
         kvs=(33, 0.405),
         kvas=1800,
@@ -568,7 +577,13 @@ def test_from_open_dss():
         loadloss=0.902,
         noloadloss=0.136,
         imag=0.3,
+        # Optional parameters
+        manufacturer="Roseau",
+        range="Tech+",
+        efficiency="Wonderful",
     )
+
+    # Electrical parameters
     assert tp_rlf.uhv == tp_dss.uhv
     assert tp_rlf.ulv == tp_dss.ulv
     assert tp_rlf.sn == tp_dss.sn
@@ -577,11 +592,17 @@ def test_from_open_dss():
     np.testing.assert_allclose(tp_rlf.z2.m, tp_dss.z2.m)
     np.testing.assert_allclose(tp_rlf.ym.m, tp_dss.ym.m)
 
+    # Optional parameters
+    assert tp_rlf.manufacturer == tp_dss.manufacturer
+    assert tp_rlf.range == tp_dss.range
+    assert tp_rlf.efficiency == tp_dss.efficiency
+
 
 def test_from_power_factory():
     # Parameters from tests/data/dgs/MV_LV_Transformer.json
     tp_pwf = TransformerParameters.from_power_factory(
         id="Transformer 100 kVA Dyn11",
+        # Electrical parameters
         tech=3,  # Three Phase Transformer
         sn=0.1,  # MVA
         uhv=20,  # kV
@@ -593,9 +614,14 @@ def test_from_power_factory():
         pc=2.15,  # Psc (kW)
         curmg=2.5,  # i0 (%)
         pfe=0.21,  # P0 (kW)
+        # Optional parameters
+        manufacturer="Roseau",
+        range="Tech+",
+        efficiency="Wonderful",
     )
     tp_rlf = TransformerParameters.from_open_and_short_circuit_tests(
         id="Transformer 100 kVA Dyn11",
+        # Electrical parameters
         type="Dyn11",
         uhv=Q_(20, "kV"),
         ulv=Q_(0.4, "kV"),
@@ -605,8 +631,13 @@ def test_from_power_factory():
         psc=Q_(2.15, "kW"),
         vsc=Q_(4, "percent"),
         max_power=Q_(0.1, "MVA"),  # 100% of nominal power by default in PwF
+        # Optional parameters
+        manufacturer="Roseau",
+        range="Tech+",
+        efficiency="Wonderful",
     )
 
+    # Electrical parameters
     assert tp_pwf.uhv == tp_rlf.uhv
     assert tp_pwf.ulv == tp_rlf.ulv
     assert tp_pwf.sn == tp_rlf.sn
@@ -615,3 +646,8 @@ def test_from_power_factory():
     assert tp_pwf.max_power == tp_rlf.max_power
     np.testing.assert_allclose(tp_pwf.z2.m, tp_rlf.z2.m)
     np.testing.assert_allclose(tp_pwf.ym.m, tp_rlf.ym.m)
+
+    # Optional parameters
+    assert tp_pwf.manufacturer == tp_rlf.manufacturer
+    assert tp_pwf.range == tp_rlf.range
+    assert tp_pwf.efficiency == tp_rlf.efficiency

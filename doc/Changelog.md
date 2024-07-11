@@ -39,8 +39,9 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 - {gh-pr}`235` Solve a bug concerning the accessors to the flexible powers result of flexible power loads. An unwanted
   error was raised.
 - {gh-pr}`235` Replace the occurrences of the `str.find` method by the `str.index` function.
-- {gh-pr}`235` The method `to_graph` of the class `ElectricalNetwork` now retrieves a graph with additional data store in the edges depending on the edge type: line,
-  transformer or switch.
+- {gh-pr}`235` The method `to_graph` of the class `ElectricalNetwork` now retrieves a graph with additional data store
+  in the edges depending on the edge type: line, transformer or switch.
+- {gh-pr}`240` Add optional data to the `TransformerParameters` class: manufacturer, efficiency and range.
 
 ## Version 0.9.1
 

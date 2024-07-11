@@ -34,7 +34,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
     )
     """The pattern to extract the winding of the primary and of the secondary of the transformer."""
 
-    @ureg_wraps(None, (None, None, None, "V", "V", "VA", "ohm", "S", "VA"))
+    @ureg_wraps(None, (None, None, None, "V", "V", "VA", "ohm", "S", "VA", None, None, None))
     def __init__(
         self,
         id: Id,
@@ -45,6 +45,9 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         z2: complex | Q_[complex],
         ym: complex | Q_[complex],
         max_power: float | Q_[float] | None = None,
+        manufacturer: str | None = None,
+        range: str | None = None,
+        efficiency: str | None = None,
     ) -> None:
         """TransformerParameters constructor.
 
@@ -74,6 +77,15 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
 
             max_power:
                 The maximum power loading of the transformer (VA). It is not used in the load flow.
+
+            manufacturer:
+                The name of the manufacturer for the transformer. Informative only, it has no impact on the load flow.
+
+            range:
+                The name of the product range for the transformer. Informative only, it has no impact on the load flow.
+
+            efficiency:
+                The efficiency class of the transformer. Informative only, it has no impact on the load flow.
         """
         super().__init__(id)
 
@@ -91,6 +103,9 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         self._ulv: float = ulv
         self._z2: complex = z2
         self._ym: complex = ym
+        self._manufacturer: str = manufacturer
+        self._range: str = range
+        self._efficiency: str = efficiency
 
         if type in ("single", "center"):
             winding1 = winding2 = phase_displacement = None
@@ -126,8 +141,8 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
 
     def __repr__(self) -> str:
         s = (
-            f"<{type(self).__name__}: id={self.id!r}, type={self.type!r}"
-            f", sn={self._sn}, uhv={self._uhv}, ulv={self._ulv}"
+            f"<{type(self).__name__}: id={self.id!r}, type={self.type!r}, sn={self._sn}, uhv={self._uhv}, "
+            f"ulv={self._ulv}"
         )
         for attr, val, tp in (
             ("max_power", self._max_power, float),
@@ -135,6 +150,9 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             ("i0", self._i0, float),
             ("psc", self._psc, float),
             ("vsc", self._vsc, float),
+            ("manufacturer", self._manufacturer, str),
+            ("range", self._range, str),
+            ("efficiency", self._efficiency, str),
         ):
             if val is not None:
                 s += f", {attr}={tp(val)!r}"
@@ -226,6 +244,21 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         """Voltages on LV side during short-circuit test (%)."""
         return None if self._vsc is None else Q_(self._vsc, "")
 
+    @property
+    def manufacturer(self) -> str | None:
+        """The name of the manufacturer for the transformer. Informative only, it has no impact on the load flow."""
+        return self._manufacturer
+
+    @property
+    def range(self) -> str | None:
+        """The name of the product range for the transformer. Informative only, it has no impact on the load flow."""
+        return self._range
+
+    @property
+    def efficiency(self) -> str | None:
+        """The efficiency class of the transformer. Informative only, it has no impact on the load flow."""
+        return self._efficiency
+
     @deprecated(
         "The to_zyk method of TransformerParameters is deprecated. The parameters"
         "`z2`, `ym`, `k`, and `orientation` are now accessible on the object directly",
@@ -302,6 +335,9 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             "percent",
             "kW",
             "percent",
+            None,
+            None,
+            None,
         ),
     )
     def from_power_factory(
@@ -320,6 +356,9 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         curmg: float | Q_[float],
         pfe: float | Q_[float],
         maxload: float | Q_[float] | None = 100,
+        manufacturer: str | None = None,
+        range: str | None = None,
+        efficiency: str | None = None,
     ) -> Self:
         """Create a transformer parameters object from PowerFactory "TypTr2" data.
 
@@ -381,6 +420,15 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
                 element (`ElmTr2`) in PwF instead of the transformer type (`TypTr2`).
                 This is used to compute `max_current` and is used for violation checks.
 
+            manufacturer:
+                The name of the manufacturer for the transformer. Informative only, it has no impact on the load flow.
+
+            range:
+                The name of the product range for the transformer. Informative only, it has no impact on the load flow.
+
+            efficiency:
+                The efficiency class of the transformer. Informative only, it has no impact on the load flow.
+
         Returns:
             The corresponding transformer parameters object.
         """
@@ -407,12 +455,41 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
 
         max_power = (sn * maxload / 100) if maxload is not None else None
 
-        obj = cls(id=id, type=type, uhv=uhv, ulv=ulv, sn=sn, z2=z2, ym=ym, max_power=max_power)
+        obj = cls(
+            id=id,
+            type=type,
+            uhv=uhv,
+            ulv=ulv,
+            sn=sn,
+            z2=z2,
+            ym=ym,
+            max_power=max_power,
+            manufacturer=manufacturer,
+            range=range,
+            efficiency=efficiency,
+        )
         return obj
 
     @classmethod
     @ureg_wraps(
-        None, (None, None, None, "kV", "kVA", None, "percent", "percent", "percent", "percent", "percent", "kVA")
+        None,
+        (
+            None,
+            None,
+            None,
+            "kV",
+            "kVA",
+            None,
+            "percent",
+            "percent",
+            "percent",
+            "percent",
+            "percent",
+            "kVA",
+            None,
+            None,
+            None,
+        ),
     )
     def from_open_dss(
         cls,
@@ -428,6 +505,9 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         imag: float | Q_[float] = 0,
         rs: float | Q_[float] | tuple[float, float] | FloatArrayLike1D | None = None,
         normhkva: float | Q_[float] | None = None,
+        manufacturer: str | None = None,
+        range: str | None = None,
+        efficiency: str | None = None,
     ) -> Self:
         """Create a transformer parameters object from OpenDSS "Transformer" data.
 
@@ -481,6 +561,15 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
                 OpenDSS parameter: `NormHKVA`. Normal maximum kVA rating for H winding (1). Usually
                 100 - 110% of maximum nameplate rating.
                 This value is passed to `max_current` and used for violation checks.
+
+            manufacturer:
+                The name of the manufacturer for the transformer. Informative only, it has no impact on the load flow.
+
+            range:
+                The name of the product range for the transformer. Informative only, it has no impact on the load flow.
+
+            efficiency:
+                The efficiency class of the transformer. Informative only, it has no impact on the load flow.
 
         Returns:
             The corresponding transformer parameters object.
@@ -582,14 +671,26 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         # Max power
         max_power = normhkva * 1000 if normhkva is not None else None
 
-        obj = cls(id=id, type=type, uhv=uhv, ulv=ulv, sn=sn, z2=z2, ym=ym, max_power=max_power)
+        obj = cls(
+            id=id,
+            type=type,
+            uhv=uhv,
+            ulv=ulv,
+            sn=sn,
+            z2=z2,
+            ym=ym,
+            max_power=max_power,
+            manufacturer=manufacturer,
+            range=range,
+            efficiency=efficiency,
+        )
         return obj
 
     #
     # Open and short circuit tests
     #
     @classmethod
-    @ureg_wraps(None, (None, None, None, "V", "V", "VA", "W", "", "W", "", "VA"))
+    @ureg_wraps(None, (None, None, None, "V", "V", "VA", "W", "", "W", "", "VA", None, None, None))
     def from_open_and_short_circuit_tests(
         cls,
         id: Id,
@@ -602,6 +703,9 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         psc: float | Q_[float],
         vsc: float | Q_[float],
         max_power: float | Q_[float] | None = None,
+        manufacturer: str | None = None,
+        range: str | None = None,
+        efficiency: str | None = None,
     ) -> Self:
         """Create a TransformerParameters object using the results of open-circuit and short-circuit tests.
 
@@ -637,6 +741,15 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
 
             max_power:
                 The maximum power loading of the transformer (VA). It is not used in the load flow.
+
+            manufacturer:
+                The name of the manufacturer for the transformer. Informative only, it has no impact on the load flow.
+
+            range:
+                The name of the product range for the transformer. Informative only, it has no impact on the load flow.
+
+            efficiency:
+                The efficiency class of the transformer. Informative only, it has no impact on the load flow.
         """
         # Check
         if i0 > 1.0 or i0 < 0.0:
@@ -668,7 +781,19 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
 
         z2, ym = cls._compute_zy(type=type, uhv=uhv, ulv=ulv, sn=sn, p0=p0, i0=i0, psc=psc, vsc=vsc)
 
-        instance = cls(id=id, type=type, uhv=uhv, ulv=ulv, sn=sn, z2=z2, ym=ym, max_power=max_power)
+        instance = cls(
+            id=id,
+            type=type,
+            uhv=uhv,
+            ulv=ulv,
+            sn=sn,
+            z2=z2,
+            ym=ym,
+            max_power=max_power,
+            manufacturer=manufacturer,
+            range=range,
+            efficiency=efficiency,
+        )
         instance._p0 = p0
         instance._i0 = i0
         instance._psc = psc
@@ -819,6 +944,9 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
                 psc=data["psc"],  # Losses during short-circuit test (W)
                 vsc=data["vsc"],  # Voltages on LV side during short-circuit test (%)
                 max_power=data.get("max_power"),  # Maximum power loading (VA)
+                manufacturer=data.get("manufacturer"),  # The manufacturer of the transformer
+                range=data.get("range"),  # The product range of the transformer
+                efficiency=data.get("efficiency"),  # The efficiency class of the transformer
             )
         else:
             z2 = complex(*data["z2"])
@@ -832,6 +960,9 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
                 z2=z2,  # Series impedance (ohm)
                 ym=ym,  # Magnetizing admittance (S)
                 max_power=data.get("max_power"),  # Maximum power loading (VA)
+                manufacturer=data.get("manufacturer"),  # The manufacturer of the transformer
+                range=data.get("range"),  # The product range of the transformer
+                efficiency=data.get("efficiency"),  # The efficiency class of the transformer
             )
 
     def _to_dict(self, include_results: bool) -> JsonDict:
@@ -855,8 +986,14 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             res["psc"] = self._psc
         if self._vsc is not None:
             res["vsc"] = self._vsc
-        if self.max_power is not None:
-            res["max_power"] = self.max_power.magnitude
+        if self._max_power is not None:
+            res["max_power"] = self._max_power
+        if self._manufacturer is not None:
+            res["manufacturer"] = self._manufacturer
+        if self._range is not None:
+            res["range"] = self._range
+        if self._efficiency is not None:
+            res["efficiency"] = self._efficiency
         return res
 
     def _results_to_dict(self, warning: bool, full: bool) -> NoReturn:
@@ -1027,6 +1164,9 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             i0=catalogue_data.at[idx, "i0"],
             psc=catalogue_data.at[idx, "psc"],
             vsc=catalogue_data.at[idx, "vsc"],
+            manufacturer=catalogue_data.at[idx, "manufacturer"],
+            range=catalogue_data.at[idx, "range"],
+            efficiency=catalogue_data.at[idx, "efficiency"],
         )
 
     @classmethod
