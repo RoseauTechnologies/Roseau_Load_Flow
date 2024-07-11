@@ -516,11 +516,25 @@ def v1_to_v2_converter(data: JsonDict) -> JsonDict:
 
     # In the results of flexible PowerLoad, the key "powers" is renamed "flexible_powers"
     # The potentials of loads are always stored in the results part of loads
+    # The key "type" is added
     buses = data.get("buses", [])
     buses_dict = {b["id"]: b for b in buses}
     old_loads = data.get("loads", [])
     loads = []
     for load_data in old_loads:
+        # Add the type
+        if "powers" in load_data:
+            load_data["type"] = "power"
+        elif "currents" in load_data:
+            load_data["type"] = "current"
+        elif "impedances" in load_data:
+            load_data["type"] = "impedance"
+        else:
+            msg = f"Unknown load type for load {load_data['id']!r}"
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LOAD_TYPE)
+
+        # Modify the results
         load_data_result = load_data.get("results", None)
         if load_data_result is not None:
             if "potentials" not in load_data_result:

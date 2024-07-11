@@ -190,48 +190,56 @@
       "id": "LVBus178129_consumption",
       "bus": "LVBus178129",
       "phases": "an",
+      "type": "power",
       "powers": [[0.0, 0.0]]
     },
     {
       "id": "LVBus178129_production",
       "bus": "LVBus178129",
       "phases": "cn",
+      "type": "power",
       "powers": [[0.0, 0.0]]
     },
     {
       "id": "LVBus178131_consumption",
       "bus": "LVBus178131",
       "phases": "cn",
+      "type": "power",
       "powers": [[5000.0, 1700.0]]
     },
     {
       "id": "LVBus178131_production",
       "bus": "LVBus178131",
       "phases": "bn",
+      "type": "power",
       "powers": [[0.0, 0.0]]
     },
     {
       "id": "LVBus178130_consumption",
       "bus": "LVBus178130",
       "phases": "bn",
+      "type": "power",
       "powers": [[5000.0, 1700.0]]
     },
     {
       "id": "LVBus178130_production",
       "bus": "LVBus178130",
       "phases": "cn",
+      "type": "power",
       "powers": [[0.0, 0.0]]
     },
     {
       "id": "LVBus178132_consumption",
       "bus": "LVBus178132",
       "phases": "an",
+      "type": "power",
       "powers": [[5000.0, 1700.0]]
     },
     {
       "id": "LVBus178132_production",
       "bus": "LVBus178132",
       "phases": "bn",
+      "type": "power",
       "powers": [[0.0, 0.0]]
     }
   ],

@@ -99,12 +99,14 @@
       "id": "LVBus030540_consumption",
       "bus": "LVBus030540",
       "phases": "an",
+      "type": "power",
       "powers": [[21400.0, 7000.0]]
     },
     {
       "id": "LVBus030540_production",
       "bus": "LVBus030540",
       "phases": "cn",
+      "type": "power",
       "powers": [[0.0, 0.0]]
     }
   ],

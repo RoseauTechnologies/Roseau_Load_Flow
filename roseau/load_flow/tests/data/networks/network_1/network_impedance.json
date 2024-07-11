@@ -130,6 +130,7 @@
       "id": 1,
       "bus": 3,
       "phases": "abcn",
+      "type": "impedance",
       "impedances": [
         [5.0, 0.0],
         [15.0, 10.0],
@@ -140,6 +141,7 @@
       "id": 2,
       "bus": 5,
       "phases": "abcn",
+      "type": "impedance",
       "impedances": [
         [500.0, 100.0],
         [500.0, 100.0],

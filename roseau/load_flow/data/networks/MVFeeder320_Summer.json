@@ -657,6 +657,7 @@
       "id": "MVLV02667_consumption",
       "bus": "MVLV02667",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [9000.0, 3000.0],
         [9000.0, 3000.0],
@@ -667,6 +668,7 @@
       "id": "MVLV02667_production",
       "bus": "MVLV02667",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [-400.0, 0.0],
         [-400.0, 0.0],
@@ -677,6 +679,7 @@
       "id": "MVLV05633_consumption",
       "bus": "MVLV05633",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [9000.0, 3000.0],
         [9000.0, 3000.0],
@@ -687,6 +690,7 @@
       "id": "MVLV05633_production",
       "bus": "MVLV05633",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [-400.0, 0.0],
         [-400.0, 0.0],
@@ -697,6 +701,7 @@
       "id": "MVLV15887_consumption",
       "bus": "MVLV15887",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [9000.0, 3000.0],
         [9000.0, 3000.0],
@@ -707,6 +712,7 @@
       "id": "MVLV15887_production",
       "bus": "MVLV15887",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [-400.0, 0.0],
         [-400.0, 0.0],
@@ -717,6 +723,7 @@
       "id": "MVLV15889_consumption",
       "bus": "MVLV15889",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [9000.0, 3000.0],
         [9000.0, 3000.0],
@@ -727,6 +734,7 @@
       "id": "MVLV15889_production",
       "bus": "MVLV15889",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [-400.0, 0.0],
         [-400.0, 0.0],
@@ -737,6 +745,7 @@
       "id": "MVLV04536_consumption",
       "bus": "MVLV04536",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [9000.0, 3000.0],
         [9000.0, 3000.0],
@@ -747,6 +756,7 @@
       "id": "MVLV04536_production",
       "bus": "MVLV04536",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [-400.0, 0.0],
         [-400.0, 0.0],
@@ -757,6 +767,7 @@
       "id": "MVLV15900_consumption",
       "bus": "MVLV15900",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [9000.0, 3000.0],
         [9000.0, 3000.0],
@@ -767,6 +778,7 @@
       "id": "MVLV15900_production",
       "bus": "MVLV15900",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [-400.0, 0.0],
         [-400.0, 0.0],

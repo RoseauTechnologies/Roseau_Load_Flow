@@ -103,12 +103,14 @@
       "id": "LVBus110873_consumption",
       "bus": "LVBus110873",
       "phases": "bn",
+      "type": "power",
       "powers": [[12700.0, 4200.0]]
     },
     {
       "id": "LVBus110873_production",
       "bus": "LVBus110873",
       "phases": "an",
+      "type": "power",
       "powers": [[0.0, 0.0]]
     }
   ],

@@ -1358,6 +1358,7 @@
       "id": 1,
       "bus": 3403,
       "phases": "abcn",
+      "type": "impedance",
       "impedances": [
         [1.0, 0.5],
         [1.0, 0.5],
