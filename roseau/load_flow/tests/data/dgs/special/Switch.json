@@ -1,0 +1,163 @@
+{
+  "General": {
+    "Attributes": ["FID", "Descr", "Val"],
+    "Values": [["1", "Version", "7.0"]]
+  },
+  "ElmCoup": {
+    "Attributes": [
+      "FID",
+      "OP",
+      "loc_name",
+      "fold_id",
+      "typ_id",
+      "bus1",
+      "bus2",
+      "nphase",
+      "nneutral",
+      "aUsage",
+      "on_off",
+      "isclosed",
+      "iNeutInter",
+      "GPSlat",
+      "GPSlon"
+    ],
+    "Values": [["2", "C", "Breaker/Switch", "4", null, "12", "10", 3, 0, "cbk", 1, 1, 0, 5.779578, 45.209615]]
+  },
+  "ElmLodmv": {
+    "Attributes": [
+      "FID",
+      "OP",
+      "loc_name",
+      "typ_id",
+      "mode_inp",
+      "ci_sym",
+      "fold_id",
+      "phtech",
+      "bus1",
+      "slini",
+      "plini",
+      "pf_recap",
+      "slinir",
+      "plinir",
+      "pf_recapr",
+      "slinis",
+      "plinis",
+      "pf_recaps",
+      "slinit",
+      "plinit",
+      "pf_recapt",
+      "pgini",
+      "sgini",
+      "pfg_recap",
+      "pginir",
+      "sginir",
+      "pfg_recapr",
+      "pginis",
+      "sginis",
+      "pfg_recaps",
+      "pginit",
+      "sginit",
+      "pfg_recapt",
+      "scale0",
+      "gscale"
+    ],
+    "Values": [
+      [
+        "3",
+        "C",
+        "MV Load",
+        null,
+        "SC",
+        0,
+        "4",
+        "3PH-'D'",
+        "9",
+        0.5,
+        0.475,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0.09,
+        0.1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        1
+      ]
+    ]
+  },
+  "ElmNet": {
+    "Attributes": ["FID", "OP", "loc_name", "fold_id", "frnom"],
+    "Values": [["4", "C", "Grid", null, 50]]
+  },
+  "ElmTerm": {
+    "Attributes": [
+      "FID",
+      "OP",
+      "loc_name",
+      "fold_id",
+      "typ_id",
+      "iUsage",
+      "phtech",
+      "uknom",
+      "outserv",
+      "GPSlat",
+      "GPSlon",
+      "iEarth"
+    ],
+    "Values": [
+      ["5", "C", "Load Bus", "4", null, 0, 0, 20, 0, 0, 0, 0],
+      ["6", "C", "Source Bus", "4", null, 0, 0, 20, 0, 0, 0, 0]
+    ]
+  },
+  "ElmXnet": {
+    "Attributes": [
+      "FID",
+      "OP",
+      "loc_name",
+      "fold_id",
+      "bus1",
+      "bus1n",
+      "cgnd",
+      "iintgnd",
+      "pgini",
+      "qgini",
+      "sgini",
+      "pf_recap",
+      "bustp",
+      "uset_mode",
+      "usetp",
+      "phiini",
+      "p_uctrl"
+    ],
+    "Values": [["7", "C", "External Grid", "4", "11", null, 1, 0, 0, 0, 0, 0, "SL", 0, 1, 0, null]]
+  },
+  "IntCase": {
+    "Attributes": ["FID", "OP", "loc_name", "cpowexp", "campexp", "cpexpshc"],
+    "Values": [["8", "C", "Study Case", "M", "k", "M"]]
+  },
+  "StaCubic": {
+    "Attributes": ["FID", "OP", "loc_name", "fold_id", "cterm", "obj_bus", "obj_id", "nphase", "cPhInfo"],
+    "Values": [
+      ["9", "C", "Cub_2", "5", "5", 0, "3", 3, "abc"],
+      ["10", "C", "Cub_3", "5", "5", 1, "2", 3, "abc"],
+      ["11", "C", "Cub_1", "6", "6", 0, "7", 3, "abc"],
+      ["12", "C", "Cub_2", "6", "6", 0, "2", 3, "abc"]
+    ]
+  }
+}

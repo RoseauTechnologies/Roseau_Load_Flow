@@ -98,3 +98,12 @@ BUS_PHASES: Final[dict[int, str]] = {
     # 7: "an",  # "1PH-N" # which phases?
     # 8: "n",  # "N" # Not allowed in RLF
 }
+
+# Switches
+SWITCH_TYPES: Final[dict[str, str]] = {
+    "cbk": "Circuit-Breaker",
+    "dct": "Disconnector",
+    "sdc": "Switch Disconnector",
+    "swt": "Load-Break-Switch",
+    "dcb": "Disconnecting Circuit-Breaker",
+}
