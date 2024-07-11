@@ -88,6 +88,7 @@
       "id": "load",
       "bus": "bus1",
       "phases": "bn",
+      "type": "power",
       "powers": [[100.0, 0.0]],
       "results": {
         "currents": [

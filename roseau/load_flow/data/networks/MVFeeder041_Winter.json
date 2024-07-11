@@ -2692,6 +2692,7 @@
       "id": "MVLV10063_consumption",
       "bus": "MVLV10063",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [5700.0, 1900.0],
         [5700.0, 1900.0],
@@ -2702,6 +2703,7 @@
       "id": "MVLV10063_production",
       "bus": "MVLV10063",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [0.0, 0.0],
         [0.0, 0.0],
@@ -2712,6 +2714,7 @@
       "id": "MVLV06198_consumption",
       "bus": "MVLV06198",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [5700.0, 1900.0],
         [5700.0, 1900.0],
@@ -2722,6 +2725,7 @@
       "id": "MVLV06198_production",
       "bus": "MVLV06198",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [0.0, 0.0],
         [0.0, 0.0],
@@ -2732,6 +2736,7 @@
       "id": "MVLV10065_consumption",
       "bus": "MVLV10065",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [5700.0, 1900.0],
         [5700.0, 1900.0],
@@ -2742,6 +2747,7 @@
       "id": "MVLV10065_production",
       "bus": "MVLV10065",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [0.0, 0.0],
         [0.0, 0.0],
@@ -2752,6 +2758,7 @@
       "id": "MVLV11613_consumption",
       "bus": "MVLV11613",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [9200.0, 3000.0],
         [9200.0, 3000.0],
@@ -2762,6 +2769,7 @@
       "id": "MVLV11613_production",
       "bus": "MVLV11613",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [0.0, 0.0],
         [0.0, 0.0],
@@ -2772,6 +2780,7 @@
       "id": "MVLV18655_consumption",
       "bus": "MVLV18655",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [5700.0, 1900.0],
         [5700.0, 1900.0],
@@ -2782,6 +2791,7 @@
       "id": "MVLV18655_production",
       "bus": "MVLV18655",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [0.0, 0.0],
         [0.0, 0.0],
@@ -2792,6 +2802,7 @@
       "id": "MVLV18656_consumption",
       "bus": "MVLV18656",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [5700.0, 1900.0],
         [5700.0, 1900.0],
@@ -2802,6 +2813,7 @@
       "id": "MVLV18656_production",
       "bus": "MVLV18656",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [0.0, 0.0],
         [0.0, 0.0],
@@ -2812,6 +2824,7 @@
       "id": "MVLV10064_consumption",
       "bus": "MVLV10064",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [5700.0, 1900.0],
         [5700.0, 1900.0],
@@ -2822,6 +2835,7 @@
       "id": "MVLV10064_production",
       "bus": "MVLV10064",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [0.0, 0.0],
         [0.0, 0.0],
@@ -2832,6 +2846,7 @@
       "id": "MVLV00730_consumption",
       "bus": "MVLV00730",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [10000.0, 3300.0],
         [10000.0, 3300.0],
@@ -2842,6 +2857,7 @@
       "id": "MVLV00730_production",
       "bus": "MVLV00730",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [0.0, 0.0],
         [0.0, 0.0],
@@ -2852,6 +2868,7 @@
       "id": "MVLV08412_consumption",
       "bus": "MVLV08412",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [8400.0, 2700.0],
         [8400.0, 2700.0],
@@ -2862,6 +2879,7 @@
       "id": "MVLV08412_production",
       "bus": "MVLV08412",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [0.0, 0.0],
         [0.0, 0.0],
@@ -2872,6 +2890,7 @@
       "id": "MVLV01638_consumption",
       "bus": "MVLV01638",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [6400.0, 2100.0],
         [6400.0, 2100.0],
@@ -2882,6 +2901,7 @@
       "id": "MVLV01638_production",
       "bus": "MVLV01638",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [0.0, 0.0],
         [0.0, 0.0],
@@ -2892,6 +2912,7 @@
       "id": "MVLV05831_consumption",
       "bus": "MVLV05831",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [8400.0, 2700.0],
         [8400.0, 2700.0],
@@ -2902,6 +2923,7 @@
       "id": "MVLV05831_production",
       "bus": "MVLV05831",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [0.0, 0.0],
         [0.0, 0.0],
@@ -2912,6 +2934,7 @@
       "id": "MVLV08413_consumption",
       "bus": "MVLV08413",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [8400.0, 2700.0],
         [8400.0, 2700.0],
@@ -2922,6 +2945,7 @@
       "id": "MVLV08413_production",
       "bus": "MVLV08413",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [0.0, 0.0],
         [0.0, 0.0],
@@ -2932,6 +2956,7 @@
       "id": "MVLV15565_consumption",
       "bus": "MVLV15565",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [8400.0, 2700.0],
         [8400.0, 2700.0],
@@ -2942,6 +2967,7 @@
       "id": "MVLV15565_production",
       "bus": "MVLV15565",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [0.0, 0.0],
         [0.0, 0.0],
@@ -2952,6 +2978,7 @@
       "id": "MVLV01295_consumption",
       "bus": "MVLV01295",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [24600.0, 8100.0],
         [24600.0, 8100.0],
@@ -2962,6 +2989,7 @@
       "id": "MVLV01295_production",
       "bus": "MVLV01295",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [0.0, 0.0],
         [0.0, 0.0],
@@ -2972,6 +3000,7 @@
       "id": "MVLV08768_consumption",
       "bus": "MVLV08768",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [5700.0, 1900.0],
         [5700.0, 1900.0],
@@ -2982,6 +3011,7 @@
       "id": "MVLV08768_production",
       "bus": "MVLV08768",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [0.0, 0.0],
         [0.0, 0.0],
@@ -2992,6 +3022,7 @@
       "id": "MVLV06199_consumption",
       "bus": "MVLV06199",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [5700.0, 1900.0],
         [5700.0, 1900.0],
@@ -3002,6 +3033,7 @@
       "id": "MVLV06199_production",
       "bus": "MVLV06199",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [0.0, 0.0],
         [0.0, 0.0],
@@ -3012,6 +3044,7 @@
       "id": "MVLV16705_consumption",
       "bus": "MVLV16705",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [5700.0, 1900.0],
         [5700.0, 1900.0],
@@ -3022,6 +3055,7 @@
       "id": "MVLV16705_production",
       "bus": "MVLV16705",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [0.0, 0.0],
         [0.0, 0.0],
@@ -3032,6 +3066,7 @@
       "id": "MVLV16704_consumption",
       "bus": "MVLV16704",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [5700.0, 1900.0],
         [5700.0, 1900.0],
@@ -3042,6 +3077,7 @@
       "id": "MVLV16704_production",
       "bus": "MVLV16704",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [0.0, 0.0],
         [0.0, 0.0],
@@ -3052,6 +3088,7 @@
       "id": "MVLV00568_consumption",
       "bus": "MVLV00568",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [8300.0, 2700.0],
         [8300.0, 2700.0],
@@ -3062,6 +3099,7 @@
       "id": "MVLV00568_production",
       "bus": "MVLV00568",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [0.0, 0.0],
         [0.0, 0.0],
@@ -3072,6 +3110,7 @@
       "id": "MVLV12126_consumption",
       "bus": "MVLV12126",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [8300.0, 2700.0],
         [8300.0, 2700.0],
@@ -3082,6 +3121,7 @@
       "id": "MVLV12126_production",
       "bus": "MVLV12126",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [0.0, 0.0],
         [0.0, 0.0],
@@ -3092,6 +3132,7 @@
       "id": "MVLV06734_consumption",
       "bus": "MVLV06734",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [10000.0, 3300.0],
         [10000.0, 3300.0],
@@ -3102,6 +3143,7 @@
       "id": "MVLV06734_production",
       "bus": "MVLV06734",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [0.0, 0.0],
         [0.0, 0.0],
@@ -3112,6 +3154,7 @@
       "id": "MVLV02233_consumption",
       "bus": "MVLV02233",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [8300.0, 2700.0],
         [8300.0, 2700.0],
@@ -3122,6 +3165,7 @@
       "id": "MVLV02233_production",
       "bus": "MVLV02233",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [0.0, 0.0],
         [0.0, 0.0],
@@ -3132,6 +3176,7 @@
       "id": "MVLV00567_consumption",
       "bus": "MVLV00567",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [8300.0, 2700.0],
         [8300.0, 2700.0],
@@ -3142,6 +3187,7 @@
       "id": "MVLV00567_production",
       "bus": "MVLV00567",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [0.0, 0.0],
         [0.0, 0.0],
@@ -3152,6 +3198,7 @@
       "id": "MVLV08663_consumption",
       "bus": "MVLV08663",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [9200.0, 3000.0],
         [9200.0, 3000.0],
@@ -3162,6 +3209,7 @@
       "id": "MVLV08663_production",
       "bus": "MVLV08663",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [0.0, 0.0],
         [0.0, 0.0],
@@ -3172,6 +3220,7 @@
       "id": "MVLV01171_consumption",
       "bus": "MVLV01171",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [9200.0, 3000.0],
         [9200.0, 3000.0],
@@ -3182,6 +3231,7 @@
       "id": "MVLV01171_production",
       "bus": "MVLV01171",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [0.0, 0.0],
         [0.0, 0.0],
@@ -3192,6 +3242,7 @@
       "id": "MVLV11614_consumption",
       "bus": "MVLV11614",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [9200.0, 3000.0],
         [9200.0, 3000.0],
@@ -3202,6 +3253,7 @@
       "id": "MVLV11614_production",
       "bus": "MVLV11614",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [0.0, 0.0],
         [0.0, 0.0],
@@ -3212,6 +3264,7 @@
       "id": "MVLV05564_consumption",
       "bus": "MVLV05564",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [9200.0, 3000.0],
         [9200.0, 3000.0],
@@ -3222,6 +3275,7 @@
       "id": "MVLV05564_production",
       "bus": "MVLV05564",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [0.0, 0.0],
         [0.0, 0.0],
@@ -3232,6 +3286,7 @@
       "id": "MVLV05857_consumption",
       "bus": "MVLV05857",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [9200.0, 3000.0],
         [9200.0, 3000.0],
@@ -3242,6 +3297,7 @@
       "id": "MVLV05857_production",
       "bus": "MVLV05857",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [0.0, 0.0],
         [0.0, 0.0],
@@ -3252,6 +3308,7 @@
       "id": "MVLV01169_consumption",
       "bus": "MVLV01169",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [9200.0, 3000.0],
         [9200.0, 3000.0],
@@ -3262,6 +3319,7 @@
       "id": "MVLV01169_production",
       "bus": "MVLV01169",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [0.0, 0.0],
         [0.0, 0.0],
@@ -3272,6 +3330,7 @@
       "id": "MVLV11121_consumption",
       "bus": "MVLV11121",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [9700.0, 3200.0],
         [9700.0, 3200.0],
@@ -3282,6 +3341,7 @@
       "id": "MVLV11121_production",
       "bus": "MVLV11121",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [0.0, 0.0],
         [0.0, 0.0],
@@ -3292,6 +3352,7 @@
       "id": "MVLV15305_consumption",
       "bus": "MVLV15305",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [9700.0, 3200.0],
         [9700.0, 3200.0],
@@ -3302,6 +3363,7 @@
       "id": "MVLV15305_production",
       "bus": "MVLV15305",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [0.0, 0.0],
         [0.0, 0.0],

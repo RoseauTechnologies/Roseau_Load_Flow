@@ -591,6 +591,7 @@
       "id": 1,
       "bus": 5,
       "phases": "abcn",
+      "type": "impedance",
       "impedances": [
         [500.0, 100.0],
         [500.0, 100.0],
@@ -601,6 +602,7 @@
       "id": 2,
       "bus": 8,
       "phases": "abcn",
+      "type": "impedance",
       "impedances": [
         [500.0, 100.0],
         [500.0, 100.0],
@@ -611,6 +613,7 @@
       "id": 3,
       "bus": 9,
       "phases": "abcn",
+      "type": "impedance",
       "impedances": [
         [500.0, 100.0],
         [500.0, 100.0],
@@ -621,6 +624,7 @@
       "id": 4,
       "bus": 12,
       "phases": "abcn",
+      "type": "impedance",
       "impedances": [
         [500.0, 100.0],
         [500.0, 100.0],
@@ -631,6 +635,7 @@
       "id": 5,
       "bus": 15,
       "phases": "abcn",
+      "type": "impedance",
       "impedances": [
         [10.0, 5.0],
         [8.0, 5.0],
@@ -641,6 +646,7 @@
       "id": 6,
       "bus": 19,
       "phases": "abcn",
+      "type": "impedance",
       "impedances": [
         [10.0, 5.0],
         [8.0, 5.0],
@@ -651,6 +657,7 @@
       "id": 7,
       "bus": 21,
       "phases": "abcn",
+      "type": "impedance",
       "impedances": [
         [10.0, 5.0],
         [8.0, 5.0],
@@ -661,6 +668,7 @@
       "id": 8,
       "bus": 22,
       "phases": "abcn",
+      "type": "impedance",
       "impedances": [
         [10.0, 5.0],
         [8.0, 5.0],
@@ -671,6 +679,7 @@
       "id": 9,
       "bus": 24,
       "phases": "abcn",
+      "type": "impedance",
       "impedances": [
         [10.0, 5.0],
         [8.0, 5.0],

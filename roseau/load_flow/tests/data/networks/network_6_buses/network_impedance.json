@@ -157,6 +157,7 @@
       "id": 1,
       "bus": 2,
       "phases": "abcn",
+      "type": "impedance",
       "impedances": [
         [10.0, 5.0],
         [10.0, 5.0],
@@ -167,6 +168,7 @@
       "id": 2,
       "bus": 2,
       "phases": "abcn",
+      "type": "impedance",
       "impedances": [
         [10.0, 5.0],
         [10.0, 5.0],
@@ -177,6 +179,7 @@
       "id": 3,
       "bus": 3,
       "phases": "abcn",
+      "type": "impedance",
       "impedances": [
         [10.0, 5.0],
         [10.0, 5.0],

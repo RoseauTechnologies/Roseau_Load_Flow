@@ -259,12 +259,14 @@ def test_loads_to_dict():
         "id": "load_s1",
         "bus": "bus",
         "phases": "abcn",
+        "type": "power",
         "powers": [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
     }
     assert PowerLoad(id="load_s2", bus=bus, phases="abc", powers=values).to_dict(include_results=False) == {
         "id": "load_s2",
         "bus": "bus",
         "phases": "abc",
+        "type": "power",
         "powers": [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
     }
 
@@ -273,12 +275,14 @@ def test_loads_to_dict():
         "id": "load_i1",
         "bus": "bus",
         "phases": "abcn",
+        "type": "current",
         "currents": [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
     }
     assert CurrentLoad(id="load_i2", bus=bus, phases="abc", currents=values).to_dict(include_results=False) == {
         "id": "load_i2",
         "bus": "bus",
         "phases": "abc",
+        "type": "current",
         "currents": [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
     }
 
@@ -287,12 +291,14 @@ def test_loads_to_dict():
         "id": "load_z1",
         "bus": "bus",
         "phases": "abcn",
+        "type": "impedance",
         "impedances": [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
     }
     assert ImpedanceLoad(id="load_z2", bus=bus, phases="abc", impedances=values).to_dict(include_results=False) == {
         "id": "load_z2",
         "bus": "bus",
         "phases": "abc",
+        "type": "impedance",
         "impedances": [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
     }
 
@@ -301,6 +307,7 @@ def test_loads_to_dict():
         "id": "load_f1",
         "bus": "bus",
         "phases": "abcn",
+        "type": "power",
         "powers": [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
         "flexible_params": [
             {
@@ -319,7 +326,7 @@ def test_loads_to_dict():
     fp = [FlexibleParameter.constant()] * 3
     flex_load = PowerLoad(id="load_f1", bus=bus, phases="abcn", powers=values, flexible_params=fp)
     assert flex_load.to_dict(include_results=False) == expected_dict
-    parsed_flex_load = PowerLoad.from_dict(expected_dict | {"bus": Bus("bus", phases="abcn")})
+    parsed_flex_load = PowerLoad.from_dict(expected_dict | {"bus": Bus(id="bus", phases="abcn")})
     assert isinstance(parsed_flex_load, PowerLoad)
     assert parsed_flex_load.id == flex_load.id
     assert parsed_flex_load.bus.id == flex_load.bus.id

@@ -220,60 +220,70 @@
       "id": "LVBus087076_consumption",
       "bus": "LVBus087076",
       "phases": "cn",
+      "type": "power",
       "powers": [[0.0, 0.0]]
     },
     {
       "id": "LVBus087076_production",
       "bus": "LVBus087076",
       "phases": "bn",
+      "type": "power",
       "powers": [[0.0, 0.0]]
     },
     {
       "id": "LVBus087078_consumption",
       "bus": "LVBus087078",
       "phases": "an",
+      "type": "power",
       "powers": [[0.0, 0.0]]
     },
     {
       "id": "LVBus087078_production",
       "bus": "LVBus087078",
       "phases": "cn",
+      "type": "power",
       "powers": [[0.0, 0.0]]
     },
     {
       "id": "LVBus087079_consumption",
       "bus": "LVBus087079",
       "phases": "bn",
+      "type": "power",
       "powers": [[2000.0, 700.0]]
     },
     {
       "id": "LVBus087079_production",
       "bus": "LVBus087079",
       "phases": "bn",
+      "type": "power",
       "powers": [[-300.0, 0.0]]
     },
     {
       "id": "LVBus087080_consumption",
       "bus": "LVBus087080",
       "phases": "cn",
+      "type": "power",
       "powers": [[2000.0, 700.0]]
     },
     {
       "id": "LVBus087080_production",
       "bus": "LVBus087080",
       "phases": "cn",
+      "type": "power",
       "powers": [[-300.0, 0.0]]
     },
     {
       "id": "LVBus087077_consumption",
       "bus": "LVBus087077",
       "phases": "an",
+      "type": "power",
       "powers": [[2000.0, 700.0]]
     },
     {
       "id": "LVBus087077_production",
       "bus": "LVBus087077",
       "phases": "an",
+      "type": "power",
       "powers": [[-300.0, 0.0]]
     }
   ],

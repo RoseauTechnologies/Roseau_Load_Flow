@@ -987,6 +987,7 @@
       "id": "MVLV01557_consumption",
       "bus": "MVLV01557",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [7800.0, 2600.0],
         [7800.0, 2600.0],
@@ -997,6 +998,7 @@
       "id": "MVLV01557_production",
       "bus": "MVLV01557",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [-200.0, 0.0],
         [-200.0, 0.0],
@@ -1007,6 +1009,7 @@
       "id": "MVLV03692_consumption",
       "bus": "MVLV03692",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [7800.0, 2600.0],
         [7800.0, 2600.0],
@@ -1017,6 +1020,7 @@
       "id": "MVLV03692_production",
       "bus": "MVLV03692",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [-200.0, 0.0],
         [-200.0, 0.0],
@@ -1027,6 +1031,7 @@
       "id": "MVLV07320_consumption",
       "bus": "MVLV07320",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [13600.0, 4500.0],
         [13600.0, 4500.0],
@@ -1037,6 +1042,7 @@
       "id": "MVLV07320_production",
       "bus": "MVLV07320",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [-200.0, 0.0],
         [-200.0, 0.0],
@@ -1047,6 +1053,7 @@
       "id": "MVLV09569_consumption",
       "bus": "MVLV09569",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [13600.0, 4500.0],
         [13600.0, 4500.0],
@@ -1057,6 +1064,7 @@
       "id": "MVLV09569_production",
       "bus": "MVLV09569",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [-200.0, 0.0],
         [-200.0, 0.0],
@@ -1067,6 +1075,7 @@
       "id": "MVLV14997_consumption",
       "bus": "MVLV14997",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [7800.0, 2600.0],
         [7800.0, 2600.0],
@@ -1077,6 +1086,7 @@
       "id": "MVLV14997_production",
       "bus": "MVLV14997",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [-200.0, 0.0],
         [-200.0, 0.0],
@@ -1087,6 +1097,7 @@
       "id": "MVLV14994_consumption",
       "bus": "MVLV14994",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [13600.0, 4500.0],
         [13600.0, 4500.0],
@@ -1097,6 +1108,7 @@
       "id": "MVLV14994_production",
       "bus": "MVLV14994",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [-200.0, 0.0],
         [-200.0, 0.0],
@@ -1107,6 +1119,7 @@
       "id": "MVLV03678_consumption",
       "bus": "MVLV03678",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [13600.0, 4500.0],
         [13600.0, 4500.0],
@@ -1117,6 +1130,7 @@
       "id": "MVLV03678_production",
       "bus": "MVLV03678",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [-200.0, 0.0],
         [-200.0, 0.0],
@@ -1127,6 +1141,7 @@
       "id": "MVLV14995_consumption",
       "bus": "MVLV14995",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [13600.0, 4500.0],
         [13600.0, 4500.0],
@@ -1137,6 +1152,7 @@
       "id": "MVLV14995_production",
       "bus": "MVLV14995",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [-200.0, 0.0],
         [-200.0, 0.0],
@@ -1147,6 +1163,7 @@
       "id": "MVLV18242_consumption",
       "bus": "MVLV18242",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [13600.0, 4500.0],
         [13600.0, 4500.0],
@@ -1157,6 +1174,7 @@
       "id": "MVLV18242_production",
       "bus": "MVLV18242",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [-200.0, 0.0],
         [-200.0, 0.0],
@@ -1167,6 +1185,7 @@
       "id": "MVLV13304_consumption",
       "bus": "MVLV13304",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [5900.0, 1900.0],
         [5900.0, 1900.0],
@@ -1177,6 +1196,7 @@
       "id": "MVLV13304_production",
       "bus": "MVLV13304",
       "phases": "abc",
+      "type": "power",
       "powers": [
         [-200.0, 0.0],
         [-200.0, 0.0],

@@ -211,8 +211,9 @@ class AbstractLoad(Element, ABC):
     #
     @classmethod
     def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> "AbstractLoad":
-        if (s_list := data.get("powers")) is not None:
-            powers = [complex(s[0], s[1]) for s in s_list]
+        load_type: Literal["power", "current", "impedance"] = data["type"]
+        if load_type == "power":
+            powers = [complex(s[0], s[1]) for s in data["powers"]]
             if (fp_data_list := data.get("flexible_params")) is not None:
                 fp = [
                     FlexibleParameter.from_dict(data=fp_dict, include_results=include_results)
@@ -221,14 +222,14 @@ class AbstractLoad(Element, ABC):
             else:
                 fp = None
             self = PowerLoad(id=data["id"], bus=data["bus"], powers=powers, phases=data["phases"], flexible_params=fp)
-        elif (i_list := data.get("currents")) is not None:
-            currents = [complex(i[0], i[1]) for i in i_list]
+        elif load_type == "current":
+            currents = [complex(i[0], i[1]) for i in data["currents"]]
             self = CurrentLoad(id=data["id"], bus=data["bus"], currents=currents, phases=data["phases"])
-        elif (z_list := data.get("impedances")) is not None:
-            impedances = [complex(z[0], z[1]) for z in z_list]
+        elif load_type == "impedance":
+            impedances = [complex(z[0], z[1]) for z in data["impedances"]]
             self = ImpedanceLoad(id=data["id"], bus=data["bus"], impedances=impedances, phases=data["phases"])
         else:
-            msg = f"Unknown load type for load {data['id']!r}"
+            msg = f"Unknown load type {load_type!r} for load {data['id']!r}"
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LOAD_TYPE)
         if include_results and "results" in data:
@@ -254,6 +255,7 @@ class AbstractLoad(Element, ABC):
             "id": self.id,
             "bus": self.bus.id,
             "phases": self.phases,
+            "type": self.type,
             f"{self.type}s": [[value.real, value.imag] for value in complex_array],
         }
         if include_results:
@@ -268,6 +270,7 @@ class AbstractLoad(Element, ABC):
         results = {
             "id": self.id,
             "phases": self.phases,
+            "type": self.type,
             "currents": [[i.real, i.imag] for i in currents],
         }
         potentials = self._res_potentials_getter(warning=False)

@@ -93,6 +93,7 @@
       "id": "load",
       "bus": "bus2",
       "phases": "abcn",
+      "type": "power",
       "powers": [
         [2000000.0, 0.0],
         [1000000.0, 500000.0],

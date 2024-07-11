@@ -27,8 +27,8 @@ og:description: See what's new in the latest release of Roseau Load Flow !
       and `res_switches` methods instead.
     - the field `branches` does not exist anymore. Please use the fields `lines`, `transformers` and `switches`.
 - {gh-pr}`235` Move the `Switch` class into its own file `roseau/load_flow/models/switches.py`.
-- {gh-pr}`235` The JSON file format number is upgraded to the version 2. All the files in version 0 or 1 can still be
-  read. Please upgrade them manually using the following code:
+- {gh-pr}`235` {gh-pr}`239` The JSON file format number is upgraded to the version 2. All the files in version 0 or 1
+  can still be read. Please upgrade them manually using the following code:
   ```python
   path = "my_json_file.json"
   ElectricalNetwork.from_json(path).to_json(path)

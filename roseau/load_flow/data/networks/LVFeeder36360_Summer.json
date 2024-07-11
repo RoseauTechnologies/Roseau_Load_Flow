@@ -288,84 +288,98 @@
       "id": "LVBus169862_consumption",
       "bus": "LVBus169862",
       "phases": "an",
+      "type": "power",
       "powers": [[0.0, 0.0]]
     },
     {
       "id": "LVBus169862_production",
       "bus": "LVBus169862",
       "phases": "bn",
+      "type": "power",
       "powers": [[0.0, 0.0]]
     },
     {
       "id": "LVBus169863_consumption",
       "bus": "LVBus169863",
       "phases": "an",
+      "type": "power",
       "powers": [[0.0, 0.0]]
     },
     {
       "id": "LVBus169863_production",
       "bus": "LVBus169863",
       "phases": "an",
+      "type": "power",
       "powers": [[0.0, 0.0]]
     },
     {
       "id": "LVBus169868_consumption",
       "bus": "LVBus169868",
       "phases": "bn",
+      "type": "power",
       "powers": [[3200.0, 1100.0]]
     },
     {
       "id": "LVBus169868_production",
       "bus": "LVBus169868",
       "phases": "bn",
+      "type": "power",
       "powers": [[-100.0, 0.0]]
     },
     {
       "id": "LVBus169864_consumption",
       "bus": "LVBus169864",
       "phases": "bn",
+      "type": "power",
       "powers": [[0.0, 0.0]]
     },
     {
       "id": "LVBus169864_production",
       "bus": "LVBus169864",
       "phases": "an",
+      "type": "power",
       "powers": [[0.0, 0.0]]
     },
     {
       "id": "LVBus169867_consumption",
       "bus": "LVBus169867",
       "phases": "bn",
+      "type": "power",
       "powers": [[3200.0, 1100.0]]
     },
     {
       "id": "LVBus169867_production",
       "bus": "LVBus169867",
       "phases": "bn",
+      "type": "power",
       "powers": [[-100.0, 0.0]]
     },
     {
       "id": "LVBus169865_consumption",
       "bus": "LVBus169865",
       "phases": "cn",
+      "type": "power",
       "powers": [[3200.0, 1100.0]]
     },
     {
       "id": "LVBus169865_production",
       "bus": "LVBus169865",
       "phases": "cn",
+      "type": "power",
       "powers": [[-100.0, 0.0]]
     },
     {
       "id": "LVBus169866_consumption",
       "bus": "LVBus169866",
       "phases": "an",
+      "type": "power",
       "powers": [[3200.0, 1100.0]]
     },
     {
       "id": "LVBus169866_production",
       "bus": "LVBus169866",
       "phases": "an",
+      "type": "power",
       "powers": [[-100.0, 0.0]]
     }
   ],
