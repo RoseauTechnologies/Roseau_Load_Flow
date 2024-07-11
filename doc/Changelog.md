@@ -19,6 +19,7 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`240` Add tests for switches imported from DGS and improve warning and error messages.
 - {gh-pr}`235` **BREAKING CHANGE**: The constructor of the class `ElectricalNetwork` has changed:
   - it accepts keyword arguments only.
   - it accepts the arguments `lines`, `transformers` and `switches` in replacement of the argument `branches`.

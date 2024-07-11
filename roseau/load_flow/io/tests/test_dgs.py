@@ -1,3 +1,4 @@
+import copy
 import json
 import warnings
 
@@ -5,6 +6,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.io.dgs import _dgs_dict_to_df
 from roseau.load_flow.io.dgs.constants import GENERAL_LOAD_INPUT_MODE
 from roseau.load_flow.io.dgs.loads import compute_3phase_load_powers
@@ -36,7 +38,7 @@ def test_from_dgs(dgs_network_path):
         case "MV_LV_Transformer_LV_grid" | "MV_LV_Transformer_unbalanced" | "MV_LV_Transformer" | "Exemple_exhaustif":
             # MV/LV networks => ground on the LV side and no ground on the MV side
             assert pref_ids == {"pref (ground)", f"pref (source '{source_id}')"}, pref_ids
-        case "MV_Network":
+        case "MV_Network" | "Switch":
             # MV network: no neutral conductor (and no lines shunt here) => no ground
             assert pref_ids == {f"pref (source '{source_id}')"}, pref_ids
         case _:
@@ -95,3 +97,40 @@ def test_dgs_general_load_input_modes(dgs_special_network_dir):
         except NotImplementedError:
             continue
         np.testing.assert_allclose(powers, expected_powers, atol=1e-5, err_msg=f"Input Mode: {mode_inp!r}")
+
+
+def test_dgs_switches(dgs_special_network_dir, tmp_path):
+    path = dgs_special_network_dir / "Switch.json"
+    good_json = json.loads(path.read_bytes())
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")  # Make sure there is no warning
+        en = ElectricalNetwork.from_dgs(path)
+
+    assert len(en.switches) == 1
+    switch = next(iter(en.switches.values()))
+    assert switch.phases == "abc"
+
+    source = next(iter(en.sources.values()))
+    load = next(iter(en.loads.values()))
+    assert switch.bus1 is source.bus
+    assert switch.bus2 is load.bus
+
+    bad_path = tmp_path / "Bad_Switch.json"
+
+    # Error on wrong nphase
+    bad_json = copy.deepcopy(good_json)
+    bad_json["ElmCoup"]["Values"][0][bad_json["ElmCoup"]["Attributes"].index("nphase")] = 2
+    bad_path.write_text(json.dumps(bad_json))
+    with pytest.raises(RoseauLoadFlowException) as e:
+        ElectricalNetwork.from_dgs(bad_path)
+    assert e.value.code == RoseauLoadFlowExceptionCode.DGS_BAD_PHASE_NUMBER
+    assert e.value.msg == "nphase=2 for switch '2' is not supported. Only 3-phase switches are currently supported."
+
+    # Warn on open switch
+    assert good_json["ElmCoup"]["Values"][0][good_json["ElmCoup"]["Attributes"].index("on_off")] == 1
+    bad_json = copy.deepcopy(good_json)
+    bad_json["ElmCoup"]["Values"][0][bad_json["ElmCoup"]["Attributes"].index("on_off")] = 0
+    bad_path.write_text(json.dumps(bad_json))
+    with pytest.warns(UserWarning, match=r"Switch '2' is open but switches are always closed in roseau-load-flow."):
+        ElectricalNetwork.from_dgs(bad_path)
