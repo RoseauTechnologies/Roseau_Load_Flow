@@ -229,7 +229,7 @@ class AbstractLoad(Element, ABC):
             impedances = [complex(z[0], z[1]) for z in data["impedances"]]
             self = ImpedanceLoad(id=data["id"], bus=data["bus"], impedances=impedances, phases=data["phases"])
         else:
-            msg = f"Unknown load type for load {data['id']!r}"
+            msg = f"Unknown load type {load_type!r} for load {data['id']!r}"
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LOAD_TYPE)
         if include_results and "results" in data:
