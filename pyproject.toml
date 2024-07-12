@@ -155,3 +155,4 @@ directory = "htmlcov"
 addopts = "--color=yes -n=0 --import-mode=importlib"
 testpaths = ["roseau/load_flow/"]
 filterwarnings = []
+markers = ["no_patch_engine"]
