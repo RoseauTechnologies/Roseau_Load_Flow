@@ -313,16 +313,16 @@ class Bus(Element):
 
         Voltage Unbalance Factor:
 
-        :math:`VUF = \\frac{|V_n|}{|V_p|} * 100 (\\%)`
+        :math:`VUF = \\dfrac{|V_{\\mathrm{n}}|}{|V_{\\mathrm{p}}|} \times 100 (\\%)`
 
-        Where :math:`V_n` is the negative-sequence voltage and :math:`V_p` is the positive-sequence
-        voltage.
+        Where :math:`V_{\\mathrm{n}}` is the negative-sequence voltage and :math:`V_{\\mathrm{p}}` is the
+        positive-sequence voltage.
         """
         # https://std.iec.ch/terms/terms.nsf/3385f156e728849bc1256e8c00278ad2/771c5188e62fade5c125793a0043f2a5?OpenDocument
         if self.phases not in {"abc", "abcn"}:
             msg = f"Voltage unbalance is only available for 3-phases buses, bus {self.id!r} has phases {self.phases!r}"
             logger.error(msg)
-            raise RoseauLoadFlowException(msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
         # We use the potentials here which is equivalent to using the "line to neutral" voltages as
         # defined by the standard. The standard also has this note:
         # NOTE 1 Phase-to-phase voltages may also be used instead of line to neutral voltages.
