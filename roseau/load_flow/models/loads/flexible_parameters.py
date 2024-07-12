@@ -1140,7 +1140,7 @@ class FlexibleParameter(JsonMixin):
         power: complex | Q_[complex],
         ax: "Axes | None" = None,
         voltages_labels_mask: NDArray[np.bool_] | None = None,
-    ) -> tuple["Axes", ComplexArray]:
+    ) -> tuple["Axes", ComplexArrayLike1D]:
         """Plot the "trajectory" of the flexible powers (in the (P, Q) plane) for the provided voltages and theoretical
         power.
 

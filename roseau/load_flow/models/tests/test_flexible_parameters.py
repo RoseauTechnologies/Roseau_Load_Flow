@@ -23,6 +23,9 @@ def test_control():
         c_tmp = Control.from_dict(c.to_dict())
         assert c_tmp == c
 
+        assert c.alpha == Control._DEFAULT_ALPHA
+        assert c.epsilon == Control._DEFAULT_EPSILON
+
     # Equality with something which is not a control
     assert c0 != object()
 
@@ -204,6 +207,9 @@ def test_projection():
     for p in (p0, p1, p2):
         p_tmp = Projection.from_dict(p.to_dict())
         assert p_tmp == p
+
+        assert p.alpha == Projection._DEFAULT_ALPHA
+        assert p.epsilon == Projection._DEFAULT_EPSILON
 
     # Equality with something which is not a projection
     assert p0 != object()
@@ -523,5 +529,11 @@ def test_flexible_parameters_compute_powers():
     np.testing.assert_allclose(res_flexible_powers.m, expected_res_flexible_powers)
 
     # Check that the plot does not fail
-    ax, res_flexible_powers = fp.plot_control_q(voltages=voltages, power=power, ax=ax)
+    ax, res_flexible_powers = fp.plot_control_q(voltages=voltages, power=power)
+    np.testing.assert_allclose(res_flexible_powers.m, expected_res_flexible_powers)
+
+    # Plot PQ
+    ax, res_flexible_powers = fp.plot_pq(
+        voltages=voltages, power=power, voltages_labels_mask=np.isin(voltages, [240, 250])
+    )
     np.testing.assert_allclose(res_flexible_powers.m, expected_res_flexible_powers)
