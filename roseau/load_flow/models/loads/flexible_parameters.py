@@ -88,7 +88,7 @@ class Control(JsonMixin):
             epsilon:
                 This value is used to make a smooth inverse function. It is only useful for P control.
         """
-        self.type = type
+        self._type = type
         self._u_min = u_min
         self._u_down = u_down
         self._u_up = u_up
@@ -97,7 +97,7 @@ class Control(JsonMixin):
         self._epsilon = epsilon
         self._check_values()
         self._cy_control = CyControl(
-            t=type,
+            t=self._type,
             u_min=self._u_min,
             u_down=self._u_down,
             u_up=self._u_up,
@@ -178,6 +178,24 @@ class Control(JsonMixin):
             msg = f"'epsilon' must be lower than 1 but {self._epsilon:.3f} was provided."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_CONTROL_VALUE)
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Control):
+            return NotImplemented
+        return (
+            (self.type == other.type)
+            and (self._u_min == other._u_min)
+            and (self._u_down == other._u_down)
+            and (self._u_up == other._u_up)
+            and (self._u_max == other._u_max)
+            and (self._alpha == other._alpha)
+            and (self._epsilon == other._epsilon)
+        )
+
+    @property
+    def type(self) -> ControlType:
+        """The type of the control."""
+        return self._type
 
     @property
     @ureg_wraps("V", (None,))
@@ -468,6 +486,11 @@ class Projection(JsonMixin):
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PROJECTION_VALUE)
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Projection):
+            return NotImplemented
+        return (self.type == other.type) and (self._alpha == other._alpha) and (self._epsilon == other._epsilon)
+
     @property
     def alpha(self) -> float:
         """This value is used to make soft sign function and to build a soft projection function."""
@@ -559,6 +582,18 @@ class FlexibleParameter(JsonMixin):
             s_max=self._s_max,
             q_min=self._q_min,
             q_max=self._q_max,
+        )
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, FlexibleParameter):
+            return NotImplemented
+        return (
+            (self.control_p == other.control_p)
+            and (self.control_q == other.control_q)
+            and (self.projection == other.projection)
+            and (self._q_min_value == other._q_min_value)
+            and (self._q_max_value == other._q_max_value)
+            and (self._s_max == other._s_max)
         )
 
     @property
@@ -785,7 +820,7 @@ class FlexibleParameter(JsonMixin):
         )
 
     @classmethod
-    @ureg_wraps(None, (None, "V", "V", "V", "V", "VA", "Var", "Var", None, None, None, None))
+    @ureg_wraps(None, (None, "V", "V", "V", "V", "VA", "VAr", "VAr", None, None, None, None))
     def q_u(
         cls,
         u_min: float | Q_[float],

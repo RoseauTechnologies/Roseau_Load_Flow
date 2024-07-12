@@ -50,8 +50,11 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
 
     _type_re = "|".join(x.code() for x in LineType)
     _material_re = "|".join(x.code() for x in ConductorType)
+    _insulator_re = "|".join(x.code() for x in InsulatorType)
     _section_re = r"[1-9][0-9]*"
-    _REGEXP_LINE_TYPE_NAME = re.compile(rf"^({_type_re})_({_material_re})_{_section_re}$", flags=re.IGNORECASE)
+    _REGEXP_LINE_TYPE_NAME = re.compile(
+        rf"^({_type_re})_({_material_re})_({_insulator_re}_)?{_section_re}$", flags=re.IGNORECASE
+    )
 
     @ureg_wraps(None, (None, None, "ohm/km", "S/km", "A", None, None, None, "mm²"))
     def __init__(

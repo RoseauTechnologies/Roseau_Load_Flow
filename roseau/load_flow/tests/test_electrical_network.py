@@ -37,6 +37,18 @@ from roseau.load_flow.utils import LoadTypeDtype, PhaseDtype, VoltagePhaseDtype
 
 
 @pytest.fixture()
+def all_element_network(test_networks_path) -> ElectricalNetwork:
+    # Load the network from the JSON file (without results)
+    return ElectricalNetwork.from_json(path=test_networks_path / "all_element_network.json", include_results=False)
+
+
+@pytest.fixture()
+def all_element_network_with_results(test_networks_path) -> ElectricalNetwork:
+    # Load the network from the JSON file (with results, no need to invoke the solver)
+    return ElectricalNetwork.from_json(path=test_networks_path / "all_element_network.json", include_results=True)
+
+
+@pytest.fixture()
 def small_network(test_networks_path) -> ElectricalNetwork:
     # Load the network from the JSON file (without results)
     return ElectricalNetwork.from_json(path=test_networks_path / "small_network.json", include_results=False)
@@ -1840,7 +1852,7 @@ def test_to_graph(small_network: ElectricalNetwork):
         assert edge_data == {"id": switch.id, "type": "switch", "geom": switch.geometry}
 
 
-def test_serialization(small_network, small_network_with_results):
+def test_serialization(all_element_network, all_element_network_with_results):
     def assert_results(en_dict: dict, included: bool):
         for bus_data in en_dict["buses"]:
             assert ("results" in bus_data) == included
@@ -1860,7 +1872,7 @@ def test_serialization(small_network, small_network_with_results):
             assert ("results" in p_ref_data) == included
 
     # No results: include_results is ignored
-    en = small_network
+    en = all_element_network
     en_dict_with_results = en.to_dict(include_results=True)
     en_dict_without_results = en.to_dict(include_results=False)
     assert_results(en_dict_with_results, included=False)
@@ -1870,7 +1882,7 @@ def test_serialization(small_network, small_network_with_results):
     assert new_en.to_dict() == en_dict_without_results
 
     # Has results: include_results is respected
-    en = small_network_with_results
+    en = all_element_network_with_results
     en_dict_with_results = en.to_dict(include_results=True)
     en_dict_without_results = en.to_dict(include_results=False)
     assert_results(en_dict_with_results, included=True)
@@ -1883,7 +1895,7 @@ def test_serialization(small_network, small_network_with_results):
     assert en.to_dict() == en_dict_with_results
 
     # Has invalid results: cannot include them
-    en.loads["load"].powers += Q_(1, "VA")  # <- invalidate the results
+    en.loads["load0"].powers += Q_(1, "VA")  # <- invalidate the results
     with pytest.raises(RoseauLoadFlowException) as e:
         en.to_dict(include_results=True)
     assert e.value.msg == (
@@ -1896,8 +1908,8 @@ def test_serialization(small_network, small_network_with_results):
     assert ElectricalNetwork.from_dict(en_dict_without_results).to_dict() == en_dict_without_results
 
 
-def test_results_to_dict(small_network_with_results):
-    en = small_network_with_results
+def test_results_to_dict(all_element_network_with_results):
+    en = all_element_network_with_results
 
     # By default full=False
     res_network = en.results_to_dict()
@@ -1960,8 +1972,8 @@ def test_results_to_dict(small_network_with_results):
         np.testing.assert_allclose(complex_current, potential_ref.res_current.m)
 
 
-def test_results_to_dict_full(small_network_with_results):
-    en = small_network_with_results
+def test_results_to_dict_full(all_element_network_with_results):
+    en = all_element_network_with_results
 
     # Here, `full` is True
     res_network = en.results_to_dict(full=True)

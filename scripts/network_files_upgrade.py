@@ -13,8 +13,6 @@ DATA_DIR = PROJECT_ROOT / "roseau" / "load_flow" / "data" / "networks"
 def all_network_paths() -> Generator[Path, None, None]:
     # Test networks
     yield from (TEST_DATA_DIR / "networks").glob("**/*network*.json")
-    # Benchmark networks
-    yield from (TEST_DATA_DIR / "benchmark").glob("**/network*.json")
     # Package data
     yield from DATA_DIR.glob("[!Catalogue]*.json")
     # Models test data
