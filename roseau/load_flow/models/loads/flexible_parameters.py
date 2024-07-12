@@ -815,7 +815,7 @@ class FlexibleParameter(JsonMixin):
         )
 
     @classmethod
-    @ureg_wraps(None, (None, "V", "V", "V", "V", "VA", "Var", "Var", None, None, None, None))
+    @ureg_wraps(None, (None, "V", "V", "V", "V", "VA", "VAr", "VAr", None, None, None, None))
     def q_u(
         cls,
         u_min: float | Q_[float],
@@ -1238,7 +1238,7 @@ class FlexibleParameter(JsonMixin):
     @ureg_wraps((None, "VA"), (None, "V", "VA", None))
     def plot_control_p(
         self, voltages: FloatArrayLike1D, power: complex | Q_[complex], ax: "Axes | None" = None
-    ) -> tuple["Axes", ComplexArray]:
+    ) -> tuple["Axes", ComplexArrayLike1D]:
         """Plot the flexible active power consumed (or produced) for the provided voltages and theoretical power.
 
         Args:
@@ -1288,7 +1288,7 @@ class FlexibleParameter(JsonMixin):
     @ureg_wraps((None, "VA"), (None, "V", "VA", None))
     def plot_control_q(
         self, voltages: FloatArrayLike1D, power: complex | Q_[complex], ax: "Axes | None" = None
-    ) -> tuple["Axes", ComplexArray]:
+    ) -> tuple["Axes", ComplexArrayLike1D]:
         """Plot the flexible reactive power consumed (or produced) for the provided voltages and theoretical power.
 
         Args:
