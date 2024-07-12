@@ -193,7 +193,7 @@ def test_control():
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_CONTROL_TYPE
 
     # To dict with an error
-    c.type = "unknown"
+    c._type = "unknown"
     with pytest.raises(RoseauLoadFlowException) as e:
         c.to_dict()
     assert e.value.msg == "Unsupported control type 'unknown'"

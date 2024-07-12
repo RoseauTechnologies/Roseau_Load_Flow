@@ -88,7 +88,7 @@ class Control(JsonMixin):
             epsilon:
                 This value is used to make a smooth inverse function. It is only useful for P control.
         """
-        self.type = type
+        self._type = type
         self._u_min = u_min
         self._u_down = u_down
         self._u_up = u_up
@@ -97,7 +97,7 @@ class Control(JsonMixin):
         self._epsilon = epsilon
         self._check_values()
         self._cy_control = CyControl(
-            t=type,
+            t=self._type,
             u_min=self._u_min,
             u_down=self._u_down,
             u_up=self._u_up,
@@ -191,6 +191,11 @@ class Control(JsonMixin):
             and (self._alpha == other._alpha)
             and (self._epsilon == other._epsilon)
         )
+
+    @property
+    def type(self) -> ControlType:
+        """The type of the control."""
+        return self._type
 
     @property
     @ureg_wraps("V", (None,))
@@ -1140,7 +1145,7 @@ class FlexibleParameter(JsonMixin):
         power: complex | Q_[complex],
         ax: "Axes | None" = None,
         voltages_labels_mask: NDArray[np.bool_] | None = None,
-    ) -> tuple["Axes", ComplexArrayLike1D]:
+    ) -> tuple["Axes", ComplexArray]:
         """Plot the "trajectory" of the flexible powers (in the (P, Q) plane) for the provided voltages and theoretical
         power.
 
@@ -1238,7 +1243,7 @@ class FlexibleParameter(JsonMixin):
     @ureg_wraps((None, "VA"), (None, "V", "VA", None))
     def plot_control_p(
         self, voltages: FloatArrayLike1D, power: complex | Q_[complex], ax: "Axes | None" = None
-    ) -> tuple["Axes", ComplexArrayLike1D]:
+    ) -> tuple["Axes", ComplexArray]:
         """Plot the flexible active power consumed (or produced) for the provided voltages and theoretical power.
 
         Args:
@@ -1288,7 +1293,7 @@ class FlexibleParameter(JsonMixin):
     @ureg_wraps((None, "VA"), (None, "V", "VA", None))
     def plot_control_q(
         self, voltages: FloatArrayLike1D, power: complex | Q_[complex], ax: "Axes | None" = None
-    ) -> tuple["Axes", ComplexArrayLike1D]:
+    ) -> tuple["Axes", ComplexArray]:
         """Plot the flexible reactive power consumed (or produced) for the provided voltages and theoretical power.
 
         Args:
