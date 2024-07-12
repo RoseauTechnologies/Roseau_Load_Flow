@@ -631,3 +631,24 @@ def test_from_power_factory():
     lp = LineParameters.from_power_factory(**new_pwf_params)
     assert lp.line_type == LineType.OVERHEAD
     assert lp.insulator_type == InsulatorType.XLPE
+
+
+def test_results_to_dict():
+    # No results to export
+    lp = LineParameters.from_catalogue(name="U_AL_150", nb_phases=3)
+    with pytest.raises(RoseauLoadFlowException) as e:
+        lp.results_to_dict()
+    assert e.value.msg == "The LineParameters has no results to export."
+    assert e.value.code == RoseauLoadFlowExceptionCode.JSON_NO_RESULTS
+
+
+def test_equality():
+    # Optional information are not used for the comparison
+    lp = LineParameters.from_catalogue(name="U_AL_150", nb_phases=3)
+    for x in ("max_current", "line_type", "conductor_type", "insulator_type", "section"):
+        assert getattr(lp, x) is not None
+    lp2 = LineParameters(id=lp.id, z_line=lp.z_line, y_shunt=lp.y_shunt)
+    assert lp2 == lp
+
+    # Test the case which returns NotImplemented in the equality operator
+    assert lp != object()

@@ -90,7 +90,7 @@ class Line(AbstractBranch):
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
 
         self._initialized = False
-        super().__init__(id, bus1, bus2, phases1=phases, phases2=phases, geometry=geometry)
+        super().__init__(id=id, bus1=bus1, bus2=bus2, phases1=phases, phases2=phases, geometry=geometry)
         self.ground = ground
         self.length = length
         self.parameters = parameters
