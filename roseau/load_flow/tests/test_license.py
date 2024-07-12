@@ -26,7 +26,7 @@ class FakeCyLicense:
 
 def test_license():
     key = "My Wonderful Key"
-    expiry_datetime = dt.datetime.now(tz=dt.UTC)
+    expiry_datetime = dt.datetime.now(tz=dt.timezone.utc)
     valid = True
     max_nb_buses = 150
     machine_fingerprint = "hashed-fingerprint"
