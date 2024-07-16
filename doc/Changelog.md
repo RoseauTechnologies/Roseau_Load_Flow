@@ -19,6 +19,8 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`243` Fix cross-sectional area of DGS line types created from line elements and special case
+  invalid PwF line geographical coordinates table.
 - {gh-pr}`240` Add tests for switches imported from DGS and improve warning and error messages.
 - {gh-pr}`235` **BREAKING CHANGE**: The constructor of the class `ElectricalNetwork` has changed:
   - it accepts keyword arguments only.
