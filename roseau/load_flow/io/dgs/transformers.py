@@ -79,6 +79,8 @@ def generate_transformers(
         tap = 1.0 + elm_tr.at[idx, "nntap"] * transformers_tap[type_id] / 100
         bus1 = buses[sta_cubic.at[elm_tr.at[idx, "bushv"], "cterm"]]
         bus2 = buses[sta_cubic.at[elm_tr.at[idx, "buslv"], "cterm"]]
+        # petersen = elm_tr.at[idx, "cpeter_l"]  # Petersen coil
+        # z_gnd = elm_tr.at[idx, "re0tr_l"] + 1j * elm_tr.at[idx, "xe0tr_l"]  # Grounding impedance
         # Transformers do not have geometries, use the buses
         geometry = (
             shapely.LineString([bus1.geometry, bus2.geometry]).centroid
