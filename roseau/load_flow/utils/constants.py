@@ -60,6 +60,7 @@ TAN_D = {
     InsulatorType.XLPE: Q_(40e-4),
     InsulatorType.EPR: Q_(200e-4),
     InsulatorType.IP: Q_(100e-4),
+    InsulatorType.UNKNOWN: Q_(0),
 }
 """Loss angles of common insulator materials according to the IEC 60287 standard."""
 # IEC 60287-1-1 Table 3. We only include the MV values.
@@ -72,6 +73,7 @@ EPSILON_R = {
     InsulatorType.XLPE: Q_(2.5),
     InsulatorType.EPR: Q_(3),
     InsulatorType.IP: Q_(4),
+    InsulatorType.UNKNOWN: Q_(1),
 }
 """Relative permittivity of common insulator materials according to the IEC 60287 standard."""
 # IEC 60287-1-1 Table 3. We only include the MV values.

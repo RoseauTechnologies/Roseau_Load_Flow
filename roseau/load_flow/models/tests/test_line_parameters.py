@@ -108,7 +108,7 @@ def test_line_parameters():
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_LINE_MODEL
 
 
-def test_geometry():
+def test_from_geometry():
     # line_data = {"dpp": 0, "dpn": 0, "dsh": 0.04}
 
     # Working example
@@ -178,12 +178,12 @@ def test_geometry():
 
     # line_data = {"dpp": 0, "dpn": 0, "dsh": 0.04}
 
-    # Working example
+    # Working example (also with string types)
     z_line, y_shunt, line_type, conductor_type, insulator_type, section = LineParameters._from_geometry(
         id="test",
-        line_type=LineType.UNDERGROUND,
-        conductor_type=ConductorType.AL,
-        insulator_type=InsulatorType.PVC,
+        line_type="UNDERGROUND",
+        conductor_type="AL",
+        insulator_type="PVC",
         section=150,
         section_neutral=70,
         height=-1.5,
@@ -236,10 +236,47 @@ def test_geometry():
 
     npt.assert_allclose(y_shunt, y_shunt_expected, rtol=0.3)
 
+    assert isinstance(line_type, LineType)
     assert line_type == LineType.UNDERGROUND
+    assert isinstance(conductor_type, ConductorType)
     assert conductor_type == ConductorType.AL
+    assert isinstance(insulator_type, InsulatorType)
     assert insulator_type == InsulatorType.PVC
     assert section == 150
+
+    # Test unknown insulator type
+    lp = LineParameters.from_geometry(
+        id="test",
+        line_type=LineType.OVERHEAD,
+        conductor_type="CU",
+        insulator_type=None,
+        section=50,
+        height=10,
+        external_diameter=0.04,
+    )
+    assert lp.insulator_type == InsulatorType.UNKNOWN
+    np.testing.assert_allclose(lp.y_shunt.m.real, 0.0)
+    lp = LineParameters.from_geometry(
+        id="test",
+        line_type="underground",
+        conductor_type=ConductorType.CU,
+        insulator_type=InsulatorType.UNKNOWN,
+        section=50,
+        height=-0.5,
+        external_diameter=0.04,
+    )
+    np.testing.assert_allclose(
+        lp.y_shunt.m.imag * 4,  # because InsulatorType.IP has 4x epsilon_r
+        LineParameters.from_geometry(
+            id="test",
+            line_type=lp.line_type,
+            conductor_type=lp.conductor_type,
+            insulator_type=InsulatorType.IP,  # 4x epsilon_r of InsulatorType.UNKNOWN
+            section=lp.section,
+            height=-0.5,
+            external_diameter=0.04,
+        ).y_shunt.m.imag,
+    )
 
 
 def test_sym():
