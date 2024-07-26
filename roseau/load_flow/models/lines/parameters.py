@@ -513,13 +513,13 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         # dpn = data["dpn"]  # Distance phase to neutral (m)
         # dsh = data["dsh"]  # Diameter of the sheath (mm)
 
+        line_type = LineType(line_type)
         if conductor_type is None:
             conductor_type = _DEFAULT_CONDUCTOR_TYPE[line_type]
         if insulator_type is None:
             insulator_type = _DEFAULT_INSULATION_TYPE[line_type]
         if section_neutral is None:
             section_neutral = section
-        line_type = LineType(line_type)
         conductor_type = ConductorType(conductor_type)
         insulator_type = InsulatorType(insulator_type)
 

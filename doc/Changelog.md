@@ -19,6 +19,8 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`245` {gh-issue}`244` Fix the `LineParameters.from_geometry` method to not crash when passed
+  `unknown` insulator type or `None`.
 - Add `res_voltages` to the `VoltageSource` class for symmetry with the other elements.
   `res_voltages` is always equal to the supplied `voltages` for a voltage source.
 - {gh-pr}`243` Fix cross-sectional area of DGS line types created from line elements and special case
