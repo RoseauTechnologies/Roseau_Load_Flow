@@ -19,7 +19,7 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
-- {gh-pr}`244` Add `res_voltages` to the `VoltageSource` class for symmetry with the other elements.
+- Add `res_voltages` to the `VoltageSource` class for symmetry with the other elements.
   `res_voltages` is always equal to the supplied `voltages` for a voltage source.
 - {gh-pr}`243` Fix cross-sectional area of DGS line types created from line elements and special case
   invalid PwF line geographical coordinates table.
