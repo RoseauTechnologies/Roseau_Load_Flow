@@ -5,7 +5,7 @@ from typing import Final
 import numpy as np
 from typing_extensions import Self
 
-from roseau.load_flow.converters import calculate_voltage_phases
+from roseau.load_flow.converters import _calculate_voltages, calculate_voltage_phases
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import Element
@@ -151,6 +151,16 @@ class VoltageSource(Element):
     def res_potentials(self) -> Q_[ComplexArray]:
         """The load flow result of the source potentials (V)."""
         return self._res_potentials_getter(warning=True)
+
+    def _res_voltages_getter(self, warning: bool) -> ComplexArray:
+        potentials = self._res_potentials_getter(warning)
+        return _calculate_voltages(potentials, self.phases)
+
+    @property
+    @ureg_wraps("V", (None,))
+    def res_voltages(self) -> Q_[ComplexArray]:
+        """The load flow result of the source voltages (V)."""
+        return self._res_voltages_getter(warning=True)
 
     def _res_powers_getter(
         self, warning: bool, currents: ComplexArray | None = None, potentials: ComplexArray | None = None
