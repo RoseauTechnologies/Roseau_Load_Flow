@@ -173,6 +173,7 @@ _VOLTAGE_PHASES_CACHE = {
     "abc": ["ab", "bc", "ca"],
     "abcn": ["an", "bn", "cn"],
 }
+_PHASE_SIZES = {ph: len(ph_list) for ph, ph_list in _VOLTAGE_PHASES_CACHE.items()}
 
 
 def calculate_voltage_phases(phases: str) -> list[str]:

@@ -204,56 +204,64 @@
       "bus": "LVBus031726",
       "phases": "bn",
       "type": "power",
-      "powers": [[0.0, 0.0]]
+      "powers": [[0.0, 0.0]],
+      "connect_neutral": true
     },
     {
       "id": "LVBus031726_production",
       "bus": "LVBus031726",
       "phases": "bn",
       "type": "power",
-      "powers": [[0.0, 0.0]]
+      "powers": [[0.0, 0.0]],
+      "connect_neutral": true
     },
     {
       "id": "LVBus031727_consumption",
       "bus": "LVBus031727",
       "phases": "an",
       "type": "power",
-      "powers": [[0.0, 0.0]]
+      "powers": [[0.0, 0.0]],
+      "connect_neutral": true
     },
     {
       "id": "LVBus031727_production",
       "bus": "LVBus031727",
       "phases": "bn",
       "type": "power",
-      "powers": [[0.0, 0.0]]
+      "powers": [[0.0, 0.0]],
+      "connect_neutral": true
     },
     {
       "id": "LVBus031729_consumption",
       "bus": "LVBus031729",
       "phases": "an",
       "type": "power",
-      "powers": [[4400.0, 1400.0]]
+      "powers": [[4400.0, 1400.0]],
+      "connect_neutral": true
     },
     {
       "id": "LVBus031729_production",
       "bus": "LVBus031729",
       "phases": "an",
       "type": "power",
-      "powers": [[-200.0, 0.0]]
+      "powers": [[-200.0, 0.0]],
+      "connect_neutral": true
     },
     {
       "id": "LVBus031728_consumption",
       "bus": "LVBus031728",
       "phases": "cn",
       "type": "power",
-      "powers": [[4400.0, 1400.0]]
+      "powers": [[4400.0, 1400.0]],
+      "connect_neutral": true
     },
     {
       "id": "LVBus031728_production",
       "bus": "LVBus031728",
       "phases": "cn",
       "type": "power",
-      "powers": [[-200.0, 0.0]]
+      "powers": [[-200.0, 0.0]],
+      "connect_neutral": true
     }
   ],
   "sources": [
@@ -265,7 +273,8 @@
         [17320.50807568877, 10000.0],
         [0.0, -20000.0],
         [-17320.50807568877, 10000.0]
-      ]
+      ],
+      "connect_neutral": false
     }
   ],
   "lines_params": [

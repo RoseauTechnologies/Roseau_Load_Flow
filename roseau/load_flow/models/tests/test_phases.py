@@ -72,7 +72,8 @@ def test_loads_phases():
     # Allowed
     for ph, n in (("ab", 1), ("abc", 3), ("abcn", 3)):
         i = next(load_ids)
-        PowerLoad(id=f"load{i}", bus=bus, phases=ph, powers=[100] * n)
+        load = PowerLoad(id=f"load{i}", bus=bus, phases=ph, powers=[100] * n)
+        assert not load.has_floating_neutral
 
     # Not in bus
     bus = Bus(id="bus", phases="ab")
@@ -87,16 +88,19 @@ def test_loads_phases():
     for ph, n in (("ab", 1), ("abc", 3), ("abcn", 3)):
         i = next(load_ids)
         bus = Bus(id="bus", phases=ph)
-        load = PowerLoad(id=f"load{i}", bus=bus, phases=ph, powers=[100] * n)
+        load = PowerLoad(id=f"load{i}", bus=bus, powers=[100] * n)
         assert load.phases == ph
+        assert not load.has_floating_neutral
 
     # Floating neutral
     bus = Bus(id="bus", phases="ab")
     # power and impedance loads can have a floating neutral
     i = next(load_ids)
-    PowerLoad(id=f"load{i}", bus=bus, phases="abn", powers=[100, 100])
+    load = PowerLoad(id=f"load{i}", bus=bus, phases="abn", powers=[100, 100])
+    assert load.has_floating_neutral
     i = next(load_ids)
-    ImpedanceLoad(id=f"load{i}", bus=bus, phases="abn", impedances=[100, 100])
+    load = ImpedanceLoad(id=f"load{i}", bus=bus, phases="abn", impedances=[100, 100])
+    assert load.has_floating_neutral
     # current loads cannot have a floating neutral
     i = next(load_ids)
     with pytest.raises(RoseauLoadFlowException) as e:
@@ -106,12 +110,47 @@ def test_loads_phases():
         f"Constant current loads cannot have a floating neutral. CurrentLoad 'load{i}' "
         f"has phases 'abn' while bus 'bus' has phases 'ab'."
     )
-    # single-phase floating neutral does not make sense
     i = next(load_ids)
     with pytest.raises(RoseauLoadFlowException) as e:
+        # single-phase floating neutral does not make sense
         PowerLoad(id=f"load{i}", bus=bus, phases="an", powers=[100])
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
     assert e.value.msg == f"Phases ['n'] of load 'load{i}' are not in bus 'bus' phases 'ab'"
+
+    # Explicitly connected neutral
+    bus_ab = Bus(id="bus_ab", phases="ab")
+    bus_abn = Bus(id="bus_abn", phases="abn")
+    i = next(load_ids)
+    load = PowerLoad(id=f"load{i}", bus=bus_ab, phases="ab", powers=[100], connect_neutral=True)
+    assert not load.has_floating_neutral
+    i = next(load_ids)
+    with pytest.raises(RoseauLoadFlowException) as e:
+        # Explicitly connected neutral to a bus without neutral
+        PowerLoad(id=f"load{i}", bus=bus_ab, phases="abn", powers=[100, 100], connect_neutral=True)
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
+    assert e.value.msg == f"Phases ['n'] of load 'load{i}' are not in bus 'bus_ab' phases 'ab'"
+    i = next(load_ids)
+    load = PowerLoad(id=f"load{i}", bus=bus_abn, phases="ab", powers=[100], connect_neutral=True)
+    assert not load.has_floating_neutral
+    load = PowerLoad(id=f"load{i}", bus=bus_abn, phases="abn", powers=[100, 100], connect_neutral=True)
+    assert not load.has_floating_neutral
+
+    # Explicitly disconnected neutral
+    bus_ab = Bus(id="bus_ab", phases="ab")
+    bus_abn = Bus(id="bus_abn", phases="abn")
+    i = next(load_ids)
+    load = PowerLoad(id=f"load{i}", bus=bus_ab, phases="ab", powers=[100], connect_neutral=False)
+    assert not load.has_floating_neutral
+    i = next(load_ids)
+    load = PowerLoad(id=f"load{i}", bus=bus_ab, phases="abn", powers=[100, 100], connect_neutral=False)
+    assert load.has_floating_neutral
+    i = next(load_ids)
+    load = PowerLoad(id=f"load{i}", bus=bus_abn, phases="ab", powers=[100], connect_neutral=False)
+    assert not load.has_floating_neutral
+    i = next(load_ids)
+    load = PowerLoad(id=f"load{i}", bus=bus_abn, phases="abn", powers=[100, 100], connect_neutral=False)
+    assert load.phases == "abn"
+    assert load.has_floating_neutral
 
 
 def test_sources_phases():
@@ -131,7 +170,8 @@ def test_sources_phases():
     # Allowed
     for ph, n in (("ab", 1), ("abc", 3), ("abcn", 3)):
         i = next(source_ids)
-        VoltageSource(id=f"source{i}", bus=bus, phases=ph, voltages=[100] * n)
+        source = VoltageSource(id=f"source{i}", bus=bus, phases=ph, voltages=[100] * n)
+        assert not source.has_floating_neutral
 
     # Not in bus
     bus = Bus(id="bus", phases="ab")
@@ -148,17 +188,54 @@ def test_sources_phases():
         bus = Bus(id="bus", phases=ph)
         vs = VoltageSource(id=f"source{i}", bus=bus, voltages=[100] * n)
         assert vs.phases == ph
+        assert not vs.has_floating_neutral
 
-    # Floating neutral
+    # Floating neutral default behavior
     bus = Bus(id="bus", phases="ab")
     i = next(source_ids)
-    VoltageSource(id=f"source{i}", bus=bus, phases="abn", voltages=[100, 100])
-    # single-phase floating neutral does not make sense
+    source = VoltageSource(id=f"source{i}", bus=bus, phases="abn", voltages=[100, 100])
+    assert source.has_floating_neutral
     i = next(source_ids)
     with pytest.raises(RoseauLoadFlowException) as e:
+        # single-phase floating neutral does not make sense
         VoltageSource(id=f"source{i}", bus=bus, phases="an", voltages=[100])
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
     assert e.value.msg == f"Phases ['n'] of source 'source{i}' are not in bus 'bus' phases 'ab'"
+
+    # Explicitly connected neutral
+    bus_ab = Bus(id="bus_ab", phases="ab")
+    bus_abn = Bus(id="bus_abn", phases="abn")
+    i = next(source_ids)
+    source = VoltageSource(id=f"source{i}", bus=bus_ab, phases="ab", voltages=[100], connect_neutral=True)
+    assert not source.has_floating_neutral
+    i = next(source_ids)
+    with pytest.raises(RoseauLoadFlowException) as e:
+        # Explicitly connected neutral to a bus without neutral
+        VoltageSource(id=f"source{i}", bus=bus_ab, phases="abn", voltages=[100, 100], connect_neutral=True)
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
+    assert e.value.msg == f"Phases ['n'] of source 'source{i}' are not in bus 'bus_ab' phases 'ab'"
+    i = next(source_ids)
+    source = VoltageSource(id=f"source{i}", bus=bus_abn, phases="ab", voltages=[100], connect_neutral=True)
+    assert not source.has_floating_neutral
+    source = VoltageSource(id=f"source{i}", bus=bus_abn, phases="abn", voltages=[100, 100], connect_neutral=True)
+    assert not source.has_floating_neutral
+
+    # Explicitly disconnected neutral
+    bus_ab = Bus(id="bus_ab", phases="ab")
+    bus_abn = Bus(id="bus_abn", phases="abn")
+    i = next(source_ids)
+    source = VoltageSource(id=f"source{i}", bus=bus_ab, phases="ab", voltages=[100], connect_neutral=False)
+    assert not source.has_floating_neutral
+    i = next(source_ids)
+    source = VoltageSource(id=f"source{i}", bus=bus_ab, phases="abn", voltages=[100, 100], connect_neutral=False)
+    assert source.has_floating_neutral
+    i = next(source_ids)
+    source = VoltageSource(id=f"source{i}", bus=bus_abn, phases="ab", voltages=[100], connect_neutral=False)
+    assert not source.has_floating_neutral
+    i = next(source_ids)
+    source = VoltageSource(id=f"source{i}", bus=bus_abn, phases="abn", voltages=[100, 100], connect_neutral=False)
+    assert source.phases == "abn"
+    assert source.has_floating_neutral
 
 
 def test_lines_phases():

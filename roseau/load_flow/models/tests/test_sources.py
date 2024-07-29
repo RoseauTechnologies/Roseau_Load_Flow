@@ -55,12 +55,14 @@ def test_sources_to_dict():
         "bus": "bus",
         "phases": "abcn",
         "voltages": [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
+        "connect_neutral": True,
     }
     assert VoltageSource(id="vs2", bus=bus, phases="abc", voltages=values).to_dict(include_results=False) == {
         "id": "vs2",
         "bus": "bus",
         "phases": "abc",
         "voltages": [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
+        "connect_neutral": True,
     }
 
 

@@ -90,6 +90,7 @@
       "phases": "bn",
       "type": "power",
       "powers": [[100.0, 0.0]],
+      "connect_neutral": true,
       "results": {
         "currents": [
           [0.005000025000250002, -0.0],
@@ -108,6 +109,7 @@
       "bus": "bus0",
       "phases": "bn",
       "voltages": [[20000.0, 0.0]],
+      "connect_neutral": true,
       "results": {
         "currents": [
           [-0.005000025000125, 0.0],

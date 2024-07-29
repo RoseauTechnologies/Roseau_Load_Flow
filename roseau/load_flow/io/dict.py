@@ -534,14 +534,18 @@ def v1_to_v2_converter(data: JsonDict) -> JsonDict:
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LOAD_TYPE)
 
+        bus_data = buses_dict[load_data["bus"]]
+        bus_phases = bus_data["phases"]
+        load_phases = load_data["phases"]
+
+        # Add the connect_neutral key
+        load_data["connect_neutral"] = "n" in bus_phases or "n" not in load_phases
+
         # Modify the results
         load_data_result = load_data.get("results", None)
         if load_data_result is not None:
             if "potentials" not in load_data_result:
-                bus_data = buses_dict[load_data["bus"]]
-                bus_phases = bus_data["phases"]
                 bus_potentials = bus_data["results"]["potentials"]
-                load_phases = load_data["phases"]
                 load_data_result["potentials"] = [bus_potentials[bus_phases.index(p)] for p in load_phases]
             if "powers" in load_data_result:
                 load_data_result["flexible_powers"] = load_data_result.pop("powers")
@@ -551,12 +555,17 @@ def v1_to_v2_converter(data: JsonDict) -> JsonDict:
     old_sources = data.get("sources", [])
     sources = []
     for source_data in old_sources:
+        bus_data = buses_dict[source_data["bus"]]
+        bus_phases = bus_data["phases"]
+        source_phases = source_data["phases"]
+
+        # Add the connect_neutral key
+        source_data["connect_neutral"] = "n" in bus_phases or "n" not in source_phases
+
+        # Modify the results
         source_data_result = source_data.get("results", None)
         if source_data_result is not None and "potentials" not in source_data_result:
-            bus_data = buses_dict[source_data["bus"]]
-            bus_phases = bus_data["phases"]
             bus_potentials = bus_data["results"]["potentials"]
-            source_phases = source_data["phases"]
             source_data_result["potentials"] = [bus_potentials[bus_phases.index(p)] for p in source_phases]
         sources.append(source_data)
 
