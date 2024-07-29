@@ -19,6 +19,10 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`246` Improvements to the `rlf.converters` module:
+  - Fix `series_phasor_to_sym` function with series that have different phases per element.
+  - Make `calculate_voltages` take array-like potentials.
+  - Improve typing of several functions.
 - {gh-pr}`245` {gh-issue}`244` Fix the `LineParameters.from_geometry` method to not crash when passed
   `unknown` insulator type or `None`.
 - Add `res_voltages` to the `VoltageSource` class for symmetry with the other elements.

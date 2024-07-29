@@ -50,7 +50,7 @@ def generate_transformers(
     transformers: dict[Id, Transformer],
     buses: dict[Id, Bus],
     sta_cubic: pd.DataFrame,
-    transformers_tap: dict[Id, int],
+    transformers_tap: dict[Id, float],
     transformers_params: dict[Id, TransformerParameters],
 ) -> None:
     """Generate the transformers of the network.
@@ -83,7 +83,7 @@ def generate_transformers(
         # z_gnd = elm_tr.at[idx, "re0tr_l"] + 1j * elm_tr.at[idx, "xe0tr_l"]  # Grounding impedance
         # Transformers do not have geometries, use the buses
         geometry = (
-            shapely.LineString([bus1.geometry, bus2.geometry]).centroid
+            shapely.LineString([bus1.geometry, bus2.geometry]).centroid  # type: ignore
             if bus1.geometry is not None and bus2.geometry is not None
             else None
         )

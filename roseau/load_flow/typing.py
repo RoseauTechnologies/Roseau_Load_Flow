@@ -75,13 +75,22 @@ MapOrSeq: TypeAlias = Mapping[Id, T] | Sequence[T]
 ComplexArray: TypeAlias = NDArray[np.complex128]
 # TODO: improve the types below when shape-typing becomes supported
 ComplexArrayLike1D: TypeAlias = (
-    ComplexArray | Q_[ComplexArray] | Q_[Sequence[complex]] | Sequence[complex | Q_[complex]]
+    NDArray[np.number]
+    | Q_[NDArray[np.number]]
+    | Q_[Sequence[complex | float]]
+    | Sequence[complex | float | Q_[complex | float]]
 )
 ComplexArrayLike2D: TypeAlias = (
-    ComplexArray | Q_[ComplexArray] | Q_[Sequence[Sequence[complex]]] | Sequence[Sequence[complex | Q_[complex]]]
+    NDArray[np.number]
+    | Q_[NDArray[np.number]]
+    | Q_[Sequence[Sequence[complex]]]
+    | Sequence[Sequence[complex | Q_[complex]]]
 )
 FloatArrayLike1D: TypeAlias = (
-    NDArray[np.float64] | Q_[NDArray[np.float64]] | Q_[Sequence[float]] | Sequence[float | Q_[float]]
+    NDArray[np.floating | np.integer]
+    | Q_[NDArray[np.floating | np.integer]]
+    | Q_[Sequence[float]]
+    | Sequence[float | Q_[float]]
 )
 
 __all__ = [

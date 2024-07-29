@@ -129,7 +129,7 @@ def network_from_dgs(
     # Transformers
     if elm_tr is not None:
         transformers_params: dict[Id, TransformerParameters] = {}
-        transformers_tap: dict[Id, int] = {}
+        transformers_tap: dict[Id, float] = {}
         if typ_tr is None:
             msg = (
                 "The network contains transformers but is missing transformer types (TypTr2). Please copy all "
@@ -210,7 +210,7 @@ def _add_potential_refs(  # noqa: C901
         connected_component: set[Element] = set()
         has_potential_ref = False
         transformer = None
-        to_visit = [initial_element]
+        to_visit: list[Element] = [initial_element]
         while to_visit:
             element = to_visit.pop(-1)
             connected_component.add(element)
