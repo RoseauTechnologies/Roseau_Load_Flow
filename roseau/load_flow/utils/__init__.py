@@ -11,6 +11,7 @@ from roseau.load_flow.utils.types import (
     LineType,
     LoadTypeDtype,
     PhaseDtype,
+    SequenceDtype,
     VoltagePhaseDtype,
 )
 
@@ -39,4 +40,5 @@ __all__ = [
     "VoltagePhaseDtype",
     "BranchTypeDtype",
     "LoadTypeDtype",
+    "SequenceDtype",
 ]

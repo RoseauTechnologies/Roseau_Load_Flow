@@ -7,13 +7,17 @@ Available functions:
 * convert potentials to voltages
 """
 
-from collections.abc import Sequence
+import logging
 
 import numpy as np
 import pandas as pd
 
+from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.typing import ComplexArray, ComplexArrayLike1D
 from roseau.load_flow.units import Q_, ureg_wraps
+from roseau.load_flow.utils.types import SequenceDtype
+
+logger = logging.getLogger(__name__)
 
 ALPHA = np.exp(2 / 3 * np.pi * 1j)
 """complex: Phasor rotation operator `alpha`, which rotates a phasor vector counterclockwise by 120
@@ -30,17 +34,18 @@ A = np.array(
 """numpy.ndarray[complex]: "A" matrix: transformation matrix from phasor to symmetrical components."""
 
 _A_INV = np.linalg.inv(A)
+_SEQ_INDEX = pd.CategoricalIndex(["zero", "pos", "neg"], name="sequence", dtype=SequenceDtype)
 
 
-def phasor_to_sym(v_abc: Sequence[complex]) -> ComplexArray:
+def phasor_to_sym(v_abc: ComplexArrayLike1D) -> ComplexArray:
     """Compute the symmetrical components `(0, +, -)` from the phasor components `(a, b, c)`."""
-    v_abc_array = np.array(v_abc)
+    v_abc_array = np.asarray(v_abc)
     orig_shape = v_abc_array.shape
     v_012 = _A_INV @ v_abc_array.reshape((3, 1))
     return v_012.reshape(orig_shape)
 
 
-def sym_to_phasor(v_012: Sequence[complex]) -> ComplexArray:
+def sym_to_phasor(v_012: ComplexArrayLike1D) -> ComplexArray:
     """Compute the phasor components `(a, b, c)` from the symmetrical components `(0, +, -)`."""
     v_012_array = np.array(v_012)
     orig_shape = v_012_array.shape
@@ -98,15 +103,13 @@ def series_phasor_to_sym(s_abc: pd.Series) -> pd.Series:
     """
     if not isinstance(s_abc, pd.Series):
         raise TypeError("Input must be a pandas Series.")
-    s_012: pd.Series = (
-        s_abc.unstack("phase")
-        .apply(lambda x: phasor_to_sym(x).flatten(), axis="columns", result_type="expand")
-        .rename(columns={0: "zero", 1: "pos", 2: "neg"})
-        .stack()
-    )
-    s_012.name = s_abc.name
-    s_012.index = s_012.index.set_names("sequence", level=-1).set_levels(
-        s_012.index.levels[-1].astype(pd.CategoricalDtype(categories=["zero", "pos", "neg"], ordered=True)), level=-1
+    if not isinstance(s_abc.index, pd.MultiIndex):
+        raise ValueError("Input series must have a MultiIndex.")
+    if "phase" not in s_abc.index.names:
+        raise ValueError("Input series must have a 'phase' level in the MultiIndex.")
+    level_names = [name for name in s_abc.index.names if name != "phase"]
+    s_012 = s_abc.groupby(level=level_names, sort=False).apply(
+        lambda s: pd.Series(_A_INV @ s, index=_SEQ_INDEX, dtype=np.complex128)
     )
     return s_012
 
@@ -135,7 +138,7 @@ def calculate_voltages(potentials: ComplexArrayLike1D, phases: str) -> Q_[Comple
 
     Args:
         potentials:
-            Array of the complex potentials of each phase.
+            Array-like of the complex potentials of each phase.
 
         phases:
             String of the phases in order. If a neutral exists, it must be the last.
@@ -154,22 +157,22 @@ def calculate_voltages(potentials: ComplexArrayLike1D, phases: str) -> Q_[Comple
         >>> calculate_voltages(np.array([230, 0], dtype=np.complex128), "an")
         array([230.+0.j]) <Unit('volt')>
     """
-    return _calculate_voltages(potentials, phases)
+    return _calculate_voltages(np.asarray(potentials), phases)
 
 
-def _calculate_voltage_phases(phases: str) -> list[str]:
-    if "n" in phases:  # "an", "bn", "cn"
-        return [p + "n" for p in phases[:-1]]
-    else:  # "ab", "bc", "ca"
-        if len(phases) == 2:
-            return [phases]
-        else:
-            return [p1 + p2 for p1, p2 in zip(phases, np.roll(list(phases), -1), strict=True)]
-
-
-_voltage_cache: dict[str, list[str]] = {}
-for _phases in ("ab", "bc", "ca", "an", "bn", "cn", "abn", "bcn", "can", "abc", "abcn"):
-    _voltage_cache[_phases] = _calculate_voltage_phases(_phases)
+_VOLTAGE_PHASES_CACHE = {
+    "ab": ["ab"],
+    "bc": ["bc"],
+    "ca": ["ca"],
+    "an": ["an"],
+    "bn": ["bn"],
+    "cn": ["cn"],
+    "abn": ["an", "bn"],
+    "bcn": ["bn", "cn"],
+    "can": ["cn", "an"],
+    "abc": ["ab", "bc", "ca"],
+    "abcn": ["an", "bn", "cn"],
+}
 
 
 def calculate_voltage_phases(phases: str) -> list[str]:
@@ -192,4 +195,9 @@ def calculate_voltage_phases(phases: str) -> list[str]:
         >>> calculate_voltage_phases("abcn")
         ['an', 'bn', 'cn']
     """
-    return _voltage_cache[phases]
+    try:
+        return _VOLTAGE_PHASES_CACHE[phases]
+    except KeyError:
+        msg = f"Invalid phases '{phases}'. Must be one of {', '.join(_VOLTAGE_PHASES_CACHE)}."
+        logger.error(msg)
+        raise RoseauLoadFlowException(msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE) from None

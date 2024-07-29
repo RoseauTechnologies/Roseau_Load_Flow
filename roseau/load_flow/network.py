@@ -30,6 +30,7 @@ from roseau.load_flow.models import (
     Element,
     Ground,
     Line,
+    Load,
     PotentialRef,
     PowerLoad,
     Switch,
@@ -144,20 +145,26 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         lines: MapOrSeq[Line],
         transformers: MapOrSeq[Transformer],
         switches: MapOrSeq[Switch],
-        loads: MapOrSeq[AbstractLoad],
+        loads: MapOrSeq[Load],
         sources: MapOrSeq[VoltageSource],
         grounds: MapOrSeq[Ground],
         potential_refs: MapOrSeq[PotentialRef],
         crs: str | CRS | None = None,
     ) -> None:
-        self.buses = self._elements_as_dict(buses, RoseauLoadFlowExceptionCode.BAD_BUS_ID)
-        self.lines = self._elements_as_dict(lines, RoseauLoadFlowExceptionCode.BAD_LINE_ID)
-        self.transformers = self._elements_as_dict(transformers, RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_ID)
-        self.switches = self._elements_as_dict(switches, RoseauLoadFlowExceptionCode.BAD_SWITCH_ID)
-        self.loads = self._elements_as_dict(loads, RoseauLoadFlowExceptionCode.BAD_LOAD_ID)
-        self.sources = self._elements_as_dict(sources, RoseauLoadFlowExceptionCode.BAD_SOURCE_ID)
-        self.grounds = self._elements_as_dict(grounds, RoseauLoadFlowExceptionCode.BAD_GROUND_ID)
-        self.potential_refs = self._elements_as_dict(potential_refs, RoseauLoadFlowExceptionCode.BAD_POTENTIAL_REF_ID)
+        self.buses: dict[Id, Bus] = self._elements_as_dict(buses, RoseauLoadFlowExceptionCode.BAD_BUS_ID)
+        self.lines: dict[Id, Line] = self._elements_as_dict(lines, RoseauLoadFlowExceptionCode.BAD_LINE_ID)
+        self.transformers: dict[Id, Transformer] = self._elements_as_dict(
+            transformers, RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_ID
+        )
+        self.switches: dict[Id, Switch] = self._elements_as_dict(switches, RoseauLoadFlowExceptionCode.BAD_SWITCH_ID)
+        self.loads: dict[Id, Load] = self._elements_as_dict(loads, RoseauLoadFlowExceptionCode.BAD_LOAD_ID)
+        self.sources: dict[Id, VoltageSource] = self._elements_as_dict(
+            sources, RoseauLoadFlowExceptionCode.BAD_SOURCE_ID
+        )
+        self.grounds: dict[Id, Ground] = self._elements_as_dict(grounds, RoseauLoadFlowExceptionCode.BAD_GROUND_ID)
+        self.potential_refs: dict[Id, PotentialRef] = self._elements_as_dict(
+            potential_refs, RoseauLoadFlowExceptionCode.BAD_POTENTIAL_REF_ID
+        )
 
         self._elements: list[Element] = []
         self._check_validity(constructed=False)
@@ -166,7 +173,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         self._solver = AbstractSolver.from_dict(data={"name": self._DEFAULT_SOLVER, "params": {}}, network=self)
         if crs is None:
             crs = "EPSG:4326"
-        self.crs = CRS(crs)
+        self.crs: CRS = CRS(crs)
 
     def __repr__(self) -> str:
         def count_repr(__o: Sized, /, singular: str, plural: str | None = None) -> str:
@@ -197,14 +204,16 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         if isinstance(elements, Mapping):
             for element_id, element in elements.items():
                 if element.id != element_id:
-                    msg = f"{typ.capitalize()} ID mismatch: {element_id!r} != {element.id!r}."
+                    msg = (
+                        f"{typ.capitalize()} ID {element.id!r} does not match its key in the dictionary {element_id!r}."
+                    )
                     logger.error(msg)
                     raise RoseauLoadFlowException(msg, code=error_code)
                 elements_dict[element_id] = element
         else:
             for element in elements:
                 if element.id in elements_dict:
-                    msg = f"Duplicate ID for an {typ.lower()} in this network: {element.id!r}."
+                    msg = f"Duplicate {typ.lower()} ID {element.id!r} in the network."
                     logger.error(msg)
                     raise RoseauLoadFlowException(msg, code=error_code)
                 elements_dict[element.id] = element
@@ -226,7 +235,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         lines: list[Line] = []
         transformers: list[Transformer] = []
         switches: list[Switch] = []
-        loads: list[AbstractLoad] = []
+        loads: list[Load] = []
         sources: list[VoltageSource] = []
         grounds: list[Ground] = []
         potential_refs: list[PotentialRef] = []

@@ -1,7 +1,7 @@
 import logging
 from abc import ABC
 from functools import cached_property
-from typing import ClassVar, Final, Literal
+from typing import ClassVar, Final, Literal, TypeAlias
 
 import numpy as np
 
@@ -555,3 +555,7 @@ class ImpedanceLoad(AbstractLoad):
         self._invalidate_network_results()
         if self._cy_element is not None:
             self._cy_element.update_admittances(1.0 / self._impedances)
+
+
+Load: TypeAlias = PowerLoad | CurrentLoad | ImpedanceLoad
+"""The type of an electric load."""

@@ -20,6 +20,8 @@ BranchTypeDtype = pd.CategoricalDtype(categories=["line", "transformer", "switch
 """Categorical data type used for branch types."""
 LoadTypeDtype = pd.CategoricalDtype(categories=["power", "current", "impedance"], ordered=True)
 """Categorical data type used for load types."""
+SequenceDtype = pd.CategoricalDtype(categories=["zero", "pos", "neg"], ordered=True)
+"""Categorical data type used for symmetrical components."""
 _DTYPES: Final = {
     "bus_id": object,
     "branch_id": object,

@@ -16,6 +16,7 @@ from roseau.load_flow.models.loads import (
     CurrentLoad,
     FlexibleParameter,
     ImpedanceLoad,
+    Load,
     PowerLoad,
     Projection,
 )
@@ -42,6 +43,7 @@ __all__ = [
     "ImpedanceLoad",
     "PowerLoad",
     "CurrentLoad",
+    "Load",
     "FlexibleParameter",
     "Control",
     "Projection",

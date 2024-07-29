@@ -408,7 +408,7 @@ def test_bad_networks():
             grounds={"g": ground},
             potential_refs={"pr": pref},
         )
-    assert e.value.msg == "Bus ID mismatch: 'foo' != 'sb'."
+    assert e.value.msg == "Bus ID 'sb' does not match its key in the dictionary 'foo'."
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_BUS_ID
 
 
