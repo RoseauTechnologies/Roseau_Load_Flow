@@ -27,10 +27,11 @@ from roseau.load_flow.models import (
     AbstractBranch,
     AbstractLoad,
     Bus,
+    CurrentLoad,
     Element,
     Ground,
+    ImpedanceLoad,
     Line,
-    Load,
     PotentialRef,
     PowerLoad,
     Switch,
@@ -145,7 +146,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         lines: MapOrSeq[Line],
         transformers: MapOrSeq[Transformer],
         switches: MapOrSeq[Switch],
-        loads: MapOrSeq[Load],
+        loads: MapOrSeq[PowerLoad | CurrentLoad | ImpedanceLoad],
         sources: MapOrSeq[VoltageSource],
         grounds: MapOrSeq[Ground],
         potential_refs: MapOrSeq[PotentialRef],
@@ -157,7 +158,9 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             transformers, RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_ID
         )
         self.switches: dict[Id, Switch] = self._elements_as_dict(switches, RoseauLoadFlowExceptionCode.BAD_SWITCH_ID)
-        self.loads: dict[Id, Load] = self._elements_as_dict(loads, RoseauLoadFlowExceptionCode.BAD_LOAD_ID)
+        self.loads: dict[Id, PowerLoad | CurrentLoad | ImpedanceLoad] = self._elements_as_dict(
+            loads, RoseauLoadFlowExceptionCode.BAD_LOAD_ID
+        )
         self.sources: dict[Id, VoltageSource] = self._elements_as_dict(
             sources, RoseauLoadFlowExceptionCode.BAD_SOURCE_ID
         )
@@ -235,7 +238,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         lines: list[Line] = []
         transformers: list[Transformer] = []
         switches: list[Switch] = []
-        loads: list[Load] = []
+        loads: list[PowerLoad | CurrentLoad | ImpedanceLoad] = []
         sources: list[VoltageSource] = []
         grounds: list[Ground] = []
         potential_refs: list[PotentialRef] = []
