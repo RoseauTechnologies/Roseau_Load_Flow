@@ -59,7 +59,7 @@ class AbstractLoad(Element, ABC):
 
             connect_neutral:
                 Specifies whether the load's neutral should be connected to the bus's neutral or
-                left floating. By default, the load's neutral is connected when the load has a
+                left floating. By default, the load's neutral is connected when the bus has a
                 neutral. If the bus does not have a neutral, the load's neutral is left floating
                 by default. To override the default behavior, pass an explicit ``True`` or ``False``.
         """
@@ -347,7 +347,7 @@ class PowerLoad(AbstractLoad):
 
             connect_neutral:
                 Specifies whether the load's neutral should be connected to the bus's neutral or
-                left floating. By default, the load's neutral is connected when the load has a
+                left floating. By default, the load's neutral is connected when the bus has a
                 neutral. If the bus does not have a neutral, the load's neutral is left floating
                 by default. To override the default behavior, pass an explicit ``True`` or ``False``.
         """
@@ -576,7 +576,7 @@ class ImpedanceLoad(AbstractLoad):
 
             connect_neutral:
                 Specifies whether the load's neutral should be connected to the bus's neutral or
-                left floating. By default, the load's neutral is connected when the load has a
+                left floating. By default, the load's neutral is connected when the bus has a
                 neutral. If the bus does not have a neutral, the load's neutral is left floating
                 by default. To override the default behavior, pass an explicit ``True`` or ``False``.
         """

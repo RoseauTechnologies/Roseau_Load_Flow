@@ -56,7 +56,7 @@ class VoltageSource(Element):
 
             connect_neutral:
                 Specifies whether the source's neutral should be connected to the bus's neutral or
-                left floating. By default, the source's neutral is connected when the source has a
+                left floating. By default, the source's neutral is connected when the bus has a
                 neutral. If the bus does not have a neutral, the source's neutral is left floating
                 by default. To override the default behavior, pass an explicit ``True`` or ``False``.
         """
