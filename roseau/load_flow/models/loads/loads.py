@@ -75,7 +75,7 @@ class AbstractLoad(Element, ABC):
             # Also check they are in the bus phases
             phases_not_in_bus = set(phases) - set(bus.phases)
             if connect_neutral is None:
-                connect_neutral = "n" in bus.phases
+                connect_neutral = "n" in bus.phases or "n" not in phases
             # "n" is allowed to be absent from the bus only if the load has more than 2 phases
             missing_ok = phases_not_in_bus == {"n"} and len(phases) > 2 and not connect_neutral
             if phases_not_in_bus and not missing_ok:

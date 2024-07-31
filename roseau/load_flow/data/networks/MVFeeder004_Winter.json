@@ -545,7 +545,7 @@
         [30600.0, 10000.0],
         [30600.0, 10000.0]
       ],
-      "connect_neutral": false
+      "connect_neutral": true
     },
     {
       "id": "MVLV00510_production",
@@ -557,7 +557,7 @@
         [0.0, 0.0],
         [0.0, 0.0]
       ],
-      "connect_neutral": false
+      "connect_neutral": true
     },
     {
       "id": "MVLV06791_consumption",
@@ -569,7 +569,7 @@
         [73000.0, 24000.0],
         [73000.0, 24000.0]
       ],
-      "connect_neutral": false
+      "connect_neutral": true
     },
     {
       "id": "MVLV06791_production",
@@ -581,7 +581,7 @@
         [0.0, 0.0],
         [0.0, 0.0]
       ],
-      "connect_neutral": false
+      "connect_neutral": true
     },
     {
       "id": "MVLV10651_consumption",
@@ -593,7 +593,7 @@
         [73000.0, 24000.0],
         [73000.0, 24000.0]
       ],
-      "connect_neutral": false
+      "connect_neutral": true
     },
     {
       "id": "MVLV10651_production",
@@ -605,7 +605,7 @@
         [0.0, 0.0],
         [0.0, 0.0]
       ],
-      "connect_neutral": false
+      "connect_neutral": true
     },
     {
       "id": "MVLV10636_consumption",
@@ -617,7 +617,7 @@
         [39100.0, 12800.0],
         [39100.0, 12800.0]
       ],
-      "connect_neutral": false
+      "connect_neutral": true
     },
     {
       "id": "MVLV10636_production",
@@ -629,7 +629,7 @@
         [0.0, 0.0],
         [0.0, 0.0]
       ],
-      "connect_neutral": false
+      "connect_neutral": true
     },
     {
       "id": "MVLV07316_consumption",
@@ -641,7 +641,7 @@
         [73000.0, 24000.0],
         [73000.0, 24000.0]
       ],
-      "connect_neutral": false
+      "connect_neutral": true
     },
     {
       "id": "MVLV07316_production",
@@ -653,7 +653,7 @@
         [0.0, 0.0],
         [0.0, 0.0]
       ],
-      "connect_neutral": false
+      "connect_neutral": true
     }
   ],
   "sources": [
@@ -666,7 +666,7 @@
         [0.0, -20000.0],
         [-17320.50807568877, 10000.0]
       ],
-      "connect_neutral": false
+      "connect_neutral": true
     }
   ],
   "lines_params": [

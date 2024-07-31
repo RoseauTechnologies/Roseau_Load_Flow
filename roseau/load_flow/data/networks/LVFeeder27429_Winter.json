@@ -523,7 +523,7 @@
         [0.0, -20000.0],
         [-17320.50807568877, 10000.0]
       ],
-      "connect_neutral": false
+      "connect_neutral": true
     }
   ],
   "lines_params": [
