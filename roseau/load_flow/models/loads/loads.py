@@ -206,7 +206,7 @@ class AbstractLoad(Element, ABC):
 
     def _cy_connect(self):
         connections = []
-        bus_phases = self.bus.phases if self._connect_neutral else self.bus.phases.removesuffix("n")
+        bus_phases = self.bus.phases.removesuffix("n") if self.has_floating_neutral else self.bus.phases
         for i, phase in enumerate(bus_phases):
             if phase in self.phases:
                 j = self.phases.index(phase)
