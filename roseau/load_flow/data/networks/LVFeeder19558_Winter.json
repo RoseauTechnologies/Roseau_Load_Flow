@@ -105,14 +105,16 @@
       "bus": "LVBus090801",
       "phases": "cn",
       "type": "power",
-      "powers": [[7800.0, 2600.0]]
+      "powers": [[7800.0, 2600.0]],
+      "connect_neutral": null
     },
     {
       "id": "LVBus090801_production",
       "bus": "LVBus090801",
       "phases": "bn",
       "type": "power",
-      "powers": [[0.0, 0.0]]
+      "powers": [[0.0, 0.0]],
+      "connect_neutral": null
     }
   ],
   "sources": [
@@ -124,7 +126,8 @@
         [17320.50807568877, 10000.0],
         [0.0, -20000.0],
         [-17320.50807568877, 10000.0]
-      ]
+      ],
+      "connect_neutral": null
     }
   ],
   "lines_params": [

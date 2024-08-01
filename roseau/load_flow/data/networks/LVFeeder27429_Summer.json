@@ -373,126 +373,144 @@
       "bus": "LVBus127384",
       "phases": "cn",
       "type": "power",
-      "powers": [[0.0, 0.0]]
+      "powers": [[0.0, 0.0]],
+      "connect_neutral": null
     },
     {
       "id": "LVBus127384_production",
       "bus": "LVBus127384",
       "phases": "bn",
       "type": "power",
-      "powers": [[0.0, 0.0]]
+      "powers": [[0.0, 0.0]],
+      "connect_neutral": null
     },
     {
       "id": "LVBus187572_consumption",
       "bus": "LVBus187572",
       "phases": "an",
       "type": "power",
-      "powers": [[0.0, 0.0]]
+      "powers": [[0.0, 0.0]],
+      "connect_neutral": null
     },
     {
       "id": "LVBus187572_production",
       "bus": "LVBus187572",
       "phases": "an",
       "type": "power",
-      "powers": [[0.0, 0.0]]
+      "powers": [[0.0, 0.0]],
+      "connect_neutral": null
     },
     {
       "id": "LVBus195737_consumption",
       "bus": "LVBus195737",
       "phases": "an",
       "type": "power",
-      "powers": [[1600.0, 500.0]]
+      "powers": [[1600.0, 500.0]],
+      "connect_neutral": null
     },
     {
       "id": "LVBus195737_production",
       "bus": "LVBus195737",
       "phases": "an",
       "type": "power",
-      "powers": [[-3700.0, 0.0]]
+      "powers": [[-3700.0, 0.0]],
+      "connect_neutral": null
     },
     {
       "id": "LVBus186172_consumption",
       "bus": "LVBus186172",
       "phases": "an",
       "type": "power",
-      "powers": [[0.0, 0.0]]
+      "powers": [[0.0, 0.0]],
+      "connect_neutral": null
     },
     {
       "id": "LVBus186172_production",
       "bus": "LVBus186172",
       "phases": "cn",
       "type": "power",
-      "powers": [[0.0, 0.0]]
+      "powers": [[0.0, 0.0]],
+      "connect_neutral": null
     },
     {
       "id": "LVBus186173_consumption",
       "bus": "LVBus186173",
       "phases": "cn",
       "type": "power",
-      "powers": [[0.0, 0.0]]
+      "powers": [[0.0, 0.0]],
+      "connect_neutral": null
     },
     {
       "id": "LVBus186173_production",
       "bus": "LVBus186173",
       "phases": "an",
       "type": "power",
-      "powers": [[0.0, 0.0]]
+      "powers": [[0.0, 0.0]],
+      "connect_neutral": null
     },
     {
       "id": "LVBus186174_consumption",
       "bus": "LVBus186174",
       "phases": "an",
       "type": "power",
-      "powers": [[1600.0, 500.0]]
+      "powers": [[1600.0, 500.0]],
+      "connect_neutral": null
     },
     {
       "id": "LVBus186174_production",
       "bus": "LVBus186174",
       "phases": "an",
       "type": "power",
-      "powers": [[-3700.0, 0.0]]
+      "powers": [[-3700.0, 0.0]],
+      "connect_neutral": null
     },
     {
       "id": "LVBus186175_consumption",
       "bus": "LVBus186175",
       "phases": "an",
       "type": "power",
-      "powers": [[0.0, 0.0]]
+      "powers": [[0.0, 0.0]],
+      "connect_neutral": null
     },
     {
       "id": "LVBus186175_production",
       "bus": "LVBus186175",
       "phases": "cn",
       "type": "power",
-      "powers": [[0.0, 0.0]]
+      "powers": [[0.0, 0.0]],
+      "connect_neutral": null
     },
     {
       "id": "LVBus186176_consumption",
       "bus": "LVBus186176",
       "phases": "cn",
       "type": "power",
-      "powers": [[0.0, 0.0]]
+      "powers": [[0.0, 0.0]],
+      "connect_neutral": null
     },
     {
       "id": "LVBus186176_production",
       "bus": "LVBus186176",
       "phases": "cn",
       "type": "power",
-      "powers": [[0.0, 0.0]]
+      "powers": [[0.0, 0.0]],
+      "connect_neutral": null
     },
     {
       "id": "LVBus186177_consumption",
       "bus": "LVBus186177",
       "phases": "an",
       "type": "power",
-      "powers": [[1600.0, 500.0]]
+      "powers": [[1600.0, 500.0]],
+      "connect_neutral": null
     },
     {
       "id": "LVBus186177_production",
       "bus": "LVBus186177",
       "phases": "an",
       "type": "power",
-      "powers": [[-3700.0, 0.0]]
+      "powers": [[-3700.0, 0.0]],
+      "connect_neutral": null
     }
   ],
   "sources": [
@@ -504,7 +522,8 @@
         [17320.50807568877, 10000.0],
         [0.0, -20000.0],
         [-17320.50807568877, 10000.0]
-      ]
+      ],
+      "connect_neutral": null
     }
   ],
   "lines_params": [

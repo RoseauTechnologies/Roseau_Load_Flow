@@ -100,14 +100,16 @@
       "bus": "LVBus030540",
       "phases": "bn",
       "type": "power",
-      "powers": [[4300.0, 1400.0]]
+      "powers": [[4300.0, 1400.0]],
+      "connect_neutral": null
     },
     {
       "id": "LVBus030540_production",
       "bus": "LVBus030540",
       "phases": "bn",
       "type": "power",
-      "powers": [[-300.0, 0.0]]
+      "powers": [[-300.0, 0.0]],
+      "connect_neutral": null
     }
   ],
   "sources": [
@@ -119,7 +121,8 @@
         [17320.50807568877, 10000.0],
         [0.0, -20000.0],
         [-17320.50807568877, 10000.0]
-      ]
+      ],
+      "connect_neutral": null
     }
   ],
   "lines_params": [

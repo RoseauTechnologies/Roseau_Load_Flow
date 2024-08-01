@@ -162,28 +162,32 @@
       "bus": "LVBus021707",
       "phases": "bn",
       "type": "power",
-      "powers": [[0.0, 0.0]]
+      "powers": [[0.0, 0.0]],
+      "connect_neutral": null
     },
     {
       "id": "LVBus021707_production",
       "bus": "LVBus021707",
       "phases": "an",
       "type": "power",
-      "powers": [[0.0, 0.0]]
+      "powers": [[0.0, 0.0]],
+      "connect_neutral": null
     },
     {
       "id": "LVBus195690_consumption",
       "bus": "LVBus195690",
       "phases": "an",
       "type": "power",
-      "powers": [[14200.0, 4700.0]]
+      "powers": [[14200.0, 4700.0]],
+      "connect_neutral": null
     },
     {
       "id": "LVBus195690_production",
       "bus": "LVBus195690",
       "phases": "bn",
       "type": "power",
-      "powers": [[0.0, 0.0]]
+      "powers": [[0.0, 0.0]],
+      "connect_neutral": null
     }
   ],
   "sources": [
@@ -195,7 +199,8 @@
         [17320.50807568877, 10000.0],
         [0.0, -20000.0],
         [-17320.50807568877, 10000.0]
-      ]
+      ],
+      "connect_neutral": null
     }
   ],
   "lines_params": [

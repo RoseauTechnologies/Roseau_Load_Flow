@@ -1,11 +1,12 @@
 import logging
+import warnings
 from functools import cached_property
 from typing import Final
 
 import numpy as np
 from typing_extensions import Self
 
-from roseau.load_flow.converters import _calculate_voltages, calculate_voltage_phases
+from roseau.load_flow.converters import _PHASE_SIZES, _calculate_voltages, calculate_voltage_phases
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import Element
@@ -22,7 +23,15 @@ class VoltageSource(Element):
     allowed_phases: Final = Bus.allowed_phases
     """The allowed phases for a voltage source are the same as for a :attr:`bus<Bus.allowed_phases>`."""
 
-    def __init__(self, id: Id, bus: Bus, *, voltages: ComplexArrayLike1D, phases: str | None = None) -> None:
+    def __init__(
+        self,
+        id: Id,
+        bus: Bus,
+        *,
+        voltages: ComplexArrayLike1D,
+        phases: str | None = None,
+        connect_neutral: bool | None = None,
+    ) -> None:
         """Voltage source constructor.
 
         Args:
@@ -42,11 +51,19 @@ class VoltageSource(Element):
                 The phases of the source. A string like ``"abc"`` or ``"an"`` etc. The bus phases are
                 used by default. The order of the phases is important. For a full list of supported
                 phases, see the class attribute :attr:`allowed_phases`. All phases of the source must
-                be present in the phases of the connected bus. Multiphase sources are allowed to have
-                a floating neutral (i.e. they can be connected to buses that don't have a neutral).
+                be present in the phases of the connected bus. Multiphase sources are allowed to be
+                connected to buses that don't have a neutral if ``connect_neutral`` is not set to
+                ``True``.
+
+            connect_neutral:
+                Specifies whether the source's neutral should be connected to the bus's neutral or
+                left floating. By default, the source's neutral is connected when the bus has a
+                neutral. If the bus does not have a neutral, the source's neutral is left floating
+                by default. To override the default behavior, pass an explicit ``True`` or ``False``.
         """
         super().__init__(id)
-        self._connect(bus)
+        if connect_neutral is not None:
+            connect_neutral = bool(connect_neutral)  # to allow np.bool
 
         if phases is None:
             phases = bus.phases
@@ -55,25 +72,28 @@ class VoltageSource(Element):
             # Also check they are in the bus phases
             phases_not_in_bus = set(phases) - set(bus.phases)
             # "n" is allowed to be absent from the bus only if the source has more than 2 phases
-            floating_neutral = phases_not_in_bus == {"n"} and len(phases) > 2
-            if phases_not_in_bus and not floating_neutral:
+            missing_ok = phases_not_in_bus == {"n"} and len(phases) > 2 and not connect_neutral
+            if phases_not_in_bus and not missing_ok:
                 msg = (
                     f"Phases {sorted(phases_not_in_bus)} of source {id!r} are not in bus "
                     f"{bus.id!r} phases {bus.phases!r}"
                 )
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
-        if len(phases) == 2 and "n" not in phases:
-            # This is a delta source that has one element connected between two phases
-            self._size = 1
-        else:
-            self._size = len(set(phases) - {"n"})
-
+        if connect_neutral and "n" not in phases:
+            warnings.warn(
+                message=f"Neutral connection requested for source {id!r} with no neutral phase",
+                category=UserWarning,
+                stacklevel=2,
+            )
+            connect_neutral = None
+        self._connect(bus)
         self._phases = phases
         self._bus = bus
-        self.voltages = voltages
-
         self._n = len(self._phases)
+        self._size = _PHASE_SIZES[phases]
+        self._connect_neutral = connect_neutral
+        self.voltages = voltages
         if self.phases == "abc":
             self._cy_element = CyDeltaVoltageSource(n=self._n, voltages=self._voltages)
         else:
@@ -116,10 +136,16 @@ class VoltageSource(Element):
         if self._cy_element is not None:
             self._cy_element.update_voltages(self._voltages)
 
-    @property
+    @cached_property
     def has_floating_neutral(self) -> bool:
         """Does this source have a floating neutral?"""
-        return "n" in self._phases and "n" not in self._bus._phases
+        if "n" not in self._phases:
+            return False
+        if self._connect_neutral is False:
+            return True
+        if self._connect_neutral is None:
+            return "n" not in self.bus.phases
+        return False
 
     @cached_property
     def voltage_phases(self) -> list[str]:
@@ -180,7 +206,8 @@ class VoltageSource(Element):
 
     def _cy_connect(self):
         connections = []
-        for i, phase in enumerate(self.bus.phases):
+        bus_phases = self.bus.phases if self._connect_neutral else self.bus.phases.removesuffix("n")
+        for i, phase in enumerate(bus_phases):
             if phase in self.phases:
                 j = self.phases.index(phase)
                 connections.append((i, j))
@@ -207,7 +234,13 @@ class VoltageSource(Element):
     @classmethod
     def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
         voltages = [complex(v[0], v[1]) for v in data["voltages"]]
-        self = cls(id=data["id"], bus=data["bus"], voltages=voltages, phases=data["phases"])
+        self = cls(
+            id=data["id"],
+            bus=data["bus"],
+            voltages=voltages,
+            phases=data["phases"],
+            connect_neutral=data["connect_neutral"],
+        )
         if include_results and "results" in data:
             self._res_currents = np.array(
                 [complex(i[0], i[1]) for i in data["results"]["currents"]], dtype=np.complex128
@@ -226,6 +259,7 @@ class VoltageSource(Element):
             "bus": self.bus.id,
             "phases": self.phases,
             "voltages": [[v.real, v.imag] for v in self._voltages],
+            "connect_neutral": self._connect_neutral,
         }
         if include_results:
             currents = self._res_currents_getter(warning=True)

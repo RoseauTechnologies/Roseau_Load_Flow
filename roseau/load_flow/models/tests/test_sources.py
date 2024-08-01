@@ -55,12 +55,41 @@ def test_sources_to_dict():
         "bus": "bus",
         "phases": "abcn",
         "voltages": [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
+        "connect_neutral": None,
     }
     assert VoltageSource(id="vs2", bus=bus, phases="abc", voltages=values).to_dict(include_results=False) == {
         "id": "vs2",
         "bus": "bus",
         "phases": "abc",
         "voltages": [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
+        "connect_neutral": None,
+    }
+    assert VoltageSource(id="vs3", bus=bus, phases="abc", voltages=values, connect_neutral=False).to_dict(
+        include_results=False
+    ) == {
+        "id": "vs3",
+        "bus": "bus",
+        "phases": "abc",
+        "voltages": [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
+        "connect_neutral": False,
+    }
+    assert VoltageSource(id="vs4", bus=bus, phases="abcn", voltages=values, connect_neutral=True).to_dict(
+        include_results=False
+    ) == {
+        "id": "vs4",
+        "bus": "bus",
+        "phases": "abcn",
+        "voltages": [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
+        "connect_neutral": True,
+    }
+    with pytest.warns(UserWarning, match=r"Neutral connection requested for source 'vs5' with no neutral phase"):
+        vs = VoltageSource(id="vs5", bus=bus, phases="abc", voltages=values, connect_neutral=True)
+    assert vs.to_dict(include_results=False) == {
+        "id": "vs5",
+        "bus": "bus",
+        "phases": "abc",
+        "voltages": [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
+        "connect_neutral": None,
     }
 
 

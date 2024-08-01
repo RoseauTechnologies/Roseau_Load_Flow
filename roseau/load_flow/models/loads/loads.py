@@ -1,11 +1,12 @@
 import logging
+import warnings
 from abc import ABC
 from functools import cached_property
 from typing import ClassVar, Final, Literal
 
 import numpy as np
 
-from roseau.load_flow.converters import _calculate_voltages, calculate_voltage_phases
+from roseau.load_flow.converters import _PHASE_SIZES, _calculate_voltages, calculate_voltage_phases
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import Element
@@ -39,7 +40,7 @@ class AbstractLoad(Element, ABC):
     allowed_phases: Final = Bus.allowed_phases
     """The allowed phases for a load are the same as for a :attr:`bus<Bus.allowed_phases>`."""
 
-    def __init__(self, id: Id, bus: Bus, *, phases: str | None = None) -> None:
+    def __init__(self, id: Id, bus: Bus, *, phases: str | None = None, connect_neutral: bool | None = None) -> None:
         """AbstractLoad constructor.
 
         Args:
@@ -53,12 +54,22 @@ class AbstractLoad(Element, ABC):
                 The phases of the load. A string like ``"abc"`` or ``"an"`` etc. The bus phases are
                 used by default. The order of the phases is important. For a full list of supported
                 phases, see the class attribute :attr:`allowed_phases`. All phases of the load must
-                be present in the phases of the connected bus. Multiphase loads are allowed to have
-                a floating neutral (i.e. they can be connected to buses that don't have a neutral).
+                be present in the phases of the connected bus. Multiphase loads are allowed to be
+                connected to buses that don't have a neutral if ``connect_neutral`` is not set to
+                ``True``.
+
+            connect_neutral:
+                Specifies whether the load's neutral should be connected to the bus's neutral or
+                left floating. By default, the load's neutral is connected when the bus has a
+                neutral. If the bus does not have a neutral, the load's neutral is left floating
+                by default. To override the default behavior, pass an explicit ``True`` or ``False``.
         """
         if type(self) is AbstractLoad:
             raise TypeError("Can't instantiate abstract class AbstractLoad")
         super().__init__(id)
+        if connect_neutral is not None:
+            connect_neutral = bool(connect_neutral)  # to allow np.bool
+
         if phases is None:
             phases = bus.phases
         else:
@@ -66,25 +77,29 @@ class AbstractLoad(Element, ABC):
             # Also check they are in the bus phases
             phases_not_in_bus = set(phases) - set(bus.phases)
             # "n" is allowed to be absent from the bus only if the load has more than 2 phases
-            floating_neutral = phases_not_in_bus == {"n"} and len(phases) > 2
-            if phases_not_in_bus and not floating_neutral:
+            missing_ok = phases_not_in_bus == {"n"} and len(phases) > 2 and not connect_neutral
+            if phases_not_in_bus and not missing_ok:
                 msg = (
                     f"Phases {sorted(phases_not_in_bus)} of load {id!r} are not in bus {bus.id!r} "
                     f"phases {bus.phases!r}"
                 )
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
+        if connect_neutral and "n" not in phases:
+            warnings.warn(
+                message=f"Neutral connection requested for load {id!r} with no neutral phase",
+                category=UserWarning,
+                stacklevel=3,
+            )
+            connect_neutral = None
         self._connect(bus)
 
         self._phases = phases
         self._bus = bus
         self._n = len(self._phases)
         self._symbol = {"power": "S", "current": "I", "impedance": "Z"}[self.type]
-        if len(phases) == 2 and "n" not in phases:
-            # This is a delta load that has one element connected between two phases
-            self._size = 1
-        else:
-            self._size = len(set(phases) - {"n"})
+        self._size = _PHASE_SIZES[phases]
+        self._connect_neutral = connect_neutral
 
         # Results
         self._res_currents: ComplexArray | None = None
@@ -109,10 +124,16 @@ class AbstractLoad(Element, ABC):
         """Whether the load is flexible or not. Only :class:`PowerLoad` can be flexible."""
         return False
 
-    @property
+    @cached_property
     def has_floating_neutral(self) -> bool:
         """Does this load have a floating neutral?"""
-        return "n" in self._phases and "n" not in self._bus._phases
+        if "n" not in self._phases:
+            return False
+        if self._connect_neutral is False:
+            return True
+        if self._connect_neutral is None:
+            return "n" not in self.bus.phases
+        return False
 
     @cached_property
     def voltage_phases(self) -> list[str]:
@@ -185,7 +206,8 @@ class AbstractLoad(Element, ABC):
 
     def _cy_connect(self):
         connections = []
-        for i, phase in enumerate(self.bus.phases):
+        bus_phases = self.bus.phases if self._connect_neutral else self.bus.phases.removesuffix("n")
+        for i, phase in enumerate(bus_phases):
             if phase in self.phases:
                 j = self.phases.index(phase)
                 connections.append((i, j))
@@ -221,13 +243,26 @@ class AbstractLoad(Element, ABC):
                 ]
             else:
                 fp = None
-            self = PowerLoad(id=data["id"], bus=data["bus"], powers=powers, phases=data["phases"], flexible_params=fp)
+            self = PowerLoad(
+                id=data["id"],
+                bus=data["bus"],
+                powers=powers,
+                phases=data["phases"],
+                flexible_params=fp,
+                connect_neutral=data["connect_neutral"],
+            )
         elif load_type == "current":
             currents = [complex(i[0], i[1]) for i in data["currents"]]
             self = CurrentLoad(id=data["id"], bus=data["bus"], currents=currents, phases=data["phases"])
         elif load_type == "impedance":
             impedances = [complex(z[0], z[1]) for z in data["impedances"]]
-            self = ImpedanceLoad(id=data["id"], bus=data["bus"], impedances=impedances, phases=data["phases"])
+            self = ImpedanceLoad(
+                id=data["id"],
+                bus=data["bus"],
+                impedances=impedances,
+                phases=data["phases"],
+                connect_neutral=data["connect_neutral"],
+            )
         else:
             msg = f"Unknown load type {load_type!r} for load {data['id']!r}"
             logger.error(msg)
@@ -257,6 +292,7 @@ class AbstractLoad(Element, ABC):
             "phases": self.phases,
             "type": self.type,
             f"{self.type}s": [[value.real, value.imag] for value in complex_array],
+            "connect_neutral": self._connect_neutral,
         }
         if include_results:
             currents = self._res_currents_getter(warning=True)
@@ -294,6 +330,7 @@ class PowerLoad(AbstractLoad):
         powers: ComplexArrayLike1D,
         phases: str | None = None,
         flexible_params: list[FlexibleParameter] | None = None,
+        connect_neutral: bool | None = None,
     ) -> None:
         """PowerLoad constructor.
 
@@ -312,15 +349,22 @@ class PowerLoad(AbstractLoad):
                 The phases of the load. A string like ``"abc"`` or ``"an"`` etc. The bus phases are
                 used by default. The order of the phases is important. For a full list of supported
                 phases, see the class attribute :attr:`allowed_phases`. All phases of the load must
-                be present in the phases of the connected bus. Multiphase loads are allowed to have
-                a floating neutral (i.e. they can be connected to buses that don't have a neutral).
+                be present in the phases of the connected bus. Multiphase loads are allowed to be
+                connected to buses that don't have a neutral if ``connect_neutral`` is not set to
+                ``True``.
 
             flexible_params:
                 A list of :class:`FlexibleParameters` object, one for each phase. When provided,
                 the load is considered as flexible (or controllable) and the parameters are used
                 to compute the flexible power of the load.
+
+            connect_neutral:
+                Specifies whether the load's neutral should be connected to the bus's neutral or
+                left floating. By default, the load's neutral is connected when the bus has a
+                neutral. If the bus does not have a neutral, the load's neutral is left floating
+                by default. To override the default behavior, pass an explicit ``True`` or ``False``.
         """
-        super().__init__(id=id, bus=bus, phases=phases)
+        super().__init__(id=id, bus=bus, phases=phases, connect_neutral=connect_neutral)
 
         if bus.short_circuits:
             msg = (
@@ -513,7 +557,15 @@ class ImpedanceLoad(AbstractLoad):
 
     type: Final = "impedance"
 
-    def __init__(self, id: Id, bus: Bus, *, impedances: ComplexArrayLike1D, phases: str | None = None) -> None:
+    def __init__(
+        self,
+        id: Id,
+        bus: Bus,
+        *,
+        impedances: ComplexArrayLike1D,
+        phases: str | None = None,
+        connect_neutral: bool | None = None,
+    ) -> None:
         """ImpedanceLoad constructor.
 
         Args:
@@ -531,10 +583,17 @@ class ImpedanceLoad(AbstractLoad):
                 The phases of the load. A string like ``"abc"`` or ``"an"`` etc. The bus phases are
                 used by default. The order of the phases is important. For a full list of supported
                 phases, see the class attribute :attr:`allowed_phases`. All phases of the load must
-                be present in the phases of the connected bus. Multiphase loads are allowed to have
-                a floating neutral (i.e. they can be connected to buses that don't have a neutral).
+                be present in the phases of the connected bus. Multiphase loads are allowed to be
+                connected to buses that don't have a neutral if ``connect_neutral`` is not set to
+                ``True``.
+
+            connect_neutral:
+                Specifies whether the load's neutral should be connected to the bus's neutral or
+                left floating. By default, the load's neutral is connected when the bus has a
+                neutral. If the bus does not have a neutral, the load's neutral is left floating
+                by default. To override the default behavior, pass an explicit ``True`` or ``False``.
         """
-        super().__init__(id=id, phases=phases, bus=bus)
+        super().__init__(id=id, phases=phases, bus=bus, connect_neutral=connect_neutral)
         self.impedances = impedances
         if self.phases == "abc":
             self._cy_element = CyDeltaAdmittanceLoad(n=self._n, admittances=1.0 / self._impedances)

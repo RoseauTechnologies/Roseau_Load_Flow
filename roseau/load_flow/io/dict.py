@@ -534,6 +534,9 @@ def v1_to_v2_converter(data: JsonDict) -> JsonDict:
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LOAD_TYPE)
 
+        # Add the connect_neutral key
+        load_data["connect_neutral"] = None
+
         # Modify the results
         load_data_result = load_data.get("results", None)
         if load_data_result is not None:
@@ -551,6 +554,10 @@ def v1_to_v2_converter(data: JsonDict) -> JsonDict:
     old_sources = data.get("sources", [])
     sources = []
     for source_data in old_sources:
+        # Add the connect_neutral key
+        source_data["connect_neutral"] = None
+
+        # Modify the results
         source_data_result = source_data.get("results", None)
         if source_data_result is not None and "potentials" not in source_data_result:
             bus_data = buses_dict[source_data["bus"]]

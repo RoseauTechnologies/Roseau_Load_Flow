@@ -19,6 +19,10 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`247` Add `connect_neutral` parameter to the loads and sources constructor to specify if the
+  neutral is to be connected to the bus's neutral or to be left floating. This allows loads connected
+  to the same bus to have different neutral connections. The default behavior remains the same as
+  before where the neutral is connected when the bus has a neutral and floating otherwise.
 - {gh-pr}`246` Improvements to the `rlf.converters` module:
   - Fix `series_phasor_to_sym` function with series that have different phases per element.
   - Make `calculate_voltages` take array-like potentials.
