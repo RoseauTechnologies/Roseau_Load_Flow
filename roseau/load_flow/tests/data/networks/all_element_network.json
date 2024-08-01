@@ -186,7 +186,7 @@
         [100.0, 5.0],
         [100.0, 5.0]
       ],
-      "connect_neutral": true,
+      "connect_neutral": null,
       "results": {
         "currents": [
           [0.4274583443346339, 0.18364477655704511],
@@ -212,7 +212,7 @@
         [10.0, 1.0],
         [10.0, 1.0]
       ],
-      "connect_neutral": true,
+      "connect_neutral": null,
       "results": {
         "currents": [
           [10.0, 1.0],
@@ -238,7 +238,7 @@
         [1.0, 0.0],
         [1.0, 0.0]
       ],
-      "connect_neutral": true,
+      "connect_neutral": null,
       "results": {
         "currents": [
           [193.24728940174276, 94.72000212198726],
@@ -264,7 +264,7 @@
         [100.0, 0.0],
         [100.0, 0.0]
       ],
-      "connect_neutral": true,
+      "connect_neutral": null,
       "results": {
         "currents": [
           [0.4172330229494081, 0.20450642770451552],
@@ -352,7 +352,7 @@
         [-100.0, 0.0],
         [-100.0, 0.0]
       ],
-      "connect_neutral": true,
+      "connect_neutral": null,
       "results": {
         "currents": [
           [-0.4172330229494081, -0.20450642770451552],
@@ -440,7 +440,7 @@
         [-100.0, 0.0],
         [-100.0, 0.0]
       ],
-      "connect_neutral": true,
+      "connect_neutral": null,
       "results": {
         "currents": [
           [-0.6095353772743768, 0.18782790386585235],
@@ -537,7 +537,7 @@
         [0.0, -20000.0],
         [-17320.50807568877, 10000.0]
       ],
-      "connect_neutral": true,
+      "connect_neutral": null,
       "results": {
         "currents": [
           [-4.337191536563758, -0.2950557451715961],

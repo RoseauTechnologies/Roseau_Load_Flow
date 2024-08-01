@@ -1,4 +1,5 @@
 import logging
+import warnings
 from functools import cached_property
 from typing import Final
 
@@ -61,18 +62,15 @@ class VoltageSource(Element):
                 by default. To override the default behavior, pass an explicit ``True`` or ``False``.
         """
         super().__init__(id)
-        self._connect(bus)
+        if connect_neutral is not None:
+            connect_neutral = bool(connect_neutral)  # to allow np.bool
 
         if phases is None:
             phases = bus.phases
-            if connect_neutral is None:
-                connect_neutral = True
         else:
             self._check_phases(id, phases=phases)
             # Also check they are in the bus phases
             phases_not_in_bus = set(phases) - set(bus.phases)
-            if connect_neutral is None:
-                connect_neutral = "n" in bus.phases or "n" not in phases
             # "n" is allowed to be absent from the bus only if the source has more than 2 phases
             missing_ok = phases_not_in_bus == {"n"} and len(phases) > 2 and not connect_neutral
             if phases_not_in_bus and not missing_ok:
@@ -82,6 +80,14 @@ class VoltageSource(Element):
                 )
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
+        if connect_neutral and "n" not in phases:
+            warnings.warn(
+                message=f"Neutral connection requested for source {id!r} with no neutral phase",
+                category=UserWarning,
+                stacklevel=2,
+            )
+            connect_neutral = None
+        self._connect(bus)
         self._phases = phases
         self._bus = bus
         self._n = len(self._phases)
@@ -130,10 +136,16 @@ class VoltageSource(Element):
         if self._cy_element is not None:
             self._cy_element.update_voltages(self._voltages)
 
-    @property
+    @cached_property
     def has_floating_neutral(self) -> bool:
         """Does this source have a floating neutral?"""
-        return "n" in self._phases and not self._connect_neutral
+        if "n" not in self._phases:
+            return False
+        if self._connect_neutral is False:
+            return True
+        if self._connect_neutral is None:
+            return "n" not in self.bus.phases
+        return False
 
     @cached_property
     def voltage_phases(self) -> list[str]:

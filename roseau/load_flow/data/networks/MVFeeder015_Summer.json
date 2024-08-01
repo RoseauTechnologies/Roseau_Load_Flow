@@ -993,7 +993,7 @@
         [7800.0, 2600.0],
         [7800.0, 2600.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV01557_production",
@@ -1005,7 +1005,7 @@
         [-200.0, 0.0],
         [-200.0, 0.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV03692_consumption",
@@ -1017,7 +1017,7 @@
         [7800.0, 2600.0],
         [7800.0, 2600.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV03692_production",
@@ -1029,7 +1029,7 @@
         [-200.0, 0.0],
         [-200.0, 0.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV07320_consumption",
@@ -1041,7 +1041,7 @@
         [13600.0, 4500.0],
         [13600.0, 4500.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV07320_production",
@@ -1053,7 +1053,7 @@
         [-200.0, 0.0],
         [-200.0, 0.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV09569_consumption",
@@ -1065,7 +1065,7 @@
         [13600.0, 4500.0],
         [13600.0, 4500.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV09569_production",
@@ -1077,7 +1077,7 @@
         [-200.0, 0.0],
         [-200.0, 0.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV14997_consumption",
@@ -1089,7 +1089,7 @@
         [7800.0, 2600.0],
         [7800.0, 2600.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV14997_production",
@@ -1101,7 +1101,7 @@
         [-200.0, 0.0],
         [-200.0, 0.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV14994_consumption",
@@ -1113,7 +1113,7 @@
         [13600.0, 4500.0],
         [13600.0, 4500.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV14994_production",
@@ -1125,7 +1125,7 @@
         [-200.0, 0.0],
         [-200.0, 0.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV03678_consumption",
@@ -1137,7 +1137,7 @@
         [13600.0, 4500.0],
         [13600.0, 4500.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV03678_production",
@@ -1149,7 +1149,7 @@
         [-200.0, 0.0],
         [-200.0, 0.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV14995_consumption",
@@ -1161,7 +1161,7 @@
         [13600.0, 4500.0],
         [13600.0, 4500.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV14995_production",
@@ -1173,7 +1173,7 @@
         [-200.0, 0.0],
         [-200.0, 0.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV18242_consumption",
@@ -1185,7 +1185,7 @@
         [13600.0, 4500.0],
         [13600.0, 4500.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV18242_production",
@@ -1197,7 +1197,7 @@
         [-200.0, 0.0],
         [-200.0, 0.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV13304_consumption",
@@ -1209,7 +1209,7 @@
         [5900.0, 1900.0],
         [5900.0, 1900.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV13304_production",
@@ -1221,7 +1221,7 @@
         [-200.0, 0.0],
         [-200.0, 0.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     }
   ],
   "sources": [
@@ -1234,7 +1234,7 @@
         [0.0, -20000.0],
         [-17320.50807568877, 10000.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     }
   ],
   "lines_params": [

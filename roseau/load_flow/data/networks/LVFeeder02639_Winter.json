@@ -237,7 +237,7 @@
       "phases": "bn",
       "type": "power",
       "powers": [[0.0, 0.0]],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "LVBus012331_production",
@@ -245,7 +245,7 @@
       "phases": "cn",
       "type": "power",
       "powers": [[0.0, 0.0]],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "LVBus012332_consumption",
@@ -253,7 +253,7 @@
       "phases": "an",
       "type": "power",
       "powers": [[0.0, 0.0]],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "LVBus012332_production",
@@ -261,7 +261,7 @@
       "phases": "cn",
       "type": "power",
       "powers": [[0.0, 0.0]],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "LVBus012333_consumption",
@@ -269,7 +269,7 @@
       "phases": "cn",
       "type": "power",
       "powers": [[0.0, 0.0]],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "LVBus012333_production",
@@ -277,7 +277,7 @@
       "phases": "an",
       "type": "power",
       "powers": [[0.0, 0.0]],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "LVBus012334_consumption",
@@ -285,7 +285,7 @@
       "phases": "cn",
       "type": "power",
       "powers": [[25600.0, 8400.0]],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "LVBus012334_production",
@@ -293,7 +293,7 @@
       "phases": "cn",
       "type": "power",
       "powers": [[0.0, 0.0]],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "LVBus012335_consumption",
@@ -301,7 +301,7 @@
       "phases": "cn",
       "type": "power",
       "powers": [[25600.0, 8400.0]],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "LVBus012335_production",
@@ -309,7 +309,7 @@
       "phases": "bn",
       "type": "power",
       "powers": [[0.0, 0.0]],
-      "connect_neutral": true
+      "connect_neutral": null
     }
   ],
   "sources": [
@@ -322,7 +322,7 @@
         [0.0, -20000.0],
         [-17320.50807568877, 10000.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     }
   ],
   "lines_params": [

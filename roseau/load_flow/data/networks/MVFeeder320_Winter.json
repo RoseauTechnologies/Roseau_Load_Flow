@@ -663,7 +663,7 @@
         [45100.0, 14800.0],
         [45100.0, 14800.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV02667_production",
@@ -675,7 +675,7 @@
         [0.0, 0.0],
         [0.0, 0.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV05633_consumption",
@@ -687,7 +687,7 @@
         [45100.0, 14800.0],
         [45100.0, 14800.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV05633_production",
@@ -699,7 +699,7 @@
         [0.0, 0.0],
         [0.0, 0.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV15887_consumption",
@@ -711,7 +711,7 @@
         [45100.0, 14800.0],
         [45100.0, 14800.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV15887_production",
@@ -723,7 +723,7 @@
         [0.0, 0.0],
         [0.0, 0.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV15889_consumption",
@@ -735,7 +735,7 @@
         [45100.0, 14800.0],
         [45100.0, 14800.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV15889_production",
@@ -747,7 +747,7 @@
         [0.0, 0.0],
         [0.0, 0.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV04536_consumption",
@@ -759,7 +759,7 @@
         [45100.0, 14800.0],
         [45100.0, 14800.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV04536_production",
@@ -771,7 +771,7 @@
         [0.0, 0.0],
         [0.0, 0.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV15900_consumption",
@@ -783,7 +783,7 @@
         [45100.0, 14800.0],
         [45100.0, 14800.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV15900_production",
@@ -795,7 +795,7 @@
         [0.0, 0.0],
         [0.0, 0.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     }
   ],
   "sources": [
@@ -808,7 +808,7 @@
         [0.0, -20000.0],
         [-17320.50807568877, 10000.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     }
   ],
   "lines_params": [

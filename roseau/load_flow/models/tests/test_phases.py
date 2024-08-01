@@ -92,7 +92,7 @@ def test_loads_phases():
         assert load.phases == ph
         assert not load.has_floating_neutral
 
-    # Floating neutral
+    # Floating neutral default behavior
     bus = Bus(id="bus", phases="ab")
     # power and impedance loads can have a floating neutral
     i = next(load_ids)
@@ -121,7 +121,8 @@ def test_loads_phases():
     bus_ab = Bus(id="bus_ab", phases="ab")
     bus_abn = Bus(id="bus_abn", phases="abn")
     i = next(load_ids)
-    load = PowerLoad(id=f"load{i}", bus=bus_ab, phases="ab", powers=[100], connect_neutral=True)
+    with pytest.warns(UserWarning, match=rf"Neutral connection requested for load 'load{i}' with no neutral phase"):
+        load = PowerLoad(id=f"load{i}", bus=bus_ab, phases="ab", powers=[100], connect_neutral=True)
     assert not load.has_floating_neutral
     i = next(load_ids)
     with pytest.raises(RoseauLoadFlowException) as e:
@@ -130,7 +131,8 @@ def test_loads_phases():
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
     assert e.value.msg == f"Phases ['n'] of load 'load{i}' are not in bus 'bus_ab' phases 'ab'"
     i = next(load_ids)
-    load = PowerLoad(id=f"load{i}", bus=bus_abn, phases="ab", powers=[100], connect_neutral=True)
+    with pytest.warns(UserWarning, match=rf"Neutral connection requested for load 'load{i}' with no neutral phase"):
+        load = PowerLoad(id=f"load{i}", bus=bus_abn, phases="ab", powers=[100], connect_neutral=True)
     assert not load.has_floating_neutral
     load = PowerLoad(id=f"load{i}", bus=bus_abn, phases="abn", powers=[100, 100], connect_neutral=True)
     assert not load.has_floating_neutral
@@ -206,7 +208,8 @@ def test_sources_phases():
     bus_ab = Bus(id="bus_ab", phases="ab")
     bus_abn = Bus(id="bus_abn", phases="abn")
     i = next(source_ids)
-    source = VoltageSource(id=f"source{i}", bus=bus_ab, phases="ab", voltages=[100], connect_neutral=True)
+    with pytest.warns(UserWarning, match=rf"Neutral connection requested for source 'source{i}' with no neutral phase"):
+        source = VoltageSource(id=f"source{i}", bus=bus_ab, phases="ab", voltages=[100], connect_neutral=True)
     assert not source.has_floating_neutral
     i = next(source_ids)
     with pytest.raises(RoseauLoadFlowException) as e:
@@ -215,7 +218,8 @@ def test_sources_phases():
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
     assert e.value.msg == f"Phases ['n'] of source 'source{i}' are not in bus 'bus_ab' phases 'ab'"
     i = next(source_ids)
-    source = VoltageSource(id=f"source{i}", bus=bus_abn, phases="ab", voltages=[100], connect_neutral=True)
+    with pytest.warns(UserWarning, match=rf"Neutral connection requested for source 'source{i}' with no neutral phase"):
+        source = VoltageSource(id=f"source{i}", bus=bus_abn, phases="ab", voltages=[100], connect_neutral=True)
     assert not source.has_floating_neutral
     source = VoltageSource(id=f"source{i}", bus=bus_abn, phases="abn", voltages=[100, 100], connect_neutral=True)
     assert not source.has_floating_neutral

@@ -259,7 +259,7 @@
       "phases": "an",
       "type": "power",
       "powers": [[0.0, 0.0]],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "LVBus004111_production",
@@ -267,7 +267,7 @@
       "phases": "an",
       "type": "power",
       "powers": [[0.0, 0.0]],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "LVBus004113_consumption",
@@ -275,7 +275,7 @@
       "phases": "an",
       "type": "power",
       "powers": [[0.0, 0.0]],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "LVBus004113_production",
@@ -283,7 +283,7 @@
       "phases": "an",
       "type": "power",
       "powers": [[0.0, 0.0]],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "LVBus004116_consumption",
@@ -291,7 +291,7 @@
       "phases": "an",
       "type": "power",
       "powers": [[2100.0, 700.0]],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "LVBus004116_production",
@@ -299,7 +299,7 @@
       "phases": "an",
       "type": "power",
       "powers": [[-500.0, 0.0]],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "LVBus004114_consumption",
@@ -307,7 +307,7 @@
       "phases": "bn",
       "type": "power",
       "powers": [[0.0, 0.0]],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "LVBus004114_production",
@@ -315,7 +315,7 @@
       "phases": "bn",
       "type": "power",
       "powers": [[0.0, 0.0]],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "LVBus004115_consumption",
@@ -323,7 +323,7 @@
       "phases": "cn",
       "type": "power",
       "powers": [[2100.0, 700.0]],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "LVBus004115_production",
@@ -331,7 +331,7 @@
       "phases": "cn",
       "type": "power",
       "powers": [[-500.0, 0.0]],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "LVBus004112_consumption",
@@ -339,7 +339,7 @@
       "phases": "bn",
       "type": "power",
       "powers": [[2100.0, 700.0]],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "LVBus004112_production",
@@ -347,7 +347,7 @@
       "phases": "bn",
       "type": "power",
       "powers": [[-500.0, 0.0]],
-      "connect_neutral": true
+      "connect_neutral": null
     }
   ],
   "sources": [
@@ -360,7 +360,7 @@
         [0.0, -20000.0],
         [-17320.50807568877, 10000.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     }
   ],
   "lines_params": [

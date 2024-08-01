@@ -539,7 +539,7 @@ def v1_to_v2_converter(data: JsonDict) -> JsonDict:
         load_phases = load_data["phases"]
 
         # Add the connect_neutral key
-        load_data["connect_neutral"] = "n" in bus_phases or "n" not in load_phases
+        load_data["connect_neutral"] = None
 
         # Modify the results
         load_data_result = load_data.get("results", None)
@@ -560,7 +560,7 @@ def v1_to_v2_converter(data: JsonDict) -> JsonDict:
         source_phases = source_data["phases"]
 
         # Add the connect_neutral key
-        source_data["connect_neutral"] = "n" in bus_phases or "n" not in source_phases
+        source_data["connect_neutral"] = None
 
         # Modify the results
         source_data_result = source_data.get("results", None)

@@ -1,4 +1,5 @@
 import logging
+import warnings
 from abc import ABC
 from functools import cached_property
 from typing import ClassVar, Final, Literal
@@ -66,16 +67,15 @@ class AbstractLoad(Element, ABC):
         if type(self) is AbstractLoad:
             raise TypeError("Can't instantiate abstract class AbstractLoad")
         super().__init__(id)
+        if connect_neutral is not None:
+            connect_neutral = bool(connect_neutral)  # to allow np.bool
+
         if phases is None:
             phases = bus.phases
-            if connect_neutral is None:
-                connect_neutral = True
         else:
             self._check_phases(id=id, phases=phases)
             # Also check they are in the bus phases
             phases_not_in_bus = set(phases) - set(bus.phases)
-            if connect_neutral is None:
-                connect_neutral = "n" in bus.phases or "n" not in phases
             # "n" is allowed to be absent from the bus only if the load has more than 2 phases
             missing_ok = phases_not_in_bus == {"n"} and len(phases) > 2 and not connect_neutral
             if phases_not_in_bus and not missing_ok:
@@ -85,6 +85,13 @@ class AbstractLoad(Element, ABC):
                 )
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
+        if connect_neutral and "n" not in phases:
+            warnings.warn(
+                message=f"Neutral connection requested for load {id!r} with no neutral phase",
+                category=UserWarning,
+                stacklevel=3,
+            )
+            connect_neutral = None
         self._connect(bus)
 
         self._phases = phases
@@ -117,10 +124,16 @@ class AbstractLoad(Element, ABC):
         """Whether the load is flexible or not. Only :class:`PowerLoad` can be flexible."""
         return False
 
-    @property
+    @cached_property
     def has_floating_neutral(self) -> bool:
         """Does this load have a floating neutral?"""
-        return "n" in self._phases and not self._connect_neutral
+        if "n" not in self._phases:
+            return False
+        if self._connect_neutral is False:
+            return True
+        if self._connect_neutral is None:
+            return "n" not in self.bus.phases
+        return False
 
     @cached_property
     def voltage_phases(self) -> list[str]:

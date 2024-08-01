@@ -984,7 +984,7 @@
         [18300.0, 6000.0],
         [18300.0, 6000.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV19321_production",
@@ -996,7 +996,7 @@
         [-1300.0, 0.0],
         [-1300.0, 0.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV19350_consumption",
@@ -1008,7 +1008,7 @@
         [2200.0, 700.0],
         [2200.0, 700.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV19350_production",
@@ -1020,7 +1020,7 @@
         [-2300.0, 0.0],
         [-2300.0, 0.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV17095_consumption",
@@ -1032,7 +1032,7 @@
         [2200.0, 700.0],
         [2200.0, 700.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV17095_production",
@@ -1044,7 +1044,7 @@
         [-2300.0, 0.0],
         [-2300.0, 0.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV14280_consumption",
@@ -1056,7 +1056,7 @@
         [2200.0, 700.0],
         [2200.0, 700.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV14280_production",
@@ -1068,7 +1068,7 @@
         [-2300.0, 0.0],
         [-2300.0, 0.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV17080_consumption",
@@ -1080,7 +1080,7 @@
         [18300.0, 6000.0],
         [18300.0, 6000.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV17080_production",
@@ -1092,7 +1092,7 @@
         [-1300.0, 0.0],
         [-1300.0, 0.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV14605_consumption",
@@ -1104,7 +1104,7 @@
         [2200.0, 700.0],
         [2200.0, 700.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV14605_production",
@@ -1116,7 +1116,7 @@
         [-2300.0, 0.0],
         [-2300.0, 0.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV04587_consumption",
@@ -1128,7 +1128,7 @@
         [18300.0, 6000.0],
         [18300.0, 6000.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV04587_production",
@@ -1140,7 +1140,7 @@
         [-1300.0, 0.0],
         [-1300.0, 0.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV04956_consumption",
@@ -1152,7 +1152,7 @@
         [18300.0, 6000.0],
         [18300.0, 6000.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV04956_production",
@@ -1164,7 +1164,7 @@
         [-1300.0, 0.0],
         [-1300.0, 0.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV11843_consumption",
@@ -1176,7 +1176,7 @@
         [18300.0, 6000.0],
         [18300.0, 6000.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV11843_production",
@@ -1188,7 +1188,7 @@
         [-1300.0, 0.0],
         [-1300.0, 0.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV04958_consumption",
@@ -1200,7 +1200,7 @@
         [18300.0, 6000.0],
         [18300.0, 6000.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV04958_production",
@@ -1212,7 +1212,7 @@
         [-1300.0, 0.0],
         [-1300.0, 0.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     }
   ],
   "sources": [
@@ -1225,7 +1225,7 @@
         [0.0, -20000.0],
         [-17320.50807568877, 10000.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     }
   ],
   "lines_params": [

@@ -261,7 +261,7 @@ def test_loads_to_dict():
         "phases": "abcn",
         "type": "power",
         "powers": [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
-        "connect_neutral": True,
+        "connect_neutral": None,
     }
     assert PowerLoad(id="load_s2", bus=bus, phases="abc", powers=values).to_dict(include_results=False) == {
         "id": "load_s2",
@@ -269,7 +269,7 @@ def test_loads_to_dict():
         "phases": "abc",
         "type": "power",
         "powers": [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
-        "connect_neutral": True,
+        "connect_neutral": None,
     }
 
     # Current load
@@ -279,7 +279,7 @@ def test_loads_to_dict():
         "phases": "abcn",
         "type": "current",
         "currents": [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
-        "connect_neutral": True,
+        "connect_neutral": None,
     }
     assert CurrentLoad(id="load_i2", bus=bus, phases="abc", currents=values).to_dict(include_results=False) == {
         "id": "load_i2",
@@ -287,7 +287,7 @@ def test_loads_to_dict():
         "phases": "abc",
         "type": "current",
         "currents": [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
-        "connect_neutral": True,
+        "connect_neutral": None,
     }
 
     # Impedance load
@@ -297,7 +297,7 @@ def test_loads_to_dict():
         "phases": "abcn",
         "type": "impedance",
         "impedances": [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
-        "connect_neutral": True,
+        "connect_neutral": None,
     }
     assert ImpedanceLoad(id="load_z2", bus=bus, phases="abc", impedances=values).to_dict(include_results=False) == {
         "id": "load_z2",
@@ -305,7 +305,37 @@ def test_loads_to_dict():
         "phases": "abc",
         "type": "impedance",
         "impedances": [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
+        "connect_neutral": None,
+    }
+    assert ImpedanceLoad(id="load_z3", bus=bus, phases="abc", impedances=values, connect_neutral=False).to_dict(
+        include_results=False
+    ) == {
+        "id": "load_z3",
+        "bus": "bus",
+        "phases": "abc",
+        "type": "impedance",
+        "impedances": [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
+        "connect_neutral": False,
+    }
+    assert ImpedanceLoad(id="load_z4", bus=bus, phases="abcn", impedances=values, connect_neutral=True).to_dict(
+        include_results=False
+    ) == {
+        "id": "load_z4",
+        "bus": "bus",
+        "phases": "abcn",
+        "type": "impedance",
+        "impedances": [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
         "connect_neutral": True,
+    }
+    with pytest.warns(UserWarning, match=r"Neutral connection requested for load 'load_z5' with no neutral phase"):
+        vs = ImpedanceLoad(id="load_z5", bus=bus, phases="abc", impedances=values, connect_neutral=True)
+    assert vs.to_dict(include_results=False) == {
+        "id": "load_z5",
+        "bus": "bus",
+        "phases": "abc",
+        "type": "impedance",
+        "impedances": [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
+        "connect_neutral": None,
     }
 
     # Flexible load
@@ -315,7 +345,7 @@ def test_loads_to_dict():
         "phases": "abcn",
         "type": "power",
         "powers": [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
-        "connect_neutral": True,
+        "connect_neutral": None,
         "flexible_params": [
             {
                 "control_p": {"type": "constant"},

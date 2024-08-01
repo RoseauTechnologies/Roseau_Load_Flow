@@ -1980,7 +1980,7 @@
         [6500.0, 2100.0],
         [6500.0, 2100.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV04950_production",
@@ -1992,7 +1992,7 @@
         [-2500.0, 0.0],
         [-2500.0, 0.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV13936_consumption",
@@ -2004,7 +2004,7 @@
         [6500.0, 2100.0],
         [6500.0, 2100.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV13936_production",
@@ -2016,7 +2016,7 @@
         [-2500.0, 0.0],
         [-2500.0, 0.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV11702_consumption",
@@ -2028,7 +2028,7 @@
         [6500.0, 2100.0],
         [6500.0, 2100.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV11702_production",
@@ -2040,7 +2040,7 @@
         [-2500.0, 0.0],
         [-2500.0, 0.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV16629_consumption",
@@ -2052,7 +2052,7 @@
         [6500.0, 2100.0],
         [6500.0, 2100.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV16629_production",
@@ -2064,7 +2064,7 @@
         [-2500.0, 0.0],
         [-2500.0, 0.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV17142_consumption",
@@ -2076,7 +2076,7 @@
         [6500.0, 2100.0],
         [6500.0, 2100.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV17142_production",
@@ -2088,7 +2088,7 @@
         [-2500.0, 0.0],
         [-2500.0, 0.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV17075_consumption",
@@ -2100,7 +2100,7 @@
         [6500.0, 2100.0],
         [6500.0, 2100.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV17075_production",
@@ -2112,7 +2112,7 @@
         [-2500.0, 0.0],
         [-2500.0, 0.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV13935_consumption",
@@ -2124,7 +2124,7 @@
         [6500.0, 2100.0],
         [6500.0, 2100.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV13935_production",
@@ -2136,7 +2136,7 @@
         [-2500.0, 0.0],
         [-2500.0, 0.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV14272_consumption",
@@ -2148,7 +2148,7 @@
         [6500.0, 2100.0],
         [6500.0, 2100.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV14272_production",
@@ -2160,7 +2160,7 @@
         [-2500.0, 0.0],
         [-2500.0, 0.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV17143_consumption",
@@ -2172,7 +2172,7 @@
         [6500.0, 2100.0],
         [6500.0, 2100.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV17143_production",
@@ -2184,7 +2184,7 @@
         [-2500.0, 0.0],
         [-2500.0, 0.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV19187_consumption",
@@ -2196,7 +2196,7 @@
         [6500.0, 2100.0],
         [6500.0, 2100.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV19187_production",
@@ -2208,7 +2208,7 @@
         [-2500.0, 0.0],
         [-2500.0, 0.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV17074_consumption",
@@ -2220,7 +2220,7 @@
         [6500.0, 2100.0],
         [6500.0, 2100.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV17074_production",
@@ -2232,7 +2232,7 @@
         [-2500.0, 0.0],
         [-2500.0, 0.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV06933_consumption",
@@ -2244,7 +2244,7 @@
         [4000.0, 1300.0],
         [4000.0, 1300.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV06933_production",
@@ -2256,7 +2256,7 @@
         [0.0, 0.0],
         [0.0, 0.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV04549_consumption",
@@ -2268,7 +2268,7 @@
         [4000.0, 1300.0],
         [4000.0, 1300.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV04549_production",
@@ -2280,7 +2280,7 @@
         [0.0, 0.0],
         [0.0, 0.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV04916_consumption",
@@ -2292,7 +2292,7 @@
         [4000.0, 1300.0],
         [4000.0, 1300.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV04916_production",
@@ -2304,7 +2304,7 @@
         [0.0, 0.0],
         [0.0, 0.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV16510_consumption",
@@ -2316,7 +2316,7 @@
         [4000.0, 1300.0],
         [4000.0, 1300.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV16510_production",
@@ -2328,7 +2328,7 @@
         [0.0, 0.0],
         [0.0, 0.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV12206_consumption",
@@ -2340,7 +2340,7 @@
         [4000.0, 1300.0],
         [4000.0, 1300.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV12206_production",
@@ -2352,7 +2352,7 @@
         [0.0, 0.0],
         [0.0, 0.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV11692_consumption",
@@ -2364,7 +2364,7 @@
         [4000.0, 1300.0],
         [4000.0, 1300.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV11692_production",
@@ -2376,7 +2376,7 @@
         [0.0, 0.0],
         [0.0, 0.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV11693_consumption",
@@ -2388,7 +2388,7 @@
         [4000.0, 1300.0],
         [4000.0, 1300.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV11693_production",
@@ -2400,7 +2400,7 @@
         [0.0, 0.0],
         [0.0, 0.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV08087_consumption",
@@ -2412,7 +2412,7 @@
         [4000.0, 1300.0],
         [4000.0, 1300.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV08087_production",
@@ -2424,7 +2424,7 @@
         [0.0, 0.0],
         [0.0, 0.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     }
   ],
   "sources": [
@@ -2437,7 +2437,7 @@
         [0.0, -20000.0],
         [-17320.50807568877, 10000.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     }
   ],
   "lines_params": [

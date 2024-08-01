@@ -83,7 +83,7 @@
       "phases": "an",
       "type": "power",
       "powers": [[1500000.0, -500000.0]],
-      "connect_neutral": true,
+      "connect_neutral": null,
       "results": {
         "currents": [
           [75.31408026597121, 24.685919734028797],
@@ -102,7 +102,7 @@
       "bus": "bus1",
       "phases": "an",
       "voltages": [[20000.0, 0.0]],
-      "connect_neutral": true,
+      "connect_neutral": null,
       "results": {
         "currents": [
           [-75.31408026597317, -24.685919734027358],

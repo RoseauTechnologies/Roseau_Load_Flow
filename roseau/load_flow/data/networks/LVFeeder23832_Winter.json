@@ -105,7 +105,7 @@
       "phases": "bn",
       "type": "power",
       "powers": [[12700.0, 4200.0]],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "LVBus110873_production",
@@ -113,7 +113,7 @@
       "phases": "an",
       "type": "power",
       "powers": [[0.0, 0.0]],
-      "connect_neutral": true
+      "connect_neutral": null
     }
   ],
   "sources": [
@@ -126,7 +126,7 @@
         [0.0, -20000.0],
         [-17320.50807568877, 10000.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     }
   ],
   "lines_params": [

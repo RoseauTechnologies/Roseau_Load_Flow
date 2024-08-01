@@ -509,7 +509,7 @@
         [9300.0, 3100.0],
         [9300.0, 3100.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV12316_production",
@@ -521,7 +521,7 @@
         [-1000.0, 0.0],
         [-1000.0, 0.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV18592_consumption",
@@ -533,7 +533,7 @@
         [9300.0, 3100.0],
         [9300.0, 3100.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV18592_production",
@@ -545,7 +545,7 @@
         [-1000.0, 0.0],
         [-1000.0, 0.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV07687_consumption",
@@ -557,7 +557,7 @@
         [9300.0, 3100.0],
         [9300.0, 3100.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV07687_production",
@@ -569,7 +569,7 @@
         [-1000.0, 0.0],
         [-1000.0, 0.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV14607_consumption",
@@ -581,7 +581,7 @@
         [9300.0, 3100.0],
         [9300.0, 3100.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     },
     {
       "id": "MVLV14607_production",
@@ -593,7 +593,7 @@
         [-1000.0, 0.0],
         [-1000.0, 0.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     }
   ],
   "sources": [
@@ -606,7 +606,7 @@
         [0.0, -20000.0],
         [-17320.50807568877, 10000.0]
       ],
-      "connect_neutral": true
+      "connect_neutral": null
     }
   ],
   "lines_params": [
