@@ -4,12 +4,12 @@ import numpy as np
 import pytest
 from shapely import LineString, Point
 
-from roseau.load_flow import Line
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.io.dict import v0_to_v1_converter, v1_to_v2_converter
 from roseau.load_flow.models import (
     Bus,
     Ground,
+    Line,
     LineParameters,
     PotentialRef,
     PowerLoad,
@@ -18,6 +18,7 @@ from roseau.load_flow.models import (
     VoltageSource,
 )
 from roseau.load_flow.network import ElectricalNetwork
+from roseau.load_flow.testing import assert_json_close
 from roseau.load_flow.typing import JsonDict
 from roseau.load_flow.utils import ConductorType, InsulatorType, LineType
 
@@ -1060,7 +1061,7 @@ def test_v0_to_v2_converter():
     # Uncomment the following lines as needed when new versions are added
     # expected_dict = v2_to_v3_converter(expected_dict)
     # expected_dict = v3_to_v4_converter(expected_dict)
-    assert net_dict == expected_dict
+    assert_json_close(net_dict, expected_dict)
 
 
 def test_v1_to_v2_converter():
@@ -1307,7 +1308,7 @@ def test_v1_to_v2_converter():
     net_dict = net.to_dict(include_results=True)
     expected_dict = copy.deepcopy(dict_v1)
     expected_dict = v1_to_v2_converter(expected_dict)
-    assert net_dict == expected_dict
+    assert_json_close(net_dict, expected_dict)
 
     # Include results=False
     def _delete(d: JsonDict, k: str) -> JsonDict:
@@ -1323,4 +1324,4 @@ def test_v1_to_v2_converter():
     }
     expected_dict = copy.deepcopy(dict_v1_without_results)
     expected_dict = v1_to_v2_converter(expected_dict)
-    assert net_dict == expected_dict
+    assert_json_close(net_dict, expected_dict)
