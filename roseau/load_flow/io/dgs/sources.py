@@ -39,8 +39,8 @@ def generate_sources(
         bus_id = sta_cubic.at[id_sta_cubic_source, "cterm"]  # id of the bus to which the source is connected
         un = elm_term.at[bus_id, "uknom"] / np.sqrt(3) * 1e3  # phase-to-neutral voltage (V)
         tap = elm_xnet.at[source_id, "usetp"]  # tap voltage (p.u.)
-        voltages = un * tap * np.array([1, np.exp(-2j * np.pi / 3), np.exp(2j * np.pi / 3)])
+        voltage = un * tap
         source_bus = buses[bus_id]
 
         # TODO remove hard coded phases (requires adapting voltages for delta sources)
-        sources[source_id] = VoltageSource(id=source_id, bus=source_bus, phases="abcn", voltages=voltages)
+        sources[source_id] = VoltageSource(id=source_id, bus=source_bus, phases="abcn", voltages=voltage)

@@ -122,8 +122,7 @@ line = rlf.Line(
 
 # A voltage source on the first bus
 un = 400 / np.sqrt(3)
-voltages = rlf.Q_(un * np.exp([0, -2j * np.pi / 3, 2j * np.pi / 3]), "V")
-vs = rlf.VoltageSource(id="source", bus=bus1, voltages=voltages)
+vs = rlf.VoltageSource(id="source", bus=bus1, voltages=rlf.Q_(un, "V"))
 
 
 # A power load on the second bus

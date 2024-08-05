@@ -43,8 +43,7 @@ import roseau.load_flow as rlf
 # A voltage source
 bus = rlf.Bus(id="bus", phases="abcn")
 un = 400 / np.sqrt(3)
-voltages = rlf.Q_(un * np.exp([0, -2j * np.pi / 3, 2j * np.pi / 3]), "V")
-vs = rlf.VoltageSource(id="source", bus=bus, voltages=voltages)
+vs = rlf.VoltageSource(id="source", bus=bus, voltages=rlf.Q_(un, "V"))
 
 # A potential ref
 pref = rlf.PotentialRef("pref", element=bus, phase="n")

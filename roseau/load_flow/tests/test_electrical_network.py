@@ -77,11 +77,10 @@ def check_result_warning(expected_message: str | re.Pattern[str]):
 def test_connect_and_disconnect():
     ground = Ground("ground")
     vn = 400 / np.sqrt(3)
-    voltages = [vn, vn * np.exp(-2 / 3 * np.pi * 1j), vn * np.exp(2 / 3 * np.pi * 1j)]
     source_bus = Bus(id="source", phases="abcn")
     load_bus = Bus(id="load bus", phases="abcn")
     ground.connect(load_bus)
-    vs = VoltageSource(id="vs", phases="abcn", bus=source_bus, voltages=voltages)
+    vs = VoltageSource(id="vs", phases="abcn", bus=source_bus, voltages=vn)
     load = PowerLoad(id="power load", phases="abcn", bus=load_bus, powers=[100 + 0j, 100 + 0j, 100 + 0j])
     lp = LineParameters(id="test", z_line=np.eye(4, dtype=complex))
     line = Line(id="line", bus1=source_bus, bus2=load_bus, phases="abcn", parameters=lp, length=10)
@@ -148,11 +147,10 @@ def test_connect_and_disconnect():
 def test_recursive_connect_disconnect():
     ground = Ground("ground")
     vn = 400 / np.sqrt(3)
-    voltages = [vn, vn * np.exp(-2 / 3 * np.pi * 1j), vn * np.exp(2 / 3 * np.pi * 1j)]
     source_bus = Bus(id="source", phases="abcn")
     load_bus = Bus(id="load bus", phases="abcn")
     ground.connect(load_bus)
-    VoltageSource(id="vs", phases="abcn", bus=source_bus, voltages=voltages)
+    VoltageSource(id="vs", phases="abcn", bus=source_bus, voltages=vn)
     load = PowerLoad(id="power load", phases="abcn", bus=load_bus, powers=[100 + 0j, 100 + 0j, 100 + 0j])
     lp = LineParameters(id="test", z_line=np.eye(4, dtype=complex))
     line = Line(id="line", bus1=source_bus, bus2=load_bus, phases="abcn", parameters=lp, length=10)
@@ -243,11 +241,10 @@ def test_recursive_connect_disconnect_ground():
     #
     ground = Ground("ground")
     vn = 400 / np.sqrt(3)
-    voltages = [vn, vn * np.exp(-2 / 3 * np.pi * 1j), vn * np.exp(2 / 3 * np.pi * 1j)]
     source_bus = Bus(id="source", phases="abcn")
     load_bus = Bus(id="load bus", phases="abcn")
     ground.connect(load_bus)
-    VoltageSource(id="vs", phases="abcn", bus=source_bus, voltages=voltages)
+    VoltageSource(id="vs", phases="abcn", bus=source_bus, voltages=vn)
     PowerLoad(id="power load", phases="abcn", bus=load_bus, powers=[100 + 0j, 100 + 0j, 100 + 0j])
     lp = LineParameters(id="test", z_line=np.eye(4, dtype=complex))
     Line(id="line", bus1=source_bus, bus2=load_bus, phases="abcn", parameters=lp, length=10)
@@ -421,7 +418,7 @@ def test_poorly_connected_elements():
     ground = Ground(id="g1")
     Line(id="l1", bus1=bus1, bus2=bus2, parameters=lp, phases="abc", length=1, ground=ground)
     Line(id="l2", bus1=bus3, bus2=bus4, parameters=lp, phases="abc", length=1, ground=ground)
-    VoltageSource(id="vs1", bus=bus1, voltages=20e3 * np.array([1, np.exp(-2j * np.pi / 3), np.exp(2j * np.pi / 3)]))
+    VoltageSource(id="vs1", bus=bus1, voltages=20e3)
     PotentialRef(id="pr1", element=ground)
     with pytest.raises(RoseauLoadFlowException) as e:
         ElectricalNetwork.from_element(initial_bus=bus1)
@@ -870,7 +867,7 @@ def test_network_elements(small_network: ElectricalNetwork):
 
     # Create a second network
     bus_vs = Bus(id="bus_vs", phases="abcn")
-    VoltageSource(id="vs2", bus=bus_vs, voltages=15e3 * np.array([1, np.exp(-2j * np.pi / 3), np.exp(2j * np.pi / 3)]))
+    VoltageSource(id="vs2", bus=bus_vs, voltages=15e3)
     ground = Ground(id="ground2")
     ground.connect(bus=bus_vs, phase="a")
     PotentialRef(id="pref2", element=ground)
@@ -1669,10 +1666,9 @@ def test_propagate_potentials():
 
 def test_short_circuits():
     vn = 400 / np.sqrt(3)
-    voltages = [vn, vn * np.exp(-2 / 3 * np.pi * 1j), vn * np.exp(2 / 3 * np.pi * 1j)]
     bus = Bus(id="bus", phases="abcn")
     bus.add_short_circuit("a", "n")
-    _ = VoltageSource(id="vs", bus=bus, voltages=voltages)
+    _ = VoltageSource(id="vs", bus=bus, voltages=vn)
     _ = PotentialRef(id="pref", element=bus)
     en = ElectricalNetwork.from_element(initial_bus=bus)
     df = pd.DataFrame.from_records(

@@ -64,8 +64,7 @@ def test_short_circuit():
 
     # Dict methods
     vn = 400 / np.sqrt(3)
-    voltages = [vn, vn * np.exp(-2 / 3 * np.pi * 1j), vn * np.exp(2 / 3 * np.pi * 1j)]
-    _ = VoltageSource("vs", bus=bus, voltages=voltages)
+    _ = VoltageSource("vs", bus=bus, voltages=vn)
     _ = PotentialRef("pref", element=bus)
     en = ElectricalNetwork.from_element(bus)
     en2 = ElectricalNetwork.from_dict(en.to_dict())
@@ -196,8 +195,7 @@ def test_propagate_limits():  # noqa: C901
     Transformer(id="tr", bus1=b3_mv, bus2=b1_lv, parameters=tp)
     Line(id="l1_lv", bus1=b1_lv, bus2=b2_lv, length=1, parameters=lp_lv)
 
-    voltages = 20_000 * np.exp([0, -2 / 3 * np.pi * 1j, 2 / 3 * np.pi * 1j])
-    VoltageSource(id="s_mv", bus=b1_mv, voltages=voltages)
+    VoltageSource(id="s_mv", bus=b1_mv, voltages=20_000)
 
     PowerLoad(id="pl1_mv", bus=b2_mv, powers=[10e3, 10e3, 10e3])
     PowerLoad(id="pl2_mv", bus=b3_mv, powers=[10e3, 10e3, 10e3])
@@ -317,8 +315,7 @@ def test_get_connected_buses():
     Line(id="l1_lv", bus1=b1_lv, bus2=b2_lv, length=1, parameters=lp_lv)
     Switch(id="sw_lv", bus1=b2_lv, bus2=b3_lv)
 
-    voltages = 20_000 * np.exp([0, -2 / 3 * np.pi * 1j, 2 / 3 * np.pi * 1j])
-    VoltageSource(id="s_mv", bus=b1_mv, voltages=voltages)
+    VoltageSource(id="s_mv", bus=b1_mv, voltages=20_000)
 
     PowerLoad(id="pl1_mv", bus=b2_mv, powers=[10e3, 10e3, 10e3])
     PowerLoad(id="pl2_mv", bus=b3_mv, powers=[10e3, 10e3, 10e3])
