@@ -249,3 +249,29 @@ def test_source_voltages(bus_ph, source_ph, bus_vph, source_vph):
 
     assert source.voltage_phases == source_vph
     assert len(source.res_voltages) == len(source.voltage_phases)
+
+
+def test_source_scalar_voltages():
+    bus = Bus("bus", phases="abcn")
+
+    # Three-phase source
+    source = VoltageSource("source", bus, phases="abcn", voltages=230)
+    np.testing.assert_allclose(
+        source.voltages.m, [230, 230 * np.exp(-1j * 2 * np.pi / 3), 230 * np.exp(1j * 2 * np.pi / 3)]
+    )
+    source.voltages = 240
+    np.testing.assert_allclose(
+        source.voltages.m, [240, 240 * np.exp(-1j * 2 * np.pi / 3), 240 * np.exp(1j * 2 * np.pi / 3)]
+    )
+
+    # Bi-phase source
+    source = VoltageSource("source", bus, phases="abn", voltages=230)
+    np.testing.assert_allclose(source.voltages.m, [230, -230])
+    source.voltages = 240
+    np.testing.assert_allclose(source.voltages.m, [240, -240])
+
+    # Single phase source
+    source = VoltageSource("source", bus, phases="an", voltages=230)
+    np.testing.assert_allclose(source.voltages.m, [230])
+    source.voltages = 240
+    np.testing.assert_allclose(source.voltages.m, [240])

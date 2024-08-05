@@ -25,12 +25,11 @@ from roseau.load_flow.utils import ConductorType, InsulatorType, LineType
 def test_to_dict():
     ground = Ground("ground")
     vn = 400 / np.sqrt(3)
-    voltages = [vn, vn * np.exp(-2 / 3 * np.pi * 1j), vn * np.exp(2 / 3 * np.pi * 1j)]
     source_bus = Bus(id="source", phases="abcn", geometry=Point(0.0, 0.0), min_voltage=0.9 * vn)
     load_bus = Bus(id="load bus", phases="abcn", geometry=Point(0.0, 1.0), max_voltage=1.1 * vn)
     ground.connect(load_bus)
     p_ref = PotentialRef(id="pref", element=ground)
-    vs = VoltageSource(id="vs", bus=source_bus, phases="abcn", voltages=voltages)
+    vs = VoltageSource(id="vs", bus=source_bus, phases="abcn", voltages=vn)
 
     # Same id, different line parameters -> fail
     lp1 = LineParameters(
@@ -113,14 +112,13 @@ def test_to_dict():
     # Same id, different transformer parameters -> fail
     ground = Ground("ground")
     vn = 400 / np.sqrt(3)
-    voltages = [vn, vn * np.exp(-2 / 3 * np.pi * 1j), vn * np.exp(2 / 3 * np.pi * 1j)]
     geom = Point(0.0, 0.0)
     source_bus = Bus(id="source", phases="abcn", geometry=geom)
     load_bus = Bus(id="load bus", phases="abcn", geometry=geom)
     ground.connect(load_bus)
     ground.connect(source_bus)
     p_ref = PotentialRef(id="pref", element=ground)
-    vs = VoltageSource(id="vs", bus=source_bus, phases="abcn", voltages=voltages)
+    vs = VoltageSource(id="vs", bus=source_bus, phases="abcn", voltages=vn)
 
     # Same id, different transformer parameters -> fail
     tp1 = TransformerParameters.from_open_and_short_circuit_tests(

@@ -19,6 +19,7 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`249` {gh-issue}`248` Accept scalar values for the `voltages` parameter of the `VoltageSource` class.
 - {gh-pr}`247` Add `connect_neutral` parameter to the loads and sources constructor to specify if the
   neutral is to be connected to the bus's neutral or to be left floating. This allows loads connected
   to the same bus to have different neutral connections. The default behavior remains the same as

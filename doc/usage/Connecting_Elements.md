@@ -32,8 +32,7 @@ Let's take the electrical network of the [Getting started page](usage-getting-st
 ... ground.connect(source_bus, phase="n")
 
 >>> un = 400 / np.sqrt(3)
-... source_voltages = [un, un * np.exp(-2j * np.pi / 3), un * np.exp(2j * np.pi / 3)]
-... vs = rlf.VoltageSource(id="vs", bus=source_bus, voltages=source_voltages)
+... vs = rlf.VoltageSource(id="vs", bus=source_bus, voltages=un)
 
 >>> load = rlf.PowerLoad(id="load", bus=load_bus, powers=[10e3 + 0j, 10e3, 10e3])  # VA
 

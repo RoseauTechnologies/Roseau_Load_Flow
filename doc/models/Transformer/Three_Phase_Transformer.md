@@ -621,8 +621,7 @@ pref_mv = rlf.PotentialRef(id="pref_mv", element=bus_mv)
 pref_lv = rlf.PotentialRef(id="pref_lv", element=bus_lv, phase="n")
 
 # Create a voltage source and connect it to the MV bus
-voltages = 20e3 * np.exp([0, -2j * np.pi / 3, 2j * np.pi / 3])
-vs = rlf.VoltageSource(id="vs", bus=bus_mv, voltages=voltages)
+vs = rlf.VoltageSource(id="vs", bus=bus_mv, voltages=20e3)
 
 # Create a MV/LV transformer
 tp = rlf.TransformerParameters.from_open_and_short_circuit_tests(

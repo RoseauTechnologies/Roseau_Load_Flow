@@ -40,10 +40,7 @@ is impossible.
 ...     ground.connect(bus=source_bus)
 ...     # Create a LV source at the first bus
 ...     un = 400 / np.sqrt(3)
-...     source_voltages = [un, un * np.exp(-2j * np.pi / 3), un * np.exp(2j * np.pi / 3)]
-...     vs = rlf.VoltageSource(
-...         id="vs", bus=source_bus, phases="abcn", voltages=source_voltages
-...     )
+...     vs = rlf.VoltageSource(id="vs", bus=source_bus, phases="abcn", voltages=un)
 ...     # Add LV lines
 ...     lp1 = rlf.LineParameters.from_geometry(
 ...         "U_AL_240",
