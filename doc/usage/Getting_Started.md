@@ -84,8 +84,7 @@ line and a constant power load. This network is a low voltage network (three-pha
 
 >>> # Nominal phase-to-neutral voltage (typical european voltage)
 ... un = 400 / np.sqrt(3)  # In Volts
-
->>> # Optional network limits (for analyzing network violations)
+... # Optional network limits (for analyzing network violations)
 ... u_min = 0.9 * un  # V
 ... u_max = 1.1 * un  # V
 ... i_max = 500.0  # A
@@ -104,8 +103,7 @@ line and a constant power load. This network is a low voltage network (three-pha
 
 >>> # Create a three-phase voltage source at the first bus
 ... # (voltages are phase-to-neutral because the source's phases include a neutral)
-... source_voltages = un * np.exp([0, -2j * np.pi / 3, 2j * np.pi / 3])
-... vs = rlf.VoltageSource(id="vs", bus=source_bus, voltages=source_voltages)
+... vs = rlf.VoltageSource(id="vs", bus=source_bus, voltages=un)
 
 >>> # Add a 30kW load at the second bus (balanced load, 10 kW per phase)
 ... load = rlf.PowerLoad(id="load", bus=load_bus, powers=[10e3 + 0j, 10e3, 10e3])  # In VA
@@ -121,19 +119,29 @@ elements. For example, to create a delta-connected source instead, you can expli
 to `"abc"`:
 
 ```pycon
->>> source_voltages = un * np.sqrt(3) * np.exp([0, -2j * np.pi / 3, 2j * np.pi / 3])
-... vs = rlf.VoltageSource(
-...     id="vs", bus=source_bus, voltages=source_voltages, phases="abc"  # <- delta source
+>>> vs_delta = rlf.VoltageSource(
+...     id="vs_delta",
+...     bus=source_bus,
+...     voltages=un * np.sqrt(3),
+...     phases="abc",  # <- delta source
 ... )
 ```
 
-Note the use of `un * np.sqrt(3)` in the source voltages as they now represent the phase-to-phase
+Note the use of `un * np.sqrt(3)` as the source voltages as they now represent the phase-to-phase
 voltages. This is because everywhere in `roseau-load-flow`, the `voltages` of an element depend on
 the element's `phases`. Voltages of elements connected in a _Star (wye)_ configuration (elements
 that have a neutral connection indicated by the presence of the `'n'` character in their `phases`
 attribute) are the **phase-to-neutral** voltages. Voltages of elements connected in a _Delta_
 configuration (elements that do not have a neutral connection indicated by the absence of the
-`'n'` char from their `phases` attribute) are the **phase-to-phase** voltages.
+`'n'` char from their `phases` attribute) are the **phase-to-phase** voltages. To see between which
+phases the voltage is defined, you can use the `voltage_phases` property of the element.
+
+```pycon
+>>> vs.voltage_phases
+['an', 'bn', 'cn']
+>>> vs_delta.voltage_phases
+['ab', 'bc', 'ca']
+```
 
 At this point, all the basic elements of the network have been defined and connected. Now,
 everything can be encapsulated in an `ElectricalNetwork` object, but first, some important
