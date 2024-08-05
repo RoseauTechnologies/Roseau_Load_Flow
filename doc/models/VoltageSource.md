@@ -128,7 +128,7 @@ vs3.voltage_phases  # ["ab", "bc", "ca"]
 
 # Incorrect phases: the source's phases must be a subset of the bus's phases
 bus2 = rlf.Bus(id="bus2", phases="an")
-rlf.VoltageSource("vs", bus=bus2, phases="bn", voltages=230)  # Error
+rlf.VoltageSource("vs4", bus=bus2, phases="bn", voltages=230)  # Error
 ```
 
 A **scalar** (potentially complex) voltage value can be used to define the source's balanced
@@ -152,18 +152,18 @@ rlf.VoltageSource("vs2", bus=bus, phases="abc", voltages=400)
 
 # Two-phase connection
 # --------------------
-vs = rlf.VoltageSource("vs4", bus=bus, phases="abn", voltages=230)
+rlf.VoltageSource("vs3", bus=bus, phases="abn", voltages=230)
 # {'an': (230+0j), 'bn': (-230+0j)}
 
 # Single-phase connection
 # -----------------------
-vs = rlf.VoltageSource("vs5", bus=bus, phases="an", voltages=230)
+rlf.VoltageSource("vs4", bus=bus, phases="an", voltages=230)
 # {'an': (230+0j)}
 
 # Unbalanced source, explicit voltage vector
 # ------------------------------------------
-vs = rlf.VoltageSource(
-    "vs6",
+rlf.VoltageSource(
+    "vs5",
     bus=bus,
     phases="abcn",
     voltages=[230, 115 * np.exp(1j * np.pi / 2), 115 * np.exp(-1j * np.pi / 2)],
@@ -172,7 +172,7 @@ vs = rlf.VoltageSource(
 
 # Incorrect voltage vector: only two elements!!
 rlf.VoltageSource(
-    id="vs", bus=bus, phases="abc", voltages=400 * np.exp([0, -2j * np.pi / 3])
+    id="vs6", bus=bus, phases="abc", voltages=400 * np.exp([0, -2j * np.pi / 3])
 )  # Error
 ```
 
@@ -185,8 +185,8 @@ bus = rlf.Bus(id="bus", phases="abcn")
 
 # Unbalanced source, explicit voltage vector
 # ------------------------------------------
-vs = rlf.VoltageSource(
-    "vs6",
+rlf.VoltageSource(
+    "vs1",
     bus=bus,
     phases="abcn",
     voltages=[230, 115 * np.exp(1j * np.pi / 2), 115 * np.exp(-1j * np.pi / 2)],
@@ -195,7 +195,7 @@ vs = rlf.VoltageSource(
 
 # Incorrect voltage vector: only two voltage values!!
 rlf.VoltageSource(
-    id="vs", bus=bus, phases="abc", voltages=400 * np.exp([0, -2j * np.pi / 3])
+    id="vs2", bus=bus, phases="abc", voltages=400 * np.exp([0, -2j * np.pi / 3])
 )  # Error
 ```
 
