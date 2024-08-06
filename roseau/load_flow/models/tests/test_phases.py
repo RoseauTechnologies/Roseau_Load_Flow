@@ -584,3 +584,7 @@ def test_potential_ref_phases():
         PotentialRef(id="ref9", element=ground, phases="n")
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
     assert e.value.msg == "Potential reference 'ref9' connected to the ground cannot have a phase."
+
+    # Deprecated
+    with pytest.warns(DeprecationWarning, match=r"The 'phase' argument is deprecated, use 'phases' instead"):
+        assert PotentialRef(id="ref10", element=bus_abc, phase="a").phases == "a"
