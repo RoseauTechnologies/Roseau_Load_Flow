@@ -2,9 +2,9 @@ import numpy as np
 import pytest
 from pint.errors import DimensionalityError
 
-from roseau.load_flow import Projection
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
-from roseau.load_flow.models import Bus, CurrentLoad, FlexibleParameter, ImpedanceLoad, PowerLoad
+from roseau.load_flow.models import Bus, CurrentLoad, FlexibleParameter, ImpedanceLoad, PowerLoad, Projection
+from roseau.load_flow.testing import assert_json_close
 from roseau.load_flow.units import Q_
 
 
@@ -255,88 +255,115 @@ def test_loads_to_dict():
     values = [1 + 2j, 3 + 4j, 5 + 6j]
 
     # Power load
-    assert PowerLoad(id="load_s1", bus=bus, phases="abcn", powers=values).to_dict(include_results=False) == {
-        "id": "load_s1",
-        "bus": "bus",
-        "phases": "abcn",
-        "type": "power",
-        "powers": [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
-        "connect_neutral": None,
-    }
-    assert PowerLoad(id="load_s2", bus=bus, phases="abc", powers=values).to_dict(include_results=False) == {
-        "id": "load_s2",
-        "bus": "bus",
-        "phases": "abc",
-        "type": "power",
-        "powers": [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
-        "connect_neutral": None,
-    }
+    assert_json_close(
+        PowerLoad(id="load_s1", bus=bus, phases="abcn", powers=values).to_dict(include_results=False),
+        {
+            "id": "load_s1",
+            "bus": "bus",
+            "phases": "abcn",
+            "type": "power",
+            "powers": [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
+            "connect_neutral": None,
+        },
+    )
+    assert_json_close(
+        PowerLoad(id="load_s2", bus=bus, phases="abc", powers=values).to_dict(include_results=False),
+        {
+            "id": "load_s2",
+            "bus": "bus",
+            "phases": "abc",
+            "type": "power",
+            "powers": [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
+            "connect_neutral": None,
+        },
+    )
 
     # Current load
-    assert CurrentLoad(id="load_i1", bus=bus, phases="abcn", currents=values).to_dict(include_results=False) == {
-        "id": "load_i1",
-        "bus": "bus",
-        "phases": "abcn",
-        "type": "current",
-        "currents": [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
-        "connect_neutral": None,
-    }
-    assert CurrentLoad(id="load_i2", bus=bus, phases="abc", currents=values).to_dict(include_results=False) == {
-        "id": "load_i2",
-        "bus": "bus",
-        "phases": "abc",
-        "type": "current",
-        "currents": [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
-        "connect_neutral": None,
-    }
+    assert_json_close(
+        CurrentLoad(id="load_i1", bus=bus, phases="abcn", currents=values).to_dict(include_results=False),
+        {
+            "id": "load_i1",
+            "bus": "bus",
+            "phases": "abcn",
+            "type": "current",
+            "currents": [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
+            "connect_neutral": None,
+        },
+    )
+    assert_json_close(
+        CurrentLoad(id="load_i2", bus=bus, phases="abc", currents=values).to_dict(include_results=False),
+        {
+            "id": "load_i2",
+            "bus": "bus",
+            "phases": "abc",
+            "type": "current",
+            "currents": [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
+            "connect_neutral": None,
+        },
+    )
 
     # Impedance load
-    assert ImpedanceLoad(id="load_z1", bus=bus, phases="abcn", impedances=values).to_dict(include_results=False) == {
-        "id": "load_z1",
-        "bus": "bus",
-        "phases": "abcn",
-        "type": "impedance",
-        "impedances": [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
-        "connect_neutral": None,
-    }
-    assert ImpedanceLoad(id="load_z2", bus=bus, phases="abc", impedances=values).to_dict(include_results=False) == {
-        "id": "load_z2",
-        "bus": "bus",
-        "phases": "abc",
-        "type": "impedance",
-        "impedances": [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
-        "connect_neutral": None,
-    }
-    assert ImpedanceLoad(id="load_z3", bus=bus, phases="abc", impedances=values, connect_neutral=False).to_dict(
-        include_results=False
-    ) == {
-        "id": "load_z3",
-        "bus": "bus",
-        "phases": "abc",
-        "type": "impedance",
-        "impedances": [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
-        "connect_neutral": False,
-    }
-    assert ImpedanceLoad(id="load_z4", bus=bus, phases="abcn", impedances=values, connect_neutral=True).to_dict(
-        include_results=False
-    ) == {
-        "id": "load_z4",
-        "bus": "bus",
-        "phases": "abcn",
-        "type": "impedance",
-        "impedances": [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
-        "connect_neutral": True,
-    }
+    assert_json_close(
+        ImpedanceLoad(id="load_z1", bus=bus, phases="abcn", impedances=values).to_dict(include_results=False),
+        {
+            "id": "load_z1",
+            "bus": "bus",
+            "phases": "abcn",
+            "type": "impedance",
+            "impedances": [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
+            "connect_neutral": None,
+        },
+    )
+    assert_json_close(
+        ImpedanceLoad(id="load_z2", bus=bus, phases="abc", impedances=values).to_dict(include_results=False),
+        {
+            "id": "load_z2",
+            "bus": "bus",
+            "phases": "abc",
+            "type": "impedance",
+            "impedances": [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
+            "connect_neutral": None,
+        },
+    )
+    assert_json_close(
+        ImpedanceLoad(id="load_z3", bus=bus, phases="abc", impedances=values, connect_neutral=False).to_dict(
+            include_results=False
+        ),
+        {
+            "id": "load_z3",
+            "bus": "bus",
+            "phases": "abc",
+            "type": "impedance",
+            "impedances": [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
+            "connect_neutral": False,
+        },
+    )
+    assert_json_close(
+        ImpedanceLoad(id="load_z4", bus=bus, phases="abcn", impedances=values, connect_neutral=True).to_dict(
+            include_results=False
+        ),
+        {
+            "id": "load_z4",
+            "bus": "bus",
+            "phases": "abcn",
+            "type": "impedance",
+            "impedances": [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
+            "connect_neutral": True,
+        },
+    )
     with pytest.warns(UserWarning, match=r"Neutral connection requested for load 'load_z5' with no neutral phase"):
         vs = ImpedanceLoad(id="load_z5", bus=bus, phases="abc", impedances=values, connect_neutral=True)
-    assert vs.to_dict(include_results=False) == {
-        "id": "load_z5",
-        "bus": "bus",
-        "phases": "abc",
-        "type": "impedance",
-        "impedances": [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
-        "connect_neutral": None,
-    }
+    assert_json_close(
+        vs.to_dict(include_results=False),
+        {
+            "id": "load_z5",
+            "bus": "bus",
+            "phases": "abc",
+            "type": "impedance",
+            "impedances": [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
+            "connect_neutral": None,
+        },
+    )
 
     # Flexible load
     expected_dict = {
@@ -362,7 +389,7 @@ def test_loads_to_dict():
     }
     fp = [FlexibleParameter.constant()] * 3
     flex_load = PowerLoad(id="load_f1", bus=bus, phases="abcn", powers=values, flexible_params=fp)
-    assert flex_load.to_dict(include_results=False) == expected_dict
+    assert_json_close(flex_load.to_dict(include_results=False), expected_dict)
     parsed_flex_load = PowerLoad.from_dict(expected_dict | {"bus": Bus(id="bus", phases="abcn")})
     assert isinstance(parsed_flex_load, PowerLoad)
     assert parsed_flex_load.id == flex_load.id
