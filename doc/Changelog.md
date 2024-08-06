@@ -19,6 +19,8 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`254` {gh-issue}`251` Allow passing multiple phases to potential references. The `phase`
+  attribute of the `PotentialRef` is replaced by `phases`.
 - {gh-pr}`249` {gh-issue}`248` Accept scalar values for the `voltages` parameter of the `VoltageSource` class.
 - {gh-pr}`247` Add `connect_neutral` parameter to the loads and sources constructor to specify if the
   neutral is to be connected to the bus's neutral or to be left floating. This allows loads connected

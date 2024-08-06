@@ -407,8 +407,8 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
     def potential_refs_frame(self) -> pd.DataFrame:
         """The :attr:`potential references <potential_refs>` of the network as a dataframe."""
         return pd.DataFrame.from_records(
-            data=[(pref.id, pref.phase, pref.element.id) for pref in self.potential_refs.values()],
-            columns=["id", "phase", "element_id"],
+            data=[(pref.id, pref.phases, pref.element.id) for pref in self.potential_refs.values()],
+            columns=["id", "phases", "element_id"],
             index="id",
         )
 

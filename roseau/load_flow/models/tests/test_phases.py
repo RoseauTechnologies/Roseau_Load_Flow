@@ -7,9 +7,11 @@ from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowE
 from roseau.load_flow.models import (
     Bus,
     CurrentLoad,
+    Ground,
     ImpedanceLoad,
     Line,
     LineParameters,
+    PotentialRef,
     PowerLoad,
     Switch,
     Transformer,
@@ -555,3 +557,30 @@ def test_voltage_phases():
 
     load = VoltageSource(id="vs5", bus=bus, voltages=[100], phases="ab")
     assert load.voltage_phases == ["ab"]
+
+
+def test_potential_ref_phases():
+    bus_abc = Bus(id="bus_abc", phases="abc")
+    bus_abcn = Bus(id="bus_abcn", phases="abcn")
+    ground = Ground(id="ground")
+
+    # Default behavior
+    assert PotentialRef(id="ref1", element=bus_abc).phases == "abc"
+    assert PotentialRef(id="ref2", element=bus_abcn).phases == "n"
+    assert PotentialRef(id="ref3", element=ground).phases is None
+
+    # Explicit phases
+    assert PotentialRef(id="ref4", element=bus_abc, phases="a").phases == "a"
+    assert PotentialRef(id="ref5", element=bus_abc, phases="ab").phases == "ab"
+    assert PotentialRef(id="ref6", element=bus_abcn, phases="ab").phases == "ab"
+    assert PotentialRef(id="ref7", element=bus_abcn, phases="abcn").phases == "abcn"
+
+    # Not allowed
+    with pytest.raises(RoseauLoadFlowException) as e:
+        PotentialRef(id="ref8", element=bus_abc, phases="an")
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
+    assert e.value.msg == "Phases ['n'] of potential reference 'ref8' are not in bus 'bus_abc' phases 'abc'"
+    with pytest.raises(RoseauLoadFlowException) as e:
+        PotentialRef(id="ref9", element=ground, phases="n")
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
+    assert e.value.msg == "Potential reference 'ref9' connected to the ground cannot have a phase."
