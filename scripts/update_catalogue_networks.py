@@ -211,7 +211,7 @@ if __name__ == "__main__":
             for potential_ref_id in en.potential_refs:
                 assert potential_ref_id == "pref", potential_ref_id
                 potential_ref = en.potential_refs[potential_ref_id]
-                assert potential_ref.phase is None
+                assert potential_ref.phases is None
                 assert potential_ref.element.id == "ground"
                 new_potential_ref = rlf.PotentialRef(potential_ref_id, element=new_grounds[potential_ref.element.id])
                 new_potential_refs[potential_ref_id] = new_potential_ref
