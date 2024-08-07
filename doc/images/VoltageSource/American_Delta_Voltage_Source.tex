@@ -13,26 +13,26 @@
 
   % Coordonnées
   \coordinate (A) at (90:\Radius);%
-  \coordinate (B) at (210:\Radius);%
-  \coordinate (C) at (330:\Radius);%
+  \coordinate (B) at (330:\Radius);%
+  \coordinate (C) at (210:\Radius);%
   \coordinate (A2) at ($(\Radius,\Radius)+(1,0)$);%
-  \coordinate (C2) at (A2 |- B);%
-  \coordinate (B2) at ($(C2)-(0,1.25)$);%
-  \coordinate (B3) at ($(B)-(0,1.25)$);%
+  \coordinate (B2) at (A2 |- C);%
+  \coordinate (C2) at ($(B2)-(0,1.25)$);%
+  \coordinate (C3) at ($(C)-(0,1.25)$);%
 
   % Nœuds
   \node[above] at (A) {A};%
-  \node[left] at (B) {B};%
-  \node[above right] at (C) {C};%
+  \node[above right] at (B) {B};%
+  \node[left] at (C) {C};%
 
   % Lignes
-  \draw (A) to[vsourcesin, v_=$\underline{U_{\arm\brm}}$, i^>=$\underline{I_{\abrm}}$, *-*] (B) %
-  to[vsourcesin, v_=$\underline{U_{\brm\crm}}$, i^>=$\underline{I_{\bcrm}}$, *-*] (C) %
-  to[vsourcesin, v_=$\underline{U_{\crm\arm}}$, i^>=$\underline{I_{\carm}}$, *-*] (A);%
+  \draw (A) to[vsourcesin, v^=$\underline{U_{\arm\brm}}$, i>=$\underline{I_{\abrm}}$, *-*] (B) %
+  to[vsourcesin, v^=$\underline{U_{\brm\crm}}$, i>=$\underline{I_{\bcrm}}$, *-*] (C) %
+  to[vsourcesin, v^=$\underline{U_{\crm\arm}}$, i>=$\underline{I_{\carm}}$, *-*] (A);%
   \draw (A2) to[short,i=$\underline{I_{\arm}}$,*-*] (A);%
-  \draw (B) -- (B3);%
-  \draw (B2) to[short,i=$\underline{I_{\brm}}$,*-] (B3);%
-  \draw (C2) to[short,i=$\underline{I_{\crm}}$,*-] (C);%
+  \draw (C) -- (C3);%
+  \draw (B2) to[short,i=$\underline{I_{\brm}}$,*-] (B);%
+  \draw (C2) to[short,i=$\underline{I_{\crm}}$,*-] (C3);%
 \end{tikzpicture}
 \end{document}
 % Local Variables:

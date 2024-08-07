@@ -19,6 +19,8 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`255` Update the figures of loads and of voltage sources in the documentation to be compliant with the work
+  of {gh-pr}`249`.
 - {gh-pr}`254` {gh-issue}`251` Allow passing multiple phases to potential references. The `phase`
   attribute of the `PotentialRef` is replaced by `phases`.
 - {gh-pr}`249` {gh-issue}`248` Accept scalar values for the `voltages` parameter of the `VoltageSource` class.
