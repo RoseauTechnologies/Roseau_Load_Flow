@@ -62,7 +62,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         id: Id,
         z_line: ComplexArrayLike2D,
         y_shunt: ComplexArrayLike2D | None = None,
-        max_current: float | None = None,
+        max_current: float | Q_[float] | None = None,
         line_type: LineType | None = None,
         conductor_type: ConductorType | None = None,
         insulator_type: InsulatorType | None = None,
@@ -638,84 +638,10 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
 
     @classmethod
     @deprecated(
-        "The method LineParameters.from_name_lv() is deprecated and will be removed in a future "
-        "version. Use LineParameters.from_geometry() instead.",
+        "The method LineParameters.from_name_mv() is deprecated and will be removed in a future "
+        "version. Use LineParameters.from_coiffier() instead.",
         category=FutureWarning,
     )
-    @ureg_wraps(None, (None, None, "mm²", "m", "mm", "A"))
-    def from_name_lv(
-        cls,
-        name: str,
-        section_neutral: float | Q_[float] | None = None,
-        height: float | Q_[float] | None = None,
-        external_diameter: float | Q_[float] | None = None,
-        max_current: float | Q_[float] | None = None,
-    ) -> Self:
-        """Method to get the electrical parameters of a LV line from its canonical name.
-        Some hypothesis will be made: the section of the neutral is the same as the other sections, the height and
-        external diameter are pre-defined, and the insulator is PVC.
-
-        Args:
-            name:
-                The name of the line the parameters must be computed. E.g. "U_AL_150".
-
-            section_neutral:
-                Surface of the neutral (mm²). If None it will be the same as the section of the other phases.
-
-            height:
-                 Height of the line (m). If None a default value will be used.
-
-            external_diameter:
-                External diameter of the wire (mm). If None a default value will be used.
-
-            max_current:
-                An optional maximum current loading of the line (A). It is not used in the load flow.
-
-        Returns:
-            The corresponding line parameters.
-
-        .. deprecated:: 0.6.0
-            Use :meth:`LineParameters.from_geometry` instead.
-        """
-        match = cls._REGEXP_LINE_TYPE_NAME.fullmatch(string=name)
-        if not match:
-            msg = f"The line type name does not follow the syntax rule. {name!r} was provided."
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TYPE_NAME_SYNTAX)
-
-        # Check the user input and retrieve enumerated types
-        line_type, conductor_type, section = name.split("_")
-        line_type = LineType(line_type)
-        conductor_type = ConductorType(conductor_type)
-        insulator_type = InsulatorType.PVC
-
-        section = float(section)
-
-        if section_neutral is None:
-            section_neutral = section
-        if height is None:
-            height = Q_(-1.5, "m") if line_type == LineType.UNDERGROUND else Q_(10.0, "m")
-        if external_diameter is None:
-            external_diameter = Q_(40, "mm")
-
-        return cls.from_geometry(
-            id=name,
-            line_type=line_type,
-            conductor_type=conductor_type,
-            insulator_type=insulator_type,
-            section=section,
-            section_neutral=section_neutral,
-            height=height,
-            external_diameter=external_diameter,
-            max_current=max_current,
-        )
-
-    @classmethod
-    # @deprecated(
-    #     "The method LineParameters.from_name_mv() is deprecated and will be removed in a future "
-    #     "version. Use LineParameters.from_catalogue() instead.",
-    #     category=FutureWarning,
-    # )
     @ureg_wraps(None, (None, None, "A"))
     def from_name_mv(cls, name: str, max_current: float | Q_[float] | None = None) -> Self:
         """Get the electrical parameters of a MV line from its canonical name (France specific model)
@@ -731,26 +657,75 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         Returns:
             The corresponding line parameters.
         """
-        match = cls._REGEXP_LINE_TYPE_NAME.fullmatch(string=name)
-        if not match:
-            msg = f"The line type name does not follow the syntax rule. {name!r} was provided."
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TYPE_NAME_SYNTAX)
+        obj = cls.from_coiffier_model(name=name, nb_phases=3)
+        obj.max_current = max_current
+        return obj
 
+    @classmethod
+    def from_coiffier_model(cls, name: str, nb_phases: int = 3, id: Id | None = None) -> Self:  # noqa: C901
+        """Get the electrical parameters of a MV line using Alain Coiffier's method (France specific model).
+
+        Args:
+            name:
+                The canonical name of the line parameters. It must be in the format
+                `lineType_conductorType_crossSection`. E.g. "U_AL_150".
+
+            nb_phases:
+                The number of phases of the line between 1 and 4, defaults to 3. It represents the
+                size of the ``z_line`` and ``y_shunt`` matrices.
+
+            id:
+                A unique ID for the created line parameters object (optional). If ``None``
+                (default), the id of the created object will be the canonical name.
+
+        Returns:
+            The corresponding line parameters.
+        """
         # Check the user input and retrieve enumerated types
-        line_type, conductor_type, section = name.split("_")
-        line_type = LineType(line_type)
-        conductor_type = ConductorType(conductor_type)
-        section = Q_(float(section), "mm**2")
+        try:
+            if cls._REGEXP_LINE_TYPE_NAME.fullmatch(string=name) is None:
+                raise AssertionError
+            line_type, conductor_type, section = name.split("_")
+            line_type = LineType(line_type)
+            conductor_type = ConductorType(conductor_type)
+            section = Q_(float(section), "mm**2")
+        except Exception:
+            msg = (
+                f"The Coiffier line parameter name {name!r} is not valid, expected format is "
+                "'LineType_ConductorType_CrossSection'."
+            )
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TYPE_NAME_SYNTAX) from None
 
         r = RHO[conductor_type] / section
         if line_type == LineType.OVERHEAD:
             c_b1 = Q_(50, "µF/km")
             c_b2 = Q_(0, "µF/(km*mm**2)")
             x = Q_(0.35, "ohm/km")
+            if conductor_type == ConductorType.AA:
+                if section <= 50:
+                    c_imax = 14.20
+                elif 50 < section <= 100:
+                    c_imax = 12.10
+                else:
+                    c_imax = 15.70
+            elif conductor_type in {ConductorType.AL, ConductorType.AM}:
+                c_imax = 16.40
+            elif conductor_type == ConductorType.CU:
+                c_imax = 21
+            elif conductor_type == ConductorType.LA:
+                if section <= 50:
+                    c_imax = 13.60
+                elif 50 < section <= 100:
+                    c_imax = 12.10
+                else:
+                    c_imax = 15.60
+            else:
+                c_imax = 15.90
         elif line_type == LineType.TWISTED:
             c_b1 = Q_(1750, "µF/km")
             c_b2 = Q_(5, "µF/(km*mm**2)")
+            c_imax = 12
             x = Q_(0.1, "ohm/km")
         elif line_type == LineType.UNDERGROUND:
             if section <= Q_(50, "mm**2"):
@@ -759,6 +734,12 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             else:
                 c_b1 = Q_(2240, "µF/km")
                 c_b2 = Q_(15, "µF/(km*mm**2)")
+            if conductor_type == ConductorType.AL:
+                c_imax = 16.5
+            elif conductor_type == ConductorType.CU:
+                c_imax = 20
+            else:  # Other material: AA, AM, LA.
+                c_imax = 16.5
             x = Q_(0.1, "ohm/km")
         else:
             msg = f"The line type {line_type!r} of the line {name!r} is unknown."
@@ -767,9 +748,20 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         b = (c_b1 + c_b2 * section) * 1e-4 * OMEGA
         b = b.to("S/km")
 
-        z_line = (r + x * 1j) * np.eye(3, dtype=np.float64)  # in ohms/km
-        y_shunt = b * 1j * np.eye(3, dtype=np.float64)  # in siemens/km
-        return cls(id=name, z_line=z_line, y_shunt=y_shunt, max_current=max_current)
+        z_line = (r + x * 1j) * np.eye(nb_phases, dtype=np.float64)  # in ohms/km
+        y_shunt = b * 1j * np.eye(nb_phases, dtype=np.float64)  # in siemens/km
+        max_current = c_imax * section.m**0.62  # A
+        if id is None:
+            id = name
+        return cls(
+            id=id,
+            z_line=z_line,
+            y_shunt=y_shunt,
+            line_type=line_type,
+            conductor_type=conductor_type,
+            section=section,
+            max_current=max_current,
+        )
 
     #
     # Constructors from other software
