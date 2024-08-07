@@ -143,6 +143,16 @@ phases the voltage is defined, you can use the `voltage_phases` property of the 
 ['ab', 'bc', 'ca']
 ```
 
+When creating balanced loads, you can, as a shortcut, pass a single scalar value to the `powers`
+argument. This value will be used equally for all phases. For example, the load definition above
+can be simplified as follows:
+
+```pycon
+>>> load = rlf.PowerLoad(
+...     id="load", bus=load_bus, powers=10e3 + 0j
+... )  # 10kW per phase, 30kW total
+```
+
 At this point, all the basic elements of the network have been defined and connected. Now,
 everything can be encapsulated in an `ElectricalNetwork` object, but first, some important
 notes on the `Ground` and `PotentialRef` elements:

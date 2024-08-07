@@ -1246,7 +1246,7 @@ def test_v1_to_v2_converter():
     # }
     #
     # # Potential reference
-    # potential_ref = PotentialRef(id="pref", element=buses[1], phase=None)
+    # potential_ref = PotentialRef(id="pref", element=buses[1])
     #
     # # Sources and loads
     # vs = VoltageSource(

@@ -54,10 +54,10 @@ switch = rlf.Switch(id="switch", bus1=bus1, bus2=bus2)
 # A voltage source on the first bus
 vs = rlf.VoltageSource(id="source", bus=bus1, voltages=400 / np.sqrt(3))
 
-# The neutral of the voltage source is fixed at potential 0
-pref = rlf.PotentialRef(id="pref", element=bus1, phase="n")
+# The potential of the neutral of bus1 is fixed at 0V
+pref = rlf.PotentialRef(id="pref", element=bus1)
 
-# A power load on the second bus
+# An unbalanced constant-power load on the second bus
 load = rlf.PowerLoad(id="load", bus=bus2, powers=[5000 + 1600j, 2500 + 800j, 0])
 
 # Create a network and solve a load flow

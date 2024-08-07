@@ -389,13 +389,15 @@ def test_loads_to_dict():
     }
     fp = [FlexibleParameter.constant()] * 3
     flex_load = PowerLoad(id="load_f1", bus=bus, phases="abcn", powers=values, flexible_params=fp)
+    assert flex_load.flexible_params is not None
     assert_json_close(flex_load.to_dict(include_results=False), expected_dict)
     parsed_flex_load = PowerLoad.from_dict(expected_dict | {"bus": Bus(id="bus", phases="abcn")})
     assert isinstance(parsed_flex_load, PowerLoad)
     assert parsed_flex_load.id == flex_load.id
     assert parsed_flex_load.bus.id == flex_load.bus.id
     assert parsed_flex_load.phases == flex_load.phases
-    assert np.allclose(parsed_flex_load.powers, flex_load.powers)
+    assert np.allclose(parsed_flex_load.powers.m, flex_load.powers.m)
+    assert parsed_flex_load.flexible_params is not None
     assert [p.to_dict(include_results=False) for p in parsed_flex_load.flexible_params] == [
         p.to_dict(include_results=False) for p in flex_load.flexible_params
     ]
@@ -529,7 +531,7 @@ def test_power_load_res_powers(bus_ph, load_ph, s, res_pot, res_cur):
     bus._res_potentials = np.array(res_pot, dtype=complex)
     load._res_currents = np.array(res_cur, dtype=complex)
     load._res_potentials = bus._get_potentials_of(load.phases, warning=False)
-    assert np.allclose(sum(load.res_powers), sum(load.powers))
+    assert np.allclose(sum(load.res_powers.m), sum(load.powers.m))
 
 
 @pytest.mark.parametrize(
@@ -599,8 +601,8 @@ def test_current_load_res_powers(bus_ph, load_ph, i, res_pot, res_cur):
     bus._res_potentials = np.array(res_pot, dtype=complex)
     load._res_currents = np.array(res_cur, dtype=complex)
     load._res_potentials = bus._get_potentials_of(load.phases, warning=False)
-    load_powers = load.res_voltages * load.currents.conj()  # S = V * I*
-    assert np.allclose(sum(load.res_powers), sum(load_powers))
+    load_powers = load.res_voltages.m * load.currents.m.conj()  # S = V * I*
+    assert np.allclose(sum(load.res_powers.m), sum(load_powers))
 
 
 @pytest.mark.parametrize(
@@ -700,8 +702,8 @@ def test_impedance_load_res_powers(bus_ph, load_ph, z, res_pot, res_cur):
     bus._res_potentials = np.array(res_pot, dtype=complex)
     load._res_currents = np.array(res_cur, dtype=complex)
     load._res_potentials = bus._get_potentials_of(load.phases, warning=False)
-    load_powers = np.abs(load.res_voltages) ** 2 / load.impedances.conj()  # S = |V|² / Z*
-    assert np.allclose(sum(load.res_powers), sum(load_powers))
+    load_powers = np.abs(load.res_voltages.m) ** 2 / load.impedances.m.conj()  # S = |V|² / Z*
+    assert np.allclose(sum(load.res_powers.m), sum(load_powers))
 
 
 @pytest.mark.parametrize(
@@ -732,10 +734,10 @@ def test_load_voltages(bus_ph, load_ph, bus_vph, load_vph):
     load._res_potentials = bus._get_potentials_of(phases=load.phases, warning=False)
 
     assert bus.voltage_phases == bus_vph
-    assert len(bus.res_voltages) == len(bus.voltage_phases)
+    assert len(bus.res_voltages.m) == len(bus.voltage_phases)
 
     assert load.voltage_phases == load_vph
-    assert len(load.res_voltages) == len(load.voltage_phases)
+    assert len(load.res_voltages.m) == len(load.voltage_phases)
 
 
 def test_non_flexible_load_res_flexible_powers():
@@ -748,3 +750,47 @@ def test_non_flexible_load_res_flexible_powers():
         _ = load.res_flexible_powers
     assert e.value.msg == "The load 'load' is not flexible and does not have flexible powers"
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_LOAD_TYPE
+
+
+def test_loads_scalar_values():
+    bus = Bus(id="bus", phases="abcn")
+
+    # Power load
+    load = PowerLoad(id="load1", bus=bus, powers=100 + 50j, phases="abcn")
+    np.testing.assert_allclose(load.powers.m, [100 + 50j, 100 + 50j, 100 + 50j], strict=True)
+    load.powers = 200 + 100j
+    np.testing.assert_allclose(load.powers.m, [200 + 100j, 200 + 100j, 200 + 100j], strict=True)
+    load = PowerLoad(id="load2", bus=bus, powers=100 + 50j, phases="abc")
+    np.testing.assert_allclose(load.powers.m, [100 + 50j, 100 + 50j, 100 + 50j], strict=True)
+    load = PowerLoad(id="load3", bus=bus, powers=100 + 50j, phases="bcn")
+    np.testing.assert_allclose(load.powers.m, [100 + 50j, 100 + 50j], strict=True)
+    load = PowerLoad(id="load4", bus=bus, powers=100 + 50j, phases="ca")
+    np.testing.assert_allclose(load.powers.m, [100 + 50j], strict=True)
+    load = PowerLoad(id="load5", bus=bus, powers=100 + 50j, phases="an")
+    np.testing.assert_allclose(load.powers.m, [100 + 50j], strict=True)
+
+    # Current load
+    load = CurrentLoad(id="load6", bus=bus, currents=2 + 1j, phases="abcn")
+    np.testing.assert_allclose(
+        load.currents.m, [(2 + 1j), (2 + 1j) * np.exp(-2j * np.pi / 3), (2 + 1j) * np.exp(2j * np.pi / 3)], strict=True
+    )
+    load.currents = 4 + 2j
+    np.testing.assert_allclose(
+        load.currents.m, [(4 + 2j), (4 + 2j) * np.exp(-2j * np.pi / 3), (4 + 2j) * np.exp(2j * np.pi / 3)], strict=True
+    )
+    load = CurrentLoad(id="load7", bus=bus, currents=2 + 1j, phases="abc")
+    np.testing.assert_allclose(
+        load.currents.m, [(2 + 1j), (2 + 1j) * np.exp(-2j * np.pi / 3), (2 + 1j) * np.exp(2j * np.pi / 3)], strict=True
+    )
+    load = CurrentLoad(id="load8", bus=bus, currents=2 + 1j, phases="bcn")
+    np.testing.assert_allclose(load.currents.m, [(2 + 1j), -(2 + 1j)], strict=True)
+    load = CurrentLoad(id="load9", bus=bus, currents=2 + 1j, phases="ca")
+    np.testing.assert_allclose(load.currents.m, [2 + 1j], strict=True)
+    load = CurrentLoad(id="load10", bus=bus, currents=2 + 1j, phases="an")
+    np.testing.assert_allclose(load.currents.m, [2 + 1j], strict=True)
+
+    # Impedance load
+    load = ImpedanceLoad(id="load11", bus=bus, impedances=1000 + 500j, phases="abcn")
+    np.testing.assert_allclose(load.impedances.m, [1000 + 500j, 1000 + 500j, 1000 + 500j], strict=True)
+    load.impedances = 2000 + 1000j
+    np.testing.assert_allclose(load.impedances.m, [2000 + 1000j, 2000 + 1000j, 2000 + 1000j], strict=True)

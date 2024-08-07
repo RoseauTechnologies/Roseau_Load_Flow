@@ -38,11 +38,11 @@ bus1 = rlf.Bus(id="bus1", phases="abcn")  # A three-phase bus with a neutral
 bus2 = rlf.Bus(id="bus2", phases="abc")  # A three-phase bus without a neutral
 bus3 = rlf.Bus(id="bus3", phases="an")  # A single-phase bus
 
-rlf.PowerLoad(id="load1", bus=bus1, powers=[100, 0, 50j], phases="abcn")  # OK
-rlf.PowerLoad(id="load2", bus=bus1, powers=[100, 0, 50j], phases="abc")  # OK
-rlf.PowerLoad(id="load3", bus=bus2, powers=[100], phases="ab")  # OK
+rlf.PowerLoad(id="load1", bus=bus1, powers=1000, phases="abcn")  # OK
+rlf.PowerLoad(id="load2", bus=bus1, powers=1000, phases="abc")  # OK
+rlf.PowerLoad(id="load3", bus=bus2, powers=1000, phases="ab")  # OK
 rlf.PowerLoad(
-    id="load4", bus=bus3, powers=[100], phases="ab"
+    id="load4", bus=bus3, powers=1000, phases="ab"
 )  # Error: bus3 does not have phase "b"
 ```
 
@@ -83,8 +83,8 @@ line = rlf.Line(id="line", bus1=bus1, bus2=bus2, parameters=lp, length=rlf.Q_(1,
 un = 400 / np.sqrt(3)
 vs = rlf.VoltageSource(id="source", bus=bus1, voltages=rlf.Q_(un, "V"))
 
-# The neutral of the voltage source is fixed at potential 0
-pref = rlf.PotentialRef(id="pref", element=bus1, phase="n")
+# The neutral of bus1 is fixed at potential 0
+pref = rlf.PotentialRef(id="pref", element=bus1)
 
 # Create a short-circuit on bus2 between phases "a" and "b"
 bus2.add_short_circuit("a", "b")

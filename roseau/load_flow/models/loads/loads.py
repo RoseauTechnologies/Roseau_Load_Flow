@@ -11,8 +11,9 @@ from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowE
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import Element
 from roseau.load_flow.models.loads.flexible_parameters import FlexibleParameter
-from roseau.load_flow.typing import ComplexArray, ComplexArrayLike1D, Id, JsonDict
+from roseau.load_flow.typing import ComplexArray, ComplexArrayLikeScalarOr1D, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
+from roseau.load_flow.utils.constants import PositiveSequence
 from roseau.load_flow_engine.cy_engine import (
     CyAdmittanceLoad,
     CyCurrentLoad,
@@ -155,17 +156,31 @@ class AbstractLoad(Element, ABC):
         """The load flow result of the load currents (A)."""
         return self._res_currents_getter(warning=True)
 
-    def _validate_value(self, value: ComplexArrayLike1D) -> ComplexArray:
-        if len(value) != self._size:
-            msg = f"Incorrect number of {self.type}s: {len(value)} instead of {self._size}"
+    def _validate_value(self, value: ComplexArrayLikeScalarOr1D) -> ComplexArray:
+        if np.isscalar(value):
+            if self.type == "current":
+                if self._size == 1:
+                    values = [value]
+                elif self._size == 2:
+                    values = [value, -value]
+                else:
+                    assert self._size == 3
+                    values = value * PositiveSequence
+            else:
+                values = [value for _ in range(self._size)]
+        else:
+            values = value
+        values = np.array(values, dtype=np.complex128)
+        if len(values) != self._size:
+            msg = f"Incorrect number of {self.type}s: {len(values)} instead of {self._size}"
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode[f"BAD_{self._symbol}_SIZE"])
         # A load cannot have any zero impedance
-        if self.type == "impedance" and np.isclose(value, 0).any():
+        if self.type == "impedance" and np.isclose(values, 0).any():
             msg = f"An impedance of the load {self.id!r} is null"
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Z_VALUE)
-        return np.array(value, dtype=np.complex128)
+        return values
 
     def _res_potentials_getter(self, warning: bool) -> ComplexArray:
         if self._fetch_results:
@@ -327,7 +342,7 @@ class PowerLoad(AbstractLoad):
         id: Id,
         bus: Bus,
         *,
-        powers: ComplexArrayLike1D,
+        powers: ComplexArrayLikeScalarOr1D,
         phases: str | None = None,
         flexible_params: list[FlexibleParameter] | None = None,
         connect_neutral: bool | None = None,
@@ -342,8 +357,14 @@ class PowerLoad(AbstractLoad):
                 The bus to connect the load to.
 
             powers:
-                An array-like of the powers for each phase component. Either complex values (VA)
-                or a :class:`Quantity <roseau.load_flow.units.Q_>` of complex values.
+                A single power value or an array-like of power values for each phase component.
+                Either complex values (VA) or a :class:`Quantity <roseau.load_flow.units.Q_>` of
+                complex values.
+
+                When a scalar value is provided, it creates a balanced load with the same power for
+                each phase. The scalar value passed is assumed to be the power of each component of
+                the load, not the total multi-phase power. To create an unbalanced load, provide a
+                vector of power values with the same length as the number of components of the load.
 
             phases:
                 The phases of the load. A string like ``"abc"`` or ``"an"`` etc. The bus phases are
@@ -383,15 +404,11 @@ class PowerLoad(AbstractLoad):
         self._res_flexible_powers: ComplexArray | None = None
 
         if self.is_flexible:
-            cy_parameters = []
-            for p in flexible_params:
-                cy_parameters.append(p._cy_fp)
+            cy_parameters = np.array([p._cy_fp for p in flexible_params])  # type: ignore
             if self.phases == "abc":
-                self._cy_element = CyDeltaFlexibleLoad(
-                    n=self._n, powers=self._powers, parameters=np.array(cy_parameters)
-                )
+                self._cy_element = CyDeltaFlexibleLoad(n=self._n, powers=self._powers, parameters=cy_parameters)
             else:
-                self._cy_element = CyFlexibleLoad(n=self._n, powers=self._powers, parameters=np.array(cy_parameters))
+                self._cy_element = CyFlexibleLoad(n=self._n, powers=self._powers, parameters=cy_parameters)
         else:
             if self.phases == "abc":
                 self._cy_element = CyDeltaPowerLoad(n=self._n, powers=self._powers)
@@ -410,12 +427,15 @@ class PowerLoad(AbstractLoad):
     @property
     @ureg_wraps("VA", (None,))
     def powers(self) -> Q_[ComplexArray]:
-        """The powers of the load (VA)."""
+        """The powers of the load (VA).
+
+        Setting the powers will update the load's power values and invalidate the network results.
+        """
         return self._powers
 
     @powers.setter
     @ureg_wraps(None, (None, "VA"))
-    def powers(self, value: ComplexArrayLike1D) -> None:
+    def powers(self, value: ComplexArrayLikeScalarOr1D) -> None:
         value = self._validate_value(value)
         if self._flexible_params is not None:
             for power, fp in zip(value, self._flexible_params, strict=True):
@@ -502,7 +522,7 @@ class CurrentLoad(AbstractLoad):
 
     type: Final = "current"
 
-    def __init__(self, id: Id, bus: Bus, *, currents: ComplexArrayLike1D, phases: str | None = None) -> None:
+    def __init__(self, id: Id, bus: Bus, *, currents: ComplexArrayLikeScalarOr1D, phases: str | None = None) -> None:
         """CurrentLoad constructor.
 
         Args:
@@ -513,8 +533,17 @@ class CurrentLoad(AbstractLoad):
                 The bus to connect the load to.
 
             currents:
-                An array-like of the currents for each phase component. Either complex values (A)
-                or a :class:`Quantity <roseau.load_flow.units.Q_>` of complex values.
+                A single current value or an array-like of current values for each phase component.
+                Either complex values (A) or a :class:`Quantity <roseau.load_flow.units.Q_>` of
+                complex values.
+
+                When a scalar value is provided, it is interpreted as the first value of the load
+                currents vector to create a balanced load. The other values are calculated based on
+                the number of phases of the load. For a single-phase load, the passed scalar value
+                is used. For a two-phase load, the second current value is the negative of the first
+                value (180° phase shift). For a three-phase load, the second and third current
+                values are obtained by rotating the first value by -120° and 120°, respectively
+                (120° phase shift clockwise).
 
             phases:
                 The phases of the load. A string like ``"abc"`` or ``"an"`` etc. The bus phases are
@@ -540,12 +569,15 @@ class CurrentLoad(AbstractLoad):
     @property
     @ureg_wraps("A", (None,))
     def currents(self) -> Q_[ComplexArray]:
-        """The currents of the load (Amps)."""
+        """The currents of the load (Amps).
+
+        Setting the currents will update the load's currents and invalidate the network results.
+        """
         return self._currents
 
     @currents.setter
     @ureg_wraps(None, (None, "A"))
-    def currents(self, value: ComplexArrayLike1D) -> None:
+    def currents(self, value: ComplexArrayLikeScalarOr1D) -> None:
         self._currents = self._validate_value(value)
         self._invalidate_network_results()
         if self._cy_element is not None:
@@ -562,7 +594,7 @@ class ImpedanceLoad(AbstractLoad):
         id: Id,
         bus: Bus,
         *,
-        impedances: ComplexArrayLike1D,
+        impedances: ComplexArrayLikeScalarOr1D,
         phases: str | None = None,
         connect_neutral: bool | None = None,
     ) -> None:
@@ -576,8 +608,13 @@ class ImpedanceLoad(AbstractLoad):
                 The bus to connect the load to.
 
             impedances:
-                An array-like of the impedances for each phase component. Either complex values
-                (Ohms) or a :class:`Quantity <roseau.load_flow.units.Q_>` of complex values.
+                A single impedance value or an array-like of impedance values for each phase component.
+                Either complex values (Ohms) or a :class:`Quantity <roseau.load_flow.units.Q_>` of
+                complex values.
+
+                When a scalar value is provided, it creates a balanced load with the same impedance
+                for each phase. To create an unbalanced load, provide a vector of impedance values
+                with the same length as the number of components of the load.
 
             phases:
                 The phases of the load. A string like ``"abc"`` or ``"an"`` etc. The bus phases are
@@ -609,7 +646,7 @@ class ImpedanceLoad(AbstractLoad):
 
     @impedances.setter
     @ureg_wraps(None, (None, "ohm"))
-    def impedances(self, impedances: ComplexArrayLike1D) -> None:
+    def impedances(self, impedances: ComplexArrayLikeScalarOr1D) -> None:
         self._impedances = self._validate_value(impedances)
         self._invalidate_network_results()
         if self._cy_element is not None:

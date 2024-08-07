@@ -92,6 +92,25 @@ sb      zero        9.947598e-14-1.421085e-14j
 Name: voltage, dtype: complex128
 ```
 
+_Roseau Load Flow_ also provides useful helpers to create three-phase balanced quantities by only
+providing the magnitude of the quantities. For example, to create a three-phase balanced positive
+sequence voltage:
+
+```pycon
+>>> import numpy as np
+>>> import roseau.load_flow as rlf
+>>> V = 230 * rlf.PositiveSequence
+>>> V
+array([ 230.  +0.j        , -115.-199.18584287j, -115.+199.18584287j])
+>>> np.abs(V)
+array([230., 230., 230.])
+>>> np.angle(V, deg=True)
+array([   0., -120.,  120.])
+```
+
+Similarly, you can use `rlf.NegativeSequence` and `rlf.ZeroSequence` to create negative-sequence
+and zero-sequence quantities respectively.
+
 ## Potentials to voltages conversion
 
 {mod}`roseau.load_flow.converters` also contains helpers to convert a vector of potentials to a
