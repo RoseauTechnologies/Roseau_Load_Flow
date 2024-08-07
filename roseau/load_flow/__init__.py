@@ -43,8 +43,9 @@ from roseau.load_flow.models import (
 )
 from roseau.load_flow.network import ElectricalNetwork
 from roseau.load_flow.units import Q_, ureg
-from roseau.load_flow.utils import ConductorType, InsulatorType, LineType
+from roseau.load_flow.utils import ConductorType, InsulatorType, LineType, constants
 from roseau.load_flow.utils._versions import show_versions
+from roseau.load_flow.utils.constants import ALPHA, ALPHA2, NegativeSequence, PositiveSequence, ZeroSequence
 
 __version__ = importlib.metadata.version("roseau-load-flow")
 
@@ -60,6 +61,7 @@ __all__ = [
     "__version__",
     "show_versions",
     "converters",
+    "constants",
     # Electrical Network
     "ElectricalNetwork",
     # Buses
@@ -100,4 +102,10 @@ __all__ = [
     "deactivate_license",
     "get_license",
     "License",
+    # Constants
+    "ALPHA",
+    "ALPHA2",
+    "PositiveSequence",
+    "NegativeSequence",
+    "ZeroSequence",
 ]

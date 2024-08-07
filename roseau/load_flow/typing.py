@@ -80,6 +80,7 @@ ComplexArrayLike1D: TypeAlias = (
     | Q_[Sequence[complex | float]]
     | Sequence[complex | float | Q_[complex | float]]
 )
+ComplexArrayLikeScalarOr1D: TypeAlias = ComplexArrayLike1D | Q_[complex | float] | complex
 ComplexArrayLike2D: TypeAlias = (
     NDArray[np.number]
     | Q_[NDArray[np.number]]

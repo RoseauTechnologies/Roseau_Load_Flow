@@ -19,6 +19,10 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`256` {gh-issue}`250`:
+  - Accept scalar values for the `powers`, `currents`, `impedances` parameters of the load classes.
+  - Add `rlf.PositiveSequence`, `rlf.NegativeSequence` and `rlf.ZeroSequence` vectors for easier
+    creation of balanced quantities.
 - {gh-pr}`255` Update the figures of loads and of voltage sources in the documentation to be compliant with the work
   of {gh-pr}`249`.
 - {gh-pr}`254` {gh-issue}`251` Allow passing multiple phases to potential references. The `phase`

@@ -15,22 +15,12 @@ import pandas as pd
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.typing import ComplexArray, ComplexArrayLike1D
 from roseau.load_flow.units import Q_, ureg_wraps
+from roseau.load_flow.utils.constants import NegativeSequence, PositiveSequence, ZeroSequence
 from roseau.load_flow.utils.types import SequenceDtype
 
 logger = logging.getLogger(__name__)
 
-ALPHA = np.exp(2 / 3 * np.pi * 1j)
-"""complex: Phasor rotation operator `alpha`, which rotates a phasor vector counterclockwise by 120
-degrees when multiplied by it."""
-
-A = np.array(
-    [
-        [1, 1, 1],
-        [1, ALPHA**2, ALPHA],
-        [1, ALPHA, ALPHA**2],
-    ],
-    dtype=np.complex128,
-)
+A = np.array([ZeroSequence, PositiveSequence, NegativeSequence], dtype=np.complex128)
 """numpy.ndarray[complex]: "A" matrix: transformation matrix from phasor to symmetrical components."""
 
 _A_INV = np.linalg.inv(A)
@@ -47,7 +37,7 @@ def phasor_to_sym(v_abc: ComplexArrayLike1D) -> ComplexArray:
 
 def sym_to_phasor(v_012: ComplexArrayLike1D) -> ComplexArray:
     """Compute the phasor components `(a, b, c)` from the symmetrical components `(0, +, -)`."""
-    v_012_array = np.array(v_012)
+    v_012_array = np.asarray(v_012)
     orig_shape = v_012_array.shape
     v_abc = A @ v_012_array.reshape((3, 1))
     return v_abc.reshape(orig_shape)
@@ -115,20 +105,25 @@ def series_phasor_to_sym(s_abc: pd.Series) -> pd.Series:
 
 
 def _calculate_voltages(potentials: ComplexArray, phases: str) -> ComplexArray:
-    assert len(potentials) == len(phases), "Number of potentials must match number of phases."
-    if "n" in phases:  # Van, Vbn, Vcn
+    if len(potentials) != len(phases):
+        msg = (
+            f"Number of potentials must match number of phases, got {len(potentials)} potentials "
+            f"and {len(phases)} phases."
+        )
+        logger.error(msg)
+        raise RoseauLoadFlowException(msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
+    if "n" in phases:  # V_an, V_bn, V_cn, V_abcn
         # we know "n" is the last phase
         voltages = potentials[:-1] - potentials[-1]
-    else:  # Vab, Vbc, Vca
-        if len(phases) == 2:
-            # V = potentials[0] - potentials[1] (but as array)
-            voltages = potentials[:1] - potentials[1:]
-        else:
-            assert phases == "abc"
-            voltages = np.array(
-                [potentials[0] - potentials[1], potentials[1] - potentials[2], potentials[2] - potentials[0]],
-                dtype=np.complex128,
-            )
+    elif len(phases) == 2:  # V_ab, V_bc, V_ca
+        # V = potentials[0] - potentials[1] (but as array)
+        voltages = potentials[:1] - potentials[1:]
+    else:  # V_abc
+        assert phases == "abc"
+        voltages = np.array(
+            [potentials[0] - potentials[1], potentials[1] - potentials[2], potentials[2] - potentials[0]],
+            dtype=np.complex128,
+        )
     return voltages
 
 
@@ -141,11 +136,12 @@ def calculate_voltages(potentials: ComplexArrayLike1D, phases: str) -> Q_[Comple
             Array-like of the complex potentials of each phase.
 
         phases:
-            String of the phases in order. If a neutral exists, it must be the last.
+            String of the phases in order. Can be one of:
+            "ab", "bc", "ca", "an", "bn", "cn", "abn", "bcn", "can", "abc", "abcn".
 
     Returns:
-        Array of the voltages between phases. If a neutral exists, the voltages are Phase-Neutral.
-        Otherwise, the voltages are Phase-Phase.
+        Array of the voltages between phases. If a neutral exists, the voltages are Phase-To-Neutral.
+        Otherwise, the voltages are Phase-To-Phase.
 
     Example:
         >>> potentials = 230 * np.array([1, np.exp(-2j * np.pi / 3), np.exp(2j * np.pi / 3), 0], dtype=np.complex128)
@@ -157,6 +153,7 @@ def calculate_voltages(potentials: ComplexArrayLike1D, phases: str) -> Q_[Comple
         >>> calculate_voltages(np.array([230, 0], dtype=np.complex128), "an")
         array([230.+0.j]) <Unit('volt')>
     """
+    calculate_voltage_phases(phases)  # check if phases are valid
     return _calculate_voltages(np.asarray(potentials), phases)
 
 

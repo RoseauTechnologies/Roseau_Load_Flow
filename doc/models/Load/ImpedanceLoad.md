@@ -63,13 +63,11 @@ line = rlf.Line(id="line", bus1=bus1, bus2=bus2, parameters=lp, length=rlf.Q_(1,
 un = 400 / np.sqrt(3)
 vs = rlf.VoltageSource(id="source", bus=bus1, voltages=rlf.Q_(un, "V"))
 
-# The neutral of the voltage source is fixed at potential 0
-pref = rlf.PotentialRef(id="pref", element=bus1, phase="n")
+# The potential of the neutral of bus1 is fixed at 0V
+pref = rlf.PotentialRef(id="pref", element=bus1)
 
-# A power load on the second bus
-load = rlf.ImpedanceLoad(
-    id="load", bus=bus2, impedances=rlf.Q_(np.array([40 + 3j, 40 + 3j, 40 + 3j]), "ohm")
-)
+# A balanced constant-impedance load on the second bus: R=40 ohm, X=3 ohm per phase
+load = rlf.ImpedanceLoad(id="load", bus=bus2, impedances=rlf.Q_(40 + 3j, "ohm"))
 
 # Create a network and solve a load flow
 en = rlf.ElectricalNetwork.from_element(bus1)
@@ -90,7 +88,7 @@ en.res_buses_voltages.transform([np.abs, ft.partial(np.angle, deg=True)])
 # | ('bus2', 'bn') |                   228.948 |         -119.963       |
 # | ('bus2', 'cn') |                   228.948 |          120.037       |
 
-# Modify the load value to create an unbalanced load
+# Create an unbalanced load with three different impedance values
 load.impedances = rlf.Q_(np.array([40 + 4j, 20 + 2j, 10 + 1j]), "ohm")
 en.solve_load_flow()
 

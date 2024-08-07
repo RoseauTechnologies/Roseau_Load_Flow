@@ -6,12 +6,13 @@ from typing import Final
 import numpy as np
 from typing_extensions import Self
 
-from roseau.load_flow.converters import _PHASE_SIZES, ALPHA, _calculate_voltages, calculate_voltage_phases
+from roseau.load_flow.converters import _PHASE_SIZES, _calculate_voltages, calculate_voltage_phases
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import Element
-from roseau.load_flow.typing import ComplexArray, ComplexArrayLike1D, Id, JsonDict
+from roseau.load_flow.typing import ComplexArray, ComplexArrayLikeScalarOr1D, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
+from roseau.load_flow.utils.constants import PositiveSequence
 from roseau.load_flow_engine.cy_engine import CyDeltaVoltageSource, CyVoltageSource
 
 logger = logging.getLogger(__name__)
@@ -35,7 +36,7 @@ class VoltageSource(Element):
         id: Id,
         bus: Bus,
         *,
-        voltages: ComplexArrayLike1D | complex | Q_[complex],
+        voltages: ComplexArrayLikeScalarOr1D,
         phases: str | None = None,
         connect_neutral: bool | None = None,
     ) -> None:
@@ -153,7 +154,7 @@ class VoltageSource(Element):
 
     @voltages.setter
     @ureg_wraps(None, (None, "V"))
-    def voltages(self, value: ComplexArrayLike1D | complex | Q_[complex]) -> None:
+    def voltages(self, value: ComplexArrayLikeScalarOr1D) -> None:
         """Set the voltages of the source."""
         if np.isscalar(value):
             if self._size == 1:
@@ -162,7 +163,7 @@ class VoltageSource(Element):
                 voltages = [value, -value]
             else:
                 assert self._size == 3
-                voltages = [value, value * ALPHA**2, value * ALPHA]
+                voltages = value * PositiveSequence
         else:
             voltages = value
         voltages = np.array(voltages, dtype=np.complex128)

@@ -69,10 +69,10 @@ line = rlf.Line(id="line", bus1=bus1, bus2=bus2, parameters=lp, length=rlf.Q_(1,
 un = 400 / np.sqrt(3)
 vs = rlf.VoltageSource(id="source", bus=bus1, voltages=rlf.Q_(un, "V"))
 
-# The neutral of the voltage source is fixed at potential 0
-pref = rlf.PotentialRef(id="pref", element=bus1, phase="n")
+# The potential of the neutral of bus1 is fixed at 0V
+pref = rlf.PotentialRef(id="pref", element=bus1)
 
-# A power load on the second bus
+# An unbalanced constant-power load on the second bus
 load = rlf.PowerLoad(
     id="load", bus=bus2, powers=rlf.Q_(np.array([5.0, 2.5, 0]) * (1 - 0.3j), "kVA")
 )

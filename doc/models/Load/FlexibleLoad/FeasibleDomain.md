@@ -46,14 +46,10 @@ un = 400 / np.sqrt(3)
 vs = rlf.VoltageSource(id="source", bus=bus, voltages=rlf.Q_(un, "V"))
 
 # A potential ref
-pref = rlf.PotentialRef("pref", element=bus, phase="n")
+pref = rlf.PotentialRef("pref", element=bus)
 
-# No flexible params
-load = rlf.PowerLoad(
-    id="load",
-    bus=bus,
-    powers=rlf.Q_(np.array([1000, 1000, 1000]), "VA"),
-)
+# No flexible params: 1 kVA per phase
+load = rlf.PowerLoad(id="load", bus=bus, powers=rlf.Q_(1000, "VA"))
 
 # Build a network and solve a load flow
 en = rlf.ElectricalNetwork.from_element(bus)

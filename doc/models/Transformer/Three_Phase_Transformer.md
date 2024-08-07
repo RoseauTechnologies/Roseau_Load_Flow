@@ -618,7 +618,7 @@ bus_lv = rlf.Bus(id="bus_lv", phases="abcn")
 
 # Set the potential references of the MV and LV networks
 pref_mv = rlf.PotentialRef(id="pref_mv", element=bus_mv)
-pref_lv = rlf.PotentialRef(id="pref_lv", element=bus_lv, phase="n")
+pref_lv = rlf.PotentialRef(id="pref_lv", element=bus_lv)
 
 # Create a voltage source and connect it to the MV bus
 vs = rlf.VoltageSource(id="vs", bus=bus_mv, voltages=20e3)
@@ -645,8 +645,8 @@ transformer = rlf.Transformer(
     tap=1.025,
 )
 
-# Create a LV load
-load = rlf.PowerLoad(id="load", bus=bus_lv, phases="abcn", powers=[3e3, 3e3, 3e3])
+# Create a balanced constant-power 9kW LV load (3kW per phase)
+load = rlf.PowerLoad(id="load", bus=bus_lv, phases="abcn", powers=3e3)
 
 # Create the network and solve the load flow
 en = rlf.ElectricalNetwork.from_element(bus_mv)
