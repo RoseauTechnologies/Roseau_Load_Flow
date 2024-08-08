@@ -361,31 +361,58 @@ def test_sym():
     npt.assert_allclose(y_shunt, y_shunt_expected)
 
 
-def test_from_name_lv():
-    with pytest.raises(RoseauLoadFlowException) as e, pytest.warns(FutureWarning):
-        LineParameters.from_name_lv("totoU_Al_150")
-    assert "The line type name does not follow the syntax rule." in e.value.msg
-    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_TYPE_NAME_SYNTAX
-
-    with pytest.warns(FutureWarning):
-        lp = LineParameters.from_name_lv("U_AL_150")
-    assert lp.z_line.shape == (4, 4)
-    assert lp.y_shunt.shape == (4, 4)
-    assert (lp.z_line.real >= 0).all().all()
-
-
 def test_from_name_mv():
-    with pytest.raises(RoseauLoadFlowException) as e:  # , pytest.warns(FutureWarning):
-        LineParameters.from_name_mv("totoU_Al_150")
-    assert "The line type name does not follow the syntax rule." in e.value.msg
-    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_TYPE_NAME_SYNTAX
-
-    lp = LineParameters.from_name_mv("U_AL_150")
+    warning_msg = (
+        r"The method LineParameters.from_name_mv\(\) is deprecated and will be removed in a future "
+        r"version\. Use LineParameters\.from_coiffier\(\) instead\."
+    )
+    with pytest.warns(FutureWarning, match=warning_msg):
+        lp = LineParameters.from_name_mv("U_AL_150", max_current=100000)
     z_line_expected = (0.1767 + 0.1j) * np.eye(3)
     y_shunt_expected = 0.00014106j * np.eye(3)
 
-    npt.assert_allclose(lp.z_line.m_as("ohm/km"), z_line_expected, rtol=0.01, atol=0.01)
-    npt.assert_allclose(lp.y_shunt.m_as("S/km"), y_shunt_expected, rtol=0.01, atol=0.01)
+    npt.assert_allclose(lp.z_line.m_as("ohm/km"), z_line_expected, rtol=0.01, atol=0.01, strict=True)
+    npt.assert_allclose(lp.y_shunt.m_as("S/km"), y_shunt_expected, rtol=0.01, atol=0.01, strict=True)
+    npt.assert_allclose(lp.max_current.m_as("A"), 100000, strict=True)
+
+
+def test_from_coiffier_model():
+    # Invalid names
+    with pytest.raises(RoseauLoadFlowException) as e:
+        LineParameters.from_coiffier_model("totoU_Al_150")
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_TYPE_NAME_SYNTAX
+    assert e.value.msg == (
+        "The Coiffier line parameter name 'totoU_Al_150' is not valid, expected format is "
+        "'LineType_ConductorType_CrossSection'."
+    )
+    with pytest.raises(RoseauLoadFlowException) as e:
+        LineParameters.from_coiffier_model("U_AL_IP_150")
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_TYPE_NAME_SYNTAX
+    assert e.value.msg == (
+        "The Coiffier line parameter name 'U_AL_IP_150' is not valid, expected format is "
+        "'LineType_ConductorType_CrossSection'."
+    )
+
+    # Working example with defaults
+    lp = LineParameters.from_coiffier_model("U_AL_150")
+    z_line_expected = (0.1767 + 0.1j) * np.eye(3)
+    y_shunt_expected = 0.00014106j * np.eye(3)
+    assert lp.id == "U_AL_150"
+    assert lp.line_type == LineType.UNDERGROUND
+    assert lp.conductor_type == ConductorType.AL
+    assert lp.section.m == 150
+    npt.assert_allclose(lp.z_line.m_as("ohm/km"), z_line_expected, rtol=0.01, atol=0.01, strict=True)
+    npt.assert_allclose(lp.y_shunt.m_as("S/km"), y_shunt_expected, rtol=0.01, atol=0.01, strict=True)
+    npt.assert_allclose(lp.max_current.m_as("A"), 368.689292, strict=True)
+
+    # Working example with custom arguments
+    lp2 = LineParameters.from_coiffier_model("O_CU_54", nb_phases=2, id="lp2")
+    assert lp2.id == "lp2"
+    assert lp2.line_type == LineType.OVERHEAD
+    assert lp2.conductor_type == ConductorType.CU
+    assert lp2.section.m == 54
+    assert lp2.z_line.m.shape == (2, 2)
+    assert lp2.y_shunt.m.shape == (2, 2)
 
 
 def test_catalogue_data():

@@ -19,6 +19,12 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`257` {gh-issue}`252` Updates to the `LineParameters` class:
+  - The method `from_name_lv`, deprecated since version 0.6, has been removed. It can be easily
+    replaced by the `from_geometry` method.
+  - The method `from_name_mv` is deprecated. A new method `from_coiffier_model` is added with the
+    same functionality and more flexibility. The new method computes the ampacity of the line based
+    on Coiffier's model and works with different numbers of phases.
 - {gh-pr}`256` {gh-issue}`250`:
   - Accept scalar values for the `powers`, `currents`, `impedances` parameters of the load classes.
   - Add `rlf.PositiveSequence`, `rlf.NegativeSequence` and `rlf.ZeroSequence` vectors for easier
