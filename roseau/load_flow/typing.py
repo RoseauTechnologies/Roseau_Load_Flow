@@ -73,25 +73,26 @@ ProjectionType: TypeAlias = Literal["euclidean", "keep_p", "keep_q"]
 Solver: TypeAlias = Literal["newton", "newton_goldstein"]
 MapOrSeq: TypeAlias = Mapping[Id, T] | Sequence[T]
 ComplexArray: TypeAlias = NDArray[np.complex128]
-# TODO: improve the types below when shape-typing becomes supported
+
+IntegerLike: TypeAlias = int | np.integer[Any]
+FloatLike: TypeAlias = float | np.floating[Any] | IntegerLike
+ComplexLike: TypeAlias = complex | np.complexfloating[Any, Any] | FloatLike
+
 ComplexArrayLike1D: TypeAlias = (
-    NDArray[np.number]
-    | Q_[NDArray[np.number]]
-    | Q_[Sequence[complex | float]]
-    | Sequence[complex | float | Q_[complex | float]]
+    NDArray[np.number] | Q_[NDArray[np.number]] | Q_[Sequence[ComplexLike]] | Sequence[ComplexLike | Q_[ComplexLike]]
 )
-ComplexArrayLikeScalarOr1D: TypeAlias = ComplexArrayLike1D | Q_[complex | float] | complex
+ComplexArrayLikeScalarOr1D: TypeAlias = ComplexArrayLike1D | Q_[ComplexLike] | ComplexLike
 ComplexArrayLike2D: TypeAlias = (
     NDArray[np.number]
     | Q_[NDArray[np.number]]
-    | Q_[Sequence[Sequence[complex]]]
-    | Sequence[Sequence[complex | Q_[complex]]]
+    | Q_[Sequence[Sequence[ComplexLike]]]
+    | Sequence[Sequence[ComplexLike | Q_[ComplexLike]]]
 )
 FloatArrayLike1D: TypeAlias = (
-    NDArray[np.floating | np.integer]
-    | Q_[NDArray[np.floating | np.integer]]
-    | Q_[Sequence[float]]
-    | Sequence[float | Q_[float]]
+    NDArray[np.floating[Any] | np.integer[Any]]
+    | Q_[NDArray[np.floating[Any] | np.integer[Any]]]
+    | Q_[Sequence[FloatLike]]
+    | Sequence[FloatLike | Q_[FloatLike]]
 )
 
 __all__ = [

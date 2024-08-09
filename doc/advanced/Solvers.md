@@ -13,7 +13,9 @@ myst:
 
 (solvers)=
 
-# General information
+# Solvers
+
+## General information
 
 The goal is to compute the voltages at each bus and the currents and powers flow in each branch of
 the network. The computation must respect the Kirchhoff's laws and the constraints of the network.
@@ -42,7 +44,7 @@ In code, $\varepsilon$ can be set with `en.solve_load_flow(tolerance=...)` (by d
 There are several solvers to solve this kind of problems. In _Roseau Load Flow_, the following
 solvers are available:
 
-# Newton-Raphson
+## Newton-Raphson
 
 This is the classical [_Newton-Raphson_ method](https://en.wikipedia.org/wiki/Newton%27s_method).
 
@@ -64,11 +66,11 @@ within a maximum number of iterations (modify with `en.solve_load_flow(max_itera
 the maximum number of iterations is exceeded, the solver did not converge and the execution
 fails.
 
-## Parameters
+### Parameters
 
 The _Newton-Raphson_ solver doesn't accept any parameter.
 
-# Goldstein and Price
+## Goldstein and Price
 
 This is a variant of the classical _Newton-Raphson_ solver with a linear search.
 
@@ -106,7 +108,7 @@ A search is made to find $t$ such that:
 m_2q'(0) \leqslant \frac{q(t) - q(0)}{t} \leqslant m_1q'(0)
 ```
 
-```{image} /_static/Goldstein_And_Price.svg
+```{image} /_static/Advanced/Goldstein_And_Price.svg
 :alt: Goldstein and Price conditions
 :width: 500px
 :align: center
@@ -122,7 +124,7 @@ $t$ is then used to compute $x_{k+1} = x_k + t d(x_k)$
 The _Goldstein and Price_ variant is thus as fast as the classical _Newton-Raphson_ while being
 more robust.
 
-## Parameters
+### Parameters
 
 The _Goldstein and Price_ solver accepts the following parameters:
 

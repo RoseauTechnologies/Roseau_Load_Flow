@@ -473,8 +473,16 @@ def test_frame(small_network: ElectricalNetwork):
     # Lines
     lines_gdf = small_network.lines_frame
     assert isinstance(lines_gdf, gpd.GeoDataFrame)
-    assert lines_gdf.shape == (1, 6)
-    assert lines_gdf.columns.tolist() == ["phases", "bus1_id", "bus2_id", "parameters_id", "max_current", "geometry"]
+    assert lines_gdf.shape == (1, 7)
+    assert lines_gdf.columns.tolist() == [
+        "phases",
+        "bus1_id",
+        "bus2_id",
+        "parameters_id",
+        "length",
+        "max_current",
+        "geometry",
+    ]
 
     # Transformers
     transformers_gdf = small_network.transformers_frame

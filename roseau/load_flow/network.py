@@ -312,6 +312,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                     line.bus1.id,
                     line.bus2.id,
                     line.parameters.id,
+                    line.length.m,
                     max_current,
                     line.geometry,
                 )
@@ -319,7 +320,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         return gpd.GeoDataFrame(
             data=pd.DataFrame.from_records(
                 data=data,
-                columns=["id", "phases", "bus1_id", "bus2_id", "parameters_id", "max_current", "geometry"],
+                columns=["id", "phases", "bus1_id", "bus2_id", "parameters_id", "length", "max_current", "geometry"],
                 index="id",
             ),
             geometry="geometry",

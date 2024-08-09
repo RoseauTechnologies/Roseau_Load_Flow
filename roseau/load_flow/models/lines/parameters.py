@@ -685,10 +685,10 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         try:
             if cls._REGEXP_LINE_TYPE_NAME.fullmatch(string=name) is None:
                 raise AssertionError
-            line_type, conductor_type, section = name.split("_")
-            line_type = LineType(line_type)
-            conductor_type = ConductorType(conductor_type)
-            section = Q_(float(section), "mm**2")
+            line_type_s, conductor_type_s, section_s = name.split("_")
+            line_type = LineType(line_type_s)
+            conductor_type = ConductorType(conductor_type_s)
+            section = Q_(float(section_s), "mm**2")
         except Exception:
             msg = (
                 f"The Coiffier line parameter name {name!r} is not valid, expected format is "

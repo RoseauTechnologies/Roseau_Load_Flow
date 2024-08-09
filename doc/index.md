@@ -38,8 +38,20 @@ and newer and can be installed with:
 ```{toctree}
 ---
 maxdepth: 2
+caption: Installation and License
 ---
 Installation
+```
+
+## License
+
+Read more about the license of this project:
+
+```{toctree}
+---
+maxdepth: 2
+---
+License
 ```
 
 ## Usage
@@ -67,29 +79,16 @@ caption: Models
 models/index
 ```
 
-## Solvers
+## Advanced
 
-The load flow solvers used are also documented:
-
-```{toctree}
----
-maxdepth: 2
-caption: Solvers
----
-Solvers
-```
-
-## License
-
-Read more about the license of this project:
+Advanced concepts, edge cases and more are explained in this section:
 
 ```{toctree}
 ---
 maxdepth: 2
-caption: More
-
+caption: Advanced
 ---
-License
+advanced/index
 ```
 
 ## Changelog
@@ -97,6 +96,7 @@ License
 ```{toctree}
 ---
 maxdepth: 2
+caption: More
 ---
 Changelog
 ```
@@ -109,7 +109,6 @@ references:
 ```{toctree}
 ---
 maxdepth: 2
-caption: API Reference
 ---
 autoapi/roseau/load_flow/index
 ```

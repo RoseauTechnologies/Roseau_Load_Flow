@@ -77,3 +77,14 @@ h6,
   font-weight: unset;
   line-height: unset;
 }
+
+/*Roseau colors */
+.roseau-primary {
+  color: #234e83;
+}
+.roseau-secondary {
+  color: #cad40e;
+}
+.roseau-tertiary {
+  color: #55b2aa;
+}
