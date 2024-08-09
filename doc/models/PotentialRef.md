@@ -80,6 +80,9 @@ rlf.PotentialRef(id="pref3", element=bus3, phases="ab").phases  # "ab"
 bus3.res_potentials[:2].sum()  # 0V (after the load flow calculation)
 ```
 
+For more information on the potential references, refer to their [dedicated page](advanced-pref)
+in the advanced section of the documentation.
+
 ## API Reference
 
 ```{eval-rst}

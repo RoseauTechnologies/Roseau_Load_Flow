@@ -122,6 +122,13 @@ html_static_path = ["_static"]
 # Extra CSS files
 html_css_files = ["css/custom.css"]
 
+# Custom roles
+rst_prolog = """
+.. role:: roseau-primary
+.. role:: roseau-secondary
+.. role:: roseau-tertiary
+"""
+
 # -- Options for AutoAPI -------------------------------------------------
 autoapi_dirs = ["../roseau"]
 autoapi_ignore = ["**/tests/**", "**/conftest.py", "__about__.py"]

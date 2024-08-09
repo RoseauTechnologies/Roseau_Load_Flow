@@ -11,7 +11,7 @@ from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowE
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import Element
 from roseau.load_flow.models.loads.flexible_parameters import FlexibleParameter
-from roseau.load_flow.typing import ComplexArray, ComplexArrayLikeScalarOr1D, Id, JsonDict
+from roseau.load_flow.typing import ComplexArray, ComplexScalarOrArrayLike1D, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow.utils.constants import PositiveSequence
 from roseau.load_flow_engine.cy_engine import (
@@ -156,7 +156,7 @@ class AbstractLoad(Element, ABC):
         """The load flow result of the load currents (A)."""
         return self._res_currents_getter(warning=True)
 
-    def _validate_value(self, value: ComplexArrayLikeScalarOr1D) -> ComplexArray:
+    def _validate_value(self, value: ComplexScalarOrArrayLike1D) -> ComplexArray:
         if np.isscalar(value):
             if self.type == "current":
                 if self._size == 1:
@@ -342,7 +342,7 @@ class PowerLoad(AbstractLoad):
         id: Id,
         bus: Bus,
         *,
-        powers: ComplexArrayLikeScalarOr1D,
+        powers: ComplexScalarOrArrayLike1D,
         phases: str | None = None,
         flexible_params: list[FlexibleParameter] | None = None,
         connect_neutral: bool | None = None,
@@ -435,7 +435,7 @@ class PowerLoad(AbstractLoad):
 
     @powers.setter
     @ureg_wraps(None, (None, "VA"))
-    def powers(self, value: ComplexArrayLikeScalarOr1D) -> None:
+    def powers(self, value: ComplexScalarOrArrayLike1D) -> None:
         value = self._validate_value(value)
         if self._flexible_params is not None:
             for power, fp in zip(value, self._flexible_params, strict=True):
@@ -522,7 +522,7 @@ class CurrentLoad(AbstractLoad):
 
     type: Final = "current"
 
-    def __init__(self, id: Id, bus: Bus, *, currents: ComplexArrayLikeScalarOr1D, phases: str | None = None) -> None:
+    def __init__(self, id: Id, bus: Bus, *, currents: ComplexScalarOrArrayLike1D, phases: str | None = None) -> None:
         """CurrentLoad constructor.
 
         Args:
@@ -577,7 +577,7 @@ class CurrentLoad(AbstractLoad):
 
     @currents.setter
     @ureg_wraps(None, (None, "A"))
-    def currents(self, value: ComplexArrayLikeScalarOr1D) -> None:
+    def currents(self, value: ComplexScalarOrArrayLike1D) -> None:
         self._currents = self._validate_value(value)
         self._invalidate_network_results()
         if self._cy_element is not None:
@@ -594,7 +594,7 @@ class ImpedanceLoad(AbstractLoad):
         id: Id,
         bus: Bus,
         *,
-        impedances: ComplexArrayLikeScalarOr1D,
+        impedances: ComplexScalarOrArrayLike1D,
         phases: str | None = None,
         connect_neutral: bool | None = None,
     ) -> None:
@@ -646,7 +646,7 @@ class ImpedanceLoad(AbstractLoad):
 
     @impedances.setter
     @ureg_wraps(None, (None, "ohm"))
-    def impedances(self, impedances: ComplexArrayLikeScalarOr1D) -> None:
+    def impedances(self, impedances: ComplexScalarOrArrayLike1D) -> None:
         self._impedances = self._validate_value(impedances)
         self._invalidate_network_results()
         if self._cy_element is not None:

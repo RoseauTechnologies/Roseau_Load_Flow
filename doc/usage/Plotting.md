@@ -7,39 +7,54 @@ myst:
     "description lang=fr": |
       Apprenez à tracer une carte du réseau MT ou BT avec Roseau Load Flow, solveur d'écoulements de charge pour le
       calcul électrique des réseaux intelligents.
-    "keywords lang=fr": simulation, réseau, électrique, carte
-    "keywords lang=en": simulation, distribution grid, map,
+    "keywords lang=fr": simulation, réseau, électrique, carte, tracé
+    "keywords lang=en": simulation, distribution grid, map, plot
 ---
 
-# Plotting a distribution network
+# Plotting
 
-On this page, the [folium](https://python-visualization.github.io/folium/index.html) library is used to plot an
-`ElectricalNetwork`.
+_Roseau Load Flow_ provides functions to plot networks and some electric quantities in the
+`roseau.load_flow.plotting` module.
 
-Let's take a MV network from the catalogue:
+## Plotting a network on a map
+
+The {func}`~roseau.load_flow.plotting.plot_interactive_map` function plots an `ElectricalNetwork`
+on an interactive map using the [folium](https://python-visualization.github.io/folium/latest)
+library. The function requires the geometries of the elements in the network to be defined. Only
+buses and lines are currently plotted. Simply call the function with an `ElectricalNetwork` to get
+an interactive map of the network `plot_interactive_map(en)`.
+
+The `plot_interactive_map` function uses the `ElectricalNetwork` geo dataframes of buses and lines
+to plot the network on a map. The function accepts optional arguments to customize the appearance
+of the plot. Refer to the function's documentation for more information.
+
+Let's take a MV network from the catalogue as an example to show how we can customize the style of
+the buses on the map:
 
 ```pycon
 >>> import roseau.load_flow as rlf
+>>> from roseau.load_flow.plotting import plot_interactive_map
 >>> en = rlf.ElectricalNetwork.from_catalogue(name="MVFeeder210", load_point_name="Winter")
+>>> en
+<ElectricalNetwork: 128 buses, 126 lines, 0 transformers, 1 switch, 82 loads, 1 source, 1 ground, 1 potential ref>
 ```
 
-The plot will be done from the {doc}`GeoDataFrame <geopandas:docs/reference/geodataframe>` of buses and lines (we
-ignore transformers and switches in this tutorial).
+As the `id` of the buses of this network contains information about the type of bus, we can use it
+to apply different styles for different bus types. For example, HV/MV substation can have different
+size and color than MV/LV substations and junction buses. `plot_interactive_map` takes an optional
+`style_function` argument to customize the style of the plots. This is a function that accepts a
+GeoJSON feature mapping and returns an optional dictionary of style properties. The GeoJSON feature
+contains an `"element_type"` property that indicates the type of the element (bus, line, etc.). The
+other properties are the columns of the dataframes of the elements of the network.
 
 ```pycon
->>> buses_gdf = en.buses_frame.reset_index()
->>> lines_gdf = en.lines_frame.reset_index()
-```
-
-In order to style the buses, a style function, a highlight function and a tooltip are defined. The `"id"` property of
-the buses is used to separate the HV/MV substation and the MV/LV substations for the style function. Remaining buses
-are junction buses. The color of the buses is changed when highlighted.
-
-```pycon
->>> import folium
-
->>> def buses_style_function(feature):
-...     if feature["properties"]["id"].startswith("HVMV"):  # HV/MV substation
+>>> def style_function(feature: dict) -> dict | None:
+...     # If the element is not a bus, return None to use the default style
+...     if feature["properties"]["element_type"] != "bus":
+...         return None
+...     # Override the default style of buses based on the bus id
+...     bus_id = feature["properties"]["id"]
+...     if bus_id.startswith("HVMV"):  # HV/MV substation
 ...         return {
 ...             "fill": True,
 ...             "fillColor": "#000000",
@@ -47,7 +62,7 @@ are junction buses. The color of the buses is changed when highlighted.
 ...             "fillOpacity": 1,
 ...             "radius": 7,
 ...         }
-...     elif feature["properties"]["id"].startswith("MVLV"):  # MV/LV substations
+...     elif bus_id.startswith("MVLV"):  # MV/LV substations
 ...         return {
 ...             "fill": True,
 ...             "fillColor": "#234e83",
@@ -65,72 +80,47 @@ are junction buses. The color of the buses is changed when highlighted.
 ...         }
 ...
 
->>> def buses_highlight_function(feature):
-...     return {"color": "#cad40e", "fillColor": "#cad40e"}
-...
-
->>> buses_tooltip = folium.GeoJsonTooltip(
-...     fields=["id", "phases"],
-...     aliases=["Id:", "Phases:"],
-...     localize=True,
-...     sticky=False,
-...     labels=True,
-...     max_width=800,
-... )
 ```
 
-The same is done for the lines.
+Finally, calling the `plot_interactive_map` function with the custom style function produces an
+interactive map of the network:
 
 ```pycon
->>> def lines_style_function(feature):
-...     return {"color": "#234e83", "weight": 4}
-...
-
-
->>> def lines_highlight_function(feature):
-...     return {"color": "#cad40e"}
-...
-
-
->>> lines_tooltip = folium.GeoJsonTooltip(
-...     fields=["id", "bus1_id", "bus2_id", "parameters_id"],
-...     aliases=["Id:", "Bus1:", "Bus2:", "Parameters:"],
-...     localize=True,
-...     sticky=False,
-...     labels=True,
-...     max_width=800,
-... )
-```
-
-Finally, the two geojson layers are added in a folium map.
-
-```pycon
->>> m = folium.Map(
-...     location=list(reversed(buses_gdf.unary_union.centroid.coords[0])), zoom_start=12
-... )
-
->>> folium.GeoJson(
-...     data=lines_gdf,
-...     name="lines",
-...     marker=folium.CircleMarker(),
-...     style_function=lines_style_function,
-...     highlight_function=lines_highlight_function,
-...     tooltip=lines_tooltip,
-... ).add_to(m)
-
->>> folium.GeoJson(
-...     buses_gdf,
-...     name="buses",
-...     marker=folium.CircleMarker(),
-...     style_function=buses_style_function,
-...     highlight_function=buses_highlight_function,
-...     tooltip=buses_tooltip,
-... ).add_to(m)
-
->>> folium.LayerControl().add_to(m)
+>>> m = plot_interactive_map(en, style_function=style_function)
 >>> m
 ```
 
-It leads to this result:
+<iframe src="../_static/Plotting/MVFeeder210.html" height="500px" width="100%" frameborder="0"></iframe>
 
-<iframe src="../_static/Plotting_MVFeeder210.html" height="600px" width="100%" frameborder="0"></iframe>
+## Plotting voltage phasors
+
+The {func}`~roseau.load_flow.plotting.plot_voltage_phasors` function plots the voltage phasors of
+a bus, load or source in the complex plane. This function can be used to visualize voltage unbalance
+in multi-phase systems for instance. It takes the element and an optional matplotlib `Axes` object
+to use for the plot. Note that the element must have load flow results to plot the voltage phasors.
+
+```pycon
+>>> import matplotlib.pyplot as plt
+... import roseau.load_flow as rlf
+... from roseau.load_flow.plotting import plot_voltage_phasors
+
+>>> bus = rlf.Bus("Bus", phases="abcn")
+... source = rlf.VoltageSource("Wye Source", bus, voltages=230, phases="abcn")
+... load = rlf.ImpedanceLoad("Delta Load", bus, impedances=50, phases="abc")
+... rlf.PotentialRef("PRef", element=bus)
+... en = rlf.ElectricalNetwork.from_element(bus)
+... en.solve_load_flow()
+
+>>> fig, axes = plt.subplots(1, 2, figsize=(8, 4))
+... plot_voltage_phasors(source, ax=axes[0])
+... plot_voltage_phasors(load, ax=axes[1])
+... plt.show()
+```
+
+```{image} /_static/Plotting/Plot_Voltage_Phasors.png
+:alt: A plot showing voltage phasors of a wye-connected source and a delta-connected load
+:align: center
+```
+
+A similar function {func}`~roseau.load_flow.plotting.plot_symmetrical_voltages` plots the symmetrical
+components of the voltage phasors of a three-phase bus, load or source.
