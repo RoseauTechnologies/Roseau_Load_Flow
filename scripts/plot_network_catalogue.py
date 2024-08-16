@@ -170,7 +170,7 @@ if __name__ == "__main__":
         # Create the map
         zoom_start = 12 if network_name.startswith("MV") else 16
         title = prettify_network_name(name=network_name)
-        m = RoseauMap(location=list(reversed(buses_gdf.unary_union.centroid.coords[0])), zoom_start=zoom_start)
+        m = RoseauMap(location=list(reversed(buses_gdf.union_all().centroid.coords[0])), zoom_start=zoom_start)
         folium.GeoJson(
             data=lines_gdf,
             name="lines",
@@ -203,7 +203,7 @@ if __name__ == "__main__":
 
     # Create the map
     title = "Available networks"
-    m = RoseauMap(location=list(reversed(buses_gdf.unary_union.centroid.coords[0])), zoom_start=9)
+    m = RoseauMap(location=list(reversed(buses_gdf.union_all().centroid.coords[0])), zoom_start=9)
     folium.GeoJson(
         data=lines_gdf,
         name="lines",

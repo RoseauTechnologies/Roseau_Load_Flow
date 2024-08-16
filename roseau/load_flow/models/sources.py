@@ -10,7 +10,7 @@ from roseau.load_flow.converters import _PHASE_SIZES, _calculate_voltages, calcu
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import Element
-from roseau.load_flow.typing import ComplexArray, ComplexArrayLikeScalarOr1D, Id, JsonDict
+from roseau.load_flow.typing import ComplexArray, ComplexScalarOrArrayLike1D, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow.utils.constants import PositiveSequence
 from roseau.load_flow_engine.cy_engine import CyDeltaVoltageSource, CyVoltageSource
@@ -36,7 +36,7 @@ class VoltageSource(Element):
         id: Id,
         bus: Bus,
         *,
-        voltages: ComplexArrayLikeScalarOr1D,
+        voltages: ComplexScalarOrArrayLike1D,
         phases: str | None = None,
         connect_neutral: bool | None = None,
     ) -> None:
@@ -154,7 +154,7 @@ class VoltageSource(Element):
 
     @voltages.setter
     @ureg_wraps(None, (None, "V"))
-    def voltages(self, value: ComplexArrayLikeScalarOr1D) -> None:
+    def voltages(self, value: ComplexScalarOrArrayLike1D) -> None:
         """Set the voltages of the source."""
         if np.isscalar(value):
             if self._size == 1:

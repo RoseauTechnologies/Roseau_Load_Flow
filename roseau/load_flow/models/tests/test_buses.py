@@ -22,7 +22,7 @@ from roseau.load_flow import (
 
 def test_bus_potentials_of_phases():
     bus = Bus("bus", phases="abcn")
-    bus._res_potentials = [1, 2, 3, 4]
+    bus._res_potentials = np.array([1, 2, 3, 4], dtype=np.complex128)
 
     assert np.allclose(bus._get_potentials_of("abcn", warning=False), [1, 2, 3, 4])
     assert isinstance(bus._get_potentials_of("abcn", warning=False), np.ndarray)
@@ -143,7 +143,7 @@ def test_voltage_limits():
 def test_res_violated():
     bus = Bus(id="bus", phases="abc")
     direct_seq = np.exp([0, -2 / 3 * np.pi * 1j, 2 / 3 * np.pi * 1j])
-    bus._res_potentials = 230 * direct_seq
+    bus._res_potentials = (230 + 0j) * direct_seq
 
     # No limits
     assert bus.res_violated is None

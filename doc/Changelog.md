@@ -19,6 +19,12 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`258` Add basic plotting functionality in the new `roseau.load_flow.plotting` module. The
+  `plot_interactive_map` function plots an electrical network on an interactive map using the folium
+  library and the `plot_voltage_phasors` function plots the voltage phasors of a bus, load or source
+  in the complex plane.
+- {gh-pr}`258` The documentation gained a new "advanced" section with a page on floating neutrals
+  and a page on potential references.
 - {gh-pr}`257` {gh-issue}`252` Updates to the `LineParameters` class:
   - The method `from_name_lv`, deprecated since version 0.6, has been removed. It can be easily
     replaced by the `from_geometry` method.
