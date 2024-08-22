@@ -19,6 +19,7 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`259` The cache of the license object was not reset after the activation of a new license key.
 - {gh-pr}`258` Add basic plotting functionality in the new `roseau.load_flow.plotting` module. The
   `plot_interactive_map` function plots an electrical network on an interactive map using the folium
   library and the `plot_voltage_phasors` function plots the voltage phasors of a bus, load or source
