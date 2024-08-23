@@ -28,7 +28,8 @@ In the power system, transformers are used to connect different parts of the net
 conduction of electric current between these parts, except for autotransformers. A transformer thus
 isolates the electric potentials of its different sides. This isolation, called galvanic isolation,
 allows the electric potentials of the different sides of a transformer to be set independently.
-This means that networks might have different reference points for the electric potentials. More precisely, a network must have a reference point for each galvanically isolated section.
+This means that networks might have different reference points for the electric potentials. More
+precisely, a network must have a reference point for each galvanically isolated section.
 
 ## Potential reference in Roseau Load Flow
 
