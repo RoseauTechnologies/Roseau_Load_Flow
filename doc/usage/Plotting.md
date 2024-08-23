@@ -92,6 +92,31 @@ interactive map of the network:
 
 <iframe src="../_static/Plotting/MVFeeder210.html" height="500px" width="100%" frameborder="0"></iframe>
 
+## Plotting a network with no geometries
+
+If the network does not have geometries defined for its elements, the `plot_interactive_map` function
+will not work. In this case, you can use the {meth}`~roseau.load_flow.ElectricalNetwork.to_graph`
+method to convert the network to a networkx `Graph` and plot it using the `networkx` library. In the
+following example we plot the graph of the network `MVFeeder210` from the previous example:
+
+```pycon
+>>> import networkx as nx
+... import roseau.load_flow as rlf
+... en = rlf.ElectricalNetwork.from_catalogue(name="MVFeeder210", load_point_name="Winter")
+... for bus in en.buses.values():
+...     bus.geometry = None  # Pretend buses don't have geometries
+... G = en.to_graph()
+... nx.draw(G, node_size=50)  # This works even if the geometries are not defined
+```
+
+```{image} /_static/Plotting/MVFeeder210_Graph_No_Geometries.png
+:alt: A plot showing the graph of the network MVFeeder210 with no geometries using networkx
+:align: center
+```
+
+See the [networkx docs](https://networkx.org/documentation/stable/tutorial.html#drawing-graphs) for
+more information.
+
 ## Plotting voltage phasors
 
 The {func}`~roseau.load_flow.plotting.plot_voltage_phasors` function plots the voltage phasors of
