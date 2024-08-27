@@ -98,6 +98,11 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_VOLTAGES)
 
+        if np.isclose(z2, 0.0):
+            msg = f"Transformer type {id!r} has a null series impedance z2. Ideal transformers are not supported."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_IMPEDANCE)
+
         self._sn: float = sn
         self._uhv: float = uhv
         self._ulv: float = ulv

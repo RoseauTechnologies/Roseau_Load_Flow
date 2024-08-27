@@ -771,3 +771,15 @@ def test_compute_open_short_circuit_parameters():
     psc, vsc = tp._compute_short_circuit_parameters()
     assert np.isclose(psc.m, tp.psc.m, rtol=0.001)
     assert np.isclose(vsc.m, tp.vsc.m)
+
+
+def test_ideal_transformer():
+    # Ideal transformer not yet supported
+    with pytest.raises(RoseauLoadFlowException) as e:
+        TransformerParameters(id="test", type="Dyn11", sn=50e3, uhv=20e3, ulv=400, z2=0.0, ym=0.0)
+    assert e.value.msg == (
+        "Transformer type 'test' has a null series impedance z2. Ideal transformers are not supported."
+    )
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_IMPEDANCE
+    # OK
+    TransformerParameters(id="test", type="Dyn11", sn=50e3, uhv=20e3, ulv=400, z2=0.0000001, ym=0.0)
