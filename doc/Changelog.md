@@ -21,7 +21,7 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 - {gh-pr}`262` Raise a proper error when a transformer is defined with null impedance.
 - {gh-pr}`259` The cache of the license object was not reset after the activation of a new license key.
-- {gh-pr}`258` {gh-pr}`261` Add basic plotting functionality in the new `roseau.load_flow.plotting`
+- {gh-pr}`258` {gh-pr}`261` {gh-pr}`263` Add basic plotting functionality in the new `roseau.load_flow.plotting`
   module. The `plot_interactive_map` function plots an electrical network on an interactive map using
   the folium library and the `plot_voltage_phasors` function plots the voltage phasors of a bus, load
   or source in the complex plane. The revamped plotting section of the documentation demonstrates the

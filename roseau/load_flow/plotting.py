@@ -1,6 +1,6 @@
 """Plotting functions for `roseau.load_flow`."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
@@ -164,7 +164,7 @@ def plot_interactive_map(
     highlight_color: str = "#cad40e",
     style_function: Callable[["FeatureMap"], "StyleDict | None"] | None = None,
     highlight_function: Callable[["FeatureMap"], "StyleDict | None"] | None = None,
-    zoom_start: int | None = None,
+    map_kws: Mapping[str, Any] | None = None,
 ) -> "folium.Map":
     """Plot an electrical network on an interactive map.
 
@@ -192,9 +192,10 @@ def plot_interactive_map(
             Function mapping a GeoJson Feature to a style dict for mouse events. If not provided or
             when it returns ``None``, the default highlight style is used.
 
-        zoom_start:
-            Initial zoom level for the map. If not provided, the zoom level is calculated based on
-            the bounding box of the network.
+        map_kws:
+            Additional keyword arguments to pass to the :class:`folium.Map` constructor. By default,
+            `location` is set to the centroid of the network geometry and `zoom_start` is calculated
+            based on its bounding box.
 
     Returns:
         The :class:`folium.Map` object with the network plot.
@@ -206,6 +207,8 @@ def plot_interactive_map(
             "The `folium` library is required when using `roseau.load_flow.plotting.plot_interactive_map`."
             "Install it with `pip install folium`."
         ) from e
+
+    map_kws = dict(map_kws) if map_kws is not None else {}
 
     buses_gdf = network.buses_frame
     buses_gdf.reset_index(inplace=True)
@@ -244,17 +247,19 @@ def plot_interactive_map(
         else:
             return {"color": highlight_color}
 
-    # Calculate the center and zoom level of the map
-    geom_union = buses_gdf.union_all()
-    location = list(reversed(geom_union.centroid.coords[0]))
-    if zoom_start is None:
-        # Calculate the zoom level based on the bounding box of the network
-        min_x, min_y, max_x, max_y = geom_union.bounds
-        zoom_lon = np.ceil(np.log2(360 * 2.0 / (max_x - min_x)))
-        zoom_lat = np.ceil(np.log2(360 * 2.0 / (max_y - min_y)))
-        zoom_start = int(min(zoom_lon, zoom_lat))
+    # Calculate the center and zoom level of the map if not provided
+    if "location" not in map_kws or "zoom_start" not in map_kws:
+        geom_union = buses_gdf.union_all()
+        if "location" not in map_kws:
+            map_kws["location"] = list(reversed(geom_union.centroid.coords[0]))
+        if "zoom_start" not in map_kws:
+            # Calculate the zoom level based on the bounding box of the network
+            min_x, min_y, max_x, max_y = geom_union.bounds
+            zoom_lon = np.ceil(np.log2(360 * 2.0 / (max_x - min_x)))
+            zoom_lat = np.ceil(np.log2(360 * 2.0 / (max_y - min_y)))
+            map_kws["zoom_start"] = int(min(zoom_lon, zoom_lat))
 
-    m = folium.Map(location=location, zoom_start=zoom_start)
+    m = folium.Map(**map_kws)
     folium.GeoJson(
         data=lines_gdf,
         name="lines",
