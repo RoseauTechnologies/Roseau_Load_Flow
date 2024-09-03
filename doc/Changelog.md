@@ -19,7 +19,7 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
-- {gh-pr}`236` Improvements of the Sphinx configuration.
+- {gh-pr}`237` Improvements of the Sphinx configuration.
 - {gh-pr}`262` Raise a proper error when a transformer is defined with null impedance.
 - {gh-pr}`259` The cache of the license object was not reset after the activation of a new license key.
 - {gh-pr}`258` {gh-pr}`261` {gh-pr}`263` Add basic plotting functionality in the new `roseau.load_flow.plotting`
@@ -202,7 +202,7 @@ Starting with version 0.7.0, Roseau Load Flow is no longer supplied as a SaaS. T
 a standalone Python library.
 ```
 
-- The documentation is moved from GitHub Pages to <https://www.roseau-load-flow.roseautechnologies.com/>.
+- The documentation is moved from GitHub Pages to <https://roseau-load-flow.roseautechnologies.com/>.
 - Fix a bug in the engine: it was impossible to change the parameters of center-tapped and single phase transformers.
 - {gh-pr}`179` Fix a bug in the propagation of potentials when a center-tapped transformer is used without neutral at
   the primary side.
