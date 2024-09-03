@@ -33,7 +33,6 @@ release = "0.9.1"
 extensions = [
     "myst_parser",
     "sphinx.ext.mathjax",
-    "sphinx.ext.autodoc",
     "sphinx.ext.napoleon",
     "sphinx.ext.intersphinx",
     "sphinx.ext.extlinks",
@@ -71,14 +70,6 @@ exclude_patterns = ["images/*"]
 # They will overwrite any existing file of the same name.
 # As these files are not meant to be built, they are automatically excluded from source files.
 html_extra_path = ["robots.txt", ".htaccess"]
-
-# -- Options for autodoc ----------------------------------------------------
-autodoc_default_options = {"ignore-module-all": False}
-autodoc_member_order = "bysource"
-autodoc_typehints = "signature"
-autodoc_inherit_docstrings = True
-autoclass_content = "both"  # show both class and __init__ docstrings
-autodoc_mock_imports = ["roseau.load_flow_engine"]  # Ignore missing dependencies when building the documentation
 
 # -- Options for HTML output -------------------------------------------------
 
@@ -129,12 +120,23 @@ rst_prolog = """
 .. role:: roseau-tertiary
 """
 
+
+# -- Options for autodoc ----------------------------------------------------
+autodoc_default_options = {"ignore-module-all": False}
+autodoc_member_order = "bysource"
+autodoc_typehints = "signature"
+autodoc_inherit_docstrings = True
+autoclass_content = "both"  # show both class and __init__ docstrings
+autodoc_mock_imports = ["roseau.load_flow_engine"]  # Ignore missing dependencies when building the documentation
+
+
 # -- Options for AutoAPI -------------------------------------------------
 autoapi_dirs = ["../roseau"]
 autoapi_ignore = ["**/tests/**", "**/conftest.py", "__about__.py"]
 autoapi_options = ["members", "show-inheritance", "show-module-summary", "imported-members"]
 autoapi_python_class_content = "both"  # without this, the __init__ docstring is not shown
 autoapi_python_use_implicit_namespaces = True
+suppress_warnings = ["autoapi.python_import_resolution"]  # For the import of roseau.load_flow_engine.cy_engine
 
 # -- Options for intersphinx -------------------------------------------------
 intersphinx_mapping = {
@@ -147,6 +149,9 @@ intersphinx_mapping = {
     "typing_extensions": ("https://typing-extensions.readthedocs.io/en/stable/", None),
     "matplotlib": ("https://matplotlib.org/stable/", None),
     "networkx": ("https://networkx.org/documentation/stable/", None),
+    "pyproj": ("https://pyproj4.github.io/pyproj/stable/", None),
+    "certifi": ("https://certifiio.readthedocs.io/en/latest/", None),
+    "platformdirs": ("https://platformdirs.readthedocs.io/en/latest/", None),
 }
 
 # -- Options for sphinx_copybutton -------------------------------------------

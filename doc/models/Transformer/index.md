@@ -188,10 +188,9 @@ A catalogue of transformer parameters is available. More details [here](catalogu
 The following transformer models are available in _Roseau Load Flow_:
 
 ```{toctree}
----
-maxdepth: 2
-caption: Transformers
----
+:maxdepth: 2
+:caption: Transformers
+
 Single_Phase_Transformer
 Three_Phase_Transformer
 Center_Tapped_Transformer
@@ -200,11 +199,11 @@ Center_Tapped_Transformer
 ## API Reference
 
 ```{eval-rst}
-.. autoclass:: roseau.load_flow.models.TransformerParameters
+.. autoapiclass:: roseau.load_flow.models.TransformerParameters
    :members:
    :show-inheritance:
    :no-index:
-.. autoclass:: roseau.load_flow.models.Transformer
+.. autoapiclass:: roseau.load_flow.models.Transformer
    :members:
    :show-inheritance:
    :no-index:

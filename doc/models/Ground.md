@@ -152,7 +152,7 @@ en.res_buses_voltages.transform([np.abs, ft.partial(np.angle, deg=True)])
 ## API Reference
 
 ```{eval-rst}
-.. autoclass:: roseau.load_flow.models.Ground
+.. autoapiclass:: roseau.load_flow.models.Ground
    :members:
    :show-inheritance:
    :no-index:

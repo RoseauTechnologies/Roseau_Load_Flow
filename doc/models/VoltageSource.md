@@ -202,7 +202,7 @@ rlf.VoltageSource(
 ## API Reference
 
 ```{eval-rst}
-.. autoclass:: roseau.load_flow.models.VoltageSource
+.. autoapiclass:: roseau.load_flow.models.VoltageSource
    :members:
    :show-inheritance:
    :no-index:

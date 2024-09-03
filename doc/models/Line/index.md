@@ -183,10 +183,9 @@ The following line models are available in _Roseau Load Flow_. Please also have 
 define the parameters of lines.
 
 ```{toctree}
----
-maxdepth: 2
-caption: Lines
----
+:maxdepth: 2
+:caption: Lines
+
 Parameters
 ShuntLine
 SimplifiedLine
@@ -195,11 +194,11 @@ SimplifiedLine
 ## API Reference
 
 ```{eval-rst}
-.. autoclass:: roseau.load_flow.models.LineParameters
+.. autoapiclass:: roseau.load_flow.models.LineParameters
    :members:
    :show-inheritance:
    :no-index:
-.. autoclass:: roseau.load_flow.models.Line
+.. autoapiclass:: roseau.load_flow.models.Line
    :members:
    :show-inheritance:
    :no-index:
