@@ -17,8 +17,9 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 # Changelog
 
-## Unreleased
+## Version 0.10.0
 
+- A wheel for Python 3.13 is also available.
 - The wheels for Windows are now available. The problem was the same as the one of the
   [issue 28551](https://github.com/matplotlib/matplotlib/issues/28551) of the Matplotlib repository.
 - {gh-pr}`237` Improvements of the Sphinx configuration.
