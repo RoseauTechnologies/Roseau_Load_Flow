@@ -53,7 +53,7 @@ typing-extensions = ">=4.6.2"
 pyproj = ">=3.3.0"
 certifi = ">=2023.5.7"
 platformdirs = ">=4.0.0"
-roseau-load-flow-engine = "==0.14.1"
+roseau-load-flow-engine = ">=0.14.1"
 
 # Optional dependencies
 matplotlib = { version = ">=3.7.2", optional = true }
@@ -75,7 +75,7 @@ networkx = ">=3.0.0"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^3.0.0"
-ruff = ">=0.5.0"
+ruff = ">=0.6.0"
 
 [tool.poetry.group.doc.dependencies]
 sphinx = "^8.0.2"
@@ -94,7 +94,6 @@ sphinxext-opengraph = ">=0.9.1"
 line-length = 120
 target-version = "py310"
 show-fixes = true
-extend-include = ["*.ipynb"]
 namespace-packages = ["roseau"]
 
 [tool.ruff.lint]

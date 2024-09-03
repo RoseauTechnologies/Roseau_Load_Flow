@@ -19,6 +19,8 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- The wheels for Windows are now available. The problem was the same as the one of the
+  [issue 28551](https://github.com/matplotlib/matplotlib/issues/28551) of the Matplotlib repository.
 - {gh-pr}`237` Improvements of the Sphinx configuration.
 - {gh-pr}`262` Raise a proper error when a transformer is defined with null impedance.
 - {gh-pr}`259` The cache of the license object was not reset after the activation of a new license key.
