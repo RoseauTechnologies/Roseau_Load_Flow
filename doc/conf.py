@@ -120,6 +120,16 @@ rst_prolog = """
 .. role:: roseau-tertiary
 """
 
+
+# -- Options for autodoc ----------------------------------------------------
+autodoc_default_options = {"ignore-module-all": False}
+autodoc_member_order = "bysource"
+autodoc_typehints = "signature"
+autodoc_inherit_docstrings = True
+autoclass_content = "both"  # show both class and __init__ docstrings
+autodoc_mock_imports = ["roseau.load_flow_engine"]  # Ignore missing dependencies when building the documentation
+
+
 # -- Options for AutoAPI -------------------------------------------------
 autoapi_dirs = ["../roseau"]
 autoapi_ignore = ["**/tests/**", "**/conftest.py", "__about__.py"]

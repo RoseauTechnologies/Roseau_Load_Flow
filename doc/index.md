@@ -36,10 +36,9 @@ More details are given in the [Catalogues page](catalogues-networks).
 and newer and can be installed with:
 
 ```{toctree}
----
-maxdepth: 2
-caption: Installation and License
----
+:maxdepth: 2
+:caption: Installation and License
+
 Installation
 ```
 
@@ -48,9 +47,8 @@ Installation
 Read more about the license of this project:
 
 ```{toctree}
----
-maxdepth: 2
----
+:maxdepth: 2
+
 License
 ```
 
@@ -59,10 +57,9 @@ License
 The following tutorials are available to help you get started:
 
 ```{toctree}
----
-maxdepth: 2
-caption: Usage
----
+:maxdepth: 2
+:caption: Usage
+
 usage/index
 ```
 
@@ -72,10 +69,9 @@ A description of the electrical models used for each component, an example usage
 to the API of the classes are available here:
 
 ```{toctree}
----
-maxdepth: 2
-caption: Models
----
+:maxdepth: 2
+:caption: Models
+
 models/index
 ```
 
@@ -84,20 +80,18 @@ models/index
 Advanced concepts, edge cases and more are explained in this section:
 
 ```{toctree}
----
-maxdepth: 2
-caption: Advanced
----
+:maxdepth: 2
+:caption: Advanced
+
 advanced/index
 ```
 
 ## Changelog
 
 ```{toctree}
----
-maxdepth: 2
-caption: More
----
+:maxdepth: 2
+:caption: More
+
 Changelog
 ```
 
@@ -107,8 +101,7 @@ If you want the full documentation of all the classes and functions, you can ref
 references:
 
 ```{toctree}
----
-maxdepth: 2
----
+:maxdepth: 2
+
 autoapi/roseau/load_flow/index
 ```

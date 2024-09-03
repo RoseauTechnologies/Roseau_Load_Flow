@@ -86,7 +86,7 @@ in the advanced section of the documentation.
 ## API Reference
 
 ```{eval-rst}
-.. autoclass:: roseau.load_flow.models.PotentialRef
+.. autoapiclass:: roseau.load_flow.models.PotentialRef
    :members:
    :show-inheritance:
    :no-index:

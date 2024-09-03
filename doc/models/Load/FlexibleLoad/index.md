@@ -59,10 +59,9 @@ The expression $\underline{S}(U)$ depends on four parameters:
 All these elements are detailed in the following sections:
 
 ```{toctree}
----
-maxdepth: 2
-caption: Flexible loads
----
+:maxdepth: 2
+:caption: Flexible loads
+
 Control
 Projection
 FlexibleParameter
@@ -72,15 +71,15 @@ FeasibleDomain
 ## API Reference
 
 ```{eval-rst}
-.. autoclass:: roseau.load_flow.models.Control
+.. autoapiclass:: roseau.load_flow.models.Control
    :members:
    :show-inheritance:
    :no-index:
-.. autoclass:: roseau.load_flow.models.Projection
+.. autoapiclass:: roseau.load_flow.models.Projection
    :members:
    :show-inheritance:
    :no-index:
-.. autoclass:: roseau.load_flow.models.FlexibleParameter
+.. autoapiclass:: roseau.load_flow.models.FlexibleParameter
     :members:
     :show-inheritance:
     :no-index:
