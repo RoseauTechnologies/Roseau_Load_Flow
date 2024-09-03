@@ -279,7 +279,7 @@ class VoltageSource(Element):
             bus=data["bus"],
             voltages=voltages,
             phases=data["phases"],
-            connect_neutral=data["connect_neutral"],
+            connect_neutral=data.get("connect_neutral"),
         )
         if include_results and "results" in data:
             self._res_currents = np.array(

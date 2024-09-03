@@ -264,7 +264,7 @@ class AbstractLoad(Element, ABC):
                 powers=powers,
                 phases=data["phases"],
                 flexible_params=fp,
-                connect_neutral=data["connect_neutral"],
+                connect_neutral=data.get("connect_neutral"),
             )
         elif load_type == "current":
             currents = [complex(i[0], i[1]) for i in data["currents"]]
@@ -276,7 +276,7 @@ class AbstractLoad(Element, ABC):
                 bus=data["bus"],
                 impedances=impedances,
                 phases=data["phases"],
-                connect_neutral=data["connect_neutral"],
+                connect_neutral=data.get("connect_neutral"),
             )
         else:
             msg = f"Unknown load type {load_type!r} for load {data['id']!r}"
