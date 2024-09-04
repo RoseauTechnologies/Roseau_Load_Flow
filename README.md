@@ -38,6 +38,11 @@ contact@roseautechnologies.com.
 
 ![Catalogue of networks](https://github.com/RoseauTechnologies/Roseau_Load_Flow/blob/main/doc/_static/Network/Catalogue.png?raw=True)
 
+## Tutorials
+
+The folder `tutorials` contains some Jupyter Notebooks designed to help new users of _Roseau Load Flow_. Currently,
+some tutorials dedicated to _OpenDSS_ users are available.
+
 ## Bug reports / Feature requests
 
 If you find a bug or have a feature request, please open an issue on

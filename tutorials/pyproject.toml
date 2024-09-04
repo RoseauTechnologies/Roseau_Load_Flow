@@ -1,11 +1,13 @@
 [tool.poetry]
 name = "roseau-load-flow-tutorials"
-version = "0.1"
+version = "0.1.0"
 description = "Tutorials for Roseau Load Flow inspired from different software"
 authors = [
-    "Ahmad Zubair <ahmad.zubair@roseautechnologies.com>",
+    "Ali Hamdan <ali.hamdan@roseautechnologies.com>",
+    "Benoît Vinot <benoit.vinot@roseautechnologies.com>",
+    "Ahmad Zubair",
 ]
-maintainers = ["Ahmad Zubair <ahmad.zubair@roseautechnologies.com>"]
+maintainers = ["Benoît Vinot <benoit.vinot@roseautechnologies.com>"]
 license = "BSD-3-Clause"
 repository = "https://github.com/RoseauTechnologies/Roseau_Load_Flow_Tutorials/"
 package-mode = false
@@ -16,19 +18,19 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.dependencies]
 python = "^3.10"
-roseau-load-flow = ">=0.9.1"
+roseau-load-flow = ">=0.10.0"
 dss-python = ">=0.15.7"
 jupyter = "^1.0.0"
+rich = ">=13.8.0"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^3.0.0"
-ruff = ">=0.3.0"
+ruff = ">=0.6.0"
 
 [tool.ruff]
 line-length = 120
 target-version = "py310"
 show-fixes = true
-extend-include = ["*.ipynb"]
 
 [tool.ruff.lint]
 select = ["E", "F", "C90", "W", "B", "UP", "I", "RUF100", "TID", "SIM", "PT", "PIE", "N", "C4", "NPY", "T10"]
