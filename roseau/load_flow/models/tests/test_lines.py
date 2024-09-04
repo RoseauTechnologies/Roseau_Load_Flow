@@ -8,24 +8,24 @@ from roseau.load_flow.units import Q_
 
 
 def test_lines_length():
-    bus1 = Bus("bus1", phases="abcn")
-    bus2 = Bus("bus2", phases="abcn")
-    lp = LineParameters("lp", z_line=np.eye(4, dtype=complex))
+    bus1 = Bus(id="bus1", phases="abcn")
+    bus2 = Bus(id="bus2", phases="abcn")
+    lp = LineParameters(id="lp", z_line=np.eye(4, dtype=complex))
 
     # Negative value for length in the constructor
     with pytest.raises(RoseauLoadFlowException) as e:
-        Line("line1", bus1=bus1, bus2=bus2, parameters=lp, length=-5)
+        Line(id="line1", bus1=bus1, bus2=bus2, parameters=lp, length=-5)
     assert "A line length must be greater than 0." in e.value.msg
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_LENGTH_VALUE
 
     # The same with a unit
     with pytest.raises(RoseauLoadFlowException) as e:
-        Line("line2", bus1=bus1, bus2=bus2, parameters=lp, length=Q_(-5, "m"))
+        Line(id="line2", bus1=bus1, bus2=bus2, parameters=lp, length=Q_(-5, "m"))
     assert "A line length must be greater than 0." in e.value.msg
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_LENGTH_VALUE
 
     # Test on the length setter
-    line = Line("line3", bus1=bus1, bus2=bus2, parameters=lp, length=Q_(5, "m"))
+    line = Line(id="line3", bus1=bus1, bus2=bus2, parameters=lp, length=Q_(5, "m"))
     with pytest.raises(RoseauLoadFlowException) as e:
         line.length = -6.5
     assert "A line length must be greater than 0." in e.value.msg
@@ -39,41 +39,41 @@ def test_lines_length():
 
 
 def test_lines_units():
-    bus1 = Bus("bus1", phases="abcn")
-    bus2 = Bus("bus2", phases="abcn")
-    lp = LineParameters("lp", z_line=np.eye(4, dtype=complex))
+    bus1 = Bus(id="bus1", phases="abcn")
+    bus2 = Bus(id="bus2", phases="abcn")
+    lp = LineParameters(id="lp", z_line=np.eye(4, dtype=complex))
 
     # Good unit constructor
-    line = Line("line1", bus1=bus1, bus2=bus2, parameters=lp, length=Q_(5, "km"))
+    line = Line(id="line1", bus1=bus1, bus2=bus2, parameters=lp, length=Q_(5, "km"))
     assert np.isclose(line._length, 5)
 
     # Good unit setter
-    line = Line("line2", bus1=bus1, bus2=bus2, parameters=lp, length=5)
+    line = Line(id="line2", bus1=bus1, bus2=bus2, parameters=lp, length=5)
     assert np.allclose(line._length, 5)
     line.length = Q_(6.5, "m")
     assert np.isclose(line._length, 6.5e-3)
 
     # Bad unit constructor
     with pytest.raises(DimensionalityError, match=r"Cannot convert from 'ampere' \(\[current\]\) to 'km'"):
-        Line("line3", bus1=bus1, bus2=bus2, parameters=lp, length=Q_(5, "A"))
+        Line(id="line3", bus1=bus1, bus2=bus2, parameters=lp, length=Q_(5, "A"))
 
     # Bad unit setter
-    line = Line("line4", bus1=bus1, bus2=bus2, parameters=lp, length=5)
+    line = Line(id="line4", bus1=bus1, bus2=bus2, parameters=lp, length=5)
     with pytest.raises(DimensionalityError, match=r"Cannot convert from 'ampere' \(\[current\]\) to 'km'"):
         line.length = Q_(6.5, "A")
 
 
 def test_line_parameters_shortcut():
-    bus1 = Bus("bus1", phases="abcn")
-    bus2 = Bus("bus2", phases="abcn")
+    bus1 = Bus(id="bus1", phases="abcn")
+    bus2 = Bus(id="bus2", phases="abcn")
 
     #
     # Without shunt
     #
-    lp = LineParameters("lp", z_line=np.eye(4, dtype=complex))
+    lp = LineParameters(id="lp", z_line=np.eye(4, dtype=complex))
 
     # Z
-    line = Line("line1", bus1=bus1, bus2=bus2, parameters=lp, length=Q_(50, "m"))
+    line = Line(id="line1", bus1=bus1, bus2=bus2, parameters=lp, length=Q_(50, "m"))
     assert np.allclose(line.z_line.m_as("ohm"), 0.05 * np.eye(4, dtype=complex))
 
     # Y
@@ -85,11 +85,11 @@ def test_line_parameters_shortcut():
     #
     z_line = 0.01 * np.eye(4, dtype=complex)
     y_shunt = 1e-5 * np.eye(4, dtype=complex)
-    lp = LineParameters("lp", z_line=z_line, y_shunt=y_shunt)
+    lp = LineParameters(id="lp", z_line=z_line, y_shunt=y_shunt)
 
     # Z
     ground = Ground("ground")
-    line = Line("line2", bus1=bus1, bus2=bus2, parameters=lp, length=Q_(50, "m"), ground=ground)
+    line = Line(id="line2", bus1=bus1, bus2=bus2, parameters=lp, length=Q_(50, "m"), ground=ground)
     assert np.allclose(line.z_line.m_as("ohm"), 0.05 * z_line)
 
     # Y
@@ -97,11 +97,41 @@ def test_line_parameters_shortcut():
     assert np.allclose(line.y_shunt.m_as("S"), 0.05 * y_shunt)
 
 
+def test_line_ground(recwarn):
+    bus1 = Bus(id="bus1", phases="abc")
+    bus2 = Bus(id="bus2", phases="abc")
+    z_line = 0.01 * np.eye(3, dtype=complex)
+    y_shunt = 1e-5 * np.eye(3, dtype=complex)
+    lp_with_shunt = LineParameters(id="lp_with_shunt", z_line=z_line, y_shunt=y_shunt)
+    lp_without_shunt = LineParameters(id="lp_without_shunt", z_line=z_line)
+    ground = Ground(id="ground")
+
+    # Create a line with a useless ground
+    recwarn.clear()
+    line_without_shunt = Line(
+        id="line", bus1=bus1, bus2=bus2, parameters=lp_without_shunt, length=Q_(50, "m"), ground=ground
+    )
+    assert len(recwarn) == 1
+    assert recwarn[0].category is UserWarning
+    assert (
+        recwarn[0].message.args[0]
+        == "The ground element must not be provided for line 'line' as it does not have a shunt admittance."
+    )
+    assert line_without_shunt.ground is None
+
+    # assign a line parameter with shunt to a line without ground
+    line_without_shunt._initialized = False  # To reach the last option of the parameters setter
+    with pytest.raises(RoseauLoadFlowException) as e:
+        line_without_shunt.parameters = lp_with_shunt
+    assert e.value.msg == "The ground element must be provided for line 'line' with shunt admittance."
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_LINE_TYPE
+
+
 def test_res_violated():
-    bus1 = Bus("bus1", phases="abc")
-    bus2 = Bus("bus2", phases="abc")
-    lp = LineParameters("lp", z_line=np.eye(3, dtype=complex))
-    line = Line("line", bus1=bus1, bus2=bus2, parameters=lp, length=Q_(50, "m"))
+    bus1 = Bus(id="bus1", phases="abc")
+    bus2 = Bus(id="bus2", phases="abc")
+    lp = LineParameters(id="lp", z_line=np.eye(3, dtype=complex))
+    line = Line(id="line", bus1=bus1, bus2=bus2, parameters=lp, length=Q_(50, "m"))
     direct_seq = np.exp([0, -2 / 3 * np.pi * 1j, 2 / 3 * np.pi * 1j])
 
     bus1._res_potentials = 230 * direct_seq
@@ -318,15 +348,15 @@ def test_res_violated():
     ),
 )
 def test_lines_results(phases, z_line, y_shunt, len_line, bus_pot, line_cur, ground_pot, expected_pow):
-    bus1 = Bus("bus1", phases=phases["bus1"])
-    bus2 = Bus("bus2", phases=phases["bus2"])
+    bus1 = Bus(id="bus1", phases=phases["bus1"])
+    bus2 = Bus(id="bus2", phases=phases["bus2"])
     y_shunt = np.array(y_shunt, dtype=np.complex128) if y_shunt is not None else None
     ground = Ground("gnd")
-    lp = LineParameters("lp", z_line=np.array(z_line, dtype=np.complex128), y_shunt=y_shunt)
+    lp = LineParameters(id="lp", z_line=np.array(z_line, dtype=complex), y_shunt=y_shunt)
     line = Line(
-        "line",
-        bus1,
-        bus2,
+        id="line",
+        bus1=bus1,
+        bus2=bus2,
         phases=phases["line"],
         length=len_line,
         parameters=lp,

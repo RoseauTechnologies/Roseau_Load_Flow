@@ -122,8 +122,7 @@ line = rlf.Line(
 
 # A voltage source on the first bus
 un = 400 / np.sqrt(3)
-voltages = rlf.Q_(un * np.exp([0, -2j * np.pi / 3, 2j * np.pi / 3]), "V")
-vs = rlf.VoltageSource(id="source", bus=bus1, voltages=voltages)
+vs = rlf.VoltageSource(id="source", bus=bus1, voltages=rlf.Q_(un, "V"))
 
 
 # A power load on the second bus
@@ -158,7 +157,7 @@ en = rlf.ElectricalNetwork.from_element(bus1)
 en.solve_load_flow()
 
 # The current "entering" into the line from the bus1
-en.res_branches[["current1"]].transform([np.abs, ft.partial(np.angle, deg=True)])
+en.res_lines[["current1"]].transform([np.abs, ft.partial(np.angle, deg=True)])
 # |               |   ('current1', 'absolute') |   ('current1', 'angle') |
 # |:--------------|---------------------------:|------------------------:|
 # | ('line', 'a') |                  23.9459   |                 15.6886 |
@@ -167,7 +166,7 @@ en.res_branches[["current1"]].transform([np.abs, ft.partial(np.angle, deg=True)]
 # | ('line', 'n') |                  20.6151   |                167.381  |
 
 # The current "entering" into the line from the bus2
-en.res_branches[["current2"]].transform([np.abs, ft.partial(np.angle, deg=True)])
+en.res_lines[["current2"]].transform([np.abs, ft.partial(np.angle, deg=True)])
 # |               |   ('current2', 'absolute') |   ('current2', 'angle') |
 # |:--------------|---------------------------:|------------------------:|
 # | ('line', 'a') |               23.9202      |               -164.585  |

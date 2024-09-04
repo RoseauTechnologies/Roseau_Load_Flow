@@ -3,9 +3,9 @@ from enum import Enum
 
 from typing_extensions import Self
 
-if sys.version_info >= (3, 11):
+if sys.version_info >= (3, 11):  # pragma: no-cover-if-py-lt-311
     from enum import StrEnum as StrEnum
-else:
+else:  # pragma: no-cover-if-py-gte-311
 
     class StrEnum(str, Enum):
         """

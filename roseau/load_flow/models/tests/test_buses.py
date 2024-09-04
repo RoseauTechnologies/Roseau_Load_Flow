@@ -22,7 +22,7 @@ from roseau.load_flow import (
 
 def test_bus_potentials_of_phases():
     bus = Bus("bus", phases="abcn")
-    bus._res_potentials = [1, 2, 3, 4]
+    bus._res_potentials = np.array([1, 2, 3, 4], dtype=np.complex128)
 
     assert np.allclose(bus._get_potentials_of("abcn", warning=False), [1, 2, 3, 4])
     assert isinstance(bus._get_potentials_of("abcn", warning=False), np.ndarray)
@@ -34,7 +34,7 @@ def test_bus_potentials_of_phases():
 
 
 def test_short_circuit():
-    bus = Bus("bus", phases="abc")
+    bus = Bus(id="bus", phases="abc")
 
     # Bad parameters
     with pytest.raises(RoseauLoadFlowException) as e:
@@ -64,8 +64,7 @@ def test_short_circuit():
 
     # Dict methods
     vn = 400 / np.sqrt(3)
-    voltages = [vn, vn * np.exp(-2 / 3 * np.pi * 1j), vn * np.exp(2 / 3 * np.pi * 1j)]
-    _ = VoltageSource("vs", bus=bus, voltages=voltages)
+    _ = VoltageSource("vs", bus=bus, voltages=vn)
     _ = PotentialRef("pref", element=bus)
     en = ElectricalNetwork.from_element(bus)
     en2 = ElectricalNetwork.from_dict(en.to_dict())
@@ -94,12 +93,12 @@ def test_short_circuit():
 
 def test_voltage_limits():
     # Default values
-    bus = Bus("bus", phases="abc")
+    bus = Bus(id="bus", phases="abc")
     assert bus.min_voltage is None
     assert bus.max_voltage is None
 
     # Passed as arguments
-    bus = Bus("bus", phases="abc", min_voltage=350, max_voltage=420)
+    bus = Bus(id="bus", phases="abc", min_voltage=350, max_voltage=420)
     assert bus.min_voltage == Q_(350, "V")
     assert bus.max_voltage == Q_(420, "V")
 
@@ -142,9 +141,9 @@ def test_voltage_limits():
 
 
 def test_res_violated():
-    bus = Bus("bus", phases="abc")
+    bus = Bus(id="bus", phases="abc")
     direct_seq = np.exp([0, -2 / 3 * np.pi * 1j, 2 / 3 * np.pi * 1j])
-    bus._res_potentials = 230 * direct_seq
+    bus._res_potentials = (230 + 0j) * direct_seq
 
     # No limits
     assert bus.res_violated is None
@@ -177,32 +176,31 @@ def test_res_violated():
 
 
 def test_propagate_limits():  # noqa: C901
-    b1_mv = Bus("b1_mv", phases="abc")
-    b2_mv = Bus("b2_mv", phases="abc")
-    b3_mv = Bus("b3_mv", phases="abc")
-    b1_lv = Bus("b1_lv", phases="abcn")
-    b2_lv = Bus("b2_lv", phases="abcn")
+    b1_mv = Bus(id="b1_mv", phases="abc")
+    b2_mv = Bus(id="b2_mv", phases="abc")
+    b3_mv = Bus(id="b3_mv", phases="abc")
+    b1_lv = Bus(id="b1_lv", phases="abcn")
+    b2_lv = Bus(id="b2_lv", phases="abcn")
 
-    PotentialRef("pref_mv", element=b1_mv)
+    PotentialRef(id="pref_mv", element=b1_mv)
     g = Ground("g")
-    PotentialRef("pref_lv", element=g)
+    PotentialRef(id="pref_lv", element=g)
 
-    lp_mv = LineParameters("lp_mv", z_line=np.eye(3), y_shunt=0.1 * np.eye(3))
-    lp_lv = LineParameters("lp_lv", z_line=np.eye(4))
+    lp_mv = LineParameters(id="lp_mv", z_line=np.eye(3), y_shunt=0.1 * np.eye(3))
+    lp_lv = LineParameters(id="lp_lv", z_line=np.eye(4))
     tp = TransformerParameters.from_catalogue(name="SE_Minera_A0Ak_100kVA", manufacturer="SE")
 
-    Line("l1_mv", b1_mv, b2_mv, length=1.5, parameters=lp_mv, ground=g)
-    Line("l2_mv", b2_mv, b3_mv, length=2, parameters=lp_mv, ground=g)
-    Transformer("tr", b3_mv, b1_lv, parameters=tp)
-    Line("l1_lv", b1_lv, b2_lv, length=1, parameters=lp_lv)
+    Line(id="l1_mv", bus1=b1_mv, bus2=b2_mv, length=1.5, parameters=lp_mv, ground=g)
+    Line(id="l2_mv", bus1=b2_mv, bus2=b3_mv, length=2, parameters=lp_mv, ground=g)
+    Transformer(id="tr", bus1=b3_mv, bus2=b1_lv, parameters=tp)
+    Line(id="l1_lv", bus1=b1_lv, bus2=b2_lv, length=1, parameters=lp_lv)
 
-    voltages = 20_000 * np.exp([0, -2 / 3 * np.pi * 1j, 2 / 3 * np.pi * 1j])
-    VoltageSource("s_mv", bus=b1_mv, voltages=voltages)
+    VoltageSource(id="s_mv", bus=b1_mv, voltages=20_000)
 
-    PowerLoad("pl1_mv", bus=b2_mv, powers=[10e3, 10e3, 10e3])
-    PowerLoad("pl2_mv", bus=b3_mv, powers=[10e3, 10e3, 10e3])
-    PowerLoad("pl1_lv", bus=b1_lv, powers=[1e3, 1e3, 1e3])
-    PowerLoad("pl2_lv", bus=b2_lv, powers=[1e3, 1e3, 1e3])
+    PowerLoad(id="pl1_mv", bus=b2_mv, powers=[10e3, 10e3, 10e3])
+    PowerLoad(id="pl2_mv", bus=b3_mv, powers=[10e3, 10e3, 10e3])
+    PowerLoad(id="pl1_lv", bus=b1_lv, powers=[1e3, 1e3, 1e3])
+    PowerLoad(id="pl2_lv", bus=b2_lv, powers=[1e3, 1e3, 1e3])
 
     # All buses have None as min and max voltage
     for bus in (b1_mv, b2_mv, b3_mv, b1_lv, b2_lv):
@@ -270,8 +268,8 @@ def test_propagate_limits():  # noqa: C901
         assert bus.max_voltage == Q_(253, "V")
 
     # What if there is a switch?
-    b4_mv = Bus("b4_mv", phases="abc")
-    Switch("sw", b2_mv, b4_mv)
+    b4_mv = Bus(id="b4_mv", phases="abc")
+    Switch(id="sw", bus1=b2_mv, bus2=b4_mv)
     b1_mv.propagate_limits()
     for bus in (b1_mv, b2_mv, b3_mv, b4_mv):
         assert bus.min_voltage is None
@@ -293,37 +291,36 @@ def test_propagate_limits():  # noqa: C901
 
 
 def test_get_connected_buses():
-    b1_mv = Bus("b1_mv", phases="abc")
-    b2_mv = Bus("b2_mv", phases="abc")
-    b3_mv = Bus("b3_mv", phases="abc")
-    b4_mv = Bus("b4_mv", phases="abc")
-    b1_lv = Bus("b1_lv", phases="abcn")
-    b2_lv = Bus("b2_lv", phases="abcn")
-    b3_lv = Bus("b3_lv", phases="abcn")
+    b1_mv = Bus(id="b1_mv", phases="abc")
+    b2_mv = Bus(id="b2_mv", phases="abc")
+    b3_mv = Bus(id="b3_mv", phases="abc")
+    b4_mv = Bus(id="b4_mv", phases="abc")
+    b1_lv = Bus(id="b1_lv", phases="abcn")
+    b2_lv = Bus(id="b2_lv", phases="abcn")
+    b3_lv = Bus(id="b3_lv", phases="abcn")
 
-    PotentialRef("pref_mv", element=b1_mv)
+    PotentialRef(id="pref_mv", element=b1_mv)
     g = Ground("g")
-    PotentialRef("pref_lv", element=g)
+    PotentialRef(id="pref_lv", element=g)
 
-    lp_mv = LineParameters("lp_mv", z_line=np.eye(3), y_shunt=0.1 * np.eye(3))
-    lp_lv = LineParameters("lp_lv", z_line=np.eye(4))
+    lp_mv = LineParameters(id="lp_mv", z_line=np.eye(3), y_shunt=0.1 * np.eye(3))
+    lp_lv = LineParameters(id="lp_lv", z_line=np.eye(4))
     tp = TransformerParameters.from_catalogue(name="SE_Minera_A0Ak_100kVA", manufacturer="SE")
 
-    Line("l1_mv", b1_mv, b2_mv, length=1.5, parameters=lp_mv, ground=g)
-    Line("l2_mv", b2_mv, b3_mv, length=2, parameters=lp_mv, ground=g)
-    Line("l3_mv", b2_mv, b4_mv, length=0.5, parameters=lp_mv, ground=g)  # creates a loop
-    Switch("sw_mv", b3_mv, b4_mv)
-    Transformer("tr", b3_mv, b1_lv, parameters=tp)
-    Line("l1_lv", b1_lv, b2_lv, length=1, parameters=lp_lv)
-    Switch("sw_lv", b2_lv, b3_lv)
+    Line(id="l1_mv", bus1=b1_mv, bus2=b2_mv, length=1.5, parameters=lp_mv, ground=g)
+    Line(id="l2_mv", bus1=b2_mv, bus2=b3_mv, length=2, parameters=lp_mv, ground=g)
+    Line(id="l3_mv", bus1=b2_mv, bus2=b4_mv, length=0.5, parameters=lp_mv, ground=g)  # creates a loop
+    Switch(id="sw_mv", bus1=b3_mv, bus2=b4_mv)
+    Transformer(id="tr", bus1=b3_mv, bus2=b1_lv, parameters=tp)
+    Line(id="l1_lv", bus1=b1_lv, bus2=b2_lv, length=1, parameters=lp_lv)
+    Switch(id="sw_lv", bus1=b2_lv, bus2=b3_lv)
 
-    voltages = 20_000 * np.exp([0, -2 / 3 * np.pi * 1j, 2 / 3 * np.pi * 1j])
-    VoltageSource("s_mv", bus=b1_mv, voltages=voltages)
+    VoltageSource(id="s_mv", bus=b1_mv, voltages=20_000)
 
-    PowerLoad("pl1_mv", bus=b2_mv, powers=[10e3, 10e3, 10e3])
-    PowerLoad("pl2_mv", bus=b3_mv, powers=[10e3, 10e3, 10e3])
-    PowerLoad("pl1_lv", bus=b1_lv, powers=[1e3, 1e3, 1e3])
-    PowerLoad("pl2_lv", bus=b2_lv, powers=[1e3, 1e3, 1e3])
+    PowerLoad(id="pl1_mv", bus=b2_mv, powers=[10e3, 10e3, 10e3])
+    PowerLoad(id="pl2_mv", bus=b3_mv, powers=[10e3, 10e3, 10e3])
+    PowerLoad(id="pl1_lv", bus=b1_lv, powers=[1e3, 1e3, 1e3])
+    PowerLoad(id="pl2_lv", bus=b2_lv, powers=[1e3, 1e3, 1e3])
 
     mv_buses = (b1_mv, b2_mv, b3_mv, b4_mv)
     mv_bus_ids = sorted(b.id for b in mv_buses)
@@ -336,7 +333,7 @@ def test_get_connected_buses():
 
 
 def test_res_voltage_unbalance():
-    bus = Bus("b3", phases="abc")
+    bus = Bus(id="b3", phases="abc")
 
     va = 230 + 0j
     vb = 230 * np.exp(4j * np.pi / 3)
@@ -351,14 +348,14 @@ def test_res_voltage_unbalance():
     assert np.isclose(bus.res_voltage_unbalance().magnitude, 100)
 
     # With neutral
-    bus = Bus("b3n", phases="abcn")
+    bus = Bus(id="b3n", phases="abcn")
     bus._res_potentials = np.array([va, vb, vc, 0])
     assert np.isclose(bus.res_voltage_unbalance().magnitude, 0)
     bus._res_potentials = np.array([va, vb, vb, 0])
     assert np.isclose(bus.res_voltage_unbalance().magnitude, 100)
 
     # Non 3-phase bus
-    bus = Bus("b1", phases="an")
+    bus = Bus(id="b1", phases="an")
     bus._res_potentials = np.array([va, 0])
     with pytest.raises(RoseauLoadFlowException) as e:
         bus.res_voltage_unbalance()

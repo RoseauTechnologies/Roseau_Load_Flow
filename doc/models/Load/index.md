@@ -85,10 +85,9 @@ considers the voltage dependency of loads. ZIP stands for the three load types:
 The following load models are available in _Roseau Load Flow_:
 
 ```{toctree}
----
-maxdepth: 3
-caption: Loads
----
+:maxdepth: 3
+:caption: Loads
+
 ImpedanceLoad
 CurrentLoad
 PowerLoad
@@ -98,19 +97,19 @@ FlexibleLoad/index
 ## API Reference
 
 ```{eval-rst}
-.. autoclass:: roseau.load_flow.models.AbstractLoad
+.. autoapiclass:: roseau.load_flow.models.AbstractLoad
    :members:
    :show-inheritance:
    :no-index:
-.. autoclass:: roseau.load_flow.models.ImpedanceLoad
+.. autoapiclass:: roseau.load_flow.models.ImpedanceLoad
    :members:
    :show-inheritance:
    :no-index:
-.. autoclass:: roseau.load_flow.models.CurrentLoad
+.. autoapiclass:: roseau.load_flow.models.CurrentLoad
     :members:
     :show-inheritance:
     :no-index:
-.. autoclass:: roseau.load_flow.models.PowerLoad
+.. autoapiclass:: roseau.load_flow.models.PowerLoad
     :members:
     :show-inheritance:
     :no-index:

@@ -3,7 +3,7 @@ import logging
 import pandas as pd
 import shapely
 
-from roseau.load_flow.models import AbstractBranch, Bus, Transformer, TransformerParameters
+from roseau.load_flow.models import Bus, Transformer, TransformerParameters
 from roseau.load_flow.typing import Id
 from roseau.load_flow.units import Q_
 
@@ -16,7 +16,7 @@ def generate_typ_tr(
     """Generate transformer parameters from the "TypTr2" dataframe.
 
     Args:
-        typ_lne:
+        typ_tr:
             The "TypTr2" dataframe containing transformer parameters data.
 
         transformers_params:
@@ -47,19 +47,19 @@ def generate_typ_tr(
 
 def generate_transformers(
     elm_tr: pd.DataFrame,
-    branches: dict[Id, AbstractBranch],
+    transformers: dict[Id, Transformer],
     buses: dict[Id, Bus],
     sta_cubic: pd.DataFrame,
-    transformers_tap: dict[Id, int],
+    transformers_tap: dict[Id, float],
     transformers_params: dict[Id, TransformerParameters],
 ) -> None:
     """Generate the transformers of the network.
 
     Args:
-        elm_tr2:
+        elm_tr:
             The "ElmTr2" dataframe containing the transformer data.
 
-        branches:
+        transformers:
             The dictionary to store the transformers into.
 
         buses:
@@ -79,12 +79,14 @@ def generate_transformers(
         tap = 1.0 + elm_tr.at[idx, "nntap"] * transformers_tap[type_id] / 100
         bus1 = buses[sta_cubic.at[elm_tr.at[idx, "bushv"], "cterm"]]
         bus2 = buses[sta_cubic.at[elm_tr.at[idx, "buslv"], "cterm"]]
+        # petersen = elm_tr.at[idx, "cpeter_l"]  # Petersen coil
+        # z_gnd = elm_tr.at[idx, "re0tr_l"] + 1j * elm_tr.at[idx, "xe0tr_l"]  # Grounding impedance
         # Transformers do not have geometries, use the buses
         geometry = (
-            shapely.LineString([bus1.geometry, bus2.geometry]).centroid
+            shapely.LineString([bus1.geometry, bus2.geometry]).centroid  # type: ignore
             if bus1.geometry is not None and bus2.geometry is not None
             else None
         )
-        branches[idx] = Transformer(
+        transformers[idx] = Transformer(
             id=idx, bus1=bus1, bus2=bus2, parameters=transformers_params[type_id], tap=tap, geometry=geometry
         )

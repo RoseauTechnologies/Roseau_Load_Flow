@@ -1,5 +1,6 @@
 {
-  "version": 1,
+  "version": 2,
+  "is_multiphase": true,
   "grounds": [
     {
       "id": "ground",
@@ -54,28 +55,15 @@
       "max_voltage": 253
     }
   ],
-  "branches": [
-    {
-      "id": "Transformer",
-      "type": "transformer",
-      "phases1": "abc",
-      "phases2": "abcn",
-      "bus1": "MVLV13539",
-      "bus2": "MVLVFeeder13539",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [-1.5670214765884245, 48.8376573517751]
-      },
-      "tap": 1.0,
-      "params_id": "Dyn11_160kVA"
-    },
+  "lines": [
     {
       "id": "LVBranch087298",
-      "type": "line",
-      "phases1": "abcn",
-      "phases2": "abcn",
+      "phases": "abcn",
       "bus1": "MVLVFeeder13539",
       "bus2": "LVBus030540",
+      "length": 0.03236051183812635,
+      "params_id": "U_AL_150",
+      "ground": "ground",
       "geometry": {
         "type": "LineString",
         "coordinates": [
@@ -87,24 +75,41 @@
           [-1.567394325443026, 48.83750072463013],
           [-1.567394325443026, 48.83750072463013]
         ]
-      },
-      "length": 0.03236051183812635,
-      "params_id": "U_AL_150",
-      "ground": "ground"
+      }
     }
   ],
+  "transformers": [
+    {
+      "id": "Transformer",
+      "phases1": "abc",
+      "phases2": "abcn",
+      "bus1": "MVLV13539",
+      "bus2": "MVLVFeeder13539",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-1.5670214765884245, 48.8376573517751]
+      },
+      "tap": 1.0,
+      "params_id": "Dyn11_160kVA"
+    }
+  ],
+  "switches": [],
   "loads": [
     {
       "id": "LVBus030540_consumption",
       "bus": "LVBus030540",
       "phases": "bn",
-      "powers": [[4300.0, 1400.0]]
+      "type": "power",
+      "powers": [[4300.0, 1400.0]],
+      "connect_neutral": null
     },
     {
       "id": "LVBus030540_production",
       "bus": "LVBus030540",
       "phases": "bn",
-      "powers": [[-300.0, 0.0]]
+      "type": "power",
+      "powers": [[-300.0, 0.0]],
+      "connect_neutral": null
     }
   ],
   "sources": [
@@ -116,7 +121,8 @@
         [17320.50807568877, 10000.0],
         [0.0, -20000.0],
         [-17320.50807568877, 10000.0]
-      ]
+      ],
+      "connect_neutral": null
     }
   ],
   "lines_params": [
@@ -163,11 +169,13 @@
       "sn": 160000.0,
       "uhv": 20000.0,
       "ulv": 400.0,
+      "type": "Dyn11",
+      "z2": [0.014687500000000001, 0.037205877811845804],
+      "ym": [3.8333333333333335e-7, -3.0426140077242796e-6],
       "i0": 0.023,
       "p0": 460.0,
       "psc": 2350.0,
       "vsc": 0.04,
-      "type": "Dyn11",
       "max_power": 160000
     }
   ]

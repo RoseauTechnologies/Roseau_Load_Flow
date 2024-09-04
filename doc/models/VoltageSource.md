@@ -98,42 +98,111 @@ The equations that model a delta voltage source are:
 Where $\underline{U}\in\mathbb{C}^3$ is the voltage vector (user defined parameter) and
 $\underline{V}\in\mathbb{C}^3$ is the node potentials vector (variable).
 
+(models-voltage-source-usage)=
+
 ## Usage
 
-A voltage source defined with a neutral phase is a star voltage source, otherwise it is a delta
-voltage source. The voltage vector must have the same size as the number of the phase-to-phase
-or phase-to-neutral connections of the source.
+A voltage source defined with a neutral phase is a star-connected voltage source, otherwise it is a
+delta-connected voltage source. The phases of the source must be a subset of the phases of the bus
+it is connected to. A voltage source takes the same phases as the bus by default.
 
 ```python
 import numpy as np
 import roseau.load_flow as rlf
 
 bus = rlf.Bus(id="bus", phases="abcn")
+# The phases of the source are the same as the bus by default
+vs1 = rlf.VoltageSource("vs1", bus=bus, voltages=230)  # phases="abcn" implied
+vs1.phases  # "abcn"
+vs1.voltage_phases  # ["an", "bn", "cn"]
 
-# Star connection
-un = 400 / np.sqrt(3)  # 400V phase-to-phase -> 230V phase-to-neutral
-voltages = un * np.exp([0, -2j * np.pi / 3, 2j * np.pi / 3])
+# Explicitly define the phases of the source (star connection)
+vs2 = rlf.VoltageSource("vs2", bus=bus, phases="abcn", voltages=230)  # Same as vs1
+vs2.phases  # "abcn"
+vs2.voltage_phases  # ["an", "bn", "cn"]
+
+# Explicitly define the phases of the source (delta connection)
+vs3 = rlf.VoltageSource("vs3", bus=bus, phases="abc", voltages=400)
+vs3.phases  # "abc"
+vs3.voltage_phases  # ["ab", "bc", "ca"]
+
+# Incorrect phases: the source's phases must be a subset of the bus's phases
+bus2 = rlf.Bus(id="bus2", phases="an")
+rlf.VoltageSource("vs4", bus=bus2, phases="bn", voltages=230)  # Error
+```
+
+A **scalar** (potentially complex) voltage value can be used to define the source's balanced
+voltages. For a single-phase source, the scalar value is used as the voltage of the source's phase.
+For a two-phase source, the second voltage value is the negative of the first value (180° phase
+shift). For a three-phase source, the second and third values are calculated by rotating the first
+value by -120° and 120°, respectively (120° phase shift clockwise).
+
+```python
+bus = rlf.Bus(id="bus", phases="abcn")
+
+# Three-phase connection (star)
+# -----------------------------
+rlf.VoltageSource("vs1", bus=bus, phases="abcn", voltages=230)
+# {'an': (230+0j), 'bn': (-115-199.18584287042083j), 'cn': (-115+199.1858428704209j)}
+
+# Three-phase connection (delta)
+# ------------------------------
+rlf.VoltageSource("vs2", bus=bus, phases="abc", voltages=400)
+# {'ab': (400+0j), 'bc': (-200-346.41016151377534j), 'ca': (-200+346.4101615137755j)}
+
+# Two-phase connection
+# --------------------
+rlf.VoltageSource("vs3", bus=bus, phases="abn", voltages=230)
+# {'an': (230+0j), 'bn': (-230+0j)}
+
+# Single-phase connection
+# -----------------------
+rlf.VoltageSource("vs4", bus=bus, phases="an", voltages=230)
+# {'an': (230+0j)}
+
+# Unbalanced source, explicit voltage vector
+# ------------------------------------------
 rlf.VoltageSource(
-    id="vs", bus=bus, phases="abcn", voltages=voltages
-)  # Voltages are considered phase-to-neutral because phases="abcn"
+    "vs5",
+    bus=bus,
+    phases="abcn",
+    voltages=[230, 115 * np.exp(1j * np.pi / 2), 115 * np.exp(-1j * np.pi / 2)],
+)
+# {'an': (230+0j), 'bn': (115j), 'cn': (-115j)}
 
-# Delta connection
-un = 400  # 400V phase-to-phase
-voltages = un * np.exp([0, -2j * np.pi / 3, 2j * np.pi / 3])
+# Incorrect voltage vector: only two elements!!
 rlf.VoltageSource(
-    id="vs", bus=bus, phases="abc", voltages=voltages
-)  # Voltages are considered phase-to-phase because phases="abc"
+    id="vs6", bus=bus, phases="abc", voltages=400 * np.exp([0, -2j * np.pi / 3])
+)  # Error
+```
 
-# Incorrect voltage vector
-un = 400
-voltages = un * np.exp([0, -2j * np.pi / 3])  # Only two elements!!
-rlf.VoltageSource(id="vs", bus=bus, phases="abc", voltages=voltages)  # Error
+A voltage **vector** (list or numpy array) can be used to create an unbalanced voltage source if
+needed. The voltage vector must have the same size as the number of the phase-to-phase or
+phase-to-neutral connections of the source.
+
+```python
+bus = rlf.Bus(id="bus", phases="abcn")
+
+# Unbalanced source, explicit voltage vector
+# ------------------------------------------
+rlf.VoltageSource(
+    "vs1",
+    bus=bus,
+    phases="abcn",
+    voltages=[230, 115 * np.exp(1j * np.pi / 2), 115 * np.exp(-1j * np.pi / 2)],
+)
+# {'an': (230+0j), 'bn': (115j), 'cn': (-115j)}
+
+# Incorrect voltage vector: only two voltage values!!
+rlf.VoltageSource(
+    id="vs2", bus=bus, phases="abc", voltages=400 * np.exp([0, -2j * np.pi / 3])
+)  # Error
 ```
 
 ## API Reference
 
 ```{eval-rst}
-.. autoclass:: roseau.load_flow.models.VoltageSource
+.. autoapiclass:: roseau.load_flow.models.VoltageSource
    :members:
    :show-inheritance:
    :no-index:

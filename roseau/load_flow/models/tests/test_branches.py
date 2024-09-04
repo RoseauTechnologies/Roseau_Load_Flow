@@ -32,7 +32,7 @@ def test_res_branches_potentials():
 
 
 def test_powers_equal(network_with_results):
-    line: Line = network_with_results.branches["line"]
+    line: Line = network_with_results.lines["line"]
     vs = network_with_results.sources["vs"]
     pl = network_with_results.loads["load"]
     powers1, powers2 = line.res_powers

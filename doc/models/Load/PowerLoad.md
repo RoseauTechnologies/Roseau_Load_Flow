@@ -64,14 +64,13 @@ line = rlf.Line(id="line", bus1=bus1, bus2=bus2, parameters=lp, length=rlf.Q_(1,
 
 # A voltage source on the first bus
 un = 400 / np.sqrt(3)
-voltages = rlf.Q_(un * np.exp([0, -2j * np.pi / 3, 2j * np.pi / 3]), "V")
-vs = rlf.VoltageSource(id="source", bus=bus1, voltages=voltages)
+vs = rlf.VoltageSource(id="source", bus=bus1, voltages=rlf.Q_(un, "V"))
 
-# The neutral of the voltage source is fixed at potential 0
-pref = rlf.PotentialRef(id="pref", element=bus1, phase="n")
+# The potential of the neutral of bus1 is fixed at 0V
+pref = rlf.PotentialRef(id="pref", element=bus1)
 
-# A power load on the second bus
-load = rlf.PowerLoad(id="load", bus=bus2, powers=rlf.Q_((1000 - 300j) * np.ones(3), "VA"))
+# A balanced constant-power load on the second bus
+load = rlf.PowerLoad(id="load", bus=bus2, powers=rlf.Q_((1000 - 300j), "VA"))
 
 # Create a network and solve a load flow
 en = rlf.ElectricalNetwork.from_element(bus1)
@@ -97,11 +96,11 @@ en.res_buses_voltages.transform([np.abs, ft.partial(np.angle, deg=True)])
 # | ('bus2', 'bn') |                   229.414 |         -120.114       |
 # | ('bus2', 'cn') |                   229.414 |          119.886       |
 
-# Modify the load value to create an unbalanced load
+# Create an unbalanced load with three different power values
 load.powers = rlf.Q_(np.array([5.0, 2.5, 0]) * (1 - 0.3j), "kVA")
 en.solve_load_flow()
 
-# Get the powers of the loads in the network
+# Get the powers of the loads in the network, the neutral power is no longer zero
 en.res_loads["power"]
 # |               |                  power |
 # |:--------------|-----------------------:|
@@ -110,7 +109,7 @@ en.res_loads["power"]
 # | ('load', 'c') |    0                   |
 # | ('load', 'n') | -148.93 + 3.78664e-14j |
 
-# Get the voltages of the network
+# Get the voltages of the network, bus2 voltages are no longer equal
 en.res_buses_voltages.transform([np.abs, ft.partial(np.angle, deg=True)])
 # |                |   ('voltage', 'absolute') |   ('voltage', 'angle') |
 # |:---------------|--------------------------:|-----------------------:|

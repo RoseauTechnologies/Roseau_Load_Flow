@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "roseau-load-flow"
-version = "0.9.1"
+version = "0.10.0"
 description = "Highly capable three-phase load flow solver"
 authors = [
     "Ali Hamdan <ali.hamdan@roseautechnologies.com>",
@@ -29,13 +29,12 @@ classifiers = [
     "Development Status :: 3 - Alpha",
     # "License :: OSI Approved :: The 3-Clause BSD License (BSD-3-Clause)", # https://github.com/pypa/trove-classifiers/issues/70
     "Operating System :: MacOS :: MacOS X",
-    # I [BV] have met some difficulties generating usable wheels for Windows... If you need it, please post an issue
-    # on GitHub
     "Operating System :: Microsoft :: Windows",
     "Operating System :: POSIX :: Linux",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Scientific/Engineering :: Physics",
 ]
 
@@ -55,7 +54,7 @@ typing-extensions = ">=4.6.2"
 pyproj = ">=3.3.0"
 certifi = ">=2023.5.7"
 platformdirs = ">=4.0.0"
-roseau-load-flow-engine = "==0.14.1"
+roseau-load-flow-engine = "==0.15.0"
 
 # Optional dependencies
 matplotlib = { version = ">=3.7.2", optional = true }
@@ -71,15 +70,16 @@ pytest = "^8.0.0"
 pytest-cov = "^5.0.0"
 pytest-xdist = "^3.1.0"
 coverage = { version = "^7.0.5", extras = ["toml"] }
+coverage-conditional-plugin = ">=0.9.0"
 matplotlib = ">=3.7.2"
 networkx = ">=3.0.0"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^3.0.0"
-ruff = ">=0.5.0"
+ruff = ">=0.6.0"
 
 [tool.poetry.group.doc.dependencies]
-sphinx = "^7.0.1"
+sphinx = "^8.0.2"
 myst-parser = ">=0.16.1"
 sphinx-math-dollar = "^1.2.1"
 sphinx-autoapi = "^3.0.0"
@@ -95,7 +95,6 @@ sphinxext-opengraph = ">=0.9.1"
 line-length = 120
 target-version = "py310"
 show-fixes = true
-extend-include = ["*.ipynb"]
 namespace-packages = ["roseau"]
 
 [tool.ruff.lint]
@@ -115,6 +114,11 @@ docstring-code-format = true
 [tool.coverage.run]
 branch = true
 omit = ["roseau/load_flow/__about__.py"]
+plugins = ["coverage_conditional_plugin"]
+
+[tool.coverage.coverage_conditional_plugin.rules]
+no-cover-if-py-gte-311 = "sys_version_info >= (3, 11)"
+no-cover-if-py-lt-311 = "sys_version_info < (3, 11)"
 
 [tool.coverage.paths]
 source = ["roseau/load_flow/"]
@@ -125,7 +129,7 @@ skip_covered = true
 # Regexes for lines to exclude from consideration
 exclude_lines = [
     # Have to re-enable the standard pragma
-    "pragma: no cover",
+    "pragma: no-cover",
     # Don't complain about missing debug-only code:
     "def __repr__",
     "if self.debug",
@@ -139,7 +143,7 @@ exclude_lines = [
     "if TYPE_CHECKING:",
 ]
 ignore_errors = true
-fail_under = 90
+fail_under = 93
 
 [tool.coverage.html]
 directory = "htmlcov"
@@ -149,3 +153,4 @@ directory = "htmlcov"
 addopts = "--color=yes -n=0 --import-mode=importlib"
 testpaths = ["roseau/load_flow/"]
 filterwarnings = []
+markers = ["no_patch_engine"]

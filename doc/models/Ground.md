@@ -65,8 +65,7 @@ bus3 = rlf.Bus(id="bus3", phases="abc")
 
 # Define a voltage source on the first bus
 un = 400
-voltages = rlf.Q_(un * np.exp([0, -2j * np.pi / 3, 2j * np.pi / 3]), "V")
-vs = rlf.VoltageSource(id="source", bus=bus1, voltages=voltages)
+vs = rlf.VoltageSource(id="source", bus=bus1, voltages=rlf.Q_(un, "V"))
 
 # Define the impedance and admittance parameters of the lines (can be reused)
 parameters = rlf.LineParameters(
@@ -153,7 +152,7 @@ en.res_buses_voltages.transform([np.abs, ft.partial(np.angle, deg=True)])
 ## API Reference
 
 ```{eval-rst}
-.. autoclass:: roseau.load_flow.models.Ground
+.. autoapiclass:: roseau.load_flow.models.Ground
    :members:
    :show-inheritance:
    :no-index:

@@ -67,13 +67,12 @@ line = rlf.Line(id="line", bus1=bus1, bus2=bus2, parameters=lp, length=rlf.Q_(1,
 
 # A voltage source on the first bus
 un = 400 / np.sqrt(3)
-voltages = rlf.Q_(un * np.exp([0, -2j * np.pi / 3, 2j * np.pi / 3]), "V")
-vs = rlf.VoltageSource(id="source", bus=bus1, voltages=voltages)
+vs = rlf.VoltageSource(id="source", bus=bus1, voltages=rlf.Q_(un, "V"))
 
-# The neutral of the voltage source is fixed at potential 0
-pref = rlf.PotentialRef(id="pref", element=bus1, phase="n")
+# The potential of the neutral of bus1 is fixed at 0V
+pref = rlf.PotentialRef(id="pref", element=bus1)
 
-# A power load on the second bus
+# An unbalanced constant-power load on the second bus
 load = rlf.PowerLoad(
     id="load", bus=bus2, powers=rlf.Q_(np.array([5.0, 2.5, 0]) * (1 - 0.3j), "kVA")
 )
@@ -104,7 +103,7 @@ en = rlf.ElectricalNetwork.from_element(bus1)
 en.solve_load_flow()
 
 # The current flowing into the line from bus1
-en.res_branches[["current1"]].transform([np.abs, ft.partial(np.angle, deg=True)])
+en.res_lines[["current1"]].transform([np.abs, ft.partial(np.angle, deg=True)])
 # |               |   ('current1', 'absolute') |   ('current1', 'angle') |
 # |:--------------|---------------------------:|------------------------:|
 # | ('line', 'a') |                    24.1958 |                 16.4456 |
@@ -113,7 +112,7 @@ en.res_branches[["current1"]].transform([np.abs, ft.partial(np.angle, deg=True)]
 # | ('line', 'n') |                    20.628  |                168.476  |
 
 # The current flowing into the line from bus2
-en.res_branches[["current2"]].transform([np.abs, ft.partial(np.angle, deg=True)])
+en.res_lines[["current2"]].transform([np.abs, ft.partial(np.angle, deg=True)])
 # |               |   ('current2', 'absolute') |   ('current2', 'angle') |
 # |:--------------|---------------------------:|------------------------:|
 # | ('line', 'a') |                    24.1958 |               -163.554  |

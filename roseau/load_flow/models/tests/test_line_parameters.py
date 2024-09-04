@@ -42,7 +42,7 @@ def test_line_parameters():
     y_shunt = 2 * np.eye(3, dtype=complex)
     y_shunt[1, 1] = -3
     with pytest.raises(RoseauLoadFlowException):
-        LineParameters("test", z_line=z_line, y_shunt=y_shunt)
+        LineParameters(id="test", z_line=z_line, y_shunt=y_shunt)
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_Z_LINE_VALUE
     assert e.value.msg == "The z_line matrix of line type 'test' has coefficients with negative real part."
 
@@ -50,16 +50,16 @@ def test_line_parameters():
     z_line = np.eye(4, dtype=complex)[:, :2]
     y_shunt = np.eye(4, dtype=complex)
     with pytest.raises(RoseauLoadFlowException) as e:
-        LineParameters("test", z_line=z_line, y_shunt=y_shunt)
+        LineParameters(id="test", z_line=z_line, y_shunt=y_shunt)
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_Z_LINE_SHAPE
     assert e.value.msg == "The z_line matrix of line type 'test' has incorrect dimensions (4, 2)."
 
     # Bad shape (LV - Y)
     z_line = np.eye(4, dtype=complex)
     y_shunt = np.eye(3, dtype=complex)
-    lp = LineParameters("test", z_line=z_line, y_shunt=y_shunt)
+    lp = LineParameters(id="test", z_line=z_line, y_shunt=y_shunt)
     with pytest.raises(RoseauLoadFlowException) as e:
-        Line("line1", bus1, bus2, phases="abcn", ground=ground, parameters=lp, length=2.4)
+        Line(id="line1", bus1=bus1, bus2=bus2, phases="abcn", ground=ground, parameters=lp, length=2.4)
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_Y_SHUNT_SHAPE
     assert e.value.msg == "Incorrect y_shunt dimensions for line 'line1': (3, 3) instead of (4, 4)"
 
@@ -74,9 +74,9 @@ def test_line_parameters():
     # Bad shape (MV - Y)
     z_line = np.eye(3, dtype=complex)
     y_shunt = np.eye(6, dtype=complex)
-    lp = LineParameters("test", z_line=z_line, y_shunt=y_shunt)
+    lp = LineParameters(id="test", z_line=z_line, y_shunt=y_shunt)
     with pytest.raises(RoseauLoadFlowException) as e:
-        Line("line2", bus1, bus2, phases="abc", ground=ground, parameters=lp, length=2.4)
+        Line(id="line2", bus1=bus1, bus2=bus2, phases="abc", ground=ground, parameters=lp, length=2.4)
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_Y_SHUNT_SHAPE
     assert e.value.msg == "Incorrect y_shunt dimensions for line 'line2': (6, 6) instead of (3, 3)"
 
@@ -85,16 +85,16 @@ def test_line_parameters():
     y_shunt = np.eye(3, dtype=complex)
     lp = LineParameters("test", z_line=z_line, y_shunt=y_shunt)
     with pytest.raises(RoseauLoadFlowException) as e:
-        Line("line3", bus1, bus2, phases="abcn", ground=ground, parameters=lp, length=2.4)
+        Line(id="line3", bus1=bus1, bus2=bus2, phases="abcn", ground=ground, parameters=lp, length=2.4)
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_Z_LINE_SHAPE
     assert e.value.msg == "Incorrect z_line dimensions for line 'line3': (3, 3) instead of (4, 4)"
 
     # Adding/Removing a shunt to a line is not allowed
     mat = np.eye(3, dtype=complex)
-    lp1 = LineParameters("lp1", z_line=mat.copy(), y_shunt=mat.copy())
-    lp2 = LineParameters("lp2", z_line=mat.copy())
-    bus1 = Bus("bus1", phases="abc")
-    bus2 = Bus("bus2", phases="abc")
+    lp1 = LineParameters(id="lp1", z_line=mat.copy(), y_shunt=mat.copy())
+    lp2 = LineParameters(id="lp2", z_line=mat.copy())
+    bus1 = Bus(id="bus1", phases="abc")
+    bus2 = Bus(id="bus2", phases="abc")
     ground = Ground("ground")
     line1 = Line(id="line1", bus1=bus1, bus2=bus2, parameters=lp1, length=1.0, ground=ground)
     line2 = Line(id="line2", bus1=bus1, bus2=bus2, parameters=lp2, length=1.0, ground=None)
@@ -108,7 +108,7 @@ def test_line_parameters():
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_LINE_MODEL
 
 
-def test_geometry():
+def test_from_geometry():
     # line_data = {"dpp": 0, "dpn": 0, "dsh": 0.04}
 
     # Working example
@@ -178,12 +178,12 @@ def test_geometry():
 
     # line_data = {"dpp": 0, "dpn": 0, "dsh": 0.04}
 
-    # Working example
+    # Working example (also with string types)
     z_line, y_shunt, line_type, conductor_type, insulator_type, section = LineParameters._from_geometry(
-        "test",
-        line_type=LineType.UNDERGROUND,
-        conductor_type=ConductorType.AL,
-        insulator_type=InsulatorType.PVC,
+        id="test",
+        line_type="UNDERGROUND",
+        conductor_type="AL",
+        insulator_type="PVC",
         section=150,
         section_neutral=70,
         height=-1.5,
@@ -236,10 +236,47 @@ def test_geometry():
 
     npt.assert_allclose(y_shunt, y_shunt_expected, rtol=0.3)
 
+    assert isinstance(line_type, LineType)
     assert line_type == LineType.UNDERGROUND
+    assert isinstance(conductor_type, ConductorType)
     assert conductor_type == ConductorType.AL
+    assert isinstance(insulator_type, InsulatorType)
     assert insulator_type == InsulatorType.PVC
     assert section == 150
+
+    # Test unknown insulator type
+    lp = LineParameters.from_geometry(
+        id="test",
+        line_type=LineType.OVERHEAD,
+        conductor_type="CU",
+        insulator_type=None,
+        section=50,
+        height=10,
+        external_diameter=0.04,
+    )
+    assert lp.insulator_type == InsulatorType.UNKNOWN
+    np.testing.assert_allclose(lp.y_shunt.m.real, 0.0)
+    lp = LineParameters.from_geometry(
+        id="test",
+        line_type="underground",
+        conductor_type=ConductorType.CU,
+        insulator_type=InsulatorType.UNKNOWN,
+        section=50,
+        height=-0.5,
+        external_diameter=0.04,
+    )
+    np.testing.assert_allclose(
+        lp.y_shunt.m.imag * 4,  # because InsulatorType.IP has 4x epsilon_r
+        LineParameters.from_geometry(
+            id="test",
+            line_type=lp.line_type,
+            conductor_type=lp.conductor_type,
+            insulator_type=InsulatorType.IP,  # 4x epsilon_r of InsulatorType.UNKNOWN
+            section=lp.section,
+            height=-0.5,
+            external_diameter=0.04,
+        ).y_shunt.m.imag,
+    )
 
 
 def test_sym():
@@ -247,7 +284,7 @@ def test_sym():
     # line_data = {"id": "NKBA NOR  25.00 kV", "un": 25000.0, "in": 277.0000100135803}
 
     z_line, y_shunt = LineParameters._sym_to_zy(
-        "NKBA NOR  25.00 kV", z0=0.0j, z1=1.0 + 1.0j, zn=0.0j, zpn=0.0j, y0=0.0j, y1=1e-06j, bn=0.0, bpn=0.0
+        id="NKBA NOR  25.00 kV", z0=0.0j, z1=1.0 + 1.0j, zn=0.0j, zpn=0.0j, y0=0.0j, y1=1e-06j, bn=0.0, bpn=0.0
     )
     z_line_expected = (1 + 1j) * np.eye(3)
     npt.assert_allclose(z_line, z_line_expected)
@@ -257,7 +294,7 @@ def test_sym():
     # line_data = {"id": "NKBA 4x150   1.00 kV", "un": 1000.0, "in": 361.0000014305115}
     # Downgraded model because of PwF bad data
     z_line, y_shunt = LineParameters._sym_to_zy(
-        "NKBA 4x150   1.00 kV",
+        id="NKBA 4x150   1.00 kV",
         z0=0.5 + 0.3050000071525574j,
         z1=0.125 + 0.0860000029206276j,
         zn=0.0j,
@@ -283,7 +320,7 @@ def test_sym():
     # line_data = {"id": "sym_neutral_underground_line_example", "un": 400.0, "in": 150}
 
     z_line, y_shunt = LineParameters._sym_to_zy(
-        "sym_neutral_underground_line_example",
+        id="sym_neutral_underground_line_example",
         z0=0.188 + 0.8224j,
         z1=0.188 + 0.0812j,
         zn=0.4029 + 0.3522j,
@@ -316,7 +353,7 @@ def test_sym():
     # line_data = {"id": "sym_line_example", "un": 20000.0, "in": 309}
 
     z_line, y_shunt = LineParameters._sym_to_zy(
-        "sym_line_example", z0=0.2 + 0.1j, z1=0.2 + 0.1j, zn=0.4029, y0=0.00014106j, y1=0.00014106j
+        id="sym_line_example", z0=0.2 + 0.1j, z1=0.2 + 0.1j, zn=0.4029, y0=0.00014106j, y1=0.00014106j
     )
     z_line_expected = (0.2 + 0.1j) * np.eye(3)
     npt.assert_allclose(z_line, z_line_expected)
@@ -324,31 +361,58 @@ def test_sym():
     npt.assert_allclose(y_shunt, y_shunt_expected)
 
 
-def test_from_name_lv():
-    with pytest.raises(RoseauLoadFlowException) as e, pytest.warns(FutureWarning):
-        LineParameters.from_name_lv("totoU_Al_150")
-    assert "The line type name does not follow the syntax rule." in e.value.msg
-    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_TYPE_NAME_SYNTAX
-
-    with pytest.warns(FutureWarning):
-        lp = LineParameters.from_name_lv("U_AL_150")
-    assert lp.z_line.shape == (4, 4)
-    assert lp.y_shunt.shape == (4, 4)
-    assert (lp.z_line.real >= 0).all().all()
-
-
 def test_from_name_mv():
-    with pytest.raises(RoseauLoadFlowException) as e:  # , pytest.warns(FutureWarning):
-        LineParameters.from_name_mv("totoU_Al_150")
-    assert "The line type name does not follow the syntax rule." in e.value.msg
-    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_TYPE_NAME_SYNTAX
-
-    lp = LineParameters.from_name_mv("U_AL_150")
+    warning_msg = (
+        r"The method LineParameters.from_name_mv\(\) is deprecated and will be removed in a future "
+        r"version\. Use LineParameters\.from_coiffier\(\) instead\."
+    )
+    with pytest.warns(FutureWarning, match=warning_msg):
+        lp = LineParameters.from_name_mv("U_AL_150", max_current=100000)
     z_line_expected = (0.1767 + 0.1j) * np.eye(3)
     y_shunt_expected = 0.00014106j * np.eye(3)
 
-    npt.assert_allclose(lp.z_line.m_as("ohm/km"), z_line_expected, rtol=0.01, atol=0.01)
-    npt.assert_allclose(lp.y_shunt.m_as("S/km"), y_shunt_expected, rtol=0.01, atol=0.01)
+    npt.assert_allclose(lp.z_line.m_as("ohm/km"), z_line_expected, rtol=0.01, atol=0.01, strict=True)
+    npt.assert_allclose(lp.y_shunt.m_as("S/km"), y_shunt_expected, rtol=0.01, atol=0.01, strict=True)
+    npt.assert_allclose(lp.max_current.m_as("A"), 100000, strict=True)
+
+
+def test_from_coiffier_model():
+    # Invalid names
+    with pytest.raises(RoseauLoadFlowException) as e:
+        LineParameters.from_coiffier_model("totoU_Al_150")
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_TYPE_NAME_SYNTAX
+    assert e.value.msg == (
+        "The Coiffier line parameter name 'totoU_Al_150' is not valid, expected format is "
+        "'LineType_ConductorType_CrossSection'."
+    )
+    with pytest.raises(RoseauLoadFlowException) as e:
+        LineParameters.from_coiffier_model("U_AL_IP_150")
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_TYPE_NAME_SYNTAX
+    assert e.value.msg == (
+        "The Coiffier line parameter name 'U_AL_IP_150' is not valid, expected format is "
+        "'LineType_ConductorType_CrossSection'."
+    )
+
+    # Working example with defaults
+    lp = LineParameters.from_coiffier_model("U_AL_150")
+    z_line_expected = (0.1767 + 0.1j) * np.eye(3)
+    y_shunt_expected = 0.00014106j * np.eye(3)
+    assert lp.id == "U_AL_150"
+    assert lp.line_type == LineType.UNDERGROUND
+    assert lp.conductor_type == ConductorType.AL
+    assert lp.section.m == 150
+    npt.assert_allclose(lp.z_line.m_as("ohm/km"), z_line_expected, rtol=0.01, atol=0.01, strict=True)
+    npt.assert_allclose(lp.y_shunt.m_as("S/km"), y_shunt_expected, rtol=0.01, atol=0.01, strict=True)
+    npt.assert_allclose(lp.max_current.m_as("A"), 368.689292, strict=True)
+
+    # Working example with custom arguments
+    lp2 = LineParameters.from_coiffier_model("O_CU_54", nb_phases=2, id="lp2")
+    assert lp2.id == "lp2"
+    assert lp2.line_type == LineType.OVERHEAD
+    assert lp2.conductor_type == ConductorType.CU
+    assert lp2.section.m == 54
+    assert lp2.z_line.m.shape == (2, 2)
+    assert lp2.y_shunt.m.shape == (2, 2)
 
 
 def test_catalogue_data():
@@ -362,7 +426,7 @@ def test_catalogue_data():
     assert catalogue_data["name"].is_unique, "Regenerate catalogue."
 
     for row in catalogue_data.itertuples():
-        assert re.match(r"^(?:U|O|T)_[A-Z]+_\d+(?:_\w+)?$", row.name)
+        assert re.match(r"^[UOT]_[A-Z]+_\d+(?:_\w+)?$", row.name)
         assert isinstance(row.r, float)
         assert isinstance(row.x, float)
         assert isinstance(row.b, float)
@@ -484,10 +548,10 @@ def test_get_catalogue():
 
 
 def test_max_current():
-    lp = LineParameters("test", z_line=np.eye(3))
+    lp = LineParameters(id="test", z_line=np.eye(3))
     assert lp.max_current is None
 
-    lp = LineParameters("test", z_line=np.eye(3), max_current=100)
+    lp = LineParameters(id="test", z_line=np.eye(3), max_current=100)
     assert lp.max_current == Q_(100, "A")
 
     lp.max_current = 200
@@ -501,7 +565,7 @@ def test_max_current():
 
 
 def test_json_serialization(tmp_path):
-    lp = LineParameters("test", z_line=np.eye(3), max_current=np.int64(100), section=np.float64(150))
+    lp = LineParameters(id="test", z_line=np.eye(3), max_current=np.int64(100), section=np.float64(150))
     path = tmp_path / "lp.json"
     lp.to_json(path)
     lp_dict = LineParameters.from_json(path).to_dict()
@@ -631,3 +695,24 @@ def test_from_power_factory():
     lp = LineParameters.from_power_factory(**new_pwf_params)
     assert lp.line_type == LineType.OVERHEAD
     assert lp.insulator_type == InsulatorType.XLPE
+
+
+def test_results_to_dict():
+    # No results to export
+    lp = LineParameters.from_catalogue(name="U_AL_150", nb_phases=3)
+    with pytest.raises(RoseauLoadFlowException) as e:
+        lp.results_to_dict()
+    assert e.value.msg == "The LineParameters has no results to export."
+    assert e.value.code == RoseauLoadFlowExceptionCode.JSON_NO_RESULTS
+
+
+def test_equality():
+    # Optional information are not used for the comparison
+    lp = LineParameters.from_catalogue(name="U_AL_150", nb_phases=3)
+    for x in ("max_current", "line_type", "conductor_type", "insulator_type", "section"):
+        assert getattr(lp, x) is not None
+    lp2 = LineParameters(id=lp.id, z_line=lp.z_line, y_shunt=lp.y_shunt)
+    assert lp2 == lp
+
+    # Test the case which returns NotImplemented in the equality operator
+    assert lp != object()

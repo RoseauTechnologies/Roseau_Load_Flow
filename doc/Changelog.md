@@ -17,6 +17,76 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 # Changelog
 
+## Version 0.10.0
+
+- A wheel for Python 3.13 is also available.
+- The wheels for Windows are now available. The problem was the same as the one of the
+  [issue 28551](https://github.com/matplotlib/matplotlib/issues/28551) of the Matplotlib repository.
+- {gh-pr}`237` Improvements of the Sphinx configuration.
+- {gh-pr}`262` Raise a proper error when a transformer is defined with null impedance.
+- {gh-pr}`259` The cache of the license object was not reset after the activation of a new license key.
+- {gh-pr}`258` {gh-pr}`261` {gh-pr}`263` Add basic plotting functionality in the new `roseau.load_flow.plotting`
+  module. The `plot_interactive_map` function plots an electrical network on an interactive map using
+  the folium library and the `plot_voltage_phasors` function plots the voltage phasors of a bus, load
+  or source in the complex plane. The revamped plotting section of the documentation demonstrates the
+  plotting functionalities available in Roseau Load Flow with examples.
+- {gh-pr}`258` The documentation gained a new "advanced" section with a page on floating neutrals
+  and a page on potential references.
+- {gh-pr}`257` {gh-issue}`252` Updates to the `LineParameters` class:
+  - The method `from_name_lv`, deprecated since version 0.6, has been removed. It can be easily
+    replaced by the `from_geometry` method.
+  - The method `from_name_mv` is deprecated. A new method `from_coiffier_model` is added with the
+    same functionality and more flexibility. The new method computes the ampacity of the line based
+    on Coiffier's model and works with different numbers of phases.
+- {gh-pr}`256` {gh-issue}`250`:
+  - Accept scalar values for the `powers`, `currents`, `impedances` parameters of the load classes.
+  - Add `rlf.PositiveSequence`, `rlf.NegativeSequence` and `rlf.ZeroSequence` vectors for easier
+    creation of balanced quantities.
+- {gh-pr}`255` Update the figures of loads and of voltage sources in the documentation to be compliant with the work
+  of {gh-pr}`249`.
+- {gh-pr}`254` {gh-issue}`251` Allow passing multiple phases to potential references. The `phase`
+  attribute of the `PotentialRef` is replaced by `phases`.
+- {gh-pr}`249` {gh-issue}`248` Accept scalar values for the `voltages` parameter of the `VoltageSource` class.
+- {gh-pr}`247` Add `connect_neutral` parameter to the loads and sources constructor to specify if the
+  neutral is to be connected to the bus's neutral or to be left floating. This allows loads connected
+  to the same bus to have different neutral connections. The default behavior remains the same as
+  before where the neutral is connected when the bus has a neutral and floating otherwise.
+- {gh-pr}`246` Improvements to the `rlf.converters` module:
+  - Fix `series_phasor_to_sym` function with series that have different phases per element.
+  - Make `calculate_voltages` take array-like potentials.
+  - Improve typing of several functions.
+- {gh-pr}`245` {gh-issue}`244` Fix the `LineParameters.from_geometry` method to not crash when passed
+  `unknown` insulator type or `None`.
+- Add `res_voltages` to the `VoltageSource` class for symmetry with the other elements.
+  `res_voltages` is always equal to the supplied `voltages` for a voltage source.
+- {gh-pr}`243` Fix cross-sectional area of DGS line types created from line elements and special case
+  invalid PwF line geographical coordinates table.
+- {gh-pr}`240` Add tests for switches imported from DGS and improve warning and error messages.
+- {gh-pr}`235` **BREAKING CHANGE**: The constructor of the class `ElectricalNetwork` has changed:
+  - it accepts keyword arguments only.
+  - it accepts the arguments `lines`, `transformers` and `switches` in replacement of the argument `branches`.
+  - As a consequence,
+    - the results method `res_branches` has been removed. Please use `res_lines`, `res_transformers`
+      and `res_switches` methods instead.
+    - the field `branches` does not exist anymore. Please use the fields `lines`, `transformers` and `switches`.
+- {gh-pr}`235` Move the `Switch` class into its own file `roseau/load_flow/models/switches.py`.
+- {gh-pr}`235` {gh-pr}`239` The JSON file format number is upgraded to the version 2. All the files in version 0 or 1
+  can still be read. Please upgrade them manually using the following code:
+  ```python
+  path = "my_json_file.json"
+  ElectricalNetwork.from_json(path).to_json(path)
+  ```
+- {gh-pr}`235` The method `results_to_dict` now accepts the keyword-only argument `full` which allows the export of all
+  the results of an element.
+- {gh-pr}`235` Solve a bug concerning the accessors to the flexible powers result of flexible power loads. An unwanted
+  error was raised.
+- {gh-pr}`235` Replace the occurrences of the `str.find` method by the `str.index` function.
+- {gh-pr}`235` The method `to_graph` of the class `ElectricalNetwork` now retrieves a graph with additional data store
+  in the edges depending on the edge type: line, transformer or switch.
+- {gh-pr}`242` Add optional data to the `TransformerParameters` class: manufacturer, efficiency and range.
+- {gh-pr}`242` Fixed a bug in the unit of `q_min` and `q_max` in the constructor of `FlexibleParameter`.
+- {gh-pr}`242` Add equality operator for the classes `FlexibleParameter`, `Control` and `Projection`.
+
 ## Version 0.9.1
 
 ```{note}
@@ -135,7 +205,7 @@ Starting with version 0.7.0, Roseau Load Flow is no longer supplied as a SaaS. T
 a standalone Python library.
 ```
 
-- The documentation is moved from GitHub Pages to <https://www.roseau-load-flow.roseautechnologies.com/>.
+- The documentation is moved from GitHub Pages to <https://roseau-load-flow.roseautechnologies.com/>.
 - Fix a bug in the engine: it was impossible to change the parameters of center-tapped and single phase transformers.
 - {gh-pr}`179` Fix a bug in the propagation of potentials when a center-tapped transformer is used without neutral at
   the primary side.

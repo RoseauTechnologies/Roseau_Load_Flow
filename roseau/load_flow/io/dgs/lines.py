@@ -6,7 +6,7 @@ import shapely
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.io.dgs.constants import CONDUCTOR_TYPES, INSULATOR_TYPES, LINE_TYPES
-from roseau.load_flow.models import AbstractBranch, Bus, Ground, Line, LineParameters
+from roseau.load_flow.models import Bus, Ground, Line, LineParameters
 from roseau.load_flow.typing import Id
 
 logger = logging.getLogger(__name__)
@@ -86,7 +86,7 @@ def generate_typ_lne(typ_lne: pd.DataFrame, lines_params: dict[Id, LineParameter
 
 def generate_typ_lne_from_elm_lne(
     elm_lne: pd.DataFrame, line_id: Id, phases: str, lines_params: dict[Id, LineParameters]
-) -> None:
+) -> LineParameters:
     """Generate line parameters for a certain line.
 
     Args:
@@ -96,10 +96,15 @@ def generate_typ_lne_from_elm_lne(
         line_id:
             The ID of the line in the dataframe.
 
+        phases:
+            The phases of the line.
+
         lines_params:
             The dictionary to store the line parameters into.
-    """
 
+    Returns:
+        The generated line parameters.
+    """
     lne_series = elm_lne.loc[line_id]
 
     # Get a unique ID for the line parameters (contains the ID of the line)
@@ -112,8 +117,8 @@ def generate_typ_lne_from_elm_lne(
     # Get the type of the line (overhead, underground)
     line_type = LINE_TYPES.get(lne_series.get("inAir"))
 
-    # Get the cross-sectional area
-    section = lne_series.get("inAir")  # mm²
+    # Get the cross-sectional area (mm²)
+    section = lne_series.get("crosssec") or None  # Sometimes it is zero!! replace by None in this case
 
     # Get the impedance and admittance matrices
     required_fields = ("R0", "X0", "X1", "R1", "G0", "B0", "G1", "B1")
@@ -139,7 +144,7 @@ def generate_typ_lne_from_elm_lne(
 
 def generate_lines(
     elm_lne: pd.DataFrame,
-    branches: dict[Id, AbstractBranch],
+    lines: dict[Id, Line],
     buses: dict[Id, Bus],
     sta_cubic: pd.DataFrame,
     lines_params: dict[Id, LineParameters],
@@ -151,7 +156,7 @@ def generate_lines(
         elm_lne:
             The "ElmLne" dataframe containing the line data.
 
-        branches:
+        lines:
             The dictionary to store the lines into.
 
         buses:
@@ -192,19 +197,30 @@ def generate_lines(
         if has_geometry:
             try:
                 nb_points = int(elm_lne.at[line_id, "GPScoords:SIZEROW"])
-                latitude_columns = [f"GPScoords:{i}:0" for i in range(nb_points)]
-                longitude_columns = [f"GPScoords:{i}:1" for i in range(nb_points)]
-                geometry = shapely.LineString(
-                    shapely.points(
-                        elm_lne.loc[line_id, longitude_columns].values.astype(float),
-                        elm_lne.loc[line_id, latitude_columns].values.astype(float),
+                nb_cols = int(elm_lne.at[line_id, "GPScoords:SIZECOL"])
+                # We need at least 2 points with 2 columns (latitude and longitude)
+                if nb_points == 0 or nb_cols == 0:
+                    pass  # nb_points is 0 -> no GPS points; nb_cols is 0 -> badly initialized GPS data by PwF
+                elif nb_points == 1:
+                    warnings.warn(
+                        f"Failed to read geometry data for line {line_id!r}: it has a single GPS point.",
+                        stacklevel=4,
                     )
-                )
+                else:
+                    assert nb_cols == 2, f"Expected 2 GPS columns (Latitude/Longitude), got {nb_cols}."
+                    lat_cols = [f"GPScoords:{i}:0" for i in range(nb_points)]
+                    lon_cols = [f"GPScoords:{i}:1" for i in range(nb_points)]
+                    geometry = shapely.LineString(
+                        shapely.points(
+                            elm_lne.loc[line_id, lon_cols].values.astype(float),
+                            elm_lne.loc[line_id, lat_cols].values.astype(float),
+                        )
+                    )
             except Exception as e:
                 warnings.warn(
                     f"Failed to read geometry data for line {line_id!r}: {type(e).__name__}: {e}", stacklevel=4
                 )
-        branches[line_id] = Line(
+        lines[line_id] = Line(
             id=line_id,
             bus1=bus1,
             bus2=bus2,

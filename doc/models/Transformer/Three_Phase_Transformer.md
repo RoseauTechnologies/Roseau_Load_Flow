@@ -618,11 +618,10 @@ bus_lv = rlf.Bus(id="bus_lv", phases="abcn")
 
 # Set the potential references of the MV and LV networks
 pref_mv = rlf.PotentialRef(id="pref_mv", element=bus_mv)
-pref_lv = rlf.PotentialRef(id="pref_lv", element=bus_lv, phase="n")
+pref_lv = rlf.PotentialRef(id="pref_lv", element=bus_lv)
 
 # Create a voltage source and connect it to the MV bus
-voltages = 20e3 * np.exp([0, -2j * np.pi / 3, 2j * np.pi / 3])
-vs = rlf.VoltageSource(id="vs", bus=bus_mv, voltages=voltages)
+vs = rlf.VoltageSource(id="vs", bus=bus_mv, voltages=20e3)
 
 # Create a MV/LV transformer
 tp = rlf.TransformerParameters.from_open_and_short_circuit_tests(
@@ -646,15 +645,17 @@ transformer = rlf.Transformer(
     tap=1.025,
 )
 
-# Create a LV load
-load = rlf.PowerLoad(id="load", bus=bus_lv, phases="abcn", powers=[3e3, 3e3, 3e3])
+# Create a balanced constant-power 9kW LV load (3kW per phase)
+load = rlf.PowerLoad(id="load", bus=bus_lv, phases="abcn", powers=3e3)
 
 # Create the network and solve the load flow
 en = rlf.ElectricalNetwork.from_element(bus_mv)
 en.solve_load_flow()
 
 # The current flowing into the transformer from the MV bus
-en.res_branches[["current1"]].dropna().transform([np.abs, ft.partial(np.angle, deg=True)])
+en.res_transformers[["current1"]].dropna().transform(
+    [np.abs, ft.partial(np.angle, deg=True)]
+)
 # |                  |   ('current1', 'absolute') |   ('current1', 'angle') |
 # |:-----------------|---------------------------:|------------------------:|
 # | ('transfo', 'a') |                   0.275904 |                -38.8165 |
@@ -662,7 +663,7 @@ en.res_branches[["current1"]].dropna().transform([np.abs, ft.partial(np.angle, d
 # | ('transfo', 'c') |                   0.275904 |                 81.1835 |
 
 # The current flowing into the transformer from the LV bus
-en.res_branches[["current2"]].transform([np.abs, ft.partial(np.angle, deg=True)])
+en.res_transformers[["current2"]].transform([np.abs, ft.partial(np.angle, deg=True)])
 # |                  |   ('current2', 'absolute') |   ('current2', 'angle') |
 # |:-----------------|---------------------------:|------------------------:|
 # | ('transfo', 'a') |               12.6872      |                179.813  |

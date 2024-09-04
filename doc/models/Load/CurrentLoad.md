@@ -60,18 +60,13 @@ line = rlf.Line(id="line", bus1=bus1, bus2=bus2, parameters=lp, length=rlf.Q_(1,
 
 # A voltage source on the first bus
 un = 400 / np.sqrt(3)
-voltages = rlf.Q_(un * np.exp([0, -2j * np.pi / 3, 2j * np.pi / 3]), "V")
-vs = rlf.VoltageSource(id="source", bus=bus1, voltages=voltages)
+vs = rlf.VoltageSource(id="source", bus=bus1, voltages=rlf.Q_(un, "V"))
 
-# The neutral of the voltage source is fixed at potential 0
-pref = rlf.PotentialRef(id="pref", element=bus1, phase="n")
+# The potential of the neutral of bus1 is fixed at 0V
+pref = rlf.PotentialRef(id="pref", element=bus1)
 
-# A current load on the second bus
-load = rlf.CurrentLoad(
-    id="load",
-    bus=bus2,
-    currents=rlf.Q_(5 * np.exp([0, -2j * np.pi / 3, 2j * np.pi / 3]), "A"),
-)
+# A balanced constant-current load on the second bus: 5A per phase
+load = rlf.CurrentLoad(id="load", bus=bus2, currents=rlf.Q_(5, "A"))
 
 # Create a network and solve a load flow
 en = rlf.ElectricalNetwork.from_element(bus1)
@@ -97,10 +92,9 @@ en.res_buses_voltages.transform([np.abs, ft.partial(np.angle, deg=True)])
 # | ('bus2', 'bn') |                    229.19 |                   -120 |
 # | ('bus2', 'cn') |                    229.19 |                    120 |
 
-# Modify the load value to create an unbalanced load
-load.currents = rlf.Q_(
-    np.array([5.0, 2.5, 0]) * np.exp([0, -2j * np.pi / 3, 2j * np.pi / 3]), "A"
-)
+# Create an unbalanced load with three different current values
+load.currents = rlf.Q_(np.array([5.0, 2.5, 0]) * rlf.PositiveSequence, "A")
+
 en.solve_load_flow()
 
 # Get the currents of the loads of the network

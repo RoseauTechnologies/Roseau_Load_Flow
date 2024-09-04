@@ -9,10 +9,7 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-__all__ = [
-    "pyplot",
-    "networkx",
-]
+__all__ = ["pyplot", "networkx"]
 
 
 def __getattr__(name: str) -> Any:

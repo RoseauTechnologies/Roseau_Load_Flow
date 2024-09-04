@@ -135,8 +135,9 @@ class Bus(Element):
         """The load flow result of the bus potentials (V)."""
         return self._res_potentials_getter(warning=True)
 
-    def _res_voltages_getter(self, warning: bool) -> ComplexArray:
-        potentials = np.array(self._res_potentials_getter(warning=warning))
+    def _res_voltages_getter(self, warning: bool, potentials: ComplexArray | None = None) -> ComplexArray:
+        if potentials is None:
+            potentials = np.array(self._res_potentials_getter(warning=warning))
         return _calculate_voltages(potentials, self.phases)
 
     @property
@@ -232,7 +233,8 @@ class Bus(Element):
                 limits different from this bus. If ``True``, the limits are propagated even if
                 connected buses have different limits.
         """
-        from roseau.load_flow.models.lines import Line, Switch
+        from roseau.load_flow.models.lines import Line
+        from roseau.load_flow.models.switches import Switch
 
         buses: set[Bus] = set()
         visited: set[Element] = set()
@@ -283,7 +285,8 @@ class Bus(Element):
 
         These are all the buses connected via one or more lines or switches to this bus.
         """
-        from roseau.load_flow.models.lines import Line, Switch
+        from roseau.load_flow.models.lines import Line
+        from roseau.load_flow.models.switches import Switch
 
         visited_buses = {self.id}
         yield self.id
@@ -310,16 +313,16 @@ class Bus(Element):
 
         Voltage Unbalance Factor:
 
-        :math:`VUF = \\frac{|V_n|}{|V_p|} * 100 (\\%)`
+        :math:`VUF = \\dfrac{|V_{\\mathrm{n}}|}{|V_{\\mathrm{p}}|} \times 100 (\\%)`
 
-        Where :math:`V_n` is the negative-sequence voltage and :math:`V_p` is the positive-sequence
-        voltage.
+        Where :math:`V_{\\mathrm{n}}` is the negative-sequence voltage and :math:`V_{\\mathrm{p}}` is the
+        positive-sequence voltage.
         """
         # https://std.iec.ch/terms/terms.nsf/3385f156e728849bc1256e8c00278ad2/771c5188e62fade5c125793a0043f2a5?OpenDocument
         if self.phases not in {"abc", "abcn"}:
             msg = f"Voltage unbalance is only available for 3-phases buses, bus {self.id!r} has phases {self.phases!r}"
             logger.error(msg)
-            raise RoseauLoadFlowException(msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
         # We use the potentials here which is equivalent to using the "line to neutral" voltages as
         # defined by the standard. The standard also has this note:
         # NOTE 1 Phase-to-phase voltages may also be used instead of line to neutral voltages.
@@ -366,12 +369,18 @@ class Bus(Element):
             res["results"] = {"potentials": [[v.real, v.imag] for v in potentials]}
         return res
 
-    def _results_to_dict(self, warning: bool) -> JsonDict:
-        return {
+    def _results_to_dict(self, warning: bool, full: bool) -> JsonDict:
+        potentials = np.array(self._res_potentials_getter(warning))
+        res = {
             "id": self.id,
             "phases": self.phases,
-            "potentials": [[v.real, v.imag] for v in self._res_potentials_getter(warning)],
+            "potentials": [[v.real, v.imag] for v in potentials],
         }
+        if full:
+            res["voltages"] = [
+                [v.real, v.imag] for v in self._res_voltages_getter(warning=False, potentials=potentials)
+            ]
+        return res
 
     def add_short_circuit(self, *phases: str, ground: "Ground | None" = None) -> None:
         """Add a short-circuit by connecting multiple phases together optionally with a ground.
@@ -418,7 +427,7 @@ class Bus(Element):
         if self.network is not None:
             self.network._valid = False
 
-        phases_index = np.array([self.phases.find(p) for p in phases], dtype=np.int32)
+        phases_index = np.array([self.phases.index(p) for p in phases], dtype=np.int32)
         self._cy_element.connect_ports(phases_index, len(phases))
 
         if ground is not None:

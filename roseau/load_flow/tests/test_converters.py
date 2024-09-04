@@ -4,7 +4,7 @@ from pandas.testing import assert_series_equal
 
 from roseau.load_flow.converters import calculate_voltages, phasor_to_sym, series_phasor_to_sym, sym_to_phasor
 from roseau.load_flow.units import Q_, ureg
-from roseau.load_flow.utils import PhaseDtype
+from roseau.load_flow.utils import SequenceDtype
 
 
 def test_phasor_to_sym():
@@ -82,21 +82,36 @@ def test_phasor_sym_roundtrip():
 
 def test_series_phasor_to_sym():
     va = 230 + 0j
-    vb = 230 * np.e ** (1j * 4 * np.pi / 3)
-    vc = 230 * np.e ** (1j * 2 * np.pi / 3)
+    vb = 230 * np.exp(1j * 4 * np.pi / 3)
+    vc = 230 * np.exp(1j * 2 * np.pi / 3)
 
-    index = pd.MultiIndex.from_tuples(
-        [("bus1", "a"), ("bus1", "b"), ("bus1", "c"), ("bus2", "a"), ("bus2", "b"), ("bus2", "c")],
-        names=["bus_id", "phase"],
+    # Test with different phases per bus, different systems, different magnitudes
+    # fmt: off
+    voltage_data = {
+        # Direct system (positive sequence)
+        ("bus1", "a"): va, ("bus1", "b"): vb, ("bus1", "c"): vc,
+        # Indirect system (negative sequence)
+        ("bus2", "an"): va / 2, ("bus2", "bn"): vc / 2, ("bus2", "cn"): vb / 2,
+        # Unbalanced system (zero sequence)
+        ("bus3", "ab"): va, ("bus3", "bc"): va, ("bus3", "ca"): va,
+    }
+    expected_sym_data = [
+        0, va, 0,  # Direct system (positive sequence)
+        0, 0, va / 2,  # Indirect system (negative sequence)
+        va, 0, 0,  # Unbalanced system (zero sequence)
+    ]
+    # fmt: on
+    expected_sym_index = pd.MultiIndex.from_arrays(
+        [
+            pd.Index(["bus1", "bus1", "bus1", "bus2", "bus2", "bus2", "bus3", "bus3", "bus3"]),
+            pd.CategoricalIndex(
+                ["zero", "pos", "neg", "zero", "pos", "neg", "zero", "pos", "neg"], dtype=SequenceDtype
+            ),
+        ],
+        names=["bus_id", "sequence"],
     )
-    index = index.set_levels(index.levels[-1].astype(PhaseDtype), level=-1)
-    voltage = pd.Series([va, vb, vc, va / 2, vb / 2, vc / 2], index=index, name="voltage")
-
-    seq_dtype = pd.CategoricalDtype(categories=["zero", "pos", "neg"], ordered=True)
-    sym_index = index.set_levels(["zero", "pos", "neg"], level=-1)
-    sym_index = sym_index.set_names("sequence", level=-1).set_levels(sym_index.levels[-1].astype(seq_dtype), level=-1)
-    expected = pd.Series([0, va, 0, 0, va / 2, 0], index=sym_index, name="voltage")
-
+    voltage = pd.Series(voltage_data, name="voltage").rename_axis(index=["bus_id", "phase"])
+    expected = pd.Series(data=expected_sym_data, index=expected_sym_index, name="voltage")
     assert_series_equal(series_phasor_to_sym(voltage), expected, check_exact=False)
 
 
@@ -114,3 +129,13 @@ def test_calculate_voltages():
     voltages = calculate_voltages(Q_([20, 0], "kV"), "an")
     np.testing.assert_allclose(voltages.m, np.array([20000.0 + 0.0j]))
     assert voltages.units == ureg.Unit("V")
+
+    # Array-like
+    voltages = calculate_voltages([230, 0], "an")
+    np.testing.assert_allclose(voltages.m, np.array([230.0 + 0.0j]))
+    voltages = calculate_voltages([230, 0], "ab")
+    np.testing.assert_allclose(voltages.m, np.array([230.0 + 0.0j]))
+    voltages = calculate_voltages([230, 230j, -230j], "abc")
+    np.testing.assert_allclose(voltages.m, np.array([230.0 - 230.0j, 460.0j, -230.0 - 230.0j]))
+    voltages = calculate_voltages([230, 230j, -230j, 0], "abcn")
+    np.testing.assert_allclose(voltages.m, np.array([230.0, 230.0j, -230.0j]))

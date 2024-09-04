@@ -32,8 +32,7 @@ a Delta-Wye transformer and a small LV network.
 >>> # Create a MV bus with a voltage source
 ... bus0_mv = rlf.Bus(id="bus0_mv", phases="abc")
 ... un = 20e3  # V
-... source_voltages = [un, un * np.exp(-2j * np.pi / 3), un * np.exp(2j * np.pi / 3)]
-... vs = rlf.VoltageSource(id="vs", bus=bus0_mv, phases="abc", voltages=source_voltages)
+... vs = rlf.VoltageSource(id="vs", bus=bus0_mv, phases="abc", voltages=un)
 ... # Set the MV potential reference
 ... pref_mv = rlf.PotentialRef(id="pref_mv", element=bus0_mv)
 

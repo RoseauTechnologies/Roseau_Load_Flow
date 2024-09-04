@@ -52,22 +52,20 @@ bus2 = rlf.Bus(id="bus2", phases="abcn")
 switch = rlf.Switch(id="switch", bus1=bus1, bus2=bus2)
 
 # A voltage source on the first bus
-un = 400 / np.sqrt(3)
-voltages = un * np.exp([0, -2j * np.pi / 3, 2j * np.pi / 3])
-vs = rlf.VoltageSource(id="source", bus=bus1, voltages=voltages)
+vs = rlf.VoltageSource(id="source", bus=bus1, voltages=400 / np.sqrt(3))
 
-# The neutral of the voltage source is fixed at potential 0
-pref = rlf.PotentialRef(id="pref", element=bus1, phase="n")
+# The potential of the neutral of bus1 is fixed at 0V
+pref = rlf.PotentialRef(id="pref", element=bus1)
 
-# A power load on the second bus
+# An unbalanced constant-power load on the second bus
 load = rlf.PowerLoad(id="load", bus=bus2, powers=[5000 + 1600j, 2500 + 800j, 0])
 
 # Create a network and solve a load flow
 en = rlf.ElectricalNetwork.from_element(bus1)
 en.solve_load_flow()
 
-# The current flowing into the line from bus1
-en.res_branches[["current1"]].transform([np.abs, ft.partial(np.angle, deg=True)])
+# The current flowing into the switch from bus1
+en.res_switches[["current1"]].transform([np.abs, ft.partial(np.angle, deg=True)])
 # |                 |   ('current1', 'absolute') |   ('current1', 'angle') |
 # |:----------------|---------------------------:|------------------------:|
 # | ('switch', 'a') |                    22.7321 |                -17.7447 |
@@ -75,8 +73,8 @@ en.res_branches[["current1"]].transform([np.abs, ft.partial(np.angle, deg=True)]
 # | ('switch', 'c') |                     0      |                  0      |
 # | ('switch', 'n') |                    19.6866 |                132.255  |
 
-# The current flowing into the line from bus2
-en.res_branches[["current2"]].transform([np.abs, ft.partial(np.angle, deg=True)])
+# The current flowing into the switch from bus2
+en.res_switches[["current2"]].transform([np.abs, ft.partial(np.angle, deg=True)])
 # |                 |   ('current2', 'absolute') |   ('current2', 'angle') |
 # |:----------------|---------------------------:|------------------------:|
 # | ('switch', 'a') |                    22.7321 |                162.255  |
@@ -101,7 +99,7 @@ en.res_buses_voltages[["voltage"]].transform([np.abs, ft.partial(np.angle, deg=T
 ## API Reference
 
 ```{eval-rst}
-.. autoclass:: roseau.load_flow.models.Switch
+.. autoapiclass:: roseau.load_flow.models.Switch
    :members:
    :show-inheritance:
    :no-index:

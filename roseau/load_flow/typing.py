@@ -63,7 +63,7 @@ from numpy.typing import NDArray
 
 from roseau.load_flow.units import Q_
 
-T = TypeVar("T")
+T = TypeVar("T", bound=Any)
 
 Id: TypeAlias = int | str
 JsonDict: TypeAlias = dict[str, Any]
@@ -71,17 +71,21 @@ StrPath: TypeAlias = str | os.PathLike[str]
 ControlType: TypeAlias = Literal["constant", "p_max_u_production", "p_max_u_consumption", "q_u"]
 ProjectionType: TypeAlias = Literal["euclidean", "keep_p", "keep_q"]
 Solver: TypeAlias = Literal["newton", "newton_goldstein"]
-MapOrSeq: TypeAlias = Mapping[Id, T] | Sequence[T]
+MapOrSeq: TypeAlias = Mapping[int, T] | Mapping[str, T] | Mapping[Id, T] | Sequence[T]
 ComplexArray: TypeAlias = NDArray[np.complex128]
-# TODO: improve the types below when shape-typing becomes supported
-ComplexArrayLike1D: TypeAlias = (
-    ComplexArray | Q_[ComplexArray] | Q_[Sequence[complex]] | Sequence[complex | Q_[complex]]
-)
+QtyOrMag: TypeAlias = Q_[T] | T
+
+Int: TypeAlias = int | np.integer[Any]
+Float: TypeAlias = float | np.floating[Any] | Int
+Complex: TypeAlias = complex | np.complexfloating[Any, Any] | Float
+
+ComplexArrayLike1D: TypeAlias = QtyOrMag[NDArray[np.number] | Sequence[Complex]] | Sequence[QtyOrMag[Complex]]
+ComplexScalarOrArrayLike1D: TypeAlias = ComplexArrayLike1D | QtyOrMag[Complex]
 ComplexArrayLike2D: TypeAlias = (
-    ComplexArray | Q_[ComplexArray] | Q_[Sequence[Sequence[complex]]] | Sequence[Sequence[complex | Q_[complex]]]
+    QtyOrMag[NDArray[np.number] | Sequence[Sequence[Complex]]] | Sequence[Sequence[QtyOrMag[Complex]]]
 )
 FloatArrayLike1D: TypeAlias = (
-    NDArray[np.float64] | Q_[NDArray[np.float64]] | Q_[Sequence[float]] | Sequence[float | Q_[float]]
+    QtyOrMag[NDArray[np.floating[Any] | np.integer[Any]] | Sequence[Float]] | Sequence[QtyOrMag[Float]]
 )
 
 __all__ = [

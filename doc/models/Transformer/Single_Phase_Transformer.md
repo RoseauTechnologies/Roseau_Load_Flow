@@ -75,8 +75,7 @@ import roseau.load_flow as rlf
 bus1 = rlf.Bus(id="bus1", phases="abcn")
 pref1 = rlf.PotentialRef(id="pref1", element=bus1)
 
-voltages = 400 / np.sqrt(3) * np.exp([0, -2j * np.pi / 3, 2j * np.pi / 3])
-vs = rlf.VoltageSource(id="vs", bus=bus1, voltages=voltages)
+vs = rlf.VoltageSource(id="vs", bus=bus1, voltages=400 / np.sqrt(3))
 
 # Create the load bus and the load
 bus2 = rlf.Bus(id="bus2", phases="an")
@@ -110,21 +109,21 @@ en = rlf.ElectricalNetwork.from_element(bus1)
 en.solve_load_flow()
 
 # The current flowing into the transformer from the source side
-en.res_branches[["current1"]].transform([np.abs, ft.partial(np.angle, deg=True)])
+en.res_transformers[["current1"]].transform([np.abs, ft.partial(np.angle, deg=True)])
 # |                  |   ('current1', 'absolute') |   ('current1', 'angle') |
 # |:-----------------|---------------------------:|------------------------:|
 # | ('transfo', 'a') |                   0.462811 |               -0.956008 |
 # | ('transfo', 'n') |                   0.462811 |              179.044    |
 
 # The current flowing into the transformer from the load side
-en.res_branches[["current2"]].transform([np.abs, ft.partial(np.angle, deg=True)])
+en.res_transformers[["current2"]].transform([np.abs, ft.partial(np.angle, deg=True)])
 # |                  |   ('current2', 'absolute') |   ('current2', 'angle') |
 # |:-----------------|---------------------------:|------------------------:|
 # | ('transfo', 'a') |                   0.438211 |              179.85     |
 # | ('transfo', 'n') |                   0.438211 |               -0.149761 |
 
 # The power flow in the transformer
-en.res_branches[["power1", "power2"]].abs()
+en.res_transformers[["power1", "power2"]].abs()
 # |                  |   power1 |   power2 |
 # |:-----------------|---------:|---------:|
 # | ('transfo', 'a') |  106.882 |      100 |

@@ -82,10 +82,12 @@ def activate_license(key: str | None = None) -> None:
             variable `ROSEAU_LOAD_FLOW_LICENSE_KEY` is used. If this variable is not set, an error
             is raised.
     """
+    global _license
     if key is None:
         key = os.getenv("ROSEAU_LOAD_FLOW_LICENSE_KEY", "")
     try:
         cy_activate_license(key=key, cacert_filepath=certifi.where(), cache_folderpath=user_cache_dir())
+        _license = None
     except RuntimeError as e:
         msg = f"The license cannot be activated. The detailed error message is {e.args[0][2:]!r}."
         logger.error(msg)

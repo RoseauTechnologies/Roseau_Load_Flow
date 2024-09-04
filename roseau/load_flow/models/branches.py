@@ -1,6 +1,5 @@
 import logging
 from functools import cached_property
-from typing import ClassVar, Literal
 
 from shapely.geometry.base import BaseGeometry
 from typing_extensions import Self
@@ -22,8 +21,6 @@ class AbstractBranch(Element):
         :doc:`Transformer models documentation </models/Transformer/index>` and
         :doc:`Switch model documentation </models/Switch>`
     """
-
-    type: ClassVar[Literal["line", "transformer", "switch"]]
 
     def __init__(
         self, id: Id, bus1: Bus, bus2: Bus, *, phases1: str, phases2: str, geometry: BaseGeometry | None = None
@@ -52,8 +49,8 @@ class AbstractBranch(Element):
         if type(self) is AbstractBranch:
             raise TypeError("Can't instantiate abstract class AbstractBranch")
         super().__init__(id)
-        self._check_phases(id, phases1=phases1)
-        self._check_phases(id, phases2=phases2)
+        self._check_phases(id=id, phases1=phases1)
+        self._check_phases(id=id, phases2=phases2)
         self._n1 = len(phases1)
         self._n2 = len(phases2)
         self._phases1 = phases1
@@ -106,13 +103,19 @@ class AbstractBranch(Element):
         return self._res_currents_getter(warning=True)
 
     def _res_powers_getter(
-        self, warning: bool, pot1: ComplexArray | None = None, pot2: ComplexArray | None = None
+        self,
+        warning: bool,
+        potentials1: ComplexArray | None = None,
+        potentials2: ComplexArray | None = None,
+        currents1: ComplexArray | None = None,
+        currents2: ComplexArray | None = None,
     ) -> tuple[ComplexArray, ComplexArray]:
-        cur1, cur2 = self._res_currents_getter(warning)
-        if pot1 is None or pot2 is None:
-            pot1, pot2 = self._res_potentials_getter(warning=False)  # we warn on the previous line
-        powers1 = pot1 * cur1.conj()
-        powers2 = pot2 * cur2.conj()
+        if currents1 is None or currents2 is None:
+            currents1, currents2 = self._res_currents_getter(warning)
+        if potentials1 is None or potentials2 is None:
+            potentials1, potentials2 = self._res_potentials_getter(warning=False)  # we warn on the previous line
+        powers1 = potentials1 * currents1.conj()
+        powers2 = potentials2 * currents2.conj()
         return powers1, powers2
 
     @property
@@ -122,8 +125,8 @@ class AbstractBranch(Element):
         return self._res_powers_getter(warning=True)
 
     def _res_potentials_getter(self, warning: bool) -> tuple[ComplexArray, ComplexArray]:
-        pot1 = self.bus1._get_potentials_of(self.phases1, warning)
-        pot2 = self.bus2._get_potentials_of(self.phases2, warning=False)  # we warn on the previous line
+        pot1 = self.bus1._get_potentials_of(phases=self.phases1, warning=warning)
+        pot2 = self.bus2._get_potentials_of(phases=self.phases2, warning=False)  # we warn on the previous line
         return pot1, pot2
 
     @property
@@ -132,9 +135,14 @@ class AbstractBranch(Element):
         """The load flow result of the branch potentials (V)."""
         return self._res_potentials_getter(warning=True)
 
-    def _res_voltages_getter(self, warning: bool) -> tuple[ComplexArray, ComplexArray]:
-        pot1, pot2 = self._res_potentials_getter(warning)
-        return _calculate_voltages(pot1, self.phases1), _calculate_voltages(pot2, self.phases2)
+    def _res_voltages_getter(
+        self, warning: bool, potentials1: ComplexArray | None = None, potentials2: ComplexArray | None = None
+    ) -> tuple[ComplexArray, ComplexArray]:
+        if potentials1 is None or potentials2 is None:
+            potentials1, potentials2 = self._res_potentials_getter(warning)
+        return _calculate_voltages(potentials=potentials1, phases=self.phases1), _calculate_voltages(
+            potentials=potentials2, phases=self.phases2
+        )
 
     @property
     @ureg_wraps(("V", "V"), (None,))
@@ -148,7 +156,7 @@ class AbstractBranch(Element):
         assert isinstance(self.bus1, Bus)
         for i, phase in enumerate(self.phases1):
             if phase in self.bus1.phases:
-                j = self.bus1.phases.find(phase)
+                j = self.bus1.phases.index(phase)
                 connections.append((i, j))
         self._cy_element.connect(self.bus1._cy_element, connections, True)
 
@@ -156,7 +164,7 @@ class AbstractBranch(Element):
         assert isinstance(self.bus2, Bus)
         for i, phase in enumerate(self.phases2):
             if phase in self.bus2.phases:
-                j = self.bus2.phases.find(phase)
+                j = self.bus2.phases.index(phase)
                 connections.append((i, j))
         self._cy_element.connect(self.bus2._cy_element, connections, False)
 
@@ -170,7 +178,6 @@ class AbstractBranch(Element):
     def _to_dict(self, include_results: bool) -> JsonDict:
         res = {
             "id": self.id,
-            "type": self.type,
             "phases1": self.phases1,
             "phases2": self.phases2,
             "bus1": self.bus1.id,
@@ -185,13 +192,3 @@ class AbstractBranch(Element):
                 "currents2": [[i.real, i.imag] for i in currents2],
             }
         return res
-
-    def _results_to_dict(self, warning: bool) -> JsonDict:
-        currents1, currents2 = self._res_currents_getter(warning)
-        return {
-            "id": self.id,
-            "phases1": self.phases1,
-            "phases2": self.phases2,
-            "currents1": [[i.real, i.imag] for i in currents1],
-            "currents2": [[i.real, i.imag] for i in currents2],
-        }

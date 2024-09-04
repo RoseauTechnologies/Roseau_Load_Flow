@@ -15,22 +15,22 @@
 
   % Coordinates
   \coordinate (A1) at (90:\radius);%
-  \coordinate (B1) at (210:\radius);%
-  \coordinate (C1) at (330:\radius);%
+  \coordinate (B1) at (330:\radius);%
+  \coordinate (C1) at (210:\radius);%
   \coordinate (A) at (90:\Radius);%
-  \coordinate (B) at (210:\Radius);%
-  \coordinate (C) at (330:\Radius);%
+  \coordinate (B) at (330:\Radius);%
+  \coordinate (C) at (210:\Radius);%
   \coordinate (N) at (0,0);%
   \coordinate (A2) at ($(-\Radius,\Radius)-(1,0)$);%
-  \coordinate (B2) at (A2 |- B); %x of A2 and y of B
-  \coordinate (C2) at ($(B2)-(0,1)$);%
-  \coordinate (C3) at ($(C)-(0,1)$);%
+  \coordinate (C2) at (A2 |- C);%
+  \coordinate (B2) at ($(C2)-(0,1)$);%
+  \coordinate (B3) at ($(B)-(0,1)$);%
   \coordinate (N2) at (A2 |- N);%
 
   % Nodes
   \node[above] at (A) {A};%
-  \node[below] at (B) {B};%
-  \node[right] at (C) {C};%
+  \node[right] at (B) {B};%
+  \node[below] at (C) {C};%
   \node[above right] at (N) {N};%
 
   % Lines
@@ -38,9 +38,10 @@
   \draw (B) to[short,*-] (B1) to[generic, v<=$\underline{V_{\brm}}-\underline{V_{\nrm}}$, -*] (N);%
   \draw (C) to[short,*-] (C1) to[generic, v<=$\underline{V_{\crm}}-\underline{V_{\nrm}}$, -*] (N);%
   \draw (A2) to[short,i=$\underline{I_{\arm}}$,*-*] (A);%
-  \draw (B2) to[short,i=$\underline{I_{\brm}}$,*-*] (B);%
-  \draw (C2) to[short,i=$\underline{I_{\crm}}$,*-] (C3);%
-  \draw (C3) -- (C); \draw (N2) to[short, i=$\underline{I_{\nrm}}$, *-] (N);%
+  \draw (B2) to[short,i=$\underline{I_{\brm}}$,*-] (B3);%
+  \draw (B3) -- (B);%
+  \draw (C2) to[short,i=$\underline{I_{\crm}}$,*-*] (C);%
+  \draw (N2) to[short, i=$\underline{I_{\nrm}}$, *-] (N);%
 
   % Line-to-line voltage
   % \draw (A) to[open, v=$V_{m,\abrm}$] (B)
