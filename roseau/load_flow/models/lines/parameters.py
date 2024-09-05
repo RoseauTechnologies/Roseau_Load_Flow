@@ -1120,11 +1120,11 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
     #
     @classmethod
     def catalogue_path(cls) -> Path:
-        return Path(resources.files("roseau.load_flow") / "data" / "lines").expanduser().absolute()
+        return Path(resources.files("roseau.load_flow") / "data" / "lines" / "Catalogue.csv").expanduser().absolute()
 
     @classmethod
     def catalogue_data(cls) -> pd.DataFrame:
-        file = cls.catalogue_path() / "Catalogue.csv"
+        file = cls.catalogue_path()
         return pd.read_csv(file, parse_dates=False).fillna({"insulator": ""})
 
     @classmethod

@@ -1011,11 +1011,15 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
     #
     @classmethod
     def catalogue_path(cls) -> Path:
-        return Path(resources.files("roseau.load_flow") / "data" / "transformers").expanduser().absolute()
+        return (
+            Path(resources.files("roseau.load_flow") / "data" / "transformers" / "Catalogue.csv")
+            .expanduser()
+            .absolute()
+        )
 
     @classmethod
     def catalogue_data(cls) -> pd.DataFrame:
-        file = cls.catalogue_path() / "Catalogue.csv"
+        file = cls.catalogue_path()
         return pd.read_csv(file, parse_dates=False)
 
     @classmethod
@@ -1102,6 +1106,8 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         Args:
             name:
                 The name of the transformer to get from the catalogue. It can be a regular expression.
+                The name is subject to change when the catalogue is updated. Prefer using the other
+                filters.
 
             manufacturer:
                 The name of the manufacturer to get. It can be a regular expression.
