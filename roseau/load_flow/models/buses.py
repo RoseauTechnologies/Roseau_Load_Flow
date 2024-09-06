@@ -1,7 +1,7 @@
 import logging
 from collections.abc import Iterator
 from functools import cached_property
-from typing import TYPE_CHECKING, Any, Final
+from typing import TYPE_CHECKING, Any, Final, Optional
 
 import numpy as np
 import pandas as pd
@@ -13,12 +13,13 @@ from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowE
 from roseau.load_flow.models.core import Element
 from roseau.load_flow.typing import ComplexArray, ComplexArrayLike1D, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
+from roseau.load_flow.utils.graph import propagate_limits
 from roseau.load_flow_engine.cy_engine import CyBus
 
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
-    from roseau.load_flow.models.grounds import Ground
+    from roseau.load_flow.single import Ground
 
 
 class Bus(Element):
@@ -233,52 +234,7 @@ class Bus(Element):
                 limits different from this bus. If ``True``, the limits are propagated even if
                 connected buses have different limits.
         """
-        from roseau.load_flow.models.lines import Line
-        from roseau.load_flow.models.switches import Switch
-
-        buses: set[Bus] = set()
-        visited: set[Element] = set()
-        remaining = set(self._connected_elements)
-
-        while remaining:
-            branch = remaining.pop()
-            visited.add(branch)
-            if not isinstance(branch, (Line, Switch)):
-                continue
-            for element in branch._connected_elements:
-                if not isinstance(element, Bus) or element is self or element in buses:
-                    continue
-                buses.add(element)
-                to_add = set(element._connected_elements).difference(visited)
-                remaining.update(to_add)
-                if not (
-                    force
-                    or self._min_voltage is None
-                    or element._min_voltage is None
-                    or np.isclose(element._min_voltage, self._min_voltage)
-                ):
-                    msg = (
-                        f"Cannot propagate the minimum voltage ({self._min_voltage} V) of bus {self.id!r} "
-                        f"to bus {element.id!r} with different minimum voltage ({element._min_voltage} V)."
-                    )
-                    logger.error(msg)
-                    raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_VOLTAGES)
-                if not (
-                    force
-                    or self._max_voltage is None
-                    or element._max_voltage is None
-                    or np.isclose(element._max_voltage, self._max_voltage)
-                ):
-                    msg = (
-                        f"Cannot propagate the maximum voltage ({self._max_voltage} V) of bus {self.id!r} "
-                        f"to bus {element.id!r} with different maximum voltage ({element._max_voltage} V)."
-                    )
-                    logger.error(msg)
-                    raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_VOLTAGES)
-
-        for bus in buses:
-            bus._min_voltage = self._min_voltage
-            bus._max_voltage = self._max_voltage
+        propagate_limits(initial_bus=self, force=force)
 
     def get_connected_buses(self) -> Iterator[Id]:
         """Get IDs of all the buses galvanically connected to this bus.
@@ -382,7 +338,7 @@ class Bus(Element):
             ]
         return res
 
-    def add_short_circuit(self, *phases: str, ground: "Ground | None" = None) -> None:
+    def add_short_circuit(self, *phases: str, ground: Optional["Ground"] = None) -> None:
         """Add a short-circuit by connecting multiple phases together optionally with a ground.
 
         Args:
