@@ -93,7 +93,7 @@ the license key from versioning by adding it to your `.gitignore` file.
 ## How to set an environment variable?
 
 If you are not sure how to set an environment variable, [this article](https://www.bitecode.dev/p/environment-variables-for-beginners)
-has instructions for Windows, MacOS and Linux. The section [Persisting an environment variable](https://www.bitecode.dev/i/121864947/persisting-an-environment-variable)
+has instructions for Windows, macOS and Linux. The section [Persisting an environment variable](https://www.bitecode.dev/i/121864947/persisting-an-environment-variable)
 explains how to make the environment variable persistent on your machine so that you don't have to
 set it every time you open a new terminal.
 
