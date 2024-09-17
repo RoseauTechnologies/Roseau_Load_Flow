@@ -17,9 +17,13 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 # Changelog
 
+## Unreleased
+
+- {gh-pr}`267` Add a section in the documentation on Google Colab secrets.
+
 ## Version 0.10.0
 
-- A wheel for Python 3.13 is also available.
+- A wheel for Python 3.13 is available.
 - The wheels for Windows are now available. The problem was the same as the one of the
   [issue 28551](https://github.com/matplotlib/matplotlib/issues/28551) of the Matplotlib repository.
 - {gh-pr}`237` Improvements of the Sphinx configuration.
