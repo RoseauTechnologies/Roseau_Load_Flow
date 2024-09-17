@@ -93,9 +93,25 @@ the license key from versioning by adding it to your `.gitignore` file.
 ## How to set an environment variable?
 
 If you are not sure how to set an environment variable, [this article](https://www.bitecode.dev/p/environment-variables-for-beginners)
-has instructions for Windows, MacOS and Linux. The section [Persisting an environment variable](https://www.bitecode.dev/i/121864947/persisting-an-environment-variable)
+has instructions for Windows, macOS and Linux. The section [Persisting an environment variable](https://www.bitecode.dev/i/121864947/persisting-an-environment-variable)
 explains how to make the environment variable persistent on your machine so that you don't have to
 set it every time you open a new terminal.
+
+### For Google Colab users
+
+The "Secrets" feature in Google Colab is very useful for defining local variables. In the left panel, open the 'Secrets' section. Create a new variable called `ROSEAU_LOAD_FLOW_LICENSE_KEY`, with the value being your license key. This variable is personal to you, and the toggle will allow you to enable access to the license key for notebooks of your choice.
+
+```{image} /_static/2024_09_16_Google_Colab_Environment_Variable.png
+:alt: Google Colab environment variable
+:align: center
+```
+
+To set the environment variable, add the following in a cell at the beginning of your notebook:
+
+```
+from google.colab import userdata
+os.environ['ROSEAU_LOAD_FLOW_LICENSE_KEY'] = userdata.get('ROSEAU_LOAD_FLOW_LICENSE_KEY')
+```
 
 ### For Jupyter Notebook users
 
