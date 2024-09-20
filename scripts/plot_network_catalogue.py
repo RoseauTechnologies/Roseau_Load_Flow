@@ -72,8 +72,8 @@ def lines_highlight_function(feature):
 
 
 lines_tooltip = folium.GeoJsonTooltip(
-    fields=["id", "bus1_id", "bus2_id", "parameters_id"],
-    aliases=["Id:", "Bus1:", "Bus2:", "Parameters:"],
+    fields=["id", "phases", "bus1_id", "bus2_id", "parameters_id", "length"],
+    aliases=["Id:", "Phases:", "Bus1:", "Bus2:", "Parameters:", "Length (km):"],
     localize=True,
     sticky=False,
     labels=True,
@@ -221,6 +221,9 @@ if __name__ == "__main__":
         tooltip=buses_tooltip,
     ).add_to(m)
     folium.LayerControl().add_to(m)
+
+    # Hide the ReadTheDoc flyout in the Catalogue.html file
+    m.get_root().header.add_child(Element("<style> readthedocs-flyout { visibility: hidden; }</style>"))
 
     # Save the map
     m.save(outfile=OUTPUT_DIR / "Catalogue.html", title=None)
