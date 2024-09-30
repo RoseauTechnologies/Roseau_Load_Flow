@@ -4,6 +4,7 @@
 LATEXMK:=$(shell which latexmk)
 LUALATEX:=$(shell which lualatex)
 PDF2SVG:=$(shell which pdf2svg)
+SVGO:=$(shell which svgo)
 
 # Folders
 INPUT_FOLDER:=$(shell realpath .)
@@ -32,6 +33,7 @@ $(OUTPUT_FOLDER)/%.pdf: %.tex Preambule.tex
 
 %.svg: %.pdf
 	@$(PDF2SVG) $< $@
+	@$(SVGO) --multipass --final-newline $@
 
 clean:
 	@rm -f $(AUX_FILES) $(LOG_FILES) $(PDF_FILES) *~
@@ -47,13 +49,16 @@ cleanall: clean
 
 checks:
 	@if [ -z "$(PDF2SVG)" ]; then \
-	echo "Pdf2svg is required to compile the figures!"; \
+	echo "Pdf2svg is required to compile the figures! https://yihui.org/tinytex/"; \
 	fi;
 	@if [ -z "$(LUALATEX)" ]; then \
-	echo "LuaLaTeX is required to compile the figures!"; \
+	echo "LuaLaTeX is required to compile the figures! https://yihui.org/tinytex/"; \
 	fi;
 	@if [ -z "$(LATEXMK)" ]; then \
-	echo "LaTeXmk is required to compile the figures!"; \
+	echo "LaTeXmk is required to compile the figures! https://yihui.org/tinytex/"; \
+	fi;
+	@if [ -z "$(SVGO)" ]; then \
+	echo "Svgo is required to compile the figures! https://github.com/svg/svgo"; \
 	fi;
 
 # Local Variables:
