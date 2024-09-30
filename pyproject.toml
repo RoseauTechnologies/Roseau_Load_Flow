@@ -1,30 +1,20 @@
-[tool.poetry]
+[project]
 name = "roseau-load-flow"
 version = "0.10.0"
 description = "Highly capable three-phase load flow solver"
 authors = [
-    "Ali Hamdan <ali.hamdan@roseautechnologies.com>",
-    "Sébastien Vallet <sebastien.vallet@roseautechnologies.com>",
-    "Benoît Vinot <benoit.vinot@roseautechnologies.com>",
-    "Florent Cadoux <florent.cadoux@roseautechnologies.com>",
-    "Louise Muller <louise.muller@roseautechnologies.com>",
-    "Victor Gouin",
+    { name = "Ali Hamdan", email = "ali.hamdan@roseautechnologies.com" },
+    { name = "Sébastien Vallet", email = "sebastien.vallet@roseautechnologies.com" },
+    { name = "Benoît Vinot", email = "benoit.vinot@roseautechnologies.com" },
+    { name = "Florent Cadoux", email = "florent.cadoux@roseautechnologies.com" },
+    { name = "Louise Muller", email = "louise.muller@roseautechnologies.com" },
+    { name = "Victor Gouin" },
 ]
-maintainers = ["Ali Hamdan <ali.hamdan@roseautechnologies.com>"]
-license = "BSD-3-Clause"
-repository = "https://github.com/RoseauTechnologies/Roseau_Load_Flow/"
+maintainers = [
+    { name = "Ali Hamdan", email = "ali.hamdan@roseautechnologies.com" },
+]
+license = { file = "LICENSE.md" }
 readme = "README.md"
-include = [
-    "roseau/load_flow/data/**/*.json",
-    "roseau/load_flow/data/**/*.csv"
-]
-exclude = [
-    "**/tests/**",
-    "**/conftest.py",
-]
-packages = [
-    { include = "roseau/load_flow" }
-]
 classifiers = [
     "Development Status :: 3 - Alpha",
     # "License :: OSI Approved :: The 3-Clause BSD License (BSD-3-Clause)", # https://github.com/pypa/trove-classifiers/issues/70
@@ -37,59 +27,67 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
     "Topic :: Scientific/Engineering :: Physics",
 ]
+requires-python = ">=3.10,<4.0.0"
+dependencies = [
+    "numpy>=1.21.5",
+    "pandas>=1.4.0",
+    "geopandas>=1.0.0",
+    "shapely>=2.0.0",
+    "regex>=2022.1.18",
+    "pint>=0.21.0",
+    "typing-extensions>=4.6.2",
+    "pyproj>=3.3.0",
+    "certifi>=2023.5.7",
+    "platformdirs>=4.0.0",
+    "roseau-load-flow-engine==0.15.0",
+]
+
+[project.urls]
+homepage = "https://www.roseautechnologies.com/roseau-load-flow/"
+repository = "https://github.com/RoseauTechnologies/Roseau_Load_Flow/"
+issues = "https://github.com/RoseauTechnologies/Roseau_Load_Flow/issues/"
+documentation = "https://roseau-load-flow.roseautechnologies.com/"
+
+
+[project.optional-dependencies]
+plot = ["matplotlib>=3.7.2"]
+graph = ["networkx>=3.0.0"]
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
-[tool.poetry.dependencies]
-python = "^3.10"
-numpy = ">=1.21.5"
-pandas = ">=1.4.0"
-geopandas = ">=1.0.0"
-shapely = ">=2.0.0"
-regex = ">=2022.1.18"
-pint = ">=0.21.0"
-typing-extensions = ">=4.6.2"
-pyproj = ">=3.3.0"
-certifi = ">=2023.5.7"
-platformdirs = ">=4.0.0"
-roseau-load-flow-engine = "==0.15.0"
+[tool.hatch.build.targets.sdist]
+only-include = ["roseau"]
+exclude = ["*tests*", "*conftest.py"]
 
-# Optional dependencies
-matplotlib = { version = ">=3.7.2", optional = true }
-networkx = { version = ">=3.0.0", optional = true }
+[tool.hatch.build.targets.wheel]
+packages = ["roseau"]
 
-[tool.poetry.extras]
-# DO NOT forget to update the installation page in the documentation when extras change
-plot = ["matplotlib"]
-graph = ["networkx"]
 
-[tool.poetry.group.test.dependencies]
-pytest = "^8.0.0"
-pytest-cov = "^5.0.0"
-pytest-xdist = "^3.1.0"
-coverage = { version = "^7.0.5", extras = ["toml"] }
-coverage-conditional-plugin = ">=0.9.0"
-matplotlib = ">=3.7.2"
-networkx = ">=3.0.0"
-
-[tool.poetry.group.dev.dependencies]
-pre-commit = "^3.0.0"
-ruff = ">=0.6.0"
-
-[tool.poetry.group.doc.dependencies]
-sphinx = "^8.0.2"
-myst-parser = ">=0.16.1"
-sphinx-math-dollar = "^1.2.1"
-sphinx-autoapi = "^3.0.0"
-sphinx-copybutton = ">=0.5.1"
-sphinx-inline-tabs = ">=2022.1.2b11"
-furo = ">=2022.9.29"
-sphinxcontrib-googleanalytics = ">=0.3"
-sphinxcontrib-bibtex = "^2.5.0"
-sphinx-sitemap = "^2.5.1"
-sphinxext-opengraph = ">=0.9.1"
+[tool.rye]
+managed = true
+universal = true
+dev-dependencies = [
+    # Tests
+    "pytest>=8.0.0",
+    "pytest-cov>=5.0.0",
+    "pytest-xdist>=3.1.0",
+    "coverage[toml]>=7.0.5",
+    "coverage-conditional-plugin>=0.9.0",
+    # Docs
+    "sphinx>=8.0.2",
+    "myst-parser>=0.16.1",
+    "sphinx-math-dollar>=1.2.1",
+    "sphinx-autoapi>=3.0.0",
+    "sphinx-copybutton>=0.5.1",
+    "sphinx-inline-tabs>=2022.1.2b11",
+    "furo>=2022.9.29",
+    "sphinxcontrib-googleanalytics>=0.3",
+    "sphinxcontrib-bibtex>=2.5.0",
+    "sphinx-sitemap>=2.5.1",
+    "sphinxext-opengraph>=0.9.1",
+]
 
 [tool.ruff]
 line-length = 120
