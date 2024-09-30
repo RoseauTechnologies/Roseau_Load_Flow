@@ -16,6 +16,7 @@ on:
 
 env:
   CI: true
+  UV_SYSTEM_PYTHON: 1
 
 jobs:
   build:
@@ -49,24 +50,24 @@ jobs:
           git lfs pull
           git lfs prune --verify-remote
 
-      - name: Install poetry
-        run: pipx install poetry
+      - name: Install uv
+        uses: astral-sh/setup-uv@v2
+        with:
+          enable-cache: true
+          cache-dependency-glob: "requirements**.lock"
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-          cache: "poetry"
 
       - name: Install dependencies
         run: |
-          poetry env use "${{ matrix.python-version }}"
-          poetry install --without dev
+          uv pip install -r requirements-dev.lock
 
       - name: Test with pytest
         run: |
-          poetry run pytest -vv -n=auto --durations=25 --cov-report html \
-          --cov-config pyproject.toml roseau
+          pytest -vv -n=auto --durations=25 --cov-report html --cov-config pyproject.toml roseau
         env:
           ROSEAU_LOAD_FLOW_LICENSE_KEY: ${{ secrets.ROSEAU_LOAD_FLOW_LICENSE_KEY }}
 
