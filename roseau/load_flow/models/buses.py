@@ -313,7 +313,7 @@ class Bus(Element):
 
         Voltage Unbalance Factor:
 
-        :math:`VUF = \\dfrac{|V_{\\mathrm{n}}|}{|V_{\\mathrm{p}}|} \times 100 (\\%)`
+        :math:`VUF = \\dfrac{|V_{\\mathrm{n}}|}{|V_{\\mathrm{p}}|} \\times 100 \\, (\\%)`
 
         Where :math:`V_{\\mathrm{n}}` is the negative-sequence voltage and :math:`V_{\\mathrm{p}}` is the
         positive-sequence voltage.
