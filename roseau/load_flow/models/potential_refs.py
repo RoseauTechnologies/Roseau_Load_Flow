@@ -97,7 +97,7 @@ class PotentialRef(Element):
             else:
                 self._cy_element = CyDeltaPotentialRef(n)
                 indices = (element.phases.index(p) for p in phases)
-                element._cy_element.connect(self._cy_element, [(i, i) for i in indices])
+                element._cy_element.connect(self._cy_element, [(p, i) for i, p in enumerate(indices)])
         else:
             self._cy_element = CyPotentialRef()
             element._cy_element.connect(self._cy_element, [(0, 0)])

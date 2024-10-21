@@ -19,6 +19,7 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`272` {gh-issue}`271`: Fix segfault when phases of a potential reference are not the same as the bus phases.
 - {gh-pr}`270` Use [Rye](https://rye.astral.sh/) instead of [Poetry](https://python-poetry.org/) as dependency manager.
 - {gh-pr}`269` Optimize the SVG files of the documentation.
 - {gh-pr}`268` Set up ReadTheDoc to automatically compile the documentation.
