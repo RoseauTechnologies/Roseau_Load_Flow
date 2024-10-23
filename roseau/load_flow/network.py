@@ -40,6 +40,7 @@ from roseau.load_flow.models import (
 )
 from roseau.load_flow.typing import Id, JsonDict, MapOrSeq, Solver, StrPath
 from roseau.load_flow.utils import CatalogueMixin, JsonMixin, _optional_deps
+from roseau.load_flow.utils._exceptions import find_stack_level
 from roseau.load_flow.utils.types import _DTYPES, LoadTypeDtype, VoltagePhaseDtype
 from roseau.load_flow_engine.cy_engine import CyElectricalNetwork
 
@@ -640,7 +641,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                     "ensure the validity of results."
                 ),
                 category=UserWarning,
-                stacklevel=2,
+                stacklevel=find_stack_level(),
             )
 
     @property
