@@ -10,6 +10,7 @@ from roseau.load_flow.models.core import Element
 from roseau.load_flow.models.grounds import Ground
 from roseau.load_flow.typing import Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
+from roseau.load_flow.utils._exceptions import find_stack_level
 from roseau.load_flow_engine.cy_engine import CyDeltaPotentialRef, CyPotentialRef
 
 logger = logging.getLogger(__name__)
@@ -51,7 +52,11 @@ class PotentialRef(Element):
                 a neutral, otherwise, the sum of the potentials of the bus phases is set to zero.
         """
         if "phase" in deprecated_kw and phases is None:
-            warnings.warn("The 'phase' argument is deprecated, use 'phases' instead.", DeprecationWarning, stacklevel=2)
+            warnings.warn(
+                "The 'phase' argument is deprecated, use 'phases' instead.",
+                DeprecationWarning,
+                stacklevel=find_stack_level(),
+            )
             phases = deprecated_kw.pop("phase")
         if deprecated_kw:
             raise TypeError(

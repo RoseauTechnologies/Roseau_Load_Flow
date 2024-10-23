@@ -10,6 +10,7 @@ from shapely.geometry.base import BaseGeometry
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.typing import Id
 from roseau.load_flow.utils import Identifiable, JsonMixin
+from roseau.load_flow.utils._exceptions import find_stack_level
 from roseau.load_flow_engine.cy_engine import CyElement
 
 if TYPE_CHECKING:
@@ -169,13 +170,7 @@ class Element(ABC, Identifiable, JsonMixin):
                     "ensure the validity of results."
                 ),
                 category=UserWarning,
-                # Ignore all private RLF stacks:
-                # - this method
-                # - _res_..._getter caller function
-                # - res_... property
-                # - ureg wrappers
-                # TODO: dynamic stacklevel computation similar to pandas and matplotlib
-                stacklevel=6,
+                stacklevel=find_stack_level(),
             )
         self._fetch_results = False
         return value

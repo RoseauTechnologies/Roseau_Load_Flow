@@ -33,6 +33,7 @@ from roseau.load_flow.models import (
     VoltageSource,
 )
 from roseau.load_flow.typing import Id, StrPath
+from roseau.load_flow.utils._exceptions import find_stack_level
 
 logger = logging.getLogger(__name__)
 
@@ -119,7 +120,7 @@ def network_from_dgs(
                 "line types from the library to the project before exporting otherwise a "
                 "LineParameter object will be created for each line."
             )
-            warnings.warn(msg, stacklevel=3)
+            warnings.warn(msg, stacklevel=find_stack_level())
         else:
             generate_typ_lne(typ_lne=typ_lne, lines_params=lines_params)
         generate_lines(
@@ -184,7 +185,7 @@ def _parse_dgs_version(data: dict[str, Any]) -> tuple[int, ...]:
             f"The DGS version {dgs_version} is too old, this may cause conversion errors. Try "
             f"updating the version before exporting."
         )
-        warnings.warn(msg, stacklevel=4)
+        warnings.warn(msg, stacklevel=find_stack_level())
     return dgs_version_tuple
 
 

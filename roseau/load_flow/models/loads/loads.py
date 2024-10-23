@@ -13,6 +13,7 @@ from roseau.load_flow.models.core import Element
 from roseau.load_flow.models.loads.flexible_parameters import FlexibleParameter
 from roseau.load_flow.typing import ComplexArray, ComplexScalarOrArrayLike1D, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
+from roseau.load_flow.utils._exceptions import find_stack_level
 from roseau.load_flow.utils.constants import PositiveSequence
 from roseau.load_flow_engine.cy_engine import (
     CyAdmittanceLoad,
@@ -90,7 +91,7 @@ class AbstractLoad(Element, ABC):
             warnings.warn(
                 message=f"Neutral connection requested for load {id!r} with no neutral phase",
                 category=UserWarning,
-                stacklevel=3,
+                stacklevel=find_stack_level(),
             )
             connect_neutral = None
         self._connect(bus)

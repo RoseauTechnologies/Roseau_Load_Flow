@@ -8,6 +8,7 @@ from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowE
 from roseau.load_flow.io.dgs.constants import CONDUCTOR_TYPES, INSULATOR_TYPES, LINE_TYPES
 from roseau.load_flow.models import Bus, Ground, Line, LineParameters
 from roseau.load_flow.typing import Id
+from roseau.load_flow.utils._exceptions import find_stack_level
 
 logger = logging.getLogger(__name__)
 
@@ -204,7 +205,7 @@ def generate_lines(
                 elif nb_points == 1:
                     warnings.warn(
                         f"Failed to read geometry data for line {line_id!r}: it has a single GPS point.",
-                        stacklevel=4,
+                        stacklevel=find_stack_level(),
                     )
                 else:
                     assert nb_cols == 2, f"Expected 2 GPS columns (Latitude/Longitude), got {nb_cols}."
@@ -218,7 +219,8 @@ def generate_lines(
                     )
             except Exception as e:
                 warnings.warn(
-                    f"Failed to read geometry data for line {line_id!r}: {type(e).__name__}: {e}", stacklevel=4
+                    f"Failed to read geometry data for line {line_id!r}: {type(e).__name__}: {e}",
+                    stacklevel=find_stack_level(),
                 )
         lines[line_id] = Line(
             id=line_id,

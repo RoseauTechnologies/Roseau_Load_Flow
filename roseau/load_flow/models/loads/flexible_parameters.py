@@ -17,6 +17,7 @@ from roseau.load_flow.typing import (
 )
 from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow.utils import JsonMixin, _optional_deps
+from roseau.load_flow.utils._exceptions import find_stack_level
 from roseau.load_flow_engine.cy_engine import CyControl, CyFlexibleParameter, CyProjection
 
 logger = logging.getLogger(__name__)
@@ -135,7 +136,7 @@ class Control(JsonMixin):
                     f"different from 0 were given: {msg}"
                 ),
                 category=UserWarning,
-                stacklevel=2,
+                stacklevel=find_stack_level(),
             )
 
         # Raise an error if the useful values are not well-ordered and positive

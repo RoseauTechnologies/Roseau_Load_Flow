@@ -29,6 +29,7 @@ from roseau.load_flow.utils import (
     JsonMixin,
     LineType,
 )
+from roseau.load_flow.utils._exceptions import find_stack_level
 
 logger = logging.getLogger(__name__)
 
@@ -1442,7 +1443,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
                     f"The {matrix_name} matrix of line type {self.id!r} has off-diagonal elements "
                     f"with a non-zero real part."
                 )
-                warnings.warn(msg, category=UserWarning, stacklevel=4)
+                warnings.warn(msg, category=UserWarning, stacklevel=find_stack_level())
             # Check that the real coefficients are non-negative
             if (matrix.real < 0.0).any():
                 msg = f"The {matrix_name} matrix of line type {self.id!r} has coefficients with negative real part."

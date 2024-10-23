@@ -7,6 +7,7 @@ import shapely
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models import Bus, Switch
 from roseau.load_flow.typing import Id
+from roseau.load_flow.utils._exceptions import find_stack_level
 
 logger = logging.getLogger(__name__)
 
@@ -47,6 +48,7 @@ def generate_switches(
         on_off = elm_coup.at[switch_id, "on_off"]
         if not on_off:
             warnings.warn(
-                f"Switch {switch_id!r} is open but switches are always closed in roseau-load-flow.", stacklevel=4
+                f"Switch {switch_id!r} is open but switches are always closed in roseau-load-flow.",
+                stacklevel=find_stack_level(),
             )
         switches[switch_id] = Switch(id=switch_id, phases=phases, bus1=bus1, bus2=bus2, geometry=geometry)
