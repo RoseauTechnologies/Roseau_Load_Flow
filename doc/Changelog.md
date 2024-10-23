@@ -19,6 +19,7 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`274` Allow a ground to be connected to multiple phases of the same bus with a warning.
 - {gh-pr}`273` Dynamically calculate the stacklevel of the first frame outside of `roseau.load_flow` for warnings
 - {gh-pr}`272` {gh-issue}`271`: Fix segfault when phases of a potential reference are not the same as the bus phases.
 - {gh-pr}`270` Use [Rye](https://rye.astral.sh/) instead of [Poetry](https://python-poetry.org/) as dependency manager.

@@ -1,4 +1,5 @@
 import logging
+import warnings
 from typing import TYPE_CHECKING, Final
 
 from typing_extensions import Self
@@ -7,6 +8,7 @@ from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowE
 from roseau.load_flow.models.core import Element
 from roseau.load_flow.typing import Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
+from roseau.load_flow.utils._exceptions import find_stack_level
 from roseau.load_flow_engine.cy_engine import CyGround
 
 if TYPE_CHECKING:
@@ -64,7 +66,7 @@ class Ground(Element):
 
     @property
     def connected_buses(self) -> dict[Id, str]:
-        """The bus ID and phase of the buses connected to this ground."""
+        """The bus ID and phase(s) of the buses connected to this ground."""
         return self._connected_buses.copy()  # copy so that the user does not change it
 
     def connect(self, bus: "Bus", phase: str = "n") -> None:
@@ -79,16 +81,17 @@ class Ground(Element):
                 present in the bus phases. Defaults to ``"n"``.
         """
         if bus.id in self._connected_buses:
-            msg = f"Ground {self.id!r} is already connected to bus {bus.id!r}."
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.BAD_BUS_ID)
+            warnings.warn(f"Ground {self.id!r} is already connected to bus {bus.id!r}.", stacklevel=find_stack_level())
         self._check_phases(self.id, phases=phase)
         if phase not in bus.phases:
             msg = f"Cannot connect a ground to phase {phase!r} of bus {bus.id!r} that has phases {bus.phases!r}."
             logger.error(msg)
             raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.BAD_PHASE)
         self._connect(bus)
-        self._connected_buses[bus.id] = phase
+        if bus.id in self._connected_buses:
+            self._connected_buses[bus.id] += phase
+        else:
+            self._connected_buses[bus.id] = phase
         p = bus.phases.index(phase)
         bus._cy_element.connect(self._cy_element, [(p, 0)])
 
@@ -99,7 +102,8 @@ class Ground(Element):
     def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
         self = cls(data["id"])
         for bus_data in data["buses"]:
-            self.connect(bus=bus_data["bus"], phase=bus_data["phase"])
+            for phase in bus_data["phase"]:
+                self.connect(bus=bus_data["bus"], phase=phase)
         if include_results and "results" in data:
             self._res_potential = complex(*data["results"]["potential"])
             self._fetch_results = False
