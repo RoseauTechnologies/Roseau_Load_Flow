@@ -579,16 +579,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         self._no_results = False
 
         # Lazily update the results of the elements
-        for element in chain(
-            self.buses.values(),
-            self.lines.values(),
-            self.transformers.values(),
-            self.switches.values(),
-            self.loads.values(),
-            self.sources.values(),
-            self.grounds.values(),
-            self.potential_refs.values(),
-        ):
+        for element in self._elements:
             element._fetch_results = True
             element._no_results = False
 
@@ -1153,33 +1144,10 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
     def _create_network(self) -> None:
         """Create the Cython and C++ electrical network of all the passed elements."""
         self._valid = True
-        cy_elements = []
-        self._elements = []
-        for bus in self.buses.values():
-            cy_elements.append(bus._cy_element)
-            self._elements.append(bus)
-        for line in self.lines.values():
-            cy_elements.append(line._cy_element)
-            self._elements.append(line)
-        for transformer in self.transformers.values():
-            cy_elements.append(transformer._cy_element)
-            self._elements.append(transformer)
-        for switch in self.switches.values():
-            cy_elements.append(switch._cy_element)
-            self._elements.append(switch)
-        for load in self.loads.values():
-            cy_elements.append(load._cy_element)
-            self._elements.append(load)
-        for ground in self.grounds.values():
-            cy_elements.append(ground._cy_element)
-            self._elements.append(ground)
-        for p_ref in self.potential_refs.values():
-            cy_elements.append(p_ref._cy_element)
-            self._elements.append(p_ref)
-        for source in self.sources.values():
-            cy_elements.append(source._cy_element)
-            self._elements.append(source)
         self._propagate_potentials()
+        cy_elements = []
+        for element in self._elements:
+            cy_elements.append(element._cy_element)
         self._cy_electrical_network = CyElectricalNetwork(elements=np.array(cy_elements), nb_elements=len(cy_elements))
 
     def _check_validity(self, constructed: bool) -> None:
@@ -1256,32 +1224,55 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
 
         starting_potentials, starting_bus = self._get_potentials(all_phases)
         elements = [(starting_bus, starting_potentials)]
-        visited = set()
+        self._elements = [starting_bus]
+        visited = {starting_bus}
         while elements:
             element, potentials = elements.pop(-1)
             visited.add(element)
+            self._elements.append(element)
             if isinstance(element, Bus) and not element._initialized:
                 element.potentials = np.array([potentials[p] for p in element.phases], dtype=np.complex128)
                 element._initialized_by_the_user = False  # only used for serialization
-            for e in element._connected_elements:
-                if e not in visited and isinstance(e, (AbstractBranch, Bus)):
-                    if isinstance(element, Transformer):
-                        k = element.parameters._ulv / element.parameters._uhv
-                        phase_displacement = element.parameters.phase_displacement
-                        if phase_displacement is None:
-                            phase_displacement = 0
-                        new_potentials = potentials.copy()
-                        for key, p in new_potentials.items():
-                            new_potentials[key] = p * k * np.exp(phase_displacement * -1j * np.pi / 6.0)
-                        elements.append((e, new_potentials))
-                    else:
+            if not isinstance(element, Ground):  # Do not go from ground to buses/branches
+                for e in element._connected_elements:
+                    if e not in visited:
+                        if isinstance(element, Transformer):
+                            k = element.parameters._ulv / element.parameters._uhv
+                            phase_displacement = element.parameters.phase_displacement
+                            if phase_displacement is None:
+                                phase_displacement = 0
+                            new_potentials = potentials.copy()
+                            for key, p in new_potentials.items():
+                                new_potentials[key] = p * k * np.exp(phase_displacement * -1j * np.pi / 6.0)
+                            elements.append((e, new_potentials))
+                        else:
+                            elements.append((e, potentials))
+            else:
+                for e in element._connected_elements:
+                    if e not in visited and isinstance(e, PotentialRef):
                         elements.append((e, potentials))
 
-        if len(visited) < len(self.buses) + len(self.lines) + len(self.transformers) + len(self.switches):
+        if len(visited) < (
+            len(self.buses)
+            + len(self.lines)
+            + len(self.transformers)
+            + len(self.switches)
+            + len(self.grounds)
+            + len(self.sources)
+            + len(self.potential_refs)
+            + len(self.loads)
+        ):
             unconnected_elements = [
                 element
                 for element in chain(
-                    self.buses.values(), self.lines.values(), self.transformers.values(), self.switches.values()
+                    self.buses.values(),
+                    self.lines.values(),
+                    self.transformers.values(),
+                    self.switches.values(),
+                    self.sources.values(),
+                    self.loads.values(),
+                    self.grounds.values(),
+                    self.potential_refs.values(),
                 )
                 if element not in visited
             ]

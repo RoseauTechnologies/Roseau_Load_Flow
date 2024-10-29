@@ -8,13 +8,14 @@ from typing_extensions import Self
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.license import activate_license, get_license
 from roseau.load_flow.typing import JsonDict, Solver
-from roseau.load_flow_engine.cy_engine import CyAbstractSolver, CyNewton, CyNewtonGoldstein
+from roseau.load_flow_engine.cy_engine import CyAbstractSolver, CyBackwardForward, CyNewton, CyNewtonGoldstein
 
 logger = logging.getLogger(__name__)
 
 _SOLVERS_PARAMS: dict[Solver, list[str]] = {
     "newton": [],
     "newton_goldstein": ["m1", "m2"],
+    "backward_forward": [],
 }
 SOLVERS = list(_SOLVERS_PARAMS)
 
@@ -57,6 +58,8 @@ class AbstractSolver(ABC):
             m1 = data["params"].get("m1", NewtonGoldstein.DEFAULT_M1)
             m2 = data["params"].get("m2", NewtonGoldstein.DEFAULT_M2)
             return NewtonGoldstein(network=network, m1=m1, m2=m2)
+        elif data["name"] == "backward_forward":
+            return BackwardForward(network=network)
         else:
             msg = f"Solver {data['name']!r} is not implemented."
             logger.error(msg)
@@ -225,3 +228,27 @@ class NewtonGoldstein(AbstractNewton):
 
     def params(self) -> JsonDict:
         return {"m1": self.m1, "m2": self.m2}
+
+
+class BackwardForward(AbstractSolver):
+    """A backward-forward implementation, less stable than Newton-Raphson based algorithms,
+    but can be more performant in some cases.
+    """
+
+    name = "backward_forward"
+
+    def __init__(self, network: "ElectricalNetwork") -> None:
+        """Backward-Forward constructor.
+
+        Args:
+            network:
+                The electrical network for which the load flow needs to be solved.
+        """
+        super().__init__(network=network)
+        self._cy_solver = CyBackwardForward(network=network._cy_electrical_network)
+
+    def update_network(self, network: "ElectricalNetwork") -> None:
+        self._cy_solver = CyBackwardForward(network=network._cy_electrical_network)
+
+    def update_params(self, params: JsonDict) -> None:
+        pass
