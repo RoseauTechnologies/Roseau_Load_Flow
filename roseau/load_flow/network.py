@@ -171,6 +171,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         )
 
         self._elements: list[Element] = []
+        self._has_loop = False
         self._check_validity(constructed=False)
         self._create_network()
         self._valid = True
@@ -1223,11 +1224,12 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                 all_phases |= set(bus.phases)
 
         starting_potentials, starting_bus = self._get_potentials(all_phases)
-        elements = [(starting_bus, starting_potentials)]
+        elements = [(starting_bus, starting_potentials, None)]
         self._elements = [starting_bus]
+        self._has_loop = False
         visited = {starting_bus}
         while elements:
-            element, potentials = elements.pop(-1)
+            element, potentials, parent = elements.pop(-1)
             visited.add(element)
             self._elements.append(element)
             if isinstance(element, Bus) and not element._initialized:
@@ -1244,13 +1246,15 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                             new_potentials = potentials.copy()
                             for key, p in new_potentials.items():
                                 new_potentials[key] = p * k * np.exp(phase_displacement * -1j * np.pi / 6.0)
-                            elements.append((e, new_potentials))
+                            elements.append((e, new_potentials, element))
                         else:
-                            elements.append((e, potentials))
+                            elements.append((e, potentials, element))
+                    elif parent != e:
+                        self._has_loop = True
             else:
                 for e in element._connected_elements:
                     if e not in visited and isinstance(e, PotentialRef):
-                        elements.append((e, potentials))
+                        elements.append((e, potentials, element))
 
         if len(visited) < (
             len(self.buses)
