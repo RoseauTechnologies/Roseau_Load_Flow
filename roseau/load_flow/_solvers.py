@@ -259,4 +259,11 @@ class BackwardForward(AbstractSolver):
         if network._has_loop:
             msg = "The backward-forward solver does not support loops, but the network contains one."
             logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.NETWORK_LOOP)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.NO_BACKWARD_FORWARD)
+        if network._has_floating_neutral:
+            msg = (
+                "The backward-forward solver does not support loads with floating neutral, "
+                "but the network contains at least one."
+            )
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.NO_BACKWARD_FORWARD)

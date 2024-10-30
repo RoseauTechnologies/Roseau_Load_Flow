@@ -172,6 +172,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
 
         self._elements: list[Element] = []
         self._has_loop = False
+        self._has_floating_neutral = False
         self._check_validity(constructed=False)
         self._create_network()
         self._valid = True
@@ -1148,6 +1149,10 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
     def _create_network(self) -> None:
         """Create the Cython and C++ electrical network of all the passed elements."""
         self._valid = True
+        self._has_floating_neutral = False
+        for load in self.loads.values():
+            if load.has_floating_neutral:
+                self._has_floating_neutral = True
         self._propagate_potentials()
         cy_elements = []
         for element in self._elements:
