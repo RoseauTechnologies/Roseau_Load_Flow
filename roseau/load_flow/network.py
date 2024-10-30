@@ -1238,7 +1238,6 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         visited = {starting_source}
         while elements:
             element, potentials, parent = elements.pop(-1)
-            visited.add(element)
             self._elements.append(element)
             if isinstance(element, Bus) and not element._initialized:
                 element.potentials = np.array([potentials[p] for p in element.phases], dtype=np.complex128)
@@ -1255,14 +1254,17 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                             for key, p in new_potentials.items():
                                 new_potentials[key] = p * k * np.exp(phase_displacement * -1j * np.pi / 6.0)
                             elements.append((e, new_potentials, element))
+                            visited.add(e)
                         else:
                             elements.append((e, potentials, element))
+                            visited.add(e)
                     elif parent != e and not isinstance(e, Ground):
                         self._has_loop = True
             else:
                 for e in element._connected_elements:
                     if e not in visited and isinstance(e, PotentialRef):
                         elements.append((e, potentials, element))
+                        visited.add(e)
 
         if len(visited) < (
             len(self.buses)
