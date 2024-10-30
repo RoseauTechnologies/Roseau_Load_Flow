@@ -245,25 +245,24 @@ class BackwardForward(AbstractSolver):
                 The electrical network for which the load flow needs to be solved.
         """
         super().__init__(network=network)
-        self._check_network(network=network)
         self._cy_solver = CyBackwardForward(network=network._cy_electrical_network)
 
     def update_network(self, network: "ElectricalNetwork") -> None:
-        self._check_network(network=network)
         self._cy_solver = CyBackwardForward(network=network._cy_electrical_network)
 
     def update_params(self, params: JsonDict) -> None:
         pass
 
-    def _check_network(self, network: "ElectricalNetwork") -> None:
-        if network._has_loop:
+    def solve_load_flow(self, max_iterations: int, tolerance: float) -> tuple[int, float]:
+        if self.network._has_loop:
             msg = "The backward-forward solver does not support loops, but the network contains one."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.NO_BACKWARD_FORWARD)
-        if network._has_floating_neutral:
+        if self.network._has_floating_neutral:
             msg = (
                 "The backward-forward solver does not support loads with floating neutral, "
                 "but the network contains at least one."
             )
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.NO_BACKWARD_FORWARD)
+        return super().solve_load_flow(max_iterations, tolerance)

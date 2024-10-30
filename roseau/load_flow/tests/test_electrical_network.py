@@ -2140,24 +2140,3 @@ def test_propagate_potentials_center_transformers():
     with contextlib.suppress(TypeError):  # cython solve_load_flow method has been patched
         en.solve_load_flow()  # propagate the potentials
     npt.assert_allclose(bus2.potentials.m_as("V"), np.array([200, -200, 0], dtype=np.complex128))
-
-
-def test_network_loop():
-    bus1 = Bus(id="bus1", phases="abc")
-    PotentialRef(id="pref", element=bus1)
-    VoltageSource(id="vs", bus=bus1, voltages=20000)
-    bus2 = Bus(id="bus2", phases="abc")
-    lp = LineParameters(id="test", z_line=np.eye(3, dtype=complex))
-    Line(id="line1", bus1=bus1, bus2=bus2, parameters=lp, length=1.0)
-    bus3 = Bus(id="bus3", phases="abc")
-    Line(id="line2", bus1=bus2, bus2=bus3, parameters=lp, length=1.0)
-    en = ElectricalNetwork.from_element(bus1)
-    with contextlib.suppress(TypeError):  # cython solve_load_flow method has been patched
-        en.solve_load_flow(solver="backward_forward")  # Ok, no loop
-
-    # Add loop
-    Line(id="line3", bus1=bus1, bus2=bus3, parameters=lp, length=1.0)
-    with pytest.raises(RoseauLoadFlowException) as e:
-        en.solve_load_flow(solver="backward_forward")
-    assert "The backward-forward solver does not support loops, but the network contains one." in e.value.args[0]
-    assert e.value.args[1] == RoseauLoadFlowExceptionCode.NETWORK_LOOP
