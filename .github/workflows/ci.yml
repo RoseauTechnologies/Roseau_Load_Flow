@@ -51,10 +51,9 @@ jobs:
           git lfs prune --verify-remote
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v2
+        uses: astral-sh/setup-uv@v3
         with:
           enable-cache: true
-          cache-dependency-glob: "requirements**.lock"
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
@@ -63,11 +62,11 @@ jobs:
 
       - name: Install dependencies
         run: |
-          uv pip install -r requirements-dev.lock
+          uv sync --frozen --all-extras
 
       - name: Test with pytest
         run: |
-          pytest -vv -n=auto --durations=25 --cov-report html --cov-config pyproject.toml roseau
+          uv run pytest -vv -n=auto --durations=25 --cov-report html --cov-config pyproject.toml roseau
         env:
           ROSEAU_LOAD_FLOW_LICENSE_KEY: ${{ secrets.ROSEAU_LOAD_FLOW_LICENSE_KEY }}
 
