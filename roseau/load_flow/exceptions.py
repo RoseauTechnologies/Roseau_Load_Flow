@@ -98,6 +98,7 @@ class RoseauLoadFlowExceptionCode(StrEnum):
     BAD_SOLVER_NAME = auto()
     BAD_SOLVER_PARAMS = auto()
     NETWORK_LOOP = auto()
+    NO_BACKWARD_FORWARD = auto()
 
     # DGS export
     DGS_BAD_PHASE_TECHNOLOGY = auto()

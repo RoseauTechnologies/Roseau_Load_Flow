@@ -595,8 +595,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             msg = f"The license cannot be validated. The detailed error message is {msg[2:]!r}"
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.LICENSE_ERROR) from e
-        else:
-            assert msg.startswith("1 ")
+        elif msg.startswith("1 "):
             msg = msg[2:]
             zero_elements_index, inf_elements_index = self._solver._cy_solver.analyse_jacobian()
             if zero_elements_index:
@@ -615,6 +614,10 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                 )
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_JACOBIAN) from e
+        else:
+            assert msg.startswith("2 ")
+            msg = msg[2:]
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.NO_BACKWARD_FORWARD) from e
 
     #
     # Properties to access the load flow results as dataframes
@@ -1223,11 +1226,11 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             if not bus._initialized:
                 all_phases |= set(bus.phases)
 
-        starting_potentials, starting_bus = self._get_potentials(all_phases)
-        elements = [(starting_bus, starting_potentials, None)]
-        self._elements = [starting_bus]
+        starting_potentials, starting_source = self._get_potentials(all_phases)
+        elements = [(starting_source, starting_potentials, None)]
+        self._elements = []
         self._has_loop = False
-        visited = {starting_bus}
+        visited = {starting_source}
         while elements:
             element, potentials, parent = elements.pop(-1)
             visited.add(element)
@@ -1249,7 +1252,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                             elements.append((e, new_potentials, element))
                         else:
                             elements.append((e, potentials, element))
-                    elif parent != e:
+                    elif parent != e and not isinstance(e, Ground):
                         self._has_loop = True
             else:
                 for e in element._connected_elements:
@@ -1287,7 +1290,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.POORLY_CONNECTED_ELEMENT)
 
-    def _get_potentials(self, all_phases: set[str]) -> tuple[dict[str, complex], Bus]:
+    def _get_potentials(self, all_phases: set[str]) -> tuple[dict[str, complex], VoltageSource]:
         """Compute initial potentials from the voltages sources of the network, get also the starting source"""
         starting_source = None
         potentials = {"n": 0.0}
@@ -1324,7 +1327,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             potentials["c"] = v * np.exp(2j * np.pi / 3)
             potentials["n"] = 0.0
 
-        return potentials, starting_source.bus
+        return potentials, starting_source
 
     @staticmethod
     def _check_ref(elements: Iterable[Element]) -> None:
