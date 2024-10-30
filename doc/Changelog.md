@@ -26,6 +26,7 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 - {gh-pr}`269` Optimize the SVG files of the documentation.
 - {gh-pr}`268` Set up ReadTheDoc to automatically compile the documentation.
 - {gh-pr}`267` Add a section in the documentation on Google Colab secrets.
+- {gh-pr}`276` Add a backward-forward solver (experimental).
 
 ## Version 0.10.0
 
