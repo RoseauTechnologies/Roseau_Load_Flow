@@ -146,14 +146,15 @@ Newton-Raphson algorithms.
 
 - **Modeling Restrictions**:
   - The network cannot contain loops.
-  - Floating neutrals are not allowed for loads.
+  - Floating neutrals are not allowed for loads and sources.
 - **Convergence**: This method may exhibit weaker convergence properties, particularly in scenarios involving
   flexible loads.
 
 ### Important Note
 
-This solver is still in the experimental stage. Users should be aware that certain edge cases may not be handled
-correctly when utilizing the backward-forward sweep method.
+This solver is still in the **experimental** stage. Users should be aware that certain edge cases may not be handled
+correctly when utilizing the backward-forward sweep method. If you face any issues with this solver, please let
+us know by filing a GitHub issue
 
 ### Parameters
 
