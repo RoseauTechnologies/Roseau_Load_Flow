@@ -97,9 +97,24 @@ def test_backward_forward_limitations():
     load = PowerLoad(id="load", bus=bus3, powers=[10, 10, 10], phases="abcn")
     with pytest.raises(RoseauLoadFlowException) as e:
         en.solve_load_flow(solver="backward_forward")
-    assert "The backward-forward solver does not support loads with floating neutral" in e.value.args[0]
+    assert (
+        "The backward-forward solver does not support loads or voltage sources with floating neutral" in e.value.args[0]
+    )
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.NO_BACKWARD_FORWARD
     load.disconnect()
+
+    with contextlib.suppress(TypeError):  # cython solve_load_flow method has been patched
+        en.solve_load_flow(solver="backward_forward")  # Ok, no loop or floating neutral
+
+    # Add floating neutral
+    vs = VoltageSource(id="vs2", bus=bus3, voltages=20e3, phases="abcn")
+    with pytest.raises(RoseauLoadFlowException) as e:
+        en.solve_load_flow(solver="backward_forward")
+    assert (
+        "The backward-forward solver does not support loads or voltage sources with floating neutral" in e.value.args[0]
+    )
+    assert e.value.args[1] == RoseauLoadFlowExceptionCode.NO_BACKWARD_FORWARD
+    vs.disconnect()
 
     with contextlib.suppress(TypeError):  # cython solve_load_flow method has been patched
         en.solve_load_flow(solver="backward_forward")  # Ok, no loop or floating neutral

@@ -1153,6 +1153,9 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         for load in self.loads.values():
             if load.has_floating_neutral:
                 self._has_floating_neutral = True
+        for source in self.sources.values():
+            if source.has_floating_neutral:
+                self._has_floating_neutral = True
         self._propagate_potentials()
         cy_elements = []
         for element in self._elements:
