@@ -1,4 +1,5 @@
 import logging
+import warnings
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
@@ -8,6 +9,7 @@ from typing_extensions import Self
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.license import activate_license, get_license
 from roseau.load_flow.typing import JsonDict, Solver
+from roseau.load_flow.utils._exceptions import find_stack_level
 from roseau.load_flow_engine.cy_engine import CyAbstractSolver, CyBackwardForward, CyNewton, CyNewtonGoldstein
 
 logger = logging.getLogger(__name__)
@@ -92,10 +94,10 @@ class AbstractSolver(ABC):
         """If the network has changed, we need to re-create a solver for this new network."""
         raise NotImplementedError
 
-    @abstractmethod
     def update_params(self, params: JsonDict) -> None:
         """If the network has changed, we need to re-create a solver for this new network."""
-        raise NotImplementedError
+        msg = "The update_params() method is called for a solver that doesn't have any parameters."
+        warnings.warn(msg, stacklevel=find_stack_level())
 
     def to_dict(self) -> JsonDict:
         """Return the solver information as a dictionary format."""
@@ -164,9 +166,6 @@ class Newton(AbstractNewton):
 
     def update_network(self, network: "ElectricalNetwork") -> None:
         self._cy_solver = CyNewton(network=network._cy_electrical_network, optimize_tape=self.optimize_tape)
-
-    def update_params(self, params: JsonDict) -> None:
-        pass
 
 
 class NewtonGoldstein(AbstractNewton):
@@ -249,9 +248,6 @@ class BackwardForward(AbstractSolver):
 
     def update_network(self, network: "ElectricalNetwork") -> None:
         self._cy_solver = CyBackwardForward(network=network._cy_electrical_network)
-
-    def update_params(self, params: JsonDict) -> None:
-        pass
 
     def solve_load_flow(self, max_iterations: int, tolerance: float) -> tuple[int, float]:
         if self.network._has_loop:
