@@ -171,6 +171,8 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         )
 
         self._elements: list[Element] = []
+        self._has_loop = False
+        self._has_floating_neutral = False
         self._check_validity(constructed=False)
         self._create_network()
         self._valid = True
@@ -579,16 +581,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         self._no_results = False
 
         # Lazily update the results of the elements
-        for element in chain(
-            self.buses.values(),
-            self.lines.values(),
-            self.transformers.values(),
-            self.switches.values(),
-            self.loads.values(),
-            self.sources.values(),
-            self.grounds.values(),
-            self.potential_refs.values(),
-        ):
+        for element in self._elements:
             element._fetch_results = True
             element._no_results = False
 
@@ -603,8 +596,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             msg = f"The license cannot be validated. The detailed error message is {msg[2:]!r}"
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.LICENSE_ERROR) from e
-        else:
-            assert msg.startswith("1 ")
+        elif msg.startswith("1 "):
             msg = msg[2:]
             zero_elements_index, inf_elements_index = self._solver._cy_solver.analyse_jacobian()
             if zero_elements_index:
@@ -623,6 +615,10 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                 )
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_JACOBIAN) from e
+        else:
+            assert msg.startswith("2 ")
+            msg = msg[2:]
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.NO_BACKWARD_FORWARD) from e
 
     #
     # Properties to access the load flow results as dataframes
@@ -1153,33 +1149,17 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
     def _create_network(self) -> None:
         """Create the Cython and C++ electrical network of all the passed elements."""
         self._valid = True
-        cy_elements = []
-        self._elements = []
-        for bus in self.buses.values():
-            cy_elements.append(bus._cy_element)
-            self._elements.append(bus)
-        for line in self.lines.values():
-            cy_elements.append(line._cy_element)
-            self._elements.append(line)
-        for transformer in self.transformers.values():
-            cy_elements.append(transformer._cy_element)
-            self._elements.append(transformer)
-        for switch in self.switches.values():
-            cy_elements.append(switch._cy_element)
-            self._elements.append(switch)
+        self._has_floating_neutral = False
         for load in self.loads.values():
-            cy_elements.append(load._cy_element)
-            self._elements.append(load)
-        for ground in self.grounds.values():
-            cy_elements.append(ground._cy_element)
-            self._elements.append(ground)
-        for p_ref in self.potential_refs.values():
-            cy_elements.append(p_ref._cy_element)
-            self._elements.append(p_ref)
+            if load.has_floating_neutral:
+                self._has_floating_neutral = True
         for source in self.sources.values():
-            cy_elements.append(source._cy_element)
-            self._elements.append(source)
+            if source.has_floating_neutral:
+                self._has_floating_neutral = True
         self._propagate_potentials()
+        cy_elements = []
+        for element in self._elements:
+            cy_elements.append(element._cy_element)
         self._cy_electrical_network = CyElectricalNetwork(elements=np.array(cy_elements), nb_elements=len(cy_elements))
 
     def _check_validity(self, constructed: bool) -> None:
@@ -1254,34 +1234,62 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             if not bus._initialized:
                 all_phases |= set(bus.phases)
 
-        starting_potentials, starting_bus = self._get_potentials(all_phases)
-        elements = [(starting_bus, starting_potentials)]
-        visited = set()
+        starting_potentials, starting_source = self._get_potentials(all_phases)
+        elements = [(starting_source, starting_potentials, None)]
+        self._elements = []
+        self._has_loop = False
+        visited = {starting_source}
         while elements:
-            element, potentials = elements.pop(-1)
-            visited.add(element)
+            element, potentials, parent = elements.pop(-1)
+            self._elements.append(element)
             if isinstance(element, Bus) and not element._initialized:
                 element.potentials = np.array([potentials[p] for p in element.phases], dtype=np.complex128)
                 element._initialized_by_the_user = False  # only used for serialization
-            for e in element._connected_elements:
-                if e not in visited and isinstance(e, (AbstractBranch, Bus)):
-                    if isinstance(element, Transformer):
-                        k = element.parameters._ulv / element.parameters._uhv
-                        phase_displacement = element.parameters.phase_displacement
-                        if phase_displacement is None:
-                            phase_displacement = 0
-                        new_potentials = potentials.copy()
-                        for key, p in new_potentials.items():
-                            new_potentials[key] = p * k * np.exp(phase_displacement * -1j * np.pi / 6.0)
-                        elements.append((e, new_potentials))
-                    else:
-                        elements.append((e, potentials))
+            if not isinstance(element, Ground):  # Do not go from ground to buses/branches
+                for e in element._connected_elements:
+                    if e not in visited:
+                        if isinstance(element, Transformer):
+                            k = element.parameters._ulv / element.parameters._uhv
+                            phase_displacement = element.parameters.phase_displacement
+                            if phase_displacement is None:
+                                phase_displacement = 0
+                            new_potentials = potentials.copy()
+                            for key, p in new_potentials.items():
+                                new_potentials[key] = p * k * np.exp(phase_displacement * -1j * np.pi / 6.0)
+                            elements.append((e, new_potentials, element))
+                            visited.add(e)
+                        else:
+                            elements.append((e, potentials, element))
+                            visited.add(e)
+                    elif parent != e and not isinstance(e, Ground):
+                        self._has_loop = True
+            else:
+                for e in element._connected_elements:
+                    if e not in visited and isinstance(e, PotentialRef):
+                        elements.append((e, potentials, element))
+                        visited.add(e)
 
-        if len(visited) < len(self.buses) + len(self.lines) + len(self.transformers) + len(self.switches):
+        if len(visited) < (
+            len(self.buses)
+            + len(self.lines)
+            + len(self.transformers)
+            + len(self.switches)
+            + len(self.grounds)
+            + len(self.sources)
+            + len(self.potential_refs)
+            + len(self.loads)
+        ):
             unconnected_elements = [
                 element
                 for element in chain(
-                    self.buses.values(), self.lines.values(), self.transformers.values(), self.switches.values()
+                    self.buses.values(),
+                    self.lines.values(),
+                    self.transformers.values(),
+                    self.switches.values(),
+                    self.sources.values(),
+                    self.loads.values(),
+                    self.grounds.values(),
+                    self.potential_refs.values(),
                 )
                 if element not in visited
             ]
@@ -1292,7 +1300,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.POORLY_CONNECTED_ELEMENT)
 
-    def _get_potentials(self, all_phases: set[str]) -> tuple[dict[str, complex], Bus]:
+    def _get_potentials(self, all_phases: set[str]) -> tuple[dict[str, complex], VoltageSource]:
         """Compute initial potentials from the voltages sources of the network, get also the starting source"""
         starting_source = None
         potentials = {"n": 0.0}
@@ -1329,7 +1337,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             potentials["c"] = v * np.exp(2j * np.pi / 3)
             potentials["n"] = 0.0
 
-        return potentials, starting_source.bus
+        return potentials, starting_source
 
     @staticmethod
     def _check_ref(elements: Iterable[Element]) -> None:
