@@ -135,7 +135,7 @@ en.res_buses.transform([np.abs, ft.partial(np.angle, deg=True)])
 # | ('bus3', 'c') |                   395.28    |                  120.043 |
 
 # The requested voltages of the voltage sources are respected
-en.res_buses_voltages.transform([np.abs, ft.partial(np.angle, deg=True)])
+en.res_buses_voltages.transform[["voltage"]]([np.abs, ft.partial(np.angle, deg=True)])
 # |                |   ('voltage', 'absolute') |   ('voltage', 'angle') |
 # |:---------------|--------------------------:|-----------------------:|
 # | ('bus1', 'ab') |                   400     |            6.31922e-19 |

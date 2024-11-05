@@ -160,7 +160,7 @@ en.res_transformers[["current2"]].transform([np.abs, ft.partial(np.angle, deg=Tr
 # the load has 0VA on this phase.
 
 # The voltages at the buses of the network
-en.res_buses_voltages.transform([np.abs, ft.partial(np.angle, deg=True)])
+en.res_buses_voltages.transform[["voltage"]]([np.abs, ft.partial(np.angle, deg=True)])
 # |                      |   ('voltage', 'absolute') |   ('voltage', 'angle') |
 # |:---------------------|--------------------------:|-----------------------:|
 # | ('source_bus', 'an') |                 11547     |            9.20565e-25 |
