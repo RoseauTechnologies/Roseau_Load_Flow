@@ -14,7 +14,6 @@ from roseau.load_flow.models.loads.flexible_parameters import FlexibleParameter
 from roseau.load_flow.typing import ComplexArray, ComplexScalarOrArrayLike1D, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow.utils._exceptions import find_stack_level
-from roseau.load_flow.utils.constants import PositiveSequence
 from roseau.load_flow_engine.cy_engine import (
     CyAdmittanceLoad,
     CyCurrentLoad,
@@ -158,19 +157,7 @@ class AbstractLoad(Element, ABC):
         return self._res_currents_getter(warning=True)
 
     def _validate_value(self, value: ComplexScalarOrArrayLike1D) -> ComplexArray:
-        if np.isscalar(value):
-            if self.type == "current":
-                if self._size == 1:
-                    values = [value]
-                elif self._size == 2:
-                    values = [value, -value]
-                else:
-                    assert self._size == 3
-                    values = value * PositiveSequence
-            else:
-                values = [value for _ in range(self._size)]
-        else:
-            values = value
+        values = [value for _ in range(self._size)] if np.isscalar(value) else value
         values = np.array(values, dtype=np.complex128)
         if len(values) != self._size:
             msg = f"Incorrect number of {self.type}s: {len(values)} instead of {self._size}"
@@ -536,15 +523,13 @@ class CurrentLoad(AbstractLoad):
             currents:
                 A single current value or an array-like of current values for each phase component.
                 Either complex values (A) or a :class:`Quantity <roseau.load_flow.units.Q_>` of
-                complex values.
+                complex values. The complex currents provided define the currents magnitudes and
+                their phase shift from the voltages of the load. For example, a current of
+                ``10*exp(-90°j)`` represents an inductive constant current of 10 A.
 
-                When a scalar value is provided, it is interpreted as the first value of the load
-                currents vector to create a balanced load. The other values are calculated based on
-                the number of phases of the load. For a single-phase load, the passed scalar value
-                is used. For a two-phase load, the second current value is the negative of the first
-                value (180° phase shift). For a three-phase load, the second and third current
-                values are obtained by rotating the first value by -120° and 120°, respectively
-                (120° phase shift clockwise).
+                When a scalar value is provided, it creates a balanced load with the same current
+                for each phase. To create an unbalanced load, provide a vector of current values
+                with the same length as the number of components of the load.
 
             phases:
                 The phases of the load. A string like ``"abc"`` or ``"an"`` etc. The bus phases are

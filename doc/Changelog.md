@@ -19,6 +19,10 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`277` Fix the definition of constant current loads to be the magnitudes of the currents
+  and their phase shift from the voltages instead of the absolute phase shift. Currents should no
+  longer be rotated by 120° to be in sync with the voltages.
+- {gh-pr}`276` Add a backward-forward solver (experimental).
 - {gh-pr}`275` Use [uv](https://docs.astral.sh/uv/) instead of [Rye](https://rye.astral.sh/) as dependency manager.
 - {gh-pr}`273` Dynamically calculate the stacklevel of the first frame outside of `roseau.load_flow` for warnings
 - {gh-pr}`272` {gh-issue}`271`: Fix segfault when phases of a potential reference are not the same as the bus phases.
@@ -26,7 +30,6 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 - {gh-pr}`269` Optimize the SVG files of the documentation.
 - {gh-pr}`268` Set up ReadTheDoc to automatically compile the documentation.
 - {gh-pr}`267` Add a section in the documentation on Google Colab secrets.
-- {gh-pr}`276` Add a backward-forward solver (experimental).
 
 ## Version 0.10.0
 

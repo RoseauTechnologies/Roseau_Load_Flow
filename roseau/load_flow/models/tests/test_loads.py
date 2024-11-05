@@ -771,19 +771,13 @@ def test_loads_scalar_values():
 
     # Current load
     load = CurrentLoad(id="load6", bus=bus, currents=2 + 1j, phases="abcn")
-    np.testing.assert_allclose(
-        load.currents.m, [(2 + 1j), (2 + 1j) * np.exp(-2j * np.pi / 3), (2 + 1j) * np.exp(2j * np.pi / 3)], strict=True
-    )
+    np.testing.assert_allclose(load.currents.m, [2 + 1j, 2 + 1j, 2 + 1j], strict=True)
     load.currents = 4 + 2j
-    np.testing.assert_allclose(
-        load.currents.m, [(4 + 2j), (4 + 2j) * np.exp(-2j * np.pi / 3), (4 + 2j) * np.exp(2j * np.pi / 3)], strict=True
-    )
+    np.testing.assert_allclose(load.currents.m, [4 + 2j, 4 + 2j, 4 + 2j], strict=True)
     load = CurrentLoad(id="load7", bus=bus, currents=2 + 1j, phases="abc")
-    np.testing.assert_allclose(
-        load.currents.m, [(2 + 1j), (2 + 1j) * np.exp(-2j * np.pi / 3), (2 + 1j) * np.exp(2j * np.pi / 3)], strict=True
-    )
+    np.testing.assert_allclose(load.currents.m, [2 + 1j, 2 + 1j, 2 + 1j], strict=True)
     load = CurrentLoad(id="load8", bus=bus, currents=2 + 1j, phases="bcn")
-    np.testing.assert_allclose(load.currents.m, [(2 + 1j), -(2 + 1j)], strict=True)
+    np.testing.assert_allclose(load.currents.m, [2 + 1j, 2 + 1j], strict=True)
     load = CurrentLoad(id="load9", bus=bus, currents=2 + 1j, phases="ca")
     np.testing.assert_allclose(load.currents.m, [2 + 1j], strict=True)
     load = CurrentLoad(id="load10", bus=bus, currents=2 + 1j, phases="an")

@@ -130,7 +130,7 @@ en.res_transformers[["power1", "power2"]].abs()
 # | ('transfo', 'n') |    0     |        0 |
 
 # The voltages at the buses of the network
-en.res_buses_voltages.transform([np.abs, ft.partial(np.angle, deg=True)])
+en.res_buses_voltages[["voltage"]].transform([np.abs, ft.partial(np.angle, deg=True)])
 # |                |   ('voltage', 'absolute') |   ('voltage', 'angle') |
 # |:---------------|--------------------------:|-----------------------:|
 # | ('bus1', 'an') |                    230.94 |               0        |

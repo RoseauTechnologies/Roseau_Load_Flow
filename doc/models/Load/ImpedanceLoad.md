@@ -20,26 +20,27 @@ _ZIP_ equation: $S = 0 \times V^0 + 0 \times V^1 + z \times V^2 \implies S \prop
 
 ## Equations
 
-The equations are the following (star loads):
+The equations are the following for star loads given the constant impedances {math}`z_{\mathrm{abc}}`:
 
 ```{math}
 \left\{
     \begin{aligned}
         \underline{I_{\mathrm{abc}}} &= \frac{\underline{V_{\mathrm{abc}}}-\underline{V_{\mathrm{n}}}}{
-        \underline{Z_{\mathrm{abc}}}} \\
+        \underline{z_{\mathrm{abc}}}} \\
         \underline{I_{\mathrm{n}}} &= -\sum_{p\in\{\mathrm{a},\mathrm{b},\mathrm{c}\}}\underline{I_{p}}
     \end{aligned}
 \right.
 ```
 
-And the following (delta loads):
+And the following for delta loads given the constant impedances {math}`z_{\mathrm{ab}}`,
+{math}`z_{\mathrm{bc}}` and {math}`z_{\mathrm{ca}}`:
 
 ```{math}
 \left\{
     \begin{aligned}
-        \underline{I_{\mathrm{ab}}} &= \frac{\underline{V_{\mathrm{a}}}-\underline{V_{\mathrm{b}}}}{\underline{Z_{\mathrm{ab}}}} \\
-        \underline{I_{\mathrm{bc}}} &= \frac{\underline{V_{\mathrm{b}}}-\underline{V_{\mathrm{c}}}}{\underline{Z_{\mathrm{bc}}}} \\
-        \underline{I_{\mathrm{ca}}} &= \frac{\underline{V_{\mathrm{c}}}-\underline{V_{\mathrm{a}}}}{\underline{Z_{\mathrm{ca}}}}
+        \underline{I_{\mathrm{ab}}} &= \frac{\underline{V_{\mathrm{a}}}-\underline{V_{\mathrm{b}}}}{\underline{z_{\mathrm{ab}}}} \\
+        \underline{I_{\mathrm{bc}}} &= \frac{\underline{V_{\mathrm{b}}}-\underline{V_{\mathrm{c}}}}{\underline{z_{\mathrm{bc}}}} \\
+        \underline{I_{\mathrm{ca}}} &= \frac{\underline{V_{\mathrm{c}}}-\underline{V_{\mathrm{a}}}}{\underline{z_{\mathrm{ca}}}}
     \end{aligned}
 \right.
 ```
@@ -78,7 +79,7 @@ load.res_voltages / load.res_currents[:3]
 # array([40.+3.j, 40.+3.j, 40.+3.j]) <Unit('volt / ampere')>
 
 # Get the voltages of the network
-en.res_buses_voltages.transform([np.abs, ft.partial(np.angle, deg=True)])
+en.res_buses_voltages["voltage"].transform([np.abs, ft.partial(np.angle, deg=True)])
 # |                |   ('voltage', 'absolute') |   ('voltage', 'angle') |
 # |:---------------|--------------------------:|-----------------------:|
 # | ('bus1', 'an') |                   230.94  |           -6.40192e-19 |
@@ -97,7 +98,7 @@ load.res_voltages / load.res_currents[:3]
 # array([40.+4.j, 20.+2.j, 10.+1.j]) <Unit('volt / ampere')>
 
 # Get the voltages of the network
-en.res_buses_voltages.transform([np.abs, ft.partial(np.angle, deg=True)])
+en.res_buses_voltages["voltage"].transform([np.abs, ft.partial(np.angle, deg=True)])
 # |                |   ('voltage', 'absolute') |   ('voltage', 'angle') |
 # |:---------------|--------------------------:|-----------------------:|
 # | ('bus1', 'an') |                   230.94  |               0        |
