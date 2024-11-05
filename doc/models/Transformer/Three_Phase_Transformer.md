@@ -672,7 +672,7 @@ en.res_transformers[["current2"]].transform([np.abs, ft.partial(np.angle, deg=Tr
 # | ('transfo', 'n') |                2.25156e-13 |                -80.4634 |
 
 # The voltages at the buses of the network
-en.res_buses_voltages.transform[["voltage"]]([np.abs, ft.partial(np.angle, deg=True)])
+en.res_buses_voltages[["voltage"]].transform([np.abs, ft.partial(np.angle, deg=True)])
 # |                  |   ('voltage', 'absolute') |   ('voltage', 'angle') |
 # |:-----------------|--------------------------:|-----------------------:|
 # | ('bus_mv', 'ab') |                 20000     |               0        |
