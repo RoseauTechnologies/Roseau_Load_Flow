@@ -10,9 +10,9 @@ import numpy as np
 import roseau.load_flow as rlf
 
 PHASES = {"MV": "abc", "LV": "abcn"}
-U_N = {"MV": 20_000, "LV": 230}
-U_MAX = {"MV": int(20_000 * 1.05), "LV": int(230 * 1.1)}
-U_MIN = {"MV": int(20_000 * 0.95), "LV": int(230 * 0.9)}
+U_N = {"MV": 20_000, "LV": 400}
+U_MAX = {"MV": 1.05, "LV": 1.1}
+U_MIN = {"MV": 0.95, "LV": 0.9}
 
 df = rlf.ElectricalNetwork.get_catalogue()
 
@@ -64,8 +64,9 @@ if __name__ == "__main__":
                     id=bus_id,
                     phases=PHASES[bus_type],
                     geometry=bus.geometry,
-                    min_voltage=U_MIN[bus_type],
-                    max_voltage=U_MAX[bus_type],
+                    nominal_voltage=U_N[bus_type],
+                    min_voltage_level=U_MIN[bus_type],
+                    max_voltage_level=U_MAX[bus_type],
                 )
                 new_buses[bus_id] = new_bus
             assert feeder_bus_id is not None

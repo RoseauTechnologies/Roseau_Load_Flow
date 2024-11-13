@@ -1,4 +1,5 @@
 import logging
+import warnings
 from collections.abc import Iterator
 from functools import cached_property
 from typing import TYPE_CHECKING, Any, Final
@@ -11,8 +12,9 @@ from typing_extensions import Self
 from roseau.load_flow.converters import _calculate_voltages, calculate_voltage_phases, phasor_to_sym
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.core import Element
-from roseau.load_flow.typing import ComplexArray, ComplexArrayLike1D, Id, JsonDict
+from roseau.load_flow.typing import ComplexArray, ComplexArrayLike1D, FloatArrayLike1D, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
+from roseau.load_flow.utils._exceptions import find_stack_level
 from roseau.load_flow_engine.cy_engine import CyBus
 
 logger = logging.getLogger(__name__)
@@ -39,8 +41,9 @@ class Bus(Element):
         phases: str,
         geometry: BaseGeometry | None = None,
         potentials: ComplexArrayLike1D | None = None,
-        min_voltage: float | None = None,
-        max_voltage: float | None = None,
+        nominal_voltage: float | None = None,
+        min_voltage_level: float | None = None,
+        max_voltage_level: float | None = None,
     ) -> None:
         """Bus constructor.
 
@@ -63,15 +66,20 @@ class Bus(Element):
                 Either complex values (V) or a :class:`Quantity <roseau.load_flow.units.Q_>` of
                 complex values.
 
-            min_voltage:
-                An optional minimum voltage of the bus (V). It is not used in the load flow.
-                It must be a phase-neutral voltage if the bus has a neutral, phase-phase otherwise.
-                Either a float (V) or a :class:`Quantity <roseau.load_flow.units.Q_>` of float.
+            nominal_voltage:
+                An optional nominal voltage for the bus (V). It is not used in the load flow.
+                It is always a phase-phase voltage. It can be a float (V) or a
+                :class:`Quantity <roseau.load_flow.units.Q_>` of float.
 
-            max_voltage:
-                An optional maximum voltage of the bus (V). It is not used in the load flow.
-                It must be a phase-neutral voltage if the bus has a neutral, phase-phase otherwise.
-                Either a float (V) or a :class:`Quantity <roseau.load_flow.units.Q_>` of float.
+            min_voltage_level:
+                An optional minimum voltage of the bus (%). It is not used in the load flow.
+                It must be a percentage of the `nominal_voltage`. If provided, the nominal voltage becomes mandatory.
+                Either a float (without unit) or a :class:`Quantity <roseau.load_flow.units.Q_>` of float.
+
+            max_voltage_level:
+                An optional maximum voltage of the bus (%). It is not used in the load flow.
+                It must be a percentage of the `nominal_voltage`. If provided, the nominal voltage becomes mandatory.
+                Either a float (without unit) or a :class:`Quantity <roseau.load_flow.units.Q_>` of float.
         """
         super().__init__(id)
         self._check_phases(id, phases=phases)
@@ -81,12 +89,15 @@ class Bus(Element):
             potentials = [0] * len(phases)
         self.potentials = potentials
         self.geometry = geometry
-        self._min_voltage: float | None = None
-        self._max_voltage: float | None = None
-        if min_voltage is not None:
-            self.min_voltage = min_voltage
-        if max_voltage is not None:
-            self.max_voltage = max_voltage
+        self._nominal_voltage: float | None = None
+        self._min_voltage_level: float | None = None
+        self._max_voltage_level: float | None = None
+        if nominal_voltage is not None:
+            self.nominal_voltage = nominal_voltage
+        if min_voltage_level is not None:
+            self.min_voltage_level = min_voltage_level
+        if max_voltage_level is not None:
+            self.max_voltage_level = max_voltage_level
 
         self._res_potentials: ComplexArray | None = None
         self._short_circuits: list[dict[str, Any]] = []
@@ -151,6 +162,22 @@ class Bus(Element):
         """
         return self._res_voltages_getter(warning=True)
 
+    @property
+    def res_voltages_level(self) -> FloatArrayLike1D | None:
+        """The load flow result of the bus voltages level (V).
+
+        If the bus has a neutral, the voltages are phase-neutral voltages for existing phases in
+        the order ``[Van, Vbn, Vcn]``. If the bus does not have a neutral, phase-phase voltages
+        are returned in the order ``[Vab, Vbc, Vca]``.
+        """
+        if self._nominal_voltage is None:
+            return None
+        voltages_abs = abs(self._res_voltages_getter(warning=True))
+        if "n" in self.phases:
+            return Q_(np.sqrt(3) * voltages_abs / self._nominal_voltage, "V")
+        else:
+            return Q_(voltages_abs / self._nominal_voltage, "V")
+
     @cached_property
     def voltage_phases(self) -> list[str]:
         """The phases of the voltages."""
@@ -162,42 +189,108 @@ class Bus(Element):
         return np.array([potentials[self.phases.index(p)] for p in phases])
 
     @property
-    def min_voltage(self) -> Q_[float] | None:
-        """The minimum voltage of the bus (V) if it is set."""
-        return None if self._min_voltage is None else Q_(self._min_voltage, "V")
+    def nominal_voltage(self) -> Q_[float] | None:
+        """The phase-phase nominal voltage of the bus of the bus (V) if it is set."""
+        return None if self._nominal_voltage is None else Q_(self._nominal_voltage, "V")
 
-    @min_voltage.setter
+    @nominal_voltage.setter
     @ureg_wraps(None, (None, "V"))
-    def min_voltage(self, value: float | Q_[float] | None) -> None:
-        if value is not None and self._max_voltage is not None and value > self._max_voltage:
-            msg = (
-                f"Cannot set min voltage of bus {self.id!r} to {value} V as it is higher than its "
-                f"max voltage ({self._max_voltage} V)."
-            )
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_VOLTAGES)
+    def nominal_voltage(self, value: float | Q_[float] | None) -> None:
         if pd.isna(value):
             value = None
-        self._min_voltage = value
+        if value is None:
+            if self._max_voltage_level is not None or self._min_voltage_level is not None:
+                warnings.warn(
+                    message=(
+                        f"The nominal voltage of the bus {self.id!r} is required to use `min_voltage_level` and "
+                        f"`max_voltage_level`."
+                    ),
+                    category=UserWarning,
+                    stacklevel=find_stack_level(),
+                )
+        else:
+            if value <= 0:
+                msg = f"The nominal voltage of bus {self.id!r} must be positive. {value} V has been provided."
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_VOLTAGES)
+        self._nominal_voltage = value
+
+    @property
+    def min_voltage_level(self) -> Q_[float] | None:
+        """The minimum voltage level of the bus if it is set."""
+        return None if self._min_voltage_level is None else Q_(self._min_voltage_level, "")
+
+    @min_voltage_level.setter
+    @ureg_wraps(None, (None, ""))
+    def min_voltage_level(self, value: float | Q_[float] | None) -> None:
+        if pd.isna(value):
+            value = None
+        if value is not None:
+            if self._max_voltage_level is not None and value > self._max_voltage_level:
+                msg = (
+                    f"Cannot set min voltage level of bus {self.id!r} to {value} as it is higher than its "
+                    f"max voltage ({self._max_voltage_level})."
+                )
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_VOLTAGES)
+            if self._nominal_voltage is None:
+                warnings.warn(
+                    message=(
+                        f"The min voltage level of the bus {self.id!r} is useless without a nominal voltage. Please "
+                        f"define a nominal voltage for this bus."
+                    ),
+                    category=UserWarning,
+                    stacklevel=find_stack_level(),
+                )
+
+        self._min_voltage_level = value
+
+    @property
+    def min_voltage(self) -> Q_[float] | None:
+        """The minimum voltage of the bus (V) if it is set."""
+        return (
+            None
+            if self._min_voltage_level is None or self._nominal_voltage is None
+            else Q_(self._min_voltage_level * self._nominal_voltage, "V")
+        )
+
+    @property
+    def max_voltage_level(self) -> Q_[float] | None:
+        """The maximum voltage level of the bus if it is set."""
+        return None if self._max_voltage_level is None else Q_(self._max_voltage_level, "")
+
+    @max_voltage_level.setter
+    @ureg_wraps(None, (None, ""))
+    def max_voltage_level(self, value: float | Q_[float] | None) -> None:
+        if pd.isna(value):
+            value = None
+        if value is not None:
+            if self._min_voltage_level is not None and value < self._min_voltage_level:
+                msg = (
+                    f"Cannot set max voltage level of bus {self.id!r} to {value} as it is lower than its "
+                    f"min voltage ({self._min_voltage_level})."
+                )
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_VOLTAGES)
+            if self._nominal_voltage is None:
+                warnings.warn(
+                    message=(
+                        f"The max voltage level of the bus {self.id!r} is useless without a nominal voltage. Please "
+                        f"define a nominal voltage for this bus."
+                    ),
+                    category=UserWarning,
+                    stacklevel=find_stack_level(),
+                )
+        self._max_voltage_level = value
 
     @property
     def max_voltage(self) -> Q_[float] | None:
         """The maximum voltage of the bus (V) if it is set."""
-        return None if self._max_voltage is None else Q_(self._max_voltage, "V")
-
-    @max_voltage.setter
-    @ureg_wraps(None, (None, "V"))
-    def max_voltage(self, value: float | Q_[float] | None) -> None:
-        if value is not None and self._min_voltage is not None and value < self._min_voltage:
-            msg = (
-                f"Cannot set max voltage of bus {self.id!r} to {value} V as it is lower than its "
-                f"min voltage ({self._min_voltage} V)."
-            )
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_VOLTAGES)
-        if pd.isna(value):
-            value = None
-        self._max_voltage = value
+        return (
+            None
+            if self._max_voltage_level is None or self._nominal_voltage is None
+            else Q_(self._max_voltage_level * self._nominal_voltage, "V")
+        )
 
     @property
     def res_violated(self) -> bool | None:
@@ -205,16 +298,23 @@ class Bus(Element):
 
         Returns ``None`` if the bus has no voltage limits are not set.
         """
-        if self._min_voltage is None and self._max_voltage is None:
+        if (self._min_voltage_level is None and self._max_voltage_level is None) or self._nominal_voltage is None:
             return None
         voltages = abs(self._res_voltages_getter(warning=True))
-        if self._min_voltage is None:
-            assert self._max_voltage is not None
-            return float(max(voltages)) > self._max_voltage
-        elif self._max_voltage is None:
-            return float(min(voltages)) < self._min_voltage
+        if "n" in self.phases:
+            voltages_level = np.sqrt(3) * voltages / self._nominal_voltage
         else:
-            return float(min(voltages)) < self._min_voltage or float(max(voltages)) > self._max_voltage
+            voltages_level = voltages / self._nominal_voltage
+        if self._min_voltage_level is None:
+            assert self._max_voltage_level is not None
+            return float(max(voltages_level)) > self._max_voltage_level
+        elif self._max_voltage_level is None:
+            return float(min(voltages_level)) < self._min_voltage_level
+        else:
+            return (
+                float(min(voltages_level)) < self._min_voltage_level
+                or float(max(voltages_level)) > self._max_voltage_level
+            )
 
     def propagate_limits(self, force: bool = False) -> None:
         """Propagate the voltage limits to galvanically connected buses.
@@ -253,32 +353,45 @@ class Bus(Element):
                 remaining.update(to_add)
                 if not (
                     force
-                    or self._min_voltage is None
-                    or element._min_voltage is None
-                    or np.isclose(element._min_voltage, self._min_voltage)
+                    or self._nominal_voltage is None
+                    or element._nominal_voltage is None
+                    or np.isclose(element._nominal_voltage, self._nominal_voltage)
                 ):
                     msg = (
-                        f"Cannot propagate the minimum voltage ({self._min_voltage} V) of bus {self.id!r} "
-                        f"to bus {element.id!r} with different minimum voltage ({element._min_voltage} V)."
+                        f"Cannot propagate the nominal voltage ({self._nominal_voltage} V) of bus {self.id!r} "
+                        f"to bus {element.id!r} with different nominal voltage ({element._nominal_voltage} V)."
                     )
                     logger.error(msg)
                     raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_VOLTAGES)
                 if not (
                     force
-                    or self._max_voltage is None
-                    or element._max_voltage is None
-                    or np.isclose(element._max_voltage, self._max_voltage)
+                    or self._min_voltage_level is None
+                    or element._min_voltage_level is None
+                    or np.isclose(element._min_voltage_level, self._min_voltage_level)
                 ):
                     msg = (
-                        f"Cannot propagate the maximum voltage ({self._max_voltage} V) of bus {self.id!r} "
-                        f"to bus {element.id!r} with different maximum voltage ({element._max_voltage} V)."
+                        f"Cannot propagate the minimum voltage level ({self._min_voltage_level}) of bus {self.id!r} "
+                        f"to bus {element.id!r} with different minimum voltage level ({element._min_voltage_level})."
+                    )
+                    logger.error(msg)
+                    raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_VOLTAGES)
+                if not (
+                    force
+                    or self._max_voltage_level is None
+                    or element._max_voltage_level is None
+                    or np.isclose(element._max_voltage_level, self._max_voltage_level)
+                ):
+                    msg = (
+                        f"Cannot propagate the maximum voltage level ({self._max_voltage_level}) of bus {self.id!r} "
+                        f"to bus {element.id!r} with different maximum voltage level ({element._max_voltage_level})."
                     )
                     logger.error(msg)
                     raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_VOLTAGES)
 
         for bus in buses:
-            bus._min_voltage = self._min_voltage
-            bus._max_voltage = self._max_voltage
+            bus._nominal_voltage = self._nominal_voltage
+            bus._min_voltage_level = self._min_voltage_level
+            bus._max_voltage_level = self._max_voltage_level
 
     def get_connected_buses(self) -> Iterator[Id]:
         """Get IDs of all the buses galvanically connected to this bus.
@@ -343,8 +456,9 @@ class Bus(Element):
             phases=data["phases"],
             geometry=geometry,
             potentials=potentials,
-            min_voltage=data.get("min_voltage"),
-            max_voltage=data.get("max_voltage"),
+            nominal_voltage=data.get("nominal_voltage"),
+            min_voltage_level=data.get("min_voltage_level"),
+            max_voltage_level=data.get("max_voltage_level"),
         )
         if include_results and "results" in data:
             self._res_potentials = np.array(
@@ -360,10 +474,12 @@ class Bus(Element):
             res["potentials"] = [[v.real, v.imag] for v in self._potentials]
         if self.geometry is not None:
             res["geometry"] = self.geometry.__geo_interface__
-        if self.min_voltage is not None:
-            res["min_voltage"] = self.min_voltage.magnitude
-        if self.max_voltage is not None:
-            res["max_voltage"] = self.max_voltage.magnitude
+        if self.nominal_voltage is not None:
+            res["nominal_voltage"] = self.nominal_voltage.magnitude
+        if self.min_voltage_level is not None:
+            res["min_voltage_level"] = self.min_voltage_level.magnitude
+        if self.max_voltage_level is not None:
+            res["max_voltage_level"] = self.max_voltage_level.magnitude
         if include_results:
             potentials = self._res_potentials_getter(warning=True)
             res["results"] = {"potentials": [[v.real, v.imag] for v in potentials]}
