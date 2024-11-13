@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "is_multiphase": true,
   "grounds": [
     {
@@ -31,8 +31,8 @@
         "type": "Point",
         "coordinates": [-1.318375372111463, 48.64794139348595]
       },
-      "min_voltage": 19000,
-      "max_voltage": 21000
+      "nominal_voltage": 20000,
+      "min_voltage_level": 0.95
     },
     {
       "id": "MVLVFeeder03045",
@@ -41,8 +41,8 @@
         "type": "Point",
         "coordinates": [-1.318375372111463, 48.64794139348595]
       },
-      "min_voltage": 207,
-      "max_voltage": 253
+      "nominal_voltage": 400,
+      "min_voltage_level": 0.9
     },
     {
       "id": "LVBus004111",
@@ -51,8 +51,8 @@
         "type": "Point",
         "coordinates": [-1.319439380306016, 48.64935651484044]
       },
-      "min_voltage": 207,
-      "max_voltage": 253
+      "nominal_voltage": 400,
+      "min_voltage_level": 0.9
     },
     {
       "id": "LVBus004113",
@@ -61,8 +61,8 @@
         "type": "Point",
         "coordinates": [-1.320149235966572, 48.64971306653889]
       },
-      "min_voltage": 207,
-      "max_voltage": 253
+      "nominal_voltage": 400,
+      "min_voltage_level": 0.9
     },
     {
       "id": "LVBus004116",
@@ -71,8 +71,8 @@
         "type": "Point",
         "coordinates": [-1.320032407456181, 48.64986022542928]
       },
-      "min_voltage": 207,
-      "max_voltage": 253
+      "nominal_voltage": 400,
+      "min_voltage_level": 0.9
     },
     {
       "id": "LVBus004114",
@@ -81,8 +81,8 @@
         "type": "Point",
         "coordinates": [-1.320930091968568, 48.64998504109587]
       },
-      "min_voltage": 207,
-      "max_voltage": 253
+      "nominal_voltage": 400,
+      "min_voltage_level": 0.9
     },
     {
       "id": "LVBus004115",
@@ -91,8 +91,8 @@
         "type": "Point",
         "coordinates": [-1.321744301484108, 48.65025939158834]
       },
-      "min_voltage": 207,
-      "max_voltage": 253
+      "nominal_voltage": 400,
+      "min_voltage_level": 0.9
     },
     {
       "id": "LVBus004112",
@@ -101,8 +101,8 @@
         "type": "Point",
         "coordinates": [-1.318850459390614, 48.65071019353541]
       },
-      "min_voltage": 207,
-      "max_voltage": 253
+      "nominal_voltage": 400,
+      "min_voltage_level": 0.9
     }
   ],
   "lines": [

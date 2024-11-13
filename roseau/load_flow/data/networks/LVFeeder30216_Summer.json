@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "is_multiphase": true,
   "grounds": [
     {
@@ -31,8 +31,8 @@
         "type": "Point",
         "coordinates": [-1.22546628182438, 49.01938176375552]
       },
-      "min_voltage": 19000,
-      "max_voltage": 21000
+      "nominal_voltage": 20000,
+      "min_voltage_level": 0.95
     },
     {
       "id": "MVLVFeeder15088",
@@ -41,8 +41,8 @@
         "type": "Point",
         "coordinates": [-1.22546628182438, 49.01938176375552]
       },
-      "min_voltage": 207,
-      "max_voltage": 253
+      "nominal_voltage": 400,
+      "min_voltage_level": 0.9
     },
     {
       "id": "LVBus140700",
@@ -51,8 +51,8 @@
         "type": "Point",
         "coordinates": [-1.225935460180821, 49.018863637691915]
       },
-      "min_voltage": 207,
-      "max_voltage": 253
+      "nominal_voltage": 400,
+      "min_voltage_level": 0.9
     },
     {
       "id": "LVBus140702",
@@ -61,8 +61,8 @@
         "type": "Point",
         "coordinates": [-1.222909448895307, 49.02051036142216]
       },
-      "min_voltage": 207,
-      "max_voltage": 253
+      "nominal_voltage": 400,
+      "min_voltage_level": 0.9
     },
     {
       "id": "LVBus140703",
@@ -71,8 +71,8 @@
         "type": "Point",
         "coordinates": [-1.221086648382608, 49.02059680576484]
       },
-      "min_voltage": 207,
-      "max_voltage": 253
+      "nominal_voltage": 400,
+      "min_voltage_level": 0.9
     },
     {
       "id": "LVBus140704",
@@ -81,8 +81,8 @@
         "type": "Point",
         "coordinates": [-1.220623536255886, 49.02039183220841]
       },
-      "min_voltage": 207,
-      "max_voltage": 253
+      "nominal_voltage": 400,
+      "min_voltage_level": 0.9
     },
     {
       "id": "LVBus140706",
@@ -91,8 +91,8 @@
         "type": "Point",
         "coordinates": [-1.226435067526595, 49.01831548317052]
       },
-      "min_voltage": 207,
-      "max_voltage": 253
+      "nominal_voltage": 400,
+      "min_voltage_level": 0.9
     },
     {
       "id": "LVBus140701",
@@ -101,8 +101,8 @@
         "type": "Point",
         "coordinates": [-1.224534711913636, 49.01646259384531]
       },
-      "min_voltage": 207,
-      "max_voltage": 253
+      "nominal_voltage": 400,
+      "min_voltage_level": 0.9
     },
     {
       "id": "LVBus140705",
@@ -111,8 +111,8 @@
         "type": "Point",
         "coordinates": [-1.228920824707651, 49.020350305877685]
       },
-      "min_voltage": 207,
-      "max_voltage": 253
+      "nominal_voltage": 400,
+      "min_voltage_level": 0.9
     }
   ],
   "lines": [
