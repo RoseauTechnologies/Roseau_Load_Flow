@@ -12,7 +12,7 @@ from typing_extensions import Self
 from roseau.load_flow.converters import _calculate_voltages, calculate_voltage_phases, phasor_to_sym
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.core import Element
-from roseau.load_flow.typing import ComplexArray, ComplexArrayLike1D, FloatArrayLike1D, Id, JsonDict
+from roseau.load_flow.typing import ComplexArray, ComplexArrayLike1D, FloatArray, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow.utils._exceptions import find_stack_level
 from roseau.load_flow_engine.cy_engine import CyBus
@@ -74,12 +74,12 @@ class Bus(Element):
             min_voltage_level:
                 An optional minimum voltage of the bus (%). It is not used in the load flow.
                 It must be a percentage of the `nominal_voltage`. If provided, the nominal voltage becomes mandatory.
-                Either a float (without unit) or a :class:`Quantity <roseau.load_flow.units.Q_>` of float.
+                Either a float (unitless) or a :class:`Quantity <roseau.load_flow.units.Q_>` of float.
 
             max_voltage_level:
                 An optional maximum voltage of the bus (%). It is not used in the load flow.
                 It must be a percentage of the `nominal_voltage`. If provided, the nominal voltage becomes mandatory.
-                Either a float (without unit) or a :class:`Quantity <roseau.load_flow.units.Q_>` of float.
+                Either a float (unitless) or a :class:`Quantity <roseau.load_flow.units.Q_>` of float.
         """
         super().__init__(id)
         self._check_phases(id, phases=phases)
@@ -163,20 +163,15 @@ class Bus(Element):
         return self._res_voltages_getter(warning=True)
 
     @property
-    def res_voltages_level(self) -> FloatArrayLike1D | None:
-        """The load flow result of the bus voltages level (V).
-
-        If the bus has a neutral, the voltages are phase-neutral voltages for existing phases in
-        the order ``[Van, Vbn, Vcn]``. If the bus does not have a neutral, phase-phase voltages
-        are returned in the order ``[Vab, Vbc, Vca]``.
-        """
+    def res_voltage_levels(self) -> Q_[FloatArray] | None:
+        """The load flow result of the bus voltage levels (unitless)."""
         if self._nominal_voltage is None:
             return None
         voltages_abs = abs(self._res_voltages_getter(warning=True))
         if "n" in self.phases:
-            return Q_(np.sqrt(3) * voltages_abs / self._nominal_voltage, "V")
+            return Q_(np.sqrt(3) * voltages_abs / self._nominal_voltage, "")
         else:
-            return Q_(voltages_abs / self._nominal_voltage, "V")
+            return Q_(voltages_abs / self._nominal_voltage, "")
 
     @cached_property
     def voltage_phases(self) -> list[str]:

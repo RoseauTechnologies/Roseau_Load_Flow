@@ -73,6 +73,7 @@ ProjectionType: TypeAlias = Literal["euclidean", "keep_p", "keep_q"]
 Solver: TypeAlias = Literal["newton", "newton_goldstein", "backward_forward"]
 MapOrSeq: TypeAlias = Mapping[int, T] | Mapping[str, T] | Mapping[Id, T] | Sequence[T]
 ComplexArray: TypeAlias = NDArray[np.complex128]
+FloatArray: TypeAlias = NDArray[np.float64]
 QtyOrMag: TypeAlias = Q_[T] | T
 
 Int: TypeAlias = int | np.integer[Any]
@@ -96,6 +97,7 @@ __all__ = [
     "ProjectionType",
     "Solver",
     "MapOrSeq",
+    "FloatArray",
     "ComplexArray",
     "ComplexArrayLike1D",
     "ComplexArrayLike2D",

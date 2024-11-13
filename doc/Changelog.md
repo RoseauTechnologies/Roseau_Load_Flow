@@ -20,15 +20,18 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 ## Unreleased
 
 - {gh-issue}`278` {gh-pr}`280` **BREAKING CHANGE**: the `Bus` constructor now accepts a nominal voltage
-  (phase-to-phase, in V), a `min_voltage_level` (without unit) and a `max_voltage_level` (without unit). These
-  arguments replace `min_voltage` and `max_voltage`. The `Bus` class now have some additional properties:
-  - `res_voltages_level`: it retrieves the voltage level of the bus according to the provided phase-to-phase nominal
+  (phase-to-phase, in V), a `min_voltage_level` (unitless) and a `max_voltage_level` (unitless). These
+  arguments replace `min_voltage` and `max_voltage`. The `Bus` class now has some additional properties:
+
+  - `res_voltage_levels`: it retrieves the voltage levels of the bus according to the provided phase-to-phase nominal
     voltage;
-  - `min_voltage_level` and `max_voltage_level`: these properties retrieve the minimum and maximum voltage levels.
+  - `min_voltage_level` and `max_voltage_level`: these properties retrieve the minimum and maximum voltage levels;
   - `min_voltage` and `max_voltage`: these properties (that existed before) now compute the minimum and maximum
-    voltage (in V) from the nominal voltage and the minimum and maximum levels.
-    The file format also changed to take into account these changes. If a `min_voltage` or `max_voltage` existed in a
-    file of a previous version, they are lost when upgrading the file.
+    voltages (in V) from the nominal voltage and the minimum and maximum levels.
+
+  The file format also changed to take into account these changes. If a `min_voltage` or `max_voltage` existed in a
+  file of a previous version, they are lost when upgrading the file.
+
 - {gh-pr}`277` Fix the definition of constant current loads to be the magnitudes of the currents
   and their phase shift from the voltages instead of the absolute phase shift. Currents should no
   longer be rotated by 120° to be in sync with the voltages.

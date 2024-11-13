@@ -11,6 +11,7 @@ from roseau.load_flow.typing import (
     ComplexArray,
     ComplexArrayLike1D,
     ControlType,
+    FloatArray,
     FloatArrayLike1D,
     JsonDict,
     ProjectionType,
@@ -1347,7 +1348,7 @@ class FlexibleParameter(JsonMixin):
     @staticmethod
     def _theoretical_control_data(
         control: Control, v_min: float, v_max: float, power: float, s_max: float
-    ) -> tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.object_]]:
+    ) -> tuple[FloatArray, FloatArray, NDArray[np.object_]]:
         """Helper to get data for the different plots of the class. It provides the theoretical control curve
         abscissas and ordinates values. It also provides ticks for the abscissa axis.
 

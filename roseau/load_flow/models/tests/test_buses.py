@@ -220,9 +220,9 @@ def test_res_voltages():
 
     assert np.allclose(bus.res_potentials.m, (230 + 0j) * direct_seq_neutral)
     assert np.allclose(bus.res_voltages.m, (230 + 0j) * direct_seq)
-    assert bus.res_voltages_level is None
+    assert bus.res_voltage_levels is None
     bus.nominal_voltage = 400  # V
-    assert np.allclose(bus.res_voltages_level.m, 230 / 400 * np.sqrt(3))
+    assert np.allclose(bus.res_voltage_levels.m, 230 / 400 * np.sqrt(3))
 
     # Without a neutral
     bus = Bus(id="bus", phases="abc")
@@ -230,9 +230,9 @@ def test_res_voltages():
 
     assert np.allclose(bus.res_potentials.m, (20_000 + 0j) * direct_seq / np.sqrt(3))
     assert np.allclose(bus.res_voltages.m, (20_000 + 0j) * direct_seq * np.exp(np.pi * 1j / 6))
-    assert bus.res_voltages_level is None
+    assert bus.res_voltage_levels is None
     bus.nominal_voltage = 20_000  # V
-    assert np.allclose(bus.res_voltages_level.m, 1.0)
+    assert np.allclose(bus.res_voltage_levels.m, 1.0)
 
 
 def test_res_violated():

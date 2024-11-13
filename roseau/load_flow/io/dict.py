@@ -638,11 +638,11 @@ def v2_to_v3_converter(data: JsonDict) -> JsonDict:
     bus_warning_emitted: bool = False
     for bus_data in old_buses:
         for key in ("min_voltage", "max_voltage"):
-            if bus_data.pop(key, None) and not bus_warning_emitted:
+            if bus_data.pop(key, None) is not None and not bus_warning_emitted:
                 warnings.warn(
-                    "In v3 version of JSON files, `min_voltage` and `max_voltage` are replaced with "
-                    "`man_voltage_level`, `max_voltage_level` and `nominal_voltage`. The found values of "
-                    "`min_voltage` or `max_voltage` are dropped.",
+                    "Starting with version 0.11.0 of roseau-load-flow (JSON file v3), `min_voltage` and "
+                    "`max_voltage` are replaced with `min_voltage_level`, `max_voltage_level` and `nominal_voltage`. "
+                    "The found values of `min_voltage` or `max_voltage` are dropped.",
                     stacklevel=find_stack_level(),
                 )
                 bus_warning_emitted = True
