@@ -86,8 +86,8 @@ line and a constant power load. This network is a low voltage network (three-pha
 >>> # Nominal phase-to-phase voltage (typical european voltage)
 ... un = 400  # In Volts
 ... # Optional network limits (for analyzing network violations)
-... u_min_level = 0.9  # V
-... u_max_level = 1.1  # V
+... u_min_level = 0.9  # 90% of un
+... u_max_level = 1.1  # 110% of un
 ... i_max = 500.0  # A
 
 >>> # Create two buses (notice the phases of LV buses include the neutral, as in typical LV networks)
