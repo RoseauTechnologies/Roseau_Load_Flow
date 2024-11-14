@@ -1332,7 +1332,7 @@ def test_v1_to_v2_converter():
     assert_json_close(net_dict, expected_dict)
 
 
-def test_v2_to_v3_converter():
+def test_v2_to_v3_converter(recwarn):
     # Do not change `dict_v2` or the network manually, add/update the converters until the test passes
 
     dict_v2 = {
@@ -1536,5 +1536,13 @@ def test_v2_to_v3_converter():
     net = ElectricalNetwork.from_dict(data=copy.deepcopy(dict_v2), include_results=True)
     net_dict = net.to_dict(include_results=True)
     expected_dict = copy.deepcopy(dict_v2)
+    recwarn.clear()
     expected_dict = v2_to_v3_converter(expected_dict)
+    assert len(recwarn) == 1
+    assert (
+        recwarn[0].message.args[0]
+        == "Starting with version 0.11.0 of roseau-load-flow (JSON file v3), `min_voltage` and `max_voltage` are "
+        "replaced with `min_voltage_level`, `max_voltage_level` and `nominal_voltage`. The found values of "
+        "`min_voltage` or `max_voltage` are dropped."
+    )
     assert_json_close(net_dict, expected_dict)

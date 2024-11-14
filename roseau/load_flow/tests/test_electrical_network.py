@@ -36,31 +36,31 @@ from roseau.load_flow.utils import LoadTypeDtype, PhaseDtype, VoltagePhaseDtype
 # The following networks are generated using the scripts/generate_test_networks.py script
 
 
-@pytest.fixture()
+@pytest.fixture
 def all_element_network(test_networks_path) -> ElectricalNetwork:
     # Load the network from the JSON file (without results)
     return ElectricalNetwork.from_json(path=test_networks_path / "all_element_network.json", include_results=False)
 
 
-@pytest.fixture()
+@pytest.fixture
 def all_element_network_with_results(test_networks_path) -> ElectricalNetwork:
     # Load the network from the JSON file (with results, no need to invoke the solver)
     return ElectricalNetwork.from_json(path=test_networks_path / "all_element_network.json", include_results=True)
 
 
-@pytest.fixture()
+@pytest.fixture
 def small_network(test_networks_path) -> ElectricalNetwork:
     # Load the network from the JSON file (without results)
     return ElectricalNetwork.from_json(path=test_networks_path / "small_network.json", include_results=False)
 
 
-@pytest.fixture()
+@pytest.fixture
 def small_network_with_results(test_networks_path) -> ElectricalNetwork:
     # Load the network from the JSON file (with results, no need to invoke the solver)
     return ElectricalNetwork.from_json(path=test_networks_path / "small_network.json", include_results=True)
 
 
-@pytest.fixture()
+@pytest.fixture
 def single_phase_network(test_networks_path) -> ElectricalNetwork:
     return ElectricalNetwork.from_json(path=test_networks_path / "single_phase_network.json", include_results=True)
 

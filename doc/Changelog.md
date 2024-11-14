@@ -19,6 +19,7 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`281` Add official support for Python 3.13.
 - {gh-issue}`278` {gh-pr}`280` **BREAKING CHANGE**: the `Bus` constructor now accepts a nominal voltage
   (phase-to-phase, in V), a `min_voltage_level` (unitless) and a `max_voltage_level` (unitless). These
   arguments replace `min_voltage` and `max_voltage`. The `Bus` class now has some additional properties:
