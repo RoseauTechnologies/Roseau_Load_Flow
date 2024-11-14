@@ -67,7 +67,7 @@ def patch_engine(request):
                     for _, klass in inspect.getmembers(
                         module,
                         lambda member: inspect.isclass(member)
-                        and member.__module__.startswith("roseau.load_flow_engine.")
+                        and "load_flow_engine." in member.__module__
                         and member.__name__.startswith("Cy")
                         and member.__name__ != "CyLicense",  # Test of the static methods of this class
                     ):
@@ -90,11 +90,11 @@ def dgs_network_path(request) -> Path:
     return request.param
 
 
-@pytest.fixture()
+@pytest.fixture
 def dgs_special_network_dir() -> Path:
     return TEST_DGS_SPECIAL_NETWORKS_DIR
 
 
-@pytest.fixture()
+@pytest.fixture
 def test_networks_path() -> Path:
     return TEST_ALL_NETWORKS_DATA_FOLDER

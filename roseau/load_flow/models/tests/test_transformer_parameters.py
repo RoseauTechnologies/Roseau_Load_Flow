@@ -761,7 +761,7 @@ def test_equality():
     assert tp != object()
 
 
-@pytest.mark.no_patch_engine()
+@pytest.mark.no_patch_engine
 def test_compute_open_short_circuit_parameters():
     tp = TransformerParameters.from_catalogue(name="SE_Minera_A0Ak_100kVA", manufacturer="SE")
     p0, i0 = tp._compute_open_circuit_parameters()
