@@ -29,8 +29,8 @@ def generate_typ_tr(
         # Extract data
         name = typ_tr.at[idx, "loc_name"]
         sn = Q_(typ_tr.at[idx, "strn"], "MVA")  # The nominal voltages of the transformer (MVA)
-        uhv = Q_(typ_tr.at[idx, "utrn_h"], "kV")  # Phase-to-phase nominal voltages of the high voltages side (kV)
-        ulv = Q_(typ_tr.at[idx, "utrn_l"], "kV")  # Phase-to-phase nominal voltages of the low voltages side (kV)
+        up = Q_(typ_tr.at[idx, "utrn_h"], "kV")  # Phase-to-phase nominal voltages of the primary side (kV)
+        us = Q_(typ_tr.at[idx, "utrn_l"], "kV")  # Phase-to-phase nominal voltages of the secondary side (kV)
         i0 = Q_(typ_tr.at[idx, "curmg"] / 3, "percent")  # Current during off-load test (%)
         p0 = Q_(typ_tr.at[idx, "pfe"] / 3, "kW")  # Losses during off-load test (kW)
         psc = Q_(typ_tr.at[idx, "pcutr"], "kW")  # Losses during short-circuit test (kW)
@@ -40,7 +40,7 @@ def generate_typ_tr(
 
         # Generate transformer parameters
         transformers_params[idx] = TransformerParameters.from_open_and_short_circuit_tests(
-            id=name, type=windings, uhv=uhv, ulv=ulv, sn=sn, p0=p0, i0=i0, psc=psc, vsc=vsc
+            id=name, type=windings, up=up, us=us, sn=sn, p0=p0, i0=i0, psc=psc, vsc=vsc
         )
         transformers_tap[idx] = typ_tr.at[idx, "dutap"]
 

@@ -18,8 +18,8 @@ def test_transformer_parameters():
         "psc": 1350.0,  # W
         "p0": 145.0,  # W
         "i0": 1.8 / 100,  # %
-        "ulv": 400,  # V
-        "uhv": 20000,  # V
+        "us": 400,  # V
+        "up": 20000,  # V
         "sn": 50 * 1e3,  # VA
         "vsc": 4 / 100,  # %
         "type": "yzn11",
@@ -48,8 +48,8 @@ def test_transformer_parameters():
         "psc": 2150.0,  # W
         "p0": 210.0,  # W
         "i0": 3.5 / 100,  # %
-        "ulv": 400,  # V
-        "uhv": 20000,  # V
+        "us": 400,  # V
+        "up": 20000,  # V
         "sn": 100 * 1e3,  # VA
         "vsc": 4 / 100,  # %
         "type": "dyn11",
@@ -77,8 +77,8 @@ def test_transformer_parameters():
         "psc": 2350.0,  # W
         "p0": 460.0,  # W
         "i0": 5.6 / 100,  # %
-        "ulv": 400,  # V
-        "uhv": 20000,  # V
+        "us": 400,  # V
+        "up": 20000,  # V
         "sn": 160 * 1e3,  # VA
         "vsc": 4 / 100,  # %
         "type": "dyn5",
@@ -106,8 +106,8 @@ def test_transformer_parameters():
         "psc": 2350.0,  # W
         "p0": 460.0,  # W
         "i0": 5.6 / 100,  # %
-        "ulv": 400,  # V
-        "uhv": 20000,  # V
+        "us": 400,  # V
+        "up": 20000,  # V
         "sn": 160 * 1e3,  # VA
         "vsc": 4 / 100,  # %
         "type": "dtotoyn11",
@@ -117,48 +117,14 @@ def test_transformer_parameters():
     assert "Transformer windings cannot be extracted from the string" in e.value.msg
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS
 
-    # UHV == ULV...
-    data = {
-        "id": "test",
-        "psc": 2350.0,  # W
-        "p0": 460.0,  # W
-        "i0": 5.6 / 100,  # %
-        "ulv": 401,  # V
-        "uhv": 400,  # V
-        "sn": 160 * 1e3,  # VA
-        "vsc": 4 / 100,  # %
-        "type": "dyn11",
-    }
-    with pytest.raises(RoseauLoadFlowException) as e:
-        TransformerParameters.from_dict(data)
-    assert "has the low voltages higher than the high voltages" in e.value.msg
-    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_VOLTAGES
-
-    # UHV < ULV...
-    data = {
-        "id": "test",
-        "psc": 2350.0,  # W
-        "p0": 460.0,  # W
-        "i0": 5.6 / 100,  # %
-        "ulv": 400,  # V
-        "uhv": 350,  # V
-        "sn": 160 * 1e3,  # VA
-        "vsc": 4 / 100,  # %
-        "type": "dyn11",
-    }
-    with pytest.raises(RoseauLoadFlowException) as e:
-        TransformerParameters.from_dict(data)
-    assert "has the low voltages higher than the high voltages" in e.value.msg
-    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_VOLTAGES
-
     # Bad i0
     data = {
         "id": "test",
         "psc": 2350.0,  # W
         "p0": 460.0,  # W
         "i0": 5.6,  # %
-        "ulv": 400,  # V
-        "uhv": 20000,  # V
+        "us": 400,  # V
+        "up": 20000,  # V
         "sn": 160 * 1e3,  # VA
         "vsc": 4 / 100,  # %
         "type": "dyn11",
@@ -174,8 +140,8 @@ def test_transformer_parameters():
         "psc": 2350.0,  # W
         "p0": 460.0,  # W
         "i0": 5.6 / 100,  # %
-        "ulv": 400,  # V
-        "uhv": 20000,  # V
+        "us": 400,  # V
+        "up": 20000,  # V
         "sn": 160 * 1e3,  # VA
         "vsc": 4,  # %
         "type": "dyn11",
@@ -190,8 +156,8 @@ def test_transformer_parameters():
         "id": "test",
         "type": "Dyn11",
         "sn": 50000.0,
-        "uhv": 20000.0,
-        "ulv": 400.0,
+        "up": 20000.0,
+        "us": 400.0,
         "i0": 0.027,
         "p0": 210.0,
         "psc": 2150.0,
@@ -210,24 +176,24 @@ def test_transformers_parameters_units():
         "id": "Yzn11 - 50kVA",
         "z2": Q_(8.64 + 9.444j, "centiohm"),  # Ohm
         "ym": Q_(0.3625 - 2.2206j, "uS"),  # S
-        "ulv": Q_(400, "V"),  # V
-        "uhv": Q_(20, "kV"),  # V
+        "us": Q_(400, "V"),  # V
+        "up": Q_(20, "kV"),  # V
         "sn": Q_(50, "kVA"),  # VA
         "type": "yzn11",
     }
     tp = TransformerParameters(**data)
     assert np.isclose(tp._z2, (0.0864 + 0.0944406692j))
     assert np.isclose(tp._ym, (3.625e-07 - 2.2206e-06j))
-    assert np.isclose(tp._ulv, 400)
-    assert np.isclose(tp._uhv, 20000)
+    assert np.isclose(tp._us, 400)
+    assert np.isclose(tp._up, 20000)
     assert np.isclose(tp._sn, 50e3)
 
     # Bad unit for each of them
     for param, fake_quantity in (
         ("z2", Q_(1350.0, "A")),
         ("ym", Q_(145.0, "A")),
-        ("ulv", Q_(400, "A")),
-        ("uhv", Q_(20, "A")),
+        ("us", Q_(400, "A")),
+        ("up", Q_(20, "A")),
         ("sn", Q_(50, "A")),
     ):
         copy_data = data.copy()
@@ -246,8 +212,8 @@ def test_transformers_parameters_units_from_tests():
         "psc": Q_(1350.0, "W"),  # W
         "p0": Q_(145.0, "W"),  # W
         "i0": Q_(1.8, "percent"),  # %
-        "ulv": Q_(400, "V"),  # V
-        "uhv": Q_(20, "kV"),  # V
+        "us": Q_(400, "V"),  # V
+        "up": Q_(20, "kV"),  # V
         "sn": Q_(50, "kVA"),  # VA
         "vsc": Q_(4, "percent"),  # %
         "type": "yzn11",
@@ -256,8 +222,8 @@ def test_transformers_parameters_units_from_tests():
     assert np.isclose(tp._psc, 1350.0)
     assert np.isclose(tp._p0, 145.0)
     assert np.isclose(tp._i0, 1.8e-2)
-    assert np.isclose(tp._ulv, 400)
-    assert np.isclose(tp._uhv, 20000)
+    assert np.isclose(tp._us, 400)
+    assert np.isclose(tp._up, 20000)
     assert np.isclose(tp._sn, 50e3)
     assert np.isclose(tp._vsc, 4e-2)
 
@@ -266,8 +232,8 @@ def test_transformers_parameters_units_from_tests():
         ("psc", Q_(1350.0, "A")),
         ("p0", Q_(145.0, "A")),
         ("i0", Q_(1.8 / 100, "A")),
-        ("ulv", Q_(400, "A")),
-        ("uhv", Q_(20, "A")),
+        ("us", Q_(400, "A")),
+        ("up", Q_(20, "A")),
         ("sn", Q_(50, "A")),
         ("vsc", Q_(4 / 100, "A")),
     ):
@@ -369,8 +335,8 @@ def test_catalogue_data():
 
         # Check the values are the same
         assert tp.type == catalogue_data.at[tp.id, "type"]
-        assert np.isclose(tp.uhv.m, catalogue_data.at[tp.id, "uhv"])
-        assert np.isclose(tp.ulv.m, catalogue_data.at[tp.id, "ulv"])
+        assert np.isclose(tp.up.m, catalogue_data.at[tp.id, "up"])
+        assert np.isclose(tp.us.m, catalogue_data.at[tp.id, "us"])
         assert np.isclose(tp.sn.m, catalogue_data.at[tp.id, "sn"])
         assert np.isclose(tp.p0.m, catalogue_data.at[tp.id, "p0"])
         assert np.isclose(tp.i0.m, catalogue_data.at[tp.id, "i0"])
@@ -405,8 +371,8 @@ def test_from_catalogue():
     # Unknown floats
     for field_name, display_name, display_unit in (
         ("sn", "nominal power", "kVA"),
-        ("uhv", "primary side voltage", "kV"),
-        ("ulv", "secondary side voltage", "kV"),
+        ("up", "primary side voltage", "kV"),
+        ("us", "secondary side voltage", "kV"),
     ):
         # Without unit
         with pytest.raises(RoseauLoadFlowException) as e:
@@ -451,8 +417,8 @@ def test_get_catalogue():
         ("efficiency", r"c0.*", 29),
         ("type", r"dy.*", 158),
         ("sn", Q_(160, "kVA"), 12),
-        ("uhv", Q_(20, "kV"), 162),
-        ("ulv", 400, 162),
+        ("up", Q_(20, "kV"), 162),
+        ("us", 400, 162),
     ):
         filtered_catalogue = TransformerParameters.get_catalogue(**{field_name: value})
         assert filtered_catalogue.shape == (expected_size, 7), f"{field_name}={value!r}"
@@ -464,8 +430,8 @@ def test_get_catalogue():
         ("efficiency", r"c0.*", 29),
         ("type", r"^d.*11$", 144),
         ("sn", Q_(160, "kVA"), 11),
-        ("uhv", Q_(20, "kV"), 148),
-        ("ulv", 400, 148),
+        ("up", Q_(20, "kV"), 148),
+        ("us", 400, 148),
     ):
         filtered_catalogue = TransformerParameters.get_catalogue(**{field_name: value}, manufacturer="se")
         assert filtered_catalogue.shape == (expected_size, 7), f"{field_name}={value!r}"
@@ -476,8 +442,8 @@ def test_get_catalogue():
         ("efficiency", r"c0[abc]k", 15),
         ("type", r"dyn\d+", 41),
         ("sn", Q_(160, "kVA"), 3),
-        ("uhv", Q_(20, "kV"), 41),
-        ("ulv", 400, 41),
+        ("up", Q_(20, "kV"), 41),
+        ("us", 400, 41),
     ):
         filtered_catalogue = TransformerParameters.get_catalogue(
             **{field_name: value}, manufacturer="se", range=r"^vegeta$"
@@ -485,7 +451,7 @@ def test_get_catalogue():
         assert filtered_catalogue.shape == (expected_size, 7), f"{field_name}={value!r}"
 
     # No results
-    empty_catalogue = TransformerParameters.get_catalogue(ulv=250)
+    empty_catalogue = TransformerParameters.get_catalogue(us=250)
     assert empty_catalogue.shape == (0, 7)
 
 
@@ -495,8 +461,8 @@ def test_max_power():
         "psc": 1350.0,
         "p0": 145.0,
         "i0": 1.8 / 100,
-        "ulv": 400,
-        "uhv": 20000,
+        "us": 400,
+        "up": 20000,
         "sn": 50 * 1e3,
         "vsc": 4 / 100,
     }
@@ -553,8 +519,8 @@ def test_from_open_dss():
         id="tp-test",
         # Electrical parameters
         type="Dyn11",
-        uhv=Q_(33, "kV"),
-        ulv=Q_(0.405, "kV"),
+        up=Q_(33, "kV"),
+        us=Q_(0.405, "kV"),
         sn=sn,
         p0=Q_(0.136, "percent") * sn,
         i0=Q_(0.3, "percent"),
@@ -584,8 +550,8 @@ def test_from_open_dss():
     )
 
     # Electrical parameters
-    assert tp_rlf.uhv == tp_dss.uhv
-    assert tp_rlf.ulv == tp_dss.ulv
+    assert tp_rlf.up == tp_dss.up
+    assert tp_rlf.us == tp_dss.us
     assert tp_rlf.sn == tp_dss.sn
     assert tp_rlf.k == tp_dss.k
     assert tp_rlf.orientation == tp_dss.orientation
@@ -605,8 +571,8 @@ def test_from_power_factory():
         # Electrical parameters
         tech=3,  # Three Phase Transformer
         sn=0.1,  # MVA
-        uhv=20,  # kV
-        ulv=0.4,  # kV
+        up=20,  # kV
+        us=0.4,  # kV
         vg_hv="D",
         vg_lv="yn",
         phase_shift=11,
@@ -623,8 +589,8 @@ def test_from_power_factory():
         id="Transformer 100 kVA Dyn11",
         # Electrical parameters
         type="Dyn11",
-        uhv=Q_(20, "kV"),
-        ulv=Q_(0.4, "kV"),
+        up=Q_(20, "kV"),
+        us=Q_(0.4, "kV"),
         sn=Q_(0.1, "MVA"),
         p0=Q_(0.21, "kW"),
         i0=Q_(2.5, "percent"),
@@ -638,8 +604,8 @@ def test_from_power_factory():
     )
 
     # Electrical parameters
-    assert tp_pwf.uhv == tp_rlf.uhv
-    assert tp_pwf.ulv == tp_rlf.ulv
+    assert tp_pwf.up == tp_rlf.up
+    assert tp_pwf.us == tp_rlf.us
     assert tp_pwf.sn == tp_rlf.sn
     assert tp_pwf.k == tp_rlf.k
     assert tp_pwf.orientation == tp_rlf.orientation
@@ -658,8 +624,8 @@ def test_from_power_factory():
         # Electrical parameters
         tech="single-phase",  # Single Phase Transformer
         sn=0.1,  # MVA
-        uhv=20,  # kV
-        ulv=0.4,  # kV
+        up=20,  # kV
+        us=0.4,  # kV
         vg_hv="D",
         vg_lv="yn",
         phase_shift=11,
@@ -681,8 +647,8 @@ def test_from_power_factory():
             # Electrical parameters
             tech="unknown value",  # <-------------Error
             sn=0.1,  # MVA
-            uhv=20,  # kV
-            ulv=0.4,  # kV
+            up=20,  # kV
+            us=0.4,  # kV
             vg_hv="D",
             vg_lv="yn",
             phase_shift=11,
@@ -714,8 +680,8 @@ def test_to_dict():
     tp2 = TransformerParameters(
         id=tp.id,
         type=tp.type,
-        uhv=tp.uhv,
-        ulv=tp.ulv,
+        up=tp.up,
+        us=tp.us,
         sn=tp.sn,
         z2=tp.z2,
         ym=tp.ym,
@@ -726,8 +692,8 @@ def test_to_dict():
     d = tp2.to_dict()
     assert d.pop("id") == tp2.id
     assert d.pop("sn") == tp2.sn.m
-    assert d.pop("uhv") == tp2.uhv.m
-    assert d.pop("ulv") == tp2.ulv.m
+    assert d.pop("up") == tp2.up.m
+    assert d.pop("us") == tp2.us.m
     assert d.pop("type") == tp2.type
     assert d.pop("z2") == [tp2.z2.m.real, tp2.z2.m.imag]
     assert d.pop("ym") == [tp2.ym.m.real, tp2.ym.m.imag]
@@ -746,8 +712,8 @@ def test_equality():
         "id": "Yzn11 - 50kVA",
         "z2": Q_(8.64 + 9.444j, "centiohm"),  # Ohm
         "ym": Q_(0.3625 - 2.2206j, "uS"),  # S
-        "ulv": Q_(400, "V"),  # V
-        "uhv": Q_(20, "kV"),  # V
+        "us": Q_(400, "V"),  # V
+        "up": Q_(20, "kV"),  # V
         "sn": Q_(50, "kVA"),  # VA
         "type": "yzn11",
     }
@@ -776,10 +742,10 @@ def test_compute_open_short_circuit_parameters():
 def test_ideal_transformer():
     # Ideal transformer not yet supported
     with pytest.raises(RoseauLoadFlowException) as e:
-        TransformerParameters(id="test", type="Dyn11", sn=50e3, uhv=20e3, ulv=400, z2=0.0, ym=0.0)
+        TransformerParameters(id="test", type="Dyn11", sn=50e3, up=20e3, us=400, z2=0.0, ym=0.0)
     assert e.value.msg == (
         "Transformer type 'test' has a null series impedance z2. Ideal transformers are not supported."
     )
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_IMPEDANCE
     # OK
-    TransformerParameters(id="test", type="Dyn11", sn=50e3, uhv=20e3, ulv=400, z2=0.0000001, ym=0.0)
+    TransformerParameters(id="test", type="Dyn11", sn=50e3, up=20e3, us=400, z2=0.0000001, ym=0.0)

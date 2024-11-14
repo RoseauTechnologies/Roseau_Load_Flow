@@ -427,8 +427,8 @@ def v0_to_v1_converter(data: JsonDict) -> JsonDict:  # noqa: C901
     for transformer_type in data["transformer_types"]:
         tp = {
             "sn": transformer_type["sn"],
-            "uhv": transformer_type["uhv"],
-            "ulv": transformer_type["ulv"],
+            "up": transformer_type["up"],
+            "us": transformer_type["us"],
             "i0": transformer_type["i0"],
             "p0": transformer_type["p0"],
             "psc": transformer_type["psc"],
@@ -648,6 +648,16 @@ def v2_to_v3_converter(data: JsonDict) -> JsonDict:
                 bus_warning_emitted = True
         buses.append(bus_data)
 
+    # Rename uhv in up and ulv in us
+    old_transformers_params = data.get("transformers_params", [])
+    transformers_params = []
+    for transformer_param_data in old_transformers_params:
+        if up := transformer_param_data.pop("uhv", None) is not None:
+            transformer_param_data["up"] = up
+        if us := transformer_param_data.pop("ulv", None) is not None:
+            transformer_param_data["us"] = us
+        transformers_params.append(transformer_param_data)
+
     results = {
         "version": 3,
         "is_multiphase": data["is_multiphase"],  # Unchanged
@@ -660,7 +670,7 @@ def v2_to_v3_converter(data: JsonDict) -> JsonDict:
         "loads": data["loads"],  # Unchanged
         "sources": data["sources"],  # Unchanged
         "lines_params": data["lines_params"],  # Unchanged
-        "transformers_params": data["transformers_params"],  # Unchanged
+        "transformers_params": transformers_params,  # <---- Changed
     }
     if "short_circuits" in data:
         results["short_circuits"] = data["short_circuits"]  # Unchanged

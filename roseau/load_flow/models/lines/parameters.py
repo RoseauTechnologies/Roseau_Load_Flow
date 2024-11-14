@@ -268,13 +268,13 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
                 Neutral impedance - :math:`r_{\\mathrm{n}}+x_{\\mathrm{n}}\\cdot j` (ohms/km)
 
             xpn:
-                Phase to neutral reactance (ohms/km)
+                Phase-to-neutral reactance (ohms/km)
 
             bn:
                 Neutral susceptance (siemens/km)
 
             bpn:
-                Phase to neutral susceptance (siemens/km)
+                Phase-to-neutral susceptance (siemens/km)
 
             max_current:
                 An optional maximum current loading of the line (A). It is not used in the load flow.
@@ -325,13 +325,13 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
                 Neutral impedance - :math:`r_{\\mathrm{n}}+x_{\\mathrm{n}}\\cdot j` (ohms/km)
 
             zpn:
-                Phase to neutral impedance (ohms/km)
+                Phase-to-neutral impedance (ohms/km)
 
             bn:
                 Neutral susceptance (siemens/km)
 
             bpn:
-                Phase to neutral susceptance (siemens/km)
+                Phase-to-neutral susceptance (siemens/km)
 
         Returns:
             The impedance and admittance matrices.
@@ -353,7 +353,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             if not any_neutral_na:
                 # Build the complex
                 yn = bn * 1j  # Neutral shunt admittance (Siemens/km)
-                ypn = bpn * 1j  # Phase to neutral shunt admittance (Siemens/km)
+                ypn = bpn * 1j  # Phase-to-neutral shunt admittance (Siemens/km)
 
                 if zpn == 0 and zn == 0:
                     logger.warning(
@@ -510,8 +510,8 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         Returns:
             The impedance and admittance matrices.
         """
-        # dpp = data["dpp"]  # Distance phase to phase (m)
-        # dpn = data["dpn"]  # Distance phase to neutral (m)
+        # dpp = data["dpp"]  # Distance phase-to-phase (m)
+        # dpn = data["dpn"]  # Distance phase-to-neutral (m)
         # dsh = data["dsh"]  # Diameter of the sheath (mm)
 
         line_type = LineType(line_type)

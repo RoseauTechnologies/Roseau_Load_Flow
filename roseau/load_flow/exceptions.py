@@ -46,7 +46,6 @@ class RoseauLoadFlowExceptionCode(StrEnum):
     BAD_TRANSFORMER_ID = auto()
     BAD_TRANSFORMER_WINDINGS = auto()
     BAD_TRANSFORMER_TYPE = auto()
-    BAD_TRANSFORMER_VOLTAGES = auto()
     BAD_TRANSFORMER_IMPEDANCE = auto()
     BAD_TRANSFORMER_PARAMETERS = auto()
 

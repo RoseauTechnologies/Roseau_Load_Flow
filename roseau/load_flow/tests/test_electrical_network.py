@@ -343,7 +343,7 @@ def test_bad_networks():
     # No potential reference
     bus3 = Bus(id="bus3", phases="abcn")
     tp = TransformerParameters.from_open_and_short_circuit_tests(
-        id="t", type="Dyn11", uhv=20000, ulv=400, sn=160 * 1e3, p0=460, i0=2.3 / 100, psc=2350, vsc=4 / 100
+        id="t", type="Dyn11", up=20000, us=400, sn=160 * 1e3, p0=460, i0=2.3 / 100, psc=2350, vsc=4 / 100
     )
     t = Transformer(id="transfo", bus1=bus2, bus2=bus3, parameters=tp)
     with pytest.raises(RoseauLoadFlowException) as e:
@@ -2165,7 +2165,7 @@ def test_propagate_potentials_center_transformers():
     PotentialRef(id="pref", element=bus1)
     VoltageSource(id="vs", bus=bus1, voltages=[20000])
     tp = TransformerParameters.from_open_and_short_circuit_tests(
-        id="test", type="center", sn=160000, uhv=20000.0, ulv=400.0, i0=0.023, p0=460.0, psc=2350.0, vsc=0.04
+        id="test", type="center", sn=160000, up=20000.0, us=400.0, i0=0.023, p0=460.0, psc=2350.0, vsc=0.04
     )
     bus2 = Bus(id="bus2", phases="abn")
     PotentialRef(id="pref2", element=bus2)
