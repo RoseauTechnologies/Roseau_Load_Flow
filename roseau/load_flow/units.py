@@ -112,8 +112,10 @@ def ureg_wraps(
     Args:
         ret:
             Units of each of the return values. Use `None` to skip argument conversion.
+
         args:
             Units of each of the input arguments. Use `None` to skip argument conversion.
+
         strict:
             Indicates that only quantities are accepted. (Default value = True)
     """

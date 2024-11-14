@@ -49,7 +49,7 @@
                 initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
     <style>
-      #map_87226d9b6088ebf4261e78f2ed0c4ac7 {
+      #map_00fec856638ed4675f6eae11f54552cc {
         position: relative;
         width: 100%;
         height: 100%;
@@ -92,18 +92,18 @@
     </style>
   </head>
   <body>
-    <div class="folium-map" id="map_87226d9b6088ebf4261e78f2ed0c4ac7"></div>
+    <div class="folium-map" id="map_00fec856638ed4675f6eae11f54552cc"></div>
   </body>
   <script>
-    var map_87226d9b6088ebf4261e78f2ed0c4ac7 = L.map("map_87226d9b6088ebf4261e78f2ed0c4ac7", {
+    var map_00fec856638ed4675f6eae11f54552cc = L.map("map_00fec856638ed4675f6eae11f54552cc", {
       center: [48.68464052876196, -1.3944206082981023],
       crs: L.CRS.EPSG3857,
-      zoom: 12,
+      zoom: 13,
       zoomControl: true,
       preferCanvas: false,
     });
 
-    var tile_layer_171d17db364fe8cfa05d44303cf8c901 = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    var tile_layer_12c426dbacab2996cf5d2b158444c7a1 = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution:
         '\u0026copy; \u003ca href="https://www.openstreetmap.org/copyright"\u003eOpenStreetMap\u003c/a\u003e contributors',
       detectRetina: false,
@@ -116,21 +116,21 @@
       tms: false,
     });
 
-    tile_layer_171d17db364fe8cfa05d44303cf8c901.addTo(map_87226d9b6088ebf4261e78f2ed0c4ac7);
+    tile_layer_12c426dbacab2996cf5d2b158444c7a1.addTo(map_00fec856638ed4675f6eae11f54552cc);
 
-    function geo_json_0cfb3888569ec551691fdf576db88059_styler(feature) {
+    function geo_json_815741c4c7ecad4ac263bf9b2b6bac1f_styler(feature) {
       switch (feature.id) {
         default:
           return { color: "#234e83", weight: 2 };
       }
     }
-    function geo_json_0cfb3888569ec551691fdf576db88059_highlighter(feature) {
+    function geo_json_815741c4c7ecad4ac263bf9b2b6bac1f_highlighter(feature) {
       switch (feature.id) {
         default:
           return { color: "#cad40e" };
       }
     }
-    function geo_json_0cfb3888569ec551691fdf576db88059_pointToLayer(feature, latlng) {
+    function geo_json_815741c4c7ecad4ac263bf9b2b6bac1f_pointToLayer(feature, latlng) {
       var opts = {
         bubblingMouseEvents: true,
         color: "#3388ff",
@@ -148,38 +148,38 @@
         weight: 3,
       };
 
-      let style = geo_json_0cfb3888569ec551691fdf576db88059_styler(feature);
+      let style = geo_json_815741c4c7ecad4ac263bf9b2b6bac1f_styler(feature);
       Object.assign(opts, style);
 
       return new L.CircleMarker(latlng, opts);
     }
 
-    function geo_json_0cfb3888569ec551691fdf576db88059_onEachFeature(feature, layer) {
+    function geo_json_815741c4c7ecad4ac263bf9b2b6bac1f_onEachFeature(feature, layer) {
       layer.on({
         mouseout: function (e) {
           if (typeof e.target.setStyle === "function") {
-            geo_json_0cfb3888569ec551691fdf576db88059.resetStyle(e.target);
+            geo_json_815741c4c7ecad4ac263bf9b2b6bac1f.resetStyle(e.target);
           }
         },
         mouseover: function (e) {
           if (typeof e.target.setStyle === "function") {
-            const highlightStyle = geo_json_0cfb3888569ec551691fdf576db88059_highlighter(e.target.feature);
+            const highlightStyle = geo_json_815741c4c7ecad4ac263bf9b2b6bac1f_highlighter(e.target.feature);
             e.target.setStyle(highlightStyle);
           }
         },
       });
     }
-    var geo_json_0cfb3888569ec551691fdf576db88059 = L.geoJson(null, {
-      onEachFeature: geo_json_0cfb3888569ec551691fdf576db88059_onEachFeature,
+    var geo_json_815741c4c7ecad4ac263bf9b2b6bac1f = L.geoJson(null, {
+      onEachFeature: geo_json_815741c4c7ecad4ac263bf9b2b6bac1f_onEachFeature,
 
-      style: geo_json_0cfb3888569ec551691fdf576db88059_styler,
-      pointToLayer: geo_json_0cfb3888569ec551691fdf576db88059_pointToLayer,
+      style: geo_json_815741c4c7ecad4ac263bf9b2b6bac1f_styler,
+      pointToLayer: geo_json_815741c4c7ecad4ac263bf9b2b6bac1f_pointToLayer,
     });
 
-    function geo_json_0cfb3888569ec551691fdf576db88059_add(data) {
-      geo_json_0cfb3888569ec551691fdf576db88059.addData(data);
+    function geo_json_815741c4c7ecad4ac263bf9b2b6bac1f_add(data) {
+      geo_json_815741c4c7ecad4ac263bf9b2b6bac1f.addData(data);
     }
-    geo_json_0cfb3888569ec551691fdf576db88059_add({
+    geo_json_815741c4c7ecad4ac263bf9b2b6bac1f_add({
       bbox: [-1.471709586496959, 48.66494015250545, -1.315198632188688, 48.70845136474554],
       features: [
         {
@@ -3739,7 +3739,7 @@
       type: "FeatureCollection",
     });
 
-    geo_json_0cfb3888569ec551691fdf576db88059.bindTooltip(
+    geo_json_815741c4c7ecad4ac263bf9b2b6bac1f.bindTooltip(
       function (layer) {
         let div = L.DomUtil.create("div");
 
@@ -3768,9 +3768,9 @@
       { className: "foliumtooltip", maxWidth: 800, sticky: false },
     );
 
-    geo_json_0cfb3888569ec551691fdf576db88059.addTo(map_87226d9b6088ebf4261e78f2ed0c4ac7);
+    geo_json_815741c4c7ecad4ac263bf9b2b6bac1f.addTo(map_00fec856638ed4675f6eae11f54552cc);
 
-    function geo_json_5ccbf2d0b4db0ffc011091198c6f63a8_styler(feature) {
+    function geo_json_a731d05f59087604b83bdf4d04dbe83c_styler(feature) {
       switch (feature.id) {
         case "0":
         case "1":
@@ -3821,13 +3821,13 @@
           return { color: "#234e83", fill: true, fillColor: "#234e83", fillOpacity: 1, radius: 3 };
       }
     }
-    function geo_json_5ccbf2d0b4db0ffc011091198c6f63a8_highlighter(feature) {
+    function geo_json_a731d05f59087604b83bdf4d04dbe83c_highlighter(feature) {
       switch (feature.id) {
         default:
           return { color: "#cad40e", fillColor: "#cad40e" };
       }
     }
-    function geo_json_5ccbf2d0b4db0ffc011091198c6f63a8_pointToLayer(feature, latlng) {
+    function geo_json_a731d05f59087604b83bdf4d04dbe83c_pointToLayer(feature, latlng) {
       var opts = {
         bubblingMouseEvents: true,
         color: "#3388ff",
@@ -3845,45 +3845,52 @@
         weight: 3,
       };
 
-      let style = geo_json_5ccbf2d0b4db0ffc011091198c6f63a8_styler(feature);
+      let style = geo_json_a731d05f59087604b83bdf4d04dbe83c_styler(feature);
       Object.assign(opts, style);
 
       return new L.CircleMarker(latlng, opts);
     }
 
-    function geo_json_5ccbf2d0b4db0ffc011091198c6f63a8_onEachFeature(feature, layer) {
+    function geo_json_a731d05f59087604b83bdf4d04dbe83c_onEachFeature(feature, layer) {
       layer.on({
         mouseout: function (e) {
           if (typeof e.target.setStyle === "function") {
-            geo_json_5ccbf2d0b4db0ffc011091198c6f63a8.resetStyle(e.target);
+            geo_json_a731d05f59087604b83bdf4d04dbe83c.resetStyle(e.target);
           }
         },
         mouseover: function (e) {
           if (typeof e.target.setStyle === "function") {
-            const highlightStyle = geo_json_5ccbf2d0b4db0ffc011091198c6f63a8_highlighter(e.target.feature);
+            const highlightStyle = geo_json_a731d05f59087604b83bdf4d04dbe83c_highlighter(e.target.feature);
             e.target.setStyle(highlightStyle);
           }
         },
       });
     }
-    var geo_json_5ccbf2d0b4db0ffc011091198c6f63a8 = L.geoJson(null, {
-      onEachFeature: geo_json_5ccbf2d0b4db0ffc011091198c6f63a8_onEachFeature,
+    var geo_json_a731d05f59087604b83bdf4d04dbe83c = L.geoJson(null, {
+      onEachFeature: geo_json_a731d05f59087604b83bdf4d04dbe83c_onEachFeature,
 
-      style: geo_json_5ccbf2d0b4db0ffc011091198c6f63a8_styler,
-      pointToLayer: geo_json_5ccbf2d0b4db0ffc011091198c6f63a8_pointToLayer,
+      style: geo_json_a731d05f59087604b83bdf4d04dbe83c_styler,
+      pointToLayer: geo_json_a731d05f59087604b83bdf4d04dbe83c_pointToLayer,
     });
 
-    function geo_json_5ccbf2d0b4db0ffc011091198c6f63a8_add(data) {
-      geo_json_5ccbf2d0b4db0ffc011091198c6f63a8.addData(data);
+    function geo_json_a731d05f59087604b83bdf4d04dbe83c_add(data) {
+      geo_json_a731d05f59087604b83bdf4d04dbe83c.addData(data);
     }
-    geo_json_5ccbf2d0b4db0ffc011091198c6f63a8_add({
+    geo_json_a731d05f59087604b83bdf4d04dbe83c_add({
       bbox: [-1.471496954704484, 48.665013198677705, -1.315508137717839, 48.70845136474554],
       features: [
         {
           bbox: [-1.315508137717839, 48.67552963511552, -1.315508137717839, 48.67552963511552],
           geometry: { coordinates: [-1.315508137717839, 48.67552963511552], type: "Point" },
           id: "0",
-          properties: { element_type: "bus", id: "HVMV14", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "HVMV14",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
@@ -3893,8 +3900,9 @@
           properties: {
             element_type: "bus",
             id: "HVMVFeeder14",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -3903,889 +3911,1771 @@
           bbox: [-1.359690288894828, 48.70030435899507, -1.359690288894828, 48.70030435899507],
           geometry: { coordinates: [-1.359690288894828, 48.70030435899507], type: "Point" },
           id: "2",
-          properties: { element_type: "bus", id: "MVLV12961", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVLV12961",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.360816212595922, 48.70113087837448, -1.360816212595922, 48.70113087837448],
           geometry: { coordinates: [-1.360816212595922, 48.70113087837448], type: "Point" },
           id: "3",
-          properties: { element_type: "bus", id: "MVBus17524", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus17524",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.36250058294375, 48.699920974017196, -1.36250058294375, 48.699920974017196],
           geometry: { coordinates: [-1.36250058294375, 48.699920974017196], type: "Point" },
           id: "4",
-          properties: { element_type: "bus", id: "MVBus17523", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus17523",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.362017012011286, 48.707740359055315, -1.362017012011286, 48.707740359055315],
           geometry: { coordinates: [-1.362017012011286, 48.707740359055315], type: "Point" },
           id: "5",
-          properties: { element_type: "bus", id: "MVLV08691", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVLV08691",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.363787332955464, 48.70687745644073, -1.363787332955464, 48.70687745644073],
           geometry: { coordinates: [-1.363787332955464, 48.70687745644073], type: "Point" },
           id: "6",
-          properties: { element_type: "bus", id: "MVBus17533", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus17533",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.372474957363736, 48.70819963640383, -1.372474957363736, 48.70819963640383],
           geometry: { coordinates: [-1.372474957363736, 48.70819963640383], type: "Point" },
           id: "7",
-          properties: { element_type: "bus", id: "MVLV05594", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVLV05594",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.371470530798074, 48.708006097671856, -1.371470530798074, 48.708006097671856],
           geometry: { coordinates: [-1.371470530798074, 48.708006097671856], type: "Point" },
           id: "8",
-          properties: { element_type: "bus", id: "MVBus17536", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus17536",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.372263248440009, 48.70572814874992, -1.372263248440009, 48.70572814874992],
           geometry: { coordinates: [-1.372263248440009, 48.70572814874992], type: "Point" },
           id: "9",
-          properties: { element_type: "bus", id: "MVLV15838", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVLV15838",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.365482557431456, 48.70845136474554, -1.365482557431456, 48.70845136474554],
           geometry: { coordinates: [-1.365482557431456, 48.70845136474554], type: "Point" },
           id: "10",
-          properties: { element_type: "bus", id: "MVBus17535", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus17535",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.361706222495278, 48.70493345667249, -1.361706222495278, 48.70493345667249],
           geometry: { coordinates: [-1.361706222495278, 48.70493345667249], type: "Point" },
           id: "11",
-          properties: { element_type: "bus", id: "MVBus17532", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus17532",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.362654078028266, 48.70439394941558, -1.362654078028266, 48.70439394941558],
           geometry: { coordinates: [-1.362654078028266, 48.70439394941558], type: "Point" },
           id: "12",
-          properties: { element_type: "bus", id: "MVBus17530", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus17530",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.361146143854642, 48.70373258684646, -1.361146143854642, 48.70373258684646],
           geometry: { coordinates: [-1.361146143854642, 48.70373258684646], type: "Point" },
           id: "13",
-          properties: { element_type: "bus", id: "MVLV12960", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVLV12960",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.365766216776604, 48.70323344674769, -1.365766216776604, 48.70323344674769],
           geometry: { coordinates: [-1.365766216776604, 48.70323344674769], type: "Point" },
           id: "14",
-          properties: { element_type: "bus", id: "MVBus17529", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus17529",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.366857582095782, 48.702909804508195, -1.366857582095782, 48.702909804508195],
           geometry: { coordinates: [-1.366857582095782, 48.702909804508195], type: "Point" },
           id: "15",
-          properties: { element_type: "bus", id: "MVBus17528", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus17528",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.36985327513618, 48.70171789916646, -1.36985327513618, 48.70171789916646],
           geometry: { coordinates: [-1.36985327513618, 48.70171789916646], type: "Point" },
           id: "16",
-          properties: { element_type: "bus", id: "MVLV11643", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVLV11643",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.369391365276649, 48.702312360854734, -1.369391365276649, 48.702312360854734],
           geometry: { coordinates: [-1.369391365276649, 48.702312360854734], type: "Point" },
           id: "17",
-          properties: { element_type: "bus", id: "MVBus17540", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus17540",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.368602686985163, 48.702762027953426, -1.368602686985163, 48.702762027953426],
           geometry: { coordinates: [-1.368602686985163, 48.702762027953426], type: "Point" },
           id: "18",
-          properties: { element_type: "bus", id: "MVBus17539", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus17539",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.365080155168652, 48.702931226958164, -1.365080155168652, 48.702931226958164],
           geometry: { coordinates: [-1.365080155168652, 48.702931226958164], type: "Point" },
           id: "19",
-          properties: { element_type: "bus", id: "MVBus17527", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus17527",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.364469760819947, 48.702221813021815, -1.364469760819947, 48.702221813021815],
           geometry: { coordinates: [-1.364469760819947, 48.702221813021815], type: "Point" },
           id: "20",
-          properties: { element_type: "bus", id: "MVBus17526", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus17526",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.361872248455002, 48.698372926745066, -1.361872248455002, 48.698372926745066],
           geometry: { coordinates: [-1.361872248455002, 48.698372926745066], type: "Point" },
           id: "21",
-          properties: { element_type: "bus", id: "MVBus17515", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus17515",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.381057295037861, 48.68857227401332, -1.381057295037861, 48.68857227401332],
           geometry: { coordinates: [-1.381057295037861, 48.68857227401332], type: "Point" },
           id: "22",
-          properties: { element_type: "bus", id: "MVLV11234", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVLV11234",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.380593480920253, 48.68951313748911, -1.380593480920253, 48.68951313748911],
           geometry: { coordinates: [-1.380593480920253, 48.68951313748911], type: "Point" },
           id: "23",
-          properties: { element_type: "bus", id: "MVBus17518", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus17518",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.386086307107507, 48.69024982994571, -1.386086307107507, 48.69024982994571],
           geometry: { coordinates: [-1.386086307107507, 48.69024982994571], type: "Point" },
           id: "24",
-          properties: { element_type: "bus", id: "MVLV02676", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVLV02676",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.386095076128499, 48.69020544337535, -1.386095076128499, 48.69020544337535],
           geometry: { coordinates: [-1.386095076128499, 48.69020544337535], type: "Point" },
           id: "25",
-          properties: { element_type: "bus", id: "MVBus17519", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus17519",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.386320350855856, 48.69674688889175, -1.386320350855856, 48.69674688889175],
           geometry: { coordinates: [-1.386320350855856, 48.69674688889175], type: "Point" },
           id: "26",
-          properties: { element_type: "bus", id: "MVLV00763", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVLV00763",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.387228378138695, 48.69648346340322, -1.387228378138695, 48.69648346340322],
           geometry: { coordinates: [-1.387228378138695, 48.69648346340322], type: "Point" },
           id: "27",
-          properties: { element_type: "bus", id: "MVBus24053", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus24053",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.390456896571498, 48.694092429012166, -1.390456896571498, 48.694092429012166],
           geometry: { coordinates: [-1.390456896571498, 48.694092429012166], type: "Point" },
           id: "28",
-          properties: { element_type: "bus", id: "MVBus24052", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus24052",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.393859245371176, 48.678398121997645, -1.393859245371176, 48.678398121997645],
           geometry: { coordinates: [-1.393859245371176, 48.678398121997645], type: "Point" },
           id: "29",
-          properties: { element_type: "bus", id: "MVLV04069", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVLV04069",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.396689119419465, 48.68008386227141, -1.396689119419465, 48.68008386227141],
           geometry: { coordinates: [-1.396689119419465, 48.68008386227141], type: "Point" },
           id: "30",
-          properties: { element_type: "bus", id: "MVBus24062", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus24062",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.397198756611179, 48.68002106022296, -1.397198756611179, 48.68002106022296],
           geometry: { coordinates: [-1.397198756611179, 48.68002106022296], type: "Point" },
           id: "31",
-          properties: { element_type: "bus", id: "MVLV02107", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVLV02107",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.397175010325148, 48.680005646047306, -1.397175010325148, 48.680005646047306],
           geometry: { coordinates: [-1.397175010325148, 48.680005646047306], type: "Point" },
           id: "32",
-          properties: { element_type: "bus", id: "MVBus24064", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus24064",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.396086853166442, 48.68016686423779, -1.396086853166442, 48.68016686423779],
           geometry: { coordinates: [-1.396086853166442, 48.68016686423779], type: "Point" },
           id: "33",
-          properties: { element_type: "bus", id: "MVBus24061", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus24061",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.391320095620501, 48.68124807997599, -1.391320095620501, 48.68124807997599],
           geometry: { coordinates: [-1.391320095620501, 48.68124807997599], type: "Point" },
           id: "34",
-          properties: { element_type: "bus", id: "MVBus24059", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus24059",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.391318871202315, 48.68128407741701, -1.391318871202315, 48.68128407741701],
           geometry: { coordinates: [-1.391318871202315, 48.68128407741701], type: "Point" },
           id: "35",
-          properties: { element_type: "bus", id: "MVLV06953", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVLV06953",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.387495141567356, 48.683362598407236, -1.387495141567356, 48.683362598407236],
           geometry: { coordinates: [-1.387495141567356, 48.683362598407236], type: "Point" },
           id: "36",
-          properties: { element_type: "bus", id: "MVBus24058", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus24058",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.387208961037065, 48.68286061089437, -1.387208961037065, 48.68286061089437],
           geometry: { coordinates: [-1.387208961037065, 48.68286061089437], type: "Point" },
           id: "37",
-          properties: { element_type: "bus", id: "MVLV08246", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVLV08246",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.388369912450079, 48.684359890565865, -1.388369912450079, 48.684359890565865],
           geometry: { coordinates: [-1.388369912450079, 48.684359890565865], type: "Point" },
           id: "38",
-          properties: { element_type: "bus", id: "MVBus24057", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus24057",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.389247638808418, 48.68704140487774, -1.389247638808418, 48.68704140487774],
           geometry: { coordinates: [-1.389247638808418, 48.68704140487774], type: "Point" },
           id: "39",
-          properties: { element_type: "bus", id: "MVLV15406", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVLV15406",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.389136030184977, 48.68430691391075, -1.389136030184977, 48.68430691391075],
           geometry: { coordinates: [-1.389136030184977, 48.68430691391075], type: "Point" },
           id: "40",
-          properties: { element_type: "bus", id: "MVBus24056", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus24056",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.398561158560935, 48.687535479227805, -1.398561158560935, 48.687535479227805],
           geometry: { coordinates: [-1.398561158560935, 48.687535479227805], type: "Point" },
           id: "41",
-          properties: { element_type: "bus", id: "MVBus24055", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus24055",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.401395938329806, 48.67482940726141, -1.401395938329806, 48.67482940726141],
           geometry: { coordinates: [-1.401395938329806, 48.67482940726141], type: "Point" },
           id: "42",
-          properties: { element_type: "bus", id: "MVLV00545", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVLV00545",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.402903063269356, 48.67421149659865, -1.402903063269356, 48.67421149659865],
           geometry: { coordinates: [-1.402903063269356, 48.67421149659865], type: "Point" },
           id: "43",
-          properties: { element_type: "bus", id: "MVBus24095", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus24095",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.406207660086664, 48.675123055199464, -1.406207660086664, 48.675123055199464],
           geometry: { coordinates: [-1.406207660086664, 48.675123055199464], type: "Point" },
           id: "44",
-          properties: { element_type: "bus", id: "MVBus24094", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus24094",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.410177531992409, 48.67251969634844, -1.410177531992409, 48.67251969634844],
           geometry: { coordinates: [-1.410177531992409, 48.67251969634844], type: "Point" },
           id: "45",
-          properties: { element_type: "bus", id: "MVLV03222", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVLV03222",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.407329364348828, 48.67378715489126, -1.407329364348828, 48.67378715489126],
           geometry: { coordinates: [-1.407329364348828, 48.67378715489126], type: "Point" },
           id: "46",
-          properties: { element_type: "bus", id: "MVBus24097", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus24097",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.410767426786093, 48.67586486863645, -1.410767426786093, 48.67586486863645],
           geometry: { coordinates: [-1.410767426786093, 48.67586486863645], type: "Point" },
           id: "47",
-          properties: { element_type: "bus", id: "MVBus24093", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus24093",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.411978407328498, 48.676764286658575, -1.411978407328498, 48.676764286658575],
           geometry: { coordinates: [-1.411978407328498, 48.676764286658575], type: "Point" },
           id: "48",
-          properties: { element_type: "bus", id: "MVBus24092", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus24092",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.413074070122556, 48.67823125435254, -1.413074070122556, 48.67823125435254],
           geometry: { coordinates: [-1.413074070122556, 48.67823125435254], type: "Point" },
           id: "49",
-          properties: { element_type: "bus", id: "MVBus24069", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus24069",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.420420507191141, 48.68634791867971, -1.420420507191141, 48.68634791867971],
           geometry: { coordinates: [-1.420420507191141, 48.68634791867971], type: "Point" },
           id: "50",
-          properties: { element_type: "bus", id: "MVLV10453", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVLV10453",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.424667185742581, 48.68251880629374, -1.424667185742581, 48.68251880629374],
           geometry: { coordinates: [-1.424667185742581, 48.68251880629374], type: "Point" },
           id: "51",
-          properties: { element_type: "bus", id: "MVBus24076", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus24076",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.424579380339677, 48.68254398026742, -1.424579380339677, 48.68254398026742],
           geometry: { coordinates: [-1.424579380339677, 48.68254398026742], type: "Point" },
           id: "52",
-          properties: { element_type: "bus", id: "MVLV09363", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVLV09363",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.420328922524153, 48.677875121617966, -1.420328922524153, 48.677875121617966],
           geometry: { coordinates: [-1.420328922524153, 48.677875121617966], type: "Point" },
           id: "53",
-          properties: { element_type: "bus", id: "MVBus24075", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus24075",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.419810117061095, 48.67734764388789, -1.419810117061095, 48.67734764388789],
           geometry: { coordinates: [-1.419810117061095, 48.67734764388789], type: "Point" },
           id: "54",
-          properties: { element_type: "bus", id: "MVBus24073", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus24073",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.417411347774322, 48.6790354886807, -1.417411347774322, 48.6790354886807],
           geometry: { coordinates: [-1.417411347774322, 48.6790354886807], type: "Point" },
           id: "55",
-          properties: { element_type: "bus", id: "MVLV13819", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVLV13819",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.421340042028947, 48.67636068076991, -1.421340042028947, 48.67636068076991],
           geometry: { coordinates: [-1.421340042028947, 48.67636068076991], type: "Point" },
           id: "56",
-          properties: { element_type: "bus", id: "MVBus24072", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus24072",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.425622793335055, 48.67794155813378, -1.425622793335055, 48.67794155813378],
           geometry: { coordinates: [-1.425622793335055, 48.67794155813378], type: "Point" },
           id: "57",
-          properties: { element_type: "bus", id: "MVLV18922", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVLV18922",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.420630681455058, 48.674440314166944, -1.420630681455058, 48.674440314166944],
           geometry: { coordinates: [-1.420630681455058, 48.674440314166944], type: "Point" },
           id: "58",
-          properties: { element_type: "bus", id: "MVBus24071", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus24071",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.419991973797182, 48.67443548826671, -1.419991973797182, 48.67443548826671],
           geometry: { coordinates: [-1.419991973797182, 48.67443548826671], type: "Point" },
           id: "59",
-          properties: { element_type: "bus", id: "MVBus24070", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus24070",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.419761534530391, 48.67316204924771, -1.419761534530391, 48.67316204924771],
           geometry: { coordinates: [-1.419761534530391, 48.67316204924771], type: "Point" },
           id: "60",
-          properties: { element_type: "bus", id: "MVLV00547", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVLV00547",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.42136624107891, 48.67352763843192, -1.42136624107891, 48.67352763843192],
           geometry: { coordinates: [-1.42136624107891, 48.67352763843192], type: "Point" },
           id: "61",
-          properties: { element_type: "bus", id: "MVBus24080", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus24080",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.424157252985195, 48.67046024446686, -1.424157252985195, 48.67046024446686],
           geometry: { coordinates: [-1.424157252985195, 48.67046024446686], type: "Point" },
           id: "62",
-          properties: { element_type: "bus", id: "MVLV02728", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVLV02728",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.425433424469281, 48.6704288218968, -1.425433424469281, 48.6704288218968],
           geometry: { coordinates: [-1.425433424469281, 48.6704288218968], type: "Point" },
           id: "63",
-          properties: { element_type: "bus", id: "MVBus24082", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus24082",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.423949664678889, 48.6680024069041, -1.423949664678889, 48.6680024069041],
           geometry: { coordinates: [-1.423949664678889, 48.6680024069041], type: "Point" },
           id: "64",
-          properties: { element_type: "bus", id: "MVLV14266", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVLV14266",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.424019455111165, 48.667992607111934, -1.424019455111165, 48.667992607111934],
           geometry: { coordinates: [-1.424019455111165, 48.667992607111934], type: "Point" },
           id: "65",
-          properties: { element_type: "bus", id: "MVBus24090", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus24090",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.42773882512684, 48.667518960930806, -1.42773882512684, 48.667518960930806],
           geometry: { coordinates: [-1.42773882512684, 48.667518960930806], type: "Point" },
           id: "66",
-          properties: { element_type: "bus", id: "MVBus24085", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus24085",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.435905350518214, 48.665013198677705, -1.435905350518214, 48.665013198677705],
           geometry: { coordinates: [-1.435905350518214, 48.665013198677705], type: "Point" },
           id: "67",
-          properties: { element_type: "bus", id: "MVLV18920", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVLV18920",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.438557514204313, 48.66571332634098, -1.438557514204313, 48.66571332634098],
           geometry: { coordinates: [-1.438557514204313, 48.66571332634098], type: "Point" },
           id: "68",
-          properties: { element_type: "bus", id: "MVBus39974", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus39974",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.471496954704484, 48.684283897260315, -1.471496954704484, 48.684283897260315],
           geometry: { coordinates: [-1.471496954704484, 48.684283897260315], type: "Point" },
           id: "69",
-          properties: { element_type: "bus", id: "MVBus39989", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus39989",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.454111420613221, 48.67365783095757, -1.454111420613221, 48.67365783095757],
           geometry: { coordinates: [-1.454111420613221, 48.67365783095757], type: "Point" },
           id: "70",
-          properties: { element_type: "bus", id: "MVBus39986", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus39986",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.456255345960154, 48.673153506275305, -1.456255345960154, 48.673153506275305],
           geometry: { coordinates: [-1.456255345960154, 48.673153506275305], type: "Point" },
           id: "71",
-          properties: { element_type: "bus", id: "MVLV14633", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVLV14633",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.454133606341398, 48.67364249809416, -1.454133606341398, 48.67364249809416],
           geometry: { coordinates: [-1.454133606341398, 48.67364249809416], type: "Point" },
           id: "72",
-          properties: { element_type: "bus", id: "MVBus39987", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus39987",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.453998689564143, 48.67360108655294, -1.453998689564143, 48.67360108655294],
           geometry: { coordinates: [-1.453998689564143, 48.67360108655294], type: "Point" },
           id: "73",
-          properties: { element_type: "bus", id: "MVBus39985", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus39985",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.448362516861079, 48.67139846929151, -1.448362516861079, 48.67139846929151],
           geometry: { coordinates: [-1.448362516861079, 48.67139846929151], type: "Point" },
           id: "74",
-          properties: { element_type: "bus", id: "MVBus39983", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus39983",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.449205686310729, 48.67094761063653, -1.449205686310729, 48.67094761063653],
           geometry: { coordinates: [-1.449205686310729, 48.67094761063653], type: "Point" },
           id: "75",
-          properties: { element_type: "bus", id: "MVLV00544", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVLV00544",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.445506049849497, 48.66907708140258, -1.445506049849497, 48.66907708140258],
           geometry: { coordinates: [-1.445506049849497, 48.66907708140258], type: "Point" },
           id: "76",
-          properties: { element_type: "bus", id: "MVBus39982", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus39982",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.44375635095643, 48.668776616576054, -1.44375635095643, 48.668776616576054],
           geometry: { coordinates: [-1.44375635095643, 48.668776616576054], type: "Point" },
           id: "77",
-          properties: { element_type: "bus", id: "MVBus39981", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus39981",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.443288177621643, 48.668471426684015, -1.443288177621643, 48.668471426684015],
           geometry: { coordinates: [-1.443288177621643, 48.668471426684015], type: "Point" },
           id: "78",
-          properties: { element_type: "bus", id: "MVLV18919", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVLV18919",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.443343047955685, 48.66847284504271, -1.443343047955685, 48.66847284504271],
           geometry: { coordinates: [-1.443343047955685, 48.66847284504271], type: "Point" },
           id: "79",
-          properties: { element_type: "bus", id: "MVBus39990", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus39990",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.444227964428699, 48.668319010605344, -1.444227964428699, 48.668319010605344],
           geometry: { coordinates: [-1.444227964428699, 48.668319010605344], type: "Point" },
           id: "80",
-          properties: { element_type: "bus", id: "MVBus39980", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus39980",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.443199968358023, 48.66690877873582, -1.443199968358023, 48.66690877873582],
           geometry: { coordinates: [-1.443199968358023, 48.66690877873582], type: "Point" },
           id: "81",
-          properties: { element_type: "bus", id: "MVBus39978", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus39978",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.446079710619304, 48.66557326975702, -1.446079710619304, 48.66557326975702],
           geometry: { coordinates: [-1.446079710619304, 48.66557326975702], type: "Point" },
           id: "82",
-          properties: { element_type: "bus", id: "MVLV06448", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVLV06448",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.441570933640071, 48.66627762495946, -1.441570933640071, 48.66627762495946],
           geometry: { coordinates: [-1.441570933640071, 48.66627762495946], type: "Point" },
           id: "83",
-          properties: { element_type: "bus", id: "MVBus39976", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus39976",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.438449788295261, 48.67104614339778, -1.438449788295261, 48.67104614339778],
           geometry: { coordinates: [-1.438449788295261, 48.67104614339778], type: "Point" },
           id: "84",
-          properties: { element_type: "bus", id: "MVLV09015", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVLV09015",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.437540172188118, 48.66623721183292, -1.437540172188118, 48.66623721183292],
           geometry: { coordinates: [-1.437540172188118, 48.66623721183292], type: "Point" },
           id: "85",
-          properties: { element_type: "bus", id: "MVBus24089", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus24089",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.429737921743526, 48.66740399771851, -1.429737921743526, 48.66740399771851],
           geometry: { coordinates: [-1.429737921743526, 48.66740399771851], type: "Point" },
           id: "86",
-          properties: { element_type: "bus", id: "MVBus24086", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus24086",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.432209635049518, 48.67056922323461, -1.432209635049518, 48.67056922323461],
           geometry: { coordinates: [-1.432209635049518, 48.67056922323461], type: "Point" },
           id: "87",
-          properties: { element_type: "bus", id: "MVLV06447", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVLV06447",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.430226347180375, 48.66816721336321, -1.430226347180375, 48.66816721336321],
           geometry: { coordinates: [-1.430226347180375, 48.66816721336321], type: "Point" },
           id: "88",
-          properties: { element_type: "bus", id: "MVBus24087", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus24087",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.427550443876756, 48.66832702556939, -1.427550443876756, 48.66832702556939],
           geometry: { coordinates: [-1.427550443876756, 48.66832702556939], type: "Point" },
           id: "89",
-          properties: { element_type: "bus", id: "MVBus24084", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus24084",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.423458086823049, 48.672063747279815, -1.423458086823049, 48.672063747279815],
           geometry: { coordinates: [-1.423458086823049, 48.672063747279815], type: "Point" },
           id: "90",
-          properties: { element_type: "bus", id: "MVBus24081", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus24081",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.408493773037451, 48.68069081868821, -1.408493773037451, 48.68069081868821],
           geometry: { coordinates: [-1.408493773037451, 48.68069081868821], type: "Point" },
           id: "91",
-          properties: { element_type: "bus", id: "MVBus24068", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus24068",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.413039955009211, 48.681710134344065, -1.413039955009211, 48.681710134344065],
           geometry: { coordinates: [-1.413039955009211, 48.681710134344065], type: "Point" },
           id: "92",
-          properties: { element_type: "bus", id: "MVLV10323", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVLV10323",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.411072946287639, 48.68122377495599, -1.411072946287639, 48.68122377495599],
           geometry: { coordinates: [-1.411072946287639, 48.68122377495599], type: "Point" },
           id: "93",
-          properties: { element_type: "bus", id: "MVBus24101", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus24101",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.40965762004385, 48.68091651992885, -1.40965762004385, 48.68091651992885],
           geometry: { coordinates: [-1.40965762004385, 48.68091651992885], type: "Point" },
           id: "94",
-          properties: { element_type: "bus", id: "MVBus24100", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus24100",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.410867808177468, 48.68472414481989, -1.410867808177468, 48.68472414481989],
           geometry: { coordinates: [-1.410867808177468, 48.68472414481989], type: "Point" },
           id: "95",
-          properties: { element_type: "bus", id: "MVLV10324", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVLV10324",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.410457520575412, 48.6846248924926, -1.410457520575412, 48.6846248924926],
           geometry: { coordinates: [-1.410457520575412, 48.6846248924926], type: "Point" },
           id: "96",
-          properties: { element_type: "bus", id: "MVBus24104", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus24104",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.409563445224697, 48.687969213263976, -1.409563445224697, 48.687969213263976],
           geometry: { coordinates: [-1.409563445224697, 48.687969213263976], type: "Point" },
           id: "97",
-          properties: { element_type: "bus", id: "MVLV00546", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVLV00546",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.409907100020805, 48.68709324149833, -1.409907100020805, 48.68709324149833],
           geometry: { coordinates: [-1.409907100020805, 48.68709324149833], type: "Point" },
           id: "98",
-          properties: { element_type: "bus", id: "MVBus24108", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus24108",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.410557522651376, 48.685621609766095, -1.410557522651376, 48.685621609766095],
           geometry: { coordinates: [-1.410557522651376, 48.685621609766095], type: "Point" },
           id: "99",
-          properties: { element_type: "bus", id: "MVBus24107", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus24107",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.41052130409578, 48.6846345578222, -1.41052130409578, 48.6846345578222],
           geometry: { coordinates: [-1.41052130409578, 48.6846345578222], type: "Point" },
           id: "100",
-          properties: { element_type: "bus", id: "MVBus24106", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus24106",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.410375244576262, 48.68359763038951, -1.410375244576262, 48.68359763038951],
           geometry: { coordinates: [-1.410375244576262, 48.68359763038951], type: "Point" },
           id: "101",
-          properties: { element_type: "bus", id: "MVBus24103", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus24103",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.409110034494963, 48.68080865138281, -1.409110034494963, 48.68080865138281],
           geometry: { coordinates: [-1.409110034494963, 48.68080865138281], type: "Point" },
           id: "102",
-          properties: { element_type: "bus", id: "MVBus24099", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus24099",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.389640377977582, 48.6936695244645, -1.389640377977582, 48.6936695244645],
           geometry: { coordinates: [-1.389640377977582, 48.6936695244645], type: "Point" },
           id: "103",
-          properties: { element_type: "bus", id: "MVBus24051", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus24051",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.386585620553674, 48.692516906896316, -1.386585620553674, 48.692516906896316],
           geometry: { coordinates: [-1.386585620553674, 48.692516906896316], type: "Point" },
           id: "104",
-          properties: { element_type: "bus", id: "MVBus24050", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus24050",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.388721682538931, 48.69170724856656, -1.388721682538931, 48.69170724856656],
           geometry: { coordinates: [-1.388721682538931, 48.69170724856656], type: "Point" },
           id: "105",
-          properties: { element_type: "bus", id: "MVLV05135", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVLV05135",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.3860685283105134, 48.69022637502021, -1.3860685283105134, 48.69022637502021],
           geometry: { coordinates: [-1.3860685283105134, 48.69022637502021], type: "Point" },
           id: "106",
-          properties: { element_type: "bus", id: "MVLV00762", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVLV00762",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.37140828752311, 48.69474338047859, -1.37140828752311, 48.69474338047859],
           geometry: { coordinates: [-1.37140828752311, 48.69474338047859], type: "Point" },
           id: "107",
-          properties: { element_type: "bus", id: "MVBus17517", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus17517",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.370008749538573, 48.69484206776048, -1.370008749538573, 48.69484206776048],
           geometry: { coordinates: [-1.370008749538573, 48.69484206776048], type: "Point" },
           id: "108",
-          properties: { element_type: "bus", id: "MVBus17516", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus17516",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.3610517542755765, 48.69858050796095, -1.3610517542755765, 48.69858050796095],
           geometry: { coordinates: [-1.3610517542755765, 48.69858050796095], type: "Point" },
           id: "109",
-          properties: { element_type: "bus", id: "MVLV15837", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVLV15837",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.350033533716369, 48.70073831530751, -1.350033533716369, 48.70073831530751],
           geometry: { coordinates: [-1.350033533716369, 48.70073831530751], type: "Point" },
           id: "110",
-          properties: { element_type: "bus", id: "MVBus08235", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus08235",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.349583389791825, 48.7002449228178, -1.349583389791825, 48.7002449228178],
           geometry: { coordinates: [-1.349583389791825, 48.7002449228178], type: "Point" },
           id: "111",
-          properties: { element_type: "bus", id: "MVBus08234", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus08234",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.349090863664277, 48.69988795473, -1.349090863664277, 48.69988795473],
           geometry: { coordinates: [-1.349090863664277, 48.69988795473], type: "Point" },
           id: "112",
-          properties: { element_type: "bus", id: "MVBus08233", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus08233",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.332662258481913, 48.69470601327688, -1.332662258481913, 48.69470601327688],
           geometry: { coordinates: [-1.332662258481913, 48.69470601327688], type: "Point" },
           id: "113",
-          properties: { element_type: "bus", id: "MVBus08232", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus08232",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.332456160398833, 48.694750388404394, -1.332456160398833, 48.694750388404394],
           geometry: { coordinates: [-1.332456160398833, 48.694750388404394], type: "Point" },
           id: "114",
-          properties: { element_type: "bus", id: "MVBus08231", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus08231",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.3324397522750886, 48.69480756439362, -1.3324397522750886, 48.69480756439362],
           geometry: { coordinates: [-1.3324397522750886, 48.69480756439362], type: "Point" },
           id: "115",
-          properties: { element_type: "bus", id: "MVLV16807", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVLV16807",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.337811745653045, 48.69348041079462, -1.337811745653045, 48.69348041079462],
           geometry: { coordinates: [-1.337811745653045, 48.69348041079462], type: "Point" },
           id: "116",
-          properties: { element_type: "bus", id: "MVLV08873", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVLV08873",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.337017272071378, 48.69361150583635, -1.337017272071378, 48.69361150583635],
           geometry: { coordinates: [-1.337017272071378, 48.69361150583635], type: "Point" },
           id: "117",
-          properties: { element_type: "bus", id: "MVBus08990", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus08990",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.336768360474335, 48.693054819581505, -1.336768360474335, 48.693054819581505],
           geometry: { coordinates: [-1.336768360474335, 48.693054819581505], type: "Point" },
           id: "118",
-          properties: { element_type: "bus", id: "MVLV13668", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVLV13668",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.333868868924871, 48.69442417043966, -1.333868868924871, 48.69442417043966],
           geometry: { coordinates: [-1.333868868924871, 48.69442417043966], type: "Point" },
           id: "119",
-          properties: { element_type: "bus", id: "MVBus08989", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus08989",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.332769653966778, 48.694856436515416, -1.332769653966778, 48.694856436515416],
           geometry: { coordinates: [-1.332769653966778, 48.694856436515416], type: "Point" },
           id: "120",
-          properties: { element_type: "bus", id: "MVBus08988", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus08988",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.332696716348577, 48.69475012796576, -1.332696716348577, 48.69475012796576],
           geometry: { coordinates: [-1.332696716348577, 48.69475012796576], type: "Point" },
           id: "121",
-          properties: { element_type: "bus", id: "MVBus08987", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus08987",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.332311951909265, 48.6947431871332, -1.332311951909265, 48.6947431871332],
           geometry: { coordinates: [-1.332311951909265, 48.6947431871332], type: "Point" },
           id: "122",
-          properties: { element_type: "bus", id: "MVBus05030", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus05030",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.324403471836129, 48.688034195862905, -1.324403471836129, 48.688034195862905],
           geometry: { coordinates: [-1.324403471836129, 48.688034195862905], type: "Point" },
           id: "123",
-          properties: { element_type: "bus", id: "MVBus05028", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus05028",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.32466065492585, 48.6880640048316, -1.32466065492585, 48.6880640048316],
           geometry: { coordinates: [-1.32466065492585, 48.6880640048316], type: "Point" },
           id: "124",
-          properties: { element_type: "bus", id: "MVLV06298", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVLV06298",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.324640695755288, 48.68391926354705, -1.324640695755288, 48.68391926354705],
           geometry: { coordinates: [-1.324640695755288, 48.68391926354705], type: "Point" },
           id: "125",
-          properties: { element_type: "bus", id: "MVBus05027", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus05027",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.324633327379154, 48.681828081809556, -1.324633327379154, 48.681828081809556],
           geometry: { coordinates: [-1.324633327379154, 48.681828081809556], type: "Point" },
           id: "126",
-          properties: { element_type: "bus", id: "MVBus05026", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVBus05026",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
           bbox: [-1.3243096308857334, 48.677222514427754, -1.3243096308857334, 48.677222514427754],
           geometry: { coordinates: [-1.3243096308857334, 48.677222514427754], type: "Point" },
           id: "127",
-          properties: { element_type: "bus", id: "MVLV06299", max_voltage: 21000, min_voltage: 19000, phases: "abc" },
+          properties: {
+            element_type: "bus",
+            id: "MVLV06299",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
       ],
       type: "FeatureCollection",
     });
 
-    geo_json_5ccbf2d0b4db0ffc011091198c6f63a8.bindTooltip(
+    geo_json_a731d05f59087604b83bdf4d04dbe83c.bindTooltip(
       function (layer) {
         let div = L.DomUtil.create("div");
 
@@ -4814,23 +5704,23 @@
       { className: "foliumtooltip", maxWidth: 800, sticky: false },
     );
 
-    geo_json_5ccbf2d0b4db0ffc011091198c6f63a8.addTo(map_87226d9b6088ebf4261e78f2ed0c4ac7);
+    geo_json_a731d05f59087604b83bdf4d04dbe83c.addTo(map_00fec856638ed4675f6eae11f54552cc);
 
-    var layer_control_5189a23caf3c6f69b13e5349284355b8_layers = {
+    var layer_control_dadaf2ff4e999fa3f3cde382e5ba6f0d_layers = {
       base_layers: {
-        openstreetmap: tile_layer_171d17db364fe8cfa05d44303cf8c901,
+        openstreetmap: tile_layer_12c426dbacab2996cf5d2b158444c7a1,
       },
       overlays: {
-        lines: geo_json_0cfb3888569ec551691fdf576db88059,
-        buses: geo_json_5ccbf2d0b4db0ffc011091198c6f63a8,
+        lines: geo_json_815741c4c7ecad4ac263bf9b2b6bac1f,
+        buses: geo_json_a731d05f59087604b83bdf4d04dbe83c,
       },
     };
-    let layer_control_5189a23caf3c6f69b13e5349284355b8 = L.control
+    let layer_control_dadaf2ff4e999fa3f3cde382e5ba6f0d = L.control
       .layers(
-        layer_control_5189a23caf3c6f69b13e5349284355b8_layers.base_layers,
-        layer_control_5189a23caf3c6f69b13e5349284355b8_layers.overlays,
+        layer_control_dadaf2ff4e999fa3f3cde382e5ba6f0d_layers.base_layers,
+        layer_control_dadaf2ff4e999fa3f3cde382e5ba6f0d_layers.overlays,
         { autoZIndex: true, collapsed: true, position: "topright" },
       )
-      .addTo(map_87226d9b6088ebf4261e78f2ed0c4ac7);
+      .addTo(map_00fec856638ed4675f6eae11f54552cc);
   </script>
 </html>

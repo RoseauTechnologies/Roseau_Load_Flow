@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "is_multiphase": true,
   "grounds": [
     {
@@ -31,8 +31,8 @@
         "type": "Point",
         "coordinates": [-1.3413945147439499, 48.67575966750258]
       },
-      "min_voltage": 19000,
-      "max_voltage": 21000
+      "nominal_voltage": 20000,
+      "min_voltage_level": 0.95
     },
     {
       "id": "MVLVFeeder08786",
@@ -41,8 +41,8 @@
         "type": "Point",
         "coordinates": [-1.3413945147439499, 48.67575966750258]
       },
-      "min_voltage": 207,
-      "max_voltage": 253
+      "nominal_voltage": 400,
+      "min_voltage_level": 0.9
     },
     {
       "id": "LVBus021707",
@@ -51,8 +51,8 @@
         "type": "Point",
         "coordinates": [-1.3405143892225866, 48.67378431146558]
       },
-      "min_voltage": 207,
-      "max_voltage": 253
+      "nominal_voltage": 400,
+      "min_voltage_level": 0.9
     },
     {
       "id": "LVBus195690",
@@ -61,8 +61,8 @@
         "type": "Point",
         "coordinates": [-1.341130004040592, 48.674217267249176]
       },
-      "min_voltage": 207,
-      "max_voltage": 253
+      "nominal_voltage": 400,
+      "min_voltage_level": 0.9
     }
   ],
   "lines": [

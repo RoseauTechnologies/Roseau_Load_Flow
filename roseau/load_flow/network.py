@@ -289,13 +289,14 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         """The :attr:`buses` of the network as a geo dataframe."""
         data = []
         for bus in self.buses.values():
-            min_voltage = bus.min_voltage.magnitude if bus.min_voltage is not None else float("nan")
-            max_voltage = bus.max_voltage.magnitude if bus.max_voltage is not None else float("nan")
-            data.append((bus.id, bus.phases, min_voltage, max_voltage, bus.geometry))
+            nominal_voltage = bus.nominal_voltage.magnitude if bus.nominal_voltage is not None else (float("nan"))
+            min_voltage_level = bus.min_voltage_level.magnitude if bus.min_voltage_level is not None else float("nan")
+            max_voltage_level = bus.max_voltage_level.magnitude if bus.max_voltage_level is not None else float("nan")
+            data.append((bus.id, bus.phases, nominal_voltage, min_voltage_level, max_voltage_level, bus.geometry))
         return gpd.GeoDataFrame(
             data=pd.DataFrame.from_records(
                 data=data,
-                columns=["id", "phases", "min_voltage", "max_voltage", "geometry"],
+                columns=["id", "phases", "nominal_voltage", "min_voltage_level", "max_voltage_level", "geometry"],
                 index="id",
             ),
             geometry="geometry",
@@ -675,40 +676,54 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
 
         and the following columns:
             - `voltage`: The complex voltage of the bus (in Volts) for the given phase.
-            - `min_voltage`: The minimum voltage of the bus (in Volts).
-            - `max_voltage`: The maximum voltage of the bus (in Volts).
+            - `voltage_level`: The voltage level of the bus.
+            - `min_voltage_level`: The minimum voltage level of the bus.
+            - `max_voltage_level`: The maximum voltage level of the bus.
+            - `violated`: `True` if a voltage limit is not respected.
         """
         self._check_valid_results()
         voltages_dict = {
             "bus_id": [],
             "phase": [],
             "voltage": [],
-            "min_voltage": [],
-            "max_voltage": [],
+            "voltage_level": [],
+            "min_voltage_level": [],
+            "max_voltage_level": [],
             "violated": [],
         }
         dtypes = {c: _DTYPES[c] for c in voltages_dict} | {"phase": VoltagePhaseDtype}
+        sqrt_3 = float(np.sqrt(3))
         for bus_id, bus in self.buses.items():
-            min_voltage = bus._min_voltage
-            max_voltage = bus._max_voltage
-            voltage_limits_set = False
+            nominal_voltage = bus._nominal_voltage
+            min_voltage_level = bus._min_voltage_level
+            max_voltage_level = bus._max_voltage_level
+            voltage_limits_set = (
+                min_voltage_level is not None or max_voltage_level is not None
+            ) and nominal_voltage is not None
 
-            if min_voltage is None:
-                min_voltage = float("nan")
-            else:
-                voltage_limits_set = True
-            if max_voltage is None:
-                max_voltage = float("nan")
-            else:
-                voltage_limits_set = True
+            if nominal_voltage is None:
+                nominal_voltage = float("nan")
+            if min_voltage_level is None:
+                min_voltage_level = float("nan")
+            if max_voltage_level is None:
+                max_voltage_level = float("nan")
             for voltage, phase in zip(bus._res_voltages_getter(warning=False), bus.voltage_phases, strict=True):
                 voltage_abs = abs(voltage)
-                violated = (voltage_abs < min_voltage or voltage_abs > max_voltage) if voltage_limits_set else None
+                if voltage_limits_set:
+                    if "n" in phase:
+                        voltage_level = sqrt_3 * voltage_abs / nominal_voltage
+                    else:
+                        voltage_level = voltage_abs / nominal_voltage
+                    violated = voltage_level < min_voltage_level or voltage_level > max_voltage_level
+                else:
+                    violated = None
+                    voltage_level = float("nan")
                 voltages_dict["bus_id"].append(bus_id)
                 voltages_dict["phase"].append(phase)
                 voltages_dict["voltage"].append(voltage)
-                voltages_dict["min_voltage"].append(min_voltage)
-                voltages_dict["max_voltage"].append(max_voltage)
+                voltages_dict["voltage_level"].append(voltage_level)
+                voltages_dict["min_voltage_level"].append(min_voltage_level)
+                voltages_dict["max_voltage_level"].append(max_voltage_level)
                 voltages_dict["violated"].append(violated)
         return pd.DataFrame(voltages_dict).astype(dtypes).set_index(["bus_id", "phase"])
 

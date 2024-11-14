@@ -50,7 +50,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css" />
     <link
       rel="stylesheet"
@@ -67,7 +67,7 @@
                 initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
     <style>
-      #map_69625c540da0f9dcd4c16f1df9d32869 {
+      #map_076c6c02089405a19adc9dcac0b413fb {
         position: relative;
         width: 100%;
         height: 100%;
@@ -114,10 +114,10 @@
   <body>
     <h1>MV Feeder 078</h1>
 
-    <div class="folium-map" id="map_69625c540da0f9dcd4c16f1df9d32869"></div>
+    <div class="folium-map" id="map_076c6c02089405a19adc9dcac0b413fb"></div>
   </body>
   <script>
-    var map_69625c540da0f9dcd4c16f1df9d32869 = L.map("map_69625c540da0f9dcd4c16f1df9d32869", {
+    var map_076c6c02089405a19adc9dcac0b413fb = L.map("map_076c6c02089405a19adc9dcac0b413fb", {
       center: [48.84089905180882, -0.8728837389513482],
       crs: L.CRS.EPSG3857,
       zoom: 12,
@@ -125,7 +125,7 @@
       preferCanvas: false,
     });
 
-    var tile_layer_eaf7f13f360d637ee65e6d2c572551a8 = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    var tile_layer_4b716a208ec38ff823f2a4db6dc650ab = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution:
         '\u0026copy; \u003ca href="https://www.openstreetmap.org/copyright"\u003eOpenStreetMap\u003c/a\u003e contributors',
       detectRetina: false,
@@ -138,21 +138,21 @@
       tms: false,
     });
 
-    tile_layer_eaf7f13f360d637ee65e6d2c572551a8.addTo(map_69625c540da0f9dcd4c16f1df9d32869);
+    tile_layer_4b716a208ec38ff823f2a4db6dc650ab.addTo(map_076c6c02089405a19adc9dcac0b413fb);
 
-    function geo_json_d0f81896b867fd39cbe28c8a7f3e6e65_styler(feature) {
+    function geo_json_029f6646432eed548643c8d45bc62762_styler(feature) {
       switch (feature.id) {
         default:
           return { color: "#234e83", weight: 4 };
       }
     }
-    function geo_json_d0f81896b867fd39cbe28c8a7f3e6e65_highlighter(feature) {
+    function geo_json_029f6646432eed548643c8d45bc62762_highlighter(feature) {
       switch (feature.id) {
         default:
           return { color: "#cad40e" };
       }
     }
-    function geo_json_d0f81896b867fd39cbe28c8a7f3e6e65_pointToLayer(feature, latlng) {
+    function geo_json_029f6646432eed548643c8d45bc62762_pointToLayer(feature, latlng) {
       var opts = {
         bubblingMouseEvents: true,
         color: "#3388ff",
@@ -170,38 +170,38 @@
         weight: 3,
       };
 
-      let style = geo_json_d0f81896b867fd39cbe28c8a7f3e6e65_styler(feature);
+      let style = geo_json_029f6646432eed548643c8d45bc62762_styler(feature);
       Object.assign(opts, style);
 
       return new L.CircleMarker(latlng, opts);
     }
 
-    function geo_json_d0f81896b867fd39cbe28c8a7f3e6e65_onEachFeature(feature, layer) {
+    function geo_json_029f6646432eed548643c8d45bc62762_onEachFeature(feature, layer) {
       layer.on({
         mouseout: function (e) {
           if (typeof e.target.setStyle === "function") {
-            geo_json_d0f81896b867fd39cbe28c8a7f3e6e65.resetStyle(e.target);
+            geo_json_029f6646432eed548643c8d45bc62762.resetStyle(e.target);
           }
         },
         mouseover: function (e) {
           if (typeof e.target.setStyle === "function") {
-            const highlightStyle = geo_json_d0f81896b867fd39cbe28c8a7f3e6e65_highlighter(e.target.feature);
+            const highlightStyle = geo_json_029f6646432eed548643c8d45bc62762_highlighter(e.target.feature);
             e.target.setStyle(highlightStyle);
           }
         },
       });
     }
-    var geo_json_d0f81896b867fd39cbe28c8a7f3e6e65 = L.geoJson(null, {
-      onEachFeature: geo_json_d0f81896b867fd39cbe28c8a7f3e6e65_onEachFeature,
+    var geo_json_029f6646432eed548643c8d45bc62762 = L.geoJson(null, {
+      onEachFeature: geo_json_029f6646432eed548643c8d45bc62762_onEachFeature,
 
-      style: geo_json_d0f81896b867fd39cbe28c8a7f3e6e65_styler,
-      pointToLayer: geo_json_d0f81896b867fd39cbe28c8a7f3e6e65_pointToLayer,
+      style: geo_json_029f6646432eed548643c8d45bc62762_styler,
+      pointToLayer: geo_json_029f6646432eed548643c8d45bc62762_pointToLayer,
     });
 
-    function geo_json_d0f81896b867fd39cbe28c8a7f3e6e65_add(data) {
-      geo_json_d0f81896b867fd39cbe28c8a7f3e6e65.addData(data);
+    function geo_json_029f6646432eed548643c8d45bc62762_add(data) {
+      geo_json_029f6646432eed548643c8d45bc62762.addData(data);
     }
-    geo_json_d0f81896b867fd39cbe28c8a7f3e6e65_add({
+    geo_json_029f6646432eed548643c8d45bc62762_add({
       bbox: [-0.888730478192353, 48.82656655184295, -0.856661212898628, 48.85903835995974],
       features: [
         {
@@ -2288,7 +2288,7 @@
       type: "FeatureCollection",
     });
 
-    geo_json_d0f81896b867fd39cbe28c8a7f3e6e65.bindTooltip(
+    geo_json_029f6646432eed548643c8d45bc62762.bindTooltip(
       function (layer) {
         let div = L.DomUtil.create("div");
 
@@ -2317,9 +2317,9 @@
       { className: "foliumtooltip", maxWidth: 800, sticky: false },
     );
 
-    geo_json_d0f81896b867fd39cbe28c8a7f3e6e65.addTo(map_69625c540da0f9dcd4c16f1df9d32869);
+    geo_json_029f6646432eed548643c8d45bc62762.addTo(map_076c6c02089405a19adc9dcac0b413fb);
 
-    function geo_json_fba1eeed9baadd3797f8d4f7fb5fe7e0_styler(feature) {
+    function geo_json_16f605b684e826a630063ea02372bdac_styler(feature) {
       switch (feature.id) {
         case "0":
         case "1":
@@ -2352,13 +2352,13 @@
           return { color: "#234e83", fill: true, fillColor: "#234e83", fillOpacity: 1, radius: 3 };
       }
     }
-    function geo_json_fba1eeed9baadd3797f8d4f7fb5fe7e0_highlighter(feature) {
+    function geo_json_16f605b684e826a630063ea02372bdac_highlighter(feature) {
       switch (feature.id) {
         default:
           return { color: "#cad40e", fillColor: "#cad40e" };
       }
     }
-    function geo_json_fba1eeed9baadd3797f8d4f7fb5fe7e0_pointToLayer(feature, latlng) {
+    function geo_json_16f605b684e826a630063ea02372bdac_pointToLayer(feature, latlng) {
       var opts = {
         bubblingMouseEvents: true,
         color: "#3388ff",
@@ -2376,45 +2376,52 @@
         weight: 3,
       };
 
-      let style = geo_json_fba1eeed9baadd3797f8d4f7fb5fe7e0_styler(feature);
+      let style = geo_json_16f605b684e826a630063ea02372bdac_styler(feature);
       Object.assign(opts, style);
 
       return new L.CircleMarker(latlng, opts);
     }
 
-    function geo_json_fba1eeed9baadd3797f8d4f7fb5fe7e0_onEachFeature(feature, layer) {
+    function geo_json_16f605b684e826a630063ea02372bdac_onEachFeature(feature, layer) {
       layer.on({
         mouseout: function (e) {
           if (typeof e.target.setStyle === "function") {
-            geo_json_fba1eeed9baadd3797f8d4f7fb5fe7e0.resetStyle(e.target);
+            geo_json_16f605b684e826a630063ea02372bdac.resetStyle(e.target);
           }
         },
         mouseover: function (e) {
           if (typeof e.target.setStyle === "function") {
-            const highlightStyle = geo_json_fba1eeed9baadd3797f8d4f7fb5fe7e0_highlighter(e.target.feature);
+            const highlightStyle = geo_json_16f605b684e826a630063ea02372bdac_highlighter(e.target.feature);
             e.target.setStyle(highlightStyle);
           }
         },
       });
     }
-    var geo_json_fba1eeed9baadd3797f8d4f7fb5fe7e0 = L.geoJson(null, {
-      onEachFeature: geo_json_fba1eeed9baadd3797f8d4f7fb5fe7e0_onEachFeature,
+    var geo_json_16f605b684e826a630063ea02372bdac = L.geoJson(null, {
+      onEachFeature: geo_json_16f605b684e826a630063ea02372bdac_onEachFeature,
 
-      style: geo_json_fba1eeed9baadd3797f8d4f7fb5fe7e0_styler,
-      pointToLayer: geo_json_fba1eeed9baadd3797f8d4f7fb5fe7e0_pointToLayer,
+      style: geo_json_16f605b684e826a630063ea02372bdac_styler,
+      pointToLayer: geo_json_16f605b684e826a630063ea02372bdac_pointToLayer,
     });
 
-    function geo_json_fba1eeed9baadd3797f8d4f7fb5fe7e0_add(data) {
-      geo_json_fba1eeed9baadd3797f8d4f7fb5fe7e0.addData(data);
+    function geo_json_16f605b684e826a630063ea02372bdac_add(data) {
+      geo_json_16f605b684e826a630063ea02372bdac.addData(data);
     }
-    geo_json_fba1eeed9baadd3797f8d4f7fb5fe7e0_add({
+    geo_json_16f605b684e826a630063ea02372bdac_add({
       bbox: [-0.888557428715923, 48.82656655184295, -0.856679771196076, 48.858894496901186],
       features: [
         {
           bbox: [-0.861907220519602, 48.85275990396129, -0.861907220519602, 48.85275990396129],
           geometry: { coordinates: [-0.861907220519602, 48.85275990396129], type: "Point" },
           id: "0",
-          properties: { id: "HVMV06", max_voltage: 21000, min_voltage: 19000, network: "MVFeeder078", phases: "abc" },
+          properties: {
+            id: "HVMV06",
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
+            network: "MVFeeder078",
+            nominal_voltage: 20000,
+            phases: "abc",
+          },
           type: "Feature",
         },
         {
@@ -2423,9 +2430,10 @@
           id: "1",
           properties: {
             id: "HVMVFeeder06",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
             network: "MVFeeder078",
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -2436,9 +2444,10 @@
           id: "2",
           properties: {
             id: "MVLV16267",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
             network: "MVFeeder078",
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -2449,9 +2458,10 @@
           id: "3",
           properties: {
             id: "MVBus05176",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
             network: "MVFeeder078",
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -2462,9 +2472,10 @@
           id: "4",
           properties: {
             id: "MVBus05175",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
             network: "MVFeeder078",
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -2475,9 +2486,10 @@
           id: "5",
           properties: {
             id: "MVBus05174",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
             network: "MVFeeder078",
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -2488,9 +2500,10 @@
           id: "6",
           properties: {
             id: "MVBus05173",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
             network: "MVFeeder078",
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -2501,9 +2514,10 @@
           id: "7",
           properties: {
             id: "MVLV00093",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
             network: "MVFeeder078",
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -2514,9 +2528,10 @@
           id: "8",
           properties: {
             id: "MVBus04732",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
             network: "MVFeeder078",
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -2527,9 +2542,10 @@
           id: "9",
           properties: {
             id: "MVBus04731",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
             network: "MVFeeder078",
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -2540,9 +2556,10 @@
           id: "10",
           properties: {
             id: "MVLV17336",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
             network: "MVFeeder078",
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -2553,9 +2570,10 @@
           id: "11",
           properties: {
             id: "MVBus04323",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
             network: "MVFeeder078",
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -2566,9 +2584,10 @@
           id: "12",
           properties: {
             id: "MVBus08705",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
             network: "MVFeeder078",
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -2579,9 +2598,10 @@
           id: "13",
           properties: {
             id: "MVBus08704",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
             network: "MVFeeder078",
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -2592,9 +2612,10 @@
           id: "14",
           properties: {
             id: "MVBus08703",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
             network: "MVFeeder078",
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -2605,9 +2626,10 @@
           id: "15",
           properties: {
             id: "MVBus08702",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
             network: "MVFeeder078",
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -2618,9 +2640,10 @@
           id: "16",
           properties: {
             id: "MVLV14202",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
             network: "MVFeeder078",
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -2631,9 +2654,10 @@
           id: "17",
           properties: {
             id: "MVBus07205",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
             network: "MVFeeder078",
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -2644,9 +2668,10 @@
           id: "18",
           properties: {
             id: "MVBus07204",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
             network: "MVFeeder078",
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -2657,9 +2682,10 @@
           id: "19",
           properties: {
             id: "MVBus07203",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
             network: "MVFeeder078",
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -2670,9 +2696,10 @@
           id: "20",
           properties: {
             id: "MVLV17331",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
             network: "MVFeeder078",
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -2683,9 +2710,10 @@
           id: "21",
           properties: {
             id: "MVBus08183",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
             network: "MVFeeder078",
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -2696,9 +2724,10 @@
           id: "22",
           properties: {
             id: "MVLV14197",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
             network: "MVFeeder078",
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -2709,9 +2738,10 @@
           id: "23",
           properties: {
             id: "MVBus07202",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
             network: "MVFeeder078",
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -2722,9 +2752,10 @@
           id: "24",
           properties: {
             id: "MVBus07201",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
             network: "MVFeeder078",
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -2735,9 +2766,10 @@
           id: "25",
           properties: {
             id: "MVBus07200",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
             network: "MVFeeder078",
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -2748,9 +2780,10 @@
           id: "26",
           properties: {
             id: "MVBus07199",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
             network: "MVFeeder078",
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -2761,9 +2794,10 @@
           id: "27",
           properties: {
             id: "MVLV16339",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
             network: "MVFeeder078",
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -2774,9 +2808,10 @@
           id: "28",
           properties: {
             id: "MVLV06618",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
             network: "MVFeeder078",
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -2787,9 +2822,10 @@
           id: "29",
           properties: {
             id: "MVBus08686",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
             network: "MVFeeder078",
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -2800,9 +2836,10 @@
           id: "30",
           properties: {
             id: "MVBus08685",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
             network: "MVFeeder078",
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -2813,9 +2850,10 @@
           id: "31",
           properties: {
             id: "MVLV06624",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
             network: "MVFeeder078",
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -2826,9 +2864,10 @@
           id: "32",
           properties: {
             id: "MVLV07908",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
             network: "MVFeeder078",
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -2839,9 +2878,10 @@
           id: "33",
           properties: {
             id: "MVBus07971",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
             network: "MVFeeder078",
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -2852,9 +2892,10 @@
           id: "34",
           properties: {
             id: "MVBus07970",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
             network: "MVFeeder078",
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -2865,9 +2906,10 @@
           id: "35",
           properties: {
             id: "MVLV06613",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
             network: "MVFeeder078",
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -2878,9 +2920,10 @@
           id: "36",
           properties: {
             id: "MVLV16338",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
             network: "MVFeeder078",
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -2891,9 +2934,10 @@
           id: "37",
           properties: {
             id: "MVBus10081",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
             network: "MVFeeder078",
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -2904,9 +2948,10 @@
           id: "38",
           properties: {
             id: "MVLV07909",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
             network: "MVFeeder078",
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -2917,9 +2962,10 @@
           id: "39",
           properties: {
             id: "MVLV19250",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
             network: "MVFeeder078",
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -2930,9 +2976,10 @@
           id: "40",
           properties: {
             id: "MVBus18347",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
             network: "MVFeeder078",
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -2943,9 +2990,10 @@
           id: "41",
           properties: {
             id: "MVBus18346",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
             network: "MVFeeder078",
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -2956,9 +3004,10 @@
           id: "42",
           properties: {
             id: "MVBus18345",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
             network: "MVFeeder078",
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -2969,9 +3018,10 @@
           id: "43",
           properties: {
             id: "MVBus18343",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
             network: "MVFeeder078",
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -2982,9 +3032,10 @@
           id: "44",
           properties: {
             id: "MVLV06627",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
             network: "MVFeeder078",
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -2995,9 +3046,10 @@
           id: "45",
           properties: {
             id: "MVLV03392",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
             network: "MVFeeder078",
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -3008,9 +3060,10 @@
           id: "46",
           properties: {
             id: "MVBus16410",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
             network: "MVFeeder078",
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -3021,9 +3074,10 @@
           id: "47",
           properties: {
             id: "MVLV17323",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
             network: "MVFeeder078",
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -3034,9 +3088,10 @@
           id: "48",
           properties: {
             id: "MVBus15325",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
             network: "MVFeeder078",
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -3047,9 +3102,10 @@
           id: "49",
           properties: {
             id: "MVLV16352",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
             network: "MVFeeder078",
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -3060,9 +3116,10 @@
           id: "50",
           properties: {
             id: "MVBus12384",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
             network: "MVFeeder078",
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -3073,9 +3130,10 @@
           id: "51",
           properties: {
             id: "MVLV06614",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
             network: "MVFeeder078",
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -3086,9 +3144,10 @@
           id: "52",
           properties: {
             id: "MVLV14187",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
             network: "MVFeeder078",
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -3099,9 +3158,10 @@
           id: "53",
           properties: {
             id: "MVLV17318",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
             network: "MVFeeder078",
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -3112,9 +3172,10 @@
           id: "54",
           properties: {
             id: "MVLV00077",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
             network: "MVFeeder078",
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -3125,9 +3186,10 @@
           id: "55",
           properties: {
             id: "MVBus11094",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
             network: "MVFeeder078",
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -3138,9 +3200,10 @@
           id: "56",
           properties: {
             id: "MVBus07968",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
             network: "MVFeeder078",
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -3151,9 +3214,10 @@
           id: "57",
           properties: {
             id: "MVBus07967",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
             network: "MVFeeder078",
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -3164,9 +3228,10 @@
           id: "58",
           properties: {
             id: "MVBus07966",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
             network: "MVFeeder078",
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -3177,9 +3242,10 @@
           id: "59",
           properties: {
             id: "MVBus07965",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
             network: "MVFeeder078",
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -3190,9 +3256,10 @@
           id: "60",
           properties: {
             id: "MVBus04341",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
             network: "MVFeeder078",
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -3203,9 +3270,10 @@
           id: "61",
           properties: {
             id: "MVBus04340",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
             network: "MVFeeder078",
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -3216,9 +3284,10 @@
           id: "62",
           properties: {
             id: "MVBus04339",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
             network: "MVFeeder078",
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -3229,9 +3298,10 @@
           id: "63",
           properties: {
             id: "MVBus04338",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
             network: "MVFeeder078",
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -3242,9 +3312,10 @@
           id: "64",
           properties: {
             id: "MVBus04337",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
             network: "MVFeeder078",
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -3255,9 +3326,10 @@
           id: "65",
           properties: {
             id: "MVBus04336",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
             network: "MVFeeder078",
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -3268,9 +3340,10 @@
           id: "66",
           properties: {
             id: "MVBus04335",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
             network: "MVFeeder078",
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -3281,9 +3354,10 @@
           id: "67",
           properties: {
             id: "MVBus04325",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
             network: "MVFeeder078",
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -3294,9 +3368,10 @@
           id: "68",
           properties: {
             id: "MVLV03394",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
             network: "MVFeeder078",
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -3305,7 +3380,7 @@
       type: "FeatureCollection",
     });
 
-    geo_json_fba1eeed9baadd3797f8d4f7fb5fe7e0.bindTooltip(
+    geo_json_16f605b684e826a630063ea02372bdac.bindTooltip(
       function (layer) {
         let div = L.DomUtil.create("div");
 
@@ -3334,23 +3409,23 @@
       { className: "foliumtooltip", maxWidth: 800, sticky: false },
     );
 
-    geo_json_fba1eeed9baadd3797f8d4f7fb5fe7e0.addTo(map_69625c540da0f9dcd4c16f1df9d32869);
+    geo_json_16f605b684e826a630063ea02372bdac.addTo(map_076c6c02089405a19adc9dcac0b413fb);
 
-    var layer_control_1ce4d6e6c0baf526772e887155b01950_layers = {
+    var layer_control_4f6deefb26441b1abdcad1756d3c868b_layers = {
       base_layers: {
-        openstreetmap: tile_layer_eaf7f13f360d637ee65e6d2c572551a8,
+        openstreetmap: tile_layer_4b716a208ec38ff823f2a4db6dc650ab,
       },
       overlays: {
-        lines: geo_json_d0f81896b867fd39cbe28c8a7f3e6e65,
-        buses: geo_json_fba1eeed9baadd3797f8d4f7fb5fe7e0,
+        lines: geo_json_029f6646432eed548643c8d45bc62762,
+        buses: geo_json_16f605b684e826a630063ea02372bdac,
       },
     };
-    let layer_control_1ce4d6e6c0baf526772e887155b01950 = L.control
+    let layer_control_4f6deefb26441b1abdcad1756d3c868b = L.control
       .layers(
-        layer_control_1ce4d6e6c0baf526772e887155b01950_layers.base_layers,
-        layer_control_1ce4d6e6c0baf526772e887155b01950_layers.overlays,
+        layer_control_4f6deefb26441b1abdcad1756d3c868b_layers.base_layers,
+        layer_control_4f6deefb26441b1abdcad1756d3c868b_layers.overlays,
         { autoZIndex: true, collapsed: true, position: "topright" },
       )
-      .addTo(map_69625c540da0f9dcd4c16f1df9d32869);
+      .addTo(map_076c6c02089405a19adc9dcac0b413fb);
   </script>
 </html>

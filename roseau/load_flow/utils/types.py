@@ -52,8 +52,9 @@ _DTYPES: Final = {
     "shunt_losses": complex,
     "series_current": complex,
     "max_current": float,
-    "min_voltage": float,
-    "max_voltage": float,
+    "voltage_level": float,
+    "min_voltage_level": float,
+    "max_voltage_level": float,
     "violated": pd.BooleanDtype(),
     "flexible": pd.BooleanDtype(),
 }

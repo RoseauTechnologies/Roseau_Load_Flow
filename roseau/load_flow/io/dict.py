@@ -8,6 +8,7 @@ to read and write networks from and to JSON files.
 
 import copy
 import logging
+import warnings
 from typing import TYPE_CHECKING, TypeVar
 
 import numpy as np
@@ -27,13 +28,14 @@ from roseau.load_flow.models import (
     VoltageSource,
 )
 from roseau.load_flow.typing import Id, JsonDict
+from roseau.load_flow.utils._exceptions import find_stack_level
 
 if TYPE_CHECKING:
     from roseau.load_flow.network import ElectricalNetwork
 
 logger = logging.getLogger(__name__)
 
-NETWORK_JSON_VERSION = 2
+NETWORK_JSON_VERSION = 3
 """The current version of the network JSON file format."""
 
 _T = TypeVar("_T", bound=AbstractBranch)
@@ -92,7 +94,7 @@ def network_from_dict(  # noqa: C901
     data = copy.deepcopy(data)  # Make a copy to avoid modifying the original
 
     version = data.get("version", 0)
-    if version <= 1:
+    if version <= 2:
         logger.warning(
             f"Got an outdated network file (version {version}), trying to update to the current format "
             f"(version {NETWORK_JSON_VERSION}). Please save the network again."
@@ -102,6 +104,8 @@ def network_from_dict(  # noqa: C901
             include_results = False  # V0 network dictionaries didn't have results
         if version == 1:
             data = v1_to_v2_converter(data)
+        if version == 2:
+            data = v2_to_v3_converter(data)
     else:
         # If we arrive here, we dealt with all legacy versions, it must be the current one
         assert version == NETWORK_JSON_VERSION, f"Unsupported network file version {version}."
@@ -607,6 +611,54 @@ def v1_to_v2_converter(data: JsonDict) -> JsonDict:
         "transformers": transformers,
         "loads": loads,
         "sources": sources,
+        "lines_params": data["lines_params"],  # Unchanged
+        "transformers_params": data["transformers_params"],  # Unchanged
+    }
+    if "short_circuits" in data:
+        results["short_circuits"] = data["short_circuits"]  # Unchanged
+
+    return results
+
+
+def v2_to_v3_converter(data: JsonDict) -> JsonDict:
+    """Convert a v2 network dict to a v3 network dict.
+
+    Args:
+        data:
+            The v2 network data.
+
+    Returns:
+        The v3 network data.
+    """
+    assert data.get("version", 0) == 2, data["version"]
+
+    # The name of min_voltage, max_voltage and max_voltage_level has changed so they are not usable anymore.
+    old_buses = data.get("buses", [])
+    buses = []
+    bus_warning_emitted: bool = False
+    for bus_data in old_buses:
+        for key in ("min_voltage", "max_voltage"):
+            if bus_data.pop(key, None) is not None and not bus_warning_emitted:
+                warnings.warn(
+                    "Starting with version 0.11.0 of roseau-load-flow (JSON file v3), `min_voltage` and "
+                    "`max_voltage` are replaced with `min_voltage_level`, `max_voltage_level` and `nominal_voltage`. "
+                    "The found values of `min_voltage` or `max_voltage` are dropped.",
+                    stacklevel=find_stack_level(),
+                )
+                bus_warning_emitted = True
+        buses.append(bus_data)
+
+    results = {
+        "version": 3,
+        "is_multiphase": data["is_multiphase"],  # Unchanged
+        "grounds": data["grounds"],  # Unchanged
+        "potential_refs": data["potential_refs"],  # Unchanged
+        "buses": buses,  # <---- Changed
+        "lines": data["lines"],  # Unchanged
+        "switches": data["switches"],  # Unchanged
+        "transformers": data["transformers"],  # Unchanged
+        "loads": data["loads"],  # Unchanged
+        "sources": data["sources"],  # Unchanged
         "lines_params": data["lines_params"],  # Unchanged
         "transformers_params": data["transformers_params"],  # Unchanged
     }

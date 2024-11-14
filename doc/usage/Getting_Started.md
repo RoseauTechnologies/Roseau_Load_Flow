@@ -61,7 +61,8 @@ The following is a summary of the available elements:
   - `FlexibleParameter`: This object defines the parameters of the flexible load's control (Maximum power, projection,
     type, etc.)
 
-  Note that flexible loads are an advanced feature that most users don't need. They are explained in details [here](usage-flexible-loads).
+  Note that flexible loads are an advanced feature that most users don't need. They are explained in
+  details [here](usage-flexible-loads).
 
 - Sources:
 
@@ -82,16 +83,28 @@ line and a constant power load. This network is a low voltage network (three-pha
 >>> import numpy as np
 ... import roseau.load_flow as rlf
 
->>> # Nominal phase-to-neutral voltage (typical european voltage)
-... un = 400 / np.sqrt(3)  # In Volts
+>>> # Nominal phase-to-phase voltage (typical european voltage)
+... un = 400  # In Volts
 ... # Optional network limits (for analyzing network violations)
-... u_min = 0.9 * un  # V
-... u_max = 1.1 * un  # V
+... u_min_level = 0.9  # 90% of un
+... u_max_level = 1.1  # 110% of un
 ... i_max = 500.0  # A
 
 >>> # Create two buses (notice the phases of LV buses include the neutral, as in typical LV networks)
-... source_bus = rlf.Bus(id="sb", phases="abcn", min_voltage=u_min, max_voltage=u_max)
-... load_bus = rlf.Bus(id="lb", phases="abcn", min_voltage=u_min, max_voltage=u_max)
+... source_bus = rlf.Bus(
+...     id="sb",
+...     phases="abcn",
+...     nominal_voltage=un,
+...     min_voltage_level=u_min_level,
+...     max_voltage_level=u_max_level,
+... )
+... load_bus = rlf.Bus(
+...     id="lb",
+...     phases="abcn",
+...     nominal_voltage=un,
+...     min_voltage_level=u_min_level,
+...     max_voltage_level=u_max_level,
+... )
 
 >>> # Define the reference of potentials to be the earth's potential
 ... # First define the "Ground" object representing the earth
@@ -103,7 +116,7 @@ line and a constant power load. This network is a low voltage network (three-pha
 
 >>> # Create a three-phase voltage source at the first bus
 ... # (voltages are phase-to-neutral because the source's phases include a neutral)
-... vs = rlf.VoltageSource(id="vs", bus=source_bus, voltages=un)
+... vs = rlf.VoltageSource(id="vs", bus=source_bus, voltages=un / np.sqrt(3))
 
 >>> # Add a 30kW load at the second bus (balanced load, 10 kW per phase)
 ... load = rlf.PowerLoad(id="load", bus=load_bus, powers=[10e3 + 0j, 10e3, 10e3])  # In VA
@@ -122,12 +135,12 @@ to `"abc"`:
 >>> vs_delta = rlf.VoltageSource(
 ...     id="vs_delta",
 ...     bus=source_bus,
-...     voltages=un * np.sqrt(3),
+...     voltages=un,
 ...     phases="abc",  # <- delta source
 ... )
 ```
 
-Note the use of `un * np.sqrt(3)` as the source voltages as they now represent the phase-to-phase
+Note the use of `un` (and not `un / np.sqrt(3)`) as the source voltages as they now represent the phase-to-phase
 voltages. This is because everywhere in `roseau-load-flow`, the `voltages` of an element depend on
 the element's `phases`. Voltages of elements connected in a _Star (wye)_ configuration (elements
 that have a neutral connection indicated by the presence of the `'n'` character in their `phases`
@@ -193,7 +206,7 @@ Afterwards, the load flow can be solved by calling the `solve_load_flow` method 
 
 ```pycon
 >>> en.solve_load_flow()
-(2, 1.8595619621919468e-07)
+(2, 1.8595620332462204e-07)
 ```
 
 It returns the number of iterations performed by the _Newton-Raphson_ solver, and the residual
@@ -233,7 +246,7 @@ results for each element type:
 
 | Element type                                | Available results                                                                                                                                       |
 | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Bus`                                       | `res_potentials`, `res_voltages`, `res_violated`                                                                                                        |
+| `Bus`                                       | `res_potentials`, `res_voltages`, `res_voltage_levels`, `res_violated`                                                                                  |
 | `Line`                                      | `res_currents`, `res_powers`, `res_potentials`, `res_voltages`, `res_series_power_losses`, `res_shunt_power_losses`, `res_power_losses`, `res_violated` |
 | `Transformer`                               | `res_currents`, `res_powers`, `res_potentials`, `res_voltages`, `res_power_losses`, `res_violated`                                                      |
 | `Switch`                                    | `res_currents`, `res_powers`, `res_potentials`, `res_voltages`                                                                                          |
@@ -252,19 +265,19 @@ properties of buses as follows:
 
 ```pycon
 >>> load_bus.res_potentials
-array([ 2.21928183e+02-2.60536682e-18j, -1.10964092e+02-1.92195445e+02j,
-       -1.10964092e+02+1.92195445e+02j,  2.68637675e-15-6.67652444e-17j]) <Unit('volt')>
+<Quantity([ 2.21928183e+02+6.75019253e-17j, -1.10964092e+02-1.92195445e+02j,
+           -1.10964092e+02+1.92195445e+02j, -2.73357765e-15+1.72985625e-15j], 'volt')>
 ```
 
 As the results are _pint quantities_, they can be converted to different units easily.
 
 ```pycon
 >>> abs(load_bus.res_voltages).to("kV")  # Get a Quantity in kV
-array([0.22192818, 0.22192818, 0.22192818]) <Unit('kilovolt')>
+<Quantity([0.22192818, 0.22192818, 0.22192818], 'kilovolt')>
 >>> abs(load_bus.res_voltages).m_as("kV")  # Get the magnitude in kV
 array([0.22192818, 0.22192818, 0.22192818])
 >>> abs(load_bus.res_voltages).m  # Get the default magnitude (Volts)
-array([221.928183, 221.928183, 221.928183])
+array([221.92818336, 221.92818336, 221.92818336])
 ```
 
 The currents of the line are available using the `res_currents` property of the `line` object.
@@ -280,10 +293,10 @@ would have been non-zero.
 
 ```pycon
 >>> line.res_currents
-(array([ 4.50596216e+01+1.30268341e-17j, -2.25298108e+01-3.90227770e+01j,
-        -2.25298108e+01+3.90227770e+01j, -1.34318838e-14+3.33826222e-16j]) <Unit('ampere')>,
- array([-4.50596216e+01-1.30268341e-17j,  2.25298108e+01+3.90227770e+01j,
-         2.25298108e+01-3.90227770e+01j,  1.34318838e-14-3.33826222e-16j]) <Unit('ampere')>)
+(<Quantity([ 4.50596216e+01-3.37509626e-16j, -2.25298108e+01-3.90227770e+01j,
+            -2.25298108e+01+3.90227770e+01j,  1.36678883e-14-8.64928126e-15j], 'ampere')>,
+ <Quantity([-4.50596216e+01+3.37509626e-16j,  2.25298108e+01+3.90227770e+01j,
+             2.25298108e+01-3.90227770e+01j, -1.36678883e-14+8.64928126e-15j], 'ampere')>)
 ```
 
 ### Dataframe network results
@@ -336,14 +349,14 @@ Below are the results of the load flow for `en`, rounded to 2 decimal places:
 >>> en.res_buses_voltages
 ```
 
-| bus_id | phase |        voltage | min_voltage | max_voltage | violated |
-| :----- | :---- | -------------: | ----------: | ----------: | :------- |
-| sb     | an    |      230.94+0j |     207.846 |     254.034 | False    |
-| sb     | bn    |   -115.47-200j |     207.846 |     254.034 | False    |
-| sb     | cn    |   -115.47+200j |     207.846 |     254.034 | False    |
-| lb     | an    |      221.93-0j |     207.846 |     254.034 | False    |
-| lb     | bn    | -110.96-192.2j |     207.846 |     254.034 | False    |
-| lb     | cn    | -110.96+192.2j |     207.846 |     254.034 | False    |
+| bus_id | phase |        voltage | voltage_level | min_voltage_level | max_voltage_level | violated |
+| :----- | :---- | -------------: | ------------: | ----------------: | ----------------: | :------- |
+| sb     | an    |      230.94+0j |             1 |               0.9 |               1.1 | False    |
+| sb     | bn    |   -115.47-200j |             1 |               0.9 |               1.1 | False    |
+| sb     | cn    |   -115.47+200j |             1 |               0.9 |               1.1 | False    |
+| lb     | an    |      221.93+0j |          0.96 |               0.9 |               1.1 | False    |
+| lb     | bn    | -110.96-192.2j |          0.96 |               0.9 |               1.1 | False    |
+| lb     | cn    | -110.96+192.2j |          0.96 |               0.9 |               1.1 | False    |
 
 ```pycon
 >>> en.res_lines
@@ -454,13 +467,14 @@ Or, if you prefer degrees:
 
 ## Analyzing the results and detecting violations
 
-In the example network above, `min_voltage` and `max_voltage` arguments were passed to the `Bus`
-constructor and `max_current` was passed to the `LineParameters` constructor. These arguments
-define the limits of the network that can be used to check if the network is in a valid state
-or not. Note that these limits have no effect on the load flow calculation.
+In the example network above, `min_voltage_level`, `max_voltage_level` and `nominal_voltage` arguments
+were passed to the `Bus` constructor and `max_current` was passed to the `LineParameters` constructor.
+These arguments define the limits of the network that can be used to check if the network is in a valid
+state or not. Note that these limits have no effect on the load flow calculation.
 
-If you set `min_voltage` or `max_voltage` on a bus, the `res_violated` property will tell you if
-the voltage limits are violated or not at this bus. Here, the voltage limits are not violated.
+If you set `nominal_voltage` with `min_voltage_level` or `max_voltage_level` on a bus, the `res_violated`
+property will tell you if the voltage limits are violated or not at this bus. Here, the voltage limits are
+not violated.
 
 ```pycon
 >>> load_bus.res_violated
@@ -499,14 +513,16 @@ unbalanced situation.
 ...     [15, 0, 0], "kVA"
 ... )  # <- 15 kW on phase "a", 0 W on phases "b" and "c"
 >>> en.solve_load_flow()
-(3, 1.686343545e-07)
+(3, 1.1027623258996755e-11)
 >>> load_bus.res_potentials
-array([ 216.02252269  +0.j, -115.47005384-200.j, -115.47005384+200.j, 14.91758499  +0.j]) <Unit('volt')>
+<Quantity([216.02252269+6.33771335e-28j, -115.47005384-2.00000000e+02j,
+           -115.47005384+2.00000000e+02j, 14.91758499-6.33771336e-28j], 'volt')>
 ```
 
 Notice how the unbalance manifested in the neutral's potential of the bus no longer being close to 0 V.
 
-More information on modifying the network elements can be found in the [Modifying a network](usage-modifying-network) page.
+More information on modifying the network elements can be found in the [Modifying a network](usage-modifying-network)
+page.
 
 (gs-network-json)=
 
