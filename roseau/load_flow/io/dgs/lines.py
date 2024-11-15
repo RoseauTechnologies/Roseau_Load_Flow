@@ -23,6 +23,7 @@ def generate_typ_lne(typ_lne: pd.DataFrame, lines_params: dict[Id, LineParameter
         lines_params:
             The dictionary to store the line parameters into.
     """
+    # TODO: Maybe add the section of the neutral
     for type_id in typ_lne.index:
         this_typ_lne: pd.Series = typ_lne.loc[type_id]
         # TODO: use the detailed phase information instead of n
@@ -80,7 +81,7 @@ def generate_typ_lne(typ_lne: pd.DataFrame, lines_params: dict[Id, LineParameter
                 line_type=line_type,
                 conductor_type=conductor_type,
                 insulator_type=insulator_type,
-                section=section,
+                sections=section,
             )
         lines_params[type_id] = lp
 
@@ -120,6 +121,7 @@ def generate_typ_lne_from_elm_lne(
 
     # Get the cross-sectional area (mm²)
     section = lne_series.get("crosssec") or None  # Sometimes it is zero!! replace by None in this case
+    # TODO The section of the neutral?
 
     # Get the impedance and admittance matrices
     required_fields = ("R0", "X0", "X1", "R1", "G0", "B0", "G1", "B1")
@@ -138,7 +140,7 @@ def generate_typ_lne_from_elm_lne(
 
     with warnings.catch_warnings():
         warnings.filterwarnings(action="ignore", message=r".* off-diagonal elements ", category=UserWarning)
-        lp = LineParameters(id=typ_id, z_line=z_line, y_shunt=y_shunt, line_type=line_type, section=section)
+        lp = LineParameters(id=typ_id, z_line=z_line, y_shunt=y_shunt, line_type=line_type, sections=section)
 
     return lp
 

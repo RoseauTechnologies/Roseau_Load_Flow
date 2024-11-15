@@ -353,7 +353,7 @@
       "line_type": "UNDERGROUND",
       "conductor_type": "AL",
       "insulator_type": "UNKNOWN",
-      "section": 240.0
+      "sections": [240.0, 240.0, 240.0]
     }
   ],
   "transformers_params": []

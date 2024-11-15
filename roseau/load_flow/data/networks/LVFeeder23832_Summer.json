@@ -164,7 +164,7 @@
       "line_type": "TWISTED",
       "conductor_type": "AL",
       "insulator_type": "UNKNOWN",
-      "section": 70.0
+      "sections": [70.0, 70.0, 70.0, 70.0]
     }
   ],
   "transformers_params": [

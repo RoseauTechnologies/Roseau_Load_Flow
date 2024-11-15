@@ -112,7 +112,7 @@ def test_from_geometry():
     # line_data = {"dpp": 0, "dpn": 0, "dsh": 0.04}
 
     # Working example
-    z_line, y_shunt, line_type, conductor_type, insulator_type, section = LineParameters._from_geometry(
+    z_line, y_shunt, line_type, conductor_type, insulator_type, sections = LineParameters._from_geometry(
         "test",
         line_type=LineType.OVERHEAD,
         conductor_type=ConductorType.AL,
@@ -174,12 +174,12 @@ def test_from_geometry():
     assert line_type == LineType.OVERHEAD
     assert conductor_type == ConductorType.AL
     assert insulator_type == InsulatorType.PEX
-    assert section == 150
+    npt.assert_allclose(sections, [150, 150, 150, 70])
 
     # line_data = {"dpp": 0, "dpn": 0, "dsh": 0.04}
 
     # Working example (also with string types)
-    z_line, y_shunt, line_type, conductor_type, insulator_type, section = LineParameters._from_geometry(
+    z_line, y_shunt, line_type, conductor_type, insulator_type, sections = LineParameters._from_geometry(
         id="test",
         line_type="UNDERGROUND",
         conductor_type="AL",
@@ -242,7 +242,7 @@ def test_from_geometry():
     assert conductor_type == ConductorType.AL
     assert isinstance(insulator_type, InsulatorType)
     assert insulator_type == InsulatorType.PVC
-    assert section == 150
+    npt.assert_allclose(sections, [150, 150, 150, 70])
 
     # Test unknown insulator type
     lp = LineParameters.from_geometry(
@@ -272,7 +272,7 @@ def test_from_geometry():
             line_type=lp.line_type,
             conductor_type=lp.conductor_type,
             insulator_type=InsulatorType.IP,  # 4x epsilon_r of InsulatorType.UNKNOWN
-            section=lp.section,
+            section=lp.sections[0],
             height=-0.5,
             external_diameter=0.04,
         ).y_shunt.m.imag,
@@ -400,7 +400,7 @@ def test_from_coiffier_model():
     assert lp.id == "U_AL_150"
     assert lp.line_type == LineType.UNDERGROUND
     assert lp.conductor_type == ConductorType.AL
-    assert lp.section.m == 150
+    assert np.allclose(lp.sections.m, 150)
     npt.assert_allclose(lp.z_line.m_as("ohm/km"), z_line_expected, rtol=0.01, atol=0.01, strict=True)
     npt.assert_allclose(lp.y_shunt.m_as("S/km"), y_shunt_expected, rtol=0.01, atol=0.01, strict=True)
     npt.assert_allclose(lp.max_currents.m_as("A"), [368.689292] * 3, strict=True)
@@ -410,7 +410,7 @@ def test_from_coiffier_model():
     assert lp2.id == "lp2"
     assert lp2.line_type == LineType.OVERHEAD
     assert lp2.conductor_type == ConductorType.CU
-    assert lp2.section.m == 54
+    assert np.allclose(lp2.sections.m, 54)
     assert lp2.z_line.m.shape == (2, 2)
     assert lp2.y_shunt.m.shape == (2, 2)
 
@@ -430,7 +430,7 @@ def test_catalogue_data():
         assert isinstance(row.r, float)
         assert isinstance(row.x, float)
         assert isinstance(row.b, float)
-        assert isinstance(row.maximal_currents, int | float)
+        assert isinstance(row.maximal_current, int | float)
         LineType(row.type)  # Check that the type is valid
         ConductorType(row.material)  # Check that the material is valid
         InsulatorType(row.insulator)  # Check that the insulator is valid
@@ -503,7 +503,7 @@ def test_from_catalogue():
     assert lp.line_type == LineType.UNDERGROUND
     assert lp.conductor_type == ConductorType.AL
     assert lp.insulator_type == InsulatorType.UNKNOWN
-    assert lp.section.m == 150
+    assert np.allclose(lp.sections.m, 150)
 
     # Success, overridden ID
     lp = LineParameters.from_catalogue(name="U_AL_150", id="lp1")
@@ -545,6 +545,54 @@ def test_get_catalogue():
     # No results
     empty_catalogue = LineParameters.get_catalogue(section=15000)
     assert empty_catalogue.shape == (0, 8)
+
+
+def test_sections():
+    z_line = np.eye(3, dtype=complex)
+    y_shunt = np.eye(3, dtype=complex)
+
+    # None-like values
+    lp = LineParameters("test", z_line=z_line, y_shunt=y_shunt, sections=None)
+    assert lp.sections is None
+    lp.sections = np.nan
+    assert lp.sections is None
+    lp.sections = pd.NA
+    assert lp.sections is None
+
+    # Single values
+    lp.sections = 4
+    assert len(lp.sections) == 3
+    assert np.allclose(lp.sections.magnitude, 4)
+
+    lp.sections = Q_(4, "cm**2")
+    assert len(lp.sections) == 3
+    assert np.allclose(lp.sections.magnitude, 400)
+
+    # Arrays
+    lp.sections = Q_([4, 5, 6], "mm**2")
+    assert len(lp.sections) == 3
+    assert np.allclose(lp.sections.magnitude, [4, 5, 6])
+
+    # Errors
+    with pytest.raises(RoseauLoadFlowException) as e:
+        lp.sections = [np.nan, float("nan"), pd.NA]
+    assert e.value.msg == "Sections can't be null: [nan, nan, <NA>] mm² was provided."
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_SECTIONS_VALUE
+
+    with pytest.raises(RoseauLoadFlowException) as e:
+        lp.sections = [np.nan, float("nan"), 3]
+    assert e.value.msg == "Sections can't be null: [nan, nan, 3] mm² was provided."
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_SECTIONS_VALUE
+
+    with pytest.raises(RoseauLoadFlowException) as e:
+        lp.sections = [3, -1, 3.0]
+    assert e.value.msg == "Sections must be non-negative: [3, -1, 3.0] mm² was provided."
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_SECTIONS_VALUE
+
+    with pytest.raises(RoseauLoadFlowException) as e:
+        lp.sections = [3, 3]
+    assert e.value.msg == "Incorrect number of sections: 2 instead of 3"
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_SECTIONS_SIZE
 
 
 def test_max_currents():
@@ -589,21 +637,22 @@ def test_max_currents():
     with pytest.raises(RoseauLoadFlowException) as e:
         lp.max_currents = -2
     assert e.value.msg == "Maximum currents must be non-negative: -2 A was provided."
-    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_MAX_CURRENTS
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_MAX_CURRENTS_VALUE
 
     with pytest.raises(RoseauLoadFlowException) as e:
         lp.max_currents = [1, np.nan, -2]
     assert e.value.msg == "Maximum currents must be non-negative: [1.0, nan, -2.0] A was provided."
-    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_MAX_CURRENTS
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_MAX_CURRENTS_VALUE
 
 
 def test_json_serialization(tmp_path):
-    lp = LineParameters(id="test", z_line=np.eye(3), section=np.float64(150))
+    lp = LineParameters(id="test", z_line=np.eye(3), sections=np.float64(150), max_currents=[1, float("nan"), np.nan])
     path = tmp_path / "lp.json"
     lp.to_json(path)
     lp_dict = LineParameters.from_json(path).to_dict()
     assert isinstance(lp_dict["z_line"], list)
-    assert isinstance(lp_dict["section"], float)
+    npt.assert_allclose(lp_dict["sections"], [150, 150, 150])
+    npt.assert_allclose(lp_dict["max_currents"], [1, np.nan, np.nan])
 
 
 def test_from_open_dss():
@@ -695,7 +744,7 @@ def test_from_power_factory():
     assert na2ysy1x95rm.line_type == LineType.UNDERGROUND
     assert na2ysy1x95rm.conductor_type == ConductorType.AL
     assert na2ysy1x95rm.insulator_type == InsulatorType.PVC
-    assert na2ysy1x95rm.section.m == 95
+    assert np.allclose(na2ysy1x95rm.sections.m, 95)
 
     # Bad phases
     new_pwf_params = pwf_params | {"nphase": 4}
@@ -748,7 +797,7 @@ def test_equality():
         line_type=lp.line_type,
         conductor_type=lp.conductor_type,
         insulator_type=lp.insulator_type,
-        section=lp.section,
+        sections=lp.sections,
     )
     assert lp2 == lp
 

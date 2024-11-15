@@ -165,7 +165,7 @@
       "line_type": "UNDERGROUND",
       "conductor_type": "AL",
       "insulator_type": "UNKNOWN",
-      "section": 150.0
+      "sections": [150.0, 150.0, 150.0, 150.0]
     }
   ],
   "transformers_params": [

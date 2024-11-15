@@ -659,12 +659,15 @@ def v2_to_v3_converter(data: JsonDict) -> JsonDict:
         transformers_params.append(transformer_param_data)
 
     # Rename `maximal_current` in `maximal_currents` and uses array
+    # Rename `section` in `sections` and uses array
     old_lines_params = data.get("lines_params", [])
     lines_params = []
     for line_param_data in old_lines_params:
+        size = len(line_param_data["z_line"][0])
         if maximal_current := line_param_data.pop("maximal_current", None) is not None:
-            size = len(line_param_data["z_line"][0])
             line_param_data["maximal_currents"] = [maximal_current] * size
+        if section := line_param_data.pop("section", None) is not None:
+            line_param_data["sections"] = [section] * size
         lines_params.append(line_param_data)
 
     results = {

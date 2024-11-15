@@ -40,7 +40,7 @@ def test_to_dict():
         line_type=LineType.UNDERGROUND,
         conductor_type=ConductorType.AA,
         insulator_type=InsulatorType.PVC,
-        section=120,
+        sections=120,
     )
     lp2 = LineParameters("test", z_line=np.eye(4, dtype=complex), y_shunt=np.eye(4, dtype=complex) * 1.1)
 
@@ -90,7 +90,7 @@ def test_to_dict():
         line_type=LineType.UNDERGROUND,
         conductor_type=ConductorType.AA,
         insulator_type=InsulatorType.PVC,
-        section=120,
+        sections=120,
     )
     line2.parameters = lp2
     en.to_dict(include_results=False)
@@ -114,7 +114,7 @@ def test_to_dict():
     assert lp_dict["line_type"] == "UNDERGROUND"
     assert lp_dict["conductor_type"] == "AA"
     assert lp_dict["insulator_type"] == "PVC"
-    assert np.isclose(lp_dict["section"], 120)
+    assert np.allclose(lp_dict["sections"], 120)
     assert "results" not in res_bus0
     assert "results" not in res_bus1
     assert "results" not in res_line0

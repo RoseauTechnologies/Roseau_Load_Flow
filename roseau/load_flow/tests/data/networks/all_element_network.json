@@ -583,7 +583,7 @@
       "line_type": "UNDERGROUND",
       "conductor_type": "AM",
       "insulator_type": "UNKNOWN",
-      "section": 148
+      "sections": [148.0, 148.0, 148.0]
     },
     {
       "id": "lp1",
@@ -605,7 +605,7 @@
       "line_type": "TWISTED",
       "conductor_type": "AL",
       "insulator_type": "UNKNOWN",
-      "section": 75.0
+      "sections": [75.0, 75.0, 75.0, 75.0]
     }
   ],
   "transformers_params": [
