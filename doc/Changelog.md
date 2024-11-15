@@ -19,6 +19,8 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`283` **BREAKING CHANGE**: The parameter `max_current` of `LineParameters` class is renamed `max_currents`
+  and now accepts an array of maximum currents (one per phase).
 - {gh-pr}`282` **BREAKING CHANGE**: Rename the parameters of the class `TransformerParameters`: `uhv` becomes `up`
   (for **p**rimary side) and `ulv` becomes `us` (for **s**econdary side). In addition, `up` doesn't need to be
   greater than `us` anymore.

@@ -88,6 +88,7 @@ ComplexArrayLike2D: TypeAlias = (
 FloatArrayLike1D: TypeAlias = (
     QtyOrMag[NDArray[np.floating[Any] | np.integer[Any]] | Sequence[Float]] | Sequence[QtyOrMag[Float]]
 )
+FloatScalarOrArrayLike1D: TypeAlias = FloatArrayLike1D | QtyOrMag[Float]
 
 __all__ = [
     "Id",
@@ -102,4 +103,6 @@ __all__ = [
     "ComplexArrayLike1D",
     "ComplexArrayLike2D",
     "FloatArrayLike1D",
+    "ComplexScalarOrArrayLike1D",
+    "FloatScalarOrArrayLike1D",
 ]

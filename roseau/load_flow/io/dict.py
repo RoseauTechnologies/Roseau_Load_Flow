@@ -648,7 +648,7 @@ def v2_to_v3_converter(data: JsonDict) -> JsonDict:
                 bus_warning_emitted = True
         buses.append(bus_data)
 
-    # Rename uhv in up and ulv in us
+    # Rename `uhv` in `up` and `ulv` in `us`
     old_transformers_params = data.get("transformers_params", [])
     transformers_params = []
     for transformer_param_data in old_transformers_params:
@@ -657,6 +657,15 @@ def v2_to_v3_converter(data: JsonDict) -> JsonDict:
         if us := transformer_param_data.pop("ulv", None) is not None:
             transformer_param_data["us"] = us
         transformers_params.append(transformer_param_data)
+
+    # Rename `maximal_current` in `maximal_currents` and uses array
+    old_lines_params = data.get("lines_params", [])
+    lines_params = []
+    for line_param_data in old_lines_params:
+        if maximal_current := line_param_data.pop("maximal_current", None) is not None:
+            size = len(line_param_data["z_line"][0])
+            line_param_data["maximal_currents"] = [maximal_current] * size
+        lines_params.append(line_param_data)
 
     results = {
         "version": 3,
@@ -669,7 +678,7 @@ def v2_to_v3_converter(data: JsonDict) -> JsonDict:
         "transformers": data["transformers"],  # Unchanged
         "loads": data["loads"],  # Unchanged
         "sources": data["sources"],  # Unchanged
-        "lines_params": data["lines_params"],  # Unchanged
+        "lines_params": lines_params,  # <---- Changed
         "transformers_params": transformers_params,  # <---- Changed
     }
     if "short_circuits" in data:

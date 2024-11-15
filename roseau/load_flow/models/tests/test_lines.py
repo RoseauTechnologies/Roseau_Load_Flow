@@ -142,29 +142,59 @@ def test_res_violated():
     assert line.res_violated is None
 
     # No constraint violated
-    lp.max_current = 11
+    lp.max_currents = 11
     assert line.res_violated is False
 
     # Two violations
-    lp.max_current = 9
+    lp.max_currents = 9
     assert line.res_violated is True
 
     # Side 1 violation
-    lp.max_current = 11
+    lp.max_currents = 11
     line._res_currents = 12 * direct_seq, -10 * direct_seq
     assert line.res_violated is True
 
     # Side 2 violation
-    lp.max_current = 11
+    lp.max_currents = 11
     line._res_currents = 10 * direct_seq, -12 * direct_seq
     assert line.res_violated is True
 
     # A single phase violation
-    lp.max_current = 11
+    lp.max_currents = 11
     line._res_currents = 10 * direct_seq, -10 * direct_seq
     line._res_currents[0][0] = 12 * direct_seq[0]
     line._res_currents[1][0] = -12 * direct_seq[0]
     assert line.res_violated is True
+
+    #
+    # The same with arrays
+    #
+    line._res_currents = 10 * direct_seq, -10 * direct_seq
+
+    # No constraint violated
+    lp.max_currents = [11, 12, 13]
+    assert line.res_violated is False
+
+    # Two violations
+    lp.max_currents = [9, 9, 12]
+    assert line.res_violated is True
+
+    # Side 1 violation
+    lp.max_currents = [11, 10, 9]
+    line._res_currents = 12 * direct_seq, -10 * direct_seq
+    assert line.res_violated is True
+
+    # Side 2 violation
+    lp.max_currents = [11, 11, 13]
+    line._res_currents = 10 * direct_seq, -12 * direct_seq
+    assert line.res_violated is True
+
+    # Nan is the array
+    lp.max_currents = [11, np.nan, 13]
+    line._res_currents = 10 * direct_seq, -12 * direct_seq
+    assert line.res_violated is True
+    lp.max_currents = [13, np.nan, 13]
+    assert line.res_violated is False
 
 
 @pytest.mark.parametrize(

@@ -64,7 +64,7 @@ def generate_typ_lne(typ_lne: pd.DataFrame, lines_params: dict[Id, LineParameter
 
         # Optional fields
         sline = this_typ_lne.get("sline")
-        max_current = sline * 1e3 if sline is not None else None
+        max_currents = sline * 1e3 if sline is not None else None
         line_type = LINE_TYPES.get(this_typ_lne.get("cohl_"))
         conductor_type = CONDUCTOR_TYPES.get(this_typ_lne.get("mlei"))
         insulator_type = INSULATOR_TYPES.get(this_typ_lne.get("imiso"))
@@ -76,7 +76,7 @@ def generate_typ_lne(typ_lne: pd.DataFrame, lines_params: dict[Id, LineParameter
                 type_id,
                 z_line=z_line,
                 y_shunt=y_shunt,
-                max_current=max_current,
+                max_currents=max_currents,
                 line_type=line_type,
                 conductor_type=conductor_type,
                 insulator_type=insulator_type,

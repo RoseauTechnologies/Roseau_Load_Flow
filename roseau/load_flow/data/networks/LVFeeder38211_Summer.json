@@ -295,7 +295,7 @@
           [-9.334047516122607e-6, -9.334047516122602e-6, -9.334294062818125e-6, 8.357992380628483e-5]
         ]
       ],
-      "max_current": 187,
+      "max_currents": [187, 187, 187, 187],
       "line_type": "TWISTED",
       "conductor_type": "AL",
       "insulator_type": "UNKNOWN",

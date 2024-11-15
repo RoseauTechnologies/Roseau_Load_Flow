@@ -52,6 +52,7 @@ _DTYPES: Final = {
     "shunt_losses": complex,
     "series_current": complex,
     "max_current": float,
+    "max_currents": object,
     "voltage_level": float,
     "min_voltage_level": float,
     "max_voltage_level": float,

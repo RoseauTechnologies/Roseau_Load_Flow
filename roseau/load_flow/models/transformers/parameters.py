@@ -416,7 +416,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
                 PwF parameter `maxload` (Max. Thermal Loading Limit). The maximum loading of the
                 transformer in (%) of the nominal power. This parameter is defined on the transformer
                 element (`ElmTr2`) in PwF instead of the transformer type (`TypTr2`).
-                This is used to compute `max_current` and is used for violation checks.
+                This is used to compute `max_currents` and is used for violation checks.
 
             manufacturer:
                 The name of the manufacturer for the transformer. Informative only, it has no impact on the load flow.
@@ -558,7 +558,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             normhkva:
                 OpenDSS parameter: `NormHKVA`. Normal maximum kVA rating for H winding (1). Usually
                 100 - 110% of maximum nameplate rating.
-                This value is passed to `max_current` and used for violation checks.
+                This value is passed to `max_currents` and used for violation checks.
 
             manufacturer:
                 The name of the manufacturer for the transformer. Informative only, it has no impact on the load flow.

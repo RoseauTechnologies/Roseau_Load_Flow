@@ -11,7 +11,14 @@ import pandas as pd
 from typing_extensions import Self, deprecated
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
-from roseau.load_flow.typing import ComplexArray, ComplexArrayLike2D, Id, JsonDict
+from roseau.load_flow.typing import (
+    ComplexArray,
+    ComplexArrayLike2D,
+    FloatArray,
+    FloatScalarOrArrayLike1D,
+    Id,
+    JsonDict,
+)
 from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow.utils import (
     EPSILON_0,
@@ -63,7 +70,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         id: Id,
         z_line: ComplexArrayLike2D,
         y_shunt: ComplexArrayLike2D | None = None,
-        max_current: float | Q_[float] | None = None,
+        max_currents: FloatScalarOrArrayLike1D | None = None,
         line_type: LineType | None = None,
         conductor_type: ConductorType | None = None,
         insulator_type: InsulatorType | None = None,
@@ -81,10 +88,15 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             y_shunt:
                 The Y matrix of the line (Siemens/km). This field is optional if the line has no shunt part.
 
-            max_current:
-                The maximum current loading of the line (A). The maximum current is optional, it is
+            max_currents:
+                The maximum currents loading of the line (A). The maximum currents are optional, they are
                 not used in the load flow but can be used to check for overloading.
                 See also :meth:`Line.res_violated <roseau.load_flow.Line.res_violated>`.
+
+                When a scalar value is provided, it creates an array with the same maximum current for each conductor.
+                The scalar value passed is assumed to be the maximum current of each conductor, not the total
+                multi-phase maximum current. To create a different maximum current per conductor, provide a
+                vector of current values with the same length as the number of conductor of the line.
 
             line_type:
                 The type of the line (overhead, underground, twisted). The line type is optional,
@@ -112,7 +124,9 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         else:
             self._with_shunt = not np.allclose(y_shunt, 0)
             self._y_shunt = np.array(y_shunt, dtype=np.complex128)
-        self.max_current = max_current
+        self._size = self._z_line.shape[0]
+        self._max_currents = None
+        self.max_currents = max_currents
         self._line_type = line_type
         self._conductor_type = conductor_type
         self._insulator_type = insulator_type
@@ -122,7 +136,6 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
     def __repr__(self) -> str:
         s = f"<{type(self).__name__}: id={self.id!r}"
         for attr, val, tp in (
-            ("max_current", self._max_current, float),
             ("line_type", self._line_type, str),
             ("conductor_type", self._conductor_type, str),
             ("insulator_type", self._insulator_type, str),
@@ -140,6 +153,19 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             self.id == other.id
             and self._z_line.shape == other._z_line.shape
             and np.allclose(self._z_line, other._z_line)
+            and (
+                (self._max_currents is None and other._max_currents is None)
+                or (
+                    self._max_currents is not None
+                    and other._max_currents is not None
+                    and self._max_currents.shape == other._max_currents.shape
+                    and np.allclose(self._max_currents, other._max_currents)
+                )
+            )
+            and self._line_type == other._line_type
+            and self._conductor_type == other._conductor_type
+            and self._insulator_type == other._insulator_type
+            and self._section == other._section
             and (
                 (not self._with_shunt and not other._with_shunt)
                 or (
@@ -166,9 +192,9 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         return self._with_shunt
 
     @property
-    def max_current(self) -> Q_[float] | None:
-        """The maximum current loading of the line (A) if it is set."""
-        return None if self._max_current is None else Q_(self._max_current, "A")
+    def max_currents(self) -> Q_[FloatArray] | None:
+        """The maximum currents loading of the line (A) if it is set."""
+        return None if self._max_currents is None else Q_(self._max_currents, "A")
 
     @property
     def line_type(self) -> LineType | None:
@@ -190,10 +216,33 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         """The cross-section area of the cable (in mm²). Informative only, it has no impact on the load flow."""
         return None if self._section is None else Q_(self._section, "mm**2")
 
-    @max_current.setter
+    @max_currents.setter
     @ureg_wraps(None, (None, "A"))
-    def max_current(self, value: float | Q_[float] | None) -> None:
-        self._max_current = value
+    def max_currents(self, value: FloatScalarOrArrayLike1D | None) -> None:
+        value_isna = pd.isna(value)
+        if not np.isscalar(value_isna):
+            value_isna = np.array(value_isna).all()
+
+        if value_isna:
+            values = None
+        else:
+            if np.isscalar(value):
+                if value < 0:
+                    msg = f"Maximum currents must be non-negative: {value} A was provided."
+                    logger.error(msg)
+                    raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_MAX_CURRENTS)
+                value = [value for _ in range(self._size)]
+
+            values = np.array(value, dtype=np.float64)
+            if len(values) != self._size:
+                msg = f"Incorrect number of maximum currents: {len(values)} instead of {self._size}"
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_MAX_CURRENTS_SIZE)
+            if (values < 0).any():
+                msg = f"Maximum currents must be non-negative: [{', '.join(f'{x}' for x in values)}] A was provided."
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_MAX_CURRENTS)
+        self._max_currents = values
 
     @staticmethod
     def _sym_to_zy_simple(n, z0: complex, z1: complex, y0: complex, y1: complex) -> tuple[ComplexArray, ComplexArray]:
@@ -244,7 +293,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         xpn: float | Q_[float] | None = None,
         bn: float | Q_[float] | None = None,
         bpn: float | Q_[float] | None = None,
-        max_current: float | Q_[float] | None = None,
+        max_currents: FloatScalarOrArrayLike1D | None = None,
     ) -> Self:
         """Create line parameters from a symmetric model.
 
@@ -276,8 +325,8 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             bpn:
                 Phase-to-neutral susceptance (siemens/km)
 
-            max_current:
-                An optional maximum current loading of the line (A). It is not used in the load flow.
+            max_currents:
+                An optional maximum currents loading of the line (A). It is not used in the load flow.
 
         Returns:
             The created line parameters.
@@ -288,7 +337,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             impedance matrix is not invertible.
         """
         z_line, y_shunt = cls._sym_to_zy(id=id, z0=z0, z1=z1, y0=y0, y1=y1, zn=zn, zpn=1j * xpn, bn=bn, bpn=bpn)
-        return cls(id=id, z_line=z_line, y_shunt=y_shunt, max_current=max_current)
+        return cls(id=id, z_line=z_line, y_shunt=y_shunt, max_currents=max_currents)
 
     @classmethod
     def _sym_to_zy(
@@ -404,7 +453,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         section_neutral: float | Q_[float] | None = None,
         height: float | Q_[float],
         external_diameter: float | Q_[float],
-        max_current: float | Q_[float] | None = None,
+        max_currents: FloatScalarOrArrayLike1D | None = None,
     ) -> Self:
         """Create line parameters from its geometry.
 
@@ -437,8 +486,8 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             external_diameter:
                 External diameter of the cable (m).
 
-            max_current:
-                An optional maximum current loading of the line (A). It is not used in the load flow.
+            max_currents:
+                An optional maximum currents loading of the line (A). It is not used in the load flow.
 
         Returns:
             The created line parameters.
@@ -460,7 +509,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             id=id,
             z_line=z_line,
             y_shunt=y_shunt,
-            max_current=max_current,
+            max_currents=max_currents,
             line_type=line_type,
             conductor_type=conductor_type,
             insulator_type=insulator_type,
@@ -644,7 +693,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         category=FutureWarning,
     )
     @ureg_wraps(None, (None, None, "A"))
-    def from_name_mv(cls, name: str, max_current: float | Q_[float] | None = None) -> Self:
+    def from_name_mv(cls, name: str, max_currents: FloatScalarOrArrayLike1D | None = None) -> Self:
         """Get the electrical parameters of a MV line from its canonical name (France specific model)
 
         Args:
@@ -652,14 +701,14 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
                 The canonical name of the line parameters. It must be in the format
                 `lineType_conductorType_crossSection`. E.g. "U_AL_150".
 
-            max_current:
+            max_currents:
                 An optional maximum current loading of the line (A). It is not used in the load flow.
 
         Returns:
             The corresponding line parameters.
         """
         obj = cls.from_coiffier_model(name=name, nb_phases=3)
-        obj.max_current = max_current
+        obj.max_currents = max_currents
         return obj
 
     @classmethod
@@ -751,7 +800,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
 
         z_line = (r + x * 1j) * np.eye(nb_phases, dtype=np.float64)  # in ohms/km
         y_shunt = b * 1j * np.eye(nb_phases, dtype=np.float64)  # in siemens/km
-        max_current = c_imax * section.m**0.62  # A
+        max_currents = c_imax * section.m**0.62  # A
         if id is None:
             id = name
         return cls(
@@ -761,7 +810,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             line_type=line_type,
             conductor_type=conductor_type,
             section=section,
-            max_current=max_current,
+            max_currents=max_currents,
         )
 
     #
@@ -954,7 +1003,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_INSULATOR_TYPE)
 
-        max_current = inom * 1e3 if inom is not None else None
+        max_currents = inom * 1e3 if inom is not None else None
 
         z_line, y_shunt = cls._sym_to_zy_simple(
             n=nphase, z0=r0 + 1j * x0, z1=r1 + 1j * x1, y0=1j * b0 * 1e-6, y1=1j * b1 * 1e-6
@@ -976,7 +1025,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
                 id=id,
                 z_line=z_line,
                 y_shunt=y_shunt,
-                max_current=max_current,
+                max_currents=max_currents,
                 line_type=line_type,
                 conductor_type=conductor_type,
                 insulator_type=insulator_type,
@@ -998,7 +1047,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         c1: float | Q_[float] = 3.4,  # default value used in OpenDSS
         c0: float | Q_[float] = 1.6,  # default value used in OpenDSS
         basefreq: float | Q_[float] = F,
-        normamps: float | Q_[float] | None = None,
+        normamps: FloatScalarOrArrayLike1D | None = None,
         linetype: str | None = None,
     ) -> Self:
         """Create a line parameters object from OpenDSS "LineCode" data.
@@ -1038,7 +1087,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
                 OpenDSS parameter: `NormAmps`. Normal ampere limit on line (A). This is the so-called
                 Planning Limit. It may also be the value above which load will have to be dropped
                 in a contingency. Usually about 75% - 80% of the emergency (one-hour) rating.
-                This value is passed to `max_current` and used for violation checks.
+                This value is passed to `max_currents` and used for violation checks.
 
             linetype:
                 OpenDSS parameter: `LineType`. Code designating the type of line. Only ``"OH"``
@@ -1113,7 +1162,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         # Create the RLF line parameters with off-diagonal resistance allowed
         with warnings.catch_warnings():
             warnings.filterwarnings(action="ignore", message=r".* off-diagonal elements ", category=UserWarning)
-            obj = cls(id=id, z_line=z, y_shunt=yc, max_current=normamps, line_type=line_type)
+            obj = cls(id=id, z_line=z, y_shunt=yc, max_currents=normamps, line_type=line_type)
         return obj
 
     #
@@ -1292,7 +1341,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             id=id,
             z_line=z_line,
             y_shunt=y_shunt,
-            max_current=max_current,
+            max_currents=max_current,
             line_type=line_type,
             conductor_type=conductor_type,
             insulator_type=insulator_type,
@@ -1385,7 +1434,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             id=data["id"],
             z_line=z_line,
             y_shunt=y_shunt,
-            max_current=data.get("max_current"),
+            max_currents=data.get("max_currents"),
             line_type=line_type,
             conductor_type=conductor_type,
             insulator_type=insulator_type,
@@ -1396,8 +1445,8 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         res = {"id": self.id, "z_line": [self._z_line.real.tolist(), self._z_line.imag.tolist()]}
         if self.with_shunt:
             res["y_shunt"] = [self._y_shunt.real.tolist(), self._y_shunt.imag.tolist()]
-        if self.max_current is not None:
-            res["max_current"] = self.max_current.magnitude
+        if self.max_currents is not None:
+            res["max_currents"] = self._max_currents.tolist()
         if self._line_type is not None:
             res["line_type"] = self._line_type.name
         if self._conductor_type is not None:

@@ -486,7 +486,7 @@ def test_frame(small_network: ElectricalNetwork):
         "bus2_id",
         "parameters_id",
         "length",
-        "max_current",
+        "max_currents",
         "geometry",
     ]
 
@@ -1379,7 +1379,7 @@ def test_load_flow_results_frames(small_network_with_results):
     assert_frame_equal(en.res_lines, expected_res_lines, rtol=1e-4, atol=1e-5)
 
     # Lines with violated max current
-    en.lines["line"].parameters.max_current = 0.002
+    en.lines["line"].parameters.max_currents = 0.002
     expected_res_lines_violated_records = [
         d | {"max_current": 0.002, "violated": d["phase"] != "n"} for d in expected_res_lines_records
     ]
@@ -1862,13 +1862,13 @@ def test_to_graph(small_network: ElectricalNetwork):
 
     for line in small_network.lines.values():
         edge_data = g.edges[line.bus1.id, line.bus2.id]
-        max_current = line.max_current.magnitude if line.max_current is not None else None
+        max_currents = line.max_currents.magnitude if line.max_currents is not None else None
         assert edge_data == {
             "id": line.id,
             "type": "line",
             "phases": line.phases,
             "parameters_id": line.parameters.id,
-            "max_current": max_current,
+            "max_currents": max_currents,
             "geom": line.geometry,
         }
 

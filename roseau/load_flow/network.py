@@ -308,7 +308,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         """The :attr:`lines` of the network as a geo dataframe."""
         data = []
         for line in self.lines.values():
-            max_current = line.max_current.magnitude if line.max_current is not None else float("nan")
+            max_currents = line.max_currents.magnitude.tolist() if line.max_currents is not None else None
             data.append(
                 (
                     line.id,
@@ -317,14 +317,14 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                     line.bus2.id,
                     line.parameters.id,
                     line.length.m,
-                    max_current,
+                    max_currents,
                     line.geometry,
                 )
             )
         return gpd.GeoDataFrame(
             data=pd.DataFrame.from_records(
                 data=data,
-                columns=["id", "phases", "bus1_id", "bus2_id", "parameters_id", "length", "max_current", "geometry"],
+                columns=["id", "phases", "bus1_id", "bus2_id", "parameters_id", "length", "max_currents", "geometry"],
                 index="id",
             ),
             geometry="geometry",
@@ -468,7 +468,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         for bus in self.buses.values():
             graph.add_node(bus.id, geom=bus.geometry)
         for line in self.lines.values():
-            max_current = line.max_current.magnitude if line.max_current is not None else None
+            max_currents = line.max_currents.magnitude.tolist() if line.max_currents is not None else None
             graph.add_edge(
                 line.bus1.id,
                 line.bus2.id,
@@ -476,7 +476,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                 type="line",
                 phases=line.phases,
                 parameters_id=line.parameters.id,
-                max_current=max_current,
+                max_currents=max_currents,
                 geom=line.geometry,
             )
         for transformer in self.transformers.values():
@@ -750,6 +750,8 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                 phase due to the series and mutual impedances.
             - `series_current`: The complex current in the series impedance of the line (in Amps)
                 for the given phase.
+            - `max_current`: The maximal current loading of the line (in Amps) for the given phase.
+            - `res_violated`: True, if a current constraint is not respected for the given phase.
 
         Additional information can be easily computed from this dataframe. For example:
 
@@ -785,20 +787,27 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             powers1 = potentials1 * currents1.conj()
             powers2 = potentials2 * currents2.conj()
             series_losses = du_line * series_currents.conj()
-            i_max = line.parameters._max_current
-            for i1, i2, s1, s2, v1, v2, s_series, i_series, phase in zip(
-                currents1,
-                currents2,
-                powers1,
-                powers2,
-                potentials1,
-                potentials2,
-                series_losses,
-                series_currents,
-                line.phases,
-                strict=True,
+            i_max = line.parameters._max_currents
+            for k, (i1, i2, s1, s2, v1, v2, s_series, i_series, phase) in enumerate(
+                zip(
+                    currents1,
+                    currents2,
+                    powers1,
+                    powers2,
+                    potentials1,
+                    potentials2,
+                    series_losses,
+                    series_currents,
+                    line.phases,
+                    strict=True,
+                )
             ):
-                violated = None if i_max is None else (abs(i1) > i_max or abs(i2) > i_max)
+                if i_max is None:
+                    violated = None
+                    im = None
+                else:
+                    im = i_max[k]
+                    violated = abs(i1) > im or abs(i2) > im
                 res_dict["line_id"].append(line.id)
                 res_dict["phase"].append(phase)
                 res_dict["current1"].append(i1)
@@ -809,7 +818,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                 res_dict["potential2"].append(v2)
                 res_dict["series_losses"].append(s_series)
                 res_dict["series_current"].append(i_series)
-                res_dict["max_current"].append(i_max)
+                res_dict["max_current"].append(im)
                 res_dict["violated"].append(violated)
         return pd.DataFrame(res_dict).astype(dtypes).set_index(["line_id", "phase"])
 

@@ -83,13 +83,21 @@ def test_to_dict():
     assert e.value.code == RoseauLoadFlowExceptionCode.JSON_LINE_PARAMETERS_DUPLICATES
 
     # Same id, same line parameters -> ok
-    lp2 = LineParameters(id="test", z_line=np.eye(4, dtype=complex), y_shunt=np.eye(4, dtype=complex))
+    lp2 = LineParameters(
+        id="test",
+        z_line=np.eye(4, dtype=complex),
+        y_shunt=np.eye(4, dtype=complex),
+        line_type=LineType.UNDERGROUND,
+        conductor_type=ConductorType.AA,
+        insulator_type=InsulatorType.PVC,
+        section=120,
+    )
     line2.parameters = lp2
     en.to_dict(include_results=False)
 
     # Dict content
     line2.parameters = lp1
-    lp1.max_current = 1000
+    lp1.max_currents = 1000
     res = en.to_dict(include_results=False)
     res_bus0, res_bus1 = res["buses"]
     res_line0, res_line1 = res["lines"]
@@ -102,7 +110,7 @@ def test_to_dict():
     assert np.isclose(res_bus1["nominal_voltage"], 400.0)
     assert np.isclose(res_bus1["max_voltage_level"], 1.1)
     lp_dict = res["lines_params"][0]
-    assert np.isclose(lp_dict["max_current"], 1000)
+    assert np.allclose(lp_dict["max_currents"], 1000)
     assert lp_dict["line_type"] == "UNDERGROUND"
     assert lp_dict["conductor_type"] == "AA"
     assert lp_dict["insulator_type"] == "PVC"

@@ -308,7 +308,7 @@
           [-0.00018518179657458456, 4.85783749893247e-5, -0.00018518179657458597, 0.0009990656421805131]
         ]
       ],
-      "max_current": 325,
+      "max_currents": [325, 325, 325, 325],
       "line_type": "UNDERGROUND",
       "conductor_type": "AL",
       "insulator_type": "UNKNOWN",

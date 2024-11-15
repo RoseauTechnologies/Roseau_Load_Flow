@@ -367,13 +367,13 @@ def test_from_name_mv():
         r"version\. Use LineParameters\.from_coiffier\(\) instead\."
     )
     with pytest.warns(FutureWarning, match=warning_msg):
-        lp = LineParameters.from_name_mv("U_AL_150", max_current=100000)
+        lp = LineParameters.from_name_mv("U_AL_150", max_currents=100000)
     z_line_expected = (0.1767 + 0.1j) * np.eye(3)
     y_shunt_expected = 0.00014106j * np.eye(3)
 
     npt.assert_allclose(lp.z_line.m_as("ohm/km"), z_line_expected, rtol=0.01, atol=0.01, strict=True)
     npt.assert_allclose(lp.y_shunt.m_as("S/km"), y_shunt_expected, rtol=0.01, atol=0.01, strict=True)
-    npt.assert_allclose(lp.max_current.m_as("A"), 100000, strict=True)
+    npt.assert_allclose(lp.max_currents.m_as("A"), [100000.0] * 3, strict=True)
 
 
 def test_from_coiffier_model():
@@ -403,7 +403,7 @@ def test_from_coiffier_model():
     assert lp.section.m == 150
     npt.assert_allclose(lp.z_line.m_as("ohm/km"), z_line_expected, rtol=0.01, atol=0.01, strict=True)
     npt.assert_allclose(lp.y_shunt.m_as("S/km"), y_shunt_expected, rtol=0.01, atol=0.01, strict=True)
-    npt.assert_allclose(lp.max_current.m_as("A"), 368.689292, strict=True)
+    npt.assert_allclose(lp.max_currents.m_as("A"), [368.689292] * 3, strict=True)
 
     # Working example with custom arguments
     lp2 = LineParameters.from_coiffier_model("O_CU_54", nb_phases=2, id="lp2")
@@ -430,7 +430,7 @@ def test_catalogue_data():
         assert isinstance(row.r, float)
         assert isinstance(row.x, float)
         assert isinstance(row.b, float)
-        assert isinstance(row.maximal_current, int | float)
+        assert isinstance(row.maximal_currents, int | float)
         LineType(row.type)  # Check that the type is valid
         ConductorType(row.material)  # Check that the material is valid
         InsulatorType(row.insulator)  # Check that the insulator is valid
@@ -499,7 +499,7 @@ def test_from_catalogue():
     assert lp.id == "U_AL_150"
     assert lp.z_line.shape == (3, 3)
     assert lp.y_shunt.shape == (3, 3)
-    assert lp.max_current > 0
+    assert (lp.max_currents > 0).all()
     assert lp.line_type == LineType.UNDERGROUND
     assert lp.conductor_type == ConductorType.AL
     assert lp.insulator_type == InsulatorType.UNKNOWN
@@ -547,30 +547,62 @@ def test_get_catalogue():
     assert empty_catalogue.shape == (0, 8)
 
 
-def test_max_current():
-    lp = LineParameters(id="test", z_line=np.eye(3))
-    assert lp.max_current is None
+def test_max_currents():
+    z_line = np.eye(3, dtype=complex)
+    y_shunt = np.eye(3, dtype=complex)
 
-    lp = LineParameters(id="test", z_line=np.eye(3), max_current=100)
-    assert lp.max_current == Q_(100, "A")
+    # None-like values
+    lp = LineParameters("test", z_line=z_line, y_shunt=y_shunt, max_currents=None)
+    assert lp.max_currents is None
+    lp.max_currents = np.nan
+    assert lp.max_currents is None
+    lp.max_currents = pd.NA
+    assert lp.max_currents is None
+    lp.max_currents = [np.nan, float("nan"), pd.NA]
+    assert lp.max_currents is None
 
-    lp.max_current = 200
-    assert lp.max_current == Q_(200, "A")
+    # Single values
+    lp.max_currents = 4
+    assert len(lp.max_currents) == 3
+    assert np.allclose(lp.max_currents.magnitude, 4)
 
-    lp.max_current = None
-    assert lp.max_current is None
+    lp.max_currents = Q_(4, "kA")
+    assert len(lp.max_currents) == 3
+    assert np.allclose(lp.max_currents.magnitude, 4000)
 
-    lp.max_current = Q_(3, "kA")
-    assert lp.max_current == Q_(3_000, "A")
+    # Arrays
+    lp.max_currents = Q_([4, 5, 6], "A")
+    assert len(lp.max_currents) == 3
+    assert np.allclose(lp.max_currents.magnitude, [4, 5, 6])
+
+    # Array with nan
+    lp.max_currents = Q_([4, np.nan, 6], "A")
+    assert len(lp.max_currents) == 3
+    npt.assert_allclose(lp.max_currents.magnitude, [4, np.nan, 6], equal_nan=True)
+
+    # Errors
+    with pytest.raises(RoseauLoadFlowException) as e:
+        lp.max_currents = [1, 2]
+    assert e.value.msg == "Incorrect number of maximum currents: 2 instead of 3"
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_MAX_CURRENTS_SIZE
+
+    with pytest.raises(RoseauLoadFlowException) as e:
+        lp.max_currents = -2
+    assert e.value.msg == "Maximum currents must be non-negative: -2 A was provided."
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_MAX_CURRENTS
+
+    with pytest.raises(RoseauLoadFlowException) as e:
+        lp.max_currents = [1, np.nan, -2]
+    assert e.value.msg == "Maximum currents must be non-negative: [1.0, nan, -2.0] A was provided."
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_MAX_CURRENTS
 
 
 def test_json_serialization(tmp_path):
-    lp = LineParameters(id="test", z_line=np.eye(3), max_current=np.int64(100), section=np.float64(150))
+    lp = LineParameters(id="test", z_line=np.eye(3), section=np.float64(150))
     path = tmp_path / "lp.json"
     lp.to_json(path)
     lp_dict = LineParameters.from_json(path).to_dict()
     assert isinstance(lp_dict["z_line"], list)
-    assert isinstance(lp_dict["max_current"], int)
     assert isinstance(lp_dict["section"], float)
 
 
@@ -596,7 +628,7 @@ def test_from_open_dss():
     y_shunt_expected = [[ys_e, ym_e, ym_e], [ym_e, ys_e, ym_e], [ym_e, ym_e, ys_e]]
     np.testing.assert_allclose(lp240sq.y_shunt.m, y_shunt_expected)
     assert lp240sq.line_type is None
-    assert lp240sq.max_current is None
+    assert lp240sq.max_currents is None
 
     # DSS command: `New LineCode.16sq NPhases=1 R1=0.350, X1=0.025, R0=0.366, X0=0.025, C1=1.036, C0=0.488 Units=kft NormAmps=400 LineType=OH`
     lp16sq = LineParameters.from_open_dss(
@@ -619,7 +651,7 @@ def test_from_open_dss():
     y_shunt_expected = [[ys_e]]
     np.testing.assert_allclose(lp16sq.y_shunt.m, y_shunt_expected)
     assert lp16sq.line_type == LineType.OVERHEAD
-    assert lp16sq.max_current.m == 400
+    assert np.allclose(lp16sq.max_currents.m, 400)
 
 
 def test_from_power_factory():
@@ -659,7 +691,7 @@ def test_from_power_factory():
     y_shunt_expected = [[ys_e, ym_e, ym_e], [ym_e, ys_e, ym_e], [ym_e, ym_e, ys_e]]
     np.testing.assert_allclose(na2ysy1x95rm.y_shunt.m, y_shunt_expected)
 
-    assert na2ysy1x95rm.max_current.m == 235, na2ysy1x95rm.max_current
+    assert np.allclose(na2ysy1x95rm.max_currents.m, 235), na2ysy1x95rm.max_currents
     assert na2ysy1x95rm.line_type == LineType.UNDERGROUND
     assert na2ysy1x95rm.conductor_type == ConductorType.AL
     assert na2ysy1x95rm.insulator_type == InsulatorType.PVC
@@ -707,11 +739,17 @@ def test_results_to_dict():
 
 
 def test_equality():
-    # Optional information are not used for the comparison
     lp = LineParameters.from_catalogue(name="U_AL_150", nb_phases=3)
-    for x in ("max_current", "line_type", "conductor_type", "insulator_type", "section"):
-        assert getattr(lp, x) is not None
-    lp2 = LineParameters(id=lp.id, z_line=lp.z_line, y_shunt=lp.y_shunt)
+    lp2 = LineParameters(
+        id=lp.id,
+        z_line=lp.z_line,
+        y_shunt=lp.y_shunt,
+        max_currents=lp.max_currents,
+        line_type=lp.line_type,
+        conductor_type=lp.conductor_type,
+        insulator_type=lp.insulator_type,
+        section=lp.section,
+    )
     assert lp2 == lp
 
     # Test the case which returns NotImplemented in the equality operator

@@ -120,7 +120,7 @@ def generate_all_element_network() -> None:
         id=lp1_tmp.id,
         z_line=lp1_tmp.z_line,
         y_shunt=None,  # <---- No shunt
-        max_current=lp1_tmp.max_current,
+        max_currents=lp1_tmp.max_currents,
         line_type=lp1_tmp.line_type,
         conductor_type=lp1_tmp.conductor_type,
         insulator_type=lp1_tmp.insulator_type,
