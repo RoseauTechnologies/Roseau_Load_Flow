@@ -1264,7 +1264,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                 for e in element._connected_elements:
                     if e not in visited:
                         if isinstance(element, Transformer):
-                            k = element.parameters._ulv / element.parameters._uhv
+                            k = element.parameters._us / element.parameters._up
                             phase_displacement = element.parameters.phase_displacement
                             if phase_displacement is None:
                                 phase_displacement = 0

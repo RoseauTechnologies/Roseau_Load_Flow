@@ -1,4 +1,4 @@
-name,manufacturer,range,efficiency,sn,vsc,psc,i0,p0,type,uhv,ulv,du1,du0.8,eff1 100%,eff0.8 100%,eff1 75%,eff0.8 75%
+name,manufacturer,range,efficiency,sn,vsc,psc,i0,p0,type,up,us,du1,du0.8,eff1 100%,eff0.8 100%,eff1 75%,eff0.8 75%
 FT_Standard_Standard_100kVA,FT,Standard,Standard,100000,0.04,2150,0.025,210,Dyn11,20000,400,2.21,3.75,97.69,97.13,98.14,97.69
 FT_Standard_Standard_160kVA,FT,Standard,Standard,160000,0.04,2350,0.023,460,Dyn11,20000,400,1.54,3.43,98.27,97.85,98.54,98.18
 FT_Standard_Standard_250kVA,FT,Standard,Standard,250000,0.04,3250,0.021,650,Dyn11,20000,400,1.37,3.33,98.46,98.09,98.7,98.37

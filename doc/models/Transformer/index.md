@@ -22,10 +22,10 @@ _Roseau Load Flow_ can model single-phase, center-tapped and three-phase transfo
 
 Transformers are modeled with the following parameters:
 
-- $U_{1,\mathrm{nom.}}$: the phase-to-phase nominal voltage of the high voltages side (in V). This
-  parameter is called `uhv` in the code.
-- $U_{2,\mathrm{nom.}}$: the phase-to-phase nominal voltage of the low voltages side (in V). This
-  parameter is called `ulv` in the code.
+- $U_{1,\mathrm{nom.}}$: the phase-to-phase nominal voltage of the primary side (in V). This
+  parameter is called `up` in the code.
+- $U_{2,\mathrm{nom.}}$: the phase-to-phase nominal voltage of the secondary side (in V). This
+  parameter is called `us` in the code.
 - $S_{\mathrm{nom.}}$: the nominal power of the transformer (in VA). This parameter is called `sn`
   in the code.
 - $Z_2$: the series impedance located at the secondary side of the transformer. It represents
@@ -129,8 +129,8 @@ single_phase_transformer_parameters = (
     rlf.TransformerParameters.from_open_and_short_circuit_tests(
         id="single_phase_transformer_parameters",
         type="single",  # <--- single-phase transformer
-        uhv=rlf.Q_(20, "kV"),
-        ulv=rlf.Q_(400, "V"),
+        up=rlf.Q_(20, "kV"),
+        us=rlf.Q_(400, "V"),
         sn=rlf.Q_(160, "kVA"),
         p0=rlf.Q_(300, "W"),
         i0=rlf.Q_(1.4, "%"),
@@ -142,8 +142,8 @@ single_phase_transformer_parameters = (
 # single_phase_transformer_parameters = rlf.TransformerParameters(
 #     id="single_phase_transformer_parameters",
 #     type="single",
-#     uhv=rlf.Q_(20, "kV"),
-#     ulv=rlf.Q_(400, "V"),
+#     up=rlf.Q_(20, "kV"),
+#     us=rlf.Q_(400, "V"),
 #     sn=rlf.Q_(160, "kVA"),
 #     z2=rlf.Q_(0.0125+0.038j, "ohm"),
 #     ym=rlf.Q_(7.5e-7-5.5e-6j, "S"),
@@ -155,8 +155,8 @@ three_phase_transformer_parameters = (
     rlf.TransformerParameters.from_open_and_short_circuit_tests(
         id="three_phase_transformer_parameters",
         type="Dyn11",  # <--- three-phase transformer with delta primary and wye secondary
-        uhv=rlf.Q_(20, "kV"),
-        ulv=rlf.Q_(400, "V"),
+        up=rlf.Q_(20, "kV"),
+        us=rlf.Q_(400, "V"),
         sn=rlf.Q_(160, "kVA"),
         p0=rlf.Q_(300, "W"),
         i0=rlf.Q_(1.4, "%"),
@@ -170,8 +170,8 @@ center_tapped_transformer_parameters = (
     rlf.TransformerParameters.from_open_and_short_circuit_tests(
         id="center_tapped_transformer_parameters",
         type="center",  # <--- center-tapped transformer
-        uhv=rlf.Q_(20, "kV"),
-        ulv=rlf.Q_(400, "V"),
+        up=rlf.Q_(20, "kV"),
+        us=rlf.Q_(400, "V"),
         sn=rlf.Q_(160, "kVA"),
         p0=rlf.Q_(300, "W"),
         i0=rlf.Q_(1.4, "%"),

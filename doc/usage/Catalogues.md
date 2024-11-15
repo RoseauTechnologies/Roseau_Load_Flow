@@ -186,58 +186,58 @@ This catalogue can be retrieved in the form of a dataframe using:
 
 _Truncated output_
 
-| Name                         | Manufacturer | Product range | Efficiency | Nominal power (kVA) | Type  | High voltage (kV) | Low voltage (kV) |
-| :--------------------------- | :----------- | :------------ | :--------- | ------------------: | :---- | ----------------: | ---------------: |
-| FT_Standard_Standard_100kVA  | FT           | Standard      | Standard   |                 100 | Dyn11 |                20 |              0.4 |
-| FT_Standard_Standard_160kVA  | FT           | Standard      | Standard   |                 160 | Dyn11 |                20 |              0.4 |
-| FT_Standard_Standard_250kVA  | FT           | Standard      | Standard   |                 250 | Dyn11 |                20 |              0.4 |
-| FT_Standard_Standard_315kVA  | FT           | Standard      | Standard   |                 315 | Dyn11 |                20 |              0.4 |
-| FT_Standard_Standard_400kVA  | FT           | Standard      | Standard   |                 400 | Dyn11 |                20 |              0.4 |
-| FT_Standard_Standard_500kVA  | FT           | Standard      | Standard   |                 500 | Dyn11 |                20 |              0.4 |
-| FT_Standard_Standard_630kVA  | FT           | Standard      | Standard   |                 630 | Dyn11 |                20 |              0.4 |
-| FT_Standard_Standard_800kVA  | FT           | Standard      | Standard   |                 800 | Dyn11 |                20 |              0.4 |
-| FT_Standard_Standard_1000kVA | FT           | Standard      | Standard   |                1000 | Dyn11 |                20 |              0.4 |
-| FT_Standard_Standard_1250kVA | FT           | Standard      | Standard   |                1250 | Dyn11 |                20 |              0.4 |
-| FT_Standard_Standard_1600kVA | FT           | Standard      | Standard   |                1600 | Dyn11 |                20 |              0.4 |
-| FT_Standard_Standard_2000kVA | FT           | Standard      | Standard   |                2000 | Dyn11 |                20 |              0.4 |
-| FT_Standard_Standard_2500kVA | FT           | Standard      | Standard   |                2500 | Dyn11 |                20 |              0.4 |
-| FT_Standard_Standard_3150kVA | FT           | Standard      | Standard   |                3150 | Dyn11 |                20 |              0.4 |
-| SE_Minera_AA0Ak_160kVA       | SE           | Minera        | AA0Ak      |                 160 | Dyn11 |                20 |              0.4 |
-| SE_Minera_AA0Ak_250kVA       | SE           | Minera        | AA0Ak      |                 250 | Dyn11 |                20 |              0.4 |
-| SE_Minera_AA0Ak_400kVA       | SE           | Minera        | AA0Ak      |                 400 | Dyn11 |                20 |              0.4 |
-| SE_Minera_AA0Ak_630kVA       | SE           | Minera        | AA0Ak      |                 630 | Dyn11 |                20 |              0.4 |
-| SE_Minera_AA0Ak_800kVA       | SE           | Minera        | AA0Ak      |                 800 | Dyn11 |                20 |              0.4 |
-| SE_Minera_AA0Ak_1000kVA      | SE           | Minera        | AA0Ak      |                1000 | Dyn11 |                20 |              0.4 |
-| SE_Minera_AA0Ak_1250kVA      | SE           | Minera        | AA0Ak      |                1250 | Dyn11 |                20 |              0.4 |
-| SE_Minera_AA0Ak_1600kVA      | SE           | Minera        | AA0Ak      |                1600 | Dyn11 |                20 |              0.4 |
-| SE_Minera_AA0Ak_2000kVA      | SE           | Minera        | AA0Ak      |                2000 | Dyn11 |                20 |              0.4 |
-| SE_Minera_AA0Ak_2500kVA      | SE           | Minera        | AA0Ak      |                2500 | Dyn11 |                20 |              0.4 |
-| SE_Minera_AA0Ak_3150kVA      | SE           | Minera        | AA0Ak      |                3150 | Dyn11 |                20 |              0.4 |
-| SE_Minera_A0Ak_50kVA         | SE           | Minera        | A0Ak       |                  50 | Yzn11 |                20 |              0.4 |
-| SE_Minera_A0Ak_100kVA        | SE           | Minera        | A0Ak       |                 100 | Dyn11 |                20 |              0.4 |
-| SE_Minera_A0Ak_160kVA        | SE           | Minera        | A0Ak       |                 160 | Dyn11 |                20 |              0.4 |
-| SE_Minera_A0Ak_250kVA        | SE           | Minera        | A0Ak       |                 250 | Dyn11 |                20 |              0.4 |
-| SE_Minera_A0Ak_315kVA        | SE           | Minera        | A0Ak       |                 315 | Dyn11 |                20 |              0.4 |
-| SE_Minera_A0Ak_400kVA        | SE           | Minera        | A0Ak       |                 400 | Dyn11 |                20 |              0.4 |
-| SE_Minera_A0Ak_500kVA        | SE           | Minera        | A0Ak       |                 500 | Dyn11 |                20 |              0.4 |
-| SE_Minera_A0Ak_630kVA        | SE           | Minera        | A0Ak       |                 630 | Dyn11 |                20 |              0.4 |
-| SE_Minera_A0Ak_800kVA        | SE           | Minera        | A0Ak       |                 800 | Dyn11 |                20 |              0.4 |
-| SE_Minera_A0Ak_1000kVA       | SE           | Minera        | A0Ak       |                1000 | Dyn11 |                20 |              0.4 |
-| SE_Minera_A0Ak_1250kVA       | SE           | Minera        | A0Ak       |                1250 | Dyn11 |                20 |              0.4 |
-| SE_Minera_A0Ak_1600kVA       | SE           | Minera        | A0Ak       |                1600 | Dyn11 |                20 |              0.4 |
-| SE_Minera_A0Ak_2000kVA       | SE           | Minera        | A0Ak       |                2000 | Dyn11 |                20 |              0.4 |
-| SE_Minera_A0Ak_2500kVA       | SE           | Minera        | A0Ak       |                2500 | Dyn11 |                20 |              0.4 |
-| SE_Minera_B0Bk_50kVA         | SE           | Minera        | B0Bk       |                  50 | Yzn11 |                20 |              0.4 |
-| SE_Minera_B0Bk_100kVA        | SE           | Minera        | B0Bk       |                 100 | Dyn11 |                20 |              0.4 |
-| SE_Minera_B0Bk_160kVA        | SE           | Minera        | B0Bk       |                 160 | Dyn11 |                20 |              0.4 |
-| SE_Minera_B0Bk_250kVA        | SE           | Minera        | B0Bk       |                 250 | Dyn11 |                20 |              0.4 |
-| SE_Minera_B0Bk_315kVA        | SE           | Minera        | B0Bk       |                 315 | Dyn11 |                20 |              0.4 |
-| SE_Minera_B0Bk_400kVA        | SE           | Minera        | B0Bk       |                 400 | Dyn11 |                20 |              0.4 |
-| SE_Minera_B0Bk_500kVA        | SE           | Minera        | B0Bk       |                 500 | Dyn11 |                20 |              0.4 |
-| SE_Minera_B0Bk_630kVA        | SE           | Minera        | B0Bk       |                 630 | Dyn11 |                20 |              0.4 |
-| SE_Minera_B0Bk_800kVA        | SE           | Minera        | B0Bk       |                 800 | Dyn11 |                20 |              0.4 |
-| SE_Minera_B0Bk_1000kVA       | SE           | Minera        | B0Bk       |                1000 | Dyn11 |                20 |              0.4 |
-| SE_Minera_B0Bk_1250kVA       | SE           | Minera        | B0Bk       |                1250 | Dyn11 |                20 |              0.4 |
+| Name                         | Manufacturer | Product range | Efficiency | Nominal power (kVA) | Type  | Primary voltage (kV) | Secondary voltage (kV) |
+| :--------------------------- | :----------- | :------------ | :--------- | ------------------: | :---- | -------------------: | ---------------------: |
+| FT_Standard_Standard_100kVA  | FT           | Standard      | Standard   |                 100 | Dyn11 |                   20 |                    0.4 |
+| FT_Standard_Standard_160kVA  | FT           | Standard      | Standard   |                 160 | Dyn11 |                   20 |                    0.4 |
+| FT_Standard_Standard_250kVA  | FT           | Standard      | Standard   |                 250 | Dyn11 |                   20 |                    0.4 |
+| FT_Standard_Standard_315kVA  | FT           | Standard      | Standard   |                 315 | Dyn11 |                   20 |                    0.4 |
+| FT_Standard_Standard_400kVA  | FT           | Standard      | Standard   |                 400 | Dyn11 |                   20 |                    0.4 |
+| FT_Standard_Standard_500kVA  | FT           | Standard      | Standard   |                 500 | Dyn11 |                   20 |                    0.4 |
+| FT_Standard_Standard_630kVA  | FT           | Standard      | Standard   |                 630 | Dyn11 |                   20 |                    0.4 |
+| FT_Standard_Standard_800kVA  | FT           | Standard      | Standard   |                 800 | Dyn11 |                   20 |                    0.4 |
+| FT_Standard_Standard_1000kVA | FT           | Standard      | Standard   |                1000 | Dyn11 |                   20 |                    0.4 |
+| FT_Standard_Standard_1250kVA | FT           | Standard      | Standard   |                1250 | Dyn11 |                   20 |                    0.4 |
+| FT_Standard_Standard_1600kVA | FT           | Standard      | Standard   |                1600 | Dyn11 |                   20 |                    0.4 |
+| FT_Standard_Standard_2000kVA | FT           | Standard      | Standard   |                2000 | Dyn11 |                   20 |                    0.4 |
+| FT_Standard_Standard_2500kVA | FT           | Standard      | Standard   |                2500 | Dyn11 |                   20 |                    0.4 |
+| FT_Standard_Standard_3150kVA | FT           | Standard      | Standard   |                3150 | Dyn11 |                   20 |                    0.4 |
+| SE_Minera_AA0Ak_160kVA       | SE           | Minera        | AA0Ak      |                 160 | Dyn11 |                   20 |                    0.4 |
+| SE_Minera_AA0Ak_250kVA       | SE           | Minera        | AA0Ak      |                 250 | Dyn11 |                   20 |                    0.4 |
+| SE_Minera_AA0Ak_400kVA       | SE           | Minera        | AA0Ak      |                 400 | Dyn11 |                   20 |                    0.4 |
+| SE_Minera_AA0Ak_630kVA       | SE           | Minera        | AA0Ak      |                 630 | Dyn11 |                   20 |                    0.4 |
+| SE_Minera_AA0Ak_800kVA       | SE           | Minera        | AA0Ak      |                 800 | Dyn11 |                   20 |                    0.4 |
+| SE_Minera_AA0Ak_1000kVA      | SE           | Minera        | AA0Ak      |                1000 | Dyn11 |                   20 |                    0.4 |
+| SE_Minera_AA0Ak_1250kVA      | SE           | Minera        | AA0Ak      |                1250 | Dyn11 |                   20 |                    0.4 |
+| SE_Minera_AA0Ak_1600kVA      | SE           | Minera        | AA0Ak      |                1600 | Dyn11 |                   20 |                    0.4 |
+| SE_Minera_AA0Ak_2000kVA      | SE           | Minera        | AA0Ak      |                2000 | Dyn11 |                   20 |                    0.4 |
+| SE_Minera_AA0Ak_2500kVA      | SE           | Minera        | AA0Ak      |                2500 | Dyn11 |                   20 |                    0.4 |
+| SE_Minera_AA0Ak_3150kVA      | SE           | Minera        | AA0Ak      |                3150 | Dyn11 |                   20 |                    0.4 |
+| SE_Minera_A0Ak_50kVA         | SE           | Minera        | A0Ak       |                  50 | Yzn11 |                   20 |                    0.4 |
+| SE_Minera_A0Ak_100kVA        | SE           | Minera        | A0Ak       |                 100 | Dyn11 |                   20 |                    0.4 |
+| SE_Minera_A0Ak_160kVA        | SE           | Minera        | A0Ak       |                 160 | Dyn11 |                   20 |                    0.4 |
+| SE_Minera_A0Ak_250kVA        | SE           | Minera        | A0Ak       |                 250 | Dyn11 |                   20 |                    0.4 |
+| SE_Minera_A0Ak_315kVA        | SE           | Minera        | A0Ak       |                 315 | Dyn11 |                   20 |                    0.4 |
+| SE_Minera_A0Ak_400kVA        | SE           | Minera        | A0Ak       |                 400 | Dyn11 |                   20 |                    0.4 |
+| SE_Minera_A0Ak_500kVA        | SE           | Minera        | A0Ak       |                 500 | Dyn11 |                   20 |                    0.4 |
+| SE_Minera_A0Ak_630kVA        | SE           | Minera        | A0Ak       |                 630 | Dyn11 |                   20 |                    0.4 |
+| SE_Minera_A0Ak_800kVA        | SE           | Minera        | A0Ak       |                 800 | Dyn11 |                   20 |                    0.4 |
+| SE_Minera_A0Ak_1000kVA       | SE           | Minera        | A0Ak       |                1000 | Dyn11 |                   20 |                    0.4 |
+| SE_Minera_A0Ak_1250kVA       | SE           | Minera        | A0Ak       |                1250 | Dyn11 |                   20 |                    0.4 |
+| SE_Minera_A0Ak_1600kVA       | SE           | Minera        | A0Ak       |                1600 | Dyn11 |                   20 |                    0.4 |
+| SE_Minera_A0Ak_2000kVA       | SE           | Minera        | A0Ak       |                2000 | Dyn11 |                   20 |                    0.4 |
+| SE_Minera_A0Ak_2500kVA       | SE           | Minera        | A0Ak       |                2500 | Dyn11 |                   20 |                    0.4 |
+| SE_Minera_B0Bk_50kVA         | SE           | Minera        | B0Bk       |                  50 | Yzn11 |                   20 |                    0.4 |
+| SE_Minera_B0Bk_100kVA        | SE           | Minera        | B0Bk       |                 100 | Dyn11 |                   20 |                    0.4 |
+| SE_Minera_B0Bk_160kVA        | SE           | Minera        | B0Bk       |                 160 | Dyn11 |                   20 |                    0.4 |
+| SE_Minera_B0Bk_250kVA        | SE           | Minera        | B0Bk       |                 250 | Dyn11 |                   20 |                    0.4 |
+| SE_Minera_B0Bk_315kVA        | SE           | Minera        | B0Bk       |                 315 | Dyn11 |                   20 |                    0.4 |
+| SE_Minera_B0Bk_400kVA        | SE           | Minera        | B0Bk       |                 400 | Dyn11 |                   20 |                    0.4 |
+| SE_Minera_B0Bk_500kVA        | SE           | Minera        | B0Bk       |                 500 | Dyn11 |                   20 |                    0.4 |
+| SE_Minera_B0Bk_630kVA        | SE           | Minera        | B0Bk       |                 630 | Dyn11 |                   20 |                    0.4 |
+| SE_Minera_B0Bk_800kVA        | SE           | Minera        | B0Bk       |                 800 | Dyn11 |                   20 |                    0.4 |
+| SE_Minera_B0Bk_1000kVA       | SE           | Minera        | B0Bk       |                1000 | Dyn11 |                   20 |                    0.4 |
+| SE_Minera_B0Bk_1250kVA       | SE           | Minera        | B0Bk       |                1250 | Dyn11 |                   20 |                    0.4 |
 
 The following data are available in this table:
 
@@ -248,8 +248,8 @@ The following data are available in this table:
 - the **efficiency** class of the transformer
 - the **type** of the transformer.
 - the nominal power, noted **sn**.
-- the primary side phase to phase voltage, noted **uhv**.
-- the secondary side phase to phase voltage, noted **ulv**.
+- the primary side phase-to-phase voltage, noted **up**.
+- the secondary side phase-to-phase voltage, noted **us**.
 
 The `get_catalogue` method accepts arguments (in bold above) that can be used to filter the returned table. The
 following command only retrieves transformer parameters of transformers with an efficiency of "A0Ak":
@@ -258,22 +258,22 @@ following command only retrieves transformer parameters of transformers with an 
 >>> rlf.TransformerParameters.get_catalogue(efficiency="A0Ak")
 ```
 
-| Name                   | Manufacturer | Product range | Efficiency | Type  | Nominal power (kVA) | High voltage (kV) | Low voltage (kV) |
-| :--------------------- | :----------- | :------------ | :--------- | :---- | ------------------: | ----------------: | ---------------: |
-| SE_Minera_A0Ak_50kVA   | SE           | Minera        | A0Ak       | Yzn11 |                50.0 |              20.0 |              0.4 |
-| SE_Minera_A0Ak_100kVA  | SE           | Minera        | A0Ak       | Dyn11 |               100.0 |              20.0 |              0.4 |
-| SE_Minera_A0Ak_160kVA  | SE           | Minera        | A0Ak       | Dyn11 |               160.0 |              20.0 |              0.4 |
-| SE_Minera_A0Ak_250kVA  | SE           | Minera        | A0Ak       | Dyn11 |               250.0 |              20.0 |              0.4 |
-| SE_Minera_A0Ak_315kVA  | SE           | Minera        | A0Ak       | Dyn11 |               315.0 |              20.0 |              0.4 |
-| SE_Minera_A0Ak_400kVA  | SE           | Minera        | A0Ak       | Dyn11 |               400.0 |              20.0 |              0.4 |
-| SE_Minera_A0Ak_500kVA  | SE           | Minera        | A0Ak       | Dyn11 |               500.0 |              20.0 |              0.4 |
-| SE_Minera_A0Ak_630kVA  | SE           | Minera        | A0Ak       | Dyn11 |               630.0 |              20.0 |              0.4 |
-| SE_Minera_A0Ak_800kVA  | SE           | Minera        | A0Ak       | Dyn11 |               800.0 |              20.0 |              0.4 |
-| SE_Minera_A0Ak_1000kVA | SE           | Minera        | A0Ak       | Dyn11 |              1000.0 |              20.0 |              0.4 |
-| SE_Minera_A0Ak_1250kVA | SE           | Minera        | A0Ak       | Dyn11 |              1250.0 |              20.0 |              0.4 |
-| SE_Minera_A0Ak_1600kVA | SE           | Minera        | A0Ak       | Dyn11 |              1600.0 |              20.0 |              0.4 |
-| SE_Minera_A0Ak_2000kVA | SE           | Minera        | A0Ak       | Dyn11 |              2000.0 |              20.0 |              0.4 |
-| SE_Minera_A0Ak_2500kVA | SE           | Minera        | A0Ak       | Dyn11 |              2500.0 |              20.0 |              0.4 |
+| Name                   | Manufacturer | Product range | Efficiency | Type  | Nominal power (kVA) | Primary voltage (kV) | Secondary voltage (kV) |
+| :--------------------- | :----------- | :------------ | :--------- | :---- | ------------------: | -------------------: | ---------------------: |
+| SE_Minera_A0Ak_50kVA   | SE           | Minera        | A0Ak       | Yzn11 |                50.0 |                 20.0 |                    0.4 |
+| SE_Minera_A0Ak_100kVA  | SE           | Minera        | A0Ak       | Dyn11 |               100.0 |                 20.0 |                    0.4 |
+| SE_Minera_A0Ak_160kVA  | SE           | Minera        | A0Ak       | Dyn11 |               160.0 |                 20.0 |                    0.4 |
+| SE_Minera_A0Ak_250kVA  | SE           | Minera        | A0Ak       | Dyn11 |               250.0 |                 20.0 |                    0.4 |
+| SE_Minera_A0Ak_315kVA  | SE           | Minera        | A0Ak       | Dyn11 |               315.0 |                 20.0 |                    0.4 |
+| SE_Minera_A0Ak_400kVA  | SE           | Minera        | A0Ak       | Dyn11 |               400.0 |                 20.0 |                    0.4 |
+| SE_Minera_A0Ak_500kVA  | SE           | Minera        | A0Ak       | Dyn11 |               500.0 |                 20.0 |                    0.4 |
+| SE_Minera_A0Ak_630kVA  | SE           | Minera        | A0Ak       | Dyn11 |               630.0 |                 20.0 |                    0.4 |
+| SE_Minera_A0Ak_800kVA  | SE           | Minera        | A0Ak       | Dyn11 |               800.0 |                 20.0 |                    0.4 |
+| SE_Minera_A0Ak_1000kVA | SE           | Minera        | A0Ak       | Dyn11 |              1000.0 |                 20.0 |                    0.4 |
+| SE_Minera_A0Ak_1250kVA | SE           | Minera        | A0Ak       | Dyn11 |              1250.0 |                 20.0 |                    0.4 |
+| SE_Minera_A0Ak_1600kVA | SE           | Minera        | A0Ak       | Dyn11 |              1600.0 |                 20.0 |                    0.4 |
+| SE_Minera_A0Ak_2000kVA | SE           | Minera        | A0Ak       | Dyn11 |              2000.0 |                 20.0 |                    0.4 |
+| SE_Minera_A0Ak_2500kVA | SE           | Minera        | A0Ak       | Dyn11 |              2500.0 |                 20.0 |                    0.4 |
 
 or only transformers with a wye winding on the primary side (using a regular expression)
 
@@ -281,12 +281,12 @@ or only transformers with a wye winding on the primary side (using a regular exp
 >>> rlf.TransformerParameters.get_catalogue(type=r"y.*")
 ```
 
-| Name                     | Manufacturer | Product range | Efficiency | Type  | Nominal power (kVA) | High voltage (kV) | Low voltage (kV) |
-| :----------------------- | :----------- | :------------ | :--------- | :---- | ------------------: | ----------------: | ---------------: |
-| SE_Minera_A0Ak_50kVA     | SE           | Minera        | A0Ak       | Yzn11 |                50.0 |              20.0 |              0.4 |
-| SE_Minera_B0Bk_50kVA     | SE           | Minera        | B0Bk       | Yzn11 |                50.0 |              20.0 |              0.4 |
-| SE_Minera_C0Bk_50kVA     | SE           | Minera        | C0Bk       | Yzn11 |                50.0 |              20.0 |              0.4 |
-| SE_Minera_Standard_50kVA | SE           | Minera        | Standard   | Yzn11 |                50.0 |              20.0 |              0.4 |
+| Name                     | Manufacturer | Product range | Efficiency | Type  | Nominal power (kVA) | Primary voltage (kV) | Secondary voltage (kV) |
+| :----------------------- | :----------- | :------------ | :--------- | :---- | ------------------: | -------------------: | ---------------------: |
+| SE_Minera_A0Ak_50kVA     | SE           | Minera        | A0Ak       | Yzn11 |                50.0 |                 20.0 |                    0.4 |
+| SE_Minera_B0Bk_50kVA     | SE           | Minera        | B0Bk       | Yzn11 |                50.0 |                 20.0 |                    0.4 |
+| SE_Minera_C0Bk_50kVA     | SE           | Minera        | C0Bk       | Yzn11 |                50.0 |                 20.0 |                    0.4 |
+| SE_Minera_Standard_50kVA | SE           | Minera        | Standard   | Yzn11 |                50.0 |                 20.0 |                    0.4 |
 
 or only transformers meeting both criteria
 
@@ -294,9 +294,9 @@ or only transformers meeting both criteria
 >>> rlf.TransformerParameters.get_catalogue(efficiency="A0Ak", type=r"y.*")
 ```
 
-| Name                 | Manufacturer | Product range | Efficiency | Type  | Nominal power (kVA) | High voltage (kV) | Low voltage (kV) |
-| :------------------- | :----------- | :------------ | :--------- | :---- | ------------------: | ----------------: | ---------------: |
-| SE_Minera_A0Ak_50kVA | SE           | Minera        | A0Ak       | Yzn11 |                50.0 |              20.0 |              0.4 |
+| Name                 | Manufacturer | Product range | Efficiency | Type  | Nominal power (kVA) | Primary voltage (kV) | Secondary voltage (kV) |
+| :------------------- | :----------- | :------------ | :--------- | :---- | ------------------: | -------------------: | ---------------------: |
+| SE_Minera_A0Ak_50kVA | SE           | Minera        | A0Ak       | Yzn11 |                50.0 |                 20.0 |                    0.4 |
 
 Among all the possible filters, the nominal power and voltages are expected in their default unit
 (VA and V). You can also use the [Pint](https://pint.readthedocs.io/en/stable/) library to express
@@ -310,11 +310,11 @@ nominal power of 3150 kVA, the following two commands return the same table:
 >>> rlf.TransformerParameters.get_catalogue(sn=rlf.Q_(3150, "kVA"))
 ```
 
-| Name                         | Manufacturer | Product range | Efficiency | Type  | Nominal power (kVA) | High voltage (kV) | Low voltage (kV) |
-| :--------------------------- | :----------- | :------------ | :--------- | :---- | ------------------: | ----------------: | ---------------: |
-| FT_Standard_Standard_3150kVA | FT           | Standard      | Standard   | Dyn11 |              3150.0 |              20.0 |              0.4 |
-| SE_Vegeta_C0Bk_3150kVA       | SE           | Vegeta        | C0Bk       | Dyn11 |              3150.0 |              20.0 |              0.4 |
-| SE_Vegeta_Standard_3150kVA   | SE           | Vegeta        | Standard   | Dyn11 |              3150.0 |              20.0 |              0.4 |
+| Name                         | Manufacturer | Product range | Efficiency | Type  | Nominal power (kVA) | Primary voltage (kV) | Secondary voltage (kV) |
+| :--------------------------- | :----------- | :------------ | :--------- | :---- | ------------------: | -------------------: | ---------------------: |
+| FT_Standard_Standard_3150kVA | FT           | Standard      | Standard   | Dyn11 |              3150.0 |                 20.0 |                    0.4 |
+| SE_Vegeta_C0Bk_3150kVA       | SE           | Vegeta        | C0Bk       | Dyn11 |              3150.0 |                 20.0 |                    0.4 |
+| SE_Vegeta_Standard_3150kVA   | SE           | Vegeta        | Standard   | Dyn11 |              3150.0 |                 20.0 |                    0.4 |
 
 ### Getting an instance
 

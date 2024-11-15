@@ -19,6 +19,9 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`282` **BREAKING CHANGE**: Rename the parameters of the class `TransformerParameters`: `uhv` becomes `up`
+  (for **p**rimary side) and `ulv` becomes `us` (for **s**econdary side). In addition, `up` doesn't need to be
+  greater than `us` anymore.
 - {gh-pr}`281` Add official support for Python 3.13.
 - {gh-issue}`278` {gh-pr}`280` **BREAKING CHANGE**: the `Bus` constructor now accepts a nominal voltage
   (phase-to-phase, in V), a `min_voltage_level` (unitless) and a `max_voltage_level` (unitless). These

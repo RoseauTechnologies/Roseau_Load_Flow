@@ -111,8 +111,8 @@ tp = rlf.TransformerParameters.from_open_and_short_circuit_tests(
     "t",
     "center",  # <--- Center-tapped transformer
     sn=630e3,
-    uhv=20000.0,
-    ulv=230.0,
+    up=20000.0,
+    us=230.0,
     i0=0.018,
     p0=1300.0,
     psc=6500.0,
