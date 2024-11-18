@@ -1,9 +1,9 @@
 import pytest
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
-from roseau.load_flow.utils.types import ConductorType, InsulatorType, LineType
+from roseau.load_flow.utils.types import Insulator, LineType, Material
 
-TYPES = [ConductorType, InsulatorType, LineType]
+TYPES = [Material, Insulator, LineType]
 TYPES_IDS = [x.__name__ for x in TYPES]
 
 
@@ -32,18 +32,16 @@ def test_line_type():
     assert LineType("T") == LineType.TWISTED
 
 
-def test_insulator_type():
-    assert InsulatorType("") == InsulatorType.UNKNOWN
-    assert InsulatorType("nan") == InsulatorType.UNKNOWN
-    assert InsulatorType("pex") == InsulatorType.XLPE
+def test_insulator():
+    assert Insulator("pex") == Insulator.XLPE
 
 
-def test_conductor_type():
+def test_material():
     with pytest.raises(RoseauLoadFlowException) as e:
-        ConductorType("")
-    assert "cannot be converted into a ConductorType" in e.value.msg
-    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_CONDUCTOR_TYPE
+        Material("")
+    assert "cannot be converted into a Material" in e.value.msg
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_MATERIAL
     with pytest.raises(RoseauLoadFlowException) as e:
-        ConductorType("nan")
-    assert "cannot be converted into a ConductorType" in e.value.msg
-    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_CONDUCTOR_TYPE
+        Material("nan")
+    assert "cannot be converted into a Material" in e.value.msg
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_MATERIAL

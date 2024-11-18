@@ -35,7 +35,7 @@ class RoseauLoadFlowExceptionCode(StrEnum):
     BAD_Y_SHUNT_SHAPE = auto()
     BAD_LINE_MODEL = auto()
     BAD_LINE_TYPE = auto()
-    BAD_CONDUCTOR_TYPE = auto()
+    BAD_MATERIAL = auto()
     BAD_INSULATOR_TYPE = auto()
     BAD_Z_LINE_VALUE = auto()
     BAD_Y_SHUNT_VALUE = auto()
@@ -45,6 +45,9 @@ class RoseauLoadFlowExceptionCode(StrEnum):
     BAD_MAX_CURRENTS_SIZE = auto()
     BAD_SECTIONS_VALUE = auto()
     BAD_SECTIONS_SIZE = auto()
+    BAD_MATERIALS_VALUE = auto()
+    BAD_MATERIALS_SIZE = auto()
+    BAD_INSULATORS_SIZE = auto()
 
     # Transformer
     BAD_TRANSFORMER_ID = auto()

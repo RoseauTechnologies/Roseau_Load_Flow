@@ -1,6 +1,7 @@
 import logging
 import re
 import warnings
+from collections.abc import Sequence
 from importlib import resources
 from pathlib import Path
 from typing import Literal, NoReturn
@@ -29,27 +30,27 @@ from roseau.load_flow.utils import (
     RHO,
     TAN_D,
     CatalogueMixin,
-    ConductorType,
     F,
     Identifiable,
-    InsulatorType,
+    Insulator,
     JsonMixin,
     LineType,
+    Material,
 )
 from roseau.load_flow.utils._exceptions import find_stack_level
 
 logger = logging.getLogger(__name__)
 
-_DEFAULT_CONDUCTOR_TYPE = {
-    LineType.OVERHEAD: ConductorType.ACSR,
-    LineType.TWISTED: ConductorType.AL,
-    LineType.UNDERGROUND: ConductorType.AL,
+_DEFAULT_MATERIAL = {
+    LineType.OVERHEAD: Material.ACSR,
+    LineType.TWISTED: Material.AL,
+    LineType.UNDERGROUND: Material.AL,
 }
 
-_DEFAULT_INSULATION_TYPE = {
-    LineType.OVERHEAD: InsulatorType.UNKNOWN,  # Not used for overhead lines
-    LineType.TWISTED: InsulatorType.XLPE,
-    LineType.UNDERGROUND: InsulatorType.PVC,
+_DEFAULT_INSULATOR = {
+    LineType.OVERHEAD: None,  # Not used for overhead lines
+    LineType.TWISTED: Insulator.XLPE,
+    LineType.UNDERGROUND: Insulator.PVC,
 }
 
 
@@ -57,8 +58,8 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
     """Parameters that define electrical models of lines."""
 
     _type_re = "|".join(x.code() for x in LineType)
-    _material_re = "|".join(x.code() for x in ConductorType)
-    _insulator_re = "|".join(x.code() for x in InsulatorType)
+    _material_re = "|".join(x.code() for x in Material)
+    _insulator_re = "|".join(x.code() for x in Insulator)
     _section_re = r"[1-9][0-9]*"
     _REGEXP_LINE_TYPE_NAME = re.compile(
         rf"^({_type_re})_({_material_re})_({_insulator_re}_)?{_section_re}$", flags=re.IGNORECASE
@@ -72,8 +73,8 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         y_shunt: ComplexArrayLike2D | None = None,
         max_currents: FloatScalarOrArrayLike1D | None = None,
         line_type: LineType | None = None,
-        conductor_type: ConductorType | None = None,
-        insulator_type: InsulatorType | None = None,
+        materials: Material | Sequence[Material] | None = None,
+        insulators: Insulator | Sequence[Insulator] | None = None,
         sections: FloatScalarOrArrayLike1D | None = None,
     ) -> None:
         """LineParameters constructor.
@@ -104,15 +105,15 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
                 automatically filled when the line parameters are created from a geometric model or
                 from the catalogue.
 
-            conductor_type:
-                The type of the conductor material (Aluminum, Copper, ...). The conductor type is
-                optional, it is informative only and is not used in the load flow. This field gets
+            materials:
+                The types of the conductor material (Aluminum, Copper, ...). The materials are
+                optional, they are informative only and are not used in the load flow. This field gets
                 automatically filled when the line parameters are created from a geometric model or
                 from the catalogue.
 
-            insulator_type:
-                The type of the cable insulator (PVC, XLPE, ...). The insulator type is optional,
-                it is informative only and is not used in the load flow. This field gets
+            insulators:
+                The types of the cable insulator (PVC, XLPE, ...). The insulators are optional,
+                they are informative only and are not used in the load flow. This field gets
                 automatically filled when the line parameters are created from a geometric model or
                 from the catalogue.
 
@@ -137,25 +138,26 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         self._max_currents = None
         self.max_currents = max_currents
         self._line_type = line_type
-        self._conductor_type = conductor_type
-        self._insulator_type = insulator_type
+        self._materials = None
+        self.materials = materials
+        self._insulators = None
+        self.insulators = insulators
         self._sections = None
         self.sections = sections
         self._check_matrix()
 
     def __repr__(self) -> str:
         s = f"<{type(self).__name__}: id={self.id!r}"
-        for attr, val, tp in (
-            ("line_type", self._line_type, str),
-            ("conductor_type", self._conductor_type, str),
-            ("insulator_type", self._insulator_type, str),
-        ):
-            if val is not None:
-                s += f", {attr}={tp(val)!r}"
+        if self._line_type is not None:
+            s += f", line_type={str(self._line_type)!r}"
+        if self._insulators is not None:
+            s += f", insulators={self._insulators}"
+        if self._materials is not None:
+            s += f", materials={self._materials}"
         if self._sections is not None:
-            s += f", sections=[{', '.join(f'{x}' for x in self._sections)}]"
+            s += f", sections={self._sections}"
         if self._max_currents is not None:
-            s += f", max_currents=[{', '.join(f'{x}' for x in self._max_currents)}]"
+            s += f", max_currents={self._max_currents}"
         s += ">"
         return s
 
@@ -176,8 +178,24 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
                 )
             )
             and self._line_type == other._line_type
-            and self._conductor_type == other._conductor_type
-            and self._insulator_type == other._insulator_type
+            and (
+                (self._materials is None and other._materials is None)
+                or (
+                    self._materials is not None
+                    and other._materials is not None
+                    and self._materials.shape == other._materials.shape
+                    and np.array_equal(self._materials, other._materials)
+                )
+            )
+            and (
+                (self._insulators is None and other._insulators is None)
+                or (
+                    self._insulators is not None
+                    and other._insulators is not None
+                    and self._insulators.shape == other._insulators.shape
+                    and np.array_equal(self._insulators, other._insulators)
+                )
+            )
             and (
                 (self._sections is None and other._sections is None)
                 or (
@@ -223,14 +241,14 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         return self._line_type
 
     @property
-    def conductor_type(self) -> ConductorType | None:
-        """The type of the conductor material. Informative only, it has no impact on the load flow."""
-        return self._conductor_type
+    def materials(self) -> Material | Sequence[Material] | None:
+        """The materials of the conductors. Informative only, it has no impact on the load flow."""
+        return self._materials
 
     @property
-    def insulator_type(self) -> InsulatorType | None:
-        """The type of the cable insulator. Informative only, it has no impact on the load flow."""
-        return self._insulator_type
+    def insulators(self) -> Insulator | Sequence[Insulator] | None:
+        """The insulators of the conductors. Informative only, it has no impact on the load flow."""
+        return self._insulators
 
     @property
     def sections(self) -> FloatArray | None:
@@ -265,6 +283,43 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_MAX_CURRENTS_VALUE)
         self._max_currents = values
 
+    @materials.setter
+    def materials(self, value: Material | Sequence[Material] | None) -> None:
+        value_isna = pd.isna(value)
+        if np.isscalar(value_isna):
+            values = None if value_isna else np.array([Material(value) for _ in range(self._size)], dtype=np.object_)
+        else:
+            if np.any(value_isna):
+                msg = f"Materials cannot contain null values: [{', '.join(f'{x}' for x in value)}] was provided."
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_MATERIALS_VALUE)
+
+            # Build the numpy array fails with pd.NA inside
+            values = np.array([Material(x) for x in value], dtype=np.object_)
+            if len(value) != self._size:
+                msg = f"Incorrect number of materials: {len(value)} instead of {self._size}"
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_MATERIALS_SIZE)
+        self._materials = values
+
+    @insulators.setter
+    def insulators(self, value: Insulator | Sequence[Insulator] | None) -> None:
+        value_isna = pd.isna(value)
+        if np.isscalar(value_isna):
+            values = None if value_isna else np.array([Insulator(value) for _ in range(self._size)], dtype=np.object_)
+        elif np.all(value_isna):
+            values = None
+        else:
+            values = np.array(
+                [None if isna else Insulator(v) for isna, v in zip(value_isna, value, strict=True)],
+                dtype=np.object_,
+            )
+            if len(value) != self._size:
+                msg = f"Incorrect number of insulators: {len(value)} instead of {self._size}"
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_INSULATORS_SIZE)
+        self._insulators = values
+
     @sections.setter
     @ureg_wraps(None, (None, "mm**2"))
     def sections(self, value: FloatScalarOrArrayLike1D | None) -> None:
@@ -279,11 +334,13 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             else:
                 values = np.array([value for _ in range(self._size)], dtype=np.float64)
         else:
-            values = np.array(value, dtype=np.float64)
             if np.any(value_isna):
-                msg = f"Sections cannot contain null values: {values.tolist()} mm² was provided."
+                msg = f"Sections cannot contain null values: [{', '.join(f'{x}' for x in value)}] mm² was provided."
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_SECTIONS_VALUE)
+
+            # Build the numpy array fails with pd.NA inside
+            values = np.array(value, dtype=np.float64)
             if len(value) != self._size:
                 msg = f"Incorrect number of sections: {len(value)} instead of {self._size}"
                 logger.error(msg)
@@ -498,8 +555,8 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         id: Id,
         *,
         line_type: LineType,
-        conductor_type: ConductorType | None = None,
-        insulator_type: InsulatorType | None = None,
+        material: Material | None = None,
+        insulator: Insulator | None = None,
         section: float | Q_[float],
         section_neutral: float | Q_[float] | None = None,
         height: float | Q_[float],
@@ -515,13 +572,13 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             line_type:
                 Overhead or underground. See also :class:`~roseau.load_flow.LineType`.
 
-            conductor_type:
+            material:
                 Type of the conductor. If ``None``, ``ACSR`` is used for overhead lines and ``AL``
-                for underground or twisted lines. See also :class:`~roseau.load_flow.ConductorType`.
+                for underground or twisted lines. See also :class:`~roseau.load_flow.Material`.
 
-            insulator_type:
+            insulator:
                 Type of insulator. If ``None``, ``XLPE`` is used for twisted lines and ``PVC`` for
-                underground lines. See also :class:`~roseau.load_flow.InsulatorType`.
+                underground lines. See also :class:`~roseau.load_flow.Insulator`.
 
             section:
                 Cross-section surface area of the phases (mm²).
@@ -546,11 +603,11 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         See Also:
             :ref:`Line parameters alternative constructor documentation <models-line_parameters-alternative_constructors>`
         """
-        z_line, y_shunt, line_type, conductor_type, insulator_type, sections = cls._from_geometry(
+        z_line, y_shunt, line_type, material, insulator, sections = cls._from_geometry(
             id=id,
             line_type=line_type,
-            conductor_type=conductor_type,
-            insulator_type=insulator_type,
+            material=material,
+            insulator=insulator,
             section=section,
             section_neutral=section_neutral,
             height=height,
@@ -562,8 +619,8 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             y_shunt=y_shunt,
             max_currents=max_currents,
             line_type=line_type,
-            conductor_type=conductor_type,
-            insulator_type=insulator_type,
+            materials=material,
+            insulators=insulator,
             sections=sections,
         )
 
@@ -571,13 +628,13 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
     def _from_geometry(
         id: Id,
         line_type: LineType,
-        conductor_type: ConductorType | None,
-        insulator_type: InsulatorType | None,
+        material: Material | None,
+        insulator: Insulator | None,
         section: float,
         section_neutral: float | None,
         height: float,
         external_diameter: float,
-    ) -> tuple[ComplexArray, ComplexArray, LineType, ConductorType, InsulatorType, FloatArray]:
+    ) -> tuple[ComplexArray, ComplexArray, LineType, Material, Insulator, FloatArray]:
         """Create impedance and admittance matrices using a geometric model.
 
         Args:
@@ -587,10 +644,10 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             line_type:
                 Overhead, twisted overhead, or underground.
 
-            conductor_type:
+            material:
                 Type of the conductor material (Aluminum, Copper, ...).
 
-            insulator_type:
+            insulator:
                 Type of insulator.
 
             section:
@@ -616,14 +673,14 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         # dsh = data["dsh"]  # Diameter of the sheath (mm)
 
         line_type = LineType(line_type)
-        if conductor_type is None:
-            conductor_type = _DEFAULT_CONDUCTOR_TYPE[line_type]
-        if insulator_type is None:
-            insulator_type = _DEFAULT_INSULATION_TYPE[line_type]
+        if material is None:
+            material = _DEFAULT_MATERIAL[line_type]
+        if insulator is None:
+            insulator = _DEFAULT_INSULATOR[line_type]
         if section_neutral is None:
             section_neutral = section
-        conductor_type = ConductorType(conductor_type)
-        insulator_type = InsulatorType(insulator_type)
+        material = Material(material)
+        insulator = Insulator(insulator)
 
         # Geometric configuration
         if line_type in (LineType.OVERHEAD, LineType.TWISTED):
@@ -659,7 +716,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             coord = np.array([[-x, height - x], [x, height - x], [x, height + x], [-x, height + x]])  # m
             xp = x * 3
             coord_prim = np.array([[-xp, height - xp], [xp, height - xp], [xp, height + xp], [-xp, height + xp]])  # m
-            epsilon = (EPSILON_0 * EPSILON_R[insulator_type]).m
+            epsilon = (EPSILON_0 * EPSILON_R[insulator]).m
         else:
             msg = f"The line type {line_type!r} of the line {id!r} is unknown."
             logger.error(msg)
@@ -713,7 +770,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         np.fill_diagonal(minus, 1)
 
         # Electrical parameters
-        r = RHO[conductor_type].m / sections_m2 * np.eye(4, dtype=np.float64) * 1e3  # resistance (ohm/km)
+        r = RHO[material].m / sections_m2 * np.eye(4, dtype=np.float64) * 1e3  # resistance (ohm/km)
         distance[mask_diagonal] = gmr
         inductance = MU_0.m / (2 * PI) * np.log(1 / distance) * 1e3  # H/m->H/km
         distance[mask_diagonal] = radius
@@ -726,7 +783,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         c[mask_off_diagonal] = -lambda_inv[mask_off_diagonal]
         g = np.zeros((4, 4), dtype=np.float64)  # conductance (S/km)
         omega = OMEGA.m
-        g[mask_diagonal] = TAN_D[insulator_type].magnitude * np.einsum("ii->i", c) * omega
+        g[mask_diagonal] = TAN_D[insulator].magnitude * np.einsum("ii->i", c) * omega
 
         # Build the impedance and admittance matrices
         z_line = r + inductance * omega * 1j
@@ -737,7 +794,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         y_shunt[mask_diagonal] = np.einsum("ij->i", y)
         y_shunt[mask_off_diagonal] = -y[mask_off_diagonal]
 
-        return z_line, y_shunt, line_type, conductor_type, insulator_type, sections_mm2
+        return z_line, y_shunt, line_type, material, insulator, sections_mm2
 
     @classmethod
     @deprecated(
@@ -788,9 +845,9 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         try:
             if cls._REGEXP_LINE_TYPE_NAME.fullmatch(string=name) is None:
                 raise AssertionError
-            line_type_s, conductor_type_s, section_s = name.split("_")
+            line_type_s, material_s, section_s = name.split("_")
             line_type = LineType(line_type_s)
-            conductor_type = ConductorType(conductor_type_s)
+            material = Material(material_s)
             section = Q_(float(section_s), "mm**2")
         except Exception:
             msg = (
@@ -800,23 +857,23 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TYPE_NAME_SYNTAX) from None
 
-        r = RHO[conductor_type] / section
+        r = RHO[material] / section
         if line_type == LineType.OVERHEAD:
             c_b1 = Q_(50, "µF/km")
             c_b2 = Q_(0, "µF/(km*mm**2)")
             x = Q_(0.35, "ohm/km")
-            if conductor_type == ConductorType.AA:
+            if material == Material.AA:
                 if section <= 50:
                     c_imax = 14.20
                 elif 50 < section <= 100:
                     c_imax = 12.10
                 else:
                     c_imax = 15.70
-            elif conductor_type in {ConductorType.AL, ConductorType.AM}:
+            elif material in {Material.AL, Material.AM}:
                 c_imax = 16.40
-            elif conductor_type == ConductorType.CU:
+            elif material == Material.CU:
                 c_imax = 21
-            elif conductor_type == ConductorType.LA:
+            elif material == Material.LA:
                 if section <= 50:
                     c_imax = 13.60
                 elif 50 < section <= 100:
@@ -837,9 +894,9 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             else:
                 c_b1 = Q_(2240, "µF/km")
                 c_b2 = Q_(15, "µF/(km*mm**2)")
-            if conductor_type == ConductorType.AL:
+            if material == Material.AL:
                 c_imax = 16.5
-            elif conductor_type == ConductorType.CU:
+            elif material == Material.CU:
                 c_imax = 20
             else:  # Other material: AA, AM, LA.
                 c_imax = 16.5
@@ -861,7 +918,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             z_line=z_line,
             y_shunt=y_shunt,
             line_type=line_type,
-            conductor_type=conductor_type,
+            materials=material,
             sections=section,
             max_currents=max_currents,
         )
@@ -1020,35 +1077,35 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
 
         mlei_norm = conductor.upper() if conductor is not None else None
         if mlei_norm is None:
-            conductor_type = None
+            material = None
         elif mlei_norm in ("AL", "ALUMINIUM", "ALUMINUM"):
-            conductor_type = ConductorType.AL
+            material = Material.AL
         elif mlei_norm in ("CU", "COPPER"):
-            conductor_type = ConductorType.CU
+            material = Material.CU
         elif mlei_norm in ("AD", "ALDREY"):
-            conductor_type = ConductorType.AM
+            material = Material.AM
         elif mlei_norm in ("AS", "ALUMINIUM-STEEL", "ALUMINUM-STEEL"):
-            conductor_type = ConductorType.AA
+            material = Material.AA
         elif mlei_norm in ("DS", "ALDREY-STEEL"):
-            conductor_type = ConductorType.LA
+            material = Material.LA
         else:
             msg = f"Expected conductor='Al', 'Cu', 'Ad', 'As' or 'Ds', got {conductor!r} for line parameters {id!r}."
             logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_CONDUCTOR_TYPE)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_MATERIAL)
 
         imiso_norm = str(insulation).upper() if insulation is not None else None
         if imiso_norm is None:
-            insulator_type = None
+            insulator = None
         elif imiso_norm == "PVC" or imiso_norm == "0":
-            insulator_type = InsulatorType.PVC
+            insulator = Insulator.PVC
         elif imiso_norm == "XLPE" or imiso_norm == "1":
-            insulator_type = InsulatorType.XLPE
+            insulator = Insulator.XLPE
         elif imiso_norm == "MINERAL" or imiso_norm == "2":
-            insulator_type = InsulatorType.UNKNOWN  # not supported yet
+            insulator = None  # not supported yet
         elif imiso_norm == "PAPER" or imiso_norm == "3":
-            insulator_type = InsulatorType.IP
+            insulator = Insulator.IP
         elif imiso_norm == "EPR" or imiso_norm == "4":
-            insulator_type = InsulatorType.EPR
+            insulator = Insulator.EPR
         else:
             msg = (
                 f"Expected insulation='PVC', 'XLPE', 'MINERAL', 'PAPER' or 'EPR', got {insulation!r} "
@@ -1081,8 +1138,8 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
                 y_shunt=y_shunt,
                 max_currents=max_currents,
                 line_type=line_type,
-                conductor_type=conductor_type,
-                insulator_type=insulator_type,
+                materials=material,
+                insulators=insulator,
                 sections=section,
             )
         return obj
@@ -1229,15 +1286,15 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
     @classmethod
     def catalogue_data(cls) -> pd.DataFrame:
         file = cls.catalogue_path() / "Catalogue.csv"
-        return pd.read_csv(file, parse_dates=False).fillna({"insulator": ""})
+        return pd.read_csv(file, parse_dates=False).astype({"insulator": pd.StringDtype()})
 
     @classmethod
     def _get_catalogue(
         cls,
         name: str | re.Pattern[str] | None,
         line_type: str | None,
-        conductor_type: str | None,
-        insulator_type: str | None,
+        material: str | None,
+        insulator: str | None,
         section: float | None,
         raise_if_not_found: bool,
     ) -> tuple[pd.DataFrame, str]:
@@ -1248,7 +1305,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         for value, column_name, display_name, display_name_plural in [
             (name, "name", "name", "names"),
         ]:
-            if value is None:
+            if pd.isna(value):
                 continue
 
             mask = cls._filter_catalogue_str(value, strings=catalogue_data[column_name])
@@ -1266,17 +1323,25 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         # Filter on enumerated types
         for value, column_name, display_name, enum_class in (
             (line_type, "type", "line_type", LineType),
-            (conductor_type, "material", "conductor_type", ConductorType),
-            (insulator_type, "insulator", "insulator_type", InsulatorType),
+            (material, "material", "material", Material),
+            (insulator, "insulator", "insulator", Insulator),
         ):
-            if value is None:
+            if pd.isna(value):
                 continue
 
-            enum_series = catalogue_data[column_name].apply(enum_class)
+            enum_series = pd.Series(
+                data=[
+                    None if isna else enum_class(x)
+                    for isna, x in zip(
+                        catalogue_data[column_name].isna(), catalogue_data[column_name].values, strict=True
+                    )
+                ],
+                index=catalogue_data.index,
+            )
             try:
                 mask = enum_series == enum_class(value)
             except RoseauLoadFlowException:
-                mask = pd.Series(False, index=catalogue_data.index)
+                mask = pd.Series(data=False, index=catalogue_data.index)
             if raise_if_not_found and mask.sum() == 0:
                 cls._raise_not_found_in_catalogue(
                     value=repr(value),
@@ -1315,8 +1380,8 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         cls,
         name: str | re.Pattern[str] | None = None,
         line_type: str | None = None,
-        conductor_type: str | None = None,
-        insulator_type: str | None = None,
+        material: str | None = None,
+        insulator: str | None = None,
         section: float | Q_[float] | None = None,
         id: Id | None = None,
         nb_phases: int = 3,
@@ -1332,12 +1397,12 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
                 The type of the line parameters to get. It can be ``"overhead"``, ``"twisted"``, or
                 ``"underground"``. See also :class:`~roseau.load_flow.LineType`.
 
-            conductor_type:
+            material:
                 The type of the conductor material (Al, Cu, ...). See also
-                :class:`~roseau.load_flow.ConductorType`.
+                :class:`~roseau.load_flow.Material`.
 
-            insulator_type:
-                The type of insulator. See also :class:`~roseau.load_flow.InsulatorType`.
+            insulator:
+                The type of insulator. See also :class:`~roseau.load_flow.Insulator`.
 
             section:
                 The cross-section surface area of the phases (mm²).
@@ -1361,8 +1426,8 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         catalogue_data, query_info = cls._get_catalogue(
             name=name,
             line_type=line_type,
-            conductor_type=conductor_type,
-            insulator_type=insulator_type,
+            material=material,
+            insulator=insulator,
             section=section,
             raise_if_not_found=True,
         )
@@ -1381,8 +1446,8 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         x = catalogue_data.at[idx, "x"]
         b = catalogue_data.at[idx, "b"]
         line_type = LineType(catalogue_data.at[idx, "type"])
-        conductor_type = ConductorType(catalogue_data.at[idx, "material"])
-        insulator_type = InsulatorType(catalogue_data.at[idx, "insulator"])
+        material = Material(catalogue_data.at[idx, "material"])
+        insulator = catalogue_data.at[idx, "insulator"]  # Converted in the LineParameters creator
         section = catalogue_data.at[idx, "section"]
         max_current = catalogue_data.at[idx, "maximal_current"]
         if pd.isna(max_current):
@@ -1397,8 +1462,8 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             y_shunt=y_shunt,
             max_currents=max_current,
             line_type=line_type,
-            conductor_type=conductor_type,
-            insulator_type=insulator_type,
+            materials=material,
+            insulators=insulator,
             sections=section,
         )
 
@@ -1408,8 +1473,8 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         cls,
         name: str | re.Pattern[str] | None = None,
         line_type: str | None = None,
-        conductor_type: str | None = None,
-        insulator_type: str | None = None,
+        material: str | None = None,
+        insulator: str | None = None,
         section: float | Q_[float] | None = None,
     ) -> pd.DataFrame:
         """Get the catalogue of available lines.
@@ -1426,12 +1491,12 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
                 The type of the line parameters to get. It can be ``"overhead"``, ``"twisted"``, or
                 ``"underground"``. See also :class:`~roseau.load_flow.LineType`.
 
-            conductor_type:
+            material:
                 The type of the conductor material (Al, Cu, ...). See also
-                :class:`~roseau.load_flow.ConductorType`.
+                :class:`~roseau.load_flow.Material`.
 
-            insulator_type:
-                The type of insulator. See also :class:`~roseau.load_flow.InsulatorType`.
+            insulator:
+                The type of insulator. See also :class:`~roseau.load_flow.Insulator`.
 
             section:
                 The cross-section surface area of the phases (mm²).
@@ -1442,8 +1507,8 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         catalogue_data, _ = cls._get_catalogue(
             name=name,
             line_type=line_type,
-            conductor_type=conductor_type,
-            insulator_type=insulator_type,
+            material=material,
+            insulator=insulator,
             section=section,
             raise_if_not_found=False,
         )
@@ -1456,7 +1521,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
                 "maximal_current": "Maximal current (A)",
                 "type": "Line type",
                 "material": "Conductor material",
-                "insulator": "Insulator type",
+                "insulator": "Insulator",
                 "section": "Cross-section (mm²)",
             }
         ).set_index("Name")
@@ -1482,16 +1547,14 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         z_line = np.array(data["z_line"][0]) + 1j * np.array(data["z_line"][1])
         y_shunt = np.array(data["y_shunt"][0]) + 1j * np.array(data["y_shunt"][1]) if "y_shunt" in data else None
         line_type = LineType(data["line_type"]) if "line_type" in data else None
-        conductor_type = ConductorType(data["conductor_type"]) if "conductor_type" in data else None
-        insulator_type = InsulatorType(data["insulator_type"]) if "insulator_type" in data else None
         return cls(
             id=data["id"],
             z_line=z_line,
             y_shunt=y_shunt,
             max_currents=data.get("max_currents"),
             line_type=line_type,
-            conductor_type=conductor_type,
-            insulator_type=insulator_type,
+            materials=data.get("materials"),
+            insulators=data.get("insulators"),
             sections=data.get("sections"),
         )
 
@@ -1503,10 +1566,10 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             res["max_currents"] = self._max_currents.tolist()
         if self._line_type is not None:
             res["line_type"] = self._line_type.name
-        if self._conductor_type is not None:
-            res["conductor_type"] = self._conductor_type.name
-        if self._insulator_type is not None:
-            res["insulator_type"] = self._insulator_type.name
+        if self._materials is not None:
+            res["materials"] = [x.name for x in self._materials]
+        if self._insulators is not None:
+            res["insulators"] = [None if x is None else x.name for x in self._insulators]
         if self._sections is not None:
             res["sections"] = self._sections.tolist()
         return res

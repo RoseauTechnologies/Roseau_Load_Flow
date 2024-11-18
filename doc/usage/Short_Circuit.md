@@ -45,8 +45,8 @@ is impossible.
 ...     lp1 = rlf.LineParameters.from_geometry(
 ...         "U_AL_240",
 ...         line_type=rlf.LineType.UNDERGROUND,
-...         conductor_type=rlf.ConductorType.AL,
-...         insulator_type=rlf.InsulatorType.PVC,
+...         material=rlf.Material.AL,
+...         insulator=rlf.Insulator.PVC,
 ...         section=240,
 ...         section_neutral=120,
 ...         height=rlf.Q_(-1.5, "m"),
@@ -58,8 +58,8 @@ is impossible.
 ...     lp2 = rlf.LineParameters.from_geometry(
 ...         "U_AL_150",
 ...         line_type=rlf.LineType.UNDERGROUND,
-...         conductor_type=rlf.ConductorType.AL,
-...         insulator_type=rlf.InsulatorType.PVC,
+...         material=rlf.Material.AL,
+...         insulator=rlf.Insulator.PVC,
 ...         section=150,
 ...         section_neutral=150,
 ...         height=rlf.Q_(-1.5, "m"),

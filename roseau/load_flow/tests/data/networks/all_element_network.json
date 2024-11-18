@@ -581,8 +581,8 @@
       ],
       "max_currents": [323, 323, 323],
       "line_type": "UNDERGROUND",
-      "conductor_type": "AM",
-      "insulator_type": "UNKNOWN",
+      "materials": ["AM", "AM", "AM"],
+
       "sections": [148.0, 148.0, 148.0]
     },
     {
@@ -603,8 +603,8 @@
       ],
       "max_currents": [195, 195, 195, 195],
       "line_type": "TWISTED",
-      "conductor_type": "AL",
-      "insulator_type": "UNKNOWN",
+      "materials": ["AL", "AL", "AL", "AL"],
+
       "sections": [75.0, 75.0, 75.0, 75.0]
     }
   ],

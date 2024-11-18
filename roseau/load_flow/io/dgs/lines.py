@@ -5,7 +5,7 @@ import pandas as pd
 import shapely
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
-from roseau.load_flow.io.dgs.constants import CONDUCTOR_TYPES, INSULATOR_TYPES, LINE_TYPES
+from roseau.load_flow.io.dgs.constants import INSULATORS, LINE_TYPES, MATERIALS
 from roseau.load_flow.models import Bus, Ground, Line, LineParameters
 from roseau.load_flow.typing import Id
 from roseau.load_flow.utils._exceptions import find_stack_level
@@ -67,20 +67,20 @@ def generate_typ_lne(typ_lne: pd.DataFrame, lines_params: dict[Id, LineParameter
         sline = this_typ_lne.get("sline")
         max_currents = sline * 1e3 if sline is not None else None
         line_type = LINE_TYPES.get(this_typ_lne.get("cohl_"))
-        conductor_type = CONDUCTOR_TYPES.get(this_typ_lne.get("mlei"))
-        insulator_type = INSULATOR_TYPES.get(this_typ_lne.get("imiso"))
+        material = MATERIALS.get(this_typ_lne.get("mlei"))
+        insulator = INSULATORS.get(this_typ_lne.get("imiso"))
         section = this_typ_lne.get("qurs") or None  # Sometimes it is zero!! replace by None in this case
 
         with warnings.catch_warnings():
             warnings.filterwarnings(action="ignore", message=r".* off-diagonal elements ", category=UserWarning)
             lp = LineParameters(
-                type_id,
+                id=type_id,
                 z_line=z_line,
                 y_shunt=y_shunt,
                 max_currents=max_currents,
                 line_type=line_type,
-                conductor_type=conductor_type,
-                insulator_type=insulator_type,
+                materials=material,
+                insulators=insulator,
                 sections=section,
             )
         lines_params[type_id] = lp

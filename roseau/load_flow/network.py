@@ -308,7 +308,8 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         """The :attr:`lines` of the network as a geo dataframe."""
         data = []
         for line in self.lines.values():
-            max_currents = line.max_currents.magnitude.tolist() if line.max_currents is not None else None
+            if (max_currents := line.max_currents) is not None:
+                max_currents = max_currents.magnitude.tolist()
             data.append(
                 (
                     line.id,

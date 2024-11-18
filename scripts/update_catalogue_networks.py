@@ -103,9 +103,9 @@ if __name__ == "__main__":
                     # Add missing data from the IEC catalogue
                     max_currents=iec_params.max_currents,
                     line_type=iec_params.line_type,
-                    conductor_type=iec_params.conductor_type,
-                    insulator_type=iec_params.insulator_type,
-                    section=iec_params.section,
+                    materials=iec_params.materials,
+                    insulators=iec_params.insulators,
+                    sections=iec_params.sections,
                 )
                 new_line = rlf.Line(
                     id=line_id,

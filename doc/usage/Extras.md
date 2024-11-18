@@ -161,10 +161,10 @@ array([345.+199.18584287j]) <Unit('volt')>
 ## Constants
 
 {mod}`roseau.load_flow.utils.constants` contains some common constants like the resistivity
-and permeability of common conductor types in addition to other useful constants. Please refer to
+and permeability of common materials in addition to other useful constants. Please refer to
 the module documentation for more details.
 
-An enumeration of available conductor types can be found in the {mod}`roseau.load_flow.utils.types`
+An enumeration of available materials can be found in the {mod}`roseau.load_flow.utils.types`
 module.
 
 ## Voltage unbalance

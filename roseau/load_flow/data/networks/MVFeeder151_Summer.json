@@ -2334,8 +2334,8 @@
       ],
       "max_currents": [357, 357, 357],
       "line_type": "OVERHEAD",
-      "conductor_type": "AM",
-      "insulator_type": "UNKNOWN",
+      "materials": ["AM", "AM", "AM"],
+
       "sections": [148.0, 148.0, 148.0]
     },
     {
@@ -2366,8 +2366,8 @@
       ],
       "max_currents": [193, 193, 193],
       "line_type": "OVERHEAD",
-      "conductor_type": "AM",
-      "insulator_type": "UNKNOWN",
+      "materials": ["AM", "AM", "AM"],
+
       "sections": [54.0, 54.0, 54.0]
     },
     {
@@ -2398,8 +2398,8 @@
       ],
       "max_currents": [325, 325, 325],
       "line_type": "UNDERGROUND",
-      "conductor_type": "AL",
-      "insulator_type": "UNKNOWN",
+      "materials": ["AL", "AL", "AL"],
+
       "sections": [150.0, 150.0, 150.0]
     }
   ],

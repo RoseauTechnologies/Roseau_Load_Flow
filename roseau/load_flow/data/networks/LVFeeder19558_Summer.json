@@ -163,8 +163,8 @@
       ],
       "max_currents": [325, 325, 325, 325],
       "line_type": "UNDERGROUND",
-      "conductor_type": "AL",
-      "insulator_type": "UNKNOWN",
+      "materials": ["AL", "AL", "AL", "AL"],
+
       "sections": [150.0, 150.0, 150.0, 150.0]
     }
   ],

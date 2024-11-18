@@ -660,6 +660,8 @@ def v2_to_v3_converter(data: JsonDict) -> JsonDict:
 
     # Rename `maximal_current` in `maximal_currents` and uses array
     # Rename `section` in `sections` and uses array
+    # Rename `insulator_type` in `insulators` and uses array. `Unknown` is deleted
+    # Rename `material` in `materials` and uses array
     old_lines_params = data.get("lines_params", [])
     lines_params = []
     for line_param_data in old_lines_params:
@@ -668,6 +670,10 @@ def v2_to_v3_converter(data: JsonDict) -> JsonDict:
             line_param_data["maximal_currents"] = [maximal_current] * size
         if section := line_param_data.pop("section", None) is not None:
             line_param_data["sections"] = [section] * size
+        if conductor_type := line_param_data.pop("conductor_types", None) is not None:
+            line_param_data["materials"] = [conductor_type] * size
+        if (insulator_type := line_param_data.pop("insulator_types", None) is not None) and insulator_type != "unknown":
+            line_param_data["insulators"] = [insulator_type] * size
         lines_params.append(line_param_data)
 
     results = {

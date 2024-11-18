@@ -124,7 +124,7 @@ variable:
    ROSEAU_LOAD_FLOW_LICENSE_KEY="A8C6DA-9405FB-E74FB9-C71C3C-207661-V3"
    ```
 2. Add a cell to the beginning of your notebook with the following content and execute it:
-   ```ipython3
+   ```python-console
    %pip install python-dotenv
    %load_ext dotenv
    %dotenv
