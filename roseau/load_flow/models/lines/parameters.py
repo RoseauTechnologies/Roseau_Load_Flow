@@ -94,9 +94,9 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
                 See also :meth:`Line.res_violated <roseau.load_flow.Line.res_violated>`.
 
                 When a scalar value is provided, it creates an array with the same maximum current for each conductor.
-                The scalar value passed is assumed to be the maximum current of each conductor, not the total
-                multi-phase maximum current. To create a different maximum current per conductor, provide a
-                vector of current values with the same length as the number of conductor of the line.
+                The scalar value passed is assumed to be the maximum current of each conductor. To create a
+                different maximum current per conductor, provide a vector of current values with the same length as
+                the number of conductor of the line.
 
             line_type:
                 The type of the line (overhead, underground, twisted). The line type is optional,
@@ -117,8 +117,8 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
                 from the catalogue.
 
             sections:
-                The sections of the conductor. The sections are optional, it is informative only and is not used in
-                the load flow.  This field gets automatically filled when the line parameters are created from a
+                The sections of the conductor. The sections are optional, thy are informative only and ares not used in
+                the load flow. This field gets automatically filled when the line parameters are created from a
                 geometric model or from the catalogue.
 
                 When a scalar value is provided, it creates an array with the same section for each conductor. To
@@ -260,7 +260,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_MAX_CURRENTS_SIZE)
             if (values < 0).any():
-                msg = f"Maximum currents must be non-negative: [{', '.join(f'{x}' for x in values)}] A was provided."
+                msg = f"Maximum currents must be non-negative: {values.tolist()} A was provided."
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_MAX_CURRENTS_VALUE)
         self._max_currents = values
@@ -279,18 +279,17 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             else:
                 values = np.array([value for _ in range(self._size)], dtype=np.float64)
         else:
+            values = np.array(value, dtype=np.float64)
             if np.any(value_isna):
-                msg = f"Sections can't be null: [{', '.join(f'{x}' for x in value)}] mm² was provided."
+                msg = f"Sections cannot contain null values: {values.tolist()} mm² was provided."
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_SECTIONS_VALUE)
             if len(value) != self._size:
                 msg = f"Incorrect number of sections: {len(value)} instead of {self._size}"
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_SECTIONS_SIZE)
-
-            values = np.array(value, dtype=np.float64)
             if (values < 0).any():
-                msg = f"Sections must be non-negative: [{', '.join(f'{x}' for x in value)}] mm² was provided."
+                msg = f"Sections must be non-negative: {values.tolist()} mm² was provided."
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_SECTIONS_VALUE)
 
@@ -919,7 +918,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         cohl: Literal[0, "Cable", 1, "OHL"] = "Cable",
         conductor: Literal["Al", "Cu", "Ad", "As", "Ds"] | None = None,
         insulation: Literal[0, "PVC", 1, "XLPE", 2, "Mineral", 3, "Paper", 4, "EPR"] | None = None,
-        section: FloatScalarOrArrayLike1D | None = None,
+        section: float | Q_[float] | None = None,
     ) -> Self:
         """Create a line parameters object from PowerFactory "TypLne" data.
 
