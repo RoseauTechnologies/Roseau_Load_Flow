@@ -3,7 +3,6 @@ from enum import auto
 from typing import Final
 
 import pandas as pd
-from typing_extensions import deprecated
 
 from roseau.load_flow._compat import StrEnum
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
@@ -177,23 +176,8 @@ class Insulator(StrEnum):
                 pass
         msg = f"{value!r} cannot be converted into a Insulator."
         logger.error(msg)
-        raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.BAD_INSULATOR_TYPE)
+        raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.BAD_INSULATOR)
 
     def code(self) -> str:
         """A code that can be used in insulator type names."""
         return self.name
-
-
-#
-# Deprecated enum classes
-#
-@deprecated("Use the class `Insulator` instead.")
-def InsulatorType(*args, **kwargs):  # noqa: N802
-    """A deprecated class: please use the class `Insulator` instead."""
-    return Insulator(*args, **kwargs)
-
-
-@deprecated("Use the class `Material` instead.")
-def ConductorType(*args, **kwargs):  # noqa: N802
-    """A deprecated class: please use the class `Material` instead."""
-    return Material(*args, **kwargs)

@@ -678,8 +678,8 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         and the following columns:
             - `voltage`: The complex voltage of the bus (in Volts) for the given phase.
             - `voltage_level`: The voltage level of the bus.
-            - `min_voltage_level`: The minimum voltage level of the bus.
-            - `max_voltage_level`: The maximum voltage level of the bus.
+            - `min_voltage_level`: The minimal voltage level of the bus.
+            - `max_voltage_level`: The maximal voltage level of the bus.
             - `violated`: `True` if a voltage limit is not respected.
         """
         self._check_valid_results()
@@ -842,7 +842,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                 second bus.
             - `potential1`: The complex potential of the first bus (in Volts) for the given phase.
             - `potential2`: The complex potential of the second bus (in Volts) for the given phase.
-            - `max_power`: The maximum power loading (in VoltAmps) of the transformer.
+            - `max_power`: The maximal power loading (in VoltAmps) of the transformer.
 
         Note that values for missing phases are set to ``nan``. For example, a "Dyn" transformer
         has the phases "abc" on the primary side and "abcn" on the secondary side, so the primary

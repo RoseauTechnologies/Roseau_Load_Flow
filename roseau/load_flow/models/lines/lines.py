@@ -222,7 +222,7 @@ class Line(AbstractBranch):
 
     @property
     def max_currents(self) -> Q_[FloatArray] | None:
-        """The maximum currents loading of the line (in A)."""
+        """The maximal currents loading of the line (in A)."""
         # Do not add a setter. The user must know that if they change the max_currents, it changes
         # for all lines that share the parameters. It is better to set it on the parameters.
         return self._parameters.max_currents
@@ -305,9 +305,9 @@ class Line(AbstractBranch):
 
     @property
     def res_violated(self) -> bool | None:
-        """Whether the line current exceeds the maximum current (loading > 100%).
+        """Whether the line current exceeds the maximal current (loading > 100%).
 
-        Returns ``None`` if the maximum currents are not set.
+        Returns ``None`` if the maximal currents are not set.
         """
         i_max = self._parameters._max_currents
         if i_max is None:

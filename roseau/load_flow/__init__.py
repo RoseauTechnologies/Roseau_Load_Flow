@@ -7,6 +7,7 @@ See Package Contents below for a list of available classes and functions.
 """
 
 import importlib.metadata
+from typing import Any
 
 from roseau.load_flow import converters
 from roseau.load_flow.__about__ import (
@@ -43,7 +44,7 @@ from roseau.load_flow.models import (
 )
 from roseau.load_flow.network import ElectricalNetwork
 from roseau.load_flow.units import Q_, ureg
-from roseau.load_flow.utils import ConductorType, Insulator, InsulatorType, LineType, Material, constants
+from roseau.load_flow.utils import Insulator, LineType, Material, constants
 from roseau.load_flow.utils._versions import show_versions
 from roseau.load_flow.utils.constants import ALPHA, ALPHA2, NegativeSequence, PositiveSequence, ZeroSequence
 
@@ -112,3 +113,28 @@ __all__ = [
     "NegativeSequence",
     "ZeroSequence",
 ]
+
+global __rlf_deprecated_classes
+__rlf_deprecated_classes = set()
+
+
+def __getattr__(name: str) -> Any:
+    deprecated_classes = {"ConductorType": Material, "InsulatorType": Insulator}
+
+    if name in deprecated_classes:
+        from roseau.load_flow.utils._exceptions import find_stack_level
+
+        new_class = deprecated_classes[name]
+        if name not in __rlf_deprecated_classes:
+            import warnings
+
+            warnings.warn(
+                f"The {name} class is deprecated. Use {new_class.__name__} instead.",
+                stacklevel=find_stack_level(),
+            )
+        __rlf_deprecated_classes.add(name)
+
+        return new_class
+    else:
+        # raise AttributeError with original error message
+        raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

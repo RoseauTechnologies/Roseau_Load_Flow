@@ -72,12 +72,12 @@ class Bus(Element):
                 :class:`Quantity <roseau.load_flow.units.Q_>` of float.
 
             min_voltage_level:
-                An optional minimum voltage of the bus (%). It is not used in the load flow.
+                An optional minimal voltage of the bus (%). It is not used in the load flow.
                 It must be a percentage of the `nominal_voltage`. If provided, the nominal voltage becomes mandatory.
                 Either a float (unitless) or a :class:`Quantity <roseau.load_flow.units.Q_>` of float.
 
             max_voltage_level:
-                An optional maximum voltage of the bus (%). It is not used in the load flow.
+                An optional maximal voltage of the bus (%). It is not used in the load flow.
                 It must be a percentage of the `nominal_voltage`. If provided, the nominal voltage becomes mandatory.
                 Either a float (unitless) or a :class:`Quantity <roseau.load_flow.units.Q_>` of float.
         """
@@ -212,7 +212,7 @@ class Bus(Element):
 
     @property
     def min_voltage_level(self) -> Q_[float] | None:
-        """The minimum voltage level of the bus if it is set."""
+        """The minimal voltage level of the bus if it is set."""
         return None if self._min_voltage_level is None else Q_(self._min_voltage_level, "")
 
     @min_voltage_level.setter
@@ -242,7 +242,7 @@ class Bus(Element):
 
     @property
     def min_voltage(self) -> Q_[float] | None:
-        """The minimum voltage of the bus (V) if it is set."""
+        """The minimal voltage of the bus (V) if it is set."""
         return (
             None
             if self._min_voltage_level is None or self._nominal_voltage is None
@@ -251,7 +251,7 @@ class Bus(Element):
 
     @property
     def max_voltage_level(self) -> Q_[float] | None:
-        """The maximum voltage level of the bus if it is set."""
+        """The maximal voltage level of the bus if it is set."""
         return None if self._max_voltage_level is None else Q_(self._max_voltage_level, "")
 
     @max_voltage_level.setter
@@ -280,7 +280,7 @@ class Bus(Element):
 
     @property
     def max_voltage(self) -> Q_[float] | None:
-        """The maximum voltage of the bus (V) if it is set."""
+        """The maximal voltage of the bus (V) if it is set."""
         return (
             None
             if self._max_voltage_level is None or self._nominal_voltage is None

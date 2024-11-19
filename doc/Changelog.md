@@ -19,18 +19,24 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
-- {gh-pr}`283` **BREAKING CHANGE**: The `LineParameters` class changed:
+- {gh-pr}`283` **BREAKING CHANGE**: Several changes related to the `LineParameters`:
 
-  - The parameter `max_current` is renamed `max_currents` and now accepts an array of maximum currents (one per
-    conductor).
-  - The parameter `section` is renamed `sections` and now accepts an array of sections (one per conductor).
-  - The parameter `insulator_type` is renamed `insulators` and now accepts an array of insulators (one per conductor).
-  - The parameter `conductor_type` is renamed `materials` and now accepts an array of materials (one per conductor).
+  - The `LineParameters` class changed:
 
-  The enumerated classes `InsulatorType` and `ConductorType` are renamed `Insulator` and `Material`. Their old names
-  are deprecated and will be removed in a future release.
+    - The parameter `max_current` is renamed `max_currents` and now accepts an array of maximal currents (one per
+      conductor).
+    - The parameter `section` is renamed `sections` and now accepts an array of sections (one per conductor).
+    - The parameter `insulator_type` is renamed `insulators` and now accepts an array of insulators (one per conductor).
+    - The parameter `conductor_type` is renamed `materials` and now accepts an array of materials (one per conductor).
+    - The class method `from_geometry` now accepts several additional arguments related to the neutral
+      (`material_neutral`, `insulator_neutral`, `max_current_neutral`)
 
-  The insulator `UNKNOWN` is removed. Please use `None` if the insulator is unknown.
+  - The enumerated classes `InsulatorType` and `ConductorType` are renamed `Insulator` and `Material`. Their old
+    names are deprecated and will be removed in a future release.
+  - The insulator `UNKNOWN` is removed. Please use `None` if the insulator is unknown.
+  - The catalogue has now several additional columns related to the neutral parameters (resistance, reactance,
+    susceptance, material, insulator, maximal current). The `get_catalogue` and the `from_catalogue` methods have
+    been changed to accept filter on the columns (`material_neutral`, `insulator_neutral`, `section_neutral`)
 
 - {gh-pr}`282` **BREAKING CHANGE**: Rename the parameters of the class `TransformerParameters`: `uhv` becomes `up`
   (for **p**rimary side) and `ulv` becomes `us` (for **s**econdary side). In addition, `up` doesn't need to be

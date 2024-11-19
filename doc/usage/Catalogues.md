@@ -381,28 +381,28 @@ This catalogue can be retrieved in the form of a dataframe using:
 
 _Truncated output_
 
-| Name     | Line type   | Conductor material | Insulator | Cross-section (mm²) | Resistance (ohm/km) | Reactance (ohm/km) | Susceptance (S/km) | Maximal current (A) |
-| :------- | :---------- | :----------------- | :-------- | ------------------: | ------------------: | -----------------: | -----------------: | ------------------: |
-| T_AM_80  | twisted     | am                 |           |                  80 |            0.457596 |           0.105575 |         3.0507e-05 |                 203 |
-| U_CU_19  | underground | cu                 |           |                  19 |               1.009 |           0.133054 |        2.33629e-05 |                 138 |
-| O_AM_33  | overhead    | am                 |           |                  33 |             1.08577 |           0.375852 |          3.045e-06 |                 142 |
-| U_CU_150 | underground | cu                 |           |                 150 |               0.124 |          0.0960503 |        3.41234e-05 |                 420 |
-| O_AM_74  | overhead    | am                 |           |                  74 |            0.491898 |           0.350482 |         3.2757e-06 |                 232 |
-| T_AM_34  | twisted     | am                 |           |                  34 |             1.04719 |           0.121009 |        2.60354e-05 |                 118 |
-| T_AM_50  | twisted     | am                 |           |                  50 |            0.744842 |           0.113705 |        2.79758e-05 |                 146 |
-| O_AM_95  | overhead    | am                 |           |                  95 |             0.37184 |           0.342634 |         3.3543e-06 |                 266 |
-| U_CU_100 | underground | cu                 |           |                 100 |               0.185 |           0.102016 |        3.17647e-05 |                 339 |
-| T_CU_38  | twisted     | cu                 |           |                  38 |              0.4966 |           0.118845 |        2.65816e-05 |                 165 |
-| O_AM_100 | overhead    | am                 |           |                 100 |            0.356269 |           0.341022 |          3.371e-06 |                 276 |
-| U_AM_60  | underground | am                 |           |                  60 |            0.629804 |            0.11045 |        2.89372e-05 |                 194 |
-| T_AM_79  | twisted     | am                 |           |                  79 |            0.463313 |           0.105781 |        3.04371e-05 |                 201 |
-| T_CU_60  | twisted     | cu                 |           |                  60 |              0.3275 |            0.11045 |        2.89372e-05 |                 219 |
-| U_AM_240 | underground | am                 |           |                 240 |             0.14525 |          0.0899296 |        3.69374e-05 |                 428 |
-| O_AL_37  | overhead    | al                 |           |                  37 |            0.837733 |           0.372257 |         3.0757e-06 |                 152 |
-| U_AM_93  | underground | am                 |           |                  93 |            0.383274 |           0.103152 |        3.13521e-05 |                 249 |
-| O_AM_28  | overhead    | am                 |           |                  28 |             1.27866 |           0.381013 |         3.0019e-06 |                 130 |
-| T_AL_90  | twisted     | al                 |           |                  90 |              0.3446 |           0.103672 |        3.11668e-05 |                 219 |
-| O_AM_79  | overhead    | am                 |           |                  79 |            0.463313 |           0.348428 |         3.2959e-06 |                 240 |
+| Name    | Line type | Phase material | Neutral material | Phase insulator | Neutral insulator | Phase cross-section (mm²) | Neutral cross-section (mm²) | Phase resistance (ohm/km) | Neutral resistance (ohm/km) | Phase reactance (ohm/km) | Neutral reactance (ohm/km) | Phase susceptance (S/km) | Neutral susceptance (S/km) | Maximal phase current (A) | Maximal neutral current (A) |
+| :------ | :-------- | :------------- | :--------------- | :-------------- | :---------------- | ------------------------: | --------------------------: | ------------------------: | --------------------------: | -----------------------: | -------------------------: | -----------------------: | -------------------------: | ------------------------: | --------------------------: |
+| O_AL_12 | overhead  | al             | al               |                 |                   |                        12 |                          12 |                      2.69 |                        2.69 |                 0.407632 |                   0.407632 |                2.798e-06 |                  2.798e-06 |                        70 |                          70 |
+| O_AL_13 | overhead  | al             | al               |                 |                   |                        13 |                          13 |                     2.495 |                       2.495 |                 0.405118 |                   0.405118 |               2.8161e-06 |                 2.8161e-06 |                        76 |                          76 |
+| O_AL_14 | overhead  | al             | al               |                 |                   |                        14 |                          14 |                       2.3 |                         2.3 |                 0.402789 |                   0.402789 |               2.8331e-06 |                 2.8331e-06 |                        82 |                          82 |
+| O_AL_19 | overhead  | al             | al               |                 |                   |                        19 |                          19 |                   1.67333 |                     1.67333 |                 0.393195 |                   0.393195 |               2.9051e-06 |                 2.9051e-06 |                       103 |                         103 |
+| O_AL_20 | overhead  | al             | al               |                 |                   |                        20 |                          20 |                   1.59444 |                     1.59444 |                 0.391584 |                   0.391584 |               2.9175e-06 |                 2.9175e-06 |                       106 |                         106 |
+| O_AL_22 | overhead  | al             | al               |                 |                   |                        22 |                          22 |                   1.43667 |                     1.43667 |                  0.38859 |                    0.38859 |               2.9409e-06 |                 2.9409e-06 |                       113 |                         113 |
+| O_AL_25 | overhead  | al             | al               |                 |                   |                        25 |                          25 |                       1.2 |                         1.2 |                 0.384574 |                   0.384574 |                2.973e-06 |                  2.973e-06 |                       122 |                         122 |
+| O_AL_28 | overhead  | al             | al               |                 |                   |                        28 |                          28 |                    1.1004 |                      1.1004 |                 0.381013 |                   0.381013 |               3.0019e-06 |                 3.0019e-06 |                       130 |                         130 |
+| O_AL_29 | overhead  | al             | al               |                 |                   |                        29 |                          29 |                    1.0672 |                      1.0672 |                 0.379911 |                   0.379911 |                3.011e-06 |                  3.011e-06 |                       132 |                         132 |
+| O_AL_33 | overhead  | al             | al               |                 |                   |                        33 |                          33 |                    0.9344 |                      0.9344 |                 0.375852 |                   0.375852 |                3.045e-06 |                  3.045e-06 |                       142 |                         142 |
+| O_AL_34 | overhead  | al             | al               |                 |                   |                        34 |                          34 |                    0.9012 |                      0.9012 |                 0.374914 |                   0.374914 |               3.0529e-06 |                 3.0529e-06 |                       144 |                         144 |
+| O_AL_37 | overhead  | al             | al               |                 |                   |                        37 |                          37 |                  0.837733 |                    0.837733 |                 0.372257 |                   0.372257 |               3.0757e-06 |                 3.0757e-06 |                       152 |                         152 |
+| O_AL_38 | overhead  | al             | al               |                 |                   |                        38 |                          38 |                    0.8226 |                      0.8226 |                  0.37142 |                    0.37142 |               3.0829e-06 |                 3.0829e-06 |                       155 |                         155 |
+| O_AL_40 | overhead  | al             | al               |                 |                   |                        40 |                          40 |                  0.792333 |                    0.792333 |                 0.369808 |                   0.369808 |               3.0969e-06 |                 3.0969e-06 |                       160 |                         160 |
+| O_AL_43 | overhead  | al             | al               |                 |                   |                        43 |                          43 |                  0.746933 |                    0.746933 |                 0.367536 |                   0.367536 |               3.1169e-06 |                 3.1169e-06 |                       167 |                         167 |
+| O_AL_48 | overhead  | al             | al               |                 |                   |                        48 |                          48 |                  0.671267 |                    0.671267 |                  0.36408 |                    0.36408 |               3.1478e-06 |                 3.1478e-06 |                       180 |                         180 |
+| O_AL_50 | overhead  | al             | al               |                 |                   |                        50 |                          50 |                     0.641 |                       0.641 |                 0.362798 |                   0.362798 |               3.1595e-06 |                 3.1595e-06 |                       185 |                         185 |
+| O_AL_54 | overhead  | al             | al               |                 |                   |                        54 |                          54 |                    0.6014 |                      0.6014 |                  0.36038 |                    0.36038 |               3.1816e-06 |                 3.1816e-06 |                       193 |                         193 |
+| O_AL_55 | overhead  | al             | al               |                 |                   |                        55 |                          55 |                    0.5915 |                      0.5915 |                 0.359804 |                   0.359804 |                3.187e-06 |                  3.187e-06 |                       195 |                         195 |
+| O_AL_59 | overhead  | al             | al               |                 |                   |                        59 |                          59 |                    0.5519 |                      0.5519 |                 0.357598 |                   0.357598 |               3.2075e-06 |                 3.2075e-06 |                       203 |                         203 |
 
 The following data are available in this table:
 
@@ -410,16 +410,20 @@ The following data are available in this table:
   cross-section area, and optionally the insulator. It is in the form
   `{line_type}_{conductor_material}_{cross_section}_{insulator}`.
 - the **line type**. It can be `"OVERHEAD"`, `"UNDERGROUND"` or `"TWISTED"`.
-- the **conductor material**. See the {class}`~roseau.load_flow.Material` class.
-- the **insulator**. See the {class}`~roseau.load_flow.Insulator` class.
-- the **cross-section** of the conductor in mm².
+- the **conductor material** for the phases and for the neutral. See the {class}`~roseau.load_flow.Material` class.
+- the **insulator** for the phases and for the neutral. See the {class}`~roseau.load_flow.Insulator` class.
+- the **cross-section** of the phases and neutral conductors in mm².
 
 in addition to the following calculated physical parameters:
 
-- the _resistance_ of the line in ohm/km.
-- the _reactance_ of the line in ohm/km.
-- the _susceptance_ of the line in S/km.
-- the _maximal current_ of the line in A.
+- the _phase resistance_ of the line in ohm/km.
+- the _neutral resistance_ of the line in ohm/km.
+- the _phase reactance_ of the line in ohm/km.
+- the _neutral reactance_ of the line in ohm/km.
+- the _phase susceptance_ of the line in S/km.
+- the _neutral susceptance_ of the line in S/km.
+- the _phase maximal current_ of the line in A.
+- the _neutral maximal current_ of the line in A.
 
 The `get_catalogue` method accepts arguments (in bold above) that can be used to filter the returned
 table. The following command only returns line parameters made of Aluminum:
@@ -430,36 +434,36 @@ table. The following command only returns line parameters made of Aluminum:
 
 _Truncated output_
 
-| Name     | Line type   | Conductor material | Insulator | Cross-section (mm²) | Resistance (ohm/km) | Reactance (ohm/km) | Susceptance (S/km) | Maximal current (A) |
-| :------- | :---------- | :----------------- | :-------- | ------------------: | ------------------: | -----------------: | -----------------: | ------------------: |
-| U_AL_117 | underground | al                 |           |                 117 |             0.26104 |          0.0996298 |         3.2668e-05 |                 286 |
-| U_AL_33  | underground | al                 |           |                  33 |              0.9344 |           0.121598 |        2.58907e-05 |                 144 |
-| U_AL_69  | underground | al                 |           |                  69 |              0.4529 |           0.108041 |        2.96921e-05 |                 212 |
-| T_AL_228 | twisted     | al                 |           |                 228 |            0.133509 |          0.0905569 |        3.66279e-05 |                 395 |
-| U_AL_150 | underground | al                 |           |                 150 |               0.206 |          0.0960503 |        3.41234e-05 |                 325 |
-| T_AL_69  | twisted     | al                 |           |                  69 |              0.4529 |           0.108041 |        2.96921e-05 |                 185 |
-| O_AL_116 | overhead    | al                 |           |                 116 |             0.26372 |           0.336359 |           3.42e-06 |                 310 |
-| U_AL_50  | underground | al                 |           |                  50 |               0.641 |           0.113705 |        2.79758e-05 |                 175 |
-| U_AL_93  | underground | al                 |           |                  93 |             0.32984 |           0.103152 |        3.13521e-05 |                 249 |
-| T_AL_59  | twisted     | al                 |           |                  59 |              0.5519 |           0.110744 |        2.88474e-05 |                 164 |
+| Name    | Line type | Phase material | Neutral material | Phase insulator | Neutral insulator | Phase cross-section (mm²) | Neutral cross-section (mm²) | Phase resistance (ohm/km) | Neutral resistance (ohm/km) | Phase reactance (ohm/km) | Neutral reactance (ohm/km) | Phase susceptance (S/km) | Neutral susceptance (S/km) | Maximal phase current (A) | Maximal neutral current (A) |
+| :------ | :-------- | :------------- | :--------------- | :-------------- | :---------------- | ------------------------: | --------------------------: | ------------------------: | --------------------------: | -----------------------: | -------------------------: | -----------------------: | -------------------------: | ------------------------: | --------------------------: |
+| O_AL_12 | overhead  | al             | al               |                 |                   |                        12 |                          12 |                      2.69 |                        2.69 |                 0.407632 |                   0.407632 |                2.798e-06 |                  2.798e-06 |                        70 |                          70 |
+| O_AL_13 | overhead  | al             | al               |                 |                   |                        13 |                          13 |                     2.495 |                       2.495 |                 0.405118 |                   0.405118 |               2.8161e-06 |                 2.8161e-06 |                        76 |                          76 |
+| O_AL_14 | overhead  | al             | al               |                 |                   |                        14 |                          14 |                       2.3 |                         2.3 |                 0.402789 |                   0.402789 |               2.8331e-06 |                 2.8331e-06 |                        82 |                          82 |
+| O_AL_19 | overhead  | al             | al               |                 |                   |                        19 |                          19 |                   1.67333 |                     1.67333 |                 0.393195 |                   0.393195 |               2.9051e-06 |                 2.9051e-06 |                       103 |                         103 |
+| O_AL_20 | overhead  | al             | al               |                 |                   |                        20 |                          20 |                   1.59444 |                     1.59444 |                 0.391584 |                   0.391584 |               2.9175e-06 |                 2.9175e-06 |                       106 |                         106 |
+| O_AL_22 | overhead  | al             | al               |                 |                   |                        22 |                          22 |                   1.43667 |                     1.43667 |                  0.38859 |                    0.38859 |               2.9409e-06 |                 2.9409e-06 |                       113 |                         113 |
+| O_AL_25 | overhead  | al             | al               |                 |                   |                        25 |                          25 |                       1.2 |                         1.2 |                 0.384574 |                   0.384574 |                2.973e-06 |                  2.973e-06 |                       122 |                         122 |
+| O_AL_28 | overhead  | al             | al               |                 |                   |                        28 |                          28 |                    1.1004 |                      1.1004 |                 0.381013 |                   0.381013 |               3.0019e-06 |                 3.0019e-06 |                       130 |                         130 |
+| O_AL_29 | overhead  | al             | al               |                 |                   |                        29 |                          29 |                    1.0672 |                      1.0672 |                 0.379911 |                   0.379911 |                3.011e-06 |                  3.011e-06 |                       132 |                         132 |
+| O_AL_33 | overhead  | al             | al               |                 |                   |                        33 |                          33 |                    0.9344 |                      0.9344 |                 0.375852 |                   0.375852 |                3.045e-06 |                  3.045e-06 |                       142 |                         142 |
 
-or only lines with a cross-section of 240 mm² (using a regular expression)
+or only lines with a cross-section of 240 mm²
 
 ```pycon
 >>> rlf.LineParameters.get_catalogue(section=240)
 ```
 
-| Name     | Line type   | Conductor material | Insulator | Cross-section (mm²) | Resistance (ohm/km) | Reactance (ohm/km) | Susceptance (S/km) | Maximal current (A) |
-| :------- | :---------- | :----------------- | :-------- | ------------------: | ------------------: | -----------------: | -----------------: | ------------------: |
-| O_AL_240 | overhead    | al                 |           |                 240 |               0.125 |           0.313518 |         3.6823e-06 |                 490 |
-| O_CU_240 | overhead    | cu                 |           |                 240 |              0.0775 |           0.313518 |         3.6823e-06 |                 630 |
-| O_AM_240 | overhead    | am                 |           |                 240 |             0.14525 |           0.313518 |         3.6823e-06 |                 490 |
-| U_AL_240 | underground | al                 |           |                 240 |               0.125 |          0.0899296 |        3.69374e-05 |                 428 |
-| U_CU_240 | underground | cu                 |           |                 240 |              0.0775 |          0.0899296 |        3.69374e-05 |                 549 |
-| U_AM_240 | underground | am                 |           |                 240 |             0.14525 |          0.0899296 |        3.69374e-05 |                 428 |
-| T_AL_240 | twisted     | al                 |           |                 240 |               0.125 |          0.0899296 |        3.69374e-05 |                 409 |
-| T_CU_240 | twisted     | cu                 |           |                 240 |              0.0775 |          0.0899296 |        3.69374e-05 |                 538 |
-| T_AM_240 | twisted     | am                 |           |                 240 |             0.14525 |          0.0899296 |        3.69374e-05 |                 409 |
+| Name     | Line type   | Phase material | Neutral material | Phase insulator | Neutral insulator | Phase cross-section (mm²) | Neutral cross-section (mm²) | Phase resistance (ohm/km) | Neutral resistance (ohm/km) | Phase reactance (ohm/km) | Neutral reactance (ohm/km) | Phase susceptance (S/km) | Neutral susceptance (S/km) | Maximal phase current (A) | Maximal neutral current (A) |
+| :------- | :---------- | :------------- | :--------------- | :-------------- | :---------------- | ------------------------: | --------------------------: | ------------------------: | --------------------------: | -----------------------: | -------------------------: | -----------------------: | -------------------------: | ------------------------: | --------------------------: |
+| O_AL_240 | overhead    | al             | al               |                 |                   |                       240 |                         240 |                     0.125 |                       0.125 |                 0.313518 |                   0.313518 |               3.6823e-06 |                 3.6823e-06 |                       490 |                         490 |
+| O_CU_240 | overhead    | cu             | cu               |                 |                   |                       240 |                         240 |                    0.0775 |                      0.0775 |                 0.313518 |                   0.313518 |               3.6823e-06 |                 3.6823e-06 |                       630 |                         630 |
+| O_AM_240 | overhead    | am             | am               |                 |                   |                       240 |                         240 |                   0.14525 |                     0.14525 |                 0.313518 |                   0.313518 |               3.6823e-06 |                 3.6823e-06 |                       490 |                         490 |
+| U_AL_240 | underground | al             | al               |                 |                   |                       240 |                         240 |                     0.125 |                       0.125 |                0.0899296 |                  0.0899296 |              3.69374e-05 |                3.69374e-05 |                       428 |                         428 |
+| U_CU_240 | underground | cu             | cu               |                 |                   |                       240 |                         240 |                    0.0775 |                      0.0775 |                0.0899296 |                  0.0899296 |              3.69374e-05 |                3.69374e-05 |                       549 |                         549 |
+| U_AM_240 | underground | am             | am               |                 |                   |                       240 |                         240 |                   0.14525 |                     0.14525 |                0.0899296 |                  0.0899296 |              3.69374e-05 |                3.69374e-05 |                       428 |                         428 |
+| T_AL_240 | twisted     | al             | al               |                 |                   |                       240 |                         240 |                     0.125 |                       0.125 |                0.0899296 |                  0.0899296 |              3.69374e-05 |                3.69374e-05 |                       409 |                         409 |
+| T_CU_240 | twisted     | cu             | cu               |                 |                   |                       240 |                         240 |                    0.0775 |                      0.0775 |                0.0899296 |                  0.0899296 |              3.69374e-05 |                3.69374e-05 |                       538 |                         538 |
+| T_AM_240 | twisted     | am             | am               |                 |                   |                       240 |                         240 |                   0.14525 |                     0.14525 |                0.0899296 |                  0.0899296 |              3.69374e-05 |                3.69374e-05 |                       409 |                         409 |
 
 or only lines meeting both criteria
 
@@ -467,11 +471,11 @@ or only lines meeting both criteria
 >>> rlf.LineParameters.get_catalogue(material="al", section=240)
 ```
 
-| Name     | Line type   | Conductor material | Insulator | Cross-section (mm²) | Resistance (ohm/km) | Reactance (ohm/km) | Susceptance (S/km) | Maximal current (A) |
-| :------- | :---------- | :----------------- | :-------- | ------------------: | ------------------: | -----------------: | -----------------: | ------------------: |
-| O_AL_240 | overhead    | al                 |           |                 240 |               0.125 |           0.313518 |         3.6823e-06 |                 490 |
-| U_AL_240 | underground | al                 |           |                 240 |               0.125 |          0.0899296 |        3.69374e-05 |                 428 |
-| T_AL_240 | twisted     | al                 |           |                 240 |               0.125 |          0.0899296 |        3.69374e-05 |                 409 |
+| Name     | Line type   | Phase material | Neutral material | Phase insulator | Neutral insulator | Phase cross-section (mm²) | Neutral cross-section (mm²) | Phase resistance (ohm/km) | Neutral resistance (ohm/km) | Phase reactance (ohm/km) | Neutral reactance (ohm/km) | Phase susceptance (S/km) | Neutral susceptance (S/km) | Maximal phase current (A) | Maximal neutral current (A) |
+| :------- | :---------- | :------------- | :--------------- | :-------------- | :---------------- | ------------------------: | --------------------------: | ------------------------: | --------------------------: | -----------------------: | -------------------------: | -----------------------: | -------------------------: | ------------------------: | --------------------------: |
+| O_AL_240 | overhead    | al             | al               |                 |                   |                       240 |                         240 |                     0.125 |                       0.125 |                 0.313518 |                   0.313518 |               3.6823e-06 |                 3.6823e-06 |                       490 |                         490 |
+| U_AL_240 | underground | al             | al               |                 |                   |                       240 |                         240 |                     0.125 |                       0.125 |                0.0899296 |                  0.0899296 |              3.69374e-05 |                3.69374e-05 |                       428 |                         428 |
+| T_AL_240 | twisted     | al             | al               |                 |                   |                       240 |                         240 |                     0.125 |                       0.125 |                0.0899296 |                  0.0899296 |              3.69374e-05 |                3.69374e-05 |                       409 |                         409 |
 
 When filtering by the cross-section area, it is expected to provide a numeric value in mm² or to use a pint quantity.
 

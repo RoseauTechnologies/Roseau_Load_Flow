@@ -36,7 +36,7 @@ class RoseauLoadFlowExceptionCode(StrEnum):
     BAD_LINE_MODEL = auto()
     BAD_LINE_TYPE = auto()
     BAD_MATERIAL = auto()
-    BAD_INSULATOR_TYPE = auto()
+    BAD_INSULATOR = auto()
     BAD_Z_LINE_VALUE = auto()
     BAD_Y_SHUNT_VALUE = auto()
     BAD_TYPE_NAME_SYNTAX = auto()

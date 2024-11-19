@@ -22,9 +22,7 @@ from roseau.load_flow.utils.constants import (
 from roseau.load_flow.utils.mixins import CatalogueMixin, Identifiable, JsonMixin
 from roseau.load_flow.utils.types import (
     BranchTypeDtype,
-    ConductorType,
     Insulator,
-    InsulatorType,
     LineType,
     LoadTypeDtype,
     Material,
@@ -58,9 +56,6 @@ __all__ = [
     "LineType",
     "Material",
     "Insulator",
-    # Deprecated types
-    "InsulatorType",
-    "ConductorType",
     # Dtypes
     "PhaseDtype",
     "VoltagePhaseDtype",

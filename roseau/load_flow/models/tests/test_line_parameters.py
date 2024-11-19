@@ -112,11 +112,13 @@ def test_from_geometry():
     # line_data = {"dpp": 0, "dpn": 0, "dsh": 0.04}
 
     # Working example
-    z_line, y_shunt, line_type, material, insulator, sections = LineParameters._from_geometry(
+    z_line, y_shunt, line_type, materials, insulators, sections = LineParameters._from_geometry(
         "test",
         line_type=LineType.OVERHEAD,
         material=Material.AL,
+        material_neutral=None,
         insulator=Insulator.PEX,
+        insulator_neutral=None,
         section=150,
         section_neutral=70,
         height=10,
@@ -172,18 +174,39 @@ def test_from_geometry():
     npt.assert_allclose(y_shunt, y_shunt_expected, rtol=0.001)
 
     assert line_type == LineType.OVERHEAD
-    assert material == Material.AL
-    assert insulator == Insulator.PEX
+    assert np.array_equal(materials, np.array([Material.AL] * 4, dtype=np.object_))
+    assert np.array_equal(insulators, np.array([Insulator.PEX] * 4, dtype=np.object_))
     npt.assert_allclose(sections, [150, 150, 150, 70])
 
+    # The same but precise the neutral types
+    z_line, y_shunt, line_type, materials, insulators, sections = LineParameters._from_geometry(
+        "test",
+        line_type=LineType.OVERHEAD,
+        material=Material.AL,
+        material_neutral=Material.AL,
+        insulator=Insulator.PEX,
+        insulator_neutral=Insulator.PEX,
+        section=150,
+        section_neutral=70,
+        height=10,
+        external_diameter=0.04,
+    )
+    npt.assert_allclose(z_line, nplin.inv(y_line_expected), rtol=0.04, atol=0.02)
+    npt.assert_allclose(y_shunt, y_shunt_expected, rtol=0.001)
+    assert line_type == LineType.OVERHEAD
+    assert np.array_equal(materials, np.array([Material.AL] * 4, dtype=np.object_))
+    assert np.array_equal(insulators, np.array([Insulator.PEX] * 4, dtype=np.object_))
+    npt.assert_allclose(sections, [150, 150, 150, 70])
     # line_data = {"dpp": 0, "dpn": 0, "dsh": 0.04}
 
     # Working example (also with string types)
-    z_line, y_shunt, line_type, material, insulator, sections = LineParameters._from_geometry(
+    z_line, y_shunt, line_type, materials, insulators, sections = LineParameters._from_geometry(
         id="test",
         line_type="UNDERGROUND",
         material="AL",
+        material_neutral="AL",
         insulator="PVC",
+        insulator_neutral="PVC",
         section=150,
         section_neutral=70,
         height=-1.5,
@@ -238,11 +261,55 @@ def test_from_geometry():
 
     assert isinstance(line_type, LineType)
     assert line_type == LineType.UNDERGROUND
-    assert isinstance(material, Material)
-    assert material == Material.AL
-    assert isinstance(insulator, Insulator)
-    assert insulator == Insulator.PVC
+    assert np.array_equal(materials, np.array([Material.AL] * 4, dtype=np.object_))
+    assert np.array_equal(insulators, np.array([Insulator.PVC] * 4, dtype=np.object_))
     npt.assert_allclose(sections, [150, 150, 150, 70])
+
+    # Mix two lines to check that the neutral is different
+    z_line_1, y_shunt_1, line_type, materials, insulators, sections = LineParameters._from_geometry(
+        "test",
+        line_type=LineType.OVERHEAD,
+        material=Material.AL,
+        material_neutral=Material.AL,
+        insulator=Insulator.PEX,
+        insulator_neutral=Insulator.PEX,
+        section=150,
+        section_neutral=70,
+        height=10,
+        external_diameter=0.04,
+    )
+    z_line_2, y_shunt_2, line_type, materials, insulators, sections = LineParameters._from_geometry(
+        "test",
+        line_type=LineType.OVERHEAD,
+        material=Material.AM,
+        material_neutral=Material.AM,
+        insulator=Insulator.XLPE,
+        insulator_neutral=Insulator.XLPE,
+        section=150,
+        section_neutral=70,
+        height=10,
+        external_diameter=0.04,
+    )
+
+    z_line, y_shunt, line_type, materials, insulators, sections = LineParameters._from_geometry(
+        "test",
+        line_type=LineType.OVERHEAD,
+        material=Material.AL,
+        material_neutral=Material.AM,
+        insulator=Insulator.PEX,
+        insulator_neutral=Insulator.XLPE,
+        section=150,
+        section_neutral=70,
+        height=10,
+        external_diameter=0.04,
+    )
+    z_line_expected = z_line_1.copy()
+    z_line_expected[3, 3] = z_line_2[3, 3]
+    y_shunt_expected = y_shunt_1.copy()
+    y_shunt_expected[3, 3] = y_shunt_2[3, 3]
+
+    npt.assert_allclose(z_line, z_line_expected)
+    npt.assert_allclose(y_shunt, y_shunt_expected)
 
 
 def test_sym():
@@ -393,14 +460,21 @@ def test_catalogue_data():
 
     for row in catalogue_data.itertuples():
         assert re.match(r"^[UOT]_[A-Z]+_\d+(?:_\w+)?$", row.name)
-        assert isinstance(row.r, float)
-        assert isinstance(row.x, float)
-        assert isinstance(row.b, float)
+        assert isinstance(row.resistance, float)
+        assert isinstance(row.resistance_neutral, float)
+        assert isinstance(row.reactance, float)
+        assert isinstance(row.reactance_neutral, float)
+        assert isinstance(row.susceptance, float)
+        assert isinstance(row.susceptance_neutral, float)
         assert isinstance(row.maximal_current, int | float)
+        assert isinstance(row.maximal_current_neutral, int | float)
         LineType(row.type)  # Check that the type is valid
         Material(row.material)  # Check that the material is valid
+        Material(row.material_neutral)  # Check that the material is valid
         pd.isna(row.insulator) or Insulator(row.insulator)  # Check that the insulator is valid
+        pd.isna(row.insulator_neutral) or Insulator(row.insulator_neutral)  # Check that the insulator is valid
         assert isinstance(row.section, int | float)
+        assert isinstance(row.section_neutral, int | float)
 
 
 def test_from_catalogue():
@@ -485,32 +559,36 @@ def test_get_catalogue():
     # Get the entire catalogue
     catalogue = LineParameters.get_catalogue()
     assert isinstance(catalogue, pd.DataFrame)
-    assert catalogue.shape == (355, 8)
+    assert catalogue.shape == (355, 15)
 
     # Filter on a single attribute
     for field_name, value, expected_size in (
         ("name", r"U_AL_150.*", 1),
         ("line_type", "OvErHeAd", 122),
         ("material", "Cu", 121),
+        ("material_neutral", "Cu", 121),
         # ("insulator", Insulator.SE, 240),
         ("section", 150, 9),
+        ("section_neutral", 150, 9),
         ("section", Q_(1.5, "cm²"), 9),
+        ("section_neutral", Q_(1.5, "cm²"), 9),
     ):
         filtered_catalogue = LineParameters.get_catalogue(**{field_name: value})
-        assert filtered_catalogue.shape == (expected_size, 8)
+        assert filtered_catalogue.shape == (expected_size, 15)
 
     # Filter on two attributes
     for field_name, value, expected_size in (
         ("name", r"U_AL_150.*", 1),
         ("line_type", "OvErHeAd", 122),
         ("section", 150, 9),
+        ("section_neutral", 150, 9),
     ):
         filtered_catalogue = LineParameters.get_catalogue(**{field_name: value})
-        assert filtered_catalogue.shape == (expected_size, 8)
+        assert filtered_catalogue.shape == (expected_size, 15)
 
     # No results
     empty_catalogue = LineParameters.get_catalogue(section=15000)
-    assert empty_catalogue.shape == (0, 8)
+    assert empty_catalogue.shape == (0, 15)
 
 
 def test_insulators():
@@ -552,7 +630,7 @@ def test_insulators():
     with pytest.raises(RoseauLoadFlowException) as e:
         lp.insulators = ["invalid", Insulator.XLPE, "XLPE"]
     assert e.value.msg == "'invalid' cannot be converted into a Insulator."
-    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_INSULATOR_TYPE
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_INSULATOR
 
     with pytest.raises(RoseauLoadFlowException) as e:
         lp.insulators = [Insulator.XLPE, Insulator.HDPE]
@@ -692,17 +770,17 @@ def test_max_currents():
     # Errors
     with pytest.raises(RoseauLoadFlowException) as e:
         lp.max_currents = [1, 2]
-    assert e.value.msg == "Incorrect number of maximum currents: 2 instead of 3"
+    assert e.value.msg == "Incorrect number of maximal currents: 2 instead of 3"
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_MAX_CURRENTS_SIZE
 
     with pytest.raises(RoseauLoadFlowException) as e:
         lp.max_currents = -2
-    assert e.value.msg == "Maximum currents must be non-negative: -2 A was provided."
+    assert e.value.msg == "Maximal currents must be non-negative: -2 A was provided."
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_MAX_CURRENTS_VALUE
 
     with pytest.raises(RoseauLoadFlowException) as e:
         lp.max_currents = [1, np.nan, -2]
-    assert e.value.msg == "Maximum currents must be non-negative: [1.0, nan, -2.0] A was provided."
+    assert e.value.msg == "Maximal currents must be non-negative: [1.0, nan, -2.0] A was provided."
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_MAX_CURRENTS_VALUE
 
 

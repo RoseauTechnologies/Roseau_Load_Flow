@@ -90,6 +90,7 @@ FloatArrayLike1D: TypeAlias = (
 )
 FloatScalarOrArrayLike1D: TypeAlias = FloatArrayLike1D | QtyOrMag[Float]
 
+
 __all__ = [
     "Id",
     "JsonDict",
