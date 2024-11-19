@@ -672,7 +672,9 @@ def v2_to_v3_converter(data: JsonDict) -> JsonDict:
             line_param_data["sections"] = [section] * size
         if conductor_type := line_param_data.pop("conductor_types", None) is not None:
             line_param_data["materials"] = [conductor_type] * size
-        if (insulator_type := line_param_data.pop("insulator_types", None) is not None) and insulator_type != "unknown":
+        if (
+            insulator_type := line_param_data.pop("insulator_types", None) is not None
+        ) and insulator_type.lower() != "unknown":
             line_param_data["insulators"] = [insulator_type] * size
         lines_params.append(line_param_data)
 

@@ -22,7 +22,7 @@ MATERIALS: Final[dict[int | str, Material]] = {
 INSULATORS: Final[dict[int, Insulator]] = {
     0: Insulator.PVC,  # PVC
     1: Insulator.XLPE,  # XLPE
-    2: None,  # Mineral # (aka MI, MICC, Pyro) not supported by RLF
+    2: Insulator.NONE,  # Mineral # (aka MI, MICC, Pyro) not supported by RLF
     3: Insulator.IP,  # Paper
     4: Insulator.EPR,  # EPR
 }

@@ -145,6 +145,9 @@ class Material(StrEnum):
 class Insulator(StrEnum):
     """The type of the insulator for a wire."""
 
+    NONE = auto()
+    """No insulation."""
+
     # General insulators (IEC 60287)
     HDPE = auto()
     """High-Density PolyEthylene (HDPE) insulation."""

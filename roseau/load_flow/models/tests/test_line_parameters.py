@@ -178,6 +178,54 @@ def test_from_geometry():
     assert np.array_equal(insulators, np.array([Insulator.PEX] * 4, dtype=np.object_))
     npt.assert_allclose(sections, [150, 150, 150, 70])
 
+    # Test None insulator
+    lp = LineParameters.from_geometry(
+        id="test",
+        line_type=LineType.OVERHEAD,
+        material="CU",
+        insulator=None,
+        section=50,
+        height=10,
+        external_diameter=0.04,
+    )
+    # The default insulator for overhead lines
+    assert np.array_equal(lp.insulators, np.array([Insulator.NONE] * 4, dtype=np.object_))
+    np.testing.assert_allclose(lp.y_shunt.m.real, 0.0)
+    lp = LineParameters.from_geometry(
+        id="test",
+        line_type=LineType.OVERHEAD,
+        material="CU",
+        insulator=Insulator.NONE,
+        insulator_neutral=None,
+        section=50,
+        height=10,
+        external_diameter=0.04,
+    )
+    assert np.array_equal(lp.insulators, np.array([Insulator.NONE] * 4, dtype=np.object_))
+    np.testing.assert_allclose(lp.y_shunt.m.real, 0.0)
+
+    lp = LineParameters.from_geometry(
+        id="test",
+        line_type="underground",
+        material=Material.CU,
+        insulator=Insulator.NONE,
+        section=50,
+        height=-0.5,
+        external_diameter=0.04,
+    )
+    np.testing.assert_allclose(
+        lp.y_shunt.m.imag * 4,  # because InsulatorType.IP has 4x epsilon_r
+        LineParameters.from_geometry(
+            id="test",
+            line_type=lp.line_type,
+            material=lp.materials[0],
+            insulator=Insulator.IP,  # 4x epsilon_r of InsulatorType.NONE
+            section=lp.sections[0],
+            height=-0.5,
+            external_diameter=0.04,
+        ).y_shunt.m.imag,
+    )
+
     # The same but precise the neutral types
     z_line, y_shunt, line_type, materials, insulators, sections = LineParameters._from_geometry(
         "test",
@@ -612,21 +660,30 @@ def test_insulators():
     assert len(lp.insulators) == 3
     assert np.array_equal(lp.insulators, np.array([Insulator.EPR] * 3))
 
+    # Special case for Insulator.NONE
+    lp.insulators = Insulator.NONE.name
+    assert len(lp.insulators) == 3
+    assert np.array_equal(lp.insulators, np.array([Insulator.NONE] * 3))
+
     # Arrays
     lp.insulators = [Insulator.EPR, Insulator.XLPE, Insulator.LDPE]
     assert len(lp.insulators) == 3
     assert np.array_equal(lp.insulators, np.array([Insulator.EPR, Insulator.XLPE, Insulator.LDPE]))
 
-    # Arrays with nan
-    lp.insulators = [pd.NA, np.nan, Insulator.LDPE]
+    lp.insulators = [Insulator.NONE, Insulator.NONE, Insulator.NONE]
     assert len(lp.insulators) == 3
-    assert np.array_equal(lp.insulators, np.array([None, None, Insulator.LDPE]))
+    assert np.array_equal(lp.insulators, np.array([Insulator.NONE, Insulator.NONE, Insulator.NONE]))
 
     # Arrays with all none
     lp.insulators = [pd.NA, np.nan, None]
     assert lp.insulators is None
 
     # Errors
+    with pytest.raises(RoseauLoadFlowException) as e:
+        lp.insulators = [pd.NA, np.nan, Insulator.LDPE]
+    assert e.value.msg == "Insulators cannot contain null values: [<NA>, nan, ldpe] was provided."
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_INSULATORS_VALUE
+
     with pytest.raises(RoseauLoadFlowException) as e:
         lp.insulators = ["invalid", Insulator.XLPE, "XLPE"]
     assert e.value.msg == "'invalid' cannot be converted into a Insulator."

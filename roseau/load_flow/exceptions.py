@@ -47,6 +47,7 @@ class RoseauLoadFlowExceptionCode(StrEnum):
     BAD_SECTIONS_SIZE = auto()
     BAD_MATERIALS_VALUE = auto()
     BAD_MATERIALS_SIZE = auto()
+    BAD_INSULATORS_VALUE = auto()
     BAD_INSULATORS_SIZE = auto()
 
     # Transformer

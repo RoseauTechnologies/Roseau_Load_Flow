@@ -114,26 +114,22 @@ __all__ = [
     "ZeroSequence",
 ]
 
-global __rlf_deprecated_classes
-__rlf_deprecated_classes = set()
-
 
 def __getattr__(name: str) -> Any:
     deprecated_classes = {"ConductorType": Material, "InsulatorType": Insulator}
 
-    if name in deprecated_classes:
+    if name in deprecated_classes and name not in globals():
+        import warnings
+
         from roseau.load_flow.utils._exceptions import find_stack_level
 
         new_class = deprecated_classes[name]
-        if name not in __rlf_deprecated_classes:
-            import warnings
-
-            warnings.warn(
-                f"The {name} class is deprecated. Use {new_class.__name__} instead.",
-                stacklevel=find_stack_level(),
-            )
-        __rlf_deprecated_classes.add(name)
-
+        warnings.warn(
+            f"The `{name}` class is deprecated. Use `{new_class.__name__}` instead.",
+            category=DeprecationWarning,
+            stacklevel=find_stack_level(),
+        )
+        globals()[name] = new_class
         return new_class
     else:
         # raise AttributeError with original error message

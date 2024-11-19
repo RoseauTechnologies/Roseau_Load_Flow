@@ -69,7 +69,7 @@ DELTA_P: dict[Material, Q_[float]] = {
 # for material in Material:
 #     print(material, delta_p(RHO[material], MU_R[material]).m_as("mm"))
 
-TAN_D: dict[Insulator | None, Q_[float]] = {
+TAN_D: dict[Insulator, Q_[float]] = {
     Insulator.PVC: Q_(1000e-4),
     Insulator.HDPE: Q_(10e-4),
     Insulator.MDPE: Q_(10e-4),
@@ -77,12 +77,12 @@ TAN_D: dict[Insulator | None, Q_[float]] = {
     Insulator.XLPE: Q_(40e-4),
     Insulator.EPR: Q_(200e-4),
     Insulator.IP: Q_(100e-4),
-    None: Q_(0),
+    Insulator.NONE: Q_(0),
 }
 """Loss angles of common insulator materials according to the IEC 60287 standard."""
 # IEC 60287-1-1 Table 3. We only include the MV values.
 
-EPSILON_R: dict[Insulator | None, Q_[float]] = {
+EPSILON_R: dict[Insulator, Q_[float]] = {
     Insulator.PVC: Q_(8.0),
     Insulator.HDPE: Q_(2.3),
     Insulator.MDPE: Q_(2.3),
@@ -90,7 +90,7 @@ EPSILON_R: dict[Insulator | None, Q_[float]] = {
     Insulator.XLPE: Q_(2.5),
     Insulator.EPR: Q_(3.0),
     Insulator.IP: Q_(4.0),
-    None: Q_(1.0),
+    Insulator.NONE: Q_(1.0),
 }
 """Relative permittivity of common insulator materials according to the IEC 60287 standard."""
 # IEC 60287-1-1 Table 3. We only include the MV values.

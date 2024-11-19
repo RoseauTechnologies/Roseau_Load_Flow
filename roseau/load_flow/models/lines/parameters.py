@@ -49,13 +49,13 @@ _DEFAULT_MATERIAL = {
 }
 
 _DEFAULT_INSULATOR = {
-    LineType.OVERHEAD: None,  # Not used for overhead lines
+    LineType.OVERHEAD: Insulator.NONE,  # Not used for overhead lines
     LineType.TWISTED: Insulator.XLPE,
     LineType.UNDERGROUND: Insulator.PVC,
 }
 
 MaterialArray: TypeAlias = NDArray[Material]
-InsulatorArray: TypeAlias = NDArray[Insulator | None]
+InsulatorArray: TypeAlias = NDArray[Insulator]
 
 
 class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
@@ -314,10 +314,13 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         elif np.all(value_isna):
             values = None
         else:
-            values = np.array(
-                [None if isna else Insulator(v) for isna, v in zip(value_isna, value, strict=True)],
-                dtype=np.object_,
-            )
+            if np.any(value_isna):
+                msg = f"Insulators cannot contain null values: [{', '.join(f'{x}' for x in value)}] was provided."
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_INSULATORS_VALUE)
+
+            # Build the numpy array fails with pd.NA inside
+            values = np.array([Insulator(v) for v in value], dtype=np.object_)
             if len(value) != self._size:
                 msg = f"Incorrect number of insulators: {len(value)} instead of {self._size}"
                 logger.error(msg)
@@ -589,10 +592,13 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
 
             insulator:
                 Type of insulator. If ``None``, ``XLPE`` is used for twisted lines and ``PVC`` for
-                underground lines. See also :class:`~roseau.load_flow.Insulator`.
+                underground lines. See also :class:`~roseau.load_flow.Insulator`. Please provide
+                :attr:`~roseau.load_flow.Insulator.NONE` for cable without insulator.
 
             insulator_neutral:
-                Type of insulator. If ``None``, it will be the same as the insulator of the other phases.
+                Type of insulator. If ``None``, it will be the same as the insulator of the other phases. See also
+                :class:`~roseau.load_flow.Insulator`. Please provide :attr:`~roseau.load_flow.Insulator.NONE` for
+                cable without insulator.
 
             section:
                 Cross-section surface area of the phases (mm²).
@@ -676,10 +682,14 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
                 as the material of the other phases.
 
             insulator:
-                Type of insulator for the phases.
+                Type of insulator. If ``None``, ``XLPE`` is used for twisted lines and ``PVC`` for
+                underground lines. See also :class:`~roseau.load_flow.Insulator`. Please provide
+                :attr:`~roseau.load_flow.Insulator.NONE` for cable without insulator.
 
             insulator_neutral:
-                Type of insulator for the neutral. If ``None`` it will be the same as the insulator of the other phases.
+                Type of insulator. If ``None``, it will be the same as the insulator of the other phases. See also
+                :class:`~roseau.load_flow.Insulator`. Please provide :attr:`~roseau.load_flow.Insulator.NONE` for
+                cable without insulator.
 
             section:
                 Surface of the phases (mm²).
@@ -1136,7 +1146,8 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             insulation:
                 PwF parameter `imiso` (Insulation Material). The material used for the conductor's
                 insulation. It can be one of `'PVC'` (`0`), `'XLPE'` (`1`), `'Mineral'` (`2`),
-                `'Paper'` (`3`) or `'EPR'` (`4`).
+                `'Paper'` (`3`) or `'EPR'` (`4`). If ``None`` is provided, the insulation is not filled in the
+                resulting instance.
 
             section:
                 PwF parameter `qurs` (Nominal Cross-Section). The nominal cross-sectional area of
@@ -1191,7 +1202,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         elif imiso_norm == "XLPE" or imiso_norm == "1":
             insulator = Insulator.XLPE
         elif imiso_norm == "MINERAL" or imiso_norm == "2":
-            insulator = None  # not supported yet
+            insulator = Insulator.NONE  # not supported yet
         elif imiso_norm == "PAPER" or imiso_norm == "3":
             insulator = Insulator.IP
         elif imiso_norm == "EPR" or imiso_norm == "4":
@@ -1507,10 +1518,12 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
                 :class:`~roseau.load_flow.Material`.
 
             insulator:
-                The insulator of the phases. See also :class:`~roseau.load_flow.Insulator`.
+                The insulator of the phases. See also :class:`~roseau.load_flow.Insulator`. Please provide
+                :attr:`~roseau.load_flow.Insulator.NONE` for cable without insulator.
 
             insulator_neutral:
-                The insulator of the neutral. See also :class:`~roseau.load_flow.Insulator`.
+                The insulator of the neutral. See also :class:`~roseau.load_flow.Insulator`. Please provide
+                :attr:`~roseau.load_flow.Insulator.NONE` for cable without insulator.
 
             section:
                 The cross-section surface area of the phases (mm²).
@@ -1633,10 +1646,12 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
                 :class:`~roseau.load_flow.Material`.
 
             insulator:
-                The insulator of the phases. See also :class:`~roseau.load_flow.Insulator`.
+                The insulator of the phases. See also :class:`~roseau.load_flow.Insulator`. Please provide
+                :attr:`~roseau.load_flow.Insulator.NONE` for cable without insulator.
 
             insulator_neutral:
-                The insulator of the neutral. See also :class:`~roseau.load_flow.Insulator`.
+                The insulator of the neutral. See also :class:`~roseau.load_flow.Insulator`. Please provide
+                :attr:`~roseau.load_flow.Insulator.NONE` for cable without insulator.
 
             section:
                 The cross-section surface area of the phases (mm²).
@@ -1722,7 +1737,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         if self._materials is not None:
             res["materials"] = [x.name for x in self._materials]
         if self._insulators is not None:
-            res["insulators"] = [None if x is None else x.name for x in self._insulators]
+            res["insulators"] = [x.name for x in self._insulators]
         if self._sections is not None:
             res["sections"] = self._sections.tolist()
         return res

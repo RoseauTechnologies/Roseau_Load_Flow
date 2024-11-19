@@ -34,6 +34,7 @@ og:description: See what's new in the latest release of Roseau Load Flow !
   - The enumerated classes `InsulatorType` and `ConductorType` are renamed `Insulator` and `Material`. Their old
     names are deprecated and will be removed in a future release.
   - The insulator `UNKNOWN` is removed. Please use `None` if the insulator is unknown.
+  - The insulator `NONE` is added. It must be used to describe conductors without insulator.
   - The catalogue has now several additional columns related to the neutral parameters (resistance, reactance,
     susceptance, material, insulator, maximal current). The `get_catalogue` and the `from_catalogue` methods have
     been changed to accept filter on the columns (`material_neutral`, `insulator_neutral`, `section_neutral`)
