@@ -579,11 +579,11 @@
           [0.0, 0.0, 3.40441e-5]
         ]
       ],
-      "max_current": 323,
+      "max_currents": [323, 323, 323],
       "line_type": "UNDERGROUND",
-      "conductor_type": "AM",
-      "insulator_type": "UNKNOWN",
-      "section": 148
+      "materials": ["AM", "AM", "AM"],
+
+      "sections": [148.0, 148.0, 148.0]
     },
     {
       "id": "lp1",
@@ -601,11 +601,11 @@
           [0.0, 0.0, 0.0, 0.1066400577]
         ]
       ],
-      "max_current": 195,
+      "max_currents": [195, 195, 195, 195],
       "line_type": "TWISTED",
-      "conductor_type": "AL",
-      "insulator_type": "UNKNOWN",
-      "section": 75.0
+      "materials": ["AL", "AL", "AL", "AL"],
+
+      "sections": [75.0, 75.0, 75.0, 75.0]
     }
   ],
   "transformers_params": [

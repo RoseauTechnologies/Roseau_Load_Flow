@@ -10,7 +10,7 @@ from roseau.load_flow.models.branches import AbstractBranch
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.grounds import Ground
 from roseau.load_flow.models.lines.parameters import LineParameters
-from roseau.load_flow.typing import ComplexArray, Id, JsonDict
+from roseau.load_flow.typing import ComplexArray, FloatArray, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow_engine.cy_engine import CyShuntLine, CySimplifiedLine
 
@@ -221,11 +221,11 @@ class Line(AbstractBranch):
         return self._parameters._y_shunt * self._length
 
     @property
-    def max_current(self) -> Q_[float] | None:
-        """The maximum current loading of the line (in A)."""
-        # Do not add a setter. The user must know that if they change the max_current, it changes
+    def max_currents(self) -> Q_[FloatArray] | None:
+        """The maximal currents loading of the line (in A)."""
+        # Do not add a setter. The user must know that if they change the max_currents, it changes
         # for all lines that share the parameters. It is better to set it on the parameters.
-        return self._parameters.max_current
+        return self._parameters.max_currents
 
     @property
     def with_shunt(self) -> bool:
@@ -305,16 +305,16 @@ class Line(AbstractBranch):
 
     @property
     def res_violated(self) -> bool | None:
-        """Whether the line current exceeds the maximum current (loading > 100%).
+        """Whether the line current exceeds the maximal current (loading > 100%).
 
-        Returns ``None`` if the maximum current is not set.
+        Returns ``None`` if the maximal currents are not set.
         """
-        i_max = self._parameters._max_current
+        i_max = self._parameters._max_currents
         if i_max is None:
             return None
         currents1, currents2 = self._res_currents_getter(warning=True)
         # True if any phase is overloaded
-        return float(np.max([abs(currents1), abs(currents2)])) > i_max
+        return bool((np.maximum(abs(currents1), abs(currents2)) > i_max).any())
 
     #
     # Json Mixin interface

@@ -122,7 +122,7 @@ line and a constant power load. This network is a low voltage network (three-pha
 ... load = rlf.PowerLoad(id="load", bus=load_bus, powers=[10e3 + 0j, 10e3, 10e3])  # In VA
 
 >>> # Add a 2 km line between the source bus and the load bus with R = 0.1 Ohm/km and X = 0
-... lp = rlf.LineParameters("lp", z_line=(0.1 + 0.0j) * np.eye(4), max_current=i_max)
+... lp = rlf.LineParameters("lp", z_line=(0.1 + 0.0j) * np.eye(4), max_currents=i_max)
 ... line = rlf.Line(id="line", bus1=source_bus, bus2=load_bus, parameters=lp, length=2.0)
 ```
 
@@ -468,7 +468,7 @@ Or, if you prefer degrees:
 ## Analyzing the results and detecting violations
 
 In the example network above, `min_voltage_level`, `max_voltage_level` and `nominal_voltage` arguments
-were passed to the `Bus` constructor and `max_current` was passed to the `LineParameters` constructor.
+were passed to the `Bus` constructor and `max_currents` was passed to the `LineParameters` constructor.
 These arguments define the limits of the network that can be used to check if the network is in a valid
 state or not. Note that these limits have no effect on the load flow calculation.
 
@@ -481,7 +481,7 @@ not violated.
 False
 ```
 
-Similarly, if you set `max_current` on a line, the `res_violated` property will tell you if the
+Similarly, if you set `max_currents` on a line, the `res_violated` property will tell you if the
 current loading of the line in any phase exceeds the limit. Here, the current limit is not violated.
 
 ```pycon

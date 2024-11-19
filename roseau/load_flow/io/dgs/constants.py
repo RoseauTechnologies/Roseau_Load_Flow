@@ -1,30 +1,30 @@
 from typing import Final, Literal, TypeAlias
 
-from roseau.load_flow.utils import ConductorType, InsulatorType, LineType
+from roseau.load_flow.utils import Insulator, LineType, Material
 
 # Lines
 LINE_TYPES: Final[dict[int, LineType]] = {
     0: LineType.UNDERGROUND,  # inAir=Ground
     1: LineType.OVERHEAD,  # inAir=Air
 }
-CONDUCTOR_TYPES: Final[dict[int | str, ConductorType]] = {
-    0: ConductorType.AL,
-    "Al": ConductorType.AL,
-    1: ConductorType.CU,
-    "Cu": ConductorType.CU,
-    2: ConductorType.AM,
-    "Ad": ConductorType.AM,
-    3: ConductorType.AA,
-    "As": ConductorType.AA,
-    4: ConductorType.LA,
-    "Ds": ConductorType.LA,
+MATERIALS: Final[dict[int | str, Material]] = {
+    0: Material.AL,
+    "Al": Material.AL,
+    1: Material.CU,
+    "Cu": Material.CU,
+    2: Material.AM,
+    "Ad": Material.AM,
+    3: Material.AA,
+    "As": Material.AA,
+    4: Material.LA,
+    "Ds": Material.LA,
 }
-INSULATOR_TYPES: Final[dict[int, InsulatorType]] = {
-    0: InsulatorType.PVC,  # PVC
-    1: InsulatorType.XLPE,  # XLPE
-    2: InsulatorType.UNKNOWN,  # Mineral # (aka MI, MICC, Pyro) not supported by RLF
-    3: InsulatorType.IP,  # Paper
-    4: InsulatorType.EPR,  # EPR
+INSULATORS: Final[dict[int, Insulator]] = {
+    0: Insulator.PVC,  # PVC
+    1: Insulator.XLPE,  # XLPE
+    2: Insulator.NONE,  # Mineral # (aka MI, MICC, Pyro) not supported by RLF
+    3: Insulator.IP,  # Paper
+    4: Insulator.EPR,  # EPR
 }
 
 # Loads

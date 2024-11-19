@@ -457,8 +457,8 @@ The formulas of the previous sections are used to get the impedance and shunt ad
 ... line_parameters = rlf.LineParameters.from_geometry(
 ...     "twisted_example",
 ...     line_type=rlf.LineType.TWISTED,
-...     conductor_type=rlf.ConductorType.AL,
-...     insulator_type=rlf.InsulatorType.PEX,
+...     material=rlf.Material.AL,
+...     insulator=rlf.Insulator.PEX,
 ...     section=150,  # mm²
 ...     section_neutral=70,  # mm²
 ...     height=10,  # m
@@ -539,8 +539,8 @@ Please note that for underground lines, the provided height $h$ must be negative
 ... line_parameters = rlf.LineParameters.from_geometry(
 ...     "underground_example",
 ...     line_type=rlf.LineType.UNDERGROUND,
-...     conductor_type=rlf.ConductorType.AL,
-...     insulator_type=rlf.InsulatorType.PVC,
+...     material=rlf.Material.AL,
+...     insulator=rlf.Insulator.PVC,
 ...     section=150,  # mm²
 ...     section_neutral=70,  # mm²
 ...     height=-1.5,  # m # Underground so negative!

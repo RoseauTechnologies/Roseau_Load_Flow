@@ -52,6 +52,7 @@ _DTYPES: Final = {
     "shunt_losses": complex,
     "series_current": complex,
     "max_current": float,
+    "max_currents": object,
     "voltage_level": float,
     "min_voltage_level": float,
     "max_voltage_level": float,
@@ -91,7 +92,7 @@ class LineType(StrEnum):
         return self.name[0]
 
 
-class ConductorType(StrEnum):
+class Material(StrEnum):
     """The type of the material of the conductor."""
 
     CU = auto()
@@ -126,26 +127,26 @@ class ConductorType(StrEnum):
     """Aluminum Alloy Conductor Steel Reinforced (AACSR) -- Fr = Almélec-Acier."""
 
     @classmethod
-    def _missing_(cls, value: object) -> "ConductorType | None":
+    def _missing_(cls, value: object) -> "Material":
         if isinstance(value, str):
             try:
                 return cls[value.upper()]
             except KeyError:
                 pass
-        msg = f"{value!r} cannot be converted into a ConductorType."
+        msg = f"{value!r} cannot be converted into a Material."
         logger.error(msg)
-        raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.BAD_CONDUCTOR_TYPE)
+        raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.BAD_MATERIAL)
 
     def code(self) -> str:
         """A code that can be used in conductor type names."""
         return self.name
 
 
-class InsulatorType(StrEnum):
+class Insulator(StrEnum):
     """The type of the insulator for a wire."""
 
-    UNKNOWN = auto()
-    """The material of the insulator is unknown."""
+    NONE = auto()
+    """No insulation."""
 
     # General insulators (IEC 60287)
     HDPE = auto()
@@ -170,18 +171,15 @@ class InsulatorType(StrEnum):
     """Alias -- Medium-Density PolyEthylene (MDPE) insulation."""
 
     @classmethod
-    def _missing_(cls, value: object) -> "InsulatorType | None":
+    def _missing_(cls, value: object) -> "Insulator":
         if isinstance(value, str):
-            string = value.upper()
-            if string in {"", "NAN"}:
-                return cls.UNKNOWN
             try:
-                return cls[string]
+                return cls[value.upper()]
             except KeyError:
                 pass
-        msg = f"{value!r} cannot be converted into a InsulatorType."
+        msg = f"{value!r} cannot be converted into a Insulator."
         logger.error(msg)
-        raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.BAD_INSULATOR_TYPE)
+        raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.BAD_INSULATOR)
 
     def code(self) -> str:
         """A code that can be used in insulator type names."""
