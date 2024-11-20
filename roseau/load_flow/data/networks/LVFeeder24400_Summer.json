@@ -73,6 +73,7 @@
       "bus2": "LVBus113443",
       "length": 0.15570295096319542,
       "params_id": "T_AL_70",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -95,6 +96,7 @@
       "bus2": "LVBus113444",
       "length": 0.08656266979024978,
       "params_id": "T_AL_70",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -202,10 +204,9 @@
           [-9.334047516122607e-6, -9.334047516122602e-6, -9.334294062818125e-6, 8.357992380628483e-5]
         ]
       ],
-      "max_currents": [187, 187, 187, 187],
+      "ampacities": [187, 187, 187, 187],
       "line_type": "TWISTED",
       "materials": ["AL", "AL", "AL", "AL"],
-
       "sections": [70.0, 70.0, 70.0, 70.0]
     }
   ],

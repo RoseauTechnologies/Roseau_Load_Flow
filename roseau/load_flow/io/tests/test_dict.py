@@ -97,7 +97,7 @@ def test_to_dict():
 
     # Dict content
     line2.parameters = lp1
-    lp1.max_currents = 1000
+    lp1.ampacities = 1000
     res = en.to_dict(include_results=False)
     res_bus0, res_bus1 = res["buses"]
     res_line0, res_line1 = res["lines"]
@@ -110,7 +110,7 @@ def test_to_dict():
     assert np.isclose(res_bus1["nominal_voltage"], 400.0)
     assert np.isclose(res_bus1["max_voltage_level"], 1.1)
     lp_dict = res["lines_params"][0]
-    assert np.allclose(lp_dict["max_currents"], 1000)
+    assert np.allclose(lp_dict["ampacities"], 1000)
     assert lp_dict["line_type"] == "UNDERGROUND"
     assert lp_dict["materials"] == ["AA"] * 4
     assert lp_dict["insulators"] == ["PVC"] * 4

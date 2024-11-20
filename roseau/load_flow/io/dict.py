@@ -658,7 +658,7 @@ def v2_to_v3_converter(data: JsonDict) -> JsonDict:
             transformer_param_data["us"] = us
         transformers_params.append(transformer_param_data)
 
-    # Rename `maximal_current` in `maximal_currents` and uses array
+    # Rename `maximal_current` in `ampacities` and uses array
     # Rename `section` in `sections` and uses array
     # Rename `insulator_type` in `insulators` and uses array. `Unknown` is deleted
     # Rename `material` in `materials` and uses array
@@ -667,7 +667,7 @@ def v2_to_v3_converter(data: JsonDict) -> JsonDict:
     for line_param_data in old_lines_params:
         size = len(line_param_data["z_line"][0])
         if maximal_current := line_param_data.pop("maximal_current", None) is not None:
-            line_param_data["maximal_currents"] = [maximal_current] * size
+            line_param_data["ampacities"] = [maximal_current] * size
         if section := line_param_data.pop("section", None) is not None:
             line_param_data["sections"] = [section] * size
         if conductor_type := line_param_data.pop("conductor_types", None) is not None:
@@ -678,13 +678,20 @@ def v2_to_v3_converter(data: JsonDict) -> JsonDict:
             line_param_data["insulators"] = [insulator_type] * size
         lines_params.append(line_param_data)
 
+    # Add max_loading to lines
+    old_lines = data.get("lines", [])
+    lines = []
+    for line_data in old_lines:
+        line_data["max_loading"] = 1
+        lines.append(line_data)
+
     results = {
         "version": 3,
         "is_multiphase": data["is_multiphase"],  # Unchanged
         "grounds": data["grounds"],  # Unchanged
         "potential_refs": data["potential_refs"],  # Unchanged
         "buses": buses,  # <---- Changed
-        "lines": data["lines"],  # Unchanged
+        "lines": lines,  # <---- Changed
         "switches": data["switches"],  # Unchanged
         "transformers": data["transformers"],  # Unchanged
         "loads": data["loads"],  # Unchanged

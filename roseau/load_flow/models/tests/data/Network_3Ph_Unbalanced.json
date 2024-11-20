@@ -70,6 +70,7 @@
       "bus2": "bus2",
       "length": 10,
       "params_id": "lp",
+      "max_loading": 1,
       "results": {
         "currents1": [
           [100.20549935720612, -0.3761232800346832],

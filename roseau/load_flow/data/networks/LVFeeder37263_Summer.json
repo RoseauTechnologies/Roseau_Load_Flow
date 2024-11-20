@@ -63,6 +63,7 @@
       "bus2": "LVBus173891",
       "length": 0.06318652813386802,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -163,10 +164,9 @@
           [-0.00018518179657458456, 4.85783749893247e-5, -0.00018518179657458597, 0.0009990656421805131]
         ]
       ],
-      "max_currents": [325, 325, 325, 325],
+      "ampacities": [325, 325, 325, 325],
       "line_type": "UNDERGROUND",
       "materials": ["AL", "AL", "AL", "AL"],
-
       "sections": [150.0, 150.0, 150.0, 150.0]
     }
   ],

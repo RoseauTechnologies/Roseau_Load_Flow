@@ -1,4 +1,4 @@
-name,type,material,material_neutral,insulator,insulator_neutral,section,section_neutral,resistance,resistance_neutral,reactance,reactance_neutral,susceptance,susceptance_neutral,maximal_current,maximal_current_neutral
+name,type,material,material_neutral,insulator,insulator_neutral,section,section_neutral,resistance,resistance_neutral,reactance,reactance_neutral,susceptance,susceptance_neutral,ampacity,ampacity_neutral
 O_AL_12,overhead,al,al,,,12,12,2.69,2.69,0.4076321335,0.4076321335,0.000002798,0.000002798,70,70
 O_AL_13,overhead,al,al,,,13,13,2.495,2.495,0.4051175176,0.4051175176,0.0000028161,0.0000028161,76,76
 O_AL_14,overhead,al,al,,,14,14,2.3,2.3,0.402789347,0.402789347,0.0000028331,0.0000028331,82,82

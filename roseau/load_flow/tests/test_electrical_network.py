@@ -486,7 +486,7 @@ def test_frame(small_network: ElectricalNetwork):
         "bus2_id",
         "parameters_id",
         "length",
-        "max_currents",
+        "max_loading",
         "geometry",
     ]
 
@@ -546,8 +546,9 @@ def test_buses_voltages(small_network_with_results):
     assert isinstance(small_network_with_results, ElectricalNetwork)
     en = small_network_with_results
     # Multiply by sqrt(3) because a neutral exists in the small network
-    en.buses["bus0"].nominal_voltage = 20_000 * np.sqrt(3)
-    en.buses["bus1"].nominal_voltage = 20_000 * np.sqrt(3)
+    nominal_voltage = 20_000 * np.sqrt(3)
+    en.buses["bus0"].nominal_voltage = nominal_voltage
+    en.buses["bus1"].nominal_voltage = nominal_voltage
     en.buses["bus0"].max_voltage_level = 1.05
     en.buses["bus1"].min_voltage_level = 1.0
 
@@ -556,55 +557,61 @@ def test_buses_voltages(small_network_with_results):
             "bus_id": "bus0",
             "phase": "an",
             "voltage": 20000.0 + 0.0j,
+            "violated": False,
             "voltage_level": 1.0,
             "min_voltage_level": np.nan,
             "max_voltage_level": 1.05,
-            "violated": False,
+            "nominal_voltage": nominal_voltage,
         },
         {
             "bus_id": "bus0",
             "phase": "bn",
             "voltage": -10000.0 + -17320.508076j,
+            "violated": False,
             "voltage_level": 1.0000000000134766,
             "min_voltage_level": np.nan,
             "max_voltage_level": 1.05,
-            "violated": False,
+            "nominal_voltage": nominal_voltage,
         },
         {
             "bus_id": "bus0",
             "phase": "cn",
             "voltage": -10000.0 + 17320.508076j,
+            "violated": False,
             "voltage_level": 1.0000000000134766,
             "min_voltage_level": np.nan,
             "max_voltage_level": 1.05,
-            "violated": False,
+            "nominal_voltage": nominal_voltage,
         },
         {
             "bus_id": "bus1",
             "phase": "an",
             "voltage": 19999.949999875 + 0.0j,
+            "violated": True,
             "voltage_level": 0.99999749999375,
             "min_voltage_level": 1.0,
             "max_voltage_level": np.nan,
-            "violated": True,
+            "nominal_voltage": nominal_voltage,
         },
         {
             "bus_id": "bus1",
             "phase": "bn",
             "voltage": -9999.9749999375 + -17320.464774621556j,
+            "violated": True,
             "voltage_level": 0.9999975000072265,
             "min_voltage_level": 1.0,
             "max_voltage_level": np.nan,
-            "violated": True,
+            "nominal_voltage": nominal_voltage,
         },
         {
             "bus_id": "bus1",
             "phase": "cn",
             "voltage": -9999.9749999375 + 17320.464774621556j,
+            "violated": True,
             "voltage_level": 0.9999975000072265,
             "min_voltage_level": 1.0,
             "max_voltage_level": np.nan,
-            "violated": True,
+            "nominal_voltage": nominal_voltage,
         },
     ]
 
@@ -626,14 +633,15 @@ def test_buses_voltages(small_network_with_results):
     )
 
     assert isinstance(buses_voltages, pd.DataFrame)
-    assert buses_voltages.shape == (6, 5)
+    assert buses_voltages.shape == (6, 6)
     assert buses_voltages.index.names == ["bus_id", "phase"]
     assert list(buses_voltages.columns) == [
         "voltage",
+        "violated",
         "voltage_level",
         "min_voltage_level",
         "max_voltage_level",
-        "violated",
+        "nominal_voltage",
     ]
     assert_frame_equal(buses_voltages, expected_buses_voltages, check_exact=False)
 
@@ -701,19 +709,21 @@ def test_single_phase_network(single_phase_network: ElectricalNetwork):
                     "bus_id": "bus0",
                     "phase": "bn",
                     "voltage": (19999.94999975 + 0j) - (-0.050000250001249996 + 0j),
+                    "violated": None,
                     "voltage_level": np.nan,
                     "min_voltage_level": np.nan,
                     "max_voltage_level": np.nan,
-                    "violated": None,
+                    "nominal_voltage": np.nan,
                 },
                 {
                     "bus_id": "bus1",
                     "phase": "bn",
                     "voltage": (19999.899999499998 + 0j) - (0j),
+                    "violated": None,
                     "voltage_level": np.nan,
                     "min_voltage_level": np.nan,
                     "max_voltage_level": np.nan,
-                    "violated": None,
+                    "nominal_voltage": np.nan,
                 },
             ]
         )
@@ -725,6 +735,7 @@ def test_single_phase_network(single_phase_network: ElectricalNetwork):
                 "min_voltage_level": float,
                 "max_voltage_level": float,
                 "violated": pd.BooleanDtype(),
+                "nominal_voltage": float,
             }
         )
         .set_index(["bus_id", "phase"]),
@@ -782,8 +793,10 @@ def test_single_phase_network(single_phase_network: ElectricalNetwork):
                         + (19999.899999499998 + 0j) * (-0.005000025000117603 - 0j).conjugate()
                     ),
                     "series_current": 0.005000025000117603 + 0j,
-                    "max_current": np.nan,
                     "violated": None,
+                    "loading": np.nan,
+                    "max_loading": 1.0,
+                    "ampacity": np.nan,
                 },
                 {
                     "line_id": "line",
@@ -799,8 +812,10 @@ def test_single_phase_network(single_phase_network: ElectricalNetwork):
                         + (0j) * (0.005000025000125 - 0j).conjugate()
                     ),
                     "series_current": -0.005000025000125 + 0j,
-                    "max_current": np.nan,
                     "violated": None,
+                    "loading": np.nan,
+                    "max_loading": 1.0,
+                    "ampacity": np.nan,
                 },
             ]
         )
@@ -815,8 +830,10 @@ def test_single_phase_network(single_phase_network: ElectricalNetwork):
                 "potential2": complex,
                 "series_losses": complex,
                 "series_current": complex,
-                "max_current": float,
                 "violated": pd.BooleanDtype(),
+                "loading": float,
+                "max_loading": float,
+                "ampacity": float,
             }
         )
         .set_index(["line_id", "phase"]),
@@ -992,7 +1009,7 @@ def test_network_results_warning(small_network, small_network_with_results, recw
     for line in en.lines.values():
         for result_field_name in result_field_names_dict["lines"]:
             if result_field_name == "res_violated":
-                continue  # No max_currents
+                continue  # No ampacities
             if not line.with_shunt and "shunt" in result_field_name:
                 continue  # No results if no shunt
             with pytest.raises(RoseauLoadFlowException) as e:
@@ -1044,7 +1061,7 @@ def test_network_results_warning(small_network, small_network_with_results, recw
     for line in en.lines.values():
         for result_field_name in result_field_names_dict["lines"]:
             if result_field_name == "res_violated":
-                continue  # No max_currents
+                continue  # No ampacities
             if not line.with_shunt and "shunt" in result_field_name:
                 continue  # No results if no shunt
             _ = getattr(line, result_field_name)
@@ -1085,7 +1102,7 @@ def test_network_results_warning(small_network, small_network_with_results, recw
     for line in en.lines.values():
         for result_field_name in result_field_names_dict["lines"]:
             if result_field_name == "res_violated":
-                continue  # No max_currents
+                continue  # No ampacities
             if not line.with_shunt and "shunt" in result_field_name:
                 continue  # No results if no shunt
             with check_result_warning(expected_message=expected_message):
@@ -1154,7 +1171,8 @@ def test_network_results_error(small_network):
 def test_load_flow_results_frames(small_network_with_results):
     en = small_network_with_results
     # Multiply by sqrt(3) because a neutral exists in the small network
-    en.buses["bus0"].nominal_voltage = 20_000 * np.sqrt(3)
+    nominal_voltage = 20_000 * np.sqrt(3)
+    en.buses["bus0"].nominal_voltage = nominal_voltage
     en.buses["bus0"].min_voltage_level = 1.05
 
     # Buses results
@@ -1184,55 +1202,61 @@ def test_load_flow_results_frames(small_network_with_results):
                     "bus_id": "bus0",
                     "phase": "an",
                     "voltage": (20000 + 2.89120e-18j) - (-1.34764e-12 + 2.89120e-18j),
+                    "violated": True,
                     "voltage_level": 1.0,
                     "min_voltage_level": 1.05,
                     "max_voltage_level": np.nan,
-                    "violated": True,
+                    "nominal_voltage": nominal_voltage,
                 },
                 {
                     "bus_id": "bus0",
                     "phase": "bn",
                     "voltage": (-10000.00000 - 17320.50807j) - (-1.34764e-12 + 2.89120e-18j),
+                    "violated": True,
                     "voltage_level": 1.0000000000134766,
                     "min_voltage_level": 1.05,
                     "max_voltage_level": np.nan,
-                    "violated": True,
+                    "nominal_voltage": nominal_voltage,
                 },
                 {
                     "bus_id": "bus0",
                     "phase": "cn",
                     "voltage": (-10000.00000 + 17320.50807j) - (-1.34764e-12 + 2.89120e-18j),
+                    "violated": True,
                     "voltage_level": 1.0000000000134766,
                     "min_voltage_level": 1.05,
                     "max_voltage_level": np.nan,
-                    "violated": True,
+                    "nominal_voltage": nominal_voltage,
                 },
                 {
                     "bus_id": "bus1",
                     "phase": "an",
                     "voltage": (19999.94999 + 2.89119e-18j) - (0j),
+                    "violated": None,
                     "voltage_level": np.nan,
                     "min_voltage_level": np.nan,
                     "max_voltage_level": np.nan,
-                    "violated": None,
+                    "nominal_voltage": np.nan,
                 },
                 {
                     "bus_id": "bus1",
                     "phase": "bn",
                     "voltage": (-9999.97499 - 17320.46477j) - (0j),
+                    "violated": None,
                     "voltage_level": np.nan,
                     "min_voltage_level": np.nan,
                     "max_voltage_level": np.nan,
-                    "violated": None,
+                    "nominal_voltage": np.nan,
                 },
                 {
                     "bus_id": "bus1",
                     "phase": "cn",
                     "voltage": (-9999.97499 + 17320.46477j) - (0j),
+                    "violated": None,
                     "voltage_level": np.nan,
                     "min_voltage_level": np.nan,
                     "max_voltage_level": np.nan,
-                    "violated": None,
+                    "nominal_voltage": np.nan,
                 },
             ]
         )
@@ -1241,10 +1265,11 @@ def test_load_flow_results_frames(small_network_with_results):
                 "bus_id": object,
                 "phase": VoltagePhaseDtype,
                 "voltage": complex,
+                "violated": pd.BooleanDtype(),
                 "voltage_level": float,
                 "min_voltage_level": float,
                 "max_voltage_level": float,
-                "violated": pd.BooleanDtype(),
+                "nominal_voltage": float,
             }
         )
         .set_index(["bus_id", "phase"])
@@ -1302,8 +1327,10 @@ def test_load_flow_results_frames(small_network_with_results):
                 + (19999.94999 + 2.89119e-18j) * (-0.00500 - 7.22799e-25j).conjugate()
             ),
             "series_current": 0.00500 + 7.22799e-25j,
-            "max_current": np.nan,
             "violated": None,
+            "loading": np.nan,
+            "max_loading": 1.0,
+            "ampacity": np.nan,
         },
         {
             "line_id": "line",
@@ -1319,8 +1346,10 @@ def test_load_flow_results_frames(small_network_with_results):
                 + (-9999.97499 - 17320.46477j) * (0.00250 + 0.00433j).conjugate()
             ),
             "series_current": -0.00250 - 0.00433j,
-            "max_current": np.nan,
             "violated": None,
+            "loading": np.nan,
+            "max_loading": 1.0,
+            "ampacity": np.nan,
         },
         {
             "line_id": "line",
@@ -1336,8 +1365,10 @@ def test_load_flow_results_frames(small_network_with_results):
                 + (-9999.97499 + 17320.46477j) * (0.00250 - 0.00433j).conjugate()
             ),
             "series_current": -0.00250 + 0.00433j,
-            "max_current": np.nan,
             "violated": None,
+            "loading": np.nan,
+            "max_loading": 1.0,
+            "ampacity": np.nan,
         },
         {
             "line_id": "line",
@@ -1353,8 +1384,10 @@ def test_load_flow_results_frames(small_network_with_results):
                 + (0j) * (1.34764e-13 - 2.89120e-19j).conjugate()
             ),
             "series_current": -1.34764e-13 + 2.89120e-19j,
-            "max_current": np.nan,
             "violated": None,
+            "loading": np.nan,
+            "max_loading": 1.0,
+            "ampacity": np.nan,
         },
     ]
     expected_res_lines_dtypes = {
@@ -1368,8 +1401,10 @@ def test_load_flow_results_frames(small_network_with_results):
         "potential2": complex,
         "series_losses": complex,
         "series_current": complex,
-        "max_current": float,
         "violated": pd.BooleanDtype(),
+        "loading": float,
+        "max_loading": float,
+        "ampacity": float,
     }
     expected_res_lines = (
         pd.DataFrame.from_records(expected_res_lines_records)
@@ -1379,10 +1414,17 @@ def test_load_flow_results_frames(small_network_with_results):
     assert_frame_equal(en.res_lines, expected_res_lines, rtol=1e-4, atol=1e-5)
 
     # Lines with violated max current
-    en.lines["line"].parameters.max_currents = 0.002
-    expected_res_lines_violated_records = [
-        d | {"max_current": 0.002, "violated": d["phase"] != "n"} for d in expected_res_lines_records
-    ]
+    en.lines["line"].parameters.ampacities = 0.002
+    expected_res_lines_violated_records = []
+    for d in expected_res_lines_records:
+        if d["phase"] == "n":
+            expected_res_lines_violated_records.append(
+                d | {"ampacity": 0.002, "violated": False, "loading": 6.738240607860843e-11}
+            )
+        else:
+            expected_res_lines_violated_records.append(
+                d | {"ampacity": 0.002, "violated": True, "loading": 2.500006250011211}
+            )
     expected_res_violated_lines = (
         pd.DataFrame.from_records(expected_res_lines_violated_records)
         .astype(expected_res_lines_dtypes)
@@ -1862,13 +1904,15 @@ def test_to_graph(small_network: ElectricalNetwork):
 
     for line in small_network.lines.values():
         edge_data = g.edges[line.bus1.id, line.bus2.id]
-        max_currents = line.max_currents.magnitude if line.max_currents is not None else None
+        ampacities = line.ampacities.magnitude if line.ampacities is not None else None
         assert edge_data == {
             "id": line.id,
             "type": "line",
             "phases": line.phases,
+            "length": line.length.m,
             "parameters_id": line.parameters.id,
-            "max_currents": max_currents,
+            "ampacities": ampacities,
+            "max_loading": line._max_loading,
             "geom": line.geometry,
         }
 

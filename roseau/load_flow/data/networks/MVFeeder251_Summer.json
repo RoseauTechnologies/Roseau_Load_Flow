@@ -1273,6 +1273,7 @@
       "bus2": "MVBus02317",
       "length": 0.028233461470556193,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -1293,6 +1294,7 @@
       "bus2": "MVLV11101",
       "length": 0.04649766143979308,
       "params_id": "O_AM_54",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -1311,6 +1313,7 @@
       "bus2": "MVBus17209",
       "length": 0.005203781737639504,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -1331,6 +1334,7 @@
       "bus2": "MVLV00382",
       "length": 0.24257532653511676,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -1356,6 +1360,7 @@
       "bus2": "MVBus17207",
       "length": 0.0018152069112323077,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -1374,6 +1379,7 @@
       "bus2": "MVBus17206",
       "length": 0.0063636643007188185,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -1393,6 +1399,7 @@
       "bus2": "MVLV09251",
       "length": 0.11367425331406272,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -1417,6 +1424,7 @@
       "bus2": "MVLV05023",
       "length": 0.012101505956263555,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -1436,6 +1444,7 @@
       "bus2": "MVBus15062",
       "length": 0.06688605844940153,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -1456,6 +1465,7 @@
       "bus2": "MVBus15061",
       "length": 0.21550751613824057,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -1506,6 +1516,7 @@
       "bus2": "MVLV14464",
       "length": 0.007619096156059685,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -1526,6 +1537,7 @@
       "bus2": "MVBus14650",
       "length": 0.08604247104581982,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -1553,6 +1565,7 @@
       "bus2": "MVLV15279",
       "length": 0.6005951041406843,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -1588,6 +1601,7 @@
       "bus2": "MVLV18774",
       "length": 0.15671172166017394,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -1608,6 +1622,7 @@
       "bus2": "MVBus10227",
       "length": 0.1880618514463853,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -1627,6 +1642,7 @@
       "bus2": "MVLV12002",
       "length": 0.1550339128722013,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -1650,6 +1666,7 @@
       "bus2": "MVBus10226",
       "length": 0.10457758935540795,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -1668,6 +1685,7 @@
       "bus2": "MVLV13673",
       "length": 0.16464985621011782,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -1691,6 +1709,7 @@
       "bus2": "MVBus10224",
       "length": 0.288510435240511,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -1718,6 +1737,7 @@
       "bus2": "MVLV14088",
       "length": 0.008478251107719109,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -1737,6 +1757,7 @@
       "bus2": "MVLV00901",
       "length": 0.5926417980284098,
       "params_id": "O_AM_54",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -1755,6 +1776,7 @@
       "bus2": "MVLV15540",
       "length": 0.07639433946605165,
       "params_id": "O_AM_54",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -1773,6 +1795,7 @@
       "bus2": "MVLV00558",
       "length": 0.756896951853965,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -1796,6 +1819,7 @@
       "bus2": "MVBus14682",
       "length": 0.11641707040119277,
       "params_id": "O_AM_54",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -1815,6 +1839,7 @@
       "bus2": "MVBus14681",
       "length": 0.21417143761172072,
       "params_id": "O_AM_54",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -1833,6 +1858,7 @@
       "bus2": "MVBus14679",
       "length": 0.09663886198510684,
       "params_id": "O_AM_54",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -1851,6 +1877,7 @@
       "bus2": "MVLV13843",
       "length": 0.4580472166707575,
       "params_id": "O_AM_54",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -1869,6 +1896,7 @@
       "bus2": "MVBus14678",
       "length": 0.09694397235096873,
       "params_id": "O_AM_54",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -1887,6 +1915,7 @@
       "bus2": "MVBus14677",
       "length": 0.07906888946602389,
       "params_id": "O_AM_54",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -1905,6 +1934,7 @@
       "bus2": "MVBus14676",
       "length": 0.3669595001259236,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -1931,6 +1961,7 @@
       "bus2": "MVBus14674",
       "length": 0.1802597631984163,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -1954,6 +1985,7 @@
       "bus2": "MVLV04212",
       "length": 0.01332263067374734,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -1973,6 +2005,7 @@
       "bus2": "MVLV10753",
       "length": 0.07057903647257757,
       "params_id": "O_AM_54",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -1991,6 +2024,7 @@
       "bus2": "MVLV16209",
       "length": 0.05439303367334706,
       "params_id": "O_AM_54",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -2009,6 +2043,7 @@
       "bus2": "MVBus23668",
       "length": 0.0012805970531591306,
       "params_id": "O_AM_54",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -2027,6 +2062,7 @@
       "bus2": "MVLV16630",
       "length": 0.37081031837191913,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -2056,6 +2092,7 @@
       "bus2": "MVBus23669",
       "length": 0.10986828457659217,
       "params_id": "O_AM_54",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -2075,6 +2112,7 @@
       "bus2": "MVLV00557",
       "length": 0.74567234079204,
       "params_id": "O_AM_54",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -2094,6 +2132,7 @@
       "bus2": "MVLV00556",
       "length": 0.4177356164704489,
       "params_id": "O_AM_54",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -2115,6 +2154,7 @@
       "bus2": "MVLV16207",
       "length": 0.32029104368682343,
       "params_id": "O_AM_54",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -2135,6 +2175,7 @@
       "bus2": "MVLV03243",
       "length": 0.37523568002671814,
       "params_id": "O_AM_54",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -2154,6 +2195,7 @@
       "bus2": "MVBus23660",
       "length": 0.3065729223546083,
       "params_id": "O_AM_54",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -2172,6 +2214,7 @@
       "bus2": "MVBus23665",
       "length": 0.6395473100197062,
       "params_id": "O_AM_54",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -2190,6 +2233,7 @@
       "bus2": "MVBus23664",
       "length": 0.1119210277032705,
       "params_id": "O_AM_54",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -2209,6 +2253,7 @@
       "bus2": "MVLV10338",
       "length": 0.2740050631911384,
       "params_id": "O_AM_54",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -2227,6 +2272,7 @@
       "bus2": "MVBus23663",
       "length": 0.4489506342270319,
       "params_id": "O_AM_54",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -2246,6 +2292,7 @@
       "bus2": "MVBus23659",
       "length": 0.9018397404516275,
       "params_id": "O_AM_54",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -2269,6 +2316,7 @@
       "bus2": "MVBus23658",
       "length": 0.3637049063758763,
       "params_id": "O_AM_54",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -2288,6 +2336,7 @@
       "bus2": "MVLV18938",
       "length": 0.14761877610763896,
       "params_id": "O_AM_54",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -2306,6 +2355,7 @@
       "bus2": "MVBus23656",
       "length": 0.07833119469092044,
       "params_id": "O_AM_54",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -2324,6 +2374,7 @@
       "bus2": "MVBus23654",
       "length": 0.43182383669511015,
       "params_id": "O_AM_54",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -2344,6 +2395,7 @@
       "bus2": "MVBus23653",
       "length": 0.4732570571516864,
       "params_id": "O_AM_54",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -2364,6 +2416,7 @@
       "bus2": "MVBus23651",
       "length": 0.33190085523301377,
       "params_id": "O_AM_54",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -2383,6 +2436,7 @@
       "bus2": "MVLV13841",
       "length": 0.330837173677165,
       "params_id": "O_AM_54",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -2401,6 +2455,7 @@
       "bus2": "MVBus23650",
       "length": 0.8033045776755825,
       "params_id": "O_AM_54",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -2427,6 +2482,7 @@
       "bus2": "MVBus23649",
       "length": 0.06097076611982121,
       "params_id": "O_AM_54",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -2445,6 +2501,7 @@
       "bus2": "MVBus23647",
       "length": 0.508202408525906,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -2478,6 +2535,7 @@
       "bus2": "MVLV16575",
       "length": 0.10310654010388842,
       "params_id": "O_AM_54",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -2496,6 +2554,7 @@
       "bus2": "MVLV10158",
       "length": 0.19986212906546252,
       "params_id": "O_AM_54",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -2514,6 +2573,7 @@
       "bus2": "MVLV13649",
       "length": 0.15532711411755915,
       "params_id": "O_AM_54",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -2533,6 +2593,7 @@
       "bus2": "MVLV00375",
       "length": 0.271437589653534,
       "params_id": "O_AM_54",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -2552,6 +2613,7 @@
       "bus2": "MVLV00373",
       "length": 0.08379643799941182,
       "params_id": "O_AM_54",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -2570,6 +2632,7 @@
       "bus2": "MVLV13646",
       "length": 0.3924871147476781,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -2598,6 +2661,7 @@
       "bus2": "MVBus34424",
       "length": 0.4129712656640833,
       "params_id": "O_AM_54",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -2617,6 +2681,7 @@
       "bus2": "MVBus34423",
       "length": 0.07003190855528035,
       "params_id": "O_AM_54",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -2635,6 +2700,7 @@
       "bus2": "MVLV10159",
       "length": 0.18945571956595136,
       "params_id": "O_AM_54",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -2655,6 +2721,7 @@
       "bus2": "MVBus34421",
       "length": 0.20172561841725256,
       "params_id": "O_AM_54",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -2673,6 +2740,7 @@
       "bus2": "MVBus34420",
       "length": 0.28441854620385315,
       "params_id": "O_AM_54",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -2691,6 +2759,7 @@
       "bus2": "MVBus34419",
       "length": 0.1872351576860677,
       "params_id": "O_AM_54",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -2709,6 +2778,7 @@
       "bus2": "MVLV10164",
       "length": 0.08307445089227075,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -2728,6 +2798,7 @@
       "bus2": "MVBus34430",
       "length": 0.34138710270072825,
       "params_id": "O_AM_54",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -2747,6 +2818,7 @@
       "bus2": "MVBus34429",
       "length": 0.4316157313277553,
       "params_id": "O_AM_54",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -2767,6 +2839,7 @@
       "bus2": "MVBus34418",
       "length": 0.280354646989838,
       "params_id": "O_AM_54",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -2785,6 +2858,7 @@
       "bus2": "MVBus34416",
       "length": 0.46227121366192264,
       "params_id": "O_AM_54",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -2804,6 +2878,7 @@
       "bus2": "MVBus34414",
       "length": 0.07317231902175302,
       "params_id": "O_AM_54",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -2822,6 +2897,7 @@
       "bus2": "MVBus34413",
       "length": 0.6720310690910645,
       "params_id": "O_AM_54",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -2842,6 +2918,7 @@
       "bus2": "MVBus34412",
       "length": 0.08953139053423927,
       "params_id": "O_AM_54",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -2860,6 +2937,7 @@
       "bus2": "MVLV03060",
       "length": 0.5346788249293161,
       "params_id": "O_AM_54",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -2879,6 +2957,7 @@
       "bus2": "MVBus34411",
       "length": 0.08153686761905633,
       "params_id": "O_AM_148",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -2897,6 +2976,7 @@
       "bus2": "MVLV06284",
       "length": 0.0607116755354689,
       "params_id": "O_AM_54",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -2915,6 +2995,7 @@
       "bus2": "MVBus34410",
       "length": 0.08291962228537283,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -2938,6 +3019,7 @@
       "bus2": "MVLV08862",
       "length": 0.26707625608160257,
       "params_id": "O_AM_54",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -2956,6 +3038,7 @@
       "bus2": "MVLV19162",
       "length": 0.08382862257920029,
       "params_id": "O_AM_54",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -2974,6 +3057,7 @@
       "bus2": "MVBus32945",
       "length": 0.08192465202152102,
       "params_id": "O_AM_54",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -2992,6 +3076,7 @@
       "bus2": "MVBus32944",
       "length": 0.28017990056768277,
       "params_id": "O_AM_54",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -3010,6 +3095,7 @@
       "bus2": "MVBus32943",
       "length": 0.39063953902460974,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -3038,6 +3124,7 @@
       "bus2": "MVLV03057",
       "length": 0.4597844729770908,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -3060,6 +3147,7 @@
       "bus2": "MVBus32953",
       "length": 1.6326161105779273,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -3123,6 +3211,7 @@
       "bus2": "MVLV00376",
       "length": 0.08040663184049307,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -3142,6 +3231,7 @@
       "bus2": "MVBus32951",
       "length": 0.03578752012234594,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -3161,6 +3251,7 @@
       "bus2": "MVBus32950",
       "length": 0.40312747799055015,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -3192,6 +3283,7 @@
       "bus2": "MVBus32948",
       "length": 0.4830376263026058,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -3222,6 +3314,7 @@
       "bus2": "MVBus32942",
       "length": 1.0731453489406135,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -3249,6 +3342,7 @@
       "bus2": "MVLV02134",
       "length": 1.1707233869850964,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -3280,6 +3374,7 @@
       "bus2": "MVLV14458",
       "length": 0.44321442367888547,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -3344,6 +3439,7 @@
       "bus2": "MVBus22069",
       "length": 0.36238372555403137,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -3382,6 +3478,7 @@
       "bus2": "MVLV18758",
       "length": 0.056578106178282746,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -3402,6 +3499,7 @@
       "bus2": "MVBus22067",
       "length": 1.926359122832335,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -3436,6 +3534,7 @@
       "bus2": "MVLV15114",
       "length": 0.2493185426177021,
       "params_id": "O_AM_54",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -3454,6 +3553,7 @@
       "bus2": "MVLV03792",
       "length": 0.2051436384266768,
       "params_id": "O_AM_54",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -3474,6 +3574,7 @@
       "bus2": "MVLV07424",
       "length": 0.14383385188322648,
       "params_id": "O_AM_54",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -3493,6 +3594,7 @@
       "bus2": "MVBus22073",
       "length": 0.10019875986664627,
       "params_id": "O_AM_54",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -3511,6 +3613,7 @@
       "bus2": "MVBus22072",
       "length": 0.008461700673569049,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -3529,6 +3632,7 @@
       "bus2": "MVBus22066",
       "length": 0.10342519827364842,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -3555,6 +3659,7 @@
       "bus2": "MVLV14298",
       "length": 0.8798759256032205,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -3582,6 +3687,7 @@
       "bus2": "MVLV06470",
       "length": 0.7954401697427387,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -3603,6 +3709,7 @@
       "bus2": "MVBus11803",
       "length": 1.0773011885807644,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -3630,6 +3737,7 @@
       "bus2": "MVLV14297",
       "length": 0.5364504470557699,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -3657,6 +3765,7 @@
       "bus2": "MVLV05282",
       "length": 0.0032995137003003863,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -3675,6 +3784,7 @@
       "bus2": "MVBus09269",
       "length": 0.31007777091499894,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -3706,6 +3816,7 @@
       "bus2": "MVLV08091",
       "length": 1.103705815148244,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -3741,6 +3852,7 @@
       "bus2": "MVLV12189",
       "length": 0.4629762715887536,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -3809,6 +3921,7 @@
       "bus2": "MVBus06432",
       "length": 0.792612707543813,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -3838,6 +3951,7 @@
       "bus2": "MVBus06431",
       "length": 0.22660860033133476,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -3891,6 +4005,7 @@
       "bus2": "MVLV10176",
       "length": 0.22922896329104542,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -3934,6 +4049,7 @@
       "bus2": "MVBus05970",
       "length": 0.2637279374416299,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -3958,6 +4074,7 @@
       "bus2": "MVBus05969",
       "length": 0.02430435716809026,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -3977,6 +4094,7 @@
       "bus2": "MVLV07004",
       "length": 0.024978720138269347,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -3996,6 +4114,7 @@
       "bus2": "MVBus02322",
       "length": 1.02694858466435,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -4031,6 +4150,7 @@
       "bus2": "MVBus02321",
       "length": 0.16790378725191302,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -4051,6 +4171,7 @@
       "bus2": "MVBus02320",
       "length": 0.009993540367716214,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -4072,6 +4193,7 @@
       "bus2": "MVBus02319",
       "length": 0.26473687880197855,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -4091,6 +4213,7 @@
       "bus2": "MVBus02318",
       "length": 0.09202958332239944,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -5434,10 +5557,9 @@
           [0.0, 0.0, 1.5707963267948965e-6]
         ]
       ],
-      "max_currents": [357, 357, 357],
+      "ampacities": [357, 357, 357],
       "line_type": "OVERHEAD",
       "materials": ["AM", "AM", "AM"],
-
       "sections": [148.0, 148.0, 148.0]
     },
     {
@@ -5466,10 +5588,9 @@
           [0.0, 0.0, 1.5707963267948965e-6]
         ]
       ],
-      "max_currents": [193, 193, 193],
+      "ampacities": [193, 193, 193],
       "line_type": "OVERHEAD",
       "materials": ["AM", "AM", "AM"],
-
       "sections": [54.0, 54.0, 54.0]
     },
     {
@@ -5498,10 +5619,9 @@
           [0.0, 0.0, 0.00014105751014618172]
         ]
       ],
-      "max_currents": [325, 325, 325],
+      "ampacities": [325, 325, 325],
       "line_type": "UNDERGROUND",
       "materials": ["AL", "AL", "AL"],
-
       "sections": [150.0, 150.0, 150.0]
     }
   ],

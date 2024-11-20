@@ -123,6 +123,7 @@
       "bus2": "LVBus169862",
       "length": 0.08968070135743335,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -146,6 +147,7 @@
       "bus2": "LVBus169863",
       "length": 0.04436724010618379,
       "params_id": "T_AL_70",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -166,6 +168,7 @@
       "bus2": "LVBus169868",
       "length": 0.08219148406259193,
       "params_id": "T_AL_70",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -191,6 +194,7 @@
       "bus2": "LVBus169864",
       "length": 0.09054384067800328,
       "params_id": "T_AL_70",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -209,6 +213,7 @@
       "bus2": "LVBus169867",
       "length": 0.08005243959261948,
       "params_id": "T_AL_70",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -230,6 +235,7 @@
       "bus2": "LVBus169865",
       "length": 0.031098546879261002,
       "params_id": "T_AL_70",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -250,6 +256,7 @@
       "bus2": "LVBus169866",
       "length": 0.06422966085250291,
       "params_id": "T_AL_70",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -441,10 +448,9 @@
           [-9.334047516122607e-6, -9.334047516122602e-6, -9.334294062818125e-6, 8.357992380628483e-5]
         ]
       ],
-      "max_currents": [187, 187, 187, 187],
+      "ampacities": [187, 187, 187, 187],
       "line_type": "TWISTED",
       "materials": ["AL", "AL", "AL", "AL"],
-
       "sections": [70.0, 70.0, 70.0, 70.0]
     },
     {
@@ -477,10 +483,9 @@
           [-0.00018518179657458456, 4.85783749893247e-5, -0.00018518179657458597, 0.0009990656421805131]
         ]
       ],
-      "max_currents": [325, 325, 325, 325],
+      "ampacities": [325, 325, 325, 325],
       "line_type": "UNDERGROUND",
       "materials": ["AL", "AL", "AL", "AL"],
-
       "sections": [150.0, 150.0, 150.0, 150.0]
     }
   ],

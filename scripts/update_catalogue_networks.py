@@ -101,7 +101,7 @@ if __name__ == "__main__":
                     z_line=line.parameters.z_line,
                     y_shunt=line.parameters.y_shunt,
                     # Add missing data from the IEC catalogue
-                    max_currents=iec_params.max_currents,
+                    ampacities=iec_params.ampacities,
                     line_type=iec_params.line_type,
                     materials=iec_params.materials,
                     insulators=iec_params.insulators,
