@@ -653,9 +653,9 @@ def v2_to_v3_converter(data: JsonDict) -> JsonDict:
     old_transformers_params = data.get("transformers_params", [])
     transformers_params = []
     for transformer_param_data in old_transformers_params:
-        if up := transformer_param_data.pop("uhv", None) is not None:
+        if (up := transformer_param_data.pop("uhv", None)) is not None:
             transformer_param_data["up"] = up
-        if us := transformer_param_data.pop("ulv", None) is not None:
+        if (us := transformer_param_data.pop("ulv", None)) is not None:
             transformer_param_data["us"] = us
         transformer_param_data.pop("max_power", None)
         transformers_params.append(transformer_param_data)
@@ -668,14 +668,14 @@ def v2_to_v3_converter(data: JsonDict) -> JsonDict:
     lines_params = []
     for line_param_data in old_lines_params:
         size = len(line_param_data["z_line"][0])
-        if maximal_current := line_param_data.pop("maximal_current", None) is not None:
+        if (maximal_current := line_param_data.pop("maximal_current", None)) is not None:
             line_param_data["ampacities"] = [maximal_current] * size
-        if section := line_param_data.pop("section", None) is not None:
+        if (section := line_param_data.pop("section", None)) is not None:
             line_param_data["sections"] = [section] * size
-        if conductor_type := line_param_data.pop("conductor_types", None) is not None:
+        if (conductor_type := line_param_data.pop("conductor_types", None)) is not None:
             line_param_data["materials"] = [conductor_type] * size
         if (
-            insulator_type := line_param_data.pop("insulator_types", None) is not None
+            (insulator_type := line_param_data.pop("insulator_types", None)) is not None
         ) and insulator_type.lower() != "unknown":
             line_param_data["insulators"] = [insulator_type] * size
         lines_params.append(line_param_data)
