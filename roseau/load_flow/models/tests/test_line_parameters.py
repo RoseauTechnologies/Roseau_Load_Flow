@@ -442,21 +442,6 @@ def test_sym():
     npt.assert_allclose(y_shunt, y_shunt_expected)
 
 
-def test_from_name_mv():
-    warning_msg = (
-        r"The method LineParameters.from_name_mv\(\) is deprecated and will be removed in a future "
-        r"version\. Use LineParameters\.from_coiffier\(\) instead\."
-    )
-    with pytest.warns(FutureWarning, match=warning_msg):
-        lp = LineParameters.from_name_mv("U_AL_150", max_currents=100000)
-    z_line_expected = (0.1767 + 0.1j) * np.eye(3)
-    y_shunt_expected = 0.00014106j * np.eye(3)
-
-    npt.assert_allclose(lp.z_line.m_as("ohm/km"), z_line_expected, rtol=0.01, atol=0.01, strict=True)
-    npt.assert_allclose(lp.y_shunt.m_as("S/km"), y_shunt_expected, rtol=0.01, atol=0.01, strict=True)
-    npt.assert_allclose(lp.max_currents.m_as("A"), [100000.0] * 3, strict=True)
-
-
 def test_from_coiffier_model():
     # Invalid names
     with pytest.raises(RoseauLoadFlowException) as e:

@@ -10,7 +10,7 @@ import numpy as np
 import numpy.linalg as nplin
 import pandas as pd
 from numpy._typing import NDArray
-from typing_extensions import Self, deprecated
+from typing_extensions import Self
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.typing import (
@@ -895,31 +895,6 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_TYPE)
 
         return coord, coord_prim, epsilon, epsilon_neutral
-
-    @classmethod
-    @deprecated(
-        "The method LineParameters.from_name_mv() is deprecated and will be removed in a future "
-        "version. Use LineParameters.from_coiffier() instead.",
-        category=FutureWarning,
-    )
-    @ureg_wraps(None, (None, None, "A"))
-    def from_name_mv(cls, name: str, max_currents: FloatScalarOrArrayLike1D | None = None) -> Self:
-        """Get the electrical parameters of a MV line from its canonical name (France specific model)
-
-        Args:
-            name:
-                The canonical name of the line parameters. It must be in the format
-                `lineType_conductorType_crossSection`. E.g. "U_AL_150".
-
-            max_currents:
-                An optional maximal current loading of the line (A). It is not used in the load flow.
-
-        Returns:
-            The corresponding line parameters.
-        """
-        obj = cls.from_coiffier_model(name=name, nb_phases=3)
-        obj.max_currents = max_currents
-        return obj
 
     @classmethod
     def from_coiffier_model(cls, name: str, nb_phases: int = 3, id: Id | None = None) -> Self:  # noqa: C901
