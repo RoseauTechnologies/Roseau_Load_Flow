@@ -25,6 +25,8 @@ def generate_typ_tr(
         transformers_tap:
             The dictionary to store the tap positions of the transformers into.
     """
+    # TODO The parameter `maxload` could be exported too and then stored in `transformers_maxload` dictionary to be
+    #  used when the transformers are created fo fill `max_loading`
     for idx in typ_tr.index:
         # Extract data
         name = typ_tr.at[idx, "loc_name"]

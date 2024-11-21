@@ -22,11 +22,11 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 - {gh-pr}`285` {gh-issue}`279` **BREAKING CHANGE**: Add limits on assets. It is now possible to define a maximum
   loading for lines and transformers. It generates some indirect consequences:
 
-  - The constructors of `Transformer` and `Line` now accept an unitless `max_loading` parameter equal to 1 (=100%) by
-    default.
+  - The constructors of `Transformer` and `Line` now accept an unitless `max_loading` parameter equal to 1 (=100% of
+    the ampacities for lines and of the nominal power for transformers) by default.
   - The parameter `max_currents` of `LineParameters` is now called `ampacities`.
-  - The class `Line` has a `max_currents` property that retrieves the maximal admissible currents for each conductor
-    taking into account the ampacities of the `LineParameters` and the `max_loading` of the `Line`.
+  - The class `Line` has a `max_currents` property that retrieves the maximal admissible currents (in Amps) for each
+    conductor taking into account the ampacities of the `LineParameters` and the `max_loading` of the `Line`.
   - The `res_violated` methods of `Transformer` and `Line` take into account this `max_loading`.
   - The `Line` and `Transformer` classes have a new `res_loading` method to compute the loading according to the
     maximum loading and the ampacities (for `Line`) or the nominal power (for the `Transformer`).

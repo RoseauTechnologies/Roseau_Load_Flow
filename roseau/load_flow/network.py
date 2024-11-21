@@ -335,7 +335,10 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         """The :attr:`transformers` of the network as a geo dataframe."""
         data = []
         for transformer in self.transformers.values():
-            max_power = transformer.max_power.magnitude if transformer.max_power is not None else float("nan")
+            if (max_loading := transformer.max_loading) is not None:
+                max_loading = max_loading.magnitude
+            else:
+                max_loading = float("nan")
             data.append(
                 (
                     transformer.id,
@@ -344,14 +347,14 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                     transformer.bus1.id,
                     transformer.bus2.id,
                     transformer.parameters.id,
-                    max_power,
+                    max_loading,
                     transformer.geometry,
                 )
             )
         return gpd.GeoDataFrame(
             data=pd.DataFrame.from_records(
                 data=data,
-                columns=["id", "phases1", "phases2", "bus1_id", "bus2_id", "parameters_id", "max_power", "geometry"],
+                columns=["id", "phases1", "phases2", "bus1_id", "bus2_id", "parameters_id", "max_loading", "geometry"],
                 index="id",
             ),
             geometry="geometry",
@@ -482,7 +485,10 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                 geom=line.geometry,
             )
         for transformer in self.transformers.values():
-            max_power = transformer.max_power.magnitude if transformer.max_power is not None else None
+            if (max_loading := transformer.max_loading) is not None:
+                max_loading = max_loading.magnitude
+            if (sn := transformer.sn) is not None:
+                sn = sn.magnitude
             graph.add_edge(
                 transformer.bus1.id,
                 transformer.bus2.id,
@@ -491,7 +497,8 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                 phases1=transformer.phases1,
                 phases2=transformer.phases2,
                 parameters_id=transformer.parameters.id,
-                max_power=max_power,
+                max_loading=max_loading,
+                sn=sn,
                 geom=transformer.geometry,
             )
         for switch in self.switches.values():
@@ -868,7 +875,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                 second bus.
             - `potential1`: The complex potential of the first bus (in Volts) for the given phase.
             - `potential2`: The complex potential of the second bus (in Volts) for the given phase.
-            - `max_power`: The maximal power loading (in VoltAmps) of the transformer.
+            - `max_loading`: The maximal loading (unitless) of the transformer.
 
         Note that values for missing phases are set to ``nan``. For example, a "Dyn" transformer
         has the phases "abc" on the primary side and "abcn" on the secondary side, so the primary
@@ -884,8 +891,11 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             "power2": [],
             "potential1": [],
             "potential2": [],
-            "max_power": [],
             "violated": [],
+            "loading": [],
+            # Non results
+            "max_loading": [],
+            "sn": [],
         }
         dtypes = {c: _DTYPES[c] for c in res_dict}
         for transformer in self.transformers.values():
@@ -893,8 +903,15 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             potentials1, potentials2 = transformer._res_potentials_getter(warning=False)
             powers1 = potentials1 * currents1.conj()
             powers2 = potentials2 * currents2.conj()
-            s_max = transformer.parameters._max_power
-            violated = (abs(powers1.sum()) > s_max or abs(powers2.sum()) > s_max) if s_max is not None else None
+            sn = transformer.parameters._sn
+            max_loading = transformer._max_loading
+            if sn is None:
+                violated = None
+                loading = None
+            else:
+                s_max = sn * max_loading
+                loading = max(abs(powers1.sum()), abs(powers2.sum())) / s_max
+                violated = loading > max_loading
             for phase in transformer._all_phases:
                 if phase in transformer.phases1:
                     idx1 = transformer.phases1.index(phase)
@@ -914,8 +931,11 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                 res_dict["power2"].append(s2)
                 res_dict["potential1"].append(v1)
                 res_dict["potential2"].append(v2)
-                res_dict["max_power"].append(s_max)
                 res_dict["violated"].append(violated)
+                res_dict["loading"].append(loading)
+                # Non results
+                res_dict["max_loading"].append(max_loading)
+                res_dict["sn"].append(sn)
         return pd.DataFrame(res_dict).astype(dtypes).set_index(["transformer_id", "phase"])
 
     @property

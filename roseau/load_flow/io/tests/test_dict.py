@@ -166,13 +166,11 @@ def test_to_dict():
 
     # Dict content
     transformer2.parameters = tp1
-    tp1.max_power = 180_000
     res = en.to_dict(include_results=False)
     assert "geometry" in res["buses"][0]
     assert "geometry" in res["buses"][1]
     assert "geometry" in res["transformers"][0]
     assert "geometry" in res["transformers"][1]
-    assert np.isclose(res["transformers_params"][0]["max_power"], 180_000)
 
 
 def test_v0_to_v3_converter():

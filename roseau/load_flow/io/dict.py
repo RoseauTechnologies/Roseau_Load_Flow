@@ -649,6 +649,7 @@ def v2_to_v3_converter(data: JsonDict) -> JsonDict:
         buses.append(bus_data)
 
     # Rename `uhv` in `up` and `ulv` in `us`
+    # Remove max_power
     old_transformers_params = data.get("transformers_params", [])
     transformers_params = []
     for transformer_param_data in old_transformers_params:
@@ -656,6 +657,7 @@ def v2_to_v3_converter(data: JsonDict) -> JsonDict:
             transformer_param_data["up"] = up
         if us := transformer_param_data.pop("ulv", None) is not None:
             transformer_param_data["us"] = us
+        transformer_param_data.pop("max_power", None)
         transformers_params.append(transformer_param_data)
 
     # Rename `maximal_current` in `ampacities` and uses array
@@ -685,6 +687,13 @@ def v2_to_v3_converter(data: JsonDict) -> JsonDict:
         line_data["max_loading"] = 1
         lines.append(line_data)
 
+    # Add max_loading to transformers
+    old_transformers = data.get("transformers", [])
+    transformers = []
+    for transformer_data in old_transformers:
+        transformer_data["max_loading"] = 1
+        transformers.append(transformer_data)
+
     results = {
         "version": 3,
         "is_multiphase": data["is_multiphase"],  # Unchanged
@@ -693,7 +702,7 @@ def v2_to_v3_converter(data: JsonDict) -> JsonDict:
         "buses": buses,  # <---- Changed
         "lines": lines,  # <---- Changed
         "switches": data["switches"],  # Unchanged
-        "transformers": data["transformers"],  # Unchanged
+        "transformers": transformers,  # <---- Changed
         "loads": data["loads"],  # Unchanged
         "sources": data["sources"],  # Unchanged
         "lines_params": lines_params,  # <---- Changed

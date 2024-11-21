@@ -35,7 +35,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
     )
     """The pattern to extract the winding of the primary and of the secondary of the transformer."""
 
-    @ureg_wraps(None, (None, None, None, "V", "V", "VA", "ohm", "S", "VA", None, None, None))
+    @ureg_wraps(None, (None, None, None, "V", "V", "VA", "ohm", "S", None, None, None))
     def __init__(
         self,
         id: Id,
@@ -45,7 +45,6 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         sn: float | Q_[float],
         z2: complex | Q_[complex],
         ym: complex | Q_[complex],
-        max_power: float | Q_[float] | None = None,
         manufacturer: str | None = None,
         range: str | None = None,
         efficiency: str | None = None,
@@ -75,9 +74,6 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
 
             ym:
                 The magnetizing admittance located at the primary side of the transformer.
-
-            max_power:
-                The maximum power loading of the transformer (VA). It is not used in the load flow.
 
             manufacturer:
                 The name of the manufacturer for the transformer. Informative only, it has no impact on the load flow.
@@ -129,7 +125,6 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         self.winding2: str | None = winding2
         self.phase_displacement: Literal[0, 5, 6, 11] | None = phase_displacement
         self.type = type
-        self.max_power = max_power
 
         # Filled using alternative constructor `from_open_and_short_circuit_tests`
         self._p0: float | None = None
@@ -143,7 +138,6 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             f"us={self._us}"
         )
         for attr, val, tp in (
-            ("max_power", self._max_power, float),
             ("p0", self._p0, float),
             ("i0", self._i0, float),
             ("psc", self._psc, float),
@@ -169,6 +163,9 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
                 and np.isclose(self._us, other._us)
                 and np.isclose(self._z2, other._z2)
                 and np.isclose(self._ym, other._ym)
+                and self._manufacturer == other._manufacturer
+                and self._range == other._range
+                and self._efficiency == other._efficiency
             )
 
     @property
@@ -211,16 +208,6 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
     def orientation(self) -> float:
         """The orientation of the transformer: 1 for direct windings or -1 for reverse windings."""
         return self._orientation
-
-    @property
-    def max_power(self) -> Q_[float] | None:
-        """The maximum power loading of the transformer (VA) if it is set."""
-        return None if self._max_power is None else Q_(self._max_power, "VA")
-
-    @max_power.setter
-    @ureg_wraps(None, (None, "VA"))
-    def max_power(self, value: float | Q_[float] | None) -> None:
-        self._max_power = value
 
     @property
     def p0(self) -> Q_[float] | None:
@@ -332,7 +319,6 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             "kW",
             "percent",
             "kW",
-            "percent",
             None,
             None,
             None,
@@ -353,7 +339,6 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         pc: float | Q_[float],
         curmg: float | Q_[float],
         pfe: float | Q_[float],
-        maxload: float | Q_[float] | None = 100,
         manufacturer: str | None = None,
         range: str | None = None,
         efficiency: str | None = None,
@@ -412,12 +397,6 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
                 PwF parameter `pfe` (Magnetizing Impedance - No Load Losses). The magnetizing
                 impedance i.e. the power losses in (kW) obtained from the no-load test.
 
-            maxload:
-                PwF parameter `maxload` (Max. Thermal Loading Limit). The maximum loading of the
-                transformer in (%) of the nominal power. This parameter is defined on the transformer
-                element (`ElmTr2`) in PwF instead of the transformer type (`TypTr2`).
-                This is used to compute `max_power` and is used for violation checks.
-
             manufacturer:
                 The name of the manufacturer for the transformer. Informative only, it has no impact on the load flow.
 
@@ -451,8 +430,6 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
 
         z2, ym = cls._compute_zy(type=type, up=up, us=us, sn=sn, p0=p0, i0=i0, psc=psc, vsc=vsc)
 
-        max_power = (sn * maxload / 100) if maxload is not None else None
-
         obj = cls(
             id=id,
             type=type,
@@ -461,7 +438,6 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             sn=sn,
             z2=z2,
             ym=ym,
-            max_power=max_power,
             manufacturer=manufacturer,
             range=range,
             efficiency=efficiency,
@@ -483,7 +459,6 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             "percent",
             "percent",
             "percent",
-            "kVA",
             None,
             None,
             None,
@@ -502,7 +477,6 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         noloadloss: float | Q_[float] = 0,
         imag: float | Q_[float] = 0,
         rs: float | Q_[float] | tuple[float, float] | FloatArrayLike1D | None = None,
-        normhkva: float | Q_[float] | None = None,
         manufacturer: str | None = None,
         range: str | None = None,
         efficiency: str | None = None,
@@ -554,11 +528,6 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
                 kVA base. Only required if `loadloss` is not passed. Note that if `rs` is used along
                 with `loadloss`, they have to have equivalent values. For a two-winding transformer,
                 `%rs=[0.1, 0.1]` is equivalent to `%loadloss=0.2`.
-
-            normhkva:
-                OpenDSS parameter: `NormHKVA`. Normal maximum kVA rating for H winding (1). Usually
-                100 - 110% of maximum nameplate rating.
-                This value is passed to `max_power` and used for violation checks.
 
             manufacturer:
                 The name of the manufacturer for the transformer. Informative only, it has no impact on the load flow.
@@ -666,9 +635,6 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         vsc = xhl / 100
         z2, ym = cls._compute_zy(type=type, up=up, us=us, sn=sn, p0=p0, i0=i0, psc=psc, vsc=vsc)
 
-        # Max power
-        max_power = normhkva * 1000 if normhkva is not None else None
-
         obj = cls(
             id=id,
             type=type,
@@ -677,7 +643,6 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             sn=sn,
             z2=z2,
             ym=ym,
-            max_power=max_power,
             manufacturer=manufacturer,
             range=range,
             efficiency=efficiency,
@@ -688,7 +653,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
     # Open and short circuit tests
     #
     @classmethod
-    @ureg_wraps(None, (None, None, None, "V", "V", "VA", "W", "", "W", "", "VA", None, None, None))
+    @ureg_wraps(None, (None, None, None, "V", "V", "VA", "W", "", "W", "", None, None, None))
     def from_open_and_short_circuit_tests(
         cls,
         id: Id,
@@ -700,7 +665,6 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         i0: float | Q_[float],
         psc: float | Q_[float],
         vsc: float | Q_[float],
-        max_power: float | Q_[float] | None = None,
         manufacturer: str | None = None,
         range: str | None = None,
         efficiency: str | None = None,
@@ -736,9 +700,6 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
 
             vsc:
                 Voltages on LV side during short-circuit test (%)
-
-            max_power:
-                The maximum power loading of the transformer (VA). It is not used in the load flow.
 
             manufacturer:
                 The name of the manufacturer for the transformer. Informative only, it has no impact on the load flow.
@@ -787,7 +748,6 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             sn=sn,
             z2=z2,
             ym=ym,
-            max_power=max_power,
             manufacturer=manufacturer,
             range=range,
             efficiency=efficiency,
@@ -937,7 +897,6 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
                 i0=data["i0"],  # Current during open-circuit test (%)
                 psc=data["psc"],  # Losses during short-circuit test (W)
                 vsc=data["vsc"],  # Voltages on LV side during short-circuit test (%)
-                max_power=data.get("max_power"),  # Maximum power loading (VA)
                 manufacturer=data.get("manufacturer"),  # The manufacturer of the transformer
                 range=data.get("range"),  # The product range of the transformer
                 efficiency=data.get("efficiency"),  # The efficiency class of the transformer
@@ -953,7 +912,6 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
                 sn=data["sn"],  # Nominal power
                 z2=z2,  # Series impedance (ohm)
                 ym=ym,  # Magnetizing admittance (S)
-                max_power=data.get("max_power"),  # Maximum power loading (VA)
                 manufacturer=data.get("manufacturer"),  # The manufacturer of the transformer
                 range=data.get("range"),  # The product range of the transformer
                 efficiency=data.get("efficiency"),  # The efficiency class of the transformer
@@ -980,8 +938,6 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             res["psc"] = self._psc
         if self._vsc is not None:
             res["vsc"] = self._vsc
-        if self._max_power is not None:
-            res["max_power"] = self._max_power
         if self._manufacturer is not None:
             res["manufacturer"] = self._manufacturer
         if self._range is not None:

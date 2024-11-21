@@ -49,7 +49,6 @@ class RoseauLoadFlowExceptionCode(StrEnum):
     BAD_MATERIALS_SIZE = auto()
     BAD_INSULATORS_VALUE = auto()
     BAD_INSULATORS_SIZE = auto()
-    BAD_MAX_LOADING_VALUE = auto()
 
     # Transformer
     BAD_TRANSFORMER_ID = auto()
@@ -57,6 +56,9 @@ class RoseauLoadFlowExceptionCode(StrEnum):
     BAD_TRANSFORMER_TYPE = auto()
     BAD_TRANSFORMER_IMPEDANCE = auto()
     BAD_TRANSFORMER_PARAMETERS = auto()
+
+    # Transformer and line
+    BAD_MAX_LOADING_VALUE = auto()
 
     # Switch
     BAD_SWITCH_ID = auto()

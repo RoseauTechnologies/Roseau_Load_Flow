@@ -135,12 +135,14 @@ if __name__ == "__main__":
                     tap=transformer.tap,
                     phases1=transformer.phases1,
                     phases2=transformer.phases2,
+                    max_loading=1,  # Since v0.11.0
                     geometry=transformer.geometry,
                 )
                 assert isinstance(transformer.parameters.id, str), repr(transformer.parameters.id)
                 m = re.match(pattern=r"^.*_(\d+)kVA$", string=transformer.parameters.id)
                 assert m, transformer.parameters.id
-                transformer.parameters.max_power = int(m.group(1)) * 1_000
+                # Since v0.11.0, this does not work. Please use max_loading
+                # transformer.parameters.max_power = int(m.group(1)) * 1_000
                 assert new_transformer.geometry == transformer.geometry
                 new_transformers[transformer_id] = new_transformer
 

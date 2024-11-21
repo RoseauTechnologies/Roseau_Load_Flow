@@ -92,7 +92,8 @@
         "coordinates": [-1.58340589517331, 48.8394770872287]
       },
       "tap": 1.0,
-      "params_id": "Dyn11_160kVA"
+      "params_id": "Dyn11_160kVA",
+      "max_loading": 1
     }
   ],
   "switches": [],
@@ -176,8 +177,7 @@
       "i0": 0.023,
       "p0": 460.0,
       "psc": 2350.0,
-      "vsc": 0.04,
-      "max_power": 160000
+      "vsc": 0.04
     }
   ]
 }

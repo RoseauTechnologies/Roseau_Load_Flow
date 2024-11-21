@@ -254,7 +254,7 @@ class Line(AbstractBranch):
         ampacities` of the parameters."""
         # Do not add a setter. Only `max_loading` can be altered by the user
         amp = self._parameters._ampacities
-        return Q_(amp * self._max_loading, "") if amp is not None else None
+        return None if amp is None else Q_(amp * self._max_loading, "A")
 
     @property
     def with_shunt(self) -> bool:
@@ -333,7 +333,6 @@ class Line(AbstractBranch):
         return self._res_power_losses_getter(warning=True)
 
     @property
-    @ureg_wraps("", (None,))
     def res_loading(self) -> Q_[FloatArray] | None:
         """Get the loading of the line (unitless)."""
         amp = self._parameters._ampacities
@@ -341,7 +340,7 @@ class Line(AbstractBranch):
             return None
         currents1, currents2 = self._res_currents_getter(warning=True)
         i_max = amp * self._max_loading
-        return np.maximum(abs(currents1), abs(currents2)) / i_max
+        return Q_(np.maximum(abs(currents1), abs(currents2)) / i_max, "")
 
     @property
     def res_violated(self) -> bool | None:

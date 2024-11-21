@@ -152,7 +152,8 @@
         ]
       },
       "tap": 1.0,
-      "params_id": "tp0"
+      "params_id": "tp0",
+      "max_loading": 1
     }
   ],
   "switches": [

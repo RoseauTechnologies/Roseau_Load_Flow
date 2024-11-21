@@ -500,7 +500,7 @@ def test_frame(small_network: ElectricalNetwork):
         "bus1_id",
         "bus2_id",
         "parameters_id",
-        "max_power",
+        "max_loading",
         "geometry",
     ]
     assert transformers_gdf.index.name == "id"
@@ -755,8 +755,10 @@ def test_single_phase_network(single_phase_network: ElectricalNetwork):
                 "power2",
                 "potential1",
                 "potential2",
-                "max_power",
                 "violated",
+                "loading",
+                "max_loading",
+                "sn",
             ],
         )
         .astype(
@@ -768,8 +770,10 @@ def test_single_phase_network(single_phase_network: ElectricalNetwork):
                 "power2": complex,
                 "potential1": complex,
                 "potential2": complex,
-                "max_power": float,
                 "violated": pd.BooleanDtype(),
+                "loading": float,
+                "max_loading": float,
+                "sn": float,
             }
         )
         .set_index(["transformer_id", "phase"]),
@@ -1289,8 +1293,10 @@ def test_load_flow_results_frames(small_network_with_results):
                 "power2",
                 "potential1",
                 "potential2",
-                "max_power",
                 "violated",
+                "loading",
+                "max_loading",
+                "sn",
             ],
         )
         .astype(
@@ -1303,8 +1309,10 @@ def test_load_flow_results_frames(small_network_with_results):
                 "power2": complex,
                 "potential1": complex,
                 "potential2": complex,
-                "max_power": float,
+                "loading": float,
                 "violated": pd.BooleanDtype(),
+                "max_loading": float,
+                "sn": float,
             }
         )
         .set_index(["transformer_id", "phase"])
@@ -1887,24 +1895,26 @@ def test_get_catalogue():
     assert catalogue.empty
 
 
-def test_to_graph(small_network: ElectricalNetwork):
-    g = small_network.to_graph()
+def test_to_graph(all_element_network: ElectricalNetwork):
+    g = all_element_network.to_graph()
     assert isinstance(g, nx.Graph)
-    assert sorted(g.nodes) == sorted(small_network.buses)
+    assert sorted(g.nodes) == sorted(all_element_network.buses)
     assert sorted(g.edges) == sorted(
         (b.bus1.id, b.bus2.id)
         for b in it.chain(
-            small_network.lines.values(), small_network.transformers.values(), small_network.switches.values()
+            all_element_network.lines.values(),
+            all_element_network.transformers.values(),
+            all_element_network.switches.values(),
         )
     )
 
-    for bus in small_network.buses.values():
+    for bus in all_element_network.buses.values():
         node_data = g.nodes[bus.id]
         assert node_data["geom"] == bus.geometry
 
-    for line in small_network.lines.values():
+    for line in all_element_network.lines.values():
         edge_data = g.edges[line.bus1.id, line.bus2.id]
-        ampacities = line.ampacities.magnitude if line.ampacities is not None else None
+        ampacities = line.ampacities.magnitude.tolist() if line.ampacities is not None else None
         assert edge_data == {
             "id": line.id,
             "type": "line",
@@ -1916,22 +1926,23 @@ def test_to_graph(small_network: ElectricalNetwork):
             "geom": line.geometry,
         }
 
-    for transformer in small_network.transformers.values():
+    for transformer in all_element_network.transformers.values():
         edge_data = g.edges[transformer.bus1.id, transformer.bus2.id]
-        max_power = transformer.max_power.magnitude if transformer.max_power is not None else None
+        max_loading = transformer.max_loading.magnitude if transformer.max_loading is not None else None
         assert edge_data == {
             "id": transformer.id,
             "type": "transformer",
             "phases1": transformer.phases1,
             "phases2": transformer.phases2,
             "parameters_id": transformer.parameters.id,
-            "max_power": max_power,
+            "max_loading": max_loading,
+            "sn": transformer.sn.magnitude,
             "geom": transformer.geometry,
         }
 
-    for switch in small_network.switches.values():
+    for switch in all_element_network.switches.values():
         edge_data = g.edges[switch.bus1.id, switch.bus2.id]
-        assert edge_data == {"id": switch.id, "type": "switch", "geom": switch.geometry}
+        assert edge_data == {"id": switch.id, "type": "switch", "phases": switch.phases, "geom": switch.geometry}
 
 
 def test_serialization(all_element_network, all_element_network_with_results):
