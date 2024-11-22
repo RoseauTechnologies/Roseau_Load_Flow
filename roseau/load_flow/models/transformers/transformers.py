@@ -76,8 +76,8 @@ class Transformer(AbstractBranch):
             max_loading:
                 The maximum loading of the transformer (unitless). It is used with the `sn` of the
                 :class:`TransformerParameters` to compute the :meth:`~roseau.load_flow.Transformer.max_power`,
-                 :meth:`~roseau.load_flow.Transformer.res_loading` and
-                 :meth:`~roseau.load_flow.Transformer.res_violated` of the transformer.
+                :meth:`~roseau.load_flow.Transformer.res_loading` and
+                :meth:`~roseau.load_flow.Transformer.res_violated` of the transformer.
 
             geometry:
                 The geometry of the transformer.

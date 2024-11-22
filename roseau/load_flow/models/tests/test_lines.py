@@ -164,31 +164,31 @@ def test_res_violated():
     # No constraint violated
     lp.ampacities = 11
     assert line.res_violated is False
-    assert np.allclose(line.res_loading, 10 / 11)
+    npt.assert_allclose(line.res_loading.m, 10 / 11)
 
     # Reduced max_loading
     line.max_loading = Q_(50, "%")
     assert line.max_loading.m == 0.5
     assert line.res_violated is True
-    assert np.allclose(line.res_loading, 10 / (11 * 0.5))
+    npt.assert_allclose(line.res_loading.m, 10 / (11 * 0.5))
 
     # Two violations
     lp.ampacities = 9
     line.max_loading = 1
     assert line.res_violated is True
-    assert np.allclose(line.res_loading, 10 / 9)
+    npt.assert_allclose(line.res_loading.m, 10 / 9)
 
     # Side 1 violation
     lp.ampacities = 11
     line._res_currents = 12 * direct_seq, -10 * direct_seq
     assert line.res_violated is True
-    assert np.allclose(line.res_loading, 12 / 11)
+    npt.assert_allclose(line.res_loading.m, 12 / 11)
 
     # Side 2 violation
     lp.ampacities = 11
     line._res_currents = 10 * direct_seq, -12 * direct_seq
     assert line.res_violated is True
-    assert np.allclose(line.res_loading, 12 / 11)
+    npt.assert_allclose(line.res_loading.m, 12 / 11)
 
     # A single phase violation
     lp.ampacities = 11
@@ -196,7 +196,7 @@ def test_res_violated():
     line._res_currents[0][0] = 12 * direct_seq[0]
     line._res_currents[1][0] = -12 * direct_seq[0]
     assert line.res_violated is True
-    assert np.allclose(line.res_loading, [12 / 11, 10 / 11, 10 / 11])
+    npt.assert_allclose(line.res_loading.m, [12 / 11, 10 / 11, 10 / 11])
 
     #
     # The same with arrays
@@ -207,33 +207,33 @@ def test_res_violated():
     lp.ampacities = [11, 12, 13]
     line.max_loading = 1
     assert line.res_violated is False
-    assert np.allclose(line.res_loading, [10 / 11, 10 / 12, 10 / 13])
+    npt.assert_allclose(line.res_loading.m, [10 / 11, 10 / 12, 10 / 13])
 
     # Two violations
     lp.ampacities = [9, 9, 12]
     assert line.res_violated is True
-    assert np.allclose(line.res_loading, [10 / 9, 10 / 9, 10 / 12])
+    npt.assert_allclose(line.res_loading.m, [10 / 9, 10 / 9, 10 / 12])
 
     # Side 1 violation
     lp.ampacities = [11, 10, 9]
     line._res_currents = 12 * direct_seq, -10 * direct_seq
     assert line.res_violated is True
-    assert np.allclose(line.res_loading, [12 / 11, 12 / 10, 12 / 9])
+    npt.assert_allclose(line.res_loading.m, [12 / 11, 12 / 10, 12 / 9])
 
     # Side 2 violation
     lp.ampacities = [11, 11, 13]
     line._res_currents = 10 * direct_seq, -12 * direct_seq
     assert line.res_violated is True
-    assert np.allclose(line.res_loading, [12 / 11, 12 / 11, 12 / 13])
+    npt.assert_allclose(line.res_loading.m, [12 / 11, 12 / 11, 12 / 13])
 
     # Nan is the array
     lp.ampacities = [11, np.nan, 13]
     line._res_currents = 10 * direct_seq, -12 * direct_seq
     assert line.res_violated is True
-    npt.assert_allclose(line.res_loading, [12 / 11, np.nan, 12 / 13], equal_nan=True)
+    npt.assert_allclose(line.res_loading.m, [12 / 11, np.nan, 12 / 13], equal_nan=True)
     lp.ampacities = [13, np.nan, 13]
     assert line.res_violated is False
-    npt.assert_allclose(line.res_loading, [12 / 13, np.nan, 12 / 13], equal_nan=True)
+    npt.assert_allclose(line.res_loading.m, [12 / 13, np.nan, 12 / 13], equal_nan=True)
 
 
 @pytest.mark.parametrize(

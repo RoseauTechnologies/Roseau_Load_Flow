@@ -1000,8 +1000,8 @@ def test_equality():
 
     other_data = {
         "id": lp.id + " other",
-        "z_line": lp.z_line.m + 1,
-        "y_shunt": lp.y_shunt.m + 1,
+        "z_line": lp.z_line.m + 0.1j,
+        "y_shunt": lp.y_shunt.m + 0.1j,
         "ampacities": lp.ampacities.m + 1,
         "line_type": LineType.OVERHEAD,
         "materials": Material.CU,

@@ -6,7 +6,7 @@ from roseau.load_flow.models import Bus, Transformer, TransformerParameters
 
 
 def test_max_power():
-    tp = TransformerParameters.from_catalogue(name="FT_Standard_Standard_100kVA")
+    tp = TransformerParameters.from_catalogue(name="FT_Standard_Standard_100kVA_20kV_400V")
     assert tp.sn == Q_(100, "kVA")
 
     bus1 = Bus(id="bus1", phases="abc")

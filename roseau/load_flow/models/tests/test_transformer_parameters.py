@@ -391,15 +391,15 @@ def test_from_catalogue():
         TransformerParameters.from_catalogue(type=r"yzn.*", sn=50e3)
     assert e.value.msg == (
         "Several transformers matching the query (type='yzn.*', nominal power=50.0 kVA) have been "
-        "found: 'SE_Minera_A0Ak_50kVA', 'SE_Minera_B0Bk_50kVA', 'SE_Minera_C0Bk_50kVA', "
-        "'SE_Minera_Standard_50kVA'."
+        "found: 'SE_Minera_A0Ak_50kVA_20kV_400V', 'SE_Minera_B0Bk_50kVA_20kV_400V', "
+        "'SE_Minera_C0Bk_50kVA_20kV_400V', 'SE_Minera_Standard_50kVA_20kV_400V'."
     )
     assert e.value.code == RoseauLoadFlowExceptionCode.CATALOGUE_SEVERAL_FOUND
 
     # Success
-    tp = TransformerParameters.from_catalogue(name="SE_Minera_AA0Ak_160kVA")
-    assert tp.id == "SE_Minera_AA0Ak_160kVA"
-    tp = TransformerParameters.from_catalogue(name="SE_Minera_AA0Ak_160kVA", id="tp-test1")
+    tp = TransformerParameters.from_catalogue(name="SE_Minera_AA0Ak_160kVA_20kV_400V")
+    assert tp.id == "SE_Minera_AA0Ak_160kVA_20kV_400V"
+    tp = TransformerParameters.from_catalogue(name="SE_Minera_AA0Ak_160kVA_20kV_400V", id="tp-test1")
     assert tp.id == "tp-test1"
 
 
@@ -411,7 +411,7 @@ def test_get_catalogue():
 
     # Filter on a single attribute
     for field_name, value, expected_size in (
-        ("name", "SE_Minera_A0Ak_50kVA", 1),
+        ("name", "SE_Minera_A0Ak_50kVA_20kV_400V", 1),
         ("manufacturer", "SE", 148),
         ("range", r"min.*", 67),
         ("efficiency", r"c0.*", 29),
@@ -425,7 +425,7 @@ def test_get_catalogue():
 
     # Filter on two attributes
     for field_name, value, expected_size in (
-        ("name", "SE_Minera_A0Ak_50kVA", 1),
+        ("name", "SE_Minera_A0Ak_50kVA_20kV_400V", 1),
         ("range", "minera", 67),
         ("efficiency", r"c0.*", 29),
         ("type", r"^d.*11$", 144),
@@ -438,7 +438,7 @@ def test_get_catalogue():
 
     # Filter on three attributes
     for field_name, value, expected_size in (
-        ("name", "se_VEGETA_C0BK_3150kva", 1),
+        ("name", "se_VEGETA_C0BK_3150kva_20Kv_400v", 1),
         ("efficiency", r"c0[abc]k", 15),
         ("type", r"dyn\d+", 41),
         ("sn", Q_(160, "kVA"), 3),
@@ -641,7 +641,7 @@ def test_from_power_factory():
 
 def test_to_dict():
     # No results to export
-    tp = TransformerParameters.from_catalogue(name="SE_Minera_A0Ak_100kVA", manufacturer="SE")
+    tp = TransformerParameters.from_catalogue(name="SE_Minera_A0Ak_100kVA_20kV_400V", manufacturer="SE")
     with pytest.raises(RoseauLoadFlowException) as e:
         tp.results_to_dict()
     assert e.value.msg == "The TransformerParameters has no results to export."
@@ -719,7 +719,7 @@ def test_equality():
 
 @pytest.mark.no_patch_engine
 def test_compute_open_short_circuit_parameters():
-    tp = TransformerParameters.from_catalogue(name="SE_Minera_A0Ak_100kVA", manufacturer="SE")
+    tp = TransformerParameters.from_catalogue(name="SE_Minera_A0Ak_100kVA_20kV_400V", manufacturer="SE")
     p0, i0 = tp._compute_open_circuit_parameters()
     assert np.isclose(p0.m, tp.p0.m)
     assert np.isclose(i0.m, tp.i0.m)
