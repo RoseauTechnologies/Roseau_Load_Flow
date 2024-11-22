@@ -9,7 +9,12 @@ from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.transformers.parameters import TransformerParameters
 from roseau.load_flow.typing import Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
-from roseau.load_flow_engine.cy_engine import CyCenterTransformer, CySingleTransformer, CyThreePhaseTransformer
+from roseau.load_flow_engine.cy_engine import (
+    CyCenterTransformer,
+    CySingleTransformer,
+    CyThreePhaseTransformer,
+    CyTransformer,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -101,51 +106,30 @@ class Transformer(AbstractBranch):
         self.max_loading = max_loading
 
         z2, ym, k, orientation = parameters._z2, parameters._ym, parameters._k, parameters._orientation
+        self._cy_element: CyTransformer
         if parameters.type == "single":
-            self._cy_element = CySingleTransformer(z2=z2, ym=ym, k=k * tap)
+            self._cy_element = CySingleTransformer(z2=z2, ym=ym, k=k * orientation * tap)
         elif parameters.type == "center":
-            self._cy_element = CyCenterTransformer(z2=z2, ym=ym, k=k * tap)
+            self._cy_element = CyCenterTransformer(z2=z2, ym=ym, k=k * orientation * tap)
         else:
-            if "Y" in parameters.winding1 and "y" in parameters.winding2:
-                self._cy_element = CyThreePhaseTransformer(
-                    n1=4, n2=4, prim="Y", sec="y", z2=z2, ym=ym, k=k * tap, orientation=orientation
-                )
-            elif "D" in parameters.winding1 and "y" in parameters.winding2:
-                self._cy_element = CyThreePhaseTransformer(
-                    n1=3, n2=4, prim="D", sec="y", z2=z2, ym=ym, k=k * tap, orientation=orientation
-                )
-            elif "D" in parameters.winding1 and "d" in parameters.winding2:
-                self._cy_element = CyThreePhaseTransformer(
-                    n1=3, n2=3, prim="D", sec="d", z2=z2, ym=ym, k=k * tap, orientation=orientation
-                )
-            elif "Y" in parameters.winding1 and "d" in parameters.winding2:
-                self._cy_element = CyThreePhaseTransformer(
-                    n1=4, n2=3, prim="Y", sec="d", z2=z2, ym=ym, k=k * tap, orientation=orientation
-                )
-            elif "Y" in parameters.winding1 and "z" in parameters.winding2:
-                self._cy_element = CyThreePhaseTransformer(
-                    n1=4, n2=4, prim="Y", sec="z", z2=z2, ym=ym, k=k * tap, orientation=orientation
-                )
-            elif "D" in parameters.winding1 and "z" in parameters.winding2:
-                self._cy_element = CyThreePhaseTransformer(
-                    n1=3, n2=4, prim="D", sec="z", z2=z2, ym=ym, k=k * tap, orientation=orientation
-                )
-            else:
-                msg = f"Transformer {parameters.type} is not implemented yet..."
-                logger.error(msg)
-                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS)
+            self._cy_element = CyThreePhaseTransformer(
+                n1=parameters._n1,
+                n2=parameters._n2,
+                prim=parameters.winding1[0],
+                sec=parameters.winding2[0],
+                z2=z2,
+                ym=ym,
+                k=k * tap,
+                orientation=orientation,
+            )
         self._cy_connect()
 
     def __repr__(self) -> str:
-        s = (
+        return (
             f"<{type(self).__name__}: id={self.id!r}, bus1={self.bus1.id!r}, bus2={self.bus2.id!r}, "
-            f"phases1={self.phases1!r}, phases2={self.phases2!r}"
+            f"phases1={self.phases1!r}, phases2={self.phases2!r}, tap={self.tap:f}, "
+            f"max_loading={self._max_loading:f}>"
         )
-        for attr, val, tp in (("tap", self._tap, float), ("max_loading", self._max_loading, float)):
-            if val is not None:
-                s += f", {attr}={tp(val)!r}"
-        s += ">"
-        return s
 
     @property
     def tap(self) -> float:

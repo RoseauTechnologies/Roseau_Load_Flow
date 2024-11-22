@@ -154,8 +154,8 @@ have been found. Please look at the catalogue using the `get_catalogue` class me
 
 ## Transformers
 
-_Roseau Load Flow_ is provided with a catalogue of transformer parameters. These parameters are available
-through the class `TransformerParameters`.
+_Roseau Load Flow_ ships with a catalogue of `TransformerParameters` obtained from data sheets of
+real transformers.
 
 ```{note}
 Currently, only three phase MV/LV transformers are in the catalogue.
@@ -243,12 +243,20 @@ _Truncated output_
 
 The following data are available in this table:
 
-- the **name**: a unique name of the transformer in the catalogue.
-- the **manufacturer**: two manufacturers are available. `"SE"` stands for "Schneider-Electric" and `"FT"` stands for
-  "France Transfo".
+- the **name**: a unique name of the transformer in the catalogue. This is usually a concatenation
+  of the manufacturer, the product range, the efficiency class, the nominal power, the primary side
+  phase-to-phase voltage, and the secondary side phase-to-phase voltage.
+- the **manufacturer**: two manufacturers are available. `"SE"` stands for "Schneider-Electric" and
+  `"FT"` stands for "France Transfo".
 - the product **range** which depends on the manufacturer
 - the **efficiency** class of the transformer
-- the **type** of the transformer.
+- the **type** of the transfomer. It can be `three` for three-phase transformers, `single` for
+  single-phase transformers and `center` for center-tapped transformers.
+- the technology of the transformer, noted **tech**:
+  - `dry`: dry-type transformer
+  - `mineral`: mineral oil immersed transformer
+  - `ester`: vegetable oil (natural ester) immersed transformer
+- the vector group of the transformer, noted **vg** (e.g., `Dyn11`, `Yzn11`, `Ii0`, etc.)
 - the nominal power, noted **sn**.
 - the primary side phase-to-phase voltage, noted **up**.
 - the no-load secondary side phase-to-phase voltage, noted **us**.
