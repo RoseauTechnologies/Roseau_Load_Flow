@@ -19,6 +19,7 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`286` The deprecated method `LineParameters.from_name_mv` is removed.
 - {gh-pr}`283` **BREAKING CHANGE**: Several changes related to the `LineParameters`:
 
   - The `LineParameters` class changed:
