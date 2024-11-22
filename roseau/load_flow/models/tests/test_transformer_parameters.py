@@ -455,33 +455,6 @@ def test_get_catalogue():
     assert empty_catalogue.shape == (0, 7)
 
 
-def test_max_power():
-    kwds = {
-        "type": "yzn11",
-        "psc": 1350.0,
-        "p0": 145.0,
-        "i0": 1.8 / 100,
-        "us": 400,
-        "up": 20000,
-        "sn": 50 * 1e3,
-        "vsc": 4 / 100,
-    }
-    tp = TransformerParameters.from_open_and_short_circuit_tests(id="test", **kwds)
-    assert tp.max_power is None
-
-    tp = TransformerParameters.from_open_and_short_circuit_tests(id="test", **kwds, max_power=60_000)
-    assert tp.max_power == Q_(60_000, "VA")
-
-    tp.max_power = 55_000
-    assert tp.max_power == Q_(55_000, "VA")
-
-    tp.max_power = None
-    assert tp.max_power is None
-
-    tp.max_power = Q_(65, "kVA")
-    assert tp.max_power == Q_(65_000, "VA")
-
-
 def test_from_open_dss():
     """https://sourceforge.net/p/electricdss/discussion/beginners/thread/742e6c9665/
 
@@ -571,8 +544,8 @@ def test_from_power_factory():
         # Electrical parameters
         tech=3,  # Three Phase Transformer
         sn=0.1,  # MVA
-        up=20,  # kV
-        us=0.4,  # kV
+        uhv=20,  # kV
+        ulv=0.4,  # kV
         vg_hv="D",
         vg_lv="yn",
         phase_shift=11,
@@ -596,7 +569,6 @@ def test_from_power_factory():
         i0=Q_(2.5, "percent"),
         psc=Q_(2.15, "kW"),
         vsc=Q_(4, "percent"),
-        max_power=Q_(0.1, "MVA"),  # 100% of nominal power by default in PwF
         # Optional parameters
         manufacturer="Roseau",
         range="Tech+",
@@ -609,7 +581,6 @@ def test_from_power_factory():
     assert tp_pwf.sn == tp_rlf.sn
     assert tp_pwf.k == tp_rlf.k
     assert tp_pwf.orientation == tp_rlf.orientation
-    assert tp_pwf.max_power == tp_rlf.max_power
     np.testing.assert_allclose(tp_pwf.z2.m, tp_rlf.z2.m)
     np.testing.assert_allclose(tp_pwf.ym.m, tp_rlf.ym.m)
 
@@ -624,8 +595,8 @@ def test_from_power_factory():
         # Electrical parameters
         tech="single-phase",  # Single Phase Transformer
         sn=0.1,  # MVA
-        up=20,  # kV
-        us=0.4,  # kV
+        uhv=20,  # kV
+        ulv=0.4,  # kV
         vg_hv="D",
         vg_lv="yn",
         phase_shift=11,
@@ -647,8 +618,8 @@ def test_from_power_factory():
             # Electrical parameters
             tech="unknown value",  # <-------------Error
             sn=0.1,  # MVA
-            up=20,  # kV
-            us=0.4,  # kV
+            uhv=20,  # kV
+            ulv=0.4,  # kV
             vg_hv="D",
             vg_lv="yn",
             phase_shift=11,
@@ -716,12 +687,31 @@ def test_equality():
         "up": Q_(20, "kV"),  # V
         "sn": Q_(50, "kVA"),  # VA
         "type": "yzn11",
+        "manufacturer": "Roseau",
+        "range": "Tech+",
+        "efficiency": "Extraordinary",
     }
 
-    # Optional information are not used for the comparison
     tp = TransformerParameters(**data)
-    tp2 = TransformerParameters(**data, manufacturer="Roseau", range="Tech+", efficiency="Extraordinary")
+    tp2 = TransformerParameters(**data)
     assert tp2 == tp
+
+    # Fails
+    other_data = {
+        "id": "Dyn11 - 49kVA",
+        "z2": Q_(8.63 + 9.444j, "centiohm"),  # Ohm
+        "ym": Q_(0.48 - 2.2206j, "uS"),  # S
+        "us": Q_(399, "V"),  # V
+        "up": Q_(19, "kV"),  # V
+        "sn": Q_(49, "kVA"),  # VA
+        "type": "dyn11",
+        "manufacturer": "Roso",
+        "range": "Tech-",
+        "efficiency": "Less extraordinary",
+    }
+    for k, v in other_data.items():
+        other_tp = TransformerParameters(**(data | {k: v}))
+        assert other_tp != tp, k
 
     # Test the case which returns NotImplemented in the equality operator
     assert tp != object()

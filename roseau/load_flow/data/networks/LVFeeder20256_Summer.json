@@ -123,6 +123,7 @@
       "bus2": "LVBus094025",
       "length": 0.006305750351183943,
       "params_id": "T_AL_70",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -142,6 +143,7 @@
       "bus2": "LVBus094029",
       "length": 0.09393517180378773,
       "params_id": "T_AL_70",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -162,6 +164,7 @@
       "bus2": "LVBus094031",
       "length": 0.10772524267857121,
       "params_id": "T_AL_70",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -180,6 +183,7 @@
       "bus2": "LVBus094030",
       "length": 0.039561474934677016,
       "params_id": "T_AL_70",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -199,6 +203,7 @@
       "bus2": "LVBus094026",
       "length": 0.28751405369286326,
       "params_id": "T_AL_70",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -223,6 +228,7 @@
       "bus2": "LVBus094027",
       "length": 0.061401995852302334,
       "params_id": "T_AL_70",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -242,6 +248,7 @@
       "bus2": "LVBus094028",
       "length": 0.05808029688523051,
       "params_id": "T_AL_70",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -267,7 +274,8 @@
         "coordinates": [-1.198773190586607, 48.76230724776908]
       },
       "tap": 1.0,
-      "params_id": "Dyn11_160kVA"
+      "params_id": "Dyn11_160kVA",
+      "max_loading": 1
     }
   ],
   "switches": [],
@@ -429,10 +437,9 @@
           [-9.334047516122607e-6, -9.334047516122602e-6, -9.334294062818125e-6, 8.357992380628483e-5]
         ]
       ],
-      "max_currents": [187, 187, 187, 187],
+      "ampacities": [187, 187, 187, 187],
       "line_type": "TWISTED",
       "materials": ["AL", "AL", "AL", "AL"],
-
       "sections": [70.0, 70.0, 70.0, 70.0]
     }
   ],
@@ -448,8 +455,7 @@
       "i0": 0.023,
       "p0": 460.0,
       "psc": 2350.0,
-      "vsc": 0.04,
-      "max_power": 160000
+      "vsc": 0.04
     }
   ]
 }

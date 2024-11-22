@@ -41,8 +41,8 @@ class RoseauLoadFlowExceptionCode(StrEnum):
     BAD_Y_SHUNT_VALUE = auto()
     BAD_TYPE_NAME_SYNTAX = auto()
     BAD_LENGTH_VALUE = auto()
-    BAD_MAX_CURRENTS_VALUE = auto()
-    BAD_MAX_CURRENTS_SIZE = auto()
+    BAD_AMPACITIES_VALUE = auto()
+    BAD_AMPACITIES_SIZE = auto()
     BAD_SECTIONS_VALUE = auto()
     BAD_SECTIONS_SIZE = auto()
     BAD_MATERIALS_VALUE = auto()
@@ -56,6 +56,9 @@ class RoseauLoadFlowExceptionCode(StrEnum):
     BAD_TRANSFORMER_TYPE = auto()
     BAD_TRANSFORMER_IMPEDANCE = auto()
     BAD_TRANSFORMER_PARAMETERS = auto()
+
+    # Transformer and line
+    BAD_MAX_LOADING_VALUE = auto()
 
     # Switch
     BAD_SWITCH_ID = auto()

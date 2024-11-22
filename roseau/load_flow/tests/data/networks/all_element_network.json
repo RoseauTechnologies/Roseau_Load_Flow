@@ -92,6 +92,7 @@
       "bus2": "bus1",
       "length": 1.5,
       "params_id": "lp0",
+      "max_loading": 1,
       "ground": "ground",
       "results": {
         "currents1": [
@@ -113,6 +114,7 @@
       "bus2": "bus4",
       "length": 0.1,
       "params_id": "lp1",
+      "max_loading": 1,
       "results": {
         "currents1": [
           [203.0652123688027, 96.09147480241117],
@@ -150,7 +152,8 @@
         ]
       },
       "tap": 1.0,
-      "params_id": "tp0"
+      "params_id": "tp0",
+      "max_loading": 1
     }
   ],
   "switches": [
@@ -579,10 +582,9 @@
           [0.0, 0.0, 3.40441e-5]
         ]
       ],
-      "max_currents": [323, 323, 323],
+      "ampacities": [323, 323, 323],
       "line_type": "UNDERGROUND",
       "materials": ["AM", "AM", "AM"],
-
       "sections": [148.0, 148.0, 148.0]
     },
     {
@@ -601,10 +603,9 @@
           [0.0, 0.0, 0.0, 0.1066400577]
         ]
       ],
-      "max_currents": [195, 195, 195, 195],
+      "ampacities": [195, 195, 195, 195],
       "line_type": "TWISTED",
       "materials": ["AL", "AL", "AL", "AL"],
-
       "sections": [75.0, 75.0, 75.0, 75.0]
     }
   ],

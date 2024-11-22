@@ -93,6 +93,7 @@
       "bus2": "LVBus178129",
       "length": 0.03149676075784545,
       "params_id": "T_AL_70",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -112,6 +113,7 @@
       "bus2": "LVBus178131",
       "length": 0.13113446014467442,
       "params_id": "T_AL_70",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -133,6 +135,7 @@
       "bus2": "LVBus178130",
       "length": 0.17387433044121148,
       "params_id": "T_AL_70",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -155,6 +158,7 @@
       "bus2": "LVBus178132",
       "length": 0.07252441840882509,
       "params_id": "T_AL_70",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -181,7 +185,8 @@
         "coordinates": [-0.737488811262479, 48.784238047637125]
       },
       "tap": 1.0,
-      "params_id": "Dyn11_160kVA"
+      "params_id": "Dyn11_160kVA",
+      "max_loading": 1
     }
   ],
   "switches": [],
@@ -295,10 +300,9 @@
           [-9.334047516122607e-6, -9.334047516122602e-6, -9.334294062818125e-6, 8.357992380628483e-5]
         ]
       ],
-      "max_currents": [187, 187, 187, 187],
+      "ampacities": [187, 187, 187, 187],
       "line_type": "TWISTED",
       "materials": ["AL", "AL", "AL", "AL"],
-
       "sections": [70.0, 70.0, 70.0, 70.0]
     }
   ],
@@ -314,8 +318,7 @@
       "i0": 0.023,
       "p0": 460.0,
       "psc": 2350.0,
-      "vsc": 0.04,
-      "max_power": 160000
+      "vsc": 0.04
     }
   ]
 }

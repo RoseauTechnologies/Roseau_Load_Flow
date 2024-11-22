@@ -133,6 +133,7 @@
       "bus2": "MVBus03246",
       "length": 0.03437601393347589,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -154,6 +155,7 @@
       "bus2": "MVLV12316",
       "length": 0.004149664526962077,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -172,6 +174,7 @@
       "bus2": "MVLV18592",
       "length": 0.2993785990167933,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -202,6 +205,7 @@
       "bus2": "MVBus09362",
       "length": 0.0030639494102197053,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -220,6 +224,7 @@
       "bus2": "MVBus09361",
       "length": 0.10188973558821779,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -242,6 +247,7 @@
       "bus2": "MVLV07687",
       "length": 0.5398981925554321,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -284,6 +290,7 @@
       "bus2": "MVBus07867",
       "length": 0.5303723579195851,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -311,6 +318,7 @@
       "bus2": "MVLV14607",
       "length": 1.166091630690215,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -385,6 +393,7 @@
       "bus2": "MVBus03247",
       "length": 2.071208490393622,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -636,10 +645,9 @@
           [0.0, 0.0, 0.00014105751014618172]
         ]
       ],
-      "max_currents": [325, 325, 325],
+      "ampacities": [325, 325, 325],
       "line_type": "UNDERGROUND",
       "materials": ["AL", "AL", "AL"],
-
       "sections": [150.0, 150.0, 150.0]
     }
   ],

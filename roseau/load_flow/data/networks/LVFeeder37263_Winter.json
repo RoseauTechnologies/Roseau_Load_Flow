@@ -63,6 +63,7 @@
       "bus2": "LVBus173891",
       "length": 0.06318652813386802,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -97,7 +98,8 @@
         "coordinates": [-1.186472797718411, 48.48667576673907]
       },
       "tap": 1.0,
-      "params_id": "Dyn11_160kVA"
+      "params_id": "Dyn11_160kVA",
+      "max_loading": 1
     }
   ],
   "switches": [],
@@ -163,10 +165,9 @@
           [-0.00018518179657458456, 4.85783749893247e-5, -0.00018518179657458597, 0.0009990656421805131]
         ]
       ],
-      "max_currents": [325, 325, 325, 325],
+      "ampacities": [325, 325, 325, 325],
       "line_type": "UNDERGROUND",
       "materials": ["AL", "AL", "AL", "AL"],
-
       "sections": [150.0, 150.0, 150.0, 150.0]
     }
   ],
@@ -182,8 +183,7 @@
       "i0": 0.023,
       "p0": 460.0,
       "psc": 2350.0,
-      "vsc": 0.04,
-      "max_power": 160000
+      "vsc": 0.04
     }
   ]
 }

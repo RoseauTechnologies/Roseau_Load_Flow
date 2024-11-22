@@ -103,6 +103,7 @@
       "bus2": "LVBus087076",
       "length": 0.04187235159546076,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -125,6 +126,7 @@
       "bus2": "LVBus087078",
       "length": 0.10847194755352463,
       "params_id": "T_AL_70",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -145,6 +147,7 @@
       "bus2": "LVBus087079",
       "length": 0.02607998376353147,
       "params_id": "T_AL_70",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -164,6 +167,7 @@
       "bus2": "LVBus087080",
       "length": 0.04020726221453102,
       "params_id": "T_AL_70",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -185,6 +189,7 @@
       "bus2": "LVBus087077",
       "length": 0.01566142289245769,
       "params_id": "T_AL_70",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -211,7 +216,8 @@
         "coordinates": [-1.1327275629390434, 49.16774480064011]
       },
       "tap": 1.0,
-      "params_id": "Dyn11_160kVA"
+      "params_id": "Dyn11_160kVA",
+      "max_loading": 1
     }
   ],
   "switches": [],
@@ -341,10 +347,9 @@
           [-9.334047516122607e-6, -9.334047516122602e-6, -9.334294062818125e-6, 8.357992380628483e-5]
         ]
       ],
-      "max_currents": [187, 187, 187, 187],
+      "ampacities": [187, 187, 187, 187],
       "line_type": "TWISTED",
       "materials": ["AL", "AL", "AL", "AL"],
-
       "sections": [70.0, 70.0, 70.0, 70.0]
     },
     {
@@ -377,10 +382,9 @@
           [-0.00018518179657458456, 4.85783749893247e-5, -0.00018518179657458597, 0.0009990656421805131]
         ]
       ],
-      "max_currents": [325, 325, 325, 325],
+      "ampacities": [325, 325, 325, 325],
       "line_type": "UNDERGROUND",
       "materials": ["AL", "AL", "AL", "AL"],
-
       "sections": [150.0, 150.0, 150.0, 150.0]
     }
   ],
@@ -396,8 +400,7 @@
       "i0": 0.023,
       "p0": 460.0,
       "psc": 2350.0,
-      "vsc": 0.04,
-      "max_power": 160000
+      "vsc": 0.04
     }
   ]
 }

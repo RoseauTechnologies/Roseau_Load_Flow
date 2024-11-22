@@ -620,7 +620,7 @@ def v1_to_v2_converter(data: JsonDict) -> JsonDict:
     return results
 
 
-def v2_to_v3_converter(data: JsonDict) -> JsonDict:
+def v2_to_v3_converter(data: JsonDict) -> JsonDict:  # noqa: C901
     """Convert a v2 network dict to a v3 network dict.
 
     Args:
@@ -649,16 +649,20 @@ def v2_to_v3_converter(data: JsonDict) -> JsonDict:
         buses.append(bus_data)
 
     # Rename `uhv` in `up` and `ulv` in `us`
+    # Remove `max_power`
     old_transformers_params = data.get("transformers_params", [])
     transformers_params = []
+    transformers_params_max_loading = {}
     for transformer_param_data in old_transformers_params:
-        if up := transformer_param_data.pop("uhv", None) is not None:
+        if (up := transformer_param_data.pop("uhv", None)) is not None:
             transformer_param_data["up"] = up
-        if us := transformer_param_data.pop("ulv", None) is not None:
+        if (us := transformer_param_data.pop("ulv", None)) is not None:
             transformer_param_data["us"] = us
+        if (max_power := transformer_param_data.pop("max_power", None)) is not None:
+            transformers_params_max_loading[transformer_param_data["id"]] = max_power / transformer_param_data["sn"]
         transformers_params.append(transformer_param_data)
 
-    # Rename `maximal_current` in `maximal_currents` and uses array
+    # Rename `maximal_current` in `ampacities` and uses array
     # Rename `section` in `sections` and uses array
     # Rename `insulator_type` in `insulators` and uses array. `Unknown` is deleted
     # Rename `material` in `materials` and uses array
@@ -666,17 +670,31 @@ def v2_to_v3_converter(data: JsonDict) -> JsonDict:
     lines_params = []
     for line_param_data in old_lines_params:
         size = len(line_param_data["z_line"][0])
-        if maximal_current := line_param_data.pop("maximal_current", None) is not None:
-            line_param_data["maximal_currents"] = [maximal_current] * size
-        if section := line_param_data.pop("section", None) is not None:
+        if (maximal_current := line_param_data.pop("maximal_current", None)) is not None:
+            line_param_data["ampacities"] = [maximal_current] * size
+        if (section := line_param_data.pop("section", None)) is not None:
             line_param_data["sections"] = [section] * size
-        if conductor_type := line_param_data.pop("conductor_types", None) is not None:
+        if (conductor_type := line_param_data.pop("conductor_types", None)) is not None:
             line_param_data["materials"] = [conductor_type] * size
         if (
-            insulator_type := line_param_data.pop("insulator_types", None) is not None
+            (insulator_type := line_param_data.pop("insulator_types", None)) is not None
         ) and insulator_type.lower() != "unknown":
             line_param_data["insulators"] = [insulator_type] * size
         lines_params.append(line_param_data)
+
+    # Add max_loading to lines
+    old_lines = data.get("lines", [])
+    lines = []
+    for line_data in old_lines:
+        line_data["max_loading"] = 1
+        lines.append(line_data)
+
+    # Add max_loading to transformers
+    old_transformers = data.get("transformers", [])
+    transformers = []
+    for transformer_data in old_transformers:
+        transformer_data["max_loading"] = transformers_params_max_loading.get(transformer_data["params_id"], 1)
+        transformers.append(transformer_data)
 
     results = {
         "version": 3,
@@ -684,9 +702,9 @@ def v2_to_v3_converter(data: JsonDict) -> JsonDict:
         "grounds": data["grounds"],  # Unchanged
         "potential_refs": data["potential_refs"],  # Unchanged
         "buses": buses,  # <---- Changed
-        "lines": data["lines"],  # Unchanged
+        "lines": lines,  # <---- Changed
         "switches": data["switches"],  # Unchanged
-        "transformers": data["transformers"],  # Unchanged
+        "transformers": transformers,  # <---- Changed
         "loads": data["loads"],  # Unchanged
         "sources": data["sources"],  # Unchanged
         "lines_params": lines_params,  # <---- Changed

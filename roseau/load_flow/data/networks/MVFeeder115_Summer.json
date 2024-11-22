@@ -63,6 +63,7 @@
       "bus2": "MVLV14092",
       "length": 5.766634582124083,
       "params_id": "U_AL_240",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -137,6 +138,7 @@
       "bus2": "MVLV05996",
       "length": 6.070765210726548,
       "params_id": "U_AL_240",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -349,10 +351,9 @@
           [0.0, 0.0, 0.00018346901096964396]
         ]
       ],
-      "max_currents": [428, 428, 428],
+      "ampacities": [428, 428, 428],
       "line_type": "UNDERGROUND",
       "materials": ["AL", "AL", "AL"],
-
       "sections": [240.0, 240.0, 240.0]
     }
   ],
