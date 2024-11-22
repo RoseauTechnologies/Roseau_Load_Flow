@@ -165,13 +165,15 @@ Currently, only three phase MV/LV transformers are in the catalogue.
 
 The available transformers data come from the following data sheets:
 
-- For Schneider-Electric EcoDesign products (_AA0Ak_ efficiency class):
-  [Minera](../_static/Transformer/Minera-EcoDesign2021-20kV_ZZ6921.pdf),
-  [Vegeta](../_static/Transformer/Vegeta-EcoDesign2021-20kV_ZZ6924.pdf),
-  [Trihal](../_static/Transformer/Trihal-EcoDesign2021-20kV_ZZ6925.pdf)
-- For other Schneider-Electric products: See [this document](../_static/Transformer/2023_03_31_Fiche_Technique_Schneider_Electric.pdf)
+- For _Schneider-Electric EcoDesign_ products (**AA0Ak** efficiency class):
+  [Minera](../_static/Transformer/References/2024_03_18_Minera-EcoDesign2021-20kV_ZZ6921.pdf),
+  [Vegeta](../_static/Transformer/References/2024_03_18_Vegeta-EcoDesign2021-20kV_ZZ6924.pdf),
+  [Trihal](../_static/Transformer/References/2024_03_18_Trihal-EcoDesign2021-20kV_ZZ6925.pdf)
+- For other _Schneider-Electric_ products: See
+  [this document](../_static/Transformer/References/2023_03_31_Fiche_Technique_Schneider_Electric.pdf)
   on pages 19, 21 and 22.
-- For France Transfo: See [this document](../_static/Transformer/2023_03_30_Fiche_Technique_France_Transfo.pdf).
+- For _France Transfo_: See
+  [this document](../_static/Transformer/References/2023_03_30_Fiche_Technique_France_Transfo.pdf).
 
 Pull requests to add some other sources are welcome!
 
