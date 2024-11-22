@@ -903,7 +903,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         Args:
             name:
                 The canonical name of the line parameters. It must be in the format
-                `lineType_conductorType_crossSection`. E.g. "U_AL_150".
+                `LineType_Material_CrossSection`. E.g. "U_AL_150".
 
             nb_phases:
                 The number of phases of the line between 1 and 4, defaults to 3. It represents the
@@ -927,7 +927,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         except Exception:
             msg = (
                 f"The Coiffier line parameter name {name!r} is not valid, expected format is "
-                "'LineType_ConductorType_CrossSection'."
+                "'LineType_Material_CrossSection'."
             )
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TYPE_NAME_SYNTAX) from None

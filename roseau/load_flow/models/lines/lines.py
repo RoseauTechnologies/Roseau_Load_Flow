@@ -39,8 +39,8 @@ class Line(AbstractBranch):
         length: float | Q_[float],
         phases: str | None = None,
         ground: Ground | None = None,
-        geometry: BaseGeometry | None = None,
         max_loading: float | Q_[float] = 1,
+        geometry: BaseGeometry | None = None,
     ) -> None:
         """Line constructor.
 
@@ -71,12 +71,13 @@ class Line(AbstractBranch):
             ground:
                 The ground element attached to the line if it has shunt admittance.
 
+            max_loading:
+                The maximum loading of the line (unitless).  It is not used in the load flow. It is used with the
+                `ampacities` of the :class:`LineParameters` to compute the
+                :meth:`~roseau.load_flow.Line.max_currents` of the line.
+
             geometry:
                 The geometry of the line i.e. the linestring.
-
-            max_loading:
-                The maximum loading of the line (unitless). It is used with the `ampacities` of the
-                :class:`LineParameters` to compute the :meth:`~roseau.load_flow.Line.max_currents` of the line.
         """
         if phases is None:
             phases = "".join(p for p in bus1.phases if p in bus2.phases)  # can't use set because order is important
@@ -136,6 +137,17 @@ class Line(AbstractBranch):
         self._y_shunt = parameters._y_shunt * self._length
         self._z_line_inv = np.linalg.inv(self._z_line)
         self._yg = self._y_shunt.sum(axis=1)  # y_ig = Y_ia + Y_ib + Y_ic + Y_in for i in {a, b, c, n}
+
+    def __repr__(self) -> str:
+        s = (
+            f"<{type(self).__name__}: id={self.id!r}, bus1={self.bus1.id!r}, bus2={self.bus2.id!r}, "
+            f"phases1={self.phases1!r}, phases2={self.phases2!r}"
+        )
+        for attr, val, tp in (("length", self._length, float), ("max_loading", self._max_loading, float)):
+            if val is not None:
+                s += f", {attr}={tp(val)!r}"
+        s += ">"
+        return s
 
     @property
     def phases(self) -> str:
@@ -251,7 +263,7 @@ class Line(AbstractBranch):
     @property
     def max_currents(self) -> Q_[FloatArray] | None:
         """The maximum current of the line (in A). It takes into account the `max_loading` of the line and the
-        ampacities` of the parameters."""
+        `ampacities` of the parameters."""
         # Do not add a setter. Only `max_loading` can be altered by the user
         amp = self._parameters._ampacities
         return None if amp is None else Q_(amp * self._max_loading, "A")

@@ -620,7 +620,7 @@ def v1_to_v2_converter(data: JsonDict) -> JsonDict:
     return results
 
 
-def v2_to_v3_converter(data: JsonDict) -> JsonDict:
+def v2_to_v3_converter(data: JsonDict) -> JsonDict:  # noqa: C901
     """Convert a v2 network dict to a v3 network dict.
 
     Args:
@@ -649,15 +649,17 @@ def v2_to_v3_converter(data: JsonDict) -> JsonDict:
         buses.append(bus_data)
 
     # Rename `uhv` in `up` and `ulv` in `us`
-    # Remove max_power
+    # Remove `max_power`
     old_transformers_params = data.get("transformers_params", [])
     transformers_params = []
+    transformers_params_max_loading = {}
     for transformer_param_data in old_transformers_params:
         if (up := transformer_param_data.pop("uhv", None)) is not None:
             transformer_param_data["up"] = up
         if (us := transformer_param_data.pop("ulv", None)) is not None:
             transformer_param_data["us"] = us
-        transformer_param_data.pop("max_power", None)
+        if (max_power := transformer_param_data.pop("max_power", None)) is not None:
+            transformers_params_max_loading[transformer_param_data["id"]] = max_power / transformer_param_data["sn"]
         transformers_params.append(transformer_param_data)
 
     # Rename `maximal_current` in `ampacities` and uses array
@@ -691,7 +693,7 @@ def v2_to_v3_converter(data: JsonDict) -> JsonDict:
     old_transformers = data.get("transformers", [])
     transformers = []
     for transformer_data in old_transformers:
-        transformer_data["max_loading"] = 1
+        transformer_data["max_loading"] = transformers_params_max_loading.get(transformer_data["params_id"], 1)
         transformers.append(transformer_data)
 
     results = {

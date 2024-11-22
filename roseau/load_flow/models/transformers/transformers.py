@@ -42,8 +42,8 @@ class Transformer(AbstractBranch):
         tap: float = 1.0,
         phases1: str | None = None,
         phases2: str | None = None,
-        geometry: BaseGeometry | None = None,
         max_loading: float | Q_[float] = 1,
+        geometry: BaseGeometry | None = None,
     ) -> None:
         """Transformer constructor.
 
@@ -73,14 +73,14 @@ class Transformer(AbstractBranch):
             phases2:
                 The phases of the second extremity of the transformer. See ``phases1``.
 
-            geometry:
-                The geometry of the transformer.
-
             max_loading:
                 The maximum loading of the transformer (unitless). It is used with the `sn` of the
                 :class:`TransformerParameters` to compute the :meth:`~roseau.load_flow.Transformer.max_power`,
                  :meth:`~roseau.load_flow.Transformer.res_loading` and
                  :meth:`~roseau.load_flow.Transformer.res_violated` of the transformer.
+
+            geometry:
+                The geometry of the transformer.
         """
         if parameters.type == "single":
             phases1, phases2 = self._compute_phases_single(
@@ -135,6 +135,17 @@ class Transformer(AbstractBranch):
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS)
         self._cy_connect()
+
+    def __repr__(self) -> str:
+        s = (
+            f"<{type(self).__name__}: id={self.id!r}, bus1={self.bus1.id!r}, bus2={self.bus2.id!r}, "
+            f"phases1={self.phases1!r}, phases2={self.phases2!r}"
+        )
+        for attr, val, tp in (("tap", self._tap, float), ("max_loading", self._max_loading, float)):
+            if val is not None:
+                s += f", {attr}={tp(val)!r}"
+        s += ">"
+        return s
 
     @property
     def tap(self) -> float:

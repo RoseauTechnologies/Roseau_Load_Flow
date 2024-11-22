@@ -449,14 +449,14 @@ def test_from_coiffier_model():
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_TYPE_NAME_SYNTAX
     assert e.value.msg == (
         "The Coiffier line parameter name 'totoU_Al_150' is not valid, expected format is "
-        "'LineType_ConductorType_CrossSection'."
+        "'LineType_Material_CrossSection'."
     )
     with pytest.raises(RoseauLoadFlowException) as e:
         LineParameters.from_coiffier_model("U_AL_IP_150")
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_TYPE_NAME_SYNTAX
     assert e.value.msg == (
         "The Coiffier line parameter name 'U_AL_IP_150' is not valid, expected format is "
-        "'LineType_ConductorType_CrossSection'."
+        "'LineType_Material_CrossSection'."
     )
 
     # Working example with defaults

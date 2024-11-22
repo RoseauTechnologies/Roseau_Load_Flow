@@ -544,8 +544,8 @@ def test_from_power_factory():
         # Electrical parameters
         tech=3,  # Three Phase Transformer
         sn=0.1,  # MVA
-        up=20,  # kV
-        us=0.4,  # kV
+        uhv=20,  # kV
+        ulv=0.4,  # kV
         vg_hv="D",
         vg_lv="yn",
         phase_shift=11,
@@ -595,8 +595,8 @@ def test_from_power_factory():
         # Electrical parameters
         tech="single-phase",  # Single Phase Transformer
         sn=0.1,  # MVA
-        up=20,  # kV
-        us=0.4,  # kV
+        uhv=20,  # kV
+        ulv=0.4,  # kV
         vg_hv="D",
         vg_lv="yn",
         phase_shift=11,
@@ -618,8 +618,8 @@ def test_from_power_factory():
             # Electrical parameters
             tech="unknown value",  # <-------------Error
             sn=0.1,  # MVA
-            up=20,  # kV
-            us=0.4,  # kV
+            uhv=20,  # kV
+            ulv=0.4,  # kV
             vg_hv="D",
             vg_lv="yn",
             phase_shift=11,

@@ -330,8 +330,8 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         *,
         tech: Literal[2, "single-phase", 3, "three-phase"],
         sn: float | Q_[float],
-        up: float | Q_[float],
-        us: float | Q_[float],
+        uhv: float | Q_[float],
+        ulv: float | Q_[float],
         vg_hv: str,
         vg_lv: str,
         phase_shift: int,
@@ -359,11 +359,11 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             sn:
                 PwF parameter `strn` (Rated Power). The rated power of the transformer in (MVA).
 
-            up:
+            uhv:
                 PwF parameter `utrn_h` (Rated Voltage HV-Side). The rated phase-to-phase voltage of
                 the transformer on the primary side.
 
-            us:
+            ulv:
                 PwF parameter `utrn_l` (Rated Voltage LV-Side). The rated phase-to-phase voltage of
                 the transformer on the secondary side.
 
@@ -420,21 +420,21 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_TYPE)
 
-        up *= 1e3
-        us *= 1e3
+        uhv *= 1e3
+        ulv *= 1e3
         sn *= 1e6
         p0 = pfe * 1e3
         psc = pc * 1e3
         i0 = curmg / 100
         vsc = uk / 100
 
-        z2, ym = cls._compute_zy(type=type, up=up, us=us, sn=sn, p0=p0, i0=i0, psc=psc, vsc=vsc)
+        z2, ym = cls._compute_zy(type=type, up=uhv, us=ulv, sn=sn, p0=p0, i0=i0, psc=psc, vsc=vsc)
 
         obj = cls(
             id=id,
             type=type,
-            up=up,
-            us=us,
+            up=uhv,
+            us=ulv,
             sn=sn,
             z2=z2,
             ym=ym,

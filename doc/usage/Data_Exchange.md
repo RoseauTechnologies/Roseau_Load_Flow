@@ -147,8 +147,8 @@ The data on these two screenshots translate to:
 ...     id="0.315 MVA 20/0.4 kV Dyn11 ASEA",
 ...     tech="three-phase",  # Technology, "Basic Data"
 ...     sn=rlf.Q_(0.315, "MVA"),  # Rated Power, "Basic Data"
-...     up=rlf.Q_(20, "kV"),  # Rated Voltage HV-Side, "Basic Data"
-...     us=rlf.Q_(0.4, "kV"),  # Rated Voltage LV-Side, "Basic Data"
+...     uhv=rlf.Q_(20, "kV"),  # Rated Voltage HV-Side, "Basic Data"
+...     ulv=rlf.Q_(0.4, "kV"),  # Rated Voltage LV-Side, "Basic Data"
 ...     vg_hv="D",  # Vector Group HV-Side, "Basic Data"
 ...     vg_lv="yn",  # Vector Group LV-Side, "Basic Data"
 ...     phase_shift=11,  # Vector Group Phase Shift, "Basic Data"

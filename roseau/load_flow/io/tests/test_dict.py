@@ -1340,7 +1340,6 @@ def test_v1_to_v2_converter():
 
 def test_v2_to_v3_converter(recwarn):
     # Do not change `dict_v2` or the network manually, add/update the converters until the test passes
-
     dict_v2 = {
         "version": 2,
         "is_multiphase": True,
@@ -1552,3 +1551,93 @@ def test_v2_to_v3_converter(recwarn):
         "`min_voltage` or `max_voltage` are dropped."
     )
     assert_json_close(net_dict, expected_dict)
+
+
+def test_v2_to_v3_converter_max_loading():
+    # Dict v2 (test the max_power -> max_loading conversion)
+    # import roseau.load_flow as rlf
+    #
+    # bus1 = rlf.Bus(id=1, phases="abc")
+    # bus2 = rlf.Bus(id=2, phases="abc")
+    # data = {
+    #     "id": "Yzn11 - 50kVA",
+    #     "z2": rlf.Q_(8.64 + 9.444j, "centiohm"),  # Ohm
+    #     "ym": rlf.Q_(0.3625 - 2.2206j, "uS"),  # S
+    #     "ulv": rlf.Q_(400, "V"),  # V
+    #     "uhv": rlf.Q_(20, "kV"),  # V
+    #     "sn": rlf.Q_(50, "kVA"),  # VA
+    #     "type": "yzn11",
+    #     "max_power": rlf.Q_(60, "kVA"),
+    # }
+    # tp = rlf.TransformerParameters(**data)
+    # t = rlf.Transformer(id="t", bus1=bus1, bus2=bus2, parameters=tp)
+    # vs = rlf.VoltageSource(id="vs", bus=bus1, voltages=20_000)
+    # p_ref = rlf.PotentialRef(id="pref", element=bus1)
+    # p_ref2 = rlf.PotentialRef(id="pref2", element=bus2)
+    # en = rlf.ElectricalNetwork.from_element(bus1)
+    # en.to_json("test_max_power.json")
+    dict_v2 = {
+        "version": 2,
+        "is_multiphase": True,
+        "grounds": [],
+        "potential_refs": [{"id": "pref", "bus": 1, "phases": None}, {"id": "pref2", "bus": 2, "phases": None}],
+        "buses": [{"id": 1, "phases": "abc"}, {"id": 2, "phases": "abc"}],
+        "lines": [],
+        "transformers": [
+            {
+                "id": "t",
+                "phases1": "abc",
+                "phases2": "abc",
+                "bus1": 1,
+                "bus2": 2,
+                "tap": 1.0,
+                "params_id": "Yzn11 - 50kVA",
+            }
+        ],
+        "switches": [],
+        "loads": [],
+        "sources": [
+            {
+                "id": "vs",
+                "bus": 1,
+                "phases": "abc",
+                "voltages": [
+                    [20000.0, 0.0],
+                    [-10000.000000000007, -17320.50807568877],
+                    [-9999.999999999996, 17320.508075688773],
+                ],
+                "connect_neutral": None,
+            }
+        ],
+        "lines_params": [],
+        "transformers_params": [
+            {
+                "id": "Yzn11 - 50kVA",
+                "sn": 50000.0,
+                "uhv": 20000.0,
+                "ulv": 400.0,
+                "type": "yzn11",
+                "z2": [0.0864, 0.09444000000000001],
+                "ym": [3.6249999999999997e-07, -2.2206e-06],
+                "max_power": 60000.0,
+            }
+        ],
+    }
+    dict_v3 = v2_to_v3_converter(copy.deepcopy(dict_v2))
+    tp_data = dict_v3["transformers_params"][0]
+    assert tp_data["sn"] == 50000.0
+    assert "max_power" not in tp_data
+    t_data = dict_v3["transformers"][0]
+    assert t_data["params_id"] == "Yzn11 - 50kVA"
+    assert t_data["max_loading"] == 60 / 50
+
+    # The same without max_power in the original transformer parameter
+    dict_v2_bis = copy.deepcopy(dict_v2)
+    dict_v2_bis["transformers_params"][0].pop("max_power")
+    dict_v3 = v2_to_v3_converter(dict_v2_bis)
+    tp_data = dict_v3["transformers_params"][0]
+    assert tp_data["sn"] == 50000.0
+    assert "max_power" not in tp_data
+    t_data = dict_v3["transformers"][0]
+    assert t_data["params_id"] == "Yzn11 - 50kVA"
+    assert t_data["max_loading"] == 1
