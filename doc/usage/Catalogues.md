@@ -188,58 +188,58 @@ This catalogue can be retrieved in the form of a dataframe using:
 
 _Truncated output_
 
-| Name                                   | Manufacturer | Product range | Efficiency | Nominal power (kVA) | Type  | Primary voltage (kV) | Secondary voltage (kV) |
-| :------------------------------------- | :----------- | :------------ | :--------- | ------------------: | :---- | -------------------: | ---------------------: |
-| FT_Standard_Standard_100kVA_20kV_400V  | FT           | Standard      | Standard   |                 100 | Dyn11 |                   20 |                    0.4 |
-| FT_Standard_Standard_160kVA_20kV_400V  | FT           | Standard      | Standard   |                 160 | Dyn11 |                   20 |                    0.4 |
-| FT_Standard_Standard_250kVA_20kV_400V  | FT           | Standard      | Standard   |                 250 | Dyn11 |                   20 |                    0.4 |
-| FT_Standard_Standard_315kVA_20kV_400V  | FT           | Standard      | Standard   |                 315 | Dyn11 |                   20 |                    0.4 |
-| FT_Standard_Standard_400kVA_20kV_400V  | FT           | Standard      | Standard   |                 400 | Dyn11 |                   20 |                    0.4 |
-| FT_Standard_Standard_500kVA_20kV_400V  | FT           | Standard      | Standard   |                 500 | Dyn11 |                   20 |                    0.4 |
-| FT_Standard_Standard_630kVA_20kV_400V  | FT           | Standard      | Standard   |                 630 | Dyn11 |                   20 |                    0.4 |
-| FT_Standard_Standard_800kVA_20kV_400V  | FT           | Standard      | Standard   |                 800 | Dyn11 |                   20 |                    0.4 |
-| FT_Standard_Standard_1000kVA_20kV_400V | FT           | Standard      | Standard   |                1000 | Dyn11 |                   20 |                    0.4 |
-| FT_Standard_Standard_1250kVA_20kV_400V | FT           | Standard      | Standard   |                1250 | Dyn11 |                   20 |                    0.4 |
-| FT_Standard_Standard_1600kVA_20kV_400V | FT           | Standard      | Standard   |                1600 | Dyn11 |                   20 |                    0.4 |
-| FT_Standard_Standard_2000kVA_20kV_400V | FT           | Standard      | Standard   |                2000 | Dyn11 |                   20 |                    0.4 |
-| FT_Standard_Standard_2500kVA_20kV_400V | FT           | Standard      | Standard   |                2500 | Dyn11 |                   20 |                    0.4 |
-| FT_Standard_Standard_3150kVA_20kV_400V | FT           | Standard      | Standard   |                3150 | Dyn11 |                   20 |                    0.4 |
-| SE_Minera_AA0Ak_160kVA_20kV_400V       | SE           | Minera        | AA0Ak      |                 160 | Dyn11 |                   20 |                    0.4 |
-| SE_Minera_AA0Ak_250kVA_20kV_400V       | SE           | Minera        | AA0Ak      |                 250 | Dyn11 |                   20 |                    0.4 |
-| SE_Minera_AA0Ak_400kVA_20kV_400V       | SE           | Minera        | AA0Ak      |                 400 | Dyn11 |                   20 |                    0.4 |
-| SE_Minera_AA0Ak_630kVA_20kV_400V       | SE           | Minera        | AA0Ak      |                 630 | Dyn11 |                   20 |                    0.4 |
-| SE_Minera_AA0Ak_800kVA_20kV_400V       | SE           | Minera        | AA0Ak      |                 800 | Dyn11 |                   20 |                    0.4 |
-| SE_Minera_AA0Ak_1000kVA_20kV_400V      | SE           | Minera        | AA0Ak      |                1000 | Dyn11 |                   20 |                    0.4 |
-| SE_Minera_AA0Ak_1250kVA_20kV_400V      | SE           | Minera        | AA0Ak      |                1250 | Dyn11 |                   20 |                    0.4 |
-| SE_Minera_AA0Ak_1600kVA_20kV_400V      | SE           | Minera        | AA0Ak      |                1600 | Dyn11 |                   20 |                    0.4 |
-| SE_Minera_AA0Ak_2000kVA_20kV_400V      | SE           | Minera        | AA0Ak      |                2000 | Dyn11 |                   20 |                    0.4 |
-| SE_Minera_AA0Ak_2500kVA_20kV_400V      | SE           | Minera        | AA0Ak      |                2500 | Dyn11 |                   20 |                    0.4 |
-| SE_Minera_AA0Ak_3150kVA_20kV_400V      | SE           | Minera        | AA0Ak      |                3150 | Dyn11 |                   20 |                    0.4 |
-| SE_Minera_A0Ak_50kVA_20kV_400V         | SE           | Minera        | A0Ak       |                  50 | Yzn11 |                   20 |                    0.4 |
-| SE_Minera_A0Ak_100kVA_20kV_400V        | SE           | Minera        | A0Ak       |                 100 | Dyn11 |                   20 |                    0.4 |
-| SE_Minera_A0Ak_160kVA_20kV_400V        | SE           | Minera        | A0Ak       |                 160 | Dyn11 |                   20 |                    0.4 |
-| SE_Minera_A0Ak_250kVA_20kV_400V        | SE           | Minera        | A0Ak       |                 250 | Dyn11 |                   20 |                    0.4 |
-| SE_Minera_A0Ak_315kVA_20kV_400V        | SE           | Minera        | A0Ak       |                 315 | Dyn11 |                   20 |                    0.4 |
-| SE_Minera_A0Ak_400kVA_20kV_400V        | SE           | Minera        | A0Ak       |                 400 | Dyn11 |                   20 |                    0.4 |
-| SE_Minera_A0Ak_500kVA_20kV_400V        | SE           | Minera        | A0Ak       |                 500 | Dyn11 |                   20 |                    0.4 |
-| SE_Minera_A0Ak_630kVA_20kV_400V        | SE           | Minera        | A0Ak       |                 630 | Dyn11 |                   20 |                    0.4 |
-| SE_Minera_A0Ak_800kVA_20kV_400V        | SE           | Minera        | A0Ak       |                 800 | Dyn11 |                   20 |                    0.4 |
-| SE_Minera_A0Ak_1000kVA_20kV_400V       | SE           | Minera        | A0Ak       |                1000 | Dyn11 |                   20 |                    0.4 |
-| SE_Minera_A0Ak_1250kVA_20kV_400V       | SE           | Minera        | A0Ak       |                1250 | Dyn11 |                   20 |                    0.4 |
-| SE_Minera_A0Ak_1600kVA_20kV_400V       | SE           | Minera        | A0Ak       |                1600 | Dyn11 |                   20 |                    0.4 |
-| SE_Minera_A0Ak_2000kVA_20kV_400V       | SE           | Minera        | A0Ak       |                2000 | Dyn11 |                   20 |                    0.4 |
-| SE_Minera_A0Ak_2500kVA_20kV_400V       | SE           | Minera        | A0Ak       |                2500 | Dyn11 |                   20 |                    0.4 |
-| SE_Minera_B0Bk_50kVA_20kV_400V         | SE           | Minera        | B0Bk       |                  50 | Yzn11 |                   20 |                    0.4 |
-| SE_Minera_B0Bk_100kVA_20kV_400V        | SE           | Minera        | B0Bk       |                 100 | Dyn11 |                   20 |                    0.4 |
-| SE_Minera_B0Bk_160kVA_20kV_400V        | SE           | Minera        | B0Bk       |                 160 | Dyn11 |                   20 |                    0.4 |
-| SE_Minera_B0Bk_250kVA_20kV_400V        | SE           | Minera        | B0Bk       |                 250 | Dyn11 |                   20 |                    0.4 |
-| SE_Minera_B0Bk_315kVA_20kV_400V        | SE           | Minera        | B0Bk       |                 315 | Dyn11 |                   20 |                    0.4 |
-| SE_Minera_B0Bk_400kVA_20kV_400V        | SE           | Minera        | B0Bk       |                 400 | Dyn11 |                   20 |                    0.4 |
-| SE_Minera_B0Bk_500kVA_20kV_400V        | SE           | Minera        | B0Bk       |                 500 | Dyn11 |                   20 |                    0.4 |
-| SE_Minera_B0Bk_630kVA_20kV_400V        | SE           | Minera        | B0Bk       |                 630 | Dyn11 |                   20 |                    0.4 |
-| SE_Minera_B0Bk_800kVA_20kV_400V        | SE           | Minera        | B0Bk       |                 800 | Dyn11 |                   20 |                    0.4 |
-| SE_Minera_B0Bk_1000kVA_20kV_400V       | SE           | Minera        | B0Bk       |                1000 | Dyn11 |                   20 |                    0.4 |
-| SE_Minera_B0Bk_1250kVA_20kV_400V       | SE           | Minera        | B0Bk       |                1250 | Dyn11 |                   20 |                    0.4 |
+| Name                              | Manufacturer | Product range | Efficiency | Nominal power (kVA) | High voltage (kV) | Low voltage (kV) | Vector Group |
+| :-------------------------------- | :----------- | :------------ | :--------- | ------------------: | ----------------: | ---------------: | :----------- |
+| FT_100kVA_20kV_400V               | FT           |               |            |                 100 |                20 |              0.4 | Dyn11        |
+| FT_160kVA_20kV_400V               | FT           |               |            |                 160 |                20 |              0.4 | Dyn11        |
+| FT_250kVA_20kV_400V               | FT           |               |            |                 250 |                20 |              0.4 | Dyn11        |
+| FT_315kVA_20kV_400V               | FT           |               |            |                 315 |                20 |              0.4 | Dyn11        |
+| FT_400kVA_20kV_400V               | FT           |               |            |                 400 |                20 |              0.4 | Dyn11        |
+| FT_500kVA_20kV_400V               | FT           |               |            |                 500 |                20 |              0.4 | Dyn11        |
+| FT_630kVA_20kV_400V               | FT           |               |            |                 630 |                20 |              0.4 | Dyn11        |
+| FT_800kVA_20kV_400V               | FT           |               |            |                 800 |                20 |              0.4 | Dyn11        |
+| FT_1000kVA_20kV_400V              | FT           |               |            |                1000 |                20 |              0.4 | Dyn11        |
+| FT_1250kVA_20kV_400V              | FT           |               |            |                1250 |                20 |              0.4 | Dyn11        |
+| FT_1600kVA_20kV_400V              | FT           |               |            |                1600 |                20 |              0.4 | Dyn11        |
+| FT_2000kVA_20kV_400V              | FT           |               |            |                2000 |                20 |              0.4 | Dyn11        |
+| FT_2500kVA_20kV_400V              | FT           |               |            |                2500 |                20 |              0.4 | Dyn11        |
+| FT_3150kVA_20kV_400V              | FT           |               |            |                3150 |                20 |              0.4 | Dyn11        |
+| SE_Minera_AA0Ak_160kVA_20kV_400V  | SE           | Minera        | AA0Ak      |                 160 |                20 |              0.4 | Dyn11        |
+| SE_Minera_AA0Ak_250kVA_20kV_400V  | SE           | Minera        | AA0Ak      |                 250 |                20 |              0.4 | Dyn11        |
+| SE_Minera_AA0Ak_400kVA_20kV_400V  | SE           | Minera        | AA0Ak      |                 400 |                20 |              0.4 | Dyn11        |
+| SE_Minera_AA0Ak_630kVA_20kV_400V  | SE           | Minera        | AA0Ak      |                 630 |                20 |              0.4 | Dyn11        |
+| SE_Minera_AA0Ak_800kVA_20kV_400V  | SE           | Minera        | AA0Ak      |                 800 |                20 |              0.4 | Dyn11        |
+| SE_Minera_AA0Ak_1000kVA_20kV_400V | SE           | Minera        | AA0Ak      |                1000 |                20 |              0.4 | Dyn11        |
+| SE_Minera_AA0Ak_1250kVA_20kV_400V | SE           | Minera        | AA0Ak      |                1250 |                20 |              0.4 | Dyn11        |
+| SE_Minera_AA0Ak_1600kVA_20kV_400V | SE           | Minera        | AA0Ak      |                1600 |                20 |              0.4 | Dyn11        |
+| SE_Minera_AA0Ak_2000kVA_20kV_400V | SE           | Minera        | AA0Ak      |                2000 |                20 |              0.4 | Dyn11        |
+| SE_Minera_AA0Ak_2500kVA_20kV_400V | SE           | Minera        | AA0Ak      |                2500 |                20 |              0.4 | Dyn11        |
+| SE_Minera_AA0Ak_3150kVA_20kV_400V | SE           | Minera        | AA0Ak      |                3150 |                20 |              0.4 | Dyn11        |
+| SE_Minera_A0Ak_50kVA_20kV_400V    | SE           | Minera        | A0Ak       |                  50 |                20 |              0.4 | Yzn11        |
+| SE_Minera_A0Ak_100kVA_20kV_400V   | SE           | Minera        | A0Ak       |                 100 |                20 |              0.4 | Dyn11        |
+| SE_Minera_A0Ak_160kVA_20kV_400V   | SE           | Minera        | A0Ak       |                 160 |                20 |              0.4 | Dyn11        |
+| SE_Minera_A0Ak_250kVA_20kV_400V   | SE           | Minera        | A0Ak       |                 250 |                20 |              0.4 | Dyn11        |
+| SE_Minera_A0Ak_315kVA_20kV_400V   | SE           | Minera        | A0Ak       |                 315 |                20 |              0.4 | Dyn11        |
+| SE_Minera_A0Ak_400kVA_20kV_400V   | SE           | Minera        | A0Ak       |                 400 |                20 |              0.4 | Dyn11        |
+| SE_Minera_A0Ak_500kVA_20kV_400V   | SE           | Minera        | A0Ak       |                 500 |                20 |              0.4 | Dyn11        |
+| SE_Minera_A0Ak_630kVA_20kV_400V   | SE           | Minera        | A0Ak       |                 630 |                20 |              0.4 | Dyn11        |
+| SE_Minera_A0Ak_800kVA_20kV_400V   | SE           | Minera        | A0Ak       |                 800 |                20 |              0.4 | Dyn11        |
+| SE_Minera_A0Ak_1000kVA_20kV_400V  | SE           | Minera        | A0Ak       |                1000 |                20 |              0.4 | Dyn11        |
+| SE_Minera_A0Ak_1250kVA_20kV_400V  | SE           | Minera        | A0Ak       |                1250 |                20 |              0.4 | Dyn11        |
+| SE_Minera_A0Ak_1600kVA_20kV_400V  | SE           | Minera        | A0Ak       |                1600 |                20 |              0.4 | Dyn11        |
+| SE_Minera_A0Ak_2000kVA_20kV_400V  | SE           | Minera        | A0Ak       |                2000 |                20 |              0.4 | Dyn11        |
+| SE_Minera_A0Ak_2500kVA_20kV_400V  | SE           | Minera        | A0Ak       |                2500 |                20 |              0.4 | Dyn11        |
+| SE_Minera_B0Bk_50kVA_20kV_400V    | SE           | Minera        | B0Bk       |                  50 |                20 |              0.4 | Yzn11        |
+| SE_Minera_B0Bk_100kVA_20kV_400V   | SE           | Minera        | B0Bk       |                 100 |                20 |              0.4 | Dyn11        |
+| SE_Minera_B0Bk_160kVA_20kV_400V   | SE           | Minera        | B0Bk       |                 160 |                20 |              0.4 | Dyn11        |
+| SE_Minera_B0Bk_250kVA_20kV_400V   | SE           | Minera        | B0Bk       |                 250 |                20 |              0.4 | Dyn11        |
+| SE_Minera_B0Bk_315kVA_20kV_400V   | SE           | Minera        | B0Bk       |                 315 |                20 |              0.4 | Dyn11        |
+| SE_Minera_B0Bk_400kVA_20kV_400V   | SE           | Minera        | B0Bk       |                 400 |                20 |              0.4 | Dyn11        |
+| SE_Minera_B0Bk_500kVA_20kV_400V   | SE           | Minera        | B0Bk       |                 500 |                20 |              0.4 | Dyn11        |
+| SE_Minera_B0Bk_630kVA_20kV_400V   | SE           | Minera        | B0Bk       |                 630 |                20 |              0.4 | Dyn11        |
+| SE_Minera_B0Bk_800kVA_20kV_400V   | SE           | Minera        | B0Bk       |                 800 |                20 |              0.4 | Dyn11        |
+| SE_Minera_B0Bk_1000kVA_20kV_400V  | SE           | Minera        | B0Bk       |                1000 |                20 |              0.4 | Dyn11        |
+| SE_Minera_B0Bk_1250kVA_20kV_400V  | SE           | Minera        | B0Bk       |                1250 |                20 |              0.4 | Dyn11        |
 
 The following data are available in this table:
 
@@ -258,8 +258,8 @@ The following data are available in this table:
   - `ester`: vegetable oil (natural ester) immersed transformer
 - the vector group of the transformer, noted **vg** (e.g., `Dyn11`, `Yzn11`, `Ii0`, etc.)
 - the nominal power, noted **sn**.
-- the primary side phase-to-phase voltage, noted **up**.
-- the no-load secondary side phase-to-phase voltage, noted **us**.
+- the phase-to-phase high voltage, noted **uhv**.
+- the no-load phase-to-phase low voltage, noted **ulv**.
 
 The `get_catalogue` method accepts arguments (in bold above) that can be used to filter the returned table. The
 following command only retrieves transformer parameters of transformers with an efficiency of "A0Ak":
@@ -268,22 +268,22 @@ following command only retrieves transformer parameters of transformers with an 
 >>> rlf.TransformerParameters.get_catalogue(efficiency="A0Ak")
 ```
 
-| Name                             | Manufacturer | Product range | Efficiency | Type  | Nominal power (kVA) | Primary voltage (kV) | Secondary voltage (kV) |
-| :------------------------------- | :----------- | :------------ | :--------- | :---- | ------------------: | -------------------: | ---------------------: |
-| SE_Minera_A0Ak_50kVA_20kV_400V   | SE           | Minera        | A0Ak       | Yzn11 |                50.0 |                 20.0 |                    0.4 |
-| SE_Minera_A0Ak_100kVA_20kV_400V  | SE           | Minera        | A0Ak       | Dyn11 |               100.0 |                 20.0 |                    0.4 |
-| SE_Minera_A0Ak_160kVA_20kV_400V  | SE           | Minera        | A0Ak       | Dyn11 |               160.0 |                 20.0 |                    0.4 |
-| SE_Minera_A0Ak_250kVA_20kV_400V  | SE           | Minera        | A0Ak       | Dyn11 |               250.0 |                 20.0 |                    0.4 |
-| SE_Minera_A0Ak_315kVA_20kV_400V  | SE           | Minera        | A0Ak       | Dyn11 |               315.0 |                 20.0 |                    0.4 |
-| SE_Minera_A0Ak_400kVA_20kV_400V  | SE           | Minera        | A0Ak       | Dyn11 |               400.0 |                 20.0 |                    0.4 |
-| SE_Minera_A0Ak_500kVA_20kV_400V  | SE           | Minera        | A0Ak       | Dyn11 |               500.0 |                 20.0 |                    0.4 |
-| SE_Minera_A0Ak_630kVA_20kV_400V  | SE           | Minera        | A0Ak       | Dyn11 |               630.0 |                 20.0 |                    0.4 |
-| SE_Minera_A0Ak_800kVA_20kV_400V  | SE           | Minera        | A0Ak       | Dyn11 |               800.0 |                 20.0 |                    0.4 |
-| SE_Minera_A0Ak_1000kVA_20kV_400V | SE           | Minera        | A0Ak       | Dyn11 |              1000.0 |                 20.0 |                    0.4 |
-| SE_Minera_A0Ak_1250kVA_20kV_400V | SE           | Minera        | A0Ak       | Dyn11 |              1250.0 |                 20.0 |                    0.4 |
-| SE_Minera_A0Ak_1600kVA_20kV_400V | SE           | Minera        | A0Ak       | Dyn11 |              1600.0 |                 20.0 |                    0.4 |
-| SE_Minera_A0Ak_2000kVA_20kV_400V | SE           | Minera        | A0Ak       | Dyn11 |              2000.0 |                 20.0 |                    0.4 |
-| SE_Minera_A0Ak_2500kVA_20kV_400V | SE           | Minera        | A0Ak       | Dyn11 |              2500.0 |                 20.0 |                    0.4 |
+| Name                             | Manufacturer | Product range | Efficiency | Nominal power (kVA) | High voltage (kV) | Low voltage (kV) | Vector Group |
+| :------------------------------- | :----------- | :------------ | :--------- | ------------------: | ----------------: | ---------------: | :----------- |
+| SE_Minera_A0Ak_50kVA_20kV_400V   | SE           | Minera        | A0Ak       |                50.0 |              20.0 |              0.4 | Yzn11        |
+| SE_Minera_A0Ak_100kVA_20kV_400V  | SE           | Minera        | A0Ak       |               100.0 |              20.0 |              0.4 | Dyn11        |
+| SE_Minera_A0Ak_160kVA_20kV_400V  | SE           | Minera        | A0Ak       |               160.0 |              20.0 |              0.4 | Dyn11        |
+| SE_Minera_A0Ak_250kVA_20kV_400V  | SE           | Minera        | A0Ak       |               250.0 |              20.0 |              0.4 | Dyn11        |
+| SE_Minera_A0Ak_315kVA_20kV_400V  | SE           | Minera        | A0Ak       |               315.0 |              20.0 |              0.4 | Dyn11        |
+| SE_Minera_A0Ak_400kVA_20kV_400V  | SE           | Minera        | A0Ak       |               400.0 |              20.0 |              0.4 | Dyn11        |
+| SE_Minera_A0Ak_500kVA_20kV_400V  | SE           | Minera        | A0Ak       |               500.0 |              20.0 |              0.4 | Dyn11        |
+| SE_Minera_A0Ak_630kVA_20kV_400V  | SE           | Minera        | A0Ak       |               630.0 |              20.0 |              0.4 | Dyn11        |
+| SE_Minera_A0Ak_800kVA_20kV_400V  | SE           | Minera        | A0Ak       |               800.0 |              20.0 |              0.4 | Dyn11        |
+| SE_Minera_A0Ak_1000kVA_20kV_400V | SE           | Minera        | A0Ak       |              1000.0 |              20.0 |              0.4 | Dyn11        |
+| SE_Minera_A0Ak_1250kVA_20kV_400V | SE           | Minera        | A0Ak       |              1250.0 |              20.0 |              0.4 | Dyn11        |
+| SE_Minera_A0Ak_1600kVA_20kV_400V | SE           | Minera        | A0Ak       |              1600.0 |              20.0 |              0.4 | Dyn11        |
+| SE_Minera_A0Ak_2000kVA_20kV_400V | SE           | Minera        | A0Ak       |              2000.0 |              20.0 |              0.4 | Dyn11        |
+| SE_Minera_A0Ak_2500kVA_20kV_400V | SE           | Minera        | A0Ak       |              2500.0 |              20.0 |              0.4 | Dyn11        |
 
 or only transformers with a wye winding on the primary side (using a regular expression)
 
@@ -291,12 +291,12 @@ or only transformers with a wye winding on the primary side (using a regular exp
 >>> rlf.TransformerParameters.get_catalogue(type=r"Y.*")
 ```
 
-| Name                               | Manufacturer | Product range | Efficiency | Type  | Nominal power (kVA) | Primary voltage (kV) | Secondary voltage (kV) |
-| :--------------------------------- | :----------- | :------------ | :--------- | :---- | ------------------: | -------------------: | ---------------------: |
-| SE_Minera_A0Ak_50kVA_20kV_400V     | SE           | Minera        | A0Ak       | Yzn11 |                50.0 |                 20.0 |                    0.4 |
-| SE_Minera_B0Bk_50kVA_20kV_400V     | SE           | Minera        | B0Bk       | Yzn11 |                50.0 |                 20.0 |                    0.4 |
-| SE_Minera_C0Bk_50kVA_20kV_400V     | SE           | Minera        | C0Bk       | Yzn11 |                50.0 |                 20.0 |                    0.4 |
-| SE_Minera_Standard_50kVA_20kV_400V | SE           | Minera        | Standard   | Yzn11 |                50.0 |                 20.0 |                    0.4 |
+| Name                               | Manufacturer | Product range | Efficiency | Nominal power (kVA) | High voltage (kV) | Low voltage (kV) | Vector Group |
+| :--------------------------------- | :----------- | :------------ | :--------- | ------------------: | ----------------: | ---------------: | :----------- |
+| SE_Minera_A0Ak_50kVA_20kV_400V     | SE           | Minera        | A0Ak       |                50.0 |              20.0 |              0.4 | Yzn11        |
+| SE_Minera_B0Bk_50kVA_20kV_400V     | SE           | Minera        | B0Bk       |                50.0 |              20.0 |              0.4 | Yzn11        |
+| SE_Minera_C0Bk_50kVA_20kV_400V     | SE           | Minera        | C0Bk       |                50.0 |              20.0 |              0.4 | Yzn11        |
+| SE_Minera_Standard_50kVA_20kV_400V | SE           | Minera        | Standard   |                50.0 |              20.0 |              0.4 | Yzn11        |
 
 or only transformers meeting both criteria
 
@@ -304,9 +304,9 @@ or only transformers meeting both criteria
 >>> rlf.TransformerParameters.get_catalogue(efficiency="A0Ak", type=r"Y.*")
 ```
 
-| Name                           | Manufacturer | Product range | Efficiency | Type  | Nominal power (kVA) | Primary voltage (kV) | Secondary voltage (kV) |
-| :----------------------------- | :----------- | :------------ | :--------- | :---- | ------------------: | -------------------: | ---------------------: |
-| SE_Minera_A0Ak_50kVA_20kV_400V | SE           | Minera        | A0Ak       | Yzn11 |                50.0 |                 20.0 |                    0.4 |
+| Name                           | Manufacturer | Product range | Efficiency | Nominal power (kVA) | High voltage (kV) | Low voltage (kV) | Vector Group |
+| :----------------------------- | :----------- | :------------ | :--------- | ------------------: | ----------------: | ---------------: | :----------- |
+| SE_Minera_A0Ak_50kVA_20kV_400V | SE           | Minera        | A0Ak       |                50.0 |              20.0 |              0.4 | Yzn11        |
 
 Among all the possible filters, the nominal power and voltages are expected in their default unit
 (VA and V). You can also use the [Pint](https://pint.readthedocs.io/en/stable/) library to express
@@ -320,11 +320,11 @@ nominal power of 3150 kVA, the following two commands return the same table:
 >>> rlf.TransformerParameters.get_catalogue(sn=rlf.Q_(3150, "kVA"))
 ```
 
-| Name                                   | Manufacturer | Product range | Efficiency | Type  | Nominal power (kVA) | Primary voltage (kV) | Secondary voltage (kV) |
-| :------------------------------------- | :----------- | :------------ | :--------- | :---- | ------------------: | -------------------: | ---------------------: |
-| FT_Standard_Standard_3150kVA_20kV_400V | FT           | Standard      | Standard   | Dyn11 |              3150.0 |                 20.0 |                    0.4 |
-| SE_Vegeta_C0Bk_3150kVA_20kV_400V       | SE           | Vegeta        | C0Bk       | Dyn11 |              3150.0 |                 20.0 |                    0.4 |
-| SE_Vegeta_Standard_3150kVA_20kV_400V   | SE           | Vegeta        | Standard   | Dyn11 |              3150.0 |                 20.0 |                    0.4 |
+| Name                                 | Manufacturer | Product range | Efficiency | Nominal power (kVA) | High voltage (kV) | Low voltage (kV) | Vector Group |
+| :----------------------------------- | :----------- | :------------ | :--------- | ------------------: | ----------------: | ---------------: | :----------- |
+| FT_3150kVA_20kV_400V                 | FT           | Standard      | Standard   |              3150.0 |              20.0 |              0.4 | Dyn11        |
+| SE_Vegeta_C0Bk_3150kVA_20kV_400V     | SE           | Vegeta        | C0Bk       |              3150.0 |              20.0 |              0.4 | Dyn11        |
+| SE_Vegeta_Standard_3150kVA_20kV_400V | SE           | Vegeta        | Standard   |              3150.0 |              20.0 |              0.4 | Dyn11        |
 
 ### Getting an instance
 
@@ -351,12 +351,12 @@ In case no or several results match the parameters, an error is raised:
 ```pycon
 >>> rlf.TransformerParameters.from_catalogue(manufacturer="ft")
 RoseauLoadFlowException: Several transformers matching the query (manufacturer='ft') have been found:
-'FT_Standard_Standard_100kVA_20kV_400V', 'FT_Standard_Standard_160kVA_20kV_400V',
-'FT_Standard_Standard_250kVA_20kV_400V', 'FT_Standard_Standard_315kVA_20kV_400V',
-'FT_Standard_Standard_400kVA_20kV_400V', 'FT_Standard_Standard_500kVA_20kV_400V',
-'FT_Standard_Standard_630kVA_20kV_400V', 'FT_Standard_Standard_800kVA_20kV_400V',
-'FT_Standard_Standard_1000kVA_20kV_400V', 'FT_Standard_Standard_1250kVA_20kV_400V',
-'FT_Standard_Standard_1600kVA_20kV_400V', [...]. [catalogue_several_found]
+'FT_100kVA_20kV_400V', 'FT_160kVA_20kV_400V',
+'FT_250kVA_20kV_400V', 'FT_315kVA_20kV_400V',
+'FT_400kVA_20kV_400V', 'FT_500kVA_20kV_400V',
+'FT_630kVA_20kV_400V', 'FT_800kVA_20kV_400V',
+'FT_1000kVA_20kV_400V', 'FT_1250kVA_20kV_400V',
+'FT_1600kVA_20kV_400V', [...]. [catalogue_several_found]
 ```
 
 or if no results:

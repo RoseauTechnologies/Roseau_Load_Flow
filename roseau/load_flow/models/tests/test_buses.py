@@ -287,7 +287,7 @@ def test_propagate_limits():  # noqa: C901
 
     lp_mv = LineParameters(id="lp_mv", z_line=np.eye(3), y_shunt=0.1 * np.eye(3))
     lp_lv = LineParameters(id="lp_lv", z_line=np.eye(4))
-    tp = TransformerParameters.from_catalogue(name="SE_Minera_A0Ak_100kVA_20kV_400V", manufacturer="SE")
+    tp = TransformerParameters.from_catalogue(name="SE_Minera_A0Ak_100kVA_20kV_410V_Dyn11", manufacturer="SE")
 
     Line(id="l1_mv", bus1=b1_mv, bus2=b2_mv, length=1.5, parameters=lp_mv, ground=g)
     Line(id="l2_mv", bus1=b2_mv, bus2=b3_mv, length=2, parameters=lp_mv, ground=g)
@@ -447,7 +447,7 @@ def test_get_connected_buses():
 
     lp_mv = LineParameters(id="lp_mv", z_line=np.eye(3), y_shunt=0.1 * np.eye(3))
     lp_lv = LineParameters(id="lp_lv", z_line=np.eye(4))
-    tp = TransformerParameters.from_catalogue(name="SE_Minera_A0Ak_100kVA_20kV_400V", manufacturer="SE")
+    tp = TransformerParameters.from_catalogue(name="SE_Minera_A0Ak_100kVA_20kV_410V_Dyn11", manufacturer="SE")
 
     Line(id="l1_mv", bus1=b1_mv, bus2=b2_mv, length=1.5, parameters=lp_mv, ground=g)
     Line(id="l2_mv", bus1=b2_mv, bus2=b3_mv, length=2, parameters=lp_mv, ground=g)

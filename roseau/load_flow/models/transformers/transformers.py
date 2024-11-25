@@ -87,11 +87,11 @@ class Transformer(AbstractBranch):
             geometry:
                 The geometry of the transformer.
         """
-        if parameters.type == "single":
+        if parameters.type == "single-phase":
             phases1, phases2 = self._compute_phases_single(
                 id=id, bus1=bus1, bus2=bus2, phases1=phases1, phases2=phases2
             )
-        elif parameters.type == "center":
+        elif parameters.type == "center-tapped":
             phases1, phases2 = self._compute_phases_center(
                 id=id, bus1=bus1, bus2=bus2, phases1=phases1, phases2=phases2
             )
@@ -107,9 +107,9 @@ class Transformer(AbstractBranch):
 
         z2, ym, k, orientation = parameters._z2, parameters._ym, parameters._k, parameters._orientation
         self._cy_element: CyTransformer
-        if parameters.type == "single":
+        if parameters.type == "single-phase":
             self._cy_element = CySingleTransformer(z2=z2, ym=ym, k=k * orientation * tap)
-        elif parameters.type == "center":
+        elif parameters.type == "center-tapped":
             self._cy_element = CyCenterTransformer(z2=z2, ym=ym, k=k * orientation * tap)
         else:
             self._cy_element = CyThreePhaseTransformer(

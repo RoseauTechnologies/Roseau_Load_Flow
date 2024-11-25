@@ -31,18 +31,18 @@ def generate_typ_tr(
         # Extract data
         name = typ_tr.at[idx, "loc_name"]
         sn = Q_(typ_tr.at[idx, "strn"], "MVA")  # The nominal voltages of the transformer (MVA)
-        up = Q_(typ_tr.at[idx, "utrn_h"], "kV")  # Phase-to-phase nominal voltages of the primary side (kV)
-        us = Q_(typ_tr.at[idx, "utrn_l"], "kV")  # Phase-to-phase nominal voltages of the secondary side (kV)
+        uhv = Q_(typ_tr.at[idx, "utrn_h"], "kV")  # Phase-to-phase nominal voltage of the HV side (kV)
+        ulv = Q_(typ_tr.at[idx, "utrn_l"], "kV")  # Phase-to-phase nominal voltage of the LV side (kV)
         i0 = Q_(typ_tr.at[idx, "curmg"] / 3, "percent")  # Current during off-load test (%)
         p0 = Q_(typ_tr.at[idx, "pfe"] / 3, "kW")  # Losses during off-load test (kW)
         psc = Q_(typ_tr.at[idx, "pcutr"], "kW")  # Losses during short-circuit test (kW)
         vsc = Q_(typ_tr.at[idx, "uktr"], "percent")  # Voltages on LV side during short-circuit test (%)
-        # Windings of the transformer
-        windings = f"{typ_tr.at[idx, 'tr2cn_h']}{typ_tr.at[idx, 'tr2cn_l']}{typ_tr.at[idx, 'nt2ag']}"
+        # Vector group of the transformer
+        vg = f"{typ_tr.at[idx, 'tr2cn_h']}{typ_tr.at[idx, 'tr2cn_l']}{typ_tr.at[idx, 'nt2ag']}"
 
         # Generate transformer parameters
         transformers_params[idx] = TransformerParameters.from_open_and_short_circuit_tests(
-            id=name, type=windings, up=up, us=us, sn=sn, p0=p0, i0=i0, psc=psc, vsc=vsc
+            id=name, vg=vg, uhv=uhv, ulv=ulv, sn=sn, p0=p0, i0=i0, psc=psc, vsc=vsc
         )
         transformers_tap[idx] = typ_tr.at[idx, "dutap"]
 

@@ -427,15 +427,24 @@ def v0_to_v1_converter(data: JsonDict) -> JsonDict:  # noqa: C901
     for transformer_type in data["transformer_types"]:
         tp = {
             "sn": transformer_type["sn"],
-            "up": transformer_type["up"],
-            "us": transformer_type["us"],
+            "uhv": transformer_type["uhv"],
+            "ulv": transformer_type["ulv"],
             "i0": transformer_type["i0"],
             "p0": transformer_type["p0"],
             "psc": transformer_type["psc"],
             "vsc": transformer_type["vsc"],
             "type": transformer_type["type"],
         }
-        z2, ym = TransformerParameters._compute_zy(**tp)
+        z2, ym = TransformerParameters._compute_zy(
+            vg=tp["type"],
+            uhv=tp["uhv"],
+            ulv=tp["ulv"],
+            sn=tp["sn"],
+            p0=tp["p0"],
+            i0=tp["i0"],
+            psc=tp["psc"],
+            vsc=tp["vsc"],
+        )
         tp["id"] = transformer_type["name"]
         tp["z2"] = [z2.real, z2.imag]
         tp["ym"] = [ym.real, ym.imag]
@@ -648,16 +657,17 @@ def v2_to_v3_converter(data: JsonDict) -> JsonDict:  # noqa: C901
                 bus_warning_emitted = True
         buses.append(bus_data)
 
-    # Rename `uhv` in `up` and `ulv` in `us`
     # Remove `max_power`
+    # Rename `type` to `vg`
     old_transformers_params = data.get("transformers_params", [])
     transformers_params = []
     transformers_params_max_loading = {}
     for transformer_param_data in old_transformers_params:
-        if (up := transformer_param_data.pop("uhv", None)) is not None:
-            transformer_param_data["up"] = up
-        if (us := transformer_param_data.pop("ulv", None)) is not None:
-            transformer_param_data["us"] = us
+        transformer_param_data["vg"] = transformer_param_data.pop("type")
+        if (uhv := transformer_param_data.pop("up", None)) is not None:
+            transformer_param_data["uhv"] = uhv
+        if (ulv := transformer_param_data.pop("us", None)) is not None:
+            transformer_param_data["ulv"] = ulv
         if (max_power := transformer_param_data.pop("max_power", None)) is not None:
             transformers_params_max_loading[transformer_param_data["id"]] = max_power / transformer_param_data["sn"]
         transformers_params.append(transformer_param_data)
