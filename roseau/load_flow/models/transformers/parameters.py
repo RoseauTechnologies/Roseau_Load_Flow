@@ -30,7 +30,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             "Yz5", "Yz11", "Yzn5", "Yzn11", "Ynz5", "Ynz11", "Ynzn5", "Ynzn11",  # Wye-zigzag
         },
         "single": {"Ii0", "Ii6"},  # single-phase
-        "center": {"Ii0", "Ii6"},  # center-tapped
+        "center": {"Iii0", "Iii6"},  # center-tapped
     }
     # fmt: on
 
