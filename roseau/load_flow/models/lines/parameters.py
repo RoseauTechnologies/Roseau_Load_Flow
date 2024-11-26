@@ -125,7 +125,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
                 from the catalogue.
 
             sections:
-                The sections of the conductor. The sections are optional, thy are informative only and are not used in
+                The sections of the conductor. The sections are optional, they are informative only and are not used in
                 the load flow. This field gets automatically filled when the line parameters are created from a
                 geometric model or from the catalogue.
 
@@ -150,6 +150,15 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         self._materials = self._check_enum_array(value=materials, enum_class=Material, name="materials")
         self._insulators = self._check_enum_array(value=insulators, enum_class=Insulator, name="insulators")
         self._sections = self._check_positive_float_array(value=sections, name="sections", unit="mm²")
+
+        # Cache
+        self._z_line_cache = {}
+        self._y_shunt_cache = {}
+        self._with_shunt_cache = {}
+        self._materials_cache = {}
+        self._sections_cache = {}
+        self._insulators_cache = {}
+        self._ampacities_cache = {}
 
     def __repr__(self) -> str:
         s = f"<{type(self).__name__}: id={self.id!r}"
@@ -233,10 +242,14 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         return self._z_line_without_unit(phases=phases)
 
     def _z_line_without_unit(self, phases: str) -> ComplexArray:
-        indices = ["abcn".index(p) for p in phases]
-        z_line = self._z_line[np.ix_(indices, indices)]
-        self._check_matrix_values(id=self.id, matrix=z_line, matrix_name="z_line")
-        self._check_z_line_matrix(id=self.id, z_line=z_line)
+        if phases in self._z_line_cache:
+            z_line = self._z_line_cache[phases]
+        else:
+            indices = ["abcn".index(p) for p in phases]
+            z_line = self._z_line[np.ix_(indices, indices)]
+            self._check_matrix_values(id=self.id, matrix=z_line, matrix_name="z_line")
+            self._check_z_line_matrix(id=self.id, z_line=z_line)
+            self._z_line_cache[phases] = z_line
         return z_line
 
     @ureg_wraps("S/km", (None, None))
@@ -253,9 +266,13 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         return self._y_shunt_without_unit(phases=phases)
 
     def _y_shunt_without_unit(self, phases: str) -> ComplexArray:
-        indices = ["abcn".index(p) for p in phases]
-        y_shunt = self._convert_y(self._y[np.ix_(indices, indices)])
-        self._check_matrix_values(id=self.id, matrix=y_shunt, matrix_name="y_shunt")
+        if phases in self._y_shunt_cache:
+            y_shunt = self._y_shunt_cache[phases]
+        else:
+            indices = ["abcn".index(p) for p in phases]
+            y_shunt = self._convert_y(self._y[np.ix_(indices, indices)])
+            self._check_matrix_values(id=self.id, matrix=y_shunt, matrix_name="y_shunt")
+            self._y_shunt_cache[phases] = y_shunt
         return y_shunt
 
     def with_shunt(self, phases: str) -> bool:
@@ -268,8 +285,13 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         Returns:
             True if the line has a not-null shunt admittance matrix.
         """
-        indices = ["abcn".index(p) for p in phases]
-        return not np.allclose(self._y[np.ix_(indices, indices)], 0)
+        if phases in self._with_shunt_cache:
+            return self._with_shunt_cache[phases]
+        else:
+            indices = ["abcn".index(p) for p in phases]
+            res = not np.allclose(self._y[np.ix_(indices, indices)], 0)
+            self._with_shunt_cache[phases] = res
+            return res
 
     def materials(self, phases: str) -> MaterialArray | None:
         """The materials of the conductors. Informative only, it has no impact on the load flow.
@@ -281,7 +303,14 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         Returns:
             The materials of the line to model.
         """
-        return None if self._materials is None else self._materials[["abcn".index(p) for p in phases]]
+        if self._materials is None:
+            return None
+        elif phases in self._materials_cache:
+            return self._materials_cache[phases]
+        else:
+            res = self._materials[["abcn".index(p) for p in phases]]
+            self._materials_cache[phases] = res
+            return res
 
     def sections(self, phases: str) -> Q_[FloatArray] | None:
         """The cross-section areas of the cable (in mm²). Informative only, it has no impact on the load flow.
@@ -293,7 +322,14 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         Returns:
             The sections of the line to model.
         """
-        return None if self._sections is None else Q_(self._sections[["abcn".index(p) for p in phases]], "mm**2")
+        if self._sections is None:
+            return None
+        elif phases in self._sections_cache:
+            return self._sections_cache[phases]
+        else:
+            res = Q_(self._sections[["abcn".index(p) for p in phases]], "mm**2")
+            self._sections_cache[phases] = res
+            return res
 
     def insulators(self, phases: str) -> InsulatorArray | None:
         """The insulators of the conductors. Informative only, it has no impact on the load flow.
@@ -305,7 +341,14 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         Returns:
             The insulators of the line to model.
         """
-        return None if self._insulators is None else self._insulators[["abcn".index(p) for p in phases]]
+        if self._insulators is None:
+            return None
+        elif phases in self._insulators_cache:
+            return self._insulators_cache[phases]
+        else:
+            res = self._insulators[["abcn".index(p) for p in phases]]
+            self._insulators_cache[phases] = res
+            return res
 
     def ampacities(self, phases: str) -> Q_[FloatArray] | None:
         """The ampacities of the line (A) if it is set. Informative only, it has no impact on the load flow.
@@ -317,7 +360,14 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         Returns:
             The ampacities of the line to model.
         """
-        return None if self._ampacities is None else Q_(self._ampacities[["abcn".index(p) for p in phases]], "A")
+        if self._ampacities is None:
+            return None
+        elif phases in self._ampacities_cache:
+            return self._ampacities_cache[phases]
+        else:
+            res = Q_(self._ampacities[["abcn".index(p) for p in phases]], "A")
+            self._ampacities_cache[phases] = res
+            return res
 
     @staticmethod
     def _sym_to_zy_simple(z0: complex, z1: complex, y0: complex, y1: complex) -> tuple[ComplexArray, ComplexArray]:

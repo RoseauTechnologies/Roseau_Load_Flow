@@ -103,10 +103,9 @@ class Line(AbstractBranch):
         self.parameters = parameters
         self.max_loading = max_loading
         self._initialized = True
-        with_shunt = parameters.with_shunt(phases=phases)
 
         # Handle the ground
-        if self.ground is not None and not with_shunt:
+        if self.ground is not None and not self._with_shunt:
             warnings.warn(
                 message=(
                     f"The ground element must not be provided for line {self.id!r} as it does not have a shunt "
@@ -116,12 +115,12 @@ class Line(AbstractBranch):
                 stacklevel=2,
             )
             self.ground = None
-        elif with_shunt:
+        elif self._with_shunt:
             # Connect the ground
             self._connect(self.ground)
 
         z_line = parameters._z_line_without_unit(phases=phases)
-        if with_shunt:
+        if self._with_shunt:
             y_shunt = self.parameters._y_shunt_without_unit(phases=phases)
             self._cy_element = CyShuntLine(
                 n=self._n1,
@@ -132,13 +131,12 @@ class Line(AbstractBranch):
             y_shunt = np.zeros_like(z_line, dtype=np.complex128)
             self._cy_element = CySimplifiedLine(n=self._n1, z_line=z_line.reshape(self._n1 * self._n2) * self._length)
         self._cy_connect()
-        if with_shunt:
+        if self._with_shunt:
             ground._cy_element.connect(self._cy_element, [(0, self._n1 + self._n1)])
 
         # Cache values related to the line parameters
         self._z_line = z_line * self._length
         self._y_shunt = y_shunt * self._length
-        self._with_shunt = with_shunt
         self._z_line_inv = np.linalg.inv(self._z_line)
         self._yg = self._y_shunt.sum(axis=1)  # y_ig = Y_ia + Y_ib + Y_ic + Y_in for i in {a, b, c, n}
         self._materials = parameters.materials(phases=phases)
@@ -232,6 +230,7 @@ class Line(AbstractBranch):
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_MODEL)
         self._invalidate_network_results()
         self._parameters = value
+        self._with_shunt = value_with_shunt
         if self._initialized:
             self._update_internal_parameters(value, self._length)
 
