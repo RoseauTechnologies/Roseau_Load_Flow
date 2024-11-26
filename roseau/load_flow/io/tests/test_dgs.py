@@ -2,7 +2,7 @@ import copy
 import json
 import warnings
 
-import numpy as np
+import numpy.testing as npt
 import pandas as pd
 import pytest
 
@@ -17,6 +17,7 @@ from roseau.load_flow.network import ElectricalNetwork
 def test_from_dgs(dgs_network_path):
     # Read DGS
     with warnings.catch_warnings():
+        warnings.filterwarnings(action="ignore", message=r".* off-diagonal elements ", category=UserWarning)
         if dgs_network_path.stem == "Line_Without_Type":
             warnings.filterwarnings("ignore", message=r".*is missing line types", category=UserWarning)
         en = ElectricalNetwork.from_dgs(dgs_network_path)
@@ -59,8 +60,10 @@ def test_from_dgs_no_line_type(dgs_special_network_dir):
         r"Please copy all line types from the library to the project before "
         r"exporting otherwise a LineParameter object will be created for each line."
     )
-    with pytest.warns(UserWarning, match=expected_msg):
-        en = ElectricalNetwork.from_dgs(path)
+    with warnings.catch_warnings():
+        warnings.filterwarnings(action="ignore", message=r".* off-diagonal elements ", category=UserWarning)
+        with pytest.warns(UserWarning, match=expected_msg):
+            en = ElectricalNetwork.from_dgs(path)
     en._check_validity(constructed=False)
 
     assert len(en.lines) == 1
@@ -76,11 +79,13 @@ def test_from_dgs_no_line_type(dgs_special_network_dir):
     zs, zm = line.z_line.m[0, :2]  # series and mutual components
     r0, r1 = elm_lne.at[line_id, "R0"], elm_lne.at[line_id, "R1"]
     x0, x1 = elm_lne.at[line_id, "X0"], elm_lne.at[line_id, "X1"]
-    np.testing.assert_allclose(zs.real, (r0 + 2 * r1) / 3)
-    np.testing.assert_allclose(zs.imag, (x0 + 2 * x1) / 3)
-    np.testing.assert_allclose(zm.real, (r0 - r1) / 3)
-    np.testing.assert_allclose(zm.imag, (x0 - x1) / 3)
-    np.testing.assert_allclose(line.parameters.z_line(line.phases).m, line.z_line.m / line.length.m)
+    npt.assert_allclose(zs.real, (r0 + 2 * r1) / 3)
+    npt.assert_allclose(zs.imag, (x0 + 2 * x1) / 3)
+    npt.assert_allclose(zm.real, (r0 - r1) / 3)
+    npt.assert_allclose(zm.imag, (x0 - x1) / 3)
+    with warnings.catch_warnings():
+        warnings.filterwarnings(action="ignore", message=r".* off-diagonal elements ", category=UserWarning)
+        npt.assert_allclose(line.parameters.z_line(line.phases).m, line.z_line.m / line.length.m)
 
 
 def test_dgs_general_load_input_modes(dgs_special_network_dir):
@@ -96,7 +101,7 @@ def test_dgs_general_load_input_modes(dgs_special_network_dir):
             powers = compute_3phase_load_powers(elm_lod, load_id, i_sym=0, factor=1, load_type="General")
         except NotImplementedError:
             continue
-        np.testing.assert_allclose(powers, expected_powers, atol=1e-5, err_msg=f"Input Mode: {mode_inp!r}")
+        npt.assert_allclose(powers, expected_powers, atol=1e-5, err_msg=f"Input Mode: {mode_inp!r}")
 
 
 def test_dgs_switches(dgs_special_network_dir, tmp_path):

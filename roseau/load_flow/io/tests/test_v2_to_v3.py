@@ -1,11 +1,13 @@
 import copy
 
+import pytest
+
 from roseau.load_flow.io.dict import _convert_line_parameters_v2_to_v3, _convert_lines_v2_to_v3, v2_to_v3_converter
 from roseau.load_flow.network import ElectricalNetwork
 from roseau.load_flow.testing import assert_json_close
 
 
-def test_v2_to_v3_converter(recwarn):
+def test_v2_to_v3_converter():
     # Do not change `dict_v2` or the network manually, add/update the converters until the test passes
     dict_v2 = {
         "version": 2,
@@ -205,18 +207,13 @@ def test_v2_to_v3_converter(recwarn):
     # )
 
     # Include results=True
-    net = ElectricalNetwork.from_dict(data=copy.deepcopy(dict_v2), include_results=True)
+    with pytest.warns(UserWarning, match=r"Starting with version 0.11.0 of roseau-load-flow \(JSON file v3\), .*"):
+        net = ElectricalNetwork.from_dict(data=copy.deepcopy(dict_v2), include_results=True)
     net_dict = net.to_dict(include_results=True)
     expected_dict = copy.deepcopy(dict_v2)
-    recwarn.clear()
-    expected_dict = v2_to_v3_converter(expected_dict)
-    assert len(recwarn) == 1
-    assert (
-        recwarn[0].message.args[0]
-        == "Starting with version 0.11.0 of roseau-load-flow (JSON file v3), `min_voltage` and `max_voltage` are "
-        "replaced with `min_voltage_level`, `max_voltage_level` and `nominal_voltage`. The found values of "
-        "`min_voltage` or `max_voltage` are dropped."
-    )
+    with pytest.warns(UserWarning, match=r"Starting with version 0.11.0 of roseau-load-flow \(JSON file v3\), .*"):
+        expected_dict = v2_to_v3_converter(expected_dict)
+
     assert_json_close(net_dict, expected_dict)
 
 
@@ -588,9 +585,7 @@ def test_v2_to_v3_converter_line_parameters():
     )
 
 
-def test_v2_to_v3_lines(recwarn):
-    recwarn.clear()
-
+def test_v2_to_v3_lines():
     # Simple example
     lp = {"id": "lp", "z_line": [[[0.05, 0.0], [0.0, 0.05]], [[0.05, 0.0], [0.0, 0.05]]]}
     old_lines = [
@@ -790,7 +785,6 @@ def test_v2_to_v3_lines(recwarn):
             },
         ],
     )
-    assert len(recwarn) == 0  # No warnings until here
 
     # The same line parameters used two times with two different set of phases
     # An other used two times with two different sets of parameters
@@ -835,7 +829,13 @@ def test_v2_to_v3_lines(recwarn):
             "ground": "gnd",
         },
     ]
-    new_lines, new_lines_params = _convert_lines_v2_to_v3(old_lines=old_lines, old_lines_params=old_lines_params)
+    with pytest.warns(
+        UserWarning,
+        match=r"The line parameters 'O_AM_54' has been used for lines with several set of phases. Thus, it has been "
+        "duplicated and renamed to fit the new requirements of the file format. The new parameters' id are: "
+        "'O_AM_54_abc', 'O_AM_54_can'.",
+    ):
+        new_lines, new_lines_params = _convert_lines_v2_to_v3(old_lines=old_lines, old_lines_params=old_lines_params)
     assert_json_close(
         new_lines,
         [
@@ -969,11 +969,168 @@ def test_v2_to_v3_lines(recwarn):
             },
         ],
     )
-    assert len(recwarn) == 1
-    wm = recwarn[0]
-    assert wm.category is UserWarning
-    assert wm.message.args[0] == (
-        "The line parameters 'O_AM_54' has been used for lines with several set of phases. Thus, it has been "
-        "duplicated and renamed to fit the new requirements of the file format. The new parameters' id are: "
-        "'O_AM_54_abc', 'O_AM_54_can'."
+
+    # The line parameters name already exists
+    lp = {
+        "id": "O_AM_54",
+        "z_line": [[[0.6129629629629629, 0.0], [0.0, 0.6129629629629629]], [[0.35, 0.0], [0.0, 0.35]]],
+        "y_shunt": [[[0.0, 0.0], [0.0, 0.0]], [[1.5707963267948965e-6, 0.0], [0.0, 1.5707963267948965e-6]]],
+        "max_current": 193,
+        "line_type": "OVERHEAD",
+        "conductor_type": "AM",
+        "insulator_type": "UNKNOWN",
+        "section": 54.0,
+    }
+    lp_copy = copy.deepcopy(lp)
+    lp_copy["id"] = "O_AM_54_ab"
+    old_lines_params = [lp, lp_copy]
+    old_lines = [
+        {
+            "id": "line1",
+            "phases": "ab",
+            "bus1": "sb",
+            "bus2": "lb",
+            "length": 10,
+            "params_id": "O_AM_54",
+            "ground": "gnd",
+        },
+        {
+            "id": "line2",
+            "phases": "bc",
+            "bus1": "sb",
+            "bus2": "lb",
+            "length": 10,
+            "params_id": "O_AM_54",
+            "ground": "gnd",
+        },
+        {
+            "id": "line3",
+            "phases": "ab",
+            "bus1": "sb",
+            "bus2": "lb",
+            "length": 10,
+            "params_id": "O_AM_54_ab",
+            "ground": "gnd",
+        },
+    ]
+    with pytest.warns(
+        UserWarning,
+        match=r"The line parameters 'O_AM_54' has been used for lines with several set of phases. Thus, it has been "
+        r"duplicated and renamed to fit the new requirements of the file format. The new parameters' id are: 'O_AM_54_ab_0', 'O_AM_54_bc'.",
+    ):
+        new_lines, new_lines_params = _convert_lines_v2_to_v3(old_lines=old_lines, old_lines_params=old_lines_params)
+    assert_json_close(
+        new_lines,
+        [
+            {
+                "id": "line1",
+                "phases": "ab",
+                "bus1": "sb",
+                "bus2": "lb",
+                "length": 10,
+                "params_id": "O_AM_54_ab_0",
+                "max_loading": 1,
+                "ground": "gnd",
+            },
+            {
+                "id": "line2",
+                "phases": "bc",
+                "bus1": "sb",
+                "bus2": "lb",
+                "length": 10,
+                "params_id": "O_AM_54_bc",
+                "max_loading": 1,
+                "ground": "gnd",
+            },
+            {
+                "id": "line3",
+                "phases": "ab",
+                "bus1": "sb",
+                "bus2": "lb",
+                "length": 10,
+                "params_id": "O_AM_54_ab",
+                "max_loading": 1,
+                "ground": "gnd",
+            },
+        ],
+    )
+    assert_json_close(
+        new_lines_params,
+        [
+            {
+                "id": "O_AM_54_ab_0",
+                "z_line": [
+                    [
+                        [0.6129629629629629, 0.0, 0.0, 0.0],
+                        [0.0, 0.6129629629629629, 0.0, 0.0],
+                        [0.0, 0.0, 0.0, 0.0],
+                        [0.0, 0.0, 0.0, 0.0],
+                    ],
+                    [[0.35, 0.0, 0.0, 0.0], [0.0, 0.35, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]],
+                ],
+                "y_shunt": [
+                    [[0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]],
+                    [
+                        [1.5707963267948965e-6, 0.0, 0.0, 0.0],
+                        [0.0, 1.5707963267948965e-6, 0.0, 0.0],
+                        [0.0, 0.0, 0.0, 0.0],
+                        [0.0, 0.0, 0.0, 0.0],
+                    ],
+                ],
+                "ampacities": [193, 193, 193, 193],
+                "line_type": "OVERHEAD",
+                "materials": ["AM", "AM", "AM", "AM"],
+                "sections": [54.0, 54.0, 54.0, 54.0],
+            },
+            {
+                "id": "O_AM_54_bc",
+                "z_line": [
+                    [
+                        [0.0, 0.0, 0.0, 0.0],
+                        [0.0, 0.6129629629629629, 0.0, 0.0],
+                        [0.0, 0.0, 0.6129629629629629, 0.0],
+                        [0.0, 0.0, 0.0, 0.0],
+                    ],
+                    [[0.0, 0.0, 0.0, 0.0], [0.0, 0.35, 0.0, 0.0], [0.0, 0.0, 0.35, 0.0], [0.0, 0.0, 0.0, 0.0]],
+                ],
+                "y_shunt": [
+                    [[0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]],
+                    [
+                        [0.0, 0.0, 0.0, 0.0],
+                        [0.0, 1.5707963267948965e-6, 0.0, 0.0],
+                        [0.0, 0.0, 1.5707963267948965e-6, 0.0],
+                        [0.0, 0.0, 0.0, 0.0],
+                    ],
+                ],
+                "ampacities": [193, 193, 193, 193],
+                "line_type": "OVERHEAD",
+                "materials": ["AM", "AM", "AM", "AM"],
+                "sections": [54.0, 54.0, 54.0, 54.0],
+            },
+            {
+                "id": "O_AM_54_ab",
+                "z_line": [
+                    [
+                        [0.6129629629629629, 0.0, 0.0, 0.0],
+                        [0.0, 0.6129629629629629, 0.0, 0.0],
+                        [0.0, 0.0, 0.0, 0.0],
+                        [0.0, 0.0, 0.0, 0.0],
+                    ],
+                    [[0.35, 0.0, 0.0, 0.0], [0.0, 0.35, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]],
+                ],
+                "y_shunt": [
+                    [[0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]],
+                    [
+                        [1.5707963267948965e-6, 0.0, 0.0, 0.0],
+                        [0.0, 1.5707963267948965e-6, 0.0, 0.0],
+                        [0.0, 0.0, 0.0, 0.0],
+                        [0.0, 0.0, 0.0, 0.0],
+                    ],
+                ],
+                "ampacities": [193, 193, 193, 193],
+                "line_type": "OVERHEAD",
+                "materials": ["AM", "AM", "AM", "AM"],
+                "sections": [54.0, 54.0, 54.0, 54.0],
+            },
+        ],
     )

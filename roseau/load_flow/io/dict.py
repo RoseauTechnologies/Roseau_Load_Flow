@@ -763,7 +763,6 @@ def _convert_lines_v2_to_v3(
         The list of lines and lines parameters converted to the version 3.
     """
     # z_line and y_shunt are now all 4x4 matrices
-
     old_lines_params_dict = {x["id"]: x for x in old_lines_params}
     # { line_id -> { line_data } }
     lines_dict = {}
@@ -795,6 +794,7 @@ def _convert_lines_v2_to_v3(
 
     # Generate the new line parameters list
     new_lines_params_list = []
+    existing_line_params_id = set(old_lines_params_dict.keys())  # The user-defined line parameters' id
     for line_params_id, phases_lp_data in lines_params_dict.items():
         if len(phases_lp_data) == 1:
             # The line parameter `line_params_id` has been used only with a single set of phases thus we do not change
@@ -808,6 +808,11 @@ def _convert_lines_v2_to_v3(
             for phases, (new_line_params_data, lines_id) in phases_lp_data.items():
                 # Add the phases to the line parameters' id
                 new_line_params_id = f"{line_params_id}_{phases}"
+                i = 0
+                while new_line_params_id in existing_line_params_id:
+                    new_line_params_id = f"{line_params_id}_{phases}_{i}"
+                    i += 1
+                existing_line_params_id.add(new_line_params_id)
                 new_line_params_data["id"] = new_line_params_id
                 new_lines_params_list.append(new_line_params_data)
                 new_lines_params_id_list.append(new_line_params_id)

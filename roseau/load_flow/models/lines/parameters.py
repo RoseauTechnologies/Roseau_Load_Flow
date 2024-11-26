@@ -457,13 +457,13 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             # Build the complex
             yn = bn * 1j  # Neutral shunt admittance (Siemens/km)
             ypn = bpn * 1j  # Phase-to-neutral shunt admittance (Siemens/km)
-
-            if (not np.isclose(zpn, 0)) or (not np.isclose(zn, 0)):
-                z_line[:3, -1] = zpn
-                z_line[-1, :3] = zpn
+            z_line[:3, -1] = zpn
+            z_line[-1, :3] = zpn
+            if not np.isclose(zn, 0):
                 z_line[-1, -1] = zn
-                y_shunt[:3, -1] = ypn
-                y_shunt[-1, :3] = ypn
+            y_shunt[:3, -1] = ypn
+            y_shunt[-1, :3] = ypn
+            if not np.isclose(yn, 0):
                 y_shunt[-1, -1] = yn
 
         return z_line, y_shunt

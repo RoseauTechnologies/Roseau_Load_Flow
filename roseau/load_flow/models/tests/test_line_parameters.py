@@ -13,69 +13,55 @@ from roseau.load_flow.utils import Insulator, LineType, Material
 
 
 def test_line_parameters():
-    bus1 = Bus(id="junction1", phases="abcn")
-    bus2 = Bus(id="junction2", phases="abcn")
-    ground = Ground("ground")
-
     # Real element off the diagonal (Z)
-    z_line = np.eye(4, dtype=complex)
     y_shunt = np.eye(4, dtype=complex)
     for p in Line.allowed_phases:
         if len(p) == 1:
             continue
+        z_line = np.eye(4, dtype=complex)
         indices = ["abcn".index(x) for x in p]
-        ix = (indices[0], indices[1])
-        z_line[*ix] = 1
+        z_line[indices[0], indices[1]] = 1
         lp = LineParameters("test", z_line=z_line, y_shunt=y_shunt)
         with pytest.warns(UserWarning, match=r"z_line .* has off-diagonal elements with a non-zero"):
             lp.z_line(p)
 
-        z_line[*ix] = 0
-
     # Real element off the diagonal (Y)
     z_line = np.eye(4, dtype=complex)
-    y_shunt = np.eye(4, dtype=complex)
+
     for p in Line.allowed_phases:
         if len(p) == 1:
             continue
+        y_shunt = np.eye(4, dtype=complex)
         indices = ["abcn".index(x) for x in p]
-        ix = (indices[0], indices[1])
-        y_shunt[*ix] = 1
+        y_shunt[indices[0], indices[1]] = 1
         lp = LineParameters("test", z_line=z_line, y_shunt=y_shunt)
         with pytest.warns(UserWarning, match=r"y_shunt .* has off-diagonal elements with a non-zero"):
             lp.y_shunt(p)
 
-        y_shunt[*ix] = 0
-
     # Negative real values (Z)
-    z_line = 2 * np.eye(4, dtype=complex)
     y_shunt = -2 * np.eye(4, dtype=complex)
     for p in Line.allowed_phases:
+        z_line = 2 * np.eye(4, dtype=complex)
         indices = ["abcn".index(x) for x in p]
-        ix = (indices[0], indices[0])
-        z_line[*ix] = -3
+        z_line[indices[0], indices[0]] = -3
         lp = LineParameters("test", z_line=z_line, y_shunt=y_shunt)
         with pytest.raises(RoseauLoadFlowException) as e:
             lp.z_line(p)
         assert e.value.code == RoseauLoadFlowExceptionCode.BAD_Z_LINE_VALUE
         assert e.value.msg == "The z_line matrix of line type 'test' has coefficients with negative real part."
 
-        z_line[*ix] = 2
-
     # Negative real values (Y)
     z_line = 2 * np.eye(4, dtype=complex)
-    y_shunt = 2 * np.eye(4, dtype=complex)
+
     for p in Line.allowed_phases:
+        y_shunt = 2 * np.eye(4, dtype=complex)
         indices = ["abcn".index(x) for x in p]
-        ix = (indices[0], indices[0])
-        y_shunt[*ix] = -3
+        y_shunt[indices[0], indices[0]] = -3
         lp = LineParameters("test", z_line=z_line, y_shunt=y_shunt)
         with pytest.raises(RoseauLoadFlowException) as e:
             lp.y_shunt(p)
         assert e.value.code == RoseauLoadFlowExceptionCode.BAD_Y_SHUNT_VALUE
         assert e.value.msg == "The y_shunt matrix of line type 'test' has coefficients with negative real part."
-
-        y_shunt[*ix] = 2
 
     # Bad shape (LV - Z)
     z_line = np.eye(4, dtype=complex)[:, :2]
@@ -416,9 +402,9 @@ def test_sym():
     zm = (z0 - z1) / 3
     ys = (y0 + 2 * y1) / 3
     ym = (y0 - y1) / 3
-    z_line_expected = [[zs, zm, zm, zm], [zm, zs, zm, zm], [zm, zm, zs, zm], [zm, zm, zm, zs]]
+    z_line_expected = [[zs, zm, zm, 0], [zm, zs, zm, 0], [zm, zm, zs, 0], [0, 0, 0, zs]]
     npt.assert_allclose(z_line, z_line_expected)
-    y_shunt_expected = [[ys, ym, ym, ym], [ym, ys, ym, ym], [ym, ym, ys, ym], [ym, ym, ym, ys]]
+    y_shunt_expected = [[ys, ym, ym, 0], [ym, ys, ym, 0], [ym, ym, ys, 0], [0, 0, 0, ys]]
     npt.assert_allclose(y_shunt, y_shunt_expected)
 
     # line_data = {"id": "NKBA 4x150   1.00 kV", "un": 1000.0, "in": 361.0000014305115}
@@ -435,10 +421,10 @@ def test_sym():
     )
     z_line_expected = np.array(
         [
-            [0.25 + 0.159j, 0.125 + 0.073j, 0.125 + 0.073j, 0.125 + 0.073j],
-            [0.125 + 0.073j, 0.25 + 0.159j, 0.125 + 0.073j, 0.125 + 0.073j],
-            [0.125 + 0.073j, 0.125 + 0.073j, 0.25 + 0.159j, 0.125 + 0.073j],
-            [0.125 + 0.073j, 0.125 + 0.073j, 0.125 + 0.073j, 0.25 + 0.159j],
+            [0.25 + 0.159j, 0.125 + 0.073j, 0.125 + 0.073j, 0.0],
+            [0.125 + 0.073j, 0.25 + 0.159j, 0.125 + 0.073j, 0.0],
+            [0.125 + 0.073j, 0.125 + 0.073j, 0.25 + 0.159j, 0.0],
+            [0.0, 0.0, 0.0, 0.25 + 0.159j],
         ],
         dtype=complex,
     )

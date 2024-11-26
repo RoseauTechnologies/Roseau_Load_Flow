@@ -97,7 +97,7 @@ def test_line_parameters_shortcut():
     assert np.allclose(line.y_shunt.m_as("S"), 0.05 * y_shunt)
 
 
-def test_line_ground(recwarn):
+def test_line_ground():
     bus1 = Bus(id="bus1", phases="abc")
     bus2 = Bus(id="bus2", phases="abc")
     z_line = 0.01 * np.eye(4, dtype=complex)
@@ -107,16 +107,13 @@ def test_line_ground(recwarn):
     ground = Ground(id="ground")
 
     # Create a line with a useless ground
-    recwarn.clear()
-    line_without_shunt = Line(
-        id="line", bus1=bus1, bus2=bus2, parameters=lp_without_shunt, length=Q_(50, "m"), ground=ground
-    )
-    assert len(recwarn) == 1
-    assert recwarn[0].category is UserWarning
-    assert (
-        recwarn[0].message.args[0]
-        == "The ground element must not be provided for line 'line' as it does not have a shunt admittance."
-    )
+    with pytest.warns(
+        UserWarning,
+        match="The ground element must not be provided for line 'line' as it does not have a shunt admittance.",
+    ):
+        line_without_shunt = Line(
+            id="line", bus1=bus1, bus2=bus2, parameters=lp_without_shunt, length=Q_(50, "m"), ground=ground
+        )
     assert line_without_shunt.ground is None
 
     # assign a line parameter with shunt to a line without ground
@@ -450,7 +447,7 @@ def test_lines_results(phases, z_line, y_shunt, len_line, bus_pot, line_cur, gro
         phases=phases["line"],
         length=len_line,
         parameters=lp,
-        ground=ground if lp.with_shunt else None,
+        ground=ground if lp.with_shunt(phases["line"]) else None,
     )
     bus1._res_potentials = np.array(bus_pot[0], dtype=complex)
     bus2._res_potentials = np.array(bus_pot[1], dtype=complex)

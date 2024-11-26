@@ -194,7 +194,7 @@ def generate_lines(
             bus2=bus2,
             length=length,
             parameters=lp,
-            ground=ground if lp.with_shunt else None,
+            ground=ground if lp.with_shunt(phases) else None,
             phases=phases,
             geometry=geometry,
         )
