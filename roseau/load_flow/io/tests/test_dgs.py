@@ -16,11 +16,9 @@ from roseau.load_flow.network import ElectricalNetwork
 
 def test_from_dgs(dgs_network_path):
     # Read DGS
-    with warnings.catch_warnings():
-        warnings.filterwarnings(action="ignore", message=r".* off-diagonal elements ", category=UserWarning)
-        if dgs_network_path.stem == "Line_Without_Type":
-            warnings.filterwarnings("ignore", message=r".*is missing line types", category=UserWarning)
-        en = ElectricalNetwork.from_dgs(dgs_network_path)
+    if dgs_network_path.stem == "Line_Without_Type":
+        warnings.filterwarnings("ignore", message=r".*is missing line types", category=UserWarning)
+    en = ElectricalNetwork.from_dgs(dgs_network_path)
 
     # Check the validity of the network
     en._check_validity(constructed=False)
@@ -60,10 +58,8 @@ def test_from_dgs_no_line_type(dgs_special_network_dir):
         r"Please copy all line types from the library to the project before "
         r"exporting otherwise a LineParameter object will be created for each line."
     )
-    with warnings.catch_warnings():
-        warnings.filterwarnings(action="ignore", message=r".* off-diagonal elements ", category=UserWarning)
-        with pytest.warns(UserWarning, match=expected_msg):
-            en = ElectricalNetwork.from_dgs(path)
+    with pytest.warns(UserWarning, match=expected_msg):
+        en = ElectricalNetwork.from_dgs(path)
     en._check_validity(constructed=False)
 
     assert len(en.lines) == 1
