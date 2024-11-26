@@ -145,7 +145,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             self._y = self._convert_y(y=self._y_shunt)
 
         # Parameters that are not used in the load flow
-        self._line_type = line_type
+        self._line_type = None if pd.isna(line_type) else LineType(line_type)
         self._ampacities = self._check_positive_float_array(value=ampacities, name="ampacities", unit="A")
         self._materials = self._check_enum_array(value=materials, enum_class=Material, name="materials")
         self._insulators = self._check_enum_array(value=insulators, enum_class=Insulator, name="insulators")
@@ -440,15 +440,10 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
                 Phase-to-neutral susceptance (siemens/km)
 
             ampacities:
-                An optional ampacities loading of the line (A). It is not used in the load flow.
+                An optional ampacities for the line parameters (A). It is not used in the load flow.
 
         Returns:
             The created line parameters.
-
-        Notes:
-            As explained in the :ref:`Line parameters alternative constructor documentation
-            <models-line_parameters-alternative_constructors-symmetric>`, the model may be "degraded" if the computed
-            impedance matrix is not invertible.
         """
         zpn = None if pd.isna(xpn) else 1j * xpn
         z_line, y_shunt = cls._sym_to_zy(z0=z0, z1=z1, y0=y0, y1=y1, zn=zn, zpn=zpn, bn=bn, bpn=bpn)
@@ -499,7 +494,6 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         # Check if all neutral parameters are valid
         any_neutral_na = any(pd.isna([zpn, bn, bpn, zn]))
 
-        # Two possible choices. The first one is the best but sometimes PwF data forces us to choose the second one
         z_line, y_shunt = cls._sym_to_zy_simple(z0=z0, y0=y0, z1=z1, y1=y1)
 
         # If the neutral data have been given, the matrix is filled
@@ -973,8 +967,8 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             "ohm/km",
             "ohm/km",
             "µS/km",
-            None,
             "kA",
+            None,
             None,
             None,
             "mm**2",
@@ -1601,13 +1595,12 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         """
         z_line = np.array(data["z_line"][0]) + 1j * np.array(data["z_line"][1])
         y_shunt = np.array(data["y_shunt"][0]) + 1j * np.array(data["y_shunt"][1]) if "y_shunt" in data else None
-        line_type = LineType(data["line_type"]) if "line_type" in data else None
         return cls(
             id=data["id"],
             z_line=z_line,
             y_shunt=y_shunt,
             ampacities=data.get("ampacities"),
-            line_type=line_type,
+            line_type=data.get("line_type"),
             materials=data.get("materials"),
             insulators=data.get("insulators"),
             sections=data.get("sections"),
