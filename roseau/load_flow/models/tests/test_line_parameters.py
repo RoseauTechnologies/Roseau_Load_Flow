@@ -13,38 +13,55 @@ from roseau.load_flow.utils import Insulator, LineType, Material
 
 
 def test_line_parameters():
-    bus1 = Bus(id="junction1", phases="abcn")
-    bus2 = Bus(id="junction2", phases="abcn")
-    ground = Ground("ground")
-
     # Real element off the diagonal (Z)
-    z_line = np.ones(shape=(4, 4), dtype=complex)
     y_shunt = np.eye(4, dtype=complex)
-    with pytest.warns(UserWarning, match=r"z_line .* has off-diagonal elements with a non-zero"):
-        LineParameters("test", z_line=z_line, y_shunt=y_shunt)
+    for p in Line.allowed_phases:
+        if len(p) == 1:
+            continue
+        z_line = np.eye(4, dtype=complex)
+        indices = ["abcn".index(x) for x in p]
+        z_line[indices[0], indices[1]] = 1
+        lp = LineParameters("test", z_line=z_line, y_shunt=y_shunt)
+        with pytest.warns(UserWarning, match=r"z_line .* has off-diagonal elements with a non-zero"):
+            lp.z_line(p)
 
     # Real element off the diagonal (Y)
-    z_line = np.eye(3, dtype=complex)
-    y_shunt = np.ones(shape=(3, 3), dtype=complex)
-    with pytest.warns(UserWarning, match=r"y_shunt .* has off-diagonal elements with a non-zero"):
-        LineParameters("test", z_line=z_line, y_shunt=y_shunt)
+    z_line = np.eye(4, dtype=complex)
+
+    for p in Line.allowed_phases:
+        if len(p) == 1:
+            continue
+        y_shunt = np.eye(4, dtype=complex)
+        indices = ["abcn".index(x) for x in p]
+        y_shunt[indices[0], indices[1]] = 1
+        lp = LineParameters("test", z_line=z_line, y_shunt=y_shunt)
+        with pytest.warns(UserWarning, match=r"y_shunt .* has off-diagonal elements with a non-zero"):
+            lp.y_shunt(p)
 
     # Negative real values (Z)
-    z_line = 2 * np.eye(4, dtype=complex)
-    z_line[1, 1] = -3
     y_shunt = -2 * np.eye(4, dtype=complex)
-    with pytest.raises(RoseauLoadFlowException) as e:
-        LineParameters("test", z_line=z_line, y_shunt=y_shunt)
-    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_Z_LINE_VALUE
-    assert e.value.msg == "The z_line matrix of line type 'test' has coefficients with negative real part."
+    for p in Line.allowed_phases:
+        z_line = 2 * np.eye(4, dtype=complex)
+        indices = ["abcn".index(x) for x in p]
+        z_line[indices[0], indices[0]] = -3
+        lp = LineParameters("test", z_line=z_line, y_shunt=y_shunt)
+        with pytest.raises(RoseauLoadFlowException) as e:
+            lp.z_line(p)
+        assert e.value.code == RoseauLoadFlowExceptionCode.BAD_Z_LINE_VALUE
+        assert e.value.msg == "The z_line matrix of line type 'test' has coefficients with negative real part."
 
     # Negative real values (Y)
-    y_shunt = 2 * np.eye(3, dtype=complex)
-    y_shunt[1, 1] = -3
-    with pytest.raises(RoseauLoadFlowException):
-        LineParameters(id="test", z_line=z_line, y_shunt=y_shunt)
-    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_Z_LINE_VALUE
-    assert e.value.msg == "The z_line matrix of line type 'test' has coefficients with negative real part."
+    z_line = 2 * np.eye(4, dtype=complex)
+
+    for p in Line.allowed_phases:
+        y_shunt = 2 * np.eye(4, dtype=complex)
+        indices = ["abcn".index(x) for x in p]
+        y_shunt[indices[0], indices[0]] = -3
+        lp = LineParameters("test", z_line=z_line, y_shunt=y_shunt)
+        with pytest.raises(RoseauLoadFlowException) as e:
+            lp.y_shunt(p)
+        assert e.value.code == RoseauLoadFlowExceptionCode.BAD_Y_SHUNT_VALUE
+        assert e.value.msg == "The y_shunt matrix of line type 'test' has coefficients with negative real part."
 
     # Bad shape (LV - Z)
     z_line = np.eye(4, dtype=complex)[:, :2]
@@ -52,16 +69,21 @@ def test_line_parameters():
     with pytest.raises(RoseauLoadFlowException) as e:
         LineParameters(id="test", z_line=z_line, y_shunt=y_shunt)
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_Z_LINE_SHAPE
-    assert e.value.msg == "The z_line matrix of line type 'test' has incorrect dimensions (4, 2)."
+    assert (
+        e.value.msg
+        == "The z_line matrix of line type 'test' has incorrect dimensions (4, 2). A 4x4 matrix was expected."
+    )
 
     # Bad shape (LV - Y)
     z_line = np.eye(4, dtype=complex)
     y_shunt = np.eye(3, dtype=complex)
-    lp = LineParameters(id="test", z_line=z_line, y_shunt=y_shunt)
     with pytest.raises(RoseauLoadFlowException) as e:
-        Line(id="line1", bus1=bus1, bus2=bus2, phases="abcn", ground=ground, parameters=lp, length=2.4)
+        LineParameters(id="test", z_line=z_line, y_shunt=y_shunt)
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_Y_SHUNT_SHAPE
-    assert e.value.msg == "Incorrect y_shunt dimensions for line 'line1': (3, 3) instead of (4, 4)"
+    assert (
+        e.value.msg
+        == "The y_shunt matrix of line type 'test' has incorrect dimensions (3, 3). A 4x4 matrix was expected."
+    )
 
     # Bad shape (MV - Z)
     z_line = np.eye(4, dtype=complex)[:, :2]
@@ -69,28 +91,35 @@ def test_line_parameters():
     with pytest.raises(RoseauLoadFlowException) as e:
         LineParameters("test", z_line=z_line, y_shunt=y_shunt)
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_Z_LINE_SHAPE
-    assert e.value.msg == "The z_line matrix of line type 'test' has incorrect dimensions (4, 2)."
+    assert (
+        e.value.msg
+        == "The z_line matrix of line type 'test' has incorrect dimensions (4, 2). A 4x4 matrix was expected."
+    )
 
     # Bad shape (MV - Y)
-    z_line = np.eye(3, dtype=complex)
+    z_line = np.eye(4, dtype=complex)
     y_shunt = np.eye(6, dtype=complex)
-    lp = LineParameters(id="test", z_line=z_line, y_shunt=y_shunt)
     with pytest.raises(RoseauLoadFlowException) as e:
-        Line(id="line2", bus1=bus1, bus2=bus2, phases="abc", ground=ground, parameters=lp, length=2.4)
+        LineParameters(id="test", z_line=z_line, y_shunt=y_shunt)
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_Y_SHUNT_SHAPE
-    assert e.value.msg == "Incorrect y_shunt dimensions for line 'line2': (6, 6) instead of (3, 3)"
+    assert (
+        e.value.msg
+        == "The y_shunt matrix of line type 'test' has incorrect dimensions (6, 6). A 4x4 matrix was expected."
+    )
 
     # LV line with not zero shunt admittance
     z_line = np.eye(3, dtype=complex)
     y_shunt = np.eye(3, dtype=complex)
-    lp = LineParameters("test", z_line=z_line, y_shunt=y_shunt)
     with pytest.raises(RoseauLoadFlowException) as e:
-        Line(id="line3", bus1=bus1, bus2=bus2, phases="abcn", ground=ground, parameters=lp, length=2.4)
+        LineParameters("test", z_line=z_line, y_shunt=y_shunt)
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_Z_LINE_SHAPE
-    assert e.value.msg == "Incorrect z_line dimensions for line 'line3': (3, 3) instead of (4, 4)"
+    assert (
+        e.value.msg
+        == "The z_line matrix of line type 'test' has incorrect dimensions (3, 3). A 4x4 matrix was expected."
+    )
 
     # Adding/Removing a shunt to a line is not allowed
-    mat = np.eye(3, dtype=complex)
+    mat = np.eye(4, dtype=complex)
     lp1 = LineParameters(id="lp1", z_line=mat.copy(), y_shunt=mat.copy())
     lp2 = LineParameters(id="lp2", z_line=mat.copy())
     bus1 = Bus(id="bus1", phases="abc")
@@ -189,8 +218,8 @@ def test_from_geometry():
         external_diameter=0.04,
     )
     # The default insulator for overhead lines
-    assert np.array_equal(lp.insulators, np.array([Insulator.NONE] * 4, dtype=np.object_))
-    np.testing.assert_allclose(lp.y_shunt.m.real, 0.0)
+    assert np.array_equal(lp._insulators, np.array([Insulator.NONE] * 4, dtype=np.object_))
+    np.testing.assert_allclose(lp._y_shunt.real, 0.0)
     lp = LineParameters.from_geometry(
         id="test",
         line_type=LineType.OVERHEAD,
@@ -201,8 +230,8 @@ def test_from_geometry():
         height=10,
         external_diameter=0.04,
     )
-    assert np.array_equal(lp.insulators, np.array([Insulator.NONE] * 4, dtype=np.object_))
-    np.testing.assert_allclose(lp.y_shunt.m.real, 0.0)
+    assert np.array_equal(lp._insulators, np.array([Insulator.NONE] * 4, dtype=np.object_))
+    np.testing.assert_allclose(lp._y_shunt.real, 0.0)
 
     lp = LineParameters.from_geometry(
         id="test",
@@ -214,16 +243,16 @@ def test_from_geometry():
         external_diameter=0.04,
     )
     np.testing.assert_allclose(
-        lp.y_shunt.m.imag * 4,  # because InsulatorType.IP has 4x epsilon_r
+        lp._y_shunt.imag * 4,  # because InsulatorType.IP has 4x epsilon_r
         LineParameters.from_geometry(
             id="test",
             line_type=lp.line_type,
-            material=lp.materials[0],
+            material=lp._materials[0],
             insulator=Insulator.IP,  # 4x epsilon_r of InsulatorType.NONE
-            section=lp.sections[0],
+            section=lp._sections[0],
             height=-0.5,
             external_diameter=0.04,
-        ).y_shunt.m.imag,
+        )._y_shunt.imag,
     )
 
     # The same but precise the neutral types
@@ -364,18 +393,23 @@ def test_sym():
     # With the bad model of PwF
     # line_data = {"id": "NKBA NOR  25.00 kV", "un": 25000.0, "in": 277.0000100135803}
 
-    z_line, y_shunt = LineParameters._sym_to_zy(
-        id="NKBA NOR  25.00 kV", z0=0.0j, z1=1.0 + 1.0j, zn=0.0j, zpn=0.0j, y0=0.0j, y1=1e-06j, bn=0.0, bpn=0.0
-    )
-    z_line_expected = (1 + 1j) * np.eye(3)
+    z0 = 0.0j
+    z1 = 1.0 + 1.0j
+    y0 = 0.0j
+    y1 = 1e-06j
+    z_line, y_shunt = LineParameters._sym_to_zy(z0=z0, z1=z1, zn=0.0j, zpn=0.0j, y0=y0, y1=y1, bn=0.0, bpn=0.0)
+    zs = (z0 + 2 * z1) / 3
+    zm = (z0 - z1) / 3
+    ys = (y0 + 2 * y1) / 3
+    ym = (y0 - y1) / 3
+    z_line_expected = [[zs, zm, zm, 0], [zm, zs, zm, 0], [zm, zm, zs, 0], [0, 0, 0, zs]]
     npt.assert_allclose(z_line, z_line_expected)
-    y_shunt_expected = 1e-6j * np.eye(3)
+    y_shunt_expected = [[ys, ym, ym, 0], [ym, ys, ym, 0], [ym, ym, ys, 0], [0, 0, 0, ys]]
     npt.assert_allclose(y_shunt, y_shunt_expected)
 
     # line_data = {"id": "NKBA 4x150   1.00 kV", "un": 1000.0, "in": 361.0000014305115}
     # Downgraded model because of PwF bad data
     z_line, y_shunt = LineParameters._sym_to_zy(
-        id="NKBA 4x150   1.00 kV",
         z0=0.5 + 0.3050000071525574j,
         z1=0.125 + 0.0860000029206276j,
         zn=0.0j,
@@ -387,21 +421,20 @@ def test_sym():
     )
     z_line_expected = np.array(
         [
-            [0.25 + 0.159j, 0.125 + 0.073j, 0.125 + 0.073j],
-            [0.125 + 0.073j, 0.25 + 0.159j, 0.125 + 0.073j],
-            [0.125 + 0.073j, 0.125 + 0.073j, 0.25 + 0.159j],
+            [0.25 + 0.159j, 0.125 + 0.073j, 0.125 + 0.073j, 0.0],
+            [0.125 + 0.073j, 0.25 + 0.159j, 0.125 + 0.073j, 0.0],
+            [0.125 + 0.073j, 0.125 + 0.073j, 0.25 + 0.159j, 0.0],
+            [0.0, 0.0, 0.0, 0.25 + 0.159j],
         ],
         dtype=complex,
     )
     npt.assert_allclose(z_line, z_line_expected)
-    y_shunt_expected = np.zeros(shape=(3, 3), dtype=complex)
+    y_shunt_expected = np.zeros(shape=(4, 4), dtype=complex)
     npt.assert_allclose(y_shunt, y_shunt_expected)
 
     # First line
     # line_data = {"id": "sym_neutral_underground_line_example", "un": 400.0, "in": 150}
-
     z_line, y_shunt = LineParameters._sym_to_zy(
-        id="sym_neutral_underground_line_example",
         z0=0.188 + 0.8224j,
         z1=0.188 + 0.0812j,
         zn=0.4029 + 0.3522j,
@@ -433,12 +466,10 @@ def test_sym():
     # Second line
     # line_data = {"id": "sym_line_example", "un": 20000.0, "in": 309}
 
-    z_line, y_shunt = LineParameters._sym_to_zy(
-        id="sym_line_example", z0=0.2 + 0.1j, z1=0.2 + 0.1j, zn=0.4029, y0=0.00014106j, y1=0.00014106j
-    )
-    z_line_expected = (0.2 + 0.1j) * np.eye(3)
+    z_line, y_shunt = LineParameters._sym_to_zy(z0=0.2 + 0.1j, z1=0.2 + 0.1j, zn=0.4029, y0=0.00014106j, y1=0.00014106j)
+    z_line_expected = (0.2 + 0.1j) * np.eye(4)
     npt.assert_allclose(z_line, z_line_expected)
-    y_shunt_expected = 0.00014106j * np.eye(3)
+    y_shunt_expected = 0.00014106j * np.eye(4)
     npt.assert_allclose(y_shunt, y_shunt_expected)
 
 
@@ -461,24 +492,24 @@ def test_from_coiffier_model():
 
     # Working example with defaults
     lp = LineParameters.from_coiffier_model("U_AL_150")
-    z_line_expected = (0.1767 + 0.1j) * np.eye(3)
-    y_shunt_expected = 0.00014106j * np.eye(3)
+    z_line_expected = (0.1767 + 0.1j) * np.eye(4)
+    y_shunt_expected = 0.00014106j * np.eye(4)
     assert lp.id == "U_AL_150"
     assert lp.line_type == LineType.UNDERGROUND
-    assert np.array_equal(lp.materials, np.array([Material.AL] * 3, dtype=np.object_))
-    assert np.allclose(lp.sections.m, 150)
-    npt.assert_allclose(lp.z_line.m_as("ohm/km"), z_line_expected, rtol=0.01, atol=0.01, strict=True)
-    npt.assert_allclose(lp.y_shunt.m_as("S/km"), y_shunt_expected, rtol=0.01, atol=0.01, strict=True)
-    npt.assert_allclose(lp.ampacities.m_as("A"), [368.689292] * 3, strict=True)
+    assert np.array_equal(lp._materials, np.array([Material.AL] * 4, dtype=np.object_))
+    assert np.allclose(lp._sections, 150)
+    npt.assert_allclose(lp._z_line, z_line_expected, rtol=0.01, atol=0.01, strict=True)
+    npt.assert_allclose(lp._y_shunt, y_shunt_expected, rtol=0.01, atol=0.01, strict=True)
+    npt.assert_allclose(lp._ampacities, [368.689292] * 4, strict=True)
 
     # Working example with custom arguments
-    lp2 = LineParameters.from_coiffier_model("O_CU_54", nb_phases=2, id="lp2")
+    lp2 = LineParameters.from_coiffier_model("O_CU_54", id="lp2")
     assert lp2.id == "lp2"
     assert lp2.line_type == LineType.OVERHEAD
-    assert np.array_equal(lp2.materials, np.array([Material.CU] * 2, dtype=np.object_))
-    assert np.allclose(lp2.sections.m, 54)
-    assert lp2.z_line.m.shape == (2, 2)
-    assert lp2.y_shunt.m.shape == (2, 2)
+    assert np.array_equal(lp2._materials, np.array([Material.CU] * 4, dtype=np.object_))
+    assert np.allclose(lp2._sections, 54)
+    assert lp2._z_line.shape == (4, 4)
+    assert lp2._y_shunt.shape == (4, 4)
 
 
 def test_catalogue_data():
@@ -570,22 +601,17 @@ def test_from_catalogue():
     # Success
     lp = LineParameters.from_catalogue(name="U_AL_150")
     assert lp.id == "U_AL_150"
-    assert lp.z_line.shape == (3, 3)
-    assert lp.y_shunt.shape == (3, 3)
-    assert (lp.ampacities > 0).all()
+    assert lp._z_line.shape == (4, 4)
+    assert lp._y_shunt.shape == (4, 4)
+    assert (lp._ampacities > 0).all()
     assert lp.line_type == LineType.UNDERGROUND
-    assert np.array_equal(lp.materials, np.array([Material.AL] * 3))
-    assert lp.insulators is None
-    assert np.allclose(lp.sections.m, 150)
+    assert np.array_equal(lp._materials, np.array([Material.AL] * 4))
+    assert lp._insulators is None
+    assert np.allclose(lp._sections, 150)
 
     # Success, overridden ID
     lp = LineParameters.from_catalogue(name="U_AL_150", id="lp1")
     assert lp.id == "lp1"
-
-    # Success, single-phase line
-    lp = LineParameters.from_catalogue(name="U_AL_150", nb_phases=2)
-    assert lp.z_line.shape == (2, 2)
-    assert lp.y_shunt.shape == (2, 2)
 
 
 def test_get_catalogue():
@@ -625,237 +651,298 @@ def test_get_catalogue():
 
 
 def test_insulators():
-    z_line = np.eye(3, dtype=complex)
-    y_shunt = np.eye(3, dtype=complex)
+    z_line = np.eye(4, dtype=complex)
+    y_shunt = np.eye(4, dtype=complex)
 
     # None-like values
     lp = LineParameters("test", z_line=z_line, y_shunt=y_shunt, insulators=None)
-    assert lp.insulators is None
-    lp.insulators = np.nan
-    assert lp.insulators is None
-    lp.insulators = pd.NA
-    assert lp.insulators is None
+    assert lp._insulators is None
+    for p in Line.allowed_phases:
+        assert lp.insulators(p) is None
+    lp = LineParameters("test", z_line=z_line, y_shunt=y_shunt, insulators=np.nan)
+    assert lp._insulators is None
+    for p in Line.allowed_phases:
+        assert lp.insulators(p) is None
+    lp = LineParameters("test", z_line=z_line, y_shunt=y_shunt, insulators=pd.NA)
+    assert lp._insulators is None
+    for p in Line.allowed_phases:
+        assert lp.insulators(p) is None
 
     # Single values
-    lp.insulators = Insulator.EPR
-    assert len(lp.insulators) == 3
-    assert np.array_equal(lp.insulators, np.array([Insulator.EPR] * 3))
+    lp = LineParameters("test", z_line=z_line, y_shunt=y_shunt, insulators=Insulator.EPR)
+    assert len(lp._insulators) == 4
+    for p in Line.allowed_phases:
+        assert np.array_equal(lp.insulators(p), np.array([Insulator.EPR] * len(p)))
 
-    lp.insulators = Insulator.EPR.name
-    assert len(lp.insulators) == 3
-    assert np.array_equal(lp.insulators, np.array([Insulator.EPR] * 3))
+    lp = LineParameters("test", z_line=z_line, y_shunt=y_shunt, insulators=Insulator.EPR.name)
+    assert len(lp._insulators) == 4
+    for p in Line.allowed_phases:
+        assert np.array_equal(lp.insulators(p), np.array([Insulator.EPR] * len(p)))
 
     # Special case for Insulator.NONE
-    lp.insulators = Insulator.NONE.name
-    assert len(lp.insulators) == 3
-    assert np.array_equal(lp.insulators, np.array([Insulator.NONE] * 3))
+    lp = LineParameters("test", z_line=z_line, y_shunt=y_shunt, insulators=Insulator.NONE.name)
+    assert len(lp._insulators) == 4
+    for p in Line.allowed_phases:
+        assert np.array_equal(lp.insulators(p), np.array([Insulator.NONE] * len(p)))
 
     # Arrays
-    lp.insulators = [Insulator.EPR, Insulator.XLPE, Insulator.LDPE]
-    assert len(lp.insulators) == 3
-    assert np.array_equal(lp.insulators, np.array([Insulator.EPR, Insulator.XLPE, Insulator.LDPE]))
+    insulators = [Insulator.EPR, Insulator.XLPE, Insulator.LDPE, Insulator.IP]
+    lp = LineParameters("test", z_line=z_line, y_shunt=y_shunt, insulators=insulators)
+    for p in Line.allowed_phases:
+        expected_value = np.array([insulators["abcn".index(x)] for x in p])
+        assert np.array_equal(lp.insulators(p), expected_value)
 
-    lp.insulators = [Insulator.NONE, Insulator.NONE, Insulator.NONE]
-    assert len(lp.insulators) == 3
-    assert np.array_equal(lp.insulators, np.array([Insulator.NONE, Insulator.NONE, Insulator.NONE]))
+    insulators = [Insulator.NONE, Insulator.NONE, Insulator.NONE, Insulator.NONE]
+    lp = LineParameters("test", z_line=z_line, y_shunt=y_shunt, insulators=insulators)
+    for p in Line.allowed_phases:
+        assert np.array_equal(lp.insulators(p), np.array([Insulator.NONE] * len(p)))
 
     # Arrays with all none
-    lp.insulators = [pd.NA, np.nan, None]
-    assert lp.insulators is None
+    lp = LineParameters("test", z_line=z_line, y_shunt=y_shunt, insulators=[pd.NA, np.nan, None, None])
+    assert lp._insulators is None
+    for p in Line.allowed_phases:
+        assert lp.insulators(p) is None
 
     # Errors
     with pytest.raises(RoseauLoadFlowException) as e:
-        lp.insulators = [pd.NA, np.nan, Insulator.LDPE]
-    assert e.value.msg == "Insulators cannot contain null values: [<NA>, nan, ldpe] was provided."
+        LineParameters("test", z_line=z_line, y_shunt=y_shunt, insulators=[pd.NA, np.nan, Insulator.LDPE, Insulator.IP])
+    assert e.value.msg == "Insulators cannot contain null values: [<NA>, nan, ldpe, ip] was provided."
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_INSULATORS_VALUE
 
     with pytest.raises(RoseauLoadFlowException) as e:
-        lp.insulators = ["invalid", Insulator.XLPE, "XLPE"]
+        LineParameters(
+            "test", z_line=z_line, y_shunt=y_shunt, insulators=["invalid", Insulator.XLPE, "XLPE", Insulator.IP]
+        )
     assert e.value.msg == "'invalid' cannot be converted into a Insulator."
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_INSULATOR
 
     with pytest.raises(RoseauLoadFlowException) as e:
-        lp.insulators = [Insulator.XLPE, Insulator.HDPE]
-    assert e.value.msg == "Incorrect number of insulators: 2 instead of 3"
+        LineParameters("test", z_line=z_line, y_shunt=y_shunt, insulators=[Insulator.XLPE, Insulator.HDPE])
+    assert e.value.msg == "Incorrect number of insulators: 2 instead of 4."
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_INSULATORS_SIZE
 
 
 def test_materials():
-    z_line = np.eye(3, dtype=complex)
-    y_shunt = np.eye(3, dtype=complex)
+    z_line = np.eye(4, dtype=complex)
+    y_shunt = np.eye(4, dtype=complex)
 
     # None-like values
     lp = LineParameters("test", z_line=z_line, y_shunt=y_shunt, materials=None)
-    assert lp.materials is None
-    lp.materials = np.nan
-    assert lp.materials is None
-    lp.materials = pd.NA
-    assert lp.materials is None
+    assert lp._materials is None
+    for p in Line.allowed_phases:
+        assert lp.materials(p) is None
+    lp = LineParameters("test", z_line=z_line, y_shunt=y_shunt, materials=np.nan)
+    assert lp._materials is None
+    for p in Line.allowed_phases:
+        assert lp.materials(p) is None
+    lp = LineParameters("test", z_line=z_line, y_shunt=y_shunt, materials=pd.NA)
+    assert lp._materials is None
+    for p in Line.allowed_phases:
+        assert lp.materials(p) is None
 
     # Single values
-    lp.materials = Material.AAAC
-    assert len(lp.materials) == 3
-    assert np.array_equal(lp.materials, np.array([Material.AAAC] * 3))
+    lp = LineParameters("test", z_line=z_line, y_shunt=y_shunt, materials=Material.AAAC)
+    assert len(lp._materials) == 4
+    for p in Line.allowed_phases:
+        assert np.array_equal(lp.materials(p), np.array([Material.AAAC] * len(p)))
 
-    lp.materials = Material.AAAC.name
-    assert len(lp.materials) == 3
-    assert np.array_equal(lp.materials, np.array([Material.AAAC] * 3))
+    lp = LineParameters("test", z_line=z_line, y_shunt=y_shunt, materials=Material.AAAC.name)
+    assert len(lp._materials) == 4
+    for p in Line.allowed_phases:
+        assert np.array_equal(lp.materials(p), np.array([Material.AAAC] * len(p)))
 
     # Arrays
-    lp.materials = [Material.AAAC, Material.AL, Material.CU]
-    assert len(lp.materials) == 3
-    assert np.array_equal(lp.materials, np.array([Material.AAAC, Material.AL, Material.CU]))
+    materials = [Material.AAAC, Material.AL, Material.CU, Material.AACSR]
+    lp = LineParameters("test", z_line=z_line, y_shunt=y_shunt, materials=materials)
+    assert len(lp._materials) == 4
+    for p in Line.allowed_phases:
+        expected_value = np.array([materials["abcn".index(x)] for x in p])
+        assert np.array_equal(lp.materials(p), expected_value)
+
+    # Arrays with all none
+    lp = LineParameters("test", z_line=z_line, y_shunt=y_shunt, materials=[np.nan, float("nan"), pd.NA, np.nan])
+    assert lp._materials is None
+    for p in Line.allowed_phases:
+        assert lp.materials(p) is None
 
     # Errors
     with pytest.raises(RoseauLoadFlowException) as e:
-        lp.materials = [np.nan, float("nan"), pd.NA]
-    assert e.value.msg == "Materials cannot contain null values: [nan, nan, <NA>] was provided."
+        LineParameters(
+            "test", z_line=z_line, y_shunt=y_shunt, materials=[np.nan, float("nan"), Material.AM, Material.CU]
+        )
+    assert e.value.msg == "Materials cannot contain null values: [nan, nan, am, cu] was provided."
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_MATERIALS_VALUE
 
     with pytest.raises(RoseauLoadFlowException) as e:
-        lp.materials = [np.nan, float("nan"), Material.AM]
-    assert e.value.msg == "Materials cannot contain null values: [nan, nan, am] was provided."
-    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_MATERIALS_VALUE
-
-    with pytest.raises(RoseauLoadFlowException) as e:
-        lp.materials = ["invalid", Material.AM, "AM"]
+        LineParameters("test", z_line=z_line, y_shunt=y_shunt, materials=["invalid", Material.AM, "AM", "am"])
     assert e.value.msg == "'invalid' cannot be converted into a Material."
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_MATERIAL
 
     with pytest.raises(RoseauLoadFlowException) as e:
-        lp.materials = [Material.AM, Material.AL]
-    assert e.value.msg == "Incorrect number of materials: 2 instead of 3"
+        LineParameters("test", z_line=z_line, y_shunt=y_shunt, materials=[Material.AM, Material.AL])
+    assert e.value.msg == "Incorrect number of materials: 2 instead of 4."
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_MATERIALS_SIZE
 
 
 def test_sections():
-    z_line = np.eye(3, dtype=complex)
-    y_shunt = np.eye(3, dtype=complex)
+    z_line = np.eye(4, dtype=complex)
+    y_shunt = np.eye(4, dtype=complex)
 
     # None-like values
     lp = LineParameters("test", z_line=z_line, y_shunt=y_shunt, sections=None)
-    assert lp.sections is None
-    lp.sections = np.nan
-    assert lp.sections is None
-    lp.sections = pd.NA
-    assert lp.sections is None
+    assert lp._sections is None
+    for p in Line.allowed_phases:
+        assert lp.sections(p) is None
+    lp = LineParameters("test", z_line=z_line, y_shunt=y_shunt, sections=np.nan)
+    assert lp._sections is None
+    for p in Line.allowed_phases:
+        assert lp.sections(p) is None
+    lp = LineParameters("test", z_line=z_line, y_shunt=y_shunt, sections=pd.NA)
+    assert lp._sections is None
+    for p in Line.allowed_phases:
+        assert lp.sections(p) is None
 
     # Single values
-    lp.sections = 4
-    assert len(lp.sections) == 3
-    assert np.allclose(lp.sections.magnitude, 4)
+    lp = LineParameters("test", z_line=z_line, y_shunt=y_shunt, sections=4)
+    assert len(lp._sections) == 4
+    for p in Line.allowed_phases:
+        assert np.allclose(lp.sections(p).m, 4)
 
-    lp.sections = Q_(4, "cm**2")
-    assert len(lp.sections) == 3
-    assert np.allclose(lp.sections.magnitude, 400)
+    lp = LineParameters("test", z_line=z_line, y_shunt=y_shunt, sections=Q_(4, "cm**2"))
+    assert len(lp._sections) == 4
+    for p in Line.allowed_phases:
+        assert np.allclose(lp.sections(p).m, 400)
 
     # Arrays
-    lp.sections = Q_([4, 5, 6], "mm**2")
-    assert len(lp.sections) == 3
-    assert np.allclose(lp.sections.magnitude, [4, 5, 6])
+    sections = [4, 5, 6, 7]
+    lp = LineParameters("test", z_line=z_line, y_shunt=y_shunt, sections=Q_(sections, "mm**2"))
+    assert len(lp._sections) == 4
+    for p in Line.allowed_phases:
+        expected_value = np.array([sections["abcn".index(x)] for x in p])
+        assert np.allclose(lp.sections(p).m, expected_value)
+
+    # Arrays with all none
+    lp = LineParameters("test", z_line=z_line, y_shunt=y_shunt, sections=[np.nan, float("nan"), pd.NA, np.nan])
+    assert lp._sections is None
+    for p in Line.allowed_phases:
+        assert lp.sections(p) is None
 
     # Errors
     with pytest.raises(RoseauLoadFlowException) as e:
-        lp.sections = [np.nan, float("nan"), pd.NA]
-    assert e.value.msg == "Sections cannot contain null values: [nan, nan, <NA>] mm² was provided."
+        LineParameters("test", z_line=z_line, y_shunt=y_shunt, sections=[np.nan, float("nan"), 3, 4])
+    assert e.value.msg == "Sections cannot contain null values: [nan, nan, 3, 4] mm² was provided."
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_SECTIONS_VALUE
 
     with pytest.raises(RoseauLoadFlowException) as e:
-        lp.sections = [np.nan, float("nan"), 3]
-    assert e.value.msg == "Sections cannot contain null values: [nan, nan, 3] mm² was provided."
+        LineParameters("test", z_line=z_line, y_shunt=y_shunt, sections=-1)
+    assert e.value.msg == "Sections must be positive: -1 mm² was provided."
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_SECTIONS_VALUE
 
     with pytest.raises(RoseauLoadFlowException) as e:
-        lp.sections = [3, -1, 3.0]
-    assert e.value.msg == "Sections must be positive: [3.0, -1.0, 3.0] mm² was provided."
+        LineParameters("test", z_line=z_line, y_shunt=y_shunt, sections=0)
+    assert e.value.msg == "Sections must be positive: 0 mm² was provided."
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_SECTIONS_VALUE
 
     with pytest.raises(RoseauLoadFlowException) as e:
-        lp.sections = [3, 0, 3.0]
-    assert e.value.msg == "Sections must be positive: [3.0, 0.0, 3.0] mm² was provided."
+        LineParameters("test", z_line=z_line, y_shunt=y_shunt, sections=[3, -1, 3.0, 4.0])
+    assert e.value.msg == "Sections must be positive: [3.0, -1.0, 3.0, 4.0] mm² was provided."
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_SECTIONS_VALUE
 
     with pytest.raises(RoseauLoadFlowException) as e:
-        lp.sections = [3, 3]
-    assert e.value.msg == "Incorrect number of sections: 2 instead of 3"
+        LineParameters("test", z_line=z_line, y_shunt=y_shunt, sections=[3, 0, 3.0, 4.0])
+    assert e.value.msg == "Sections must be positive: [3.0, 0.0, 3.0, 4.0] mm² was provided."
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_SECTIONS_VALUE
+
+    with pytest.raises(RoseauLoadFlowException) as e:
+        LineParameters("test", z_line=z_line, y_shunt=y_shunt, sections=[3, 3])
+    assert e.value.msg == "Incorrect number of sections: 2 instead of 4."
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_SECTIONS_SIZE
 
 
 def test_ampacities():
-    z_line = np.eye(3, dtype=complex)
-    y_shunt = np.eye(3, dtype=complex)
+    z_line = np.eye(4, dtype=complex)
+    y_shunt = np.eye(4, dtype=complex)
 
     # None-like values
     lp = LineParameters("test", z_line=z_line, y_shunt=y_shunt, ampacities=None)
-    assert lp.ampacities is None
-    lp.ampacities = np.nan
-    assert lp.ampacities is None
-    lp.ampacities = pd.NA
-    assert lp.ampacities is None
-    lp.ampacities = [np.nan, float("nan"), pd.NA]
-    assert lp.ampacities is None
+    assert lp._ampacities is None
+    for p in Line.allowed_phases:
+        assert lp.ampacities(p) is None
+    lp = LineParameters("test", z_line=z_line, y_shunt=y_shunt, ampacities=np.nan)
+    assert lp._ampacities is None
+    for p in Line.allowed_phases:
+        assert lp.ampacities(p) is None
+    lp = LineParameters("test", z_line=z_line, y_shunt=y_shunt, ampacities=pd.NA)
+    assert lp._ampacities is None
+    for p in Line.allowed_phases:
+        assert lp.ampacities(p) is None
 
     # Single values
-    lp.ampacities = 4
-    assert len(lp.ampacities) == 3
-    assert np.allclose(lp.ampacities.magnitude, 4)
+    lp = LineParameters("test", z_line=z_line, y_shunt=y_shunt, ampacities=4)
+    assert len(lp._ampacities) == 4
+    for p in Line.allowed_phases:
+        assert np.allclose(lp.ampacities(p).m, 4)
 
-    lp.ampacities = Q_(4, "kA")
-    assert len(lp.ampacities) == 3
-    assert np.allclose(lp.ampacities.magnitude, 4000)
+    lp = LineParameters("test", z_line=z_line, y_shunt=y_shunt, ampacities=Q_(4, "kA"))
+    assert len(lp._ampacities) == 4
+    for p in Line.allowed_phases:
+        assert np.allclose(lp.ampacities(p).m, 4000)
 
     # Arrays
-    lp.ampacities = Q_([4, 5, 6], "A")
-    assert len(lp.ampacities) == 3
-    assert np.allclose(lp.ampacities.magnitude, [4, 5, 6])
+    ampacities = [4, 5, 6, 7]
+    lp = LineParameters("test", z_line=z_line, y_shunt=y_shunt, ampacities=Q_(ampacities, "A"))
+    assert len(lp._ampacities) == 4
+    for p in Line.allowed_phases:
+        expected_value = np.array([ampacities["abcn".index(x)] for x in p])
+        assert np.allclose(lp.ampacities(p).m, expected_value)
 
-    # Array with nan
-    lp.ampacities = Q_([4, np.nan, 6], "A")
-    assert len(lp.ampacities) == 3
-    npt.assert_allclose(lp.ampacities.magnitude, [4, np.nan, 6], equal_nan=True)
+    # Arrays with all none
+    lp = LineParameters("test", z_line=z_line, y_shunt=y_shunt, ampacities=[np.nan, float("nan"), pd.NA, np.nan])
+    assert lp._ampacities is None
+    for p in Line.allowed_phases:
+        assert lp.ampacities(p) is None
 
     # Errors
     with pytest.raises(RoseauLoadFlowException) as e:
-        lp.ampacities = [1, 2]
-    assert e.value.msg == "Incorrect number of ampacities: 2 instead of 3"
+        LineParameters("test", z_line=z_line, y_shunt=y_shunt, ampacities=[1, 2])
+    assert e.value.msg == "Incorrect number of ampacities: 2 instead of 4."
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_AMPACITIES_SIZE
 
     with pytest.raises(RoseauLoadFlowException) as e:
-        lp.ampacities = -2
+        LineParameters("test", z_line=z_line, y_shunt=y_shunt, ampacities=-2)
     assert e.value.msg == "Ampacities must be positive: -2 A was provided."
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_AMPACITIES_VALUE
 
     with pytest.raises(RoseauLoadFlowException) as e:
-        lp.ampacities = 0
+        LineParameters("test", z_line=z_line, y_shunt=y_shunt, ampacities=0)
     assert e.value.msg == "Ampacities must be positive: 0 A was provided."
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_AMPACITIES_VALUE
 
     with pytest.raises(RoseauLoadFlowException) as e:
-        lp.ampacities = [1, np.nan, -2]
-    assert e.value.msg == "Ampacities must be positive: [1.0, nan, -2.0] A was provided."
+        LineParameters("test", z_line=z_line, y_shunt=y_shunt, ampacities=[1, 2, -2, 3])
+    assert e.value.msg == "Ampacities must be positive: [1.0, 2.0, -2.0, 3.0] A was provided."
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_AMPACITIES_VALUE
 
     with pytest.raises(RoseauLoadFlowException) as e:
-        lp.ampacities = [1, np.nan, 0]
-    assert e.value.msg == "Ampacities must be positive: [1.0, nan, 0.0] A was provided."
+        LineParameters("test", z_line=z_line, y_shunt=y_shunt, ampacities=[1, 2, 0, 3])
+    assert e.value.msg == "Ampacities must be positive: [1.0, 2.0, 0.0, 3.0] A was provided."
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_AMPACITIES_VALUE
 
 
 def test_json_serialization(tmp_path):
-    lp = LineParameters(id="test", z_line=np.eye(3), sections=np.float64(150), ampacities=[1, float("nan"), np.nan])
+    lp = LineParameters(id="test", z_line=np.eye(4), sections=np.float64(150), ampacities=[1, 2, 3, 4])
     path = tmp_path / "lp.json"
     lp.to_json(path)
     lp_dict = LineParameters.from_json(path).to_dict()
     assert isinstance(lp_dict["z_line"], list)
-    npt.assert_allclose(lp_dict["sections"], [150, 150, 150])
-    npt.assert_allclose(lp_dict["ampacities"], [1, np.nan, np.nan])
+    npt.assert_allclose(lp_dict["sections"], [150, 150, 150, 150])
+    npt.assert_allclose(lp_dict["ampacities"], [1, 2, 3, 4])
 
 
 def test_from_open_dss():
     # DSS command: `New linecode.240sq nphases=3 R1=0.127 X1=0.072 R0=0.342 X0=0.089 units=km`
     lp240sq = LineParameters.from_open_dss(
         id="linecode-240sq",
-        nphases=3,
         r1=Q_(0.127, "ohm/km"),
         x1=Q_(0.072, "ohm/km"),
         r0=Q_(0.342, "ohm/km"),
@@ -866,19 +953,28 @@ def test_from_open_dss():
     assert lp240sq.id == "linecode-240sq"
     zs_e = 0.19866666666666669 + 0.07766666666666666j
     zm_e = 0.07166666666666667 + 0.005666666666666667j
-    z_line_expected = [[zs_e, zm_e, zm_e], [zm_e, zs_e, zm_e], [zm_e, zm_e, zs_e]]
-    np.testing.assert_allclose(lp240sq.z_line.m, z_line_expected)
+    z_line_expected = [
+        [zs_e, zm_e, zm_e, zm_e],
+        [zm_e, zs_e, zm_e, zm_e],
+        [zm_e, zm_e, zs_e, zm_e],
+        [zm_e, zm_e, zm_e, zs_e],
+    ]
+    np.testing.assert_allclose(lp240sq._z_line, z_line_expected)
     ys_e = 8.796459430051418e-07j
     ym_e = -1.8849555921538752e-07j
-    y_shunt_expected = [[ys_e, ym_e, ym_e], [ym_e, ys_e, ym_e], [ym_e, ym_e, ys_e]]
-    np.testing.assert_allclose(lp240sq.y_shunt.m, y_shunt_expected)
+    y_shunt_expected = [
+        [ys_e, ym_e, ym_e, ym_e],
+        [ym_e, ys_e, ym_e, ym_e],
+        [ym_e, ym_e, ys_e, ym_e],
+        [ym_e, ym_e, ym_e, ys_e],
+    ]
+    np.testing.assert_allclose(lp240sq._y_shunt, y_shunt_expected)
     assert lp240sq.line_type is None
-    assert lp240sq.ampacities is None
+    assert lp240sq._ampacities is None
 
     # DSS command: `New LineCode.16sq NPhases=1 R1=0.350, X1=0.025, R0=0.366, X0=0.025, C1=1.036, C0=0.488 Units=kft NormAmps=400 LineType=OH`
     lp16sq = LineParameters.from_open_dss(
         id="linecode-16sq",
-        nphases=1,
         r1=Q_(0.350, "ohm/kft"),
         x1=Q_(0.025, "ohm/kft"),
         r0=Q_(0.366, "ohm/kft"),
@@ -890,21 +986,31 @@ def test_from_open_dss():
     )
     assert lp16sq.id == "linecode-16sq"
     zs_e = 1.1657917760279966 + 0.08202099737532809j
-    z_line_expected = [[zs_e]]
-    np.testing.assert_allclose(lp16sq.z_line.m, z_line_expected)
+    zm_e = 0.017497812773403343 + 0j
+    z_line_expected = [
+        [zs_e, zm_e, zm_e, zm_e],
+        [zm_e, zs_e, zm_e, zm_e],
+        [zm_e, zm_e, zs_e, zm_e],
+        [zm_e, zm_e, zm_e, zs_e],
+    ]
+    np.testing.assert_allclose(lp16sq._z_line, z_line_expected)
     ys_e = 8.795360010050165e-07j
-    y_shunt_expected = [[ys_e]]
-    np.testing.assert_allclose(lp16sq.y_shunt.m, y_shunt_expected)
+    ym_e = -1.8827567521513636e-07j
+    y_shunt_expected = [
+        [ys_e, ym_e, ym_e, ym_e],
+        [ym_e, ys_e, ym_e, ym_e],
+        [ym_e, ym_e, ys_e, ym_e],
+        [ym_e, ym_e, ym_e, ys_e],
+    ]
+    np.testing.assert_allclose(lp16sq._y_shunt, y_shunt_expected)
     assert lp16sq.line_type == LineType.OVERHEAD
-    assert np.allclose(lp16sq.ampacities.m, 400)
+    assert np.allclose(lp16sq._ampacities, 400)
 
 
 def test_from_power_factory():
     # Parameters from tests/data/dgs/special/MV_Load.json
     pwf_params = {
         "id": "NA2YSY 1x95rm 12/20kV it",
-        "nphase": 3,
-        "nneutral": 0,
         "r1": 0.3225,  # Ohm/km
         "x1": 0.125663,  # Ohm/km
         "b1": 72.25663,  # µS/km
@@ -929,54 +1035,54 @@ def test_from_power_factory():
 
     zs_e = 0.645 + 0.2513266666666667j
     zm_e = 0.3225 + 0.1256636666666667j
-    z_line_expected = [[zs_e, zm_e, zm_e], [zm_e, zs_e, zm_e], [zm_e, zm_e, zs_e]]
-    np.testing.assert_allclose(na2ysy1x95rm.z_line.m, z_line_expected)
+    z_line_expected = [
+        [zs_e, zm_e, zm_e, 0],
+        [zm_e, zs_e, zm_e, 0],
+        [zm_e, zm_e, zs_e, 0],
+        [0, 0, 0, zs_e],
+    ]
+    np.testing.assert_allclose(na2ysy1x95rm._z_line, z_line_expected)
     ys_e = 7.318863666666666e-05j
     ym_e = 9.320066666666643e-07j
-    y_shunt_expected = [[ys_e, ym_e, ym_e], [ym_e, ys_e, ym_e], [ym_e, ym_e, ys_e]]
-    np.testing.assert_allclose(na2ysy1x95rm.y_shunt.m, y_shunt_expected)
+    y_shunt_expected = [
+        [ys_e, ym_e, ym_e, 0],
+        [ym_e, ys_e, ym_e, 0],
+        [ym_e, ym_e, ys_e, 0],
+        [0, 0, 0, ys_e],
+    ]
+    np.testing.assert_allclose(na2ysy1x95rm._y_shunt, y_shunt_expected)
 
-    assert np.allclose(na2ysy1x95rm.ampacities.m, 235), na2ysy1x95rm.ampacities
+    assert np.allclose(na2ysy1x95rm._ampacities, 235), na2ysy1x95rm._ampacities
     assert na2ysy1x95rm.line_type == LineType.UNDERGROUND
-    assert np.array_equal(na2ysy1x95rm.materials, np.array([Material.AL] * 3))
-    assert np.array_equal(na2ysy1x95rm.insulators, np.array([Insulator.PVC] * 3))
-    assert np.allclose(na2ysy1x95rm.sections.m, 95)
-
-    # Bad phases
-    new_pwf_params = pwf_params | {"nphase": 4}
-    with pytest.raises(RoseauLoadFlowException) as e:
-        LineParameters.from_power_factory(**new_pwf_params)
-    assert e.value.msg == "Expected nphase=1, 2 or 3, got 4 for line parameters 'NA2YSY 1x95rm 12/20kV it'."
-    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
-    new_pwf_params = pwf_params | {"nneutral": 2}
-    with pytest.raises(RoseauLoadFlowException) as e:
-        LineParameters.from_power_factory(**new_pwf_params)
-    assert e.value.msg == "Expected nneutral=0 or 1, got 2 for line parameters 'NA2YSY 1x95rm 12/20kV it'."
-    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
+    assert np.array_equal(na2ysy1x95rm._materials, np.array([Material.AL] * 4))
+    assert np.array_equal(na2ysy1x95rm._insulators, np.array([Insulator.PVC] * 4))
+    assert np.allclose(na2ysy1x95rm._sections, 95)
 
     # Line has no neutral, OK to not pass neutral impedances
     new_pwf_params = {k: v for k, v in pwf_params.items() if k not in {"rn", "xn", "bn", "rpn", "xpn", "bpn"}}
     LineParameters.from_power_factory(**new_pwf_params)
 
-    # This time with neutral, should raise an error
-    new_pwf_params["nneutral"] = 1
-    with pytest.raises(RoseauLoadFlowException) as e:
-        LineParameters.from_power_factory(**new_pwf_params)
-    assert e.value.msg == (
-        "Missing rn, xn, bn, rpn, xpn or bpn required with nneutral=1 for line parameters 'NA2YSY 1x95rm 12/20kV it'."
-    )
-    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_LINE_MODEL
+    # This time with a missing neutral value
+    for key in ("rn", "xn", "bn", "rpn", "xpn", "bpn"):
+        new_pwf_params = {k: v for k, v in pwf_params.items() if k != key}
+        with pytest.raises(RoseauLoadFlowException) as e:
+            LineParameters.from_power_factory(**new_pwf_params)
+        assert e.value.msg == (
+            "rn, xn, bn, rpn, xpn and bpn must be all provided or none of them for line parameters "
+            "'NA2YSY 1x95rm 12/20kV it'."
+        )
+        assert e.value.code == RoseauLoadFlowExceptionCode.BAD_LINE_MODEL
 
     # String versions of line/insulator type are also accepted
     new_pwf_params = pwf_params | {"cohl": "OHL", "insulation": "XLPE"}
     lp = LineParameters.from_power_factory(**new_pwf_params)
     assert lp.line_type == LineType.OVERHEAD
-    assert np.array_equal(lp.insulators, np.array([Insulator.XLPE] * 3, dtype=np.object_))
+    assert np.array_equal(lp._insulators, np.array([Insulator.XLPE] * 4, dtype=np.object_))
 
 
 def test_results_to_dict():
     # No results to export
-    lp = LineParameters.from_catalogue(name="U_AL_150", nb_phases=3)
+    lp = LineParameters.from_catalogue(name="U_AL_150")
     with pytest.raises(RoseauLoadFlowException) as e:
         lp.results_to_dict()
     assert e.value.msg == "The LineParameters has no results to export."
@@ -984,29 +1090,29 @@ def test_results_to_dict():
 
 
 def test_equality():
-    lp = LineParameters.from_catalogue(name="U_AL_150", nb_phases=3)
+    lp = LineParameters.from_catalogue(name="U_AL_150")
     data = {
         "id": lp.id,
-        "z_line": lp.z_line,
-        "y_shunt": lp.y_shunt,
-        "ampacities": lp.ampacities,
-        "line_type": lp.line_type,
-        "materials": lp.materials,
-        "insulators": lp.insulators,
-        "sections": lp.sections,
+        "z_line": lp._z_line,
+        "y_shunt": lp._y_shunt,
+        "ampacities": lp._ampacities,
+        "line_type": lp._line_type,
+        "materials": lp._materials,
+        "insulators": lp._insulators,
+        "sections": lp._sections,
     }
     lp2 = LineParameters(**data)
     assert lp2 == lp
 
     other_data = {
         "id": lp.id + " other",
-        "z_line": lp.z_line.m + 1,
-        "y_shunt": lp.y_shunt.m + 1,
-        "ampacities": lp.ampacities.m + 1,
+        "z_line": lp._z_line + 1,
+        "y_shunt": lp._y_shunt + 1,
+        "ampacities": lp._ampacities + 1,
         "line_type": LineType.OVERHEAD,
         "materials": Material.CU,
         "insulators": Insulator.XLPE,
-        "sections": lp.sections.m + 1,
+        "sections": lp._sections + 1,
     }
     for k, v in other_data.items():
         other_lp = LineParameters(**(data | {k: v}))

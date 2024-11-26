@@ -296,7 +296,7 @@ def test_bad_networks():
     bus1 = Bus(id="bus1", phases="abcn")
     bus2 = Bus(id="bus2", phases="abcn")
     ground.connect(bus2)
-    lp = LineParameters(id="test", z_line=np.eye(3, dtype=complex))
+    lp = LineParameters(id="test", z_line=np.eye(4, dtype=complex))
     line = Line(id="line", bus1=bus1, bus2=bus2, phases="abc", parameters=lp, length=10)
     p_ref = PotentialRef(id="pref1", element=ground)
     with pytest.raises(RoseauLoadFlowException) as e:
@@ -433,7 +433,7 @@ def test_invalid_element_overrides():
     bus1 = Bus(id="bus1", phases="an")
     bus2 = Bus(id="bus2", phases="an")
     PotentialRef(id="pr", element=bus1)
-    lp = LineParameters(id="lp", z_line=np.eye(2, dtype=complex))
+    lp = LineParameters(id="lp", z_line=np.eye(4, dtype=complex))
     Line(id="line", bus1=bus1, bus2=bus2, parameters=lp, length=1)
     VoltageSource(id="source", bus=bus1, voltages=[230])
     old_load = PowerLoad(id="load", bus=bus2, powers=[1000])
@@ -1422,7 +1422,7 @@ def test_load_flow_results_frames(small_network_with_results):
     assert_frame_equal(en.res_lines, expected_res_lines, rtol=1e-4, atol=1e-5)
 
     # Lines with violated max current
-    en.lines["line"].parameters.ampacities = 0.002
+    en.lines["line"].parameters._ampacities = np.array([0.002] * 4, dtype=np.float64)
     expected_res_lines_violated_records = []
     for d in expected_res_lines_records:
         if d["phase"] == "n":

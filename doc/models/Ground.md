@@ -70,8 +70,8 @@ vs = rlf.VoltageSource(id="source", bus=bus1, voltages=rlf.Q_(un, "V"))
 # Define the impedance and admittance parameters of the lines (can be reused)
 parameters = rlf.LineParameters(
     id="parameters",
-    z_line=rlf.Q_((0.12 + 0.1j) * np.eye(3), "ohm/km"),
-    y_shunt=rlf.Q_(2e-4j * np.eye(3), "S/km"),
+    z_line=rlf.Q_((0.12 + 0.1j) * np.eye(4), "ohm/km"),
+    y_shunt=rlf.Q_(2e-4j * np.eye(4), "S/km"),
 )
 
 # Define a line between bus1 and bus2 (using g1 for the shunt connections)

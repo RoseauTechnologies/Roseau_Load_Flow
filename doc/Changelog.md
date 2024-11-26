@@ -19,6 +19,18 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`287` **BREAKING CHANGES**: The constructor of the class `LineParameters` now only accepts 4x4 line
+  impedance and shunt admittance matrices. This means that the same `LineParameters` instance can be used for lines
+  that have different phases. It has the following consequences:
+
+  - The methods `z_line`, `y_shunt`, `with_shunt`, `sections`, `materials`, `insulators` and `ampacities` are not
+    anymore properties. They are now methods that takes the phases of a line as argument.
+  - These parameters can not be set anymore.
+  - All the alternative constructors of the class have also been modified and don't accept anymore parameters about
+    the number of phases or of neutral.
+  - The conversion of files generated with previous versions of _Roseau Load Flow_ may rename some line parameters
+    to avoid mistakes when they are used with lines using different phases. An `UserWarning` is raised in such cases.
+
 - {gh-pr}`285` {gh-issue}`279` **BREAKING CHANGE**: Add limits on assets. It is now possible to define a maximum
   loading for lines and transformers. It generates some indirect consequences:
 
