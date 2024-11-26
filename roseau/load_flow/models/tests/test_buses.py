@@ -285,7 +285,7 @@ def test_propagate_limits():  # noqa: C901
     g = Ground("g")
     PotentialRef(id="pref_lv", element=g)
 
-    lp_mv = LineParameters(id="lp_mv", z_line=np.eye(3), y_shunt=0.1 * np.eye(3))
+    lp_mv = LineParameters(id="lp_mv", z_line=np.eye(4), y_shunt=0.1 * np.eye(4))
     lp_lv = LineParameters(id="lp_lv", z_line=np.eye(4))
     tp = TransformerParameters.from_catalogue(name="SE_Minera_A0Ak_100kVA", manufacturer="SE")
 
@@ -445,7 +445,7 @@ def test_get_connected_buses():
     g = Ground("g")
     PotentialRef(id="pref_lv", element=g)
 
-    lp_mv = LineParameters(id="lp_mv", z_line=np.eye(3), y_shunt=0.1 * np.eye(3))
+    lp_mv = LineParameters(id="lp_mv", z_line=np.eye(4), y_shunt=0.1 * np.eye(4))
     lp_lv = LineParameters(id="lp_lv", z_line=np.eye(4))
     tp = TransformerParameters.from_catalogue(name="SE_Minera_A0Ak_100kVA", manufacturer="SE")
 

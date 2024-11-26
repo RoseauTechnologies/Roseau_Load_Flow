@@ -9,9 +9,10 @@ from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowE
 from roseau.load_flow.models.branches import AbstractBranch
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.grounds import Ground
-from roseau.load_flow.models.lines.parameters import LineParameters
+from roseau.load_flow.models.lines.parameters import InsulatorArray, LineParameters, MaterialArray
 from roseau.load_flow.typing import ComplexArray, FloatArray, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
+from roseau.load_flow.utils.types import LineType
 from roseau.load_flow_engine.cy_engine import CyShuntLine, CySimplifiedLine
 
 logger = logging.getLogger(__name__)
@@ -102,9 +103,10 @@ class Line(AbstractBranch):
         self.parameters = parameters
         self.max_loading = max_loading
         self._initialized = True
+        with_shunt = parameters.with_shunt(phases=phases)
 
         # Handle the ground
-        if self.ground is not None and not self.with_shunt:
+        if self.ground is not None and not with_shunt:
             warnings.warn(
                 message=(
                     f"The ground element must not be provided for line {self.id!r} as it does not have a shunt "
@@ -114,29 +116,35 @@ class Line(AbstractBranch):
                 stacklevel=2,
             )
             self.ground = None
-        elif self.with_shunt:
+        elif with_shunt:
             # Connect the ground
             self._connect(self.ground)
 
-        if parameters.with_shunt:
+        z_line = parameters._z_line_without_unit(phases=phases)
+        if with_shunt:
+            y_shunt = self.parameters._y_shunt_without_unit(phases=phases)
             self._cy_element = CyShuntLine(
                 n=self._n1,
-                y_shunt=parameters._y_shunt.reshape(self._n1 * self._n2) * self._length,
-                z_line=parameters._z_line.reshape(self._n1 * self._n2) * self._length,
+                y_shunt=y_shunt.reshape(self._n1 * self._n2) * self._length,
+                z_line=z_line.reshape(self._n1 * self._n2) * self._length,
             )
         else:
-            self._cy_element = CySimplifiedLine(
-                n=self._n1, z_line=parameters._z_line.reshape(self._n1 * self._n2) * self._length
-            )
+            y_shunt = np.zeros_like(z_line, dtype=np.complex128)
+            self._cy_element = CySimplifiedLine(n=self._n1, z_line=z_line.reshape(self._n1 * self._n2) * self._length)
         self._cy_connect()
-        if parameters.with_shunt:
+        if with_shunt:
             ground._cy_element.connect(self._cy_element, [(0, self._n1 + self._n1)])
 
-        # Cache values used in results calculations
-        self._z_line = parameters._z_line * self._length
-        self._y_shunt = parameters._y_shunt * self._length
+        # Cache values related to the line parameters
+        self._z_line = z_line * self._length
+        self._y_shunt = y_shunt * self._length
+        self._with_shunt = with_shunt
         self._z_line_inv = np.linalg.inv(self._z_line)
         self._yg = self._y_shunt.sum(axis=1)  # y_ig = Y_ia + Y_ib + Y_ic + Y_in for i in {a, b, c, n}
+        self._materials = parameters.materials(phases=phases)
+        self._sections = parameters.sections(phases=phases)
+        self._insulators = parameters.insulators(phases=phases)
+        self._ampacities = parameters.ampacities(phases=phases)
 
     def __repr__(self) -> str:
         s = (
@@ -159,13 +167,23 @@ class Line(AbstractBranch):
         self._parameters = parameters
         self._length = length
 
-        self._z_line = parameters._z_line * length
-        self._y_shunt = parameters._y_shunt * length
+        # Update the cache values
+        self._with_shunt = parameters.with_shunt(phases=self._phases1)
+        self._z_line = parameters._z_line_without_unit(phases=self._phases1) * self._length
+        if self._with_shunt:
+            self._y_shunt = parameters._y_shunt_without_unit(phases=self._phases1) * self._length
+        else:
+            self._y_shunt = np.zeros_like(self._z_line, dtype=np.complex128)
         self._z_line_inv = np.linalg.inv(self._z_line)
         self._yg = self._y_shunt.sum(axis=1)
+        self._materials = parameters.materials(phases=self._phases1)
+        self._sections = parameters.sections(phases=self._phases1)
+        self._insulators = parameters.insulators(phases=self._phases1)
+        self._ampacities = parameters.ampacities(phases=self._phases1)
 
+        # Update the cy_element
         if self._cy_element is not None:
-            if self._parameters.with_shunt:
+            if self._with_shunt:
                 self._cy_element.update_line_parameters(
                     y_shunt=self._y_shunt.reshape(self._n1 * self._n2), z_line=self._z_line.reshape(self._n1 * self._n2)
                 )
@@ -197,27 +215,18 @@ class Line(AbstractBranch):
 
     @parameters.setter
     def parameters(self, value: LineParameters) -> None:
-        shape = (self._n1, self._n2)
-        if value._z_line.shape != shape:
-            msg = f"Incorrect z_line dimensions for line {self.id!r}: {value._z_line.shape} instead of {shape}"
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Z_LINE_SHAPE)
-
-        if value.with_shunt:
-            if self._initialized and not self.with_shunt:
+        value_with_shunt = value.with_shunt(phases=self._phases1)
+        if value_with_shunt:
+            if self._initialized and not self._with_shunt:
                 msg = "Cannot set line parameters with a shunt to a line that does not have shunt components."
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_MODEL)
-            if value._y_shunt.shape != shape:
-                msg = f"Incorrect y_shunt dimensions for line {self.id!r}: {value._y_shunt.shape} instead of {shape}"
-                logger.error(msg)
-                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Y_SHUNT_SHAPE)
             if self.ground is None:
                 msg = f"The ground element must be provided for line {self.id!r} with shunt admittance."
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_TYPE)
         else:
-            if self._initialized and self.with_shunt:
+            if self._initialized and self._with_shunt:
                 msg = "Cannot set line parameters without a shunt to a line that has shunt components."
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_MODEL)
@@ -225,18 +234,6 @@ class Line(AbstractBranch):
         self._parameters = value
         if self._initialized:
             self._update_internal_parameters(value, self._length)
-
-    @property
-    @ureg_wraps("ohm", (None,))
-    def z_line(self) -> Q_[ComplexArray]:
-        """Impedance of the line (in Ohm)."""
-        return self._parameters._z_line * self._length
-
-    @property
-    @ureg_wraps("S", (None,))
-    def y_shunt(self) -> Q_[ComplexArray]:
-        """Shunt admittance of the line (in Siemens)."""
-        return self._parameters._y_shunt * self._length
 
     @property
     @ureg_wraps("", (None,))
@@ -253,25 +250,60 @@ class Line(AbstractBranch):
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_MAX_LOADING_VALUE)
         self._max_loading = value
 
+    #
+    # Properties related to the parameters
+    #
+    @property
+    @ureg_wraps("ohm", (None,))
+    def z_line(self) -> Q_[ComplexArray]:
+        """Impedance of the line (in Ohm)."""
+        return self._z_line
+
+    @property
+    @ureg_wraps("S", (None,))
+    def y_shunt(self) -> Q_[ComplexArray]:
+        """Shunt admittance of the line (in Siemens)."""
+        return self._y_shunt
+
+    @property
+    def with_shunt(self) -> bool:
+        return self._with_shunt
+
+    @property
+    def line_type(self) -> LineType | None:
+        """The type of the line. Informative only, it has no impact on the load flow."""
+        return self._parameters.line_type
+
+    @property
+    def materials(self) -> MaterialArray | None:
+        """The materials of the conductors. Informative only, it has no impact on the load flow."""
+        return self._materials
+
+    @property
+    def insulators(self) -> InsulatorArray | None:
+        """The insulators of the conductors. Informative only, it has no impact on the load flow."""
+        return self._insulators
+
+    @property
+    def sections(self) -> Q_[FloatArray] | None:
+        """The cross-section areas of the cable (in mm²). Informative only, it has no impact on the load flow."""
+        return self._sections
+
     @property
     def ampacities(self) -> Q_[FloatArray] | None:
-        """The ampacities of the line (in A)."""
-        # Do not add a setter. The user must know that if they change the ampacities, it changes
-        # for all lines that share the parameters. It is better to set it on the parameters.
-        return self._parameters.ampacities
+        """The ampacities of the line (A) if it is set. Informative only, it has no impact on the load flow."""
+        return self._ampacities
 
     @property
     def max_currents(self) -> Q_[FloatArray] | None:
         """The maximum current of the line (in A). It takes into account the `max_loading` of the line and the
         `ampacities` of the parameters."""
-        # Do not add a setter. Only `max_loading` can be altered by the user
-        amp = self._parameters._ampacities
-        return None if amp is None else Q_(amp * self._max_loading, "A")
+        # Do not add a setter. Only `max_loading` can be altered by the user.
+        return None if self._ampacities is None else Q_(self._ampacities * self._max_loading, "A")
 
-    @property
-    def with_shunt(self) -> bool:
-        return self._parameters.with_shunt
-
+    #
+    # Load flow results
+    #
     def _res_series_values_getter(self, warning: bool) -> tuple[ComplexArray, ComplexArray]:
         pot1, pot2 = self._res_potentials_getter(warning)  # V
         du_line = pot1 - pot2
@@ -299,7 +331,7 @@ class Line(AbstractBranch):
         return self._res_series_power_losses_getter(warning=True)
 
     def _res_shunt_values_getter(self, warning: bool) -> tuple[ComplexArray, ComplexArray, ComplexArray, ComplexArray]:
-        assert self.with_shunt, "This method only works when there is a shunt"
+        assert self._with_shunt, "This method only works when there is a shunt"
         assert self.ground is not None
         pot1, pot2 = self._res_potentials_getter(warning)
         vg = self.ground._res_potential_getter(warning=False)
@@ -309,7 +341,7 @@ class Line(AbstractBranch):
         return pot1, pot2, i1_shunt, i2_shunt
 
     def _res_shunt_currents_getter(self, warning: bool) -> tuple[ComplexArray, ComplexArray]:
-        if not self.with_shunt:
+        if not self._with_shunt:
             zeros = np.zeros(self._n1, dtype=np.complex128)
             return zeros[:], zeros[:]
         _, _, cur1, cur2 = self._res_shunt_values_getter(warning)
@@ -322,7 +354,7 @@ class Line(AbstractBranch):
         return self._res_shunt_currents_getter(warning=True)
 
     def _res_shunt_power_losses_getter(self, warning: bool) -> ComplexArray:
-        if not self.with_shunt:
+        if not self._with_shunt:
             return np.zeros(self._n1, dtype=np.complex128)
         pot1, pot2, cur1, cur2 = self._res_shunt_values_getter(warning)
         return pot1 * cur1.conj() + pot2 * cur2.conj()
@@ -347,11 +379,10 @@ class Line(AbstractBranch):
     @property
     def res_loading(self) -> Q_[FloatArray] | None:
         """Get the loading of the line (unitless)."""
-        amp = self._parameters._ampacities
-        if amp is None:
+        if self._ampacities is None:
             return None
         currents1, currents2 = self._res_currents_getter(warning=True)
-        i_max = amp * self._max_loading
+        i_max = self._ampacities.m * self._max_loading
         return Q_(np.maximum(abs(currents1), abs(currents2)) / i_max, "")
 
     @property
@@ -361,11 +392,10 @@ class Line(AbstractBranch):
 
         Returns ``None`` if the ampacities or the `max_loading` is not set are not set.
         """
-        amp = self._parameters._ampacities
-        if amp is None:
+        if self._ampacities is None:
             return None
         currents1, currents2 = self._res_currents_getter(warning=True)
-        i_max = amp * self._max_loading
+        i_max = self._ampacities.m * self._max_loading
         # True if any phase is overloaded
         return bool((np.maximum(abs(currents1), abs(currents2)) > i_max).any())
 

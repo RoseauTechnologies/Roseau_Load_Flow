@@ -22,8 +22,7 @@ configurations and material types.
 
 This page describes how to build the impedance and shunt admittance matrices and thus the line
 parameters object using these alternative data. This is achieved via the alternative constructors
-of the `LineParameters` class. Note that only 3-phase lines are supported by the alternative
-constructors.
+of the `LineParameters` class.
 
 (models-line_parameters-alternative_constructors-symmetric)=
 
@@ -45,15 +44,25 @@ the shunt admittance matrix $\underline{Y}$ using the following equations:
 ```{math}
 \begin{aligned}
     \underline{Z} &= \begin{pmatrix}
-        \underline{Z_{\mathrm{s}}} & \underline{Z_{\mathrm{m}}} & \underline{Z_{\mathrm{m}}} \\
-        \underline{Z_{\mathrm{m}}} & \underline{Z_{\mathrm{s}}} & \underline{Z_{\mathrm{m}}} \\
-        \underline{Z_{\mathrm{m}}} & \underline{Z_{\mathrm{m}}} & \underline{Z_{\mathrm{s}}} \\
+        \underline{Z_{\mathrm{s}}} & \underline{Z_{\mathrm{m}}} & \underline{Z_{\mathrm{m}}} &
+          \underline{Z_{\mathrm{m}}} \\
+        \underline{Z_{\mathrm{m}}} & \underline{Z_{\mathrm{s}}} & \underline{Z_{\mathrm{m}}} &
+          \underline{Z_{\mathrm{m}}} \\
+        \underline{Z_{\mathrm{m}}} & \underline{Z_{\mathrm{m}}} & \underline{Z_{\mathrm{s}}} &
+          \underline{Z_{\mathrm{m}}} \\
+        \underline{Z_{\mathrm{m}}} & \underline{Z_{\mathrm{m}}} & \underline{Z_{\mathrm{m}}} &
+          \underline{Z_{\mathrm{s}}} \\
     \end{pmatrix}\\
     \underline{Y} &=
     \begin{pmatrix}
-        \underline{Y_{\mathrm{s}}} & \underline{Y_{\mathrm{m}}} & \underline{Y_{\mathrm{m}}} \\
-        \underline{Y_{\mathrm{m}}} & \underline{Y_{\mathrm{s}}} & \underline{Y_{\mathrm{m}}} \\
-        \underline{Y_{\mathrm{m}}} & \underline{Y_{\mathrm{m}}} & \underline{Y_{\mathrm{s}}} \\
+        \underline{Y_{\mathrm{s}}} & \underline{Y_{\mathrm{m}}} & \underline{Y_{\mathrm{m}}} &
+          \underline{Y_{\mathrm{m}}} \\
+        \underline{Y_{\mathrm{m}}} & \underline{Y_{\mathrm{s}}} & \underline{Y_{\mathrm{m}}} &
+          \underline{Y_{\mathrm{m}}} \\
+        \underline{Y_{\mathrm{m}}} & \underline{Y_{\mathrm{m}}} & \underline{Y_{\mathrm{s}}} &
+          \underline{Y_{\mathrm{m}}} \\
+        \underline{Y_{\mathrm{m}}} & \underline{Y_{\mathrm{m}}} & \underline{Y_{\mathrm{m}}} &
+          \underline{Y_{\mathrm{s}}} \\
     \end{pmatrix}
 \end{aligned}
 ```
@@ -83,8 +92,8 @@ For lines with a neutral, this method also takes the following optional extra pa
 
 ```{note}
 If any of those parameters is omitted or if $\underline{Z_{\mathrm{n}}}$ and
-$\underline{X_{p\mathrm{n}}}$ are zeros, the neutral wire is omitted and a 3-phase line parameters
-is built.
+$\underline{X_{p\mathrm{n}}}$ are zeros, the neutral wire is omitted and the symmetrical matrix described above is
+returned.
 ```
 
 In this case, the following matrices are built:
@@ -121,22 +130,6 @@ $\underline{Y_{\mathrm{m}}}$ as before and:
 respectively the phase-to-neutral series impedance (in $\Omega$/km), the neutral shunt admittance (in S/km) and
 the phase-to-neutral shunt admittance (in S/km).
 
-````{note}
-If the computed impedance matrix is be non-invertible, the `from_sym` class method builds impedance
-and shunt admittance matrices using the following definitions:
-
-```{math}
-\begin{aligned}
-    \underline{Z_{\mathrm{s}}} &= \underline{Z_1} \\
-    \underline{Z_{\mathrm{m}}} &= 0 \\
-    \underline{Y_{\mathrm{s}}} &= \underline{Y_1} \\
-    \underline{Y_{\mathrm{m}}} &= 0 \\
-\end{aligned}
-```
-It means that we try to define $\underline{Z_0}=\underline{Z_1}$ and $\underline{Y_0}=\underline{Y_1}$. If this
-"degraded" model also leads to a non-invertible impedance matrix, an error is raised.
-````
-
 ### Examples
 
 ```pycon
@@ -148,44 +141,23 @@ It means that we try to define $\underline{Z_0}=\underline{Z_1}$ and $\underline
 ...     "sym_line_example", z0=0.2 + 0.1j, z1=0.2 + 0.1j, y0=0.00014106j, y1=0.00014106j
 ... )
 
->>> line_parameters.z_line
-array(
-    [[ 0.2+0.1j, 0. +0.j , 0. +0.j  ],
-     [ 0. +0.j , 0.2+0.1j, 0. +0.j  ],
-     [ 0. +0.j , 0. +0.j , 0.2+0.1j ]]
-) <Unit('ohm / kilometer')>
+>>> line_parameters.z_line("abcn")
+<Quantity(
+    [[0.2+0.1j, 0. +0.j , 0. +0.j , 0. +0.j ],
+     [0. +0.j , 0.2+0.1j, 0. +0.j , 0. +0.j ],
+     [0. +0.j , 0. +0.j , 0.2+0.1j, 0. +0.j ],
+     [0. +0.j , 0. +0.j , 0. +0.j , 0.2+0.1j]],
+'ohm / kilometer')>
 
->>> line_parameters.y_shunt
-array(
-    [[ 0.+0.00014106j, 0.+0.j        , 0.+0.j         ],
-     [ 0.+0.j        , 0.+0.00014106j, 0.+0.j         ],
-     [ 0.+0.j        , 0.+0.j        , 0.+0.00014106j ]]
-) <Unit('siemens / kilometer')>
+>>> line_parameters.y_shunt("abcn")
+<Quantity(
+    [[0.+0.00014106j, 0.+0.j        , 0.+0.j        , 0.+0.j        ],
+     [0.+0.j        , 0.+0.00014106j, 0.+0.j        , 0.+0.j        ],
+     [0.+0.j        , 0.+0.j        , 0.+0.00014106j, 0.+0.j        ],
+     [0.+0.j        , 0.+0.j        , 0.+0.j        , 0.+0.00014106j]],
+'siemens / kilometer')>
 
-
->>> # Simple example in "downgraded" model
-... line_parameters = rlf.LineParameters.from_sym(
-...     "NKBA NOR  25.00 kV", z0=0.0j, z1=1.0 + 1.0j, y0=0.0j, y1=1e-06j
-... )
-The symmetric model data provided for line type 'NKBA NOR  25.00 kV' produces invalid line impedance matrix... It is
-often the case with line models coming from PowerFactory. Trying to handle the data in a 'degraded' line model.
-
->>> line_parameters.z_line
-array(
-    [[1.+1.j, 0.+0.j, 0.+0.j],
-     [0.+0.j, 1.+1.j, 0.+0.j],
-     [0.+0.j, 0.+0.j, 1.+1.j]]
-) <Unit('ohm / kilometer')>
-
->>> line_parameters.y_shunt
-array(
-    [[0.+1.e-06j, 0.+0.e+00j, 0.+0.e+00j],
-     [0.+0.e+00j, 0.+1.e-06j, 0.+0.e+00j],
-     [0.+0.e+00j, 0.+0.e+00j, 0.+1.e-06j]]
-) <Unit('siemens / kilometer')>
-
-
->>> # 4x4 matrix
+>>> # Take into account neutral elements
 ... line_parameters = rlf.LineParameters.from_sym(
 ...     "sym_neutral_underground_line_example",
 ...     z0=0.188 + 0.8224j,
@@ -198,21 +170,21 @@ array(
 ...     bpn=-0.000031502,
 ... )
 
->>> line_parameters.z_line
-array(
-    [[0.188 +0.32826667j, 0.    +0.24706667j, 0.    +0.24706667j, 0.    +0.2471j    ],
-     [0.    +0.24706667j, 0.188 +0.32826667j, 0.    +0.24706667j, 0.    +0.2471j    ],
-     [0.    +0.24706667j, 0.    +0.24706667j, 0.188 +0.32826667j, 0.    +0.2471j    ],
-     [0.    +0.2471j    , 0.    +0.2471j    , 0.    +0.2471j    , 0.4029+0.3522j    ]]
-) <Unit('ohm / kilometer')>
+>>> line_parameters.z_line("abcn")
+<Quantity(
+    [[0.188 +0.32826667j, 0.    +0.24706667j, 0.    +0.24706667j, 0.    +0.2471j],
+     [0.    +0.24706667j, 0.188 +0.32826667j, 0.    +0.24706667j, 0.    +0.2471j],
+     [0.    +0.24706667j, 0.    +0.24706667j, 0.188 +0.32826667j, 0.    +0.2471j],
+     [0.    +0.2471j    , 0.    +0.2471j    , 0.    +0.2471j    , 0.4029+0.3522j]],
+'ohm / kilometer')>
 
->>> line_parameters.y_shunt
-array(
-    [[ 1.0462e-05+1.74371333e-04j,  0.0000e+00-5.56186667e-05j, 0.0000e+00-5.56186667e-05j, -0.0000e+00-3.15020000e-05j],
-     [ 0.0000e+00-5.56186667e-05j,  1.0462e-05+1.74371333e-04j, 0.0000e+00-5.56186667e-05j, -0.0000e+00-3.15020000e-05j],
-     [ 0.0000e+00-5.56186667e-05j,  0.0000e+00-5.56186667e-05j, 1.0462e-05+1.74371333e-04j, -0.0000e+00-3.15020000e-05j],
-     [-0.0000e+00-3.15020000e-05j, -0.0000e+00-3.15020000e-05j, -0.0000e+00-3.15020000e-05j, 0.0000e+00+1.14070000e-04j]]
-) <Unit('siemens / kilometer')>
+>>> line_parameters.y_shunt("abcn").to("uS/km")
+<Quantity(
+    [[10.462+174.37133333j,  0.    -55.61866667j,  0.    -55.61866667j, 0.    -31.502j],
+     [ 0.    -55.61866667j, 10.462+174.37133333j,  0.    -55.61866667j, 0.    -31.502j],
+     [ 0.    -55.61866667j,  0.    -55.61866667j, 10.462+174.37133333j, 0.    -31.502j],
+     [ 0.    -31.502j     ,  0.    -31.502j     ,  0.    -31.502j     , 0.   +114.07j ]],
+'microsiemens / kilometer')>
 ```
 
 ## Geometric model
@@ -462,24 +434,24 @@ The formulas of the previous sections are used to get the impedance and shunt ad
 ...     section=150,  # mm²
 ...     section_neutral=70,  # mm²
 ...     height=10,  # m
-...     external_diameter=rlf.Q_(4, "cm"),
+...     external_diameter=rlf.Q_(5, "cm"),
 ... )
 
->>> line_parameters.z_line
-array(
-    [[0.188     +0.32828403j, 0.        +0.25483745j, 0.        +0.25483745j, 0.        +0.28935138j],
-     [0.        +0.25483745j, 0.188     +0.32828403j, 0.        +0.25483745j, 0.        +0.28935138j],
-     [0.        +0.25483745j, 0.        +0.25483745j, 0.188     +0.32828403j, 0.        +0.28935138j],
-     [0.        +0.28935138j, 0.        +0.28935138j, 0.        +0.28935138j, 0.40285714+0.35222736j]]
-) <Unit('ohm / kilometer')>
+>>> line_parameters.z_line("abcn")
+<Quantity(
+    [[0.18842667+0.32828403j , 0.        +0.24081693j, 0.        +0.24081693j,  0.        +0.27533085j],
+     [ 0.        +0.24081693j, 0.18842667+0.32828403j, 0.        +0.24081693j,  0.        +0.27533085j],
+     [ 0.        +0.24081693j, 0.        +0.24081693j, 0.18842667+0.32828403j,  0.        +0.27533085j],
+     [ 0.        +0.27533085j, 0.        +0.27533085j, 0.        +0.27533085j,  0.40377143+0.35222736j]],
+'ohm / kilometer')>
 
->>> line_parameters.y_shunt.to("uS/km")
-array(
-    [[0.09883654 +48.82465468j, 0.          -1.92652134j, 0.          -1.92555213j, 0.         -12.02706891j],
-     [0.          -1.92652134j, 0.09883654 +48.82465468j, 0.          -1.92555213j, 0.         -12.02706891j],
-     [0.          -1.92555213j, 0.          -1.92555213j, 0.09884227 +48.82653968j, 0.         -12.02801059j],
-     [0.         -12.02706891j, 0.         -12.02706891j, 0.         -12.02801059j, 0.21303236+107.09293474j]]
-) <Unit('microsiemens / kilometer')>)
+>>> line_parameters.y_shunt("abcn").to("uS/km")
+<Quantity(
+    [[0.10014735+37.06451833j, 0.         -2.29401352j, 0.         -2.29320761j,  0.         -7.44046029j],
+     [0.         -2.29401352j, 0.10014735+37.06451833j, 0.         -2.29320761j,  0.         -7.44046029j],
+     [0.         -2.29320761j, 0.         -2.29320761j, 0.10015225+37.06535779j,  0.         -7.44087918j],
+     [0.         -7.44046029j, 0.         -7.44046029j, 0.         -7.44087918j,  0.17653382+66.45525438j]],
+'microsiemens / kilometer')>
 ```
 
 ### Underground line
@@ -547,21 +519,21 @@ Please note that for underground lines, the provided height $h$ must be negative
 ...     external_diameter=0.049,  # m
 ... )
 
->>> line_parameters.z_line
-array(
-    [[0.188     +0.32828403j, 0.        +0.25482437j, 0.        +0.23304851j, 0.        +0.25482437j],
-     [0.        +0.25482437j, 0.188     +0.32828403j, 0.        +0.25482437j, 0.        +0.23304851j],
-     [0.        +0.23304851j, 0.        +0.25482437j, 0.188     +0.32828403j, 0.        +0.25482437j],
-     [0.        +0.25482437j, 0.        +0.23304851j, 0.        +0.25482437j, 0.40285714+0.35222736j]]
-) <Unit('ohm / kilometer')>
+>>> line_parameters.z_line("abcn")
+<Quantity(
+    [[0.18842667+0.32828403j, 0.        +0.25482437j, 0.        +0.23304851j, 0.        +0.25482437j],
+     [0.        +0.25482437j, 0.18842667+0.32828403j, 0.        +0.25482437j, 0.        +0.23304851j],
+     [0.        +0.23304851j, 0.        +0.25482437j, 0.18842667+0.32828403j, 0.        +0.25482437j],
+     [0.        +0.25482437j, 0.        +0.23304851j, 0.        +0.25482437j, 0.40377143+0.35222736j]],
+'ohm / kilometer')>
 
->>> line_parameters.y_shunt.to("uS/km")
-array(
-    [[19.06271927+458.27618628j,  0.         -74.71708551j,  0.         -20.98651877j,  0.         -44.86059415j],
-     [ 0.         -74.71708551j, 20.61057729+499.04239152j,  0.         -74.71708551j,  0.          -6.09859898j],
-     [ 0.         -20.98651877j,  0.         -74.71708551j, 19.06271927+458.27618628j,  0.         -44.86059415j],
-     [ 0.         -44.86059415j,  0.          -6.09859898j,  0.         -44.86059415j, 12.66715195+306.9389864j ]]
-) <Unit('microsiemens / kilometer')>
+>>> line_parameters.y_shunt("abcn").to("uS/km")
+<Quantity(
+    [[39.15717351+564.81344205j,  0.         -92.08685834j,  0.         -25.86533679j,  0.         -55.28951177j],
+     [ 0.         -92.08685834j, 42.33666455+615.05672632j,  0.         -92.08685834j,  0.          -7.51636412j],
+     [ 0.         -25.86533679j,  0.         -92.08685834j, 39.15717351+564.81344205j,  0.         -55.28951177j],
+     [ 0.         -55.28951177j,  0.          -7.51636412j,  0.         -55.28951177j, 26.01989043+378.29429195j]],
+'microsiemens / kilometer')>
 ```
 
 ## Import from OpenDSS

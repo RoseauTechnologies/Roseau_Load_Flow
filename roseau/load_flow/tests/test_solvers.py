@@ -85,7 +85,7 @@ def test_backward_forward_limitations():
     PotentialRef(id="pref", element=bus1)
     VoltageSource(id="vs", bus=bus1, voltages=20000)
     bus2 = Bus(id="bus2", phases="abc")
-    lp = LineParameters(id="test", z_line=np.eye(3, dtype=complex))
+    lp = LineParameters(id="test", z_line=np.eye(4, dtype=complex))
     Line(id="line1", bus1=bus1, bus2=bus2, parameters=lp, length=1.0)
     bus3 = Bus(id="bus3", phases="abc")
     Line(id="line2", bus1=bus2, bus2=bus3, parameters=lp, length=1.0)

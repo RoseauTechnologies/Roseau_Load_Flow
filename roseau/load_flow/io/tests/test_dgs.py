@@ -7,7 +7,7 @@ import pandas as pd
 import pytest
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
-from roseau.load_flow.io.dgs import _dgs_dict_to_df, generate_typ_lne
+from roseau.load_flow.io.dgs import _dgs_dict_to_df
 from roseau.load_flow.io.dgs.constants import GENERAL_LOAD_INPUT_MODE
 from roseau.load_flow.io.dgs.loads import compute_3phase_load_powers
 from roseau.load_flow.models import Line
@@ -80,7 +80,7 @@ def test_from_dgs_no_line_type(dgs_special_network_dir):
     np.testing.assert_allclose(zs.imag, (x0 + 2 * x1) / 3)
     np.testing.assert_allclose(zm.real, (r0 - r1) / 3)
     np.testing.assert_allclose(zm.imag, (x0 - x1) / 3)
-    np.testing.assert_allclose(line.parameters.z_line.m, line.z_line.m / line.length.m)
+    np.testing.assert_allclose(line.parameters.z_line(line.phases).m, line.z_line.m / line.length.m)
 
 
 def test_dgs_general_load_input_modes(dgs_special_network_dir):
@@ -134,63 +134,3 @@ def test_dgs_switches(dgs_special_network_dir, tmp_path):
     bad_path.write_text(json.dumps(bad_json))
     with pytest.warns(UserWarning, match=r"Switch '2' is open but switches are always closed in roseau-load-flow."):
         ElectricalNetwork.from_dgs(bad_path)
-
-
-def test_generate_typ_lne_errors(monkeypatch):
-    # Small number of conductor (not in (3, 4)
-    typ_line = pd.DataFrame(data={"nneutral": [0], "nlnph": [1]}, index=pd.Index(["lt1"]))
-    with pytest.raises(RoseauLoadFlowException) as e:
-        generate_typ_lne(typ_lne=typ_line, lines_params={})
-    assert e.value.msg == "The number of phases (1) of line type 'lt1' cannot be handled, it should be 3 or 4."
-    assert e.value.code == RoseauLoadFlowExceptionCode.DGS_BAD_PHASE_NUMBER
-
-    # Too large impedance/shunt admittance matrices generated
-    typ_line = pd.DataFrame(
-        data={
-            "nneutral": [0],
-            "nlnph": [3],
-            "cohl_": [0],
-            "mlei": ["Cu"],
-            "imiso": [0],
-            "rline": [0.188],
-            "xline": [0.3283],
-            "lline": [1.045011],
-            "rline0": [0.188],
-            "xline0": [0.3283],
-            "lline0": [1.045011],
-            "rnline": [0],
-            "xnline": [0],
-            "lnline": [0],
-            "rpnline": [0],
-            "xpnline": [0],
-            "lpnline": [0],
-            "gline0": [0],
-            "bline0": [0],
-            "gline": [0],
-            "bline": [0],
-        },
-        index=pd.Index(["lt1"]),
-    )
-
-    def _fake_sym_to_zy(*args, **kwargs):
-        return np.diag(np.array([1, 2, 3, 4, 5], dtype=complex)), np.diag(np.array([1, 2, 3, 4, 5], dtype=complex))
-
-    with monkeypatch.context() as m:
-        m.setattr("roseau.load_flow.io.dgs.lines.LineParameters._sym_to_zy", _fake_sym_to_zy)
-        lines_params = {}
-        generate_typ_lne(typ_lne=typ_line, lines_params=lines_params)
-    np.testing.assert_allclose(lines_params["lt1"].z_line.m, np.diag(np.array([1, 2, 3], dtype=complex)))
-    np.testing.assert_allclose(lines_params["lt1"].y_shunt.m, np.diag(np.array([1, 2, 3], dtype=complex)))
-
-    # Too small matrices
-    def _fake_sym_to_zy(*args, **kwargs):
-        return np.eye(N=2, dtype=complex), np.eye(N=2, dtype=complex)
-
-    with monkeypatch.context() as m:
-        m.setattr("roseau.load_flow.io.dgs.lines.LineParameters._sym_to_zy", _fake_sym_to_zy)
-        with pytest.raises(RoseauLoadFlowException) as e:
-            generate_typ_lne(typ_lne=typ_line, lines_params={})
-        assert e.value.msg == (
-            "A 3x3 impedance matrix was expected for the line type 'lt1' but a 2x2 matrix was generated."
-        )
-        assert e.value.code == RoseauLoadFlowExceptionCode.DGS_BAD_PHASE_NUMBER

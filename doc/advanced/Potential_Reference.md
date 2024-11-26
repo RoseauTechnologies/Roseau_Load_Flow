@@ -204,9 +204,9 @@ rlf.Transformer("MV/LV Transformer", bus1=mv_bus1, bus2=lv_bus1, parameters=tp)
 
 # Create a common ground for the MV and LV sides
 ground = rlf.Ground("Ground")
-mv_lp = rlf.LineParameters.from_catalogue("U_AL_150", nb_phases=3)
+mv_lp = rlf.LineParameters.from_catalogue("U_AL_150")
 rlf.Line("MV Line", bus1=mv_bus1, bus2=mv_bus2, length=1, parameters=mv_lp, ground=ground)
-lv_lp = rlf.LineParameters.from_catalogue("U_AL_70", nb_phases=4)
+lv_lp = rlf.LineParameters.from_catalogue("U_AL_70")
 rlf.Line(
     "LV Line", bus1=lv_bus1, bus2=lv_bus2, length=0.1, parameters=lv_lp, ground=ground
 )
@@ -246,12 +246,12 @@ rlf.Transformer("MV/LV Transformer", bus1=mv_bus1, bus2=lv_bus1, parameters=tp)
 
 # Create separate grounds for the MV and LV sides
 mv_ground = rlf.Ground("MVGround")
-mv_lp = rlf.LineParameters.from_catalogue("U_AL_150", nb_phases=3)
+mv_lp = rlf.LineParameters.from_catalogue("U_AL_150")
 rlf.Line(
     "MV Line", bus1=mv_bus1, bus2=mv_bus2, length=1, parameters=mv_lp, ground=mv_ground
 )
 lv_ground = rlf.Ground("LVGround")
-lv_lp = rlf.LineParameters.from_catalogue("U_AL_70", nb_phases=4)
+lv_lp = rlf.LineParameters.from_catalogue("U_AL_70")
 rlf.Line(
     "LV Line", bus1=lv_bus1, bus2=lv_bus2, length=0.1, parameters=lv_lp, ground=lv_ground
 )

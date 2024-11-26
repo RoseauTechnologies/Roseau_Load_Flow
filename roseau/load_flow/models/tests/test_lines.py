@@ -1,5 +1,4 @@
 import numpy as np
-import numpy.testing as npt
 import pytest
 from pint import DimensionalityError
 
@@ -101,8 +100,8 @@ def test_line_parameters_shortcut():
 def test_line_ground(recwarn):
     bus1 = Bus(id="bus1", phases="abc")
     bus2 = Bus(id="bus2", phases="abc")
-    z_line = 0.01 * np.eye(3, dtype=complex)
-    y_shunt = 1e-5 * np.eye(3, dtype=complex)
+    z_line = 0.01 * np.eye(4, dtype=complex)
+    y_shunt = 1e-5 * np.eye(4, dtype=complex)
     lp_with_shunt = LineParameters(id="lp_with_shunt", z_line=z_line, y_shunt=y_shunt)
     lp_without_shunt = LineParameters(id="lp_without_shunt", z_line=z_line)
     ground = Ground(id="ground")
@@ -131,7 +130,7 @@ def test_line_ground(recwarn):
 def test_max_loading():
     bus1 = Bus(id="bus1", phases="abc")
     bus2 = Bus(id="bus2", phases="abc")
-    lp = LineParameters(id="lp", z_line=np.eye(3, dtype=complex))
+    lp = LineParameters(id="lp", z_line=np.eye(4, dtype=complex))
     line = Line(id="line", bus1=bus1, bus2=bus2, parameters=lp, length=Q_(50, "m"))
 
     # Value must be positive
@@ -149,7 +148,7 @@ def test_max_loading():
 def test_res_violated():
     bus1 = Bus(id="bus1", phases="abc")
     bus2 = Bus(id="bus2", phases="abc")
-    lp = LineParameters(id="lp", z_line=np.eye(3, dtype=complex))
+    lp = LineParameters(id="lp", z_line=np.eye(4, dtype=complex))
     line = Line(id="line", bus1=bus1, bus2=bus2, parameters=lp, length=Q_(50, "m"))
     direct_seq = np.exp([0, -2 / 3 * np.pi * 1j, 2 / 3 * np.pi * 1j])
 
@@ -162,7 +161,8 @@ def test_res_violated():
     assert line.res_violated is None
 
     # No constraint violated
-    lp.ampacities = 11
+    lp = LineParameters(id="lp", z_line=np.eye(4, dtype=complex), ampacities=11)
+    line.parameters = lp
     assert line.res_violated is False
     assert np.allclose(line.res_loading, 10 / 11)
 
@@ -173,25 +173,29 @@ def test_res_violated():
     assert np.allclose(line.res_loading, 10 / (11 * 0.5))
 
     # Two violations
-    lp.ampacities = 9
+    lp = LineParameters(id="lp", z_line=np.eye(4, dtype=complex), ampacities=9)
+    line.parameters = lp
     line.max_loading = 1
     assert line.res_violated is True
     assert np.allclose(line.res_loading, 10 / 9)
 
     # Side 1 violation
-    lp.ampacities = 11
+    lp = LineParameters(id="lp", z_line=np.eye(4, dtype=complex), ampacities=11)
+    line.parameters = lp
     line._res_currents = 12 * direct_seq, -10 * direct_seq
     assert line.res_violated is True
     assert np.allclose(line.res_loading, 12 / 11)
 
     # Side 2 violation
-    lp.ampacities = 11
+    lp = LineParameters(id="lp", z_line=np.eye(4, dtype=complex), ampacities=11)
+    line.parameters = lp
     line._res_currents = 10 * direct_seq, -12 * direct_seq
     assert line.res_violated is True
     assert np.allclose(line.res_loading, 12 / 11)
 
     # A single phase violation
-    lp.ampacities = 11
+    lp = LineParameters(id="lp", z_line=np.eye(4, dtype=complex), ampacities=11)
+    line.parameters = lp
     line._res_currents = 10 * direct_seq, -10 * direct_seq
     line._res_currents[0][0] = 12 * direct_seq[0]
     line._res_currents[1][0] = -12 * direct_seq[0]
@@ -204,36 +208,31 @@ def test_res_violated():
     line._res_currents = 10 * direct_seq, -10 * direct_seq
 
     # No constraint violated
-    lp.ampacities = [11, 12, 13]
+    lp = LineParameters(id="lp", z_line=np.eye(4, dtype=complex), ampacities=[11, 12, 13, 1500])
+    line.parameters = lp
     line.max_loading = 1
     assert line.res_violated is False
     assert np.allclose(line.res_loading, [10 / 11, 10 / 12, 10 / 13])
 
     # Two violations
-    lp.ampacities = [9, 9, 12]
+    lp = LineParameters(id="lp", z_line=np.eye(4, dtype=complex), ampacities=[9, 9, 12, 24])
+    line.parameters = lp
     assert line.res_violated is True
     assert np.allclose(line.res_loading, [10 / 9, 10 / 9, 10 / 12])
 
     # Side 1 violation
-    lp.ampacities = [11, 10, 9]
+    lp = LineParameters(id="lp", z_line=np.eye(4, dtype=complex), ampacities=[11, 10, 9, 12])
+    line.parameters = lp
     line._res_currents = 12 * direct_seq, -10 * direct_seq
     assert line.res_violated is True
     assert np.allclose(line.res_loading, [12 / 11, 12 / 10, 12 / 9])
 
     # Side 2 violation
-    lp.ampacities = [11, 11, 13]
+    lp = LineParameters(id="lp", z_line=np.eye(4, dtype=complex), ampacities=[11, 11, 13, 4])
+    line.parameters = lp
     line._res_currents = 10 * direct_seq, -12 * direct_seq
     assert line.res_violated is True
     assert np.allclose(line.res_loading, [12 / 11, 12 / 11, 12 / 13])
-
-    # Nan is the array
-    lp.ampacities = [11, np.nan, 13]
-    line._res_currents = 10 * direct_seq, -12 * direct_seq
-    assert line.res_violated is True
-    npt.assert_allclose(line.res_loading, [12 / 11, np.nan, 12 / 13], equal_nan=True)
-    lp.ampacities = [13, np.nan, 13]
-    assert line.res_violated is False
-    npt.assert_allclose(line.res_loading, [12 / 13, np.nan, 12 / 13], equal_nan=True)
 
 
 @pytest.mark.parametrize(
@@ -292,7 +291,7 @@ def test_res_violated():
         ),
         pytest.param(
             {"bus1": "abcn", "bus2": "abc", "line": "abc"},
-            (0.1 + 0.1j) / 2 * np.eye(3, dtype=complex),
+            (0.1 + 0.1j) / 2 * np.eye(4, dtype=complex),
             None,
             10,
             (
@@ -325,7 +324,7 @@ def test_res_violated():
         ),
         pytest.param(
             {"bus1": "an", "bus2": "an", "line": "an"},
-            np.eye(2, dtype=complex),
+            np.eye(4, dtype=complex),
             None,
             1,
             ([230.0 + 0.0j, 0.0 + 0.0j], [225.47405027 + 0.0j, 4.52594973 + 0.0j]),
@@ -340,7 +339,7 @@ def test_res_violated():
         ),
         pytest.param(  # Verified manually and with pandapower
             {"bus1": "an", "bus2": "an", "line": "an"},
-            (0.1 + 0.1j) / 2 * np.eye(2, dtype=complex),
+            (0.1 + 0.1j) / 2 * np.eye(4, dtype=complex),
             None,
             10,
             ([20000.0 + 0.0j, 0.0 + 0.0j], [19961.964706645947 - 62.5j, 38.035293354052556 + 62.5j]),
@@ -359,14 +358,36 @@ def test_res_violated():
         pytest.param(
             {"bus1": "abcn", "bus2": "abc", "line": "abc"},
             [
-                [0.12918333333333334 + 0.10995533333333332j, 0.05497783333333334j, 0.05497783333333334j],
-                [0.05497783333333334j, 0.12918333333333334 + 0.10995533333333332j, 0.05497783333333334j],
-                [0.05497783333333334j, 0.05497783333333334j, 0.12918333333333334 + 0.10995533333333332j],
+                [
+                    0.12918333333333334 + 0.10995533333333332j,
+                    0.05497783333333334j,
+                    0.05497783333333334j,
+                    0.05497783333333334j,
+                ],
+                [
+                    0.05497783333333334j,
+                    0.12918333333333334 + 0.10995533333333332j,
+                    0.05497783333333334j,
+                    0.05497783333333334j,
+                ],
+                [
+                    0.05497783333333334j,
+                    0.05497783333333334j,
+                    0.12918333333333334 + 0.10995533333333332j,
+                    0.05497783333333334j,
+                ],
+                [
+                    0.05497783333333334j,
+                    0.05497783333333334j,
+                    0.05497783333333334j,
+                    0.12918333333333334 + 0.10995533333333332j,
+                ],
             ],
             [
-                [4.930205666666666e-05j, 6.073716666666661e-07j, 6.073716666666661e-07j],
-                [6.073716666666661e-07j, 4.930205666666666e-05j, 6.073716666666661e-07j],
-                [6.073716666666661e-07j, 6.073716666666661e-07j, 4.930205666666666e-05j],
+                [4.8694685e-05j, 6.073716666666661e-07j, 6.073716666666661e-07j, 6.073716666666661e-07j],
+                [6.073716666666661e-07j, 4.8694685e-05j, 6.073716666666661e-07j, 6.073716666666661e-07j],
+                [6.073716666666661e-07j, 6.073716666666661e-07j, 4.8694685e-05j, 6.073716666666661e-07j],
+                [6.073716666666661e-07j, 6.073716666666661e-07j, 6.073716666666661e-07j, 4.869468499999999e-05j],
             ],
             10,
             (

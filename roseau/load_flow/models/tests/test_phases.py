@@ -261,9 +261,9 @@ def test_lines_phases():
         assert e.value.msg.startswith(f"Line of id 'line{i}' got invalid phases '{ph}', allowed values are")
 
     # Allowed
+    lp = LineParameters("test", z_line=10 * np.eye(4, dtype=complex))
     for ph in ("ab", "abc", "a", "n"):
         i = next(line_ids)
-        lp = LineParameters("test", z_line=10 * np.eye(len(ph), dtype=complex))
         Line(id=f"line{i}", bus1=bus1, bus2=bus2, phases=ph, parameters=lp, length=10)
 
     # Not in bus
@@ -280,17 +280,9 @@ def test_lines_phases():
     bus1 = Bus(id="bus-1", phases="abcn")
     bus2 = Bus(id="bus-2", phases="ca")
     i = next(line_ids)
-    lp = LineParameters(id="test", z_line=10 * np.eye(2, dtype=complex))
+    lp = LineParameters(id="test", z_line=10 * np.eye(4, dtype=complex))
     line = Line(id=f"line{i}", bus1=bus1, bus2=bus2, parameters=lp, length=10)
     assert line.phases == line.phases1 == line.phases2 == "ca"
-
-    # Bad default
-    lp = LineParameters(id="test", z_line=10 * np.eye(3, dtype=complex))  # bad
-    i = next(line_ids)
-    with pytest.raises(RoseauLoadFlowException) as e:
-        Line(id=f"line{i}", bus1=bus1, bus2=bus2, parameters=lp, length=10)
-    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_Z_LINE_SHAPE
-    assert e.value.msg == f"Incorrect z_line dimensions for line 'line{i}': (3, 3) instead of (2, 2)"
 
 
 def test_switches_phases():
