@@ -102,9 +102,9 @@ def network_from_dict(  # noqa: C901
         if version == 0:
             data = v0_to_v1_converter(data)
             include_results = False  # V0 network dictionaries didn't have results
-        if version <= 1:
+        if version == 1:
             data = v1_to_v2_converter(data)
-        if version <= 2:
+        if version == 2:
             data = v2_to_v3_converter(data)
     else:
         # If we arrive here, we dealt with all legacy versions, it must be the current one
@@ -329,9 +329,6 @@ def network_to_dict(en: "ElectricalNetwork", *, include_results: bool) -> JsonDi
     return res
 
 
-#
-# V0 to V1
-#
 def v0_to_v1_converter(data: JsonDict) -> JsonDict:  # noqa: C901
     """Convert a v0 network dict to a v1 network dict.
 
@@ -509,9 +506,6 @@ def v0_to_v1_converter(data: JsonDict) -> JsonDict:  # noqa: C901
     }
 
 
-#
-# V1 to V2
-#
 def v1_to_v2_converter(data: JsonDict) -> JsonDict:
     """Convert a v1 network dict to a v2 network dict.
 
@@ -626,10 +620,7 @@ def v1_to_v2_converter(data: JsonDict) -> JsonDict:
     return results
 
 
-#
-# V2 to V3
-#
-def v2_to_v3_converter(data: JsonDict) -> JsonDict:
+def v2_to_v3_converter(data: JsonDict) -> JsonDict:  # noqa: C901
     """Convert a v2 network dict to a v3 network dict.
 
     Args:
@@ -657,21 +648,53 @@ def v2_to_v3_converter(data: JsonDict) -> JsonDict:
                 bus_warning_emitted = True
         buses.append(bus_data)
 
-    #
-    # Transformers
-    #
-    old_transformers = data.get("transformers", [])
+    # Rename `uhv` in `up` and `ulv` in `us`
+    # Remove `max_power`
     old_transformers_params = data.get("transformers_params", [])
-    transformers, transformers_params = _convert_transformers_v2_to_v3(
-        old_transformers=old_transformers, old_transformers_params=old_transformers_params
-    )
+    transformers_params = []
+    transformers_params_max_loading = {}
+    for transformer_param_data in old_transformers_params:
+        if (up := transformer_param_data.pop("uhv", None)) is not None:
+            transformer_param_data["up"] = up
+        if (us := transformer_param_data.pop("ulv", None)) is not None:
+            transformer_param_data["us"] = us
+        if (max_power := transformer_param_data.pop("max_power", None)) is not None:
+            transformers_params_max_loading[transformer_param_data["id"]] = max_power / transformer_param_data["sn"]
+        transformers_params.append(transformer_param_data)
 
-    #
-    # Lines
-    #
-    old_lines = data.get("lines", [])
+    # Rename `maximal_current` in `ampacities` and uses array
+    # Rename `section` in `sections` and uses array
+    # Rename `insulator_type` in `insulators` and uses array. `Unknown` is deleted
+    # Rename `material` in `materials` and uses array
     old_lines_params = data.get("lines_params", [])
-    lines, lines_params = _convert_lines_v2_to_v3(old_lines=old_lines, old_lines_params=old_lines_params)
+    lines_params = []
+    for line_param_data in old_lines_params:
+        size = len(line_param_data["z_line"][0])
+        if (maximal_current := line_param_data.pop("maximal_current", None)) is not None:
+            line_param_data["ampacities"] = [maximal_current] * size
+        if (section := line_param_data.pop("section", None)) is not None:
+            line_param_data["sections"] = [section] * size
+        if (conductor_type := line_param_data.pop("conductor_types", None)) is not None:
+            line_param_data["materials"] = [conductor_type] * size
+        if (
+            (insulator_type := line_param_data.pop("insulator_types", None)) is not None
+        ) and insulator_type.lower() != "unknown":
+            line_param_data["insulators"] = [insulator_type] * size
+        lines_params.append(line_param_data)
+
+    # Add max_loading to lines
+    old_lines = data.get("lines", [])
+    lines = []
+    for line_data in old_lines:
+        line_data["max_loading"] = 1
+        lines.append(line_data)
+
+    # Add max_loading to transformers
+    old_transformers = data.get("transformers", [])
+    transformers = []
+    for transformer_data in old_transformers:
+        transformer_data["max_loading"] = transformers_params_max_loading.get(transformer_data["params_id"], 1)
+        transformers.append(transformer_data)
 
     results = {
         "version": 3,
@@ -691,199 +714,3 @@ def v2_to_v3_converter(data: JsonDict) -> JsonDict:
         results["short_circuits"] = data["short_circuits"]  # Unchanged
 
     return results
-
-
-def _convert_transformers_v2_to_v3(
-    old_transformers: list[JsonDict], old_transformers_params: list[JsonDict]
-) -> tuple[list[JsonDict], list[JsonDict]]:
-    """Convert the `transformers` and the `transformers_params` of a network file from the version 2 to the version 3.
-
-        * For the parameters:
-            * Rename `uhv` in `up` and `ulv` in `us`.
-            * Remove `max_power`.
-        * For the transformers:
-            * Add `max_loading` according to the deleted `max_power` of the parameters.
-
-    Args:
-        old_transformers:
-            The list of transformers of the file.
-
-        old_transformers_params:
-            The list of transformers params of the file.
-
-    Returns:
-        The list of transformers and transformers parameters converted to the version 3.
-    """
-    # Rename `uhv` in `up` and `ulv` in `us`
-    # Remove `max_power`
-    transformers_params = []
-    transformers_params_max_loading = {}
-    for transformer_param_data in old_transformers_params:
-        if (up := transformer_param_data.pop("uhv", None)) is not None:
-            transformer_param_data["up"] = up
-        if (us := transformer_param_data.pop("ulv", None)) is not None:
-            transformer_param_data["us"] = us
-        if (max_power := transformer_param_data.pop("max_power", None)) is not None:
-            transformers_params_max_loading[transformer_param_data["id"]] = max_power / transformer_param_data["sn"]
-        transformers_params.append(transformer_param_data)
-
-    # Add `max_loading` to transformers
-    transformers = []
-    for transformer_data in old_transformers:
-        transformer_data["max_loading"] = transformers_params_max_loading.get(transformer_data["params_id"], 1)
-        transformers.append(transformer_data)
-
-    return transformers, transformers_params
-
-
-def _convert_lines_v2_to_v3(
-    old_lines: list[JsonDict], old_lines_params: list[JsonDict]
-) -> tuple[list[JsonDict], list[JsonDict]]:
-    """Convert the `lines` and the `lines_params` of a network file from the version 2 to the version 3.
-
-        * For the parameters:
-            * Rename `maximal_current` in `ampacities` and uses array.
-            * Rename `section` in `sections` and uses array.
-            * Rename `insulator_type` in `insulators` and uses array. `Unknown` is deleted.
-            * Rename `material` in `materials` and uses array.
-            * `z_line` and `y_shunt` are transformed into 4x4 matrices.
-        * For the lines:
-            * Add `max_loading`.
-            * If the same parameter was used for several set of phases, it will be duplicated and renamed. A warning
-              is emitted in this case.
-
-    Args:
-        old_lines:
-            The list of lines of the file.
-
-        old_lines_params:
-            The list of lines params of the file.
-
-    Returns:
-        The list of lines and lines parameters converted to the version 3.
-    """
-    # z_line and y_shunt are now all 4x4 matrices
-    old_lines_params_dict = {x["id"]: x for x in old_lines_params}
-    # { line_id -> { line_data } }
-    lines_dict = {}
-    #  { line_params_id -> { phase -> (line_params_data, [ line_id ] } }
-    lines_params_dict: dict[Id, dict[str, tuple[JsonDict, list[Id]]]] = {}
-    for line_data in old_lines:
-        line_id = line_data["id"]
-        phases = line_data["phases"]
-        line_params_id = line_data["params_id"]
-
-        # Maximal loading
-        line_data["max_loading"] = 1
-
-        # Handle the line parameters. At this point, we store in the `lines_params_dict`:
-        # * the id of the parameters,
-        # * the phases of the lines using these parameters
-        # * the new data of the line parameters (4x4 matrices and arrays for material, ...)
-        # * the list of lines using these parameters for the same set of phases.
-        old_line_params_data = old_lines_params_dict[line_params_id]
-        new_line_params_data = _convert_line_parameters_v2_to_v3(
-            old_line_params_data=old_line_params_data, line_phases=phases
-        )
-        lines_dict[line_id] = line_data
-        lp_dict = lines_params_dict.setdefault(line_params_id, {})
-        if phases in lp_dict:
-            lp_dict[phases][1].append(line_id)
-        else:
-            lp_dict[phases] = (new_line_params_data, [line_id])
-
-    # Generate the new line parameters list
-    new_lines_params_list = []
-    existing_line_params_id = set(old_lines_params_dict.keys())  # The user-defined line parameters' id
-    for line_params_id, phases_lp_data in lines_params_dict.items():
-        if len(phases_lp_data) == 1:
-            # The line parameter `line_params_id` has been used only with a single set of phases thus we do not change
-            # this line parameter
-            new_line_params_data, _ = next(iter(phases_lp_data.values()))
-            new_lines_params_list.append(new_line_params_data)
-        else:
-            # The line parameters `line_params_id` has been used with several sets of phases, thus we have to create
-            # several line parameters from this one
-            new_lines_params_id_list = []
-            for phases, (new_line_params_data, lines_id) in phases_lp_data.items():
-                # Add the phases to the line parameters' id
-                new_line_params_id = f"{line_params_id}_{phases}"
-                i = 0
-                while new_line_params_id in existing_line_params_id:
-                    new_line_params_id = f"{line_params_id}_{phases}_{i}"
-                    i += 1
-                existing_line_params_id.add(new_line_params_id)
-                new_line_params_data["id"] = new_line_params_id
-                new_lines_params_list.append(new_line_params_data)
-                new_lines_params_id_list.append(new_line_params_id)
-
-                # Change the params_id in the line data
-                for line_id in lines_id:
-                    line_data = lines_dict[line_id]
-                    line_data["params_id"] = new_line_params_id
-
-            warnings.warn(
-                f"The line parameters {line_params_id!r} has been used for lines with several set of "
-                f"phases. Thus, it has been duplicated and renamed to fit the new requirements of "
-                f"the file format. The new parameters' id are: {', '.join(f'{x!r}' for x in new_lines_params_id_list)}.",
-                UserWarning,
-                stacklevel=find_stack_level(),
-            )
-
-    return list(lines_dict.values()), new_lines_params_list
-
-
-def _convert_line_parameters_v2_to_v3(old_line_params_data: JsonDict, line_phases: str) -> JsonDict:
-    """Take the data of the line parameters and the phases of the line that uses these parameters and retrieve the
-    updated line parameters data.
-
-    Args:
-        old_line_params_data:
-            The data of the line parameters.
-
-        line_phases:
-            The phases of the line using these parameters.
-
-    Returns:
-        The updated line parameters for this set of phases.
-    """
-    # Copy of the input
-    old_line_params_data = copy.deepcopy(old_line_params_data)
-
-    # Rename `maximal_current` in `ampacities` and uses array
-    # Rename `section` in `sections` and uses array
-    # Rename `insulator_type` in `insulators` and uses array. `Unknown` is deleted
-    # Rename `material` in `materials` and uses array
-    if (maximal_current := old_line_params_data.pop("max_current", None)) is not None:
-        old_line_params_data["ampacities"] = [maximal_current] * 4
-    if (section := old_line_params_data.pop("section", None)) is not None:
-        old_line_params_data["sections"] = [section] * 4
-    if (conductor_type := old_line_params_data.pop("conductor_type", None)) is not None:
-        old_line_params_data["materials"] = [conductor_type] * 4
-    if (
-        (insulator_type := old_line_params_data.pop("insulator_type", None)) is not None
-    ) and insulator_type.lower() != "unknown":
-        old_line_params_data["insulators"] = [insulator_type] * 4
-
-    # Fill the z_line and y_shunt data to have 4x4 matrices
-    # Nothing to do with `abcn`:  line parameters matrices are 4x4
-    if line_phases == "abcn":
-        return old_line_params_data
-
-    # Create new matrices for the provided phases
-    indices = ["abcn".index(p) for p in line_phases]
-    ix = np.ix_(indices, indices)
-    old_z_line = np.array(old_line_params_data["z_line"][0]) + 1j * np.array(old_line_params_data["z_line"][1])
-    new_z_line = np.zeros(shape=(4, 4), dtype=np.complex128)
-    new_z_line[ix] = old_z_line
-    old_line_params_data["z_line"] = [new_z_line.real.tolist(), new_z_line.imag.tolist()]
-
-    if "y_shunt" in old_line_params_data:
-        old_y_shunt = np.array(old_line_params_data["y_shunt"][0]) + 1j * np.array(old_line_params_data["y_shunt"][1])
-        old_y = LineParameters._convert_y(old_y_shunt)
-        new_y = np.zeros(shape=(4, 4), dtype=np.complex128)
-        new_y[ix] = old_y
-        new_y_shunt = LineParameters._convert_y(new_y)
-        old_line_params_data["y_shunt"] = [new_y_shunt.real.tolist(), new_y_shunt.imag.tolist()]
-
-    return old_line_params_data

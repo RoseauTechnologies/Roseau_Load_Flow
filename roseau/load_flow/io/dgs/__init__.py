@@ -123,11 +123,9 @@ def network_from_dgs(
             warnings.warn(msg, stacklevel=find_stack_level())
         else:
             generate_typ_lne(typ_lne=typ_lne, lines_params=lines_params)
-        with warnings.catch_warnings():
-            warnings.filterwarnings(action="ignore", message=r".* off-diagonal elements ", category=UserWarning)
-            generate_lines(
-                elm_lne=elm_lne, lines=lines, buses=buses, sta_cubic=sta_cubic, lines_params=lines_params, ground=ground
-            )
+        generate_lines(
+            elm_lne=elm_lne, lines=lines, buses=buses, sta_cubic=sta_cubic, lines_params=lines_params, ground=ground
+        )
 
     # Transformers
     if elm_tr is not None:

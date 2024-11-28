@@ -163,7 +163,7 @@ The data on these two screenshots translate to:
 
 `roseau-load-flow` supports creating lines and transformers from OpenDSS data.
 
-### Lines
+#### Lines
 
 To create line parameters from an OpenDSS `LineCode` object, use the
 {meth}`LineParameters.from_open_dss() <roseau.load_flow.LineParameters.from_open_dss>` method. For
@@ -173,25 +173,17 @@ translates to:
 ```pycon
 >>> lp = rlf.LineParameters.from_open_dss(
 ...     id="240sq",
-...     r1=rlf.Q_(0.127, "ohm/km"),
-...     x1=rlf.Q_(0.072, "ohm/km"),
-...     r0=rlf.Q_(0.342, "ohm/km"),
-...     x0=rlf.Q_(0.089, "ohm/km"),
-...     c1=rlf.Q_(3.4, "nF/km"),  # default value used in OpenDSS code
-...     c0=rlf.Q_(1.6, "nF/km"),  # default value used in OpenDSS code
+...     nphases=3,  #  creates 3x3 Z,Y matrices
+...     r1=Q_(0.127, "ohm/km"),
+...     x1=Q_(0.072, "ohm/km"),
+...     r0=Q_(0.342, "ohm/km"),
+...     x0=Q_(0.089, "ohm/km"),
+...     c1=Q_(3.4, "nF/km"),  # default value used in OpenDSS code
+...     c0=Q_(1.6, "nF/km"),  # default value used in OpenDSS code
 ... )
 ```
 
-As the DSS command contains the `nphases=3` data, this parameters can now be used in a line with three phases:
-
-```pycon
-bus1 = rlf.Bus(id="bus1", phases="abc")
-bus2 = rlf.Bus(id="bus2", phases="abc")
-ground=rlf.Ground("ground")
-line = rlf.Line(id="line",bus1=bus1, bus2=bus2, phases="abc", parameters=lp, length=rlf.Q_(300, "m"), ground=ground)
-```
-
-### Transformers
+#### Transformers
 
 To create a transformer from an OpenDSS 2-winding `Transformer` object, use the
 {meth}`TransformerParameters.from_open_dss() <roseau.load_flow.TransformerParameters.from_open_dss>`
