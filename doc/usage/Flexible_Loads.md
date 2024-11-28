@@ -47,10 +47,10 @@ a Delta-Wye transformer and a small LV network.
 >>> # Add a MV/LV transformer
 ... tp = rlf.TransformerParameters.from_open_and_short_circuit_tests(
 ...     "160_kVA",
-...     "Dyn11",
+...     vg="Dyn11",
 ...     sn=160.0 * 1e3,
-...     up=20e3,
-...     us=400.0,
+...     uhv=20e3,
+...     ulv=400.0,
 ...     i0=2.3 / 100,
 ...     p0=460.0,
 ...     psc=2350.0,

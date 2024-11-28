@@ -86,10 +86,10 @@ load = rlf.PowerLoad(id="load", bus=bus2, powers=[100], phases="an")
 # Create the transformer
 tp = rlf.TransformerParameters.from_open_and_short_circuit_tests(
     id="Example_TP",
-    type="single",  # <--- Single-phase transformer
+    vg="Ii0",  # <--- Single-phase transformer
     sn=800,
-    up=400,
-    us=400,
+    uhv=400,
+    ulv=400,
     i0=0.022,
     p0=17,
     psc=25,

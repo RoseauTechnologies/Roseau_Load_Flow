@@ -33,6 +33,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         # Center-tapped
         "Iii0", "Iii6",
     }
+    """Allowed vector groups for transformers."""
     # fmt: on
 
     @ureg_wraps(None, (None, None, None, "V", "V", "VA", "ohm", "S", None, None, None))
@@ -1295,10 +1296,12 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
                     "manufacturer": "Manufacturer",
                     "range": "Product range",
                     "efficiency": "Efficiency",
-                    "vg": "Vector Group",
+                    "vg": "Vector group",
                     "sn": "Nominal power (kVA)",
-                    "uhv": "Primary voltage (kV)",
-                    "ulv": "Secondary voltage (kV)",
+                    "uhv": "High voltage (kV)",
+                    "ulv": "Low voltage (kV)",
+                    "type": "Type",
+                    "oil": "Oil",
                     # # If we ever want to display these columns
                     # "i0": "No-load current (%)",
                     # "p0": "No-load losses (W)",
