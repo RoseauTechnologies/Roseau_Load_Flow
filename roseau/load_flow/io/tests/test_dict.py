@@ -1,3 +1,5 @@
+import copy
+
 import numpy as np
 import pytest
 from shapely import LineString, Point
@@ -17,6 +19,7 @@ from roseau.load_flow.models import (
 )
 from roseau.load_flow.network import ElectricalNetwork
 from roseau.load_flow.testing import assert_json_close
+from roseau.load_flow.typing import JsonDict
 from roseau.load_flow.utils import Insulator, LineType, Material
 
 
@@ -107,7 +110,7 @@ def test_to_dict():
     assert np.isclose(res_bus1["nominal_voltage"], 400.0)
     assert np.isclose(res_bus1["max_voltage_level"], 1.1)
     lp_dict = res["lines_params"][0]
-    assert "ampacities" not in lp_dict
+    assert np.allclose(lp_dict["ampacities"], 1000)
     assert lp_dict["line_type"] == "UNDERGROUND"
     assert lp_dict["materials"] == ["AA"] * 4
     assert lp_dict["insulators"] == ["PVC"] * 4
@@ -1068,3 +1071,573 @@ def test_v0_to_v3_converter():
     # expected_dict = v2_to_v3_converter(expected_dict)
     # expected_dict = v3_to_v4_converter(expected_dict)
     assert_json_close(net_dict, expected_dict)
+
+
+def test_v1_to_v2_converter():
+    # Do not change `dict_v1` or the network manually, add/update the converters until the test passes
+
+    dict_v1 = {
+        "version": 1,
+        "grounds": [],
+        "potential_refs": [
+            {
+                "id": "pref",
+                "bus": 1,
+                "phases": None,
+                "results": {"current": [-7.771563289958464e-16, -2.220444725761333e-16]},
+            }
+        ],
+        "buses": [
+            {
+                "id": 1,
+                "phases": "abc",
+                "geometry": {"type": "Point", "coordinates": (0.0, 0.0)},
+                "results": {
+                    "potentials": [
+                        [5773.502691896258, -3333.3333333932287],
+                        [-5773.502691896258, -3333.3333333932287],
+                        [9.888685758712307e-24, 6666.666666786457],
+                    ]
+                },
+            },
+            {
+                "id": 2,
+                "phases": "abc",
+                "geometry": {"type": "Point", "coordinates": (0.0, 1.0)},
+                "results": {
+                    "potentials": [
+                        [5772.521060368325, -3330.7830499173137],
+                        [-5770.803265855299, -3333.7583572908047],
+                        [-1.7177945130259364, 6664.5414072081185],
+                    ]
+                },
+            },
+        ],
+        "branches": [
+            {
+                "id": 1,
+                "type": "line",
+                "phases1": "abc",
+                "phases2": "abc",
+                "bus1": 1,
+                "bus2": 2,
+                "geometry": {"type": "LineString", "coordinates": ((0.0, 0.0), (1.0, 0.0))},
+                "results": {
+                    "currents1": [
+                        [2.804661508377779, -7.286524216899904],
+                        [-7.712645831309471, 1.214353993074318],
+                        [4.907984322931247, 6.072170223825586],
+                    ],
+                    "currents2": [
+                        [-2.804661508377779, 7.286524216899904],
+                        [7.712645831309471, -1.214353993074318],
+                        [-4.907984322931247, -6.072170223825586],
+                    ],
+                },
+                "length": 1.0,
+                "params_id": "lp",
+            }
+        ],
+        "loads": [
+            {
+                "id": 1,
+                "bus": 2,
+                "phases": "abc",
+                "powers": [
+                    [38000.0, 12489.9959967968],
+                    [38000.0, 12489.9959967968],
+                    [38000.0, 12489.9959967968],
+                ],
+                "results": {
+                    "currents": [
+                        [-0.9366300237736715, -1.623256890969888],
+                        [-0.9374666925612338, 1.6227738400201663],
+                        [1.8740967163349054, 0.00048305094972167506],
+                    ],
+                    "powers": [
+                        [-0.0, 12489.9959967968],
+                        [-0.0, 12489.9959967968],
+                        [-0.0, 12489.9959967968],
+                    ],
+                },
+                "flexible_params": [
+                    {
+                        "control_p": {
+                            "type": "p_max_u_consumption",
+                            "u_min": 18000,
+                            "u_down": 19000,
+                            "alpha": 1000.0,
+                            "epsilon": 1e-08,
+                        },
+                        "control_q": {"type": "constant"},
+                        "projection": {"type": "euclidean", "alpha": 1000.0, "epsilon": 1e-08},
+                        "s_max": 45000.0,
+                    },
+                    {
+                        "control_p": {
+                            "type": "p_max_u_consumption",
+                            "u_min": 18000,
+                            "u_down": 19000,
+                            "alpha": 1000.0,
+                            "epsilon": 1e-08,
+                        },
+                        "control_q": {"type": "constant"},
+                        "projection": {"type": "euclidean", "alpha": 1000.0, "epsilon": 1e-08},
+                        "s_max": 45000.0,
+                    },
+                    {
+                        "control_p": {
+                            "type": "p_max_u_consumption",
+                            "u_min": 18000,
+                            "u_down": 19000,
+                            "alpha": 1000.0,
+                            "epsilon": 1e-08,
+                        },
+                        "control_q": {"type": "constant"},
+                        "projection": {"type": "euclidean", "alpha": 1000.0, "epsilon": 1e-08},
+                        "s_max": 45000.0,
+                    },
+                ],
+            },
+            {
+                "id": 2,
+                "bus": 2,
+                "phases": "abc",
+                "powers": [
+                    [40459.7989783205, 20229.89948916025],
+                    [40459.79897941102, 20229.89948970551],
+                    [40459.79897941102, 20229.89948970551],
+                ],
+                "results": {
+                    "currents": [
+                        [3.7412915321516125, -5.663267325930873],
+                        [-6.775179138747953, -0.40841984694689626],
+                        [3.0338876065963407, 6.07168717287777],
+                    ]
+                },
+            },
+        ],
+        "sources": [
+            {
+                "id": 1,
+                "bus": 1,
+                "phases": "abc",
+                "voltages": [
+                    [11547.005383792515, 0.0],
+                    [-5773.502691896258, -10000.000000179687],
+                    [-5773.502691896258, 10000.000000179687],
+                ],
+                "results": {
+                    "currents": [
+                        [-2.80466150837794, 7.286524216900761],
+                        [7.712645831309187, -1.2143539930732696],
+                        [-4.907984322931247, -6.0721702238274915],
+                    ]
+                },
+            }
+        ],
+        "lines_params": [
+            {
+                "id": "lp",
+                "z_line": [
+                    [[0.35, 0.0, 0.0], [0.0, 0.35, 0.0], [0.0, 0.0, 0.35]],
+                    [[0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]],
+                ],
+            }
+        ],
+        "transformers_params": [],
+    }
+
+    # # Buses
+    # buses = {
+    #     1: Bus(id=1, phases="abc", geometry=Point(0.0, 0.0)),
+    #     2: Bus(id=2, phases="abc", geometry=Point(0.0, 1.0)),
+    # }
+    #
+    # # Potential reference
+    # potential_ref = PotentialRef(id="pref", element=buses[1])
+    #
+    # # Sources and loads
+    # vs = VoltageSource(
+    #     id=1,
+    #     bus=buses[1],
+    #     voltages=[
+    #         11547.005383792515 + 0.0j,
+    #         -5773.502691896258 + -10000.000000179687j,
+    #         -5773.502691896258 + 10000.000000179687j,
+    #     ],
+    #     phases="abc",
+    # )
+    # fp = FlexibleParameter(
+    #     control_p=Control.p_max_u_consumption(u_min=18_000, u_down=19_000),
+    #     control_q=Control.constant(),
+    #     projection=Projection(type="euclidean"),
+    #     s_max=45e3,
+    # )
+    # power = cmath.rect(40e3, math.acos(0.95))
+    # loads = [
+    #     PowerLoad(id=1, bus=buses[2], phases="abc", powers=[power, power, power], flexible_params=[fp, fp, fp]),
+    #     PowerLoad(
+    #         id=2,
+    #         bus=buses[2],
+    #         phases="abc",
+    #         powers=[
+    #             40459.7989783205 + 20229.89948916025j,
+    #             40459.79897941102 + 20229.89948970551j,
+    #             40459.79897941102 + 20229.89948970551j,
+    #         ],
+    #     ),
+    # ]
+    #
+    # line_parameters = LineParameters(id="lp", z_line=0.35 * np.eye(3, dtype=complex))
+    # lines = {
+    #     1: Line(
+    #         id=1,
+    #         bus1=buses[1],
+    #         bus2=buses[2],
+    #         parameters=line_parameters,
+    #         length=1.0,
+    #         geometry=LineString([(0, 0), (1, 0)]),
+    #     )
+    # }
+    #
+    # net = ElectricalNetwork(
+    #     buses=buses,
+    #     lines=lines,
+    #     transformers=[],
+    #     switches=[],
+    #     loads=loads,
+    #     sources=[vs],
+    #     grounds=[],
+    #     potential_refs=[potential_ref],
+    # )
+
+    # Include results=True
+    net = ElectricalNetwork.from_dict(data=copy.deepcopy(dict_v1), include_results=True)
+    net_dict = net.to_dict(include_results=True)
+    expected_dict = copy.deepcopy(dict_v1)
+    expected_dict = v1_to_v2_converter(expected_dict)
+    expected_dict = v2_to_v3_converter(expected_dict)
+    assert_json_close(net_dict, expected_dict)
+
+    # Include results=False
+    def _delete(d: JsonDict, k: str) -> JsonDict:
+        if k in d:
+            d.pop(k)
+        return d
+
+    net = ElectricalNetwork.from_dict(data=copy.deepcopy(dict_v1), include_results=False)
+    net_dict = net.to_dict(include_results=False)
+    dict_v1_without_results = {
+        k: [_delete(d=x, k="results") for x in v] if isinstance(v, list) else v
+        for k, v in copy.deepcopy(dict_v1).items()
+    }
+    expected_dict = copy.deepcopy(dict_v1_without_results)
+    expected_dict = v1_to_v2_converter(expected_dict)
+    expected_dict = v2_to_v3_converter(expected_dict)
+    assert_json_close(net_dict, expected_dict)
+
+
+def test_v2_to_v3_converter(recwarn):
+    # Do not change `dict_v2` or the network manually, add/update the converters until the test passes
+    dict_v2 = {
+        "version": 2,
+        "is_multiphase": True,
+        "buses": [
+            {
+                "geometry": {"coordinates": (0.0, 0.0), "type": "Point"},
+                "id": 1,
+                "max_voltage": 420,
+                "min_voltage": 380,
+                "phases": "abc",
+            },
+            {
+                "geometry": {"coordinates": (0.0, 1.0), "type": "Point"},
+                "id": 2,
+                "max_voltage": 420,
+                "min_voltage": 380,
+                "phases": "abc",
+            },
+        ],
+        "grounds": [],
+        "lines": [
+            {
+                "bus1": 1,
+                "bus2": 2,
+                "geometry": {"coordinates": ((0.0, 0.0), (1.0, 0.0)), "type": "LineString"},
+                "id": 1,
+                "length": 1.0,
+                "params_id": "lp",
+                "phases": "abc",
+            }
+        ],
+        "lines_params": [
+            {
+                "id": "lp",
+                "z_line": [
+                    [[0.35, 0.0, 0.0], [0.0, 0.35, 0.0], [0.0, 0.0, 0.35]],
+                    [[0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]],
+                ],
+            }
+        ],
+        "loads": [
+            {
+                "bus": 2,
+                "connect_neutral": None,
+                "flexible_params": [
+                    {
+                        "control_p": {
+                            "alpha": 1000.0,
+                            "epsilon": 1e-08,
+                            "type": "p_max_u_consumption",
+                            "u_down": 19000,
+                            "u_min": 18000,
+                        },
+                        "control_q": {"type": "constant"},
+                        "projection": {"alpha": 1000.0, "epsilon": 1e-08, "type": "euclidean"},
+                        "s_max": 45000.0,
+                    },
+                    {
+                        "control_p": {
+                            "alpha": 1000.0,
+                            "epsilon": 1e-08,
+                            "type": "p_max_u_consumption",
+                            "u_down": 19000,
+                            "u_min": 18000,
+                        },
+                        "control_q": {"type": "constant"},
+                        "projection": {"alpha": 1000.0, "epsilon": 1e-08, "type": "euclidean"},
+                        "s_max": 45000.0,
+                    },
+                    {
+                        "control_p": {
+                            "alpha": 1000.0,
+                            "epsilon": 1e-08,
+                            "type": "p_max_u_consumption",
+                            "u_down": 19000,
+                            "u_min": 18000,
+                        },
+                        "control_q": {"type": "constant"},
+                        "projection": {"alpha": 1000.0, "epsilon": 1e-08, "type": "euclidean"},
+                        "s_max": 45000.0,
+                    },
+                ],
+                "id": 1,
+                "phases": "abc",
+                "powers": [[38000.0, 12489.9959967968], [38000.0, 12489.9959967968], [38000.0, 12489.9959967968]],
+                "type": "power",
+            },
+            {
+                "bus": 2,
+                "connect_neutral": None,
+                "id": 2,
+                "phases": "abc",
+                "powers": [
+                    [40459.7989783205, 20229.89948916025],
+                    [40459.79897941102, 20229.89948970551],
+                    [40459.79897941102, 20229.89948970551],
+                ],
+                "type": "power",
+            },
+        ],
+        "potential_refs": [{"bus": 1, "id": "pref", "phases": None}],
+        "sources": [
+            {
+                "bus": 1,
+                "connect_neutral": None,
+                "id": 1,
+                "phases": "abc",
+                "voltages": [
+                    [11547.005383792515, 0.0],
+                    [-5773.502691896258, -10000.000000179687],
+                    [-5773.502691896258, 10000.000000179687],
+                ],
+            }
+        ],
+        "switches": [],
+        "transformers": [],
+        "transformers_params": [],
+    }
+
+    # # Buses
+    # buses = {
+    #     1: Bus(
+    #         id=1,
+    #         phases="abc",
+    #         geometry=Point(0.0, 0.0),
+    #         nominal_voltage=400,
+    #         min_voltage_level=0.95,
+    #         max_voltage_level=1.05,
+    #     ),
+    #     2: Bus(
+    #         id=2,
+    #         phases="abc",
+    #         geometry=Point(0.0, 1.0),
+    #         nominal_voltage=400,
+    #         min_voltage_level=0.95,
+    #         max_voltage_level=1.05,
+    #     ),
+    # }
+    #
+    # # Potential reference
+    # potential_ref = PotentialRef(id="pref", element=buses[1])
+    #
+    # # Sources and loads
+    # vs = VoltageSource(
+    #     id=1,
+    #     bus=buses[1],
+    #     voltages=[
+    #         11547.005383792515 + 0.0j,
+    #         -5773.502691896258 + -10000.000000179687j,
+    #         -5773.502691896258 + 10000.000000179687j,
+    #     ],
+    #     phases="abc",
+    # )
+    # fp = FlexibleParameter(
+    #     control_p=Control.p_max_u_consumption(u_min=18_000, u_down=19_000),
+    #     control_q=Control.constant(),
+    #     projection=Projection(type="euclidean"),
+    #     s_max=45e3,
+    # )
+    # power = cmath.rect(40e3, math.acos(0.95))
+    # loads = [
+    #     PowerLoad(id=1, bus=buses[2], phases="abc", powers=[power, power, power], flexible_params=[fp, fp, fp]),
+    #     PowerLoad(
+    #         id=2,
+    #         bus=buses[2],
+    #         phases="abc",
+    #         powers=[
+    #             40459.7989783205 + 20229.89948916025j,
+    #             40459.79897941102 + 20229.89948970551j,
+    #             40459.79897941102 + 20229.89948970551j,
+    #         ],
+    #     ),
+    # ]
+    #
+    # line_parameters = LineParameters(id="lp", z_line=0.35 * np.eye(3, dtype=complex))
+    # lines = {
+    #     1: Line(
+    #         id=1,
+    #         bus1=buses[1],
+    #         bus2=buses[2],
+    #         parameters=line_parameters,
+    #         length=1.0,
+    #         geometry=LineString([(0, 0), (1, 0)]),
+    #     )
+    # }
+    #
+    # net = ElectricalNetwork(
+    #     buses=buses,
+    #     lines=lines,
+    #     transformers=[],
+    #     switches=[],
+    #     loads=loads,
+    #     sources=[vs],
+    #     grounds=[],
+    #     potential_refs=[potential_ref],
+    # )
+
+    # Include results=True
+    net = ElectricalNetwork.from_dict(data=copy.deepcopy(dict_v2), include_results=True)
+    net_dict = net.to_dict(include_results=True)
+    expected_dict = copy.deepcopy(dict_v2)
+    recwarn.clear()
+    expected_dict = v2_to_v3_converter(expected_dict)
+    assert len(recwarn) == 1
+    assert (
+        recwarn[0].message.args[0]
+        == "Starting with version 0.11.0 of roseau-load-flow (JSON file v3), `min_voltage` and `max_voltage` are "
+        "replaced with `min_voltage_level`, `max_voltage_level` and `nominal_voltage`. The found values of "
+        "`min_voltage` or `max_voltage` are dropped."
+    )
+    assert_json_close(net_dict, expected_dict)
+
+
+def test_v2_to_v3_converter_max_loading():
+    # Dict v2 (test the max_power -> max_loading conversion)
+    # import roseau.load_flow as rlf
+    #
+    # bus1 = rlf.Bus(id=1, phases="abc")
+    # bus2 = rlf.Bus(id=2, phases="abc")
+    # data = {
+    #     "id": "Yzn11 - 50kVA",
+    #     "z2": rlf.Q_(8.64 + 9.444j, "centiohm"),  # Ohm
+    #     "ym": rlf.Q_(0.3625 - 2.2206j, "uS"),  # S
+    #     "ulv": rlf.Q_(400, "V"),  # V
+    #     "uhv": rlf.Q_(20, "kV"),  # V
+    #     "sn": rlf.Q_(50, "kVA"),  # VA
+    #     "type": "yzn11",
+    #     "max_power": rlf.Q_(60, "kVA"),
+    # }
+    # tp = rlf.TransformerParameters(**data)
+    # t = rlf.Transformer(id="t", bus1=bus1, bus2=bus2, parameters=tp)
+    # vs = rlf.VoltageSource(id="vs", bus=bus1, voltages=20_000)
+    # p_ref = rlf.PotentialRef(id="pref", element=bus1)
+    # p_ref2 = rlf.PotentialRef(id="pref2", element=bus2)
+    # en = rlf.ElectricalNetwork.from_element(bus1)
+    # en.to_json("test_max_power.json")
+    dict_v2 = {
+        "version": 2,
+        "is_multiphase": True,
+        "grounds": [],
+        "potential_refs": [{"id": "pref", "bus": 1, "phases": None}, {"id": "pref2", "bus": 2, "phases": None}],
+        "buses": [{"id": 1, "phases": "abc"}, {"id": 2, "phases": "abc"}],
+        "lines": [],
+        "transformers": [
+            {
+                "id": "t",
+                "phases1": "abc",
+                "phases2": "abc",
+                "bus1": 1,
+                "bus2": 2,
+                "tap": 1.0,
+                "params_id": "Yzn11 - 50kVA",
+            }
+        ],
+        "switches": [],
+        "loads": [],
+        "sources": [
+            {
+                "id": "vs",
+                "bus": 1,
+                "phases": "abc",
+                "voltages": [
+                    [20000.0, 0.0],
+                    [-10000.000000000007, -17320.50807568877],
+                    [-9999.999999999996, 17320.508075688773],
+                ],
+                "connect_neutral": None,
+            }
+        ],
+        "lines_params": [],
+        "transformers_params": [
+            {
+                "id": "Yzn11 - 50kVA",
+                "sn": 50000.0,
+                "uhv": 20000.0,
+                "ulv": 400.0,
+                "type": "yzn11",
+                "z2": [0.0864, 0.09444000000000001],
+                "ym": [3.6249999999999997e-07, -2.2206e-06],
+                "max_power": 60000.0,
+            }
+        ],
+    }
+    dict_v3 = v2_to_v3_converter(copy.deepcopy(dict_v2))
+    tp_data = dict_v3["transformers_params"][0]
+    assert tp_data["sn"] == 50000.0
+    assert "max_power" not in tp_data
+    t_data = dict_v3["transformers"][0]
+    assert t_data["params_id"] == "Yzn11 - 50kVA"
+    assert t_data["max_loading"] == 60 / 50
+
+    # The same without max_power in the original transformer parameter
+    dict_v2_bis = copy.deepcopy(dict_v2)
+    dict_v2_bis["transformers_params"][0].pop("max_power")
+    dict_v3 = v2_to_v3_converter(dict_v2_bis)
+    tp_data = dict_v3["transformers_params"][0]
+    assert tp_data["sn"] == 50000.0
+    assert "max_power" not in tp_data
+    t_data = dict_v3["transformers"][0]
+    assert t_data["params_id"] == "Yzn11 - 50kVA"
+    assert t_data["max_loading"] == 1

@@ -28,7 +28,14 @@ def generate_typ_lne(typ_lne: pd.DataFrame, lines_params: dict[Id, LineParameter
         this_typ_lne: pd.Series = typ_lne.loc[type_id]
         # TODO: use the detailed phase information instead of n
         nneutral = this_typ_lne["nneutral"]
+        n = this_typ_lne["nlnph"] + nneutral
+        if n not in (3, 4):
+            msg = f"The number of phases ({n}) of line type {type_id!r} cannot be handled, it should be 3 or 4."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DGS_BAD_PHASE_NUMBER)
+
         z_line, y_shunt = LineParameters._sym_to_zy(
+            type_id,
             z0=complex(this_typ_lne["rline0"], this_typ_lne["xline0"]),
             z1=complex(this_typ_lne["rline"], this_typ_lne["xline"]),
             y0=complex(this_typ_lne["gline0"], this_typ_lne["bline0"]) * 1e-6,
@@ -39,6 +46,23 @@ def generate_typ_lne(typ_lne: pd.DataFrame, lines_params: dict[Id, LineParameter
             bpn=(this_typ_lne["bpnline"] * 1e-6) if nneutral else None,
         )
 
+        actual_shape = z_line.shape[0]
+        if actual_shape > n:  # 4x4 matrix while a 3x3 matrix was expected
+            # Extract the 3x3 underlying matrix
+            z_line = z_line[:n, :n]
+            y_shunt = y_shunt[:n, :n]
+        elif actual_shape == n:
+            # Everything ok
+            pass
+        else:
+            # Something unexpected happened
+            msg = (
+                f"A {n}x{n} impedance matrix was expected for the line type {type_id!r} but a "
+                f"{actual_shape}x{actual_shape} matrix was generated."
+            )
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DGS_BAD_PHASE_NUMBER)
+
         # Optional fields
         sline = this_typ_lne.get("sline")
         ampacities = sline * 1e3 if sline is not None else None
@@ -47,21 +71,23 @@ def generate_typ_lne(typ_lne: pd.DataFrame, lines_params: dict[Id, LineParameter
         insulator = INSULATORS.get(this_typ_lne.get("imiso"))
         section = this_typ_lne.get("qurs") or None  # Sometimes it is zero!! replace by None in this case
 
-        lp = LineParameters(
-            id=type_id,
-            z_line=z_line,
-            y_shunt=y_shunt,
-            ampacities=ampacities,
-            line_type=line_type,
-            materials=material,
-            insulators=insulator,
-            sections=section,
-        )
+        with warnings.catch_warnings():
+            warnings.filterwarnings(action="ignore", message=r".* off-diagonal elements ", category=UserWarning)
+            lp = LineParameters(
+                id=type_id,
+                z_line=z_line,
+                y_shunt=y_shunt,
+                ampacities=ampacities,
+                line_type=line_type,
+                materials=material,
+                insulators=insulator,
+                sections=section,
+            )
         lines_params[type_id] = lp
 
 
 def generate_typ_lne_from_elm_lne(
-    elm_lne: pd.DataFrame, line_id: Id, lines_params: dict[Id, LineParameters]
+    elm_lne: pd.DataFrame, line_id: Id, phases: str, lines_params: dict[Id, LineParameters]
 ) -> LineParameters:
     """Generate line parameters for a certain line.
 
@@ -71,6 +97,9 @@ def generate_typ_lne_from_elm_lne(
 
         line_id:
             The ID of the line in the dataframe.
+
+        phases:
+            The phases of the line.
 
         lines_params:
             The dictionary to store the line parameters into.
@@ -106,8 +135,13 @@ def generate_typ_lne_from_elm_lne(
     z1 = (lne_series["R1"] + 1j * lne_series["X1"]) / length  # Ω/km
     y0 = (lne_series["G0"] + 1j * lne_series["B0"]) / length * 1e-6  # µS/km -> S/km
     y1 = (lne_series["G1"] + 1j * lne_series["B1"]) / length * 1e-6  # µS/km -> S/km
-    z_line, y_shunt = LineParameters._sym_to_zy_simple(z0=z0, y0=y0, z1=z1, y1=y1)
-    lp = LineParameters(id=typ_id, z_line=z_line, y_shunt=y_shunt, line_type=line_type, sections=section)
+    z_line, y_shunt = LineParameters._sym_to_zy_simple(n=len(phases), z0=z0, y0=y0, z1=z1, y1=y1)
+    LineParameters._check_z_line_matrix(id=typ_id, z_line=z_line)
+
+    with warnings.catch_warnings():
+        warnings.filterwarnings(action="ignore", message=r".* off-diagonal elements ", category=UserWarning)
+        lp = LineParameters(id=typ_id, z_line=z_line, y_shunt=y_shunt, line_type=line_type, sections=section)
+
     return lp
 
 
@@ -154,7 +188,9 @@ def generate_lines(
             if phases == "abcn" and lp._z_line.shape[0] == 3:
                 phases = "abc"
         elif pd.isna(type_id):  # Missing line type, generate a new one
-            lp = generate_typ_lne_from_elm_lne(elm_lne=elm_lne, line_id=line_id, lines_params=lines_params)
+            lp = generate_typ_lne_from_elm_lne(
+                elm_lne=elm_lne, line_id=line_id, phases=phases, lines_params=lines_params
+            )
         else:
             msg = f"typ_id {type_id!r} of line {line_id} was not found in the 'type_lne' table"
             logger.error(msg)
@@ -194,7 +230,7 @@ def generate_lines(
             bus2=bus2,
             length=length,
             parameters=lp,
-            ground=ground if lp.with_shunt(phases) else None,
+            ground=ground if lp.with_shunt else None,
             phases=phases,
             geometry=geometry,
         )
