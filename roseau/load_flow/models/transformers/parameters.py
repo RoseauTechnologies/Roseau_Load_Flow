@@ -462,13 +462,16 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
                 impedance i.e. the power losses in (kW) obtained from the no-load test.
 
             manufacturer:
-                The name of the manufacturer for the transformer. Informative only, it has no impact on the load flow.
+                The name of the manufacturer for the transformer. Informative only, it has no impact
+                on the load flow.
 
             range:
-                The name of the product range for the transformer. Informative only, it has no impact on the load flow.
+                The name of the product range for the transformer. Informative only, it has no impact
+                on the load flow.
 
             efficiency:
-                The efficiency class of the transformer. Informative only, it has no impact on the load flow.
+                The efficiency class of the transformer. Informative only, it has no impact on the
+                load flow.
 
         Returns:
             The corresponding transformer parameters object.
@@ -593,20 +596,23 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
                 `%rs=[0.1, 0.1]` is equivalent to `%loadloss=0.2`.
 
             manufacturer:
-                The name of the manufacturer for the transformer. Informative only, it has no impact on the load flow.
+                The name of the manufacturer for the transformer. Informative only, it has no impact
+                on the load flow.
 
             range:
-                The name of the product range for the transformer. Informative only, it has no impact on the load flow.
+                The name of the product range for the transformer. Informative only, it has no impact
+                on the load flow.
 
             efficiency:
-                The efficiency class of the transformer. Informative only, it has no impact on the load flow.
+                The efficiency class of the transformer. Informative only, it has no impact on the
+                load flow.
 
         Returns:
             The corresponding transformer parameters object.
 
         Example usage::
 
-            # DSS command: `DSSText.Command = "New transformer.LVTR Buses=[sourcebus, A.1.2.3] Conns=[delta wye] KVs=[11, 0.4] KVAs=[250 250] %Rs=0.00 xhl=2.5 %loadloss=0 "`
+            # DSS command: `New transformer.LVTR Buses=[sourcebus, A.1.2.3] Conns=[delta wye] KVs=[11, 0.4] KVAs=[250 250] %Rs=0.00 xhl=2.5 %loadloss=0`
             tp = rlf.TransformerParameters.from_open_dss(
                 id="dss-tp",
                 conns=("delta", "wye"),
@@ -805,7 +811,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         if psc / sn > vsc:
             msg = (
                 f"Invalid short-circuit results for transformer parameters {id!r}. The following "
-                f"inequality must be respected: psc/sn <= vsc"
+                f"inequality must be respected: psc/sn <= vsc, got {psc/sn=:f} and {vsc=:f}."
             )
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_PARAMETERS)
@@ -1043,15 +1049,15 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
                 "range": str,
                 "efficiency": str,
                 "type": str,
-                "tech": str,
+                "oil": str,
                 "sn": int,
                 "vsc": float,
                 "psc": float,
                 "i0": float,
                 "p0": float,
                 "vg": str,
-                "uhv": float,
-                "ulv": float,
+                "uhv": int,
+                "ulv": int,
                 "du1": float,
                 "du0.8": float,
                 "eff1 100%": float,
@@ -1059,7 +1065,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
                 "eff1 75%": float,
                 "eff0.8 75%": float,
             },
-        ).fillna({"efficiency": "", "range": ""})
+        ).fillna({"manufacturer": "", "efficiency": "", "range": "", "oil": ""})
 
     @classmethod
     def _get_catalogue(

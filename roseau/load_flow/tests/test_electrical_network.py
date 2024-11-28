@@ -91,7 +91,7 @@ def test_connect_and_disconnect():
     load_bus2 = Bus(id="load_bus2", phases="abcn")
     ground2 = Ground("ground2")
     ground2.connect(bus=load_bus2)
-    tp = TransformerParameters.from_catalogue(name="SE_Minera_A0Ak_50kVA_20kV_410V_Yzn11")
+    tp = TransformerParameters.from_catalogue(name="SE Minera A0Ak 50kVA 15/20kV(20) 410V Yzn11")
     Transformer(id="transfo", bus1=load_bus, bus2=load_bus2, parameters=tp)
     with pytest.raises(RoseauLoadFlowException) as e:
         en._check_validity(constructed=False)
@@ -2218,7 +2218,7 @@ def test_propagate_potentials_center_transformers():
     # Source is located at the primary side of the transformer
     bus1 = Bus(id="bus1", phases="ab")
     PotentialRef(id="pref", element=bus1)
-    VoltageSource(id="vs", bus=bus1, voltages=[20000])
+    VoltageSource(id="vs", bus=bus1, voltages=20000)
     tp = TransformerParameters.from_open_and_short_circuit_tests(
         id="test", vg="Iii0", sn=160000, uhv=20000.0, ulv=400.0, i0=0.023, p0=460.0, psc=2350.0, vsc=0.04
     )
