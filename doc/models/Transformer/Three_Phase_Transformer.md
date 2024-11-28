@@ -625,7 +625,7 @@ vs = rlf.VoltageSource(id="vs", bus=bus_mv, voltages=20e3)
 
 # Create a MV/LV transformer
 tp = rlf.TransformerParameters.from_open_and_short_circuit_tests(
-    id="SE_Minera_A0Ak_100_kVA",
+    id="SE Minera A0Ak 100kVA",
     vg="Dyn11",
     sn=100.0 * 1e3,
     uhv=20e3,
