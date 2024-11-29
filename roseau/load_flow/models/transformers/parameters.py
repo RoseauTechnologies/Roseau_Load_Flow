@@ -103,6 +103,13 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         super().__init__(id)
 
         # Check
+        if uhv < ulv:
+            msg = (
+                f"Transformer parameters {id!r} has the low voltage higher than the high voltage: "
+                f"uhv={uhv!s} V and ulv={ulv!s} V."
+            )
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_VOLTAGES)
         if np.isclose(z2, 0.0):
             msg = (
                 f"Transformer parameters {id!r} has a null series impedance z2. Ideal transformers "
@@ -137,7 +144,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
 
         n_of_winding = {"y": 4, "z": 4, "d": 3, "i": 2, "ii": 3}
         n1 = n_of_winding[w1.lower()]
-        n2 = n_of_winding[w2]
+        n2 = n_of_winding[w2.lower()]
 
         self._k: float = ulv / uhv
         self._orientation: float = -1.0 if phase_displacement in {5, 6} else 1.0

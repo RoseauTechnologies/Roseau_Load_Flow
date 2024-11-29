@@ -19,6 +19,21 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`289` Improve the `TransformerParameters` class and the transformers catalogue
+
+  - Add 15kV transformers to the catalogue (SE and FT)
+  - Add single-phase transformers to the catalogue (Schneider Imprego)
+  - Add step-up transformers to the catalogue (Cahors "Serie Jaune")
+  - Use the correct LV side no-load voltage as defined in the datasheets (some 400V became 410V)
+  - Revert {gh-pr}`282` to keep the IEC 600076 names `uhv` and `ulv` for the transformer voltages.
+
+  **BREAKING CHANGES**:
+
+  - Replace the `type` parameter of `TransformerParameters` constructors by `vg` for vector group.
+  - `TransformerParameters.type` now returns `three-phase`, `single-phase` or `center-tapped`. Use
+    `TransformerParameters.vg` to get vector group.
+  - Modify the names of the transformers in the catalogue to add voltage levels and vector groups
+
 - {gh-pr}`285` {gh-issue}`279` **BREAKING CHANGE**: Add limits on assets. It is now possible to define a maximum
   loading for lines and transformers. It generates some indirect consequences:
 

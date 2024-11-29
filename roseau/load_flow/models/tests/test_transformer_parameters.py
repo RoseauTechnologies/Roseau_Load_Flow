@@ -117,6 +117,40 @@ def test_transformer_parameters():
     assert e.value.msg.startswith("Invalid vector group: 'dtotoyn11'. Expected one of ['Dd0'")
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS
 
+    # UHV == ULV...
+    data = {
+        "id": "test",
+        "psc": 2350.0,  # W
+        "p0": 460.0,  # W
+        "i0": 5.6 / 100,  # %
+        "ulv": 400,  # V
+        "uhv": 400,  # V
+        "sn": 160 * 1e3,  # VA
+        "vsc": 4 / 100,  # %
+        "vg": "dyn11",
+    }
+    TransformerParameters.from_dict(data)
+
+    # UHV < ULV...
+    data = {
+        "id": "test",
+        "psc": 2350.0,  # W
+        "p0": 460.0,  # W
+        "i0": 5.6 / 100,  # %
+        "ulv": 400.0045,  # V
+        "uhv": np.int64(350),  # V
+        "sn": 160 * 1e3,  # VA
+        "vsc": 4 / 100,  # %
+        "vg": "dyn11",
+    }
+    with pytest.raises(RoseauLoadFlowException) as e:
+        TransformerParameters.from_dict(data)
+    assert e.value.msg == (
+        "Transformer parameters 'test' has the low voltage higher than the high voltage: "
+        "uhv=350 V and ulv=400.0045 V."
+    )
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_VOLTAGES
+
     # Bad i0
     data = {
         "id": "test",
