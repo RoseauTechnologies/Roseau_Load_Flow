@@ -155,10 +155,13 @@ class Transformer(AbstractBranch):
 
     @parameters.setter
     def parameters(self, value: TransformerParameters) -> None:
-        type1 = self._parameters.type
-        type2 = value.type
-        if type1 != type2:
-            msg = f"The updated type changed for transformer {self.id!r}: {type1} to {type2}."
+        vg1 = self._parameters.vg
+        vg2 = value.vg
+        if vg1 != vg2:
+            msg = (
+                f"Cannot update the parameters of transformer {self.id!r} to a different vector "
+                f"group: old={vg1!r}, new={vg2!r}."
+            )
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_TYPE)
         self._parameters = value
