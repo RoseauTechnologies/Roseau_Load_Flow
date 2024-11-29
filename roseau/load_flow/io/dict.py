@@ -629,7 +629,7 @@ def v1_to_v2_converter(data: JsonDict) -> JsonDict:
     return results
 
 
-def v2_to_v3_converter(data: JsonDict) -> JsonDict:  # noqa: C901
+def v2_to_v3_converter(data: JsonDict) -> JsonDict:
     """Convert a v2 network dict to a v3 network dict.
 
     Args:
@@ -664,10 +664,6 @@ def v2_to_v3_converter(data: JsonDict) -> JsonDict:  # noqa: C901
     transformers_params_max_loading = {}
     for transformer_param_data in old_transformers_params:
         transformer_param_data["vg"] = transformer_param_data.pop("type")
-        if (uhv := transformer_param_data.pop("up", None)) is not None:
-            transformer_param_data["uhv"] = uhv
-        if (ulv := transformer_param_data.pop("us", None)) is not None:
-            transformer_param_data["ulv"] = ulv
         if (max_power := transformer_param_data.pop("max_power", None)) is not None:
             transformers_params_max_loading[transformer_param_data["id"]] = max_power / transformer_param_data["sn"]
         transformers_params.append(transformer_param_data)
