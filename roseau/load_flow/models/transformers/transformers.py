@@ -9,7 +9,12 @@ from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.transformers.parameters import TransformerParameters
 from roseau.load_flow.typing import Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
-from roseau.load_flow_engine.cy_engine import CyCenterTransformer, CySingleTransformer, CyThreePhaseTransformer
+from roseau.load_flow_engine.cy_engine import (
+    CyCenterTransformer,
+    CySingleTransformer,
+    CyThreePhaseTransformer,
+    CyTransformer,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -76,17 +81,17 @@ class Transformer(AbstractBranch):
             max_loading:
                 The maximum loading of the transformer (unitless). It is used with the `sn` of the
                 :class:`TransformerParameters` to compute the :meth:`~roseau.load_flow.Transformer.max_power`,
-                 :meth:`~roseau.load_flow.Transformer.res_loading` and
-                 :meth:`~roseau.load_flow.Transformer.res_violated` of the transformer.
+                :meth:`~roseau.load_flow.Transformer.res_loading` and
+                :meth:`~roseau.load_flow.Transformer.res_violated` of the transformer.
 
             geometry:
                 The geometry of the transformer.
         """
-        if parameters.type == "single":
+        if parameters.type == "single-phase":
             phases1, phases2 = self._compute_phases_single(
                 id=id, bus1=bus1, bus2=bus2, phases1=phases1, phases2=phases2
             )
-        elif parameters.type == "center":
+        elif parameters.type == "center-tapped":
             phases1, phases2 = self._compute_phases_center(
                 id=id, bus1=bus1, bus2=bus2, phases1=phases1, phases2=phases2
             )
@@ -101,51 +106,30 @@ class Transformer(AbstractBranch):
         self.max_loading = max_loading
 
         z2, ym, k, orientation = parameters._z2, parameters._ym, parameters._k, parameters._orientation
-        if parameters.type == "single":
-            self._cy_element = CySingleTransformer(z2=z2, ym=ym, k=k * tap)
-        elif parameters.type == "center":
-            self._cy_element = CyCenterTransformer(z2=z2, ym=ym, k=k * tap)
+        self._cy_element: CyTransformer
+        if parameters.type == "single-phase":
+            self._cy_element = CySingleTransformer(z2=z2, ym=ym, k=k * orientation * tap)
+        elif parameters.type == "center-tapped":
+            self._cy_element = CyCenterTransformer(z2=z2, ym=ym, k=k * orientation * tap)
         else:
-            if "Y" in parameters.winding1 and "y" in parameters.winding2:
-                self._cy_element = CyThreePhaseTransformer(
-                    n1=4, n2=4, prim="Y", sec="y", z2=z2, ym=ym, k=k * tap, orientation=orientation
-                )
-            elif "D" in parameters.winding1 and "y" in parameters.winding2:
-                self._cy_element = CyThreePhaseTransformer(
-                    n1=3, n2=4, prim="D", sec="y", z2=z2, ym=ym, k=k * tap, orientation=orientation
-                )
-            elif "D" in parameters.winding1 and "d" in parameters.winding2:
-                self._cy_element = CyThreePhaseTransformer(
-                    n1=3, n2=3, prim="D", sec="d", z2=z2, ym=ym, k=k * tap, orientation=orientation
-                )
-            elif "Y" in parameters.winding1 and "d" in parameters.winding2:
-                self._cy_element = CyThreePhaseTransformer(
-                    n1=4, n2=3, prim="Y", sec="d", z2=z2, ym=ym, k=k * tap, orientation=orientation
-                )
-            elif "Y" in parameters.winding1 and "z" in parameters.winding2:
-                self._cy_element = CyThreePhaseTransformer(
-                    n1=4, n2=4, prim="Y", sec="z", z2=z2, ym=ym, k=k * tap, orientation=orientation
-                )
-            elif "D" in parameters.winding1 and "z" in parameters.winding2:
-                self._cy_element = CyThreePhaseTransformer(
-                    n1=3, n2=4, prim="D", sec="z", z2=z2, ym=ym, k=k * tap, orientation=orientation
-                )
-            else:
-                msg = f"Transformer {parameters.type} is not implemented yet..."
-                logger.error(msg)
-                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS)
+            self._cy_element = CyThreePhaseTransformer(
+                n1=parameters._n1,
+                n2=parameters._n2,
+                prim=parameters.winding1[0],
+                sec=parameters.winding2[0],
+                z2=z2,
+                ym=ym,
+                k=k * tap,
+                orientation=orientation,
+            )
         self._cy_connect()
 
     def __repr__(self) -> str:
-        s = (
+        return (
             f"<{type(self).__name__}: id={self.id!r}, bus1={self.bus1.id!r}, bus2={self.bus2.id!r}, "
-            f"phases1={self.phases1!r}, phases2={self.phases2!r}"
+            f"phases1={self.phases1!r}, phases2={self.phases2!r}, tap={self.tap:f}, "
+            f"max_loading={self._max_loading:f}>"
         )
-        for attr, val, tp in (("tap", self._tap, float), ("max_loading", self._max_loading, float)):
-            if val is not None:
-                s += f", {attr}={tp(val)!r}"
-        s += ">"
-        return s
 
     @property
     def tap(self) -> float:
@@ -171,16 +155,21 @@ class Transformer(AbstractBranch):
 
     @parameters.setter
     def parameters(self, value: TransformerParameters) -> None:
-        type1 = self._parameters.type
-        type2 = value.type
-        if type1 != type2:
-            msg = f"The updated type changed for transformer {self.id!r}: {type1} to {type2}."
+        vg1 = self._parameters.vg
+        vg2 = value.vg
+        if vg1 != vg2:
+            msg = (
+                f"Cannot update the parameters of transformer {self.id!r} to a different vector "
+                f"group: old={vg1!r}, new={vg2!r}."
+            )
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_TYPE)
         self._parameters = value
         self._invalidate_network_results()
         if self._cy_element is not None:
             z2, ym, k = value._z2, value._ym, value._k
+            if value.type in ("single-phase", "center-tapped"):
+                k *= value._orientation
             self._cy_element.update_transformer_parameters(z2, ym, k * self.tap)
 
     @property

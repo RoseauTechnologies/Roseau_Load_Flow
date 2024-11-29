@@ -2,18 +2,16 @@ import logging
 import re
 from importlib import resources
 from pathlib import Path
-from typing import Literal, NoReturn
+from typing import Final, Literal, NoReturn
 
 import numpy as np
 import pandas as pd
-import regex
-from typing_extensions import Self, deprecated
+from typing_extensions import Self
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.typing import FloatArrayLike1D, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow.utils import CatalogueMixin, Identifiable, JsonMixin
-from roseau.load_flow.utils.constants import PositiveSequence
 
 logger = logging.getLogger(__name__)
 
@@ -21,27 +19,31 @@ logger = logging.getLogger(__name__)
 class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
     """Parameters that define electrical models of transformers."""
 
-    _EXTRACT_WINDINGS_RE = regex.compile(
-        "(?(DEFINE)(?P<y_winding>yn?)(?P<d_winding>d)(?P<z_winding>zn?)(?P<p_set_1>[06])"
-        "(?P<p_set_2>5|11))"
-        ""
-        "(?|(?P<w1>(?&y_winding))(?P<w2>(?&y_winding))(?P<p>(?&p_set_1))"  # yy
-        "|(?P<w1>(?&y_winding))(?P<w2>(?&d_winding))(?P<p>(?&p_set_2))"  # yd
-        "|(?P<w1>(?&y_winding))(?P<w2>(?&z_winding))(?P<p>(?&p_set_2))"  # yz
-        "|(?P<w1>(?&d_winding))(?P<w2>(?&z_winding))(?P<p>(?&p_set_1))"  # dz
-        "|(?P<w1>(?&d_winding))(?P<w2>(?&y_winding))(?P<p>(?&p_set_2))"  # dy
-        "|(?P<w1>(?&d_winding))(?P<w2>(?&d_winding))(?P<p>(?&p_set_1)))",  # dd
-        regex.IGNORECASE,
-    )
-    """The pattern to extract the winding of the primary and of the secondary of the transformer."""
+    # fmt: off
+    allowed_vector_groups: Final = {
+        # Three-phase
+        "Dd0", "Dd6",  # Delta-delta
+        "Yy0", "Yy6", "Yyn0", "Yyn6", "Yny0", "Yny6", "Ynyn0", "Ynyn6",  # Wye-wye
+        "Dy5", "Dy11", "Dyn5", "Dyn11",  # Delta-wye
+        "Dz0", "Dz6", "Dzn0", "Dzn6",  # Delta-zigzag
+        "Yd5", "Yd11", "Ynd5", "Ynd11",  # Wye-delta
+        "Yz5", "Yz11", "Yzn5", "Yzn11", "Ynz5", "Ynz11", "Ynzn5", "Ynzn11",  # Wye-zigzag
+        # Single-phase
+        "Ii0", "Ii6",
+        # Center-tapped
+        "Iii0", "Iii6",
+    }
+    """Allowed vector groups for transformers."""
+    # fmt: on
 
     @ureg_wraps(None, (None, None, None, "V", "V", "VA", "ohm", "S", None, None, None))
     def __init__(
         self,
         id: Id,
-        type: str,
-        up: float | Q_[float],
-        us: float | Q_[float],
+        *,
+        vg: str,
+        uhv: float | Q_[float],
+        ulv: float | Q_[float],
         sn: float | Q_[float],
         z2: complex | Q_[complex],
         ym: complex | Q_[complex],
@@ -55,16 +57,23 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             id:
                 A unique ID of the transformer parameters, typically its canonical name.
 
-            type:
-                The type of transformer parameters. It can be "single" for single-phase transformers, "center" for
-                center-tapped transformers, or the name of the windings such as "Dyn11" for three-phase transformers.
-                Allowed windings are "D" for delta, "Y" for wye (star), and "Z" for zigzag.
+            vg:
+                The vector group of the transformer.
 
-            up:
-                Phase-to-phase nominal voltages of the primary side (V)
+                For three-phase transformers, ``Dyn11`` denotes a delta-wye connection with -30° phase
+                displacement. Allowed windings are ``D`` for delta, ``Y`` for wye, ``Z`` for zigzag.
 
-            us:
-                Phase-to-phase nominal voltages of the secondary side (V)
+                For single-phase transformers, ``Ii0`` denotes a normal in-phase connection and
+                ``Ii6`` denotes an inverted connection.
+
+                For center-tapped transformers, ``Iii0`` denotes a normal in-phase connection and
+                ``Iii6`` denotes an inverted connection.
+
+            uhv:
+                Rated phase-to-phase voltage of the HV side (V)
+
+            ulv:
+                Rated no-load phase-to-phase voltage of the LV side (V)
 
             sn:
                 The nominal power of the transformer (VA)
@@ -76,55 +85,74 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
                 The magnetizing admittance located at the primary side of the transformer.
 
             manufacturer:
-                The name of the manufacturer for the transformer. Informative only, it has no impact on the load flow.
+                The name of the manufacturer for the transformer. Informative only, it has no impact
+                on the load flow. It is filled automatically when the parameters when imported from
+                the catalogue.
 
             range:
-                The name of the product range for the transformer. Informative only, it has no impact on the load flow.
+                The product range for the transformer as defined by the manufacturer. Informative
+                only, it has no impact on the load flow. It is filled automatically when the
+                parameters when imported from the catalogue.
 
             efficiency:
-                The efficiency class of the transformer. Informative only, it has no impact on the load flow.
+                The efficiency class of the transformer. Informative only, it has no impact on the
+                load flow. It is filled automatically when the parameters when imported from the
+                catalogue. The efficiency class used in the catalogue follows the `Eco-Design`
+                requirements as defined by the `EN 50629` standard.
         """
         super().__init__(id)
 
         # Check
+        if uhv < ulv:
+            msg = (
+                f"Transformer parameters {id!r} has the low voltage higher than the high voltage: "
+                f"uhv={uhv!s} V and ulv={ulv!s} V."
+            )
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_VOLTAGES)
         if np.isclose(z2, 0.0):
-            msg = f"Transformer type {id!r} has a null series impedance z2. Ideal transformers are not supported."
+            msg = (
+                f"Transformer parameters {id!r} has a null series impedance z2. Ideal transformers "
+                f"are not supported yet."
+            )
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_IMPEDANCE)
 
+        # Extract the windings of the primary and the secondary of the transformer
+        winding1, winding2, phase_displacement = self.extract_windings(vg=vg)
+        w1, w2 = winding1[0], winding2[0]
+
+        self._vg: str = vg
         self._sn: float = sn
-        self._up: float = up
-        self._us: float = us
+        self._uhv: float = uhv
+        self._ulv: float = ulv
         self._z2: complex = z2
         self._ym: complex = ym
-        self._manufacturer: str = manufacturer
-        self._range: str = range
-        self._efficiency: str = efficiency
+        self._manufacturer: str | None = manufacturer
+        self._range: str | None = range
+        self._efficiency: str | None = efficiency
 
-        if type in ("single", "center"):
-            winding1 = winding2 = phase_displacement = None
-        else:
-            # Extract the windings of the primary and the secondary of the transformer
-            winding1, winding2, phase_displacement = self.extract_windings(string=type)
+        # Change the voltages if the reference voltages is phase-to-neutral
+        if w1 == "Y":
+            uhv /= np.sqrt(3.0)
+        elif w1 == "Z":
+            uhv /= 3.0
+        if w2 == "y":
+            ulv /= np.sqrt(3.0)
+        elif w2 == "z":
+            ulv /= 3.0
 
-            assert phase_displacement in {0, 5, 6, 11}, phase_displacement
-            # Change the voltages if the reference voltages is phase-to-neutral
-            w1, w2 = winding1[0].upper(), winding2[0].lower()
-            if w1 == "Y":
-                up /= np.sqrt(3.0)
-            elif w1 == "Z":
-                up /= 3.0
-            if w2 == "y":
-                us /= np.sqrt(3.0)
-            elif w2 == "z":
-                us /= 3.0
+        n_of_winding = {"y": 4, "z": 4, "d": 3, "i": 2, "ii": 3}
+        n1 = n_of_winding[w1.lower()]
+        n2 = n_of_winding[w2.lower()]
 
-        self._k: float = us / up
+        self._k: float = ulv / uhv
         self._orientation: float = -1.0 if phase_displacement in {5, 6} else 1.0
-        self.winding1: str | None = winding1
-        self.winding2: str | None = winding2
-        self.phase_displacement: Literal[0, 5, 6, 11] | None = phase_displacement
-        self.type = type
+        self._n1: int = n1
+        self._n2: int = n2
+        self._winding1: str = winding1
+        self._winding2: str = winding2
+        self._phase_displacement: int = phase_displacement
 
         # Filled using alternative constructor `from_open_and_short_circuit_tests`
         self._p0: float | None = None
@@ -133,10 +161,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         self._vsc: float | None = None
 
     def __repr__(self) -> str:
-        s = (
-            f"<{type(self).__name__}: id={self.id!r}, type={self.type!r}, sn={self._sn}, up={self._up}, "
-            f"us={self._us}"
-        )
+        s = f"<{type(self).__name__}: id={self.id!r}, vg={self._vg!r}, sn={self._sn}, uhv={self._uhv}, ulv={self._ulv}"
         for attr, val, tp in (
             ("p0", self._p0, float),
             ("i0", self._i0, float),
@@ -155,12 +180,12 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         if not isinstance(other, TransformerParameters):
             return NotImplemented
         else:
-            return (
+            return bool(
                 self.id == other.id
-                and self.type == other.type
+                and self._vg == other._vg
                 and np.isclose(self._sn, other._sn)
-                and np.isclose(self._up, other._up)
-                and np.isclose(self._us, other._us)
+                and np.isclose(self._uhv, other._uhv)
+                and np.isclose(self._ulv, other._ulv)
                 and np.isclose(self._z2, other._z2)
                 and np.isclose(self._ym, other._ym)
                 and self._manufacturer == other._manufacturer
@@ -169,16 +194,74 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             )
 
     @property
-    @ureg_wraps("V", (None,))
-    def up(self) -> Q_[float]:
-        """Phase-to-phase nominal voltages of the primary side (V)."""
-        return self._up
+    def type(self) -> Literal["three-phase", "single-phase", "center-tapped"]:
+        """The type of transformer parameters.
+
+        It can be ``three-phase``, ``single-phase`` or ``center-tapped``.
+        """
+        if self._vg in ("Ii0", "Ii6"):
+            return "single-phase"
+        elif self._vg in ("Iii0", "Iii6"):
+            return "center-tapped"
+        else:
+            return "three-phase"
+
+    @property
+    def vg(self) -> str:
+        """The vector group of the transformer.
+
+        For three-phase transformers, ``Dyn11`` denotes a delta-wye connection with 30° lead phase
+        displacement. Allowed windings are ``D`` for delta, ``Y`` for wye, ``Z`` for zigzag.
+
+        For single-phase transformers, ``Ii0`` denotes a normal in-phase connection and ``Ii6``
+        denotes an inverted connection.
+
+        For center-tapped transformers, ``Iii0`` denotes a normal in-phase connection and ``Iii6``
+        denotes an inverted connection.
+        """
+        return self._vg
+
+    @property
+    def winding1(self) -> str:
+        """The primary winding of the transformer.
+
+        The following values are used:
+        - ``D``: a Delta connection
+        - ``Y`` or ``Yn``: a Wye connection
+        - ``Z`` or ``Zn``: a Zigzag connection
+        - ``I``: single-phase
+        """
+        return self._winding1
+
+    @property
+    def winding2(self) -> str:
+        """The secondary winding of the transformer.
+
+        The following values are used:
+        - ``d``: a Delta connection
+        - ``y`` or ``yn``: a Wye connection
+        - ``z`` or ``zn``: a Zigzag connection
+        - ``i``: single-phase
+        - ``ii`` split-phase (i.e center-tapped)
+        """
+        return self._winding2
+
+    @property
+    def phase_displacement(self) -> int:
+        """The phase rotation as indicated by the vector group."""
+        return self._phase_displacement
 
     @property
     @ureg_wraps("V", (None,))
-    def us(self) -> Q_[float]:
-        """Phase-to-phase nominal voltages of the secondary side (V)."""
-        return self._us
+    def uhv(self) -> Q_[float]:
+        """Rated phase-to-phase voltage of the HV side (V)."""
+        return self._uhv
+
+    @property
+    @ureg_wraps("V", (None,))
+    def ulv(self) -> Q_[float]:
+        """Rated no-load phase-to-phase voltage of the LV side (V)."""
+        return self._ulv
 
     @property
     @ureg_wraps("VA", (None,))
@@ -231,73 +314,62 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
 
     @property
     def manufacturer(self) -> str | None:
-        """The name of the manufacturer for the transformer. Informative only, it has no impact on the load flow."""
+        """The name of the manufacturer for the transformer.
+
+        Informative only, it has no impact on the load flow. It is filled automatically when the
+        parameters are imported from the catalogue.
+        """
         return self._manufacturer
 
     @property
     def range(self) -> str | None:
-        """The name of the product range for the transformer. Informative only, it has no impact on the load flow."""
+        """The product range for the transformer as defined by the manufacturer.
+
+        Informative only, it has no impact on the load flow. It is filled automatically when the
+        parameters are imported from the catalogue.
+        """
         return self._range
 
     @property
     def efficiency(self) -> str | None:
-        """The efficiency class of the transformer. Informative only, it has no impact on the load flow."""
-        return self._efficiency
+        """The efficiency class of the transformer.
 
-    @deprecated(
-        "The to_zyk method of TransformerParameters is deprecated. The parameters"
-        "`z2`, `ym`, `k`, and `orientation` are now accessible on the object directly",
-        category=FutureWarning,
-    )
-    @ureg_wraps(("ohm", "S", "", None), (None,))
-    def to_zyk(self) -> tuple[Q_[complex], Q_[complex], Q_[float], float]:
-        """Get the transformer parameters ``z2``, ``ym``, ``k`` and ``orientation`` mandatory for some models.
-
-        Where:
-            * ``z2``: The series impedance of the transformer (Ohms).
-            * ``ym``: The magnetizing admittance of the transformer (Siemens).
-            * ``k``: The transformation ratio.
-            * ``orientation``: 1 for direct winding, -1 for reverse winding.
-
-        Returns:
-            The parameters (``z2``, ``ym``, ``k``, ``orientation``).
+        Informative only, it has no impact on the load flow. It is filled automatically when the
+        parameters imported from the catalogue. The efficiency class used in the catalogue follows
+        the `Eco-Design` requirements as defined by the `EN 50629` standard.
         """
-        return self._z2, self._ym, self._k, self._orientation
+        return self._efficiency
 
     @classmethod
     def _compute_zy(
-        cls, type: str, up: float, us: float, sn: float, p0: float, i0: float, psc: float, vsc: float
+        cls, vg: str, uhv: float, ulv: float, sn: float, p0: float, i0: float, psc: float, vsc: float
     ) -> tuple[complex, complex]:
-        if type in ("single", "center"):
-            winding1, winding2 = None, None
-        else:
-            winding1, winding2, _ = cls.extract_windings(string=type)
-            winding1, winding2 = winding1[0].upper(), winding2[0].lower()
+        w1, w2, _ = cls.extract_windings(vg=vg)
 
         # Off-load test
         # Iron losses resistance (Ohm)
         if p0 > 0:
-            r_iron = up**2 / p0
+            r_iron = uhv**2 / p0
             y_iron = 1 / r_iron
         else:  # no iron losses
             y_iron = 0
         # Magnetizing inductance (Henry) * omega (rad/s)
         s0 = i0 * sn
         if s0 > p0:
-            lm_omega = up**2 / np.sqrt(s0**2 - p0**2)
+            lm_omega = uhv**2 / np.sqrt(s0**2 - p0**2)
             y_lm = 1 / (1j * lm_omega)
         else:  # no magnetizing reactance
             y_lm = 0j
         ym = y_iron + y_lm
 
         # Short-circuit test
-        r2 = psc * (us / sn) ** 2
-        l2_omega = np.sqrt((vsc * us**2 / sn) ** 2 - r2**2)
+        r2 = psc * (ulv / sn) ** 2
+        l2_omega = np.sqrt((vsc * ulv**2 / sn) ** 2 - r2**2)
         z2 = r2 + 1j * l2_omega
 
-        if winding1 == "D":
+        if w1[0] == "D":
             ym /= 3
-        if winding2 == "d":
+        if w2[0] == "d":
             z2 *= 3
 
         return z2, ym
@@ -361,11 +433,11 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
 
             uhv:
                 PwF parameter `utrn_h` (Rated Voltage HV-Side). The rated phase-to-phase voltage of
-                the transformer on the primary side.
+                the transformer on the HV side.
 
             ulv:
                 PwF parameter `utrn_l` (Rated Voltage LV-Side). The rated phase-to-phase voltage of
-                the transformer on the secondary side.
+                the transformer on the LV side.
 
             vg_hv:
                 PwF parameter `tr2cn_h` (Vector Group HV-Side). The vector group of the high voltage
@@ -398,13 +470,16 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
                 impedance i.e. the power losses in (kW) obtained from the no-load test.
 
             manufacturer:
-                The name of the manufacturer for the transformer. Informative only, it has no impact on the load flow.
+                The name of the manufacturer for the transformer. Informative only, it has no impact
+                on the load flow.
 
             range:
-                The name of the product range for the transformer. Informative only, it has no impact on the load flow.
+                The name of the product range for the transformer. Informative only, it has no impact
+                on the load flow.
 
             efficiency:
-                The efficiency class of the transformer. Informative only, it has no impact on the load flow.
+                The efficiency class of the transformer. Informative only, it has no impact on the
+                load flow.
 
         Returns:
             The corresponding transformer parameters object.
@@ -412,9 +487,9 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         # Type: from vector group data and technology
         tech_norm = str(tech).upper().replace(" ", "-")
         if tech_norm.startswith("SINGLE-PHASE") or tech_norm == "2":
-            type = "single"
+            vg = "Ii0"  # TODO do we have vector group data for single-phase transformers?
         elif tech_norm.startswith("THREE-PHASE") or tech_norm == "3":
-            type = f"{vg_hv.upper()}{vg_lv.lower()}{phase_shift}"
+            vg = f"{vg_hv.upper()}{vg_lv.lower()}{phase_shift}"
         else:
             msg = f"Expected tech='single-phase' or 'three-phase', got {tech!r} for transformer parameters {id!r}."
             logger.error(msg)
@@ -428,13 +503,13 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         i0 = curmg / 100
         vsc = uk / 100
 
-        z2, ym = cls._compute_zy(type=type, up=uhv, us=ulv, sn=sn, p0=p0, i0=i0, psc=psc, vsc=vsc)
+        z2, ym = cls._compute_zy(vg=vg, uhv=uhv, ulv=ulv, sn=sn, p0=p0, i0=i0, psc=psc, vsc=vsc)
 
-        obj = cls(
+        return cls(
             id=id,
-            type=type,
-            up=uhv,
-            us=ulv,
+            vg=vg,
+            uhv=uhv,
+            ulv=ulv,
             sn=sn,
             z2=z2,
             ym=ym,
@@ -442,7 +517,6 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             range=range,
             efficiency=efficiency,
         )
-        return obj
 
     @classmethod
     @ureg_wraps(
@@ -530,20 +604,23 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
                 `%rs=[0.1, 0.1]` is equivalent to `%loadloss=0.2`.
 
             manufacturer:
-                The name of the manufacturer for the transformer. Informative only, it has no impact on the load flow.
+                The name of the manufacturer for the transformer. Informative only, it has no impact
+                on the load flow.
 
             range:
-                The name of the product range for the transformer. Informative only, it has no impact on the load flow.
+                The name of the product range for the transformer. Informative only, it has no impact
+                on the load flow.
 
             efficiency:
-                The efficiency class of the transformer. Informative only, it has no impact on the load flow.
+                The efficiency class of the transformer. Informative only, it has no impact on the
+                load flow.
 
         Returns:
             The corresponding transformer parameters object.
 
         Example usage::
 
-            # DSS command: `DSSText.Command = "New transformer.LVTR Buses=[sourcebus, A.1.2.3] Conns=[delta wye] KVs=[11, 0.4] KVAs=[250 250] %Rs=0.00 xhl=2.5 %loadloss=0 "`
+            # DSS command: `New transformer.LVTR Buses=[sourcebus, A.1.2.3] Conns=[delta wye] KVs=[11, 0.4] KVAs=[250 250] %Rs=0.00 xhl=2.5 %loadloss=0`
             tp = rlf.TransformerParameters.from_open_dss(
                 id="dss-tp",
                 conns=("delta", "wye"),
@@ -594,11 +671,11 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         else:
             phase_displacement = 0  # TODO is leadlag used with Dd or Yy transformers?
 
-        # Type: from winding and lead-lag parameters
-        type = f"{w1}{w2}{phase_displacement}"
+        # Vector Group: from winding and lead-lag parameters
+        vg = f"{w1}{w2}{phase_displacement}"
 
         # High and low rated voltages
-        up, us = (u * 1000 for u in kvs)  # in Volts
+        uhv, ulv = (u * 1000 for u in kvs)  # in Volts
 
         # Nominal power
         sn: float  # in Watts
@@ -633,13 +710,13 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         i0 = imag / 100
         psc = (loadloss / 100) * sn
         vsc = xhl / 100
-        z2, ym = cls._compute_zy(type=type, up=up, us=us, sn=sn, p0=p0, i0=i0, psc=psc, vsc=vsc)
+        z2, ym = cls._compute_zy(vg=vg, uhv=uhv, ulv=ulv, sn=sn, p0=p0, i0=i0, psc=psc, vsc=vsc)
 
-        obj = cls(
+        return cls(
             id=id,
-            type=type,
-            up=up,
-            us=us,
+            vg=vg,
+            uhv=uhv,
+            ulv=ulv,
             sn=sn,
             z2=z2,
             ym=ym,
@@ -647,7 +724,6 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             range=range,
             efficiency=efficiency,
         )
-        return obj
 
     #
     # Open and short circuit tests
@@ -657,9 +733,10 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
     def from_open_and_short_circuit_tests(
         cls,
         id: Id,
-        type: str,
-        up: float | Q_[float],
-        us: float | Q_[float],
+        *,
+        vg: str,
+        uhv: float | Q_[float],
+        ulv: float | Q_[float],
         sn: float | Q_[float],
         p0: float | Q_[float],
         i0: float | Q_[float],
@@ -675,40 +752,54 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             id:
                 A unique ID of the transformer parameters, typically its canonical name.
 
-            type:
-                The type of transformer parameters. It can be "single" for single-phase transformers, "center" for
-                center-tapped transformers, or the name of the windings such as "Dyn11" for three-phase transformers.
-                Allowed windings are "D" for delta, "Y" for wye (star), and "Z" for zigzag.
+            vg:
+                The vector group of the transformer.
 
-            up:
-                Phase-to-phase nominal voltages of the primary side (V)
+                For three-phase transformers, ``Dyn11`` denotes a delta-wye connection with -30° phase
+                displacement. Allowed windings are ``D`` for delta, ``Y`` for wye, ``Z`` for zigzag.
 
-            us:
-                Phase-to-phase nominal voltages of the secondary side (V)
+                For single-phase transformers, ``Ii0`` denotes a normal in-phase connection and
+                ``Ii6`` denotes an inverted connection.
+
+                For center-tapped transformers, ``Iii0`` denotes a normal in-phase connection and
+                ``Iii6`` denotes an inverted connection.
+
+            uhv:
+                Rated phase-to-phase voltage of the HV side (V).
+
+            ulv:
+                Rated no-load phase-to-phase voltage of the LV side (V).
 
             sn:
-                The nominal power of the transformer (VA)
+                The nominal power of the transformer (VA).
 
             p0:
-                Losses during open-circuit test (W)
+                Losses during open-circuit test (W).
 
             i0:
-                Current during open-circuit test (%)
+                Current during open-circuit test (%).
 
             psc:
-                Losses during short-circuit test (W)
+                Losses during short-circuit test (W).
 
             vsc:
-                Voltages on LV side during short-circuit test (%)
+                Voltages on LV side during short-circuit test (%).
 
             manufacturer:
-                The name of the manufacturer for the transformer. Informative only, it has no impact on the load flow.
+                The name of the manufacturer for the transformer. Informative only, it has no impact
+                on the load flow. It is filled automatically when the parameters when imported from
+                the catalogue.
 
             range:
-                The name of the product range for the transformer. Informative only, it has no impact on the load flow.
+                The product range for the transformer as defined by the manufacturer. Informative
+                only, it has no impact on the load flow. It is filled automatically when the
+                parameters when imported from the catalogue.
 
             efficiency:
-                The efficiency class of the transformer. Informative only, it has no impact on the load flow.
+                The efficiency class of the transformer. Informative only, it has no impact on the
+                load flow. It is filled automatically when the parameters when imported from the
+                catalogue. The efficiency class used in the catalogue follows the `Eco-Design`
+                requirements as defined by the `EN 50629` standard.
         """
         # Check
         if i0 > 1.0 or i0 < 0.0:
@@ -728,7 +819,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         if psc / sn > vsc:
             msg = (
                 f"Invalid short-circuit results for transformer parameters {id!r}. The following "
-                f"inequality must be respected: psc/sn <= vsc"
+                f"inequality must be respected: psc/sn <= vsc, got {psc/sn=:f} and {vsc=:f}."
             )
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_PARAMETERS)
@@ -738,13 +829,13 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
                 f"i0 * sn > p0. The magnetizing admittance imaginary part will be null."
             )
 
-        z2, ym = cls._compute_zy(type=type, up=up, us=us, sn=sn, p0=p0, i0=i0, psc=psc, vsc=vsc)
+        z2, ym = cls._compute_zy(vg=vg, uhv=uhv, ulv=ulv, sn=sn, p0=p0, i0=i0, psc=psc, vsc=vsc)
 
         instance = cls(
             id=id,
-            type=type,
-            up=up,
-            us=us,
+            vg=vg,
+            uhv=uhv,
+            ulv=ulv,
             sn=sn,
             z2=z2,
             ym=ym,
@@ -770,54 +861,52 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         Returns:
             The values ``p0``, the losses (in W), and ``i0``, the current (in %) during open-circuit test.
         """
-        from roseau.load_flow.converters import _calculate_voltages
         from roseau.load_flow.models import Bus, PotentialRef, Transformer, VoltageSource
         from roseau.load_flow.network import ElectricalNetwork
 
         if solve_kwargs is None:
             solve_kwargs = {}
 
-        if self.type == "single":
+        voltage = self._uhv
+        if self.type == "single-phase":
             phases_hv = "ab"
             phases_lv = "ab"
-            voltages = [self._up]
-        elif self.type == "center":
+        elif self.type == "center-tapped":
             phases_hv = "ab"
             phases_lv = "abn"
-            voltages = [self._up]
         else:
             # Three-phase transformer
-            phases_hv = "abc" if self.winding1.lower().startswith("d") else "abcn"
-            phases_lv = "abc" if self.winding2.lower().startswith("d") else "abcn"
+            phases_hv = "abc" if self.winding1[0] == "D" else "abcn"
+            phases_lv = "abc" if self.winding2[0] == "d" else "abcn"
             if "n" in phases_hv:
-                voltages = self._up / np.sqrt(3) * PositiveSequence
-            else:
-                voltages = _calculate_voltages(potentials=self._up / np.sqrt(3) * PositiveSequence, phases="abc")
+                voltage /= np.sqrt(3)
 
         bus_hv = Bus(id="BusHV", phases=phases_hv)
         bus_lv = Bus(id="BusLV", phases=phases_lv)
         PotentialRef(id="PRefHV", element=bus_hv)
         PotentialRef(id="PRefLV", element=bus_lv)
-        VoltageSource(id="VS", bus=bus_hv, voltages=voltages)
+        VoltageSource(id="VS", bus=bus_hv, voltages=voltage)
         transformer = Transformer(id="Transformer", bus1=bus_hv, bus2=bus_lv, parameters=self)
 
         en = ElectricalNetwork.from_element(bus_hv)
         en.solve_load_flow(**solve_kwargs)
         p_primary = transformer.res_powers[0].m.sum().real
         i_primary = abs(transformer.res_currents[0].m[0])
-        in_ = self._sn / self._up if self.type in ("single", "center") else self._sn / (np.sqrt(3) * self._up)
+        i_nom = self._sn / self._uhv
+        if self.type == "three-phase":
+            i_nom /= np.sqrt(3)
 
         # Additional checks
-        u_secondary = abs(_calculate_voltages(potentials=bus_lv.res_potentials.m, phases=phases_lv))
-        if self.type == "single":
-            expected_u_secondary = self._us
-        elif self.type == "center":
-            expected_u_secondary = self._us / 2
+        u_secondary = abs(bus_lv.res_voltages.m)
+        if self.type == "single-phase":
+            expected_u_secondary = self._ulv
+        elif self.type == "center-tapped":
+            expected_u_secondary = self._ulv / 2
         else:
-            expected_u_secondary = self._us / np.sqrt(3)
+            expected_u_secondary = self._ulv / np.sqrt(3)
         np.testing.assert_allclose(u_secondary, expected_u_secondary)
 
-        return p_primary, i_primary / in_
+        return p_primary, i_primary / i_nom
 
     @ureg_wraps(("W", ""), (None, None))
     def _compute_short_circuit_parameters(self, solve_kwargs: JsonDict | None = None) -> tuple[Q_[float], Q_[float]]:
@@ -825,48 +914,39 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
 
         Args:
             solve_kwargs:
-                The keywords arguments used by the :meth:`ElectricalNetwork.solve_load_flow` method. By default, the
-                default arguments of the method are used.
+                The keywords arguments used by the :meth:`ElectricalNetwork.solve_load_flow` method.
+                By default, the default arguments of the method are used.
 
         Returns:
             The values ``psc``, the losses (in W), and ``vsc``, the voltages on LV side (in %) during short-circuit
             test.
         """
-        from roseau.load_flow.converters import _calculate_voltages
         from roseau.load_flow.models import Bus, PotentialRef, Transformer, VoltageSource
         from roseau.load_flow.network import ElectricalNetwork
 
         if solve_kwargs is None:
             solve_kwargs = {}
 
-        potentials_hv = None
-        potentials_lv = None
-        vsc = abs(self._z2) * self._sn / self._us**2
-        if self.type == "single":
+        vsc = abs(self._z2) * self._sn / self._ulv**2
+        voltage = vsc * self._uhv
+        if self.type == "single-phase":
             phases_hv = "ab"
             phases_lv = "ab"
-            voltages = [vsc * self._up]
-        elif self.type == "center":
+        elif self.type == "center-tapped":
             phases_hv = "ab"
             phases_lv = "abn"
-            voltages = [vsc * self._up]
-            # TODO: The initialization of potentials seems very bad in the case of such short-circuit...
-            potentials_hv = [vsc * self._up, -vsc * self._up]
-            potentials_lv = [0, 0, 0]
         else:
             # Three-phase transformer
-            phases_hv = "abc" if self.winding1.lower().startswith("d") else "abcn"
-            phases_lv = "abc" if self.winding2.lower().startswith("d") else "abcn"
+            phases_hv = "abc" if self.winding1[0] == "D" else "abcn"
+            phases_lv = "abc" if self.winding2[0] == "d" else "abcn"
             if "n" in phases_hv:
-                voltages = vsc * self._up / np.sqrt(3) * PositiveSequence
-            else:
-                voltages = _calculate_voltages(potentials=vsc * self._up / np.sqrt(3) * PositiveSequence, phases="abc")
+                voltage /= np.sqrt(3)
 
-        bus_hv = Bus(id="BusHV", phases=phases_hv, potentials=potentials_hv)
-        bus_lv = Bus(id="BusLV", phases=phases_lv, potentials=potentials_lv)
+        bus_hv = Bus(id="BusHV", phases=phases_hv)
+        bus_lv = Bus(id="BusLV", phases=phases_lv)
         PotentialRef(id="PRefHV", element=bus_hv)
         PotentialRef(id="PRefLV", element=bus_lv)
-        VoltageSource(id="VS", bus=bus_hv, voltages=voltages)
+        VoltageSource(id="VS", bus=bus_hv, voltages=voltage)
         transformer = Transformer(id="Transformer", bus1=bus_hv, bus2=bus_lv, parameters=self)
         bus_lv.add_short_circuit(*phases_lv)
         en = ElectricalNetwork.from_element(bus_hv)
@@ -874,9 +954,11 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         p_primary = transformer.res_powers[0].m.sum().real
 
         # Additional check
-        in_ = self._sn / self._us if self.type in ("single", "center") else self._sn / (np.sqrt(3) * self._us)
+        i_nom = self._sn / self._ulv
+        if self.type == "three-phase":
+            i_nom /= np.sqrt(3)  # I = S3ph / (sqrt(3) * U)
         i_secondary = abs(transformer.res_currents[1].m[0])
-        np.testing.assert_allclose(i_secondary, in_)
+        np.testing.assert_allclose(i_secondary, i_nom)
 
         return p_primary, vsc
 
@@ -889,9 +971,9 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             # TODO should we validate z2 and ym if they exist?
             return cls.from_open_and_short_circuit_tests(
                 id=data["id"],
-                type=data["type"],  # Type of the transformer
-                up=data["up"],  # Phase-to-phase nominal voltages of the primary side (V)
-                us=data["us"],  # Phase-to-phase nominal voltages of the secondary side (V)
+                vg=data["vg"],  # Vector Group (e.g. Dyn11)
+                uhv=data["uhv"],  # Rated phase-to-phase voltage of the HV side (V)
+                ulv=data["ulv"],  # Rated no-load phase-to-phase voltage of the LV side (V)
                 sn=data["sn"],  # Nominal power
                 p0=data["p0"],  # Losses during open-circuit test (W)
                 i0=data["i0"],  # Current during open-circuit test (%)
@@ -906,9 +988,9 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             ym = complex(*data["ym"])
             return cls(
                 id=data["id"],
-                type=data["type"],  # Type of the transformer
-                up=data["up"],  # Phase-to-phase nominal voltages of the primary side (V)
-                us=data["us"],  # Phase-to-phase nominal voltages of the secondary side (V)
+                vg=data["vg"],  # Vector Group (e.g. Dyn11)
+                uhv=data["uhv"],  # Rated phase-to-phase voltages of the HV side (V)
+                ulv=data["ulv"],  # Rated no-load phase-to-phase voltages of the LV side (V)
                 sn=data["sn"],  # Nominal power
                 z2=z2,  # Series impedance (ohm)
                 ym=ym,  # Magnetizing admittance (S)
@@ -923,10 +1005,10 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         ym = complex(self._ym)
         res = {
             "id": self.id,
+            "vg": self._vg,
             "sn": self._sn,
-            "up": self._up,
-            "us": self._us,
-            "type": self.type,
+            "uhv": self._uhv,
+            "ulv": self._ulv,
             "z2": [z2.real, z2.imag],
             "ym": [ym.real, ym.imag],
         }
@@ -961,7 +1043,32 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
     @classmethod
     def catalogue_data(cls) -> pd.DataFrame:
         file = cls.catalogue_path() / "Catalogue.csv"
-        return pd.read_csv(file, parse_dates=False)
+        return pd.read_csv(
+            file,
+            parse_dates=False,
+            dtype={
+                "name": str,
+                "manufacturer": str,
+                "range": str,
+                "efficiency": str,
+                "type": str,
+                "oil": str,
+                "sn": int,
+                "vsc": float,
+                "psc": float,
+                "i0": float,
+                "p0": float,
+                "vg": str,
+                "uhv": int,
+                "ulv": int,
+                "du1": float,
+                "du0.8": float,
+                "eff1 100%": float,
+                "eff0.8 100%": float,
+                "eff1 75%": float,
+                "eff0.8 75%": float,
+            },
+        ).fillna({"manufacturer": "", "efficiency": "", "range": "", "oil": ""})
 
     @classmethod
     def _get_catalogue(
@@ -970,10 +1077,10 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         manufacturer: str | re.Pattern[str] | None,
         range: str | re.Pattern[str] | None,
         efficiency: str | re.Pattern[str] | None,
-        type: str | re.Pattern[str] | None,
+        vg: str | re.Pattern[str] | None,
         sn: float | None,
-        up: float | None,
-        us: float | None,
+        uhv: float | None,
+        ulv: float | None,
         raise_if_not_found: bool,
     ) -> tuple[pd.DataFrame, str]:
         # Get the catalogue data
@@ -988,7 +1095,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             (manufacturer, "manufacturer", "manufacturer", "manufacturers"),
             (range, "range", "range", "ranges"),
             (efficiency, "efficiency", "efficiency", "efficiencies"),
-            (type, "type", "type", "types"),
+            (vg, "vg", "vector group", "vector groups"),
         ):
             if pd.isna(value):
                 continue
@@ -1003,13 +1110,13 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
                     query_msg_list=query_msg_list,
                 )
             catalogue_data = catalogue_data.loc[mask, :]
-            query_msg_list.append(f"{display_name}={value!r}")
+            query_msg_list.append(f"{column_name}={value!r}")
 
         # Filter on float
         for value, column_name, display_name, display_name_plural, display_unit in (
             (sn, "sn", "nominal power", "nominal powers", "kVA"),
-            (up, "up", "primary side voltage", "primary side voltages", "kV"),
-            (us, "us", "secondary side voltage", "secondary side voltages", "kV"),
+            (uhv, "uhv", "high voltage", "high voltages", "kV"),
+            (ulv, "ulv", "low voltage", "low voltages", "kV"),
         ):
             if pd.isna(value):
                 continue
@@ -1024,7 +1131,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
                     query_msg_list=query_msg_list,
                 )
             catalogue_data = catalogue_data.loc[mask, :]
-            query_msg_list.append(f"{display_name}={value/1000:.1f} {display_unit}")
+            query_msg_list.append(f"{column_name}={value/1000:.1f} {display_unit}")
 
         return catalogue_data, ", ".join(query_msg_list)
 
@@ -1033,13 +1140,14 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
     def from_catalogue(
         cls,
         name: str | re.Pattern[str] | None = None,
+        *,
         manufacturer: str | re.Pattern[str] | None = None,
         range: str | re.Pattern[str] | None = None,
         efficiency: str | re.Pattern[str] | None = None,
-        type: str | re.Pattern[str] | None = None,
+        vg: str | re.Pattern[str] | None = None,
         sn: float | Q_[float] | None = None,
-        up: float | Q_[float] | None = None,
-        us: float | Q_[float] | None = None,
+        uhv: float | Q_[float] | None = None,
+        ulv: float | Q_[float] | None = None,
         id: Id | None = None,
     ) -> Self:
         """Build a transformer parameters from one in the catalogue.
@@ -1047,6 +1155,8 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         Args:
             name:
                 The name of the transformer to get from the catalogue. It can be a regular expression.
+                The name is subject to change when the catalogue is updated. Prefer using the other
+                filters.
 
             manufacturer:
                 The name of the manufacturer to get. It can be a regular expression.
@@ -1057,17 +1167,17 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             efficiency:
                 The efficiency of the transformer get. It can be a regular expression.
 
-            type:
-                The type of the transformer to get. It can be a regular expression.
+            vg:
+                The vector group of the transformer to get. It can be a regular expression.
 
             sn:
                 The nominal power of the transformer to get.
 
-            up:
-                The primary side voltage of the transformer to get.
+            uhv:
+                The rated phase-to-phase voltage of the HV side of the transformer to get.
 
-            us:
-                The secondary side voltage of the transformer to get.
+            ulv:
+                The rated no-load phase-to-phase voltage of the LV side of the transformer to get.
 
             id:
                 A unique ID for the created line parameters object (optional). If ``None``
@@ -1084,10 +1194,10 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             manufacturer=manufacturer,
             range=range,
             efficiency=efficiency,
-            type=type,
+            vg=vg,
             sn=sn,
-            up=up,
-            us=us,
+            uhv=uhv,
+            ulv=ulv,
             raise_if_not_found=True,
         )
 
@@ -1106,9 +1216,9 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             id = catalogue_data.at[idx, "name"]
         return cls.from_open_and_short_circuit_tests(
             id=id,
-            type=catalogue_data.at[idx, "type"],
-            up=catalogue_data.at[idx, "up"],
-            us=catalogue_data.at[idx, "us"],
+            vg=catalogue_data.at[idx, "vg"],
+            uhv=catalogue_data.at[idx, "uhv"],
+            ulv=catalogue_data.at[idx, "ulv"],
             sn=catalogue_data.at[idx, "sn"],
             p0=catalogue_data.at[idx, "p0"],
             i0=catalogue_data.at[idx, "i0"],
@@ -1124,13 +1234,14 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
     def get_catalogue(
         cls,
         name: str | re.Pattern[str] | None = None,
+        *,
         manufacturer: str | re.Pattern[str] | None = None,
         range: str | re.Pattern[str] | None = None,
         efficiency: str | re.Pattern[str] | None = None,
-        type: str | re.Pattern[str] | None = None,
+        vg: str | re.Pattern[str] | None = None,
         sn: float | Q_[float] | None = None,
-        up: float | Q_[float] | None = None,
-        us: float | Q_[float] | None = None,
+        uhv: float | Q_[float] | None = None,
+        ulv: float | Q_[float] | None = None,
     ) -> pd.DataFrame:
         """Get the catalogue of available transformers.
 
@@ -1150,17 +1261,17 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             efficiency:
                 An optional efficiency to filter the output. It can be a regular expression.
 
-            type:
-                An optional type of the transformer. It can be a regular expression.
+            vg:
+                An optional vector group of the transformer. It can be a regular expression.
 
             sn:
                 An optional nominal power of the transformer to filter the output.
 
-            up:
-                An optional primary side voltage to filter the output.
+            uhv:
+                An optional rated high voltage to filter the output.
 
-            us:
-                An optional secondary side voltage to filter the output.
+            ulv:
+                An optional rated no-load low voltage to filter the output.
 
         Returns:
             The catalogue data as a dataframe.
@@ -1170,15 +1281,15 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             manufacturer=manufacturer,
             range=range,
             efficiency=efficiency,
-            type=type,
+            vg=vg,
             sn=sn,
-            up=up,
-            us=us,
+            uhv=uhv,
+            ulv=ulv,
             raise_if_not_found=False,
         )
         catalogue_data["sn"] /= 1000  # kVA
-        catalogue_data["up"] /= 1000  # kV
-        catalogue_data["us"] /= 1000  # kV
+        catalogue_data["uhv"] /= 1000  # kV
+        catalogue_data["ulv"] /= 1000  # kV
         return (
             catalogue_data.drop(columns=["i0", "p0", "psc", "vsc"])
             .rename(
@@ -1187,10 +1298,12 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
                     "manufacturer": "Manufacturer",
                     "range": "Product range",
                     "efficiency": "Efficiency",
-                    "type": "Type",
+                    "vg": "Vector group",
                     "sn": "Nominal power (kVA)",
-                    "up": "Primary voltage (kV)",
-                    "us": "Secondary voltage (kV)",
+                    "uhv": "High voltage (kV)",
+                    "ulv": "Low voltage (kV)",
+                    "type": "Type",
+                    "oil": "Oil",
                     # # If we ever want to display these columns
                     # "i0": "No-load current (%)",
                     # "p0": "No-load losses (W)",
@@ -1205,22 +1318,31 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
     # Utils
     #
     @classmethod
-    def extract_windings(cls, string: str) -> tuple[str, str, int]:
-        """Extract the windings and phase displacement from a given string
+    def extract_windings(cls, vg: str) -> tuple[str, str, int]:
+        """Extract the windings and phase displacement from a given vector group
 
         Args:
-            string:
-                The string to parse.
+            vg:
+                The vector group of the transformer.
+
+                For three-phase transformers, ``Dyn11`` denotes a delta-wye connection with -30° phase
+                displacement. Allowed windings are ``D`` for delta, ``Y`` for wye, ``Z`` for zigzag.
+
+                For single-phase transformers, ``Ii0`` denotes a normal in-phase connection and
+                ``Ii6`` denotes an inverted connection.
+
+                For center-tapped transformers, ``Iii0`` denotes a normal in-phase connection and
+                ``Iii6`` denotes an inverted connection.
 
         Returns:
-            The first winding, the second winding, and the phase displacement
+            The first winding, the second winding, and the phase displacement.
         """
-        match = cls._EXTRACT_WINDINGS_RE.fullmatch(string=string)
-        if match:
+        match = re.fullmatch(r"^(?P<w1>(D|Yn?|Zn?|I))(?P<w2>(d|yn?|zn?|i|ii))(?P<p>(0|1|5|6|11))$", vg, flags=re.I)
+        if match and vg.capitalize() in cls.allowed_vector_groups:
             groups = match.groupdict()
-            winding1, winding2, phase_displacement = groups["w1"], groups["w2"], groups["p"]
-            return winding1.upper(), winding2.lower(), int(phase_displacement)
+            winding1, winding2, phase_displacement = groups["w1"].upper(), groups["w2"].lower(), int(groups["p"])
+            return winding1, winding2, phase_displacement
         else:
-            msg = f"Transformer windings cannot be extracted from the string {string!r}."
+            msg = f"Invalid vector group: {vg!r}. Expected one of {sorted(cls.allowed_vector_groups)}."
             logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_VECTOR_GROUP)

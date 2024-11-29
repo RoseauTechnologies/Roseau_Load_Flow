@@ -133,10 +133,10 @@ def test_to_dict():
 
     # Same id, different transformer parameters -> fail
     tp1 = TransformerParameters.from_open_and_short_circuit_tests(
-        id="t", type="Dyn11", up=20000, us=400, sn=160 * 1e3, p0=460, i0=2.3 / 100, psc=2350, vsc=4 / 100
+        id="t", vg="Dyn11", uhv=20000, ulv=400, sn=160 * 1e3, p0=460, i0=2.3 / 100, psc=2350, vsc=4 / 100
     )
     tp2 = TransformerParameters.from_open_and_short_circuit_tests(
-        id="t", type="Dyn11", up=20000, us=400, sn=200 * 1e3, p0=460, i0=2.3 / 100, psc=2350, vsc=4 / 100
+        id="t", vg="Dyn11", uhv=20000, ulv=400, sn=200 * 1e3, p0=460, i0=2.3 / 100, psc=2350, vsc=4 / 100
     )
     transformer1 = Transformer(id="Transformer1", bus1=source_bus, bus2=load_bus, parameters=tp1, geometry=geom)
     transformer2 = Transformer(id="Transformer2", bus1=source_bus, bus2=load_bus, parameters=tp2, geometry=geom)
@@ -159,7 +159,7 @@ def test_to_dict():
 
     # Same id, same transformer parameters -> ok
     tp2 = TransformerParameters.from_open_and_short_circuit_tests(
-        id="t", type="Dyn11", up=20000, us=400, sn=160 * 1e3, p0=460, i0=2.3 / 100, psc=2350, vsc=4 / 100
+        id="t", vg="Dyn11", uhv=20000, ulv=400, sn=160 * 1e3, p0=460, i0=2.3 / 100, psc=2350, vsc=4 / 100
     )
     transformer2.parameters = tp2
     en.to_dict(include_results=False)
@@ -497,8 +497,8 @@ def test_v0_to_v3_converter():
             {
                 "name": "160kVA_Dd0",
                 "sn": 160000.0,
-                "up": 20000.0,
-                "us": 400.0,
+                "uhv": 20000.0,
+                "ulv": 400.0,
                 "i0": 0.023,
                 "p0": 460.0,
                 "psc": 2350.0,
@@ -508,8 +508,8 @@ def test_v0_to_v3_converter():
             {
                 "name": "160kVA_Dd6",
                 "sn": 160000.0,
-                "up": 20000.0,
-                "us": 400.0,
+                "uhv": 20000.0,
+                "ulv": 400.0,
                 "i0": 0.023,
                 "p0": 460.0,
                 "psc": 2350.0,
@@ -519,8 +519,8 @@ def test_v0_to_v3_converter():
             {
                 "name": "160kVA_Dyn11",
                 "sn": 160000.0,
-                "up": 20000.0,
-                "us": 400.0,
+                "uhv": 20000.0,
+                "ulv": 400.0,
                 "i0": 0.023,
                 "p0": 460.0,
                 "psc": 2350.0,
@@ -530,8 +530,8 @@ def test_v0_to_v3_converter():
             {
                 "name": "160kVA_Dyn5",
                 "sn": 160000.0,
-                "up": 20000.0,
-                "us": 400.0,
+                "uhv": 20000.0,
+                "ulv": 400.0,
                 "i0": 0.023,
                 "p0": 460.0,
                 "psc": 2350.0,
@@ -541,8 +541,8 @@ def test_v0_to_v3_converter():
             {
                 "name": "160kVA_Dzn0",
                 "sn": 160000.0,
-                "up": 20000.0,
-                "us": 400.0,
+                "uhv": 20000.0,
+                "ulv": 400.0,
                 "i0": 0.023,
                 "p0": 460.0,
                 "psc": 2350.0,
@@ -552,8 +552,8 @@ def test_v0_to_v3_converter():
             {
                 "name": "160kVA_Dzn6",
                 "sn": 160000.0,
-                "up": 20000.0,
-                "us": 400.0,
+                "uhv": 20000.0,
+                "ulv": 400.0,
                 "i0": 0.023,
                 "p0": 460.0,
                 "psc": 2350.0,
@@ -563,8 +563,8 @@ def test_v0_to_v3_converter():
             {
                 "name": "160kVA_Yd11",
                 "sn": 160000.0,
-                "up": 20000.0,
-                "us": 400.0,
+                "uhv": 20000.0,
+                "ulv": 400.0,
                 "i0": 0.023,
                 "p0": 460.0,
                 "psc": 2350.0,
@@ -574,8 +574,8 @@ def test_v0_to_v3_converter():
             {
                 "name": "160kVA_Yd5",
                 "sn": 160000.0,
-                "up": 20000.0,
-                "us": 400.0,
+                "uhv": 20000.0,
+                "ulv": 400.0,
                 "i0": 0.023,
                 "p0": 460.0,
                 "psc": 2350.0,
@@ -585,8 +585,8 @@ def test_v0_to_v3_converter():
             {
                 "name": "160kVA_Yyn0",
                 "sn": 160000.0,
-                "up": 20000.0,
-                "us": 400.0,
+                "uhv": 20000.0,
+                "ulv": 400.0,
                 "i0": 0.023,
                 "p0": 460.0,
                 "psc": 2350.0,
@@ -596,8 +596,8 @@ def test_v0_to_v3_converter():
             {
                 "name": "160kVA_Yyn6",
                 "sn": 160000.0,
-                "up": 20000.0,
-                "us": 400.0,
+                "uhv": 20000.0,
+                "ulv": 400.0,
                 "i0": 0.023,
                 "p0": 460.0,
                 "psc": 2350.0,
@@ -607,8 +607,8 @@ def test_v0_to_v3_converter():
             {
                 "name": "160kVA_Yzn11",
                 "sn": 160000.0,
-                "up": 20000.0,
-                "us": 400.0,
+                "uhv": 20000.0,
+                "ulv": 400.0,
                 "i0": 0.023,
                 "p0": 460.0,
                 "psc": 2350.0,
@@ -618,8 +618,8 @@ def test_v0_to_v3_converter():
             {
                 "name": "160kVA_Yzn5",
                 "sn": 160000.0,
-                "up": 20000.0,
-                "us": 400.0,
+                "uhv": 20000.0,
+                "ulv": 400.0,
                 "i0": 0.023,
                 "p0": 460.0,
                 "psc": 2350.0,
@@ -796,10 +796,10 @@ def test_v0_to_v3_converter():
     tp = {
         "160kVA_Dd0": TransformerParameters.from_open_and_short_circuit_tests(
             id="160kVA_Dd0",
-            type="dd0",
+            vg="dd0",
             sn=160000.0,
-            up=20000.0,
-            us=400.0,
+            uhv=20000.0,
+            ulv=400.0,
             i0=0.023,
             p0=460.0,
             psc=2350.0,
@@ -807,10 +807,10 @@ def test_v0_to_v3_converter():
         ),
         "160kVA_Dd6": TransformerParameters.from_open_and_short_circuit_tests(
             id="160kVA_Dd6",
-            type="dd6",
+            vg="dd6",
             sn=160000.0,
-            up=20000.0,
-            us=400.0,
+            uhv=20000.0,
+            ulv=400.0,
             i0=0.023,
             p0=460.0,
             psc=2350.0,
@@ -818,10 +818,10 @@ def test_v0_to_v3_converter():
         ),
         "160kVA_Dyn11": TransformerParameters.from_open_and_short_circuit_tests(
             id="160kVA_Dyn11",
-            type="dyn11",
+            vg="dyn11",
             sn=160000.0,
-            up=20000.0,
-            us=400.0,
+            uhv=20000.0,
+            ulv=400.0,
             i0=0.023,
             p0=460.0,
             psc=2350.0,
@@ -829,10 +829,10 @@ def test_v0_to_v3_converter():
         ),
         "160kVA_Dyn5": TransformerParameters.from_open_and_short_circuit_tests(
             id="160kVA_Dyn5",
-            type="dyn5",
+            vg="dyn5",
             sn=160000.0,
-            up=20000.0,
-            us=400.0,
+            uhv=20000.0,
+            ulv=400.0,
             i0=0.023,
             p0=460.0,
             psc=2350.0,
@@ -840,10 +840,10 @@ def test_v0_to_v3_converter():
         ),
         "160kVA_Dzn0": TransformerParameters.from_open_and_short_circuit_tests(
             id="160kVA_Dzn0",
-            type="dzn0",
+            vg="dzn0",
             sn=160000.0,
-            up=20000.0,
-            us=400.0,
+            uhv=20000.0,
+            ulv=400.0,
             i0=0.023,
             p0=460.0,
             psc=2350.0,
@@ -851,10 +851,10 @@ def test_v0_to_v3_converter():
         ),
         "160kVA_Dzn6": TransformerParameters.from_open_and_short_circuit_tests(
             id="160kVA_Dzn6",
-            type="dzn6",
+            vg="dzn6",
             sn=160000.0,
-            up=20000.0,
-            us=400.0,
+            uhv=20000.0,
+            ulv=400.0,
             i0=0.023,
             p0=460.0,
             psc=2350.0,
@@ -862,10 +862,10 @@ def test_v0_to_v3_converter():
         ),
         "160kVA_Yd11": TransformerParameters.from_open_and_short_circuit_tests(
             id="160kVA_Yd11",
-            type="yd11",
+            vg="yd11",
             sn=160000.0,
-            up=20000.0,
-            us=400.0,
+            uhv=20000.0,
+            ulv=400.0,
             i0=0.023,
             p0=460.0,
             psc=2350.0,
@@ -873,10 +873,10 @@ def test_v0_to_v3_converter():
         ),
         "160kVA_Yd5": TransformerParameters.from_open_and_short_circuit_tests(
             id="160kVA_Yd5",
-            type="yd5",
+            vg="yd5",
             sn=160000.0,
-            up=20000.0,
-            us=400.0,
+            uhv=20000.0,
+            ulv=400.0,
             i0=0.023,
             p0=460.0,
             psc=2350.0,
@@ -884,10 +884,10 @@ def test_v0_to_v3_converter():
         ),
         "160kVA_Yyn0": TransformerParameters.from_open_and_short_circuit_tests(
             id="160kVA_Yyn0",
-            type="yyn0",
+            vg="yyn0",
             sn=160000.0,
-            up=20000.0,
-            us=400.0,
+            uhv=20000.0,
+            ulv=400.0,
             i0=0.023,
             p0=460.0,
             psc=2350.0,
@@ -895,10 +895,10 @@ def test_v0_to_v3_converter():
         ),
         "160kVA_Yyn6": TransformerParameters.from_open_and_short_circuit_tests(
             id="160kVA_Yyn6",
-            type="yyn6",
+            vg="yyn6",
             sn=160000.0,
-            up=20000.0,
-            us=400.0,
+            uhv=20000.0,
+            ulv=400.0,
             i0=0.023,
             p0=460.0,
             psc=2350.0,
@@ -906,10 +906,10 @@ def test_v0_to_v3_converter():
         ),
         "160kVA_Yzn11": TransformerParameters.from_open_and_short_circuit_tests(
             id="160kVA_Yzn11",
-            type="yzn11",
+            vg="yzn11",
             sn=160000.0,
-            up=20000.0,
-            us=400.0,
+            uhv=20000.0,
+            ulv=400.0,
             i0=0.023,
             p0=460.0,
             psc=2350.0,
@@ -917,10 +917,10 @@ def test_v0_to_v3_converter():
         ),
         "160kVA_Yzn5": TransformerParameters.from_open_and_short_circuit_tests(
             id="160kVA_Yzn5",
-            type="yzn5",
+            vg="yzn5",
             sn=160000.0,
-            up=20000.0,
-            us=400.0,
+            uhv=20000.0,
+            ulv=400.0,
             i0=0.023,
             p0=460.0,
             psc=2350.0,
@@ -1566,7 +1566,7 @@ def test_v2_to_v3_converter_max_loading():
     #     "ulv": rlf.Q_(400, "V"),  # V
     #     "uhv": rlf.Q_(20, "kV"),  # V
     #     "sn": rlf.Q_(50, "kVA"),  # VA
-    #     "type": "yzn11",
+    #     "vg": "yzn11",
     #     "max_power": rlf.Q_(60, "kVA"),
     # }
     # tp = rlf.TransformerParameters(**data)

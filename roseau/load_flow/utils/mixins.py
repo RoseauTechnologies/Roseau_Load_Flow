@@ -295,7 +295,7 @@ class CatalogueMixin(Generic[_T], metaclass=ABCMeta):
         else:
             try:
                 pattern = re.compile(pattern=value, flags=re.IGNORECASE)
-                result = vector.str.fullmatch(pattern)
+                result = vector.str.fullmatch(pattern) | (vector.str.lower() == value.lower())
             except re.error:
                 # fallback to string comparison
                 result = vector.str.lower() == value.lower()

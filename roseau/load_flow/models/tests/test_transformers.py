@@ -2,11 +2,12 @@ import numpy as np
 import pytest
 
 from roseau.load_flow import Q_, RoseauLoadFlowException, RoseauLoadFlowExceptionCode
+from roseau.load_flow import PositiveSequence as PosSeq
 from roseau.load_flow.models import Bus, Transformer, TransformerParameters
 
 
 def test_max_power():
-    tp = TransformerParameters.from_catalogue(name="FT_Standard_Standard_100kVA")
+    tp = TransformerParameters.from_catalogue(name="FT 100kVA 15/20kV(20) 400V Dyn11")
     assert tp.sn == Q_(100, "kVA")
 
     bus1 = Bus(id="bus1", phases="abc")
@@ -24,7 +25,7 @@ def test_max_loading():
     bus1 = Bus(id="bus1", phases="abc")
     bus2 = Bus(id="bus2", phases="abc")
     tp = TransformerParameters.from_open_and_short_circuit_tests(
-        id="tp", psc=1350.0, p0=145.0, i0=1.8 / 100, us=400, up=20000, sn=50 * 1e3, vsc=4 / 100, type="yzn11"
+        id="tp", psc=1350.0, p0=145.0, i0=1.8 / 100, ulv=400, uhv=20000, sn=50 * 1e3, vsc=4 / 100, vg="yzn11"
     )
     transformer = Transformer(id="transformer", bus1=bus1, bus2=bus2, parameters=tp)
 
@@ -44,15 +45,13 @@ def test_res_violated():
     bus1 = Bus(id="bus1", phases="abc")
     bus2 = Bus(id="bus2", phases="abcn")
     tp = TransformerParameters.from_open_and_short_circuit_tests(
-        id="tp", psc=1350.0, p0=145.0, i0=1.8 / 100, us=400, up=20000, sn=50 * 1e3, vsc=4 / 100, type="yzn11"
+        id="tp", psc=1350.0, p0=145.0, i0=1.8 / 100, ulv=400, uhv=20000, sn=50 * 1e3, vsc=4 / 100, vg="yzn11"
     )
     transformer = Transformer(id="transformer", bus1=bus1, bus2=bus2, parameters=tp)
-    direct_seq = np.exp([0, -2 / 3 * np.pi * 1j, 2 / 3 * np.pi * 1j])
-    direct_seq_neutral = np.concatenate([direct_seq, [0]])
 
-    bus1._res_potentials = 20_000 * direct_seq
-    bus2._res_potentials = 230 * direct_seq_neutral
-    transformer._res_currents = 0.8 * direct_seq, -65 * direct_seq_neutral
+    bus1._res_potentials = 20_000 * PosSeq
+    bus2._res_potentials = np.concatenate([230 * PosSeq, [0]])
+    transformer._res_currents = 0.8 * PosSeq, np.concatenate([-65 * PosSeq, [0]])
 
     # Default value
     assert transformer.max_loading == Q_(1, "")
@@ -61,38 +60,36 @@ def test_res_violated():
     # No constraint violated
     transformer.max_loading = 1
     assert transformer.res_violated is False
-    assert np.allclose(transformer.res_loading, 0.8 * 20 * 3 / 50)
+    np.testing.assert_allclose(transformer.res_loading.m, 0.8 * 20 * 3 / 50)
 
     # Two violations
     transformer.max_loading = 4 / 5
     assert transformer.res_violated is True
-    assert np.allclose(transformer.res_loading, 0.8 * 20 * 3 / 40)
+    np.testing.assert_allclose(transformer.res_loading.m, 0.8 * 20 * 3 / 40)
 
     # Primary side violation
     transformer.max_loading = Q_(45, "%")
     assert transformer.res_violated is True
-    assert np.allclose(transformer.res_loading, 0.8 * 20 * 3 / (50 * 0.45))
+    np.testing.assert_allclose(transformer.res_loading.m, 0.8 * 20 * 3 / (50 * 0.45))
 
     # Secondary side violation
     transformer.max_loading = 1
-    transformer._res_currents = 0.8 * direct_seq, -80 * direct_seq_neutral
+    transformer._res_currents = 0.8 * PosSeq, np.concatenate([-80 * PosSeq, [0]])
     assert transformer.res_violated is True
-    assert np.allclose(transformer.res_loading, 80 * 230 * 3 / 50_000)
+    np.testing.assert_allclose(transformer.res_loading.m, 80 * 230 * 3 / 50_000)
 
 
 def test_transformer_results():
     bus1 = Bus(id="bus1", phases="abc")
     bus2 = Bus(id="bus2", phases="abcn")
     tp = TransformerParameters.from_open_and_short_circuit_tests(
-        id="tp", psc=1350, p0=145, i0=0.018, us=400, up=20e3, sn=50e3, vsc=0.04, type="yzn11"
+        id="tp", psc=1350, p0=145, i0=0.018, ulv=400, uhv=20e3, sn=50e3, vsc=0.04, vg="yzn11"
     )
     transformer = Transformer(id="transformer", bus1=bus1, bus2=bus2, parameters=tp)
-    direct_seq = np.exp([0, -2 / 3 * np.pi * 1j, 2 / 3 * np.pi * 1j])
-    direct_seq_neutral = np.concatenate([direct_seq, [0]])
 
-    bus1._res_potentials = 20_000 * direct_seq
-    bus2._res_potentials = 230 * direct_seq_neutral
-    transformer._res_currents = 0.8 * direct_seq, -65 * direct_seq_neutral
+    bus1._res_potentials = 20_000 * PosSeq
+    bus2._res_potentials = np.concatenate([230 * PosSeq, [0]])
+    transformer._res_currents = 0.8 * PosSeq, np.concatenate([-65 * PosSeq, [0]])
 
     res_p1, res_p2 = (p.m for p in transformer.res_powers)
 

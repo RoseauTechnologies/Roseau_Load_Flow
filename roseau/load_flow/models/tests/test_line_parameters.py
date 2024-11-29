@@ -364,9 +364,10 @@ def test_sym():
     # With the bad model of PwF
     # line_data = {"id": "NKBA NOR  25.00 kV", "un": 25000.0, "in": 277.0000100135803}
 
-    z_line, y_shunt = LineParameters._sym_to_zy(
-        id="NKBA NOR  25.00 kV", z0=0.0j, z1=1.0 + 1.0j, zn=0.0j, zpn=0.0j, y0=0.0j, y1=1e-06j, bn=0.0, bpn=0.0
-    )
+    with pytest.warns(UserWarning, match=r"does not have neutral elements"):
+        z_line, y_shunt = LineParameters._sym_to_zy(
+            id="NKBA NOR  25.00 kV", z0=0.0j, z1=1.0 + 1.0j, zn=0.0j, zpn=0.0j, y0=0.0j, y1=1e-06j, bn=0.0, bpn=0.0
+        )
     z_line_expected = (1 + 1j) * np.eye(3)
     npt.assert_allclose(z_line, z_line_expected)
     y_shunt_expected = 1e-6j * np.eye(3)
@@ -374,17 +375,18 @@ def test_sym():
 
     # line_data = {"id": "NKBA 4x150   1.00 kV", "un": 1000.0, "in": 361.0000014305115}
     # Downgraded model because of PwF bad data
-    z_line, y_shunt = LineParameters._sym_to_zy(
-        id="NKBA 4x150   1.00 kV",
-        z0=0.5 + 0.3050000071525574j,
-        z1=0.125 + 0.0860000029206276j,
-        zn=0.0j,
-        zpn=0.0j,
-        y0=0.0j,
-        y1=0.0j,
-        bn=0.0,
-        bpn=0.0,
-    )
+    with pytest.warns(UserWarning, match=r"does not have neutral elements"):
+        z_line, y_shunt = LineParameters._sym_to_zy(
+            id="NKBA 4x150   1.00 kV",
+            z0=0.5 + 0.3050000071525574j,
+            z1=0.125 + 0.0860000029206276j,
+            zn=0.0j,
+            zpn=0.0j,
+            y0=0.0j,
+            y1=0.0j,
+            bn=0.0,
+            bpn=0.0,
+        )
     z_line_expected = np.array(
         [
             [0.25 + 0.159j, 0.125 + 0.073j, 0.125 + 0.073j],
@@ -1000,8 +1002,8 @@ def test_equality():
 
     other_data = {
         "id": lp.id + " other",
-        "z_line": lp.z_line.m + 1,
-        "y_shunt": lp.y_shunt.m + 1,
+        "z_line": lp.z_line.m + 0.1j,
+        "y_shunt": lp.y_shunt.m + 0.1j,
         "ampacities": lp.ampacities.m + 1,
         "line_type": LineType.OVERHEAD,
         "materials": Material.CU,

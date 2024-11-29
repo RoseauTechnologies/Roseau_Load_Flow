@@ -18,4 +18,4 @@ def test_versions(capsys):
     assert lines[9] == "----------------------"
     for i, (key, value) in enumerate(_get_dependency_info().items()):
         assert re.fullmatch(pattern=rf"{key}\s+{value}", string=lines[10 + i])
-    assert lines[20] == ""
+    assert lines[19] == ""

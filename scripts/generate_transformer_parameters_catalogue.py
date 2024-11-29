@@ -23,14 +23,14 @@ if __name__ == "__main__":
         destination_path.mkdir(exist_ok=True, parents=True)
 
         # Get parameters
-        up = Q_(df.at[idx, "up"], "V")  # Phase-to-phase nominal voltages of the primary side
-        us = Q_(df.at[idx, "us"], "V")  # Phase-to-phase nominal voltages of the secondary side
+        uhv = Q_(df.at[idx, "uhv"], "V")  # Phase-to-phase nominal voltages of the primary side
+        ulv = Q_(df.at[idx, "ulv"], "V")  # Phase-to-phase nominal voltages of the secondary side
         sn = Q_(df.at[idx, "sn"], "VA")  # Nominal power
         i0 = Q_(np.round(df.at[idx, "i0"], decimals=3), "")  # Current during open-circuit test
         p0 = Q_(df.at[idx, "p0"], "W")  # Losses during open-circuit test
         psc = Q_(df.at[idx, "psc"], "W")  # Losses during short-circuit test
         vsc = Q_(df.at[idx, "vsc"], "")  # Voltages on LV side during short-circuit test
-        type = df.at[idx, "type"]
+        vg = df.at[idx, "vg"]
 
         # Check the canonical name
         sn_kva = int(sn.m_as("kVA"))
@@ -38,7 +38,7 @@ if __name__ == "__main__":
 
         # Generate transformer parameters
         tp = TransformerParameters.from_open_and_short_circuit_tests(
-            id=id, type=type, up=up, us=us, sn=sn, p0=p0, i0=i0, psc=psc, vsc=vsc
+            id=id, vg=vg, uhv=uhv, ulv=ulv, sn=sn, p0=p0, i0=i0, psc=psc, vsc=vsc
         )
         assert tp.z2 is not None, id
         assert tp.ym is not None, id

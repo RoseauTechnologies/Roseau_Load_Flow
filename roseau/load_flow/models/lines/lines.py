@@ -262,8 +262,7 @@ class Line(AbstractBranch):
 
     @property
     def max_currents(self) -> Q_[FloatArray] | None:
-        """The maximum current of the line (in A). It takes into account the `max_loading` of the line and the
-        `ampacities` of the parameters."""
+        """The maximum current of the line defined as `max_loading * parameters.ampacities` (in A)."""
         # Do not add a setter. Only `max_loading` can be altered by the user
         amp = self._parameters._ampacities
         return None if amp is None else Q_(amp * self._max_loading, "A")
