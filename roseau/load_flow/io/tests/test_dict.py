@@ -1,4 +1,6 @@
 import copy
+import importlib.resources as resources
+import json
 
 import numpy as np
 import pytest
@@ -1338,218 +1340,26 @@ def test_v1_to_v2_converter():
     assert_json_close(net_dict, expected_dict)
 
 
-def test_v2_to_v3_converter(recwarn):
-    # Do not change `dict_v2` or the network manually, add/update the converters until the test passes
-    dict_v2 = {
-        "version": 2,
-        "is_multiphase": True,
-        "buses": [
-            {
-                "geometry": {"coordinates": (0.0, 0.0), "type": "Point"},
-                "id": 1,
-                "max_voltage": 420,
-                "min_voltage": 380,
-                "phases": "abc",
-            },
-            {
-                "geometry": {"coordinates": (0.0, 1.0), "type": "Point"},
-                "id": 2,
-                "max_voltage": 420,
-                "min_voltage": 380,
-                "phases": "abc",
-            },
-        ],
-        "grounds": [],
-        "lines": [
-            {
-                "bus1": 1,
-                "bus2": 2,
-                "geometry": {"coordinates": ((0.0, 0.0), (1.0, 0.0)), "type": "LineString"},
-                "id": 1,
-                "length": 1.0,
-                "params_id": "lp",
-                "phases": "abc",
-            }
-        ],
-        "lines_params": [
-            {
-                "id": "lp",
-                "z_line": [
-                    [[0.35, 0.0, 0.0], [0.0, 0.35, 0.0], [0.0, 0.0, 0.35]],
-                    [[0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]],
-                ],
-            }
-        ],
-        "loads": [
-            {
-                "bus": 2,
-                "connect_neutral": None,
-                "flexible_params": [
-                    {
-                        "control_p": {
-                            "alpha": 1000.0,
-                            "epsilon": 1e-08,
-                            "type": "p_max_u_consumption",
-                            "u_down": 19000,
-                            "u_min": 18000,
-                        },
-                        "control_q": {"type": "constant"},
-                        "projection": {"alpha": 1000.0, "epsilon": 1e-08, "type": "euclidean"},
-                        "s_max": 45000.0,
-                    },
-                    {
-                        "control_p": {
-                            "alpha": 1000.0,
-                            "epsilon": 1e-08,
-                            "type": "p_max_u_consumption",
-                            "u_down": 19000,
-                            "u_min": 18000,
-                        },
-                        "control_q": {"type": "constant"},
-                        "projection": {"alpha": 1000.0, "epsilon": 1e-08, "type": "euclidean"},
-                        "s_max": 45000.0,
-                    },
-                    {
-                        "control_p": {
-                            "alpha": 1000.0,
-                            "epsilon": 1e-08,
-                            "type": "p_max_u_consumption",
-                            "u_down": 19000,
-                            "u_min": 18000,
-                        },
-                        "control_q": {"type": "constant"},
-                        "projection": {"alpha": 1000.0, "epsilon": 1e-08, "type": "euclidean"},
-                        "s_max": 45000.0,
-                    },
-                ],
-                "id": 1,
-                "phases": "abc",
-                "powers": [[38000.0, 12489.9959967968], [38000.0, 12489.9959967968], [38000.0, 12489.9959967968]],
-                "type": "power",
-            },
-            {
-                "bus": 2,
-                "connect_neutral": None,
-                "id": 2,
-                "phases": "abc",
-                "powers": [
-                    [40459.7989783205, 20229.89948916025],
-                    [40459.79897941102, 20229.89948970551],
-                    [40459.79897941102, 20229.89948970551],
-                ],
-                "type": "power",
-            },
-        ],
-        "potential_refs": [{"bus": 1, "id": "pref", "phases": None}],
-        "sources": [
-            {
-                "bus": 1,
-                "connect_neutral": None,
-                "id": 1,
-                "phases": "abc",
-                "voltages": [
-                    [11547.005383792515, 0.0],
-                    [-5773.502691896258, -10000.000000179687],
-                    [-5773.502691896258, 10000.000000179687],
-                ],
-            }
-        ],
-        "switches": [],
-        "transformers": [],
-        "transformers_params": [],
-    }
-
-    # # Buses
-    # buses = {
-    #     1: Bus(
-    #         id=1,
-    #         phases="abc",
-    #         geometry=Point(0.0, 0.0),
-    #         nominal_voltage=400,
-    #         min_voltage_level=0.95,
-    #         max_voltage_level=1.05,
-    #     ),
-    #     2: Bus(
-    #         id=2,
-    #         phases="abc",
-    #         geometry=Point(0.0, 1.0),
-    #         nominal_voltage=400,
-    #         min_voltage_level=0.95,
-    #         max_voltage_level=1.05,
-    #     ),
-    # }
-    #
-    # # Potential reference
-    # potential_ref = PotentialRef(id="pref", element=buses[1])
-    #
-    # # Sources and loads
-    # vs = VoltageSource(
-    #     id=1,
-    #     bus=buses[1],
-    #     voltages=[
-    #         11547.005383792515 + 0.0j,
-    #         -5773.502691896258 + -10000.000000179687j,
-    #         -5773.502691896258 + 10000.000000179687j,
-    #     ],
-    #     phases="abc",
-    # )
-    # fp = FlexibleParameter(
-    #     control_p=Control.p_max_u_consumption(u_min=18_000, u_down=19_000),
-    #     control_q=Control.constant(),
-    #     projection=Projection(type="euclidean"),
-    #     s_max=45e3,
-    # )
-    # power = cmath.rect(40e3, math.acos(0.95))
-    # loads = [
-    #     PowerLoad(id=1, bus=buses[2], phases="abc", powers=[power, power, power], flexible_params=[fp, fp, fp]),
-    #     PowerLoad(
-    #         id=2,
-    #         bus=buses[2],
-    #         phases="abc",
-    #         powers=[
-    #             40459.7989783205 + 20229.89948916025j,
-    #             40459.79897941102 + 20229.89948970551j,
-    #             40459.79897941102 + 20229.89948970551j,
-    #         ],
-    #     ),
-    # ]
-    #
-    # line_parameters = LineParameters(id="lp", z_line=0.35 * np.eye(3, dtype=complex))
-    # lines = {
-    #     1: Line(
-    #         id=1,
-    #         bus1=buses[1],
-    #         bus2=buses[2],
-    #         parameters=line_parameters,
-    #         length=1.0,
-    #         geometry=LineString([(0, 0), (1, 0)]),
-    #     )
-    # }
-    #
-    # net = ElectricalNetwork(
-    #     buses=buses,
-    #     lines=lines,
-    #     transformers=[],
-    #     switches=[],
-    #     loads=loads,
-    #     sources=[vs],
-    #     grounds=[],
-    #     potential_refs=[potential_ref],
-    # )
+def test_v2_to_v3_converter():
+    # Do not change `"network_json_v2.json"`, add/update the converter until the test passes
+    dict_v2 = json.loads(
+        (resources.files("roseau.load_flow.io") / "tests" / "data" / "network_json_v2.json").read_text()
+    )
 
     # Include results=True
     net = ElectricalNetwork.from_dict(data=copy.deepcopy(dict_v2), include_results=True)
     net_dict = net.to_dict(include_results=True)
     expected_dict = copy.deepcopy(dict_v2)
-    recwarn.clear()
-    expected_dict = v2_to_v3_converter(expected_dict)
-    assert len(recwarn) == 1
-    assert (
-        recwarn[0].message.args[0]
-        == "Starting with version 0.11.0 of roseau-load-flow (JSON file v3), `min_voltage` and `max_voltage` are "
-        "replaced with `min_voltage_level`, `max_voltage_level` and `nominal_voltage`. The found values of "
-        "`min_voltage` or `max_voltage` are dropped."
-    )
+    with pytest.warns(
+        UserWarning,
+        match=(
+            r"Starting with version 0.11.0 of roseau-load-flow \(JSON file v3\), `min_voltage` and "
+            r"`max_voltage` are replaced with `min_voltage_level`, `max_voltage_level` and "
+            r"`nominal_voltage`. The found values of `min_voltage` or `max_voltage` are dropped."
+        ),
+    ):
+        expected_dict = v2_to_v3_converter(expected_dict)
+
     assert_json_close(net_dict, expected_dict)
 
 

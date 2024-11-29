@@ -99,12 +99,12 @@ def network_from_dict(  # noqa: C901
             f"Got an outdated network file (version {version}), trying to update to the current format "
             f"(version {NETWORK_JSON_VERSION}). Please save the network again."
         )
-        if version == 0:
+        if version <= 0:
             data = v0_to_v1_converter(data)
             include_results = False  # V0 network dictionaries didn't have results
-        if version == 1:
+        if version <= 1:
             data = v1_to_v2_converter(data)
-        if version == 2:
+        if version <= 2:
             data = v2_to_v3_converter(data)
     else:
         # If we arrive here, we dealt with all legacy versions, it must be the current one
@@ -195,12 +195,13 @@ def network_from_dict(  # noqa: C901
         id = transformer_data["id"]
         phases1 = transformer_data["phases1"]
         phases2 = transformer_data["phases2"]
+        tap = transformer_data["tap"]
         bus1 = buses[transformer_data["bus1"]]
         bus2 = buses[transformer_data["bus2"]]
         geometry = Transformer._parse_geometry(transformer_data.get("geometry"))
         tp = transformers_params[transformer_data["params_id"]]
         transformer = Transformer(
-            id=id, bus1=bus1, bus2=bus2, parameters=tp, phases1=phases1, phases2=phases2, geometry=geometry
+            id=id, bus1=bus1, bus2=bus2, parameters=tp, phases1=phases1, phases2=phases2, tap=tap, geometry=geometry
         )
         if include_results:
             transformer = _assign_branch_currents(branch=transformer, branch_data=transformer_data)
@@ -302,13 +303,13 @@ def network_to_dict(en: "ElectricalNetwork", *, include_results: bool) -> JsonDi
     line_params: list[JsonDict] = []
     for lp in lines_params_dict.values():
         line_params.append(lp.to_dict(include_results=include_results))
-    line_params.sort(key=lambda x: x["id"])  # Always keep the same order
+    line_params.sort(key=lambda x: (type(x["id"]).__name__, str(x["id"])))  # Always keep the same order
 
     # Transformer parameters
     transformer_params: list[JsonDict] = []
     for tp in transformers_params_dict.values():
         transformer_params.append(tp.to_dict(include_results=include_results))
-    transformer_params.sort(key=lambda x: x["id"])  # Always keep the same order
+    transformer_params.sort(key=lambda x: (type(x["id"]).__name__, str(x["id"])))  # Always keep the same order
 
     res = {
         "version": NETWORK_JSON_VERSION,
@@ -629,7 +630,7 @@ def v1_to_v2_converter(data: JsonDict) -> JsonDict:
     return results
 
 
-def v2_to_v3_converter(data: JsonDict) -> JsonDict:
+def v2_to_v3_converter(data: JsonDict) -> JsonDict:  # noqa: C901
     """Convert a v2 network dict to a v3 network dict.
 
     Args:
@@ -663,7 +664,12 @@ def v2_to_v3_converter(data: JsonDict) -> JsonDict:
     transformers_params = []
     transformers_params_max_loading = {}
     for transformer_param_data in old_transformers_params:
-        transformer_param_data["vg"] = transformer_param_data.pop("type")
+        vg = transformer_param_data.pop("type")
+        if vg == "single":
+            vg = "Ii0"
+        elif vg == "center":
+            vg = "Iii0"
+        transformer_param_data["vg"] = vg
         if (max_power := transformer_param_data.pop("max_power", None)) is not None:
             transformers_params_max_loading[transformer_param_data["id"]] = max_power / transformer_param_data["sn"]
         transformers_params.append(transformer_param_data)
@@ -676,14 +682,14 @@ def v2_to_v3_converter(data: JsonDict) -> JsonDict:
     lines_params = []
     for line_param_data in old_lines_params:
         size = len(line_param_data["z_line"][0])
-        if (maximal_current := line_param_data.pop("maximal_current", None)) is not None:
+        if (maximal_current := line_param_data.pop("max_current", None)) is not None:
             line_param_data["ampacities"] = [maximal_current] * size
         if (section := line_param_data.pop("section", None)) is not None:
             line_param_data["sections"] = [section] * size
-        if (conductor_type := line_param_data.pop("conductor_types", None)) is not None:
+        if (conductor_type := line_param_data.pop("conductor_type", None)) is not None:
             line_param_data["materials"] = [conductor_type] * size
         if (
-            (insulator_type := line_param_data.pop("insulator_types", None)) is not None
+            (insulator_type := line_param_data.pop("insulator_type", None)) is not None
         ) and insulator_type.lower() != "unknown":
             line_param_data["insulators"] = [insulator_type] * size
         lines_params.append(line_param_data)

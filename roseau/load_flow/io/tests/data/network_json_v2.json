@@ -1,0 +1,346 @@
+{
+  "version": 2,
+  "is_multiphase": true,
+  "grounds": [
+    {
+      "id": "gnd",
+      "buses": [
+        {
+          "id": 3,
+          "phase": "n"
+        },
+        {
+          "id": 5,
+          "phase": "n"
+        }
+      ]
+    }
+  ],
+  "potential_refs": [
+    {
+      "id": "pref",
+      "ground": "gnd"
+    }
+  ],
+  "buses": [
+    {
+      "id": 1,
+      "phases": "abc",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [0.0, 0.0]
+      },
+      "min_voltage": 19000.0,
+      "max_voltage": 21000.0
+    },
+    {
+      "id": 5,
+      "phases": "abcn",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [0.0, 2.0]
+      },
+      "min_voltage": 207,
+      "max_voltage": 253
+    },
+    {
+      "id": 4,
+      "phases": "abcn",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [0.0, 2.0]
+      },
+      "min_voltage": 207,
+      "max_voltage": 253
+    },
+    {
+      "id": 3,
+      "phases": "abcn",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [0.0, 1.0]
+      },
+      "min_voltage": 207,
+      "max_voltage": 253
+    },
+    {
+      "id": 2,
+      "phases": "abc",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [0.0, 1.0]
+      },
+      "min_voltage": 19000.0,
+      "max_voltage": 21000.0
+    }
+  ],
+  "lines": [
+    {
+      "id": 1,
+      "phases": "abc",
+      "bus1": 1,
+      "bus2": 2,
+      "length": 10.0,
+      "params_id": 1,
+      "ground": "gnd",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [0.0, 0.0],
+          [1.0, 0.0]
+        ]
+      }
+    },
+    {
+      "id": 2,
+      "phases": "abcn",
+      "bus1": 3,
+      "bus2": 4,
+      "length": 1.0,
+      "params_id": 2,
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [0.0, 1.0],
+          [0.0, 2.0]
+        ]
+      }
+    }
+  ],
+  "transformers": [
+    {
+      "id": 3,
+      "phases1": "ab",
+      "phases2": "abn",
+      "bus1": 4,
+      "bus2": 5,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [0.0, 2.0]
+      },
+      "tap": 1.0,
+      "params_id": "3"
+    },
+    {
+      "id": 2,
+      "phases1": "bc",
+      "phases2": "bc",
+      "bus1": 4,
+      "bus2": 5,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [0.0, 2.0]
+      },
+      "tap": 1.0,
+      "params_id": "2"
+    },
+    {
+      "id": 1,
+      "phases1": "abc",
+      "phases2": "abcn",
+      "bus1": 2,
+      "bus2": 3,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [0.0, 1.0]
+      },
+      "tap": 1.025,
+      "params_id": "SE_Minera_AA0Ak_160kVA"
+    }
+  ],
+  "switches": [],
+  "loads": [
+    {
+      "id": 1,
+      "bus": 2,
+      "phases": "abc",
+      "type": "power",
+      "powers": [
+        [38000.0, 12489.9959967968],
+        [38000.0, 12489.9959967968],
+        [38000.0, 12489.9959967968]
+      ],
+      "connect_neutral": null,
+      "flexible_params": [
+        {
+          "control_p": {
+            "type": "p_max_u_consumption",
+            "u_min": 18000.0,
+            "u_down": 19000.0,
+            "alpha": 1000.0,
+            "epsilon": 1e-8
+          },
+          "control_q": {
+            "type": "constant"
+          },
+          "projection": {
+            "type": "euclidean",
+            "alpha": 1000.0,
+            "epsilon": 1e-8
+          },
+          "s_max": 45000.0
+        },
+        {
+          "control_p": {
+            "type": "p_max_u_consumption",
+            "u_min": 18000.0,
+            "u_down": 19000.0,
+            "alpha": 1000.0,
+            "epsilon": 1e-8
+          },
+          "control_q": {
+            "type": "constant"
+          },
+          "projection": {
+            "type": "euclidean",
+            "alpha": 1000.0,
+            "epsilon": 1e-8
+          },
+          "s_max": 45000.0
+        },
+        {
+          "control_p": {
+            "type": "p_max_u_consumption",
+            "u_min": 18000.0,
+            "u_down": 19000.0,
+            "alpha": 1000.0,
+            "epsilon": 1e-8
+          },
+          "control_q": {
+            "type": "constant"
+          },
+          "projection": {
+            "type": "euclidean",
+            "alpha": 1000.0,
+            "epsilon": 1e-8
+          },
+          "s_max": 45000.0
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "bus": 2,
+      "phases": "abc",
+      "type": "power",
+      "powers": [
+        [40459.7989783205, 20229.89948916025],
+        [40459.79897941102, 20229.89948970551],
+        [40459.79897941102, 20229.89948970551]
+      ],
+      "connect_neutral": null
+    }
+  ],
+  "sources": [
+    {
+      "id": 1,
+      "bus": 1,
+      "phases": "abc",
+      "voltages": [
+        [20000.0, 0.0],
+        [-9999.999999999996, -17320.508075688773],
+        [-9999.999999999996, 17320.508075688773]
+      ],
+      "connect_neutral": null
+    }
+  ],
+  "lines_params": [
+    {
+      "id": 1,
+      "z_line": [
+        [
+          [0.35, 0.0, 0.0],
+          [0.0, 0.35, 0.0],
+          [0.0, 0.0, 0.35]
+        ],
+        [
+          [0.0, 0.0, 0.0],
+          [0.0, 0.0, 0.0],
+          [0.0, 0.0, 0.0]
+        ]
+      ],
+      "y_shunt": [
+        [
+          [0.0, 0.0, 0.0],
+          [0.0, 0.0, 0.0],
+          [0.0, 0.0, 0.0]
+        ],
+        [
+          [1e-6, 0.0, 0.0],
+          [0.0, 1e-6, 0.0],
+          [0.0, 0.0, 1e-6]
+        ]
+      ],
+      "max_current": 250,
+      "line_type": "UNDERGROUND",
+      "conductor_type": "AL",
+      "insulator_type": "PVC",
+      "section": 240.0
+    },
+    {
+      "id": 2,
+      "z_line": [
+        [
+          [0.35, 0.0, 0.0, 0.0],
+          [0.0, 0.35, 0.0, 0.0],
+          [0.0, 0.0, 0.35, 0.0],
+          [0.0, 0.0, 0.0, 0.35]
+        ],
+        [
+          [0.0, 0.0, 0.0, 0.0],
+          [0.0, 0.0, 0.0, 0.0],
+          [0.0, 0.0, 0.0, 0.0],
+          [0.0, 0.0, 0.0, 0.0]
+        ]
+      ],
+      "max_current": 160,
+      "line_type": "OVERHEAD",
+      "conductor_type": "CU",
+      "section": 150.0
+    }
+  ],
+  "transformers_params": [
+    {
+      "id": "2",
+      "sn": 10000.0,
+      "uhv": 400,
+      "ulv": 400,
+      "type": "single",
+      "z2": [0.05, 0.0],
+      "ym": [0.01, 0.02],
+      "max_power": 10000.0,
+      "manufacturer": "roseau tech",
+      "range": "testing",
+      "efficiency": "good"
+    },
+    {
+      "id": "3",
+      "sn": 10000.0,
+      "uhv": 400,
+      "ulv": 400,
+      "type": "center",
+      "z2": [0.05, 0.0],
+      "ym": [0.01, 0.02],
+      "max_power": 10000.0,
+      "manufacturer": "roseau tech",
+      "range": "testing",
+      "efficiency": "good++"
+    },
+    {
+      "id": "SE_Minera_AA0Ak_160kVA",
+      "sn": 160000,
+      "uhv": 20000,
+      "ulv": 400,
+      "type": "Dyn11",
+      "z2": [0.010937500000000001, 0.038475590882402315],
+      "ym": [1.5749999999999997e-7, -1.9999379834134858e-5],
+      "i0": 0.15,
+      "p0": 189,
+      "psc": 1750,
+      "vsc": 0.04,
+      "manufacturer": "SE",
+      "range": "Minera",
+      "efficiency": "AA0Ak"
+    }
+  ]
+}
