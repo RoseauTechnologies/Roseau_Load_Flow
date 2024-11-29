@@ -25,7 +25,6 @@ def _get_dependency_info() -> JsonDict:
             "numpy",
             "geopandas",
             "shapely",
-            "regex",
             "pint",
             "platformdirs",
             "certifi",

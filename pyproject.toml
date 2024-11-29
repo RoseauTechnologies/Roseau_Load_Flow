@@ -33,7 +33,6 @@ dependencies = [
     "pandas>=1.4.0",
     "geopandas>=1.0.0",
     "shapely>=2.0.0",
-    "regex>=2022.1.18",
     "pint>=0.21.0",
     "typing-extensions>=4.6.2",
     "pyproj>=3.3.0",
