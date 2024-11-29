@@ -920,8 +920,6 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         if solve_kwargs is None:
             solve_kwargs = {}
 
-        potentials_hv = None
-        potentials_lv = None
         vsc = abs(self._z2) * self._sn / self._ulv**2
         voltage = vsc * self._uhv
         if self.type == "single-phase":
@@ -930,9 +928,6 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         elif self.type == "center-tapped":
             phases_hv = "ab"
             phases_lv = "abn"
-            # TODO: The initialization of potentials seems very bad in the case of such short-circuit...
-            potentials_hv = [vsc * self._uhv, -vsc * self._uhv]
-            potentials_lv = [0, 0, 0]
         else:
             # Three-phase transformer
             phases_hv = "abc" if self.winding1[0] == "D" else "abcn"
@@ -940,8 +935,8 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             if "n" in phases_hv:
                 voltage /= np.sqrt(3)
 
-        bus_hv = Bus(id="BusHV", phases=phases_hv, potentials=potentials_hv)
-        bus_lv = Bus(id="BusLV", phases=phases_lv, potentials=potentials_lv)
+        bus_hv = Bus(id="BusHV", phases=phases_hv)
+        bus_lv = Bus(id="BusLV", phases=phases_lv)
         PotentialRef(id="PRefHV", element=bus_hv)
         PotentialRef(id="PRefLV", element=bus_lv)
         VoltageSource(id="VS", bus=bus_hv, voltages=voltage)
