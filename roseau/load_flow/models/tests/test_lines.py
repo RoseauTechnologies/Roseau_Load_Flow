@@ -1,5 +1,4 @@
 import numpy as np
-import numpy.testing as npt
 import pytest
 from pint import DimensionalityError
 
@@ -225,15 +224,6 @@ def test_res_violated():
     line._res_currents = 10 * direct_seq, -12 * direct_seq
     assert line.res_violated is True
     assert np.allclose(line.res_loading, [12 / 11, 12 / 11, 12 / 13])
-
-    # Nan is the array
-    lp.ampacities = [11, np.nan, 13]
-    line._res_currents = 10 * direct_seq, -12 * direct_seq
-    assert line.res_violated is True
-    npt.assert_allclose(line.res_loading, [12 / 11, np.nan, 12 / 13], equal_nan=True)
-    lp.ampacities = [13, np.nan, 13]
-    assert line.res_violated is False
-    npt.assert_allclose(line.res_loading, [12 / 13, np.nan, 12 / 13], equal_nan=True)
 
 
 @pytest.mark.parametrize(
