@@ -364,9 +364,10 @@ def test_sym():
     # With the bad model of PwF
     # line_data = {"id": "NKBA NOR  25.00 kV", "un": 25000.0, "in": 277.0000100135803}
 
-    z_line, y_shunt = LineParameters._sym_to_zy(
-        id="NKBA NOR  25.00 kV", z0=0.0j, z1=1.0 + 1.0j, zn=0.0j, zpn=0.0j, y0=0.0j, y1=1e-06j, bn=0.0, bpn=0.0
-    )
+    with pytest.warns(UserWarning, match=r"does not have neutral elements"):
+        z_line, y_shunt = LineParameters._sym_to_zy(
+            id="NKBA NOR  25.00 kV", z0=0.0j, z1=1.0 + 1.0j, zn=0.0j, zpn=0.0j, y0=0.0j, y1=1e-06j, bn=0.0, bpn=0.0
+        )
     z_line_expected = (1 + 1j) * np.eye(3)
     npt.assert_allclose(z_line, z_line_expected)
     y_shunt_expected = 1e-6j * np.eye(3)
@@ -374,17 +375,18 @@ def test_sym():
 
     # line_data = {"id": "NKBA 4x150   1.00 kV", "un": 1000.0, "in": 361.0000014305115}
     # Downgraded model because of PwF bad data
-    z_line, y_shunt = LineParameters._sym_to_zy(
-        id="NKBA 4x150   1.00 kV",
-        z0=0.5 + 0.3050000071525574j,
-        z1=0.125 + 0.0860000029206276j,
-        zn=0.0j,
-        zpn=0.0j,
-        y0=0.0j,
-        y1=0.0j,
-        bn=0.0,
-        bpn=0.0,
-    )
+    with pytest.warns(UserWarning, match=r"does not have neutral elements"):
+        z_line, y_shunt = LineParameters._sym_to_zy(
+            id="NKBA 4x150   1.00 kV",
+            z0=0.5 + 0.3050000071525574j,
+            z1=0.125 + 0.0860000029206276j,
+            zn=0.0j,
+            zpn=0.0j,
+            y0=0.0j,
+            y1=0.0j,
+            bn=0.0,
+            bpn=0.0,
+        )
     z_line_expected = np.array(
         [
             [0.25 + 0.159j, 0.125 + 0.073j, 0.125 + 0.073j],
@@ -676,7 +678,7 @@ def test_insulators():
 
     with pytest.raises(RoseauLoadFlowException) as e:
         lp.insulators = [Insulator.XLPE, Insulator.HDPE]
-    assert e.value.msg == "Incorrect number of insulators: 2 instead of 3"
+    assert e.value.msg == "Incorrect number of insulators: 2 instead of 3."
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_INSULATORS_SIZE
 
 
@@ -706,12 +708,11 @@ def test_materials():
     assert len(lp.materials) == 3
     assert np.array_equal(lp.materials, np.array([Material.AAAC, Material.AL, Material.CU]))
 
-    # Errors
-    with pytest.raises(RoseauLoadFlowException) as e:
-        lp.materials = [np.nan, float("nan"), pd.NA]
-    assert e.value.msg == "Materials cannot contain null values: [nan, nan, <NA>] was provided."
-    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_MATERIALS_VALUE
+    # Arrays with all none
+    lp.materials = [np.nan, float("nan"), pd.NA]
+    assert lp.materials is None
 
+    # Errors
     with pytest.raises(RoseauLoadFlowException) as e:
         lp.materials = [np.nan, float("nan"), Material.AM]
     assert e.value.msg == "Materials cannot contain null values: [nan, nan, am] was provided."
@@ -724,7 +725,7 @@ def test_materials():
 
     with pytest.raises(RoseauLoadFlowException) as e:
         lp.materials = [Material.AM, Material.AL]
-    assert e.value.msg == "Incorrect number of materials: 2 instead of 3"
+    assert e.value.msg == "Incorrect number of materials: 2 instead of 3."
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_MATERIALS_SIZE
 
 
@@ -754,12 +755,11 @@ def test_sections():
     assert len(lp.sections) == 3
     assert np.allclose(lp.sections.magnitude, [4, 5, 6])
 
-    # Errors
-    with pytest.raises(RoseauLoadFlowException) as e:
-        lp.sections = [np.nan, float("nan"), pd.NA]
-    assert e.value.msg == "Sections cannot contain null values: [nan, nan, <NA>] mm² was provided."
-    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_SECTIONS_VALUE
+    # Arrays with all none
+    lp.sections = [np.nan, float("nan"), pd.NA]
+    assert lp.sections is None
 
+    # Errors
     with pytest.raises(RoseauLoadFlowException) as e:
         lp.sections = [np.nan, float("nan"), 3]
     assert e.value.msg == "Sections cannot contain null values: [nan, nan, 3] mm² was provided."
@@ -777,7 +777,7 @@ def test_sections():
 
     with pytest.raises(RoseauLoadFlowException) as e:
         lp.sections = [3, 3]
-    assert e.value.msg == "Incorrect number of sections: 2 instead of 3"
+    assert e.value.msg == "Incorrect number of sections: 2 instead of 3."
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_SECTIONS_SIZE
 
 
@@ -791,8 +791,6 @@ def test_ampacities():
     lp.ampacities = np.nan
     assert lp.ampacities is None
     lp.ampacities = pd.NA
-    assert lp.ampacities is None
-    lp.ampacities = [np.nan, float("nan"), pd.NA]
     assert lp.ampacities is None
 
     # Single values
@@ -809,15 +807,19 @@ def test_ampacities():
     assert len(lp.ampacities) == 3
     assert np.allclose(lp.ampacities.magnitude, [4, 5, 6])
 
-    # Array with nan
-    lp.ampacities = Q_([4, np.nan, 6], "A")
-    assert len(lp.ampacities) == 3
-    npt.assert_allclose(lp.ampacities.magnitude, [4, np.nan, 6], equal_nan=True)
+    # Array with all nan
+    lp.ampacities = [np.nan, float("nan"), pd.NA]
+    assert lp.ampacities is None
 
     # Errors
     with pytest.raises(RoseauLoadFlowException) as e:
+        lp.ampacities = Q_([4, np.nan, 6], "A")
+    assert e.value.msg == "Ampacities cannot contain null values: [4.0, nan, 6.0] A was provided."
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_AMPACITIES_VALUE
+
+    with pytest.raises(RoseauLoadFlowException) as e:
         lp.ampacities = [1, 2]
-    assert e.value.msg == "Incorrect number of ampacities: 2 instead of 3"
+    assert e.value.msg == "Incorrect number of ampacities: 2 instead of 3."
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_AMPACITIES_SIZE
 
     with pytest.raises(RoseauLoadFlowException) as e:
@@ -831,24 +833,24 @@ def test_ampacities():
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_AMPACITIES_VALUE
 
     with pytest.raises(RoseauLoadFlowException) as e:
-        lp.ampacities = [1, np.nan, -2]
-    assert e.value.msg == "Ampacities must be positive: [1.0, nan, -2.0] A was provided."
+        lp.ampacities = [1, 0.1, -2]
+    assert e.value.msg == "Ampacities must be positive: [1.0, 0.1, -2.0] A was provided."
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_AMPACITIES_VALUE
 
     with pytest.raises(RoseauLoadFlowException) as e:
-        lp.ampacities = [1, np.nan, 0]
-    assert e.value.msg == "Ampacities must be positive: [1.0, nan, 0.0] A was provided."
+        lp.ampacities = [1, 1.2, 0]
+    assert e.value.msg == "Ampacities must be positive: [1.0, 1.2, 0.0] A was provided."
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_AMPACITIES_VALUE
 
 
 def test_json_serialization(tmp_path):
-    lp = LineParameters(id="test", z_line=np.eye(3), sections=np.float64(150), ampacities=[1, float("nan"), np.nan])
+    lp = LineParameters(id="test", z_line=np.eye(3), sections=np.float64(150), ampacities=[1, 2, 3])
     path = tmp_path / "lp.json"
     lp.to_json(path)
     lp_dict = LineParameters.from_json(path).to_dict()
     assert isinstance(lp_dict["z_line"], list)
     npt.assert_allclose(lp_dict["sections"], [150, 150, 150])
-    npt.assert_allclose(lp_dict["ampacities"], [1, np.nan, np.nan])
+    npt.assert_allclose(lp_dict["ampacities"], [1, 2, 3])
 
 
 def test_from_open_dss():
