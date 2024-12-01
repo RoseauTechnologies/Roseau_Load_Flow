@@ -19,6 +19,7 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`291` Fixed several bugs in JSON serialization and deserialization.
 - {gh-pr}`289` Improve the `TransformerParameters` class and the transformers catalogue
 
   - Add 15kV transformers to the catalogue (SE and FT)
