@@ -95,9 +95,11 @@ def network_from_dict(  # noqa: C901
 
     version = data.get("version", 0)
     if version <= 2:
-        logger.warning(
+        warnings.warn(
             f"Got an outdated network file (version {version}), trying to update to the current format "
-            f"(version {NETWORK_JSON_VERSION}). Please save the network again."
+            f"(version {NETWORK_JSON_VERSION}). Please save the network again.",
+            category=UserWarning,
+            stacklevel=find_stack_level(),
         )
         if version <= 0:
             data = v0_to_v1_converter(data)
@@ -177,11 +179,20 @@ def network_from_dict(  # noqa: C901
         bus2 = buses[line_data["bus2"]]
         geometry = Line._parse_geometry(line_data.get("geometry"))
         length = line_data["length"]
+        max_loading = line_data["max_loading"]
         lp = lines_params[line_data["params_id"]]
         gid = line_data.get("ground")
         ground = grounds[gid] if gid is not None else None
         line = Line(
-            id=id, bus1=bus1, bus2=bus2, parameters=lp, phases=phases, length=length, ground=ground, geometry=geometry
+            id=id,
+            bus1=bus1,
+            bus2=bus2,
+            parameters=lp,
+            phases=phases,
+            length=length,
+            ground=ground,
+            geometry=geometry,
+            max_loading=max_loading,
         )
         if include_results:
             line = _assign_branch_currents(branch=line, branch_data=line_data)
@@ -196,12 +207,21 @@ def network_from_dict(  # noqa: C901
         phases1 = transformer_data["phases1"]
         phases2 = transformer_data["phases2"]
         tap = transformer_data["tap"]
+        max_loading = transformer_data["max_loading"]
         bus1 = buses[transformer_data["bus1"]]
         bus2 = buses[transformer_data["bus2"]]
         geometry = Transformer._parse_geometry(transformer_data.get("geometry"))
         tp = transformers_params[transformer_data["params_id"]]
         transformer = Transformer(
-            id=id, bus1=bus1, bus2=bus2, parameters=tp, phases1=phases1, phases2=phases2, tap=tap, geometry=geometry
+            id=id,
+            bus1=bus1,
+            bus2=bus2,
+            parameters=tp,
+            phases1=phases1,
+            phases2=phases2,
+            tap=tap,
+            geometry=geometry,
+            max_loading=max_loading,
         )
         if include_results:
             transformer = _assign_branch_currents(branch=transformer, branch_data=transformer_data)
@@ -671,7 +691,10 @@ def v2_to_v3_converter(data: JsonDict) -> JsonDict:  # noqa: C901
             vg = "Iii0"
         transformer_param_data["vg"] = vg
         if (max_power := transformer_param_data.pop("max_power", None)) is not None:
-            transformers_params_max_loading[transformer_param_data["id"]] = max_power / transformer_param_data["sn"]
+            loading = max_power / transformer_param_data["sn"]
+        else:
+            loading = 1
+        transformers_params_max_loading[transformer_param_data["id"]] = loading
         transformers_params.append(transformer_param_data)
 
     # Rename `maximal_current` in `ampacities` and uses array
@@ -705,7 +728,7 @@ def v2_to_v3_converter(data: JsonDict) -> JsonDict:  # noqa: C901
     old_transformers = data.get("transformers", [])
     transformers = []
     for transformer_data in old_transformers:
-        transformer_data["max_loading"] = transformers_params_max_loading.get(transformer_data["params_id"], 1)
+        transformer_data["max_loading"] = transformers_params_max_loading[transformer_data["params_id"]]
         transformers.append(transformer_data)
 
     results = {
