@@ -813,8 +813,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                 loading_array = None
                 violated_array = None
             else:
-                i_max = ampacities * max_loading
-                loading_array = np.maximum(abs(currents1), abs(currents2)) / i_max
+                loading_array = np.maximum(abs(currents1), abs(currents2)) / ampacities
                 violated_array = loading_array > max_loading
             for k, (i1, i2, s1, s2, v1, v2, s_series, i_series, phase) in enumerate(
                 zip(
@@ -905,13 +904,8 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             powers2 = potentials2 * currents2.conj()
             sn = transformer.parameters._sn
             max_loading = transformer._max_loading
-            if sn is None:
-                violated = None
-                loading = None
-            else:
-                s_max = sn * max_loading
-                loading = max(abs(powers1.sum()), abs(powers2.sum())) / s_max
-                violated = loading > max_loading
+            loading = max(abs(powers1.sum()), abs(powers2.sum())) / sn
+            violated = loading > max_loading
             for phase in transformer._all_phases:
                 if phase in transformer.phases1:
                     idx1 = transformer.phases1.index(phase)
