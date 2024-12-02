@@ -91,9 +91,6 @@ This release adds official support for Python 3.13 and adds a new experimental b
     `from_catalogue` methods have been changed to accept filter on the columns (`material_neutral`,
     `insulator_neutral`, `section_neutral`)
 
-- {gh-pr}`282` (Reverted) Rename the parameters of the class `TransformerParameters`: `uhv` becomes
-  `up` (for **p**rimary side) and `ulv` becomes `us` (for **s**econdary side). In addition, `up`
-  doesn't need to be greater than `us` anymore.
 - {gh-pr}`281` Add official support for Python 3.13.
 - {gh-issue}`278` {gh-pr}`280` Modify the `Bus` voltage limits:
 
