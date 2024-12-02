@@ -10,9 +10,9 @@ import numpy as np
 import roseau.load_flow as rlf
 
 PHASES = {"MV": "abc", "LV": "abcn"}
-U_N = {"MV": 20_000, "LV": 230}
-U_MAX = {"MV": int(20_000 * 1.05), "LV": int(230 * 1.1)}
-U_MIN = {"MV": int(20_000 * 0.95), "LV": int(230 * 0.9)}
+U_N = {"MV": 20_000, "LV": 400}
+U_MAX = {"MV": 1.05, "LV": 1.1}
+U_MIN = {"MV": 0.95, "LV": 0.9}
 
 df = rlf.ElectricalNetwork.get_catalogue()
 
@@ -64,8 +64,9 @@ if __name__ == "__main__":
                     id=bus_id,
                     phases=PHASES[bus_type],
                     geometry=bus.geometry,
-                    min_voltage=U_MIN[bus_type],
-                    max_voltage=U_MAX[bus_type],
+                    nominal_voltage=U_N[bus_type],
+                    min_voltage_level=U_MIN[bus_type],
+                    max_voltage_level=U_MAX[bus_type],
                 )
                 new_buses[bus_id] = new_bus
             assert feeder_bus_id is not None
@@ -100,11 +101,11 @@ if __name__ == "__main__":
                     z_line=line.parameters.z_line,
                     y_shunt=line.parameters.y_shunt,
                     # Add missing data from the IEC catalogue
-                    max_current=iec_params.max_current,
+                    ampacities=iec_params.ampacities,
                     line_type=iec_params.line_type,
-                    conductor_type=iec_params.conductor_type,
-                    insulator_type=iec_params.insulator_type,
-                    section=iec_params.section,
+                    materials=iec_params.materials,
+                    insulators=iec_params.insulators,
+                    sections=iec_params.sections,
                 )
                 new_line = rlf.Line(
                     id=line_id,
@@ -134,12 +135,14 @@ if __name__ == "__main__":
                     tap=transformer.tap,
                     phases1=transformer.phases1,
                     phases2=transformer.phases2,
+                    max_loading=1,  # Since v0.11.0
                     geometry=transformer.geometry,
                 )
                 assert isinstance(transformer.parameters.id, str), repr(transformer.parameters.id)
                 m = re.match(pattern=r"^.*_(\d+)kVA$", string=transformer.parameters.id)
                 assert m, transformer.parameters.id
-                transformer.parameters.max_power = int(m.group(1)) * 1_000
+                # Since v0.11.0, this does not work. Please use max_loading
+                # transformer.parameters.max_power = int(m.group(1)) * 1_000
                 assert new_transformer.geometry == transformer.geometry
                 new_transformers[transformer_id] = new_transformer
 

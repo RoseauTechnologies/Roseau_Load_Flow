@@ -9,7 +9,12 @@ from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.transformers.parameters import TransformerParameters
 from roseau.load_flow.typing import Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
-from roseau.load_flow_engine.cy_engine import CyCenterTransformer, CySingleTransformer, CyThreePhaseTransformer
+from roseau.load_flow_engine.cy_engine import (
+    CyCenterTransformer,
+    CySingleTransformer,
+    CyThreePhaseTransformer,
+    CyTransformer,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -42,6 +47,7 @@ class Transformer(AbstractBranch):
         tap: float = 1.0,
         phases1: str | None = None,
         phases2: str | None = None,
+        max_loading: float | Q_[float] = 1,
         geometry: BaseGeometry | None = None,
     ) -> None:
         """Transformer constructor.
@@ -72,14 +78,20 @@ class Transformer(AbstractBranch):
             phases2:
                 The phases of the second extremity of the transformer. See ``phases1``.
 
+            max_loading:
+                The maximum loading of the transformer (unitless). It is used with the `sn` of the
+                :class:`TransformerParameters` to compute the :meth:`~roseau.load_flow.Transformer.max_power`,
+                :meth:`~roseau.load_flow.Transformer.res_loading` and
+                :meth:`~roseau.load_flow.Transformer.res_violated` of the transformer.
+
             geometry:
                 The geometry of the transformer.
         """
-        if parameters.type == "single":
+        if parameters.type == "single-phase":
             phases1, phases2 = self._compute_phases_single(
                 id=id, bus1=bus1, bus2=bus2, phases1=phases1, phases2=phases2
             )
-        elif parameters.type == "center":
+        elif parameters.type == "center-tapped":
             phases1, phases2 = self._compute_phases_center(
                 id=id, bus1=bus1, bus2=bus2, phases1=phases1, phases2=phases2
             )
@@ -91,42 +103,33 @@ class Transformer(AbstractBranch):
         super().__init__(id=id, bus1=bus1, bus2=bus2, phases1=phases1, phases2=phases2, geometry=geometry)
         self.tap = tap
         self._parameters = parameters
+        self.max_loading = max_loading
 
         z2, ym, k, orientation = parameters._z2, parameters._ym, parameters._k, parameters._orientation
-        if parameters.type == "single":
-            self._cy_element = CySingleTransformer(z2=z2, ym=ym, k=k * tap)
-        elif parameters.type == "center":
-            self._cy_element = CyCenterTransformer(z2=z2, ym=ym, k=k * tap)
+        self._cy_element: CyTransformer
+        if parameters.type == "single-phase":
+            self._cy_element = CySingleTransformer(z2=z2, ym=ym, k=k * orientation * tap)
+        elif parameters.type == "center-tapped":
+            self._cy_element = CyCenterTransformer(z2=z2, ym=ym, k=k * orientation * tap)
         else:
-            if "Y" in parameters.winding1 and "y" in parameters.winding2:
-                self._cy_element = CyThreePhaseTransformer(
-                    n1=4, n2=4, prim="Y", sec="y", z2=z2, ym=ym, k=k * tap, orientation=orientation
-                )
-            elif "D" in parameters.winding1 and "y" in parameters.winding2:
-                self._cy_element = CyThreePhaseTransformer(
-                    n1=3, n2=4, prim="D", sec="y", z2=z2, ym=ym, k=k * tap, orientation=orientation
-                )
-            elif "D" in parameters.winding1 and "d" in parameters.winding2:
-                self._cy_element = CyThreePhaseTransformer(
-                    n1=3, n2=3, prim="D", sec="d", z2=z2, ym=ym, k=k * tap, orientation=orientation
-                )
-            elif "Y" in parameters.winding1 and "d" in parameters.winding2:
-                self._cy_element = CyThreePhaseTransformer(
-                    n1=4, n2=3, prim="Y", sec="d", z2=z2, ym=ym, k=k * tap, orientation=orientation
-                )
-            elif "Y" in parameters.winding1 and "z" in parameters.winding2:
-                self._cy_element = CyThreePhaseTransformer(
-                    n1=4, n2=4, prim="Y", sec="z", z2=z2, ym=ym, k=k * tap, orientation=orientation
-                )
-            elif "D" in parameters.winding1 and "z" in parameters.winding2:
-                self._cy_element = CyThreePhaseTransformer(
-                    n1=3, n2=4, prim="D", sec="z", z2=z2, ym=ym, k=k * tap, orientation=orientation
-                )
-            else:
-                msg = f"Transformer {parameters.type} is not implemented yet..."
-                logger.error(msg)
-                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS)
+            self._cy_element = CyThreePhaseTransformer(
+                n1=parameters._n1,
+                n2=parameters._n2,
+                prim=parameters.winding1[0],
+                sec=parameters.winding2[0],
+                z2=z2,
+                ym=ym,
+                k=k * tap,
+                orientation=orientation,
+            )
         self._cy_connect()
+
+    def __repr__(self) -> str:
+        return (
+            f"<{type(self).__name__}: id={self.id!r}, bus1={self.bus1.id!r}, bus2={self.bus2.id!r}, "
+            f"phases1={self.phases1!r}, phases2={self.phases2!r}, tap={self.tap:f}, "
+            f"max_loading={self._max_loading:f}>"
+        )
 
     @property
     def tap(self) -> float:
@@ -152,24 +155,50 @@ class Transformer(AbstractBranch):
 
     @parameters.setter
     def parameters(self, value: TransformerParameters) -> None:
-        type1 = self._parameters.type
-        type2 = value.type
-        if type1 != type2:
-            msg = f"The updated type changed for transformer {self.id!r}: {type1} to {type2}."
+        vg1 = self._parameters.vg
+        vg2 = value.vg
+        if vg1 != vg2:
+            msg = (
+                f"Cannot update the parameters of transformer {self.id!r} to a different vector "
+                f"group: old={vg1!r}, new={vg2!r}."
+            )
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_TYPE)
         self._parameters = value
         self._invalidate_network_results()
         if self._cy_element is not None:
             z2, ym, k = value._z2, value._ym, value._k
+            if value.type in ("single-phase", "center-tapped"):
+                k *= value._orientation
             self._cy_element.update_transformer_parameters(z2, ym, k * self.tap)
+
+    @property
+    @ureg_wraps("", (None,))
+    def max_loading(self) -> Q_[float]:
+        """The maximum loading of the transformer (unitless)"""
+        return self._max_loading
+
+    @max_loading.setter
+    @ureg_wraps(None, (None, ""))
+    def max_loading(self, value: float | Q_[float]) -> None:
+        if value <= 0:
+            msg = f"Maximum loading must be positive: {value} was provided."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_MAX_LOADING_VALUE)
+        self._max_loading: float = value
+
+    @property
+    def sn(self) -> Q_[float]:
+        """The nominal power of the transformer (VA)."""
+        # Do not add a setter. The user must know that if they change the nominal power, it changes
+        # for all transformers that share the parameters. It is better to set it on the parameters.
+        return self._parameters.sn
 
     @property
     def max_power(self) -> Q_[float] | None:
         """The maximum power loading of the transformer (in VA)."""
-        # Do not add a setter. The user must know that if they change the max_power, it changes
-        # for all transformers that share the parameters. It is better to set it on the parameters.
-        return self.parameters.max_power
+        sn = self.parameters._sn
+        return None if sn is None else Q_(sn * self._max_loading, "VA")
 
     def _compute_phases_three(
         self,
@@ -292,17 +321,18 @@ class Transformer(AbstractBranch):
         return sum(powers1) + sum(powers2)
 
     @property
-    def res_violated(self) -> bool | None:
-        """Whether the transformer power exceeds the maximum power (loading > 100%).
-
-        Returns ``None`` if the maximum power is not set.
-        """
-        s_max = self.parameters._max_power
-        if s_max is None:
-            return None
+    @ureg_wraps("", (None,))
+    def res_loading(self) -> Q_[float]:
+        """Get the loading of the transformer (unitless)."""
+        sn = self._parameters._sn
         powers1, powers2 = self._res_powers_getter(warning=True)
+        return max(abs(powers1.sum()), abs(powers2.sum())) / sn
+
+    @property
+    def res_violated(self) -> bool:
+        """Whether the transformer power loading exceeds its maximal loading."""
         # True if either the primary or secondary is overloaded
-        return bool((abs(powers1.sum()) > s_max) or (abs(powers2.sum()) > s_max))
+        return bool(self.res_loading.m > self._max_loading)
 
     #
     # Json Mixin interface
@@ -311,6 +341,7 @@ class Transformer(AbstractBranch):
         res = super()._to_dict(include_results=include_results)
         res["tap"] = self.tap
         res["params_id"] = self.parameters.id
+        res["max_loading"] = self._max_loading
 
         return res
 

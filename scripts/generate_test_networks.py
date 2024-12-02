@@ -107,7 +107,7 @@ def generate_all_element_network() -> None:
     line0 = rlf.Line(id="line0", bus1=bus0, bus2=bus1, parameters=lp0, length=rlf.Q_(1.5, "km"), ground=ground)
 
     # Transformer between bus1 and bus2
-    tp0 = rlf.TransformerParameters.from_catalogue(name="SE_Minera_A0Ak_100kVA", id="tp0")
+    tp0 = rlf.TransformerParameters.from_catalogue(name="SE Minera A0Ak 100kVA 15/20kV(20) 410V Dyn11", id="tp0")
     transformer0 = rlf.Transformer(id="transformer0", bus1=bus1, bus2=bus2, parameters=tp0, tap=1.0)
     ground.connect(bus=bus2, phase="n")
 
@@ -120,11 +120,11 @@ def generate_all_element_network() -> None:
         id=lp1_tmp.id,
         z_line=lp1_tmp.z_line,
         y_shunt=None,  # <---- No shunt
-        max_current=lp1_tmp.max_current,
+        ampacities=lp1_tmp.ampacities,
         line_type=lp1_tmp.line_type,
-        conductor_type=lp1_tmp.conductor_type,
-        insulator_type=lp1_tmp.insulator_type,
-        section=lp1_tmp.section,
+        materials=lp1_tmp.materials,
+        insulators=lp1_tmp.insulators,
+        sections=lp1_tmp.sections,
     )
     line1 = rlf.Line(id="line1", bus1=bus3, bus2=bus4, parameters=lp1, length=rlf.Q_(100, "m"))
 

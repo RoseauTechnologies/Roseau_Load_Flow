@@ -82,23 +82,20 @@ import functools as ft
 import numpy as np
 import roseau.load_flow as rlf
 
-# Create a ground and set it as the reference potential
+# Create a ground and set it as the reference of potentials
 ground = rlf.Ground("ground")
 pref = rlf.PotentialRef("pref", ground)
 
 # Create a source bus and voltage source (MV)
-source_bus = rlf.Bus("source_bus", phases="abcn")
-ground.connect(source_bus)
-vs = rlf.VoltageSource(id="vs", bus=source_bus, voltages=20e3 / np.sqrt(3))
+source_bus = rlf.Bus("source_bus", phases="abc")
+vs = rlf.VoltageSource(id="vs", bus=source_bus, voltages=20e3)
 
 # Create a load bus and a load (MV)
 load_bus = rlf.Bus(id="load_bus", phases="abc")
 mv_load = rlf.PowerLoad("mv_load", load_bus, powers=[10000, 10000, 10000])
 
-# Connect the two MV buses with a line
-lp = rlf.LineParameters.from_catalogue(
-    name="U_AL_150", model="iec"
-)  # Underground, ALuminium, 150mm²
+# Connect the two MV buses with an Underground ALuminium line of 150mm²
+lp = rlf.LineParameters.from_catalogue(name="U_AL_150")
 line = rlf.Line("line", source_bus, load_bus, parameters=lp, length=1.0, ground=ground)
 
 # Create a low-voltage bus and a load
@@ -109,7 +106,7 @@ lv_load = rlf.PowerLoad("lv_load", lv_bus, powers=[-2000, 0])
 # Create a transformer
 tp = rlf.TransformerParameters.from_open_and_short_circuit_tests(
     "t",
-    "center",  # <--- Center-tapped transformer
+    vg="Iii0",  # <--- Center-tapped transformer
     sn=630e3,
     uhv=20000.0,
     ulv=230.0,
@@ -126,11 +123,12 @@ en.solve_load_flow()
 
 # The current flowing into the line from the source side
 en.res_lines[["current1"]].dropna().transform([np.abs, ft.partial(np.angle, deg=True)])
-# |                  |   ('current1', 'absolute') |   ('current1', 'angle') |
-# |:-----------------|---------------------------:|------------------------:|
-# | ('line', 'a')    |                   1.58451  |                 45.1554 |
-# | ('line', 'b')    |                   1.28415  |                -55.5618 |
-# | ('line', 'c')    |                   1.84471  |               -178      |
+# |               |   ('current1', 'absolute') |   ('current1', 'angle') |
+# |:--------------|---------------------------:|------------------------:|
+# | ('line', 'a') |                     1.1229 |                -35.6881 |
+# | ('line', 'b') |                   0.559322 |                 -157.84 |
+# | ('line', 'c') |                    0.95146 |                 114.464 |
+
 
 # The current flowing into the transformer from the source side
 en.res_transformers[["current1"]].dropna().transform(
@@ -138,37 +136,39 @@ en.res_transformers[["current1"]].dropna().transform(
 )
 # |                  |   ('current1', 'absolute') |   ('current1', 'angle') |
 # |:-----------------|---------------------------:|------------------------:|
-# | ('transfo', 'a') |                   0.564366 |                -63.5557 |
-# | ('transfo', 'b') |                   0.564366 |                116.444  |
+# | ('transfo', 'a') |                   0.564362 |                -93.5552 |
+# | ('transfo', 'b') |                   0.564362 |                 86.4448 |
+
 
 # The current flowing into the line from the load side
 en.res_lines[["current2"]].transform([np.abs, ft.partial(np.angle, deg=True)])
-# |                  |   ('current2', 'absolute') |   ('current2', 'angle') |
-# |:-----------------|---------------------------:|------------------------:|
-# | ('line', 'a')    |                   1.22632  |                155.665  |
-# | ('line', 'b')    |                   0.726784 |                 19.6741 |
-# | ('line', 'c')    |                   0.866034 |                -60.0009 |
+# |               |   ('current2', 'absolute') |   ('current2', 'angle') |
+# |:--------------|---------------------------:|------------------------:|
+# | ('line', 'a') |                    1.22632 |                 125.666 |
+# | ('line', 'b') |                   0.726787 |                -10.3247 |
+# | ('line', 'c') |                   0.866039 |                -90.0003 |
+
 
 # The current flowing into the transformer from the load side
 en.res_transformers[["current2"]].transform([np.abs, ft.partial(np.angle, deg=True)])
 # |                  |   ('current2', 'absolute') |   ('current2', 'angle') |
 # |:-----------------|---------------------------:|------------------------:|
-# | ('transfo', 'a') |                  17.3904   |                 30.0135 |
-# | ('transfo', 'b') |                   0        |                  0      |
-# | ('transfo', 'n') |                  17.3904   |               -149.987  |
+# | ('transfo', 'a') |                    17.3905 |               0.0141285 |
+# | ('transfo', 'b') |                          0 |                       0 |
+# | ('transfo', 'n') |                    17.3905 |                -179.986 |
 # We can see the secondary phase "b" of the transformer does not carry any current as
 # the load has 0VA on this phase.
 
 # The voltages at the buses of the network
-en.res_buses_voltages.transform([np.abs, ft.partial(np.angle, deg=True)])
+en.res_buses_voltages[["voltage"]].transform([np.abs, ft.partial(np.angle, deg=True)])
 # |                      |   ('voltage', 'absolute') |   ('voltage', 'angle') |
 # |:---------------------|--------------------------:|-----------------------:|
-# | ('source_bus', 'an') |                 11547     |            9.20565e-25 |
-# | ('source_bus', 'bn') |                 11547     |         -120           |
-# | ('source_bus', 'cn') |                 11547     |          120           |
-# | ('load_bus', 'ab')   |                 19999.8   |           29.9994      |
-# | ('load_bus', 'bc')   |                 19999.9   |          -90.0009      |
-# | ('load_bus', 'ca')   |                 19999.7   |          149.999       |
-# | ('lv_bus', 'an')     |                   115.006 |           30.0135      |
-# | ('lv_bus', 'bn')     |                   114.999 |         -150.001       |
+# | ('source_bus', 'ab') |                     20000 |                      0 |
+# | ('source_bus', 'bc') |                     20000 |                   -120 |
+# | ('source_bus', 'ca') |                     20000 |                    120 |
+# | ('load_bus', 'ab')   |                   19999.6 |             6.9969e-05 |
+# | ('load_bus', 'bc')   |                   19999.8 |                   -120 |
+# | ('load_bus', 'ca')   |                   19999.6 |                119.999 |
+# | ('lv_bus', 'an')     |                   115.005 |              0.0141285 |
+# | ('lv_bus', 'bn')     |                   114.998 |                   -180 |
 ```

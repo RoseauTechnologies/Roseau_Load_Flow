@@ -12,6 +12,7 @@ from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import Element
 from roseau.load_flow.typing import ComplexArray, ComplexScalarOrArrayLike1D, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
+from roseau.load_flow.utils._exceptions import find_stack_level
 from roseau.load_flow.utils.constants import PositiveSequence
 from roseau.load_flow_engine.cy_engine import CyDeltaVoltageSource, CyVoltageSource
 
@@ -101,7 +102,7 @@ class VoltageSource(Element):
             warnings.warn(
                 message=f"Neutral connection requested for source {id!r} with no neutral phase",
                 category=UserWarning,
-                stacklevel=2,
+                stacklevel=find_stack_level(),
             )
             connect_neutral = None
         self._connect(bus)

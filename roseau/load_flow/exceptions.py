@@ -35,20 +35,32 @@ class RoseauLoadFlowExceptionCode(StrEnum):
     BAD_Y_SHUNT_SHAPE = auto()
     BAD_LINE_MODEL = auto()
     BAD_LINE_TYPE = auto()
-    BAD_CONDUCTOR_TYPE = auto()
-    BAD_INSULATOR_TYPE = auto()
+    BAD_MATERIAL = auto()
+    BAD_INSULATOR = auto()
     BAD_Z_LINE_VALUE = auto()
     BAD_Y_SHUNT_VALUE = auto()
     BAD_TYPE_NAME_SYNTAX = auto()
     BAD_LENGTH_VALUE = auto()
+    BAD_AMPACITIES_VALUE = auto()
+    BAD_AMPACITIES_SIZE = auto()
+    BAD_SECTIONS_VALUE = auto()
+    BAD_SECTIONS_SIZE = auto()
+    BAD_MATERIALS_VALUE = auto()
+    BAD_MATERIALS_SIZE = auto()
+    BAD_INSULATORS_VALUE = auto()
+    BAD_INSULATORS_SIZE = auto()
 
     # Transformer
     BAD_TRANSFORMER_ID = auto()
-    BAD_TRANSFORMER_WINDINGS = auto()
     BAD_TRANSFORMER_TYPE = auto()
+    BAD_TRANSFORMER_VECTOR_GROUP = auto()
+    BAD_TRANSFORMER_WINDINGS = BAD_TRANSFORMER_VECTOR_GROUP
     BAD_TRANSFORMER_VOLTAGES = auto()
     BAD_TRANSFORMER_IMPEDANCE = auto()
     BAD_TRANSFORMER_PARAMETERS = auto()
+
+    # Transformer and line
+    BAD_MAX_LOADING_VALUE = auto()
 
     # Switch
     BAD_SWITCH_ID = auto()
@@ -97,6 +109,7 @@ class RoseauLoadFlowExceptionCode(StrEnum):
     # Solver
     BAD_SOLVER_NAME = auto()
     BAD_SOLVER_PARAMS = auto()
+    NO_BACKWARD_FORWARD = auto()
 
     # DGS export
     DGS_BAD_PHASE_TECHNOLOGY = auto()

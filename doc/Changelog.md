@@ -17,9 +17,106 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 # Changelog
 
+## Version 0.11.0
+
+This release adds official support for Python 3.13 and adds a new experimental backward-forward solver.
+
+### Breaking changes
+
+- The `min_voltage` and `max_voltage` of `Bus` have been replaced by `nominal_voltage` (phase-to-phase,
+  in V), a `min_voltage_level` (unitless) and a `max_voltage_level` (unitless).
+- The `type` parameter of `TransformerParameters` constructors becomes `vg` for vector group. Replace
+  `type="single"` by `vg="Ii0"` and `type="center"` by `vg="Iii0"`.
+- The `type` attribute of `TransformerParameters` now returns `three-phase`, `single-phase` or
+  `center-tapped`. Use `TransformerParameters.vg` to get the vector group.
+- The names of the transformers in the catalogue have been modified to add voltage levels and vector
+  groups. Use `rlf.TransformerParameters.get_catalogue()` to see the updated catalogue.
+- The `max_current`, `section`, `insulator_type` and `conductor_type` parameters of the `LineParameters`
+  class are renamed to `ampacities`, `sections`, `insulators` and `materials` respectively. The new
+  parameters accept arrays of values, one per conductor.
+- The enumeration `InsulatorType.UNKNOWN` is removed. Please use `None` if the insulator is unknown.
+- The definition of constant-current loads is modified to be the magnitudes of the currents and their
+  phase shift from the voltages instead of the absolute phase shift. Currents should no longer be
+  rotated by 120° to be in sync with the voltages.
+
+### Deprecations
+
+- The enumerated classes `InsulatorType` and `ConductorType` are renamed to `Insulator` and `Material`
+  respectively. Their old names are deprecated and will be removed in a future release.
+- The deprecated method `LineParameters.from_name_mv` is removed.
+
+### Detailed changes
+
+- {gh-pr}`293` Fixed `loading` calculation for lines and transformers
+- {gh-pr}`291` Fixed several bugs in JSON serialization and deserialization.
+- {gh-pr}`289` {gh-issue}`264` Improve the `TransformerParameters` class and the transformers catalogue
+
+  - Add 15kV transformers to the catalogue (SE and FT)
+  - Add single-phase transformers to the catalogue (Schneider Imprego)
+  - Add step-up transformers to the catalogue (Cahors "Serie Jaune")
+  - Use the correct LV side no-load voltage as defined in the datasheets (some 400V became 410V)
+  - Revert {gh-pr}`282` to keep the IEC 600076 names `uhv` and `ulv` for the transformer voltages.
+  - Replace the `type` parameter of `TransformerParameters` constructors by `vg` for vector group.
+  - `TransformerParameters.type` now returns `three-phase`, `single-phase` or `center-tapped`. Use
+    `TransformerParameters.vg` to get vector group.
+  - Modify the names of the transformers in the catalogue to add voltage levels and vector groups
+
+- {gh-pr}`285` {gh-issue}`279` Add maximum loading for lines and transformers.
+
+  - The constructors of `Transformer` and `Line` now accept a unitless `max_loading` parameter equal
+    to 1 (=100%) by default.
+  - The parameter `max_currents` of `LineParameters` is now called `ampacities`.
+  - The `Line` class gained a new property `max_currents` that returns the maximal admissible currents
+    (in Amps) for each conductor: `line.max_current = line.parameters.ampacity * line.max_loading`.
+  - The `res_violated` property of `Transformer` and `Line` now take into account this `max_loading`.
+  - The `Line` and `Transformer` classes have a new `res_loading` property to compute the loading of
+    the element:
+    - `line.res_loading = line.res_currents / line.parameters.ampacities`
+    - `transformer.res_loading = sum(transformer.res_powers) / transformer.parameters.sn`
+
+- {gh-pr}`286` The deprecated method `LineParameters.from_name_mv` is removed.
+- {gh-pr}`283` Several changes related to the `LineParameters`:
+
+  - The `max_current`, `section`, `insulator_type` and `conductor_type` parameters are renamed to
+    `max_currents`, `sections`, `insulators` and `materials` respectively. The new parameters accept
+    arrays of values, one per conductor.
+  - The class method `from_geometry` now accepts several additional arguments related to the neutral
+    (`material_neutral`, `insulator_neutral`, `max_current_neutral`)
+  - The enumerated classes `InsulatorType` and `ConductorType` are renamed to `Insulator` and `Material`.
+    Their old names are deprecated and will be removed in a future release.
+  - The insulator `UNKNOWN` is removed. Please use `None` if the insulator is unknown.
+  - The insulator `NONE` is added. It must be used to describe conductors without insulator.
+  - The catalogue has now several additional columns related to the neutral parameters (resistance,
+    reactance, susceptance, material, insulator, maximal current). The `get_catalogue` and the
+    `from_catalogue` methods have been changed to accept filter on the columns (`material_neutral`,
+    `insulator_neutral`, `section_neutral`)
+
+- {gh-pr}`281` Add official support for Python 3.13.
+- {gh-issue}`278` {gh-pr}`280` Modify the `Bus` voltage limits:
+
+  - The `min_voltage` and `max_voltage` parameters and attributes of `Bus` have been replaced by
+    `nominal_voltage` (phase-to-phase, in V), a `min_voltage_level` (unitless) and a `max_voltage_level`
+    (unitless).
+  - `Bus` gained a new property `res_voltage_levels` that returns the voltage levels of the bus
+    as a percentage of the nominal voltage;
+  - The JSON file format also changed to take into account these changes. If a `min_voltage` or
+    `max_voltage` existed in a file of a previous version, they are lost when upgrading the file.
+
+- {gh-pr}`277` Fix the definition of constant current loads to be the magnitudes of the currents
+  and their phase shift from the voltages instead of the absolute phase shift. Currents should no
+  longer be rotated by 120° to be in sync with the voltages.
+- {gh-pr}`276` Add a backward-forward solver (experimental).
+- {gh-pr}`275` Use [uv](https://docs.astral.sh/uv/) instead of [Rye](https://rye.astral.sh/) as dependency manager.
+- {gh-pr}`273` Dynamically calculate the stacklevel of the first frame outside of `roseau.load_flow` for warnings
+- {gh-pr}`272` {gh-issue}`271`: Fix segfault when phases of a potential reference are not the same as the bus phases.
+- {gh-pr}`270` Use [Rye](https://rye.astral.sh/) instead of [Poetry](https://python-poetry.org/) as dependency manager.
+- {gh-pr}`269` Optimize the SVG files of the documentation.
+- {gh-pr}`268` Set up ReadTheDoc to automatically compile the documentation.
+- {gh-pr}`267` Add a section in the documentation on Google Colab secrets.
+
 ## Version 0.10.0
 
-- A wheel for Python 3.13 is also available.
+- A wheel for Python 3.13 is available.
 - The wheels for Windows are now available. The problem was the same as the one of the
   [issue 28551](https://github.com/matplotlib/matplotlib/issues/28551) of the Matplotlib repository.
 - {gh-pr}`237` Improvements of the Sphinx configuration.

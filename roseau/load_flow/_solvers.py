@@ -1,4 +1,5 @@
 import logging
+import warnings
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
@@ -8,13 +9,15 @@ from typing_extensions import Self
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.license import activate_license, get_license
 from roseau.load_flow.typing import JsonDict, Solver
-from roseau.load_flow_engine.cy_engine import CyAbstractSolver, CyNewton, CyNewtonGoldstein
+from roseau.load_flow.utils._exceptions import find_stack_level
+from roseau.load_flow_engine.cy_engine import CyAbstractSolver, CyBackwardForward, CyNewton, CyNewtonGoldstein
 
 logger = logging.getLogger(__name__)
 
 _SOLVERS_PARAMS: dict[Solver, list[str]] = {
     "newton": [],
     "newton_goldstein": ["m1", "m2"],
+    "backward_forward": [],
 }
 SOLVERS = list(_SOLVERS_PARAMS)
 
@@ -57,6 +60,8 @@ class AbstractSolver(ABC):
             m1 = data["params"].get("m1", NewtonGoldstein.DEFAULT_M1)
             m2 = data["params"].get("m2", NewtonGoldstein.DEFAULT_M2)
             return NewtonGoldstein(network=network, m1=m1, m2=m2)
+        elif data["name"] == "backward_forward":
+            return BackwardForward(network=network)
         else:
             msg = f"Solver {data['name']!r} is not implemented."
             logger.error(msg)
@@ -89,10 +94,10 @@ class AbstractSolver(ABC):
         """If the network has changed, we need to re-create a solver for this new network."""
         raise NotImplementedError
 
-    @abstractmethod
     def update_params(self, params: JsonDict) -> None:
         """If the network has changed, we need to re-create a solver for this new network."""
-        raise NotImplementedError
+        msg = "The update_params() method is called for a solver that doesn't have any parameters."
+        warnings.warn(msg, stacklevel=find_stack_level())
 
     def to_dict(self) -> JsonDict:
         """Return the solver information as a dictionary format."""
@@ -162,9 +167,6 @@ class Newton(AbstractNewton):
     def update_network(self, network: "ElectricalNetwork") -> None:
         self._cy_solver = CyNewton(network=network._cy_electrical_network, optimize_tape=self.optimize_tape)
 
-    def update_params(self, params: JsonDict) -> None:
-        pass
-
 
 class NewtonGoldstein(AbstractNewton):
     """The Newton-Raphson algorithm with the Goldstein and Price linear search. It has better stability than the
@@ -225,3 +227,38 @@ class NewtonGoldstein(AbstractNewton):
 
     def params(self) -> JsonDict:
         return {"m1": self.m1, "m2": self.m2}
+
+
+class BackwardForward(AbstractSolver):
+    """A backward-forward implementation, less stable than Newton-Raphson based algorithms,
+    but can be more performant in some cases.
+    """
+
+    name = "backward_forward"
+
+    def __init__(self, network: "ElectricalNetwork") -> None:
+        """Backward-Forward constructor.
+
+        Args:
+            network:
+                The electrical network for which the load flow needs to be solved.
+        """
+        super().__init__(network=network)
+        self._cy_solver = CyBackwardForward(network=network._cy_electrical_network)
+
+    def update_network(self, network: "ElectricalNetwork") -> None:
+        self._cy_solver = CyBackwardForward(network=network._cy_electrical_network)
+
+    def solve_load_flow(self, max_iterations: int, tolerance: float) -> tuple[int, float]:
+        if self.network._has_loop:
+            msg = "The backward-forward solver does not support loops, but the network contains one."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.NO_BACKWARD_FORWARD)
+        if self.network._has_floating_neutral:
+            msg = (
+                "The backward-forward solver does not support loads or voltage sources with floating neutral, "
+                "but the network contains at least one."
+            )
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.NO_BACKWARD_FORWARD)
+        return super().solve_load_flow(max_iterations, tolerance)

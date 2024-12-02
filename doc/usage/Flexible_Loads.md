@@ -47,7 +47,7 @@ a Delta-Wye transformer and a small LV network.
 >>> # Add a MV/LV transformer
 ... tp = rlf.TransformerParameters.from_open_and_short_circuit_tests(
 ...     "160_kVA",
-...     "Dyn11",
+...     vg="Dyn11",
 ...     sn=160.0 * 1e3,
 ...     uhv=20e3,
 ...     ulv=400.0,
@@ -70,8 +70,8 @@ a Delta-Wye transformer and a small LV network.
 ... lp = rlf.LineParameters.from_geometry(
 ...     "U_AL_150",
 ...     line_type=rlf.LineType.UNDERGROUND,
-...     conductor_type=rlf.ConductorType.AL,
-...     insulator_type=rlf.InsulatorType.PVC,
+...     material=rlf.Material.AL,
+...     insulator=rlf.Insulator.PVC,
 ...     section=150,
 ...     section_neutral=150,
 ...     height=rlf.Q_(-1.5, "m"),

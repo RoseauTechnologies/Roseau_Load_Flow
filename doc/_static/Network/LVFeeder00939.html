@@ -50,7 +50,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css" />
     <link
       rel="stylesheet"
@@ -67,7 +67,7 @@
                 initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
     <style>
-      #map_25ba0c74d0a43620e25dd297b145be2e {
+      #map_f488d512e5d25115ef7c9b641582d56d {
         position: relative;
         width: 100%;
         height: 100%;
@@ -114,10 +114,10 @@
   <body>
     <h1>LV Feeder 00939</h1>
 
-    <div class="folium-map" id="map_25ba0c74d0a43620e25dd297b145be2e"></div>
+    <div class="folium-map" id="map_f488d512e5d25115ef7c9b641582d56d"></div>
   </body>
   <script>
-    var map_25ba0c74d0a43620e25dd297b145be2e = L.map("map_25ba0c74d0a43620e25dd297b145be2e", {
+    var map_f488d512e5d25115ef7c9b641582d56d = L.map("map_f488d512e5d25115ef7c9b641582d56d", {
       center: [48.64968940378774, -1.319931606954789],
       crs: L.CRS.EPSG3857,
       zoom: 16,
@@ -125,7 +125,7 @@
       preferCanvas: false,
     });
 
-    var tile_layer_6370e57c4beb7726ec78cef3f82eaa21 = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    var tile_layer_000df70d5b112f4a0e603bcfb8bd000a = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution:
         '\u0026copy; \u003ca href="https://www.openstreetmap.org/copyright"\u003eOpenStreetMap\u003c/a\u003e contributors',
       detectRetina: false,
@@ -138,21 +138,21 @@
       tms: false,
     });
 
-    tile_layer_6370e57c4beb7726ec78cef3f82eaa21.addTo(map_25ba0c74d0a43620e25dd297b145be2e);
+    tile_layer_000df70d5b112f4a0e603bcfb8bd000a.addTo(map_f488d512e5d25115ef7c9b641582d56d);
 
-    function geo_json_7ee80fe785f01194cd2de75a46568cb5_styler(feature) {
+    function geo_json_e62d63283bf97b0c46db1e68d394e4c2_styler(feature) {
       switch (feature.id) {
         default:
           return { color: "#adb9cb", weight: 3 };
       }
     }
-    function geo_json_7ee80fe785f01194cd2de75a46568cb5_highlighter(feature) {
+    function geo_json_e62d63283bf97b0c46db1e68d394e4c2_highlighter(feature) {
       switch (feature.id) {
         default:
           return { color: "#cad40e" };
       }
     }
-    function geo_json_7ee80fe785f01194cd2de75a46568cb5_pointToLayer(feature, latlng) {
+    function geo_json_e62d63283bf97b0c46db1e68d394e4c2_pointToLayer(feature, latlng) {
       var opts = {
         bubblingMouseEvents: true,
         color: "#3388ff",
@@ -170,38 +170,38 @@
         weight: 3,
       };
 
-      let style = geo_json_7ee80fe785f01194cd2de75a46568cb5_styler(feature);
+      let style = geo_json_e62d63283bf97b0c46db1e68d394e4c2_styler(feature);
       Object.assign(opts, style);
 
       return new L.CircleMarker(latlng, opts);
     }
 
-    function geo_json_7ee80fe785f01194cd2de75a46568cb5_onEachFeature(feature, layer) {
+    function geo_json_e62d63283bf97b0c46db1e68d394e4c2_onEachFeature(feature, layer) {
       layer.on({
         mouseout: function (e) {
           if (typeof e.target.setStyle === "function") {
-            geo_json_7ee80fe785f01194cd2de75a46568cb5.resetStyle(e.target);
+            geo_json_e62d63283bf97b0c46db1e68d394e4c2.resetStyle(e.target);
           }
         },
         mouseover: function (e) {
           if (typeof e.target.setStyle === "function") {
-            const highlightStyle = geo_json_7ee80fe785f01194cd2de75a46568cb5_highlighter(e.target.feature);
+            const highlightStyle = geo_json_e62d63283bf97b0c46db1e68d394e4c2_highlighter(e.target.feature);
             e.target.setStyle(highlightStyle);
           }
         },
       });
     }
-    var geo_json_7ee80fe785f01194cd2de75a46568cb5 = L.geoJson(null, {
-      onEachFeature: geo_json_7ee80fe785f01194cd2de75a46568cb5_onEachFeature,
+    var geo_json_e62d63283bf97b0c46db1e68d394e4c2 = L.geoJson(null, {
+      onEachFeature: geo_json_e62d63283bf97b0c46db1e68d394e4c2_onEachFeature,
 
-      style: geo_json_7ee80fe785f01194cd2de75a46568cb5_styler,
-      pointToLayer: geo_json_7ee80fe785f01194cd2de75a46568cb5_pointToLayer,
+      style: geo_json_e62d63283bf97b0c46db1e68d394e4c2_styler,
+      pointToLayer: geo_json_e62d63283bf97b0c46db1e68d394e4c2_pointToLayer,
     });
 
-    function geo_json_7ee80fe785f01194cd2de75a46568cb5_add(data) {
-      geo_json_7ee80fe785f01194cd2de75a46568cb5.addData(data);
+    function geo_json_e62d63283bf97b0c46db1e68d394e4c2_add(data) {
+      geo_json_e62d63283bf97b0c46db1e68d394e4c2.addData(data);
     }
-    geo_json_7ee80fe785f01194cd2de75a46568cb5_add({
+    geo_json_e62d63283bf97b0c46db1e68d394e4c2_add({
       bbox: [-1.321757789157954, 48.64794139348595, -1.318356873544854, 48.65071019353541],
       features: [
         {
@@ -226,7 +226,8 @@
             bus1_id: "MVLVFeeder03045",
             bus2_id: "LVBus004111",
             id: "LVBranch128683",
-            max_current: 325,
+            length: 0.18165362031560994,
+            max_loading: 1,
             network: "LVFeeder00939",
             parameters_id: "U_AL_150",
             phases: "abcn",
@@ -250,7 +251,8 @@
             bus1_id: "LVBus004111",
             bus2_id: "LVBus004113",
             id: "LVBranch022998",
-            max_current: 187,
+            length: 0.06563452239076538,
+            max_loading: 1,
             network: "LVFeeder00939",
             parameters_id: "T_AL_70",
             phases: "abcn",
@@ -274,7 +276,8 @@
             bus1_id: "LVBus004113",
             bus2_id: "LVBus004116",
             id: "LVBranch013210",
-            max_current: 187,
+            length: 0.01849364446078355,
+            max_loading: 1,
             network: "LVFeeder00939",
             parameters_id: "T_AL_70",
             phases: "abcn",
@@ -299,7 +302,8 @@
             bus1_id: "LVBus004113",
             bus2_id: "LVBus004114",
             id: "LVBranch013211",
-            max_current: 187,
+            length: 0.06500094076102345,
+            max_loading: 1,
             network: "LVFeeder00939",
             parameters_id: "T_AL_70",
             phases: "abcn",
@@ -327,7 +331,8 @@
             bus1_id: "LVBus004114",
             bus2_id: "LVBus004115",
             id: "LVBranch147387",
-            max_current: 325,
+            length: 0.07029495574312403,
+            max_loading: 1,
             network: "LVFeeder00939",
             parameters_id: "U_AL_150",
             phases: "abcn",
@@ -356,7 +361,8 @@
             bus1_id: "LVBus004111",
             bus2_id: "LVBus004112",
             id: "LVBranch068439",
-            max_current: 187,
+            length: 0.1640996914834165,
+            max_loading: 1,
             network: "LVFeeder00939",
             parameters_id: "T_AL_70",
             phases: "abcn",
@@ -367,13 +373,13 @@
       type: "FeatureCollection",
     });
 
-    geo_json_7ee80fe785f01194cd2de75a46568cb5.bindTooltip(
+    geo_json_e62d63283bf97b0c46db1e68d394e4c2.bindTooltip(
       function (layer) {
         let div = L.DomUtil.create("div");
 
         let handleObject = (feature) => (typeof feature == "object" ? JSON.stringify(feature) : feature);
-        let fields = ["id", "bus1_id", "bus2_id", "parameters_id"];
-        let aliases = ["Id:", "Bus1:", "Bus2:", "Parameters:"];
+        let fields = ["id", "phases", "bus1_id", "bus2_id", "parameters_id", "length"];
+        let aliases = ["Id:", "Phases:", "Bus1:", "Bus2:", "Parameters:", "Length (km):"];
         let table =
           "<table>" +
           String(
@@ -396,9 +402,9 @@
       { className: "foliumtooltip", maxWidth: 800, sticky: false },
     );
 
-    geo_json_7ee80fe785f01194cd2de75a46568cb5.addTo(map_25ba0c74d0a43620e25dd297b145be2e);
+    geo_json_e62d63283bf97b0c46db1e68d394e4c2.addTo(map_f488d512e5d25115ef7c9b641582d56d);
 
-    function geo_json_001993998c0f2ed408cd3fe00cd8f978_styler(feature) {
+    function geo_json_fbd08df6bee809bbf198372d524146b5_styler(feature) {
       switch (feature.id) {
         case "0":
         case "1":
@@ -407,13 +413,13 @@
           return { color: "#adb9cb", fill: true, fillColor: "#adb9cb", fillOpacity: 1, radius: 1 };
       }
     }
-    function geo_json_001993998c0f2ed408cd3fe00cd8f978_highlighter(feature) {
+    function geo_json_fbd08df6bee809bbf198372d524146b5_highlighter(feature) {
       switch (feature.id) {
         default:
           return { color: "#cad40e", fillColor: "#cad40e" };
       }
     }
-    function geo_json_001993998c0f2ed408cd3fe00cd8f978_pointToLayer(feature, latlng) {
+    function geo_json_fbd08df6bee809bbf198372d524146b5_pointToLayer(feature, latlng) {
       var opts = {
         bubblingMouseEvents: true,
         color: "#3388ff",
@@ -431,38 +437,38 @@
         weight: 3,
       };
 
-      let style = geo_json_001993998c0f2ed408cd3fe00cd8f978_styler(feature);
+      let style = geo_json_fbd08df6bee809bbf198372d524146b5_styler(feature);
       Object.assign(opts, style);
 
       return new L.CircleMarker(latlng, opts);
     }
 
-    function geo_json_001993998c0f2ed408cd3fe00cd8f978_onEachFeature(feature, layer) {
+    function geo_json_fbd08df6bee809bbf198372d524146b5_onEachFeature(feature, layer) {
       layer.on({
         mouseout: function (e) {
           if (typeof e.target.setStyle === "function") {
-            geo_json_001993998c0f2ed408cd3fe00cd8f978.resetStyle(e.target);
+            geo_json_fbd08df6bee809bbf198372d524146b5.resetStyle(e.target);
           }
         },
         mouseover: function (e) {
           if (typeof e.target.setStyle === "function") {
-            const highlightStyle = geo_json_001993998c0f2ed408cd3fe00cd8f978_highlighter(e.target.feature);
+            const highlightStyle = geo_json_fbd08df6bee809bbf198372d524146b5_highlighter(e.target.feature);
             e.target.setStyle(highlightStyle);
           }
         },
       });
     }
-    var geo_json_001993998c0f2ed408cd3fe00cd8f978 = L.geoJson(null, {
-      onEachFeature: geo_json_001993998c0f2ed408cd3fe00cd8f978_onEachFeature,
+    var geo_json_fbd08df6bee809bbf198372d524146b5 = L.geoJson(null, {
+      onEachFeature: geo_json_fbd08df6bee809bbf198372d524146b5_onEachFeature,
 
-      style: geo_json_001993998c0f2ed408cd3fe00cd8f978_styler,
-      pointToLayer: geo_json_001993998c0f2ed408cd3fe00cd8f978_pointToLayer,
+      style: geo_json_fbd08df6bee809bbf198372d524146b5_styler,
+      pointToLayer: geo_json_fbd08df6bee809bbf198372d524146b5_pointToLayer,
     });
 
-    function geo_json_001993998c0f2ed408cd3fe00cd8f978_add(data) {
-      geo_json_001993998c0f2ed408cd3fe00cd8f978.addData(data);
+    function geo_json_fbd08df6bee809bbf198372d524146b5_add(data) {
+      geo_json_fbd08df6bee809bbf198372d524146b5.addData(data);
     }
-    geo_json_001993998c0f2ed408cd3fe00cd8f978_add({
+    geo_json_fbd08df6bee809bbf198372d524146b5_add({
       bbox: [-1.321744301484108, 48.64794139348595, -1.318375372111463, 48.65071019353541],
       features: [
         {
@@ -471,9 +477,10 @@
           id: "0",
           properties: {
             id: "MVLV03045",
-            max_voltage: 21000,
-            min_voltage: 19000,
+            max_voltage_level: null,
+            min_voltage_level: 0.95,
             network: "LVFeeder00939",
+            nominal_voltage: 20000,
             phases: "abc",
           },
           type: "Feature",
@@ -484,9 +491,10 @@
           id: "1",
           properties: {
             id: "MVLVFeeder03045",
-            max_voltage: 253,
-            min_voltage: 207,
+            max_voltage_level: null,
+            min_voltage_level: 0.9,
             network: "LVFeeder00939",
+            nominal_voltage: 400,
             phases: "abcn",
           },
           type: "Feature",
@@ -497,9 +505,10 @@
           id: "2",
           properties: {
             id: "LVBus004111",
-            max_voltage: 253,
-            min_voltage: 207,
+            max_voltage_level: null,
+            min_voltage_level: 0.9,
             network: "LVFeeder00939",
+            nominal_voltage: 400,
             phases: "abcn",
           },
           type: "Feature",
@@ -510,9 +519,10 @@
           id: "3",
           properties: {
             id: "LVBus004113",
-            max_voltage: 253,
-            min_voltage: 207,
+            max_voltage_level: null,
+            min_voltage_level: 0.9,
             network: "LVFeeder00939",
+            nominal_voltage: 400,
             phases: "abcn",
           },
           type: "Feature",
@@ -523,9 +533,10 @@
           id: "4",
           properties: {
             id: "LVBus004116",
-            max_voltage: 253,
-            min_voltage: 207,
+            max_voltage_level: null,
+            min_voltage_level: 0.9,
             network: "LVFeeder00939",
+            nominal_voltage: 400,
             phases: "abcn",
           },
           type: "Feature",
@@ -536,9 +547,10 @@
           id: "5",
           properties: {
             id: "LVBus004114",
-            max_voltage: 253,
-            min_voltage: 207,
+            max_voltage_level: null,
+            min_voltage_level: 0.9,
             network: "LVFeeder00939",
+            nominal_voltage: 400,
             phases: "abcn",
           },
           type: "Feature",
@@ -549,9 +561,10 @@
           id: "6",
           properties: {
             id: "LVBus004115",
-            max_voltage: 253,
-            min_voltage: 207,
+            max_voltage_level: null,
+            min_voltage_level: 0.9,
             network: "LVFeeder00939",
+            nominal_voltage: 400,
             phases: "abcn",
           },
           type: "Feature",
@@ -562,9 +575,10 @@
           id: "7",
           properties: {
             id: "LVBus004112",
-            max_voltage: 253,
-            min_voltage: 207,
+            max_voltage_level: null,
+            min_voltage_level: 0.9,
             network: "LVFeeder00939",
+            nominal_voltage: 400,
             phases: "abcn",
           },
           type: "Feature",
@@ -573,7 +587,7 @@
       type: "FeatureCollection",
     });
 
-    geo_json_001993998c0f2ed408cd3fe00cd8f978.bindTooltip(
+    geo_json_fbd08df6bee809bbf198372d524146b5.bindTooltip(
       function (layer) {
         let div = L.DomUtil.create("div");
 
@@ -602,23 +616,23 @@
       { className: "foliumtooltip", maxWidth: 800, sticky: false },
     );
 
-    geo_json_001993998c0f2ed408cd3fe00cd8f978.addTo(map_25ba0c74d0a43620e25dd297b145be2e);
+    geo_json_fbd08df6bee809bbf198372d524146b5.addTo(map_f488d512e5d25115ef7c9b641582d56d);
 
-    var layer_control_573bdcc5da45805673e2950aed1d8e48_layers = {
+    var layer_control_648a9d14e32c011b3c15f34309386ac8_layers = {
       base_layers: {
-        openstreetmap: tile_layer_6370e57c4beb7726ec78cef3f82eaa21,
+        openstreetmap: tile_layer_000df70d5b112f4a0e603bcfb8bd000a,
       },
       overlays: {
-        lines: geo_json_7ee80fe785f01194cd2de75a46568cb5,
-        buses: geo_json_001993998c0f2ed408cd3fe00cd8f978,
+        lines: geo_json_e62d63283bf97b0c46db1e68d394e4c2,
+        buses: geo_json_fbd08df6bee809bbf198372d524146b5,
       },
     };
-    let layer_control_573bdcc5da45805673e2950aed1d8e48 = L.control
+    let layer_control_648a9d14e32c011b3c15f34309386ac8 = L.control
       .layers(
-        layer_control_573bdcc5da45805673e2950aed1d8e48_layers.base_layers,
-        layer_control_573bdcc5da45805673e2950aed1d8e48_layers.overlays,
+        layer_control_648a9d14e32c011b3c15f34309386ac8_layers.base_layers,
+        layer_control_648a9d14e32c011b3c15f34309386ac8_layers.overlays,
         { autoZIndex: true, collapsed: true, position: "topright" },
       )
-      .addTo(map_25ba0c74d0a43620e25dd297b145be2e);
+      .addTo(map_f488d512e5d25115ef7c9b641582d56d);
   </script>
 </html>

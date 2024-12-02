@@ -625,8 +625,8 @@ vs = rlf.VoltageSource(id="vs", bus=bus_mv, voltages=20e3)
 
 # Create a MV/LV transformer
 tp = rlf.TransformerParameters.from_open_and_short_circuit_tests(
-    id="SE_Minera_A0Ak_100_kVA",
-    type="Dyn11",
+    id="SE Minera A0Ak 100kVA",
+    vg="Dyn11",
     sn=100.0 * 1e3,
     uhv=20e3,
     ulv=400.0,
@@ -672,7 +672,7 @@ en.res_transformers[["current2"]].transform([np.abs, ft.partial(np.angle, deg=Tr
 # | ('transfo', 'n') |                2.25156e-13 |                -80.4634 |
 
 # The voltages at the buses of the network
-en.res_buses_voltages.transform([np.abs, ft.partial(np.angle, deg=True)])
+en.res_buses_voltages[["voltage"]].transform([np.abs, ft.partial(np.angle, deg=True)])
 # |                  |   ('voltage', 'absolute') |   ('voltage', 'angle') |
 # |:-----------------|--------------------------:|-----------------------:|
 # | ('bus_mv', 'ab') |                 20000     |               0        |

@@ -389,7 +389,7 @@ def test_flexible_parameter():
     assert e.value.code == RoseauLoadFlowExceptionCode.JSON_NO_RESULTS
 
 
-@pytest.mark.no_patch_engine()
+@pytest.mark.no_patch_engine
 def test_flexible_parameters_compute_powers():
     # Control P
     fp = FlexibleParameter(

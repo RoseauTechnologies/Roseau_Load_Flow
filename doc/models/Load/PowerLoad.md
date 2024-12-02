@@ -20,28 +20,29 @@ _ZIP_ equation: $S = s \times V^0 + 0 \times V^1 + 0 \times V^2 \implies S = \ma
 
 ## Equations
 
-The equations are the following (star loads):
+The equations are the following for star loads given the constant powers {math}`s_{\mathrm{abc}}`:
 
 ```{math}
 \left\{
     \begin{aligned}
-        \underline{I_{\mathrm{abc}}} &= \left(\frac{\underline{S_{\mathrm{abc}}}}{\underline{V_{\mathrm{abc}}}
+        \underline{I_{\mathrm{abc}}} &= \left(\frac{\underline{s_{\mathrm{abc}}}}{\underline{V_{\mathrm{abc}}}
         -\underline{V_{\mathrm{n}}}}\right)^{\star} \\
         \underline{I_{\mathrm{n}}} &= -\sum_{p\in\{\mathrm{a},\mathrm{b},\mathrm{c}\}}\underline{I_{p}}
     \end{aligned}
 \right.
 ```
 
-And the following (delta loads):
+And the following for delta loads given the constant powers {math}`s_{\mathrm{ab}}`,
+{math}`s_{\mathrm{bc}}` and {math}`s_{\mathrm{ca}}`:
 
 ```{math}
 \left\{
     \begin{aligned}
-        \underline{I_{\mathrm{ab}}} &= \left(\frac{\underline{S_{\mathrm{ab}}}}{\underline{V_{\mathrm{a}}}-\underline
+        \underline{I_{\mathrm{ab}}} &= \left(\frac{\underline{s_{\mathrm{ab}}}}{\underline{V_{\mathrm{a}}}-\underline
         {V_{\mathrm{b}}}}\right)^{\star} \\
-        \underline{I_{\mathrm{bc}}} &= \left(\frac{\underline{S_{\mathrm{bc}}}}{\underline{V_{\mathrm{b}}}-\underline
+        \underline{I_{\mathrm{bc}}} &= \left(\frac{\underline{s_{\mathrm{bc}}}}{\underline{V_{\mathrm{b}}}-\underline
         {V_{\mathrm{c}}}}\right)^{\star} \\
-        \underline{I_{\mathrm{ca}}} &= \left(\frac{\underline{S_{\mathrm{ca}}}}{\underline{V_{\mathrm{c}}}-\underline
+        \underline{I_{\mathrm{ca}}} &= \left(\frac{\underline{s_{\mathrm{ca}}}}{\underline{V_{\mathrm{c}}}-\underline
         {V_{\mathrm{a}}}}\right)^{\star}
     \end{aligned}
 \right.
@@ -86,7 +87,7 @@ en.res_loads["power"]
 # | ('load', 'n') | -5.57569e-31+ 2.25385e-32j |
 
 # Get the voltages of the network
-en.res_buses_voltages.transform([np.abs, ft.partial(np.angle, deg=True)])
+en.res_buses_voltages["voltage"].transform([np.abs, ft.partial(np.angle, deg=True)])
 # |                |   ('voltage', 'absolute') |   ('voltage', 'angle') |
 # |:---------------|--------------------------:|-----------------------:|
 # | ('bus1', 'an') |                   230.94  |            9.69325e-22 |
@@ -110,7 +111,7 @@ en.res_loads["power"]
 # | ('load', 'n') | -148.93 + 3.78664e-14j |
 
 # Get the voltages of the network, bus2 voltages are no longer equal
-en.res_buses_voltages.transform([np.abs, ft.partial(np.angle, deg=True)])
+en.res_buses_voltages["voltage"].transform([np.abs, ft.partial(np.angle, deg=True)])
 # |                |   ('voltage', 'absolute') |   ('voltage', 'angle') |
 # |:---------------|--------------------------:|-----------------------:|
 # | ('bus1', 'an') |                   230.94  |            4.05321e-24 |

@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "is_multiphase": true,
   "grounds": [
     {
@@ -68,6 +68,7 @@
       "bus2": "lb",
       "length": 10,
       "params_id": "lp",
+      "max_loading": 1,
       "ground": "gnd",
       "results": {
         "currents1": [

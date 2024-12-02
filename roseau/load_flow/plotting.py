@@ -276,7 +276,7 @@ def plot_interactive_map(
         ),
     ).add_to(m)
     folium.GeoJson(
-        buses_gdf,
+        data=buses_gdf,
         name="buses",
         marker=folium.CircleMarker(),
         style_function=internal_style_function,

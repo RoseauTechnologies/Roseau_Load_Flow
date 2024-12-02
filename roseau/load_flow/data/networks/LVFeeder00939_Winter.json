@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "is_multiphase": true,
   "grounds": [
     {
@@ -31,8 +31,8 @@
         "type": "Point",
         "coordinates": [-1.318375372111463, 48.64794139348595]
       },
-      "min_voltage": 19000,
-      "max_voltage": 21000
+      "nominal_voltage": 20000,
+      "min_voltage_level": 0.95
     },
     {
       "id": "MVLVFeeder03045",
@@ -41,8 +41,8 @@
         "type": "Point",
         "coordinates": [-1.318375372111463, 48.64794139348595]
       },
-      "min_voltage": 207,
-      "max_voltage": 253
+      "nominal_voltage": 400,
+      "min_voltage_level": 0.9
     },
     {
       "id": "LVBus004111",
@@ -51,8 +51,8 @@
         "type": "Point",
         "coordinates": [-1.319439380306016, 48.64935651484044]
       },
-      "min_voltage": 207,
-      "max_voltage": 253
+      "nominal_voltage": 400,
+      "min_voltage_level": 0.9
     },
     {
       "id": "LVBus004113",
@@ -61,8 +61,8 @@
         "type": "Point",
         "coordinates": [-1.320149235966572, 48.64971306653889]
       },
-      "min_voltage": 207,
-      "max_voltage": 253
+      "nominal_voltage": 400,
+      "min_voltage_level": 0.9
     },
     {
       "id": "LVBus004116",
@@ -71,8 +71,8 @@
         "type": "Point",
         "coordinates": [-1.320032407456181, 48.64986022542928]
       },
-      "min_voltage": 207,
-      "max_voltage": 253
+      "nominal_voltage": 400,
+      "min_voltage_level": 0.9
     },
     {
       "id": "LVBus004114",
@@ -81,8 +81,8 @@
         "type": "Point",
         "coordinates": [-1.320930091968568, 48.64998504109587]
       },
-      "min_voltage": 207,
-      "max_voltage": 253
+      "nominal_voltage": 400,
+      "min_voltage_level": 0.9
     },
     {
       "id": "LVBus004115",
@@ -91,8 +91,8 @@
         "type": "Point",
         "coordinates": [-1.321744301484108, 48.65025939158834]
       },
-      "min_voltage": 207,
-      "max_voltage": 253
+      "nominal_voltage": 400,
+      "min_voltage_level": 0.9
     },
     {
       "id": "LVBus004112",
@@ -101,8 +101,8 @@
         "type": "Point",
         "coordinates": [-1.318850459390614, 48.65071019353541]
       },
-      "min_voltage": 207,
-      "max_voltage": 253
+      "nominal_voltage": 400,
+      "min_voltage_level": 0.9
     }
   ],
   "lines": [
@@ -113,6 +113,7 @@
       "bus2": "LVBus004111",
       "length": 0.18165362031560994,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -137,6 +138,7 @@
       "bus2": "LVBus004113",
       "length": 0.06563452239076538,
       "params_id": "T_AL_70",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -156,6 +158,7 @@
       "bus2": "LVBus004116",
       "length": 0.01849364446078355,
       "params_id": "T_AL_70",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -175,6 +178,7 @@
       "bus2": "LVBus004114",
       "length": 0.06500094076102345,
       "params_id": "T_AL_70",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -195,6 +199,7 @@
       "bus2": "LVBus004115",
       "length": 0.07029495574312403,
       "params_id": "U_AL_150",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -218,6 +223,7 @@
       "bus2": "LVBus004112",
       "length": 0.1640996914834165,
       "params_id": "T_AL_70",
+      "max_loading": 1,
       "ground": "ground",
       "geometry": {
         "type": "LineString",
@@ -248,7 +254,8 @@
         "coordinates": [-1.318375372111463, 48.64794139348595]
       },
       "tap": 1.0,
-      "params_id": "Dyn11_160kVA"
+      "params_id": "Dyn11_160kVA",
+      "max_loading": 1
     }
   ],
   "switches": [],
@@ -394,11 +401,10 @@
           [-9.334047516122607e-6, -9.334047516122602e-6, -9.334294062818125e-6, 8.357992380628483e-5]
         ]
       ],
-      "max_current": 187,
+      "ampacities": [187, 187, 187, 187],
       "line_type": "TWISTED",
-      "conductor_type": "AL",
-      "insulator_type": "UNKNOWN",
-      "section": 70.0
+      "materials": ["AL", "AL", "AL", "AL"],
+      "sections": [70.0, 70.0, 70.0, 70.0]
     },
     {
       "id": "U_AL_150",
@@ -430,11 +436,10 @@
           [-0.00018518179657458456, 4.85783749893247e-5, -0.00018518179657458597, 0.0009990656421805131]
         ]
       ],
-      "max_current": 325,
+      "ampacities": [325, 325, 325, 325],
       "line_type": "UNDERGROUND",
-      "conductor_type": "AL",
-      "insulator_type": "UNKNOWN",
-      "section": 150.0
+      "materials": ["AL", "AL", "AL", "AL"],
+      "sections": [150.0, 150.0, 150.0, 150.0]
     }
   ],
   "transformers_params": [
@@ -443,14 +448,13 @@
       "sn": 160000.0,
       "uhv": 20000.0,
       "ulv": 400.0,
-      "type": "Dyn11",
+      "vg": "Dyn11",
       "z2": [0.014687500000000001, 0.037205877811845804],
       "ym": [3.8333333333333335e-7, -3.0426140077242796e-6],
       "i0": 0.023,
       "p0": 460.0,
       "psc": 2350.0,
-      "vsc": 0.04,
-      "max_power": 160000
+      "vsc": 0.04
     }
   ]
 }

@@ -11,12 +11,14 @@ from roseau.load_flow.typing import (
     ComplexArray,
     ComplexArrayLike1D,
     ControlType,
+    FloatArray,
     FloatArrayLike1D,
     JsonDict,
     ProjectionType,
 )
 from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow.utils import JsonMixin, _optional_deps
+from roseau.load_flow.utils._exceptions import find_stack_level
 from roseau.load_flow_engine.cy_engine import CyControl, CyFlexibleParameter, CyProjection
 
 logger = logging.getLogger(__name__)
@@ -135,7 +137,7 @@ class Control(JsonMixin):
                     f"different from 0 were given: {msg}"
                 ),
                 category=UserWarning,
-                stacklevel=2,
+                stacklevel=find_stack_level(),
             )
 
         # Raise an error if the useful values are not well-ordered and positive
@@ -526,7 +528,7 @@ class FlexibleParameter(JsonMixin):
 
     * The active power :class:`roseau.load_flow.models.Control` to apply;
     * The reactive power :class:`roseau.load_flow.models.Control` to apply;
-    * The :class:`Projection` to use when dealing with voltage violations;
+    * The :class:`roseau.load_flow.models.Projection` to use when dealing with voltage violations;
     * The apparent power of the flexible load (VA). This is the maximum power the load can
       consume/produce. It is the radius of the feasible circle used by the projection
 
@@ -1346,7 +1348,7 @@ class FlexibleParameter(JsonMixin):
     @staticmethod
     def _theoretical_control_data(
         control: Control, v_min: float, v_max: float, power: float, s_max: float
-    ) -> tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.object_]]:
+    ) -> tuple[FloatArray, FloatArray, NDArray[np.object_]]:
         """Helper to get data for the different plots of the class. It provides the theoretical control curve
         abscissas and ordinates values. It also provides ticks for the abscissa axis.
 

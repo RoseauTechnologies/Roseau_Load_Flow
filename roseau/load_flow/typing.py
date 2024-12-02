@@ -70,9 +70,10 @@ JsonDict: TypeAlias = dict[str, Any]
 StrPath: TypeAlias = str | os.PathLike[str]
 ControlType: TypeAlias = Literal["constant", "p_max_u_production", "p_max_u_consumption", "q_u"]
 ProjectionType: TypeAlias = Literal["euclidean", "keep_p", "keep_q"]
-Solver: TypeAlias = Literal["newton", "newton_goldstein"]
+Solver: TypeAlias = Literal["newton", "newton_goldstein", "backward_forward"]
 MapOrSeq: TypeAlias = Mapping[int, T] | Mapping[str, T] | Mapping[Id, T] | Sequence[T]
 ComplexArray: TypeAlias = NDArray[np.complex128]
+FloatArray: TypeAlias = NDArray[np.float64]
 QtyOrMag: TypeAlias = Q_[T] | T
 
 Int: TypeAlias = int | np.integer[Any]
@@ -87,6 +88,8 @@ ComplexArrayLike2D: TypeAlias = (
 FloatArrayLike1D: TypeAlias = (
     QtyOrMag[NDArray[np.floating[Any] | np.integer[Any]] | Sequence[Float]] | Sequence[QtyOrMag[Float]]
 )
+FloatScalarOrArrayLike1D: TypeAlias = FloatArrayLike1D | QtyOrMag[Float]
+
 
 __all__ = [
     "Id",
@@ -96,8 +99,11 @@ __all__ = [
     "ProjectionType",
     "Solver",
     "MapOrSeq",
+    "FloatArray",
     "ComplexArray",
     "ComplexArrayLike1D",
     "ComplexArrayLike2D",
     "FloatArrayLike1D",
+    "ComplexScalarOrArrayLike1D",
+    "FloatScalarOrArrayLike1D",
 ]

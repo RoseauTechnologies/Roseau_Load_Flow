@@ -20,25 +20,30 @@ _ZIP_ equation: $S = 0 \times V^0 + i \times V^1 + 0 \times V^2 \implies S \prop
 
 ## Equations
 
-The equations are the following (star loads):
+The equations are the following for star loads given the constant currents {math}`i_{\mathrm{abc}}`:
 
 ```{math}
 \left\{
     \begin{aligned}
-        \underline{I_{\mathrm{abc}}} &= \mathrm{constant} \\
+        \underline{I_{\mathrm{abc}}} &= i_{\mathrm{abc}} \frac{\underline{V_{\mathrm{abc}}}
+        -\underline{V_{\mathrm{n}}}}{|\underline{V_{\mathrm{abc}}}-\underline{V_{\mathrm{n}}}|} \\
         \underline{I_{\mathrm{n}}} &= -\sum_{p\in\{\mathrm{a},\mathrm{b},\mathrm{c}\}}\underline{I_{p}}
     \end{aligned}
 \right.
 ```
 
-And the following (delta loads):
+And the following for delta loads given the constant currents {math}`i_{\mathrm{ab}}`,
+{math}`i_{\mathrm{bc}}` and {math}`i_{\mathrm{ca}}`:
 
 ```{math}
 \left\{
     \begin{aligned}
-        \underline{I_{\mathrm{ab}}} &= \mathrm{constant} \\
-        \underline{I_{\mathrm{bc}}} &= \mathrm{constant} \\
-        \underline{I_{\mathrm{ca}}} &= \mathrm{constant}
+        \underline{I_{\mathrm{ab}}} &= i_{\mathrm{ab}} \frac{\underline{V_{\mathrm{a}}}
+        -\underline{V_{\mathrm{b}}}}{|\underline{V_{\mathrm{a}}}-\underline{V_{\mathrm{b}}}|} \\
+        \underline{I_{\mathrm{bc}}} &= i_{\mathrm{bc}} \frac{\underline{V_{\mathrm{b}}}
+        -\underline{V_{\mathrm{c}}}}{|\underline{V_{\mathrm{b}}}-\underline{V_{\mathrm{c}}}|} \\
+        \underline{I_{\mathrm{ca}}} &= i_{\mathrm{ca}} \frac{\underline{V_{\mathrm{c}}}
+        -\underline{V_{\mathrm{a}}}}{|\underline{V_{\mathrm{c}}}-\underline{V_{\mathrm{a}}}|}
     \end{aligned}
 \right.
 ```
@@ -74,15 +79,15 @@ en.solve_load_flow()
 
 # Get the current of the load (equal to the one provided)
 en.res_loads["current"].transform([np.abs, ft.partial(np.angle, deg=True)])
-# |               |    absolute |   angle |
-# |:--------------|------------:|--------:|
-# | ('load', 'a') | 5           |       0 |
-# | ('load', 'b') | 5           |    -120 |
-# | ('load', 'c') | 5           |     120 |
-# | ('load', 'n') | 1.77636e-15 |     180 |
+# |               |    absolute |      angle |
+# |:--------------|------------:|-----------:|
+# | ('load', 'a') | 5           |          0 |
+# | ('load', 'b') | 5           |       -120 |
+# | ('load', 'c') | 5           |        120 |
+# | ('load', 'n') | 1.77636e-15 |   -71.5651 |
 
 # Get the voltages of the network
-en.res_buses_voltages.transform([np.abs, ft.partial(np.angle, deg=True)])
+en.res_buses_voltages["voltage"].transform([np.abs, ft.partial(np.angle, deg=True)])
 # |                |   ('voltage', 'absolute') |   ('voltage', 'angle') |
 # |:---------------|--------------------------:|-----------------------:|
 # | ('bus1', 'an') |                    230.94 |                      0 |
@@ -99,10 +104,10 @@ en.solve_load_flow()
 
 # Get the currents of the loads of the network
 en.res_loads["current"].transform([np.abs, ft.partial(np.angle, deg=True)])
-# |               |   absolute |   angle |
-# |:--------------|-----------:|--------:|
-# | ('load', 'a') |    5       |       0 |
-# | ('load', 'b') |    2.5     |    -120 |
-# | ('load', 'c') |    0       |     180 |
-# | ('load', 'n') |    4.33013 |     150 |
+# |               |   absolute |       angle |
+# |:--------------|-----------:|------------:|
+# | ('load', 'a') |    5       |   -0.187647 |
+# | ('load', 'b') |    2.5     |     119.999 |
+# | ('load', 'c') |    0       |          -0 |
+# | ('load', 'n') |    4.32197 |    -150.188 |
 ```

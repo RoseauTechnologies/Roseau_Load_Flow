@@ -75,8 +75,8 @@
     style/.condition={\thisrow{v}==245}{pin={[pin style] above:\mylabel}},coordinate
     style/.condition={\thisrow{v}==250}{pin={[pin style] above:\mylabel}},coordinate
     style/.condition={\thisrow{v}==255}{pin={[pin style] below:\mylabel}},visualization depends on={\thisrow{v} \as
-      \myvalue},visualization depends on={value
-      $\qty[parse-numbers=false]{\pgfmathprintnumber{\thisrow{v}}}{V}$\as\mylabel},] \addplot[point meta={\thisrow{v}}]
+    \myvalue},visualization depends on={value
+    $\qty[parse-numbers=false]{\pgfmathprintnumber{\thisrow{v}}}{V}$\as\mylabel},] \addplot[point meta={\thisrow{v}}]
     table[x=p, y=q, col sep=comma] {Load/FlexibleLoad/PmaxU_Qconst_Example.csv};\draw[black] (axis cs:0,0)
     circle[radius=5000];%%%%%% Required to use the "v" column for two usages%%%%%
   \end{axis}

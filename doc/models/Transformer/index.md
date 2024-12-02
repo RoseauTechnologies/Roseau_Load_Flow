@@ -22,10 +22,10 @@ _Roseau Load Flow_ can model single-phase, center-tapped and three-phase transfo
 
 Transformers are modeled with the following parameters:
 
-- $U_{1,\mathrm{nom.}}$: the phase-to-phase nominal voltage of the high voltages side (in V). This
-  parameter is called `uhv` in the code.
-- $U_{2,\mathrm{nom.}}$: the phase-to-phase nominal voltage of the low voltages side (in V). This
-  parameter is called `ulv` in the code.
+- $U_{1,\mathrm{nom.}}$: the phase-to-phase nominal voltage of the primary side (in V). This
+  parameter is called `up` in the code.
+- $U_{2,\mathrm{nom.}}$: the phase-to-phase nominal voltage of the secondary side (in V). This
+  parameter is called `us` in the code.
 - $S_{\mathrm{nom.}}$: the nominal power of the transformer (in VA). This parameter is called `sn`
   in the code.
 - $Z_2$: the series impedance located at the secondary side of the transformer. It represents
@@ -114,34 +114,33 @@ method.
 
 To define the parameters of the transformers, use the `TransformerParameters` class. It takes as
 arguments the elements described in the previous section and converts them into the series
-impedance and the magnetizing admittance. The `type` argument of the constructor can take the
+impedance and the magnetizing admittance. The `vg` argument of the constructor can take the
 following values:
 
-- `"single"` to model a single-phase transformer
-- `"center"` to model a center-tapped transformer
-- Any windings (`"Dd0"`, `"Dz6"`, etc.) to model a three-phase transformer.
+- `"Ii0"` or `"Ii6"` to model a single-phase transformer, in-phase or 180° phase shift respectively
+- `"Iii0"` or `"Iii6"` to model a center-tapped transformer, in-phase or 180° phase shift respectively
+- `"Dd0"`, `"Dyn11"`, etc. to model a three-phase transformer with different winding configurations
 
 ```python
 import roseau.load_flow as rlf
 
 # The transformer parameters for a single-phase transformer
-single_phase_transformer_parameters = (
-    rlf.TransformerParameters.from_open_and_short_circuit_tests(
-        id="single_phase_transformer_parameters",
-        type="single",  # <--- single-phase transformer
-        uhv=rlf.Q_(20, "kV"),
-        ulv=rlf.Q_(400, "V"),
-        sn=rlf.Q_(160, "kVA"),
-        p0=rlf.Q_(300, "W"),
-        i0=rlf.Q_(1.4, "%"),
-        psc=rlf.Q_(2000, "W"),
-        vsc=rlf.Q_(4, "%"),
-    )
+transformer_params_1ph = rlf.TransformerParameters.from_open_and_short_circuit_tests(
+    id="transformer_params_1ph",
+    vg="Ii0",  # <--- single-phase transformer
+    uhv=rlf.Q_(20, "kV"),
+    ulv=rlf.Q_(400, "V"),
+    sn=rlf.Q_(160, "kVA"),
+    p0=rlf.Q_(300, "W"),
+    i0=rlf.Q_(1.4, "%"),
+    psc=rlf.Q_(2000, "W"),
+    vsc=rlf.Q_(4, "%"),
 )
+assert transformer_params_1ph.type == "single-phase"
 # Alternatively, if you have z2 and ym already:
-# single_phase_transformer_parameters = rlf.TransformerParameters(
-#     id="single_phase_transformer_parameters",
-#     type="single",
+# transformer_params_1ph = rlf.TransformerParameters(
+#     id="transformer_params_1ph",
+#     vg="Ii0",
 #     uhv=rlf.Q_(20, "kV"),
 #     ulv=rlf.Q_(400, "V"),
 #     sn=rlf.Q_(160, "kVA"),
@@ -151,34 +150,36 @@ single_phase_transformer_parameters = (
 
 
 # The transformer parameters for a three-phase transformer
-three_phase_transformer_parameters = (
-    rlf.TransformerParameters.from_open_and_short_circuit_tests(
-        id="three_phase_transformer_parameters",
-        type="Dyn11",  # <--- three-phase transformer with delta primary and wye secondary
-        uhv=rlf.Q_(20, "kV"),
-        ulv=rlf.Q_(400, "V"),
-        sn=rlf.Q_(160, "kVA"),
-        p0=rlf.Q_(300, "W"),
-        i0=rlf.Q_(1.4, "%"),
-        psc=rlf.Q_(2000, "W"),
-        vsc=rlf.Q_(4, "%"),
-    )
+transformer_params_3ph = rlf.TransformerParameters.from_open_and_short_circuit_tests(
+    id="transformer_params_3ph",
+    vg="Dyn11",  # <--- three-phase transformer with delta primary and wye secondary
+    uhv=rlf.Q_(20, "kV"),
+    ulv=rlf.Q_(400, "V"),
+    sn=rlf.Q_(160, "kVA"),
+    p0=rlf.Q_(300, "W"),
+    i0=rlf.Q_(1.4, "%"),
+    psc=rlf.Q_(2000, "W"),
+    vsc=rlf.Q_(4, "%"),
 )
+assert transformer_params_3ph.type == "three-phase"
 
 # The transformer parameters for a center-tapped transformer
-center_tapped_transformer_parameters = (
-    rlf.TransformerParameters.from_open_and_short_circuit_tests(
-        id="center_tapped_transformer_parameters",
-        type="center",  # <--- center-tapped transformer
-        uhv=rlf.Q_(20, "kV"),
-        ulv=rlf.Q_(400, "V"),
-        sn=rlf.Q_(160, "kVA"),
-        p0=rlf.Q_(300, "W"),
-        i0=rlf.Q_(1.4, "%"),
-        psc=rlf.Q_(2000, "W"),
-        vsc=rlf.Q_(4, "%"),
-    )
+transformer_params_ct = rlf.TransformerParameters.from_open_and_short_circuit_tests(
+    id="transformer_params_ct",
+    vg="Iii0",  # <--- center-tapped transformer
+    uhv=rlf.Q_(20, "kV"),
+    ulv=rlf.Q_(400, "V"),
+    sn=rlf.Q_(160, "kVA"),
+    p0=rlf.Q_(300, "W"),
+    i0=rlf.Q_(1.4, "%"),
+    psc=rlf.Q_(2000, "W"),
+    vsc=rlf.Q_(4, "%"),
 )
+assert transformer_params_ct.type == "center-tapped"
+
+# Available vector groups:
+print(rlf.TransformerParameters.allowed_vector_groups)
+# "Dd0", "Dd6", ..., "Ii0", "Ii6", "Iii0", "Iii6",
 ```
 
 A catalogue of transformer parameters is available. More details [here](catalogues-transformers).

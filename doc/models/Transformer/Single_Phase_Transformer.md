@@ -86,7 +86,7 @@ load = rlf.PowerLoad(id="load", bus=bus2, powers=[100], phases="an")
 # Create the transformer
 tp = rlf.TransformerParameters.from_open_and_short_circuit_tests(
     id="Example_TP",
-    type="single",  # <--- Single-phase transformer
+    vg="Ii0",  # <--- Single-phase transformer
     sn=800,
     uhv=400,
     ulv=400,
@@ -130,7 +130,7 @@ en.res_transformers[["power1", "power2"]].abs()
 # | ('transfo', 'n') |    0     |        0 |
 
 # The voltages at the buses of the network
-en.res_buses_voltages.transform([np.abs, ft.partial(np.angle, deg=True)])
+en.res_buses_voltages[["voltage"]].transform([np.abs, ft.partial(np.angle, deg=True)])
 # |                |   ('voltage', 'absolute') |   ('voltage', 'angle') |
 # |:---------------|--------------------------:|-----------------------:|
 # | ('bus1', 'an') |                    230.94 |               0        |

@@ -40,6 +40,7 @@ from roseau.load_flow.models import (
 )
 from roseau.load_flow.typing import Id, JsonDict, MapOrSeq, Solver, StrPath
 from roseau.load_flow.utils import CatalogueMixin, JsonMixin, _optional_deps
+from roseau.load_flow.utils._exceptions import find_stack_level
 from roseau.load_flow.utils.types import _DTYPES, LoadTypeDtype, VoltagePhaseDtype
 from roseau.load_flow_engine.cy_engine import CyElectricalNetwork
 
@@ -170,6 +171,8 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         )
 
         self._elements: list[Element] = []
+        self._has_loop = False
+        self._has_floating_neutral = False
         self._check_validity(constructed=False)
         self._create_network()
         self._valid = True
@@ -286,13 +289,14 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         """The :attr:`buses` of the network as a geo dataframe."""
         data = []
         for bus in self.buses.values():
-            min_voltage = bus.min_voltage.magnitude if bus.min_voltage is not None else float("nan")
-            max_voltage = bus.max_voltage.magnitude if bus.max_voltage is not None else float("nan")
-            data.append((bus.id, bus.phases, min_voltage, max_voltage, bus.geometry))
+            nominal_voltage = bus.nominal_voltage.magnitude if bus.nominal_voltage is not None else (float("nan"))
+            min_voltage_level = bus.min_voltage_level.magnitude if bus.min_voltage_level is not None else float("nan")
+            max_voltage_level = bus.max_voltage_level.magnitude if bus.max_voltage_level is not None else float("nan")
+            data.append((bus.id, bus.phases, nominal_voltage, min_voltage_level, max_voltage_level, bus.geometry))
         return gpd.GeoDataFrame(
             data=pd.DataFrame.from_records(
                 data=data,
-                columns=["id", "phases", "min_voltage", "max_voltage", "geometry"],
+                columns=["id", "phases", "nominal_voltage", "min_voltage_level", "max_voltage_level", "geometry"],
                 index="id",
             ),
             geometry="geometry",
@@ -304,7 +308,6 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         """The :attr:`lines` of the network as a geo dataframe."""
         data = []
         for line in self.lines.values():
-            max_current = line.max_current.magnitude if line.max_current is not None else float("nan")
             data.append(
                 (
                     line.id,
@@ -312,15 +315,15 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                     line.bus1.id,
                     line.bus2.id,
                     line.parameters.id,
-                    line.length.m,
-                    max_current,
+                    line._length,
+                    line._max_loading,
                     line.geometry,
                 )
             )
         return gpd.GeoDataFrame(
             data=pd.DataFrame.from_records(
                 data=data,
-                columns=["id", "phases", "bus1_id", "bus2_id", "parameters_id", "length", "max_current", "geometry"],
+                columns=["id", "phases", "bus1_id", "bus2_id", "parameters_id", "length", "max_loading", "geometry"],
                 index="id",
             ),
             geometry="geometry",
@@ -332,7 +335,10 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         """The :attr:`transformers` of the network as a geo dataframe."""
         data = []
         for transformer in self.transformers.values():
-            max_power = transformer.max_power.magnitude if transformer.max_power is not None else float("nan")
+            if (max_loading := transformer.max_loading) is not None:
+                max_loading = max_loading.magnitude
+            else:
+                max_loading = float("nan")
             data.append(
                 (
                     transformer.id,
@@ -341,14 +347,14 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                     transformer.bus1.id,
                     transformer.bus2.id,
                     transformer.parameters.id,
-                    max_power,
+                    max_loading,
                     transformer.geometry,
                 )
             )
         return gpd.GeoDataFrame(
             data=pd.DataFrame.from_records(
                 data=data,
-                columns=["id", "phases1", "phases2", "bus1_id", "bus2_id", "parameters_id", "max_power", "geometry"],
+                columns=["id", "phases1", "phases2", "bus1_id", "bus2_id", "parameters_id", "max_loading", "geometry"],
                 index="id",
             ),
             geometry="geometry",
@@ -430,7 +436,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
     #
     @property
     def buses_clusters(self) -> list[set[Id]]:
-        """Sets of galvanically connected buses, i.e buses connected by lines or a switches.
+        """Sets of galvanically connected buses, i.e. buses connected by lines or a switches.
 
         This can be useful to isolate parts of the network for localized analysis. For example, to
         study a LV subnetwork of a MV feeder.
@@ -464,7 +470,8 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         for bus in self.buses.values():
             graph.add_node(bus.id, geom=bus.geometry)
         for line in self.lines.values():
-            max_current = line.max_current.magnitude if line.max_current is not None else None
+            if (ampacities := line.ampacities) is not None:
+                ampacities = ampacities.magnitude.tolist()
             graph.add_edge(
                 line.bus1.id,
                 line.bus2.id,
@@ -472,11 +479,16 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                 type="line",
                 phases=line.phases,
                 parameters_id=line.parameters.id,
-                max_current=max_current,
+                length=line._length,
+                max_loading=line._max_loading,
+                ampacities=ampacities,
                 geom=line.geometry,
             )
         for transformer in self.transformers.values():
-            max_power = transformer.max_power.magnitude if transformer.max_power is not None else None
+            if (max_loading := transformer.max_loading) is not None:
+                max_loading = max_loading.magnitude
+            if (sn := transformer.sn) is not None:
+                sn = sn.magnitude
             graph.add_edge(
                 transformer.bus1.id,
                 transformer.bus2.id,
@@ -485,7 +497,8 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                 phases1=transformer.phases1,
                 phases2=transformer.phases2,
                 parameters_id=transformer.parameters.id,
-                max_power=max_power,
+                max_loading=max_loading,
+                sn=sn,
                 geom=transformer.geometry,
             )
         for switch in self.switches.values():
@@ -578,16 +591,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         self._no_results = False
 
         # Lazily update the results of the elements
-        for element in chain(
-            self.buses.values(),
-            self.lines.values(),
-            self.transformers.values(),
-            self.switches.values(),
-            self.loads.values(),
-            self.sources.values(),
-            self.grounds.values(),
-            self.potential_refs.values(),
-        ):
+        for element in self._elements:
             element._fetch_results = True
             element._no_results = False
 
@@ -602,8 +606,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             msg = f"The license cannot be validated. The detailed error message is {msg[2:]!r}"
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.LICENSE_ERROR) from e
-        else:
-            assert msg.startswith("1 ")
+        elif msg.startswith("1 "):
             msg = msg[2:]
             zero_elements_index, inf_elements_index = self._solver._cy_solver.analyse_jacobian()
             if zero_elements_index:
@@ -622,6 +625,10 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                 )
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_JACOBIAN) from e
+        else:
+            assert msg.startswith("2 ")
+            msg = msg[2:]
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.NO_BACKWARD_FORWARD) from e
 
     #
     # Properties to access the load flow results as dataframes
@@ -640,7 +647,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                     "ensure the validity of results."
                 ),
                 category=UserWarning,
-                stacklevel=2,
+                stacklevel=find_stack_level(),
             )
 
     @property
@@ -678,41 +685,61 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
 
         and the following columns:
             - `voltage`: The complex voltage of the bus (in Volts) for the given phase.
-            - `min_voltage`: The minimum voltage of the bus (in Volts).
-            - `max_voltage`: The maximum voltage of the bus (in Volts).
+            - `violated`: `True` if a voltage limit is not respected.
+            - `voltage_level`: The voltage level of the bus.
+            - `min_voltage_level`: The minimal voltage level of the bus.
+            - `max_voltage_level`: The maximal voltage level of the bus.
+            - `nominal_voltage`: The nominal voltage of the bus (in Volts).
         """
         self._check_valid_results()
         voltages_dict = {
             "bus_id": [],
             "phase": [],
             "voltage": [],
-            "min_voltage": [],
-            "max_voltage": [],
             "violated": [],
+            "voltage_level": [],
+            # Non results
+            "min_voltage_level": [],
+            "max_voltage_level": [],
+            "nominal_voltage": [],
         }
         dtypes = {c: _DTYPES[c] for c in voltages_dict} | {"phase": VoltagePhaseDtype}
+        sqrt_3 = float(np.sqrt(3))
         for bus_id, bus in self.buses.items():
-            min_voltage = bus._min_voltage
-            max_voltage = bus._max_voltage
-            voltage_limits_set = False
+            nominal_voltage = bus._nominal_voltage
+            min_voltage_level = bus._min_voltage_level
+            max_voltage_level = bus._max_voltage_level
+            voltage_limits_set = (
+                min_voltage_level is not None or max_voltage_level is not None
+            ) and nominal_voltage is not None
 
-            if min_voltage is None:
-                min_voltage = float("nan")
-            else:
-                voltage_limits_set = True
-            if max_voltage is None:
-                max_voltage = float("nan")
-            else:
-                voltage_limits_set = True
+            if nominal_voltage is None:
+                nominal_voltage = float("nan")
+            if min_voltage_level is None:
+                min_voltage_level = float("nan")
+            if max_voltage_level is None:
+                max_voltage_level = float("nan")
             for voltage, phase in zip(bus._res_voltages_getter(warning=False), bus.voltage_phases, strict=True):
                 voltage_abs = abs(voltage)
-                violated = (voltage_abs < min_voltage or voltage_abs > max_voltage) if voltage_limits_set else None
+                if voltage_limits_set:
+                    if "n" in phase:
+                        voltage_level = sqrt_3 * voltage_abs / nominal_voltage
+                    else:
+                        voltage_level = voltage_abs / nominal_voltage
+                    violated = voltage_level < min_voltage_level or voltage_level > max_voltage_level
+                else:
+                    violated = None
+                    voltage_level = float("nan")
                 voltages_dict["bus_id"].append(bus_id)
                 voltages_dict["phase"].append(phase)
                 voltages_dict["voltage"].append(voltage)
-                voltages_dict["min_voltage"].append(min_voltage)
-                voltages_dict["max_voltage"].append(max_voltage)
                 voltages_dict["violated"].append(violated)
+                voltages_dict["voltage_level"].append(voltage_level)
+                # Non results
+                voltages_dict["min_voltage_level"].append(min_voltage_level)
+                voltages_dict["max_voltage_level"].append(max_voltage_level)
+                voltages_dict["nominal_voltage"].append(nominal_voltage)
+
         return pd.DataFrame(voltages_dict).astype(dtypes).set_index(["bus_id", "phase"])
 
     @property
@@ -738,6 +765,10 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                 phase due to the series and mutual impedances.
             - `series_current`: The complex current in the series impedance of the line (in Amps)
                 for the given phase.
+            - `violated`: True, if a current constraint is not respected for the given phase.
+            - `loading`: The loading of the line (unitless) for the given phase.
+            - `max_loading`: The maximal loading of the line (unitless) for the given phase.
+            - `ampacity`: The ampacity of the line parameter (in Amps) for the given phase.
 
         Additional information can be easily computed from this dataframe. For example:
 
@@ -762,8 +793,11 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             "potential2": [],
             "series_losses": [],
             "series_current": [],
-            "max_current": [],
             "violated": [],
+            "loading": [],
+            # Non results
+            "max_loading": [],
+            "ampacity": [],
         }
         dtypes = {c: _DTYPES[c] for c in res_dict}
         for line in self.lines.values():
@@ -773,20 +807,36 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             powers1 = potentials1 * currents1.conj()
             powers2 = potentials2 * currents2.conj()
             series_losses = du_line * series_currents.conj()
-            i_max = line.parameters._max_current
-            for i1, i2, s1, s2, v1, v2, s_series, i_series, phase in zip(
-                currents1,
-                currents2,
-                powers1,
-                powers2,
-                potentials1,
-                potentials2,
-                series_losses,
-                series_currents,
-                line.phases,
-                strict=True,
+            ampacities = line.parameters._ampacities
+            max_loading = line._max_loading
+            if ampacities is None:
+                loading_array = None
+                violated_array = None
+            else:
+                loading_array = np.maximum(abs(currents1), abs(currents2)) / ampacities
+                violated_array = loading_array > max_loading
+            for k, (i1, i2, s1, s2, v1, v2, s_series, i_series, phase) in enumerate(
+                zip(
+                    currents1,
+                    currents2,
+                    powers1,
+                    powers2,
+                    potentials1,
+                    potentials2,
+                    series_losses,
+                    series_currents,
+                    line.phases,
+                    strict=True,
+                )
             ):
-                violated = None if i_max is None else (abs(i1) > i_max or abs(i2) > i_max)
+                if ampacities is None:
+                    loading = None
+                    violated = None
+                    ampacity = None
+                else:
+                    loading = loading_array[k]
+                    violated = violated_array[k]
+                    ampacity = ampacities[k]
                 res_dict["line_id"].append(line.id)
                 res_dict["phase"].append(phase)
                 res_dict["current1"].append(i1)
@@ -797,8 +847,12 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                 res_dict["potential2"].append(v2)
                 res_dict["series_losses"].append(s_series)
                 res_dict["series_current"].append(i_series)
-                res_dict["max_current"].append(i_max)
                 res_dict["violated"].append(violated)
+                res_dict["loading"].append(loading)
+                # Non results
+                res_dict["max_loading"].append(max_loading)
+                res_dict["ampacity"].append(ampacity)
+
         return pd.DataFrame(res_dict).astype(dtypes).set_index(["line_id", "phase"])
 
     @property
@@ -820,7 +874,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                 second bus.
             - `potential1`: The complex potential of the first bus (in Volts) for the given phase.
             - `potential2`: The complex potential of the second bus (in Volts) for the given phase.
-            - `max_power`: The maximum power loading (in VoltAmps) of the transformer.
+            - `max_loading`: The maximal loading (unitless) of the transformer.
 
         Note that values for missing phases are set to ``nan``. For example, a "Dyn" transformer
         has the phases "abc" on the primary side and "abcn" on the secondary side, so the primary
@@ -836,8 +890,11 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             "power2": [],
             "potential1": [],
             "potential2": [],
-            "max_power": [],
             "violated": [],
+            "loading": [],
+            # Non results
+            "max_loading": [],
+            "sn": [],
         }
         dtypes = {c: _DTYPES[c] for c in res_dict}
         for transformer in self.transformers.values():
@@ -845,8 +902,10 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             potentials1, potentials2 = transformer._res_potentials_getter(warning=False)
             powers1 = potentials1 * currents1.conj()
             powers2 = potentials2 * currents2.conj()
-            s_max = transformer.parameters._max_power
-            violated = (abs(powers1.sum()) > s_max or abs(powers2.sum()) > s_max) if s_max is not None else None
+            sn = transformer.parameters._sn
+            max_loading = transformer._max_loading
+            loading = max(abs(powers1.sum()), abs(powers2.sum())) / sn
+            violated = loading > max_loading
             for phase in transformer._all_phases:
                 if phase in transformer.phases1:
                     idx1 = transformer.phases1.index(phase)
@@ -866,8 +925,11 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                 res_dict["power2"].append(s2)
                 res_dict["potential1"].append(v1)
                 res_dict["potential2"].append(v2)
-                res_dict["max_power"].append(s_max)
                 res_dict["violated"].append(violated)
+                res_dict["loading"].append(loading)
+                # Non results
+                res_dict["max_loading"].append(max_loading)
+                res_dict["sn"].append(sn)
         return pd.DataFrame(res_dict).astype(dtypes).set_index(["transformer_id", "phase"])
 
     @property
@@ -1110,7 +1172,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT)
         if element.id in container and container[element.id] is not element:
-            element._disconnect()  # Don't leave it lingering in other elemnets _connected_elements
+            element._disconnect()  # Don't leave it lingering in other elements _connected_elements
             msg = f"A {element_type} of ID {element.id!r} is already connected to the network."
             if can_disconnect:
                 msg += f" Disconnect the old {element_type} first if you meant to replace it."
@@ -1152,33 +1214,17 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
     def _create_network(self) -> None:
         """Create the Cython and C++ electrical network of all the passed elements."""
         self._valid = True
-        cy_elements = []
-        self._elements = []
-        for bus in self.buses.values():
-            cy_elements.append(bus._cy_element)
-            self._elements.append(bus)
-        for line in self.lines.values():
-            cy_elements.append(line._cy_element)
-            self._elements.append(line)
-        for transformer in self.transformers.values():
-            cy_elements.append(transformer._cy_element)
-            self._elements.append(transformer)
-        for switch in self.switches.values():
-            cy_elements.append(switch._cy_element)
-            self._elements.append(switch)
+        self._has_floating_neutral = False
         for load in self.loads.values():
-            cy_elements.append(load._cy_element)
-            self._elements.append(load)
-        for ground in self.grounds.values():
-            cy_elements.append(ground._cy_element)
-            self._elements.append(ground)
-        for p_ref in self.potential_refs.values():
-            cy_elements.append(p_ref._cy_element)
-            self._elements.append(p_ref)
+            if load.has_floating_neutral:
+                self._has_floating_neutral = True
         for source in self.sources.values():
-            cy_elements.append(source._cy_element)
-            self._elements.append(source)
+            if source.has_floating_neutral:
+                self._has_floating_neutral = True
         self._propagate_potentials()
+        cy_elements = []
+        for element in self._elements:
+            cy_elements.append(element._cy_element)
         self._cy_electrical_network = CyElectricalNetwork(elements=np.array(cy_elements), nb_elements=len(cy_elements))
 
     def _check_validity(self, constructed: bool) -> None:
@@ -1253,34 +1299,62 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             if not bus._initialized:
                 all_phases |= set(bus.phases)
 
-        starting_potentials, starting_bus = self._get_potentials(all_phases)
-        elements = [(starting_bus, starting_potentials)]
-        visited = set()
+        starting_potentials, starting_source = self._get_potentials(all_phases)
+        elements = [(starting_source, starting_potentials, None)]
+        self._elements = []
+        self._has_loop = False
+        visited = {starting_source}
         while elements:
-            element, potentials = elements.pop(-1)
-            visited.add(element)
+            element, potentials, parent = elements.pop(-1)
+            self._elements.append(element)
             if isinstance(element, Bus) and not element._initialized:
                 element.potentials = np.array([potentials[p] for p in element.phases], dtype=np.complex128)
                 element._initialized_by_the_user = False  # only used for serialization
-            for e in element._connected_elements:
-                if e not in visited and isinstance(e, (AbstractBranch, Bus)):
-                    if isinstance(element, Transformer):
-                        k = element.parameters._ulv / element.parameters._uhv
-                        phase_displacement = element.parameters.phase_displacement
-                        if phase_displacement is None:
-                            phase_displacement = 0
-                        new_potentials = potentials.copy()
-                        for key, p in new_potentials.items():
-                            new_potentials[key] = p * k * np.exp(phase_displacement * -1j * np.pi / 6.0)
-                        elements.append((e, new_potentials))
-                    else:
-                        elements.append((e, potentials))
+            if not isinstance(element, Ground):  # Do not go from ground to buses/branches
+                for e in element._connected_elements:
+                    if e not in visited:
+                        if isinstance(element, Transformer):
+                            k = element.parameters._ulv / element.parameters._uhv
+                            phase_displacement = element.parameters.phase_displacement
+                            if phase_displacement is None:
+                                phase_displacement = 0
+                            new_potentials = potentials.copy()
+                            for key, p in new_potentials.items():
+                                new_potentials[key] = p * k * np.exp(phase_displacement * -1j * np.pi / 6.0)
+                            elements.append((e, new_potentials, element))
+                            visited.add(e)
+                        else:
+                            elements.append((e, potentials, element))
+                            visited.add(e)
+                    elif parent != e and not isinstance(e, Ground):
+                        self._has_loop = True
+            else:
+                for e in element._connected_elements:
+                    if e not in visited and isinstance(e, PotentialRef):
+                        elements.append((e, potentials, element))
+                        visited.add(e)
 
-        if len(visited) < len(self.buses) + len(self.lines) + len(self.transformers) + len(self.switches):
+        if len(visited) < (
+            len(self.buses)
+            + len(self.lines)
+            + len(self.transformers)
+            + len(self.switches)
+            + len(self.grounds)
+            + len(self.sources)
+            + len(self.potential_refs)
+            + len(self.loads)
+        ):
             unconnected_elements = [
                 element
                 for element in chain(
-                    self.buses.values(), self.lines.values(), self.transformers.values(), self.switches.values()
+                    self.buses.values(),
+                    self.lines.values(),
+                    self.transformers.values(),
+                    self.switches.values(),
+                    self.sources.values(),
+                    self.loads.values(),
+                    self.grounds.values(),
+                    self.potential_refs.values(),
                 )
                 if element not in visited
             ]
@@ -1291,7 +1365,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.POORLY_CONNECTED_ELEMENT)
 
-    def _get_potentials(self, all_phases: set[str]) -> tuple[dict[str, complex], Bus]:
+    def _get_potentials(self, all_phases: set[str]) -> tuple[dict[str, complex], VoltageSource]:
         """Compute initial potentials from the voltages sources of the network, get also the starting source"""
         starting_source = None
         potentials = {"n": 0.0}
@@ -1328,7 +1402,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             potentials["c"] = v * np.exp(2j * np.pi / 3)
             potentials["n"] = 0.0
 
-        return potentials, starting_source.bus
+        return potentials, starting_source
 
     @staticmethod
     def _check_ref(elements: Iterable[Element]) -> None:

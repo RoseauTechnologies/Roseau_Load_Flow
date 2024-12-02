@@ -5,9 +5,10 @@ import pandas as pd
 import shapely
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
-from roseau.load_flow.io.dgs.constants import CONDUCTOR_TYPES, INSULATOR_TYPES, LINE_TYPES
+from roseau.load_flow.io.dgs.constants import INSULATORS, LINE_TYPES, MATERIALS
 from roseau.load_flow.models import Bus, Ground, Line, LineParameters
 from roseau.load_flow.typing import Id
+from roseau.load_flow.utils._exceptions import find_stack_level
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +23,7 @@ def generate_typ_lne(typ_lne: pd.DataFrame, lines_params: dict[Id, LineParameter
         lines_params:
             The dictionary to store the line parameters into.
     """
+    # TODO: Maybe add the section of the neutral
     for type_id in typ_lne.index:
         this_typ_lne: pd.Series = typ_lne.loc[type_id]
         # TODO: use the detailed phase information instead of n
@@ -63,23 +65,23 @@ def generate_typ_lne(typ_lne: pd.DataFrame, lines_params: dict[Id, LineParameter
 
         # Optional fields
         sline = this_typ_lne.get("sline")
-        max_current = sline * 1e3 if sline is not None else None
+        ampacities = sline * 1e3 if sline is not None else None
         line_type = LINE_TYPES.get(this_typ_lne.get("cohl_"))
-        conductor_type = CONDUCTOR_TYPES.get(this_typ_lne.get("mlei"))
-        insulator_type = INSULATOR_TYPES.get(this_typ_lne.get("imiso"))
+        material = MATERIALS.get(this_typ_lne.get("mlei"))
+        insulator = INSULATORS.get(this_typ_lne.get("imiso"))
         section = this_typ_lne.get("qurs") or None  # Sometimes it is zero!! replace by None in this case
 
         with warnings.catch_warnings():
             warnings.filterwarnings(action="ignore", message=r".* off-diagonal elements ", category=UserWarning)
             lp = LineParameters(
-                type_id,
+                id=type_id,
                 z_line=z_line,
                 y_shunt=y_shunt,
-                max_current=max_current,
+                ampacities=ampacities,
                 line_type=line_type,
-                conductor_type=conductor_type,
-                insulator_type=insulator_type,
-                section=section,
+                materials=material,
+                insulators=insulator,
+                sections=section,
             )
         lines_params[type_id] = lp
 
@@ -119,6 +121,7 @@ def generate_typ_lne_from_elm_lne(
 
     # Get the cross-sectional area (mm²)
     section = lne_series.get("crosssec") or None  # Sometimes it is zero!! replace by None in this case
+    # TODO The section of the neutral?
 
     # Get the impedance and admittance matrices
     required_fields = ("R0", "X0", "X1", "R1", "G0", "B0", "G1", "B1")
@@ -137,7 +140,7 @@ def generate_typ_lne_from_elm_lne(
 
     with warnings.catch_warnings():
         warnings.filterwarnings(action="ignore", message=r".* off-diagonal elements ", category=UserWarning)
-        lp = LineParameters(id=typ_id, z_line=z_line, y_shunt=y_shunt, line_type=line_type, section=section)
+        lp = LineParameters(id=typ_id, z_line=z_line, y_shunt=y_shunt, line_type=line_type, sections=section)
 
     return lp
 
@@ -204,7 +207,7 @@ def generate_lines(
                 elif nb_points == 1:
                     warnings.warn(
                         f"Failed to read geometry data for line {line_id!r}: it has a single GPS point.",
-                        stacklevel=4,
+                        stacklevel=find_stack_level(),
                     )
                 else:
                     assert nb_cols == 2, f"Expected 2 GPS columns (Latitude/Longitude), got {nb_cols}."
@@ -218,7 +221,8 @@ def generate_lines(
                     )
             except Exception as e:
                 warnings.warn(
-                    f"Failed to read geometry data for line {line_id!r}: {type(e).__name__}: {e}", stacklevel=4
+                    f"Failed to read geometry data for line {line_id!r}: {type(e).__name__}: {e}",
+                    stacklevel=find_stack_level(),
                 )
         lines[line_id] = Line(
             id=line_id,

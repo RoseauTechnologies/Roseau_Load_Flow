@@ -112,16 +112,93 @@ In addition to the DGS import support, `roseau-load-flow` supports creating line
 parameters from PowerFactory data. This is useful when you don't want to import a whole network but
 would like to use some of the lines and transformers models you have in a power factory project.
 
+#### Lines
+
 To create line parameters from a PowerFactory Line Type (`TypLne`) object, use the
 {meth}`LineParameters.from_power_factory() <roseau.load_flow.LineParameters.from_power_factory>` method.
+
+The parameters of a line type can be found in two different panels on the graphical user interface of PowerFactory:
+
+- the "Basic Data" panel as shown in the figure below
+
+  ```{image} /_static/IO/DGS_Line_Basic_Data.png
+  :alt: Line basic data panel
+  :align: center
+  ```
+
+- the "Load Flow" panel as shown in the figure below
+
+  ```{image} /_static/IO/DGS_Line_Load_Flow.png
+  :alt: Line load flow panel
+  :align: center
+  ```
+
+The data on these two screenshots translate to:
+
+```pycon
+>>> rlf.LineParameters.from_power_factory(
+...     id="NA2YSY 1x95rm 12/20kV it",
+...     r0=rlf.Q_(1.29, "ohm/km"),  # Parameters per Length Zero Sequence, "Basic data"
+...     r1=rlf.Q_(0.3225, "ohm/km"),  # Parameters per Length 1,2 Sequence, "Basic data"
+...     x0=rlf.Q_(0.502654, "ohm/km"),  # Parameters per Length Zero Sequence, "Basic data"
+...     x1=rlf.Q_(0.125663, "ohm/km"),  # Parameters per Length 1,2 Sequence, "Basic data"
+...     b0=rlf.Q_(75.05265, "uS/km"),  # Parameters per Length Sero Sequence, "Load Flow"
+...     b1=rlf.Q_(72.25663, "uS/km"),  # Parameters per Length 1,2 Sequence, "Load Flow"
+...     nphase=3,  # Phases, "Basic Data"
+...     nneutral=0,  # Number of Neutrals, "Basic Data"
+...     inom=rlf.Q_(0.235, "kA"),  # Rated Current, "Basic Data"
+...     cohl="Cable",  # Cable/OHL, "Basic Data"
+...     conductor="Al",  # Conductor Material, "Load Flow"
+... )
+```
+
+#### Transformers
 
 To create transformer parameters from a PowerFactory 2-Winding Transformer Type (`TypTr2`) object, use the
 {meth}`TransformerParameters.from_power_factory() <roseau.load_flow.TransformerParameters.from_power_factory>`
 method.
 
+The parameters of a 2-winding transformer can be found in two different panels on the graphical user interface of
+PowerFactory:
+
+- the "Basic Data" panel as shown in the figure below
+
+  ```{image} /_static/IO/DGS_Two_Winding_Three_Phase_Transformer_Basic_Data.png
+  :alt: Two winding three-phase transformer basic data panel
+  :align: center
+  ```
+
+- the "Load Flow" panel as shown in the figure below
+
+  ```{image} /_static/IO/DGS_Two_Winding_Three_Phase_Transformer_Load_Flow.png
+  :alt: Two winding three-phase transformer load flow panel
+  :align: center
+  ```
+
+The data on these two screenshots translate to:
+
+```pycon
+>>> tp = rlf.TransformerParameters.from_power_factory(
+...     id="0.315 MVA 20/0.4 kV Dyn11 ASEA",
+...     tech="three-phase",  # Technology, "Basic Data"
+...     sn=rlf.Q_(0.315, "MVA"),  # Rated Power, "Basic Data"
+...     uhv=rlf.Q_(20, "kV"),  # Rated Voltage HV-Side, "Basic Data"
+...     ulv=rlf.Q_(0.4, "kV"),  # Rated Voltage LV-Side, "Basic Data"
+...     vg_hv="D",  # Vector Group HV-Side, "Basic Data"
+...     vg_lv="yn",  # Vector Group LV-Side, "Basic Data"
+...     phase_shift=11,  # Vector Group Phase Shift, "Basic Data"
+...     uk=rlf.Q_(6, "%"),  # Positive Sequence Impedance Short-Circuit Voltage, "Basic Data"
+...     pc=rlf.Q_(4, "kW"),  # Positive Sequence Impedance Copper Losses, "Basic Data"
+...     curmg=rlf.Q_(0.333343, "%"),  # Magnetizing Impedance - No Load Current, "Load Flow"
+...     pfe=rlf.Q_(1.05, "kW"),  # Magnetizing Impedance - No Load Losses, "Load Flow"
+... )
+```
+
 ## OpenDSS
 
 `roseau-load-flow` supports creating lines and transformers from OpenDSS data.
+
+### Lines
 
 To create line parameters from an OpenDSS `LineCode` object, use the
 {meth}`LineParameters.from_open_dss() <roseau.load_flow.LineParameters.from_open_dss>` method. For
@@ -140,6 +217,8 @@ translates to:
 ...     c0=Q_(1.6, "nF/km"),  # default value used in OpenDSS code
 ... )
 ```
+
+### Transformers
 
 To create a transformer from an OpenDSS 2-winding `Transformer` object, use the
 {meth}`TransformerParameters.from_open_dss() <roseau.load_flow.TransformerParameters.from_open_dss>`

@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "is_multiphase": true,
   "grounds": [
     {
@@ -92,6 +92,7 @@
       "bus2": "bus1",
       "length": 1.5,
       "params_id": "lp0",
+      "max_loading": 1,
       "ground": "ground",
       "results": {
         "currents1": [
@@ -113,6 +114,7 @@
       "bus2": "bus4",
       "length": 0.1,
       "params_id": "lp1",
+      "max_loading": 1,
       "results": {
         "currents1": [
           [203.0652123688027, 96.09147480241117],
@@ -150,7 +152,8 @@
         ]
       },
       "tap": 1.0,
-      "params_id": "tp0"
+      "params_id": "tp0",
+      "max_loading": 1
     }
   ],
   "switches": [
@@ -579,11 +582,10 @@
           [0.0, 0.0, 3.40441e-5]
         ]
       ],
-      "max_current": 323,
+      "ampacities": [323, 323, 323],
       "line_type": "UNDERGROUND",
-      "conductor_type": "AM",
-      "insulator_type": "UNKNOWN",
-      "section": 148
+      "materials": ["AM", "AM", "AM"],
+      "sections": [148.0, 148.0, 148.0]
     },
     {
       "id": "lp1",
@@ -601,11 +603,10 @@
           [0.0, 0.0, 0.0, 0.1066400577]
         ]
       ],
-      "max_current": 195,
+      "ampacities": [195, 195, 195, 195],
       "line_type": "TWISTED",
-      "conductor_type": "AL",
-      "insulator_type": "UNKNOWN",
-      "section": 75.0
+      "materials": ["AL", "AL", "AL", "AL"],
+      "sections": [75.0, 75.0, 75.0, 75.0]
     }
   ],
   "transformers_params": [
@@ -614,7 +615,7 @@
       "sn": 100000,
       "uhv": 20000,
       "ulv": 400,
-      "type": "Dyn11",
+      "vg": "Dyn11",
       "z2": [0.02, 0.060794736614282655],
       "ym": [1.2083333333333332e-7, -3.987611022487859e-7],
       "i0": 0.005,

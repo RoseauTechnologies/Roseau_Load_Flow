@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "is_multiphase": true,
   "grounds": [
     {
@@ -62,6 +62,7 @@
       "bus2": "bus1",
       "length": 1.0,
       "params_id": "test",
+      "max_loading": 1,
       "geometry": {
         "type": "LineString",
         "coordinates": [

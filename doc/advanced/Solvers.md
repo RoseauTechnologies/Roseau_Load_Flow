@@ -131,3 +131,31 @@ The _Goldstein and Price_ solver accepts the following parameters:
 - `"m1"` the first constant of the _Goldstein and Price_ variant. By default: `0.1`.
 - `"m2"` the second constant of the _Goldstein and Price_ variant. By default: `0.9`.
   Note that the constraint $m_1 < m_2$ must be met.
+
+## Backward-Forward
+
+This is an implementation of the backward-forward sweep method, which offers an efficient alternative to traditional
+Newton-Raphson algorithms.
+
+### Advantages
+
+- **Faster Execution Time**: The backward-forward sweep method generally executes more quickly than Newton-Raphson-based
+  approaches.
+
+### Limitations
+
+- **Modeling Restrictions**:
+  - The network cannot contain loops.
+  - Floating neutrals are not allowed for loads and sources.
+- **Convergence**: This method may exhibit weaker convergence properties, particularly in scenarios involving
+  flexible loads.
+
+### Important Note
+
+This solver is still in the **experimental** stage. Users should be aware that certain edge cases may not be handled
+correctly when utilizing the backward-forward sweep method. If you face any issues with this solver, please let
+us know by filing a GitHub issue
+
+### Parameters
+
+The _Backward-Forward_ solver doesn't accept any parameter.

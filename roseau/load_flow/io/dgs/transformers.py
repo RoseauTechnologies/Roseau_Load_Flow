@@ -25,22 +25,24 @@ def generate_typ_tr(
         transformers_tap:
             The dictionary to store the tap positions of the transformers into.
     """
+    # TODO The parameter `maxload` could be exported too and then stored in `transformers_maxload` dictionary to be
+    #  used when the transformers are created fo fill `max_loading`
     for idx in typ_tr.index:
         # Extract data
         name = typ_tr.at[idx, "loc_name"]
         sn = Q_(typ_tr.at[idx, "strn"], "MVA")  # The nominal voltages of the transformer (MVA)
-        uhv = Q_(typ_tr.at[idx, "utrn_h"], "kV")  # Phase-to-phase nominal voltages of the high voltages side (kV)
-        ulv = Q_(typ_tr.at[idx, "utrn_l"], "kV")  # Phase-to-phase nominal voltages of the low voltages side (kV)
+        uhv = Q_(typ_tr.at[idx, "utrn_h"], "kV")  # Phase-to-phase nominal voltage of the HV side (kV)
+        ulv = Q_(typ_tr.at[idx, "utrn_l"], "kV")  # Phase-to-phase nominal voltage of the LV side (kV)
         i0 = Q_(typ_tr.at[idx, "curmg"] / 3, "percent")  # Current during off-load test (%)
         p0 = Q_(typ_tr.at[idx, "pfe"] / 3, "kW")  # Losses during off-load test (kW)
         psc = Q_(typ_tr.at[idx, "pcutr"], "kW")  # Losses during short-circuit test (kW)
         vsc = Q_(typ_tr.at[idx, "uktr"], "percent")  # Voltages on LV side during short-circuit test (%)
-        # Windings of the transformer
-        windings = f"{typ_tr.at[idx, 'tr2cn_h']}{typ_tr.at[idx, 'tr2cn_l']}{typ_tr.at[idx, 'nt2ag']}"
+        # Vector group of the transformer
+        vg = f"{typ_tr.at[idx, 'tr2cn_h']}{typ_tr.at[idx, 'tr2cn_l']}{typ_tr.at[idx, 'nt2ag']}"
 
         # Generate transformer parameters
         transformers_params[idx] = TransformerParameters.from_open_and_short_circuit_tests(
-            id=name, type=windings, uhv=uhv, ulv=ulv, sn=sn, p0=p0, i0=i0, psc=psc, vsc=vsc
+            id=name, vg=vg, uhv=uhv, ulv=ulv, sn=sn, p0=p0, i0=i0, psc=psc, vsc=vsc
         )
         transformers_tap[idx] = typ_tr.at[idx, "dutap"]
 

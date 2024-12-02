@@ -10,7 +10,7 @@ from roseau.load_flow.models.branches import AbstractBranch
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.grounds import Ground
 from roseau.load_flow.models.lines.parameters import LineParameters
-from roseau.load_flow.typing import ComplexArray, Id, JsonDict
+from roseau.load_flow.typing import ComplexArray, FloatArray, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow_engine.cy_engine import CyShuntLine, CySimplifiedLine
 
@@ -39,6 +39,7 @@ class Line(AbstractBranch):
         length: float | Q_[float],
         phases: str | None = None,
         ground: Ground | None = None,
+        max_loading: float | Q_[float] = 1,
         geometry: BaseGeometry | None = None,
     ) -> None:
         """Line constructor.
@@ -70,6 +71,11 @@ class Line(AbstractBranch):
             ground:
                 The ground element attached to the line if it has shunt admittance.
 
+            max_loading:
+                The maximum loading of the line (unitless).  It is not used in the load flow. It is used with the
+                `ampacities` of the :class:`LineParameters` to compute the
+                :meth:`~roseau.load_flow.Line.max_currents` of the line.
+
             geometry:
                 The geometry of the line i.e. the linestring.
         """
@@ -94,6 +100,7 @@ class Line(AbstractBranch):
         self.ground = ground
         self.length = length
         self.parameters = parameters
+        self.max_loading = max_loading
         self._initialized = True
 
         # Handle the ground
@@ -130,6 +137,17 @@ class Line(AbstractBranch):
         self._y_shunt = parameters._y_shunt * self._length
         self._z_line_inv = np.linalg.inv(self._z_line)
         self._yg = self._y_shunt.sum(axis=1)  # y_ig = Y_ia + Y_ib + Y_ic + Y_in for i in {a, b, c, n}
+
+    def __repr__(self) -> str:
+        s = (
+            f"<{type(self).__name__}: id={self.id!r}, bus1={self.bus1.id!r}, bus2={self.bus2.id!r}, "
+            f"phases1={self.phases1!r}, phases2={self.phases2!r}"
+        )
+        for attr, val, tp in (("length", self._length, float), ("max_loading", self._max_loading, float)):
+            if val is not None:
+                s += f", {attr}={tp(val)!r}"
+        s += ">"
+        return s
 
     @property
     def phases(self) -> str:
@@ -221,11 +239,33 @@ class Line(AbstractBranch):
         return self._parameters._y_shunt * self._length
 
     @property
-    def max_current(self) -> Q_[float] | None:
-        """The maximum current loading of the line (in A)."""
-        # Do not add a setter. The user must know that if they change the max_current, it changes
+    @ureg_wraps("", (None,))
+    def max_loading(self) -> Q_[float]:
+        """The maximum loading of the line (unitless)"""
+        return self._max_loading
+
+    @max_loading.setter
+    @ureg_wraps(None, (None, ""))
+    def max_loading(self, value: float | Q_[float]) -> None:
+        if value <= 0:
+            msg = f"Maximum loading must be positive: {value} was provided."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_MAX_LOADING_VALUE)
+        self._max_loading: float = value
+
+    @property
+    def ampacities(self) -> Q_[FloatArray] | None:
+        """The ampacities of the line (in A)."""
+        # Do not add a setter. The user must know that if they change the ampacities, it changes
         # for all lines that share the parameters. It is better to set it on the parameters.
-        return self._parameters.max_current
+        return self._parameters.ampacities
+
+    @property
+    def max_currents(self) -> Q_[FloatArray] | None:
+        """The maximum current of the line defined as `max_loading * parameters.ampacities` (in A)."""
+        # Do not add a setter. Only `max_loading` can be altered by the user
+        amp = self._parameters._ampacities
+        return None if amp is None else Q_(amp * self._max_loading, "A")
 
     @property
     def with_shunt(self) -> bool:
@@ -304,17 +344,22 @@ class Line(AbstractBranch):
         return self._res_power_losses_getter(warning=True)
 
     @property
-    def res_violated(self) -> bool | None:
-        """Whether the line current exceeds the maximum current (loading > 100%).
-
-        Returns ``None`` if the maximum current is not set.
-        """
-        i_max = self._parameters._max_current
-        if i_max is None:
+    def res_loading(self) -> Q_[FloatArray] | None:
+        """The loading of the line (unitless) if ``self.parameters.ampacities`` is set, else ``None``."""
+        if (amp := self._parameters._ampacities) is None:
             return None
         currents1, currents2 = self._res_currents_getter(warning=True)
-        # True if any phase is overloaded
-        return float(np.max([abs(currents1), abs(currents2)])) > i_max
+        return Q_(np.maximum(abs(currents1), abs(currents2)) / amp, "")
+
+    @property
+    def res_violated(self) -> bool | None:
+        """Whether the line current loading exceeds its maximal loading.
+
+        Returns ``None`` if the ``self.parameters.ampacities`` is not set.
+        """
+        if (loading := self.res_loading) is None:
+            return None
+        return bool((loading.m > self._max_loading).any())
 
     #
     # Json Mixin interface
@@ -327,6 +372,7 @@ class Line(AbstractBranch):
             "bus2": self.bus2.id,
             "length": self._length,
             "params_id": self._parameters.id,
+            "max_loading": self._max_loading,
         }
         if self.ground is not None:
             res["ground"] = self.ground.id
