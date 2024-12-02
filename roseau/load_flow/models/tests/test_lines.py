@@ -169,7 +169,7 @@ def test_res_violated():
     line.max_loading = Q_(50, "%")
     assert line.max_loading.m == 0.5
     assert line.res_violated is True
-    np.testing.assert_allclose(line.res_loading.m, 10 / (11 * 0.5))
+    np.testing.assert_allclose(line.res_loading.m, 10 / 11)
 
     # Two violations
     lp.ampacities = 9

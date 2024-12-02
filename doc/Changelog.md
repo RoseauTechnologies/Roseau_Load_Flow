@@ -19,71 +19,88 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+This release adds official support for Python 3.13 and adds a new experimental backward-forward solver.
+
+### Breaking changes
+
+- The `min_voltage` and `max_voltage` of `Bus` have been replaced by `nominal_voltage` (phase-to-phase,
+  in V), a `min_voltage_level` (unitless) and a `max_voltage_level` (unitless).
+- The `type` parameter of `TransformerParameters` constructors becomes `vg` for vector group. Replace
+  `type="single"` by `vg="Ii0"` and `type="center"` by `vg="Iii0"`.
+- The `type` attribute of `TransformerParameters` now returns `three-phase`, `single-phase` or
+  `center-tapped`. Use `TransformerParameters.vg` to get the vector group.
+- The names of the transformers in the catalogue have been modified to add voltage levels and vector
+  groups. Use `rlf.TransformerParameters.get_catalogue()` to see the updated catalogue.
+- The `max_current`, `section`, `insulator_type` and `conductor_type` parameters of the `LineParameters`
+  class are renamed to `ampacities`, `sections`, `insulators` and `materials` respectively. The new
+  parameters accept arrays of values, one per conductor.
+- The enumeration `InsulatorType.UNKNOWN` is removed. Please use `None` if the insulator is unknown.
+- The definition of constant-current loads is modified to be the magnitudes of the currents and their
+  phase shift from the voltages instead of the absolute phase shift. Currents should no longer be
+  rotated by 120° to be in sync with the voltages.
+
+### Deprecations
+
+- The enumerated classes `InsulatorType` and `ConductorType` are renamed to `Insulator` and `Material`
+  respectively. Their old names are deprecated and will be removed in a future release.
+- The deprecated method `LineParameters.from_name_mv` is removed.
+
+### Detailed changes
+
+- {gh-pr}`293` Fixed `loading` calculation for lines and transformers
 - {gh-pr}`291` Fixed several bugs in JSON serialization and deserialization.
-- {gh-pr}`289` Improve the `TransformerParameters` class and the transformers catalogue
+- {gh-pr}`289` {gh-issue}`264` Improve the `TransformerParameters` class and the transformers catalogue
 
   - Add 15kV transformers to the catalogue (SE and FT)
   - Add single-phase transformers to the catalogue (Schneider Imprego)
   - Add step-up transformers to the catalogue (Cahors "Serie Jaune")
   - Use the correct LV side no-load voltage as defined in the datasheets (some 400V became 410V)
   - Revert {gh-pr}`282` to keep the IEC 600076 names `uhv` and `ulv` for the transformer voltages.
-
-  **BREAKING CHANGES**:
-
   - Replace the `type` parameter of `TransformerParameters` constructors by `vg` for vector group.
   - `TransformerParameters.type` now returns `three-phase`, `single-phase` or `center-tapped`. Use
     `TransformerParameters.vg` to get vector group.
   - Modify the names of the transformers in the catalogue to add voltage levels and vector groups
 
-- {gh-pr}`285` {gh-issue}`279` **BREAKING CHANGE**: Add limits on assets. It is now possible to define a maximum
-  loading for lines and transformers. It generates some indirect consequences:
+- {gh-pr}`285` {gh-issue}`279` Add maximum loading for lines and transformers.
 
-  - The constructors of `Transformer` and `Line` now accept an unitless `max_loading` parameter equal to 1 (=100% of
-    the ampacities for lines and of the nominal power for transformers) by default.
+  - The constructors of `Transformer` and `Line` now accept a unitless `max_loading` parameter equal
+    to 1 (=100%) by default.
   - The parameter `max_currents` of `LineParameters` is now called `ampacities`.
-  - The class `Line` has a `max_currents` property that retrieves the maximal admissible currents (in Amps) for each
-    conductor taking into account the ampacities of the `LineParameters` and the `max_loading` of the `Line`.
-  - The `res_violated` methods of `Transformer` and `Line` take into account this `max_loading`.
-  - The `Line` and `Transformer` classes have a new `res_loading` method to compute the loading according to the
-    maximum loading and the ampacities (for `Line`) or the nominal power (for the `Transformer`).
+  - The `Line` class gained a new property `max_currents` that returns the maximal admissible currents
+    (in Amps) for each conductor: `line.max_current = line.parameters.ampacity * line.max_loading`.
+  - The `res_violated` property of `Transformer` and `Line` now take into account this `max_loading`.
+  - The `Line` and `Transformer` classes have a new `res_loading` property to compute the loading of
+    the element:
+    - `line.res_loading = line.res_currents / line.parameters.ampacities`
+    - `transformer.res_loading = sum(transformer.res_powers) / transformer.parameters.sn`
 
 - {gh-pr}`286` The deprecated method `LineParameters.from_name_mv` is removed.
-- {gh-pr}`283` **BREAKING CHANGE**: Several changes related to the `LineParameters`:
+- {gh-pr}`283` Several changes related to the `LineParameters`:
 
-  - The `LineParameters` class changed:
-
-    - The parameter `max_current` is renamed `max_currents` and now accepts an array of maximal currents (one per
-      conductor).
-    - The parameter `section` is renamed `sections` and now accepts an array of sections (one per conductor).
-    - The parameter `insulator_type` is renamed `insulators` and now accepts an array of insulators (one per conductor).
-    - The parameter `conductor_type` is renamed `materials` and now accepts an array of materials (one per conductor).
-    - The class method `from_geometry` now accepts several additional arguments related to the neutral
-      (`material_neutral`, `insulator_neutral`, `max_current_neutral`)
-
-  - The enumerated classes `InsulatorType` and `ConductorType` are renamed `Insulator` and `Material`. Their old
-    names are deprecated and will be removed in a future release.
+  - The `max_current`, `section`, `insulator_type` and `conductor_type` parameters are renamed to
+    `max_currents`, `sections`, `insulators` and `materials` respectively. The new parameters accept
+    arrays of values, one per conductor.
+  - The class method `from_geometry` now accepts several additional arguments related to the neutral
+    (`material_neutral`, `insulator_neutral`, `max_current_neutral`)
+  - The enumerated classes `InsulatorType` and `ConductorType` are renamed to `Insulator` and `Material`.
+    Their old names are deprecated and will be removed in a future release.
   - The insulator `UNKNOWN` is removed. Please use `None` if the insulator is unknown.
   - The insulator `NONE` is added. It must be used to describe conductors without insulator.
-  - The catalogue has now several additional columns related to the neutral parameters (resistance, reactance,
-    susceptance, material, insulator, maximal current). The `get_catalogue` and the `from_catalogue` methods have
-    been changed to accept filter on the columns (`material_neutral`, `insulator_neutral`, `section_neutral`)
+  - The catalogue has now several additional columns related to the neutral parameters (resistance,
+    reactance, susceptance, material, insulator, maximal current). The `get_catalogue` and the
+    `from_catalogue` methods have been changed to accept filter on the columns (`material_neutral`,
+    `insulator_neutral`, `section_neutral`)
 
-- {gh-pr}`282` **BREAKING CHANGE**: Rename the parameters of the class `TransformerParameters`: `uhv` becomes `up`
-  (for **p**rimary side) and `ulv` becomes `us` (for **s**econdary side). In addition, `up` doesn't need to be
-  greater than `us` anymore.
 - {gh-pr}`281` Add official support for Python 3.13.
-- {gh-issue}`278` {gh-pr}`280` **BREAKING CHANGE**: the `Bus` constructor now accepts a nominal voltage
-  (phase-to-phase, in V), a `min_voltage_level` (unitless) and a `max_voltage_level` (unitless). These
-  arguments replace `min_voltage` and `max_voltage`. The `Bus` class now has some additional properties:
+- {gh-issue}`278` {gh-pr}`280` Modify the `Bus` voltage limits:
 
-  - `res_voltage_levels`: it retrieves the voltage levels of the bus according to the provided phase-to-phase nominal
-    voltage;
-  - `min_voltage_level` and `max_voltage_level`: these properties retrieve the minimum and maximum voltage levels;
-  - `min_voltage` and `max_voltage`: these properties (that existed before) now compute the minimum and maximum
-    voltages (in V) from the nominal voltage and the minimum and maximum levels.
-
-  The file format also changed to take into account these changes. If a `min_voltage` or `max_voltage` existed in a
-  file of a previous version, they are lost when upgrading the file.
+  - The `min_voltage` and `max_voltage` parameters and attributes of `Bus` have been replaced by
+    `nominal_voltage` (phase-to-phase, in V), a `min_voltage_level` (unitless) and a `max_voltage_level`
+    (unitless).
+  - `Bus` gained a new property `res_voltage_levels` that returns the voltage levels of the bus
+    as a percentage of the nominal voltage;
+  - The JSON file format also changed to take into account these changes. If a `min_voltage` or
+    `max_voltage` existed in a file of a previous version, they are lost when upgrading the file.
 
 - {gh-pr}`277` Fix the definition of constant current loads to be the magnitudes of the currents
   and their phase shift from the voltages instead of the absolute phase shift. Currents should no

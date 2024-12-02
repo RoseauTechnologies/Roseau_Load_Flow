@@ -251,7 +251,7 @@ class Line(AbstractBranch):
             msg = f"Maximum loading must be positive: {value} was provided."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_MAX_LOADING_VALUE)
-        self._max_loading = value
+        self._max_loading: float = value
 
     @property
     def ampacities(self) -> Q_[FloatArray] | None:
@@ -345,28 +345,21 @@ class Line(AbstractBranch):
 
     @property
     def res_loading(self) -> Q_[FloatArray] | None:
-        """Get the loading of the line (unitless)."""
-        amp = self._parameters._ampacities
-        if amp is None:
+        """The loading of the line (unitless) if ``self.parameters.ampacities`` is set, else ``None``."""
+        if (amp := self._parameters._ampacities) is None:
             return None
         currents1, currents2 = self._res_currents_getter(warning=True)
-        i_max = amp * self._max_loading
-        return Q_(np.maximum(abs(currents1), abs(currents2)) / i_max, "")
+        return Q_(np.maximum(abs(currents1), abs(currents2)) / amp, "")
 
     @property
     def res_violated(self) -> bool | None:
-        """Whether the line current exceeds the maximal current of the line (computed with the parameters' ampacities
-        and the maximal loading of the line itself).
+        """Whether the line current loading exceeds its maximal loading.
 
-        Returns ``None`` if the ampacities or the `max_loading` is not set are not set.
+        Returns ``None`` if the ``self.parameters.ampacities`` is not set.
         """
-        amp = self._parameters._ampacities
-        if amp is None:
+        if (loading := self.res_loading) is None:
             return None
-        currents1, currents2 = self._res_currents_getter(warning=True)
-        i_max = amp * self._max_loading
-        # True if any phase is overloaded
-        return bool((np.maximum(abs(currents1), abs(currents2)) > i_max).any())
+        return bool((loading.m > self._max_loading).any())
 
     #
     # Json Mixin interface

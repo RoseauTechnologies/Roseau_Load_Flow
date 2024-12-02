@@ -65,12 +65,12 @@ def test_res_violated():
     # Two violations
     transformer.max_loading = 4 / 5
     assert transformer.res_violated is True
-    np.testing.assert_allclose(transformer.res_loading.m, 0.8 * 20 * 3 / 40)
+    np.testing.assert_allclose(transformer.res_loading.m, 0.8 * 20 * 3 / 50)
 
     # Primary side violation
     transformer.max_loading = Q_(45, "%")
     assert transformer.res_violated is True
-    np.testing.assert_allclose(transformer.res_loading.m, 0.8 * 20 * 3 / (50 * 0.45))
+    np.testing.assert_allclose(transformer.res_loading.m, 0.8 * 20 * 3 / 50)
 
     # Secondary side violation
     transformer.max_loading = 1

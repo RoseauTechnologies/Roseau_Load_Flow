@@ -185,7 +185,7 @@ class Transformer(AbstractBranch):
             msg = f"Maximum loading must be positive: {value} was provided."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_MAX_LOADING_VALUE)
-        self._max_loading = value
+        self._max_loading: float = value
 
     @property
     def sn(self) -> Q_[float]:
@@ -321,28 +321,18 @@ class Transformer(AbstractBranch):
         return sum(powers1) + sum(powers2)
 
     @property
-    def res_loading(self) -> Q_[float] | None:
+    @ureg_wraps("", (None,))
+    def res_loading(self) -> Q_[float]:
         """Get the loading of the transformer (unitless)."""
         sn = self._parameters._sn
-        if sn is None:
-            return None
         powers1, powers2 = self._res_powers_getter(warning=True)
-        s_max = sn * self._max_loading
-        return Q_(max(abs(powers1.sum()), abs(powers2.sum())) / s_max, "")
+        return max(abs(powers1.sum()), abs(powers2.sum())) / sn
 
     @property
-    def res_violated(self) -> bool | None:
-        """Whether the transformer power exceeds the maximum power (loading > max_loading).
-
-        Returns ``None`` if the maximum power is not set.
-        """
-        sn = self._parameters._sn
-        if sn is None:
-            return None
-        powers1, powers2 = self._res_powers_getter(warning=True)
-        s_max = sn * self._max_loading
+    def res_violated(self) -> bool:
+        """Whether the transformer power loading exceeds its maximal loading."""
         # True if either the primary or secondary is overloaded
-        return bool((abs(powers1.sum()) > s_max) or (abs(powers2.sum()) > s_max))
+        return bool(self.res_loading.m > self._max_loading)
 
     #
     # Json Mixin interface
