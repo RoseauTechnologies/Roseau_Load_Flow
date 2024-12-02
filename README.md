@@ -62,6 +62,6 @@ For bug reports, feature requests, or questions, please open an issue on
 This software is developed by [Roseau Technologies](https://www.roseautechnologies.com/en).
 
 Follow us on:
-[![Linkedin](https://i.stack.imgur.com/gVE0j.png) LinkedIn](https://www.linkedin.com/company/roseau-technologies/)
+[![Linkedin](https://i.sstatic.net/gVE0j.png) LinkedIn](https://www.linkedin.com/company/roseau-technologies/)
 &nbsp;
-[![GitHub](https://i.stack.imgur.com/tskMh.png) GitHub](https://github.com/RoseauTechnologies)
+[![GitHub](https://i.sstatic.net/tskMh.png) GitHub](https://github.com/RoseauTechnologies)

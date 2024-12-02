@@ -25,7 +25,7 @@ The equations are the following for star loads given the constant currents {math
 ```{math}
 \left\{
     \begin{aligned}
-        \underline{I_{\mathrm{abc}}} &= i_{\mathrm{abc}} * \frac{\underline{V_{\mathrm{abc}}}
+        \underline{I_{\mathrm{abc}}} &= i_{\mathrm{abc}} \frac{\underline{V_{\mathrm{abc}}}
         -\underline{V_{\mathrm{n}}}}{|\underline{V_{\mathrm{abc}}}-\underline{V_{\mathrm{n}}}|} \\
         \underline{I_{\mathrm{n}}} &= -\sum_{p\in\{\mathrm{a},\mathrm{b},\mathrm{c}\}}\underline{I_{p}}
     \end{aligned}
@@ -38,11 +38,11 @@ And the following for delta loads given the constant currents {math}`i_{\mathrm{
 ```{math}
 \left\{
     \begin{aligned}
-        \underline{I_{\mathrm{ab}}} &= i_{\mathrm{ab}} * \frac{\underline{V_{\mathrm{a}}}
+        \underline{I_{\mathrm{ab}}} &= i_{\mathrm{ab}} \frac{\underline{V_{\mathrm{a}}}
         -\underline{V_{\mathrm{b}}}}{|\underline{V_{\mathrm{a}}}-\underline{V_{\mathrm{b}}}|} \\
-        \underline{I_{\mathrm{bc}}} &= i_{\mathrm{bc}} * \frac{\underline{V_{\mathrm{b}}}
+        \underline{I_{\mathrm{bc}}} &= i_{\mathrm{bc}} \frac{\underline{V_{\mathrm{b}}}
         -\underline{V_{\mathrm{c}}}}{|\underline{V_{\mathrm{b}}}-\underline{V_{\mathrm{c}}}|} \\
-        \underline{I_{\mathrm{ca}}} &= i_{\mathrm{ca}} * \frac{\underline{V_{\mathrm{c}}}
+        \underline{I_{\mathrm{ca}}} &= i_{\mathrm{ca}} \frac{\underline{V_{\mathrm{c}}}
         -\underline{V_{\mathrm{a}}}}{|\underline{V_{\mathrm{c}}}-\underline{V_{\mathrm{a}}}|}
     \end{aligned}
 \right.

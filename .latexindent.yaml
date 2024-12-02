@@ -39,6 +39,7 @@ indentRules:
 modifyLineBreaks:
   textWrapOptions:
     columns: 120
+    when: after
   environments:
     BeginStartsOnOwnLine: 1
     BodyStartsOnOwnLine: 1
