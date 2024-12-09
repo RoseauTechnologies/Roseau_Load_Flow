@@ -4,22 +4,22 @@
 ![pre-commit](https://github.com/RoseauTechnologies/Roseau_Load_Flow/actions/workflows/pre-commit.yml/badge.svg)
 [![Documentation Status](https://readthedocs.org/projects/roseau-load-flow/badge/?version=latest)](https://roseau-load-flow.readthedocs.io/en/latest/?badge=latest)
 
-_Roseau Load Flow_ is a powerful multi-phase load flow solver for unbalanced power flow analysis that
-offers:
+_Roseau Load Flow_ is a powerful load flow solver and static analysis tool that offers:
 
-- Multi-phase, unbalanced power flow analysis
-- Performance optimized solver written in C++
+- **Multi-phase**, **unbalanced** power flow analysis
+- A performance optimized solver written in C++
 - A catalogue of real-world transformer and line models
-- An ergonomic object-oriented Python interface
+- An ergonomic object-oriented Python interface with unit-aware quantities
 - A comprehensive documentation with code examples
 - Real-world distribution network data samples in the library (with more available on request)
 
-In addition to the following _unique_ set of features:
+In addition to the following **unique** set of features:
 
-- Support for floating neutrals for loads and sources
+- Support for _floating neutrals_ for loads and sources
 - Four-wire multi-phase modelling with no Kron's reduction, no transformations, no assumptions on the
   network topology and no implicit earthing everywhere
-- Support for flexible, voltage-dependent, loads directly in the Newton algorithm for better convergence
+- Support for **flexible**, voltage-dependent, loads directly in the Newton algorithm for better
+  convergence and stability
 
 This project is compatible with Python version 3.10 and newer. The
 [installation instructions](https://roseau-load-flow.roseautechnologies.com/Installation.html)
