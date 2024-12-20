@@ -105,6 +105,7 @@ class RoseauLoadFlowExceptionCode(StrEnum):
     LOAD_FLOW_NOT_RUN = auto()
     SEVERAL_NETWORKS = auto()
     BAD_JACOBIAN = auto()
+    NAN_VALUE = auto()
 
     # Solver
     BAD_SOLVER_NAME = auto()

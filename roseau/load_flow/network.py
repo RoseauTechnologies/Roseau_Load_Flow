@@ -609,19 +609,30 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         elif msg.startswith("1 "):
             msg = msg[2:]
             zero_elements_index, inf_elements_index = self._solver._cy_solver.analyse_jacobian()
-            if zero_elements_index:
+            if inf_elements_index:
+                inf_elements = [self._elements[i] for i in inf_elements_index]
+                printable_elements = ", ".join(f"{type(e).__name__}({e.id!r})" for e in inf_elements)
+                msg += (
+                    f"The problem seems to come from the elements [{printable_elements}] that induce infinite values."
+                )
+                power_load = False
+                flexible_load = False
+                for inf_element in inf_elements:
+                    if isinstance(inf_element, PowerLoad):
+                        power_load = True
+                        if inf_element.is_flexible:
+                            flexible_load = True
+                if power_load:
+                    msg += " This might be caused by a bad potential initialization of a power load"
+                if flexible_load:
+                    msg += ", or by flexible loads with very high alpha or incorrect flexible parameters voltages."
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.NAN_VALUE)
+            elif zero_elements_index:
                 zero_elements = [self._elements[i] for i in zero_elements_index]
                 printable_elements = ", ".join(f"{type(e).__name__}({e.id!r})" for e in zero_elements)
                 msg += (
                     f"The problem seems to come from the elements [{printable_elements}] that have at least one "
                     f"disconnected phase. "
-                )
-            if inf_elements_index:
-                inf_elements = [self._elements[i] for i in inf_elements_index]
-                printable_elements = ", ".join(f"{type(e).__name__}({e.id!r})" for e in inf_elements)
-                msg += (
-                    f"The problem seems to come from the elements [{printable_elements}] that induce infinite "
-                    f"values. This might be caused by flexible loads with very high alpha."
                 )
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_JACOBIAN) from e
