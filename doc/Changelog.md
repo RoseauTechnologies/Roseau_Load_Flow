@@ -17,6 +17,11 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 # Changelog
 
+## Unreleased
+
+- {gh-pr}`301` {gh-issue}`299` Improve the error message when the Jacobian matrix contains infinite
+  or NaN values.
+
 ## Version 0.11.0
 
 This release adds official support for Python 3.13 and adds a new experimental backward-forward solver.
