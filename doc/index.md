@@ -15,32 +15,15 @@ myst:
 
 # Welcome to the Roseau Load Flow documentation
 
-_Roseau Load Flow_ is a powerful load flow solver and static analysis tool that offers:
+```{include} ../README.md
+:start-after: <!-- start rlf-pitch -->
+:end-before: <!-- end rlf-pitch -->
+```
 
-- **Multi-phase**, **unbalanced** power flow analysis
-- A performance optimized solver written in C++
-- A catalogue of real-world transformer and line models
-- An ergonomic object-oriented Python interface with unit-aware quantities
-- A comprehensive documentation with code examples
-- Real-world distribution network data samples in the library (with more available on request)
-
-In addition to the following **unique** set of features:
-
-- Support for _floating neutrals_ for loads and sources
-- Four-wire multi-phase modelling with no Kron's reduction, no transformations, no assumptions on the
-  network topology and no implicit earthing everywhere
-- Support for **flexible**, voltage-dependent, loads directly in the Newton algorithm for better
-  convergence and stability
-
-This software is developed by [Roseau Technologies](https://www.roseautechnologies.com/en).
-<a href="https://www.linkedin.com/company/roseau-technologies/"><i class="fa-brands fa-linkedin" ></i></a>
-<a href="https://github.com/RoseauTechnologies/"><i class="fa-brands fa-github" ></i></a>
-
-_Roseau Load Flow_ ships with a sample of 20 low-voltage and 20 medium-voltage feeder networks. Each
-network is provided with its summer and winter load points. At _Roseau Technologies_, we can provide
-the major part of the French medium and low voltage networks on demand. For more information, please
-contact us at
-[contact@roseautechnologies.com](mailto:contact@roseautechnologies.com).
+```{include} ../README.md
+:start-after: <!-- start rlf-networks -->
+:end-before: <!-- end rlf-networks -->
+```
 
 <iframe src="./_static/Network/Catalogue.html" height="600px" width="100%" frameborder="0"></iframe>
 
