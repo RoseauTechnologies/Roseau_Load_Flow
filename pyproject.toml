@@ -73,6 +73,7 @@ doc = [
     "sphinxcontrib-bibtex>=2.5.0",
     "sphinx-sitemap>=2.5.1",
     "sphinxext-opengraph>=0.9.1",
+    "ipython>=8.31.0",
 ]
 
 [tool.uv]

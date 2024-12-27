@@ -114,7 +114,7 @@ the corresponding functions. They can be installed with the
 If you are using Jupyter Notebooks, you can install `roseau-load-flow` directly from a notebook
 cell with:
 
-```python-console
+```ipython
 In [1]: %pip install roseau-load-flow
 ```
 
