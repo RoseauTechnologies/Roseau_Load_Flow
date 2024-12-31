@@ -8,7 +8,7 @@ from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowE
 from roseau.load_flow.io.dgs.constants import INSULATORS, LINE_TYPES, MATERIALS
 from roseau.load_flow.models import Bus, Ground, Line, LineParameters
 from roseau.load_flow.typing import Id
-from roseau.load_flow.utils._exceptions import find_stack_level
+from roseau.load_flow.utils import find_stack_level
 
 logger = logging.getLogger(__name__)
 

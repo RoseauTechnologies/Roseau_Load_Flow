@@ -28,7 +28,7 @@ from roseau.load_flow.models import (
     VoltageSource,
 )
 from roseau.load_flow.typing import Id, JsonDict
-from roseau.load_flow.utils._exceptions import find_stack_level
+from roseau.load_flow.utils import find_stack_level
 
 if TYPE_CHECKING:
     from roseau.load_flow.network import ElectricalNetwork

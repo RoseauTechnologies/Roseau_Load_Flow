@@ -110,7 +110,7 @@ docstring-code-format = true
 "*.ipynb" = ["E402", "F403", "F405"]
 
 [tool.coverage.run]
-branch = true
+branch = false
 omit = ["roseau/load_flow/__about__.py"]
 plugins = ["coverage_conditional_plugin"]
 

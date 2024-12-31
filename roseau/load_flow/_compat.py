@@ -1,3 +1,4 @@
+# Cannot move to utils because of circular imports
 import sys
 from enum import Enum
 

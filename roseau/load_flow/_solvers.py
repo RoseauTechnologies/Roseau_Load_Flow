@@ -9,7 +9,7 @@ from typing_extensions import Self
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.license import activate_license, get_license
 from roseau.load_flow.typing import JsonDict, Solver
-from roseau.load_flow.utils._exceptions import find_stack_level
+from roseau.load_flow.utils import find_stack_level
 from roseau.load_flow_engine.cy_engine import CyAbstractSolver, CyBackwardForward, CyNewton, CyNewtonGoldstein
 
 logger = logging.getLogger(__name__)

@@ -48,18 +48,18 @@ If we take the example network from the [Getting Started page](gs-creating-netwo
 
 As there are no transformers between the two buses, they all belong to the same cluster.
 
-## Conversion to symmetrical components
+## Symmetrical components
 
-{mod}`roseau.load_flow.converters` contains helpers to convert between phasor and symmetrical
-components. For example, to convert a phasor voltage to symmetrical components:
+{mod}`roseau.load_flow.sym` contains helpers to work with symmetrical components. For example, to
+convert a phasor voltage to symmetrical components:
 
 ```pycon
 >>> import numpy as np
->>> from roseau.load_flow.converters import phasor_to_sym, sym_to_phasor
+>>> import roseau.load_flow as rlf
 >>> v = 230 * np.exp([0, -2j * np.pi / 3, 2j * np.pi / 3])
 >>> v
 array([ 230.  +0.j        , -115.-199.18584287j, -115.+199.18584287j])
->>> v_sym = phasor_to_sym(v)
+>>> v_sym = rlf.sym.phasor_to_sym(v)
 >>> v_sym
 array([[ 8.52651283e-14-1.42108547e-14j],
        [ 2.30000000e+02+4.19109192e-14j],
@@ -80,8 +80,7 @@ You can also convert pandas Series to symmetrical components. If we take the exa
 [Getting Started](Getting_Started.md) page:
 
 ```pycon
->>> from roseau.load_flow.converters import series_phasor_to_sym
->>> series_phasor_to_sym(en.res_buses_voltages["voltage"])
+>>> rlf.sym.series_phasor_to_sym(en.res_buses_voltages["voltage"])
 bus_id  sequence
 lb      zero        8.526513e-14-1.421085e-14j
         pos         2.219282e+02+4.167975e-14j
@@ -92,14 +91,14 @@ sb      zero        9.947598e-14-1.421085e-14j
 Name: voltage, dtype: complex128
 ```
 
-_Roseau Load Flow_ also provides useful helpers to create three-phase balanced quantities by only
+The `rlf.sym` module also provides useful helpers to create three-phase balanced quantities by only
 providing the magnitude of the quantities. For example, to create a three-phase balanced positive
 sequence voltage:
 
 ```pycon
 >>> import numpy as np
 >>> import roseau.load_flow as rlf
->>> V = 230 * rlf.PositiveSequence
+>>> V = 230 * rlf.sym.PositiveSequence
 >>> V
 array([ 230.  +0.j        , -115.-199.18584287j, -115.+199.18584287j])
 >>> np.abs(V)
@@ -108,23 +107,24 @@ array([230., 230., 230.])
 array([   0., -120.,  120.])
 ```
 
-Similarly, you can use `rlf.NegativeSequence` and `rlf.ZeroSequence` to create negative-sequence
-and zero-sequence quantities respectively.
+Similarly, you can use `rlf.sym.NegativeSequence` and `rlf.sym.ZeroSequence` to create negative-sequence
+and zero-sequence quantities respectively. Because these are so common, you can also access them
+directly from the top-level module as `rlf.PositiveSequence`, etc.
 
 ## Potentials to voltages conversion
 
-{mod}`roseau.load_flow.converters` also contains helpers to convert a vector of potentials to a
-vector of voltages. Example:
+{mod}`roseau.load_flow.converters` contains helpers to convert a vector of potentials to a vector of
+voltages. Example:
 
 ```pycon
 >>> import numpy as np
->>> from roseau.load_flow.converters import calculate_voltages, calculate_voltage_phases
+>>> import roseau.load_flow as rlf
 >>> potentials = 230 * np.array([1, np.exp(-2j * np.pi / 3), np.exp(2j * np.pi / 3), 0])
 >>> potentials
 array([ 230.  +0.j        , -115.-199.18584287j, -115.+199.18584287j,
           0.  +0.j        ])
 >>> phases = "abcn"
->>> calculate_voltages(potentials, phases)
+>>> rlf.converters.calculate_voltages(potentials, phases)
 array([ 230.  +0.j        , -115.-199.18584287j, -115.+199.18584287j]) <Unit('volt')>
 ```
 
@@ -132,40 +132,46 @@ Because the phases include the neutral, the voltages calculated are phase-to-neu
 You can also calculate phase-to-phase voltages by omitting the neutral:
 
 ```pycon
->>> calculate_voltages(potentials[:-1], phases[:-1])
+>>> rlf.converters.calculate_voltages(potentials[:-1], phases[:-1])
 array([ 345.+199.18584287j,    0.-398.37168574j, -345.+199.18584287j]) <Unit('volt')>
 ```
 
 To get the phases of the voltage, you can use `calculate_voltage_phases`:
 
 ```pycon
->>> calculate_voltage_phases(phases)
+>>> rlf.converters.calculate_voltage_phases(phases)
 ['an', 'bn', 'cn']
 ```
 
 Of course these functions work with arbitrary phases:
 
 ```pycon
->>> calculate_voltages(potentials[:2], phases[:2])
+>>> rlf.converters.calculate_voltages(potentials[:2], phases[:2])
 array([345.+199.18584287j]) <Unit('volt')>
->>> calculate_voltage_phases(phases[:2])
+>>> rlf.converters.calculate_voltage_phases(phases[:2])
 ['ab']
->>> calculate_voltage_phases("abc")
+>>> rlf.converters.calculate_voltage_phases("abc")
 ['ab', 'bc', 'ca']
->>> calculate_voltage_phases("bc")
+>>> rlf.converters.calculate_voltage_phases("bc")
 ['bc']
->>> calculate_voltage_phases("bcn")
+>>> rlf.converters.calculate_voltage_phases("bcn")
 ['bn', 'cn']
 ```
 
 ## Constants
 
-{mod}`roseau.load_flow.utils.constants` contains some common constants like the resistivity
-and permeability of common materials in addition to other useful constants. Please refer to
-the module documentation for more details.
+{mod}`roseau.load_flow.constants` contains some common mathematical and physical constants like the
+resistivity and permeability of common materials in addition to other useful constants. Please refer
+to the module documentation for more details. An enumeration of available materials can be found in
+the {mod}`roseau.load_flow.types` module.
 
-An enumeration of available materials can be found in the {mod}`roseau.load_flow.utils.types`
-module.
+Some commonly used constants can be accessed directly from the top-level module for convenience.
+Notable top-level constants:
+
+- `rlf.SQRT3`: the square root of 3. Useful for converting between phase-to-phase and phase-to-neutral
+  voltages.
+- `rlf.ALPHA`: the alpha constant. Rotates a complex number by 120°.
+- `rlf.ALPHA2`: the alpha constant squared. Rotates a complex number by 240° (or -120°).
 
 ## Voltage unbalance
 

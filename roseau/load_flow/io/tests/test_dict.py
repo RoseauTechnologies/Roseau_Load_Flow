@@ -22,7 +22,7 @@ from roseau.load_flow.models import (
 )
 from roseau.load_flow.network import ElectricalNetwork
 from roseau.load_flow.testing import assert_json_close
-from roseau.load_flow.utils import Insulator, LineType, Material
+from roseau.load_flow.types import Insulator, LineType, Material
 
 # Store the expected hashes of the files that should not be modified
 EXPECTED_HASHES = {

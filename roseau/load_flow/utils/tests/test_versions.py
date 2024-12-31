@@ -1,7 +1,7 @@
 import re
 
 from roseau.load_flow import show_versions
-from roseau.load_flow.utils._versions import _get_dependency_info, _get_sys_info
+from roseau.load_flow.utils.versions import _get_dependency_info, _get_sys_info
 
 
 def test_versions(capsys):

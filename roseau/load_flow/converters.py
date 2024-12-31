@@ -3,105 +3,18 @@ This module provides helper functions to convert from one representation to anot
 
 Available functions:
 
-* convert between phasor and symmetrical components
 * convert potentials to voltages
 """
 
 import logging
 
 import numpy as np
-import pandas as pd
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.typing import ComplexArray, ComplexArrayLike1D
 from roseau.load_flow.units import Q_, ureg_wraps
-from roseau.load_flow.utils.constants import NegativeSequence, PositiveSequence, ZeroSequence
-from roseau.load_flow.utils.types import SequenceDtype
 
 logger = logging.getLogger(__name__)
-
-A = np.array([ZeroSequence, PositiveSequence, NegativeSequence], dtype=np.complex128)
-"""numpy.ndarray[complex]: "A" matrix: transformation matrix from phasor to symmetrical components."""
-
-_A_INV = np.linalg.inv(A)
-_SEQ_INDEX = pd.CategoricalIndex(["zero", "pos", "neg"], name="sequence", dtype=SequenceDtype)
-
-
-def phasor_to_sym(v_abc: ComplexArrayLike1D) -> ComplexArray:
-    """Compute the symmetrical components `(0, +, -)` from the phasor components `(a, b, c)`."""
-    v_abc_array = np.asarray(v_abc)
-    orig_shape = v_abc_array.shape
-    v_012 = _A_INV @ v_abc_array.reshape((3, 1))
-    return v_012.reshape(orig_shape)
-
-
-def sym_to_phasor(v_012: ComplexArrayLike1D) -> ComplexArray:
-    """Compute the phasor components `(a, b, c)` from the symmetrical components `(0, +, -)`."""
-    v_012_array = np.asarray(v_012)
-    orig_shape = v_012_array.shape
-    v_abc = A @ v_012_array.reshape((3, 1))
-    return v_abc.reshape(orig_shape)
-
-
-def series_phasor_to_sym(s_abc: pd.Series) -> pd.Series:
-    """Compute the symmetrical components `(0, +, -)` from the phasor components `(a, b, c)` of a series.
-
-    Args:
-        s_abc:
-            Series of phasor components (voltage, current, ...). The series must have a
-            multi-index with a `'phase'` level containing the phases in order (a -> b -> c).
-
-    Returns:
-        Series of the symmetrical components representing the input phasor series. The series has
-        a multi-index with the phase level replaced by a `'sequence'` level of values
-        `('zero', 'pos', 'neg')`.
-
-    Example:
-        Say we have a pandas series of three-phase voltages of every bus in the network:
-
-        >>> voltage
-        bus_id  phase
-        vs      an       200000000000.0+0.00000000j
-                bn      -10000.000000-17320.508076j
-                cn      -10000.000000+17320.508076j
-        bus     an       19999.00000095+0.00000000j
-                bn       -9999.975000-17320.464775j
-                cn       -9999.975000+17320.464775j
-        Name: voltage, dtype: complex128
-
-        We can get the `zero`, `positive`, and `negative` sequences of the voltage using:
-
-        >>> voltage_sym_components = series_phasor_to_sym(voltage)
-        >>> voltage_sym_components
-        bus_id  sequence
-        bus     zero        3.183231e-12-9.094947e-13j
-                pos         1.999995e+04+3.283594e-12j
-                neg        -1.796870e-07-2.728484e-12j
-        vs      zero        5.002221e-12-9.094947e-13j
-                pos         2.000000e+04+3.283596e-12j
-                neg        -1.796880e-07-1.818989e-12j
-        Name: voltage, dtype: complex128
-
-        We can now access each sequence of the symmetrical components individually:
-
-        >>> voltage_sym_components.loc[:, "zero"]  # get zero sequence values
-        bus_id
-        bus     3.183231e-12-9.094947e-13j
-        vs      5.002221e-12-9.094947e-13j
-        Name: voltage, dtype: complex128
-
-    """
-    if not isinstance(s_abc, pd.Series):
-        raise TypeError("Input must be a pandas Series.")
-    if not isinstance(s_abc.index, pd.MultiIndex):
-        raise ValueError("Input series must have a MultiIndex.")
-    if "phase" not in s_abc.index.names:
-        raise ValueError("Input series must have a 'phase' level in the MultiIndex.")
-    level_names = [name for name in s_abc.index.names if name != "phase"]
-    s_012 = s_abc.groupby(level=level_names, sort=False).apply(
-        lambda s: pd.Series(_A_INV @ s, index=_SEQ_INDEX, dtype=np.complex128)
-    )
-    return s_012
 
 
 def _calculate_voltages(potentials: ComplexArray, phases: str) -> ComplexArray:
@@ -199,3 +112,21 @@ def calculate_voltage_phases(phases: str) -> list[str]:
         msg = f"Invalid phases '{phases}'. Must be one of {', '.join(_VOLTAGE_PHASES_CACHE)}."
         logger.error(msg)
         raise RoseauLoadFlowException(msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE) from None
+
+
+def __getattr__(name: str):
+    import warnings
+
+    from roseau.load_flow.utils import find_stack_level
+
+    if name in ("phasor_to_sym", "sym_to_phasor", "series_phasor_to_sym"):
+        warnings.warn(
+            f"'rlf.converters.{name}' is deprecated. Use 'rlf.sym.{name}' instead.",
+            category=FutureWarning,
+            stacklevel=find_stack_level(),
+        )
+        from roseau.load_flow import sym
+
+        return getattr(sym, name)
+
+    raise AttributeError(f"module '{__name__}' has no attribute '{name}'")

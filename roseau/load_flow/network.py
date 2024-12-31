@@ -22,6 +22,7 @@ from pyproj import CRS
 from typing_extensions import Self
 
 from roseau.load_flow._solvers import AbstractSolver
+from roseau.load_flow.constants import SQRT3
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.io import network_from_dgs, network_from_dict, network_to_dict
 from roseau.load_flow.models import (
@@ -40,9 +41,15 @@ from roseau.load_flow.models import (
     VoltageSource,
 )
 from roseau.load_flow.typing import Id, JsonDict, MapOrSeq, Solver, StrPath
-from roseau.load_flow.utils import SQRT3, CatalogueMixin, JsonMixin, _optional_deps
-from roseau.load_flow.utils._exceptions import find_stack_level
-from roseau.load_flow.utils.types import _DTYPES, LoadTypeDtype, VoltagePhaseDtype
+from roseau.load_flow.utils import (
+    DTYPES,
+    CatalogueMixin,
+    JsonMixin,
+    LoadTypeDtype,
+    VoltagePhaseDtype,
+    find_stack_level,
+    optional_deps,
+)
 from roseau.load_flow_engine.cy_engine import CyElectricalNetwork
 
 if TYPE_CHECKING:
@@ -462,7 +469,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             This method requires *networkx* to be installed. You can install it with the ``"graph"``
             extra if you are using pip: ``pip install "roseau-load-flow[graph]"``.
         """
-        nx = _optional_deps.networkx
+        nx = optional_deps.networkx
         graph = nx.Graph()
         for bus in self.buses.values():
             graph.add_node(bus.id, geom=bus.geometry)
@@ -667,7 +674,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         """
         self._check_valid_results()
         res_dict = {"bus_id": [], "phase": [], "potential": []}
-        dtypes = {c: _DTYPES[c] for c in res_dict}
+        dtypes = {c: DTYPES[c] for c in res_dict}
         for bus_id, bus in self.buses.items():
             for potential, phase in zip(bus._res_potentials_getter(warning=False), bus.phases, strict=True):
                 res_dict["bus_id"].append(bus_id)
@@ -707,7 +714,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             "max_voltage_level": [],
             "nominal_voltage": [],
         }
-        dtypes = {c: _DTYPES[c] for c in voltages_dict} | {"phase": VoltagePhaseDtype}
+        dtypes = {c: DTYPES[c] for c in voltages_dict} | {"phase": VoltagePhaseDtype}
         for bus_id, bus in self.buses.items():
             nominal_voltage = bus._nominal_voltage
             min_voltage_level = bus._min_voltage_level
@@ -808,7 +815,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             "max_loading": [],
             "ampacity": [],
         }
-        dtypes = {c: _DTYPES[c] for c in res_dict}
+        dtypes = {c: DTYPES[c] for c in res_dict}
         for line in self.lines.values():
             currents1, currents2 = line._res_currents_getter(warning=False)
             potentials1, potentials2 = line._res_potentials_getter(warning=False)
@@ -905,7 +912,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             "max_loading": [],
             "sn": [],
         }
-        dtypes = {c: _DTYPES[c] for c in res_dict}
+        dtypes = {c: DTYPES[c] for c in res_dict}
         for transformer in self.transformers.values():
             currents1, currents2 = transformer._res_currents_getter(warning=False)
             potentials1, potentials2 = transformer._res_potentials_getter(warning=False)
@@ -972,7 +979,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             "potential1": [],
             "potential2": [],
         }
-        dtypes = {c: _DTYPES[c] for c in res_dict}
+        dtypes = {c: DTYPES[c] for c in res_dict}
         for switch in self.switches.values():
             if not isinstance(switch, Switch):
                 continue
@@ -1009,7 +1016,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         """
         self._check_valid_results()
         res_dict = {"load_id": [], "phase": [], "type": [], "current": [], "power": [], "potential": []}
-        dtypes = {c: _DTYPES[c] for c in res_dict} | {"type": LoadTypeDtype}
+        dtypes = {c: DTYPES[c] for c in res_dict} | {"type": LoadTypeDtype}
         for load_id, load in self.loads.items():
             currents = load._res_currents_getter(warning=False)
             potentials = load._res_potentials_getter(warning=False)
@@ -1038,7 +1045,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         """
         self._check_valid_results()
         voltages_dict = {"load_id": [], "phase": [], "type": [], "voltage": []}
-        dtypes = {c: _DTYPES[c] for c in voltages_dict} | {"phase": VoltagePhaseDtype, "type": LoadTypeDtype}
+        dtypes = {c: DTYPES[c] for c in voltages_dict} | {"phase": VoltagePhaseDtype, "type": LoadTypeDtype}
         for load_id, load in self.loads.items():
             for voltage, phase in zip(load._res_voltages_getter(warning=False), load.voltage_phases, strict=True):
                 voltages_dict["load_id"].append(load_id)
@@ -1064,7 +1071,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         """
         self._check_valid_results()
         loads_dict = {"load_id": [], "phase": [], "flexible_power": []}
-        dtypes = {c: _DTYPES[c] for c in loads_dict} | {"phase": VoltagePhaseDtype}
+        dtypes = {c: DTYPES[c] for c in loads_dict} | {"phase": VoltagePhaseDtype}
         for load_id, load in self.loads.items():
             if not (isinstance(load, PowerLoad) and load.is_flexible):
                 continue
@@ -1091,7 +1098,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         """
         self._check_valid_results()
         res_dict = {"source_id": [], "phase": [], "current": [], "power": [], "potential": []}
-        dtypes = {c: _DTYPES[c] for c in res_dict}
+        dtypes = {c: DTYPES[c] for c in res_dict}
         for source_id, source in self.sources.items():
             currents = source._res_currents_getter(warning=False)
             potentials = source._res_potentials_getter(warning=False)
@@ -1115,7 +1122,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         """
         self._check_valid_results()
         res_dict = {"ground_id": [], "potential": []}
-        dtypes = {c: _DTYPES[c] for c in res_dict}
+        dtypes = {c: DTYPES[c] for c in res_dict}
         for ground in self.grounds.values():
             potential = ground._res_potential_getter(warning=False)
             res_dict["ground_id"].append(ground.id)
@@ -1134,7 +1141,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         """
         self._check_valid_results()
         res_dict = {"potential_ref_id": [], "current": []}
-        dtypes = {c: _DTYPES[c] for c in res_dict}
+        dtypes = {c: DTYPES[c] for c in res_dict}
         for p_ref in self.potential_refs.values():
             current = p_ref._res_current_getter(warning=False)
             res_dict["potential_ref_id"].append(p_ref.id)

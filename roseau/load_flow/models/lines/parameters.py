@@ -13,7 +13,9 @@ from numpy._typing import NDArray
 from typing_extensions import Self
 
 from roseau.load_flow._compat import StrEnum
+from roseau.load_flow.constants import EPSILON_0, EPSILON_R, MU_0, OMEGA, PI, RHO, TAN_D, F
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
+from roseau.load_flow.types import Insulator, LineType, Material
 from roseau.load_flow.typing import (
     ComplexArray,
     ComplexArrayLike2D,
@@ -24,23 +26,7 @@ from roseau.load_flow.typing import (
     JsonDict,
 )
 from roseau.load_flow.units import Q_, ureg_wraps
-from roseau.load_flow.utils import (
-    EPSILON_0,
-    EPSILON_R,
-    MU_0,
-    OMEGA,
-    PI,
-    RHO,
-    TAN_D,
-    CatalogueMixin,
-    F,
-    Identifiable,
-    Insulator,
-    JsonMixin,
-    LineType,
-    Material,
-)
-from roseau.load_flow.utils._exceptions import find_stack_level
+from roseau.load_flow.utils import CatalogueMixin, Identifiable, JsonMixin, find_stack_level
 
 logger = logging.getLogger(__name__)
 
@@ -56,9 +42,9 @@ _DEFAULT_INSULATOR = {
     LineType.UNDERGROUND: Insulator.PVC,
 }
 
-MaterialArray: TypeAlias = NDArray[Material]
-InsulatorArray: TypeAlias = NDArray[Insulator]
-_StrEnumType: TypeAlias = TypeVar("_StrEnumType", bound=StrEnum)
+MaterialArray: TypeAlias = NDArray[np.object_]
+InsulatorArray: TypeAlias = NDArray[np.object_]
+_StrEnumType = TypeVar("_StrEnumType", bound=StrEnum)
 
 
 class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
