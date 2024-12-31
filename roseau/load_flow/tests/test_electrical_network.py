@@ -901,6 +901,13 @@ def test_single_phase_network(single_phase_network: ElectricalNetwork):
         .set_index(["load_id", "phase"]),
     )
 
+    # Buses voltage_level is computed when nominal_voltage is defined, even if missing min/max levels
+    source_bus.nominal_voltage = 20_000 * np.sqrt(3)
+    assert source_bus.min_voltage_level is None
+    assert source_bus.max_voltage_level is None
+    npt.assert_allclose(single_phase_network.res_buses_voltages.loc[("bus0", np.s_[:]), "voltage_level"], 1.0)
+    assert single_phase_network.res_buses_voltages.loc[("bus1", np.s_[:]), "voltage_level"].isna().all()
+
 
 def test_network_elements(small_network: ElectricalNetwork):
     # Add a line to the network ("bus2" constructor belongs to the network)
