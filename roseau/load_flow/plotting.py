@@ -5,7 +5,9 @@ from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
-import roseau.load_flow as rlf
+from roseau.load_flow.models import AbstractLoad, Bus, VoltageSource
+from roseau.load_flow.network import ElectricalNetwork
+from roseau.load_flow.sym import phasor_to_sym
 from roseau.load_flow.typing import Complex, ComplexArray, Float
 
 if TYPE_CHECKING:
@@ -76,9 +78,7 @@ def _draw_voltage_phasor(ax: "Axes", potential1: Complex, potential2: Complex, c
 #
 # Phasor plotting functions
 #
-def plot_voltage_phasors(
-    element: rlf.Bus | rlf.AbstractLoad | rlf.VoltageSource, *, ax: "Axes | None" = None
-) -> "Axes":
+def plot_voltage_phasors(element: Bus | AbstractLoad | VoltageSource, *, ax: "Axes | None" = None) -> "Axes":
     """Plot the voltage phasors of a bus, load, or voltage source.
 
     Args:
@@ -91,7 +91,7 @@ def plot_voltage_phasors(
     Returns:
         The axes with the plot.
     """
-    from roseau.load_flow.utils._optional_deps import pyplot as plt
+    from roseau.load_flow.utils.optional_deps import pyplot as plt
 
     if ax is None:
         ax = plt.gca()
@@ -121,9 +121,7 @@ def plot_voltage_phasors(
     return ax
 
 
-def plot_symmetrical_voltages(
-    element: rlf.Bus | rlf.AbstractLoad | rlf.VoltageSource, *, ax: "Axes | None" = None
-) -> "Axes":
+def plot_symmetrical_voltages(element: Bus | AbstractLoad | VoltageSource, *, ax: "Axes | None" = None) -> "Axes":
     """Plot the symmetrical voltages of a bus, load, or voltage source.
 
     Args:
@@ -137,13 +135,13 @@ def plot_symmetrical_voltages(
     Returns:
         The axes with the plot.
     """
-    from roseau.load_flow.utils._optional_deps import pyplot as plt
+    from roseau.load_flow.utils.optional_deps import pyplot as plt
 
     if element.phases not in {"abc", "abcn"}:
         raise ValueError("The element must have 'abc' or 'abcn' phases.")
     if ax is None:
         ax = plt.gca()
-    voltages_sym = rlf.converters.phasor_to_sym(element.res_voltages.m)
+    voltages_sym = phasor_to_sym(element.res_voltages.m)
     _configure_axes(ax, voltages_sym)
     ax.set_title(f"{element.id} (symmetrical)")
     for sequence, voltage in zip(("zero", "pos", "neg"), voltages_sym, strict=True):
@@ -158,7 +156,7 @@ def plot_symmetrical_voltages(
 # Map plotting functions
 #
 def plot_interactive_map(
-    network: rlf.ElectricalNetwork,
+    network: ElectricalNetwork,
     *,
     style_color: str = "#234e83",
     highlight_color: str = "#cad40e",

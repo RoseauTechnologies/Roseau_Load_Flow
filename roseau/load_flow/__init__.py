@@ -9,7 +9,7 @@ See Package Contents below for a list of available classes and functions.
 import importlib.metadata
 from typing import Any
 
-from roseau.load_flow import converters
+from roseau.load_flow import constants, converters, plotting, sym
 from roseau.load_flow.__about__ import (
     __authors__,
     __copyright__,
@@ -20,6 +20,7 @@ from roseau.load_flow.__about__ import (
     __status__,
     __url__,
 )
+from roseau.load_flow.constants import SQRT3
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.license import License, activate_license, deactivate_license, get_license
 from roseau.load_flow.models import (
@@ -43,10 +44,10 @@ from roseau.load_flow.models import (
     VoltageSource,
 )
 from roseau.load_flow.network import ElectricalNetwork
+from roseau.load_flow.sym import ALPHA, ALPHA2, NegativeSequence, PositiveSequence, ZeroSequence
+from roseau.load_flow.types import Insulator, LineType, Material
 from roseau.load_flow.units import Q_, ureg
-from roseau.load_flow.utils import Insulator, LineType, Material, constants
-from roseau.load_flow.utils._versions import show_versions
-from roseau.load_flow.utils.constants import ALPHA, ALPHA2, SQRT3, NegativeSequence, PositiveSequence, ZeroSequence
+from roseau.load_flow.utils import show_versions
 
 __version__ = importlib.metadata.version("roseau-load-flow")
 
@@ -63,6 +64,8 @@ __all__ = [
     "show_versions",
     "converters",
     "constants",
+    "plotting",
+    "sym",
     # Electrical Network
     "ElectricalNetwork",
     # Buses
@@ -119,12 +122,12 @@ def __getattr__(name: str) -> Any:
     if name in deprecated_classes and name not in globals():
         import warnings
 
-        from roseau.load_flow.utils._exceptions import find_stack_level
+        from roseau.load_flow.utils.exceptions import find_stack_level
 
         new_class = deprecated_classes[name]
         warnings.warn(
             f"The `{name}` class is deprecated. Use `{new_class.__name__}` instead.",
-            category=DeprecationWarning,
+            category=FutureWarning,
             stacklevel=find_stack_level(),
         )
         globals()[name] = new_class

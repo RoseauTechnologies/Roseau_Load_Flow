@@ -9,12 +9,13 @@ import pandas as pd
 from shapely.geometry.base import BaseGeometry
 from typing_extensions import Self
 
-from roseau.load_flow.converters import _calculate_voltages, calculate_voltage_phases, phasor_to_sym
+from roseau.load_flow.converters import _calculate_voltages, calculate_voltage_phases
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.core import Element
+from roseau.load_flow.sym import phasor_to_sym
 from roseau.load_flow.typing import ComplexArray, ComplexArrayLike1D, FloatArray, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
-from roseau.load_flow.utils._exceptions import find_stack_level
+from roseau.load_flow.utils import find_stack_level
 from roseau.load_flow_engine.cy_engine import CyBus
 
 logger = logging.getLogger(__name__)

@@ -8,8 +8,8 @@ import pytest
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models import Bus, Ground, Line, LineParameters
+from roseau.load_flow.types import Insulator, LineType, Material
 from roseau.load_flow.units import Q_
-from roseau.load_flow.utils import Insulator, LineType, Material
 
 
 def test_line_parameters():
@@ -214,12 +214,12 @@ def test_from_geometry():
         external_diameter=0.04,
     )
     np.testing.assert_allclose(
-        lp.y_shunt.m.imag * 4,  # because InsulatorType.IP has 4x epsilon_r
+        lp.y_shunt.m.imag * 4,  # because Insulator.IP has 4x epsilon_r
         LineParameters.from_geometry(
             id="test",
             line_type=lp.line_type,
             material=lp.materials[0],
-            insulator=Insulator.IP,  # 4x epsilon_r of InsulatorType.NONE
+            insulator=Insulator.IP,  # 4x epsilon_r of Insulator.NONE
             section=lp.sections[0],
             height=-0.5,
             external_diameter=0.04,

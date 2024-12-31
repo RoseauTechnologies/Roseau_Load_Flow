@@ -1,10 +1,22 @@
 import pytest
 
+from roseau.load_flow.constants import DELTA_P, EPSILON_R, MU_R, RHO, TAN_D
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
-from roseau.load_flow.utils.types import Insulator, LineType, Material
+from roseau.load_flow.types import Insulator, LineType, Material
 
 TYPES = [Material, Insulator, LineType]
 TYPES_IDS = [x.__name__ for x in TYPES]
+
+
+def test_types_of_constants():
+    for x in Material:
+        assert x in MU_R
+        assert x in RHO
+        assert x in DELTA_P
+
+    for x in Insulator:
+        assert x in TAN_D
+        assert x in EPSILON_R
 
 
 @pytest.mark.parametrize(scope="module", argnames="t", argvalues=TYPES, ids=TYPES_IDS)

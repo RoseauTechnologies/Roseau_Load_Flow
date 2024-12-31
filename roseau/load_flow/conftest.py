@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
 
-import roseau
+import roseau.load_flow
 from roseau.load_flow.utils.log import set_logging_config
 
 HERE = Path(__file__).parent.expanduser().absolute()
@@ -63,6 +63,8 @@ def patch_engine(request):
                 for f in filenames:
                     if not f.endswith(".py"):
                         continue
+                    if f in ("constants.py", "types.py") and base_module == "roseau.load_flow.utils":
+                        continue  # TODO: Remove when deprecated modules are removed
                     module = importlib.import_module(f"{base_module}.{f.removesuffix('.py')}")
                     for _, klass in inspect.getmembers(
                         module,

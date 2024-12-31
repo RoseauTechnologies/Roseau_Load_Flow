@@ -19,6 +19,12 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`304` Add top-level modules `rlf.constants` and `rlf.types`. The old modules in the `utils`
+  package are deprecated and will be removed in a future release. The `utils` package is for internal
+  use only and should not be considered stable.
+- {gh-pr}`304` Add top-level module `rlf.sym` for symmetrical components utilities. The `sym_to_phasor`,
+  `phasor_to_sym` and `series_phasor_to_sym` functions are moved from the `rlf.converters` module to
+  this module. The old functions are deprecated and will be removed in a future release.
 - {gh-pr}`303` Fix missing `voltage_level` in `en.res_buses_voltages` when the buses define nominal
   voltage but not voltage limits.
 - {gh-pr}`303` Add `rlf.SQRT3` constant for the square root of 3. It can be useful for the conversion

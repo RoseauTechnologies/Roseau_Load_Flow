@@ -4,8 +4,8 @@ from pint import DimensionalityError
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models import Bus, Ground, Line, LineParameters
+from roseau.load_flow.sym import PositiveSequence as PosSeq
 from roseau.load_flow.units import Q_
-from roseau.load_flow.utils import PositiveSequence as PosSeq
 
 
 def test_lines_length():

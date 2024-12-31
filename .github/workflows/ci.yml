@@ -17,6 +17,7 @@ on:
 env:
   CI: true
   UV_SYSTEM_PYTHON: 1
+  COVERAGE_CORE: sysmon
 
 jobs:
   build:

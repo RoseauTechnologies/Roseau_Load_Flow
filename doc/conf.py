@@ -132,7 +132,16 @@ autodoc_mock_imports = ["roseau.load_flow_engine"]  # Ignore missing dependencie
 
 # -- Options for AutoAPI -------------------------------------------------
 autoapi_dirs = ["../roseau"]
-autoapi_ignore = ["**/tests/**", "**/conftest.py", "__about__.py"]
+autoapi_ignore = [
+    # Tests
+    "**/tests/**",
+    "**/conftest.py",
+    # Cruft
+    "**/roseau/load_flow/__about__.py",
+    # Internal utilities
+    "**/roseau/load_flow/utils/**",
+    "**/roseau/load_flow/io/**",
+]
 autoapi_options = ["members", "show-inheritance", "show-module-summary", "imported-members"]
 autoapi_python_class_content = "both"  # without this, the __init__ docstring is not shown
 autoapi_python_use_implicit_namespaces = True
