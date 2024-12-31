@@ -11,6 +11,7 @@ import warnings
 from collections.abc import Iterable, Mapping, Sized
 from importlib import resources
 from itertools import chain
+from math import nan
 from pathlib import Path
 from typing import TYPE_CHECKING, NoReturn, TypeVar
 
@@ -39,7 +40,7 @@ from roseau.load_flow.models import (
     VoltageSource,
 )
 from roseau.load_flow.typing import Id, JsonDict, MapOrSeq, Solver, StrPath
-from roseau.load_flow.utils import CatalogueMixin, JsonMixin, _optional_deps
+from roseau.load_flow.utils import SQRT3, CatalogueMixin, JsonMixin, _optional_deps
 from roseau.load_flow.utils._exceptions import find_stack_level
 from roseau.load_flow.utils.types import _DTYPES, LoadTypeDtype, VoltagePhaseDtype
 from roseau.load_flow_engine.cy_engine import CyElectricalNetwork
@@ -289,9 +290,9 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         """The :attr:`buses` of the network as a geo dataframe."""
         data = []
         for bus in self.buses.values():
-            nominal_voltage = bus.nominal_voltage.magnitude if bus.nominal_voltage is not None else (float("nan"))
-            min_voltage_level = bus.min_voltage_level.magnitude if bus.min_voltage_level is not None else float("nan")
-            max_voltage_level = bus.max_voltage_level.magnitude if bus.max_voltage_level is not None else float("nan")
+            nominal_voltage = bus._nominal_voltage if bus._nominal_voltage is not None else nan
+            min_voltage_level = bus._min_voltage_level if bus._min_voltage_level is not None else nan
+            max_voltage_level = bus._max_voltage_level if bus._max_voltage_level is not None else nan
             data.append((bus.id, bus.phases, nominal_voltage, min_voltage_level, max_voltage_level, bus.geometry))
         return gpd.GeoDataFrame(
             data=pd.DataFrame.from_records(
@@ -335,10 +336,6 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         """The :attr:`transformers` of the network as a geo dataframe."""
         data = []
         for transformer in self.transformers.values():
-            if (max_loading := transformer.max_loading) is not None:
-                max_loading = max_loading.magnitude
-            else:
-                max_loading = float("nan")
             data.append(
                 (
                     transformer.id,
@@ -347,7 +344,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                     transformer.bus1.id,
                     transformer.bus2.id,
                     transformer.parameters.id,
-                    max_loading,
+                    transformer._max_loading,
                     transformer.geometry,
                 )
             )
@@ -470,8 +467,8 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         for bus in self.buses.values():
             graph.add_node(bus.id, geom=bus.geometry)
         for line in self.lines.values():
-            if (ampacities := line.ampacities) is not None:
-                ampacities = ampacities.magnitude.tolist()
+            if (ampacities := line.parameters._ampacities) is not None:
+                ampacities = ampacities.tolist()
             graph.add_edge(
                 line.bus1.id,
                 line.bus2.id,
@@ -485,10 +482,6 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                 geom=line.geometry,
             )
         for transformer in self.transformers.values():
-            if (max_loading := transformer.max_loading) is not None:
-                max_loading = max_loading.magnitude
-            if (sn := transformer.sn) is not None:
-                sn = sn.magnitude
             graph.add_edge(
                 transformer.bus1.id,
                 transformer.bus2.id,
@@ -497,8 +490,8 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                 phases1=transformer.phases1,
                 phases2=transformer.phases2,
                 parameters_id=transformer.parameters.id,
-                max_loading=max_loading,
-                sn=sn,
+                max_loading=transformer._max_loading,
+                sn=transformer.parameters._sn,
                 geom=transformer.geometry,
             )
         for switch in self.switches.values():
@@ -715,32 +708,37 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             "nominal_voltage": [],
         }
         dtypes = {c: _DTYPES[c] for c in voltages_dict} | {"phase": VoltagePhaseDtype}
-        sqrt_3 = float(np.sqrt(3))
         for bus_id, bus in self.buses.items():
             nominal_voltage = bus._nominal_voltage
             min_voltage_level = bus._min_voltage_level
             max_voltage_level = bus._max_voltage_level
-            voltage_limits_set = (
+
+            nominal_voltage_defined = nominal_voltage is not None
+            voltage_limits_set = nominal_voltage_defined and (
                 min_voltage_level is not None or max_voltage_level is not None
-            ) and nominal_voltage is not None
+            )
 
             if nominal_voltage is None:
-                nominal_voltage = float("nan")
+                nominal_voltage = nan
             if min_voltage_level is None:
-                min_voltage_level = float("nan")
+                min_voltage_level = nan
             if max_voltage_level is None:
-                max_voltage_level = float("nan")
+                max_voltage_level = nan
             for voltage, phase in zip(bus._res_voltages_getter(warning=False), bus.voltage_phases, strict=True):
                 voltage_abs = abs(voltage)
-                if voltage_limits_set:
+                if nominal_voltage_defined:
                     if "n" in phase:
-                        voltage_level = sqrt_3 * voltage_abs / nominal_voltage
+                        voltage_level = SQRT3 * voltage_abs / nominal_voltage
                     else:
                         voltage_level = voltage_abs / nominal_voltage
-                    violated = voltage_level < min_voltage_level or voltage_level > max_voltage_level
+                    violated = (
+                        (voltage_level < min_voltage_level or voltage_level > max_voltage_level)
+                        if voltage_limits_set
+                        else None
+                    )
                 else:
+                    voltage_level = nan
                     violated = None
-                    voltage_level = float("nan")
                 voltages_dict["bus_id"].append(bus_id)
                 voltages_dict["phase"].append(phase)
                 voltages_dict["voltage"].append(voltage)

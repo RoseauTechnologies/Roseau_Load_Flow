@@ -46,7 +46,7 @@ from roseau.load_flow.network import ElectricalNetwork
 from roseau.load_flow.units import Q_, ureg
 from roseau.load_flow.utils import Insulator, LineType, Material, constants
 from roseau.load_flow.utils._versions import show_versions
-from roseau.load_flow.utils.constants import ALPHA, ALPHA2, NegativeSequence, PositiveSequence, ZeroSequence
+from roseau.load_flow.utils.constants import ALPHA, ALPHA2, SQRT3, NegativeSequence, PositiveSequence, ZeroSequence
 
 __version__ = importlib.metadata.version("roseau-load-flow")
 
@@ -98,9 +98,6 @@ __all__ = [
     "LineType",
     "Material",
     "Insulator",
-    # Deprecated types
-    "InsulatorType",
-    "ConductorType",
     # License
     "activate_license",
     "deactivate_license",
@@ -109,6 +106,7 @@ __all__ = [
     # Constants
     "ALPHA",
     "ALPHA2",
+    "SQRT3",
     "PositiveSequence",
     "NegativeSequence",
     "ZeroSequence",

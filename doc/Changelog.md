@@ -19,6 +19,11 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`303` Fix missing `voltage_level` in `en.res_buses_voltages` when the buses define nominal
+  voltage but not voltage limits.
+- {gh-pr}`303` Add `rlf.SQRT3` constant for the square root of 3. It can be useful for the conversion
+  between phase-to-phase and phase-to-neutral voltages.
+- {gh-pr}`303` Improve the performance of some dataframe properties.
 - {gh-pr}`301` {gh-issue}`299` Improve the error message when the Jacobian matrix contains infinite
   or NaN values.
 
