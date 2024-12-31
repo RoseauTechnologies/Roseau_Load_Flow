@@ -26,10 +26,10 @@ In addition to the following **unique** set of features:
 <!-- end rlf-pitch -->
 
 This project is compatible with Python version 3.10 and newer. The
-[installation instructions](https://roseau-load-flow.roseautechnologies.com/Installation.html)
+[installation instructions](https://roseau-load-flow.roseautechnologies.com/en/latest/Installation.html)
 will guide you through the installation process. If you are new to _Roseau Load Flow_, we recommend
 you start with the
-[getting started tutorial](https://roseau-load-flow.roseautechnologies.com/usage/Getting_Started.html).
+[getting started tutorial](https://roseau-load-flow.roseautechnologies.com/en/latest/usage/Getting_Started.html).
 You can find the complete documentation at https://roseau-load-flow.roseautechnologies.com/.
 
 ## License
@@ -43,7 +43,7 @@ at [contact@roseautechnologies.com](mailto:contact@roseautechnologies.com).
 > Licenses are given free of charge for **students and teachers**. Please contact us at
 > contact@roseautechnologies.com for more information.
 
-Read more at [License](https://roseau-load-flow.roseautechnologies.com/License.html).
+Read more at [License](https://roseau-load-flow.roseautechnologies.com/en/latest/License.html).
 
 ## Network data
 
