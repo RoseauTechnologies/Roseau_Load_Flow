@@ -113,6 +113,7 @@ docstring-code-format = true
 branch = false
 omit = ["roseau/load_flow/__about__.py"]
 plugins = ["coverage_conditional_plugin"]
+source = ["roseau"]
 
 [tool.coverage.coverage_conditional_plugin.rules]
 no-cover-if-py-gte-311 = "sys_version_info >= (3, 11)"
