@@ -8,7 +8,7 @@ import re
 import textwrap
 import time
 import warnings
-from collections.abc import Iterable, Mapping, Sized
+from collections.abc import Iterable, Mapping
 from importlib import resources
 from itertools import chain
 from math import nan
@@ -47,6 +47,7 @@ from roseau.load_flow.utils import (
     JsonMixin,
     LoadTypeDtype,
     VoltagePhaseDtype,
+    count_repr,
     find_stack_level,
     optional_deps,
 )
@@ -155,7 +156,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         lines: MapOrSeq[Line],
         transformers: MapOrSeq[Transformer],
         switches: MapOrSeq[Switch],
-        loads: MapOrSeq[PowerLoad | CurrentLoad | ImpedanceLoad],
+        loads: MapOrSeq[AbstractLoad],
         sources: MapOrSeq[VoltageSource],
         grounds: MapOrSeq[Ground],
         potential_refs: MapOrSeq[PotentialRef],
@@ -167,7 +168,8 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             transformers, RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_ID
         )
         self.switches: dict[Id, Switch] = self._elements_as_dict(switches, RoseauLoadFlowExceptionCode.BAD_SWITCH_ID)
-        self.loads: dict[Id, PowerLoad | CurrentLoad | ImpedanceLoad] = self._elements_as_dict(
+        # Use a union of all loads types to help autocompletion when typing `load.powers` for example
+        self.loads: dict[Id, AbstractLoad | PowerLoad | CurrentLoad | ImpedanceLoad] = self._elements_as_dict(
             loads, RoseauLoadFlowExceptionCode.BAD_LOAD_ID
         )
         self.sources: dict[Id, VoltageSource] = self._elements_as_dict(
@@ -190,13 +192,6 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         self.crs: CRS = CRS(crs)
 
     def __repr__(self) -> str:
-        def count_repr(__o: Sized, /, singular: str, plural: str | None = None) -> str:
-            """Singular/plural count representation: `1 bus` or `2 buses`."""
-            n = len(__o)
-            if n == 1:
-                return f"{n} {singular}"
-            return f"{n} {plural if plural is not None else singular + 's'}"
-
         return (
             f"<{type(self).__name__}:"
             f" {count_repr(self.buses, 'bus', 'buses')},"
@@ -249,7 +244,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         lines: list[Line] = []
         transformers: list[Transformer] = []
         switches: list[Switch] = []
-        loads: list[PowerLoad | CurrentLoad | ImpedanceLoad] = []
+        loads: list[AbstractLoad] = []
         sources: list[VoltageSource] = []
         grounds: list[Ground] = []
         potential_refs: list[PotentialRef] = []
@@ -295,99 +290,95 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
     @property
     def buses_frame(self) -> gpd.GeoDataFrame:
         """The :attr:`buses` of the network as a geo dataframe."""
-        data = []
+        index = []
+        data = {
+            "phases": [],
+            "nominal_voltage": [],
+            "min_voltage_level": [],
+            "max_voltage_level": [],
+            "geometry": [],
+        }
         for bus in self.buses.values():
-            nominal_voltage = bus._nominal_voltage if bus._nominal_voltage is not None else nan
-            min_voltage_level = bus._min_voltage_level if bus._min_voltage_level is not None else nan
-            max_voltage_level = bus._max_voltage_level if bus._max_voltage_level is not None else nan
-            data.append((bus.id, bus.phases, nominal_voltage, min_voltage_level, max_voltage_level, bus.geometry))
-        return gpd.GeoDataFrame(
-            data=pd.DataFrame.from_records(
-                data=data,
-                columns=["id", "phases", "nominal_voltage", "min_voltage_level", "max_voltage_level", "geometry"],
-                index="id",
-            ),
-            geometry="geometry",
-            crs=self.crs,
-        )
+            index.append(bus.id)
+            data["phases"].append(bus.phases)
+            data["nominal_voltage"].append(bus._nominal_voltage if bus._nominal_voltage is not None else nan)
+            data["min_voltage_level"].append(bus._min_voltage_level if bus._min_voltage_level is not None else nan)
+            data["max_voltage_level"].append(bus._max_voltage_level if bus._max_voltage_level is not None else nan)
+            data["geometry"].append(bus.geometry)
+        index = pd.Index(index, name="id")
+        return gpd.GeoDataFrame(data=data, index=index, geometry="geometry", crs=self.crs)
 
     @property
     def lines_frame(self) -> gpd.GeoDataFrame:
         """The :attr:`lines` of the network as a geo dataframe."""
-        data = []
+        index = []
+        data = {
+            "phases": [],
+            "bus1_id": [],
+            "bus2_id": [],
+            "parameters_id": [],
+            "length": [],
+            "max_loading": [],
+            "geometry": [],
+        }
         for line in self.lines.values():
-            data.append(
-                (
-                    line.id,
-                    line.phases,
-                    line.bus1.id,
-                    line.bus2.id,
-                    line.parameters.id,
-                    line._length,
-                    line._max_loading,
-                    line.geometry,
-                )
-            )
-        return gpd.GeoDataFrame(
-            data=pd.DataFrame.from_records(
-                data=data,
-                columns=["id", "phases", "bus1_id", "bus2_id", "parameters_id", "length", "max_loading", "geometry"],
-                index="id",
-            ),
-            geometry="geometry",
-            crs=self.crs,
-        )
+            index.append(line.id)
+            data["phases"].append(line.phases)
+            data["bus1_id"].append(line.bus1.id)
+            data["bus2_id"].append(line.bus2.id)
+            data["parameters_id"].append(line.parameters.id)
+            data["length"].append(line._length)
+            data["max_loading"].append(line._max_loading)
+            data["geometry"].append(line.geometry)
+        index = pd.Index(index, name="id")
+        return gpd.GeoDataFrame(data=data, index=index, geometry="geometry", crs=self.crs)
 
     @property
     def transformers_frame(self) -> gpd.GeoDataFrame:
         """The :attr:`transformers` of the network as a geo dataframe."""
-        data = []
+        index = []
+        data = {
+            "phases1": [],
+            "phases2": [],
+            "bus1_id": [],
+            "bus2_id": [],
+            "parameters_id": [],
+            "tap": [],
+            "max_loading": [],
+            "geometry": [],
+        }
         for transformer in self.transformers.values():
-            data.append(
-                (
-                    transformer.id,
-                    transformer.phases1,
-                    transformer.phases2,
-                    transformer.bus1.id,
-                    transformer.bus2.id,
-                    transformer.parameters.id,
-                    transformer._max_loading,
-                    transformer.geometry,
-                )
-            )
-        return gpd.GeoDataFrame(
-            data=pd.DataFrame.from_records(
-                data=data,
-                columns=["id", "phases1", "phases2", "bus1_id", "bus2_id", "parameters_id", "max_loading", "geometry"],
-                index="id",
-            ),
-            geometry="geometry",
-            crs=self.crs,
-        )
+            index.append(transformer.id)
+            data["phases1"].append(transformer.phases1)
+            data["phases2"].append(transformer.phases2)
+            data["bus1_id"].append(transformer.bus1.id)
+            data["bus2_id"].append(transformer.bus2.id)
+            data["parameters_id"].append(transformer.parameters.id)
+            data["tap"].append(transformer._tap)
+            data["max_loading"].append(transformer._max_loading)
+            data["geometry"].append(transformer.geometry)
+        index = pd.Index(index, name="id")
+        return gpd.GeoDataFrame(data=data, index=index, geometry="geometry", crs=self.crs)
 
     @property
     def switches_frame(self) -> gpd.GeoDataFrame:
         """The :attr:`switches` of the network as a geo dataframe."""
-        data = []
+        index = []
+        data = {"phases": [], "bus1_id": [], "bus2_id": [], "geometry": []}
         for switch in self.switches.values():
-            data.append((switch.id, switch.phases, switch.bus1.id, switch.bus2.id, switch.geometry))
-        return gpd.GeoDataFrame(
-            data=pd.DataFrame.from_records(
-                data=data,
-                columns=["id", "phases", "bus1_id", "bus2_id", "geometry"],
-                index="id",
-            ),
-            geometry="geometry",
-            crs=self.crs,
-        )
+            index.append(switch.id)
+            data["phases"].append(switch.phases)
+            data["bus1_id"].append(switch.bus1.id)
+            data["bus2_id"].append(switch.bus2.id)
+            data["geometry"].append(switch.geometry)
+        index = pd.Index(index, name="id")
+        return gpd.GeoDataFrame(data=data, index=index, geometry="geometry", crs=self.crs)
 
     @property
     def loads_frame(self) -> pd.DataFrame:
         """The :attr:`loads` of the network as a dataframe."""
         return pd.DataFrame.from_records(
-            data=[
-                (load_id, load.type, load.phases, load.bus.id, load.is_flexible) for load_id, load in self.loads.items()
-            ],
+            data=[(load.id, load.type, load.phases, load.bus.id, load.is_flexible) for load in self.loads.values()],
             columns=["id", "type", "phases", "bus_id", "flexible"],
             index="id",
         )
@@ -396,7 +387,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
     def sources_frame(self) -> pd.DataFrame:
         """The :attr:`sources` of the network as a dataframe."""
         return pd.DataFrame.from_records(
-            data=[(source_id, source.phases, source.bus.id) for source_id, source in self.sources.items()],
+            data=[(source.id, source.phases, source.bus.id) for source in self.sources.values()],
             columns=["id", "phases", "bus_id"],
             index="id",
         )
@@ -418,8 +409,11 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
     def potential_refs_frame(self) -> pd.DataFrame:
         """The :attr:`potential references <potential_refs>` of the network as a dataframe."""
         return pd.DataFrame.from_records(
-            data=[(pref.id, pref.phases, pref.element.id) for pref in self.potential_refs.values()],
-            columns=["id", "phases", "element_id"],
+            data=[
+                (pref.id, pref.phases, pref.element.id, type(pref.element).__name__.lower())
+                for pref in self.potential_refs.values()
+            ],
+            columns=["id", "phases", "element_id", "element_type"],
             index="id",
         )
 
@@ -775,16 +769,16 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                 first bus.
             - `power2`: The complex power of the line (in VoltAmps) for the given phase at the
                 second bus.
-            - `potential1`: The complex potential of the first bus (in Volts) for the given phase.
-            - `potential2`: The complex potential of the second bus (in Volts) for the given phase.
-            - `series_losses`: The complex power losses of the line (in VoltAmps) for the given
-                phase due to the series and mutual impedances.
+            - `potential1`: The complex potential (in Volts) for the given phase of the first bus.
+            - `potential2`: The complex potential (in Volts) for the given phase of the second bus.
+            - `series_losses`: The complex losses in the series and mutual impedances of the line
+              (in VoltAmps) for the given phase.
             - `series_current`: The complex current in the series impedance of the line (in Amps)
                 for the given phase.
-            - `violated`: True, if a current constraint is not respected for the given phase.
+            - `violated`: True, if the line loading exceeds the maximum loading for the given phase.
             - `loading`: The loading of the line (unitless) for the given phase.
             - `max_loading`: The maximal loading of the line (unitless) for the given phase.
-            - `ampacity`: The ampacity of the line parameter (in Amps) for the given phase.
+            - `ampacity`: The ampacity of the line (in Amps) for the given phase.
 
         Additional information can be easily computed from this dataframe. For example:
 
@@ -823,36 +817,28 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             powers1 = potentials1 * currents1.conj()
             powers2 = potentials2 * currents2.conj()
             series_losses = du_line * series_currents.conj()
-            ampacities = line.parameters._ampacities
+            ampacity_array = line.parameters._ampacities
             max_loading = line._max_loading
-            if ampacities is None:
-                loading_array = None
-                violated_array = None
+            if ampacity_array is None:
+                ampacity_array = loading_array = violated_array = [None for _ in line.phases]
             else:
-                loading_array = np.maximum(abs(currents1), abs(currents2)) / ampacities
+                loading_array = np.maximum(abs(currents1), abs(currents2)) / ampacity_array
                 violated_array = loading_array > max_loading
-            for k, (i1, i2, s1, s2, v1, v2, s_series, i_series, phase) in enumerate(
-                zip(
-                    currents1,
-                    currents2,
-                    powers1,
-                    powers2,
-                    potentials1,
-                    potentials2,
-                    series_losses,
-                    series_currents,
-                    line.phases,
-                    strict=True,
-                )
+            for i1, i2, s1, s2, v1, v2, s_series, i_series, phase, ampacity, loading, violated in zip(
+                currents1,
+                currents2,
+                powers1,
+                powers2,
+                potentials1,
+                potentials2,
+                series_losses,
+                series_currents,
+                line.phases,
+                ampacity_array,
+                loading_array,
+                violated_array,
+                strict=True,
             ):
-                if ampacities is None:
-                    loading = None
-                    violated = None
-                    ampacity = None
-                else:
-                    loading = loading_array[k]
-                    violated = violated_array[k]
-                    ampacity = ampacities[k]
                 res_dict["line_id"].append(line.id)
                 res_dict["phase"].append(phase)
                 res_dict["current1"].append(i1)
@@ -981,8 +967,6 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         }
         dtypes = {c: DTYPES[c] for c in res_dict}
         for switch in self.switches.values():
-            if not isinstance(switch, Switch):
-                continue
             currents1, currents2 = switch._res_currents_getter(warning=False)
             potentials1, potentials2 = switch._res_potentials_getter(warning=False)
             powers1 = potentials1 * currents1.conj()
@@ -1163,41 +1147,41 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                 The element to add. Only lines, loads, buses and sources can be added.
         """
         # The C++ electrical network and the tape will be recomputed
-        container: dict[Id, Element]
-        can_disconnect = False
         if isinstance(element, Bus):
-            container, element_type = self.buses, "bus"
+            self._add_element_to_dict(element, self.buses)
         elif isinstance(element, AbstractLoad):
-            container, element_type = self.loads, "load"
-            can_disconnect = True
+            self._add_element_to_dict(element, self.loads, disconnectable=True)
         elif isinstance(element, Line):
-            container, element_type = self.lines, "line"
+            self._add_element_to_dict(element, self.lines)
         elif isinstance(element, Transformer):
-            container, element_type = self.transformers, "transformer"
+            self._add_element_to_dict(element, self.transformers)
         elif isinstance(element, Switch):
-            container, element_type = self.switches, "switch"
+            self._add_element_to_dict(element, self.switches)
         elif isinstance(element, VoltageSource):
-            container, element_type = self.sources, "source"
-            can_disconnect = True
+            self._add_element_to_dict(element, self.sources, disconnectable=True)
         elif isinstance(element, Ground):
-            container, element_type = self.grounds, "ground"
+            self._add_element_to_dict(element, self.grounds)
         elif isinstance(element, PotentialRef):
-            container, element_type = self.potential_refs, "potential reference"
+            self._add_element_to_dict(element, self.potential_refs)
         else:
             msg = f"Unknown element {element} can not be added to the network."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT)
-        if element.id in container and container[element.id] is not element:
-            element._disconnect()  # Don't leave it lingering in other elements _connected_elements
-            msg = f"A {element_type} of ID {element.id!r} is already connected to the network."
-            if can_disconnect:
-                msg += f" Disconnect the old {element_type} first if you meant to replace it."
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT)
-        container[element.id] = element
-        element._network = self
         self._valid = False
         self._results_valid = False
+
+    def _add_element_to_dict(self, element: _E, to: dict[Id, _E], disconnectable: bool = False) -> None:
+        if element.id in to and (old := to[element.id]) is not element:
+            element._disconnect()  # Don't leave it lingering in other elemnets _connected_elements
+            old_type = type(old).__name__
+            prefix = "An" if old_type[0] in "AEIOU" else "A"
+            msg = f"{prefix} {old_type} of ID {element.id!r} is already connected to the network."
+            if disconnectable:
+                msg += " Disconnect the old element first if you meant to replace it."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT)
+        to[element.id] = element
+        element._network = self
 
     def _disconnect_element(self, element: Element) -> None:
         """Remove an element of the network.

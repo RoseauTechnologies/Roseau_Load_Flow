@@ -149,7 +149,7 @@ class Bus(Element):
 
     def _res_voltages_getter(self, warning: bool, potentials: ComplexArray | None = None) -> ComplexArray:
         if potentials is None:
-            potentials = np.array(self._res_potentials_getter(warning=warning))
+            potentials = self._res_potentials_getter(warning=warning)
         return _calculate_voltages(potentials, self.phases)
 
     @property
@@ -163,16 +163,20 @@ class Bus(Element):
         """
         return self._res_voltages_getter(warning=True)
 
+    def _res_voltage_levels_getter(self, warning: bool) -> FloatArray | None:
+        if self._nominal_voltage is None:
+            return None
+        voltages_abs = abs(self._res_voltages_getter(warning=warning))
+        if "n" in self.phases:
+            return np.sqrt(3) * voltages_abs / self._nominal_voltage
+        else:
+            return voltages_abs / self._nominal_voltage
+
     @property
     def res_voltage_levels(self) -> Q_[FloatArray] | None:
         """The load flow result of the bus voltage levels (unitless)."""
-        if self._nominal_voltage is None:
-            return None
-        voltages_abs = abs(self._res_voltages_getter(warning=True))
-        if "n" in self.phases:
-            return Q_(np.sqrt(3) * voltages_abs / self._nominal_voltage, "")
-        else:
-            return Q_(voltages_abs / self._nominal_voltage, "")
+        voltage_levels = self._res_voltage_levels_getter(warning=True)
+        return None if voltage_levels is None else Q_(voltage_levels, "")
 
     @cached_property
     def voltage_phases(self) -> list[str]:
@@ -294,23 +298,17 @@ class Bus(Element):
 
         Returns ``None`` if the bus has no voltage limits are not set.
         """
-        if (self._min_voltage_level is None and self._max_voltage_level is None) or self._nominal_voltage is None:
+        u_min = self._min_voltage_level
+        u_max = self._max_voltage_level
+        if u_min is None and u_max is None:
             return None
-        voltages = abs(self._res_voltages_getter(warning=True))
-        if "n" in self.phases:
-            voltages_level = np.sqrt(3) * voltages / self._nominal_voltage
-        else:
-            voltages_level = voltages / self._nominal_voltage
-        if self._min_voltage_level is None:
-            assert self._max_voltage_level is not None
-            return float(max(voltages_level)) > self._max_voltage_level
-        elif self._max_voltage_level is None:
-            return float(min(voltages_level)) < self._min_voltage_level
-        else:
-            return (
-                float(min(voltages_level)) < self._min_voltage_level
-                or float(max(voltages_level)) > self._max_voltage_level
-            )
+        u_nom = self._nominal_voltage
+        if u_nom is None:
+            return None
+        voltage_levels = self._res_voltage_levels_getter(warning=True)
+        return (u_min is not None and bool(min(voltage_levels) < u_min)) or (
+            u_max is not None and bool(max(voltage_levels) > u_max)
+        )
 
     def propagate_limits(self, force: bool = False) -> None:
         """Propagate the voltage limits to galvanically connected buses.
@@ -489,9 +487,10 @@ class Bus(Element):
             "potentials": [[v.real, v.imag] for v in potentials],
         }
         if full:
-            res["voltages"] = [
-                [v.real, v.imag] for v in self._res_voltages_getter(warning=False, potentials=potentials)
-            ]
+            voltages = self._res_voltages_getter(warning=False, potentials=potentials)
+            res["voltages"] = [[v.real, v.imag] for v in voltages]
+            voltage_levels = self._res_voltage_levels_getter(warning=False)
+            res["voltage_levels"] = None if voltage_levels is None else voltage_levels.tolist()
         return res
 
     def add_short_circuit(self, *phases: str, ground: "Ground | None" = None) -> None:
