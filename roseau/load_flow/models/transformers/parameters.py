@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 from typing_extensions import Self
 
+from roseau.load_flow.constants import SQRT3
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.typing import FloatArrayLike1D, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
@@ -879,7 +880,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             phases_hv = "abc" if self.winding1[0] == "D" else "abcn"
             phases_lv = "abc" if self.winding2[0] == "d" else "abcn"
             if "n" in phases_hv:
-                voltage /= np.sqrt(3)
+                voltage /= SQRT3
 
         bus_hv = Bus(id="BusHV", phases=phases_hv)
         bus_lv = Bus(id="BusLV", phases=phases_lv)
@@ -894,7 +895,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         i_primary = abs(transformer.res_currents[0].m[0])
         i_nom = self._sn / self._uhv
         if self.type == "three-phase":
-            i_nom /= np.sqrt(3)
+            i_nom /= SQRT3
 
         # Additional checks
         u_secondary = abs(bus_lv.res_voltages.m)
@@ -903,7 +904,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         elif self.type == "center-tapped":
             expected_u_secondary = self._ulv / 2
         else:
-            expected_u_secondary = self._ulv / np.sqrt(3)
+            expected_u_secondary = self._ulv / SQRT3
         np.testing.assert_allclose(u_secondary, expected_u_secondary)
 
         return p_primary, i_primary / i_nom
@@ -940,7 +941,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             phases_hv = "abc" if self.winding1[0] == "D" else "abcn"
             phases_lv = "abc" if self.winding2[0] == "d" else "abcn"
             if "n" in phases_hv:
-                voltage /= np.sqrt(3)
+                voltage /= SQRT3
 
         bus_hv = Bus(id="BusHV", phases=phases_hv)
         bus_lv = Bus(id="BusLV", phases=phases_lv)
@@ -956,7 +957,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         # Additional check
         i_nom = self._sn / self._ulv
         if self.type == "three-phase":
-            i_nom /= np.sqrt(3)  # I = S3ph / (sqrt(3) * U)
+            i_nom /= SQRT3  # I = S3ph / (sqrt(3) * U)
         i_secondary = abs(transformer.res_currents[1].m[0])
         np.testing.assert_allclose(i_secondary, i_nom)
 

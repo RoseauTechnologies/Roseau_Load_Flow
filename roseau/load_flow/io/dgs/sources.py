@@ -1,8 +1,8 @@
 import logging
 
-import numpy as np
 import pandas as pd
 
+from roseau.load_flow.constants import SQRT3
 from roseau.load_flow.models import Bus, VoltageSource
 from roseau.load_flow.typing import Id
 
@@ -37,7 +37,7 @@ def generate_sources(
     for source_id in elm_xnet.index:
         id_sta_cubic_source = elm_xnet.at[source_id, "bus1"]  # id of the cubicle connecting the source and its bus
         bus_id = sta_cubic.at[id_sta_cubic_source, "cterm"]  # id of the bus to which the source is connected
-        un = elm_term.at[bus_id, "uknom"] / np.sqrt(3) * 1e3  # phase-to-neutral voltage (V)
+        un = elm_term.at[bus_id, "uknom"] / SQRT3 * 1e3  # phase-to-neutral voltage (V)
         tap = elm_xnet.at[source_id, "usetp"]  # tap voltage (p.u.)
         voltage = un * tap
         source_bus = buses[bus_id]

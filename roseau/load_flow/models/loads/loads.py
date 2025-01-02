@@ -317,6 +317,8 @@ class AbstractLoad(Element, ABC):
         if full:
             powers = self._res_powers_getter(warning=False, currents=currents, potentials=potentials)
             results["powers"] = [[s.real, s.imag] for s in powers]
+            voltages = _calculate_voltages(potentials, self.phases)
+            results["voltages"] = [[v.real, v.imag] for v in voltages]
         return results
 
 

@@ -121,7 +121,7 @@ line = rlf.Line(
 )
 
 # A voltage source on the first bus
-un = 400 / np.sqrt(3)
+un = 400 / rlf.SQRT3
 vs = rlf.VoltageSource(id="source", bus=bus1, voltages=rlf.Q_(un, "V"))
 
 

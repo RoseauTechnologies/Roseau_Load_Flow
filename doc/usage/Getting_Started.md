@@ -116,7 +116,7 @@ line and a constant power load. This network is a low voltage network (three-pha
 
 >>> # Create a three-phase voltage source at the first bus
 ... # (voltages are phase-to-neutral because the source's phases include a neutral)
-... vs = rlf.VoltageSource(id="vs", bus=source_bus, voltages=un / np.sqrt(3))
+... vs = rlf.VoltageSource(id="vs", bus=source_bus, voltages=un / rlf.SQRT3)
 
 >>> # Add a 30kW load at the second bus (balanced load, 10 kW per phase)
 ... load = rlf.PowerLoad(id="load", bus=load_bus, powers=[10e3 + 0j, 10e3, 10e3])  # In VA
@@ -140,7 +140,7 @@ to `"abc"`:
 ... )
 ```
 
-Note the use of `un` (and not `un / np.sqrt(3)`) as the source voltages as they now represent the phase-to-phase
+Note the use of `un` (and not `un / rlf.SQRT3`) as the source voltages as they now represent the phase-to-phase
 voltages. This is because everywhere in `roseau-load-flow`, the `voltages` of an element depend on
 the element's `phases`. Voltages of elements connected in a _Star (wye)_ configuration (elements
 that have a neutral connection indicated by the presence of the `'n'` character in their `phases`

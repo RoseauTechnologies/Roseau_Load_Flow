@@ -343,13 +343,17 @@ class Line(AbstractBranch):
         """Get the power losses in the line (in VA)."""
         return self._res_power_losses_getter(warning=True)
 
+    def _res_loading_getter(self, warning: bool) -> FloatArray | None:
+        if (amp := self._parameters._ampacities) is None:
+            return None
+        currents1, currents2 = self._res_currents_getter(warning)
+        return np.maximum(abs(currents1), abs(currents2)) / amp
+
     @property
     def res_loading(self) -> Q_[FloatArray] | None:
         """The loading of the line (unitless) if ``self.parameters.ampacities`` is set, else ``None``."""
-        if (amp := self._parameters._ampacities) is None:
-            return None
-        currents1, currents2 = self._res_currents_getter(warning=True)
-        return Q_(np.maximum(abs(currents1), abs(currents2)) / amp, "")
+        loading = self._res_loading_getter(warning=True)
+        return None if loading is None else Q_(loading, "")
 
     @property
     def res_violated(self) -> bool | None:
@@ -357,9 +361,8 @@ class Line(AbstractBranch):
 
         Returns ``None`` if the ``self.parameters.ampacities`` is not set.
         """
-        if (loading := self.res_loading) is None:
-            return None
-        return bool((loading.m > self._max_loading).any())
+        loading = self._res_loading_getter(warning=True)
+        return None if loading is None else bool((loading > self._max_loading).any())
 
     #
     # Json Mixin interface
@@ -423,4 +426,6 @@ class Line(AbstractBranch):
             results["shunt_power_losses"] = [
                 [s.real, s.imag] for s in self._res_shunt_power_losses_getter(warning=False)
             ]
+            loading = self._res_loading_getter(warning=False)
+            results["loading"] = None if loading is None else loading.tolist()
         return results

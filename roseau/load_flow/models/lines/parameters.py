@@ -13,7 +13,7 @@ from numpy._typing import NDArray
 from typing_extensions import Self
 
 from roseau.load_flow._compat import StrEnum
-from roseau.load_flow.constants import EPSILON_0, EPSILON_R, MU_0, OMEGA, PI, RHO, TAN_D, F
+from roseau.load_flow.constants import EPSILON_0, EPSILON_R, MU_0, OMEGA, PI, RHO, SQRT3, TAN_D, F
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.types import Insulator, LineType, Material
 from roseau.load_flow.typing import (
@@ -765,7 +765,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
                 msg = f"The height of a '{line_type}' line must be a positive number."
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_MODEL)
-            x = np.sqrt(3) * external_diameter / 8
+            x = SQRT3 * external_diameter / 8
             coord = np.array(
                 [
                     [-x, height + external_diameter / 8],

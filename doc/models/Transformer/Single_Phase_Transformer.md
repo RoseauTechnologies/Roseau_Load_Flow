@@ -75,7 +75,7 @@ import roseau.load_flow as rlf
 bus1 = rlf.Bus(id="bus1", phases="abcn")
 pref1 = rlf.PotentialRef(id="pref1", element=bus1)
 
-vs = rlf.VoltageSource(id="vs", bus=bus1, voltages=400 / np.sqrt(3))
+vs = rlf.VoltageSource(id="vs", bus=bus1, voltages=400 / rlf.SQRT3)
 
 # Create the load bus and the load
 bus2 = rlf.Bus(id="bus2", phases="an")

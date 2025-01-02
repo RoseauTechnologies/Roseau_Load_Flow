@@ -19,6 +19,12 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`305` Add missing `tap` column to `en.transformers_frame`.
+- {gh-pr}`305` Add `element_type` column to `en.potential_refs_frame` to indicate if the potential
+  reference is connected to a bus or a ground.
+- {gh-pr}`305` Add missing information to `results_to_dict` with `full=True`. This adds `loading` to
+  lines and transformers, `voltage_levels` to buses, and `voltages` to loads and sources.
+- {gh-pr}`305` Improve the performance of `res_violated` of buses, lines and transformers.
 - {gh-pr}`304` Add top-level modules `rlf.constants` and `rlf.types`. The old modules in the `utils`
   package are deprecated and will be removed in a future release. The `utils` package is for internal
   use only and should not be considered stable.

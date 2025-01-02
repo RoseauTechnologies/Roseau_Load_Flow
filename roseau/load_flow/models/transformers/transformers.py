@@ -320,19 +320,22 @@ class Transformer(AbstractBranch):
         powers1, powers2 = self._res_powers_getter(warning=True)
         return sum(powers1) + sum(powers2)
 
+    def _res_loading_getter(self, warning: bool) -> float:
+        powers1, powers2 = self._res_powers_getter(warning)
+        return max(abs(powers1.sum()), abs(powers2.sum())) / self._parameters._sn
+
     @property
     @ureg_wraps("", (None,))
     def res_loading(self) -> Q_[float]:
         """Get the loading of the transformer (unitless)."""
-        sn = self._parameters._sn
-        powers1, powers2 = self._res_powers_getter(warning=True)
-        return max(abs(powers1.sum()), abs(powers2.sum())) / sn
+        return self._res_loading_getter(warning=True)
 
     @property
     def res_violated(self) -> bool:
         """Whether the transformer power loading exceeds its maximal loading."""
         # True if either the primary or secondary is overloaded
-        return bool(self.res_loading.m > self._max_loading)
+        loading = self._res_loading_getter(warning=True)
+        return bool(loading > self._max_loading)
 
     #
     # Json Mixin interface
@@ -373,7 +376,11 @@ class Transformer(AbstractBranch):
             results["voltages1"] = [[v.real, v.imag] for v in voltages1]
             results["voltages2"] = [[v.real, v.imag] for v in voltages2]
 
-            power_losses = sum(powers1) + sum(powers2)
+            sum_powers1 = sum(powers1)
+            sum_powers2 = sum(powers2)
+            power_losses = sum_powers1 + sum_powers2
             results["power_losses"] = [power_losses.real, power_losses.imag]
+            loading = max(abs(sum_powers1), abs(sum_powers2)) / self.parameters._sn
+            results["loading"] = loading
 
         return results
