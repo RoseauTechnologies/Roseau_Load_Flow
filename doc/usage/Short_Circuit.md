@@ -39,7 +39,7 @@ is impossible.
 ...     pref = rlf.PotentialRef(id="pref", element=ground)
 ...     ground.connect(bus=source_bus)
 ...     # Create a LV source at the first bus
-...     un = 400 / np.sqrt(3)
+...     un = 400 / rlf.SQRT3
 ...     vs = rlf.VoltageSource(id="vs", bus=source_bus, phases="abcn", voltages=un)
 ...     # Add LV lines
 ...     lp1 = rlf.LineParameters.from_geometry(

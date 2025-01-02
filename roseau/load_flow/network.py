@@ -1172,7 +1172,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
 
     def _add_element_to_dict(self, element: _E, to: dict[Id, _E], disconnectable: bool = False) -> None:
         if element.id in to and (old := to[element.id]) is not element:
-            element._disconnect()  # Don't leave it lingering in other elemnets _connected_elements
+            element._disconnect()  # Don't leave it lingering in other elements _connected_elements
             old_type = type(old).__name__
             prefix = "An" if old_type[0] in "AEIOU" else "A"
             msg = f"{prefix} {old_type} of ID {element.id!r} is already connected to the network."

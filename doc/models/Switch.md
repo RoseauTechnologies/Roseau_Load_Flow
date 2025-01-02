@@ -52,7 +52,7 @@ bus2 = rlf.Bus(id="bus2", phases="abcn")
 switch = rlf.Switch(id="switch", bus1=bus1, bus2=bus2)
 
 # A voltage source on the first bus
-vs = rlf.VoltageSource(id="source", bus=bus1, voltages=400 / np.sqrt(3))
+vs = rlf.VoltageSource(id="source", bus=bus1, voltages=400 / rlf.SQRT3)
 
 # The potential of the neutral of bus1 is fixed at 0V
 pref = rlf.PotentialRef(id="pref", element=bus1)

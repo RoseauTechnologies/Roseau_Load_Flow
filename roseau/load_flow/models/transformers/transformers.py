@@ -334,7 +334,7 @@ class Transformer(AbstractBranch):
     def res_violated(self) -> bool:
         """Whether the transformer power loading exceeds its maximal loading."""
         # True if either the primary or secondary is overloaded
-        loading = self._res_loading_getter(warning=False)
+        loading = self._res_loading_getter(warning=True)
         return bool(loading > self._max_loading)
 
     #

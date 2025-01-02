@@ -9,6 +9,7 @@ import pandas as pd
 from shapely.geometry.base import BaseGeometry
 from typing_extensions import Self
 
+from roseau.load_flow.constants import SQRT3
 from roseau.load_flow.converters import _calculate_voltages, calculate_voltage_phases
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.core import Element
@@ -168,7 +169,7 @@ class Bus(Element):
             return None
         voltages_abs = abs(self._res_voltages_getter(warning=warning))
         if "n" in self.phases:
-            return np.sqrt(3) * voltages_abs / self._nominal_voltage
+            return SQRT3 * voltages_abs / self._nominal_voltage
         else:
             return voltages_abs / self._nominal_voltage
 

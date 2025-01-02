@@ -61,7 +61,7 @@ lp = rlf.LineParameters(id="lp", z_line=rlf.Q_(0.35 * np.eye(4), "ohm/km"))
 line = rlf.Line(id="line", bus1=bus1, bus2=bus2, parameters=lp, length=rlf.Q_(1, "km"))
 
 # A voltage source on the first bus
-un = 400 / np.sqrt(3)
+un = 400 / rlf.SQRT3
 vs = rlf.VoltageSource(id="source", bus=bus1, voltages=rlf.Q_(un, "V"))
 
 # The potential of the neutral of bus1 is fixed at 0V
