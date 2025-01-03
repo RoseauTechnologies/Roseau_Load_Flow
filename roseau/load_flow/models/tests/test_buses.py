@@ -9,6 +9,7 @@ from roseau.load_flow import (
     Ground,
     Line,
     LineParameters,
+    PositiveSequence,
     PotentialRef,
     PowerLoad,
     RoseauLoadFlowException,
@@ -214,31 +215,29 @@ def test_voltage_limits(recwarn):
 def test_res_voltages():
     # With a neutral
     bus = Bus(id="bus", phases="abcn")
-    direct_seq = np.exp([0, -2 / 3 * np.pi * 1j, 2 / 3 * np.pi * 1j])
-    direct_seq_neutral = np.array([1, np.exp(-2 / 3 * np.pi * 1j), np.exp(2 / 3 * np.pi * 1j), 0])
+    direct_seq_neutral = np.array([*PositiveSequence, 0])
     bus._res_potentials = (230 + 0j) * direct_seq_neutral
 
     assert np.allclose(bus.res_potentials.m, (230 + 0j) * direct_seq_neutral)
-    assert np.allclose(bus.res_voltages.m, (230 + 0j) * direct_seq)
+    assert np.allclose(bus.res_voltages.m, (230 + 0j) * PositiveSequence)
     assert bus.res_voltage_levels is None
     bus.nominal_voltage = 400  # V
     assert np.allclose(bus.res_voltage_levels.m, 230 / 400 * np.sqrt(3))
 
     # Without a neutral
     bus = Bus(id="bus", phases="abc")
-    bus._res_potentials = (20_000 + 0j) * direct_seq / np.sqrt(3)
+    bus._res_potentials = (20e3 + 0j) * PositiveSequence / np.sqrt(3)
 
-    assert np.allclose(bus.res_potentials.m, (20_000 + 0j) * direct_seq / np.sqrt(3))
-    assert np.allclose(bus.res_voltages.m, (20_000 + 0j) * direct_seq * np.exp(np.pi * 1j / 6))
+    assert np.allclose(bus.res_potentials.m, (20e3 + 0j) * PositiveSequence / np.sqrt(3))
+    assert np.allclose(bus.res_voltages.m, (20e3 + 0j) * PositiveSequence * np.exp(np.pi * 1j / 6))
     assert bus.res_voltage_levels is None
-    bus.nominal_voltage = 20_000  # V
+    bus.nominal_voltage = 20e3  # V
     assert np.allclose(bus.res_voltage_levels.m, 1.0)
 
 
 def test_res_violated():
     bus = Bus(id="bus", phases="abc")
-    direct_seq = np.exp([0, -2 / 3 * np.pi * 1j, 2 / 3 * np.pi * 1j])
-    bus._res_potentials = (230 + 0j) * direct_seq
+    bus._res_potentials = (230 + 0j) * PositiveSequence
 
     # No limits
     assert bus.res_violated is None
@@ -249,29 +248,35 @@ def test_res_violated():
 
     # Only min voltage
     bus.min_voltage_level = 0.9
-    assert bus.res_violated is False
+    assert (bus.res_violated == [False, False, False]).all()
     bus.min_voltage_level = 1.1
-    assert bus.res_violated is True
+    assert (bus.res_violated == [True, True, True]).all()
 
     # Only max voltage
     bus.min_voltage_level = None
     bus.max_voltage_level = 1.1
-    assert bus.res_violated is False
+    assert (bus.res_violated == [False, False, False]).all()
     bus.max_voltage_level = 0.9
-    assert bus.res_violated is True
+    assert (bus.res_violated == [True, True, True]).all()
 
     # Both min and max voltage
     # min <= v <= max
     bus.min_voltage_level = 0.9
     bus.max_voltage_level = 1.1
-    assert bus.res_violated is False
+    assert (bus.res_violated == [False, False, False]).all()
     # v < min
     bus.min_voltage_level = 1.1
-    assert bus.res_violated is True
+    assert (bus.res_violated == [True, True, True]).all()
     # v > max
     bus.min_voltage_level = 0.9
     bus.max_voltage_level = 0.9
-    assert bus.res_violated is True
+    assert (bus.res_violated == [True, True, True]).all()
+
+    # Not all phases are violated
+    bus.min_voltage_level = 0.9
+    bus.max_voltage_level = 1.1
+    bus._res_potentials[0] = 300 + 0j
+    assert (bus.res_violated == [True, False, True]).all()
 
 
 def test_propagate_limits():  # noqa: C901
