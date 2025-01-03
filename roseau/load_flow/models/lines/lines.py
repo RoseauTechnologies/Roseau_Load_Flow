@@ -10,7 +10,7 @@ from roseau.load_flow.models.branches import AbstractBranch
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.grounds import Ground
 from roseau.load_flow.models.lines.parameters import LineParameters
-from roseau.load_flow.typing import ComplexArray, FloatArray, Id, JsonDict
+from roseau.load_flow.typing import BoolArray, ComplexArray, FloatArray, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow_engine.cy_engine import CyShuntLine, CySimplifiedLine
 
@@ -356,13 +356,13 @@ class Line(AbstractBranch):
         return None if loading is None else Q_(loading, "")
 
     @property
-    def res_violated(self) -> bool | None:
+    def res_violated(self) -> BoolArray | None:
         """Whether the line current loading exceeds its maximal loading.
 
         Returns ``None`` if the ``self.parameters.ampacities`` is not set.
         """
         loading = self._res_loading_getter(warning=True)
-        return None if loading is None else bool((loading > self._max_loading).any())
+        return None if loading is None else (loading > self._max_loading)
 
     #
     # Json Mixin interface

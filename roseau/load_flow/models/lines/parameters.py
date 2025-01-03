@@ -99,7 +99,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
                 from the catalogue.
 
             materials:
-                The types of the conductor material (Aluminum, Copper, ...). The materials are
+                The types of the conductors material (Aluminum, Copper, ...). The materials are
                 optional, they are informative only and are not used in the load flow. This field gets
                 automatically filled when the line parameters are created from a geometric model or
                 from the catalogue.

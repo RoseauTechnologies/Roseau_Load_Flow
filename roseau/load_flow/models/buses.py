@@ -14,7 +14,7 @@ from roseau.load_flow.converters import _calculate_voltages, calculate_voltage_p
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.core import Element
 from roseau.load_flow.sym import phasor_to_sym
-from roseau.load_flow.typing import ComplexArray, ComplexArrayLike1D, FloatArray, Id, JsonDict
+from roseau.load_flow.typing import BoolArray, ComplexArray, ComplexArrayLike1D, FloatArray, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow.utils import find_stack_level
 from roseau.load_flow_engine.cy_engine import CyBus
@@ -294,7 +294,7 @@ class Bus(Element):
         )
 
     @property
-    def res_violated(self) -> bool | None:
+    def res_violated(self) -> BoolArray | None:
         """Whether the bus has voltage limits violations.
 
         Returns ``None`` if the bus has no voltage limits are not set.
@@ -303,13 +303,15 @@ class Bus(Element):
         u_max = self._max_voltage_level
         if u_min is None and u_max is None:
             return None
-        u_nom = self._nominal_voltage
-        if u_nom is None:
-            return None
         voltage_levels = self._res_voltage_levels_getter(warning=True)
-        return (u_min is not None and bool(min(voltage_levels) < u_min)) or (
-            u_max is not None and bool(max(voltage_levels) > u_max)
-        )
+        if voltage_levels is None:
+            return None
+        violated = np.full_like(voltage_levels, fill_value=False, dtype=np.bool_)
+        if u_min is not None:
+            violated |= voltage_levels < u_min
+        if u_max is not None:
+            violated |= voltage_levels > u_max
+        return violated
 
     def propagate_limits(self, force: bool = False) -> None:
         """Propagate the voltage limits to galvanically connected buses.

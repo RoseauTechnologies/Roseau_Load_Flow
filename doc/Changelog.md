@@ -19,6 +19,9 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`307` {gh-issue}`296` Make `line.res_violated` and `bus.res_violated` return a boolean array
+  indicating if the corresponding phase is violated. This is consistent with the dataframe results
+  `en.res_lines` and `en.res_buses_voltages`. For old behavior, use `line_or_bus.res_violated.any()`.
 - {gh-pr}`305` Add missing `tap` column to `en.transformers_frame`.
 - {gh-pr}`305` Add `element_type` column to `en.potential_refs_frame` to indicate if the potential
   reference is connected to a bus or a ground.

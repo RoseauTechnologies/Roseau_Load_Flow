@@ -65,7 +65,7 @@ def to_markdown(df: pd.DataFrame, *, floatfmt: str = "g", index: bool = True, no
         ):
             colalign.append("right")
             if is_complex_dtype:
-                df[c] = df[c].apply(lambda x: f"{x.real:{floatfmt}}{x.imag:+{floatfmt}}")
+                df[c] = df[c].apply(lambda x: f"{x.real:{floatfmt}}{x.imag:+{floatfmt}}j")
         else:
             colalign.append("left")
 
