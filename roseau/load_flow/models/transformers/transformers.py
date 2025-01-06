@@ -1,4 +1,5 @@
 import logging
+import warnings
 from typing import Final
 
 from shapely.geometry.base import BaseGeometry
@@ -9,6 +10,7 @@ from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.transformers.parameters import TransformerParameters
 from roseau.load_flow.typing import Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
+from roseau.load_flow.utils import find_stack_level
 from roseau.load_flow_engine.cy_engine import (
     CyCenterTransformer,
     CySingleTransformer,
@@ -209,8 +211,11 @@ class Transformer(AbstractBranch):
         phases1: str | None,
         phases2: str | None,
     ) -> tuple[str, str]:
-        w1_has_neutral = "y" in parameters.winding1.lower() or "z" in parameters.winding1.lower()
-        w2_has_neutral = "y" in parameters.winding2.lower() or "z" in parameters.winding2.lower()
+        w1 = parameters.winding1
+        w2 = parameters.winding2
+        clock = parameters.phase_displacement
+
+        w1_has_neutral = w1.endswith("N")
         if phases1 is None:
             phases1 = "abcn" if w1_has_neutral else "abc"
             phases1 = "".join(p for p in bus1.phases if p in phases1)
@@ -221,13 +226,23 @@ class Transformer(AbstractBranch):
             transformer_phases = "abcn" if w1_has_neutral else "abc"
             phases_not_in_transformer = set(phases1) - set(transformer_phases)
             if phases_not_in_transformer:
-                msg = (
-                    f"Phases (1) {phases1!r} of transformer {id!r} are not compatible with its "
-                    f"winding {parameters.winding1!r}."
-                )
-                logger.error(msg)
-                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
+                if phases_not_in_transformer == {"n"} and w1.startswith(("Y", "Z")):
+                    correct_vg = f"{w1}N{w2}{clock}"
+                    warnings.warn(
+                        f"Transformer {id!r} with vector group '{parameters.vg}' does not have a "
+                        f"brought out neutral on the HV side. The neutral phase 'n' is ignored. If "
+                        f"you meant to use a brought out neutral, use vector group '{correct_vg}'. "
+                        f"This will raise an error in the future.",
+                        FutureWarning,
+                        stacklevel=find_stack_level(),
+                    )
+                    phases1 = phases1.replace("n", "")
+                else:
+                    msg = f"Phases (1) {phases1!r} of transformer {id!r} are not compatible with its winding {w1!r}."
+                    logger.error(msg)
+                    raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
 
+        w2_has_neutral = w2.endswith("n")
         if phases2 is None:
             phases2 = "abcn" if w2_has_neutral else "abc"
             phases2 = "".join(p for p in bus2.phases if p in phases2)
@@ -238,12 +253,21 @@ class Transformer(AbstractBranch):
             transformer_phases = "abcn" if w2_has_neutral else "abc"
             phases_not_in_transformer = set(phases2) - set(transformer_phases)
             if phases_not_in_transformer:
-                msg = (
-                    f"Phases (2) {phases2!r} of transformer {id!r} are not compatible with its "
-                    f"winding {parameters.winding2!r}."
-                )
-                logger.error(msg)
-                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
+                if phases_not_in_transformer == {"n"} and w2.startswith(("y", "z")):
+                    correct_vg = f"{w1}{w2}n{clock}"
+                    warnings.warn(
+                        f"Transformer {id!r} with vector group '{parameters.vg}' does not have a "
+                        f"brought out neutral on the LV side. The neutral phase 'n' is ignored. If "
+                        f"you meant to use a brought out neutral, use vector group '{correct_vg}'. "
+                        f"This will raise an error in the future.",
+                        FutureWarning,
+                        stacklevel=find_stack_level(),
+                    )
+                    phases2 = phases2.replace("n", "")
+                else:
+                    msg = f"Phases (2) {phases2!r} of transformer {id!r} are not compatible with its winding {w2!r}."
+                    logger.error(msg)
+                    raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
 
         return phases1, phases2
 

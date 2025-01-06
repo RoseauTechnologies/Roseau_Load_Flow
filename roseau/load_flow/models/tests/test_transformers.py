@@ -100,3 +100,39 @@ def test_transformer_results():
     actual_total_losses = transformer.res_power_losses.m
     assert np.isscalar(actual_total_losses)
     np.testing.assert_allclose(actual_total_losses, expected_total_losses)
+
+
+def test_brought_out_neutral():
+    bus1 = Bus(id="bus1", phases="abcn")
+    bus2 = Bus(id="bus2", phases="abcn")
+
+    tp1 = TransformerParameters("tp1", vg="Yd5", uhv=60e3, ulv=20e3, sn=1000e3, z2=0.01, ym=0.01j)
+    tp2 = TransformerParameters("tp2", vg="Dy11", uhv=20e3, ulv=400, sn=100e3, z2=0.01, ym=0.01j)
+
+    # Correct behavior when phases are not specified
+    tr1 = Transformer(id="tr1", bus1=bus1, bus2=bus2, parameters=tp1)
+    assert tr1.phases1 == "abc"
+    tr2 = Transformer(id="tr2", bus1=bus1, bus2=bus2, parameters=tp2)
+    assert tr2.phases2 == "abc"
+
+    # Warn on old behavior
+    with pytest.warns(
+        FutureWarning,
+        match=(
+            r"Transformer 'tr3' with vector group 'Yd5' does not have a brought out neutral on the "
+            r"HV side. The neutral phase 'n' is ignored. If you meant to use a brought out neutral, "
+            r"use vector group 'YNd5'. This will raise an error in the future."
+        ),
+    ):
+        tr3 = Transformer(id="tr3", bus1=bus1, bus2=bus2, parameters=tp1, phases1="abcn", phases2="abc")
+    assert tr3.phases1 == "abc"
+    with pytest.warns(
+        FutureWarning,
+        match=(
+            r"Transformer 'tr4' with vector group 'Dy11' does not have a brought out neutral on the "
+            r"LV side. The neutral phase 'n' is ignored. If you meant to use a brought out neutral, "
+            r"use vector group 'Dyn11'. This will raise an error in the future."
+        ),
+    ):
+        tr4 = Transformer(id="tr4", bus1=bus1, bus2=bus2, parameters=tp2, phases1="abc", phases2="abcn")
+    assert tr4.phases2 == "abc"

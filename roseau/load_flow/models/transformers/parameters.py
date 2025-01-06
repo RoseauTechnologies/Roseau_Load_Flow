@@ -123,7 +123,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         winding1, winding2, phase_displacement = self.extract_windings(vg=vg)
         w1, w2 = winding1[0], winding2[0]
 
-        self._vg: str = vg
+        self._vg: str = f"{winding1}{winding2}{phase_displacement}"  # normalized vector group
         self._sn: float = sn
         self._uhv: float = uhv
         self._ulv: float = ulv

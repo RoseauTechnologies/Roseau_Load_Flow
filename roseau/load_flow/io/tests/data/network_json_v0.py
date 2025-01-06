@@ -235,7 +235,7 @@ tp = {
     ),
     "160kVA_Yd11": rlf.TransformerParameters.from_open_and_short_circuit_tests(
         id="160kVA_Yd11",
-        vg="yd11",
+        vg="ynd11",
         sn=160000.0,
         uhv=20000.0,
         ulv=400.0,
@@ -246,7 +246,7 @@ tp = {
     ),
     "160kVA_Yd5": rlf.TransformerParameters.from_open_and_short_circuit_tests(
         id="160kVA_Yd5",
-        vg="yd5",
+        vg="ynd5",
         sn=160000.0,
         uhv=20000.0,
         ulv=400.0,
@@ -257,7 +257,7 @@ tp = {
     ),
     "160kVA_Yyn0": rlf.TransformerParameters.from_open_and_short_circuit_tests(
         id="160kVA_Yyn0",
-        vg="yyn0",
+        vg="ynyn0",
         sn=160000.0,
         uhv=20000.0,
         ulv=400.0,
@@ -268,7 +268,7 @@ tp = {
     ),
     "160kVA_Yyn6": rlf.TransformerParameters.from_open_and_short_circuit_tests(
         id="160kVA_Yyn6",
-        vg="yyn6",
+        vg="ynyn6",
         sn=160000.0,
         uhv=20000.0,
         ulv=400.0,
@@ -279,7 +279,7 @@ tp = {
     ),
     "160kVA_Yzn11": rlf.TransformerParameters.from_open_and_short_circuit_tests(
         id="160kVA_Yzn11",
-        vg="yzn11",
+        vg="ynzn11",
         sn=160000.0,
         uhv=20000.0,
         ulv=400.0,
@@ -290,7 +290,7 @@ tp = {
     ),
     "160kVA_Yzn5": rlf.TransformerParameters.from_open_and_short_circuit_tests(
         id="160kVA_Yzn5",
-        vg="yzn5",
+        vg="ynzn5",
         sn=160000.0,
         uhv=20000.0,
         ulv=400.0,

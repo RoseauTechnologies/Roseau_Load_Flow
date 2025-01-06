@@ -19,6 +19,8 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`310` {gh-issue}`308` Support star and zig-zag windings with non-brought out neutral. In
+  earlier versions, vector groups like "Yd11" were considered identical to "YNd11".
 - {gh-pr}`307` {gh-issue}`296` Make `line.res_violated` and `bus.res_violated` return a boolean array
   indicating if the corresponding phase is violated. This is consistent with the dataframe results
   `en.res_lines` and `en.res_buses_voltages`. For old behavior, use `line_or_bus.res_violated.any()`.
