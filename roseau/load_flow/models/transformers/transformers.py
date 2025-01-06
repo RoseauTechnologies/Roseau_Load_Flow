@@ -229,7 +229,7 @@ class Transformer(AbstractBranch):
                 if phases_not_in_transformer == {"n"} and w1.startswith(("Y", "Z")):
                     correct_vg = f"{w1}N{w2}{clock}"
                     warnings.warn(
-                        f"Transformer {id!r} with vector group {parameters.vg} does not have have a "
+                        f"Transformer {id!r} with vector group '{parameters.vg}' does not have a "
                         f"brought out neutral on the HV side. The neutral phase 'n' is ignored. If "
                         f"you meant to use a brought out neutral, use vector group '{correct_vg}'. "
                         f"This will raise an error in the future.",
@@ -238,14 +238,11 @@ class Transformer(AbstractBranch):
                     )
                     phases1 = phases1.replace("n", "")
                 else:
-                    msg = (
-                        f"Phases (1) {phases1!r} of transformer {id!r} are not compatible with its "
-                        f"winding {parameters.winding1!r}."
-                    )
+                    msg = f"Phases (1) {phases1!r} of transformer {id!r} are not compatible with its winding {w1!r}."
                     logger.error(msg)
                     raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
 
-        w2_has_neutral = parameters.winding2.endswith("n")
+        w2_has_neutral = w2.endswith("n")
         if phases2 is None:
             phases2 = "abcn" if w2_has_neutral else "abc"
             phases2 = "".join(p for p in bus2.phases if p in phases2)
@@ -259,7 +256,7 @@ class Transformer(AbstractBranch):
                 if phases_not_in_transformer == {"n"} and w2.startswith(("y", "z")):
                     correct_vg = f"{w1}{w2}n{clock}"
                     warnings.warn(
-                        f"Transformer {id!r} with vector group {parameters.vg} does not have have a "
+                        f"Transformer {id!r} with vector group '{parameters.vg}' does not have a "
                         f"brought out neutral on the LV side. The neutral phase 'n' is ignored. If "
                         f"you meant to use a brought out neutral, use vector group '{correct_vg}'. "
                         f"This will raise an error in the future.",
@@ -268,10 +265,7 @@ class Transformer(AbstractBranch):
                     )
                     phases2 = phases2.replace("n", "")
                 else:
-                    msg = (
-                        f"Phases (2) {phases2!r} of transformer {id!r} are not compatible with its "
-                        f"winding {parameters.winding2!r}."
-                    )
+                    msg = f"Phases (2) {phases2!r} of transformer {id!r} are not compatible with its winding {w2!r}."
                     logger.error(msg)
                     raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
 
