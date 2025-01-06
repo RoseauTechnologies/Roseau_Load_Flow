@@ -23,7 +23,7 @@ def assert_json_close(obj1: object, obj2: object, *, rtol=1e-7, atol=0, prefix: 
     elif isinstance(obj1, str):
         if not isinstance(obj2, str):
             raise AssertionError(f"{this_prefix}objects types are different: {type(obj1)} != {type(obj2)}")
-        assert obj1 == obj2, f"{this_prefix}strings are different: {obj1} != {obj2}"
+        assert obj1 == obj2, f"{this_prefix}strings are different: {obj1!r} != {obj2!r}"
     elif isinstance(obj1, (bool, np.bool_)):
         if not isinstance(obj2, (bool, np.bool_)):
             raise AssertionError(f"{this_prefix}objects types are different: {type(obj1)} != {type(obj2)}")
