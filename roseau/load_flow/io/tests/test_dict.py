@@ -139,7 +139,7 @@ def test_to_dict():
     lp_dict = res["lines_params"][0]
     assert np.allclose(lp_dict["ampacities"], 1000)
     assert lp_dict["line_type"] == "UNDERGROUND"
-    assert lp_dict["materials"] == ["AA"] * 4
+    assert lp_dict["materials"] == ["ACSR"] * 4
     assert lp_dict["insulators"] == ["PVC"] * 4
     assert np.allclose(lp_dict["sections"], 120)
     assert "results" not in res_bus0

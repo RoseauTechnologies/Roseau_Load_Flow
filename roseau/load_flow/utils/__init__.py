@@ -11,7 +11,7 @@ from roseau.load_flow.utils.dtypes import (
     VoltagePhaseDtype,
 )
 from roseau.load_flow.utils.exceptions import find_stack_level
-from roseau.load_flow.utils.helpers import count_repr
+from roseau.load_flow.utils.helpers import CaseInsensitiveStrEnum, count_repr
 from roseau.load_flow.utils.log import set_logging_config
 from roseau.load_flow.utils.mixins import CatalogueMixin, Identifiable, JsonMixin
 from roseau.load_flow.utils.versions import show_versions
@@ -36,6 +36,8 @@ __all__ = [
     "set_logging_config",
     # General purpose
     "count_repr",
+    # Enums
+    "CaseInsensitiveStrEnum",
 ]
 
 

@@ -1,7 +1,6 @@
 import pytest
 
 from roseau.load_flow.constants import DELTA_P, EPSILON_R, MU_R, RHO, TAN_D
-from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.types import Insulator, LineType, Material
 
 TYPES = [Material, Insulator, LineType]
@@ -27,14 +26,10 @@ def test_types_basic(t):
 
 
 def test_line_type():
-    with pytest.raises(RoseauLoadFlowException) as e:
+    with pytest.raises(ValueError, match=r"is not a valid LineType"):
         LineType("")
-    assert "cannot be converted into a LineType" in e.value.msg
-    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_LINE_TYPE
-    with pytest.raises(RoseauLoadFlowException) as e:
+    with pytest.raises(ValueError, match=r"is not a valid LineType"):
         LineType("nan")
-    assert "cannot be converted into a LineType" in e.value.msg
-    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_LINE_TYPE
 
     assert LineType("oVeRhEaD") == LineType.OVERHEAD
     assert LineType("o") == LineType.OVERHEAD
@@ -49,11 +44,7 @@ def test_insulator():
 
 
 def test_material():
-    with pytest.raises(RoseauLoadFlowException) as e:
+    with pytest.raises(ValueError, match=r"is not a valid Material"):
         Material("")
-    assert "cannot be converted into a Material" in e.value.msg
-    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_MATERIAL
-    with pytest.raises(RoseauLoadFlowException) as e:
+    with pytest.raises(ValueError, match=r"is not a valid Material"):
         Material("nan")
-    assert "cannot be converted into a Material" in e.value.msg
-    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_MATERIAL

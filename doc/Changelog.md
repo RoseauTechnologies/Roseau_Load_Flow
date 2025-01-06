@@ -19,6 +19,9 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`311` Add French aliases to line enumeration types.
+- {gh-pr}`311` Fix `TypeError`s in the `LineParameters.from_coiffier_model`. The error message of
+  invalid models now indicates whether the line type or the conductor material is invalid.
 - {gh-pr}`310` {gh-issue}`308` Support star and zig-zag windings with non-brought out neutral. In
   earlier versions, vector groups like "Yd11" were considered identical to "YNd11".
 - {gh-pr}`307` {gh-issue}`296` Make `line.res_violated` and `bus.res_violated` return a boolean array

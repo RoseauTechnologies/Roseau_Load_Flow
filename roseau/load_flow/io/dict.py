@@ -28,6 +28,7 @@ from roseau.load_flow.models import (
     TransformerParameters,
     VoltageSource,
 )
+from roseau.load_flow.types import Insulator, Material
 from roseau.load_flow.typing import Id, JsonDict
 from roseau.load_flow.utils import find_stack_level
 
@@ -700,10 +701,10 @@ def v2_to_v3_converter(data: JsonDict) -> JsonDict:  # noqa: C901
         transformers_params_max_loading[transformer_param_data["id"]] = loading
         transformers_params.append(transformer_param_data)
 
-    # Rename `maximal_current` in `ampacities` and uses array
-    # Rename `section` in `sections` and uses array
-    # Rename `insulator_type` in `insulators` and uses array. `Unknown` is deleted
-    # Rename `material` in `materials` and uses array
+    # Rename `maximal_current` to `ampacities` and use array
+    # Rename `section` to `sections` and use array
+    # Rename `insulator_type` to `insulators` and use array. `Unknown` is deleted
+    # Rename `material` to `materials` and use array
     old_lines_params = data.get("lines_params", [])
     lines_params = []
     for line_param_data in old_lines_params:
@@ -770,9 +771,8 @@ def v3_to_v4_converter(data: JsonDict) -> JsonDict:
     for tr in data["transformers"]:
         tr_phases_per_params[tr["params_id"]].append((tr["phases1"], tr["phases2"]))
 
-    old_transformer_params = data["transformers_params"]
     transformer_params = []
-    for tp_data in old_transformer_params:
+    for tp_data in data["transformers_params"]:
         w1, w2, clock = TransformerParameters.extract_windings(tp_data["vg"])
         # Handle brought out neutrals that were not declared as such
         if w1 in ("Y", "Z") and any(tr_phases[0] == "abcn" for tr_phases in tr_phases_per_params[tp_data["id"]]):
@@ -782,6 +782,15 @@ def v3_to_v4_converter(data: JsonDict) -> JsonDict:
         # Normalize the vector group (dyN11 -> Dyn11)
         tp_data["vg"] = f"{w1}{w2}{clock}"
         transformer_params.append(tp_data)
+
+    line_params = []
+    for line_param_data in data["lines_params"]:
+        # Normalize the insulator and material types
+        if (materials := line_param_data.pop("materials", None)) is not None:
+            line_param_data["materials"] = [Material(material).name for material in materials]
+        if (insulators := line_param_data.pop("insulators", None)) is not None:
+            line_param_data["insulators"] = [Insulator(insulator).name for insulator in insulators]
+        line_params.append(line_param_data)
 
     results = {
         "version": 4,
@@ -794,7 +803,7 @@ def v3_to_v4_converter(data: JsonDict) -> JsonDict:
         "transformers": data["transformers"],  # <---- Unchanged
         "loads": data["loads"],  # Unchanged
         "sources": data["sources"],  # Unchanged
-        "lines_params": data["lines_params"],  # <---- Unchanged
+        "lines_params": line_params,  # <---- Changed
         "transformers_params": transformer_params,  # <---- Changed
     }
     if "short_circuits" in data:
