@@ -1,14 +1,13 @@
 import logging
 from enum import auto
 
-from roseau.load_flow._compat import StrEnum
-from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
+from roseau.load_flow.utils import CaseInsensitiveStrEnum
 
 # The local logger
 logger = logging.getLogger(__name__)
 
 
-class LineType(StrEnum):
+class LineType(CaseInsensitiveStrEnum):
     """The type of a line."""
 
     OVERHEAD = auto()
@@ -18,78 +17,55 @@ class LineType(StrEnum):
     TWISTED = auto()
     """A twisted line commonly known as Aerial Cable or Aerial Bundled Conductor (ABC) -- Fr = Torsadé."""
 
-    # aliases
+    # Short aliases
     O = OVERHEAD  # noqa: E741
     U = UNDERGROUND
     T = TWISTED
 
-    @classmethod
-    def _missing_(cls, value: object) -> "LineType | None":
-        if isinstance(value, str):
-            try:
-                return cls[value.upper()]
-            except KeyError:
-                pass
-        msg = f"{value!r} cannot be converted into a LineType."
-        logger.error(msg)
-        raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.BAD_LINE_TYPE)
-
-    def code(self) -> str:
-        """A code that can be used in line type names."""
-        return self.name[0]
+    # French aliases
+    AERIEN = OVERHEAD  # Aérien
+    A = OVERHEAD  # Aérien
+    SOUTERRAIN = UNDERGROUND  # Souterrain
+    S = UNDERGROUND  # Souterrain
+    TORSADE = TWISTED  # Torsadé
 
 
-class Material(StrEnum):
+class Material(CaseInsensitiveStrEnum):
     """The type of the material of the conductor."""
+
+    # AAC:    1350-H19 (Standard Round of Compact Round)
+    # AAC/TW: 1380-H19 (Trapezoidal Wire)
+    # AAAC:   Aluminum alloy 6201-T81.
+    # AAAC:   Concentric-lay-stranded
+    # AAAC:   conforms to ASTM Specification B-399
+    # AAAC:   Applications: Overhead
+    # ACSR:   Aluminum alloy 1350-H-19
+    # ACSR:   Applications: Bare overhead transmission cable and primary and secondary distribution cable
 
     CU = auto()
     """Copper -- Fr = Cuivre."""
-    AL = auto()
-    """All Aluminum Conductor (AAC) -- Fr = Aluminium."""
-    AM = auto()
-    """All Aluminum Alloy Conductor (AAAC) -- Fr = Almélec."""
-    AA = auto()
-    """Aluminum Conductor Steel Reinforced (ACSR) -- Fr = Alu-Acier."""
-    LA = auto()
-    """Aluminum Alloy Conductor Steel Reinforced (AACSR) -- Fr = Almélec-Acier."""
+    AAC = auto()
+    """All Aluminum Conductor (AAC) -- Fr = Aluminium (AL)."""
+    AAAC = auto()
+    """All Aluminum Alloy Conductor (AAAC) -- Fr = Almélec (AM, AMC)."""
+    ACSR = auto()
+    """Aluminum Conductor Steel Reinforced (ACSR) -- Fr = Alu-Acier (AA)."""
+    AACSR = auto()
+    """Aluminum Alloy Conductor Steel Reinforced (AACSR) -- Fr = Almélec-Acier (LA)."""
 
-    # Aliases
-    AAC = AL  # 1350-H19 (Standard Round of Compact Round)
-    """All Aluminum Conductor (AAC) -- Fr = Aluminium."""
-    # AAC/TW  # 1380-H19 (Trapezoidal Wire)
-
-    AAAC = AM
-    """All Aluminum Alloy Conductor (AAAC) -- Fr = Almélec."""
-    # Aluminum alloy 6201-T81.
-    # Concentric-lay-stranded
-    # conforms to ASTM Specification B-399
-    # Applications: Overhead
-
-    ACSR = AA
-    """Aluminum Conductor Steel Reinforced (ACSR) -- Fr = Alu-Acier."""
-    # Aluminum alloy 1350-H-19
-    # Applications: Bare overhead transmission cable and primary and secondary distribution cable
-
-    AACSR = LA
-    """Aluminum Alloy Conductor Steel Reinforced (AACSR) -- Fr = Almélec-Acier."""
-
-    @classmethod
-    def _missing_(cls, value: object) -> "Material":
-        if isinstance(value, str):
-            try:
-                return cls[value.upper()]
-            except KeyError:
-                pass
-        msg = f"{value!r} cannot be converted into a Material."
-        logger.error(msg)
-        raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.BAD_MATERIAL)
-
-    def code(self) -> str:
-        """A code that can be used in conductor type names."""
-        return self.name
+    # French aliases
+    CUC = CU  # Cuivre Câble
+    CUF = CU  # Cuivre Fil
+    AL = AAC  # Aluminium
+    AM = AAAC  # Almélec
+    AMC = AAAC  # Almélec
+    AA = ACSR  # Aluminium Acier
+    AR = ACSR  # Aluminium Acier Renforcé
+    LA = AACSR  # Almélec Acier
+    LR = AACSR  # Almélec Acier Renforcé
 
 
-class Insulator(StrEnum):
+class Insulator(CaseInsensitiveStrEnum):
     """The type of the insulator for a wire."""
 
     NONE = auto()
@@ -111,23 +87,84 @@ class Insulator(StrEnum):
     IP = auto()
     """Impregnated Paper (IP) insulation."""
 
-    # Aliases
+    # French aliases
     PEX = XLPE
-    """Alias -- Cross-linked polyethylene (XLPE) insulation."""
     PE = MDPE
-    """Alias -- Medium-Density PolyEthylene (MDPE) insulation."""
 
-    @classmethod
-    def _missing_(cls, value: object) -> "Insulator":
-        if isinstance(value, str):
-            try:
-                return cls[value.upper()]
-            except KeyError:
-                pass
-        msg = f"{value!r} cannot be converted into a Insulator."
-        logger.error(msg)
-        raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.BAD_INSULATOR)
 
-    def code(self) -> str:
-        """A code that can be used in insulator type names."""
-        return self.name
+class TransformerCooling(CaseInsensitiveStrEnum):
+    """IEC Designations and Descriptions of the Cooling Classes Used in Power Transformers."""
+
+    # TODO add to the catalogue
+
+    ONAN = auto()
+    """Oil Natural/Air Natural.
+
+    Oil-air (self-cooled).
+
+    Previous designation (1993): OA or ONS
+    """
+    ONAF = auto()
+    """Oil Natural/Air Forced, Forced-air
+
+    Previous designation (1993): FA or ONF
+    """
+    ONAN_ONAF_ONAF = auto()
+    """Oil Natural Air Natural/Oil Natural Air Forced/Oil Natural Air Forced.
+
+    Oil-air (self-cooled), followed by two stages of forced-air cooling (fans).
+
+    Previous designation (1993): OA/FA/FA
+    """
+    ONAN_ONAF_OFAF = auto()
+    """Oil Natural Air Natural/Oil Natural Air Forced/Oil Forced Air Forced.
+
+    Oil-air (self-cooled), followed by one stage of forced-air cooling (fans), followed by 1 stage
+    of forced oil (oil pumps).
+
+    Previous designation (1993): OA/FA/FOA
+    """
+    ONAF_ODAF = auto()
+    """Oil Natural Air Forced/Oil Direct Air Forced.
+
+    Oil-air (self-cooled), followed by one stage of directed oil flow pumps (with fans).
+
+    Previous designation (1993): OA/FOA
+    """
+    ONAF_ODAF_ODAF = auto()
+    """Oil Natural Air Forced/Oil Direct Air Forced/Oil Direct Air Forced.
+
+    Oil-air (self-cooled), followed by two stages of directed oil flow pumps (with fans).
+
+    Previous designation (1993): OA/FOA/FOA
+    """
+    OFAF = auto()
+    """Oil Forced Air Forced.
+
+    Forced oil/air (with fans) rating only -- no self-cooled rating.
+
+    Previous designation (1993): FOA
+    """
+    OFWF = auto()
+    """Oil Forced Water Forced.
+
+    Forced oil/water cooled rating only (oil/water heat exchanger with oil and water pumps) -- no
+    self-cooled rating.
+
+    Previous designation (1993): FOW
+    """
+    ODAF = auto()
+    """Oil Direct Air Forced
+
+    Forced oil/air cooled rating only with directed oil flow pumps and fans -- no self-cooled rating.
+
+    Previous designation (1993): FOA
+    """
+    ODWF = auto()
+    """Oil Direct Water Forced
+
+    Forced oil/water cooled rating only (oil/water heat exchanger with directed oil flow pumps and
+    water pumps) --  no self-cooled rating.
+
+    Previous designation (1993): FOW
+    """

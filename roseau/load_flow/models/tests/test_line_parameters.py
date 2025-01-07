@@ -360,6 +360,51 @@ def test_from_geometry():
     npt.assert_allclose(y_shunt, y_shunt_expected)
 
 
+def test_from_geometry_checks():
+    # Wrong height
+    with pytest.raises(RoseauLoadFlowException) as e:
+        LineParameters.from_geometry(
+            "test", line_type="O", material="AL", section=150, height=-1.5, external_diameter=0.04
+        )
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_LINE_MODEL
+    assert e.value.msg == "The height of 'overhead' line must be a positive number."
+    with pytest.raises(RoseauLoadFlowException) as e:
+        LineParameters.from_geometry(
+            "test", line_type="U", material="AL", section=150, height=15, external_diameter=0.00001
+        )
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_LINE_MODEL
+    assert e.value.msg == "The height of 'underground' line must be a negative number."
+
+    # Wrong external diameter
+    with pytest.raises(RoseauLoadFlowException) as e:
+        LineParameters.from_geometry(
+            "test", line_type="T", material="AL", section=150, height=15, external_diameter=0.02
+        )
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_LINE_MODEL
+    assert e.value.msg == (
+        "Conductors too big for 'twisted' line parameter of id 'test'. Inequality "
+        "`neutral_radius + phase_radius <= external_diameter / 4` is not satisfied."
+    )
+    with pytest.raises(RoseauLoadFlowException) as e:
+        LineParameters.from_geometry(
+            "test", line_type="U", material="AL", section=150, height=-1.5, external_diameter=0.02
+        )
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_LINE_MODEL
+    assert e.value.msg == (
+        "Conductors too big for 'underground' line parameter of id 'test'. Inequality "
+        "`neutral_radius + phase_radius <= external_diameter * sqrt(2) / 4` is not satisfied."
+    )
+    with pytest.raises(RoseauLoadFlowException) as e:
+        LineParameters.from_geometry(
+            "test", line_type="U", material="AL", section=150, section_neutral=50, height=-1.5, external_diameter=0.035
+        )
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_LINE_MODEL
+    assert e.value.msg == (
+        "Conductors too big for 'underground' line parameter of id 'test'. Inequality "
+        "`phase_radius*2 <= external_diameter * sqrt(2) / 4` is not satisfied."
+    )
+
+
 def test_sym():
     # With the bad model of PwF
     # line_data = {"id": "NKBA NOR  25.00 kV", "un": 25000.0, "in": 277.0000100135803}
@@ -451,15 +496,10 @@ def test_from_coiffier_model():
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_TYPE_NAME_SYNTAX
     assert e.value.msg == (
         "The Coiffier line parameter name 'totoU_Al_150' is not valid, expected format is "
-        "'LineType_Material_CrossSection'."
+        "'LineType_Material_CrossSection' or 'LineType_Material_Insulator_CrossSection': 'totoU' is not a valid LineType"
     )
-    with pytest.raises(RoseauLoadFlowException) as e:
+    with pytest.warns(UserWarning, match=r"The insulator is currently ignored in the Coiffier model, got 'IP'."):
         LineParameters.from_coiffier_model("U_AL_IP_150")
-    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_TYPE_NAME_SYNTAX
-    assert e.value.msg == (
-        "The Coiffier line parameter name 'U_AL_IP_150' is not valid, expected format is "
-        "'LineType_Material_CrossSection'."
-    )
 
     # Working example with defaults
     lp = LineParameters.from_coiffier_model("U_AL_150")
@@ -482,6 +522,13 @@ def test_from_coiffier_model():
     assert lp2.z_line.m.shape == (2, 2)
     assert lp2.y_shunt.m.shape == (2, 2)
 
+    # Check that no errors are raised with all the possible combinations
+    for lt in LineType:
+        for m in Material:
+            # TODO for i in Insulator:
+            for s in (40, 80, 120):
+                LineParameters.from_coiffier_model(f"{lt.name}_{m.name}_{s}")
+
 
 def test_catalogue_data():
     # The catalogue data path exists
@@ -494,6 +541,7 @@ def test_catalogue_data():
     assert catalogue_data["name"].is_unique, "Regenerate catalogue."
 
     for row in catalogue_data.itertuples():
+        assert isinstance(row.name, str)
         assert re.match(r"^[UOT]_[A-Z]+_\d+(?:_\w+)?$", row.name)
         assert isinstance(row.resistance, float)
         assert isinstance(row.resistance_neutral, float)
@@ -506,8 +554,10 @@ def test_catalogue_data():
         LineType(row.type)  # Check that the type is valid
         Material(row.material)  # Check that the material is valid
         Material(row.material_neutral)  # Check that the material is valid
-        pd.isna(row.insulator) or Insulator(row.insulator)  # Check that the insulator is valid
-        pd.isna(row.insulator_neutral) or Insulator(row.insulator_neutral)  # Check that the insulator is valid
+        if pd.notna(row.insulator):
+            Insulator(row.insulator)  # Check that the insulator is valid
+        if pd.notna(row.insulator_neutral):
+            Insulator(row.insulator_neutral)  # Check that the insulator is valid
         assert isinstance(row.section, int | float)
         assert isinstance(row.section_neutral, int | float)
 
@@ -673,7 +723,7 @@ def test_insulators():
 
     with pytest.raises(RoseauLoadFlowException) as e:
         lp.insulators = ["invalid", Insulator.XLPE, "XLPE"]
-    assert e.value.msg == "'invalid' cannot be converted into a Insulator."
+    assert e.value.msg == "'invalid' is not a valid Insulator"
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_INSULATOR
 
     with pytest.raises(RoseauLoadFlowException) as e:
@@ -715,12 +765,12 @@ def test_materials():
     # Errors
     with pytest.raises(RoseauLoadFlowException) as e:
         lp.materials = [np.nan, float("nan"), Material.AM]
-    assert e.value.msg == "Materials cannot contain null values: [nan, nan, am] was provided."
+    assert e.value.msg == "Materials cannot contain null values: [nan, nan, aaac] was provided."
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_MATERIALS_VALUE
 
     with pytest.raises(RoseauLoadFlowException) as e:
         lp.materials = ["invalid", Material.AM, "AM"]
-    assert e.value.msg == "'invalid' cannot be converted into a Material."
+    assert e.value.msg == "'invalid' is not a valid Material"
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_MATERIAL
 
     with pytest.raises(RoseauLoadFlowException) as e:
