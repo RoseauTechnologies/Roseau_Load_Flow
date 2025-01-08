@@ -1,4 +1,4 @@
-"""This script generates a version 2 JSON file.
+"""This script generates a version 3 JSON file.
 
 Run with roseau-load-flow==0.11.0, NOT WITH THE CURRENT VERSION::
 
