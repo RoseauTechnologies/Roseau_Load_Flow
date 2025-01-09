@@ -1,5 +1,5 @@
 {
-  "version": 3,
+  "version": 4,
   "is_multiphase": true,
   "grounds": [
     {
@@ -351,9 +351,9 @@
           [0.0, 0.0, 0.00018346901096964396]
         ]
       ],
-      "ampacities": [428, 428, 428],
+      "ampacities": [428.0, 428.0, 428.0],
       "line_type": "UNDERGROUND",
-      "materials": ["AL", "AL", "AL"],
+      "materials": ["AAC", "AAC", "AAC"],
       "sections": [240.0, 240.0, 240.0]
     }
   ],
