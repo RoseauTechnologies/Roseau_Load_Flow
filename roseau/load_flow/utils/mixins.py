@@ -169,14 +169,14 @@ class JsonMixin(metaclass=ABCMeta):
         The results dictionary of an element contains the ID of the element, its phases, and the
         result. For example, `bus.results_to_dict()` returns a dictionary with the form::
 
-            {"id": "bus1", "phases": "an", "potentials": [[230.0, 0.0]]}
+            {"id": "bus1", "phases": "an", "potentials": [[230.0, 0.0], [0.0, 0.0]]}
 
         Note that complex values (like `potentials` in the example above) are stored as list of
         [real part, imaginary part] so that it is JSON-serializable
 
         Using the `full` argument, `bus.results_to_dict(full=True)` leads to the following results::
 
-            {"id": "bus1", "phases": "an", "potentials": [[230.0, 0.0]], "voltages": [[230.0, 0.0]]}
+            {"id": "bus1", "phases": "an", "potentials": [[230.0, 0.0], [0.0, 0.0]], "voltages": [[230.0, 0.0]]}
 
         The results dictionary of the network contains the results of all of its elements grouped
         by the element type. It has the form::

@@ -1,6 +1,6 @@
 [project]
 name = "roseau-load-flow"
-version = "0.11.0"
+version = "0.12.0-alpha"
 description = "Highly capable three-phase load flow solver"
 authors = [
     { name = "Ali Hamdan", email = "ali.hamdan@roseautechnologies.com" },
@@ -38,7 +38,7 @@ dependencies = [
     "pyproj>=3.3.0",
     "certifi>=2023.5.7",
     "platformdirs>=4.0.0",
-    "roseau-load-flow-engine==0.16.0",
+    "roseau-load-flow-engine==0.17.0-alpha",
 ]
 
 [project.urls]
@@ -71,8 +71,8 @@ doc = [
     "furo>=2022.9.29",
     "sphinxcontrib-googleanalytics>=0.3",
     "sphinxcontrib-bibtex>=2.5.0",
-    "sphinx-sitemap>=2.5.1",
     "sphinxext-opengraph>=0.9.1",
+    "ipython>=8.31.0",
 ]
 
 [tool.uv]
@@ -109,9 +109,10 @@ docstring-code-format = true
 "*.ipynb" = ["E402", "F403", "F405"]
 
 [tool.coverage.run]
-branch = true
+branch = false
 omit = ["roseau/load_flow/__about__.py"]
 plugins = ["coverage_conditional_plugin"]
+source = ["roseau/load_flow/"]
 
 [tool.coverage.coverage_conditional_plugin.rules]
 no-cover-if-py-gte-311 = "sys_version_info >= (3, 11)"

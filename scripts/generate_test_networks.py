@@ -1,4 +1,3 @@
-from importlib import resources
 from pathlib import Path
 
 import numpy as np
@@ -6,7 +5,7 @@ from shapely import LineString, Point
 
 import roseau.load_flow as rlf
 
-TEST_NETWORKS_PATH = Path(resources.files("roseau.load_flow")) / "tests" / "data" / "networks"
+TEST_NETWORKS_PATH = Path(rlf.__file__).parent / "tests" / "data" / "networks"
 
 
 def generate_small_network() -> None:
@@ -97,9 +96,7 @@ def generate_all_element_network() -> None:
     bus4 = rlf.Bus(id="bus4", phases="abcn")
 
     # Voltage source
-    voltages = rlf.converters.calculate_voltages(
-        potentials=20e3 / np.sqrt(3) * np.array([1, np.exp(-2j * np.pi / 3), np.exp(2j * np.pi / 3)]), phases="abc"
-    )
+    voltages = rlf.converters.calculate_voltages(potentials=20e3 / rlf.SQRT3 * rlf.PositiveSequence, phases="abc")
     voltage_source0 = rlf.VoltageSource(id="voltage_source0", bus=bus0, voltages=voltages, phases="abc")
 
     # Line between bus0 and bus1 (with shunt)

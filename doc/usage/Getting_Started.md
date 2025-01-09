@@ -116,7 +116,7 @@ line and a constant power load. This network is a low voltage network (three-pha
 
 >>> # Create a three-phase voltage source at the first bus
 ... # (voltages are phase-to-neutral because the source's phases include a neutral)
-... vs = rlf.VoltageSource(id="vs", bus=source_bus, voltages=un / np.sqrt(3))
+... vs = rlf.VoltageSource(id="vs", bus=source_bus, voltages=un / rlf.SQRT3)
 
 >>> # Add a 30kW load at the second bus (balanced load, 10 kW per phase)
 ... load = rlf.PowerLoad(id="load", bus=load_bus, powers=[10e3 + 0j, 10e3, 10e3])  # In VA
@@ -140,7 +140,7 @@ to `"abc"`:
 ... )
 ```
 
-Note the use of `un` (and not `un / np.sqrt(3)`) as the source voltages as they now represent the phase-to-phase
+Note the use of `un` (and not `un / rlf.SQRT3`) as the source voltages as they now represent the phase-to-phase
 voltages. This is because everywhere in `roseau-load-flow`, the `voltages` of an element depend on
 the element's `phases`. Voltages of elements connected in a _Star (wye)_ configuration (elements
 that have a neutral connection indicated by the presence of the `'n'` character in their `phases`
@@ -373,7 +373,7 @@ Below are the results of the load flow for `en`, rounded to 2 decimal places:
 >>> en.res_transformers  # empty as the network does not contain transformers
 ```
 
-[//]: # "TODO"
+<!-- TODO -->
 
 | transformer_id | phase | current1 | current2 | power1 | power2 | potential1 | potential2 | violated | loading | max_loading |  sn |
 | :------------- | :---- | -------: | -------: | -----: | -----: | ---------: | ---------: | :------- | ------: | ----------: | --: |
@@ -449,7 +449,7 @@ to magnitude and angle values (radians).
 | lb     | bn    |  221.928 |     -2.0944 |
 | lb     | cn    |  221.928 |      2.0944 |
 
-Or, if you prefer degrees:
+Or, if you prefer the angles in degrees:
 
 ```pycon
 >>> import functools as ft
@@ -481,7 +481,7 @@ not violated.
 
 ```pycon
 >>> load_bus.res_violated
-False
+array([False, False, False])
 ```
 
 Similarly, if you set `ampacities` on a line parameters and `max_loading` (default 100% of the ampacity) on a line, the
@@ -492,7 +492,7 @@ loading of the line in any phase exceeds the limit. Here, the current limit is n
 >>> line.res_loading
 <Quantity([0.09012, 0.09012, 0.09012, 0.], 'dimensionless')>
 >>> line.res_violated
-False
+array([False, False, False, False])
 ```
 
 The maximal loading of the transformer can be defined using the `max_loading` argument of the

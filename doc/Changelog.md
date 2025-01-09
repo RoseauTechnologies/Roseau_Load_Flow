@@ -17,6 +17,42 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 # Changelog
 
+## Version 0.12.0-alpha
+
+- Some improvements of the underlying engine:
+  - Simplify the center-tapped transformer model in order to improve the convergence speed (especially in case of a
+    short-circuit).
+  - Add the backward-forward algorithm for the single-phase transformers.
+  - Improve the error message if a singular matrix is detected.
+  - Build the engine using the `manylinux_2_34` image for Linux distributions (previously it was `manylinux_2_28`).
+- {gh-pr}`311` Add French aliases to line enumeration types.
+- {gh-pr}`311` Fix `TypeError`s in the `LineParameters.from_coiffier_model`. The error message of
+  invalid models now indicates whether the line type or the conductor material is invalid.
+- {gh-pr}`310` {gh-issue}`308` Support star and zig-zag windings with non-brought out neutral. In
+  earlier versions, vector groups like "Yd11" were considered identical to "YNd11".
+- {gh-pr}`307` {gh-issue}`296` Make `line.res_violated` and `bus.res_violated` return a boolean array
+  indicating if the corresponding phase is violated. This is consistent with the dataframe results
+  `en.res_lines` and `en.res_buses_voltages`. For old behavior, use `line_or_bus.res_violated.any()`.
+- {gh-pr}`305` Add missing `tap` column to `en.transformers_frame`.
+- {gh-pr}`305` Add `element_type` column to `en.potential_refs_frame` to indicate if the potential
+  reference is connected to a bus or a ground.
+- {gh-pr}`305` Add missing information to `results_to_dict` with `full=True`. This adds `loading` to
+  lines and transformers, `voltage_levels` to buses, and `voltages` to loads and sources.
+- {gh-pr}`305` Improve the performance of `res_violated` of buses, lines and transformers.
+- {gh-pr}`304` Add top-level modules `rlf.constants` and `rlf.types`. The old modules in the `utils`
+  package are deprecated and will be removed in a future release. The `utils` package is for internal
+  use only and should not be considered stable.
+- {gh-pr}`304` Add top-level module `rlf.sym` for symmetrical components utilities. The `sym_to_phasor`,
+  `phasor_to_sym` and `series_phasor_to_sym` functions are moved from the `rlf.converters` module to
+  this module. The old functions are deprecated and will be removed in a future release.
+- {gh-pr}`303` Fix missing `voltage_level` in `en.res_buses_voltages` when the buses define nominal
+  voltage but not voltage limits.
+- {gh-pr}`303` Add `rlf.SQRT3` constant for the square root of 3. It can be useful for the conversion
+  between phase-to-phase and phase-to-neutral voltages.
+- {gh-pr}`303` Improve the performance of some dataframe properties.
+- {gh-pr}`301` {gh-issue}`299` Improve the error message when the Jacobian matrix contains infinite
+  or NaN values.
+
 ## Version 0.11.0
 
 This release adds official support for Python 3.13 and adds a new experimental backward-forward solver.

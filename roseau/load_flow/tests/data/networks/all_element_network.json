@@ -1,5 +1,5 @@
 {
-  "version": 3,
+  "version": 4,
   "is_multiphase": true,
   "grounds": [
     {
@@ -582,9 +582,9 @@
           [0.0, 0.0, 3.40441e-5]
         ]
       ],
-      "ampacities": [323, 323, 323],
+      "ampacities": [323.0, 323.0, 323.0],
       "line_type": "UNDERGROUND",
-      "materials": ["AM", "AM", "AM"],
+      "materials": ["AAAC", "AAAC", "AAAC"],
       "sections": [148.0, 148.0, 148.0]
     },
     {
@@ -603,19 +603,19 @@
           [0.0, 0.0, 0.0, 0.1066400577]
         ]
       ],
-      "ampacities": [195, 195, 195, 195],
+      "ampacities": [195.0, 195.0, 195.0, 195.0],
       "line_type": "TWISTED",
-      "materials": ["AL", "AL", "AL", "AL"],
+      "materials": ["AAC", "AAC", "AAC", "AAC"],
       "sections": [75.0, 75.0, 75.0, 75.0]
     }
   ],
   "transformers_params": [
     {
       "id": "tp0",
+      "vg": "Dyn11",
       "sn": 100000,
       "uhv": 20000,
       "ulv": 400,
-      "vg": "Dyn11",
       "z2": [0.02, 0.060794736614282655],
       "ym": [1.2083333333333332e-7, -3.987611022487859e-7],
       "i0": 0.005,

@@ -10,7 +10,7 @@ from roseau.load_flow.models.branches import AbstractBranch
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.grounds import Ground
 from roseau.load_flow.models.lines.parameters import LineParameters
-from roseau.load_flow.typing import ComplexArray, FloatArray, Id, JsonDict
+from roseau.load_flow.typing import BoolArray, ComplexArray, FloatArray, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow_engine.cy_engine import CyShuntLine, CySimplifiedLine
 
@@ -343,23 +343,26 @@ class Line(AbstractBranch):
         """Get the power losses in the line (in VA)."""
         return self._res_power_losses_getter(warning=True)
 
+    def _res_loading_getter(self, warning: bool) -> FloatArray | None:
+        if (amp := self._parameters._ampacities) is None:
+            return None
+        currents1, currents2 = self._res_currents_getter(warning)
+        return np.maximum(abs(currents1), abs(currents2)) / amp
+
     @property
     def res_loading(self) -> Q_[FloatArray] | None:
         """The loading of the line (unitless) if ``self.parameters.ampacities`` is set, else ``None``."""
-        if (amp := self._parameters._ampacities) is None:
-            return None
-        currents1, currents2 = self._res_currents_getter(warning=True)
-        return Q_(np.maximum(abs(currents1), abs(currents2)) / amp, "")
+        loading = self._res_loading_getter(warning=True)
+        return None if loading is None else Q_(loading, "")
 
     @property
-    def res_violated(self) -> bool | None:
+    def res_violated(self) -> BoolArray | None:
         """Whether the line current loading exceeds its maximal loading.
 
         Returns ``None`` if the ``self.parameters.ampacities`` is not set.
         """
-        if (loading := self.res_loading) is None:
-            return None
-        return bool((loading.m > self._max_loading).any())
+        loading = self._res_loading_getter(warning=True)
+        return None if loading is None else (loading > self._max_loading)
 
     #
     # Json Mixin interface
@@ -423,4 +426,6 @@ class Line(AbstractBranch):
             results["shunt_power_losses"] = [
                 [s.real, s.imag] for s in self._res_shunt_power_losses_getter(warning=False)
             ]
+            loading = self._res_loading_getter(warning=False)
+            results["loading"] = None if loading is None else loading.tolist()
         return results

@@ -9,6 +9,7 @@ to read and write networks from and to JSON files.
 import copy
 import logging
 import warnings
+from collections import defaultdict
 from typing import TYPE_CHECKING, TypeVar
 
 import numpy as np
@@ -27,15 +28,16 @@ from roseau.load_flow.models import (
     TransformerParameters,
     VoltageSource,
 )
+from roseau.load_flow.types import Insulator, Material
 from roseau.load_flow.typing import Id, JsonDict
-from roseau.load_flow.utils._exceptions import find_stack_level
+from roseau.load_flow.utils import find_stack_level
 
 if TYPE_CHECKING:
     from roseau.load_flow.network import ElectricalNetwork
 
 logger = logging.getLogger(__name__)
 
-NETWORK_JSON_VERSION = 3
+NETWORK_JSON_VERSION = 4
 """The current version of the network JSON file format."""
 
 _T = TypeVar("_T", bound=AbstractBranch)
@@ -94,7 +96,7 @@ def network_from_dict(  # noqa: C901
     data = copy.deepcopy(data)  # Make a copy to avoid modifying the original
 
     version = data.get("version", 0)
-    if version <= 2:
+    if version <= 3:
         warnings.warn(
             f"Got an outdated network file (version {version}), trying to update to the current format "
             f"(version {NETWORK_JSON_VERSION}). Please save the network again.",
@@ -108,6 +110,8 @@ def network_from_dict(  # noqa: C901
             data = v1_to_v2_converter(data)
         if version <= 2:
             data = v2_to_v3_converter(data)
+        if version <= 3:
+            data = v3_to_v4_converter(data)
     else:
         # If we arrive here, we dealt with all legacy versions, it must be the current one
         assert version == NETWORK_JSON_VERSION, f"Unsupported network file version {version}."
@@ -662,7 +666,7 @@ def v2_to_v3_converter(data: JsonDict) -> JsonDict:  # noqa: C901
     """
     assert data.get("version", 0) == 2, data["version"]
 
-    # The name of min_voltage, max_voltage and max_voltage_level has changed so they are not usable anymore.
+    # The name of min_voltage and max_voltage have changed so they are not usable anymore.
     old_buses = data.get("buses", [])
     buses = []
     bus_warning_emitted: bool = False
@@ -697,10 +701,10 @@ def v2_to_v3_converter(data: JsonDict) -> JsonDict:  # noqa: C901
         transformers_params_max_loading[transformer_param_data["id"]] = loading
         transformers_params.append(transformer_param_data)
 
-    # Rename `maximal_current` in `ampacities` and uses array
-    # Rename `section` in `sections` and uses array
-    # Rename `insulator_type` in `insulators` and uses array. `Unknown` is deleted
-    # Rename `material` in `materials` and uses array
+    # Rename `maximal_current` to `ampacities` and use array
+    # Rename `section` to `sections` and use array
+    # Rename `insulator_type` to `insulators` and use array. `Unknown` is deleted
+    # Rename `material` to `materials` and use array
     old_lines_params = data.get("lines_params", [])
     lines_params = []
     for line_param_data in old_lines_params:
@@ -744,6 +748,63 @@ def v2_to_v3_converter(data: JsonDict) -> JsonDict:  # noqa: C901
         "sources": data["sources"],  # Unchanged
         "lines_params": lines_params,  # <---- Changed
         "transformers_params": transformers_params,  # <---- Changed
+    }
+    if "short_circuits" in data:
+        results["short_circuits"] = data["short_circuits"]  # Unchanged
+
+    return results
+
+
+def v3_to_v4_converter(data: JsonDict) -> JsonDict:
+    """Convert a v3 network dict to a v4 network dict.
+
+    Args:
+        data:
+            The v3 network data.
+
+    Returns:
+        The v4 network data.
+    """
+    assert data.get("version", 0) == 3, data["version"]
+
+    tr_phases_per_params = defaultdict(list)
+    for tr in data["transformers"]:
+        tr_phases_per_params[tr["params_id"]].append((tr["phases1"], tr["phases2"]))
+
+    transformer_params = []
+    for tp_data in data["transformers_params"]:
+        w1, w2, clock = TransformerParameters.extract_windings(tp_data["vg"])
+        # Handle brought out neutrals that were not declared as such
+        if w1 in ("Y", "Z") and any(tr_phases[0] == "abcn" for tr_phases in tr_phases_per_params[tp_data["id"]]):
+            w1 += "N"
+        if w2 in ("y", "z") and any(tr_phases[1] == "abcn" for tr_phases in tr_phases_per_params[tp_data["id"]]):
+            w2 += "n"
+        # Normalize the vector group (dyN11 -> Dyn11)
+        tp_data["vg"] = f"{w1}{w2}{clock}"
+        transformer_params.append(tp_data)
+
+    line_params = []
+    for line_param_data in data["lines_params"]:
+        # Normalize the insulator and material types
+        if (materials := line_param_data.pop("materials", None)) is not None:
+            line_param_data["materials"] = [Material(material).name for material in materials]
+        if (insulators := line_param_data.pop("insulators", None)) is not None:
+            line_param_data["insulators"] = [Insulator(insulator).name for insulator in insulators]
+        line_params.append(line_param_data)
+
+    results = {
+        "version": 4,
+        "is_multiphase": data["is_multiphase"],  # Unchanged
+        "grounds": data["grounds"],  # Unchanged
+        "potential_refs": data["potential_refs"],  # Unchanged
+        "buses": data["buses"],  # <---- Unchanged
+        "lines": data["lines"],  # <---- Unchanged
+        "switches": data["switches"],  # Unchanged
+        "transformers": data["transformers"],  # <---- Unchanged
+        "loads": data["loads"],  # Unchanged
+        "sources": data["sources"],  # Unchanged
+        "lines_params": line_params,  # <---- Changed
+        "transformers_params": transformer_params,  # <---- Changed
     }
     if "short_circuits" in data:
         results["short_circuits"] = data["short_circuits"]  # Unchanged

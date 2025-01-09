@@ -13,7 +13,7 @@ from roseau.load_flow.models.core import Element
 from roseau.load_flow.models.loads.flexible_parameters import FlexibleParameter
 from roseau.load_flow.typing import ComplexArray, ComplexScalarOrArrayLike1D, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
-from roseau.load_flow.utils._exceptions import find_stack_level
+from roseau.load_flow.utils import find_stack_level
 from roseau.load_flow_engine.cy_engine import (
     CyAdmittanceLoad,
     CyCurrentLoad,
@@ -317,6 +317,8 @@ class AbstractLoad(Element, ABC):
         if full:
             powers = self._res_powers_getter(warning=False, currents=currents, potentials=potentials)
             results["powers"] = [[s.real, s.imag] for s in powers]
+            voltages = _calculate_voltages(potentials, self.phases)
+            results["voltages"] = [[v.real, v.imag] for v in voltages]
         return results
 
 

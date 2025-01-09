@@ -4,8 +4,8 @@ from pint import DimensionalityError
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models import Bus, Ground, Line, LineParameters
+from roseau.load_flow.sym import PositiveSequence as PosSeq
 from roseau.load_flow.units import Q_
-from roseau.load_flow.utils import PositiveSequence as PosSeq
 
 
 def test_lines_length():
@@ -162,39 +162,39 @@ def test_res_violated():
 
     # No constraint violated
     lp.ampacities = 11
-    assert line.res_violated is False
+    assert (line.res_violated == [False, False, False]).all()
     np.testing.assert_allclose(line.res_loading.m, 10 / 11)
 
     # Reduced max_loading
     line.max_loading = Q_(50, "%")
     assert line.max_loading.m == 0.5
-    assert line.res_violated is True
+    assert (line.res_violated == [True, True, True]).all()
     np.testing.assert_allclose(line.res_loading.m, 10 / 11)
 
-    # Two violations
+    # Two sides violations
     lp.ampacities = 9
     line.max_loading = 1
-    assert line.res_violated is True
+    assert (line.res_violated == [True, True, True]).all()
     np.testing.assert_allclose(line.res_loading.m, 10 / 9)
 
     # Side 1 violation
     lp.ampacities = 11
     line._res_currents = 12 * PosSeq, -10 * PosSeq
-    assert line.res_violated is True
+    assert (line.res_violated == [True, True, True]).all()
     np.testing.assert_allclose(line.res_loading.m, 12 / 11)
 
     # Side 2 violation
     lp.ampacities = 11
     line._res_currents = 10 * PosSeq, -12 * PosSeq
-    assert line.res_violated is True
+    assert (line.res_violated == [True, True, True]).all()
     np.testing.assert_allclose(line.res_loading.m, 12 / 11)
 
     # A single phase violation
     lp.ampacities = 11
     line._res_currents = 10 * PosSeq, -10 * PosSeq
-    line._res_currents[0][0] = 12 * PosSeq[0]
-    line._res_currents[1][0] = -12 * PosSeq[0]
-    assert line.res_violated is True
+    line._res_currents[0][0] = 12
+    line._res_currents[1][0] = -12
+    assert (line.res_violated == [True, False, False]).all()
     np.testing.assert_allclose(line.res_loading.m, [12 / 11, 10 / 11, 10 / 11])
 
     #
@@ -205,24 +205,24 @@ def test_res_violated():
     # No constraint violated
     lp.ampacities = [11, 12, 13]
     line.max_loading = 1
-    assert line.res_violated is False
+    assert (line.res_violated == [False, False, False]).all()
     np.testing.assert_allclose(line.res_loading.m, [10 / 11, 10 / 12, 10 / 13])
 
-    # Two violations
+    # Two sides violations
     lp.ampacities = [9, 9, 12]
-    assert line.res_violated is True
+    assert (line.res_violated == [True, True, False]).all()
     np.testing.assert_allclose(line.res_loading.m, [10 / 9, 10 / 9, 10 / 12])
 
     # Side 1 violation
-    lp.ampacities = [11, 10, 9]
+    lp.ampacities = [11, 13, 11]
     line._res_currents = 12 * PosSeq, -10 * PosSeq
-    assert line.res_violated is True
-    np.testing.assert_allclose(line.res_loading.m, [12 / 11, 12 / 10, 12 / 9])
+    assert (line.res_violated == [True, False, True]).all()
+    np.testing.assert_allclose(line.res_loading.m, [12 / 11, 12 / 13, 12 / 11])
 
     # Side 2 violation
     lp.ampacities = [11, 11, 13]
     line._res_currents = 10 * PosSeq, -12 * PosSeq
-    assert line.res_violated is True
+    assert (line.res_violated == [True, True, False]).all()
     np.testing.assert_allclose(line.res_loading.m, [12 / 11, 12 / 11, 12 / 13])
 
 

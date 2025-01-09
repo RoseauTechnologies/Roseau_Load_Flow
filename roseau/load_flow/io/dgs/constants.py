@@ -1,6 +1,6 @@
 from typing import Final, Literal, TypeAlias
 
-from roseau.load_flow.utils import Insulator, LineType, Material
+from roseau.load_flow.types import Insulator, LineType, Material
 
 # Lines
 LINE_TYPES: Final[dict[int, LineType]] = {

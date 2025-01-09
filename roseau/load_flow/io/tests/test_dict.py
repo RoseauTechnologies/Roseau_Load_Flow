@@ -9,7 +9,13 @@ import pytest
 from shapely import LineString, Point
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
-from roseau.load_flow.io.dict import NETWORK_JSON_VERSION, v0_to_v1_converter, v1_to_v2_converter, v2_to_v3_converter
+from roseau.load_flow.io.dict import (
+    NETWORK_JSON_VERSION,
+    v0_to_v1_converter,
+    v1_to_v2_converter,
+    v2_to_v3_converter,
+    v3_to_v4_converter,
+)
 from roseau.load_flow.models import (
     Bus,
     Ground,
@@ -22,13 +28,14 @@ from roseau.load_flow.models import (
 )
 from roseau.load_flow.network import ElectricalNetwork
 from roseau.load_flow.testing import assert_json_close
-from roseau.load_flow.utils import Insulator, LineType, Material
+from roseau.load_flow.types import Insulator, LineType, Material
 
 # Store the expected hashes of the files that should not be modified
 EXPECTED_HASHES = {
     "network_json_v0.json": "ad984cbcd26b36602a2789e2f0badcb5",
     "network_json_v1.json": "fc930431b69165f68961b0f0dc2635b5",
     "network_json_v2.json": "d85a2658708576c083ceab666a83150b",
+    "network_json_v3.json": "551f852aefc71d744f4738d31bd0e90b",
 }
 
 
@@ -132,7 +139,7 @@ def test_to_dict():
     lp_dict = res["lines_params"][0]
     assert np.allclose(lp_dict["ampacities"], 1000)
     assert lp_dict["line_type"] == "UNDERGROUND"
-    assert lp_dict["materials"] == ["AA"] * 4
+    assert lp_dict["materials"] == ["ACSR"] * 4
     assert lp_dict["insulators"] == ["PVC"] * 4
     assert np.allclose(lp_dict["sections"], 120)
     assert "results" not in res_bus0
@@ -204,6 +211,7 @@ def test_all_converters():
         expected_dict = v0_to_v1_converter(expected_dict)
         expected_dict = v1_to_v2_converter(expected_dict)
         expected_dict = v2_to_v3_converter(expected_dict)
+        expected_dict = v3_to_v4_converter(expected_dict)
     assert_json_close(net_dict, expected_dict)
 
 
@@ -220,6 +228,7 @@ def test_from_dict_v0():
         expected_dict = v0_to_v1_converter(expected_dict)
         expected_dict = v1_to_v2_converter(expected_dict)
         expected_dict = v2_to_v3_converter(expected_dict)
+        expected_dict = v3_to_v4_converter(expected_dict)
     assert_json_close(net_dict, expected_dict)
 
 
@@ -235,6 +244,7 @@ def test_from_dict_v1():
         warnings.simplefilter("ignore")
         expected_dict = v1_to_v2_converter(expected_dict)
         expected_dict = v2_to_v3_converter(expected_dict)
+        expected_dict = v3_to_v4_converter(expected_dict)
     assert_json_close(net_dict, expected_dict)
 
     # Test with `include_results=False`
@@ -257,6 +267,7 @@ def test_from_dict_v1():
         remove_results(expected_dict_no_results)
         expected_dict_no_results = v1_to_v2_converter(expected_dict_no_results)
         expected_dict_no_results = v2_to_v3_converter(expected_dict_no_results)
+        expected_dict_no_results = v3_to_v4_converter(expected_dict_no_results)
     assert_json_close(net_dict, expected_dict_no_results)
 
 
@@ -280,6 +291,7 @@ def test_from_dict_v2():
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         expected_dict = v2_to_v3_converter(expected_dict)
+        expected_dict = v3_to_v4_converter(expected_dict)
 
     assert_json_close(net_dict, expected_dict)
 
@@ -287,6 +299,27 @@ def test_from_dict_v2():
     for tr in en.transformers.values():
         tp_data = next(tp_d for tp_d in dict_v2["transformers_params"] if tp_d["id"] == tr.parameters.id)
         assert tr.max_loading.m == tp_data["max_power"] / tp_data["sn"]
+
+
+def test_from_dict_v3():
+    dict_v3 = json.loads(read_json_file("network_json_v3.json"))
+
+    with pytest.warns(UserWarning, match=r"Got an outdated network file \(version 3\)"):
+        en = ElectricalNetwork.from_dict(data=dict_v3, include_results=True)
+    net_dict = en.to_dict(include_results=True)
+    expected_dict = copy.deepcopy(dict_v3)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        expected_dict = v3_to_v4_converter(expected_dict)
+
+    assert_json_close(net_dict, expected_dict)
+
+    # Test vector group of transformers
+    for tr in en.transformers.values():
+        if tr.phases1 == "abcn":
+            assert tr.parameters.winding1 in ("YN", "ZN")
+        if tr.phases2 == "abcn":
+            assert tr.parameters.winding2 in ("yn", "zn")
 
 
 @pytest.mark.parametrize("version", list(range(NETWORK_JSON_VERSION)))

@@ -17,8 +17,7 @@ from roseau.load_flow.typing import (
     ProjectionType,
 )
 from roseau.load_flow.units import Q_, ureg_wraps
-from roseau.load_flow.utils import JsonMixin, _optional_deps
-from roseau.load_flow.utils._exceptions import find_stack_level
+from roseau.load_flow.utils import JsonMixin, find_stack_level, optional_deps
 from roseau.load_flow_engine.cy_engine import CyControl, CyFlexibleParameter, CyProjection
 
 logger = logging.getLogger(__name__)
@@ -1168,7 +1167,7 @@ class FlexibleParameter(JsonMixin):
             The axis on which the plot has been drawn and the resulting flexible powers (the input if not `None` else
             the computed values).
         """
-        plt = _optional_deps.pyplot  # this line first for better error handling
+        plt = optional_deps.pyplot  # this line first for better error handling
         from matplotlib import colormaps, patheffects
 
         # Get the axes
@@ -1262,7 +1261,7 @@ class FlexibleParameter(JsonMixin):
             The axis on which the plot has been drawn and the resulting flexible powers (the input if not `None` else
             the computed values).
         """
-        plt = _optional_deps.pyplot
+        plt = optional_deps.pyplot
 
         # Get the axes
         if ax is None:
@@ -1312,7 +1311,7 @@ class FlexibleParameter(JsonMixin):
             The axis on which the plot has been drawn and the resulting flexible powers (the input if not `None` else
             the computed values).
         """
-        plt = _optional_deps.pyplot
+        plt = optional_deps.pyplot
 
         # Get the axes
         if ax is None:

@@ -4,6 +4,8 @@
 # list see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
+import os
+
 # -- Path setup --------------------------------------------------------------
 
 
@@ -22,8 +24,8 @@ copyright = "2018, Roseau Technologies SAS"
 # author = "Benoît Vinot"
 
 # The full version, including alpha/beta/rc tags
-version = "0.11"
-release = "0.11.0"
+version = "0.12"
+release = "0.12.0-alpha"
 
 # -- General configuration ---------------------------------------------------
 
@@ -41,7 +43,6 @@ extensions = [
     "sphinx_inline_tabs",
     "sphinxcontrib.googleanalytics",
     "sphinxcontrib.bibtex",
-    "sphinx_sitemap",
     "sphinxext.opengraph",
 ]
 myst_enable_extensions = ["deflist", "smartquotes", "replacements", "dollarmath"]
@@ -105,6 +106,9 @@ html_theme_options = {
     ],
 }
 
+# See https://docs.readthedocs.io/en/stable/canonical-urls.html
+html_baseurl = os.getenv("READTHEDOCS_CANONICAL_URL", "https://roseau-load-flow.roseautechnologies.com/page/")
+
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
@@ -132,7 +136,16 @@ autodoc_mock_imports = ["roseau.load_flow_engine"]  # Ignore missing dependencie
 
 # -- Options for AutoAPI -------------------------------------------------
 autoapi_dirs = ["../roseau"]
-autoapi_ignore = ["**/tests/**", "**/conftest.py", "__about__.py"]
+autoapi_ignore = [
+    # Tests
+    "**/tests/**",
+    "**/conftest.py",
+    # Cruft
+    "**/roseau/load_flow/__about__.py",
+    # Internal utilities
+    "**/roseau/load_flow/utils/**",
+    "**/roseau/load_flow/io/**",
+]
 autoapi_options = ["members", "show-inheritance", "show-module-summary", "imported-members"]
 autoapi_python_class_content = "both"  # without this, the __init__ docstring is not shown
 autoapi_python_use_implicit_namespaces = True
@@ -173,11 +186,6 @@ extlinks = {
     "gh-pr": ("https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/%s", "PR%s"),
 }
 
-
-# -- Options for sphinx-sitemap -----------------------------------------
-html_baseurl = "https://roseau-load-flow.roseautechnologies.com/"
-sitemap_url_scheme = "{link}"  # default is {lang}{version}{link}
-
 # -- Options for sphinx-opengraph -----------------------------------------
-ogp_site_url = "https://roseau-load-flow.roseautechnologies.com/"
-ogp_image = "https://roseau-load-flow.roseautechnologies.com/_static/Roseau_Load_Flow_Stacked.svg"
+ogp_site_url = "https://roseau-load-flow.roseautechnologies.com/page/"
+ogp_image = "https://roseau-load-flow.roseautechnologies.com/page/_static/Roseau_Load_Flow_Stacked.svg"

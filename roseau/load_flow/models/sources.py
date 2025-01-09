@@ -10,10 +10,10 @@ from roseau.load_flow.converters import _PHASE_SIZES, _calculate_voltages, calcu
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import Element
+from roseau.load_flow.sym import PositiveSequence
 from roseau.load_flow.typing import ComplexArray, ComplexScalarOrArrayLike1D, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
-from roseau.load_flow.utils._exceptions import find_stack_level
-from roseau.load_flow.utils.constants import PositiveSequence
+from roseau.load_flow.utils import find_stack_level
 from roseau.load_flow_engine.cy_engine import CyDeltaVoltageSource, CyVoltageSource
 
 logger = logging.getLogger(__name__)
@@ -321,4 +321,6 @@ class VoltageSource(Element):
         if full:
             powers = self._res_powers_getter(warning=False, currents=currents, potentials=potentials)
             results["powers"] = [[s.real, s.imag] for s in powers]
+            voltages = _calculate_voltages(potentials, self.phases)
+            results["voltages"] = [[v.real, v.imag] for v in voltages]
         return results
