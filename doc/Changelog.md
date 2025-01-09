@@ -19,6 +19,12 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Version 0.12.0-alpha
 
+- Some improvements of the underlying engine:
+  - Simplify the center-tapped transformer model in order to improve the convergence speed (especially in case of a
+    short-circuit).
+  - Add the backward-forward algorithm for the single-phase transformers.
+  - Improve the error message if a singular matrix is detected.
+  - Build the engine using the `manylinux_2_34` image for Linux distributions (previously it was `manylinux_2_28`).
 - {gh-pr}`311` Add French aliases to line enumeration types.
 - {gh-pr}`311` Fix `TypeError`s in the `LineParameters.from_coiffier_model`. The error message of
   invalid models now indicates whether the line type or the conductor material is invalid.
