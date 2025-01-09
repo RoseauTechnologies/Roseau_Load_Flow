@@ -1,5 +1,5 @@
 {
-  "version": 3,
+  "version": 4,
   "is_multiphase": true,
   "grounds": [
     {
@@ -2269,9 +2269,9 @@
           [0.0, 0.0, 1.5707963267948965e-6]
         ]
       ],
-      "ampacities": [193, 193, 193],
+      "ampacities": [193.0, 193.0, 193.0],
       "line_type": "OVERHEAD",
-      "materials": ["AM", "AM", "AM"],
+      "materials": ["AAAC", "AAAC", "AAAC"],
       "sections": [54.0, 54.0, 54.0]
     },
     {
@@ -2300,9 +2300,9 @@
           [0.0, 0.0, 0.00014105751014618172]
         ]
       ],
-      "ampacities": [325, 325, 325],
+      "ampacities": [325.0, 325.0, 325.0],
       "line_type": "UNDERGROUND",
-      "materials": ["AL", "AL", "AL"],
+      "materials": ["AAC", "AAC", "AAC"],
       "sections": [150.0, 150.0, 150.0]
     }
   ],
