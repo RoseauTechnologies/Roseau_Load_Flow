@@ -71,7 +71,6 @@ doc = [
     "furo>=2022.9.29",
     "sphinxcontrib-googleanalytics>=0.3",
     "sphinxcontrib-bibtex>=2.5.0",
-    "sphinx-sitemap>=2.5.1",
     "sphinxext-opengraph>=0.9.1",
     "ipython>=8.31.0",
 ]

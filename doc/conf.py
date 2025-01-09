@@ -4,6 +4,8 @@
 # list see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
+import os
+
 # -- Path setup --------------------------------------------------------------
 
 
@@ -41,7 +43,6 @@ extensions = [
     "sphinx_inline_tabs",
     "sphinxcontrib.googleanalytics",
     "sphinxcontrib.bibtex",
-    "sphinx_sitemap",
     "sphinxext.opengraph",
 ]
 myst_enable_extensions = ["deflist", "smartquotes", "replacements", "dollarmath"]
@@ -104,6 +105,9 @@ html_theme_options = {
         },
     ],
 }
+
+# See https://docs.readthedocs.io/en/stable/canonical-urls.html
+html_baseurl = os.getenv("READTHEDOCS_CANONICAL_URL", "https://roseau-load-flow.roseautechnologies.com/page/")
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -182,11 +186,6 @@ extlinks = {
     "gh-pr": ("https://github.com/RoseauTechnologies/Roseau_Load_Flow/pull/%s", "PR%s"),
 }
 
-
-# -- Options for sphinx-sitemap -----------------------------------------
-html_baseurl = "https://roseau-load-flow.roseautechnologies.com/"
-sitemap_url_scheme = "{link}"  # default is {lang}{version}{link}
-
 # -- Options for sphinx-opengraph -----------------------------------------
-ogp_site_url = "https://roseau-load-flow.roseautechnologies.com/"
-ogp_image = "https://roseau-load-flow.roseautechnologies.com/_static/Roseau_Load_Flow_Stacked.svg"
+ogp_site_url = "https://roseau-load-flow.roseautechnologies.com/page/"
+ogp_image = "https://roseau-load-flow.roseautechnologies.com/page/_static/Roseau_Load_Flow_Stacked.svg"
