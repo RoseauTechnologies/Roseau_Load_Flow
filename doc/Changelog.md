@@ -17,7 +17,7 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 # Changelog
 
-## Unreleased
+## Version 0.12.0-alpha
 
 - {gh-pr}`311` Add French aliases to line enumeration types.
 - {gh-pr}`311` Fix `TypeError`s in the `LineParameters.from_coiffier_model`. The error message of

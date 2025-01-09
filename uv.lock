@@ -1290,7 +1290,7 @@ wheels = [
 
 [[package]]
 name = "roseau-load-flow"
-version = "0.11.0"
+version = "0.12.0a0"
 source = { editable = "." }
 dependencies = [
     { name = "certifi" },
@@ -1346,7 +1346,7 @@ requires-dist = [
     { name = "pint", specifier = ">=0.21.0" },
     { name = "platformdirs", specifier = ">=4.0.0" },
     { name = "pyproj", specifier = ">=3.3.0" },
-    { name = "roseau-load-flow-engine", specifier = "==0.16.0" },
+    { name = "roseau-load-flow-engine", specifier = ">=0.16.0" },
     { name = "shapely", specifier = ">=2.0.0" },
     { name = "typing-extensions", specifier = ">=4.6.2" },
 ]
