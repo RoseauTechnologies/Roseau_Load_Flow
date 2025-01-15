@@ -81,8 +81,7 @@ class AbstractLoad(Element, ABC):
             missing_ok = phases_not_in_bus == {"n"} and len(phases) > 2 and not connect_neutral
             if phases_not_in_bus and not missing_ok:
                 msg = (
-                    f"Phases {sorted(phases_not_in_bus)} of load {id!r} are not in bus {bus.id!r} "
-                    f"phases {bus.phases!r}"
+                    f"Phases {sorted(phases_not_in_bus)} of load {id!r} are not in bus {bus.id!r} phases {bus.phases!r}"
                 )
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)

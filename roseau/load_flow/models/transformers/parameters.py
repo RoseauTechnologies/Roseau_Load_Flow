@@ -20,6 +20,8 @@ logger = logging.getLogger(__name__)
 class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
     """Parameters that define electrical models of transformers."""
 
+    # Power Transformers General specification can be found in IEC 60076-1
+
     # fmt: off
     allowed_vector_groups: Final = {
         # Three-phase
@@ -1128,11 +1130,11 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
                     value=f"{value / 1000:.1f} {display_unit}",
                     name=display_name,
                     name_plural=display_name_plural,
-                    strings=catalogue_data[column_name].apply(lambda x: f"{x/1000:.1f} {display_unit}"),  # noqa: B023
+                    strings=catalogue_data[column_name].apply(lambda x: f"{x / 1000:.1f} {display_unit}"),  # noqa: B023
                     query_msg_list=query_msg_list,
                 )
             catalogue_data = catalogue_data.loc[mask, :]
-            query_msg_list.append(f"{column_name}={value/1000:.1f} {display_unit}")
+            query_msg_list.append(f"{column_name}={value / 1000:.1f} {display_unit}")
 
         return catalogue_data, ", ".join(query_msg_list)
 
@@ -1338,7 +1340,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         Returns:
             The first winding, the second winding, and the phase displacement.
         """
-        match = re.fullmatch(r"^(?P<w1>(D|Yn?|Zn?|I))(?P<w2>(d|yn?|zn?|i|ii))(?P<p>(0|1|5|6|11))$", vg, flags=re.I)
+        match = re.fullmatch(r"^(?P<w1>(D|Yn?|Zn?|I))(?P<w2>(d|yn?|zn?|i|ii))(?P<p>\d{1,2})$", vg, flags=re.I)
         if match and vg.capitalize() in cls.allowed_vector_groups:
             groups = match.groupdict()
             winding1, winding2, phase_displacement = groups["w1"].upper(), groups["w2"].lower(), int(groups["p"])
