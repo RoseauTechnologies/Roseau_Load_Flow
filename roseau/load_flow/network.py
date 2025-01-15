@@ -6,14 +6,13 @@ import json
 import logging
 import re
 import textwrap
-import time
 import warnings
 from collections.abc import Iterable, Mapping
 from importlib import resources
 from itertools import chain
 from math import nan
 from pathlib import Path
-from typing import TYPE_CHECKING, NoReturn, TypeVar
+from typing import TYPE_CHECKING, TypeVar
 
 import geopandas as gpd
 import numpy as np
@@ -518,10 +517,9 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         network (e.g. ``print(net.res_buses``). To get the results for a specific element, use the
         `res_` properties on the element (e.g. ``print(net.buses["bus1"].res_potentials)``.
 
-        You need to activate the license before calling this method. Alternatively you may set the
-        environment variable ``ROSEAU_LOAD_FLOW_LICENSE_KEY`` to your license key and it will be
-        picked automatically when calling this method. See the :ref:`license` page for more
-        information.
+        You need to activate the license before calling this method. You may set the environment
+        variable ``ROSEAU_LOAD_FLOW_LICENSE_KEY`` to your license key and it will be picked
+        automatically when calling this method. See the :ref:`license` page for more information.
 
         Args:
             max_iterations:
@@ -537,9 +535,14 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
 
             solver:
                 The name of the solver to use for the load flow. The options are:
-                    - ``'newton'``: the classical Newton-Raphson solver.
-                    - ``'newton_goldstein'``: the Newton-Raphson solver with the Goldstein and
-                      Price linear search.
+
+                - ``newton``: The classical *Newton-Raphson* method.
+                - ``newton_goldstein``: The *Newton-Raphson* method with the *Goldstein and Price*
+                  linear search algorithm. It generally has better convergence properties than the
+                  classical Newton-Raphson method. This is the default.
+                - ``backward_forward``: the *Backward-Forward Sweep* method. It usually executes
+                  faster than the other approaches but may exhibit weaker convergence properties. It
+                  does not support meshed networks or floating neutrals.
 
             solver_params:
                 A dictionary of parameters used by the solver. Available parameters depend on the
@@ -563,25 +566,8 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         if not warm_start:
             self._reset_inputs()
 
-        start = time.perf_counter()
-        try:
-            iterations, residual = self._solver.solve_load_flow(max_iterations=max_iterations, tolerance=tolerance)
-        except RuntimeError as e:
-            self._handle_error(e)
+        iterations, residual = self._solver.solve_load_flow(max_iterations=max_iterations, tolerance=tolerance)
 
-        end = time.perf_counter()
-
-        if iterations == max_iterations:
-            msg = (
-                f"The load flow did not converge after {iterations} iterations. The norm of the residuals is "
-                f"{residual:5n}"
-            )
-            logger.error(msg=msg)
-            raise RoseauLoadFlowException(
-                msg, RoseauLoadFlowExceptionCode.NO_LOAD_FLOW_CONVERGENCE, iterations, residual
-            )
-
-        logger.debug(f"The load flow converged after {iterations} iterations and {end - start:.3n} s.")
         self._no_results = False
 
         # Lazily update the results of the elements
@@ -593,47 +579,6 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         self._results_valid = True
 
         return iterations, residual
-
-    def _handle_error(self, e: RuntimeError) -> NoReturn:
-        msg = e.args[0]
-        if msg.startswith("0 "):
-            msg = f"The license cannot be validated. The detailed error message is {msg[2:]!r}"
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.LICENSE_ERROR) from e
-        elif msg.startswith("1 "):
-            msg = msg[2:]
-            zero_elements_index, inf_elements_index = self._solver._cy_solver.analyse_jacobian()
-            if inf_elements_index:
-                inf_elements = [self._elements[i] for i in inf_elements_index]
-                printable_elements = ", ".join(f"{type(e).__name__}({e.id!r})" for e in inf_elements)
-                msg += (
-                    f"The problem seems to come from the elements [{printable_elements}] that induce infinite values."
-                )
-                power_load = False
-                flexible_load = False
-                for inf_element in inf_elements:
-                    if isinstance(inf_element, PowerLoad):
-                        power_load = True
-                        if inf_element.is_flexible:
-                            flexible_load = True
-                if power_load:
-                    msg += " This might be caused by a bad potential initialization of a power load"
-                if flexible_load:
-                    msg += ", or by flexible loads with very high alpha or incorrect flexible parameters voltages."
-                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.NAN_VALUE)
-            elif zero_elements_index:
-                zero_elements = [self._elements[i] for i in zero_elements_index]
-                printable_elements = ", ".join(f"{type(e).__name__}({e.id!r})" for e in zero_elements)
-                msg += (
-                    f"The problem seems to come from the elements [{printable_elements}] that have at least one "
-                    f"disconnected phase. "
-                )
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_JACOBIAN) from e
-        else:
-            assert msg.startswith("2 ")
-            msg = msg[2:]
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.NO_BACKWARD_FORWARD) from e
 
     #
     # Properties to access the load flow results as dataframes
