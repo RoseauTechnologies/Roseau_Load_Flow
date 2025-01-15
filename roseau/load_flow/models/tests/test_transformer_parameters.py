@@ -146,8 +146,7 @@ def test_transformer_parameters():
     with pytest.raises(RoseauLoadFlowException) as e:
         TransformerParameters.from_dict(data)
     assert e.value.msg == (
-        "Transformer parameters 'test' has the low voltage higher than the high voltage: "
-        "uhv=350 V and ulv=400.0045 V."
+        "Transformer parameters 'test' has the low voltage higher than the high voltage: uhv=350 V and ulv=400.0045 V."
     )
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_VOLTAGES
 

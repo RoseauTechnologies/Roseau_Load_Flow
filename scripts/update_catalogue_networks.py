@@ -33,9 +33,9 @@ if __name__ == "__main__":
             for bus_id in sorted(en.buses):  # we need to sort to get MVLV bus before VoltageSource bus
                 assert isinstance(bus_id, str), repr(bus_id)
                 bus = en.buses[bus_id]
-                assert (
-                    bus.phases == "abcn" if bus_id == "VoltageSource" else PHASES[feeder_type]
-                ), f"{name=}, {bus_id=}, {bus.phases=}"
+                assert bus.phases == "abcn" if bus_id == "VoltageSource" else PHASES[feeder_type], (
+                    f"{name=}, {bus_id=}, {bus.phases=}"
+                )
                 bus_type = feeder_type
                 if (feeder_type == "LV" and bus_id.startswith("MVLV")) or (
                     feeder_type == "MV" and bus_id.startswith("HVMV")
