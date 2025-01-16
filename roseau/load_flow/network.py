@@ -21,7 +21,7 @@ from pyproj import CRS
 from typing_extensions import Self
 
 from roseau.load_flow._solvers import AbstractSolver
-from roseau.load_flow.constants import SQRT3
+from roseau.load_flow.constants import ALPHA, ALPHA2, CLOCK_PHASE_SHIFT, SQRT3
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.io import network_from_dgs, network_from_dict, network_to_dict
 from roseau.load_flow.models import (
@@ -1245,10 +1245,12 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                 all_phases |= set(bus.phases)
 
         starting_potentials, starting_source = self._get_potentials(all_phases)
-        elements = [(starting_source, starting_potentials, None)]
+        elements: list[tuple[Element, dict[str, complex], Element | None]] = [
+            (starting_source, starting_potentials, None)
+        ]
         self._elements = []
         self._has_loop = False
-        visited = {starting_source}
+        visited: set[Element] = {starting_source}
         while elements:
             element, potentials, parent = elements.pop(-1)
             self._elements.append(element)
@@ -1259,18 +1261,13 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                 for e in element._connected_elements:
                     if e not in visited:
                         if isinstance(element, Transformer):
-                            k = element.parameters._ulv / element.parameters._uhv
-                            phase_displacement = element.parameters.phase_displacement
-                            if phase_displacement is None:
-                                phase_displacement = 0
-                            new_potentials = potentials.copy()
-                            for key, p in new_potentials.items():
-                                new_potentials[key] = p * k * np.exp(phase_displacement * -1j * np.pi / 6.0)
-                            elements.append((e, new_potentials, element))
-                            visited.add(e)
+                            phase_shift = CLOCK_PHASE_SHIFT[element.parameters.phase_displacement]
+                            kd = element.parameters._ulv / element.parameters._uhv * phase_shift
+                            new_potentials = {key: p * kd * element.tap for key, p in potentials.items()}
                         else:
-                            elements.append((e, potentials, element))
-                            visited.add(e)
+                            new_potentials = potentials
+                        elements.append((e, new_potentials, element))
+                        visited.add(e)
                     elif parent != e and not isinstance(e, Ground):
                         self._has_loop = True
             else:
@@ -1313,7 +1310,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
     def _get_potentials(self, all_phases: set[str]) -> tuple[dict[str, complex], VoltageSource]:
         """Compute initial potentials from the voltages sources of the network, get also the starting source"""
         starting_source = None
-        potentials = {"n": 0.0}
+        potentials = {"n": 0j}
         # if there are multiple voltage sources, start from the higher one (the last one in the sorted below)
         for source in sorted(self.sources.values(), key=lambda x: np.average(np.abs(x._voltages))):
             source_voltages = source._voltages
@@ -1343,8 +1340,8 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             # We failed to determine all the potentials (the sources are strange), fallback to something simple
             v = np.average(np.abs(starting_source._voltages))
             potentials["a"] = v
-            potentials["b"] = v * np.exp(-2j * np.pi / 3)
-            potentials["c"] = v * np.exp(2j * np.pi / 3)
+            potentials["b"] = v * ALPHA2
+            potentials["c"] = v * ALPHA
             potentials["n"] = 0.0
 
         return potentials, starting_source
