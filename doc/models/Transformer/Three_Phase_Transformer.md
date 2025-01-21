@@ -16,8 +16,8 @@ myst:
 # Three-phase transformer
 
 Three-phase transformers are modeled with three separate single-phase non-ideal transformers. The
-windings of the individual transformers are connected with different configurations to the primary
-side (generally the high voltage side) and to the secondary side (generally the low voltage side).
+windings of the individual transformers are connected with different configurations to the high
+voltage (HV) side and to the low voltage (LV) side.
 The non-ideal transformer losses are represented by $\underline{Z_2}$ the series impedances and
 $\underline{Y_{\mathrm{m}}}$ the magnetizing admittances.
 
@@ -55,46 +55,34 @@ For example, the windings with a $Dyn11$ configuration are represented by the fo
 ```
 ````
 
-## Windings
+Notice how the brought out neutral is accessible on the LV side of the transformer. Transformers
+with the neutral not brought out are also supported by omitting the $n$ in the vector group (e.g.
+$Dy11$). In this case there will be no neutral connection on the LV side.
 
-There are several ways to connect the windings of the individual internal transformers in _Roseau Load
-Flow_. They are represented in the following windings diagrams:
+## Winding configurations
 
-### Wye secondary
+_Roseau Load Flow_ supports most of the 2-winding transformer configurations as defined in the IEC
+60076-1 standard.
 
-```{list-table}
-:class: borderless
-:widths: 400 400
+The following common connections are supported:
 
-* - ![image](/_static/Transformer/Windings_Dy11.svg)
-  - ![image](/_static/Transformer/Windings_Yy0.svg)
-* - ![image](/_static/Transformer/Windings_Dy5.svg)
-  - ![image](/_static/Transformer/Windings_Yy6.svg)
+```{image} /_static/Transformer/Common_Connections.svg
+:alt: Common transformer connections
+:width: 700px
+:align: center
 ```
 
-### Delta secondary
+The following additional connections are also supported:
 
-```{list-table}
-:class: borderless
-:widths: 400 400
-
-* - ![image](/_static/Transformer/Windings_Dd0.svg)
-  - ![image](/_static/Transformer/Windings_Yd11.svg)
-* - ![image](/_static/Transformer/Windings_Dd6.svg)
-  - ![image](/_static/Transformer/Windings_Yd5.svg)
+```{image} /_static/Transformer/Additional_Connections.svg
+:alt: Additional transformer connections
+:width: 700px
+:align: center
 ```
 
-### Zigzag secondary
-
-```{list-table}
-:class: borderless
-:widths: 400 400
-
-* - ![image](/_static/Transformer/Windings_Dz0.svg)
-  - ![image](/_static/Transformer/Windings_Yz11.svg)
-* - ![image](/_static/Transformer/Windings_Dz6.svg)
-  - ![image](/_static/Transformer/Windings_Yz5.svg)
-```
+Note that the neutral connection is omitted in the diagrams above for simplicity. All _Wye_ and
+_Zigzag_ connections, whether on the HV side or on the LV side, may have a neutral connection
+brought out.
 
 ## Equations
 
@@ -121,11 +109,17 @@ The following equations are used to model 3-phase transformers:
 ```
 
 Where $\underline{Z_2}$ is the series impedance and $\underline{Y_{\mathrm{m}}}$ is the magnetizing
-admittance of the transformer. $o_r$ is the orientation variable, equal to $1$ for direct windings and $-1$ for
-inverse windings. The other quantities are the matrices defined below.
+admittance of the transformer. $o_r$ is the orientation variable, equals to $1$ for direct windings,
+i.e. windings with the hour index in the top half of the clock, and $-1$ for inverse windings, i.e.
+windings with the hour index in the bottom half of the clock. The other quantities are the matrices
+defined below.
 
 ## Matrices
 
+Let $I_3$ be the identity matrix $\begin{pmatrix} 1 & 0 & 0 \\ 0 & 1 & 0 \\ 0 & 0 & 1 \end{pmatrix}$,
+$S_3$ be the shifting matrix $\begin{pmatrix} 0 & 1 & 0 \\ 0 & 0 & 1 \\ 1 & 0 & 0 \end{pmatrix}$, and
+$S_3^T$ be its transpose. Also, let $0_3$ be the null vector $\begin{pmatrix} 0 \\ 0 \\ 0 \end{pmatrix}$
+and $1_3$ be the vector $\begin{pmatrix} 1 \\ 1 \\ 1 \end{pmatrix}$.
 The following matrices are used to model the windings configurations described above:
 
 ### Transformation matrices
@@ -133,48 +127,28 @@ The following matrices are used to model the windings configurations described a
 ```{list-table}
 :class: borderless
 :header-rows: 1
-:stub-columns: 1
+:stub-columns: 2
 :align: center
 
 * - Winding
+  - Clock numbers
   - $M_{\mathrm{TV}}$
   - $M_{\mathrm{TI}}$
 
-* - Dd, Yy, Dy and Yd
-  - $k\begin{pmatrix}
-    1 & 0 & 0\\
-    0 & 1 & 0\\
-    0 & 0 & 1
-    \end{pmatrix}$
-  - $k\begin{pmatrix}
-    -1 & 0 & 0\\
-    0 & -1 & 0\\
-    0 & 0 & -1
-    \end{pmatrix}$
+* - _Dd_, _Yy_, _Dy_, _Yd_
+  - _all_
+  - $k I_3$
+  - $-k I_3$
 
-* - Yz
-  - $k\begin{pmatrix}
-    1 & 0 & 0\\
-    0 & 1 & 0\\
-    0 & 0 & 1
-    \end{pmatrix}$
-  - $k\begin{pmatrix}
-    -1 & 0 & 1\\
-    1 & -1 & 0\\
-    0 & 1 & -1
-    \end{pmatrix}$
+* - _Dz_, _Yz_
+  - 4,5,10,11
+  - $k I_3$
+  - $-k (I_3 - S_3^T)$
 
-* - Dz
-  - $k\begin{pmatrix}
-    1 & 0 & 0\\
-    0 & 1 & 0\\
-    0 & 0 & 1
-    \end{pmatrix}$
-  - $k\begin{pmatrix}
-    -1 & 1 & 0\\
-    0 & -1 & 1\\
-    1 & 0 & -1
-    \end{pmatrix}$
+* - _Dz_, _Yz_
+  - 0,6,1,2,7,8
+  - $k I_3$
+  - $-k (I_3 - S_3)$
 ```
 
 Where $k$ is the transformation ratio of the internal transformers defined as:
@@ -185,419 +159,113 @@ Where $k$ is the transformation ratio of the internal transformers defined as:
 :stub-columns: 1
 :align: center
 
-* - Winding
+* - Windings
   - $k$
-* - Dy
+* - Dy, Yz
   - $\dfrac{U_{\mathrm{LV}}}{\sqrt{3} \cdot  U_{\mathrm{HV}}}$
-* - Yy
-  - $\dfrac{U_{\mathrm{LV}}}{U_{\mathrm{HV}}}$
-* - Dd
+* - Dd, Yy
   - $\dfrac{U_{\mathrm{LV}}}{U_{\mathrm{HV}}}$
 * - Yd
   - $\dfrac{\sqrt{3} \cdot U_{\mathrm{LV}}}{U_{\mathrm{HV}}}$
 * - Dz
   - $\dfrac{U_{\mathrm{LV}}}{3 \cdot U_{\mathrm{HV}}}$
-* - Yz
-  - $\dfrac{U_{\mathrm{LV}}}{\sqrt{3} \cdot  U_{\mathrm{HV}}}$
 ```
 
-### Primary winding matrices
+### HV winding matrices
 
 ```{list-table}
 :class: borderless
 :header-rows: 1
-:stub-columns: 1
+:stub-columns: 2
 :align: center
 
-* - Winding
+* - HV Winding
+  - Clock numbers
   - $K_{\mathrm{VABC}}$
   - $K_{\mathrm{UXYZ}}$
   - $K_{\mathrm{IABC}}$
   - $K_{\mathrm{IXYZ}}$
   - $K_{\mathrm{N}}$
 
-* - Dx
-  - $\begin{pmatrix}
-        1 & -1 & 0\\
-        0 & 1 & -1\\
-        -1 & 0 & 1
-    \end{pmatrix}$
-  - $\begin{pmatrix}
-        1 & 0 & 0\\
-        0 & 1 & 0\\
-        0 & 0 & 1
-    \end{pmatrix}$
-  - $\begin{pmatrix}
-        1 & 0 & 0\\
-        0 & 1 & 0\\
-        0 & 0 & 1
-    \end{pmatrix}$
-  - $\begin{pmatrix}
-        1 & 0 & -1\\
-        -1 & 1 & 0\\
-        0 & -1 & 1
-    \end{pmatrix}$
-  - $\begin{pmatrix}
-        0\\
-        0\\
-        0
-    \end{pmatrix}$
+* - _D_
+  - 0,6,4,5,10,11
+  - $I_3 - S_3$
+  - $I_3$
+  - $I_3$
+  - $I_3 - S_3^T$
+  - $0_3$
 
-* - Yx
-  - $\begin{pmatrix}
-        1 & 0 & 0\\
-        0 & 1 & 0\\
-        0 & 0 & 1
-    \end{pmatrix}$
-  - $\begin{pmatrix}
-        1 & 0 & 0\\
-        0 & 1 & 0\\
-        0 & 0 & 1
-    \end{pmatrix}$
-  - $\begin{pmatrix}
-        1 & 0 & 0\\
-        0 & 1 & 0\\
-        0 & 0 & 1
-    \end{pmatrix}$
-  - $\begin{pmatrix}
-        1 & 0 & 0\\
-        0 & 1 & 0\\
-        0 & 0 & 1
-    \end{pmatrix}$
-  - $\begin{pmatrix}
-        1\\
-        1\\
-        1
-    \end{pmatrix}$
+* - _D_
+  - 1,2,7,8
+  - $I_3 - S_3^T$
+  - $I_3$
+  - $I_3$
+  - $I_3 - S_3$
+  - $0_3$
 
-* - Zx
-  - $\begin{pmatrix}
-        1 & 0 & 0\\
-        0 & 1 & 0\\
-        0 & 0 & 1
-    \end{pmatrix}$
-  - $\begin{pmatrix}
-        1 & 0 & -1\\
-        -1 & 1 & 0\\
-        0 & -1 & 1
-    \end{pmatrix}$
-  - $\begin{pmatrix}
-        1 & 0 & 0\\
-        0 & 1 & 0\\
-        0 & 0 & 1
-    \end{pmatrix}$
-  - $\begin{pmatrix}
-        1 & 0 & 0\\
-        0 & 1 & 0\\
-        0 & 0 & 1
-    \end{pmatrix}$
-  - $\begin{pmatrix}
-        1\\
-        1\\
-        1
-    \end{pmatrix}$
+* - _Y_
+  - _all_
+  - $I_3$
+  - $I_3$
+  - $I_3$
+  - $I_3$
+  - $1_3$
 ```
 
-### Secondary windings matrices
-
-#### Direct
+### LV winding matrices
 
 ```{list-table}
 :class: borderless
 :header-rows: 1
-:stub-columns: 1
+:stub-columns: 2
 :align: center
 
-* - Winding
+* - LV Winding
+  - Clock numbers
   - $K_{\mathrm{Vabc}}$
   - $K_{\mathrm{Uxyz}}$
   - $K_{\mathrm{Iabc}}$
   - $K_{\mathrm{Ixyz}}$
   - $K_{\mathrm{n}}$
-* - Dd0
-  - $\begin{pmatrix}
-        1 & -1 & 0\\
-        0 & 1 & -1\\
-        -1 & 0 & 1
-    \end{pmatrix}$
-  - $\begin{pmatrix}
-        1 & 0 & 0\\
-        0 & 1 & 0\\
-        0 & 0 & 1
-    \end{pmatrix}$
-  - $\begin{pmatrix}
-        1 & 0 & 0\\
-        0 & 1 & 0\\
-        0 & 0 & 1
-    \end{pmatrix}$
-  - $\begin{pmatrix}
-        1 & 0 & -1\\
-        -1 & 1 & 0\\
-        0 & -1 & 1
-    \end{pmatrix}$
-  - $\begin{pmatrix}
-        0\\
-        0\\
-        0
-    \end{pmatrix}$
+* - _d_
+  - 0,6,1,2,7,8
+  - $I_3 - S_3$
+  - $I_3$
+  - $I_3$
+  - $I_3 - S_3^T$
+  - $0_3$
 
-* - Yd11
-  - $\begin{pmatrix}
-        1 & 0 & -1\\
-        -1 & 1 & 0\\
-        0 & -1 & 1
-    \end{pmatrix}$
-  - $\begin{pmatrix}
-        1 & 0 & 0\\
-        0 & 1 & 0\\
-        0 & 0 & 1
-    \end{pmatrix}$
-  - $\begin{pmatrix}
-        1 & 0 & 0\\
-        0 & 1 & 0\\
-        0 & 0 & 1
-    \end{pmatrix}$
-  - $\begin{pmatrix}
-        1 & -1 & 0\\
-        0 & 1 & -1\\
-        -1 & 0 & 1
-    \end{pmatrix}$
-  - $\begin{pmatrix}
-        0\\
-        0\\
-        0
-    \end{pmatrix}$
+* - _d_
+  - 4,5,10,11
+  - $I_3 - S_3^T$
+  - $I_3$
+  - $I_3$
+  - $I_3 - S_3$
+  - $0_3$
 
-* - Yy0 and Dy11
-  - $\begin{pmatrix}
-        1 & 0 & 0\\
-        0 & 1 & 0\\
-        0 & 0 & 1
-    \end{pmatrix}$
-  - $\begin{pmatrix}
-        1 & 0 & 0\\
-        0 & 1 & 0\\
-        0 & 0 & 1
-    \end{pmatrix}$
-  - $\begin{pmatrix}
-        1 & 0 & 0\\
-        0 & 1 & 0\\
-        0 & 0 & 1
-    \end{pmatrix}$
-  - $\begin{pmatrix}
-        1 & 0 & 0\\
-        0 & 1 & 0\\
-        0 & 0 & 1
-    \end{pmatrix}$
-  - $\begin{pmatrix}
-        1\\
-        1\\
-        1
-    \end{pmatrix}$
+* - _y_
+  - _all_
+  - $I_3$
+  - $I_3$
+  - $I_3$
+  - $I_3$
+  - $1_3$
 
-* - Dz0
-  - $\begin{pmatrix}
-        1 & 0 & 0\\
-        0 & 1 & 0\\
-        0 & 0 & 1
-    \end{pmatrix}$
-  - $\begin{pmatrix}
-        1 & 0 & -1\\
-        -1 & 1 & 0\\
-        0 & -1 & 1
-    \end{pmatrix}$
-  - $\begin{pmatrix}
-        1 & 0 & 0\\
-        0 & 1 & 0\\
-        0 & 0 & 1
-    \end{pmatrix}$
-  - $\begin{pmatrix}
-        1 & 0 & 0\\
-        0 & 1 & 0\\
-        0 & 0 & 1
-    \end{pmatrix}$
-  - $\begin{pmatrix}
-        1\\
-        1\\
-        1
-    \end{pmatrix}$
+* - _z_
+  - 0,6,1,2,7,8
+  - $I_3$
+  - $I_3 - S_3^T$
+  - $I_3$
+  - $I_3$
+  - $1_3$
 
-* - Yz11
-  - $\begin{pmatrix}
-        1 & 0 & 0\\
-        0 & 1 & 0\\
-        0 & 0 & 1
-    \end{pmatrix}$
-  - $\begin{pmatrix}
-        1 & -1 & 0\\
-        0 & 1 & -1\\
-        -1 & 0 & 1
-    \end{pmatrix}$
-  - $\begin{pmatrix}
-        1 & 0 & 0\\
-        0 & 1 & 0\\
-        0 & 0 & 1
-    \end{pmatrix}$
-  - $\begin{pmatrix}
-        1 & 0 & 0\\
-        0 & 1 & 0\\
-        0 & 0 & 1
-    \end{pmatrix}$
-  - $\begin{pmatrix}
-        1\\
-        1\\
-        1
-    \end{pmatrix}$
-```
-
-#### Inverse
-
-```{list-table}
-:class: borderless
-:header-rows: 1
-:stub-columns: 1
-:align: center
-
-* - Winding
-  - $K_{\mathrm{Vabc}}$
-  - $K_{\mathrm{Uxyz}}$
-  - $K_{\mathrm{Iabc}}$
-  - $K_{\mathrm{Ixyz}}$
-  - $K_{\mathrm{n}}$
-* - Dd6
-  - $\begin{pmatrix}
-        1 & -1 & 0\\
-        0 & 1 & -1\\
-        -1 & 0 & 1
-      \end{pmatrix}$
-  - $\begin{pmatrix}
-        -1 & 0 & 0\\
-        0 & -1 & 0\\
-        0 & 0 & -1
-     \end{pmatrix}$
-  - $\begin{pmatrix}
-        1 & 0 & 0\\
-        0 & 1 & 0\\
-        0 & 0 & 1
-     \end{pmatrix}$
-  - $\begin{pmatrix}
-        -1 & 0 & 1\\
-        1 & -1 & 0\\
-        0 & 1 & -1
-     \end{pmatrix}$
-  - $\begin{pmatrix}
-        0\\
-        0\\
-        0
-    \end{pmatrix}$
-
-* - Yd5
-  - $\begin{pmatrix}
-        1 & 0 & -1\\
-        -1 & 1 & 0\\
-        0 & -1 & 1
-      \end{pmatrix}$
-  - $\begin{pmatrix}
-       -1 & 0 & 0\\
-       0 & -1 & 0\\
-       0 & 0 & -1
-     \end{pmatrix}$
-  - $\begin{pmatrix}
-       1 & 0 & 0\\
-       0 & 1 & 0\\
-       0 & 0 & 1
-     \end{pmatrix}$
-  - $\begin{pmatrix}
-       -1 & 1 & 0\\
-       0 & -1 & 1\\
-       1 & 0 & -1
-     \end{pmatrix}$
-  - $\begin{pmatrix}
-       0\\
-       0\\
-       0
-    \end{pmatrix}$
-
-* - Yy6 and Dy5
-  - $\begin{pmatrix}
-        1 & 0 & 0\\
-        0 & 1 & 0\\
-        0 & 0 & 1
-      \end{pmatrix}$
-  - $\begin{pmatrix}
-       -1 & 0 & 0\\
-       0 & -1 & 0\\
-       0 & 0 & -1
-     \end{pmatrix}$
-  - $\begin{pmatrix}
-       1 & 0 & 0\\
-       0 & 1 & 0\\
-       0 & 0 & 1
-     \end{pmatrix}$
-  - $\begin{pmatrix}
-       -1 & 0 & 0\\
-       0 & -1 & 0\\
-       0 & 0 & -1
-     \end{pmatrix}$
-  - $\begin{pmatrix}
-       1\\
-       1\\
-       1
-     \end{pmatrix}$
-
-* - Dz6
-  - $\begin{pmatrix}
-        1 & 0 & 0\\
-        0 & 1 & 0\\
-        0 & 0 & 1
-      \end{pmatrix}$
-  - $\begin{pmatrix}
-       -1 & 0 & 1\\
-       1 & -1 & 0\\
-       0 & 1 & -1
-     \end{pmatrix}$
-  - $\begin{pmatrix}
-       1 & 0 & 0\\
-       0 & 1 & 0\\
-       0 & 0 & 1
-     \end{pmatrix}$
-  - $\begin{pmatrix}
-       -1 & 0 & 0\\
-       0 & -1 & 0\\
-       0 & 0 & -1
-     \end{pmatrix}$
-  - $\begin{pmatrix}
-       1\\
-       1\\
-       1
-     \end{pmatrix}$
-
-* - Yz5
-  - $\begin{pmatrix}
-        1 & 0 & 0\\
-        0 & 1 & 0\\
-        0 & 0 & 1
-      \end{pmatrix}$
-  - $\begin{pmatrix}
-       -1 & 1 & 0\\
-       0 & -1 & 1\\
-       1 & 0 & -1
-     \end{pmatrix}$
-  - $\begin{pmatrix}
-       1 & 0 & 0\\
-       0 & 1 & 0\\
-       0 & 0 & 1
-     \end{pmatrix}$
-  - $\begin{pmatrix}
-       -1 & 0 & 0\\
-       0 & -1 & 0\\
-       0 & 0 & -1
-     \end{pmatrix}$
-  - $\begin{pmatrix}
-       1\\
-       1\\
-       1
-     \end{pmatrix}$
+* - _z_
+  - 4,5,10,11
+  - $I_3$
+  - $I_3 - S_3$
+  - $I_3$
+  - $I_3$
+  - $1_3$
 ```
 
 ## Example

@@ -1,0 +1,267 @@
+%
+% Definitions of windings
+%
+\pgfmathsetmacro{\yt}{0.25}%
+\pgfmathsetmacro{\yzero}{0}%
+\pgfmathsetmacro{\yone}{-0.5}%
+\pgfmathsetmacro{\ytwo}{-1}%
+\pgfmathsetmacro{\ythree}{-1.25}%
+\pgfmathsetmacro{\yfour}{-2}%
+\pgfmathsetmacro{\yfive}{-2.5}%
+\pgfmathsetmacro{\ysix}{-2.75}%
+\pgfmathsetmacro{\yseven}{-3}%
+\pgfmathsetmacro{\yeight}{-3.25}%
+
+\pgfmathsetmacro{\xAl}{0.0}%
+\pgfmathsetmacro{\xA}{0.5}%
+\pgfmathsetmacro{\xAr}{1.0}%
+\pgfmathsetmacro{\xBl}{1.5}%
+\pgfmathsetmacro{\xB}{2.0}%
+\pgfmathsetmacro{\xBr}{2.5}%
+\pgfmathsetmacro{\xCl}{3.0}%
+\pgfmathsetmacro{\xC}{3.5}%
+\pgfmathsetmacro{\xCr}{4.0}%
+
+\ctikzset{european, straight voltages, bipoles/length=1.2cm, cute inductors}%
+
+\tikzset{
+  D direct/.pic={
+    \draw[red,text=black]
+    (\xA,\yt) node[circ,black]{} node[above]{A} to[L, -, name=X] (\xA,\yfour)%
+    (\xB,\yt) node[circ,black]{} node[above]{B} to[L, -, name=Y] (\xB,\yfour)%
+    (\xC,\yt) node[circ,black]{} node[above]{C} to[L, -, name=Z] (\xC,\yfour)%
+    (\xA,\yfour) to[short, -] (\xAr,\yfour) to[short, -] (\xBl,\yzero) to[short, -] (\xB,\yzero)%
+    (\xB,\yfour) to[short, -] (\xBr,\yfour) to[short, -] (\xCl,\yzero) to[short, -] (\xC,\yzero)%
+    (\xC,\yfour) to[short, -] (\xC,\yfive) to[short, -] (\xAl,\yfive) to[short, -] (\xAl,\yzero) to[short, -] (\xA,\yzero);%
+    \path[fill=red,draw=red]
+    (X.ul dot) node[circ]{}%
+    (Y.ul dot) node[circ]{}%
+    (Z.ul dot) node[circ]{};%
+  },
+  D inverse/.pic={
+    \draw[red,text=black]
+    (\xA,\yt) node[circ,black]{} node[above]{A} to[L, -, name=X] (\xA,\yfour)%
+    (\xB,\yt) node[circ,black]{} node[above]{B} to[L, -, name=Y] (\xB,\yfour)%
+    (\xC,\yt) node[circ,black]{} node[above]{C} to[L, -, name=Z] (\xC,\yfour)%
+    (\xA,\yzero) to[short, -] (\xAr,\yzero) to[short, -] (\xBl,\yfour) to[short, -] (\xB,\yfour)%
+    (\xB,\yzero) to[short, -] (\xBr,\yzero) to[short, -] (\xCl,\yfour) to[short, -] (\xC,\yfour)%
+    (\xC,\yzero) to[short, -] (\xCr,\yzero) to[short, -] (\xCr,\yfive) to[short, -] (\xA,\yfive) to[short, -] (\xA,\yfour);%
+    \path[fill=red,draw=red]
+    (X.ul dot) node[circ]{}%
+    (Y.ul dot) node[circ]{}%
+    (Z.ul dot) node[circ]{};%
+  },
+  d direct/.pic={
+    \draw[red,text=black]
+    (\xA,\yt) node[circ,black]{} node[above]{a} to[L, -, name=x] (\xA,\yfour)%
+    (\xB,\yt) node[circ,black]{} node[above]{b} to[L, -, name=y] (\xB,\yfour)%
+    (\xC,\yt) node[circ,black]{} node[above]{c} to[L, -, name=z] (\xC,\yfour)%
+    (\xA,\yfour) to[short, -] (\xAr,\yfour) to[short, -] (\xBl,\yzero) to[short, -] (\xB,\yzero)%
+    (\xB,\yfour) to[short, -] (\xBr,\yfour) to[short, -] (\xCl,\yzero) to[short, -] (\xC,\yzero)%
+    (\xC,\yfour) to[short, -] (\xC,\yfive) to[short, -] (\xAl,\yfive) to[short, -] (\xAl,\yzero) to[short, -] (\xA,\yzero);%
+    \path[fill=red,draw=red]
+    (x.ul dot) node[circ]{}%
+    (y.ul dot) node[circ]{}%
+    (z.ul dot) node[circ]{};%
+  },
+  d inverse/.pic={
+    \draw[red,text=black]
+    (\xA,\yt) node[circ,black]{} node[above]{a} to[L, -, name=x] (\xA,\yfour)%
+    (\xB,\yt) node[circ,black]{} node[above]{b} to[L, -, name=y] (\xB,\yfour)%
+    (\xC,\yt) node[circ,black]{} node[above]{c} to[L, -, name=z] (\xC,\yfour)%
+    (\xA,\yzero) to[short, -] (\xAr,\yzero) to[short, -] (\xBl,\yfour) to[short, -] (\xB,\yfour)%
+    (\xB,\yzero) to[short, -] (\xBr,\yzero) to[short, -] (\xCl,\yfour) to[short, -] (\xC,\yfour)%
+    (\xC,\yzero) to[short, -] (\xCr,\yzero) to[short, -] (\xCr,\yfive) to[short, -] (\xA,\yfive) to[short, -] (\xA,\yfour);%
+    \path[fill=red,draw=red]
+    (x.ul dot) node[circ]{}%
+    (y.ul dot) node[circ]{}%
+    (z.ul dot) node[circ]{};%
+  },
+  d direct reverse/.pic={
+    \draw[red,text=black]
+    (\xA,\yt) node[circ,black]{} node[above]{a} to[L, -, name=x] (\xA,\yfour)%
+    (\xB,\yt) node[circ,black]{} node[above]{b} to[L, -, name=y] (\xB,\yfour)%
+    (\xC,\yt) node[circ,black]{} node[above]{c} to[L, -, name=z] (\xC,\yfour)%
+    (\xA,\yfour) to[short, -] (\xAr,\yfour) to[short, -] (\xBl,\yzero) to[short, -] (\xB,\yzero)%
+    (\xB,\yfour) to[short, -] (\xBr,\yfour) to[short, -] (\xCl,\yzero) to[short, -] (\xC,\yzero)%
+    (\xC,\yfour) to[short, -] (\xC,\yfive) to[short, -] (\xAl,\yfive) to[short, -] (\xAl,\yzero) to[short, -] (\xA,\yzero);%
+    \path[fill=red,draw=red]
+    (x.ur dot) node[circ]{}%
+    (y.ur dot) node[circ]{}%
+    (z.ur dot) node[circ]{};%
+  },
+  d inverse reverse/.pic={
+    \draw[red,text=black]
+    (\xA,\yt) node[circ,black]{} node[above]{a} to[L, -, name=x] (\xA,\yfour)%
+    (\xB,\yt) node[circ,black]{} node[above]{b} to[L, -, name=y] (\xB,\yfour)%
+    (\xC,\yt) node[circ,black]{} node[above]{c} to[L, -, name=z] (\xC,\yfour)%
+    (\xA,\yzero) to[short, -] (\xAr,\yzero) to[short, -] (\xBl,\yfour) to[short, -] (\xB,\yfour)%
+    (\xB,\yzero) to[short, -] (\xBr,\yzero) to[short, -] (\xCl,\yfour) to[short, -] (\xC,\yfour)%
+    (\xC,\yzero) to[short, -] (\xCr,\yzero) to[short, -] (\xCr,\yfive) to[short, -] (\xA,\yfive) to[short, -] (\xA,\yfour);%
+    \path[fill=red,draw=red]
+    (x.ur dot) node[circ]{}%
+    (y.ur dot) node[circ]{}%
+    (z.ur dot) node[circ]{};%
+  },
+  Y/.pic={
+    \draw[RoseauBlue, text=black]
+    (\xA,\yt) node[circ,black]{} node[above]{A} to[L, -, name=X] (\xA,\yfour) to[short, -] (\xA,\yfive) %
+    (\xB,\yt) node[circ,black]{} node[above]{B} to[L, -, name=Y] (\xB,\yfour) to[short, -] (\xB,\yfive) %
+    (\xC,\yt) node[circ,black]{} node[above]{C} to[L, -, name=Z] (\xC,\yfour) to[short, -] (\xC,\yfive) %
+    (\xA,\yfive) to[short, -] (\xC,\yfive);%
+    \path[fill=RoseauBlue,draw=RoseauBlue]
+    (X.ul dot) node[circ]{}%
+    (Y.ul dot) node[circ]{}%
+    (Z.ul dot) node[circ]{};%
+  },
+  y/.pic={
+    \draw[RoseauBlue, text=black]
+    (\xA,\yt) node[circ,black]{} node[above]{a} to[L, -, name=x] (\xA,\yfour) to[short, -] (\xA,\yfive) %
+    (\xB,\yt) node[circ,black]{} node[above]{b} to[L, -, name=y] (\xB,\yfour) to[short, -] (\xB,\yfive) %
+    (\xC,\yt) node[circ,black]{} node[above]{c} to[L, -, name=z] (\xC,\yfour) to[short, -] (\xC,\yfive) %
+    (\xA,\yfive) to[short, -] (\xC,\yfive);%
+    \path[fill=RoseauBlue,draw=RoseauBlue]
+    (x.ul dot) node[circ]{}%
+    (y.ul dot) node[circ]{}%
+    (z.ul dot) node[circ]{};%
+  },
+  y reverse/.pic={
+    \draw[RoseauBlue, text=black]
+    (\xA,\yt) node[circ,black]{} node[above]{a} to[L, -, name=x] (\xA,\yfour) to[short, -] (\xA,\yfive) %
+    (\xB,\yt) node[circ,black]{} node[above]{b} to[L, -, name=y] (\xB,\yfour) to[short, -] (\xB,\yfive) %
+    (\xC,\yt) node[circ,black]{} node[above]{c} to[L, -, name=z] (\xC,\yfour) to[short, -] (\xC,\yfive) %
+    (\xA,\yfive) to[short, -] (\xC,\yfive);%
+    \path[fill=RoseauBlue,draw=RoseauBlue]
+    (x.ur dot) node[circ]{}%
+    (y.ur dot) node[circ]{}%
+    (z.ur dot) node[circ]{};%
+  },
+  z direct/.pic={
+    \draw[RoseauGreen, text=black] (\xA,\yt) node[circ,black]{} node[above]{a}%
+    to[short, -] (\xA, \yzero)%
+    to[L, name=x1] (\xA,\ytwo)%
+    to[short, -] (\xAl, \ytwo)%
+    to[short, -] (\xAl, \ysix)%
+    to[short, -] (\xC,\ysix)%
+    to[short, -] (\xC,\yfive)%
+    to[L, mirror, name=z2] (\xC,\ythree);%
+    \draw[RoseauGreen, text=black] (\xB,\yt) node[circ,black]{} node[above]{b}%
+    to[short, -] (\xB, \yzero)%
+    to[L, name=y1] (\xB,\ytwo)%
+    to[short, -] (\xBl,\ytwo)%
+    to[short, -] (\xAr,\yfive)%
+    to[short, -] (\xA,\yfive)%
+    to[L, mirror, name=x2] (\xA,\ythree);%
+    \draw[RoseauGreen, text=black] (\xC,\yt) node[circ,black]{} node[above]{c}%
+    to[short, -] (\xC, \yzero)%
+    to[L, name=z1] (\xC,\ytwo)%
+    to[short, -] (\xCl,\ytwo)%
+    to[short, -] (\xBr,\yfive)%
+    to[short, -] (\xB,\yfive)%
+    to[L, mirror, name=y2] (\xB,\ythree);%
+    \draw[RoseauGreen, text=black] (\xA,\ythree) to[short, -] (\xC,\ythree);
+    \path[fill=RoseauGreen,draw=RoseauGreen]
+    (x1.ul dot) node[circ]{}%
+    (x2.ur dot) node[circ]{}%
+    (y1.ul dot) node[circ]{}%
+    (y2.ur dot) node[circ]{}%
+    (z1.ul dot) node[circ]{}%
+    (z2.ur dot) node[circ]{};%
+  },
+  z inverse/.pic={
+    \draw[RoseauGreen, text=black] (\xAl,\yt) node[circ,black]{} node[above]{a}%
+    to[short, -] (\xAl, \yzero)%
+    to[L, name=x1] (\xAl,\ytwo)%
+    to[short, -] (\xA, \ytwo)%
+    to[short, -] (\xAr, \yfive)%
+    to[short, -] (\xBl,\yfive)%
+    to[L, mirror, name=y2] (\xBl,\ythree);%
+    \draw[RoseauGreen, text=black] (\xBl,\yt) node[circ,black]{} node[above]{b}%
+    to[short, -] (\xBl, \yzero)%
+    to[L, name=y1] (\xBl,\ytwo)%
+    to[short, -] (\xB,\ytwo)%
+    to[short, -] (\xBr,\yfive)%
+    to[short, -] (\xCl,\yfive)%
+    to[L, mirror, name=z2] (\xCl,\ythree);%
+    \draw[RoseauGreen, text=black] (\xCl,\yt) node[circ,black]{} node[above]{c}%
+    to[short, -] (\xCl, \yzero)%
+    to[L, name=z1] (\xCl,\ytwo)%
+    to[short, -] (\xC,\ytwo)%
+    to[short, -] (\xC,\ysix)%
+    to[short, -] (\xAl,\ysix)%
+    to[short, -] (\xAl,\yfive)%
+    to[L, mirror, name=x2] (\xAl,\ythree);%
+    \draw[RoseauGreen, text=black] (\xAl,\ythree) to[short, -] (\xCl,\ythree);
+    \path[fill=RoseauGreen,draw=RoseauGreen]
+    (x1.ul dot) node[circ]{}%
+    (x2.ur dot) node[circ]{}%
+    (y1.ul dot) node[circ]{}%
+    (y2.ur dot) node[circ]{}%
+    (z1.ul dot) node[circ]{}%
+    (z2.ur dot) node[circ]{};%
+  },
+  z direct reverse/.pic={
+    \draw[RoseauGreen, text=black] (\xA,\yt) node[circ,black]{} node[above]{a}%
+    to[short, -] (\xA, \yzero)%
+    to[L, name=x1] (\xA,\ytwo)%
+    to[short, -] (\xAl, \ytwo)%
+    to[short, -] (\xAl, \ysix)%
+    to[short, -] (\xC,\ysix)%
+    to[short, -] (\xC,\yfive)%
+    to[L, mirror, name=z2] (\xC,\ythree);%
+    \draw[RoseauGreen, text=black] (\xB,\yt) node[circ,black]{} node[above]{b}%
+    to[short, -] (\xB, \yzero)%
+    to[L, name=y1] (\xB,\ytwo)%
+    to[short, -] (\xBl,\ytwo)%
+    to[short, -] (\xAr,\yfive)%
+    to[short, -] (\xA,\yfive)%
+    to[L, mirror, name=x2] (\xA,\ythree);%
+    \draw[RoseauGreen, text=black] (\xC,\yt) node[circ,black]{} node[above]{c}%
+    to[short, -] (\xC, \yzero)%
+    to[L, name=z1] (\xC,\ytwo)%
+    to[short, -] (\xCl,\ytwo)%
+    to[short, -] (\xBr,\yfive)%
+    to[short, -] (\xB,\yfive)%
+    to[L, mirror, name=y2] (\xB,\ythree);%
+    \draw[RoseauGreen, text=black] (\xA,\ythree) to[short, -] (\xC,\ythree);
+    \path[fill=RoseauGreen,draw=RoseauGreen]
+    (x1.ur dot) node[circ]{}%
+    (x2.ul dot) node[circ]{}%
+    (y1.ur dot) node[circ]{}%
+    (y2.ul dot) node[circ]{}%
+    (z1.ur dot) node[circ]{}%
+    (z2.ul dot) node[circ]{};%
+  },
+  z inverse reverse/.pic={
+    \draw[RoseauGreen, text=black] (\xAl,\yt) node[circ,black]{} node[above]{a}%
+    to[short, -] (\xAl, \yzero)%
+    to[L, name=x1] (\xAl,\ytwo)%
+    to[short, -] (\xA, \ytwo)%
+    to[short, -] (\xAr, \yfive)%
+    to[short, -] (\xBl,\yfive)%
+    to[L, mirror, name=y2] (\xBl,\ythree);%
+    \draw[RoseauGreen, text=black] (\xBl,\yt) node[circ,black]{} node[above]{b}%
+    to[short, -] (\xBl, \yzero)%
+    to[L, name=y1] (\xBl,\ytwo)%
+    to[short, -] (\xB,\ytwo)%
+    to[short, -] (\xBr,\yfive)%
+    to[short, -] (\xCl,\yfive)%
+    to[L, mirror, name=z2] (\xCl,\ythree);%
+    \draw[RoseauGreen, text=black] (\xCl,\yt) node[circ,black]{} node[above]{c}%
+    to[short, -] (\xCl, \yzero)%
+    to[L, name=z1] (\xCl,\ytwo)%
+    to[short, -] (\xC,\ytwo)%
+    to[short, -] (\xC,\ysix)%
+    to[short, -] (\xAl,\ysix)%
+    to[short, -] (\xAl,\yfive)%
+    to[L, mirror, name=x2] (\xAl,\ythree);%
+    \draw[RoseauGreen, text=black] (\xAl,\ythree) to[short, -] (\xCl,\ythree);
+    \path[fill=RoseauGreen,draw=RoseauGreen]
+    (x1.ur dot) node[circ]{}%
+    (x2.ul dot) node[circ]{}%
+    (y1.ur dot) node[circ]{}%
+    (y2.ul dot) node[circ]{}%
+    (z1.ur dot) node[circ]{}%
+    (z2.ul dot) node[circ]{};%
+  }
+}
