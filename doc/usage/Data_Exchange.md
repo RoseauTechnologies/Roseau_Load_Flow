@@ -112,6 +112,8 @@ In addition to the DGS import support, `roseau-load-flow` supports creating line
 parameters from PowerFactory data. This is useful when you don't want to import a whole network but
 would like to use some of the lines and transformers models you have in a power factory project.
 
+(PowerFactory-Lines)=
+
 #### Lines
 
 To create line parameters from a PowerFactory Line Type (`TypLne`) object, use the
@@ -151,6 +153,8 @@ The data on these two screenshots translate to:
 ...     conductor="Al",  # Conductor Material, "Load Flow"
 ... )
 ```
+
+(PowerFactory-Transformers)=
 
 #### Transformers
 
@@ -198,6 +202,8 @@ The data on these two screenshots translate to:
 
 `roseau-load-flow` supports creating lines and transformers from OpenDSS data.
 
+(OpenDSS-Lines)=
+
 ### Lines
 
 To create line parameters from an OpenDSS `LineCode` object, use the
@@ -218,6 +224,8 @@ translates to:
 ... )
 ```
 
+(OpenDSS-Transformers)=
+
 ### Transformers
 
 To create a transformer from an OpenDSS 2-winding `Transformer` object, use the
@@ -232,7 +240,7 @@ translates to:
 ...     conns=("delta", "wye"),
 ...     kvs=(11, 0.4),
 ...     kvas=(250, 250),  # alternatively pass a scalar `kvas=250`
-...     leadlag="euro",  # THE ONLY OPENDSS MODEL WE CURRENTLY SUPPORT
+...     leadlag="euro",  # (Dyn11) or "ansi" (Dyn1)
 ...     xhl=2.5,
 ...     loadloss=0,
 ...     noloadloss=0,  # default value used in OpenDSS

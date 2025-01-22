@@ -9,120 +9,126 @@
   \input{Transformer/Connection_Defs.tex}%
 
   % Phase displacement = 2
-  \begin{scope}[local bounding box=Yy2, shift={(0,0)}]
-    \ctikzset{poles/full fill opacity=0};%
-    \pic[transparent] at (0,0) {Y};%
-    \pic[transparent] at (0,-3.5) {y};%
+  \begin{scope}[local bounding box=C2, shift={(0,0)}]
+    \pic at (0,0) {clock};%
+    \pic at (0,-3.5) {clock};%
   \end{scope}
-  ;%
+  \node[left=-2.0 of C2, node font=\Large] (C2 legend) {2};%
+  \begin{scope}[local bounding box=Yy2, shift={(6,0)}]
+    \pic at (0,0) {empty};%
+    \pic at (0,-3.5) {empty};%
+  \end{scope}
   \node[left=0.1 of Yy2] (Yy2 legend) {\phantom{Yy2}};%
-  \begin{scope}[local bounding box=Dd2, shift={(8,0)}]
+  \begin{scope}[local bounding box=Dd2, shift={(14,0)}]
     \pic at (0,0) {D inverse};%
     \pic at (0,-3.5) {d direct};%
   \end{scope}
   \node[left=0.1 of Dd2] (Dd2 legend) {\textcolor{red}{Dd}2};%
-  \begin{scope}[local bounding box=Dz2, shift={(16,0)}]
+  \begin{scope}[local bounding box=Dz2, shift={(22,0)}]
     \pic at (0,0) {D inverse};%
     \pic at (0,-3.5) {z direct};%
   \end{scope}
   \node[left=0.1 of Dz2] (Dz2 legend) {\textcolor{red}{D}\textcolor{RoseauGreen}{z}2};%
 
   % Phase displacement = 4
-  \begin{scope}[local bounding box=Yy4, shift={(0,-8)}]
-    \ctikzset{poles/full fill opacity=0};%
-    \pic[transparent] at (0,0) {Y};%
-    \pic[transparent] at (0,-3.5) {y};%
+  \begin{scope}[local bounding box=C4, shift={(0,-8)}]
+    \pic at (0,0) {clock};%
+    \pic at (0,-3.5) {clock};%
   \end{scope}
-  ;%
+  \node[left=-2.0 of C4, node font=\Large] (C4 legend) {4};%
+  \begin{scope}[local bounding box=Yy4, shift={(6,-8)}]
+    \pic at (0,0) {empty};%
+    \pic at (0,-3.5) {empty};%
+  \end{scope}
   \node[left=0.1 of Yy4] (Yy4 legend) {\phantom{Yy4}};%
-  \begin{scope}[local bounding box=Dd4, shift={(8,-8)}]
+  \begin{scope}[local bounding box=Dd4, shift={(14,-8)}]
     \pic at (0,0) {D direct};%
     \pic at (0,-3.5) {d inverse};%
   \end{scope}
   \node[left=0.1 of Dd4] (Dd4 legend) {\textcolor{red}{Dd}4};%
-  \begin{scope}[local bounding box=Dz4, shift={(16,-8)}]
+  \begin{scope}[local bounding box=Dz4, shift={(22,-8)}]
     \pic at (0,0) {D direct};%
     \pic at (0,-3.5) {z inverse};%
   \end{scope}
   \node[left=0.1 of Dz4] (Dz4 legend) {\textcolor{red}{D}\textcolor{RoseauGreen}{z}4};%
 
   % Phase displacement = 7
-  \begin{scope}[local bounding box=Yd7, shift={(0,-16)}]
+  \begin{scope}[local bounding box=C7, shift={(0,-16)}]
+    \pic at (0,0) {clock};%
+    \pic at (0,-3.5) {clock};%
+  \end{scope}
+  \node[left=-2.0 of C7, node font=\Large] (C7 legend) {7};%
+  \begin{scope}[local bounding box=Yd7, shift={(6,-16)}]
     \pic at (0,0) {Y};%
     \pic at (0,-3.5) {d direct reverse};%
   \end{scope}
   \node[left=0.1 of Yd7] (Yd7 legend) {\textcolor{RoseauBlue}{Y}\textcolor{red}{d}7};%
-  \begin{scope}[local bounding box=Dy7, shift={(8,-16)}]
+  \begin{scope}[local bounding box=Dy7, shift={(14,-16)}]
     \pic at (0,0) {D inverse};%
     \pic at (0,-3.5) {y reverse};%
   \end{scope}
   \node[left=0.1 of Dy7] (Dy7 legend) {\textcolor{red}{D}\textcolor{RoseauBlue}{y}7};%
-  \begin{scope}[local bounding box=Yz7, shift={(16,-16)}]
+  \begin{scope}[local bounding box=Yz7, shift={(22,-16)}]
     \pic at (0,0) {Y};%
     \pic at (0,-3.5) {z direct reverse};%
   \end{scope}
   \node[left=0.1 of Yz7] (Yz7 legend) {\textcolor{RoseauBlue}{Y}\textcolor{RoseauGreen}{z}7};%
 
   % Phase displacement = 8
-  \begin{scope}[local bounding box=Yy8, shift={(0,-24)}]
-    \ctikzset{poles/full fill opacity=0};%
-    \pic[transparent] at (0,0) {Y};%
-    \pic[transparent] at (0,-3.5) {y};%
+  \begin{scope}[local bounding box=C8, shift={(0,-24)}]
+    \pic at (0,0) {clock};%
+    \pic at (0,-3.5) {clock};%
   \end{scope}
-  ;%
+  \node[left=-2.0 of C8, node font=\Large] (C8 legend) {8};%
+  \begin{scope}[local bounding box=Yy8, shift={(6,-24)}]
+    \pic at (0,0) {empty};%
+    \pic at (0,-3.5) {empty};%
+  \end{scope}
   \node[left=0.1 of Yy8] (Yy8 legend) {\phantom{Yy8}};%
-  \begin{scope}[local bounding box=Dd8, shift={(8,-24)}]
+  \begin{scope}[local bounding box=Dd8, shift={(14,-24)}]
     \pic at (0,0) {D inverse};%
     \pic at (0,-3.5) {d direct reverse};%
   \end{scope}
   \node[left=0.1 of Dd8] (Dd8 legend) {\textcolor{red}{Dd}8};%
-  \begin{scope}[local bounding box=Dz8, shift={(16,-24)}]
+  \begin{scope}[local bounding box=Dz8, shift={(22,-24)}]
     \pic at (0,0) {D inverse};%
     \pic at (0,-3.5) {z direct reverse};%
   \end{scope}
   \node[left=0.1 of Dz8] (Dz8 legend) {\textcolor{red}{D}\textcolor{RoseauGreen}{z}8};%
 
   % Phase displacement = 10
-  \begin{scope}[local bounding box=Yy10, shift={(0,-32)}]
-    \ctikzset{poles/full fill opacity=0};%
-    \pic[transparent] at (0,0) {Y};%
-    \pic[transparent] at (0,-3.5) {y};%
+  \begin{scope}[local bounding box=C10, shift={(0,-32)}]
+    \pic at (0,0) {clock};%
+    \pic at (0,-3.5) {clock};%
   \end{scope}
-  ;%
+  \node[left=-2.0 of C10, node font=\Large] (C10 legend) {10};%
+  \begin{scope}[local bounding box=Yy10, shift={(6,-32)}]
+    \pic at (0,0) {empty};%
+    \pic at (0,-3.5) {empty};%
+  \end{scope}
   \node[left=0.1 of Yy10] (Yy10 legend) {\phantom{Yy10}};%
-  \begin{scope}[local bounding box=Dd10, shift={(8,-32)}]
+  \begin{scope}[local bounding box=Dd10, shift={(14,-32)}]
     \pic at (0,0) {D direct};%
     \pic at (0,-3.5) {d inverse};%
   \end{scope}
   \node[left=0.1 of Dd10] (Dd10 legend) {\textcolor{red}{Dd}10};%
-  \begin{scope}[local bounding box=Dz10, shift={(16,-32)}]
+  \begin{scope}[local bounding box=Dz10, shift={(22,-32)}]
     \pic at (0,0) {D direct};%
     \pic at (0,-3.5) {z inverse};%
   \end{scope}
   \node[left=0.1 of Dz10] (Dz10 legend) {\textcolor{red}{D}\textcolor{RoseauGreen}{z}10};%
 
-  % Add clock numbers to the left
-  \node[left=3.0 of Yy2, node font=\Large] (C2) {2};%
-  \node[left=3.0 of Yy4, node font=\Large] (C4) {4};%
-  \node[left=3.0 of Yd7, node font=\Large] (C7) {7};%
-  \node[left=3.0 of Yy8, node font=\Large] (C8) {8};%
-  \node[left=3.0 of Yy10, node font=\Large] (C10) {10};%
-
   % Add clock numbers coordinates to align the horizontal separators
-  \coordinate[left=1.0 of C2] (C2l);%
-  \coordinate[left=1.0 of C4] (C4l);%
-  \coordinate[left=1.0 of C7] (C7l);%
-  \coordinate[left=1.0 of C8] (C8l);%
-  \coordinate[left=1.0 of C10] (C10l);%
+  \coordinate[left=0.0 of C2] (C2l);%
+  \coordinate[left=0.0 of C4] (C4l);%
+  \coordinate[left=0.0 of C7] (C7l);%
+  \coordinate[left=0.0 of C8] (C8l);%
+  \coordinate[left=0.0 of C10] (C10l);%
   \coordinate[right=1.0 of Dz2] (C2r);%
   \coordinate[right=1.0 of Dz4] (C4r);%
   \coordinate[right=1.0 of Yz7] (C7r);%
   \coordinate[right=1.0 of Dz8] (C8r);%
   \coordinate[right=1.0 of Dz10] (C10r);%
-
-  % Add coordinates of the top-left and the bottom-left corners
-  \coordinate[above=3.0 of C2] (tl);%
-  \coordinate[below=3.0 of C10] (bl);%
 
   % Draw horizontal separators
   \draw ($(C2l.south west)!0.5!(C4l.north west)$) -- ($(C2r.south east)!0.5!(C4r.north east)$);%
@@ -131,7 +137,7 @@
   \draw ($(C8l.south west)!0.5!(C10l.north west)$) -- ($(C8r.south east)!0.5!(C10r.north east)$);%
 
   % Draw vertical separators
-  \draw ($(tl.north east)!0.5!(Yy2.north west)$) -- ($(bl.south east)!0.5!(Yy10.south west)$);%
+  \draw ($(C2.north east)!0.5!(Yy2.north west)$) -- ($(C10.south east)!0.5!(Yy10.south west)$);%
   \draw ($(Yy2.north east)!0.5!(Dd2.north west)$) -- ($(Yy10.south east)!0.5!(Dd10.south west)$);%
   \draw ($(Dd2.north east)!0.5!(Dz2.north west)$) -- ($(Dd10.south east)!0.5!(Dz10.south west)$);%
 \end{tikzpicture}

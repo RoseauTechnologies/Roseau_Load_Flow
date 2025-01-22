@@ -9,8 +9,6 @@
 \pgfmathsetmacro{\yfour}{-2}%
 \pgfmathsetmacro{\yfive}{-2.5}%
 \pgfmathsetmacro{\ysix}{-2.75}%
-\pgfmathsetmacro{\yseven}{-3}%
-\pgfmathsetmacro{\yeight}{-3.25}%
 
 \pgfmathsetmacro{\xAl}{0.0}%
 \pgfmathsetmacro{\xA}{0.5}%
@@ -37,6 +35,7 @@
     (X.ul dot) node[circ]{}%
     (Y.ul dot) node[circ]{}%
     (Z.ul dot) node[circ]{};%
+    \path (\xAl,\yt) to (\xCr,\yt) to (\xCr,\ysix) to (\xAl,\ysix);% invisible path to center the pic
   },
   D inverse/.pic={
     \draw[red,text=black]
@@ -50,6 +49,7 @@
     (X.ul dot) node[circ]{}%
     (Y.ul dot) node[circ]{}%
     (Z.ul dot) node[circ]{};%
+    \path (\xAl,\yt) to (\xCr,\yt) to (\xCr,\ysix) to (\xAl,\ysix);% invisible path to center the pic
   },
   d direct/.pic={
     \draw[red,text=black]
@@ -63,6 +63,7 @@
     (x.ul dot) node[circ]{}%
     (y.ul dot) node[circ]{}%
     (z.ul dot) node[circ]{};%
+    \path (\xAl,\yt) to (\xCr,\yt) to (\xCr,\ysix) to (\xAl,\ysix);% invisible path to center the pic
   },
   d inverse/.pic={
     \draw[red,text=black]
@@ -76,6 +77,7 @@
     (x.ul dot) node[circ]{}%
     (y.ul dot) node[circ]{}%
     (z.ul dot) node[circ]{};%
+    \path (\xAl,\yt) to (\xCr,\yt) to (\xCr,\ysix) to (\xAl,\ysix);% invisible path to center the pic
   },
   d direct reverse/.pic={
     \draw[red,text=black]
@@ -89,6 +91,7 @@
     (x.ur dot) node[circ]{}%
     (y.ur dot) node[circ]{}%
     (z.ur dot) node[circ]{};%
+    \path (\xAl,\yt) to (\xCr,\yt) to (\xCr,\ysix) to (\xAl,\ysix);% invisible path to center the pic
   },
   d inverse reverse/.pic={
     \draw[red,text=black]
@@ -102,6 +105,7 @@
     (x.ur dot) node[circ]{}%
     (y.ur dot) node[circ]{}%
     (z.ur dot) node[circ]{};%
+    \path (\xAl,\yt) to (\xCr,\yt) to (\xCr,\ysix) to (\xAl,\ysix);% invisible path to center the pic
   },
   Y/.pic={
     \draw[RoseauBlue, text=black]
@@ -113,6 +117,7 @@
     (X.ul dot) node[circ]{}%
     (Y.ul dot) node[circ]{}%
     (Z.ul dot) node[circ]{};%
+    \path (\xAl,\yt) to (\xCr,\yt) to (\xCr,\ysix) to (\xAl,\ysix);% invisible path to center the pic
   },
   y/.pic={
     \draw[RoseauBlue, text=black]
@@ -124,6 +129,7 @@
     (x.ul dot) node[circ]{}%
     (y.ul dot) node[circ]{}%
     (z.ul dot) node[circ]{};%
+    \path (\xAl,\yt) to (\xCr,\yt) to (\xCr,\ysix) to (\xAl,\ysix);% invisible path to center the pic
   },
   y reverse/.pic={
     \draw[RoseauBlue, text=black]
@@ -135,6 +141,7 @@
     (x.ur dot) node[circ]{}%
     (y.ur dot) node[circ]{}%
     (z.ur dot) node[circ]{};%
+    \path (\xAl,\yt) to (\xCr,\yt) to (\xCr,\ysix) to (\xAl,\ysix);% invisible path to center the pic
   },
   z direct/.pic={
     \draw[RoseauGreen, text=black] (\xA,\yt) node[circ,black]{} node[above]{a}%
@@ -167,31 +174,32 @@
     (y2.ur dot) node[circ]{}%
     (z1.ul dot) node[circ]{}%
     (z2.ur dot) node[circ]{};%
+    \path (\xAl,\yt) to (\xCr,\yt) to (\xCr,\ysix) to (\xAl,\ysix);% invisible path to center the pic
   },
   z inverse/.pic={
-    \draw[RoseauGreen, text=black] (\xAl,\yt) node[circ,black]{} node[above]{a}%
-    to[short, -] (\xAl, \yzero)%
-    to[L, name=x1] (\xAl,\ytwo)%
-    to[short, -] (\xA, \ytwo)%
-    to[short, -] (\xAr, \yfive)%
-    to[short, -] (\xBl,\yfive)%
-    to[L, mirror, name=y2] (\xBl,\ythree);%
-    \draw[RoseauGreen, text=black] (\xBl,\yt) node[circ,black]{} node[above]{b}%
-    to[short, -] (\xBl, \yzero)%
-    to[L, name=y1] (\xBl,\ytwo)%
-    to[short, -] (\xB,\ytwo)%
-    to[short, -] (\xBr,\yfive)%
+    \draw[RoseauGreen, text=black] (\xA,\yt) node[circ,black]{} node[above]{a}%
+    to[short, -] (\xA, \yzero)%
+    to[L, name=x1] (\xA,\ytwo)%
+    to[short, -] (\xAr, \ytwo)%
+    to[short, -] (\xBl, \yfive)%
+    to[short, -] (\xB,\yfive)%
+    to[L, mirror, name=y2] (\xB,\ythree);%
+    \draw[RoseauGreen, text=black] (\xB,\yt) node[circ,black]{} node[above]{b}%
+    to[short, -] (\xB, \yzero)%
+    to[L, name=y1] (\xB,\ytwo)%
+    to[short, -] (\xBr,\ytwo)%
     to[short, -] (\xCl,\yfive)%
-    to[L, mirror, name=z2] (\xCl,\ythree);%
-    \draw[RoseauGreen, text=black] (\xCl,\yt) node[circ,black]{} node[above]{c}%
-    to[short, -] (\xCl, \yzero)%
-    to[L, name=z1] (\xCl,\ytwo)%
-    to[short, -] (\xC,\ytwo)%
-    to[short, -] (\xC,\ysix)%
-    to[short, -] (\xAl,\ysix)%
-    to[short, -] (\xAl,\yfive)%
-    to[L, mirror, name=x2] (\xAl,\ythree);%
-    \draw[RoseauGreen, text=black] (\xAl,\ythree) to[short, -] (\xCl,\ythree);
+    to[short, -] (\xC,\yfive)%
+    to[L, mirror, name=z2] (\xC,\ythree);%
+    \draw[RoseauGreen, text=black] (\xC,\yt) node[circ,black]{} node[above]{c}%
+    to[short, -] (\xC, \yzero)%
+    to[L, name=z1] (\xC,\ytwo)%
+    to[short, -] (\xCr,\ytwo)%
+    to[short, -] (\xCr,\ysix)%
+    to[short, -] (\xA,\ysix)%
+    to[short, -] (\xA,\yfive)%
+    to[L, mirror, name=x2] (\xA,\ythree);%
+    \draw[RoseauGreen, text=black] (\xA,\ythree) to[short, -] (\xC,\ythree);
     \path[fill=RoseauGreen,draw=RoseauGreen]
     (x1.ul dot) node[circ]{}%
     (x2.ur dot) node[circ]{}%
@@ -199,6 +207,7 @@
     (y2.ur dot) node[circ]{}%
     (z1.ul dot) node[circ]{}%
     (z2.ur dot) node[circ]{};%
+    \path (\xAl,\yt) to (\xCr,\yt) to (\xCr,\ysix) to (\xAl,\ysix);% invisible path to center the pic
   },
   z direct reverse/.pic={
     \draw[RoseauGreen, text=black] (\xA,\yt) node[circ,black]{} node[above]{a}%
@@ -231,31 +240,32 @@
     (y2.ul dot) node[circ]{}%
     (z1.ur dot) node[circ]{}%
     (z2.ul dot) node[circ]{};%
+    \path (\xAl,\yt) to (\xCr,\yt) to (\xCr,\ysix) to (\xAl,\ysix);% invisible path to center the pic
   },
   z inverse reverse/.pic={
-    \draw[RoseauGreen, text=black] (\xAl,\yt) node[circ,black]{} node[above]{a}%
-    to[short, -] (\xAl, \yzero)%
-    to[L, name=x1] (\xAl,\ytwo)%
-    to[short, -] (\xA, \ytwo)%
-    to[short, -] (\xAr, \yfive)%
-    to[short, -] (\xBl,\yfive)%
-    to[L, mirror, name=y2] (\xBl,\ythree);%
-    \draw[RoseauGreen, text=black] (\xBl,\yt) node[circ,black]{} node[above]{b}%
-    to[short, -] (\xBl, \yzero)%
-    to[L, name=y1] (\xBl,\ytwo)%
-    to[short, -] (\xB,\ytwo)%
-    to[short, -] (\xBr,\yfive)%
+    \draw[RoseauGreen, text=black] (\xA,\yt) node[circ,black]{} node[above]{a}%
+    to[short, -] (\xA, \yzero)%
+    to[L, name=x1] (\xA,\ytwo)%
+    to[short, -] (\xAr, \ytwo)%
+    to[short, -] (\xBl, \yfive)%
+    to[short, -] (\xB,\yfive)%
+    to[L, mirror, name=y2] (\xB,\ythree);%
+    \draw[RoseauGreen, text=black] (\xB,\yt) node[circ,black]{} node[above]{b}%
+    to[short, -] (\xB, \yzero)%
+    to[L, name=y1] (\xB,\ytwo)%
+    to[short, -] (\xBr,\ytwo)%
     to[short, -] (\xCl,\yfive)%
-    to[L, mirror, name=z2] (\xCl,\ythree);%
-    \draw[RoseauGreen, text=black] (\xCl,\yt) node[circ,black]{} node[above]{c}%
-    to[short, -] (\xCl, \yzero)%
-    to[L, name=z1] (\xCl,\ytwo)%
-    to[short, -] (\xC,\ytwo)%
-    to[short, -] (\xC,\ysix)%
-    to[short, -] (\xAl,\ysix)%
-    to[short, -] (\xAl,\yfive)%
-    to[L, mirror, name=x2] (\xAl,\ythree);%
-    \draw[RoseauGreen, text=black] (\xAl,\ythree) to[short, -] (\xCl,\ythree);
+    to[short, -] (\xC,\yfive)%
+    to[L, mirror, name=z2] (\xC,\ythree);%
+    \draw[RoseauGreen, text=black] (\xC,\yt) node[circ,black]{} node[above]{c}%
+    to[short, -] (\xC, \yzero)%
+    to[L, name=z1] (\xC,\ytwo)%
+    to[short, -] (\xCr,\ytwo)%
+    to[short, -] (\xCr,\ysix)%
+    to[short, -] (\xA,\ysix)%
+    to[short, -] (\xA,\yfive)%
+    to[L, mirror, name=x2] (\xA,\ythree);%
+    \draw[RoseauGreen, text=black] (\xA,\ythree) to[short, -] (\xC,\ythree);
     \path[fill=RoseauGreen,draw=RoseauGreen]
     (x1.ur dot) node[circ]{}%
     (x2.ul dot) node[circ]{}%
@@ -263,5 +273,15 @@
     (y2.ul dot) node[circ]{}%
     (z1.ur dot) node[circ]{}%
     (z2.ul dot) node[circ]{};%
-  }
+    \path (\xAl,\yt) to (\xCr,\yt) to (\xCr,\ysix) to (\xAl,\ysix);% invisible path to center the pic
+  },
+  empty/.pic={
+    % empty pic to align the other pics
+    \path (\xA,\yt) node[above]{\phantom{A}} (\xB,\yt) node[above]{\phantom{B}} (\xC,\yt) node[above]{\phantom{C}};%
+    \path (\xAl,\yt) to (\xCr,\yt) to (\xCr,\ysix) to (\xAl,\ysix);% invisible path to center the pic
+  },
+  clock/.pic={
+    \path (\xB,\yt) node[above]{\phantom{B}};%
+    \path (\xAr,\yt) to (\xCl,\yt) to (\xCl,\ysix) to (\xAr,\ysix);% invisible path to center the pic
+  },
 }

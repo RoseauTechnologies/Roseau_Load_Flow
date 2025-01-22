@@ -55,9 +55,9 @@ For example, the windings with a $Dyn11$ configuration are represented by the fo
 ```
 ````
 
-Notice how the brought out neutral is accessible on the LV side of the transformer. Transformers
-with the neutral not brought out are also supported by omitting the $n$ in the vector group (e.g.
-$Dy11$). In this case there will be no neutral connection on the LV side.
+Notice how the is accessible on the LV side of the transformer. Transformers with the neutral not
+brought out are also supported by omitting the $n$ in the vector group (e.g. $Dy11$). In this case
+there will be no neutral connection on the LV side.
 
 ## Winding configurations
 
@@ -120,7 +120,7 @@ Let $I_3$ be the identity matrix $\begin{pmatrix} 1 & 0 & 0 \\ 0 & 1 & 0 \\ 0 & 
 $S_3$ be the shifting matrix $\begin{pmatrix} 0 & 1 & 0 \\ 0 & 0 & 1 \\ 1 & 0 & 0 \end{pmatrix}$, and
 $S_3^T$ be its transpose. Also, let $0_3$ be the null vector $\begin{pmatrix} 0 \\ 0 \\ 0 \end{pmatrix}$
 and $1_3$ be the vector $\begin{pmatrix} 1 \\ 1 \\ 1 \end{pmatrix}$.
-The following matrices are used to model the windings configurations described above:
+The following matrices are used to model the winding configurations described above:
 
 ### Transformation matrices
 
