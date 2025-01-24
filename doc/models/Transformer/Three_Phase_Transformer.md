@@ -55,9 +55,9 @@ For example, the windings with a $Dyn11$ configuration are represented by the fo
 ```
 ````
 
-Notice how the is accessible on the LV side of the transformer. Transformers with the neutral not
-brought out are also supported by omitting the $n$ in the vector group (e.g. $Dy11$). In this case
-there will be no neutral connection on the LV side.
+Notice how the neutral is accessible on the LV side of the transformer. Transformers with the
+neutral not brought out are also supported by omitting the $n$ in the vector group (e.g. $Dy11$).
+In this case there will be no neutral connection on the LV side.
 
 ## Winding configurations
 
@@ -130,7 +130,7 @@ The following matrices are used to model the winding configurations described ab
 :stub-columns: 2
 :align: center
 
-* - Winding
+* - Windings
   - Clock numbers
   - $M_{\mathrm{TV}}$
   - $M_{\mathrm{TI}}$

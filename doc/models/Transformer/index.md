@@ -38,9 +38,9 @@ Transformers are modeled with the following parameters:
 The vector group defines the type of transformer and its high voltage and low voltage winding
 configuration:
 
-- `"Ii0"` or `"Ii6"` to model a single-phase transformer, in-phase or in opposition respectively;
-- `"Iii0"` or `"Iii6"` to model a center-tapped transformer, in-phase or in opposition respectively;
-- `"Dd0"`, `"Dyn11"`, etc. to model a three-phase transformer with different winding configurations.
+- `"Ii0"` or `"Ii6"`: a single-phase transformer, in-phase or in opposition respectively;
+- `"Iii0"` or `"Iii6"`: a center-tapped transformer, in-phase or in opposition respectively;
+- `"Dd0"`, `"Dyn11"`, etc.: a three-phase transformer with different winding configurations.
   For a full list of supported three-phase transformer configurations, please refer to the
   [three-phase transformer models](./Three_Phase_Transformer.md) page.
 
@@ -86,7 +86,7 @@ Then, $\underline{Y_{\mathrm{m}}}$ can be deduced:
         \frac{1}{R_{\mathrm{iron}}} + \frac{1}{j\omega L_{\mathrm{m}}} & \qquad \text{if } S^0 > P^0 \\%
         \frac{1}{R_{\mathrm{iron}}} & \qquad \text{otherwise}%
     \end{aligned}
-\right\}.
+\right.
 ```
 
 #### Short-circuit test
