@@ -2,6 +2,12 @@
 Internal utility classes and functions for Roseau Load Flow.
 """
 
+from roseau.load_flow.utils.deprecations import (
+    deprecate_nonkeyword_arguments,
+    deprecate_parameter_as_multi_positional,
+    deprecate_renamed_parameter,
+    deprecate_renamed_parameters,
+)
 from roseau.load_flow.utils.dtypes import (
     DTYPES,
     BranchTypeDtype,
@@ -23,6 +29,10 @@ __all__ = [
     "CatalogueMixin",
     # Exceptions and warnings
     "find_stack_level",
+    "deprecate_nonkeyword_arguments",
+    "deprecate_parameter_as_multi_positional",
+    "deprecate_renamed_parameter",
+    "deprecate_renamed_parameters",
     # DTypes
     "DTYPES",
     "BranchTypeDtype",

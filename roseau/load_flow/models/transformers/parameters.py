@@ -86,10 +86,10 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
                 The nominal power of the transformer (VA)
 
             z2:
-                The series impedance located at the secondary side of the transformer.
+                The series impedance located at the LV side of the transformer.
 
             ym:
-                The magnetizing admittance located at the primary side of the transformer.
+                The magnetizing admittance located at the HV side of the transformer.
 
             manufacturer:
                 The name of the manufacturer for the transformer. Informative only, it has no impact
@@ -125,11 +125,10 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_IMPEDANCE)
 
-        # Extract the windings of the primary and the secondary of the transformer
-        winding1, winding2, phase_displacement = self.extract_windings(vg=vg)
-        w1, w2 = winding1[0], winding2[0]
+        # Extract the windings of the HV and LV sides of the transformer
+        whv, wlv, clock = self.extract_windings(vg=vg)
 
-        self._vg: str = f"{winding1}{winding2}{phase_displacement}"  # normalized vector group
+        self._vg: str = f"{whv}{wlv}{clock}"  # normalized vector group
         self._sn: float = sn
         self._uhv: float = uhv
         self._ulv: float = ulv
@@ -140,25 +139,25 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         self._efficiency: str | None = efficiency
 
         # Change the voltages if the reference voltages is phase-to-neutral
-        if w1 == "Y":
+        if whv[0] == "Y":
             uhv /= np.sqrt(3.0)
-        elif w1 == "Z":
+        elif whv[0] == "Z":
             uhv /= 3.0
-        if w2 == "y":
+        if wlv[0] == "y":
             ulv /= np.sqrt(3.0)
-        elif w2 == "z":
+        elif wlv[0] == "z":
             ulv /= 3.0
 
-        n_of_winding = {"y": 4, "z": 4, "d": 3, "i": 2, "ii": 3}
-        n1 = n_of_winding[w1.lower()]
-        n2 = n_of_winding[w2.lower()]
+        n_of_winding = {"y": 4, "z": 4, "yn": 4, "zn": 4, "d": 3, "i": 2, "ii": 3}
+        n1 = n_of_winding[whv.lower()]
+        n2 = n_of_winding[wlv.lower()]
 
         self._k: float = ulv / uhv
         self._n1: int = n1
         self._n2: int = n2
-        self._winding1: str = winding1
-        self._winding2: str = winding2
-        self._phase_displacement: int = phase_displacement
+        self._whv: str = whv
+        self._wlv: str = wlv
+        self._clock: int = clock
 
         # Filled using alternative constructor `from_open_and_short_circuit_tests`
         self._p0: float | None = None
@@ -228,8 +227,8 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         return self._vg
 
     @property
-    def winding1(self) -> str:
-        """The primary winding of the transformer.
+    def whv(self) -> str:
+        """The HV winding of the transformer.
 
         The following values are used:
         - ``D``: a Delta connection
@@ -237,11 +236,11 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         - ``Z`` or ``Zn``: a Zigzag connection
         - ``I``: single-phase
         """
-        return self._winding1
+        return self._whv
 
     @property
-    def winding2(self) -> str:
-        """The secondary winding of the transformer.
+    def wlv(self) -> str:
+        """The LV winding of the transformer.
 
         The following values are used:
         - ``d``: a Delta connection
@@ -250,12 +249,17 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         - ``i``: single-phase
         - ``ii`` split-phase (i.e center-tapped)
         """
-        return self._winding2
+        return self._wlv
 
     @property
-    def phase_displacement(self) -> int:
-        """The phase rotation (clock number) as indicated by the vector group."""
-        return self._phase_displacement
+    def clock(self) -> int:
+        """The clock number (phase displacement) as indicated by the vector group."""
+        return self._clock
+
+    # Keep old properties for backward compatibility
+    winding1 = whv
+    winding2 = wlv
+    phase_displacement = clock
 
     @property
     @ureg_wraps("V", (None,))
@@ -296,7 +300,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
     @property
     def orientation(self) -> float:
         """The orientation of the transformer: 1 for direct windings or -1 for reverse windings."""
-        return -1.0 if 3 < self._phase_displacement < 9 else 1.0
+        return -1.0 if 3 < self._clock < 9 else 1.0
 
     @property
     def p0(self) -> Q_[float] | None:
@@ -350,7 +354,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
     def _compute_zy(
         cls, vg: str, uhv: float, ulv: float, sn: float, p0: float, i0: float, psc: float, vsc: float
     ) -> tuple[complex, complex]:
-        w1, w2, _ = cls.extract_windings(vg=vg)
+        whv, wlv, _ = cls.extract_windings(vg=vg)
 
         # Off-load test
         # Iron losses resistance (Ohm)
@@ -373,9 +377,9 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         l2_omega = np.sqrt((vsc * ulv**2 / sn) ** 2 - r2**2)
         z2 = r2 + 1j * l2_omega
 
-        if w1[0] == "D":
+        if whv[0] == "D":
             ym /= 3
-        if w2[0] == "d":
+        if wlv[0] == "d":
             z2 *= 3
 
         return z2, ym
@@ -641,21 +645,21 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             )
         """
         # Windings
-        w1, w2 = (c.lower() for c in conns)
+        whv, wlv = (c.lower() for c in conns)
         wye_names = ("wye", "ln")
         delta_names = ("delta", "ll")
-        if w1 in wye_names:
-            w1 = "Y"
-        elif w1 in delta_names:
-            w1 = "D"
+        if whv in wye_names:
+            whv = "Y"
+        elif whv in delta_names:
+            whv = "D"
         else:
             msg = f"Got unknown winding (1) connection {conns[0]!r}, expected one of ('wye', 'ln', 'delta', 'll')."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS)
-        if w2 in wye_names:
-            w2 = "yn"
-        elif w2 in delta_names:
-            w2 = "d"
+        if wlv in wye_names:
+            wlv = "yn"
+        elif wlv in delta_names:
+            wlv = "d"
         else:
             msg = f"Got unknown winding (2) connection {conns[1]!r}, expected one of ('wye', 'ln', 'delta', 'll')."
             logger.error(msg)
@@ -663,20 +667,20 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
 
         # Lead lag
         leadlag_l = leadlag.lower()
-        if (w1 == "D" and w2[0] == "y") or (w1[0] == "Y" and w2 == "d"):
+        if (whv == "D" and wlv[0] == "y") or (whv[0] == "Y" and wlv == "d"):
             if leadlag_l in ("lead", "euro"):
-                phase_displacement = 11
+                clock = 11
             elif leadlag_l in ("lag", "ansi"):
-                phase_displacement = 1
+                clock = 1
             else:
                 msg = f"Got unknown leadlag value {leadlag!r}, expected one of ('lead', 'lag', 'ansi', 'euro')"
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS)
         else:
-            phase_displacement = 0  # TODO is leadlag used with Dd or Yy transformers?
+            clock = 0  # TODO is leadlag used with Dd or Yy transformers?
 
         # Vector Group: from winding and lead-lag parameters
-        vg = f"{w1}{w2}{phase_displacement}"
+        vg = f"{whv}{wlv}{clock}"
 
         # High and low rated voltages
         uhv, ulv = (u * 1000 for u in kvs)  # in Volts
@@ -880,8 +884,8 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             phases_lv = "abn"
         else:
             # Three-phase transformer
-            phases_hv = "abc" if self.winding1[0] == "D" else "abcn"
-            phases_lv = "abc" if self.winding2[0] == "d" else "abcn"
+            phases_hv = "abc" if self.whv[0] == "D" else "abcn"
+            phases_lv = "abc" if self.wlv[0] == "d" else "abcn"
             if "n" in phases_hv:
                 voltage /= SQRT3
 
@@ -890,27 +894,27 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         PotentialRef(id="PRefHV", element=bus_hv)
         PotentialRef(id="PRefLV", element=bus_lv)
         VoltageSource(id="VS", bus=bus_hv, voltages=voltage)
-        transformer = Transformer(id="Transformer", bus1=bus_hv, bus2=bus_lv, parameters=self)
+        transformer = Transformer(id="Transformer", bus_hv=bus_hv, bus_lv=bus_lv, parameters=self)
 
         en = ElectricalNetwork.from_element(bus_hv)
         en.solve_load_flow(**solve_kwargs)
-        p_primary = transformer.res_powers[0].m.sum().real
-        i_primary = abs(transformer.res_currents[0].m[0])
+        p_hv = transformer.res_powers[0].m.sum().real
+        i_hv = abs(transformer.res_currents[0].m[0])
         i_nom = self._sn / self._uhv
         if self.type == "three-phase":
             i_nom /= SQRT3
 
         # Additional checks
-        u_secondary = abs(bus_lv.res_voltages.m)
+        u_lv = abs(bus_lv.res_voltages.m)
         if self.type == "single-phase":
-            expected_u_secondary = self._ulv
+            expected_u_lv = self._ulv
         elif self.type == "center-tapped":
-            expected_u_secondary = self._ulv / 2
+            expected_u_lv = self._ulv / 2
         else:
-            expected_u_secondary = self._ulv / SQRT3
-        np.testing.assert_allclose(u_secondary, expected_u_secondary)
+            expected_u_lv = self._ulv / SQRT3
+        np.testing.assert_allclose(u_lv, expected_u_lv)
 
-        return p_primary, i_primary / i_nom
+        return p_hv, i_hv / i_nom
 
     @ureg_wraps(("W", ""), (None, None))
     def _compute_short_circuit_parameters(self, solve_kwargs: JsonDict | None = None) -> tuple[Q_[float], Q_[float]]:
@@ -941,8 +945,8 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             phases_lv = "abn"
         else:
             # Three-phase transformer
-            phases_hv = "abc" if self.winding1[0] == "D" else "abcn"
-            phases_lv = "abc" if self.winding2[0] == "d" else "abcn"
+            phases_hv = "abc" if self.whv[0] == "D" else "abcn"
+            phases_lv = "abc" if self.wlv[0] == "d" else "abcn"
             if "n" in phases_hv:
                 voltage /= SQRT3
 
@@ -951,20 +955,20 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         PotentialRef(id="PRefHV", element=bus_hv)
         PotentialRef(id="PRefLV", element=bus_lv)
         VoltageSource(id="VS", bus=bus_hv, voltages=voltage)
-        transformer = Transformer(id="Transformer", bus1=bus_hv, bus2=bus_lv, parameters=self)
+        transformer = Transformer(id="Transformer", bus_hv=bus_hv, bus_lv=bus_lv, parameters=self)
         bus_lv.add_short_circuit(*phases_lv)
         en = ElectricalNetwork.from_element(bus_hv)
         en.solve_load_flow(**solve_kwargs)
-        p_primary = transformer.res_powers[0].m.sum().real
+        p_hv = transformer.res_powers[0].m.sum().real
 
         # Additional check
         i_nom = self._sn / self._ulv
         if self.type == "three-phase":
             i_nom /= SQRT3  # I = S3ph / (sqrt(3) * U)
-        i_secondary = abs(transformer.res_currents[1].m[0])
-        np.testing.assert_allclose(i_secondary, i_nom)
+        i_lv = abs(transformer.res_currents[1].m[0])
+        np.testing.assert_allclose(i_lv, i_nom)
 
-        return p_primary, vsc
+        return p_hv, vsc
 
     #
     # Json Mixin interface
@@ -1339,16 +1343,16 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
                 ``Iii6`` denotes an inverted connection.
 
         Returns:
-            The first winding, the second winding, and the phase displacement.
+            The HV winding, the LV winding, and the phase displacement.
         """
         vg_norm = vg.capitalize().replace("Yn", "YN", 1).replace("Zn", "ZN", 1)
         if vg_norm in cls.allowed_vector_groups:
-            w1 = vg_norm[:2] if vg_norm[1] == "N" else vg_norm[0]
-            vg_norm = vg_norm.removeprefix(w1)
-            w2 = vg_norm[:2] if vg_norm[1] in "in" else vg_norm[0]
-            vg_norm = vg_norm.removeprefix(w2)
+            whv = vg_norm[:2] if vg_norm[1] == "N" else vg_norm[0]
+            vg_norm = vg_norm.removeprefix(whv)
+            wlv = vg_norm[:2] if vg_norm[1] in "in" else vg_norm[0]
+            vg_norm = vg_norm.removeprefix(wlv)
             clock = int(vg_norm)
-            return w1, w2, clock
+            return whv, wlv, clock
         else:
             msg = f"Invalid vector group: {vg!r}. Expected one of {sorted(cls.allowed_vector_groups)}."
             logger.error(msg)

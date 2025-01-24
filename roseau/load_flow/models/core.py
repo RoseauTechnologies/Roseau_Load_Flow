@@ -57,7 +57,7 @@ class Element(ABC, Identifiable, JsonMixin):
     def _check_phases(cls, id: Id, allowed_phases: frozenset[str] | None = None, **kwargs: str) -> None:
         if allowed_phases is None:
             allowed_phases = cls.allowed_phases
-        name, phases = kwargs.popitem()  # phases, phases1 or phases2
+        name, phases = kwargs.popitem()  # phases, phases1, phases2, phases_hv, phases_lv, etc.
         if phases not in allowed_phases:
             msg = (
                 f"{cls.__name__} of id {id!r} got invalid {name} {phases!r}, allowed values are: "

@@ -296,7 +296,7 @@ def test_propagate_limits():  # noqa: C901
 
     Line(id="l1_mv", bus1=b1_mv, bus2=b2_mv, length=1.5, parameters=lp_mv, ground=g)
     Line(id="l2_mv", bus1=b2_mv, bus2=b3_mv, length=2, parameters=lp_mv, ground=g)
-    Transformer(id="tr", bus1=b3_mv, bus2=b1_lv, parameters=tp)
+    Transformer(id="tr", bus_hv=b3_mv, bus_lv=b1_lv, parameters=tp)
     Line(id="l1_lv", bus1=b1_lv, bus2=b2_lv, length=1, parameters=lp_lv)
 
     VoltageSource(id="s_mv", bus=b1_mv, voltages=20_000)
@@ -458,7 +458,7 @@ def test_get_connected_buses():
     Line(id="l2_mv", bus1=b2_mv, bus2=b3_mv, length=2, parameters=lp_mv, ground=g)
     Line(id="l3_mv", bus1=b2_mv, bus2=b4_mv, length=0.5, parameters=lp_mv, ground=g)  # creates a loop
     Switch(id="sw_mv", bus1=b3_mv, bus2=b4_mv)
-    Transformer(id="tr", bus1=b3_mv, bus2=b1_lv, parameters=tp)
+    Transformer(id="tr", bus_hv=b3_mv, bus_lv=b1_lv, parameters=tp)
     Line(id="l1_lv", bus1=b1_lv, bus2=b2_lv, length=1, parameters=lp_lv)
     Switch(id="sw_lv", bus1=b2_lv, bus2=b3_lv)
 
