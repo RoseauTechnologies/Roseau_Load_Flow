@@ -77,13 +77,13 @@ class Transformer(AbstractBranch):
                 the :class:`TransformerParameters` class and can be used by multiple transformers.
 
             phases_hv:
-                The phases of the first extremity of the transformer. A string like ``"abc"`` or
-                ``"abcn"`` etc. The order of the phases is important. For a full list of supported
-                phases, see the class attribute :attr:`allowed_phases`. All phases must be present
-                in the connected bus. By default, determined from the transformer type.
+                The phases of the HV side of the transformer. A string like ``"abc"`` or ``"abcn"``
+                etc. The order of the phases is important. For a full list of supported phases, see
+                the class attribute :attr:`allowed_phases`. All phases must be present in the
+                connected bus. By default, determined from the transformer type.
 
             phases_lv:
-                The phases of the second extremity of the transformer. See ``phases_lv``.
+                The phases of the LV side of the transformer. Similar to ``phases_hv``.
 
             max_loading:
                 The maximum loading of the transformer (unitless). It is used with the `sn` of the

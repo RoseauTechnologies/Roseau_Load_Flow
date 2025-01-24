@@ -305,10 +305,10 @@ tp = rlf.TransformerParameters.from_open_and_short_circuit_tests(
 )
 transformer = rlf.Transformer(
     id="transfo",
-    bus1=bus_mv,
-    bus2=bus_lv,
-    phases1="abc",
-    phases2="abcn",
+    bus_hv=bus_mv,
+    bus_lv=bus_lv,
+    phases_hv="abc",
+    phases_lv="abcn",
     parameters=tp,
     tap=1.025,
 )

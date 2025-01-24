@@ -105,7 +105,7 @@ def generate_all_element_network() -> None:
 
     # Transformer between bus1 and bus2
     tp0 = rlf.TransformerParameters.from_catalogue(name="SE Minera A0Ak 100kVA 15/20kV(20) 410V Dyn11", id="tp0")
-    transformer0 = rlf.Transformer(id="transformer0", bus1=bus1, bus2=bus2, parameters=tp0, tap=1.0)
+    transformer0 = rlf.Transformer(id="transformer0", bus_hv=bus1, bus_lv=bus2, parameters=tp0, tap=1.0)
     ground.connect(bus=bus2, phase="n")
 
     # Switch between the bus2 and the bus3

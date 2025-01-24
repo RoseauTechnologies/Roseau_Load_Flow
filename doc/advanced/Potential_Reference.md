@@ -166,7 +166,7 @@ rlf.VoltageSource("MVSource", bus=mv_bus, voltages=20e3)
 
 # Create a delta-wye transformer connecting the MV and LV buses
 tp = rlf.TransformerParameters.from_catalogue("SE Minera AA0Ak 160kVA 20kV 410V Dyn11")
-rlf.Transformer("MV/LV Transformer", bus1=mv_bus, bus2=lv_bus, parameters=tp)
+rlf.Transformer("MV/LV Transformer", bus_hv=mv_bus, bus_lv=lv_bus, parameters=tp)
 
 # Define the potential references for the MV and LV sides
 rlf.PotentialRef("MV PotentialRef", element=mv_bus)  # by default, phases="abc"
@@ -200,7 +200,7 @@ rlf.VoltageSource("Source", bus=mv_bus1, voltages=20_000)
 
 # Create a delta-wye transformer connecting the MV and LV buses
 tp = rlf.TransformerParameters.from_catalogue("SE Minera AA0Ak 160kVA 20kV 410V Dyn11")
-rlf.Transformer("MV/LV Transformer", bus1=mv_bus1, bus2=lv_bus1, parameters=tp)
+rlf.Transformer("MV/LV Transformer", bus_hv=mv_bus1, bus_lv=lv_bus1, parameters=tp)
 
 # Create a common ground for the MV and LV sides
 ground = rlf.Ground("Ground")
@@ -242,7 +242,7 @@ rlf.VoltageSource("Source", bus=mv_bus1, voltages=20_000)
 
 # Create a delta-wye transformer connecting the MV and LV buses
 tp = rlf.TransformerParameters.from_catalogue("SE Minera AA0Ak 160kVA 20kV 410V Dyn11")
-rlf.Transformer("MV/LV Transformer", bus1=mv_bus1, bus2=lv_bus1, parameters=tp)
+rlf.Transformer("MV/LV Transformer", bus_hv=mv_bus1, bus_lv=lv_bus1, parameters=tp)
 
 # Create separate grounds for the MV and LV sides
 mv_ground = rlf.Ground("MVGround")

@@ -249,8 +249,8 @@ translates to:
 ... )
 >>> transformer = rlf.Transformer(
 ...     id="LVTR",
-...     bus1=sourcebus,  # supposedly created already
-...     bus2=A,  # supposedly created already
+...     bus_hv=sourcebus,  # supposedly created already
+...     bus_lv=A,  # supposedly created already
 ...     parameters=tp_dss,
 ... )
 ```
