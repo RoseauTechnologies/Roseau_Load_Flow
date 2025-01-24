@@ -24,17 +24,21 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
 
     # fmt: off
     allowed_vector_groups: Final = {
-        # Three-phase
-        "Dd0", "Dd6",  # Delta-delta
-        "Yy0", "Yy6", "Yyn0", "Yyn6", "Yny0", "Yny6", "Ynyn0", "Ynyn6",  # Wye-wye
-        "Dy5", "Dy11", "Dyn5", "Dyn11",  # Delta-wye
-        "Dz0", "Dz6", "Dzn0", "Dzn6",  # Delta-zigzag
-        "Yd5", "Yd11", "Ynd5", "Ynd11",  # Wye-delta
-        "Yz5", "Yz11", "Yzn5", "Yzn11", "Ynz5", "Ynz11", "Ynzn5", "Ynzn11",  # Wye-zigzag
-        # Single-phase
-        "Ii0", "Ii6",
-        # Center-tapped
-        "Iii0", "Iii6",
+        # Common connections (clock numbers 0, 1, 5, 6, 11)
+        "Dd0", "Yy0", "YNy0", "Yyn0", "YNyn0", "Dz0", "Dzn0",
+        "Dy1", "Dyn1", "Yz1", "YNz1", "Yzn1", "YNzn1", "Yd1", "YNd1",
+        "Dy5", "Dyn5", "Yz5", "YNz5", "Yzn5", "YNzn5", "Yd5", "YNd5",
+        "Dd6", "Yy6", "YNy6", "Yyn6", "YNyn6", "Dz6", "Dzn6",
+        "Dy11", "Dyn11", "Yz11", "YNz11", "Yzn11", "YNzn11", "Yd11", "YNd11",
+        # Additional connections (clock numbers 2, 4, 7, 8, 10)
+        "Dd2", "Dz2", "Dzn2",
+        "Dd4", "Dz4", "Dzn4",
+        "Dy7", "Dyn7", "Yz7", "YNz7", "Yzn7", "YNzn7", "Yd7", "YNd7",
+        "Dd8", "Dz8", "Dzn8",
+        "Dd10", "Dz10", "Dzn10",
+        # Single-phase transformers
+        "Ii0", "Iii0",
+        "Ii6", "Iii6",
     }
     """Allowed vector groups for transformers."""
     # fmt: on
@@ -150,7 +154,6 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         n2 = n_of_winding[w2.lower()]
 
         self._k: float = ulv / uhv
-        self._orientation: float = -1.0 if phase_displacement in {5, 6} else 1.0
         self._n1: int = n1
         self._n2: int = n2
         self._winding1: str = winding1
@@ -251,7 +254,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
 
     @property
     def phase_displacement(self) -> int:
-        """The phase rotation as indicated by the vector group."""
+        """The phase rotation (clock number) as indicated by the vector group."""
         return self._phase_displacement
 
     @property
@@ -293,7 +296,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
     @property
     def orientation(self) -> float:
         """The orientation of the transformer: 1 for direct windings or -1 for reverse windings."""
-        return self._orientation
+        return -1.0 if 3 < self._phase_displacement < 9 else 1.0
 
     @property
     def p0(self) -> Q_[float] | None:
@@ -629,7 +632,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
                 conns=("delta", "wye"),
                 kvs=(11, 0.4),
                 kvas=(250, 250),  # alternatively pass a scalar `kvas=250`
-                leadlag="euro",  # THE ONLY OPENDSS MODEL WE CURRENTLY SUPPORT
+                leadlag="ansi",  # (Dyn1 or Yd1) or "euro" (Dyn11 or Yd11)
                 xhl=2.5,
                 loadloss=0,
                 noloadloss=0,  # default value used in OpenDSS
@@ -664,9 +667,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             if leadlag_l in ("lead", "euro"):
                 phase_displacement = 11
             elif leadlag_l in ("lag", "ansi"):
-                msg = f"{w1}{w2}1 transformers are not supported yet, pass `leadlag='euro'` to create a {w1}{w2}11 instead."
-                logger.error(msg)
-                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS)
+                phase_displacement = 1
             else:
                 msg = f"Got unknown leadlag value {leadlag!r}, expected one of ('lead', 'lag', 'ansi', 'euro')"
                 logger.error(msg)
@@ -1340,11 +1341,14 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         Returns:
             The first winding, the second winding, and the phase displacement.
         """
-        match = re.fullmatch(r"^(?P<w1>(D|Yn?|Zn?|I))(?P<w2>(d|yn?|zn?|i|ii))(?P<p>\d{1,2})$", vg, flags=re.I)
-        if match and vg.capitalize() in cls.allowed_vector_groups:
-            groups = match.groupdict()
-            winding1, winding2, phase_displacement = groups["w1"].upper(), groups["w2"].lower(), int(groups["p"])
-            return winding1, winding2, phase_displacement
+        vg_norm = vg.capitalize().replace("Yn", "YN", 1).replace("Zn", "ZN", 1)
+        if vg_norm in cls.allowed_vector_groups:
+            w1 = vg_norm[:2] if vg_norm[1] == "N" else vg_norm[0]
+            vg_norm = vg_norm.removeprefix(w1)
+            w2 = vg_norm[:2] if vg_norm[1] in "in" else vg_norm[0]
+            vg_norm = vg_norm.removeprefix(w2)
+            clock = int(vg_norm)
+            return w1, w2, clock
         else:
             msg = f"Invalid vector group: {vg!r}. Expected one of {sorted(cls.allowed_vector_groups)}."
             logger.error(msg)

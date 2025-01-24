@@ -24,6 +24,21 @@
       },
     },
     {
+      "label": "Compile images",
+      "detail": "Compile the tex doc images.",
+      "type": "shell",
+      "command": "make -C doc/images clean && make -C doc/images",
+      "group": {
+        "kind": "build",
+        "isDefault": true,
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "silent",
+        "focus": true,
+      },
+    },
+    {
       "label": "Open docs",
       "detail": "Open the docs in the browser.",
       "type": "shell",

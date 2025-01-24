@@ -107,7 +107,8 @@ class Transformer(AbstractBranch):
         self._parameters = parameters
         self.max_loading = max_loading
 
-        z2, ym, k, orientation = parameters._z2, parameters._ym, parameters._k, parameters._orientation
+        z2, ym, k = parameters._z2, parameters._ym, parameters._k
+        clock, orientation = parameters._phase_displacement, parameters.orientation
         self._cy_element: CyTransformer
         if parameters.type == "single-phase":
             self._cy_element = CySingleTransformer(z2=z2, ym=ym, k=k * orientation * tap)
@@ -122,7 +123,7 @@ class Transformer(AbstractBranch):
                 z2=z2,
                 ym=ym,
                 k=k * tap,
-                orientation=orientation,
+                clock=clock,
             )
         self._cy_connect()
 
@@ -171,7 +172,7 @@ class Transformer(AbstractBranch):
         if self._cy_element is not None:
             z2, ym, k = value._z2, value._ym, value._k
             if value.type in ("single-phase", "center-tapped"):
-                k *= value._orientation
+                k *= value.orientation
             self._cy_element.update_transformer_parameters(z2, ym, k * self.tap)
 
     @property

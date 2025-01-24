@@ -17,6 +17,11 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 # Changelog
 
+## Unreleased
+
+- {gh-pr}`318` Implement all common and additional three-phase transformer vector groups. Notable
+  addition is transformers with clock number 1, common in North America.
+
 ## Version 0.12.0-alpha
 
 - Some improvements of the underlying engine:
