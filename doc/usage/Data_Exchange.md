@@ -240,7 +240,7 @@ translates to:
 ...     conns=("delta", "wye"),
 ...     kvs=(11, 0.4),
 ...     kvas=(250, 250),  # alternatively pass a scalar `kvas=250`
-...     leadlag="euro",  # (Dyn11) or "ansi" (Dyn1)
+...     leadlag="ansi",  # (Dyn1) or "euro" (Dyn11)
 ...     xhl=2.5,
 ...     loadloss=0,
 ...     noloadloss=0,  # default value used in OpenDSS
