@@ -171,8 +171,8 @@ class Transformer(AbstractBranch):
         self._invalidate_network_results()
         if self._cy_element is not None:
             z2, ym, k = value._z2, value._ym, value._k
-            if value.type in ("single-phase", "center-tapped") and value._phase_displacement != 0:
-                k *= -1
+            if value.type in ("single-phase", "center-tapped"):
+                k *= value.orientation
             self._cy_element.update_transformer_parameters(z2, ym, k * self.tap)
 
     @property

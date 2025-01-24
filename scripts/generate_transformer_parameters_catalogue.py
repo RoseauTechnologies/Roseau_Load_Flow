@@ -43,6 +43,7 @@ if __name__ == "__main__":
         assert tp.z2 is not None, id
         assert tp.ym is not None, id
         assert tp.k is not None, id
+        assert tp.orientation is not None, id
         tp.to_json(destination_path / f"{sn_kva}.json")
 
     # Sort the catalogue and write it
