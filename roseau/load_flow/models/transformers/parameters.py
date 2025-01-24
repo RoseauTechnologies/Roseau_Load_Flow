@@ -294,6 +294,11 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         return self._k
 
     @property
+    def orientation(self) -> float:
+        """The orientation of the transformer: 1 for direct windings or -1 for reverse windings."""
+        return -1.0 if 3 < self._phase_displacement < 9 else 1.0
+
+    @property
     def p0(self) -> Q_[float] | None:
         """Losses during open-circuit test (W)."""
         return None if self._p0 is None else Q_(self._p0, "W")

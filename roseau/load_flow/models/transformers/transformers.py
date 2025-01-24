@@ -107,8 +107,8 @@ class Transformer(AbstractBranch):
         self._parameters = parameters
         self.max_loading = max_loading
 
-        z2, ym, k, clock = parameters._z2, parameters._ym, parameters._k, parameters._phase_displacement
-        orientation = 1 if clock == 0 else -1
+        z2, ym, k = parameters._z2, parameters._ym, parameters._k
+        clock, orientation = parameters._phase_displacement, parameters.orientation
         self._cy_element: CyTransformer
         if parameters.type == "single-phase":
             self._cy_element = CySingleTransformer(z2=z2, ym=ym, k=k * orientation * tap)
