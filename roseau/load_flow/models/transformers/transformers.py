@@ -61,7 +61,7 @@ class Transformer(AbstractBranch):
 
         Args:
             id:
-                A unique ID of the transformer in the network branches.
+                A unique ID of the transformer in the network transformers.
 
             bus_hv:
                 Bus to connect the HV side of the transformer.
