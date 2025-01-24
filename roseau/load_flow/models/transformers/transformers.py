@@ -123,8 +123,8 @@ class Transformer(AbstractBranch):
             self._cy_element = CyThreePhaseTransformer(
                 n1=parameters._n1,
                 n2=parameters._n2,
-                prim=parameters.whv[0],
-                sec=parameters.wlv[0],
+                whv=parameters.whv[0],
+                wlv=parameters.wlv[0],
                 z2=z2,
                 ym=ym,
                 k=k * tap,
