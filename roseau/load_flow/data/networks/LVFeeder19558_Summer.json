@@ -87,10 +87,10 @@
   "transformers": [
     {
       "id": "Transformer",
-      "phases1": "abc",
-      "phases2": "abcn",
-      "bus1": "MVLV04060",
-      "bus2": "MVLVFeeder04060",
+      "phases_hv": "abc",
+      "phases_lv": "abcn",
+      "bus_hv": "MVLV04060",
+      "bus_lv": "MVLVFeeder04060",
       "geometry": {
         "type": "Point",
         "coordinates": [-1.356072102421145, 48.79586129055696]

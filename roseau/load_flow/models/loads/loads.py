@@ -305,14 +305,14 @@ class AbstractLoad(Element, ABC):
 
     def _results_to_dict(self, warning: bool, full: bool) -> JsonDict:
         currents = self._res_currents_getter(warning)
+        potentials = self._res_potentials_getter(warning=False)
         results = {
             "id": self.id,
             "phases": self.phases,
             "type": self.type,
             "currents": [[i.real, i.imag] for i in currents],
+            "potentials": [[v.real, v.imag] for v in potentials],
         }
-        potentials = self._res_potentials_getter(warning=False)
-        results["potentials"] = [[v.real, v.imag] for v in potentials]
         if full:
             powers = self._res_powers_getter(warning=False, currents=currents, potentials=potentials)
             results["powers"] = [[s.real, s.imag] for s in powers]

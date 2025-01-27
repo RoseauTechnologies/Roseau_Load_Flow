@@ -41,7 +41,7 @@ NETWORK_JSON_VERSION = 4
 """The current version of the network JSON file format."""
 
 
-def _assign_branch_currents(branch: AbstractBranch, branch_data: JsonDict) -> None:
+def _assign_branch_currents(branch: AbstractBranch, branch_data: JsonDict, current_keys: tuple[str, str]) -> None:
     """Small helper to assign the currents results to a branch object.
 
     Args:
@@ -55,8 +55,12 @@ def _assign_branch_currents(branch: AbstractBranch, branch_data: JsonDict) -> No
         The updated `branch` object.
     """
     if "results" in branch_data:
-        currents1 = np.array([complex(i[0], i[1]) for i in branch_data["results"]["currents1"]], dtype=np.complex128)
-        currents2 = np.array([complex(i[0], i[1]) for i in branch_data["results"]["currents2"]], dtype=np.complex128)
+        currents1 = np.array(
+            [complex(i[0], i[1]) for i in branch_data["results"][current_keys[0]]], dtype=np.complex128
+        )
+        currents2 = np.array(
+            [complex(i[0], i[1]) for i in branch_data["results"][current_keys[1]]], dtype=np.complex128
+        )
         branch._res_currents = (currents1, currents2)
         branch._fetch_results = False
         branch._no_results = False
@@ -195,7 +199,7 @@ def network_from_dict(  # noqa: C901
             max_loading=max_loading,
         )
         if include_results:
-            _assign_branch_currents(branch=line, branch_data=line_data)
+            _assign_branch_currents(branch=line, branch_data=line_data, current_keys=("currents1", "currents2"))
 
         has_results = has_results and not line._no_results
         lines_dict[id] = line
@@ -204,12 +208,12 @@ def network_from_dict(  # noqa: C901
     transformers_dict: dict[Id, Transformer] = {}
     for transformer_data in data["transformers"]:
         id = transformer_data["id"]
-        phases_hv = transformer_data["phases1"]
-        phases_lv = transformer_data["phases2"]
+        phases_hv = transformer_data["phases_hv"]
+        phases_lv = transformer_data["phases_lv"]
         tap = transformer_data["tap"]
         max_loading = transformer_data["max_loading"]
-        bus1 = buses[transformer_data["bus1"]]
-        bus2 = buses[transformer_data["bus2"]]
+        bus1 = buses[transformer_data["bus_hv"]]
+        bus2 = buses[transformer_data["bus_lv"]]
         geometry = Transformer._parse_geometry(transformer_data.get("geometry"))
         tp = transformers_params[transformer_data["params_id"]]
         transformer = Transformer(
@@ -224,7 +228,9 @@ def network_from_dict(  # noqa: C901
             max_loading=max_loading,
         )
         if include_results:
-            _assign_branch_currents(branch=transformer, branch_data=transformer_data)
+            _assign_branch_currents(
+                branch=transformer, branch_data=transformer_data, current_keys=("currents_hv", "currents_lv")
+            )
 
         has_results = has_results and not transformer._no_results
         transformers_dict[id] = transformer
@@ -239,7 +245,7 @@ def network_from_dict(  # noqa: C901
         geometry = Switch._parse_geometry(switch_data.get("geometry"))
         switch = Switch(id=id, bus1=bus1, bus2=bus2, phases=phases, geometry=geometry)
         if include_results:
-            _assign_branch_currents(branch=switch, branch_data=switch_data)
+            _assign_branch_currents(branch=switch, branch_data=switch_data, current_keys=("currents1", "currents2"))
 
         has_results = has_results and not switch._no_results
         switches_dict[id] = switch
@@ -788,6 +794,18 @@ def v3_to_v4_converter(data: JsonDict) -> JsonDict:
             line_param_data["insulators"] = [Insulator(insulator).name for insulator in insulators]
         line_params.append(line_param_data)
 
+    transformers = []
+    for tr_data in data["transformers"]:
+        # Handle renamed keys
+        tr_data["bus_hv"] = tr_data.pop("bus1")
+        tr_data["bus_lv"] = tr_data.pop("bus2")
+        tr_data["phases_hv"] = tr_data.pop("phases1")
+        tr_data["phases_lv"] = tr_data.pop("phases2")
+        if "results" in tr_data:
+            tr_data["results"]["currents_hv"] = tr_data["results"].pop("currents1")
+            tr_data["results"]["currents_lv"] = tr_data["results"].pop("currents2")
+        transformers.append(tr_data)
+
     results = {
         "version": 4,
         "is_multiphase": data["is_multiphase"],  # Unchanged
@@ -796,11 +814,11 @@ def v3_to_v4_converter(data: JsonDict) -> JsonDict:
         "buses": data["buses"],  # <---- Unchanged
         "lines": data["lines"],  # <---- Unchanged
         "switches": data["switches"],  # Unchanged
-        "transformers": data["transformers"],  # <---- Unchanged
+        "transformers": transformers,
         "loads": data["loads"],  # Unchanged
         "sources": data["sources"],  # Unchanged
-        "lines_params": line_params,  # <---- Changed
-        "transformers_params": transformer_params,  # <---- Changed
+        "lines_params": line_params,
+        "transformers_params": transformer_params,
     }
     if "short_circuits" in data:
         results["short_circuits"] = data["short_circuits"]  # Unchanged
