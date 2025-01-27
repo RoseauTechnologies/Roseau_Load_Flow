@@ -398,7 +398,21 @@ class Transformer(AbstractBranch):
     # Json Mixin interface
     #
     def _to_dict(self, include_results: bool) -> JsonDict:
-        res = super()._to_dict(include_results=include_results)
+        res = {
+            "id": self.id,
+            "phases_hv": self.phases1,
+            "phases_lv": self.phases2,
+            "bus_hv": self.bus1.id,
+            "bus_lv": self.bus2.id,
+        }
+        if self.geometry is not None:
+            res["geometry"] = self.geometry.__geo_interface__
+        if include_results:
+            currents_hv, currents_lv = self._res_currents_getter(warning=True)
+            res["results"] = {
+                "currents_hv": [[i.real, i.imag] for i in currents_hv],
+                "currents_lv": [[i.real, i.imag] for i in currents_lv],
+            }
         res["tap"] = self.tap
         res["params_id"] = self.parameters.id
         res["max_loading"] = self._max_loading
@@ -409,15 +423,15 @@ class Transformer(AbstractBranch):
         currents1, currents2 = self._res_currents_getter(warning)
         results = {
             "id": self.id,
-            "phases1": self.phases_hv,
-            "phases2": self.phases_lv,
-            "currents1": [[i.real, i.imag] for i in currents1],
-            "currents2": [[i.real, i.imag] for i in currents2],
+            "phases_hv": self.phases_hv,
+            "phases_lv": self.phases_lv,
+            "currents_hv": [[i.real, i.imag] for i in currents1],
+            "currents_lv": [[i.real, i.imag] for i in currents2],
         }
         if full:
             potentials1, potentials2 = self._res_potentials_getter(warning=False)
-            results["potentials1"] = [[v.real, v.imag] for v in potentials1]
-            results["potentials2"] = [[v.real, v.imag] for v in potentials2]
+            results["potentials_hv"] = [[v.real, v.imag] for v in potentials1]
+            results["potentials_lv"] = [[v.real, v.imag] for v in potentials2]
             powers1, powers2 = self._res_powers_getter(
                 warning=False,
                 potentials1=potentials1,
@@ -425,13 +439,13 @@ class Transformer(AbstractBranch):
                 currents1=currents1,
                 currents2=currents2,
             )
-            results["powers1"] = [[s.real, s.imag] for s in powers1]
-            results["powers2"] = [[s.real, s.imag] for s in powers2]
+            results["powers_hv"] = [[s.real, s.imag] for s in powers1]
+            results["powers_lv"] = [[s.real, s.imag] for s in powers2]
             voltages1, voltages2 = self._res_voltages_getter(
                 warning=False, potentials1=potentials1, potentials2=potentials2
             )
-            results["voltages1"] = [[v.real, v.imag] for v in voltages1]
-            results["voltages2"] = [[v.real, v.imag] for v in voltages2]
+            results["voltages_hv"] = [[v.real, v.imag] for v in voltages1]
+            results["voltages_lv"] = [[v.real, v.imag] for v in voltages2]
 
             sum_powers1 = sum(powers1)
             sum_powers2 = sum(powers2)
