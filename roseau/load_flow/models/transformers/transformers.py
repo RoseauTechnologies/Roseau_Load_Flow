@@ -4,11 +4,12 @@ from typing import Final
 
 from shapely.geometry.base import BaseGeometry
 
+from roseau.load_flow.converters import _calculate_voltages
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.branches import AbstractBranch
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.transformers.parameters import TransformerParameters
-from roseau.load_flow.typing import Id, JsonDict
+from roseau.load_flow.typing import ComplexArray, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow.utils import deprecate_renamed_parameters, find_stack_level
 from roseau.load_flow_engine.cy_engine import (
@@ -393,6 +394,63 @@ class Transformer(AbstractBranch):
         # True if either the HV or LV side is overloaded
         loading = self._res_loading_getter(warning=True)
         return bool(loading > self._max_loading)
+
+    #
+    # Transformer specific results
+    #
+    @property
+    @ureg_wraps("A", (None,))
+    def res_currents_hv(self) -> Q_[ComplexArray]:
+        """The load flow result of the transformer currents on the HV side (A)."""
+        return self._res_currents_getter(warning=True)[0]
+
+    @property
+    @ureg_wraps("A", (None,))
+    def res_currents_lv(self) -> Q_[ComplexArray]:
+        """The load flow result of the transformer currents on the LV side (A)."""
+        return self._res_currents_getter(warning=True)[1]
+
+    @property
+    @ureg_wraps("V", (None,))
+    def res_potentials_hv(self) -> Q_[ComplexArray]:
+        """The load flow result of the transformer potentials on the HV side (V)."""
+        return self._res_potentials_getter(warning=True)[0]
+
+    @property
+    @ureg_wraps("V", (None,))
+    def res_potentials_lv(self) -> Q_[ComplexArray]:
+        """The load flow result of the transformer potentials on the HV side (V)."""
+        return self._res_potentials_getter(warning=True)[1]
+
+    @property
+    @ureg_wraps("VA", (None,))
+    def res_powers_hv(self) -> Q_[ComplexArray]:
+        """The load flow result of the transformer powers on the HV side (VA)."""
+        currents_hv = self._res_currents_getter(warning=True)[0]
+        potentials_hv = self._res_potentials_getter(warning=False)[0]
+        return potentials_hv * currents_hv.conj()
+
+    @property
+    @ureg_wraps("VA", (None,))
+    def res_powers_lv(self) -> Q_[ComplexArray]:
+        """The load flow result of the transformer powers on the LV side (VA)."""
+        currents_lv = self._res_currents_getter(warning=True)[1]
+        potentials_lv = self._res_potentials_getter(warning=False)[1]
+        return potentials_lv * currents_lv.conj()
+
+    @property
+    @ureg_wraps("V", (None,))
+    def res_voltages_hv(self) -> Q_[ComplexArray]:
+        """The load flow result of the transformer voltages on the HV side (V)."""
+        potentials_hv = self._res_potentials_getter(warning=True)[0]
+        return _calculate_voltages(potentials=potentials_hv, phases=self.phases_hv)
+
+    @property
+    @ureg_wraps("V", (None,))
+    def res_voltages_lv(self) -> Q_[ComplexArray]:
+        """The load flow result of the transformer voltages on the LV side (V)."""
+        potentials_lv = self._res_potentials_getter(warning=True)[1]
+        return _calculate_voltages(potentials=potentials_lv, phases=self.phases_lv)
 
     #
     # Json Mixin interface

@@ -340,10 +340,10 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         """The :attr:`transformers` of the network as a geo dataframe."""
         index = []
         data = {
-            "phases1": [],
-            "phases2": [],
-            "bus1_id": [],
-            "bus2_id": [],
+            "phases_hv": [],
+            "phases_lv": [],
+            "bus_hv_id": [],
+            "bus_lv_id": [],
             "parameters_id": [],
             "tap": [],
             "max_loading": [],
@@ -351,10 +351,10 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         }
         for transformer in self.transformers.values():
             index.append(transformer.id)
-            data["phases1"].append(transformer.phases1)
-            data["phases2"].append(transformer.phases2)
-            data["bus1_id"].append(transformer.bus1.id)
-            data["bus2_id"].append(transformer.bus2.id)
+            data["phases_hv"].append(transformer.phases_hv)
+            data["phases_lv"].append(transformer.phases_lv)
+            data["bus_hv_id"].append(transformer.bus_hv.id)
+            data["bus_lv_id"].append(transformer.bus_lv.id)
             data["parameters_id"].append(transformer.parameters.id)
             data["tap"].append(transformer._tap)
             data["max_loading"].append(transformer._max_loading)
@@ -814,16 +814,18 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             - `phase`: The phase of the transformer (in ``{'a', 'b', 'c', 'n'}``).
 
         and the following columns:
-            - `current1`: The complex current of the transformer (in Amps) for the given phase at the
-                first bus.
-            - `current2`: The complex current of the transformer (in Amps) for the given phase at the
-                second bus.
-            - `power1`: The complex power of the transformer (in VoltAmps) for the given phase at the
-                first bus.
-            - `power2`: The complex power of the transformer (in VoltAmps) for the given phase at the
-                second bus.
-            - `potential1`: The complex potential of the first bus (in Volts) for the given phase.
-            - `potential2`: The complex potential of the second bus (in Volts) for the given phase.
+            - `current_hv`: The complex current on the HV side of the transformer (in Amps) for the
+              given phase.
+            - `current_lv`: The complex current on the LV side of the transformer (in Amps) for the
+              given phase.
+            - `power_hv`: The complex power on the HV side of the transformer (in VoltAmps) for the
+              given phase.
+            - `power_lv`: The complex power on the LV side of the transformer (in VoltAmps) for the
+              given phase.
+            - `potential_hv`: The complex potential on the HV side of the transformer (in Volts) for
+              the given phase.
+            - `potential_lv`: The complex potential on the LV side of the transformer (in Volts) for
+              the given phase.
             - `max_loading`: The maximal loading (unitless) of the transformer.
 
         Note that values for missing phases are set to ``nan``. For example, a "Dyn" transformer has
@@ -834,12 +836,12 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         res_dict = {
             "transformer_id": [],
             "phase": [],
-            "current1": [],
-            "current2": [],
-            "power1": [],
-            "power2": [],
-            "potential1": [],
-            "potential2": [],
+            "current_hv": [],
+            "current_lv": [],
+            "power_hv": [],
+            "power_lv": [],
+            "potential_hv": [],
+            "potential_lv": [],
             "violated": [],
             "loading": [],
             # Non results
@@ -848,33 +850,33 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         }
         dtypes = {c: DTYPES[c] for c in res_dict}
         for transformer in self.transformers.values():
-            currents1, currents2 = transformer._res_currents_getter(warning=False)
-            potentials1, potentials2 = transformer._res_potentials_getter(warning=False)
-            powers1 = potentials1 * currents1.conj()
-            powers2 = potentials2 * currents2.conj()
+            currents_hv, currents_lv = transformer._res_currents_getter(warning=False)
+            potentials_hv, potentials_lv = transformer._res_potentials_getter(warning=False)
+            powers_hv = potentials_hv * currents_hv.conj()
+            powers_lv = potentials_lv * currents_lv.conj()
             sn = transformer.parameters._sn
             max_loading = transformer._max_loading
-            loading = max(abs(powers1.sum()), abs(powers2.sum())) / sn
+            loading = max(abs(powers_hv.sum()), abs(powers_lv.sum())) / sn
             violated = loading > max_loading
             for phase in transformer._all_phases:
-                if phase in transformer.phases1:
-                    idx1 = transformer.phases1.index(phase)
-                    i1, s1, v1 = currents1[idx1], powers1[idx1], potentials1[idx1]
+                if phase in transformer.phases_hv:
+                    idx_hv = transformer.phases_hv.index(phase)
+                    i_hv, s_hv, v_hv = currents_hv[idx_hv], powers_hv[idx_hv], potentials_hv[idx_hv]
                 else:
-                    i1, s1, v1 = None, None, None
-                if phase in transformer.phases2:
-                    idx2 = transformer.phases2.index(phase)
-                    i2, s2, v2 = currents2[idx2], powers2[idx2], potentials2[idx2]
+                    i_hv, s_hv, v_hv = None, None, None
+                if phase in transformer.phases_lv:
+                    idx_lv = transformer.phases_lv.index(phase)
+                    i_lv, s_lv, v_lv = currents_lv[idx_lv], powers_lv[idx_lv], potentials_lv[idx_lv]
                 else:
-                    i2, s2, v2 = None, None, None
+                    i_lv, s_lv, v_lv = None, None, None
                 res_dict["transformer_id"].append(transformer.id)
                 res_dict["phase"].append(phase)
-                res_dict["current1"].append(i1)
-                res_dict["current2"].append(i2)
-                res_dict["power1"].append(s1)
-                res_dict["power2"].append(s2)
-                res_dict["potential1"].append(v1)
-                res_dict["potential2"].append(v2)
+                res_dict["current_hv"].append(i_hv)
+                res_dict["current_lv"].append(i_lv)
+                res_dict["power_hv"].append(s_hv)
+                res_dict["power_lv"].append(s_lv)
+                res_dict["potential_hv"].append(v_hv)
+                res_dict["potential_lv"].append(v_lv)
                 res_dict["violated"].append(violated)
                 res_dict["loading"].append(loading)
                 # Non results

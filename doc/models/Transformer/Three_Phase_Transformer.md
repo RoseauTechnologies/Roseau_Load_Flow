@@ -321,23 +321,23 @@ en = rlf.ElectricalNetwork.from_element(bus_mv)
 en.solve_load_flow()
 
 # The current flowing into the transformer from the MV bus
-en.res_transformers[["current1"]].dropna().transform(
+en.res_transformers[["current_hv"]].dropna().transform(
     [np.abs, ft.partial(np.angle, deg=True)]
 )
-# |                  |   ('current1', 'absolute') |   ('current1', 'angle') |
-# |:-----------------|---------------------------:|------------------------:|
-# | ('transfo', 'a') |                   0.275904 |                -38.8165 |
-# | ('transfo', 'b') |                   0.275904 |               -158.817  |
-# | ('transfo', 'c') |                   0.275904 |                 81.1835 |
+# |                  |   ('current_hv', 'absolute') |   ('current_hv', 'angle') |
+# |:-----------------|-----------------------------:|--------------------------:|
+# | ('transfo', 'a') |                     0.275904 |                  -38.8165 |
+# | ('transfo', 'b') |                     0.275904 |                 -158.817  |
+# | ('transfo', 'c') |                     0.275904 |                   81.1835 |
 
 # The current flowing into the transformer from the LV bus
-en.res_transformers[["current2"]].transform([np.abs, ft.partial(np.angle, deg=True)])
-# |                  |   ('current2', 'absolute') |   ('current2', 'angle') |
-# |:-----------------|---------------------------:|------------------------:|
-# | ('transfo', 'a') |               12.6872      |                179.813  |
-# | ('transfo', 'b') |               12.6872      |                 59.8133 |
-# | ('transfo', 'c') |               12.6872      |                -60.1867 |
-# | ('transfo', 'n') |                2.25156e-13 |                -80.4634 |
+en.res_transformers[["current_lv"]].transform([np.abs, ft.partial(np.angle, deg=True)])
+# |                  |   ('current_lv', 'absolute') |   ('current_lv', 'angle') |
+# |:-----------------|-----------------------------:|--------------------------:|
+# | ('transfo', 'a') |                 12.6872      |                  179.813  |
+# | ('transfo', 'b') |                 12.6872      |                   59.8133 |
+# | ('transfo', 'c') |                 12.6872      |                  -60.1867 |
+# | ('transfo', 'n') |                  2.25156e-13 |                  -80.4634 |
 
 # The voltages at the buses of the network
 en.res_buses_voltages[["voltage"]].transform([np.abs, ft.partial(np.angle, deg=True)])

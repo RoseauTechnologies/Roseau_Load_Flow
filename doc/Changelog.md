@@ -19,9 +19,31 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
-- {gh-pr}`319` {gh-issue}`191` Deprecate the notion of "primary" and "secondary" sides of transformers
-  in favor of "high-voltage" and "low-voltage" sides following the IEC 60076-1 standard. The following
-  parameters of `rlf.Transformer` are deprecated and renamed:
+### Breaking changes
+
+- The following columns have been renamed in `ElectricalNetwork.transformers_frame`:
+
+  - `bus1_id` -> `bus_hv_id`
+  - `bus2_id` -> `bus_lv_id`
+  - `phases1` -> `phases_hv`
+  - `phases2` -> `phases_lv`
+
+  and the following columns have been renamed in `ElectricalNetwork.res_transformers`:
+
+  - `current1` -> `current_hv`
+  - `current2` -> `current_lv`
+  - `potential1` -> `potential_hv`
+  - `potential2` -> `potential_lv`
+  - `voltage1` -> `voltage_hv`
+  - `voltage2` -> `voltage_lv`
+  - `power1` -> `power_hv`
+  - `power2` -> `power_lv`
+
+### Detailed changes
+
+- {gh-pr}`319` {gh-pr}`320` {gh-pr}`321` {gh-issue}`191` Deprecate the notion of "primary" and
+  "secondary" sides of transformers in favor of "high-voltage" and "low-voltage" sides following the
+  IEC 60076-1 standard. The following parameters of `rlf.Transformer` are deprecated and renamed:
 
   - `bus1` -> `bus_hv`
   - `bus2` -> `bus_lv`
@@ -31,6 +53,9 @@ og:description: See what's new in the latest release of Roseau Load Flow !
   The attributes `bus1`, `bus2`, `phases1`, `phases2`, `winding1`, `winding2`, `phase_displacement`
   are still available. They are aliases to newly added attributes `bus_hv`, `bus_lv`, `phases_hv`,
   `phases_lv`, `whv`, `wlv`, and `clock` respectively. The old attributes will NOT be removed.
+
+  The corresponding columns in `ElectricalNetwork.transformers_frame` and
+  `ElectricalNetwork.res_transformers` have been renamed as well. The old columns have been removed.
 
 - {gh-pr}`318` Implement all common and additional three-phase transformer vector groups. Notable
   addition is transformers with clock number 1, common in North America.
