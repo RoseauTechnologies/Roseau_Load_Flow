@@ -281,7 +281,7 @@ def test_transformers_parameters_units_from_tests():
 def test_transformer_type():
     valid_windings1 = ("y", "yn", "d", "i")
     valid_windings2 = ("y", "yn", "z", "zn", "d", "i", "ii")
-    valid_phase_displacements = (0, 5, 6, 11)
+    valid_clock_numbers = (0, 5, 6, 11)
     valid_types = {
         "dd",
         "yy",
@@ -338,21 +338,21 @@ def test_transformer_type():
         "iii6",
     }
 
-    for winding1 in valid_windings1:
-        for winding2 in valid_windings2:
-            vg = f"{winding1}{winding2}"
+    for winding_hv in valid_windings1:
+        for winding_lv in valid_windings2:
+            vg = f"{winding_hv}{winding_lv}"
             if vg in valid_types:
                 with pytest.raises(RoseauLoadFlowException) as e:
                     TransformerParameters.extract_windings(vg)
                 assert e.value.msg.startswith(f"Invalid vector group: '{vg}'. Expected one of ['Dd0'")
                 assert e.value.code == RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS
-                for phase_displacement in valid_phase_displacements:
-                    vg = f"{winding1}{winding2}{phase_displacement}"
+                for clock_number in valid_clock_numbers:
+                    vg = f"{winding_hv}{winding_lv}{clock_number}"
                     if vg in valid_full_types:
-                        w1, w2, p = TransformerParameters.extract_windings(vg)
-                        assert w1 == winding1.upper()
-                        assert w2 == winding2
-                        assert p == phase_displacement
+                        whv, wlv, clock = TransformerParameters.extract_windings(vg)
+                        assert whv == winding_hv.upper()
+                        assert wlv == winding_lv
+                        assert clock == clock_number
                     else:
                         with pytest.raises(RoseauLoadFlowException) as e:
                             TransformerParameters.extract_windings(vg)

@@ -92,7 +92,7 @@ def test_connect_and_disconnect():
     ground2 = Ground("ground2")
     ground2.connect(bus=load_bus2)
     tp = TransformerParameters.from_catalogue(name="SE Minera A0Ak 50kVA 15/20kV(20) 410V Yzn11")
-    Transformer(id="transfo", bus1=load_bus, bus2=load_bus2, parameters=tp)
+    Transformer(id="transfo", bus_hv=load_bus, bus_lv=load_bus2, parameters=tp)
     with pytest.raises(RoseauLoadFlowException) as e:
         en._check_validity(constructed=False)
     assert "does not have a potential reference" in e.value.args[0]
@@ -345,7 +345,7 @@ def test_bad_networks():
     tp = TransformerParameters.from_open_and_short_circuit_tests(
         id="t", vg="Dyn11", uhv=20000, ulv=400, sn=160 * 1e3, p0=460, i0=2.3 / 100, psc=2350, vsc=4 / 100
     )
-    t = Transformer(id="transfo", bus1=bus2, bus2=bus3, parameters=tp)
+    t = Transformer(id="transfo", bus_hv=bus2, bus_lv=bus3, parameters=tp)
     with pytest.raises(RoseauLoadFlowException) as e:
         ElectricalNetwork.from_element(bus0)
     assert "does not have a potential reference" in e.value.msg
@@ -2281,7 +2281,7 @@ def test_results_to_json(small_network_with_results, tmp_path):
 
 
 def test_propagate_potentials_center_transformers():
-    # Source is located at the primary side of the transformer
+    # Source is located at the HV side of the transformer
     bus1 = Bus(id="bus1", phases="ab")
     PotentialRef(id="pref", element=bus1)
     VoltageSource(id="vs", bus=bus1, voltages=20000)
@@ -2290,7 +2290,7 @@ def test_propagate_potentials_center_transformers():
     )
     bus2 = Bus(id="bus2", phases="abn")
     PotentialRef(id="pref2", element=bus2)
-    Transformer(id="transfo", bus1=bus1, bus2=bus2, parameters=tp)
+    Transformer(id="transfo", bus_hv=bus1, bus_lv=bus2, parameters=tp)
     en = ElectricalNetwork.from_element(bus2)
     with contextlib.suppress(TypeError):  # cython solve_load_flow method has been patched
         en.solve_load_flow()  # propagate the potentials

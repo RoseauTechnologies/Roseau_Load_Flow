@@ -58,10 +58,10 @@ a Delta-Wye transformer and a small LV network.
 ... )
 ... transformer = rlf.Transformer(
 ...     id="transfo",
-...     bus1=bus0_mv,
-...     bus2=bus0_lv,
-...     phases1="abc",
-...     phases2="abcn",
+...     bus_hv=bus0_mv,
+...     bus_lv=bus0_lv,
+...     phases_hv="abc",
+...     phases_lv="abcn",
 ...     parameters=tp,
 ...     tap=1.025,
 ... )

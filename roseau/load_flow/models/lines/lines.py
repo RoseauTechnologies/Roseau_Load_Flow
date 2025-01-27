@@ -46,7 +46,7 @@ class Line(AbstractBranch):
 
         Args:
             id:
-                A unique ID of the line in the network branches.
+                A unique ID of the line in the network lines.
 
             bus1:
                 The first bus (aka `"from_bus"`) to connect to the line.

@@ -79,16 +79,21 @@ def generate_transformers(
     for idx in elm_tr.index:
         type_id = elm_tr.at[idx, "typ_id"]  # id of the transformer type
         tap = 1.0 + elm_tr.at[idx, "nntap"] * transformers_tap[type_id] / 100
-        bus1 = buses[sta_cubic.at[elm_tr.at[idx, "bushv"], "cterm"]]
-        bus2 = buses[sta_cubic.at[elm_tr.at[idx, "buslv"], "cterm"]]
+        bus_hv = buses[sta_cubic.at[elm_tr.at[idx, "bushv"], "cterm"]]
+        bus_lv = buses[sta_cubic.at[elm_tr.at[idx, "buslv"], "cterm"]]
         # petersen = elm_tr.at[idx, "cpeter_l"]  # Petersen coil
         # z_gnd = elm_tr.at[idx, "re0tr_l"] + 1j * elm_tr.at[idx, "xe0tr_l"]  # Grounding impedance
         # Transformers do not have geometries, use the buses
         geometry = (
-            shapely.LineString([bus1.geometry, bus2.geometry]).centroid  # type: ignore
-            if bus1.geometry is not None and bus2.geometry is not None
+            shapely.LineString([bus_hv.geometry, bus_lv.geometry]).centroid  # type: ignore
+            if bus_hv.geometry is not None and bus_lv.geometry is not None
             else None
         )
         transformers[idx] = Transformer(
-            id=idx, bus1=bus1, bus2=bus2, parameters=transformers_params[type_id], tap=tap, geometry=geometry
+            id=idx,
+            bus_hv=bus_hv,
+            bus_lv=bus_lv,
+            parameters=transformers_params[type_id],
+            tap=tap,
+            geometry=geometry,
         )

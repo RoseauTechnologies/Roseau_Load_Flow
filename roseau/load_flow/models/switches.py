@@ -33,7 +33,7 @@ class Switch(AbstractBranch):
 
         Args:
             id:
-                A unique ID of the switch in the network branches.
+                A unique ID of the switch in the network switches.
 
             bus1:
                 Bus to connect to the switch.

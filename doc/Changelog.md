@@ -19,6 +19,19 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`319` {gh-issue}`191` Deprecate the notion of "primary" and "secondary" sides of transformers
+  in favor of "high-voltage" and "low-voltage" sides following the IEC 60076-1 standard. The following
+  parameters of `rlf.Transformer` are deprecated and renamed:
+
+  - `bus1` -> `bus_hv`
+  - `bus2` -> `bus_lv`
+  - `phases1` -> `phases_hv`
+  - `phases2` -> `phases_lv`
+
+  The attributes `bus1`, `bus2`, `phases1`, `phases2`, `winding1`, `winding2`, `phase_displacement`
+  are still available. They are aliases to newly added attributes `bus_hv`, `bus_lv`, `phases_hv`,
+  `phases_lv`, `whv`, `wlv`, and `clock` respectively. The old attributes will NOT be removed.
+
 - {gh-pr}`318` Implement all common and additional three-phase transformer vector groups. Notable
   addition is transformers with clock number 1, common in North America.
 

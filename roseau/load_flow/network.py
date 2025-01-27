@@ -74,36 +74,39 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             such as loads and sources. Buses can be connected together with branches.
 
         lines:
-            The lines of the network. Either a list of lines or a dictionary of lines with their IDs as keys.
+            The lines of the network. Either a list of lines or a dictionary of lines with their IDs
+            as keys.
 
         transformers:
-            The transformers of the network. Either a list of transformers or a dictionary of transformers with their IDs as keys.
+            The transformers of the network. Either a list of transformers or a dictionary of
+            transformers with their IDs as keys.
 
         switches:
-            The switches of the network. Either a list of switches or a dictionary of switches with their IDs as keys.
+            The switches of the network. Either a list of switches or a dictionary of switches with
+            their IDs as keys.
 
         loads:
-            The loads of the network. Either a list of loads or a dictionary of loads with their
-            IDs as keys. There are three types of loads: constant power, constant current, and
-            constant impedance.
+            The loads of the network. Either a list of loads or a dictionary of loads with their IDs
+            as keys. There are three types of loads: constant power, constant current, and constant
+            impedance.
 
         sources:
             The sources of the network. Either a list of sources or a dictionary of sources with
-            their IDs as keys. A network must have at least one source. Note that two sources
-            cannot be connected with a switch.
+            their IDs as keys. A network must have at least one source. Note that two sources cannot
+            be connected with a switch.
 
         grounds:
             The grounds of the network. Either a list of grounds or a dictionary of grounds with
             their IDs as keys. LV networks typically have one ground element connected to the
-            neutral of the main source bus (secondary of the MV/LV transformer). HV networks
-            may have one or more grounds connected to the shunt components of their lines.
+            neutral of the main source bus (LV side of the MV/LV transformer). HV networks may have
+            one or more grounds connected to the shunt components of their lines.
 
         potential_refs:
             The potential references of the network. Either a list of potential references or a
             dictionary of potential references with their IDs as keys. As the name suggests, this
             element defines the reference of potentials of the network. A potential reference per
-            galvanically isolated section of the network is expected. A potential reference can
-            be connected to a bus or to a ground.
+            galvanically isolated section of the network is expected. A potential reference can be
+            connected to a bus or to a ground.
 
         crs:
             An optional Coordinate Reference System to use with geo data frames. If not provided,
@@ -823,9 +826,9 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             - `potential2`: The complex potential of the second bus (in Volts) for the given phase.
             - `max_loading`: The maximal loading (unitless) of the transformer.
 
-        Note that values for missing phases are set to ``nan``. For example, a "Dyn" transformer
-        has the phases "abc" on the primary side and "abcn" on the secondary side, so the primary
-        side values for current, power, and potential for phase "n" will be ``nan``.
+        Note that values for missing phases are set to ``nan``. For example, a "Dyn" transformer has
+        the phases "abc" on the HV side and "abcn" on the LV side, so the HV side values for current,
+        power, and potential for phase "n" will be ``nan``.
         """
         self._check_valid_results()
         res_dict = {

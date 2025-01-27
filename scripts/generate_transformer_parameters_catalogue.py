@@ -23,8 +23,8 @@ if __name__ == "__main__":
         destination_path.mkdir(exist_ok=True, parents=True)
 
         # Get parameters
-        uhv = Q_(df.at[idx, "uhv"], "V")  # Phase-to-phase nominal voltages of the primary side
-        ulv = Q_(df.at[idx, "ulv"], "V")  # Phase-to-phase nominal voltages of the secondary side
+        uhv = Q_(df.at[idx, "uhv"], "V")  # Phase-to-phase nominal voltages of the HV side
+        ulv = Q_(df.at[idx, "ulv"], "V")  # Phase-to-phase nominal voltages of the LV side
         sn = Q_(df.at[idx, "sn"], "VA")  # Nominal power
         i0 = Q_(np.round(df.at[idx, "i0"], decimals=3), "")  # Current during open-circuit test
         p0 = Q_(df.at[idx, "p0"], "W")  # Losses during open-circuit test

@@ -165,8 +165,8 @@ def test_to_dict():
     tp2 = TransformerParameters.from_open_and_short_circuit_tests(
         id="t", vg="Dyn11", uhv=20000, ulv=400, sn=200 * 1e3, p0=460, i0=2.3 / 100, psc=2350, vsc=4 / 100
     )
-    transformer1 = Transformer(id="Transformer1", bus1=source_bus, bus2=load_bus, parameters=tp1, geometry=geom)
-    transformer2 = Transformer(id="Transformer2", bus1=source_bus, bus2=load_bus, parameters=tp2, geometry=geom)
+    transformer1 = Transformer(id="Transformer1", bus_hv=source_bus, bus_lv=load_bus, parameters=tp1, geometry=geom)
+    transformer2 = Transformer(id="Transformer2", bus_hv=source_bus, bus_lv=load_bus, parameters=tp2, geometry=geom)
     en = ElectricalNetwork(
         buses=[source_bus, load_bus],
         lines=[],
@@ -317,9 +317,9 @@ def test_from_dict_v3():
     # Test vector group of transformers
     for tr in en.transformers.values():
         if tr.phases1 == "abcn":
-            assert tr.parameters.winding1 in ("YN", "ZN")
+            assert tr.parameters.whv in ("YN", "ZN")
         if tr.phases2 == "abcn":
-            assert tr.parameters.winding2 in ("yn", "zn")
+            assert tr.parameters.wlv in ("yn", "zn")
 
 
 @pytest.mark.parametrize("version", list(range(NETWORK_JSON_VERSION)))

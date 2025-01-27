@@ -10,7 +10,7 @@ import copy
 import logging
 import warnings
 from collections import defaultdict
-from typing import TYPE_CHECKING, TypeVar
+from typing import TYPE_CHECKING
 
 import numpy as np
 
@@ -40,10 +40,8 @@ logger = logging.getLogger(__name__)
 NETWORK_JSON_VERSION = 4
 """The current version of the network JSON file format."""
 
-_T = TypeVar("_T", bound=AbstractBranch)
 
-
-def _assign_branch_currents(branch: _T, branch_data: JsonDict) -> _T:
+def _assign_branch_currents(branch: AbstractBranch, branch_data: JsonDict) -> None:
     """Small helper to assign the currents results to a branch object.
 
     Args:
@@ -62,8 +60,6 @@ def _assign_branch_currents(branch: _T, branch_data: JsonDict) -> _T:
         branch._res_currents = (currents1, currents2)
         branch._fetch_results = False
         branch._no_results = False
-
-    return branch
 
 
 def network_from_dict(  # noqa: C901
@@ -199,7 +195,7 @@ def network_from_dict(  # noqa: C901
             max_loading=max_loading,
         )
         if include_results:
-            line = _assign_branch_currents(branch=line, branch_data=line_data)
+            _assign_branch_currents(branch=line, branch_data=line_data)
 
         has_results = has_results and not line._no_results
         lines_dict[id] = line
@@ -208,8 +204,8 @@ def network_from_dict(  # noqa: C901
     transformers_dict: dict[Id, Transformer] = {}
     for transformer_data in data["transformers"]:
         id = transformer_data["id"]
-        phases1 = transformer_data["phases1"]
-        phases2 = transformer_data["phases2"]
+        phases_hv = transformer_data["phases1"]
+        phases_lv = transformer_data["phases2"]
         tap = transformer_data["tap"]
         max_loading = transformer_data["max_loading"]
         bus1 = buses[transformer_data["bus1"]]
@@ -218,17 +214,17 @@ def network_from_dict(  # noqa: C901
         tp = transformers_params[transformer_data["params_id"]]
         transformer = Transformer(
             id=id,
-            bus1=bus1,
-            bus2=bus2,
+            bus_hv=bus1,
+            bus_lv=bus2,
             parameters=tp,
-            phases1=phases1,
-            phases2=phases2,
+            phases_hv=phases_hv,
+            phases_lv=phases_lv,
             tap=tap,
             geometry=geometry,
             max_loading=max_loading,
         )
         if include_results:
-            transformer = _assign_branch_currents(branch=transformer, branch_data=transformer_data)
+            _assign_branch_currents(branch=transformer, branch_data=transformer_data)
 
         has_results = has_results and not transformer._no_results
         transformers_dict[id] = transformer
@@ -243,7 +239,7 @@ def network_from_dict(  # noqa: C901
         geometry = Switch._parse_geometry(switch_data.get("geometry"))
         switch = Switch(id=id, bus1=bus1, bus2=bus2, phases=phases, geometry=geometry)
         if include_results:
-            switch = _assign_branch_currents(branch=switch, branch_data=switch_data)
+            _assign_branch_currents(branch=switch, branch_data=switch_data)
 
         has_results = has_results and not switch._no_results
         switches_dict[id] = switch
@@ -498,9 +494,9 @@ def v0_to_v1_converter(data: JsonDict) -> JsonDict:  # noqa: C901
             branch["tap"] = old_branch["tap"]
             branch["type"] = branch_type
             # Transformers have no phases information, we need to infer it from the windings
-            w1, w2, _ = TransformerParameters.extract_windings(transformers_params[params_id]["type"])
-            phases1 = "abcn" if ("y" in w1.lower() or "z" in w1.lower()) else "abc"
-            phases2 = "abcn" if ("y" in w2.lower() or "z" in w2.lower()) else "abc"
+            whv, wlv, _ = TransformerParameters.extract_windings(transformers_params[params_id]["type"])
+            phases1 = "abcn" if ("y" in whv.lower() or "z" in whv.lower()) else "abc"
+            phases2 = "abcn" if ("y" in wlv.lower() or "z" in wlv.lower()) else "abc"
             # Determine the "special element" connected to bus2 of the transformer
             if phases2 == "abcn":  # ground if it has neutral
                 ground["buses"].append({"id": bus2_id, "phase": "n"})
@@ -773,14 +769,14 @@ def v3_to_v4_converter(data: JsonDict) -> JsonDict:
 
     transformer_params = []
     for tp_data in data["transformers_params"]:
-        w1, w2, clock = TransformerParameters.extract_windings(tp_data["vg"])
+        whv, wlv, clock = TransformerParameters.extract_windings(tp_data["vg"])
         # Handle brought out neutrals that were not declared as such
-        if w1 in ("Y", "Z") and any(tr_phases[0] == "abcn" for tr_phases in tr_phases_per_params[tp_data["id"]]):
-            w1 += "N"
-        if w2 in ("y", "z") and any(tr_phases[1] == "abcn" for tr_phases in tr_phases_per_params[tp_data["id"]]):
-            w2 += "n"
+        if whv in ("Y", "Z") and any(tr_phases[0] == "abcn" for tr_phases in tr_phases_per_params[tp_data["id"]]):
+            whv += "N"
+        if wlv in ("y", "z") and any(tr_phases[1] == "abcn" for tr_phases in tr_phases_per_params[tp_data["id"]]):
+            wlv += "n"
         # Normalize the vector group (dyN11 -> Dyn11)
-        tp_data["vg"] = f"{w1}{w2}{clock}"
+        tp_data["vg"] = f"{whv}{wlv}{clock}"
         transformer_params.append(tp_data)
 
     line_params = []
