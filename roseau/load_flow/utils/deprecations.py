@@ -30,16 +30,16 @@ def deprecate_renamed_parameters(
         def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
             for old_name, new_name in replaced_names.items():
                 if old_name in kwargs:
-                    func_name = function.__qualname__
+                    func_name = function.__qualname__.removesuffix(".__init__").removesuffix(".__new__")
                     if new_name in kwargs:
                         raise TypeError(
-                            f"`{func_name!r}` received both `{old_name!r}` and `{new_name!r}` as "
-                            f"arguments; `{old_name!r}` is deprecated, use `{new_name!r}` instead."
+                            f"{func_name}() got both {old_name!r} and {new_name!r} as arguments; "
+                            f"{old_name!r} is deprecated, use {new_name!r} instead."
                         )
                     warnings.warn(
                         message=(
-                            f"The argument `{old_name}` for `{func_name}` is deprecated. It has been "
-                            f"renamed to `{new_name}`."
+                            f"Argument {old_name!r} for {func_name}() is deprecated. It has been "
+                            f"renamed to {new_name!r}."
                         ),
                         category=category,
                         stacklevel=find_stack_level(),
@@ -47,7 +47,7 @@ def deprecate_renamed_parameters(
                     kwargs[new_name] = kwargs.pop(old_name)
             return function(*args, **kwargs)
 
-        wrapper.__signature__ = inspect.signature(function)  # type: ignore[attr-defined]
+        wrapper.__signature__ = inspect.signature(function)  # type: ignore
         return wrapper
 
     return decorate
@@ -110,7 +110,8 @@ def deprecate_nonkeyword_arguments(
 
         num_allowed_args = len(allow_args)
         if message is None:
-            msg = f"All arguments of {function.__qualname__}"
+            func_name = function.__qualname__.removesuffix(".__init__").removesuffix(".__new__")
+            msg = f"All arguments of {func_name}()"
             if "self" in allow_args:
                 allow_args.remove("self")
             if not allow_args:
@@ -129,7 +130,7 @@ def deprecate_nonkeyword_arguments(
                 warnings.warn(message=msg, category=FutureWarning, stacklevel=find_stack_level())
             return function(*args, **kwargs)
 
-        wrapper.__signature__ = new_sig  # type: ignore[attr-defined]
+        wrapper.__signature__ = new_sig  # type: ignore
         return wrapper
 
     return decorate
@@ -142,7 +143,7 @@ def deprecate_parameter_as_multi_positional(
 
     Use as follows::
 
-        @deprecate_parameter_as_positional("param", version="0.10.0")
+        @deprecate_parameter_as_multi_positional("param", version="0.10.0")
         def my_func(*param): ...
     """
 
@@ -156,7 +157,7 @@ def deprecate_parameter_as_multi_positional(
 
             warnings.warn(
                 message=(
-                    f"Passing `{old_name}` as a keyword argument is deprecated. Pass it as a "
+                    f"Passing {old_name!r} as a keyword argument is deprecated. Pass it as a "
                     "positional argument instead."
                 ),
                 category=FutureWarning,
@@ -169,7 +170,7 @@ def deprecate_parameter_as_multi_positional(
                 arg_value = tuple(arg_value)
             return function(*args, *arg_value, **kwargs)
 
-        wrapper.__signature__ = inspect.signature(function)  # type: ignore[attr-defined]
+        wrapper.__signature__ = inspect.signature(function)  # type: ignore
         return wrapper
 
     return decorate

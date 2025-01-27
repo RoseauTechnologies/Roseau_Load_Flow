@@ -134,7 +134,7 @@ class Transformer(AbstractBranch):
 
     def __repr__(self) -> str:
         return (
-            f"<{type(self).__name__}: id={self.id!r}, bus1={self.bus1.id!r}, bus2={self.bus2.id!r}, "
+            f"<{type(self).__name__}: id={self.id!r}, bus_hv={self.bus_hv.id!r}, bus_lv={self.bus_lv.id!r}, "
             f"phases_hv={self.phases_hv!r}, phases_lv={self.phases_lv!r}, tap={self.tap:f}, "
             f"max_loading={self._max_loading:f}>"
         )

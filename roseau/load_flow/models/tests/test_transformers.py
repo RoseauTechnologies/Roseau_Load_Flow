@@ -136,3 +136,58 @@ def test_brought_out_neutral():
     ):
         tr4 = Transformer(id="tr4", bus_hv=bus_hv, bus_lv=bus_lv, parameters=tp2, phases_hv="abc", phases_lv="abcn")
     assert tr4.phases_lv == "abc"
+
+
+def test_renamed_attributes():
+    bus_hv = Bus(id="bus_hv", phases="abc")
+    bus_lv = Bus(id="bus_lv", phases="abcn")
+    tp = TransformerParameters("tp", vg="Dyn11", uhv=20e3, ulv=400, sn=100e3, z2=0.01, ym=0.01j)
+    tr = Transformer(id="transformer", bus_hv=bus_hv, bus_lv=bus_lv, parameters=tp, phases_hv="abc", phases_lv="abcn")
+
+    # Old attributes
+    assert tp.winding1 == "D"
+    assert tp.winding2 == "yn"
+    assert tp.phase_displacement == 11
+    assert tr.phases1 == "abc"
+    assert tr.phases2 == "abcn"
+    assert tr.bus1 == bus_hv
+    assert tr.bus2 == bus_lv
+
+    # New attributes
+    assert tp.whv == "D"
+    assert tp.wlv == "yn"
+    assert tp.clock == 11
+    assert tr.phases_hv == "abc"
+    assert tr.phases_lv == "abcn"
+    assert tr.bus_hv == bus_hv
+    assert tr.bus_lv == bus_lv
+
+
+def test_deprecated_parameters():
+    bus_hv = Bus(id="bus_hv", phases="abc")
+    bus_lv = Bus(id="bus_lv", phases="abcn")
+    tp = TransformerParameters("tp", vg="Dyn11", uhv=20e3, ulv=400, sn=100e3, z2=0.01, ym=0.01j)
+
+    with pytest.warns(
+        DeprecationWarning,
+        match=r"Argument 'bus1' for Transformer\(\) is deprecated. It has been renamed to 'bus_hv'",
+    ):
+        Transformer(id="transformer", bus1=bus_hv, bus_lv=bus_lv, parameters=tp)  # type: ignore
+
+    with pytest.warns(
+        DeprecationWarning,
+        match=r"Argument 'bus2' for Transformer\(\) is deprecated. It has been renamed to 'bus_lv'",
+    ):
+        Transformer(id="transformer", bus_hv=bus_hv, bus2=bus_lv, parameters=tp)  # type: ignore
+
+    with pytest.warns(
+        DeprecationWarning,
+        match=r"Argument 'phases1' for Transformer\(\) is deprecated. It has been renamed to 'phases_hv'",
+    ):
+        Transformer(id="transformer", bus_hv=bus_hv, bus_lv=bus_lv, parameters=tp, phases1="abc")  # type: ignore
+
+    with pytest.warns(
+        DeprecationWarning,
+        match=r"Argument 'phases2' for Transformer\(\) is deprecated. It has been renamed to 'phases_lv'",
+    ):
+        Transformer(id="transformer", bus_hv=bus_hv, bus_lv=bus_lv, parameters=tp, phases2="abcn")  # type: ignore
