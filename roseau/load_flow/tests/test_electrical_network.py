@@ -462,7 +462,7 @@ def test_invalid_element_overrides():
     )
 
 
-def test_frame(small_network: ElectricalNetwork):
+def test_frames(small_network: ElectricalNetwork):
     # Buses
     buses_gdf = small_network.buses_frame
     assert isinstance(buses_gdf, gpd.GeoDataFrame)
@@ -496,10 +496,10 @@ def test_frame(small_network: ElectricalNetwork):
     assert isinstance(transformers_gdf, gpd.GeoDataFrame)
     assert transformers_gdf.shape == (0, 8)
     assert transformers_gdf.columns.tolist() == [
-        "phases1",
-        "phases2",
-        "bus1_id",
-        "bus2_id",
+        "phases_hv",
+        "phases_lv",
+        "bus_hv_id",
+        "bus_lv_id",
         "parameters_id",
         "tap",
         "max_loading",
@@ -766,12 +766,12 @@ def test_single_phase_network(single_phase_network: ElectricalNetwork):
             columns=[
                 "transformer_id",
                 "phase",
-                "current1",
-                "current2",
-                "power1",
-                "power2",
-                "potential1",
-                "potential2",
+                "current_hv",
+                "current_lv",
+                "power_hv",
+                "power_lv",
+                "potential_hv",
+                "potential_lv",
                 "violated",
                 "loading",
                 "max_loading",
@@ -781,12 +781,12 @@ def test_single_phase_network(single_phase_network: ElectricalNetwork):
         .astype(
             {
                 "phase": PhaseDtype,
-                "current1": complex,
-                "current2": complex,
-                "power1": complex,
-                "power2": complex,
-                "potential1": complex,
-                "potential2": complex,
+                "current_hv": complex,
+                "current_lv": complex,
+                "power_hv": complex,
+                "power_lv": complex,
+                "potential_hv": complex,
+                "potential_lv": complex,
                 "violated": pd.BooleanDtype(),
                 "loading": float,
                 "max_loading": float,
@@ -1311,12 +1311,12 @@ def test_load_flow_results_frames(small_network_with_results):
             columns=[
                 "transformer_id",
                 "phase",
-                "current1",
-                "current2",
-                "power1",
-                "power2",
-                "potential1",
-                "potential2",
+                "current_hv",
+                "current_lv",
+                "power_hv",
+                "power_lv",
+                "potential_hv",
+                "potential_lv",
                 "violated",
                 "loading",
                 "max_loading",
@@ -1327,12 +1327,12 @@ def test_load_flow_results_frames(small_network_with_results):
             {
                 "transformer_id": object,
                 "phase": PhaseDtype,
-                "current1": complex,
-                "current2": complex,
-                "power1": complex,
-                "power2": complex,
-                "potential1": complex,
-                "potential2": complex,
+                "current_hv": complex,
+                "current_lv": complex,
+                "power_hv": complex,
+                "power_lv": complex,
+                "potential_hv": complex,
+                "potential_lv": complex,
                 "loading": float,
                 "violated": pd.BooleanDtype(),
                 "max_loading": float,

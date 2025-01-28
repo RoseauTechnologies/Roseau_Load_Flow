@@ -131,13 +131,13 @@ en.res_lines[["current1"]].dropna().transform([np.abs, ft.partial(np.angle, deg=
 
 
 # The current flowing into the transformer from the source side
-en.res_transformers[["current1"]].dropna().transform(
+en.res_transformers[["current_hv"]].dropna().transform(
     [np.abs, ft.partial(np.angle, deg=True)]
 )
-# |                  |   ('current1', 'absolute') |   ('current1', 'angle') |
-# |:-----------------|---------------------------:|------------------------:|
-# | ('transfo', 'a') |                   0.564362 |                -93.5552 |
-# | ('transfo', 'b') |                   0.564362 |                 86.4448 |
+# |                  |   ('current_hv', 'absolute') |   ('current_hv', 'angle') |
+# |:-----------------|-----------------------------:|--------------------------:|
+# | ('transfo', 'a') |                     0.564362 |                  -93.5552 |
+# | ('transfo', 'b') |                     0.564362 |                   86.4448 |
 
 
 # The current flowing into the line from the load side
@@ -150,12 +150,12 @@ en.res_lines[["current2"]].transform([np.abs, ft.partial(np.angle, deg=True)])
 
 
 # The current flowing into the transformer from the load side
-en.res_transformers[["current2"]].transform([np.abs, ft.partial(np.angle, deg=True)])
-# |                  |   ('current2', 'absolute') |   ('current2', 'angle') |
-# |:-----------------|---------------------------:|------------------------:|
-# | ('transfo', 'a') |                    17.3905 |               0.0141285 |
-# | ('transfo', 'b') |                          0 |                       0 |
-# | ('transfo', 'n') |                    17.3905 |                -179.986 |
+en.res_transformers[["current_lv"]].transform([np.abs, ft.partial(np.angle, deg=True)])
+# |                  |   ('current_lv', 'absolute') |   ('current_lv', 'angle') |
+# |:-----------------|-----------------------------:|--------------------------:|
+# | ('transfo', 'a') |                      17.3905 |                 0.0141285 |
+# | ('transfo', 'b') |                            0 |                         0 |
+# | ('transfo', 'n') |                      17.3905 |                  -179.986 |
 # We can see the secondary phase "b" of the transformer does not carry any current as
 # the load has 0VA on this phase.
 

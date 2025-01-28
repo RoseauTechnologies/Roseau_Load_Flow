@@ -85,21 +85,33 @@ def test_transformer_results():
     tp = TransformerParameters.from_open_and_short_circuit_tests(
         id="tp", psc=1350, p0=145, i0=0.018, ulv=400, uhv=20e3, sn=50e3, vsc=0.04, vg="yzn11"
     )
-    transformer = Transformer(id="transformer", bus_hv=bus_hv, bus_lv=bus_lv, parameters=tp)
+    tr = Transformer(id="tr", bus_hv=bus_hv, bus_lv=bus_lv, parameters=tp)
 
     bus_hv._res_potentials = 20_000 * PosSeq
     bus_lv._res_potentials = np.concatenate([230 * PosSeq, [0]])
-    transformer._res_currents = 0.8 * PosSeq, np.concatenate([-65 * PosSeq, [0]])
+    tr._res_currents = 0.8 * PosSeq, np.concatenate([-65 * PosSeq, [0]])
 
-    res_p1, res_p2 = (p.m for p in transformer.res_powers)
+    p_hv, p_lv = (p.m for p in tr.res_powers)
 
-    np.testing.assert_allclose(res_p1, transformer.res_potentials[0].m * transformer.res_currents[0].m.conj())
-    np.testing.assert_allclose(res_p2, transformer.res_potentials[1].m * transformer.res_currents[1].m.conj())
+    np.testing.assert_allclose(p_hv, tr.res_potentials[0].m * tr.res_currents[0].m.conj())
+    np.testing.assert_allclose(p_lv, tr.res_potentials[1].m * tr.res_currents[1].m.conj())
 
-    expected_total_losses = res_p1[0] + res_p1[1] + res_p1[2] + res_p2[0] + res_p2[1] + res_p2[2] + res_p2[3]
-    actual_total_losses = transformer.res_power_losses.m
+    expected_total_losses = p_hv[0] + p_hv[1] + p_hv[2] + p_lv[0] + p_lv[1] + p_lv[2] + p_lv[3]
+    actual_total_losses = tr.res_power_losses.m
     assert np.isscalar(actual_total_losses)
     np.testing.assert_allclose(actual_total_losses, expected_total_losses)
+
+    # Transformer HV aliases
+    np.testing.assert_allclose(tr.res_potentials_hv.m, tr.res_potentials[0].m)
+    np.testing.assert_allclose(tr.res_currents_hv.m, tr.res_currents[0].m)
+    np.testing.assert_allclose(tr.res_voltages_hv.m, tr.res_voltages[0].m)
+    np.testing.assert_allclose(tr.res_powers_hv.m, tr.res_powers[0].m)
+
+    # Transformer LV aliases
+    np.testing.assert_allclose(tr.res_potentials_lv.m, tr.res_potentials[1].m)
+    np.testing.assert_allclose(tr.res_currents_lv.m, tr.res_currents[1].m)
+    np.testing.assert_allclose(tr.res_voltages_lv.m, tr.res_voltages[1].m)
+    np.testing.assert_allclose(tr.res_powers_lv.m, tr.res_powers[1].m)
 
 
 def test_brought_out_neutral():
