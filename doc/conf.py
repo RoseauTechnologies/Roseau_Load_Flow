@@ -145,6 +145,8 @@ autoapi_ignore = [
     # Internal utilities
     "**/roseau/load_flow/utils/**",
     "**/roseau/load_flow/io/**",
+    # RLF Single
+    "**/roseau/load_flow_single/**",
 ]
 autoapi_options = ["members", "show-inheritance", "show-module-summary", "imported-members"]
 autoapi_python_class_content = "both"  # without this, the __init__ docstring is not shown

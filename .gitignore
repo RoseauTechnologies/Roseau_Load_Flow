@@ -249,6 +249,7 @@ doc/images/*.pdf
 
 roseau/*
 !roseau/load_flow
+!roseau/load_flow_single
 node_modules/
 doc/images/**/*.bak*
 doc/images/**/*.pdf
