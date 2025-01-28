@@ -1,7 +1,7 @@
 [project]
 name = "roseau-load-flow"
 version = "0.12.0-alpha"
-description = "Highly capable three-phase load flow solver"
+description = "Highly capable multi-phase load flow solver"
 authors = [
     { name = "Ali Hamdan", email = "ali.hamdan@roseautechnologies.com" },
     { name = "Sébastien Vallet", email = "sebastien.vallet@roseautechnologies.com" },
@@ -112,14 +112,14 @@ docstring-code-format = true
 branch = false
 omit = ["roseau/load_flow/__about__.py"]
 plugins = ["coverage_conditional_plugin"]
-source = ["roseau/load_flow/"]
+source = ["roseau/load_flow/", "roseau/load_flow_single/"]
 
 [tool.coverage.coverage_conditional_plugin.rules]
 no-cover-if-py-gte-311 = "sys_version_info >= (3, 11)"
 no-cover-if-py-lt-311 = "sys_version_info < (3, 11)"
 
 [tool.coverage.paths]
-source = ["roseau/load_flow/"]
+source = ["roseau/load_flow/", "roseau/load_flow_single/"]
 
 [tool.coverage.report]
 # Skip files with 100% coverage
@@ -149,6 +149,6 @@ directory = "htmlcov"
 # Pytest
 [tool.pytest.ini_options]
 addopts = "--color=yes -n=0 --import-mode=importlib"
-testpaths = ["roseau/load_flow/"]
+testpaths = ["roseau/load_flow/", "roseau/load_flow_single/"]
 filterwarnings = []
 markers = ["no_patch_engine"]

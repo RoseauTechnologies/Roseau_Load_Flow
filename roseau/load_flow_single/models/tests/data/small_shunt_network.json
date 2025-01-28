@@ -1,0 +1,80 @@
+{
+  "version": 4,
+  "is_multiphase": false,
+  "buses": [
+    {
+      "id": "bus0",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-1.318375372111463, 48.64794139348595]
+      },
+      "results": {
+        "voltage": [20000.0, 0.0]
+      }
+    },
+    {
+      "id": "bus1",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-1.320149235966572, 48.64971306653889]
+      },
+      "results": {
+        "voltage": [19047.469046437775, 0.0]
+      }
+    }
+  ],
+  "lines": [
+    {
+      "id": "line",
+      "bus1": "bus0",
+      "bus2": "bus1",
+      "length": 1.0,
+      "params_id": "test",
+      "max_loading": 1.0,
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [-1.318375372111463, 48.64794139348595],
+          [-1.320149235966572, 48.64971306653889]
+        ]
+      },
+      "results": {
+        "current1": [112.72942716402258, 0.0],
+        "current2": [-0.009093338350339764, 0.0]
+      }
+    }
+  ],
+  "transformers": [],
+  "switches": [],
+  "loads": [
+    {
+      "id": "load",
+      "bus": "bus1",
+      "type": "power",
+      "power": [300.0, 0.0],
+      "results": {
+        "current": [0.009093338350340053, -0.0],
+        "voltage": [19047.469046437775, 0.0]
+      }
+    }
+  ],
+  "sources": [
+    {
+      "id": "vs",
+      "bus": "bus0",
+      "voltage": [20000.0, 0.0],
+      "results": {
+        "current": [-112.72942716402237, 0.0],
+        "voltage": [20000.0, 0.0]
+      }
+    }
+  ],
+  "lines_params": [
+    {
+      "id": "test",
+      "z_line": [10.0, 0.0],
+      "y_shunt": [0.01, 0.0]
+    }
+  ],
+  "transformers_params": []
+}
