@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-class Ground(Element):
+class Ground(Element[CyGround]):
     """This element defines the ground.
 
     Only buses and lines that have shunt components can be connected to a ground.
@@ -33,6 +33,7 @@ class Ground(Element):
        :class:`Line` constructor. Note that the ground connection is mandatory for shunt lines.
     """
 
+    element_type: Final = "ground"
     allowed_phases: Final = frozenset({"a", "b", "c", "n"})
 
     def __init__(self, id: Id) -> None:
@@ -50,17 +51,6 @@ class Ground(Element):
 
     def __repr__(self) -> str:
         return f"{type(self).__name__}(id={self.id!r})"
-
-    def _res_potential_getter(self, warning: bool) -> complex:
-        if self._fetch_results:
-            self._res_potential = self._cy_element.get_potentials(1)[0]
-        return self._res_getter(self._res_potential, warning)
-
-    @property
-    @ureg_wraps("V", (None,))
-    def res_potential(self) -> Q_[complex]:
-        """The load flow result of the ground potential (V)."""
-        return self._res_potential_getter(warning=True)
 
     @property
     def connected_buses(self) -> dict[Id, str]:
@@ -91,6 +81,25 @@ class Ground(Element):
         self._connected_buses[bus.id] = phase
         p = bus.phases.index(phase)
         bus._cy_element.connect(self._cy_element, [(p, 0)])
+
+    #
+    # Results
+    #
+    def _refresh_results(self) -> bool:
+        if self._fetch_results:
+            self._res_potential = self._cy_element.get_potentials(1)[0]
+            return True
+        return False
+
+    def _res_potential_getter(self, warning: bool) -> complex:
+        self._refresh_results()
+        return self._res_getter(self._res_potential, warning)
+
+    @property
+    @ureg_wraps("V", (None,))
+    def res_potential(self) -> Q_[complex]:
+        """The load flow result of the ground potential (V)."""
+        return self._res_potential_getter(warning=True)
 
     #
     # Json Mixin interface

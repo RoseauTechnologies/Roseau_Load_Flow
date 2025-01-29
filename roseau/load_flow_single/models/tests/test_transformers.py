@@ -48,9 +48,8 @@ def test_res_violated():
     )
     transformer = Transformer(id="transformer", bus_hv=bus_hv, bus_lv=bus_lv, parameters=tp)
 
-    bus_hv._res_voltage = 20_000
-    bus_lv._res_voltage = 400
-    transformer._res_currents = 1.0, -29.0  # 69% loading primary, 40% loading secondary
+    transformer._res_voltages = (20e3 + 0j), (400 + 0j)
+    transformer._res_currents = (1 + 0j), (-29 + 0j)  # 69% loading primary, 40% loading secondary
 
     # Default value
     assert transformer.max_loading == Q_(1, "")
@@ -86,14 +85,13 @@ def test_transformer_results():
     )
     tr = Transformer(id="transformer", bus_hv=bus_hv, bus_lv=bus_lv, parameters=tp)
 
-    bus_hv._res_voltage = 20_000
-    bus_lv._res_voltage = 400
-    tr._res_currents = np.complex128(0.8 + 0j), np.complex128(-65 + 0j)
+    tr._res_voltages = 20e3 + 0j, 400 + 0j
+    tr._res_currents = 0.8 + 0j, -65 + 0j
 
     p_hv, p_lv = (p.m for p in tr.res_powers)
 
-    np.testing.assert_allclose(p_hv, tr.res_voltages[0].m * tr.res_currents[0].m.conj() * np.sqrt(3.0))
-    np.testing.assert_allclose(p_lv, tr.res_voltages[1].m * tr.res_currents[1].m.conj() * np.sqrt(3.0))
+    np.testing.assert_allclose(p_hv, tr.res_voltages[0].m * tr.res_currents[0].m.conjugate() * np.sqrt(3.0))
+    np.testing.assert_allclose(p_lv, tr.res_voltages[1].m * tr.res_currents[1].m.conjugate() * np.sqrt(3.0))
 
     expected_total_losses = p_hv + p_lv
     actual_total_losses = tr.res_power_losses.m

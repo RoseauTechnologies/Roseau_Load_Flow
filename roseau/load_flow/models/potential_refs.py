@@ -16,7 +16,7 @@ from roseau.load_flow_engine.cy_engine import CyDeltaPotentialRef, CyPotentialRe
 logger = logging.getLogger(__name__)
 
 
-class PotentialRef(Element):
+class PotentialRef(Element[CyPotentialRef | CyDeltaPotentialRef]):
     """A potential reference.
 
     This element sets the reference for the potentials in a network. Only one potential reference
@@ -28,6 +28,7 @@ class PotentialRef(Element):
     bus, the sum of the potentials of the specified phases is set to 0V.
     """
 
+    element_type: Final = "potential reference"
     allowed_phases: Final = frozenset({"a", "b", "c", "n"} | Bus.allowed_phases)
 
     def __init__(self, id: Id, element: Bus | Ground, *, phases: str | None = None, **deprecated_kw) -> None:
@@ -118,9 +119,17 @@ class PotentialRef(Element):
         """
         return self._phases
 
-    def _res_current_getter(self, warning: bool) -> complex:
+    #
+    # Results
+    #
+    def _refresh_results(self) -> bool:
         if self._fetch_results:
             self._res_current = self._cy_element.get_current()
+            return True
+        return False
+
+    def _res_current_getter(self, warning: bool) -> complex:
+        self._refresh_results()
         return self._res_getter(self._res_current, warning)
 
     @property
@@ -133,7 +142,7 @@ class PotentialRef(Element):
         return self._res_current_getter(warning=True)
 
     #
-    # Jso Mixin interface
+    # Json Mixin interface
     #
     @classmethod
     def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:

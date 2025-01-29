@@ -1,4 +1,5 @@
 import logging
+from typing import Final
 
 import numpy as np
 from shapely.geometry.base import BaseGeometry
@@ -16,6 +17,8 @@ logger = logging.getLogger(__name__)
 
 class Line(AbstractBranch[CyShuntLine | CySimplifiedLine]):
     """An electrical line PI model with series impedance and optional shunt admittance."""
+
+    element_type: Final = "line"
 
     def __init__(
         self,
@@ -189,21 +192,9 @@ class Line(AbstractBranch[CyShuntLine | CySimplifiedLine]):
         _, i_line = self._res_series_values_getter(warning)
         return i_line
 
-    @property
-    @ureg_wraps("A", (None,))
-    def res_series_current(self) -> Q_[complex]:
-        """Get the current in the series elements of the line (in A)."""
-        return self._res_series_current_getter(warning=True)
-
     def _res_series_power_losses_getter(self, warning: bool) -> complex:
         du_line, i_line = self._res_series_values_getter(warning)
         return du_line * i_line.conjugate() * SQRT3  # Sₗ = √3.ΔU.Iₗ*
-
-    @property
-    @ureg_wraps("VA", (None,))
-    def res_series_power_losses(self) -> Q_[complex]:
-        """Get the power losses in the series elements of the line (in VA)."""
-        return self._res_series_power_losses_getter(warning=True)
 
     def _res_shunt_values_getter(self, warning: bool) -> tuple[complex, complex, complex, complex]:
         assert self.with_shunt, "This method only works when there is a shunt"
@@ -218,6 +209,35 @@ class Line(AbstractBranch[CyShuntLine | CySimplifiedLine]):
         _, _, cur1, cur2 = self._res_shunt_values_getter(warning)
         return cur1, cur2
 
+    def _res_shunt_power_losses_getter(self, warning: bool) -> complex:
+        if not self.with_shunt:
+            return 0j
+        volt1, volt2, cur1, cur2 = self._res_shunt_values_getter(warning)
+        return (volt1 * cur1.conjugate() + volt2 * cur2.conjugate()) * SQRT3
+
+    def _res_power_losses_getter(self, warning: bool) -> complex:
+        series_losses = self._res_series_power_losses_getter(warning)
+        shunt_losses = self._res_shunt_power_losses_getter(warning=False)  # we warn on the previous line
+        return series_losses + shunt_losses
+
+    def _res_loading_getter(self, warning: bool) -> float | None:
+        if (amp := self._parameters._ampacity) is None:
+            return None
+        current1, current2 = self._res_currents_getter(warning=warning)
+        return max(abs(current1), abs(current2)) / amp
+
+    @property
+    @ureg_wraps("A", (None,))
+    def res_series_current(self) -> Q_[complex]:
+        """Get the current in the series elements of the line (in A)."""
+        return self._res_series_current_getter(warning=True)
+
+    @property
+    @ureg_wraps("VA", (None,))
+    def res_series_power_losses(self) -> Q_[complex]:
+        """Get the power losses in the series elements of the line (in VA)."""
+        return self._res_series_power_losses_getter(warning=True)
+
     @property
     @ureg_wraps(("A", "A"), (None,))
     def res_shunt_currents(self) -> tuple[Q_[complex], Q_[complex]]:
@@ -225,34 +245,17 @@ class Line(AbstractBranch[CyShuntLine | CySimplifiedLine]):
         cur1, cur2 = self._res_shunt_currents_getter(warning=True)
         return cur1, cur2
 
-    def _res_shunt_power_losses_getter(self, warning: bool) -> complex:
-        if not self.with_shunt:
-            return 0j
-        volt1, volt2, cur1, cur2 = self._res_shunt_values_getter(warning)
-        return (volt1 * cur1.conjugate() + volt2 * cur2.conjugate()) * SQRT3
-
     @property
     @ureg_wraps("VA", (None,))
     def res_shunt_power_losses(self) -> Q_[complex]:
         """Get the power losses in the shunt elements of the line (in VA)."""
         return self._res_shunt_power_losses_getter(warning=True)
 
-    def _res_power_losses_getter(self, warning: bool) -> complex:
-        series_losses = self._res_series_power_losses_getter(warning)
-        shunt_losses = self._res_shunt_power_losses_getter(warning=False)  # we warn on the previous line
-        return series_losses + shunt_losses
-
     @property
     @ureg_wraps("VA", (None,))
     def res_power_losses(self) -> Q_[complex]:
         """Get the power losses in the line (in VA)."""
         return self._res_power_losses_getter(warning=True)
-
-    def _res_loading_getter(self, warning: bool) -> float | None:
-        if (amp := self._parameters._ampacity) is None:
-            return None
-        current1, current2 = self._res_currents_getter(warning=warning)
-        return max(abs(current1), abs(current2)) / amp
 
     @property
     def res_loading(self) -> Q_[float] | None:
@@ -275,55 +278,29 @@ class Line(AbstractBranch[CyShuntLine | CySimplifiedLine]):
     # Json Mixin interface
     #
     def _to_dict(self, include_results: bool) -> JsonDict:
-        res = {
-            "id": self.id,
-            "bus1": self.bus1.id,
-            "bus2": self.bus2.id,
-            "length": self._length,
-            "params_id": self._parameters.id,
-            "max_loading": self._max_loading,
-        }
-        if self.geometry is not None:
-            res["geometry"] = self.geometry.__geo_interface__
+        data = super()._to_dict(include_results)
+        data["max_loading"] = self._max_loading
+        data["params_id"] = self._parameters.id
+        data["length"] = self._length
         if include_results:
-            current1, current2 = self._res_currents_getter(warning=True)
-            res["results"] = {
-                "current1": [current1.real, current1.imag],
-                "current2": [current2.real, current2.imag],
-            }
-        return res
+            data["results"] = data.pop("results")  # move results to the end
+        return data
 
     def _results_to_dict(self, warning: bool, full: bool) -> JsonDict:
-        current1, current2 = self._res_currents_getter(warning)
-        results = {
-            "id": self.id,
-            "current1": [current1.real, current1.imag],
-            "current2": [current2.real, current2.imag],
-        }
+        results = super()._results_to_dict(warning, full)
         if full:
-            voltage1, voltage2 = self._res_voltages_getter(warning=False)
-            results["voltage1"] = [voltage1.real, voltage1.imag]
-            results["voltage2"] = [voltage2.real, voltage2.imag]
-            power1, power2 = self._res_powers_getter(
-                warning=False,
-                voltage1=voltage1,
-                voltage2=voltage2,
-                current1=current1,
-                current2=current2,
-            )
-            results["power1"] = [power1.real, power1.imag]
-            results["power2"] = [power2.real, power2.imag]
-            s = self._res_power_losses_getter(warning=False)
-            results["power_losses"] = [s.real, s.imag]
-            i = self._res_series_current_getter(warning=False)
-            results["series_current"] = [i.real, i.imag]
-            s = self._res_series_power_losses_getter(warning=False)
-            results["series_power_losses"] = [s.real, s.imag]
+            # Add line specific results
+            power_losses = self._res_power_losses_getter(warning=False)  # warn only once
+            series_power_losses = self._res_series_power_losses_getter(warning=False)
+            shunt_power_losses = self._res_shunt_power_losses_getter(warning=False)
+            series_current = self._res_series_current_getter(warning=False)
             shunt_current1, shunt_current2 = self._res_shunt_currents_getter(warning=False)
+            loading = self._res_loading_getter(warning=False)
+            results["power_losses"] = [power_losses.real, power_losses.imag]
+            results["series_power_losses"] = [series_power_losses.real, series_power_losses.imag]
+            results["shunt_power_losses"] = [shunt_power_losses.real, shunt_power_losses.imag]
+            results["series_current"] = [series_current.real, series_current.imag]
             results["shunt_current1"] = [shunt_current1.real, shunt_current1.imag]
             results["shunt_current2"] = [shunt_current2.real, shunt_current2.imag]
-            s = self._res_shunt_power_losses_getter(warning=False)
-            results["shunt_power_losses"] = [s.real, s.imag]
-            loading = self._res_loading_getter(warning=False)
             results["loading"] = loading
         return results

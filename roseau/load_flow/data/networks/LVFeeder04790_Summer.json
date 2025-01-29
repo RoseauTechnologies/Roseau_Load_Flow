@@ -71,10 +71,6 @@
       "phases": "abcn",
       "bus1": "MVLVFeeder08786",
       "bus2": "LVBus021707",
-      "length": 0.2522152999932708,
-      "params_id": "U_AL_150",
-      "max_loading": 1,
-      "ground": "ground",
       "geometry": {
         "type": "LineString",
         "coordinates": [
@@ -105,17 +101,17 @@
           [-1.340517035971892, 48.67379109524738],
           [-1.3405143892225866, 48.67378431146558]
         ]
-      }
+      },
+      "max_loading": 1.0,
+      "params_id": "U_AL_150",
+      "length": 0.2522152999932708,
+      "ground": "ground"
     },
     {
       "id": "LVBranch143253",
       "phases": "abcn",
       "bus1": "LVBus021707",
       "bus2": "LVBus195690",
-      "length": 0.07146262631265571,
-      "params_id": "U_AL_150",
-      "max_loading": 1,
-      "ground": "ground",
       "geometry": {
         "type": "LineString",
         "coordinates": [
@@ -139,7 +135,11 @@
           [-1.341130004040592, 48.674217267249176],
           [-1.341130004040592, 48.674217267249176]
         ]
-      }
+      },
+      "max_loading": 1.0,
+      "params_id": "U_AL_150",
+      "length": 0.07146262631265571,
+      "ground": "ground"
     }
   ],
   "transformers": [
@@ -153,9 +153,9 @@
         "type": "Point",
         "coordinates": [-1.3413945147439499, 48.67575966750258]
       },
-      "tap": 1.0,
+      "max_loading": 1.0,
       "params_id": "Dyn11_160kVA",
-      "max_loading": 1
+      "tap": 1.0
     }
   ],
   "switches": [],
@@ -165,32 +165,32 @@
       "bus": "LVBus021707",
       "phases": "an",
       "type": "power",
-      "powers": [[0.0, 0.0]],
-      "connect_neutral": null
+      "connect_neutral": null,
+      "powers": [[0.0, 0.0]]
     },
     {
       "id": "LVBus021707_production",
       "bus": "LVBus021707",
       "phases": "bn",
       "type": "power",
-      "powers": [[0.0, 0.0]],
-      "connect_neutral": null
+      "connect_neutral": null,
+      "powers": [[0.0, 0.0]]
     },
     {
       "id": "LVBus195690_consumption",
       "bus": "LVBus195690",
       "phases": "an",
       "type": "power",
-      "powers": [[2800.0, 900.0]],
-      "connect_neutral": null
+      "connect_neutral": null,
+      "powers": [[2800.0, 900.0]]
     },
     {
       "id": "LVBus195690_production",
       "bus": "LVBus195690",
       "phases": "an",
       "type": "power",
-      "powers": [[-300.0, 0.0]],
-      "connect_neutral": null
+      "connect_neutral": null,
+      "powers": [[-300.0, 0.0]]
     }
   ],
   "sources": [
@@ -198,12 +198,13 @@
       "id": "VoltageSource",
       "bus": "MVLV08786",
       "phases": "abc",
+      "type": "voltage",
+      "connect_neutral": null,
       "voltages": [
         [17320.50807568877, 10000.0],
         [0.0, -20000.0],
         [-17320.50807568877, 10000.0]
-      ],
-      "connect_neutral": null
+      ]
     }
   ],
   "lines_params": [

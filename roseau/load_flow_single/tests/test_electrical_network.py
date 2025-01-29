@@ -107,7 +107,7 @@ def test_connect_and_disconnect():
     assert vs.bus is None
     with pytest.raises(RoseauLoadFlowException) as e:
         vs.to_dict()
-    assert e.value.msg == "The voltage source 'vs' is disconnected and cannot be used anymore."
+    assert e.value.msg == "The source 'vs' is disconnected and cannot be used anymore."
     assert e.value.code == RoseauLoadFlowExceptionCode.DISCONNECTED_ELEMENT
 
     # Adding unknown element
@@ -1136,6 +1136,10 @@ def test_results_to_dict(all_elements_network_with_results):
         np.testing.assert_allclose(current1, line.res_currents[0].m)
         current2 = complex(*res_line.pop("current2"))
         np.testing.assert_allclose(current2, line.res_currents[1].m)
+        voltage1 = complex(*res_line.pop("voltage1"))
+        np.testing.assert_allclose(voltage1, line.res_voltages[0].m)
+        voltage2 = complex(*res_line.pop("voltage2"))
+        np.testing.assert_allclose(voltage2, line.res_voltages[1].m)
         assert not res_line, res_line
     for res_transformer in res_network["transformers"]:
         transformer = en.transformers[res_transformer.pop("id")]
@@ -1143,6 +1147,10 @@ def test_results_to_dict(all_elements_network_with_results):
         np.testing.assert_allclose(current_hv, transformer.res_currents[0].m)
         current_lv = complex(*res_transformer.pop("current_lv"))
         np.testing.assert_allclose(current_lv, transformer.res_currents[1].m)
+        voltage_hv = complex(*res_transformer.pop("voltage_hv"))
+        np.testing.assert_allclose(voltage_hv, transformer.res_voltages[0].m)
+        voltage_lv = complex(*res_transformer.pop("voltage_lv"))
+        np.testing.assert_allclose(voltage_lv, transformer.res_voltages[1].m)
         assert not res_transformer, res_transformer
     for res_switch in res_network["switches"]:
         switch = en.switches[res_switch.pop("id")]
@@ -1150,6 +1158,10 @@ def test_results_to_dict(all_elements_network_with_results):
         np.testing.assert_allclose(current1, switch.res_currents[0].m)
         current2 = complex(*res_switch.pop("current2"))
         np.testing.assert_allclose(current2, switch.res_currents[1].m)
+        voltage1 = complex(*res_switch.pop("voltage1"))
+        np.testing.assert_allclose(voltage1, switch.res_voltages[0].m)
+        voltage2 = complex(*res_switch.pop("voltage2"))
+        np.testing.assert_allclose(voltage2, switch.res_voltages[1].m)
         assert not res_switch, res_switch
     for res_load in res_network["loads"]:
         load = en.loads[res_load.pop("id")]
@@ -1161,6 +1173,7 @@ def test_results_to_dict(all_elements_network_with_results):
         assert not res_load, res_load
     for res_source in res_network["sources"]:
         source = en.sources[res_source.pop("id")]
+        assert res_source.pop("type") == source.type
         current = complex(*res_source.pop("current"))
         np.testing.assert_allclose(current, source.res_current.m)
         voltage = complex(*res_source.pop("voltage"))
@@ -1271,9 +1284,7 @@ def test_results_to_dict_full(all_elements_network_with_results):
         assert not res_switch, res_switch
     for res_load in res_network["loads"]:
         load = en.loads[res_load.pop("id")]
-        # Type
-        load_type = res_load.pop("type")
-        assert load_type == load.type
+        assert res_load.pop("type") == load.type
         # Current
         current = complex(*res_load.pop("current"))
         np.testing.assert_allclose(current, load.res_current.m)
@@ -1286,6 +1297,7 @@ def test_results_to_dict_full(all_elements_network_with_results):
         assert not res_load, res_load
     for res_source in res_network["sources"]:
         source = en.sources[res_source.pop("id")]
+        assert res_source.pop("type") == source.type
         # Current
         current = complex(*res_source.pop("current"))
         np.testing.assert_allclose(current, source.res_current.m)
@@ -1307,4 +1319,4 @@ def test_results_to_json(small_network_with_results, tmp_path):
     with tmp_file.open() as fp:
         res_network = json.load(fp)
 
-    assert res_network == res_network_expected
+    assert_json_close(res_network, res_network_expected)

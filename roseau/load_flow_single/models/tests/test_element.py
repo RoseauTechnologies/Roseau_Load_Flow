@@ -9,6 +9,6 @@ def test_abstract_classes():
     bus1 = Bus(id="bus1")
     bus2 = Bus(id="bus2")
     with pytest.raises(TypeError, match="Can't instantiate abstract class AbstractBranch"):
-        AbstractBranch(id="branch_id", bus1=bus1, bus2=bus2)
+        AbstractBranch(id="branch_id", bus1=bus1, bus2=bus2, n=2)
     with pytest.raises(TypeError, match="Can't instantiate abstract class AbstractLoad"):
         AbstractLoad(id="load_id", bus=bus1)

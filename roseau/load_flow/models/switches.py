@@ -8,15 +8,16 @@ from roseau.load_flow.models.branches import AbstractBranch
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import Element
 from roseau.load_flow.models.sources import VoltageSource
-from roseau.load_flow.typing import Id, JsonDict
+from roseau.load_flow.typing import Id
 from roseau.load_flow_engine.cy_engine import CySwitch
 
 logger = logging.getLogger(__name__)
 
 
-class Switch(AbstractBranch):
+class Switch(AbstractBranch[CySwitch]):
     """A general purpose switch branch."""
 
+    element_type: Final = "switch"
     allowed_phases: Final = frozenset(Bus.allowed_phases | {"a", "b", "c", "n"})
     """The allowed phases for a switch are:
 
@@ -111,46 +112,3 @@ class Switch(AbstractBranch):
             )
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_VOLTAGES_SOURCES_CONNECTION)
-
-    #
-    # Json Mixin interface
-    #
-    def _to_dict(self, include_results: bool) -> JsonDict:
-        res = {"id": self.id, "phases": self.phases, "bus1": self.bus1.id, "bus2": self.bus2.id}
-        if self.geometry is not None:
-            res["geometry"] = self.geometry.__geo_interface__
-        if include_results:
-            currents1, currents2 = self._res_currents_getter(warning=True)
-            res["results"] = {
-                "currents1": [[i.real, i.imag] for i in currents1],
-                "currents2": [[i.real, i.imag] for i in currents2],
-            }
-        return res
-
-    def _results_to_dict(self, warning: bool, full: bool) -> JsonDict:
-        currents1, currents2 = self._res_currents_getter(warning)
-        results = {
-            "id": self.id,
-            "phases": self.phases,
-            "currents1": [[i.real, i.imag] for i in currents1],
-            "currents2": [[i.real, i.imag] for i in currents2],
-        }
-        if full:
-            potentials1, potentials2 = self._res_potentials_getter(warning=False)
-            results["potentials1"] = [[v.real, v.imag] for v in potentials1]
-            results["potentials2"] = [[v.real, v.imag] for v in potentials2]
-            powers1, powers2 = self._res_powers_getter(
-                warning=False,
-                potentials1=potentials1,
-                potentials2=potentials2,
-                currents1=currents1,
-                currents2=currents2,
-            )
-            results["powers1"] = [[s.real, s.imag] for s in powers1]
-            results["powers2"] = [[s.real, s.imag] for s in powers2]
-            voltages1, voltages2 = self._res_voltages_getter(
-                warning=False, potentials1=potentials1, potentials2=potentials2
-            )
-            results["voltages1"] = [[v.real, v.imag] for v in voltages1]
-            results["voltages2"] = [[v.real, v.imag] for v in voltages2]
-        return results

@@ -102,34 +102,19 @@ def test_loads_to_dict():
     # Power load
     assert_json_close(
         PowerLoad(id="load_s1", bus=bus, power=value).to_dict(include_results=False),
-        {
-            "id": "load_s1",
-            "bus": "bus",
-            "type": "power",
-            "power": [1.0, 2.0],
-        },
+        {"id": "load_s1", "bus": "bus", "type": "power", "power": [1.0, 2.0]},
     )
 
     # Current load
     assert_json_close(
         CurrentLoad(id="load_i1", bus=bus, current=value).to_dict(include_results=False),
-        {
-            "id": "load_i1",
-            "bus": "bus",
-            "type": "current",
-            "current": [1.0, 2.0],
-        },
+        {"id": "load_i1", "bus": "bus", "type": "current", "current": [1.0, 2.0]},
     )
 
     # Impedance load
     assert_json_close(
         ImpedanceLoad(id="load_z1", bus=bus, impedance=value).to_dict(include_results=False),
-        {
-            "id": "load_z1",
-            "bus": "bus",
-            "type": "impedance",
-            "impedance": [1.0, 2.0],
-        },
+        {"id": "load_z1", "bus": "bus", "type": "impedance", "impedance": [1.0, 2.0]},
     )
 
     # Flexible load

@@ -1,6 +1,8 @@
 import logging
 from functools import cached_property
+from typing import TypeVar
 
+import numpy as np
 from shapely.geometry.base import BaseGeometry
 from typing_extensions import Self
 
@@ -9,11 +11,14 @@ from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import Element
 from roseau.load_flow.typing import ComplexArray, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
+from roseau.load_flow_engine.cy_engine import CyBranch
 
 logger = logging.getLogger(__name__)
 
+_CyB = TypeVar("_CyB", bound=CyBranch)
 
-class AbstractBranch(Element):
+
+class AbstractBranch(Element[_CyB]):
     """Base class of all the branches (lines, switches and transformers) of the network.
 
     See Also:
@@ -60,11 +65,14 @@ class AbstractBranch(Element):
         self.geometry = geometry
         self._connect(bus1, bus2)
         self._res_currents: tuple[ComplexArray, ComplexArray] | None = None
+        self._res_potentials: tuple[ComplexArray, ComplexArray] | None = None
+        self._sides_suffixes = ("_hv", "_lv") if self.element_type == "transformer" else ("1", "2")
 
     def __repr__(self) -> str:
+        s1, s2 = self._sides_suffixes
         return (
-            f"<{type(self).__name__}: id={self.id!r}, bus1={self.bus1.id!r}, bus2={self.bus2.id!r}, "
-            f"phases1={self.phases1!r}, phases2={self.phases2!r}>"
+            f"<{type(self).__name__}: id={self.id!r}, bus{s1}={self.bus1.id!r}, bus{s2}={self.bus2.id!r}, "
+            f"phases{s1}={self.phases1!r}, phases{s2}={self.phases2!r}>"
         )
 
     @property
@@ -91,69 +99,9 @@ class AbstractBranch(Element):
         """The second bus of the branch."""
         return self._bus2
 
-    def _res_currents_getter(self, warning: bool) -> tuple[ComplexArray, ComplexArray]:
-        if self._fetch_results:
-            self._res_currents = self._cy_element.get_currents(self._n1, self._n2)
-        return self._res_getter(value=self._res_currents, warning=warning)
-
-    @property
-    @ureg_wraps(("A", "A"), (None,))
-    def res_currents(self) -> tuple[Q_[ComplexArray], Q_[ComplexArray]]:
-        """The load flow result of the branch currents (A)."""
-        return self._res_currents_getter(warning=True)
-
-    def _res_powers_getter(
-        self,
-        warning: bool,
-        potentials1: ComplexArray | None = None,
-        potentials2: ComplexArray | None = None,
-        currents1: ComplexArray | None = None,
-        currents2: ComplexArray | None = None,
-    ) -> tuple[ComplexArray, ComplexArray]:
-        if currents1 is None or currents2 is None:
-            currents1, currents2 = self._res_currents_getter(warning)
-        if potentials1 is None or potentials2 is None:
-            potentials1, potentials2 = self._res_potentials_getter(warning=False)  # we warn on the previous line
-        powers1 = potentials1 * currents1.conj()
-        powers2 = potentials2 * currents2.conj()
-        return powers1, powers2
-
-    @property
-    @ureg_wraps(("VA", "VA"), (None,))
-    def res_powers(self) -> tuple[Q_[ComplexArray], Q_[ComplexArray]]:
-        """The load flow result of the branch powers (VA)."""
-        return self._res_powers_getter(warning=True)
-
-    def _res_potentials_getter(self, warning: bool) -> tuple[ComplexArray, ComplexArray]:
-        pot1 = self.bus1._get_potentials_of(phases=self.phases1, warning=warning)
-        pot2 = self.bus2._get_potentials_of(phases=self.phases2, warning=False)  # we warn on the previous line
-        return pot1, pot2
-
-    @property
-    @ureg_wraps(("V", "V"), (None,))
-    def res_potentials(self) -> tuple[Q_[ComplexArray], Q_[ComplexArray]]:
-        """The load flow result of the branch potentials (V)."""
-        return self._res_potentials_getter(warning=True)
-
-    def _res_voltages_getter(
-        self, warning: bool, potentials1: ComplexArray | None = None, potentials2: ComplexArray | None = None
-    ) -> tuple[ComplexArray, ComplexArray]:
-        if potentials1 is None or potentials2 is None:
-            potentials1, potentials2 = self._res_potentials_getter(warning)
-        return _calculate_voltages(potentials=potentials1, phases=self.phases1), _calculate_voltages(
-            potentials=potentials2, phases=self.phases2
-        )
-
-    @property
-    @ureg_wraps(("V", "V"), (None,))
-    def res_voltages(self) -> tuple[Q_[ComplexArray], Q_[ComplexArray]]:
-        """The load flow result of the branch voltages (V)."""
-        return self._res_voltages_getter(warning=True)
-
     def _cy_connect(self) -> None:
         """Connect the Cython elements of the buses and the branch"""
         connections = []
-        assert isinstance(self.bus1, Bus)
         for i, phase in enumerate(self.phases1):
             if phase in self.bus1.phases:
                 j = self.bus1.phases.index(phase)
@@ -161,7 +109,6 @@ class AbstractBranch(Element):
         self._cy_element.connect(self.bus1._cy_element, connections, True)
 
         connections = []
-        assert isinstance(self.bus2, Bus)
         for i, phase in enumerate(self.phases2):
             if phase in self.bus2.phases:
                 j = self.bus2.phases.index(phase)
@@ -169,26 +116,125 @@ class AbstractBranch(Element):
         self._cy_element.connect(self.bus2._cy_element, connections, False)
 
     #
+    # Results
+    #
+    def _refresh_results(self) -> bool:
+        if self._fetch_results:
+            self._res_currents = self._cy_element.get_currents(self._n1, self._n2)
+            self._res_potentials = self._cy_element.get_potentials(self._n1, self._n2)
+            return True
+        return False
+
+    def _res_currents_getter(self, warning: bool) -> tuple[ComplexArray, ComplexArray]:
+        self._refresh_results()
+        return self._res_getter(value=self._res_currents, warning=warning)
+
+    def _res_potentials_getter(self, warning: bool) -> tuple[ComplexArray, ComplexArray]:
+        self._refresh_results()
+        return self._res_getter(value=self._res_potentials, warning=warning)
+
+    def _res_voltages_getter(self, warning: bool) -> tuple[ComplexArray, ComplexArray]:
+        potentials1, potentials2 = self._res_potentials_getter(warning)
+        return (
+            _calculate_voltages(potentials=potentials1, phases=self.phases1),
+            _calculate_voltages(potentials=potentials2, phases=self.phases2),
+        )
+
+    def _res_powers_getter(self, warning: bool) -> tuple[ComplexArray, ComplexArray]:
+        currents1, currents2 = self._res_currents_getter(warning)
+        potentials1, potentials2 = self._res_potentials_getter(warning=False)  # warn only once
+        powers1 = potentials1 * currents1.conjugate()
+        powers2 = potentials2 * currents2.conjugate()
+        return powers1, powers2
+
+    @property
+    @ureg_wraps(("A", "A"), (None,))
+    def res_currents(self) -> tuple[Q_[ComplexArray], Q_[ComplexArray]]:
+        """The load flow result of the branch currents (A)."""
+        return self._res_currents_getter(warning=True)
+
+    @property
+    @ureg_wraps(("VA", "VA"), (None,))
+    def res_powers(self) -> tuple[Q_[ComplexArray], Q_[ComplexArray]]:
+        """The load flow result of the branch powers (VA)."""
+        return self._res_powers_getter(warning=True)
+
+    @property
+    @ureg_wraps(("V", "V"), (None,))
+    def res_potentials(self) -> tuple[Q_[ComplexArray], Q_[ComplexArray]]:
+        """The load flow result of the branch potentials (V)."""
+        return self._res_potentials_getter(warning=True)
+
+    @property
+    @ureg_wraps(("V", "V"), (None,))
+    def res_voltages(self) -> tuple[Q_[ComplexArray], Q_[ComplexArray]]:
+        """The load flow result of the branch voltages (V)."""
+        return self._res_voltages_getter(warning=True)
+
+    #
     # Json Mixin interface
     #
     @classmethod
     def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
-        return cls(**data)  # not used anymore
+        data["geometry"] = cls._parse_geometry(data.pop("geometry", None))
+        results = data.pop("results", None)
+        self = cls(**data)
+        if include_results and results:
+            s1, s2 = self._sides_suffixes
+            currents1 = np.array([complex(*i) for i in results[f"currents{s1}"]], dtype=np.complex128)
+            currents2 = np.array([complex(*i) for i in results[f"currents{s2}"]], dtype=np.complex128)
+            potentials1 = np.array([complex(*v) for v in results[f"potentials{s1}"]], dtype=np.complex128)
+            potentials2 = np.array([complex(*v) for v in results[f"potentials{s2}"]], dtype=np.complex128)
+            self._res_currents = (currents1, currents2)
+            self._res_potentials = (potentials1, potentials2)
+            self._fetch_results = False
+            self._no_results = False
+        return self
 
     def _to_dict(self, include_results: bool) -> JsonDict:
-        res = {
-            "id": self.id,
-            "phases1": self.phases1,
-            "phases2": self.phases2,
-            "bus1": self.bus1.id,
-            "bus2": self.bus2.id,
-        }
+        s1, s2 = self._sides_suffixes
+        data: JsonDict = {"id": self.id}
+        if self.element_type == "transformer":
+            data[f"phases{s1}"] = self.phases1
+            data[f"phases{s2}"] = self.phases2
+        else:
+            data["phases"] = self.phases1
+        data[f"bus{s1}"] = self.bus1.id
+        data[f"bus{s2}"] = self.bus2.id
         if self.geometry is not None:
-            res["geometry"] = self.geometry.__geo_interface__
+            data["geometry"] = self.geometry.__geo_interface__
         if include_results:
             currents1, currents2 = self._res_currents_getter(warning=True)
-            res["results"] = {
-                "currents1": [[i.real, i.imag] for i in currents1],
-                "currents2": [[i.real, i.imag] for i in currents2],
+            potentials1, potentials2 = self._res_potentials_getter(warning=False)  # warn only once
+            data["results"] = {
+                f"currents{s1}": [[i.real, i.imag] for i in currents1],
+                f"currents{s2}": [[i.real, i.imag] for i in currents2],
+                f"potentials{s1}": [[i.real, i.imag] for i in potentials1],
+                f"potentials{s2}": [[i.real, i.imag] for i in potentials2],
             }
-        return res
+        return data
+
+    def _results_to_dict(self, warning: bool, full: bool) -> JsonDict:
+        currents1, currents2 = self._res_currents_getter(warning)
+        potentials1, potentials2 = self._res_potentials_getter(warning=False)  # warn only once
+        s1, s2 = self._sides_suffixes
+        results: JsonDict = {"id": self.id}
+        if self.element_type == "transformer":
+            results[f"phases{s1}"] = self.phases1
+            results[f"phases{s2}"] = self.phases2
+        else:
+            results["phases"] = self.phases1
+        results[f"currents{s1}"] = [[i.real, i.imag] for i in currents1]
+        results[f"currents{s2}"] = [[i.real, i.imag] for i in currents2]
+        results[f"potentials{s1}"] = [[v.real, v.imag] for v in potentials1]
+        results[f"potentials{s2}"] = [[v.real, v.imag] for v in potentials2]
+        if full:
+            powers1 = potentials1 * currents1.conjugate()
+            powers2 = potentials2 * currents2.conjugate()
+            voltages1 = _calculate_voltages(potentials=potentials1, phases=self.phases1)
+            voltages2 = _calculate_voltages(potentials=potentials2, phases=self.phases2)
+            results[f"powers{s1}"] = [[s.real, s.imag] for s in powers1]
+            results[f"powers{s2}"] = [[s.real, s.imag] for s in powers2]
+            results[f"voltages{s1}"] = [[v.real, v.imag] for v in voltages1]
+            results[f"voltages{s2}"] = [[v.real, v.imag] for v in voltages2]
+        return results

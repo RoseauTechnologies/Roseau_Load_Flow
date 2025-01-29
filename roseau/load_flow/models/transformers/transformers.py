@@ -22,12 +22,13 @@ from roseau.load_flow_engine.cy_engine import (
 logger = logging.getLogger(__name__)
 
 
-class Transformer(AbstractBranch):
+class Transformer(AbstractBranch[CyTransformer]):
     """A generic transformer model.
 
     The model parameters are defined using the ``parameters`` argument.
     """
 
+    element_type: Final = "transformer"
     allowed_phases: Final = Bus.allowed_phases
     """The allowed phases for a transformer are:
 
@@ -115,7 +116,6 @@ class Transformer(AbstractBranch):
 
         z2, ym, k = parameters._z2, parameters._ym, parameters._k
         clock, orientation = parameters.clock, parameters.orientation
-        self._cy_element: CyTransformer
         if parameters.type == "single-phase":
             self._cy_element = CySingleTransformer(z2=z2, ym=ym, k=k * orientation * tap)
         elif parameters.type == "center-tapped":
@@ -134,11 +134,7 @@ class Transformer(AbstractBranch):
         self._cy_connect()
 
     def __repr__(self) -> str:
-        return (
-            f"<{type(self).__name__}: id={self.id!r}, bus_hv={self.bus_hv.id!r}, bus_lv={self.bus_lv.id!r}, "
-            f"phases_hv={self.phases_hv!r}, phases_lv={self.phases_lv!r}, tap={self.tap:f}, "
-            f"max_loading={self._max_loading:f}>"
-        )
+        return f"{super().__repr__()[:-1]}, tap={self.tap:f}, max_loading={self._max_loading:f}>"
 
     @property
     def bus_hv(self) -> Bus:
@@ -214,7 +210,7 @@ class Transformer(AbstractBranch):
             msg = f"Maximum loading must be positive: {value} was provided."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_MAX_LOADING_VALUE)
-        self._max_loading: float = value
+        self._max_loading = float(value)
 
     @property
     def sn(self) -> Q_[float]:
@@ -371,16 +367,12 @@ class Transformer(AbstractBranch):
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
 
-    @property
-    @ureg_wraps("VA", (None,))
-    def res_power_losses(self) -> Q_[complex]:
-        """Get the total power losses in the transformer (in VA)."""
-        powers1, powers2 = self._res_powers_getter(warning=True)
-        return sum(powers1) + sum(powers2)
-
+    #
+    # Results
+    #
     def _res_loading_getter(self, warning: bool) -> float:
-        powers1, powers2 = self._res_powers_getter(warning)
-        return max(abs(powers1.sum()), abs(powers2.sum())) / self._parameters._sn
+        powers_hv, powers_lv = self._res_powers_getter(warning)
+        return max(abs(powers_hv.sum()), abs(powers_lv.sum())) / self._parameters._sn
 
     @property
     @ureg_wraps("", (None,))
@@ -389,15 +381,19 @@ class Transformer(AbstractBranch):
         return self._res_loading_getter(warning=True)
 
     @property
+    @ureg_wraps("VA", (None,))
+    def res_power_losses(self) -> Q_[complex]:
+        """Get the total power losses in the transformer (in VA)."""
+        powers_hv, powers_lv = self._res_powers_getter(warning=True)
+        return sum(powers_hv) + sum(powers_lv)
+
+    @property
     def res_violated(self) -> bool:
         """Whether the transformer power loading exceeds its maximal loading."""
         # True if either the HV or LV side is overloaded
         loading = self._res_loading_getter(warning=True)
         return bool(loading > self._max_loading)
 
-    #
-    # Transformer specific results
-    #
     @property
     @ureg_wraps("A", (None,))
     def res_currents_hv(self) -> Q_[ComplexArray]:
@@ -428,7 +424,7 @@ class Transformer(AbstractBranch):
         """The load flow result of the transformer powers on the HV side (VA)."""
         currents_hv = self._res_currents_getter(warning=True)[0]
         potentials_hv = self._res_potentials_getter(warning=False)[0]
-        return potentials_hv * currents_hv.conj()
+        return potentials_hv * currents_hv.conjugate()
 
     @property
     @ureg_wraps("VA", (None,))
@@ -436,7 +432,7 @@ class Transformer(AbstractBranch):
         """The load flow result of the transformer powers on the LV side (VA)."""
         currents_lv = self._res_currents_getter(warning=True)[1]
         potentials_lv = self._res_potentials_getter(warning=False)[1]
-        return potentials_lv * currents_lv.conj()
+        return potentials_lv * currents_lv.conjugate()
 
     @property
     @ureg_wraps("V", (None,))
@@ -456,60 +452,22 @@ class Transformer(AbstractBranch):
     # Json Mixin interface
     #
     def _to_dict(self, include_results: bool) -> JsonDict:
-        res = {
-            "id": self.id,
-            "phases_hv": self.phases1,
-            "phases_lv": self.phases2,
-            "bus_hv": self.bus1.id,
-            "bus_lv": self.bus2.id,
-        }
-        if self.geometry is not None:
-            res["geometry"] = self.geometry.__geo_interface__
+        data = super()._to_dict(include_results)
+        data["max_loading"] = self._max_loading
+        data["params_id"] = self.parameters.id
+        data["tap"] = self.tap
         if include_results:
-            currents_hv, currents_lv = self._res_currents_getter(warning=True)
-            res["results"] = {
-                "currents_hv": [[i.real, i.imag] for i in currents_hv],
-                "currents_lv": [[i.real, i.imag] for i in currents_lv],
-            }
-        res["tap"] = self.tap
-        res["params_id"] = self.parameters.id
-        res["max_loading"] = self._max_loading
-
-        return res
+            data["results"] = data.pop("results")  # move results to the end
+        return data
 
     def _results_to_dict(self, warning: bool, full: bool) -> JsonDict:
-        currents1, currents2 = self._res_currents_getter(warning)
-        results = {
-            "id": self.id,
-            "phases_hv": self.phases_hv,
-            "phases_lv": self.phases_lv,
-            "currents_hv": [[i.real, i.imag] for i in currents1],
-            "currents_lv": [[i.real, i.imag] for i in currents2],
-        }
+        results = super()._results_to_dict(warning, full)
         if full:
-            potentials1, potentials2 = self._res_potentials_getter(warning=False)
-            results["potentials_hv"] = [[v.real, v.imag] for v in potentials1]
-            results["potentials_lv"] = [[v.real, v.imag] for v in potentials2]
-            powers1, powers2 = self._res_powers_getter(
-                warning=False,
-                potentials1=potentials1,
-                potentials2=potentials2,
-                currents1=currents1,
-                currents2=currents2,
-            )
-            results["powers_hv"] = [[s.real, s.imag] for s in powers1]
-            results["powers_lv"] = [[s.real, s.imag] for s in powers2]
-            voltages1, voltages2 = self._res_voltages_getter(
-                warning=False, potentials1=potentials1, potentials2=potentials2
-            )
-            results["voltages_hv"] = [[v.real, v.imag] for v in voltages1]
-            results["voltages_lv"] = [[v.real, v.imag] for v in voltages2]
-
-            sum_powers1 = sum(powers1)
-            sum_powers2 = sum(powers2)
-            power_losses = sum_powers1 + sum_powers2
+            # Add transformer specific results
+            powers_hv, powers_lv = self._res_powers_getter(warning=False)  # warn only once
+            sum_powers_hv, sum_powers_lv = sum(powers_hv), sum(powers_lv)
+            power_losses = sum_powers_hv + sum_powers_lv
+            loading = max(abs(sum_powers_hv), abs(sum_powers_lv)) / self.parameters._sn
             results["power_losses"] = [power_losses.real, power_losses.imag]
-            loading = max(abs(sum_powers1), abs(sum_powers2)) / self.parameters._sn
             results["loading"] = loading
-
         return results

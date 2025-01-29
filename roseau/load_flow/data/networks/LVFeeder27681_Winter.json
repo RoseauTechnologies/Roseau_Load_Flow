@@ -61,10 +61,6 @@
       "phases": "abcn",
       "bus1": "MVLVFeeder11757",
       "bus2": "LVBus128601",
-      "length": 0.03074722558197331,
-      "params_id": "U_AL_150",
-      "max_loading": 1,
-      "ground": "ground",
       "geometry": {
         "type": "LineString",
         "coordinates": [
@@ -77,7 +73,11 @@
           [-0.872690668569252, 49.325398961209295],
           [-0.872690668569252, 49.325398961209295]
         ]
-      }
+      },
+      "max_loading": 1.0,
+      "params_id": "U_AL_150",
+      "length": 0.03074722558197331,
+      "ground": "ground"
     }
   ],
   "transformers": [
@@ -91,9 +91,9 @@
         "type": "Point",
         "coordinates": [-0.872844643374193, 49.325171742226196]
       },
-      "tap": 1.0,
+      "max_loading": 1.0,
       "params_id": "Dyn11_160kVA",
-      "max_loading": 1
+      "tap": 1.0
     }
   ],
   "switches": [],
@@ -103,16 +103,16 @@
       "bus": "LVBus128601",
       "phases": "an",
       "type": "power",
-      "powers": [[9100.0, 3000.0]],
-      "connect_neutral": null
+      "connect_neutral": null,
+      "powers": [[9100.0, 3000.0]]
     },
     {
       "id": "LVBus128601_production",
       "bus": "LVBus128601",
       "phases": "an",
       "type": "power",
-      "powers": [[0.0, 0.0]],
-      "connect_neutral": null
+      "connect_neutral": null,
+      "powers": [[0.0, 0.0]]
     }
   ],
   "sources": [
@@ -120,12 +120,13 @@
       "id": "VoltageSource",
       "bus": "MVLV11757",
       "phases": "abc",
+      "type": "voltage",
+      "connect_neutral": null,
       "voltages": [
         [17320.50807568877, 10000.0],
         [0.0, -20000.0],
         [-17320.50807568877, 10000.0]
-      ],
-      "connect_neutral": null
+      ]
     }
   ],
   "lines_params": [

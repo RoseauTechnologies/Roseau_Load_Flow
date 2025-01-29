@@ -1,6 +1,7 @@
 import logging
 import warnings
 from collections.abc import Iterator
+from typing import Final
 
 import numpy as np
 import pandas as pd
@@ -13,12 +14,15 @@ from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow.utils import find_stack_level
 from roseau.load_flow_engine.cy_engine import CyBus
 from roseau.load_flow_single.models.core import Element
+from roseau.load_flow_single.models.terminals import BaseTerminal
 
 logger = logging.getLogger(__name__)
 
 
-class Bus(Element[CyBus]):
+class Bus(BaseTerminal[CyBus]):
     """An electrical bus."""
+
+    element_type: Final = "bus"
 
     def __init__(
         self,
@@ -41,18 +45,20 @@ class Bus(Element[CyBus]):
                 x-y coordinates of the bus.
 
             nominal_voltage:
-                An optional nominal voltage for the bus (V). It is not used in the load flow.
-                It can be a float (V) or a :class:`Quantity <roseau.load_flow.units.Q_>` of float.
+                An optional nominal phase-to-phase voltage for the bus (V). It is not used in the
+                load flow. It can be a float (V) or a :class:`Quantity <roseau.load_flow.units.Q_>`
+                of float. It must be provided if either `min_voltage_level` or `max_voltage_level`
+                is provided.
 
             min_voltage_level:
-                An optional minimum voltage of the bus (%). It is not used in the load flow.
-                It must be a percentage of the `nominal_voltage`. If provided, the nominal voltage becomes mandatory.
-                Either a float (unitless) or a :class:`Quantity <roseau.load_flow.units.Q_>` of float.
+                An optional minimal voltage level of the bus (%). It is not used in the load flow.
+                It must be a percentage of the `nominal_voltage` between 0 and 1. Either a float
+                (unitless) or a :class:`Quantity <roseau.load_flow.units.Q_>` of float.
 
             max_voltage_level:
-                An optional maximum voltage of the bus (%). It is not used in the load flow.
-                It must be a percentage of the `nominal_voltage`. If provided, the nominal voltage becomes mandatory.
-                Either a float (unitless) or a :class:`Quantity <roseau.load_flow.units.Q_>` of float.
+                An optional maximal voltage level of the bus (%). It is not used in the load flow.
+                It must be a percentage of the `nominal_voltage` between 0 and 1. Either a float
+                (unitless) or a :class:`Quantity <roseau.load_flow.units.Q_>` of float.
 
             initial_voltage:
                 An optional initial voltage of the bus (V). It can be used to improve the convergence
@@ -64,6 +70,7 @@ class Bus(Element[CyBus]):
             initial_voltage = 0.0
         self.initial_voltage = initial_voltage
         self.geometry = geometry
+
         self._nominal_voltage: float | None = None
         self._min_voltage_level: float | None = None
         self._max_voltage_level: float | None = None
@@ -74,9 +81,6 @@ class Bus(Element[CyBus]):
         if max_voltage_level is not None:
             self.max_voltage_level = max_voltage_level
 
-        self._res_voltage: complex | None = None
-
-        self._n = 2
         self._initialized = initialized
         self._initialized_by_the_user = initialized  # only used for serialization
         self._cy_element = CyBus(
@@ -102,59 +106,35 @@ class Bus(Element[CyBus]):
         if self._cy_element is not None:
             self._cy_element.initialize_potentials(np.array([self._initial_voltage / SQRT3, 0], dtype=np.complex128))
 
-    def _res_voltage_getter(self, warning: bool) -> complex:
-        if self._fetch_results:
-            self._res_voltage = self._cy_element.get_potentials(self._n)[0] * SQRT3
-        return self._res_getter(value=self._res_voltage, warning=warning)
-
-    @property
-    @ureg_wraps("V", (None,))
-    def res_voltage(self) -> Q_[complex]:
-        """The load flow result of the bus voltages (V)."""
-        return self._res_voltage_getter(warning=True)
-
-    def _res_voltage_level_getter(self, warning: bool) -> float | None:
-        if self._nominal_voltage is None:
-            return None
-        voltage = self._res_voltage_getter(warning)
-        return abs(voltage) / self._nominal_voltage
-
-    @property
-    def res_voltage_level(self) -> Q_[float] | None:
-        """The load flow result of the bus voltage levels (unitless)."""
-        voltages_level = self._res_voltage_level_getter(warning=True)
-        return None if voltages_level is None else Q_(voltages_level, "")
-
     @property
     def nominal_voltage(self) -> Q_[float] | None:
-        """The phase-phase nominal voltage of the bus of the bus (V) if it is set."""
+        """The phase-to-phase nominal voltage of the bus (V) if it is set."""
         return None if self._nominal_voltage is None else Q_(self._nominal_voltage, "V")
 
     @nominal_voltage.setter
     @ureg_wraps(None, (None, "V"))
-    def nominal_voltage(self, value: float | Q_[float] | None) -> None:
+    def nominal_voltage(self, value: Float | Q_[Float] | None) -> None:
         if pd.isna(value):
-            value = None
-        if value is None:
             if self._max_voltage_level is not None or self._min_voltage_level is not None:
                 warnings.warn(
                     message=(
-                        f"The nominal voltage of the bus {self.id!r} is required to use `min_voltage_level` and "
-                        f"`max_voltage_level`."
+                        f"The nominal voltage of bus {self.id!r} is required to use `min_voltage_level` "
+                        f"and `max_voltage_level`."
                     ),
                     category=UserWarning,
                     stacklevel=find_stack_level(),
                 )
+            self._nominal_voltage = None
         else:
             if value <= 0:
                 msg = f"The nominal voltage of bus {self.id!r} must be positive. {value} V has been provided."
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_VOLTAGES)
-        self._nominal_voltage = value
+            self._nominal_voltage = float(value)
 
     @property
     def min_voltage_level(self) -> Q_[float] | None:
-        """The minimum voltage level of the bus if it is set."""
+        """The minimum voltage level of the bus (pu) if it is set."""
         return None if self._min_voltage_level is None else Q_(self._min_voltage_level, "")
 
     @min_voltage_level.setter
@@ -173,7 +153,7 @@ class Bus(Element[CyBus]):
             if self._nominal_voltage is None:
                 warnings.warn(
                     message=(
-                        f"The min voltage level of the bus {self.id!r} is useless without a nominal voltage. Please "
+                        f"The min voltage level of bus {self.id!r} is useless without a nominal voltage. Please "
                         f"define a nominal voltage for this bus."
                     ),
                     category=UserWarning,
@@ -192,7 +172,7 @@ class Bus(Element[CyBus]):
 
     @property
     def max_voltage_level(self) -> Q_[float] | None:
-        """The maximum voltage level of the bus if it is set."""
+        """The maximum voltage level of the bus (pu) if it is set."""
         return None if self._max_voltage_level is None else Q_(self._max_voltage_level, "")
 
     @max_voltage_level.setter
@@ -211,7 +191,7 @@ class Bus(Element[CyBus]):
             if self._nominal_voltage is None:
                 warnings.warn(
                     message=(
-                        f"The max voltage level of the bus {self.id!r} is useless without a nominal voltage. Please "
+                        f"The max voltage level of bus {self.id!r} is useless without a nominal voltage. Please "
                         f"define a nominal voltage for this bus."
                     ),
                     category=UserWarning,
@@ -227,22 +207,6 @@ class Bus(Element[CyBus]):
             if self._max_voltage_level is None or self._nominal_voltage is None
             else Q_(self._max_voltage_level * self._nominal_voltage, "V")
         )
-
-    @property
-    def res_violated(self) -> bool | None:
-        """Whether the bus has voltage limits violations.
-
-        Returns ``None`` if the bus has no voltage limits set.
-        """
-        u_min = self._min_voltage_level
-        u_max = self._max_voltage_level
-        if u_min is None and u_max is None:
-            return None
-        u_pu = self._res_voltage_level_getter(warning=True)
-        if u_pu is None:
-            return None
-
-        return (u_min is not None and u_pu < u_min) or (u_max is not None and u_pu > u_max)
 
     def propagate_limits(self, force: bool = False) -> None:
         """Propagate the voltage limits to galvanically connected buses.
@@ -349,47 +313,72 @@ class Bus(Element[CyBus]):
                 remaining.update(to_add)
 
     #
+    # Results
+    #
+    def _res_voltage_level_getter(self, warning: bool) -> float | None:
+        if self._nominal_voltage is None:
+            return None
+        voltage = self._res_voltage_getter(warning)
+        return abs(voltage) / self._nominal_voltage
+
+    @property
+    def res_voltage_level(self) -> Q_[float] | None:
+        """The load flow result of the bus voltage levels (unitless)."""
+        voltages_level = self._res_voltage_level_getter(warning=True)
+        return None if voltages_level is None else Q_(voltages_level, "")
+
+    @property
+    def res_violated(self) -> bool | None:
+        """Whether the bus has voltage limits violations.
+
+        Returns ``None`` if the bus has no voltage limits set.
+        """
+        u_min = self._min_voltage_level
+        u_max = self._max_voltage_level
+        if u_min is None and u_max is None:
+            return None
+        u_pu = self._res_voltage_level_getter(warning=True)
+        if u_pu is None:
+            return None
+
+        return (u_min is not None and u_pu < u_min) or (u_max is not None and u_pu > u_max)
+
+    #
     # Json Mixin interface
     #
     @classmethod
     def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
-        geometry = cls._parse_geometry(data.get("geometry"))
         if (initial_voltage := data.get("initial_voltage")) is not None:
             initial_voltage = complex(initial_voltage[0], initial_voltage[1])
         self = cls(
             id=data["id"],
-            geometry=geometry,
+            geometry=cls._parse_geometry(data.get("geometry")),
             initial_voltage=initial_voltage,
             nominal_voltage=data.get("nominal_voltage"),
             min_voltage_level=data.get("min_voltage_level"),
             max_voltage_level=data.get("max_voltage_level"),
         )
-        if include_results and "results" in data:
-            self._res_voltage = complex(data["results"]["voltage"][0], data["results"]["voltage"][1])
-            self._fetch_results = False
-            self._no_results = False
+        self._parse_results_from_dict(data, include_results=include_results)
         return self
 
     def _to_dict(self, include_results: bool) -> JsonDict:
-        res = {"id": self.id}
+        data = super()._to_dict(include_results=include_results)
         if self._initialized_by_the_user:
-            res["initial_voltage"] = [self._initial_voltage.real, self._initial_voltage.imag]
+            data["initial_voltage"] = [self._initial_voltage.real, self._initial_voltage.imag]
         if self.geometry is not None:
-            res["geometry"] = self.geometry.__geo_interface__
+            data["geometry"] = self.geometry.__geo_interface__
         if self.nominal_voltage is not None:
-            res["nominal_voltage"] = self.nominal_voltage.magnitude
+            data["nominal_voltage"] = self.nominal_voltage.magnitude
         if self.min_voltage_level is not None:
-            res["min_voltage_level"] = self.min_voltage_level.magnitude
+            data["min_voltage_level"] = self.min_voltage_level.magnitude
         if self.max_voltage_level is not None:
-            res["max_voltage_level"] = self.max_voltage_level.magnitude
+            data["max_voltage_level"] = self.max_voltage_level.magnitude
         if include_results:
-            voltage = self._res_voltage_getter(warning=True)
-            res["results"] = {"voltage": [voltage.real, voltage.imag]}
-        return res
+            data["results"] = data.pop("results")  # move results to the end
+        return data
 
     def _results_to_dict(self, warning: bool, full: bool) -> JsonDict:
-        voltage = self._res_voltage_getter(warning)
-        res = {"id": self.id, "voltage": [voltage.real, voltage.imag]}
+        results = super()._results_to_dict(warning, full)
         if full:
-            res["voltage_level"] = self._res_voltage_level_getter(warning=False)
-        return res
+            results["voltage_level"] = self._res_voltage_level_getter(warning=False)
+        return results
