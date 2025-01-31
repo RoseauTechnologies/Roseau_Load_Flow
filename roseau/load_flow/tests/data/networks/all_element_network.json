@@ -28,6 +28,11 @@
     {
       "id": "bus0",
       "phases": "abc",
+      "initial_potentials": [
+        [11547.005383792515, 0.0],
+        [-5773.502691896261, -9999.999999999996],
+        [-5773.502691896255, 10000.0]
+      ],
       "results": {
         "potentials": [
           [11547.005383786585, -3.266936146665946e-9],
@@ -313,25 +318,6 @@
         [100.0, 0.0],
         [100.0, 0.0]
       ],
-      "results": {
-        "currents": [
-          [0.4063515856914272, 0.19643587542643476],
-          [-0.033057336856425305, -0.4501287481106594],
-          [-0.373330996548295, 0.2536387717216332],
-          [3.67477132930949e-5, 5.410096259145236e-5]
-        ],
-        "potentials": [
-          [199.47682795187697, 96.42980477019915],
-          [-16.227752820828513, -220.9669033054901],
-          [-183.2490769359472, 124.53710827582836],
-          [-1.858501715591362e-6, -3.973914589308959e-6]
-        ],
-        "flexible_powers": [
-          [100.0, 0.0],
-          [100.0, 0.0],
-          [100.0, -0.014493901674800247]
-        ]
-      },
       "flexible_params": [
         {
           "control_p": {
@@ -388,7 +374,26 @@
           },
           "s_max": 150.0
         }
-      ]
+      ],
+      "results": {
+        "currents": [
+          [0.4063515856914272, 0.19643587542643476],
+          [-0.033057336856425305, -0.4501287481106594],
+          [-0.373330996548295, 0.2536387717216332],
+          [3.67477132930949e-5, 5.410096259145236e-5]
+        ],
+        "potentials": [
+          [199.47682795187697, 96.42980477019915],
+          [-16.227752820828513, -220.9669033054901],
+          [-183.2490769359472, 124.53710827582836],
+          [-1.858501715591362e-6, -3.973914589308959e-6]
+        ],
+        "flexible_powers": [
+          [100.0, 0.0],
+          [100.0, 0.0],
+          [100.0, -0.014493901674800247]
+        ]
+      }
     },
     {
       "id": "load4",
@@ -400,6 +405,63 @@
         [-100.0, 0.0],
         [-100.0, 0.0],
         [-100.0, 0.0]
+      ],
+      "flexible_params": [
+        {
+          "control_p": {
+            "type": "constant"
+          },
+          "control_q": {
+            "type": "constant"
+          },
+          "projection": {
+            "type": "euclidean",
+            "alpha": 1000.0,
+            "epsilon": 1e-8
+          },
+          "s_max": 1.0
+        },
+        {
+          "control_p": {
+            "type": "p_max_u_production",
+            "u_up": 245.0,
+            "u_max": 250.0,
+            "alpha": 1000.0,
+            "epsilon": 1e-8
+          },
+          "control_q": {
+            "type": "constant"
+          },
+          "projection": {
+            "type": "euclidean",
+            "alpha": 1000.0,
+            "epsilon": 1e-8
+          },
+          "s_max": 150.0
+        },
+        {
+          "control_p": {
+            "type": "p_max_u_production",
+            "u_up": 245.0,
+            "u_max": 250.0,
+            "alpha": 1000.0,
+            "epsilon": 1e-8
+          },
+          "control_q": {
+            "type": "q_u",
+            "u_min": 215.0,
+            "u_down": 220.0,
+            "u_up": 240.0,
+            "u_max": 245.0,
+            "alpha": 1000.0
+          },
+          "projection": {
+            "type": "euclidean",
+            "alpha": 1000.0,
+            "epsilon": 1e-8
+          },
+          "s_max": 150.0
+        }
       ],
       "results": {
         "currents": [
@@ -419,47 +481,23 @@
           [-100.0, 0.0],
           [-100.0, -0.012505035777010676]
         ]
-      },
+      }
+    },
+    {
+      "id": "load5",
+      "bus": "bus4",
+      "phases": "abcn",
+      "type": "power",
+      "connect_neutral": null,
+      "powers": [
+        [-100.0, 0.0],
+        [-100.0, 0.0],
+        [-100.0, 0.0]
+      ],
       "flexible_params": [
         {
           "control_p": {
             "type": "constant"
-          },
-          "control_q": {
-            "type": "constant"
-          },
-          "projection": {
-            "type": "euclidean",
-            "alpha": 1000.0,
-            "epsilon": 1e-8
-          },
-          "s_max": 1.0
-        },
-        {
-          "control_p": {
-            "type": "p_max_u_production",
-            "u_up": 245.0,
-            "u_max": 250.0,
-            "alpha": 1000.0,
-            "epsilon": 1e-8
-          },
-          "control_q": {
-            "type": "constant"
-          },
-          "projection": {
-            "type": "euclidean",
-            "alpha": 1000.0,
-            "epsilon": 1e-8
-          },
-          "s_max": 150.0
-        },
-        {
-          "control_p": {
-            "type": "p_max_u_production",
-            "u_up": 245.0,
-            "u_max": 250.0,
-            "alpha": 1000.0,
-            "epsilon": 1e-8
           },
           "control_q": {
             "type": "q_u",
@@ -474,20 +512,52 @@
             "alpha": 1000.0,
             "epsilon": 1e-8
           },
-          "s_max": 150.0
+          "s_max": 150.0,
+          "q_min": -100.0,
+          "q_max": 100.0
+        },
+        {
+          "control_p": {
+            "type": "constant"
+          },
+          "control_q": {
+            "type": "q_u",
+            "u_min": 215.0,
+            "u_down": 220.0,
+            "u_up": 240.0,
+            "u_max": 245.0,
+            "alpha": 1000.0
+          },
+          "projection": {
+            "type": "euclidean",
+            "alpha": 1000.0,
+            "epsilon": 1e-8
+          },
+          "s_max": 150.0,
+          "q_min": -100.0,
+          "q_max": 100.0
+        },
+        {
+          "control_p": {
+            "type": "constant"
+          },
+          "control_q": {
+            "type": "q_u",
+            "u_min": 215.0,
+            "u_down": 220.0,
+            "u_up": 240.0,
+            "u_max": 245.0,
+            "alpha": 1000.0
+          },
+          "projection": {
+            "type": "euclidean",
+            "alpha": 1000.0,
+            "epsilon": 1e-8
+          },
+          "s_max": 150.0,
+          "q_min": -100.0,
+          "q_max": 100.0
         }
-      ]
-    },
-    {
-      "id": "load5",
-      "bus": "bus4",
-      "phases": "abcn",
-      "type": "power",
-      "connect_neutral": null,
-      "powers": [
-        [-100.0, 0.0],
-        [-100.0, 0.0],
-        [-100.0, 0.0]
       ],
       "results": {
         "currents": [
@@ -507,72 +577,7 @@
           [-100.0, -0.00833710044595426],
           [-100.0, -0.008336690518007117]
         ]
-      },
-      "flexible_params": [
-        {
-          "control_p": {
-            "type": "constant"
-          },
-          "control_q": {
-            "type": "q_u",
-            "u_min": 215.0,
-            "u_down": 220.0,
-            "u_up": 240.0,
-            "u_max": 245.0,
-            "alpha": 1000.0
-          },
-          "projection": {
-            "type": "euclidean",
-            "alpha": 1000.0,
-            "epsilon": 1e-8
-          },
-          "s_max": 150.0,
-          "q_min": -100.0,
-          "q_max": 100.0
-        },
-        {
-          "control_p": {
-            "type": "constant"
-          },
-          "control_q": {
-            "type": "q_u",
-            "u_min": 215.0,
-            "u_down": 220.0,
-            "u_up": 240.0,
-            "u_max": 245.0,
-            "alpha": 1000.0
-          },
-          "projection": {
-            "type": "euclidean",
-            "alpha": 1000.0,
-            "epsilon": 1e-8
-          },
-          "s_max": 150.0,
-          "q_min": -100.0,
-          "q_max": 100.0
-        },
-        {
-          "control_p": {
-            "type": "constant"
-          },
-          "control_q": {
-            "type": "q_u",
-            "u_min": 215.0,
-            "u_down": 220.0,
-            "u_up": 240.0,
-            "u_max": 245.0,
-            "alpha": 1000.0
-          },
-          "projection": {
-            "type": "euclidean",
-            "alpha": 1000.0,
-            "epsilon": 1e-8
-          },
-          "s_max": 150.0,
-          "q_min": -100.0,
-          "q_max": 100.0
-        }
-      ]
+      }
     }
   ],
   "sources": [

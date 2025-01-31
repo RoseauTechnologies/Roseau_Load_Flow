@@ -467,13 +467,13 @@ class Bus(BaseTerminal[CyBus]):
     #
     @classmethod
     def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
-        if (potentials := data.get("potentials")) is not None:
-            potentials = [complex(*v) for v in potentials]
+        if (initial_potentials := data.get("initial_potentials")) is not None:
+            initial_potentials = [complex(*v) for v in initial_potentials]
         self = cls(
             id=data["id"],
             phases=data["phases"],
             geometry=cls._parse_geometry(data.get("geometry")),
-            initial_potentials=potentials,
+            initial_potentials=initial_potentials,
             nominal_voltage=data.get("nominal_voltage"),
             min_voltage_level=data.get("min_voltage_level"),
             max_voltage_level=data.get("max_voltage_level"),
@@ -484,7 +484,7 @@ class Bus(BaseTerminal[CyBus]):
     def _to_dict(self, include_results: bool) -> JsonDict:
         data = super()._to_dict(include_results=include_results)
         if self._initialized_by_the_user:
-            data["potentials"] = [[v.real, v.imag] for v in self._initial_potentials]
+            data["initial_potentials"] = [[v.real, v.imag] for v in self._initial_potentials]
         if self.geometry is not None:
             data["geometry"] = self.geometry.__geo_interface__
         if self.nominal_voltage is not None:

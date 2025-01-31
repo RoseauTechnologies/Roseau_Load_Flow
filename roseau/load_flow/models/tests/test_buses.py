@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import pytest
+import shapely
 
 from roseau.load_flow import (
     Q_,
@@ -19,6 +20,7 @@ from roseau.load_flow import (
     TransformerParameters,
     VoltageSource,
 )
+from roseau.load_flow.testing import assert_json_close
 
 
 def test_short_circuit():
@@ -495,6 +497,70 @@ def test_res_voltage_unbalance():
         bus.res_voltage_unbalance()
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
     assert e.value.msg == "Voltage unbalance is only available for 3-phases buses, bus 'b1' has phases 'an'"
+
+
+def test_to_dict():
+    bus = Bus(
+        id="bus",
+        phases="an",
+        nominal_voltage=400,
+        min_voltage_level=0.9,
+        max_voltage_level=1.1,
+    )
+    assert_json_close(
+        bus.to_dict(include_results=False),
+        {
+            "id": "bus",
+            "phases": "an",
+            "nominal_voltage": 400,
+            "min_voltage_level": 0.9,
+            "max_voltage_level": 1.1,
+        },
+    )
+    bus.min_voltage_level = None
+    assert_json_close(
+        bus.to_dict(include_results=False),
+        {"id": "bus", "phases": "an", "nominal_voltage": 400, "max_voltage_level": 1.1},
+    )
+    bus.max_voltage_level = None
+    assert_json_close(
+        bus.to_dict(include_results=False),
+        {"id": "bus", "phases": "an", "nominal_voltage": 400},
+    )
+    bus.nominal_voltage = None
+    assert_json_close(
+        bus.to_dict(include_results=False),
+        {"id": "bus", "phases": "an"},
+    )
+
+    bus.geometry = shapely.Point(1.5, 0.5)
+    assert_json_close(
+        bus.to_dict(include_results=False),
+        {"id": "bus", "phases": "an", "geometry": {"type": "Point", "coordinates": [1.5, 0.5]}},
+    )
+    bus.geometry = None
+
+    bus.initial_potentials = [230 + 0j, 0j]
+    assert_json_close(
+        bus.to_dict(include_results=False),
+        {"id": "bus", "phases": "an", "initial_potentials": [[230, 0], [0, 0]]},
+    )
+
+
+def test_to_from_dict_round_trip():
+    bus = Bus(
+        id="bus",
+        phases="an",
+        geometry=shapely.Point(1.5, 0.5),
+        nominal_voltage=400,
+        min_voltage_level=0.9,
+        max_voltage_level=1.1,
+        initial_potentials=[230 + 0j, 0j],
+    )
+    bus_dict = bus.to_dict(include_results=False)
+    bus2 = Bus.from_dict(bus_dict)
+    bus2_dict = bus2.to_dict(include_results=False)
+    assert_json_close(bus_dict, bus2_dict)
 
 
 def test_deprecated_potentials():

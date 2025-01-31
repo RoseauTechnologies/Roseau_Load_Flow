@@ -89,7 +89,7 @@ def generate_all_element_network() -> None:
     pref = rlf.PotentialRef(id="pref", element=ground)
 
     # Buses
-    bus0 = rlf.Bus(id="bus0", phases="abc")
+    bus0 = rlf.Bus(id="bus0", phases="abc", initial_potentials=20e3 / rlf.SQRT3 * rlf.PositiveSequence)
     bus1 = rlf.Bus(id="bus1", phases="abc")
     bus2 = rlf.Bus(id="bus2", phases="abcn")
     bus3 = rlf.Bus(id="bus3", phases="abcn")
