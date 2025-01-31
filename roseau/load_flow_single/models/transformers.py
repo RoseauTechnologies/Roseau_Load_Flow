@@ -23,7 +23,7 @@ class Transformer(AbstractBranch[CySingleTransformer]):
 
     element_type: Final = "transformer"
 
-    @deprecate_renamed_parameters({"bus1": "bus_hv", "bus2": "bus_lv"}, version="0.2.0", category=DeprecationWarning)
+    @deprecate_renamed_parameters({"bus1": "bus_hv", "bus2": "bus_lv"}, version="0.12.0", category=DeprecationWarning)
     def __init__(
         self,
         id: Id,

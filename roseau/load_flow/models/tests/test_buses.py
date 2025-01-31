@@ -495,3 +495,28 @@ def test_res_voltage_unbalance():
         bus.res_voltage_unbalance()
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
     assert e.value.msg == "Voltage unbalance is only available for 3-phases buses, bus 'b1' has phases 'an'"
+
+
+def test_deprecated_potentials():
+    # Constructor
+    with pytest.warns(
+        DeprecationWarning,
+        match=r"Argument 'potentials' for Bus\(\) is deprecated. It has been renamed to 'initial_potentials'",
+    ):
+        bus = Bus(id="bus", phases="an", potentials=[230, 0])  # type: ignore
+    np.testing.assert_allclose(bus.initial_potentials.m, [230, 0])
+
+    # Property getter
+    with pytest.warns(
+        DeprecationWarning,
+        match=r"'Bus.potentials' is deprecated. It has been renamed to 'initial_potentials'",
+    ):
+        _ = bus.potentials
+
+    # Property setter
+    with pytest.warns(
+        DeprecationWarning,
+        match=r"'Bus.potentials' is deprecated. It has been renamed to 'initial_potentials'",
+    ):
+        bus.potentials = [220, 0]
+    np.testing.assert_allclose(bus.initial_potentials.m, [220, 0])

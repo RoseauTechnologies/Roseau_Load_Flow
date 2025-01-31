@@ -1751,8 +1751,8 @@ def test_propagate_potentials():
     assert source_bus._initialized
     un = 20e3 / np.sqrt(3)
     expected_potentials = un * np.array([1, np.exp(-2j * np.pi / 3), np.exp(2j * np.pi / 3)])
-    assert np.allclose(load_bus.potentials.m, expected_potentials)
-    assert np.allclose(source_bus.potentials.m, expected_potentials)
+    assert np.allclose(load_bus.initial_potentials.m, expected_potentials)
+    assert np.allclose(source_bus.initial_potentials.m, expected_potentials)
 
     # Multiple sources
     source_bus = Bus(id="source_bus", phases="abcn")
@@ -1765,7 +1765,7 @@ def test_propagate_potentials():
     assert not load_bus._initialized
     _ = ElectricalNetwork.from_element(source_bus)
     assert load_bus._initialized
-    assert np.allclose(load_bus.potentials.m, [100, 200, 300, 0])
+    assert np.allclose(load_bus.initial_potentials.m, [100, 200, 300, 0])
 
     # Do not define a source for all phases
     source_bus = Bus(id="source_bus", phases="abcn")
@@ -1777,7 +1777,9 @@ def test_propagate_potentials():
     assert not load_bus._initialized
     _ = ElectricalNetwork.from_element(source_bus)
     assert load_bus._initialized
-    assert np.allclose(load_bus.potentials.m, 100 * np.array([1, np.exp(-2j * np.pi / 3), np.exp(2j * np.pi / 3), 0]))
+    assert np.allclose(
+        load_bus.initial_potentials.m, 100 * np.array([1, np.exp(-2j * np.pi / 3), np.exp(2j * np.pi / 3), 0])
+    )
 
 
 def test_short_circuits():
@@ -2324,4 +2326,4 @@ def test_propagate_potentials_center_transformers():
     en = ElectricalNetwork.from_element(bus2)
     with contextlib.suppress(TypeError):  # cython solve_load_flow method has been patched
         en.solve_load_flow()  # propagate the potentials
-    npt.assert_allclose(bus2.potentials.m_as("V"), np.array([200, -200, 0], dtype=np.complex128))
+    npt.assert_allclose(bus2.initial_potentials.m_as("V"), np.array([200, -200, 0], dtype=np.complex128))
