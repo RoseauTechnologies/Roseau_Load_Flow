@@ -52,6 +52,10 @@ def test_res_violated():
     bus_hv._res_potentials = 20_000 * PosSeq
     bus_lv._res_potentials = np.concatenate([230 * PosSeq, [0]])
     transformer._res_currents = 0.8 * PosSeq, np.concatenate([-65 * PosSeq, [0]])
+    transformer._res_potentials = (
+        np.array([bus_hv._res_potentials[bus_hv.phases.index(p)] for p in transformer.phases_hv], dtype=complex),
+        np.array([bus_lv._res_potentials[bus_lv.phases.index(p)] for p in transformer.phases_lv], dtype=complex),
+    )
 
     # Default value
     assert transformer.max_loading == Q_(1, "")
@@ -90,6 +94,10 @@ def test_transformer_results():
     bus_hv._res_potentials = 20_000 * PosSeq
     bus_lv._res_potentials = np.concatenate([230 * PosSeq, [0]])
     tr._res_currents = 0.8 * PosSeq, np.concatenate([-65 * PosSeq, [0]])
+    tr._res_potentials = (
+        np.array([bus_hv._res_potentials[bus_hv.phases.index(p)] for p in tr.phases_hv], dtype=complex),
+        np.array([bus_lv._res_potentials[bus_lv.phases.index(p)] for p in tr.phases_lv], dtype=complex),
+    )
 
     p_hv, p_lv = (p.m for p in tr.res_powers)
 

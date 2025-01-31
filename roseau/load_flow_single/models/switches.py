@@ -1,9 +1,10 @@
 import logging
+from typing import Final
 
 from shapely.geometry.base import BaseGeometry
 
 from roseau.load_flow import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
-from roseau.load_flow.typing import Id, JsonDict
+from roseau.load_flow.typing import Id
 from roseau.load_flow_engine.cy_engine import CySwitch
 from roseau.load_flow_single.models.branches import AbstractBranch
 from roseau.load_flow_single.models.buses import Bus
@@ -15,6 +16,8 @@ logger = logging.getLogger(__name__)
 
 class Switch(AbstractBranch[CySwitch]):
     """A general purpose switch branch."""
+
+    element_type: Final = "switch"
 
     def __init__(self, id: Id, bus1: Bus, bus2: Bus, *, geometry: BaseGeometry | None = None) -> None:
         """Switch constructor.
@@ -76,40 +79,3 @@ class Switch(AbstractBranch[CySwitch]):
             )
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_VOLTAGES_SOURCES_CONNECTION)
-
-    #
-    # Json Mixin interface
-    #
-    def _to_dict(self, include_results: bool) -> JsonDict:
-        res = {"id": self.id, "bus1": self.bus1.id, "bus2": self.bus2.id}
-        if self.geometry is not None:
-            res["geometry"] = self.geometry.__geo_interface__
-        if include_results:
-            current1, current2 = self._res_currents_getter(warning=True)
-            res["results"] = {
-                "current1": [current1.real, current1.imag],
-                "current2": [current2.real, current2.imag],
-            }
-        return res
-
-    def _results_to_dict(self, warning: bool, full: bool) -> JsonDict:
-        current1, current2 = self._res_currents_getter(warning)
-        results = {
-            "id": self.id,
-            "current1": [current1.real, current1.imag],
-            "current2": [current2.real, current2.imag],
-        }
-        if full:
-            voltage1, voltage2 = self._res_voltages_getter(warning=False)
-            results["voltage1"] = [voltage1.real, voltage1.imag]
-            results["voltage2"] = [voltage2.real, voltage2.imag]
-            power1, power2 = self._res_powers_getter(
-                warning=False,
-                voltage1=voltage1,
-                voltage2=voltage2,
-                current1=current1,
-                current2=current2,
-            )
-            results["power1"] = [power1.real, power1.imag]
-            results["power2"] = [power2.real, power2.imag]
-        return results

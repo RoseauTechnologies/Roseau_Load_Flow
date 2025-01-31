@@ -61,10 +61,6 @@
       "phases": "abc",
       "bus1": "HVMVFeeder07",
       "bus2": "MVLV14092",
-      "length": 5.766634582124083,
-      "params_id": "U_AL_240",
-      "max_loading": 1,
-      "ground": "ground",
       "geometry": {
         "type": "LineString",
         "coordinates": [
@@ -129,17 +125,17 @@
           [-1.664997490891627, 49.46181945594003],
           [-1.6650298238154546, 49.46180069059946]
         ]
-      }
+      },
+      "max_loading": 1.0,
+      "params_id": "U_AL_240",
+      "length": 5.766634582124083,
+      "ground": "ground"
     },
     {
       "id": "MVBranch39083",
       "phases": "abc",
       "bus1": "MVLV14092",
       "bus2": "MVLV05996",
-      "length": 6.070765210726548,
-      "params_id": "U_AL_240",
-      "max_loading": 1,
-      "ground": "ground",
       "geometry": {
         "type": "LineString",
         "coordinates": [
@@ -245,7 +241,11 @@
           [-1.626239709998294, 49.43249717368583],
           [-1.626239709998294, 49.43249717368583]
         ]
-      }
+      },
+      "max_loading": 1.0,
+      "params_id": "U_AL_240",
+      "length": 6.070765210726548,
+      "ground": "ground"
     }
   ],
   "transformers": [],
@@ -267,48 +267,48 @@
       "bus": "MVLV05996",
       "phases": "abc",
       "type": "power",
+      "connect_neutral": null,
       "powers": [
         [0.0, 0.0],
         [0.0, 0.0],
         [0.0, 0.0]
-      ],
-      "connect_neutral": null
+      ]
     },
     {
       "id": "MVLV05996_production",
       "bus": "MVLV05996",
       "phases": "abc",
       "type": "power",
+      "connect_neutral": null,
       "powers": [
         [0.0, 0.0],
         [0.0, 0.0],
         [0.0, 0.0]
-      ],
-      "connect_neutral": null
+      ]
     },
     {
       "id": "MVLV14092_consumption",
       "bus": "MVLV14092",
       "phases": "abc",
       "type": "power",
+      "connect_neutral": null,
       "powers": [
         [0.0, 0.0],
         [0.0, 0.0],
         [0.0, 0.0]
-      ],
-      "connect_neutral": null
+      ]
     },
     {
       "id": "MVLV14092_production",
       "bus": "MVLV14092",
       "phases": "abc",
       "type": "power",
+      "connect_neutral": null,
       "powers": [
         [0.0, 0.0],
         [0.0, 0.0],
         [0.0, 0.0]
-      ],
-      "connect_neutral": null
+      ]
     }
   ],
   "sources": [
@@ -316,12 +316,13 @@
       "id": "VoltageSource",
       "bus": "HVMV07",
       "phases": "abc",
+      "type": "voltage",
+      "connect_neutral": null,
       "voltages": [
         [17320.50807568877, 10000.0],
         [0.0, -20000.0],
         [-17320.50807568877, 10000.0]
-      ],
-      "connect_neutral": null
+      ]
     }
   ],
   "lines_params": [

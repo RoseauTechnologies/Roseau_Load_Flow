@@ -76,7 +76,7 @@ def test_voltage_limits():
     with pytest.warns(
         UserWarning,
         match=(
-            r"The min voltage level of the bus 'bus' is useless without a nominal voltage. Please "
+            r"The min voltage level of bus 'bus' is useless without a nominal voltage. Please "
             r"define a nominal voltage for this bus."
         ),
     ):
@@ -87,7 +87,7 @@ def test_voltage_limits():
     with pytest.warns(
         UserWarning,
         match=(
-            r"The max voltage level of the bus 'bus' is useless without a nominal voltage. Please "
+            r"The max voltage level of bus 'bus' is useless without a nominal voltage. Please "
             r"define a nominal voltage for this bus."
         ),
     ):
@@ -99,7 +99,7 @@ def test_voltage_limits():
     bus.nominal_voltage = Q_(400, "V")
     with pytest.warns(
         UserWarning,
-        match=r"The nominal voltage of the bus 'bus' is required to use `min_voltage_level` and `max_voltage_level`.",
+        match=r"The nominal voltage of bus 'bus' is required to use `min_voltage_level` and `max_voltage_level`.",
     ):
         bus.nominal_voltage = None
 

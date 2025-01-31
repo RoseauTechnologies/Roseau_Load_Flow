@@ -1,4 +1,5 @@
 import logging
+from typing import Final
 
 from shapely.geometry.base import BaseGeometry
 
@@ -19,6 +20,8 @@ class Transformer(AbstractBranch[CySingleTransformer]):
 
     The model parameters are defined using the ``parameters`` argument.
     """
+
+    element_type: Final = "transformer"
 
     @deprecate_renamed_parameters({"bus1": "bus_hv", "bus2": "bus_lv"}, version="0.2.0", category=DeprecationWarning)
     def __init__(
@@ -70,7 +73,7 @@ class Transformer(AbstractBranch[CySingleTransformer]):
         # Equivalent direct-system (positive-sequence) parameters
         z2, ym, k = parameters.z2d, parameters.ymd, parameters.kd
 
-        self._cy_element = CySingleTransformer(z2=z2, ym=ym, k=k * tap)
+        self._cy_element = CySingleTransformer(z2=z2, ym=ym, k=k * self._tap)
         self._cy_connect()
 
     @property
@@ -98,7 +101,7 @@ class Transformer(AbstractBranch[CySingleTransformer]):
         self._invalidate_network_results()
         if self._cy_element is not None:
             z2, ym, k = self.parameters.z2d, self.parameters.ymd, self.parameters.kd
-            self._cy_element.update_transformer_parameters(z2, ym, k * value)
+            self._cy_element.update_transformer_parameters(z2, ym, k * self._tap)
 
     @property
     def parameters(self) -> TransformerParameters:
@@ -218,49 +221,21 @@ class Transformer(AbstractBranch[CySingleTransformer]):
     # Json Mixin interface
     #
     def _to_dict(self, include_results: bool) -> JsonDict:
-        res = {
-            "id": self.id,
-            "bus_hv": self.bus_hv.id,
-            "bus_lv": self.bus_lv.id,
-            "tap": self.tap,
-            "params_id": self.parameters.id,
-            "max_loading": self._max_loading,
-        }
-        if self.geometry is not None:
-            res["geometry"] = self.geometry.__geo_interface__
+        data = super()._to_dict(include_results)
+        data["max_loading"] = self._max_loading
+        data["params_id"] = self.parameters.id
+        data["tap"] = self.tap
         if include_results:
-            current_hv, current_lv = self._res_currents_getter(warning=True)
-            res["results"] = {
-                "current_hv": [current_hv.real, current_hv.imag],
-                "current_lv": [current_lv.real, current_lv.imag],
-            }
-        return res
+            data["results"] = data.pop("results")  # move results to the end
+        return data
 
     def _results_to_dict(self, warning: bool, full: bool) -> JsonDict:
-        current_hv, current_lv = self._res_currents_getter(warning)
-        results = {
-            "id": self.id,
-            "current_hv": [current_hv.real, current_hv.imag],
-            "current_lv": [current_lv.real, current_lv.imag],
-        }
+        results = super()._results_to_dict(warning, full)
         if full:
-            voltage_hv, voltage_lv = self._res_voltages_getter(warning=False)
-            results["voltage_hv"] = [voltage_hv.real, voltage_hv.imag]
-            results["voltage_lv"] = [voltage_lv.real, voltage_lv.imag]
-            power_hv, power_lv = self._res_powers_getter(
-                warning=False,
-                voltage1=voltage_hv,
-                voltage2=voltage_lv,
-                current1=current_hv,
-                current2=current_lv,
-            )
-            results["power_hv"] = [power_hv.real, power_hv.imag]
-            results["power_lv"] = [power_lv.real, power_lv.imag]
-
+            # Add transformer specific results
+            power_hv, power_lv = self._res_powers_getter(warning=False)  # warn only once
             power_losses = power_hv + power_lv
-            results["power_losses"] = [power_losses.real, power_losses.imag]
-
             loading = max(abs(power_hv), abs(power_lv)) / self.parameters._sn
+            results["power_losses"] = [power_losses.real, power_losses.imag]
             results["loading"] = loading
-
         return results

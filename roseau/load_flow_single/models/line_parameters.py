@@ -849,20 +849,20 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         )
 
     def _to_dict(self, include_results: bool) -> JsonDict:
-        res = {"id": self.id, "z_line": [self._z_line.real, self._z_line.imag]}
+        data = {"id": self.id, "z_line": [self._z_line.real, self._z_line.imag]}
         if self._with_shunt:
-            res["y_shunt"] = [self._y_shunt.real, self._y_shunt.imag]
+            data["y_shunt"] = [self._y_shunt.real, self._y_shunt.imag]
         if self._ampacity is not None:
-            res["ampacity"] = self._ampacity
+            data["ampacity"] = self._ampacity
         if self._line_type is not None:
-            res["line_type"] = self._line_type.name
+            data["line_type"] = self._line_type.name
         if self._material is not None:
-            res["material"] = self._material.name
+            data["material"] = self._material.name
         if self._insulator is not None:
-            res["insulator"] = self._insulator.name
+            data["insulator"] = self._insulator.name
         if self._section is not None:
-            res["section"] = self._section
-        return res
+            data["section"] = self._section
+        return data
 
     def _results_to_dict(self, warning: bool, full: bool) -> NoReturn:
         msg = f"The {type(self).__name__} has no results to export."

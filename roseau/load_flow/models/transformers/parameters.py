@@ -1011,7 +1011,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         # Make sure z2 and ym are not numpy types (for JSON serialization)
         z2 = complex(self._z2)
         ym = complex(self._ym)
-        res = {
+        data = {
             "id": self.id,
             "vg": self._vg,
             "sn": self._sn,
@@ -1021,20 +1021,20 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             "ym": [ym.real, ym.imag],
         }
         if self._i0 is not None:
-            res["i0"] = self._i0
+            data["i0"] = self._i0
         if self._p0 is not None:
-            res["p0"] = self._p0
+            data["p0"] = self._p0
         if self._psc is not None:
-            res["psc"] = self._psc
+            data["psc"] = self._psc
         if self._vsc is not None:
-            res["vsc"] = self._vsc
+            data["vsc"] = self._vsc
         if self._manufacturer is not None:
-            res["manufacturer"] = self._manufacturer
+            data["manufacturer"] = self._manufacturer
         if self._range is not None:
-            res["range"] = self._range
+            data["range"] = self._range
         if self._efficiency is not None:
-            res["efficiency"] = self._efficiency
-        return res
+            data["efficiency"] = self._efficiency
+        return data
 
     def _results_to_dict(self, warning: bool, full: bool) -> NoReturn:
         msg = f"The {type(self).__name__} has no results to export."

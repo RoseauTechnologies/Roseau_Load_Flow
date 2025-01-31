@@ -14,19 +14,11 @@ def test_sources_to_dict():
     # Power source
     assert_json_close(
         VoltageSource(id="vs1", bus=bus, voltage=value).to_dict(include_results=False),
-        {
-            "id": "vs1",
-            "bus": "bus",
-            "voltage": [1.0, 2.0],
-        },
+        {"id": "vs1", "bus": "bus", "type": "voltage", "voltage": [1.0, 2.0]},
     )
     assert_json_close(
         VoltageSource(id="vs2", bus=bus, voltage=value).to_dict(include_results=False),
-        {
-            "id": "vs2",
-            "bus": "bus",
-            "voltage": [1.0, 2.0],
-        },
+        {"id": "vs2", "bus": "bus", "type": "voltage", "voltage": [1.0, 2.0]},
     )
 
 

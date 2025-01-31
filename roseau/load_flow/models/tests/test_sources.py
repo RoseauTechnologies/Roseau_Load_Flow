@@ -57,6 +57,7 @@ def test_sources_to_dict():
             "id": "vs1",
             "bus": "bus",
             "phases": "abcn",
+            "type": "voltage",
             "voltages": [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
             "connect_neutral": None,
         },
@@ -67,6 +68,7 @@ def test_sources_to_dict():
             "id": "vs2",
             "bus": "bus",
             "phases": "abc",
+            "type": "voltage",
             "voltages": [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
             "connect_neutral": None,
         },
@@ -79,6 +81,7 @@ def test_sources_to_dict():
             "id": "vs3",
             "bus": "bus",
             "phases": "abc",
+            "type": "voltage",
             "voltages": [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
             "connect_neutral": False,
         },
@@ -91,6 +94,7 @@ def test_sources_to_dict():
             "id": "vs4",
             "bus": "bus",
             "phases": "abcn",
+            "type": "voltage",
             "voltages": [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
             "connect_neutral": True,
         },
@@ -103,6 +107,7 @@ def test_sources_to_dict():
             "id": "vs5",
             "bus": "bus",
             "phases": "abc",
+            "type": "voltage",
             "voltages": [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
             "connect_neutral": None,
         },
@@ -226,10 +231,11 @@ def test_sources_units():
 def test_source_res_voltages(bus_ph, source_ph, res_pot, res_cur):
     bus = Bus(id="bus", phases=bus_ph)
     bus._res_potentials = np.array(res_pot, dtype=complex)
-    voltages = calculate_voltages(bus._get_potentials_of(source_ph, warning=False), source_ph)
+    source_potentials = np.array([bus._res_potentials[bus.phases.index(p)] for p in source_ph], dtype=complex)
+    voltages = calculate_voltages(source_potentials, source_ph)
     source = VoltageSource(id="source", bus=bus, voltages=voltages, phases=source_ph)
     source._res_currents = np.array(res_cur, dtype=complex)
-    source._res_potentials = bus._get_potentials_of(source.phases, warning=False)
+    source._res_potentials = source_potentials
     assert np.allclose(source.res_voltages, source.voltages)
 
 
@@ -258,7 +264,7 @@ def test_source_voltages(bus_ph, source_ph, bus_vph, source_vph):
 
     res_cur = [0.1 + 0j, 0.2 + 0j, 0.3 + 0j, 0.6 + 0j]
     source._res_currents = np.array(res_cur[: len(source_ph)], dtype=complex)
-    source._res_potentials = bus._get_potentials_of(phases=source.phases, warning=False)
+    source._res_potentials = np.array([bus._res_potentials[bus.phases.index(p)] for p in source_ph], dtype=complex)
 
     assert bus.voltage_phases == bus_vph
     assert len(bus.res_voltages) == len(bus.voltage_phases)

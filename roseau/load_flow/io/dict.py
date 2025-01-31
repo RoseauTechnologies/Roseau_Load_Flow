@@ -12,8 +12,6 @@ import warnings
 from collections import defaultdict
 from typing import TYPE_CHECKING
 
-import numpy as np
-
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models import (
     AbstractBranch,
@@ -39,31 +37,6 @@ logger = logging.getLogger(__name__)
 
 NETWORK_JSON_VERSION = 4
 """The current version of the network JSON file format."""
-
-
-def _assign_branch_currents(branch: AbstractBranch, branch_data: JsonDict, current_keys: tuple[str, str]) -> None:
-    """Small helper to assign the currents results to a branch object.
-
-    Args:
-        branch:
-            The object to assign the results.
-
-        branch_data:
-            The data of the branch which may contain the results.
-
-    Returns:
-        The updated `branch` object.
-    """
-    if "results" in branch_data:
-        currents1 = np.array(
-            [complex(i[0], i[1]) for i in branch_data["results"][current_keys[0]]], dtype=np.complex128
-        )
-        currents2 = np.array(
-            [complex(i[0], i[1]) for i in branch_data["results"][current_keys[1]]], dtype=np.complex128
-        )
-        branch._res_currents = (currents1, currents2)
-        branch._fetch_results = False
-        branch._no_results = False
 
 
 def network_from_dict(  # noqa: C901
@@ -177,78 +150,33 @@ def network_from_dict(  # noqa: C901
     # Lines
     lines_dict: dict[Id, Line] = {}
     for line_data in data["lines"]:
-        id = line_data["id"]
-        phases = line_data["phases"]
-        bus1 = buses[line_data["bus1"]]
-        bus2 = buses[line_data["bus2"]]
-        geometry = Line._parse_geometry(line_data.get("geometry"))
-        length = line_data["length"]
-        max_loading = line_data["max_loading"]
-        lp = lines_params[line_data["params_id"]]
-        gid = line_data.get("ground")
-        ground = grounds[gid] if gid is not None else None
-        line = Line(
-            id=id,
-            bus1=bus1,
-            bus2=bus2,
-            parameters=lp,
-            phases=phases,
-            length=length,
-            ground=ground,
-            geometry=geometry,
-            max_loading=max_loading,
-        )
-        if include_results:
-            _assign_branch_currents(branch=line, branch_data=line_data, current_keys=("currents1", "currents2"))
-
+        line_data["bus1"] = buses[line_data["bus1"]]
+        line_data["bus2"] = buses[line_data["bus2"]]
+        line_data["parameters"] = lines_params[line_data.pop("params_id")]
+        if (ground_id := line_data.pop("ground", None)) is not None:
+            line_data["ground"] = grounds[ground_id]
+        line = Line.from_dict(data=line_data, include_results=include_results)
+        lines_dict[line.id] = line
         has_results = has_results and not line._no_results
-        lines_dict[id] = line
 
     # Transformers
     transformers_dict: dict[Id, Transformer] = {}
     for transformer_data in data["transformers"]:
-        id = transformer_data["id"]
-        phases_hv = transformer_data["phases_hv"]
-        phases_lv = transformer_data["phases_lv"]
-        tap = transformer_data["tap"]
-        max_loading = transformer_data["max_loading"]
-        bus1 = buses[transformer_data["bus_hv"]]
-        bus2 = buses[transformer_data["bus_lv"]]
-        geometry = Transformer._parse_geometry(transformer_data.get("geometry"))
-        tp = transformers_params[transformer_data["params_id"]]
-        transformer = Transformer(
-            id=id,
-            bus_hv=bus1,
-            bus_lv=bus2,
-            parameters=tp,
-            phases_hv=phases_hv,
-            phases_lv=phases_lv,
-            tap=tap,
-            geometry=geometry,
-            max_loading=max_loading,
-        )
-        if include_results:
-            _assign_branch_currents(
-                branch=transformer, branch_data=transformer_data, current_keys=("currents_hv", "currents_lv")
-            )
-
+        transformer_data["bus_hv"] = buses[transformer_data["bus_hv"]]
+        transformer_data["bus_lv"] = buses[transformer_data["bus_lv"]]
+        transformer_data["parameters"] = transformers_params[transformer_data.pop("params_id")]
+        transformer = Transformer.from_dict(data=transformer_data, include_results=include_results)
+        transformers_dict[transformer.id] = transformer
         has_results = has_results and not transformer._no_results
-        transformers_dict[id] = transformer
 
     # Switches
     switches_dict: dict[Id, Switch] = {}
     for switch_data in data["switches"]:
-        id = switch_data["id"]
-        phases = switch_data["phases"]
-        bus1 = buses[switch_data["bus1"]]
-        bus2 = buses[switch_data["bus2"]]
-        geometry = Switch._parse_geometry(switch_data.get("geometry"))
-        switch = Switch(id=id, bus1=bus1, bus2=bus2, phases=phases, geometry=geometry)
-        if include_results:
-            _assign_branch_currents(branch=switch, branch_data=switch_data, current_keys=("currents1", "currents2"))
-
+        switch_data["bus1"] = buses[switch_data["bus1"]]
+        switch_data["bus2"] = buses[switch_data["bus2"]]
+        switch = Switch.from_dict(data=switch_data, include_results=include_results)
+        switches_dict[switch.id] = switch
         has_results = has_results and not switch._no_results
-        switches_dict[id] = switch
 
     # Short-circuits
     short_circuits = data.get("short_circuits")
@@ -757,7 +685,7 @@ def v2_to_v3_converter(data: JsonDict) -> JsonDict:  # noqa: C901
     return results
 
 
-def v3_to_v4_converter(data: JsonDict) -> JsonDict:
+def v3_to_v4_converter(data: JsonDict) -> JsonDict:  # noqa: C901
     """Convert a v3 network dict to a v4 network dict.
 
     Args:
@@ -768,6 +696,12 @@ def v3_to_v4_converter(data: JsonDict) -> JsonDict:
         The v4 network data.
     """
     assert data.get("version", 0) == 3, data["version"]
+
+    sources = []
+    for source in data["sources"]:
+        # Add source type
+        source["type"] = "voltage"
+        sources.append(source)
 
     tr_phases_per_params = defaultdict(list)
     for tr in data["transformers"]:
@@ -794,6 +728,14 @@ def v3_to_v4_converter(data: JsonDict) -> JsonDict:
             line_param_data["insulators"] = [Insulator(insulator).name for insulator in insulators]
         line_params.append(line_param_data)
 
+    buses_dict = {b["id"]: b for b in data["buses"]}
+
+    def get_branch_potentials_from_bus(bus_id: Id, branch_phases: str) -> list[list[float]]:
+        bus_data: JsonDict = buses_dict[bus_id]
+        bus_phases: str = bus_data["phases"]
+        bus_potentials: list[list[float]] = bus_data["results"]["potentials"]
+        return [bus_potentials[bus_phases.index(p)] for p in branch_phases]
+
     transformers = []
     for tr_data in data["transformers"]:
         # Handle renamed keys
@@ -804,19 +746,51 @@ def v3_to_v4_converter(data: JsonDict) -> JsonDict:
         if "results" in tr_data:
             tr_data["results"]["currents_hv"] = tr_data["results"].pop("currents1")
             tr_data["results"]["currents_lv"] = tr_data["results"].pop("currents2")
+        # Handle missing results
+        if "results" in tr_data:
+            tr_data["results"]["potentials_hv"] = get_branch_potentials_from_bus(
+                bus_id=tr_data["bus_hv"], branch_phases=tr_data["phases_hv"]
+            )
+            tr_data["results"]["potentials_lv"] = get_branch_potentials_from_bus(
+                bus_id=tr_data["bus_lv"], branch_phases=tr_data["phases_lv"]
+            )
         transformers.append(tr_data)
+
+    lines = []
+    for line_data in data["lines"]:
+        # Handle missing results
+        if "results" in line_data:
+            line_data["results"]["potentials1"] = get_branch_potentials_from_bus(
+                bus_id=line_data["bus1"], branch_phases=line_data["phases"]
+            )
+            line_data["results"]["potentials2"] = get_branch_potentials_from_bus(
+                bus_id=line_data["bus2"], branch_phases=line_data["phases"]
+            )
+        lines.append(line_data)
+
+    switches = []
+    for switch_data in data["switches"]:
+        # Handle missing results
+        if "results" in switch_data:
+            switch_data["results"]["potentials1"] = get_branch_potentials_from_bus(
+                bus_id=switch_data["bus1"], branch_phases=switch_data["phases"]
+            )
+            switch_data["results"]["potentials2"] = get_branch_potentials_from_bus(
+                bus_id=switch_data["bus2"], branch_phases=switch_data["phases"]
+            )
+        switches.append(switch_data)
 
     results = {
         "version": 4,
         "is_multiphase": data["is_multiphase"],  # Unchanged
         "grounds": data["grounds"],  # Unchanged
         "potential_refs": data["potential_refs"],  # Unchanged
-        "buses": data["buses"],  # <---- Unchanged
-        "lines": data["lines"],  # <---- Unchanged
-        "switches": data["switches"],  # Unchanged
+        "buses": data["buses"],  # Unchanged
+        "lines": lines,
+        "switches": switches,
         "transformers": transformers,
         "loads": data["loads"],  # Unchanged
-        "sources": data["sources"],  # Unchanged
+        "sources": sources,
         "lines_params": line_params,
         "transformers_params": transformer_params,
     }

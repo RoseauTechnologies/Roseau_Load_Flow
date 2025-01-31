@@ -424,6 +424,10 @@ def test_lines_results(phases, z_line, y_shunt, len_line, bus_pot, line_cur, gro
     bus1._res_potentials = np.array(bus_pot[0], dtype=complex)
     bus2._res_potentials = np.array(bus_pot[1], dtype=complex)
     line._res_currents = np.array(line_cur[0], dtype=complex), np.array(line_cur[1], dtype=complex)
+    line._res_potentials = (
+        np.array([bus1._res_potentials[bus1.phases.index(p)] for p in line.phases1], dtype=complex),
+        np.array([bus2._res_potentials[bus2.phases.index(p)] for p in line.phases2], dtype=complex),
+    )
     ground._res_potential = ground_pot
     res_powers1, res_powers2 = (x.m for x in line.res_powers)
     series_losses = line.res_series_power_losses.m

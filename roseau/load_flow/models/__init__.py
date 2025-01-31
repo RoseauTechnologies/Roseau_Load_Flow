@@ -7,6 +7,7 @@ Equations, diagrams, and examples can be found in the :doc:`/models/index` page.
 
 from roseau.load_flow.models.branches import AbstractBranch
 from roseau.load_flow.models.buses import Bus
+from roseau.load_flow.models.connectables import BaseConnectable
 from roseau.load_flow.models.core import Element
 from roseau.load_flow.models.grounds import Ground
 from roseau.load_flow.models.lines import Line, LineParameters
@@ -22,6 +23,7 @@ from roseau.load_flow.models.loads import (
 from roseau.load_flow.models.potential_refs import PotentialRef
 from roseau.load_flow.models.sources import VoltageSource
 from roseau.load_flow.models.switches import Switch
+from roseau.load_flow.models.terminals import BaseTerminal
 from roseau.load_flow.models.transformers import Transformer, TransformerParameters
 
 __all__ = [
@@ -30,6 +32,8 @@ __all__ = [
     "PotentialRef",
     "Ground",
     "AbstractBranch",
+    "BaseTerminal",
+    "BaseConnectable",
     # Buses
     "Bus",
     # Lines
@@ -48,6 +52,6 @@ __all__ = [
     # Transformers
     "Transformer",
     "TransformerParameters",
-    # Voltage sources
+    # Sources
     "VoltageSource",
 ]

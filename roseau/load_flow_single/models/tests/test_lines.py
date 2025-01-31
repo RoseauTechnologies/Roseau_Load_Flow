@@ -119,8 +119,6 @@ def test_res_violated():
     lp = LineParameters(id="lp", z_line=1.0)
     line = Line(id="line", bus1=bus1, bus2=bus2, parameters=lp, length=Q_(50, "m"))
 
-    bus1._res_voltage = 400
-    bus2._res_voltage = 380
     line._res_currents = 10, -10
 
     # No limits
@@ -191,16 +189,13 @@ def test_lines_results():
     z_line = (0.1 + 0.1j) / 2
     y_shunt = None
     len_line = 10
-    bus1_voltage = 20000.0 + 0.0j
-    bus2_voltage = 19883.965550324414 - 84.999999999981j
+    line_voltages = 20000.0 + 0.0j, 19883.965550324414 - 84.999999999981j
     line_currents = (116.06729363657514 - 17.9177478743607j), (-116.06729363657514 + 17.9177478743607j)
     bus1 = Bus(id="bus1")
     bus2 = Bus(id="bus2")
-    y_shunt = np.array(y_shunt, dtype=np.complex128) if y_shunt is not None else None
     lp = LineParameters(id="lp", z_line=z_line, y_shunt=y_shunt)
     line = Line(id="line", bus1=bus1, bus2=bus2, length=len_line, parameters=lp)
-    bus1._res_voltage = bus1_voltage
-    bus2._res_voltage = bus2_voltage
+    line._res_voltages = line_voltages
     line._res_currents = line_currents
     res_powers1, res_powers2 = (x.m for x in line.res_powers)
     series_losses = line.res_series_power_losses.m

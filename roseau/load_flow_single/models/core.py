@@ -1,7 +1,7 @@
 import logging
 import warnings
-from abc import ABC
-from typing import TYPE_CHECKING, Any, Generic, NoReturn, TypeVar
+from abc import ABC, abstractmethod
+from typing import TYPE_CHECKING, Any, ClassVar, Generic, NoReturn, TypeVar
 
 import shapely
 from shapely.geometry import shape
@@ -24,6 +24,9 @@ _CyE = TypeVar("_CyE", bound=CyElement)
 class Element(ABC, Identifiable, JsonMixin, Generic[_CyE]):
     """An abstract class of an element in an Electrical network."""
 
+    element_type: ClassVar[str]
+    """The type of the element. It is a string like ``"load"`` or ``"line"`` etc."""
+
     def __init__(self, id: Id) -> None:
         """Element constructor.
 
@@ -32,8 +35,11 @@ class Element(ABC, Identifiable, JsonMixin, Generic[_CyE]):
                 A unique ID of the element in the network. Two elements of the same type cannot
                 have the same ID.
         """
-        if type(self) is Element:
+        cls = type(self)
+        if cls is Element:
             raise TypeError("Can't instantiate abstract class Element")
+        if not hasattr(cls, "element_type"):
+            raise TypeError(f"Class {cls.__name__} must have an `element_type` attribute.")
         super().__init__(id)
         self._connected_elements: list[Element] = []
         self._network: ElectricalNetwork | None = None
@@ -122,6 +128,11 @@ class Element(ABC, Identifiable, JsonMixin, Generic[_CyE]):
         """Invalidate the network making the result"""
         if self.network is not None:
             self.network._results_valid = False
+
+    @abstractmethod
+    def _refresh_results(self) -> None:
+        """Refresh the results of the element."""
+        raise NotImplementedError
 
     def _res_getter(self, value: _T | None, warning: bool) -> _T:
         """A safe getter for load flow results.

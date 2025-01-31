@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-class Ground(Element):
+class Ground(Element[CyGround]):
     """This element defines the ground.
 
     Only buses and lines that have shunt components can be connected to a ground.
@@ -33,6 +33,7 @@ class Ground(Element):
        :class:`Line` constructor. Note that the ground connection is mandatory for shunt lines.
     """
 
+    element_type: Final = "ground"
     allowed_phases: Final = frozenset({"a", "b", "c", "n"})
 
     def __init__(self, id: Id) -> None:
@@ -50,17 +51,6 @@ class Ground(Element):
 
     def __repr__(self) -> str:
         return f"{type(self).__name__}(id={self.id!r})"
-
-    def _res_potential_getter(self, warning: bool) -> complex:
-        if self._fetch_results:
-            self._res_potential = self._cy_element.get_potentials(1)[0]
-        return self._res_getter(self._res_potential, warning)
-
-    @property
-    @ureg_wraps("V", (None,))
-    def res_potential(self) -> Q_[complex]:
-        """The load flow result of the ground potential (V)."""
-        return self._res_potential_getter(warning=True)
 
     @property
     def connected_buses(self) -> dict[Id, str]:
@@ -93,6 +83,23 @@ class Ground(Element):
         bus._cy_element.connect(self._cy_element, [(p, 0)])
 
     #
+    # Results
+    #
+    def _refresh_results(self) -> None:
+        if self._fetch_results:
+            self._res_potential = self._cy_element.get_potentials(1)[0]
+
+    def _res_potential_getter(self, warning: bool) -> complex:
+        self._refresh_results()
+        return self._res_getter(self._res_potential, warning)
+
+    @property
+    @ureg_wraps("V", (None,))
+    def res_potential(self) -> Q_[complex]:
+        """The load flow result of the ground potential (V)."""
+        return self._res_potential_getter(warning=True)
+
+    #
     # Json Mixin interface
     #
     @classmethod
@@ -108,14 +115,14 @@ class Ground(Element):
 
     def _to_dict(self, include_results: bool) -> JsonDict:
         # Shunt lines and potential references will have the ground in their dict not here.
-        res = {
+        data = {
             "id": self.id,
             "buses": [{"id": bus_id, "phase": phase} for bus_id, phase in self._connected_buses.items()],
         }
         if include_results:
             v = self._res_potential_getter(warning=True)
-            res["results"] = {"potential": [v.real, v.imag]}
-        return res
+            data["results"] = {"potential": [v.real, v.imag]}
+        return data
 
     def _results_to_dict(self, warning: bool, full: bool) -> JsonDict:
         v = self._res_potential_getter(warning)

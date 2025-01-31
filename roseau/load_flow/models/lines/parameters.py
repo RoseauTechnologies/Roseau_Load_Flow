@@ -1601,20 +1601,20 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         )
 
     def _to_dict(self, include_results: bool) -> JsonDict:
-        res = {"id": self.id, "z_line": [self._z_line.real.tolist(), self._z_line.imag.tolist()]}
+        data = {"id": self.id, "z_line": [self._z_line.real.tolist(), self._z_line.imag.tolist()]}
         if self.with_shunt:
-            res["y_shunt"] = [self._y_shunt.real.tolist(), self._y_shunt.imag.tolist()]
+            data["y_shunt"] = [self._y_shunt.real.tolist(), self._y_shunt.imag.tolist()]
         if self.ampacities is not None:
-            res["ampacities"] = self._ampacities.tolist()
+            data["ampacities"] = self._ampacities.tolist()
         if self._line_type is not None:
-            res["line_type"] = self._line_type.name
+            data["line_type"] = self._line_type.name
         if self._materials is not None:
-            res["materials"] = [x.name for x in self._materials]
+            data["materials"] = [x.name for x in self._materials]
         if self._insulators is not None:
-            res["insulators"] = [x.name for x in self._insulators]
+            data["insulators"] = [x.name for x in self._insulators]
         if self._sections is not None:
-            res["sections"] = self._sections.tolist()
-        return res
+            data["sections"] = self._sections.tolist()
+        return data
 
     def _results_to_dict(self, warning: bool, full: bool) -> NoReturn:
         msg = f"The {type(self).__name__} has no results to export."

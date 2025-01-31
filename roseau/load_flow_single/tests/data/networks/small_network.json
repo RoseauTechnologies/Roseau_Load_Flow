@@ -28,9 +28,6 @@
       "id": "line",
       "bus1": "bus0",
       "bus2": "bus1",
-      "length": 1.0,
-      "params_id": "test",
-      "max_loading": 1.0,
       "geometry": {
         "type": "LineString",
         "coordinates": [
@@ -38,9 +35,14 @@
           [-1.320149235966572, 48.64971306653889]
         ]
       },
+      "length": 1.0,
+      "params_id": "test",
+      "max_loading": 1.0,
       "results": {
         "current1": [0.008660318990223459, 0.0],
-        "current2": [-0.008660318990223459, -0.0]
+        "current2": [-0.008660318990223459, -0.0],
+        "voltage1": [20000.0, 0.0],
+        "voltage2": [19999.84999887499, 0.0]
       }
     }
   ],
@@ -62,6 +64,7 @@
     {
       "id": "vs",
       "bus": "bus0",
+      "type": "voltage",
       "voltage": [20000.0, 0.0],
       "results": {
         "current": [-0.008660318990236813, 0.0],

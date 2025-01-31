@@ -4,8 +4,8 @@ from shapely import LineString, Point
 
 import roseau.load_flow_single as rlfs
 
-TEST_NETWORKS_PATH = Path(rlfs.__file__) / "tests" / "data" / "networks"
-TEST_MODELS_PATH = Path(rlfs.__file__) / "models" / "tests" / "data"
+TEST_NETWORKS_PATH = Path(rlfs.__file__).parent / "tests" / "data" / "networks"
+TEST_MODELS_PATH = Path(rlfs.__file__).parent / "models" / "tests" / "data"
 
 
 def generate_small_network() -> None:
