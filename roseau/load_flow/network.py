@@ -1260,7 +1260,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             element, potentials, parent = elements.pop(-1)
             self._elements.append(element)
             if isinstance(element, Bus) and not element._initialized:
-                element.potentials = np.array([potentials[p] for p in element.phases], dtype=np.complex128)
+                element.initial_potentials = np.array([potentials[p] for p in element.phases], dtype=np.complex128)
                 element._initialized_by_the_user = False  # only used for serialization
             if not isinstance(element, Ground):  # Do not go from ground to buses/branches
                 for e in element._connected_elements:

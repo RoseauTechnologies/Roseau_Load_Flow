@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any, Final
 import numpy as np
 import pandas as pd
 from shapely.geometry.base import BaseGeometry
-from typing_extensions import Self
+from typing_extensions import Self, deprecated
 
 from roseau.load_flow.constants import SQRT3
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
@@ -15,7 +15,7 @@ from roseau.load_flow.models.terminals import BaseTerminal
 from roseau.load_flow.sym import phasor_to_sym
 from roseau.load_flow.typing import BoolArray, ComplexArray, ComplexArrayLike1D, FloatArray, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
-from roseau.load_flow.utils import find_stack_level
+from roseau.load_flow.utils import deprecate_renamed_parameter, find_stack_level
 from roseau.load_flow_engine.cy_engine import CyBus
 
 logger = logging.getLogger(__name__)
@@ -29,16 +29,19 @@ class Bus(BaseTerminal[CyBus]):
 
     element_type: Final = "bus"
 
+    @deprecate_renamed_parameter(
+        old_name="potentials", new_name="initial_potentials", version="0.12.0", category=DeprecationWarning
+    )
     def __init__(
         self,
         id: Id,
         *,
         phases: str,
         geometry: BaseGeometry | None = None,
-        potentials: ComplexArrayLike1D | None = None,
-        nominal_voltage: float | None = None,
-        min_voltage_level: float | None = None,
-        max_voltage_level: float | None = None,
+        initial_potentials: ComplexArrayLike1D | None = None,
+        nominal_voltage: float | Q_[float] | None = None,
+        min_voltage_level: float | Q_[float] | None = None,
+        max_voltage_level: float | Q_[float] | None = None,
     ) -> None:
         """Bus constructor.
 
@@ -55,7 +58,7 @@ class Bus(BaseTerminal[CyBus]):
                 An optional geometry of the bus; a :class:`~shapely.Geometry` that represents the
                 x-y coordinates of the bus.
 
-            potentials:
+            initial_potentials:
                 An optional array-like of initial potentials of each phase of the bus. If given,
                 these potentials are used as the starting point of the load flow computation.
                 Either complex values (V) or a :class:`Quantity <roseau.load_flow.units.Q_>` of
@@ -78,10 +81,10 @@ class Bus(BaseTerminal[CyBus]):
                 (unitless) or a :class:`Quantity <roseau.load_flow.units.Q_>` of float.
         """
         super().__init__(id, phases=phases)
-        initialized = potentials is not None
-        if potentials is None:
-            potentials = [0] * len(phases)
-        self.potentials = potentials
+        initialized = initial_potentials is not None
+        if initial_potentials is None:
+            initial_potentials = [0] * len(phases)
+        self.initial_potentials = initial_potentials
         self.geometry = geometry
 
         self._nominal_voltage: float | None = None
@@ -98,30 +101,41 @@ class Bus(BaseTerminal[CyBus]):
 
         self._initialized = initialized
         self._initialized_by_the_user = initialized  # only used for serialization
-        self._cy_element = CyBus(n=self._n, potentials=self._potentials)
+        self._cy_element = CyBus(n=self._n, potentials=self._initial_potentials)
 
     def __repr__(self) -> str:
         return f"{type(self).__name__}(id={self.id!r}, phases={self.phases!r})"
 
     @property
     @ureg_wraps("V", (None,))
-    def potentials(self) -> Q_[ComplexArray]:
+    def initial_potentials(self) -> Q_[ComplexArray]:
         """An array of initial potentials of the bus (V)."""
-        return self._potentials
+        return self._initial_potentials
 
-    @potentials.setter
+    @initial_potentials.setter
     @ureg_wraps(None, (None, "V"))
-    def potentials(self, value: ComplexArrayLike1D) -> None:
+    def initial_potentials(self, value: ComplexArrayLike1D) -> None:
         if len(value) != len(self.phases):
             msg = f"Incorrect number of potentials: {len(value)} instead of {len(self.phases)}"
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_POTENTIALS_SIZE)
-        self._potentials = np.array(value, dtype=np.complex128)
+        self._initial_potentials = np.array(value, dtype=np.complex128)
         self._invalidate_network_results()
         self._initialized = True
         self._initialized_by_the_user = True
         if self._cy_element is not None:
-            self._cy_element.initialize_potentials(self._potentials)
+            self._cy_element.initialize_potentials(self._initial_potentials)
+
+    @property
+    @deprecated("'Bus.potentials' is deprecated. It has been renamed to 'initial_potentials'.")
+    def potentials(self) -> Q_[ComplexArray]:
+        """Deprecated alias to `initial_potentials`."""
+        return self.initial_potentials
+
+    @potentials.setter
+    @deprecated("'Bus.potentials' is deprecated. It has been renamed to 'initial_potentials'.")
+    def potentials(self, value: ComplexArrayLike1D) -> None:
+        self.initial_potentials = value
 
     @property
     def nominal_voltage(self) -> Q_[float] | None:
@@ -453,13 +467,13 @@ class Bus(BaseTerminal[CyBus]):
     #
     @classmethod
     def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
-        if (potentials := data.get("potentials")) is not None:
-            potentials = [complex(*v) for v in potentials]
+        if (initial_potentials := data.get("initial_potentials")) is not None:
+            initial_potentials = [complex(*v) for v in initial_potentials]
         self = cls(
             id=data["id"],
             phases=data["phases"],
             geometry=cls._parse_geometry(data.get("geometry")),
-            potentials=potentials,
+            initial_potentials=initial_potentials,
             nominal_voltage=data.get("nominal_voltage"),
             min_voltage_level=data.get("min_voltage_level"),
             max_voltage_level=data.get("max_voltage_level"),
@@ -470,7 +484,7 @@ class Bus(BaseTerminal[CyBus]):
     def _to_dict(self, include_results: bool) -> JsonDict:
         data = super()._to_dict(include_results=include_results)
         if self._initialized_by_the_user:
-            data["potentials"] = [[v.real, v.imag] for v in self._potentials]
+            data["initial_potentials"] = [[v.real, v.imag] for v in self._initial_potentials]
         if self.geometry is not None:
             data["geometry"] = self.geometry.__geo_interface__
         if self.nominal_voltage is not None:

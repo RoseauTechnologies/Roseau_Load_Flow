@@ -41,6 +41,8 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ### Detailed changes
 
+- {gh-pr}`325` Rename `Bus.potentials` to `Bus.initial_potentials`. The old attribute and constructor
+  parameter are deprecated and will be removed in a future release.
 - {gh-pr}`319` {gh-pr}`320` {gh-pr}`321` {gh-issue}`191` Deprecate the notion of "primary" and
   "secondary" sides of transformers in favor of "high-voltage" and "low-voltage" sides following the
   IEC 60076-1 standard. The following parameters of `rlf.Transformer` are deprecated and renamed:

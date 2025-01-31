@@ -695,7 +695,14 @@ def v3_to_v4_converter(data: JsonDict) -> JsonDict:  # noqa: C901
     Returns:
         The v4 network data.
     """
-    assert data.get("version", 0) == 3, data["version"]
+    assert data["version"] == 3, data["version"]
+
+    buses = []
+    for bus in data["buses"]:
+        # Rename potentials to initial_potentials
+        if "potentials" in bus:
+            bus["initial_potentials"] = bus.pop("potentials")
+        buses.append(bus)
 
     sources = []
     for source in data["sources"]:
@@ -785,7 +792,7 @@ def v3_to_v4_converter(data: JsonDict) -> JsonDict:  # noqa: C901
         "is_multiphase": data["is_multiphase"],  # Unchanged
         "grounds": data["grounds"],  # Unchanged
         "potential_refs": data["potential_refs"],  # Unchanged
-        "buses": data["buses"],  # Unchanged
+        "buses": buses,
         "lines": lines,
         "switches": switches,
         "transformers": transformers,
