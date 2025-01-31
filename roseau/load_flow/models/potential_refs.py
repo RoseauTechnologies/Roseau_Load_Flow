@@ -122,11 +122,9 @@ class PotentialRef(Element[CyPotentialRef | CyDeltaPotentialRef]):
     #
     # Results
     #
-    def _refresh_results(self) -> bool:
+    def _refresh_results(self) -> None:
         if self._fetch_results:
             self._res_current = self._cy_element.get_current()
-            return True
-        return False
 
     def _res_current_getter(self, warning: bool) -> complex:
         self._refresh_results()

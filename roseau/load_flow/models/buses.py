@@ -464,28 +464,28 @@ class Bus(BaseTerminal[CyBus]):
             min_voltage_level=data.get("min_voltage_level"),
             max_voltage_level=data.get("max_voltage_level"),
         )
-        self._parse_results_from_dict(data, include_results)
+        self._parse_results_from_dict(data, include_results=include_results)
         return self
 
     def _to_dict(self, include_results: bool) -> JsonDict:
-        bus_dict = super()._to_dict(include_results=include_results)
+        data = super()._to_dict(include_results=include_results)
         if self._initialized_by_the_user:
-            bus_dict["potentials"] = [[v.real, v.imag] for v in self._potentials]
+            data["potentials"] = [[v.real, v.imag] for v in self._potentials]
         if self.geometry is not None:
-            bus_dict["geometry"] = self.geometry.__geo_interface__
+            data["geometry"] = self.geometry.__geo_interface__
         if self.nominal_voltage is not None:
-            bus_dict["nominal_voltage"] = self.nominal_voltage.magnitude
+            data["nominal_voltage"] = self.nominal_voltage.magnitude
         if self.min_voltage_level is not None:
-            bus_dict["min_voltage_level"] = self.min_voltage_level.magnitude
+            data["min_voltage_level"] = self.min_voltage_level.magnitude
         if self.max_voltage_level is not None:
-            bus_dict["max_voltage_level"] = self.max_voltage_level.magnitude
+            data["max_voltage_level"] = self.max_voltage_level.magnitude
         if include_results:
-            bus_dict["results"] = bus_dict.pop("results")  # move results to the end
-        return bus_dict
+            data["results"] = data.pop("results")  # move results to the end
+        return data
 
     def _results_to_dict(self, warning: bool, full: bool) -> JsonDict:
-        bus_results = super()._results_to_dict(warning, full)
+        results = super()._results_to_dict(warning, full)
         if full:
             voltage_levels = self._res_voltage_levels_getter(warning=False)
-            bus_results["voltage_levels"] = None if voltage_levels is None else voltage_levels.tolist()
-        return bus_results
+            results["voltage_levels"] = None if voltage_levels is None else voltage_levels.tolist()
+        return results

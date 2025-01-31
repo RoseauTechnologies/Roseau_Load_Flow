@@ -193,7 +193,6 @@ def test_lines_results():
     line_currents = (116.06729363657514 - 17.9177478743607j), (-116.06729363657514 + 17.9177478743607j)
     bus1 = Bus(id="bus1")
     bus2 = Bus(id="bus2")
-    y_shunt = y_shunt if y_shunt is not None else None
     lp = LineParameters(id="lp", z_line=z_line, y_shunt=y_shunt)
     line = Line(id="line", bus1=bus1, bus2=bus2, length=len_line, parameters=lp)
     line._res_voltages = line_voltages

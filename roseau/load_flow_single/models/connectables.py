@@ -51,11 +51,10 @@ class BaseConnectable(BaseTerminal[_CyE], ABC):
     #
     # Results
     #
-    def _refresh_results(self) -> bool:
-        if super()._refresh_results():
+    def _refresh_results(self) -> None:
+        if self._fetch_results:
+            super()._refresh_results()
             self._res_current = self._cy_element.get_currents(self._n)[0]
-            return True
-        return False
 
     def _res_current_getter(self, warning: bool) -> complex:
         self._refresh_results()
@@ -96,11 +95,10 @@ class BaseConnectable(BaseTerminal[_CyE], ABC):
     #
     # Json Mixin interface
     #
-    def _parse_results_from_dict(self, data: JsonDict, include_results: bool = True) -> bool:
-        if super()._parse_results_from_dict(data, include_results=include_results):
+    def _parse_results_from_dict(self, data: JsonDict, include_results: bool) -> None:
+        if include_results and "results" in data:
+            super()._parse_results_from_dict(data, include_results=include_results)
             self._res_current = complex(*data["results"]["current"])
-            return True
-        return False
 
     def _to_dict(self, include_results: bool) -> JsonDict:
         self._raise_disconnected_error()

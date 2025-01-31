@@ -28,11 +28,9 @@ class BaseTerminal(Element[_CyE], ABC):
     #
     # Results
     #
-    def _refresh_results(self) -> bool:
+    def _refresh_results(self) -> None:
         if self._fetch_results:
             self._res_voltage = self._cy_element.get_potentials(self._n)[0] * SQRT3
-            return True
-        return False
 
     def _res_voltage_getter(self, warning: bool) -> complex:
         self._refresh_results()
@@ -47,13 +45,11 @@ class BaseTerminal(Element[_CyE], ABC):
     #
     # Json Mixin interface
     #
-    def _parse_results_from_dict(self, data: JsonDict, include_results: bool) -> bool:
+    def _parse_results_from_dict(self, data: JsonDict, include_results: bool) -> None:
         if include_results and "results" in data:
             self._res_voltage = complex(*data["results"]["voltage"])
             self._fetch_results = False
             self._no_results = False
-            return True
-        return False
 
     def _to_dict(self, include_results: bool) -> JsonDict:
         data: JsonDict = {"id": self.id}

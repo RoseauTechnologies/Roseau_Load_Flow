@@ -152,7 +152,7 @@ class Element(ABC, Identifiable, JsonMixin, Generic[_CyE]):
             self.network._results_valid = False
 
     @abstractmethod
-    def _refresh_results(self) -> bool:
+    def _refresh_results(self) -> None:
         """Refresh the results of the element."""
         raise NotImplementedError
 

@@ -56,11 +56,9 @@ class BaseTerminal(Element[_CyE], ABC):
         """The phases of the voltages of the element."""
         return calculate_voltage_phases(self._phases)
 
-    def _refresh_results(self) -> bool:
+    def _refresh_results(self) -> None:
         if self._fetch_results:
             self._res_potentials = self._cy_element.get_potentials(self._n)
-            return True
-        return False
 
     def _res_potentials_getter(self, warning: bool) -> ComplexArray:
         self._refresh_results()
@@ -90,29 +88,27 @@ class BaseTerminal(Element[_CyE], ABC):
     #
     # Json Mixin interface
     #
-    def _parse_results_from_dict(self, data: JsonDict, include_results: bool) -> bool:
+    def _parse_results_from_dict(self, data: JsonDict, include_results: bool) -> None:
         if include_results and "results" in data:
             self._res_potentials = np.array([complex(*v) for v in data["results"]["potentials"]], dtype=np.complex128)
             self._fetch_results = False
             self._no_results = False
-            return True
-        return False
 
     def _to_dict(self, include_results: bool) -> JsonDict:
-        terminal_dict = {"id": self.id, "phases": self.phases}
+        data = {"id": self.id, "phases": self.phases}
         if include_results:
             potentials = self._res_potentials_getter(warning=True)
-            terminal_dict["results"] = {"potentials": [[v.real, v.imag] for v in potentials]}
-        return terminal_dict
+            data["results"] = {"potentials": [[v.real, v.imag] for v in potentials]}
+        return data
 
     def _results_to_dict(self, warning: bool, full: bool) -> JsonDict:
         potentials = self._res_potentials_getter(warning)
-        res = {
+        results = {
             "id": self.id,
             "phases": self.phases,
             "potentials": [[v.real, v.imag] for v in potentials],
         }
         if full:
             voltages = _calculate_voltages(potentials, self.phases)
-            res["voltages"] = [[v.real, v.imag] for v in voltages]
-        return res
+            results["voltages"] = [[v.real, v.imag] for v in voltages]
+        return results

@@ -76,14 +76,12 @@ class AbstractBranch(Element[_CyB]):
     #
     # Results
     #
-    def _refresh_results(self) -> bool:
+    def _refresh_results(self) -> None:
         if self._fetch_results:
             current1, current2 = self._cy_element.get_currents(1, 1)
             potential1, potential2 = self._cy_element.get_potentials(1, 1)
             self._res_currents = current1[0], current2[0]
             self._res_voltages = potential1[0] * SQRT3, potential2[0] * SQRT3
-            return True
-        return False
 
     def _res_currents_getter(self, warning: bool) -> tuple[complex, complex]:
         self._refresh_results()

@@ -126,11 +126,9 @@ class AbstractLoad(BaseConnectable[_CyL], ABC):
             msg = f"Unknown load type {load_type!r} for load {data['id']!r}"
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LOAD_TYPE)
-        if (
-            self._parse_results_from_dict(data, include_results=include_results)
-            and "flexible_powers" in data["results"]
-        ):
-            assert isinstance(self, PowerLoad), "Only PowerLoad can have flexible powers"
+        self._parse_results_from_dict(data, include_results=include_results)
+        if include_results and "results" in data and "flexible_powers" in data["results"]:
+            assert isinstance(self, PowerLoad), "Only PowerLoad can be flexible"
             self._res_flexible_powers = np.array(
                 [complex(*p) for p in data["results"]["flexible_powers"]], dtype=np.complex128
             )
@@ -138,13 +136,26 @@ class AbstractLoad(BaseConnectable[_CyL], ABC):
 
     def _to_dict(self, include_results: bool) -> JsonDict:
         complex_array = getattr(self, f"_{self.type}s")
-        load_dict = {
-            **super()._to_dict(include_results=include_results),
-            f"{self.type}s": [[value.real, value.imag] for value in complex_array],
-        }
+        data = super()._to_dict(include_results=include_results)
+        data[f"{self.type}s"] = [[value.real, value.imag] for value in complex_array]
+        if self.is_flexible:
+            assert isinstance(self, PowerLoad), "Only PowerLoad can be flexible"
+            assert self.flexible_params is not None, "Flexible load must have flexible parameters"
+            data["flexible_params"] = [fp.to_dict(include_results=include_results) for fp in self.flexible_params]
+            if include_results:
+                flexible_powers = self._res_flexible_powers_getter(warning=False)  # warn only once
+                data["results"]["flexible_powers"] = [[s.real, s.imag] for s in flexible_powers]
         if include_results:
-            load_dict["results"] = load_dict.pop("results")  # move results to the end
-        return load_dict
+            data["results"] = data.pop("results")  # move results to the end
+        return data
+
+    def _results_to_dict(self, warning: bool, full: bool) -> JsonDict:
+        results = super()._results_to_dict(warning=warning, full=full)
+        if self.is_flexible:
+            assert isinstance(self, PowerLoad), "Only PowerLoad can be flexible"
+            flexible_powers = self._res_flexible_powers_getter(warning=False)  # warn only once
+            results["flexible_powers"] = [[s.real, s.imag] for s in flexible_powers]
+        return results
 
 
 class PowerLoad(AbstractLoad[CyPowerLoad | CyDeltaPowerLoad | CyFlexibleLoad | CyDeltaFlexibleLoad]):
@@ -281,12 +292,11 @@ class PowerLoad(AbstractLoad[CyPowerLoad | CyDeltaPowerLoad | CyFlexibleLoad | C
         if self._cy_element is not None:
             self._cy_element.update_powers(self._powers)
 
-    def _refresh_results(self) -> bool:
-        if super()._refresh_results():
+    def _refresh_results(self) -> None:
+        if self._fetch_results:
+            super()._refresh_results()
             if self.is_flexible:
                 self._res_flexible_powers = self._cy_element.get_powers(self._n)
-            return True
-        return False
 
     def _res_flexible_powers_getter(self, warning: bool) -> ComplexArray:
         self._refresh_results()
@@ -309,28 +319,6 @@ class PowerLoad(AbstractLoad[CyPowerLoad | CyDeltaPowerLoad | CyFlexibleLoad | C
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LOAD_TYPE)
         return self._res_flexible_powers_getter(warning=True)
-
-    #
-    # Json Mixin interface
-    #
-    def _to_dict(self, include_results: bool) -> JsonDict:
-        res = super()._to_dict(include_results=include_results)
-        if self.flexible_params is not None:
-            res["flexible_params"] = [fp.to_dict(include_results=include_results) for fp in self.flexible_params]
-            if include_results:
-                res["results"]["flexible_powers"] = [
-                    [s.real, s.imag] for s in self._res_flexible_powers_getter(warning=False)
-                ]
-        return res
-
-    def _results_to_dict(self, warning: bool, full: bool) -> JsonDict:
-        if self.is_flexible:
-            return {
-                **super()._results_to_dict(warning=warning, full=full),
-                "flexible_powers": [[s.real, s.imag] for s in self._res_flexible_powers_getter(False)],
-            }
-        else:
-            return super()._results_to_dict(warning=warning, full=full)
 
 
 class CurrentLoad(AbstractLoad[CyCurrentLoad | CyDeltaCurrentLoad]):

@@ -127,11 +127,10 @@ class BaseConnectable(BaseTerminal[_CyE], ABC):
     #
     # Results
     #
-    def _refresh_results(self) -> bool:
-        if super()._refresh_results():
+    def _refresh_results(self) -> None:
+        if self._fetch_results:
+            super()._refresh_results()
             self._res_currents = self._cy_element.get_currents(self._n)
-            return True
-        return False
 
     def _res_currents_getter(self, warning: bool) -> ComplexArray:
         self._refresh_results()
@@ -157,15 +156,14 @@ class BaseConnectable(BaseTerminal[_CyE], ABC):
     #
     # Json Mixin interface
     #
-    def _parse_results_from_dict(self, data: JsonDict, *, include_results: bool = True) -> bool:
-        if super()._parse_results_from_dict(data, include_results=include_results):
+    def _parse_results_from_dict(self, data: JsonDict, include_results: bool) -> None:
+        if include_results and "results" in data:
+            super()._parse_results_from_dict(data, include_results=include_results)
             self._res_currents = np.array([complex(*i) for i in data["results"]["currents"]], dtype=np.complex128)
-            return True
-        return False
 
     def _to_dict(self, include_results: bool) -> JsonDict:
         self._raise_disconnected_error()
-        element_dict = {
+        data = {
             "id": self.id,
             "bus": self.bus.id,
             "phases": self.phases,
@@ -175,11 +173,11 @@ class BaseConnectable(BaseTerminal[_CyE], ABC):
         if include_results:
             currents = self._res_currents_getter(warning=True)
             potentials = self._res_potentials_getter(warning=False)  # warn only once
-            element_dict["results"] = {
+            data["results"] = {
                 "currents": [[i.real, i.imag] for i in currents],
                 "potentials": [[v.real, v.imag] for v in potentials],
             }
-        return element_dict
+        return data
 
     def _results_to_dict(self, warning: bool, full: bool) -> JsonDict:
         currents = self._res_currents_getter(warning)

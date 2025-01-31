@@ -1098,17 +1098,17 @@ class FlexibleParameter(JsonMixin):
         )
 
     def _to_dict(self, include_results: bool) -> JsonDict:
-        res = {
+        data = {
             "control_p": self.control_p.to_dict(include_results=include_results),
             "control_q": self.control_q.to_dict(include_results=include_results),
             "projection": self.projection.to_dict(include_results=include_results),
             "s_max": self._s_max,
         }
         if self._q_min_value is not None:
-            res["q_min"] = self._q_min_value
+            data["q_min"] = self._q_min_value
         if self._q_max_value is not None:
-            res["q_max"] = self._q_max_value
-        return res
+            data["q_max"] = self._q_max_value
+        return data
 
     def _results_to_dict(self, warning: bool, full: bool) -> NoReturn:
         msg = f"The {type(self).__name__} has no results to export."

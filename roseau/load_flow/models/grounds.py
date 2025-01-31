@@ -85,11 +85,9 @@ class Ground(Element[CyGround]):
     #
     # Results
     #
-    def _refresh_results(self) -> bool:
+    def _refresh_results(self) -> None:
         if self._fetch_results:
             self._res_potential = self._cy_element.get_potentials(1)[0]
-            return True
-        return False
 
     def _res_potential_getter(self, warning: bool) -> complex:
         self._refresh_results()
@@ -117,14 +115,14 @@ class Ground(Element[CyGround]):
 
     def _to_dict(self, include_results: bool) -> JsonDict:
         # Shunt lines and potential references will have the ground in their dict not here.
-        res = {
+        data = {
             "id": self.id,
             "buses": [{"id": bus_id, "phase": phase} for bus_id, phase in self._connected_buses.items()],
         }
         if include_results:
             v = self._res_potential_getter(warning=True)
-            res["results"] = {"potential": [v.real, v.imag]}
-        return res
+            data["results"] = {"potential": [v.real, v.imag]}
+        return data
 
     def _results_to_dict(self, warning: bool, full: bool) -> JsonDict:
         v = self._res_potential_getter(warning)
