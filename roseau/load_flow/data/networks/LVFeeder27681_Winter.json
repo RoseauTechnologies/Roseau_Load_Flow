@@ -4,10 +4,12 @@
   "grounds": [
     {
       "id": "ground",
-      "buses": [
+      "connections": [
         {
-          "id": "MVLVFeeder11757",
-          "phase": "n"
+          "element_type": "bus",
+          "element_id": "MVLVFeeder11757",
+          "phase": "n",
+          "side": ""
         }
       ]
     }

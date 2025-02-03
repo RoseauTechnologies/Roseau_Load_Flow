@@ -4,7 +4,7 @@
   "grounds": [
     {
       "id": "ground",
-      "buses": []
+      "connections": []
     }
   ],
   "potential_refs": [

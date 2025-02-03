@@ -31,7 +31,7 @@ the load imbalance, the more serious the issue becomes.
 
 ## Modelling floating neutral in Roseau Load Flow
 
-Roseau Load Flow offers an intuitive interface for modelling floating neutrals.
+Roseau Load Flow offers a simple interface for modelling floating neutrals.
 
 ### Implicit floating neutral
 
@@ -138,3 +138,68 @@ because the neutral cannot be connected:
 RoseauLoadFlowException: Phases ['n'] of load 'Load' are not in bus 'Bus' phases 'abc' [bad_phase]
 ```
 ````
+
+### Grounded neutral
+
+In Roseau Load Flow, ground connections are always explicit. When you want a bus to be connected to
+a ground, you need to call the `Bus.connect_ground()` method with the ground element and the phase
+to connect to.
+
+In some advanced cases, you might want to connect a single load of a bus to the ground while keeping
+other loads not grounded. This can be achieved by modelling the load with a floating neutral then
+connecting its neutral to the ground. The following example demonstrates this:
+
+```python
+import matplotlib.pyplot as plt
+import numpy as np
+import roseau.load_flow as rlf
+from roseau.load_flow.plotting import plot_voltage_phasors
+
+# Define a ground element and set its potential to 0V
+ground = rlf.Ground("Ground")
+pref = rlf.PotentialRef("PRef", element=ground)  # Sets V_ground = 0V
+
+# Define two buses
+bus1 = rlf.Bus("Bus1", phases="abcn")
+bus2 = rlf.Bus("Bus2", phases="abcn")
+
+# Define a voltage source on the first bus
+source = rlf.VoltageSource("Source", bus1, voltages=rlf.Q_(230, "V"))
+
+# Define a line between bus1 and bus2
+lp = rlf.LineParameters(id="lp", z_line=(0.12 + 0.1j) * np.eye(4))
+line = rlf.Line(id="Line", bus1=bus1, bus2=bus2, parameters=lp, length=rlf.Q_(1, "km"))
+
+# Define two unbalanced loads with floating neutrals
+z = rlf.Q_(50 + 500j, "ohm") * np.array([1, 3, 5])  # different impedance on each phase
+grounded_load = rlf.ImpedanceLoad(
+    "Load - Neutral Grounded", bus2, impedances=z, connect_neutral=False
+)
+another_load = rlf.ImpedanceLoad(
+    "Load - Neutral Floating", bus2, impedances=z, connect_neutral=False
+)
+
+# Connect the neutral of the first bus to the ground
+bus1.connect_ground(ground, phase="n")
+
+# Connect the neutral of the "grounded_load" to the ground
+grounded_load.connect_ground(ground, phase="n")
+
+en = rlf.ElectricalNetwork.from_element(bus1)
+en.solve_load_flow()
+
+fig, axes = plt.subplots(1, 3, figsize=(12, 4))
+plot_voltage_phasors(source, ax=axes[0])
+plot_voltage_phasors(grounded_load, ax=axes[1])
+plot_voltage_phasors(another_load, ax=axes[2])
+plt.show()
+```
+
+```{image} /_static/Advanced/Floating_And_Grounded_Neutral.png
+:alt: Floating neutral vs grounded neutral
+:align: center
+```
+
+Notice that the neutral of the grounded load remains at the center of the phasor diagram, even
+though the load is unbalanced and not connected to the bus. This is because the neutral is connected
+to the ground, which has a fixed potential.

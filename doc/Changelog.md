@@ -41,6 +41,10 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ### Detailed changes
 
+- {gh-pr}`326` Support ground connections of loads, sources, and transformers in addition to buses.
+  The method `Ground.connect(bus)` is deprecated in favor of the method `connect_ground(ground)` on
+  `Bus`, `VoltageSource`, and loads. The `Transformer` class gained two methods `connect_ground_hv`
+  and `connect_ground_lv` to connect either the HV or LV side to the ground.
 - {gh-pr}`325` Rename `Bus.potentials` to `Bus.initial_potentials`. The old attribute and constructor
   parameter are deprecated and will be removed in a future release.
 - {gh-pr}`319` {gh-pr}`320` {gh-pr}`321` {gh-issue}`191` Deprecate the notion of "primary" and

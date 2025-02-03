@@ -2,9 +2,10 @@ import logging
 import time
 import warnings
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Generic, TypeVar
+from typing import TYPE_CHECKING, Generic
 
 import numpy as np
+from typing_extensions import TypeVar
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.license import activate_license, get_license
@@ -31,10 +32,10 @@ if TYPE_CHECKING:
     from roseau.load_flow.network import ElectricalNetwork
 
 
-_CySolverT = TypeVar("_CySolverT", bound=CyAbstractSolver)
+_CyS_co = TypeVar("_CyS_co", bound=CyAbstractSolver, default=CyAbstractSolver, covariant=True)
 
 
-class AbstractSolver(ABC, Generic[_CySolverT]):
+class AbstractSolver(ABC, Generic[_CyS_co]):
     """This is an abstract class for all the solvers."""
 
     name: str | None = None
@@ -47,7 +48,7 @@ class AbstractSolver(ABC, Generic[_CySolverT]):
                 The electrical network for which the load flow needs to be solved.
         """
         self.network = network
-        self._cy_solver: _CySolverT | None = None
+        self._cy_solver: _CyS_co | None = None
 
     @classmethod
     def from_dict(cls, data: JsonDict, network: "ElectricalNetwork") -> "AbstractSolver":
@@ -148,10 +149,10 @@ class AbstractSolver(ABC, Generic[_CySolverT]):
         return {}
 
 
-_CyNewtonT = TypeVar("_CyNewtonT", bound=CyAbstractNewton)
+_CyN_co = TypeVar("_CyN_co", bound=CyAbstractNewton, default=CyAbstractNewton, covariant=True)
 
 
-class AbstractNewton(AbstractSolver[_CyNewtonT], ABC):
+class AbstractNewton(AbstractSolver[_CyN_co], ABC):
     """This is an abstract class for all the Newton-Raphson solvers."""
 
     DEFAULT_TAPE_OPTIMIZATION: bool = True

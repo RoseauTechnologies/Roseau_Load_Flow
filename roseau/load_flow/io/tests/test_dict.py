@@ -55,7 +55,7 @@ def test_to_dict():
     vn = 400 / np.sqrt(3)
     source_bus = Bus(id="source", phases="abcn", geometry=Point(0.0, 0.0), min_voltage_level=0.9, nominal_voltage=400)
     load_bus = Bus(id="load bus", phases="abcn", geometry=Point(0.0, 1.0), max_voltage_level=1.1, nominal_voltage=400)
-    ground.connect(load_bus)
+    load_bus.connect_ground(ground)
     p_ref = PotentialRef(id="pref", element=ground)
     vs = VoltageSource(id="vs", bus=source_bus, phases="abcn", voltages=vn)
 
@@ -153,8 +153,8 @@ def test_to_dict():
     geom = Point(0.0, 0.0)
     source_bus = Bus(id="source", phases="abcn", geometry=geom)
     load_bus = Bus(id="load bus", phases="abcn", geometry=geom)
-    ground.connect(load_bus)
-    ground.connect(source_bus)
+    load_bus.connect_ground(ground)
+    source_bus.connect_ground(ground)
     p_ref = PotentialRef(id="pref", element=ground)
     vs = VoltageSource(id="vs", bus=source_bus, phases="abcn", voltages=vn)
 

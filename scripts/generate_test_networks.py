@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 
 import numpy as np
@@ -6,6 +7,14 @@ from shapely import LineString, Point
 import roseau.load_flow as rlf
 
 TEST_NETWORKS_PATH = Path(rlf.__file__).parent / "tests" / "data" / "networks"
+
+
+def to_json(en: rlf.ElectricalNetwork, path: Path) -> None:
+    path = en.to_json(path)
+    content = path.read_text()
+    # minimize diff by removing leading zero in scientific notation
+    content = re.sub(r"((?:\[| )-?\d+(?:\.\d+)?)e(-|\+)0(\d+)", r"\1e\2\3", content)
+    path.write_text(content)
 
 
 def generate_small_network() -> None:
@@ -17,7 +26,7 @@ def generate_small_network() -> None:
     ground = rlf.Ground("ground")
     source_bus = rlf.Bus(id="bus0", phases="abcn", geometry=point1)
     load_bus = rlf.Bus(id="bus1", phases="abcn", geometry=point2)
-    ground.connect(load_bus)
+    load_bus.connect_ground(ground)
 
     voltages = [20000.0 + 0.0j, -10000.0 - 17320.508076j, -10000.0 + 17320.508076j]
     vs = rlf.VoltageSource(id="vs", bus=source_bus, voltages=voltages, phases="abcn")
@@ -40,7 +49,7 @@ def generate_small_network() -> None:
         potential_refs=[pref],
     )
     en.solve_load_flow()
-    en.to_json(TEST_NETWORKS_PATH / "small_network.json")
+    to_json(en, TEST_NETWORKS_PATH / "small_network.json")
 
 
 def generate_single_phase_network() -> None:
@@ -56,12 +65,12 @@ def generate_single_phase_network() -> None:
     line_string = LineString([point1, point2])
 
     # Network elements
+    ground = rlf.Ground("ground")
+    pref = rlf.PotentialRef(id="pref", element=ground)
+
     bus0 = rlf.Bus(id="bus0", phases=phases, geometry=point1)
     bus1 = rlf.Bus(id="bus1", phases=phases, geometry=point2)
-
-    ground = rlf.Ground("ground")
-    ground.connect(bus1)
-    pref = rlf.PotentialRef(id="pref", element=ground)
+    bus1.connect_ground(ground)
 
     vs = rlf.VoltageSource(id="vs", bus=bus0, voltages=[20000.0 + 0.0j], phases=phases)
     load = rlf.PowerLoad(id="load", bus=bus1, powers=[100], phases=phases)
@@ -80,7 +89,7 @@ def generate_single_phase_network() -> None:
         potential_refs=[pref],
     )
     en.solve_load_flow()
-    en.to_json(TEST_NETWORKS_PATH / "single_phase_network.json")
+    to_json(en, TEST_NETWORKS_PATH / "single_phase_network.json")
 
 
 def generate_all_element_network() -> None:
@@ -106,7 +115,8 @@ def generate_all_element_network() -> None:
     # Transformer between bus1 and bus2
     tp0 = rlf.TransformerParameters.from_catalogue(name="SE Minera A0Ak 100kVA 15/20kV(20) 410V Dyn11", id="tp0")
     transformer0 = rlf.Transformer(id="transformer0", bus_hv=bus1, bus_lv=bus2, parameters=tp0, tap=1.0)
-    ground.connect(bus=bus2, phase="n")
+    bus2.connect_ground(ground, phase="n")
+    transformer0.connect_ground_lv(ground, phase="n")
 
     # Switch between the bus2 and the bus3
     switch0 = rlf.Switch(id="switch0", bus1=bus2, bus2=bus3)
@@ -188,7 +198,7 @@ def generate_all_element_network() -> None:
         potential_refs=[pref],
     )
     en.solve_load_flow()
-    en.to_json(TEST_NETWORKS_PATH / "all_element_network.json")
+    to_json(en, TEST_NETWORKS_PATH / "all_element_network.json")
 
 
 if __name__ == "__main__":

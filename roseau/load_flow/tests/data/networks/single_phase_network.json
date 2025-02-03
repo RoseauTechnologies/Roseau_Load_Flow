@@ -4,10 +4,12 @@
   "grounds": [
     {
       "id": "ground",
-      "buses": [
+      "connections": [
         {
-          "id": "bus1",
-          "phase": "n"
+          "element_type": "bus",
+          "element_id": "bus1",
+          "phase": "n",
+          "side": ""
         }
       ],
       "results": {

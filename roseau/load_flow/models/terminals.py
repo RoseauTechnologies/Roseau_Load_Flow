@@ -1,19 +1,20 @@
 import logging
 from abc import ABC
 from functools import cached_property
-from typing import Final
+from typing import Final, Literal
 
 import numpy as np
 
 from roseau.load_flow.converters import _PHASE_SIZES, _calculate_voltages, calculate_voltage_phases
-from roseau.load_flow.models.core import Element, _CyE
+from roseau.load_flow.models.core import Element, _CyE_co
+from roseau.load_flow.models.grounds import Ground
 from roseau.load_flow.typing import ComplexArray, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
 
 logger = logging.getLogger(__name__)
 
 
-class BaseTerminal(Element[_CyE], ABC):
+class BaseTerminal(Element[_CyE_co], ABC):
     """A base class for all the terminals (buses, load, sources, etc.) of the network."""
 
     allowed_phases: Final = frozenset({"ab", "bc", "ca", "an", "bn", "cn", "abn", "bcn", "can", "abc", "abcn"})
@@ -56,6 +57,36 @@ class BaseTerminal(Element[_CyE], ABC):
         """The phases of the voltages of the element."""
         return calculate_voltage_phases(self._phases)
 
+    def connect_ground(
+        self,
+        ground: Ground,
+        *,
+        phase: str = "n",
+        on_connected: Literal["warn", "raise", "ignore"] = "raise",
+    ) -> None:
+        """Connect the given phase of the element to a ground.
+
+        Args:
+            ground:
+                The ground to connect to.
+
+            phase:
+                The phase of the connection. It must be one of ``{"a", "b", "c", "n"}`` and must be
+                present in the element's phases. Defaults to ``"n"``.
+
+            on_connected:
+                The action to take if this ground is already connected to *other phases* of this
+                element. If ``"raise"`` (default), raise an error. If ``"warn"``, issue a warning.
+                If ``"ignore"``, do nothing. An error is always raised if this ground is already
+                connected to the *same phase*.
+        """
+        ground._connect_common(self, phase=phase, on_connected=on_connected, element_phases=self.phases, side="")
+        p = self.phases.index(phase)
+        self._cy_element.connect(ground._cy_element, [(p, 0)])
+
+    #
+    # Results
+    #
     def _refresh_results(self) -> None:
         if self._fetch_results:
             self._res_potentials = self._cy_element.get_potentials(self._n)

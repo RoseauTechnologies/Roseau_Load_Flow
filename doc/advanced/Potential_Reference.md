@@ -59,8 +59,8 @@ source = rlf.VoltageSource("Source", bus=bus, voltages=230)
 # Create a ground and a potential reference connected to the ground
 ground = rlf.Ground("Ground")
 pref = rlf.PotentialRef("PotentialRef", element=ground)
-# Connect the ground to any phase of the bus, here the neutral
-ground.connect(bus=bus, phase="n")
+# Connect the neutral of the bus to the ground (any phase can be used)
+bus.connect_ground(ground, phase="n")
 en = rlf.ElectricalNetwork.from_element(bus)
 en.solve_load_flow()
 

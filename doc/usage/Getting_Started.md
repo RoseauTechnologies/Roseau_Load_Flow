@@ -112,7 +112,7 @@ line and a constant power load. This network is a low voltage network (three-pha
 ... # second, fix the potential of the ground at 0 V
 ... pref = rlf.PotentialRef(id="pref", element=ground)
 ... # third, ground the neutral wire of the source bus by connecting it to the Ground element
-... ground.connect(source_bus, phase="n")
+... source_bus.connect_ground(ground, phase="n")
 
 >>> # Create a three-phase voltage source at the first bus
 ... # (voltages are phase-to-neutral because the source's phases include a neutral)

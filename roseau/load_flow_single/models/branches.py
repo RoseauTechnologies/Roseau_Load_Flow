@@ -1,8 +1,7 @@
 import logging
-from typing import TypeVar
 
 from shapely.geometry.base import BaseGeometry
-from typing_extensions import Self
+from typing_extensions import Self, TypeVar
 
 from roseau.load_flow import SQRT3
 from roseau.load_flow.typing import Id, JsonDict
@@ -13,10 +12,10 @@ from roseau.load_flow_single.models.core import Element
 
 logger = logging.getLogger(__name__)
 
-_CyB = TypeVar("_CyB", bound=CyBranch)
+_CyB_co = TypeVar("_CyB_co", bound=CyBranch, default=CyBranch, covariant=True)
 
 
-class AbstractBranch(Element[_CyB]):
+class AbstractBranch(Element[_CyB_co]):
     """Base class of all the branches (lines, switches and transformers) of the network.
 
     See Also:

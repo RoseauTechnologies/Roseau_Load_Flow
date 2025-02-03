@@ -22,7 +22,7 @@ buses = {
 # Grounds and potential references
 ground = rlf.Ground("ground")
 for bus_id in (1, 3, 4, 5, 7, 9, 10, 11, 13):
-    ground.connect(buses[bus_id])
+    buses[bus_id].connect_ground(ground)
 potential_refs = [
     rlf.PotentialRef(id="pref", element=ground),
     rlf.PotentialRef(id="tr12", element=buses[2]),

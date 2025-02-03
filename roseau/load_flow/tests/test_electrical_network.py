@@ -79,7 +79,7 @@ def test_connect_and_disconnect():
     vn = 400 / np.sqrt(3)
     source_bus = Bus(id="source", phases="abcn")
     load_bus = Bus(id="load bus", phases="abcn")
-    ground.connect(load_bus)
+    load_bus.connect_ground(ground)
     vs = VoltageSource(id="vs", phases="abcn", bus=source_bus, voltages=vn)
     load = PowerLoad(id="power load", phases="abcn", bus=load_bus, powers=[100 + 0j, 100 + 0j, 100 + 0j])
     lp = LineParameters(id="test", z_line=np.eye(4, dtype=complex))
@@ -90,7 +90,7 @@ def test_connect_and_disconnect():
     # Connection of a new connected component
     load_bus2 = Bus(id="load_bus2", phases="abcn")
     ground2 = Ground("ground2")
-    ground2.connect(bus=load_bus2)
+    load_bus2.connect_ground(ground2)
     tp = TransformerParameters.from_catalogue(name="SE Minera A0Ak 50kVA 15/20kV(20) 410V Yzn11")
     Transformer(id="transfo", bus_hv=load_bus, bus_lv=load_bus2, parameters=tp)
     with pytest.raises(RoseauLoadFlowException) as e:
@@ -149,7 +149,7 @@ def test_recursive_connect_disconnect():
     vn = 400 / np.sqrt(3)
     source_bus = Bus(id="source", phases="abcn")
     load_bus = Bus(id="load bus", phases="abcn")
-    ground.connect(load_bus)
+    load_bus.connect_ground(ground)
     VoltageSource(id="vs", phases="abcn", bus=source_bus, voltages=vn)
     load = PowerLoad(id="power load", phases="abcn", bus=load_bus, powers=[100 + 0j, 100 + 0j, 100 + 0j])
     lp = LineParameters(id="test", z_line=np.eye(4, dtype=complex))
@@ -243,7 +243,7 @@ def test_recursive_connect_disconnect_ground():
     vn = 400 / np.sqrt(3)
     source_bus = Bus(id="source", phases="abcn")
     load_bus = Bus(id="load bus", phases="abcn")
-    ground.connect(load_bus)
+    load_bus.connect_ground(ground)
     VoltageSource(id="vs", phases="abcn", bus=source_bus, voltages=vn)
     PowerLoad(id="power load", phases="abcn", bus=load_bus, powers=[100 + 0j, 100 + 0j, 100 + 0j])
     lp = LineParameters(id="test", z_line=np.eye(4, dtype=complex))
@@ -295,7 +295,7 @@ def test_bad_networks():
     ground = Ground("ground")
     bus1 = Bus(id="bus1", phases="abcn")
     bus2 = Bus(id="bus2", phases="abcn")
-    ground.connect(bus2)
+    bus2.connect_ground(ground)
     lp = LineParameters(id="test", z_line=np.eye(3, dtype=complex))
     line = Line(id="line", bus1=bus1, bus2=bus2, phases="abc", parameters=lp, length=10)
     p_ref = PotentialRef(id="pref1", element=ground)
@@ -312,7 +312,7 @@ def test_bad_networks():
 
     # Bad constructor
     bus0 = Bus(id="bus0", phases="abcn")
-    ground.connect(bus0)
+    bus0.connect_ground(ground)
     voltages = [20000.0 + 0.0j, -10000.0 - 17320.508076j, -10000.0 + 17320.508076j]
     vs = VoltageSource(id="vs", bus=bus0, phases="abcn", voltages=voltages)
     switch = Switch(id="switch", bus1=bus0, bus2=bus1, phases="abcn")
@@ -363,7 +363,7 @@ def test_bad_networks():
     assert t.network is None
 
     # Good network
-    ground.connect(bus3)
+    bus3.connect_ground(ground)
 
     # 2 potential reference
     p_ref2 = PotentialRef(id="pref2", element=bus3)
@@ -389,7 +389,7 @@ def test_bad_networks():
     load_bus = Bus(id="lb", phases="abcn")
     ground = Ground(id="g")
     pref = PotentialRef(id="pr", element=ground)
-    ground.connect(src_bus)
+    src_bus.connect_ground(ground)
     lp = LineParameters(id="test", z_line=np.eye(4, dtype=complex))
     line = Line(id="ln", bus1=src_bus, bus2=load_bus, phases="abcn", parameters=lp, length=10)
     vs = VoltageSource(id="vs", bus=src_bus, phases="abcn", voltages=[230, 120 + 150j, 120 - 150j])
@@ -531,9 +531,9 @@ def test_frames(small_network: ElectricalNetwork):
     # Grounds
     grounds_df = small_network.grounds_frame
     assert isinstance(grounds_df, pd.DataFrame)
-    assert grounds_df.shape == (1, 1)
-    assert grounds_df.columns.tolist() == ["phase"]
-    assert grounds_df.index.names == ["id", "bus_id"]
+    assert grounds_df.shape == (1, 5)
+    assert grounds_df.columns.tolist() == ["id", "element_type", "element_id", "phase", "side"]
+    assert grounds_df.index.names == [None]
 
     # Potential refs
     potential_refs_df = small_network.potential_refs_frame
@@ -947,7 +947,7 @@ def test_network_elements(small_network: ElectricalNetwork):
     bus_vs = Bus(id="bus_vs", phases="abcn")
     VoltageSource(id="vs2", bus=bus_vs, voltages=15e3)
     ground = Ground(id="ground2")
-    ground.connect(bus=bus_vs, phase="a")
+    bus_vs.connect_ground(ground, phase="a")
     PotentialRef(id="pref2", element=ground)
     small_network_2 = ElectricalNetwork.from_element(initial_bus=bus_vs)
 

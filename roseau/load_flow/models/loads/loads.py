@@ -1,8 +1,9 @@
 import logging
 from abc import ABC
-from typing import Final, TypeVar
+from typing import Final
 
 import numpy as np
+from typing_extensions import TypeVar
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.buses import Bus
@@ -24,10 +25,10 @@ from roseau.load_flow_engine.cy_engine import (
 
 logger = logging.getLogger(__name__)
 
-_CyL = TypeVar("_CyL", bound=CyLoad)
+_CyL_co = TypeVar("_CyL_co", bound=CyLoad, default=CyLoad, covariant=True)
 
 
-class AbstractLoad(BaseConnectable[_CyL], ABC):
+class AbstractLoad(BaseConnectable[_CyL_co], ABC):
     """An abstract class of an electric load.
 
     The subclasses of this class can be used to model:

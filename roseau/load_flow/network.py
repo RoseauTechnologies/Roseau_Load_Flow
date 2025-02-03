@@ -396,15 +396,14 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
 
     @property
     def grounds_frame(self) -> pd.DataFrame:
-        """The :attr:`grounds` of the network as a dataframe."""
+        """The ground connections of the network as a dataframe."""
         return pd.DataFrame.from_records(
             data=[
-                (ground.id, bus_id, phase)
+                (ground.id, c["element"].element_type, c["element"].id, c["phase"], c["side"])
                 for ground in self.grounds.values()
-                for bus_id, phase in ground.connected_buses.items()
+                for c in ground.connections
             ],
-            columns=["id", "bus_id", "phase"],
-            index=["id", "bus_id"],
+            columns=["id", "element_type", "element_id", "phase", "side"],
         )
 
     @property

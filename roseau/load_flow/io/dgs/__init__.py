@@ -230,7 +230,7 @@ def _add_potential_refs(  # noqa: C901
                 # First: prefer creating the reference at a source (if any)
                 if vs.bus in connected_component:
                     if "n" in vs.bus._phases:
-                        ground.connect(vs.bus)
+                        vs.bus.connect_ground(ground)
                     else:
                         pref = PotentialRef(id=f"pref (source {vs.id!r})", element=vs.bus)
                         potential_refs[pref.id] = pref
@@ -243,7 +243,7 @@ def _add_potential_refs(  # noqa: C901
                     if not isinstance(element, Bus):
                         continue
                     if "n" in element._phases:
-                        ground.connect(element)
+                        element.connect_ground(ground)
                         has_potential_ref = True
                         break
                 else:
@@ -255,7 +255,7 @@ def _add_potential_refs(  # noqa: C901
                         )
                         assert transformer_bus in connected_component
                         if "n" in transformer_bus._phases:
-                            ground.connect(transformer_bus)
+                            transformer_bus.connect_ground(ground)
                         else:
                             pref = PotentialRef(id=f"pref (transformer {transformer.id!r})", element=transformer_bus)
                             potential_refs[pref.id] = pref

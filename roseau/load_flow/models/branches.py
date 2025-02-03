@@ -1,10 +1,9 @@
 import logging
 from functools import cached_property
-from typing import TypeVar
 
 import numpy as np
 from shapely.geometry.base import BaseGeometry
-from typing_extensions import Self
+from typing_extensions import Self, TypeVar
 
 from roseau.load_flow.converters import _calculate_voltages
 from roseau.load_flow.models.buses import Bus
@@ -15,10 +14,10 @@ from roseau.load_flow_engine.cy_engine import CyBranch
 
 logger = logging.getLogger(__name__)
 
-_CyB = TypeVar("_CyB", bound=CyBranch)
+_CyB_co = TypeVar("_CyB_co", bound=CyBranch, default=CyBranch, covariant=True)
 
 
-class AbstractBranch(Element[_CyB]):
+class AbstractBranch(Element[_CyB_co]):
     """Base class of all the branches (lines, switches and transformers) of the network.
 
     See Also:

@@ -105,6 +105,13 @@ def network_from_dict(  # noqa: C901
         for tp in data["transformers_params"]
     }
 
+    # Grounds (without connections)
+    grounds: dict[Id, Ground] = {}
+    for ground_data in data["grounds"]:
+        ground = Ground.from_dict(data=ground_data, include_results=include_results)
+        grounds[ground.id] = ground
+        has_results = has_results and not ground._no_results
+
     # Buses, loads and sources
     buses: dict[Id, Bus] = {}
     for bus_data in data["buses"]:
@@ -124,15 +131,7 @@ def network_from_dict(  # noqa: C901
         sources[source.id] = source
         has_results = has_results and not source._no_results
 
-    # Grounds and potential refs
-    grounds: dict[Id, Ground] = {}
-    for ground_data in data["grounds"]:
-        for ground_bus_data in ground_data["buses"]:
-            ground_bus_data["bus"] = buses[ground_bus_data.pop("id")]
-        ground = Ground.from_dict(data=ground_data, include_results=include_results)
-        grounds[ground.id] = ground
-        has_results = has_results and not ground._no_results
-
+    # Potential references
     potential_refs: dict[Id, PotentialRef] = {}
     for pref_data in data["potential_refs"]:
         if "bus" in pref_data:
@@ -177,6 +176,29 @@ def network_from_dict(  # noqa: C901
         switch = Switch.from_dict(data=switch_data, include_results=include_results)
         switches_dict[switch.id] = switch
         has_results = has_results and not switch._no_results
+
+    # Ground connections
+    for ground_data in data["grounds"]:
+        ground = grounds[ground_data["id"]]
+        for c in ground_data["connections"]:
+            match (c["element_type"], c["side"]):
+                case "bus", "":
+                    bus = buses[c["element_id"]]
+                    bus.connect_ground(ground, phase=c["phase"], on_connected="ignore")
+                case "load", "":
+                    load = loads[c["element_id"]]
+                    load.connect_ground(ground, phase=c["phase"], on_connected="ignore")
+                case "source", "":
+                    source = sources[c["element_id"]]
+                    source.connect_ground(ground, phase=c["phase"], on_connected="ignore")
+                case "transformer", "HV":
+                    transformer = transformers_dict[c["element_id"]]
+                    transformer.connect_ground_hv(ground, phase=c["phase"], on_connected="ignore")
+                case "transformer", "LV":
+                    transformer = transformers_dict[c["element_id"]]
+                    transformer.connect_ground_lv(ground, phase=c["phase"], on_connected="ignore")
+                case _:
+                    raise AssertionError(f"Invalid connection to {c['element_type'], c['side']}")
 
     # Short-circuits
     short_circuits = data.get("short_circuits")
@@ -697,6 +719,15 @@ def v3_to_v4_converter(data: JsonDict) -> JsonDict:  # noqa: C901
     """
     assert data["version"] == 3, data["version"]
 
+    grounds = []
+    for ground in data["grounds"]:
+        # Replace buses by connections
+        ground["connections"] = [
+            {"element_type": "bus", "element_id": bus["id"], "phase": bus["phase"], "side": ""}
+            for bus in ground.pop("buses")
+        ]
+        grounds.append(ground)
+
     buses = []
     for bus in data["buses"]:
         # Rename potentials to initial_potentials
@@ -790,7 +821,7 @@ def v3_to_v4_converter(data: JsonDict) -> JsonDict:  # noqa: C901
     results = {
         "version": 4,
         "is_multiphase": data["is_multiphase"],  # Unchanged
-        "grounds": data["grounds"],  # Unchanged
+        "grounds": grounds,
         "potential_refs": data["potential_refs"],  # Unchanged
         "buses": buses,
         "lines": lines,

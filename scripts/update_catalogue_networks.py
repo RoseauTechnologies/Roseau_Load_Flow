@@ -78,7 +78,7 @@ if __name__ == "__main__":
                 ground = en.grounds[ground_id]
                 new_ground = rlf.Ground(ground_id)
                 if feeder_type == "LV":
-                    new_ground.connect(bus=new_buses[feeder_bus_id], phase="n")
+                    new_buses[feeder_bus_id].connect_ground(new_ground, phase="n")
                 new_grounds[ground_id] = new_ground
 
             new_lines = {}

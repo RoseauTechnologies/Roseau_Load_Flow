@@ -1,6 +1,6 @@
 import logging
 import warnings
-from typing import Final
+from typing import Final, Literal
 
 from shapely.geometry.base import BaseGeometry
 
@@ -8,6 +8,7 @@ from roseau.load_flow.converters import _calculate_voltages
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.branches import AbstractBranch
 from roseau.load_flow.models.buses import Bus
+from roseau.load_flow.models.grounds import Ground
 from roseau.load_flow.models.transformers.parameters import TransformerParameters
 from roseau.load_flow.typing import ComplexArray, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
@@ -366,6 +367,60 @@ class Transformer(AbstractBranch[CyTransformer]):
             msg = f"{side} {ph} of transformer {id!r} {be} not in phases {bus.phases!r} of its {side} bus {bus.id!r}."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
+
+    def connect_ground_hv(
+        self,
+        ground: Ground,
+        *,
+        phase: str = "n",
+        on_connected: Literal["warn", "raise", "ignore"] = "raise",
+    ) -> None:
+        """Connect the given phase on the HV side of the transformer to a ground.
+
+        Args:
+            ground:
+                The ground to connect to.
+
+            phase:
+                The phase of the connection. It must be one of ``{"a", "b", "c", "n"}`` and must be
+                present in the transformer's phases. Defaults to ``"n"``.
+
+            on_connected:
+                The action to take if this ground is already connected to *other HV phases* of this
+                transformer. If ``"raise"`` (default), raise an error. If ``"warn"``, issue a warning.
+                If ``"ignore"``, do nothing. An error is always raised if this ground is already
+                connected to the *same phase*.
+        """
+        ground._connect_common(self, phase=phase, on_connected=on_connected, element_phases=self.phases_hv, side="HV")
+        p = self.phases_hv.index(phase)
+        self._cy_element.connect(ground._cy_element, [(p, 0)], True)
+
+    def connect_ground_lv(
+        self,
+        ground: Ground,
+        *,
+        phase: str = "n",
+        on_connected: Literal["warn", "raise", "ignore"] = "raise",
+    ) -> None:
+        """Connect the given phase on the LV side of the transformer to a ground.
+
+        Args:
+            ground:
+                The ground to connect to.
+
+            phase:
+                The phase of the connection. It must be one of ``{"a", "b", "c", "n"}`` and must be
+                present in the transformer's phases. Defaults to ``"n"``.
+
+            on_connected:
+                The action to take if this ground is already connected to *other LV phases* of this
+                transformer. If ``"raise"`` (default), raise an error. If ``"warn"``, issue a warning.
+                If ``"ignore"``, do nothing. An error is always raised if this ground is already
+                connected to the *same phase*.
+        """
+        ground._connect_common(self, phase=phase, on_connected=on_connected, element_phases=self.phases_lv, side="LV")
+        p = self.phases_lv.index(phase)
+        self._cy_element.connect(ground._cy_element, [(p, 0)], False)
 
     #
     # Results

@@ -29,7 +29,7 @@ Let's take the electrical network of the [Getting started page](usage-getting-st
 
 >>> ground = rlf.Ground(id="gnd")
 ... pref = rlf.PotentialRef(id="pref", element=ground)
-... ground.connect(source_bus, phase="n")
+... source_bus.connect_ground(ground, phase="n")
 
 >>> un = 400 / rlf.SQRT3
 ... vs = rlf.VoltageSource(id="vs", bus=source_bus, voltages=un)
