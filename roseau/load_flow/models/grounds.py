@@ -71,9 +71,9 @@ class Ground(Element[CyGround]):
         """The bus ID and phase of the buses connected to this ground.
 
         .. deprecated:: 0.12.0
-            Use the :attr:`Ground.connections` instead.
+            Use :attr:`Ground.connections` instead.
         """
-        return {c["element"].id: c["phase"] for c in self._connections}
+        return {c["element"].id: c["phase"] for c in self._connections if c["element"].element_type == "bus"}
 
     @deprecated("`Ground.connect` is deprecated, use `Bus.connect_ground` instead.")
     def connect(self, bus: "Bus", phase: str = "n") -> None:

@@ -104,3 +104,20 @@ def test_ground_to_from_dict_roundtrip():
     connections1 = [(c["element"].element_type, c["element"].id, c["phase"], c["side"]) for c in ground.connections]
     connections2 = [(c["element"].element_type, c["element"].id, c["phase"], c["side"]) for c in ground2.connections]
     assert_json_close(connections1, connections2)
+
+
+def test_ground_deprecations():
+    ground = Ground("ground")
+    bus = Bus("bus", phases="abcn")
+    load = PowerLoad("load", bus=bus, phases="abcn", powers=3e3, connect_neutral=False)
+    with pytest.warns(DeprecationWarning, match=r"`Ground.connect` is deprecated, use `Bus.connect_ground` instead."):
+        ground.connect(bus)
+    assert {"element": bus, "phase": "n", "side": ""} in ground.connections
+
+    load.connect_ground(ground, phase="n")
+
+    with pytest.warns(
+        DeprecationWarning, match=r"`Ground.connected_buses` is deprecated, use `Ground.connections` instead."
+    ):
+        connected_buses = ground.connected_buses
+    assert connected_buses == {"bus": "n"}
