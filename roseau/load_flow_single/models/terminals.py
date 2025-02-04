@@ -4,12 +4,12 @@ from abc import ABC
 from roseau.load_flow import SQRT3
 from roseau.load_flow.typing import Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
-from roseau.load_flow_single.models.core import Element, _CyE
+from roseau.load_flow_single.models.core import Element, _CyE_co
 
 logger = logging.getLogger(__name__)
 
 
-class BaseTerminal(Element[_CyE], ABC):
+class BaseTerminal(Element[_CyE_co], ABC):
     """A base class for all the terminals (buses, load, sources, etc.) of the network."""
 
     def __init__(self, id: Id) -> None:

@@ -6,14 +6,14 @@ from typing import Final
 import numpy as np
 
 from roseau.load_flow.converters import _PHASE_SIZES, _calculate_voltages, calculate_voltage_phases
-from roseau.load_flow.models.core import Element, _CyE
+from roseau.load_flow.models.core import Element, _CyE_co
 from roseau.load_flow.typing import ComplexArray, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
 
 logger = logging.getLogger(__name__)
 
 
-class BaseTerminal(Element[_CyE], ABC):
+class BaseTerminal(Element[_CyE_co], ABC):
     """A base class for all the terminals (buses, load, sources, etc.) of the network."""
 
     allowed_phases: Final = frozenset({"ab", "bc", "ca", "an", "bn", "cn", "abn", "bcn", "can", "abc", "abcn"})

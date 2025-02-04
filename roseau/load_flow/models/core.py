@@ -1,11 +1,12 @@
 import logging
 import warnings
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Any, ClassVar, Generic, NoReturn, Optional, TypeVar
+from typing import TYPE_CHECKING, Any, ClassVar, Generic, NoReturn, Optional
 
 import shapely
 from shapely.geometry import shape
 from shapely.geometry.base import BaseGeometry
+from typing_extensions import TypeVar
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.typing import Id
@@ -18,10 +19,10 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 _T = TypeVar("_T")
-_CyE = TypeVar("_CyE", bound=CyElement)
+_CyE_co = TypeVar("_CyE_co", bound=CyElement, default=CyElement, covariant=True)
 
 
-class Element(ABC, Identifiable, JsonMixin, Generic[_CyE]):
+class Element(ABC, Identifiable, JsonMixin, Generic[_CyE_co]):
     """An abstract class of an element in an Electrical network."""
 
     element_type: ClassVar[str]
@@ -52,7 +53,7 @@ class Element(ABC, Identifiable, JsonMixin, Generic[_CyE]):
         super().__init__(id)
         self._connected_elements: list[Element] = []
         self._network: ElectricalNetwork | None = None
-        self._cy_element: _CyE | None = None
+        self._cy_element: _CyE_co | None = None
         self._fetch_results = False
         self._no_results = True
         self._results_valid = True

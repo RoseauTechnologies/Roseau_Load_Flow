@@ -547,7 +547,7 @@ def test_to_dict():
     )
 
 
-def test_to_from_dict_round_trip():
+def test_to_from_dict_roundtrip():
     bus = Bus(
         id="bus",
         phases="an",

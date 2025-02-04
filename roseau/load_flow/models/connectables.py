@@ -9,7 +9,7 @@ import numpy as np
 from roseau.load_flow.converters import _calculate_voltages
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.buses import Bus
-from roseau.load_flow.models.core import _CyE
+from roseau.load_flow.models.core import _CyE_co
 from roseau.load_flow.models.terminals import BaseTerminal
 from roseau.load_flow.typing import ComplexArray, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
@@ -18,7 +18,7 @@ from roseau.load_flow.utils import find_stack_level
 logger = logging.getLogger(__name__)
 
 
-class BaseConnectable(BaseTerminal[_CyE], ABC):
+class BaseConnectable(BaseTerminal[_CyE_co], ABC):
     """A base class for connectable elements in the network (loads, sources, etc.)."""
 
     type: ClassVar[str]
