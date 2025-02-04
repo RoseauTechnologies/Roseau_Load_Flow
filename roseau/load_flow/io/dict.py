@@ -761,6 +761,9 @@ def v3_to_v4_converter(data: JsonDict) -> JsonDict:  # noqa: C901
             tr_data["results"]["potentials_lv"] = get_branch_potentials_from_bus(
                 bus_id=tr_data["bus_lv"], branch_phases=tr_data["phases_lv"]
             )
+        # Handle floating neutrals
+        tr_data["connect_neutral_hv"] = None
+        tr_data["connect_neutral_lv"] = None
         transformers.append(tr_data)
 
     lines = []

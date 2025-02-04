@@ -6,10 +6,12 @@ from shapely.geometry.base import BaseGeometry
 from typing_extensions import Self, TypeVar
 
 from roseau.load_flow.converters import _calculate_voltages
+from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import Element
 from roseau.load_flow.typing import ComplexArray, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
+from roseau.load_flow.utils import one_or_more_repr
 from roseau.load_flow_engine.cy_engine import CyBranch
 
 logger = logging.getLogger(__name__)
@@ -113,6 +115,26 @@ class AbstractBranch(Element[_CyB_co]):
                 j = self.bus2.phases.index(phase)
                 connections.append((i, j))
         self._cy_element.connect(self.bus2._cy_element, connections, False)
+
+    def _check_phases_common(self, id: Id, bus1: Bus, bus2: Bus, phases: str | None) -> str:
+        """Check the common phases between the buses and the branch (for lines and switches)."""
+        buses_phases = set(bus1.phases) & set(bus2.phases)
+        if phases is None:
+            phases = "".join(sorted(buses_phases)).replace("ac", "ca")
+        else:
+            # Also check they are in the intersection of buses phases
+            self._check_phases(id, phases=phases)
+            phases_not_in_buses = set(phases) - buses_phases
+            if phases_not_in_buses:
+                ph, be = one_or_more_repr(sorted(phases_not_in_buses), "Phase")
+                ph_common = "".join(sorted(buses_phases)).replace("ac", "ca")
+                msg = (
+                    f"{ph} of {self.element_type} {id!r} {be} not in the common phases {ph_common!r} "
+                    f"of its buses {bus1.id!r} and {bus2.id!r}."
+                )
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
+        return phases
 
     #
     # Results

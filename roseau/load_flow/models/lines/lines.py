@@ -80,22 +80,7 @@ class Line(AbstractBranch[CyShuntLine | CySimplifiedLine]):
             geometry:
                 The geometry of the line i.e. the linestring.
         """
-        if phases is None:
-            phases = "".join(p for p in bus1.phases if p in bus2.phases)  # can't use set because order is important
-            phases = phases.replace("ac", "ca")
-        else:
-            # Also check they are in the intersection of buses phases
-            self._check_phases(id, phases=phases)
-            buses_phases = set(bus1.phases) & set(bus2.phases)
-            phases_not_in_buses = set(phases) - buses_phases
-            if phases_not_in_buses:
-                msg = (
-                    f"Phases {sorted(phases_not_in_buses)} of line {id!r} are not in the common phases "
-                    f"{sorted(buses_phases)} of buses {bus1.id!r} and {bus2.id!r}."
-                )
-                logger.error(msg)
-                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
-
+        phases = self._check_phases_common(id, bus1=bus1, bus2=bus2, phases=phases)
         self._initialized = False
         super().__init__(id=id, bus1=bus1, bus2=bus2, phases1=phases, phases2=phases, geometry=geometry)
         self.ground = ground

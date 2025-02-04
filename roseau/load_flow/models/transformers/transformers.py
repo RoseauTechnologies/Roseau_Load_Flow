@@ -1,5 +1,6 @@
 import logging
 import warnings
+from functools import cached_property
 from typing import Final
 
 from shapely.geometry.base import BaseGeometry
@@ -56,6 +57,8 @@ class Transformer(AbstractBranch[CyTransformer]):
         tap: float = 1.0,
         phases_hv: str | None = None,
         phases_lv: str | None = None,
+        connect_neutral_hv: bool | None = None,
+        connect_neutral_lv: bool | None = None,
         max_loading: float | Q_[float] = 1,
         geometry: BaseGeometry | None = None,
     ) -> None:
@@ -87,6 +90,16 @@ class Transformer(AbstractBranch[CyTransformer]):
             phases_lv:
                 The phases of the LV side of the transformer. Similar to ``phases_hv``.
 
+            connect_neutral_hv:
+                Specifies whether the element's neutral on the HV side should be connected to the HV
+                bus's neutral or left floating. By default, the elements's neutral is connected when
+                the bus has a neutral. If the bus does not have a neutral, the element's neutral is
+                left floating by default. To override the default behavior, pass an explicit ``True``
+                or ``False``.
+
+            connect_neutral_lv:
+                Similar to ``connect_neutral_hv`` but for the LV side.
+
             max_loading:
                 The maximum loading of the transformer (unitless). It is used with the `sn` of the
                 :class:`TransformerParameters` to compute the :meth:`~roseau.load_flow.Transformer.max_power`,
@@ -97,19 +110,25 @@ class Transformer(AbstractBranch[CyTransformer]):
                 The geometry of the transformer.
         """
         if parameters.type == "single-phase":
-            phases_hv, phases_lv = self._compute_phases_single(
-                id=id, bus_hv=bus_hv, bus_lv=bus_lv, phases_hv=phases_hv, phases_lv=phases_lv
-            )
+            compute_phases = self._compute_phases_single
         elif parameters.type == "center-tapped":
-            phases_hv, phases_lv = self._compute_phases_center(
-                id=id, bus_hv=bus_hv, bus_lv=bus_lv, phases_hv=phases_hv, phases_lv=phases_lv
-            )
+            compute_phases = self._compute_phases_center
         else:
-            phases_hv, phases_lv = self._compute_phases_three(
-                id=id, bus_hv=bus_hv, bus_lv=bus_lv, parameters=parameters, phases_hv=phases_hv, phases_lv=phases_lv
-            )
+            compute_phases = self._compute_phases_three
+        phases_hv, phases_lv, connect_neutral_hv, connect_neutral_lv = compute_phases(
+            id=id,
+            bus_hv=bus_hv,
+            bus_lv=bus_lv,
+            parameters=parameters,
+            phases_hv=phases_hv,
+            phases_lv=phases_lv,
+            connect_neutral_hv=connect_neutral_hv,
+            connect_neutral_lv=connect_neutral_lv,
+        )
 
         super().__init__(id=id, bus1=bus_hv, bus2=bus_lv, phases1=phases_hv, phases2=phases_lv, geometry=geometry)
+        self._connect_neutral_hv = connect_neutral_hv
+        self._connect_neutral_lv = connect_neutral_lv
         self.tap = tap
         self._parameters = parameters
         self.max_loading = max_loading
@@ -155,6 +174,16 @@ class Transformer(AbstractBranch[CyTransformer]):
     def phases_lv(self) -> str:
         """The phases of the low voltage side of the transformer."""
         return self._phases2
+
+    @cached_property
+    def has_floating_neutral_hv(self) -> bool:
+        """Does this transformer have a floating neutral on the HV side?"""
+        return self.bus_hv._is_element_neutral_floating(self.phases_hv, self._connect_neutral_hv)
+
+    @cached_property
+    def has_floating_neutral_lv(self) -> bool:
+        """Does this transformer have a floating neutral on the LV side?"""
+        return self.bus_lv._is_element_neutral_floating(self.phases_lv, self._connect_neutral_lv)
 
     @property
     def tap(self) -> float:
@@ -233,7 +262,9 @@ class Transformer(AbstractBranch[CyTransformer]):
         parameters: TransformerParameters,
         phases_hv: str | None,
         phases_lv: str | None,
-    ) -> tuple[str, str]:
+        connect_neutral_hv: bool | None,
+        connect_neutral_lv: bool | None,
+    ) -> tuple[str, str, bool | None, bool | None]:
         whv = parameters.whv
         wlv = parameters.wlv
         clock = parameters.clock
@@ -245,11 +276,8 @@ class Transformer(AbstractBranch[CyTransformer]):
             self._check_phases(id=id, allowed_phases=self._allowed_phases_three, phases_hv=phases_hv)
         else:
             self._check_phases(id=id, allowed_phases=self._allowed_phases_three, phases_hv=phases_hv)
-            self._check_bus_phases(id=id, bus=bus_hv, phases_hv=phases_hv)
-            transformer_phases = "abcn" if w1_has_neutral else "abc"
-            phases_not_in_transformer = set(phases_hv) - set(transformer_phases)
-            if phases_not_in_transformer:
-                if phases_not_in_transformer == {"n"} and whv.startswith(("Y", "Z")):
+            if "n" in phases_hv and not w1_has_neutral:
+                if whv.startswith(("Y", "Z")):
                     correct_vg = f"{whv}N{wlv}{clock}"
                     warnings.warn(
                         f"Transformer {id!r} with vector group '{parameters.vg}' does not have a "
@@ -264,6 +292,9 @@ class Transformer(AbstractBranch[CyTransformer]):
                     msg = f"HV phases {phases_hv!r} of transformer {id!r} are not compatible with its winding {whv!r}."
                     logger.error(msg)
                     raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
+            connect_neutral_hv = bus_hv._check_element_phases(
+                self, eid=id, phases=phases_hv, side="HV", connect_neutral=connect_neutral_hv
+            )
 
         w2_has_neutral = wlv.endswith("n")
         if phases_lv is None:
@@ -272,11 +303,8 @@ class Transformer(AbstractBranch[CyTransformer]):
             self._check_phases(id=id, allowed_phases=self._allowed_phases_three, phases_lv=phases_lv)
         else:
             self._check_phases(id=id, allowed_phases=self._allowed_phases_three, phases_lv=phases_lv)
-            self._check_bus_phases(id=id, bus=bus_lv, phases_lv=phases_lv)
-            transformer_phases = "abcn" if w2_has_neutral else "abc"
-            phases_not_in_transformer = set(phases_lv) - set(transformer_phases)
-            if phases_not_in_transformer:
-                if phases_not_in_transformer == {"n"} and wlv.startswith(("y", "z")):
+            if "n" in phases_lv and not w2_has_neutral:
+                if wlv.startswith(("y", "z")):
                     correct_vg = f"{whv}{wlv}n{clock}"
                     warnings.warn(
                         f"Transformer {id!r} with vector group '{parameters.vg}' does not have a "
@@ -291,12 +319,23 @@ class Transformer(AbstractBranch[CyTransformer]):
                     msg = f"LV phases {phases_lv!r} of transformer {id!r} are not compatible with its winding {wlv!r}."
                     logger.error(msg)
                     raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
+            connect_neutral_lv = bus_lv._check_element_phases(
+                self, eid=id, phases=phases_lv, side="LV", connect_neutral=connect_neutral_lv
+            )
 
-        return phases_hv, phases_lv
+        return phases_hv, phases_lv, connect_neutral_hv, connect_neutral_lv
 
     def _compute_phases_single(
-        self, id: Id, bus_hv: Bus, bus_lv: Bus, phases_hv: str | None, phases_lv: str | None
-    ) -> tuple[str, str]:
+        self,
+        id: Id,
+        bus_hv: Bus,
+        bus_lv: Bus,
+        parameters: TransformerParameters,
+        phases_hv: str | None,
+        phases_lv: str | None,
+        connect_neutral_hv: bool | None,
+        connect_neutral_lv: bool | None,
+    ) -> tuple[str, str, bool | None, bool | None]:
         if phases_hv is None:
             phases_hv = "".join(
                 p for p in bus_hv.phases if p in bus_lv.phases
@@ -308,8 +347,9 @@ class Transformer(AbstractBranch[CyTransformer]):
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
         else:
             self._check_phases(id=id, allowed_phases=self._allowed_phases_single, phases_hv=phases_hv)
-            self._check_bus_phases(id=id, bus=bus_hv, phases_hv=phases_hv)
-
+            connect_neutral_hv = bus_hv._check_element_phases(
+                self, eid=id, phases=phases_hv, side="HV", connect_neutral=connect_neutral_hv
+            )
         if phases_lv is None:
             phases_lv = "".join(
                 p for p in bus_hv.phases if p in bus_lv.phases
@@ -321,13 +361,23 @@ class Transformer(AbstractBranch[CyTransformer]):
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
         else:
             self._check_phases(id=id, allowed_phases=self._allowed_phases_single, phases_lv=phases_lv)
-            self._check_bus_phases(id=id, bus=bus_lv, phases_lv=phases_lv)
+            connect_neutral_lv = bus_lv._check_element_phases(
+                self, eid=id, phases=phases_lv, side="LV", connect_neutral=connect_neutral_lv
+            )
 
-        return phases_hv, phases_lv
+        return phases_hv, phases_lv, connect_neutral_hv, connect_neutral_lv
 
     def _compute_phases_center(
-        self, id: Id, bus_hv: Bus, bus_lv: Bus, phases_hv: str | None, phases_lv: str | None
-    ) -> tuple[str, str]:
+        self,
+        id: Id,
+        bus_hv: Bus,
+        bus_lv: Bus,
+        parameters: TransformerParameters,
+        phases_hv: str | None,
+        phases_lv: str | None,
+        connect_neutral_hv: bool | None,
+        connect_neutral_lv: bool | None,
+    ) -> tuple[str, str, bool | None, bool | None]:
         if phases_hv is None:
             phases_hv = "".join(p for p in bus_lv.phases if p in bus_hv.phases and p != "n")
             phases_hv = phases_hv.replace("ac", "ca")
@@ -337,7 +387,9 @@ class Transformer(AbstractBranch[CyTransformer]):
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
         else:
             self._check_phases(id=id, allowed_phases=self._allowed_phases_single, phases_hv=phases_hv)
-            self._check_bus_phases(id=id, bus=bus_hv, phases_hv=phases_hv)
+            connect_neutral_hv = bus_hv._check_element_phases(
+                self, eid=id, phases=phases_hv, side="HV", connect_neutral=connect_neutral_hv
+            )
 
         if phases_lv is None:
             phases_lv = "".join(p for p in bus_lv.phases if p in bus_hv.phases or p == "n")
@@ -347,25 +399,29 @@ class Transformer(AbstractBranch[CyTransformer]):
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
         else:
             self._check_phases(id=id, allowed_phases=self._allowed_phases_center_lv_side, phases_lv=phases_lv)
-            self._check_bus_phases(id=id, bus=bus_lv, phases_lv=phases_lv)
+            connect_neutral_lv = bus_lv._check_element_phases(
+                self, eid=id, phases=phases_lv, side="LV", connect_neutral=connect_neutral_lv
+            )
 
-        return phases_hv, phases_lv
+        return phases_hv, phases_lv, connect_neutral_hv, connect_neutral_lv
 
-    @staticmethod
-    def _check_bus_phases(id: Id, bus: Bus, **kwargs: str) -> None:
-        name, phases = kwargs.popitem()  # phases_hv or phases_lv
-        side = "HV" if name == "phases_hv" else "LV"
-        phases_not_in_bus = set(phases) - set(bus.phases)
-        if phases_not_in_bus:
-            if len(phases_not_in_bus) == 1:
-                ph = f"phase {next(iter(phases_not_in_bus))!r}"
-                be = "is"
-            else:
-                ph = f"phases {sorted(phases_not_in_bus)}"
-                be = "are"
-            msg = f"{side} {ph} of transformer {id!r} {be} not in phases {bus.phases!r} of its {side} bus {bus.id!r}."
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
+    def _cy_connect(self) -> None:
+        """Connect the Cython elements of the buses and the transformer."""
+        connections = []
+        bus_hv_phases = self.bus_hv.phases.removesuffix("n") if self.has_floating_neutral_hv else self.bus_hv.phases
+        for i, phase in enumerate(self.phases1):
+            if phase in bus_hv_phases:
+                j = bus_hv_phases.index(phase)
+                connections.append((i, j))
+        self._cy_element.connect(self.bus_hv._cy_element, connections, True)
+
+        connections = []
+        bus_lv_phases = self.bus_lv.phases.removesuffix("n") if self.has_floating_neutral_lv else self.bus_lv.phases
+        for i, phase in enumerate(self.phases2):
+            if phase in bus_lv_phases:
+                j = bus_lv_phases.index(phase)
+                connections.append((i, j))
+        self._cy_element.connect(self.bus_lv._cy_element, connections, False)
 
     #
     # Results
@@ -453,6 +509,8 @@ class Transformer(AbstractBranch[CyTransformer]):
     #
     def _to_dict(self, include_results: bool) -> JsonDict:
         data = super()._to_dict(include_results)
+        data["connect_neutral_hv"] = self._connect_neutral_hv
+        data["connect_neutral_lv"] = self._connect_neutral_lv
         data["max_loading"] = self._max_loading
         data["params_id"] = self.parameters.id
         data["tap"] = self.tap

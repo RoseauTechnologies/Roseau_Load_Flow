@@ -1,7 +1,7 @@
 import logging
 import warnings
 from collections.abc import Iterator
-from typing import TYPE_CHECKING, Any, Final
+from typing import TYPE_CHECKING, Any, Final, Literal
 
 import numpy as np
 import pandas as pd
@@ -15,7 +15,7 @@ from roseau.load_flow.models.terminals import BaseTerminal
 from roseau.load_flow.sym import phasor_to_sym
 from roseau.load_flow.typing import BoolArray, ComplexArray, ComplexArrayLike1D, FloatArray, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
-from roseau.load_flow.utils import deprecate_renamed_parameter, find_stack_level
+from roseau.load_flow.utils import deprecate_renamed_parameter, find_stack_level, one_or_more_repr
 from roseau.load_flow_engine.cy_engine import CyBus
 
 logger = logging.getLogger(__name__)
@@ -245,6 +245,43 @@ class Bus(BaseTerminal[CyBus]):
     def short_circuits(self) -> list[dict[str, Any]]:
         """Return the list of short-circuits of this bus."""
         return self._short_circuits[:]  # return a copy as users should not modify the list directly
+
+    def _is_element_neutral_floating(self, phases: str, connect_neutral: bool | None) -> bool:
+        """Check if a connected element with `phases` has a floating neutral."""
+        if "n" not in phases:
+            return False
+        if connect_neutral is False:
+            return True
+        if connect_neutral is None:
+            return "n" not in self.phases
+        return False
+
+    def _check_element_phases(
+        self, e: Element, eid: Id, phases: str, connect_neutral: bool | None, side: Literal["HV", "LV", ""]
+    ) -> bool | None:
+        side_sep = f"{side} " if side else ""
+        if connect_neutral is not None:
+            connect_neutral = bool(connect_neutral)  # to allow np.bool
+        if connect_neutral and "n" not in phases:
+            warnings.warn(
+                message=f"Neutral connection requested for {e.element_type} {eid!r} with no {side_sep}neutral phase",
+                category=UserWarning,
+                stacklevel=find_stack_level(),
+            )
+            connect_neutral = None
+        # Also check they are in the bus phases
+        phases_not_in_bus = set(phases) - set(self.phases)
+        # "n" is allowed to be absent from the self only if the element has more than 2 phases
+        missing_ok = phases_not_in_bus == {"n"} and len(phases) > 2 and not connect_neutral
+        if phases_not_in_bus and not missing_ok:
+            ph, be = one_or_more_repr(sorted(phases_not_in_bus), f"{side_sep}phase")
+            ph = ph[0].upper() + ph[1:]
+            msg = (
+                f"{ph} of {e.element_type} {eid!r} {be} not in phases {self.phases!r} of its {side_sep}bus {self.id!r}."
+            )
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
+        return connect_neutral
 
     def add_short_circuit(self, *phases: str, ground: "Ground | None" = None) -> None:
         """Add a short-circuit by connecting multiple phases together optionally with a ground.

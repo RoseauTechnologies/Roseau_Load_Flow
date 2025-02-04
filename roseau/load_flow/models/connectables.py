@@ -1,5 +1,4 @@
 import logging
-import warnings
 from abc import ABC
 from functools import cached_property
 from typing import ClassVar
@@ -13,7 +12,6 @@ from roseau.load_flow.models.core import _CyE_co
 from roseau.load_flow.models.terminals import BaseTerminal
 from roseau.load_flow.typing import ComplexArray, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
-from roseau.load_flow.utils import find_stack_level
 
 logger = logging.getLogger(__name__)
 
@@ -54,27 +52,11 @@ class BaseConnectable(BaseTerminal[_CyE_co], ABC):
             phases = bus.phases
         else:
             self._check_phases(id=id, phases=phases)
-            # Also check they are in the bus phases
-            phases_not_in_bus = set(phases) - set(bus.phases)
-            # "n" is allowed to be absent from the bus only if the element has more than 2 phases
-            missing_ok = phases_not_in_bus == {"n"} and len(phases) > 2 and not connect_neutral
-            if phases_not_in_bus and not missing_ok:
-                msg = f"Phases {sorted(phases_not_in_bus)} of {self.element_type} {id!r} are not in bus {bus.id!r} phases {bus.phases!r}"
-                logger.error(msg)
-                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
+            connect_neutral = bus._check_element_phases(
+                self, eid=id, phases=phases, connect_neutral=connect_neutral, side=""
+            )
 
         super().__init__(id, phases=phases)
-
-        if connect_neutral is not None:
-            connect_neutral = bool(connect_neutral)  # to allow np.bool
-        if connect_neutral and "n" not in phases:
-            warnings.warn(
-                message=f"Neutral connection requested for {self.element_type} {id!r} with no neutral phase",
-                category=UserWarning,
-                stacklevel=find_stack_level(),
-            )
-            connect_neutral = None
-
         self._connect(bus)
         self._bus = bus
         self._connect_neutral = connect_neutral
@@ -92,13 +74,7 @@ class BaseConnectable(BaseTerminal[_CyE_co], ABC):
     @cached_property
     def has_floating_neutral(self) -> bool:
         """Does this element have a floating neutral?"""
-        if "n" not in self._phases:
-            return False
-        if self._connect_neutral is False:
-            return True
-        if self._connect_neutral is None:
-            return "n" not in self.bus.phases
-        return False
+        return self.bus._is_element_neutral_floating(self.phases, self._connect_neutral)
 
     def _cy_connect(self) -> None:
         connections = []

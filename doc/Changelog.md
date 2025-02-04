@@ -41,6 +41,12 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ### Detailed changes
 
+- {gh-pr}`328` Support floating neutrals for transformers. The `Transformer` class constructor now
+  accepts optional `connect_neutral_hv` and `connect_neutral_lv` parameters to specify if the neutral
+  is to be connected to the bus's neutral or to be left floating. By default the neutral is connected
+  when the bus has a neutral and left floating otherwise.
+- {gh-pr}`328` The `plot_voltage_phasors` function and the `plot_symmetrical_voltages` functions now
+  also support transformers, lines and switches.
 - {gh-pr}`325` Rename `Bus.potentials` to `Bus.initial_potentials`. The old attribute and constructor
   parameter are deprecated and will be removed in a future release.
 - {gh-pr}`319` {gh-pr}`320` {gh-pr}`321` {gh-issue}`191` Deprecate the notion of "primary" and

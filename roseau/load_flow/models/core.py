@@ -57,6 +57,7 @@ class Element(ABC, Identifiable, JsonMixin, Generic[_CyE_co]):
         self._fetch_results = False
         self._no_results = True
         self._results_valid = True
+        self._element_info = f"{cls.element_type} {id!r}"  # for logging
 
     @property
     def network(self) -> Optional["ElectricalNetwork"]:
