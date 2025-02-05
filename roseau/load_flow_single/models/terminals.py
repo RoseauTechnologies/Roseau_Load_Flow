@@ -9,18 +9,18 @@ from roseau.load_flow_single.models.core import Element, _CyE_co
 logger = logging.getLogger(__name__)
 
 
-class BaseTerminal(Element[_CyE_co], ABC):
+class AbstractTerminal(Element[_CyE_co], ABC):
     """A base class for all the terminals (buses, load, sources, etc.) of the network."""
 
     def __init__(self, id: Id) -> None:
-        """BaseTerminal constructor.
+        """AbstractTerminal constructor.
 
         Args:
             id:
                 A unique ID of the terminal in its dictionary of the network.
         """
-        if type(self) is BaseTerminal:
-            raise TypeError("Can't instantiate abstract class BaseTerminal")
+        if type(self) is AbstractTerminal:
+            raise TypeError("Can't instantiate abstract class AbstractTerminal")
         super().__init__(id)
         self._n = 2
         self._res_voltage: complex | None = None

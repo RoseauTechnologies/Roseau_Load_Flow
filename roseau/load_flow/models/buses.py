@@ -11,7 +11,7 @@ from typing_extensions import Self, deprecated
 from roseau.load_flow.constants import SQRT3
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.core import Element
-from roseau.load_flow.models.terminals import BaseTerminal
+from roseau.load_flow.models.terminals import AbstractTerminal
 from roseau.load_flow.sym import phasor_to_sym
 from roseau.load_flow.typing import BoolArray, ComplexArray, ComplexArrayLike1D, FloatArray, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
@@ -24,7 +24,7 @@ if TYPE_CHECKING:
     from roseau.load_flow.models.grounds import Ground
 
 
-class Bus(BaseTerminal[CyBus]):
+class Bus(AbstractTerminal[CyBus]):
     """A multi-phase electrical bus."""
 
     element_type: Final = "bus"

@@ -7,18 +7,18 @@ from roseau.load_flow.typing import Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow_single.models.buses import Bus
 from roseau.load_flow_single.models.core import _CyE_co
-from roseau.load_flow_single.models.terminals import BaseTerminal
+from roseau.load_flow_single.models.terminals import AbstractTerminal
 
 logger = logging.getLogger(__name__)
 
 
-class BaseConnectable(BaseTerminal[_CyE_co], ABC):
+class AbstractConnectable(AbstractTerminal[_CyE_co], ABC):
     """A base class for connectable elements in the network (loads, sources, etc.)."""
 
     type: ClassVar[str]
 
     def __init__(self, id: Id, bus: Bus) -> None:
-        """BaseConnectable constructor.
+        """AbstractConnectable constructor.
 
         Args:
             id:
@@ -27,8 +27,8 @@ class BaseConnectable(BaseTerminal[_CyE_co], ABC):
             bus:
                 The bus to connect the element to.
         """
-        if type(self) is BaseConnectable:
-            raise TypeError("Can't instantiate abstract class BaseConnectable")
+        if type(self) is AbstractConnectable:
+            raise TypeError("Can't instantiate abstract class AbstractConnectable")
         super().__init__(id)
         self._connect(bus)
         self._bus = bus

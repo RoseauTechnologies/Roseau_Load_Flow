@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any, Literal
 import numpy as np
 
 from roseau.load_flow.converters import _calculate_voltages
-from roseau.load_flow.models import AbstractBranch, BaseTerminal
+from roseau.load_flow.models import AbstractBranch, AbstractTerminal
 from roseau.load_flow.network import ElectricalNetwork
 from roseau.load_flow.sym import phasor_to_sym
 from roseau.load_flow.typing import Complex, ComplexArray, Float
@@ -78,9 +78,9 @@ def _draw_voltage_phasor(ax: "Axes", potential1: Complex, potential2: Complex, c
 
 
 def _get_phases_and_potentials(
-    element: BaseTerminal | AbstractBranch, side: Literal[1, 2, "HV", "LV"] | None
+    element: AbstractTerminal | AbstractBranch, side: Literal[1, 2, "HV", "LV"] | None
 ) -> tuple[str, ComplexArray]:
-    if isinstance(element, BaseTerminal):
+    if isinstance(element, AbstractTerminal):
         return element.phases, element.res_potentials.m
     if side in (1, "HV"):
         return element.phases1, element.res_potentials[0].m
@@ -97,7 +97,10 @@ def _get_phases_and_potentials(
 # Phasor plotting functions
 #
 def plot_voltage_phasors(
-    element: BaseTerminal | AbstractBranch, *, side: Literal[1, 2, "HV", "LV"] | None = None, ax: "Axes | None" = None
+    element: AbstractTerminal | AbstractBranch,
+    *,
+    side: Literal[1, 2, "HV", "LV"] | None = None,
+    ax: "Axes | None" = None,
 ) -> "Axes":
     """Plot the voltage phasors of a terminal element or a branch element.
 
@@ -149,7 +152,10 @@ def plot_voltage_phasors(
 
 
 def plot_symmetrical_voltages(
-    element: BaseTerminal | AbstractBranch, *, side: Literal[1, 2, "HV", "LV"] | None = None, ax: "Axes | None" = None
+    element: AbstractTerminal | AbstractBranch,
+    *,
+    side: Literal[1, 2, "HV", "LV"] | None = None,
+    ax: "Axes | None" = None,
 ) -> "Axes":
     """Plot the symmetrical voltages of a terminal element or a branch element.
 
