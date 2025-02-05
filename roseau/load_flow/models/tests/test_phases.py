@@ -84,7 +84,7 @@ def test_loads_phases():
         with pytest.raises(RoseauLoadFlowException) as e:
             PowerLoad(id=f"load{i}", bus=bus, phases=phase, powers=[100] * n)
         assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
-        assert e.value.msg == f"Phases ['{missing}'] of load 'load{i}' are not in bus 'bus' phases 'ab'"
+        assert e.value.msg == f"Phase '{missing}' of load 'load{i}' is not in phases 'ab' of its bus 'bus'."
 
     # Default
     for ph, n in (("ab", 1), ("abc", 3), ("abcn", 3)):
@@ -117,7 +117,7 @@ def test_loads_phases():
         # single-phase floating neutral does not make sense
         PowerLoad(id=f"load{i}", bus=bus, phases="an", powers=[100])
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
-    assert e.value.msg == f"Phases ['n'] of load 'load{i}' are not in bus 'bus' phases 'ab'"
+    assert e.value.msg == f"Phase 'n' of load 'load{i}' is not in phases 'ab' of its bus 'bus'."
 
     # Explicitly connected neutral
     bus_ab = Bus(id="bus_ab", phases="ab")
@@ -131,7 +131,7 @@ def test_loads_phases():
         # Explicitly connected neutral to a bus without neutral
         PowerLoad(id=f"load{i}", bus=bus_ab, phases="abn", powers=[100, 100], connect_neutral=True)
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
-    assert e.value.msg == f"Phases ['n'] of load 'load{i}' are not in bus 'bus_ab' phases 'ab'"
+    assert e.value.msg == f"Phase 'n' of load 'load{i}' is not in phases 'ab' of its bus 'bus_ab'."
     i = next(load_ids)
     with pytest.warns(UserWarning, match=rf"Neutral connection requested for load 'load{i}' with no neutral phase"):
         load = PowerLoad(id=f"load{i}", bus=bus_abn, phases="ab", powers=[100], connect_neutral=True)
@@ -184,7 +184,7 @@ def test_sources_phases():
         with pytest.raises(RoseauLoadFlowException) as e:
             VoltageSource(id=f"source{i}", bus=bus, phases=phase, voltages=[100] * n)
         assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
-        assert e.value.msg == f"Phases ['{missing}'] of source 'source{i}' are not in bus 'bus' phases 'ab'"
+        assert e.value.msg == f"Phase '{missing}' of source 'source{i}' is not in phases 'ab' of its bus 'bus'."
 
     # Default
     for ph, n in (("ab", 1), ("abc", 3), ("abcn", 3)):
@@ -204,7 +204,7 @@ def test_sources_phases():
         # single-phase floating neutral does not make sense
         VoltageSource(id=f"source{i}", bus=bus, phases="an", voltages=[100])
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
-    assert e.value.msg == f"Phases ['n'] of source 'source{i}' are not in bus 'bus' phases 'ab'"
+    assert e.value.msg == f"Phase 'n' of source 'source{i}' is not in phases 'ab' of its bus 'bus'."
 
     # Explicitly connected neutral
     bus_ab = Bus(id="bus_ab", phases="ab")
@@ -218,7 +218,7 @@ def test_sources_phases():
         # Explicitly connected neutral to a bus without neutral
         VoltageSource(id=f"source{i}", bus=bus_ab, phases="abn", voltages=[100, 100], connect_neutral=True)
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
-    assert e.value.msg == f"Phases ['n'] of source 'source{i}' are not in bus 'bus_ab' phases 'ab'"
+    assert e.value.msg == f"Phase 'n' of source 'source{i}' is not in phases 'ab' of its bus 'bus_ab'."
     i = next(source_ids)
     with pytest.warns(UserWarning, match=rf"Neutral connection requested for source 'source{i}' with no neutral phase"):
         source = VoltageSource(id=f"source{i}", bus=bus_abn, phases="ab", voltages=[100], connect_neutral=True)
@@ -273,7 +273,7 @@ def test_lines_phases():
         Line(id=f"line{i}", bus1=bus1, bus2=bus2, phases="abcn", parameters=lp, length=10)
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
     assert e.value.msg == (
-        f"Phases ['n'] of line 'line{i}' are not in the common phases ['a', 'b', 'c'] of buses 'bus-1' and 'bus-2'."
+        f"Phase 'n' of line 'line{i}' is not in the common phases 'abc' of its buses 'bus-1' and 'bus-2'."
     )
 
     # Default
@@ -317,9 +317,8 @@ def test_switches_phases():
     with pytest.raises(RoseauLoadFlowException) as e:
         Switch(id="switch1", bus1=bus1, bus2=bus2, phases="abcn")
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
-    assert (
-        e.value.msg
-        == "Phases ['n'] of switch 'switch1' are not in the common phases ['a', 'b', 'c'] of buses 'bus-1' and 'bus-2'."
+    assert e.value.msg == (
+        "Phase 'n' of switch 'switch1' is not in the common phases 'abc' of its buses 'bus-1' and 'bus-2'."
     )
 
     # Default
@@ -332,50 +331,157 @@ def test_switches_phases():
 def test_transformer_three_phases():
     bus_hv = Bus(id="bus-1", phases="abcn")
     bus_lv = Bus(id="bus-2", phases="abcn")
+    tr_ids = count(1)
 
     assert Transformer.allowed_phases == Bus.allowed_phases
+    tp = TransformerParameters.from_open_and_short_circuit_tests(
+        id="H61_50kVA", vg="Dyn11", uhv=20e3, ulv=400, sn=50e3, p0=145, i0=0.018, psc=1350, vsc=0.04
+    )
 
     # Not allowed
-    tp = TransformerParameters.from_open_and_short_circuit_tests(
-        id="H61_50kVA", vg="Dyn11", uhv=20000, ulv=400, sn=50 * 1e3, p0=145, i0=1.8 / 100, psc=1350, vsc=4 / 100
-    )
     for ph in ("ba", "nc", "anb", "nabc", "acb"):
+        i = next(tr_ids)
         with pytest.raises(RoseauLoadFlowException) as e:
-            Transformer(id="tr1", bus_hv=bus_hv, bus_lv=bus_lv, phases_hv=ph, phases_lv=ph, parameters=tp)
+            Transformer(id=f"tr{i}", bus_hv=bus_hv, bus_lv=bus_lv, phases_hv=ph, phases_lv=ph, parameters=tp)
         assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
-        assert e.value.msg.startswith(f"Transformer of id 'tr1' got invalid phases_hv '{ph}', allowed values are")
+        assert e.value.msg.startswith(f"Transformer of id 'tr{i}' got invalid phases_hv '{ph}', allowed values are")
 
     # Allowed
-    Transformer(id="tr1", bus_hv=bus_hv, bus_lv=bus_lv, phases_hv="abc", phases_lv="abcn", parameters=tp)
+    i = next(tr_ids)
+    Transformer(id=f"tr{i}", bus_hv=bus_hv, bus_lv=bus_lv, phases_hv="abc", phases_lv="abcn", parameters=tp)
 
     # Not in bus
-    bus_lv = Bus(id="bus-2", phases="abc")
+    bus_lv = Bus(id="bus-2", phases="abn")
+    i = next(tr_ids)
     with pytest.raises(RoseauLoadFlowException) as e:
-        Transformer(id="tr1", bus_hv=bus_hv, bus_lv=bus_lv, phases_hv="abc", phases_lv="abcn", parameters=tp)
+        Transformer(id=f"tr{i}", bus_hv=bus_hv, bus_lv=bus_lv, phases_hv="abc", phases_lv="abcn", parameters=tp)
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
-    assert e.value.msg == "LV phase 'n' of transformer 'tr1' is not in phases 'abc' of its LV bus 'bus-2'."
+    assert e.value.msg == f"LV phase 'c' of transformer 'tr{i}' is not in phases 'abn' of its LV bus 'bus-2'."
 
     # Not in transformer
     bus_hv = Bus(id="bus-1", phases="abcn")
     bus_lv = Bus(id="bus-2", phases="abcn")
+    i = next(tr_ids)
     with pytest.raises(RoseauLoadFlowException) as e:
-        Transformer(id="tr1", bus_hv=bus_hv, bus_lv=bus_lv, phases_hv="abcn", phases_lv="abcn", parameters=tp)
+        Transformer(id=f"tr{i}", bus_hv=bus_hv, bus_lv=bus_lv, phases_hv="abcn", phases_lv="abcn", parameters=tp)
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
-    assert e.value.msg == "HV phases 'abcn' of transformer 'tr1' are not compatible with its winding 'D'."
+    assert e.value.msg == f"HV phases 'abcn' of transformer 'tr{i}' are not compatible with its winding 'D'."
 
     # Default
     bus_hv = Bus(id="bus-1", phases="abc")
     bus_lv = Bus(id="bus-2", phases="abcn")
-    transformer = Transformer(id="tr1", bus_hv=bus_hv, bus_lv=bus_lv, parameters=tp)
+    i = next(tr_ids)
+    transformer = Transformer(id=f"tr{i}", bus_hv=bus_hv, bus_lv=bus_lv, parameters=tp)
     assert transformer.phases_hv == "abc"
     assert transformer.phases_lv == "abcn"
 
     # Intersection
     bus_hv = Bus(id="bus-1", phases="abcn")
     bus_lv = Bus(id="bus-2", phases="abcn")
-    transformer = Transformer(id="tr1", bus_hv=bus_hv, bus_lv=bus_lv, parameters=tp)
+    i = next(tr_ids)
+    transformer = Transformer(id=f"tr{i}", bus_hv=bus_hv, bus_lv=bus_lv, parameters=tp)
     assert transformer.phases_hv == "abc"
     assert transformer.phases_lv == "abcn"
+
+    # Floating LV neutral default behavior
+    bus_lv = Bus(id="bus-2", phases="abc")
+    i = next(tr_ids)
+    tr = Transformer(id=f"tr{i}", bus_hv=bus_hv, bus_lv=bus_lv, phases_lv="abcn", parameters=tp)
+    assert tr.has_floating_neutral_lv
+
+    # Explicitly connected LV neutral
+    bus_lv = Bus(id="bus-2", phases="abc")  # <- no neutral
+    i = next(tr_ids)
+    with pytest.warns(
+        UserWarning, match=rf"Neutral connection requested for transformer 'tr{i}' with no LV neutral phase"
+    ):
+        tr = Transformer(f"tr{i}", bus_hv, bus_lv, phases_lv="abc", parameters=tp, connect_neutral_lv=True)
+    assert not tr.has_floating_neutral_lv
+    i = next(tr_ids)
+    with pytest.raises(RoseauLoadFlowException) as e:
+        # Explicitly connected neutral to a bus without neutral
+        Transformer(f"tr{i}", bus_hv, bus_lv, phases_lv="abcn", parameters=tp, connect_neutral_lv=True)
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
+    assert e.value.msg == f"LV phase 'n' of transformer 'tr{i}' is not in phases 'abc' of its LV bus 'bus-2'."
+    bus_lv = Bus(id="bus-2", phases="abcn")  # <- neutral
+    i = next(tr_ids)
+    with pytest.warns(
+        UserWarning, match=rf"Neutral connection requested for transformer 'tr{i}' with no LV neutral phase"
+    ):
+        tr = Transformer(f"tr{i}", bus_hv, bus_lv, phases_lv="abc", parameters=tp, connect_neutral_lv=True)
+    assert not tr.has_floating_neutral_lv
+    tr = Transformer(f"tr{i}", bus_hv, bus_lv, phases_lv="abcn", parameters=tp, connect_neutral_lv=True)
+    assert not tr.has_floating_neutral_lv
+
+    # Explicitly disconnected LV neutral
+    bus_lv = Bus(id="bus-2", phases="abc")  # <- no neutral
+    i = next(tr_ids)
+    tr = Transformer(f"tr{i}", bus_hv, bus_lv, phases_lv="abc", parameters=tp, connect_neutral_lv=False)
+    assert not tr.has_floating_neutral_lv
+    i = next(tr_ids)
+    tr = Transformer(f"tr{i}", bus_hv, bus_lv, phases_lv="abcn", parameters=tp, connect_neutral_lv=False)
+    assert tr.has_floating_neutral_lv
+    bus_lv = Bus(id="bus-2", phases="abcn")  # <- neutral
+    i = next(tr_ids)
+    tr = Transformer(f"tr{i}", bus_hv, bus_lv, phases_lv="abc", parameters=tp, connect_neutral_lv=False)
+    assert not tr.has_floating_neutral_lv
+    i = next(tr_ids)
+    tr = Transformer(f"tr{i}", bus_hv, bus_lv, phases_lv="abcn", parameters=tp, connect_neutral_lv=False)
+    assert tr.phases_lv == "abcn"
+    assert tr.has_floating_neutral_lv
+
+    # HV neutral
+    tp = TransformerParameters.from_open_and_short_circuit_tests(
+        id="tp2", vg="YNd11", uhv=20e3, ulv=400, sn=50e3, p0=145, i0=0.018, psc=1350, vsc=0.04
+    )
+    bus_lv = Bus(id="bus-2", phases="abc")
+
+    # Floating HV neutral default behavior
+    bus_hv = Bus(id="bus-1", phases="abc")
+    i = next(tr_ids)
+    tr = Transformer(id=f"tr{i}", bus_hv=bus_hv, bus_lv=bus_lv, phases_hv="abcn", parameters=tp)
+    assert tr.has_floating_neutral_hv
+
+    # Explicitly connected HV neutral
+    bus_hv = Bus(id="bus-1", phases="abc")  # <- no neutral
+    i = next(tr_ids)
+    with pytest.warns(
+        UserWarning, match=rf"Neutral connection requested for transformer 'tr{i}' with no HV neutral phase"
+    ):
+        tr = Transformer(f"tr{i}", bus_hv, bus_lv, phases_hv="abc", parameters=tp, connect_neutral_hv=True)
+    assert not tr.has_floating_neutral_hv
+    i = next(tr_ids)
+    with pytest.raises(RoseauLoadFlowException) as e:
+        # Explicitly connected neutral to a bus without neutral
+        Transformer(f"tr{i}", bus_hv, bus_lv, phases_hv="abcn", parameters=tp, connect_neutral_hv=True)
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
+    assert e.value.msg == f"HV phase 'n' of transformer 'tr{i}' is not in phases 'abc' of its HV bus 'bus-1'."
+    bus_hv = Bus(id="bus-1", phases="abcn")  # <- neutral
+    i = next(tr_ids)
+    with pytest.warns(
+        UserWarning, match=rf"Neutral connection requested for transformer 'tr{i}' with no HV neutral phase"
+    ):
+        tr = Transformer(f"tr{i}", bus_hv, bus_lv, phases_hv="abc", parameters=tp, connect_neutral_hv=True)
+    assert not tr.has_floating_neutral_hv
+    tr = Transformer(f"tr{i}", bus_hv, bus_lv, phases_hv="abcn", parameters=tp, connect_neutral_hv=True)
+    assert not tr.has_floating_neutral_hv
+
+    # Explicitly disconnected HV neutral
+    bus_hv = Bus(id="bus-1", phases="abc")  # <- no neutral
+    i = next(tr_ids)
+    tr = Transformer(f"tr{i}", bus_hv, bus_lv, phases_hv="abc", parameters=tp, connect_neutral_hv=False)
+    assert not tr.has_floating_neutral_hv
+    i = next(tr_ids)
+    tr = Transformer(f"tr{i}", bus_hv, bus_lv, phases_hv="abcn", parameters=tp, connect_neutral_hv=False)
+    assert tr.has_floating_neutral_hv
+    bus_hv = Bus(id="bus-1", phases="abcn")  # <- neutral
+    i = next(tr_ids)
+    tr = Transformer(f"tr{i}", bus_hv, bus_lv, phases_hv="abc", parameters=tp, connect_neutral_hv=False)
+    assert not tr.has_floating_neutral_hv
+    i = next(tr_ids)
+    tr = Transformer(f"tr{i}", bus_hv, bus_lv, phases_hv="abcn", parameters=tp, connect_neutral_hv=False)
+    assert tr.phases_hv == "abcn"
+    assert tr.has_floating_neutral_hv
 
 
 def test_transformer_single_phases():

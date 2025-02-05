@@ -1,11 +1,13 @@
 """Plotting functions for `roseau.load_flow`."""
 
+import math
 from collections.abc import Callable, Mapping
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 import numpy as np
 
-from roseau.load_flow.models import AbstractLoad, Bus, VoltageSource
+from roseau.load_flow.converters import _calculate_voltages
+from roseau.load_flow.models import AbstractBranch, BaseTerminal
 from roseau.load_flow.network import ElectricalNetwork
 from roseau.load_flow.sym import phasor_to_sym
 from roseau.load_flow.typing import Complex, ComplexArray, Float
@@ -75,15 +77,40 @@ def _draw_voltage_phasor(ax: "Axes", potential1: Complex, potential2: Complex, c
     ax.annotate(f"{abs(voltage):.0f}V", (midpoint.real, midpoint.imag), ha=ha, va=va, rotation=rot)  # type: ignore
 
 
+def _get_phases_and_potentials(
+    element: BaseTerminal | AbstractBranch, side: Literal[1, 2, "HV", "LV"] | None
+) -> tuple[str, ComplexArray]:
+    if isinstance(element, BaseTerminal):
+        return element.phases, element.res_potentials.m
+    if side in (1, "HV"):
+        return element.phases1, element.res_potentials[0].m
+    elif side in (2, "LV"):
+        return element.phases2, element.res_potentials[1].m
+    elif side is None:
+        expected = ("HV", "LV") if element.element_type == "transformer" else (1, 2)
+        raise ValueError(f"The side of {element.element_type} must be one of {expected}.")
+    else:
+        raise ValueError(f"Invalid side: {side!r}")
+
+
 #
 # Phasor plotting functions
 #
-def plot_voltage_phasors(element: Bus | AbstractLoad | VoltageSource, *, ax: "Axes | None" = None) -> "Axes":
-    """Plot the voltage phasors of a bus, load, or voltage source.
+def plot_voltage_phasors(
+    element: BaseTerminal | AbstractBranch, *, side: Literal[1, 2, "HV", "LV"] | None = None, ax: "Axes | None" = None
+) -> "Axes":
+    """Plot the voltage phasors of a terminal element or a branch element.
 
     Args:
         element:
-            The bus, load or source whose voltages to plot.
+            The bus, load, source, line, switch or transformer whose voltages to plot.
+
+        side:
+            The side of the branch element to plot.
+
+            - For transformers: ``"HV"`` or ``"LV"``
+            - For lines/switches: ``1`` or ``2``
+            - For buses/loads/sources: ignored
 
         ax:
             The axes to plot on. If None, the currently active axes object is used.
@@ -95,23 +122,23 @@ def plot_voltage_phasors(element: Bus | AbstractLoad | VoltageSource, *, ax: "Ax
 
     if ax is None:
         ax = plt.gca()
-    potentials = element.res_potentials.m
+    phases, potentials = _get_phases_and_potentials(element, side)
     _configure_axes(ax, potentials)
     ax.set_title(f"{element.id}")
-    if "n" in element.phases:
+    if "n" in phases:
         origin = potentials.flat[-1]
-        for phase, potential in zip(element.phases[:-1], potentials[:-1].flat, strict=True):
+        for phase, potential in zip(phases[:-1], potentials[:-1].flat, strict=True):
             _draw_voltage_phasor(ax, potential, origin, color=_COLORS[phase])
-        for phase, potential in zip(element.phases, potentials.flat, strict=True):
+        for phase, potential in zip(phases, potentials.flat, strict=True):
             ax.scatter(potential.real, potential.imag, color=_COLORS[phase], label=phase)
-    elif len(element.phases) == 2:
+    elif len(phases) == 2:
         v1, v2 = potentials.flat
-        phase = element.phases
+        phase = phases
         _draw_voltage_phasor(ax, v1, v2, color=_COLORS[phase])
         for v, ph in ((v1, phase[0]), (v2, phase[1])):
             ax.scatter(v.real, v.imag, color=_COLORS[ph], label=ph)
     else:
-        assert element.phases == "abc"
+        assert phases == "abc"
         va, vb, vc = potentials.flat
         for v1, v2, phase in ((va, vb, "ab"), (vb, vc, "bc"), (vc, va, "ca")):
             _draw_voltage_phasor(ax, v1, v2, color=_COLORS[phase])
@@ -121,13 +148,22 @@ def plot_voltage_phasors(element: Bus | AbstractLoad | VoltageSource, *, ax: "Ax
     return ax
 
 
-def plot_symmetrical_voltages(element: Bus | AbstractLoad | VoltageSource, *, ax: "Axes | None" = None) -> "Axes":
-    """Plot the symmetrical voltages of a bus, load, or voltage source.
+def plot_symmetrical_voltages(
+    element: BaseTerminal | AbstractBranch, *, side: Literal[1, 2, "HV", "LV"] | None = None, ax: "Axes | None" = None
+) -> "Axes":
+    """Plot the symmetrical voltages of a terminal element or a branch element.
 
     Args:
         element:
-            The bus, load or source whose symmetrical voltages to plot. The element must have 'abc'
-            or 'abcn' phases.
+            The bus, load, source, line, switch or transformer whose voltages to plot. The element
+            must have 'abc' or 'abcn' phases.
+
+        side:
+            The side of the branch element to plot.
+
+            - For transformers: ``"HV"`` or ``"LV"``
+            - For lines/switches: ``1`` or ``2``
+            - For buses/loads/sources: ignored
 
         ax:
             The axes to plot on. If None, the current axes object is used.
@@ -137,11 +173,12 @@ def plot_symmetrical_voltages(element: Bus | AbstractLoad | VoltageSource, *, ax
     """
     from roseau.load_flow.utils.optional_deps import pyplot as plt
 
-    if element.phases not in {"abc", "abcn"}:
+    phases, potentials = _get_phases_and_potentials(element, side)
+    if phases not in {"abc", "abcn"}:
         raise ValueError("The element must have 'abc' or 'abcn' phases.")
     if ax is None:
         ax = plt.gca()
-    voltages_sym = phasor_to_sym(element.res_voltages.m)
+    voltages_sym = phasor_to_sym(_calculate_voltages(potentials, phases))
     _configure_axes(ax, voltages_sym)
     ax.set_title(f"{element.id} (symmetrical)")
     for sequence, voltage in zip(("zero", "pos", "neg"), voltages_sym, strict=True):
@@ -253,9 +290,9 @@ def plot_interactive_map(
         if "zoom_start" not in map_kws:
             # Calculate the zoom level based on the bounding box of the network
             min_x, min_y, max_x, max_y = geom_union.bounds
-            zoom_lon = np.ceil(np.log2(360 * 2.0 / (max_x - min_x)))
-            zoom_lat = np.ceil(np.log2(360 * 2.0 / (max_y - min_y)))
-            map_kws["zoom_start"] = int(min(zoom_lon, zoom_lat))
+            zoom_lon = math.ceil(math.log2(360 * 2.0 / (max_x - min_x)))
+            zoom_lat = math.ceil(math.log2(360 * 2.0 / (max_y - min_y)))
+            map_kws["zoom_start"] = min(zoom_lon, zoom_lat)
 
     m = folium.Map(**map_kws)
     folium.GeoJson(
