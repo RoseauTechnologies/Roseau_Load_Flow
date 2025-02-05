@@ -685,12 +685,22 @@ def test_potential_ref_phases():
     with pytest.raises(RoseauLoadFlowException) as e:
         PotentialRef(id="ref8", element=bus_abc, phases="an")
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
-    assert e.value.msg == "Phases ['n'] of potential reference 'ref8' are not in bus 'bus_abc' phases 'abc'"
+    assert e.value.msg == "Phase 'n' of potential reference 'ref8' is not in phases 'abc' of bus 'bus_abc'."
     with pytest.raises(RoseauLoadFlowException) as e:
         PotentialRef(id="ref9", element=ground, phases="n")
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
-    assert e.value.msg == "Potential reference 'ref9' connected to the ground cannot have a phase."
+    assert e.value.msg == "Potential reference 'ref9' connected to a ground cannot have phases."
+
+    # Bad element type
+    switch = Switch(id="switch", bus1=bus_abc, bus2=bus_abcn)
+    with pytest.raises(RoseauLoadFlowException) as e:
+        PotentialRef(id="ref9", element=switch)  # type: ignore
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT
+    assert e.value.msg == "Potential reference 'ref9' cannot be connected to a switch."
 
     # Deprecated
-    with pytest.warns(DeprecationWarning, match=r"The 'phase' argument is deprecated, use 'phases' instead"):
-        assert PotentialRef(id="ref10", element=bus_abc, phase="a").phases == "a"
+    with pytest.warns(
+        DeprecationWarning,
+        match=r"Argument 'phase' for PotentialRef\(\) is deprecated. It has been renamed to 'phases'.",
+    ):
+        assert PotentialRef(id="ref10", element=bus_abc, phase="a").phases == "a"  # type: ignore
