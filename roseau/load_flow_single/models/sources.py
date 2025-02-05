@@ -9,12 +9,12 @@ from roseau.load_flow.typing import Complex, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow_engine.cy_engine import CyVoltageSource
 from roseau.load_flow_single.models.buses import Bus
-from roseau.load_flow_single.models.connectables import BaseConnectable
+from roseau.load_flow_single.models.connectables import AbstractConnectable
 
 logger = logging.getLogger(__name__)
 
 
-class VoltageSource(BaseConnectable[CyVoltageSource]):
+class VoltageSource(AbstractConnectable[CyVoltageSource]):
     """A voltage source fixes the voltages of the bus it is connected to.
 
     See Also:

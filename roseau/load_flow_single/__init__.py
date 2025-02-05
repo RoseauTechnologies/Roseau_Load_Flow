@@ -31,7 +31,9 @@ from roseau.load_flow import (
 from roseau.load_flow.units import Q_, ureg
 from roseau.load_flow_single.models import (
     AbstractBranch,
+    AbstractConnectable,
     AbstractLoad,
+    AbstractTerminal,
     Bus,
     Control,
     CurrentLoad,
@@ -77,6 +79,8 @@ __all__ = [
     "Projection",
     "Control",
     "AbstractBranch",
+    "AbstractTerminal",
+    "AbstractConnectable",
     # Other imports from RLF to have the same interface
     # utils
     "Insulator",

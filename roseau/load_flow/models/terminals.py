@@ -13,7 +13,7 @@ from roseau.load_flow.units import Q_, ureg_wraps
 logger = logging.getLogger(__name__)
 
 
-class BaseTerminal(Element[_CyE_co], ABC):
+class AbstractTerminal(Element[_CyE_co], ABC):
     """A base class for all the terminals (buses, load, sources, etc.) of the network."""
 
     allowed_phases: Final = frozenset({"ab", "bc", "ca", "an", "bn", "cn", "abn", "bcn", "can", "abc", "abcn"})
@@ -25,7 +25,7 @@ class BaseTerminal(Element[_CyE_co], ABC):
     """
 
     def __init__(self, id: Id, *, phases: str) -> None:
-        """BaseTerminal constructor.
+        """AbstractTerminal constructor.
 
         Args:
             id:
@@ -36,8 +36,8 @@ class BaseTerminal(Element[_CyE_co], ABC):
                 phases is important. For a full list of supported phases, see the class attribute
                 :attr:`.allowed_phases`.
         """
-        if type(self) is BaseTerminal:
-            raise TypeError("Can't instantiate abstract class BaseTerminal")
+        if type(self) is AbstractTerminal:
+            raise TypeError("Can't instantiate abstract class AbstractTerminal")
 
         super().__init__(id)
         self._check_phases(id, phases=phases)

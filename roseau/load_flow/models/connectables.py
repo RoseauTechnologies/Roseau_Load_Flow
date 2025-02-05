@@ -9,20 +9,20 @@ from roseau.load_flow.converters import _calculate_voltages
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import _CyE_co
-from roseau.load_flow.models.terminals import BaseTerminal
+from roseau.load_flow.models.terminals import AbstractTerminal
 from roseau.load_flow.typing import ComplexArray, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
 
 logger = logging.getLogger(__name__)
 
 
-class BaseConnectable(BaseTerminal[_CyE_co], ABC):
+class AbstractConnectable(AbstractTerminal[_CyE_co], ABC):
     """A base class for connectable elements in the network (loads, sources, etc.)."""
 
     type: ClassVar[str]
 
     def __init__(self, id: Id, bus: Bus, *, phases: str | None = None, connect_neutral: bool | None = None) -> None:
-        """BaseConnectable constructor.
+        """AbstractConnectable constructor.
 
         Args:
             id:
@@ -45,8 +45,8 @@ class BaseConnectable(BaseTerminal[_CyE_co], ABC):
                 neutral. If the bus does not have a neutral, the element's neutral is left floating
                 by default. To override the default behavior, pass an explicit ``True`` or ``False``.
         """
-        if type(self) is BaseConnectable:
-            raise TypeError("Can't instantiate abstract class BaseConnectable")
+        if type(self) is AbstractConnectable:
+            raise TypeError("Can't instantiate abstract class AbstractConnectable")
 
         if phases is None:
             phases = bus.phases

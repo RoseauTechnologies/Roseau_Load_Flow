@@ -14,12 +14,12 @@ from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow.utils import find_stack_level
 from roseau.load_flow_engine.cy_engine import CyBus
 from roseau.load_flow_single.models.core import Element
-from roseau.load_flow_single.models.terminals import BaseTerminal
+from roseau.load_flow_single.models.terminals import AbstractTerminal
 
 logger = logging.getLogger(__name__)
 
 
-class Bus(BaseTerminal[CyBus]):
+class Bus(AbstractTerminal[CyBus]):
     """An electrical bus."""
 
     element_type: Final = "bus"
