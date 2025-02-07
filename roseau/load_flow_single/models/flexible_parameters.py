@@ -7,7 +7,7 @@ from typing_extensions import Self
 from roseau.load_flow import SQRT3, Projection, RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow import Control as MultiControl
 from roseau.load_flow import FlexibleParameter as MultiFlexibleParameter
-from roseau.load_flow.typing import Complex, ComplexArray, ControlType, Float, ProjectionType
+from roseau.load_flow.typing import ComplexArray, ControlType, Float, ProjectionType
 from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow_engine.cy_engine import CyControl, CyFlexibleParameter
 
@@ -147,7 +147,7 @@ class FlexibleParameter(MultiFlexibleParameter):
     @ureg_wraps("VA", (None,))
     def s_max(self) -> Q_[float]:
         """The apparent power of the flexible load (VA). It is the radius of the feasible circle."""
-        return self._s_max
+        return self._s_max  # type: ignore
 
     @s_max.setter
     @ureg_wraps(None, (None, "VA"))
@@ -157,7 +157,7 @@ class FlexibleParameter(MultiFlexibleParameter):
             msg = f"'s_max' must be greater than 0 but {s_max:P#~} was provided."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_FLEXIBLE_PARAMETER_VALUE)
-        self._s_max = value
+        self._s_max = float(value)
         if self._q_max_value is not None and self._q_max_value > self._s_max:
             logger.warning("'s_max' has been updated but now 'q_max' is greater than s_max. 'q_max' is set to s_max")
             self._q_max_value = self._s_max
@@ -175,7 +175,7 @@ class FlexibleParameter(MultiFlexibleParameter):
     @ureg_wraps("VAr", (None,))
     def q_min(self) -> Q_[float]:
         """The minimum reactive power of the flexible load (VAr)."""
-        return self._q_min
+        return self._q_min  # type: ignore
 
     @q_min.setter
     @ureg_wraps(None, (None, "VAr"))
@@ -209,7 +209,7 @@ class FlexibleParameter(MultiFlexibleParameter):
     @ureg_wraps("VAr", (None,))
     def q_max(self) -> Q_[float]:
         """The maximum reactive power of the flexible load (VAr)."""
-        return self._q_max
+        return self._q_max  # type: ignore
 
     @q_max.setter
     @ureg_wraps(None, (None, "VAr"))
@@ -624,7 +624,7 @@ class FlexibleParameter(MultiFlexibleParameter):
             q_max=q_max,
         )
 
-    def _compute_powers(self, voltages: Iterable[Float], power: Complex) -> ComplexArray:
+    def _compute_powers(self, voltages: Iterable[float], power: complex) -> ComplexArray:
         # Iterate over the provided voltages to get the associated flexible powers
         flexible_powers = [self._cy_fp.compute_power(v / SQRT3, power / 3.0) for v in voltages]
         return np.array(flexible_powers, dtype=np.complex128)
