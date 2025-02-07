@@ -130,7 +130,8 @@ The following results are available for all transformers:
 | `res_loading`      | $\mathrm{pu}$ | number           | The loading of the transformer compared to its nominal power                                          |
 | `res_violated`     | -             | boolean          | Indicates if the transformer loading exceeds its maximal loading                                      |
 
-The results with two arrays are for the first and second ends of the transformer, respectively.
+The results with two arrays are for the first and second ends of the transformer, respectively. The
+sense of currents and powers is from the corresponding bus into the transformer.
 For convenience, these results are also available with the suffix `_hv` and `_lv` to access the
 results of the high voltage and low voltage sides of the transformer, respectively. For example,
 `res_potentials_hv` returns a complex array of potentials of the HV side of the transformer.

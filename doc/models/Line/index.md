@@ -187,13 +187,14 @@ The following results are available for all lines:
 | `res_currents`            | $A$           | 2 complex arrays | The currents flowing into each phase of the line                                               |
 | `res_powers`              | $V\!A$        | 2 complex arrays | The powers flowing into each phase of the line                                                 |
 | `res_voltages`            | $V$           | 2 complex arrays | The phase-to-neutral voltages if the line has a neutral, the phase-to-phase voltages otherwise |
-| `res_series_currents`     | $A$           | complex array    | The currents flowing into the series impedance of each phase of the line                       |
+| `res_series_currents`     | $A$           | complex array    | The currents flowing in the series impedance of each phase of the line from bus 1 to bus 2     |
 | `res_power_losses`        | $V\!A$        | complex array    | The total power losses in each phase of the line                                               |
 | `res_series_power_losses` | $V\!A$        | complex array    | The power losses in the series impedance of each phase of the line                             |
 | `res_loading`             | $\mathrm{pu}$ | number array     | The loading of each phase of the line compared to its ampacity                                 |
 | `res_violated`            | -             | boolean array    | Indicates if the loading of each phase exceeds the maximal loading                             |
 
-The results with two arrays are for the first and second ends of the line, respectively.
+The results with two arrays are for the first and second ends of the line, respectively. The sense
+of currents and powers is from the corresponding bus into the line.
 
 ## Available models
 

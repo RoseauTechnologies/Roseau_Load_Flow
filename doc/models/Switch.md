@@ -46,7 +46,8 @@ The following results are available for all switches:
 | `res_powers`     | $V\!A$       | 2 complex arrays | The powers flowing into each phase of the switch                                                 |
 | `res_voltages`   | $V$          | 2 complex arrays | The phase-to-neutral voltages if the switch has a neutral, the phase-to-phase voltages otherwise |
 
-The results with two arrays are for the first and second ends of the switch, respectively.
+The results with two arrays are for the first and second ends of the switch, respectively. The sense
+of currents and powers is from the corresponding bus into the switch.
 
 ## Usage
 
