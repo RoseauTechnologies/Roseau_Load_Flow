@@ -34,6 +34,14 @@ defining a ground element. If you want to do so, you must add a `PotentialRef` e
 [](PotentialRef.md).
 ```
 
+## Available Results
+
+The following results are available for all grounds:
+
+| Result Accessor | Default Unit | Type    | Description                 |
+| --------------- | ------------ | ------- | --------------------------- |
+| `res_potential` | $V$          | complex | The potential of the ground |
+
 ## Usage
 
 In _Roseau Load Flow_, several grounds can be defined leading to ground elements with a non-zero

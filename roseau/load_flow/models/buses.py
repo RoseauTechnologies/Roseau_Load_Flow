@@ -12,7 +12,6 @@ from roseau.load_flow.constants import SQRT3
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.core import Element
 from roseau.load_flow.models.terminals import AbstractTerminal
-from roseau.load_flow.sym import phasor_to_sym
 from roseau.load_flow.typing import BoolArray, ComplexArray, ComplexArrayLike1D, FloatArray, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow.utils import deprecate_renamed_parameter, find_stack_level, one_or_more_repr
@@ -52,7 +51,7 @@ class Bus(AbstractTerminal[CyBus]):
             phases:
                 The phases of the bus. A string like ``"abc"`` or ``"an"`` etc. The order of the
                 phases is important. For a full list of supported phases, see the class attribute
-                :attr:`.allowed_phases`.
+                :attr:`!allowed_phases`.
 
             geometry:
                 An optional geometry of the bus; a :class:`~shapely.Geometry` that represents the
@@ -450,10 +449,40 @@ class Bus(AbstractTerminal[CyBus]):
         else:
             return voltages_abs / self._nominal_voltage
 
+    def _res_voltage_levels_pp_getter(self, warning: bool) -> FloatArray | None:
+        if self._nominal_voltage is None:
+            return None
+        voltages_abs = abs(self._res_voltages_pp_getter(warning=warning))
+        return voltages_abs / self._nominal_voltage
+
+    def _res_voltage_levels_pn_getter(self, warning: bool) -> FloatArray | None:
+        if self._nominal_voltage is None:
+            return None
+        voltages_abs = abs(self._res_voltages_pn_getter(warning=warning))
+        return SQRT3 * voltages_abs / self._nominal_voltage
+
     @property
     def res_voltage_levels(self) -> Q_[FloatArray] | None:
-        """The load flow result of the bus voltage levels (unitless)."""
+        """The load flow result of the bus voltage levels (p.u.)."""
         voltage_levels = self._res_voltage_levels_getter(warning=True)
+        return None if voltage_levels is None else Q_(voltage_levels, "")
+
+    @property
+    def res_voltage_levels_pp(self) -> Q_[FloatArray] | None:
+        """The load flow result of the bus's phase-to-phase voltage levels (p.u.).
+
+        Raises an error if the element has only one phase.
+        """
+        voltage_levels = self._res_voltage_levels_pp_getter(warning=True)
+        return None if voltage_levels is None else Q_(voltage_levels, "")
+
+    @property
+    def res_voltage_levels_pn(self) -> Q_[FloatArray] | None:
+        """The load flow result of the bus's phase-to-neutral voltage levels (p.u.).
+
+        Raises an error if the element does not have a neutral.
+        """
+        voltage_levels = self._res_voltage_levels_pn_getter(warning=True)
         return None if voltage_levels is None else Q_(voltage_levels, "")
 
     @property
@@ -475,29 +504,6 @@ class Bus(AbstractTerminal[CyBus]):
         if u_max is not None:
             violated |= voltage_levels > u_max
         return violated
-
-    @ureg_wraps("percent", (None,))
-    def res_voltage_unbalance(self) -> Q_[float]:
-        """Calculate the voltage unbalance on this bus according to the IEC definition.
-
-        Voltage Unbalance Factor:
-
-        :math:`VUF = \\dfrac{|V_{\\mathrm{n}}|}{|V_{\\mathrm{p}}|} \\times 100 \\, (\\%)`
-
-        Where :math:`V_{\\mathrm{n}}` is the negative-sequence voltage and :math:`V_{\\mathrm{p}}` is the
-        positive-sequence voltage.
-        """
-        # https://std.iec.ch/terms/terms.nsf/3385f156e728849bc1256e8c00278ad2/771c5188e62fade5c125793a0043f2a5?OpenDocument
-        if self.phases not in {"abc", "abcn"}:
-            msg = f"Voltage unbalance is only available for 3-phases buses, bus {self.id!r} has phases {self.phases!r}"
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
-        # We use the potentials here which is equivalent to using the "line to neutral" voltages as
-        # defined by the standard. The standard also has this note:
-        # NOTE 1 Phase-to-phase voltages may also be used instead of line to neutral voltages.
-        potentials = self._res_potentials_getter(warning=True)
-        _, vp, vn = phasor_to_sym(potentials[:3])  # (0, +, -)
-        return abs(vn) / abs(vp) * 100
 
     #
     # Json Mixin interface

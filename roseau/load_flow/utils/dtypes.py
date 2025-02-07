@@ -11,6 +11,8 @@ BranchTypeDtype: Final = pd.CategoricalDtype(categories=["line", "transformer", 
 """Categorical data type used for branch types."""
 LoadTypeDtype: Final = pd.CategoricalDtype(categories=["power", "current", "impedance"], ordered=True)
 """Categorical data type used for load types."""
+SourceTypeDtype: Final = pd.CategoricalDtype(categories=["voltage"], ordered=True)
+"""Categorical data type used for source types."""
 SequenceDtype: Final = pd.CategoricalDtype(categories=["zero", "pos", "neg"], ordered=True)
 """Categorical data type used for symmetrical components."""
 DTYPES: Final = {

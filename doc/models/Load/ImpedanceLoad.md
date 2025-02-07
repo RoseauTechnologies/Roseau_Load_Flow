@@ -45,7 +45,11 @@ And the following for delta loads given the constant impedances {math}`z_{\mathr
 \right.
 ```
 
-## Example
+## Available Results
+
+The results for constant-impedance loads are described [here](./index.md#available-results).
+
+## Usage
 
 ```python
 import functools as ft

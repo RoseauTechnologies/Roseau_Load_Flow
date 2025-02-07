@@ -14,6 +14,7 @@ from roseau.load_flow.utils.dtypes import (
     LoadTypeDtype,
     PhaseDtype,
     SequenceDtype,
+    SourceTypeDtype,
     VoltagePhaseDtype,
 )
 from roseau.load_flow.utils.exceptions import find_stack_level
@@ -39,6 +40,7 @@ __all__ = [
     "LoadTypeDtype",
     "PhaseDtype",
     "SequenceDtype",
+    "SourceTypeDtype",
     "VoltagePhaseDtype",
     # Versions
     "show_versions",

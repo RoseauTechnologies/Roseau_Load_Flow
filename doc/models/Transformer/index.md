@@ -7,7 +7,7 @@ myst:
       Les transformateurs dans Roseau Load Flow - Solveur d'écoulement de charge triphasé et déséquilibré dans une
       API Python par Roseau Technologies.
     "keywords lang=fr": simulation, réseau, électrique, bus, roseau load flow, transformateurs, modèle
-    "keywords lang=en": simulation, distribution grid, switch, transformers, model
+    "keywords lang=en": simulation, distribution grid, power transformer, transformers, model
 ---
 
 # Transformers
@@ -115,6 +115,26 @@ Then, $\underline{Z_2}$ can be deduced:
 ```{math}
 \underline{Z_2} = R_2+j\cdot X_2
 ```
+
+## Available Results
+
+The following results are available for all transformers:
+
+| Result Accessor    | Default Unit  | Type             | Description                                                                                           |
+| ------------------ | ------------- | ---------------- | ----------------------------------------------------------------------------------------------------- |
+| `res_potentials`   | $V$           | 2 complex arrays | The potentials of each phase of the transformer                                                       |
+| `res_currents`     | $A$           | 2 complex arrays | The currents flowing into each phase of the transformer                                               |
+| `res_powers`       | $V\!A$        | 2 complex arrays | The powers flowing into each phase of the transformer                                                 |
+| `res_voltages`     | $V$           | 2 complex arrays | The phase-to-neutral voltages if the transformer has a neutral, the phase-to-phase voltages otherwise |
+| `res_power_losses` | $V\!A$        | complex          | The total power loss in the transformer                                                               |
+| `res_loading`      | $\mathrm{pu}$ | number           | The loading of the transformer compared to its nominal power                                          |
+| `res_violated`     | -             | boolean          | Indicates if the transformer loading exceeds its maximal loading                                      |
+
+The results with two arrays are for the first and second ends of the transformer, respectively. The
+sense of currents and powers is from the corresponding bus into the transformer.
+For convenience, these results are also available with the suffix `_hv` and `_lv` to access the
+results of the high voltage and low voltage sides of the transformer, respectively. For example,
+`res_potentials_hv` returns a complex array of potentials of the HV side of the transformer.
 
 ## Usage
 

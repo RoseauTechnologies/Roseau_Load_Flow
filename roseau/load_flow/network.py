@@ -7,12 +7,12 @@ import logging
 import re
 import textwrap
 import warnings
-from collections.abc import Iterable, Mapping
+from collections.abc import Generator, Iterable, Mapping
 from importlib import resources
 from itertools import chain
 from math import nan
 from pathlib import Path
-from typing import TYPE_CHECKING, TypeVar
+from typing import TYPE_CHECKING, Literal, TypeVar
 
 import geopandas as gpd
 import numpy as np
@@ -22,11 +22,13 @@ from typing_extensions import Self
 
 from roseau.load_flow._solvers import AbstractSolver
 from roseau.load_flow.constants import ALPHA, ALPHA2, CLOCK_PHASE_SHIFT, SQRT3
+from roseau.load_flow.converters import _calculate_voltages, calculate_voltage_phases
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.io import network_from_dgs, network_from_dict, network_to_dict
 from roseau.load_flow.models import (
     AbstractBranch,
     AbstractLoad,
+    AbstractTerminal,
     Bus,
     CurrentLoad,
     Element,
@@ -39,12 +41,13 @@ from roseau.load_flow.models import (
     Transformer,
     VoltageSource,
 )
-from roseau.load_flow.typing import Id, JsonDict, MapOrSeq, Solver, StrPath
+from roseau.load_flow.typing import ComplexArray, Id, JsonDict, MapOrSeq, Solver, StrPath
 from roseau.load_flow.utils import (
     DTYPES,
     CatalogueMixin,
     JsonMixin,
     LoadTypeDtype,
+    SourceTypeDtype,
     VoltagePhaseDtype,
     count_repr,
     find_stack_level,
@@ -58,6 +61,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 _E = TypeVar("_E", bound=Element)
+_AT = TypeVar("_AT", bound=AbstractTerminal)
 
 
 class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
@@ -389,8 +393,8 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
     def sources_frame(self) -> pd.DataFrame:
         """The :attr:`sources` of the network as a dataframe."""
         return pd.DataFrame.from_records(
-            data=[(source.id, source.phases, source.bus.id) for source in self.sources.values()],
-            columns=["id", "phases", "bus_id"],
+            data=[(source.id, source.type, source.phases, source.bus.id) for source in self.sources.values()],
+            columns=["id", "type", "phases", "bus_id"],
             index="id",
         )
 
@@ -623,82 +627,6 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                 res_dict["phase"].append(phase)
                 res_dict["potential"].append(potential)
         return pd.DataFrame(res_dict).astype(dtypes).set_index(["bus_id", "phase"])
-
-    @property
-    def res_buses_voltages(self) -> pd.DataFrame:
-        """The load flow results of the complex voltages of the buses (V).
-
-        The voltages are computed from the potentials of the buses. If the bus has a neutral, the
-        voltage is the line-to-neutral voltage. Otherwise, the voltage is the line-to-line voltage.
-        The result dataframe has a ``phase`` index that depicts this behavior.
-
-        The results are returned as a dataframe with the following index:
-            - `bus_id`: The id of the bus.
-            - `phase`: The phase of the bus (in ``{'an', 'bn', 'cn', 'ab', 'bc', 'ca'}``).
-
-        and the following columns:
-            - `voltage`: The complex voltage of the bus (in Volts) for the given phase.
-            - `violated`: `True` if a voltage limit is not respected.
-            - `voltage_level`: The voltage level of the bus.
-            - `min_voltage_level`: The minimal voltage level of the bus.
-            - `max_voltage_level`: The maximal voltage level of the bus.
-            - `nominal_voltage`: The nominal voltage of the bus (in Volts).
-        """
-        self._check_valid_results()
-        voltages_dict = {
-            "bus_id": [],
-            "phase": [],
-            "voltage": [],
-            "violated": [],
-            "voltage_level": [],
-            # Non results
-            "min_voltage_level": [],
-            "max_voltage_level": [],
-            "nominal_voltage": [],
-        }
-        dtypes = {c: DTYPES[c] for c in voltages_dict} | {"phase": VoltagePhaseDtype}
-        for bus_id, bus in self.buses.items():
-            nominal_voltage = bus._nominal_voltage
-            min_voltage_level = bus._min_voltage_level
-            max_voltage_level = bus._max_voltage_level
-
-            nominal_voltage_defined = nominal_voltage is not None
-            voltage_limits_set = nominal_voltage_defined and (
-                min_voltage_level is not None or max_voltage_level is not None
-            )
-
-            if nominal_voltage is None:
-                nominal_voltage = nan
-            if min_voltage_level is None:
-                min_voltage_level = nan
-            if max_voltage_level is None:
-                max_voltage_level = nan
-            for voltage, phase in zip(bus._res_voltages_getter(warning=False), bus.voltage_phases, strict=True):
-                voltage_abs = abs(voltage)
-                if nominal_voltage_defined:
-                    if "n" in phase:
-                        voltage_level = SQRT3 * voltage_abs / nominal_voltage
-                    else:
-                        voltage_level = voltage_abs / nominal_voltage
-                    violated = (
-                        (voltage_level < min_voltage_level or voltage_level > max_voltage_level)
-                        if voltage_limits_set
-                        else None
-                    )
-                else:
-                    voltage_level = nan
-                    violated = None
-                voltages_dict["bus_id"].append(bus_id)
-                voltages_dict["phase"].append(phase)
-                voltages_dict["voltage"].append(voltage)
-                voltages_dict["violated"].append(violated)
-                voltages_dict["voltage_level"].append(voltage_level)
-                # Non results
-                voltages_dict["min_voltage_level"].append(min_voltage_level)
-                voltages_dict["max_voltage_level"].append(max_voltage_level)
-                voltages_dict["nominal_voltage"].append(nominal_voltage)
-
-        return pd.DataFrame(voltages_dict).astype(dtypes).set_index(["bus_id", "phase"])
 
     @property
     def res_lines(self) -> pd.DataFrame:
@@ -965,30 +893,6 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         return pd.DataFrame(res_dict).astype(dtypes).set_index(["load_id", "phase"])
 
     @property
-    def res_loads_voltages(self) -> pd.DataFrame:
-        """The load flow results of the complex voltages of the loads (V).
-
-        The results are returned as a dataframe with the following index:
-            - `load_id`: The id of the load.
-            - `phase`: The phase of the load (in ``{'an', 'bn', 'cn'}`` for wye loads and in
-                ``{'ab', 'bc', 'ca'}`` for delta loads.).
-
-        and the following columns:
-            - `type`: The type of the load, can be ``{'power', 'current', 'impedance'}``.s
-            - `voltage`: The complex voltage of the load (in Volts) for the given *phase*.
-        """
-        self._check_valid_results()
-        voltages_dict = {"load_id": [], "phase": [], "type": [], "voltage": []}
-        dtypes = {c: DTYPES[c] for c in voltages_dict} | {"phase": VoltagePhaseDtype, "type": LoadTypeDtype}
-        for load_id, load in self.loads.items():
-            for voltage, phase in zip(load._res_voltages_getter(warning=False), load.voltage_phases, strict=True):
-                voltages_dict["load_id"].append(load_id)
-                voltages_dict["phase"].append(phase)
-                voltages_dict["type"].append(load.type)
-                voltages_dict["voltage"].append(voltage)
-        return pd.DataFrame(voltages_dict).astype(dtypes).set_index(["load_id", "phase"])
-
-    @property
     def res_loads_flexible_powers(self) -> pd.DataFrame:
         """The load flow results of the flexible powers of the "flexible" loads.
 
@@ -1026,13 +930,14 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             - `phase`: The phase of the source (in ``{'a', 'b', 'c', 'n'}``).
 
         and the following columns:
+            - `type`: The type of the source, can be ``{'voltage'}``.
             - `current`: The complex current of the source (in Amps) for the given phase.
             - `power`: The complex power of the source (in VoltAmps) for the given phase.
             - `potential`: The complex potential of the source (in Volts) for the given phase.
         """
         self._check_valid_results()
-        res_dict = {"source_id": [], "phase": [], "current": [], "power": [], "potential": []}
-        dtypes = {c: DTYPES[c] for c in res_dict}
+        res_dict = {"source_id": [], "type": [], "phase": [], "current": [], "power": [], "potential": []}
+        dtypes = {c: DTYPES[c] for c in res_dict} | {"type": SourceTypeDtype}
         for source_id, source in self.sources.items():
             currents = source._res_currents_getter(warning=False)
             potentials = source._res_potentials_getter(warning=False)
@@ -1040,6 +945,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             for i, s, v, phase in zip(currents, powers, potentials, source.phases, strict=True):
                 res_dict["source_id"].append(source_id)
                 res_dict["phase"].append(phase)
+                res_dict["type"].append(source.type)
                 res_dict["current"].append(i)
                 res_dict["power"].append(s)
                 res_dict["potential"].append(v)
@@ -1081,6 +987,264 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             res_dict["potential_ref_id"].append(p_ref.id)
             res_dict["current"].append(current)
         return pd.DataFrame(res_dict).astype(dtypes).set_index(["potential_ref_id"])
+
+    # Voltages results
+    def _iter_terminal_res_voltages(
+        self, terminals: Mapping[Id, _AT], voltage_type: Literal["pp", "pn", "auto"]
+    ) -> Generator[tuple[_AT, ComplexArray, list[str]]]:
+        if voltage_type == "auto":
+            for e in terminals.values():
+                yield e, e._res_voltages_getter(warning=False), e.voltage_phases
+        elif voltage_type == "pp":
+            for e in terminals.values():
+                phases = e.phases.removesuffix("n")
+                n = len(phases)
+                if n == 1:
+                    continue
+                voltage_phases = calculate_voltage_phases(phases)
+                potentials = e._res_potentials_getter(warning=False)
+                voltages = _calculate_voltages(potentials[:n], phases)
+                yield e, voltages, voltage_phases
+        elif voltage_type == "pn":
+            for e in terminals.values():
+                if "n" not in e.phases:
+                    continue
+                yield e, e._res_voltages_getter(warning=False), e.voltage_phases
+
+    def _get_res_buses_voltages(self, voltage_type: Literal["pp", "pn", "auto"]) -> pd.DataFrame:
+        self._check_valid_results()
+        voltages_dict = {
+            "bus_id": [],
+            "phase": [],
+            "voltage": [],
+            "violated": [],
+            "voltage_level": [],
+            # Non results
+            "min_voltage_level": [],
+            "max_voltage_level": [],
+            "nominal_voltage": [],
+        }
+        dtypes = {c: DTYPES[c] for c in voltages_dict} | {"phase": VoltagePhaseDtype}
+        for bus, voltages, phases in self._iter_terminal_res_voltages(self.buses, voltage_type):
+            nominal_voltage = bus._nominal_voltage
+            min_voltage_level = bus._min_voltage_level
+            max_voltage_level = bus._max_voltage_level
+            nominal_voltage_defined = nominal_voltage is not None
+            voltage_limits_set = nominal_voltage_defined and (
+                min_voltage_level is not None or max_voltage_level is not None
+            )
+            if nominal_voltage is None:
+                nominal_voltage = nan
+            if min_voltage_level is None:
+                min_voltage_level = nan
+            if max_voltage_level is None:
+                max_voltage_level = nan
+            for voltage, phase in zip(voltages, phases, strict=True):
+                voltage_abs = abs(voltage)
+                if nominal_voltage_defined:
+                    if "n" in phase:
+                        voltage_level = SQRT3 * voltage_abs / nominal_voltage
+                    else:
+                        voltage_level = voltage_abs / nominal_voltage
+                    violated = (
+                        (voltage_level < min_voltage_level or voltage_level > max_voltage_level)
+                        if voltage_limits_set
+                        else None
+                    )
+                else:
+                    voltage_level = nan
+                    violated = None
+                voltages_dict["bus_id"].append(bus.id)
+                voltages_dict["phase"].append(phase)
+                voltages_dict["voltage"].append(voltage)
+                voltages_dict["violated"].append(violated)
+                voltages_dict["voltage_level"].append(voltage_level)
+                # Non results
+                voltages_dict["min_voltage_level"].append(min_voltage_level)
+                voltages_dict["max_voltage_level"].append(max_voltage_level)
+                voltages_dict["nominal_voltage"].append(nominal_voltage)
+
+        return pd.DataFrame(voltages_dict).astype(dtypes).set_index(["bus_id", "phase"])
+
+    @property
+    def res_buses_voltages(self) -> pd.DataFrame:
+        """The load flow results of the complex voltages of the buses (V).
+
+        The voltage is phase-to-neutral if the bus has a neutral and phase-to-phase otherwise. The
+        dataframe has a ``phase`` index that will contain values like ``'an'`` for phase-to-neutral
+        voltages and values like ``'ab'`` for phase-to-phase voltages.
+
+        The results are returned as a dataframe with the following index:
+            - `bus_id`: The id of the bus.
+            - `phase`: The phase of the bus (in ``{'an', 'bn', 'cn', 'ab', 'bc', 'ca'}``).
+
+        and the following columns:
+            - `voltage`: The complex voltage of the bus (in Volts) for the given phase.
+            - `violated`: `True` if a voltage limit is not respected.
+            - `voltage_level`: The voltage level of the bus.
+            - `min_voltage_level`: The minimal voltage level of the bus.
+            - `max_voltage_level`: The maximal voltage level of the bus.
+            - `nominal_voltage`: The nominal voltage of the bus (in Volts).
+        """
+        return self._get_res_buses_voltages(voltage_type="auto")
+
+    @property
+    def res_buses_voltages_pp(self) -> pd.DataFrame:
+        """The load flow results of the complex phase-to-phase voltages of the buses (V).
+
+        Only buses with two or more phases are considered.
+
+        The results are returned as a dataframe with the following index:
+            - `bus_id`: The id of the bus.
+            - `phase`: The phase of the bus (in ``{'ab', 'bc', 'ca'}``).
+
+        and the following columns:
+            - `voltage`: The complex voltage of the bus (in Volts) for the given phase.
+            - `violated`: `True` if a voltage limit is not respected.
+            - `voltage_level`: The voltage level of the bus.
+            - `min_voltage_level`: The minimal voltage level of the bus.
+            - `max_voltage_level`: The maximal voltage level of the bus.
+            - `nominal_voltage`: The nominal voltage of the bus (in Volts).
+        """
+        return self._get_res_buses_voltages(voltage_type="pp")
+
+    @property
+    def res_buses_voltages_pn(self) -> pd.DataFrame:
+        """The load flow results of the complex phase-to-neutral voltages of the buses (V).
+
+        Only buses with a neutral are considered.
+
+        The results are returned as a dataframe with the following index:
+            - `bus_id`: The id of the bus.
+            - `phase`: The phase of the bus (in ``{'an', 'bn', 'cn'}``).
+
+        and the following columns:
+            - `voltage`: The complex voltage of the bus (in Volts) for the given phase.
+            - `violated`: `True` if a voltage limit is not respected.
+            - `voltage_level`: The voltage level of the bus.
+            - `min_voltage_level`: The minimal voltage level of the bus.
+            - `max_voltage_level`: The maximal voltage level of the bus.
+            - `nominal_voltage`: The nominal voltage of the bus (in Volts).
+        """
+        return self._get_res_buses_voltages(voltage_type="pn")
+
+    def _get_res_loads_voltages(self, voltage_type: Literal["pp", "pn", "auto"]) -> pd.DataFrame:
+        self._check_valid_results()
+        voltages_dict = {"load_id": [], "phase": [], "type": [], "voltage": []}
+        dtypes = {c: DTYPES[c] for c in voltages_dict} | {"phase": VoltagePhaseDtype, "type": LoadTypeDtype}
+        for load, voltages, phases in self._iter_terminal_res_voltages(self.loads, voltage_type):
+            for voltage, phase in zip(voltages, phases, strict=True):
+                voltages_dict["load_id"].append(load.id)
+                voltages_dict["phase"].append(phase)
+                voltages_dict["type"].append(load.type)
+                voltages_dict["voltage"].append(voltage)
+        return pd.DataFrame(voltages_dict).astype(dtypes).set_index(["load_id", "phase"])
+
+    @property
+    def res_loads_voltages(self) -> pd.DataFrame:
+        """The load flow results of the complex voltages of the loads (V).
+
+        The results are returned as a dataframe with the following index:
+            - `load_id`: The id of the load.
+            - `phase`: The phase of the load (in ``{'an', 'bn', 'cn'}`` for wye loads and in
+                ``{'ab', 'bc', 'ca'}`` for delta loads.).
+
+        and the following columns:
+            - `type`: The type of the load, can be ``{'power', 'current', 'impedance'}``.s
+            - `voltage`: The complex voltage of the load (in Volts) for the given *phase*.
+        """
+        return self._get_res_loads_voltages(voltage_type="auto")
+
+    @property
+    def res_loads_voltages_pp(self) -> pd.DataFrame:
+        """The load flow results of the complex phase-to-phase voltages of the loads (V).
+
+        Only loads with two or more phases are considered.
+
+        The results are returned as a dataframe with the following index:
+            - `load_id`: The id of the load.
+            - `phase`: The phase of the load (in ``{'ab', 'bc', 'ca'}``).
+
+        and the following columns:
+            - `type`: The type of the load, can be ``{'power', 'current', 'impedance'}``.s
+            - `voltage`: The complex voltage of the load (in Volts) for the given *phase*.
+        """
+        return self._get_res_loads_voltages(voltage_type="pp")
+
+    @property
+    def res_loads_voltages_pn(self) -> pd.DataFrame:
+        """The load flow results of the complex phase-to-phase voltages of the loads (V).
+
+        Only loads with a neutral are considered.
+
+        The results are returned as a dataframe with the following index:
+            - `load_id`: The id of the load.
+            - `phase`: The phase of the load (in ``{'an', 'bn', 'cn'}``).
+
+        and the following columns:
+            - `type`: The type of the load, can be ``{'power', 'current', 'impedance'}``.s
+            - `voltage`: The complex voltage of the load (in Volts) for the given *phase*.
+        """
+        return self._get_res_loads_voltages(voltage_type="pn")
+
+    def _get_res_sources_voltages(self, voltage_type: Literal["pp", "pn", "auto"]) -> pd.DataFrame:
+        self._check_valid_results()
+        voltages_dict = {"source_id": [], "phase": [], "type": [], "voltage": []}
+        dtypes = {c: DTYPES[c] for c in voltages_dict} | {"phase": VoltagePhaseDtype, "type": SourceTypeDtype}
+        for source, voltages, phases in self._iter_terminal_res_voltages(self.sources, voltage_type):
+            for voltage, phase in zip(voltages, phases, strict=True):
+                voltages_dict["source_id"].append(source.id)
+                voltages_dict["phase"].append(phase)
+                voltages_dict["type"].append(source.type)
+                voltages_dict["voltage"].append(voltage)
+        return pd.DataFrame(voltages_dict).astype(dtypes).set_index(["source_id", "phase"])
+
+    @property
+    def res_sources_voltages(self) -> pd.DataFrame:
+        """The load flow results of the complex voltages of the sources (V).
+
+        The results are returned as a dataframe with the following index:
+            - `source_id`: The id of the source.
+            - `phase`: The phase of the source (in ``{'an', 'bn', 'cn'}`` for wye sources and in
+                ``{'ab', 'bc', 'ca'}`` for delta sources.).
+
+        and the following columns:
+            - `type`: The type of the source, can be ``{'voltage'}``.
+            - `voltage`: The complex voltage of the source (in Volts) for the given *phase*.
+        """
+        return self._get_res_sources_voltages(voltage_type="auto")
+
+    @property
+    def res_sources_voltages_pp(self) -> pd.DataFrame:
+        """The load flow results of the complex phase-to-phase voltages of the sources (V).
+
+        Only sources with two or more phases are considered.
+
+        The results are returned as a dataframe with the following index:
+            - `source_id`: The id of the source.
+            - `phase`: The phase of the source (in ``{'ab', 'bc', 'ca'}``).
+
+        and the following columns:
+            - `type`: The type of the source, can be ``{'voltage'}``.
+            - `voltage`: The complex voltage of the source (in Volts) for the given *phase*.
+        """
+        return self._get_res_sources_voltages(voltage_type="pp")
+
+    @property
+    def res_sources_voltages_pn(self) -> pd.DataFrame:
+        """The load flow results of the complex phase-to-neutral voltages of the sources (V).
+
+        Only sources with a neutral are considered.
+
+        The results are returned as a dataframe with the following index:
+            - `source_id`: The id of the source.
+            - `phase`: The phase of the source (in ``{'an', 'bn', 'cn'}``).
+
+        and the following columns:
+            - `type`: The type of the source, can be ``{'voltage'}``.
+            - `voltage`: The complex voltage of the source (in Volts) for the given *phase*.
+        """
+        return self._get_res_sources_voltages(voltage_type="pn")
 
     #
     # Internal methods, please do not use

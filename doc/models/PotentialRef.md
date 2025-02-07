@@ -29,6 +29,14 @@ potential of the point where it is connected to $0$ Volt. The symbol of a potent
 One and only one potential reference per galvanically isolated section of the network can be set.
 ```
 
+## Available Results
+
+The following results are available for all potential references:
+
+| Result Accessor | Default Unit | Type    | Description                            |
+| --------------- | ------------ | ------- | -------------------------------------- |
+| `res_current`   | $A$          | complex | Always $0A$ for a successful load flow |
+
 ## Usage
 
 It is common to consider the earth as the reference of potentials (i.e $V_{earth} = 0V$). In
