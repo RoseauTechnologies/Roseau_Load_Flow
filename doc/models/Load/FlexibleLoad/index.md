@@ -68,6 +68,15 @@ FlexibleParameter
 FeasibleDomain
 ```
 
+## Available Results
+
+In addition to the results available for all loads, as described [here](../index.md#available-results),
+the following results are available for flexible loads:
+
+| Result Accessor       | Default Unit | Type          | Description                                    |
+| --------------------- | ------------ | ------------- | ---------------------------------------------- |
+| `res_flexible_powers` | $V\!A$       | complex array | The powers in the inner components of the load |
+
 ## API Reference
 
 ```{eval-rst}

@@ -48,7 +48,11 @@ And the following for delta loads given the constant powers {math}`s_{\mathrm{ab
 \right.
 ```
 
-## Example
+## Available Results
+
+The results for constant-power loads are described [here](./index.md#available-results).
+
+## Usage
 
 ```python
 import functools as ft

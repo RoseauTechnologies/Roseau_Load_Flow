@@ -31,11 +31,10 @@ from roseau.load_flow.models import (
 )
 from roseau.load_flow.network import ElectricalNetwork
 from roseau.load_flow.units import Q_
-from roseau.load_flow.utils import LoadTypeDtype, PhaseDtype, VoltagePhaseDtype
+from roseau.load_flow.utils import LoadTypeDtype, PhaseDtype, SourceTypeDtype, VoltagePhaseDtype
+
 
 # The following networks are generated using the scripts/generate_test_networks.py script
-
-
 @pytest.fixture
 def all_element_network(test_networks_path) -> ElectricalNetwork:
     # Load the network from the JSON file (without results)
@@ -72,6 +71,25 @@ def check_result_warning(expected_message: str | re.Pattern[str]):
     assert len(records) == 1
     assert re.match(expected_message, records[0].message.args[0])
     assert records[0].category is UserWarning
+
+
+def strip_q(value):
+    """Get the magnitude of a Quantity or None."""
+    return None if value is None else value.m
+
+
+def array_replace_none(array_or_none, default, like):
+    """Return an array or an array of NaNs with the same shape as `like`."""
+    if array_or_none is None:
+        return [default for _ in like]
+    return array_or_none
+
+
+def replace_none(scalar_or_none, default):
+    """Return an array or an array of NaNs with the same shape as `like`."""
+    if scalar_or_none is None:
+        return default
+    return scalar_or_none
 
 
 def test_connect_and_disconnect():
@@ -524,8 +542,8 @@ def test_frames(small_network: ElectricalNetwork):
     # Sources
     sources_df = small_network.sources_frame
     assert isinstance(sources_df, pd.DataFrame)
-    assert sources_df.shape == (1, 2)
-    assert sources_df.columns.tolist() == ["phases", "bus_id"]
+    assert sources_df.shape == (1, 3)
+    assert sources_df.columns.tolist() == ["type", "phases", "bus_id"]
     assert sources_df.index.name == "id"
 
     # Grounds
@@ -1222,88 +1240,6 @@ def test_load_flow_results_frames(small_network_with_results):
     )
     assert_frame_equal(en.res_buses, expected_res_buses, rtol=1e-5)
 
-    # Buses voltages results
-    expected_res_buses_voltages = (
-        pd.DataFrame.from_records(
-            [
-                {
-                    "bus_id": "bus0",
-                    "phase": "an",
-                    "voltage": (20000 + 2.89120e-18j) - (-1.34764e-12 + 2.89120e-18j),
-                    "violated": True,
-                    "voltage_level": 1.0,
-                    "min_voltage_level": 1.05,
-                    "max_voltage_level": np.nan,
-                    "nominal_voltage": nominal_voltage,
-                },
-                {
-                    "bus_id": "bus0",
-                    "phase": "bn",
-                    "voltage": (-10000.00000 - 17320.50807j) - (-1.34764e-12 + 2.89120e-18j),
-                    "violated": True,
-                    "voltage_level": 1.0000000000134766,
-                    "min_voltage_level": 1.05,
-                    "max_voltage_level": np.nan,
-                    "nominal_voltage": nominal_voltage,
-                },
-                {
-                    "bus_id": "bus0",
-                    "phase": "cn",
-                    "voltage": (-10000.00000 + 17320.50807j) - (-1.34764e-12 + 2.89120e-18j),
-                    "violated": True,
-                    "voltage_level": 1.0000000000134766,
-                    "min_voltage_level": 1.05,
-                    "max_voltage_level": np.nan,
-                    "nominal_voltage": nominal_voltage,
-                },
-                {
-                    "bus_id": "bus1",
-                    "phase": "an",
-                    "voltage": (19999.94999 + 2.89119e-18j) - (0j),
-                    "violated": None,
-                    "voltage_level": np.nan,
-                    "min_voltage_level": np.nan,
-                    "max_voltage_level": np.nan,
-                    "nominal_voltage": np.nan,
-                },
-                {
-                    "bus_id": "bus1",
-                    "phase": "bn",
-                    "voltage": (-9999.97499 - 17320.46477j) - (0j),
-                    "violated": None,
-                    "voltage_level": np.nan,
-                    "min_voltage_level": np.nan,
-                    "max_voltage_level": np.nan,
-                    "nominal_voltage": np.nan,
-                },
-                {
-                    "bus_id": "bus1",
-                    "phase": "cn",
-                    "voltage": (-9999.97499 + 17320.46477j) - (0j),
-                    "violated": None,
-                    "voltage_level": np.nan,
-                    "min_voltage_level": np.nan,
-                    "max_voltage_level": np.nan,
-                    "nominal_voltage": np.nan,
-                },
-            ]
-        )
-        .astype(
-            {
-                "bus_id": object,
-                "phase": VoltagePhaseDtype,
-                "voltage": complex,
-                "violated": pd.BooleanDtype(),
-                "voltage_level": float,
-                "min_voltage_level": float,
-                "max_voltage_level": float,
-                "nominal_voltage": float,
-            }
-        )
-        .set_index(["bus_id", "phase"])
-    )
-    assert_frame_equal(en.res_buses_voltages, expected_res_buses_voltages, rtol=1e-5)
-
     # Transformers results
     expected_res_transformers = (
         pd.DataFrame.from_records(
@@ -1554,6 +1490,7 @@ def test_load_flow_results_frames(small_network_with_results):
                 {
                     "source_id": "vs",
                     "phase": "a",
+                    "type": "voltage",
                     "current": -0.00500 + 0j,
                     "power": (20000 + 2.89120e-18j) * (-0.00500 + 0j).conjugate(),
                     "potential": 20000 + 2.89120e-18j,
@@ -1561,6 +1498,7 @@ def test_load_flow_results_frames(small_network_with_results):
                 {
                     "source_id": "vs",
                     "phase": "b",
+                    "type": "voltage",
                     "current": 0.00250 + 0.00433j,
                     "power": (-10000.00000 - 17320.50807j) * (0.00250 + 0.00433j).conjugate(),
                     "potential": -10000.00000 - 17320.50807j,
@@ -1568,6 +1506,7 @@ def test_load_flow_results_frames(small_network_with_results):
                 {
                     "source_id": "vs",
                     "phase": "c",
+                    "type": "voltage",
                     "current": 0.00250 - 0.00433j,
                     "power": (-10000.00000 + 17320.50807j) * (0.00250 - 0.00433j).conjugate(),
                     "potential": -10000.00000 + 17320.50807j,
@@ -1575,6 +1514,7 @@ def test_load_flow_results_frames(small_network_with_results):
                 {
                     "source_id": "vs",
                     "phase": "n",
+                    "type": "voltage",
                     "current": 1.34764e-13 - 2.89121e-19j,
                     "power": (-1.34764e-12 + 2.89120e-18j) * (1.34764e-13 - 2.89121e-19j).conjugate(),
                     "potential": -1.34764e-12 + 2.89120e-18j,
@@ -1585,6 +1525,7 @@ def test_load_flow_results_frames(small_network_with_results):
             {
                 "source_id": object,
                 "phase": PhaseDtype,
+                "type": SourceTypeDtype,
                 "current": complex,
                 "power": complex,
                 "potential": complex,
@@ -1654,8 +1595,223 @@ def test_load_flow_results_frames(small_network_with_results):
     assert_frame_equal(en.res_loads_flexible_powers, expected_res_flex_powers, rtol=1e-5)
 
 
+def test_res_buses_voltages(all_element_network_with_results):
+    en = all_element_network_with_results
+    dtypes = {  # in the expected order
+        "bus_id": object,
+        "phase": VoltagePhaseDtype,
+        "voltage": complex,
+        "violated": pd.BooleanDtype(),
+        "voltage_level": float,
+        "min_voltage_level": float,
+        "max_voltage_level": float,
+        "nominal_voltage": float,
+    }
+
+    # Voltages
+    records = []
+    for bus in en.buses.values():
+        voltages = bus.res_voltages.m
+        phases = bus.voltage_phases
+        levels = array_replace_none(strip_q(bus.res_voltage_levels), np.nan, like=voltages)
+        violated_list = array_replace_none(bus.res_violated, None, like=voltages)
+        for voltage, level, violated, phase in zip(voltages, levels, violated_list, phases, strict=True):
+            records.append(
+                {
+                    "bus_id": bus.id,
+                    "phase": phase,
+                    "voltage": voltage,
+                    "violated": violated,
+                    "voltage_level": level,
+                    "min_voltage_level": replace_none(strip_q(bus.min_voltage_level), np.nan),
+                    "max_voltage_level": replace_none(strip_q(bus.max_voltage_level), np.nan),
+                    "nominal_voltage": replace_none(strip_q(bus.nominal_voltage), np.nan),
+                }
+            )
+    expected_df = pd.DataFrame.from_records(records).astype(dtypes).set_index(["bus_id", "phase"])
+    assert_frame_equal(en.res_buses_voltages, expected_df)
+
+    # Voltages phase-to-phase
+    records = []
+    errored = False
+    for bus in en.buses.values():
+        try:
+            voltages = bus.res_voltages_pp.m
+        except RoseauLoadFlowException:
+            errored = True
+            continue
+        phases = bus.voltage_phases_pp
+        levels = array_replace_none(strip_q(bus.res_voltage_levels_pp), np.nan, like=voltages)
+        violated_list = array_replace_none(bus.res_violated, None, like=voltages)
+        for voltage, level, violated, phase in zip(voltages, levels, violated_list, phases, strict=True):
+            records.append(
+                {
+                    "bus_id": bus.id,
+                    "phase": phase,
+                    "voltage": voltage,
+                    "violated": violated,
+                    "voltage_level": level,
+                    "min_voltage_level": replace_none(strip_q(bus.min_voltage_level), np.nan),
+                    "max_voltage_level": replace_none(strip_q(bus.max_voltage_level), np.nan),
+                    "nominal_voltage": replace_none(strip_q(bus.nominal_voltage), np.nan),
+                }
+            )
+    expected_df = pd.DataFrame.from_records(records).astype(dtypes).set_index(["bus_id", "phase"])
+    assert errored, "This doesn't test buses with no phase-to-phase voltage"
+    assert_frame_equal(en.res_buses_voltages_pp, expected_df)
+
+    # Voltages phase-to-neutral
+    records = []
+    errored = False
+    for bus in en.buses.values():
+        try:
+            voltages = bus.res_voltages_pn.m
+        except RoseauLoadFlowException:
+            errored = True
+            continue
+        phases = bus.voltage_phases_pn
+        levels = array_replace_none(strip_q(bus.res_voltage_levels_pn), np.nan, like=voltages)
+        violated_list = array_replace_none(bus.res_violated, None, like=voltages)
+        for voltage, level, violated, phase in zip(voltages, levels, violated_list, phases, strict=True):
+            records.append(
+                {
+                    "bus_id": bus.id,
+                    "phase": phase,
+                    "voltage": voltage,
+                    "violated": violated,
+                    "voltage_level": level,
+                    "min_voltage_level": replace_none(strip_q(bus.min_voltage_level), np.nan),
+                    "max_voltage_level": replace_none(strip_q(bus.max_voltage_level), np.nan),
+                    "nominal_voltage": replace_none(strip_q(bus.nominal_voltage), np.nan),
+                }
+            )
+    expected_df = pd.DataFrame.from_records(records).astype(dtypes).set_index(["bus_id", "phase"])
+    assert errored, "This doesn't test buses with no phase-to-neutral voltage"
+    assert_frame_equal(en.res_buses_voltages_pn, expected_df)
+
+
+def test_res_loads_voltages(all_element_network_with_results):
+    en = all_element_network_with_results
+    dtypes = {  # in the expected order
+        "load_id": object,
+        "phase": VoltagePhaseDtype,
+        "type": LoadTypeDtype,
+        "voltage": complex,
+    }
+
+    # Voltages
+    records = []
+    for load in en.loads.values():
+        voltages = load.res_voltages.m
+        for voltage, phase in zip(voltages, load.voltage_phases, strict=True):
+            records.append(
+                {
+                    "load_id": load.id,
+                    "phase": phase,
+                    "type": load.type,
+                    "voltage": voltage,
+                }
+            )
+    expected_df = pd.DataFrame.from_records(records).astype(dtypes).set_index(["load_id", "phase"])
+    assert_frame_equal(en.res_loads_voltages, expected_df)
+
+    # Voltages phase-to-phase
+    records = []
+    errored = False
+    for load in en.loads.values():
+        try:
+            voltages = load.res_voltages_pp.m
+        except RoseauLoadFlowException:
+            errored = True
+            continue
+        for voltage, phase in zip(voltages, load.voltage_phases_pp, strict=True):
+            records.append(
+                {
+                    "load_id": load.id,
+                    "phase": phase,
+                    "type": load.type,
+                    "voltage": voltage,
+                }
+            )
+    assert errored, "This doesn't test loads with no phase-to-phase voltage"
+    expected_df = pd.DataFrame.from_records(records).astype(dtypes).set_index(["load_id", "phase"])
+    assert_frame_equal(en.res_loads_voltages_pp, expected_df)
+
+    # Voltages phase-to-neutral
+    records = []
+    errored = False
+    for load in en.loads.values():
+        try:
+            voltages = load.res_voltages_pn.m
+        except RoseauLoadFlowException:
+            errored = True
+            continue
+        for voltage, phase in zip(voltages, load.voltage_phases_pn, strict=True):
+            records.append(
+                {
+                    "load_id": load.id,
+                    "phase": phase,
+                    "type": load.type,
+                    "voltage": voltage,
+                }
+            )
+    assert errored, "This doesn't test loads with no phase-to-neutral voltage"
+    expected_df = pd.DataFrame.from_records(records).astype(dtypes).set_index(["load_id", "phase"])
+    assert_frame_equal(en.res_loads_voltages_pn, expected_df)
+
+
+def test_res_sources_voltages(all_element_network_with_results):
+    en = all_element_network_with_results
+    dtypes = {  # in the expected order
+        "source_id": object,
+        "phase": VoltagePhaseDtype,
+        "type": SourceTypeDtype,
+        "voltage": complex,
+    }
+
+    # Voltages
+    records = []
+    for source in en.sources.values():
+        voltages = source.res_voltages.m
+        for voltage, phase in zip(voltages, source.voltage_phases, strict=True):
+            records.append({"source_id": source.id, "phase": phase, "type": source.type, "voltage": voltage})
+    expected_df = pd.DataFrame.from_records(records).astype(dtypes).set_index(["source_id", "phase"])
+    assert_frame_equal(en.res_sources_voltages, expected_df)
+
+    # Voltages phase-to-phase
+    records = []
+    errored = False
+    for source in en.sources.values():
+        try:
+            voltages = source.res_voltages_pp.m
+        except RoseauLoadFlowException:
+            errored = True
+            continue
+        for voltage, phase in zip(voltages, source.voltage_phases_pp, strict=True):
+            records.append({"source_id": source.id, "phase": phase, "type": source.type, "voltage": voltage})
+    assert errored, "This doesn't test sources with no phase-to-phase voltage"
+    expected_df = pd.DataFrame.from_records(records).astype(dtypes).set_index(["source_id", "phase"])
+    assert_frame_equal(en.res_sources_voltages_pp, expected_df)
+
+    # Voltages phase-to-neutral
+    records = []
+    errored = False
+    for source in en.sources.values():
+        try:
+            voltages = source.res_voltages_pn.m
+        except RoseauLoadFlowException:
+            errored = True
+            continue
+        for voltage, phase in zip(voltages, source.voltage_phases_pn, strict=True):
+            records.append({"source_id": source.id, "phase": phase, "type": source.type, "voltage": voltage})
+    assert errored, "This doesn't test sources with no phase-to-neutral voltage"
+    expected_df = pd.DataFrame.from_records(records).astype(dtypes).set_index(["source_id", "phase"])
+    assert_frame_equal(en.res_sources_voltages_pn, expected_df)
+
+
 def test_solver_warm_start(small_network: ElectricalNetwork, monkeypatch):
-    load: PowerLoad = small_network.loads["load"]
+    load = small_network.loads["load"]
+    assert isinstance(load, PowerLoad)
     load_bus = small_network.buses["bus1"]
 
     original_propagate_potentials = small_network._propagate_potentials

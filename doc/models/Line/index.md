@@ -7,7 +7,7 @@ myst:
       Les modèles de ligne dans Roseau Load Flow - Solveur d'écoulement de charge triphasé et déséquilibré dans une
       API Python par Roseau Technologies.
     "keywords lang=fr": simulation, réseau, électrique, bus, roseau load flow, lignes, modèle
-    "keywords lang=en": simulation, distribution grid, switch, lines, model
+    "keywords lang=en": simulation, distribution grid, power line, electric line, lines, model
 ---
 
 # Lines
@@ -176,6 +176,24 @@ and the line shunt admittance in Siemens (taking into account the length of the 
 
 There are several alternative constructors for `LineParameters` objects. The description of them can be found in the
 dedicated [Line parameters page](Parameters.md).
+
+## Available Results
+
+The following results are available for all lines:
+
+| Result Accessor           | Default Unit  | Type             | Description                                                                                    |
+| ------------------------- | ------------- | ---------------- | ---------------------------------------------------------------------------------------------- |
+| `res_potentials`          | $V$           | 2 complex arrays | The potentials of each phase of the line                                                       |
+| `res_currents`            | $A$           | 2 complex arrays | The currents flowing into each phase of the line                                               |
+| `res_powers`              | $V\!A$        | 2 complex arrays | The powers flowing into each phase of the line                                                 |
+| `res_voltages`            | $V$           | 2 complex arrays | The phase-to-neutral voltages if the line has a neutral, the phase-to-phase voltages otherwise |
+| `res_series_currents`     | $A$           | complex array    | The currents flowing into the series impedance of each phase of the line                       |
+| `res_power_losses`        | $V\!A$        | complex array    | The total power losses in each phase of the line                                               |
+| `res_series_power_losses` | $V\!A$        | complex array    | The power losses in the series impedance of each phase of the line                             |
+| `res_loading`             | $\mathrm{pu}$ | number array     | The loading of each phase of the line compared to its ampacity                                 |
+| `res_violated`            | -             | boolean array    | Indicates if the loading of each phase exceeds the maximal loading                             |
+
+The results with two arrays are for the first and second ends of the line, respectively.
 
 ## Available models
 

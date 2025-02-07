@@ -35,7 +35,20 @@ The associated equations are:
 \right.
 ```
 
-## Example
+## Available Results
+
+The following results are available for all switches:
+
+| Result Accessor  | Default Unit | Type             | Description                                                                                      |
+| ---------------- | ------------ | ---------------- | ------------------------------------------------------------------------------------------------ |
+| `res_potentials` | $V$          | 2 complex arrays | The potentials of each phase of the switch                                                       |
+| `res_currents`   | $A$          | 2 complex arrays | The currents flowing into each phase of the switch                                               |
+| `res_powers`     | $V\!A$       | 2 complex arrays | The powers flowing into each phase of the switch                                                 |
+| `res_voltages`   | $V$          | 2 complex arrays | The phase-to-neutral voltages if the switch has a neutral, the phase-to-phase voltages otherwise |
+
+The results with two arrays are for the first and second ends of the switch, respectively.
+
+## Usage
 
 Here is a switch connecting a constant power load to a voltage source.
 

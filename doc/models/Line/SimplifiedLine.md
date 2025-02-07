@@ -47,6 +47,10 @@ With $\underline{Y} = 0$, the equations become:
 \right.
 ```
 
+## Available Results
+
+The results for simplified lines are described [here](./index.md#available-results).
+
 ## Usage
 
 To create a simplified line, create an instance of `LineParameter` without providing `y_shunt`.

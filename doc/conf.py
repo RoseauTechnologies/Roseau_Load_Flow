@@ -47,6 +47,7 @@ extensions = [
 ]
 myst_enable_extensions = ["deflist", "smartquotes", "replacements", "dollarmath"]
 myst_html_meta = {"robots": "all"}
+myst_heading_anchors = 3
 add_module_names = False
 napoleon_numpy_docstring = False
 python_use_unqualified_type_names = True

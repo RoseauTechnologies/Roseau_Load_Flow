@@ -89,15 +89,16 @@ def generate_all_element_network() -> None:
     pref = rlf.PotentialRef(id="pref", element=ground)
 
     # Buses
-    bus0 = rlf.Bus(id="bus0", phases="abc", initial_potentials=20e3 / rlf.SQRT3 * rlf.PositiveSequence)
-    bus1 = rlf.Bus(id="bus1", phases="abc")
-    bus2 = rlf.Bus(id="bus2", phases="abcn")
-    bus3 = rlf.Bus(id="bus3", phases="abcn")
+    bus0 = rlf.Bus(id="bus0", phases="abc", initial_potentials=20e3 * rlf.PositiveSequence)
+    bus1 = rlf.Bus(id="bus1", phases="abc", nominal_voltage=20e3, min_voltage_level=0.95, max_voltage_level=1.15)
+    bus2 = rlf.Bus(id="bus2", phases="abcn", nominal_voltage=400, min_voltage_level=0.9, max_voltage_level=1.1)
+    bus3 = rlf.Bus(id="bus3", phases="abcn", nominal_voltage=400)
     bus4 = rlf.Bus(id="bus4", phases="abcn")
+    bus5 = rlf.Bus(id="bus5", phases="bn", nominal_voltage=400, min_voltage_level=0.9, max_voltage_level=1.1)
+    bus6 = rlf.Bus(id="bus6", phases="ca")
 
     # Voltage source
-    voltages = rlf.converters.calculate_voltages(potentials=20e3 / rlf.SQRT3 * rlf.PositiveSequence, phases="abc")
-    voltage_source0 = rlf.VoltageSource(id="voltage_source0", bus=bus0, voltages=voltages, phases="abc")
+    source0 = rlf.VoltageSource(id="source0", bus=bus0, voltages=20e3, phases="abc")
 
     # Line between bus0 and bus1 (with shunt)
     lp0 = rlf.LineParameters.from_catalogue(name="U_AM_148", id="lp0")
@@ -105,7 +106,7 @@ def generate_all_element_network() -> None:
 
     # Transformer between bus1 and bus2
     tp0 = rlf.TransformerParameters.from_catalogue(name="SE Minera A0Ak 100kVA 15/20kV(20) 410V Dyn11", id="tp0")
-    transformer0 = rlf.Transformer(id="transformer0", bus_hv=bus1, bus_lv=bus2, parameters=tp0, tap=1.0)
+    transformer0 = rlf.Transformer(id="transformer0", bus_hv=bus1, bus_lv=bus2, parameters=tp0, tap=1.025)
     ground.connect(bus=bus2, phase="n")
 
     # Switch between the bus2 and the bus3
@@ -177,13 +178,22 @@ def generate_all_element_network() -> None:
         id="load5", bus=bus4, powers=rlf.Q_([-100, -100, -100], "W"), phases="abcn", flexible_params=[fp6, fp6, fp6]
     )
 
+    # Elements with strange phases
+    lp2 = rlf.LineParameters.from_catalogue(name="T_AL_75", id="lp2", nb_phases=2)
+    switch1 = rlf.Switch(id="switch1", bus1=bus4, bus2=bus5)
+    line2 = rlf.Line(id="line2", bus1=bus4, bus2=bus6, parameters=lp2, length=rlf.Q_(100, "m"), ground=ground)
+    load6 = rlf.PowerLoad(id="load6", bus=bus5, powers=rlf.Q_([100], "W"))
+    load7 = rlf.PowerLoad(id="load7", bus=bus6, powers=rlf.Q_([100], "W"))
+    source1 = rlf.VoltageSource(id="source1", bus=bus5, voltages=230)
+    source2 = rlf.VoltageSource(id="source2", bus=bus6, voltages=400)
+
     en = rlf.ElectricalNetwork(
-        buses=[bus0, bus1, bus2, bus3, bus4],
-        lines=[line0, line1],
+        buses=[bus0, bus1, bus2, bus3, bus4, bus5, bus6],
+        lines=[line0, line1, line2],
         transformers=[transformer0],
-        switches=[switch0],
-        loads=[load0, load1, load2, load3, load4, load5],
-        sources=[voltage_source0],
+        switches=[switch0, switch1],
+        loads=[load0, load1, load2, load3, load4, load5, load6, load7],
+        sources=[source0, source1, source2],
         grounds=[ground],
         potential_refs=[pref],
     )

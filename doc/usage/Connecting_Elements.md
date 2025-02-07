@@ -18,7 +18,7 @@ myst:
 
 ## Creating a network
 
-Let's take the electrical network of the [Getting started page](usage-getting-started) as an example.
+Let's take the electrical network of the [Getting started page](./Getting_Started.md) as an example.
 
 ```pycon
 >>> import numpy as np

@@ -90,7 +90,7 @@ Let's run the load flow, and get the current results.
 ```{note}
 If you get an error saying
 `roseau.load_flow.RoseauLoadFlowException: The license is not valid. Please use the activate_license(key="...")`,
-make sure you follow the instructions in [Solving a load flow](gs-solving-load-flow).
+make sure you follow the instructions in [Solving a load flow](./Getting_Started.md#solving-a-load-flow).
 ```
 
 ```{note}

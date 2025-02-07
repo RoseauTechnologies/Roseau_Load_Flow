@@ -41,6 +41,9 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ### Detailed changes
 
+- {gh-pr}`330` Add phase-to-phase (`res_voltages_pp`) and phase-to-neutral (`res_voltages_pn`)
+  voltage results for terminal elements. Voltage unbalance results are now available for all terminal
+  elements with the `res_voltage_unbalance` method.
 - {gh-pr}`328` Support floating neutrals for transformers. The `Transformer` class constructor now
   accepts optional `connect_neutral_hv` and `connect_neutral_lv` parameters to specify if the neutral
   is to be connected to the bus's neutral or to be left floating. By default the neutral is connected

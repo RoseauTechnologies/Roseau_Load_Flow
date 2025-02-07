@@ -35,7 +35,7 @@ example, for a network with a MV feeder, this property returns a list containing
 IDs and all sets of LV subnetworks buses IDs. If you want to get the cluster of only one bus, you
 can use {meth}`Bus.get_connected_buses <roseau.load_flow.models.Bus.get_connected_buses>`
 
-If we take the example network from the [Getting Started page](gs-creating-network):
+If we take the example network from the [Getting Started page](./Getting_Started.md#creating-a-network):
 
 ```pycon
 >>> set(source_bus.get_connected_buses())

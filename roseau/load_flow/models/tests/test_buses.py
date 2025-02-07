@@ -496,7 +496,7 @@ def test_res_voltage_unbalance():
     with pytest.raises(RoseauLoadFlowException) as e:
         bus.res_voltage_unbalance()
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
-    assert e.value.msg == "Voltage unbalance is only available for 3-phases buses, bus 'b1' has phases 'an'"
+    assert e.value.msg == "Voltage unbalance is only available for three-phase elements, bus 'b1' has phases 'an'."
 
 
 def test_to_dict():
