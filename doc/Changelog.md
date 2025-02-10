@@ -41,6 +41,9 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ### Detailed changes
 
+- {gh-pr}`331` Add `voltage_type` to the `plot_voltage_phasors` function to be able to plot the
+  voltages in phase-to-phase or phase-to-neutral. The `plot_symmetrical_voltages` function now plots
+  each sequence in a separate axes for better readability.
 - {gh-pr}`330` Add phase-to-phase (`res_voltages_pp`) and phase-to-neutral (`res_voltages_pn`)
   voltage results for terminal elements. Voltage unbalance results are now available for all terminal
   elements with the `res_voltage_unbalance` method.

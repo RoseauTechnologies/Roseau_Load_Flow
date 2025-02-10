@@ -3,7 +3,7 @@
   "jupyter.notebookFileRoot": "${workspaceFolder}",
   "notebook.formatOnSave.enabled": true,
   "notebook.codeActionsOnSave": {
-    "source.organizeImports.ruff": "explicit",
+    "notebook.source.organizeImports.ruff": "explicit",
   },
 
   // Python
