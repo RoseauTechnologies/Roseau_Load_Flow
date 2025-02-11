@@ -524,9 +524,9 @@ class FlexibleParameter(JsonMixin):
 
     This class encapsulate single-phase flexibility information of a flexible load:
 
-    * The active power :class:`roseau.load_flow.models.Control` to apply;
-    * The reactive power :class:`roseau.load_flow.models.Control` to apply;
-    * The :class:`roseau.load_flow.models.Projection` to use when dealing with voltage violations;
+    * The active power :class:`~roseau.load_flow.models.Control` to apply;
+    * The reactive power :class:`~roseau.load_flow.models.Control` to apply;
+    * The :class:`~roseau.load_flow.models.Projection` to use when dealing with voltage violations;
     * The apparent power of the flexible load (VA). This is the maximum power the load can
       consume/produce. It is the radius of the feasible circle used by the projection
 

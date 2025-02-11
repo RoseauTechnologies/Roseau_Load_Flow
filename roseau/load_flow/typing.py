@@ -72,6 +72,14 @@ Union Input Types (Wide)
     A 1D array-like of floating numbers or a quantity of floating numbers. An array-like is a
     sequence or a numpy array.
 
+.. class:: ComplexScalarOrArrayLike1D
+
+    A scalar or a 1D array-like of complex numbers or a quantity thereof.
+
+.. class:: FloatScalarOrArrayLike1D
+
+    A scalar or a 1D array-like of floating numbers or a quantity thereof.
+
 Numpy Output Types (Narrow)
 ---------------------------
 
