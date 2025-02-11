@@ -4,12 +4,11 @@ import warnings
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Generic
 
-import numpy as np
 from typing_extensions import TypeVar
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.license import activate_license, get_license
-from roseau.load_flow.typing import JsonDict, Solver
+from roseau.load_flow.typing import FloatMatrix, JsonDict, Solver
 from roseau.load_flow.utils import find_stack_level
 from roseau.load_flow_engine.cy_engine import (
     CyAbstractNewton,
@@ -148,6 +147,34 @@ class AbstractSolver(ABC, Generic[_CyS_co]):
         """Return the parameters of the solver."""
         return {}
 
+    # Debugging methods
+    # -----------------
+    def save_matrix(self, prefix: str) -> None:
+        """Output files of the jacobian and vector matrix of the first newton step.
+
+        Those files can be used to launch an eigen solver benchmark
+        (see https://eigen.tuxfamily.org/dox/group__TopicSparseSystems.html)
+
+        Args:
+            prefix:
+                The prefix of the name of the files. They will be output as `prefix.mtx` and
+                `prefix_m.mtx` to follow Eigen solver benchmark convention.
+        """
+        raise NotImplementedError(f"save_matrix() is not implemented for solver {self.name!r}.")
+
+    def current_jacobian(self) -> FloatMatrix:
+        """Get the jacobian of the current iteration (useful for debugging)."""
+        raise NotImplementedError(f"current_jacobian() is not implemented for solver {self.name!r}.")
+
+    def analyse_jacobian(self) -> tuple[list[int], list[int]]:
+        """Analyse the jacobian to try to understand why it is singular.
+
+        Returns:
+            The vector of elements associated with a column of zeros and the vector of elements
+            associated with a line which contains a NaN.
+        """
+        raise NotImplementedError(f"analyse_jacobian() is not implemented for solver {self.name!r}.")
+
 
 _CyN_co = TypeVar("_CyN_co", bound=CyAbstractNewton, default=CyAbstractNewton, covariant=True)
 
@@ -204,29 +231,12 @@ class AbstractNewton(AbstractSolver[_CyN_co], ABC):
     # Debugging methods
     # -----------------
     def save_matrix(self, prefix: str) -> None:
-        """Output files of the jacobian and vector matrix of the first newton step.
-
-        Those files can be used to launch an eigen solver benchmark
-        (see https://eigen.tuxfamily.org/dox/group__TopicSparseSystems.html)
-
-        Args:
-            prefix:
-                The prefix of the name of the files. They will be output as `prefix.mtx` and
-                `prefix_m.mtx` to follow Eigen solver benchmark convention.
-        """
         self._cy_solver.save_matrix(prefix)
 
-    def current_jacobian(self) -> np.ndarray[tuple[int, int], np.dtype[np.float64]]:
-        """Get the jacobian of the current iteration (useful for debugging)."""
+    def current_jacobian(self) -> FloatMatrix:
         return self._cy_solver.current_jacobian()
 
     def analyse_jacobian(self) -> tuple[list[int], list[int]]:
-        """Analyse the jacobian to try to understand why it is singular.
-
-        Returns:
-            The vector of elements associated with a column of zeros and the vector of elements
-            associated with a line which contains a NaN.
-        """
         return self._cy_solver.analyse_jacobian()
 
 

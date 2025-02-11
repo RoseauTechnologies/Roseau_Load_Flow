@@ -10,7 +10,7 @@ from roseau.load_flow.models.branches import AbstractBranch
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.grounds import Ground
 from roseau.load_flow.models.lines.parameters import LineParameters
-from roseau.load_flow.typing import BoolArray, ComplexArray, FloatArray, Id, JsonDict
+from roseau.load_flow.typing import BoolArray, ComplexArray, ComplexMatrix, FloatArray, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow_engine.cy_engine import CyShuntLine, CySimplifiedLine
 
@@ -209,13 +209,13 @@ class Line(AbstractBranch[CyShuntLine | CySimplifiedLine]):
 
     @property
     @ureg_wraps("ohm", (None,))
-    def z_line(self) -> Q_[ComplexArray]:
+    def z_line(self) -> Q_[ComplexMatrix]:
         """Impedance of the line (in Ohm)."""
         return self._parameters._z_line * self._length
 
     @property
     @ureg_wraps("S", (None,))
-    def y_shunt(self) -> Q_[ComplexArray]:
+    def y_shunt(self) -> Q_[ComplexMatrix]:
         """Shunt admittance of the line (in Siemens)."""
         return self._parameters._y_shunt * self._length
 
