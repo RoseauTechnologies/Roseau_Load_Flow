@@ -58,7 +58,7 @@ dev = [
     "pytest-cov>=5.0.0",
     "pytest-xdist>=3.1.0",
     "coverage[toml]>=7.0.5",
-    "coverage-conditional-plugin>=0.9.0",
+    "covdefaults>=2.3.0",
 ]
 doc = [
     # Docs
@@ -110,37 +110,10 @@ docstring-code-format = true
 
 [tool.coverage.run]
 branch = false
-omit = ["roseau/load_flow/__about__.py"]
-plugins = ["coverage_conditional_plugin"]
-source = ["roseau/load_flow/", "roseau/load_flow_single/"]
-
-[tool.coverage.coverage_conditional_plugin.rules]
-no-cover-if-py-gte-311 = "sys_version_info >= (3, 11)"
-no-cover-if-py-lt-311 = "sys_version_info < (3, 11)"
-
-[tool.coverage.paths]
+plugins = ["covdefaults"]
 source = ["roseau/load_flow/", "roseau/load_flow_single/"]
 
 [tool.coverage.report]
-# Skip files with 100% coverage
-skip_covered = true
-# Regexes for lines to exclude from consideration
-exclude_lines = [
-    # Have to re-enable the standard pragma
-    "pragma: no-cover",
-    # Don't complain about missing debug-only code:
-    "def __repr__",
-    "if self.debug",
-    # Don't complain if tests don't hit defensive assertion code:
-    "raise AssertionError",
-    "raise NotImplementedError",
-    # Don't complain if non-runnable code isn't run:
-    "if 0:",
-    "if __name__ == .__main__.:",
-    # Type checking
-    "if TYPE_CHECKING:",
-]
-ignore_errors = true
 fail_under = 93
 
 [tool.coverage.html]
