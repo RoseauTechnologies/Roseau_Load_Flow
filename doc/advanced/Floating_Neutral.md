@@ -181,8 +181,8 @@ tr_floating = rlf.Transformer(
 ground = rlf.Ground("Ground")
 pref_mv = rlf.PotentialRef("PRef MV", element=bus_mv)
 pref_lv = rlf.PotentialRef("PRef LV", element=ground)
-ground.connect(bus1_lv)
-ground.connect(bus2_lv)
+gc_bus1_lv = rlf.GroundConnection(ground=ground, element=bus1_lv)
+gc_bus2_lv = rlf.GroundConnection(ground=ground, element=bus2_lv)
 en = rlf.ElectricalNetwork.from_element(bus_mv)
 en.solve_load_flow()
 

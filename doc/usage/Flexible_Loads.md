@@ -42,7 +42,7 @@ a Delta-Wye transformer and a small LV network.
 ... # Set the ground potential to 0V
 ... pref_lv = rlf.PotentialRef(id="pref_lv", element=ground)
 ... # Connect the ground to the neutral of the LV bus
-... ground.connect(bus0_lv)
+... rlf.GroundConnection(ground=ground, element=bus0_lv)
 
 >>> # Add a MV/LV transformer
 ... tp = rlf.TransformerParameters.from_open_and_short_circuit_tests(

@@ -109,8 +109,8 @@ load = rlf.PowerLoad(
     powers=rlf.Q_(np.array([5.0, 2.5, 0]) * (1 - 0.3j), "kVA"),
 )
 
-# Set the phase "a" of the first bus to the ground g1
-g1.connect(bus=bus1, phase="a")
+# Connect the phase "a" of the first bus to the ground g1
+gc = rlf.GroundConnection(id="gc", ground=g1, element=bus1, phase="a")
 
 # Set the potential of the ground element g1 to 0V
 pref = rlf.PotentialRef(id="pref", element=g1)
