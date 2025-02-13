@@ -330,7 +330,7 @@ def test_bad_networks():
 
     # Bad constructor
     bus0 = Bus(id="bus0", phases="abcn")
-    GroundConnection(ground=ground, element=bus0)
+    gc = GroundConnection(ground=ground, element=bus0)
     voltages = [20000.0 + 0.0j, -10000.0 - 17320.508076j, -10000.0 + 17320.508076j]
     vs = VoltageSource(id="vs", bus=bus0, phases="abcn", voltages=voltages)
     switch = Switch(id="switch", bus1=bus0, bus2=bus1, phases="abcn")
@@ -427,6 +427,30 @@ def test_bad_networks():
         )
     assert e.value.msg == "Bus ID 'sb' does not match its key in the dictionary 'foo'."
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_BUS_ID
+
+    # Special error message for missing ground_connections
+    ground = Ground(id="Ground")
+    bus = Bus(id="Bus", phases="abcn")
+    pref = PotentialRef(id="pr", element=ground)
+    gc = GroundConnection(id="GC", ground=ground, element=bus)
+    vs = VoltageSource(id="Source", bus=bus, voltages=230)
+    with pytest.raises(RoseauLoadFlowException) as e:
+        ElectricalNetwork(
+            buses=[bus],
+            lines=[],
+            transformers=[],
+            switches=[],
+            loads=[],
+            sources=[vs],
+            grounds=[ground],
+            potential_refs=[pref],
+        )
+    assert e.value.msg == (
+        "It looks like you forgot to add the ground connections to the network. Either use "
+        "`ElectricalNetwork.from_element()` to create the network or add the ground connections "
+        "manually, e.g: `ElectricalNetwork(..., ground_connections=ground.connections)`."
+    )
+    assert e.value.code == RoseauLoadFlowExceptionCode.UNKNOWN_ELEMENT
 
 
 def test_poorly_connected_elements():

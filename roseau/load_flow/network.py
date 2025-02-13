@@ -1405,6 +1405,22 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.EMPTY_NETWORK)
 
+        # Temporarily print a more usefull error message for missing ground_connections to help
+        # with the transition
+        # TODO remove this special case in version 0.15.0
+        missing_gc = next((gc for g in self.grounds.values() for gc in g.connections), None)
+        if not self.ground_connections and missing_gc is not None:
+            gc_hint = (
+                "ground.connections" if len(self.grounds) == 1 else "[gc for g in grounds for gc in g.connections]"
+            )
+            msg = (
+                f"It looks like you forgot to add the ground connections to the network. Either use "
+                f"`ElectricalNetwork.from_element()` to create the network or add the ground connections "
+                f"manually, e.g: `ElectricalNetwork(..., ground_connections={gc_hint})`."
+            )
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.UNKNOWN_ELEMENT)
+
         found_source = False
         for element in elements:
             # Check connected elements and check network assignment
