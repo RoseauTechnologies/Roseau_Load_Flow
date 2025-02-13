@@ -17,7 +17,7 @@ def generate_small_network() -> None:
     ground = rlf.Ground("ground")
     source_bus = rlf.Bus(id="bus0", phases="abcn", geometry=point1)
     load_bus = rlf.Bus(id="bus1", phases="abcn", geometry=point2)
-    ground.connect(load_bus)
+    gc = rlf.GroundConnection(id="gc", ground=ground, element=load_bus)
 
     voltages = [20000.0 + 0.0j, -10000.0 - 17320.508076j, -10000.0 + 17320.508076j]
     vs = rlf.VoltageSource(id="vs", bus=source_bus, voltages=voltages, phases="abcn")
@@ -38,6 +38,7 @@ def generate_small_network() -> None:
         sources=[vs],
         grounds=[ground],
         potential_refs=[pref],
+        ground_connections=[gc],
     )
     en.solve_load_flow()
     en.to_json(TEST_NETWORKS_PATH / "small_network.json")
@@ -60,7 +61,7 @@ def generate_single_phase_network() -> None:
     bus1 = rlf.Bus(id="bus1", phases=phases, geometry=point2)
 
     ground = rlf.Ground("ground")
-    ground.connect(bus1)
+    gc = rlf.GroundConnection(id="gc", ground=ground, element=bus1)
     pref = rlf.PotentialRef(id="pref", element=ground)
 
     vs = rlf.VoltageSource(id="vs", bus=bus0, voltages=[20000.0 + 0.0j], phases=phases)
@@ -78,6 +79,7 @@ def generate_single_phase_network() -> None:
         sources=[vs],
         grounds=[ground],
         potential_refs=[pref],
+        ground_connections=[gc],
     )
     en.solve_load_flow()
     en.to_json(TEST_NETWORKS_PATH / "single_phase_network.json")
@@ -107,7 +109,7 @@ def generate_all_element_network() -> None:
     # Transformer between bus1 and bus2
     tp0 = rlf.TransformerParameters.from_catalogue(name="SE Minera A0Ak 100kVA 15/20kV(20) 410V Dyn11", id="tp0")
     transformer0 = rlf.Transformer(id="transformer0", bus_hv=bus1, bus_lv=bus2, parameters=tp0, tap=1.025)
-    ground.connect(bus=bus2, phase="n")
+    gc0 = rlf.GroundConnection(id="gc0", ground=ground, element=bus2, phase="n")
 
     # Switch between the bus2 and the bus3
     switch0 = rlf.Switch(id="switch0", bus1=bus2, bus2=bus3)
@@ -196,6 +198,7 @@ def generate_all_element_network() -> None:
         sources=[source0, source1, source2],
         grounds=[ground],
         potential_refs=[pref],
+        ground_connections=[gc0],
     )
     en.solve_load_flow()
     en.to_json(TEST_NETWORKS_PATH / "all_element_network.json")
