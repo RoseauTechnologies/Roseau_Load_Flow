@@ -1405,9 +1405,8 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.EMPTY_NETWORK)
 
-        # Temporarily print a more usefull error message for missing ground_connections to help
-        # with the transition
-        # TODO remove this special case in version 0.15.0
+        # Temporarily print a better error message for missing ground_connections to help with the
+        # transition. TODO remove this special case in version 0.15.0
         missing_gc = next((gc for g in self.grounds.values() for gc in g.connections), None)
         if not self.ground_connections and missing_gc is not None:
             gc_hint = (
