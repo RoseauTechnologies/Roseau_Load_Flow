@@ -19,6 +19,7 @@ from roseau.load_flow.io.dict import (
 from roseau.load_flow.models import (
     Bus,
     Ground,
+    GroundConnection,
     Line,
     LineParameters,
     PotentialRef,
@@ -50,12 +51,24 @@ def ignore_unmatched_warnings(warn_check, /) -> None:
             warn_check.list.remove(w)
 
 
+def remove_results(obj: object, /) -> None:
+    """Recursively remove the 'results' key from a JSON structure."""
+    if isinstance(obj, dict):
+        if "results" in obj:
+            del obj["results"]
+        for v in obj.values():
+            remove_results(v)
+    elif isinstance(obj, list):
+        for x in obj:
+            remove_results(x)
+
+
 def test_to_dict():
     ground = Ground("ground")
     vn = 400 / np.sqrt(3)
     source_bus = Bus(id="source", phases="abcn", geometry=Point(0.0, 0.0), min_voltage_level=0.9, nominal_voltage=400)
     load_bus = Bus(id="load bus", phases="abcn", geometry=Point(0.0, 1.0), max_voltage_level=1.1, nominal_voltage=400)
-    ground.connect(load_bus)
+    gc = GroundConnection(id="gc", ground=ground, element=load_bus)
     p_ref = PotentialRef(id="pref", element=ground)
     vs = VoltageSource(id="vs", bus=source_bus, phases="abcn", voltages=vn)
 
@@ -101,6 +114,7 @@ def test_to_dict():
         sources=[vs],
         grounds=[ground],
         potential_refs=[p_ref],
+        ground_connections=[gc],
     )
 
     # Same id, different line parameters -> fail
@@ -153,8 +167,8 @@ def test_to_dict():
     geom = Point(0.0, 0.0)
     source_bus = Bus(id="source", phases="abcn", geometry=geom)
     load_bus = Bus(id="load bus", phases="abcn", geometry=geom)
-    ground.connect(load_bus)
-    ground.connect(source_bus)
+    gc_load = GroundConnection(id="gc_load", ground=ground, element=load_bus)
+    gc_source = GroundConnection(id="gc_source", ground=ground, element=source_bus)
     p_ref = PotentialRef(id="pref", element=ground)
     vs = VoltageSource(id="vs", bus=source_bus, phases="abcn", voltages=vn)
 
@@ -176,6 +190,7 @@ def test_to_dict():
         sources=[vs],
         grounds=[ground],
         potential_refs=[p_ref],
+        ground_connections=[gc_load, gc_source],
     )
 
     # Same id, different transformer parameters -> fail
@@ -248,17 +263,6 @@ def test_from_dict_v1():
     assert_json_close(net_dict, expected_dict)
 
     # Test with `include_results=False`
-    def remove_results(obj: object, /) -> None:
-        """Recursively remove the 'results' key from a JSON structure."""
-        if isinstance(obj, dict):
-            if "results" in obj:
-                del obj["results"]
-            for v in obj.values():
-                remove_results(v)
-        elif isinstance(obj, list):
-            for x in obj:
-                remove_results(x)
-
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         net = ElectricalNetwork.from_dict(data=dict_v1, include_results=False)

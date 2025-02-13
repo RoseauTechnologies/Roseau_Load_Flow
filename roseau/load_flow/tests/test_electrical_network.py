@@ -19,6 +19,7 @@ from roseau.load_flow.models import (
     CurrentLoad,
     FlexibleParameter,
     Ground,
+    GroundConnection,
     ImpedanceLoad,
     Line,
     LineParameters,
@@ -94,11 +95,10 @@ def replace_none(scalar_or_none, default):
 
 def test_connect_and_disconnect():
     ground = Ground("ground")
-    vn = 400 / np.sqrt(3)
     source_bus = Bus(id="source", phases="abcn")
     load_bus = Bus(id="load bus", phases="abcn")
-    ground.connect(load_bus)
-    vs = VoltageSource(id="vs", phases="abcn", bus=source_bus, voltages=vn)
+    GroundConnection(ground=ground, element=load_bus)
+    vs = VoltageSource(id="vs", phases="abcn", bus=source_bus, voltages=400 / np.sqrt(3))
     load = PowerLoad(id="power load", phases="abcn", bus=load_bus, powers=[100 + 0j, 100 + 0j, 100 + 0j])
     lp = LineParameters(id="test", z_line=np.eye(4, dtype=complex))
     line = Line(id="line", bus1=source_bus, bus2=load_bus, phases="abcn", parameters=lp, length=10)
@@ -108,7 +108,7 @@ def test_connect_and_disconnect():
     # Connection of a new connected component
     load_bus2 = Bus(id="load_bus2", phases="abcn")
     ground2 = Ground("ground2")
-    ground2.connect(bus=load_bus2)
+    GroundConnection(ground=ground2, element=load_bus2)
     tp = TransformerParameters.from_catalogue(name="SE Minera A0Ak 50kVA 15/20kV(20) 410V Yzn11")
     Transformer(id="transfo", bus_hv=load_bus, bus_lv=load_bus2, parameters=tp)
     with pytest.raises(RoseauLoadFlowException) as e:
@@ -157,7 +157,7 @@ def test_connect_and_disconnect():
         en._disconnect_element(line)
     assert e.value.msg == (
         "<Line: id='line', bus1='source', bus2='load bus', phases1='abcn', phases2='abcn', length=10.0, "
-        "max_loading=1.0> is a Line and it cannot be disconnected from a network."
+        "max_loading=1.0> is a line and cannot be disconnected from a network."
     )
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT
 
@@ -167,7 +167,7 @@ def test_recursive_connect_disconnect():
     vn = 400 / np.sqrt(3)
     source_bus = Bus(id="source", phases="abcn")
     load_bus = Bus(id="load bus", phases="abcn")
-    ground.connect(load_bus)
+    gc = GroundConnection(ground=ground, element=load_bus)
     VoltageSource(id="vs", phases="abcn", bus=source_bus, voltages=vn)
     load = PowerLoad(id="power load", phases="abcn", bus=load_bus, powers=[100 + 0j, 100 + 0j, 100 + 0j])
     lp = LineParameters(id="test", z_line=np.eye(4, dtype=complex))
@@ -210,7 +210,7 @@ def test_recursive_connect_disconnect():
         parameters=lp,
         length=0.5,
     )
-    assert load_bus._connected_elements == [ground, load, line, new_line]
+    assert load_bus._connected_elements == [gc, load, line, new_line]
     assert new_bus.network == en
     assert new_bus._connected_elements == [new_load, new_line2, new_line]
     assert new_bus.id in en.buses
@@ -232,7 +232,7 @@ def test_recursive_connect_disconnect():
 
     # Disconnect a load
     new_load.disconnect()
-    assert load_bus._connected_elements == [ground, load, line, new_line]
+    assert load_bus._connected_elements == [gc, load, line, new_line]
     assert new_bus.network == en
     assert new_bus._connected_elements == [new_line2, new_line]
     assert new_bus.id in en.buses
@@ -261,7 +261,7 @@ def test_recursive_connect_disconnect_ground():
     vn = 400 / np.sqrt(3)
     source_bus = Bus(id="source", phases="abcn")
     load_bus = Bus(id="load bus", phases="abcn")
-    ground.connect(load_bus)
+    GroundConnection(ground=ground, element=load_bus)
     VoltageSource(id="vs", phases="abcn", bus=source_bus, voltages=vn)
     PowerLoad(id="power load", phases="abcn", bus=load_bus, powers=[100 + 0j, 100 + 0j, 100 + 0j])
     lp = LineParameters(id="test", z_line=np.eye(4, dtype=complex))
@@ -313,7 +313,7 @@ def test_bad_networks():
     ground = Ground("ground")
     bus1 = Bus(id="bus1", phases="abcn")
     bus2 = Bus(id="bus2", phases="abcn")
-    ground.connect(bus2)
+    gc = GroundConnection(ground=ground, element=bus2)
     lp = LineParameters(id="test", z_line=np.eye(3, dtype=complex))
     line = Line(id="line", bus1=bus1, bus2=bus2, phases="abc", parameters=lp, length=10)
     p_ref = PotentialRef(id="pref1", element=ground)
@@ -330,7 +330,7 @@ def test_bad_networks():
 
     # Bad constructor
     bus0 = Bus(id="bus0", phases="abcn")
-    ground.connect(bus0)
+    GroundConnection(ground=ground, element=bus0)
     voltages = [20000.0 + 0.0j, -10000.0 - 17320.508076j, -10000.0 + 17320.508076j]
     vs = VoltageSource(id="vs", bus=bus0, phases="abcn", voltages=voltages)
     switch = Switch(id="switch", bus1=bus0, bus2=bus1, phases="abcn")
@@ -344,6 +344,7 @@ def test_bad_networks():
             sources=[vs],
             grounds=[ground],
             potential_refs=[p_ref],
+            ground_connections=[gc],
         )
     assert "but has not been added to the network. It must be added with 'connect'." in e.value.msg
     assert bus2.id in e.value.msg
@@ -381,7 +382,7 @@ def test_bad_networks():
     assert t.network is None
 
     # Good network
-    ground.connect(bus3)
+    GroundConnection(ground=ground, element=bus3)
 
     # 2 potential reference
     p_ref2 = PotentialRef(id="pref2", element=bus3)
@@ -407,7 +408,7 @@ def test_bad_networks():
     load_bus = Bus(id="lb", phases="abcn")
     ground = Ground(id="g")
     pref = PotentialRef(id="pr", element=ground)
-    ground.connect(src_bus)
+    gc = GroundConnection(id="gc", ground=ground, element=src_bus)
     lp = LineParameters(id="test", z_line=np.eye(4, dtype=complex))
     line = Line(id="ln", bus1=src_bus, bus2=load_bus, phases="abcn", parameters=lp, length=10)
     vs = VoltageSource(id="vs", bus=src_bus, phases="abcn", voltages=[230, 120 + 150j, 120 - 150j])
@@ -422,6 +423,7 @@ def test_bad_networks():
             sources={"vs": vs},
             grounds={"g": ground},
             potential_refs={"pr": pref},
+            ground_connections={"gc": gc},
         )
     assert e.value.msg == "Bus ID 'sb' does not match its key in the dictionary 'foo'."
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_BUS_ID
@@ -550,8 +552,15 @@ def test_frames(small_network: ElectricalNetwork):
     grounds_df = small_network.grounds_frame
     assert isinstance(grounds_df, pd.DataFrame)
     assert grounds_df.shape == (1, 1)
-    assert grounds_df.columns.tolist() == ["phase"]
-    assert grounds_df.index.names == ["id", "bus_id"]
+    assert grounds_df.columns.tolist() == ["id"]
+    assert grounds_df.index.name is None
+
+    # Ground Connections
+    ground_conn_df = small_network.ground_connections_frame
+    assert isinstance(ground_conn_df, pd.DataFrame)
+    assert ground_conn_df.shape == (1, 6)
+    assert ground_conn_df.columns.tolist() == ["ground_id", "element_id", "element_type", "phase", "side", "impedance"]
+    assert ground_conn_df.index.name == "id"
 
     # Potential refs
     potential_refs_df = small_network.potential_refs_frame
@@ -965,7 +974,7 @@ def test_network_elements(small_network: ElectricalNetwork):
     bus_vs = Bus(id="bus_vs", phases="abcn")
     VoltageSource(id="vs2", bus=bus_vs, voltages=15e3)
     ground = Ground(id="ground2")
-    ground.connect(bus=bus_vs, phase="a")
+    GroundConnection(ground=ground, element=bus_vs, phase="a")
     PotentialRef(id="pref2", element=ground)
     small_network_2 = ElectricalNetwork.from_element(initial_bus=bus_vs)
 
@@ -984,6 +993,7 @@ def test_network_elements(small_network: ElectricalNetwork):
         small_network.loads.values(),
         small_network.grounds.values(),
         small_network.potential_refs.values(),
+        small_network.ground_connections.values(),
     ):
         assert element.network == small_network
     for element in it.chain(
@@ -994,6 +1004,7 @@ def test_network_elements(small_network: ElectricalNetwork):
         small_network_2.loads.values(),
         small_network_2.grounds.values(),
         small_network_2.potential_refs.values(),
+        small_network_2.ground_connections.values(),
     ):
         assert element.network == small_network_2
 
@@ -1017,6 +1028,8 @@ def test_network_results_warning(small_network, small_network_with_results, recw
         assert ground.network == en
     for p_ref in en.potential_refs.values():
         assert p_ref.network == en
+    for gc in en.ground_connections.values():
+        assert gc.network == en
 
     # All the results function raises an exception
     result_field_names_dict = {
@@ -1044,13 +1057,16 @@ def test_network_results_warning(small_network, small_network_with_results, recw
         "switches": ("res_currents", "res_potentials", "res_powers", "res_voltages"),
         "loads": ("res_currents", "res_powers", "res_potentials", "res_voltages"),
         "sources": ("res_currents", "res_potentials", "res_powers"),
+        "grounds": ("res_potential",),
+        "potential_refs": ("res_current",),
+        "ground_connections": ("res_current",),
     }
     for bus in en.buses.values():
         for result_field_name in result_field_names_dict["buses"]:
             if result_field_name == "res_violated" and bus.min_voltage is None and bus.max_voltage is None:
                 continue  # No min or max voltages so no call to results
             with pytest.raises(RoseauLoadFlowException) as e:
-                _ = getattr(bus, result_field_name)
+                getattr(bus, result_field_name)
             assert e.value.code == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
     for line in en.lines.values():
         for result_field_name in result_field_names_dict["lines"]:
@@ -1059,22 +1075,22 @@ def test_network_results_warning(small_network, small_network_with_results, recw
             if not line.with_shunt and "shunt" in result_field_name:
                 continue  # No results if no shunt
             with pytest.raises(RoseauLoadFlowException) as e:
-                _ = getattr(line, result_field_name)
+                getattr(line, result_field_name)
             assert e.value.code == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
     for transformer in en.transformers.values():
         for result_field_name in result_field_names_dict["transformers"]:
             with pytest.raises(RoseauLoadFlowException) as e:
-                _ = getattr(transformer, result_field_name)
+                getattr(transformer, result_field_name)
             assert e.value.code == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
     for switch in en.switches.values():
         for result_field_name in result_field_names_dict["switches"]:
             with pytest.raises(RoseauLoadFlowException) as e:
-                _ = getattr(switch, result_field_name)
+                getattr(switch, result_field_name)
             assert e.value.code == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
     for load in en.loads.values():
         for result_field_name in result_field_names_dict["loads"]:
             with pytest.raises(RoseauLoadFlowException) as e:
-                _ = getattr(load, result_field_name)
+                getattr(load, result_field_name)
             assert e.value.code == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
         if load.is_flexible and isinstance(load, PowerLoad):
             with pytest.raises(RoseauLoadFlowException) as e:
@@ -1083,16 +1099,23 @@ def test_network_results_warning(small_network, small_network_with_results, recw
     for source in en.sources.values():
         for result_field_name in result_field_names_dict["sources"]:
             with pytest.raises(RoseauLoadFlowException) as e:
-                _ = getattr(source, result_field_name)
+                getattr(source, result_field_name)
             assert e.value.code == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
     for ground in en.grounds.values():
-        with pytest.raises(RoseauLoadFlowException) as e:
-            _ = ground.res_potential
-        assert e.value.code == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
+        for result_field_name in result_field_names_dict["grounds"]:
+            with pytest.raises(RoseauLoadFlowException) as e:
+                getattr(ground, result_field_name)
+            assert e.value.code == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
     for p_ref in en.potential_refs.values():
-        with pytest.raises(RoseauLoadFlowException) as e:
-            _ = p_ref.res_current
-        assert e.value.code == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
+        for result_field_name in result_field_names_dict["potential_refs"]:
+            with pytest.raises(RoseauLoadFlowException) as e:
+                getattr(p_ref, result_field_name)
+            assert e.value.code == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
+    for gc in en.ground_connections.values():
+        for result_field_name in result_field_names_dict["ground_connections"]:
+            with pytest.raises(RoseauLoadFlowException) as e:
+                getattr(gc, result_field_name)
+            assert e.value.code == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
 
     # Network with results
     en = small_network_with_results
@@ -1103,32 +1126,37 @@ def test_network_results_warning(small_network, small_network_with_results, recw
         for result_field_name in result_field_names_dict["buses"]:
             if result_field_name == "res_violated" and bus.min_voltage is None and bus.max_voltage is None:
                 continue  # No min or max voltages so no call to results
-            _ = getattr(bus, result_field_name)
+            getattr(bus, result_field_name)
     for line in en.lines.values():
         for result_field_name in result_field_names_dict["lines"]:
             if result_field_name == "res_violated":
                 continue  # No ampacities
             if not line.with_shunt and "shunt" in result_field_name:
                 continue  # No results if no shunt
-            _ = getattr(line, result_field_name)
+            getattr(line, result_field_name)
     for transformer in en.transformers.values():
         for result_field_name in result_field_names_dict["transformers"]:
-            _ = getattr(transformer, result_field_name)
+            getattr(transformer, result_field_name)
     for switch in en.switches.values():
         for result_field_name in result_field_names_dict["switches"]:
-            _ = getattr(switch, result_field_name)
+            getattr(switch, result_field_name)
     for load in en.loads.values():
         for result_field_name in result_field_names_dict["loads"]:
-            _ = getattr(load, result_field_name)
+            getattr(load, result_field_name)
         if load.is_flexible and isinstance(load, PowerLoad):
             _ = load.res_flexible_powers
     for source in en.sources.values():
         for result_field_name in result_field_names_dict["sources"]:
-            _ = getattr(source, result_field_name)
+            getattr(source, result_field_name)
     for ground in en.grounds.values():
-        _ = ground.res_potential
+        for result_field_name in result_field_names_dict["grounds"]:
+            getattr(ground, result_field_name)
     for p_ref in en.potential_refs.values():
-        _ = p_ref.res_current
+        for result_field_name in result_field_names_dict["potential_refs"]:
+            getattr(p_ref, result_field_name)
+    for gc in en.ground_connections.values():
+        for result_field_name in result_field_names_dict["ground_connections"]:
+            getattr(gc, result_field_name)
     assert len(recwarn) == 0
 
     # Modify something
@@ -1144,7 +1172,7 @@ def test_network_results_warning(small_network, small_network_with_results, recw
             if result_field_name == "res_violated" and bus.min_voltage is None and bus.max_voltage is None:
                 continue  # No min or max voltages so no call to results
             with check_result_warning(expected_message=expected_message):
-                _ = getattr(bus, result_field_name)
+                getattr(bus, result_field_name)
     for line in en.lines.values():
         for result_field_name in result_field_names_dict["lines"]:
             if result_field_name == "res_violated":
@@ -1152,32 +1180,38 @@ def test_network_results_warning(small_network, small_network_with_results, recw
             if not line.with_shunt and "shunt" in result_field_name:
                 continue  # No results if no shunt
             with check_result_warning(expected_message=expected_message):
-                _ = getattr(line, result_field_name)
+                getattr(line, result_field_name)
     for transformer in en.transformers.values():
         for result_field_name in result_field_names_dict["transformers"]:
             with check_result_warning(expected_message=expected_message):
-                _ = getattr(transformer, result_field_name)
+                getattr(transformer, result_field_name)
     for switch in en.switches.values():
         for result_field_name in result_field_names_dict["switches"]:
             with check_result_warning(expected_message=expected_message):
-                _ = getattr(switch, result_field_name)
+                getattr(switch, result_field_name)
     for load in en.loads.values():
         for result_field_name in result_field_names_dict["loads"]:
             with check_result_warning(expected_message=expected_message):
-                _ = getattr(load, result_field_name)
+                getattr(load, result_field_name)
         if load.is_flexible and isinstance(load, PowerLoad):
             with check_result_warning(expected_message=expected_message):
                 _ = load.res_flexible_powers
     for source in en.sources.values():
         for result_field_name in result_field_names_dict["sources"]:
             with check_result_warning(expected_message=expected_message):
-                _ = getattr(source, result_field_name)
+                getattr(source, result_field_name)
     for ground in en.grounds.values():
-        with check_result_warning(expected_message=expected_message):
-            _ = ground.res_potential
+        for result_field_name in result_field_names_dict["grounds"]:
+            with check_result_warning(expected_message=expected_message):
+                getattr(ground, result_field_name)
     for p_ref in en.potential_refs.values():
-        with check_result_warning(expected_message=expected_message):
-            _ = p_ref.res_current
+        for result_field_name in result_field_names_dict["potential_refs"]:
+            with check_result_warning(expected_message=expected_message):
+                getattr(p_ref, result_field_name)
+    for gc in en.ground_connections.values():
+        for result_field_name in result_field_names_dict["ground_connections"]:
+            with check_result_warning(expected_message=expected_message):
+                getattr(gc, result_field_name)
 
     # Ensure that a single warning is raised when having a data frame result
     expected_message = (
@@ -1199,6 +1233,12 @@ def test_network_results_warning(small_network, small_network_with_results, recw
         _ = en.res_sources
     with check_result_warning(expected_message=expected_message):
         _ = en.res_loads_flexible_powers
+    with check_result_warning(expected_message=expected_message):
+        _ = en.res_grounds
+    with check_result_warning(expected_message=expected_message):
+        _ = en.res_potential_refs
+    with check_result_warning(expected_message=expected_message):
+        _ = en.res_ground_connections
 
 
 def test_network_results_error(small_network):
@@ -1217,8 +1257,7 @@ def test_network_results_error(small_network):
 def test_load_flow_results_frames(small_network_with_results):
     en = small_network_with_results
     # Multiply by sqrt(3) because a neutral exists in the small network
-    nominal_voltage = 20_000 * np.sqrt(3)
-    en.buses["bus0"].nominal_voltage = nominal_voltage
+    en.buses["bus0"].nominal_voltage = 20e3 * np.sqrt(3)
     en.buses["bus0"].min_voltage_level = 1.05
 
     # Buses results
@@ -1558,6 +1597,18 @@ def test_load_flow_results_frames(small_network_with_results):
         .set_index(["potential_ref_id"])
     )
     assert_frame_equal(en.res_potential_refs, expected_res_potential_refs, check_exact=False)
+
+    # Ground connections results
+    expected_res_ground_connections = (
+        pd.DataFrame.from_records(
+            [
+                {"connection_id": "gc", "current": -1.08420e-18 + 2.89120e-19j},
+            ]
+        )
+        .astype({"connection_id": object, "current": complex})
+        .set_index(["connection_id"])
+    )
+    assert_frame_equal(en.res_ground_connections, expected_res_ground_connections, check_exact=False)
 
     # No flexible loads
     assert en.res_loads_flexible_powers.empty
@@ -2145,6 +2196,8 @@ def test_serialization(all_element_network, all_element_network_with_results):
             assert ("results" in ground_data) == included
         for p_ref_data in en_dict["potential_refs"]:
             assert ("results" in p_ref_data) == included
+        for gc_data in en_dict["ground_connections"]:
+            assert ("results" in gc_data) == included
 
     # No results: include_results is ignored
     en = all_element_network
@@ -2197,6 +2250,7 @@ def test_results_to_dict(all_element_network_with_results):
         "sources",
         "grounds",
         "potential_refs",
+        "ground_connections",
     }
     for v in res_network.values():
         assert isinstance(v, list)
@@ -2274,6 +2328,11 @@ def test_results_to_dict(all_element_network_with_results):
         current = complex(*res_potential_ref.pop("current"))
         np.testing.assert_allclose(current, potential_ref.res_current.m)
         assert not res_potential_ref, res_potential_ref
+    for res_gc in res_network["ground_connections"]:
+        gc = en.ground_connections[res_gc.pop("id")]
+        current = complex(*res_gc.pop("current"))
+        np.testing.assert_allclose(current, gc.res_current.m)
+        assert not res_gc, res_gc
 
 
 def test_results_to_dict_full(all_element_network_with_results):
@@ -2290,6 +2349,7 @@ def test_results_to_dict_full(all_element_network_with_results):
         "sources",
         "grounds",
         "potential_refs",
+        "ground_connections",
     }
     for v in res_network.values():
         assert isinstance(v, list)
@@ -2454,6 +2514,11 @@ def test_results_to_dict_full(all_element_network_with_results):
         current = complex(*res_potential_ref.pop("current"))
         np.testing.assert_allclose(current, potential_ref.res_current.m)
         assert not res_potential_ref, res_potential_ref
+    for res_gc in res_network["ground_connections"]:
+        gc = en.ground_connections[res_gc.pop("id")]
+        current = complex(*res_gc.pop("current"))
+        np.testing.assert_allclose(current, gc.res_current.m)
+        assert not res_gc, res_gc
 
 
 def test_results_to_json(small_network_with_results, tmp_path):

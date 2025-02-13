@@ -21,8 +21,12 @@ buses = {
 
 # Grounds and potential references
 ground = rlf.Ground("ground")
-for bus_id in (1, 3, 4, 5, 7, 9, 10, 11, 13):
-    ground.connect(buses[bus_id])
+gc_id = 1
+for bus in buses.values():
+    if "n" not in bus.phases:
+        continue
+    rlf.GroundConnection(id=f"{gc_id}", ground=ground, element=bus)
+    gc_id += 1
 potential_refs = [
     rlf.PotentialRef(id="pref", element=ground),
     rlf.PotentialRef(id="tr12", element=buses[2]),
@@ -433,4 +437,5 @@ en = rlf.ElectricalNetwork(
     sources=[vs],
     grounds=[ground],
     potential_refs=potential_refs,
+    ground_connections=ground.connections,
 )

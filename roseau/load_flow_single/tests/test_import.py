@@ -11,6 +11,7 @@ def test_import():
         # Multi-phase elements
         "Ground",
         "PotentialRef",
+        "GroundConnection",
         # Sequences
         "NegativeSequence",
         "PositiveSequence",

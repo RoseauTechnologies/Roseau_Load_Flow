@@ -34,6 +34,7 @@ from roseau.load_flow.models import (
     Element,
     FlexibleParameter,
     Ground,
+    GroundConnection,
     ImpedanceLoad,
     Line,
     LineParameters,
@@ -75,6 +76,7 @@ __all__ = [
     # Core models
     "Element",
     "Ground",
+    "GroundConnection",
     "PotentialRef",
     "AbstractBranch",
     "AbstractTerminal",

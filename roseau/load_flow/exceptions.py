@@ -18,6 +18,7 @@ class RoseauLoadFlowExceptionCode(StrEnum):
     # Grounds and Potential references
     BAD_GROUND_ID = auto()
     BAD_POTENTIAL_REF_ID = auto()
+    BAD_GROUND_CONNECTION_ID = auto()
 
     # Buses
     BAD_BUS_ID = auto()
@@ -28,6 +29,7 @@ class RoseauLoadFlowExceptionCode(StrEnum):
 
     # Branches
     BAD_BRANCH_TYPE = auto()
+    BAD_BRANCH_SIDE = auto()
 
     # Lines
     BAD_LINE_ID = auto()

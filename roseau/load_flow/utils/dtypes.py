@@ -25,6 +25,7 @@ DTYPES: Final = {
     "source_id": object,
     "ground_id": object,
     "potential_ref_id": object,
+    "connection_id": object,
     "type": object,
     "phase": PhaseDtype,
     "current": complex,

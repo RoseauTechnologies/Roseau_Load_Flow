@@ -41,6 +41,11 @@ Roseau Load Flow Literals
 
     Available solvers for the load flow computation.
 
+.. class:: Side
+
+    The side of a transformer (``"HV"`` or ``"LV"``) or a line/switch (1 or 2). ``None`` is used
+    for terminal elements that do not have a side.
+
 Union Input Types (Wide)
 ------------------------
 
@@ -126,6 +131,7 @@ QtyOrMag: TypeAlias = Q_[T] | T
 ControlType: TypeAlias = Literal["constant", "p_max_u_production", "p_max_u_consumption", "q_u"]
 ProjectionType: TypeAlias = Literal["euclidean", "keep_p", "keep_q"]
 Solver: TypeAlias = Literal["newton", "newton_goldstein", "backward_forward"]
+Side: TypeAlias = Literal[1, 2, "HV", "LV"] | None
 
 # Input Types (Wide)
 Int: TypeAlias = int | np.integer
@@ -146,7 +152,6 @@ ComplexArray: TypeAlias = np.ndarray[tuple[int], np.dtype[np.complex128]]  # 1D
 FloatArray: TypeAlias = np.ndarray[tuple[int], np.dtype[np.float64]]  # 1D
 BoolArray: TypeAlias = np.ndarray[tuple[int], np.dtype[np.bool_]]  # 1D
 
-
 __all__ = [
     # Helpers
     "Id",
@@ -158,6 +163,7 @@ __all__ = [
     "ControlType",
     "ProjectionType",
     "Solver",
+    "Side",
     # Wide input types
     "Int",
     "Float",
