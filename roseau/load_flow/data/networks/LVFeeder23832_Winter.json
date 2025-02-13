@@ -3,13 +3,7 @@
   "is_multiphase": true,
   "grounds": [
     {
-      "id": "ground",
-      "buses": [
-        {
-          "id": "MVLVFeeder07524",
-          "phase": "n"
-        }
-      ]
+      "id": "ground"
     }
   ],
   "potential_refs": [
@@ -94,6 +88,8 @@
         "type": "Point",
         "coordinates": [-1.40977863333772, 49.411627422261766]
       },
+      "connect_neutral_hv": null,
+      "connect_neutral_lv": null,
       "max_loading": 1.0,
       "params_id": "Dyn11_160kVA",
       "tap": 1.0
@@ -182,6 +178,20 @@
       "p0": 460.0,
       "psc": 2350.0,
       "vsc": 0.04
+    }
+  ],
+  "ground_connections": [
+    {
+      "id": "1",
+      "ground": "ground",
+      "element": {
+        "id": "MVLVFeeder07524",
+        "type": "bus"
+      },
+      "phase": "n",
+      "impedance": [0.0, 0.0],
+      "side": null,
+      "on_connected": "raise"
     }
   ]
 }
