@@ -41,7 +41,7 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ### Detailed changes
 
-- {gh-pr}`334` Add `GroundConnection` class with the following features:
+- {gh-pr}`335` Add `GroundConnection` class with the following features:
 
   - Ground connections for all terminal elements (buses, loads, sources) and all branch elements,
     (transformers, lines, switches). Previously only buses could be connected to ground.
