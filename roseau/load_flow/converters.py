@@ -17,7 +17,7 @@ from roseau.load_flow.units import Q_, ureg_wraps
 logger = logging.getLogger(__name__)
 
 
-def _calculate_voltages(potentials: ComplexArray, phases: str) -> ComplexArray:
+def _calculate_voltages(potentials: ComplexArrayLike1D, phases: str) -> ComplexArray:
     if len(potentials) != len(phases):
         msg = (
             f"Number of potentials must match number of phases, got {len(potentials)} potentials "
@@ -67,7 +67,7 @@ def calculate_voltages(potentials: ComplexArrayLike1D, phases: str) -> Q_[Comple
         array([230.+0.j]) <Unit('volt')>
     """
     calculate_voltage_phases(phases)  # check if phases are valid
-    return _calculate_voltages(np.asarray(potentials), phases)
+    return _calculate_voltages(np.asarray(potentials), phases)  # type: ignore
 
 
 _VOLTAGE_PHASES_CACHE = {

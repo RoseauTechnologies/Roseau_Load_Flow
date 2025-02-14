@@ -13,11 +13,13 @@ from collections import defaultdict
 from typing import TYPE_CHECKING
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
+from roseau.load_flow.io.common import NetworkElements
 from roseau.load_flow.models import (
     AbstractBranch,
     AbstractLoad,
     Bus,
     Ground,
+    GroundConnection,
     Line,
     LineParameters,
     PotentialRef,
@@ -39,19 +41,7 @@ NETWORK_JSON_VERSION = 4
 """The current version of the network JSON file format."""
 
 
-def network_from_dict(  # noqa: C901
-    data: JsonDict, *, include_results: bool = True
-) -> tuple[
-    dict[Id, Bus],
-    dict[Id, Line],
-    dict[Id, Transformer],
-    dict[Id, Switch],
-    dict[Id, AbstractLoad],
-    dict[Id, VoltageSource],
-    dict[Id, Ground],
-    dict[Id, PotentialRef],
-    bool,
-]:
+def network_from_dict(data: JsonDict, *, include_results: bool = True) -> tuple[NetworkElements, bool]:  # noqa: C901
     """Create the electrical network elements from a dictionary.
 
     Args:
@@ -63,8 +53,9 @@ def network_from_dict(  # noqa: C901
             the results are also loaded into the network.
 
     Returns:
-        The buses, lines, transformers, switches, loads, sources, grounds and potential refs to construct the electrical
-        network and a boolean indicating if the network has results.
+        The buses, lines, transformers, switches, loads, sources, grounds, potential refs and ground
+        connections to construct the electrical network and a boolean indicating if the network has
+        results.
     """
     data = copy.deepcopy(data)  # Make a copy to avoid modifying the original
 
@@ -105,6 +96,13 @@ def network_from_dict(  # noqa: C901
         for tp in data["transformers_params"]
     }
 
+    # Grounds
+    grounds: dict[Id, Ground] = {}
+    for ground_data in data["grounds"]:
+        ground = Ground.from_dict(data=ground_data, include_results=include_results)
+        grounds[ground.id] = ground
+        has_results = has_results and not ground._no_results
+
     # Buses, loads and sources
     buses: dict[Id, Bus] = {}
     for bus_data in data["buses"]:
@@ -124,15 +122,7 @@ def network_from_dict(  # noqa: C901
         sources[source.id] = source
         has_results = has_results and not source._no_results
 
-    # Grounds and potential refs
-    grounds: dict[Id, Ground] = {}
-    for ground_data in data["grounds"]:
-        for ground_bus_data in ground_data["buses"]:
-            ground_bus_data["bus"] = buses[ground_bus_data.pop("id")]
-        ground = Ground.from_dict(data=ground_data, include_results=include_results)
-        grounds[ground.id] = ground
-        has_results = has_results and not ground._no_results
-
+    # Potential refs
     potential_refs: dict[Id, PotentialRef] = {}
     for pref_data in data["potential_refs"]:
         if "bus" in pref_data:
@@ -148,7 +138,7 @@ def network_from_dict(  # noqa: C901
         has_results = has_results and not p_ref._no_results
 
     # Lines
-    lines_dict: dict[Id, Line] = {}
+    lines: dict[Id, Line] = {}
     for line_data in data["lines"]:
         line_data["bus1"] = buses[line_data["bus1"]]
         line_data["bus2"] = buses[line_data["bus2"]]
@@ -156,27 +146,51 @@ def network_from_dict(  # noqa: C901
         if (ground_id := line_data.pop("ground", None)) is not None:
             line_data["ground"] = grounds[ground_id]
         line = Line.from_dict(data=line_data, include_results=include_results)
-        lines_dict[line.id] = line
+        lines[line.id] = line
         has_results = has_results and not line._no_results
 
     # Transformers
-    transformers_dict: dict[Id, Transformer] = {}
+    transformers: dict[Id, Transformer] = {}
     for transformer_data in data["transformers"]:
         transformer_data["bus_hv"] = buses[transformer_data["bus_hv"]]
         transformer_data["bus_lv"] = buses[transformer_data["bus_lv"]]
         transformer_data["parameters"] = transformers_params[transformer_data.pop("params_id")]
         transformer = Transformer.from_dict(data=transformer_data, include_results=include_results)
-        transformers_dict[transformer.id] = transformer
+        transformers[transformer.id] = transformer
         has_results = has_results and not transformer._no_results
 
     # Switches
-    switches_dict: dict[Id, Switch] = {}
+    switches: dict[Id, Switch] = {}
     for switch_data in data["switches"]:
         switch_data["bus1"] = buses[switch_data["bus1"]]
         switch_data["bus2"] = buses[switch_data["bus2"]]
         switch = Switch.from_dict(data=switch_data, include_results=include_results)
-        switches_dict[switch.id] = switch
+        switches[switch.id] = switch
         has_results = has_results and not switch._no_results
+
+    # Ground connections
+    ground_connections: dict[Id, GroundConnection] = {}
+    for gc_data in data["ground_connections"]:
+        element = gc_data.pop("element")
+        gc_data["ground"] = grounds[gc_data.pop("ground")]
+        match element["type"]:
+            case "bus":
+                gc_data["element"] = buses[element["id"]]
+            case "load":
+                gc_data["element"] = loads[element["id"]]
+            case "source":
+                gc_data["element"] = sources[element["id"]]
+            case "line":
+                gc_data["element"] = lines[element["id"]]
+            case "transformer":
+                gc_data["element"] = transformers[element["id"]]
+            case "switch":
+                gc_data["element"] = switches[element["id"]]
+            case what:
+                raise AssertionError(f"Unknown element type {what!r} for ground connection {gc_data['id']!r}.")
+        gc = GroundConnection.from_dict(data=gc_data, include_results=include_results)
+        ground_connections[gc.id] = gc
+        has_results = has_results and not gc._no_results
 
     # Short-circuits
     short_circuits = data.get("short_circuits")
@@ -186,7 +200,20 @@ def network_from_dict(  # noqa: C901
             ground = grounds[ground_id] if ground_id is not None else None
             buses[sc["bus_id"]].add_short_circuit(*sc["short_circuit"]["phases"], ground=ground)
 
-    return buses, lines_dict, transformers_dict, switches_dict, loads, sources, grounds, potential_refs, has_results
+    return (
+        {
+            "buses": buses,
+            "lines": lines,
+            "transformers": transformers,
+            "switches": switches,
+            "loads": loads,
+            "sources": sources,
+            "grounds": grounds,
+            "potential_refs": potential_refs,
+            "ground_connections": ground_connections,
+        },
+        has_results,
+    )
 
 
 def network_to_dict(en: "ElectricalNetwork", *, include_results: bool) -> JsonDict:
@@ -206,6 +233,7 @@ def network_to_dict(en: "ElectricalNetwork", *, include_results: bool) -> JsonDi
     # Export the grounds and the pref
     grounds = [ground.to_dict(include_results=include_results) for ground in en.grounds.values()]
     potential_refs = [p_ref.to_dict(include_results=include_results) for p_ref in en.potential_refs.values()]
+    ground_connections = [gc.to_dict(include_results=include_results) for gc in en.ground_connections.values()]
 
     # Export the buses, loads and sources
     buses: list[JsonDict] = []
@@ -278,6 +306,7 @@ def network_to_dict(en: "ElectricalNetwork", *, include_results: bool) -> JsonDi
         "sources": sources,
         "lines_params": line_params,
         "transformers_params": transformer_params,
+        "ground_connections": ground_connections,
     }
     if short_circuits:
         res["short_circuits"] = short_circuits
@@ -697,6 +726,28 @@ def v3_to_v4_converter(data: JsonDict) -> JsonDict:  # noqa: C901
     """
     assert data["version"] == 3, data["version"]
 
+    grounds = []
+    ground_connections = []
+    gc_id = 1
+    for ground in data["grounds"]:
+        for gc_bus_data in ground.pop("buses"):
+            gid = ground["id"]
+            bid = gc_bus_data["id"]
+            gc_data = {
+                "id": str(gc_id) if isinstance(gid, str) else gc_id,
+                "ground": gid,
+                "element": {"id": bid, "type": "bus"},
+                "phase": gc_bus_data["phase"],
+                "side": None,
+                "impedance": [0.0, 0.0],
+                "on_connected": "raise",
+            }
+            if "results" in ground:
+                gc_data["results"] = {"current": [0.0, 0.0]}
+            gc_id += 1
+            ground_connections.append(gc_data)
+        grounds.append(ground)
+
     buses = []
     for bus in data["buses"]:
         # Rename potentials to initial_potentials
@@ -793,7 +844,7 @@ def v3_to_v4_converter(data: JsonDict) -> JsonDict:  # noqa: C901
     results = {
         "version": 4,
         "is_multiphase": data["is_multiphase"],  # Unchanged
-        "grounds": data["grounds"],  # Unchanged
+        "grounds": grounds,
         "potential_refs": data["potential_refs"],  # Unchanged
         "buses": buses,
         "lines": lines,
@@ -803,6 +854,7 @@ def v3_to_v4_converter(data: JsonDict) -> JsonDict:  # noqa: C901
         "sources": sources,
         "lines_params": line_params,
         "transformers_params": transformer_params,
+        "ground_connections": ground_connections,
     }
     if "short_circuits" in data:
         results["short_circuits"] = data["short_circuits"]  # Unchanged

@@ -17,6 +17,68 @@ TEST_DGS_NETWORKS_IDS = [x.stem for x in TEST_DGS_NETWORKS]
 TEST_DGS_SPECIAL_NETWORKS_DIR = HERE / "tests" / "data" / "dgs" / "special"
 
 
+# Patch the engine
+class PatchedCyObject:
+    def __init__(self, *args, **kwargs):  # Accept all constructor parameters
+        pass
+
+    def __getattr__(self, attr: str):  # Accept all methods
+        if attr.startswith("__array"):  # Leave the numpy interface
+            return object.__getattr__(self, attr)
+        else:
+            return self.patched_cy_method
+
+    def patched_cy_method(self, *args, **kwargs):
+        pass
+
+
+def patched_cy_activate_license(*args, **kwargs):  # pragma: no-cover
+    pass
+
+
+_CY_CLASSES_WITH_BASES = {
+    "CyElement": (),
+    "CyBus": ("CyElement",),
+    "CyBranch": ("CyElement",),
+    "CySimplifiedLine": ("CyBranch",),
+    "CyShuntLine": ("CyBranch",),
+    "CySwitch": ("CyBranch",),
+    "CyTransformer": ("CyBranch",),
+    "CyThreePhaseTransformer": ("CyTransformer",),
+    "CySingleTransformer": ("CyTransformer",),
+    "CyCenterTransformer": ("CyTransformer",),
+    "CyLoad": ("CyElement",),
+    "CyPowerLoad": ("CyLoad",),
+    "CyDeltaPowerLoad": ("CyLoad",),
+    "CyAdmittanceLoad": ("CyLoad",),
+    "CyDeltaAdmittanceLoad": ("CyLoad",),
+    "CyCurrentLoad": ("CyLoad",),
+    "CyDeltaCurrentLoad": ("CyLoad",),
+    "CyLoadBalancer": ("CyLoad",),
+    "CyControl": (),
+    "CyProjection": (),
+    "CyFlexibleParameter": (),
+    "CyFlexibleLoad": ("CyLoad",),
+    "CyDeltaFlexibleLoad": ("CyLoad",),
+    "CyVoltageSource": ("CyElement",),
+    "CyDeltaVoltageSource": ("CyElement",),
+    "CyGround": ("CyElement",),
+    "CyPotentialRef": ("CyElement",),
+    "CyDeltaPotentialRef": ("CyElement",),
+    "CyElectricalNetwork": (),
+    "CyLicense": (),
+    "CyAbstractSolver": (),
+    "CyAbstractNewton": ("CyAbstractSolver",),
+    "CyNewton": ("CyAbstractNewton",),
+    "CyNewtonGoldstein": ("CyAbstractNewton",),
+    "CyBackwardForward": ("CyAbstractSolver",),
+}
+_PATCHED_CY_CLASSES: dict[str, type[PatchedCyObject]] = {}
+for class_name, bases in _CY_CLASSES_WITH_BASES.items():
+    bases = tuple(_PATCHED_CY_CLASSES[base] for base in bases) or (PatchedCyObject,)
+    _PATCHED_CY_CLASSES[class_name] = type(class_name, bases, {})
+
+
 @pytest.fixture(autouse=True)
 def patch_engine(request):
     mpatch = MonkeyPatch()
@@ -32,24 +94,6 @@ def patch_engine(request):
         # Activate logging
         set_logging_config("debug")
     else:
-        # Patch the engine
-
-        class Foo:
-            def __init__(self, *args, **kwargs):  # Accept all constructor parameters
-                pass
-
-            def __getattr__(self, attr):  # Accept all methods
-                if attr.startswith("__array"):  # Let numpy interface
-                    return object.__getattr__(self, attr)
-                else:
-                    return self.foo
-
-            def foo(self, *args, **kwargs):
-                pass
-
-        def bar(*args, **kwargs):  # pragma: no-cover
-            pass
-
         # Get all roseau.load_flow submodules
         rlf_directory_path = Path(roseau.load_flow.__file__).parent
         relative_to = Path(roseau.load_flow.__file__).parents[2]
@@ -73,10 +117,10 @@ def patch_engine(request):
                         and member.__name__.startswith("Cy")
                         and member.__name__ != "CyLicense",  # Test of the static methods of this class
                     ):
-                        mpatch.setattr(f"{module.__name__}.{klass.__name__}", Foo)
+                        mpatch.setattr(f"{module.__name__}.{klass.__name__}", _PATCHED_CY_CLASSES[klass.__name__])
 
         # Also patch the activate license function of the _solvers module
-        mpatch.setattr("roseau.load_flow.license.cy_activate_license", bar)
+        mpatch.setattr("roseau.load_flow.license.cy_activate_license", patched_cy_activate_license)
 
     yield mpatch
     mpatch.undo()

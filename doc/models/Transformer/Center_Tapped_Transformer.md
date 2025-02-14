@@ -100,7 +100,7 @@ line = rlf.Line("line", source_bus, load_bus, parameters=lp, length=1.0, ground=
 
 # Create a low-voltage bus and a load
 lv_bus = rlf.Bus(id="lv_bus", phases="abn")
-ground.connect(lv_bus)
+rlf.GroundConnection(ground=ground, element=lv_bus)
 lv_load = rlf.PowerLoad("lv_load", lv_bus, powers=[-2000, 0])
 
 # Create a transformer

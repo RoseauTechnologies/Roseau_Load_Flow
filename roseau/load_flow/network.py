@@ -33,6 +33,7 @@ from roseau.load_flow.models import (
     CurrentLoad,
     Element,
     Ground,
+    GroundConnection,
     ImpedanceLoad,
     Line,
     PotentialRef,
@@ -166,6 +167,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         sources: MapOrSeq[VoltageSource],
         grounds: MapOrSeq[Ground],
         potential_refs: MapOrSeq[PotentialRef],
+        ground_connections: MapOrSeq[GroundConnection] = (),
         crs: str | CRS | None = None,
     ) -> None:
         self.buses: dict[Id, Bus] = self._elements_as_dict(buses, RoseauLoadFlowExceptionCode.BAD_BUS_ID)
@@ -184,6 +186,9 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         self.grounds: dict[Id, Ground] = self._elements_as_dict(grounds, RoseauLoadFlowExceptionCode.BAD_GROUND_ID)
         self.potential_refs: dict[Id, PotentialRef] = self._elements_as_dict(
             potential_refs, RoseauLoadFlowExceptionCode.BAD_POTENTIAL_REF_ID
+        )
+        self.ground_connections: dict[Id, GroundConnection] = self._elements_as_dict(
+            ground_connections, RoseauLoadFlowExceptionCode.BAD_GROUND_CONNECTION_ID
         )
 
         self._elements: list[Element] = []
@@ -207,7 +212,8 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             f" {count_repr(self.loads, 'load')},"
             f" {count_repr(self.sources, 'source')},"
             f" {count_repr(self.grounds, 'ground')},"
-            f" {count_repr(self.potential_refs, 'potential ref')}"
+            f" {count_repr(self.potential_refs, 'potential ref')},"
+            f" {count_repr(self.ground_connections, 'ground connection')}"
             f">"
         )
 
@@ -254,6 +260,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         sources: list[VoltageSource] = []
         grounds: list[Ground] = []
         potential_refs: list[PotentialRef] = []
+        ground_connections: list[GroundConnection] = []
 
         elements: list[Element] = [initial_bus]
         visited_elements: set[Element] = set()
@@ -276,6 +283,8 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                 grounds.append(e)
             elif isinstance(e, PotentialRef):
                 potential_refs.append(e)
+            elif isinstance(e, GroundConnection):
+                ground_connections.append(e)
             for connected_element in e._connected_elements:
                 if connected_element not in visited_elements and connected_element not in elements:
                     elements.append(connected_element)
@@ -288,6 +297,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             sources=sources,
             grounds=grounds,
             potential_refs=potential_refs,
+            ground_connections=ground_connections,
         )
 
     #
@@ -400,16 +410,11 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
 
     @property
     def grounds_frame(self) -> pd.DataFrame:
-        """The :attr:`grounds` of the network as a dataframe."""
-        return pd.DataFrame.from_records(
-            data=[
-                (ground.id, bus_id, phase)
-                for ground in self.grounds.values()
-                for bus_id, phase in ground.connected_buses.items()
-            ],
-            columns=["id", "bus_id", "phase"],
-            index=["id", "bus_id"],
-        )
+        """The :attr:`grounds` of the network as a dataframe.
+
+        See :attr:`ground_connections_frame` for the connections to the ground.
+        """
+        return pd.DataFrame.from_records(data=[(ground.id,) for ground in self.grounds.values()], columns=["id"])
 
     @property
     def potential_refs_frame(self) -> pd.DataFrame:
@@ -420,6 +425,18 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                 for pref in self.potential_refs.values()
             ],
             columns=["id", "phases", "element_id", "element_type"],
+            index="id",
+        )
+
+    @property
+    def ground_connections_frame(self) -> pd.DataFrame:
+        """The :attr:`ground connections <ground_connections>` of the network as a dataframe."""
+        return pd.DataFrame.from_records(
+            data=[
+                (gc.id, gc.ground.id, gc.element.id, gc.element.element_type, gc.phase, gc.side, gc._impedance)
+                for gc in self.ground_connections.values()
+            ],
+            columns=["id", "ground_id", "element_id", "element_type", "phase", "side", "impedance"],
             index="id",
         )
 
@@ -440,7 +457,9 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
     #
     @property
     def buses_clusters(self) -> list[set[Id]]:
-        """Sets of galvanically connected buses, i.e. buses connected by lines or a switches.
+        """Clusters of buses connected by lines and switches.
+
+        Each cluster is a set of bus IDs.
 
         This can be useful to isolate parts of the network for localized analysis. For example, to
         study a LV subnetwork of a MV feeder.
@@ -988,6 +1007,24 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             res_dict["current"].append(current)
         return pd.DataFrame(res_dict).astype(dtypes).set_index(["potential_ref_id"])
 
+    @property
+    def res_ground_connections(self) -> pd.DataFrame:
+        """The load flow results of the network ground connections.
+
+        The results are returned as a dataframe with the following index:
+            - `connection_id`: The id of the ground connection.
+        and the following columns:
+            - `current`: The complex current passing through connection to the ground (in Amps).
+        """
+        self._check_valid_results()
+        res_dict = {"connection_id": [], "current": []}
+        dtypes = {c: DTYPES[c] for c in res_dict}
+        for gc in self.ground_connections.values():
+            current = gc._res_current_getter(warning=False)
+            res_dict["connection_id"].append(gc.id)
+            res_dict["current"].append(current)
+        return pd.DataFrame(res_dict).astype(dtypes).set_index(["connection_id"])
+
     # Voltages results
     def _iter_terminal_res_voltages(
         self, terminals: Mapping[Id, _AT], voltage_type: Literal["pp", "pn", "auto"]
@@ -1277,8 +1314,10 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             self._add_element_to_dict(element, self.grounds)
         elif isinstance(element, PotentialRef):
             self._add_element_to_dict(element, self.potential_refs)
+        elif isinstance(element, GroundConnection):
+            self._add_element_to_dict(element, self.ground_connections)
         else:
-            msg = f"Unknown element {element} can not be added to the network."
+            msg = f"Unknown element {element!r} cannot be added to the network."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT)
         self._valid = False
@@ -1309,14 +1348,14 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                 The element to remove.
         """
         # The C++ electrical network and the tape will be recomputed
-        if isinstance(element, Bus | AbstractBranch):
-            msg = f"{element!r} is a {type(element).__name__} and it cannot be disconnected from a network."
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT)
-        elif isinstance(element, AbstractLoad):
+        if isinstance(element, AbstractLoad):
             self.loads.pop(element.id)
         elif isinstance(element, VoltageSource):
             self.sources.pop(element.id)
+        elif isinstance(element, Bus | AbstractBranch):
+            msg = f"{element!r} is a {element.element_type} and cannot be disconnected from a network."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT)
         else:
             msg = f"{element!r} is not a valid load or source."
             logger.error(msg)
@@ -1359,11 +1398,27 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         elements.update(self.sources.values())
         elements.update(self.grounds.values())
         elements.update(self.potential_refs.values())
+        elements.update(self.ground_connections.values())
 
         if not elements:
             msg = "Cannot create a network without elements."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.EMPTY_NETWORK)
+
+        # Temporarily print a better error message for missing ground_connections to help with the
+        # transition. TODO remove this special case in version 0.15.0
+        missing_gc = next((gc for g in self.grounds.values() for gc in g.connections), None)
+        if not self.ground_connections and missing_gc is not None:
+            gc_hint = (
+                "ground.connections" if len(self.grounds) == 1 else "[gc for g in grounds for gc in g.connections]"
+            )
+            msg = (
+                f"It looks like you forgot to add the ground connections to the network. Either use "
+                f"`ElectricalNetwork.from_element()` to create the network or add the ground connections "
+                f"manually, e.g: `ElectricalNetwork(..., ground_connections={gc_hint})`."
+            )
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.UNKNOWN_ELEMENT)
 
         found_source = False
         for element in elements:
@@ -1450,10 +1505,11 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             + len(self.lines)
             + len(self.transformers)
             + len(self.switches)
-            + len(self.grounds)
             + len(self.sources)
-            + len(self.potential_refs)
             + len(self.loads)
+            + len(self.grounds)
+            + len(self.potential_refs)
+            + len(self.ground_connections)
         ):
             unconnected_elements = [
                 element
@@ -1466,6 +1522,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                     self.loads.values(),
                     self.grounds.values(),
                     self.potential_refs.values(),
+                    self.ground_connections.values(),
                 )
                 if element not in visited
             ]
@@ -1571,19 +1628,8 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         Returns:
             The constructed network.
         """
-        buses, lines, transformers, switches, loads, sources, grounds, p_refs, has_results = network_from_dict(
-            data=data, include_results=include_results
-        )
-        network = cls(
-            buses=buses,
-            lines=lines,
-            transformers=transformers,
-            switches=switches,
-            loads=loads,
-            sources=sources,
-            grounds=grounds,
-            potential_refs=p_refs,
-        )
+        network_data, has_results = network_from_dict(data=data, include_results=include_results)
+        network = cls(**network_data)
         network._no_results = not has_results
         network._results_valid = has_results
         return network
@@ -1611,6 +1657,9 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             "potential_refs": [
                 p_ref._results_to_dict(warning=False, full=full) for p_ref in self.potential_refs.values()
             ],
+            "ground_connections": [
+                gc._results_to_dict(warning=False, full=full) for gc in self.ground_connections.values()
+            ],
         }
 
     #
@@ -1635,17 +1684,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         Returns:
             The constructed network.
         """
-        buses, lines, transformers, switches, loads, sources, grounds, potential_refs = network_from_dgs(path)
-        return cls(
-            buses=buses,
-            lines=lines,
-            transformers=transformers,
-            switches=switches,
-            loads=loads,
-            sources=sources,
-            grounds=grounds,
-            potential_refs=potential_refs,
-        )
+        return cls(**network_from_dgs(path))
 
     #
     # Catalogue of networks

@@ -41,6 +41,17 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ### Detailed changes
 
+- {gh-pr}`335` Add `GroundConnection` class with the following features:
+
+  - Ground connections for all terminal elements (buses, loads, sources) and all branch elements,
+    (transformers, lines, switches). Previously only buses could be connected to ground.
+  - Non-ideal (impedant) ground connections with the `impedance` parameter.
+  - Access to the current in the ground connection with the `res_current` property.
+
+  The method `Ground.connect` is deprecated in favor of the new class. Replace `ground.connect(bus)`
+  by `GroundConnection(ground=ground, element=bus)`. The attribute `Ground.connected_buses` is also
+  deprecated in favor of `GroundConnection.connected_elements`.
+
 - {gh-pr}`331` Add `voltage_type` to the `plot_voltage_phasors` function to be able to plot the
   voltages in phase-to-phase or phase-to-neutral. The `plot_symmetrical_voltages` function now plots
   each sequence in a separate axes for better readability.

@@ -137,8 +137,9 @@ line and a constant power load represent the low voltage network.
 ... )
 ... # Earth the neutral wire of transformer's neutral on the LV side
 ... ground = rlf.Ground(id="Ground")  # Represents the earth
-... ground.connect(lv_bus1, phase="n")
-... # ground.connect(lv_bus2, phase="n")  # Optionally earth the load's neutral
+... rlf.GroundConnection(ground=ground, element=lv_bus1, phase="n")
+... # # Optionally earth the load's neutral
+... # rlf.GroundConnection(ground=ground, element=lv_bus2, phase="n")
 
 >>> # Set the references of potentials for each network (explained later)
 ... # -------------------------------------------------------------------
