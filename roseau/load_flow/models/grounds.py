@@ -287,15 +287,19 @@ class GroundConnection(Element[CySimplifiedLine | CySwitch]):
             if not isinstance(self._cy_element, CySwitch):
                 if self._cy_element is not None:
                     self._cy_element.disconnect()
+                if self._network is not None:
+                    self._network._valid = False
                 self._cy_element = CySwitch(n=1)
                 self._cy_connect()
             else:
-                pass  # do nothing
+                pass  # do nothing, switch has no parameters
         else:
-            z_line = np.array([[self._impedance]], dtype=np.complex128)
+            z_line = np.array([self._impedance], dtype=np.complex128)
             if not isinstance(self._cy_element, CySimplifiedLine):
                 if self._cy_element is not None:
                     self._cy_element.disconnect()
+                if self._network is not None:
+                    self._network._valid = False
                 self._cy_element = CySimplifiedLine(n=1, z_line=z_line)
                 self._cy_connect()
             else:
