@@ -1,9 +1,9 @@
 import logging
 import warnings
-from typing import TYPE_CHECKING, Final, Generic, Literal
+from typing import TYPE_CHECKING, Final, Literal
 
 import numpy as np
-from typing_extensions import Self, TypeVar, deprecated
+from typing_extensions import Self, deprecated
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.core import Element
@@ -16,9 +16,6 @@ if TYPE_CHECKING:
     from roseau.load_flow.models.buses import Bus
 
 logger = logging.getLogger(__name__)
-
-
-_E_co = TypeVar("_E_co", bound=Element, default=Element, covariant=True)
 
 
 class Ground(Element[CyGround]):
@@ -134,7 +131,7 @@ class Ground(Element[CyGround]):
         return {"id": self.id, "potential": [v.real, v.imag]}
 
 
-class GroundConnection(Element[CySimplifiedLine | CySwitch], Generic[_E_co]):
+class GroundConnection(Element[CySimplifiedLine | CySwitch]):
     """An ideal or impedant connection to the ground."""
 
     element_type: Final = "ground_connection"
@@ -145,7 +142,7 @@ class GroundConnection(Element[CySimplifiedLine | CySwitch], Generic[_E_co]):
         id: Id | None = None,
         *,
         ground: Ground,
-        element: _E_co,
+        element: Element,
         impedance: Complex | Q_[Complex] = 0j,
         phase: str = "n",
         side: Side = None,
@@ -310,7 +307,7 @@ class GroundConnection(Element[CySimplifiedLine | CySwitch], Generic[_E_co]):
         return self._ground
 
     @property
-    def element(self) -> _E_co:
+    def element(self) -> Element:
         """The element connected to the ground."""
         return self._element
 
