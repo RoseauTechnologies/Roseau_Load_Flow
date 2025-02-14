@@ -29,6 +29,7 @@ def test_ground_connections():
     # Default phase is n, if available
     gc1 = GroundConnection(ground=ground1, element=bus1)
     assert ground1.connections == [gc1]
+    assert gc1.id == "bus 'bus1' phase 'n' to ground 'ground1'"
     g1_nc = len(ground1.connections)
     with pytest.raises(RoseauLoadFlowException) as e:
         GroundConnection(ground=ground1, element=bus3)
@@ -96,6 +97,7 @@ def test_ground_connections():
     assert e.value.msg == "Invalid side 'BT' for transformer 'tr', expected one of ('HV', 'LV')."
     gc8 = GroundConnection(ground=ground1, element=tr, side="LV", phase="n")
     assert gc8 in ground1.connections
+    assert gc8.id == "transformer 'tr' LV phase 'n' to ground 'ground1'"
     with pytest.raises(RoseauLoadFlowException) as e:
         GroundConnection(ground=ground1, element=tr, side="HV", phase="n")
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
@@ -121,8 +123,10 @@ def test_ground_connections():
     assert e.value.msg == "Phase 'n' is not present in phases 1 'bc' of switch 'sw'."
     gc10 = GroundConnection(ground=ground1, element=ln, side=1, phase="a")
     assert gc10 in ground1.connections
+    assert gc10.id == "line 'ln' phase 1 'a' to ground 'ground1'"
     gc11 = GroundConnection(ground=ground1, element=sw, side=2, phase="b")
     assert gc11 in ground1.connections
+    assert gc11.id == "switch 'sw' phase 2 'b' to ground 'ground1'"
 
 
 def test_impedant_ground():

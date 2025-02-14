@@ -200,16 +200,16 @@ class GroundConnection(Element[CySimplifiedLine | CySwitch]):
             logger.error(msg)
             raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT)
 
+        pretty_phases = f"{side} phases" if side in ("HV", "LV") else f"phases {side}" if side in (1, 2) else "phases"
+        pretty_phase = pretty_phases.replace("phases", "phase")
         if id is None:
-            side_phase = f"{phase!r}" if side is None else f"({side}) {phase!r}"
-            id = f"{element.element_type} {element.id!r} phase {side_phase!r} to ground {ground.id!r}"
+            id = f"{element.element_type} {element.id!r} {pretty_phase} {phase!r} to ground {ground.id!r}"
         # Check the phase is valid.
         self._check_phases(id, phases=phase)
 
         # Check the phase is present in the element phases.
         self._element_phases_attr = "phases" + {1: "1", 2: "2", "HV": "1", "LV": "2", None: ""}[side]
         self._element_phases: str = getattr(element, self._element_phases_attr)
-        pretty_phases = f"{side} phases" if side in ("HV", "LV") else f"phases {side}" if side in (1, 2) else "phases"
         if phase not in self._element_phases:
             msg = (
                 f"Phase {phase!r} is not present in {pretty_phases} {self._element_phases!r} of "
@@ -221,7 +221,6 @@ class GroundConnection(Element[CySimplifiedLine | CySwitch]):
         # Check if the element is already connected to this ground
         connected_phases = [gc._phase for gc in ground._connections if gc._element is element and gc._side == side]
         if connected_phases:
-            pretty_phase = pretty_phases.replace("phases", "phase")
             if phase in connected_phases:
                 msg = (
                     f"Ground {ground.id!r} is already connected to {pretty_phase} {phase!r} of {element._element_info}."
