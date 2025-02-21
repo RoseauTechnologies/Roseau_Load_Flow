@@ -229,10 +229,10 @@ class Bus(AbstractTerminal[CyBus]):
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_SHORT_CIRCUIT)
 
         self._short_circuit = True
+        self._cy_element.connect_ports(np.array([0, 1], dtype=np.int32))
 
         if self.network is not None:
             self.network._valid = False
-            self._cy_element.connect(self.network._ground, [(0, 0)])
 
     def propagate_limits(self, force: bool = False) -> None:
         """Propagate the voltage limits to galvanically connected buses.

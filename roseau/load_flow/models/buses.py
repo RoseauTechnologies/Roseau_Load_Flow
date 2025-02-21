@@ -328,7 +328,7 @@ class Bus(AbstractTerminal[CyBus]):
             self.network._valid = False
 
         phases_index = np.array([self.phases.index(p) for p in phases], dtype=np.int32)
-        self._cy_element.connect_ports(phases_index, len(phases))
+        self._cy_element.connect_ports(phases_index)
 
         if ground is not None:
             self._cy_element.connect(ground._cy_element, [(phases_index[0], 0)])

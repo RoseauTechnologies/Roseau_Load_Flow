@@ -139,8 +139,6 @@ class ElectricalNetwork(JsonMixin):
         self._ground.connect(self._potential_ref, [(0, 0)])
         for bus in self.buses.values():
             bus._cy_element.connect(self._ground, [(1, 0)])
-            if bus._short_circuit:
-                bus._cy_element.connect(self._ground, [(0, 0)])
         for line in self.lines.values():
             if line.with_shunt:
                 self._ground.connect(line._cy_element, [(0, 2)])
