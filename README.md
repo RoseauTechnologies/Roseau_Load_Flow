@@ -50,7 +50,7 @@ Read more at [License](https://roseau-load-flow.roseautechnologies.com/en/latest
 <!-- start rlf-networks -->
 
 _Roseau Load Flow_ ships with a sample of 20 low-voltage and 20 medium-voltage feeder networks. Each
-network is provided with its summer and winter load points. 
+network is provided with its summer and winter load points.
 To go further, you can also use [these 150 distribution networks](https://www.data.gouv.fr/fr/datasets/departs-hta-representatifs-pour-lanalyse-des-reseaux-de-distribution-francais/), published by Mines Paris Tech in Roseau Load Flow format. Supplied with their respective coefficients, these representative networks can be used to simulate the entire French distribution network.
 
 <!-- end rlf-networks -->
