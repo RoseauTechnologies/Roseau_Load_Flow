@@ -238,8 +238,9 @@ def network_to_dict(en: "ElectricalNetwork", *, include_results: bool) -> JsonDi
         "sources": sources,
         "lines_params": line_params,
         "transformers_params": transformer_params,
-        "short_circuits": short_circuits,
     }
+    if short_circuits:
+        res["short_circuits"] = short_circuits
     return res
 
 
