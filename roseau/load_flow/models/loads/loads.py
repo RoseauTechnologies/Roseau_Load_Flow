@@ -355,6 +355,14 @@ class CurrentLoad(AbstractLoad[CyCurrentLoad | CyDeltaCurrentLoad]):
                 be present in the phases of the connected bus.
         """
         super().__init__(id=id, phases=phases, bus=bus)
+
+        if bus.short_circuits:
+            msg = (
+                f"The current load {self.id!r} is connected on bus {bus.id!r} that already has a short-circuit. "
+                f"It makes the short-circuit calculation impossible."
+            )
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_SHORT_CIRCUIT)
         if self.has_floating_neutral:
             msg = (
                 f"Constant current loads cannot have a floating neutral. {type(self).__name__} "
@@ -362,6 +370,7 @@ class CurrentLoad(AbstractLoad[CyCurrentLoad | CyDeltaCurrentLoad]):
             )
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
+
         self.currents = currents  # handles size checks and unit conversion
         if self.phases == "abc":
             self._cy_element = CyDeltaCurrentLoad(n=self._n, currents=self._currents)

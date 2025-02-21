@@ -41,6 +41,8 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ### Detailed changes
 
+- {gh-pr}`339` Current loads can not be used with a short-circuit anymore as they make the calculation
+  fail.
 - {gh-pr}`335` Add `GroundConnection` class with the following features:
 
   - Ground connections for all terminal elements (buses, loads, sources) and all branch elements,
