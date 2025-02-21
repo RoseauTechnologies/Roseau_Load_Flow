@@ -139,6 +139,8 @@ class ElectricalNetwork(JsonMixin):
         self._ground.connect(self._potential_ref, [(0, 0)])
         for bus in self.buses.values():
             bus._cy_element.connect(self._ground, [(1, 0)])
+            if bus._short_circuit:
+                bus._cy_element.connect(self._ground, [(0, 0)])
         for line in self.lines.values():
             if line.with_shunt:
                 self._ground.connect(line._cy_element, [(0, 2)])
@@ -146,7 +148,7 @@ class ElectricalNetwork(JsonMixin):
         self._elements: list[Element] = []
         self._has_loop = False
         self._has_floating_neutral = False
-        self._check_validity(constructed=False)
+        self._check_validity(constructed=True)
         self._create_network()
         self._valid = True
         self._solver = AbstractSolver.from_dict(data={"name": self._DEFAULT_SOLVER, "params": {}}, network=self)

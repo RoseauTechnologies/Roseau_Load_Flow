@@ -146,6 +146,12 @@ def network_from_dict(
         switches_dict[switch.id] = switch
         has_results = has_results and not switch._no_results
 
+    # Short-circuits
+    short_circuits = data.get("short_circuits")
+    if short_circuits is not None:
+        for sc in short_circuits:
+            buses[sc["bus_id"]].add_short_circuit()
+
     return buses, lines_dict, transformers_dict, switches_dict, loads, sources, has_results
 
 
@@ -167,6 +173,7 @@ def network_to_dict(en: "ElectricalNetwork", *, include_results: bool) -> JsonDi
     buses: list[JsonDict] = []
     loads: list[JsonDict] = []
     sources: list[JsonDict] = []
+    short_circuits: list[JsonDict] = []
     for bus in en.buses.values():
         buses.append(bus.to_dict(include_results=include_results))
         for element in bus._connected_elements:
@@ -176,6 +183,8 @@ def network_to_dict(en: "ElectricalNetwork", *, include_results: bool) -> JsonDi
             elif isinstance(element, VoltageSource):
                 assert element.bus is bus
                 sources.append(element.to_dict(include_results=include_results))
+        if bus.short_circuit:
+            short_circuits.append({"bus_id": bus.id})
 
     # Export the lines with their parameters
     lines: list[JsonDict] = []
@@ -229,6 +238,7 @@ def network_to_dict(en: "ElectricalNetwork", *, include_results: bool) -> JsonDi
         "sources": sources,
         "lines_params": line_params,
         "transformers_params": transformer_params,
+        "short_circuits": short_circuits,
     }
     return res
 
@@ -301,5 +311,7 @@ def v3_to_v4_converter(data: JsonDict) -> JsonDict:
         "lines_params": line_params,
         "transformers_params": data["transformers_params"],  # <---- Unchanged
     }
+    if "short_circuits" in data:
+        results["short_circuits"] = data["short_circuits"]  # Unchanged
 
     return results

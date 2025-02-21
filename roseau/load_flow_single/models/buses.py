@@ -81,6 +81,8 @@ class Bus(AbstractTerminal[CyBus]):
         if max_voltage_level is not None:
             self.max_voltage_level = max_voltage_level
 
+        self._short_circuit: bool = False
+
         self._initialized = initialized
         self._initialized_by_the_user = initialized  # only used for serialization
         self._cy_element = CyBus(
@@ -207,6 +209,30 @@ class Bus(AbstractTerminal[CyBus]):
             if self._max_voltage_level is None or self._nominal_voltage is None
             else Q_(self._max_voltage_level * self._nominal_voltage, "V")
         )
+
+    @property
+    def short_circuit(self) -> bool:
+        """Return the list of short-circuits of this bus."""
+        return self._short_circuit
+
+    def add_short_circuit(self) -> None:
+        """Add a short-circuit by connecting all the phases together with a ground."""
+        from roseau.load_flow_single import PowerLoad
+
+        for element in self._connected_elements:
+            if isinstance(element, PowerLoad):
+                msg = (
+                    f"A power load {element.id!r} is already connected on bus {self.id!r}. "
+                    f"It makes the short-circuit calculation impossible."
+                )
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_SHORT_CIRCUIT)
+
+        self._short_circuit = True
+
+        if self.network is not None:
+            self.network._valid = False
+            self._cy_element.connect(self.network._ground, [(0, 0)])
 
     def propagate_limits(self, force: bool = False) -> None:
         """Propagate the voltage limits to galvanically connected buses.
