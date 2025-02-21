@@ -315,9 +315,8 @@ class Bus(AbstractTerminal[CyBus]):
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
         for element in self._connected_elements:
             if isinstance(element, (PowerLoad, CurrentLoad)):
-                load_type = "power" if isinstance(element, PowerLoad) else "current"
                 msg = (
-                    f"A {load_type} load {element.id!r} is already connected on bus {self.id!r}. "
+                    f"A {element.type} load {element.id!r} is already connected on bus {self.id!r}. "
                     f"It makes the short-circuit calculation impossible."
                 )
                 logger.error(msg)
