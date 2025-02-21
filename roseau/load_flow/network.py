@@ -194,7 +194,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         self._elements: list[Element] = []
         self._has_loop = False
         self._has_floating_neutral = False
-        self._check_validity(constructed=False)
+        self._check_validity(constructed=True)
         self._create_network()
         self._valid = True
         self._solver = AbstractSolver.from_dict(data={"name": self._DEFAULT_SOLVER, "params": {}}, network=self)

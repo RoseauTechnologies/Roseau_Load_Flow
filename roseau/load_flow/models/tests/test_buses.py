@@ -6,6 +6,7 @@ import shapely
 from roseau.load_flow import (
     Q_,
     Bus,
+    CurrentLoad,
     ElectricalNetwork,
     Ground,
     Line,
@@ -75,6 +76,15 @@ def test_short_circuit():
     bus = Bus("bus", phases="abc")
     assert not bus.short_circuits
     _ = PowerLoad(id="load", bus=bus, powers=[10, 10, 10])
+    with pytest.raises(RoseauLoadFlowException) as e:
+        bus.add_short_circuit("a", "b")
+    assert "is already connected on bus" in e.value.msg
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_SHORT_CIRCUIT
+
+    # Cannot short-circuit a bus with a current load
+    bus = Bus("bus", phases="abc")
+    assert not bus.short_circuits
+    _ = CurrentLoad(id="load", bus=bus, currents=[10, 10, 10])
     with pytest.raises(RoseauLoadFlowException) as e:
         bus.add_short_circuit("a", "b")
     assert "is already connected on bus" in e.value.msg

@@ -124,6 +124,14 @@ class PowerLoad(AbstractLoad[CyPowerLoad | CyFlexibleLoad]):
         """
         super().__init__(id=id, bus=bus)
 
+        if bus.short_circuit:
+            msg = (
+                f"The power load {self.id!r} is connected on bus {bus.id!r} that already has a short-circuit. "
+                f"It makes the short-circuit calculation impossible."
+            )
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_SHORT_CIRCUIT)
+
         self._flexible_param = flexible_param
         self.power = power
 
@@ -218,6 +226,15 @@ class CurrentLoad(AbstractLoad[CyCurrentLoad]):
                 complex value.
         """
         super().__init__(id=id, bus=bus)
+
+        if bus.short_circuit:
+            msg = (
+                f"The current load {self.id!r} is connected on bus {bus.id!r} that already has a short-circuit. "
+                f"It makes the short-circuit calculation impossible."
+            )
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_SHORT_CIRCUIT)
+
         self.current = current
         self._cy_element = CyCurrentLoad(n=self._n, currents=np.array([self._current], dtype=np.complex128))
         self._cy_connect()

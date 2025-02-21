@@ -5,6 +5,8 @@ import pytest
 from roseau.load_flow import Q_, RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow_single import (
     Bus,
+    CurrentLoad,
+    ElectricalNetwork,
     Line,
     LineParameters,
     PowerLoad,
@@ -13,6 +15,45 @@ from roseau.load_flow_single import (
     TransformerParameters,
     VoltageSource,
 )
+
+
+def test_short_circuit():
+    bus = Bus(id="bus")
+
+    assert not bus._short_circuit
+    bus.add_short_circuit()
+    assert bus._short_circuit
+
+    # Dict methods
+    vn = 400 / np.sqrt(3)
+    _ = VoltageSource("vs", bus=bus, voltage=vn)
+    en = ElectricalNetwork.from_element(bus)
+    en2 = ElectricalNetwork.from_dict(en.to_dict())
+    assert en2.buses["bus"]._short_circuit
+
+    # Cannot connect a load on a short-circuited bus
+    with pytest.raises(RoseauLoadFlowException) as e:
+        PowerLoad(id="load", bus=bus, power=10)
+    assert "is connected on bus" in e.value.msg
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_SHORT_CIRCUIT
+
+    # Cannot short-circuit a bus with a power load
+    bus = Bus("bus")
+    assert not bus.short_circuit
+    _ = PowerLoad(id="load", bus=bus, power=10)
+    with pytest.raises(RoseauLoadFlowException) as e:
+        bus.add_short_circuit()
+    assert "is already connected on bus" in e.value.msg
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_SHORT_CIRCUIT
+
+    # Cannot short-circuit a bus with a current load
+    bus = Bus("bus")
+    assert not bus.short_circuit
+    _ = CurrentLoad(id="load", bus=bus, current=10)
+    with pytest.raises(RoseauLoadFlowException) as e:
+        bus.add_short_circuit()
+    assert "is already connected on bus" in e.value.msg
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_SHORT_CIRCUIT
 
 
 def test_voltage_limits():

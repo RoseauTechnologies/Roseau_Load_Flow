@@ -238,7 +238,7 @@ def test_bad_networks():
             loads=[],
             sources=[vs],
         )
-    assert "but has not been added to the network. It must be added with 'connect'." in e.value.msg
+    assert "but was not passed to the ElectricalNetwork constructor." in e.value.msg
     assert bus2.id in e.value.msg
     assert e.value.code == RoseauLoadFlowExceptionCode.UNKNOWN_ELEMENT
 

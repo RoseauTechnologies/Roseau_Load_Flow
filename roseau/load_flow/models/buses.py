@@ -292,7 +292,7 @@ class Bus(AbstractTerminal[CyBus]):
             ground:
                 If a ground is given, the phases will also be connected to the ground.
         """
-        from roseau.load_flow import PowerLoad
+        from roseau.load_flow import CurrentLoad, PowerLoad
 
         for phase in phases:
             if phase not in self.phases:
@@ -314,9 +314,9 @@ class Bus(AbstractTerminal[CyBus]):
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
         for element in self._connected_elements:
-            if isinstance(element, PowerLoad):
+            if isinstance(element, (PowerLoad, CurrentLoad)):
                 msg = (
-                    f"A power load {element.id!r} is already connected on bus {self.id!r}. "
+                    f"A {element.type} load {element.id!r} is already connected on bus {self.id!r}. "
                     f"It makes the short-circuit calculation impossible."
                 )
                 logger.error(msg)
@@ -328,7 +328,7 @@ class Bus(AbstractTerminal[CyBus]):
             self.network._valid = False
 
         phases_index = np.array([self.phases.index(p) for p in phases], dtype=np.int32)
-        self._cy_element.connect_ports(phases_index, len(phases))
+        self._cy_element.connect_ports(phases_index)
 
         if ground is not None:
             self._cy_element.connect(ground._cy_element, [(phases_index[0], 0)])
