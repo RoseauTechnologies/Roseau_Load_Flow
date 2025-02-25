@@ -12,9 +12,10 @@ from roseau.load_flow.utils.log import set_logging_config
 HERE = Path(__file__).parent.expanduser().absolute()
 TEST_ALL_NETWORKS_DATA_FOLDER = HERE / "tests" / "data" / "networks"
 
-TEST_DGS_NETWORKS = list((HERE / "tests" / "data" / "dgs").rglob("*.json"))
+TEST_DGS_NETWORKS_DIR = HERE / "tests" / "data" / "dgs"
+TEST_DGS_NETWORKS = list(TEST_DGS_NETWORKS_DIR.rglob("*.json"))
 TEST_DGS_NETWORKS_IDS = [x.stem for x in TEST_DGS_NETWORKS]
-TEST_DGS_SPECIAL_NETWORKS_DIR = HERE / "tests" / "data" / "dgs" / "special"
+TEST_DGS_SPECIAL_NETWORKS_DIR = TEST_DGS_NETWORKS_DIR / "special"
 
 
 # Patch the engine
@@ -137,7 +138,12 @@ def dgs_network_path(request) -> Path:
 
 
 @pytest.fixture
-def dgs_special_network_dir() -> Path:
+def dgs_networks_dir() -> Path:
+    return TEST_DGS_NETWORKS_DIR
+
+
+@pytest.fixture
+def dgs_special_networks_dir() -> Path:
     return TEST_DGS_SPECIAL_NETWORKS_DIR
 
 

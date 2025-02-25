@@ -26,6 +26,11 @@ INSULATORS: Final[dict[int, Insulator]] = {
     3: Insulator.IP,  # Paper
     4: Insulator.EPR,  # EPR
 }
+LINE_TYPES_REVERSE: Final[dict[LineType, int]] = (
+    {v: k for k, v in LINE_TYPES.items()} | {LineType.TWISTED: 1}  # Twisted treated as Overhead
+)
+MATERIALS_REVERSE: Final[dict[Material, str]] = {v: k for k, v in MATERIALS.items() if isinstance(k, str)}
+INSULATORS_REVERSE: Final[dict[Insulator, int]] = {v: k for k, v in INSULATORS.items()}
 
 # Loads
 PwFLoadType: TypeAlias = Literal["MV", "LV", "General", "PV", "GenStat"]

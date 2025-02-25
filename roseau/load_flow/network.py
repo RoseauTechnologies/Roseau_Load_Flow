@@ -1671,7 +1671,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         return Path(resources.files("roseau.load_flow") / "data" / "io" / "DGS-RLF.pfd").expanduser().absolute()
 
     @classmethod
-    def from_dgs(cls, path: StrPath) -> Self:
+    def from_dgs(cls, path: StrPath, use_name_as_id: bool = False) -> Self:
         """Construct an electrical network from json DGS file (PowerFactory).
 
         Only JSON format of DGS is currently supported. See the
@@ -1681,10 +1681,15 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             path:
                 The path to the network DGS data file.
 
+            use_name_as_id:
+                If True, use the name of the elements (i.e. the ``loc_name`` field) as their ID.
+                Otherwise, use their DGS file ID (i.e. the ``FID`` field) as their ID. Can only be
+                used if the names are unique. Default is False.
+
         Returns:
             The constructed network.
         """
-        return cls(**network_from_dgs(path))
+        return cls(**network_from_dgs(path, use_name_as_id))
 
     #
     # Catalogue of networks

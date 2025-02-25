@@ -805,7 +805,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
 
             efficiency:
                 The efficiency class of the transformer. Informative only, it has no impact on the
-                load flow. It is filled automatically when the parameters when imported from the
+                load flow. It is filled automatically when the parameters are imported from the
                 catalogue. The efficiency class used in the catalogue follows the `Eco-Design`
                 requirements as defined by the `EN 50629` standard.
         """
