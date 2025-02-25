@@ -14,7 +14,10 @@ logger = logging.getLogger(__name__)
 # DGS -> RLF
 #
 def typ_tr2_to_tp(
-    typ_tr: pd.DataFrame, tr_params: dict[str, TransformerParameters], tr_taps: dict[str, float], use_name_as_id: bool
+    typ_tr: pd.DataFrame,
+    tr_params: dict[str, TransformerParameters],
+    tr_taps: dict[str, float],
+    use_name_as_id: bool,
 ) -> None:
     """Generate transformer parameters from the "TypTr2" dataframe.
 

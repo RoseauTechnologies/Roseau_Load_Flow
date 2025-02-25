@@ -42,7 +42,7 @@ def network_from_dgs(filename: StrPath, use_name_as_id: bool = False) -> Network
 
     Args:
         filename:
-            name of the JSON file
+            Name of the JSON file.
 
         use_name_as_id:
             If True, use the name of the elements (the ``loc_name`` field) as their id. Otherwise,

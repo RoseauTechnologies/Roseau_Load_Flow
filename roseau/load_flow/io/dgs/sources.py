@@ -36,7 +36,9 @@ def elm_xnet_to_sources(
     for source_id in elm_xnet.index:
         bus = buses[sta_cubic.at[elm_xnet.at[source_id, "bus1"], "cterm"]]
         tap = elm_xnet.at[source_id, "usetp"]  # tap voltage (p.u.)
-        voltage = bus.nominal_voltage.m / SQRT3 * tap  # phase-to-neutral voltage (V)
+        un = bus.nominal_voltage
+        assert un is not None, f"Bus {bus.id} of the source {source_id!r} has no nominal voltage"
+        voltage = un.m / SQRT3 * tap  # phase-to-neutral voltage (V)
 
         # TODO remove hard coded phases (requires adapting voltages for delta sources)
         sources[source_id] = VoltageSource(id=source_id, bus=bus, phases="abcn", voltages=voltage)
