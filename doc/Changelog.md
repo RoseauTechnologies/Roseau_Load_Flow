@@ -41,8 +41,14 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ### Detailed changes
 
-- {gh-pr}`339` Current loads can not be used with a short-circuit anymore as they make the calculation
-  fail.
+- {gh-pr}`340` Improve the support for the conversion from the PowerFactory DGS format.
+  - Add an option to `ElectricalNetwork.from_dgs` to use the element names (`loc_name` in DGS) as IDs.
+    The names must be unique for each element type.
+  - Read the transformer's maximum loading from the DGS file.
+  - Read the bus's nominal voltage from the DGS file.
+  - Fix conversion of the transformer's no-load test results.
+- {gh-pr}`339` Constant current loads are no longer allowed on a bus with a short-circuit. Previously,
+  the load flow would fail with a singular matrix error.
 - {gh-pr}`335` Add `GroundConnection` class with the following features:
 
   - Ground connections for all terminal elements (buses, loads, sources) and all branch elements,

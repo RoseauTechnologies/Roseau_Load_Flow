@@ -6,20 +6,18 @@ Use the `ElectricalNetwork.from_dgs` method to read a network from a dgs file.
 
 import json
 import logging
-import warnings
+from collections.abc import Iterable
 from itertools import chain, islice
-from typing import Any
-
-import pandas as pd
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.io.common import NetworkElements
-from roseau.load_flow.io.dgs.buses import generate_buses
-from roseau.load_flow.io.dgs.lines import generate_lines, generate_typ_lne
-from roseau.load_flow.io.dgs.loads import generate_loads
-from roseau.load_flow.io.dgs.sources import generate_sources
-from roseau.load_flow.io.dgs.switches import generate_switches
-from roseau.load_flow.io.dgs.transformers import generate_transformers, generate_typ_tr
+from roseau.load_flow.io.dgs.buses import elm_term_to_buses
+from roseau.load_flow.io.dgs.lines import elm_lne_to_lines, typ_lne_to_lp
+from roseau.load_flow.io.dgs.loads import elm_lod_all_to_loads
+from roseau.load_flow.io.dgs.sources import elm_xnet_to_sources
+from roseau.load_flow.io.dgs.switches import elm_coup_to_switches
+from roseau.load_flow.io.dgs.transformers import elm_tr2_to_transformers, typ_tr2_to_tp
+from roseau.load_flow.io.dgs.utils import dgs_dict_to_df, has_typ_lne, has_typ_tr2, parse_dgs_version
 from roseau.load_flow.models import (
     AbstractLoad,
     Bus,
@@ -35,16 +33,21 @@ from roseau.load_flow.models import (
     VoltageSource,
 )
 from roseau.load_flow.typing import Id, StrPath
-from roseau.load_flow.utils import find_stack_level
 
 logger = logging.getLogger(__name__)
 
 
-def network_from_dgs(filename: StrPath) -> NetworkElements:
+def network_from_dgs(filename: StrPath, use_name_as_id: bool = False) -> NetworkElements:
     """Create the electrical elements from a JSON file in DGS format.
 
     Args:
-        filename: name of the JSON file
+        filename:
+            Name of the JSON file.
+
+        use_name_as_id:
+            If True, use the name of the elements (the ``loc_name`` field) as their id. Otherwise,
+            use the id from the DGS file (the ``FID`` field). Only use if you are sure the names are
+            unique. Default is False.
 
     Returns:
         The elements of the network.
@@ -52,31 +55,43 @@ def network_from_dgs(filename: StrPath) -> NetworkElements:
     # Create dataframes from JSON file
     with open(filename, encoding="ISO-8859-10") as f:
         data = json.load(f)
-    _parse_dgs_version(data)
+    parse_dgs_version(data)
 
-    elm_xnet = _dgs_dict_to_df(data, "ElmXnet")  # External sources
-    elm_term = _dgs_dict_to_df(data, "ElmTerm")  # Terminals (buses)
-    sta_cubic = _dgs_dict_to_df(data, "StaCubic")  # Cubicles
-    elm_tr = _dgs_dict_to_df(data, "ElmTr2") if "ElmTr2" in data else None  # Transformers
-    typ_tr = _dgs_dict_to_df(data, "TypTr2") if "TypTr2" in data else None  # Transformer types
-    elm_coup = _dgs_dict_to_df(data, "ElmCoup") if "ElmCoup" in data else None  # Switch
-    elm_lne = _dgs_dict_to_df(data, "ElmLne") if "ElmLne" in data else None  # Lines
-    typ_lne = _dgs_dict_to_df(data, "TypLne") if "TypLne" in data else None  # Line types
-    elm_lod_lv = _dgs_dict_to_df(data, "ElmLodLV") if "ElmLodLV" in data else None  # LV loads
-    elm_lod_mv = _dgs_dict_to_df(data, "ElmLodmv") if "ElmLodmv" in data else None  # MV loads
-    elm_lod = _dgs_dict_to_df(data, "ElmLod") if "ElmLod" in data else None  # General loads
-    elm_gen_stat = _dgs_dict_to_df(data, "ElmGenStat") if "ElmGenStat" in data else None  # Generators
-    elm_pv_sys = _dgs_dict_to_df(data, "ElmPvsys") if "ElmPvsys" in data else None  # LV generators
+    index_col = "loc_name" if use_name_as_id else "FID"
+
+    # StaCubic is always indexed by its ID
+    sta_cubic = dgs_dict_to_df(data, "StaCubic", "FID")  # Cubicles
+    # Read the elements of the network, index by FID or loc_name
+    elm_term = dgs_dict_to_df(data, "ElmTerm", index_col)  # Terminals (buses)
+    typ_lne = dgs_dict_to_df(data, "TypLne", index_col) if "TypLne" in data else None  # Line types
+    typ_tr2 = dgs_dict_to_df(data, "TypTr2", index_col) if "TypTr2" in data else None  # Transformer types
+    elm_xnet = dgs_dict_to_df(data, "ElmXnet", index_col)  # External sources
+    elm_tr = dgs_dict_to_df(data, "ElmTr2", index_col) if "ElmTr2" in data else None  # Transformers
+    elm_coup = dgs_dict_to_df(data, "ElmCoup", index_col) if "ElmCoup" in data else None  # Switches
+    elm_lne = dgs_dict_to_df(data, "ElmLne", index_col) if "ElmLne" in data else None  # Lines
+    elm_lod_lv = dgs_dict_to_df(data, "ElmLodLV", index_col) if "ElmLodLV" in data else None  # LV loads
+    elm_lod_mv = dgs_dict_to_df(data, "ElmLodmv", index_col) if "ElmLodmv" in data else None  # MV loads
+    elm_lod = dgs_dict_to_df(data, "ElmLod", index_col) if "ElmLod" in data else None  # General loads
+    elm_gen_stat = dgs_dict_to_df(data, "ElmGenStat", index_col) if "ElmGenStat" in data else None  # Generators
+    elm_pv_sys = dgs_dict_to_df(data, "ElmPvsys", index_col) if "ElmPvsys" in data else None  # LV generators
+
+    # Reindex buses and types by their FID because they are needed elsewhere
+    if use_name_as_id:
+        elm_term = elm_term.reset_index(drop=False).set_index("FID")
+        if typ_lne is not None:
+            typ_lne = typ_lne.reset_index(drop=False).set_index("FID")
+        if typ_tr2 is not None:
+            typ_tr2 = typ_tr2.reset_index(drop=False).set_index("FID")
 
     # ElectricalNetwork elements
-    grounds: dict[Id, Ground] = {}
-    buses: dict[Id, Bus] = {}
-    potential_refs: dict[Id, PotentialRef] = {}
+    buses: dict[str, Bus] = {}  # key is the FID
     sources: dict[Id, VoltageSource] = {}
     loads: dict[Id, AbstractLoad] = {}
     lines: dict[Id, Line] = {}
     transformers: dict[Id, Transformer] = {}
     switches: dict[Id, Switch] = {}
+    grounds: dict[Id, Ground] = {}
+    potential_refs: dict[Id, PotentialRef] = {}
     ground_connections: dict[Id, GroundConnection] = {}
 
     # Ground and potential reference
@@ -84,72 +99,66 @@ def network_from_dgs(filename: StrPath) -> NetworkElements:
     p_ref = PotentialRef(id="pref (ground)", element=ground)
 
     # Buses
-    generate_buses(elm_term=elm_term, buses=buses)
+    elm_term_to_buses(elm_term=elm_term, buses=buses, use_name_as_id=use_name_as_id)
 
     # Sources
-    generate_sources(elm_xnet=elm_xnet, sources=sources, buses=buses, sta_cubic=sta_cubic, elm_term=elm_term)
+    elm_xnet_to_sources(elm_xnet=elm_xnet, sources=sources, buses=buses, sta_cubic=sta_cubic)
 
     # Loads
     if elm_lod is not None:  # General loads
-        generate_loads(elm_lod=elm_lod, loads=loads, buses=buses, sta_cubic=sta_cubic, factor=1e6, load_type="General")
+        elm_lod_all_to_loads(
+            elm_lod=elm_lod, loads=loads, buses=buses, sta_cubic=sta_cubic, factor=1e6, load_type="General"
+        )
     if elm_lod_mv is not None:  # MV loads
-        generate_loads(elm_lod=elm_lod_mv, loads=loads, buses=buses, sta_cubic=sta_cubic, factor=1e6, load_type="MV")
+        elm_lod_all_to_loads(
+            elm_lod=elm_lod_mv, loads=loads, buses=buses, sta_cubic=sta_cubic, factor=1e6, load_type="MV"
+        )
     if elm_lod_lv is not None:  # LV loads
-        generate_loads(elm_lod=elm_lod_lv, loads=loads, buses=buses, sta_cubic=sta_cubic, factor=1e3, load_type="LV")
+        elm_lod_all_to_loads(
+            elm_lod=elm_lod_lv, loads=loads, buses=buses, sta_cubic=sta_cubic, factor=1e3, load_type="LV"
+        )
     if elm_pv_sys is not None:  # PV systems
-        generate_loads(elm_lod=elm_pv_sys, loads=loads, buses=buses, sta_cubic=sta_cubic, factor=1e3, load_type="PV")
+        elm_lod_all_to_loads(
+            elm_lod=elm_pv_sys, loads=loads, buses=buses, sta_cubic=sta_cubic, factor=1e3, load_type="PV"
+        )
     if elm_gen_stat is not None:  # Static generators
-        generate_loads(
+        elm_lod_all_to_loads(
             elm_lod=elm_gen_stat, loads=loads, buses=buses, sta_cubic=sta_cubic, factor=1e6, load_type="GenStat"
         )
 
     # Lines
     if elm_lne is not None:
-        lines_params: dict[Id, LineParameters] = {}
-        if typ_lne is None:
-            msg = (
-                "The network contains lines but is missing line types (TypLne). Please copy all "
-                "line types from the library to the project before exporting otherwise a "
-                "LineParameter object will be created for each line."
-            )
-            warnings.warn(msg, stacklevel=find_stack_level())
-        else:
-            generate_typ_lne(typ_lne=typ_lne, lines_params=lines_params)
-        generate_lines(
-            elm_lne=elm_lne, lines=lines, buses=buses, sta_cubic=sta_cubic, lines_params=lines_params, ground=ground
+        line_params: dict[str, LineParameters] = {}  # key is the FID
+        if has_typ_lne(typ_lne):
+            typ_lne_to_lp(typ_lne=typ_lne, line_params=line_params, use_name_as_id=use_name_as_id)
+        elm_lne_to_lines(
+            elm_lne=elm_lne, lines=lines, buses=buses, sta_cubic=sta_cubic, line_params=line_params, ground=ground
         )
 
     # Transformers
     if elm_tr is not None:
-        transformers_params: dict[Id, TransformerParameters] = {}
-        transformers_tap: dict[Id, float] = {}
-        if typ_tr is None:
-            msg = (
-                "The network contains transformers but is missing transformer types (TypTr2). Please copy all "
-                "transformer types from the library to the project before exporting and try again."
-            )
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DGS_MISSING_REQUIRED_DATA)
-        else:
-            generate_typ_tr(typ_tr=typ_tr, transformers_params=transformers_params, transformers_tap=transformers_tap)
-        generate_transformers(
+        tr_params: dict[str, TransformerParameters] = {}  # key is the FID
+        tr_taps: dict[str, float] = {}  # key is the type's FID
+        if has_typ_tr2(typ_tr2):
+            typ_tr2_to_tp(typ_tr=typ_tr2, tr_params=tr_params, tr_taps=tr_taps, use_name_as_id=use_name_as_id)
+        elm_tr2_to_transformers(
             elm_tr=elm_tr,
             transformers=transformers,
             buses=buses,
             sta_cubic=sta_cubic,
-            transformers_tap=transformers_tap,
-            transformers_params=transformers_params,
+            tr_taps=tr_taps,
+            tr_params=tr_params,
         )
 
     # Switches
     if elm_coup is not None:
-        generate_switches(elm_coup=elm_coup, switches=switches, buses=buses, sta_cubic=sta_cubic)
+        elm_coup_to_switches(elm_coup=elm_coup, switches=switches, buses=buses, sta_cubic=sta_cubic)
 
     _add_potential_refs_and_ground_connections(
-        buses=buses,
-        lines=lines,
-        transformers=transformers,
-        switches=switches,
+        buses=buses.values(),
+        lines=lines.values(),
+        transformers=transformers.values(),
+        switches=switches.values(),
         sources=sources,
         potential_refs=potential_refs,
         ground_connections=ground_connections,
@@ -161,7 +170,7 @@ def network_from_dgs(filename: StrPath) -> NetworkElements:
         potential_refs[p_ref.id] = p_ref
 
     return {
-        "buses": buses,
+        "buses": {bus.id: bus for bus in buses.values()},
         "lines": lines,
         "transformers": transformers,
         "switches": switches,
@@ -173,30 +182,11 @@ def network_from_dgs(filename: StrPath) -> NetworkElements:
     }
 
 
-def _dgs_dict_to_df(data: dict[str, Any], name: str) -> pd.DataFrame:
-    """Transform a DGS dictionary of elements into a dataframe indexed by the element ID."""
-    return pd.DataFrame(columns=data[name]["Attributes"], data=data[name]["Values"]).set_index("FID")
-
-
-def _parse_dgs_version(data: dict[str, Any]) -> tuple[int, ...]:
-    """Parse the version of the DGS export, warn on old versions."""
-    general_data = dict(zip(data["General"]["Attributes"], zip(*data["General"]["Values"], strict=True), strict=True))
-    dgs_version = general_data["Val"][general_data["Descr"].index("Version")]
-    dgs_version_tuple = tuple(map(int, dgs_version.split(".")))
-    if dgs_version_tuple < (6, 0):
-        msg = (
-            f"The DGS version {dgs_version} is too old, this may cause conversion errors. Try "
-            f"updating the version before exporting."
-        )
-        warnings.warn(msg, stacklevel=find_stack_level())
-    return dgs_version_tuple
-
-
 def _add_potential_refs_and_ground_connections(  # noqa: C901
-    buses: dict[Id, Bus],
-    lines: dict[Id, Line],
-    transformers: dict[Id, Transformer],
-    switches: dict[Id, Switch],
+    buses: Iterable[Bus],
+    lines: Iterable[Line],
+    transformers: Iterable[Transformer],
+    switches: Iterable[Switch],
     sources: dict[Id, VoltageSource],
     potential_refs: dict[Id, PotentialRef],
     ground_connections: dict[Id, GroundConnection],
@@ -204,7 +194,7 @@ def _add_potential_refs_and_ground_connections(  # noqa: C901
 ) -> None:
     """Add potential reference(s) to a DGS network."""
     # Note this function is adapted from the ElectricalNetwork._check_ref method
-    elements = chain(buses.values(), lines.values(), transformers.values(), switches.values())
+    elements = chain(buses, lines, transformers, switches)
     visited_elements: set[Element] = set()
     for initial_element in elements:
         if initial_element in visited_elements:

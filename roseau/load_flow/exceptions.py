@@ -115,6 +115,8 @@ class RoseauLoadFlowExceptionCode(StrEnum):
     NO_BACKWARD_FORWARD = auto()
 
     # DGS export
+    DGS_NOT_SUPPORTED = auto()
+    DGS_NON_UNIQUE_NAME = auto()
     DGS_BAD_PHASE_TECHNOLOGY = auto()
     DGS_BAD_PHASE_NUMBER = auto()
     DGS_BAD_TYPE_ID = auto()

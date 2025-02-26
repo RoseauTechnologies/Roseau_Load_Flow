@@ -12,8 +12,11 @@ from roseau.load_flow.utils import find_stack_level
 logger = logging.getLogger(__name__)
 
 
-def generate_switches(
-    elm_coup: pd.DataFrame, switches: dict[Id, Switch], buses: dict[Id, Bus], sta_cubic: pd.DataFrame
+#
+# DGS -> RLF
+#
+def elm_coup_to_switches(
+    elm_coup: pd.DataFrame, switches: dict[Id, Switch], buses: dict[str, Bus], sta_cubic: pd.DataFrame
 ) -> None:
     """Generate the switches of the network.
 
@@ -25,10 +28,10 @@ def generate_switches(
             The dictionary to store the switches into.
 
         buses:
-            The dictionary of the all buses.
+            The dictionary of the all buses indexed by their FID.
 
         sta_cubic:
-            The "StaCubic" dataframe of cubicles.
+            The "StaCubic" dataframe of cubicles indexed by their FID.
     """
     has_geometry = "GPSlon" in elm_coup.columns and "GPSlat" in elm_coup.columns
     for switch_id in elm_coup.index:
