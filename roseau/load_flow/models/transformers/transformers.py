@@ -13,12 +13,7 @@ from roseau.load_flow.models.transformers.parameters import TransformerParameter
 from roseau.load_flow.typing import ComplexArray, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow.utils import deprecate_renamed_parameters, find_stack_level
-from roseau.load_flow_engine.cy_engine import (
-    CyCenterTransformer,
-    CySingleTransformer,
-    CyThreePhaseTransformer,
-    CyTransformer,
-)
+from roseau.load_flow_engine.cy_engine import CyTransformer
 
 logger = logging.getLogger(__name__)
 
@@ -133,23 +128,10 @@ class Transformer(AbstractBranch[CyTransformer]):
         self._parameters = parameters
         self.max_loading = max_loading
 
-        z2, ym, k = parameters._z2, parameters._ym, parameters._k
-        clock, orientation = parameters.clock, parameters.orientation
-        if parameters.type == "single-phase":
-            self._cy_element = CySingleTransformer(z2=z2, ym=ym, k=k * orientation * tap)
-        elif parameters.type == "center-tapped":
-            self._cy_element = CyCenterTransformer(z2=z2, ym=ym, k=k * orientation * tap)
+        if parameters.type == "three-phase":
+            self._cy_element = parameters._create_cy_transformer(tap=tap)
         else:
-            self._cy_element = CyThreePhaseTransformer(
-                n1=parameters._n1,
-                n2=parameters._n2,
-                whv=parameters.whv[0],
-                wlv=parameters.wlv[0],
-                z2=z2,
-                ym=ym,
-                k=k * tap,
-                clock=clock,
-            )
+            self._cy_element = parameters._create_cy_transformer(tap=parameters.orientation * tap)
         self._cy_connect()
 
     def __repr__(self) -> str:

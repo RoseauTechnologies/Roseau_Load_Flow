@@ -8,11 +8,16 @@ import numpy as np
 import pandas as pd
 from typing_extensions import Self
 
-from roseau.load_flow.constants import SQRT3
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.typing import FloatArrayLike1D, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow.utils import CatalogueMixin, Identifiable, JsonMixin
+from roseau.load_flow_engine.cy_engine import (
+    CyCenterTransformer,
+    CySingleTransformer,
+    CyThreePhaseTransformer,
+    CyTransformer,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -164,6 +169,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         self._i0: float | None = None
         self._psc: float | None = None
         self._vsc: float | None = None
+        self._has_test_results: bool = False
 
     def __repr__(self) -> str:
         s = f"<{type(self).__name__}: id={self.id!r}, vg={self._vg!r}, sn={self._sn}, uhv={self._uhv}, ulv={self._ulv}"
@@ -303,24 +309,36 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         return -1.0 if 3 < self._clock < 9 else 1.0
 
     @property
-    def p0(self) -> Q_[float] | None:
+    def p0(self) -> Q_[float]:
         """Losses during open-circuit test (W)."""
-        return None if self._p0 is None else Q_(self._p0, "W")
+        if self._p0 is None:
+            assert not self._has_test_results, "Missing p0 from open-circuit test results."
+            self._p0, self._i0 = self._compute_open_circuit_parameters()
+        return Q_(self._p0, "W")
 
     @property
-    def i0(self) -> Q_[float] | None:
+    def i0(self) -> Q_[float]:
         """Current during open-circuit test (%)."""
-        return None if self._i0 is None else Q_(self._i0, "")
+        if self._i0 is None:
+            assert not self._has_test_results, "Missing i0 from open-circuit test results."
+            self._p0, self._i0 = self._compute_open_circuit_parameters()
+        return Q_(self._i0, "")
 
     @property
-    def psc(self) -> Q_[float] | None:
+    def psc(self) -> Q_[float]:
         """Losses during short-circuit test (W)."""
-        return None if self._psc is None else Q_(self._psc, "W")
+        if self._psc is None:
+            assert not self._has_test_results, "Missing psc from short-circuit test results."
+            self._psc, self._vsc = self._compute_short_circuit_parameters()
+        return Q_(self._psc, "W")
 
     @property
-    def vsc(self) -> Q_[float] | None:
+    def vsc(self) -> Q_[float]:
         """Voltages on LV side during short-circuit test (%)."""
-        return None if self._vsc is None else Q_(self._vsc, "")
+        if self._vsc is None:
+            assert not self._has_test_results, "Missing vsc from short-circuit test results."
+            self._psc, self._vsc = self._compute_short_circuit_parameters()
+        return Q_(self._vsc, "")
 
     @property
     def manufacturer(self) -> str | None:
@@ -515,7 +533,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
 
         z2, ym = cls._compute_zy(vg=vg, uhv=uhv, ulv=ulv, sn=sn, p0=p0, i0=i0, psc=psc, vsc=vsc)
 
-        return cls(
+        instance = cls(
             id=id,
             vg=vg,
             uhv=uhv,
@@ -527,6 +545,12 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             range=range,
             efficiency=efficiency,
         )
+        instance._p0 = p0
+        instance._i0 = i0
+        instance._psc = psc
+        instance._vsc = vsc
+        instance._has_test_results = True
+        return instance
 
     @classmethod
     @ureg_wraps(
@@ -720,7 +744,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         vsc = xhl / 100
         z2, ym = cls._compute_zy(vg=vg, uhv=uhv, ulv=ulv, sn=sn, p0=p0, i0=i0, psc=psc, vsc=vsc)
 
-        return cls(
+        instance = cls(
             id=id,
             vg=vg,
             uhv=uhv,
@@ -732,6 +756,12 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             range=range,
             efficiency=efficiency,
         )
+        instance._p0 = p0
+        instance._i0 = i0
+        instance._psc = psc
+        instance._vsc = vsc
+        instance._has_test_results = True
+        return instance
 
     #
     # Open and short circuit tests
@@ -855,120 +885,44 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         instance._i0 = i0
         instance._psc = psc
         instance._vsc = vsc
+        instance._has_test_results = True
         return instance
 
-    @ureg_wraps(("W", ""), (None, None))
-    def _compute_open_circuit_parameters(self, solve_kwargs: JsonDict | None = None) -> tuple[Q_[float], Q_[float]]:
-        """Compute the open-circuit parameters of the transformer parameters solving a load flow on a small circuit.
-
-        Args:
-            solve_kwargs:
-                The keywords arguments used by the :meth:`ElectricalNetwork.solve_load_flow` method. By default, the
-                default arguments of the method are used.
-
-        Returns:
-            The values ``p0``, the losses (in W), and ``i0``, the current (in %) during open-circuit test.
-        """
-        from roseau.load_flow.models import Bus, PotentialRef, Transformer, VoltageSource
-        from roseau.load_flow.network import ElectricalNetwork
-
-        if solve_kwargs is None:
-            solve_kwargs = {}
-
-        voltage = self._uhv
-        if self.type == "single-phase":
-            phases_hv = "ab"
-            phases_lv = "ab"
-        elif self.type == "center-tapped":
-            phases_hv = "ab"
-            phases_lv = "abn"
-        else:
-            # Three-phase transformer
-            phases_hv = "abc" if self.whv[0] == "D" else "abcn"
-            phases_lv = "abc" if self.wlv[0] == "d" else "abcn"
-            if "n" in phases_hv:
-                voltage /= SQRT3
-
-        bus_hv = Bus(id="BusHV", phases=phases_hv)
-        bus_lv = Bus(id="BusLV", phases=phases_lv)
-        PotentialRef(id="PRefHV", element=bus_hv)
-        PotentialRef(id="PRefLV", element=bus_lv)
-        VoltageSource(id="VS", bus=bus_hv, voltages=voltage)
-        transformer = Transformer(id="Transformer", bus_hv=bus_hv, bus_lv=bus_lv, parameters=self)
-
-        en = ElectricalNetwork.from_element(bus_hv)
-        en.solve_load_flow(**solve_kwargs)
-        p_hv = transformer.res_powers[0].m.sum().real
-        i_hv = abs(transformer.res_currents[0].m[0])
-        i_nom = self._sn / self._uhv
+    def _create_cy_transformer(self, tap: float = 1.0) -> CyTransformer:
+        """Create a CyTransformer object from the transformer parameters."""
         if self.type == "three-phase":
-            i_nom /= SQRT3
-
-        # Additional checks
-        u_lv = abs(bus_lv.res_voltages.m)
-        if self.type == "single-phase":
-            expected_u_lv = self._ulv
-        elif self.type == "center-tapped":
-            expected_u_lv = self._ulv / 2
+            return CyThreePhaseTransformer(
+                n1=self._n1,
+                n2=self._n2,
+                whv=self._whv[0],
+                wlv=self._wlv[0],
+                z2=self._z2,
+                ym=self._ym,
+                k=self._k * tap,
+                clock=self._clock,
+            )
+        elif self.type == "single-phase":
+            return CySingleTransformer(z2=self._z2, ym=self._ym, k=self._k * tap)
         else:
-            expected_u_lv = self._ulv / SQRT3
-        np.testing.assert_allclose(u_lv, expected_u_lv)
+            return CyCenterTransformer(z2=self._z2, ym=self._ym, k=self._k * tap)
 
-        return p_hv, i_hv / i_nom
-
-    @ureg_wraps(("W", ""), (None, None))
-    def _compute_short_circuit_parameters(self, solve_kwargs: JsonDict | None = None) -> tuple[Q_[float], Q_[float]]:
-        """Compute the short circuit parameters of the transformer parameters solving a load flow on a small circuit.
-
-        Args:
-            solve_kwargs:
-                The keywords arguments used by the :meth:`ElectricalNetwork.solve_load_flow` method.
-                By default, the default arguments of the method are used.
+    def _compute_open_circuit_parameters(self) -> tuple[float, float]:
+        """Compute the open-circuit test results of the transformer parameters.
 
         Returns:
-            The values ``psc``, the losses (in W), and ``vsc``, the voltages on LV side (in %) during short-circuit
+            The values ``p0``, the losses (in W), and ``i0``, the current (in %) during open-circuit
             test.
         """
-        from roseau.load_flow.models import Bus, PotentialRef, Transformer, VoltageSource
-        from roseau.load_flow.network import ElectricalNetwork
+        return self._create_cy_transformer().compute_open_circuit_parameters(uhv=self._uhv, ulv=self._ulv, sn=self._sn)
 
-        if solve_kwargs is None:
-            solve_kwargs = {}
+    def _compute_short_circuit_parameters(self) -> tuple[float, float]:
+        """Compute the short-circuit test results of the transformer parameters.
 
-        vsc = abs(self._z2) * self._sn / self._ulv**2
-        voltage = vsc * self._uhv
-        if self.type == "single-phase":
-            phases_hv = "ab"
-            phases_lv = "ab"
-        elif self.type == "center-tapped":
-            phases_hv = "ab"
-            phases_lv = "abn"
-        else:
-            # Three-phase transformer
-            phases_hv = "abc" if self.whv[0] == "D" else "abcn"
-            phases_lv = "abc" if self.wlv[0] == "d" else "abcn"
-            if "n" in phases_hv:
-                voltage /= SQRT3
-
-        bus_hv = Bus(id="BusHV", phases=phases_hv)
-        bus_lv = Bus(id="BusLV", phases=phases_lv)
-        PotentialRef(id="PRefHV", element=bus_hv)
-        PotentialRef(id="PRefLV", element=bus_lv)
-        VoltageSource(id="VS", bus=bus_hv, voltages=voltage)
-        transformer = Transformer(id="Transformer", bus_hv=bus_hv, bus_lv=bus_lv, parameters=self)
-        bus_lv.add_short_circuit(*phases_lv)
-        en = ElectricalNetwork.from_element(bus_hv)
-        en.solve_load_flow(**solve_kwargs)
-        p_hv = transformer.res_powers[0].m.sum().real
-
-        # Additional check
-        i_nom = self._sn / self._ulv
-        if self.type == "three-phase":
-            i_nom /= SQRT3  # I = S3ph / (sqrt(3) * U)
-        i_lv = abs(transformer.res_currents[1].m[0])
-        np.testing.assert_allclose(i_lv, i_nom)
-
-        return p_hv, vsc
+        Returns:
+            The values ``psc``, the losses (in W), and ``vsc``, the voltages on LV side (in %) during
+            short-circuit test.
+        """
+        return self._create_cy_transformer().compute_short_circuit_parameters(uhv=self._uhv, ulv=self._ulv, sn=self._sn)
 
     #
     # Json Mixin interface
@@ -1020,13 +974,10 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             "z2": [z2.real, z2.imag],
             "ym": [ym.real, ym.imag],
         }
-        if self._i0 is not None:
+        if self._has_test_results:
             data["i0"] = self._i0
-        if self._p0 is not None:
             data["p0"] = self._p0
-        if self._psc is not None:
             data["psc"] = self._psc
-        if self._vsc is not None:
             data["vsc"] = self._vsc
         if self._manufacturer is not None:
             data["manufacturer"] = self._manufacturer

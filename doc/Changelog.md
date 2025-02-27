@@ -41,6 +41,9 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ### Detailed changes
 
+- {gh-pr}`341` Compute the transformer's open-circuit (no-load) and short-circuit tests results if
+  they are not provided. `TransformerParameters`'s `i0`, `p0`, `vsc`, and `psc` are now always
+  available and no longer return `None` when the transformer is created from `z2` and `ym`.
 - {gh-pr}`340` Improve the support for the conversion from the PowerFactory DGS format.
   - Add an option to `ElectricalNetwork.from_dgs` to use the element names (`loc_name` in DGS) as IDs.
     The names must be unique for each element type.
