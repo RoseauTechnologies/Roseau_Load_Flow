@@ -3,8 +3,6 @@
 See https://github.com/RoseauTechnologies/Roseau_Load_Flow/issues/181
 """
 
-import re
-
 import numpy as np
 
 import roseau.load_flow as rlf
@@ -135,14 +133,9 @@ if __name__ == "__main__":
                     tap=transformer.tap,
                     phases_hv=transformer.phases_hv,
                     phases_lv=transformer.phases_lv,
-                    max_loading=1,  # Since v0.11.0
                     geometry=transformer.geometry,
                 )
                 assert isinstance(transformer.parameters.id, str), repr(transformer.parameters.id)
-                m = re.match(pattern=r"^.*_(\d+)kVA$", string=transformer.parameters.id)
-                assert m, transformer.parameters.id
-                # Since v0.11.0, this does not work. Please use max_loading
-                # transformer.parameters.max_power = int(m.group(1)) * 1_000
                 assert new_transformer.geometry == transformer.geometry
                 new_transformers[transformer_id] = new_transformer
 

@@ -231,10 +231,10 @@ class Transformer(AbstractBranch[CyTransformer]):
         return self._parameters.sn
 
     @property
-    def max_power(self) -> Q_[float] | None:
+    @ureg_wraps("VA", (None,))
+    def max_power(self) -> Q_[float]:
         """The maximum power loading of the transformer (in VA)."""
-        sn = self.parameters._sn
-        return None if sn is None else Q_(sn * self._max_loading, "VA")
+        return self.parameters._sn * self._max_loading  # type: ignore
 
     def _compute_phases_three(
         self,
