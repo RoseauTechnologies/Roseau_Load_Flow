@@ -49,7 +49,7 @@ class AbstractBranch(Element[_CyB_co]):
         self._bus1 = bus1
         self._bus2 = bus2
         self._n = n
-        self.geometry = geometry
+        self.geometry = self._check_geometry(geometry)
         self._connect(bus1, bus2)
         self._res_currents: tuple[complex, complex] | None = None
         self._res_voltages: tuple[complex, complex] | None = None

@@ -48,6 +48,7 @@ class Element(ABC, Identifiable, JsonMixin, Generic[_CyE_co]):
         self._fetch_results = False
         self._no_results = True
         self._results_valid = True
+        self._element_info = f"{cls.element_type} {id!r}"  # for logging
 
     @property
     def network(self) -> "ElectricalNetwork | None":
@@ -166,6 +167,20 @@ class Element(ABC, Identifiable, JsonMixin, Generic[_CyE_co]):
             )
         self._fetch_results = False
         return value
+
+    def _check_geometry(self, geometry: BaseGeometry | None) -> BaseGeometry | None:
+        """Check if the geometry is a valid shapely geometry."""
+        # We couldn't use the public class shapely.Geometry because it has no attributes
+        # Change if this ticket is resolved: https://github.com/shapely/shapely/issues/2166
+        if geometry is None:
+            return None
+        if not isinstance(geometry, BaseGeometry):
+            msg = (
+                f"The geometry of {self._element_info} is not a valid shapely geometry. Got {type(geometry).__name__}."
+            )
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_GEOMETRY_TYPE)
+        return geometry
 
     @staticmethod
     def _parse_geometry(geometry: str | dict[str, Any] | None) -> BaseGeometry | None:

@@ -69,7 +69,7 @@ class Bus(AbstractTerminal[CyBus]):
         if initial_voltage is None:
             initial_voltage = 0.0
         self.initial_voltage = initial_voltage
-        self.geometry = geometry
+        self.geometry = self._check_geometry(geometry)
 
         self._nominal_voltage: float | None = None
         self._min_voltage_level: float | None = None
