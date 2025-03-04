@@ -41,6 +41,7 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ### Detailed changes
 
+- {gh-pr}`343` {gh-issue}`336` Warn when a line/switch connects buses with different nominal voltages.
 - {gh-pr}`341` Compute the transformer's open-circuit (no-load) and short-circuit tests results if
   they are not provided. `TransformerParameters`'s `i0`, `p0`, `vsc`, and `psc` are now always
   available and no longer return `None` when the transformer is created from `z2` and `ym`.

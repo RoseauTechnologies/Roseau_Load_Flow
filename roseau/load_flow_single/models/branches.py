@@ -1,11 +1,14 @@
 import logging
+import warnings
 
+import numpy as np
 from shapely.geometry.base import BaseGeometry
 from typing_extensions import Self, TypeVar
 
 from roseau.load_flow import SQRT3
 from roseau.load_flow.typing import Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
+from roseau.load_flow.utils import find_stack_level
 from roseau.load_flow_engine.cy_engine import CyBranch
 from roseau.load_flow_single.models.buses import Bus
 from roseau.load_flow_single.models.core import Element
@@ -71,6 +74,20 @@ class AbstractBranch(Element[_CyB_co]):
         connections = [(i, i) for i in range(self._n)]
         self._cy_element.connect(self.bus1._cy_element, connections, True)
         self._cy_element.connect(self.bus2._cy_element, connections, False)
+
+    def _check_same_voltage_level(self) -> None:
+        if (
+            self.bus1._nominal_voltage is not None
+            and self.bus2._nominal_voltage is not None
+            and not np.isclose(self.bus1._nominal_voltage, self.bus2._nominal_voltage)
+        ):
+            warnings.warn(
+                (
+                    f"{self.element_type.capitalize()} {self.id!r} connects buses with different "
+                    f"nominal voltages: {self.bus1._nominal_voltage} and {self.bus2._nominal_voltage}."
+                ),
+                stacklevel=find_stack_level(),
+            )
 
     #
     # Results

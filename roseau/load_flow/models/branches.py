@@ -1,4 +1,5 @@
 import logging
+import warnings
 from functools import cached_property
 
 import numpy as np
@@ -11,7 +12,7 @@ from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import Element
 from roseau.load_flow.typing import ComplexArray, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
-from roseau.load_flow.utils import one_or_more_repr
+from roseau.load_flow.utils import find_stack_level, one_or_more_repr
 from roseau.load_flow_engine.cy_engine import CyBranch
 
 logger = logging.getLogger(__name__)
@@ -135,6 +136,20 @@ class AbstractBranch(Element[_CyB_co]):
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
         return phases
+
+    def _check_same_voltage_level(self) -> None:
+        if (
+            self.bus1._nominal_voltage is not None
+            and self.bus2._nominal_voltage is not None
+            and not np.isclose(self.bus1._nominal_voltage, self.bus2._nominal_voltage)
+        ):
+            warnings.warn(
+                (
+                    f"{self.element_type.capitalize()} {self.id!r} connects buses with different "
+                    f"nominal voltages: {self.bus1._nominal_voltage} and {self.bus2._nominal_voltage}."
+                ),
+                stacklevel=find_stack_level(),
+            )
 
     #
     # Results

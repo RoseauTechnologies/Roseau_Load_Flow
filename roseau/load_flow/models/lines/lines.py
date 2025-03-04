@@ -88,6 +88,7 @@ class Line(AbstractBranch[CyShuntLine | CySimplifiedLine]):
         self.parameters = parameters
         self.max_loading = max_loading
         self._initialized = True
+        self._check_same_voltage_level()
 
         # Handle the ground
         if self.ground is not None and not self.with_shunt:
