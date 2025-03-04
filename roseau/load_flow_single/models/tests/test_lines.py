@@ -1,3 +1,5 @@
+import warnings
+
 import numpy as np
 import pytest
 from pint import DimensionalityError
@@ -247,8 +249,10 @@ def test_different_voltage_levels():
     bus3 = Bus(id="bus3")
     bus4 = Bus(id="bus4", nominal_voltage=400)
     lp = LineParameters(id="lp", z_line=1)
-    Line(id="ln good", bus1=bus1, bus2=bus2, parameters=lp, length=0.1)  # OK
-    Line(id="ln good2", bus1=bus1, bus2=bus3, parameters=lp, length=0.1)  # OK
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        Line(id="ln good", bus1=bus1, bus2=bus2, parameters=lp, length=0.1)  # OK
+        Line(id="ln good2", bus1=bus1, bus2=bus3, parameters=lp, length=0.1)  # OK
     with pytest.warns(
         UserWarning, match=r"Line 'ln bad' connects buses with different nominal voltages: 240.0 and 400.0."
     ):

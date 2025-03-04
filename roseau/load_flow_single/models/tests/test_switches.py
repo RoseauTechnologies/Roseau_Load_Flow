@@ -1,3 +1,5 @@
+import warnings
+
 import pytest
 
 from roseau.load_flow import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
@@ -51,8 +53,10 @@ def test_different_voltage_levels():
     bus2 = Bus(id="bus2", nominal_voltage=240)
     bus3 = Bus(id="bus3")
     bus4 = Bus(id="bus4", nominal_voltage=400)
-    Switch(id="sw good", bus1=bus1, bus2=bus2)  # OK
-    Switch(id="sw good2", bus1=bus1, bus2=bus3)  # OK
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        Switch(id="sw good", bus1=bus1, bus2=bus2)  # OK
+        Switch(id="sw good2", bus1=bus1, bus2=bus3)  # OK
     with pytest.warns(
         UserWarning, match=r"Switch 'sw bad' connects buses with different nominal voltages: 240.0 and 400.0."
     ):
