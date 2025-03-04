@@ -1,3 +1,5 @@
+import warnings
+
 import pytest
 
 from roseau.load_flow import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
@@ -44,3 +46,18 @@ def test_switch_connection():
         "Connecting switch 'switch' between buses 'bus1' and 'bus2' that both have a voltage source is not allowed."
     )
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_VOLTAGES_SOURCES_CONNECTION
+
+
+def test_different_voltage_levels():
+    bus1 = Bus(id="bus1", nominal_voltage=240)
+    bus2 = Bus(id="bus2", nominal_voltage=240)
+    bus3 = Bus(id="bus3")
+    bus4 = Bus(id="bus4", nominal_voltage=400)
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        Switch(id="sw good", bus1=bus1, bus2=bus2)  # OK
+        Switch(id="sw good2", bus1=bus1, bus2=bus3)  # OK
+    with pytest.warns(
+        UserWarning, match=r"Switch 'sw bad' connects buses with different nominal voltages: 240.0 V and 400.0 V."
+    ):
+        Switch(id="sw bad", bus1=bus1, bus2=bus4)
