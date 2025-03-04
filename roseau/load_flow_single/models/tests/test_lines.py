@@ -254,6 +254,6 @@ def test_different_voltage_levels():
         Line(id="ln good", bus1=bus1, bus2=bus2, parameters=lp, length=0.1)  # OK
         Line(id="ln good2", bus1=bus1, bus2=bus3, parameters=lp, length=0.1)  # OK
     with pytest.warns(
-        UserWarning, match=r"Line 'ln bad' connects buses with different nominal voltages: 240.0 and 400.0."
+        UserWarning, match=r"Line 'ln bad' connects buses with different nominal voltages: 240.0 V and 400.0 V."
     ):
         Line(id="ln bad", bus1=bus1, bus2=bus4, parameters=lp, length=0.1)

@@ -84,7 +84,7 @@ class AbstractBranch(Element[_CyB_co]):
             warnings.warn(
                 (
                     f"{self.element_type.capitalize()} {self.id!r} connects buses with different "
-                    f"nominal voltages: {self.bus1._nominal_voltage} and {self.bus2._nominal_voltage}."
+                    f"nominal voltages: {self.bus1._nominal_voltage} V and {self.bus2._nominal_voltage} V."
                 ),
                 stacklevel=find_stack_level(),
             )

@@ -58,6 +58,6 @@ def test_different_voltage_levels():
         Switch(id="sw good", bus1=bus1, bus2=bus2)  # OK
         Switch(id="sw good2", bus1=bus1, bus2=bus3)  # OK
     with pytest.warns(
-        UserWarning, match=r"Switch 'sw bad' connects buses with different nominal voltages: 240.0 and 400.0."
+        UserWarning, match=r"Switch 'sw bad' connects buses with different nominal voltages: 240.0 V and 400.0 V."
     ):
         Switch(id="sw bad", bus1=bus1, bus2=bus4)
