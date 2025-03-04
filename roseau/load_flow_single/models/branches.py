@@ -1,6 +1,6 @@
 import logging
 
-from shapely.geometry.base import BaseGeometry
+import shapely
 from typing_extensions import Self, TypeVar
 
 from roseau.load_flow import SQRT3
@@ -24,7 +24,7 @@ class AbstractBranch(Element[_CyB_co]):
         :doc:`Switch model documentation </models/Switch>`
     """
 
-    def __init__(self, id: Id, bus1: Bus, bus2: Bus, n: int, *, geometry: BaseGeometry | None = None) -> None:
+    def __init__(self, id: Id, bus1: Bus, bus2: Bus, n: int, *, geometry: shapely.Geometry | None = None) -> None:
         """AbstractBranch constructor.
 
         Args:
@@ -46,7 +46,7 @@ class AbstractBranch(Element[_CyB_co]):
         self._bus1 = bus1
         self._bus2 = bus2
         self._n = n
-        self.geometry = geometry
+        self.geometry = self._check_geometry(geometry)
         self._connect(bus1, bus2)
         self._res_currents: tuple[complex, complex] | None = None
         self._res_voltages: tuple[complex, complex] | None = None

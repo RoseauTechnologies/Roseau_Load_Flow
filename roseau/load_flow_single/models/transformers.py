@@ -1,7 +1,7 @@
 import logging
 from typing import Final
 
-from shapely.geometry.base import BaseGeometry
+import shapely
 
 from roseau.load_flow import SQRT3, RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.typing import Float, Id, JsonDict
@@ -33,7 +33,7 @@ class Transformer(AbstractBranch[CySingleTransformer]):
         parameters: TransformerParameters,
         tap: Float = 1.0,
         max_loading: Float | Q_[Float] = 1.0,
-        geometry: BaseGeometry | None = None,
+        geometry: shapely.Geometry | None = None,
     ) -> None:
         """Transformer constructor.
 

@@ -2,13 +2,16 @@
 This module defines the electrical network class.
 """
 
+import json
 import logging
 import textwrap
 import warnings
 from collections.abc import Mapping
+from importlib import resources
 from itertools import chain
 from math import nan
-from typing import TYPE_CHECKING, TypeVar
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, TypeVar
 
 import geopandas as gpd
 import numpy as np
@@ -18,10 +21,10 @@ from typing_extensions import Self
 
 from roseau.load_flow import SQRT3, RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow._solvers import AbstractSolver
-from roseau.load_flow.typing import Id, JsonDict, MapOrSeq, Solver
+from roseau.load_flow.typing import Id, JsonDict, MapOrSeq, Solver, StrPath
 from roseau.load_flow.utils import DTYPES, JsonMixin, LoadTypeDtype, count_repr, find_stack_level, optional_deps
 from roseau.load_flow_engine.cy_engine import CyElectricalNetwork, CyGround, CyPotentialRef
-from roseau.load_flow_single.io import network_from_dict, network_to_dict
+from roseau.load_flow_single.io import network_from_dgs, network_from_dict, network_to_dgs, network_to_dict
 from roseau.load_flow_single.models.branches import AbstractBranch
 from roseau.load_flow_single.models.buses import Bus
 from roseau.load_flow_single.models.core import Element
@@ -1021,3 +1024,75 @@ class ElectricalNetwork(JsonMixin):
             "loads": [load._results_to_dict(warning=False, full=full) for load in self.loads.values()],
             "sources": [source._results_to_dict(warning=False, full=full) for source in self.sources.values()],
         }
+
+    #
+    # DGS interface
+    #
+    @classmethod
+    def dgs_export_definition_folder_path(cls) -> Path:
+        """Returns the path to the DGS pfd file to use as "Export Definition Folder"."""
+        return Path(resources.files("roseau.load_flow") / "data" / "io" / "DGS-RLF.pfd").expanduser().absolute()
+
+    @classmethod
+    def from_dgs_dict(cls, data: Mapping[str, Any], /, use_name_as_id: bool = False) -> Self:
+        """Construct an electrical network from a json DGS file (PowerFactory).
+
+        Only JSON format of DGS is currently supported. See the
+        :ref:`Data Exchange page <data-exchange-power-factory>` for more information.
+
+        Args:
+            data:
+                The dictionary containing the network DGS data.
+
+            use_name_as_id:
+                If True, use the name of the elements (the ``loc_name`` field) as their id. Otherwise,
+                use the id from the DGS file (the ``FID`` field). Only use if you are sure the names
+                are unique. Default is False.
+
+        Returns:
+            The constructed network.
+        """
+        return cls(**network_from_dgs(data, use_name_as_id))
+
+    @classmethod
+    def from_dgs_file(cls, path: StrPath, use_name_as_id: bool = False) -> Self:
+        """Construct an electrical network from a json DGS file (PowerFactory).
+
+        Only JSON format of DGS is currently supported. See the
+        :ref:`Data Exchange page <data-exchange-power-factory>` for more information.
+
+        Args:
+            path:
+                The path to the network DGS data file.
+
+            use_name_as_id:
+                If True, use the name of the elements (the ``loc_name`` field) as their id. Otherwise,
+                use the id from the DGS file (the ``FID`` field). Only use if you are sure the names
+                are unique. Default is False.
+
+        Returns:
+            The constructed network.
+        """
+        with open(path, encoding="ISO-8859-10") as f:
+            data = json.load(f)
+        return cls(**network_from_dgs(data, use_name_as_id))
+
+    def to_dgs_dict(self) -> JsonDict:
+        """Convert the network to a dictionary compatible with the DGS json format (PowerFactory).
+
+        Only JSON format of DGS is currently. See the
+        :ref:`Data Exchange page <data-exchange-power-factory>` for more information.
+        """
+        return network_to_dgs(self)
+
+    def to_dgs_file(self, path: StrPath) -> Path:
+        """Save the network to a json DGS file (PowerFactory).
+
+        Only JSON format of DGS is currently. See the
+        :ref:`Data Exchange page <data-exchange-power-factory>` for more information.
+        """
+        data = network_to_dgs(self)
+        path = Path(path).expanduser().resolve()
+        with open(path, "w") as f:
+            json.dump(data, f, indent=2)
+        return path

@@ -121,7 +121,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
                 or (
                     self._section is not None
                     and other._section is not None
-                    and np.isclose(self._section, other._section)
+                    and np.allclose(self._section, other._section)
                 )
             )
             and (
@@ -129,7 +129,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
                 or (
                     self._ampacity is not None
                     and other._ampacity is not None
-                    and np.isclose(self._ampacity, other._ampacity)
+                    and np.allclose(self._ampacity, other._ampacity)
                 )
             )
         )

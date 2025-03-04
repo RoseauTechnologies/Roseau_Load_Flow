@@ -21,7 +21,7 @@ from roseau.load_flow.typing import Id
 logger = logging.getLogger(__name__)
 
 
-def compute_mv_load_power(elm_lod: pd.DataFrame, load_id: str, suffix: str) -> complex:
+def compute_mv_load_power(elm_lod: pd.DataFrame, load_id: Id, suffix: str) -> complex:
     """Compute the complex power of an MV Load.
 
     An MV load has load power (slini) and generation power (sgini). The powers are defined using
@@ -59,7 +59,7 @@ def compute_mv_load_power(elm_lod: pd.DataFrame, load_id: str, suffix: str) -> c
     return power_l - power_g
 
 
-def compute_lv_load_power(elm_lod: pd.DataFrame, load_id: str, suffix: str) -> complex:
+def compute_lv_load_power(elm_lod: pd.DataFrame, load_id: Id, suffix: str) -> complex:
     """Compute the complex power of an LV Load.
 
     An LV load has load power (slini) only. The power is defined using `plini`, `slini` and `pf_recap`.
@@ -86,7 +86,7 @@ def compute_lv_load_power(elm_lod: pd.DataFrame, load_id: str, suffix: str) -> c
     return (p + 1j * q) * scale
 
 
-def compute_general_load_power(elm_lod: pd.DataFrame, load_id: str, suffix: str) -> complex:
+def compute_general_load_power(elm_lod: pd.DataFrame, load_id: Id, suffix: str) -> complex:
     """Compute the complex power of a General Load.
 
     A general load has load power (slini) only. The power is defined using one of (`plini`, `qlini`),
@@ -143,7 +143,7 @@ def compute_general_load_power(elm_lod: pd.DataFrame, load_id: str, suffix: str)
     return (p + 1j * q) * scale
 
 
-def compute_pv_sys_power(elm_lod: pd.DataFrame, load_id: str, suffix: str) -> complex:
+def compute_pv_sys_power(elm_lod: pd.DataFrame, load_id: Id, suffix: str) -> complex:
     """Compute the complex power of a PV Sys.
 
     Args:
@@ -168,7 +168,7 @@ def compute_pv_sys_power(elm_lod: pd.DataFrame, load_id: str, suffix: str) -> co
     return -(p + 1j * q) * scale
 
 
-def compute_gen_stat_power(elm_lod: pd.DataFrame, load_id: str, suffix: str) -> complex:
+def compute_gen_stat_power(elm_lod: pd.DataFrame, load_id: Id, suffix: str) -> complex:
     """Compute the complex power of a Static Generator.
 
     Args:
@@ -194,7 +194,7 @@ def compute_gen_stat_power(elm_lod: pd.DataFrame, load_id: str, suffix: str) -> 
 
 
 class LoadPowerFunction(Protocol):
-    def __call__(self, elm_lod: pd.DataFrame, load_id: str, suffix: str) -> complex: ...
+    def __call__(self, elm_lod: pd.DataFrame, load_id: Id, suffix: str) -> complex: ...
 
 
 LOAD_POWER_FUNCTIONS: dict[PwFLoadType, LoadPowerFunction] = {

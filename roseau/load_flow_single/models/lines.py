@@ -2,7 +2,7 @@ import logging
 from typing import Final
 
 import numpy as np
-from shapely.geometry.base import BaseGeometry
+import shapely
 
 from roseau.load_flow import SQRT3, RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.typing import Float, Id, JsonDict
@@ -29,7 +29,7 @@ class Line(AbstractBranch[CyShuntLine | CySimplifiedLine]):
         parameters: LineParameters,
         length: Float | Q_[Float],
         max_loading: Float | Q_[Float] = 1.0,
-        geometry: BaseGeometry | None = None,
+        geometry: shapely.Geometry | None = None,
     ) -> None:
         """Line constructor.
 
@@ -89,11 +89,13 @@ class Line(AbstractBranch[CyShuntLine | CySimplifiedLine]):
         self._z_line_inv = 1.0 / self._z_line
         if self._cy_element is not None:
             if self._parameters.with_shunt:
+                assert isinstance(self._cy_element, CyShuntLine)
                 self._cy_element.update_line_parameters(
                     y_shunt=np.array([self._y_shunt], dtype=np.complex128),
                     z_line=np.array([self._z_line], dtype=np.complex128),
                 )
             else:
+                assert isinstance(self._cy_element, CySimplifiedLine)
                 self._cy_element.update_line_parameters(z_line=np.array([self._z_line], dtype=np.complex128))
 
     @property

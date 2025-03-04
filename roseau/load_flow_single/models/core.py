@@ -4,7 +4,6 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any, ClassVar, Generic, NoReturn
 
 import shapely
-from shapely.geometry import shape
 from shapely.geometry.base import BaseGeometry
 from typing_extensions import TypeVar
 
@@ -48,6 +47,7 @@ class Element(ABC, Identifiable, JsonMixin, Generic[_CyE_co]):
         self._fetch_results = False
         self._no_results = True
         self._results_valid = True
+        self._element_info = f"{cls.element_type} {id!r}"  # for logging
 
     @property
     def network(self) -> "ElectricalNetwork | None":
@@ -167,6 +167,22 @@ class Element(ABC, Identifiable, JsonMixin, Generic[_CyE_co]):
         self._fetch_results = False
         return value
 
+    def _check_geometry(self, geometry: shapely.Geometry | None) -> BaseGeometry | None:
+        """Check if the geometry is a valid shapely geometry."""
+        # shapely.Geometry is the public name of shapely objects but it has no attributes. We accept
+        # shapely.Geometry as input because users most likely use it as annotation but internally we
+        # use BaseGeometry because it has all the shapely geometry attributes.
+        # In practice, there are no shapely.Geometry objects that are not BaseGeometry objects.
+        if geometry is None:
+            return None
+        if not isinstance(geometry, BaseGeometry):
+            msg = (
+                f"The geometry of {self._element_info} is not a valid shapely geometry. Got {type(geometry).__name__}."
+            )
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_GEOMETRY_TYPE)
+        return geometry
+
     @staticmethod
     def _parse_geometry(geometry: str | dict[str, Any] | None) -> BaseGeometry | None:
         if geometry is None:
@@ -174,7 +190,7 @@ class Element(ABC, Identifiable, JsonMixin, Generic[_CyE_co]):
         elif isinstance(geometry, str):
             return shapely.from_wkt(geometry)
         else:
-            return shape(geometry)
+            return shapely.geometry.shape(geometry)
 
     def _raise_several_network(self) -> NoReturn:
         """Raise an exception when there are several networks involved during a connection of elements."""
