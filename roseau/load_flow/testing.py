@@ -20,9 +20,11 @@ def assert_json_close(obj1: object, obj2: object, *, rtol=1e-7, atol=0, _prefix:
 
         obj2:
             The second JSON data structure to compare.
+
         rtol:
             The relative tolerance parameter for the comparison of floating point numbers. Defaults
             to 1e-7.
+
         atol:
             The absolute tolerance parameter for the comparison of floating point numbers. Defaults
             to 0.
