@@ -66,6 +66,7 @@ class Line(AbstractBranch[CyShuntLine | CySimplifiedLine]):
         self.parameters = parameters
         self.max_loading = max_loading
         self._initialized = True
+        self._check_same_voltage_level()
 
         # Cache values used in results calculations
         self._z_line = parameters._z_line * self._length

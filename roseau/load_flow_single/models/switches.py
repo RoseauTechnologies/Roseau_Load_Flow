@@ -38,6 +38,7 @@ class Switch(AbstractBranch[CySwitch]):
         super().__init__(id=id, bus1=bus1, bus2=bus2, n=1, geometry=geometry)
         self._check_elements()
         self._check_loop()
+        self._check_same_voltage_level()
         self._cy_element = CySwitch(1)
         self._cy_connect()
 

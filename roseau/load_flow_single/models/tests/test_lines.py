@@ -1,3 +1,5 @@
+import warnings
+
 import numpy as np
 import pytest
 from pint import DimensionalityError
@@ -239,3 +241,19 @@ def test_powers_equal(network_with_results):
     assert np.isclose(power1, expected_power1)
     assert np.isclose(power2, expected_power2)
     assert np.isclose(power_loss, expected_power_loss)
+
+
+def test_different_voltage_levels():
+    bus1 = Bus(id="bus1", nominal_voltage=240)
+    bus2 = Bus(id="bus2", nominal_voltage=240)
+    bus3 = Bus(id="bus3")
+    bus4 = Bus(id="bus4", nominal_voltage=400)
+    lp = LineParameters(id="lp", z_line=1)
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        Line(id="ln good", bus1=bus1, bus2=bus2, parameters=lp, length=0.1)  # OK
+        Line(id="ln good2", bus1=bus1, bus2=bus3, parameters=lp, length=0.1)  # OK
+    with pytest.warns(
+        UserWarning, match=r"Line 'ln bad' connects buses with different nominal voltages: 240.0 V and 400.0 V."
+    ):
+        Line(id="ln bad", bus1=bus1, bus2=bus4, parameters=lp, length=0.1)

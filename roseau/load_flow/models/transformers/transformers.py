@@ -433,46 +433,6 @@ class Transformer(AbstractBranch[CyTransformer]):
         return bool(loading > self._max_loading)
 
     @property
-    @ureg_wraps("A", (None,))
-    def res_currents_hv(self) -> Q_[ComplexArray]:
-        """The load flow result of the transformer currents on the HV side (A)."""
-        return self._res_currents_getter(warning=True)[0]
-
-    @property
-    @ureg_wraps("A", (None,))
-    def res_currents_lv(self) -> Q_[ComplexArray]:
-        """The load flow result of the transformer currents on the LV side (A)."""
-        return self._res_currents_getter(warning=True)[1]
-
-    @property
-    @ureg_wraps("V", (None,))
-    def res_potentials_hv(self) -> Q_[ComplexArray]:
-        """The load flow result of the transformer potentials on the HV side (V)."""
-        return self._res_potentials_getter(warning=True)[0]
-
-    @property
-    @ureg_wraps("V", (None,))
-    def res_potentials_lv(self) -> Q_[ComplexArray]:
-        """The load flow result of the transformer potentials on the HV side (V)."""
-        return self._res_potentials_getter(warning=True)[1]
-
-    @property
-    @ureg_wraps("VA", (None,))
-    def res_powers_hv(self) -> Q_[ComplexArray]:
-        """The load flow result of the transformer powers on the HV side (VA)."""
-        currents_hv = self._res_currents_getter(warning=True)[0]
-        potentials_hv = self._res_potentials_getter(warning=False)[0]
-        return potentials_hv * currents_hv.conjugate()
-
-    @property
-    @ureg_wraps("VA", (None,))
-    def res_powers_lv(self) -> Q_[ComplexArray]:
-        """The load flow result of the transformer powers on the LV side (VA)."""
-        currents_lv = self._res_currents_getter(warning=True)[1]
-        potentials_lv = self._res_potentials_getter(warning=False)[1]
-        return potentials_lv * currents_lv.conjugate()
-
-    @property
     @ureg_wraps("V", (None,))
     def res_voltages_hv(self) -> Q_[ComplexArray]:
         """The load flow result of the transformer voltages on the HV side (V)."""
