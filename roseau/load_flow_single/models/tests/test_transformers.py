@@ -97,13 +97,3 @@ def test_transformer_results():
     actual_total_losses = tr.res_power_losses.m
     assert np.isscalar(actual_total_losses)
     np.testing.assert_allclose(actual_total_losses, expected_total_losses)
-
-    # Transformer HV aliases
-    np.testing.assert_allclose(tr.res_current_hv.m, tr.res_currents[0].m)
-    np.testing.assert_allclose(tr.res_voltage_hv.m, tr.res_voltages[0].m)
-    np.testing.assert_allclose(tr.res_power_hv.m, tr.res_powers[0].m)
-
-    # Transformer LV aliases
-    np.testing.assert_allclose(tr.res_current_lv.m, tr.res_currents[1].m)
-    np.testing.assert_allclose(tr.res_voltage_lv.m, tr.res_voltages[1].m)
-    np.testing.assert_allclose(tr.res_power_lv.m, tr.res_powers[1].m)

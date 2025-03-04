@@ -3,7 +3,7 @@ from typing import Final
 
 from shapely.geometry.base import BaseGeometry
 
-from roseau.load_flow import SQRT3, RoseauLoadFlowException, RoseauLoadFlowExceptionCode
+from roseau.load_flow import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.typing import Float, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow.utils import deprecate_renamed_parameters
@@ -173,49 +173,6 @@ class Transformer(AbstractBranch[CySingleTransformer]):
         # True if either the primary or secondary is overloaded
         loading = self._res_loading_getter(warning=True)
         return bool(loading > self._max_loading)
-
-    #
-    # Transformer specific results
-    #
-    @property
-    @ureg_wraps("A", (None,))
-    def res_current_hv(self) -> Q_[complex]:
-        """The load flow result of the transformer current on the HV side (A)."""
-        return self._res_currents_getter(warning=True)[0]
-
-    @property
-    @ureg_wraps("A", (None,))
-    def res_current_lv(self) -> Q_[complex]:
-        """The load flow result of the transformer current on the LV side (A)."""
-        return self._res_currents_getter(warning=True)[1]
-
-    @property
-    @ureg_wraps("V", (None,))
-    def res_voltage_hv(self) -> Q_[complex]:
-        """The load flow result of the transformer voltage on the HV side (V)."""
-        return self._res_voltages_getter(warning=True)[0]
-
-    @property
-    @ureg_wraps("V", (None,))
-    def res_voltage_lv(self) -> Q_[complex]:
-        """The load flow result of the transformer voltage on the LV side (V)."""
-        return self._res_voltages_getter(warning=True)[1]
-
-    @property
-    @ureg_wraps("VA", (None,))
-    def res_power_hv(self) -> Q_[complex]:
-        """The load flow result of the transformer power on the HV side (VA)."""
-        current_hv = self._res_currents_getter(warning=True)[0]
-        voltage_hv = self._res_voltages_getter(warning=False)[0]
-        return voltage_hv * current_hv.conjugate() * SQRT3
-
-    @property
-    @ureg_wraps("VA", (None,))
-    def res_power_lv(self) -> Q_[complex]:
-        """The load flow result of the transformer power on the LV side (VA)."""
-        current_lv = self._res_currents_getter(warning=True)[1]
-        voltage_lv = self._res_voltages_getter(warning=False)[1]
-        return voltage_lv * current_lv.conjugate() * SQRT3
 
     #
     # Json Mixin interface
