@@ -1055,7 +1055,7 @@ class ElectricalNetwork(JsonMixin):
         return cls(**network_from_dgs(data, use_name_as_id))
 
     @classmethod
-    def from_dgs_file(cls, path: StrPath, use_name_as_id: bool = False) -> Self:
+    def from_dgs_file(cls, path: StrPath, *, use_name_as_id: bool = False, encoding: str | None = None) -> Self:
         """Construct an electrical network from a json DGS file (PowerFactory).
 
         Only JSON format of DGS is currently supported. See the
@@ -1070,10 +1070,13 @@ class ElectricalNetwork(JsonMixin):
                 use the id from the DGS file (the ``FID`` field). Only use if you are sure the names
                 are unique. Default is False.
 
+            encoding:
+                The encoding of the file to be passed to the `open` function.
+
         Returns:
             The constructed network.
         """
-        with open(path, encoding="ISO-8859-10") as f:
+        with open(path, encoding=encoding) as f:
             data = json.load(f)
         return cls(**network_from_dgs(data, use_name_as_id))
 
@@ -1085,14 +1088,21 @@ class ElectricalNetwork(JsonMixin):
         """
         return network_to_dgs(self)
 
-    def to_dgs_file(self, path: StrPath) -> Path:
+    def to_dgs_file(self, path: StrPath, *, encoding: str | None = None) -> Path:
         """Save the network to a json DGS file (PowerFactory).
 
         Only JSON format of DGS is currently. See the
         :ref:`Data Exchange page <data-exchange-power-factory>` for more information.
+
+        Args:
+            path:
+                Save the network to this path.
+
+            encoding:
+                The encoding of the file to be passed to the `open` function.
         """
         data = network_to_dgs(self)
         path = Path(path).expanduser().resolve()
-        with open(path, "w") as f:
+        with open(path, "w", encoding=encoding) as f:
             json.dump(data, f, indent=2)
         return path
