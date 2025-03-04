@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any, ClassVar, Generic, NoReturn
 
 import shapely
+from shapely.geometry import shape
 from shapely.geometry.base import BaseGeometry
 from typing_extensions import TypeVar
 
@@ -167,12 +168,10 @@ class Element(ABC, Identifiable, JsonMixin, Generic[_CyE_co]):
         self._fetch_results = False
         return value
 
-    def _check_geometry(self, geometry: shapely.Geometry | None) -> BaseGeometry | None:
+    def _check_geometry(self, geometry: BaseGeometry | None) -> BaseGeometry | None:
         """Check if the geometry is a valid shapely geometry."""
-        # shapely.Geometry is the public name of shapely objects but it has no attributes. We accept
-        # shapely.Geometry as input because users most likely use it as annotation but internally we
-        # use BaseGeometry because it has all the shapely geometry attributes.
-        # In practice, there are no shapely.Geometry objects that are not BaseGeometry objects.
+        # We couldn't use the public class shapely.Geometry because it has no attributes
+        # Change if this ticket is resolved: https://github.com/shapely/shapely/issues/2166
         if geometry is None:
             return None
         if not isinstance(geometry, BaseGeometry):
@@ -190,7 +189,7 @@ class Element(ABC, Identifiable, JsonMixin, Generic[_CyE_co]):
         elif isinstance(geometry, str):
             return shapely.from_wkt(geometry)
         else:
-            return shapely.geometry.shape(geometry)
+            return shape(geometry)
 
     def _raise_several_network(self) -> NoReturn:
         """Raise an exception when there are several networks involved during a connection of elements."""

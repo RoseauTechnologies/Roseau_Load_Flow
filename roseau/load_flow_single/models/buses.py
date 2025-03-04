@@ -5,7 +5,7 @@ from typing import Final
 
 import numpy as np
 import pandas as pd
-import shapely
+from shapely.geometry.base import BaseGeometry
 from typing_extensions import Self
 
 from roseau.load_flow import SQRT3, RoseauLoadFlowException, RoseauLoadFlowExceptionCode
@@ -28,7 +28,7 @@ class Bus(AbstractTerminal[CyBus]):
         self,
         id: Id,
         *,
-        geometry: shapely.Geometry | None = None,
+        geometry: BaseGeometry | None = None,
         nominal_voltage: Float | Q_[Float] | None = None,
         min_voltage_level: Float | Q_[Float] | None = None,
         max_voltage_level: Float | Q_[Float] | None = None,
