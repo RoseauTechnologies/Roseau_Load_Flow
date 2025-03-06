@@ -1320,3 +1320,13 @@ def test_results_to_json(small_network_with_results, tmp_path):
         res_network = json.load(fp)
 
     assert_json_close(res_network, res_network_expected)
+
+
+def test_add_shunt_line_to_existing_network_no_segfault():
+    # https://github.com/RoseauTechnologies/Roseau_Load_Flow/issues/346
+    bus = Bus("Bus")
+    VoltageSource("Source", bus=bus, voltage=20e3)
+    ElectricalNetwork.from_element(bus)
+    bus_new = Bus("New Bus")
+    lp = LineParameters("LP with shunt", z_line=0.1 + 0.1j, y_shunt=0.01j)
+    Line("New Line", bus1=bus, bus2=bus_new, parameters=lp, length=0.1)  # <- used to segfault here

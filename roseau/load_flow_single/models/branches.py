@@ -50,7 +50,6 @@ class AbstractBranch(Element[_CyB_co]):
         self._bus2 = bus2
         self._n = n
         self.geometry = self._check_geometry(geometry)
-        self._connect(bus1, bus2)
         self._res_currents: tuple[complex, complex] | None = None
         self._res_voltages: tuple[complex, complex] | None = None
         self._sides_suffixes = ("_hv", "_lv") if self.element_type == "transformer" else ("1", "2")
