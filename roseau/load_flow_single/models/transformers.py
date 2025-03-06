@@ -75,6 +75,7 @@ class Transformer(AbstractBranch[CySingleTransformer]):
 
         self._cy_element = CySingleTransformer(z2=z2, ym=ym, k=k * self._tap)
         self._cy_connect()
+        self._connect(bus_hv, bus_lv)
 
     @property
     def bus_hv(self) -> Bus:

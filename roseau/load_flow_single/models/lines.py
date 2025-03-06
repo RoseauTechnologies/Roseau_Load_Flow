@@ -82,6 +82,7 @@ class Line(AbstractBranch[CyShuntLine | CySimplifiedLine]):
         else:
             self._cy_element = CySimplifiedLine(n=1, z_line=np.array([self._z_line], dtype=np.complex128))
         self._cy_connect()
+        self._connect(bus1, bus2)
 
     def _update_internal_parameters(self) -> None:
         """Update the internal parameters of the line."""
