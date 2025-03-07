@@ -90,13 +90,13 @@ class AbstractLoad(AbstractConnectable[_CyL_co], ABC):
     @property
     @ureg_wraps("A", (None,))
     def res_inner_currents(self) -> Q_[ComplexArray]:
-        """The load flow result of the load inner currents (A)."""
+        """The load flow result of the currents that flow in the inner components of the load (A)."""
         return self._res_inner_currents_getter(warning=True)
 
     @property
     @ureg_wraps("VA", (None,))
     def res_inner_powers(self) -> Q_[ComplexArray]:
-        """The load flow result of the load inner powers (VA)."""
+        """The load flow result of the powers that flow in the inner components of the load (VA)."""
         return self._res_inner_powers_getter(warning=True)
 
     def _validate_value(self, value: ComplexScalarOrArrayLike1D) -> ComplexArray:

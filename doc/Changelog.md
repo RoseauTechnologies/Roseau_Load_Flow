@@ -41,6 +41,9 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ### Detailed changes
 
+- {gh-pr}`348` The `Load` classes have two new properties: `res_inner_currents` and `res_inner_powers`.
+  These are the currents and powers that flow in the inner components of the load as opposed to
+  `res_currents` and `res_powers` that flow into the load.
 - {gh-pr}`343` {gh-issue}`336` Warn when a line/switch connects buses with different nominal voltages.
 - {gh-pr}`341` Compute the transformer's open-circuit (no-load) and short-circuit tests results if
   they are not provided. `TransformerParameters`'s `i0`, `p0`, `vsc`, and `psc` are now always
