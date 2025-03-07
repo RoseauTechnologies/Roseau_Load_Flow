@@ -96,7 +96,11 @@ class AbstractLoad(AbstractConnectable[_CyL_co], ABC):
     @property
     @ureg_wraps("VA", (None,))
     def res_inner_powers(self) -> Q_[ComplexArray]:
-        """The load flow result of the powers that flow in the inner components of the load (VA)."""
+        """The load flow result of the powers that flow in the inner components of the load (VA).
+        
+        Unlike `res_powers`, the inner powers do not depend on the reference of potentials. They
+        are the physical powers consumed by each of the load dipoles.
+        """
         return self._res_inner_powers_getter(warning=True)
 
     def _validate_value(self, value: ComplexScalarOrArrayLike1D) -> ComplexArray:
