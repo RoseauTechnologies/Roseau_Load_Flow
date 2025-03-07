@@ -71,8 +71,8 @@ class AbstractBranch(Element[_CyB_co]):
     def _cy_connect(self) -> None:
         """Connect the Cython elements of the buses and the branch"""
         connections = [(i, i) for i in range(self._n)]
-        self._cy_element.connect(self.bus1._cy_element, connections, True)
-        self._cy_element.connect(self.bus2._cy_element, connections, False)
+        self._cy_element.connect_side(self.bus1._cy_element, connections, True)
+        self._cy_element.connect_side(self.bus2._cy_element, connections, False)
 
     def _check_same_voltage_level(self) -> None:
         if (
@@ -93,8 +93,8 @@ class AbstractBranch(Element[_CyB_co]):
     #
     def _refresh_results(self) -> None:
         if self._fetch_results:
-            current1, current2 = self._cy_element.get_currents(1, 1)
-            potential1, potential2 = self._cy_element.get_potentials(1, 1)
+            current1, current2 = self._cy_element.get_side_currents(1, 1)
+            potential1, potential2 = self._cy_element.get_side_potentials(1, 1)
             self._res_currents = current1[0], current2[0]
             self._res_voltages = potential1[0] * SQRT3, potential2[0] * SQRT3
 
