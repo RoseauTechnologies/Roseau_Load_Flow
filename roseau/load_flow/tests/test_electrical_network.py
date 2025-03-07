@@ -2329,6 +2329,8 @@ def test_results_to_dict(all_element_network_with_results):
         np.testing.assert_allclose(currents, load.res_currents.m)
         potentials = [complex(*i) for i in res_load.pop("potentials")]
         np.testing.assert_allclose(potentials, load.res_potentials.m)
+        inner_currents = [complex(*i) for i in res_load.pop("inner_currents")]
+        np.testing.assert_allclose(inner_currents, load.res_inner_currents.m)
         if load.is_flexible:
             flexible_powers = [complex(*i) for i in res_load.pop("flexible_powers")]
             np.testing.assert_allclose(flexible_powers, load.res_flexible_powers.m)
@@ -2506,6 +2508,12 @@ def test_results_to_dict_full(all_element_network_with_results):
         # Voltages
         voltages = [complex(*i) for i in res_load.pop("voltages")]
         np.testing.assert_allclose(voltages, load.res_voltages.m)
+        # Inner currents
+        inner_currents = [complex(*i) for i in res_load.pop("inner_currents")]
+        np.testing.assert_allclose(inner_currents, load.res_inner_currents.m)
+        # Inner powers
+        inner_powers = [complex(*i) for i in res_load.pop("inner_powers")]
+        np.testing.assert_allclose(inner_powers, load.res_inner_powers.m)
         # Flexible powers
         if load.is_flexible:
             flexible_powers = [complex(*i) for i in res_load.pop("flexible_powers")]

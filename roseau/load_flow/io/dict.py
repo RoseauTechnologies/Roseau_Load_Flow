@@ -12,6 +12,9 @@ import warnings
 from collections import defaultdict
 from typing import TYPE_CHECKING
 
+import numpy as np
+
+from roseau.load_flow.converters import _calculate_voltages
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.io.common import NetworkElements
 from roseau.load_flow.models import (
@@ -841,6 +844,25 @@ def v3_to_v4_converter(data: JsonDict) -> JsonDict:  # noqa: C901
             )
         switches.append(switch_data)
 
+    loads = []
+    for load_data in data["loads"]:
+        # Handle missing results
+        if "results" in load_data:
+            potentials = np.array([complex(*v) for v in load_data["results"]["potentials"]], dtype=np.complex128)
+            voltages = _calculate_voltages(potentials, load_data["phases"])
+            if load_data["type"] == "current":
+                currents = np.array([complex(*z) for z in load_data["currents"]], dtype=np.complex128)
+                inner_currents = currents * voltages / np.abs(voltages)
+            elif load_data["type"] == "power":
+                powers = np.array([complex(*z) for z in load_data["powers"]], dtype=np.complex128)
+                inner_currents = np.conj(powers / voltages)
+            else:
+                assert load_data["type"] == "impedance"
+                impedances = np.array([complex(*z) for z in load_data["impedances"]], dtype=np.complex128)
+                inner_currents = voltages / impedances
+            load_data["results"]["inner_currents"] = [[i.real, i.imag] for i in inner_currents]
+        loads.append(load_data)
+
     results = {
         "version": 4,
         "is_multiphase": data["is_multiphase"],  # Unchanged
@@ -850,7 +872,7 @@ def v3_to_v4_converter(data: JsonDict) -> JsonDict:  # noqa: C901
         "lines": lines,
         "switches": switches,
         "transformers": transformers,
-        "loads": data["loads"],  # Unchanged
+        "loads": loads,
         "sources": sources,
         "lines_params": line_params,
         "transformers_params": transformer_params,

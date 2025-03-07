@@ -66,11 +66,38 @@ class AbstractLoad(AbstractConnectable[_CyL_co], ABC):
             raise TypeError("Can't instantiate abstract class AbstractLoad")
         super().__init__(id, bus, phases=phases, connect_neutral=connect_neutral)
         self._symbol = {"power": "S", "current": "I", "impedance": "Z"}[self.type]
+        self._res_inner_currents: ComplexArray | None = None
 
     @property
     def is_flexible(self) -> bool:
         """Whether the load is flexible or not. Only :class:`PowerLoad` can be flexible."""
         return False
+
+    def _refresh_results(self) -> None:
+        if self._fetch_results:
+            super()._refresh_results()
+            self._res_inner_currents = self._cy_element.get_inner_currents(self._size)
+
+    def _res_inner_currents_getter(self, warning: bool) -> ComplexArray:
+        self._refresh_results()
+        return self._res_getter(value=self._res_inner_currents, warning=warning)
+
+    def _res_inner_powers_getter(self, warning: bool) -> ComplexArray:
+        currents = self._res_inner_currents_getter(warning=warning)
+        voltages = self._res_voltages_getter(warning=False)  # warn only once
+        return voltages * currents.conjugate()
+
+    @property
+    @ureg_wraps("A", (None,))
+    def res_inner_currents(self) -> Q_[ComplexArray]:
+        """The load flow result of the load inner currents (A)."""
+        return self._res_inner_currents_getter(warning=True)
+
+    @property
+    @ureg_wraps("VA", (None,))
+    def res_inner_powers(self) -> Q_[ComplexArray]:
+        """The load flow result of the load inner powers (VA)."""
+        return self._res_inner_powers_getter(warning=True)
 
     def _validate_value(self, value: ComplexScalarOrArrayLike1D) -> ComplexArray:
         values = [value for _ in range(self._size)] if np.isscalar(value) else value
@@ -89,6 +116,19 @@ class AbstractLoad(AbstractConnectable[_CyL_co], ABC):
     #
     # Json Mixin interface
     #
+    def _parse_results_from_dict(self, data: JsonDict, include_results: bool) -> None:
+        if include_results and "results" in data:
+            super()._parse_results_from_dict(data, include_results=include_results)
+            if "inner_currents" in data["results"]:
+                self._res_inner_currents = np.array(
+                    [complex(*i) for i in data["results"]["inner_currents"]], dtype=np.complex128
+                )
+            if "flexible_powers" in data["results"]:
+                assert isinstance(self, PowerLoad), "Only PowerLoad can be flexible"
+                self._res_flexible_powers = np.array(
+                    [complex(*p) for p in data["results"]["flexible_powers"]], dtype=np.complex128
+                )
+
     @classmethod
     def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> "AbstractLoad":
         load_type = data["type"]
@@ -128,11 +168,6 @@ class AbstractLoad(AbstractConnectable[_CyL_co], ABC):
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LOAD_TYPE)
         self._parse_results_from_dict(data, include_results=include_results)
-        if include_results and "results" in data and "flexible_powers" in data["results"]:
-            assert isinstance(self, PowerLoad), "Only PowerLoad can be flexible"
-            self._res_flexible_powers = np.array(
-                [complex(*p) for p in data["results"]["flexible_powers"]], dtype=np.complex128
-            )
         return self
 
     def _to_dict(self, include_results: bool) -> JsonDict:
@@ -147,11 +182,18 @@ class AbstractLoad(AbstractConnectable[_CyL_co], ABC):
                 flexible_powers = self._res_flexible_powers_getter(warning=False)  # warn only once
                 data["results"]["flexible_powers"] = [[s.real, s.imag] for s in flexible_powers]
         if include_results:
+            inner_currents = self._res_inner_currents_getter(warning=False)
+            data["results"]["inner_currents"] = [[i.real, i.imag] for i in inner_currents]
             data["results"] = data.pop("results")  # move results to the end
         return data
 
     def _results_to_dict(self, warning: bool, full: bool) -> JsonDict:
         results = super()._results_to_dict(warning=warning, full=full)
+        inner_currents = self._res_inner_currents_getter(warning=False)
+        results["inner_currents"] = [[i.real, i.imag] for i in inner_currents]
+        if full:
+            inner_powers = self._res_inner_powers_getter(warning=False)
+            results["inner_powers"] = [[i.real, i.imag] for i in inner_powers]
         if self.is_flexible:
             assert isinstance(self, PowerLoad), "Only PowerLoad can be flexible"
             flexible_powers = self._res_flexible_powers_getter(warning=False)  # warn only once
