@@ -167,6 +167,7 @@ def network_from_dgs(data: Mapping[str, Any], /, use_name_as_id: bool = False) -
         "switches": switches,
         "loads": loads,
         "sources": sources,
+        "crs": None,  # TODO check if the CRS can be stored in the DGS file
     }
 
 
@@ -273,4 +274,5 @@ def network_to_dgs(en: "ElectricalNetwork") -> JsonDict:
         "ElmTr2": elm_tr2,
         "ElmXnet": elm_xnet,
         "ElmLod": elm_lod,
+        # TODO check if the CRS can be stored in the DGS file
     }

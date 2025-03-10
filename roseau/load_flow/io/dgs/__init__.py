@@ -179,6 +179,7 @@ def network_from_dgs(filename: StrPath, use_name_as_id: bool = False) -> Network
         "grounds": grounds,
         "potential_refs": potential_refs,
         "ground_connections": ground_connections,
+        "crs": None,  # TODO check if the CRS can be stored in the DGS file
     }
 
 

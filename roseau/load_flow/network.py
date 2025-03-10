@@ -17,7 +17,6 @@ from typing import TYPE_CHECKING, Literal, TypeVar
 import geopandas as gpd
 import numpy as np
 import pandas as pd
-from pyproj import CRS
 from typing_extensions import Self
 
 from roseau.load_flow._solvers import AbstractSolver
@@ -42,7 +41,7 @@ from roseau.load_flow.models import (
     Transformer,
     VoltageSource,
 )
-from roseau.load_flow.typing import ComplexArray, Id, JsonDict, MapOrSeq, Solver, StrPath
+from roseau.load_flow.typing import ComplexArray, CRSLike, Id, JsonDict, MapOrSeq, Solver, StrPath
 from roseau.load_flow.utils import (
     DTYPES,
     CatalogueMixin,
@@ -114,8 +113,8 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             connected to a bus or to a ground.
 
         crs:
-            An optional Coordinate Reference System to use with geo data frames. If not provided,
-            the ``EPSG:4326`` CRS will be used.
+            An optional Coordinate Reference System to use with geo data frames. Can be anything
+            accepted by geopandas and pyproj, such as an authority string or WKT string.
 
     Attributes:
         buses (dict[Id, roseau.load_flow.Bus]):
@@ -168,7 +167,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         grounds: MapOrSeq[Ground],
         potential_refs: MapOrSeq[PotentialRef],
         ground_connections: MapOrSeq[GroundConnection] = (),
-        crs: str | CRS | None = None,
+        crs: CRSLike | None = None,
     ) -> None:
         self.buses: dict[Id, Bus] = self._elements_as_dict(buses, RoseauLoadFlowExceptionCode.BAD_BUS_ID)
         self.lines: dict[Id, Line] = self._elements_as_dict(lines, RoseauLoadFlowExceptionCode.BAD_LINE_ID)
@@ -198,9 +197,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         self._create_network()
         self._valid = True
         self._solver = AbstractSolver.from_dict(data={"name": self._DEFAULT_SOLVER, "params": {}}, network=self)
-        if crs is None:
-            crs = "EPSG:4326"
-        self.crs: CRS = CRS(crs)
+        self.crs: CRSLike | None = crs
 
     def __repr__(self) -> str:
         return (
@@ -241,13 +238,17 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         return elements_dict
 
     @classmethod
-    def from_element(cls, initial_bus: Bus) -> Self:
+    def from_element(cls, initial_bus: Bus, crs: CRSLike | None = None) -> Self:
         """Construct the network from only one element (bus) and add the others automatically.
 
         Args:
             initial_bus:
                 Any bus of the network. The network is constructed from this bus and all the
                 elements connected to it. This is usually the main source bus of the network.
+
+        crs:
+            An optional Coordinate Reference System to use with geo data frames. Can be anything
+            accepted by geopandas and pyproj, such as an authority string or WKT string.
 
         Returns:
             The network constructed from the given bus and all the elements connected to it.
@@ -298,6 +299,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             grounds=grounds,
             potential_refs=potential_refs,
             ground_connections=ground_connections,
+            crs=crs,
         )
 
     #

@@ -13,6 +13,7 @@ from collections import defaultdict
 from typing import TYPE_CHECKING
 
 import numpy as np
+from pyproj import CRS
 
 from roseau.load_flow.converters import _calculate_voltages
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
@@ -86,6 +87,10 @@ def network_from_dict(data: JsonDict, *, include_results: bool = True) -> tuple[
     # Check that the network is multiphase
     is_multiphase = data.get("is_multiphase", True)
     assert is_multiphase, f"Unsupported phase selection {is_multiphase=}."
+
+    # CRS
+    crs_dict = data.get("crs", {"data": None, "normalize": False})
+    crs = CRS(crs_dict["data"]) if crs_dict["normalize"] else crs_dict["data"]
 
     # Track if ALL results are included in the network
     has_results = include_results
@@ -214,6 +219,7 @@ def network_from_dict(data: JsonDict, *, include_results: bool = True) -> tuple[
             "grounds": grounds,
             "potential_refs": potential_refs,
             "ground_connections": ground_connections,
+            "crs": crs,
         },
         has_results,
     )
@@ -233,6 +239,12 @@ def network_to_dict(en: "ElectricalNetwork", *, include_results: bool) -> JsonDi
     Returns:
         The created dictionary.
     """
+    # CRS
+    if isinstance(en.crs, CRS):
+        crs = {"data": en.crs.to_wkt(), "normalize": True}
+    else:
+        crs = {"data": en.crs, "normalize": False}
+
     # Export the grounds and the pref
     grounds = [ground.to_dict(include_results=include_results) for ground in en.grounds.values()]
     potential_refs = [p_ref.to_dict(include_results=include_results) for p_ref in en.potential_refs.values()]
@@ -299,6 +311,7 @@ def network_to_dict(en: "ElectricalNetwork", *, include_results: bool) -> JsonDi
     res = {
         "version": NETWORK_JSON_VERSION,
         "is_multiphase": True,
+        "crs": crs,
         "grounds": grounds,
         "potential_refs": potential_refs,
         "buses": buses,
@@ -728,6 +741,7 @@ def v3_to_v4_converter(data: JsonDict) -> JsonDict:  # noqa: C901
         The v4 network data.
     """
     assert data["version"] == 3, data["version"]
+    crs = {"data": None, "normalize": False}  # CRS is always None in V3
 
     grounds = []
     ground_connections = []
@@ -866,6 +880,7 @@ def v3_to_v4_converter(data: JsonDict) -> JsonDict:  # noqa: C901
     results = {
         "version": 4,
         "is_multiphase": data["is_multiphase"],  # Unchanged
+        "crs": crs,
         "grounds": grounds,
         "potential_refs": data["potential_refs"],  # Unchanged
         "buses": buses,

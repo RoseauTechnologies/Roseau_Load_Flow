@@ -11,7 +11,7 @@ from roseau.load_flow.models import (
     Transformer,
     VoltageSource,
 )
-from roseau.load_flow.typing import Id
+from roseau.load_flow.typing import CRSLike, Id
 
 
 @final
@@ -27,3 +27,4 @@ class NetworkElements(TypedDict):
     grounds: dict[Id, Ground]
     potential_refs: dict[Id, PotentialRef]
     ground_connections: dict[Id, GroundConnection]
+    crs: CRSLike | None
