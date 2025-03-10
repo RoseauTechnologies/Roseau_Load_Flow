@@ -6,6 +6,7 @@ import warnings
 
 import numpy as np
 import pytest
+from pyproj import CRS
 from shapely import LineString, Point
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
@@ -340,3 +341,46 @@ def test_json_files_not_modified(version):
             f"Hash of '{filename}' has changed. Do not change the content of this file or update the hash "
             f"for formatting-only changes.\nExpected hash: {EXPECTED_HASHES[filename]}\nComputed hash: {digest}"
         )
+
+
+def test_crs_conversion():
+    # No CRS
+    bus = Bus(id="bus", phases="an", geometry=Point(0.0, 0.0))
+    VoltageSource(id="source", bus=bus, voltages=400)
+    PotentialRef(id="pref", element=bus)
+    en = ElectricalNetwork.from_element(bus)
+    en_dict = en.to_dict()
+    assert en_dict["crs"] == {"data": None, "normalize": False}
+    assert en.buses_frame.crs is None
+    en2 = ElectricalNetwork.from_dict(en_dict)
+    assert en2.crs is None
+    assert en2.buses_frame.crs is None
+
+    # CRS like
+    bus = Bus(id="bus", phases="an", geometry=Point(0.0, 0.0))
+    VoltageSource(id="source", bus=bus, voltages=400)
+    PotentialRef(id="pref", element=bus)
+    en = ElectricalNetwork.from_element(bus, crs="WGS84")
+    en_dict = en.to_dict()
+    assert en_dict["crs"] == {"data": "WGS84", "normalize": False}
+    assert en.buses_frame.crs == "WGS84"
+    en2 = ElectricalNetwork.from_dict(en_dict)
+    assert en2.crs == "WGS84"
+    assert en2.buses_frame.crs == "WGS84"
+
+    # CRS object -> WKT format
+    bus = Bus(id="bus", phases="an", geometry=Point(0.0, 0.0))
+    VoltageSource(id="source", bus=bus, voltages=400)
+    PotentialRef(id="pref", element=bus)
+    en = ElectricalNetwork.from_element(bus, crs=CRS("EPSG:4326"))
+    en_dict = en.to_dict()
+    assert en_dict["crs"]["normalize"] is True
+    crs_data = en_dict["crs"]["data"]
+    assert isinstance(crs_data, str)
+    assert crs_data.startswith("GEOGCRS[")  # WKT format
+    assert crs_data.endswith('ID["EPSG",4326]]')
+    assert en.buses_frame.crs == "EPSG:4326"
+    en2 = ElectricalNetwork.from_dict(en_dict)
+    assert isinstance(en2.crs, CRS)
+    assert en2.crs == "EPSG:4326"
+    assert en2.buses_frame.crs == "EPSG:4326"

@@ -16,12 +16,11 @@ from typing import TYPE_CHECKING, Any, TypeVar
 import geopandas as gpd
 import numpy as np
 import pandas as pd
-from pyproj import CRS
 from typing_extensions import Self
 
 from roseau.load_flow import SQRT3, RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow._solvers import AbstractSolver
-from roseau.load_flow.typing import Id, JsonDict, MapOrSeq, Solver, StrPath
+from roseau.load_flow.typing import CRSLike, Id, JsonDict, MapOrSeq, Solver, StrPath
 from roseau.load_flow.utils import DTYPES, JsonMixin, LoadTypeDtype, count_repr, find_stack_level, optional_deps
 from roseau.load_flow_engine.cy_engine import CyElectricalNetwork, CyGround, CyPotentialRef
 from roseau.load_flow_single.io import network_from_dgs, network_from_dict, network_to_dgs, network_to_dict
@@ -78,8 +77,8 @@ class ElectricalNetwork(JsonMixin):
             cannot be connected with a switch.
 
         crs:
-            An optional Coordinate Reference System to use with geo data frames. If not provided,
-            the ``EPSG:4326`` CRS will be used.
+            An optional Coordinate Reference System to use with geo data frames. Can be anything
+            accepted by geopandas and pyproj, such as an authority string or WKT string.
 
     Attributes:
         buses (dict[Id, roseau.load_flow_single.Bus]):
@@ -121,7 +120,7 @@ class ElectricalNetwork(JsonMixin):
         switches: MapOrSeq[Switch],
         loads: MapOrSeq[AbstractLoad],
         sources: MapOrSeq[VoltageSource],
-        crs: str | CRS | None = None,
+        crs: CRSLike | None = None,
     ) -> None:
         self.buses: dict[Id, Bus] = self._elements_as_dict(buses, RoseauLoadFlowExceptionCode.BAD_BUS_ID)
         self.lines: dict[Id, Line] = self._elements_as_dict(lines, RoseauLoadFlowExceptionCode.BAD_LINE_ID)
@@ -153,9 +152,7 @@ class ElectricalNetwork(JsonMixin):
         self._create_network()
         self._valid = True
         self._solver = AbstractSolver.from_dict(data={"name": self._DEFAULT_SOLVER, "params": {}}, network=self)
-        if crs is None:
-            crs = "EPSG:4326"
-        self.crs: CRS = CRS(crs)
+        self.crs: CRSLike | None = crs
 
     def __repr__(self) -> str:
         return (
@@ -193,13 +190,17 @@ class ElectricalNetwork(JsonMixin):
         return elements_dict
 
     @classmethod
-    def from_element(cls, initial_bus: Bus) -> Self:
+    def from_element(cls, initial_bus: Bus, crs: CRSLike | None = None) -> Self:
         """Construct the network from only one element (bus) and add the others automatically.
 
         Args:
             initial_bus:
                 Any bus of the network. The network is constructed from this bus and all the
                 elements connected to it. This is usually the main source bus of the network.
+
+        crs:
+            An optional Coordinate Reference System to use with geo data frames. Can be anything
+            accepted by geopandas and pyproj, such as an authority string or WKT string.
 
         Returns:
             The network constructed from the given bus and all the elements connected to it.
@@ -208,7 +209,7 @@ class ElectricalNetwork(JsonMixin):
         lines: list[Line] = []
         transformers: list[Transformer] = []
         switches: list[Switch] = []
-        loads: list[PowerLoad | CurrentLoad | ImpedanceLoad] = []
+        loads: list[AbstractLoad | PowerLoad | CurrentLoad | ImpedanceLoad] = []
         sources: list[VoltageSource] = []
 
         elements: list[Element] = [initial_bus]
@@ -238,6 +239,7 @@ class ElectricalNetwork(JsonMixin):
             switches=switches,
             loads=loads,
             sources=sources,
+            crs=crs,
         )
 
     #
@@ -989,17 +991,8 @@ class ElectricalNetwork(JsonMixin):
         Returns:
             The constructed network.
         """
-        buses, lines, transformers, switches, loads, sources, has_results = network_from_dict(
-            data=data, include_results=include_results
-        )
-        network = cls(
-            buses=buses,
-            lines=lines,
-            transformers=transformers,
-            switches=switches,
-            loads=loads,
-            sources=sources,
-        )
+        network_data, has_results = network_from_dict(data=data, include_results=include_results)
+        network = cls(**network_data)
         network._no_results = not has_results
         network._results_valid = has_results
         return network

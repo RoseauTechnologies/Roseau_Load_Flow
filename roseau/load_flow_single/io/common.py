@@ -1,6 +1,6 @@
 from typing import TypedDict, final
 
-from roseau.load_flow.typing import Id
+from roseau.load_flow.typing import CRSLike, Id
 from roseau.load_flow_single.models import AbstractLoad, Bus, Line, Switch, Transformer, VoltageSource
 
 
@@ -14,3 +14,4 @@ class NetworkElements(TypedDict):
     lines: dict[Id, Line]
     transformers: dict[Id, Transformer]
     switches: dict[Id, Switch]
+    crs: CRSLike | None

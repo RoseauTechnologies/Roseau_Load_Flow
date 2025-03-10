@@ -11,10 +11,13 @@ import logging
 import warnings
 from typing import TYPE_CHECKING
 
+from pyproj import CRS
+
 from roseau.load_flow import Insulator, Material, RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.io.dict import NETWORK_JSON_VERSION as NETWORK_JSON_VERSION
 from roseau.load_flow.typing import Id, JsonDict
 from roseau.load_flow.utils import find_stack_level
+from roseau.load_flow_single.io.common import NetworkElements
 from roseau.load_flow_single.models import (
     AbstractLoad,
     Bus,
@@ -32,17 +35,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-def network_from_dict(
-    data: JsonDict, *, include_results: bool = True
-) -> tuple[
-    dict[Id, Bus],
-    dict[Id, Line],
-    dict[Id, Transformer],
-    dict[Id, Switch],
-    dict[Id, AbstractLoad],
-    dict[Id, VoltageSource],
-    bool,
-]:
+def network_from_dict(data: JsonDict, *, include_results: bool = True) -> tuple[NetworkElements, bool]:
     """Create the electrical network elements from a dictionary.
 
     Args:
@@ -86,6 +79,10 @@ def network_from_dict(
         f"Did not apply all JSON version converters, got {data['version']}, expected {NETWORK_JSON_VERSION}."
     )
 
+    # CRS
+    crs_dict = data.get("crs", {"data": None, "normalize": False})
+    crs = CRS(crs_dict["data"]) if crs_dict["normalize"] else crs_dict["data"]
+
     # Track if ALL results are included in the network
     has_results = include_results
 
@@ -118,32 +115,32 @@ def network_from_dict(
         has_results = has_results and not source._no_results
 
     # Lines
-    lines_dict: dict[Id, Line] = {}
+    lines: dict[Id, Line] = {}
     for line_data in data["lines"]:
         line_data["bus1"] = buses[line_data["bus1"]]
         line_data["bus2"] = buses[line_data["bus2"]]
         line_data["parameters"] = lines_params[line_data.pop("params_id")]
         line = Line.from_dict(data=line_data, include_results=include_results)
-        lines_dict[line.id] = line
+        lines[line.id] = line
         has_results = has_results and not line._no_results
 
     # Transformers
-    transformers_dict: dict[Id, Transformer] = {}
+    transformers: dict[Id, Transformer] = {}
     for transformer_data in data["transformers"]:
         transformer_data["bus_hv"] = buses[transformer_data["bus_hv"]]
         transformer_data["bus_lv"] = buses[transformer_data["bus_lv"]]
         transformer_data["parameters"] = transformers_params[transformer_data.pop("params_id")]
         transformer = Transformer.from_dict(data=transformer_data, include_results=include_results)
-        transformers_dict[transformer.id] = transformer
+        transformers[transformer.id] = transformer
         has_results = has_results and not transformer._no_results
 
     # Switches
-    switches_dict: dict[Id, Switch] = {}
+    switches: dict[Id, Switch] = {}
     for switch_data in data["switches"]:
         switch_data["bus1"] = buses[switch_data["bus1"]]
         switch_data["bus2"] = buses[switch_data["bus2"]]
         switch = Switch.from_dict(data=switch_data, include_results=include_results)
-        switches_dict[switch.id] = switch
+        switches[switch.id] = switch
         has_results = has_results and not switch._no_results
 
     # Short-circuits
@@ -152,7 +149,18 @@ def network_from_dict(
         for sc in short_circuits:
             buses[sc["bus_id"]].add_short_circuit()
 
-    return buses, lines_dict, transformers_dict, switches_dict, loads, sources, has_results
+    return (
+        {
+            "buses": buses,
+            "lines": lines,
+            "transformers": transformers,
+            "switches": switches,
+            "loads": loads,
+            "sources": sources,
+            "crs": crs,
+        },
+        has_results,
+    )
 
 
 def network_to_dict(en: "ElectricalNetwork", *, include_results: bool) -> JsonDict:
@@ -169,6 +177,12 @@ def network_to_dict(en: "ElectricalNetwork", *, include_results: bool) -> JsonDi
     Returns:
         The created dictionary.
     """
+    # CRS
+    if isinstance(en.crs, CRS):
+        crs = {"data": en.crs.to_wkt(), "normalize": True}
+    else:
+        crs = {"data": en.crs, "normalize": False}
+
     # Export the buses, loads and sources
     buses: list[JsonDict] = []
     loads: list[JsonDict] = []
@@ -230,6 +244,7 @@ def network_to_dict(en: "ElectricalNetwork", *, include_results: bool) -> JsonDi
     res = {
         "version": NETWORK_JSON_VERSION,
         "is_multiphase": False,
+        "crs": crs,
         "buses": buses,
         "lines": lines,
         "transformers": transformers,
@@ -246,6 +261,7 @@ def network_to_dict(en: "ElectricalNetwork", *, include_results: bool) -> JsonDi
 
 def v3_to_v4_converter(data: JsonDict) -> JsonDict:
     assert data["version"] == 3, data["version"]
+    crs = {"data": None, "normalize": False}  # CRS is always None in V3
     loads = []
     for load in data["loads"]:
         # Remove the flexible power results
@@ -303,6 +319,7 @@ def v3_to_v4_converter(data: JsonDict) -> JsonDict:
     results = {
         "version": 4,
         "is_multiphase": data["is_multiphase"],  # Unchanged
+        "crs": crs,
         "buses": data["buses"],  # Unchanged
         "lines": lines,
         "transformers": transformers,

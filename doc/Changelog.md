@@ -23,24 +23,27 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 - The following columns have been renamed in `ElectricalNetwork.transformers_frame`:
 
-  - `bus1_id` -> `bus_hv_id`
-  - `bus2_id` -> `bus_lv_id`
-  - `phases1` -> `phases_hv`
-  - `phases2` -> `phases_lv`
+  - `bus1_id`, `bus2_id` -> `bus_hv_id`, `bus_lv_id`
+  - `phases1`, `phases2` -> `phases_hv`, `phases_lv`
 
   and the following columns have been renamed in `ElectricalNetwork.res_transformers`:
 
-  - `current1` -> `current_hv`
-  - `current2` -> `current_lv`
-  - `potential1` -> `potential_hv`
-  - `potential2` -> `potential_lv`
-  - `voltage1` -> `voltage_hv`
-  - `voltage2` -> `voltage_lv`
-  - `power1` -> `power_hv`
-  - `power2` -> `power_lv`
+  - `current1`, `current2` -> `current_hv`, `current_lv`
+  - `potential1`, `potential2` -> `potential_hv`, `potential_lv`
+  - `voltage1`, `voltage2` -> `voltage_hv`, `voltage_lv`
+  - `power1`, `power2` -> `power_hv`, `power_lv`
+
+- The `ElectricalNetwork.crs` now defaults to `None` (no CRS) instead of `"EPSG:4326"`. The attribute
+  is also no longer normalized to a `pyproj.CRS` object but is stored as is. Use `CRS(en.crs)` to
+  always get a `pyproj.CRS` object.
 
 ### Detailed changes
 
+- {gh-pr}`351` {gh-issue}`332` Improved support of the network's Coordinate Reference System (CRS).
+  - The `CRS` will now default to `None` (no CRS) instead of `"EPSG:4326"` if not provided.
+  - The `ElectricalNetwork.crs` attribute is no longer normalized to a `pyproj.CRS` object.
+  - The `CRS` can be set when creating a network with the `ElectricalNetwork.from_element` method.
+  - The `CRS` is now correctly stored in the JSON file and is read when loading the network.
 - {gh-pr}`350` {gh-issue}`349` Fix invalid transformer parameters with no leakage inductance when
   created from open and short circuit tests.
 - {gh-pr}`348` The load classes have two new properties: `res_inner_currents` and `res_inner_powers`.
