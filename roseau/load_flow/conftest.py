@@ -4,7 +4,6 @@ import os
 from pathlib import Path
 
 import pytest
-from _pytest.monkeypatch import MonkeyPatch
 
 import roseau.load_flow
 from roseau.load_flow.utils.log import set_logging_config
@@ -82,7 +81,7 @@ for class_name, bases in _CY_CLASSES_WITH_BASES.items():
 
 @pytest.fixture(autouse=True)
 def patch_engine(request):
-    mpatch = MonkeyPatch()
+    mpatch = pytest.MonkeyPatch()
 
     if "no_patch_engine" in request.keywords:
         # A load flow must be solved in the test
