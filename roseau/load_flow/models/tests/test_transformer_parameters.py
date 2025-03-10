@@ -1,6 +1,7 @@
 import numbers
 
 import numpy as np
+import numpy.testing as npt
 import pandas as pd
 import pytest
 from pint import DimensionalityError
@@ -780,19 +781,6 @@ def test_equality():
     assert tp != object()
 
 
-@pytest.mark.xfail(reason="CyTr signature changed (TODO remove xfail)")
-@pytest.mark.no_patch_engine
-def test_compute_open_short_circuit_parameters():
-    tp = TransformerParameters.from_catalogue(name="SE Minera A0Ak 100kVA 15/20kV(20) 410V Dyn11")
-    p0, i0 = tp._compute_open_circuit_parameters()
-    assert np.isclose(p0.m, tp.p0.m)
-    assert np.isclose(i0.m, tp.i0.m)
-
-    psc, vsc = tp._compute_short_circuit_parameters()
-    assert np.isclose(psc.m, tp.psc.m, rtol=0.001)
-    assert np.isclose(vsc.m, tp.vsc.m)
-
-
 def test_ideal_transformer():
     # Ideal transformer not yet supported
     with pytest.raises(RoseauLoadFlowException) as e:
@@ -803,3 +791,22 @@ def test_ideal_transformer():
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_IMPEDANCE
     # OK
     TransformerParameters(id="test", vg="Dyn11", sn=50e3, uhv=20e3, ulv=400, z2=0.0000001, ym=0.0)
+
+
+def test_from_tests_no_leakage_reactance():
+    # https://github.com/RoseauTechnologies/Roseau_Load_Flow/issues/349
+    # Data from LV isolation transformer "DYN11 K13 CU IP21 8" of "ORTEA NEXT"
+    # https://www.orteanext.com/product/dyn11-k13-r-ip21/
+    tp = TransformerParameters.from_open_and_short_circuit_tests(
+        id="DYN11 K13 CU IP21 8",
+        vg="Dyn11",
+        uhv=Q_(400, "V"),
+        ulv=Q_(400, "V"),
+        sn=Q_(8, "kVA"),
+        p0=Q_(150, "W"),
+        i0=Q_(10, "percent"),
+        psc=Q_(280, "W"),
+        vsc=Q_(3.5, "percent"),
+    )
+    npt.assert_allclose(tp.z2.m.real, tp.vsc.m * tp.ulv.m**2 / tp.sn.m)  # r2 = |z2|
+    npt.assert_allclose(tp.z2.m.imag, 0.0)  # x2 = 0

@@ -374,7 +374,8 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
     ) -> tuple[complex, complex]:
         whv, wlv, _ = cls.extract_windings(vg=vg)
 
-        # Off-load test
+        # Open-circuit (no-load) test
+        # ---------------------------
         # Iron losses resistance (Ohm)
         if p0 > 0:
             r_iron = uhv**2 / p0
@@ -389,14 +390,20 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         else:  # no magnetizing reactance
             y_lm = 0j
         ym = y_iron + y_lm
-
-        # Short-circuit test
-        r2 = psc * (ulv / sn) ** 2
-        l2_omega = np.sqrt((vsc * ulv**2 / sn) ** 2 - r2**2)
-        z2 = r2 + 1j * l2_omega
-
         if whv[0] == "D":
             ym /= 3
+
+        # Short-circuit test
+        # ------------------
+        # Copper losses resistance (Ohm)
+        r2 = psc * (ulv / sn) ** 2
+        z2_mag = vsc * ulv**2 / sn
+        # Leakage inductance (Henry) * omega (rad/s)
+        if z2_mag > r2:  # noqa: SIM108
+            l2_omega = np.sqrt(z2_mag**2 - r2**2)
+        else:  # no leakage reactance
+            l2_omega = 0.0
+        z2 = r2 + 1j * l2_omega
         if wlv[0] == "d":
             z2 *= 3
 
@@ -1139,13 +1146,13 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
                 The rated no-load phase-to-phase voltage of the LV side of the transformer to get.
 
             id:
-                A unique ID for the created line parameters object (optional). If ``None``
+                A unique ID for the created transformer parameters object (optional). If ``None``
                 (default), the id of the created object will be its name in the catalogue. Note that
                 this parameter is not used in the data filtering.
 
         Returns:
-            The selected transformer. If several transformers fitting the filters are in the catalogue, an error is
-            raised.
+            The selected transformer. If several or no transformers fitting the filters are found in
+            the catalogue, an error is raised.
         """
         # Get the catalogue data
         catalogue_data, query_info = cls._get_catalogue(

@@ -41,7 +41,9 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ### Detailed changes
 
-- {gh-pr}`348` The `Load` classes have two new properties: `res_inner_currents` and `res_inner_powers`.
+- {gh-pr}`350` {gh-issue}`349` Fix invalid transformer parameters with no leakage inductance when
+  created from open and short circuit tests.
+- {gh-pr}`348` The load classes have two new properties: `res_inner_currents` and `res_inner_powers`.
   These are the currents and powers that flow in the inner components of the load as opposed to
   `res_currents` and `res_powers` that flow into the load.
 - {gh-pr}`343` {gh-issue}`336` Warn when a line/switch connects buses with different nominal voltages.
