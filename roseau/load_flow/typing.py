@@ -87,7 +87,7 @@ Union Input Types (Wide)
 
 .. class:: CRSLike
 
-    Any type accepted by :class:`pyproj.CRS`. This can be a string (PROJ, JSON WKT, authority),
+    Any type accepted by :class:`pyproj.CRS`. This can be a string (PROJ, JSON, WKT, authority),
     an integer (EPSG code), a dictionary (PROJ parameters), a tuple (authority name and code), an
     object with a `to_wkt` method, or a CRS class.
 
