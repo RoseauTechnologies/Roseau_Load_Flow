@@ -865,10 +865,20 @@ def v3_to_v4_converter(data: JsonDict) -> JsonDict:  # noqa: C901
             potentials = np.array([complex(*v) for v in load_data["results"]["potentials"]], dtype=np.complex128)
             voltages = _calculate_voltages(potentials, load_data["phases"])
             if load_data["type"] == "current":
-                currents = np.array([complex(*z) for z in load_data["currents"]], dtype=np.complex128)
+                currents = np.array([complex(*i) for i in load_data["currents"]], dtype=np.complex128)
                 inner_currents = currents * voltages / np.abs(voltages)
             elif load_data["type"] == "power":
-                powers = np.array([complex(*z) for z in load_data["powers"]], dtype=np.complex128)
+                powers = np.array(
+                    [
+                        complex(*s)
+                        for s in (
+                            load_data["results"]["flexible_powers"]
+                            if "flexible_powers" in load_data["results"]
+                            else load_data["powers"]
+                        )
+                    ],
+                    dtype=np.complex128,
+                )
                 inner_currents = np.conj(powers / voltages)
             else:
                 assert load_data["type"] == "impedance"

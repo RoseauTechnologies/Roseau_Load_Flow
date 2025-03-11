@@ -1,6 +1,10 @@
 {
   "version": 4,
   "is_multiphase": false,
+  "crs": {
+    "data": null,
+    "normalize": false
+  },
   "buses": [
     {
       "id": "bus0",
@@ -38,9 +42,9 @@
       "id": "line0",
       "bus1": "bus0",
       "bus2": "bus1",
-      "length": 1.5,
-      "params_id": "lp0",
       "max_loading": 1.0,
+      "params_id": "lp0",
+      "length": 1.5,
       "results": {
         "current1": [4.594797877154633, 0.5537548956835963],
         "current2": [-4.594778531489283, 0.03586440248545841],
@@ -52,9 +56,9 @@
       "id": "line1",
       "bus1": "bus3",
       "bus2": "bus4",
-      "length": 0.1,
-      "params_id": "lp1",
       "max_loading": 0.9,
+      "params_id": "lp1",
+      "length": 0.1,
       "results": {
         "current1": [194.83548517380024, 110.46820359843765],
         "current2": [-194.83548517380024, -110.46820359843765],
@@ -68,9 +72,9 @@
       "id": "transformer0",
       "bus_hv": "bus1",
       "bus_lv": "bus2",
-      "tap": 1.025,
-      "params_id": "630kVA",
       "max_loading": 1.1,
+      "params_id": "630kVA",
+      "tap": 1.025,
       "results": {
         "current_hv": [4.5947785314875755, -0.03586440248581183],
         "current_lv": [-194.8354851738003, -110.4682035984375],

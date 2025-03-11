@@ -1,6 +1,10 @@
 {
   "version": 4,
   "is_multiphase": true,
+  "crs": {
+    "data": null,
+    "normalize": false
+  },
   "grounds": [
     {
       "id": "ground",
@@ -103,7 +107,7 @@
           [19999.899999499998, 0.0],
           [0.0, 0.0]
         ],
-        "inner_currents": [[0.005000025000250002, -0.0]]
+        "inner_currents": [[0.005000025000250003, -0.0]]
       }
     }
   ],

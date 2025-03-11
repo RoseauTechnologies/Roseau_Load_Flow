@@ -356,10 +356,10 @@ class PowerLoad(AbstractLoad[CyPowerLoad | CyDeltaPowerLoad | CyFlexibleLoad | C
 
         This property is only available for flexible loads.
 
-        It returns the powers actually consumed or produced by each component of the load instead
-        of the "line powers" flowing into the load connection points (as the :meth:`res_powers`
-        property does). The two properties are the same for Wye-connected loads but are different
-        for Delta-connected loads.
+        It returns the "inner powers" of the load instead of the "line powers" flowing into the load
+        connection points. This property is equivalent to the :attr:`res_inner_powers` property, not
+        to the :attr:`res_powers` property. Prefer using ``res_inner_powers`` because it is available
+        for all loads.
         """
         if not self.is_flexible:
             msg = f"The load {self.id!r} is not flexible and does not have flexible powers"
