@@ -1,6 +1,10 @@
 {
   "version": 4,
   "is_multiphase": false,
+  "crs": {
+    "data": null,
+    "normalize": false
+  },
   "buses": [
     {
       "id": "bus0",
@@ -35,9 +39,9 @@
           [-1.320149235966572, 48.64971306653889]
         ]
       },
-      "length": 1.0,
-      "params_id": "test",
       "max_loading": 1.0,
+      "params_id": "test",
+      "length": 1.0,
       "results": {
         "current1": [0.008660318990223459, 0.0],
         "current2": [-0.008660318990223459, -0.0],
