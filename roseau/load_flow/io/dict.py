@@ -870,8 +870,8 @@ def v3_to_v4_converter(data: JsonDict) -> JsonDict:  # noqa: C901
             elif load_data["type"] == "power":
                 powers = np.array(
                     [
-                        complex(*z)
-                        for z in (
+                        complex(*s)
+                        for s in (
                             load_data["results"]["flexible_powers"]
                             if "flexible_powers" in load_data["results"]
                             else load_data["powers"]
