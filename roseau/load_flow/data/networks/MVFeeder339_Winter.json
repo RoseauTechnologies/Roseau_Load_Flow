@@ -2,7 +2,7 @@
   "version": 4,
   "is_multiphase": true,
   "crs": {
-    "data": null,
+    "data": "EPSG:4326",
     "normalize": false
   },
   "grounds": [
