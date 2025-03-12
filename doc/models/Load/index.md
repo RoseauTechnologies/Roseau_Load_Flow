@@ -77,12 +77,14 @@ loads.
 
 The following results are available for all loads:
 
-| Result Accessor  | Default Unit | Type          | Description                                                                                    |
-| ---------------- | ------------ | ------------- | ---------------------------------------------------------------------------------------------- |
-| `res_potentials` | $V$          | complex array | The potentials of each phase of the load                                                       |
-| `res_currents`   | $A$          | complex array | The line currents flowing into each phase of the load                                          |
-| `res_powers`     | $V\!A$       | complex array | The line powers flowing into each phase of the load                                            |
-| `res_voltages`   | $V$          | complex array | The phase-to-neutral voltages if the load has a neutral, the phase-to-phase voltages otherwise |
+| Result Accessor      | Default Unit | Type          | Description                                                                                    |
+| -------------------- | ------------ | ------------- | ---------------------------------------------------------------------------------------------- |
+| `res_potentials`     | $V$          | complex array | The potentials of each phase of the load                                                       |
+| `res_currents`       | $A$          | complex array | The line currents flowing into each phase of the load                                          |
+| `res_powers`         | $V\!A$       | complex array | The line powers flowing into each phase of the load                                            |
+| `res_voltages`       | $V$          | complex array | The phase-to-neutral voltages if the load has a neutral, the phase-to-phase voltages otherwise |
+| `res_inner_currents` | $A$          | complex array | The currents flowing in each component (dipole) of the load.                                   |
+| `res_inner_powers`   | $V\!A$       | complex array | The powers dissipated by each component (dipole) of the load.                                  |
 
 Addionally, the following results are available for loads with a neutral:
 

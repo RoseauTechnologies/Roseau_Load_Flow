@@ -20,7 +20,7 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 ## Version 0.12.0
 
 ```{note}
-This is the last version of _Roseau Load Flow_ compatible with Python 3.10.
+This is the last version of _Roseau Load Flow_ to support Python 3.10.
 ```
 
 ```{seealso}
@@ -47,8 +47,9 @@ This release also includes the modifications that are in the [version 0.12.0-alp
 
 ### Detailed changes
 
-- A new module named `roseau.load_flow_single` has been added to enable load flow calculations in a single-wire case.
-  This is still an experimental and undocumented module.
+- A new **experimental** module named `roseau.load_flow_single` has been added for studying balanced
+  three-phase systems using the simpler single-line model. This module is unstable and undocumented,
+  use at your own risk.
 - Improvements of license validation, particularly during simultaneous use of multiple threads or processes.
 - {gh-pr}`351` {gh-issue}`332` Improved support of the network's Coordinate Reference System (CRS).
   - The `CRS` will now default to `None` (no CRS) instead of `"EPSG:4326"` if not provided.
@@ -101,10 +102,8 @@ This release also includes the modifications that are in the [version 0.12.0-alp
   "secondary" sides of transformers in favor of "high-voltage" and "low-voltage" sides following the
   IEC 60076-1 standard. The following parameters of `rlf.Transformer` are deprecated and renamed:
 
-  - `bus1` -> `bus_hv`
-  - `bus2` -> `bus_lv`
-  - `phases1` -> `phases_hv`
-  - `phases2` -> `phases_lv`
+  - `bus1`, `bus2` -> `bus_hv`, `bus_lv`
+  - `phases1`, `phases2` -> `phases_hv`, `phases_lv`
 
   The attributes `bus1`, `bus2`, `phases1`, `phases2`, `winding1`, `winding2`, `phase_displacement`
   are still available. They are aliases to newly added attributes `bus_hv`, `bus_lv`, `phases_hv`,
