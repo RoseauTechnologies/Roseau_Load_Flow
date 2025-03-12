@@ -1352,7 +1352,7 @@ wheels = [
 
 [[package]]
 name = "roseau-load-flow"
-version = "0.12.0a0"
+version = "0.12.0"
 source = { editable = "." }
 dependencies = [
     { name = "certifi" },
@@ -1410,7 +1410,7 @@ requires-dist = [
     { name = "pint", specifier = ">=0.21.0" },
     { name = "platformdirs", specifier = ">=4.0.0" },
     { name = "pyproj", specifier = ">=3.3.0" },
-    { name = "roseau-load-flow-engine", specifier = ">=0.17.0a0" },
+    { name = "roseau-load-flow-engine", specifier = "==0.17.0" },
     { name = "shapely", specifier = ">=2.0.0" },
     { name = "typing-extensions", specifier = ">=4.6.2" },
 ]
@@ -1440,24 +1440,24 @@ doc = [
 
 [[package]]
 name = "roseau-load-flow-engine"
-version = "0.17.0a0"
+version = "0.17.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "numpy" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/18/21/a692ff18d47d5aea8d26554d91f0d4e58aba154c76efe4a5b88245eac29c/roseau_load_flow_engine-0.17.0a0-cp310-cp310-macosx_14_0_arm64.whl", hash = "sha256:798001b8eb0b829d6acb44f8977618316e45809e1681516daeb9b20840cbb163", size = 1167278 },
-    { url = "https://files.pythonhosted.org/packages/c7/47/75f1be380b508db239e5777c712da70d86092e5474c2d3159516787c1c89/roseau_load_flow_engine-0.17.0a0-cp310-cp310-manylinux_2_34_x86_64.whl", hash = "sha256:2a7c5dd3abbd6392b494ea0fb9748b2022ef3a8c63bf236ff11edb3059ea4034", size = 4266541 },
-    { url = "https://files.pythonhosted.org/packages/7b/ed/e7f1e0d96a9612e6bd385edf4440140a64d8b7925d5390f7ad4c61cc9767/roseau_load_flow_engine-0.17.0a0-cp310-cp310-win_amd64.whl", hash = "sha256:7c8f45d04f5be93bd9683b63dda108706c4b1575f622847469eb6fb475347cd9", size = 1493258 },
-    { url = "https://files.pythonhosted.org/packages/18/7e/f2612bba536d26ac210ca1a2b7dc730da7de198ef4c7bc1102810fb37d58/roseau_load_flow_engine-0.17.0a0-cp311-cp311-macosx_14_0_arm64.whl", hash = "sha256:32c399cc18848113c1c6d361da9f6267d69e603a68b7d92edeed5e650fff17c0", size = 1164941 },
-    { url = "https://files.pythonhosted.org/packages/90/58/94acb8e204eba2f7e5bfce7a634faac45fadea99429586c529b086135864/roseau_load_flow_engine-0.17.0a0-cp311-cp311-manylinux_2_34_x86_64.whl", hash = "sha256:57cf014feb751c3cc450dd805f644c579c02f0a544c48bacec4805e48875fd43", size = 4266385 },
-    { url = "https://files.pythonhosted.org/packages/fa/fe/73436313600f406776460b4abb9f764ac1acb73ac6088f4a1b4530c41d84/roseau_load_flow_engine-0.17.0a0-cp311-cp311-win_amd64.whl", hash = "sha256:a4c11c43586ac70d08a87863471b741c99630dac081a444956045b08320a552f", size = 1492638 },
-    { url = "https://files.pythonhosted.org/packages/50/74/d54b46bb1e89e5688825fe9de8da0b6d99744f5f904c811d5f155dc8b276/roseau_load_flow_engine-0.17.0a0-cp312-cp312-macosx_14_0_arm64.whl", hash = "sha256:a22dcd1c54921825684a221f4cb994e56008248aa45d634aaa0c29cfb885425c", size = 1164514 },
-    { url = "https://files.pythonhosted.org/packages/5f/63/b2f1a36c77cabf23581a59a509afbd771d7185271e6f4b6450700f1e655b/roseau_load_flow_engine-0.17.0a0-cp312-cp312-manylinux_2_34_x86_64.whl", hash = "sha256:d3f6b075097c5fecece0d0ab86165f3cf03bdaab02b68a15406728201f77c109", size = 4265919 },
-    { url = "https://files.pythonhosted.org/packages/b9/00/d40019769e6d81f78c2a04e36c437e10bcde9ca39f5173012916a2457937/roseau_load_flow_engine-0.17.0a0-cp312-cp312-win_amd64.whl", hash = "sha256:2632ccb305883a4568b506c151484540933f2ae0135dcaa5ef37d336f974cc98", size = 1492242 },
-    { url = "https://files.pythonhosted.org/packages/a2/f4/4bfe8844c88c4c6ad04518c734e519fa48722268b69ab813d895dba321b6/roseau_load_flow_engine-0.17.0a0-cp313-cp313-macosx_14_0_arm64.whl", hash = "sha256:da446e0fd6666edc3945b0f482b3eafac9282c42fef943b4e3e9a81e6fadf77b", size = 1166230 },
-    { url = "https://files.pythonhosted.org/packages/78/c5/aaea3353f0084f9b6c4f74d7ddee76e64e2b1a8a5354b2edddd30ffd20ec/roseau_load_flow_engine-0.17.0a0-cp313-cp313-manylinux_2_34_x86_64.whl", hash = "sha256:db96a5b0bec4777bcf78cf364775c7b518f5938b7b189d256adf50e39bad5777", size = 4265325 },
-    { url = "https://files.pythonhosted.org/packages/c3/fd/db1962e96b4a2b867f01be1a20103bb2585f6ed323346845b53c3af0ae0b/roseau_load_flow_engine-0.17.0a0-cp313-cp313-win_amd64.whl", hash = "sha256:ee8f4b8aff9feb4cc395f92900686235f51699a702962e238e984052534b0cad", size = 1492081 },
+    { url = "https://files.pythonhosted.org/packages/3a/eb/c0edbe0c61faf68cf289e3402d910bd4f04ea2c5e57d0f3d47c1fc2176c8/roseau_load_flow_engine-0.17.0-cp310-cp310-macosx_14_0_arm64.whl", hash = "sha256:e66e6a03d3778fb9d779c5a23b002be6375f9554e2d83888fe39ff0fc2d07534", size = 1182865 },
+    { url = "https://files.pythonhosted.org/packages/40/b7/cdaabb8d342fa0e3897458bc5edce217ac86bbee503d5e015efa21ce0217/roseau_load_flow_engine-0.17.0-cp310-cp310-manylinux_2_34_x86_64.whl", hash = "sha256:9086a3e8c180776335b6db3c4dceaae51e29532bc65d9ac7716fbb92da6071ff", size = 2137802 },
+    { url = "https://files.pythonhosted.org/packages/b4/b5/7035e618cf45dd3ec9ff39ad36c0a3f9612df4f5ae09b2cbcc54f1638c6b/roseau_load_flow_engine-0.17.0-cp310-cp310-win_amd64.whl", hash = "sha256:382842185b9b6690d0b8fcde1f289092e8e09918e8be1d657c56f2eb66f056b9", size = 1511550 },
+    { url = "https://files.pythonhosted.org/packages/a4/19/473d2cdf7a2b0026fb3aec99db6ddee4fd3fffc6b5466df028a4bdbccd00/roseau_load_flow_engine-0.17.0-cp311-cp311-macosx_14_0_arm64.whl", hash = "sha256:fac1a81379fafa53ba48c4e45fed941a8a0d90f0550ee08e28a7c6160c5f0657", size = 1180003 },
+    { url = "https://files.pythonhosted.org/packages/c8/7e/2c4d7cc19bb28fef9fad94668cc6c2348e9de166f591f4b5fe962f878a70/roseau_load_flow_engine-0.17.0-cp311-cp311-manylinux_2_34_x86_64.whl", hash = "sha256:18618c9d25e0d5ffea7410c63e853e2b78ca313d2c684a8e7aa85d9914eb2d55", size = 2138080 },
+    { url = "https://files.pythonhosted.org/packages/23/58/274f9aef1aa1187d0fa9836591970326ce007f519d0da22b210ad87147f8/roseau_load_flow_engine-0.17.0-cp311-cp311-win_amd64.whl", hash = "sha256:6a338d133671f9bcf00816aecc540f5d2ace1d1bd2ac8cac20067129db55e376", size = 1509555 },
+    { url = "https://files.pythonhosted.org/packages/13/d5/f9c470160c5cf382dfedcc59a93c72f7746afadecff7514cf2125efaa530/roseau_load_flow_engine-0.17.0-cp312-cp312-macosx_14_0_arm64.whl", hash = "sha256:85a836a4b74725df59887d7089ef7666c34edf69918683e6cbdbfd38544922ae", size = 1179537 },
+    { url = "https://files.pythonhosted.org/packages/40/20/7967b32b979552bc7f5dc1a2db11c0382736027ac3b073b8542169bfe89c/roseau_load_flow_engine-0.17.0-cp312-cp312-manylinux_2_34_x86_64.whl", hash = "sha256:b194d9c535cdc9d5ddfff247d07ee93bf9f69607a8dda6e17daf304d77ec1f7e", size = 2136225 },
+    { url = "https://files.pythonhosted.org/packages/fb/65/53fad003144c31b2b7193ab47420366fdf127a722dcc557be72446b2249e/roseau_load_flow_engine-0.17.0-cp312-cp312-win_amd64.whl", hash = "sha256:43c01e190f0a413930a5aa0f3b3efdf445160895afebd8c730caad713f959d59", size = 1507756 },
+    { url = "https://files.pythonhosted.org/packages/20/46/2b11d22ff53616e1a443c7335e2a6a00eb666e11983c4eaa2867142e8931/roseau_load_flow_engine-0.17.0-cp313-cp313-macosx_14_0_arm64.whl", hash = "sha256:9f0d91e71b8ea1b758582ad38ce005d4db7567980e4bdbc201730a03151fb2b4", size = 1181404 },
+    { url = "https://files.pythonhosted.org/packages/78/f9/d9cf8695319f45e4ab440a08b81d8b06b50d920a66bd7f9fe9aae117f914/roseau_load_flow_engine-0.17.0-cp313-cp313-manylinux_2_34_x86_64.whl", hash = "sha256:fd155be066c61dbd50f5ada4196dc28bec2609d44e71f0c85416a859a183444c", size = 2136978 },
+    { url = "https://files.pythonhosted.org/packages/53/76/cd150eb40f4ce442820aab7833a0f1aeec39dd71087bec636fc56168bac1/roseau_load_flow_engine-0.17.0-cp313-cp313-win_amd64.whl", hash = "sha256:cf2f98075bafb4abdabb6af828c4bb6e431b1be29be13a97028cd0e9a7996a6b", size = 1506809 },
 ]
 
 [[package]]

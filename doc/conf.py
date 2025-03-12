@@ -25,7 +25,7 @@ copyright = "2018, Roseau Technologies SAS"
 
 # The full version, including alpha/beta/rc tags
 version = "0.12"
-release = "0.12.0-alpha"
+release = "0.12.0"
 
 # -- General configuration ---------------------------------------------------
 

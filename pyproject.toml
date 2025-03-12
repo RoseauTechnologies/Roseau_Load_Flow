@@ -1,6 +1,6 @@
 [project]
 name = "roseau-load-flow"
-version = "0.12.0-alpha"
+version = "0.12.0"
 description = "Highly capable multi-phase load flow solver"
 authors = [
     { name = "Ali Hamdan", email = "ali.hamdan@roseautechnologies.com" },
@@ -38,7 +38,7 @@ dependencies = [
     "pyproj>=3.3.0",
     "certifi>=2023.5.7",
     "platformdirs>=4.0.0",
-    "roseau-load-flow-engine>=0.17.0-alpha",
+    "roseau-load-flow-engine==0.17.0",
 ]
 
 [project.urls]
