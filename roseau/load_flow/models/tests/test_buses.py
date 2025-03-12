@@ -1,10 +1,12 @@
 import numpy as np
 import pandas as pd
 import pytest
+import shapely
 
 from roseau.load_flow import (
     Q_,
     Bus,
+    CurrentLoad,
     ElectricalNetwork,
     Ground,
     Line,
@@ -19,19 +21,7 @@ from roseau.load_flow import (
     TransformerParameters,
     VoltageSource,
 )
-
-
-def test_bus_potentials_of_phases():
-    bus = Bus("bus", phases="abcn")
-    bus._res_potentials = np.array([1, 2, 3, 4], dtype=np.complex128)
-
-    assert np.allclose(bus._get_potentials_of("abcn", warning=False), [1, 2, 3, 4])
-    assert isinstance(bus._get_potentials_of("abcn", warning=False), np.ndarray)
-
-    assert np.allclose(bus._get_potentials_of("abc", warning=False), [1, 2, 3])
-    assert np.allclose(bus._get_potentials_of("ca", warning=False), [3, 1])
-    assert np.allclose(bus._get_potentials_of("n", warning=False), [4])
-    assert np.allclose(bus._get_potentials_of("", warning=False), [])
+from roseau.load_flow.testing import assert_json_close
 
 
 def test_short_circuit():
@@ -86,6 +76,15 @@ def test_short_circuit():
     bus = Bus("bus", phases="abc")
     assert not bus.short_circuits
     _ = PowerLoad(id="load", bus=bus, powers=[10, 10, 10])
+    with pytest.raises(RoseauLoadFlowException) as e:
+        bus.add_short_circuit("a", "b")
+    assert "is already connected on bus" in e.value.msg
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_SHORT_CIRCUIT
+
+    # Cannot short-circuit a bus with a current load
+    bus = Bus("bus", phases="abc")
+    assert not bus.short_circuits
+    _ = CurrentLoad(id="load", bus=bus, currents=[10, 10, 10])
     with pytest.raises(RoseauLoadFlowException) as e:
         bus.add_short_circuit("a", "b")
     assert "is already connected on bus" in e.value.msg
@@ -296,7 +295,7 @@ def test_propagate_limits():  # noqa: C901
 
     Line(id="l1_mv", bus1=b1_mv, bus2=b2_mv, length=1.5, parameters=lp_mv, ground=g)
     Line(id="l2_mv", bus1=b2_mv, bus2=b3_mv, length=2, parameters=lp_mv, ground=g)
-    Transformer(id="tr", bus1=b3_mv, bus2=b1_lv, parameters=tp)
+    Transformer(id="tr", bus_hv=b3_mv, bus_lv=b1_lv, parameters=tp)
     Line(id="l1_lv", bus1=b1_lv, bus2=b2_lv, length=1, parameters=lp_lv)
 
     VoltageSource(id="s_mv", bus=b1_mv, voltages=20_000)
@@ -458,7 +457,7 @@ def test_get_connected_buses():
     Line(id="l2_mv", bus1=b2_mv, bus2=b3_mv, length=2, parameters=lp_mv, ground=g)
     Line(id="l3_mv", bus1=b2_mv, bus2=b4_mv, length=0.5, parameters=lp_mv, ground=g)  # creates a loop
     Switch(id="sw_mv", bus1=b3_mv, bus2=b4_mv)
-    Transformer(id="tr", bus1=b3_mv, bus2=b1_lv, parameters=tp)
+    Transformer(id="tr", bus_hv=b3_mv, bus_lv=b1_lv, parameters=tp)
     Line(id="l1_lv", bus1=b1_lv, bus2=b2_lv, length=1, parameters=lp_lv)
     Switch(id="sw_lv", bus1=b2_lv, bus2=b3_lv)
 
@@ -507,4 +506,93 @@ def test_res_voltage_unbalance():
     with pytest.raises(RoseauLoadFlowException) as e:
         bus.res_voltage_unbalance()
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
-    assert e.value.msg == "Voltage unbalance is only available for 3-phases buses, bus 'b1' has phases 'an'"
+    assert e.value.msg == "Voltage unbalance is only available for three-phase elements, bus 'b1' has phases 'an'."
+
+
+def test_to_dict():
+    bus = Bus(
+        id="bus",
+        phases="an",
+        nominal_voltage=400,
+        min_voltage_level=0.9,
+        max_voltage_level=1.1,
+    )
+    assert_json_close(
+        bus.to_dict(include_results=False),
+        {
+            "id": "bus",
+            "phases": "an",
+            "nominal_voltage": 400,
+            "min_voltage_level": 0.9,
+            "max_voltage_level": 1.1,
+        },
+    )
+    bus.min_voltage_level = None
+    assert_json_close(
+        bus.to_dict(include_results=False),
+        {"id": "bus", "phases": "an", "nominal_voltage": 400, "max_voltage_level": 1.1},
+    )
+    bus.max_voltage_level = None
+    assert_json_close(
+        bus.to_dict(include_results=False),
+        {"id": "bus", "phases": "an", "nominal_voltage": 400},
+    )
+    bus.nominal_voltage = None
+    assert_json_close(
+        bus.to_dict(include_results=False),
+        {"id": "bus", "phases": "an"},
+    )
+
+    bus.geometry = shapely.Point(1.5, 0.5)
+    assert_json_close(
+        bus.to_dict(include_results=False),
+        {"id": "bus", "phases": "an", "geometry": {"type": "Point", "coordinates": [1.5, 0.5]}},
+    )
+    bus.geometry = None
+
+    bus.initial_potentials = [230 + 0j, 0j]
+    assert_json_close(
+        bus.to_dict(include_results=False),
+        {"id": "bus", "phases": "an", "initial_potentials": [[230, 0], [0, 0]]},
+    )
+
+
+def test_to_from_dict_roundtrip():
+    bus = Bus(
+        id="bus",
+        phases="an",
+        geometry=shapely.Point(1.5, 0.5),
+        nominal_voltage=400,
+        min_voltage_level=0.9,
+        max_voltage_level=1.1,
+        initial_potentials=[230 + 0j, 0j],
+    )
+    bus_dict = bus.to_dict(include_results=False)
+    bus2 = Bus.from_dict(bus_dict)
+    bus2_dict = bus2.to_dict(include_results=False)
+    assert_json_close(bus_dict, bus2_dict)
+
+
+def test_deprecated_potentials():
+    # Constructor
+    with pytest.warns(
+        DeprecationWarning,
+        match=r"Argument 'potentials' for Bus\(\) is deprecated. It has been renamed to 'initial_potentials'",
+    ):
+        bus = Bus(id="bus", phases="an", potentials=[230, 0])  # type: ignore
+    np.testing.assert_allclose(bus.initial_potentials.m, [230, 0])
+
+    # Property getter
+    with pytest.warns(
+        DeprecationWarning,
+        match=r"'Bus.potentials' is deprecated. It has been renamed to 'initial_potentials'",
+    ):
+        _ = bus.potentials
+
+    # Property setter
+    with pytest.warns(
+        DeprecationWarning,
+        match=r"'Bus.potentials' is deprecated. It has been renamed to 'initial_potentials'",
+    ):
+        bus.potentials = [220, 0]
+    np.testing.assert_allclose(bus.initial_potentials.m, [220, 0])

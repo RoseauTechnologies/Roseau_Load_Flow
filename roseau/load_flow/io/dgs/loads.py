@@ -1,6 +1,5 @@
 import logging
-from collections.abc import Callable
-from typing import Literal
+from typing import Literal, Protocol
 
 import numpy as np
 import pandas as pd
@@ -22,7 +21,7 @@ from roseau.load_flow.typing import Id
 logger = logging.getLogger(__name__)
 
 
-def compute_mv_load_power(elm_lod: pd.DataFrame, load_id: str, suffix: str) -> complex:
+def compute_mv_load_power(elm_lod: pd.DataFrame, load_id: Id, suffix: str) -> complex:
     """Compute the complex power of an MV Load.
 
     An MV load has load power (slini) and generation power (sgini). The powers are defined using
@@ -60,7 +59,7 @@ def compute_mv_load_power(elm_lod: pd.DataFrame, load_id: str, suffix: str) -> c
     return power_l - power_g
 
 
-def compute_lv_load_power(elm_lod: pd.DataFrame, load_id: str, suffix: str) -> complex:
+def compute_lv_load_power(elm_lod: pd.DataFrame, load_id: Id, suffix: str) -> complex:
     """Compute the complex power of an LV Load.
 
     An LV load has load power (slini) only. The power is defined using `plini`, `slini` and `pf_recap`.
@@ -87,7 +86,7 @@ def compute_lv_load_power(elm_lod: pd.DataFrame, load_id: str, suffix: str) -> c
     return (p + 1j * q) * scale
 
 
-def compute_general_load_power(elm_lod: pd.DataFrame, load_id: str, suffix: str) -> complex:
+def compute_general_load_power(elm_lod: pd.DataFrame, load_id: Id, suffix: str) -> complex:
     """Compute the complex power of a General Load.
 
     A general load has load power (slini) only. The power is defined using one of (`plini`, `qlini`),
@@ -144,7 +143,7 @@ def compute_general_load_power(elm_lod: pd.DataFrame, load_id: str, suffix: str)
     return (p + 1j * q) * scale
 
 
-def compute_pv_sys_power(elm_lod: pd.DataFrame, load_id: str, suffix: str) -> complex:
+def compute_pv_sys_power(elm_lod: pd.DataFrame, load_id: Id, suffix: str) -> complex:
     """Compute the complex power of a PV Sys.
 
     Args:
@@ -169,7 +168,7 @@ def compute_pv_sys_power(elm_lod: pd.DataFrame, load_id: str, suffix: str) -> co
     return -(p + 1j * q) * scale
 
 
-def compute_gen_stat_power(elm_lod: pd.DataFrame, load_id: str, suffix: str) -> complex:
+def compute_gen_stat_power(elm_lod: pd.DataFrame, load_id: Id, suffix: str) -> complex:
     """Compute the complex power of a Static Generator.
 
     Args:
@@ -194,7 +193,11 @@ def compute_gen_stat_power(elm_lod: pd.DataFrame, load_id: str, suffix: str) -> 
     return -(p + 1j * q) * scale
 
 
-_LOAD_POWER_FUNCTIONS: dict[PwFLoadType, Callable[[pd.DataFrame, str, str], complex]] = {
+class LoadPowerFunction(Protocol):
+    def __call__(self, elm_lod: pd.DataFrame, load_id: Id, suffix: str) -> complex: ...
+
+
+LOAD_POWER_FUNCTIONS: dict[PwFLoadType, LoadPowerFunction] = {
     "MV": compute_mv_load_power,
     "LV": compute_lv_load_power,
     "General": compute_general_load_power,
@@ -230,25 +233,28 @@ def compute_3phase_load_powers(
     Returns:
         A 3-tuple of complex powers for each phase.
     """
-    power_comp = _LOAD_POWER_FUNCTIONS[load_type]
+    power_comp = LOAD_POWER_FUNCTIONS[load_type]
     if i_sym == 0:  # Balanced
-        s_balanced = power_comp(elm_lod, load_id, "")
+        s_balanced = power_comp(elm_lod, load_id, suffix="")
         sa = s_balanced / 3
         sb = s_balanced / 3
         sc = s_balanced / 3
     elif i_sym == 1:  # Unbalanced
-        sa = power_comp(elm_lod, load_id, "r")
-        sb = power_comp(elm_lod, load_id, "s")
-        sc = power_comp(elm_lod, load_id, "t")
+        sa = power_comp(elm_lod, load_id, suffix="r")
+        sb = power_comp(elm_lod, load_id, suffix="s")
+        sc = power_comp(elm_lod, load_id, suffix="t")
     else:
         raise NotImplementedError(i_sym)  # should never reach here
     return sa * factor, sb * factor, sc * factor
 
 
-def generate_loads(
+#
+# DGS -> RLF
+#
+def elm_lod_all_to_loads(
     elm_lod: pd.DataFrame,
     loads: dict[Id, AbstractLoad],
-    buses: dict[Id, Bus],
+    buses: dict[str, Bus],
     sta_cubic: pd.DataFrame,
     factor: float,
     load_type: PwFLoadType,
@@ -263,10 +269,10 @@ def generate_loads(
             The dictionary to store the loads into.
 
         buses:
-            The dictionary of the all buses.
+            The dictionary of the all buses indexed by their FID.
 
         sta_cubic:
-            The "StaCubic" dataframe of cubicles.
+            The "StaCubic" dataframe of cubicles indexed by their FID.
 
         factor:
             The factor to multiply the load power (ex: 1e3 for kVA -> VA)
@@ -278,9 +284,7 @@ def generate_loads(
     i_sym_field = LOAD_I_SYM_FIELD_NAMES[load_type]
     has_i_sym = i_sym_field is not None and i_sym_field in elm_lod.columns
     for load_id in elm_lod.index:
-        sta_cubic_id = elm_lod.at[load_id, "bus1"]  # id of the cubicle connecting the load and its bus
-        bus_id = sta_cubic.at[sta_cubic_id, "cterm"]  # id of the bus to which the load is connected
-        bus = buses[bus_id]
+        bus = buses[sta_cubic.at[elm_lod.at[load_id, "bus1"], "cterm"]]
         phtech = elm_lod.at[load_id, "phtech"]  # could be str (MV/General), int (LV), or None (missing)
         i_sym = elm_lod.at[load_id, i_sym_field] if has_i_sym else None  # 0: Balanced, 1: Unbalanced
 
@@ -324,4 +328,4 @@ def generate_loads(
                 )
 
         # Balanced or Unbalanced
-        loads[load_id] = PowerLoad(id=load_id, phases=phases, bus=buses[bus_id], powers=[sa, sb, sc])
+        loads[load_id] = PowerLoad(id=load_id, phases=phases, bus=bus, powers=[sa, sb, sc])

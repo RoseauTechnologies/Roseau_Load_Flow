@@ -13,6 +13,7 @@ __all__ = [
     "ALPHA",
     "ALPHA2",
     "PI",
+    "CLOCK_PHASE_SHIFT",
     # Physical constants
     "MU_0",
     "MU_R",
@@ -38,6 +39,9 @@ ALPHA2: Final = ALPHA**2
 
 PI: Final = math.pi
 """The famous mathematical constant :math:`\\pi = 3.141592\\ldots`."""
+
+CLOCK_PHASE_SHIFT: Final = {clock: cmath.exp(-1j * clock * cmath.pi / 6) for clock in (0, 1, 2, 4, 5, 6, 7, 8, 10, 11)}
+"""Phase shift for each clock number in the transformer vector group notation."""
 
 MU_0: Final = Q_(1.25663706212e-6, "H/m")
 """Magnetic permeability of the vacuum :math:`\\mu_0 = 4 \\pi \\times 10^{-7}` (H/m)."""

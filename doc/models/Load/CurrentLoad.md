@@ -48,7 +48,11 @@ And the following for delta loads given the constant currents {math}`i_{\mathrm{
 \right.
 ```
 
-## Example
+## Available Results
+
+The results for constant-current loads are described [here](./index.md#available-results).
+
+## Usage
 
 ```python
 import functools as ft

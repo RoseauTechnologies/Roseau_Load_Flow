@@ -25,7 +25,7 @@ copyright = "2018, Roseau Technologies SAS"
 
 # The full version, including alpha/beta/rc tags
 version = "0.12"
-release = "0.12.0-alpha"
+release = "0.12.0"
 
 # -- General configuration ---------------------------------------------------
 
@@ -47,6 +47,7 @@ extensions = [
 ]
 myst_enable_extensions = ["deflist", "smartquotes", "replacements", "dollarmath"]
 myst_html_meta = {"robots": "all"}
+myst_heading_anchors = 3
 add_module_names = False
 napoleon_numpy_docstring = False
 python_use_unqualified_type_names = True
@@ -145,6 +146,8 @@ autoapi_ignore = [
     # Internal utilities
     "**/roseau/load_flow/utils/**",
     "**/roseau/load_flow/io/**",
+    # RLF Single
+    "**/roseau/load_flow_single/**",
 ]
 autoapi_options = ["members", "show-inheritance", "show-module-summary", "imported-members"]
 autoapi_python_class_content = "both"  # without this, the __init__ docstring is not shown

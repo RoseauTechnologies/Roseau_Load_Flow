@@ -1,14 +1,16 @@
 """Plotting functions for `roseau.load_flow`."""
 
-from collections.abc import Callable, Mapping
-from typing import TYPE_CHECKING, Any
+import cmath
+import math
+from collections.abc import Callable, Iterable, Mapping
+from typing import TYPE_CHECKING, Any, Literal
 
 import numpy as np
 
-from roseau.load_flow.models import AbstractLoad, Bus, VoltageSource
+from roseau.load_flow.models import AbstractBranch, AbstractTerminal
 from roseau.load_flow.network import ElectricalNetwork
-from roseau.load_flow.sym import phasor_to_sym
-from roseau.load_flow.typing import Complex, ComplexArray, Float
+from roseau.load_flow.sym import NegativeSequence, PositiveSequence, ZeroSequence, phasor_to_sym
+from roseau.load_flow.typing import ComplexArray
 
 if TYPE_CHECKING:
     import folium
@@ -26,9 +28,6 @@ _COLORS.update(
         "ab": _COLORS["a"],
         "bc": _COLORS["b"],
         "ca": _COLORS["c"],
-        "zero": _COLORS["a"],
-        "pos": _COLORS["b"],
-        "neg": _COLORS["c"],
     }
 )
 
@@ -36,17 +35,17 @@ _COLORS.update(
 #
 # Utility functions
 #
-def _get_rot(vector: Complex) -> float:
+def _get_rot(vector: complex) -> float:
     """Get the rotation of a vector in degrees."""
-    rot = np.angle(vector, deg=True)
+    rot = cmath.phase(vector) * 180 / cmath.pi
     if rot > 90:
         rot -= 180
     elif rot < -90:
         rot += 180
-    return rot  # type: ignore
+    return rot
 
 
-def _get_align(rot: Float) -> tuple[str, str]:
+def _get_align(rot: float) -> tuple[str, str]:
     """Get the horizontal and vertical alignment corresponding to a rotation angle."""
     if 45 < abs(rot) < 135:
         return "right", "center"
@@ -56,7 +55,7 @@ def _get_align(rot: Float) -> tuple[str, str]:
 
 def _configure_axes(ax: "Axes", vector: ComplexArray) -> None:
     """Configure the axes for a plot of complex data."""
-    center = np.mean(vector)
+    center = vector.mean()
     ax_lim = max(abs(vector - center)) * 1.2
     ax.grid()
     ax.set_axisbelow(True)
@@ -65,25 +64,85 @@ def _configure_axes(ax: "Axes", vector: ComplexArray) -> None:
     ax.set_ylim(-ax_lim + center.imag, ax_lim + center.imag)
 
 
-def _draw_voltage_phasor(ax: "Axes", potential1: Complex, potential2: Complex, color: str) -> None:
+def _draw_voltage_phasor(
+    ax: "Axes", potential1: complex, potential2: complex, color: str, annotate: bool = True
+) -> None:
     """Draw a voltage phasor between two potentials."""
     voltage = potential1 - potential2
     midpoint = (potential1 + potential2) / 2
-    ax.arrow(potential2.real, potential2.imag, voltage.real, voltage.imag, color=color)  # type: ignore
-    rot = _get_rot(voltage)
-    ha, va = _get_align(rot)
-    ax.annotate(f"{abs(voltage):.0f}V", (midpoint.real, midpoint.imag), ha=ha, va=va, rotation=rot)  # type: ignore
+    ax.arrow(potential2.real, potential2.imag, voltage.real, voltage.imag, color=color)
+    if annotate:
+        rot = _get_rot(voltage)
+        ha, va = _get_align(rot)
+        ax.annotate(f"{abs(voltage):.0f}V", (midpoint.real, midpoint.imag), ha=ha, va=va, rotation=rot)
+
+
+def _get_phases_and_potentials(
+    element: AbstractTerminal | AbstractBranch,
+    voltage_type: Literal["pp", "pn", "auto"],
+    side: Literal[1, 2, "HV", "LV"] | None,
+) -> tuple[str, ComplexArray]:
+    if isinstance(element, AbstractTerminal):
+        if side is not None:
+            raise ValueError("The side argument is only valid for branch elements.")
+        phases, potentials = element.phases, element.res_potentials.m
+    elif side in (1, "HV"):
+        phases, potentials = element.phases1, element.res_potentials[0].m
+    elif side in (2, "LV"):
+        phases, potentials = element.phases2, element.res_potentials[1].m
+    elif side is None:
+        expected = ("HV", "LV") if element.element_type == "transformer" else (1, 2)
+        raise ValueError(f"The side for a {element.element_type} must be one of {expected}.")
+    else:
+        raise ValueError(f"Invalid side: {side!r}")
+    if voltage_type == "auto":
+        return phases, potentials
+    elif voltage_type == "pn":
+        if "n" not in phases:
+            raise ValueError("The element must have a neutral to plot phase-to-neutral voltages.")
+        return phases, potentials
+    elif voltage_type == "pp":
+        phases_pp = phases.removesuffix("n")
+        n_pp = len(phases_pp)
+        if n_pp == 1:
+            raise ValueError("The element must have more than one phase to plot phase-to-phase voltages.")
+        return phases_pp, potentials[:n_pp]
+    else:
+        raise ValueError(f"Invalid voltage_type: {voltage_type!r}")
 
 
 #
 # Phasor plotting functions
 #
-def plot_voltage_phasors(element: Bus | AbstractLoad | VoltageSource, *, ax: "Axes | None" = None) -> "Axes":
-    """Plot the voltage phasors of a bus, load, or voltage source.
+def plot_voltage_phasors(
+    element: AbstractTerminal | AbstractBranch,
+    *,
+    voltage_type: Literal["pp", "pn", "auto"] = "auto",
+    side: Literal[1, 2, "HV", "LV"] | None = None,
+    ax: "Axes | None" = None,
+) -> "Axes":
+    """Plot the voltage phasors of a terminal element or a branch element.
 
     Args:
         element:
-            The bus, load or source whose voltages to plot.
+            The bus, load, source, line, switch or transformer whose voltages to plot.
+
+        voltage_type:
+            The type of the voltages to plot.
+
+            - ``"auto"``: Plots the phase-to-neutral voltages if the element has a neutral, otherwise
+              the phase-to-phase voltages. This works for all elements and is the default.
+            - ``"pp"``: Plots the phase-to-phase voltages. Raises an error if the element has only
+              one phase (e.g. "an").
+            - ``"pn"``: Plots the phase-to-neutral voltages. Raises an error if the element has no
+              neutral.
+
+        side:
+            The side of the branch element to plot.
+
+            - For transformers: ``"HV"`` or ``"LV"``
+            - For lines/switches: ``1`` or ``2``
+            - For buses/loads/sources: ignored
 
         ax:
             The axes to plot on. If None, the currently active axes object is used.
@@ -95,23 +154,23 @@ def plot_voltage_phasors(element: Bus | AbstractLoad | VoltageSource, *, ax: "Ax
 
     if ax is None:
         ax = plt.gca()
-    potentials = element.res_potentials.m
+    phases, potentials = _get_phases_and_potentials(element, voltage_type, side)
     _configure_axes(ax, potentials)
-    ax.set_title(f"{element.id}")
-    if "n" in element.phases:
+    ax.set_title(f"{element.id}" if side is None else f"{element.id} ({side})")
+    if "n" in phases:
         origin = potentials.flat[-1]
-        for phase, potential in zip(element.phases[:-1], potentials[:-1].flat, strict=True):
+        for phase, potential in zip(phases[:-1], potentials[:-1].flat, strict=True):
             _draw_voltage_phasor(ax, potential, origin, color=_COLORS[phase])
-        for phase, potential in zip(element.phases, potentials.flat, strict=True):
+        for phase, potential in zip(phases, potentials.flat, strict=True):
             ax.scatter(potential.real, potential.imag, color=_COLORS[phase], label=phase)
-    elif len(element.phases) == 2:
+    elif len(phases) == 2:
         v1, v2 = potentials.flat
-        phase = element.phases
+        phase = phases
         _draw_voltage_phasor(ax, v1, v2, color=_COLORS[phase])
         for v, ph in ((v1, phase[0]), (v2, phase[1])):
             ax.scatter(v.real, v.imag, color=_COLORS[ph], label=ph)
     else:
-        assert element.phases == "abc"
+        assert phases == "abc"
         va, vb, vc = potentials.flat
         for v1, v2, phase in ((va, vb, "ab"), (vb, vc, "bc"), (vc, va, "ca")):
             _draw_voltage_phasor(ax, v1, v2, color=_COLORS[phase])
@@ -121,35 +180,76 @@ def plot_voltage_phasors(element: Bus | AbstractLoad | VoltageSource, *, ax: "Ax
     return ax
 
 
-def plot_symmetrical_voltages(element: Bus | AbstractLoad | VoltageSource, *, ax: "Axes | None" = None) -> "Axes":
-    """Plot the symmetrical voltages of a bus, load, or voltage source.
+def plot_symmetrical_voltages(
+    element: AbstractTerminal | AbstractBranch,
+    *,
+    side: Literal[1, 2, "HV", "LV"] | None = None,
+    axes: Iterable["Axes"] | None = None,
+) -> "tuple[Axes, Axes, Axes]":
+    """Plot the symmetrical voltages of a terminal element or a branch element.
 
     Args:
         element:
-            The bus, load or source whose symmetrical voltages to plot. The element must have 'abc'
-            or 'abcn' phases.
+            The bus, load, source, line, switch or transformer whose voltages to plot. The element
+            must have ``'abc'`` or ``'abcn'`` phases.
 
-        ax:
-            The axes to plot on. If None, the current axes object is used.
+        side:
+            The side of the branch element to plot.
+
+            - For transformers: ``"HV"`` or ``"LV"``
+            - For lines/switches: ``1`` or ``2``
+            - For buses/loads/sources: ignored
+
+        axes:
+            The three axes to plot on for the symmetrical components in the order zero, positive,
+            negative. If None, new axes are created.
 
     Returns:
-        The axes with the plot.
+        The three axes with the plots of the symmetrical components in the order zero, positive,
+        negative.
     """
     from roseau.load_flow.utils.optional_deps import pyplot as plt
 
-    if element.phases not in {"abc", "abcn"}:
+    phases, potentials = _get_phases_and_potentials(element, "auto", side)
+    if phases not in {"abc", "abcn"}:
         raise ValueError("The element must have 'abc' or 'abcn' phases.")
-    if ax is None:
-        ax = plt.gca()
-    voltages_sym = phasor_to_sym(element.res_voltages.m)
-    _configure_axes(ax, voltages_sym)
-    ax.set_title(f"{element.id} (symmetrical)")
-    for sequence, voltage in zip(("zero", "pos", "neg"), voltages_sym, strict=True):
-        _draw_voltage_phasor(ax, voltage, 0j, color=_COLORS[sequence])
-    for sequence, voltage in zip(("zero", "pos", "neg"), voltages_sym, strict=True):
-        ax.scatter(voltage.real, voltage.imag, color=_COLORS[sequence], label=sequence)
-    ax.legend()
-    return ax
+    if axes is None:
+        _, axes = plt.subplots(1, 3)
+    ax0, ax1, ax2 = axes  # type: ignore
+    u0, u1, u2 = sym_components = phasor_to_sym(potentials[:3])
+    un = potentials[3] if "n" in phases else 0j
+    ax_limits = np.array(1.2 * max(abs(sym_components)) * PositiveSequence, dtype=np.complex128)
+    title = f"{element.id}" if side is None else f"{element.id} ({side})"
+
+    def _draw_balanced_voltages(ax: "Axes", u: "complex", seq: "ComplexArray"):
+        seq_potentials = np.array(u * seq, dtype=np.complex128)
+        for phase, u in zip("abc", seq_potentials.flat, strict=False):
+            _draw_voltage_phasor(ax, u, 0j, color=_COLORS[phase], annotate=False)
+        for phase, u in zip("abc", seq_potentials.flat, strict=False):
+            ax.scatter(u.real, u.imag, color=_COLORS[phase], label=phase)
+
+    def _draw_zero_voltages(ax: "Axes", u: "complex", seq: "ComplexArray"):
+        _draw_voltage_phasor(ax, u, un, color=_COLORS["a"], annotate=False)
+        ax.scatter(u.real, u.imag, color=_COLORS["a"], label="abc")
+        if "n" in phases:
+            ax.scatter(un.real, un.imag, color=_COLORS["n"], label="n")
+
+    for name, u, ax, seq, draw_func in (
+        ("Zero Sequence", u0, ax0, ZeroSequence, _draw_zero_voltages),
+        ("Positive Sequence", u1, ax1, PositiveSequence, _draw_balanced_voltages),
+        ("Negative Sequence", u2, ax2, NegativeSequence, _draw_balanced_voltages),
+    ):
+        _configure_axes(ax, ax_limits)
+        ax.set_title(f"{title}\n{name}")
+        draw_func(ax, u, seq)
+        angle = cmath.phase(u)
+        ha = "right" if cmath.pi / 2 < abs(angle) < 3 * cmath.pi / 2 else "left"
+        va = "bottom" if abs(angle) < cmath.pi else "top"
+        xy = u + ax_limits[0] / 20 * cmath.exp(1j * angle)  # move it 5% of the axis limits
+        ax.annotate(f"{abs(u):.0f}V", (xy.real, xy.imag), ha=ha, va=va)
+        ax.legend()
+
+    return ax0, ax1, ax2
 
 
 #
@@ -253,9 +353,9 @@ def plot_interactive_map(
         if "zoom_start" not in map_kws:
             # Calculate the zoom level based on the bounding box of the network
             min_x, min_y, max_x, max_y = geom_union.bounds
-            zoom_lon = np.ceil(np.log2(360 * 2.0 / (max_x - min_x)))
-            zoom_lat = np.ceil(np.log2(360 * 2.0 / (max_y - min_y)))
-            map_kws["zoom_start"] = int(min(zoom_lon, zoom_lat))
+            zoom_lon = math.ceil(math.log2(360 * 2.0 / (max_x - min_x)))
+            zoom_lat = math.ceil(math.log2(360 * 2.0 / (max_y - min_y)))
+            map_kws["zoom_start"] = min(zoom_lon, zoom_lat)
 
     m = folium.Map(**map_kws)
     folium.GeoJson(

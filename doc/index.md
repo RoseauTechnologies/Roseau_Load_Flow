@@ -2,15 +2,14 @@
 myst:
   html_meta:
     "description lang=en": |
-      Documentation of the Roseau Load Flow solver. Simulation of multiphase and unbalanced electrical networks by
-      Roseau Technologies.
+      Documentation of the Roseau Load Flow solver. Multi-phase, unbalanced power flow analysis with a performance optimized solver. Free academic licence and demo version available !
     "description lang=fr": |
       Documentation du solveur d'écoulements de charge Roseau Load Flow. Simulation des réseaux électriques
-      multiphasés et déséquilibrés par Roseau Technologies.
+      multiphasés et déséquilibrés par Roseau Technologies. Licences académiques offertes.
     "keywords lang=fr": |
-      Roseau, load flow, python, écoulement de charge, écoulement de puissance, réseau de distribution, triphasé,
+      Roseau, load flow, python, écoulement de charge, écoulement de puissance, réseau de distribution, triphasé, power flow
       déséquilibré
-    "keywords lang=en": Roseau, Load flow, python, power flow, distribution grid, three-phase, multiphase, unbalanced
+    "keywords lang=en": power flow, Roseau, Load flow, python, distribution grid, three-phase, multiphase, unbalanced
 ---
 
 # Welcome to the Roseau Load Flow documentation
@@ -31,7 +30,7 @@ More details are given in the [Catalogues page](catalogues-networks).
 
 ## Installation
 
-`roseau-load-flow` is the python interface to the solver. It is compatible with Python version 3.10
+`roseau-load-flow` is the python interface to the power flow solver. It is compatible with Python version 3.10
 and newer and can be installed with:
 
 ```{toctree}

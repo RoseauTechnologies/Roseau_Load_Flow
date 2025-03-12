@@ -19,11 +19,11 @@ __all__ = [
     "series_phasor_to_sym",
 ]
 
-PositiveSequence: Final = np.array([1, ALPHA2, ALPHA], dtype=np.complex128)
+PositiveSequence: Final[ComplexArray] = np.array([1, ALPHA2, ALPHA], dtype=np.complex128)  # type: ignore
 """numpy.ndarray[complex]: Unit vector of positive-sequence components of a three-phase system."""
-NegativeSequence: Final = np.array([1, ALPHA, ALPHA2], dtype=np.complex128)
+NegativeSequence: Final[ComplexArray] = np.array([1, ALPHA, ALPHA2], dtype=np.complex128)  # type: ignore
 """numpy.ndarray[complex]: Unit vector of negative-sequence components of a three-phase system."""
-ZeroSequence: Final = np.array([1, 1, 1], dtype=np.complex128)
+ZeroSequence: Final[ComplexArray] = np.array([1, 1, 1], dtype=np.complex128)  # type: ignore
 """numpy.ndarray[complex]: Unit vector of zero-sequence components of a three-phase system."""
 
 A: Final = np.array([ZeroSequence, PositiveSequence, NegativeSequence], dtype=np.complex128)

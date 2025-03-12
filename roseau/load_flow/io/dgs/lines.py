@@ -2,35 +2,45 @@ import logging
 import warnings
 
 import pandas as pd
-import shapely
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.io.dgs.constants import INSULATORS, LINE_TYPES, MATERIALS
+from roseau.load_flow.io.dgs.utils import gps_coords_to_linestring
 from roseau.load_flow.models import Bus, Ground, Line, LineParameters
 from roseau.load_flow.typing import Id
-from roseau.load_flow.utils import find_stack_level
 
 logger = logging.getLogger(__name__)
 
 
-def generate_typ_lne(typ_lne: pd.DataFrame, lines_params: dict[Id, LineParameters]) -> None:
+#
+# DGS -> RLF
+#
+def typ_lne_to_lp(typ_lne: pd.DataFrame, line_params: dict[str, LineParameters], use_name_as_id: bool) -> None:
     """Generate line parameters from the "TypLne" dataframe.
 
     Args:
         typ_lne:
             The "TypLne" dataframe containing line parameters data.
 
-        lines_params:
-            The dictionary to store the line parameters into.
+        line_params:
+            The dictionary to store the line parameters into indexed by the type's FID.
+
+        use_name_as_id:
+            Whether to use the type's ``loc_name`` as its ID or the FID.
     """
     # TODO: Maybe add the section of the neutral
-    for type_id in typ_lne.index:
-        this_typ_lne: pd.Series = typ_lne.loc[type_id]
+    for fid in typ_lne.index:
+        name = typ_lne.at[fid, "loc_name"]
+        type_id = name if use_name_as_id else fid
+        this_typ_lne: pd.Series = typ_lne.loc[fid]
         # TODO: use the detailed phase information instead of n
         nneutral = this_typ_lne["nneutral"]
         n = this_typ_lne["nlnph"] + nneutral
         if n not in (3, 4):
-            msg = f"The number of phases ({n}) of line type {type_id!r} cannot be handled, it should be 3 or 4."
+            msg = (
+                f"The number of phases ({n}) of line type with FID={fid!r} and loc_name={name!r} "
+                f"cannot be handled, it should be 3 or 4."
+            )
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DGS_BAD_PHASE_NUMBER)
 
@@ -46,29 +56,29 @@ def generate_typ_lne(typ_lne: pd.DataFrame, lines_params: dict[Id, LineParameter
             bpn=(this_typ_lne["bpnline"] * 1e-6) if nneutral else None,
         )
 
-        actual_shape = z_line.shape[0]
-        if actual_shape > n:  # 4x4 matrix while a 3x3 matrix was expected
+        actual_n = z_line.shape[0]
+        if actual_n > n:  # 4x4 matrix while a 3x3 matrix was expected
             # Extract the 3x3 underlying matrix
             z_line = z_line[:n, :n]
             y_shunt = y_shunt[:n, :n]
-        elif actual_shape == n:
+        elif actual_n == n:
             # Everything ok
             pass
         else:
             # Something unexpected happened
             msg = (
-                f"A {n}x{n} impedance matrix was expected for the line type {type_id!r} but a "
-                f"{actual_shape}x{actual_shape} matrix was generated."
+                f"A {n}x{n} impedance matrix was expected for the line type with FID={fid!r} and "
+                f"loc_name={name!r} but a {actual_n}x{actual_n} matrix was generated."
             )
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DGS_BAD_PHASE_NUMBER)
 
         # Optional fields
         sline = this_typ_lne.get("sline")
-        ampacities = sline * 1e3 if sline is not None else None
-        line_type = LINE_TYPES.get(this_typ_lne.get("cohl_"))
-        material = MATERIALS.get(this_typ_lne.get("mlei"))
-        insulator = INSULATORS.get(this_typ_lne.get("imiso"))
+        ampacity = sline * 1e3 if sline is not None else None
+        line_type = LINE_TYPES.get(this_typ_lne["cohl_"]) if "cohl_" in this_typ_lne else None
+        material = MATERIALS.get(this_typ_lne["mlei"]) if "mlei" in this_typ_lne else None
+        insulator = INSULATORS.get(this_typ_lne["imiso"]) if "imiso" in this_typ_lne else None
         section = this_typ_lne.get("qurs") or None  # Sometimes it is zero!! replace by None in this case
 
         with warnings.catch_warnings():
@@ -77,17 +87,17 @@ def generate_typ_lne(typ_lne: pd.DataFrame, lines_params: dict[Id, LineParameter
                 id=type_id,
                 z_line=z_line,
                 y_shunt=y_shunt,
-                ampacities=ampacities,
+                ampacities=ampacity,
                 line_type=line_type,
                 materials=material,
                 insulators=insulator,
                 sections=section,
             )
-        lines_params[type_id] = lp
+        line_params[fid] = lp
 
 
-def generate_typ_lne_from_elm_lne(
-    elm_lne: pd.DataFrame, line_id: Id, phases: str, lines_params: dict[Id, LineParameters]
+def typ_lne_from_elm_lne_to_lp(
+    elm_lne: pd.DataFrame, line_id: Id, phases: str, line_params: dict[str, LineParameters]
 ) -> LineParameters:
     """Generate line parameters for a certain line.
 
@@ -101,23 +111,24 @@ def generate_typ_lne_from_elm_lne(
         phases:
             The phases of the line.
 
-        lines_params:
+        line_params:
             The dictionary to store the line parameters into.
 
     Returns:
         The generated line parameters.
     """
     lne_series = elm_lne.loc[line_id]
+    assert isinstance(lne_series, pd.Series)
 
     # Get a unique ID for the line parameters (contains the ID of the line)
     typ_id = f"line {line_id!r}"
     i = 1
-    while typ_id in lines_params:
+    while typ_id in line_params:
         typ_id = f"line {line_id!r} ({i})"
         i += 1
 
     # Get the type of the line (overhead, underground)
-    line_type = LINE_TYPES.get(lne_series.get("inAir"))
+    line_type = LINE_TYPES.get(lne_series["inAir"]) if "inAir" in lne_series else None
 
     # Get the cross-sectional area (mm²)
     section = lne_series.get("crosssec") or None  # Sometimes it is zero!! replace by None in this case
@@ -145,12 +156,12 @@ def generate_typ_lne_from_elm_lne(
     return lp
 
 
-def generate_lines(
+def elm_lne_to_lines(
     elm_lne: pd.DataFrame,
     lines: dict[Id, Line],
-    buses: dict[Id, Bus],
+    buses: dict[str, Bus],
     sta_cubic: pd.DataFrame,
-    lines_params: dict[Id, LineParameters],
+    line_params: dict[str, LineParameters],
     ground: Ground,
 ) -> None:
     """Generate the lines of the network.
@@ -163,67 +174,37 @@ def generate_lines(
             The dictionary to store the lines into.
 
         buses:
-            The dictionary of the all buses.
+            The dictionary of the all buses indexed by their FID.
 
         sta_cubic:
-            The "StaCubic" dataframe of cubicles.
+            The "StaCubic" dataframe of cubicles indexed by their FID.
 
-        lines_params:
-            The dictionary of all lines parameters. If the line does not define a type Id, a line
-            parameters object will be created and stored in this dictionary.
+        line_params:
+            The dictionary of all lines parameters indexed by their FID. If the line does not define
+            a type Id, a line parameters object will be created and stored in this dictionary.
 
         ground:
             The ground object to connect to lines that have shunt components.
     """
     has_geometry = "GPScoords:SIZEROW" in elm_lne.columns
     for line_id in elm_lne.index:
-        type_id = elm_lne.at[line_id, "typ_id"]  # id of the line type
+        type_fid = elm_lne.at[line_id, "typ_id"]  # FID of the line type
         bus1 = buses[sta_cubic.at[elm_lne.at[line_id, "bus1"], "cterm"]]
         bus2 = buses[sta_cubic.at[elm_lne.at[line_id, "bus2"], "cterm"]]
         length = elm_lne.at[line_id, "dline"]
         phases = "abcn" if (bus1.phases == "abcn" and bus2.phases == "abcn") else "abc"
 
-        if type_id in lines_params:
-            lp = lines_params[type_id]
+        if type_fid in line_params:
+            lp = line_params[type_fid]
             if phases == "abcn" and lp._z_line.shape[0] == 3:
                 phases = "abc"
-        elif pd.isna(type_id):  # Missing line type, generate a new one
-            lp = generate_typ_lne_from_elm_lne(
-                elm_lne=elm_lne, line_id=line_id, phases=phases, lines_params=lines_params
-            )
+        elif pd.isna(type_fid):  # Missing line type, generate a new one
+            lp = typ_lne_from_elm_lne_to_lp(elm_lne=elm_lne, line_id=line_id, phases=phases, line_params=line_params)
         else:
-            msg = f"typ_id {type_id!r} of line {line_id} was not found in the 'type_lne' table"
+            msg = f"typ_id {type_fid!r} of line {line_id!r} was not found in the 'type_lne' table"
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DGS_BAD_TYPE_ID)
-
-        geometry = None
-        if has_geometry:
-            try:
-                nb_points = int(elm_lne.at[line_id, "GPScoords:SIZEROW"])
-                nb_cols = int(elm_lne.at[line_id, "GPScoords:SIZECOL"])
-                # We need at least 2 points with 2 columns (latitude and longitude)
-                if nb_points == 0 or nb_cols == 0:
-                    pass  # nb_points is 0 -> no GPS points; nb_cols is 0 -> badly initialized GPS data by PwF
-                elif nb_points == 1:
-                    warnings.warn(
-                        f"Failed to read geometry data for line {line_id!r}: it has a single GPS point.",
-                        stacklevel=find_stack_level(),
-                    )
-                else:
-                    assert nb_cols == 2, f"Expected 2 GPS columns (Latitude/Longitude), got {nb_cols}."
-                    lat_cols = [f"GPScoords:{i}:0" for i in range(nb_points)]
-                    lon_cols = [f"GPScoords:{i}:1" for i in range(nb_points)]
-                    geometry = shapely.LineString(
-                        shapely.points(
-                            elm_lne.loc[line_id, lon_cols].values.astype(float),
-                            elm_lne.loc[line_id, lat_cols].values.astype(float),
-                        )
-                    )
-            except Exception as e:
-                warnings.warn(
-                    f"Failed to read geometry data for line {line_id!r}: {type(e).__name__}: {e}",
-                    stacklevel=find_stack_level(),
-                )
+        geometry = gps_coords_to_linestring(elm_lne, line_id) if has_geometry else None
         lines[line_id] = Line(
             id=line_id,
             bus1=bus1,

@@ -25,13 +25,16 @@ from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowE
 from roseau.load_flow.license import License, activate_license, deactivate_license, get_license
 from roseau.load_flow.models import (
     AbstractBranch,
+    AbstractConnectable,
     AbstractLoad,
+    AbstractTerminal,
     Bus,
     Control,
     CurrentLoad,
     Element,
     FlexibleParameter,
     Ground,
+    GroundConnection,
     ImpedanceLoad,
     Line,
     LineParameters,
@@ -70,11 +73,14 @@ __all__ = [
     "ElectricalNetwork",
     # Buses
     "Bus",
-    # Core
+    # Core models
     "Element",
     "Ground",
+    "GroundConnection",
     "PotentialRef",
     "AbstractBranch",
+    "AbstractTerminal",
+    "AbstractConnectable",
     # Lines
     "Switch",
     "Line",

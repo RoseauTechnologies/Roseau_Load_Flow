@@ -1,15 +1,13 @@
 {
   "version": 4,
   "is_multiphase": true,
+  "crs": {
+    "data": null,
+    "normalize": false
+  },
   "grounds": [
     {
       "id": "ground",
-      "buses": [
-        {
-          "id": "bus1",
-          "phase": "n"
-        }
-      ],
       "results": {
         "potential": [0.0, 0.0]
       }
@@ -20,7 +18,7 @@
       "id": "pref",
       "ground": "ground",
       "results": {
-        "current": [-1.2500243895541274e-13, 0.0]
+        "current": [-9.36596755259092e-19, 0.0]
       }
     }
   ],
@@ -60,9 +58,6 @@
       "phases": "bn",
       "bus1": "bus0",
       "bus2": "bus1",
-      "length": 1.0,
-      "params_id": "test",
-      "max_loading": 1,
       "geometry": {
         "type": "LineString",
         "coordinates": [
@@ -70,6 +65,9 @@
           [-1.320149235966572, 48.64971306653889]
         ]
       },
+      "max_loading": 1.0,
+      "params_id": "test",
+      "length": 1.0,
       "results": {
         "currents1": [
           [0.005000025000117603, 0.0],
@@ -78,6 +76,14 @@
         "currents2": [
           [-0.005000025000117603, -0.0],
           [0.005000025000125, -0.0]
+        ],
+        "potentials1": [
+          [19999.94999975, 0.0],
+          [-0.050000250001249996, 0.0]
+        ],
+        "potentials2": [
+          [19999.899999499998, 0.0],
+          [0.0, 0.0]
         ]
       }
     }
@@ -90,8 +96,8 @@
       "bus": "bus1",
       "phases": "bn",
       "type": "power",
-      "powers": [[100.0, 0.0]],
       "connect_neutral": null,
+      "powers": [[100.0, 0.0]],
       "results": {
         "currents": [
           [0.005000025000250002, -0.0],
@@ -100,7 +106,8 @@
         "potentials": [
           [19999.899999499998, 0.0],
           [0.0, 0.0]
-        ]
+        ],
+        "inner_currents": [[0.005000025000250003, -0.0]]
       }
     }
   ],
@@ -109,8 +116,9 @@
       "id": "vs",
       "bus": "bus0",
       "phases": "bn",
-      "voltages": [[20000.0, 0.0]],
+      "type": "voltage",
       "connect_neutral": null,
+      "voltages": [[20000.0, 0.0]],
       "results": {
         "currents": [
           [-0.005000025000125, 0.0],
@@ -138,5 +146,22 @@
       ]
     }
   ],
-  "transformers_params": []
+  "transformers_params": [],
+  "ground_connections": [
+    {
+      "id": "gc",
+      "ground": "ground",
+      "element": {
+        "id": "bus1",
+        "type": "bus"
+      },
+      "phase": "n",
+      "impedance": [0.0, 0.0],
+      "side": null,
+      "on_connected": "raise",
+      "results": {
+        "current": [9.36596755259092e-19, 0.0]
+      }
+    }
+  ]
 }

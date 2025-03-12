@@ -17,8 +17,8 @@ from roseau.load_flow.constants import EPSILON_0, EPSILON_R, MU_0, OMEGA, PI, RH
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.types import Insulator, LineType, Material
 from roseau.load_flow.typing import (
-    ComplexArray,
     ComplexArrayLike2D,
+    ComplexMatrix,
     Float,
     FloatArray,
     FloatScalarOrArrayLike1D,
@@ -112,6 +112,8 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
                 the number of conductor of the line.
         """
         super().__init__(id)
+        self._z_line: ComplexMatrix
+        self._y_shunt: ComplexMatrix
         self._z_line = np.array(z_line, dtype=np.complex128)
         if y_shunt is None:
             self._with_shunt = False
@@ -203,12 +205,12 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
 
     @property
     @ureg_wraps("ohm/km", (None,))
-    def z_line(self) -> Q_[ComplexArray]:
+    def z_line(self) -> Q_[ComplexMatrix]:
         return self._z_line
 
     @property
     @ureg_wraps("S/km", (None,))
-    def y_shunt(self) -> Q_[ComplexArray]:
+    def y_shunt(self) -> Q_[ComplexMatrix]:
         return self._y_shunt
 
     @property
@@ -259,7 +261,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         self._sections = self._check_positive_float_array(value=value, name="sections", unit="mm²", size=self._size)
 
     @staticmethod
-    def _sym_to_zy_simple(n, z0: complex, z1: complex, y0: complex, y1: complex) -> tuple[ComplexArray, ComplexArray]:
+    def _sym_to_zy_simple(n, z0: complex, z1: complex, y0: complex, y1: complex) -> tuple[ComplexMatrix, ComplexMatrix]:
         """Symmetrical components to Z/Y matrices.
 
         Args:
@@ -287,7 +289,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         return z, y
 
     @staticmethod
-    def _check_z_line_matrix(id: Id, z_line: ComplexArray) -> None:
+    def _check_z_line_matrix(id: Id, z_line: ComplexMatrix) -> None:
         """Check that the z_line matrix is not singular."""
         if nplin.det(z_line) == 0:
             msg = f"The symmetric model data provided for line type {id!r} produces invalid line impedance matrix."
@@ -366,7 +368,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         zpn: complex | None = None,
         bn: float | None = None,
         bpn: float | None = None,
-    ) -> tuple[ComplexArray, ComplexArray]:
+    ) -> tuple[ComplexMatrix, ComplexMatrix]:
         """Create impedance and admittance matrix from a symmetrical model.
 
         Args:
@@ -566,7 +568,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         section_neutral: float | None,
         height: float,
         external_diameter: float,
-    ) -> tuple[ComplexArray, ComplexArray, LineType, MaterialArray, InsulatorArray, FloatArray]:
+    ) -> tuple[ComplexMatrix, ComplexMatrix, LineType, MaterialArray, InsulatorArray, FloatArray]:
         """Create impedance and admittance matrices using a geometric model.
 
         Args:
@@ -1601,20 +1603,20 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         )
 
     def _to_dict(self, include_results: bool) -> JsonDict:
-        res = {"id": self.id, "z_line": [self._z_line.real.tolist(), self._z_line.imag.tolist()]}
+        data = {"id": self.id, "z_line": [self._z_line.real.tolist(), self._z_line.imag.tolist()]}
         if self.with_shunt:
-            res["y_shunt"] = [self._y_shunt.real.tolist(), self._y_shunt.imag.tolist()]
+            data["y_shunt"] = [self._y_shunt.real.tolist(), self._y_shunt.imag.tolist()]
         if self.ampacities is not None:
-            res["ampacities"] = self._ampacities.tolist()
+            data["ampacities"] = self._ampacities.tolist()
         if self._line_type is not None:
-            res["line_type"] = self._line_type.name
+            data["line_type"] = self._line_type.name
         if self._materials is not None:
-            res["materials"] = [x.name for x in self._materials]
+            data["materials"] = [x.name for x in self._materials]
         if self._insulators is not None:
-            res["insulators"] = [x.name for x in self._insulators]
+            data["insulators"] = [x.name for x in self._insulators]
         if self._sections is not None:
-            res["sections"] = self._sections.tolist()
-        return res
+            data["sections"] = self._sections.tolist()
+        return data
 
     def _results_to_dict(self, warning: bool, full: bool) -> NoReturn:
         msg = f"The {type(self).__name__} has no results to export."

@@ -34,6 +34,14 @@ defining a ground element. If you want to do so, you must add a `PotentialRef` e
 [](PotentialRef.md).
 ```
 
+## Available Results
+
+The following results are available for all grounds:
+
+| Result Accessor | Default Unit | Type    | Description                 |
+| --------------- | ------------ | ------- | --------------------------- |
+| `res_potential` | $V$          | complex | The potential of the ground |
+
 ## Usage
 
 In _Roseau Load Flow_, several grounds can be defined leading to ground elements with a non-zero
@@ -101,8 +109,8 @@ load = rlf.PowerLoad(
     powers=rlf.Q_(np.array([5.0, 2.5, 0]) * (1 - 0.3j), "kVA"),
 )
 
-# Set the phase "a" of the first bus to the ground g1
-g1.connect(bus=bus1, phase="a")
+# Connect the phase "a" of the first bus to the ground g1
+gc = rlf.GroundConnection(id="gc", ground=g1, element=bus1, phase="a")
 
 # Set the potential of the ground element g1 to 0V
 pref = rlf.PotentialRef(id="pref", element=g1)

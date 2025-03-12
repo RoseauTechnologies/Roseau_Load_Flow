@@ -3,11 +3,12 @@ import json
 import warnings
 
 import numpy as np
+import numpy.testing as npt
 import pandas as pd
 import pytest
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
-from roseau.load_flow.io.dgs import _dgs_dict_to_df, generate_typ_lne
+from roseau.load_flow.io.dgs import dgs_dict_to_df, typ_lne_to_lp
 from roseau.load_flow.io.dgs.constants import GENERAL_LOAD_INPUT_MODE
 from roseau.load_flow.io.dgs.loads import compute_3phase_load_powers
 from roseau.load_flow.models import Line
@@ -20,6 +21,17 @@ def test_from_dgs(dgs_network_path):
         if dgs_network_path.stem == "Line_Without_Type":
             warnings.filterwarnings("ignore", message=r".*is missing line types", category=UserWarning)
         en = ElectricalNetwork.from_dgs(dgs_network_path)
+        # Also make sure use_name_as_id=True works
+        en2 = ElectricalNetwork.from_dgs(dgs_network_path, use_name_as_id=True)
+    assert len(en2.buses) == len(en.buses)
+    assert len(en2.lines) == len(en.lines)
+    assert len(en2.loads) == len(en.loads)
+    assert len(en2.sources) == len(en.sources)
+    assert len(en2.transformers) == len(en.transformers)
+    assert len(en2.switches) == len(en.switches)
+    assert len(en2.potential_refs) == len(en.potential_refs)
+    assert len(en2.grounds) == len(en.grounds)
+    assert len(en2.ground_connections) == len(en.ground_connections)
 
     # Check the validity of the network
     en._check_validity(constructed=False)
@@ -46,8 +58,8 @@ def test_from_dgs(dgs_network_path):
             assert pref_ids == {"pref (ground)"}, pref_ids
 
 
-def test_from_dgs_no_line_type(dgs_special_network_dir):
-    path = dgs_special_network_dir / "Line_Without_Type.json"
+def test_from_dgs_no_line_type(dgs_special_networks_dir):
+    path = dgs_special_networks_dir / "Line_Without_Type.json"
 
     dgs_json = json.loads(path.read_bytes())
     assert "ElmLne" in dgs_json
@@ -55,7 +67,7 @@ def test_from_dgs_no_line_type(dgs_special_network_dir):
     elm_lne = pd.DataFrame(data=dgs_json["ElmLne"]["Values"], columns=dgs_json["ElmLne"]["Attributes"]).set_index("FID")
 
     expected_msg = (
-        r"The network contains lines but is missing line types \(TypLne\)\. "
+        r"The network contains lines but it is missing line types \(TypLne\)\. "
         r"Please copy all line types from the library to the project before "
         r"exporting otherwise a LineParameter object will be created for each line."
     )
@@ -76,17 +88,17 @@ def test_from_dgs_no_line_type(dgs_special_network_dir):
     zs, zm = line.z_line.m[0, :2]  # series and mutual components
     r0, r1 = elm_lne.at[line_id, "R0"], elm_lne.at[line_id, "R1"]
     x0, x1 = elm_lne.at[line_id, "X0"], elm_lne.at[line_id, "X1"]
-    np.testing.assert_allclose(zs.real, (r0 + 2 * r1) / 3)
-    np.testing.assert_allclose(zs.imag, (x0 + 2 * x1) / 3)
-    np.testing.assert_allclose(zm.real, (r0 - r1) / 3)
-    np.testing.assert_allclose(zm.imag, (x0 - x1) / 3)
-    np.testing.assert_allclose(line.parameters.z_line.m, line.z_line.m / line.length.m)
+    npt.assert_allclose(zs.real, (r0 + 2 * r1) / 3)
+    npt.assert_allclose(zs.imag, (x0 + 2 * x1) / 3)
+    npt.assert_allclose(zm.real, (r0 - r1) / 3)
+    npt.assert_allclose(zm.imag, (x0 - x1) / 3)
+    npt.assert_allclose(line.parameters.z_line.m, line.z_line.m / line.length.m)
 
 
-def test_dgs_general_load_input_modes(dgs_special_network_dir):
-    path = dgs_special_network_dir / "General_Load.json"
+def test_dgs_general_load_input_modes(dgs_special_networks_dir):
+    path = dgs_special_networks_dir / "General_Load.json"
     data = json.loads(path.read_bytes())
-    elm_lod = _dgs_dict_to_df(data, "ElmLod")
+    elm_lod = dgs_dict_to_df(data, "ElmLod", index_col="FID")
     load_id = elm_lod.index[0]
     assert elm_lod.at[load_id, "mode_inp"] == "DEF"
     expected_powers = compute_3phase_load_powers(elm_lod, load_id, i_sym=0, factor=1, load_type="General")
@@ -96,11 +108,11 @@ def test_dgs_general_load_input_modes(dgs_special_network_dir):
             powers = compute_3phase_load_powers(elm_lod, load_id, i_sym=0, factor=1, load_type="General")
         except NotImplementedError:
             continue
-        np.testing.assert_allclose(powers, expected_powers, atol=1e-5, err_msg=f"Input Mode: {mode_inp!r}")
+        npt.assert_allclose(powers, expected_powers, atol=1e-5, err_msg=f"Input Mode: {mode_inp!r}")
 
 
-def test_dgs_switches(dgs_special_network_dir, tmp_path):
-    path = dgs_special_network_dir / "Switch.json"
+def test_dgs_switches(dgs_special_networks_dir, tmp_path):
+    path = dgs_special_networks_dir / "Switch.json"
     good_json = json.loads(path.read_bytes())
 
     with warnings.catch_warnings():
@@ -138,15 +150,21 @@ def test_dgs_switches(dgs_special_network_dir, tmp_path):
 
 def test_generate_typ_lne_errors(monkeypatch):
     # Small number of conductor (not in (3, 4)
-    typ_line = pd.DataFrame(data={"nneutral": [0], "nlnph": [1]}, index=pd.Index(["lt1"]))
+    typ_line = pd.DataFrame(
+        data={"loc_name": "lt1", "nneutral": [0], "nlnph": [1]},
+        index=pd.Index(["1"], name="FID"),
+    )
     with pytest.raises(RoseauLoadFlowException) as e:
-        generate_typ_lne(typ_lne=typ_line, lines_params={})
-    assert e.value.msg == "The number of phases (1) of line type 'lt1' cannot be handled, it should be 3 or 4."
+        typ_lne_to_lp(typ_lne=typ_line, line_params={}, use_name_as_id=False)
+    assert e.value.msg == (
+        "The number of phases (1) of line type with FID='1' and loc_name='lt1' cannot be handled, it should be 3 or 4."
+    )
     assert e.value.code == RoseauLoadFlowExceptionCode.DGS_BAD_PHASE_NUMBER
 
     # Too large impedance/shunt admittance matrices generated
     typ_line = pd.DataFrame(
         data={
+            "loc_name": "lt2",
             "nneutral": [0],
             "nlnph": [3],
             "cohl_": [0],
@@ -169,28 +187,102 @@ def test_generate_typ_lne_errors(monkeypatch):
             "gline": [0],
             "bline": [0],
         },
-        index=pd.Index(["lt1"]),
+        index=pd.Index(["2"], name="FID"),
     )
 
-    def _fake_sym_to_zy(*args, **kwargs):
+    def _sym_to_zy_good(*args, **kwargs):
         return np.diag(np.array([1, 2, 3, 4, 5], dtype=complex)), np.diag(np.array([1, 2, 3, 4, 5], dtype=complex))
 
     with monkeypatch.context() as m:
-        m.setattr("roseau.load_flow.io.dgs.lines.LineParameters._sym_to_zy", _fake_sym_to_zy)
-        lines_params = {}
-        generate_typ_lne(typ_lne=typ_line, lines_params=lines_params)
-    np.testing.assert_allclose(lines_params["lt1"].z_line.m, np.diag(np.array([1, 2, 3], dtype=complex)))
-    np.testing.assert_allclose(lines_params["lt1"].y_shunt.m, np.diag(np.array([1, 2, 3], dtype=complex)))
+        m.setattr("roseau.load_flow.io.dgs.lines.LineParameters._sym_to_zy", _sym_to_zy_good)
+        line_params = {}
+        typ_lne_to_lp(typ_lne=typ_line, line_params=line_params, use_name_as_id=False)
+    npt.assert_allclose(line_params["2"].z_line.m, np.diag(np.array([1, 2, 3], dtype=complex)))
+    npt.assert_allclose(line_params["2"].y_shunt.m, np.diag(np.array([1, 2, 3], dtype=complex)))
 
     # Too small matrices
-    def _fake_sym_to_zy(*args, **kwargs):
+    def _sym_to_zy_bad(*args, **kwargs):
         return np.eye(N=2, dtype=complex), np.eye(N=2, dtype=complex)
 
     with monkeypatch.context() as m:
-        m.setattr("roseau.load_flow.io.dgs.lines.LineParameters._sym_to_zy", _fake_sym_to_zy)
+        m.setattr("roseau.load_flow.io.dgs.lines.LineParameters._sym_to_zy", _sym_to_zy_bad)
         with pytest.raises(RoseauLoadFlowException) as e:
-            generate_typ_lne(typ_lne=typ_line, lines_params={})
+            typ_lne_to_lp(typ_lne=typ_line, line_params={}, use_name_as_id=False)
         assert e.value.msg == (
-            "A 3x3 impedance matrix was expected for the line type 'lt1' but a 2x2 matrix was generated."
+            "A 3x3 impedance matrix was expected for the line type with FID='2' and loc_name='lt2' but a 2x2 matrix was generated."
         )
         assert e.value.code == RoseauLoadFlowExceptionCode.DGS_BAD_PHASE_NUMBER
+
+
+def test_use_name_as_id(dgs_networks_dir, tmp_path):
+    dgs_path = dgs_networks_dir / "Exemple_exhaustif.json"
+    dgs_data = json.loads(dgs_path.read_bytes())
+    en_fid = ElectricalNetwork.from_dgs(dgs_path, use_name_as_id=False)
+    en_name = ElectricalNetwork.from_dgs(dgs_path, use_name_as_id=True)
+
+    elm_term = dgs_dict_to_df(dgs_data, "ElmTerm", index_col="FID")["loc_name"].to_dict()
+    typ_lne = dgs_dict_to_df(dgs_data, "TypLne", index_col="FID")["loc_name"].to_dict()
+    typ_tr2 = dgs_dict_to_df(dgs_data, "TypTr2", index_col="FID")["loc_name"].to_dict()
+
+    lp_fid = {line.parameters.id: line.parameters for line in en_fid.lines.values()}
+    lp_name = {line.parameters.id: line.parameters for line in en_name.lines.values()}
+    tp_fid = {tr.parameters.id: tr.parameters for tr in en_fid.transformers.values()}
+    tp_name = {tr.parameters.id: tr.parameters for tr in en_name.transformers.values()}
+
+    # Basic checks fot buses and types
+    for bus_fid in en_fid.buses:
+        assert elm_term[bus_fid] in en_name.buses
+    for typ_lne_fid in lp_fid:
+        assert typ_lne[typ_lne_fid] in lp_name
+    for typ_tr2_fid in tp_fid:
+        assert typ_tr2[typ_tr2_fid] in tp_name
+
+    # Check that elements are assigned the correct buses and types
+    elm_lne = dgs_dict_to_df(dgs_data, "ElmLne", index_col="FID")["loc_name"].to_dict()
+    for line_fid in en_fid.lines.values():
+        line_name = en_name.lines[elm_lne[line_fid.id]]
+        assert line_name.parameters.id == typ_lne[line_fid.parameters.id]
+        assert line_name.bus1.id == elm_term[line_fid.bus1.id]
+        assert line_name.bus2.id == elm_term[line_fid.bus2.id]
+    elm_tr2 = dgs_dict_to_df(dgs_data, "ElmTr2", index_col="FID")["loc_name"].to_dict()
+    for tr_fid in en_fid.transformers.values():
+        tr_name = en_name.transformers[elm_tr2[tr_fid.id]]
+        assert tr_name.parameters.id == typ_tr2[tr_fid.parameters.id]
+        assert tr_name.bus_hv.id == elm_term[tr_fid.bus_hv.id]
+        assert tr_name.bus_lv.id == elm_term[tr_fid.bus_lv.id]
+    elm_lod = (
+        dgs_dict_to_df(dgs_data, "ElmLodLV", index_col="FID")["loc_name"].to_dict()
+        | dgs_dict_to_df(dgs_data, "ElmLodmv", index_col="FID")["loc_name"].to_dict()
+        | dgs_dict_to_df(dgs_data, "ElmPvsys", index_col="FID")["loc_name"].to_dict()
+    )
+    for load_fid in en_fid.loads.values():
+        load_name = en_name.loads[elm_lod[load_fid.id]]
+        assert load_name.bus.id == elm_term[load_fid.bus.id]
+    elm_xnet = dgs_dict_to_df(dgs_data, "ElmXnet", index_col="FID")["loc_name"].to_dict()
+    for source_fid in en_fid.sources.values():
+        source_name = en_name.sources[elm_xnet[source_fid.id]]
+        assert source_name.bus.id == elm_term[source_fid.bus.id]
+
+    # Duplicate bus ID
+    dgs_data = json.loads(dgs_path.read_bytes())
+    bus_name_index = dgs_data["ElmTerm"]["Attributes"].index("loc_name")
+    for bus in dgs_data["ElmTerm"]["Values"][:2]:
+        bus[bus_name_index] = "Duplicate Bus"
+    bad_path = tmp_path / "Bad_Duplicate_Bus.json"
+    bad_path.write_text(json.dumps(dgs_data))
+    with pytest.raises(RoseauLoadFlowException) as e:
+        ElectricalNetwork.from_dgs(bad_path, use_name_as_id=True)
+    assert e.value.code == RoseauLoadFlowExceptionCode.DGS_NON_UNIQUE_NAME
+    assert e.value.msg == "ElmTerm has non-unique loc_name values, cannot use them as IDs."
+
+    # Duplicate line ID
+    dgs_data = json.loads(dgs_path.read_bytes())
+    line_name_index = dgs_data["ElmLne"]["Attributes"].index("loc_name")
+    for line in dgs_data["ElmLne"]["Values"]:
+        line[line_name_index] = "Duplicate Line"
+    bad_path = tmp_path / "Bad_Duplicate_Line.json"
+    bad_path.write_text(json.dumps(dgs_data))
+    with pytest.raises(RoseauLoadFlowException) as e:
+        ElectricalNetwork.from_dgs(bad_path, use_name_as_id=True)
+    assert e.value.code == RoseauLoadFlowExceptionCode.DGS_NON_UNIQUE_NAME
+    assert e.value.msg == "ElmLne has non-unique loc_name values, cannot use them as IDs."

@@ -10,9 +10,9 @@ def test_max_power():
     tp = TransformerParameters.from_catalogue(name="FT 100kVA 15/20kV(20) 400V Dyn11")
     assert tp.sn == Q_(100, "kVA")
 
-    bus1 = Bus(id="bus1", phases="abc")
-    bus2 = Bus(id="bus2", phases="abc")
-    transformer = Transformer(id="transformer", bus1=bus1, bus2=bus2, parameters=tp, max_loading=1)
+    bus_hv = Bus(id="bus_hv", phases="abc")
+    bus_lv = Bus(id="bus_lv", phases="abc")
+    transformer = Transformer(id="transformer", bus_hv=bus_hv, bus_lv=bus_lv, parameters=tp, max_loading=1)
     assert transformer.sn == Q_(100, "kVA")
     assert transformer.max_power == Q_(100, "kVA")
 
@@ -22,12 +22,12 @@ def test_max_power():
 
 
 def test_max_loading():
-    bus1 = Bus(id="bus1", phases="abc")
-    bus2 = Bus(id="bus2", phases="abc")
+    bus_hv = Bus(id="bus_hv", phases="abc")
+    bus_lv = Bus(id="bus_lv", phases="abc")
     tp = TransformerParameters.from_open_and_short_circuit_tests(
         id="tp", psc=1350.0, p0=145.0, i0=1.8 / 100, ulv=400, uhv=20000, sn=50 * 1e3, vsc=4 / 100, vg="yzn11"
     )
-    transformer = Transformer(id="transformer", bus1=bus1, bus2=bus2, parameters=tp)
+    transformer = Transformer(id="transformer", bus_hv=bus_hv, bus_lv=bus_lv, parameters=tp)
 
     # Value must be positive
     with pytest.raises(RoseauLoadFlowException) as e:
@@ -42,16 +42,20 @@ def test_max_loading():
 
 
 def test_res_violated():
-    bus1 = Bus(id="bus1", phases="abc")
-    bus2 = Bus(id="bus2", phases="abcn")
+    bus_hv = Bus(id="bus_hv", phases="abc")
+    bus_lv = Bus(id="bus_lv", phases="abcn")
     tp = TransformerParameters.from_open_and_short_circuit_tests(
         id="tp", psc=1350.0, p0=145.0, i0=1.8 / 100, ulv=400, uhv=20000, sn=50 * 1e3, vsc=4 / 100, vg="yzn11"
     )
-    transformer = Transformer(id="transformer", bus1=bus1, bus2=bus2, parameters=tp)
+    transformer = Transformer(id="transformer", bus_hv=bus_hv, bus_lv=bus_lv, parameters=tp)
 
-    bus1._res_potentials = 20_000 * PosSeq
-    bus2._res_potentials = np.concatenate([230 * PosSeq, [0]])
+    bus_hv._res_potentials = 20_000 * PosSeq
+    bus_lv._res_potentials = np.concatenate([230 * PosSeq, [0]])
     transformer._res_currents = 0.8 * PosSeq, np.concatenate([-65 * PosSeq, [0]])
+    transformer._res_potentials = (
+        np.array([bus_hv._res_potentials[bus_hv.phases.index(p)] for p in transformer.phases_hv], dtype=complex),
+        np.array([bus_lv._res_potentials[bus_lv.phases.index(p)] for p in transformer.phases_lv], dtype=complex),
+    )
 
     # Default value
     assert transformer.max_loading == Q_(1, "")
@@ -67,12 +71,12 @@ def test_res_violated():
     assert transformer.res_violated is True
     np.testing.assert_allclose(transformer.res_loading.m, 0.8 * 20 * 3 / 50)
 
-    # Primary side violation
+    # HV side violation
     transformer.max_loading = Q_(45, "%")
     assert transformer.res_violated is True
     np.testing.assert_allclose(transformer.res_loading.m, 0.8 * 20 * 3 / 50)
 
-    # Secondary side violation
+    # LV side violation
     transformer.max_loading = 1
     transformer._res_currents = 0.8 * PosSeq, np.concatenate([-80 * PosSeq, [0]])
     assert transformer.res_violated is True
@@ -80,40 +84,44 @@ def test_res_violated():
 
 
 def test_transformer_results():
-    bus1 = Bus(id="bus1", phases="abc")
-    bus2 = Bus(id="bus2", phases="abcn")
+    bus_hv = Bus(id="bus_hv", phases="abc")
+    bus_lv = Bus(id="bus_lv", phases="abcn")
     tp = TransformerParameters.from_open_and_short_circuit_tests(
         id="tp", psc=1350, p0=145, i0=0.018, ulv=400, uhv=20e3, sn=50e3, vsc=0.04, vg="yzn11"
     )
-    transformer = Transformer(id="transformer", bus1=bus1, bus2=bus2, parameters=tp)
+    tr = Transformer(id="tr", bus_hv=bus_hv, bus_lv=bus_lv, parameters=tp)
 
-    bus1._res_potentials = 20_000 * PosSeq
-    bus2._res_potentials = np.concatenate([230 * PosSeq, [0]])
-    transformer._res_currents = 0.8 * PosSeq, np.concatenate([-65 * PosSeq, [0]])
+    bus_hv._res_potentials = 20_000 * PosSeq
+    bus_lv._res_potentials = np.concatenate([230 * PosSeq, [0]])
+    tr._res_currents = 0.8 * PosSeq, np.concatenate([-65 * PosSeq, [0]])
+    tr._res_potentials = (
+        np.array([bus_hv._res_potentials[bus_hv.phases.index(p)] for p in tr.phases_hv], dtype=complex),
+        np.array([bus_lv._res_potentials[bus_lv.phases.index(p)] for p in tr.phases_lv], dtype=complex),
+    )
 
-    res_p1, res_p2 = (p.m for p in transformer.res_powers)
+    p_hv, p_lv = (p.m for p in tr.res_powers)
 
-    np.testing.assert_allclose(res_p1, transformer.res_potentials[0].m * transformer.res_currents[0].m.conj())
-    np.testing.assert_allclose(res_p2, transformer.res_potentials[1].m * transformer.res_currents[1].m.conj())
+    np.testing.assert_allclose(p_hv, tr.res_potentials[0].m * tr.res_currents[0].m.conj())
+    np.testing.assert_allclose(p_lv, tr.res_potentials[1].m * tr.res_currents[1].m.conj())
 
-    expected_total_losses = res_p1[0] + res_p1[1] + res_p1[2] + res_p2[0] + res_p2[1] + res_p2[2] + res_p2[3]
-    actual_total_losses = transformer.res_power_losses.m
+    expected_total_losses = p_hv[0] + p_hv[1] + p_hv[2] + p_lv[0] + p_lv[1] + p_lv[2] + p_lv[3]
+    actual_total_losses = tr.res_power_losses.m
     assert np.isscalar(actual_total_losses)
     np.testing.assert_allclose(actual_total_losses, expected_total_losses)
 
 
 def test_brought_out_neutral():
-    bus1 = Bus(id="bus1", phases="abcn")
-    bus2 = Bus(id="bus2", phases="abcn")
+    bus_hv = Bus(id="bus_hv", phases="abcn")
+    bus_lv = Bus(id="bus_lv", phases="abcn")
 
     tp1 = TransformerParameters("tp1", vg="Yd5", uhv=60e3, ulv=20e3, sn=1000e3, z2=0.01, ym=0.01j)
     tp2 = TransformerParameters("tp2", vg="Dy11", uhv=20e3, ulv=400, sn=100e3, z2=0.01, ym=0.01j)
 
     # Correct behavior when phases are not specified
-    tr1 = Transformer(id="tr1", bus1=bus1, bus2=bus2, parameters=tp1)
-    assert tr1.phases1 == "abc"
-    tr2 = Transformer(id="tr2", bus1=bus1, bus2=bus2, parameters=tp2)
-    assert tr2.phases2 == "abc"
+    tr1 = Transformer(id="tr1", bus_hv=bus_hv, bus_lv=bus_lv, parameters=tp1)
+    assert tr1.phases_hv == "abc"
+    tr2 = Transformer(id="tr2", bus_hv=bus_hv, bus_lv=bus_lv, parameters=tp2)
+    assert tr2.phases_lv == "abc"
 
     # Warn on old behavior
     with pytest.warns(
@@ -124,8 +132,8 @@ def test_brought_out_neutral():
             r"use vector group 'YNd5'. This will raise an error in the future."
         ),
     ):
-        tr3 = Transformer(id="tr3", bus1=bus1, bus2=bus2, parameters=tp1, phases1="abcn", phases2="abc")
-    assert tr3.phases1 == "abc"
+        tr3 = Transformer(id="tr3", bus_hv=bus_hv, bus_lv=bus_lv, parameters=tp1, phases_hv="abcn", phases_lv="abc")
+    assert tr3.phases_hv == "abc"
     with pytest.warns(
         FutureWarning,
         match=(
@@ -134,5 +142,60 @@ def test_brought_out_neutral():
             r"use vector group 'Dyn11'. This will raise an error in the future."
         ),
     ):
-        tr4 = Transformer(id="tr4", bus1=bus1, bus2=bus2, parameters=tp2, phases1="abc", phases2="abcn")
-    assert tr4.phases2 == "abc"
+        tr4 = Transformer(id="tr4", bus_hv=bus_hv, bus_lv=bus_lv, parameters=tp2, phases_hv="abc", phases_lv="abcn")
+    assert tr4.phases_lv == "abc"
+
+
+def test_renamed_attributes():
+    bus_hv = Bus(id="bus_hv", phases="abc")
+    bus_lv = Bus(id="bus_lv", phases="abcn")
+    tp = TransformerParameters("tp", vg="Dyn11", uhv=20e3, ulv=400, sn=100e3, z2=0.01, ym=0.01j)
+    tr = Transformer(id="transformer", bus_hv=bus_hv, bus_lv=bus_lv, parameters=tp, phases_hv="abc", phases_lv="abcn")
+
+    # Old attributes
+    assert tp.winding1 == "D"
+    assert tp.winding2 == "yn"
+    assert tp.phase_displacement == 11
+    assert tr.phases1 == "abc"
+    assert tr.phases2 == "abcn"
+    assert tr.bus1 == bus_hv
+    assert tr.bus2 == bus_lv
+
+    # New attributes
+    assert tp.whv == "D"
+    assert tp.wlv == "yn"
+    assert tp.clock == 11
+    assert tr.phases_hv == "abc"
+    assert tr.phases_lv == "abcn"
+    assert tr.bus_hv == bus_hv
+    assert tr.bus_lv == bus_lv
+
+
+def test_deprecated_parameters():
+    bus_hv = Bus(id="bus_hv", phases="abc")
+    bus_lv = Bus(id="bus_lv", phases="abcn")
+    tp = TransformerParameters("tp", vg="Dyn11", uhv=20e3, ulv=400, sn=100e3, z2=0.01, ym=0.01j)
+
+    with pytest.warns(
+        DeprecationWarning,
+        match=r"Argument 'bus1' for Transformer\(\) is deprecated. It has been renamed to 'bus_hv'",
+    ):
+        Transformer(id="transformer", bus1=bus_hv, bus_lv=bus_lv, parameters=tp)  # type: ignore
+
+    with pytest.warns(
+        DeprecationWarning,
+        match=r"Argument 'bus2' for Transformer\(\) is deprecated. It has been renamed to 'bus_lv'",
+    ):
+        Transformer(id="transformer", bus_hv=bus_hv, bus2=bus_lv, parameters=tp)  # type: ignore
+
+    with pytest.warns(
+        DeprecationWarning,
+        match=r"Argument 'phases1' for Transformer\(\) is deprecated. It has been renamed to 'phases_hv'",
+    ):
+        Transformer(id="transformer", bus_hv=bus_hv, bus_lv=bus_lv, parameters=tp, phases1="abc")  # type: ignore
+
+    with pytest.warns(
+        DeprecationWarning,
+        match=r"Argument 'phases2' for Transformer\(\) is deprecated. It has been renamed to 'phases_lv'",
+    ):
+        Transformer(id="transformer", bus_hv=bus_hv, bus_lv=bus_lv, parameters=tp, phases2="abcn")  # type: ignore

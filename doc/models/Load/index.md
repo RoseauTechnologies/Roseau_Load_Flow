@@ -73,6 +73,37 @@ Here is the diagram of a delta-connected three-phase load:
 In _Roseau Load Flow_, the `phases` argument of the constructor must **not** contain `"n"` for delta
 loads.
 
+## Available Results
+
+The following results are available for all loads:
+
+| Result Accessor      | Default Unit | Type          | Description                                                                                    |
+| -------------------- | ------------ | ------------- | ---------------------------------------------------------------------------------------------- |
+| `res_potentials`     | $V$          | complex array | The potentials of each phase of the load                                                       |
+| `res_currents`       | $A$          | complex array | The line currents flowing into each phase of the load                                          |
+| `res_powers`         | $V\!A$       | complex array | The line powers flowing into each phase of the load                                            |
+| `res_voltages`       | $V$          | complex array | The phase-to-neutral voltages if the load has a neutral, the phase-to-phase voltages otherwise |
+| `res_inner_currents` | $A$          | complex array | The currents flowing in each component (dipole) of the load.                                   |
+| `res_inner_powers`   | $V\!A$       | complex array | The powers dissipated by each component (dipole) of the load.                                  |
+
+Addionally, the following results are available for loads with a neutral:
+
+| Result Accessor   | Default Unit | Type          | Description                               |
+| ----------------- | ------------ | ------------- | ----------------------------------------- |
+| `res_voltages_pn` | $V$          | complex array | The phase-to-neutral voltages of the load |
+
+And the following results are available for loads with more than one phase:
+
+| Result Accessor   | Default Unit | Type          | Description                             |
+| ----------------- | ------------ | ------------- | --------------------------------------- |
+| `res_voltages_pp` | $V$          | complex array | The phase-to-phase voltages of the load |
+
+And the following results are available for _three-phase_ loads:
+
+| Result Accessor           | Default Unit | Type   | Description                                                       |
+| ------------------------- | ------------ | ------ | ----------------------------------------------------------------- |
+| `res_voltage_unbalance()` | $\%$         | number | The voltage unbalance of the load according to the IEC definition |
+
 ## Available models
 
 The _ZIP_ model is commonly used to represent electric loads in static grid analysis. This model

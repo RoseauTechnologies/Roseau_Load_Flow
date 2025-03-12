@@ -1,16 +1,22 @@
 import logging
+import time
 import warnings
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Generic
 
-import numpy as np
-from typing_extensions import Self
+from typing_extensions import TypeVar
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.license import activate_license, get_license
-from roseau.load_flow.typing import JsonDict, Solver
+from roseau.load_flow.typing import FloatMatrix, JsonDict, Solver
 from roseau.load_flow.utils import find_stack_level
-from roseau.load_flow_engine.cy_engine import CyAbstractSolver, CyBackwardForward, CyNewton, CyNewtonGoldstein
+from roseau.load_flow_engine.cy_engine import (
+    CyAbstractNewton,
+    CyAbstractSolver,
+    CyBackwardForward,
+    CyNewton,
+    CyNewtonGoldstein,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +31,10 @@ if TYPE_CHECKING:
     from roseau.load_flow.network import ElectricalNetwork
 
 
-class AbstractSolver(ABC):
+_CyS_co = TypeVar("_CyS_co", bound=CyAbstractSolver, default=CyAbstractSolver, covariant=True)
+
+
+class AbstractSolver(ABC, Generic[_CyS_co]):
     """This is an abstract class for all the solvers."""
 
     name: str | None = None
@@ -38,10 +47,10 @@ class AbstractSolver(ABC):
                 The electrical network for which the load flow needs to be solved.
         """
         self.network = network
-        self._cy_solver: CyAbstractSolver | None = None
+        self._cy_solver: _CyS_co | None = None
 
     @classmethod
-    def from_dict(cls, data: JsonDict, network: "ElectricalNetwork") -> Self:
+    def from_dict(cls, data: JsonDict, network: "ElectricalNetwork") -> "AbstractSolver":
         """AbstractSolver constructor from dict.
 
         Args:
@@ -83,7 +92,38 @@ class AbstractSolver(ABC):
         lic = get_license()
         if lic is None:
             activate_license(key=None)
-        return self._cy_solver.solve_load_flow(max_iterations=max_iterations, tolerance=tolerance)
+
+        start = time.perf_counter()
+        try:
+            iterations, residual = self._cy_solver.solve_load_flow(max_iterations=max_iterations, tolerance=tolerance)
+        except RuntimeError as e:
+            code, msg = e.args[0].split(" ", 1)
+            code = int(code)
+            if code == 0:
+                msg = f"The license cannot be validated. The detailed error message is {msg!r}"
+                exception_code = RoseauLoadFlowExceptionCode.LICENSE_ERROR
+            else:
+                msg, exception_code = self._parse_solver_error(code, msg)
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=exception_code) from e
+        end = time.perf_counter()
+
+        if iterations == max_iterations:
+            msg = (
+                f"The load flow did not converge after {iterations} iterations. The norm of the "
+                f"residuals is {residual:5n}"
+            )
+            logger.error(msg=msg)
+            raise RoseauLoadFlowException(
+                msg, RoseauLoadFlowExceptionCode.NO_LOAD_FLOW_CONVERGENCE, iterations, residual
+            )
+        logger.debug(f"The load flow converged after {iterations} iterations and {end - start:.3n} s.")
+        return iterations, residual
+
+    @abstractmethod
+    def _parse_solver_error(self, code: int, msg: str) -> tuple[str, RoseauLoadFlowExceptionCode]:
+        """Parse the solver's error code and message into a user-friendly message and an exception code."""
+        raise NotImplementedError
 
     def reset_inputs(self) -> None:
         """Reset the input vector (which is used for the first step of the newton algorithm) to its initial value"""
@@ -107,8 +147,39 @@ class AbstractSolver(ABC):
         """Return the parameters of the solver."""
         return {}
 
+    # Debugging methods
+    # -----------------
+    def save_matrix(self, prefix: str) -> None:
+        """Output files of the jacobian and vector matrix of the first newton step.
 
-class AbstractNewton(AbstractSolver, ABC):
+        Those files can be used to launch an eigen solver benchmark
+        (see https://eigen.tuxfamily.org/dox/group__TopicSparseSystems.html)
+
+        Args:
+            prefix:
+                The prefix of the name of the files. They will be output as `prefix.mtx` and
+                `prefix_m.mtx` to follow Eigen solver benchmark convention.
+        """
+        raise NotImplementedError(f"save_matrix() is not implemented for solver {self.name!r}.")
+
+    def current_jacobian(self) -> FloatMatrix:
+        """Get the jacobian of the current iteration (useful for debugging)."""
+        raise NotImplementedError(f"current_jacobian() is not implemented for solver {self.name!r}.")
+
+    def analyse_jacobian(self) -> tuple[list[int], list[int]]:
+        """Analyse the jacobian to try to understand why it is singular.
+
+        Returns:
+            The vector of elements associated with a column of zeros and the vector of elements
+            associated with a line which contains a NaN.
+        """
+        raise NotImplementedError(f"analyse_jacobian() is not implemented for solver {self.name!r}.")
+
+
+_CyN_co = TypeVar("_CyN_co", bound=CyAbstractNewton, default=CyAbstractNewton, covariant=True)
+
+
+class AbstractNewton(AbstractSolver[_CyN_co], ABC):
     """This is an abstract class for all the Newton-Raphson solvers."""
 
     DEFAULT_TAPE_OPTIMIZATION: bool = True
@@ -127,23 +198,49 @@ class AbstractNewton(AbstractSolver, ABC):
         super().__init__(network=network)
         self.optimize_tape = optimize_tape
 
-    def save_matrix(self, prefix: str) -> None:
-        """Output files of the jacobian and vector matrix of the first newton step. Those files can be used to launch an
-        eigen solver benchmark (see https://eigen.tuxfamily.org/dox/group__TopicSparseSystems.html)
+    def _parse_solver_error(self, code: int, msg: str) -> tuple[str, RoseauLoadFlowExceptionCode]:
+        assert code == 1, f"Unexpected error code {code} for a Newton solver."
+        zero_elements_index, inf_elements_index = self.analyse_jacobian()
+        if inf_elements_index:
+            inf_elements = [self.network._elements[i] for i in inf_elements_index]
+            printable_elements = ", ".join(f"{type(e).__name__}({e.id!r})" for e in inf_elements)
+            msg += f"The problem seems to come from the elements [{printable_elements}] that induce infinite values."
+            power_load = False
+            flexible_load = False
+            for inf_element in inf_elements:
+                load = self.network.loads.get(inf_element.id)
+                if load is inf_element and load.type == "power":
+                    power_load = True
+                    if load.is_flexible:
+                        flexible_load = True
+                        break
+            if power_load:
+                msg += " This might be caused by a bad potential initialization of a power load"
+            if flexible_load:
+                msg += ", or by flexible loads with very high alpha or incorrect flexible parameters voltages."
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.NAN_VALUE)
+        elif zero_elements_index:
+            zero_elements = [self.network._elements[i] for i in zero_elements_index]
+            printable_elements = ", ".join(f"{type(e).__name__}({e.id!r})" for e in zero_elements)
+            msg += (
+                f"The problem seems to come from the elements [{printable_elements}] that have at "
+                f"least one disconnected phase."
+            )
+        return msg, RoseauLoadFlowExceptionCode.BAD_JACOBIAN
 
-        Args:
-            prefix:
-                The prefix of the name of the files. They will be output as prefix.mtx and prefix_m.mtx to follow Eigen
-                solver benchmark convention.
-        """
+    # Debugging methods
+    # -----------------
+    def save_matrix(self, prefix: str) -> None:
         self._cy_solver.save_matrix(prefix)
 
-    def current_jacobian(self) -> np.ndarray:
-        """Show the jacobian of the current iteration (useful for debugging)"""
+    def current_jacobian(self) -> FloatMatrix:
         return self._cy_solver.current_jacobian()
 
+    def analyse_jacobian(self) -> tuple[list[int], list[int]]:
+        return self._cy_solver.analyse_jacobian()
 
-class Newton(AbstractNewton):
+
+class Newton(AbstractNewton[CyNewton]):
     """The classical Newton-Raphson algorithm."""
 
     name = "newton"
@@ -168,7 +265,7 @@ class Newton(AbstractNewton):
         self._cy_solver = CyNewton(network=network._cy_electrical_network, optimize_tape=self.optimize_tape)
 
 
-class NewtonGoldstein(AbstractNewton):
+class NewtonGoldstein(AbstractNewton[CyNewtonGoldstein]):
     """The Newton-Raphson algorithm with the Goldstein and Price linear search. It has better stability than the
     classical Newton-Raphson, without losing performance.
     """
@@ -229,7 +326,7 @@ class NewtonGoldstein(AbstractNewton):
         return {"m1": self.m1, "m2": self.m2}
 
 
-class BackwardForward(AbstractSolver):
+class BackwardForward(AbstractSolver[CyBackwardForward]):
     """A backward-forward implementation, less stable than Newton-Raphson based algorithms,
     but can be more performant in some cases.
     """
@@ -262,3 +359,7 @@ class BackwardForward(AbstractSolver):
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.NO_BACKWARD_FORWARD)
         return super().solve_load_flow(max_iterations, tolerance)
+
+    def _parse_solver_error(self, code: int, msg: str) -> tuple[str, RoseauLoadFlowExceptionCode]:
+        assert code == 2, f"Unexpected error code {code} for a Backward-Forward solver."
+        return msg, RoseauLoadFlowExceptionCode.NO_BACKWARD_FORWARD

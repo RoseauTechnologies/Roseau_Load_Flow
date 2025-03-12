@@ -1,5 +1,4 @@
 import logging
-import warnings
 from typing import Final
 
 from typing_extensions import Self
@@ -10,13 +9,13 @@ from roseau.load_flow.models.core import Element
 from roseau.load_flow.models.grounds import Ground
 from roseau.load_flow.typing import Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
-from roseau.load_flow.utils import find_stack_level
+from roseau.load_flow.utils import deprecate_renamed_parameter, one_or_more_repr
 from roseau.load_flow_engine.cy_engine import CyDeltaPotentialRef, CyPotentialRef
 
 logger = logging.getLogger(__name__)
 
 
-class PotentialRef(Element):
+class PotentialRef(Element[CyPotentialRef | CyDeltaPotentialRef]):
     """A potential reference.
 
     This element sets the reference for the potentials in a network. Only one potential reference
@@ -28,9 +27,11 @@ class PotentialRef(Element):
     bus, the sum of the potentials of the specified phases is set to 0V.
     """
 
+    element_type: Final = "potential reference"
     allowed_phases: Final = frozenset({"a", "b", "c", "n"} | Bus.allowed_phases)
 
-    def __init__(self, id: Id, element: Bus | Ground, *, phases: str | None = None, **deprecated_kw) -> None:
+    @deprecate_renamed_parameter(old_name="phase", new_name="phases", version="0.10.0", category=DeprecationWarning)
+    def __init__(self, id: Id, element: Bus | Ground, *, phases: str | None = None) -> None:
         """PotentialRef constructor.
 
         Args:
@@ -51,19 +52,8 @@ class PotentialRef(Element):
                 If not set, the default is to set the neutral phase as the reference for buses with
                 a neutral, otherwise, the sum of the potentials of the bus phases is set to zero.
         """
-        if "phase" in deprecated_kw and phases is None:
-            warnings.warn(
-                "The 'phase' argument is deprecated, use 'phases' instead.",
-                DeprecationWarning,
-                stacklevel=find_stack_level(),
-            )
-            phases = deprecated_kw.pop("phase")
-        if deprecated_kw:
-            raise TypeError(
-                f"PotentialRef.__init__() got an unexpected keyword argument: '{next(iter(deprecated_kw))}'"
-            )
         super().__init__(id)
-        original_phases = phases
+        self._original_phases = phases  # kept for serialization
         if isinstance(element, Bus):
             if phases is None:
                 phases = "n" if "n" in element.phases else element.phases
@@ -72,23 +62,23 @@ class PotentialRef(Element):
                 # Also check they are in the bus phases
                 phases_not_in_bus = set(phases) - set(element.phases)
                 if phases_not_in_bus:
+                    ph, be = one_or_more_repr(sorted(phases_not_in_bus), "Phase")
                     msg = (
-                        f"Phases {sorted(phases_not_in_bus)} of potential reference {id!r} are not in bus "
-                        f"{element.id!r} phases {element.phases!r}"
+                        f"{ph} of potential reference {id!r} {be} not in phases {element.phases!r} "
+                        f"of bus {element.id!r}."
                     )
                     logger.error(msg)
                     raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
         elif isinstance(element, Ground):
             if phases is not None:
-                msg = f"Potential reference {self.id!r} connected to the ground cannot have a phase."
+                msg = f"Potential reference {id!r} connected to a ground cannot have phases."
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.BAD_PHASE)
         else:
-            msg = f"Potential reference {self.id!r} is connected to {element!r} which is not a ground nor a bus."
+            msg = f"Potential reference {id!r} cannot be connected to a {element.element_type}."
             logger.error(msg)
             raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT)
         self._phases = phases
-        self._original_phases = original_phases  # kept for serialization
         self.element = element
         self._connect(element)
         self._res_current: complex | None = None
@@ -118,9 +108,15 @@ class PotentialRef(Element):
         """
         return self._phases
 
-    def _res_current_getter(self, warning: bool) -> complex:
+    #
+    # Results
+    #
+    def _refresh_results(self) -> None:
         if self._fetch_results:
             self._res_current = self._cy_element.get_current()
+
+    def _res_current_getter(self, warning: bool) -> complex:
+        self._refresh_results()
         return self._res_getter(self._res_current, warning)
 
     @property
@@ -133,7 +129,7 @@ class PotentialRef(Element):
         return self._res_current_getter(warning=True)
 
     #
-    # Jso Mixin interface
+    # Json Mixin interface
     #
     @classmethod
     def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:

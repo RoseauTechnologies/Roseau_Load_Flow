@@ -18,7 +18,7 @@ myst:
 
 ## Creating a network
 
-Let's take the electrical network of the [Getting started page](usage-getting-started) as an example.
+Let's take the electrical network of the [Getting started page](./Getting_Started.md) as an example.
 
 ```pycon
 >>> import numpy as np
@@ -29,7 +29,7 @@ Let's take the electrical network of the [Getting started page](usage-getting-st
 
 >>> ground = rlf.Ground(id="gnd")
 ... pref = rlf.PotentialRef(id="pref", element=ground)
-... ground.connect(source_bus, phase="n")
+... rlf.GroundConnection(ground=ground, element=source_bus, phase="n")
 
 >>> un = 400 / rlf.SQRT3
 ... vs = rlf.VoltageSource(id="vs", bus=source_bus, voltages=un)

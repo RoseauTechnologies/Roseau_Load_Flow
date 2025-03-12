@@ -26,6 +26,37 @@ computed during the load flow.
 
 No equation is added for a bus.
 
+## Available Results
+
+The following results are available for all buses:
+
+| Result Accessor      | Default Unit  | Type          | Description                                                                                                                       |
+| -------------------- | ------------- | ------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `res_potentials`     | $V$           | complex array | The potentials of each phase of the bus                                                                                           |
+| `res_voltages`       | $V$           | complex array | The phase-to-neutral voltages if the bus has a neutral, the phase-to-phase voltages otherwise                                     |
+| `res_voltage_levels` | $\mathrm{pu}$ | number array  | The per-unit voltage levels: ($\sqrt{3} V_{pn} / V_\mathrm{nom}$) if the bus has a neutral, ($V_{pp} / V_\mathrm{nom}$) otherwise |
+| `res_violated`       | -             | boolean array | Indicates if the voltage levels violate the limits                                                                                |
+
+Addionally, the following results are available for buses _with a neutral_:
+
+| Result Accessor         | Default Unit  | Type          | Description                                                                      |
+| ----------------------- | ------------- | ------------- | -------------------------------------------------------------------------------- |
+| `res_voltages_pn`       | $V$           | complex array | The phase-to-neutral voltages of the bus                                         |
+| `res_voltage_levels_pn` | $\mathrm{pu}$ | number array  | The voltage levels of each phase of the bus ($\sqrt{3} V_{pn} / V_\mathrm{nom}$) |
+
+And the following results are available for buses _with more than one phase_:
+
+| Result Accessor         | Default Unit  | Type          | Description                                                             |
+| ----------------------- | ------------- | ------------- | ----------------------------------------------------------------------- |
+| `res_voltages_pp`       | $V$           | complex array | The phase-to-phase voltages of the bus                                  |
+| `res_voltage_levels_pp` | $\mathrm{pu}$ | number array  | The voltage levels of each phase of the bus ($V_{pp} / V_\mathrm{nom}$) |
+
+And the following results are available for _three-phase_ buses:
+
+| Result Accessor           | Default Unit | Type   | Description                                                      |
+| ------------------------- | ------------ | ------ | ---------------------------------------------------------------- |
+| `res_voltage_unbalance()` | $\%$         | number | The voltage unbalance of the bus according to the IEC definition |
+
 ## Usage
 
 A bus is identified by its unique id and must define the phases it is connected to. A bus must

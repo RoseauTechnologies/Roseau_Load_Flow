@@ -6,6 +6,7 @@ import warnings
 
 import numpy as np
 import pytest
+from pyproj import CRS
 from shapely import LineString, Point
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
@@ -19,6 +20,7 @@ from roseau.load_flow.io.dict import (
 from roseau.load_flow.models import (
     Bus,
     Ground,
+    GroundConnection,
     Line,
     LineParameters,
     PotentialRef,
@@ -50,12 +52,24 @@ def ignore_unmatched_warnings(warn_check, /) -> None:
             warn_check.list.remove(w)
 
 
+def remove_results(obj: object, /) -> None:
+    """Recursively remove the 'results' key from a JSON structure."""
+    if isinstance(obj, dict):
+        if "results" in obj:
+            del obj["results"]
+        for v in obj.values():
+            remove_results(v)
+    elif isinstance(obj, list):
+        for x in obj:
+            remove_results(x)
+
+
 def test_to_dict():
     ground = Ground("ground")
     vn = 400 / np.sqrt(3)
     source_bus = Bus(id="source", phases="abcn", geometry=Point(0.0, 0.0), min_voltage_level=0.9, nominal_voltage=400)
     load_bus = Bus(id="load bus", phases="abcn", geometry=Point(0.0, 1.0), max_voltage_level=1.1, nominal_voltage=400)
-    ground.connect(load_bus)
+    gc = GroundConnection(id="gc", ground=ground, element=load_bus)
     p_ref = PotentialRef(id="pref", element=ground)
     vs = VoltageSource(id="vs", bus=source_bus, phases="abcn", voltages=vn)
 
@@ -101,6 +115,7 @@ def test_to_dict():
         sources=[vs],
         grounds=[ground],
         potential_refs=[p_ref],
+        ground_connections=[gc],
     )
 
     # Same id, different line parameters -> fail
@@ -153,8 +168,8 @@ def test_to_dict():
     geom = Point(0.0, 0.0)
     source_bus = Bus(id="source", phases="abcn", geometry=geom)
     load_bus = Bus(id="load bus", phases="abcn", geometry=geom)
-    ground.connect(load_bus)
-    ground.connect(source_bus)
+    gc_load = GroundConnection(id="gc_load", ground=ground, element=load_bus)
+    gc_source = GroundConnection(id="gc_source", ground=ground, element=source_bus)
     p_ref = PotentialRef(id="pref", element=ground)
     vs = VoltageSource(id="vs", bus=source_bus, phases="abcn", voltages=vn)
 
@@ -165,8 +180,8 @@ def test_to_dict():
     tp2 = TransformerParameters.from_open_and_short_circuit_tests(
         id="t", vg="Dyn11", uhv=20000, ulv=400, sn=200 * 1e3, p0=460, i0=2.3 / 100, psc=2350, vsc=4 / 100
     )
-    transformer1 = Transformer(id="Transformer1", bus1=source_bus, bus2=load_bus, parameters=tp1, geometry=geom)
-    transformer2 = Transformer(id="Transformer2", bus1=source_bus, bus2=load_bus, parameters=tp2, geometry=geom)
+    transformer1 = Transformer(id="Transformer1", bus_hv=source_bus, bus_lv=load_bus, parameters=tp1, geometry=geom)
+    transformer2 = Transformer(id="Transformer2", bus_hv=source_bus, bus_lv=load_bus, parameters=tp2, geometry=geom)
     en = ElectricalNetwork(
         buses=[source_bus, load_bus],
         lines=[],
@@ -176,6 +191,7 @@ def test_to_dict():
         sources=[vs],
         grounds=[ground],
         potential_refs=[p_ref],
+        ground_connections=[gc_load, gc_source],
     )
 
     # Same id, different transformer parameters -> fail
@@ -248,17 +264,6 @@ def test_from_dict_v1():
     assert_json_close(net_dict, expected_dict)
 
     # Test with `include_results=False`
-    def remove_results(obj: object, /) -> None:
-        """Recursively remove the 'results' key from a JSON structure."""
-        if isinstance(obj, dict):
-            if "results" in obj:
-                del obj["results"]
-            for v in obj.values():
-                remove_results(v)
-        elif isinstance(obj, list):
-            for x in obj:
-                remove_results(x)
-
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         net = ElectricalNetwork.from_dict(data=dict_v1, include_results=False)
@@ -317,9 +322,9 @@ def test_from_dict_v3():
     # Test vector group of transformers
     for tr in en.transformers.values():
         if tr.phases1 == "abcn":
-            assert tr.parameters.winding1 in ("YN", "ZN")
+            assert tr.parameters.whv in ("YN", "ZN")
         if tr.phases2 == "abcn":
-            assert tr.parameters.winding2 in ("yn", "zn")
+            assert tr.parameters.wlv in ("yn", "zn")
 
 
 @pytest.mark.parametrize("version", list(range(NETWORK_JSON_VERSION)))
@@ -336,3 +341,46 @@ def test_json_files_not_modified(version):
             f"Hash of '{filename}' has changed. Do not change the content of this file or update the hash "
             f"for formatting-only changes.\nExpected hash: {EXPECTED_HASHES[filename]}\nComputed hash: {digest}"
         )
+
+
+def test_crs_conversion():
+    # No CRS
+    bus = Bus(id="bus", phases="an", geometry=Point(0.0, 0.0))
+    VoltageSource(id="source", bus=bus, voltages=400)
+    PotentialRef(id="pref", element=bus)
+    en = ElectricalNetwork.from_element(bus)
+    en_dict = en.to_dict()
+    assert en_dict["crs"] == {"data": None, "normalize": False}
+    assert en.buses_frame.crs is None
+    en2 = ElectricalNetwork.from_dict(en_dict)
+    assert en2.crs is None
+    assert en2.buses_frame.crs is None
+
+    # CRS like
+    bus = Bus(id="bus", phases="an", geometry=Point(0.0, 0.0))
+    VoltageSource(id="source", bus=bus, voltages=400)
+    PotentialRef(id="pref", element=bus)
+    en = ElectricalNetwork.from_element(bus, crs="WGS84")
+    en_dict = en.to_dict()
+    assert en_dict["crs"] == {"data": "WGS84", "normalize": False}
+    assert en.buses_frame.crs == "WGS84"
+    en2 = ElectricalNetwork.from_dict(en_dict)
+    assert en2.crs == "WGS84"
+    assert en2.buses_frame.crs == "WGS84"
+
+    # CRS object -> WKT format
+    bus = Bus(id="bus", phases="an", geometry=Point(0.0, 0.0))
+    VoltageSource(id="source", bus=bus, voltages=400)
+    PotentialRef(id="pref", element=bus)
+    en = ElectricalNetwork.from_element(bus, crs=CRS("EPSG:4326"))
+    en_dict = en.to_dict()
+    assert en_dict["crs"]["normalize"] is True
+    crs_data = en_dict["crs"]["data"]
+    assert isinstance(crs_data, str)
+    assert crs_data.startswith("GEOGCRS[")  # WKT format
+    assert crs_data.endswith('ID["EPSG",4326]]')
+    assert en.buses_frame.crs == "EPSG:4326"
+    en2 = ElectricalNetwork.from_dict(en_dict)
+    assert isinstance(en2.crs, CRS)
+    assert en2.crs == "EPSG:4326"
+    assert en2.buses_frame.crs == "EPSG:4326"

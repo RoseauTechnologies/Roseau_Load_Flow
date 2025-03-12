@@ -1,4 +1,4 @@
-import warnings
+import re
 
 import numpy as np
 import pytest
@@ -31,29 +31,58 @@ def test_control():
 
     # Bad control type
     with pytest.raises(RoseauLoadFlowException) as e:
-        Control(type="unknown", u_min=210, u_down=220, u_up=230, u_max=240)
+        Control(type="unknown", u_min=210, u_down=220, u_up=230, u_max=240)  # type: ignore
     assert e.value.msg == "Unsupported control type 'unknown'"
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_CONTROL_TYPE
 
-    # Bad control value for p_max_u_production
+    # Bad alpha
+    with pytest.raises(RoseauLoadFlowException) as e:
+        Control(type="q_u", u_min=c3.u_min, u_down=c3.u_down, u_up=c3.u_up, u_max=c3.u_max, alpha=0)
+    assert e.value.msg == "'alpha' must be greater than 1 but 0.0 was provided."
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_CONTROL_VALUE
+
+    # No results to export
+    with pytest.raises(RoseauLoadFlowException) as e:
+        c0.results_to_dict()
+    assert e.value.msg == "The Control has no results to export."
+    assert e.value.code == RoseauLoadFlowExceptionCode.JSON_NO_RESULTS
+
+    # From dict with an error (bad control type)
+    c_dict = c3.to_dict()
+    c_dict["type"] = "unknown"
+    with pytest.raises(RoseauLoadFlowException) as e:
+        Control.from_dict(c_dict)
+    assert e.value.msg == "Unsupported control type 'unknown'"
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_CONTROL_TYPE
+
+    # To dict with an error
+    c3._type = "unknown"  # type: ignore
+    with pytest.raises(RoseauLoadFlowException) as e:
+        c3.to_dict()
+    assert e.value.msg == "Unsupported control type 'unknown'"
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_CONTROL_TYPE
+    c3._type = "q_u"
+
+
+def test_bad_p_max_u_production_control():
     with pytest.raises(RoseauLoadFlowException) as e:
         Control(type="p_max_u_production", u_min=0, u_down=0, u_up=-1, u_max=240)
-    assert e.value.msg == "'u_up' must be greater than zero as it is a voltage norm: -1 V was provided."
+    assert e.value.msg == "'u_up' must be greater than zero but -1.0 V <= 0.0 V."
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_CONTROL_VALUE
 
     with pytest.raises(RoseauLoadFlowException) as e:
         Control(type="p_max_u_production", u_min=0, u_down=0, u_up=0, u_max=240)
-    assert e.value.msg == "'u_up' must be greater than zero as it is a voltage norm: 0 V was provided."
+    assert e.value.msg == "'u_up' must be greater than zero but 0.0 V <= 0.0 V."
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_CONTROL_VALUE
 
     with pytest.raises(RoseauLoadFlowException) as e:
         Control(type="p_max_u_production", u_min=0, u_down=0, u_up=240, u_max=240)
-    assert e.value.msg == "'u_max' must be greater than the value 'u_up', but 240 V <= 240 V."
+    assert e.value.msg == "'u_max' must be greater than 'u_up' but 240.0 V <= 240.0 V."
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_CONTROL_VALUE
 
     with pytest.raises(RoseauLoadFlowException) as e:
         Control(type="p_max_u_production", u_min=0, u_down=0, u_up=241, u_max=240)
-    assert e.value.msg == "'u_max' must be greater than the value 'u_up', but 240 V <= 241 V."
+    assert e.value.msg == "'u_max' must be greater than 'u_up' but 240.0 V <= 241.0 V."
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_CONTROL_VALUE
 
     with pytest.raises(RoseauLoadFlowException) as e:
@@ -61,35 +90,36 @@ def test_control():
     assert e.value.msg == "'alpha' must be greater than 1 but 0.0 was provided."
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_CONTROL_VALUE
 
-    # Warning if values provided to useless values
-    with warnings.catch_warnings(record=True) as records:
+    # Warning if values provided to useless parameters
+    with pytest.warns(
+        UserWarning,
+        match=re.escape(
+            "The following voltage parameters are not used by the 'p_max_u_production' control and "
+            "should be set to 0 V: 'u_min' (2.0 V), 'u_down' (1.0 V)"
+        ),
+    ):
         Control(type="p_max_u_production", u_min=2, u_down=1, u_up=240, u_max=250)
-    assert len(records) == 1
-    assert (
-        records[0].message.args[0] == "Some voltage norm value(s) will not be used by the 'p_max_u_production' "
-        "control. Nevertheless, values different from 0 were given: 'u_min' (2.0 V), 'u_down' (1.0 V)"
-    )
-    assert records[0].category is UserWarning
 
-    # Bad control value for p_max_u_consumption
+
+def test_bad_p_max_u_consumption_control():
     with pytest.raises(RoseauLoadFlowException) as e:
         Control(type="p_max_u_consumption", u_min=-1, u_down=210, u_up=0, u_max=0)
-    assert e.value.msg == "'u_min' must be greater than zero as it is a voltage norm: -1 V was provided."
+    assert e.value.msg == "'u_min' must be greater than zero but -1.0 V <= 0.0 V."
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_CONTROL_VALUE
 
     with pytest.raises(RoseauLoadFlowException) as e:
         Control(type="p_max_u_consumption", u_min=0, u_down=210, u_up=0, u_max=0)
-    assert e.value.msg == "'u_min' must be greater than zero as it is a voltage norm: 0 V was provided."
+    assert e.value.msg == "'u_min' must be greater than zero but 0.0 V <= 0.0 V."
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_CONTROL_VALUE
 
     with pytest.raises(RoseauLoadFlowException) as e:
         Control(type="p_max_u_consumption", u_min=210, u_down=210, u_up=0, u_max=0)
-    assert e.value.msg == "'u_down' must be greater than the value 'u_min', but 210 V <= 210 V."
+    assert e.value.msg == "'u_down' must be greater than 'u_min' but 210.0 V <= 210.0 V."
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_CONTROL_VALUE
 
     with pytest.raises(RoseauLoadFlowException) as e:
         Control(type="p_max_u_consumption", u_min=211, u_down=210, u_up=0, u_max=0)
-    assert e.value.msg == "'u_down' must be greater than the value 'u_min', but 210 V <= 211 V."
+    assert e.value.msg == "'u_down' must be greater than 'u_min' but 210.0 V <= 211.0 V."
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_CONTROL_VALUE
 
     with pytest.raises(RoseauLoadFlowException) as e:
@@ -107,97 +137,57 @@ def test_control():
     assert e.value.msg == "'epsilon' must be lower than 1 but 1.200 was provided."
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_CONTROL_VALUE
 
-    # Warning if values provided to useless values
-    with warnings.catch_warnings(record=True) as records:
+    # Warning if values provided to useless parameters
+    with pytest.warns(
+        UserWarning,
+        match=re.escape(
+            "The following voltage parameters are not used by the 'p_max_u_consumption' control and "
+            "should be set to 0 V: 'u_max' (-1.0 V), 'u_up' (2.3 V)"
+        ),
+    ):
         Control(type="p_max_u_consumption", u_min=210, u_down=220, u_up=2.3, u_max=-1)
-    assert len(records) == 1
-    assert (
-        records[0].message.args[0] == "Some voltage norm value(s) will not be used by the 'p_max_u_consumption' "
-        "control. Nevertheless, values different from 0 were given: 'u_max' (-1.0 "
-        "V), 'u_up' (2.3 V)"
-    )
-    assert records[0].category is UserWarning
 
-    # Bad control value for q_u
+
+def test_bad_q_u_control():
     with pytest.raises(RoseauLoadFlowException) as e:
         Control(type="q_u", u_min=-1, u_down=210, u_up=220, u_max=225)
-    assert e.value.msg == "'u_min' must be greater than zero as it is a voltage norm: -1 V was provided."
+    assert e.value.msg == "'u_min' must be greater than zero but -1.0 V <= 0.0 V."
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_CONTROL_VALUE
 
     with pytest.raises(RoseauLoadFlowException) as e:
         Control(type="q_u", u_min=0, u_down=210, u_up=220, u_max=225)
-    assert e.value.msg == "'u_min' must be greater than zero as it is a voltage norm: 0 V was provided."
+    assert e.value.msg == "'u_min' must be greater than zero but 0.0 V <= 0.0 V."
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_CONTROL_VALUE
 
     with pytest.raises(RoseauLoadFlowException) as e:
         Control(type="q_u", u_min=210, u_down=210, u_up=220, u_max=225)
-    assert e.value.msg == "'u_down' must be greater than the value 'u_min', but 210 V <= 210 V."
+    assert e.value.msg == "'u_down' must be greater than 'u_min' but 210.0 V <= 210.0 V."
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_CONTROL_VALUE
 
     with pytest.raises(RoseauLoadFlowException) as e:
         Control(type="q_u", u_min=211, u_down=210.3, u_up=220, u_max=225)
-    assert e.value.msg == "'u_down' must be greater than the value 'u_min', but 210.3 V <= 211 V."
+    assert e.value.msg == "'u_down' must be greater than 'u_min' but 210.3 V <= 211.0 V."
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_CONTROL_VALUE
 
     with pytest.raises(RoseauLoadFlowException) as e:
         Control(type="q_u", u_min=210, u_down=220, u_up=220, u_max=225)
-    assert e.value.msg == "'u_up' must be greater than the value 'u_down', but 220 V <= 220 V."
+    assert e.value.msg == "'u_up' must be greater than 'u_down' but 220.0 V <= 220.0 V."
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_CONTROL_VALUE
 
     with pytest.raises(RoseauLoadFlowException) as e:
         Control(type="q_u", u_min=210, u_down=221, u_up=220, u_max=225)
-    assert e.value.msg == "'u_up' must be greater than the value 'u_down', but 220 V <= 221 V."
+    assert e.value.msg == "'u_up' must be greater than 'u_down' but 220.0 V <= 221.0 V."
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_CONTROL_VALUE
 
     with pytest.raises(RoseauLoadFlowException) as e:
         Control(type="q_u", u_min=210, u_down=220, u_up=225, u_max=225)
-    assert e.value.msg == "'u_max' must be greater than the value 'u_up', but 225 V <= 225 V."
+    assert e.value.msg == "'u_max' must be greater than 'u_up' but 225.0 V <= 225.0 V."
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_CONTROL_VALUE
 
     with pytest.raises(RoseauLoadFlowException) as e:
         Control(type="q_u", u_min=210, u_down=220, u_up=226, u_max=225)
-    assert e.value.msg == "'u_max' must be greater than the value 'u_up', but 225 V <= 226 V."
+    assert e.value.msg == "'u_max' must be greater than 'u_up' but 225.0 V <= 226.0 V."
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_CONTROL_VALUE
-
-    with pytest.raises(RoseauLoadFlowException) as e:
-        Control(
-            type="q_u",
-            u_min=Q_(210, "V"),
-            u_down=Q_(0.220, "kV"),
-            u_up=Q_(0.230, "kV"),
-            u_max=Q_(2400.5, "dV"),
-            alpha=0,
-        )
-    assert e.value.msg == "'alpha' must be greater than 1 but 0.0 was provided."
-    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_CONTROL_VALUE
-
-    # No results to export
-    c = Control(
-        type="q_u",
-        u_min=Q_(210, "V"),
-        u_down=Q_(0.220, "kV"),
-        u_up=Q_(0.230, "kV"),
-        u_max=Q_(2400.5, "dV"),
-    )
-    with pytest.raises(RoseauLoadFlowException) as e:
-        c.results_to_dict()
-    assert e.value.msg == "The Control has no results to export."
-    assert e.value.code == RoseauLoadFlowExceptionCode.JSON_NO_RESULTS
-
-    # From dict with an error (bad control type)
-    c_dict = c.to_dict()
-    c_dict["type"] = "unknown"
-    with pytest.raises(RoseauLoadFlowException) as e:
-        Control.from_dict(c_dict)
-    assert e.value.msg == "Unsupported control type 'unknown'"
-    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_CONTROL_TYPE
-
-    # To dict with an error
-    c._type = "unknown"
-    with pytest.raises(RoseauLoadFlowException) as e:
-        c.to_dict()
-    assert e.value.msg == "Unsupported control type 'unknown'"
-    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_CONTROL_TYPE
 
 
 def test_projection():
@@ -216,7 +206,7 @@ def test_projection():
 
     # Bad projection type
     with pytest.raises(RoseauLoadFlowException) as e:
-        Projection(type="unknown", alpha=150, epsilon=1e-3)
+        Projection(type="unknown", alpha=150, epsilon=1e-3)  # type: ignore
     assert e.value.msg == "Unsupported projection type 'unknown'"
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PROJECTION_TYPE
 

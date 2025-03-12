@@ -3,8 +3,6 @@
 See https://github.com/RoseauTechnologies/Roseau_Load_Flow/issues/181
 """
 
-import re
-
 import numpy as np
 
 import roseau.load_flow as rlf
@@ -33,9 +31,9 @@ if __name__ == "__main__":
             for bus_id in sorted(en.buses):  # we need to sort to get MVLV bus before VoltageSource bus
                 assert isinstance(bus_id, str), repr(bus_id)
                 bus = en.buses[bus_id]
-                assert (
-                    bus.phases == "abcn" if bus_id == "VoltageSource" else PHASES[feeder_type]
-                ), f"{name=}, {bus_id=}, {bus.phases=}"
+                assert bus.phases == "abcn" if bus_id == "VoltageSource" else PHASES[feeder_type], (
+                    f"{name=}, {bus_id=}, {bus.phases=}"
+                )
                 bus_type = feeder_type
                 if (feeder_type == "LV" and bus_id.startswith("MVLV")) or (
                     feeder_type == "MV" and bus_id.startswith("HVMV")
@@ -78,7 +76,7 @@ if __name__ == "__main__":
                 ground = en.grounds[ground_id]
                 new_ground = rlf.Ground(ground_id)
                 if feeder_type == "LV":
-                    new_ground.connect(bus=new_buses[feeder_bus_id], phase="n")
+                    rlf.GroundConnection(ground=new_ground, element=new_buses[feeder_bus_id], phase="n")
                 new_grounds[ground_id] = new_ground
 
             new_lines = {}
@@ -123,26 +121,21 @@ if __name__ == "__main__":
             new_transformers = {}
             for transformer_id, transformer in en.transformers.items():
                 assert isinstance(transformer_id, str), repr(transformer_id)
-                assert transformer.bus1.id == "VoltageSource"  # This was the source bus
-                assert transformer.bus2.id == source_bus_id  # This was the feeder bus
-                assert transformer.phases1 == "abc"
-                assert transformer.phases2 == "abcn"
+                assert transformer.bus_hv.id == "VoltageSource"  # This was the source bus
+                assert transformer.bus_lv.id == source_bus_id  # This was the feeder bus
+                assert transformer.phases_hv == "abc"
+                assert transformer.phases_lv == "abcn"
                 new_transformer = rlf.Transformer(
                     id=transformer_id,
-                    bus1=new_buses[source_bus_id],
-                    bus2=new_buses[feeder_bus_id],
+                    bus_hv=new_buses[source_bus_id],
+                    bus_lv=new_buses[feeder_bus_id],
                     parameters=transformer.parameters,
                     tap=transformer.tap,
-                    phases1=transformer.phases1,
-                    phases2=transformer.phases2,
-                    max_loading=1,  # Since v0.11.0
+                    phases_hv=transformer.phases_hv,
+                    phases_lv=transformer.phases_lv,
                     geometry=transformer.geometry,
                 )
                 assert isinstance(transformer.parameters.id, str), repr(transformer.parameters.id)
-                m = re.match(pattern=r"^.*_(\d+)kVA$", string=transformer.parameters.id)
-                assert m, transformer.parameters.id
-                # Since v0.11.0, this does not work. Please use max_loading
-                # transformer.parameters.max_power = int(m.group(1)) * 1_000
                 assert new_transformer.geometry == transformer.geometry
                 new_transformers[transformer_id] = new_transformer
 

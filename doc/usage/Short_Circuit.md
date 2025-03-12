@@ -37,7 +37,7 @@ is impossible.
 ...     # Define the reference of potentials
 ...     ground = rlf.Ground(id="gnd")
 ...     pref = rlf.PotentialRef(id="pref", element=ground)
-...     ground.connect(bus=source_bus)
+...     rlf.GroundConnection(ground=ground, element=source_bus)
 ...     # Create a LV source at the first bus
 ...     un = 400 / rlf.SQRT3
 ...     vs = rlf.VoltageSource(id="vs", bus=source_bus, phases="abcn", voltages=un)
@@ -90,7 +90,7 @@ Let's run the load flow, and get the current results.
 ```{note}
 If you get an error saying
 `roseau.load_flow.RoseauLoadFlowException: The license is not valid. Please use the activate_license(key="...")`,
-make sure you follow the instructions in [Solving a load flow](gs-solving-load-flow).
+make sure you follow the instructions in [Solving a load flow](./Getting_Started.md#solving-a-load-flow).
 ```
 
 ```{note}

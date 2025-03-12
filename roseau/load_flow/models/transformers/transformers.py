@@ -1,54 +1,59 @@
 import logging
 import warnings
+from functools import cached_property
 from typing import Final
 
 from shapely.geometry.base import BaseGeometry
 
+from roseau.load_flow.converters import _calculate_voltages
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.branches import AbstractBranch
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.transformers.parameters import TransformerParameters
-from roseau.load_flow.typing import Id, JsonDict
+from roseau.load_flow.typing import ComplexArray, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
-from roseau.load_flow.utils import find_stack_level
-from roseau.load_flow_engine.cy_engine import (
-    CyCenterTransformer,
-    CySingleTransformer,
-    CyThreePhaseTransformer,
-    CyTransformer,
-)
+from roseau.load_flow.utils import deprecate_renamed_parameters, find_stack_level
+from roseau.load_flow_engine.cy_engine import CyTransformer
 
 logger = logging.getLogger(__name__)
 
 
-class Transformer(AbstractBranch):
+class Transformer(AbstractBranch[CyTransformer]):
     """A generic transformer model.
 
     The model parameters are defined using the ``parameters`` argument.
     """
 
+    element_type: Final = "transformer"
     allowed_phases: Final = Bus.allowed_phases
     """The allowed phases for a transformer are:
 
     - P-P-P or P-P-P-N: ``"abc"``, ``"abcn"`` (three-phase transformer)
     - P-P or P-N: ``"ab"``, ``"bc"``, ``"ca"``, ``"an"``, ``"bn"``, ``"cn"`` (single-phase
-      transformer or primary of center-tapped transformer)
-    - P-P-N: ``"abn"``, ``"bcn"``, ``"can"`` (secondary of center-tapped transformer)
+      transformer or HV side of center-tapped transformer)
+    - P-P-N: ``"abn"``, ``"bcn"``, ``"can"`` (LV side of center-tapped transformer)
     """
     _allowed_phases_three = frozenset({"abc", "abcn"})
     _allowed_phases_single = frozenset({"ab", "bc", "ca", "an", "bn", "cn"})
-    _allowed_phases_center_secondary = frozenset({"abn", "bcn", "can"})
+    _allowed_phases_center_lv_side = frozenset({"abn", "bcn", "can"})
 
+    @deprecate_renamed_parameters(
+        {"bus1": "bus_hv", "bus2": "bus_lv", "phases1": "phases_hv", "phases2": "phases_lv"},
+        version="0.12.0",
+        category=DeprecationWarning,
+    )
     def __init__(
         self,
         id: Id,
-        bus1: Bus,
-        bus2: Bus,
+        bus_hv: Bus,
+        bus_lv: Bus,
         *,
         parameters: TransformerParameters,
         tap: float = 1.0,
-        phases1: str | None = None,
-        phases2: str | None = None,
+        phases_hv: str | None = None,
+        phases_lv: str | None = None,
+        connect_neutral_hv: bool | None = None,
+        connect_neutral_lv: bool | None = None,
         max_loading: float | Q_[float] = 1,
         geometry: BaseGeometry | None = None,
     ) -> None:
@@ -56,13 +61,13 @@ class Transformer(AbstractBranch):
 
         Args:
             id:
-                A unique ID of the transformer in the network branches.
+                A unique ID of the transformer in the network transformers.
 
-            bus1:
-                Bus to connect the first extremity of the transformer.
+            bus_hv:
+                Bus to connect the HV side of the transformer.
 
-            bus2:
-                Bus to connect the first extremity of the transformer.
+            bus_lv:
+                Bus to connect the LV side of the transformer.
 
             tap:
                 The tap of the transformer, for example 1.02.
@@ -71,14 +76,24 @@ class Transformer(AbstractBranch):
                 Parameters defining the electrical model of the transformer. This is an instance of
                 the :class:`TransformerParameters` class and can be used by multiple transformers.
 
-            phases1:
-                The phases of the first extremity of the transformer. A string like ``"abc"`` or
-                ``"abcn"`` etc. The order of the phases is important. For a full list of supported
-                phases, see the class attribute :attr:`allowed_phases`. All phases must be present
-                in the connected bus. By default, determined from the transformer type.
+            phases_hv:
+                The phases of the HV side of the transformer. A string like ``"abc"`` or ``"abcn"``
+                etc. The order of the phases is important. For a full list of supported phases, see
+                the class attribute :attr:`allowed_phases`. All phases must be present in the
+                connected bus. By default, determined from the transformer type.
 
-            phases2:
-                The phases of the second extremity of the transformer. See ``phases1``.
+            phases_lv:
+                The phases of the LV side of the transformer. Similar to ``phases_hv``.
+
+            connect_neutral_hv:
+                Specifies whether the element's neutral on the HV side should be connected to the HV
+                bus's neutral or left floating. By default, the elements's neutral is connected when
+                the bus has a neutral. If the bus does not have a neutral, the element's neutral is
+                left floating by default. To override the default behavior, pass an explicit ``True``
+                or ``False``.
+
+            connect_neutral_lv:
+                Similar to ``connect_neutral_hv`` but for the LV side.
 
             max_loading:
                 The maximum loading of the transformer (unitless). It is used with the `sn` of the
@@ -90,48 +105,67 @@ class Transformer(AbstractBranch):
                 The geometry of the transformer.
         """
         if parameters.type == "single-phase":
-            phases1, phases2 = self._compute_phases_single(
-                id=id, bus1=bus1, bus2=bus2, phases1=phases1, phases2=phases2
-            )
+            compute_phases = self._compute_phases_single
         elif parameters.type == "center-tapped":
-            phases1, phases2 = self._compute_phases_center(
-                id=id, bus1=bus1, bus2=bus2, phases1=phases1, phases2=phases2
-            )
+            compute_phases = self._compute_phases_center
         else:
-            phases1, phases2 = self._compute_phases_three(
-                id=id, bus1=bus1, bus2=bus2, parameters=parameters, phases1=phases1, phases2=phases2
-            )
+            compute_phases = self._compute_phases_three
+        phases_hv, phases_lv, connect_neutral_hv, connect_neutral_lv = compute_phases(
+            id=id,
+            bus_hv=bus_hv,
+            bus_lv=bus_lv,
+            parameters=parameters,
+            phases_hv=phases_hv,
+            phases_lv=phases_lv,
+            connect_neutral_hv=connect_neutral_hv,
+            connect_neutral_lv=connect_neutral_lv,
+        )
 
-        super().__init__(id=id, bus1=bus1, bus2=bus2, phases1=phases1, phases2=phases2, geometry=geometry)
+        super().__init__(id=id, bus1=bus_hv, bus2=bus_lv, phases1=phases_hv, phases2=phases_lv, geometry=geometry)
+        self._connect_neutral_hv = connect_neutral_hv
+        self._connect_neutral_lv = connect_neutral_lv
         self.tap = tap
         self._parameters = parameters
         self.max_loading = max_loading
 
-        z2, ym, k, orientation = parameters._z2, parameters._ym, parameters._k, parameters._orientation
-        self._cy_element: CyTransformer
-        if parameters.type == "single-phase":
-            self._cy_element = CySingleTransformer(z2=z2, ym=ym, k=k * orientation * tap)
-        elif parameters.type == "center-tapped":
-            self._cy_element = CyCenterTransformer(z2=z2, ym=ym, k=k * orientation * tap)
+        if parameters.type == "three-phase":
+            self._cy_element = parameters._create_cy_transformer(tap=tap)
         else:
-            self._cy_element = CyThreePhaseTransformer(
-                n1=parameters._n1,
-                n2=parameters._n2,
-                prim=parameters.winding1[0],
-                sec=parameters.winding2[0],
-                z2=z2,
-                ym=ym,
-                k=k * tap,
-                orientation=orientation,
-            )
+            self._cy_element = parameters._create_cy_transformer(tap=parameters.orientation * tap)
         self._cy_connect()
 
     def __repr__(self) -> str:
-        return (
-            f"<{type(self).__name__}: id={self.id!r}, bus1={self.bus1.id!r}, bus2={self.bus2.id!r}, "
-            f"phases1={self.phases1!r}, phases2={self.phases2!r}, tap={self.tap:f}, "
-            f"max_loading={self._max_loading:f}>"
-        )
+        return f"{super().__repr__()[:-1]}, tap={self.tap:f}, max_loading={self._max_loading:f}>"
+
+    @property
+    def bus_hv(self) -> Bus:
+        """The bus on the high voltage side of the transformer."""
+        return self._bus1
+
+    @property
+    def bus_lv(self) -> Bus:
+        """The bus on the low voltage side of the transformer."""
+        return self._bus2
+
+    @property
+    def phases_hv(self) -> str:
+        """The phases of the high voltage side of the transformer."""
+        return self._phases1
+
+    @property
+    def phases_lv(self) -> str:
+        """The phases of the low voltage side of the transformer."""
+        return self._phases2
+
+    @cached_property
+    def has_floating_neutral_hv(self) -> bool:
+        """Does this transformer have a floating neutral on the HV side?"""
+        return self.bus_hv._is_element_neutral_floating(self.phases_hv, self._connect_neutral_hv)
+
+    @cached_property
+    def has_floating_neutral_lv(self) -> bool:
+        """Does this transformer have a floating neutral on the LV side?"""
+        return self.bus_lv._is_element_neutral_floating(self.phases_lv, self._connect_neutral_lv)
 
     @property
     def tap(self) -> float:
@@ -171,7 +205,7 @@ class Transformer(AbstractBranch):
         if self._cy_element is not None:
             z2, ym, k = value._z2, value._ym, value._k
             if value.type in ("single-phase", "center-tapped"):
-                k *= value._orientation
+                k *= value.orientation
             self._cy_element.update_transformer_parameters(z2, ym, k * self.tap)
 
     @property
@@ -187,7 +221,7 @@ class Transformer(AbstractBranch):
             msg = f"Maximum loading must be positive: {value} was provided."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_MAX_LOADING_VALUE)
-        self._max_loading: float = value
+        self._max_loading = float(value)
 
     @property
     def sn(self) -> Q_[float]:
@@ -197,37 +231,36 @@ class Transformer(AbstractBranch):
         return self._parameters.sn
 
     @property
-    def max_power(self) -> Q_[float] | None:
+    @ureg_wraps("VA", (None,))
+    def max_power(self) -> Q_[float]:
         """The maximum power loading of the transformer (in VA)."""
-        sn = self.parameters._sn
-        return None if sn is None else Q_(sn * self._max_loading, "VA")
+        return self.parameters._sn * self._max_loading  # type: ignore
 
     def _compute_phases_three(
         self,
         id: Id,
-        bus1: Bus,
-        bus2: Bus,
+        bus_hv: Bus,
+        bus_lv: Bus,
         parameters: TransformerParameters,
-        phases1: str | None,
-        phases2: str | None,
-    ) -> tuple[str, str]:
-        w1 = parameters.winding1
-        w2 = parameters.winding2
-        clock = parameters.phase_displacement
+        phases_hv: str | None,
+        phases_lv: str | None,
+        connect_neutral_hv: bool | None,
+        connect_neutral_lv: bool | None,
+    ) -> tuple[str, str, bool | None, bool | None]:
+        whv = parameters.whv
+        wlv = parameters.wlv
+        clock = parameters.clock
 
-        w1_has_neutral = w1.endswith("N")
-        if phases1 is None:
-            phases1 = "abcn" if w1_has_neutral else "abc"
-            phases1 = "".join(p for p in bus1.phases if p in phases1)
-            self._check_phases(id=id, allowed_phases=self._allowed_phases_three, phases1=phases1)
+        w1_has_neutral = whv.endswith("N")
+        if phases_hv is None:
+            phases_hv = "abcn" if w1_has_neutral else "abc"
+            phases_hv = "".join(p for p in bus_hv.phases if p in phases_hv)
+            self._check_phases(id=id, allowed_phases=self._allowed_phases_three, phases_hv=phases_hv)
         else:
-            self._check_phases(id=id, allowed_phases=self._allowed_phases_three, phases1=phases1)
-            self._check_bus_phases(id=id, bus=bus1, phases1=phases1)
-            transformer_phases = "abcn" if w1_has_neutral else "abc"
-            phases_not_in_transformer = set(phases1) - set(transformer_phases)
-            if phases_not_in_transformer:
-                if phases_not_in_transformer == {"n"} and w1.startswith(("Y", "Z")):
-                    correct_vg = f"{w1}N{w2}{clock}"
+            self._check_phases(id=id, allowed_phases=self._allowed_phases_three, phases_hv=phases_hv)
+            if "n" in phases_hv and not w1_has_neutral:
+                if whv.startswith(("Y", "Z")):
+                    correct_vg = f"{whv}N{wlv}{clock}"
                     warnings.warn(
                         f"Transformer {id!r} with vector group '{parameters.vg}' does not have a "
                         f"brought out neutral on the HV side. The neutral phase 'n' is ignored. If "
@@ -236,25 +269,25 @@ class Transformer(AbstractBranch):
                         FutureWarning,
                         stacklevel=find_stack_level(),
                     )
-                    phases1 = phases1.replace("n", "")
+                    phases_hv = phases_hv.replace("n", "")
                 else:
-                    msg = f"Phases (1) {phases1!r} of transformer {id!r} are not compatible with its winding {w1!r}."
+                    msg = f"HV phases {phases_hv!r} of transformer {id!r} are not compatible with its winding {whv!r}."
                     logger.error(msg)
                     raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
+            connect_neutral_hv = bus_hv._check_element_phases(
+                self, eid=id, phases=phases_hv, side="HV", connect_neutral=connect_neutral_hv
+            )
 
-        w2_has_neutral = w2.endswith("n")
-        if phases2 is None:
-            phases2 = "abcn" if w2_has_neutral else "abc"
-            phases2 = "".join(p for p in bus2.phases if p in phases2)
-            self._check_phases(id=id, allowed_phases=self._allowed_phases_three, phases2=phases2)
+        w2_has_neutral = wlv.endswith("n")
+        if phases_lv is None:
+            phases_lv = "abcn" if w2_has_neutral else "abc"
+            phases_lv = "".join(p for p in bus_lv.phases if p in phases_lv)
+            self._check_phases(id=id, allowed_phases=self._allowed_phases_three, phases_lv=phases_lv)
         else:
-            self._check_phases(id=id, allowed_phases=self._allowed_phases_three, phases2=phases2)
-            self._check_bus_phases(id=id, bus=bus2, phases2=phases2)
-            transformer_phases = "abcn" if w2_has_neutral else "abc"
-            phases_not_in_transformer = set(phases2) - set(transformer_phases)
-            if phases_not_in_transformer:
-                if phases_not_in_transformer == {"n"} and w2.startswith(("y", "z")):
-                    correct_vg = f"{w1}{w2}n{clock}"
+            self._check_phases(id=id, allowed_phases=self._allowed_phases_three, phases_lv=phases_lv)
+            if "n" in phases_lv and not w2_has_neutral:
+                if wlv.startswith(("y", "z")):
+                    correct_vg = f"{whv}{wlv}n{clock}"
                     warnings.warn(
                         f"Transformer {id!r} with vector group '{parameters.vg}' does not have a "
                         f"brought out neutral on the LV side. The neutral phase 'n' is ignored. If "
@@ -263,90 +296,121 @@ class Transformer(AbstractBranch):
                         FutureWarning,
                         stacklevel=find_stack_level(),
                     )
-                    phases2 = phases2.replace("n", "")
+                    phases_lv = phases_lv.replace("n", "")
                 else:
-                    msg = f"Phases (2) {phases2!r} of transformer {id!r} are not compatible with its winding {w2!r}."
+                    msg = f"LV phases {phases_lv!r} of transformer {id!r} are not compatible with its winding {wlv!r}."
                     logger.error(msg)
                     raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
+            connect_neutral_lv = bus_lv._check_element_phases(
+                self, eid=id, phases=phases_lv, side="LV", connect_neutral=connect_neutral_lv
+            )
 
-        return phases1, phases2
+        return phases_hv, phases_lv, connect_neutral_hv, connect_neutral_lv
 
     def _compute_phases_single(
-        self, id: Id, bus1: Bus, bus2: Bus, phases1: str | None, phases2: str | None
-    ) -> tuple[str, str]:
-        if phases1 is None:
-            phases1 = "".join(p for p in bus1.phases if p in bus2.phases)  # can't use set because order is important
-            phases1 = phases1.replace("ac", "ca")
-            if phases1 not in self._allowed_phases_single:
-                msg = f"Phases (1) of transformer {id!r} cannot be deduced from the buses, they need to be specified."
+        self,
+        id: Id,
+        bus_hv: Bus,
+        bus_lv: Bus,
+        parameters: TransformerParameters,
+        phases_hv: str | None,
+        phases_lv: str | None,
+        connect_neutral_hv: bool | None,
+        connect_neutral_lv: bool | None,
+    ) -> tuple[str, str, bool | None, bool | None]:
+        if phases_hv is None:
+            phases_hv = "".join(
+                p for p in bus_hv.phases if p in bus_lv.phases
+            )  # can't use set because order is important
+            phases_hv = phases_hv.replace("ac", "ca")
+            if phases_hv not in self._allowed_phases_single:
+                msg = f"HV phases of transformer {id!r} cannot be deduced from the buses, they need to be specified."
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
         else:
-            self._check_phases(id=id, allowed_phases=self._allowed_phases_single, phases1=phases1)
-            self._check_bus_phases(id=id, bus=bus1, phases1=phases1)
-
-        if phases2 is None:
-            phases2 = "".join(p for p in bus1.phases if p in bus2.phases)  # can't use set because order is important
-            phases2 = phases2.replace("ac", "ca")
-            if phases2 not in self._allowed_phases_single:
-                msg = f"Phases (2) of transformer {id!r} cannot be deduced from the buses, they need to be specified."
+            self._check_phases(id=id, allowed_phases=self._allowed_phases_single, phases_hv=phases_hv)
+            connect_neutral_hv = bus_hv._check_element_phases(
+                self, eid=id, phases=phases_hv, side="HV", connect_neutral=connect_neutral_hv
+            )
+        if phases_lv is None:
+            phases_lv = "".join(
+                p for p in bus_hv.phases if p in bus_lv.phases
+            )  # can't use set because order is important
+            phases_lv = phases_lv.replace("ac", "ca")
+            if phases_lv not in self._allowed_phases_single:
+                msg = f"LV phases of transformer {id!r} cannot be deduced from the buses, they need to be specified."
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
         else:
-            self._check_phases(id=id, allowed_phases=self._allowed_phases_single, phases2=phases2)
-            self._check_bus_phases(id=id, bus=bus2, phases2=phases2)
+            self._check_phases(id=id, allowed_phases=self._allowed_phases_single, phases_lv=phases_lv)
+            connect_neutral_lv = bus_lv._check_element_phases(
+                self, eid=id, phases=phases_lv, side="LV", connect_neutral=connect_neutral_lv
+            )
 
-        return phases1, phases2
+        return phases_hv, phases_lv, connect_neutral_hv, connect_neutral_lv
 
     def _compute_phases_center(
-        self, id: Id, bus1: Bus, bus2: Bus, phases1: str | None, phases2: str | None
-    ) -> tuple[str, str]:
-        if phases1 is None:
-            phases1 = "".join(p for p in bus2.phases if p in bus1.phases and p != "n")
-            phases1 = phases1.replace("ac", "ca")
-            if phases1 not in self._allowed_phases_single:
-                msg = f"Phases (1) of transformer {id!r} cannot be deduced from the buses, they need to be specified."
+        self,
+        id: Id,
+        bus_hv: Bus,
+        bus_lv: Bus,
+        parameters: TransformerParameters,
+        phases_hv: str | None,
+        phases_lv: str | None,
+        connect_neutral_hv: bool | None,
+        connect_neutral_lv: bool | None,
+    ) -> tuple[str, str, bool | None, bool | None]:
+        if phases_hv is None:
+            phases_hv = "".join(p for p in bus_lv.phases if p in bus_hv.phases and p != "n")
+            phases_hv = phases_hv.replace("ac", "ca")
+            if phases_hv not in self._allowed_phases_single:
+                msg = f"HV phases of transformer {id!r} cannot be deduced from the buses, they need to be specified."
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
         else:
-            self._check_phases(id=id, allowed_phases=self._allowed_phases_single, phases1=phases1)
-            self._check_bus_phases(id=id, bus=bus1, phases1=phases1)
-
-        if phases2 is None:
-            phases2 = "".join(p for p in bus2.phases if p in bus1.phases or p == "n")
-            if phases2 not in self._allowed_phases_center_secondary:
-                msg = f"Phases (2) of transformer {id!r} cannot be deduced from the buses, they need to be specified."
-                logger.error(msg)
-                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
-        else:
-            self._check_phases(id=id, allowed_phases=self._allowed_phases_center_secondary, phases2=phases2)
-            self._check_bus_phases(id=id, bus=bus2, phases2=phases2)
-
-        return phases1, phases2
-
-    @staticmethod
-    def _check_bus_phases(id: Id, bus: Bus, **kwargs: str) -> None:
-        name, phases = kwargs.popitem()  # phases1 or phases2
-        name = "Phases (1)" if name == "phases1" else "Phases (2)"
-        phases_not_in_bus = set(phases) - set(bus.phases)
-        if phases_not_in_bus:
-            msg = (
-                f"{name} {sorted(phases_not_in_bus)} of transformer {id!r} are not in phases "
-                f"{bus.phases!r} of bus {bus.id!r}."
+            self._check_phases(id=id, allowed_phases=self._allowed_phases_single, phases_hv=phases_hv)
+            connect_neutral_hv = bus_hv._check_element_phases(
+                self, eid=id, phases=phases_hv, side="HV", connect_neutral=connect_neutral_hv
             )
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
 
-    @property
-    @ureg_wraps("VA", (None,))
-    def res_power_losses(self) -> Q_[complex]:
-        """Get the total power losses in the transformer (in VA)."""
-        powers1, powers2 = self._res_powers_getter(warning=True)
-        return sum(powers1) + sum(powers2)
+        if phases_lv is None:
+            phases_lv = "".join(p for p in bus_lv.phases if p in bus_hv.phases or p == "n")
+            if phases_lv not in self._allowed_phases_center_lv_side:
+                msg = f"LV phases of transformer {id!r} cannot be deduced from the buses, they need to be specified."
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
+        else:
+            self._check_phases(id=id, allowed_phases=self._allowed_phases_center_lv_side, phases_lv=phases_lv)
+            connect_neutral_lv = bus_lv._check_element_phases(
+                self, eid=id, phases=phases_lv, side="LV", connect_neutral=connect_neutral_lv
+            )
 
+        return phases_hv, phases_lv, connect_neutral_hv, connect_neutral_lv
+
+    def _cy_connect(self) -> None:
+        """Connect the Cython elements of the buses and the transformer."""
+        connections = []
+        bus_hv_phases = self.bus_hv.phases.removesuffix("n") if self.has_floating_neutral_hv else self.bus_hv.phases
+        for i, phase in enumerate(self.phases1):
+            if phase in bus_hv_phases:
+                j = bus_hv_phases.index(phase)
+                connections.append((i, j))
+        self._cy_element.connect(self.bus_hv._cy_element, connections, True)
+
+        connections = []
+        bus_lv_phases = self.bus_lv.phases.removesuffix("n") if self.has_floating_neutral_lv else self.bus_lv.phases
+        for i, phase in enumerate(self.phases2):
+            if phase in bus_lv_phases:
+                j = bus_lv_phases.index(phase)
+                connections.append((i, j))
+        self._cy_element.connect(self.bus_lv._cy_element, connections, False)
+
+    #
+    # Results
+    #
     def _res_loading_getter(self, warning: bool) -> float:
-        powers1, powers2 = self._res_powers_getter(warning)
-        return max(abs(powers1.sum()), abs(powers2.sum())) / self._parameters._sn
+        powers_hv, powers_lv = self._res_powers_getter(warning)
+        return max(abs(powers_hv.sum()), abs(powers_lv.sum())) / self._parameters._sn
 
     @property
     @ureg_wraps("", (None,))
@@ -355,56 +419,55 @@ class Transformer(AbstractBranch):
         return self._res_loading_getter(warning=True)
 
     @property
+    @ureg_wraps("VA", (None,))
+    def res_power_losses(self) -> Q_[complex]:
+        """Get the total power losses in the transformer (in VA)."""
+        powers_hv, powers_lv = self._res_powers_getter(warning=True)
+        return sum(powers_hv) + sum(powers_lv)
+
+    @property
     def res_violated(self) -> bool:
         """Whether the transformer power loading exceeds its maximal loading."""
-        # True if either the primary or secondary is overloaded
+        # True if either the HV or LV side is overloaded
         loading = self._res_loading_getter(warning=True)
         return bool(loading > self._max_loading)
+
+    @property
+    @ureg_wraps("V", (None,))
+    def res_voltages_hv(self) -> Q_[ComplexArray]:
+        """The load flow result of the transformer voltages on the HV side (V)."""
+        potentials_hv = self._res_potentials_getter(warning=True)[0]
+        return _calculate_voltages(potentials=potentials_hv, phases=self.phases_hv)
+
+    @property
+    @ureg_wraps("V", (None,))
+    def res_voltages_lv(self) -> Q_[ComplexArray]:
+        """The load flow result of the transformer voltages on the LV side (V)."""
+        potentials_lv = self._res_potentials_getter(warning=True)[1]
+        return _calculate_voltages(potentials=potentials_lv, phases=self.phases_lv)
 
     #
     # Json Mixin interface
     #
     def _to_dict(self, include_results: bool) -> JsonDict:
-        res = super()._to_dict(include_results=include_results)
-        res["tap"] = self.tap
-        res["params_id"] = self.parameters.id
-        res["max_loading"] = self._max_loading
-
-        return res
+        data = super()._to_dict(include_results)
+        data["connect_neutral_hv"] = self._connect_neutral_hv
+        data["connect_neutral_lv"] = self._connect_neutral_lv
+        data["max_loading"] = self._max_loading
+        data["params_id"] = self.parameters.id
+        data["tap"] = self.tap
+        if include_results:
+            data["results"] = data.pop("results")  # move results to the end
+        return data
 
     def _results_to_dict(self, warning: bool, full: bool) -> JsonDict:
-        currents1, currents2 = self._res_currents_getter(warning)
-        results = {
-            "id": self.id,
-            "phases1": self.phases1,
-            "phases2": self.phases2,
-            "currents1": [[i.real, i.imag] for i in currents1],
-            "currents2": [[i.real, i.imag] for i in currents2],
-        }
+        results = super()._results_to_dict(warning, full)
         if full:
-            potentials1, potentials2 = self._res_potentials_getter(warning=False)
-            results["potentials1"] = [[v.real, v.imag] for v in potentials1]
-            results["potentials2"] = [[v.real, v.imag] for v in potentials2]
-            powers1, powers2 = self._res_powers_getter(
-                warning=False,
-                potentials1=potentials1,
-                potentials2=potentials2,
-                currents1=currents1,
-                currents2=currents2,
-            )
-            results["powers1"] = [[s.real, s.imag] for s in powers1]
-            results["powers2"] = [[s.real, s.imag] for s in powers2]
-            voltages1, voltages2 = self._res_voltages_getter(
-                warning=False, potentials1=potentials1, potentials2=potentials2
-            )
-            results["voltages1"] = [[v.real, v.imag] for v in voltages1]
-            results["voltages2"] = [[v.real, v.imag] for v in voltages2]
-
-            sum_powers1 = sum(powers1)
-            sum_powers2 = sum(powers2)
-            power_losses = sum_powers1 + sum_powers2
+            # Add transformer specific results
+            powers_hv, powers_lv = self._res_powers_getter(warning=False)  # warn only once
+            sum_powers_hv, sum_powers_lv = sum(powers_hv), sum(powers_lv)
+            power_losses = sum_powers_hv + sum_powers_lv
+            loading = max(abs(sum_powers_hv), abs(sum_powers_lv)) / self.parameters._sn
             results["power_losses"] = [power_losses.real, power_losses.imag]
-            loading = max(abs(sum_powers1), abs(sum_powers2)) / self.parameters._sn
             results["loading"] = loading
-
         return results

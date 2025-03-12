@@ -5,6 +5,7 @@
   "language": "en,fr",
   // words - list of words to be always considered correct
   "words": [
+    "aaac",
     "abcn",
     "absolufy",
     "acsr",
@@ -65,6 +66,7 @@
     "qlini",
     "qurs",
     "raphson",
+    "rlfs",
     "rline",
     "rnline",
     "rnpline",

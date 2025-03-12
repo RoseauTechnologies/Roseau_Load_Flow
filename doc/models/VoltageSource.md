@@ -98,6 +98,35 @@ The equations that model a delta voltage source are:
 Where $\underline{U}\in\mathbb{C}^3$ is the voltage vector (user defined parameter) and
 $\underline{V}\in\mathbb{C}^3$ is the node potentials vector (variable).
 
+## Available Results
+
+The following results are available for all sources:
+
+| Result Accessor  | Default Unit | Type          | Description                                                                                      |
+| ---------------- | ------------ | ------------- | ------------------------------------------------------------------------------------------------ |
+| `res_potentials` | $V$          | complex array | The potentials of each phase of the source                                                       |
+| `res_currents`   | $A$          | complex array | The line currents flowing into each phase of the source                                          |
+| `res_powers`     | $V\!A$       | complex array | The line powers flowing into each phase of the source                                            |
+| `res_voltages`   | $V$          | complex array | The phase-to-neutral voltages if the source has a neutral, the phase-to-phase voltages otherwise |
+
+Addionally, the following results are available for sources with a neutral:
+
+| Result Accessor   | Default Unit | Type          | Description                                 |
+| ----------------- | ------------ | ------------- | ------------------------------------------- |
+| `res_voltages_pn` | $V$          | complex array | The phase-to-neutral voltages of the source |
+
+And the following results are available for sources with more than one phase:
+
+| Result Accessor   | Default Unit | Type          | Description                               |
+| ----------------- | ------------ | ------------- | ----------------------------------------- |
+| `res_voltages_pp` | $V$          | complex array | The phase-to-phase voltages of the source |
+
+And the following results are available for _three-phase_ sources:
+
+| Result Accessor           | Default Unit | Type   | Description                                                         |
+| ------------------------- | ------------ | ------ | ------------------------------------------------------------------- |
+| `res_voltage_unbalance()` | $\%$         | number | The voltage unbalance of the source according to the IEC definition |
+
 (models-voltage-source-usage)=
 
 ## Usage

@@ -13,8 +13,8 @@ myst:
 
 # Center-tapped transformer
 
-Center-tapped transformers allow to convert two phases primary connection into a split-phase
-secondary connection, with the neutral at the center secondary winding. It is modelled as follows:
+Center-tapped transformers allow to split two-phase connection on its HV side into a two-phase
+connection with a neutral point in the middle on its LV side. It is modelled as follows:
 
 ````{tab} European standards
 ```{image}  /_static/Transformer/European_Center_Tapped_Transformer.svg
@@ -100,7 +100,7 @@ line = rlf.Line("line", source_bus, load_bus, parameters=lp, length=1.0, ground=
 
 # Create a low-voltage bus and a load
 lv_bus = rlf.Bus(id="lv_bus", phases="abn")
-ground.connect(lv_bus)
+rlf.GroundConnection(ground=ground, element=lv_bus)
 lv_load = rlf.PowerLoad("lv_load", lv_bus, powers=[-2000, 0])
 
 # Create a transformer
@@ -131,13 +131,13 @@ en.res_lines[["current1"]].dropna().transform([np.abs, ft.partial(np.angle, deg=
 
 
 # The current flowing into the transformer from the source side
-en.res_transformers[["current1"]].dropna().transform(
+en.res_transformers[["current_hv"]].dropna().transform(
     [np.abs, ft.partial(np.angle, deg=True)]
 )
-# |                  |   ('current1', 'absolute') |   ('current1', 'angle') |
-# |:-----------------|---------------------------:|------------------------:|
-# | ('transfo', 'a') |                   0.564362 |                -93.5552 |
-# | ('transfo', 'b') |                   0.564362 |                 86.4448 |
+# |                  |   ('current_hv', 'absolute') |   ('current_hv', 'angle') |
+# |:-----------------|-----------------------------:|--------------------------:|
+# | ('transfo', 'a') |                     0.564362 |                  -93.5552 |
+# | ('transfo', 'b') |                     0.564362 |                   86.4448 |
 
 
 # The current flowing into the line from the load side
@@ -150,12 +150,12 @@ en.res_lines[["current2"]].transform([np.abs, ft.partial(np.angle, deg=True)])
 
 
 # The current flowing into the transformer from the load side
-en.res_transformers[["current2"]].transform([np.abs, ft.partial(np.angle, deg=True)])
-# |                  |   ('current2', 'absolute') |   ('current2', 'angle') |
-# |:-----------------|---------------------------:|------------------------:|
-# | ('transfo', 'a') |                    17.3905 |               0.0141285 |
-# | ('transfo', 'b') |                          0 |                       0 |
-# | ('transfo', 'n') |                    17.3905 |                -179.986 |
+en.res_transformers[["current_lv"]].transform([np.abs, ft.partial(np.angle, deg=True)])
+# |                  |   ('current_lv', 'absolute') |   ('current_lv', 'angle') |
+# |:-----------------|-----------------------------:|--------------------------:|
+# | ('transfo', 'a') |                      17.3905 |                 0.0141285 |
+# | ('transfo', 'b') |                            0 |                         0 |
+# | ('transfo', 'n') |                      17.3905 |                  -179.986 |
 # We can see the secondary phase "b" of the transformer does not carry any current as
 # the load has 0VA on this phase.
 

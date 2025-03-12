@@ -17,6 +17,104 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 # Changelog
 
+## Version 0.12.0
+
+```{note}
+This is the last version of _Roseau Load Flow_ to support Python 3.10.
+```
+
+```{seealso}
+This release also includes the modifications that are in the [version 0.12.0-alpha](#version-0120-alpha).
+```
+
+### Breaking changes
+
+- The following columns have been renamed in `ElectricalNetwork.transformers_frame`:
+
+  - `bus1_id`, `bus2_id` -> `bus_hv_id`, `bus_lv_id`
+  - `phases1`, `phases2` -> `phases_hv`, `phases_lv`
+
+  and the following columns have been renamed in `ElectricalNetwork.res_transformers`:
+
+  - `current1`, `current2` -> `current_hv`, `current_lv`
+  - `potential1`, `potential2` -> `potential_hv`, `potential_lv`
+  - `voltage1`, `voltage2` -> `voltage_hv`, `voltage_lv`
+  - `power1`, `power2` -> `power_hv`, `power_lv`
+
+- The `ElectricalNetwork.crs` now defaults to `None` (no CRS) instead of `"EPSG:4326"`. The attribute
+  is also no longer normalized to a `pyproj.CRS` object but is stored as is. Use `CRS(en.crs)` to
+  always get a `pyproj.CRS` object.
+
+### Detailed changes
+
+- A new **experimental** module named `roseau.load_flow_single` has been added for studying balanced
+  three-phase systems using the simpler single-line model. This module is unstable and undocumented,
+  use at your own risk.
+- Improvements of license validation, particularly during simultaneous use of multiple threads or processes.
+- {gh-pr}`351` {gh-issue}`332` Improved support of the network's Coordinate Reference System (CRS).
+  - The `CRS` will now default to `None` (no CRS) instead of `"EPSG:4326"` if not provided.
+  - The `ElectricalNetwork.crs` attribute is no longer normalized to a `pyproj.CRS` object.
+  - The `CRS` can be set when creating a network with the `ElectricalNetwork.from_element` method.
+  - The `CRS` is now correctly stored in the JSON file and is read when loading the network.
+- {gh-pr}`350` {gh-issue}`349` Fix invalid transformer parameters with no leakage inductance when
+  created from open and short circuit tests.
+- {gh-pr}`348` The load classes have two new properties: `res_inner_currents` and `res_inner_powers`.
+  These are the currents and powers that flow in the inner components of the load as opposed to
+  `res_currents` and `res_powers` that flow into the load.
+- {gh-pr}`343` {gh-issue}`336` Warn when a line/switch connects buses with different nominal voltages.
+- {gh-pr}`341` Compute the transformer's open-circuit (no-load) and short-circuit tests results if
+  they are not provided. `TransformerParameters`'s `i0`, `p0`, `vsc`, and `psc` are now always
+  available and no longer return `None` when the transformer is created from `z2` and `ym`.
+- {gh-pr}`340` Improve the support for the conversion from the PowerFactory DGS format.
+  - Add an option to `ElectricalNetwork.from_dgs` to use the element names (`loc_name` in DGS) as IDs.
+    The names must be unique for each element type.
+  - Read the transformer's maximum loading from the DGS file.
+  - Read the bus's nominal voltage from the DGS file.
+  - Fix conversion of the transformer's no-load test results.
+- {gh-pr}`339` Constant current loads are no longer allowed on a bus with a short-circuit. Previously,
+  the load flow would fail with a singular matrix error.
+- {gh-pr}`335` Add `GroundConnection` class with the following features:
+
+  - Ground connections for all terminal elements (buses, loads, sources) and all branch elements,
+    (transformers, lines, switches). Previously only buses could be connected to ground.
+  - Non-ideal (impedant) ground connections with the `impedance` parameter.
+  - Access to the current in the ground connection with the `res_current` property.
+
+  The method `Ground.connect` is deprecated in favor of the new class. Replace `ground.connect(bus)`
+  by `GroundConnection(ground=ground, element=bus)`. The attribute `Ground.connected_buses` is also
+  deprecated in favor of `GroundConnection.connected_elements`.
+
+- {gh-pr}`331` Add `voltage_type` to the `plot_voltage_phasors` function to be able to plot the
+  voltages in phase-to-phase or phase-to-neutral. The `plot_symmetrical_voltages` function now plots
+  each sequence in a separate axes for better readability.
+- {gh-pr}`330` Add phase-to-phase (`res_voltages_pp`) and phase-to-neutral (`res_voltages_pn`)
+  voltage results for terminal elements. Voltage unbalance results are now available for all terminal
+  elements with the `res_voltage_unbalance` method.
+- {gh-pr}`328` Support floating neutrals for transformers. The `Transformer` class constructor now
+  accepts optional `connect_neutral_hv` and `connect_neutral_lv` parameters to specify if the neutral
+  is to be connected to the bus's neutral or to be left floating. By default the neutral is connected
+  when the bus has a neutral and left floating otherwise.
+- {gh-pr}`328` The `plot_voltage_phasors` function and the `plot_symmetrical_voltages` functions now
+  also support transformers, lines and switches.
+- {gh-pr}`325` Rename `Bus.potentials` to `Bus.initial_potentials`. The old attribute and constructor
+  parameter are deprecated and will be removed in a future release.
+- {gh-pr}`319` {gh-pr}`320` {gh-pr}`321` {gh-issue}`191` Deprecate the notion of "primary" and
+  "secondary" sides of transformers in favor of "high-voltage" and "low-voltage" sides following the
+  IEC 60076-1 standard. The following parameters of `rlf.Transformer` are deprecated and renamed:
+
+  - `bus1`, `bus2` -> `bus_hv`, `bus_lv`
+  - `phases1`, `phases2` -> `phases_hv`, `phases_lv`
+
+  The attributes `bus1`, `bus2`, `phases1`, `phases2`, `winding1`, `winding2`, `phase_displacement`
+  are still available. They are aliases to newly added attributes `bus_hv`, `bus_lv`, `phases_hv`,
+  `phases_lv`, `whv`, `wlv`, and `clock` respectively. The old attributes will NOT be removed.
+
+  The corresponding columns in `ElectricalNetwork.transformers_frame` and
+  `ElectricalNetwork.res_transformers` have been renamed as well. The old columns have been removed.
+
+- {gh-pr}`318` Implement all common and additional three-phase transformer vector groups. Notable
+  addition is transformers with clock number 1, common in North America.
+
 ## Version 0.12.0-alpha
 
 - Some improvements of the underlying engine:

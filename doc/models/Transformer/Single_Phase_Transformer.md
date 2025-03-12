@@ -97,10 +97,10 @@ tp = rlf.TransformerParameters.from_open_and_short_circuit_tests(
 )
 transformer = rlf.Transformer(
     id="transfo",
-    bus1=bus1,
-    bus2=bus2,
-    phases1="an",
-    phases2="an",
+    bus_hv=bus1,
+    bus_lv=bus2,
+    phases_hv="an",
+    phases_lv="an",
     parameters=tp,
 )
 
@@ -109,25 +109,25 @@ en = rlf.ElectricalNetwork.from_element(bus1)
 en.solve_load_flow()
 
 # The current flowing into the transformer from the source side
-en.res_transformers[["current1"]].transform([np.abs, ft.partial(np.angle, deg=True)])
-# |                  |   ('current1', 'absolute') |   ('current1', 'angle') |
-# |:-----------------|---------------------------:|------------------------:|
-# | ('transfo', 'a') |                   0.462811 |               -0.956008 |
-# | ('transfo', 'n') |                   0.462811 |              179.044    |
+en.res_transformers[["current_hv"]].transform([np.abs, ft.partial(np.angle, deg=True)])
+# |                  |   ('current_hv', 'absolute') |   ('current_hv', 'angle') |
+# |:-----------------|-----------------------------:|--------------------------:|
+# | ('transfo', 'a') |                     0.462811 |                 -0.956008 |
+# | ('transfo', 'n') |                     0.462811 |                179.044    |
 
 # The current flowing into the transformer from the load side
-en.res_transformers[["current2"]].transform([np.abs, ft.partial(np.angle, deg=True)])
-# |                  |   ('current2', 'absolute') |   ('current2', 'angle') |
-# |:-----------------|---------------------------:|------------------------:|
-# | ('transfo', 'a') |                   0.438211 |              179.85     |
-# | ('transfo', 'n') |                   0.438211 |               -0.149761 |
+en.res_transformers[["current_lv"]].transform([np.abs, ft.partial(np.angle, deg=True)])
+# |                  |   ('current_lv', 'absolute') |   ('current_lv', 'angle') |
+# |:-----------------|-----------------------------:|--------------------------:|
+# | ('transfo', 'a') |                     0.438211 |                179.85     |
+# | ('transfo', 'n') |                     0.438211 |                 -0.149761 |
 
 # The power flow in the transformer
-en.res_transformers[["power1", "power2"]].abs()
-# |                  |   power1 |   power2 |
-# |:-----------------|---------:|---------:|
-# | ('transfo', 'a') |  106.882 |      100 |
-# | ('transfo', 'n') |    0     |        0 |
+en.res_transformers[["power_hv", "power_lv"]].abs()
+# |                  |   power_hv |   power_lv |
+# |:-----------------|-----------:|-----------:|
+# | ('transfo', 'a') |    106.882 |        100 |
+# | ('transfo', 'n') |      0     |          0 |
 
 # The voltages at the buses of the network
 en.res_buses_voltages[["voltage"]].transform([np.abs, ft.partial(np.angle, deg=True)])

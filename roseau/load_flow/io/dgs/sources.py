@@ -9,12 +9,14 @@ from roseau.load_flow.typing import Id
 logger = logging.getLogger(__name__)
 
 
-def generate_sources(
+#
+# DGS -> RLF
+#
+def elm_xnet_to_sources(
     elm_xnet: pd.DataFrame,
     sources: dict[Id, VoltageSource],
-    buses: dict[Id, Bus],
+    buses: dict[str, Bus],
     sta_cubic: pd.DataFrame,
-    elm_term: pd.DataFrame,
 ) -> None:
     """Generate the sources of the network from External Network data.
 
@@ -26,21 +28,17 @@ def generate_sources(
             The dictionary to store the sources into.
 
         buses:
-            The dictionary of the all buses.
+            The dictionary of the all buses indexed by their FID.
 
         sta_cubic:
-            The "StaCubic" dataframe of cubicles.
-
-        elm_term:
-            The "ElmTerm" dataframe containing the bus data.
+            The "StaCubic" dataframe of cubicles indexed by their FID.
     """
     for source_id in elm_xnet.index:
-        id_sta_cubic_source = elm_xnet.at[source_id, "bus1"]  # id of the cubicle connecting the source and its bus
-        bus_id = sta_cubic.at[id_sta_cubic_source, "cterm"]  # id of the bus to which the source is connected
-        un = elm_term.at[bus_id, "uknom"] / SQRT3 * 1e3  # phase-to-neutral voltage (V)
+        bus = buses[sta_cubic.at[elm_xnet.at[source_id, "bus1"], "cterm"]]
         tap = elm_xnet.at[source_id, "usetp"]  # tap voltage (p.u.)
-        voltage = un * tap
-        source_bus = buses[bus_id]
+        un = bus.nominal_voltage
+        assert un is not None, f"Bus {bus.id} of the source {source_id!r} has no nominal voltage"
+        voltage = un.m / SQRT3 * tap  # phase-to-neutral voltage (V)
 
         # TODO remove hard coded phases (requires adapting voltages for delta sources)
-        sources[source_id] = VoltageSource(id=source_id, bus=source_bus, phases="abcn", voltages=voltage)
+        sources[source_id] = VoltageSource(id=source_id, bus=bus, phases="abcn", voltages=voltage)

@@ -10,16 +10,17 @@ from roseau.load_flow.models.branches import AbstractBranch
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.grounds import Ground
 from roseau.load_flow.models.lines.parameters import LineParameters
-from roseau.load_flow.typing import BoolArray, ComplexArray, FloatArray, Id, JsonDict
+from roseau.load_flow.typing import BoolArray, ComplexArray, ComplexMatrix, FloatArray, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow_engine.cy_engine import CyShuntLine, CySimplifiedLine
 
 logger = logging.getLogger(__name__)
 
 
-class Line(AbstractBranch):
+class Line(AbstractBranch[CyShuntLine | CySimplifiedLine]):
     """An electrical line PI model with series impedance and optional shunt admittance."""
 
+    element_type: Final = "line"
     allowed_phases: Final = frozenset(Bus.allowed_phases | {"a", "b", "c", "n"})
     """The allowed phases for a line are:
 
@@ -46,7 +47,7 @@ class Line(AbstractBranch):
 
         Args:
             id:
-                A unique ID of the line in the network branches.
+                A unique ID of the line in the network lines.
 
             bus1:
                 The first bus (aka `"from_bus"`) to connect to the line.
@@ -79,22 +80,7 @@ class Line(AbstractBranch):
             geometry:
                 The geometry of the line i.e. the linestring.
         """
-        if phases is None:
-            phases = "".join(p for p in bus1.phases if p in bus2.phases)  # can't use set because order is important
-            phases = phases.replace("ac", "ca")
-        else:
-            # Also check they are in the intersection of buses phases
-            self._check_phases(id, phases=phases)
-            buses_phases = set(bus1.phases) & set(bus2.phases)
-            phases_not_in_buses = set(phases) - buses_phases
-            if phases_not_in_buses:
-                msg = (
-                    f"Phases {sorted(phases_not_in_buses)} of line {id!r} are not in the common phases "
-                    f"{sorted(buses_phases)} of buses {bus1.id!r} and {bus2.id!r}."
-                )
-                logger.error(msg)
-                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
-
+        phases = self._check_phases_common(id, bus1=bus1, bus2=bus2, phases=phases)
         self._initialized = False
         super().__init__(id=id, bus1=bus1, bus2=bus2, phases1=phases, phases2=phases, geometry=geometry)
         self.ground = ground
@@ -102,6 +88,7 @@ class Line(AbstractBranch):
         self.parameters = parameters
         self.max_loading = max_loading
         self._initialized = True
+        self._check_same_voltage_level()
 
         # Handle the ground
         if self.ground is not None and not self.with_shunt:
@@ -139,13 +126,11 @@ class Line(AbstractBranch):
         self._yg = self._y_shunt.sum(axis=1)  # y_ig = Y_ia + Y_ib + Y_ic + Y_in for i in {a, b, c, n}
 
     def __repr__(self) -> str:
-        s = (
-            f"<{type(self).__name__}: id={self.id!r}, bus1={self.bus1.id!r}, bus2={self.bus2.id!r}, "
-            f"phases1={self.phases1!r}, phases2={self.phases2!r}"
-        )
-        for attr, val, tp in (("length", self._length, float), ("max_loading", self._max_loading, float)):
-            if val is not None:
-                s += f", {attr}={tp(val)!r}"
+        s = f"{super().__repr__()[:-1]}, length={self._length!r}"
+        if self.ground is not None:
+            s += f", ground={self.ground.id!r}"
+        if self._max_loading is not None:
+            s += f", max_loading={self._max_loading!r}"
         s += ">"
         return s
 
@@ -154,13 +139,10 @@ class Line(AbstractBranch):
         """The phases of the line. This is an alias for :attr:`phases1` and :attr:`phases2`."""
         return self._phases1
 
-    def _update_internal_parameters(self, parameters: LineParameters, length: float) -> None:
+    def _update_internal_parameters(self) -> None:
         """Update the internal parameters of the line."""
-        self._parameters = parameters
-        self._length = length
-
-        self._z_line = parameters._z_line * length
-        self._y_shunt = parameters._y_shunt * length
+        self._z_line = self._parameters._z_line * self._length
+        self._y_shunt = self._parameters._y_shunt * self._length
         self._z_line_inv = np.linalg.inv(self._z_line)
         self._yg = self._y_shunt.sum(axis=1)
 
@@ -186,9 +168,9 @@ class Line(AbstractBranch):
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LENGTH_VALUE)
         self._invalidate_network_results()
-        self._length = value
+        self._length = float(value)
         if self._initialized:
-            self._update_internal_parameters(self._parameters, value)
+            self._update_internal_parameters()
 
     @property
     def parameters(self) -> LineParameters:
@@ -224,17 +206,17 @@ class Line(AbstractBranch):
         self._invalidate_network_results()
         self._parameters = value
         if self._initialized:
-            self._update_internal_parameters(value, self._length)
+            self._update_internal_parameters()
 
     @property
     @ureg_wraps("ohm", (None,))
-    def z_line(self) -> Q_[ComplexArray]:
+    def z_line(self) -> Q_[ComplexMatrix]:
         """Impedance of the line (in Ohm)."""
         return self._parameters._z_line * self._length
 
     @property
     @ureg_wraps("S", (None,))
-    def y_shunt(self) -> Q_[ComplexArray]:
+    def y_shunt(self) -> Q_[ComplexMatrix]:
         """Shunt admittance of the line (in Siemens)."""
         return self._parameters._y_shunt * self._length
 
@@ -251,7 +233,7 @@ class Line(AbstractBranch):
             msg = f"Maximum loading must be positive: {value} was provided."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_MAX_LOADING_VALUE)
-        self._max_loading: float = value
+        self._max_loading = float(value)
 
     @property
     def ampacities(self) -> Q_[FloatArray] | None:
@@ -271,6 +253,9 @@ class Line(AbstractBranch):
     def with_shunt(self) -> bool:
         return self._parameters.with_shunt
 
+    #
+    # Results
+    #
     def _res_series_values_getter(self, warning: bool) -> tuple[ComplexArray, ComplexArray]:
         pot1, pot2 = self._res_potentials_getter(warning)  # V
         du_line = pot1 - pot2
@@ -281,21 +266,9 @@ class Line(AbstractBranch):
         _, i_line = self._res_series_values_getter(warning)
         return i_line
 
-    @property
-    @ureg_wraps("A", (None,))
-    def res_series_currents(self) -> Q_[ComplexArray]:
-        """Get the current in the series elements of the line (in A)."""
-        return self._res_series_currents_getter(warning=True)
-
     def _res_series_power_losses_getter(self, warning: bool) -> ComplexArray:
         du_line, i_line = self._res_series_values_getter(warning)
-        return du_line * i_line.conj()  # Sₗ = ΔU.Iₗ*
-
-    @property
-    @ureg_wraps("VA", (None,))
-    def res_series_power_losses(self) -> Q_[ComplexArray]:
-        """Get the power losses in the series elements of the line (in VA)."""
-        return self._res_series_power_losses_getter(warning=True)
+        return du_line * i_line.conjugate()  # Sₗ = ΔU.Iₗ*
 
     def _res_shunt_values_getter(self, warning: bool) -> tuple[ComplexArray, ComplexArray, ComplexArray, ComplexArray]:
         assert self.with_shunt, "This method only works when there is a shunt"
@@ -314,17 +287,40 @@ class Line(AbstractBranch):
         _, _, cur1, cur2 = self._res_shunt_values_getter(warning)
         return cur1, cur2
 
+    def _res_shunt_power_losses_getter(self, warning: bool) -> ComplexArray:
+        if not self.with_shunt:
+            return np.zeros(self._n1, dtype=np.complex128)
+        pot1, pot2, cur1, cur2 = self._res_shunt_values_getter(warning)
+        return pot1 * cur1.conjugate() + pot2 * cur2.conjugate()
+
+    def _res_power_losses_getter(self, warning: bool) -> ComplexArray:
+        series_losses = self._res_series_power_losses_getter(warning)
+        shunt_losses = self._res_shunt_power_losses_getter(warning=False)  # we warn on the previous line
+        return series_losses + shunt_losses
+
+    def _res_loading_getter(self, warning: bool) -> FloatArray | None:
+        if (amp := self._parameters._ampacities) is None:
+            return None
+        currents1, currents2 = self._res_currents_getter(warning)
+        return np.maximum(abs(currents1), abs(currents2)) / amp
+
+    @property
+    @ureg_wraps("A", (None,))
+    def res_series_currents(self) -> Q_[ComplexArray]:
+        """Get the current in the series elements of the line (in A)."""
+        return self._res_series_currents_getter(warning=True)
+
+    @property
+    @ureg_wraps("VA", (None,))
+    def res_series_power_losses(self) -> Q_[ComplexArray]:
+        """Get the power losses in the series elements of the line (in VA)."""
+        return self._res_series_power_losses_getter(warning=True)
+
     @property
     @ureg_wraps(("A", "A"), (None,))
     def res_shunt_currents(self) -> tuple[Q_[ComplexArray], Q_[ComplexArray]]:
         """Get the currents in the shunt elements of the line (in A)."""
         return self._res_shunt_currents_getter(warning=True)
-
-    def _res_shunt_power_losses_getter(self, warning: bool) -> ComplexArray:
-        if not self.with_shunt:
-            return np.zeros(self._n1, dtype=np.complex128)
-        pot1, pot2, cur1, cur2 = self._res_shunt_values_getter(warning)
-        return pot1 * cur1.conj() + pot2 * cur2.conj()
 
     @property
     @ureg_wraps("VA", (None,))
@@ -332,22 +328,11 @@ class Line(AbstractBranch):
         """Get the power losses in the shunt elements of the line (in VA)."""
         return self._res_shunt_power_losses_getter(warning=True)
 
-    def _res_power_losses_getter(self, warning: bool) -> ComplexArray:
-        series_losses = self._res_series_power_losses_getter(warning)
-        shunt_losses = self._res_shunt_power_losses_getter(warning=False)  # we warn on the previous line
-        return series_losses + shunt_losses
-
     @property
     @ureg_wraps("VA", (None,))
     def res_power_losses(self) -> Q_[ComplexArray]:
         """Get the power losses in the line (in VA)."""
         return self._res_power_losses_getter(warning=True)
-
-    def _res_loading_getter(self, warning: bool) -> FloatArray | None:
-        if (amp := self._parameters._ampacities) is None:
-            return None
-        currents1, currents2 = self._res_currents_getter(warning)
-        return np.maximum(abs(currents1), abs(currents2)) / amp
 
     @property
     def res_loading(self) -> Q_[FloatArray] | None:
@@ -368,64 +353,32 @@ class Line(AbstractBranch):
     # Json Mixin interface
     #
     def _to_dict(self, include_results: bool) -> JsonDict:
-        res = {
-            "id": self.id,
-            "phases": self.phases,
-            "bus1": self.bus1.id,
-            "bus2": self.bus2.id,
-            "length": self._length,
-            "params_id": self._parameters.id,
-            "max_loading": self._max_loading,
-        }
+        line_dict = super()._to_dict(include_results)
+        line_dict["max_loading"] = self._max_loading
+        line_dict["params_id"] = self._parameters.id
+        line_dict["length"] = self._length
         if self.ground is not None:
-            res["ground"] = self.ground.id
-        if self.geometry is not None:
-            res["geometry"] = self.geometry.__geo_interface__
+            line_dict["ground"] = self.ground.id
         if include_results:
-            currents1, currents2 = self._res_currents_getter(warning=True)
-            res["results"] = {
-                "currents1": [[i.real, i.imag] for i in currents1],
-                "currents2": [[i.real, i.imag] for i in currents2],
-            }
-        return res
+            line_dict["results"] = line_dict.pop("results")  # move results to the end
+        return line_dict
 
     def _results_to_dict(self, warning: bool, full: bool) -> JsonDict:
-        currents1, currents2 = self._res_currents_getter(warning)
-        results = {
-            "id": self.id,
-            "phases": self.phases,
-            "currents1": [[i.real, i.imag] for i in currents1],
-            "currents2": [[i.real, i.imag] for i in currents2],
-        }
+        results = super()._results_to_dict(warning, full)
         if full:
-            potentials1, potentials2 = self._res_potentials_getter(warning=False)
-            results["potentials1"] = [[v.real, v.imag] for v in potentials1]
-            results["potentials2"] = [[v.real, v.imag] for v in potentials2]
-            powers1, powers2 = self._res_powers_getter(
-                warning=False,
-                potentials1=potentials1,
-                potentials2=potentials2,
-                currents1=currents1,
-                currents2=currents2,
-            )
-            results["powers1"] = [[s.real, s.imag] for s in powers1]
-            results["powers2"] = [[s.real, s.imag] for s in powers2]
-            voltages1, voltages2 = self._res_voltages_getter(
-                warning=False, potentials1=potentials1, potentials2=potentials2
-            )
-            results["voltages1"] = [[v.real, v.imag] for v in voltages1]
-            results["voltages2"] = [[v.real, v.imag] for v in voltages2]
-            results["power_losses"] = [[s.real, s.imag] for s in self._res_power_losses_getter(warning=False)]
-            results["series_currents"] = [[i.real, i.imag] for i in self._res_series_currents_getter(warning=False)]
-            results["series_power_losses"] = [
-                [s.real, s.imag] for s in self._res_series_power_losses_getter(warning=False)
-            ]
-            shunt_currents1, shunt_currents2 = self._res_shunt_currents_getter(warning=False)
+            # Add line specific results
+            power_losses = self._res_power_losses_getter(warning=False)  # warn only once
+            series_power_losses = self._res_series_power_losses_getter(warning=False)
+            shunt_power_losses = self._res_shunt_power_losses_getter(warning=False)
+            series_currents = self._res_series_currents_getter(warning=False)
+            shunt_currents = self._res_shunt_currents_getter(warning=False)
+            shunt_currents1, shunt_currents2 = shunt_currents
+            loading = self._res_loading_getter(warning=False)
+            results["power_losses"] = [[s.real, s.imag] for s in power_losses]
+            results["series_currents"] = [[i.real, i.imag] for i in series_currents]
+            results["series_power_losses"] = [[s.real, s.imag] for s in series_power_losses]
             results["shunt_currents1"] = [[i.real, i.imag] for i in shunt_currents1]
             results["shunt_currents2"] = [[i.real, i.imag] for i in shunt_currents2]
-            results["shunt_power_losses"] = [
-                [s.real, s.imag] for s in self._res_shunt_power_losses_getter(warning=False)
-            ]
-            loading = self._res_loading_getter(warning=False)
+            results["shunt_power_losses"] = [[s.real, s.imag] for s in shunt_power_losses]
             results["loading"] = None if loading is None else loading.tolist()
         return results

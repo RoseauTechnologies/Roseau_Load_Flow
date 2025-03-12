@@ -1,22 +1,20 @@
 import logging
 import warnings
 from collections.abc import Iterator
-from functools import cached_property
-from typing import TYPE_CHECKING, Any, Final
+from typing import TYPE_CHECKING, Any, Final, Literal
 
 import numpy as np
 import pandas as pd
 from shapely.geometry.base import BaseGeometry
-from typing_extensions import Self
+from typing_extensions import Self, deprecated
 
 from roseau.load_flow.constants import SQRT3
-from roseau.load_flow.converters import _calculate_voltages, calculate_voltage_phases
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.core import Element
-from roseau.load_flow.sym import phasor_to_sym
+from roseau.load_flow.models.terminals import AbstractTerminal
 from roseau.load_flow.typing import BoolArray, ComplexArray, ComplexArrayLike1D, FloatArray, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
-from roseau.load_flow.utils import find_stack_level
+from roseau.load_flow.utils import deprecate_renamed_parameter, find_stack_level, one_or_more_repr
 from roseau.load_flow_engine.cy_engine import CyBus
 
 logger = logging.getLogger(__name__)
@@ -25,27 +23,24 @@ if TYPE_CHECKING:
     from roseau.load_flow.models.grounds import Ground
 
 
-class Bus(Element):
+class Bus(AbstractTerminal[CyBus]):
     """A multi-phase electrical bus."""
 
-    allowed_phases: Final = frozenset({"ab", "bc", "ca", "an", "bn", "cn", "abn", "bcn", "can", "abc", "abcn"})
-    """The allowed phases for a bus are:
+    element_type: Final = "bus"
 
-    - P-P-P or P-P-P-N: ``"abc"``, ``"abcn"``
-    - P-P or P-P-N: ``"ab"``, ``"bc"``, ``"ca"``, ``"abn"``, ``"bcn"``, ``"can"``
-    - P-N: ``"an"``, ``"bn"``, ``"cn"``
-    """
-
+    @deprecate_renamed_parameter(
+        old_name="potentials", new_name="initial_potentials", version="0.12.0", category=DeprecationWarning
+    )
     def __init__(
         self,
         id: Id,
         *,
         phases: str,
         geometry: BaseGeometry | None = None,
-        potentials: ComplexArrayLike1D | None = None,
-        nominal_voltage: float | None = None,
-        min_voltage_level: float | None = None,
-        max_voltage_level: float | None = None,
+        initial_potentials: ComplexArrayLike1D | None = None,
+        nominal_voltage: float | Q_[float] | None = None,
+        min_voltage_level: float | Q_[float] | None = None,
+        max_voltage_level: float | Q_[float] | None = None,
     ) -> None:
         """Bus constructor.
 
@@ -56,41 +51,41 @@ class Bus(Element):
             phases:
                 The phases of the bus. A string like ``"abc"`` or ``"an"`` etc. The order of the
                 phases is important. For a full list of supported phases, see the class attribute
-                :attr:`.allowed_phases`.
+                :attr:`!allowed_phases`.
 
             geometry:
                 An optional geometry of the bus; a :class:`~shapely.Geometry` that represents the
                 x-y coordinates of the bus.
 
-            potentials:
+            initial_potentials:
                 An optional array-like of initial potentials of each phase of the bus. If given,
                 these potentials are used as the starting point of the load flow computation.
                 Either complex values (V) or a :class:`Quantity <roseau.load_flow.units.Q_>` of
                 complex values.
 
             nominal_voltage:
-                An optional nominal voltage for the bus (V). It is not used in the load flow.
-                It is always a phase-phase voltage. It can be a float (V) or a
-                :class:`Quantity <roseau.load_flow.units.Q_>` of float.
+                An optional nominal phase-to-phase voltage for the bus (V). It is not used in the
+                load flow. It can be a float (V) or a :class:`Quantity <roseau.load_flow.units.Q_>`
+                of float. It must be provided if either `min_voltage_level` or `max_voltage_level`
+                is provided.
 
             min_voltage_level:
-                An optional minimal voltage of the bus (%). It is not used in the load flow.
-                It must be a percentage of the `nominal_voltage`. If provided, the nominal voltage becomes mandatory.
-                Either a float (unitless) or a :class:`Quantity <roseau.load_flow.units.Q_>` of float.
+                An optional minimal voltage level of the bus (%). It is not used in the load flow.
+                It must be a percentage of the `nominal_voltage` between 0 and 1. Either a float
+                (unitless) or a :class:`Quantity <roseau.load_flow.units.Q_>` of float.
 
             max_voltage_level:
-                An optional maximal voltage of the bus (%). It is not used in the load flow.
-                It must be a percentage of the `nominal_voltage`. If provided, the nominal voltage becomes mandatory.
-                Either a float (unitless) or a :class:`Quantity <roseau.load_flow.units.Q_>` of float.
+                An optional maximal voltage level of the bus (%). It is not used in the load flow.
+                It must be a percentage of the `nominal_voltage` between 0 and 1. Either a float
+                (unitless) or a :class:`Quantity <roseau.load_flow.units.Q_>` of float.
         """
-        super().__init__(id)
-        self._check_phases(id, phases=phases)
-        self._phases = phases
-        initialized = potentials is not None
-        if potentials is None:
-            potentials = [0] * len(phases)
-        self.potentials = potentials
+        super().__init__(id, phases=phases)
+        initialized = initial_potentials is not None
+        if initial_potentials is None:
+            initial_potentials = [0] * len(phases)
+        self.initial_potentials = initial_potentials
         self.geometry = geometry
+
         self._nominal_voltage: float | None = None
         self._min_voltage_level: float | None = None
         self._max_voltage_level: float | None = None
@@ -101,97 +96,49 @@ class Bus(Element):
         if max_voltage_level is not None:
             self.max_voltage_level = max_voltage_level
 
-        self._res_potentials: ComplexArray | None = None
         self._short_circuits: list[dict[str, Any]] = []
 
-        self._n = len(self._phases)
         self._initialized = initialized
         self._initialized_by_the_user = initialized  # only used for serialization
-        self._cy_element = CyBus(n=self._n, potentials=self._potentials)
+        self._cy_element = CyBus(n=self._n, potentials=self._initial_potentials)
 
     def __repr__(self) -> str:
         return f"{type(self).__name__}(id={self.id!r}, phases={self.phases!r})"
 
     @property
-    def phases(self) -> str:
-        """The phases of the bus."""
-        return self._phases
-
-    @property
     @ureg_wraps("V", (None,))
-    def potentials(self) -> Q_[ComplexArray]:
+    def initial_potentials(self) -> Q_[ComplexArray]:
         """An array of initial potentials of the bus (V)."""
-        return self._potentials
+        return self._initial_potentials
 
-    @potentials.setter
+    @initial_potentials.setter
     @ureg_wraps(None, (None, "V"))
-    def potentials(self, value: ComplexArrayLike1D) -> None:
+    def initial_potentials(self, value: ComplexArrayLike1D) -> None:
         if len(value) != len(self.phases):
             msg = f"Incorrect number of potentials: {len(value)} instead of {len(self.phases)}"
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_POTENTIALS_SIZE)
-        self._potentials = np.array(value, dtype=np.complex128)
+        self._initial_potentials = np.array(value, dtype=np.complex128)
         self._invalidate_network_results()
         self._initialized = True
         self._initialized_by_the_user = True
         if self._cy_element is not None:
-            self._cy_element.initialize_potentials(self._potentials)
-
-    def _res_potentials_getter(self, warning: bool) -> ComplexArray:
-        if self._fetch_results:
-            self._res_potentials = self._cy_element.get_potentials(self._n)
-        return self._res_getter(value=self._res_potentials, warning=warning)
+            self._cy_element.initialize_potentials(self._initial_potentials)
 
     @property
-    @ureg_wraps("V", (None,))
-    def res_potentials(self) -> Q_[ComplexArray]:
-        """The load flow result of the bus potentials (V)."""
-        return self._res_potentials_getter(warning=True)
+    @deprecated("'Bus.potentials' is deprecated. It has been renamed to 'initial_potentials'.")
+    def potentials(self) -> Q_[ComplexArray]:
+        """Deprecated alias to `initial_potentials`."""
+        return self.initial_potentials
 
-    def _res_voltages_getter(self, warning: bool, potentials: ComplexArray | None = None) -> ComplexArray:
-        if potentials is None:
-            potentials = self._res_potentials_getter(warning=warning)
-        return _calculate_voltages(potentials, self.phases)
-
-    @property
-    @ureg_wraps("V", (None,))
-    def res_voltages(self) -> Q_[ComplexArray]:
-        """The load flow result of the bus voltages (V).
-
-        If the bus has a neutral, the voltages are phase-neutral voltages for existing phases in
-        the order ``[Van, Vbn, Vcn]``. If the bus does not have a neutral, phase-phase voltages
-        are returned in the order ``[Vab, Vbc, Vca]``.
-        """
-        return self._res_voltages_getter(warning=True)
-
-    def _res_voltage_levels_getter(self, warning: bool) -> FloatArray | None:
-        if self._nominal_voltage is None:
-            return None
-        voltages_abs = abs(self._res_voltages_getter(warning=warning))
-        if "n" in self.phases:
-            return SQRT3 * voltages_abs / self._nominal_voltage
-        else:
-            return voltages_abs / self._nominal_voltage
-
-    @property
-    def res_voltage_levels(self) -> Q_[FloatArray] | None:
-        """The load flow result of the bus voltage levels (unitless)."""
-        voltage_levels = self._res_voltage_levels_getter(warning=True)
-        return None if voltage_levels is None else Q_(voltage_levels, "")
-
-    @cached_property
-    def voltage_phases(self) -> list[str]:
-        """The phases of the voltages."""
-        return calculate_voltage_phases(self.phases)
-
-    def _get_potentials_of(self, phases: str, warning: bool) -> ComplexArray:
-        """Get the potentials of the given phases."""
-        potentials = self._res_potentials_getter(warning)
-        return np.array([potentials[self.phases.index(p)] for p in phases])
+    @potentials.setter
+    @deprecated("'Bus.potentials' is deprecated. It has been renamed to 'initial_potentials'.")
+    def potentials(self, value: ComplexArrayLike1D) -> None:
+        self.initial_potentials = value
 
     @property
     def nominal_voltage(self) -> Q_[float] | None:
-        """The phase-phase nominal voltage of the bus of the bus (V) if it is set."""
+        """The phase-to-phase nominal voltage of the bus (V) if it is set."""
         return None if self._nominal_voltage is None else Q_(self._nominal_voltage, "V")
 
     @nominal_voltage.setter
@@ -294,24 +241,97 @@ class Bus(Element):
         )
 
     @property
-    def res_violated(self) -> BoolArray | None:
-        """Whether the bus has voltage limits violations.
+    def short_circuits(self) -> list[dict[str, Any]]:
+        """Return the list of short-circuits of this bus."""
+        return self._short_circuits[:]  # return a copy as users should not modify the list directly
 
-        Returns ``None`` if the bus has no voltage limits are not set.
+    def _is_element_neutral_floating(self, phases: str, connect_neutral: bool | None) -> bool:
+        """Check if a connected element with `phases` has a floating neutral."""
+        if "n" not in phases:
+            return False
+        if connect_neutral is False:
+            return True
+        if connect_neutral is None:
+            return "n" not in self.phases
+        return False
+
+    def _check_element_phases(
+        self, e: Element, eid: Id, phases: str, connect_neutral: bool | None, side: Literal["HV", "LV", ""]
+    ) -> bool | None:
+        side_sep = f"{side} " if side else ""
+        if connect_neutral is not None:
+            connect_neutral = bool(connect_neutral)  # to allow np.bool
+        if connect_neutral and "n" not in phases:
+            warnings.warn(
+                message=f"Neutral connection requested for {e.element_type} {eid!r} with no {side_sep}neutral phase",
+                category=UserWarning,
+                stacklevel=find_stack_level(),
+            )
+            connect_neutral = None
+        # Also check they are in the bus phases
+        phases_not_in_bus = set(phases) - set(self.phases)
+        # "n" is allowed to be absent from the self only if the element has more than 2 phases
+        missing_ok = phases_not_in_bus == {"n"} and len(phases) > 2 and not connect_neutral
+        if phases_not_in_bus and not missing_ok:
+            ph, be = one_or_more_repr(sorted(phases_not_in_bus), f"{side_sep}phase")
+            ph = ph[0].upper() + ph[1:]
+            msg = (
+                f"{ph} of {e.element_type} {eid!r} {be} not in phases {self.phases!r} of its {side_sep}bus {self.id!r}."
+            )
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
+        return connect_neutral
+
+    def add_short_circuit(self, *phases: str, ground: "Ground | None" = None) -> None:
+        """Add a short-circuit by connecting multiple phases together optionally with a ground.
+
+        Args:
+            phases:
+                The phases to connect.
+
+            ground:
+                If a ground is given, the phases will also be connected to the ground.
         """
-        u_min = self._min_voltage_level
-        u_max = self._max_voltage_level
-        if u_min is None and u_max is None:
-            return None
-        voltage_levels = self._res_voltage_levels_getter(warning=True)
-        if voltage_levels is None:
-            return None
-        violated = np.full_like(voltage_levels, fill_value=False, dtype=np.bool_)
-        if u_min is not None:
-            violated |= voltage_levels < u_min
-        if u_max is not None:
-            violated |= voltage_levels > u_max
-        return violated
+        from roseau.load_flow import CurrentLoad, PowerLoad
+
+        for phase in phases:
+            if phase not in self.phases:
+                msg = f"Phase {phase!r} is not in the phases {set(self.phases)} of bus {self.id!r}."
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
+        if not phases or (len(phases) == 1 and ground is None):
+            msg = f"For the short-circuit on bus {self.id!r}, expected at least two phases or a phase and a ground."
+            if not phases:
+                msg += " No phase was given."
+            else:
+                msg += f" Only phase {phases[0]!r} is given."
+
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
+        duplicates = [item for item in set(phases) if phases.count(item) > 1]
+        if duplicates:
+            msg = f"For the short-circuit on bus {self.id!r}, some phases are duplicated: {duplicates}."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
+        for element in self._connected_elements:
+            if isinstance(element, (PowerLoad, CurrentLoad)):
+                msg = (
+                    f"A {element.type} load {element.id!r} is already connected on bus {self.id!r}. "
+                    f"It makes the short-circuit calculation impossible."
+                )
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_SHORT_CIRCUIT)
+
+        self._short_circuits.append({"phases": list(phases), "ground": ground.id if ground is not None else None})
+
+        if self.network is not None:
+            self.network._valid = False
+
+        phases_index = np.array([self.phases.index(p) for p in phases], dtype=np.int32)
+        self._cy_element.connect_ports(phases_index)
+
+        if ground is not None:
+            self._cy_element.connect(ground._cy_element, [(phases_index[0], 0)])
 
     def propagate_limits(self, force: bool = False) -> None:
         """Propagate the voltage limits to galvanically connected buses.
@@ -417,137 +437,112 @@ class Bus(Element):
                 to_add = set(element._connected_elements).difference(visited)
                 remaining.update(to_add)
 
-    @ureg_wraps("percent", (None,))
-    def res_voltage_unbalance(self) -> Q_[float]:
-        """Calculate the voltage unbalance on this bus according to the IEC definition.
+    #
+    # Results
+    #
+    def _res_voltage_levels_getter(self, warning: bool) -> FloatArray | None:
+        if self._nominal_voltage is None:
+            return None
+        voltages_abs = abs(self._res_voltages_getter(warning=warning))
+        if "n" in self.phases:
+            return SQRT3 * voltages_abs / self._nominal_voltage
+        else:
+            return voltages_abs / self._nominal_voltage
 
-        Voltage Unbalance Factor:
+    def _res_voltage_levels_pp_getter(self, warning: bool) -> FloatArray | None:
+        if self._nominal_voltage is None:
+            return None
+        voltages_abs = abs(self._res_voltages_pp_getter(warning=warning))
+        return voltages_abs / self._nominal_voltage
 
-        :math:`VUF = \\dfrac{|V_{\\mathrm{n}}|}{|V_{\\mathrm{p}}|} \\times 100 \\, (\\%)`
+    def _res_voltage_levels_pn_getter(self, warning: bool) -> FloatArray | None:
+        if self._nominal_voltage is None:
+            return None
+        voltages_abs = abs(self._res_voltages_pn_getter(warning=warning))
+        return SQRT3 * voltages_abs / self._nominal_voltage
 
-        Where :math:`V_{\\mathrm{n}}` is the negative-sequence voltage and :math:`V_{\\mathrm{p}}` is the
-        positive-sequence voltage.
+    @property
+    def res_voltage_levels(self) -> Q_[FloatArray] | None:
+        """The load flow result of the bus voltage levels (p.u.)."""
+        voltage_levels = self._res_voltage_levels_getter(warning=True)
+        return None if voltage_levels is None else Q_(voltage_levels, "")
+
+    @property
+    def res_voltage_levels_pp(self) -> Q_[FloatArray] | None:
+        """The load flow result of the bus's phase-to-phase voltage levels (p.u.).
+
+        Raises an error if the element has only one phase.
         """
-        # https://std.iec.ch/terms/terms.nsf/3385f156e728849bc1256e8c00278ad2/771c5188e62fade5c125793a0043f2a5?OpenDocument
-        if self.phases not in {"abc", "abcn"}:
-            msg = f"Voltage unbalance is only available for 3-phases buses, bus {self.id!r} has phases {self.phases!r}"
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
-        # We use the potentials here which is equivalent to using the "line to neutral" voltages as
-        # defined by the standard. The standard also has this note:
-        # NOTE 1 Phase-to-phase voltages may also be used instead of line to neutral voltages.
-        potentials = self._res_potentials_getter(warning=True)
-        _, vp, vn = phasor_to_sym(potentials[:3])  # (0, +, -)
-        return abs(vn) / abs(vp) * 100
+        voltage_levels = self._res_voltage_levels_pp_getter(warning=True)
+        return None if voltage_levels is None else Q_(voltage_levels, "")
+
+    @property
+    def res_voltage_levels_pn(self) -> Q_[FloatArray] | None:
+        """The load flow result of the bus's phase-to-neutral voltage levels (p.u.).
+
+        Raises an error if the element does not have a neutral.
+        """
+        voltage_levels = self._res_voltage_levels_pn_getter(warning=True)
+        return None if voltage_levels is None else Q_(voltage_levels, "")
+
+    @property
+    def res_violated(self) -> BoolArray | None:
+        """Whether the bus has voltage limits violations.
+
+        Returns ``None`` if the bus has no voltage limits are not set.
+        """
+        u_min = self._min_voltage_level
+        u_max = self._max_voltage_level
+        if u_min is None and u_max is None:
+            return None
+        voltage_levels = self._res_voltage_levels_getter(warning=True)
+        if voltage_levels is None:
+            return None
+        violated = np.full_like(voltage_levels, fill_value=False, dtype=np.bool_)
+        if u_min is not None:
+            violated |= voltage_levels < u_min
+        if u_max is not None:
+            violated |= voltage_levels > u_max
+        return violated
 
     #
     # Json Mixin interface
     #
     @classmethod
     def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
-        geometry = cls._parse_geometry(data.get("geometry"))
-        if (potentials := data.get("potentials")) is not None:
-            potentials = [complex(v[0], v[1]) for v in potentials]
+        if (initial_potentials := data.get("initial_potentials")) is not None:
+            initial_potentials = [complex(*v) for v in initial_potentials]
         self = cls(
             id=data["id"],
             phases=data["phases"],
-            geometry=geometry,
-            potentials=potentials,
+            geometry=cls._parse_geometry(data.get("geometry")),
+            initial_potentials=initial_potentials,
             nominal_voltage=data.get("nominal_voltage"),
             min_voltage_level=data.get("min_voltage_level"),
             max_voltage_level=data.get("max_voltage_level"),
         )
-        if include_results and "results" in data:
-            self._res_potentials = np.array(
-                [complex(v[0], v[1]) for v in data["results"]["potentials"]], dtype=np.complex128
-            )
-            self._fetch_results = False
-            self._no_results = False
+        self._parse_results_from_dict(data, include_results=include_results)
         return self
 
     def _to_dict(self, include_results: bool) -> JsonDict:
-        res = {"id": self.id, "phases": self.phases}
+        data = super()._to_dict(include_results=include_results)
         if self._initialized_by_the_user:
-            res["potentials"] = [[v.real, v.imag] for v in self._potentials]
+            data["initial_potentials"] = [[v.real, v.imag] for v in self._initial_potentials]
         if self.geometry is not None:
-            res["geometry"] = self.geometry.__geo_interface__
+            data["geometry"] = self.geometry.__geo_interface__
         if self.nominal_voltage is not None:
-            res["nominal_voltage"] = self.nominal_voltage.magnitude
+            data["nominal_voltage"] = self.nominal_voltage.magnitude
         if self.min_voltage_level is not None:
-            res["min_voltage_level"] = self.min_voltage_level.magnitude
+            data["min_voltage_level"] = self.min_voltage_level.magnitude
         if self.max_voltage_level is not None:
-            res["max_voltage_level"] = self.max_voltage_level.magnitude
+            data["max_voltage_level"] = self.max_voltage_level.magnitude
         if include_results:
-            potentials = self._res_potentials_getter(warning=True)
-            res["results"] = {"potentials": [[v.real, v.imag] for v in potentials]}
-        return res
+            data["results"] = data.pop("results")  # move results to the end
+        return data
 
     def _results_to_dict(self, warning: bool, full: bool) -> JsonDict:
-        potentials = np.array(self._res_potentials_getter(warning))
-        res = {
-            "id": self.id,
-            "phases": self.phases,
-            "potentials": [[v.real, v.imag] for v in potentials],
-        }
+        results = super()._results_to_dict(warning, full)
         if full:
-            voltages = self._res_voltages_getter(warning=False, potentials=potentials)
-            res["voltages"] = [[v.real, v.imag] for v in voltages]
             voltage_levels = self._res_voltage_levels_getter(warning=False)
-            res["voltage_levels"] = None if voltage_levels is None else voltage_levels.tolist()
-        return res
-
-    def add_short_circuit(self, *phases: str, ground: "Ground | None" = None) -> None:
-        """Add a short-circuit by connecting multiple phases together optionally with a ground.
-
-        Args:
-            phases:
-                The phases to connect.
-
-            ground:
-                If a ground is given, the phases will also be connected to the ground.
-        """
-        from roseau.load_flow import PowerLoad
-
-        for phase in phases:
-            if phase not in self.phases:
-                msg = f"Phase {phase!r} is not in the phases {set(self.phases)} of bus {self.id!r}."
-                logger.error(msg)
-                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
-        if not phases or (len(phases) == 1 and ground is None):
-            msg = f"For the short-circuit on bus {self.id!r}, expected at least two phases or a phase and a ground."
-            if not phases:
-                msg += " No phase was given."
-            else:
-                msg += f" Only phase {phases[0]!r} is given."
-
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
-        duplicates = [item for item in set(phases) if phases.count(item) > 1]
-        if duplicates:
-            msg = f"For the short-circuit on bus {self.id!r}, some phases are duplicated: {duplicates}."
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
-        for element in self._connected_elements:
-            if isinstance(element, PowerLoad):
-                msg = (
-                    f"A power load {element.id!r} is already connected on bus {self.id!r}. "
-                    f"It makes the short-circuit calculation impossible."
-                )
-                logger.error(msg)
-                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_SHORT_CIRCUIT)
-
-        self._short_circuits.append({"phases": list(phases), "ground": ground.id if ground is not None else None})
-
-        if self.network is not None:
-            self.network._valid = False
-
-        phases_index = np.array([self.phases.index(p) for p in phases], dtype=np.int32)
-        self._cy_element.connect_ports(phases_index, len(phases))
-
-        if ground is not None:
-            self._cy_element.connect(ground._cy_element, [(phases_index[0], 0)])
-
-    @property
-    def short_circuits(self) -> list[dict[str, Any]]:
-        """Return the list of short-circuits of this bus."""
-        return self._short_circuits[:]  # return a copy as users should not modify the list directly
+            results["voltage_levels"] = None if voltage_levels is None else voltage_levels.tolist()
+        return results

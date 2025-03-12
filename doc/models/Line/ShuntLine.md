@@ -68,6 +68,18 @@ where
 
 with $\underline{Z}$ the series impedance matrix and $\underline{Y}$ the shunt admittance matrix.
 
+## Available Results
+
+In addition to the results available for all lines, as described [here](./index.md#available-results),
+the following results are available for lines with shunt components:
+
+| Result Accessor          | Default Unit | Type             | Description                                                 |
+| ------------------------ | ------------ | ---------------- | ----------------------------------------------------------- |
+| `res_shunt_currents`     | $A$          | 2 complex arrays | The currents flowing into the shunt admittances of the line |
+| `res_shunt_power_losses` | $V\!A$       | 2 complex arrays | The power losses in the shunt admittances of the line       |
+
+The results with two arrays are for the first and second ends of the line, respectively.
+
 ## Usage
 
 To create a shunt line, create an instance of `LineParameter` with the `y_shunt` argument. The
