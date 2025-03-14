@@ -1,5 +1,3 @@
-import numbers
-
 import numpy as np
 import numpy.testing as npt
 import pandas as pd
@@ -392,24 +390,24 @@ def test_catalogue_data():
 
         # Check the values are the same
         assert tp.vg == catalogue_data.at[tp.id, "vg"]
-        assert np.isclose(tp.uhv.m, catalogue_data.at[tp.id, "uhv"])
-        assert np.isclose(tp.ulv.m, catalogue_data.at[tp.id, "ulv"])
-        assert np.isclose(tp.sn.m, catalogue_data.at[tp.id, "sn"])
-        assert np.isclose(tp.p0.m, catalogue_data.at[tp.id, "p0"])
+        npt.assert_allclose(tp.uhv.m, catalogue_data.at[tp.id, "uhv"])
+        npt.assert_allclose(tp.ulv.m, catalogue_data.at[tp.id, "ulv"])
+        npt.assert_allclose(tp.sn.m, catalogue_data.at[tp.id, "sn"])
+        npt.assert_allclose(tp.p0.m, catalogue_data.at[tp.id, "p0"])
         if pd.isna(tp.i0.m):
             assert pd.isna(catalogue_data.at[tp.id, "i0"])
         else:
-            assert np.isclose(tp.i0.m, catalogue_data.at[tp.id, "i0"])
-        assert np.isclose(tp.psc.m, catalogue_data.at[tp.id, "psc"])
-        assert np.isclose(tp.vsc.m, catalogue_data.at[tp.id, "vsc"])
+            npt.assert_allclose(tp.i0.m, catalogue_data.at[tp.id, "i0"])
+        npt.assert_allclose(tp.psc.m, catalogue_data.at[tp.id, "psc"])
+        npt.assert_allclose(tp.vsc.m, catalogue_data.at[tp.id, "vsc"])
         assert tp.manufacturer == catalogue_data.at[tp.id, "manufacturer"]
         assert tp.range == catalogue_data.at[tp.id, "range"]
         assert tp.efficiency == catalogue_data.at[tp.id, "efficiency"]
 
         # Check that the parameters are valid
-        assert isinstance(tp.z2.m, numbers.Complex)
-        assert isinstance(tp.ym.m, numbers.Complex)
-        assert isinstance(tp.k.m, numbers.Real)
+        assert isinstance(tp.z2.m, complex)
+        assert isinstance(tp.ym.m, complex)
+        assert isinstance(tp.k.m, float)
         assert tp.orientation in (-1.0, 1.0)
 
 
@@ -472,7 +470,7 @@ def test_get_catalogue():
     # Get the entire catalogue
     catalogue = TransformerParameters.get_catalogue()
     assert isinstance(catalogue, pd.DataFrame)
-    assert catalogue.shape == (309, 9)
+    assert catalogue.shape == (327, 9)
 
     # Filter on a single attribute
     for field_name, value, expected_size in [
@@ -480,10 +478,10 @@ def test_get_catalogue():
         ("manufacturer", "SE", 259),
         ("range", r"min.*", 123),
         ("efficiency", r"c0.*", 58),
-        ("vg", r"dy.*", 297),
+        ("vg", r"dy.*", 304),
         ("sn", Q_(160, "kVA"), 19),
-        ("uhv", Q_(20, "kV"), 172),
-        ("ulv", 400, 51),
+        ("uhv", Q_(20, "kV"), 175),
+        ("ulv", 400, 57),
     ]:
         filtered_catalogue = TransformerParameters.get_catalogue(**{field_name: value})
         assert filtered_catalogue.shape == (expected_size, 9), f"{field_name}={value!r}"

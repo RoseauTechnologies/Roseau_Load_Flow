@@ -17,6 +17,10 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 # Changelog
 
+## Unreleased
+
+- {gh-pr}`354` {gh-issue}`337` Add HV/MV transformer models to the catalogue.
+
 ## Version 0.12.0
 
 ```{note}
