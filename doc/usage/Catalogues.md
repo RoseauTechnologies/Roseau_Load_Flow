@@ -184,7 +184,7 @@ This catalogue can be retrieved in the form of a dataframe using:
 
 <!-- Generated with:
     import roseau.load_flow as rlf
-    from roseau.load_flow.utils._doc_utils import to_markdown
+    from roseau.load_flow.utils.doc_utils import to_markdown
     tr_catalogue = rlf.TransformerParameters.get_catalogue().sample(30, random_state=1)
     print(to_markdown(tr_catalogue, no_wrap_index=True))
  -->
@@ -255,7 +255,7 @@ following command only retrieves transformer parameters of transformers with an 
 
 <!-- Generated with:
     import roseau.load_flow as rlf
-    from roseau.load_flow.utils._doc_utils import to_markdown
+    from roseau.load_flow.utils.doc_utils import to_markdown
     tr_catalogue = rlf.TransformerParameters.get_catalogue(efficiency="A0Ak").head(10)
     print(to_markdown(tr_catalogue, no_wrap_index=True))
  -->
@@ -283,7 +283,7 @@ or only transformers with a wye winding on the high voltage side (using a regula
 
 <!-- Generated with:
     import roseau.load_flow as rlf
-    from roseau.load_flow.utils._doc_utils import to_markdown
+    from roseau.load_flow.utils.doc_utils import to_markdown
     tr_catalogue = rlf.TransformerParameters.get_catalogue(vg=r"Y.*").head(10)
     print(to_markdown(tr_catalogue, no_wrap_index=True))
  -->
@@ -307,7 +307,7 @@ or only transformers meeting both criteria
 
 <!-- Generated with:
     import roseau.load_flow as rlf
-    from roseau.load_flow.utils._doc_utils import to_markdown
+    from roseau.load_flow.utils.doc_utils import to_markdown
     tr_catalogue = rlf.TransformerParameters.get_catalogue(efficiency="A0Ak", vg=r"Y.*").head(10)
     print(to_markdown(tr_catalogue, no_wrap_index=True))
  -->
@@ -331,7 +331,7 @@ nominal power of 3150 kVA, the following two commands return the same table:
 
 <!-- Generated with:
     import roseau.load_flow as rlf
-    from roseau.load_flow.utils._doc_utils import to_markdown
+    from roseau.load_flow.utils.doc_utils import to_markdown
     tr_catalogue = rlf.TransformerParameters.get_catalogue(sn=rlf.Q_(3150, "kVA")).head(10)
     print(to_markdown(tr_catalogue, no_wrap_index=True))
  -->
