@@ -30,7 +30,8 @@
         "coordinates": [-1.40977863333772, 49.411627422261766]
       },
       "nominal_voltage": 20000,
-      "min_voltage_level": 0.95
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05
     },
     {
       "id": "MVLVFeeder07524",
@@ -40,7 +41,8 @@
         "coordinates": [-1.40977863333772, 49.411627422261766]
       },
       "nominal_voltage": 400,
-      "min_voltage_level": 0.9
+      "min_voltage_level": 0.9,
+      "max_voltage_level": 1.1
     },
     {
       "id": "LVBus110873",
@@ -50,7 +52,8 @@
         "coordinates": [-1.406218859752376, 49.41236346910499]
       },
       "nominal_voltage": 400,
-      "min_voltage_level": 0.9
+      "min_voltage_level": 0.9,
+      "max_voltage_level": 1.1
     }
   ],
   "lines": [
