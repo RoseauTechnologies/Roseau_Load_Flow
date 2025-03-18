@@ -19,6 +19,8 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`356` Fix regression since version 0.11.0 where `max_voltage_level` for buses was missing
+  in the catalogue networks.
 - {gh-pr}`355` {gh-issue}`337` Add HV/MV transformer models to the catalogue.
 
 ## Version 0.12.0

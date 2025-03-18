@@ -25,7 +25,8 @@
         "coordinates": [-1.687159292228112, 49.48974276829431]
       },
       "nominal_voltage": 20000,
-      "min_voltage_level": 0.95
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05
     },
     {
       "id": "HVMVFeeder07",
@@ -35,7 +36,8 @@
         "coordinates": [-1.687159292228112, 49.48974276829431]
       },
       "nominal_voltage": 20000,
-      "min_voltage_level": 0.95
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05
     },
     {
       "id": "MVLV05996",
@@ -45,7 +47,8 @@
         "coordinates": [-1.626239709998294, 49.43249717368583]
       },
       "nominal_voltage": 20000,
-      "min_voltage_level": 0.95
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05
     },
     {
       "id": "MVLV14092",
@@ -55,7 +58,8 @@
         "coordinates": [-1.6650298238154546, 49.46180069059946]
       },
       "nominal_voltage": 20000,
-      "min_voltage_level": 0.95
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05
     }
   ],
   "lines": [
