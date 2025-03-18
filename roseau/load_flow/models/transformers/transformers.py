@@ -104,9 +104,9 @@ class Transformer(AbstractBranch[CyTransformer]):
             geometry:
                 The geometry of the transformer.
         """
-        if parameters.type == "single-phase":
+        if parameters.phases == "single-phase":
             compute_phases = self._compute_phases_single
-        elif parameters.type == "center-tapped":
+        elif parameters.phases == "center-tapped":
             compute_phases = self._compute_phases_center
         else:
             compute_phases = self._compute_phases_three
@@ -128,7 +128,7 @@ class Transformer(AbstractBranch[CyTransformer]):
         self._parameters = parameters
         self.max_loading = max_loading
 
-        if parameters.type == "three-phase":
+        if parameters.phases == "three-phase":
             self._cy_element = parameters._create_cy_transformer(tap=tap)
         else:
             self._cy_element = parameters._create_cy_transformer(tap=parameters.orientation * tap)
@@ -204,7 +204,7 @@ class Transformer(AbstractBranch[CyTransformer]):
         self._invalidate_network_results()
         if self._cy_element is not None:
             z2, ym, k = value._z2, value._ym, value._k
-            if value.type in ("single-phase", "center-tapped"):
+            if value.phases in ("single-phase", "center-tapped"):
                 k *= value.orientation
             self._cy_element.update_transformer_parameters(z2, ym, k * self.tap)
 

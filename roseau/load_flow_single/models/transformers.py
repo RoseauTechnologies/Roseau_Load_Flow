@@ -112,8 +112,8 @@ class Transformer(AbstractBranch[CySingleTransformer]):
     @parameters.setter
     def parameters(self, value: TransformerParameters) -> None:
         # Note here we allow changing the vector group as the model is the same
-        if value.type != "three-phase":
-            msg = f"{value.type.capitalize()} transformers are not allowed in a balanced three-phase load flow."
+        if value.phases != "three-phase":
+            msg = f"{value.phases.capitalize()} transformers are not allowed in a balanced three-phase load flow."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_TYPE)
         self._parameters = value

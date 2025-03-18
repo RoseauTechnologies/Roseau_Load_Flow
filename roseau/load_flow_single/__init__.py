@@ -6,6 +6,8 @@ from roseau.load_flow import (
     Material,
     RoseauLoadFlowException,
     RoseauLoadFlowExceptionCode,
+    TransformerCooling,
+    TransformerInsulation,
     __authors__,
     __copyright__,
     __credits__,
@@ -86,6 +88,8 @@ __all__ = [
     "Insulator",
     "LineType",
     "Material",
+    "TransformerCooling",
+    "TransformerInsulation",
     "utils",
     "constants",
     # License

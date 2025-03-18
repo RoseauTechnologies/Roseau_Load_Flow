@@ -191,60 +191,54 @@ This catalogue can be retrieved in the form of a dataframe using:
 
 _Truncated output_
 
-| Name                                                              | Manufacturer | Product range | Efficiency         | Type          | Oil     | Nominal power (kVA) | Vector group | High voltage (kV) | Low voltage (kV) |
-| :---------------------------------------------------------------- | :----------- | :------------ | :----------------- | :------------ | :------ | ------------------: | :----------- | ----------------: | ---------------: |
-| <nobr>SE Vegeta C0Bk 100kVA 15/20kV(15) 410V Dyn11</nobr>         | SE           | Vegeta        | C0Bk               | three-phase   | ester   |                 100 | Dyn11        |                15 |             0.41 |
-| <nobr>SE Vegeta Standard 400kVA 15/20kV(20) 410V Dyn11</nobr>     | SE           | Vegeta        | Standard           | three-phase   | ester   |                 400 | Dyn11        |                20 |             0.41 |
-| <nobr>SE Vegeta AA0Ak 630kVA 20kV 410V Dyn11</nobr>               | SE           | Vegeta        | AA0Ak              | three-phase   | ester   |                 630 | Dyn11        |                20 |             0.41 |
-| <nobr>SE Minera B0Bk 250kVA 15/20kV(20) 410V Dyn11</nobr>         | SE           | Minera        | B0Bk               | three-phase   | mineral |                 250 | Dyn11        |                20 |             0.41 |
-| <nobr>SE Minera Standard 160kVA 15/20kV(15) 410V Dyn11</nobr>     | SE           | Minera        | Standard           | three-phase   | mineral |                 160 | Dyn11        |                15 |             0.41 |
-| <nobr>SE Imprego 10kVA 230V 230V Ii0</nobr>                       | SE           | Imprego       |                    | single-phase  | dry     |                  10 | Ii0          |              0.23 |             0.23 |
-| <nobr>CA Yellow A0Ak 1250kVA 15.75/21kV(21) 400V Dyn11</nobr>     | CA           | Yellow        | A0Ak               | three-phase   |         |                1250 | Dyn11        |                21 |              0.4 |
-| <nobr>SE Trihal AA0Ak 800kVA 15/20kV(15) 410V Dyn11</nobr>        | SE           | Trihal        | AA0Ak              | three-phase   | dry     |                 800 | Dyn11        |                15 |             0.41 |
-| <nobr>SE Vegeta C0Bk 100kVA 15/20kV(20) 410V Dyn11</nobr>         | SE           | Vegeta        | C0Bk               | three-phase   | ester   |                 100 | Dyn11        |                20 |             0.41 |
-| <nobr>SE Trihal AA0Ak 1000kVA 15/20kV(15) 410V Dyn11</nobr>       | SE           | Trihal        | AA0Ak              | three-phase   | dry     |                1000 | Dyn11        |                15 |             0.41 |
-| <nobr>SE Trihal AA0Ak 800kVA 15/20kV(20) 410V Dyn11</nobr>        | SE           | Trihal        | AA0Ak              | three-phase   | dry     |                 800 | Dyn11        |                20 |             0.41 |
-| <nobr>SE Minera C0Bk 1600kVA 15/20kV(15) 410V Dyn11</nobr>        | SE           | Minera        | C0Bk               | three-phase   | mineral |                1600 | Dyn11        |                15 |             0.41 |
-| <nobr>SE Trihal ExtraReducedLosses 1250kVA 20kV 410V Dyn11</nobr> | SE           | Trihal        | ExtraReducedLosses | three-phase   | dry     |                1250 | Dyn11        |                20 |             0.41 |
-| <nobr>SE Minera B0Bk 500kVA 15/20kV(20) 410V Dyn11</nobr>         | SE           | Minera        | B0Bk               | three-phase   | mineral |                 500 | Dyn11        |                20 |             0.41 |
-| <nobr>SE Imprego 10kVA 230V 230V Iii0</nobr>                      | SE           | Imprego       |                    | center-tapped | dry     |                  10 | Iii0         |              0.23 |             0.23 |
-| <nobr>SE Vegeta C0Bk 400kVA 15/20kV(20) 410V Dyn11</nobr>         | SE           | Vegeta        | C0Bk               | three-phase   | ester   |                 400 | Dyn11        |                20 |             0.41 |
-| <nobr>CA Yellow A0Ak 800kVA 15.75/21kV(15.75) 400V Dyn11</nobr>   | CA           | Yellow        | A0Ak               | three-phase   |         |                 800 | Dyn11        |             15.75 |              0.4 |
-| <nobr>SE Trihal AA0Ak 2000kVA 15/20kV(20) 410V Dyn11</nobr>       | SE           | Trihal        | AA0Ak              | three-phase   | dry     |                2000 | Dyn11        |                20 |             0.41 |
-| <nobr>SE Vegeta C0Bk 1000kVA 15/20kV(20) 410V Dyn11</nobr>        | SE           | Vegeta        | C0Bk               | three-phase   | ester   |                1000 | Dyn11        |                20 |             0.41 |
-| <nobr>FT 400kVA 15/20kV(15) 400V Dyn11</nobr>                     | FT           |               |                    | three-phase   | mineral |                 400 | Dyn11        |                15 |              0.4 |
-| <nobr>CA Yellow A0Ak 3150kVA 15.75/21kV(15.75) 400V Dyn11</nobr>  | CA           | Yellow        | A0Ak               | three-phase   |         |                3150 | Dyn11        |             15.75 |              0.4 |
-| <nobr>FT 2000kVA 15/20kV(20) 400V Dyn11</nobr>                    | FT           |               |                    | three-phase   | mineral |                2000 | Dyn11        |                20 |              0.4 |
-| <nobr>CA Yellow A0Ak 400kVA 15.75/21kV(15.75) 400V Dyn11</nobr>   | CA           | Yellow        | A0Ak               | three-phase   |         |                 400 | Dyn11        |             15.75 |              0.4 |
-| <nobr>SE Vegeta Standard 800kVA 15/20kV(15) 410V Dyn11</nobr>     | SE           | Vegeta        | Standard           | three-phase   | ester   |                 800 | Dyn11        |                15 |             0.41 |
-| <nobr>SE Minera B0Bk 315kVA 15/20kV(15) 410V Dyn11</nobr>         | SE           | Minera        | B0Bk               | three-phase   | mineral |                 315 | Dyn11        |                15 |             0.41 |
-| <nobr>SE Minera C0Bk 50kVA 15/20kV(20) 410V Yzn11</nobr>          | SE           | Minera        | C0Bk               | three-phase   | mineral |                  50 | Yzn11        |                20 |             0.41 |
-| <nobr>SE Minera C0Bk 630kVA 15/20kV(20) 410V Dyn11</nobr>         | SE           | Minera        | C0Bk               | three-phase   | mineral |                 630 | Dyn11        |                20 |             0.41 |
-| <nobr>SE Minera C0Bk 1250kVA 15/20kV(15) 410V Dyn11</nobr>        | SE           | Minera        | C0Bk               | three-phase   | mineral |                1250 | Dyn11        |                15 |             0.41 |
-| <nobr>SE Trihal AA0Ak 800kVA 20kV 410V Dyn11</nobr>               | SE           | Trihal        | AA0Ak              | three-phase   | dry     |                 800 | Dyn11        |                20 |             0.41 |
-| <nobr>SE Minera B0Bk 2500kVA 15/20kV(20) 410V Dyn11</nobr>        | SE           | Minera        | B0Bk               | three-phase   | mineral |                2500 | Dyn11        |                20 |             0.41 |
+| Name                                                              | Manufacturer       | Product range | Efficiency         | Cooling class | Vector group | Nominal power (kVA) | High voltage (kV) | Low voltage (kV) | Frequency (Hz) |
+| :---------------------------------------------------------------- | :----------------- | :------------ | :----------------- | :------------ | :----------- | ------------------: | ----------------: | ---------------: | -------------: |
+| <nobr>SE Minera A0Ak 500kVA 15/20kV(15) 410V Dyn11</nobr>         | Schneider Electric | Minera        | A0Ak               | ONAN          | Dyn11        |                 500 |                15 |             0.41 |             50 |
+| <nobr>SE Vegeta Standard 100kVA 15/20kV(15) 410V Dyn11</nobr>     | Schneider Electric | Vegeta        | Standard           | KNAN          | Dyn11        |                 100 |                15 |             0.41 |             50 |
+| <nobr>SE Trihal AA0Ak 3150kVA 20kV 410V Dyn11</nobr>              | Schneider Electric | Trihal        | AA0Ak              | AN            | Dyn11        |                3150 |                20 |             0.41 |             50 |
+| <nobr>SE Trihal ReducedLosses 250kVA 20kV 410V Dyn11</nobr>       | Schneider Electric | Trihal        | ReducedLosses      | AN            | Dyn11        |                 250 |                20 |             0.41 |             50 |
+| <nobr>SE Imprego 10kVA 230V 230V Iii0</nobr>                      | Schneider Electric | Imprego       |                    | AN            | Iii0         |                  10 |              0.23 |             0.23 |             50 |
+| <nobr>SE Trihal AA0Ak 1600kVA 20kV 410V Dyn11</nobr>              | Schneider Electric | Trihal        | AA0Ak              | AN            | Dyn11        |                1600 |                20 |             0.41 |             50 |
+| <nobr>SE Minera B0Bk 1600kVA 15/20kV(15) 410V Dyn11</nobr>        | Schneider Electric | Minera        | B0Bk               | ONAN          | Dyn11        |                1600 |                15 |             0.41 |             50 |
+| <nobr>SE Trihal ExtraReducedLosses 1250kVA 20kV 410V Dyn11</nobr> | Schneider Electric | Trihal        | ExtraReducedLosses | AN            | Dyn11        |                1250 |                20 |             0.41 |             50 |
+| <nobr>SE Minera B0Bk 800kVA 15/20kV(15) 410V Dyn11</nobr>         | Schneider Electric | Minera        | B0Bk               | ONAN          | Dyn11        |                 800 |                15 |             0.41 |             50 |
+| <nobr>SE Trihal ExtraReducedLosses 2000kVA 20kV 410V Dyn11</nobr> | Schneider Electric | Trihal        | ExtraReducedLosses | AN            | Dyn11        |                2000 |                20 |             0.41 |             50 |
+| <nobr>SE Vegeta AA0Ak 400kVA 20kV 410V Dyn11</nobr>               | Schneider Electric | Vegeta        | AA0Ak              | KNAN          | Dyn11        |                 400 |                20 |             0.41 |             50 |
+| <nobr>FT 400kVA 15/20kV(20) 400V Dyn11</nobr>                     | France Transfo     |               |                    | ONAN          | Dyn11        |                 400 |                20 |              0.4 |             50 |
+| <nobr>SE Minera A0Ak 400kVA 15/20kV(15) 410V Dyn11</nobr>         | Schneider Electric | Minera        | A0Ak               | ONAN          | Dyn11        |                 400 |                15 |             0.41 |             50 |
+| <nobr>SE Trihal AA0Ak 1600kVA 15/20kV(15) 410V Dyn11</nobr>       | Schneider Electric | Trihal        | AA0Ak              | AN            | Dyn11        |                1600 |                15 |             0.41 |             50 |
+| <nobr>SE Trihal Standard 1000kVA 20kV 410V Dyn11</nobr>           | Schneider Electric | Trihal        | Standard           | AN            | Dyn11        |                1000 |                20 |             0.41 |             50 |
+| <nobr>SE Trihal AA0Ak 2000kVA 15/20kV(20) 410V Dyn11</nobr>       | Schneider Electric | Trihal        | AA0Ak              | AN            | Dyn11        |                2000 |                20 |             0.41 |             50 |
+| <nobr>SE Trihal ExtraReducedLosses 1000kVA 20kV 410V Dyn11</nobr> | Schneider Electric | Trihal        | ExtraReducedLosses | AN            | Dyn11        |                1000 |                20 |             0.41 |             50 |
+| <nobr>SE Trihal AA0Ak 800kVA 20kV 410V Dyn11</nobr>               | Schneider Electric | Trihal        | AA0Ak              | AN            | Dyn11        |                 800 |                20 |             0.41 |             50 |
+| <nobr>FT 630kVA 15/20kV(20) 400V Dyn11</nobr>                     | France Transfo     |               |                    | ONAN          | Dyn11        |                 630 |                20 |              0.4 |             50 |
+| <nobr>SE Minera C0Bk 1600kVA 15/20kV(15) 410V Dyn11</nobr>        | Schneider Electric | Minera        | C0Bk               | ONAN          | Dyn11        |                1600 |                15 |             0.41 |             50 |
+| <nobr>SE Vegeta Standard 800kVA 15/20kV(20) 410V Dyn11</nobr>     | Schneider Electric | Vegeta        | Standard           | KNAN          | Dyn11        |                 800 |                20 |             0.41 |             50 |
+| <nobr>SE Minera C0Bk 1250kVA 15/20kV(15) 410V Dyn11</nobr>        | Schneider Electric | Minera        | C0Bk               | ONAN          | Dyn11        |                1250 |                15 |             0.41 |             50 |
+| <nobr>SE Minera C0Bk 2000kVA 15/20kV(20) 410V Dyn11</nobr>        | Schneider Electric | Minera        | C0Bk               | ONAN          | Dyn11        |                2000 |                20 |             0.41 |             50 |
+| <nobr>SE Minera C0Bk 630kVA 15/20kV(20) 410V Dyn11</nobr>         | Schneider Electric | Minera        | C0Bk               | ONAN          | Dyn11        |                 630 |                20 |             0.41 |             50 |
+| <nobr>SE Minera C0Bk 160kVA 15/20kV(15) 410V Dyn11</nobr>         | Schneider Electric | Minera        | C0Bk               | ONAN          | Dyn11        |                 160 |                15 |             0.41 |             50 |
+| <nobr>FT 400kVA 15/20kV(15) 400V Dyn11</nobr>                     | France Transfo     |               |                    | ONAN          | Dyn11        |                 400 |                15 |              0.4 |             50 |
+| <nobr>CA Yellow A0Ak 2500kVA 15.75/21kV(15.75) 400V Dyn11</nobr>  | Cahors             | Yellow        | A0Ak               | ONAN          | Dyn11        |                2500 |             15.75 |              0.4 |             50 |
+| <nobr>FT 2000kVA 15/20kV(20) 400V Dyn11</nobr>                    | France Transfo     |               |                    | ONAN          | Dyn11        |                2000 |                20 |              0.4 |             50 |
+| <nobr>CA Yellow A0Ak 250kVA 15.75/21kV(15.75) 400V Dyn11</nobr>   | Cahors             | Yellow        | A0Ak               | ONAN          | Dyn11        |                 250 |             15.75 |              0.4 |             50 |
+| <nobr>SE Vegeta C0Bk 630kVA 15/20kV(15) 410V Dyn11</nobr>         | Schneider Electric | Vegeta        | C0Bk               | KNAN          | Dyn11        |                 630 |                15 |             0.41 |             50 |
 
 The following data are available in this table:
 
 - the **name**: a unique name of the transformer in the catalogue. This is usually a concatenation
   of the manufacturer, the product range, the efficiency class, the nominal power, the high voltage,
   the low voltage, and the vector group.
-- the **manufacturer**: these manufacturers are currently available:
-  - `"SE"` stands for "Schneider-Electric"
-  - `"FT"` stands for "France Transfo"
-  - `"CA"` stands for "Cahors"
+- the **manufacturer**: the manufacturer of the transformer.
 - the product **range** which depends on the manufacturer
 - the **efficiency** class of the transformer. The efficiency class used in the catalogue follows the
   `Eco-Design` requirements as defined by the `EN 50629` standard.
-- the **type** of the transfomer. It can be `three-phase`, `single-phase`, or `center-tapped`.
-- the oil type of the transformer, noted **oil**:
-  - `dry`: dry-type transformer
-  - `mineral`: mineral oil immersed transformer
-  - `ester`: vegetable oil (natural ester) immersed transformer
+- the **cooling** class of the transformer according to IEC 60076: (e.g., `ONAN`, `KNAN`, `AN`, etc.)
 - the vector group of the transformer, noted **vg** (e.g., `Dyn11`, `Yzn11`, `Ii0`, etc.)
 - the nominal power, noted **sn**.
-- the phase-to-phase high voltage, noted **uhv**.
-- the no-load phase-to-phase low voltage, noted **ulv**.
+- the rated high voltage (phase-to-phase), noted **uhv**.
+- the rated no-load low voltage (phase-to-phase), noted **ulv**.
+- the nominal frequency, noted **fn**.
 
 The `get_catalogue` method accepts arguments (in bold above) that can be used to filter the returned table. The
 following command only retrieves transformer parameters of transformers with an efficiency of "A0Ak":
@@ -262,18 +256,18 @@ following command only retrieves transformer parameters of transformers with an 
 
 _Truncated output_
 
-| Name                                                       | Manufacturer | Product range | Efficiency | Type        | Oil     | Nominal power (kVA) | Vector group | High voltage (kV) | Low voltage (kV) |
-| :--------------------------------------------------------- | :----------- | :------------ | :--------- | :---------- | :------ | ------------------: | :----------- | ----------------: | ---------------: |
-| <nobr>SE Minera A0Ak 50kVA 15/20kV(20) 410V Yzn11</nobr>   | SE           | Minera        | A0Ak       | three-phase | mineral |                  50 | Yzn11        |                20 |             0.41 |
-| <nobr>SE Minera A0Ak 100kVA 15/20kV(20) 410V Dyn11</nobr>  | SE           | Minera        | A0Ak       | three-phase | mineral |                 100 | Dyn11        |                20 |             0.41 |
-| <nobr>SE Minera A0Ak 160kVA 15/20kV(20) 410V Dyn11</nobr>  | SE           | Minera        | A0Ak       | three-phase | mineral |                 160 | Dyn11        |                20 |             0.41 |
-| <nobr>SE Minera A0Ak 250kVA 15/20kV(20) 410V Dyn11</nobr>  | SE           | Minera        | A0Ak       | three-phase | mineral |                 250 | Dyn11        |                20 |             0.41 |
-| <nobr>SE Minera A0Ak 315kVA 15/20kV(20) 410V Dyn11</nobr>  | SE           | Minera        | A0Ak       | three-phase | mineral |                 315 | Dyn11        |                20 |             0.41 |
-| <nobr>SE Minera A0Ak 400kVA 15/20kV(20) 410V Dyn11</nobr>  | SE           | Minera        | A0Ak       | three-phase | mineral |                 400 | Dyn11        |                20 |             0.41 |
-| <nobr>SE Minera A0Ak 500kVA 15/20kV(20) 410V Dyn11</nobr>  | SE           | Minera        | A0Ak       | three-phase | mineral |                 500 | Dyn11        |                20 |             0.41 |
-| <nobr>SE Minera A0Ak 630kVA 15/20kV(20) 410V Dyn11</nobr>  | SE           | Minera        | A0Ak       | three-phase | mineral |                 630 | Dyn11        |                20 |             0.41 |
-| <nobr>SE Minera A0Ak 800kVA 15/20kV(20) 410V Dyn11</nobr>  | SE           | Minera        | A0Ak       | three-phase | mineral |                 800 | Dyn11        |                20 |             0.41 |
-| <nobr>SE Minera A0Ak 1000kVA 15/20kV(20) 410V Dyn11</nobr> | SE           | Minera        | A0Ak       | three-phase | mineral |                1000 | Dyn11        |                20 |             0.41 |
+| Name                                                       | Manufacturer       | Product range | Efficiency | Cooling class | Vector group | Nominal power (kVA) | High voltage (kV) | Low voltage (kV) | Frequency (Hz) |
+| :--------------------------------------------------------- | :----------------- | :------------ | :--------- | :------------ | :----------- | ------------------: | ----------------: | ---------------: | -------------: |
+| <nobr>SE Minera A0Ak 50kVA 15/20kV(20) 410V Yzn11</nobr>   | Schneider Electric | Minera        | A0Ak       | ONAN          | Yzn11        |                  50 |                20 |             0.41 |             50 |
+| <nobr>SE Minera A0Ak 100kVA 15/20kV(20) 410V Dyn11</nobr>  | Schneider Electric | Minera        | A0Ak       | ONAN          | Dyn11        |                 100 |                20 |             0.41 |             50 |
+| <nobr>SE Minera A0Ak 160kVA 15/20kV(20) 410V Dyn11</nobr>  | Schneider Electric | Minera        | A0Ak       | ONAN          | Dyn11        |                 160 |                20 |             0.41 |             50 |
+| <nobr>SE Minera A0Ak 250kVA 15/20kV(20) 410V Dyn11</nobr>  | Schneider Electric | Minera        | A0Ak       | ONAN          | Dyn11        |                 250 |                20 |             0.41 |             50 |
+| <nobr>SE Minera A0Ak 315kVA 15/20kV(20) 410V Dyn11</nobr>  | Schneider Electric | Minera        | A0Ak       | ONAN          | Dyn11        |                 315 |                20 |             0.41 |             50 |
+| <nobr>SE Minera A0Ak 400kVA 15/20kV(20) 410V Dyn11</nobr>  | Schneider Electric | Minera        | A0Ak       | ONAN          | Dyn11        |                 400 |                20 |             0.41 |             50 |
+| <nobr>SE Minera A0Ak 500kVA 15/20kV(20) 410V Dyn11</nobr>  | Schneider Electric | Minera        | A0Ak       | ONAN          | Dyn11        |                 500 |                20 |             0.41 |             50 |
+| <nobr>SE Minera A0Ak 630kVA 15/20kV(20) 410V Dyn11</nobr>  | Schneider Electric | Minera        | A0Ak       | ONAN          | Dyn11        |                 630 |                20 |             0.41 |             50 |
+| <nobr>SE Minera A0Ak 800kVA 15/20kV(20) 410V Dyn11</nobr>  | Schneider Electric | Minera        | A0Ak       | ONAN          | Dyn11        |                 800 |                20 |             0.41 |             50 |
+| <nobr>SE Minera A0Ak 1000kVA 15/20kV(20) 410V Dyn11</nobr> | Schneider Electric | Minera        | A0Ak       | ONAN          | Dyn11        |                1000 |                20 |             0.41 |             50 |
 
 or only transformers with a wye winding on the high voltage side (using a regular expression)
 
@@ -288,16 +282,18 @@ or only transformers with a wye winding on the high voltage side (using a regula
     print(to_markdown(tr_catalogue, no_wrap_index=True))
  -->
 
-| Name                                                         | Manufacturer | Product range | Efficiency | Type        | Oil     | Nominal power (kVA) | Vector group | High voltage (kV) | Low voltage (kV) |
-| :----------------------------------------------------------- | :----------- | :------------ | :--------- | :---------- | :------ | ------------------: | :----------- | ----------------: | ---------------: |
-| <nobr>SE Minera A0Ak 50kVA 15/20kV(20) 410V Yzn11</nobr>     | SE           | Minera        | A0Ak       | three-phase | mineral |                  50 | Yzn11        |                20 |             0.41 |
-| <nobr>SE Minera A0Ak 50kVA 15/20kV(15) 410V Yzn11</nobr>     | SE           | Minera        | A0Ak       | three-phase | mineral |                  50 | Yzn11        |                15 |             0.41 |
-| <nobr>SE Minera B0Bk 50kVA 15/20kV(20) 410V Yzn11</nobr>     | SE           | Minera        | B0Bk       | three-phase | mineral |                  50 | Yzn11        |                20 |             0.41 |
-| <nobr>SE Minera B0Bk 50kVA 15/20kV(15) 410V Yzn11</nobr>     | SE           | Minera        | B0Bk       | three-phase | mineral |                  50 | Yzn11        |                15 |             0.41 |
-| <nobr>SE Minera C0Bk 50kVA 15/20kV(20) 410V Yzn11</nobr>     | SE           | Minera        | C0Bk       | three-phase | mineral |                  50 | Yzn11        |                20 |             0.41 |
-| <nobr>SE Minera C0Bk 50kVA 15/20kV(15) 410V Yzn11</nobr>     | SE           | Minera        | C0Bk       | three-phase | mineral |                  50 | Yzn11        |                15 |             0.41 |
-| <nobr>SE Minera Standard 50kVA 15/20kV(20) 410V Yzn11</nobr> | SE           | Minera        | Standard   | three-phase | mineral |                  50 | Yzn11        |                20 |             0.41 |
-| <nobr>SE Minera Standard 50kVA 15/20kV(15) 410V Yzn11</nobr> | SE           | Minera        | Standard   | three-phase | mineral |                  50 | Yzn11        |                15 |             0.41 |
+| Name                                                         | Manufacturer       | Product range | Efficiency | Cooling class | Vector group | Nominal power (kVA) | High voltage (kV) | Low voltage (kV) | Frequency (Hz) |
+| :----------------------------------------------------------- | :----------------- | :------------ | :--------- | :------------ | :----------- | ------------------: | ----------------: | ---------------: | -------------: |
+| <nobr>SE Minera A0Ak 50kVA 15/20kV(20) 410V Yzn11</nobr>     | Schneider Electric | Minera        | A0Ak       | ONAN          | Yzn11        |                  50 |                20 |             0.41 |             50 |
+| <nobr>SE Minera A0Ak 50kVA 15/20kV(15) 410V Yzn11</nobr>     | Schneider Electric | Minera        | A0Ak       | ONAN          | Yzn11        |                  50 |                15 |             0.41 |             50 |
+| <nobr>SE Minera B0Bk 50kVA 15/20kV(20) 410V Yzn11</nobr>     | Schneider Electric | Minera        | B0Bk       | ONAN          | Yzn11        |                  50 |                20 |             0.41 |             50 |
+| <nobr>SE Minera B0Bk 50kVA 15/20kV(15) 410V Yzn11</nobr>     | Schneider Electric | Minera        | B0Bk       | ONAN          | Yzn11        |                  50 |                15 |             0.41 |             50 |
+| <nobr>SE Minera C0Bk 50kVA 15/20kV(20) 410V Yzn11</nobr>     | Schneider Electric | Minera        | C0Bk       | ONAN          | Yzn11        |                  50 |                20 |             0.41 |             50 |
+| <nobr>SE Minera C0Bk 50kVA 15/20kV(15) 410V Yzn11</nobr>     | Schneider Electric | Minera        | C0Bk       | ONAN          | Yzn11        |                  50 |                15 |             0.41 |             50 |
+| <nobr>SE Minera Standard 50kVA 15/20kV(20) 410V Yzn11</nobr> | Schneider Electric | Minera        | Standard   | ONAN          | Yzn11        |                  50 |                20 |             0.41 |             50 |
+| <nobr>SE Minera Standard 50kVA 15/20kV(15) 410V Yzn11</nobr> | Schneider Electric | Minera        | Standard   | ONAN          | Yzn11        |                  50 |                15 |             0.41 |             50 |
+| <nobr>SC SZ11-76 MVA-110/35 kV</nobr>                        | SCOTECH            |               |            | ONAF          | YNd11        |               76000 |               110 |               35 |             50 |
+| <nobr>SC S-100 MVA-220/35KV</nobr>                           | SCOTECH            |               |            | ONAN          | YNd11        |              100000 |               220 |               35 |             50 |
 
 or only transformers meeting both criteria
 
@@ -312,10 +308,10 @@ or only transformers meeting both criteria
     print(to_markdown(tr_catalogue, no_wrap_index=True))
  -->
 
-| Name                                                     | Manufacturer | Product range | Efficiency | Type        | Oil     | Nominal power (kVA) | Vector group | High voltage (kV) | Low voltage (kV) |
-| :------------------------------------------------------- | :----------- | :------------ | :--------- | :---------- | :------ | ------------------: | :----------- | ----------------: | ---------------: |
-| <nobr>SE Minera A0Ak 50kVA 15/20kV(20) 410V Yzn11</nobr> | SE           | Minera        | A0Ak       | three-phase | mineral |                  50 | Yzn11        |                20 |             0.41 |
-| <nobr>SE Minera A0Ak 50kVA 15/20kV(15) 410V Yzn11</nobr> | SE           | Minera        | A0Ak       | three-phase | mineral |                  50 | Yzn11        |                15 |             0.41 |
+| Name                                                     | Manufacturer       | Product range | Efficiency | Cooling class | Vector group | Nominal power (kVA) | High voltage (kV) | Low voltage (kV) | Frequency (Hz) |
+| :------------------------------------------------------- | :----------------- | :------------ | :--------- | :------------ | :----------- | ------------------: | ----------------: | ---------------: | -------------: |
+| <nobr>SE Minera A0Ak 50kVA 15/20kV(20) 410V Yzn11</nobr> | Schneider Electric | Minera        | A0Ak       | ONAN          | Yzn11        |                  50 |                20 |             0.41 |             50 |
+| <nobr>SE Minera A0Ak 50kVA 15/20kV(15) 410V Yzn11</nobr> | Schneider Electric | Minera        | A0Ak       | ONAN          | Yzn11        |                  50 |                15 |             0.41 |             50 |
 
 Among all the possible filters, the nominal power and voltages are expected in their default unit
 (VA and V). You can also use the [Pint](https://pint.readthedocs.io/en/stable/) library to express
@@ -336,18 +332,18 @@ nominal power of 3150 kVA, the following two commands return the same table:
     print(to_markdown(tr_catalogue, no_wrap_index=True))
  -->
 
-| Name                                                           | Manufacturer | Product range | Efficiency | Type        | Oil     | Nominal power (kVA) | Vector group | High voltage (kV) | Low voltage (kV) |
-| :------------------------------------------------------------- | :----------- | :------------ | :--------- | :---------- | :------ | ------------------: | :----------- | ----------------: | ---------------: |
-| <nobr>FT 3150kVA 15/20kV(20) 400V Dyn11</nobr>                 | FT           |               |            | three-phase | mineral |                3150 | Dyn11        |                20 |              0.4 |
-| <nobr>FT 3150kVA 15/20kV(15) 400V Dyn11</nobr>                 | FT           |               |            | three-phase | mineral |                3150 | Dyn11        |                15 |              0.4 |
-| <nobr>SE Minera AA0Ak 3150kVA 20kV 410V Dyn11</nobr>           | SE           | Minera        | AA0Ak      | three-phase | mineral |                3150 | Dyn11        |                20 |             0.41 |
-| <nobr>SE Trihal AA0Ak 3150kVA 15/20kV(20) 410V Dyn11</nobr>    | SE           | Trihal        | AA0Ak      | three-phase | dry     |                3150 | Dyn11        |                20 |             0.41 |
-| <nobr>SE Trihal AA0Ak 3150kVA 15/20kV(15) 410V Dyn11</nobr>    | SE           | Trihal        | AA0Ak      | three-phase | dry     |                3150 | Dyn11        |                15 |             0.41 |
-| <nobr>SE Trihal AA0Ak 3150kVA 20kV 410V Dyn11</nobr>           | SE           | Trihal        | AA0Ak      | three-phase | dry     |                3150 | Dyn11        |                20 |             0.41 |
-| <nobr>SE Vegeta AA0Ak 3150kVA 20kV 410V Dyn11</nobr>           | SE           | Vegeta        | AA0Ak      | three-phase | ester   |                3150 | Dyn11        |                20 |             0.41 |
-| <nobr>SE Vegeta C0Bk 3150kVA 15/20kV(20) 410V Dyn11</nobr>     | SE           | Vegeta        | C0Bk       | three-phase | ester   |                3150 | Dyn11        |                20 |             0.41 |
-| <nobr>SE Vegeta C0Bk 3150kVA 15/20kV(15) 410V Dyn11</nobr>     | SE           | Vegeta        | C0Bk       | three-phase | ester   |                3150 | Dyn11        |                15 |             0.41 |
-| <nobr>SE Vegeta Standard 3150kVA 15/20kV(20) 410V Dyn11</nobr> | SE           | Vegeta        | Standard   | three-phase | ester   |                3150 | Dyn11        |                20 |             0.41 |
+| Name                                                           | Manufacturer       | Product range | Efficiency | Cooling class | Vector group | Nominal power (kVA) | High voltage (kV) | Low voltage (kV) | Frequency (Hz) |
+| :------------------------------------------------------------- | :----------------- | :------------ | :--------- | :------------ | :----------- | ------------------: | ----------------: | ---------------: | -------------: |
+| <nobr>FT 3150kVA 15/20kV(20) 400V Dyn11</nobr>                 | France Transfo     |               |            | ONAN          | Dyn11        |                3150 |                20 |              0.4 |             50 |
+| <nobr>FT 3150kVA 15/20kV(15) 400V Dyn11</nobr>                 | France Transfo     |               |            | ONAN          | Dyn11        |                3150 |                15 |              0.4 |             50 |
+| <nobr>SE Minera AA0Ak 3150kVA 20kV 410V Dyn11</nobr>           | Schneider Electric | Minera        | AA0Ak      | ONAN          | Dyn11        |                3150 |                20 |             0.41 |             50 |
+| <nobr>SE Trihal AA0Ak 3150kVA 15/20kV(20) 410V Dyn11</nobr>    | Schneider Electric | Trihal        | AA0Ak      | AN            | Dyn11        |                3150 |                20 |             0.41 |             50 |
+| <nobr>SE Trihal AA0Ak 3150kVA 15/20kV(15) 410V Dyn11</nobr>    | Schneider Electric | Trihal        | AA0Ak      | AN            | Dyn11        |                3150 |                15 |             0.41 |             50 |
+| <nobr>SE Trihal AA0Ak 3150kVA 20kV 410V Dyn11</nobr>           | Schneider Electric | Trihal        | AA0Ak      | AN            | Dyn11        |                3150 |                20 |             0.41 |             50 |
+| <nobr>SE Vegeta AA0Ak 3150kVA 20kV 410V Dyn11</nobr>           | Schneider Electric | Vegeta        | AA0Ak      | KNAN          | Dyn11        |                3150 |                20 |             0.41 |             50 |
+| <nobr>SE Vegeta C0Bk 3150kVA 15/20kV(20) 410V Dyn11</nobr>     | Schneider Electric | Vegeta        | C0Bk       | KNAN          | Dyn11        |                3150 |                20 |             0.41 |             50 |
+| <nobr>SE Vegeta C0Bk 3150kVA 15/20kV(15) 410V Dyn11</nobr>     | Schneider Electric | Vegeta        | C0Bk       | KNAN          | Dyn11        |                3150 |                15 |             0.41 |             50 |
+| <nobr>SE Vegeta Standard 3150kVA 15/20kV(20) 410V Dyn11</nobr> | Schneider Electric | Vegeta        | Standard   | KNAN          | Dyn11        |                3150 |                20 |             0.41 |             50 |
 
 ### Getting an instance
 
@@ -359,8 +355,9 @@ For instance, these parameters filter the catalogue down to a single transformer
 
 ```pycon
 >>> rlf.TransformerParameters.from_catalogue(efficiency="A0Ak", vg=r"Y.*", uhv=15000)
-<TransformerParameters: id='SE Minera A0Ak 50kVA 15/20kV(15) 410V Yzn11', vg='Yzn11', sn=50000, uhv=15000,
-ulv=410, p0=90.0, i0=0.005, psc=750.0, vsc=0.04, manufacturer='SE', range='Minera', efficiency='A0Ak'>
+<TransformerParameters: id='SE Minera A0Ak 50kVA 15/20kV(15) 410V Yzn11', vg='Yzn11', sn=50000,
+uhv=15000, ulv=410, fn=50.0, p0=90.0, i0=0.005, psc=750.0, vsc=0.04, manufacturer='Schneider Electric',
+range='Minera', efficiency='A0Ak', cooling='ONAN', insulation='liquid-immersed'>
 ```
 
 The `name` filter can be directly used:
@@ -369,15 +366,16 @@ The `name` filter can be directly used:
 >>> rlf.TransformerParameters.from_catalogue(
 ...     name="SE Minera A0Ak 50kVA 15/20kV(15) 410V Yzn11"
 ... )
-<TransformerParameters: id='SE Minera A0Ak 50kVA 15/20kV(15) 410V Yzn11', vg='Yzn11', sn=50000, uhv=15000,
-ulv=410, p0=90.0, i0=0.005, psc=750.0, vsc=0.04, manufacturer='SE', range='Minera', efficiency='A0Ak'>
+<TransformerParameters: id='SE Minera A0Ak 50kVA 15/20kV(15) 410V Yzn11', vg='Yzn11', sn=50000,
+uhv=15000, ulv=410, fn=50.0, p0=90.0, i0=0.005, psc=750.0, vsc=0.04, manufacturer='Schneider Electric',
+range='Minera', efficiency='A0Ak', cooling='ONAN', insulation='liquid-immersed'>
 ```
 
 In case no or several results match the parameters, an error is raised:
 
 ```pycon
->>> rlf.TransformerParameters.from_catalogue(manufacturer="ft")
-RoseauLoadFlowException: Several transformers matching the query (manufacturer='ft') have been found:
+>>> rlf.TransformerParameters.from_catalogue(manufacturer="France Transfo")
+RoseauLoadFlowException: Several transformers matching the query (manufacturer='France Transfo') have been found:
 'FT 100kVA 15/20kV(20) 400V Dyn11', 'FT 160kVA 15/20kV(20) 400V Dyn11', 'FT 250kVA 15/20kV(20) 400V Dyn11',
 'FT 315kVA 15/20kV(20) 400V Dyn11', 'FT 400kVA 15/20kV(20) 400V Dyn11', 'FT 500kVA 15/20kV(20) 400V Dyn11',
 'FT 630kVA 15/20kV(20) 400V Dyn11', 'FT 800kVA 15/20kV(20) 400V Dyn11', 'FT 1000kVA 15/20kV(20) 400V Dyn11',
@@ -390,7 +388,7 @@ or if no results:
 ```pycon
 >>> rlf.TransformerParameters.from_catalogue(manufacturer="unknown")
 RoseauLoadFlowException: No manufacturer matching 'unknown' has been found. Available manufacturers
-are 'FT', 'SE', 'CA'. [catalogue_not_found]
+are 'France Transfo', 'Schneider Electric', 'Cahors', 'SCOTECH', '', 'Pauwels', 'GBE'. [catalogue_not_found]
 ```
 
 (catalogues-lines)=
