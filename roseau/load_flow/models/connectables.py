@@ -10,6 +10,7 @@ from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowE
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import _CyE_co
 from roseau.load_flow.models.terminals import AbstractTerminal
+from roseau.load_flow.sym import phasor_to_sym
 from roseau.load_flow.typing import ComplexArray, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
 
@@ -128,6 +129,31 @@ class AbstractConnectable(AbstractTerminal[_CyE_co], ABC):
     def res_powers(self) -> Q_[ComplexArray]:
         """The load flow result of the "line powers" flowing into the element (VA)."""
         return self._res_powers_getter(warning=True)
+
+    @ureg_wraps("percent", (None,))
+    def res_current_unbalance(self) -> Q_[float]:
+        """Calculate the current unbalance (CU) on this element.
+
+        The calculation depends on the definition of current unbalance:
+
+        - Current Unbalance Factor (CUF):
+
+          :math:`CUF = \\dfrac{I_\\mathrm{2}}{I_\\mathrm{1}} \\times 100 \\, (\\%)`
+
+          Where :math:`I_{\\mathrm{2}}` is the magnitude of the negative-sequence (inverse) current
+          and :math:`I_{\\mathrm{1}}` is the magnitude of the positive-sequence (direct) current.
+        """
+
+        if self.phases not in {"abc", "abcn"}:
+            msg = (
+                f"Current unbalance is only available for three-phase elements, {self._element_info} "
+                f"has phases {self.phases!r}."
+            )
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
+        currents = self._res_currents_getter(warning=True)
+        _, i1, i2 = phasor_to_sym(currents[:3])  # (0, +, -)
+        return abs(i2) / abs(i1) * 100  # type: ignore
 
     #
     # Json Mixin interface

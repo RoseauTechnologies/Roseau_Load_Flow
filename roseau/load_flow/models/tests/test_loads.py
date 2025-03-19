@@ -4,6 +4,7 @@ from pint.errors import DimensionalityError
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models import Bus, CurrentLoad, FlexibleParameter, ImpedanceLoad, PowerLoad, Projection
+from roseau.load_flow.sym import PositiveSequence
 from roseau.load_flow.testing import assert_json_close
 from roseau.load_flow.units import Q_
 
@@ -788,3 +789,39 @@ def test_loads_scalar_values():
     np.testing.assert_allclose(load.impedances.m, [1000 + 500j, 1000 + 500j, 1000 + 500j], strict=True)
     load.impedances = 2000 + 1000j
     np.testing.assert_allclose(load.impedances.m, [2000 + 1000j, 2000 + 1000j, 2000 + 1000j], strict=True)
+
+
+def test_res_unbalance():
+    bus = Bus(id="b1", phases="abcn")
+    load = PowerLoad(id="l1", bus=bus, powers=[100 + 50j, 0, 0j], phases="abc")
+
+    va, vb, vc = 230 * PositiveSequence
+    ia, ib, ic = 1 * PositiveSequence
+
+    # Balanced load
+    load._res_potentials = np.array([va, vb, vc])
+    load._res_currents = np.array([ia, ib, ic])
+    assert np.isclose(load.res_current_unbalance().m, 0)
+
+    # Unbalanced laod
+    load._res_potentials = np.array([va, vb, vc])
+    load._res_currents = np.array([ia, ib, (ic + ib) / 2])
+    assert np.isclose(load.res_current_unbalance().m, 37.7964473)
+
+    # With neutral
+    load = PowerLoad(id="l2", bus=bus, powers=[100 + 50j, 0, 0j], phases="abcn")
+    load._res_potentials = np.array([va, vb, vc, 0])
+    load._res_currents = np.array([ia, ib, ic, 0])
+    assert np.isclose(load.res_current_unbalance().m, 0)
+    load._res_potentials = np.array([va, vb, vc, 0])
+    load._res_currents = np.array([ia, ib, ib, ia + ib + ib])
+    assert np.isclose(load.res_current_unbalance().m, 100)
+
+    # Non 3-phase bus
+    load = PowerLoad(id="l3", bus=bus, powers=[100 + 50j], phases="ab")
+    load._res_potentials = np.array([va, vb])
+    load._res_currents = np.array([ia, ib])
+    with pytest.raises(RoseauLoadFlowException) as e:
+        load.res_current_unbalance()
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
+    assert e.value.msg == "Current unbalance is only available for three-phase elements, load 'l3' has phases 'ab'."
