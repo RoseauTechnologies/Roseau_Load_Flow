@@ -53,9 +53,9 @@ And the following results are available for buses _with more than one phase_:
 
 And the following results are available for _three-phase_ buses:
 
-| Result Accessor           | Default Unit | Type   | Description                                                      |
-| ------------------------- | ------------ | ------ | ---------------------------------------------------------------- |
-| `res_voltage_unbalance()` | $\%$         | number | The voltage unbalance of the bus according to the IEC definition |
+| Result Accessor           | Default Unit | Type   | Description                                                                    |
+| ------------------------- | ------------ | ------ | ------------------------------------------------------------------------------ |
+| `res_voltage_unbalance()` | $\%$         | number | The voltage unbalance of the bus according to the IEC, IEEE or NEMA definition |
 
 ## Usage
 

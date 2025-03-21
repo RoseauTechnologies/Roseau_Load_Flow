@@ -488,17 +488,31 @@ def test_res_voltage_unbalance():
     # Balanced system
     bus._res_potentials = np.array([va, vb, vc])
     assert np.isclose(bus.res_voltage_unbalance().magnitude, 0)
+    assert np.isclose(bus.res_voltage_unbalance(definition="LVUR").magnitude, 0)
 
     # Unbalanced system
     bus._res_potentials = np.array([va, vb, vb])
     assert np.isclose(bus.res_voltage_unbalance().magnitude, 100)
+    assert np.isclose(bus.res_voltage_unbalance(definition="LVUR").magnitude, 100)
+    with pytest.raises(RoseauLoadFlowException) as e:
+        bus.res_voltage_unbalance(definition="PVUR")
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
+    assert e.value.msg == "Phase-to-neutral voltages cannot exist for bus 'b3' without a neutral."
 
     # With neutral
     bus = Bus(id="b3n", phases="abcn")
     bus._res_potentials = np.array([va, vb, vc, 0])
     assert np.isclose(bus.res_voltage_unbalance().magnitude, 0)
+    assert np.isclose(bus.res_voltage_unbalance(definition="LVUR").magnitude, 0)
+    assert np.isclose(bus.res_voltage_unbalance(definition="PVUR").magnitude, 0)
     bus._res_potentials = np.array([va, vb, vb, 0])
     assert np.isclose(bus.res_voltage_unbalance().magnitude, 100)
+    assert np.isclose(bus.res_voltage_unbalance(definition="LVUR").magnitude, 100)
+    assert np.isclose(bus.res_voltage_unbalance(definition="PVUR").magnitude, 0)
+    bus._res_potentials = np.array([va, vb, vc, 20])
+    assert np.isclose(bus.res_voltage_unbalance().magnitude, 0)
+    assert np.isclose(bus.res_voltage_unbalance(definition="LVUR").magnitude, 0)
+    assert np.isclose(bus.res_voltage_unbalance(definition="PVUR").magnitude, 8.860545454)
 
     # Non 3-phase bus
     bus = Bus(id="b1", phases="an")

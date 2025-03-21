@@ -1,7 +1,7 @@
 import logging
 from abc import ABC
 from functools import cached_property
-from typing import Final
+from typing import Final, Literal
 
 import numpy as np
 
@@ -138,16 +138,44 @@ class AbstractTerminal(Element[_CyE_co], ABC):
         """
         return self._res_voltages_pn_getter(warning=True)
 
-    @ureg_wraps("percent", (None,))
-    def res_voltage_unbalance(self) -> Q_[float]:
-        """Calculate the voltage unbalance factor on this element according to the IEC definition.
+    @ureg_wraps("percent", (None, None))
+    def res_voltage_unbalance(self, definition: Literal["VUF", "LVUR", "PVUR"] = "VUF") -> Q_[float]:
+        """Calculate the voltage unbalance (VU) on this element.
 
-        Voltage Unbalance Factor:
+        Args:
+            definition:
+                The definition of the voltage unbalance, one of the following:
 
-        :math:`VUF = \\dfrac{|V_{\\mathrm{n}}|}{|V_{\\mathrm{p}}|} \\times 100 \\, (\\%)`
+                - ``VUF``: The Voltage Unbalance Factor defined by the IEC (default). This is also
+                  called the "True Definition".
+                - ``LVUR``: The Line Voltage Unbalance Rate defined by NEMA.
+                - ``PVUR``: The Phase Voltage Unbalance Rate defined by IEEE.
 
-        Where :math:`V_{\\mathrm{n}}` is the negative-sequence (inverse) voltage
-        and :math:`V_{\\mathrm{p}}` is the positive-sequence (direct) voltage.
+        Returns:
+            The voltage unbalance in percent.
+
+        The calculation depends on the definition of voltage unbalance:
+
+        - Voltage Unbalance Factor (VUF):
+
+          :math:`VUF = \\dfrac{V_\\mathrm{2}}{V_\\mathrm{1}} \\times 100 \\, (\\%)`
+
+          Where :math:`V_{\\mathrm{2}}` is the magnitude of the negative-sequence (inverse) voltage
+          and :math:`V_{\\mathrm{1}}` is the magnitude of the positive-sequence (direct) voltage.
+        - Line Voltage Unbalance Rate (LVUR):
+
+          :math:`LVUR = \\dfrac{\\Delta V_\\mathrm{Line,Max}}{\\Delta V_\\mathrm{Line,Mean}} \\times 100 (\\%)`.
+
+          Where :math:`\\Delta V_\\mathrm{Line,Mean}` is the arithmetic mean of the line voltages
+          and :math:`\\Delta V_\\mathrm{Line,Max}` is the maximum deviation between the measured
+          line voltages and :math:`\\Delta V_\\mathrm{Line,Mean}`.
+        - The Phase Voltage Unbalance Rate (PVUR):
+
+          :math:`PVUR = \\dfrac{\\Delta V_\\mathrm{Phase,Max}}{\\Delta V_\\mathrm{Phase,Mean}} \\times 100 (\\%)`.
+
+          Where :math:`\\Delta V_\\mathrm{Phase,Mean}` is the arithmetic mean of the phase voltages
+          and :math:`\\Delta V_\\mathrm{Phase,Max}` is the maximum deviation between the measured
+          phase voltages and :math:`\\Delta V_\\mathrm{Phase,Mean}`.
         """
         if self.phases not in {"abc", "abcn"}:
             msg = (
@@ -156,13 +184,25 @@ class AbstractTerminal(Element[_CyE_co], ABC):
             )
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
-        # We use the potentials here which is equivalent to using the "line to neutral" voltages as
-        # defined by the standard. The standard also has this note:
-        # NOTE 1 Phase-to-phase voltages may also be used instead of line to neutral voltages.
-        # Indeed |Vn_pp| / |Vp_pp_| = |Vn (1-α²)| / |Vp(1-α)| = |Vn| / |Vp|
-        potentials = self._res_potentials_getter(warning=True)
-        _, vp, vn = phasor_to_sym(potentials[:3])  # (0, +, -)
-        return abs(vn) / abs(vp) * 100
+
+        if definition == "VUF":
+            # We use the potentials here which is equivalent to using the "line to neutral" voltages
+            # as defined by the standard. The standard also has this note:
+            # NOTE 1 Phase-to-phase voltages may also be used instead of line to neutral voltages.
+            # Indeed |V2_pp| / |V1_pp| = |V2 (1-α²)| / |V1(1-α)| = |V2| / |V1|
+            potentials = self._res_potentials_getter(warning=True)
+            _, v1, v2 = phasor_to_sym(potentials[:3])  # (0, +, -)
+            return abs(v2) / abs(v1) * 100  # type: ignore
+        elif definition == "LVUR":
+            voltages = abs(self._res_voltages_pp_getter(warning=True))
+            avg = sum(voltages) / 3
+            return max(abs(voltages - avg)) / avg * 100  # type: ignore
+        elif definition == "PVUR":
+            voltages = abs(self._res_voltages_pn_getter(warning=True))
+            avg = sum(voltages) / 3
+            return max(abs(voltages - avg)) / avg * 100  # type: ignore
+        else:
+            raise ValueError(f"Invalid voltage unbalance definition: {definition!r}.")
 
     #
     # Json Mixin interface
