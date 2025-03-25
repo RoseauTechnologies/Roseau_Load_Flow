@@ -100,9 +100,10 @@ And the following results are available for loads with more than one phase:
 
 And the following results are available for _three-phase_ loads:
 
-| Result Accessor           | Default Unit | Type   | Description                                                       |
-| ------------------------- | ------------ | ------ | ----------------------------------------------------------------- |
-| `res_voltage_unbalance()` | $\%$         | number | The voltage unbalance of the load according to the IEC definition |
+| Result Accessor           | Default Unit | Type   | Description                                                                     |
+| ------------------------- | ------------ | ------ | ------------------------------------------------------------------------------- |
+| `res_voltage_unbalance()` | $\%$         | number | The voltage unbalance of the load according to the IEC, IEEE or NEMA definition |
+| `res_current_unbalance()` | $\%$         | number | The Current Unbalance Factor of the load (CUF)                                  |
 
 ## Available models
 

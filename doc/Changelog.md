@@ -19,6 +19,12 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`357` Improve support for unbalance calculations.
+
+  - The `res_voltage_unbalance` method now accepts a `definition` parameter to choose between the
+    definitions of the voltage unbalance from `'VUF'` (IEC), `'PVUR'` (IEEE) and `'LVUR'` (NEMA).
+  - Loads and sources now have a `res_current_unbalance` method to compute the current unbalance.
+
 - {gh-pr}`356` Fix regression since version 0.11.0 where `max_voltage_level` for buses was missing
   in the catalogue networks.
 - {gh-pr}`355` {gh-issue}`337` Add HV/MV transformer models to the catalogue.
