@@ -8,6 +8,7 @@ authors = [
     { name = "Benoît Vinot", email = "benoit.vinot@roseautechnologies.com" },
     { name = "Florent Cadoux", email = "florent.cadoux@roseautechnologies.com" },
     { name = "Louise Muller", email = "louise.muller@roseautechnologies.com" },
+    { name = "Audrey Ficot", email = "audrey.ficot@roseautechnologies.com" },
     { name = "Victor Gouin" },
 ]
 maintainers = [
