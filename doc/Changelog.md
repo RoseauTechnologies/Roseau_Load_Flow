@@ -19,6 +19,7 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`358` Fix a division by zero error during DGS export.
 - {gh-pr}`357` Improve support for unbalance calculations.
 
   - The `res_voltage_unbalance` method now accepts a `definition` parameter to choose between the
