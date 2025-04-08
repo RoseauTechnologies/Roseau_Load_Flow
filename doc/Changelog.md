@@ -19,6 +19,8 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`360` {gh-issue}`359` Fix a bug related to adding short circuits to a bus when the ground fault was not
+  already part of the electrical network.
 - {gh-pr}`358` Fix a division by zero error during DGS export.
 - {gh-pr}`357` Improve support for unbalance calculations.
 
