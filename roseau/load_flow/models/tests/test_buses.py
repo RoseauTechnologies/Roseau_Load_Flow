@@ -90,6 +90,15 @@ def test_short_circuit():
     assert "is already connected on bus" in e.value.msg
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_SHORT_CIRCUIT
 
+    # Create the ground after the network GH359
+    bus = Bus(id="bus", phases="abcn")
+    _ = VoltageSource(id="source", bus=bus, voltages=400)
+    _ = PotentialRef(id="pref", element=bus, phases="n")
+    en = ElectricalNetwork.from_element(bus)
+    ground = Ground(id="ground")
+    bus.add_short_circuit("abc", ground=ground)
+    assert "ground" in en.grounds
+
 
 def test_voltage_limits(recwarn):
     # Default values
