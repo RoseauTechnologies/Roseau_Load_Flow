@@ -1,15 +1,14 @@
 import logging
 import re
+from enum import StrEnum
 from pathlib import Path
-from typing import Literal, NoReturn, TypeVar
+from typing import Literal, NoReturn, Self, TypeVar
 
 import numpy as np
 import pandas as pd
-from typing_extensions import Self
 
 from roseau.load_flow import Insulator, LineType, Material, RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow import LineParameters as MultiLineParameters
-from roseau.load_flow._compat import StrEnum
 from roseau.load_flow.constants import F
 from roseau.load_flow.typing import Complex, Float, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps

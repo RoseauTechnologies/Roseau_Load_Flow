@@ -1,12 +1,11 @@
 import logging
 import warnings
 from collections.abc import Iterator
-from typing import Final
+from typing import Final, Self
 
 import numpy as np
 import pandas as pd
 from shapely.geometry.base import BaseGeometry
-from typing_extensions import Self
 
 from roseau.load_flow import SQRT3, RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.typing import Complex, Float, Id, JsonDict

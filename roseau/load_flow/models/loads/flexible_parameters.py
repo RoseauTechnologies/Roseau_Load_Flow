@@ -1,11 +1,10 @@
 import logging
 import warnings
 from collections.abc import Iterable
-from typing import TYPE_CHECKING, NoReturn
+from typing import TYPE_CHECKING, NoReturn, Self
 
 import numpy as np
 from numpy.typing import NDArray
-from typing_extensions import Self
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.typing import (

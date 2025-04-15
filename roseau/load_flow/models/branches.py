@@ -1,10 +1,11 @@
 import logging
 import warnings
 from functools import cached_property
+from typing import Self
 
 import numpy as np
 from shapely.geometry.base import BaseGeometry
-from typing_extensions import Self, TypeVar
+from typing_extensions import TypeVar
 
 from roseau.load_flow.converters import _calculate_voltages
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode

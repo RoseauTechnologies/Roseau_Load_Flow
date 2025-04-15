@@ -2,11 +2,10 @@ import logging
 import re
 from importlib import resources
 from pathlib import Path
-from typing import Final, Literal, NoReturn
+from typing import Final, Literal, NoReturn, Self
 
 import numpy as np
 import pandas as pd
-from typing_extensions import Self
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.typing import FloatArrayLike1D, Id, JsonDict
