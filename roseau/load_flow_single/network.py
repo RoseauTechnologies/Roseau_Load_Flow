@@ -31,6 +31,7 @@ from roseau.load_flow_single.models.lines import Line
 from roseau.load_flow_single.models.loads import AbstractLoad, CurrentLoad, ImpedanceLoad, PowerLoad
 from roseau.load_flow_single.models.sources import VoltageSource
 from roseau.load_flow_single.models.switches import Switch
+from roseau.load_flow_single.models.transformer_parameters import TransformerParameters
 from roseau.load_flow_single.models.transformers import Transformer
 
 if TYPE_CHECKING:
@@ -146,9 +147,11 @@ class ElectricalNetwork(JsonMixin):
                 self._ground.connect(line._cy_element, [(0, 2)])
 
         # Track parameters to check for duplicates
-        self._line_parameters: dict[Id, LineParameters] = {}
+        self._parameters: dict[str, dict[Id, LineParameters | TransformerParameters]] = {"line": {}, "transformer": {}}
         for line in self.lines.values():
-            self._add_line_parameters(line)
+            self._add_parameters(line)
+        for transformer in self.transformers.values():
+            self._add_parameters(transformer)
 
         self._elements: list[Element] = []
         self._has_loop = False
@@ -799,11 +802,12 @@ class ElectricalNetwork(JsonMixin):
             self._add_element_to_dict(element, to=self.loads, disconnectable=True)
         elif isinstance(element, Line):
             self._add_element_to_dict(element, to=self.lines)
-            self._add_line_parameters(element)
+            self._add_parameters(element)
             if element.with_shunt:
                 self._ground.connect(element._cy_element, [(0, 2)])
         elif isinstance(element, Transformer):
             self._add_element_to_dict(element, to=self.transformers)
+            self._add_parameters(element)
         elif isinstance(element, Switch):
             self._add_element_to_dict(element, to=self.switches)
         elif isinstance(element, VoltageSource):
@@ -815,17 +819,21 @@ class ElectricalNetwork(JsonMixin):
         self._valid = False
         self._results_valid = False
 
-    def _add_line_parameters(self, line: Line) -> None:
-        params = line.parameters
-        if params.id not in self._line_parameters:
-            self._line_parameters[params.id] = params
-        elif params is not self._line_parameters[params.id]:
+    def _add_parameters(self, element: Transformer | Line) -> None:
+        params = element.parameters
+        params_map = self._parameters[element.element_type]
+        if params.id not in params_map:
+            params_map[params.id] = params
+        elif params is not params_map[params.id]:
             msg = (
-                f"Line parameters IDs must be unique in the network. ID {params.id!r} is used by "
-                f"several line parameters objects."
+                f"{element.element_type.capitalize()} parameters IDs must be unique in the network. "
+                f"ID {params.id!r} is used by several {element.element_type} parameters objects."
             )
             logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_ID)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PARAMETERS_ID)
+
+    def _remove_parameters(self, element_type: str, params_id: Id) -> None:
+        del self._parameters[element_type][params_id]
 
     def _add_element_to_dict(self, element: _E, to: dict[Id, _E], disconnectable: bool = False) -> None:
         if element.id in to and (old := to[element.id]) is not element:

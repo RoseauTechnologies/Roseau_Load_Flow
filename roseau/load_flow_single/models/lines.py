@@ -141,11 +141,11 @@ class Line(AbstractBranch[CyShuntLine | CySimplifiedLine]):
         if old_parameters is not None and old_parameters is not value:
             old_parameters._lines.discard(self)
             if not old_parameters._lines and self._network is not None:
-                del self._network._line_parameters[old_parameters.id]
+                self._network._remove_parameters(self.element_type, old_parameters.id)
         if self not in value._lines:
             value._lines.add(self)
             if self._network is not None:
-                self._network._add_line_parameters(self)
+                self._network._add_parameters(self)
         if self._initialized:
             self._update_internal_parameters()
 

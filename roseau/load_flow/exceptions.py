@@ -61,6 +61,7 @@ class RoseauLoadFlowExceptionCode(StrEnum):
 
     # Transformer and line
     BAD_MAX_LOADING_VALUE = auto()
+    BAD_PARAMETERS_ID = auto()
 
     # Switch
     BAD_SWITCH_ID = auto()

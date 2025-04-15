@@ -98,14 +98,11 @@ def test_to_dict():
     tp1 = rlfs.TransformerParameters.from_open_and_short_circuit_tests(
         id="t", vg="Dyn11", uhv=20000, ulv=400, sn=160 * 1e3, p0=460, i0=2.3 / 100, psc=2350, vsc=4 / 100
     )
-    tp2 = rlfs.TransformerParameters.from_open_and_short_circuit_tests(
-        id="t", vg="Dyn11", uhv=20000, ulv=400, sn=200 * 1e3, p0=460, i0=2.3 / 100, psc=2350, vsc=4 / 100
-    )
     transformer1 = rlfs.Transformer(
         id="Transformer1", bus_hv=source_bus, bus_lv=load_bus, parameters=tp1, geometry=geom
     )
     transformer2 = rlfs.Transformer(
-        id="Transformer2", bus_hv=source_bus, bus_lv=load_bus, parameters=tp2, geometry=geom
+        id="Transformer2", bus_hv=source_bus, bus_lv=load_bus, parameters=tp1, geometry=geom
     )
     en = rlfs.ElectricalNetwork(
         buses=[source_bus, load_bus],
@@ -116,21 +113,7 @@ def test_to_dict():
         sources=[vs],
     )
 
-    # Same id, different transformer parameters -> fail
-    with pytest.raises(rlfs.RoseauLoadFlowException) as e:
-        en.to_dict(include_results=False)
-    assert "There are multiple transformer parameters with id 't'" in e.value.msg
-    assert e.value.code == rlfs.RoseauLoadFlowExceptionCode.JSON_TRANSFORMER_PARAMETERS_DUPLICATES
-
-    # Same id, same transformer parameters -> ok
-    tp2 = rlfs.TransformerParameters.from_open_and_short_circuit_tests(
-        id="t", vg="Dyn11", uhv=20000, ulv=400, sn=160 * 1e3, p0=460, i0=2.3 / 100, psc=2350, vsc=4 / 100
-    )
-    transformer2.parameters = tp2
-    en.to_dict(include_results=False)
-
     # Dict content
-    transformer2.parameters = tp1
     res = en.to_dict(include_results=False)
     assert "geometry" in res["buses"][0]
     assert "geometry" in res["buses"][1]

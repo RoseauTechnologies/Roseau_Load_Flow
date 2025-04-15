@@ -1345,7 +1345,7 @@ def test_duplicate_line_parameters_id():
     assert lp2._lines == {ln2}
     with pytest.raises(RoseauLoadFlowException) as e:
         en = ElectricalNetwork.from_element(bus1)
-    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_LINE_ID
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PARAMETERS_ID
     assert e.value.msg == (
         "Line parameters IDs must be unique in the network. ID 'LP' is used by several line parameters objects."
     )
@@ -1359,15 +1359,15 @@ def test_duplicate_line_parameters_id():
     ln2 = Line("Line 2", bus1=bus1, bus2=bus2, parameters=lp1, length=0.1)
     assert lp1._lines == {ln1, ln2}
     en = ElectricalNetwork.from_element(bus1)
-    assert en._line_parameters == {lp1.id: lp1}
+    assert en._parameters["line"] == {lp1.id: lp1}
     lp2 = LineParameters("LP", z_line=0.1 + 0.1j)
     with pytest.raises(RoseauLoadFlowException) as e:
         en.lines["Line 2"].parameters = lp2
-    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_LINE_ID
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PARAMETERS_ID
     assert e.value.msg == (
         "Line parameters IDs must be unique in the network. ID 'LP' is used by several line parameters objects."
     )
-    assert en._line_parameters == {lp1.id: lp1}
+    assert en._parameters["line"] == {lp1.id: lp1}
     assert ln2._parameters == lp1
 
     # But if only one line is using the parameters, it is replaced
@@ -1378,9 +1378,9 @@ def test_duplicate_line_parameters_id():
     ln1 = Line("Line 1", bus1=bus1, bus2=bus2, parameters=lp1, length=0.1)
     assert lp1._lines == {ln1}
     en = ElectricalNetwork.from_element(bus1)
-    assert en._line_parameters == {lp1.id: lp1}
+    assert en._parameters["line"] == {lp1.id: lp1}
     lp2 = LineParameters("LP", z_line=0.1 + 0.1j)
     ln1.parameters = lp2
     assert lp1._lines == set()
     assert lp2._lines == {ln1}
-    assert en._line_parameters == {lp2.id: lp2}
+    assert en._parameters["line"] == {lp2.id: lp2}
