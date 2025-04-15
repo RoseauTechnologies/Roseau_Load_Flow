@@ -90,6 +90,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         self.material = material
         self.insulator = insulator
         self.section = section
+        self._lines = set()
 
     def __repr__(self) -> str:
         s = f"<{type(self).__name__}: id={self.id!r}"

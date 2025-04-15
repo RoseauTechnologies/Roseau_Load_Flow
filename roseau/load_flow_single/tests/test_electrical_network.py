@@ -1330,3 +1330,57 @@ def test_add_shunt_line_to_existing_network_no_segfault():
     bus_new = Bus("New Bus")
     lp = LineParameters("LP with shunt", z_line=0.1 + 0.1j, y_shunt=0.01j)
     Line("New Line", bus1=bus, bus2=bus_new, parameters=lp, length=0.1)  # <- used to segfault here
+
+
+def test_duplicate_line_parameters_id():
+    # Creating a network with duplicate line parameters ID raises an exception
+    bus1 = Bus("Bus 1")
+    bus2 = Bus("Bus 2")
+    VoltageSource("Source", bus=bus1, voltage=20e3)
+    lp1 = LineParameters("LP", z_line=0.1 + 0.1j)
+    lp2 = LineParameters("LP", z_line=0.1 + 0.1j)
+    ln1 = Line("Line 1", bus1=bus1, bus2=bus2, parameters=lp1, length=0.1)
+    ln2 = Line("Line 2", bus1=bus1, bus2=bus2, parameters=lp2, length=0.1)
+    assert lp1._lines == {ln1}
+    assert lp2._lines == {ln2}
+    with pytest.raises(RoseauLoadFlowException) as e:
+        en = ElectricalNetwork.from_element(bus1)
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_LINE_ID
+    assert e.value.msg == (
+        "Line parameters IDs must be unique in the network. ID 'LP' is used by several line parameters objects."
+    )
+
+    # Setting the parameters later also raises an exception
+    bus1 = Bus("Bus 1")
+    bus2 = Bus("Bus 2")
+    VoltageSource("Source", bus=bus1, voltage=20e3)
+    lp1 = LineParameters("LP", z_line=0.1 + 0.1j)
+    ln1 = Line("Line 1", bus1=bus1, bus2=bus2, parameters=lp1, length=0.1)
+    ln2 = Line("Line 2", bus1=bus1, bus2=bus2, parameters=lp1, length=0.1)
+    assert lp1._lines == {ln1, ln2}
+    en = ElectricalNetwork.from_element(bus1)
+    assert en._line_parameters == {lp1.id: lp1}
+    lp2 = LineParameters("LP", z_line=0.1 + 0.1j)
+    with pytest.raises(RoseauLoadFlowException) as e:
+        en.lines["Line 2"].parameters = lp2
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_LINE_ID
+    assert e.value.msg == (
+        "Line parameters IDs must be unique in the network. ID 'LP' is used by several line parameters objects."
+    )
+    assert en._line_parameters == {lp1.id: lp1}
+    assert ln2._parameters == lp1
+
+    # But if only one line is using the parameters, it is replaced
+    bus1 = Bus("Bus 1")
+    bus2 = Bus("Bus 2")
+    VoltageSource("Source", bus=bus1, voltage=20e3)
+    lp1 = LineParameters("LP", z_line=0.1 + 0.1j)
+    ln1 = Line("Line 1", bus1=bus1, bus2=bus2, parameters=lp1, length=0.1)
+    assert lp1._lines == {ln1}
+    en = ElectricalNetwork.from_element(bus1)
+    assert en._line_parameters == {lp1.id: lp1}
+    lp2 = LineParameters("LP", z_line=0.1 + 0.1j)
+    ln1.parameters = lp2
+    assert lp1._lines == set()
+    assert lp2._lines == {ln1}
+    assert en._line_parameters == {lp2.id: lp2}

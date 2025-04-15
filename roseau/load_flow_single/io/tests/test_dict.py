@@ -50,11 +50,10 @@ def test_to_dict():
         insulator=rlfs.Insulator.PVC,
         section=120,
     )
-    lp2 = rlfs.LineParameters("test", z_line=1, y_shunt=1.1)
 
     geom = LineString([(0.0, 0.0), (0.0, 1.0)])
     line1 = rlfs.Line(id="line1", bus1=source_bus, bus2=load_bus, parameters=lp1, length=10, geometry=geom)
-    line2 = rlfs.Line(id="line2", bus1=source_bus, bus2=load_bus, parameters=lp2, length=10, geometry=geom)
+    line2 = rlfs.Line(id="line2", bus1=source_bus, bus2=load_bus, parameters=lp1, length=10, geometry=geom)
     en = rlfs.ElectricalNetwork(
         buses=[source_bus, load_bus],
         lines=[line1, line2],
@@ -64,27 +63,7 @@ def test_to_dict():
         sources=[vs],
     )
 
-    # Same id, different line parameters -> fail
-    with pytest.raises(rlfs.RoseauLoadFlowException) as e:
-        en.to_dict(include_results=False)
-    assert "There are multiple line parameters with id 'test'" in e.value.msg
-    assert e.value.code == rlfs.RoseauLoadFlowExceptionCode.JSON_LINE_PARAMETERS_DUPLICATES
-
-    # Same id, same line parameters -> ok
-    lp2 = rlfs.LineParameters(
-        id="test",
-        z_line=1,
-        y_shunt=1,
-        line_type=rlfs.LineType.UNDERGROUND,
-        material=rlfs.Material.AA,
-        insulator=rlfs.Insulator.PVC,
-        section=120,
-    )
-    line2.parameters = lp2
-    en.to_dict(include_results=False)
-
     # Dict content
-    line2.parameters = lp1
     lp1.ampacity = 1000
     res = en.to_dict(include_results=False)
     res_bus0, res_bus1 = res["buses"]

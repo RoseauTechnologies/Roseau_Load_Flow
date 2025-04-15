@@ -27,6 +27,7 @@ from roseau.load_flow_single.io import network_from_dgs, network_from_dict, netw
 from roseau.load_flow_single.models.branches import AbstractBranch
 from roseau.load_flow_single.models.buses import Bus
 from roseau.load_flow_single.models.core import Element
+from roseau.load_flow_single.models.line_parameters import LineParameters
 from roseau.load_flow_single.models.lines import Line
 from roseau.load_flow_single.models.loads import AbstractLoad, CurrentLoad, ImpedanceLoad, PowerLoad
 from roseau.load_flow_single.models.sources import VoltageSource
@@ -144,6 +145,11 @@ class ElectricalNetwork(JsonMixin):
         for line in self.lines.values():
             if line.with_shunt:
                 self._ground.connect(line._cy_element, [(0, 2)])
+
+        # Track parameters to check for duplicates
+        self._line_parameters: dict[Id, LineParameters] = {}
+        for line in self.lines.values():
+            self._add_line_parameters(line)
 
         self._elements: list[Element] = []
         self._has_loop = False
@@ -794,6 +800,7 @@ class ElectricalNetwork(JsonMixin):
             self._add_element_to_dict(element, to=self.loads, disconnectable=True)
         elif isinstance(element, Line):
             self._add_element_to_dict(element, to=self.lines)
+            self._add_line_parameters(element)
             if element.with_shunt:
                 self._ground.connect(element._cy_element, [(0, 2)])
         elif isinstance(element, Transformer):
@@ -808,6 +815,18 @@ class ElectricalNetwork(JsonMixin):
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT)
         self._valid = False
         self._results_valid = False
+
+    def _add_line_parameters(self, line: Line) -> None:
+        params = line.parameters
+        if params.id not in self._line_parameters:
+            self._line_parameters[params.id] = params
+        elif params is not self._line_parameters[params.id]:
+            msg = (
+                f"Line parameters IDs must be unique in the network. ID {params.id!r} is used by "
+                f"several line parameters objects."
+            )
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_ID)
 
     def _add_element_to_dict(self, element: _E, to: dict[Id, _E], disconnectable: bool = False) -> None:
         if element.id in to and (old := to[element.id]) is not element:
