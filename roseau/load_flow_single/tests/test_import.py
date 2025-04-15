@@ -26,7 +26,6 @@ def test_import():
         # Underscore things
         "__getattr__",
         "__about__",
-        "_compat",
         "_solvers",
         # Unrelated imports
         "Any",

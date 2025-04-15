@@ -1,8 +1,7 @@
 import logging
-from typing import Final
+from typing import Final, Self
 
 import numpy as np
-from typing_extensions import Self
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.buses import Bus
