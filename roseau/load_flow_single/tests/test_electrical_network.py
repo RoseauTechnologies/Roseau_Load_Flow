@@ -432,7 +432,7 @@ def test_network_elements(small_network: ElectricalNetwork):
     bus1 = small_network.buses["bus1"]
     bus2 = Bus(id="bus2")
     assert bus2.network is None
-    lp = LineParameters(id="test", z_line=10 * 1.0)
+    lp = LineParameters(id="test 2", z_line=10 * 1.0)
     l2 = Line(id="line2", bus1=bus2, bus2=bus1, parameters=lp, length=Q_(0.3, "km"))
     assert l2.network == small_network
     assert bus2.network == small_network
