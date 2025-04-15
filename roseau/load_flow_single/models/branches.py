@@ -1,9 +1,10 @@
 import logging
 import warnings
+from typing import Self
 
 import numpy as np
 from shapely.geometry.base import BaseGeometry
-from typing_extensions import Self, TypeVar
+from typing_extensions import TypeVar
 
 from roseau.load_flow import SQRT3
 from roseau.load_flow.typing import Id, JsonDict

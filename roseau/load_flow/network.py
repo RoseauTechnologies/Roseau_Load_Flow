@@ -12,12 +12,11 @@ from importlib import resources
 from itertools import chain
 from math import nan
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal, TypeVar
+from typing import TYPE_CHECKING, Literal, Self, TypeVar
 
 import geopandas as gpd
 import numpy as np
 import pandas as pd
-from typing_extensions import Self
 
 from roseau.load_flow._solvers import AbstractSolver
 from roseau.load_flow.constants import ALPHA, ALPHA2, CLOCK_PHASE_SHIFT, SQRT3

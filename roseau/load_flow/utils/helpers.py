@@ -1,6 +1,5 @@
 from collections.abc import Collection, Sized
-
-from roseau.load_flow._compat import StrEnum
+from enum import StrEnum
 
 
 def count_repr(items: Sized, /, singular: str, plural: str | None = None) -> str:

@@ -1,9 +1,9 @@
 import logging
 import warnings
-from typing import TYPE_CHECKING, Final, Literal
+from typing import TYPE_CHECKING, Final, Literal, Self
 
 import numpy as np
-from typing_extensions import Self, deprecated
+from typing_extensions import deprecated
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.core import Element

@@ -19,6 +19,7 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`362` {gh-issue}`338` Require Python 3.11 or newer.
 - {gh-pr}`360` {gh-issue}`359` Fix a bug related to adding short circuits to a bus when the ground fault was not
   already part of the electrical network.
 - {gh-pr}`358` Fix a division by zero error during DGS export.

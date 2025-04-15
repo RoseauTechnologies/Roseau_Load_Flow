@@ -2,17 +2,16 @@ import logging
 import re
 import warnings
 from collections.abc import Sequence
+from enum import StrEnum
 from importlib import resources
 from pathlib import Path
-from typing import Literal, NoReturn, TypeAlias, TypeVar
+from typing import Literal, NoReturn, Self, TypeAlias, TypeVar
 
 import numpy as np
 import numpy.linalg as nplin
 import pandas as pd
-from numpy._typing import NDArray
-from typing_extensions import Self
+from numpy.typing import NDArray
 
-from roseau.load_flow._compat import StrEnum
 from roseau.load_flow.constants import EPSILON_0, EPSILON_R, MU_0, OMEGA, PI, RHO, SQRT3, TAN_D, F
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.types import Insulator, LineType, Material
