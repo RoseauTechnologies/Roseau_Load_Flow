@@ -163,6 +163,8 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         self._wlv: str = wlv
         self._clock: int = clock
 
+        self._elements = set()  # Set of elements using this transformer parameters object
+
         # Filled using alternative constructor `from_open_and_short_circuit_tests`
         self._p0: float | None = None
         self._i0: float | None = None

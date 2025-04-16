@@ -982,7 +982,7 @@ def test_network_elements(small_network: ElectricalNetwork):
     bus1 = small_network.buses["bus1"]
     bus2 = Bus(id="bus2", phases="abcn")
     assert bus2.network is None
-    lp = LineParameters(id="test", z_line=10 * np.eye(4, dtype=complex))
+    lp = LineParameters(id="test 2", z_line=10 * np.eye(4, dtype=complex))
     l2 = Line(id="line2", bus1=bus2, bus2=bus1, parameters=lp, length=Q_(0.3, "km"))
     assert l2.network == small_network
     assert bus2.network == small_network
@@ -2580,3 +2580,121 @@ def test_propagate_potentials_center_transformers():
     with contextlib.suppress(TypeError):  # cython solve_load_flow method has been patched
         en.solve_load_flow()  # propagate the potentials
     npt.assert_allclose(bus2.initial_potentials.m_as("V"), np.array([200, -200, 0], dtype=np.complex128))
+
+
+def test_duplicate_line_parameters_id():
+    # Creating a network with duplicate line parameters ID raises an exception
+    bus1 = Bus(id="Bus 1", phases="abc")
+    bus2 = Bus(id="Bus 2", phases="abc")
+    VoltageSource(id="Source", bus=bus1, voltages=20e3)
+    PotentialRef(id="PRef", element=bus1)
+    lp1 = LineParameters(id="LP", z_line=(0.1 + 0.1j) * np.eye(3))
+    lp2 = LineParameters(id="LP", z_line=(0.1 + 0.1j) * np.eye(3))
+    ln1 = Line(id="Line 1", bus1=bus1, bus2=bus2, parameters=lp1, length=0.1)
+    ln2 = Line(id="Line 2", bus1=bus1, bus2=bus2, parameters=lp2, length=0.1)
+    assert lp1._elements == {ln1}
+    assert lp2._elements == {ln2}
+    with pytest.raises(RoseauLoadFlowException) as e:
+        ElectricalNetwork.from_element(bus1)
+    assert e.value.msg == (
+        "Line parameters IDs must be unique in the network. ID 'LP' is used by several line parameters objects."
+    )
+
+    # Setting the parameters later also raises an exception
+    bus1 = Bus(id="Bus 1", phases="abc")
+    bus2 = Bus(id="Bus 2", phases="abc")
+    VoltageSource(id="Source", bus=bus1, voltages=20e3)
+    PotentialRef(id="PRef", element=bus1)
+    lp1 = LineParameters(id="LP", z_line=(0.1 + 0.1j) * np.eye(3))
+    ln1 = Line(id="Line 1", bus1=bus1, bus2=bus2, parameters=lp1, length=0.1)
+    ln2 = Line(id="Line 2", bus1=bus1, bus2=bus2, parameters=lp1, length=0.1)
+    assert lp1._elements == {ln1, ln2}
+    en = ElectricalNetwork.from_element(bus1)
+    assert en._parameters["line"] == {lp1.id: lp1}
+    lp2 = LineParameters(id="LP", z_line=(0.1 + 0.1j) * np.eye(3))
+    with pytest.raises(RoseauLoadFlowException) as e:
+        ln2.parameters = lp2
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PARAMETERS_ID
+    assert e.value.msg == (
+        "Line parameters IDs must be unique in the network. ID 'LP' is used by several line parameters objects."
+    )
+    assert en._parameters["line"] == {lp1.id: lp1}
+    assert ln2.parameters == lp1
+
+    # But if only one line is using the parameters, it is replaced
+    bus1 = Bus(id="Bus 1", phases="abc")
+    bus2 = Bus(id="Bus 2", phases="abc")
+    VoltageSource(id="Source", bus=bus1, voltages=20e3)
+    PotentialRef(id="PRef", element=bus1)
+    lp1 = LineParameters(id="LP", z_line=(0.1 + 0.1j) * np.eye(3))
+    ln1 = Line(id="Line 1", bus1=bus1, bus2=bus2, parameters=lp1, length=0.1)
+    assert lp1._elements == {ln1}
+    en = ElectricalNetwork.from_element(bus1)
+    assert en._parameters["line"] == {lp1.id: lp1}
+    lp2 = LineParameters(id="LP", z_line=(0.1 + 0.1j) * np.eye(3))
+    ln1.parameters = lp2
+    assert lp1._elements == set()
+    assert lp2._elements == {ln1}
+    assert en._parameters["line"] == {lp2.id: lp2}
+
+
+def test_duplicate_transformer_parameters_id():
+    # Creating a network with duplicate transformer parameters ID raises an exception
+    bus1 = Bus(id="Bus 1", phases="abc")
+    bus2 = Bus(id="Bus 2", phases="abc")
+    VoltageSource(id="Source", bus=bus1, voltages=20e3)
+    PotentialRef(id="PRef 1", element=bus1)
+    PotentialRef(id="PRef 2", element=bus2)
+    tp1 = TransformerParameters("TP", vg="Dyn11", uhv=20e3, ulv=400, sn=100e3, z2=0.1, ym=0.1j)
+    tp2 = TransformerParameters("TP", vg="Dyn11", uhv=20e3, ulv=400, sn=160e3, z2=0.01, ym=0.01j)
+    tr1 = Transformer(id="Transformer 1", bus_hv=bus1, bus_lv=bus2, parameters=tp1)
+    tr2 = Transformer(id="Transformer 2", bus_hv=bus1, bus_lv=bus2, parameters=tp2)
+    assert tp1._elements == {tr1}
+    assert tp2._elements == {tr2}
+    with pytest.raises(RoseauLoadFlowException) as e:
+        ElectricalNetwork.from_element(bus1)
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PARAMETERS_ID
+    assert e.value.msg == (
+        "Transformer parameters IDs must be unique in the network. ID 'TP' is used by several "
+        "transformer parameters objects."
+    )
+
+    # Setting the parameters later also raises an exception
+    bus1 = Bus(id="Bus 1", phases="abc")
+    bus2 = Bus(id="Bus 2", phases="abc")
+    VoltageSource(id="Source", bus=bus1, voltages=20e3)
+    PotentialRef(id="PRef 1", element=bus1)
+    PotentialRef(id="PRef 2", element=bus2)
+    tp1 = TransformerParameters("TP", vg="Dyn11", uhv=20e3, ulv=400, sn=100e3, z2=0.1, ym=0.1j)
+    tr1 = Transformer(id="Transformer 1", bus_hv=bus1, bus_lv=bus2, parameters=tp1)
+    tr2 = Transformer(id="Transformer 2", bus_hv=bus1, bus_lv=bus2, parameters=tp1)
+    assert tp1._elements == {tr1, tr2}
+    en = ElectricalNetwork.from_element(bus1)
+    assert en._parameters["transformer"] == {tp1.id: tp1}
+    tp2 = TransformerParameters("TP", vg="Dyn11", uhv=20e3, ulv=400, sn=160e3, z2=0.01, ym=0.01j)
+    with pytest.raises(RoseauLoadFlowException) as e:
+        tr2.parameters = tp2
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PARAMETERS_ID
+    assert e.value.msg == (
+        "Transformer parameters IDs must be unique in the network. ID 'TP' is used by several "
+        "transformer parameters objects."
+    )
+    assert en._parameters["transformer"] == {tp1.id: tp1}
+    assert tr2.parameters == tp1
+
+    # But if only one transformer is using the parameters, it is replaced
+    bus1 = Bus(id="Bus 1", phases="abc")
+    bus2 = Bus(id="Bus 2", phases="abc")
+    VoltageSource(id="Source", bus=bus1, voltages=20e3)
+    PotentialRef(id="PRef 1", element=bus1)
+    PotentialRef(id="PRef 2", element=bus2)
+    tp1 = TransformerParameters("TP", vg="Dyn11", uhv=20e3, ulv=400, sn=100e3, z2=0.1, ym=0.1j)
+    tr1 = Transformer(id="Transformer 1", bus_hv=bus1, bus_lv=bus2, parameters=tp1)
+    assert tp1._elements == {tr1}
+    en = ElectricalNetwork.from_element(bus1)
+    assert en._parameters["transformer"] == {tp1.id: tp1}
+    tp2 = TransformerParameters("TP", vg="Dyn11", uhv=20e3, ulv=400, sn=160e3, z2=0.01, ym=0.01j)
+    tr1.parameters = tp2
+    assert tp1._elements == set()
+    assert tp2._elements == {tr1}
+    assert en._parameters["transformer"] == {tp2.id: tp2}

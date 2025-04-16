@@ -104,6 +104,7 @@ class Transformer(AbstractBranch[CyTransformer]):
             geometry:
                 The geometry of the transformer.
         """
+        self._initialized = False
         if parameters.type == "single-phase":
             compute_phases = self._compute_phases_single
         elif parameters.type == "center-tapped":
@@ -125,14 +126,16 @@ class Transformer(AbstractBranch[CyTransformer]):
         self._connect_neutral_hv = connect_neutral_hv
         self._connect_neutral_lv = connect_neutral_lv
         self.tap = tap
-        self._parameters = parameters
+        self.parameters = parameters
         self.max_loading = max_loading
+        self._initialized = True
 
         if parameters.type == "three-phase":
             self._cy_element = parameters._create_cy_transformer(tap=tap)
         else:
             self._cy_element = parameters._create_cy_transformer(tap=parameters.orientation * tap)
         self._cy_connect()
+        self._connect(bus_hv, bus_lv)
 
     def __repr__(self) -> str:
         return f"{super().__repr__()[:-1]}, tap={self.tap:f}, max_loading={self._max_loading:f}>"
@@ -191,17 +194,17 @@ class Transformer(AbstractBranch[CyTransformer]):
 
     @parameters.setter
     def parameters(self, value: TransformerParameters) -> None:
-        vg1 = self._parameters.vg
-        vg2 = value.vg
-        if vg1 != vg2:
+        old_parameters = self._parameters if self._initialized else None
+        if old_parameters is not None and old_parameters.vg != value.vg:
             msg = (
                 f"Cannot update the parameters of transformer {self.id!r} to a different vector "
-                f"group: old={vg1!r}, new={vg2!r}."
+                f"group: old={old_parameters.vg!r}, new={value.vg!r}."
             )
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_TYPE)
-        self._parameters = value
+        self._update_network_parameters(old_parameters=old_parameters, new_parameters=value)
         self._invalidate_network_results()
+        self._parameters = value
         if self._cy_element is not None:
             z2, ym, k = value._z2, value._ym, value._k
             if value.type in ("single-phase", "center-tapped"):
