@@ -2600,6 +2600,21 @@ def test_duplicate_line_parameters_id():
         "Line parameters IDs must be unique in the network. ID 'LP' is used by several line parameters objects."
     )
 
+    # Adding the duplicate element to an existing network also raises an exception
+    bus1 = Bus(id="Bus 1", phases="abc")
+    bus2 = Bus(id="Bus 2", phases="abc")
+    VoltageSource(id="Source", bus=bus1, voltages=20e3)
+    PotentialRef(id="PRef", element=bus1)
+    lp1 = LineParameters(id="LP", z_line=(0.1 + 0.1j) * np.eye(3))
+    ln1 = Line(id="Line 1", bus1=bus1, bus2=bus2, parameters=lp1, length=0.1)
+    en = ElectricalNetwork.from_element(bus1)
+    lp2 = LineParameters(id="LP", z_line=(0.1 + 0.1j) * np.eye(3))
+    with pytest.raises(RoseauLoadFlowException) as e:
+        Line(id="Line 2", bus1=bus1, bus2=bus2, parameters=lp2, length=0.1)
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PARAMETERS_ID
+    assert "ID 'LP' is used by several line parameters objects." in e.value.msg
+    assert en._parameters["line"] == {lp1.id: lp1}
+
     # Setting the parameters later also raises an exception
     bus1 = Bus(id="Bus 1", phases="abc")
     bus2 = Bus(id="Bus 2", phases="abc")
@@ -2615,9 +2630,7 @@ def test_duplicate_line_parameters_id():
     with pytest.raises(RoseauLoadFlowException) as e:
         ln2.parameters = lp2
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PARAMETERS_ID
-    assert e.value.msg == (
-        "Line parameters IDs must be unique in the network. ID 'LP' is used by several line parameters objects."
-    )
+    assert "ID 'LP' is used by several line parameters objects." in e.value.msg
     assert en._parameters["line"] == {lp1.id: lp1}
     assert ln2.parameters == lp1
 
@@ -2659,6 +2672,22 @@ def test_duplicate_transformer_parameters_id():
         "transformer parameters objects."
     )
 
+    # Adding the duplicate element to an existing network also raises an exception
+    bus1 = Bus(id="Bus 1", phases="abc")
+    bus2 = Bus(id="Bus 2", phases="abc")
+    VoltageSource(id="Source", bus=bus1, voltages=20e3)
+    PotentialRef(id="PRef 1", element=bus1)
+    PotentialRef(id="PRef 2", element=bus2)
+    tp1 = TransformerParameters("TP", vg="Dyn11", uhv=20e3, ulv=400, sn=100e3, z2=0.1, ym=0.1j)
+    tr1 = Transformer(id="Transformer 1", bus_hv=bus1, bus_lv=bus2, parameters=tp1)
+    en = ElectricalNetwork.from_element(bus1)
+    tp2 = TransformerParameters("TP", vg="Dyn11", uhv=20e3, ulv=400, sn=160e3, z2=0.01, ym=0.01j)
+    with pytest.raises(RoseauLoadFlowException) as e:
+        Transformer(id="Transformer 2", bus_hv=bus1, bus_lv=bus2, parameters=tp2)
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PARAMETERS_ID
+    assert "ID 'TP' is used by several transformer parameters objects." in e.value.msg
+    assert en._parameters["transformer"] == {tp1.id: tp1}
+
     # Setting the parameters later also raises an exception
     bus1 = Bus(id="Bus 1", phases="abc")
     bus2 = Bus(id="Bus 2", phases="abc")
@@ -2675,10 +2704,7 @@ def test_duplicate_transformer_parameters_id():
     with pytest.raises(RoseauLoadFlowException) as e:
         tr2.parameters = tp2
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PARAMETERS_ID
-    assert e.value.msg == (
-        "Transformer parameters IDs must be unique in the network. ID 'TP' is used by several "
-        "transformer parameters objects."
-    )
+    assert "ID 'TP' is used by several transformer parameters objects." in e.value.msg
     assert en._parameters["transformer"] == {tp1.id: tp1}
     assert tr2.parameters == tp1
 
