@@ -149,9 +149,9 @@ class ElectricalNetwork(JsonMixin):
         # Track parameters to check for duplicates
         self._parameters: dict[str, dict[Id, LineParameters | TransformerParameters]] = {"line": {}, "transformer": {}}
         for line in self.lines.values():
-            self._add_parameters(line)
+            self._add_parameters("line", line.parameters)
         for transformer in self.transformers.values():
-            self._add_parameters(transformer)
+            self._add_parameters("transformer", transformer.parameters)
 
         self._elements: list[Element] = []
         self._has_loop = False
@@ -802,12 +802,12 @@ class ElectricalNetwork(JsonMixin):
             self._add_element_to_dict(element, to=self.loads, disconnectable=True)
         elif isinstance(element, Line):
             self._add_element_to_dict(element, to=self.lines)
-            self._add_parameters(element)
+            self._add_parameters("line", element.parameters)
             if element.with_shunt:
                 self._ground.connect(element._cy_element, [(0, 2)])
         elif isinstance(element, Transformer):
             self._add_element_to_dict(element, to=self.transformers)
-            self._add_parameters(element)
+            self._add_parameters("transformer", element.parameters)
         elif isinstance(element, Switch):
             self._add_element_to_dict(element, to=self.switches)
         elif isinstance(element, VoltageSource):
@@ -819,15 +819,14 @@ class ElectricalNetwork(JsonMixin):
         self._valid = False
         self._results_valid = False
 
-    def _add_parameters(self, element: Transformer | Line) -> None:
-        params = element.parameters
-        params_map = self._parameters[element.element_type]
+    def _add_parameters(self, element_type: str, params: TransformerParameters | LineParameters) -> None:
+        params_map = self._parameters[element_type]
         if params.id not in params_map:
             params_map[params.id] = params
         elif params is not params_map[params.id]:
             msg = (
-                f"{element.element_type.capitalize()} parameters IDs must be unique in the network. "
-                f"ID {params.id!r} is used by several {element.element_type} parameters objects."
+                f"{element_type.capitalize()} parameters IDs must be unique in the network. "
+                f"ID {params.id!r} is used by several {element_type} parameters objects."
             )
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PARAMETERS_ID)

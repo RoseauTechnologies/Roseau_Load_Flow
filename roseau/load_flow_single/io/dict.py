@@ -13,10 +13,10 @@ from typing import TYPE_CHECKING
 
 from pyproj import CRS
 
-from roseau.load_flow import Insulator, Material, RoseauLoadFlowException, RoseauLoadFlowExceptionCode
+from roseau.load_flow import Insulator, Material
 from roseau.load_flow.io.dict import NETWORK_JSON_VERSION as NETWORK_JSON_VERSION
 from roseau.load_flow.typing import Id, JsonDict
-from roseau.load_flow.utils import find_stack_level
+from roseau.load_flow.utils import find_stack_level, id_sort_key
 from roseau.load_flow_single.io.common import NetworkElements
 from roseau.load_flow_single.models import (
     AbstractLoad,
@@ -205,41 +205,29 @@ def network_to_dict(en: "ElectricalNetwork", *, include_results: bool) -> JsonDi
     lines_params_dict: dict[Id, LineParameters] = {}
     for line in en.lines.values():
         lines.append(line.to_dict(include_results=include_results))
-        params_id = line.parameters.id
-        if params_id in lines_params_dict and line.parameters != lines_params_dict[params_id]:
-            msg = f"There are multiple line parameters with id {params_id!r}"
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.JSON_LINE_PARAMETERS_DUPLICATES)
-        lines_params_dict[line.parameters.id] = line.parameters
+        if line.parameters.id not in lines_params_dict:
+            lines_params_dict[line.parameters.id] = line.parameters
 
     # Export the transformers with their parameters
     transformers: list[JsonDict] = []
     transformers_params_dict: dict[Id, TransformerParameters] = {}
     for transformer in en.transformers.values():
         transformers.append(transformer.to_dict(include_results=include_results))
-        params_id = transformer.parameters.id
-        if params_id in transformers_params_dict and transformer.parameters != transformers_params_dict[params_id]:
-            msg = f"There are multiple transformer parameters with id {params_id!r}"
-            logger.error(msg)
-            raise RoseauLoadFlowException(
-                msg=msg, code=RoseauLoadFlowExceptionCode.JSON_TRANSFORMER_PARAMETERS_DUPLICATES
-            )
-        transformers_params_dict[params_id] = transformer.parameters
+        if transformer.parameters.id not in transformers_params_dict:
+            transformers_params_dict[transformer.parameters.id] = transformer.parameters
 
     # Export the switches
     switches = [switch.to_dict(include_results=include_results) for switch in en.switches.values()]
 
-    # Line parameters
-    line_params: list[JsonDict] = []
-    for lp in lines_params_dict.values():
-        line_params.append(lp.to_dict(include_results=include_results))
-    line_params.sort(key=lambda x: (type(x["id"]).__name__, str(x["id"])))  # Always keep the same order
-
-    # Transformer parameters
-    transformer_params: list[JsonDict] = []
-    for tp in transformers_params_dict.values():
-        transformer_params.append(tp.to_dict(include_results=include_results))
-    transformer_params.sort(key=lambda x: (type(x["id"]).__name__, str(x["id"])))  # Always keep the same order
+    # Line and transformer parameters (sorted)
+    line_params = sorted(
+        (lp.to_dict(include_results=include_results) for lp in lines_params_dict.values()),
+        key=id_sort_key,
+    )
+    transformer_params = sorted(
+        (tp.to_dict(include_results=include_results) for tp in transformers_params_dict.values()),
+        key=id_sort_key,
+    )
 
     res = {
         "version": NETWORK_JSON_VERSION,
