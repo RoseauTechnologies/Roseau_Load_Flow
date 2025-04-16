@@ -34,14 +34,14 @@ from roseau.load_flow.models import (
     GroundConnection,
     ImpedanceLoad,
     Line,
+    LineParameters,
     PotentialRef,
     PowerLoad,
     Switch,
     Transformer,
+    TransformerParameters,
     VoltageSource,
 )
-from roseau.load_flow.models.lines.parameters import LineParameters
-from roseau.load_flow.models.transformers.parameters import TransformerParameters
 from roseau.load_flow.typing import ComplexArray, CRSLike, Id, JsonDict, MapOrSeq, Solver, StrPath
 from roseau.load_flow.utils import (
     DTYPES,

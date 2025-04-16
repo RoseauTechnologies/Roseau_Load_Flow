@@ -23,16 +23,21 @@ from roseau.load_flow.typing import CRSLike, Id, JsonDict, MapOrSeq, Solver, Str
 from roseau.load_flow.utils import DTYPES, JsonMixin, LoadTypeDtype, count_repr, find_stack_level, optional_deps
 from roseau.load_flow_engine.cy_engine import CyElectricalNetwork, CyGround, CyPotentialRef
 from roseau.load_flow_single.io import network_from_dgs, network_from_dict, network_to_dgs, network_to_dict
-from roseau.load_flow_single.models.branches import AbstractBranch
-from roseau.load_flow_single.models.buses import Bus
-from roseau.load_flow_single.models.core import Element
-from roseau.load_flow_single.models.line_parameters import LineParameters
-from roseau.load_flow_single.models.lines import Line
-from roseau.load_flow_single.models.loads import AbstractLoad, CurrentLoad, ImpedanceLoad, PowerLoad
-from roseau.load_flow_single.models.sources import VoltageSource
-from roseau.load_flow_single.models.switches import Switch
-from roseau.load_flow_single.models.transformer_parameters import TransformerParameters
-from roseau.load_flow_single.models.transformers import Transformer
+from roseau.load_flow_single.models import (
+    AbstractBranch,
+    AbstractLoad,
+    Bus,
+    CurrentLoad,
+    Element,
+    ImpedanceLoad,
+    Line,
+    LineParameters,
+    PowerLoad,
+    Switch,
+    Transformer,
+    TransformerParameters,
+    VoltageSource,
+)
 
 if TYPE_CHECKING:
     from networkx import Graph
