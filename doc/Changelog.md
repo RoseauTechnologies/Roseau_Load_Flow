@@ -19,6 +19,8 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`361` {gh-issue}`300` Raise an error when duplicate line or transformer parameters IDs are
+  used in the same network.
 - {gh-pr}`362` {gh-issue}`338` Require Python 3.11 or newer.
 - {gh-pr}`360` {gh-issue}`359` Fix a bug related to adding short circuits to a bus when the ground fault was not
   already part of the electrical network.

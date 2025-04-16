@@ -34,10 +34,12 @@ from roseau.load_flow.models import (
     GroundConnection,
     ImpedanceLoad,
     Line,
+    LineParameters,
     PotentialRef,
     PowerLoad,
     Switch,
     Transformer,
+    TransformerParameters,
     VoltageSource,
 )
 from roseau.load_flow.typing import ComplexArray, CRSLike, Id, JsonDict, MapOrSeq, Solver, StrPath
@@ -188,6 +190,13 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         self.ground_connections: dict[Id, GroundConnection] = self._elements_as_dict(
             ground_connections, RoseauLoadFlowExceptionCode.BAD_GROUND_CONNECTION_ID
         )
+
+        # Track parameters to check for duplicates
+        self._parameters: dict[str, dict[Id, LineParameters | TransformerParameters]] = {"line": {}, "transformer": {}}
+        for line in self.lines.values():
+            self._add_parameters("line", line.parameters)
+        for transformer in self.transformers.values():
+            self._add_parameters("transformer", transformer.parameters)
 
         self._elements: list[Element] = []
         self._has_loop = False
@@ -1305,8 +1314,10 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             self._add_element_to_dict(element, self.loads, disconnectable=True)
         elif isinstance(element, Line):
             self._add_element_to_dict(element, self.lines)
+            self._add_parameters(element.element_type, element.parameters)
         elif isinstance(element, Transformer):
             self._add_element_to_dict(element, self.transformers)
+            self._add_parameters(element.element_type, element.parameters)
         elif isinstance(element, Switch):
             self._add_element_to_dict(element, self.switches)
         elif isinstance(element, VoltageSource):
@@ -1323,6 +1334,21 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT)
         self._valid = False
         self._results_valid = False
+
+    def _add_parameters(self, element_type: str, params: TransformerParameters | LineParameters) -> None:
+        params_map = self._parameters[element_type]
+        if params.id not in params_map:
+            params_map[params.id] = params
+        elif params is not params_map[params.id]:
+            msg = (
+                f"{element_type.capitalize()} parameters IDs must be unique in the network. "
+                f"ID {params.id!r} is used by several {element_type} parameters objects."
+            )
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PARAMETERS_ID)
+
+    def _remove_parameters(self, element_type: str, params_id: Id) -> None:
+        del self._parameters[element_type][params_id]
 
     def _add_element_to_dict(self, element: _E, to: dict[Id, _E], disconnectable: bool = False) -> None:
         if element.id in to and (old := to[element.id]) is not element:

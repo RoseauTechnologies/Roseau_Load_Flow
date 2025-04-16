@@ -116,6 +116,7 @@ class Line(AbstractBranch[CyShuntLine | CySimplifiedLine]):
                 n=self._n1, z_line=parameters._z_line.reshape(self._n1 * self._n2) * self._length
             )
         self._cy_connect()
+        self._connect(bus1, bus2)
         if parameters.with_shunt:
             ground._cy_element.connect(self._cy_element, [(0, self._n1 + self._n1)])
 
@@ -179,6 +180,7 @@ class Line(AbstractBranch[CyShuntLine | CySimplifiedLine]):
 
     @parameters.setter
     def parameters(self, value: LineParameters) -> None:
+        old_parameters = self._parameters if self._initialized else None
         shape = (self._n1, self._n2)
         if value._z_line.shape != shape:
             msg = f"Incorrect z_line dimensions for line {self.id!r}: {value._z_line.shape} instead of {shape}"
@@ -203,6 +205,7 @@ class Line(AbstractBranch[CyShuntLine | CySimplifiedLine]):
                 msg = "Cannot set line parameters without a shunt to a line that has shunt components."
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_MODEL)
+        self._update_network_parameters(old_parameters=old_parameters, new_parameters=value)
         self._invalidate_network_results()
         self._parameters = value
         if self._initialized:

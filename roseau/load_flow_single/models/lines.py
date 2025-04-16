@@ -125,6 +125,7 @@ class Line(AbstractBranch[CyShuntLine | CySimplifiedLine]):
 
     @parameters.setter
     def parameters(self, value: LineParameters) -> None:
+        old_parameters = self._parameters if self._initialized else None
         if value.with_shunt:
             if self._initialized and not self.with_shunt:
                 msg = "Cannot set line parameters with a shunt to a line that does not have shunt components."
@@ -135,6 +136,7 @@ class Line(AbstractBranch[CyShuntLine | CySimplifiedLine]):
                 msg = "Cannot set line parameters without a shunt to a line that has shunt components."
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_MODEL)
+        self._update_network_parameters(old_parameters=old_parameters, new_parameters=value)
         self._invalidate_network_results()
         self._parameters = value
         if self._initialized:

@@ -1,7 +1,7 @@
 import logging
 import warnings
 from functools import cached_property
-from typing import Self
+from typing import TYPE_CHECKING, Self
 
 import numpy as np
 from shapely.geometry.base import BaseGeometry
@@ -15,6 +15,12 @@ from roseau.load_flow.typing import ComplexArray, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow.utils import find_stack_level, one_or_more_repr
 from roseau.load_flow_engine.cy_engine import CyBranch
+
+if TYPE_CHECKING:
+    from roseau.load_flow.models.lines.parameters import LineParameters
+    from roseau.load_flow.models.transformers.parameters import TransformerParameters
+
+    _Parameters = LineParameters | TransformerParameters
 
 logger = logging.getLogger(__name__)
 
@@ -66,7 +72,6 @@ class AbstractBranch(Element[_CyB_co]):
         self._bus1 = bus1
         self._bus2 = bus2
         self.geometry = geometry
-        self._connect(bus1, bus2)
         self._res_currents: tuple[ComplexArray, ComplexArray] | None = None
         self._res_potentials: tuple[ComplexArray, ComplexArray] | None = None
         self._sides_suffixes = ("_hv", "_lv") if self.element_type == "transformer" else ("1", "2")
@@ -151,6 +156,17 @@ class AbstractBranch(Element[_CyB_co]):
                 ),
                 stacklevel=find_stack_level(),
             )
+
+    def _update_network_parameters(self, old_parameters: "_Parameters | None", new_parameters: "_Parameters") -> None:
+        if old_parameters is not None and old_parameters is not new_parameters:
+            old_parameters._elements.discard(self)
+            if not old_parameters._elements and self._network is not None:
+                # This was the only element using the old parameters, remove them from the network
+                self._network._remove_parameters(self.element_type, old_parameters.id)
+        if self not in new_parameters._elements:
+            new_parameters._elements.add(self)
+            if self._network is not None:
+                self._network._add_parameters(self.element_type, new_parameters)
 
     #
     # Results

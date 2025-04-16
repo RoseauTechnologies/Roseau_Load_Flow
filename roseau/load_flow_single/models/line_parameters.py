@@ -90,6 +90,8 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         self.insulator = insulator
         self.section = section
 
+        self._elements = set()  # Set of elements using this line parameters object
+
     def __repr__(self) -> str:
         s = f"<{type(self).__name__}: id={self.id!r}"
         if self._line_type is not None:
@@ -104,34 +106,6 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             s += f", ampacity={self._ampacity}"
         s += ">"
         return s
-
-    def __eq__(self, other: object) -> bool:
-        if not isinstance(other, LineParameters):
-            return NotImplemented
-        return (
-            self.id == other.id
-            and np.allclose(self._z_line, other._z_line)
-            and np.allclose(self._y_shunt, other._y_shunt)
-            and self._line_type == other._line_type
-            and self._material == other._material
-            and self._insulator == other._insulator
-            and (
-                (self._section is None and other._section is None)
-                or (
-                    self._section is not None
-                    and other._section is not None
-                    and np.allclose(self._section, other._section)
-                )
-            )
-            and (
-                (self._ampacity is None and other._ampacity is None)
-                or (
-                    self._ampacity is not None
-                    and other._ampacity is not None
-                    and np.allclose(self._ampacity, other._ampacity)
-                )
-            )
-        )
 
     @property
     @ureg_wraps("ohm/km", (None,))
