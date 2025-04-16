@@ -802,12 +802,12 @@ class ElectricalNetwork(JsonMixin):
             self._add_element_to_dict(element, to=self.loads, disconnectable=True)
         elif isinstance(element, Line):
             self._add_element_to_dict(element, to=self.lines)
-            self._add_parameters("line", element.parameters)
+            self._add_parameters(element.element_type, element.parameters)
             if element.with_shunt:
                 self._ground.connect(element._cy_element, [(0, 2)])
         elif isinstance(element, Transformer):
             self._add_element_to_dict(element, to=self.transformers)
-            self._add_parameters("transformer", element.parameters)
+            self._add_parameters(element.element_type, element.parameters)
         elif isinstance(element, Switch):
             self._add_element_to_dict(element, to=self.switches)
         elif isinstance(element, VoltageSource):

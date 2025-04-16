@@ -136,14 +136,7 @@ class Line(AbstractBranch[CyShuntLine | CySimplifiedLine]):
                 msg = "Cannot set line parameters without a shunt to a line that has shunt components."
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_MODEL)
-        if old_parameters is not None and old_parameters is not value:
-            old_parameters._lines.discard(self)
-            if not old_parameters._lines and self._network is not None:
-                self._network._remove_parameters(self.element_type, old_parameters.id)
-        if self not in value._lines:
-            value._lines.add(self)
-            if self._network is not None:
-                self._network._add_parameters(self.element_type, value)
+        self._update_network_parameters(old_parameters=old_parameters, new_parameters=value)
         self._invalidate_network_results()
         self._parameters = value
         if self._initialized:

@@ -1341,8 +1341,8 @@ def test_duplicate_line_parameters_id():
     lp2 = LineParameters("LP", z_line=0.1 + 0.1j)
     ln1 = Line("Line 1", bus1=bus1, bus2=bus2, parameters=lp1, length=0.1)
     ln2 = Line("Line 2", bus1=bus1, bus2=bus2, parameters=lp2, length=0.1)
-    assert lp1._lines == {ln1}
-    assert lp2._lines == {ln2}
+    assert lp1._elements == {ln1}
+    assert lp2._elements == {ln2}
     with pytest.raises(RoseauLoadFlowException) as e:
         en = ElectricalNetwork.from_element(bus1)
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PARAMETERS_ID
@@ -1357,18 +1357,18 @@ def test_duplicate_line_parameters_id():
     lp1 = LineParameters("LP", z_line=0.1 + 0.1j)
     ln1 = Line("Line 1", bus1=bus1, bus2=bus2, parameters=lp1, length=0.1)
     ln2 = Line("Line 2", bus1=bus1, bus2=bus2, parameters=lp1, length=0.1)
-    assert lp1._lines == {ln1, ln2}
+    assert lp1._elements == {ln1, ln2}
     en = ElectricalNetwork.from_element(bus1)
     assert en._parameters["line"] == {lp1.id: lp1}
     lp2 = LineParameters("LP", z_line=0.1 + 0.1j)
     with pytest.raises(RoseauLoadFlowException) as e:
-        en.lines["Line 2"].parameters = lp2
+        ln2.parameters = lp2
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PARAMETERS_ID
     assert e.value.msg == (
         "Line parameters IDs must be unique in the network. ID 'LP' is used by several line parameters objects."
     )
     assert en._parameters["line"] == {lp1.id: lp1}
-    assert ln2._parameters == lp1
+    assert ln2.parameters == lp1
 
     # But if only one line is using the parameters, it is replaced
     bus1 = Bus("Bus 1")
@@ -1376,11 +1376,68 @@ def test_duplicate_line_parameters_id():
     VoltageSource("Source", bus=bus1, voltage=20e3)
     lp1 = LineParameters("LP", z_line=0.1 + 0.1j)
     ln1 = Line("Line 1", bus1=bus1, bus2=bus2, parameters=lp1, length=0.1)
-    assert lp1._lines == {ln1}
+    assert lp1._elements == {ln1}
     en = ElectricalNetwork.from_element(bus1)
     assert en._parameters["line"] == {lp1.id: lp1}
     lp2 = LineParameters("LP", z_line=0.1 + 0.1j)
     ln1.parameters = lp2
-    assert lp1._lines == set()
-    assert lp2._lines == {ln1}
+    assert lp1._elements == set()
+    assert lp2._elements == {ln1}
     assert en._parameters["line"] == {lp2.id: lp2}
+
+
+def test_duplicate_transformer_parameters_id():
+    # Creating a network with duplicate transformer parameters ID raises an exception
+    bus1 = Bus("Bus 1")
+    bus2 = Bus("Bus 2")
+    VoltageSource("Source", bus=bus1, voltage=20e3)
+    tp1 = TransformerParameters("TP", vg="Dyn11", uhv=20e3, ulv=400, sn=100e3, z2=0.1, ym=0.1j)
+    tp2 = TransformerParameters("TP", vg="Dyn11", uhv=20e3, ulv=400, sn=160e3, z2=0.01, ym=0.01j)
+    tr1 = Transformer("Tr 1", bus_hv=bus1, bus_lv=bus2, parameters=tp1)
+    tr2 = Transformer("Tr 2", bus_hv=bus1, bus_lv=bus2, parameters=tp2)
+    assert tp1._elements == {tr1}
+    assert tp2._elements == {tr2}
+    with pytest.raises(RoseauLoadFlowException) as e:
+        en = ElectricalNetwork.from_element(bus1)
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PARAMETERS_ID
+    assert e.value.msg == (
+        "Transformer parameters IDs must be unique in the network. ID 'TP' is used by several "
+        "transformer parameters objects."
+    )
+
+    # Setting the parameters later also raises an exception
+    bus1 = Bus("Bus 1")
+    bus2 = Bus("Bus 2")
+    VoltageSource("Source", bus=bus1, voltage=20e3)
+    tp1 = TransformerParameters("TP", vg="Dyn11", uhv=20e3, ulv=400, sn=100e3, z2=0.1, ym=0.1j)
+    tr1 = Transformer("Tr 1", bus_hv=bus1, bus_lv=bus2, parameters=tp1)
+    tr2 = Transformer("Tr 2", bus_hv=bus1, bus_lv=bus2, parameters=tp1)
+    assert tp1._elements == {tr1, tr2}
+    en = ElectricalNetwork.from_element(bus1)
+    assert en._parameters["transformer"] == {tp1.id: tp1}
+    tp2 = TransformerParameters("TP", vg="Dyn11", uhv=20e3, ulv=400, sn=160e3, z2=0.01, ym=0.01j)
+    with pytest.raises(RoseauLoadFlowException) as e:
+        tr2.parameters = tp2
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PARAMETERS_ID
+    assert e.value.msg
+    assert (
+        "Transformer parameters IDs must be unique in the network. ID 'TP' is used by several "
+        "transformer parameters objects."
+    )
+    assert en._parameters["transformer"] == {tp1.id: tp1}
+    assert tr2.parameters == tp1
+
+    # But if only one transformer is using the parameters, it is replaced
+    bus1 = Bus("Bus 1")
+    bus2 = Bus("Bus 2")
+    VoltageSource("Source", bus=bus1, voltage=20e3)
+    tp1 = TransformerParameters("TP", vg="Dyn11", uhv=20e3, ulv=400, sn=100e3, z2=0.1, ym=0.1j)
+    tr1 = Transformer("Tr 1", bus_hv=bus1, bus_lv=bus2, parameters=tp1)
+    assert tp1._elements == {tr1}
+    en = ElectricalNetwork.from_element(bus1)
+    assert en._parameters["transformer"] == {tp1.id: tp1}
+    tp2 = TransformerParameters("TP", vg="Dyn11", uhv=20e3, ulv=400, sn=160e3, z2=0.01, ym=0.01j)
+    tr1.parameters = tp2
+    assert tp1._elements == set()
+    assert tp2._elements == {tr1}
+    assert en._parameters["transformer"] == {tp2.id: tp2}
