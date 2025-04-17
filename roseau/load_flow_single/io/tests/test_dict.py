@@ -50,11 +50,10 @@ def test_to_dict():
         insulator=rlfs.Insulator.PVC,
         section=120,
     )
-    lp2 = rlfs.LineParameters("test", z_line=1, y_shunt=1.1)
 
     geom = LineString([(0.0, 0.0), (0.0, 1.0)])
     line1 = rlfs.Line(id="line1", bus1=source_bus, bus2=load_bus, parameters=lp1, length=10, geometry=geom)
-    line2 = rlfs.Line(id="line2", bus1=source_bus, bus2=load_bus, parameters=lp2, length=10, geometry=geom)
+    line2 = rlfs.Line(id="line2", bus1=source_bus, bus2=load_bus, parameters=lp1, length=10, geometry=geom)
     en = rlfs.ElectricalNetwork(
         buses=[source_bus, load_bus],
         lines=[line1, line2],
@@ -64,27 +63,7 @@ def test_to_dict():
         sources=[vs],
     )
 
-    # Same id, different line parameters -> fail
-    with pytest.raises(rlfs.RoseauLoadFlowException) as e:
-        en.to_dict(include_results=False)
-    assert "There are multiple line parameters with id 'test'" in e.value.msg
-    assert e.value.code == rlfs.RoseauLoadFlowExceptionCode.JSON_LINE_PARAMETERS_DUPLICATES
-
-    # Same id, same line parameters -> ok
-    lp2 = rlfs.LineParameters(
-        id="test",
-        z_line=1,
-        y_shunt=1,
-        line_type=rlfs.LineType.UNDERGROUND,
-        material=rlfs.Material.AA,
-        insulator=rlfs.Insulator.PVC,
-        section=120,
-    )
-    line2.parameters = lp2
-    en.to_dict(include_results=False)
-
     # Dict content
-    line2.parameters = lp1
     lp1.ampacity = 1000
     res = en.to_dict(include_results=False)
     res_bus0, res_bus1 = res["buses"]
@@ -119,14 +98,11 @@ def test_to_dict():
     tp1 = rlfs.TransformerParameters.from_open_and_short_circuit_tests(
         id="t", vg="Dyn11", uhv=20000, ulv=400, sn=160 * 1e3, p0=460, i0=2.3 / 100, psc=2350, vsc=4 / 100
     )
-    tp2 = rlfs.TransformerParameters.from_open_and_short_circuit_tests(
-        id="t", vg="Dyn11", uhv=20000, ulv=400, sn=200 * 1e3, p0=460, i0=2.3 / 100, psc=2350, vsc=4 / 100
-    )
     transformer1 = rlfs.Transformer(
         id="Transformer1", bus_hv=source_bus, bus_lv=load_bus, parameters=tp1, geometry=geom
     )
     transformer2 = rlfs.Transformer(
-        id="Transformer2", bus_hv=source_bus, bus_lv=load_bus, parameters=tp2, geometry=geom
+        id="Transformer2", bus_hv=source_bus, bus_lv=load_bus, parameters=tp1, geometry=geom
     )
     en = rlfs.ElectricalNetwork(
         buses=[source_bus, load_bus],
@@ -137,21 +113,7 @@ def test_to_dict():
         sources=[vs],
     )
 
-    # Same id, different transformer parameters -> fail
-    with pytest.raises(rlfs.RoseauLoadFlowException) as e:
-        en.to_dict(include_results=False)
-    assert "There are multiple transformer parameters with id 't'" in e.value.msg
-    assert e.value.code == rlfs.RoseauLoadFlowExceptionCode.JSON_TRANSFORMER_PARAMETERS_DUPLICATES
-
-    # Same id, same transformer parameters -> ok
-    tp2 = rlfs.TransformerParameters.from_open_and_short_circuit_tests(
-        id="t", vg="Dyn11", uhv=20000, ulv=400, sn=160 * 1e3, p0=460, i0=2.3 / 100, psc=2350, vsc=4 / 100
-    )
-    transformer2.parameters = tp2
-    en.to_dict(include_results=False)
-
     # Dict content
-    transformer2.parameters = tp1
     res = en.to_dict(include_results=False)
     assert "geometry" in res["buses"][0]
     assert "geometry" in res["buses"][1]

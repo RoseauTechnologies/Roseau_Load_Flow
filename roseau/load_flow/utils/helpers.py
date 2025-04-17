@@ -1,6 +1,5 @@
 from collections.abc import Collection, Sized
-
-from roseau.load_flow._compat import StrEnum
+from enum import StrEnum
 
 _NORM_TABLE = str.maketrans(".- /", "____")
 
@@ -19,6 +18,11 @@ def one_or_more_repr(items: Collection[object], /, singular: str, plural: str | 
     if n == 1:
         return f"{singular} {next(iter(items))!r}", "is"
     return f"{plural if plural is not None else singular + 's'} {items!r}", "are"
+
+
+def id_sort_key(x: dict, /) -> tuple[str, str]:
+    """Sorting key function for objects with an 'id' key."""
+    return type(x["id"]).__name__, str(x["id"])
 
 
 class CaseInsensitiveStrEnum(StrEnum):

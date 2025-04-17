@@ -1,9 +1,10 @@
 import logging
 import warnings
+from typing import Self
 
 import numpy as np
 from shapely.geometry.base import BaseGeometry
-from typing_extensions import Self, TypeVar
+from typing_extensions import TypeVar
 
 from roseau.load_flow import SQRT3
 from roseau.load_flow.typing import Id, JsonDict
@@ -12,10 +13,14 @@ from roseau.load_flow.utils import find_stack_level
 from roseau.load_flow_engine.cy_engine import CyBranch
 from roseau.load_flow_single.models.buses import Bus
 from roseau.load_flow_single.models.core import Element
+from roseau.load_flow_single.models.line_parameters import LineParameters
+from roseau.load_flow_single.models.transformer_parameters import TransformerParameters
 
 logger = logging.getLogger(__name__)
 
 _CyB_co = TypeVar("_CyB_co", bound=CyBranch, default=CyBranch, covariant=True)
+
+_Parameters = LineParameters | TransformerParameters
 
 
 class AbstractBranch(Element[_CyB_co]):
@@ -87,6 +92,17 @@ class AbstractBranch(Element[_CyB_co]):
                 ),
                 stacklevel=find_stack_level(),
             )
+
+    def _update_network_parameters(self, old_parameters: _Parameters | None, new_parameters: _Parameters) -> None:
+        if old_parameters is not None and old_parameters is not new_parameters:
+            old_parameters._elements.discard(self)
+            if not old_parameters._elements and self._network is not None:
+                # This was the only element using the old parameters, remove them from the network
+                self._network._remove_parameters(self.element_type, old_parameters.id)
+        if self not in new_parameters._elements:
+            new_parameters._elements.add(self)
+            if self._network is not None:
+                self._network._add_parameters(self.element_type, new_parameters)
 
     #
     # Results

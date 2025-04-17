@@ -3,11 +3,11 @@ import re
 from functools import lru_cache
 from importlib import resources
 from pathlib import Path
-from typing import Final, Literal, NoReturn
+from typing import Final, Literal, NoReturn, Self
 
 import numpy as np
 import pandas as pd
-from typing_extensions import Self, deprecated
+from typing_extensions import deprecated
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.types import TransformerCooling, TransformerInsulation
@@ -186,6 +186,8 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         self._whv: str = whv
         self._wlv: str = wlv
         self._clock: int = clock
+
+        self._elements = set()  # Set of elements using this transformer parameters object
 
         # Filled using alternative constructor `from_open_and_short_circuit_tests`
         self._p0: float | None = None
@@ -1036,7 +1038,10 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             The values ``psc``, the losses (in W), and ``vsc``, the voltages on LV side (in %) during
             short-circuit test.
         """
-        return self._create_cy_transformer().compute_short_circuit_parameters(uhv=self._uhv, ulv=self._ulv, sn=self._sn)
+        cy_transformer = self._create_cy_transformer()
+        # Ignore ym because it is ignored when computing z2 from the short-circuit test
+        cy_transformer.update_transformer_parameters(z2=self._z2, ym=0j, k=self._k)
+        return cy_transformer.compute_short_circuit_parameters(uhv=self._uhv, ulv=self._ulv, sn=self._sn)
 
     #
     # Json Mixin interface

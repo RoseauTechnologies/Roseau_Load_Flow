@@ -5,11 +5,10 @@ import textwrap
 from abc import ABCMeta, abstractmethod
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Generic, NoReturn, TypeVar, overload
+from typing import Generic, NoReturn, Self, TypeVar, overload
 
 import numpy as np
 import pandas as pd
-from typing_extensions import Self
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.typing import Id, JsonDict, StrPath

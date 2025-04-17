@@ -64,11 +64,12 @@ class Transformer(AbstractBranch[CySingleTransformer]):
             geometry:
                 The geometry of the transformer.
         """
+        self._initialized = False
         super().__init__(id=id, bus1=bus_hv, bus2=bus_lv, n=2, geometry=geometry)
-
         self.tap = tap
-        self._parameters = parameters
+        self.parameters = parameters
         self.max_loading = max_loading
+        self._initialized = True
 
         # Equivalent direct-system (positive-sequence) parameters
         z2, ym, k = parameters.z2d, parameters.ymd, parameters.kd
@@ -111,13 +112,15 @@ class Transformer(AbstractBranch[CySingleTransformer]):
 
     @parameters.setter
     def parameters(self, value: TransformerParameters) -> None:
-        # Note here we allow changing the vector group as the model is the same
+        old_parameters = self._parameters if self._initialized else None
+        # Note: here we allow changing the vector group as the underlying C++ model is the same
         if value.phases != "three-phase":
             msg = f"{value.phases.capitalize()} transformers are not allowed in a balanced three-phase load flow."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_TYPE)
-        self._parameters = value
+        self._update_network_parameters(old_parameters=old_parameters, new_parameters=value)
         self._invalidate_network_results()
+        self._parameters = value
         if self._cy_element is not None:
             z2, ym, k = value.z2d, value.ymd, value.kd
             self._cy_element.update_transformer_parameters(z2, ym, k * self.tap)

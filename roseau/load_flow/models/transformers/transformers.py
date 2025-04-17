@@ -80,7 +80,7 @@ class Transformer(AbstractBranch[CyTransformer]):
                 The phases of the HV side of the transformer. A string like ``"abc"`` or ``"abcn"``
                 etc. The order of the phases is important. For a full list of supported phases, see
                 the class attribute :attr:`allowed_phases`. All phases must be present in the
-                connected bus. By default, determined from the transformer type.
+                connected bus. By default, determined from the vector group and the connected bus.
 
             phases_lv:
                 The phases of the LV side of the transformer. Similar to ``phases_hv``.
@@ -104,6 +104,7 @@ class Transformer(AbstractBranch[CyTransformer]):
             geometry:
                 The geometry of the transformer.
         """
+        self._initialized = False
         if parameters.phases == "single-phase":
             compute_phases = self._compute_phases_single
         elif parameters.phases == "center-tapped":
@@ -125,14 +126,16 @@ class Transformer(AbstractBranch[CyTransformer]):
         self._connect_neutral_hv = connect_neutral_hv
         self._connect_neutral_lv = connect_neutral_lv
         self.tap = tap
-        self._parameters = parameters
+        self.parameters = parameters
         self.max_loading = max_loading
+        self._initialized = True
 
         if parameters.phases == "three-phase":
             self._cy_element = parameters._create_cy_transformer(tap=tap)
         else:
             self._cy_element = parameters._create_cy_transformer(tap=parameters.orientation * tap)
         self._cy_connect()
+        self._connect(bus_hv, bus_lv)
 
     def __repr__(self) -> str:
         return f"{super().__repr__()[:-1]}, tap={self.tap:f}, max_loading={self._max_loading:f}>"
@@ -191,17 +194,17 @@ class Transformer(AbstractBranch[CyTransformer]):
 
     @parameters.setter
     def parameters(self, value: TransformerParameters) -> None:
-        vg1 = self._parameters.vg
-        vg2 = value.vg
-        if vg1 != vg2:
+        old_parameters = self._parameters if self._initialized else None
+        if old_parameters is not None and old_parameters.vg != value.vg:
             msg = (
                 f"Cannot update the parameters of transformer {self.id!r} to a different vector "
-                f"group: old={vg1!r}, new={vg2!r}."
+                f"group: old={old_parameters.vg!r}, new={value.vg!r}."
             )
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_TYPE)
-        self._parameters = value
+        self._update_network_parameters(old_parameters=old_parameters, new_parameters=value)
         self._invalidate_network_results()
+        self._parameters = value
         if self._cy_element is not None:
             z2, ym, k = value._z2, value._ym, value._k
             if value.phases in ("single-phase", "center-tapped"):
@@ -254,7 +257,6 @@ class Transformer(AbstractBranch[CyTransformer]):
         w1_has_neutral = whv.endswith("N")
         if phases_hv is None:
             phases_hv = "abcn" if w1_has_neutral else "abc"
-            phases_hv = "".join(p for p in bus_hv.phases if p in phases_hv)
             self._check_phases(id=id, allowed_phases=self._allowed_phases_three, phases_hv=phases_hv)
         else:
             self._check_phases(id=id, allowed_phases=self._allowed_phases_three, phases_hv=phases_hv)
@@ -274,14 +276,13 @@ class Transformer(AbstractBranch[CyTransformer]):
                     msg = f"HV phases {phases_hv!r} of transformer {id!r} are not compatible with its winding {whv!r}."
                     logger.error(msg)
                     raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
-            connect_neutral_hv = bus_hv._check_element_phases(
-                self, eid=id, phases=phases_hv, side="HV", connect_neutral=connect_neutral_hv
-            )
+        connect_neutral_hv = bus_hv._check_element_phases(
+            self, eid=id, phases=phases_hv, side="HV", connect_neutral=connect_neutral_hv
+        )
 
         w2_has_neutral = wlv.endswith("n")
         if phases_lv is None:
             phases_lv = "abcn" if w2_has_neutral else "abc"
-            phases_lv = "".join(p for p in bus_lv.phases if p in phases_lv)
             self._check_phases(id=id, allowed_phases=self._allowed_phases_three, phases_lv=phases_lv)
         else:
             self._check_phases(id=id, allowed_phases=self._allowed_phases_three, phases_lv=phases_lv)
@@ -301,9 +302,9 @@ class Transformer(AbstractBranch[CyTransformer]):
                     msg = f"LV phases {phases_lv!r} of transformer {id!r} are not compatible with its winding {wlv!r}."
                     logger.error(msg)
                     raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
-            connect_neutral_lv = bus_lv._check_element_phases(
-                self, eid=id, phases=phases_lv, side="LV", connect_neutral=connect_neutral_lv
-            )
+        connect_neutral_lv = bus_lv._check_element_phases(
+            self, eid=id, phases=phases_lv, side="LV", connect_neutral=connect_neutral_lv
+        )
 
         return phases_hv, phases_lv, connect_neutral_hv, connect_neutral_lv
 

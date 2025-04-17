@@ -19,6 +19,23 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`365` Fix minor inconsistency in the calculation of short-circuit parameters of transformers
+  with no open and short circuit tests data. The iron losses are now consistently ignored during the
+  calculation of the short-circuit parameters.
+- {gh-pr}`364` {gh-issue}`363` Fix missing floating neutral of three-phase transformers when the
+  bus does not have a neutral.
+- {gh-pr}`361` {gh-issue}`300` Raise an error when duplicate line or transformer parameters IDs are
+  used in the same network.
+- {gh-pr}`362` {gh-issue}`338` Require Python 3.11 or newer.
+- {gh-pr}`360` {gh-issue}`359` Fix a bug related to adding short circuits to a bus when the ground fault was not
+  already part of the electrical network.
+- {gh-pr}`358` Fix a division by zero error during DGS export.
+- {gh-pr}`357` Improve support for unbalance calculations.
+
+  - The `res_voltage_unbalance` method now accepts a `definition` parameter to choose between the
+    definitions of the voltage unbalance from `'VUF'` (IEC), `'PVUR'` (IEEE) and `'LVUR'` (NEMA).
+  - Loads and sources now have a `res_current_unbalance` method to compute the current unbalance.
+
 - {gh-pr}`356` Fix regression since version 0.11.0 where `max_voltage_level` for buses was missing
   in the catalogue networks.
 - {gh-pr}`355` {gh-issue}`337` Add HV/MV transformer models to the catalogue.
