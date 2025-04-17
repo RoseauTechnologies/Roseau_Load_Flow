@@ -80,7 +80,7 @@ class Transformer(AbstractBranch[CyTransformer]):
                 The phases of the HV side of the transformer. A string like ``"abc"`` or ``"abcn"``
                 etc. The order of the phases is important. For a full list of supported phases, see
                 the class attribute :attr:`allowed_phases`. All phases must be present in the
-                connected bus. By default, determined from the transformer type.
+                connected bus. By default, determined from the vector group and the connected bus.
 
             phases_lv:
                 The phases of the LV side of the transformer. Similar to ``phases_hv``.
@@ -257,7 +257,6 @@ class Transformer(AbstractBranch[CyTransformer]):
         w1_has_neutral = whv.endswith("N")
         if phases_hv is None:
             phases_hv = "abcn" if w1_has_neutral else "abc"
-            phases_hv = "".join(p for p in bus_hv.phases if p in phases_hv)
             self._check_phases(id=id, allowed_phases=self._allowed_phases_three, phases_hv=phases_hv)
         else:
             self._check_phases(id=id, allowed_phases=self._allowed_phases_three, phases_hv=phases_hv)
@@ -277,14 +276,13 @@ class Transformer(AbstractBranch[CyTransformer]):
                     msg = f"HV phases {phases_hv!r} of transformer {id!r} are not compatible with its winding {whv!r}."
                     logger.error(msg)
                     raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
-            connect_neutral_hv = bus_hv._check_element_phases(
-                self, eid=id, phases=phases_hv, side="HV", connect_neutral=connect_neutral_hv
-            )
+        connect_neutral_hv = bus_hv._check_element_phases(
+            self, eid=id, phases=phases_hv, side="HV", connect_neutral=connect_neutral_hv
+        )
 
         w2_has_neutral = wlv.endswith("n")
         if phases_lv is None:
             phases_lv = "abcn" if w2_has_neutral else "abc"
-            phases_lv = "".join(p for p in bus_lv.phases if p in phases_lv)
             self._check_phases(id=id, allowed_phases=self._allowed_phases_three, phases_lv=phases_lv)
         else:
             self._check_phases(id=id, allowed_phases=self._allowed_phases_three, phases_lv=phases_lv)
@@ -304,9 +302,9 @@ class Transformer(AbstractBranch[CyTransformer]):
                     msg = f"LV phases {phases_lv!r} of transformer {id!r} are not compatible with its winding {wlv!r}."
                     logger.error(msg)
                     raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
-            connect_neutral_lv = bus_lv._check_element_phases(
-                self, eid=id, phases=phases_lv, side="LV", connect_neutral=connect_neutral_lv
-            )
+        connect_neutral_lv = bus_lv._check_element_phases(
+            self, eid=id, phases=phases_lv, side="LV", connect_neutral=connect_neutral_lv
+        )
 
         return phases_hv, phases_lv, connect_neutral_hv, connect_neutral_lv
 

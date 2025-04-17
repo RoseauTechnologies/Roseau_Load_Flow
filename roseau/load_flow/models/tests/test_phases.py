@@ -357,6 +357,23 @@ def test_transformer_three_phases():
         Transformer(id=f"tr{i}", bus_hv=bus_hv, bus_lv=bus_lv, phases_hv="abc", phases_lv="abcn", parameters=tp)
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
     assert e.value.msg == f"LV phase 'c' of transformer 'tr{i}' is not in phases 'abn' of its LV bus 'bus-2'."
+    i = next(tr_ids)
+    with pytest.raises(RoseauLoadFlowException) as e:
+        Transformer(id=f"tr{i}", bus_hv=bus_hv, bus_lv=bus_lv, parameters=tp)
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
+    assert e.value.msg == f"LV phase 'c' of transformer 'tr{i}' is not in phases 'abn' of its LV bus 'bus-2'."
+    bus_hv = Bus(id="bus-2", phases="bcn")
+    bus_lv = Bus(id="bus-2", phases="abcn")
+    i = next(tr_ids)
+    with pytest.raises(RoseauLoadFlowException) as e:
+        Transformer(id=f"tr{i}", bus_hv=bus_hv, bus_lv=bus_lv, phases_hv="abc", phases_lv="abcn", parameters=tp)
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
+    assert e.value.msg == f"HV phase 'a' of transformer 'tr{i}' is not in phases 'bcn' of its HV bus 'bus-2'."
+    i = next(tr_ids)
+    with pytest.raises(RoseauLoadFlowException) as e:
+        Transformer(id=f"tr{i}", bus_hv=bus_hv, bus_lv=bus_lv, parameters=tp)
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
+    assert e.value.msg == f"HV phase 'a' of transformer 'tr{i}' is not in phases 'bcn' of its HV bus 'bus-2'."
 
     # Not in transformer
     bus_hv = Bus(id="bus-1", phases="abcn")
@@ -377,11 +394,11 @@ def test_transformer_three_phases():
 
     # Intersection
     bus_hv = Bus(id="bus-1", phases="abcn")
-    bus_lv = Bus(id="bus-2", phases="abcn")
+    bus_lv = Bus(id="bus-2", phases="abc")
     i = next(tr_ids)
     transformer = Transformer(id=f"tr{i}", bus_hv=bus_hv, bus_lv=bus_lv, parameters=tp)
-    assert transformer.phases_hv == "abc"
-    assert transformer.phases_lv == "abcn"
+    assert transformer.phases_hv == "abc"  # neutral of the bus is ignored
+    assert transformer.phases_lv == "abcn"  # neutral of the transformer is floated
 
     # Floating LV neutral default behavior
     bus_lv = Bus(id="bus-2", phases="abc")
