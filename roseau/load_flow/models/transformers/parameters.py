@@ -930,7 +930,10 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             The values ``psc``, the losses (in W), and ``vsc``, the voltages on LV side (in %) during
             short-circuit test.
         """
-        return self._create_cy_transformer().compute_short_circuit_parameters(uhv=self._uhv, ulv=self._ulv, sn=self._sn)
+        cy_transformer = self._create_cy_transformer()
+        # Ignore ym because it is ignored when computing z2 from the short-circuit test
+        cy_transformer.update_transformer_parameters(z2=self._z2, ym=0j, k=self._k)
+        return cy_transformer.compute_short_circuit_parameters(uhv=self._uhv, ulv=self._ulv, sn=self._sn)
 
     #
     # Json Mixin interface

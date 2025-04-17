@@ -19,6 +19,9 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`365` Fix minor inconsistency in the calculation of short-circuit parameters of transformers
+  with no open and short circuit tests data. The iron losses are now consistently ignored during the
+  calculation of the short-circuit parameters.
 - {gh-pr}`364` {gh-issue}`363` Fix missing floating neutral of three-phase transformers when the
   bus does not have a neutral.
 - {gh-pr}`361` {gh-issue}`300` Raise an error when duplicate line or transformer parameters IDs are
