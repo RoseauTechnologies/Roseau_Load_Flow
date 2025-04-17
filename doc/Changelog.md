@@ -19,6 +19,8 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`364` {gh-issue}`363` Fix missing floating neutral of three-phase transformers when the
+  bus does not have a neutral.
 - {gh-pr}`361` {gh-issue}`300` Raise an error when duplicate line or transformer parameters IDs are
   used in the same network.
 - {gh-pr}`362` {gh-issue}`338` Require Python 3.11 or newer.
