@@ -680,7 +680,7 @@ def test_from_power_factory():
         cooling="ONAN",
         insulation="liquid-immersed",
     )
-    assert tp_pwf.phases == "single-phase"
+    assert tp_pwf.type == "single-phase"
     assert tp_pwf.vg == "Ii0"
 
     # Bad technology
@@ -755,52 +755,7 @@ def test_to_dict():
 
     # Test the from_dict without "p0", ... (only z2 and ym)
     tp3 = TransformerParameters.from_dict(tp2.to_dict())
-    assert tp3 == tp2
-
-
-def test_equality():
-    data = {
-        "id": "Yzn11 - 50kVA",
-        "vg": "yzn11",
-        "sn": Q_(50, "kVA"),  # VA
-        "uhv": Q_(20, "kV"),  # V
-        "ulv": Q_(400, "V"),  # V
-        "z2": Q_(8.64 + 9.444j, "centiohm"),  # Ohm
-        "ym": Q_(0.3625 - 2.2206j, "uS"),  # S
-        "fn": Q_(50, "Hz"),  # Hz
-        "manufacturer": "Roseau",
-        "range": "Tech+",
-        "efficiency": "Extraordinary",
-        "cooling": "ONAN",
-        "insulation": "liquid-immersed",
-    }
-
-    tp = TransformerParameters(**data)
-    tp2 = TransformerParameters(**data)
-    assert tp2 == tp
-
-    # Fails
-    other_data = {
-        "id": "Dyn11 - 49kVA",
-        "vg": "dyn11",
-        "sn": Q_(49, "kVA"),  # VA
-        "uhv": Q_(19, "kV"),  # V
-        "ulv": Q_(399, "V"),  # V
-        "z2": Q_(8.63 + 9.444j, "centiohm"),  # Ohm
-        "ym": Q_(0.48 - 2.2206j, "uS"),  # S
-        "fn": Q_(60, "Hz"),  # Hz
-        "manufacturer": "Roso",
-        "range": "Tech-",
-        "efficiency": "Less extraordinary",
-        "cooling": "AN",
-        "insulation": "dry-type",
-    }
-    for k, v in other_data.items():
-        other_tp = TransformerParameters(**(data | {k: v}))
-        assert other_tp != tp, k
-
-    # Test the case which returns NotImplemented in the equality operator
-    assert tp != object()
+    assert tp3.to_dict() == tp2.to_dict()
 
 
 def test_ideal_transformer():

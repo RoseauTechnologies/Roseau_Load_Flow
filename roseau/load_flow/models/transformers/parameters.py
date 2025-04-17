@@ -7,7 +7,6 @@ from typing import Final, Literal, NoReturn, Self
 
 import numpy as np
 import pandas as pd
-from typing_extensions import deprecated
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.types import TransformerCooling, TransformerInsulation
@@ -215,29 +214,9 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         s += ">"
         return s
 
-    def __eq__(self, other: object) -> bool:
-        if not isinstance(other, TransformerParameters):
-            return NotImplemented
-        else:
-            return bool(
-                self.id == other.id
-                and self._vg == other._vg
-                and np.isclose(self._sn, other._sn)
-                and np.isclose(self._uhv, other._uhv)
-                and np.isclose(self._ulv, other._ulv)
-                and np.isclose(self._z2, other._z2)
-                and np.isclose(self._ym, other._ym)
-                and self._fn == other._fn
-                and self._manufacturer == other._manufacturer
-                and self._range == other._range
-                and self._efficiency == other._efficiency
-                and self._cooling == other._cooling
-                and self._insulation == other._insulation
-            )
-
     @property
-    def phases(self) -> Literal["three-phase", "single-phase", "center-tapped"]:
-        """The phase configuration of the transformer.
+    def type(self) -> Literal["three-phase", "single-phase", "center-tapped"]:
+        """The type of transformer parameters.
 
         It can be ``three-phase``, ``single-phase`` or ``center-tapped``.
         """
@@ -247,16 +226,6 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             return "center-tapped"
         else:
             return "three-phase"
-
-    @property
-    @deprecated("Use `phases` property instead.", category=FutureWarning)
-    def type(self) -> Literal["three-phase", "single-phase", "center-tapped"]:
-        """The phase configuration of the transformer.
-
-        .. deprecated:: 0.13.0
-            Use the ``phases`` property instead.
-        """
-        return self.phases
 
     @property
     def vg(self) -> str:
@@ -1006,7 +975,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
 
     def _create_cy_transformer(self, tap: float = 1.0) -> CyTransformer:
         """Create a CyTransformer object from the transformer parameters."""
-        if self.phases == "three-phase":
+        if self.type == "three-phase":
             return CyThreePhaseTransformer(
                 n1=self._n1,
                 n2=self._n2,
@@ -1017,7 +986,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
                 k=self._k * tap,
                 clock=self._clock,
             )
-        elif self.phases == "single-phase":
+        elif self.type == "single-phase":
             return CySingleTransformer(z2=self._z2, ym=self._ym, k=self._k * tap)
         else:
             return CyCenterTransformer(z2=self._z2, ym=self._ym, k=self._k * tap)
@@ -1155,7 +1124,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
                 "insulation": object,
                 "material": str,
                 "oil": str,
-                "phases": str,
+                "type": str,
                 "du1": float,
                 "du0.8": float,
                 "eff1 100%": float,
@@ -1511,7 +1480,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
                     "fn": "Frequency (Hz)",
                     # # If we ever want to display these columns
                     # "insulation": "Insulation technology",
-                    # "phases": "Phases",
+                    # "type": "Type",
                     # "oil": "Oil",
                     # "material": "Material",
                     # "i0": "No-load current (%)",

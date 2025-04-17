@@ -1,4 +1,4 @@
-name,sn,uhv,ulv,fn,vg,vsc,psc,i0,p0,manufacturer,range,efficiency,cooling,insulation,material,oil,phases,du1,du0.8,eff1 100%,eff0.8 100%,eff1 75%,eff0.8 75%,notes
+name,sn,uhv,ulv,fn,vg,vsc,psc,i0,p0,manufacturer,range,efficiency,cooling,insulation,material,oil,type,du1,du0.8,eff1 100%,eff0.8 100%,eff1 75%,eff0.8 75%,notes
 FT 100kVA 15/20kV(20) 400V Dyn11,100000,20000,400,50,Dyn11,0.04,2150,0.025,210,France Transfo,,,ONAN,liquid-immersed,,mineral,three-phase,2.21,3.75,97.69,97.13,98.14,97.69,"±2,5% ±5%"
 FT 160kVA 15/20kV(20) 400V Dyn11,160000,20000,400,50,Dyn11,0.04,2350,0.023,460,France Transfo,,,ONAN,liquid-immersed,,mineral,three-phase,1.54,3.43,98.27,97.85,98.54,98.18,"±2,5% ±5%"
 FT 250kVA 15/20kV(20) 400V Dyn11,250000,20000,400,50,Dyn11,0.04,3250,0.021,650,France Transfo,,,ONAN,liquid-immersed,,mineral,three-phase,1.37,3.33,98.46,98.09,98.7,98.37,"±2,5% ±5%"
