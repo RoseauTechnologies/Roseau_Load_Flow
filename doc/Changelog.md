@@ -19,6 +19,13 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`366` Add nominal frequency (`fn`), cooling class (`cooling`) and insulation type
+  (`insulation`) to the `TransformerParameters` class.
+  The transformers catalogue has been updated accordingly. The manufacturer names in the catalogue
+  have been expanded to better accomodate new transformers (`SE` -> `Schneider Electric`, `FT` ->
+  `France Transfo`, ...). More HV/MV transformers have been added to the catalogue.
+  The cooling and insulation are described in the new enumeration types `TransformerCooling` and
+  `TransformerInsulation` respectively.
 - {gh-pr}`365` Fix minor inconsistency in the calculation of short-circuit parameters of transformers
   with no open and short circuit tests data. The iron losses are now consistently ignored during the
   calculation of the short-circuit parameters.
