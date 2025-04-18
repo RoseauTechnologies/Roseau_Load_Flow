@@ -1,5 +1,6 @@
 import logging
 import re
+from functools import lru_cache
 from importlib import resources
 from pathlib import Path
 from typing import Final, Literal, NoReturn, Self
@@ -8,6 +9,7 @@ import numpy as np
 import pandas as pd
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
+from roseau.load_flow.types import TransformerCooling, TransformerInsulation
 from roseau.load_flow.typing import FloatArrayLike1D, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow.utils import CatalogueMixin, Identifiable, JsonMixin
@@ -47,7 +49,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
     """Allowed vector groups for transformers."""
     # fmt: on
 
-    @ureg_wraps(None, (None, None, None, "V", "V", "VA", "ohm", "S", None, None, None))
+    @ureg_wraps(None, (None, None, None, "V", "V", "VA", "ohm", "S", "Hz", None, None, None, None, None))
     def __init__(
         self,
         id: Id,
@@ -58,9 +60,12 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         sn: float | Q_[float],
         z2: complex | Q_[complex],
         ym: complex | Q_[complex],
+        fn: float | Q_[float] | None = None,
         manufacturer: str | None = None,
         range: str | None = None,
         efficiency: str | None = None,
+        cooling: str | TransformerCooling | None = None,
+        insulation: str | TransformerInsulation | None = None,
     ) -> None:
         """TransformerParameters constructor.
 
@@ -95,6 +100,12 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             ym:
                 The magnetizing admittance located at the HV side of the transformer.
 
+            fn:
+                The nominal frequency of the transformer (Hz). Default is None. The frequency is not
+                currently used in the transformer model as the transformer parameters already in Ohm
+                and Siemens. It is only used when converting the transformer parameters to other
+                formats, like PowerFactory.
+
             manufacturer:
                 The name of the manufacturer for the transformer. Informative only, it has no impact
                 on the load flow. It is filled automatically when the parameters when imported from
@@ -110,6 +121,15 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
                 load flow. It is filled automatically when the parameters when imported from the
                 catalogue. The efficiency class used in the catalogue follows the `Eco-Design`
                 requirements as defined by the `EN 50629` standard.
+
+            cooling:
+                The cooling class of the transformer according to IEC 60076 (ONAN, ONAF, etc.).
+                Informative only, it has no impact on the load flow. The cooling class is defined by
+                IEC 60076 parts 2, 11 and 15.
+
+            insulation:
+                The transformer insulation technology (dry-type, liquid-immersed, gas-filled).
+                Informative only, it has no impact on the load flow.
         """
         super().__init__(id)
 
@@ -136,11 +156,14 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         self._sn: float = sn
         self._uhv: float = uhv
         self._ulv: float = ulv
+        self._fn: float | None = fn
         self._z2: complex = z2
         self._ym: complex = ym
         self._manufacturer: str | None = manufacturer
         self._range: str | None = range
         self._efficiency: str | None = efficiency
+        self._cooling = TransformerCooling(cooling) if cooling else None
+        self._insulation = TransformerInsulation(insulation) if insulation else None
 
         # Change the voltages if the reference voltages is phase-to-neutral
         if whv[0] == "Y":
@@ -175,6 +198,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
     def __repr__(self) -> str:
         s = f"<{type(self).__name__}: id={self.id!r}, vg={self._vg!r}, sn={self._sn}, uhv={self._uhv}, ulv={self._ulv}"
         for attr, val, tp in (
+            ("fn", self._fn, float),
             ("p0", self._p0, float),
             ("i0", self._i0, float),
             ("psc", self._psc, float),
@@ -182,28 +206,13 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             ("manufacturer", self._manufacturer, str),
             ("range", self._range, str),
             ("efficiency", self._efficiency, str),
+            ("cooling", self._cooling, str),
+            ("insulation", self._insulation, str),
         ):
             if val is not None:
                 s += f", {attr}={tp(val)!r}"
         s += ">"
         return s
-
-    def __eq__(self, other: object) -> bool:
-        if not isinstance(other, TransformerParameters):
-            return NotImplemented
-        else:
-            return bool(
-                self.id == other.id
-                and self._vg == other._vg
-                and np.isclose(self._sn, other._sn)
-                and np.isclose(self._uhv, other._uhv)
-                and np.isclose(self._ulv, other._ulv)
-                and np.isclose(self._z2, other._z2)
-                and np.isclose(self._ym, other._ym)
-                and self._manufacturer == other._manufacturer
-                and self._range == other._range
-                and self._efficiency == other._efficiency
-            )
 
     @property
     def type(self) -> Literal["three-phase", "single-phase", "center-tapped"]:
@@ -285,6 +294,11 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
     def sn(self) -> Q_[float]:
         """The nominal power of the transformer (VA)."""
         return self._sn
+
+    @property
+    def fn(self) -> Q_[float]:
+        """The nominal frequency of the transformer (Hz)."""
+        return Q_(self._fn, "Hz") if self._fn is not None else None
 
     @property
     @ureg_wraps("ohm", (None,))
@@ -369,6 +383,16 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         """
         return self._efficiency
 
+    @property
+    def cooling(self) -> TransformerCooling | None:
+        """The cooling class of the transformer according to IEC 60076 (ONAN, ONAF, AN, ...)."""
+        return self._cooling
+
+    @property
+    def insulation(self) -> TransformerInsulation | None:
+        """The insulation technology of the transformer (dry-type, liquid-immersed, gas-filled)."""
+        return self._insulation
+
     @classmethod
     def _compute_zy(
         cls, vg: str, uhv: float, ulv: float, sn: float, p0: float, i0: float, psc: float, vsc: float
@@ -430,6 +454,8 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             None,
             None,
             None,
+            None,
+            None,
         ),
     )
     def from_power_factory(
@@ -447,9 +473,12 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         pc: float | Q_[float],
         curmg: float | Q_[float],
         pfe: float | Q_[float],
+        # Roseau parameters
         manufacturer: str | None = None,
         range: str | None = None,
         efficiency: str | None = None,
+        cooling: str | TransformerCooling | None = None,
+        insulation: str | TransformerInsulation | None = None,
     ) -> Self:
         """Create a transformer parameters object from PowerFactory "TypTr2" data.
 
@@ -517,6 +546,15 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
                 The efficiency class of the transformer. Informative only, it has no impact on the
                 load flow.
 
+            cooling:
+                The cooling class of the transformer according to IEC 60076 (ONAN, ONAF, etc.).
+                Informative only, it has no impact on the load flow. The cooling class is defined by
+                IEC 60076 parts 2, 11 and 15.
+
+            insulation:
+                The transformer insulation technology (dry-type, liquid-immersed, gas-filled).
+                Informative only, it has no impact on the load flow.
+
         Returns:
             The corresponding transformer parameters object.
         """
@@ -552,6 +590,8 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             manufacturer=manufacturer,
             range=range,
             efficiency=efficiency,
+            cooling=cooling,
+            insulation=insulation,
         )
         instance._p0 = p0
         instance._i0 = i0
@@ -578,6 +618,8 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             None,
             None,
             None,
+            None,
+            None,
         ),
     )
     def from_open_dss(
@@ -593,9 +635,12 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         noloadloss: float | Q_[float] = 0,
         imag: float | Q_[float] = 0,
         rs: float | Q_[float] | tuple[float, float] | FloatArrayLike1D | None = None,
+        # Roseau parameters
         manufacturer: str | None = None,
         range: str | None = None,
         efficiency: str | None = None,
+        cooling: str | TransformerCooling | None = None,
+        insulation: str | TransformerInsulation | None = None,
     ) -> Self:
         """Create a transformer parameters object from OpenDSS "Transformer" data.
 
@@ -656,6 +701,15 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             efficiency:
                 The efficiency class of the transformer. Informative only, it has no impact on the
                 load flow.
+
+            cooling:
+                The cooling class of the transformer according to IEC 60076 (ONAN, ONAF, etc.).
+                Informative only, it has no impact on the load flow. The cooling class is defined by
+                IEC 60076 parts 2, 11 and 15.
+
+            insulation:
+                The transformer insulation technology (dry-type, liquid-immersed, gas-filled).
+                Informative only, it has no impact on the load flow.
 
         Returns:
             The corresponding transformer parameters object.
@@ -763,6 +817,8 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             manufacturer=manufacturer,
             range=range,
             efficiency=efficiency,
+            cooling=cooling,
+            insulation=insulation,
         )
         instance._p0 = p0
         instance._i0 = i0
@@ -775,7 +831,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
     # Open and short circuit tests
     #
     @classmethod
-    @ureg_wraps(None, (None, None, None, "V", "V", "VA", "W", "", "W", "", None, None, None))
+    @ureg_wraps(None, (None, None, None, "V", "V", "VA", "W", "", "W", "", "Hz", None, None, None, None, None))
     def from_open_and_short_circuit_tests(
         cls,
         id: Id,
@@ -788,9 +844,12 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         i0: float | Q_[float],
         psc: float | Q_[float],
         vsc: float | Q_[float],
+        fn: float | Q_[float] | None = None,
         manufacturer: str | None = None,
         range: str | None = None,
         efficiency: str | None = None,
+        cooling: str | TransformerCooling | None = None,
+        insulation: str | TransformerInsulation | None = None,
     ) -> Self:
         """Create a TransformerParameters object using the results of open-circuit and short-circuit tests.
 
@@ -831,6 +890,12 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             vsc:
                 Voltages on LV side during short-circuit test (%).
 
+            fn:
+                The nominal frequency of the transformer (Hz). Default is None. The frequency is not
+                currently used in the transformer model as the transformer parameters already in Ohm
+                and Siemens. It is only used when converting the transformer parameters to other
+                formats, like PowerFactory.
+
             manufacturer:
                 The name of the manufacturer for the transformer. Informative only, it has no impact
                 on the load flow. It is filled automatically when the parameters when imported from
@@ -846,6 +911,15 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
                 load flow. It is filled automatically when the parameters are imported from the
                 catalogue. The efficiency class used in the catalogue follows the `Eco-Design`
                 requirements as defined by the `EN 50629` standard.
+
+            cooling:
+                The cooling class of the transformer according to IEC 60076 (ONAN, ONAF, etc.).
+                Informative only, it has no impact on the load flow. The cooling class is defined by
+                IEC 60076 parts 2, 11 and 15.
+
+            insulation:
+                The transformer insulation technology (dry-type, liquid-immersed, gas-filled).
+                Informative only, it has no impact on the load flow.
         """
         # Check
         if i0 > 1.0 or i0 < 0.0:
@@ -885,9 +959,12 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             sn=sn,
             z2=z2,
             ym=ym,
+            fn=fn,
             manufacturer=manufacturer,
             range=range,
             efficiency=efficiency,
+            cooling=cooling,
+            insulation=insulation,
         )
         instance._p0 = p0
         instance._i0 = i0
@@ -952,9 +1029,12 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
                 i0=data["i0"],  # Current during open-circuit test (%)
                 psc=data["psc"],  # Losses during short-circuit test (W)
                 vsc=data["vsc"],  # Voltages on LV side during short-circuit test (%)
+                fn=data.get("fn"),  # Frequency (Hz)
                 manufacturer=data.get("manufacturer"),  # The manufacturer of the transformer
                 range=data.get("range"),  # The product range of the transformer
                 efficiency=data.get("efficiency"),  # The efficiency class of the transformer
+                cooling=data.get("cooling"),  # The cooling class of the transformer
+                insulation=data.get("insulation"),  # The insulation technology of the transformer
             )
         else:
             z2 = complex(*data["z2"])
@@ -967,9 +1047,12 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
                 sn=data["sn"],  # Nominal power
                 z2=z2,  # Series impedance (ohm)
                 ym=ym,  # Magnetizing admittance (S)
+                fn=data.get("fn"),  # Frequency (Hz)
                 manufacturer=data.get("manufacturer"),  # The manufacturer of the transformer
                 range=data.get("range"),  # The product range of the transformer
                 efficiency=data.get("efficiency"),  # The efficiency class of the transformer
+                cooling=data.get("cooling"),  # The cooling class of the transformer
+                insulation=data.get("insulation"),  # The insulation technology of the transformer
             )
 
     def _to_dict(self, include_results: bool) -> JsonDict:
@@ -985,6 +1068,8 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             "z2": [z2.real, z2.imag],
             "ym": [ym.real, ym.imag],
         }
+        if self._fn is not None:
+            data["fn"] = self._fn
         if self._has_test_results:
             data["i0"] = self._i0
             data["p0"] = self._p0
@@ -996,6 +1081,10 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             data["range"] = self._range
         if self._efficiency is not None:
             data["efficiency"] = self._efficiency
+        if self._cooling is not None:
+            data["cooling"] = self._cooling
+        if self._insulation is not None:
+            data["insulation"] = self._insulation
         return data
 
     def _results_to_dict(self, warning: bool, full: bool) -> NoReturn:
@@ -1011,34 +1100,78 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         return Path(resources.files("roseau.load_flow") / "data" / "transformers").expanduser().absolute()
 
     @classmethod
-    def catalogue_data(cls) -> pd.DataFrame:
+    @lru_cache(maxsize=1)
+    def _read_catalogue_data(cls) -> pd.DataFrame:
         file = cls.catalogue_path() / "Catalogue.csv"
         return pd.read_csv(
             file,
             parse_dates=False,
             dtype={
                 "name": str,
-                "manufacturer": str,
-                "range": str,
-                "efficiency": str,
-                "type": str,
-                "oil": str,
                 "sn": int,
+                "uhv": int,
+                "ulv": int,
+                "fn": int,
+                "vg": str,
                 "vsc": float,
                 "psc": float,
                 "i0": float,
                 "p0": float,
-                "vg": str,
-                "uhv": int,
-                "ulv": int,
+                "manufacturer": str,
+                "range": str,
+                "efficiency": str,
+                "cooling": object,
+                "insulation": object,
+                "material": str,
+                "oil": str,
+                "type": str,
                 "du1": float,
                 "du0.8": float,
                 "eff1 100%": float,
                 "eff0.8 100%": float,
                 "eff1 75%": float,
                 "eff0.8 75%": float,
+                "notes": str,
             },
-        ).fillna({"manufacturer": "", "efficiency": "", "range": "", "oil": ""})
+        ).fillna(
+            {
+                "manufacturer": "",
+                "efficiency": "",
+                "range": "",
+                "cooling": "",
+                "insulation": "",
+                "oil": "",
+                "material": "",
+                "notes": "",
+            }
+        )
+
+    @classmethod
+    def catalogue_data(cls, all: bool = False) -> pd.DataFrame:
+        data = cls._read_catalogue_data()
+        if all:
+            return data.copy()
+        else:
+            return data[
+                [
+                    "name",
+                    "sn",
+                    "uhv",
+                    "ulv",
+                    "fn",
+                    "vg",
+                    "vsc",
+                    "psc",
+                    "i0",
+                    "p0",
+                    "manufacturer",
+                    "range",
+                    "efficiency",
+                    "cooling",
+                    "insulation",
+                    "material",
+                ]
+            ].copy()
 
     @classmethod
     def _get_catalogue(
@@ -1047,16 +1180,17 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         manufacturer: str | re.Pattern[str] | None,
         range: str | re.Pattern[str] | None,
         efficiency: str | re.Pattern[str] | None,
+        cooling: str | None,
+        insulation: str | None,
         vg: str | re.Pattern[str] | None,
         sn: float | None,
         uhv: float | None,
         ulv: float | None,
+        fn: float | None,
         raise_if_not_found: bool,
     ) -> tuple[pd.DataFrame, str]:
         # Get the catalogue data
-        catalogue_data = cls.catalogue_data().drop(
-            columns=["du1", "du0.8", "eff1 100%", "eff0.8 100%", "eff1 75%", "eff0.8 75%"]
-        )
+        catalogue_data = cls.catalogue_data()
 
         # Filter on string/regular expressions
         query_msg_list = []
@@ -1082,11 +1216,44 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             catalogue_data = catalogue_data.loc[mask, :]
             query_msg_list.append(f"{column_name}={value!r}")
 
+        # Filter on enumerated types
+        for value, column_name, display_name, display_name_plural, enum_class in (
+            (insulation, "insulation", "insulation", "insulations", TransformerInsulation),
+            (cooling, "cooling", "cooling class", "cooling classes", TransformerCooling),
+        ):
+            if pd.isna(value):
+                continue
+
+            enum_series = pd.Series(
+                data=[
+                    None if isna else enum_class(x)
+                    for isna, x in zip(
+                        catalogue_data[column_name].isna(), catalogue_data[column_name].values, strict=True
+                    )
+                ],
+                index=catalogue_data.index,
+            )
+            try:
+                mask = enum_series == enum_class(value)
+            except ValueError:
+                mask = pd.Series(data=False, index=catalogue_data.index)
+            if raise_if_not_found and mask.sum() == 0:
+                cls._raise_not_found_in_catalogue(
+                    value=repr(value),
+                    name=display_name,
+                    name_plural=display_name_plural,
+                    strings=enum_series,
+                    query_msg_list=query_msg_list,
+                )
+            catalogue_data = catalogue_data.loc[mask, :]
+            query_msg_list.append(f"{display_name}={value!r}")
+
         # Filter on float
         for value, column_name, display_name, display_name_plural, display_unit in (
             (sn, "sn", "nominal power", "nominal powers", "kVA"),
             (uhv, "uhv", "high voltage", "high voltages", "kV"),
             (ulv, "ulv", "low voltage", "low voltages", "kV"),
+            (fn, "fn", "frequency", "frequencies", "Hz"),
         ):
             if pd.isna(value):
                 continue
@@ -1106,7 +1273,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         return catalogue_data, ", ".join(query_msg_list)
 
     @classmethod
-    @ureg_wraps(None, (None, None, None, None, None, None, "VA", "V", "V", None))
+    @ureg_wraps(None, (None, None, None, None, None, None, None, None, "VA", "V", "V", "Hz", None))
     def from_catalogue(
         cls,
         name: str | re.Pattern[str] | None = None,
@@ -1114,10 +1281,13 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         manufacturer: str | re.Pattern[str] | None = None,
         range: str | re.Pattern[str] | None = None,
         efficiency: str | re.Pattern[str] | None = None,
+        cooling: str | TransformerCooling | None = None,
+        insulation: str | TransformerInsulation | None = None,
         vg: str | re.Pattern[str] | None = None,
         sn: float | Q_[float] | None = None,
         uhv: float | Q_[float] | None = None,
         ulv: float | Q_[float] | None = None,
+        fn: float | Q_[float] | None = None,
         id: Id | None = None,
     ) -> Self:
         """Build a transformer parameters from one in the catalogue.
@@ -1137,6 +1307,14 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             efficiency:
                 The efficiency of the transformer get. It can be a regular expression.
 
+            cooling:
+                The cooling class of the transformer to get (ONAN, ONAF, etc.).  See also
+                :class:`~roseau.load_flow.TransformerCooling`.
+
+            insulation:
+                The insulation technology of the transformer to get (dry-type, liquid-immersed,
+                gas-filled). See also :class:`~roseau.load_flow.TransformerInsulation`.
+
             vg:
                 The vector group of the transformer to get. It can be a regular expression.
 
@@ -1148,6 +1326,9 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
 
             ulv:
                 The rated no-load phase-to-phase voltage of the LV side of the transformer to get.
+
+            fn:
+                The nominal frequency of the transformer to get.
 
             id:
                 A unique ID for the created transformer parameters object (optional). If ``None``
@@ -1164,10 +1345,13 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             manufacturer=manufacturer,
             range=range,
             efficiency=efficiency,
+            cooling=cooling,
+            insulation=insulation,
             vg=vg,
             sn=sn,
             uhv=uhv,
             ulv=ulv,
+            fn=fn,
             raise_if_not_found=True,
         )
 
@@ -1194,13 +1378,16 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             i0=catalogue_data.at[idx, "i0"].item(),
             psc=catalogue_data.at[idx, "psc"].item(),
             vsc=catalogue_data.at[idx, "vsc"].item(),
+            fn=catalogue_data.at[idx, "fn"].item(),
             manufacturer=catalogue_data.at[idx, "manufacturer"],
             range=catalogue_data.at[idx, "range"],
             efficiency=catalogue_data.at[idx, "efficiency"],
+            cooling=catalogue_data.at[idx, "cooling"],
+            insulation=catalogue_data.at[idx, "insulation"],
         )
 
     @classmethod
-    @ureg_wraps(None, (None, None, None, None, None, None, "VA", "V", "V"))
+    @ureg_wraps(None, (None, None, None, None, None, None, None, None, "VA", "V", "V", "Hz"))
     def get_catalogue(
         cls,
         name: str | re.Pattern[str] | None = None,
@@ -1208,10 +1395,13 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         manufacturer: str | re.Pattern[str] | None = None,
         range: str | re.Pattern[str] | None = None,
         efficiency: str | re.Pattern[str] | None = None,
+        cooling: str | TransformerCooling | None = None,
+        insulation: str | TransformerInsulation | None = None,
         vg: str | re.Pattern[str] | None = None,
         sn: float | Q_[float] | None = None,
         uhv: float | Q_[float] | None = None,
         ulv: float | Q_[float] | None = None,
+        fn: float | Q_[float] | None = None,
     ) -> pd.DataFrame:
         """Get the catalogue of available transformers.
 
@@ -1231,6 +1421,14 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             efficiency:
                 An optional efficiency to filter the output. It can be a regular expression.
 
+            cooling:
+                An optional cooling class to filter the output (ONAN, ONAF, etc.). See also
+                :class:`~roseau.load_flow.TransformerCooling`.
+
+            insulation:
+                An optional transformer insulation technology to filter the output (dry-type,
+                liquid-immersed, gas-filled). See also :class:`~roseau.load_flow.TransformerInsulation`.
+
             vg:
                 An optional vector group of the transformer. It can be a regular expression.
 
@@ -1243,6 +1441,9 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             ulv:
                 An optional rated no-load low voltage to filter the output.
 
+            fn:
+                An optional nominal frequency to filter the output.
+
         Returns:
             The catalogue data as a dataframe.
         """
@@ -1251,30 +1452,37 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             manufacturer=manufacturer,
             range=range,
             efficiency=efficiency,
+            cooling=cooling,
+            insulation=insulation,
             vg=vg,
             sn=sn,
             uhv=uhv,
             ulv=ulv,
+            fn=fn,
             raise_if_not_found=False,
         )
         catalogue_data["sn"] /= 1000  # kVA
         catalogue_data["uhv"] /= 1000  # kV
         catalogue_data["ulv"] /= 1000  # kV
         return (
-            catalogue_data.drop(columns=["i0", "p0", "psc", "vsc"])
+            catalogue_data[["name", "manufacturer", "range", "efficiency", "cooling", "vg", "sn", "uhv", "ulv", "fn"]]
             .rename(
                 columns={
                     "name": "Name",
                     "manufacturer": "Manufacturer",
                     "range": "Product range",
                     "efficiency": "Efficiency",
+                    "cooling": "Cooling class",
                     "vg": "Vector group",
                     "sn": "Nominal power (kVA)",
                     "uhv": "High voltage (kV)",
                     "ulv": "Low voltage (kV)",
-                    "type": "Type",
-                    "oil": "Oil",
+                    "fn": "Frequency (Hz)",
                     # # If we ever want to display these columns
+                    # "insulation": "Insulation technology",
+                    # "type": "Type",
+                    # "oil": "Oil",
+                    # "material": "Material",
                     # "i0": "No-load current (%)",
                     # "p0": "No-load losses (W)",
                     # "psc": "Load Losses at 75°C  (W)",
