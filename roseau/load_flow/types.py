@@ -138,7 +138,7 @@ class TransformerCooling(CaseInsensitiveStrEnum):
       +          +---------------------+--------+--------------------------------------------------+
       |          | Fourth Letter       | N      | Natural convection                               |
       +          + (Cooling mechanism) +--------+--------------------------------------------------+
-      |          |                     | F      | Forced circulation(fans, air blowers, water      |
+      |          |                     | F      | Forced circulation (fans, air blowers, water     |
       |          |                     |        | pumps)                                           |
       +----------+---------------------+--------+--------------------------------------------------+
 
