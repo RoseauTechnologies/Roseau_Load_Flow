@@ -109,10 +109,10 @@ class AbstractBranch(Element[_CyB_co]):
     #
     def _refresh_results(self) -> None:
         if self._fetch_results:
-            current1, current2 = self._cy_element.get_currents(1, 1)
-            potential1, potential2 = self._cy_element.get_potentials(1, 1)
-            self._res_currents = current1[0], current2[0]
-            self._res_voltages = potential1[0] * SQRT3, potential2[0] * SQRT3
+            currents1, currents2 = self._cy_element.get_currents(1, 1)
+            potentials1, potentials2 = self._cy_element.get_potentials(1, 1)
+            self._res_currents = currents1.item(0), currents2.item(0)
+            self._res_voltages = potentials1.item(0) * SQRT3, potentials2.item(0) * SQRT3
 
     def _res_currents_getter(self, warning: bool) -> tuple[complex, complex]:
         self._refresh_results()

@@ -331,7 +331,7 @@ class GroundConnection(Element[CySimplifiedLine | CySwitch]):
     #
     def _refresh_results(self) -> None:
         if self._fetch_results:
-            self._res_current = self._cy_element.get_currents(n1=1, n2=1)[0][0]
+            self._res_current = self._cy_element.get_currents(n1=1, n2=1)[0].item()
 
     def _res_current_getter(self, warning: bool) -> complex:
         self._refresh_results()
