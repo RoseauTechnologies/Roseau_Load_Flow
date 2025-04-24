@@ -30,7 +30,7 @@ class AbstractTerminal(Element[_CyE_co], ABC):
     #
     def _refresh_results(self) -> None:
         if self._fetch_results:
-            self._res_voltage = self._cy_element.get_potentials(self._n)[0] * SQRT3
+            self._res_voltage = self._cy_element.get_potentials(self._n).item(0) * SQRT3
 
     def _res_voltage_getter(self, warning: bool) -> complex:
         self._refresh_results()
