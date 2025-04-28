@@ -396,7 +396,7 @@ class Transformer(AbstractBranch[CyTransformer]):
             if phase in bus_hv_phases:
                 j = bus_hv_phases.index(phase)
                 connections.append((i, j))
-        self._cy_element.connect(self.bus_hv._cy_element, connections, True)
+        self._cy_element.connect_side(self.bus_hv._cy_element, connections, True)
 
         connections = []
         bus_lv_phases = self.bus_lv.phases.removesuffix("n") if self.has_floating_neutral_lv else self.bus_lv.phases
@@ -404,7 +404,7 @@ class Transformer(AbstractBranch[CyTransformer]):
             if phase in bus_lv_phases:
                 j = bus_lv_phases.index(phase)
                 connections.append((i, j))
-        self._cy_element.connect(self.bus_lv._cy_element, connections, False)
+        self._cy_element.connect_side(self.bus_lv._cy_element, connections, False)
 
     #
     # Results

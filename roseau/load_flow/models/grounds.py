@@ -94,7 +94,7 @@ class Ground(Element[CyGround]):
     #
     def _refresh_results(self) -> None:
         if self._fetch_results:
-            self._res_potential = self._cy_element.get_potentials(1)[0]
+            self._res_potential = self._cy_element.get_potentials(1).item()
 
     def _res_potential_getter(self, warning: bool) -> complex:
         self._refresh_results()
@@ -323,15 +323,15 @@ class GroundConnection(Element[CySimplifiedLine | CySwitch]):
         else:
             assert isinstance(self._element._cy_element, CyBranch)
             beginning = self._side in (1, "HV")
-            self._element._cy_element.connect(self._cy_element, [(i, 0)], beginning=beginning)
-        self._cy_element.connect(self._ground._cy_element, [(0, 0)], beginning=False)
+            self._element._cy_element.connect_side(self._cy_element, [(i, 0)], beginning=beginning)
+        self._cy_element.connect_side(self._ground._cy_element, [(0, 0)], beginning=False)
 
     #
     # Results
     #
     def _refresh_results(self) -> None:
         if self._fetch_results:
-            self._res_current = self._cy_element.get_currents(n1=1, n2=1)[0].item()
+            self._res_current = self._cy_element.get_currents(n=1).item()
 
     def _res_current_getter(self, warning: bool) -> complex:
         self._refresh_results()

@@ -114,14 +114,14 @@ class AbstractBranch(Element[_CyB_co]):
             if phase in self.bus1.phases:
                 j = self.bus1.phases.index(phase)
                 connections.append((i, j))
-        self._cy_element.connect(self.bus1._cy_element, connections, True)
+        self._cy_element.connect_side(self.bus1._cy_element, connections, True)
 
         connections = []
         for i, phase in enumerate(self.phases2):
             if phase in self.bus2.phases:
                 j = self.bus2.phases.index(phase)
                 connections.append((i, j))
-        self._cy_element.connect(self.bus2._cy_element, connections, False)
+        self._cy_element.connect_side(self.bus2._cy_element, connections, False)
 
     def _check_phases_common(self, id: Id, bus1: Bus, bus2: Bus, phases: str | None) -> str:
         """Check the common phases between the buses and the branch (for lines and switches)."""
@@ -173,8 +173,8 @@ class AbstractBranch(Element[_CyB_co]):
     #
     def _refresh_results(self) -> None:
         if self._fetch_results:
-            self._res_currents = self._cy_element.get_currents(self._n1, self._n2)
-            self._res_potentials = self._cy_element.get_potentials(self._n1, self._n2)
+            self._res_currents = self._cy_element.get_side_currents(self._n1, self._n2)
+            self._res_potentials = self._cy_element.get_side_potentials(self._n1, self._n2)
 
     def _res_currents_getter(self, warning: bool) -> tuple[ComplexArray, ComplexArray]:
         self._refresh_results()
