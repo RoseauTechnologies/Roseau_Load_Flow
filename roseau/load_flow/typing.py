@@ -85,6 +85,12 @@ Union Input Types (Wide)
 
     A scalar or a 1D array-like of floating numbers or a quantity thereof.
 
+.. class:: CRSLike
+
+    Any type accepted by :class:`pyproj.CRS`. This can be a string (PROJ, JSON, WKT, authority),
+    an integer (EPSG code), a dictionary (PROJ parameters), a tuple (authority name and code), an
+    object with a `to_wkt` method, or a CRS class.
+
 Numpy Output Types (Narrow)
 ---------------------------
 
@@ -111,14 +117,20 @@ Numpy Output Types (Narrow)
 
 import os
 from collections.abc import Mapping, Sequence
-from typing import Any, Literal, TypeAlias, TypeVar
+from typing import Any, Literal, Protocol, TypeAlias, TypeVar
 
 import numpy as np
 from numpy.typing import NDArray
+from pyproj import CRS
 
 from roseau.load_flow.units import Q_
 
 T = TypeVar("T", bound=Any)
+
+
+class _SupportsToWkt(Protocol):
+    def to_wkt(self) -> str: ...
+
 
 # RLF Helpers
 Id: TypeAlias = int | str
@@ -144,6 +156,24 @@ ComplexArrayLike2D: TypeAlias = (
 )
 FloatArrayLike1D: TypeAlias = QtyOrMag[NDArray[np.floating | np.integer] | Sequence[Float]] | Sequence[QtyOrMag[Float]]
 FloatScalarOrArrayLike1D: TypeAlias = FloatArrayLike1D | QtyOrMag[Float]
+CRSLike: TypeAlias = (
+    # The following are documented in the pyproj.CRS class
+    # - PROJ string
+    # - JSON string with PROJ parameters
+    # - CRS WKT string
+    # - An authority string [i.e. 'epsg:4326']
+    str
+    # - An EPSG integer code [i.e. 4326]
+    | int
+    # - Dictionary of PROJ parameters
+    | dict[str, Any]
+    # - A tuple of ("auth_name": "auth_code") [i.e ('epsg', '4326')]
+    | tuple[str, str]
+    # - An object with a `to_wkt` method
+    | _SupportsToWkt
+    # - A CRS class
+    | CRS
+)
 
 # Numpy Output Types (Narrow)
 ComplexMatrix: TypeAlias = np.ndarray[tuple[int, int], np.dtype[np.complex128]]  # 2D
@@ -173,6 +203,7 @@ __all__ = [
     "FloatArrayLike1D",
     "ComplexScalarOrArrayLike1D",
     "FloatScalarOrArrayLike1D",
+    "CRSLike",
     # Numpy narrow output types
     "BoolArray",
     "FloatArray",

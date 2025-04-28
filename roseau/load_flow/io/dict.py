@@ -13,6 +13,7 @@ from collections import defaultdict
 from typing import TYPE_CHECKING
 
 import numpy as np
+from pyproj import CRS
 
 from roseau.load_flow.converters import _calculate_voltages
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
@@ -33,7 +34,7 @@ from roseau.load_flow.models import (
 )
 from roseau.load_flow.types import Insulator, Material
 from roseau.load_flow.typing import Id, JsonDict
-from roseau.load_flow.utils import find_stack_level
+from roseau.load_flow.utils import find_stack_level, id_sort_key
 
 if TYPE_CHECKING:
     from roseau.load_flow.network import ElectricalNetwork
@@ -86,6 +87,10 @@ def network_from_dict(data: JsonDict, *, include_results: bool = True) -> tuple[
     # Check that the network is multiphase
     is_multiphase = data.get("is_multiphase", True)
     assert is_multiphase, f"Unsupported phase selection {is_multiphase=}."
+
+    # CRS
+    crs_dict = data.get("crs", {"data": None, "normalize": False})
+    crs = CRS(crs_dict["data"]) if crs_dict["normalize"] else crs_dict["data"]
 
     # Track if ALL results are included in the network
     has_results = include_results
@@ -214,6 +219,7 @@ def network_from_dict(data: JsonDict, *, include_results: bool = True) -> tuple[
             "grounds": grounds,
             "potential_refs": potential_refs,
             "ground_connections": ground_connections,
+            "crs": crs,
         },
         has_results,
     )
@@ -233,6 +239,12 @@ def network_to_dict(en: "ElectricalNetwork", *, include_results: bool) -> JsonDi
     Returns:
         The created dictionary.
     """
+    # CRS
+    if isinstance(en.crs, CRS):
+        crs = {"data": en.crs.to_wkt(), "normalize": True}
+    else:
+        crs = {"data": en.crs, "normalize": False}
+
     # Export the grounds and the pref
     grounds = [ground.to_dict(include_results=include_results) for ground in en.grounds.values()]
     potential_refs = [p_ref.to_dict(include_results=include_results) for p_ref in en.potential_refs.values()]
@@ -261,11 +273,8 @@ def network_to_dict(en: "ElectricalNetwork", *, include_results: bool) -> JsonDi
     for line in en.lines.values():
         lines.append(line.to_dict(include_results=include_results))
         params_id = line.parameters.id
-        if params_id in lines_params_dict and line.parameters != lines_params_dict[params_id]:
-            msg = f"There are multiple line parameters with id {params_id!r}"
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.JSON_LINE_PARAMETERS_DUPLICATES)
-        lines_params_dict[line.parameters.id] = line.parameters
+        if params_id not in lines_params_dict:
+            lines_params_dict[line.parameters.id] = line.parameters
 
     # Export the transformers with their parameters
     transformers: list[JsonDict] = []
@@ -273,32 +282,26 @@ def network_to_dict(en: "ElectricalNetwork", *, include_results: bool) -> JsonDi
     for transformer in en.transformers.values():
         transformers.append(transformer.to_dict(include_results=include_results))
         params_id = transformer.parameters.id
-        if params_id in transformers_params_dict and transformer.parameters != transformers_params_dict[params_id]:
-            msg = f"There are multiple transformer parameters with id {params_id!r}"
-            logger.error(msg)
-            raise RoseauLoadFlowException(
-                msg=msg, code=RoseauLoadFlowExceptionCode.JSON_TRANSFORMER_PARAMETERS_DUPLICATES
-            )
-        transformers_params_dict[params_id] = transformer.parameters
+        if params_id not in transformers_params_dict:
+            transformers_params_dict[params_id] = transformer.parameters
 
     # Export the switches
     switches = [switch.to_dict(include_results=include_results) for switch in en.switches.values()]
 
-    # Line parameters
-    line_params: list[JsonDict] = []
-    for lp in lines_params_dict.values():
-        line_params.append(lp.to_dict(include_results=include_results))
-    line_params.sort(key=lambda x: (type(x["id"]).__name__, str(x["id"])))  # Always keep the same order
-
-    # Transformer parameters
-    transformer_params: list[JsonDict] = []
-    for tp in transformers_params_dict.values():
-        transformer_params.append(tp.to_dict(include_results=include_results))
-    transformer_params.sort(key=lambda x: (type(x["id"]).__name__, str(x["id"])))  # Always keep the same order
+    # Line and transformer parameters (sorted)
+    line_params = sorted(
+        (lp.to_dict(include_results=include_results) for lp in lines_params_dict.values()),
+        key=id_sort_key,
+    )
+    transformer_params = sorted(
+        (tp.to_dict(include_results=include_results) for tp in transformers_params_dict.values()),
+        key=id_sort_key,
+    )
 
     res = {
         "version": NETWORK_JSON_VERSION,
         "is_multiphase": True,
+        "crs": crs,
         "grounds": grounds,
         "potential_refs": potential_refs,
         "buses": buses,
@@ -728,6 +731,7 @@ def v3_to_v4_converter(data: JsonDict) -> JsonDict:  # noqa: C901
         The v4 network data.
     """
     assert data["version"] == 3, data["version"]
+    crs = {"data": None, "normalize": False}  # CRS is always None in V3
 
     grounds = []
     ground_connections = []
@@ -851,10 +855,20 @@ def v3_to_v4_converter(data: JsonDict) -> JsonDict:  # noqa: C901
             potentials = np.array([complex(*v) for v in load_data["results"]["potentials"]], dtype=np.complex128)
             voltages = _calculate_voltages(potentials, load_data["phases"])
             if load_data["type"] == "current":
-                currents = np.array([complex(*z) for z in load_data["currents"]], dtype=np.complex128)
+                currents = np.array([complex(*i) for i in load_data["currents"]], dtype=np.complex128)
                 inner_currents = currents * voltages / np.abs(voltages)
             elif load_data["type"] == "power":
-                powers = np.array([complex(*z) for z in load_data["powers"]], dtype=np.complex128)
+                powers = np.array(
+                    [
+                        complex(*s)
+                        for s in (
+                            load_data["results"]["flexible_powers"]
+                            if "flexible_powers" in load_data["results"]
+                            else load_data["powers"]
+                        )
+                    ],
+                    dtype=np.complex128,
+                )
                 inner_currents = np.conj(powers / voltages)
             else:
                 assert load_data["type"] == "impedance"
@@ -866,6 +880,7 @@ def v3_to_v4_converter(data: JsonDict) -> JsonDict:  # noqa: C901
     results = {
         "version": 4,
         "is_multiphase": data["is_multiphase"],  # Unchanged
+        "crs": crs,
         "grounds": grounds,
         "potential_refs": data["potential_refs"],  # Unchanged
         "buses": buses,

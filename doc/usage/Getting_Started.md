@@ -55,11 +55,13 @@ An electrical network can be built by assembling basic elements described in the
   The _ZIP load model_ is available via the following [load](../models/Load/index.md) classes:
 
   - [`ImpedanceLoad`](../models/Load/ImpedanceLoad.md): A constant impedance (Z) load:
-    $S = |V|^2 \times \overline{Z}$, $|S|$ is proportional to $|V|^2$.
+    $\overline{S} = V^2 / \overline{Z}$ where $\overline{Z}$ is constant -- $S$ is proportional to
+    $V^2$.
   - [`CurrentLoad`](../models/Load/CurrentLoad.md) A constant current (I) load:
-    $S = V \times \overline{I}$, $|S|$ is proportional to $|V|^1$.
+    $\overline{S} = \overline{V} \times \overline{I}^*$ where $\overline{I}$ is constant -- $S$ is
+    proportional to $V^1$.
   - [`PowerLoad`](../models/Load/PowerLoad.md): A constant power (P) load:
-    $S = \mathrm{constant}$, $|S|$ is proportional to $|V|^0$.
+    $\overline{S} = \mathrm{constant}$ -- $S$ is proportional to $V^0$.
 
     A power load can be made [flexible](../models/Load/FlexibleLoad/index.md) (controllable) by
     using `FlexibleParameter` objects. This object defines the parameters of the flexible load's

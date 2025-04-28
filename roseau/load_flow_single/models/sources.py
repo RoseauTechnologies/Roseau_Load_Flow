@@ -1,8 +1,7 @@
 import logging
-from typing import Final
+from typing import Final, Self
 
 import numpy as np
-from typing_extensions import Self
 
 from roseau.load_flow import SQRT3
 from roseau.load_flow.typing import Complex, Id, JsonDict

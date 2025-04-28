@@ -19,29 +19,76 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`366` Add nominal frequency (`fn`), cooling class (`cooling`) and insulation type
+  (`insulation`) to the `TransformerParameters` class.
+  The transformers catalogue has been updated accordingly. The manufacturer names in the catalogue
+  have been expanded to better accomodate new transformers (`SE` -> `Schneider Electric`, `FT` ->
+  `France Transfo`, ...). More HV/MV transformers have been added to the catalogue.
+  The cooling and insulation are described in the new enumeration types `TransformerCooling` and
+  `TransformerInsulation` respectively.
+- {gh-pr}`365` Fix minor inconsistency in the calculation of short-circuit parameters of transformers
+  with no open and short circuit tests data. The iron losses are now consistently ignored during the
+  calculation of the short-circuit parameters.
+- {gh-pr}`364` {gh-issue}`363` Fix missing floating neutral of three-phase transformers when the
+  bus does not have a neutral.
+- {gh-pr}`361` {gh-issue}`300` Raise an error when duplicate line or transformer parameters IDs are
+  used in the same network.
+- {gh-pr}`362` {gh-issue}`338` Require Python 3.11 or newer.
+- {gh-pr}`360` {gh-issue}`359` Fix a bug related to adding short circuits to a bus when the ground fault was not
+  already part of the electrical network.
+- {gh-pr}`358` Fix a division by zero error during DGS export.
+- {gh-pr}`357` Improve support for unbalance calculations.
+
+  - The `res_voltage_unbalance` method now accepts a `definition` parameter to choose between the
+    definitions of the voltage unbalance from `'VUF'` (IEC), `'PVUR'` (IEEE) and `'LVUR'` (NEMA).
+  - Loads and sources now have a `res_current_unbalance` method to compute the current unbalance.
+
+- {gh-pr}`356` Fix regression since version 0.11.0 where `max_voltage_level` for buses was missing
+  in the catalogue networks.
+- {gh-pr}`355` {gh-issue}`337` Add HV/MV transformer models to the catalogue.
+
+## Version 0.12.0
+
+```{note}
+This is the last version of _Roseau Load Flow_ to support Python 3.10.
+```
+
+```{seealso}
+This release also includes the modifications that are in the [version 0.12.0-alpha](#version-0120-alpha).
+```
+
 ### Breaking changes
 
 - The following columns have been renamed in `ElectricalNetwork.transformers_frame`:
 
-  - `bus1_id` -> `bus_hv_id`
-  - `bus2_id` -> `bus_lv_id`
-  - `phases1` -> `phases_hv`
-  - `phases2` -> `phases_lv`
+  - `bus1_id`, `bus2_id` -> `bus_hv_id`, `bus_lv_id`
+  - `phases1`, `phases2` -> `phases_hv`, `phases_lv`
 
   and the following columns have been renamed in `ElectricalNetwork.res_transformers`:
 
-  - `current1` -> `current_hv`
-  - `current2` -> `current_lv`
-  - `potential1` -> `potential_hv`
-  - `potential2` -> `potential_lv`
-  - `voltage1` -> `voltage_hv`
-  - `voltage2` -> `voltage_lv`
-  - `power1` -> `power_hv`
-  - `power2` -> `power_lv`
+  - `current1`, `current2` -> `current_hv`, `current_lv`
+  - `potential1`, `potential2` -> `potential_hv`, `potential_lv`
+  - `voltage1`, `voltage2` -> `voltage_hv`, `voltage_lv`
+  - `power1`, `power2` -> `power_hv`, `power_lv`
+
+- The `ElectricalNetwork.crs` now defaults to `None` (no CRS) instead of `"EPSG:4326"`. The attribute
+  is also no longer normalized to a `pyproj.CRS` object but is stored as is. Use `CRS(en.crs)` to
+  always get a `pyproj.CRS` object.
 
 ### Detailed changes
 
-- {gh-pr}`348` The `Load` classes have two new properties: `res_inner_currents` and `res_inner_powers`.
+- A new **experimental** module named `roseau.load_flow_single` has been added for studying balanced
+  three-phase systems using the simpler single-line model. This module is unstable and undocumented,
+  use at your own risk.
+- Improvements of license validation, particularly during simultaneous use of multiple threads or processes.
+- {gh-pr}`351` {gh-issue}`332` Improved support of the network's Coordinate Reference System (CRS).
+  - The `CRS` will now default to `None` (no CRS) instead of `"EPSG:4326"` if not provided.
+  - The `ElectricalNetwork.crs` attribute is no longer normalized to a `pyproj.CRS` object.
+  - The `CRS` can be set when creating a network with the `ElectricalNetwork.from_element` method.
+  - The `CRS` is now correctly stored in the JSON file and is read when loading the network.
+- {gh-pr}`350` {gh-issue}`349` Fix invalid transformer parameters with no leakage inductance when
+  created from open and short circuit tests.
+- {gh-pr}`348` The load classes have two new properties: `res_inner_currents` and `res_inner_powers`.
   These are the currents and powers that flow in the inner components of the load as opposed to
   `res_currents` and `res_powers` that flow into the load.
 - {gh-pr}`343` {gh-issue}`336` Warn when a line/switch connects buses with different nominal voltages.
@@ -85,10 +132,8 @@ og:description: See what's new in the latest release of Roseau Load Flow !
   "secondary" sides of transformers in favor of "high-voltage" and "low-voltage" sides following the
   IEC 60076-1 standard. The following parameters of `rlf.Transformer` are deprecated and renamed:
 
-  - `bus1` -> `bus_hv`
-  - `bus2` -> `bus_lv`
-  - `phases1` -> `phases_hv`
-  - `phases2` -> `phases_lv`
+  - `bus1`, `bus2` -> `bus_hv`, `bus_lv`
+  - `phases1`, `phases2` -> `phases_hv`, `phases_lv`
 
   The attributes `bus1`, `bus2`, `phases1`, `phases2`, `winding1`, `winding2`, `phase_displacement`
   are still available. They are aliases to newly added attributes `bus_hv`, `bus_lv`, `phases_hv`,

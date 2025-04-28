@@ -2,17 +2,16 @@ import logging
 import re
 import warnings
 from collections.abc import Sequence
+from enum import StrEnum
 from importlib import resources
 from pathlib import Path
-from typing import Literal, NoReturn, TypeAlias, TypeVar
+from typing import Literal, NoReturn, Self, TypeAlias, TypeVar
 
 import numpy as np
 import numpy.linalg as nplin
 import pandas as pd
-from numpy._typing import NDArray
-from typing_extensions import Self
+from numpy.typing import NDArray
 
-from roseau.load_flow._compat import StrEnum
 from roseau.load_flow.constants import EPSILON_0, EPSILON_R, MU_0, OMEGA, PI, RHO, SQRT3, TAN_D, F
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.types import Insulator, LineType, Material
@@ -133,6 +132,8 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         self.sections = sections
         self._check_matrix()
 
+        self._elements = set()  # Set of elements using this line parameters object
+
     def __repr__(self) -> str:
         s = f"<{type(self).__name__}: id={self.id!r}"
         if self._line_type is not None:
@@ -147,61 +148,6 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             s += f", ampacities={self._ampacities}"
         s += ">"
         return s
-
-    def __eq__(self, other: object) -> bool:
-        if not isinstance(other, LineParameters):
-            return NotImplemented
-        return (
-            self.id == other.id
-            and self._z_line.shape == other._z_line.shape
-            and np.allclose(self._z_line, other._z_line)
-            and (
-                (self._ampacities is None and other._ampacities is None)
-                or (
-                    self._ampacities is not None
-                    and other._ampacities is not None
-                    and self._ampacities.shape == other._ampacities.shape
-                    and np.allclose(self._ampacities, other._ampacities)
-                )
-            )
-            and self._line_type == other._line_type
-            and (
-                (self._materials is None and other._materials is None)
-                or (
-                    self._materials is not None
-                    and other._materials is not None
-                    and self._materials.shape == other._materials.shape
-                    and np.array_equal(self._materials, other._materials)
-                )
-            )
-            and (
-                (self._insulators is None and other._insulators is None)
-                or (
-                    self._insulators is not None
-                    and other._insulators is not None
-                    and self._insulators.shape == other._insulators.shape
-                    and np.array_equal(self._insulators, other._insulators)
-                )
-            )
-            and (
-                (self._sections is None and other._sections is None)
-                or (
-                    self._sections is not None
-                    and other._sections is not None
-                    and self._sections.shape == other._sections.shape
-                    and np.allclose(self._sections, other._sections)
-                )
-            )
-            and (
-                (not self._with_shunt and not other._with_shunt)
-                or (
-                    self._with_shunt
-                    and other._with_shunt
-                    and self._y_shunt.shape == other._y_shunt.shape
-                    and np.allclose(self._y_shunt, other._y_shunt)
-                )
-            )
-        )
 
     @property
     @ureg_wraps("ohm/km", (None,))

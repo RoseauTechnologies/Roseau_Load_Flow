@@ -6,9 +6,9 @@ import warnings
 
 import numpy as np
 import pytest
+from pyproj import CRS
 from shapely import LineString, Point
 
-from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.io.dict import (
     NETWORK_JSON_VERSION,
     v0_to_v1_converter,
@@ -82,7 +82,6 @@ def test_to_dict():
         insulators=Insulator.PVC,
         sections=120,
     )
-    lp2 = LineParameters("test", z_line=np.eye(4, dtype=complex), y_shunt=np.eye(4, dtype=complex) * 1.1)
 
     geom = LineString([(0.0, 0.0), (0.0, 1.0)])
     line1 = Line(
@@ -101,7 +100,7 @@ def test_to_dict():
         bus2=load_bus,
         phases="abcn",
         ground=ground,
-        parameters=lp2,
+        parameters=lp1,
         length=10,
         geometry=geom,
     )
@@ -117,27 +116,7 @@ def test_to_dict():
         ground_connections=[gc],
     )
 
-    # Same id, different line parameters -> fail
-    with pytest.raises(RoseauLoadFlowException) as e:
-        en.to_dict(include_results=False)
-    assert "There are multiple line parameters with id 'test'" in e.value.msg
-    assert e.value.code == RoseauLoadFlowExceptionCode.JSON_LINE_PARAMETERS_DUPLICATES
-
-    # Same id, same line parameters -> ok
-    lp2 = LineParameters(
-        id="test",
-        z_line=np.eye(4, dtype=complex),
-        y_shunt=np.eye(4, dtype=complex),
-        line_type=LineType.UNDERGROUND,
-        materials=Material.AA,
-        insulators=Insulator.PVC,
-        sections=120,
-    )
-    line2.parameters = lp2
-    en.to_dict(include_results=False)
-
     # Dict content
-    line2.parameters = lp1
     lp1.ampacities = 1000
     res = en.to_dict(include_results=False)
     res_bus0, res_bus1 = res["buses"]
@@ -176,11 +155,8 @@ def test_to_dict():
     tp1 = TransformerParameters.from_open_and_short_circuit_tests(
         id="t", vg="Dyn11", uhv=20000, ulv=400, sn=160 * 1e3, p0=460, i0=2.3 / 100, psc=2350, vsc=4 / 100
     )
-    tp2 = TransformerParameters.from_open_and_short_circuit_tests(
-        id="t", vg="Dyn11", uhv=20000, ulv=400, sn=200 * 1e3, p0=460, i0=2.3 / 100, psc=2350, vsc=4 / 100
-    )
     transformer1 = Transformer(id="Transformer1", bus_hv=source_bus, bus_lv=load_bus, parameters=tp1, geometry=geom)
-    transformer2 = Transformer(id="Transformer2", bus_hv=source_bus, bus_lv=load_bus, parameters=tp2, geometry=geom)
+    transformer2 = Transformer(id="Transformer2", bus_hv=source_bus, bus_lv=load_bus, parameters=tp1, geometry=geom)
     en = ElectricalNetwork(
         buses=[source_bus, load_bus],
         lines=[],
@@ -193,21 +169,7 @@ def test_to_dict():
         ground_connections=[gc_load, gc_source],
     )
 
-    # Same id, different transformer parameters -> fail
-    with pytest.raises(RoseauLoadFlowException) as e:
-        en.to_dict(include_results=False)
-    assert "There are multiple transformer parameters with id 't'" in e.value.msg
-    assert e.value.code == RoseauLoadFlowExceptionCode.JSON_TRANSFORMER_PARAMETERS_DUPLICATES
-
-    # Same id, same transformer parameters -> ok
-    tp2 = TransformerParameters.from_open_and_short_circuit_tests(
-        id="t", vg="Dyn11", uhv=20000, ulv=400, sn=160 * 1e3, p0=460, i0=2.3 / 100, psc=2350, vsc=4 / 100
-    )
-    transformer2.parameters = tp2
-    en.to_dict(include_results=False)
-
     # Dict content
-    transformer2.parameters = tp1
     res = en.to_dict(include_results=False)
     assert "geometry" in res["buses"][0]
     assert "geometry" in res["buses"][1]
@@ -340,3 +302,46 @@ def test_json_files_not_modified(version):
             f"Hash of '{filename}' has changed. Do not change the content of this file or update the hash "
             f"for formatting-only changes.\nExpected hash: {EXPECTED_HASHES[filename]}\nComputed hash: {digest}"
         )
+
+
+def test_crs_conversion():
+    # No CRS
+    bus = Bus(id="bus", phases="an", geometry=Point(0.0, 0.0))
+    VoltageSource(id="source", bus=bus, voltages=400)
+    PotentialRef(id="pref", element=bus)
+    en = ElectricalNetwork.from_element(bus)
+    en_dict = en.to_dict()
+    assert en_dict["crs"] == {"data": None, "normalize": False}
+    assert en.buses_frame.crs is None
+    en2 = ElectricalNetwork.from_dict(en_dict)
+    assert en2.crs is None
+    assert en2.buses_frame.crs is None
+
+    # CRS like
+    bus = Bus(id="bus", phases="an", geometry=Point(0.0, 0.0))
+    VoltageSource(id="source", bus=bus, voltages=400)
+    PotentialRef(id="pref", element=bus)
+    en = ElectricalNetwork.from_element(bus, crs="WGS84")
+    en_dict = en.to_dict()
+    assert en_dict["crs"] == {"data": "WGS84", "normalize": False}
+    assert en.buses_frame.crs == "WGS84"
+    en2 = ElectricalNetwork.from_dict(en_dict)
+    assert en2.crs == "WGS84"
+    assert en2.buses_frame.crs == "WGS84"
+
+    # CRS object -> WKT format
+    bus = Bus(id="bus", phases="an", geometry=Point(0.0, 0.0))
+    VoltageSource(id="source", bus=bus, voltages=400)
+    PotentialRef(id="pref", element=bus)
+    en = ElectricalNetwork.from_element(bus, crs=CRS("EPSG:4326"))
+    en_dict = en.to_dict()
+    assert en_dict["crs"]["normalize"] is True
+    crs_data = en_dict["crs"]["data"]
+    assert isinstance(crs_data, str)
+    assert crs_data.startswith("GEOGCRS[")  # WKT format
+    assert crs_data.endswith('ID["EPSG",4326]]')
+    assert en.buses_frame.crs == "EPSG:4326"
+    en2 = ElectricalNetwork.from_dict(en_dict)
+    assert isinstance(en2.crs, CRS)
+    assert en2.crs == "EPSG:4326"
+    assert en2.buses_frame.crs == "EPSG:4326"

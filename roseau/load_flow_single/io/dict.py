@@ -11,10 +11,13 @@ import logging
 import warnings
 from typing import TYPE_CHECKING
 
-from roseau.load_flow import Insulator, Material, RoseauLoadFlowException, RoseauLoadFlowExceptionCode
+from pyproj import CRS
+
+from roseau.load_flow import Insulator, Material
 from roseau.load_flow.io.dict import NETWORK_JSON_VERSION as NETWORK_JSON_VERSION
 from roseau.load_flow.typing import Id, JsonDict
-from roseau.load_flow.utils import find_stack_level
+from roseau.load_flow.utils import find_stack_level, id_sort_key
+from roseau.load_flow_single.io.common import NetworkElements
 from roseau.load_flow_single.models import (
     AbstractLoad,
     Bus,
@@ -32,17 +35,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-def network_from_dict(
-    data: JsonDict, *, include_results: bool = True
-) -> tuple[
-    dict[Id, Bus],
-    dict[Id, Line],
-    dict[Id, Transformer],
-    dict[Id, Switch],
-    dict[Id, AbstractLoad],
-    dict[Id, VoltageSource],
-    bool,
-]:
+def network_from_dict(data: JsonDict, *, include_results: bool = True) -> tuple[NetworkElements, bool]:
     """Create the electrical network elements from a dictionary.
 
     Args:
@@ -86,6 +79,10 @@ def network_from_dict(
         f"Did not apply all JSON version converters, got {data['version']}, expected {NETWORK_JSON_VERSION}."
     )
 
+    # CRS
+    crs_dict = data.get("crs", {"data": None, "normalize": False})
+    crs = CRS(crs_dict["data"]) if crs_dict["normalize"] else crs_dict["data"]
+
     # Track if ALL results are included in the network
     has_results = include_results
 
@@ -118,32 +115,32 @@ def network_from_dict(
         has_results = has_results and not source._no_results
 
     # Lines
-    lines_dict: dict[Id, Line] = {}
+    lines: dict[Id, Line] = {}
     for line_data in data["lines"]:
         line_data["bus1"] = buses[line_data["bus1"]]
         line_data["bus2"] = buses[line_data["bus2"]]
         line_data["parameters"] = lines_params[line_data.pop("params_id")]
         line = Line.from_dict(data=line_data, include_results=include_results)
-        lines_dict[line.id] = line
+        lines[line.id] = line
         has_results = has_results and not line._no_results
 
     # Transformers
-    transformers_dict: dict[Id, Transformer] = {}
+    transformers: dict[Id, Transformer] = {}
     for transformer_data in data["transformers"]:
         transformer_data["bus_hv"] = buses[transformer_data["bus_hv"]]
         transformer_data["bus_lv"] = buses[transformer_data["bus_lv"]]
         transformer_data["parameters"] = transformers_params[transformer_data.pop("params_id")]
         transformer = Transformer.from_dict(data=transformer_data, include_results=include_results)
-        transformers_dict[transformer.id] = transformer
+        transformers[transformer.id] = transformer
         has_results = has_results and not transformer._no_results
 
     # Switches
-    switches_dict: dict[Id, Switch] = {}
+    switches: dict[Id, Switch] = {}
     for switch_data in data["switches"]:
         switch_data["bus1"] = buses[switch_data["bus1"]]
         switch_data["bus2"] = buses[switch_data["bus2"]]
         switch = Switch.from_dict(data=switch_data, include_results=include_results)
-        switches_dict[switch.id] = switch
+        switches[switch.id] = switch
         has_results = has_results and not switch._no_results
 
     # Short-circuits
@@ -152,7 +149,18 @@ def network_from_dict(
         for sc in short_circuits:
             buses[sc["bus_id"]].add_short_circuit()
 
-    return buses, lines_dict, transformers_dict, switches_dict, loads, sources, has_results
+    return (
+        {
+            "buses": buses,
+            "lines": lines,
+            "transformers": transformers,
+            "switches": switches,
+            "loads": loads,
+            "sources": sources,
+            "crs": crs,
+        },
+        has_results,
+    )
 
 
 def network_to_dict(en: "ElectricalNetwork", *, include_results: bool) -> JsonDict:
@@ -169,6 +177,12 @@ def network_to_dict(en: "ElectricalNetwork", *, include_results: bool) -> JsonDi
     Returns:
         The created dictionary.
     """
+    # CRS
+    if isinstance(en.crs, CRS):
+        crs = {"data": en.crs.to_wkt(), "normalize": True}
+    else:
+        crs = {"data": en.crs, "normalize": False}
+
     # Export the buses, loads and sources
     buses: list[JsonDict] = []
     loads: list[JsonDict] = []
@@ -191,45 +205,34 @@ def network_to_dict(en: "ElectricalNetwork", *, include_results: bool) -> JsonDi
     lines_params_dict: dict[Id, LineParameters] = {}
     for line in en.lines.values():
         lines.append(line.to_dict(include_results=include_results))
-        params_id = line.parameters.id
-        if params_id in lines_params_dict and line.parameters != lines_params_dict[params_id]:
-            msg = f"There are multiple line parameters with id {params_id!r}"
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.JSON_LINE_PARAMETERS_DUPLICATES)
-        lines_params_dict[line.parameters.id] = line.parameters
+        if line.parameters.id not in lines_params_dict:
+            lines_params_dict[line.parameters.id] = line.parameters
 
     # Export the transformers with their parameters
     transformers: list[JsonDict] = []
     transformers_params_dict: dict[Id, TransformerParameters] = {}
     for transformer in en.transformers.values():
         transformers.append(transformer.to_dict(include_results=include_results))
-        params_id = transformer.parameters.id
-        if params_id in transformers_params_dict and transformer.parameters != transformers_params_dict[params_id]:
-            msg = f"There are multiple transformer parameters with id {params_id!r}"
-            logger.error(msg)
-            raise RoseauLoadFlowException(
-                msg=msg, code=RoseauLoadFlowExceptionCode.JSON_TRANSFORMER_PARAMETERS_DUPLICATES
-            )
-        transformers_params_dict[params_id] = transformer.parameters
+        if transformer.parameters.id not in transformers_params_dict:
+            transformers_params_dict[transformer.parameters.id] = transformer.parameters
 
     # Export the switches
     switches = [switch.to_dict(include_results=include_results) for switch in en.switches.values()]
 
-    # Line parameters
-    line_params: list[JsonDict] = []
-    for lp in lines_params_dict.values():
-        line_params.append(lp.to_dict(include_results=include_results))
-    line_params.sort(key=lambda x: (type(x["id"]).__name__, str(x["id"])))  # Always keep the same order
-
-    # Transformer parameters
-    transformer_params: list[JsonDict] = []
-    for tp in transformers_params_dict.values():
-        transformer_params.append(tp.to_dict(include_results=include_results))
-    transformer_params.sort(key=lambda x: (type(x["id"]).__name__, str(x["id"])))  # Always keep the same order
+    # Line and transformer parameters (sorted)
+    line_params = sorted(
+        (lp.to_dict(include_results=include_results) for lp in lines_params_dict.values()),
+        key=id_sort_key,
+    )
+    transformer_params = sorted(
+        (tp.to_dict(include_results=include_results) for tp in transformers_params_dict.values()),
+        key=id_sort_key,
+    )
 
     res = {
         "version": NETWORK_JSON_VERSION,
         "is_multiphase": False,
+        "crs": crs,
         "buses": buses,
         "lines": lines,
         "transformers": transformers,
@@ -246,6 +249,7 @@ def network_to_dict(en: "ElectricalNetwork", *, include_results: bool) -> JsonDi
 
 def v3_to_v4_converter(data: JsonDict) -> JsonDict:
     assert data["version"] == 3, data["version"]
+    crs = {"data": None, "normalize": False}  # CRS is always None in V3
     loads = []
     for load in data["loads"]:
         # Remove the flexible power results
@@ -303,6 +307,7 @@ def v3_to_v4_converter(data: JsonDict) -> JsonDict:
     results = {
         "version": 4,
         "is_multiphase": data["is_multiphase"],  # Unchanged
+        "crs": crs,
         "buses": data["buses"],  # Unchanged
         "lines": lines,
         "transformers": transformers,

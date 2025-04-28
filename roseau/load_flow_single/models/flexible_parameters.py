@@ -1,8 +1,8 @@
 import logging
 from collections.abc import Iterable
+from typing import Self
 
 import numpy as np
-from typing_extensions import Self
 
 from roseau.load_flow import SQRT3, Projection, RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow import Control as MultiControl

@@ -2,12 +2,12 @@ import json
 import logging
 import warnings
 from collections.abc import Iterator, Mapping
-from typing import Any, Final, TypedDict
+from typing import Any, Final, Self, TypedDict
 
 import numpy as np
 import pandas as pd
 import shapely
-from typing_extensions import Self, TypeIs
+from typing_extensions import TypeIs
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.typing import Id, JsonDict

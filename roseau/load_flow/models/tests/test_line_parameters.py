@@ -1033,36 +1033,3 @@ def test_results_to_dict():
         lp.results_to_dict()
     assert e.value.msg == "The LineParameters has no results to export."
     assert e.value.code == RoseauLoadFlowExceptionCode.JSON_NO_RESULTS
-
-
-def test_equality():
-    lp = LineParameters.from_catalogue(name="U_AL_150", nb_phases=3)
-    data = {
-        "id": lp.id,
-        "z_line": lp.z_line,
-        "y_shunt": lp.y_shunt,
-        "ampacities": lp.ampacities,
-        "line_type": lp.line_type,
-        "materials": lp.materials,
-        "insulators": lp.insulators,
-        "sections": lp.sections,
-    }
-    lp2 = LineParameters(**data)
-    assert lp2 == lp
-
-    other_data = {
-        "id": lp.id + " other",
-        "z_line": lp.z_line.m + 0.1j,
-        "y_shunt": lp.y_shunt.m + 0.1j,
-        "ampacities": lp.ampacities.m + 1,
-        "line_type": LineType.OVERHEAD,
-        "materials": Material.CU,
-        "insulators": Insulator.XLPE,
-        "sections": lp.sections.m + 1,
-    }
-    for k, v in other_data.items():
-        other_lp = LineParameters(**(data | {k: v}))
-        assert other_lp != lp, k
-
-    # Test the case which returns NotImplemented in the equality operator
-    assert lp != object()

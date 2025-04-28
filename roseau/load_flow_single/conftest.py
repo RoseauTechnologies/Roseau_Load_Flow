@@ -4,7 +4,6 @@ import os
 from pathlib import Path
 
 import pytest
-from _pytest.monkeypatch import MonkeyPatch
 
 import roseau.load_flow
 import roseau.load_flow_single
@@ -61,7 +60,7 @@ def three_phases_transformer_type(request) -> str:
 
 @pytest.fixture(autouse=True)
 def patch_engine(request):  # noqa: C901
-    mpatch = MonkeyPatch()
+    mpatch = pytest.MonkeyPatch()
 
     if "no_patch_engine" in request.keywords:
         # A load flow must be solved in the test

@@ -1,6 +1,5 @@
-import numbers
-
 import numpy as np
+import numpy.testing as npt
 import pandas as pd
 import pytest
 from pint import DimensionalityError
@@ -212,6 +211,7 @@ def test_transformers_parameters_units():
         "ulv": Q_(400, "V"),  # V
         "uhv": Q_(20, "kV"),  # V
         "sn": Q_(50, "kVA"),  # VA
+        "fn": Q_(50, "Hz"),  # Hz
         "vg": "yzn11",
     }
     tp = TransformerParameters(**data)
@@ -220,6 +220,7 @@ def test_transformers_parameters_units():
     assert np.isclose(tp._ulv, 400)
     assert np.isclose(tp._uhv, 20000)
     assert np.isclose(tp._sn, 50e3)
+    assert np.isclose(tp._fn, 50)
 
     # Bad unit for each of them
     for param, fake_quantity in (
@@ -228,6 +229,7 @@ def test_transformers_parameters_units():
         ("ulv", Q_(400, "A")),
         ("uhv", Q_(20, "A")),
         ("sn", Q_(50, "A")),
+        ("fn", Q_(50, "A")),
     ):
         copy_data = data.copy()
         copy_data[param] = fake_quantity
@@ -249,6 +251,7 @@ def test_transformers_parameters_units_from_tests():
         "uhv": Q_(20, "kV"),  # V
         "sn": Q_(50, "kVA"),  # VA
         "vsc": Q_(4, "percent"),  # %
+        "fn": Q_(50, "Hz"),  # Hz
         "vg": "yzn11",
     }
     tp = TransformerParameters.from_open_and_short_circuit_tests(**data)
@@ -259,6 +262,7 @@ def test_transformers_parameters_units_from_tests():
     assert np.isclose(tp._uhv, 20000)
     assert np.isclose(tp._sn, 50e3)
     assert np.isclose(tp._vsc, 4e-2)
+    assert np.isclose(tp._fn, 50)
 
     # Bad unit for each of them
     for param, fake_quantity in (
@@ -269,6 +273,7 @@ def test_transformers_parameters_units_from_tests():
         ("uhv", Q_(20, "A")),
         ("sn", Q_(50, "A")),
         ("vsc", Q_(4 / 100, "A")),
+        ("fn", Q_(50, "A")),
     ):
         copy_data = data.copy()
         copy_data[param] = fake_quantity
@@ -278,11 +283,11 @@ def test_transformers_parameters_units_from_tests():
             TransformerParameters.from_open_and_short_circuit_tests(**copy_data)
 
 
-def test_transformer_type():
-    valid_windings1 = ("y", "yn", "d", "i")
-    valid_windings2 = ("y", "yn", "z", "zn", "d", "i", "ii")
+def test_transformer_vector_groups():
+    valid_hv_windings = ("y", "yn", "d", "i")
+    valid_lv_windings = ("y", "yn", "z", "zn", "d", "i", "ii")
     valid_clock_numbers = (0, 5, 6, 11)
-    valid_types = {
+    valid_vector_groups = {
         "dd",
         "yy",
         "yny",
@@ -301,7 +306,7 @@ def test_transformer_type():
         "ii",
         "iii",
     }
-    valid_full_types = {
+    valid_vector_groups_full = {
         "dd0",
         "dd6",
         "yy0",
@@ -338,17 +343,17 @@ def test_transformer_type():
         "iii6",
     }
 
-    for winding_hv in valid_windings1:
-        for winding_lv in valid_windings2:
+    for winding_hv in valid_hv_windings:
+        for winding_lv in valid_lv_windings:
             vg = f"{winding_hv}{winding_lv}"
-            if vg in valid_types:
+            if vg in valid_vector_groups:
                 with pytest.raises(RoseauLoadFlowException) as e:
                     TransformerParameters.extract_windings(vg)
                 assert e.value.msg.startswith(f"Invalid vector group: '{vg}'. Expected one of ['Dd0'")
                 assert e.value.code == RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS
                 for clock_number in valid_clock_numbers:
                     vg = f"{winding_hv}{winding_lv}{clock_number}"
-                    if vg in valid_full_types:
+                    if vg in valid_vector_groups_full:
                         whv, wlv, clock = TransformerParameters.extract_windings(vg)
                         assert whv == winding_hv.upper()
                         assert wlv == winding_lv
@@ -372,43 +377,34 @@ def test_catalogue_data():
     # Read it and copy it
     catalogue_data = TransformerParameters.catalogue_data()
 
-    # Iterate over the folder and ensure that the elements are in the catalogue data
-    error_message = (
-        "Something changed in the transformers parameters catalogue. Please regenerate the json files for the "
-        "transformers catalogue by using the python file `scripts/generate_transformer_parameters_catalogue.py`. "
-        "Don't forget to delete files that are useless too."
-    )
-
     # Check that the name is unique
-    assert catalogue_data["name"].is_unique, error_message
+    assert catalogue_data["name"].is_unique, "Catalogue transformer names are not unique."
 
     catalogue_data.set_index(keys=["name"], inplace=True)
     for idx in catalogue_data.index:
         tp = TransformerParameters.from_catalogue(name=idx)
 
-        # The entry of the catalogue has been found
-        assert tp.id in catalogue_data.index, error_message
-
         # Check the values are the same
         assert tp.vg == catalogue_data.at[tp.id, "vg"]
-        assert np.isclose(tp.uhv.m, catalogue_data.at[tp.id, "uhv"])
-        assert np.isclose(tp.ulv.m, catalogue_data.at[tp.id, "ulv"])
-        assert np.isclose(tp.sn.m, catalogue_data.at[tp.id, "sn"])
-        assert np.isclose(tp.p0.m, catalogue_data.at[tp.id, "p0"])
+        npt.assert_allclose(tp.uhv.m, catalogue_data.at[tp.id, "uhv"])
+        npt.assert_allclose(tp.ulv.m, catalogue_data.at[tp.id, "ulv"])
+        npt.assert_allclose(tp.sn.m, catalogue_data.at[tp.id, "sn"])
+        npt.assert_allclose(tp.p0.m, catalogue_data.at[tp.id, "p0"])
+        npt.assert_allclose(tp.fn.m, catalogue_data.at[tp.id, "fn"])
         if pd.isna(tp.i0.m):
             assert pd.isna(catalogue_data.at[tp.id, "i0"])
         else:
-            assert np.isclose(tp.i0.m, catalogue_data.at[tp.id, "i0"])
-        assert np.isclose(tp.psc.m, catalogue_data.at[tp.id, "psc"])
-        assert np.isclose(tp.vsc.m, catalogue_data.at[tp.id, "vsc"])
+            npt.assert_allclose(tp.i0.m, catalogue_data.at[tp.id, "i0"])
+        npt.assert_allclose(tp.psc.m, catalogue_data.at[tp.id, "psc"])
+        npt.assert_allclose(tp.vsc.m, catalogue_data.at[tp.id, "vsc"])
         assert tp.manufacturer == catalogue_data.at[tp.id, "manufacturer"]
         assert tp.range == catalogue_data.at[tp.id, "range"]
         assert tp.efficiency == catalogue_data.at[tp.id, "efficiency"]
 
         # Check that the parameters are valid
-        assert isinstance(tp.z2.m, numbers.Complex)
-        assert isinstance(tp.ym.m, numbers.Complex)
-        assert isinstance(tp.k.m, numbers.Real)
+        assert isinstance(tp.z2.m, complex)
+        assert isinstance(tp.ym.m, complex)
+        assert isinstance(tp.k.m, float)
         assert tp.orientation in (-1.0, 1.0)
 
 
@@ -471,18 +467,19 @@ def test_get_catalogue():
     # Get the entire catalogue
     catalogue = TransformerParameters.get_catalogue()
     assert isinstance(catalogue, pd.DataFrame)
-    assert catalogue.shape == (309, 9)
+    assert catalogue.shape == (332, 9)
 
     # Filter on a single attribute
     for field_name, value, expected_size in [
         ("name", "SE Minera A0Ak 50kVA 15/20kV(20) 410V Yzn11", 1),
-        ("manufacturer", "SE", 259),
+        ("manufacturer", "Schneider Electric", 260),
         ("range", r"min.*", 123),
         ("efficiency", r"c0.*", 58),
-        ("vg", r"dy.*", 297),
+        ("vg", r"dy.*", 304),
         ("sn", Q_(160, "kVA"), 19),
-        ("uhv", Q_(20, "kV"), 172),
-        ("ulv", 400, 51),
+        ("uhv", Q_(20, "kV"), 175),
+        ("ulv", 400, 57),
+        ("fn", 50, 332),
     ]:
         filtered_catalogue = TransformerParameters.get_catalogue(**{field_name: value})
         assert filtered_catalogue.shape == (expected_size, 9), f"{field_name}={value!r}"
@@ -497,7 +494,9 @@ def test_get_catalogue():
         ("uhv", Q_(20, "kV"), 158),
         ("ulv", 400, 1),
     ]:
-        filtered_catalogue = TransformerParameters.get_catalogue(**{field_name: value}, manufacturer="se")
+        filtered_catalogue = TransformerParameters.get_catalogue(
+            **{field_name: value}, manufacturer="schneider electric"
+        )
         assert filtered_catalogue.shape == (expected_size, 9), f"{field_name}={value!r}"
 
     # Filter on three attributes
@@ -510,12 +509,14 @@ def test_get_catalogue():
         ("ulv", 400, 0),
     ]:
         filtered_catalogue = TransformerParameters.get_catalogue(
-            **{field_name: value}, manufacturer="se", range=r"^vegeta$"
+            **{field_name: value}, manufacturer="SCHNEIDER ELECTRIC", range=r"^vegeta$"
         )
         assert filtered_catalogue.shape == (expected_size, 9), f"{field_name}={value!r}"
 
     # No results
     empty_catalogue = TransformerParameters.get_catalogue(ulv=250)
+    assert empty_catalogue.shape == (0, 9)
+    empty_catalogue = TransformerParameters.get_catalogue(fn=60)
     assert empty_catalogue.shape == (0, 9)
 
 
@@ -619,6 +620,8 @@ def test_from_power_factory():
         manufacturer="Roseau",
         range="Tech+",
         efficiency="Wonderful",
+        cooling="ONAN",
+        insulation="liquid-immersed",
     )
     tp_rlf = TransformerParameters.from_open_and_short_circuit_tests(
         id="Transformer 100 kVA Dyn11",
@@ -635,6 +638,8 @@ def test_from_power_factory():
         manufacturer="Roseau",
         range="Tech+",
         efficiency="Wonderful",
+        cooling="ONAN",
+        insulation="liquid-immersed",
     )
 
     # Electrical parameters
@@ -650,6 +655,8 @@ def test_from_power_factory():
     assert tp_pwf.manufacturer == tp_rlf.manufacturer
     assert tp_pwf.range == tp_rlf.range
     assert tp_pwf.efficiency == tp_rlf.efficiency
+    assert tp_pwf.cooling == tp_rlf.cooling
+    assert tp_pwf.insulation == tp_rlf.insulation
 
     # Test single phase (only the technology has been changed)
     tp_pwf = TransformerParameters.from_power_factory(
@@ -670,6 +677,8 @@ def test_from_power_factory():
         manufacturer="Roseau",
         range="Tech+",
         efficiency="Wonderful",
+        cooling="ONAN",
+        insulation="liquid-immersed",
     )
     assert tp_pwf.type == "single-phase"
     assert tp_pwf.vg == "Ii0"
@@ -694,10 +703,12 @@ def test_from_power_factory():
             manufacturer="Roseau",
             range="Tech+",
             efficiency="Wonderful",
+            cooling="ONAN",
+            insulation="liquid-immersed",
         )
-    assert (
-        e.value.msg == "Expected tech='single-phase' or 'three-phase', got 'unknown value' for transformer parameters "
-        "'Transformer 100 kVA Dyn11'."
+    assert e.value.msg == (
+        "Expected tech='single-phase' or 'three-phase', got 'unknown value' for transformer "
+        "parameters 'Transformer 100 kVA Dyn11'."
     )
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_TYPE
 
@@ -719,9 +730,12 @@ def test_to_dict():
         sn=tp.sn,
         z2=tp.z2,
         ym=tp.ym,
+        fn=tp.fn,
         manufacturer=tp.manufacturer,
         range=tp.range,
         efficiency=tp.efficiency,
+        cooling=tp.cooling,
+        insulation=tp.insulation,
     )
     d = tp2.to_dict()
     assert d.pop("id") == tp2.id
@@ -731,66 +745,17 @@ def test_to_dict():
     assert d.pop("vg") == tp2.vg
     assert d.pop("z2") == [tp2.z2.m.real, tp2.z2.m.imag]
     assert d.pop("ym") == [tp2.ym.m.real, tp2.ym.m.imag]
+    assert d.pop("fn") == tp2.fn.m
     assert d.pop("manufacturer") == tp2.manufacturer
     assert d.pop("range") == tp2.range
     assert d.pop("efficiency") == tp2.efficiency
+    assert d.pop("cooling") == tp2.cooling
+    assert d.pop("insulation") == tp2.insulation
     assert not d
 
     # Test the from_dict without "p0", ... (only z2 and ym)
     tp3 = TransformerParameters.from_dict(tp2.to_dict())
-    assert tp3 == tp2
-
-
-def test_equality():
-    data = {
-        "id": "Yzn11 - 50kVA",
-        "z2": Q_(8.64 + 9.444j, "centiohm"),  # Ohm
-        "ym": Q_(0.3625 - 2.2206j, "uS"),  # S
-        "ulv": Q_(400, "V"),  # V
-        "uhv": Q_(20, "kV"),  # V
-        "sn": Q_(50, "kVA"),  # VA
-        "vg": "yzn11",
-        "manufacturer": "Roseau",
-        "range": "Tech+",
-        "efficiency": "Extraordinary",
-    }
-
-    tp = TransformerParameters(**data)
-    tp2 = TransformerParameters(**data)
-    assert tp2 == tp
-
-    # Fails
-    other_data = {
-        "id": "Dyn11 - 49kVA",
-        "z2": Q_(8.63 + 9.444j, "centiohm"),  # Ohm
-        "ym": Q_(0.48 - 2.2206j, "uS"),  # S
-        "ulv": Q_(399, "V"),  # V
-        "uhv": Q_(19, "kV"),  # V
-        "sn": Q_(49, "kVA"),  # VA
-        "vg": "dyn11",
-        "manufacturer": "Roso",
-        "range": "Tech-",
-        "efficiency": "Less extraordinary",
-    }
-    for k, v in other_data.items():
-        other_tp = TransformerParameters(**(data | {k: v}))
-        assert other_tp != tp, k
-
-    # Test the case which returns NotImplemented in the equality operator
-    assert tp != object()
-
-
-@pytest.mark.xfail(reason="CyTr signature changed (TODO remove xfail)")
-@pytest.mark.no_patch_engine
-def test_compute_open_short_circuit_parameters():
-    tp = TransformerParameters.from_catalogue(name="SE Minera A0Ak 100kVA 15/20kV(20) 410V Dyn11")
-    p0, i0 = tp._compute_open_circuit_parameters()
-    assert np.isclose(p0.m, tp.p0.m)
-    assert np.isclose(i0.m, tp.i0.m)
-
-    psc, vsc = tp._compute_short_circuit_parameters()
-    assert np.isclose(psc.m, tp.psc.m, rtol=0.001)
-    assert np.isclose(vsc.m, tp.vsc.m)
+    assert tp3.to_dict() == tp2.to_dict()
 
 
 def test_ideal_transformer():
@@ -803,3 +768,22 @@ def test_ideal_transformer():
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_IMPEDANCE
     # OK
     TransformerParameters(id="test", vg="Dyn11", sn=50e3, uhv=20e3, ulv=400, z2=0.0000001, ym=0.0)
+
+
+def test_from_tests_no_leakage_reactance():
+    # https://github.com/RoseauTechnologies/Roseau_Load_Flow/issues/349
+    # Data from LV isolation transformer "DYN11 K13 CU IP21 8" of "ORTEA NEXT"
+    # https://www.orteanext.com/product/dyn11-k13-r-ip21/
+    tp = TransformerParameters.from_open_and_short_circuit_tests(
+        id="DYN11 K13 CU IP21 8",
+        vg="Dyn11",
+        uhv=Q_(400, "V"),
+        ulv=Q_(400, "V"),
+        sn=Q_(8, "kVA"),
+        p0=Q_(150, "W"),
+        i0=Q_(10, "percent"),
+        psc=Q_(280, "W"),
+        vsc=Q_(3.5, "percent"),
+    )
+    npt.assert_allclose(tp.z2.m.real, tp.vsc.m * tp.ulv.m**2 / tp.sn.m)  # r2 = |z2|
+    npt.assert_allclose(tp.z2.m.imag, 0.0)  # x2 = 0

@@ -1,9 +1,9 @@
 import logging
 import warnings
-from typing import TYPE_CHECKING, Final, Literal
+from typing import TYPE_CHECKING, Final, Literal, Self
 
 import numpy as np
-from typing_extensions import Self, deprecated
+from typing_extensions import deprecated
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.core import Element
@@ -331,7 +331,7 @@ class GroundConnection(Element[CySimplifiedLine | CySwitch]):
     #
     def _refresh_results(self) -> None:
         if self._fetch_results:
-            self._res_current = self._cy_element.get_side_currents(n1=1, n2=1)[0][0]
+            self._res_current = self._cy_element.get_side_currents(n1=1, n2=1)[0].item()
 
     def _res_current_getter(self, warning: bool) -> complex:
         self._refresh_results()

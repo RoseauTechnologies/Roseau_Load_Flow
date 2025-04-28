@@ -123,9 +123,10 @@ And the following results are available for sources with more than one phase:
 
 And the following results are available for _three-phase_ sources:
 
-| Result Accessor           | Default Unit | Type   | Description                                                         |
-| ------------------------- | ------------ | ------ | ------------------------------------------------------------------- |
-| `res_voltage_unbalance()` | $\%$         | number | The voltage unbalance of the source according to the IEC definition |
+| Result Accessor           | Default Unit | Type   | Description                                                                       |
+| ------------------------- | ------------ | ------ | --------------------------------------------------------------------------------- |
+| `res_voltage_unbalance()` | $\%$         | number | The voltage unbalance of the source according to the IEC, IEEE or NEMA definition |
+| `res_current_unbalance()` | $\%$         | number | The Current Unbalance Factor of the source (CUF)                                  |
 
 (models-voltage-source-usage)=
 

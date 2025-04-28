@@ -1,6 +1,10 @@
 {
   "version": 4,
   "is_multiphase": true,
+  "crs": {
+    "data": "EPSG:4326",
+    "normalize": false
+  },
   "grounds": [
     {
       "id": "ground"
@@ -21,7 +25,8 @@
         "coordinates": [-1.446077484045924, 49.034241235768725]
       },
       "nominal_voltage": 20000,
-      "min_voltage_level": 0.95
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05
     },
     {
       "id": "HVMVFeeder09",
@@ -31,7 +36,8 @@
         "coordinates": [-1.446077484045924, 49.034241235768725]
       },
       "nominal_voltage": 20000,
-      "min_voltage_level": 0.95
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05
     },
     {
       "id": "MVLV10305",
@@ -41,7 +47,8 @@
         "coordinates": [-1.527356876822457, 49.05063026709952]
       },
       "nominal_voltage": 20000,
-      "min_voltage_level": 0.95
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05
     },
     {
       "id": "MVBus23996",
@@ -51,7 +58,8 @@
         "coordinates": [-1.527305659304398, 49.050631392784375]
       },
       "nominal_voltage": 20000,
-      "min_voltage_level": 0.95
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05
     },
     {
       "id": "MVLV13802",
@@ -61,7 +69,8 @@
         "coordinates": [-1.530576179130021, 49.05011528391853]
       },
       "nominal_voltage": 20000,
-      "min_voltage_level": 0.95
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05
     },
     {
       "id": "MVBus23998",
@@ -71,7 +80,8 @@
         "coordinates": [-1.530799108036813, 49.05005551741369]
       },
       "nominal_voltage": 20000,
-      "min_voltage_level": 0.95
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05
     },
     {
       "id": "MVLV18902",
@@ -81,7 +91,8 @@
         "coordinates": [-1.542632731877063, 49.0478457642589]
       },
       "nominal_voltage": 20000,
-      "min_voltage_level": 0.95
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05
     },
     {
       "id": "MVBus28325",
@@ -91,7 +102,8 @@
         "coordinates": [-1.542619622656282, 49.04779553766782]
       },
       "nominal_voltage": 20000,
-      "min_voltage_level": 0.95
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05
     },
     {
       "id": "MVBus30458",
@@ -101,7 +113,8 @@
         "coordinates": [-1.544615426108271, 49.04665466011679]
       },
       "nominal_voltage": 20000,
-      "min_voltage_level": 0.95
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05
     },
     {
       "id": "MVBus30452",
@@ -111,7 +124,8 @@
         "coordinates": [-1.544605930612236, 49.04663486061268]
       },
       "nominal_voltage": 20000,
-      "min_voltage_level": 0.95
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05
     },
     {
       "id": "MVLV06710",
@@ -121,7 +135,8 @@
         "coordinates": [-1.564732788462391, 49.039903908577465]
       },
       "nominal_voltage": 20000,
-      "min_voltage_level": 0.95
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05
     },
     {
       "id": "MVBus35326",
@@ -131,7 +146,8 @@
         "coordinates": [-1.564656394675905, 49.0399616456111]
       },
       "nominal_voltage": 20000,
-      "min_voltage_level": 0.95
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05
     },
     {
       "id": "MVLV18001",
@@ -141,7 +157,8 @@
         "coordinates": [-1.568312137481616, 49.03765478152067]
       },
       "nominal_voltage": 20000,
-      "min_voltage_level": 0.95
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05
     },
     {
       "id": "MVBus35327",
@@ -151,7 +168,8 @@
         "coordinates": [-1.56889755134967, 49.03931854303925]
       },
       "nominal_voltage": 20000,
-      "min_voltage_level": 0.95
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05
     },
     {
       "id": "MVLV14661",
@@ -161,7 +179,8 @@
         "coordinates": [-1.575820358399386, 49.03313333990028]
       },
       "nominal_voltage": 20000,
-      "min_voltage_level": 0.95
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05
     },
     {
       "id": "MVBus38707",
@@ -171,7 +190,8 @@
         "coordinates": [-1.575603504890467, 49.03309437846214]
       },
       "nominal_voltage": 20000,
-      "min_voltage_level": 0.95
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05
     },
     {
       "id": "MVBus38709",
@@ -181,7 +201,8 @@
         "coordinates": [-1.586163645822428, 49.02561765715403]
       },
       "nominal_voltage": 20000,
-      "min_voltage_level": 0.95
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05
     },
     {
       "id": "MVBus38708",
@@ -191,7 +212,8 @@
         "coordinates": [-1.575415481427542, 49.02875745070805]
       },
       "nominal_voltage": 20000,
-      "min_voltage_level": 0.95
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05
     },
     {
       "id": "MVLV10414",
@@ -201,7 +223,8 @@
         "coordinates": [-1.573983343738142, 49.02677037365746]
       },
       "nominal_voltage": 20000,
-      "min_voltage_level": 0.95
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05
     },
     {
       "id": "MVLV12057",
@@ -211,7 +234,8 @@
         "coordinates": [-1.5732046465483145, 49.03784077453285]
       },
       "nominal_voltage": 20000,
-      "min_voltage_level": 0.95
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05
     },
     {
       "id": "MVBus35325",
@@ -221,7 +245,8 @@
         "coordinates": [-1.561893552787597, 49.04154118410379]
       },
       "nominal_voltage": 20000,
-      "min_voltage_level": 0.95
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05
     },
     {
       "id": "MVLV07041",
@@ -231,7 +256,8 @@
         "coordinates": [-1.56199895611086, 49.04162613053569]
       },
       "nominal_voltage": 20000,
-      "min_voltage_level": 0.95
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05
     },
     {
       "id": "MVBus35324",
@@ -241,7 +267,8 @@
         "coordinates": [-1.559514529559971, 49.04118696896896]
       },
       "nominal_voltage": 20000,
-      "min_voltage_level": 0.95
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05
     },
     {
       "id": "MVLV19090",
@@ -251,7 +278,8 @@
         "coordinates": [-1.55881269212674, 49.04125814200877]
       },
       "nominal_voltage": 20000,
-      "min_voltage_level": 0.95
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05
     },
     {
       "id": "MVBus30454",
@@ -261,7 +289,8 @@
         "coordinates": [-1.548795047362359, 49.04590439339881]
       },
       "nominal_voltage": 20000,
-      "min_voltage_level": 0.95
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05
     },
     {
       "id": "MVLV10304",
@@ -271,7 +300,8 @@
         "coordinates": [-1.548856389053909, 49.04604765320563]
       },
       "nominal_voltage": 20000,
-      "min_voltage_level": 0.95
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05
     },
     {
       "id": "MVBus30453",
@@ -281,7 +311,8 @@
         "coordinates": [-1.548385077336012, 49.04625140406671]
       },
       "nominal_voltage": 20000,
-      "min_voltage_level": 0.95
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05
     },
     {
       "id": "MVLV06428",
@@ -291,7 +322,8 @@
         "coordinates": [-1.549997403449801, 49.04903588566835]
       },
       "nominal_voltage": 20000,
-      "min_voltage_level": 0.95
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05
     },
     {
       "id": "MVBus30451",
@@ -301,7 +333,8 @@
         "coordinates": [-1.543968182557054, 49.04686214725682]
       },
       "nominal_voltage": 20000,
-      "min_voltage_level": 0.95
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05
     },
     {
       "id": "MVLV03204",
@@ -311,7 +344,8 @@
         "coordinates": [-1.544018357653604, 49.04697501147895]
       },
       "nominal_voltage": 20000,
-      "min_voltage_level": 0.95
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05
     },
     {
       "id": "MVBus28331",
@@ -321,7 +355,8 @@
         "coordinates": [-1.543922806647433, 49.046880850250076]
       },
       "nominal_voltage": 20000,
-      "min_voltage_level": 0.95
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05
     },
     {
       "id": "MVBus28330",
@@ -331,7 +366,8 @@
         "coordinates": [-1.542862708504378, 49.04736940703681]
       },
       "nominal_voltage": 20000,
-      "min_voltage_level": 0.95
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05
     },
     {
       "id": "MVBus28327",
@@ -341,7 +377,8 @@
         "coordinates": [-1.542770401208704, 49.04781922444621]
       },
       "nominal_voltage": 20000,
-      "min_voltage_level": 0.95
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05
     },
     {
       "id": "MVLV07026",
@@ -351,7 +388,8 @@
         "coordinates": [-1.544752904038435, 49.04845138404925]
       },
       "nominal_voltage": 20000,
-      "min_voltage_level": 0.95
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05
     },
     {
       "id": "MVBus28328",
@@ -361,7 +399,8 @@
         "coordinates": [-1.544702393697539, 49.04846880559844]
       },
       "nominal_voltage": 20000,
-      "min_voltage_level": 0.95
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05
     },
     {
       "id": "MVLV16847",
@@ -371,7 +410,8 @@
         "coordinates": [-1.5390729458236736, 49.04797870565177]
       },
       "nominal_voltage": 20000,
-      "min_voltage_level": 0.95
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05
     },
     {
       "id": "MVLV06709",
@@ -381,7 +421,8 @@
         "coordinates": [-1.5210751434046905, 49.05368710146948]
       },
       "nominal_voltage": 20000,
-      "min_voltage_level": 0.95
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05
     },
     {
       "id": "MVBus00927",
@@ -391,7 +432,8 @@
         "coordinates": [-1.487571747077065, 49.052234116603024]
       },
       "nominal_voltage": 20000,
-      "min_voltage_level": 0.95
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05
     },
     {
       "id": "MVBus00926",
@@ -401,7 +443,8 @@
         "coordinates": [-1.463995464115393, 49.046275309101084]
       },
       "nominal_voltage": 20000,
-      "min_voltage_level": 0.95
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05
     },
     {
       "id": "MVBus00925",
@@ -411,7 +454,8 @@
         "coordinates": [-1.463937029008645, 49.043696863573665]
       },
       "nominal_voltage": 20000,
-      "min_voltage_level": 0.95
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05
     },
     {
       "id": "MVBus00924",
@@ -421,7 +465,8 @@
         "coordinates": [-1.461516985174621, 49.035477339466745]
       },
       "nominal_voltage": 20000,
-      "min_voltage_level": 0.95
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05
     },
     {
       "id": "MVBus00923",
@@ -431,7 +476,8 @@
         "coordinates": [-1.461397716173976, 49.033603497990065]
       },
       "nominal_voltage": 20000,
-      "min_voltage_level": 0.95
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05
     },
     {
       "id": "MVBus00922",
@@ -441,7 +487,8 @@
         "coordinates": [-1.461764829853785, 49.031439486446786]
       },
       "nominal_voltage": 20000,
-      "min_voltage_level": 0.95
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05
     },
     {
       "id": "MVBus00921",
@@ -451,7 +498,8 @@
         "coordinates": [-1.461736098180515, 49.03010660944954]
       },
       "nominal_voltage": 20000,
-      "min_voltage_level": 0.95
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05
     },
     {
       "id": "MVBus00920",
@@ -461,7 +509,8 @@
         "coordinates": [-1.46220824503751, 49.029201861100134]
       },
       "nominal_voltage": 20000,
-      "min_voltage_level": 0.95
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05
     },
     {
       "id": "MVBus00919",
@@ -471,7 +520,8 @@
         "coordinates": [-1.44905973033842, 49.03077803898317]
       },
       "nominal_voltage": 20000,
-      "min_voltage_level": 0.95
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05
     },
     {
       "id": "MVBus00918",
@@ -481,7 +531,8 @@
         "coordinates": [-1.448327090288608, 49.031163231442164]
       },
       "nominal_voltage": 20000,
-      "min_voltage_level": 0.95
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05
     },
     {
       "id": "MVBus00917",
@@ -491,7 +542,8 @@
         "coordinates": [-1.447048659446956, 49.03194944491505]
       },
       "nominal_voltage": 20000,
-      "min_voltage_level": 0.95
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05
     },
     {
       "id": "MVBus00916",
@@ -501,7 +553,8 @@
         "coordinates": [-1.445903151201629, 49.03333590409346]
       },
       "nominal_voltage": 20000,
-      "min_voltage_level": 0.95
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05
     }
   ],
   "lines": [

@@ -48,7 +48,7 @@ from roseau.load_flow.models import (
 )
 from roseau.load_flow.network import ElectricalNetwork
 from roseau.load_flow.sym import ALPHA, ALPHA2, NegativeSequence, PositiveSequence, ZeroSequence
-from roseau.load_flow.types import Insulator, LineType, Material
+from roseau.load_flow.types import Insulator, LineType, Material, TransformerCooling, TransformerInsulation
 from roseau.load_flow.units import Q_, ureg
 from roseau.load_flow.utils import show_versions
 
@@ -107,6 +107,8 @@ __all__ = [
     "LineType",
     "Material",
     "Insulator",
+    "TransformerCooling",
+    "TransformerInsulation",
     # License
     "activate_license",
     "deactivate_license",

@@ -1,12 +1,12 @@
 import logging
 import warnings
 from collections.abc import Iterator
-from typing import TYPE_CHECKING, Any, Final, Literal
+from typing import TYPE_CHECKING, Any, Final, Literal, Self
 
 import numpy as np
 import pandas as pd
 from shapely.geometry.base import BaseGeometry
-from typing_extensions import Self, deprecated
+from typing_extensions import deprecated
 
 from roseau.load_flow.constants import SQRT3
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
@@ -331,6 +331,7 @@ class Bus(AbstractTerminal[CyBus]):
         self._cy_element.connect_ports(phases_index)
 
         if ground is not None:
+            self._connect(ground)
             self._cy_element.connect(ground._cy_element, [(phases_index[0], 0)])
 
     def propagate_limits(self, force: bool = False) -> None:

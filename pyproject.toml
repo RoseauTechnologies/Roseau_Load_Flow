@@ -1,6 +1,6 @@
 [project]
 name = "roseau-load-flow"
-version = "0.12.0-alpha"
+version = "0.12.0"
 description = "Highly capable multi-phase load flow solver"
 authors = [
     { name = "Ali Hamdan", email = "ali.hamdan@roseautechnologies.com" },
@@ -8,6 +8,7 @@ authors = [
     { name = "Benoît Vinot", email = "benoit.vinot@roseautechnologies.com" },
     { name = "Florent Cadoux", email = "florent.cadoux@roseautechnologies.com" },
     { name = "Louise Muller", email = "louise.muller@roseautechnologies.com" },
+    { name = "Audrey Ficot", email = "audrey.ficot@roseautechnologies.com" },
     { name = "Victor Gouin" },
 ]
 maintainers = [
@@ -21,13 +22,12 @@ classifiers = [
     "Operating System :: MacOS :: MacOS X",
     "Operating System :: Microsoft :: Windows",
     "Operating System :: POSIX :: Linux",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Topic :: Scientific/Engineering :: Physics",
 ]
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
     "numpy>=1.21.5",
     "pandas>=1.4.0",
@@ -38,7 +38,7 @@ dependencies = [
     "pyproj>=3.3.0",
     "certifi>=2023.5.7",
     "platformdirs>=4.0.0",
-    "roseau-load-flow-engine==0.17.0-alpha",
+    "roseau-load-flow-engine==0.17.0",
 ]
 
 [project.urls]

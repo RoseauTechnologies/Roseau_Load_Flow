@@ -12,13 +12,11 @@ from importlib import resources
 from itertools import chain
 from math import nan
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal, TypeVar
+from typing import TYPE_CHECKING, Literal, Self, TypeVar
 
 import geopandas as gpd
 import numpy as np
 import pandas as pd
-from pyproj import CRS
-from typing_extensions import Self
 
 from roseau.load_flow._solvers import AbstractSolver
 from roseau.load_flow.constants import ALPHA, ALPHA2, CLOCK_PHASE_SHIFT, SQRT3
@@ -36,13 +34,15 @@ from roseau.load_flow.models import (
     GroundConnection,
     ImpedanceLoad,
     Line,
+    LineParameters,
     PotentialRef,
     PowerLoad,
     Switch,
     Transformer,
+    TransformerParameters,
     VoltageSource,
 )
-from roseau.load_flow.typing import ComplexArray, Id, JsonDict, MapOrSeq, Solver, StrPath
+from roseau.load_flow.typing import ComplexArray, CRSLike, Id, JsonDict, MapOrSeq, Solver, StrPath
 from roseau.load_flow.utils import (
     DTYPES,
     CatalogueMixin,
@@ -114,8 +114,8 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             connected to a bus or to a ground.
 
         crs:
-            An optional Coordinate Reference System to use with geo data frames. If not provided,
-            the ``EPSG:4326`` CRS will be used.
+            An optional Coordinate Reference System to use with geo data frames. Can be anything
+            accepted by geopandas and pyproj, such as an authority string or WKT string.
 
     Attributes:
         buses (dict[Id, roseau.load_flow.Bus]):
@@ -168,7 +168,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         grounds: MapOrSeq[Ground],
         potential_refs: MapOrSeq[PotentialRef],
         ground_connections: MapOrSeq[GroundConnection] = (),
-        crs: str | CRS | None = None,
+        crs: CRSLike | None = None,
     ) -> None:
         self.buses: dict[Id, Bus] = self._elements_as_dict(buses, RoseauLoadFlowExceptionCode.BAD_BUS_ID)
         self.lines: dict[Id, Line] = self._elements_as_dict(lines, RoseauLoadFlowExceptionCode.BAD_LINE_ID)
@@ -191,6 +191,13 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             ground_connections, RoseauLoadFlowExceptionCode.BAD_GROUND_CONNECTION_ID
         )
 
+        # Track parameters to check for duplicates
+        self._parameters: dict[str, dict[Id, LineParameters | TransformerParameters]] = {"line": {}, "transformer": {}}
+        for line in self.lines.values():
+            self._add_parameters("line", line.parameters)
+        for transformer in self.transformers.values():
+            self._add_parameters("transformer", transformer.parameters)
+
         self._elements: list[Element] = []
         self._has_loop = False
         self._has_floating_neutral = False
@@ -198,9 +205,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         self._create_network()
         self._valid = True
         self._solver = AbstractSolver.from_dict(data={"name": self._DEFAULT_SOLVER, "params": {}}, network=self)
-        if crs is None:
-            crs = "EPSG:4326"
-        self.crs: CRS = CRS(crs)
+        self.crs: CRSLike | None = crs
 
     def __repr__(self) -> str:
         return (
@@ -241,13 +246,17 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         return elements_dict
 
     @classmethod
-    def from_element(cls, initial_bus: Bus) -> Self:
+    def from_element(cls, initial_bus: Bus, crs: CRSLike | None = None) -> Self:
         """Construct the network from only one element (bus) and add the others automatically.
 
         Args:
             initial_bus:
                 Any bus of the network. The network is constructed from this bus and all the
                 elements connected to it. This is usually the main source bus of the network.
+
+        crs:
+            An optional Coordinate Reference System to use with geo data frames. Can be anything
+            accepted by geopandas and pyproj, such as an authority string or WKT string.
 
         Returns:
             The network constructed from the given bus and all the elements connected to it.
@@ -298,6 +307,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             grounds=grounds,
             potential_refs=potential_refs,
             ground_connections=ground_connections,
+            crs=crs,
         )
 
     #
@@ -1304,8 +1314,10 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             self._add_element_to_dict(element, self.loads, disconnectable=True)
         elif isinstance(element, Line):
             self._add_element_to_dict(element, self.lines)
+            self._add_parameters(element.element_type, element.parameters)
         elif isinstance(element, Transformer):
             self._add_element_to_dict(element, self.transformers)
+            self._add_parameters(element.element_type, element.parameters)
         elif isinstance(element, Switch):
             self._add_element_to_dict(element, self.switches)
         elif isinstance(element, VoltageSource):
@@ -1322,6 +1334,21 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT)
         self._valid = False
         self._results_valid = False
+
+    def _add_parameters(self, element_type: str, params: TransformerParameters | LineParameters) -> None:
+        params_map = self._parameters[element_type]
+        if params.id not in params_map:
+            params_map[params.id] = params
+        elif params is not params_map[params.id]:
+            msg = (
+                f"{element_type.capitalize()} parameters IDs must be unique in the network. "
+                f"ID {params.id!r} is used by several {element_type} parameters objects."
+            )
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PARAMETERS_ID)
+
+    def _remove_parameters(self, element_type: str, params_id: Id) -> None:
+        del self._parameters[element_type][params_id]
 
     def _add_element_to_dict(self, element: _E, to: dict[Id, _E], disconnectable: bool = False) -> None:
         if element.id in to and (old := to[element.id]) is not element:
