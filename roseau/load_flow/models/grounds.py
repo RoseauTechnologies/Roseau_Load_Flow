@@ -94,7 +94,7 @@ class Ground(Element[CyGround]):
     #
     def _refresh_results(self) -> None:
         if self._fetch_results:
-            self._res_potential = self._cy_element.get_potentials(1)[0]
+            self._res_potential = self._cy_element.get_potentials(1).item()
 
     def _res_potential_getter(self, warning: bool) -> complex:
         self._refresh_results()
