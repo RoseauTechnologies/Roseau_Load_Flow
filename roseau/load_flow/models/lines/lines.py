@@ -82,7 +82,15 @@ class Line(AbstractBranch[CyShuntLine | CySimplifiedLine]):
         """
         phases = self._check_phases_common(id, bus1=bus1, bus2=bus2, phases=phases)
         self._initialized = False
-        super().__init__(id=id, bus1=bus1, bus2=bus2, phases1=phases, phases2=phases, geometry=geometry)
+        super().__init__(
+            id=id,
+            bus1=bus1,
+            bus2=bus2,
+            phases1=phases,
+            phases2=phases,
+            geometry=geometry,
+            has_ground=parameters.with_shunt,
+        )
         self.ground = ground
         self.length = length
         self.parameters = parameters
@@ -105,26 +113,20 @@ class Line(AbstractBranch[CyShuntLine | CySimplifiedLine]):
             # Connect the ground
             self._connect(self.ground)
 
-        if parameters.with_shunt:
-            self._cy_element = CyShuntLine(
-                n=self._n1,
-                y_shunt=parameters._y_shunt.reshape(self._n1 * self._n2) * self._length,
-                z_line=parameters._z_line.reshape(self._n1 * self._n2) * self._length,
-            )
-        else:
-            self._cy_element = CySimplifiedLine(
-                n=self._n1, z_line=parameters._z_line.reshape(self._n1 * self._n2) * self._length
-            )
-        self._cy_connect()
-        self._connect(bus1, bus2)
-        if parameters.with_shunt:
-            ground._cy_element.connect(self._cy_element, [(0, self._n1 + self._n1)])
-
         # Cache values used in results calculations
         self._z_line = parameters._z_line * self._length
         self._y_shunt = parameters._y_shunt * self._length
         self._z_line_inv = np.linalg.inv(self._z_line)
         self._yg = self._y_shunt.sum(axis=1)  # y_ig = Y_ia + Y_ib + Y_ic + Y_in for i in {a, b, c, n}
+
+        if parameters.with_shunt:
+            self._cy_element = CyShuntLine(n=self._n1, y_shunt=self._y_shunt.ravel(), z_line=self._z_line.ravel())
+        else:
+            self._cy_element = CySimplifiedLine(n=self._n1, z_line=self._z_line.ravel())
+        self._cy_connect()
+        self._connect(bus1, bus2)
+        if parameters.with_shunt:
+            ground._cy_element.connect(self._cy_element, [(0, self._n - 1)])
 
     def __repr__(self) -> str:
         s = f"{super().__repr__()[:-1]}, length={self._length!r}"
@@ -149,11 +151,9 @@ class Line(AbstractBranch[CyShuntLine | CySimplifiedLine]):
 
         if self._cy_element is not None:
             if self._parameters.with_shunt:
-                self._cy_element.update_line_parameters(
-                    y_shunt=self._y_shunt.reshape(self._n1 * self._n2), z_line=self._z_line.reshape(self._n1 * self._n2)
-                )
+                self._cy_element.update_line_parameters(y_shunt=self._y_shunt.ravel(), z_line=self._z_line.ravel())
             else:
-                self._cy_element.update_line_parameters(z_line=self._z_line.reshape(self._n1 * self._n2))
+                self._cy_element.update_line_parameters(z_line=self._z_line.ravel())
 
     @property
     @ureg_wraps("km", (None,))
@@ -275,9 +275,8 @@ class Line(AbstractBranch[CyShuntLine | CySimplifiedLine]):
 
     def _res_shunt_values_getter(self, warning: bool) -> tuple[ComplexArray, ComplexArray, ComplexArray, ComplexArray]:
         assert self.with_shunt, "This method only works when there is a shunt"
-        assert self.ground is not None
         pot1, pot2 = self._res_potentials_getter(warning)
-        vg = self.ground._res_potential_getter(warning=False)
+        vg = self._res_ground_potential_getter(warning=False)
         ig = self._yg * vg
         i1_shunt = (self._y_shunt @ pot1 - ig) / 2
         i2_shunt = (self._y_shunt @ pot2 - ig) / 2
@@ -306,6 +305,19 @@ class Line(AbstractBranch[CyShuntLine | CySimplifiedLine]):
             return None
         currents1, currents2 = self._res_currents_getter(warning)
         return np.maximum(abs(currents1), abs(currents2)) / amp
+
+    @property
+    @ureg_wraps("V", (None,))
+    def res_ground_potential(self) -> Q_[complex]:
+        """Get the potential of the ground port of the shunt line (in V)."""
+        if not self.with_shunt:
+            msg = (
+                f"Ground potential is only available for lines with shunt components. Line "
+                f"{self.id!r} does not have shunt components."
+            )
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_TYPE)
+        return self._res_ground_potential_getter(warning=True)
 
     @property
     @ureg_wraps("A", (None,))

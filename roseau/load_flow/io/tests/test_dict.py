@@ -15,6 +15,7 @@ from roseau.load_flow.io.dict import (
     v1_to_v2_converter,
     v2_to_v3_converter,
     v3_to_v4_converter,
+    v4_to_v5_converter,
 )
 from roseau.load_flow.models import (
     Bus,
@@ -37,6 +38,7 @@ EXPECTED_HASHES = {
     "network_json_v1.json": "fc930431b69165f68961b0f0dc2635b5",
     "network_json_v2.json": "d85a2658708576c083ceab666a83150b",
     "network_json_v3.json": "551f852aefc71d744f4738d31bd0e90b",
+    "network_json_v4.json": "6c1af7193a771488df4c8b2c476a1ef9",
 }
 
 
@@ -189,6 +191,7 @@ def test_all_converters():
         expected_dict = v1_to_v2_converter(expected_dict)
         expected_dict = v2_to_v3_converter(expected_dict)
         expected_dict = v3_to_v4_converter(expected_dict)
+        expected_dict = v4_to_v5_converter(expected_dict)
     assert_json_close(net_dict, expected_dict)
 
 
@@ -206,6 +209,7 @@ def test_from_dict_v0():
         expected_dict = v1_to_v2_converter(expected_dict)
         expected_dict = v2_to_v3_converter(expected_dict)
         expected_dict = v3_to_v4_converter(expected_dict)
+        expected_dict = v4_to_v5_converter(expected_dict)
     assert_json_close(net_dict, expected_dict)
 
 
@@ -222,6 +226,7 @@ def test_from_dict_v1():
         expected_dict = v1_to_v2_converter(expected_dict)
         expected_dict = v2_to_v3_converter(expected_dict)
         expected_dict = v3_to_v4_converter(expected_dict)
+        expected_dict = v4_to_v5_converter(expected_dict)
     assert_json_close(net_dict, expected_dict)
 
     # Test with `include_results=False`
@@ -234,6 +239,7 @@ def test_from_dict_v1():
         expected_dict_no_results = v1_to_v2_converter(expected_dict_no_results)
         expected_dict_no_results = v2_to_v3_converter(expected_dict_no_results)
         expected_dict_no_results = v3_to_v4_converter(expected_dict_no_results)
+        expected_dict_no_results = v4_to_v5_converter(expected_dict_no_results)
     assert_json_close(net_dict, expected_dict_no_results)
 
 
@@ -258,6 +264,7 @@ def test_from_dict_v2():
         warnings.simplefilter("ignore")
         expected_dict = v2_to_v3_converter(expected_dict)
         expected_dict = v3_to_v4_converter(expected_dict)
+        expected_dict = v4_to_v5_converter(expected_dict)
 
     assert_json_close(net_dict, expected_dict)
 
@@ -277,6 +284,7 @@ def test_from_dict_v3():
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         expected_dict = v3_to_v4_converter(expected_dict)
+        expected_dict = v4_to_v5_converter(expected_dict)
 
     assert_json_close(net_dict, expected_dict)
 

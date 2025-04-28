@@ -2295,6 +2295,9 @@ def test_results_to_dict(all_element_network_with_results):
         np.testing.assert_allclose(potentials1, line.res_potentials[0].m)
         potentials2 = [complex(*i) for i in res_line.pop("potentials2")]
         np.testing.assert_allclose(potentials2, line.res_potentials[1].m)
+        if line.with_shunt:
+            ground_potential = complex(*res_line.pop("ground_potential"))
+            np.testing.assert_allclose(ground_potential, line.res_ground_potential.m)
         assert not res_line, res_line
     for res_transformer in res_network["transformers"]:
         transformer = en.transformers[res_transformer.pop("id")]
@@ -2404,6 +2407,9 @@ def test_results_to_dict_full(all_element_network_with_results):
         np.testing.assert_allclose(potentials1, line.res_potentials[0].m)
         potentials2 = [complex(*i) for i in res_line.pop("potentials2")]
         np.testing.assert_allclose(potentials2, line.res_potentials[1].m)
+        if line.with_shunt:
+            ground_potential = complex(*res_line.pop("ground_potential"))
+            np.testing.assert_allclose(ground_potential, line.res_ground_potential.m)
         # Powers
         powers1 = [complex(*i) for i in res_line.pop("powers1")]
         np.testing.assert_allclose(powers1, line.res_powers[0].m)

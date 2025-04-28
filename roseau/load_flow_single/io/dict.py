@@ -73,8 +73,10 @@ def network_from_dict(data: JsonDict, *, include_results: bool = True) -> tuple[
             category=UserWarning,
             stacklevel=find_stack_level(),
         )
-        if version == 3:
+        if version <= 3:
             data = v3_to_v4_converter(data)
+        if version <= 4:
+            data = v4_to_v5_converter(data)
     assert data["version"] == NETWORK_JSON_VERSION, (
         f"Did not apply all JSON version converters, got {data['version']}, expected {NETWORK_JSON_VERSION}."
     )
@@ -315,6 +317,28 @@ def v3_to_v4_converter(data: JsonDict) -> JsonDict:
         "loads": loads,
         "sources": sources,
         "lines_params": line_params,
+        "transformers_params": data["transformers_params"],  # <---- Unchanged
+    }
+    if "short_circuits" in data:
+        results["short_circuits"] = data["short_circuits"]  # Unchanged
+
+    return results
+
+
+def v4_to_v5_converter(data: JsonDict) -> JsonDict:
+    assert data["version"] == 4, data["version"]
+
+    results = {
+        "version": 5,
+        "is_multiphase": data["is_multiphase"],  # Unchanged
+        "crs": data["crs"],  # Unchanged
+        "buses": data["buses"],  # Unchanged
+        "lines": data["lines"],  # Unchanged
+        "transformers": data["transformers"],  # Unchanged
+        "switches": data["switches"],  # Unchanged
+        "loads": data["loads"],  # Unchanged
+        "sources": data["sources"],  # Unchanged
+        "lines_params": data["lines_params"],  # <---- Unchanged
         "transformers_params": data["transformers_params"],  # <---- Unchanged
     }
     if "short_circuits" in data:

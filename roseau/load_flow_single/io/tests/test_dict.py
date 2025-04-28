@@ -10,11 +10,12 @@ from shapely import LineString, Point
 
 import roseau.load_flow_single as rlfs
 from roseau.load_flow.testing import assert_json_close
-from roseau.load_flow_single.io.dict import NETWORK_JSON_VERSION, v3_to_v4_converter
+from roseau.load_flow_single.io.dict import NETWORK_JSON_VERSION, v3_to_v4_converter, v4_to_v5_converter
 
 # Store the expected hashes of the files that should not be modified
 EXPECTED_HASHES = {
     "network_json_v3.json": "d38c827b85f143f7a6a31ff5112a74cd",
+    "network_json_v4.json": "0cb2efc98e6dc579f34785a66ce3c22e",
 }
 
 
@@ -147,6 +148,7 @@ def test_all_converters():
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         expected_dict = v3_to_v4_converter(expected_dict)
+        expected_dict = v4_to_v5_converter(expected_dict)
     assert_json_close(net_dict, expected_dict)
 
 
@@ -160,7 +162,7 @@ def test_from_dict_v3():
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         expected_dict = v3_to_v4_converter(expected_dict)
-
+        expected_dict = v4_to_v5_converter(expected_dict)
     assert_json_close(net_dict, expected_dict)
 
 

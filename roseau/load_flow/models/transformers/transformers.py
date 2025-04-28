@@ -122,7 +122,9 @@ class Transformer(AbstractBranch[CyTransformer]):
             connect_neutral_lv=connect_neutral_lv,
         )
 
-        super().__init__(id=id, bus1=bus_hv, bus2=bus_lv, phases1=phases_hv, phases2=phases_lv, geometry=geometry)
+        super().__init__(
+            id=id, bus1=bus_hv, bus2=bus_lv, phases1=phases_hv, phases2=phases_lv, geometry=geometry, has_ground=False
+        )
         self._connect_neutral_hv = connect_neutral_hv
         self._connect_neutral_lv = connect_neutral_lv
         self.tap = tap
