@@ -8,7 +8,7 @@ from typing_extensions import TypeVar
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.license import activate_license, get_license
-from roseau.load_flow.typing import FloatMatrix, JsonDict, Solver
+from roseau.load_flow.typing import FloatArray, FloatMatrix, JsonDict, Solver
 from roseau.load_flow.utils import find_stack_level
 from roseau.load_flow_engine.cy_engine import (
     CyAbstractNewton,
@@ -162,9 +162,17 @@ class AbstractSolver(ABC, Generic[_CyS_co]):
         """
         raise NotImplementedError(f"save_matrix() is not implemented for solver {self.name!r}.")
 
-    def current_jacobian(self) -> FloatMatrix:
+    def jacobian(self) -> FloatMatrix:
         """Get the jacobian of the current iteration (useful for debugging)."""
-        raise NotImplementedError(f"current_jacobian() is not implemented for solver {self.name!r}.")
+        raise NotImplementedError(f"jacobian() is not implemented for solver {self.name!r}.")
+
+    def variables(self) -> FloatMatrix:
+        """Get the variables of the current iteration (useful for debugging)."""
+        raise NotImplementedError(f"variables() is not implemented for solver {self.name!r}.")
+
+    def residuals(self) -> FloatMatrix:
+        """Get the residuals of the current iteration (useful for debugging)."""
+        raise NotImplementedError(f"residuals() is not implemented for solver {self.name!r}.")
 
     def analyse_jacobian(self) -> tuple[list[int], list[int]]:
         """Analyse the jacobian to try to understand why it is singular.
@@ -233,8 +241,14 @@ class AbstractNewton(AbstractSolver[_CyN_co], ABC):
     def save_matrix(self, prefix: str) -> None:
         self._cy_solver.save_matrix(prefix)
 
-    def current_jacobian(self) -> FloatMatrix:
-        return self._cy_solver.current_jacobian()
+    def jacobian(self) -> FloatMatrix:
+        return self._cy_solver.jacobian()
+
+    def residuals(self) -> FloatArray:
+        return self._cy_solver.residuals()
+
+    def variables(self) -> FloatArray:
+        return self._cy_solver.variables()
 
     def analyse_jacobian(self) -> tuple[list[int], list[int]]:
         return self._cy_solver.analyse_jacobian()
