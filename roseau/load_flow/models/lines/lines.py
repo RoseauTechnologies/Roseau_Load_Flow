@@ -1,6 +1,6 @@
 import logging
 import warnings
-from typing import Final
+from typing import Final, Self
 
 import numpy as np
 from shapely.geometry.base import BaseGeometry
@@ -82,15 +82,8 @@ class Line(AbstractBranch[CyShuntLine | CySimplifiedLine]):
         """
         phases = self._check_phases_common(id, bus1=bus1, bus2=bus2, phases=phases)
         self._initialized = False
-        super().__init__(
-            id=id,
-            bus1=bus1,
-            bus2=bus2,
-            phases1=phases,
-            phases2=phases,
-            geometry=geometry,
-            has_ground=parameters.with_shunt,
-        )
+        super().__init__(id=id, bus1=bus1, bus2=bus2, phases1=phases, phases2=phases, geometry=geometry)
+        self._n = self._n1 + self._n2 + (1 if parameters.with_shunt else 0)
         self.ground = ground
         self.length = length
         self.parameters = parameters
@@ -127,6 +120,9 @@ class Line(AbstractBranch[CyShuntLine | CySimplifiedLine]):
         self._connect(bus1, bus2)
         if parameters.with_shunt:
             ground._cy_element.connect(self._cy_element, [(0, self._n - 1)])
+
+        # Results
+        self._res_ground_potential: complex | None = None
 
     def __repr__(self) -> str:
         s = f"{super().__repr__()[:-1]}, length={self._length!r}"
@@ -259,6 +255,24 @@ class Line(AbstractBranch[CyShuntLine | CySimplifiedLine]):
     #
     # Results
     #
+    def _refresh_results(self) -> None:
+        if self._fetch_results:
+            super()._refresh_results()
+            if self.with_shunt:
+                all_potentials = self._cy_element.get_potentials(self._n)
+                self._res_ground_potential = all_potentials.item(-1)
+
+    def _res_ground_potential_getter(self, warning: bool) -> complex:
+        if not self.with_shunt:
+            msg = (
+                f"Ground potential is only available for lines with shunt components. Line "
+                f"{self.id!r} does not have shunt components."
+            )
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_TYPE)
+        self._refresh_results()
+        return self._res_getter(value=self._res_ground_potential, warning=warning)
+
     def _res_series_values_getter(self, warning: bool) -> tuple[ComplexArray, ComplexArray]:
         pot1, pot2 = self._res_potentials_getter(warning)  # V
         du_line = pot1 - pot2
@@ -310,13 +324,6 @@ class Line(AbstractBranch[CyShuntLine | CySimplifiedLine]):
     @ureg_wraps("V", (None,))
     def res_ground_potential(self) -> Q_[complex]:
         """Get the potential of the ground port of the shunt line (in V)."""
-        if not self.with_shunt:
-            msg = (
-                f"Ground potential is only available for lines with shunt components. Line "
-                f"{self.id!r} does not have shunt components."
-            )
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_TYPE)
         return self._res_ground_potential_getter(warning=True)
 
     @property
@@ -367,6 +374,14 @@ class Line(AbstractBranch[CyShuntLine | CySimplifiedLine]):
     #
     # Json Mixin interface
     #
+    @classmethod
+    def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
+        results = data.get("results", None)
+        self = super().from_dict(data, include_results=include_results)
+        if include_results and results and self.with_shunt:
+            self._res_ground_potential = complex(*results["ground_potential"])
+        return self
+
     def _to_dict(self, include_results: bool) -> JsonDict:
         line_dict = super()._to_dict(include_results)
         line_dict["max_loading"] = self._max_loading
@@ -375,11 +390,17 @@ class Line(AbstractBranch[CyShuntLine | CySimplifiedLine]):
         if self.ground is not None:
             line_dict["ground"] = self.ground.id
         if include_results:
+            if self.with_shunt:
+                vg = self._res_ground_potential_getter(warning=False)
+                line_dict["results"]["ground_potential"] = [vg.real, vg.imag]
             line_dict["results"] = line_dict.pop("results")  # move results to the end
         return line_dict
 
     def _results_to_dict(self, warning: bool, full: bool) -> JsonDict:
         results = super()._results_to_dict(warning, full)
+        if self.with_shunt:
+            vg = self._res_ground_potential_getter(warning=False)
+            results["ground_potential"] = [vg.real, vg.imag]
         if full:
             # Add line specific results
             power_losses = self._res_power_losses_getter(warning=False)  # warn only once

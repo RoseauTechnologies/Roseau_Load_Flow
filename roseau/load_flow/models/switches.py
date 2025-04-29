@@ -52,9 +52,7 @@ class Switch(AbstractBranch[CySwitch]):
                 The geometry of the switch.
         """
         phases = self._check_phases_common(id, bus1=bus1, bus2=bus2, phases=phases)
-        super().__init__(
-            id=id, phases1=phases, phases2=phases, bus1=bus1, bus2=bus2, geometry=geometry, has_ground=False
-        )
+        super().__init__(id=id, phases1=phases, phases2=phases, bus1=bus1, bus2=bus2, geometry=geometry)
         self._check_elements()
         self._check_loop()
         self._check_same_voltage_level()

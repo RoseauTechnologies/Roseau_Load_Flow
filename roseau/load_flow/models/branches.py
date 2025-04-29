@@ -37,15 +37,7 @@ class AbstractBranch(Element[_CyB_co]):
     """
 
     def __init__(
-        self,
-        id: Id,
-        bus1: Bus,
-        bus2: Bus,
-        *,
-        phases1: str,
-        phases2: str,
-        geometry: BaseGeometry | None,
-        has_ground: bool,
+        self, id: Id, bus1: Bus, bus2: Bus, *, phases1: str, phases2: str, geometry: BaseGeometry | None
     ) -> None:
         """AbstractBranch constructor.
 
@@ -67,9 +59,6 @@ class AbstractBranch(Element[_CyB_co]):
 
             geometry:
                 The geometry of the branch.
-
-            has_ground:
-                True if the branch has a ground port (only shunt lines have ground ports).
         """
         if type(self) is AbstractBranch:
             raise TypeError("Can't instantiate abstract class AbstractBranch")
@@ -78,16 +67,13 @@ class AbstractBranch(Element[_CyB_co]):
         self._check_phases(id=id, phases2=phases2)
         self._n1 = len(phases1)
         self._n2 = len(phases2)
-        self._n = self._n1 + self._n2 + (1 if has_ground else 0)
         self._phases1 = phases1
         self._phases2 = phases2
         self._bus1 = bus1
         self._bus2 = bus2
-        self._has_ground = has_ground
         self.geometry = geometry
         self._res_currents: tuple[ComplexArray, ComplexArray] | None = None
         self._res_potentials: tuple[ComplexArray, ComplexArray] | None = None
-        self._res_ground_potential: complex | None = None
         self._sides_suffixes = ("_hv", "_lv") if self.element_type == "transformer" else ("1", "2")
 
     def __repr__(self) -> str:
@@ -189,9 +175,6 @@ class AbstractBranch(Element[_CyB_co]):
         if self._fetch_results:
             self._res_currents = self._cy_element.get_side_currents(self._n1, self._n2)
             self._res_potentials = self._cy_element.get_side_potentials(self._n1, self._n2)
-            if self._has_ground:
-                all_potentials = self._cy_element.get_potentials(self._n)
-                self._res_ground_potential = all_potentials.item(-1)
 
     def _res_currents_getter(self, warning: bool) -> tuple[ComplexArray, ComplexArray]:
         self._refresh_results()
@@ -200,11 +183,6 @@ class AbstractBranch(Element[_CyB_co]):
     def _res_potentials_getter(self, warning: bool) -> tuple[ComplexArray, ComplexArray]:
         self._refresh_results()
         return self._res_getter(value=self._res_potentials, warning=warning)
-
-    def _res_ground_potential_getter(self, warning: bool) -> complex:
-        assert self._has_ground, f"Branch {self.id!r} has no ground port."
-        self._refresh_results()
-        return self._res_getter(value=self._res_ground_potential, warning=warning)
 
     def _res_voltages_getter(self, warning: bool) -> tuple[ComplexArray, ComplexArray]:
         potentials1, potentials2 = self._res_potentials_getter(warning)
@@ -260,8 +238,6 @@ class AbstractBranch(Element[_CyB_co]):
             potentials2 = np.array([complex(*v) for v in results[f"potentials{s2}"]], dtype=np.complex128)
             self._res_currents = (currents1, currents2)
             self._res_potentials = (potentials1, potentials2)
-            if self._has_ground:
-                self._res_ground_potential = complex(*results["ground_potential"])
             self._fetch_results = False
             self._no_results = False
         return self
@@ -287,9 +263,6 @@ class AbstractBranch(Element[_CyB_co]):
                 f"potentials{s1}": [[i.real, i.imag] for i in potentials1],
                 f"potentials{s2}": [[i.real, i.imag] for i in potentials2],
             }
-            if self._has_ground:
-                vg = self._res_ground_potential_getter(warning=False)
-                data["results"]["ground_potential"] = [vg.real, vg.imag]
         return data
 
     def _results_to_dict(self, warning: bool, full: bool) -> JsonDict:
@@ -306,9 +279,6 @@ class AbstractBranch(Element[_CyB_co]):
         results[f"currents{s2}"] = [[i.real, i.imag] for i in currents2]
         results[f"potentials{s1}"] = [[v.real, v.imag] for v in potentials1]
         results[f"potentials{s2}"] = [[v.real, v.imag] for v in potentials2]
-        if self._has_ground:
-            vg = self._res_ground_potential_getter(warning=False)
-            results["ground_potential"] = [vg.real, vg.imag]
         if full:
             powers1 = potentials1 * currents1.conjugate()
             powers2 = potentials2 * currents2.conjugate()
