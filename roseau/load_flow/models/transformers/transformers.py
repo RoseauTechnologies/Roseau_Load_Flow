@@ -4,6 +4,7 @@ from functools import cached_property
 from typing import Final
 
 from shapely.geometry.base import BaseGeometry
+from typing_extensions import deprecated
 
 from roseau.load_flow.converters import _calculate_voltages
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
@@ -433,14 +434,16 @@ class Transformer(AbstractBranch[CyTransformer]):
         loading = self._res_loading_getter(warning=True)
         return bool(loading > self._max_loading)
 
-    @property
+    @property  # TODO remove in version 0.14
+    @deprecated("`res_voltages_hv` will be removed in the next release, use `res_voltages[0]` instead")
     @ureg_wraps("V", (None,))
     def res_voltages_hv(self) -> Q_[ComplexArray]:
         """The load flow result of the transformer voltages on the HV side (V)."""
         potentials_hv = self._res_potentials_getter(warning=True)[0]
         return _calculate_voltages(potentials=potentials_hv, phases=self.phases_hv)
 
-    @property
+    @property  # TODO remove in version 0.14
+    @deprecated("`res_voltages_lv` will be removed in the next release, use `res_voltages[1]` instead")
     @ureg_wraps("V", (None,))
     def res_voltages_lv(self) -> Q_[ComplexArray]:
         """The load flow result of the transformer voltages on the LV side (V)."""
