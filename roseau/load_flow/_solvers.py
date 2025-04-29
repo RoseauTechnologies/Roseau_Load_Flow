@@ -180,7 +180,7 @@ class AbstractSolver(ABC, Generic[_CyS_co]):
     @property
     def residuals(self) -> FloatArray:
         """Get the residuals of the current iteration (useful for debugging)."""
-        raise NotImplementedError(f"residuals() is not implemented for solver {self.name!r}.")
+        raise NotImplementedError(f"residuals is not implemented for solver {self.name!r}.")
 
     def analyse_jacobian(self) -> tuple[list[int], list[int]]:
         """Analyse the jacobian to try to understand why it is singular.
