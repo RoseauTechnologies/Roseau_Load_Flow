@@ -37,7 +37,7 @@ class AbstractBranch(Element[_CyB_co]):
     """
 
     def __init__(
-        self, id: Id, bus1: Bus, bus2: Bus, *, phases1: str, phases2: str, geometry: BaseGeometry | None = None
+        self, id: Id, bus1: Bus, bus2: Bus, *, phases1: str, phases2: str, geometry: BaseGeometry | None
     ) -> None:
         """AbstractBranch constructor.
 

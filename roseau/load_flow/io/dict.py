@@ -10,7 +10,7 @@ import copy
 import logging
 import warnings
 from collections import defaultdict
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 import numpy as np
 from pyproj import CRS
@@ -41,7 +41,7 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-NETWORK_JSON_VERSION = 4
+NETWORK_JSON_VERSION: Final = 5
 """The current version of the network JSON file format."""
 
 
@@ -64,7 +64,7 @@ def network_from_dict(data: JsonDict, *, include_results: bool = True) -> tuple[
     data = copy.deepcopy(data)  # Make a copy to avoid modifying the original
 
     version = data.get("version", 0)
-    if version <= 3:
+    if version <= 4:
         warnings.warn(
             f"Got an outdated network file (version {version}), trying to update to the current format "
             f"(version {NETWORK_JSON_VERSION}). Please save the network again.",
@@ -80,6 +80,8 @@ def network_from_dict(data: JsonDict, *, include_results: bool = True) -> tuple[
             data = v2_to_v3_converter(data)
         if version <= 3:
             data = v3_to_v4_converter(data)
+        if version <= 4:
+            data = v4_to_v5_converter(data)
     else:
         # If we arrive here, we dealt with all legacy versions, it must be the current one
         assert version == NETWORK_JSON_VERSION, f"Unsupported network file version {version}."
@@ -892,6 +894,54 @@ def v3_to_v4_converter(data: JsonDict) -> JsonDict:  # noqa: C901
         "lines_params": line_params,
         "transformers_params": transformer_params,
         "ground_connections": ground_connections,
+    }
+    if "short_circuits" in data:
+        results["short_circuits"] = data["short_circuits"]  # Unchanged
+
+    return results
+
+
+def v4_to_v5_converter(data: JsonDict) -> JsonDict:
+    """Convert a v4 network dict to a v5 network dict.
+
+    Args:
+        data:
+            The v4 network data.
+
+    Returns:
+        The v5 network data.
+    """
+    assert data["version"] == 4, data["version"]
+
+    grounds_dict = {ground["id"]: ground for ground in data["grounds"]}
+
+    lines = []
+    for line_data in data["lines"]:
+        # Handle missing results
+        if "results" in line_data:
+            # Copy ground potential to line results
+            if line_data.get("ground") is not None:
+                ground_data = grounds_dict[line_data["ground"]]
+                line_data["results"]["ground_potential"] = ground_data["results"]["potential"]
+            else:
+                pass
+        lines.append(line_data)
+
+    results = {
+        "version": 5,
+        "is_multiphase": data["is_multiphase"],  # Unchanged
+        "crs": data["crs"],  # Unchanged
+        "grounds": data["grounds"],  # Unchanged
+        "potential_refs": data["potential_refs"],  # Unchanged
+        "buses": data["buses"],  # Unchanged
+        "lines": lines,
+        "switches": data["switches"],  # Unchanged
+        "transformers": data["transformers"],  # Unchanged
+        "loads": data["loads"],  # Unchanged
+        "sources": data["sources"],  # Unchanged
+        "lines_params": data["lines_params"],  # Unchanged
+        "transformers_params": data["transformers_params"],  # Unchanged
+        "ground_connections": data["ground_connections"],  # Unchanged
     }
     if "short_circuits" in data:
         results["short_circuits"] = data["short_circuits"]  # Unchanged

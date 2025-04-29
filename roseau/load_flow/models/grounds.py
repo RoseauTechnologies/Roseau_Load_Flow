@@ -94,7 +94,7 @@ class Ground(Element[CyGround]):
     #
     def _refresh_results(self) -> None:
         if self._fetch_results:
-            self._res_potential = self._cy_element.get_potentials(1).item()
+            self._res_potential = self._cy_element.get_potentials(n=1).item()
 
     def _res_potential_getter(self, warning: bool) -> complex:
         self._refresh_results()
@@ -315,16 +315,22 @@ class GroundConnection(Element[CySimplifiedLine | CySwitch]):
         return self._element
 
     def _cy_connect(self) -> None:
-        assert self._cy_element is not None
-        assert self._ground._cy_element is not None, "Ground cannot be disconnected."
+        cy_self = self._cy_element
+        cy_element = self._element._cy_element
+        cy_ground = self._ground._cy_element
+        assert cy_self is not None
+        assert cy_element is not None, "Element cannot be disconnected."
+        assert cy_ground is not None, "Ground cannot be disconnected."
+        # Connect the phase of the element to the first side of the ground connection.
         i = self._element_phases.index(self._phase)
         if self._side is None:
-            self._element._cy_element.connect(self._cy_element, [(i, 0)])
+            cy_element.connect(cy_self, [(i, 0)])
         else:
-            assert isinstance(self._element._cy_element, CyBranch)
+            assert isinstance(cy_element, CyBranch)
             beginning = self._side in (1, "HV")
-            self._element._cy_element.connect_side(self._cy_element, [(i, 0)], beginning=beginning)
-        self._cy_element.connect_side(self._ground._cy_element, [(0, 0)], beginning=False)
+            cy_element.connect_side(cy_self, [(i, 0)], beginning=beginning)
+        # Connect the ground to the second side of the ground connection.
+        cy_ground.connect(cy_self, [(0, 1)])
 
     #
     # Results

@@ -425,10 +425,12 @@ def test_lines_results(phases, z_line, y_shunt, len_line, bus_pot, line_cur, gro
     bus2._res_potentials = np.array(bus_pot[1], dtype=complex)
     line._res_currents = np.array(line_cur[0], dtype=complex), np.array(line_cur[1], dtype=complex)
     line._res_potentials = (
-        np.array([bus1._res_potentials[bus1.phases.index(p)] for p in line.phases1], dtype=complex),
-        np.array([bus2._res_potentials[bus2.phases.index(p)] for p in line.phases2], dtype=complex),
+        bus1._res_potentials[[bus1.phases.index(p) for p in line.phases1]],
+        bus2._res_potentials[[bus2.phases.index(p) for p in line.phases2]],
     )
     ground._res_potential = ground_pot
+    if lp.with_shunt:
+        line._res_ground_potential = ground._res_potential
     res_powers1, res_powers2 = (x.m for x in line.res_powers)
     series_losses = line.res_series_power_losses.m
     shunt_losses = line.res_shunt_power_losses.m
@@ -442,6 +444,16 @@ def test_lines_results(phases, z_line, y_shunt, len_line, bus_pot, line_cur, gro
     else:
         assert not np.allclose(shunt_losses, 0)
     np.testing.assert_allclose(line_losses, series_losses + shunt_losses)
+    if line.with_shunt:
+        np.testing.assert_allclose(line.res_ground_potential, ground.res_potential)
+    else:
+        with pytest.raises(RoseauLoadFlowException) as e:
+            _ = line.res_ground_potential
+        assert e.value.msg == (
+            "Ground potential is only available for lines with shunt components. Line 'line' does "
+            "not have shunt components."
+        )
+        assert e.value.code == RoseauLoadFlowExceptionCode.BAD_LINE_TYPE
 
     # Sanity check: the total power lost is equal to the sum of the powers flowing through
     np.testing.assert_allclose(res_powers1 + res_powers2, line_losses, rtol=1e-6)

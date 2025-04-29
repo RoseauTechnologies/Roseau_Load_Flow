@@ -19,6 +19,9 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`369` Add `Line.res_ground_potential` property to get the potential of the ground port of
+  lines with shunt components. Update JSON file format to version 5 to store this information. Files
+  created with previous versions of Roseau Load Flow will still be readable and will warn on loading.
 - {gh-pr}`366` Add nominal frequency (`fn`), cooling class (`cooling`) and insulation type
   (`insulation`) to the `TransformerParameters` class.
   The transformers catalogue has been updated accordingly. The manufacturer names in the catalogue

@@ -77,6 +77,7 @@ the following results are available for lines with shunt components:
 | ------------------------ | ------------ | ---------------- | ----------------------------------------------------------- |
 | `res_shunt_currents`     | $A$          | 2 complex arrays | The currents flowing into the shunt admittances of the line |
 | `res_shunt_power_losses` | $V\!A$       | 2 complex arrays | The power losses in the shunt admittances of the line       |
+| `res_ground_potential`   | $V$          | complex          | The potential of the ground element connected to the line   |
 
 The results with two arrays are for the first and second ends of the line, respectively.
 
