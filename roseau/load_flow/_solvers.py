@@ -4,11 +4,12 @@ import warnings
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Generic
 
+import numpy as np
 from typing_extensions import TypeVar
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.license import activate_license, get_license
-from roseau.load_flow.typing import FloatArray, FloatMatrix, JsonDict, Solver
+from roseau.load_flow.typing import FloatArray, FloatArrayLike1D, FloatMatrix, JsonDict, Solver
 from roseau.load_flow.utils import find_stack_level
 from roseau.load_flow_engine.cy_engine import (
     CyAbstractNewton,
@@ -168,11 +169,11 @@ class AbstractSolver(ABC, Generic[_CyS_co]):
 
     def variables(self) -> FloatArray:
         """Get the variables of the current iteration (useful for debugging)."""
-        raise NotImplementedError(f"variables() is not implemented for solver {self.name!r}.")
+        return self._cy_solver.get_variables()
 
-    def set_variables(self, variables: FloatArray) -> None:
+    def set_variables(self, variables: FloatArrayLike1D) -> None:
         """Set the independent variables (useful for debugging)."""
-        raise NotImplementedError(f"set_variables() is not implemented for solver {self.name!r}.")
+        self._cy_solver.set_variables(np.array(variables, dtype=np.float64))
 
     def residuals(self) -> FloatArray:
         """Get the residuals of the current iteration (useful for debugging)."""
@@ -250,12 +251,6 @@ class AbstractNewton(AbstractSolver[_CyN_co], ABC):
 
     def residuals(self) -> FloatArray:
         return self._cy_solver.get_residuals()
-
-    def variables(self) -> FloatArray:
-        return self._cy_solver.get_variables()
-
-    def set_variables(self, variables: FloatArray) -> None:
-        return self._cy_solver.set_variables(variables)
 
     def analyse_jacobian(self) -> tuple[list[int], list[int]]:
         return self._cy_solver.analyse_jacobian()
