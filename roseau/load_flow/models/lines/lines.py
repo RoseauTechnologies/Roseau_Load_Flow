@@ -259,8 +259,7 @@ class Line(AbstractBranch[CyShuntLine | CySimplifiedLine]):
         if self._fetch_results:
             super()._refresh_results()
             if self.with_shunt:
-                all_potentials = self._cy_element.get_potentials(self._n)
-                self._res_ground_potential = all_potentials.item(-1)
+                self._res_ground_potential = self._cy_element.get_port_potential(self._n - 1)
 
     def _res_ground_potential_getter(self, warning: bool) -> complex:
         if not self.with_shunt:
