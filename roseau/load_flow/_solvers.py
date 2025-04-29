@@ -167,14 +167,17 @@ class AbstractSolver(ABC, Generic[_CyS_co]):
         """Get the jacobian of the current iteration (useful for debugging)."""
         raise NotImplementedError(f"jacobian() is not implemented for solver {self.name!r}.")
 
+    @property
     def variables(self) -> FloatArray:
         """Get the variables of the current iteration (useful for debugging)."""
         return self._cy_solver.get_variables()
 
-    def set_variables(self, variables: FloatArrayLike1D) -> None:
+    @variables.setter
+    def variables(self, variables: FloatArrayLike1D) -> None:
         """Set the independent variables (useful for debugging)."""
         self._cy_solver.set_variables(np.array(variables, dtype=np.float64))
 
+    @property
     def residuals(self) -> FloatArray:
         """Get the residuals of the current iteration (useful for debugging)."""
         raise NotImplementedError(f"residuals() is not implemented for solver {self.name!r}.")
@@ -249,6 +252,7 @@ class AbstractNewton(AbstractSolver[_CyN_co], ABC):
     def jacobian(self) -> FloatMatrix:
         return self._cy_solver.get_jacobian()
 
+    @property
     def residuals(self) -> FloatArray:
         return self._cy_solver.get_residuals()
 
