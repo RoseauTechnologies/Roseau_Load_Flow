@@ -444,6 +444,16 @@ def test_lines_results(phases, z_line, y_shunt, len_line, bus_pot, line_cur, gro
     else:
         assert not np.allclose(shunt_losses, 0)
     np.testing.assert_allclose(line_losses, series_losses + shunt_losses)
+    if line.with_shunt:
+        np.testing.assert_allclose(line.res_ground_potential, ground.res_potential)
+    else:
+        with pytest.raises(RoseauLoadFlowException) as e:
+            _ = line.res_ground_potential
+        assert e.value.msg == (
+            "Ground potential is only available for lines with shunt components. Line 'line' does "
+            "not have shunt components."
+        )
+        assert e.value.code == RoseauLoadFlowExceptionCode.BAD_LINE_TYPE
 
     # Sanity check: the total power lost is equal to the sum of the powers flowing through
     np.testing.assert_allclose(res_powers1 + res_powers2, line_losses, rtol=1e-6)
