@@ -19,6 +19,9 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`371` Deprecate `Transformer.res_voltage_hv` and `Transformer.res_voltage_lv` properties
+  added in the last release by mistake. A simpler interface will be added later as described in
+  {gh-issue}`344`.
 - {gh-pr}`369` Add `Line.res_ground_potential` property to get the potential of the ground port of
   lines with shunt components. Update JSON file format to version 5 to store this information. Files
   created with previous versions of Roseau Load Flow will still be readable and will warn on loading.
