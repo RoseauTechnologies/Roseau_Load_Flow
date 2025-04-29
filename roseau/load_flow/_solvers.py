@@ -246,13 +246,13 @@ class AbstractNewton(AbstractSolver[_CyN_co], ABC):
         self._cy_solver.save_matrix(prefix)
 
     def jacobian(self) -> FloatMatrix:
-        return self._cy_solver.jacobian()
+        return self._cy_solver.get_jacobian()
 
     def residuals(self) -> FloatArray:
-        return self._cy_solver.residuals()
+        return self._cy_solver.get_residuals()
 
     def variables(self) -> FloatArray:
-        return self._cy_solver.variables()
+        return self._cy_solver.get_variables()
 
     def set_variables(self, variables: FloatArray) -> None:
         return self._cy_solver.set_variables(variables)
