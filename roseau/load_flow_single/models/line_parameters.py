@@ -1,3 +1,4 @@
+import cmath
 import logging
 import re
 from enum import StrEnum
@@ -81,7 +82,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             self._with_shunt = False
         else:
             self._y_shunt = self._check_value(id=id, value=y_shunt, name="y_shunt")
-            self._with_shunt = bool(not np.isclose(self._y_shunt, 0))
+            self._with_shunt = not cmath.isclose(self._y_shunt, 0)
 
         # Parameters that are not used in the load flow
         self.line_type = line_type
@@ -855,7 +856,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode[f"BAD_{name.upper()}_VALUE"])
 
         # Ensure that z_line is not 0
-        if name == "z_line" and np.isclose(value, 0):
+        if name == "z_line" and cmath.isclose(value, 0):
             msg = f"The z_line value of line type {id!r} can't be zero."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Z_LINE_VALUE)

@@ -1,3 +1,4 @@
+import cmath
 import logging
 from abc import ABC
 from typing import Final
@@ -43,11 +44,6 @@ class AbstractLoad(AbstractConnectable[_CyL_co], ABC):
         return False
 
     def _validate_value(self, value: Complex) -> complex:
-        # A load cannot have any zero impedance
-        if self.type == "impedance" and np.isclose(value, 0).any():
-            msg = f"An impedance of the load {self.id!r} is null"
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Z_VALUE)
         return complex(value)
 
     #
@@ -62,22 +58,13 @@ class AbstractLoad(AbstractConnectable[_CyL_co], ABC):
                 fp = FlexibleParameter.from_dict(data=fp_data, include_results=include_results)
             else:
                 fp = None
-            self = PowerLoad(
-                id=data["id"],
-                bus=data["bus"],
-                power=power,
-                flexible_param=fp,
-            )
+            self = PowerLoad(id=data["id"], bus=data["bus"], power=power, flexible_param=fp)
         elif load_type == "current":
             current = complex(data["current"][0], data["current"][1])
             self = CurrentLoad(id=data["id"], bus=data["bus"], current=current)
         elif load_type == "impedance":
             impedance = complex(data["impedance"][0], data["impedance"][1])
-            self = ImpedanceLoad(
-                id=data["id"],
-                bus=data["bus"],
-                impedance=impedance,
-            )
+            self = ImpedanceLoad(id=data["id"], bus=data["bus"], impedance=impedance)
         else:
             msg = f"Unknown load type {load_type!r} for load {data['id']!r}"
             logger.error(msg)
@@ -282,6 +269,14 @@ class ImpedanceLoad(AbstractLoad[CyAdmittanceLoad]):
             n=self._n, admittances=np.array([1.0 / self._impedance], dtype=np.complex128)
         )
         self._cy_connect()
+
+    def _validate_value(self, value: Complex) -> complex:
+        # A load cannot have a zero impedance
+        if cmath.isclose(value, 0):
+            msg = f"The impedance of the load {self.id!r} is null"
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Z_VALUE)
+        return super()._validate_value(value)
 
     @property
     @ureg_wraps("ohm", (None,))

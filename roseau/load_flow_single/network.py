@@ -993,15 +993,13 @@ class ElectricalNetwork(JsonMixin):
 
     def _get_starting_voltage(self) -> tuple[complex, VoltageSource]:
         """Compute initial voltages from the voltage sources of the network, get also the starting source."""
-        starting_source = None
-        initial_voltage = None
-        # if there are multiple voltage sources, start from the higher one (the last one in the sorted below)
-        for source in sorted(self.sources.values(), key=lambda x: np.average(np.abs(x._voltage))):
-            source_voltage = source._voltage
-            starting_source = source
-            initial_voltage = source_voltage
-
-        return initial_voltage, starting_source
+        sources = iter(self.sources.values())
+        starting_source = next(sources)
+        # if there are multiple voltage sources, start from the one with the highest voltage
+        for source in sources:
+            if abs(source._voltage) > abs(starting_source._voltage):
+                starting_source = source
+        return starting_source._voltage, starting_source
 
     #
     # Network saving/loading

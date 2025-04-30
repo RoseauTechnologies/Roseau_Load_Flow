@@ -105,7 +105,7 @@ class Element(ABC, Identifiable, JsonMixin, Generic[_CyE_co]):
 
         # Recursively call this method to the elements connected to self
         for e in self._connected_elements:
-            if e.network == value:
+            if e._network == value:
                 continue
             else:
                 # Recursive call
@@ -119,11 +119,11 @@ class Element(ABC, Identifiable, JsonMixin, Generic[_CyE_co]):
                 The elements to connect to self.
         """
         # Get the common network. May raise exception
-        network = self.network
+        network = self._network
         for element in elements:
             if network is None:
-                network = element.network
-            elif element.network is not None and element.network != network:
+                network = element._network
+            elif element._network is not None and element._network != network:
                 element._raise_several_network()
 
         # Modify objects. Append to the connected_elements
@@ -150,8 +150,8 @@ class Element(ABC, Identifiable, JsonMixin, Generic[_CyE_co]):
 
     def _invalidate_network_results(self) -> None:
         """Invalidate the network making the result"""
-        if self.network is not None:
-            self.network._results_valid = False
+        if self._network is not None:
+            self._network._results_valid = False
 
     @abstractmethod
     def _refresh_results(self) -> None:
@@ -178,7 +178,7 @@ class Element(ABC, Identifiable, JsonMixin, Generic[_CyE_co]):
             )
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN)
-        if warning and self.network is not None and not self.network._results_valid:
+        if warning and self._network is not None and not self._network._results_valid:
             warnings.warn(
                 message=(
                     f"The results of {type(self).__name__} {self.id!r} may be outdated. Please re-run a load flow to "

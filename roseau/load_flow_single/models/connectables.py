@@ -54,7 +54,7 @@ class AbstractConnectable(AbstractTerminal[_CyE_co], ABC):
     def _refresh_results(self) -> None:
         if self._fetch_results:
             super()._refresh_results()
-            self._res_current = self._cy_element.get_currents(self._n).item(0)
+            self._res_current = self._cy_element.get_port_current(0)
 
     def _res_current_getter(self, warning: bool) -> complex:
         self._refresh_results()
