@@ -1,8 +1,8 @@
 import logging
+import math
 import warnings
 from typing import Self
 
-import numpy as np
 from shapely.geometry.base import BaseGeometry
 from typing_extensions import TypeVar
 
@@ -83,7 +83,7 @@ class AbstractBranch(Element[_CyB_co]):
         if (
             self.bus1._nominal_voltage is not None
             and self.bus2._nominal_voltage is not None
-            and not np.isclose(self.bus1._nominal_voltage, self.bus2._nominal_voltage)
+            and not math.isclose(self.bus1._nominal_voltage, self.bus2._nominal_voltage)
         ):
             warnings.warn(
                 (
@@ -109,10 +109,14 @@ class AbstractBranch(Element[_CyB_co]):
     #
     def _refresh_results(self) -> None:
         if self._fetch_results:
-            currents1, currents2 = self._cy_element.get_side_currents(1, 1)
-            potentials1, potentials2 = self._cy_element.get_side_potentials(1, 1)
-            self._res_currents = currents1.item(0), currents2.item(0)
-            self._res_voltages = potentials1.item(0) * SQRT3, potentials2.item(0) * SQRT3
+            self._res_currents = (
+                self._cy_element.get_port_current(0),
+                self._cy_element.get_port_current(self._n),
+            )
+            self._res_voltages = (
+                self._cy_element.get_port_potential(0) * SQRT3,
+                self._cy_element.get_port_potential(self._n) * SQRT3,
+            )
 
     def _res_currents_getter(self, warning: bool) -> tuple[complex, complex]:
         self._refresh_results()

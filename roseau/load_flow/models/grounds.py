@@ -94,7 +94,7 @@ class Ground(Element[CyGround]):
     #
     def _refresh_results(self) -> None:
         if self._fetch_results:
-            self._res_potential = self._cy_element.get_potentials(n=1).item()
+            self._res_potential = self._cy_element.get_port_potential(0)
 
     def _res_potential_getter(self, warning: bool) -> complex:
         self._refresh_results()
@@ -337,7 +337,7 @@ class GroundConnection(Element[CySimplifiedLine | CySwitch]):
     #
     def _refresh_results(self) -> None:
         if self._fetch_results:
-            self._res_current = self._cy_element.get_currents(n=1).item()
+            self._res_current = self._cy_element.get_port_current(0)
 
     def _res_current_getter(self, warning: bool) -> complex:
         self._refresh_results()

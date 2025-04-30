@@ -1,4 +1,5 @@
 import logging
+import math
 import warnings
 from collections.abc import Iterator
 from typing import Final, Self
@@ -272,7 +273,7 @@ class Bus(AbstractTerminal[CyBus]):
                     force
                     or self._nominal_voltage is None
                     or element._nominal_voltage is None
-                    or np.isclose(element._nominal_voltage, self._nominal_voltage)
+                    or math.isclose(element._nominal_voltage, self._nominal_voltage)
                 ):
                     msg = (
                         f"Cannot propagate the nominal voltage ({self._nominal_voltage} V) of bus {self.id!r} "
@@ -284,7 +285,7 @@ class Bus(AbstractTerminal[CyBus]):
                     force
                     or self._min_voltage_level is None
                     or element._min_voltage_level is None
-                    or np.isclose(element._min_voltage_level, self._min_voltage_level)
+                    or math.isclose(element._min_voltage_level, self._min_voltage_level)
                 ):
                     msg = (
                         f"Cannot propagate the minimum voltage level ({self._min_voltage_level}) of bus {self.id!r} "
@@ -296,7 +297,7 @@ class Bus(AbstractTerminal[CyBus]):
                     force
                     or self._max_voltage_level is None
                     or element._max_voltage_level is None
-                    or np.isclose(element._max_voltage_level, self._max_voltage_level)
+                    or math.isclose(element._max_voltage_level, self._max_voltage_level)
                 ):
                     msg = (
                         f"Cannot propagate the maximum voltage level ({self._max_voltage_level}) of bus {self.id!r} "
