@@ -1,5 +1,5 @@
 import logging
-from abc import ABC
+from abc import ABC, abstractmethod
 from functools import cached_property
 from typing import ClassVar
 
@@ -13,15 +13,18 @@ from roseau.load_flow.models.terminals import AbstractTerminal
 from roseau.load_flow.sym import phasor_to_sym
 from roseau.load_flow.typing import ComplexArray, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
+from roseau.load_flow.utils import abstractattrs
 
 logger = logging.getLogger(__name__)
 
 
+@abstractattrs("type")
 class AbstractConnectable(AbstractTerminal[_CyE_co], ABC):
     """A base class for connectable elements in the network (loads, sources, etc.)."""
 
     type: ClassVar[str]
 
+    @abstractmethod
     def __init__(self, id: Id, bus: Bus, *, phases: str | None = None, connect_neutral: bool | None = None) -> None:
         """AbstractConnectable constructor.
 
@@ -46,9 +49,6 @@ class AbstractConnectable(AbstractTerminal[_CyE_co], ABC):
                 neutral. If the bus does not have a neutral, the element's neutral is left floating
                 by default. To override the default behavior, pass an explicit ``True`` or ``False``.
         """
-        if type(self) is AbstractConnectable:
-            raise TypeError("Can't instantiate abstract class AbstractConnectable")
-
         if phases is None:
             phases = bus.phases
         else:

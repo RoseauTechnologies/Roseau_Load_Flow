@@ -5,7 +5,7 @@ from collections.abc import Sequence
 from enum import StrEnum
 from importlib import resources
 from pathlib import Path
-from typing import Literal, NoReturn, Self, TypeAlias, TypeVar
+from typing import Final, Literal, NoReturn, Self, TypeAlias, TypeVar
 
 import numpy as np
 import numpy.linalg as nplin
@@ -48,6 +48,8 @@ _StrEnumType = TypeVar("_StrEnumType", bound=StrEnum)
 
 class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
     """Parameters that define electrical models of lines."""
+
+    is_multi_phase: Final = True
 
     @ureg_wraps(None, (None, None, "ohm/km", "S/km", "A", None, None, None, "mm²"))
     def __init__(

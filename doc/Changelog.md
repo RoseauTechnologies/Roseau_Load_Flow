@@ -19,6 +19,10 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`373` Rename the `from_dgs` method of `rlf.ElectricalNetwork` to `from_dgs_file` and add
+  a new `from_dgs_dict` method to load a network from a DGS-formatted dictionary. The old method is
+  deprecated and will be removed in a future release. The `from_dgs_file` method accepts an optional
+  `encoding` parameter to specify the encoding of the DGS file.
 - {gh-pr}`371` Deprecate `Transformer.res_voltage_hv` and `Transformer.res_voltage_lv` properties
   added in the last release by mistake. A simpler interface will be added later as described in
   {gh-issue}`344`.

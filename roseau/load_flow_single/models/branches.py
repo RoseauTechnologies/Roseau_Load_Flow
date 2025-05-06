@@ -1,6 +1,7 @@
 import logging
 import math
 import warnings
+from abc import abstractmethod
 from typing import Self
 
 from shapely.geometry.base import BaseGeometry
@@ -32,6 +33,7 @@ class AbstractBranch(Element[_CyB_co]):
         :doc:`Switch model documentation </models/Switch>`
     """
 
+    @abstractmethod
     def __init__(self, id: Id, bus1: Bus, bus2: Bus, n: int, *, geometry: BaseGeometry | None = None) -> None:
         """AbstractBranch constructor.
 
@@ -48,8 +50,6 @@ class AbstractBranch(Element[_CyB_co]):
             geometry:
                 The geometry of the branch.
         """
-        if type(self) is AbstractBranch:
-            raise TypeError("Can't instantiate abstract class AbstractBranch")
         super().__init__(id)
         self._bus1 = bus1
         self._bus2 = bus2

@@ -89,7 +89,7 @@ class Line(AbstractBranch[CyShuntLine | CySimplifiedLine]):
         self._z_line = self._parameters._z_line * self._length
         self._y_shunt = self._parameters._y_shunt * self._length
         self._z_line_inv = 1.0 / self._z_line
-        if self._cy_element is not None:
+        if self._cy_initialized:
             if self._parameters.with_shunt:
                 assert isinstance(self._cy_element, CyShuntLine)
                 self._cy_element.update_line_parameters(

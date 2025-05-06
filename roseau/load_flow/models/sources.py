@@ -120,7 +120,7 @@ class VoltageSource(AbstractConnectable[CyVoltageSource | CyDeltaVoltageSource])
             raise RoseauLoadFlowException(msg, code=RoseauLoadFlowExceptionCode.BAD_VOLTAGES_SIZE)
         self._voltages = voltages
         self._invalidate_network_results()
-        if self._cy_element is not None:
+        if self._cy_initialized:
             self._cy_element.update_voltages(self._voltages)
 
     #

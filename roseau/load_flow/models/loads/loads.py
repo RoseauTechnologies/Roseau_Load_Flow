@@ -1,5 +1,5 @@
 import logging
-from abc import ABC
+from abc import ABC, abstractmethod
 from typing import Final
 
 import numpy as np
@@ -38,6 +38,7 @@ class AbstractLoad(AbstractConnectable[_CyL_co], ABC):
 
     element_type: Final = "load"
 
+    @abstractmethod
     def __init__(self, id: Id, bus: Bus, *, phases: str | None = None, connect_neutral: bool | None = None) -> None:
         """AbstractLoad constructor.
 
@@ -62,8 +63,6 @@ class AbstractLoad(AbstractConnectable[_CyL_co], ABC):
                 neutral. If the bus does not have a neutral, the load's neutral is left floating
                 by default. To override the default behavior, pass an explicit ``True`` or ``False``.
         """
-        if type(self) is AbstractLoad:
-            raise TypeError("Can't instantiate abstract class AbstractLoad")
         super().__init__(id, bus, phases=phases, connect_neutral=connect_neutral)
         self._symbol = {"power": "S", "current": "I", "impedance": "Z"}[self.type]
         self._res_inner_currents: ComplexArray | None = None
@@ -336,7 +335,7 @@ class PowerLoad(AbstractLoad[CyPowerLoad | CyDeltaPowerLoad | CyFlexibleLoad | C
                     raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_S_VALUE)
         self._powers = value
         self._invalidate_network_results()
-        if self._cy_element is not None:
+        if self._cy_initialized:
             self._cy_element.update_powers(self._powers)
 
     def _refresh_results(self) -> None:
@@ -438,7 +437,7 @@ class CurrentLoad(AbstractLoad[CyCurrentLoad | CyDeltaCurrentLoad]):
     def currents(self, value: ComplexScalarOrArrayLike1D) -> None:
         self._currents = self._validate_value(value)
         self._invalidate_network_results()
-        if self._cy_element is not None:
+        if self._cy_initialized:
             self._cy_element.update_currents(self._currents)
 
 
@@ -507,5 +506,5 @@ class ImpedanceLoad(AbstractLoad[CyAdmittanceLoad | CyDeltaAdmittanceLoad]):
     def impedances(self, impedances: ComplexScalarOrArrayLike1D) -> None:
         self._impedances = self._validate_value(impedances)
         self._invalidate_network_results()
-        if self._cy_element is not None:
+        if self._cy_initialized:
             self._cy_element.update_admittances(1.0 / self._impedances)

@@ -26,6 +26,8 @@ logger = logging.getLogger(__name__)
 class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
     """Parameters that define electrical models of transformers."""
 
+    is_multi_phase: Final = True
+
     # Power Transformers General specification can be found in IEC 60076-1
 
     # fmt: off

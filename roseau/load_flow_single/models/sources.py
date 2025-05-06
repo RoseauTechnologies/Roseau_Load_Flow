@@ -56,7 +56,7 @@ class VoltageSource(AbstractConnectable[CyVoltageSource]):
         """Set the voltages of the source."""
         self._voltage = complex(value)
         self._invalidate_network_results()
-        if self._cy_element is not None:
+        if self._cy_initialized:
             self._cy_element.update_voltages(np.array([self._voltage / SQRT3], dtype=np.complex128))
 
     #

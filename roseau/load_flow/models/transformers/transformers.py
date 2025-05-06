@@ -184,7 +184,7 @@ class Transformer(AbstractBranch[CyTransformer]):
             logger.warning(f"The provided tap {value:.2f} is lower than 0.9. A good value is between 0.9 and 1.1.")
         self._tap = value
         self._invalidate_network_results()
-        if self._cy_element is not None:
+        if self._cy_initialized:
             z2, ym, k = self.parameters._z2, self.parameters._ym, self.parameters._k
             self._cy_element.update_transformer_parameters(z2, ym, k * value)
 
@@ -206,7 +206,7 @@ class Transformer(AbstractBranch[CyTransformer]):
         self._update_network_parameters(old_parameters=old_parameters, new_parameters=value)
         self._invalidate_network_results()
         self._parameters = value
-        if self._cy_element is not None:
+        if self._cy_initialized:
             z2, ym, k = value._z2, value._ym, value._k
             if value.type in ("single-phase", "center-tapped"):
                 k *= value.orientation

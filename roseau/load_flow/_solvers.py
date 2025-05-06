@@ -2,7 +2,7 @@ import logging
 import time
 import warnings
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Generic
+from typing import TYPE_CHECKING, Generic, TypeAlias
 
 import numpy as np
 from typing_extensions import TypeVar
@@ -29,7 +29,9 @@ _SOLVERS_PARAMS: dict[Solver, list[str]] = {
 SOLVERS = list(_SOLVERS_PARAMS)
 
 if TYPE_CHECKING:
-    from roseau.load_flow.network import ElectricalNetwork
+    from roseau.load_flow.utils import AbstractElement, AbstractNetwork
+
+    ElectricalNetwork: TypeAlias = AbstractNetwork[AbstractElement]
 
 
 _CyS_co = TypeVar("_CyS_co", bound=CyAbstractSolver, default=CyAbstractSolver, covariant=True)
@@ -224,10 +226,9 @@ class AbstractNewton(AbstractSolver[_CyN_co], ABC):
             power_load = False
             flexible_load = False
             for inf_element in inf_elements:
-                load = self.network.loads.get(inf_element.id)
-                if load is inf_element and load.type == "power":
+                if inf_element.element_type == "load" and inf_element.type == "power":  # type: ignore
                     power_load = True
-                    if load.is_flexible:
+                    if inf_element.is_flexible:  # type: ignore
                         flexible_load = True
                         break
             if power_load:

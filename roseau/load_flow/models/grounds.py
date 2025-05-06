@@ -134,7 +134,7 @@ class Ground(Element[CyGround]):
 class GroundConnection(Element[CySimplifiedLine | CySwitch]):
     """An ideal or impedant connection to the ground."""
 
-    element_type: Final = "ground_connection"
+    element_type: Final = "ground connection"
     allowed_phases: Final = frozenset({"a", "b", "c", "n"})
 
     def __init__(
@@ -283,8 +283,8 @@ class GroundConnection(Element[CySimplifiedLine | CySwitch]):
         self._impedance = complex(value)
         self._invalidate_network_results()
         if np.isclose(self._impedance, 0):
-            if not isinstance(self._cy_element, CySwitch):
-                if self._cy_element is not None:
+            if not (self._cy_initialized and isinstance(self._cy_element, CySwitch)):
+                if self._cy_initialized:
                     self._cy_element.disconnect()
                 if self._network is not None:
                     self._network._valid = False
@@ -294,8 +294,8 @@ class GroundConnection(Element[CySimplifiedLine | CySwitch]):
                 pass  # do nothing, switch has no parameters
         else:
             z_line = np.array([self._impedance], dtype=np.complex128)
-            if not isinstance(self._cy_element, CySimplifiedLine):
-                if self._cy_element is not None:
+            if not (self._cy_initialized and isinstance(self._cy_element, CySimplifiedLine)):
+                if self._cy_initialized:
                     self._cy_element.disconnect()
                 if self._network is not None:
                     self._network._valid = False

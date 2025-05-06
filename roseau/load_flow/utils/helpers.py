@@ -1,5 +1,7 @@
-from collections.abc import Collection, Sized
+from abc import ABCMeta, abstractmethod, update_abstractmethods
+from collections.abc import Callable, Collection, Sized
 from enum import StrEnum
+from typing import TypeVar
 
 _NORM_TABLE = str.maketrans(".- /", "____")
 
@@ -53,3 +55,27 @@ class CaseInsensitiveStrEnum(StrEnum):
             except KeyError:
                 pass
         return None
+
+
+_ABCT = TypeVar("_ABCT", bound=ABCMeta)
+
+
+@staticmethod
+@abstractmethod
+def _abstract_attr():
+    """Placeholder used to mark abstract attributes in classes decorated with `abstractattrs`."""
+    raise TypeError("abstract attributes are not callable")
+
+
+def abstractattrs(*attrs: str) -> Callable[[_ABCT], _ABCT]:
+    """Class decorator to mark attributes as abstract."""
+
+    def decorator(cls: "_ABCT", /) -> "_ABCT":
+        assert isinstance(cls, ABCMeta), "abstractattrs can only be used on ABC classes"
+        for attr in attrs:
+            if not hasattr(cls, attr):
+                setattr(cls, attr, _abstract_attr)
+        update_abstractmethods(cls)
+        return cls
+
+    return decorator

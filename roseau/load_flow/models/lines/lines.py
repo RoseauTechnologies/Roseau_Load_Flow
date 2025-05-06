@@ -145,7 +145,7 @@ class Line(AbstractBranch[CyShuntLine | CySimplifiedLine]):
         self._z_line_inv = np.linalg.inv(self._z_line)
         self._yg = self._y_shunt.sum(axis=1)
 
-        if self._cy_element is not None:
+        if self._cy_initialized:
             if self._parameters.with_shunt:
                 self._cy_element.update_line_parameters(y_shunt=self._y_shunt.ravel(), z_line=self._z_line.ravel())
             else:
