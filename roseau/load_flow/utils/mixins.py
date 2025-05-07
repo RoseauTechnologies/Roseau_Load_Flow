@@ -445,14 +445,6 @@ class AbstractElement(Identifiable, JsonMixin, Generic[_N_co, _CyE_co]):
             if self._network is not None:
                 self._network._disconnect_element(element=self)
         else:
-            if value.is_multi_phase != self.is_multi_phase:
-                phases = {True: "multi-phase", False: "single-phase"}
-                msg = (
-                    f"Cannot connect {phases[self.is_multi_phase]} {self._element_info} to "
-                    f"{phases[value.is_multi_phase]} network."
-                )
-                logger.error(msg)
-                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT)
             value._connect_element(element=self)
 
         # Assign the new network to self
@@ -506,6 +498,31 @@ class AbstractElement(Identifiable, JsonMixin, Generic[_N_co, _CyE_co]):
             self._cy_element.disconnect()
             # The cpp element has been disconnected and can't be reconnected easily, it's safer to delete it
             del self._cy_element
+
+    def _check_compatible_phase_tech(
+        self, obj: "AbstractElement | AbstractNetwork | type[AbstractNetwork] | Identifiable", /, id: Id | None = None
+    ) -> None:
+        """Check if the element is compatible with an element, network or parameters.
+
+        They are compatible if they have the same phase technology (single-phase or multi-phase).
+
+        Args:
+            obj:
+                The element, network or parameters to check compatibility with.
+        """
+        if self.is_multi_phase != obj.is_multi_phase:
+            phases = {True: "multi-phase", False: "single-phase"}
+            other_info = (
+                obj._element_info
+                if isinstance(obj, AbstractElement)
+                else "network"
+                if isinstance(obj, (AbstractNetwork, type(AbstractNetwork)))
+                else f"parameters {obj.id!r}"
+            )
+            info = self._element_info if id is None else f"{self.element_type} {id!r}"
+            msg = f"Cannot connect {phases[self.is_multi_phase]} {info} to {phases[obj.is_multi_phase]} {other_info}."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT)
 
     def _invalidate_network_results(self) -> None:
         """Invalidate the network making the result"""
@@ -586,6 +603,10 @@ class AbstractNetwork(RLFObject, JsonMixin, Generic[_E_co]):
 
     @abstractmethod
     def __init__(self, *, crs: CRSLike | None = None) -> None:
+        for elements in self._elements_by_type.values():
+            for element in elements.values():
+                element._check_compatible_phase_tech(self)
+
         # Attributes initialized in subclasses
         self._no_results: bool
         self._results_valid: bool

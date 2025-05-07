@@ -49,6 +49,7 @@ class AbstractConnectable(AbstractTerminal[_CyE_co], ABC):
                 neutral. If the bus does not have a neutral, the element's neutral is left floating
                 by default. To override the default behavior, pass an explicit ``True`` or ``False``.
         """
+        self._check_compatible_phase_tech(bus, id=id)
         if phases is None:
             phases = bus.phases
         else:

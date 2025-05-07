@@ -53,6 +53,8 @@ class AbstractBranch(Element[_CyB_co]):
         super().__init__(id)
         self._bus1 = bus1
         self._bus2 = bus2
+        self._check_compatible_phase_tech(bus1)
+        self._check_compatible_phase_tech(bus2)
         self._n = n
         self.geometry = self._check_geometry(geometry)
         self._res_currents: tuple[complex, complex] | None = None

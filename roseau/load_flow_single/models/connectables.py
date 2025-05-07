@@ -29,6 +29,7 @@ class AbstractConnectable(AbstractTerminal[_CyE_co], ABC):
                 The bus to connect the element to.
         """
         super().__init__(id)
+        self._check_compatible_phase_tech(bus)
         self._connect(bus)
         self._bus = bus
         self._res_current: complex | None = None

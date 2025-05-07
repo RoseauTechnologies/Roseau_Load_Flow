@@ -112,6 +112,7 @@ class Transformer(AbstractBranch[CySingleTransformer]):
 
     @parameters.setter
     def parameters(self, value: TransformerParameters) -> None:
+        self._check_compatible_phase_tech(value)
         old_parameters = self._parameters if self._initialized else None
         # Note: here we allow changing the vector group as the underlying C++ model is the same
         if value.type != "three-phase":

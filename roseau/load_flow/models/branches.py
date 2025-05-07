@@ -125,6 +125,8 @@ class AbstractBranch(Element[_CyB_co]):
 
     def _check_phases_common(self, id: Id, bus1: Bus, bus2: Bus, phases: str | None) -> str:
         """Check the common phases between the buses and the branch (for lines and switches)."""
+        self._check_compatible_phase_tech(bus1, id=id)
+        self._check_compatible_phase_tech(bus2, id=id)
         buses_phases = set(bus1.phases) & set(bus2.phases)
         if phases is None:
             phases = "".join(sorted(buses_phases)).replace("ac", "ca")

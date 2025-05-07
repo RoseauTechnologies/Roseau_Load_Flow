@@ -105,6 +105,8 @@ class Transformer(AbstractBranch[CyTransformer]):
             geometry:
                 The geometry of the transformer.
         """
+        self._check_compatible_phase_tech(bus_hv, id=id)
+        self._check_compatible_phase_tech(bus_lv, id=id)
         self._initialized = False
         if parameters.type == "single-phase":
             compute_phases = self._compute_phases_single
@@ -195,6 +197,7 @@ class Transformer(AbstractBranch[CyTransformer]):
 
     @parameters.setter
     def parameters(self, value: TransformerParameters) -> None:
+        self._check_compatible_phase_tech(value)
         old_parameters = self._parameters if self._initialized else None
         if old_parameters is not None and old_parameters.vg != value.vg:
             msg = (

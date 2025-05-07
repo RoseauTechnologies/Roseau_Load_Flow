@@ -73,6 +73,7 @@ class PotentialRef(Element[CyPotentialRef | CyDeltaPotentialRef]):
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.BAD_PHASE)
         else:
+            self._check_compatible_phase_tech(element)
             msg = f"Potential reference {id!r} cannot be connected to a {element.element_type}."
             logger.error(msg)
             raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT)

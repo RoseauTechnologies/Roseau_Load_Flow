@@ -204,8 +204,10 @@ class GroundConnection(Element[CySimplifiedLine | CySwitch]):
         pretty_phase = pretty_phases.replace("phases", "phase")
         if id is None:
             id = f"{element.element_type} {element.id!r} {pretty_phase} {phase!r} to ground {ground.id!r}"
+        super().__init__(id)
         # Check the phase is valid.
         self._check_phases(id, phases=phase)
+        self._check_compatible_phase_tech(element)
 
         # Check the phase is present in the element phases.
         self._element_phases_attr = "phases" + {1: "1", 2: "2", "HV": "1", "LV": "2", None: ""}[side]
@@ -236,7 +238,6 @@ class GroundConnection(Element[CySimplifiedLine | CySwitch]):
                 else:
                     warnings.warn(msg, stacklevel=find_stack_level())
 
-        super().__init__(id)
         self._connect(ground, element)
         self._ground = ground
         self._element = element

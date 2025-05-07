@@ -176,6 +176,7 @@ class Line(AbstractBranch[CyShuntLine | CySimplifiedLine]):
 
     @parameters.setter
     def parameters(self, value: LineParameters) -> None:
+        self._check_compatible_phase_tech(value)
         old_parameters = self._parameters if self._initialized else None
         shape = (self._n1, self._n2)
         if value._z_line.shape != shape:
