@@ -8,13 +8,14 @@ from collections import defaultdict
 from collections.abc import Collection, Iterable, Mapping, Sequence
 from importlib import resources
 from pathlib import Path
-from typing import Any, ClassVar, Generic, NoReturn, Self, TypeVar, overload
+from typing import Any, ClassVar, Generic, NoReturn, Self, overload
 
 import numpy as np
 import pandas as pd
 import shapely
 from shapely.geometry import shape
 from shapely.geometry.base import BaseGeometry
+from typing_extensions import TypeVar
 
 from roseau.load_flow._solvers import AbstractSolver
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
