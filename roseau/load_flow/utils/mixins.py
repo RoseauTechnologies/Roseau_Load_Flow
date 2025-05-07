@@ -411,15 +411,9 @@ class AbstractElement(Identifiable, JsonMixin, Generic[_N_co, _CyE_co]):
         self._results_valid = True
         self._element_info = f"{self.element_type} {id!r}"  # for logging
 
-    def __setattr__(self, name, value):
-        if name == "_cy_element":
-            self._cy_initialized = True
-        return super().__setattr__(name, value)
-
-    def __delattr__(self, name):
-        if name == "_cy_element":
-            self._cy_initialized = False
-        return super().__delattr__(name)
+    def _set_cy_element(self, cy_element: _CyE_co) -> None:  # type: ignore
+        self._cy_element = cy_element
+        self._cy_initialized = True
 
     @property
     def network(self) -> _N_co | None:
@@ -496,6 +490,7 @@ class AbstractElement(Identifiable, JsonMixin, Generic[_N_co, _CyE_co]):
         self._set_network(None)
         if self._cy_initialized:
             self._cy_element.disconnect()
+            self._cy_initialized = False
             # The cpp element has been disconnected and can't be reconnected easily, it's safer to delete it
             del self._cy_element
 

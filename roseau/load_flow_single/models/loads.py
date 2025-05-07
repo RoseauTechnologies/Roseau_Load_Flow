@@ -123,13 +123,15 @@ class PowerLoad(AbstractLoad[CyPowerLoad | CyFlexibleLoad]):
         self.power = power
 
         if self.is_flexible:
-            self._cy_element = CyFlexibleLoad(
-                n=self._n,
-                powers=np.array([self._power / 3.0], dtype=np.complex128),
-                parameters=np.array([flexible_param._cy_fp]),
+            self._set_cy_element(
+                CyFlexibleLoad(
+                    n=self._n,
+                    powers=np.array([self._power / 3.0], dtype=np.complex128),
+                    parameters=np.array([flexible_param._cy_fp]),
+                )
             )
         else:
-            self._cy_element = CyPowerLoad(n=self._n, powers=np.array([self._power / 3.0], dtype=np.complex128))
+            self._set_cy_element(CyPowerLoad(n=self._n, powers=np.array([self._power / 3.0], dtype=np.complex128)))
         self._cy_connect()
 
     @property
@@ -223,7 +225,7 @@ class CurrentLoad(AbstractLoad[CyCurrentLoad]):
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_SHORT_CIRCUIT)
 
         self.current = current
-        self._cy_element = CyCurrentLoad(n=self._n, currents=np.array([self._current], dtype=np.complex128))
+        self._set_cy_element(CyCurrentLoad(n=self._n, currents=np.array([self._current], dtype=np.complex128)))
         self._cy_connect()
 
     @property
@@ -265,8 +267,8 @@ class ImpedanceLoad(AbstractLoad[CyAdmittanceLoad]):
         """
         super().__init__(id=id, bus=bus)
         self.impedance = impedance
-        self._cy_element = CyAdmittanceLoad(
-            n=self._n, admittances=np.array([1.0 / self._impedance], dtype=np.complex128)
+        self._set_cy_element(
+            CyAdmittanceLoad(n=self._n, admittances=np.array([1.0 / self._impedance], dtype=np.complex128))
         )
         self._cy_connect()
 

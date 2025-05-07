@@ -38,7 +38,9 @@ class VoltageSource(AbstractConnectable[CyVoltageSource]):
         """
         super().__init__(id, bus)
         self.voltage = voltage
-        self._cy_element = CyVoltageSource(n=self._n, voltages=np.array([self._voltage / SQRT3], dtype=np.complex128))
+        self._set_cy_element(
+            CyVoltageSource(n=self._n, voltages=np.array([self._voltage / SQRT3], dtype=np.complex128))
+        )
         self._cy_connect()
 
     @property

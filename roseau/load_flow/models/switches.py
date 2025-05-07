@@ -56,7 +56,7 @@ class Switch(AbstractBranch[CySwitch]):
         self._check_elements()
         self._check_loop()
         self._check_same_voltage_level()
-        self._cy_element = CySwitch(self._n1)
+        self._set_cy_element(CySwitch(self._n1))
         self._cy_connect()
         self._connect(bus1, bus2)
 

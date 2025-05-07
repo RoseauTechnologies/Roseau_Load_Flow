@@ -278,14 +278,14 @@ class PowerLoad(AbstractLoad[CyPowerLoad | CyDeltaPowerLoad | CyFlexibleLoad | C
         if self.is_flexible:
             cy_parameters = np.array([p._cy_fp for p in flexible_params])  # type: ignore
             if self.phases == "abc":
-                self._cy_element = CyDeltaFlexibleLoad(n=self._n, powers=self._powers, parameters=cy_parameters)
+                self._set_cy_element(CyDeltaFlexibleLoad(n=self._n, powers=self._powers, parameters=cy_parameters))
             else:
-                self._cy_element = CyFlexibleLoad(n=self._n, powers=self._powers, parameters=cy_parameters)
+                self._set_cy_element(CyFlexibleLoad(n=self._n, powers=self._powers, parameters=cy_parameters))
         else:
             if self.phases == "abc":
-                self._cy_element = CyDeltaPowerLoad(n=self._n, powers=self._powers)
+                self._set_cy_element(CyDeltaPowerLoad(n=self._n, powers=self._powers))
             else:
-                self._cy_element = CyPowerLoad(n=self._n, powers=self._powers)
+                self._set_cy_element(CyPowerLoad(n=self._n, powers=self._powers))
         self._cy_connect()
 
     @property
@@ -418,9 +418,9 @@ class CurrentLoad(AbstractLoad[CyCurrentLoad | CyDeltaCurrentLoad]):
 
         self.currents = currents  # handles size checks and unit conversion
         if self.phases == "abc":
-            self._cy_element = CyDeltaCurrentLoad(n=self._n, currents=self._currents)
+            self._set_cy_element(CyDeltaCurrentLoad(n=self._n, currents=self._currents))
         else:
-            self._cy_element = CyCurrentLoad(n=self._n, currents=self._currents)
+            self._set_cy_element(CyCurrentLoad(n=self._n, currents=self._currents))
         self._cy_connect()
 
     @property
@@ -490,9 +490,9 @@ class ImpedanceLoad(AbstractLoad[CyAdmittanceLoad | CyDeltaAdmittanceLoad]):
         super().__init__(id=id, phases=phases, bus=bus, connect_neutral=connect_neutral)
         self.impedances = impedances
         if self.phases == "abc":
-            self._cy_element = CyDeltaAdmittanceLoad(n=self._n, admittances=1.0 / self._impedances)
+            self._set_cy_element(CyDeltaAdmittanceLoad(n=self._n, admittances=1.0 / self._impedances))
         else:
-            self._cy_element = CyAdmittanceLoad(n=self._n, admittances=1.0 / self._impedances)
+            self._set_cy_element(CyAdmittanceLoad(n=self._n, admittances=1.0 / self._impedances))
         self._cy_connect()
 
     @property

@@ -77,9 +77,9 @@ class VoltageSource(AbstractConnectable[CyVoltageSource | CyDeltaVoltageSource])
         super().__init__(id, bus, phases=phases, connect_neutral=connect_neutral)
         self.voltages = voltages
         if self.phases == "abc":
-            self._cy_element = CyDeltaVoltageSource(n=self._n, voltages=self._voltages)
+            self._set_cy_element(CyDeltaVoltageSource(n=self._n, voltages=self._voltages))
         else:
-            self._cy_element = CyVoltageSource(n=self._n, voltages=self._voltages)
+            self._set_cy_element(CyVoltageSource(n=self._n, voltages=self._voltages))
         self._cy_connect()
 
     @property

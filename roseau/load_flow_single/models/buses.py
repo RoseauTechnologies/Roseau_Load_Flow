@@ -85,8 +85,8 @@ class Bus(AbstractTerminal[CyBus]):
 
         self._initialized = initialized
         self._initialized_by_the_user = initialized  # only used for serialization
-        self._cy_element = CyBus(
-            n=self._n, potentials=np.array([self._initial_voltage / SQRT3, 0], dtype=np.complex128)
+        self._set_cy_element(
+            CyBus(n=self._n, potentials=np.array([self._initial_voltage / SQRT3, 0], dtype=np.complex128))
         )
 
     def __repr__(self) -> str:
