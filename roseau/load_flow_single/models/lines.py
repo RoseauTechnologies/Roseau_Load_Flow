@@ -74,15 +74,13 @@ class Line(AbstractBranch[CyShuntLine | CySimplifiedLine]):
         self._z_line_inv = 1.0 / self._z_line
 
         if parameters.with_shunt:
-            self._set_cy_element(
-                CyShuntLine(
-                    n=1,
-                    y_shunt=np.array([self._y_shunt], dtype=np.complex128),
-                    z_line=np.array([self._z_line], dtype=np.complex128),
-                )
+            self._cy_element = CyShuntLine(
+                n=1,
+                y_shunt=np.array([self._y_shunt], dtype=np.complex128),
+                z_line=np.array([self._z_line], dtype=np.complex128),
             )
         else:
-            self._set_cy_element(CySimplifiedLine(n=1, z_line=np.array([self._z_line], dtype=np.complex128)))
+            self._cy_element = CySimplifiedLine(n=1, z_line=np.array([self._z_line], dtype=np.complex128))
         self._cy_connect()
         self._connect(bus1, bus2)
 

@@ -74,7 +74,7 @@ class Transformer(AbstractBranch[CySingleTransformer]):
         # Equivalent direct-system (positive-sequence) parameters
         z2, ym, k = parameters.z2d, parameters.ymd, parameters.kd
 
-        self._set_cy_element(CySingleTransformer(z2=z2, ym=ym, k=k * self._tap))
+        self._cy_element = CySingleTransformer(z2=z2, ym=ym, k=k * self._tap)
         self._cy_connect()
         self._connect(bus_hv, bus_lv)
 

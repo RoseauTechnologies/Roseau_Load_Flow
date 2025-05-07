@@ -401,7 +401,6 @@ class AbstractElement(Identifiable, JsonMixin, Generic[_N_co, _CyE_co]):
                 A unique ID of the element in the network. Two elements of the same type cannot
                 have the same ID.
         """
-        self._cy_initialized = False
         super().__init__(id)
         self._connected_elements: list[AbstractElement[_N_co, Any]] = []
         self._network: _N_co | None = None
@@ -411,9 +410,9 @@ class AbstractElement(Identifiable, JsonMixin, Generic[_N_co, _CyE_co]):
         self._results_valid = True
         self._element_info = f"{self.element_type} {id!r}"  # for logging
 
-    def _set_cy_element(self, cy_element: _CyE_co) -> None:  # type: ignore
-        self._cy_element = cy_element
-        self._cy_initialized = True
+    @property
+    def _cy_initialized(self) -> bool:
+        return hasattr(self, "_cy_element")
 
     @property
     def network(self) -> _N_co | None:
@@ -490,7 +489,6 @@ class AbstractElement(Identifiable, JsonMixin, Generic[_N_co, _CyE_co]):
         self._set_network(None)
         if self._cy_initialized:
             self._cy_element.disconnect()
-            self._cy_initialized = False
             # The cpp element has been disconnected and can't be reconnected easily, it's safer to delete it
             del self._cy_element
 

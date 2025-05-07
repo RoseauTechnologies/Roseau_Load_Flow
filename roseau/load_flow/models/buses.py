@@ -100,7 +100,7 @@ class Bus(AbstractTerminal[CyBus]):
 
         self._initialized = initialized
         self._initialized_by_the_user = initialized  # only used for serialization
-        self._set_cy_element(CyBus(n=self._n, potentials=self._initial_potentials))
+        self._cy_element = CyBus(n=self._n, potentials=self._initial_potentials)
 
     def __repr__(self) -> str:
         return f"{type(self).__name__}(id={self.id!r}, phases={self.phases!r})"

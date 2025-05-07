@@ -113,9 +113,9 @@ class Line(AbstractBranch[CyShuntLine | CySimplifiedLine]):
         self._yg = self._y_shunt.sum(axis=1)  # y_ig = Y_ia + Y_ib + Y_ic + Y_in for i in {a, b, c, n}
 
         if parameters.with_shunt:
-            self._set_cy_element(CyShuntLine(n=self._n1, y_shunt=self._y_shunt.ravel(), z_line=self._z_line.ravel()))
+            self._cy_element = CyShuntLine(n=self._n1, y_shunt=self._y_shunt.ravel(), z_line=self._z_line.ravel())
         else:
-            self._set_cy_element(CySimplifiedLine(n=self._n1, z_line=self._z_line.ravel()))
+            self._cy_element = CySimplifiedLine(n=self._n1, z_line=self._z_line.ravel())
         self._cy_connect()
         self._connect(bus1, bus2)
         if parameters.with_shunt:

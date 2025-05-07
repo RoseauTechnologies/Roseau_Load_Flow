@@ -134,9 +134,9 @@ class Transformer(AbstractBranch[CyTransformer]):
         self._initialized = True
 
         if parameters.type == "three-phase":
-            self._set_cy_element(parameters._create_cy_transformer(tap=tap))
+            self._cy_element = parameters._create_cy_transformer(tap=tap)
         else:
-            self._set_cy_element(parameters._create_cy_transformer(tap=parameters.orientation * tap))
+            self._cy_element = parameters._create_cy_transformer(tap=parameters.orientation * tap)
         self._cy_connect()
         self._connect(bus_hv, bus_lv)
 

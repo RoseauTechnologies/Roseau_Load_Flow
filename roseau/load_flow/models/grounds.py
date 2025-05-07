@@ -46,7 +46,7 @@ class Ground(Element[CyGround]):
         super().__init__(id)
         self._connections: list[GroundConnection] = []
         self._res_potential: complex | None = None
-        self._set_cy_element(CyGround())
+        self._cy_element = CyGround()
 
     def __repr__(self) -> str:
         return f"{type(self).__name__}(id={self.id!r})"
@@ -289,7 +289,7 @@ class GroundConnection(Element[CySimplifiedLine | CySwitch]):
                     self._cy_element.disconnect()
                 if self._network is not None:
                     self._network._valid = False
-                self._set_cy_element(CySwitch(n=1))
+                self._cy_element = CySwitch(n=1)
                 self._cy_connect()
             else:
                 pass  # do nothing, switch has no parameters
@@ -300,7 +300,7 @@ class GroundConnection(Element[CySimplifiedLine | CySwitch]):
                     self._cy_element.disconnect()
                 if self._network is not None:
                     self._network._valid = False
-                self._set_cy_element(CySimplifiedLine(n=1, z_line=z_line))
+                self._cy_element = CySimplifiedLine(n=1, z_line=z_line)
                 self._cy_connect()
             else:
                 self._cy_element.update_line_parameters(z_line=z_line)
