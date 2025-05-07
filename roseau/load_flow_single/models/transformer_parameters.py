@@ -7,8 +7,10 @@ from roseau.load_flow.constants import CLOCK_PHASE_SHIFT
 class TransformerParameters(MultiTransformerParameters):
     """Parameters that define electrical models of three-phase transformers."""
 
+    is_multi_phase: Final = False  # type: ignore
+
     # fmt: off
-    allowed_vector_groups: Final = {
+    allowed_vector_groups: Final = { # type: ignore
         # Common connections (clock numbers 0, 1, 5, 6, 11)
         "Dd0", "Yy0", "YNy0", "Yyn0", "YNyn0", "Dz0", "Dzn0",
         "Dy1", "Dyn1", "Yz1", "YNz1", "Yzn1", "YNzn1", "Yd1", "YNd1",

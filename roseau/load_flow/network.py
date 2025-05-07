@@ -5,26 +5,22 @@ This module defines the electrical network class.
 import json
 import logging
 import re
-import textwrap
-import warnings
 from collections.abc import Generator, Iterable, Mapping
 from importlib import resources
-from itertools import chain
 from math import nan
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal, Self, TypeVar
+from typing import TYPE_CHECKING, Any, Final, Literal, Self, TypeVar, final
 
 import geopandas as gpd
 import numpy as np
 import pandas as pd
+from typing_extensions import deprecated
 
-from roseau.load_flow._solvers import AbstractSolver
 from roseau.load_flow.constants import ALPHA, ALPHA2, CLOCK_PHASE_SHIFT, SQRT3
 from roseau.load_flow.converters import _calculate_voltages, calculate_voltage_phases
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.io import network_from_dgs, network_from_dict, network_to_dict
 from roseau.load_flow.models import (
-    AbstractBranch,
     AbstractLoad,
     AbstractTerminal,
     Bus,
@@ -34,27 +30,23 @@ from roseau.load_flow.models import (
     GroundConnection,
     ImpedanceLoad,
     Line,
-    LineParameters,
     PotentialRef,
     PowerLoad,
     Switch,
     Transformer,
-    TransformerParameters,
     VoltageSource,
 )
-from roseau.load_flow.typing import ComplexArray, CRSLike, Id, JsonDict, MapOrSeq, Solver, StrPath
+from roseau.load_flow.typing import ComplexArray, CRSLike, Id, JsonDict, MapOrSeq, StrPath
 from roseau.load_flow.utils import (
     DTYPES,
+    AbstractNetwork,
     CatalogueMixin,
-    JsonMixin,
     LoadTypeDtype,
     SourceTypeDtype,
     VoltagePhaseDtype,
     count_repr,
-    find_stack_level,
     optional_deps,
 )
-from roseau.load_flow_engine.cy_engine import CyElectricalNetwork
 
 if TYPE_CHECKING:
     from networkx import Graph
@@ -65,7 +57,9 @@ _E = TypeVar("_E", bound=Element)
 _AT = TypeVar("_AT", bound=AbstractTerminal)
 
 
-class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
+# TODO move CatalogueMixin and catalogue related methods to AbstractNetwork when implemented in rlfs
+@final
+class ElectricalNetwork(AbstractNetwork[Element], CatalogueMixin[JsonDict]):
     """Electrical network class.
 
     This class represents an electrical network, its elements, and their connections. After
@@ -151,7 +145,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             as a :attr:`DataFrame<potential_refs_frame>`.
     """
 
-    _DEFAULT_SOLVER: Solver = "newton_goldstein"
+    is_multi_phase: Final = True
 
     #
     # Methods to build an electrical network
@@ -191,21 +185,18 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             ground_connections, RoseauLoadFlowExceptionCode.BAD_GROUND_CONNECTION_ID
         )
 
-        # Track parameters to check for duplicates
-        self._parameters: dict[str, dict[Id, LineParameters | TransformerParameters]] = {"line": {}, "transformer": {}}
-        for line in self.lines.values():
-            self._add_parameters("line", line.parameters)
-        for transformer in self.transformers.values():
-            self._add_parameters("transformer", transformer.parameters)
-
-        self._elements: list[Element] = []
-        self._has_loop = False
-        self._has_floating_neutral = False
-        self._check_validity(constructed=True)
-        self._create_network()
-        self._valid = True
-        self._solver = AbstractSolver.from_dict(data={"name": self._DEFAULT_SOLVER, "params": {}}, network=self)
-        self.crs: CRSLike | None = crs
+        self._elements_by_type = {  # type: ignore
+            "bus": self.buses,
+            "line": self.lines,
+            "transformer": self.transformers,
+            "switch": self.switches,
+            "load": self.loads,
+            "source": self.sources,
+            "ground": self.grounds,
+            "potential ref": self.potential_refs,
+            "ground connection": self.ground_connections,
+        }
+        super().__init__(crs=crs)
 
     def __repr__(self) -> str:
         return (
@@ -220,94 +211,6 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
             f" {count_repr(self.potential_refs, 'potential ref')},"
             f" {count_repr(self.ground_connections, 'ground connection')}"
             f">"
-        )
-
-    @staticmethod
-    def _elements_as_dict(elements: MapOrSeq[_E], error_code: RoseauLoadFlowExceptionCode) -> dict[Id, _E]:
-        """Convert a sequence or a mapping of elements to a dictionary of elements with their IDs as keys."""
-        typ = error_code.name.removeprefix("BAD_").removesuffix("_ID").replace("_", " ")
-        elements_dict: dict[Id, _E] = {}
-        if isinstance(elements, Mapping):
-            for element_id, element in elements.items():
-                if element.id != element_id:
-                    msg = (
-                        f"{typ.capitalize()} ID {element.id!r} does not match its key in the dictionary {element_id!r}."
-                    )
-                    logger.error(msg)
-                    raise RoseauLoadFlowException(msg, code=error_code)
-                elements_dict[element_id] = element
-        else:
-            for element in elements:
-                if element.id in elements_dict:
-                    msg = f"Duplicate {typ.lower()} ID {element.id!r} in the network."
-                    logger.error(msg)
-                    raise RoseauLoadFlowException(msg, code=error_code)
-                elements_dict[element.id] = element
-        return elements_dict
-
-    @classmethod
-    def from_element(cls, initial_bus: Bus, crs: CRSLike | None = None) -> Self:
-        """Construct the network from only one element (bus) and add the others automatically.
-
-        Args:
-            initial_bus:
-                Any bus of the network. The network is constructed from this bus and all the
-                elements connected to it. This is usually the main source bus of the network.
-
-        crs:
-            An optional Coordinate Reference System to use with geo data frames. Can be anything
-            accepted by geopandas and pyproj, such as an authority string or WKT string.
-
-        Returns:
-            The network constructed from the given bus and all the elements connected to it.
-        """
-        buses: list[Bus] = []
-        lines: list[Line] = []
-        transformers: list[Transformer] = []
-        switches: list[Switch] = []
-        loads: list[AbstractLoad] = []
-        sources: list[VoltageSource] = []
-        grounds: list[Ground] = []
-        potential_refs: list[PotentialRef] = []
-        ground_connections: list[GroundConnection] = []
-
-        elements: list[Element] = [initial_bus]
-        visited_elements: set[Element] = set()
-        while elements:
-            e = elements.pop(-1)
-            visited_elements.add(e)
-            if isinstance(e, Bus):
-                buses.append(e)
-            elif isinstance(e, Line):
-                lines.append(e)
-            elif isinstance(e, Transformer):
-                transformers.append(e)
-            elif isinstance(e, Switch):
-                switches.append(e)
-            elif isinstance(e, AbstractLoad):
-                loads.append(e)
-            elif isinstance(e, VoltageSource):
-                sources.append(e)
-            elif isinstance(e, Ground):
-                grounds.append(e)
-            elif isinstance(e, PotentialRef):
-                potential_refs.append(e)
-            elif isinstance(e, GroundConnection):
-                ground_connections.append(e)
-            for connected_element in e._connected_elements:
-                if connected_element not in visited_elements and connected_element not in elements:
-                    elements.append(connected_element)
-        return cls(
-            buses=buses,
-            lines=lines,
-            transformers=transformers,
-            switches=switches,
-            loads=loads,
-            sources=sources,
-            grounds=grounds,
-            potential_refs=potential_refs,
-            ground_connections=ground_connections,
-            crs=crs,
         )
 
     #
@@ -465,29 +368,6 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
     #
     # Helpers to analyze the network
     #
-    @property
-    def buses_clusters(self) -> list[set[Id]]:
-        """Clusters of buses connected by lines and switches.
-
-        Each cluster is a set of bus IDs.
-
-        This can be useful to isolate parts of the network for localized analysis. For example, to
-        study a LV subnetwork of a MV feeder.
-
-        See Also:
-            :meth:`Bus.get_connected_buses() <roseau.load_flow.models.Bus.get_connected_buses>`: Get
-            the buses in the same galvanically isolated section as a certain bus.
-        """
-        visited: set[Id] = set()
-        result: list[set[Id]] = []
-        for bus in self.buses.values():
-            if bus.id in visited:
-                continue
-            bus_cluster = set(bus.get_connected_buses())
-            visited |= bus_cluster
-            result.append(bus_cluster)
-        return result
-
     def to_graph(self) -> "Graph":
         """Create a networkx graph from this electrical network.
 
@@ -537,105 +417,8 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         return graph
 
     #
-    # Method to solve a load flow
-    #
-    def solve_load_flow(
-        self,
-        max_iterations: int = 20,
-        tolerance: float = 1e-6,
-        warm_start: bool = True,
-        solver: Solver = _DEFAULT_SOLVER,
-        solver_params: JsonDict | None = None,
-    ) -> tuple[int, float]:
-        """Solve the load flow for this network.
-
-        To get the results of the load flow for the whole network, use the `res_` properties on the
-        network (e.g. ``print(net.res_buses``). To get the results for a specific element, use the
-        `res_` properties on the element (e.g. ``print(net.buses["bus1"].res_potentials)``.
-
-        You need to activate the license before calling this method. You may set the environment
-        variable ``ROSEAU_LOAD_FLOW_LICENSE_KEY`` to your license key and it will be picked
-        automatically when calling this method. See the :ref:`license` page for more information.
-
-        Args:
-            max_iterations:
-                The maximum number of allowed iterations.
-
-            tolerance:
-                Tolerance needed for the convergence.
-
-            warm_start:
-                If true (the default), the solver is initialized with the potentials of the last
-                successful load flow result (if any). Otherwise, the potentials are reset to their
-                initial values.
-
-            solver:
-                The name of the solver to use for the load flow. The options are:
-
-                - ``newton``: The classical *Newton-Raphson* method.
-                - ``newton_goldstein``: The *Newton-Raphson* method with the *Goldstein and Price*
-                  linear search algorithm. It generally has better convergence properties than the
-                  classical Newton-Raphson method. This is the default.
-                - ``backward_forward``: the *Backward-Forward Sweep* method. It usually executes
-                  faster than the other approaches but may exhibit weaker convergence properties. It
-                  does not support meshed networks or floating neutrals.
-
-            solver_params:
-                A dictionary of parameters used by the solver. Available parameters depend on the
-                solver chosen. For more information, see the :ref:`solvers` page.
-
-        Returns:
-            The number of iterations performed and the residual error at the last iteration.
-        """
-        if not self._valid:
-            self._check_validity(constructed=False)
-            self._create_network()  # <-- calls _propagate_potentials, no warm start
-            self._solver.update_network(self)
-
-        # Update solver
-        if solver != self._solver.name:
-            solver_params = solver_params if solver_params is not None else {}
-            self._solver = AbstractSolver.from_dict(data={"name": solver, "params": solver_params}, network=self)
-        elif solver_params is not None:
-            self._solver.update_params(solver_params)
-
-        if not warm_start:
-            self._reset_inputs()
-
-        iterations, residual = self._solver.solve_load_flow(max_iterations=max_iterations, tolerance=tolerance)
-
-        self._no_results = False
-
-        # Lazily update the results of the elements
-        for element in self._elements:
-            element._fetch_results = True
-            element._no_results = False
-
-        # The results are now valid
-        self._results_valid = True
-
-        return iterations, residual
-
-    #
     # Properties to access the load flow results as dataframes
     #
-    def _check_valid_results(self) -> None:
-        """Check that the results exist and warn if they are invalid."""
-        if self._no_results:
-            msg = "The load flow results are not available because the load flow has not been run yet."
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN)
-
-        if not self._results_valid:
-            warnings.warn(
-                message=(
-                    "The results of this network may be outdated. Please re-run a load flow to "
-                    "ensure the validity of results."
-                ),
-                category=UserWarning,
-                stacklevel=find_stack_level(),
-            )
-
     @property
     def res_buses(self) -> pd.DataFrame:
         """The load flow results of the network buses.
@@ -1296,206 +1079,28 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
     #
     # Internal methods, please do not use
     #
-    def _connect_element(self, element: Element) -> None:
-        """Connect an element to the network.
+    def _add_ground_connections(self, element: Element) -> None:
+        pass  # no automatic ground connections are CURRENTLY required in multi-phase networks
 
-        When an element is added to the network, extra processing is done to keep the network valid. This method is
-        used in the by the `network` setter of `Element` instances to add the element to the internal dictionary of
-        `self`.
-
-        Args:
-            element:
-                The element to add. Only lines, loads, buses and sources can be added.
-        """
-        # The C++ electrical network and the tape will be recomputed
-        if isinstance(element, Bus):
-            self._add_element_to_dict(element, self.buses)
-        elif isinstance(element, AbstractLoad):
-            self._add_element_to_dict(element, self.loads, disconnectable=True)
-        elif isinstance(element, Line):
-            self._add_element_to_dict(element, self.lines)
-            self._add_parameters(element.element_type, element.parameters)
-        elif isinstance(element, Transformer):
-            self._add_element_to_dict(element, self.transformers)
-            self._add_parameters(element.element_type, element.parameters)
-        elif isinstance(element, Switch):
-            self._add_element_to_dict(element, self.switches)
-        elif isinstance(element, VoltageSource):
-            self._add_element_to_dict(element, self.sources, disconnectable=True)
-        elif isinstance(element, Ground):
-            self._add_element_to_dict(element, self.grounds)
-        elif isinstance(element, PotentialRef):
-            self._add_element_to_dict(element, self.potential_refs)
-        elif isinstance(element, GroundConnection):
-            self._add_element_to_dict(element, self.ground_connections)
-        else:
-            msg = f"Unknown element {element!r} cannot be added to the network."
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT)
-        self._valid = False
-        self._results_valid = False
-
-    def _add_parameters(self, element_type: str, params: TransformerParameters | LineParameters) -> None:
-        params_map = self._parameters[element_type]
-        if params.id not in params_map:
-            params_map[params.id] = params
-        elif params is not params_map[params.id]:
-            msg = (
-                f"{element_type.capitalize()} parameters IDs must be unique in the network. "
-                f"ID {params.id!r} is used by several {element_type} parameters objects."
-            )
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PARAMETERS_ID)
-
-    def _remove_parameters(self, element_type: str, params_id: Id) -> None:
-        del self._parameters[element_type][params_id]
-
-    def _add_element_to_dict(self, element: _E, to: dict[Id, _E], disconnectable: bool = False) -> None:
-        if element.id in to and (old := to[element.id]) is not element:
-            element._disconnect()  # Don't leave it lingering in other elements _connected_elements
-            old_type = type(old).__name__
-            prefix = "An" if old_type[0] in "AEIOU" else "A"
-            msg = f"{prefix} {old_type} of ID {element.id!r} is already connected to the network."
-            if disconnectable:
-                msg += " Disconnect the old element first if you meant to replace it."
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT)
-        to[element.id] = element
-        element._network = self
-
-    def _disconnect_element(self, element: Element) -> None:
-        """Remove an element of the network.
-
-        When an element is removed from the network, extra processing is needed to keep the network valid. This method
-        is used in the by the `network` setter of `Element` instances (when the provided network is `None`) to remove
-        the element to the internal dictionary of `self`.
-
-        Args:
-            element:
-                The element to remove.
-        """
-        # The C++ electrical network and the tape will be recomputed
-        if isinstance(element, AbstractLoad):
-            self.loads.pop(element.id)
-        elif isinstance(element, VoltageSource):
-            self.sources.pop(element.id)
-        elif isinstance(element, Bus | AbstractBranch):
-            msg = f"{element!r} is a {element.element_type} and cannot be disconnected from a network."
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT)
-        else:
-            msg = f"{element!r} is not a valid load or source."
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT)
-        element._network = None
-        self._valid = False
-        self._results_valid = False
-
-    def _create_network(self) -> None:
-        """Create the Cython and C++ electrical network of all the passed elements."""
-        self._valid = True
-        self._has_floating_neutral = False
+    def _get_has_floating_neutral(self) -> bool:
         for load in self.loads.values():
             if load.has_floating_neutral:
-                self._has_floating_neutral = True
+                return True
         for source in self.sources.values():
             if source.has_floating_neutral:
-                self._has_floating_neutral = True
-        self._propagate_potentials()
-        cy_elements = []
-        for element in self._elements:
-            cy_elements.append(element._cy_element)
-        self._cy_electrical_network = CyElectricalNetwork(elements=np.array(cy_elements), nb_elements=len(cy_elements))
+                return True
+        for tr in self.transformers.values():  # noqa: SIM110
+            if tr.has_floating_neutral_hv or tr.has_floating_neutral_lv:
+                return True
+        return False
 
-    def _check_validity(self, constructed: bool) -> None:
-        """Check the validity of the network to avoid having a singular jacobian matrix. It also assigns the `self`
-        to the network field of elements.
-
-        Args:
-            constructed:
-                True if the network is already constructed, and we have added an element, False
-                otherwise.
-        """
-        elements: set[Element] = set()
-        elements.update(self.buses.values())
-        elements.update(self.lines.values())
-        elements.update(self.transformers.values())
-        elements.update(self.switches.values())
-        elements.update(self.loads.values())
-        elements.update(self.sources.values())
-        elements.update(self.grounds.values())
-        elements.update(self.potential_refs.values())
-        elements.update(self.ground_connections.values())
-
-        if not elements:
-            msg = "Cannot create a network without elements."
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.EMPTY_NETWORK)
-
-        # Temporarily print a better error message for missing ground_connections to help with the
-        # transition. TODO remove this special case in version 0.15.0
-        missing_gc = next((gc for g in self.grounds.values() for gc in g.connections), None)
-        if not self.ground_connections and missing_gc is not None:
-            gc_hint = (
-                "ground.connections" if len(self.grounds) == 1 else "[gc for g in grounds for gc in g.connections]"
-            )
-            msg = (
-                f"It looks like you forgot to add the ground connections to the network. Either use "
-                f"`ElectricalNetwork.from_element()` to create the network or add the ground connections "
-                f"manually, e.g: `ElectricalNetwork(..., ground_connections={gc_hint})`."
-            )
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.UNKNOWN_ELEMENT)
-
-        found_source = False
-        for element in elements:
-            # Check connected elements and check network assignment
-            for adj_element in element._connected_elements:
-                if adj_element not in elements:
-                    msg = (
-                        f"{type(adj_element).__name__} element ({adj_element.id!r}) is connected "
-                        f"to {type(element).__name__} element ({element.id!r}) but "
-                    )
-                    if constructed:
-                        msg += "was not passed to the ElectricalNetwork constructor."
-                    else:
-                        msg += "has not been added to the network. It must be added with 'connect'."
-                    logger.error(msg)
-                    raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.UNKNOWN_ELEMENT)
-
-            # Check that there is at least a `VoltageSource` element in the network
-            if isinstance(element, VoltageSource):
-                found_source = True
-
-        # Raises an error if no voltage sources
-        if not found_source:
-            msg = "There is no voltage source provided in the network, you must provide at least one."
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.NO_VOLTAGE_SOURCE)
-
-        # Check the potential references
-        self._check_ref(elements)
-
-        # Assign the network
-        for element in elements:
-            if element.network is None:
-                element._network = self
-            elif element.network != self:
-                element._raise_several_network()
-
-    def _reset_inputs(self) -> None:
-        """Reset the input vector used for the first step of the newton algorithm to its initial value."""
-        if self._solver is not None:
-            self._solver.reset_inputs()
-
-    def _propagate_potentials(self) -> None:
-        """Set the bus potentials that have not been initialized yet."""
+    def _propagate_voltages(self) -> None:
         all_phases = set()
         for bus in self.buses.values():
             if not bus._initialized:
                 all_phases |= set(bus.phases)
 
-        starting_potentials, starting_source = self._get_potentials(all_phases)
+        starting_potentials, starting_source = self._get_starting_potentials(all_phases)
         elements: list[tuple[Element, dict[str, complex], Element | None]] = [
             (starting_source, starting_potentials, None)
         ]
@@ -1526,42 +1131,10 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                     if e not in visited and isinstance(e, PotentialRef):
                         elements.append((e, potentials, element))
                         visited.add(e)
+        self._check_connectivity(visited)
 
-        if len(visited) < (
-            len(self.buses)
-            + len(self.lines)
-            + len(self.transformers)
-            + len(self.switches)
-            + len(self.sources)
-            + len(self.loads)
-            + len(self.grounds)
-            + len(self.potential_refs)
-            + len(self.ground_connections)
-        ):
-            unconnected_elements = [
-                element
-                for element in chain(
-                    self.buses.values(),
-                    self.lines.values(),
-                    self.transformers.values(),
-                    self.switches.values(),
-                    self.sources.values(),
-                    self.loads.values(),
-                    self.grounds.values(),
-                    self.potential_refs.values(),
-                    self.ground_connections.values(),
-                )
-                if element not in visited
-            ]
-            printable_elements = textwrap.wrap(
-                ", ".join(f"{type(e).__name__}({e.id!r})" for e in unconnected_elements), 500
-            )
-            msg = f"The elements {printable_elements} are not electrically connected to a voltage source."
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.POORLY_CONNECTED_ELEMENT)
-
-    def _get_potentials(self, all_phases: set[str]) -> tuple[dict[str, complex], VoltageSource]:
-        """Compute initial potentials from the voltages sources of the network, get also the starting source"""
+    def _get_starting_potentials(self, all_phases: set[str]) -> tuple[dict[str, complex], VoltageSource]:
+        """Compute the initial potentials from the voltage sources of the network and get the starting source."""
         starting_source = None
         potentials = {"n": 0j}
         # if there are multiple voltage sources, start from the higher one (the last one in the sorted below)
@@ -1589,6 +1162,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
                 potentials["b"] = v_b
                 potentials["c"] = v_c
 
+        assert starting_source is not None, "No voltage source found in the network."
         if len(potentials) < len(all_phases):
             # We failed to determine all the potentials (the sources are strange), fallback to something simple
             v = np.average(np.abs(starting_source._voltages))
@@ -1693,13 +1267,17 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
     # DGS interface
     #
     @classmethod
-    def dgs_export_definition_folder_path(cls) -> Path:
-        """Returns the path to the DGS pfd file to use as "Export Definition Folder"."""
-        return Path(resources.files("roseau.load_flow") / "data" / "io" / "DGS-RLF.pfd").expanduser().absolute()
+    def _from_dgs(cls, data: Mapping[str, Any], /, use_name_as_id: bool = False) -> Self:
+        return cls(**network_from_dgs(data, use_name_as_id))
 
     @classmethod
+    @deprecated("`from_dgs` is deprecated, use `from_dgs_file` instead.")
     def from_dgs(cls, path: StrPath, use_name_as_id: bool = False) -> Self:
         """Construct an electrical network from json DGS file (PowerFactory).
+
+        .. deprecated:: 0.13.0
+            This method is deprecated and will be removed in a future version. Use
+            :meth:`from_dgs_file` which also accepts an encoding parameter instead.
 
         Only JSON format of DGS is currently supported. See the
         :ref:`Data Exchange page <data-exchange-power-factory>` for more information.
@@ -1716,7 +1294,7 @@ class ElectricalNetwork(JsonMixin, CatalogueMixin[JsonDict]):
         Returns:
             The constructed network.
         """
-        return cls(**network_from_dgs(path, use_name_as_id))
+        return cls.from_dgs_file(path, use_name_as_id=use_name_as_id)
 
     #
     # Catalogue of networks

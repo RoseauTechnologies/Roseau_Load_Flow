@@ -1889,58 +1889,58 @@ def test_solver_warm_start(small_network: ElectricalNetwork, monkeypatch):
     assert isinstance(load, PowerLoad)
     load_bus = small_network.buses["bus1"]
 
-    original_propagate_potentials = small_network._propagate_potentials
+    original_propagate_voltages = small_network._propagate_voltages
     original_reset_inputs = small_network._reset_inputs
 
-    def _propagate_potentials():
-        nonlocal propagate_potentials_called
-        propagate_potentials_called = True
-        return original_propagate_potentials()
+    def _propagate_voltages():
+        nonlocal propagate_voltages_called
+        propagate_voltages_called = True
+        return original_propagate_voltages()
 
     def _reset_inputs():
         nonlocal reset_inputs_called
         reset_inputs_called = True
         return original_reset_inputs()
 
-    monkeypatch.setattr(small_network, "_propagate_potentials", _propagate_potentials)
+    monkeypatch.setattr(small_network, "_propagate_voltages", _propagate_voltages)
     monkeypatch.setattr(small_network, "_reset_inputs", _reset_inputs)
     monkeypatch.setattr(small_network._solver, "solve_load_flow", lambda *_, **__: (1, 1e-20))
 
     # First case: network is valid, no results yet -> no warm start
-    propagate_potentials_called = False
+    propagate_voltages_called = False
     reset_inputs_called = False
     assert small_network._valid
     assert not small_network._results_valid  # Results are not valid by default
     with warnings.catch_warnings():
         warnings.simplefilter("error")  # Make sure there is no warning
         small_network.solve_load_flow(warm_start=True)
-    assert not propagate_potentials_called  # Is not called because it was already called in the constructor
+    assert not propagate_voltages_called  # Is not called because it was already called in the constructor
     assert not reset_inputs_called
 
     # Second case: the user requested no warm start (even though the network and results are valid)
-    propagate_potentials_called = False
+    propagate_voltages_called = False
     reset_inputs_called = False
     assert small_network._valid
     assert small_network._results_valid
     with warnings.catch_warnings():
         warnings.simplefilter("error")  # Make sure there is no warning
         small_network.solve_load_flow(warm_start=False)
-    assert not propagate_potentials_called
+    assert not propagate_voltages_called
     assert reset_inputs_called
 
     # Third case: network is valid, results are valid -> warm start
-    propagate_potentials_called = False
+    propagate_voltages_called = False
     reset_inputs_called = False
     assert small_network._valid
     assert small_network._results_valid
     with warnings.catch_warnings():
         warnings.simplefilter("error")  # Make sure there is no warning
         small_network.solve_load_flow(warm_start=True)
-    assert not propagate_potentials_called
+    assert not propagate_voltages_called
     assert not reset_inputs_called
 
     # Fourth case (load powers changes): network is valid, results are not valid -> warm start
-    propagate_potentials_called = False
+    propagate_voltages_called = False
     reset_inputs_called = False
     load.powers = load.powers + Q_(1 + 1j, "VA")
     assert small_network._valid
@@ -1948,11 +1948,11 @@ def test_solver_warm_start(small_network: ElectricalNetwork, monkeypatch):
     with warnings.catch_warnings():
         warnings.simplefilter("error")  # Make sure there is no warning
         small_network.solve_load_flow(warm_start=True)
-    assert not propagate_potentials_called
+    assert not propagate_voltages_called
     assert not reset_inputs_called
 
     # Fifth case: network is not valid -> no warm start
-    propagate_potentials_called = False
+    propagate_voltages_called = False
     reset_inputs_called = False
     new_load = PowerLoad("new_load", load_bus, powers=[100, 200, 300], phases=load.phases)
     assert new_load.network is small_network
@@ -1963,11 +1963,11 @@ def test_solver_warm_start(small_network: ElectricalNetwork, monkeypatch):
         # but this will be disruptive for the user especially that warm start is the default
         warnings.simplefilter("error")  # Make sure there is no warning
         small_network.solve_load_flow(warm_start=True)
-    assert propagate_potentials_called
+    assert propagate_voltages_called
     assert not reset_inputs_called
 
 
-def test_propagate_potentials():
+def test_propagate_voltages():
     # Delta source
     source_bus = Bus(id="source_bus", phases="abc")
     _ = VoltageSource(id="source", bus=source_bus, voltages=20e3 * np.array([np.exp(1j * np.pi / 6), -1j, 0.0]))
@@ -2571,7 +2571,7 @@ def test_results_to_json(small_network_with_results, tmp_path):
     assert res_network == res_network_expected
 
 
-def test_propagate_potentials_center_transformers():
+def test_propagate_voltages_center_transformers():
     # Source is located at the HV side of the transformer
     bus1 = Bus(id="bus1", phases="ab")
     PotentialRef(id="pref", element=bus1)

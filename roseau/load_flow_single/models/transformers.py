@@ -101,7 +101,7 @@ class Transformer(AbstractBranch[CySingleTransformer]):
             logger.warning(f"The provided tap {value:.2f} is lower than 0.9. A good value is between 0.9 and 1.1.")
         self._tap = float(value)
         self._invalidate_network_results()
-        if self._cy_element is not None:
+        if self._cy_initialized:
             z2, ym, k = self.parameters.z2d, self.parameters.ymd, self.parameters.kd
             self._cy_element.update_transformer_parameters(z2, ym, k * self._tap)
 
@@ -112,6 +112,7 @@ class Transformer(AbstractBranch[CySingleTransformer]):
 
     @parameters.setter
     def parameters(self, value: TransformerParameters) -> None:
+        self._check_compatible_phase_tech(value)
         old_parameters = self._parameters if self._initialized else None
         # Note: here we allow changing the vector group as the underlying C++ model is the same
         if value.type != "three-phase":
@@ -121,7 +122,7 @@ class Transformer(AbstractBranch[CySingleTransformer]):
         self._update_network_parameters(old_parameters=old_parameters, new_parameters=value)
         self._invalidate_network_results()
         self._parameters = value
-        if self._cy_element is not None:
+        if self._cy_initialized:
             z2, ym, k = value.z2d, value.ymd, value.kd
             self._cy_element.update_transformer_parameters(z2, ym, k * self.tap)
 

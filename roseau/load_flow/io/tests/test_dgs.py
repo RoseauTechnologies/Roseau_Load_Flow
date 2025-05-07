@@ -20,9 +20,9 @@ def test_from_dgs(dgs_network_path):
     with warnings.catch_warnings():
         if dgs_network_path.stem == "Line_Without_Type":
             warnings.filterwarnings("ignore", message=r".*is missing line types", category=UserWarning)
-        en = ElectricalNetwork.from_dgs(dgs_network_path)
+        en = ElectricalNetwork.from_dgs_file(dgs_network_path)
         # Also make sure use_name_as_id=True works
-        en2 = ElectricalNetwork.from_dgs(dgs_network_path, use_name_as_id=True)
+        en2 = ElectricalNetwork.from_dgs_file(dgs_network_path, use_name_as_id=True)
     assert len(en2.buses) == len(en.buses)
     assert len(en2.lines) == len(en.lines)
     assert len(en2.loads) == len(en.loads)
@@ -72,7 +72,7 @@ def test_from_dgs_no_line_type(dgs_special_networks_dir):
         r"exporting otherwise a LineParameter object will be created for each line."
     )
     with pytest.warns(UserWarning, match=expected_msg):
-        en = ElectricalNetwork.from_dgs(path)
+        en = ElectricalNetwork.from_dgs_file(path)
     en._check_validity(constructed=False)
 
     assert len(en.lines) == 1
@@ -117,7 +117,7 @@ def test_dgs_switches(dgs_special_networks_dir, tmp_path):
 
     with warnings.catch_warnings():
         warnings.simplefilter("error")  # Make sure there is no warning
-        en = ElectricalNetwork.from_dgs(path)
+        en = ElectricalNetwork.from_dgs_file(path)
 
     assert len(en.switches) == 1
     switch = next(iter(en.switches.values()))
@@ -135,7 +135,7 @@ def test_dgs_switches(dgs_special_networks_dir, tmp_path):
     bad_json["ElmCoup"]["Values"][0][bad_json["ElmCoup"]["Attributes"].index("nphase")] = 2
     bad_path.write_text(json.dumps(bad_json))
     with pytest.raises(RoseauLoadFlowException) as e:
-        ElectricalNetwork.from_dgs(bad_path)
+        ElectricalNetwork.from_dgs_file(bad_path)
     assert e.value.code == RoseauLoadFlowExceptionCode.DGS_BAD_PHASE_NUMBER
     assert e.value.msg == "nphase=2 for switch '2' is not supported. Only 3-phase switches are currently supported."
 
@@ -145,7 +145,7 @@ def test_dgs_switches(dgs_special_networks_dir, tmp_path):
     bad_json["ElmCoup"]["Values"][0][bad_json["ElmCoup"]["Attributes"].index("on_off")] = 0
     bad_path.write_text(json.dumps(bad_json))
     with pytest.warns(UserWarning, match=r"Switch '2' is open but switches are always closed in roseau-load-flow."):
-        ElectricalNetwork.from_dgs(bad_path)
+        ElectricalNetwork.from_dgs_file(bad_path)
 
 
 def test_generate_typ_lne_errors(monkeypatch):
@@ -217,8 +217,8 @@ def test_generate_typ_lne_errors(monkeypatch):
 def test_use_name_as_id(dgs_networks_dir, tmp_path):
     dgs_path = dgs_networks_dir / "Exemple_exhaustif.json"
     dgs_data = json.loads(dgs_path.read_bytes())
-    en_fid = ElectricalNetwork.from_dgs(dgs_path, use_name_as_id=False)
-    en_name = ElectricalNetwork.from_dgs(dgs_path, use_name_as_id=True)
+    en_fid = ElectricalNetwork.from_dgs_file(dgs_path, use_name_as_id=False)
+    en_name = ElectricalNetwork.from_dgs_file(dgs_path, use_name_as_id=True)
 
     elm_term = dgs_dict_to_df(dgs_data, "ElmTerm", index_col="FID")["loc_name"].to_dict()
     typ_lne = dgs_dict_to_df(dgs_data, "TypLne", index_col="FID")["loc_name"].to_dict()
@@ -271,7 +271,7 @@ def test_use_name_as_id(dgs_networks_dir, tmp_path):
     bad_path = tmp_path / "Bad_Duplicate_Bus.json"
     bad_path.write_text(json.dumps(dgs_data))
     with pytest.raises(RoseauLoadFlowException) as e:
-        ElectricalNetwork.from_dgs(bad_path, use_name_as_id=True)
+        ElectricalNetwork.from_dgs_file(bad_path, use_name_as_id=True)
     assert e.value.code == RoseauLoadFlowExceptionCode.DGS_NON_UNIQUE_NAME
     assert e.value.msg == "ElmTerm has non-unique loc_name values, cannot use them as IDs."
 
@@ -283,6 +283,6 @@ def test_use_name_as_id(dgs_networks_dir, tmp_path):
     bad_path = tmp_path / "Bad_Duplicate_Line.json"
     bad_path.write_text(json.dumps(dgs_data))
     with pytest.raises(RoseauLoadFlowException) as e:
-        ElectricalNetwork.from_dgs(bad_path, use_name_as_id=True)
+        ElectricalNetwork.from_dgs_file(bad_path, use_name_as_id=True)
     assert e.value.code == RoseauLoadFlowExceptionCode.DGS_NON_UNIQUE_NAME
     assert e.value.msg == "ElmLne has non-unique loc_name values, cannot use them as IDs."

@@ -3,7 +3,7 @@ import logging
 import re
 from enum import StrEnum
 from pathlib import Path
-from typing import Literal, NoReturn, Self, TypeVar
+from typing import Final, Literal, NoReturn, Self, TypeVar
 
 import numpy as np
 import pandas as pd
@@ -22,6 +22,8 @@ _StrEnumT = TypeVar("_StrEnumT", bound=StrEnum)
 
 class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
     """Parameters that define electrical models of lines."""
+
+    is_multi_phase: Final = False
 
     @ureg_wraps(None, (None, None, "ohm/km", "S/km", "A", None, None, None, "mm**2"))
     def __init__(

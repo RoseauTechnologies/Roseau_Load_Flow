@@ -178,7 +178,7 @@ class PowerLoad(AbstractLoad[CyPowerLoad | CyFlexibleLoad]):
                     raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_S_VALUE)
         self._power = value
         self._invalidate_network_results()
-        if self._cy_element is not None:
+        if self._cy_initialized:
             self._cy_element.update_powers(np.array([self._power / 3.0], dtype=np.complex128))
 
     #
@@ -240,7 +240,7 @@ class CurrentLoad(AbstractLoad[CyCurrentLoad]):
     def current(self, value: Complex | Q_[Complex]) -> None:
         self._current = self._validate_value(value)
         self._invalidate_network_results()
-        if self._cy_element is not None:
+        if self._cy_initialized:
             self._cy_element.update_currents(np.array([self._current], dtype=np.complex128))
 
 
@@ -292,5 +292,5 @@ class ImpedanceLoad(AbstractLoad[CyAdmittanceLoad]):
     def impedance(self, value: Complex | Q_[Complex]) -> None:
         self._impedance = self._validate_value(value)
         self._invalidate_network_results()
-        if self._cy_element is not None:
+        if self._cy_initialized:
             self._cy_element.update_admittances(np.array([1.0 / self._impedance], dtype=np.complex128))

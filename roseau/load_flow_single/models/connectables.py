@@ -1,5 +1,5 @@
 import logging
-from abc import ABC
+from abc import ABC, abstractmethod
 from typing import ClassVar
 
 from roseau.load_flow import SQRT3, RoseauLoadFlowException, RoseauLoadFlowExceptionCode
@@ -17,6 +17,7 @@ class AbstractConnectable(AbstractTerminal[_CyE_co], ABC):
 
     type: ClassVar[str]
 
+    @abstractmethod
     def __init__(self, id: Id, bus: Bus) -> None:
         """AbstractConnectable constructor.
 
@@ -27,9 +28,8 @@ class AbstractConnectable(AbstractTerminal[_CyE_co], ABC):
             bus:
                 The bus to connect the element to.
         """
-        if type(self) is AbstractConnectable:
-            raise TypeError("Can't instantiate abstract class AbstractConnectable")
         super().__init__(id)
+        self._check_compatible_phase_tech(bus)
         self._connect(bus)
         self._bus = bus
         self._res_current: complex | None = None
@@ -44,7 +44,6 @@ class AbstractConnectable(AbstractTerminal[_CyE_co], ABC):
         return self._bus
 
     def _cy_connect(self) -> None:
-        assert self._cy_element is not None
         connections = [(i, i) for i in range(self._n)]
         self.bus._cy_element.connect(self._cy_element, connections)
 

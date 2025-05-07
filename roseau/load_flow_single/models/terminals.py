@@ -1,5 +1,5 @@
 import logging
-from abc import ABC
+from abc import ABC, abstractmethod
 
 from roseau.load_flow import SQRT3
 from roseau.load_flow.typing import Id, JsonDict
@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 class AbstractTerminal(Element[_CyE_co], ABC):
     """A base class for all the terminals (buses, load, sources, etc.) of the network."""
 
+    @abstractmethod
     def __init__(self, id: Id) -> None:
         """AbstractTerminal constructor.
 
@@ -19,8 +20,6 @@ class AbstractTerminal(Element[_CyE_co], ABC):
             id:
                 A unique ID of the terminal in its dictionary of the network.
         """
-        if type(self) is AbstractTerminal:
-            raise TypeError("Can't instantiate abstract class AbstractTerminal")
         super().__init__(id)
         self._n = 2
         self._res_voltage: complex | None = None

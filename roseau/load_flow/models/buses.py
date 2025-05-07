@@ -122,7 +122,7 @@ class Bus(AbstractTerminal[CyBus]):
         self._invalidate_network_results()
         self._initialized = True
         self._initialized_by_the_user = True
-        if self._cy_element is not None:
+        if self._cy_initialized:
             self._cy_element.initialize_potentials(self._initial_potentials)
 
     @property

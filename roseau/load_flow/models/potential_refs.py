@@ -25,7 +25,7 @@ class PotentialRef(Element[CyPotentialRef | CyDeltaPotentialRef]):
     bus, the sum of the potentials of the specified phases is set to 0V.
     """
 
-    element_type: Final = "potential reference"
+    element_type: Final = "potential ref"
     allowed_phases: Final = frozenset({"a", "b", "c", "n"} | Bus.allowed_phases)
 
     @deprecate_renamed_parameter(old_name="phase", new_name="phases", version="0.10.0", category=DeprecationWarning)
@@ -73,6 +73,7 @@ class PotentialRef(Element[CyPotentialRef | CyDeltaPotentialRef]):
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.BAD_PHASE)
         else:
+            self._check_compatible_phase_tech(element)
             msg = f"Potential reference {id!r} cannot be connected to a {element.element_type}."
             logger.error(msg)
             raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT)

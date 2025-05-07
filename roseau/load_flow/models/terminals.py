@@ -1,5 +1,5 @@
 import logging
-from abc import ABC
+from abc import ABC, abstractmethod
 from functools import cached_property
 from typing import Final, Literal
 
@@ -26,6 +26,7 @@ class AbstractTerminal(Element[_CyE_co], ABC):
     - P-N: ``"an"``, ``"bn"``, ``"cn"``
     """
 
+    @abstractmethod
     def __init__(self, id: Id, *, phases: str) -> None:
         """AbstractTerminal constructor.
 
@@ -38,9 +39,6 @@ class AbstractTerminal(Element[_CyE_co], ABC):
                 phases is important. For a full list of supported phases, see the class attribute
                 :attr:`!allowed_phases`.
         """
-        if type(self) is AbstractTerminal:
-            raise TypeError("Can't instantiate abstract class AbstractTerminal")
-
         super().__init__(id)
         self._check_phases(id, phases=phases)
         self._phases = phases

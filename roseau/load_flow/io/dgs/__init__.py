@@ -1,13 +1,13 @@
 """
 This module is not for public use.
 
-Use the `ElectricalNetwork.from_dgs` method to read a network from a dgs file.
+Use the `ElectricalNetwork.from_dgs_file` method to read a network from a dgs file.
 """
 
-import json
 import logging
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from itertools import chain, islice
+from typing import Any
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.io.common import NetworkElements
@@ -32,12 +32,12 @@ from roseau.load_flow.models import (
     TransformerParameters,
     VoltageSource,
 )
-from roseau.load_flow.typing import Id, StrPath
+from roseau.load_flow.typing import Id
 
 logger = logging.getLogger(__name__)
 
 
-def network_from_dgs(filename: StrPath, use_name_as_id: bool = False) -> NetworkElements:
+def network_from_dgs(data: Mapping[str, Any], /, use_name_as_id: bool = False) -> NetworkElements:
     """Create the electrical elements from a JSON file in DGS format.
 
     Args:
@@ -53,8 +53,6 @@ def network_from_dgs(filename: StrPath, use_name_as_id: bool = False) -> Network
         The elements of the network.
     """
     # Create dataframes from JSON file
-    with open(filename, encoding="ISO-8859-10") as f:
-        data = json.load(f)
     parse_dgs_version(data)
 
     index_col = "loc_name" if use_name_as_id else "FID"
