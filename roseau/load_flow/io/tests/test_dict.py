@@ -185,8 +185,7 @@ def test_all_converters():
     dict_v0 = json.loads(read_json_file("network_json_v0.json"))
     net_dict = en.to_dict(include_results=False)
     expected_dict = copy.deepcopy(dict_v0)
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
+    with warnings.catch_warnings(action="ignore"):
         expected_dict = v0_to_v1_converter(expected_dict)
         expected_dict = v1_to_v2_converter(expected_dict)
         expected_dict = v2_to_v3_converter(expected_dict)
@@ -203,8 +202,7 @@ def test_from_dict_v0():
         ignore_unmatched_warnings(warn_check)
     net_dict = en.to_dict(include_results=False)
     expected_dict = copy.deepcopy(dict_v0)
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
+    with warnings.catch_warnings(action="ignore"):
         expected_dict = v0_to_v1_converter(expected_dict)
         expected_dict = v1_to_v2_converter(expected_dict)
         expected_dict = v2_to_v3_converter(expected_dict)
@@ -221,8 +219,7 @@ def test_from_dict_v1():
         ignore_unmatched_warnings(warn_check)
     net_dict = en.to_dict(include_results=True)
     expected_dict = copy.deepcopy(dict_v1)
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
+    with warnings.catch_warnings(action="ignore"):
         expected_dict = v1_to_v2_converter(expected_dict)
         expected_dict = v2_to_v3_converter(expected_dict)
         expected_dict = v3_to_v4_converter(expected_dict)
@@ -230,8 +227,7 @@ def test_from_dict_v1():
     assert_json_close(net_dict, expected_dict)
 
     # Test with `include_results=False`
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
+    with warnings.catch_warnings(action="ignore"):
         net = ElectricalNetwork.from_dict(data=dict_v1, include_results=False)
         net_dict = net.to_dict(include_results=False)
         expected_dict_no_results = copy.deepcopy(dict_v1)
@@ -260,8 +256,7 @@ def test_from_dict_v2():
         en = ElectricalNetwork.from_dict(data=dict_v2, include_results=True)
     net_dict = en.to_dict(include_results=True)
     expected_dict = copy.deepcopy(dict_v2)
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
+    with warnings.catch_warnings(action="ignore"):
         expected_dict = v2_to_v3_converter(expected_dict)
         expected_dict = v3_to_v4_converter(expected_dict)
         expected_dict = v4_to_v5_converter(expected_dict)
@@ -281,8 +276,7 @@ def test_from_dict_v3():
         en = ElectricalNetwork.from_dict(data=dict_v3, include_results=True)
     net_dict = en.to_dict(include_results=True)
     expected_dict = copy.deepcopy(dict_v3)
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
+    with warnings.catch_warnings(action="ignore"):
         expected_dict = v3_to_v4_converter(expected_dict)
         expected_dict = v4_to_v5_converter(expected_dict)
 
