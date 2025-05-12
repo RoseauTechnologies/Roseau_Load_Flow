@@ -943,8 +943,7 @@ def test_solver_warm_start(small_network: ElectricalNetwork, monkeypatch):
     reset_inputs_called = False
     assert small_network._valid
     assert not small_network._results_valid  # Results are not valid by default
-    with warnings.catch_warnings():
-        warnings.simplefilter("error")  # Make sure there is no warning
+    with warnings.catch_warnings(action="error"):  # Make sure there is no warning
         small_network.solve_load_flow(warm_start=True)
     assert not propagate_voltages_called  # Is not called because it was already called in the constructor
     assert not reset_inputs_called
@@ -954,8 +953,7 @@ def test_solver_warm_start(small_network: ElectricalNetwork, monkeypatch):
     reset_inputs_called = False
     assert small_network._valid
     assert small_network._results_valid
-    with warnings.catch_warnings():
-        warnings.simplefilter("error")  # Make sure there is no warning
+    with warnings.catch_warnings(action="error"):  # Make sure there is no warning
         small_network.solve_load_flow(warm_start=False)
     assert not propagate_voltages_called
     assert reset_inputs_called
@@ -965,8 +963,7 @@ def test_solver_warm_start(small_network: ElectricalNetwork, monkeypatch):
     reset_inputs_called = False
     assert small_network._valid
     assert small_network._results_valid
-    with warnings.catch_warnings():
-        warnings.simplefilter("error")  # Make sure there is no warning
+    with warnings.catch_warnings(action="error"):  # Make sure there is no warning
         small_network.solve_load_flow(warm_start=True)
     assert not propagate_voltages_called
     assert not reset_inputs_called
@@ -977,8 +974,7 @@ def test_solver_warm_start(small_network: ElectricalNetwork, monkeypatch):
     load.power = load.power + Q_(1 + 1j, "VA")
     assert small_network._valid
     assert not small_network._results_valid
-    with warnings.catch_warnings():
-        warnings.simplefilter("error")  # Make sure there is no warning
+    with warnings.catch_warnings(action="error"):  # Make sure there is no warning
         small_network.solve_load_flow(warm_start=True)
     assert not propagate_voltages_called
     assert not reset_inputs_called
@@ -990,10 +986,9 @@ def test_solver_warm_start(small_network: ElectricalNetwork, monkeypatch):
     assert new_load.network is small_network
     assert not small_network._valid
     assert not small_network._results_valid
-    with warnings.catch_warnings():
+    with warnings.catch_warnings(action="error"):  # Make sure there is no warning
         # We could warn here that the user requested warm start but the network is not valid
         # but this will be disruptive for the user especially that warm start is the default
-        warnings.simplefilter("error")  # Make sure there is no warning
         small_network.solve_load_flow(warm_start=True)
     assert propagate_voltages_called
     assert not reset_inputs_called

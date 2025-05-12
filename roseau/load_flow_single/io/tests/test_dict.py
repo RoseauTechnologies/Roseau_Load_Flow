@@ -145,8 +145,7 @@ def test_all_converters():
     net_dict = en.to_dict(include_results=False)
     expected_dict = copy.deepcopy(dict_v3)
     remove_results(expected_dict)
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
+    with warnings.catch_warnings(action="ignore"):
         expected_dict = v3_to_v4_converter(expected_dict)
         expected_dict = v4_to_v5_converter(expected_dict)
     assert_json_close(net_dict, expected_dict)
@@ -159,8 +158,7 @@ def test_from_dict_v3():
         en = rlfs.ElectricalNetwork.from_dict(data=dict_v3, include_results=True)
     net_dict = en.to_dict(include_results=True)
     expected_dict = copy.deepcopy(dict_v3)
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
+    with warnings.catch_warnings(action="ignore"):
         expected_dict = v3_to_v4_converter(expected_dict)
         expected_dict = v4_to_v5_converter(expected_dict)
     assert_json_close(net_dict, expected_dict)

@@ -301,10 +301,11 @@ def plot_interactive_map(
     try:
         import folium
     except ImportError as e:
-        raise ImportError(
+        e.add_note(
             "The `folium` library is required when using `roseau.load_flow.plotting.plot_interactive_map`."
             "Install it with `pip install folium`."
-        ) from e
+        )
+        raise
 
     map_kws = dict(map_kws) if map_kws is not None else {}
 

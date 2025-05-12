@@ -115,8 +115,7 @@ def test_dgs_switches(dgs_special_networks_dir, tmp_path):
     path = dgs_special_networks_dir / "Switch.json"
     good_json = json.loads(path.read_bytes())
 
-    with warnings.catch_warnings():
-        warnings.simplefilter("error")  # Make sure there is no warning
+    with warnings.catch_warnings(action="error"):  # Make sure there is no warning
         en = ElectricalNetwork.from_dgs_file(path)
 
     assert len(en.switches) == 1
