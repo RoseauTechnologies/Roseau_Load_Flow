@@ -3,11 +3,13 @@ myst:
   html_meta:
     "description lang=en": |
       Transformers in Roseau Load Flow - Three-phase unbalanced load flow solver in a Python API by Roseau Technologies.
+    "keywords lang=en": simulation, distribution grid, power transformer, transformers, model
+    # spellchecker:off
     "description lang=fr": |
       Les transformateurs dans Roseau Load Flow - Solveur d'écoulement de charge triphasé et déséquilibré dans une
       API Python par Roseau Technologies.
     "keywords lang=fr": simulation, réseau, électrique, bus, roseau load flow, transformateurs, modèle
-    "keywords lang=en": simulation, distribution grid, power transformer, transformers, model
+# spellchecker:on
 ---
 
 # Transformers

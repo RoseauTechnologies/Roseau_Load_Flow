@@ -4,12 +4,14 @@ myst:
     "description lang=en": |
       A detailed example of a short-circuit calculation with Roseau Load Flow. Easily simulate a phase-to-phase,
       multiphase or phase-to-ground fault.
+    "keywords lang=en": |
+      simulation, distribution grid, short-circuit, phase-to-phase, multiphase, phase-to-ground, calculation
+    # spellchecker:off
     "description lang=fr": |
       Un exemple détaillé de calcul de court-circuit avec Roseau Load Flow. Simulez aisément un défaut entre phases,
       multiphasé ou entre phases et terre.
     "keywords lang=fr": simulation, réseau, électrique, court-circuit, entre phases, multiphase, phase-terre
-    "keywords lang=en": |
-      simulation, distribution grid, short-circuit, phase-to-phase, multiphase, phase-to-ground, calculation
+    # spellchecker:on
 ---
 
 # Short-circuit calculations

@@ -4,11 +4,13 @@ myst:
     "description lang=en": |
       Depending on your status, Roseau Load Flow is available with several types of free or paid licenses. A trial
        key is also available.
+    "keywords lang=en": simulation, distribution grid, solver, license, open-source, free, test
+    # spellchecker:off
     "description lang=fr": |
       En fonction de votre statut, Roseau Load Flow est disponible avec plusieurs types de licences gratuites ou
        payantes. Une clef d'essai est également disponible.
     "keywords lang=fr": solveur, simulation, réseau, électrique, licence, open-source, gratuit, essai
-    "keywords lang=en": simulation, distribution grid, solver, license, open-source, free, test
+    # spellchecker:on
 og:image: https://www.roseautechnologies.com/wp-content/uploads/2024/04/DSCF0265-scaled.webp
 og:image:alt: An engineer uses Roseau Load Flow to perform compute the electric state of a MV/LV transformer
 og:title: Free public license key

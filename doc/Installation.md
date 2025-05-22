@@ -4,13 +4,15 @@ myst:
     "description lang=en": |
       Installation of Roseau Load Flow in a Python environment - Simulation of smart and unbalanced electrical
       distribution networks.
+    "keywords lang=en": Roseau, Load flow, python, power flow, distribution grid, three-phase, multiphase, unbalanced
+    # spellchecker:off
     "description lang=fr": |
       Installation de Roseau Load Flow dans un environnement Python - Simulation des réseaux de distribution
       électriques intelligents et déséquilibrés.
     "keywords lang=fr": |
       Roseau, load flow, python, écoulement de charge, écoulement de puissance, réseau de distribution, triphasé,
       déséquilibré
-    "keywords lang=en": Roseau, Load flow, python, power flow, distribution grid, three-phase, multiphase, unbalanced
+    # spellchecker:on
 ---
 
 # Installation

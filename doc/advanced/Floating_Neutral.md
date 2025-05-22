@@ -4,11 +4,13 @@ myst:
     "description lang=en": |
       Learn more about the concept of floating neutrals with Roseau Load Flow, a powerful load flow
       solver for the electrical calculation of smart grids.
+    "keywords lang=en": simulation, floating neutral, unbalanced power flow
+    # spellchecker:off
     "description lang=fr": |
       En savoir plus sur le concept de neutres flottants avec Roseau Load Flow, solveur d'écoulements
       de charge pour le calcul électrique des réseaux intelligents.
     "keywords lang=fr": simulation, neutre flottant, écoulement de charge déséquilibré
-    "keywords lang=en": simulation, floating neutral, unbalanced power flow
+    # spellchecker:on
 ---
 
 # Floating Neutral

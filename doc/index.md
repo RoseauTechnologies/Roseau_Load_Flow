@@ -3,13 +3,15 @@ myst:
   html_meta:
     "description lang=en": |
       Documentation of the Roseau Load Flow solver. Multi-phase, unbalanced power flow analysis with a performance optimized solver. Free academic licence and demo version available !
+    "keywords lang=en": power flow, Roseau, Load flow, python, distribution grid, three-phase, multiphase, unbalanced
+    # spellchecker:off
     "description lang=fr": |
       Documentation du solveur d'écoulements de charge Roseau Load Flow. Simulation des réseaux électriques
       multiphasés et déséquilibrés par Roseau Technologies. Licences académiques offertes.
     "keywords lang=fr": |
       Roseau, load flow, python, écoulement de charge, écoulement de puissance, réseau de distribution, triphasé, power flow
       déséquilibré
-    "keywords lang=en": power flow, Roseau, Load flow, python, distribution grid, three-phase, multiphase, unbalanced
+    # spellchecker:on
 ---
 
 # Welcome to the Roseau Load Flow documentation

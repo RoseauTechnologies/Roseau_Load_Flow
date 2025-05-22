@@ -4,11 +4,13 @@ myst:
     "description lang=en": |
       Single-phase transformers in Roseau Load Flow - Three-phase unbalanced load flow solver in a Python API by
       Roseau Technologies.
+    "keywords lang=en": simulation, distribution grid, switch, transformers, single-phase, model
+    # spellchecker:off
     "description lang=fr": |
       Les transformateurs monophasés dans Roseau Load Flow - Solveur d'écoulement de charge triphasé et déséquilibré
       dans une API Python par Roseau Technologies.
     "keywords lang=fr": simulation, réseau, électrique, bus, roseau load flow, transformateurs, monophasé, modèle
-    "keywords lang=en": simulation, distribution grid, switch, transformers, single-phase, model
+# spellchecker:on
 ---
 
 # Single-phase transformer

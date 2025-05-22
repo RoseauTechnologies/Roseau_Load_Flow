@@ -4,11 +4,13 @@ myst:
     "description lang=en": |
       Explanation of the concept of the control domain of a flexible load as a function of the different types of P
       and Q controls applied.
+    "keywords lang=en": simulation, distribution grid, flexible load, projection, P, Q
+    # spellchecker:off
     "description lang=fr": |
       Explications sur la notion de domaine de contrôle d'une charge flexible en fonction des différents types de
       contrôles P et Q appliqués.
     "keywords lang=fr": simulation, réseau, électrique, charge flexible, domaine de faisabilité, P, Q
-    "keywords lang=en": simulation, distribution grid, flexible load, projection, P, Q
+# spellchecker:on
 ---
 
 (models-flexible_load-feasible_domains)=

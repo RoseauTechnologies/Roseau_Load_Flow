@@ -4,14 +4,16 @@ myst:
     "description lang=en": |
       A first simple example to introduce you to power flow calculation with Roseau Load Flow: simulate a small
       network with a voltage source, a transformer, a line and a load.
+    "keywords lang=en": |
+      Roseau, Load flow, python, power flow, distribution grid, voltage source, power load, line, example
+    # spellchecker:off
     "description lang=fr": |
       Un premier exemple simple pour s'initier au calcul d'écoulement de puissance avec Roseau Load Flow. Simulez un
       petit réseau comportant une source de tension, un transformateur, une ligne et une charge.
     "keywords lang=fr": |
       load flow, python, écoulement de charge, écoulement de puissance, réseau de distribution, source, charge, ligne,
       exemple
-    "keywords lang=en": |
-      Roseau, Load flow, python, power flow, distribution grid, voltage source, power load, line, example
+    # spellchecker:on
 ---
 
 # Getting started with Roseau Load Flow

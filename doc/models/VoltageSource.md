@@ -4,11 +4,13 @@ myst:
     "description lang=en": |
       Define an ideal voltage source and its connection type in Roseau Load Flow - Three-phase unbalanced load flow
       solver in a Python API by Roseau Technologies.
+    "keywords lang=en": simulation, distribution grid, voltage source, ideal, connection, model
+    # spellchecker:off
     "description lang=fr": |
       Définir une source de tension idéale et son type de connexion dans Roseau Load Flow - Solveur d'écoulement de
       charge triphasé et déséquilibré dans une API Python par Roseau Technologies.
     "keywords lang=fr": simulation, réseau, électrique, source, tension, idéale, connexion, modèle
-    "keywords lang=en": simulation, distribution grid, voltage source, ideal, connection, model
+    # spellchecker:on
 ---
 
 # Voltage source
@@ -109,7 +111,7 @@ The following results are available for all sources:
 | `res_powers`     | $V\!A$       | complex array | The line powers flowing into each phase of the source                                            |
 | `res_voltages`   | $V$          | complex array | The phase-to-neutral voltages if the source has a neutral, the phase-to-phase voltages otherwise |
 
-Addionally, the following results are available for sources with a neutral:
+Additionally, the following results are available for sources with a neutral:
 
 | Result Accessor   | Default Unit | Type          | Description                                 |
 | ----------------- | ------------ | ------------- | ------------------------------------------- |

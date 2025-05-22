@@ -3,11 +3,13 @@ myst:
   html_meta:
     "description lang=en": |
       Load models in Roseau Load Flow - Three-phase unbalanced load flow solver in a Python API by Roseau Technologies.
+    "keywords lang=en": simulation, distribution grid, switch, load, model
+    # spellchecker:off
     "description lang=fr": |
       Les modèles de charge dans Roseau Load Flow - Solveur d'écoulement de charge triphasé et déséquilibré dans une
       API Python par Roseau Technologies.
     "keywords lang=fr": simulation, réseau, électrique, bus, roseau load flow, charges, modèle
-    "keywords lang=en": simulation, distribution grid, switch, load, model
+# spellchecker:on
 ---
 
 # Loads
@@ -86,7 +88,7 @@ The following results are available for all loads:
 | `res_inner_currents` | $A$          | complex array | The currents flowing in each component (dipole) of the load.                                   |
 | `res_inner_powers`   | $V\!A$       | complex array | The powers dissipated by each component (dipole) of the load.                                  |
 
-Addionally, the following results are available for loads with a neutral:
+Additionally, the following results are available for loads with a neutral:
 
 | Result Accessor   | Default Unit | Type          | Description                               |
 | ----------------- | ------------ | ------------- | ----------------------------------------- |

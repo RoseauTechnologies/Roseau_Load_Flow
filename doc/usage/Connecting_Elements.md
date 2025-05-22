@@ -4,12 +4,14 @@ myst:
     "description lang=en": |
       Quickly create a new electrical model by assembling sources, constant or flexible loads and lines, or load one
       of the many existing models.
+    "keywords lang=en": Roseau, Load flow, python, power flow, distribution grid, three-phase, model
+    # spellchecker:off
     "description lang=fr": |
       Créez rapidement un nouveau modèle électrique en assemblant des sources, des charges et des lignes, ou
       chargez un des nombreux modèles existants.
     "keywords lang=fr": |
       Roseau, load flow, python, écoulement de charge, écoulement de puissance, réseau de distribution, modèle
-    "keywords lang=en": Roseau, Load flow, python, power flow, distribution grid, three-phase, model
+    # spellchecker:on
 ---
 
 (usage-modifying-network)=

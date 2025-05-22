@@ -125,3 +125,29 @@ addopts = "--color=yes -n=0 --import-mode=importlib"
 testpaths = ["roseau/load_flow/", "roseau/load_flow_single/"]
 filterwarnings = []
 markers = ["no_patch_engine"]
+
+# Typos
+[tool.typos.files]
+extend-exclude = ["*.svg", "*.html", "*.tex", "*.xml", "roseau/load_flow/tests/data/"]
+
+[tool.typos.default]
+extend-ignore-re = [
+    # spellchecker:disable-line
+    "(?Rm)^.*(#|//|%)\\s*spellchecker:disable-line$",
+    # spellchecker:<on|off>
+    "(?s)(#|//)\\s*spellchecker:off.*?\\n\\s*(#|//)\\s*spellchecker:on",
+]
+extend-ignore-identifiers-re = ["YNd[0-9]*"]
+
+[tool.typos.default.extend-identifiers]
+# The phase "ba" sometimes appears
+ba = "ba"
+# np.arange
+arange = "arange"
+
+[tool.typos.default.extend-words]
+# typ and lod are heavily used in the DGS format
+typ = "typ"
+lod = "lod"
+# Phase to Neutral
+pn = "pn"

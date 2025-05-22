@@ -47,7 +47,7 @@ def test_from_dgs(dgs_network_path):
 
     # Check the created potential refs
     match dgs_network_path.stem:
-        case "MV_LV_Transformer_LV_grid" | "MV_LV_Transformer_unbalanced" | "MV_LV_Transformer" | "Exemple_exhaustif":
+        case "MV_LV_Transformer_LV_grid" | "MV_LV_Transformer_unbalanced" | "MV_LV_Transformer" | "Full_Example":
             # MV/LV networks => ground on the LV side and no ground on the MV side
             assert pref_ids == {"pref (ground)", f"pref (source '{source_id}')"}, pref_ids
         case "MV_Network" | "Switch":
@@ -214,7 +214,7 @@ def test_generate_typ_lne_errors(monkeypatch):
 
 
 def test_use_name_as_id(dgs_networks_dir, tmp_path):
-    dgs_path = dgs_networks_dir / "Exemple_exhaustif.json"
+    dgs_path = dgs_networks_dir / "Full_Example.json"
     dgs_data = json.loads(dgs_path.read_bytes())
     en_fid = ElectricalNetwork.from_dgs_file(dgs_path, use_name_as_id=False)
     en_name = ElectricalNetwork.from_dgs_file(dgs_path, use_name_as_id=True)
@@ -228,7 +228,7 @@ def test_use_name_as_id(dgs_networks_dir, tmp_path):
     tp_fid = {tr.parameters.id: tr.parameters for tr in en_fid.transformers.values()}
     tp_name = {tr.parameters.id: tr.parameters for tr in en_name.transformers.values()}
 
-    # Basic checks fot buses and types
+    # Basic checks for buses and types
     for bus_fid in en_fid.buses:
         assert elm_term[bus_fid] in en_name.buses
     for typ_lne_fid in lp_fid:

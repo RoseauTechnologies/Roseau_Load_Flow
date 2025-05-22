@@ -4,11 +4,13 @@ myst:
     "description lang=en": |
       Release history of Roseau Load Flow - Three-phase unbalanced load flow solver in a Python API by Roseau
       Technologies.
+    "keywords lang=en": changelog, solver, simulation, distribution grid, bus, model
+    # spellchecker:off
     "description lang=fr": |
       Historique des versions de Roseau Load Flow - Solveur d'écoulement de charge triphasé et déséquilibré dans une
       API Python par Roseau Technologies.
     "keywords lang=fr": version, solveur, simulation, réseau, électrique, bus
-    "keywords lang=en": changelog, solver, simulation, distribution grid, bus, model
+    # spellchecker:on
 og:image: https://www.roseautechnologies.com/wp-content/uploads/2024/04/DSCF0091-scaled.webp
 og:image:alt: An engineer uses Roseau Load Flow to perform unbalanced electric calculation
 og:title: Roseau Load Flow - Unbalanced and multiphase load flow solver
@@ -32,7 +34,7 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 - {gh-pr}`366` Add nominal frequency (`fn`), cooling class (`cooling`) and insulation type
   (`insulation`) to the `TransformerParameters` class.
   The transformers catalogue has been updated accordingly. The manufacturer names in the catalogue
-  have been expanded to better accomodate new transformers (`SE` -> `Schneider Electric`, `FT` ->
+  have been expanded to better accommodate new transformers (`SE` -> `Schneider Electric`, `FT` ->
   `France Transfo`, ...). More HV/MV transformers have been added to the catalogue.
   The cooling and insulation are described in the new enumeration types `TransformerCooling` and
   `TransformerInsulation` respectively.
@@ -227,7 +229,7 @@ This release adds official support for Python 3.13 and adds a new experimental b
 
   - Add 15kV transformers to the catalogue (SE and FT)
   - Add single-phase transformers to the catalogue (Schneider Imprego)
-  - Add step-up transformers to the catalogue (Cahors "Serie Jaune")
+  - Add step-up transformers to the catalogue (Cahors "Serie Jaune") % spellchecker:disable-line
   - Use the correct LV side no-load voltage as defined in the datasheets (some 400V became 410V)
   - Revert {gh-pr}`282` to keep the IEC 600076 names `uhv` and `ulv` for the transformer voltages.
   - Replace the `type` parameter of `TransformerParameters` constructors by `vg` for vector group.

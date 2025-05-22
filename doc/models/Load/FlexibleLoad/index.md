@@ -4,11 +4,13 @@ myst:
     "description lang=en": |
       Flexible load models in Roseau Load Flow - Three-phase unbalanced load flow solver in a Python API by Roseau
       Technologies.
+    "keywords lang=en": simulation, distribution grid, flexible load, load, model
+    # spellchecker:off
     "description lang=fr": |
       Les modèles de charge flexibles dans Roseau Load Flow - Solveur d'écoulement de charge triphasé et déséquilibré
       dans une API Python par Roseau Technologies.
     "keywords lang=fr": simulation, réseau, électrique, charge flexible, bus, roseau load flow, modèle
-    "keywords lang=en": simulation, distribution grid, flexible load, load, model
+# spellchecker:on
 ---
 
 # Flexible loads

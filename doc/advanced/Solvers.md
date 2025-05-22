@@ -4,11 +4,13 @@ myst:
     "description lang=en": |
       With Roseau Load Flow you can choose between two methods: Newton-Raphson and Goldstein and Price - Three-phase
       unbalanced load flow solver in a Python API by Roseau Technologies.
+    "keywords lang=en": simulation, distribution grid, Goldstein and Price, Newton-Raphson, solver
+    # spellchecker:off
     "description lang=fr": |
       Avec Roseau Load Flow choisissez entre deux méthodes: Newton-Raphson et Goldstein and Price. Solveur
       d'écoulement de charge triphasé et déséquilibré dans une API Python par Roseau Technologies.
     "keywords lang=fr": simulation, réseau, électrique, Goldstein and Price, Newton-Raphson, solveur
-    "keywords lang=en": simulation, distribution grid, Goldstein and Price, Newton-Raphson, solver
+    # spellchecker:on
 ---
 
 (solvers)=

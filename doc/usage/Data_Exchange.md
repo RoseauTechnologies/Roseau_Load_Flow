@@ -4,11 +4,13 @@ myst:
     "description lang=en": |
       Roseau Load Flow data exchange formats: Save/Load a network (JSON); convert from Power Factory (DGS),
       OpenDSS, etc.
+    "keywords lang=en": simulation, distribution grid, Power Factory, OpenDSS, JSON
+    # spellchecker:off
     "description lang=fr": |
       Conversion vers Roseau Load Flow: Enregistrer/Charger un réseau au format JSON, convertir depuis Power
       Factory (DGS) et OpenDSS.
     "keywords lang=fr": simulation, réseau, électrique, Power Factory, OpenDSS, JSON
-    "keywords lang=en": simulation, distribution grid, Power Factory, OpenDSS, JSON
+    # spellchecker:on
 ---
 
 (data-exchange)=
@@ -23,7 +25,7 @@ tools.
 ## Power Factory
 
 Importing PowerFactory networks in `roseau-load-flow` can be done using the _DIgSILENT Interface
-for Geographical Informations Systems_ (DGS) JSON format.
+for Geographical Information Systems_ (DGS) JSON format.
 
 The following components are currently supported:
 

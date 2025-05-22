@@ -3,11 +3,13 @@ myst:
   html_meta:
     "description lang=en": |
       Line models in Roseau Load Flow - Three-phase unbalanced load flow solver in a Python API by Roseau Technologies.
+    "keywords lang=en": simulation, distribution grid, power line, electric line, lines, model
+    # spellchecker:off
     "description lang=fr": |
       Les modèles de ligne dans Roseau Load Flow - Solveur d'écoulement de charge triphasé et déséquilibré dans une
       API Python par Roseau Technologies.
     "keywords lang=fr": simulation, réseau, électrique, bus, roseau load flow, lignes, modèle
-    "keywords lang=en": simulation, distribution grid, power line, electric line, lines, model
+# spellchecker:on
 ---
 
 # Lines

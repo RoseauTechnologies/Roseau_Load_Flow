@@ -4,11 +4,13 @@ myst:
     "description lang=en": |
       Learn about advanced concepts around the potential reference point of electric network for a
       load flow calculation with Roseau Load Flow.
+    "keywords lang=en": simulation, power grid, potentials, reference, voltage origin
+    # spellchecker:off
     "description lang=fr": |
       Découvrez les concepts avancés autour du point de référence potentiel du réseau électrique
       pour un calcul d'écoulement de charge avec Roseau Load Flow.
     "keywords lang=fr": simulation, réseau, électrique,  potentiel, référence, origine de tension
-    "keywords lang=en": simulation, power grid, potentials, reference, voltage origin
+    # spellchecker:on
 ---
 
 (advanced-pref)=
@@ -40,9 +42,9 @@ gives more flexibility in terms of the choice of the reference point for the ele
 the network. There are three ways to set the reference point for the electric potentials in the
 network.
 
-1. Settting the potential reference with a ground
-2. Settting the potential reference with a specific node and phase
-3. Settting the potential reference with a specific node and two or more phases
+1. Setting the potential reference with a ground
+2. Setting the potential reference with a specific node and phase
+3. Setting the potential reference with a specific node and two or more phases
 
 ### Reference with a ground
 

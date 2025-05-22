@@ -4,11 +4,13 @@ myst:
     "description lang=en": |
       Current load models in Roseau Load Flow - three-phase unbalanced load flow solver in a Python API by Roseau
       Technologies.
+    "keywords lang=en": simulation, distribution grid, switch, load, model, current, intensity
+    # spellchecker:off
     "description lang=fr": |
       Les modèles de charge de courant dans Roseau Load Flow - Solveur d'écoulement de charge triphasé et déséquilibré
       dans une API Python par Roseau Technologies.
     "keywords lang=fr": simulation, réseau, électrique, bus, roseau load flow, charges, modèle, courant, intensité
-    "keywords lang=en": simulation, distribution grid, switch, load, model, current, intensity
+# spellchecker:on
 ---
 
 # Current loads (I)

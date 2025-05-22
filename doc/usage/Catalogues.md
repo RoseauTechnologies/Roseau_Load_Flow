@@ -4,12 +4,14 @@ myst:
     "description lang=en": |
       Roseau Load Flow comes with a catalogue of components including numerous models of medium and low voltage
       networks, transformers and lines.
+    "keywords lang=en": simulation, distribution grid, MT, LV, transformer, cables, model
+    # spellchecker:off
     "description lang=fr": |
       Roseau Load Flow est livré avec un catalogue de composants comportant de nombreux modèles de réseaux
       moyenne-tension et basse tension, de transformateurs et de lignes.
     "keywords lang=fr": |
       simulation, réseau, électrique, réseaux, MT, BT, moyenne tension, basse tension, transformateurs, lignes, modèle
-    "keywords lang=en": simulation, distribution grid, MT, LV, transformer, cables, model
+    # spellchecker:on
 ---
 
 # Catalogues

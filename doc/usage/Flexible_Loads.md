@@ -3,11 +3,13 @@ myst:
   html_meta:
     "description lang=en": |
       Roseau Load Flow enables fine modelling of flexible loads and sources with fully parameterisable control laws.
+    "keywords lang=en": simulation, flexible, control, load, source, P(U), PQ(U), load flow
+    # spellchecker:off
     "description lang=fr": |
       Roseau Load Flow permet la modélisation fine des charges flexibles et des sources avec des lois de contrôle
       entièrement paramétrables.
     "keywords lang=fr": simulation, charge, source, flexible, contrôle, P(U), PQ(U), écoulement de charge
-    "keywords lang=en": simulation, flexible, control, load, source, P(U), PQ(U), load flow
+    # spellchecker:on
 ---
 
 (usage-flexible-loads)=

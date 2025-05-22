@@ -3,11 +3,13 @@ myst:
   html_meta:
     "description lang=en": |
       Buses in Roseau Load Flow - Three-phase unbalanced load flow solver in a Python API by Roseau Technologies.
+    "keywords lang=en": simulation, distribution grid, bus, model
+    # spellchecker:off
     "description lang=fr": |
       Les bus dans Roseau Load Flow - Solveur d'écoulement de charge triphasé et déséquilibré dans une API Python par
       Roseau Technologies.
     "keywords lang=fr": simulation, réseau, électrique, bus, roseau load flow, modèle
-    "keywords lang=en": simulation, distribution grid, bus, model
+    # spellchecker:on
 ---
 
 # Bus
@@ -37,7 +39,7 @@ The following results are available for all buses:
 | `res_voltage_levels` | $\mathrm{pu}$ | number array  | The per-unit voltage levels: ($\sqrt{3} V_{pn} / V_\mathrm{nom}$) if the bus has a neutral, ($V_{pp} / V_\mathrm{nom}$) otherwise |
 | `res_violated`       | -             | boolean array | Indicates if the voltage levels violate the limits                                                                                |
 
-Addionally, the following results are available for buses _with a neutral_:
+Additionally, the following results are available for buses _with a neutral_:
 
 | Result Accessor         | Default Unit  | Type          | Description                                                                      |
 | ----------------------- | ------------- | ------------- | -------------------------------------------------------------------------------- |
