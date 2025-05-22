@@ -1,14 +1,14 @@
 ---
 myst:
   html_meta:
-    "description lang=en": |
+    description lang=en: |
       Load models in Roseau Load Flow - Three-phase unbalanced load flow solver in a Python API by Roseau Technologies.
-    "keywords lang=en": simulation, distribution grid, switch, load, model
+    keywords lang=en: simulation, distribution grid, switch, load, model
     # spellchecker:off
-    "description lang=fr": |
+    description lang=fr: |
       Les modèles de charge dans Roseau Load Flow - Solveur d'écoulement de charge triphasé et déséquilibré dans une
       API Python par Roseau Technologies.
-    "keywords lang=fr": simulation, réseau, électrique, bus, roseau load flow, charges, modèle
+    keywords lang=fr: simulation, réseau, électrique, bus, roseau load flow, charges, modèle
 # spellchecker:on
 ---
 
@@ -16,13 +16,12 @@ myst:
 
 ## Definition
 
-The load element can be used to model consumption loads (with positive active power) as well as
-generation loads (with negative active power).
+The load element can be used to model consumption loads (with positive active power) as well as generation loads (with
+negative active power).
 
 ## Connections
 
-A load can be either star-connected or delta-connected depending on whether its phases include a
-neutral or not.
+A load can be either star-connected or delta-connected depending on whether its phases include a neutral or not.
 
 ### Star (wye) connection
 
@@ -72,8 +71,7 @@ Here is the diagram of a delta-connected three-phase load:
 ```
 ````
 
-In _Roseau Load Flow_, the `phases` argument of the constructor must **not** contain `"n"` for delta
-loads.
+In _Roseau Load Flow_, the `phases` argument of the constructor must **not** contain `"n"` for delta loads.
 
 ## Available Results
 
@@ -109,8 +107,8 @@ And the following results are available for _three-phase_ loads:
 
 ## Available models
 
-The _ZIP_ model is commonly used to represent electric loads in static grid analysis. This model
-considers the voltage dependency of loads. ZIP stands for the three load types:
+The _ZIP_ model is commonly used to represent electric loads in static grid analysis. This model considers the voltage
+dependency of loads. ZIP stands for the three load types:
 
 - Z = constant impedance load
 - I = constant current load
@@ -119,9 +117,10 @@ considers the voltage dependency of loads. ZIP stands for the three load types:
 The following load models are available in _Roseau Load Flow_:
 
 ```{toctree}
-:maxdepth: 3
-:caption: Loads
-
+---
+maxdepth: 3
+caption: Loads
+---
 ImpedanceLoad
 CurrentLoad
 PowerLoad

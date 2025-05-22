@@ -1,14 +1,14 @@
 ---
 myst:
   html_meta:
-    "description lang=en": |
+    description lang=en: |
       Roseau Load Flow enables fine modelling of flexible loads and sources with fully parameterisable control laws.
-    "keywords lang=en": simulation, flexible, control, load, source, P(U), PQ(U), load flow
+    keywords lang=en: simulation, flexible, control, load, source, P(U), PQ(U), load flow
     # spellchecker:off
-    "description lang=fr": |
+    description lang=fr: |
       Roseau Load Flow permet la modélisation fine des charges flexibles et des sources avec des lois de contrôle
       entièrement paramétrables.
-    "keywords lang=fr": simulation, charge, source, flexible, contrôle, P(U), PQ(U), écoulement de charge
+    keywords lang=fr: simulation, charge, source, flexible, contrôle, P(U), PQ(U), écoulement de charge
     # spellchecker:on
 ---
 
@@ -22,8 +22,8 @@ Let's create a network with MV and LV elements connected via a transformer.
 
 ## Creating a network
 
-This network contains a voltage source with a constant balanced voltage of 20 kV (phase-to-phase),
-a Delta-Wye transformer and a small LV network.
+This network contains a voltage source with a constant balanced voltage of 20 kV (phase-to-phase), a Delta-Wye
+transformer and a small LV network.
 
 ![Advanced Network](../_static/Advanced_Tutorial.svg)
 
@@ -116,25 +116,23 @@ The flexible loads are loads that implement some basic controls such as $P(U)$, 
 
 ## $P(U)$ control
 
-Let's remove `load3` from the network and add a flexible load as a replacement. A flexible load
-is a normal `PowerLoad` with a `flexible_params` argument that takes a list of`FlexibleParameter`.
+Let's remove `load3` from the network and add a flexible load as a replacement. A flexible load is a normal `PowerLoad`
+with a `flexible_params` argument that takes a list of`FlexibleParameter`.
 
-We first create a `FlexibleParameter` using its class method `p_max_u_production`. It returns a
-flexible parameter instance that reduces the active production when the voltage is higher than
-`u_up` volts and stops the production when the voltage reaches `u_max`. The `s_max` argument
-defines the maximum allowed apparent power of the production plant. In the example below,
-`u_up=240 V`, `u_max=250 V` and `s_max=4 kVA`.
+We first create a `FlexibleParameter` using its class method `p_max_u_production`. It returns a flexible parameter
+instance that reduces the active production when the voltage is higher than `u_up` volts and stops the production when
+the voltage reaches `u_max`. The `s_max` argument defines the maximum allowed apparent power of the production plant. In
+the example below, `u_up=240 V`, `u_max=250 V` and `s_max=4 kVA`.
 
-After that, a flexible load representing a PV plant is created. Its apparent power is fixed at
-`[si, 0, 0]` VA with `si` a negative value (negative because it is production). Theses apparent
-powers define the maximum power this load can produce. The `flexible_params` argument takes a
-list of `FlexibleParameter` instances, one per phase. For the first phase, the $P(U)$ control is
-used. For the two other phases, there is no control at all thus the `constant` class method is
-used.
+After that, a flexible load representing a PV plant is created. Its apparent power is fixed at `[si, 0, 0]` VA with `si`
+a negative value (negative because it is production). Theses apparent powers define the maximum power this load can
+produce. The `flexible_params` argument takes a list of `FlexibleParameter` instances, one per phase. For the first
+phase, the $P(U)$ control is used. For the two other phases, there is no control at all thus the `constant` class method
+is used.
 
-As a consequence, the provided apparent power for phase `'a'` is the maximum that can be produced
-(potentially modified by the $P(U)$ control) and the provided apparent power for phases `'b'` and
-`'c'` is the desired production as the flexible parameter is defined as `constant`.
+As a consequence, the provided apparent power for phase `'a'` is the maximum that can be produced (potentially modified
+by the $P(U)$ control) and the provided apparent power for phases `'b'` and `'c'` is the desired production as the
+flexible parameter is defined as `constant`.
 
 ```pycon
 >>> # Let's make the load 3 flexible with a p(u) control to reduce the voltages constraints
@@ -147,9 +145,8 @@ As a consequence, the provided apparent power for phase `'a'` is the maximum tha
 ... )
 ```
 
-The load flow can now be run again. You can see that the voltage magnitude has changed. Note that
-the voltage magnitude for phase `'a'` was 240 V above without the $P(U)$ control, thus the control
-has been activated in this run.
+The load flow can now be run again. You can see that the voltage magnitude has changed. Note that the voltage magnitude
+for phase `'a'` was 240 V above without the $P(U)$ control, thus the control has been activated in this run.
 
 ```pycon
 >>> en.solve_load_flow()
@@ -158,8 +155,8 @@ has been activated in this run.
 <Quantity([245.92531525 239.3821116  239.71188911], 'volt')>
 ```
 
-The actually produced power of the flexible load is a result of the computation and can be
-accessed using the `res_flexible_powers` property of the load.
+The actually produced power of the flexible load is a result of the computation and can be accessed using the
+`res_flexible_powers` property of the load.
 
 ```pycon
 >>> flexible_load.res_flexible_powers
@@ -180,24 +177,22 @@ Here, one can note that:
 
 ## $PQ(U)$ control
 
-Now, let's remove the flexible load that we have added in the previous section and add a new
-flexible load implementing a $PQ(U)$ control instead.
+Now, let's remove the flexible load that we have added in the previous section and add a new flexible load implementing
+a $PQ(U)$ control instead.
 
-As before, we first create a `FlexibleParameter` but this time, we will use the
-`pq_u_production` class method. It requires several arguments:
+As before, we first create a `FlexibleParameter` but this time, we will use the `pq_u_production` class method. It
+requires several arguments:
 
-- `up_up` and `up_max`: the voltages defining the interval of the $P(U)$ control activation.
-  Below `up_up`, no control is applied and above `u_max`, the production is totally shut down.
-- `uq_min`, `uq_down`, `uq_up` and `uq_max` which are the voltages defining the $Q(U)$ control
-  activation.
+- `up_up` and `up_max`: the voltages defining the interval of the $P(U)$ control activation. Below `up_up`, no control
+  is applied and above `u_max`, the production is totally shut down.
+- `uq_min`, `uq_down`, `uq_up` and `uq_max` which are the voltages defining the $Q(U)$ control activation.
   - Below `uq_min`, the power plant produces the maximum possible reactive power.
   - Between `uq_down` and `uq_up`, there is no $Q(U)$ control.
   - Above `uq_max`, the power plant consumes the maximum possible reactive power.
 
-In the example below, as the new load is a production load, only the `up_up`, `up_max`, `uq_up`
-and `uq_max` are of interests. The $Q(U)$ control starts its action at 235 V and is fully
-exhausted at 240 V. After that, the $P(U)$ is activated and is exhausted at 250 V where the
-production is totally shut down.
+In the example below, as the new load is a production load, only the `up_up`, `up_max`, `uq_up` and `uq_max` are of
+interests. The $Q(U)$ control starts its action at 235 V and is fully exhausted at 240 V. After that, the $P(U)$ is
+activated and is exhausted at 250 V where the production is totally shut down.
 
 ```pycon
 >>> # Let's try with PQ(u) control, by injecting reactive power before reducing active power
@@ -227,7 +222,6 @@ The load flow can be solved again.
 <Quantity([-2123.33087236+3389.90648934j, 0.+0.j, 0.+0.j], 'volt_ampere')>
 ```
 
-One can note that this time, the phase `'a'` consumes reactive power to limit the voltage rise in
-the network. Moreover, the magnitude of the power on phase `'a'` is approximately $4 kVA$ which is
-the maximum allowed apparent power for `load3`. In order to maintain this maximum, a
-[Euclidean projection](models-flexible_load-projections) has been used.
+One can note that this time, the phase `'a'` consumes reactive power to limit the voltage rise in the network. Moreover,
+the magnitude of the power on phase `'a'` is approximately $4 kVA$ which is the maximum allowed apparent power for
+`load3`. In order to maintain this maximum, a [Euclidean projection](models-flexible_load-projections) has been used.

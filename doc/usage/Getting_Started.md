@@ -1,16 +1,16 @@
 ---
 myst:
   html_meta:
-    "description lang=en": |
+    description lang=en: |
       A first simple example to introduce you to power flow calculation with Roseau Load Flow: simulate a small
       network with a voltage source, a transformer, a line and a load.
-    "keywords lang=en": |
+    keywords lang=en: |
       Roseau, Load flow, python, power flow, distribution grid, voltage source, power load, line, example
     # spellchecker:off
-    "description lang=fr": |
+    description lang=fr: |
       Un premier exemple simple pour s'initier au calcul d'écoulement de puissance avec Roseau Load Flow. Simulez un
       petit réseau comportant une source de tension, un transformateur, une ligne et une charge.
-    "keywords lang=fr": |
+    keywords lang=fr: |
       load flow, python, écoulement de charge, écoulement de puissance, réseau de distribution, source, charge, ligne,
       exemple
     # spellchecker:on
@@ -31,60 +31,59 @@ In this tutorial you will learn how to:
 
 ## Creating a network
 
-An electrical network can be built by assembling basic elements described in the
-[Models section](../models/index.md). The following is a summary of the available elements:
+An electrical network can be built by assembling basic elements described in the [Models section](../models/index.md).
+The following is a summary of the available elements:
 
 - Buses:
 
-  - [`Bus`](../models/Bus.md): A multi-phase node where other elements can be connected. The bus
-    optionally defines the nominal voltages and voltage limits of the network to study violations.
+  - [`Bus`](../models/Bus.md): A multi-phase node where other elements can be connected. The bus optionally defines the
+    nominal voltages and voltage limits of the network to study violations.
 
 - Branches:
 
-  - [`Line`](../models/Line/index.md): An impedant connection between two buses on the same voltage
-    level. The impedance of the line and its physical characteristics are defined by the
-    `LineParameters` object. This object can be defined once and used to describe multiple lines.
-  - [`Switch`](../models/Switch.md): An ideal connection between two buses on the same voltage level.
-    Currently, a switch cannot be opened.
-  - [`Transformer`](../models/Transformer/index.md): A transformer connecting a buses on potentially
-    different voltage levels called the high-voltage side and the low-voltage side. The impedance of
-    the transformer and its physical characteristics including its winding configuration are defined
-    by a `TransformerParameters` object. This object can be defined once and used to describe multiple
-    transformers.
+  - [`Line`](../models/Line/index.md): An impedant connection between two buses on the same voltage level. The impedance
+    of the line and its physical characteristics are defined by the `LineParameters` object. This object can be defined
+    once and used to describe multiple lines.
+  - [`Switch`](../models/Switch.md): An ideal connection between two buses on the same voltage level. Currently, a
+    switch cannot be opened.
+  - [`Transformer`](../models/Transformer/index.md): A transformer connecting a buses on potentially different voltage
+    levels called the high-voltage side and the low-voltage side. The impedance of the transformer and its physical
+    characteristics including its winding configuration are defined by a `TransformerParameters` object. This object can
+    be defined once and used to describe multiple transformers.
 
 - Loads:
 
   The _ZIP load model_ is available via the following [load](../models/Load/index.md) classes:
 
   - [`ImpedanceLoad`](../models/Load/ImpedanceLoad.md): A constant impedance (Z) load:
-    $\overline{S} = V^2 / \overline{Z}$ where $\overline{Z}$ is constant -- $S$ is proportional to
-    $V^2$.
-  - [`CurrentLoad`](../models/Load/CurrentLoad.md) A constant current (I) load:
-    $\overline{S} = \overline{V} \times \overline{I}^*$ where $\overline{I}$ is constant -- $S$ is
-    proportional to $V^1$.
-  - [`PowerLoad`](../models/Load/PowerLoad.md): A constant power (P) load:
-    $\overline{S} = \mathrm{constant}$ -- $S$ is proportional to $V^0$.
+    $\overline{S} = V^2 / \overline{Z}$ where $\overline{Z}$ is constant -- $S$ is proportional to $V^2$.
 
-    A power load can be made [flexible](../models/Load/FlexibleLoad/index.md) (controllable) by
-    using `FlexibleParameter` objects. This object defines the parameters of the flexible load's
-    control (Maximum power, projection, type, etc.) Note that flexible loads are an advanced feature
-    that most users don't need. They are explained in details [here](usage-flexible-loads).
+  - [`CurrentLoad`](../models/Load/CurrentLoad.md) A constant current (I) load:
+    $\overline{S} = \overline{V} \times \overline{I}^*$ where $\overline{I}$ is constant -- $S$ is proportional to
+    $V^1$.
+
+  - [`PowerLoad`](../models/Load/PowerLoad.md): A constant power (P) load: $\overline{S} = \mathrm{constant}$ -- $S$ is
+    proportional to $V^0$.
+
+    A power load can be made [flexible](../models/Load/FlexibleLoad/index.md) (controllable) by using
+    `FlexibleParameter` objects. This object defines the parameters of the flexible load's control (Maximum power,
+    projection, type, etc.) Note that flexible loads are an advanced feature that most users don't need. They are
+    explained in details [here](usage-flexible-loads).
 
 - Sources:
 
-  - [`VoltageSource`](../models/VoltageSource.md): An infinite power ideal source with a constant
-    voltage.
+  - [`VoltageSource`](../models/VoltageSource.md): An infinite power ideal source with a constant voltage.
 
 - Other elements:
-  - [`Ground`](../models/Ground.md): A perfect conductor that can be connected to various elements.
-    If two elements are connected to the same ground, the potentials at the connection points are
-    always equal.
-  - [`PotentialRef`](../models/PotentialRef.md): Sets the reference of potentials in the network. It
-    can be connected to buses or grounds.
 
-Let's use some of these elements to build the following simple low voltage network. A voltage source
-represents the upstream medium voltage network. A MV/LV transformer, a simple three-phase four-wire
-line and a constant power load represent the low voltage network.
+  - [`Ground`](../models/Ground.md): A perfect conductor that can be connected to various elements. If two elements are
+    connected to the same ground, the potentials at the connection points are always equal.
+  - [`PotentialRef`](../models/PotentialRef.md): Sets the reference of potentials in the network. It can be connected to
+    buses or grounds.
+
+Let's use some of these elements to build the following simple low voltage network. A voltage source represents the
+upstream medium voltage network. A MV/LV transformer, a simple three-phase four-wire line and a constant power load
+represent the low voltage network.
 
 ![Network](../_static/Getting_Started_Tutorial.svg)
 
@@ -151,11 +150,10 @@ line and a constant power load represent the low voltage network.
 ... pref_lv = rlf.PotentialRef(id="PRef_LV", element=ground)  # or lv_bus1
 ```
 
-Notice how the phases of the elements are not explicitly given. They are inferred from the buses
-they are connected to. The load and line will have their phases set to `"abcn"` while the source
-will have its phases set to `"abc"`. You can also explicitly declare the phases of these elements.
-For example, to create a star-connected (Wye) source instead, you can explicitly set its phases to
-`"abcn"`:
+Notice how the phases of the elements are not explicitly given. They are inferred from the buses they are connected to.
+The load and line will have their phases set to `"abcn"` while the source will have its phases set to `"abc"`. You can
+also explicitly declare the phases of these elements. For example, to create a star-connected (Wye) source instead, you
+can explicitly set its phases to `"abcn"`:
 
 ```pycon
 >>> # A star-connected source has "abcn" phases
@@ -164,14 +162,13 @@ For example, to create a star-connected (Wye) source instead, you can explicitly
 ... )
 ```
 
-Here, the source voltages become phase-to-neutral (`un / rlf.SQRT3`), and not phase-to-phase (`un`).
-This is because, everywhere in `roseau-load-flow`, the `voltages` of an element depend on the
-element's `phases`. Voltages of elements connected in a _Star (wye)_ configuration (elements that
-have a neutral connection indicated by the presence of the `'n'` character in their `phases`
-attribute) are the **phase-to-neutral** voltages. Voltages of elements connected in a _Delta_
-configuration (elements that do not have a neutral connection indicated by the absence of the `'n'`
-char from their `phases` attribute) are the **phase-to-phase** voltages. To see between which phases
-the voltage is defined, you can use the `voltage_phases` property of the element.
+Here, the source voltages become phase-to-neutral (`un / rlf.SQRT3`), and not phase-to-phase (`un`). This is because,
+everywhere in `roseau-load-flow`, the `voltages` of an element depend on the element's `phases`. Voltages of elements
+connected in a _Star (wye)_ configuration (elements that have a neutral connection indicated by the presence of the
+`'n'` character in their `phases` attribute) are the **phase-to-neutral** voltages. Voltages of elements connected in a
+_Delta_ configuration (elements that do not have a neutral connection indicated by the absence of the `'n'` char from
+their `phases` attribute) are the **phase-to-phase** voltages. To see between which phases the voltage is defined, you
+can use the `voltage_phases` property of the element.
 
 ```pycon
 >>> vs.voltage_phases
@@ -180,17 +177,17 @@ the voltage is defined, you can use the `voltage_phases` property of the element
 ['an', 'bn', 'cn']
 ```
 
-When creating the load, we passed a single value to the `powers` argument. This is a convenience
-feature that assumes that the load is balanced and that the value passed for the power should be
-used for all phases. If the load is unbalanced, you can pass a list of `powers` for each phase:
+When creating the load, we passed a single value to the `powers` argument. This is a convenience feature that assumes
+that the load is balanced and that the value passed for the power should be used for all phases. If the load is
+unbalanced, you can pass a list of `powers` for each phase:
 
 ```pycon
 >>> load = rlf.PowerLoad(id="Load", bus=lv_bus2, powers=[10e3, 5e3, 5e3])
 ```
 
-At this point, all the basic elements of the network have been defined and connected. Now,
-everything can be encapsulated in an `ElectricalNetwork` object, but first, some important
-notes on the `Ground` and `PotentialRef` elements:
+At this point, all the basic elements of the network have been defined and connected. Now, everything can be
+encapsulated in an `ElectricalNetwork` object, but first, some important notes on the `Ground` and `PotentialRef`
+elements:
 
 ```{important}
 The `Ground` element does not have a fixed potential as one would expect from a real ground
@@ -206,9 +203,8 @@ reference **per galvanically isolated section**.
 When in doubt, define the ground and potential references similar to the example above.
 ```
 
-An `ElectricalNetwork` object can now be created using the `from_element` constructor. The source
-bus `mv_bus` is given to this constructor. All the elements connected to this bus are automatically
-included into the network.
+An `ElectricalNetwork` object can now be created using the `from_element` constructor. The source bus `mv_bus` is given
+to this constructor. All the elements connected to this bus are automatically included into the network.
 
 ```pycon
 >>> en = rlf.ElectricalNetwork.from_element(mv_bus)
@@ -218,12 +214,10 @@ included into the network.
 
 ## Solving a load flow
 
-A [license](../License.md) is required. You can use the
-[free but limited licence key](../License.md#types-of-licenses)
+A [license](../License.md) is required. You can use the [free but limited licence key](../License.md#types-of-licenses)
 or get a personal and unlimited key by contacting us at
-[contact@roseautechnologies.com](mailto:contact@roseautechnologies.com).
-Once you have your license key, you can activate it by following the
-[License activation instructions](../License.md#get-and-activate-your-license).
+[contact@roseautechnologies.com](mailto:contact@roseautechnologies.com). Once you have your license key, you can
+activate it by following the [License activation instructions](../License.md#get-and-activate-your-license).
 
 Afterwards, the load flow can be solved by calling the `solve_load_flow` method of the `ElectricalNetwork`
 
@@ -232,22 +226,21 @@ Afterwards, the load flow can be solved by calling the `solve_load_flow` method 
 (2, 1.8595620332462204e-07)
 ```
 
-It returns the number of iterations performed by the solver, and the residual error after convergence.
-Here, the load flow converged in 2 iterations with a residual error of $1.86 \times 10^{-7}$.
+It returns the number of iterations performed by the solver, and the residual error after convergence. Here, the load
+flow converged in 2 iterations with a residual error of $1.86 \times 10^{-7}$.
 
 ## Getting the results
 
-Results can be accessed through the properties prefixed with `res_` on each element. For instance,
-the potentials of the load bus (`"LV_Bus2"`) can be accessed using the `lv_bus2.res_potentials`
-property. It contains 4 values representing the potentials of its phases `a`, `b`, `c` and `n`
-(neutral). The potentials are returned as complex numbers. Calling `abs(lv_bus2.res_potentials)`
-returns their magnitude (in Volts) and `np.angle(lv_bus2.res_potentials)` returns their angle
-(phase shift) in radians.
+Results can be accessed through the properties prefixed with `res_` on each element. For instance, the potentials of the
+load bus (`"LV_Bus2"`) can be accessed using the `lv_bus2.res_potentials` property. It contains 4 values representing
+the potentials of its phases `a`, `b`, `c` and `n` (neutral). The potentials are returned as complex numbers. Calling
+`abs(lv_bus2.res_potentials)` returns their magnitude (in Volts) and `np.angle(lv_bus2.res_potentials)` returns their
+angle (phase shift) in radians.
 
-Roseau Load Flow uses [Pint's](https://pint.readthedocs.io/en/stable/) `Quantity` objects to present
-unit-aware data to the user. _Most_ input data (load powers, source voltages, etc.) are expected
-to be either given in SI units or using the pint Quantity interface for non-SI units (example below).
-Look at the documentation of a method to see its default units.
+Roseau Load Flow uses [Pint's](https://pint.readthedocs.io/en/stable/) `Quantity` objects to present unit-aware data to
+the user. _Most_ input data (load powers, source voltages, etc.) are expected to be either given in SI units or using
+the pint Quantity interface for non-SI units (example below). Look at the documentation of a method to see its default
+units.
 
 In the following example, we create a load with powers expressed in kVA:
 
@@ -259,8 +252,8 @@ The results returned by the `res_` properties are also `Quantity` objects.
 
 ### Available results
 
-The available results depend on the type of element. The [models page](../models/index.md) of each
-element lists its available results.
+The available results depend on the type of element. The [models page](../models/index.md) of each element lists its
+available results.
 
 ### Getting results per object
 
@@ -295,11 +288,10 @@ voltages, use the `res_voltages_pp` property (only available for buses with more
 For a list of available results for buses, see the [Bus model page](../models/Bus.md#available-results).
 ```
 
-The currents of the line are available using the `res_currents` property of the `line` object.
-It contains two arrays:
+The currents of the line are available using the `res_currents` property of the `line` object. It contains two arrays:
 
-- the first is the current flowing from the first bus of the line to the second bus of the line.
-  It contains 4 values: one per phase and the neutral current.
+- the first is the current flowing from the first bus of the line to the second bus of the line. It contains 4 values:
+  one per phase and the neutral current.
 - the second is the current flowing from the second bus of the line to the first bus of the line.
 
 ```pycon
@@ -310,54 +302,52 @@ It contains two arrays:
 <Quantity([0.+0.j 0.+0.j 0.+0.j 0.+0.j], 'ampere')>
 ```
 
-Here, the sum of these currents is 0 as we have chosen a simple line model, i.e, a line with only
-series impedance elements without shunt components. If shunt components were modelled, the sum
-would have been non-zero.
+Here, the sum of these currents is 0 as we have chosen a simple line model, i.e, a line with only series impedance
+elements without shunt components. If shunt components were modelled, the sum would have been non-zero.
 
 ### Dataframe network results
 
-The results can also be retrieved for the entire network using `res_` properties of the
-`ElectricalNetwork` instance as pandas dataframes.
+The results can also be retrieved for the entire network using `res_` properties of the `ElectricalNetwork` instance as
+pandas dataframes.
 
 The main results available on the network are:
 
 - `res_buses`: Buses potentials indexed by _(bus id, phase)_
-- `res_transformers`: Transformers currents, powers, potentials, and power limits indexed by
-  _(transformer id, phase)_
-- `res_lines`: Lines currents, powers, potentials, series losses, series currents, and current
-  limits indexed by _(line id, phase)_
+- `res_transformers`: Transformers currents, powers, potentials, and power limits indexed by _(transformer id, phase)_
+- `res_lines`: Lines currents, powers, potentials, series losses, series currents, and current limits indexed by _(line
+  id, phase)_
 - `res_switches`: Switches currents, powers, and potentials indexed by _(switch id, phase)_
 - `res_loads`: Loads currents, powers, and potentials indexed by _(load id, phase)_
 - `res_sources`: Sources currents, powers, and potentials indexed by _(source id, phase)_
 - `res_grounds`: Grounds potentials indexed by _ground id_
-- `res_potential_refs`: Potential references currents indexed by _potential ref id_ (always zero
-  for a successful load flow)
+- `res_potential_refs`: Potential references currents indexed by _potential ref id_ (always zero for a successful load
+  flow)
 
 The following additional results are also available for the network:
 
 - `res_buses_voltages`: Buses voltages and voltage limits indexed by _(bus id, voltage phase²)_
-- `res_buses_voltages_pn`: Buses phase-to-neutral voltages and voltage limits indexed by
-  _(bus id, voltage phase²)_. Only buses with a neutral are included
-- `res_buses_voltages_pp`: Buses phase-to-phase voltages and voltage limits indexed by
-  _(bus id, voltage phase²)_. Only buses with more than one phase are included
+- `res_buses_voltages_pn`: Buses phase-to-neutral voltages and voltage limits indexed by _(bus id, voltage phase²)_.
+  Only buses with a neutral are included
+- `res_buses_voltages_pp`: Buses phase-to-phase voltages and voltage limits indexed by _(bus id, voltage phase²)_. Only
+  buses with more than one phase are included
 - `res_loads_voltages`: Loads voltages indexed by _(load id, voltage phase)_
-- `res_loads_voltages_pn`: Loads phase-to-neutral voltages indexed by _(load id, voltage phase)_
-  Only loads with a neutral are included
-- `res_loads_voltages_pp`: Loads phase-to-phase voltages indexed by _(load id, voltage phase)_. Only
-  loads with more than one phase are included
-- `res_loads_flexible_powers`: Loads flexible powers indexed by _(load id, voltage phase)_. Only
-  flexible loads are included
+- `res_loads_voltages_pn`: Loads phase-to-neutral voltages indexed by _(load id, voltage phase)_ Only loads with a
+  neutral are included
+- `res_loads_voltages_pp`: Loads phase-to-phase voltages indexed by _(load id, voltage phase)_. Only loads with more
+  than one phase are included
+- `res_loads_flexible_powers`: Loads flexible powers indexed by _(load id, voltage phase)_. Only flexible loads are
+  included
 - `res_sources_voltages`: Sources voltages indexed by _(source id, voltage phase)_
-- `res_sources_voltages_pn`: Sources phase-to-neutral voltages indexed by _(source id, voltage phase)_
-  Only sources with a neutral are included
-- `res_sources_voltages_pp`: Sources phase-to-phase voltages indexed by _(source id, voltage phase)_.
-  Only sources with more than one phase are included
+- `res_sources_voltages_pn`: Sources phase-to-neutral voltages indexed by _(source id, voltage phase)_ Only sources with
+  a neutral are included
+- `res_sources_voltages_pp`: Sources phase-to-phase voltages indexed by _(source id, voltage phase)_. Only sources with
+  more than one phase are included
 
 ² _a "voltage phase" is a composite phase like `an` or `ab`_
 
-All the results are complex numbers. You can always access the magnitude of the results using
-the `abs` function and the angle in radians using the `np.angle` function. For instance,
-`abs(network.res_loads)` gives you the magnitude of the loads' results in SI units.
+All the results are complex numbers. You can always access the magnitude of the results using the `abs` function and the
+angle in radians using the `np.angle` function. For instance, `abs(network.res_loads)` gives you the magnitude of the
+loads' results in SI units.
 
 Below are the results of the load flow for `en`:
 
@@ -464,8 +454,8 @@ And some voltage results:
 | LV_Bus2 | bn    |     -115.18-196.08j | False    |          0.98 |              0.90 |              1.10 |          400.00 |
 | LV_Bus2 | cn    |     -112.22+197.79j | False    |          0.98 |              0.90 |              1.10 |          400.00 |
 
-The voltage results are a mix of phase-to-phase and phase-to-neutral voltages. To get only
-phase-to-phase voltages, use the `res_buses_voltages_pp` property:
+The voltage results are a mix of phase-to-phase and phase-to-neutral voltages. To get only phase-to-phase voltages, use
+the `res_buses_voltages_pp` property:
 
 ```pycon
 >>> en.res_buses_voltages_pp
@@ -483,8 +473,8 @@ phase-to-phase voltages, use the `res_buses_voltages_pp` property:
 | LV_Bus2 | bc    |       -2.96-393.87j | False    |          0.98 |              0.90 |              1.10 |          400.00 |
 | LV_Bus2 | ca    |     -339.62+199.50j | False    |          0.98 |              0.90 |              1.10 |          400.00 |
 
-And to get only phase-to-neutral voltages, use the `res_buses_voltages_pn` property. Note that
-only buses with a neutral are included in the results:
+And to get only phase-to-neutral voltages, use the `res_buses_voltages_pn` property. Note that only buses with a neutral
+are included in the results:
 
 ```pycon
 >>> en.res_buses_voltages_pn
@@ -511,8 +501,8 @@ The same can be done for the loads:
 | Load    | bn    | power | -115.18-196.08j |
 | Load    | cn    | power | -112.22+197.79j |
 
-Using the `transform` method of data frames, the results can easily be converted from complex values
-to magnitude and angle values (radians).
+Using the `transform` method of data frames, the results can easily be converted from complex values to magnitude and
+angle values (radians).
 
 ```pycon
 >>> en.res_buses_voltages_pp["voltage"].transform([np.abs, np.angle])
@@ -551,25 +541,23 @@ Or, if you prefer the angles in degrees:
 
 ## Analyzing the results and detecting violations
 
-In the example network above, `min_voltage_level`, `max_voltage_level` and `nominal_voltage` arguments
-were passed to the `Bus` constructor and `ampacities` was passed to the `LineParameters` constructor.
-In addition with the `max_loading` parameters of the `Line` and `Transformer`, these arguments define
-the limits of the network that can be used to check if the network is in a valid state or not. Note
-that these limits have no effect on the load flow calculation.
+In the example network above, `min_voltage_level`, `max_voltage_level` and `nominal_voltage` arguments were passed to
+the `Bus` constructor and `ampacities` was passed to the `LineParameters` constructor. In addition with the
+`max_loading` parameters of the `Line` and `Transformer`, these arguments define the limits of the network that can be
+used to check if the network is in a valid state or not. Note that these limits have no effect on the load flow
+calculation.
 
-If you set `nominal_voltage` with `min_voltage_level` or `max_voltage_level` on a bus, the
-`res_violated` property will tell you if the voltage limits are violated or not at this bus. Here,
-the voltage limits are not violated.
+If you set `nominal_voltage` with `min_voltage_level` or `max_voltage_level` on a bus, the `res_violated` property will
+tell you if the voltage limits are violated or not at this bus. Here, the voltage limits are not violated.
 
 ```pycon
 >>> lv_bus2.res_violated
 array([False, False, False])
 ```
 
-Similarly, if you set `ampacities` on a line parameters and `max_loading` (defaults to 100% of the
-ampacity) on a line, the `res_loading` property will give you the current loading of each phase of
-the line. The `res_violated` property will tell you if the current loading of the line in any phase
-exceeds its limit. Here, the current limit is not violated.
+Similarly, if you set `ampacities` on a line parameters and `max_loading` (defaults to 100% of the ampacity) on a line,
+the `res_loading` property will give you the current loading of each phase of the line. The `res_violated` property will
+tell you if the current loading of the line in any phase exceeds its limit. Here, the current limit is not violated.
 
 ```pycon
 >>> line.res_loading
@@ -578,10 +566,9 @@ exceeds its limit. Here, the current limit is not violated.
 array([False, False, False, False])
 ```
 
-The maximum loading of the transformer can be defined using the `max_loading` argument of the
-`Transformer` (defaults to 100% of the nominal power). Transformers also have a `res_loading` to
-indicate the loading of the transformer and a `res_violated` property that indicates whether the
-power loading of the transformer exceeds its limit.
+The maximum loading of the transformer can be defined using the `max_loading` argument of the `Transformer` (defaults to
+100% of the nominal power). Transformers also have a `res_loading` to indicate the loading of the transformer and a
+`res_violated` property that indicates whether the power loading of the transformer exceeds its limit.
 
 ```pycon
 >>> transformer.res_loading
@@ -590,8 +577,7 @@ power loading of the transformer exceeds its limit.
 False
 ```
 
-The data frame results on the electrical network also include a `loading`, a `max_loading` and a
-`violated` columns.
+The data frame results on the electrical network also include a `loading`, a `max_loading` and a `violated` columns.
 
 ```{tip}
 You can use the {meth}`Bus.propagate_limits() <roseau.load_flow.Bus.propagate_limits>` method to
@@ -600,8 +586,7 @@ propagate the limits from a bus to buses connected to it galvanically (i.e. via 
 
 ## Updating elements of the network
 
-Network elements can be updated. For example, we can change the load's power values to create an
-unbalanced situation.
+Network elements can be updated. For example, we can change the load's power values to create an unbalanced situation.
 
 ```pycon
 >>> # 15 kW on phase "a", 0 W on phases "b" and "c"
@@ -612,8 +597,8 @@ unbalanced situation.
 <Quantity([221.36 236.71 236.71  14.5 ], 'volt')>
 ```
 
-Notice how the unbalance is manifested in the neutral's potential of the bus no longer being at 0 V.
-You can also obtain the voltage unbalance factor (VUF) according to the IEC definition:
+Notice how the unbalance is manifested in the neutral's potential of the bus no longer being at 0 V. You can also obtain
+the voltage unbalance factor (VUF) according to the IEC definition:
 
 ```pycon
 >>> lv_bus2.res_voltage_unbalance()
@@ -624,8 +609,8 @@ More information on modifying the network elements can be found [here](./Connect
 
 ## Saving/loading the network
 
-An electrical network can be written to a JSON file for later analysis or for sharing with others
-using the {meth}`~roseau.load_flow.ElectricalNetwork.to_json` method.
+An electrical network can be written to a JSON file for later analysis or for sharing with others using the
+{meth}`~roseau.load_flow.ElectricalNetwork.to_json` method.
 
 ```pycon
 >>> en.to_json("my_network.json")

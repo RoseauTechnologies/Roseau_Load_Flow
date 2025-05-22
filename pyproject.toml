@@ -144,6 +144,8 @@ extend-ignore-identifiers-re = ["YNd[0-9]*"]
 ba = "ba"
 # np.arange
 arange = "arange"
+# In Bibliography.bib
+Stichting = "Stichting"
 
 [tool.typos.default.extend-words]
 # typ and lod are heavily used in the DGS format
@@ -151,3 +153,8 @@ typ = "typ"
 lod = "lod"
 # Phase to Neutral
 pn = "pn"
+
+# MD format
+[tool.mdformat]
+wrap = 120
+number = true

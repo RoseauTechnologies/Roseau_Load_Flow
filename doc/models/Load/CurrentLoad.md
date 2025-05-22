@@ -1,22 +1,21 @@
 ---
 myst:
   html_meta:
-    "description lang=en": |
+    description lang=en: |
       Current load models in Roseau Load Flow - three-phase unbalanced load flow solver in a Python API by Roseau
       Technologies.
-    "keywords lang=en": simulation, distribution grid, switch, load, model, current, intensity
+    keywords lang=en: simulation, distribution grid, switch, load, model, current, intensity
     # spellchecker:off
-    "description lang=fr": |
+    description lang=fr: |
       Les modèles de charge de courant dans Roseau Load Flow - Solveur d'écoulement de charge triphasé et déséquilibré
       dans une API Python par Roseau Technologies.
-    "keywords lang=fr": simulation, réseau, électrique, bus, roseau load flow, charges, modèle, courant, intensité
+    keywords lang=fr: simulation, réseau, électrique, bus, roseau load flow, charges, modèle, courant, intensité
 # spellchecker:on
 ---
 
 # Current loads (I)
 
-They represent loads for which the current is considered constant, i.e. the power is proportional
-to the voltage.
+They represent loads for which the current is considered constant, i.e. the power is proportional to the voltage.
 
 _ZIP_ equation: $S = 0 \times V^0 + i \times V^1 + 0 \times V^2 \implies S \propto V$
 
@@ -34,8 +33,8 @@ The equations are the following for star loads given the constant currents {math
 \right.
 ```
 
-And the following for delta loads given the constant currents {math}`i_{\mathrm{ab}}`,
-{math}`i_{\mathrm{bc}}` and {math}`i_{\mathrm{ca}}`:
+And the following for delta loads given the constant currents {math}`i_{\mathrm{ab}}`, {math}`i_{\mathrm{bc}}` and
+{math}`i_{\mathrm{ca}}`:
 
 ```{math}
 \left\{

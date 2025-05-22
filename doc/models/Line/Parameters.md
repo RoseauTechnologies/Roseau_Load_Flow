@@ -1,15 +1,15 @@
 ---
 myst:
   html_meta:
-    "description lang=en": |
+    description lang=en: |
       Parameters of line models in Roseau Load Flow - Three-phase unbalanced load flow solver in a Python API by
       Roseau Technologies.
-    "keywords lang=en": simulation, distribution grid, switch, lines, model
+    keywords lang=en: simulation, distribution grid, switch, lines, model
     # spellchecker:off
-    "description lang=fr": |
+    description lang=fr: |
       Les paramètres des modèles de ligne dans Roseau Load Flow - Solveur d'écoulement de charge triphasé et
       déséquilibré dans une API Python par Roseau Technologies.
-    "keywords lang=fr": simulation, réseau, électrique, bus, roseau load flow, lignes, modèle
+    keywords lang=fr: simulation, réseau, électrique, bus, roseau load flow, lignes, modèle
 # spellchecker:on
 ---
 
@@ -17,15 +17,13 @@ myst:
 
 # Parameters
 
-As described [in the previous page](models-line_parameters), a line parameters object contains the
-impedance and shunt admittance matrices representing the line model. Sometimes you do not have
-these matrices available, but you have other data such as symmetric components or geometric
-configurations and material types.
+As described [in the previous page](models-line_parameters), a line parameters object contains the impedance and shunt
+admittance matrices representing the line model. Sometimes you do not have these matrices available, but you have other
+data such as symmetric components or geometric configurations and material types.
 
-This page describes how to build the impedance and shunt admittance matrices and thus the line
-parameters object using these alternative data. This is achieved via the alternative constructors
-of the `LineParameters` class. Note that only 3-phase lines are supported by the alternative
-constructors.
+This page describes how to build the impedance and shunt admittance matrices and thus the line parameters object using
+these alternative data. This is achieved via the alternative constructors of the `LineParameters` class. Note that only
+3-phase lines are supported by the alternative constructors.
 
 (models-line_parameters-alternative_constructors-symmetric)=
 
@@ -33,16 +31,16 @@ constructors.
 
 ### Definition
 
-Line parameters can be built from a symmetric model of the line using the `LineParameters.from_sym`
-class method. This method takes the following data:
+Line parameters can be built from a symmetric model of the line using the `LineParameters.from_sym` class method. This
+method takes the following data:
 
 - The zero sequence of the impedance (in $\Omega$/km), noted $\underline{Z_0}$ and `z0` in the code.
 - The direct sequence of the impedance (in $\Omega$/km), noted $\underline{Z_1}$ and `z1` in the code.
 - The zero sequence of the admittance (in S/km), noted $\underline{Y_0}$ and `y0` in the code.
 - The direct sequence of the admittance (in S/km), noted $\underline{Y_1}$ and `y1` in the code.
 
-The symmetric components are then used to build the series impedance matrix $\underline{Z}$ and
-the shunt admittance matrix $\underline{Y}$ using the following equations:
+The symmetric components are then used to build the series impedance matrix $\underline{Z}$ and the shunt admittance
+matrix $\underline{Y}$ using the following equations:
 
 ```{math}
 \begin{aligned}
@@ -77,8 +75,7 @@ For lines with a neutral, this method also takes the following optional extra pa
 
 - The neutral impedance (in $\Omega$/km), noted $\underline{Z_{\mathrm{n}}}$ and `zn` in the code.
 - The phase-to-neutral reactance (in $\Omega$/km), noted $\left(\underline{X_{p\mathrm{n}}}\right)_{p\in\{\mathrm{a},
-  \mathrm{b},\mathrm{c}\}}$. As these are supposed to be the same, this unique value is noted `xpn` in
-  the code.
+  \mathrm{b},\mathrm{c}\}}$. As these are supposed to be the same, this unique value is noted `xpn` in the code.
 - The neutral susceptance (in S/km), noted $\underline{B_{\mathrm{n}}}$ and `bn` in the code.
 - The phase-to-neutral susceptance (in S/km), noted $\left(\underline{B_{p\mathrm{n}}}\right)_{p\in\{\mathrm{a},
   \mathrm{b},\mathrm{c}\}}$. As these are supposed to be the same, this unique value is noted `bpn` in the code.
@@ -120,8 +117,8 @@ $\underline{Y_{\mathrm{m}}}$ as before and:
 \end{aligned}
 ```
 
-respectively the phase-to-neutral series impedance (in $\Omega$/km), the neutral shunt admittance (in S/km) and
-the phase-to-neutral shunt admittance (in S/km).
+respectively the phase-to-neutral series impedance (in $\Omega$/km), the neutral shunt admittance (in S/km) and the
+phase-to-neutral shunt admittance (in S/km).
 
 ````{note}
 If the computed impedance matrix is be non-invertible, the `from_sym` class method builds impedance
@@ -223,8 +220,8 @@ array(
 
 The `LineParameters` class has a class method called `from_geometry` which builds impedance and shunt admittance
 matrices from dimensions and materials used for the insulator and the conductors. Two geometric configurations are
-proposed: the first one is for a twisted line and the second is for an underground line. Both of them include a
-neutral wire.
+proposed: the first one is for a twisted line and the second is for an underground line. Both of them include a neutral
+wire.
 
 This class method accepts the following arguments:
 
@@ -326,8 +323,8 @@ where:
 - $D'_i$ the distance between the conductor $i$ and its image with respect to the ground;
 - $D'_{ij}$ the distance between the conductor $i$ and the image of the conductor $j$ with respect to the ground.
 
-The method of images ({cite:p}`wiki:Method_Of_Image_Charges`) is depicted in the following figure. It indicates how
-to compute the distances based on the position of wires.
+The method of images ({cite:p}`wiki:Method_Of_Image_Charges`) is depicted in the following figure. It indicates how to
+compute the distances based on the position of wires.
 
 ````{tab} Planar ground
 ```{image} /_static/Line/Image_Method_Plane.svg
@@ -346,9 +343,9 @@ to compute the distances based on the position of wires.
 ````
 
 The permittivity of the insulator $\varepsilon$ (in F/m) is defined as $\varepsilon_0\varepsilon_{\mathrm{r}}$ with
-$\varepsilon_0$ the permittivity of the vacuum (in F/m) and $\varepsilon_{\mathrm{r}}$ the relative
-permittivity of the insulator (no unit). These values are defined in the `utils` module
-{data}`roseau.load_flow.utils.EPSILON_0` and {data}`roseau.load_flow.utilsEPSILON_R`.
+$\varepsilon_0$ the permittivity of the vacuum (in F/m) and $\varepsilon_{\mathrm{r}}$ the relative permittivity of the
+insulator (no unit). These values are defined in the `utils` module {data}`roseau.load_flow.utils.EPSILON_0` and
+{data}`roseau.load_flow.utilsEPSILON_R`.
 
 The capacitance matrix $C$ is then defined by:
 
@@ -414,23 +411,27 @@ The frequency used to compute $\omega$ is 50 Hz.
 The following configuration of the wires is supposed:
 
 ```{image} /_static/Line/Twisted_Geometry.svg
-:alt: Twisted model geometry
-:width: 600px
-:align: center
+---
+alt: Twisted model geometry
+width: 600px
+align: center
+---
 ```
 
 Here is the details of the parameters used:
 
 ```{image} /_static/Line/Twisted_Geometry_Details.svg
-:alt: Twisted model geometry details
-:width: 600px
-:align: center
+---
+alt: Twisted model geometry details
+width: 600px
+align: center
+---
 ```
 
-In this configuration, the phase conductors are around the neutral conductor, separated by $\dfrac{2\pi}{3}$ angles
-and located at the distance $\dfrac{d_{\mathrm{ext}}}{4}$ from the center of the neutral conductor. Phases and
-neutral are separated by the insulator and air. The height distance $h$ is the distance between the center of the
-neutral conductor and the ground.
+In this configuration, the phase conductors are around the neutral conductor, separated by $\dfrac{2\pi}{3}$ angles and
+located at the distance $\dfrac{d_{\mathrm{ext}}}{4}$ from the center of the neutral conductor. Phases and neutral are
+separated by the insulator and air. The height distance $h$ is the distance between the center of the neutral conductor
+and the ground.
 
 From these figures, the following geometric positions can be deduced:
 
@@ -489,23 +490,26 @@ array(
 The following configuration of the wires is supposed:
 
 ```{image} /_static/Line/Underground_Geometry.svg
-:alt: Underground model geometry
-:width: 600px
-:align: center
+---
+alt: Underground model geometry
+width: 600px
+align: center
+---
 ```
 
 Here is the details of the parameters used:
 
 ```{image} /_static/Line/Underground_Geometry_Details.svg
-:alt: Underground model geometry details
-:width: 600px
-:align: center
+---
+alt: Underground model geometry details
+width: 600px
+align: center
+---
 ```
 
-In this configuration, the conductors are separated by $\dfrac{\pi}{2}$ angles
-and located at the distance $\dfrac{d_{\mathrm{ext}}}{4}$ from the center of the wire. Phases and
-neutral are separated by the insulator. The height distance $h$ is the distance between the center of the
-wire and the ground.
+In this configuration, the conductors are separated by $\dfrac{\pi}{2}$ angles and located at the distance
+$\dfrac{d_{\mathrm{ext}}}{4}$ from the center of the wire. Phases and neutral are separated by the insulator. The height
+distance $h$ is the distance between the center of the wire and the ground.
 
 From these figures, the following geometric positions can be deduced:
 
@@ -568,12 +572,14 @@ array(
 
 ## Import from OpenDSS
 
-Line parameters can also be created using an OpenDSS line code parameters using the
-`LineParameters.from_open_dss` class method. For more information and usage examples,
-see the {meth}`method's documentation <roseau.load_flow.LineParameters.from_open_dss>`.
+Line parameters can also be created using an OpenDSS line code parameters using the `LineParameters.from_open_dss` class
+method. For more information and usage examples, see the
+{meth}`method's documentation <roseau.load_flow.LineParameters.from_open_dss>`.
 
 ## Bibliography
 
 ```{bibliography}
-:filter: docname in docnames
+---
+filter: docname in docnames
+---
 ```

@@ -1,22 +1,22 @@
 ---
 myst:
   html_meta:
-    "description lang=en": |
+    description lang=en: |
       Simplified line models in Roseau Load Flow - Three-phase unbalanced load flow solver in a Python API by Roseau
       Technologies.
-    "keywords lang=en": simulation, distribution grid, switch, lines, model
+    keywords lang=en: simulation, distribution grid, switch, lines, model
     # spellchecker:off
-    "description lang=fr": |
+    description lang=fr: |
       Les modèles de ligne simplifiés dans Roseau Load Flow - Solveur d'écoulement de charge triphasé et déséquilibré
       dans une API Python par Roseau Technologies.
-    "keywords lang=fr": simulation, réseau, électrique, bus, roseau load flow, lignes, modèle
+    keywords lang=fr: simulation, réseau, électrique, bus, roseau load flow, lignes, modèle
 # spellchecker:on
 ---
 
 # Simplified line
 
-If the line is modeled with only series impedance, the model is simplified as there is no coupling
-with the ground. This is a common model of short lines, typically in distribution networks.
+If the line is modeled with only series impedance, the model is simplified as there is no coupling with the ground. This
+is a common model of short lines, typically in distribution networks.
 
 The corresponding diagram is:
 
@@ -55,8 +55,8 @@ The results for simplified lines are described [here](./index.md#available-resul
 
 ## Usage
 
-To create a simplified line, create an instance of `LineParameter` without providing `y_shunt`.
-Here is a simplified line connecting a constant power load to a voltage source.
+To create a simplified line, create an instance of `LineParameter` without providing `y_shunt`. Here is a simplified
+line connecting a constant power load to a voltage source.
 
 ```python
 import functools as ft

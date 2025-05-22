@@ -18,30 +18,29 @@ _Roseau Load Flow_ is a powerful load flow solver and static analysis tool that 
 In addition to the following **unique** set of features:
 
 - Support for _floating neutrals_ for loads and sources
-- Four-wire multi-phase modelling with no Kron's reduction, no transformations, no assumptions on the
-  network topology and no implicit earthing everywhere
-- Support for **flexible**, voltage-dependent, loads directly in the Newton algorithm for better
-  convergence and stability
+- Four-wire multi-phase modelling with no Kron's reduction, no transformations, no assumptions on the network topology
+  and no implicit earthing everywhere
+- Support for **flexible**, voltage-dependent, loads directly in the Newton algorithm for better convergence and
+  stability
 
 <!-- end rlf-pitch -->
 
 This project is compatible with Python version 3.11 and newer. The
-[installation instructions](https://roseau-load-flow.roseautechnologies.com/en/latest/Installation.html)
-will guide you through the installation process. If you are new to _Roseau Load Flow_, we recommend
-you start with the
-[getting started tutorial](https://roseau-load-flow.roseautechnologies.com/en/latest/usage/Getting_Started.html).
-You can find the complete documentation at https://roseau-load-flow.roseautechnologies.com/.
+[installation instructions](https://roseau-load-flow.roseautechnologies.com/en/latest/Installation.html) will guide you
+through the installation process. If you are new to _Roseau Load Flow_, we recommend you start with the
+[getting started tutorial](https://roseau-load-flow.roseautechnologies.com/en/latest/usage/Getting_Started.html). You
+can find the complete documentation at https://roseau-load-flow.roseautechnologies.com/.
 
 ## License
 
 This project is _partially_ open source but using the solver requires a license. The license key
-`A8C6DA-9405FB-E74FB9-C71C3C-207661-V3` can be used free of charge with networks containing up to 10
-buses. To obtain a personal or commercial license, please contact us
-at [contact@roseautechnologies.com](mailto:contact@roseautechnologies.com).
+`A8C6DA-9405FB-E74FB9-C71C3C-207661-V3` can be used free of charge with networks containing up to 10 buses. To obtain a
+personal or commercial license, please contact us at
+[contact@roseautechnologies.com](mailto:contact@roseautechnologies.com).
 
 > [!NOTE]
-> Licenses are given free of charge for **students and teachers**. Please contact us at
-> contact@roseautechnologies.com for more information.
+> Licenses are given free of charge for **students and teachers**. Please contact us at contact@roseautechnologies.com
+> for more information.
 
 Read more at [License](https://roseau-load-flow.roseautechnologies.com/en/latest/License.html).
 
@@ -49,8 +48,8 @@ Read more at [License](https://roseau-load-flow.roseautechnologies.com/en/latest
 
 <!-- start rlf-networks -->
 
-_Roseau Load Flow_ ships with a sample of 20 low-voltage and 20 medium-voltage feeder networks. Each
-network is provided with its summer and winter load points.
+_Roseau Load Flow_ ships with a sample of 20 low-voltage and 20 medium-voltage feeder networks. Each network is provided
+with its summer and winter load points.
 
 To go further, you can also use
 [these 150 distribution networks](https://www.data.gouv.fr/fr/datasets/departs-hta-representatifs-pour-lanalyse-des-reseaux-de-distribution-francais/),
@@ -74,5 +73,4 @@ This software is developed by [Roseau Technologies](https://www.roseautechnologi
 
 Follow us on:
 [![Linkedin](https://i.sstatic.net/gVE0j.png) LinkedIn](https://www.linkedin.com/company/roseau-technologies/)
-&nbsp;
 [![GitHub](https://i.sstatic.net/tskMh.png) GitHub](https://github.com/RoseauTechnologies)

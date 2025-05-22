@@ -1,14 +1,14 @@
 ---
 myst:
   html_meta:
-    "description lang=en": |
+    description lang=en: |
       Line models in Roseau Load Flow - Three-phase unbalanced load flow solver in a Python API by Roseau Technologies.
-    "keywords lang=en": simulation, distribution grid, power line, electric line, lines, model
+    keywords lang=en: simulation, distribution grid, power line, electric line, lines, model
     # spellchecker:off
-    "description lang=fr": |
+    description lang=fr: |
       Les modèles de ligne dans Roseau Load Flow - Solveur d'écoulement de charge triphasé et déséquilibré dans une
       API Python par Roseau Technologies.
-    "keywords lang=fr": simulation, réseau, électrique, bus, roseau load flow, lignes, modèle
+    keywords lang=fr: simulation, réseau, électrique, bus, roseau load flow, lignes, modèle
 # spellchecker:on
 ---
 
@@ -16,20 +16,18 @@ myst:
 
 ## Definition
 
-Lines are modeled using passive components lumped in a PI section. The lumped parameters are
-defined using the series impedance matrix $\underline{Z}$ and the shunt admittance matrix
-$\underline{Y}$.
+Lines are modeled using passive components lumped in a PI section. The lumped parameters are defined using the series
+impedance matrix $\underline{Z}$ and the shunt admittance matrix $\underline{Y}$.
 
 ## Matrices definition
 
-Before diving into the different line models, lets define the series impedance matrix $\underline{Z}$, and the
-shunt admittance matrix $\underline{Y}$ used to model the lines.
+Before diving into the different line models, lets define the series impedance matrix $\underline{Z}$, and the shunt
+admittance matrix $\underline{Y}$ used to model the lines.
 
 ### Series impedance matrix
 
-The series impedance matrix $\underline{Z}$, in $\Omega$, consists of the series resistance of the
-conductors ($R\in{\mathbb{R}^+}^4$), the self-inductances ($L\in\mathbb{R}^4$) and the mutual
-inductances ($M\in\mathbb{R}^{12}$).
+The series impedance matrix $\underline{Z}$, in $\Omega$, consists of the series resistance of the conductors
+($R\in{\mathbb{R}^+}^4$), the self-inductances ($L\in\mathbb{R}^4$) and the mutual inductances ($M\in\mathbb{R}^{12}$).
 
 ```{math}
 \begin{aligned}
@@ -66,8 +64,8 @@ The admittance matrix $\underline{y}$ shouldn't be confused with the shunt admit
 $\underline{Y}$ defined below.
 ```
 
-$\underline{y}$ represents the admittances between each node, while $\underline{Y}$ is used to
-compute the currents and voltages.
+$\underline{y}$ represents the admittances between each node, while $\underline{Y}$ is used to compute the currents and
+voltages.
 
 ```{math}
 \begin{aligned}
@@ -127,10 +125,9 @@ The shunt admittance matrix $\underline{Y}$ is defined from the admittance matri
 
 ## Line parameters
 
-The parameters of the lines are defined using the `LineParameters` class. It takes the series
-impedance matrix $\underline{Z}$ and optionally, the shunt admittance matrix $\underline{Y}$. The
-first one must be given in $\Omega$/km (or an equivalent unit) and the second must be given in
-$S/km$ (or an equivalent unit).
+The parameters of the lines are defined using the `LineParameters` class. It takes the series impedance matrix
+$\underline{Z}$ and optionally, the shunt admittance matrix $\underline{Y}$. The first one must be given in $\Omega$/km
+(or an equivalent unit) and the second must be given in $S/km$ (or an equivalent unit).
 
 ```python
 import numpy as np
@@ -195,18 +192,19 @@ The following results are available for all lines:
 | `res_loading`             | $\mathrm{pu}$ | number array     | The loading of each phase of the line compared to its ampacity                                 |
 | `res_violated`            | -             | boolean array    | Indicates if the loading of each phase exceeds the maximal loading                             |
 
-The results with two arrays are for the first and second ends of the line, respectively. The sense
-of currents and powers is from the corresponding bus into the line.
+The results with two arrays are for the first and second ends of the line, respectively. The sense of currents and
+powers is from the corresponding bus into the line.
 
 ## Available models
 
-The following line models are available in _Roseau Load Flow_. Please also have a look at the parameters page to
-define the parameters of lines.
+The following line models are available in _Roseau Load Flow_. Please also have a look at the parameters page to define
+the parameters of lines.
 
 ```{toctree}
-:maxdepth: 2
-:caption: Lines
-
+---
+maxdepth: 2
+caption: Lines
+---
 Parameters
 ShuntLine
 SimplifiedLine

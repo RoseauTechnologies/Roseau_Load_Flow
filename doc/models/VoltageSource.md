@@ -1,15 +1,15 @@
 ---
 myst:
   html_meta:
-    "description lang=en": |
+    description lang=en: |
       Define an ideal voltage source and its connection type in Roseau Load Flow - Three-phase unbalanced load flow
       solver in a Python API by Roseau Technologies.
-    "keywords lang=en": simulation, distribution grid, voltage source, ideal, connection, model
+    keywords lang=en: simulation, distribution grid, voltage source, ideal, connection, model
     # spellchecker:off
-    "description lang=fr": |
+    description lang=fr: |
       Définir une source de tension idéale et son type de connexion dans Roseau Load Flow - Solveur d'écoulement de
       charge triphasé et déséquilibré dans une API Python par Roseau Technologies.
-    "keywords lang=fr": simulation, réseau, électrique, source, tension, idéale, connexion, modèle
+    keywords lang=fr: simulation, réseau, électrique, source, tension, idéale, connexion, modèle
     # spellchecker:on
 ---
 
@@ -17,13 +17,13 @@ myst:
 
 ## Definition
 
-It represents an ideal voltage source that maintains a fixed voltage independently of the load
-resistance or the output current.
+It represents an ideal voltage source that maintains a fixed voltage independently of the load resistance or the output
+current.
 
 ## Connections
 
-A voltage source can be either star-connected or delta-connected depending on whether its phases
-include a neutral or not.
+A voltage source can be either star-connected or delta-connected depending on whether its phases include a neutral or
+not.
 
 ### Star (wye) connection
 
@@ -57,8 +57,8 @@ The equations that model a star voltage source are:
 \right.
 ```
 
-Where $\underline{U}\in\mathbb{C}^3$ is the voltage vector (user defined parameter) and
-$\underline{V}\in\mathbb{C}^4$ is the node potentials vector (variable).
+Where $\underline{U}\in\mathbb{C}^3$ is the voltage vector (user defined parameter) and $\underline{V}\in\mathbb{C}^4$
+is the node potentials vector (variable).
 
 ```{note}
 You can create star connected sources even on buses that don't have a neutral. In this case, the
@@ -97,8 +97,8 @@ The equations that model a delta voltage source are:
 \right.
 ```
 
-Where $\underline{U}\in\mathbb{C}^3$ is the voltage vector (user defined parameter) and
-$\underline{V}\in\mathbb{C}^3$ is the node potentials vector (variable).
+Where $\underline{U}\in\mathbb{C}^3$ is the voltage vector (user defined parameter) and $\underline{V}\in\mathbb{C}^3$
+is the node potentials vector (variable).
 
 ## Available Results
 
@@ -134,9 +134,9 @@ And the following results are available for _three-phase_ sources:
 
 ## Usage
 
-A voltage source defined with a neutral phase is a star-connected voltage source, otherwise it is a
-delta-connected voltage source. The phases of the source must be a subset of the phases of the bus
-it is connected to. A voltage source takes the same phases as the bus by default.
+A voltage source defined with a neutral phase is a star-connected voltage source, otherwise it is a delta-connected
+voltage source. The phases of the source must be a subset of the phases of the bus it is connected to. A voltage source
+takes the same phases as the bus by default.
 
 ```python
 import numpy as np
@@ -163,11 +163,10 @@ bus2 = rlf.Bus(id="bus2", phases="an")
 rlf.VoltageSource("vs4", bus=bus2, phases="bn", voltages=230)  # Error
 ```
 
-A **scalar** (potentially complex) voltage value can be used to define the source's balanced
-voltages. For a single-phase source, the scalar value is used as the voltage of the source's phase.
-For a two-phase source, the second voltage value is the negative of the first value (180° phase
-shift). For a three-phase source, the second and third values are calculated by rotating the first
-value by -120° and 120°, respectively (120° phase shift clockwise).
+A **scalar** (potentially complex) voltage value can be used to define the source's balanced voltages. For a
+single-phase source, the scalar value is used as the voltage of the source's phase. For a two-phase source, the second
+voltage value is the negative of the first value (180° phase shift). For a three-phase source, the second and third
+values are calculated by rotating the first value by -120° and 120°, respectively (120° phase shift clockwise).
 
 ```python
 bus = rlf.Bus(id="bus", phases="abcn")
@@ -208,9 +207,8 @@ rlf.VoltageSource(
 )  # Error
 ```
 
-A voltage **vector** (list or numpy array) can be used to create an unbalanced voltage source if
-needed. The voltage vector must have the same size as the number of the phase-to-phase or
-phase-to-neutral connections of the source.
+A voltage **vector** (list or numpy array) can be used to create an unbalanced voltage source if needed. The voltage
+vector must have the same size as the number of the phase-to-phase or phase-to-neutral connections of the source.
 
 ```python
 bus = rlf.Bus(id="bus", phases="abcn")
