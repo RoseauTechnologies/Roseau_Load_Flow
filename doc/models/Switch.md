@@ -1,13 +1,15 @@
 ---
 myst:
   html_meta:
-    "description lang=en": |
+    description lang=en: |
       Switches in Roseau Load Flow - Three-phase unbalanced load flow solver in a Python API by Roseau Technologies.
-    "description lang=fr": |
+    keywords lang=en: simulation, distribution grid, switch, switches, model
+    # spellchecker:off
+    description lang=fr: |
       Les interrupteurs dans Roseau Load Flow - Solveur d'écoulement de charge triphasé et déséquilibré dans une API
       Python par Roseau Technologies.
-    "keywords lang=fr": simulation, réseau, électrique, bus, roseau load flow, interrupteurs, modèle
-    "keywords lang=en": simulation, distribution grid, switch, switches, model
+    keywords lang=fr: simulation, réseau, électrique, bus, roseau load flow, interrupteurs, modèle
+    # spellchecker:on
 ---
 
 # Switch
@@ -17,9 +19,11 @@ myst:
 It represents an ideal switch, a lossless element that connects two buses.
 
 ```{image} /_static/Switch.svg
-:alt: Switch diagram
-:width: 300px
-:align: center
+---
+alt: Switch diagram
+width: 300px
+align: center
+---
 ```
 
 ## Equations
@@ -46,8 +50,8 @@ The following results are available for all switches:
 | `res_powers`     | $V\!A$       | 2 complex arrays | The powers flowing into each phase of the switch                                                 |
 | `res_voltages`   | $V$          | 2 complex arrays | The phase-to-neutral voltages if the switch has a neutral, the phase-to-phase voltages otherwise |
 
-The results with two arrays are for the first and second ends of the switch, respectively. The sense
-of currents and powers is from the corresponding bus into the switch.
+The results with two arrays are for the first and second ends of the switch, respectively. The sense of currents and
+powers is from the corresponding bus into the switch.
 
 ## Usage
 

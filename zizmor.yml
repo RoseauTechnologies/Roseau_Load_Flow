@@ -1,0 +1,12 @@
+rules:
+  unpinned-uses:
+    config:
+      policies:
+        # Trust some actions providers enough to allow pin with reference
+        actions/*: ref-pin
+        pre-commit/action: ref-pin
+        astral-sh/*: ref-pin
+  cache-poisoning:
+    ignore:
+      # ignore ci.yml as there is no release in this workflow
+      - ci.yml

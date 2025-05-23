@@ -1,20 +1,22 @@
 ---
 myst:
   html_meta:
-    "description lang=en": |
+    description lang=en: |
       Shunt line models in Roseau Load Flow - three-phase unbalanced load flow solver in a Python API by Roseau
       Technologies.
-    "description lang=fr": |
+    keywords lang=en: simulation, distribution grid, switch, lines, model
+    # spellchecker:off
+    description lang=fr: |
       Les modèles de ligne Shunt dans Roseau Load Flow - solveur d'écoulement de charge triphasé et déséquilibré dans
       une API Python par Roseau Technologies.
-    "keywords lang=fr": simulation, réseau, électrique, bus, roseau load flow, lignes, modèle
-    "keywords lang=en": simulation, distribution grid, switch, lines, model
+    keywords lang=fr: simulation, réseau, électrique, bus, roseau load flow, lignes, modèle
+# spellchecker:on
 ---
 
 # Shunt line
 
-The first model of line which can be used is a PI model with series impedance and shunt admittance. The
-corresponding diagram is:
+The first model of line which can be used is a PI model with series impedance and shunt admittance. The corresponding
+diagram is:
 
 ````{tab} European standards
 ```{image} /_static/Line/European_Shunt_Line.svg
@@ -70,8 +72,8 @@ with $\underline{Z}$ the series impedance matrix and $\underline{Y}$ the shunt a
 
 ## Available Results
 
-In addition to the results available for all lines, as described [here](./index.md#available-results),
-the following results are available for lines with shunt components:
+In addition to the results available for all lines, as described [here](./index.md#available-results), the following
+results are available for lines with shunt components:
 
 | Result Accessor          | Default Unit | Type             | Description                                                 |
 | ------------------------ | ------------ | ---------------- | ----------------------------------------------------------- |
@@ -83,9 +85,8 @@ The results with two arrays are for the first and second ends of the line, respe
 
 ## Usage
 
-To create a shunt line, create an instance of `LineParameter` with the `y_shunt` argument. The
-`ground` argument of the `Line` constructor is mandatory for shunt lines. Here is a line that
-connects a constant power load to a voltage source.
+To create a shunt line, create an instance of `LineParameter` with the `y_shunt` argument. The `ground` argument of the
+`Line` constructor is mandatory for shunt lines. Here is a line that connects a constant power load to a voltage source.
 
 ```python
 import functools as ft

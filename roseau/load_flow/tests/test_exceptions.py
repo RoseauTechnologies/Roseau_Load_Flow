@@ -7,10 +7,11 @@ def test_exceptions():
         assert str(x).upper() == x
         assert str(x).lower() == x
     # Case-insensitive constructor (with or without spaces or dashes)
+    # spellchecker:off
     assert RoseauLoadFlowExceptionCode("BaD_bus_ID") == RoseauLoadFlowExceptionCode.BAD_BUS_ID
     assert RoseauLoadFlowExceptionCode("bad bus id") == RoseauLoadFlowExceptionCode.BAD_BUS_ID
     assert RoseauLoadFlowExceptionCode("BAD-BUS-ID") == RoseauLoadFlowExceptionCode.BAD_BUS_ID
-
+    # spellchecker:on
     r = RoseauLoadFlowException(msg="toto", code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS)
     assert r.msg == "toto"
     assert isinstance(r.code, RoseauLoadFlowExceptionCode)

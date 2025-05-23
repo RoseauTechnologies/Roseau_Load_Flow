@@ -31,12 +31,14 @@ def test_line_type():
     with pytest.raises(ValueError, match=r"is not a valid LineType"):
         LineType("nan")
 
+    # spellchecker:off
     assert LineType("oVeRhEaD") == LineType.OVERHEAD
     assert LineType("o") == LineType.OVERHEAD
     assert LineType("uNdErGrOuNd") == LineType.UNDERGROUND
     assert LineType("u") == LineType.UNDERGROUND
     assert LineType("tWiStEd") == LineType.TWISTED
     assert LineType("T") == LineType.TWISTED
+    # spellchecker:on
 
 
 def test_insulator():

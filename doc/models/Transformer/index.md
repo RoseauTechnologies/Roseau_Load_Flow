@@ -1,13 +1,15 @@
 ---
 myst:
   html_meta:
-    "description lang=en": |
+    description lang=en: |
       Transformers in Roseau Load Flow - Three-phase unbalanced load flow solver in a Python API by Roseau Technologies.
-    "description lang=fr": |
+    keywords lang=en: simulation, distribution grid, power transformer, transformers, model
+    # spellchecker:off
+    description lang=fr: |
       Les transformateurs dans Roseau Load Flow - Solveur d'écoulement de charge triphasé et déséquilibré dans une
       API Python par Roseau Technologies.
-    "keywords lang=fr": simulation, réseau, électrique, bus, roseau load flow, transformateurs, modèle
-    "keywords lang=en": simulation, distribution grid, power transformer, transformers, model
+    keywords lang=fr: simulation, réseau, électrique, bus, roseau load flow, transformateurs, modèle
+# spellchecker:on
 ---
 
 # Transformers
@@ -23,50 +25,42 @@ _Roseau Load Flow_ can model single-phase, center-tapped and three-phase transfo
 Transformers are modeled with the following parameters:
 
 - $\mathrm{VG}$: the vector group of the transformer. This parameter is called `vg` in the code.
-- $U_\mathrm{HV}$: the phase-to-phase nominal voltage of the high voltage side (in V). This
-  parameter is called `uhv` in the code.
-- $U_\mathrm{LV}$: the phase-to-phase nominal voltage of the low voltage side (in V). This
-  parameter is called `ulv` in the code.
+- $U_\mathrm{HV}$: the phase-to-phase nominal voltage of the high voltage side (in V). This parameter is called `uhv` in
+  the code.
+- $U_\mathrm{LV}$: the phase-to-phase nominal voltage of the low voltage side (in V). This parameter is called `ulv` in
+  the code.
 - $S^n$: the nominal power of the transformer (in VA). This parameter is called `sn` in the code.
-- $Z_2$: the series impedance located at the low voltage side of the transformer. It represents
-  non-ideal transformer losses due to winding resistance and leakage reactance. This parameter is
-  called `z2` in the code.
-- $Y_m$: the magnetizing admittance located at the high voltage side of the transformer. It
-  represents non-ideal transformer losses due to core magnetizing inductance and iron losses. This
-  parameter is called `ym` in the code.
+- $Z_2$: the series impedance located at the low voltage side of the transformer. It represents non-ideal transformer
+  losses due to winding resistance and leakage reactance. This parameter is called `z2` in the code.
+- $Y_m$: the magnetizing admittance located at the high voltage side of the transformer. It represents non-ideal
+  transformer losses due to core magnetizing inductance and iron losses. This parameter is called `ym` in the code.
 
-The vector group defines the type of transformer and its high voltage and low voltage winding
-configuration:
+The vector group defines the type of transformer and its high voltage and low voltage winding configuration:
 
 - `"Ii0"` or `"Ii6"`: a single-phase transformer, in-phase or in opposition respectively;
 - `"Iii0"` or `"Iii6"`: a center-tapped transformer, in-phase or in opposition respectively;
-- `"Dd0"`, `"Dyn11"`, etc.: a three-phase transformer with different winding configurations.
-  For a full list of supported three-phase transformer configurations, please refer to the
+- `"Dd0"`, `"Dyn11"`, etc.: a three-phase transformer with different winding configurations. For a full list of
+  supported three-phase transformer configurations, please refer to the
   [three-phase transformer models](./Three_Phase_Transformer.md) page.
 
-$Z_2$ and $Y_m$ are usually obtained from the following results of open-circuit and short-circuit
-tests:
+$Z_2$ and $Y_m$ are usually obtained from the following results of open-circuit and short-circuit tests:
 
 - $i^0$: the current during open-circuit test (in %). This parameter is called `i0` in the code.
 - $P^0$: the losses during open-circuit test (in W). This parameter is called `p0` in the code.
-- $P^\mathrm{sc}$: the losses during short-circuit test (in W). This parameter is called `psc`
-  in the code.
-- $V^\mathrm{sc}$: the voltage on LV side during short-circuit test (in %). This parameter is
-  called `vsc` in the code.
+- $P^\mathrm{sc}$: the losses during short-circuit test (in W). This parameter is called `psc` in the code.
+- $V^\mathrm{sc}$: the voltage on LV side during short-circuit test (in %). This parameter is called `vsc` in the code.
 
 First, we define the following quantities:
 
-- $i_\mathrm{HV}^n=\dfrac{S^n}{U_\mathrm{HV}}$: the nominal current of the high voltage winding
-  of the transformer.
-- $i_\mathrm{LV}^n=\dfrac{S^n}{U_\mathrm{LV}}$: the nominal current of the low voltage winding
-  of the transformer.
+- $i_\mathrm{HV}^n=\dfrac{S^n}{U_\mathrm{HV}}$: the nominal current of the high voltage winding of the transformer.
+- $i_\mathrm{LV}^n=\dfrac{S^n}{U_\mathrm{LV}}$: the nominal current of the low voltage winding of the transformer.
 
 ### Open-circuit and short-circuit tests
 
 #### Open-circuit test
 
-Let $P^0$ be the no-load losses and $i^0_\mathrm{HV}$ be the current in the high voltage winding of
-the transformer during the no-load (open-circuit) test. The following values can be computed:
+Let $P^0$ be the no-load losses and $i^0_\mathrm{HV}$ be the current in the high voltage winding of the transformer
+during the no-load (open-circuit) test. The following values can be computed:
 
 ```{math}
 \begin{aligned}
@@ -91,8 +85,8 @@ Then, $\underline{Y_{\mathrm{m}}}$ can be deduced:
 
 #### Short-circuit test
 
-Let $P^{\mathrm{sc}}$ be the short-circuit losses and $U_\mathrm{LV}^\mathrm{sc}$ be the voltage on
-LV side during the short-circuit test. The following values can be computed:
+Let $P^{\mathrm{sc}}$ be the short-circuit losses and $U_\mathrm{LV}^\mathrm{sc}$ be the voltage on LV side during the
+short-circuit test. The following values can be computed:
 
 ```{math}
 \begin{aligned}
@@ -130,23 +124,21 @@ The following results are available for all transformers:
 | `res_loading`      | $\mathrm{pu}$ | number           | The loading of the transformer compared to its nominal power                                          |
 | `res_violated`     | -             | boolean          | Indicates if the transformer loading exceeds its maximal loading                                      |
 
-The results with two arrays are for the first and second ends of the transformer, respectively. The
-sense of currents and powers is from the corresponding bus into the transformer.
-For convenience, these results are also available with the suffix `_hv` and `_lv` to access the
-results of the high voltage and low voltage sides of the transformer, respectively. For example,
-`res_potentials_hv` returns a complex array of potentials of the HV side of the transformer.
+The results with two arrays are for the first and second ends of the transformer, respectively. The sense of currents
+and powers is from the corresponding bus into the transformer. For convenience, these results are also available with
+the suffix `_hv` and `_lv` to access the results of the high voltage and low voltage sides of the transformer,
+respectively. For example, `res_potentials_hv` returns a complex array of potentials of the HV side of the transformer.
 
 ## Usage
 
-To define the parameters of the transformers, use the `TransformerParameters` class. Depending on
-the information you have, you can choose between the following methods:
+To define the parameters of the transformers, use the `TransformerParameters` class. Depending on the information you
+have, you can choose between the following methods:
 
 ### Using pre-defined transformers in the catalogue
 
-If you don't have all the information needed to model the transformer but you know its nominal power
-and voltage, check if your transformer is already defined in the catalogue. You can then create the
-transformer parameters using the {meth}`~roseau.load_flow.TransformerParameters.from_catalogue`
-method:
+If you don't have all the information needed to model the transformer but you know its nominal power and voltage, check
+if your transformer is already defined in the catalogue. You can then create the transformer parameters using the
+{meth}`~roseau.load_flow.TransformerParameters.from_catalogue` method:
 
 ```python
 transformer_params = rlf.TransformerParameters.from_catalogue(
@@ -158,8 +150,8 @@ Refer to the [catalogues page](catalogues-transformers) for more information.
 
 ### Using open-circuit and short-circuit test results
 
-If your transformer is not in the catalogue but you have the results of the open-circuit and
-short-circuit tests, you can create the transformer parameters using the
+If your transformer is not in the catalogue but you have the results of the open-circuit and short-circuit tests, you
+can create the transformer parameters using the
 {meth}`~roseau.load_flow.TransformerParameters.from_open_and_short_circuit_tests` method:
 
 ```python
@@ -230,23 +222,23 @@ transformer_params_1ph = rlf.TransformerParameters(
 
 ### Using data from another software
 
-If you have the transformer parameters in another software, you can use the available data exchange
-methods to create the transformer parameters. We currently support _PowerFactory_ and _OpenDSS_.
+If you have the transformer parameters in another software, you can use the available data exchange methods to create
+the transformer parameters. We currently support _PowerFactory_ and _OpenDSS_.
 
-- For OpenDSS, use the {meth}`~roseau.load_flow.TransformerParameters.from_open_dss` method.
-  Refer to the [OpenDss section](OpenDSS-Transformers) in the data exchange page for more information.
-- For PowerFactory, use the {meth}`~roseau.load_flow.TransformerParameters.from_power_factory` method.
-  Refer to the [PowerFactory section](PowerFactory-Transformers) in the data exchange page for more
-  information.
+- For OpenDSS, use the {meth}`~roseau.load_flow.TransformerParameters.from_open_dss` method. Refer to the
+  [OpenDss section](OpenDSS-Transformers) in the data exchange page for more information.
+- For PowerFactory, use the {meth}`~roseau.load_flow.TransformerParameters.from_power_factory` method. Refer to the
+  [PowerFactory section](PowerFactory-Transformers) in the data exchange page for more information.
 
 ## Available models
 
 The following transformer models are available in _Roseau Load Flow_:
 
 ```{toctree}
-:maxdepth: 2
-:caption: Transformers
-
+---
+maxdepth: 2
+caption: Transformers
+---
 Single_Phase_Transformer
 Three_Phase_Transformer
 Center_Tapped_Transformer

@@ -803,7 +803,7 @@ def test_res_unbalance():
     load._res_currents = np.array([ia, ib, ic])
     assert np.isclose(load.res_current_unbalance().m, 0)
 
-    # Unbalanced laod
+    # Unbalanced load
     load._res_potentials = np.array([va, vb, vc])
     load._res_currents = np.array([ia, ib, (ic + ib) / 2])
     assert np.isclose(load.res_current_unbalance().m, 37.7964473)

@@ -35,10 +35,10 @@ from roseau.load_flow.types import Insulator, LineType, Material
 # Store the expected hashes of the files that should not be modified
 EXPECTED_HASHES = {
     "network_json_v0.json": "ad984cbcd26b36602a2789e2f0badcb5",
-    "network_json_v1.json": "fc930431b69165f68961b0f0dc2635b5",
-    "network_json_v2.json": "d85a2658708576c083ceab666a83150b",
-    "network_json_v3.json": "551f852aefc71d744f4738d31bd0e90b",
-    "network_json_v4.json": "6c1af7193a771488df4c8b2c476a1ef9",
+    "network_json_v1.json": "49be6656c9c40c7f71633eda9b913c97",
+    "network_json_v2.json": "efc3b4cb71409c57f30b44b40cc019c5",
+    "network_json_v3.json": "78944e4458a7d27cc5ccceec35ac0309",
+    "network_json_v4.json": "f6b88d6cefef751d0cb8f5104b51e818",
 }
 
 
