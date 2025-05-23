@@ -60,8 +60,16 @@ repos:
       - id: prettier
         args: ["--print-width", "120"]
         require_serial: true
+        types_or: [html, yaml]
   - repo: https://github.com/cmhughes/latexindent.pl
     rev: V3.24.5
     hooks:
       - id: latexindent
         args: [-l, -m, -s, -wd]
+  - repo: https://github.com/biomejs/pre-commit
+    rev: v1.9.4
+    hooks:
+      - id: biome-check
+        # TODO add yaml when biome supports it
+        # TODO html formatter is available in v2.0 beta, replace prettier when v2.0 is released
+        types_or: [json]
