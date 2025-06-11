@@ -404,6 +404,22 @@ def test_from_geometry_checks():
         "`phase_radius*2 <= external_diameter * sqrt(2) / 4` is not satisfied."
     )
 
+    # Missing neutral values OK
+    lp = LineParameters.from_geometry(
+        "test",
+        line_type=LineType.OVERHEAD,
+        material=Material.AL,
+        insulator=Insulator.PEX,
+        section=150,
+        height=10,
+        external_diameter=0.04,
+        ampacity=150,
+    )
+    assert lp.materials.tolist() == [Material.AL, Material.AL, Material.AL, Material.AL]
+    assert lp.insulators.tolist() == [Insulator.PEX, Insulator.PEX, Insulator.PEX, Insulator.PEX]
+    assert lp.ampacities.m.tolist() == [150, 150, 150, 150]
+    assert lp.sections.m.tolist() == [150, 150, 150, 150]
+
 
 def test_sym():
     # With the bad model of PwF

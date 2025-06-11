@@ -491,6 +491,8 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             height=height,
             external_diameter=external_diameter,
         )
+        if ampacity_neutral is None:
+            ampacity_neutral = ampacity
         ampacities = [ampacity, ampacity, ampacity, ampacity_neutral]
         return cls(
             id=id,
