@@ -21,6 +21,8 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`380` {gh-issue}`379` Fix error when neutral ampacity is not passed to `LineParameters.from_geometry`.
+
 - {gh-pr}`374` Rename the `from_dgs` method of `rlf.ElectricalNetwork` to `from_dgs_file` and add a new `from_dgs_dict`
   method to load a network from a DGS-formatted dictionary. The old method is deprecated and will be removed in a future
   release. The `from_dgs_file` method accepts an optional `encoding` parameter to specify the encoding of the DGS file.
