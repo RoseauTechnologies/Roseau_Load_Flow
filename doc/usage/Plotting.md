@@ -110,8 +110,7 @@ networkx `Graph` and plot it using the `networkx` library. In the following exam
 
 ```{image} /_static/Plotting/MVFeeder210_Graph_No_Geometries.png
 ---
-alt: A plot showing the graph of the network MVFeeder210 with no geometries using
-  networkx
+alt: The graph of the network MVFeeder210 with no geometries using networkx
 align: center
 ---
 ```
@@ -145,8 +144,7 @@ flow results to plot the voltage phasors.
 
 ```{image} /_static/Plotting/Plot_Voltage_Phasors.png
 ---
-alt: A plot showing voltage phasors of a wye-connected source and a delta-connected
-  load
+alt: The voltage phasors of a wye-connected source and a delta-connected load
 align: center
 ---
 ```
