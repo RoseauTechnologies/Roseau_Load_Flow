@@ -161,7 +161,7 @@ class ElectricalNetwork(AbstractNetwork[Element]):
             f" {count_repr(self.transformers, 'transformer', 'transformers')},"
             f" {count_repr(self.switches, 'switch', 'switches')},"
             f" {count_repr(self.loads, 'load')},"
-            f" {count_repr(self.sources, 'source')},"
+            f" {count_repr(self.sources, 'source')}"
             f">"
         )
 

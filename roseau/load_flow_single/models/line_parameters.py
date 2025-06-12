@@ -113,13 +113,13 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
     @property
     @ureg_wraps("ohm/km", (None,))
     def z_line(self) -> Q_[complex]:
-        """The impedance matrix of the line."""
+        """The positive-sequence impedance of the line (Ohm/km)."""
         return self._z_line
 
     @property
     @ureg_wraps("S/km", (None,))
     def y_shunt(self) -> Q_[complex]:
-        """The shunt admittance matrix of the line."""
+        """The positive-sequence shunt admittance of the line (S/km)."""
         return self._y_shunt
 
     @property
@@ -185,9 +185,10 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
     def from_sym(
         cls,
         id: Id,
-        z0: Complex | Q_[Complex],
+        *,
+        z0: Complex | Q_[Complex] | None = None,
         z1: Complex | Q_[Complex],
-        y0: Complex | Q_[Complex],
+        y0: Complex | Q_[Complex] | None = None,
         y1: Complex | Q_[Complex],
         ampacity: Float | Q_[Float] | None = None,
     ) -> Self:
@@ -198,16 +199,18 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
                 A unique ID of the line parameters, typically its canonical name.
 
             z0:
-                Impedance - zero sequence - :math:`r_0+x_0\\cdot j` (ohms/km)
+                Impedance - zero sequence - :math:`r_0+x_0\\cdot j` (ohms/km).
+                Not used in this positive-sequence line model.
 
             z1:
-                Impedance - direct sequence - :math:`r_1+x_1\\cdot j` (ohms/km)
+                Impedance - direct sequence - :math:`r_1+x_1\\cdot j` (ohms/km).
 
             y0:
-                Admittance - zero sequence - :math:`g_0+b_0\\cdot j` (Siemens/km)
+                Admittance - zero sequence - :math:`g_0+b_0\\cdot j` (Siemens/km).
+                Not used in this positive-sequence line model.
 
             y1:
-                Conductance - direct sequence - :math:`g_1+b_1\\cdot j` (Siemens/km)
+                Conductance - direct sequence - :math:`g_1+b_1\\cdot j` (Siemens/km).
 
             ampacity
                 An optional ampacity for the line parameters (A). It is not used in the load flow.
@@ -215,9 +218,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         Returns:
             The created line parameters.
         """
-        zs = (z0 + 2 * z1) / 3
-        ys = (y0 + 2 * y1) / 3
-        return cls(id=id, z_line=zs, y_shunt=ys, ampacity=ampacity)
+        return cls(id=id, z_line=z1, y_shunt=y1, ampacity=ampacity)
 
     @classmethod
     @ureg_wraps(None, (None, None, None, None, None, None, None, "mm**2", "mm**2", "m", "m", "A"))
@@ -225,11 +226,11 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         cls,
         id: Id,
         *,
-        line_type: LineType,
-        material: Material | None = None,
-        material_neutral: Material | None = None,
-        insulator: Insulator | None = None,
-        insulator_neutral: Insulator | None = None,
+        line_type: LineType | str,
+        material: Material | str | None = None,
+        material_neutral: Material | str | None = None,
+        insulator: Insulator | str | None = None,
+        insulator_neutral: Insulator | str | None = None,
         section: Float | Q_[Float],
         section_neutral: Float | Q_[Float] | None = None,
         height: Float | Q_[Float],
@@ -325,15 +326,40 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
     #
     @classmethod
     def from_roseau_load_flow(cls, parameters: MultiLineParameters) -> Self:
-        """Create a *Roseau Load Flow Single* line parameters from a multiphase *Roseau Load Flow* line parameter.
+        """Create a `rlfs.LineParameters` object from a `rlf.LineParameters` object.
 
         Args:
             parameters:
-                The multiphase line parameter.
+                The multiphase line parameter, an instance of `rlf.LineParameters`.
 
         Returns:
             The single phase line parameter
         """
+        n_phases = parameters._z_line.shape[0]
+        if n_phases not in (3, 4):
+            msg = (
+                f"Only three-phase line parameters can be converted to `rlfs.LineParameters`. "
+                f"`rlf.LineParameters` with id {parameters.id!r} has {n_phases} phases."
+            )
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_MODEL)
+        z_line = parameters.z_line.m
+        y_shunt = parameters.y_shunt.m
+
+        # Get the indices for the diagonal and off-diagonal elements
+        diag_i = np.diag_indices(3)
+        triu_i = np.triu_indices(3, 1)
+        tril_i = np.tril_indices(3, -1)
+
+        # Get the average values of the diagonal and off-diagonal impedances/admittances
+        zs = np.mean(z_line[diag_i])
+        ys = np.mean(y_shunt[diag_i])
+        zm = np.mean([z_line[triu_i], z_line[tril_i]])
+        ym = np.mean([y_shunt[triu_i], y_shunt[tril_i]])
+
+        z1 = zs - zm
+        y1 = ys - ym
+
         materials = parameters.materials
         sections = parameters.sections
         insulators = parameters.insulators
@@ -341,13 +367,13 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
 
         return cls(
             id=parameters.id,
-            z_line=parameters.z_line[0, 0],
-            y_shunt=parameters.y_shunt[0, 0],
+            z_line=z1,
+            y_shunt=y1,
             line_type=parameters.line_type,
             material=materials[0] if materials is not None else None,
-            section=sections[0] if sections is not None else None,
+            section=sections.m[0] if sections is not None else None,
             insulator=insulators[0] if insulators is not None else None,
-            ampacity=ampacities[0] if ampacities is not None else None,
+            ampacity=ampacities.m[0] if ampacities is not None else None,
         )
 
     @classmethod
@@ -358,11 +384,11 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         cls,
         id: Id,
         *,
-        r0: Float | Q_[Float],
+        r0: Float | Q_[Float] | None = None,
         r1: Float | Q_[Float],
-        x0: Float | Q_[Float],
+        x0: Float | Q_[Float] | None = None,
         x1: Float | Q_[Float],
-        b0: Float | Q_[Float],
+        b0: Float | Q_[Float] | None = None,
         b1: Float | Q_[Float],
         inom: Float | Q_[Float] | None = None,
         cohl: Literal[0, "Cable", 1, "OHL"] = "Cable",
@@ -378,18 +404,21 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
 
             r0:
                 PwF parameter `rline0` (AC-Resistance R0'). Zero sequence resistance in (ohms/km).
+                Not used in this positive-sequence line model.
 
             r1:
                 PwF parameter `rline` (AC-Resistance R1'). Direct sequence resistance in (ohms/km).
 
             x0:
                 PwF parameter `xline0` (Reactance X0'). Zero sequence reactance in (ohms/km).
+                Not used in this positive-sequence line model.
 
             x1:
                 PwF parameter `xline` (Reactance X1'). Direct sequence reactance in (ohms/km).
 
             b0:
                 PwF parameter `bline0` (Susceptance B0'). Zero sequence susceptance in (µS/km).
+                Not used in this positive-sequence line model.
 
             b1:
                 PwF parameter `bline` (Susceptance B'). Direct sequence susceptance in (µS/km).
@@ -425,18 +454,18 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         """
         parameters = MultiLineParameters.from_power_factory(
             id=id,
-            r0=r0,
+            r0=r0 if r0 is not None else r1,
             r1=r1,
-            x0=x0,
+            x0=x0 if x0 is not None else x1,
             x1=x1,
-            b0=b0,
+            b0=b0 if b0 is not None else b1,
             b1=b1,
             inom=inom,
             cohl=cohl,
             conductor=conductor,
             insulation=insulation,
             section=section,
-            nphase=1,
+            nphase=3,
             nneutral=0,
         )
         return cls.from_roseau_load_flow(parameters=parameters)
@@ -448,11 +477,11 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         id: Id,
         *,
         r1: Float | Q_[Float],
-        r0: Float | Q_[Float],
+        r0: Float | Q_[Float] | None = None,
         x1: Float | Q_[Float],
-        x0: Float | Q_[Float],
+        x0: Float | Q_[Float] | None = None,
         c1: Float | Q_[Float] = 3.4,  # default value used in OpenDSS
-        c0: Float | Q_[Float] = 1.6,  # default value used in OpenDSS
+        c0: Float | Q_[Float] | None = None,
         basefreq: Float | Q_[Float] = F,
         normamps: Float | Q_[Float] | None = None,
         linetype: str | None = None,
@@ -468,18 +497,21 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
 
             r0:
                 OpenDSS parameter: `R0`. Positive-sequence resistance in (ohm/km).
+                Not used in this positive-sequence line model.
 
             x1:
                 OpenDSS parameter: `X1`. Positive-sequence reactance in (ohm/km).
 
             x0:
                 OpenDSS parameter: `X0`. Positive-sequence reactance in (ohm/km).
+                Not used in this positive-sequence line model.
 
             c1:
                 OpenDSS parameter: `C1`. Positive-sequence capacitance in (nF/km).
 
             c0:
                 OpenDSS parameter: `C0`. Positive-sequence capacitance in (nF/km).
+                Not used in this positive-sequence line model.
 
             basefreq:
                 OpenDSS parameter: `BaseFreq`. Frequency at which impedances are specified (Hz).
@@ -526,15 +558,15 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         parameters = MultiLineParameters.from_open_dss(
             id=id,
             r1=r1,
-            r0=r0,
+            r0=r0 if r0 is not None else r1,
             x1=x1,
-            x0=x0,
+            x0=x0 if x0 is not None else x1,
             c1=c1,
-            c0=c0,
+            c0=c0 if c0 is not None else c1,
             basefreq=basefreq,
             normamps=normamps,
             linetype=linetype,
-            nphases=1,
+            nphases=3,
         )
         return cls.from_roseau_load_flow(parameters=parameters)
 
