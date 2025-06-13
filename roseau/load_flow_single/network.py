@@ -605,7 +605,12 @@ class ElectricalNetwork(AbstractNetwork[Element]):
             for e in element._connected_elements:
                 if e not in visited:
                     if isinstance(element, Transformer):
-                        element_voltage = initial_voltage * element.parameters.kd * element._tap
+                        if element.bus_hv in visited:
+                            # Traversing from HV side to LV side
+                            element_voltage = initial_voltage * (element.parameters.kd * element._tap)
+                        else:
+                            # Traversing from LV side to HV side
+                            element_voltage = initial_voltage / (element.parameters.kd * element._tap)
                     else:
                         element_voltage = initial_voltage
                     elements.append((e, element_voltage, element))

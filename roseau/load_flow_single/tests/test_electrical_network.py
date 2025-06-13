@@ -1,3 +1,4 @@
+import cmath
 import itertools as it
 import json
 import re
@@ -8,6 +9,7 @@ from pathlib import Path
 import geopandas as gpd
 import networkx as nx
 import numpy as np
+import numpy.testing as npt
 import pandas as pd
 import pytest
 from pandas.testing import assert_frame_equal
@@ -1458,3 +1460,19 @@ def test_duplicate_transformer_parameters_id():
     assert tp1._elements == set()
     assert tp2._elements == {tr1}
     assert en._parameters["transformer"] == {tp2.id: tp2}
+
+
+def test_propagate_voltages_step_up_transformers():
+    # Source is located at the LV side of the transformer
+    bus1 = Bus(id="Bus1")
+    bus2 = Bus(id="Bus2")
+    VoltageSource(id="Source", bus=bus1, voltage=400)  # LV source
+    tp = TransformerParameters.from_open_and_short_circuit_tests(
+        id="TP", vg="Dyn11", sn=160000, uhv=20000.0, ulv=400.0, i0=0.023, p0=460.0, psc=2350.0, vsc=0.04
+    )
+    Transformer(id="Tr", bus_lv=bus1, bus_hv=bus2, parameters=tp)
+    ElectricalNetwork.from_element(bus1)  # propagate the voltages
+    expected_lv_ini = 400
+    expected_hv_ini = cmath.rect(20e3, -np.pi / 6)  # Dyn11 shifts by -30°
+    npt.assert_allclose(bus1.initial_voltage.m, expected_lv_ini)
+    npt.assert_allclose(bus2.initial_voltage.m, expected_hv_ini)

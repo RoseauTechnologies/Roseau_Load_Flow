@@ -1119,7 +1119,12 @@ class ElectricalNetwork(AbstractNetwork[Element], CatalogueMixin[JsonDict]):
                         if isinstance(element, Transformer):
                             phase_shift = CLOCK_PHASE_SHIFT[element.parameters.phase_displacement]
                             kd = element.parameters._ulv / element.parameters._uhv * phase_shift
-                            new_potentials = {key: p * kd * element.tap for key, p in potentials.items()}
+                            if element.bus_hv in visited:
+                                # Traversing from HV side to LV side
+                                new_potentials = {key: p * (kd * element.tap) for key, p in potentials.items()}
+                            else:
+                                # Traversing from LV side to HV side
+                                new_potentials = {key: p / (kd * element.tap) for key, p in potentials.items()}
                         else:
                             new_potentials = potentials
                         elements.append((e, new_potentials, element))

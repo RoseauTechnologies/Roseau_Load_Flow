@@ -1,4 +1,4 @@
-import contextlib
+import cmath
 import itertools as it
 import json
 import re
@@ -31,6 +31,7 @@ from roseau.load_flow.models import (
     VoltageSource,
 )
 from roseau.load_flow.network import ElectricalNetwork
+from roseau.load_flow.sym import PositiveSequence
 from roseau.load_flow.units import Q_
 from roseau.load_flow.utils import LoadTypeDtype, PhaseDtype, SourceTypeDtype, VoltagePhaseDtype
 
@@ -2566,6 +2567,24 @@ def test_results_to_json(small_network_with_results, tmp_path):
     assert res_network == res_network_expected
 
 
+def test_propagate_voltages_step_up_transformers():
+    # Source is located at the LV side of the transformer
+    bus1 = Bus(id="Bus1", phases="abcn")
+    bus2 = Bus(id="Bus2", phases="abc")
+    PotentialRef(id="Pref1", element=bus1)
+    PotentialRef(id="Pref2", element=bus2)
+    VoltageSource(id="Source", bus=bus1, voltages=400 / np.sqrt(3))  # LV source
+    tp = TransformerParameters.from_open_and_short_circuit_tests(
+        id="TP", vg="Dyn11", sn=160000, uhv=20000.0, ulv=400.0, i0=0.023, p0=460.0, psc=2350.0, vsc=0.04
+    )
+    Transformer(id="Tr", bus_lv=bus1, bus_hv=bus2, parameters=tp)
+    ElectricalNetwork.from_element(bus1)  # propagate the voltages
+    expected_lv_ini = 400 / np.sqrt(3) * np.array([*PositiveSequence, 0])
+    expected_hv_ini = cmath.rect(20e3 / np.sqrt(3), -np.pi / 6) * PositiveSequence  # Dyn11 shifts by -30°
+    npt.assert_allclose(bus1.initial_potentials.m, expected_lv_ini)
+    npt.assert_allclose(bus2.initial_potentials.m, expected_hv_ini)
+
+
 def test_propagate_voltages_center_transformers():
     # Source is located at the HV side of the transformer
     bus1 = Bus(id="bus1", phases="ab")
@@ -2577,9 +2596,7 @@ def test_propagate_voltages_center_transformers():
     bus2 = Bus(id="bus2", phases="abn")
     PotentialRef(id="pref2", element=bus2)
     Transformer(id="transfo", bus_hv=bus1, bus_lv=bus2, parameters=tp)
-    en = ElectricalNetwork.from_element(bus2)
-    with contextlib.suppress(TypeError):  # cython solve_load_flow method has been patched
-        en.solve_load_flow()  # propagate the potentials
+    ElectricalNetwork.from_element(bus2)  # propagate the voltages
     npt.assert_allclose(bus2.initial_potentials.m_as("V"), np.array([200, -200, 0], dtype=np.complex128))
 
 
