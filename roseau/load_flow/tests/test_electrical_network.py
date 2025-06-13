@@ -1,5 +1,4 @@
 import cmath
-import contextlib
 import itertools as it
 import json
 import re
@@ -2597,9 +2596,7 @@ def test_propagate_voltages_center_transformers():
     bus2 = Bus(id="bus2", phases="abn")
     PotentialRef(id="pref2", element=bus2)
     Transformer(id="transfo", bus_hv=bus1, bus_lv=bus2, parameters=tp)
-    en = ElectricalNetwork.from_element(bus2)
-    with contextlib.suppress(TypeError):  # cython solve_load_flow method has been patched
-        en.solve_load_flow()  # propagate the potentials
+    ElectricalNetwork.from_element(bus2)  # propagate the voltages
     npt.assert_allclose(bus2.initial_potentials.m_as("V"), np.array([200, -200, 0], dtype=np.complex128))
 
 
