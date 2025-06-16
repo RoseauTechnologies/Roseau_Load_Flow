@@ -14,19 +14,16 @@ def test_line_parameters():
     bus2 = Bus(id="junction2")
 
     # Negative real values (Z)
-    z_line = -3
-    y_shunt = -2
     with pytest.raises(RoseauLoadFlowException) as e:
-        LineParameters("test", z_line=z_line, y_shunt=y_shunt)
+        LineParameters("test", z_line=-3, y_shunt=2)
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_Z_LINE_VALUE
-    assert e.value.msg == "The z_line value of line type 'test' has coefficients with negative real part."
+    assert e.value.msg == "The z_line value of line type 'test' has negative real part: (-3+0j)"
 
     # Negative real values (Y)
-    y_shunt = -3
-    with pytest.raises(RoseauLoadFlowException):
-        LineParameters(id="test", z_line=z_line, y_shunt=y_shunt)
-    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_Z_LINE_VALUE
-    assert e.value.msg == "The z_line value of line type 'test' has coefficients with negative real part."
+    with pytest.raises(RoseauLoadFlowException) as e:
+        LineParameters(id="test", z_line=3, y_shunt=-2)
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_Y_SHUNT_VALUE
+    assert e.value.msg == "The y_shunt value of line type 'test' has negative real part: (-2+0j)"
 
     # Adding/Removing a shunt to a line is not allowed
     lp1 = LineParameters(id="lp1", z_line=1.0, y_shunt=1.0)
