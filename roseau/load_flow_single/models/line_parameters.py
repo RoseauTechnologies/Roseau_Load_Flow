@@ -11,6 +11,7 @@ import pandas as pd
 from roseau.load_flow import Insulator, LineType, Material, RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow import LineParameters as MultiLineParameters
 from roseau.load_flow.constants import F
+from roseau.load_flow.sym import A_INV, A
 from roseau.load_flow.typing import Complex, Float, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow.utils import CatalogueMixin, Identifiable, JsonMixin
@@ -346,19 +347,12 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         z_line = parameters.z_line.m
         y_shunt = parameters.y_shunt.m
 
-        # Get the indices for the diagonal and off-diagonal elements
-        diag_i = np.diag_indices(3)
-        triu_i = np.triu_indices(3, 1)
-        tril_i = np.tril_indices(3, -1)
-
-        # Get the average values of the diagonal and off-diagonal impedances/admittances
-        zs = np.mean(z_line[diag_i])
-        ys = np.mean(y_shunt[diag_i])
-        zm = np.mean([z_line[triu_i], z_line[tril_i]])
-        ym = np.mean([y_shunt[triu_i], y_shunt[tril_i]])
-
-        z1 = zs - zm
-        y1 = ys - ym
+        z_012 = A_INV @ z_line[:3, :3] @ A
+        y_012 = A_INV @ y_shunt[:3, :3] @ A
+        z1 = z_012.item(1, 1)
+        y1 = y_012.item(1, 1)
+        if y1.real < 0:  # might produce a value with a small negative real part
+            y1 = 1j * y1.imag
 
         materials = parameters.materials
         sections = parameters.sections
@@ -883,18 +877,19 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
     @staticmethod
     def _check_value(id: Id, value: Complex, name: Literal["z_line", "y_shunt"]) -> complex:
         """Check the z_line and y_shunt values."""
+        value = complex(value)  # Ensure the value is a complex number
         # Check that the real coefficients are non-negative
         if value.real < 0.0:
-            msg = f"The {name} value of line type {id!r} has coefficients with negative real part."
+            msg = f"The {name} value of line type {id!r} has negative real part: {value}"
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode[f"BAD_{name.upper()}_VALUE"])
 
         # Ensure that z_line is not 0
         if name == "z_line" and cmath.isclose(value, 0):
-            msg = f"The z_line value of line type {id!r} can't be zero."
+            msg = f"The z_line value of line type {id!r} can't be zero: {value}"
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Z_LINE_VALUE)
-        return complex(value)
+        return value
 
     @staticmethod
     def _check_positive_float(value: Float | None, name: Literal["section", "ampacity"], unit: str) -> float | None:
