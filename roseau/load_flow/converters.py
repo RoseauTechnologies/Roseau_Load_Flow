@@ -71,6 +71,10 @@ def calculate_voltages(potentials: ComplexArrayLike1D, phases: str) -> Q_[Comple
 
 
 _VOLTAGE_PHASES_CACHE = {
+    "a": ["a"],
+    "b": ["b"],
+    "c": ["c"],
+    "n": ["n"],
     "ab": ["ab"],
     "bc": ["bc"],
     "ca": ["ca"],

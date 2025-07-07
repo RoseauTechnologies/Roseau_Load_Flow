@@ -14,55 +14,34 @@ def generate_small_network() -> None:
     point2 = Point(-1.320149235966572, 48.64971306653889)
     line_string = LineString([point1, point2])
 
-    source_bus = rlfs.Bus(id="bus0", geometry=point1)
-    load_bus = rlfs.Bus(id="bus1", geometry=point2)
+    bus0 = rlfs.Bus(id="Bus 0", geometry=point1)
+    bus1 = rlfs.Bus(id="Bus 1", geometry=point2)
+    bus2 = rlfs.Bus(
+        id="Bus 2", geometry=Point(-1.319, 48.685), nominal_voltage=20e3, min_voltage_level=0.95, max_voltage_level=1.05
+    )
+    bus3 = rlfs.Bus(id="Bus 3", geometry=Point(-1.3195, 48.648), nominal_voltage=400, min_voltage_level=0.9)
+    bus4 = rlfs.Bus(id="Bus 4", geometry=Point(-1.3205, 48.6485), nominal_voltage=400, max_voltage_level=1.1)
 
-    voltage = 20000.0 + 0.0j
-    vs = rlfs.VoltageSource(id="vs", bus=source_bus, voltage=voltage)
-    load = rlfs.PowerLoad(id="load", bus=load_bus, power=300)
-
-    lp = rlfs.LineParameters(id="test", z_line=10)
-    line = rlfs.Line(id="line", bus1=source_bus, bus2=load_bus, parameters=lp, length=1.0, geometry=line_string)
+    src = rlfs.VoltageSource(id="Source", bus=bus0, voltage=20e3)
+    ld_power = rlfs.PowerLoad(id="Load P", bus=bus1, power=3e3)
+    lp_shunt = rlfs.LineParameters(id="LP Shunt", z_line=0.01, y_shunt=0.001j)
+    ln_shunt = rlfs.Line(id="Line Shunt", bus1=bus0, bus2=bus1, parameters=lp_shunt, length=1.0, geometry=line_string)
+    sw = rlfs.Switch(id="Switch", bus1=bus0, bus2=bus2)
+    tp = rlfs.TransformerParameters(id="TP", vg="Dyn11", sn=160e3, uhv=20e3, ulv=400, z2=0.02, ym=1e-5j)
+    tr = rlfs.Transformer(id="Tr", bus_hv=bus0, bus_lv=bus3, parameters=tp, tap=1.025, max_loading=1.1)
+    lp_simple = rlfs.LineParameters(id="LP Simple", z_line=0.01)
+    ln_simple = rlfs.Line(id="Line Simple", bus1=bus3, bus2=bus4, parameters=lp_simple, length=0.15, max_loading=0.9)
 
     en = rlfs.ElectricalNetwork(
-        buses=[source_bus, load_bus],
-        lines=[line],
-        transformers=[],
-        switches=[],
-        loads=[load],
-        sources=[vs],
+        buses=[bus0, bus1, bus2, bus3, bus4],
+        lines=[ln_shunt, ln_simple],
+        transformers=[tr],
+        switches=[sw],
+        loads=[ld_power],
+        sources=[src],
     )
     en.solve_load_flow()
     en.to_json(TEST_NETWORKS_PATH / "small_network.json")
-    en.to_json(TEST_MODELS_PATH / "small_network.json")
-
-
-def generate_small_shunt_network() -> None:
-    # Build a small network
-    point1 = Point(-1.318375372111463, 48.64794139348595)
-    point2 = Point(-1.320149235966572, 48.64971306653889)
-    line_string = LineString([point1, point2])
-
-    source_bus = rlfs.Bus(id="bus0", geometry=point1)
-    load_bus = rlfs.Bus(id="bus1", geometry=point2)
-
-    voltage = 20000.0 + 0.0j
-    vs = rlfs.VoltageSource(id="vs", bus=source_bus, voltage=voltage)
-    load = rlfs.PowerLoad(id="load", bus=load_bus, power=300)
-
-    lp = rlfs.LineParameters(id="test", z_line=10, y_shunt=0.01)
-    line = rlfs.Line(id="line", bus1=source_bus, bus2=load_bus, parameters=lp, length=1.0, geometry=line_string)
-
-    en = rlfs.ElectricalNetwork(
-        buses=[source_bus, load_bus],
-        lines=[line],
-        transformers=[],
-        switches=[],
-        loads=[load],
-        sources=[vs],
-    )
-    en.solve_load_flow()
-    en.to_json(TEST_MODELS_PATH / "small_shunt_network.json")
 
 
 def generate_all_elements_network() -> None:
@@ -165,5 +144,4 @@ def generate_all_elements_network() -> None:
 
 if __name__ == "__main__":
     generate_small_network()
-    generate_small_shunt_network()
     generate_all_elements_network()

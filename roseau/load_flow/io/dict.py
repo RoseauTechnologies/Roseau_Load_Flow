@@ -34,7 +34,7 @@ from roseau.load_flow.models import (
 )
 from roseau.load_flow.types import Insulator, Material
 from roseau.load_flow.typing import Id, JsonDict
-from roseau.load_flow.utils import find_stack_level, id_sort_key
+from roseau.load_flow.utils import SIDE_SUFFIX, find_stack_level, id_sort_key
 
 if TYPE_CHECKING:
     from roseau.load_flow.network import ElectricalNetwork
@@ -183,6 +183,7 @@ def network_from_dict(data: JsonDict, *, include_results: bool = True) -> tuple[
     for gc_data in data["ground_connections"]:
         element = gc_data.pop("element")
         gc_data["ground"] = grounds[gc_data.pop("ground")]
+        side = gc_data.pop("side")
         match element["type"]:
             case "bus":
                 gc_data["element"] = buses[element["id"]]
@@ -191,11 +192,11 @@ def network_from_dict(data: JsonDict, *, include_results: bool = True) -> tuple[
             case "source":
                 gc_data["element"] = sources[element["id"]]
             case "line":
-                gc_data["element"] = lines[element["id"]]
+                gc_data["element"] = getattr(lines[element["id"]], f"side{SIDE_SUFFIX[side]}")
             case "transformer":
-                gc_data["element"] = transformers[element["id"]]
+                gc_data["element"] = getattr(transformers[element["id"]], f"side{SIDE_SUFFIX[side]}")
             case "switch":
-                gc_data["element"] = switches[element["id"]]
+                gc_data["element"] = getattr(switches[element["id"]], f"side{SIDE_SUFFIX[side]}")
             case what:
                 raise AssertionError(f"Unknown element type {what!r} for ground connection {gc_data['id']!r}.")
         gc = GroundConnection.from_dict(data=gc_data, include_results=include_results)

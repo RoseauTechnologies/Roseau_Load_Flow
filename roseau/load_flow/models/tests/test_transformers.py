@@ -51,11 +51,10 @@ def test_res_violated():
 
     bus_hv._res_potentials = 20_000 * PosSeq
     bus_lv._res_potentials = np.concatenate([230 * PosSeq, [0]])
-    transformer._res_currents = 0.8 * PosSeq, np.concatenate([-65 * PosSeq, [0]])
-    transformer._res_potentials = (
-        np.array([bus_hv._res_potentials[bus_hv.phases.index(p)] for p in transformer.phases_hv], dtype=complex),
-        np.array([bus_lv._res_potentials[bus_lv.phases.index(p)] for p in transformer.phases_lv], dtype=complex),
-    )
+    transformer.side_hv._res_currents = 0.8 * PosSeq
+    transformer.side_lv._res_currents = np.concatenate([-65 * PosSeq, [0]])
+    transformer.side_hv._res_potentials = bus_hv._res_potentials[list(map(bus_hv.phases.index, transformer.phases_hv))]
+    transformer.side_lv._res_potentials = bus_lv._res_potentials[list(map(bus_lv.phases.index, transformer.phases_lv))]
 
     # Default value
     assert transformer.max_loading == Q_(1, "")
@@ -78,7 +77,8 @@ def test_res_violated():
 
     # LV side violation
     transformer.max_loading = 1
-    transformer._res_currents = 0.8 * PosSeq, np.concatenate([-80 * PosSeq, [0]])
+    transformer.side_hv._res_currents = 0.8 * PosSeq
+    transformer.side_lv._res_currents = np.concatenate([-80 * PosSeq, [0]])
     assert transformer.res_violated is True
     np.testing.assert_allclose(transformer.res_loading.m, 80 * 230 * 3 / 50_000)
 
@@ -93,16 +93,16 @@ def test_transformer_results():
 
     bus_hv._res_potentials = 20_000 * PosSeq
     bus_lv._res_potentials = np.concatenate([230 * PosSeq, [0]])
-    tr._res_currents = 0.8 * PosSeq, np.concatenate([-65 * PosSeq, [0]])
-    tr._res_potentials = (
-        np.array([bus_hv._res_potentials[bus_hv.phases.index(p)] for p in tr.phases_hv], dtype=complex),
-        np.array([bus_lv._res_potentials[bus_lv.phases.index(p)] for p in tr.phases_lv], dtype=complex),
-    )
+    tr.side_hv._res_currents = 0.8 * PosSeq
+    tr.side_lv._res_currents = np.concatenate([-65 * PosSeq, [0]])
+    tr.side_hv._res_potentials = bus_hv._res_potentials[list(map(bus_hv.phases.index, tr.phases_hv))]
+    tr.side_lv._res_potentials = bus_lv._res_potentials[list(map(bus_lv.phases.index, tr.phases_lv))]
 
-    p_hv, p_lv = (p.m for p in tr.res_powers)
+    p_hv = tr.side_hv.res_powers.m
+    p_lv = tr.side_lv.res_powers.m
 
-    np.testing.assert_allclose(p_hv, tr.res_potentials[0].m * tr.res_currents[0].m.conj())
-    np.testing.assert_allclose(p_lv, tr.res_potentials[1].m * tr.res_currents[1].m.conj())
+    np.testing.assert_allclose(p_hv, tr.side_hv.res_potentials.m * tr.side_hv.res_currents.m.conj())
+    np.testing.assert_allclose(p_lv, tr.side_lv.res_potentials.m * tr.side_lv.res_currents.m.conj())
 
     expected_total_losses = p_hv[0] + p_hv[1] + p_hv[2] + p_lv[0] + p_lv[1] + p_lv[2] + p_lv[3]
     actual_total_losses = tr.res_power_losses.m

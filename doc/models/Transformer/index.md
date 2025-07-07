@@ -116,18 +116,50 @@ The following results are available for all transformers:
 
 | Result Accessor    | Default Unit  | Type             | Description                                                                                           |
 | ------------------ | ------------- | ---------------- | ----------------------------------------------------------------------------------------------------- |
-| `res_potentials`   | $V$           | 2 complex arrays | The potentials of each phase of the transformer                                                       |
-| `res_currents`     | $A$           | 2 complex arrays | The currents flowing into each phase of the transformer                                               |
-| `res_powers`       | $V\!A$        | 2 complex arrays | The powers flowing into each phase of the transformer                                                 |
-| `res_voltages`     | $V$           | 2 complex arrays | The phase-to-neutral voltages if the transformer has a neutral, the phase-to-phase voltages otherwise |
+| `res_potentials`⭑  | $V$           | 2 complex arrays | The potentials of each phase of the transformer                                                       |
+| `res_currents`⭑    | $A$           | 2 complex arrays | The currents flowing into each phase of the transformer                                               |
+| `res_powers`⭑      | $V\!A$        | 2 complex arrays | The powers flowing into each phase of the transformer                                                 |
+| `res_voltages`⭑    | $V$           | 2 complex arrays | The phase-to-neutral voltages if the transformer has a neutral, the phase-to-phase voltages otherwise |
 | `res_power_losses` | $V\!A$        | complex          | The total power loss in the transformer                                                               |
 | `res_loading`      | $\mathrm{pu}$ | number           | The loading of the transformer compared to its nominal power                                          |
 | `res_violated`     | -             | boolean          | Indicates if the transformer loading exceeds its maximal loading                                      |
 
-The results with two arrays are for the first and second ends of the transformer, respectively. The sense of currents
-and powers is from the corresponding bus into the transformer. For convenience, these results are also available with
-the suffix `_hv` and `_lv` to access the results of the high voltage and low voltage sides of the transformer,
-respectively. For example, `res_potentials_hv` returns a complex array of potentials of the HV side of the transformer.
+```{note}
+The result accessors marked with ⭑ contain tuples for the results of the HV and LV sides of the
+transformer. These are the old accessors to the results of the sides of the transformer. They may be
+deprecated in the future. The new interface is to use `<side>.res_*` presented below.
+```
+
+Additionally, the following results are available on each side of the transformer accessible with `<side>.` prefix where
+`<side>` is either `side_hv` or `side_lv`:
+
+| Result Accessor         | Default Unit | Type          | Description                                                                                                        |
+| ----------------------- | ------------ | ------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `<side>.res_potentials` | $V$          | complex array | The potentials of each phase of the corresponding transformer side                                                 |
+| `<side>.res_currents`   | $A$          | complex array | The currents flowing **into** each phase of the corresponding transformer side                                     |
+| `<side>.res_powers`     | $V\!A$       | complex array | The powers flowing **into** each phase of the corresponding transformer side                                       |
+| `<side>.res_voltages`   | $V$          | complex array | The voltages of the corresponding transformer side: phase-to-neutral if it has a neutral, phase-to-phase otherwise |
+
+And the following results are available for transformer sides _with a neutral and at least one phase_:
+
+| Result Accessor                | Default Unit  | Type          | Description                                                                                                 |
+| ------------------------------ | ------------- | ------------- | ----------------------------------------------------------------------------------------------------------- |
+| `<side>.res_voltages_pn`       | $V$           | complex array | The phase-to-neutral voltages of the corresponding transformer side                                         |
+| `<side>.res_voltage_levels_pn` | $\mathrm{pu}$ | number array  | The voltage levels of each phase of the corresponding transformer side ($\sqrt{3} V_{pn} / V_\mathrm{nom}$) |
+
+And the following results are available for transformer sides _with more than one phase_:
+
+| Result Accessor                | Default Unit  | Type          | Description                                                                                        |
+| ------------------------------ | ------------- | ------------- | -------------------------------------------------------------------------------------------------- |
+| `<side>.res_voltages_pp`       | $V$           | complex array | The phase-to-phase voltages of the corresponding transformer side                                  |
+| `<side>.res_voltage_levels_pp` | $\mathrm{pu}$ | number array  | The voltage levels of each phase of the corresponding transformer side ($V_{pp} / V_\mathrm{nom}$) |
+
+And the following results are available for _three-phase_ transformers:
+
+| Result Accessor                  | Default Unit | Type   | Description                                                                                               |
+| -------------------------------- | ------------ | ------ | --------------------------------------------------------------------------------------------------------- |
+| `<side>.res_voltage_unbalance()` | $\%$         | number | The voltage unbalance of the corresponding transformer side according to the IEC, IEEE or NEMA definition |
+| `<side>.res_current_unbalance()` | $\%$         | number | The Current Unbalance Factor (CUF) of the transformer side                                                |
 
 ## Usage
 

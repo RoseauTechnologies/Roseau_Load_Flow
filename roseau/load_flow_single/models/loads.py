@@ -1,6 +1,6 @@
 import cmath
 import logging
-from abc import ABC
+from abc import ABC, abstractmethod
 from typing import Final
 
 import numpy as np
@@ -11,7 +11,7 @@ from roseau.load_flow.typing import Complex, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow_engine.cy_engine import CyAdmittanceLoad, CyCurrentLoad, CyFlexibleLoad, CyLoad, CyPowerLoad
 from roseau.load_flow_single.models.buses import Bus
-from roseau.load_flow_single.models.connectables import AbstractConnectable
+from roseau.load_flow_single.models.connectables import AbstractDisconnectable
 from roseau.load_flow_single.models.flexible_parameters import FlexibleParameter
 
 logger = logging.getLogger(__name__)
@@ -19,11 +19,12 @@ logger = logging.getLogger(__name__)
 _CyL_co = TypeVar("_CyL_co", bound=CyLoad, default=CyLoad, covariant=True)
 
 
-class AbstractLoad(AbstractConnectable[_CyL_co], ABC):
+class AbstractLoad(AbstractDisconnectable[_CyL_co], ABC):
     """An abstract class of an electric load."""
 
     element_type: Final = "load"
 
+    @abstractmethod
     def __init__(self, id: Id, bus: Bus) -> None:
         """AbstractLoad constructor.
 
@@ -34,9 +35,7 @@ class AbstractLoad(AbstractConnectable[_CyL_co], ABC):
             bus:
                 The bus to connect the load to.
         """
-        if type(self) is AbstractLoad:
-            raise TypeError("Can't instantiate abstract class AbstractLoad")
-        super().__init__(id, bus)
+        super().__init__(id, bus=bus, n=2)
 
     @property
     def is_flexible(self) -> bool:

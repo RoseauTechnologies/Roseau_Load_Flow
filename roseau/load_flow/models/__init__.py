@@ -5,9 +5,9 @@ build the network and to perform the load flow analysis.
 Equations, diagrams, and examples can be found in the :doc:`/models/index` page.
 """
 
-from roseau.load_flow.models.branches import AbstractBranch
+from roseau.load_flow.models.branches import AbstractBranch, AbstractBranchSide
 from roseau.load_flow.models.buses import Bus
-from roseau.load_flow.models.connectables import AbstractConnectable
+from roseau.load_flow.models.connectables import AbstractConnectable, AbstractDisconnectable
 from roseau.load_flow.models.core import Element
 from roseau.load_flow.models.grounds import Ground, GroundConnection
 from roseau.load_flow.models.lines import Line, LineParameters
@@ -33,8 +33,10 @@ __all__ = [
     "Ground",
     "GroundConnection",
     "AbstractBranch",
+    "AbstractBranchSide",
     "AbstractTerminal",
     "AbstractConnectable",
+    "AbstractDisconnectable",
     # Buses
     "Bus",
     # Lines

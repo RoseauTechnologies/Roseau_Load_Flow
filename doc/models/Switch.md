@@ -50,8 +50,42 @@ The following results are available for all switches:
 | `res_powers`     | $V\!A$       | 2 complex arrays | The powers flowing into each phase of the switch                                                 |
 | `res_voltages`   | $V$          | 2 complex arrays | The phase-to-neutral voltages if the switch has a neutral, the phase-to-phase voltages otherwise |
 
-The results with two arrays are for the first and second ends of the switch, respectively. The sense of currents and
-powers is from the corresponding bus into the switch.
+```{note}
+These result accessors contain tuples for the results of the first and second sides of the switch.
+These are the old accessors to the results of the sides of the switch. They may be deprecated in the
+future. The new interface is to use `<side>.res_*` presented below.
+```
+
+The following results are available on each side of the switch accessible with `<side>.` prefix where `<side>` is either
+`side1` or `side2`:
+
+| Result Accessor         | Default Unit | Type          | Description                                                                                                   |
+| ----------------------- | ------------ | ------------- | ------------------------------------------------------------------------------------------------------------- |
+| `<side>.res_potentials` | $V$          | complex array | The potentials of each phase of the corresponding switch side                                                 |
+| `<side>.res_currents`   | $A$          | complex array | The currents flowing **into** each phase of the corresponding switch side                                     |
+| `<side>.res_powers`     | $V\!A$       | complex array | The powers flowing **into** each phase of the corresponding switch side                                       |
+| `<side>.res_voltages`   | $V$          | complex array | The voltages of the corresponding switch side: phase-to-neutral if it has a neutral, phase-to-phase otherwise |
+
+And the following results are available for switches _with a neutral and at least one phase_:
+
+| Result Accessor                | Default Unit  | Type          | Description                                                                                            |
+| ------------------------------ | ------------- | ------------- | ------------------------------------------------------------------------------------------------------ |
+| `<side>.res_voltages_pn`       | $V$           | complex array | The phase-to-neutral voltages of the corresponding switch side                                         |
+| `<side>.res_voltage_levels_pn` | $\mathrm{pu}$ | number array  | The voltage levels of each phase of the corresponding switch side ($\sqrt{3} V_{pn} / V_\mathrm{nom}$) |
+
+And the following results are available for switches _with more than one phase_:
+
+| Result Accessor                | Default Unit  | Type          | Description                                                                                   |
+| ------------------------------ | ------------- | ------------- | --------------------------------------------------------------------------------------------- |
+| `<side>.res_voltages_pp`       | $V$           | complex array | The phase-to-phase voltages of the corresponding switch side                                  |
+| `<side>.res_voltage_levels_pp` | $\mathrm{pu}$ | number array  | The voltage levels of each phase of the corresponding switch side ($V_{pp} / V_\mathrm{nom}$) |
+
+And the following results are available for _three-phase_ switches:
+
+| Result Accessor                  | Default Unit | Type   | Description                                                                                          |
+| -------------------------------- | ------------ | ------ | ---------------------------------------------------------------------------------------------------- |
+| `<side>.res_voltage_unbalance()` | $\%$         | number | The voltage unbalance of the corresponding switch side according to the IEC, IEEE or NEMA definition |
+| `<side>.res_current_unbalance()` | $\%$         | number | The Current Unbalance Factor (CUF) of the switch side                                                |
 
 ## Usage
 

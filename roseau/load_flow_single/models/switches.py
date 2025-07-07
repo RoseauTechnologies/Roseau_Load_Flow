@@ -6,7 +6,7 @@ from shapely.geometry.base import BaseGeometry
 from roseau.load_flow import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.typing import Id
 from roseau.load_flow_engine.cy_engine import CySwitch
-from roseau.load_flow_single.models.branches import AbstractBranch
+from roseau.load_flow_single.models.branches import AbstractBranch, AbstractBranchSide
 from roseau.load_flow_single.models.buses import Bus
 from roseau.load_flow_single.models.core import Element
 from roseau.load_flow_single.models.sources import VoltageSource
@@ -14,7 +14,7 @@ from roseau.load_flow_single.models.sources import VoltageSource
 logger = logging.getLogger(__name__)
 
 
-class Switch(AbstractBranch[CySwitch]):
+class Switch(AbstractBranch["SwitchSide", CySwitch]):
     """A general purpose switch branch."""
 
     element_type: Final = "switch"
@@ -36,6 +36,8 @@ class Switch(AbstractBranch[CySwitch]):
                 The geometry of the switch.
         """
         super().__init__(id=id, bus1=bus1, bus2=bus2, n=1, geometry=geometry)
+        self._side1 = SwitchSide(branch=self, side=1, bus=bus1)
+        self._side2 = SwitchSide(branch=self, side=2, bus=bus2)
         self._check_elements()
         self._check_loop()
         self._check_same_voltage_level()
@@ -81,3 +83,8 @@ class Switch(AbstractBranch[CySwitch]):
             )
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_VOLTAGES_SOURCES_CONNECTION)
+
+
+class SwitchSide(AbstractBranchSide):
+    element_type = "switch"
+    _branch: Switch

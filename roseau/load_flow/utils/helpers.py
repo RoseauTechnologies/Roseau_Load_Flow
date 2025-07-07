@@ -1,7 +1,19 @@
 from abc import ABCMeta, abstractmethod, update_abstractmethods
 from collections.abc import Callable, Collection, Sized
 from enum import StrEnum
-from typing import TypeVar
+from typing import Final, TypeVar
+
+from roseau.load_flow.typing import Side
+
+SIDE_INDEX: Final[dict[Side | None, int]] = {"HV": 0, "LV": 1, 1: 0, 2: 1, None: 0}
+SIDE_SUFFIX: Final[dict[Side | None, str]] = {"HV": "_hv", "LV": "_lv", 1: "1", 2: "2", None: ""}
+SIDE_DESC: Final[dict[Side | None, str]] = {
+    "HV": "HV side ",
+    "LV": "LV side ",
+    1: "side (1) ",
+    2: "side (2) ",
+    None: "",
+}
 
 _NORM_TABLE = str.maketrans(".- /", "____")
 
@@ -20,6 +32,11 @@ def one_or_more_repr(items: Collection[object], /, singular: str, plural: str | 
     if n == 1:
         return f"{singular} {next(iter(items))!r}", "is"
     return f"{plural if plural is not None else singular + 's'} {items!r}", "are"
+
+
+def ensure_startsupper(s: str, /) -> str:
+    """Ensure the string starts with an uppercase letter."""
+    return s[:1].upper() + s[1:]
 
 
 def id_sort_key(x: dict, /) -> tuple[str, str]:

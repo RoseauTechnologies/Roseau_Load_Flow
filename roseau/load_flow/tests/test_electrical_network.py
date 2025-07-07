@@ -3,7 +3,6 @@ import itertools as it
 import json
 import re
 import warnings
-from contextlib import contextmanager
 
 import geopandas as gpd
 import networkx as nx
@@ -34,6 +33,12 @@ from roseau.load_flow.network import ElectricalNetwork
 from roseau.load_flow.sym import PositiveSequence
 from roseau.load_flow.units import Q_
 from roseau.load_flow.utils import LoadTypeDtype, PhaseDtype, SourceTypeDtype, VoltagePhaseDtype
+from roseau.load_flow.utils.testing import (
+    access_elements_results,
+    check_result_warning,
+    get_result_names,
+    invoke_result_access,
+)
 
 
 # The following networks are generated using the scripts/generate_test_networks.py script
@@ -64,15 +69,6 @@ def small_network_with_results(test_networks_path) -> ElectricalNetwork:
 @pytest.fixture
 def single_phase_network(test_networks_path) -> ElectricalNetwork:
     return ElectricalNetwork.from_json(path=test_networks_path / "single_phase_network.json", include_results=True)
-
-
-@contextmanager
-def check_result_warning(expected_message: str | re.Pattern[str]):
-    with warnings.catch_warnings(record=True) as records:
-        yield
-    assert len(records) == 1
-    assert re.match(expected_message, records[0].message.args[0])
-    assert records[0].category is UserWarning
 
 
 def strip_q(value):
@@ -149,7 +145,7 @@ def test_connect_and_disconnect():
 
     # Adding unknown element
     with pytest.raises(RoseauLoadFlowException) as e:
-        en._connect_element(3)
+        en._connect_element(3)  # type: ignore
     assert "Unknown element" in e.value.msg
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT
 
@@ -749,8 +745,8 @@ def test_single_phase_network(single_phase_network: ElectricalNetwork):
     # ------------------------
     assert np.allclose(source_bus.res_potentials.m_as("V"), [19999.94999975 + 0j, -0.050000250001249996 + 0j])
     assert np.allclose(load_bus.res_potentials.m_as("V"), [19999.899999499998 + 0j, 0j])
-    assert np.allclose(line.res_currents[0].m_as("A"), [0.005000025000117603 + 0j, -0.005000025000125 + 0j])
-    assert np.allclose(line.res_currents[1].m_as("A"), [-0.005000025000117603 - 0j, 0.005000025000125 - 0j])
+    assert np.allclose(line.side1.res_currents.m_as("A"), [0.005000025000117603 + 0j, -0.005000025000125 + 0j])
+    assert np.allclose(line.side2.res_currents.m_as("A"), [-0.005000025000117603 - 0j, 0.005000025000125 - 0j])
     assert np.allclose(load.res_currents.m_as("A"), [0.005000025000250002 - 0j, -0.005000025000250002 - 0j])
 
     # Test results of network
@@ -1034,7 +1030,7 @@ def test_network_elements(small_network: ElectricalNetwork):
         assert element.network == small_network_2
 
 
-def test_network_results_warning(small_network, small_network_with_results, recwarn):  # noqa: C901
+def test_elements_network_attribute(small_network):
     en = small_network
     # network well-defined using the constructor
     for bus in en.buses.values():
@@ -1045,10 +1041,16 @@ def test_network_results_warning(small_network, small_network_with_results, recw
         assert source.network == en
     for line in en.lines.values():
         assert line.network == en
+        assert line.side1.network == en
+        assert line.side2.network == en
     for transformer in en.transformers.values():
         assert transformer.network == en
+        assert transformer.side_hv.network == en
+        assert transformer.side_lv.network == en
     for switch in en.switches.values():
         assert switch.network == en
+        assert switch.side1.network == en
+        assert switch.side2.network == en
     for ground in en.grounds.values():
         assert ground.network == en
     for p_ref in en.potential_refs.values():
@@ -1056,227 +1058,55 @@ def test_network_results_warning(small_network, small_network_with_results, recw
     for gc in en.ground_connections.values():
         assert gc.network == en
 
-    # All the results function raises an exception
-    result_field_names_dict = {
-        "buses": ("res_potentials", "res_voltages", "res_violated"),
-        "lines": (
-            "res_currents",
-            "res_violated",
-            "res_voltages",
-            "res_power_losses",
-            "res_potentials",
-            "res_powers",
-            "res_series_currents",
-            "res_series_power_losses",
-            "res_shunt_currents",
-            "res_shunt_power_losses",
-        ),
-        "transformers": (
-            "res_currents",
-            "res_powers",
-            "res_potentials",
-            "res_power_losses",
-            "res_violated",
-            "res_voltages",
-        ),
-        "switches": ("res_currents", "res_potentials", "res_powers", "res_voltages"),
-        "loads": ("res_currents", "res_powers", "res_potentials", "res_voltages"),
-        "sources": ("res_currents", "res_potentials", "res_powers"),
-        "grounds": ("res_potential",),
-        "potential_refs": ("res_current",),
-        "ground_connections": ("res_current",),
-    }
-    for bus in en.buses.values():
-        for result_field_name in result_field_names_dict["buses"]:
-            if result_field_name == "res_violated" and bus.min_voltage is None and bus.max_voltage is None:
-                continue  # No min or max voltages so no call to results
-            with pytest.raises(RoseauLoadFlowException) as e:
-                getattr(bus, result_field_name)
-            assert e.value.code == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
-    for line in en.lines.values():
-        for result_field_name in result_field_names_dict["lines"]:
-            if result_field_name == "res_violated":
-                continue  # No ampacities
-            if not line.with_shunt and "shunt" in result_field_name:
-                continue  # No results if no shunt
-            with pytest.raises(RoseauLoadFlowException) as e:
-                getattr(line, result_field_name)
-            assert e.value.code == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
-    for transformer in en.transformers.values():
-        for result_field_name in result_field_names_dict["transformers"]:
-            with pytest.raises(RoseauLoadFlowException) as e:
-                getattr(transformer, result_field_name)
-            assert e.value.code == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
-    for switch in en.switches.values():
-        for result_field_name in result_field_names_dict["switches"]:
-            with pytest.raises(RoseauLoadFlowException) as e:
-                getattr(switch, result_field_name)
-            assert e.value.code == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
-    for load in en.loads.values():
-        for result_field_name in result_field_names_dict["loads"]:
-            with pytest.raises(RoseauLoadFlowException) as e:
-                getattr(load, result_field_name)
-            assert e.value.code == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
-        if load.is_flexible and isinstance(load, PowerLoad):
-            with pytest.raises(RoseauLoadFlowException) as e:
-                _ = load.res_flexible_powers
-            assert e.value.code == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
-    for source in en.sources.values():
-        for result_field_name in result_field_names_dict["sources"]:
-            with pytest.raises(RoseauLoadFlowException) as e:
-                getattr(source, result_field_name)
-            assert e.value.code == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
-    for ground in en.grounds.values():
-        for result_field_name in result_field_names_dict["grounds"]:
-            with pytest.raises(RoseauLoadFlowException) as e:
-                getattr(ground, result_field_name)
-            assert e.value.code == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
-    for p_ref in en.potential_refs.values():
-        for result_field_name in result_field_names_dict["potential_refs"]:
-            with pytest.raises(RoseauLoadFlowException) as e:
-                getattr(p_ref, result_field_name)
-            assert e.value.code == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
-    for gc in en.ground_connections.values():
-        for result_field_name in result_field_names_dict["ground_connections"]:
-            with pytest.raises(RoseauLoadFlowException) as e:
-                getattr(gc, result_field_name)
-            assert e.value.code == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
 
+def test_network_results_missing(small_network):
+    # Network without results
+    en = small_network
+
+    # Ensure that an exception is raised when trying to access the results on the network
+    for res_name in get_result_names(type(en)):
+        e = invoke_result_access(
+            en, res_name, pytest.raises, RoseauLoadFlowException, match=r"The load flow results are not available"
+        )
+        assert e.value.code == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
+
+    # Ensure that an exception is raised when trying to access the results of the elements
+    for e in access_elements_results(
+        en, pytest.raises, RoseauLoadFlowException, match=r"Results for \w+ '[^']+' are not available"
+    ):
+        assert e.value.code == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
+
+
+def test_network_results_ok(small_network_with_results):
     # Network with results
     en = small_network_with_results
 
-    # No warning when getting results (they are up-to-date)
-    recwarn.clear()
-    for bus in en.buses.values():
-        for result_field_name in result_field_names_dict["buses"]:
-            if result_field_name == "res_violated" and bus.min_voltage is None and bus.max_voltage is None:
-                continue  # No min or max voltages so no call to results
-            getattr(bus, result_field_name)
-    for line in en.lines.values():
-        for result_field_name in result_field_names_dict["lines"]:
-            if result_field_name == "res_violated":
-                continue  # No ampacities
-            if not line.with_shunt and "shunt" in result_field_name:
-                continue  # No results if no shunt
-            getattr(line, result_field_name)
-    for transformer in en.transformers.values():
-        for result_field_name in result_field_names_dict["transformers"]:
-            getattr(transformer, result_field_name)
-    for switch in en.switches.values():
-        for result_field_name in result_field_names_dict["switches"]:
-            getattr(switch, result_field_name)
-    for load in en.loads.values():
-        for result_field_name in result_field_names_dict["loads"]:
-            getattr(load, result_field_name)
-        if load.is_flexible and isinstance(load, PowerLoad):
-            _ = load.res_flexible_powers
-    for source in en.sources.values():
-        for result_field_name in result_field_names_dict["sources"]:
-            getattr(source, result_field_name)
-    for ground in en.grounds.values():
-        for result_field_name in result_field_names_dict["grounds"]:
-            getattr(ground, result_field_name)
-    for p_ref in en.potential_refs.values():
-        for result_field_name in result_field_names_dict["potential_refs"]:
-            getattr(p_ref, result_field_name)
-    for gc in en.ground_connections.values():
-        for result_field_name in result_field_names_dict["ground_connections"]:
-            getattr(gc, result_field_name)
-    assert len(recwarn) == 0
+    # No warning when accessing the results on the network (they are up-to-date)
+    for res_name in get_result_names(type(en)):
+        invoke_result_access(en, res_name, warnings.catch_warnings, action="error")
 
-    # Modify something
-    load = en.loads["load"]
+    # No warning when accessing the results of the elements
+    for _ in access_elements_results(en, warnings.catch_warnings, action="error"):
+        pass
+
+
+def test_network_results_outdated(small_network_with_results):
+    # Network with results
+    en = small_network_with_results
+
+    # Modify something to invalidate the results
+    load = next(load for load in en.loads.values() if isinstance(load, PowerLoad))
     load.powers = [200, 200, 200]  # VA
 
-    # Ensure that a warning is raised no matter which result is requested
-    expected_message = (
-        r"The results of \w+ '\w+' may be outdated. Please re-run a load flow to ensure the validity of results."
-    )
-    for bus in en.buses.values():
-        for result_field_name in result_field_names_dict["buses"]:
-            if result_field_name == "res_violated" and bus.min_voltage is None and bus.max_voltage is None:
-                continue  # No min or max voltages so no call to results
-            with check_result_warning(expected_message=expected_message):
-                getattr(bus, result_field_name)
-    for line in en.lines.values():
-        for result_field_name in result_field_names_dict["lines"]:
-            if result_field_name == "res_violated":
-                continue  # No ampacities
-            if not line.with_shunt and "shunt" in result_field_name:
-                continue  # No results if no shunt
-            with check_result_warning(expected_message=expected_message):
-                getattr(line, result_field_name)
-    for transformer in en.transformers.values():
-        for result_field_name in result_field_names_dict["transformers"]:
-            with check_result_warning(expected_message=expected_message):
-                getattr(transformer, result_field_name)
-    for switch in en.switches.values():
-        for result_field_name in result_field_names_dict["switches"]:
-            with check_result_warning(expected_message=expected_message):
-                getattr(switch, result_field_name)
-    for load in en.loads.values():
-        for result_field_name in result_field_names_dict["loads"]:
-            with check_result_warning(expected_message=expected_message):
-                getattr(load, result_field_name)
-        if load.is_flexible and isinstance(load, PowerLoad):
-            with check_result_warning(expected_message=expected_message):
-                _ = load.res_flexible_powers
-    for source in en.sources.values():
-        for result_field_name in result_field_names_dict["sources"]:
-            with check_result_warning(expected_message=expected_message):
-                getattr(source, result_field_name)
-    for ground in en.grounds.values():
-        for result_field_name in result_field_names_dict["grounds"]:
-            with check_result_warning(expected_message=expected_message):
-                getattr(ground, result_field_name)
-    for p_ref in en.potential_refs.values():
-        for result_field_name in result_field_names_dict["potential_refs"]:
-            with check_result_warning(expected_message=expected_message):
-                getattr(p_ref, result_field_name)
-    for gc in en.ground_connections.values():
-        for result_field_name in result_field_names_dict["ground_connections"]:
-            with check_result_warning(expected_message=expected_message):
-                getattr(gc, result_field_name)
+    # Ensure that a warning is emitted when trying to access the results on the network
+    for res_name in get_result_names(type(en)):
+        invoke_result_access(en, res_name, check_result_warning, match=r"The results of this network may be outdated")
 
-    # Ensure that a single warning is raised when having a data frame result
-    expected_message = (
-        "The results of this network may be outdated. Please re-run a load flow to ensure the validity of results."
-    )
-    with check_result_warning(expected_message=expected_message):
-        _ = en.res_buses
-    with check_result_warning(expected_message=expected_message):
-        _ = en.res_buses_voltages
-    with check_result_warning(expected_message=expected_message):
-        _ = en.res_lines
-    with check_result_warning(expected_message=expected_message):
-        _ = en.res_transformers
-    with check_result_warning(expected_message=expected_message):
-        _ = en.res_switches
-    with check_result_warning(expected_message=expected_message):
-        _ = en.res_loads
-    with check_result_warning(expected_message=expected_message):
-        _ = en.res_sources
-    with check_result_warning(expected_message=expected_message):
-        _ = en.res_loads_flexible_powers
-    with check_result_warning(expected_message=expected_message):
-        _ = en.res_grounds
-    with check_result_warning(expected_message=expected_message):
-        _ = en.res_potential_refs
-    with check_result_warning(expected_message=expected_message):
-        _ = en.res_ground_connections
-
-
-def test_network_results_error(small_network):
-    en = small_network
-
-    # Test all results
-    for attr_name in dir(en):
-        if not attr_name.startswith("res_"):
-            continue
-        with pytest.raises(RoseauLoadFlowException) as e:
-            getattr(en, attr_name)
-        assert e.value.code == RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN
-        assert e.value.msg == "The load flow results are not available because the load flow has not been run yet."
+    # Ensure that a warning is emitted when trying to access the results of the elements
+    for _ in access_elements_results(
+        en, check_result_warning, match=r"The results of \w+ '[^']+' may be outdated. Please re-run a load flow"
+    ):
+        pass
 
 
 def test_load_flow_results_frames(small_network_with_results):
@@ -2284,13 +2114,13 @@ def test_results_to_dict(all_element_network_with_results):
         line = en.lines[res_line.pop("id")]
         assert res_line.pop("phases") == line.phases
         currents1 = [complex(*i) for i in res_line.pop("currents1")]
-        np.testing.assert_allclose(currents1, line.res_currents[0].m)
+        np.testing.assert_allclose(currents1, line.side1.res_currents.m)
         currents2 = [complex(*i) for i in res_line.pop("currents2")]
-        np.testing.assert_allclose(currents2, line.res_currents[1].m)
+        np.testing.assert_allclose(currents2, line.side2.res_currents.m)
         potentials1 = [complex(*i) for i in res_line.pop("potentials1")]
-        np.testing.assert_allclose(potentials1, line.res_potentials[0].m)
+        np.testing.assert_allclose(potentials1, line.side1.res_potentials.m)
         potentials2 = [complex(*i) for i in res_line.pop("potentials2")]
-        np.testing.assert_allclose(potentials2, line.res_potentials[1].m)
+        np.testing.assert_allclose(potentials2, line.side2.res_potentials.m)
         if line.with_shunt:
             ground_potential = complex(*res_line.pop("ground_potential"))
             np.testing.assert_allclose(ground_potential, line.res_ground_potential.m)
@@ -2300,25 +2130,25 @@ def test_results_to_dict(all_element_network_with_results):
         assert res_transformer.pop("phases_hv") == transformer.phases_hv
         assert res_transformer.pop("phases_lv") == transformer.phases_lv
         currents_hv = [complex(*i) for i in res_transformer.pop("currents_hv")]
-        np.testing.assert_allclose(currents_hv, transformer.res_currents[0].m)
+        np.testing.assert_allclose(currents_hv, transformer.side_hv.res_currents.m)
         currents_hv = [complex(*i) for i in res_transformer.pop("currents_lv")]
-        np.testing.assert_allclose(currents_hv, transformer.res_currents[1].m)
+        np.testing.assert_allclose(currents_hv, transformer.side_lv.res_currents.m)
         potentials_hv = [complex(*i) for i in res_transformer.pop("potentials_hv")]
-        np.testing.assert_allclose(potentials_hv, transformer.res_potentials[0].m)
+        np.testing.assert_allclose(potentials_hv, transformer.side_hv.res_potentials.m)
         potentials_lv = [complex(*i) for i in res_transformer.pop("potentials_lv")]
-        np.testing.assert_allclose(potentials_lv, transformer.res_potentials[1].m)
+        np.testing.assert_allclose(potentials_lv, transformer.side_lv.res_potentials.m)
         assert not res_transformer, res_transformer
     for res_switch in res_network["switches"]:
         switch = en.switches[res_switch.pop("id")]
         assert res_switch.pop("phases") == switch.phases
         currents1 = [complex(*i) for i in res_switch.pop("currents1")]
-        np.testing.assert_allclose(currents1, switch.res_currents[0].m)
+        np.testing.assert_allclose(currents1, switch.side1.res_currents.m)
         currents2 = [complex(*i) for i in res_switch.pop("currents2")]
-        np.testing.assert_allclose(currents2, switch.res_currents[1].m)
+        np.testing.assert_allclose(currents2, switch.side2.res_currents.m)
         potentials1 = [complex(*i) for i in res_switch.pop("potentials1")]
-        np.testing.assert_allclose(potentials1, switch.res_potentials[0].m)
+        np.testing.assert_allclose(potentials1, switch.side1.res_potentials.m)
         potentials2 = [complex(*i) for i in res_switch.pop("potentials2")]
-        np.testing.assert_allclose(potentials2, switch.res_potentials[1].m)
+        np.testing.assert_allclose(potentials2, switch.side2.res_potentials.m)
         assert not res_switch, res_switch
     for res_load in res_network["loads"]:
         load = en.loads[res_load.pop("id")]
@@ -2395,27 +2225,27 @@ def test_results_to_dict_full(all_element_network_with_results):
         assert res_line.pop("phases") == line.phases
         # Currents
         currents1 = [complex(*i) for i in res_line.pop("currents1")]
-        np.testing.assert_allclose(currents1, line.res_currents[0].m)
+        np.testing.assert_allclose(currents1, line.side1.res_currents.m)
         currents2 = [complex(*i) for i in res_line.pop("currents2")]
-        np.testing.assert_allclose(currents2, line.res_currents[1].m)
+        np.testing.assert_allclose(currents2, line.side2.res_currents.m)
         # Potentials
         potentials1 = [complex(*i) for i in res_line.pop("potentials1")]
-        np.testing.assert_allclose(potentials1, line.res_potentials[0].m)
+        np.testing.assert_allclose(potentials1, line.side1.res_potentials.m)
         potentials2 = [complex(*i) for i in res_line.pop("potentials2")]
-        np.testing.assert_allclose(potentials2, line.res_potentials[1].m)
+        np.testing.assert_allclose(potentials2, line.side2.res_potentials.m)
         if line.with_shunt:
             ground_potential = complex(*res_line.pop("ground_potential"))
             np.testing.assert_allclose(ground_potential, line.res_ground_potential.m)
         # Powers
         powers1 = [complex(*i) for i in res_line.pop("powers1")]
-        np.testing.assert_allclose(powers1, line.res_powers[0].m)
+        np.testing.assert_allclose(powers1, line.side1.res_powers.m)
         powers2 = [complex(*i) for i in res_line.pop("powers2")]
-        np.testing.assert_allclose(powers2, line.res_powers[1].m)
+        np.testing.assert_allclose(powers2, line.side2.res_powers.m)
         # Voltages
         voltages1 = [complex(*i) for i in res_line.pop("voltages1")]
-        np.testing.assert_allclose(voltages1, line.res_voltages[0].m)
+        np.testing.assert_allclose(voltages1, line.side1.res_voltages.m)
         voltages2 = [complex(*i) for i in res_line.pop("voltages2")]
-        np.testing.assert_allclose(voltages2, line.res_voltages[1].m)
+        np.testing.assert_allclose(voltages2, line.side2.res_voltages.m)
         # Power losses
         power_losses = [complex(*i) for i in res_line.pop("power_losses")]
         np.testing.assert_allclose(power_losses, line.res_power_losses.m)
@@ -2424,9 +2254,9 @@ def test_results_to_dict_full(all_element_network_with_results):
         np.testing.assert_allclose(series_currents, line.res_series_currents.m)
         # Shunt currents
         shunt_currents1 = [complex(*i) for i in res_line.pop("shunt_currents1")]
-        np.testing.assert_allclose(shunt_currents1, line.res_shunt_currents[0].m)
+        np.testing.assert_allclose(shunt_currents1, line.side1.res_shunt_currents.m)
         shunt_currents2 = [complex(*i) for i in res_line.pop("shunt_currents2")]
-        np.testing.assert_allclose(shunt_currents2, line.res_shunt_currents[1].m)
+        np.testing.assert_allclose(shunt_currents2, line.side2.res_shunt_currents.m)
         # Series power losses
         series_power_losses = [complex(*i) for i in res_line.pop("series_power_losses")]
         np.testing.assert_allclose(series_power_losses, line.res_series_power_losses.m)
@@ -2445,24 +2275,24 @@ def test_results_to_dict_full(all_element_network_with_results):
         assert res_transformer.pop("phases_lv") == transformer.phases_lv
         # Currents
         currents_hv = [complex(*i) for i in res_transformer.pop("currents_hv")]
-        np.testing.assert_allclose(currents_hv, transformer.res_currents[0].m)
+        np.testing.assert_allclose(currents_hv, transformer.side_hv.res_currents.m)
         currents_lv = [complex(*i) for i in res_transformer.pop("currents_lv")]
-        np.testing.assert_allclose(currents_lv, transformer.res_currents[1].m)
+        np.testing.assert_allclose(currents_lv, transformer.side_lv.res_currents.m)
         # Potentials
         potentials_hv = [complex(*i) for i in res_transformer.pop("potentials_hv")]
-        np.testing.assert_allclose(potentials_hv, transformer.res_potentials[0].m)
+        np.testing.assert_allclose(potentials_hv, transformer.side_hv.res_potentials.m)
         potentials_lv = [complex(*i) for i in res_transformer.pop("potentials_lv")]
-        np.testing.assert_allclose(potentials_lv, transformer.res_potentials[1].m)
+        np.testing.assert_allclose(potentials_lv, transformer.side_lv.res_potentials.m)
         # Powers
         powers_hv = [complex(*i) for i in res_transformer.pop("powers_hv")]
-        np.testing.assert_allclose(powers_hv, transformer.res_powers[0].m)
+        np.testing.assert_allclose(powers_hv, transformer.side_hv.res_powers.m)
         powers_lv = [complex(*i) for i in res_transformer.pop("powers_lv")]
-        np.testing.assert_allclose(powers_lv, transformer.res_powers[1].m)
+        np.testing.assert_allclose(powers_lv, transformer.side_lv.res_powers.m)
         # Voltages
         voltages_hv = [complex(*i) for i in res_transformer.pop("voltages_hv")]
-        np.testing.assert_allclose(voltages_hv, transformer.res_voltages[0].m)
+        np.testing.assert_allclose(voltages_hv, transformer.side_hv.res_voltages.m)
         voltages_lv = [complex(*i) for i in res_transformer.pop("voltages_lv")]
-        np.testing.assert_allclose(voltages_lv, transformer.res_voltages[1].m)
+        np.testing.assert_allclose(voltages_lv, transformer.side_lv.res_voltages.m)
         # Power losses
         power_losses = complex(*res_transformer.pop("power_losses"))
         np.testing.assert_allclose(power_losses, transformer.res_power_losses.m)
@@ -2475,24 +2305,24 @@ def test_results_to_dict_full(all_element_network_with_results):
         assert res_switch.pop("phases") == switch.phases
         # Currents
         currents1 = [complex(*i) for i in res_switch.pop("currents1")]
-        np.testing.assert_allclose(currents1, switch.res_currents[0].m)
+        np.testing.assert_allclose(currents1, switch.side1.res_currents.m)
         currents2 = [complex(*i) for i in res_switch.pop("currents2")]
-        np.testing.assert_allclose(currents2, switch.res_currents[1].m)
+        np.testing.assert_allclose(currents2, switch.side2.res_currents.m)
         # Potentials
         potentials1 = [complex(*i) for i in res_switch.pop("potentials1")]
-        np.testing.assert_allclose(potentials1, switch.res_potentials[0].m)
+        np.testing.assert_allclose(potentials1, switch.side1.res_potentials.m)
         potentials2 = [complex(*i) for i in res_switch.pop("potentials2")]
-        np.testing.assert_allclose(potentials2, switch.res_potentials[1].m)
+        np.testing.assert_allclose(potentials2, switch.side2.res_potentials.m)
         # Powers
         powers1 = [complex(*i) for i in res_switch.pop("powers1")]
-        np.testing.assert_allclose(powers1, switch.res_powers[0].m)
+        np.testing.assert_allclose(powers1, switch.side1.res_powers.m)
         powers2 = [complex(*i) for i in res_switch.pop("powers2")]
-        np.testing.assert_allclose(powers2, switch.res_powers[1].m)
+        np.testing.assert_allclose(powers2, switch.side2.res_powers.m)
         # Voltages
         voltages1 = [complex(*i) for i in res_switch.pop("voltages1")]
-        np.testing.assert_allclose(voltages1, switch.res_voltages[0].m)
+        np.testing.assert_allclose(voltages1, switch.side1.res_voltages.m)
         voltages2 = [complex(*i) for i in res_switch.pop("voltages2")]
-        np.testing.assert_allclose(voltages2, switch.res_voltages[1].m)
+        np.testing.assert_allclose(voltages2, switch.side2.res_voltages.m)
         assert not res_switch, res_switch
     for res_load in res_network["loads"]:
         load = en.loads[res_load.pop("id")]

@@ -72,16 +72,7 @@ with $\underline{Z}$ the series impedance matrix and $\underline{Y}$ the shunt a
 
 ## Available Results
 
-In addition to the results available for all lines, as described [here](./index.md#available-results), the following
-results are available for lines with shunt components:
-
-| Result Accessor          | Default Unit | Type             | Description                                                 |
-| ------------------------ | ------------ | ---------------- | ----------------------------------------------------------- |
-| `res_shunt_currents`     | $A$          | 2 complex arrays | The currents flowing into the shunt admittances of the line |
-| `res_shunt_power_losses` | $V\!A$       | 2 complex arrays | The power losses in the shunt admittances of the line       |
-| `res_ground_potential`   | $V$          | complex          | The potential of the ground element connected to the line   |
-
-The results with two arrays are for the first and second ends of the line, respectively.
+The results for shunt lines are described [here](./index.md#available-results).
 
 ## Usage
 

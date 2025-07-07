@@ -19,9 +19,13 @@ from roseau.load_flow.utils.dtypes import (
 )
 from roseau.load_flow.utils.exceptions import find_stack_level
 from roseau.load_flow.utils.helpers import (
+    SIDE_DESC,
+    SIDE_INDEX,
+    SIDE_SUFFIX,
     CaseInsensitiveStrEnum,
     abstractattrs,
     count_repr,
+    ensure_startsupper,
     id_sort_key,
     one_or_more_repr,
 )
@@ -58,10 +62,15 @@ __all__ = [
     "count_repr",
     "one_or_more_repr",
     "id_sort_key",
+    "ensure_startsupper",
     # Enums
     "CaseInsensitiveStrEnum",
     # Decorators
     "abstractattrs",
+    # Branch side helpers
+    "SIDE_DESC",
+    "SIDE_INDEX",
+    "SIDE_SUFFIX",
 ]
 
 

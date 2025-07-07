@@ -3,6 +3,7 @@ import pytest
 from roseau.load_flow_single.models import (
     AbstractBranch,
     AbstractConnectable,
+    AbstractDisconnectable,
     AbstractLoad,
     AbstractTerminal,
     Bus,
@@ -21,5 +22,7 @@ def test_abstract_classes():
         AbstractTerminal(id="terminal_id")  # type: ignore
     with pytest.raises(TypeError, match="Can't instantiate abstract class AbstractConnectable"):
         AbstractConnectable(id="connectable_id", bus=bus1)  # type: ignore
+    with pytest.raises(TypeError, match="Can't instantiate abstract class AbstractDisconnectable"):
+        AbstractDisconnectable(id="disconnectable_id", bus=bus1)  # type: ignore
     with pytest.raises(TypeError, match="Can't instantiate abstract class AbstractLoad"):
-        AbstractLoad(id="load_id", bus=bus1)
+        AbstractLoad(id="load_id", bus=bus1)  # type: ignore

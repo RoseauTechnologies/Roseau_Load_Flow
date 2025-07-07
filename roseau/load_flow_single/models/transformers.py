@@ -8,14 +8,14 @@ from roseau.load_flow.typing import Float, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow.utils import deprecate_renamed_parameters
 from roseau.load_flow_engine.cy_engine import CySingleTransformer
-from roseau.load_flow_single.models.branches import AbstractBranch
+from roseau.load_flow_single.models.branches import AbstractBranch, AbstractBranchSide
 from roseau.load_flow_single.models.buses import Bus
 from roseau.load_flow_single.models.transformer_parameters import TransformerParameters
 
 logger = logging.getLogger(__name__)
 
 
-class Transformer(AbstractBranch[CySingleTransformer]):
+class Transformer(AbstractBranch["TransformerSide", CySingleTransformer]):
     """A generic transformer model.
 
     The model parameters are defined using the ``parameters`` argument.
@@ -66,6 +66,8 @@ class Transformer(AbstractBranch[CySingleTransformer]):
         """
         self._initialized = False
         super().__init__(id=id, bus1=bus_hv, bus2=bus_lv, n=2, geometry=geometry)
+        self._side1 = TransformerSide(branch=self, side="HV", bus=bus_hv)
+        self._side2 = TransformerSide(branch=self, side="LV", bus=bus_lv)
         self.tap = tap
         self.parameters = parameters
         self.max_loading = max_loading
@@ -79,14 +81,24 @@ class Transformer(AbstractBranch[CySingleTransformer]):
         self._connect(bus_hv, bus_lv)
 
     @property
+    def side_hv(self) -> "TransformerSide":
+        """The HV side of the transformer."""
+        return self._side1
+
+    @property
+    def side_lv(self) -> "TransformerSide":
+        """The LV side of the transformer."""
+        return self._side2
+
+    @property
     def bus_hv(self) -> Bus:
         """The bus on the high voltage side of the transformer."""
-        return self._bus1
+        return self._side1.bus
 
     @property
     def bus_lv(self) -> Bus:
         """The bus on the low voltage side of the transformer."""
-        return self._bus2
+        return self._side2.bus
 
     @property
     def tap(self) -> float:
@@ -130,7 +142,7 @@ class Transformer(AbstractBranch[CySingleTransformer]):
     @ureg_wraps("", (None,))
     def max_loading(self) -> Q_[float]:
         """The maximum loading of the transformer (unitless)"""
-        return self._max_loading
+        return self._max_loading  # type: ignore
 
     @max_loading.setter
     @ureg_wraps(None, (None, ""))
@@ -158,19 +170,21 @@ class Transformer(AbstractBranch[CySingleTransformer]):
     @ureg_wraps("VA", (None,))
     def res_power_losses(self) -> Q_[complex]:
         """Get the total power losses in the transformer (in VA)."""
-        power1, power2 = self._res_powers_getter(warning=True)
-        return power1 + power2
+        power_hv = self._side1._res_power_getter(warning=True)
+        power_lv = self._side2._res_power_getter(warning=False)  # warn only once
+        return power_hv + power_lv  # type: ignore
 
     def _res_loading_getter(self, warning: bool) -> float:
         sn = self._parameters._sn
-        power1, power2 = self._res_powers_getter(warning=warning)
-        return max(abs(power1), abs(power2)) / sn
+        power_hv = self._side1._res_power_getter(warning)
+        power_lv = self._side2._res_power_getter(warning=False)  # warn only once
+        return max(abs(power_hv), abs(power_lv)) / sn
 
     @property
     @ureg_wraps("", (None,))
     def res_loading(self) -> Q_[float]:
         """Get the loading of the transformer (unitless)."""
-        return self._res_loading_getter(warning=True)
+        return self._res_loading_getter(warning=True)  # type: ignore
 
     @property
     def res_violated(self) -> bool:
@@ -195,9 +209,15 @@ class Transformer(AbstractBranch[CySingleTransformer]):
         results = super()._results_to_dict(warning, full)
         if full:
             # Add transformer specific results
-            power_hv, power_lv = self._res_powers_getter(warning=False)  # warn only once
+            power_hv = self._side1._res_power_getter(warning=False)  # warn only once
+            power_lv = self._side2._res_power_getter(warning=False)
             power_losses = power_hv + power_lv
             loading = max(abs(power_hv), abs(power_lv)) / self.parameters._sn
             results["power_losses"] = [power_losses.real, power_losses.imag]
             results["loading"] = loading
         return results
+
+
+class TransformerSide(AbstractBranchSide):
+    element_type = "transformer"
+    _branch: Transformer

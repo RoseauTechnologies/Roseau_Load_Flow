@@ -26,6 +26,7 @@ from roseau.load_flow.license import License, activate_license, deactivate_licen
 from roseau.load_flow.models import (
     AbstractBranch,
     AbstractConnectable,
+    AbstractDisconnectable,
     AbstractLoad,
     AbstractTerminal,
     Bus,
@@ -81,6 +82,7 @@ __all__ = [
     "AbstractBranch",
     "AbstractTerminal",
     "AbstractConnectable",
+    "AbstractDisconnectable",
     # Lines
     "Switch",
     "Line",

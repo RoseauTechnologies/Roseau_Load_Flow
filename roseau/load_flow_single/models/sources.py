@@ -8,13 +8,13 @@ from roseau.load_flow.typing import Complex, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow_engine.cy_engine import CyVoltageSource
 from roseau.load_flow_single.models.buses import Bus
-from roseau.load_flow_single.models.connectables import AbstractConnectable
+from roseau.load_flow_single.models.connectables import AbstractDisconnectable
 
 logger = logging.getLogger(__name__)
 
 
-class VoltageSource(AbstractConnectable[CyVoltageSource]):
-    """A voltage source fixes the voltages of the bus it is connected to.
+class VoltageSource(AbstractDisconnectable[CyVoltageSource]):
+    """A voltage source fixes the voltage of the bus it is connected to.
 
     See Also:
         The :ref:`Voltage source documentation page <models-voltage-source-usage>` for example usage.
@@ -36,7 +36,7 @@ class VoltageSource(AbstractConnectable[CyVoltageSource]):
             voltage:
                 The complex voltage of the source (V).
         """
-        super().__init__(id, bus)
+        super().__init__(id, bus=bus, n=2)
         self.voltage = voltage
         self._cy_element = CyVoltageSource(n=self._n, voltages=np.array([self._voltage / SQRT3], dtype=np.complex128))
         self._cy_connect()
@@ -53,7 +53,7 @@ class VoltageSource(AbstractConnectable[CyVoltageSource]):
     @voltage.setter
     @ureg_wraps(None, (None, "V"))
     def voltage(self, value: Complex | Q_[Complex]) -> None:
-        """Set the voltages of the source."""
+        """Set the voltage of the source."""
         self._voltage = complex(value)
         self._invalidate_network_results()
         if self._cy_initialized:

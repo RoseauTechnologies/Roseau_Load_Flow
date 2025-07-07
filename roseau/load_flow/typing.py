@@ -43,8 +43,7 @@ Roseau Load Flow Literals
 
 .. class:: Side
 
-    The side of a transformer (``"HV"`` or ``"LV"``) or a line/switch (1 or 2). ``None`` is used
-    for terminal elements that do not have a side.
+    The side of a transformer (``"HV"`` or ``"LV"``) or a line/switch (1 or 2).
 
 Union Input Types (Wide)
 ------------------------
@@ -143,7 +142,7 @@ QtyOrMag: TypeAlias = Q_[T] | T
 ControlType: TypeAlias = Literal["constant", "p_max_u_production", "p_max_u_consumption", "q_u"]
 ProjectionType: TypeAlias = Literal["euclidean", "keep_p", "keep_q"]
 Solver: TypeAlias = Literal["newton", "newton_goldstein", "backward_forward"]
-Side: TypeAlias = Literal[1, 2, "HV", "LV"] | None
+Side: TypeAlias = Literal[1, 2, "HV", "LV"]
 
 # Input Types (Wide)
 Int: TypeAlias = int | np.integer
