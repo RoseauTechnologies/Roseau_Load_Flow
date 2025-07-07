@@ -1,7 +1,7 @@
 from roseau.load_flow import Projection
 from roseau.load_flow_single.models.branches import AbstractBranch
 from roseau.load_flow_single.models.buses import Bus
-from roseau.load_flow_single.models.connectables import AbstractConnectable
+from roseau.load_flow_single.models.connectables import AbstractConnectable, AbstractDisconnectable
 from roseau.load_flow_single.models.core import Element
 from roseau.load_flow_single.models.flexible_parameters import Control, FlexibleParameter
 from roseau.load_flow_single.models.line_parameters import LineParameters
@@ -19,6 +19,7 @@ __all__ = [
     "AbstractBranch",
     "AbstractTerminal",
     "AbstractConnectable",
+    "AbstractDisconnectable",
     # Buses
     "Bus",
     # Lines

@@ -401,8 +401,10 @@ class ElectricalNetwork(AbstractNetwork[Element]):
         }
         dtypes = {c: DTYPES[c] for c in res_dict}
         for line in self.lines.values():
-            current1, current2 = line._res_currents_getter(warning=False)
-            voltage1, voltage2 = line._res_voltages_getter(warning=False)
+            current1 = line._side1._res_current_getter(warning=False)
+            current2 = line._side2._res_current_getter(warning=False)
+            voltage1 = line._side1._res_voltage_getter(warning=False)
+            voltage2 = line._side2._res_voltage_getter(warning=False)
             du_line, series_current = line._res_series_values_getter(warning=False)
             power1 = voltage1 * current1.conjugate() * SQRT3
             power2 = voltage2 * current2.conjugate() * SQRT3
@@ -466,8 +468,10 @@ class ElectricalNetwork(AbstractNetwork[Element]):
         }
         dtypes = {c: DTYPES[c] for c in res_dict}
         for transformer in self.transformers.values():
-            current_hv, current_lv = transformer._res_currents_getter(warning=False)
-            voltage_hv, voltage_lv = transformer._res_voltages_getter(warning=False)
+            current_hv = transformer._side1._res_current_getter(warning=False)
+            current_lv = transformer._side2._res_current_getter(warning=False)
+            voltage_hv = transformer._side1._res_voltage_getter(warning=False)
+            voltage_lv = transformer._side2._res_voltage_getter(warning=False)
             power_hv = voltage_hv * current_hv.conjugate() * SQRT3
             power_lv = voltage_lv * current_lv.conjugate() * SQRT3
             sn = transformer.parameters._sn
@@ -514,8 +518,10 @@ class ElectricalNetwork(AbstractNetwork[Element]):
         }
         dtypes = {c: DTYPES[c] for c in res_dict}
         for switch in self.switches.values():
-            current1, current2 = switch._res_currents_getter(warning=False)
-            voltage1, voltage2 = switch._res_voltages_getter(warning=False)
+            current1 = switch._side1._res_current_getter(warning=False)
+            current2 = switch._side2._res_current_getter(warning=False)
+            voltage1 = switch._side1._res_voltage_getter(warning=False)
+            voltage2 = switch._side2._res_voltage_getter(warning=False)
             power1 = voltage1 * current1.conjugate() * SQRT3
             power2 = voltage2 * current2.conjugate() * SQRT3
             index.append(switch.id)

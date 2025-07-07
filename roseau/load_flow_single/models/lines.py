@@ -8,14 +8,14 @@ from roseau.load_flow import SQRT3, RoseauLoadFlowException, RoseauLoadFlowExcep
 from roseau.load_flow.typing import Float, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow_engine.cy_engine import CyShuntLine, CySimplifiedLine
-from roseau.load_flow_single.models.branches import AbstractBranch
+from roseau.load_flow_single.models.branches import AbstractBranch, AbstractBranchSide
 from roseau.load_flow_single.models.buses import Bus
 from roseau.load_flow_single.models.line_parameters import LineParameters
 
 logger = logging.getLogger(__name__)
 
 
-class Line(AbstractBranch[CyShuntLine | CySimplifiedLine]):
+class Line(AbstractBranch["LineSide", CyShuntLine | CySimplifiedLine]):
     """An electrical line PI model with series impedance and optional shunt admittance."""
 
     element_type: Final = "line"
@@ -62,6 +62,8 @@ class Line(AbstractBranch[CyShuntLine | CySimplifiedLine]):
         self._initialized = False
         self._with_shunt = parameters.with_shunt
         super().__init__(id=id, bus1=bus1, bus2=bus2, n=1, geometry=geometry)
+        self._side1 = LineSide(branch=self, side=1, bus=bus1)
+        self._side2 = LineSide(branch=self, side=2, bus=bus2)
         self.length = length
         self.parameters = parameters
         self.max_loading = max_loading
@@ -104,7 +106,7 @@ class Line(AbstractBranch[CyShuntLine | CySimplifiedLine]):
     @ureg_wraps("km", (None,))
     def length(self) -> Q_[float]:
         """The length of the line (in km)."""
-        return self._length
+        return self._length  # type: ignore
 
     @length.setter
     @ureg_wraps(None, (None, "km"))
@@ -147,19 +149,19 @@ class Line(AbstractBranch[CyShuntLine | CySimplifiedLine]):
     @ureg_wraps("ohm", (None,))
     def z_line(self) -> Q_[complex]:
         """Impedance of the line (in Ohm)."""
-        return self._z_line
+        return self._z_line  # type: ignore
 
     @property
     @ureg_wraps("S", (None,))
     def y_shunt(self) -> Q_[complex]:
         """Shunt admittance of the line (in Siemens)."""
-        return self._y_shunt
+        return self._y_shunt  # type: ignore
 
     @property
     @ureg_wraps("", (None,))
     def max_loading(self) -> Q_[float]:
         """The maximum loading of the line (unitless)"""
-        return self._max_loading
+        return self._max_loading  # type: ignore
 
     @max_loading.setter
     @ureg_wraps(None, (None, ""))
@@ -190,7 +192,8 @@ class Line(AbstractBranch[CyShuntLine | CySimplifiedLine]):
         return self._with_shunt
 
     def _res_series_values_getter(self, warning: bool) -> tuple[complex, complex]:
-        volt1, volt2 = self._res_voltages_getter(warning)  # V
+        volt1 = self._side1._res_voltage_getter(warning)
+        volt2 = self._side2._res_voltage_getter(warning=False)  # warn only once
         du_line = volt1 - volt2
         i_line = self._z_line_inv * du_line / SQRT3  # Zₗ x Iₗ = ΔU -> I = Zₗ⁻¹ x ΔU
         return du_line, i_line
@@ -203,66 +206,54 @@ class Line(AbstractBranch[CyShuntLine | CySimplifiedLine]):
         du_line, i_line = self._res_series_values_getter(warning)
         return du_line * i_line.conjugate() * SQRT3  # Sₗ = √3.ΔU.Iₗ*
 
-    def _res_shunt_values_getter(self, warning: bool) -> tuple[complex, complex, complex, complex]:
-        assert self.with_shunt, "This method only works when there is a shunt"
-        volt1, volt2 = self._res_voltages_getter(warning)
-        i1_shunt = self._y_shunt * volt1 / SQRT3 / 2
-        i2_shunt = self._y_shunt * volt2 / SQRT3 / 2
-        return volt1, volt2, i1_shunt, i2_shunt
-
-    def _res_shunt_currents_getter(self, warning: bool) -> tuple[complex, complex]:
-        if not self.with_shunt:
-            return 0j, 0j
-        _, _, cur1, cur2 = self._res_shunt_values_getter(warning)
-        return cur1, cur2
-
-    def _res_shunt_power_losses_getter(self, warning: bool) -> complex:
-        if not self.with_shunt:
-            return 0j
-        volt1, volt2, cur1, cur2 = self._res_shunt_values_getter(warning)
-        return (volt1 * cur1.conjugate() + volt2 * cur2.conjugate()) * SQRT3
-
     def _res_power_losses_getter(self, warning: bool) -> complex:
         series_losses = self._res_series_power_losses_getter(warning)
-        shunt_losses = self._res_shunt_power_losses_getter(warning=False)  # we warn on the previous line
-        return series_losses + shunt_losses
+        shunt_losses1 = self._side1._res_shunt_losses_getter(warning=False)  # warn only once
+        shunt_losses2 = self._side2._res_shunt_losses_getter(warning=False)
+        return series_losses + shunt_losses1 + shunt_losses2
 
     def _res_loading_getter(self, warning: bool) -> float | None:
         if (amp := self._parameters._ampacity) is None:
             return None
-        current1, current2 = self._res_currents_getter(warning=warning)
+        current1 = self._side1._res_current_getter(warning)
+        current2 = self._side2._res_current_getter(warning=False)  # warn only once
         return max(abs(current1), abs(current2)) / amp
 
     @property
     @ureg_wraps("A", (None,))
     def res_series_current(self) -> Q_[complex]:
         """Get the current in the series elements of the line (in A)."""
-        return self._res_series_current_getter(warning=True)
+        return self._res_series_current_getter(warning=True)  # type: ignore
 
     @property
     @ureg_wraps("VA", (None,))
     def res_series_power_losses(self) -> Q_[complex]:
         """Get the power losses in the series elements of the line (in VA)."""
-        return self._res_series_power_losses_getter(warning=True)
+        return self._res_series_power_losses_getter(warning=True)  # type: ignore
 
     @property
     @ureg_wraps(("A", "A"), (None,))
     def res_shunt_currents(self) -> tuple[Q_[complex], Q_[complex]]:
         """Get the currents in the shunt elements of the line (in A)."""
-        cur1, cur2 = self._res_shunt_currents_getter(warning=True)
-        return cur1, cur2
+        return (
+            self._side1._res_shunt_current_getter(warning=True),
+            self._side2._res_shunt_current_getter(warning=False),  # warn only once
+        )  # type: ignore
 
     @property
     @ureg_wraps("VA", (None,))
     def res_shunt_power_losses(self) -> Q_[complex]:
         """Get the power losses in the shunt elements of the line (in VA)."""
-        return self._res_shunt_power_losses_getter(warning=True)
+        return (
+            self._side1._res_shunt_losses_getter(warning=True)
+            + self._side2._res_shunt_losses_getter(warning=False)  # warn only once
+        )  # type: ignore
 
     @property
     @ureg_wraps("VA", (None,))
     def res_power_losses(self) -> Q_[complex]:
         """Get the power losses in the line (in VA)."""
-        return self._res_power_losses_getter(warning=True)
+        return self._res_power_losses_getter(warning=True)  # type: ignore
 
     @property
     def res_loading(self) -> Q_[float] | None:
@@ -299,9 +290,14 @@ class Line(AbstractBranch[CyShuntLine | CySimplifiedLine]):
             # Add line specific results
             power_losses = self._res_power_losses_getter(warning=False)  # warn only once
             series_power_losses = self._res_series_power_losses_getter(warning=False)
-            shunt_power_losses = self._res_shunt_power_losses_getter(warning=False)
+            shunt_power_losses = (
+                # add the shunt losses from both sides
+                self._side1._res_shunt_losses_getter(warning=False)
+                + self._side2._res_shunt_losses_getter(warning=False)
+            )
             series_current = self._res_series_current_getter(warning=False)
-            shunt_current1, shunt_current2 = self._res_shunt_currents_getter(warning=False)
+            shunt_current1 = self._side1._res_shunt_current_getter(warning=False)
+            shunt_current2 = self._side2._res_shunt_current_getter(warning=False)
             loading = self._res_loading_getter(warning=False)
             results["power_losses"] = [power_losses.real, power_losses.imag]
             results["series_power_losses"] = [series_power_losses.real, series_power_losses.imag]
@@ -311,3 +307,37 @@ class Line(AbstractBranch[CyShuntLine | CySimplifiedLine]):
             results["shunt_current2"] = [shunt_current2.real, shunt_current2.imag]
             results["loading"] = loading
         return results
+
+
+class LineSide(AbstractBranchSide):
+    element_type = "line"
+    _branch: Line
+
+    def _res_shunt_values_getter(self, warning: bool) -> tuple[complex, complex]:
+        assert self._branch.with_shunt, "This method only works when there is a shunt"
+        voltage = self._res_voltage_getter(warning)
+        shunt_current = self._branch._y_shunt * voltage / SQRT3 / 2
+        return voltage, shunt_current
+
+    def _res_shunt_current_getter(self, warning: bool) -> complex:
+        if not self._branch.with_shunt:
+            return 0j
+        return self._res_shunt_values_getter(warning)[1]
+
+    def _res_shunt_losses_getter(self, warning: bool) -> complex:
+        if not self._branch.with_shunt:
+            return 0j
+        voltage, current = self._res_shunt_values_getter(warning)
+        return voltage * current.conjugate() * SQRT3
+
+    @property
+    @ureg_wraps("A", (None,))
+    def res_shunt_current(self) -> Q_[complex]:
+        """Get the current in the shunt elements of the line side (in A)."""
+        return self._res_shunt_current_getter(warning=True)  # type: ignore
+
+    @property
+    @ureg_wraps("VA", (None,))
+    def res_shunt_losses(self) -> Q_[complex]:
+        """Get the losses in the shunt elements of the line side (in VA)."""
+        return self._res_shunt_losses_getter(warning=True)  # type: ignore

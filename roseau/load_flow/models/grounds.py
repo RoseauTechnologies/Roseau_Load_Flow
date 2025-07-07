@@ -7,12 +7,14 @@ from typing_extensions import deprecated
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.core import Element
+from roseau.load_flow.models.terminals import AbstractTerminal
 from roseau.load_flow.typing import Complex, Id, JsonDict, Side
 from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow.utils import find_stack_level, one_or_more_repr
 from roseau.load_flow_engine.cy_engine import CyBranch, CyGround, CySimplifiedLine, CySwitch
 
 if TYPE_CHECKING:
+    from roseau.load_flow.models.branches import AbstractBranch
     from roseau.load_flow.models.buses import Bus
 
 logger = logging.getLogger(__name__)
@@ -142,10 +144,10 @@ class GroundConnection(Element[CySimplifiedLine | CySwitch]):
         id: Id | None = None,
         *,
         ground: Ground,
-        element: Element,
+        element: "AbstractTerminal | AbstractBranch",
         impedance: Complex | Q_[Complex] = 0j,
         phase: str = "n",
-        side: Side = None,
+        side: Side | None = None,
         on_connected: Literal["raise", "warn", "ignore"] = "raise",
     ) -> None:
         """Ground connection constructor.
@@ -159,7 +161,8 @@ class GroundConnection(Element[CySimplifiedLine | CySwitch]):
                 The ground object to connect to.
 
             element:
-                The branch or terminal element to connect to the ground.
+                The terminal element to connect to the ground. This can be a bus, source, load, or a
+                branch side. Passing a branch element is deprecated.
 
             impedance:
                 The impedance of the connection to the ground (ohm). Defaults to 0.
@@ -173,6 +176,11 @@ class GroundConnection(Element[CySimplifiedLine | CySwitch]):
                 must be either ``'HV'`` or ``'LV'``. If the element is a line or a switch, this must
                 be either ``1`` or ``2``. For other elements, this must be ``None``.
 
+                .. deprecated:: 0.13.0
+
+                    Using the `side` argument with branch elements is deprecated. Use
+                    `element.side1` or `element.side2` directly instead.
+
             on_connected:
                 The action to take if *other phases* of the element are already connected to this
                 ground. If ``"raise"`` (default), raise an error. If ``"warn"``, issue a warning. If
@@ -182,67 +190,79 @@ class GroundConnection(Element[CySimplifiedLine | CySwitch]):
         if on_connected not in {"warn", "raise", "ignore"}:
             raise ValueError(f"Invalid value for `on_connected`: {on_connected!r}")
 
+        self._check_compatible_phase_tech(element, id=id)
+        element_to_connect = element
         # Check the element type and the side.
-        if element.element_type in {"transformer", "line", "switch"}:
+        if isinstance(element, AbstractTerminal):
+            if side is not None:
+                msg = f"Side cannot be used with {element.element_type} elements, only with branches."
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.BAD_BRANCH_SIDE)
+            if element.element_type in {"transformer", "line", "switch"}:
+                element_to_connect = element._branch  # type: ignore
+        elif element.element_type in {"transformer", "line", "switch"}:
             if side not in (1, 2, "HV", "LV"):
                 side_status = "Side is missing" if side is None else f"Invalid side {side!r}"
                 expected_sides = ("HV", "LV") if element.element_type == "transformer" else (1, 2)
                 msg = f"{side_status} for {element._element_info}, expected one of {expected_sides}."
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.BAD_BRANCH_SIDE)
-        elif element.element_type in {"bus", "source", "load"}:
-            if side is not None:
-                msg = f"Side cannot be used with {element.element_type} elements, only with branches."
-                logger.error(msg)
-                raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.BAD_BRANCH_SIDE)
+            element = element.side1 if side in (1, "HV") else element.side2
+            warnings.warn(
+                (
+                    f"Connecting a {element_to_connect.element_type} to a ground using the side "
+                    f"argument is deprecated. Use {element_to_connect.element_type}.side"
+                    f"{element._side_suffix} directly instead."
+                ),
+                category=DeprecationWarning,
+                stacklevel=find_stack_level(),
+            )
         else:
             msg = f"Cannot connect {element._element_info} to the ground."
             logger.error(msg)
             raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT)
 
-        pretty_phases = f"{side} phases" if side in ("HV", "LV") else f"phases {side}" if side in (1, 2) else "phases"
-        pretty_phase = pretty_phases.replace("phases", "phase")
         if id is None:
-            id = f"{element.element_type} {element.id!r} {pretty_phase} {phase!r} to ground {ground.id!r}"
+            id = f"{element.element_type} {element.id!r} {element._side_desc}phase {phase!r} to ground {ground.id!r}"
         super().__init__(id)
         # Check the phase is valid.
         self._check_phases(id, phases=phase)
-        self._check_compatible_phase_tech(element)
 
         # Check the phase is present in the element phases.
-        self._element_phases_attr = "phases" + {1: "1", 2: "2", "HV": "1", "LV": "2", None: ""}[side]
-        self._element_phases: str = getattr(element, self._element_phases_attr)
-        if phase not in self._element_phases:
+        if phase not in element.phases:
             msg = (
-                f"Phase {phase!r} is not present in {pretty_phases} {self._element_phases!r} of "
-                f"{element._element_info}."
+                f"Phase {phase!r} is not present in {element._side_desc}phases {element.phases!r} "
+                f"of {element._element_info}."
             )
             logger.error(msg)
             raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.BAD_PHASE)
 
         # Check if the element is already connected to this ground
-        connected_phases = [gc._phase for gc in ground._connections if gc._element is element and gc._side == side]
+        connected_phases = [gc._phase for gc in ground._connections if gc._element is element]
         if connected_phases:
             if phase in connected_phases:
                 msg = (
-                    f"Ground {ground.id!r} is already connected to {pretty_phase} {phase!r} of {element._element_info}."
+                    f"Ground {ground.id!r} is already connected to {element._side_desc}phase "
+                    f"{phase!r} of {element._element_info}."
                 )
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
             if on_connected != "ignore":
-                connections, _ = one_or_more_repr(connected_phases, pretty_phase, pretty_phases)
-                msg = f"Ground {ground.id!r} is already connected to {connections} of {element._element_info}."
+                connections, _ = one_or_more_repr(connected_phases, "phase")
+                msg = (
+                    f"Ground {ground.id!r} is already connected to {element._side_desc}"
+                    f"{connections} of {element._element_info}."
+                )
                 if on_connected == "raise":
                     logger.error(msg)
                     raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_GROUND_ID)
                 else:
                     warnings.warn(msg, stacklevel=find_stack_level())
 
-        self._connect(ground, element)
+        self._connect(ground, element_to_connect)
         self._ground = ground
         self._element = element
         self._phase = phase
-        self._side: Side = side
         self.on_connected: Literal["raise", "warn", "ignore"] = on_connected
         self.impedance = impedance
         ground._connections.append(self)
@@ -253,13 +273,11 @@ class GroundConnection(Element[CySimplifiedLine | CySwitch]):
         parts = [
             f"id={self.id!r}",
             f"ground={self._ground.id!r}",
-            f"element={self._element.id!r}",
+            f"element={self._element_info!r} {self._element._side_desc}".rstrip(),
             f"impedance={self._impedance!r}",
             f"phase={self._phase!r}",
+            f"on_connected={self.on_connected!r}",
         ]
-        if self._side is not None:
-            parts.append(f"side={self._side!r}")
-        parts.append(f"on_connected={self.on_connected!r}")
         return f"<{type(self).__name__}: {', '.join(parts)}>"
 
     @property
@@ -268,9 +286,9 @@ class GroundConnection(Element[CySimplifiedLine | CySwitch]):
         return self._phase
 
     @property
-    def side(self) -> Side:
+    def side(self) -> Side | None:
         """The side of the element to connect to."""
-        return self._side
+        return self._element._side_value
 
     @property
     @ureg_wraps("ohm", (None,))
@@ -316,22 +334,15 @@ class GroundConnection(Element[CySimplifiedLine | CySwitch]):
         return self._element
 
     def _cy_connect(self) -> None:
-        cy_self = self._cy_element
-        cy_element = self._element._cy_element
-        cy_ground = self._ground._cy_element
-        assert cy_self is not None
-        assert cy_element is not None, "Element cannot be disconnected."
-        assert cy_ground is not None, "Ground cannot be disconnected."
         # Connect the phase of the element to the first side of the ground connection.
-        i = self._element_phases.index(self._phase)
-        if self._side is None:
-            cy_element.connect(cy_self, [(i, 0)])
+        i = self._element.phases.index(self._phase)
+        if isinstance(self._element._cy_element, CyBranch):
+            self._element._cy_element.connect_side(self._cy_element, [(i, 0)], beginning=self._element._side_index == 0)
         else:
-            assert isinstance(cy_element, CyBranch)
-            beginning = self._side in (1, "HV")
-            cy_element.connect_side(cy_self, [(i, 0)], beginning=beginning)
+            assert self._element._side_value is None
+            self._element._cy_element.connect(self._cy_element, [(i, 0)])
         # Connect the ground to the second side of the ground connection.
-        cy_ground.connect(cy_self, [(0, 1)])
+        self._ground._cy_element.connect(self._cy_element, [(0, 1)])
 
     #
     # Results
@@ -372,7 +383,7 @@ class GroundConnection(Element[CySimplifiedLine | CySwitch]):
             "element": {"id": self._element.id, "type": self._element.element_type},
             "phase": self._phase,
             "impedance": [self._impedance.real, self._impedance.imag],
-            "side": self._side,
+            "side": self._element._side_value,
             "on_connected": self.on_connected,
         }
         if include_results:

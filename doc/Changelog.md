@@ -21,6 +21,20 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`385` {gh-issue}`344` Add sides accessors to branches.
+
+  - `Transformer.side_hv` and `Transformer.side_lv` return the high-voltage and low-voltage sides of a transformer.
+  - `Line.side1` and `Line.side2` return the two sides of a line.
+  - `Switch.side1` and `Switch.side2` return the two sides of a switch.
+
+  A side is a bus connectable element and has all common attributes of bus connectables. For example,
+  `Transformer.side_hv` has the attributes `bus`, `phases`, `res_currents`, `res_powers`, `res_voltages`, etc.
+
+  Passing a branch element and a separate side argument to `rlf.GroundConnection`, `rlf.plotting.plot_voltage_phasors`
+  and `rlf.plotting.plot_symmetrical_voltages` is deprecated in favor of passing a branch side directly. For example,
+  replace `rlf.GroundConnection(ground=ground, element=transformer, side="HV")` by
+  `rlf.GroundConnection(ground=ground, element=transformer.side_hv)`.
+
 - {gh-pr}`382` Improve load flow convergence for networks with step-up transformers by improving the initial guesses for
   the voltages of the buses.
 

@@ -64,7 +64,7 @@ class Bus(AbstractTerminal[CyBus]):
                 An optional initial voltage of the bus (V). It can be used to improve the convergence
                 of the load flow algorithm.
         """
-        super().__init__(id)
+        super().__init__(id, n=2)
         initialized = initial_voltage is not None
         if initial_voltage is None:
             initial_voltage = 0.0
@@ -350,8 +350,8 @@ class Bus(AbstractTerminal[CyBus]):
     @property
     def res_voltage_level(self) -> Q_[float] | None:
         """The load flow result of the bus voltage levels (unitless)."""
-        voltages_level = self._res_voltage_level_getter(warning=True)
-        return None if voltages_level is None else Q_(voltages_level, "")
+        voltage_level = self._res_voltage_level_getter(warning=True)
+        return None if voltage_level is None else Q_(voltage_level, "")
 
     @property
     def res_violated(self) -> bool | None:

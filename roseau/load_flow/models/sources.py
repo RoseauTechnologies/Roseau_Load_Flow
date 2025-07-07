@@ -5,7 +5,7 @@ import numpy as np
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.buses import Bus
-from roseau.load_flow.models.connectables import AbstractConnectable
+from roseau.load_flow.models.connectables import AbstractDisconnectable
 from roseau.load_flow.sym import PositiveSequence
 from roseau.load_flow.typing import ComplexArray, ComplexScalarOrArrayLike1D, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
@@ -14,7 +14,7 @@ from roseau.load_flow_engine.cy_engine import CyDeltaVoltageSource, CyVoltageSou
 logger = logging.getLogger(__name__)
 
 
-class VoltageSource(AbstractConnectable[CyVoltageSource | CyDeltaVoltageSource]):
+class VoltageSource(AbstractDisconnectable[CyVoltageSource | CyDeltaVoltageSource]):
     """A voltage source fixes the voltages on the phases of the bus it is connected to.
 
     The source can be connected in a wye or star configuration (i.e with a neutral) or in a delta

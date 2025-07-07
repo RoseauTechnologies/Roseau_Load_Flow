@@ -4,7 +4,7 @@ from typing import Final
 from shapely.geometry.base import BaseGeometry
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
-from roseau.load_flow.models.branches import AbstractBranch
+from roseau.load_flow.models.branches import AbstractBranch, AbstractBranchSide
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import Element
 from roseau.load_flow.models.sources import VoltageSource
@@ -14,7 +14,7 @@ from roseau.load_flow_engine.cy_engine import CySwitch
 logger = logging.getLogger(__name__)
 
 
-class Switch(AbstractBranch[CySwitch]):
+class Switch(AbstractBranch["SwitchSide", CySwitch]):
     """A general purpose switch branch."""
 
     element_type: Final = "switch"
@@ -53,17 +53,19 @@ class Switch(AbstractBranch[CySwitch]):
         """
         phases = self._check_phases_common(id, bus1=bus1, bus2=bus2, phases=phases)
         super().__init__(id=id, phases1=phases, phases2=phases, bus1=bus1, bus2=bus2, geometry=geometry)
+        self._side1 = SwitchSide(branch=self, side=1, bus=bus1, phases=phases, connect_neutral=None)
+        self._side2 = SwitchSide(branch=self, side=2, bus=bus2, phases=phases, connect_neutral=None)
         self._check_elements()
         self._check_loop()
         self._check_same_voltage_level()
-        self._cy_element = CySwitch(self._n1)
+        self._cy_element = CySwitch(self._side1._n)
         self._cy_connect()
         self._connect(bus1, bus2)
 
     @property
     def phases(self) -> str:
         """The phases of the switch. This is an alias for :attr:`phases1` and :attr:`phases2`."""
-        return self._phases1
+        return self._side1.phases
 
     def _check_loop(self) -> None:
         """Check that there are no switch loop, raise an exception if it is the case"""
@@ -99,3 +101,9 @@ class Switch(AbstractBranch[CySwitch]):
             )
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_VOLTAGES_SOURCES_CONNECTION)
+
+
+class SwitchSide(AbstractBranchSide):
+    element_type = "switch"
+    allowed_phases = Switch.allowed_phases  # type: ignore
+    _branch: Switch

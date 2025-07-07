@@ -7,7 +7,7 @@ from typing_extensions import TypeVar
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.buses import Bus
-from roseau.load_flow.models.connectables import AbstractConnectable
+from roseau.load_flow.models.connectables import AbstractDisconnectable
 from roseau.load_flow.models.loads.flexible_parameters import FlexibleParameter
 from roseau.load_flow.typing import ComplexArray, ComplexScalarOrArrayLike1D, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 _CyL_co = TypeVar("_CyL_co", bound=CyLoad, default=CyLoad, covariant=True)
 
 
-class AbstractLoad(AbstractConnectable[_CyL_co], ABC):
+class AbstractLoad(AbstractDisconnectable[_CyL_co], ABC):
     """An abstract class of an electric load.
 
     The subclasses of this class can be used to model:

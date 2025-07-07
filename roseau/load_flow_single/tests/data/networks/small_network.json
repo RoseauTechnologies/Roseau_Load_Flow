@@ -1,5 +1,5 @@
 {
-  "version": 4,
+  "version": 5,
   "is_multiphase": false,
   "crs": {
     "data": null,
@@ -7,7 +7,7 @@
   },
   "buses": [
     {
-      "id": "bus0",
+      "id": "Bus 0",
       "geometry": {
         "type": "Point",
         "coordinates": [-1.318375372111463, 48.64794139348595]
@@ -17,67 +17,160 @@
       }
     },
     {
-      "id": "bus1",
+      "id": "Bus 1",
       "geometry": {
         "type": "Point",
         "coordinates": [-1.320149235966572, 48.64971306653889]
       },
       "results": {
-        "voltage": [19999.84999887499, 0.0]
+        "voltage": [19999.998499499885, -0.09999998499750054]
+      }
+    },
+    {
+      "id": "Bus 2",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-1.319, 48.685]
+      },
+      "nominal_voltage": 20000.0,
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05,
+      "results": {
+        "voltage": [20000.0, 0.0]
+      }
+    },
+    {
+      "id": "Bus 3",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-1.3195, 48.648]
+      },
+      "nominal_voltage": 400.0,
+      "min_voltage_level": 0.9,
+      "results": {
+        "voltage": [355.0704155516197, 205.0000000000001]
+      }
+    },
+    {
+      "id": "Bus 4",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-1.3205, 48.6485]
+      },
+      "nominal_voltage": 400.0,
+      "max_voltage_level": 1.1,
+      "results": {
+        "voltage": [355.0704155516197, 205.0000000000001]
       }
     }
   ],
   "lines": [
     {
-      "id": "line",
-      "bus1": "bus0",
-      "bus2": "bus1",
+      "id": "Line Shunt",
+      "bus1": "Bus 0",
+      "bus2": "Bus 1",
       "geometry": {
         "type": "LineString",
         "coordinates": [[-1.318375372111463, 48.64794139348595], [-1.320149235966572, 48.64971306653889]]
       },
       "max_loading": 1.0,
-      "params_id": "test",
+      "params_id": "LP Shunt",
       "length": 1.0,
       "results": {
-        "current1": [0.008660318990223459, 0.0],
-        "current2": [-0.008660318990223459, -0.0],
+        "current1": [0.08663141448050737, 11.547004517622806],
+        "current2": [-0.08660254697315395, 4.3301263730199935e-7],
         "voltage1": [20000.0, 0.0],
-        "voltage2": [19999.84999887499, 0.0]
+        "voltage2": [19999.998499499885, -0.09999998499750054]
+      }
+    },
+    {
+      "id": "Line Simple",
+      "bus1": "Bus 3",
+      "bus2": "Bus 4",
+      "max_loading": 0.9,
+      "params_id": "LP Simple",
+      "length": 0.15,
+      "results": {
+        "current1": [0.0, 0.0],
+        "current2": [-0.0, -0.0],
+        "voltage1": [355.0704155516197, 205.0000000000001],
+        "voltage2": [355.0704155516197, 205.0000000000001]
       }
     }
   ],
-  "transformers": [],
-  "switches": [],
+  "transformers": [
+    {
+      "id": "Tr",
+      "bus_hv": "Bus 0",
+      "bus_lv": "Bus 3",
+      "max_loading": 1.1,
+      "params_id": "TP",
+      "tap": 1.025,
+      "results": {
+        "current_hv": [0.0, 0.3464101615137755],
+        "current_lv": [0.0, 0.0],
+        "voltage_hv": [20000.0, 0.0],
+        "voltage_lv": [355.0704155516197, 205.0000000000001]
+      }
+    }
+  ],
+  "switches": [
+    {
+      "id": "Switch",
+      "bus1": "Bus 0",
+      "bus2": "Bus 2",
+      "results": {
+        "current1": [0.0, 0.0],
+        "current2": [-0.0, -0.0],
+        "voltage1": [20000.0, 0.0],
+        "voltage2": [20000.0, 0.0]
+      }
+    }
+  ],
   "loads": [
     {
-      "id": "load",
-      "bus": "bus1",
+      "id": "Load P",
+      "bus": "Bus 1",
       "type": "power",
-      "power": [300.0, 0.0],
+      "power": [3000.0, 0.0],
       "results": {
-        "current": [0.008660318990723963, -0.0],
-        "voltage": [19999.84999887499, 0.0]
+        "current": [0.08660254687363537, -4.330127018922242e-7],
+        "voltage": [19999.998499499885, -0.09999998499750054]
       }
     }
   ],
   "sources": [
     {
-      "id": "vs",
-      "bus": "bus0",
+      "id": "Source",
+      "bus": "Bus 0",
       "type": "voltage",
       "voltage": [20000.0, 0.0],
       "results": {
-        "current": [-0.008660318990236813, 0.0],
+        "current": [-0.08663141446038064, -11.893414679136582],
         "voltage": [20000.0, 0.0]
       }
     }
   ],
   "lines_params": [
     {
-      "id": "test",
-      "z_line": [10.0, 0.0]
+      "id": "LP Shunt",
+      "z_line": [0.01, 0.0],
+      "y_shunt": [0.0, 0.001]
+    },
+    {
+      "id": "LP Simple",
+      "z_line": [0.01, 0.0]
     }
   ],
-  "transformers_params": []
+  "transformers_params": [
+    {
+      "id": "TP",
+      "vg": "Dyn11",
+      "sn": 160000.0,
+      "uhv": 20000.0,
+      "ulv": 400,
+      "z2": [0.02, 0.0],
+      "ym": [0.0, 1e-5]
+    }
+  ]
 }

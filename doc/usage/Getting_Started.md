@@ -288,17 +288,23 @@ voltages, use the `res_voltages_pp` property (only available for buses with more
 For a list of available results for buses, see the [Bus model page](../models/Bus.md#available-results).
 ```
 
-The currents of the line are available using the `res_currents` property of the `line` object. It contains two arrays:
+The currents of the line are available using the `res_currents` property of the `line` object. It contains the two
+arrays `line.side1.res_currents` and `line.side2.res_currents`:
 
-- the first is the current flowing from the first bus of the line to the second bus of the line. It contains 4 values:
-  one per phase and the neutral current.
-- the second is the current flowing from the second bus of the line to the first bus of the line.
+- `line.side1.res_currents` is the current flowing **into** the first side of the line. It contains 4 values: one per
+  phase and the neutral current.
+- `line.side1.res_currents` is the current flowing **into** the second side of the line i.e. in the opposite direction
+  of the first side.
 
 ```pycon
 >>> line.res_currents
 (<Quantity([ 43.97 -0.33j -22.27-37.92j -21.7 +38.25j   0.   -0.j  ], 'ampere')>,
  <Quantity([-43.97 +0.33j  22.27+37.92j  21.7 -38.25j  -0.   +0.j  ], 'ampere')>)
->>> line.res_currents[0] + line.res_currents[1]
+>>> line.side1.res_currents
+<Quantity([ 43.97 -0.33j -22.27-37.92j -21.7 +38.25j   0.   -0.j  ], 'ampere')>
+>>> line.side2.res_currents
+<Quantity([-43.97 +0.33j  22.27+37.92j  21.7 -38.25j  -0.   +0.j  ], 'ampere')>
+>>> line.side1.res_currents + line.side2.res_currents
 <Quantity([0.+0.j 0.+0.j 0.+0.j 0.+0.j], 'ampere')>
 ```
 

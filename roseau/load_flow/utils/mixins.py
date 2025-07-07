@@ -419,6 +419,10 @@ class AbstractElement(Identifiable, JsonMixin, Generic[_N_co, _CyE_co]):
         """Return the network the element belong to (if any)."""
         return self._network
 
+    def _set_self_network(self, value: _N_co | None) -> None:
+        """Set the network without checking for bad assignnmets or recursing to connected elements."""
+        self._network = value
+
     def _set_network(self, value: _N_co | None) -> None:
         """Network setter with the ability to set the network to `None`.
 
@@ -441,7 +445,7 @@ class AbstractElement(Identifiable, JsonMixin, Generic[_N_co, _CyE_co]):
             value._connect_element(element=self)
 
         # Assign the new network to self
-        self._network = value
+        self._set_self_network(value)
 
         # In case of disconnection, do nothing to connected elements
         if value is None:
@@ -835,7 +839,7 @@ class AbstractNetwork(RLFObject, JsonMixin, Generic[_E_co]):
                 msg = f"{element!r} is not a valid load or source."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT)
-        element._network = None
+        element._set_self_network(None)
         self._valid = False
         self._results_valid = False
 
@@ -865,7 +869,7 @@ class AbstractNetwork(RLFObject, JsonMixin, Generic[_E_co]):
             logger.error(msg)
             raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT)
         to[element.id] = element
-        element._network = self
+        element._set_self_network(self)
 
     @abstractmethod
     def _get_has_floating_neutral(self) -> bool:
@@ -942,7 +946,7 @@ class AbstractNetwork(RLFObject, JsonMixin, Generic[_E_co]):
         # Assign the network
         for element in elements:
             if element.network is None:
-                element._network = self
+                element._set_self_network(self)
             elif element.network != self:
                 element._raise_several_network()
 

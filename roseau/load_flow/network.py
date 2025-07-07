@@ -499,8 +499,10 @@ class ElectricalNetwork(AbstractNetwork[Element], CatalogueMixin[JsonDict]):
         }
         dtypes = {c: DTYPES[c] for c in res_dict}
         for line in self.lines.values():
-            currents1, currents2 = line._res_currents_getter(warning=False)
-            potentials1, potentials2 = line._res_potentials_getter(warning=False)
+            currents1 = line._side1._res_currents_getter(warning=False)
+            currents2 = line._side2._res_currents_getter(warning=False)
+            potentials1 = line._side1._res_potentials_getter(warning=False)
+            potentials2 = line._side2._res_potentials_getter(warning=False)
             du_line, series_currents = line._res_series_values_getter(warning=False)
             powers1 = potentials1 * currents1.conj()
             powers2 = potentials2 * currents2.conj()
@@ -590,8 +592,10 @@ class ElectricalNetwork(AbstractNetwork[Element], CatalogueMixin[JsonDict]):
         }
         dtypes = {c: DTYPES[c] for c in res_dict}
         for transformer in self.transformers.values():
-            currents_hv, currents_lv = transformer._res_currents_getter(warning=False)
-            potentials_hv, potentials_lv = transformer._res_potentials_getter(warning=False)
+            currents_hv = transformer._side1._res_currents_getter(warning=False)
+            currents_lv = transformer._side2._res_currents_getter(warning=False)
+            potentials_hv = transformer._side1._res_potentials_getter(warning=False)
+            potentials_lv = transformer._side2._res_potentials_getter(warning=False)
             powers_hv = potentials_hv * currents_hv.conj()
             powers_lv = potentials_lv * currents_lv.conj()
             sn = transformer.parameters._sn
@@ -657,8 +661,10 @@ class ElectricalNetwork(AbstractNetwork[Element], CatalogueMixin[JsonDict]):
         }
         dtypes = {c: DTYPES[c] for c in res_dict}
         for switch in self.switches.values():
-            currents1, currents2 = switch._res_currents_getter(warning=False)
-            potentials1, potentials2 = switch._res_potentials_getter(warning=False)
+            currents1 = switch._side1._res_currents_getter(warning=False)
+            currents2 = switch._side2._res_currents_getter(warning=False)
+            potentials1 = switch._side1._res_potentials_getter(warning=False)
+            potentials2 = switch._side2._res_potentials_getter(warning=False)
             powers1 = potentials1 * currents1.conj()
             powers2 = potentials2 * currents2.conj()
             for i1, i2, s1, s2, v1, v2, phase in zip(
@@ -1089,8 +1095,8 @@ class ElectricalNetwork(AbstractNetwork[Element], CatalogueMixin[JsonDict]):
         for source in self.sources.values():
             if source.has_floating_neutral:
                 return True
-        for tr in self.transformers.values():  # noqa: SIM110
-            if tr.has_floating_neutral_hv or tr.has_floating_neutral_lv:
+        for tr in self.transformers.values():
+            if tr.side_hv.has_floating_neutral or tr.side_lv.has_floating_neutral:
                 return True
         return False
 
