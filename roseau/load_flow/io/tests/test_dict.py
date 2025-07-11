@@ -197,7 +197,7 @@ def test_all_converters():
 def test_from_dict_v0():
     dict_v0 = json.loads(read_json_file("network_json_v0.json"))
 
-    with pytest.warns(UserWarning, match=r"Got an outdated network file \(version 0\)") as warn_check:
+    with pytest.warns(UserWarning, match=r"Got an outdated network file \(version 0\)") as warn_check:  # noqa: PT031
         en = ElectricalNetwork.from_dict(data=dict_v0, include_results=False)
         ignore_unmatched_warnings(warn_check)
     net_dict = en.to_dict(include_results=False)
@@ -214,7 +214,7 @@ def test_from_dict_v0():
 def test_from_dict_v1():
     dict_v1 = json.loads(read_json_file("network_json_v1.json"))
 
-    with pytest.warns(UserWarning, match=r"Got an outdated network file \(version 1\)") as warn_check:
+    with pytest.warns(UserWarning, match=r"Got an outdated network file \(version 1\)") as warn_check:  # noqa: PT031
         en = ElectricalNetwork.from_dict(data=dict_v1, include_results=True)
         ignore_unmatched_warnings(warn_check)
     net_dict = en.to_dict(include_results=True)

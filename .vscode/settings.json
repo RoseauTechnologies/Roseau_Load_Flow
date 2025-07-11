@@ -17,12 +17,12 @@
   },
   // Prettier
   "prettier.printWidth": 120,
-  "[yaml][html][css]": {
+  "[yaml]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode",
     "editor.formatOnSave": true,
   },
   // Json
-  "[json]": {
+  "[json][html][css]": {
     "editor.defaultFormatter": "biomejs.biome",
     "editor.formatOnSave": true,
     "editor.indentSize": 2,
