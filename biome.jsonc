@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.1.1/schema.json",
   "vcs": {
     "enabled": false,
     "clientKind": "git",
@@ -7,7 +7,7 @@
   },
   "files": {
     "ignoreUnknown": false,
-    "ignore": []
+    "maxSize": 2097152 // 2 MiB to accommodate the networks Catalogue.html file (1.6 MiB)
   },
   "formatter": {
     "enabled": true,
@@ -15,9 +15,6 @@
     "indentWidth": 2,
     "lineWidth": 120,
     "lineEnding": "lf"
-  },
-  "organizeImports": {
-    "enabled": true
   },
   "linter": {
     "enabled": true,
@@ -28,6 +25,19 @@
   "javascript": {
     "formatter": {
       "quoteStyle": "double"
+    }
+  },
+  "assist": {
+    "enabled": true,
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
+  },
+  "html": {
+    "formatter": {
+      "enabled": true  // Enable experimental HTML formatting
     }
   }
 }
