@@ -21,6 +21,8 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`387` Stop reformatting arrays in json output.
+
 - {gh-pr}`385` {gh-issue}`344` Add sides accessors to branches.
 
   - `Transformer.side_hv` and `Transformer.side_lv` return the high-voltage and low-voltage sides of a transformer.

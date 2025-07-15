@@ -171,14 +171,9 @@ class JsonMixin(metaclass=ABCMeta):
             The expanded and resolved path of the written file.
         """
         res = self.to_dict(include_results=include_results)
-        output = json.dumps(res, ensure_ascii=False, indent=2, default=_json_encoder_default)
-        # Collapse multi-line arrays of 2-to-4 elements into single line
-        # e.g complex value represented as [real, imag] or rows of the z_line matrix
-        output = re.sub(r"\[(?:\s+(\S+,))?(?:\s+?( \S+,))??(?:\s+?( \S+,))??\s+?( \S+)\s+]", r"[\1\2\3\4]", output)
-        if not output.endswith("\n"):
-            output += "\n"
         path = Path(path).expanduser().resolve()
-        path.write_text(output)
+        with path.open("w", encoding="utf-8") as fp:
+            json.dump(res, fp, ensure_ascii=False, indent=2, default=_json_encoder_default)
         return path
 
     @abstractmethod
@@ -250,12 +245,9 @@ class JsonMixin(metaclass=ABCMeta):
             The expanded and resolved path of the written file.
         """
         dict_results = self._results_to_dict(warning=True, full=full)
-        output = json.dumps(dict_results, indent=4, default=_json_encoder_default)
-        output = re.sub(r"\[\s+(.*),\s+(.*)\s+]", r"[\1, \2]", output)
         path = Path(path).expanduser().resolve()
-        if not output.endswith("\n"):
-            output += "\n"
-        path.write_text(output)
+        with path.open("w", encoding="utf-8") as fp:
+            json.dump(dict_results, fp, ensure_ascii=False, indent=2, default=_json_encoder_default)
         return path
 
 
