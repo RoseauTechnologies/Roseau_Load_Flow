@@ -21,6 +21,9 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`388` {gh-issue}`378` Add `ElectricalNetwork.tool_data` to attach tool-specific data to the electrical network.
+  The data is written to the JSON file when saving the network and is read when loading.
+
 - {gh-pr}`387` Stop reformatting arrays in json output.
 
 - {gh-pr}`385` {gh-issue}`344` Add sides accessors to branches.

@@ -712,6 +712,7 @@ def test_buses_voltages(small_network_with_results):
 
 
 def test_to_from_dict_roundtrip(small_network: ElectricalNetwork):
+    small_network.tool_data.add("some-tool", {"version": "1.0", "date": "2025-01-01"})
     net_dict = small_network.to_dict()
     new_net = ElectricalNetwork.from_dict(net_dict)
     assert_frame_equal(small_network.buses_frame, new_net.buses_frame)
@@ -720,6 +721,8 @@ def test_to_from_dict_roundtrip(small_network: ElectricalNetwork):
     assert_frame_equal(small_network.switches_frame, new_net.switches_frame)
     assert_frame_equal(small_network.loads_frame, new_net.loads_frame)
     assert_frame_equal(small_network.sources_frame, new_net.sources_frame)
+
+    assert new_net.tool_data.to_dict() == small_network.tool_data.to_dict()
 
 
 def test_single_phase_network(single_phase_network: ElectricalNetwork):
@@ -2572,3 +2575,62 @@ def test_duplicate_transformer_parameters_id():
     assert tp1._elements == set()
     assert tp2._elements == {tr1}
     assert en._parameters["transformer"] == {tp2.id: tp2}
+
+
+def test_tool_metadata(small_network: ElectricalNetwork):
+    en = small_network
+
+    assert en.tool_data.to_dict() == {}
+    assert repr(en.tool_data) == "ToolData({})"
+
+    # Add data for a new tool
+    en.tool_data.add("some-tool", {"version": "1.0", "date": "2025-01-01"})
+    assert en.tool_data.to_dict() == {
+        "some-tool": {"version": "1.0", "date": "2025-01-01"},
+    }
+    assert repr(en.tool_data) == "ToolData({'some-tool': {'version': '1.0', 'date': '2025-01-01'}})"
+    # Raise if the data is not JSON serializable
+    with pytest.raises(
+        ValueError, match=r"ToolData is not serializable to JSON: Object of type set is not JSON serializable"
+    ):
+        en.tool_data.add("bad-tool", {"data": {1, 2, 3}})
+    assert en.tool_data.to_dict() == {
+        "some-tool": {"version": "1.0", "date": "2025-01-01"},
+    }
+    # Raise if the data already exists
+    with pytest.raises(
+        KeyError, match=r"ToolData for 'some-tool' already exists. Use `update` or set `overwrite=True` to replace it."
+    ):
+        en.tool_data.add("some-tool", {"version": "1.1", "date": "2025-01-02"})
+    assert en.tool_data.to_dict() == {
+        "some-tool": {"version": "1.0", "date": "2025-01-01"},
+    }
+    # Unless `overwrite` is set to True
+    en.tool_data.add("some-tool", {"version": "1.1", "date": "2025-01-02"}, overwrite=True)
+    assert en.tool_data.to_dict() == {
+        "some-tool": {"version": "1.1", "date": "2025-01-02"},
+    }
+
+    # Update the data of an existing tool
+    en.tool_data.update("some-tool", {"date": "2025-01-03", "author": "John Doe"})
+    assert en.tool_data.to_dict() == {
+        "some-tool": {"version": "1.1", "date": "2025-01-03", "author": "John Doe"},
+    }
+    # Raise if the data does not exist
+    with pytest.raises(KeyError, match=r"ToolData for 'non-existing-tool' does not exist. Use `add` to create it."):
+        en.tool_data.update("non-existing-tool", {"version": "1.0"})
+
+    # Remove data of an existing tool
+    en.tool_data.remove("some-tool")
+    assert en.tool_data.to_dict() == {}
+    # Raise if the data does not exist
+    with pytest.raises(KeyError, match=r"ToolData for 'non-existing-tool' does not exist."):
+        en.tool_data.remove("non-existing-tool")
+
+    # Clear all tool data
+    en.tool_data.add("another-tool", {"version": "2.0"})
+    assert en.tool_data.to_dict() == {
+        "another-tool": {"version": "2.0"},
+    }
+    en.tool_data.clear()
+    assert en.tool_data.to_dict() == {}

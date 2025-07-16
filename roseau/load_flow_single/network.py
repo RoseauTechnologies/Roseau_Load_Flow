@@ -657,8 +657,9 @@ class ElectricalNetwork(AbstractNetwork[Element]):
         Returns:
             The constructed network.
         """
-        network_data, has_results = network_from_dict(data=data, include_results=include_results)
+        network_data, tool_data, has_results = network_from_dict(data=data, include_results=include_results)
         network = cls(**network_data)
+        network.tool_data._storage.update(tool_data)
         network._no_results = not has_results
         network._results_valid = has_results
         return network
@@ -717,3 +718,6 @@ class ElectricalNetwork(AbstractNetwork[Element]):
         with open(path, "w", encoding=encoding) as f:
             json.dump(data, f, indent=2)
         return path
+
+    # TODO: delete the alias when we know how to teach sphinx to include the docstring of the parent class
+    tool_data = AbstractNetwork.tool_data

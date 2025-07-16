@@ -45,7 +45,9 @@ NETWORK_JSON_VERSION: Final = 5
 """The current version of the network JSON file format."""
 
 
-def network_from_dict(data: JsonDict, *, include_results: bool = True) -> tuple[NetworkElements, bool]:  # noqa: C901
+def network_from_dict(  # noqa: C901
+    data: JsonDict, *, include_results: bool = True
+) -> tuple[NetworkElements, dict[str, JsonDict], bool]:
     """Create the electrical network elements from a dictionary.
 
     Args:
@@ -211,6 +213,9 @@ def network_from_dict(data: JsonDict, *, include_results: bool = True) -> tuple[
             ground = grounds[ground_id] if ground_id is not None else None
             buses[sc["bus_id"]].add_short_circuit(*sc["short_circuit"]["phases"], ground=ground)
 
+    # Tool data
+    tool_data = data.get("tool", {})
+
     return (
         {
             "buses": buses,
@@ -224,6 +229,7 @@ def network_from_dict(data: JsonDict, *, include_results: bool = True) -> tuple[
             "ground_connections": ground_connections,
             "crs": crs,
         },
+        tool_data,
         has_results,
     )
 
@@ -301,6 +307,9 @@ def network_to_dict(en: "ElectricalNetwork", *, include_results: bool) -> JsonDi
         key=id_sort_key,
     )
 
+    # Tool data
+    tool_data = en.tool_data.to_dict()
+
     res = {
         "version": NETWORK_JSON_VERSION,
         "is_multiphase": True,
@@ -319,6 +328,8 @@ def network_to_dict(en: "ElectricalNetwork", *, include_results: bool) -> JsonDi
     }
     if short_circuits:
         res["short_circuits"] = short_circuits
+    if tool_data:
+        res["tool"] = tool_data
     return res
 
 
