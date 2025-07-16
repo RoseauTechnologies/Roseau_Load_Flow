@@ -18,7 +18,7 @@ class ToolData:
             raise TypeError(f"Tool name must be a string, got {type(tool).__name__}.")
 
     @staticmethod
-    def _check_metadata(data: JsonDict, /) -> None:
+    def _check_data(data: JsonDict, /) -> None:
         """Check if the data is a valid dictionary and can be serialized to JSON."""
         if not isinstance(data, dict):
             raise TypeError(f"ToolData must be a dictionary, got {type(data).__name__}.")
@@ -56,7 +56,7 @@ class ToolData:
     def add(self, tool: str, data: JsonDict, *, overwrite: bool = False) -> None:
         """Add data for a new tool."""
         self._check_tool(tool)
-        self._check_metadata(data)
+        self._check_data(data)
         if tool in self._storage and not overwrite:
             raise KeyError(f"ToolData for {tool!r} already exists. Use `update` or set `overwrite=True` to replace it.")
         self._storage[tool] = data
@@ -64,7 +64,7 @@ class ToolData:
     def update(self, tool: str, data: JsonDict) -> None:
         """Update the data of an existing tool."""
         self._check_tool(tool)
-        self._check_metadata(data)
+        self._check_data(data)
         if tool not in self._storage:
             raise KeyError(f"ToolData for {tool!r} does not exist. Use `add` to create it.")
         self._storage[tool].update(data)
