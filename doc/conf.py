@@ -127,7 +127,7 @@ rst_prolog = """
 
 
 # -- Options for autodoc ----------------------------------------------------
-autodoc_default_options = {"ignore-module-all": False}
+autodoc_default_options = {"ignore-module-all": False, "inherited-members": True}
 autodoc_member_order = "bysource"
 autodoc_typehints = "signature"
 autodoc_inherit_docstrings = True

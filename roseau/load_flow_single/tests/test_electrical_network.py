@@ -413,6 +413,7 @@ def test_empty_network():
 
 def test_to_from_dict_roundtrip(all_elements_network_with_results: ElectricalNetwork, all_elements_network_path):
     en = all_elements_network_with_results
+    en.tool_data.add("some-tool", {"version": "1.0", "date": "2025-01-01"})
     net_dict = en.to_dict()
     new_net = ElectricalNetwork.from_dict(net_dict)
 
@@ -422,6 +423,8 @@ def test_to_from_dict_roundtrip(all_elements_network_with_results: ElectricalNet
     assert_frame_equal(en.switches_frame, new_net.switches_frame)
     assert_frame_equal(en.loads_frame, new_net.loads_frame)
     assert_frame_equal(en.sources_frame, new_net.sources_frame)
+
+    assert new_net.tool_data.to_dict() == en.tool_data.to_dict()
 
 
 def test_network_elements(small_network: ElectricalNetwork):

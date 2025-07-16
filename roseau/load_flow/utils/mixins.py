@@ -22,6 +22,7 @@ from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowE
 from roseau.load_flow.typing import CRSLike, Id, JsonDict, MapOrSeq, Solver, StrPath
 from roseau.load_flow.utils.exceptions import find_stack_level
 from roseau.load_flow.utils.helpers import abstractattrs
+from roseau.load_flow.utils.tool_data import ToolData
 from roseau.load_flow_engine.cy_engine import CyElectricalNetwork, CyElement
 
 logger = logging.getLogger(__name__)
@@ -151,10 +152,9 @@ class JsonMixin(metaclass=ABCMeta):
         """Save this element to a JSON file.
 
         .. note::
-            The path is `expanded`_ then `resolved`_ before writing the file.
-
-        .. _expanded: https://docs.python.org/3/library/pathlib.html#pathlib.Path.expanduser
-        .. _resolved: https://docs.python.org/3/library/pathlib.html#pathlib.Path.resolve
+            The path is `expanded <https://docs.python.org/3/library/pathlib.html#pathlib.Path.expanduser>`__
+            then `resolved <https://docs.python.org/3/library/pathlib.html#pathlib.Path.resolve>`__
+            before writing the file.
 
         .. warning::
             If the file exists, it will be overwritten.
@@ -225,10 +225,9 @@ class JsonMixin(metaclass=ABCMeta):
         """Write the results of the load flow to a json file.
 
         .. note::
-            The path is `expanded`_ then `resolved`_ before writing the file.
-
-        .. _expanded: https://docs.python.org/3/library/pathlib.html#pathlib.Path.expanduser
-        .. _resolved: https://docs.python.org/3/library/pathlib.html#pathlib.Path.resolve
+            The path is `expanded <https://docs.python.org/3/library/pathlib.html#pathlib.Path.expanduser>`__
+            then `resolved <https://docs.python.org/3/library/pathlib.html#pathlib.Path.resolve>`__
+            before writing the file.
 
         .. warning::
             If the file exists, it will be overwritten.
@@ -609,6 +608,7 @@ class AbstractNetwork(RLFObject, JsonMixin, Generic[_E_co]):
         self._valid = True
         self._solver = AbstractSolver.from_dict(data={"name": self._DEFAULT_SOLVER, "params": {}}, network=self)
         self.crs: CRSLike | None = crs
+        self._tool_data = ToolData()
 
         # Track parameters to check for duplicates
         self._parameters: dict[str, dict[Id, Identifiable]] = {"line": {}, "transformer": {}}
@@ -1051,3 +1051,42 @@ class AbstractNetwork(RLFObject, JsonMixin, Generic[_E_co]):
         with open(path, encoding=encoding) as f:
             data = json.load(f)
         return cls._from_dgs(data, use_name_as_id=use_name_as_id)
+
+    @property
+    def tool_data(self) -> ToolData:
+        """Arbitrary JSON-serializable data for external tools.
+
+        The data is stored in a "tool" key in the network's dictionary representation.
+
+        Usage:
+
+        Add a new tool data:
+
+            >>> en.tool_data.add("my-tool", {"version": "1.0"})
+            >>> en.tool_data.add("another-tool", {"project": "PV farm"})
+            >>> en.tool_data
+            ToolData({'my-tool': {'version': '1.0'}, 'another-tool': {'project': 'PV farm'}})
+            >>> en.tool_data["my-tool"]
+            {'version': '1.0'}
+
+        Update the data of an existing tool:
+
+            >>> en.tool_data.update("my-tool", {"author": "John Doe"})
+            >>> en.tool_data["my-tool"]
+            {'version': '1.0', 'author': 'John Doe'}
+
+        Remove the data of a tool:
+
+            >>> en.tool_data.remove("my-tool")
+            >>> "my-tool" in en.tool_data
+            False
+            >>> en.tool_data
+            ToolData({'another-tool': {'project': 'PV farm'}})
+
+        Clear all tool data:
+
+            >>> en.tool_data.clear()
+            >>> en.tool_data
+            ToolData({})
+        """
+        return self._tool_data

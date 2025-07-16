@@ -293,6 +293,47 @@ Calling the `to_json()` method on a network with invalid results (say after an e
 exception. In this case, you can use the `include_results=False` option to ignore the results, or you can call the
 `solve_load_flow()` method to update the results before saving the network.
 
+You can include data specific to your tool in the JSON file using the
+{meth}`ElectricalNetwork.tool_data <roseau.load_flow.ElectricalNetwork.tool_data>` attribute. The data has to be **JSON
+serializable** and is stored in a `tool` field in the JSON file. For example, you can add data like this:
+
+```pycon
+>>> en.tool_data.add(
+...     "rlf-extension",
+...     {
+...         "version": "1.0",
+...         "last_modified": "2025-01-01",
+...         "author": "John Doe",
+...         "network_id": "EN-12345",
+...     },
+... )
+```
+
+This will add a `tool` field in the JSON file with the following content:
+
+```json
+{
+  "tool": {
+    "rlf-extension": {
+      "version": "1.0",
+      "last_modified": "2025-01-01",
+      "author": "John Doe",
+      "network_id": "EN-12345"
+    }
+  }
+}
+```
+
+The tool data can be accessed later when loading the network:
+
+```pycon
+>>> en.tool_data["rlf-extension"]
+{'version': '1.0',
+ 'last_modified': '2025-01-01',
+ 'author': 'John Doe',
+ 'network_id': 'EN-12345'}
+```
+
 ```{important}
 We do not recommend modifying the JSON file manually. The content of the JSON file is not
 guaranteed to be stable across different versions of the library and should be considered an
