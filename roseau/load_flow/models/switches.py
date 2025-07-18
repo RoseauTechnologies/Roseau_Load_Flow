@@ -99,7 +99,11 @@ class Switch(AbstractBranch["SwitchSide", CySwitch | CyOpenSwitch]):
             element = elements.pop(-1)
             visited_1.add(element)
             for e in element._connected_elements:
-                if e not in visited_1 and e is not self and (isinstance(e, Bus) or isinstance(e, Switch) and e.closed):
+                if (
+                    e not in visited_1
+                    and e is not self
+                    and ((isinstance(e, Switch) and e.closed) or isinstance(e, Bus))
+                ):
                     elements.append(e)
         visited_2: set[Element] = set()
         elements = [self.bus2]
@@ -107,7 +111,11 @@ class Switch(AbstractBranch["SwitchSide", CySwitch | CyOpenSwitch]):
             element = elements.pop(-1)
             visited_2.add(element)
             for e in element._connected_elements:
-                if e not in visited_2 and e is not self and (isinstance(e, Bus) or isinstance(e, Switch) and e.closed):
+                if (
+                    e not in visited_2
+                    and e is not self
+                    and ((isinstance(e, Switch) and e.closed) or isinstance(e, Bus))
+                ):
                     elements.append(e)
         if loop_switches := visited_1.intersection(visited_2):
             other_switches, _ = one_or_more_repr(
