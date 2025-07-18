@@ -43,6 +43,7 @@ _CY_CLASSES_WITH_BASES = {
     "CySimplifiedLine": ("CyBranch",),
     "CyShuntLine": ("CyBranch",),
     "CySwitch": ("CyBranch",),
+    "CyOpenSwitch": ("CyBranch",),
     "CyTransformer": ("CyBranch",),
     "CyThreePhaseTransformer": ("CyTransformer",),
     "CySingleTransformer": ("CyTransformer",),

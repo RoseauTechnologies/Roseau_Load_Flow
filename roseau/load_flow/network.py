@@ -1119,6 +1119,9 @@ class ElectricalNetwork(AbstractNetwork[Element], CatalogueMixin[JsonDict]):
             if isinstance(element, Bus) and not element._initialized:
                 element.initial_potentials = np.array([potentials[p] for p in element.phases], dtype=np.complex128)
                 element._initialized_by_the_user = False  # only used for serialization
+            elif isinstance(element, Switch) and not element.closed:
+                #  Do not propagate voltages through open switches
+                continue
             if not isinstance(element, Ground):  # Do not go from ground to buses/branches
                 for e in element._connected_elements:
                     if e not in visited:

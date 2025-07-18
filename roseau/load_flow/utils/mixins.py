@@ -961,10 +961,10 @@ class AbstractNetwork(RLFObject, JsonMixin, Generic[_E_co]):
                 for e in elements.values()
                 if e not in visited_elements
             ]
-            printable_elements = textwrap.wrap(
+            printable_elements = textwrap.shorten(
                 ", ".join(f"{type(e).__name__}({e.id!r})" for e in unconnected_elements), 500
             )
-            msg = f"The elements {printable_elements} are not electrically connected to a voltage source."
+            msg = f"The elements [{printable_elements}] are not electrically connected to a voltage source."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.POORLY_CONNECTED_ELEMENT)
 

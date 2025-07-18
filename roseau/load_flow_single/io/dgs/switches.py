@@ -1,5 +1,4 @@
 import logging
-import warnings
 from collections.abc import Iterable, Iterator
 
 import pandas as pd
@@ -8,7 +7,6 @@ import shapely
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.io.dgs.utils import DEFAULT_GPS_COORDS, DGSData, clean_id
 from roseau.load_flow.typing import Id
-from roseau.load_flow.utils import find_stack_level
 from roseau.load_flow_single.io.dgs.pwf import STA_CUBIC_FID_INDEX, STA_CUBIC_OBJ_ID_INDEX
 from roseau.load_flow_single.models import Bus, Switch
 
@@ -47,13 +45,8 @@ def elm_coup_to_switches(
         bus1 = buses[sta_cubic.at[elm_coup.at[idx, "bus1"], "cterm"]]
         bus2 = buses[sta_cubic.at[elm_coup.at[idx, "bus2"], "cterm"]]
         geometry = shapely.Point(elm_coup.at[idx, "GPSlon"], elm_coup.at[idx, "GPSlat"]) if has_geometry else None
-        on_off = elm_coup.at[idx, "on_off"]
-        if not on_off:
-            warnings.warn(
-                f"Switch {sw_id!r} is open but switches are always closed in roseau-load-flow.",
-                stacklevel=find_stack_level(),
-            )
-        switches[sw_id] = Switch(id=sw_id, bus1=bus1, bus2=bus2, geometry=geometry)
+        closed = bool(elm_coup.at[idx, "on_off"])
+        switches[sw_id] = Switch(id=sw_id, bus1=bus1, bus2=bus2, closed=closed, geometry=geometry)
 
 
 #
@@ -86,6 +79,7 @@ def switches_to_elm_coup(
         cubic2[STA_CUBIC_OBJ_ID_INDEX] = fid
         geom = switch.geometry.centroid if switch.geometry is not None else DEFAULT_GPS_COORDS
         gpslon, gpslat = geom.x, geom.y
+        on_off = 1 if switch.closed else 0
         values.append(
             [
                 fid,  # FID
@@ -98,7 +92,7 @@ def switches_to_elm_coup(
                 3,  # nphase
                 0,  # nneutral
                 None,  # aUsage
-                1,  # on_off
+                on_off,  # on_off
                 0,  # iNeutInter
                 gpslat,  # GPSlat
                 gpslon,  # GPSlon

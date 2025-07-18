@@ -302,7 +302,7 @@ def test_poorly_connected_elements():
         )
     assert (
         e.value.msg
-        == "The elements [\"Bus('b3'), Bus('b4'), Line('l2')\"] are not electrically connected to a voltage source."
+        == "The elements [Bus('b3'), Bus('b4'), Line('l2')] are not electrically connected to a voltage source."
     )
     assert e.value.code == RoseauLoadFlowExceptionCode.POORLY_CONNECTED_ELEMENT
 

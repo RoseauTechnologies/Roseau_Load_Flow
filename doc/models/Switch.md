@@ -28,13 +28,24 @@ align: center
 
 ## Equations
 
-The associated equations are:
+The associated equations are the following for a closed switch:
 
 ```{math}
 \left\{
     \begin{aligned}
         \underline{I_1} &= - \underline{I_2}\\
         \underline{V_1} &= \underline{V_2}\\
+    \end{aligned}
+\right.
+```
+
+and for an open switch:
+
+```{math}
+\left\{
+    \begin{aligned}
+        \underline{I_1} &= 0\\
+        \underline{I_2} &= 0\\
     \end{aligned}
 \right.
 ```
@@ -100,7 +111,7 @@ import roseau.load_flow as rlf
 bus1 = rlf.Bus(id="bus1", phases="abcn")
 bus2 = rlf.Bus(id="bus2", phases="abcn")
 
-# A line
+# A switch connecting the two buses
 switch = rlf.Switch(id="switch", bus1=bus1, bus2=bus2)
 
 # A voltage source on the first bus
@@ -146,6 +157,21 @@ en.res_buses_voltages[["voltage"]].transform([np.abs, ft.partial(np.angle, deg=T
 # | ('bus2', 'an') |                    230.94 |                      0 |
 # | ('bus2', 'bn') |                    230.94 |                   -120 |
 # | ('bus2', 'cn') |                    230.94 |                    120 |
+
+# The switch is closed by default. Let's open it and add a line
+
+switch.open()
+lp = rlf.LineParameters(id="LP", z_line=(0.1 + 0.1j) * np.eye(4))
+rlf.Line(id="line", bus1=bus1, bus2=bus2, length=0.1, parameters=lp)
+en.solve_load_flow()
+# No current flows through the switch now
+en.res_switches[["current1"]].transform([np.abs, ft.partial(np.angle, deg=True)])
+# |                 |   ('current1', 'absolute') |   ('current1', 'angle') |
+# |:----------------|---------------------------:|------------------------:|
+# | ('switch', 'a') |                          0 |                       0 |
+# | ('switch', 'b') |                          0 |                       0 |
+# | ('switch', 'c') |                          0 |                       0 |
+# | ('switch', 'n') |                          0 |                       0 |
 ```
 
 ## API Reference

@@ -21,6 +21,10 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`389` Add support for open switches. Pass `closed=False` to the `Switch` constructor to create an open switch.
+  Call `switch.open()` to open an existing switch and `switch.close()` to close it. `switch.closed` tells if the switch
+  is closed or not. The switch is closed by default.
+
 - {gh-pr}`388` {gh-issue}`378` Add `ElectricalNetwork.tool_data` to attach tool-specific data to the electrical network.
   The data is written to the JSON file when saving the network and is read when loading.
 

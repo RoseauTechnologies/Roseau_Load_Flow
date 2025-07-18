@@ -339,6 +339,11 @@ def v3_to_v4_converter(data: JsonDict) -> JsonDict:
 def v4_to_v5_converter(data: JsonDict) -> JsonDict:
     assert data["version"] == 4, data["version"]
 
+    switches = []
+    for switch_data in data["switches"]:
+        switch_data["closed"] = True
+        switches.append(switch_data)
+
     results = {
         "version": 5,
         "is_multiphase": data["is_multiphase"],  # Unchanged
@@ -346,7 +351,7 @@ def v4_to_v5_converter(data: JsonDict) -> JsonDict:
         "buses": data["buses"],  # Unchanged
         "lines": data["lines"],  # Unchanged
         "transformers": data["transformers"],  # Unchanged
-        "switches": data["switches"],  # Unchanged
+        "switches": switches,
         "loads": data["loads"],  # Unchanged
         "sources": data["sources"],  # Unchanged
         "lines_params": data["lines_params"],  # <---- Unchanged

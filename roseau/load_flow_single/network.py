@@ -608,6 +608,9 @@ class ElectricalNetwork(AbstractNetwork[Element]):
             if isinstance(element, Bus) and not element._initialized:
                 element.initial_voltage = initial_voltage
                 element._initialized_by_the_user = False  # only used for serialization
+            elif isinstance(element, Switch) and not element.closed:
+                # Do not propagate voltages through open switches
+                continue
             for e in element._connected_elements:
                 if e not in visited:
                     if isinstance(element, Transformer):
