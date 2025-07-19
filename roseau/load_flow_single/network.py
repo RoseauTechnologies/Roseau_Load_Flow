@@ -624,9 +624,13 @@ class ElectricalNetwork(AbstractNetwork[Element]):
                         element_voltage = initial_voltage
                     elements.append((e, element_voltage, element))
                     visited.add(e)
-                elif parent != e:
+                elif (
+                    not self._has_loop  # Save some checks if we already found a loop
+                    and parent != e
+                    and (not isinstance(e, Switch) or e.closed)
+                ):
                     self._has_loop = True
-        self._check_connectivity(visited)
+        self._check_connectivity(visited, starting_source)
 
     def _get_starting_voltage(self) -> tuple[complex, VoltageSource]:
         """Compute the initial voltages from the voltage sources of the network and get the starting source."""
