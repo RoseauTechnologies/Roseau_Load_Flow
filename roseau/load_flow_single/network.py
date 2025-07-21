@@ -608,6 +608,9 @@ class ElectricalNetwork(AbstractNetwork[Element]):
             if isinstance(element, Bus) and not element._initialized:
                 element.initial_voltage = initial_voltage
                 element._initialized_by_the_user = False  # only used for serialization
+            elif isinstance(element, Switch) and not element.closed:
+                # Do not propagate voltages through open switches
+                continue
             for e in element._connected_elements:
                 if e not in visited:
                     if isinstance(element, Transformer):
@@ -621,9 +624,13 @@ class ElectricalNetwork(AbstractNetwork[Element]):
                         element_voltage = initial_voltage
                     elements.append((e, element_voltage, element))
                     visited.add(e)
-                elif parent != e:
+                elif (
+                    not self._has_loop  # Save some checks if we already found a loop
+                    and parent != e
+                    and (not isinstance(e, Switch) or e.closed)
+                ):
                     self._has_loop = True
-        self._check_connectivity(visited)
+        self._check_connectivity(visited, starting_source)
 
     def _get_starting_voltage(self) -> tuple[complex, VoltageSource]:
         """Compute the initial voltages from the voltage sources of the network and get the starting source."""

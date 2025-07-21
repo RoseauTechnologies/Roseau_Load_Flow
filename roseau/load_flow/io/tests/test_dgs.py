@@ -121,6 +121,7 @@ def test_dgs_switches(dgs_special_networks_dir, tmp_path):
     assert len(en.switches) == 1
     switch = next(iter(en.switches.values()))
     assert switch.phases == "abc"
+    assert switch.closed
 
     source = next(iter(en.sources.values()))
     load = next(iter(en.loads.values()))
@@ -138,13 +139,21 @@ def test_dgs_switches(dgs_special_networks_dir, tmp_path):
     assert e.value.code == RoseauLoadFlowExceptionCode.DGS_BAD_PHASE_NUMBER
     assert e.value.msg == "nphase=2 for switch '2' is not supported. Only 3-phase switches are currently supported."
 
-    # Warn on open switch
-    assert good_json["ElmCoup"]["Values"][0][good_json["ElmCoup"]["Attributes"].index("on_off")] == 1
-    bad_json = copy.deepcopy(good_json)
-    bad_json["ElmCoup"]["Values"][0][bad_json["ElmCoup"]["Attributes"].index("on_off")] = 0
-    bad_path.write_text(json.dumps(bad_json))
-    with pytest.warns(UserWarning, match=r"Switch '2' is open but switches are always closed in roseau-load-flow."):
-        ElectricalNetwork.from_dgs_file(bad_path)
+    # Parse open switch
+    switch_attrs = good_json["ElmCoup"]["Attributes"]
+    new_switch = good_json["ElmCoup"]["Values"][0].copy()
+    new_switch[switch_attrs.index("FID")] = "1000"
+    new_switch[switch_attrs.index("loc_name")] = "Open Switch"
+    assert new_switch[switch_attrs.index("on_off")] == 1
+    new_switch[switch_attrs.index("on_off")] = 0  # Open the switch
+    open_switch_json = copy.deepcopy(good_json)
+    open_switch_json["ElmCoup"]["Values"].append(new_switch)
+    open_switch_path = tmp_path / "Open_Switch.json"
+    open_switch_path.write_text(json.dumps(open_switch_json))
+    en2 = ElectricalNetwork.from_dgs_file(open_switch_path)
+    assert len(en2.switches) == 2
+    open_switch = en2.switches["1000"]
+    assert not open_switch.closed
 
 
 def test_generate_typ_lne_errors(monkeypatch):

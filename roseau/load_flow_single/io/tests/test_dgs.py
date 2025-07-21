@@ -65,7 +65,7 @@ def test_to_from_dgs_roundtrip():
 
     lp = rlfs.LineParameters.from_catalogue("U_AL_240")
     rlfs.Line(
-        "MV Line",
+        "LV Line",
         bus1=bus1_lv,
         bus2=bus2_lv,
         parameters=lp,
@@ -79,6 +79,14 @@ def test_to_from_dgs_roundtrip():
                 (5.738531306019317, 45.18776131177264),
             ]
         ),
+    )
+
+    rlfs.Switch(
+        "LV Switch",
+        bus1=bus1_lv,
+        bus2=bus2_lv,
+        closed=False,  # Open switch
+        geometry=shapely.Point(5.741095497645757, 45.18848721409608),
     )
 
     rlfs.VoltageSource("MV Grid", bus=bus_mv, voltage=21e3 * np.exp(1j * np.pi / 6))

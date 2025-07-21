@@ -300,9 +300,24 @@ def test_poorly_connected_elements():
             loads={},
             sources=[vs],
         )
-    assert (
-        e.value.msg
-        == "The elements [\"Bus('b3'), Bus('b4'), Line('l2')\"] are not electrically connected to a voltage source."
+    assert e.value.msg == (
+        "The elements [Bus('b3'), Bus('b4'), Line('l2')] are not electrically connected to a voltage source."
+    )
+    assert e.value.code == RoseauLoadFlowExceptionCode.POORLY_CONNECTED_ELEMENT
+
+    # Poorly connected because of open switch
+    bus1 = Bus(id="Bus1")
+    bus2 = Bus(id="Bus2")
+    VoltageSource(id="Source", bus=bus1, voltage=400)
+    switch = Switch(id="Switch", bus1=bus1, bus2=bus2, closed=False)
+    VoltageSource(id="Source2", bus=bus2, voltage=399)
+
+    assert not switch.closed
+    with pytest.raises(RoseauLoadFlowException) as e:
+        ElectricalNetwork.from_element(initial_bus=bus1)
+    assert e.value.msg == (
+        "The elements [Bus('Bus2'), VoltageSource('Source2')] are not electrically connected to the "
+        "main voltage source 'Source'. Separate subnetworks are not supported."
     )
     assert e.value.code == RoseauLoadFlowExceptionCode.POORLY_CONNECTED_ELEMENT
 

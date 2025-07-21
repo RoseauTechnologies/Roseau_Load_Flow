@@ -952,7 +952,7 @@ class AbstractNetwork(RLFObject, JsonMixin, Generic[_E_co]):
         """Propagate the sources voltages to set uninitialized potentials of buses and compute self._elements."""
         raise NotImplementedError
 
-    def _check_connectivity(self, visited_elements: Collection[_E_co]) -> None:
+    def _check_connectivity(self, visited_elements: Collection[_E_co], starting_source: AbstractElement[Self]) -> None:
         """Check that all the elements are connected to a voltage source."""
         if len(visited_elements) < sum(map(len, self._elements_by_type.values())):
             unconnected_elements = [
@@ -961,10 +961,17 @@ class AbstractNetwork(RLFObject, JsonMixin, Generic[_E_co]):
                 for e in elements.values()
                 if e not in visited_elements
             ]
-            printable_elements = textwrap.wrap(
+            unconnected_source = next(
+                (e for e in self._elements_by_type["source"].values() if e not in visited_elements), None
+            )
+            printable_elements = textwrap.shorten(
                 ", ".join(f"{type(e).__name__}({e.id!r})" for e in unconnected_elements), 500
             )
-            msg = f"The elements {printable_elements} are not electrically connected to a voltage source."
+            msg = f"The elements [{printable_elements}] are not electrically connected to "
+            if unconnected_source is None:
+                msg += "a voltage source."
+            else:
+                msg += f"the main voltage source {starting_source.id!r}. Separate subnetworks are not supported."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.POORLY_CONNECTED_ELEMENT)
 

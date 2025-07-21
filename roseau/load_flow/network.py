@@ -1119,6 +1119,9 @@ class ElectricalNetwork(AbstractNetwork[Element], CatalogueMixin[JsonDict]):
             if isinstance(element, Bus) and not element._initialized:
                 element.initial_potentials = np.array([potentials[p] for p in element.phases], dtype=np.complex128)
                 element._initialized_by_the_user = False  # only used for serialization
+            elif isinstance(element, Switch) and not element.closed:
+                #  Do not propagate voltages through open switches
+                continue
             if not isinstance(element, Ground):  # Do not go from ground to buses/branches
                 for e in element._connected_elements:
                     if e not in visited:
@@ -1135,14 +1138,19 @@ class ElectricalNetwork(AbstractNetwork[Element], CatalogueMixin[JsonDict]):
                             new_potentials = potentials
                         elements.append((e, new_potentials, element))
                         visited.add(e)
-                    elif parent != e and not isinstance(e, Ground):
+                    elif (
+                        not self._has_loop  # Save some checks if we already found a loop
+                        and parent != e
+                        and not isinstance(e, Ground)
+                        and (not isinstance(e, Switch) or e.closed)
+                    ):
                         self._has_loop = True
             else:
                 for e in element._connected_elements:
                     if e not in visited and isinstance(e, PotentialRef):
                         elements.append((e, potentials, element))
                         visited.add(e)
-        self._check_connectivity(visited)
+        self._check_connectivity(visited, starting_source)
 
     def _get_starting_potentials(self, all_phases: set[str]) -> tuple[dict[str, complex], VoltageSource]:
         """Compute the initial potentials from the voltage sources of the network and get the starting source."""

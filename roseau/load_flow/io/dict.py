@@ -939,6 +939,12 @@ def v4_to_v5_converter(data: JsonDict) -> JsonDict:
                 pass
         lines.append(line_data)
 
+    switches = []
+    for switch_data in data["switches"]:
+        # Add closed parameter
+        switch_data["closed"] = True
+        switches.append(switch_data)
+
     results = {
         "version": 5,
         "is_multiphase": data["is_multiphase"],  # Unchanged
@@ -947,7 +953,7 @@ def v4_to_v5_converter(data: JsonDict) -> JsonDict:
         "potential_refs": data["potential_refs"],  # Unchanged
         "buses": data["buses"],  # Unchanged
         "lines": lines,
-        "switches": data["switches"],  # Unchanged
+        "switches": switches,
         "transformers": data["transformers"],  # Unchanged
         "loads": data["loads"],  # Unchanged
         "sources": data["sources"],  # Unchanged
