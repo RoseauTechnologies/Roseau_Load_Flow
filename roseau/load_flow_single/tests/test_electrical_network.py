@@ -968,6 +968,14 @@ def test_to_graph(small_network: ElectricalNetwork):
     assert graph.edges[bus1.id, bus2.id, 0]["id"] == tr1.id
     assert graph.edges[bus1.id, bus2.id, 1]["id"] == tr2.id
 
+    # Test open switch
+    sw = Switch(id="Switch", bus1=bus1, bus2=bus2)
+    assert en.to_graph().edges[bus1.id, bus2.id, 2]["id"] == sw.id
+    assert en.to_graph(respect_switches=False).edges[bus1.id, bus2.id, 2]["id"] == sw.id
+    sw.open()
+    assert (bus1.id, bus2.id, 2) not in en.to_graph().edges  # not included by default
+    assert en.to_graph(respect_switches=False).edges[bus1.id, bus2.id, 2]["id"] == sw.id
+
 
 def test_serialization(all_elements_network, all_elements_network_with_results):
     def assert_results(en_dict: dict, included: bool):
