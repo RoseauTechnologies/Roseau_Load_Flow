@@ -88,10 +88,19 @@ def test_connect_and_disconnect():
     # Disconnection of a load
     assert load.network == en
     load.disconnect()
+    assert load.is_disconnected
     assert load.network is None
-    assert load.bus is None
+    assert load.bus is load_bus
     with pytest.raises(RoseauLoadFlowException) as e:
         load.to_dict()
+    assert e.value.msg == "The load 'power load' is disconnected and cannot be used anymore."
+    assert e.value.code == RoseauLoadFlowExceptionCode.DISCONNECTED_ELEMENT
+    with pytest.raises(RoseauLoadFlowException) as e:
+        load.results_to_dict()
+    assert e.value.msg == "The load 'power load' is disconnected and cannot be used anymore."
+    assert e.value.code == RoseauLoadFlowExceptionCode.DISCONNECTED_ELEMENT
+    with pytest.raises(RoseauLoadFlowException) as e:
+        _ = load.res_current
     assert e.value.msg == "The load 'power load' is disconnected and cannot be used anymore."
     assert e.value.code == RoseauLoadFlowExceptionCode.DISCONNECTED_ELEMENT
     new_load = PowerLoad(id="power load", bus=load_bus, power=100 + 0j)
@@ -100,10 +109,19 @@ def test_connect_and_disconnect():
     # Disconnection of a source
     assert vs.network == en
     vs.disconnect()
+    assert vs.is_disconnected
     assert vs.network is None
-    assert vs.bus is None
+    assert vs.bus is source_bus
     with pytest.raises(RoseauLoadFlowException) as e:
         vs.to_dict()
+    assert e.value.msg == "The source 'vs' is disconnected and cannot be used anymore."
+    assert e.value.code == RoseauLoadFlowExceptionCode.DISCONNECTED_ELEMENT
+    with pytest.raises(RoseauLoadFlowException) as e:
+        vs.results_to_dict()
+    assert e.value.msg == "The source 'vs' is disconnected and cannot be used anymore."
+    assert e.value.code == RoseauLoadFlowExceptionCode.DISCONNECTED_ELEMENT
+    with pytest.raises(RoseauLoadFlowException) as e:
+        _ = vs.res_current
     assert e.value.msg == "The source 'vs' is disconnected and cannot be used anymore."
     assert e.value.code == RoseauLoadFlowExceptionCode.DISCONNECTED_ELEMENT
 

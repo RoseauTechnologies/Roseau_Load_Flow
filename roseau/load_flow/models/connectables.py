@@ -77,11 +77,7 @@ class AbstractConnectable(AbstractTerminal[_CyE_co], ABC):
         self._res_currents: ComplexArray | None = None
 
     def __repr__(self) -> str:
-        args = [
-            f"id={self.id!r}",
-            f"bus={repr(self.bus.id) if self.bus is not None else '<disconnected>'}",
-            f"phases={self.phases!r}",
-        ]
+        args = [f"id={self.id!r}", f"bus={self.bus.id!r}", f"phases={self.phases!r}"]
         if self._connect_neutral is not None:
             args.append(f"connect_neutral={self._connect_neutral!r}")
         side = f"-{self._side_value}" if self._side_value is not None else ""
@@ -241,22 +237,52 @@ class AbstractDisconnectable(AbstractConnectable[_CyE_co], ABC):
 
     type: ClassVar[str]
 
+    def __repr__(self) -> str:
+        s = super().__repr__()
+        if self._is_disconnected:
+            return f"{s} (disconnected)"
+        return s
+
+    @property
+    def is_disconnected(self) -> bool:
+        """Is this element disconnected from the network?"""
+        return self._is_disconnected
+
+    @property
+    def bus(self) -> Bus | None:
+        """The bus of the element, or None if it is disconnected.
+
+        .. deprecated:: 0.13.0
+
+            Accessing the bus of a disconnected element will change in the future to return the bus
+            it was connected to before disconnection instead of `None`. If you rely on this behavior
+            to check if the element is disconnected, please use the `is_disconnected` property instead.
+        """
+        if self._is_disconnected:
+            warnings.warn(
+                f"Accessing the bus of the disconnected {self._element_info} will change in the "
+                f"future to return the bus it was connected to before disconnection instead of None. "
+                f"If you rely on this behavior to check if the element is disconnected, please use "
+                f"`is_disconnected` instead.",
+                stacklevel=find_stack_level(),
+            )
+            return None
+        return self._bus
+
     def disconnect(self) -> None:
         """Disconnect this element from the network. It cannot be used afterwards."""
+        for element in self._connected_elements:
+            if element.element_type == "ground connection":
+                element._disconnect()
         self._disconnect()
-        self._bus = None
 
-    def _raise_disconnected_error(self) -> None:
-        """Raise an error if the element is disconnected."""
-        if self.bus is None:
-            msg = f"The {self._element_info} is disconnected and cannot be used anymore."
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DISCONNECTED_ELEMENT)
+    def _refresh_results(self) -> None:
+        self._raise_disconnected_error()
+        super()._refresh_results()
 
     def _to_dict(self, include_results: bool) -> JsonDict:
         self._raise_disconnected_error()
         return super()._to_dict(include_results=include_results) | {"type": self.type}
 
     def _results_to_dict(self, warning: bool, full: bool) -> JsonDict:
-        self._raise_disconnected_error()
         return super()._results_to_dict(warning=warning, full=full) | {"type": self.type}
