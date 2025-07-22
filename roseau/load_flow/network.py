@@ -53,7 +53,6 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-_E = TypeVar("_E", bound=Element)
 _AT = TypeVar("_AT", bound=AbstractTerminal)
 
 

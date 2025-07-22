@@ -7,7 +7,7 @@ import logging
 from collections.abc import Iterable, Mapping
 from math import nan
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Final, Self, TypeVar, final
+from typing import TYPE_CHECKING, Any, Final, Self, final
 
 import geopandas as gpd
 import pandas as pd
@@ -34,8 +34,6 @@ if TYPE_CHECKING:
     from networkx import Graph
 
 logger = logging.getLogger(__name__)
-
-_E = TypeVar("_E", bound=Element)
 
 
 @final

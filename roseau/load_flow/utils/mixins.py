@@ -952,7 +952,7 @@ class AbstractNetwork(RLFObject, JsonMixin, Generic[_E_co]):
         """Propagate the sources voltages to set uninitialized potentials of buses and compute self._elements."""
         raise NotImplementedError
 
-    def _check_connectivity(self, visited_elements: Collection[_E_co], starting_source: AbstractElement[Self]) -> None:
+    def _check_connectivity(self, visited_elements: Collection[_E_co], starting_source: _E_co) -> None:  # type: ignore
         """Check that all the elements are connected to a voltage source."""
         if len(visited_elements) < sum(map(len, self._elements_by_type.values())):
             unconnected_elements = [
