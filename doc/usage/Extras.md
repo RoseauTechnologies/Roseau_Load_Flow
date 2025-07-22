@@ -19,7 +19,7 @@ myst:
 ## Graph theory
 
 {meth}`ElectricalNetwork.to_graph() <roseau.load_flow.ElectricalNetwork.to_graph>` can be used to get a
-{class}`networkx.Graph` object from the electrical network.
+{class}`networkx.MultiGraph` object from the electrical network.
 
 The graph contains the geometries of the buses in the nodes data and the geometries and branch types in the edges data.
 

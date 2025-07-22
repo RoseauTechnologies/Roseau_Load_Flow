@@ -1999,10 +1999,10 @@ def test_get_catalogue():
 
 def test_to_graph(all_element_network: ElectricalNetwork):
     g = all_element_network.to_graph()
-    assert isinstance(g, nx.Graph)
+    assert isinstance(g, nx.MultiGraph)
     assert sorted(g.nodes) == sorted(all_element_network.buses)
     assert sorted(g.edges) == sorted(
-        (b.bus1.id, b.bus2.id)
+        (b.bus1.id, b.bus2.id, 0)
         for b in it.chain(
             all_element_network.lines.values(),
             all_element_network.transformers.values(),
@@ -2015,7 +2015,7 @@ def test_to_graph(all_element_network: ElectricalNetwork):
         assert node_data["geom"] == bus.geometry
 
     for line in all_element_network.lines.values():
-        edge_data = g.edges[line.bus1.id, line.bus2.id]
+        edge_data = g.edges[line.bus1.id, line.bus2.id, 0]
         ampacities = line.ampacities.magnitude.tolist() if line.ampacities is not None else None
         assert edge_data == {
             "id": line.id,
@@ -2029,7 +2029,7 @@ def test_to_graph(all_element_network: ElectricalNetwork):
         }
 
     for transformer in all_element_network.transformers.values():
-        edge_data = g.edges[transformer.bus1.id, transformer.bus2.id]
+        edge_data = g.edges[transformer.bus1.id, transformer.bus2.id, 0]
         max_loading = transformer.max_loading.magnitude if transformer.max_loading is not None else None
         assert edge_data == {
             "id": transformer.id,
@@ -2043,8 +2043,38 @@ def test_to_graph(all_element_network: ElectricalNetwork):
         }
 
     for switch in all_element_network.switches.values():
-        edge_data = g.edges[switch.bus1.id, switch.bus2.id]
+        edge_data = g.edges[switch.bus1.id, switch.bus2.id, 0]
         assert edge_data == {"id": switch.id, "type": "switch", "phases": switch.phases, "geom": switch.geometry}
+
+    # Test parallel branches
+    bus1 = Bus(id="Bus1", phases="abc")
+    bus2 = Bus(id="Bus2", phases="abcn")
+    tp = TransformerParameters.from_open_and_short_circuit_tests(
+        id="TP", vg="Dyn11", uhv=20000, ulv=400, sn=160 * 1e3, p0=460, i0=2.3 / 100, psc=2350, vsc=4 / 100
+    )
+    tr1 = Transformer(id="Tr1", bus_hv=bus1, bus_lv=bus2, parameters=tp)
+    tr2 = Transformer(id="Tr2", bus_hv=bus1, bus_lv=bus2, parameters=tp)  # parallel to tr1
+    src = VoltageSource(id="Source", bus=bus1, voltages=20e3)
+    pref1 = PotentialRef(id="Pref1", element=bus1)
+    pref2 = PotentialRef(id="Pref2", element=bus2)
+    en = ElectricalNetwork(
+        buses=[bus1, bus2],
+        transformers=[tr1, tr2],
+        sources=[src],
+        lines=[],
+        switches=[],
+        loads=[],
+        grounds=[],
+        potential_refs=[pref1, pref2],
+    )
+    graph = en.to_graph()
+    assert sorted(graph.nodes) == [bus1.id, bus2.id]
+    assert sorted(graph.edges) == [
+        (bus1.id, bus2.id, 0),  # Transformer Tr1
+        (bus1.id, bus2.id, 1),  # Transformer Tr2
+    ]
+    assert graph.edges[bus1.id, bus2.id, 0]["id"] == tr1.id
+    assert graph.edges[bus1.id, bus2.id, 1]["id"] == tr2.id
 
 
 def test_serialization(all_element_network, all_element_network_with_results):

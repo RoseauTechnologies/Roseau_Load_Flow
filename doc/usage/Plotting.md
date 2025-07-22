@@ -95,8 +95,8 @@ network:
 
 If the network does not have geometries defined for its elements, the `plot_interactive_map` function will not work. In
 this case, you can use the {meth}`~roseau.load_flow.ElectricalNetwork.to_graph` method to convert the network to a
-networkx `Graph` and plot it using the `networkx` library. In the following example we plot the graph of the network
-`MVFeeder210` from the previous example:
+networkx `MultiGraph` and plot it using the `networkx` library. In the following example we plot the graph of the
+network `MVFeeder210` from the previous example:
 
 ```pycon
 >>> import networkx as nx

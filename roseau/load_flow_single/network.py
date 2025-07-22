@@ -31,7 +31,7 @@ from roseau.load_flow_single.models import (
 )
 
 if TYPE_CHECKING:
-    from networkx import Graph
+    from networkx import MultiGraph
 
 logger = logging.getLogger(__name__)
 
@@ -246,8 +246,8 @@ class ElectricalNetwork(AbstractNetwork[Element]):
     #
     # Helpers to analyze the network
     #
-    def to_graph(self) -> "Graph":
-        """Create a networkx graph from this electrical network.
+    def to_graph(self) -> "MultiGraph":
+        """Create a networkx multi-graph from this electrical network.
 
         The graph contains the geometries of the buses in the nodes data and the geometries and
         branch types in the edges data.
@@ -257,7 +257,7 @@ class ElectricalNetwork(AbstractNetwork[Element]):
             extra if you are using pip: ``pip install "roseau-load-flow[graph]"``.
         """
         nx = optional_deps.networkx
-        graph = nx.Graph()
+        graph = nx.MultiGraph()
         for bus in self.buses.values():
             graph.add_node(bus.id, geom=bus.geometry)
         for line in self.lines.values():
