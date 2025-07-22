@@ -909,10 +909,10 @@ def test_propagate_voltages():
 
 def test_to_graph(small_network: ElectricalNetwork):
     g = small_network.to_graph()
-    assert isinstance(g, nx.Graph)
+    assert isinstance(g, nx.MultiGraph)
     assert sorted(g.nodes) == sorted(small_network.buses)
     assert sorted(g.edges) == sorted(
-        (b.bus1.id, b.bus2.id)
+        (b.bus1.id, b.bus2.id, 0)
         for b in it.chain(
             small_network.lines.values(), small_network.transformers.values(), small_network.switches.values()
         )
@@ -923,7 +923,7 @@ def test_to_graph(small_network: ElectricalNetwork):
         assert node_data["geom"] == bus.geometry
 
     for line in small_network.lines.values():
-        edge_data = g.edges[line.bus1.id, line.bus2.id]
+        edge_data = g.edges[line.bus1.id, line.bus2.id, 0]
         ampacity = ampacity.m if (ampacity := line.parameters.ampacity) is not None else None
         assert edge_data == {
             "id": line.id,
@@ -935,7 +935,7 @@ def test_to_graph(small_network: ElectricalNetwork):
         }
 
     for transformer in small_network.transformers.values():
-        edge_data = g.edges[transformer.bus1.id, transformer.bus2.id]
+        edge_data = g.edges[transformer.bus1.id, transformer.bus2.id, 0]
         assert edge_data == {
             "id": transformer.id,
             "type": "transformer",
@@ -946,8 +946,35 @@ def test_to_graph(small_network: ElectricalNetwork):
         }
 
     for switch in small_network.switches.values():
-        edge_data = g.edges[switch.bus1.id, switch.bus2.id]
+        edge_data = g.edges[switch.bus1.id, switch.bus2.id, 0]
         assert edge_data == {"id": switch.id, "type": "switch", "geom": switch.geometry}
+
+    # Test parallel branches
+    bus1 = Bus(id="Bus1")
+    bus2 = Bus(id="Bus2")
+    tp = TransformerParameters.from_open_and_short_circuit_tests(
+        id="TP", vg="Dyn11", uhv=20000, ulv=400, sn=160 * 1e3, p0=460, i0=2.3 / 100, psc=2350, vsc=4 / 100
+    )
+    tr1 = Transformer(id="Tr1", bus_hv=bus1, bus_lv=bus2, parameters=tp)
+    tr2 = Transformer(id="Tr2", bus_hv=bus1, bus_lv=bus2, parameters=tp)  # parallel to tr1
+    src = VoltageSource(id="Source", bus=bus1, voltage=20e3)
+    en = ElectricalNetwork(buses=[bus1, bus2], transformers=[tr1, tr2], sources=[src], lines=[], switches=[], loads=[])
+    graph = en.to_graph()
+    assert sorted(graph.nodes) == [bus1.id, bus2.id]
+    assert sorted(graph.edges) == [
+        (bus1.id, bus2.id, 0),  # Transformer Tr1
+        (bus1.id, bus2.id, 1),  # Transformer Tr2
+    ]
+    assert graph.edges[bus1.id, bus2.id, 0]["id"] == tr1.id
+    assert graph.edges[bus1.id, bus2.id, 1]["id"] == tr2.id
+
+    # Test open switch
+    sw = Switch(id="Switch", bus1=bus1, bus2=bus2)
+    assert en.to_graph().edges[bus1.id, bus2.id, 2]["id"] == sw.id
+    assert en.to_graph(respect_switches=False).edges[bus1.id, bus2.id, 2]["id"] == sw.id
+    sw.open()
+    assert (bus1.id, bus2.id, 2) not in en.to_graph().edges  # not included by default
+    assert en.to_graph(respect_switches=False).edges[bus1.id, bus2.id, 2]["id"] == sw.id
 
 
 def test_serialization(all_elements_network, all_elements_network_with_results):

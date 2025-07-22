@@ -21,6 +21,10 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`391` {gh-issue}`390` `ElectricalNetwork.to_graph` now returns a multi-graph to preserve parallel edges. It
+  also gained a `respect_switches` parameter that can be set to `False` to include open switches in the graph. The
+  default value is `True`, which means that open switches are not included in the graph.
+
 - {gh-pr}`389` Add support for open switches. Pass `closed=False` to the `Switch` constructor to create an open switch.
   Call `switch.open()` to open an existing switch and `switch.close()` to close it. `switch.closed` tells if the switch
   is closed or not. The switch is closed by default.

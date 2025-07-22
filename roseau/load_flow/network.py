@@ -49,7 +49,7 @@ from roseau.load_flow.utils import (
 )
 
 if TYPE_CHECKING:
-    from networkx import Graph
+    from networkx import MultiGraph
 
 logger = logging.getLogger(__name__)
 
@@ -367,8 +367,8 @@ class ElectricalNetwork(AbstractNetwork[Element], CatalogueMixin[JsonDict]):
     #
     # Helpers to analyze the network
     #
-    def to_graph(self) -> "Graph":
-        """Create a networkx graph from this electrical network.
+    def to_graph(self, *, respect_switches: bool = True) -> "MultiGraph":
+        """Create a networkx multi-graph from this electrical network.
 
         The graph contains the geometries of the buses in the nodes data and the geometries and
         branch types in the edges data.
@@ -376,9 +376,17 @@ class ElectricalNetwork(AbstractNetwork[Element], CatalogueMixin[JsonDict]):
         Note:
             This method requires *networkx* to be installed. You can install it with the ``"graph"``
             extra if you are using pip: ``pip install "roseau-load-flow[graph]"``.
+
+        Args:
+            respect_switches:
+                Respect the switch state. If ``True`` (default), open switches are not included in
+                the graph. If ``False``, all switches are included regardless of their state.
+
+        Returns:
+            A networkx multi-graph representing the electrical network.
         """
         nx = optional_deps.networkx
-        graph = nx.Graph()
+        graph = nx.MultiGraph()
         for bus in self.buses.values():
             graph.add_node(bus.id, geom=bus.geometry)
         for line in self.lines.values():
@@ -410,9 +418,15 @@ class ElectricalNetwork(AbstractNetwork[Element], CatalogueMixin[JsonDict]):
                 geom=transformer.geometry,
             )
         for switch in self.switches.values():
-            graph.add_edge(
-                switch.bus1.id, switch.bus2.id, id=switch.id, type="switch", phases=switch.phases, geom=switch.geometry
-            )
+            if not respect_switches or switch.closed:
+                graph.add_edge(
+                    switch.bus1.id,
+                    switch.bus2.id,
+                    id=switch.id,
+                    type="switch",
+                    phases=switch.phases,
+                    geom=switch.geometry,
+                )
         return graph
 
     #
