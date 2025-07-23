@@ -278,7 +278,10 @@ class GroundConnection(Element[CySimplifiedLine | CySwitch]):
             f"phase={self._phase!r}",
             f"on_connected={self.on_connected!r}",
         ]
-        return f"<{type(self).__name__}: {', '.join(parts)}>"
+        s = f"<{type(self).__name__}: {', '.join(parts)}>"
+        if self._is_disconnected:
+            s += " (disconnected)"
+        return s
 
     @property
     def phase(self) -> str:
@@ -344,10 +347,16 @@ class GroundConnection(Element[CySimplifiedLine | CySwitch]):
         # Connect the ground to the second side of the ground connection.
         self._ground._cy_element.connect(self._cy_element, [(0, 1)])
 
+    @property
+    def is_disconnected(self) -> bool:
+        """Is this ground connection disconnected from the network?"""
+        return self._is_disconnected
+
     #
     # Results
     #
     def _refresh_results(self) -> None:
+        self._raise_disconnected_error()
         if self._fetch_results:
             self._res_current = self._cy_element.get_port_current(0)
 
@@ -377,6 +386,7 @@ class GroundConnection(Element[CySimplifiedLine | CySwitch]):
         return self
 
     def _to_dict(self, include_results: bool) -> JsonDict:
+        self._raise_disconnected_error()
         data: JsonDict = {
             "id": self.id,
             "ground": self._ground.id,
@@ -392,6 +402,7 @@ class GroundConnection(Element[CySimplifiedLine | CySwitch]):
         return data
 
     def _results_to_dict(self, warning: bool, full: bool) -> JsonDict:
+        self._raise_disconnected_error()
         current = self._res_current_getter(warning)
         results: JsonDict = {"id": self.id, "current": [current.real, current.imag]}
         return results

@@ -73,8 +73,9 @@ class AbstractLoad(AbstractDisconnectable[_CyL_co], ABC):
         return False
 
     def _refresh_results(self) -> None:
-        if self._fetch_results:
-            super()._refresh_results()
+        fetch_results = self._fetch_results
+        super()._refresh_results()
+        if fetch_results:
             self._res_inner_currents = self._cy_element.get_inner_currents(self._size)
 
     def _res_inner_currents_getter(self, warning: bool) -> ComplexArray:
@@ -339,10 +340,10 @@ class PowerLoad(AbstractLoad[CyPowerLoad | CyDeltaPowerLoad | CyFlexibleLoad | C
             self._cy_element.update_powers(self._powers)
 
     def _refresh_results(self) -> None:
-        if self._fetch_results:
-            super()._refresh_results()
-            if self.is_flexible:
-                self._res_flexible_powers = self._cy_element.get_powers(self._n)
+        fetch_results = self._fetch_results
+        super()._refresh_results()
+        if fetch_results and self.is_flexible:
+            self._res_flexible_powers = self._cy_element.get_powers(self._n)
 
     def _res_flexible_powers_getter(self, warning: bool) -> ComplexArray:
         self._refresh_results()

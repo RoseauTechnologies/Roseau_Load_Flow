@@ -21,6 +21,11 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`392` Disconnect a ground connection of a load or source when the load or source is disconnected from the
+  network. Add `is_disconnected` property to loads, sources and ground connections to check if the element is
+  disconnected. In the future, accessing the bus of a disconnected load or source will return the original bus instead
+  of `None`, use `is_disconnected` to check if the load or source is disconnected.
+
 - {gh-pr}`391` {gh-issue}`390` `ElectricalNetwork.to_graph` now returns a multi-graph to preserve parallel edges. It
   also gained a `respect_switches` parameter that can be set to `False` to include open switches in the graph. The
   default value is `True`, which means that open switches are not included in the graph.

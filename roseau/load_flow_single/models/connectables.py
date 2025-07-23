@@ -2,7 +2,7 @@ import logging
 from abc import ABC, abstractmethod
 from typing import ClassVar
 
-from roseau.load_flow import SQRT3, RoseauLoadFlowException, RoseauLoadFlowExceptionCode
+from roseau.load_flow import SQRT3
 from roseau.load_flow.typing import Id, JsonDict, Side
 from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow.utils import abstractattrs
@@ -43,7 +43,7 @@ class AbstractConnectable(AbstractTerminal[_CyE_co], ABC):
         self._res_current: complex | None = None
 
     def __repr__(self) -> str:
-        args = [f"id={self.id!r}", f"bus={repr(self.bus.id) if self.bus is not None else '<disconnected>'}"]
+        args = [f"id={self.id!r}", f"bus={self._bus.id!r}"]
         side = f"-{self._side_value}" if self._side_value is not None else ""
         return f"<{type(self).__name__}{side}: {', '.join(args)}>"
 
@@ -127,17 +127,24 @@ class AbstractDisconnectable(AbstractConnectable[_CyE_co], ABC):
 
     type: ClassVar[str]
 
+    def __repr__(self) -> str:
+        s = super().__repr__()
+        if self._is_disconnected:
+            return f"{s} (disconnected)"
+        return s
+
+    @property
+    def is_disconnected(self) -> bool:
+        """Is this element disconnected from the network?"""
+        return self._is_disconnected
+
     def disconnect(self) -> None:
         """Disconnect this element from the network. It cannot be used afterwards."""
         self._disconnect()
-        self._bus = None
 
-    def _raise_disconnected_error(self) -> None:
-        """Raise an error if the element is disconnected."""
-        if self._bus is None:
-            msg = f"The {self.element_type} {self.id!r} is disconnected and cannot be used anymore."
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DISCONNECTED_ELEMENT)
+    def _refresh_results(self) -> None:
+        self._raise_disconnected_error()
+        super()._refresh_results()
 
     def _to_dict(self, include_results: bool) -> JsonDict:
         self._raise_disconnected_error()
@@ -146,7 +153,6 @@ class AbstractDisconnectable(AbstractConnectable[_CyE_co], ABC):
         return results
 
     def _results_to_dict(self, warning: bool, full: bool) -> JsonDict:
-        self._raise_disconnected_error()
         results = super()._results_to_dict(warning, full=full)
         results["type"] = self.type
         return results

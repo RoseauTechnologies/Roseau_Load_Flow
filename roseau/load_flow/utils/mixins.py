@@ -400,6 +400,7 @@ class AbstractElement(Identifiable, JsonMixin, Generic[_N_co, _CyE_co]):
         self._no_results = True
         self._results_valid = True
         self._element_info = f"{self.element_type} {id!r}"  # for logging
+        self._is_disconnected = False
 
     @property
     def _cy_initialized(self) -> bool:
@@ -480,12 +481,20 @@ class AbstractElement(Identifiable, JsonMixin, Generic[_N_co, _CyE_co]):
         """Remove all the connections with the other elements."""
         for element in self._connected_elements:
             element._connected_elements.remove(self)
+        self._is_disconnected = True
         self._connected_elements = []
         self._set_network(None)
         if self._cy_initialized:
             self._cy_element.disconnect()
             # The cpp element has been disconnected and can't be reconnected easily, it's safer to delete it
             del self._cy_element
+
+    def _raise_disconnected_error(self) -> None:
+        """Raise an error if the element is disconnected."""
+        if self._is_disconnected:
+            msg = f"The {self._element_info} is disconnected and cannot be used anymore."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DISCONNECTED_ELEMENT)
 
     def _check_compatible_phase_tech(
         self, obj: "AbstractElement | AbstractNetwork | type[AbstractNetwork] | Identifiable", /, id: Id | None = None
@@ -822,7 +831,7 @@ class AbstractNetwork(RLFObject, JsonMixin, Generic[_E_co]):
         """
         # The C++ electrical network and the tape will be recomputed
         et = element.element_type
-        if et in ("load", "source"):
+        if et in ("load", "source", "ground connection"):
             self._elements_by_type[et].pop(element.id)
         else:
             if et in ("bus", "transformer", "line", "switch"):

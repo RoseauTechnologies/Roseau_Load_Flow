@@ -116,25 +116,79 @@ def test_connect_and_disconnect():
     en._check_validity(constructed=False)
 
     # Disconnection of a load
+    assert not load.is_disconnected
     assert load.network == en
+    assert repr(load) == "<PowerLoad: id='power load', bus='load bus', phases='abcn'>"
     load.disconnect()
+    assert load.is_disconnected
+    assert repr(load) == "<PowerLoad: id='power load', bus='load bus', phases='abcn'> (disconnected)"
     assert load.network is None
-    assert load.bus is None
+    with pytest.warns(
+        UserWarning,
+        match=(
+            r"Accessing the bus of the disconnected load 'power load' will change in the future to "
+            r"return the bus it was connected to before disconnection instead of None. If you rely "
+            r"on this behavior to check if the element is disconnected, please use `is_disconnected` "
+            r"instead"
+        ),
+    ):
+        assert load.bus is None
     with pytest.raises(RoseauLoadFlowException) as e:
         load.to_dict()
+    assert e.value.msg == "The load 'power load' is disconnected and cannot be used anymore."
+    assert e.value.code == RoseauLoadFlowExceptionCode.DISCONNECTED_ELEMENT
+    with pytest.raises(RoseauLoadFlowException) as e:
+        load.results_to_dict()
+    assert e.value.msg == "The load 'power load' is disconnected and cannot be used anymore."
+    assert e.value.code == RoseauLoadFlowExceptionCode.DISCONNECTED_ELEMENT
+    with pytest.raises(RoseauLoadFlowException) as e:
+        _ = load.res_currents
     assert e.value.msg == "The load 'power load' is disconnected and cannot be used anymore."
     assert e.value.code == RoseauLoadFlowExceptionCode.DISCONNECTED_ELEMENT
     new_load = PowerLoad(id="power load", phases="abcn", bus=load_bus, powers=[100 + 0j, 100 + 0j, 100 + 0j])
     assert new_load.network == en
 
     # Disconnection of a source
+    assert not vs.is_disconnected
     assert vs.network == en
+    assert repr(vs) == "<VoltageSource: id='vs', bus='source', phases='abcn'>"
     vs.disconnect()
+    assert vs.is_disconnected
     assert vs.network is None
-    assert vs.bus is None
+    assert repr(vs) == "<VoltageSource: id='vs', bus='source', phases='abcn'> (disconnected)"
+    with pytest.warns(
+        UserWarning,
+        match=(
+            r"Accessing the bus of the disconnected source 'vs' will change in the future to "
+            r"return the bus it was connected to before disconnection instead of None. If you rely "
+            r"on this behavior to check if the element is disconnected, please use `is_disconnected` "
+            r"instead"
+        ),
+    ):
+        assert vs.bus is None
     with pytest.raises(RoseauLoadFlowException) as e:
         vs.to_dict()
     assert e.value.msg == "The source 'vs' is disconnected and cannot be used anymore."
+    assert e.value.code == RoseauLoadFlowExceptionCode.DISCONNECTED_ELEMENT
+    with pytest.raises(RoseauLoadFlowException) as e:
+        vs.results_to_dict()
+    assert e.value.msg == "The source 'vs' is disconnected and cannot be used anymore."
+    assert e.value.code == RoseauLoadFlowExceptionCode.DISCONNECTED_ELEMENT
+    with pytest.raises(RoseauLoadFlowException) as e:
+        _ = vs.res_currents
+    assert e.value.msg == "The source 'vs' is disconnected and cannot be used anymore."
+    assert e.value.code == RoseauLoadFlowExceptionCode.DISCONNECTED_ELEMENT
+
+    # Disconnection of an element with a ground connection
+    gc = GroundConnection(ground=ground, element=new_load, id="gc")
+    assert not gc.is_disconnected
+    assert repr(gc).endswith(">")
+    new_load.disconnect()
+    assert gc.is_disconnected
+    assert repr(gc).endswith("> (disconnected)")
+    with pytest.raises(RoseauLoadFlowException) as e:
+        _ = gc.res_current
+    assert e.value.msg == "The ground connection 'gc' is disconnected and cannot be used anymore."
     assert e.value.code == RoseauLoadFlowExceptionCode.DISCONNECTED_ELEMENT
 
     # Bad key
