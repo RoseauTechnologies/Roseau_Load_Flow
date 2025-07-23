@@ -86,10 +86,13 @@ def test_connect_and_disconnect():
     Transformer(id="transfo", bus_hv=load_bus, bus_lv=load_bus2, parameters=tp)
 
     # Disconnection of a load
+    assert not load.is_disconnected
     assert load.network == en
+    assert repr(load) == "<PowerLoad: id='power load', bus='load bus'>"
     load.disconnect()
     assert load.is_disconnected
     assert load.network is None
+    assert repr(load) == "<PowerLoad: id='power load', bus='load bus'> (disconnected)"
     assert load.bus is load_bus
     with pytest.raises(RoseauLoadFlowException) as e:
         load.to_dict()
@@ -107,10 +110,13 @@ def test_connect_and_disconnect():
     assert new_load.network == en
 
     # Disconnection of a source
+    assert not vs.is_disconnected
     assert vs.network == en
+    assert repr(vs) == "<VoltageSource: id='vs', bus='source'>"
     vs.disconnect()
     assert vs.is_disconnected
     assert vs.network is None
+    assert repr(vs) == "<VoltageSource: id='vs', bus='source'> (disconnected)"
     assert vs.bus is source_bus
     with pytest.raises(RoseauLoadFlowException) as e:
         vs.to_dict()

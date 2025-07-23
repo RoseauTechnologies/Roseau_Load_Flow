@@ -116,9 +116,12 @@ def test_connect_and_disconnect():
     en._check_validity(constructed=False)
 
     # Disconnection of a load
+    assert not load.is_disconnected
     assert load.network == en
+    assert repr(load) == "<PowerLoad: id='power load', bus='load bus', phases='abcn'>"
     load.disconnect()
     assert load.is_disconnected
+    assert repr(load) == "<PowerLoad: id='power load', bus='load bus', phases='abcn'> (disconnected)"
     assert load.network is None
     with pytest.warns(
         UserWarning,
@@ -146,10 +149,13 @@ def test_connect_and_disconnect():
     assert new_load.network == en
 
     # Disconnection of a source
+    assert not vs.is_disconnected
     assert vs.network == en
+    assert repr(vs) == "<VoltageSource: id='vs', bus='source', phases='abcn'>"
     vs.disconnect()
     assert vs.is_disconnected
     assert vs.network is None
+    assert repr(vs) == "<VoltageSource: id='vs', bus='source', phases='abcn'> (disconnected)"
     with pytest.warns(
         UserWarning,
         match=(
@@ -176,8 +182,10 @@ def test_connect_and_disconnect():
     # Disconnection of an element with a ground connection
     gc = GroundConnection(ground=ground, element=new_load, id="gc")
     assert not gc.is_disconnected
+    assert repr(gc).endswith(">")
     new_load.disconnect()
     assert gc.is_disconnected
+    assert repr(gc).endswith("> (disconnected)")
     with pytest.raises(RoseauLoadFlowException) as e:
         _ = gc.res_current
     assert e.value.msg == "The ground connection 'gc' is disconnected and cannot be used anymore."

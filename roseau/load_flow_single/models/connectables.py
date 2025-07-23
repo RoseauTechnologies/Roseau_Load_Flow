@@ -43,7 +43,7 @@ class AbstractConnectable(AbstractTerminal[_CyE_co], ABC):
         self._res_current: complex | None = None
 
     def __repr__(self) -> str:
-        args = [f"id={self.id!r}", f"bus={self.bus.id!r}"]
+        args = [f"id={self.id!r}", f"bus={self._bus.id!r}"]
         side = f"-{self._side_value}" if self._side_value is not None else ""
         return f"<{type(self).__name__}{side}: {', '.join(args)}>"
 
@@ -126,6 +126,12 @@ class AbstractDisconnectable(AbstractConnectable[_CyE_co], ABC):
     """A base class for disconnectable elements in the network (loads, sources, etc.)."""
 
     type: ClassVar[str]
+
+    def __repr__(self) -> str:
+        s = super().__repr__()
+        if self._is_disconnected:
+            return f"{s} (disconnected)"
+        return s
 
     @property
     def is_disconnected(self) -> bool:

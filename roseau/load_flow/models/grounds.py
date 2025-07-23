@@ -278,7 +278,10 @@ class GroundConnection(Element[CySimplifiedLine | CySwitch]):
             f"phase={self._phase!r}",
             f"on_connected={self.on_connected!r}",
         ]
-        return f"<{type(self).__name__}: {', '.join(parts)}>"
+        s = f"<{type(self).__name__}: {', '.join(parts)}>"
+        if self._is_disconnected:
+            s += " (disconnected)"
+        return s
 
     @property
     def phase(self) -> str:

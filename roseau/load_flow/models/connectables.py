@@ -77,7 +77,7 @@ class AbstractConnectable(AbstractTerminal[_CyE_co], ABC):
         self._res_currents: ComplexArray | None = None
 
     def __repr__(self) -> str:
-        args = [f"id={self.id!r}", f"bus={self.bus.id!r}", f"phases={self.phases!r}"]
+        args = [f"id={self.id!r}", f"bus={self._bus.id!r}", f"phases={self.phases!r}"]
         if self._connect_neutral is not None:
             args.append(f"connect_neutral={self._connect_neutral!r}")
         side = f"-{self._side_value}" if self._side_value is not None else ""
