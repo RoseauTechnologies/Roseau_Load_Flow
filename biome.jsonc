@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.1.1/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.1.2/schema.json",
   "vcs": {
     "enabled": false,
     "clientKind": "git",
@@ -37,7 +37,7 @@
   },
   "html": {
     "formatter": {
-      "enabled": true  // Enable experimental HTML formatting
+      "enabled": true // Enable experimental HTML formatting
     }
   }
 }

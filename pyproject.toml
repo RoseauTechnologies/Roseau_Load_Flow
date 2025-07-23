@@ -79,15 +79,13 @@ doc = [
 managed = true
 
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = ["uv_build>=0.8.2,<0.9.0"]
+build-backend = "uv_build"
 
-[tool.hatch.build.targets.sdist]
-only-include = ["roseau"]
-exclude = ["*tests*", "*conftest.py"]
-
-[tool.hatch.build.targets.wheel]
-packages = ["roseau"]
+[tool.uv.build-backend]
+module-name = ["roseau.load_flow", "roseau.load_flow_single"]
+module-root = ""
+source-exclude = ["*tests*", "*conftest.py"]
 
 [tool.ruff]
 line-length = 120
@@ -95,7 +93,25 @@ show-fixes = true
 namespace-packages = ["roseau"]
 
 [tool.ruff.lint]
-select = ["E", "F", "C90", "W", "B", "UP", "I", "RUF100", "TID", "SIM", "PT", "PIE", "N", "C4", "NPY", "T10", "PTH"]
+select = [
+    "E",
+    "F",
+    "C90",
+    "W",
+    "B",
+    "UP",
+    "I",
+    "RUF100",
+    "TID",
+    "SIM",
+    "PT",
+    "PIE",
+    "N",
+    "C4",
+    "NPY",
+    "T10",
+    "PTH",
+]
 unfixable = ["B"]
 ignore = ["E501", "B024", "N818", "UP038", "PTH123"]
 flake8-tidy-imports.ban-relative-imports = "all"
@@ -128,7 +144,13 @@ markers = ["no_patch_engine"]
 
 # Typos
 [tool.typos.files]
-extend-exclude = ["*.svg", "*.html", "*.tex", "*.xml", "roseau/load_flow/tests/data/"]
+extend-exclude = [
+    "*.svg",
+    "*.html",
+    "*.tex",
+    "*.xml",
+    "roseau/load_flow/tests/data/",
+]
 
 [tool.typos.default]
 extend-ignore-re = [
