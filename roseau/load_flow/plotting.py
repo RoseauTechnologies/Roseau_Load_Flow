@@ -459,7 +459,7 @@ def plot_interactive_map(  # noqa: C901
         "length": "Length (km):",
         "line_type": "Line Type:",
         "material": "Material:",
-        "insulator": "Insulator",
+        "insulator": "Insulator:",
         "section": "Section (mm²):",
         "ampacity": "Ampacity (A):",
         "max_loading": "Max loading (%):",
