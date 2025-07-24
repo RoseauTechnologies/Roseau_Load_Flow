@@ -31,6 +31,7 @@ from roseau.load_flow import (
     utils,
 )
 from roseau.load_flow.units import Q_, ureg
+from roseau.load_flow_single import plotting
 from roseau.load_flow_single.models import (
     AbstractBranch,
     AbstractConnectable,
@@ -65,6 +66,7 @@ __all__ = [
     "__status__",
     "__url__",
     "__version__",
+    "plotting",
     "Element",
     "Line",
     "LineParameters",

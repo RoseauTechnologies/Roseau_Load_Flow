@@ -23,8 +23,6 @@ def test_import():
         "ALPHA",
         "ALPHA2",
         "converters",
-        # Plotting
-        "plotting",
         # Symmetrical components
         "sym",
         # Underscore things

@@ -4,12 +4,12 @@ import cmath
 import math
 import warnings
 from collections.abc import Callable, Iterable, Mapping
-from typing import TYPE_CHECKING, Any, Literal, overload
+from typing import TYPE_CHECKING, Any, Literal, cast, overload
 
 import numpy as np
 from typing_extensions import deprecated
 
-from roseau.load_flow.models import AbstractBranch, AbstractTerminal
+from roseau.load_flow.models import AbstractBranch, AbstractTerminal, LineParameters
 from roseau.load_flow.network import ElectricalNetwork
 from roseau.load_flow.sym import NegativeSequence, PositiveSequence, ZeroSequence, phasor_to_sym
 from roseau.load_flow.typing import ComplexArray, Side
@@ -18,6 +18,9 @@ from roseau.load_flow.utils import find_stack_level
 if TYPE_CHECKING:
     import folium
     from matplotlib.axes import Axes
+
+    from roseau.load_flow_single.models import LineParameters as SingleLineParameters
+    from roseau.load_flow_single.network import ElectricalNetwork as SingleElectricalNetwork
 
     FeatureMap = dict[str, Any]
     StyleDict = dict[str, Any]
@@ -83,6 +86,8 @@ def _draw_voltage_phasor(
 def _get_phases_and_potentials(
     element: AbstractTerminal | AbstractBranch, voltage_type: Literal["pp", "pn", "auto"], side: Side | None
 ) -> tuple[AbstractTerminal, str, ComplexArray]:
+    if not element.is_multi_phase:
+        raise TypeError(f"Only multi-phase elements can be plotted. Did you mean to use rlf.{type(element).__name__}?")
     if isinstance(element, AbstractTerminal):
         if side is not None:
             raise ValueError("The side argument is only valid for branch elements.")
@@ -291,8 +296,8 @@ def plot_symmetrical_voltages(
 #
 # Map plotting functions
 #
-def plot_interactive_map(
-    network: ElectricalNetwork,
+def plot_interactive_map(  # noqa: C901
+    network: "ElectricalNetwork | SingleElectricalNetwork",
     *,
     style_color: str = "#234e83",
     highlight_color: str = "#cad40e",
@@ -338,7 +343,7 @@ def plot_interactive_map(
         import folium
     except ImportError as e:
         e.add_note(
-            "The `folium` library is required when using `roseau.load_flow.plotting.plot_interactive_map`."
+            "The `folium` library is required when using `rlf.plotting.plot_interactive_map`."
             "Install it with `pip install folium`."
         )
         raise
@@ -348,9 +353,51 @@ def plot_interactive_map(
     buses_gdf = network.buses_frame
     buses_gdf.reset_index(inplace=True)
     buses_gdf["element_type"] = "bus"
+    buses_gdf["min_voltage_level"] *= 100  # Convert to percentage
+    buses_gdf["max_voltage_level"] *= 100  # Convert to percentage
     lines_gdf = network.lines_frame
     lines_gdf.reset_index(inplace=True)
     lines_gdf["element_type"] = "line"
+    lines_gdf["max_loading"] *= 100  # Convert to percentage
+    lines_gdf[["ampacity", "section", "line_type", "material", "insulator"]] = None
+
+    line_params = {}
+    if network.is_multi_phase:
+
+        def _scalar_if_unique(value):
+            # If the value is the same for all phases, return it as a scalar, otherwise, return the array
+            if value is None:
+                return None
+            unique = np.unique(value)
+            if unique.size == 1:
+                return unique.item()
+            return value
+
+        for lp in cast("Iterable[LineParameters]", network._parameters["line"].values()):
+            line_params[lp.id] = {
+                "ampacity": _scalar_if_unique(lp._ampacities),
+                "section": _scalar_if_unique(lp._sections),
+                "line_type": lp._line_type,
+                "material": _scalar_if_unique(lp._materials),
+                "insulator": _scalar_if_unique(lp._insulators),
+            }
+    else:
+        for lp in cast("Iterable[SingleLineParameters]", network._parameters["line"].values()):
+            line_params[lp.id] = {
+                "ampacity": lp._ampacity,
+                "section": lp._section,
+                "line_type": lp._line_type,
+                "material": lp._material,
+                "insulator": lp._insulator,
+            }
+
+    for idx in lines_gdf.index:
+        lp = network.lines[lines_gdf.at[idx, "id"]].parameters  # type: ignore
+        lines_gdf.at[idx, "ampacity"] = line_params[lp.id]["ampacity"]
+        lines_gdf.at[idx, "section"] = line_params[lp.id]["section"]
+        lines_gdf.at[idx, "line_type"] = line_params[lp.id]["line_type"]
+        lines_gdf.at[idx, "material"] = line_params[lp.id]["material"]
+        lines_gdf.at[idx, "insulator"] = line_params[lp.id]["insulator"]
 
     def internal_style_function(feature):
         result = style_function(feature) if style_function is not None else None
@@ -390,9 +437,36 @@ def plot_interactive_map(
         if "zoom_start" not in map_kws:
             # Calculate the zoom level based on the bounding box of the network
             min_x, min_y, max_x, max_y = geom_union.bounds
-            zoom_lon = math.ceil(math.log2(360 * 2.0 / (max_x - min_x)))
-            zoom_lat = math.ceil(math.log2(360 * 2.0 / (max_y - min_y)))
+            # The bounding box could be a point, a vertical line or a horizontal line. In these
+            # cases, we set a default zoom level of 16.
+            zoom_lon = math.ceil(math.log2(360 * 2.0 / (max_x - min_x))) if max_x > min_x else 16
+            zoom_lat = math.ceil(math.log2(360 * 2.0 / (max_y - min_y))) if max_y > min_y else 16
             map_kws["zoom_start"] = min(zoom_lon, zoom_lat)
+
+    bus_fields = {
+        "id": "Id:",
+        "phases": "Phases:",
+        "nominal_voltage": "Un (V):",
+        "min_voltage_level": "Umin (%):",
+        "max_voltage_level": "Umax (%):",
+    }
+    line_fields = {
+        "id": "Id:",
+        "phases": "Phases:",
+        "bus1_id": "Bus1:",
+        "bus2_id": "Bus2:",
+        "parameters_id": "Parameters:",
+        "length": "Length (km):",
+        "line_type": "Line Type:",
+        "material": "Material:",
+        "insulator": "Insulator",
+        "section": "Section (mm²):",
+        "ampacity": "Ampacity (A):",
+        "max_loading": "Max loading (%):",
+    }
+    if not network.is_multi_phase:
+        del bus_fields["phases"]
+        del line_fields["phases"]
 
     m = folium.Map(**map_kws)
     folium.GeoJson(
@@ -402,8 +476,8 @@ def plot_interactive_map(
         style_function=internal_style_function,
         highlight_function=internal_highlight_function,
         tooltip=folium.GeoJsonTooltip(
-            fields=["id", "phases", "bus1_id", "bus2_id", "parameters_id", "length"],
-            aliases=["Id:", "Phases:", "Bus1:", "Bus2:", "Parameters:", "Length (km):"],
+            fields=list(line_fields.keys()),
+            aliases=list(line_fields.values()),
             localize=True,
             sticky=False,
             labels=True,
@@ -417,8 +491,8 @@ def plot_interactive_map(
         style_function=internal_style_function,
         highlight_function=internal_highlight_function,
         tooltip=folium.GeoJsonTooltip(
-            fields=["id", "phases"],
-            aliases=["Id:", "Phases:"],
+            fields=list(bus_fields.keys()),
+            aliases=list(bus_fields.values()),
             localize=True,
             sticky=False,
             labels=True,
