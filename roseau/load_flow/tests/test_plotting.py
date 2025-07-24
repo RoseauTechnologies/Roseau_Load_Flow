@@ -4,6 +4,7 @@ import numpy as np
 import numpy.testing as npt
 import pytest
 
+import roseau.load_flow_single as rlfs
 from roseau.load_flow.models import (
     Bus,
     Line,
@@ -45,6 +46,8 @@ load._res_potentials = np.array(potentials, dtype=np.complex128)
 load._res_currents = np.array(currents, dtype=np.complex128)
 source._res_potentials = np.array(potentials, dtype=np.complex128)
 source._res_currents = np.array(-currents, dtype=np.complex128)
+bus_single = rlfs.Bus(id="Bus")
+bus_single._res_voltage = 400 + 0j
 
 
 @pytest.mark.usefixtures("mock_gca")
@@ -112,7 +115,11 @@ def test_plot_voltage_phasors_errors():
 
     # Bad side
     with pytest.raises(ValueError, match=r"The side argument is only valid for branch elements"):
-        plot_voltage_phasors(bus_abc, side="HV")
+        plot_voltage_phasors(bus_abc, side="HV")  # type: ignore
+
+    # Not a multi-phase element
+    with pytest.raises(TypeError, match=r"Only multi-phase elements can be plotted. Did you mean to use rlf.Bus\?"):
+        plot_voltage_phasors(bus_single)  # type: ignore
 
 
 @pytest.mark.usefixtures("mock_gca")
@@ -202,3 +209,7 @@ def test_plot_symmetrical_voltages():
         assert ax.scatter.call_count == 3  # 1 "a" + "b" + "c"
         assert ax.arrow.call_count == 3
         assert ax.annotate.call_count == 1
+
+    # Not a multi-phase element
+    with pytest.raises(TypeError, match=r"Only multi-phase elements can be plotted. Did you mean to use rlf.Bus\?"):
+        plot_symmetrical_voltages(bus_single)  # type: ignore
