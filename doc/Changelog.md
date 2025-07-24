@@ -21,8 +21,7 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
-- {gh-pr}`394` Add support for python 3.14 development version and for free-threaded python 3.13 (3.13t). Also add
-  support for musl linux distributions.
+- {gh-pr}`394` Add support for musl linux distributions.
 
 - {gh-pr}`393` Use the `uv_build` build backend instead of `hatchling` to build the package.
 
