@@ -21,8 +21,8 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
-- {gh-pr}`395` Improve line and bus hover information of interactive map. Fix automatic zoom calculation when the whole
-  network is on the same longitude or latitude.
+- {gh-pr}`395` Improve line and bus hover information in interactive map plots. Fix an error in automatic zoom
+  calculation when the whole network is on the same longitude or latitude.
 
 - {gh-pr}`394` Add support for musl linux distributions. Also add preliminary support for python 3.14 development
   version and for free-threaded python 3.13t. Full support is waiting on our dependencies to release relevant wheels.
