@@ -21,6 +21,11 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`394` Add support for musl linux distributions. Also add preliminary support for python 3.14 development
+  version and for free-threaded python 3.13t. Full support is waiting on our dependencies to release relevant wheels.
+
+- {gh-pr}`393` Use the `uv_build` build backend instead of `hatchling` to build the package.
+
 - {gh-pr}`392` Disconnect a ground connection of a load or source when the load or source is disconnected from the
   network. Add `is_disconnected` property to loads, sources and ground connections to check if the element is
   disconnected. In the future, accessing the bus of a disconnected load or source will return the original bus instead
