@@ -250,6 +250,13 @@ def test_flexible_load():
     load._res_flexible_powers = np.array([100, 100, 100], dtype=complex)
     assert np.allclose(load.res_flexible_powers.m_as("VA"), [100, 100, 100])
 
+    # Good load with one flexible parameter
+    load = PowerLoad(id="fl10", bus=bus, powers=100 + 50j, phases="abcn", flexible_params=fp_pq_cons)
+    assert load.flexible_params == [fp_pq_cons, fp_pq_cons, fp_pq_cons]
+    assert load._res_flexible_powers is None  # load flow not run yet
+    load._res_flexible_powers = np.array([100, 100, 100], dtype=complex)
+    assert np.allclose(load.res_flexible_powers.m_as("VA"), [100, 100, 100])
+
 
 def test_loads_to_dict():
     bus = Bus(id="bus", phases="abcn")

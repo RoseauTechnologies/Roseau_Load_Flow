@@ -1,5 +1,6 @@
 import logging
 from abc import ABC, abstractmethod
+from collections.abc import Iterable
 from typing import Final
 
 import numpy as np
@@ -217,7 +218,7 @@ class PowerLoad(AbstractLoad[CyPowerLoad | CyDeltaPowerLoad | CyFlexibleLoad | C
         *,
         powers: ComplexScalarOrArrayLike1D,
         phases: str | None = None,
-        flexible_params: list[FlexibleParameter] | None = None,
+        flexible_params: FlexibleParameter | Iterable[FlexibleParameter] | None = None,
         connect_neutral: bool | None = None,
     ) -> None:
         """PowerLoad constructor.
@@ -248,9 +249,13 @@ class PowerLoad(AbstractLoad[CyPowerLoad | CyDeltaPowerLoad | CyFlexibleLoad | C
                 ``True``.
 
             flexible_params:
-                A list of :class:`FlexibleParameters` object, one for each phase. When provided,
-                the load is considered as flexible (or controllable) and the parameters are used
-                to compute the flexible power of the load.
+                A :class:`FlexibleParameters` object to make the load flexible, i.e., controllable
+                based on the voltage using the commonly known `P(U)` and `Q(U)` controls. These
+                parameters are used to compute the flexible powers of the load which could be
+                different from the input powers.
+
+                It is also possible to pass an iterable of :class:`FlexibleParameter` objects to
+                create unbalanced control settings, one for each phase of the load.
 
             connect_neutral:
                 Specifies whether the load's neutral should be connected to the bus's neutral or
@@ -267,12 +272,17 @@ class PowerLoad(AbstractLoad[CyPowerLoad | CyDeltaPowerLoad | CyFlexibleLoad | C
             )
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_SHORT_CIRCUIT)
-        if flexible_params and len(flexible_params) != self._size:
-            msg = f"Incorrect number of parameters: {len(flexible_params)} instead of {self._size}"
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PARAMETERS_SIZE)
+        if flexible_params is not None:
+            if isinstance(flexible_params, FlexibleParameter):
+                flexible_params = [flexible_params] * self._size
+            else:
+                flexible_params = list(flexible_params)
+                if len(flexible_params) != self._size:
+                    msg = f"Incorrect number of parameters: {len(flexible_params)} instead of {self._size}"
+                    logger.error(msg)
+                    raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PARAMETERS_SIZE)
 
-        self._flexible_params = flexible_params
+        self._flexible_params: list[FlexibleParameter] | None = flexible_params
         self.powers = powers
         self._res_flexible_powers: ComplexArray | None = None
 
@@ -291,6 +301,11 @@ class PowerLoad(AbstractLoad[CyPowerLoad | CyDeltaPowerLoad | CyFlexibleLoad | C
 
     @property
     def flexible_params(self) -> list[FlexibleParameter] | None:
+        """The flexible parameters of the load or None if the load is not flexible.
+
+        If the load is flexible, this property returns a list of :class:`FlexibleParameter` objects
+        that define the control settings of each phase of the load.
+        """
         return self._flexible_params
 
     @property

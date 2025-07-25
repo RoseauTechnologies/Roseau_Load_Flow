@@ -21,6 +21,8 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`396` Allow passing a single `FlexibleParameter` object to a constant-power load to be used for all phases.
+
 - {gh-pr}`395` Improve line and bus hover information in interactive map plots. Fix an error in automatic zoom
   calculation when the whole network is on the same longitude or latitude.
 

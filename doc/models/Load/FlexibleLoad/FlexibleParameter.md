@@ -47,13 +47,13 @@ fp = rlf.FlexibleParameter(
 
 ## Usage
 
-To create a flexible load, create a `PowerLoad` passing it a list of `FlexibleParameter` objects using the
+To create a flexible load, create a `PowerLoad` passing it one or more `FlexibleParameter` objects using the
 `flexible_params` parameter, one for each phase of the load.
 
 ### Scenario 1: Same $Q(U)$ control on all phases
 
 In this scenario, we apply the same $Q(U)$ control on the three phases of a load. We define a flexible parameter with
-constant $P$ control and use it three times in the load constructor.
+constant $P$ control and use it in the load constructor.
 
 ```python
 import numpy as np
@@ -79,7 +79,7 @@ load = rlf.PowerLoad(
     id="load",
     bus=bus,
     powers=rlf.Q_(np.array([1000, 1000, 1000]) * (1 - 0.3j), "VA"),
-    flexible_params=[fp, fp, fp],  # <- this makes the load "flexible"
+    flexible_params=fp,  # <- this makes the load "flexible"
 )
 ```
 
@@ -127,7 +127,7 @@ load = rlf.PowerLoad(
     bus=bus,
     phases="abn",
     powers=rlf.Q_(np.array([1000, 1000]) * (1 - 0.3j), "VA"),
-    flexible_params=[fp1, fp2],
+    flexible_params=[fp1, fp2],  # <- one for each phase of the load
 )
 ```
 
@@ -179,7 +179,7 @@ load = rlf.PowerLoad(
     id="load",
     bus=bus,
     powers=rlf.Q_(-np.array([1000, 1000, 1000]), "VA"),  # <- negative powers (generator)
-    flexible_params=[fp, fp, fp],
+    flexible_params=fp,
 )
 ```
 
