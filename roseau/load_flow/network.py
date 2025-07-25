@@ -6,9 +6,7 @@ import json
 import logging
 import re
 from collections.abc import Generator, Iterable, Mapping
-from importlib import resources
 from math import nan
-from pathlib import Path
 from typing import TYPE_CHECKING, Any, Final, Literal, Self, TypeVar, final
 
 import geopandas as gpd
@@ -40,7 +38,6 @@ from roseau.load_flow.typing import ComplexArray, CRSLike, Id, JsonDict, MapOrSe
 from roseau.load_flow.utils import (
     DTYPES,
     AbstractNetwork,
-    CatalogueMixin,
     LoadTypeDtype,
     SourceTypeDtype,
     VoltagePhaseDtype,
@@ -56,9 +53,8 @@ logger = logging.getLogger(__name__)
 _AT = TypeVar("_AT", bound=AbstractTerminal)
 
 
-# TODO move CatalogueMixin and catalogue related methods to AbstractNetwork when implemented in rlfs
 @final
-class ElectricalNetwork(AbstractNetwork[Element], CatalogueMixin[JsonDict]):
+class ElectricalNetwork(AbstractNetwork[Element]):
     """Electrical network class.
 
     This class represents an electrical network, its elements, and their connections. After
@@ -1333,92 +1329,16 @@ class ElectricalNetwork(AbstractNetwork[Element], CatalogueMixin[JsonDict]):
     # Catalogue of networks
     #
     @classmethod
-    def catalogue_path(cls) -> Path:
-        return Path(resources.files("roseau.load_flow") / "data" / "networks").expanduser().absolute()
-
-    @classmethod
-    def catalogue_data(cls) -> JsonDict:
-        return json.loads((cls.catalogue_path() / "Catalogue.json").read_text())
-
-    @classmethod
-    def _get_catalogue(
-        cls, name: str | re.Pattern[str] | None, load_point_name: str | re.Pattern[str] | None, raise_if_not_found: bool
-    ) -> tuple[pd.DataFrame, str]:
-        # Get the catalogue data
-        catalogue_data = cls.catalogue_data()
-
-        catalogue_dict = {
-            "name": [],
-            "nb_buses": [],
-            "nb_lines": [],
-            "nb_transformers": [],
-            "nb_switches": [],
-            "nb_loads": [],
-            "nb_sources": [],
-            "nb_grounds": [],
-            "nb_potential_refs": [],
-            "load_points": [],
-        }
-        query_msg_list = []
-
-        # Match on the name
-        available_names = list(catalogue_data)
-        match_names_list = available_names
-        if name is not None:
-            match_names_list = cls._filter_catalogue_str(value=name, strings=available_names)
-            if isinstance(name, re.Pattern):
-                name = name.pattern
-            query_msg_list.append(f"{name=!r}")
-        if raise_if_not_found:
-            cls._assert_one_found(found_data=match_names_list, display_name="networks", query_info=f"{name=!r}")
-
-        if load_point_name is not None:
-            load_point_name_str = load_point_name if isinstance(load_point_name, str) else load_point_name.pattern
-            query_msg_list.append(f"load_point_name={load_point_name_str!r}")
-
-        for name in match_names_list:
-            network_data = catalogue_data[name]
-
-            # Match on the load point
-            available_load_points: list[str] = network_data["load_points"]
-            match_load_point_names_list = available_load_points
-            if load_point_name is not None:
-                match_load_point_names_list = cls._filter_catalogue_str(
-                    value=load_point_name, strings=available_load_points
-                )
-                if raise_if_not_found:
-                    cls._assert_one_found(
-                        found_data=match_load_point_names_list,
-                        display_name=f"load points for network {name!r}",
-                        query_info=query_msg_list[-1],
-                    )
-                elif not match_load_point_names_list:
-                    continue
-
-            catalogue_dict["name"].append(name)
-            catalogue_dict["nb_buses"].append(network_data["nb_buses"])
-            catalogue_dict["nb_lines"].append(network_data["nb_lines"])
-            catalogue_dict["nb_transformers"].append(network_data["nb_transformers"])
-            catalogue_dict["nb_switches"].append(network_data["nb_switches"])
-            catalogue_dict["nb_loads"].append(network_data["nb_loads"])
-            catalogue_dict["nb_sources"].append(network_data["nb_sources"])
-            catalogue_dict["nb_grounds"].append(network_data["nb_grounds"])
-            catalogue_dict["nb_potential_refs"].append(network_data["nb_potential_refs"])
-            catalogue_dict["load_points"].append(match_load_point_names_list)
-
-        return pd.DataFrame(catalogue_dict), ", ".join(query_msg_list)
-
-    @classmethod
     def from_catalogue(cls, name: str | re.Pattern[str], load_point_name: str | re.Pattern[str]) -> Self:
-        """Build a network from one in the catalogue.
+        """Create a network from the catalogue.
 
         Args:
             name:
                 The name of the network to get from the catalogue. It can be a regular expression.
 
             load_point_name:
-                The name of the load point to get. For each network, several load points may be available. It can be
-                a regular expression.
+                The name of the load point to get. For each network, several load points may be
+                available. It can be a regular expression.
 
         Returns:
             The selected network
@@ -1439,43 +1359,6 @@ class ElectricalNetwork(AbstractNetwork[Element], CatalogueMixin[JsonDict]):
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.CATALOGUE_MISSING) from None
 
         return cls.from_dict(json_dict)
-
-    @classmethod
-    def get_catalogue(
-        cls, name: str | re.Pattern[str] | None = None, load_point_name: str | re.Pattern[str] | None = None
-    ) -> pd.DataFrame:
-        """Read a network dictionary from the catalogue.
-
-        Args:
-            name:
-                The name of the network to get from the catalogue. It can be a regular expression.
-
-            load_point_name:
-                The name of the load point to get. For each network, several load points may be available. It can be
-                a regular expression.
-
-        Returns:
-            The dictionary containing the network data.
-        """
-        catalogue_data, _ = cls._get_catalogue(name=name, load_point_name=load_point_name, raise_if_not_found=False)
-        return (
-            catalogue_data.reset_index(drop=True)
-            .rename(
-                columns={
-                    "name": "Name",
-                    "nb_buses": "Nb buses",
-                    "nb_lines": "Nb lines",
-                    "nb_transformers": "Nb transformers",
-                    "nb_switches": "Nb switches",
-                    "nb_loads": "Nb loads",
-                    "nb_sources": "Nb sources",
-                    "nb_grounds": "Nb grounds",
-                    "nb_potential_refs": "Nb potential refs",
-                    "load_points": "Available load points",
-                }
-            )
-            .set_index("Name")
-        )
 
     # TODO: delete the alias when we know how to teach sphinx to include the docstring of the parent class
     tool_data = AbstractNetwork.tool_data

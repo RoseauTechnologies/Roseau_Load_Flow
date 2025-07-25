@@ -288,7 +288,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         See Also:
             :ref:`Line parameters alternative constructor documentation <models-line_parameters-alternative_constructors>`
         """
-        parameters = MultiLineParameters.from_geometry(
+        lp_m = MultiLineParameters.from_geometry(
             id=id,
             line_type=line_type,
             material=material,
@@ -301,7 +301,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             external_diameter=external_diameter,
             ampacity=ampacity,
         )
-        return cls.from_roseau_load_flow(parameters=parameters)
+        return cls.from_roseau_load_flow(lp_m)
 
     @classmethod
     def from_coiffier_model(cls, name: str, id: Id | None = None) -> Self:
@@ -319,33 +319,27 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         Returns:
             The corresponding line parameters.
         """
-        parameters = MultiLineParameters.from_coiffier_model(name=name, id=id)
-        return cls.from_roseau_load_flow(parameters=parameters)
+        lp_m = MultiLineParameters.from_coiffier_model(name=name, id=id)
+        return cls.from_roseau_load_flow(lp_m)
 
     #
     # Constructors from other software
     #
     @classmethod
-    def from_roseau_load_flow(cls, parameters: MultiLineParameters) -> Self:
-        """Create a `rlfs.LineParameters` object from a `rlf.LineParameters` object.
-
-        Args:
-            parameters:
-                The multiphase line parameter, an instance of `rlf.LineParameters`.
-
-        Returns:
-            The single phase line parameter
-        """
-        n_phases = parameters._z_line.shape[0]
+    def from_roseau_load_flow(cls, lp_m: MultiLineParameters, /) -> Self:
+        """Create an instance from a multi-phase `rlf.LineParameters` object."""
+        if not isinstance(lp_m, MultiLineParameters):
+            raise TypeError(f"Expected an rlf.LineParameters object, got {type(lp_m)}.")
+        n_phases = lp_m._z_line.shape[0]
         if n_phases not in (3, 4):
             msg = (
-                f"Only three-phase line parameters can be converted to `rlfs.LineParameters`. "
-                f"`rlf.LineParameters` with id {parameters.id!r} has {n_phases} phases."
+                f"Multi-phase line parameters with id {lp_m.id!r} and {n_phases} phases cannot be "
+                f"converted to `rlfs.LineParameters`. It must be three-phase."
             )
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_MODEL)
-        z_line = parameters.z_line.m
-        y_shunt = parameters.y_shunt.m
+        z_line = lp_m._z_line
+        y_shunt = lp_m._y_shunt
 
         z_012 = A_INV @ z_line[:3, :3] @ A
         y_012 = A_INV @ y_shunt[:3, :3] @ A
@@ -354,16 +348,16 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         if y1.real < 0:  # might produce a value with a small negative real part
             y1 = 1j * y1.imag
 
-        materials = parameters.materials
-        sections = parameters.sections
-        insulators = parameters.insulators
-        ampacities = parameters.ampacities
+        materials = lp_m.materials
+        sections = lp_m.sections
+        insulators = lp_m.insulators
+        ampacities = lp_m.ampacities
 
         return cls(
-            id=parameters.id,
+            id=lp_m.id,
             z_line=z1,
             y_shunt=y1,
-            line_type=parameters.line_type,
+            line_type=lp_m.line_type,
             material=materials[0] if materials is not None else None,
             section=sections.m[0] if sections is not None else None,
             insulator=insulators[0] if insulators is not None else None,
@@ -446,7 +440,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         Returns:
             The created line parameters.
         """
-        parameters = MultiLineParameters.from_power_factory(
+        lp_m = MultiLineParameters.from_power_factory(
             id=id,
             r0=r0 if r0 is not None else r1,
             r1=r1,
@@ -462,7 +456,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             nphase=3,
             nneutral=0,
         )
-        return cls.from_roseau_load_flow(parameters=parameters)
+        return cls.from_roseau_load_flow(lp_m)
 
     @classmethod
     @ureg_wraps(None, (None, None, "ohm/km", "ohm/km", "ohm/km", "ohm/km", "nF/km", "nF/km", "Hz", "A", None))
@@ -549,7 +543,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
                 normamps=Q_(400, "A"),
             )
         """
-        parameters = MultiLineParameters.from_open_dss(
+        lp_m = MultiLineParameters.from_open_dss(
             id=id,
             r1=r1,
             r0=r0 if r0 is not None else r1,
@@ -562,7 +556,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             linetype=linetype,
             nphases=3,
         )
-        return cls.from_roseau_load_flow(parameters=parameters)
+        return cls.from_roseau_load_flow(lp_m)
 
     #
     # Catalogue Mixin

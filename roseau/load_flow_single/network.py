@@ -4,6 +4,7 @@ This module defines the electrical network class.
 
 import json
 import logging
+import re
 from collections.abc import Iterable, Mapping
 from math import nan
 from pathlib import Path
@@ -13,10 +14,12 @@ import geopandas as gpd
 import pandas as pd
 
 from roseau.load_flow import SQRT3, RoseauLoadFlowExceptionCode
+from roseau.load_flow import ElectricalNetwork as MultiElectricalNetwork
 from roseau.load_flow.typing import CRSLike, Id, JsonDict, MapOrSeq, StrPath
 from roseau.load_flow.utils import DTYPES, AbstractNetwork, LoadTypeDtype, count_repr, optional_deps
 from roseau.load_flow_engine.cy_engine import CyGround, CyPotentialRef
 from roseau.load_flow_single.io import network_from_dgs, network_from_dict, network_to_dgs, network_to_dict
+from roseau.load_flow_single.io.rlf import OnIncompatibleType, network_from_rlf
 from roseau.load_flow_single.models import (
     AbstractLoad,
     Bus,
@@ -660,7 +663,25 @@ class ElectricalNetwork(AbstractNetwork[Element]):
         pass  # potential reference is managed internally
 
     #
-    # Network saving/loading
+    # Results saving
+    #
+    def _results_to_dict(self, warning: bool, full: bool) -> JsonDict:
+        """Get the voltages and currents computed by the load flow and return them as a dict."""
+        if warning:
+            self._check_valid_results()  # Warn only once if asked
+        return {
+            "buses": [bus._results_to_dict(warning=False, full=full) for bus in self.buses.values()],
+            "lines": [line._results_to_dict(warning=False, full=full) for line in self.lines.values()],
+            "transformers": [
+                transformer._results_to_dict(warning=False, full=full) for transformer in self.transformers.values()
+            ],
+            "switches": [switch._results_to_dict(warning=False, full=full) for switch in self.switches.values()],
+            "loads": [load._results_to_dict(warning=False, full=full) for load in self.loads.values()],
+            "sources": [source._results_to_dict(warning=False, full=full) for source in self.sources.values()],
+        }
+
+    #
+    # Data exchange
     #
     @classmethod
     def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
@@ -687,27 +708,6 @@ class ElectricalNetwork(AbstractNetwork[Element]):
     def _to_dict(self, include_results: bool) -> JsonDict:
         return network_to_dict(en=self, include_results=include_results)
 
-    #
-    # Results saving
-    #
-    def _results_to_dict(self, warning: bool, full: bool) -> JsonDict:
-        """Get the voltages and currents computed by the load flow and return them as a dict."""
-        if warning:
-            self._check_valid_results()  # Warn only once if asked
-        return {
-            "buses": [bus._results_to_dict(warning=False, full=full) for bus in self.buses.values()],
-            "lines": [line._results_to_dict(warning=False, full=full) for line in self.lines.values()],
-            "transformers": [
-                transformer._results_to_dict(warning=False, full=full) for transformer in self.transformers.values()
-            ],
-            "switches": [switch._results_to_dict(warning=False, full=full) for switch in self.switches.values()],
-            "loads": [load._results_to_dict(warning=False, full=full) for load in self.loads.values()],
-            "sources": [source._results_to_dict(warning=False, full=full) for source in self.sources.values()],
-        }
-
-    #
-    # DGS interface
-    #
     @classmethod
     def _from_dgs(cls, data: Mapping[str, Any], /, use_name_as_id: bool = False) -> Self:
         return cls(**network_from_dgs(data, use_name_as_id))
@@ -738,6 +738,66 @@ class ElectricalNetwork(AbstractNetwork[Element]):
         with open(path, "w", encoding=encoding) as f:
             json.dump(data, f, indent=2)
         return path
+
+    @classmethod
+    def from_rlf(
+        cls, en_m: MultiElectricalNetwork, /, *, on_incompatible: OnIncompatibleType = "raise-critical"
+    ) -> Self:
+        """Construct an electrical network from a Roseau Load Flow multi-phase network.
+
+        Args:
+            en_m:
+                The Roseau Load Flow multi-phase network to convert. An instance of
+                ``rlf.ElectricalNetwork``. Buses and branches **must** be three-phase.
+
+            on_incompatible:
+                Action to take when an incompatibility is found. Options are:
+
+                - "ignore": Ignore incompatibilities and continue processing.
+                - "warn": Issue a warning but continue processing.
+                - "raise-critical": Raise on critical incompatibilities, warn on non-critical ones.
+                  This is the default.
+                - "raise": Raise on all incompatibilities.
+
+                Here is a non-exhaustive list of non-critical incompatibilities:
+
+                - Asymmetric potential reference (e.g. on phase "a" of a bus)
+                - Asymmetric ground connections (e.g. a connection of some phase "a" to the ground)
+                - Multiple ground elements
+                - Floating neutrals
+                - Unbalanced initial potentials of buses
+
+                Critical incompatibilities include unbalanced source voltages, non three-phase or
+                unbalanced loads.
+
+        Returns:
+            The constructed rlfs network.
+        """
+        network_data, tool_data = network_from_rlf(en_m, on_incompatible=on_incompatible)
+        network = cls(**network_data)
+        network.tool_data._storage.update(tool_data)
+        return network
+
+    #
+    # Catalogue of networks
+    #
+    @classmethod
+    def from_catalogue(cls, name: str | re.Pattern[str], load_point_name: str | re.Pattern[str]) -> Self:
+        """Create a network from the catalogue.
+
+        Args:
+            name:
+                The name of the network to get from the catalogue. It can be a regular expression.
+
+            load_point_name:
+                The name of the load point to get. For each network, several load points may be
+                available. It can be a regular expression.
+
+        Returns:
+            The selected network.
+        """
+        en_m = MultiElectricalNetwork.from_catalogue(name=name, load_point_name=load_point_name)
+        return cls.from_rlf(en_m, on_incompatible="ignore")
 
     # TODO: delete the alias when we know how to teach sphinx to include the docstring of the parent class
     tool_data = AbstractNetwork.tool_data

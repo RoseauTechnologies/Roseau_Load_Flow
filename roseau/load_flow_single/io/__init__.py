@@ -7,10 +7,12 @@ corresponding methods of the :class:`~roseau.load_flow_single.ElectricalNetwork`
 
 from roseau.load_flow_single.io.dgs import network_from_dgs, network_to_dgs
 from roseau.load_flow_single.io.dict import network_from_dict, network_to_dict
+from roseau.load_flow_single.io.rlf import network_from_rlf
 
 __all__ = [
     "network_from_dict",
     "network_to_dict",
     "network_from_dgs",
     "network_to_dgs",
+    "network_from_rlf",
 ]

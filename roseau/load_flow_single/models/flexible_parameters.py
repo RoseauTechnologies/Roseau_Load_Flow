@@ -85,6 +85,36 @@ class Control(MultiControl):
             epsilon=self._epsilon,
         )
 
+    @classmethod
+    def from_roseau_load_flow(cls, fp_m: MultiControl, /, phases: str) -> Self:
+        """Create an instance from a multi-phase `rlf.Control` object."""
+        if not isinstance(fp_m, MultiControl):
+            raise TypeError(f"Expected an rlf.Control object, got {type(fp_m)}.")
+        if phases in {"an", "bn", "cn"}:
+            return cls(
+                type=fp_m._type,
+                u_min=fp_m._u_min * SQRT3,
+                u_down=fp_m._u_down * SQRT3,
+                u_up=fp_m._u_up * SQRT3,
+                u_max=fp_m._u_max * SQRT3,
+                alpha=fp_m._alpha,
+                epsilon=fp_m._epsilon,
+            )
+        elif phases in {"ab", "bc", "ca"}:
+            return cls(
+                type=fp_m._type,
+                u_min=fp_m._u_min,
+                u_down=fp_m._u_down,
+                u_up=fp_m._u_up,
+                u_max=fp_m._u_max,
+                alpha=fp_m._alpha,
+                epsilon=fp_m._epsilon,
+            )
+        else:
+            msg = f"Invalid control phases: {phases!r}."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
+
 
 class FlexibleParameter(MultiFlexibleParameter):
     """Flexible parameters of a flexible load.
@@ -622,6 +652,23 @@ class FlexibleParameter(MultiFlexibleParameter):
             s_max=s_max,
             q_min=q_min,
             q_max=q_max,
+        )
+
+    @classmethod
+    def from_roseau_load_flow(cls, fp_m: MultiFlexibleParameter, /, phases: str) -> Self:
+        """Create an instance from a multi-phase `rlf.FlexibleParameter` object."""
+        if not isinstance(fp_m, MultiFlexibleParameter):
+            raise TypeError(f"Expected an rlf.FlexibleParameter object, got {type(fp_m)}.")
+        control_p = Control.from_roseau_load_flow(fp_m.control_p, phases)
+        control_q = Control.from_roseau_load_flow(fp_m.control_q, phases)
+        projection = fp_m.projection
+        return cls(
+            control_p=control_p,
+            control_q=control_q,
+            projection=projection,
+            s_max=fp_m.s_max,
+            q_min=fp_m.q_min,
+            q_max=fp_m.q_max,
         )
 
     def _compute_powers(self, voltages: Iterable[float], power: complex) -> ComplexArray:
