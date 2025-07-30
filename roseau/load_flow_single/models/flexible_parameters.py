@@ -86,7 +86,7 @@ class Control(MultiControl):
         )
 
     @classmethod
-    def from_roseau_load_flow(cls, fp_m: MultiControl, /, phases: str) -> Self:
+    def from_roseau_load_flow(cls, fp_m: MultiControl, /, *, phases: str) -> Self:
         """Create an instance from a multi-phase `rlf.Control` object."""
         if not isinstance(fp_m, MultiControl):
             raise TypeError(f"Expected an rlf.Control object, got {type(fp_m)}.")
@@ -655,20 +655,20 @@ class FlexibleParameter(MultiFlexibleParameter):
         )
 
     @classmethod
-    def from_roseau_load_flow(cls, fp_m: MultiFlexibleParameter, /, phases: str) -> Self:
+    def from_roseau_load_flow(cls, fp_m: MultiFlexibleParameter, /, *, phases: str) -> Self:
         """Create an instance from a multi-phase `rlf.FlexibleParameter` object."""
         if not isinstance(fp_m, MultiFlexibleParameter):
             raise TypeError(f"Expected an rlf.FlexibleParameter object, got {type(fp_m)}.")
-        control_p = Control.from_roseau_load_flow(fp_m.control_p, phases)
-        control_q = Control.from_roseau_load_flow(fp_m.control_q, phases)
+        control_p = Control.from_roseau_load_flow(fp_m.control_p, phases=phases)
+        control_q = Control.from_roseau_load_flow(fp_m.control_q, phases=phases)
         projection = fp_m.projection
         return cls(
             control_p=control_p,
             control_q=control_q,
             projection=projection,
-            s_max=fp_m.s_max,
-            q_min=fp_m.q_min,
-            q_max=fp_m.q_max,
+            s_max=fp_m._s_max * 3,
+            q_min=fp_m._q_min_value * 3 if fp_m._q_min_value is not None else None,
+            q_max=fp_m._q_max_value * 3 if fp_m._q_max_value is not None else None,
         )
 
     def _compute_powers(self, voltages: Iterable[float], power: complex) -> ComplexArray:

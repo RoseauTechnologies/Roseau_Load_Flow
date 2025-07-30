@@ -2,6 +2,7 @@ import cmath
 import warnings
 
 import numpy as np
+import numpy.testing as npt
 import pytest
 from shapely import LineString, Point
 
@@ -84,8 +85,45 @@ def test_from_rlf():  # noqa: C901
     lp2_m = rlf.LineParameters(id="LP2", z_line=(0.01 + 0.01j) * np.eye(4), insulators=rlf.Insulator.XLPE)
     rlf.Line(id="Ln2", bus1=bus4_m, bus2=bus5_m, parameters=lp2_m, length=0.1)
 
-    src_m = rlf.VoltageSource(id="Src", bus=bus1_m, voltages=20e3)
-    rlf.PowerLoad(id="PL", bus=bus2_m, powers=20e3)  # 60 kW MV load
+    rlf.VoltageSource(id="Src", bus=bus1_m, voltages=20e3)
+    rlf.PowerLoad(id="P-L", bus=bus2_m, powers=50e3)  # 150 kW MV load
+    # LV loads
+    rlf.CurrentLoad(id="I-L (Y)", bus=bus5_m, phases="abcn", currents=100 + 10j)
+    rlf.CurrentLoad(id="I-L (D)", bus=bus5_m, phases="abc", currents=100 + 10j)
+    rlf.ImpedanceLoad(id="Z-L (Y)", bus=bus5_m, phases="abcn", impedances=1 + 0.1j)
+    rlf.ImpedanceLoad(id="Z-L (D)", bus=bus5_m, phases="abc", impedances=1 + 0.1j)
+    rlf.PowerLoad(
+        id="F-L (Y)",
+        bus=bus5_m,
+        phases="abcn",
+        powers=9e3 + 1e3j,
+        flexible_params=rlf.FlexibleParameter.pq_u_consumption(
+            up_min=0.8 * 230,
+            up_down=0.9 * 230,
+            uq_min=0.6 * 230,
+            uq_down=0.7 * 230,
+            uq_up=1.05 * 230,
+            uq_max=1.1 * 230,
+            s_max=10e3,
+            q_max=1e3,
+        ),
+    )
+    rlf.PowerLoad(
+        id="F-L (D)",
+        bus=bus5_m,
+        phases="abc",
+        powers=9e3 + 1e3j,
+        flexible_params=rlf.FlexibleParameter.pq_u_consumption(
+            up_min=0.8 * 400,
+            up_down=0.9 * 400,
+            uq_min=0.6 * 400,
+            uq_down=0.7 * 400,
+            uq_up=1.05 * 400,
+            uq_max=1.1 * 400,
+            s_max=10e3,
+            q_min=-1e3,
+        ),
+    )
 
     rlf.GroundConnection(ground=gnd, element=bus3_m)
     rlf.PotentialRef(id="PRef", element=gnd)
@@ -113,9 +151,10 @@ def test_from_rlf():  # noqa: C901
             assert bus_s.initial_voltage is None
         else:
             assert bus_s.initial_voltage is not None
-            assert np.isclose(
+            npt.assert_allclose(
                 bus_s.initial_voltage.m,
-                rlf.converters.calculate_voltages(bus_m.initial_potentials.m[:3], bus_m.phases[:3]).m.item(0),
+                rlf.converters.calculate_voltages(bus_m.initial_potentials.m[:3], bus_m.phases[:3]).m.item(0)
+                / cmath.rect(1, cmath.pi / 6),
             )
 
     # Line parameters
@@ -207,7 +246,11 @@ def test_from_rlf():  # noqa: C901
         src_m = en_m.sources[src_id]
         assert src_s.id == src_m.id
         assert src_s.bus.id == src_m.bus.id
-        assert np.isclose(src_s.voltage.m, src_m.voltages.m.item(0))
+        if "n" in src_m.phases:
+            voltage_m = src_m.voltages.m.item(0) * rlf.SQRT3
+        else:
+            voltage_m = src_m.voltages.m.item(0) / cmath.rect(1, cmath.pi / 6)
+        assert np.isclose(src_s.voltage.m, voltage_m)
 
     # Loads
     for load_id, load_s in en_s.loads.items():
@@ -221,37 +264,53 @@ def test_from_rlf():  # noqa: C901
                 assert load_s.flexible_param is None
             else:
                 fp_s = load_s.flexible_param
+                v_factor = rlf.SQRT3 if "n" in load_m.phases else 1
                 for fp_m in load_m.flexible_params:
-                    assert fp_s.control_p.u_min == fp_m.control_p.u_min
-                    assert fp_s.control_p.u_down == fp_m.control_p.u_down
-                    assert fp_s.control_p.u_up == fp_m.control_p.u_up
-                    assert fp_s.control_p.u_max == fp_m.control_p.u_max
-                    assert fp_s.control_p.alpha == fp_m.control_p.alpha
-                    assert fp_s.control_p.epsilon == fp_m.control_p.epsilon
-                    assert fp_s.control_q.u_min == fp_m.control_q.u_min
-                    assert fp_s.control_q.u_down == fp_m.control_q.u_down
-                    assert fp_s.control_q.u_up == fp_m.control_q.u_up
-                    assert fp_s.control_q.u_max == fp_m.control_q.u_max
-                    assert fp_s.control_q.alpha == fp_m.control_q.alpha
-                    assert fp_s.control_q.epsilon == fp_m.control_q.epsilon
+                    # P control
+                    assert np.isclose(fp_s.control_p.u_min, fp_m.control_p.u_min * v_factor)
+                    assert np.isclose(fp_s.control_p.u_down, fp_m.control_p.u_down * v_factor)
+                    assert np.isclose(fp_s.control_p.u_up, fp_m.control_p.u_up * v_factor)
+                    assert np.isclose(fp_s.control_p.u_max, fp_m.control_p.u_max * v_factor)
+                    assert np.isclose(fp_s.control_p.alpha, fp_m.control_p.alpha)
+                    assert np.isclose(fp_s.control_p.epsilon, fp_m.control_p.epsilon)
+                    # Q control
+                    assert np.isclose(fp_s.control_q.u_min, fp_m.control_q.u_min * v_factor)
+                    assert np.isclose(fp_s.control_q.u_down, fp_m.control_q.u_down * v_factor)
+                    assert np.isclose(fp_s.control_q.u_up, fp_m.control_q.u_up * v_factor)
+                    assert np.isclose(fp_s.control_q.u_max, fp_m.control_q.u_max * v_factor)
+                    assert np.isclose(fp_s.control_q.alpha, fp_m.control_q.alpha)
+                    assert np.isclose(fp_s.control_q.epsilon, fp_m.control_q.epsilon)
+                    # Projection
                     assert fp_s.projection.type == fp_m.projection.type
                     assert fp_s.projection.alpha == fp_m.projection.alpha
                     assert fp_s.projection.epsilon == fp_m.projection.epsilon
+                    # Limits
+                    assert np.isclose(fp_s.s_max.m, fp_m.s_max.m * 3)
+                    assert np.isclose(fp_s.q_min.m, fp_m.q_min.m * 3)
+                    assert np.isclose(fp_s.q_max.m, fp_m.q_max.m * 3)
         elif isinstance(load_m, rlf.CurrentLoad):
             assert isinstance(load_s, rlfs.CurrentLoad)
-            assert np.isclose(load_s.current.m, load_m.currents.m.mean())
+            current_m = np.mean(load_m.currents.m).item()
+            if "n" not in load_m.phases:
+                current_m *= rlf.SQRT3
+            assert np.isclose(load_s.current.m, current_m)
         elif isinstance(load_m, rlf.ImpedanceLoad):
             assert isinstance(load_s, rlfs.ImpedanceLoad)
-            assert np.isclose(load_s.impedance.m, load_m.impedances.m.mean())
+            impedance_m = np.mean(load_m.impedances.m).item()
+            if "n" not in load_m.phases:
+                impedance_m /= 3
+            assert np.isclose(load_s.impedance.m, impedance_m), load_id
+        else:
+            raise AssertionError(f"Unknown load type: {type(load_m)}")
 
 
 def test_source_voltage():
     potentials = cmath.rect(400 / rlf.SQRT3, cmath.pi / 3) * np.array([*rlf.PositiveSequence, 0], dtype=np.complex128)
-    v_exp = cmath.rect(400, cmath.pi / 6 + cmath.pi / 3)
+    v_exp = cmath.rect(400, cmath.pi / 3)
 
     v_abcn = rlf.converters.calculate_voltages(potentials, "abcn").m
     v_abc = rlf.converters.calculate_voltages(potentials[:3], "abc").m
-    assert np.isclose(v_exp, v_abc.item(0))
+    assert np.isclose(v_exp, v_abcn.item(0) * rlf.SQRT3)
 
     assert np.isclose(_balance_voltages("abcn", v_abcn, "abcn", on_incompatible="raise"), v_exp)
     assert np.isclose(_balance_voltages("abc", v_abc, "abc", on_incompatible="raise"), v_exp)

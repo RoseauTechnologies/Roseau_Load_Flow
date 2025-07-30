@@ -58,43 +58,41 @@ def _handle_floating_neutral(element_m: rlf.AbstractConnectable, on_incompatible
 
 
 def _balance_voltages(ph: str, voltages: ComplexArray, msg: str, on_incompatible: OnIncompatibleType) -> complex:
-    """Calculate and return Vab to be used in the single-phase equivalent network."""
+    """Calculate and return √3*Van to be used in the single-phase equivalent network."""
     if ph in ("abc", "abcn"):  # "abc" or "abcn" (most common case)
-        if ph.endswith("n"):
-            van, vbn, vcn = voltages.tolist()
-            voltages = np.array([van - vbn, vbn - vcn, vcn - van], dtype=np.complex128)
-        voltage = voltages.item(0)
-        if not np.allclose(voltages, voltage * rlf.PositiveSequence):
+        v0, v1, v2 = rlf.sym.phasor_to_sym(voltages).tolist()
+        if not ph.endswith("n"):
+            v1 /= 1 - rlf.ALPHA2
+        voltage = v1 * rlf.SQRT3
+        if not np.allclose([v0, v2], 0):
             _handle_incompatibility(msg, on_incompatible=on_incompatible)
     elif ph in ("abn", "bcn", "can"):  # abn, bcn, can
         v1n, v2n = voltages.tolist()
         if ph == "abn":
-            voltage = v1n - v2n
+            voltage = v1n * rlf.SQRT3
         elif ph == "bcn":
-            voltage = (v1n - v2n) / rlf.ALPHA2
+            voltage = -(v1n + v2n) * rlf.SQRT3
         elif ph == "can":
-            voltage = (v1n - v2n) / rlf.ALPHA
+            voltage = v2n * rlf.SQRT3
         if not cmath.isclose(v2n, v1n * rlf.ALPHA2):
             _handle_incompatibility(msg, on_incompatible=on_incompatible)
     elif ph == "ab":
-        voltage = voltages.item(0)
+        voltage = voltages.item(0) / cmath.rect(1, cmath.pi / 6)
     elif ph == "bc":
-        voltage = voltages.item(0) / rlf.ALPHA2
+        voltage = voltages.item(0) / cmath.rect(1, -cmath.pi / 2)
     elif ph == "ca":
-        voltage = voltages.item(0) / rlf.ALPHA
+        voltage = voltages.item(0) / cmath.rect(1, 5 * cmath.pi / 6)
     elif ph == "an":
         van = voltages.item(0)
-        vbn = van * rlf.ALPHA2
-        voltage = van - vbn
+        voltage = van * rlf.SQRT3
     elif ph == "bn":
         vbn = voltages.item(0)
         van = vbn / rlf.ALPHA2
-        voltage = van - vbn
+        voltage = van * rlf.SQRT3
     elif ph == "cn":
         vcn = voltages.item(0)
         van = vcn / rlf.ALPHA
-        vbn = vcn * rlf.ALPHA
-        voltage = van - vbn
+        voltage = van * rlf.SQRT3
     else:
         raise AssertionError(ph)
     return voltage
@@ -155,16 +153,10 @@ def network_from_rlf(  # noqa: C901
         if "abc" not in ph:
             raise RuntimeError(f"Bus {bus_m.id!r} is not three-phase, phases={ph!r}")
         if bus_m._initialized_by_the_user and (init_pot := bus_m._initial_potentials) is not None:
-            pot_balanced = [*(init_pot.item(0) * rlf.PositiveSequence)]
-            if "n" in ph:
-                pot_balanced.append(0j)
-            if not (np.isclose(init_pot, pot_balanced).all()):
-                _handle_incompatibility(
-                    f"Bus {bus_m.id!r} has unbalanced initial_potentials",
-                    on_incompatible=on_incompatible,
-                    critical=False,
-                )
-            v_i = init_pot.item(0) - init_pot.item(1)  # Vab
+            init_voltages = rlf.converters._calculate_voltages(init_pot, ph)
+            v_i = _balance_voltages(
+                ph, init_voltages, f"Bus {bus_m.id!r} has unbalanced initial voltages", on_incompatible
+            )
         else:
             v_i = None
 
@@ -287,11 +279,19 @@ def network_from_rlf(  # noqa: C901
         elif isinstance(ld_m, rlf.CurrentLoad):
             if np.unique_values(ld_m._currents).size != 1:
                 _handle_incompatibility(f"Load {ld_m.id!r} has unbalanced currents", on_incompatible=on_incompatible)
-            ld_s = CurrentLoad(id=ld_m.id, bus=buses[ld_m.bus.id], current=ld_m._currents.item(0))
+            current = np.mean(ld_m._currents).item()
+            if "n" not in ph:
+                # Ia = Iab - Ica = (Van-Vbn) / Zab - (Vcn-Van) / Zca, etc. --> Il = Ip * √3
+                current *= rlf.SQRT3
+            ld_s = CurrentLoad(id=ld_m.id, bus=buses[ld_m.bus.id], current=current)
         elif isinstance(ld_m, rlf.ImpedanceLoad):
             if np.unique_values(ld_m._impedances).size != 1:
                 _handle_incompatibility(f"Load {ld_m.id!r} has unbalanced impedances", on_incompatible=on_incompatible)
-            ld_s = ImpedanceLoad(id=ld_m.id, bus=buses[ld_m.bus.id], impedance=np.mean(ld_m._impedances).item())
+            impedance = np.mean(ld_m._impedances).item()
+            if "n" not in ph:
+                # (Δ-Y) transform: Zan = Zab*Zca/(Zab+Zbc+Zca), etc. --> Zpn = Zpp / 3
+                impedance /= 3
+            ld_s = ImpedanceLoad(id=ld_m.id, bus=buses[ld_m.bus.id], impedance=impedance)
         else:
             raise NotImplementedError(f"Load type {ld_m.type!r} is not implemented.")
         _handle_floating_neutral(ld_m, on_incompatible=on_incompatible)
