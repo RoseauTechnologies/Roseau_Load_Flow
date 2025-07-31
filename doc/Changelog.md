@@ -21,6 +21,10 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`399` Add popup and search functionality to the interactive map plot. `rlf.plotting.plot_interactive_map` now
+  accepts `add_tooltips`, `add_popups` and `add_search` arguments to control the display of tooltips, popups and search
+  features. These features are enabled by default.
+
 - {gh-pr}`398` Improve the performance of accessing network results as dataframes by up to 20% and serializing a network
   to a dictionary by up to 15%. The improvements are mostly noticeable for large networks or when performing many
   simulations like in a time series analysis.

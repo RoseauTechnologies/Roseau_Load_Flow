@@ -304,6 +304,9 @@ def plot_interactive_map(  # noqa: C901
     style_function: Callable[["FeatureMap"], "StyleDict | None"] | None = None,
     highlight_function: Callable[["FeatureMap"], "StyleDict | None"] | None = None,
     map_kws: Mapping[str, Any] | None = None,
+    add_tooltips: bool = True,
+    add_popups: bool = True,
+    add_search: bool = True,
 ) -> "folium.Map":
     """Plot an electrical network on an interactive map.
 
@@ -336,6 +339,18 @@ def plot_interactive_map(  # noqa: C901
             `location` is set to the centroid of the network geometry and `zoom_start` is calculated
             based on its bounding box.
 
+        add_tooltips:
+            If ``True`` (default), tooltips will be added to the map elements. Tooltips appear when
+            hovering over an element.
+
+        add_popups:
+            If ``True`` (default), popups will be added to the map elements. Popups appear when
+            clicking on an element.
+
+        add_search:
+            If ``True`` (default), a search bar will be added to the map to search for network
+            elements by their ID.
+
     Returns:
         The :class:`folium.Map` object with the network plot.
     """
@@ -347,6 +362,7 @@ def plot_interactive_map(  # noqa: C901
             "Install it with `pip install folium`."
         )
         raise
+    from folium.plugins import Search
 
     map_kws = dict(map_kws) if map_kws is not None else {}
 
@@ -371,7 +387,7 @@ def plot_interactive_map(  # noqa: C901
             unique = np.unique(value)
             if unique.size == 1:
                 return unique.item()
-            return value
+            return value.tolist()
 
         for lp in cast("Iterable[LineParameters]", network._parameters["line"].values()):
             line_params[lp.id] = {
@@ -468,36 +484,60 @@ def plot_interactive_map(  # noqa: C901
         del bus_fields["phases"]
         del line_fields["phases"]
 
-    m = folium.Map(**map_kws)
-    folium.GeoJson(
-        data=lines_gdf,
-        name="lines",
-        marker=folium.CircleMarker(),
-        style_function=internal_style_function,
-        highlight_function=internal_highlight_function,
-        tooltip=folium.GeoJsonTooltip(
-            fields=list(line_fields.keys()),
-            aliases=list(line_fields.values()),
-            localize=True,
-            sticky=False,
-            labels=True,
-            max_width=800,
-        ),
-    ).add_to(m)
-    folium.GeoJson(
-        data=buses_gdf,
-        name="buses",
-        marker=folium.CircleMarker(),
-        style_function=internal_style_function,
-        highlight_function=internal_highlight_function,
-        tooltip=folium.GeoJsonTooltip(
+    if add_tooltips:
+        bus_tooltip = folium.GeoJsonTooltip(
             fields=list(bus_fields.keys()),
             aliases=list(bus_fields.values()),
             localize=True,
             sticky=False,
             labels=True,
             max_width=800,
-        ),
-    ).add_to(m)
+        )
+        line_tooltip = folium.GeoJsonTooltip(
+            fields=list(line_fields.keys()),
+            aliases=list(line_fields.values()),
+            localize=True,
+            sticky=False,
+            labels=True,
+            max_width=800,
+        )
+    else:
+        bus_tooltip = line_tooltip = None
+    if add_popups:
+        bus_popup = folium.GeoJsonPopup(
+            fields=list(bus_fields.keys()),
+            aliases=list(bus_fields.values()),
+            localize=True,
+            labels=True,
+        )
+        line_popup = folium.GeoJsonPopup(
+            fields=list(line_fields.keys()),
+            aliases=list(line_fields.values()),
+            localize=True,
+            labels=True,
+        )
+    else:
+        bus_popup = line_popup = None
+    m = folium.Map(**map_kws)
+    network_layer = folium.FeatureGroup(name="Electrical Network").add_to(m)
+    folium.GeoJson(
+        data=lines_gdf,
+        name="lines",
+        style_function=internal_style_function,
+        highlight_function=internal_highlight_function,
+        tooltip=line_tooltip,
+        popup=line_popup,
+    ).add_to(network_layer)
+    folium.GeoJson(
+        data=buses_gdf,
+        name="buses",
+        marker=folium.CircleMarker(),
+        style_function=internal_style_function,
+        highlight_function=internal_highlight_function,
+        tooltip=bus_tooltip,
+        popup=bus_popup,
+    ).add_to(network_layer)
     folium.LayerControl().add_to(m)
+    if add_search:
+        Search(network_layer, search_label="id", placeholder="Search network elements...").add_to(m)
     return m
