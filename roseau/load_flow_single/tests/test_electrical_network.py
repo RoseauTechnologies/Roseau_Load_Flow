@@ -1,6 +1,7 @@
 import cmath
 import itertools as it
 import json
+import re
 import warnings
 from pathlib import Path
 
@@ -13,6 +14,7 @@ import pytest
 from pandas.testing import assert_frame_equal
 
 from roseau.load_flow import Q_, RoseauLoadFlowException, RoseauLoadFlowExceptionCode
+from roseau.load_flow import ElectricalNetwork as ElectricalNetworkMulti
 from roseau.load_flow.testing import assert_json_close
 from roseau.load_flow.utils import LoadTypeDtype
 from roseau.load_flow.utils.testing import (
@@ -929,6 +931,128 @@ def test_propagate_voltages():
     expected_voltages = 20e3
     assert np.allclose(load_bus.initial_voltage.m, expected_voltages)
     assert np.allclose(source_bus.initial_voltage.m, expected_voltages)
+
+
+def test_catalogue_data():
+    # The catalogue data path exists
+    catalogue_path = ElectricalNetwork.catalogue_path()
+    assert catalogue_path.exists()
+
+    # Read it and copy it
+    catalogue_data = ElectricalNetwork.catalogue_data().copy()
+
+    # Iterate over the folder and ensure that the elements are in the catalogue data
+    error_message = (
+        "Something changed in the network catalogue. Please regenerate the Catalogue.json file for the "
+        "network catalogues by using the python file `scripts/generate_network_catalogue_data.py`."
+    )
+    for p in catalogue_path.glob("*.json"):
+        if p.stem == "Catalogue":
+            continue
+
+        # Check that the network exists in the catalogue data
+        network_name, load_point_name = p.stem.split("_")
+        assert network_name in catalogue_data, error_message
+
+        # Check the counts
+        en_m = ElectricalNetworkMulti.from_json(p, include_results=False)
+        en = ElectricalNetwork.from_rlf(en_m, on_incompatible="ignore")
+        c_data = catalogue_data[network_name]
+        assert len(c_data) == 7
+        assert c_data["nb_buses"] == len(en.buses)
+        assert c_data["nb_lines"] == len(en.lines)
+        assert c_data["nb_switches"] == len(en.switches)
+        assert c_data["nb_transformers"] == len(en.transformers)
+        assert c_data["nb_loads"] == len(en.loads)
+        assert c_data["nb_sources"] == len(en.sources)
+
+        # Check the load point
+        remaining_load_points: list[str] = c_data["load_points"]
+        assert load_point_name in remaining_load_points, error_message
+        remaining_load_points.remove(load_point_name)
+        if not remaining_load_points:
+            catalogue_data.pop(network_name)
+
+    # At the end of the process, the copy of the catalogue data should be empty
+    assert len(catalogue_data) == 0, error_message
+
+
+def test_from_catalogue():
+    # Unknown network name
+    with pytest.raises(RoseauLoadFlowException) as e:
+        ElectricalNetwork.from_catalogue(name="unknown", load_point_name="winter")
+    assert e.value.msg == (
+        "No networks matching the query (name='unknown') have been found. Please look at the "
+        "catalogue using the `get_catalogue` class method."
+    )
+    assert e.value.code == RoseauLoadFlowExceptionCode.CATALOGUE_NOT_FOUND
+
+    # Unknown load point name
+    with pytest.raises(RoseauLoadFlowException) as e:
+        ElectricalNetwork.from_catalogue(name="MVFeeder004", load_point_name="unknown")
+    assert e.value.msg == (
+        "No load points for network 'MVFeeder004' matching the query (load_point_name='unknown') have "
+        "been found. Please look at the catalogue using the `get_catalogue` class method."
+    )
+    assert e.value.code == RoseauLoadFlowExceptionCode.CATALOGUE_NOT_FOUND
+
+    # Several network name matched
+    with pytest.raises(RoseauLoadFlowException) as e:
+        ElectricalNetwork.from_catalogue(name=r"MVFeeder.*", load_point_name="winter")
+    assert e.value.msg == (
+        "Several networks matching the query (name='MVFeeder.*') have been found: 'MVFeeder004', "
+        "'MVFeeder011', 'MVFeeder015', 'MVFeeder032', 'MVFeeder041', 'MVFeeder063', 'MVFeeder078', "
+        "'MVFeeder115', 'MVFeeder128', 'MVFeeder151', 'MVFeeder159', 'MVFeeder176', 'MVFeeder210', "
+        "'MVFeeder217', 'MVFeeder232', 'MVFeeder251', 'MVFeeder290', 'MVFeeder312', 'MVFeeder320', "
+        "'MVFeeder339'."
+    )
+    assert e.value.code == RoseauLoadFlowExceptionCode.CATALOGUE_SEVERAL_FOUND
+
+    # Several load point name matched
+    with pytest.raises(RoseauLoadFlowException) as e:
+        ElectricalNetwork.from_catalogue(name="MVFeeder004", load_point_name=r".*")
+    assert e.value.msg == (
+        "Several load points for network 'MVFeeder004' matching the query (load_point_name='.*') have "
+        "been found: 'Summer', 'Winter'."
+    )
+    assert e.value.code == RoseauLoadFlowExceptionCode.CATALOGUE_SEVERAL_FOUND
+
+    # Both known
+    ElectricalNetwork.from_catalogue(name="MVFeeder004", load_point_name="winter")
+
+
+def test_get_catalogue():
+    # Get the entire catalogue
+    catalogue = ElectricalNetwork.get_catalogue()
+    assert catalogue.shape == (40, 7)
+
+    # Filter on the network name
+    catalogue = ElectricalNetwork.get_catalogue(name=r"MV.*")
+    assert catalogue.shape == (20, 7)
+    catalogue = ElectricalNetwork.get_catalogue(name=re.compile(r"^MV.*"))
+    assert catalogue.shape == (20, 7)
+
+    # Filter on the load point name
+    catalogue = ElectricalNetwork.get_catalogue(load_point_name="winter")
+    assert catalogue.shape == (40, 7)
+    catalogue = ElectricalNetwork.get_catalogue(load_point_name=re.compile(r"^Winter"))
+    assert catalogue.shape == (40, 7)
+
+    # Filter on both
+    catalogue = ElectricalNetwork.get_catalogue(name=r"MV.*", load_point_name="winter")
+    assert catalogue.shape == (20, 7)
+    catalogue = ElectricalNetwork.get_catalogue(name=r"MV.*", load_point_name=re.compile(r"^Winter"))
+    assert catalogue.shape == (20, 7)
+    catalogue = ElectricalNetwork.get_catalogue(name=re.compile(r"^MV.*"), load_point_name="winter")
+    assert catalogue.shape == (20, 7)
+    catalogue = ElectricalNetwork.get_catalogue(name=re.compile(r"^MV.*"), load_point_name=re.compile(r"^Winter"))
+    assert catalogue.shape == (20, 7)
+
+    # Regexp error
+    catalogue = ElectricalNetwork.get_catalogue(name=r"^MV[0-")
+    assert catalogue.empty
+    catalogue = ElectricalNetwork.get_catalogue(load_point_name=r"^winter[0-]")
+    assert catalogue.empty
 
 
 def test_to_graph(small_network: ElectricalNetwork):

@@ -1,7 +1,11 @@
-from typing import Final
+import logging
+from typing import Final, Self
 
+from roseau.load_flow import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow import TransformerParameters as MultiTransformerParameters
 from roseau.load_flow.constants import CLOCK_PHASE_SHIFT
+
+logger = logging.getLogger(__name__)
 
 
 class TransformerParameters(MultiTransformerParameters):
@@ -40,3 +44,18 @@ class TransformerParameters(MultiTransformerParameters):
     def ymd(self) -> complex:
         """The positive-sequence (direct-system) magnetizing admittance of the transformer."""
         return self._ym * 3.0 if self.winding1[0] == "D" else self._ym
+
+    @classmethod
+    def from_roseau_load_flow(cls, tp_m: MultiTransformerParameters, /) -> Self:
+        """Create an instance from a multi-phase `rlf.TransformerParameters` object."""
+        if not isinstance(tp_m, MultiTransformerParameters):
+            raise TypeError(f"Expected an rlf.TransformerParameters object, got {type(tp_m)}.")
+        if tp_m.vg not in TransformerParameters.allowed_vector_groups:
+            msg = (
+                f"Multi-phase transformer parameters with id {tp_m.id!r} and vector group {tp_m.vg!r} "
+                f"cannot be converted to `rlfs.TransformerParameters`. It must be three-phase."
+            )
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.INVALID_FOR_SINGLE_PHASE)
+        tp_dict = tp_m.to_dict(include_results=False)
+        return cls.from_dict(tp_dict, include_results=False)

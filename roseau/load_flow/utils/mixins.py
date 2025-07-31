@@ -593,7 +593,7 @@ class AbstractElement(Identifiable, JsonMixin, Generic[_N_co, _CyE_co]):
         raise RoseauLoadFlowException(msg, code=RoseauLoadFlowExceptionCode.SEVERAL_NETWORKS)
 
 
-class AbstractNetwork(RLFObject, JsonMixin, Generic[_E_co]):
+class AbstractNetwork(RLFObject, JsonMixin, CatalogueMixin[JsonDict], Generic[_E_co]):
     """An abstract class of an electrical network."""
 
     _DEFAULT_SOLVER: Solver = "newton_goldstein"
@@ -1067,6 +1067,133 @@ class AbstractNetwork(RLFObject, JsonMixin, Generic[_E_co]):
         with open(path, encoding=encoding) as f:
             data = json.load(f)
         return cls._from_dgs(data, use_name_as_id=use_name_as_id)
+
+    #
+    # Catalogue of networks
+    #
+    @classmethod
+    def catalogue_path(cls) -> Path:
+        return Path(resources.files("roseau.load_flow") / "data" / "networks").expanduser().absolute()  # type: ignore
+
+    @classmethod
+    def catalogue_data(cls) -> JsonDict:
+        data = json.loads((cls.catalogue_path() / "Catalogue.json").read_text())
+        if not cls.is_multi_phase:
+            # Remove the fields that are not relevant for single-phase networks
+            for net_data in data.values():
+                del net_data["nb_grounds"]
+                del net_data["nb_potential_refs"]
+        return data
+
+    @classmethod
+    def _get_catalogue(
+        cls, name: str | re.Pattern[str] | None, load_point_name: str | re.Pattern[str] | None, raise_if_not_found: bool
+    ) -> tuple[pd.DataFrame, str]:
+        # Get the catalogue data
+        catalogue_data = cls.catalogue_data()
+
+        catalogue_dict = {
+            "name": [],
+            "nb_buses": [],
+            "nb_lines": [],
+            "nb_transformers": [],
+            "nb_switches": [],
+            "nb_loads": [],
+            "nb_sources": [],
+            "nb_grounds": [],
+            "nb_potential_refs": [],
+            "load_points": [],
+        }
+        if not cls.is_multi_phase:
+            del catalogue_dict["nb_grounds"]
+            del catalogue_dict["nb_potential_refs"]
+        query_msg_list = []
+
+        # Match on the name
+        available_names = list(catalogue_data)
+        match_names_list = available_names
+        if name is not None:
+            match_names_list = cls._filter_catalogue_str(value=name, strings=available_names)
+            if isinstance(name, re.Pattern):
+                name = name.pattern
+            query_msg_list.append(f"{name=!r}")
+        if raise_if_not_found:
+            cls._assert_one_found(found_data=match_names_list, display_name="networks", query_info=f"{name=!r}")
+
+        if load_point_name is not None:
+            load_point_name_str = load_point_name if isinstance(load_point_name, str) else load_point_name.pattern
+            query_msg_list.append(f"load_point_name={load_point_name_str!r}")
+
+        for name in match_names_list:
+            network_data = catalogue_data[name]
+
+            # Match on the load point
+            available_load_points: list[str] = network_data["load_points"]
+            match_load_point_names_list = available_load_points
+            if load_point_name is not None:
+                match_load_point_names_list = cls._filter_catalogue_str(
+                    value=load_point_name, strings=available_load_points
+                )
+                if raise_if_not_found:
+                    cls._assert_one_found(
+                        found_data=match_load_point_names_list,
+                        display_name=f"load points for network {name!r}",
+                        query_info=query_msg_list[-1],
+                    )
+                elif not match_load_point_names_list:
+                    continue
+
+            catalogue_dict["name"].append(name)
+            catalogue_dict["nb_buses"].append(network_data["nb_buses"])
+            catalogue_dict["nb_lines"].append(network_data["nb_lines"])
+            catalogue_dict["nb_transformers"].append(network_data["nb_transformers"])
+            catalogue_dict["nb_switches"].append(network_data["nb_switches"])
+            catalogue_dict["nb_loads"].append(network_data["nb_loads"])
+            catalogue_dict["nb_sources"].append(network_data["nb_sources"])
+            if "nb_grounds" in network_data:
+                catalogue_dict["nb_grounds"].append(network_data["nb_grounds"])
+            if "nb_potential_refs" in network_data:
+                catalogue_dict["nb_potential_refs"].append(network_data["nb_potential_refs"])
+            catalogue_dict["load_points"].append(match_load_point_names_list)
+
+        return pd.DataFrame(catalogue_dict), ", ".join(query_msg_list)
+
+    @classmethod
+    def get_catalogue(
+        cls, name: str | re.Pattern[str] | None = None, load_point_name: str | re.Pattern[str] | None = None
+    ) -> pd.DataFrame:
+        """Read a network dictionary from the catalogue.
+
+        Args:
+            name:
+                The name of the network to get from the catalogue. It can be a regular expression.
+
+            load_point_name:
+                The name of the load point to get. For each network, several load points may be available. It can be
+                a regular expression.
+
+        Returns:
+            The dictionary containing the network data.
+        """
+        catalogue_data, _ = cls._get_catalogue(name=name, load_point_name=load_point_name, raise_if_not_found=False)
+        return (
+            catalogue_data.reset_index(drop=True)
+            .rename(
+                columns={
+                    "name": "Name",
+                    "nb_buses": "Nb buses",
+                    "nb_lines": "Nb lines",
+                    "nb_transformers": "Nb transformers",
+                    "nb_switches": "Nb switches",
+                    "nb_loads": "Nb loads",
+                    "nb_sources": "Nb sources",
+                    "nb_grounds": "Nb grounds",
+                    "nb_potential_refs": "Nb potential refs",
+                    "load_points": "Available load points",
+                }
+            )
+            .set_index("Name")
+        )
 
     @property
     def tool_data(self) -> ToolData:

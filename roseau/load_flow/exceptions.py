@@ -12,6 +12,7 @@ class RoseauLoadFlowExceptionCode(StrEnum):
     BAD_GEOMETRY_TYPE = auto()
     BAD_PHASE = auto()
     BAD_ID_TYPE = auto()
+    INVALID_FOR_SINGLE_PHASE = auto()
 
     # Grounds and Potential references
     BAD_GROUND_ID = auto()
