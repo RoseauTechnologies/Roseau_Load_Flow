@@ -192,7 +192,7 @@ class ElectricalNetwork(AbstractNetwork[Element]):
             data["bus1_id"].append(line.bus1.id)
             data["bus2_id"].append(line.bus2.id)
             data["parameters_id"].append(line.parameters.id)
-            data["length"].append(line.length.m)
+            data["length"].append(line._length)
             data["max_loading"].append(line._max_loading)
             data["geometry"].append(line.geometry)
         return gpd.GeoDataFrame(data=data, index=pd.Index(index, name="id"), geometry="geometry", crs=self.crs)
