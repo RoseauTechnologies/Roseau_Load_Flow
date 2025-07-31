@@ -36,11 +36,11 @@ def _handle_incompatibility(msg: str, on_incompatible: OnIncompatibleType, criti
         warnings.warn(msg, UserWarning, stacklevel=find_stack_level())
     elif on_incompatible == "raise-critical":
         if critical:
-            raise RuntimeError(msg)
+            raise rlf.RoseauLoadFlowException(msg, code=rlf.RoseauLoadFlowExceptionCode.INVALID_FOR_SINGLE_PHASE)
         else:
             warnings.warn(msg, UserWarning, stacklevel=find_stack_level())
     elif on_incompatible == "raise":
-        raise RuntimeError(msg)
+        raise rlf.RoseauLoadFlowException(msg, code=rlf.RoseauLoadFlowExceptionCode.INVALID_FOR_SINGLE_PHASE)
     else:
         raise ValueError(
             f"Invalid value for `on_incompatible`: {on_incompatible!r}. Expected one of 'ignore', "
@@ -57,7 +57,9 @@ def _handle_floating_neutral(element_m: rlf.AbstractConnectable, on_incompatible
         )
 
 
-def _balance_voltages(ph: str, voltages: ComplexArray, msg: str, on_incompatible: OnIncompatibleType) -> complex:
+def _balance_voltages(
+    ph: str, voltages: ComplexArray, msg: str, on_incompatible: OnIncompatibleType, critical: bool = True
+) -> complex:
     """Calculate and return √3*Van to be used in the single-phase equivalent network."""
     if ph in ("abc", "abcn"):  # "abc" or "abcn" (most common case)
         v0, v1, v2 = rlf.sym.phasor_to_sym(voltages).tolist()
@@ -65,7 +67,7 @@ def _balance_voltages(ph: str, voltages: ComplexArray, msg: str, on_incompatible
             v1 /= 1 - rlf.ALPHA2
         voltage = v1 * rlf.SQRT3
         if not np.allclose([v0, v2], 0):
-            _handle_incompatibility(msg, on_incompatible=on_incompatible)
+            _handle_incompatibility(msg, on_incompatible=on_incompatible, critical=critical)
     elif ph in ("abn", "bcn", "can"):  # abn, bcn, can
         v1n, v2n = voltages.tolist()
         if ph == "abn":
@@ -75,7 +77,7 @@ def _balance_voltages(ph: str, voltages: ComplexArray, msg: str, on_incompatible
         elif ph == "can":
             voltage = v2n * rlf.SQRT3
         if not cmath.isclose(v2n, v1n * rlf.ALPHA2):
-            _handle_incompatibility(msg, on_incompatible=on_incompatible)
+            _handle_incompatibility(msg, on_incompatible=on_incompatible, critical=critical)
     elif ph == "ab":
         voltage = voltages.item(0) / cmath.rect(1, cmath.pi / 6)
     elif ph == "bc":
@@ -151,11 +153,16 @@ def network_from_rlf(  # noqa: C901
     for bus_m in en_m.buses.values():
         ph = bus_m.phases
         if "abc" not in ph:
-            raise RuntimeError(f"Bus {bus_m.id!r} is not three-phase, phases={ph!r}")
+            msg = f"Bus {bus_m.id!r} is not three-phase, phases={ph!r}"
+            raise rlf.RoseauLoadFlowException(msg, code=rlf.RoseauLoadFlowExceptionCode.INVALID_FOR_SINGLE_PHASE)
         if bus_m._initialized_by_the_user and (init_pot := bus_m._initial_potentials) is not None:
             init_voltages = rlf.converters._calculate_voltages(init_pot, ph)
             v_i = _balance_voltages(
-                ph, init_voltages, f"Bus {bus_m.id!r} has unbalanced initial voltages", on_incompatible
+                ph,
+                init_voltages,
+                f"Bus {bus_m.id!r} has unbalanced initial potentials",
+                on_incompatible,
+                critical=False,
             )
         else:
             v_i = None
@@ -178,7 +185,14 @@ def network_from_rlf(  # noqa: C901
         if lp_m.id in ln_params_m:
             continue
         ln_params_m.add(lp_m.id)
-        lp_s = LineParameters.from_roseau_load_flow(lp_m)
+        try:
+            lp_s = LineParameters.from_roseau_load_flow(lp_m, strict=on_incompatible != "ignore")
+        except rlf.RoseauLoadFlowException as e:
+            if on_incompatible == "raise":
+                raise
+            else:
+                _handle_incompatibility(e.msg, on_incompatible=on_incompatible, critical=False)
+            lp_s = LineParameters.from_roseau_load_flow(lp_m, strict=False)
         ln_params_s[lp_s.id] = lp_s
 
     tr_params_m: set[Id] = set()
@@ -195,7 +209,8 @@ def network_from_rlf(  # noqa: C901
     lines: dict[Id, Line] = {}
     for ln_m in en_m.lines.values():
         if "abc" not in ln_m.phases:
-            raise RuntimeError(f"Line {ln_m.id!r} is not three-phase, phases={ln_m.phases!r}")
+            msg = f"Line {ln_m.id!r} is not three-phase, phases={ln_m.phases!r}"
+            raise rlf.RoseauLoadFlowException(msg, code=rlf.RoseauLoadFlowExceptionCode.INVALID_FOR_SINGLE_PHASE)
         ln_s = Line(
             id=ln_m.id,
             bus1=buses[ln_m.side1.bus.id],
@@ -228,7 +243,8 @@ def network_from_rlf(  # noqa: C901
     switches: dict[Id, Switch] = {}
     for sw_m in en_m.switches.values():
         if "abc" not in sw_m.phases:
-            raise RuntimeError(f"Switch {sw_m.id!r} is not three-phase, phases={sw_m.phases!r}")
+            msg = f"Switch {sw_m.id!r} is not three-phase, phases={sw_m.phases!r}"
+            raise rlf.RoseauLoadFlowException(msg, code=rlf.RoseauLoadFlowExceptionCode.INVALID_FOR_SINGLE_PHASE)
         sw_s = Switch(
             id=sw_m.id,
             bus1=buses[sw_m.bus1.id],

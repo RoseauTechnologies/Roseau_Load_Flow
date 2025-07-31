@@ -56,6 +56,6 @@ class TransformerParameters(MultiTransformerParameters):
                 f"cannot be converted to `rlfs.TransformerParameters`. It must be three-phase."
             )
             logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_MODEL)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.INVALID_FOR_SINGLE_PHASE)
         tp_dict = tp_m.to_dict(include_results=False)
         return cls.from_dict(tp_dict, include_results=False)

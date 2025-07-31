@@ -83,11 +83,11 @@ def test_from_rlf():  # noqa: C901
     )
     rlf.Switch(id="Sw2", bus1=bus3_m, bus2=bus4_m, closed=False)
     lp2_m = rlf.LineParameters(id="LP2", z_line=(0.01 + 0.01j) * np.eye(4), insulators=rlf.Insulator.XLPE)
-    rlf.Line(id="Ln2", bus1=bus4_m, bus2=bus5_m, parameters=lp2_m, length=0.1)
+    ln2_m = rlf.Line(id="Ln2", bus1=bus4_m, bus2=bus5_m, parameters=lp2_m, length=0.1)
 
     rlf.VoltageSource(id="Src", bus=bus1_m, voltages=20e3)
+    # Three-phase loads
     rlf.PowerLoad(id="P-L", bus=bus2_m, powers=50e3)  # 150 kW MV load
-    # LV loads
     rlf.CurrentLoad(id="I-L (Y)", bus=bus5_m, phases="abcn", currents=100 + 10j)
     rlf.CurrentLoad(id="I-L (D)", bus=bus5_m, phases="abc", currents=100 + 10j)
     rlf.ImpedanceLoad(id="Z-L (Y)", bus=bus5_m, phases="abcn", impedances=1 + 0.1j)
@@ -303,6 +303,154 @@ def test_from_rlf():  # noqa: C901
         else:
             raise AssertionError(f"Unknown load type: {type(load_m)}")
 
+    # Single-phase and dual-phase connectables
+    for phases in ("an", "bn", "cn", "ab", "bc", "ca", "abn", "bcn", "can"):
+        load_m = rlf.PowerLoad(id="Tmp Load", phases=phases, bus=bus5_m, powers=2e3)
+        with pytest.raises(rlf.RoseauLoadFlowException) as e:
+            en_s = rlfs.ElectricalNetwork.from_rlf(en_m, on_incompatible="raise")
+        assert e.value.code == rlf.RoseauLoadFlowExceptionCode.INVALID_FOR_SINGLE_PHASE
+        assert e.value.msg == f"Load 'Tmp Load' is not three-phase, phases='{phases}'"
+        load_m.disconnect()
+        load_m = rlf.CurrentLoad(id="Tmp Load", phases=phases, bus=bus5_m, currents=10 + 1j)
+        with pytest.raises(rlf.RoseauLoadFlowException) as e:
+            en_s = rlfs.ElectricalNetwork.from_rlf(en_m, on_incompatible="raise")
+        assert e.value.code == rlf.RoseauLoadFlowExceptionCode.INVALID_FOR_SINGLE_PHASE
+        assert e.value.msg == f"Load 'Tmp Load' is not three-phase, phases='{phases}'"
+        load_m.disconnect()
+        load_m = rlf.ImpedanceLoad(id="Tmp Load", phases=phases, bus=bus5_m, impedances=1 + 0.1j)
+        with pytest.raises(rlf.RoseauLoadFlowException) as e:
+            en_s = rlfs.ElectricalNetwork.from_rlf(en_m, on_incompatible="raise")
+        assert e.value.code == rlf.RoseauLoadFlowExceptionCode.INVALID_FOR_SINGLE_PHASE
+        assert e.value.msg == f"Load 'Tmp Load' is not three-phase, phases='{phases}'"
+        load_m.disconnect()
+    for phases in ("an", "bn", "cn", "ab", "bc", "ca", "abn", "bcn", "can"):
+        src2_m = rlf.VoltageSource(id="Tmp Src", phases=phases, bus=bus5_m, voltages=400)
+        with pytest.raises(rlf.RoseauLoadFlowException) as e:
+            en_s = rlfs.ElectricalNetwork.from_rlf(en_m, on_incompatible="raise")
+        assert e.value.code == rlf.RoseauLoadFlowExceptionCode.INVALID_FOR_SINGLE_PHASE
+        assert e.value.msg == f"Source 'Tmp Src' is not three-phase, phases='{phases}'"
+        src2_m.disconnect()
+
+    # Unbalanced connectables
+    src_m = en_m.sources["Src"]
+    old_voltages = src_m.voltages.m
+    src_m.voltages = rlf.NegativeSequence
+    with pytest.raises(rlf.RoseauLoadFlowException) as e:
+        en_s = rlfs.ElectricalNetwork.from_rlf(en_m, on_incompatible="raise-critical")
+    assert e.value.code == rlf.RoseauLoadFlowExceptionCode.INVALID_FOR_SINGLE_PHASE
+    assert e.value.msg == "Source 'Src' has unbalanced voltages"
+    src_m.voltages = old_voltages
+    for load_m in en_m.loads.values():
+        if isinstance(load_m, rlf.PowerLoad):
+            old_powers = load_m.powers.m
+            load_m.powers = old_powers * (1, 0.9, 0.5)
+            with pytest.raises(rlf.RoseauLoadFlowException) as e:
+                en_s = rlfs.ElectricalNetwork.from_rlf(en_m, on_incompatible="raise")
+            assert e.value.code == rlf.RoseauLoadFlowExceptionCode.INVALID_FOR_SINGLE_PHASE
+            assert e.value.msg == f"Load '{load_m.id}' has unbalanced powers"
+            load_m.powers = old_powers
+        elif isinstance(load_m, rlf.CurrentLoad):
+            old_currents = load_m.currents.m
+            load_m.currents = old_currents * (1, 0.9, 0.5)
+            with pytest.raises(rlf.RoseauLoadFlowException) as e:
+                en_s = rlfs.ElectricalNetwork.from_rlf(en_m, on_incompatible="raise")
+            assert e.value.code == rlf.RoseauLoadFlowExceptionCode.INVALID_FOR_SINGLE_PHASE
+            assert e.value.msg == f"Load '{load_m.id}' has unbalanced currents"
+            load_m.currents = old_currents
+        elif isinstance(load_m, rlf.ImpedanceLoad):
+            old_impedances = load_m.impedances.m
+            load_m.impedances = old_impedances * (1, 0.9, 0.5)
+            with pytest.raises(rlf.RoseauLoadFlowException) as e:
+                en_s = rlfs.ElectricalNetwork.from_rlf(en_m, on_incompatible="raise")
+            assert e.value.code == rlf.RoseauLoadFlowExceptionCode.INVALID_FOR_SINGLE_PHASE
+            assert e.value.msg == f"Load '{load_m.id}' has unbalanced impedances"
+            load_m.impedances = old_impedances
+
+    # Unbalanced initial potentials (with different incompatible handling)
+    old_potentials = bus1_m.initial_potentials.m
+    bus1_m.initial_potentials = 20e3 / rlf.SQRT3 * rlf.NegativeSequence
+    with pytest.raises(rlf.RoseauLoadFlowException) as e:
+        en_s = rlfs.ElectricalNetwork.from_rlf(en_m, on_incompatible="raise")
+    assert e.value.code == rlf.RoseauLoadFlowExceptionCode.INVALID_FOR_SINGLE_PHASE
+    assert e.value.msg == "Bus 'Bus1' has unbalanced initial potentials"
+    with pytest.warns(UserWarning, match=r"Bus 'Bus1' has unbalanced initial potentials"):
+        en_s = rlfs.ElectricalNetwork.from_rlf(en_m, on_incompatible="raise-critical")
+    with pytest.warns(UserWarning, match=r"Bus 'Bus1' has unbalanced initial potentials"):
+        en_s = rlfs.ElectricalNetwork.from_rlf(en_m, on_incompatible="warn")
+    with warnings.catch_warnings(action="error"):
+        en_s = rlfs.ElectricalNetwork.from_rlf(en_m, on_incompatible="ignore")
+    bus1_m.initial_potentials = old_potentials
+
+    # Asymmetric line parameters
+    lp2_m = rlf.LineParameters(
+        id="LP2",
+        z_line=[
+            [0.01 + 0.01j, 0, 0.1j, 0],
+            [0, 0.01 + 0.01j, 0, 0.1j],
+            [0.1j, 0, 0.01 + 0.01j, 0],
+            [0, 0.1j, 0, 0.01 + 0.01j],
+        ],
+    )
+    ln2_m.parameters = lp2_m
+    with pytest.raises(rlf.RoseauLoadFlowException) as e:
+        en_s = rlfs.ElectricalNetwork.from_rlf(en_m, on_incompatible="raise")
+    assert e.value.code == rlf.RoseauLoadFlowExceptionCode.INVALID_FOR_SINGLE_PHASE
+    assert e.value.msg == "Multi-phase line parameters with id 'LP2' have unbalanced series impedances."
+    with pytest.warns(
+        UserWarning, match=r"Multi-phase line parameters with id 'LP2' have unbalanced series impedances."
+    ):
+        en_s = rlfs.ElectricalNetwork.from_rlf(en_m, on_incompatible="raise-critical")
+
+    # Non-three-phase buses or branches always raise an exception
+    bus_tmp_m = rlf.Bus(id="Tmp Bus", phases="abn")
+    rlf.PotentialRef(id="Tmp PRef", element=bus_tmp_m)
+    rlf.VoltageSource(id="Tmp Src", bus=bus_tmp_m, voltages=400)
+    en_tmp_m = rlf.ElectricalNetwork.from_element(bus_tmp_m)
+    with pytest.raises(rlf.RoseauLoadFlowException) as e:
+        en_s = rlfs.ElectricalNetwork.from_rlf(en_tmp_m, on_incompatible="ignore")
+    assert e.value.code == rlf.RoseauLoadFlowExceptionCode.INVALID_FOR_SINGLE_PHASE
+    assert e.value.msg == "Bus 'Tmp Bus' is not three-phase, phases='abn'"
+
+    def create_non_three_phase_branch(br_type):
+        gnd_tmp_m = rlf.Ground(id="Tmp Gnd")
+        rlf.PotentialRef(id="Tmp PRef", element=gnd_tmp_m)
+        bus1_tmp_m = rlf.Bus(id="Tmp Bus", phases="abcn")
+        bus2_tmp_m = rlf.Bus(id="Tmp Bus2", phases="abcn")
+        rlf.GroundConnection(ground=gnd_tmp_m, element=bus1_tmp_m)
+        rlf.GroundConnection(ground=gnd_tmp_m, element=bus2_tmp_m)
+        if br_type == "line":
+            lp_tmp_m = rlf.LineParameters(id="Tmp TP", z_line=(0.01 + 0.01j) * np.eye(3))
+            rlf.Line(id="Tmp Ln", bus1=bus1_tmp_m, bus2=bus2_tmp_m, phases="abn", parameters=lp_tmp_m, length=0.1)
+        elif br_type == "switch":
+            rlf.Switch(id="Tmp Sw", bus1=bus1_tmp_m, bus2=bus2_tmp_m, phases="abn")
+        elif br_type == "transformer":
+            tp_tmp_m = rlf.TransformerParameters(id="Tmp TP", vg="Ii0", uhv=400, ulv=400, sn=10e3, z2=0.1, ym=0.01j)
+            rlf.Transformer(
+                id="Tmp Tr", bus_hv=bus1_tmp_m, bus_lv=bus2_tmp_m, phases_hv="an", phases_lv="an", parameters=tp_tmp_m
+            )
+        rlf.VoltageSource(id="Tmp Src", bus=bus1_tmp_m, voltages=400)
+        rlf.PowerLoad(id="Tmp Load", bus=bus2_tmp_m, powers=2e3)
+        return rlf.ElectricalNetwork.from_element(bus1_tmp_m)
+
+    en_tmp_m = create_non_three_phase_branch("line")
+    with pytest.raises(rlf.RoseauLoadFlowException) as e:
+        en_s = rlfs.ElectricalNetwork.from_rlf(en_tmp_m, on_incompatible="ignore")
+    assert e.value.code == rlf.RoseauLoadFlowExceptionCode.INVALID_FOR_SINGLE_PHASE
+    assert e.value.msg == "Line 'Tmp Ln' is not three-phase, phases='abn'"
+    en_tmp_m = create_non_three_phase_branch("switch")
+    with pytest.raises(rlf.RoseauLoadFlowException) as e:
+        en_s = rlfs.ElectricalNetwork.from_rlf(en_tmp_m, on_incompatible="ignore")
+    assert e.value.code == rlf.RoseauLoadFlowExceptionCode.INVALID_FOR_SINGLE_PHASE
+    assert e.value.msg == "Switch 'Tmp Sw' is not three-phase, phases='abn'"
+    en_tmp_m = create_non_three_phase_branch("transformer")
+    with pytest.raises(rlf.RoseauLoadFlowException) as e:
+        en_s = rlfs.ElectricalNetwork.from_rlf(en_tmp_m, on_incompatible="ignore")
+    assert e.value.code == rlf.RoseauLoadFlowExceptionCode.INVALID_FOR_SINGLE_PHASE
+    assert e.value.msg == (
+        "Multi-phase transformer parameters with id 'Tmp TP' and vector group 'Ii0' cannot be "
+        "converted to `rlfs.TransformerParameters`. It must be three-phase."
+    )
+
 
 def test_source_voltage():
     potentials = cmath.rect(400 / rlf.SQRT3, cmath.pi / 3) * np.array([*rlf.PositiveSequence, 0], dtype=np.complex128)
@@ -326,11 +474,19 @@ def test_source_voltage():
     assert np.isclose(_balance_voltages("cn", v_abcn[2:3], "cn", on_incompatible="raise"), v_exp)
 
     # Unbalanced voltages
-    with pytest.raises(RuntimeError, match=r"abcn"):
+    with pytest.raises(rlf.RoseauLoadFlowException) as e:
         _balance_voltages("abcn", rlf.NegativeSequence, "abcn", on_incompatible="raise")
-    with pytest.raises(RuntimeError, match=r"abc"):
+    assert e.value.code == rlf.RoseauLoadFlowExceptionCode.INVALID_FOR_SINGLE_PHASE
+    assert e.value.msg == "abcn"
+    with pytest.raises(rlf.RoseauLoadFlowException) as e:
         _balance_voltages("abc", rlf.NegativeSequence, "abc angle", on_incompatible="raise")
-    with pytest.raises(RuntimeError, match=r"abn angle"):
+    assert e.value.code == rlf.RoseauLoadFlowExceptionCode.INVALID_FOR_SINGLE_PHASE
+    assert e.value.msg == "abc angle"
+    with pytest.raises(rlf.RoseauLoadFlowException) as e:
         _balance_voltages("abn", rlf.NegativeSequence[:2], "abn angle", on_incompatible="raise")
-    with pytest.raises(RuntimeError, match=r"abn mag"):
+    assert e.value.code == rlf.RoseauLoadFlowExceptionCode.INVALID_FOR_SINGLE_PHASE
+    assert e.value.msg == "abn angle"
+    with pytest.raises(rlf.RoseauLoadFlowException) as e:
         _balance_voltages("abn", [1, 1.2] * rlf.PositiveSequence[:2], "abn mag", on_incompatible="raise")
+    assert e.value.code == rlf.RoseauLoadFlowExceptionCode.INVALID_FOR_SINGLE_PHASE
+    assert e.value.msg == "abn mag"

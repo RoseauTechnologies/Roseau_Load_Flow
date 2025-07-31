@@ -28,7 +28,7 @@ def test_from_roseau_load_flow():
     )
     with pytest.raises(RoseauLoadFlowException) as e:
         TransformerParameters.from_roseau_load_flow(lp_m_bad)
-    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_LINE_MODEL
+    assert e.value.code == RoseauLoadFlowExceptionCode.INVALID_FOR_SINGLE_PHASE
     assert e.value.msg == (
         "Multi-phase transformer parameters with id 'Bad TP' and vector group 'Ii0' cannot be "
         "converted to `rlfs.TransformerParameters`. It must be three-phase."

@@ -19,6 +19,8 @@ from roseau.load_flow.utils import CatalogueMixin, Identifiable, JsonMixin
 logger = logging.getLogger(__name__)
 
 _StrEnumT = TypeVar("_StrEnumT", bound=StrEnum)
+_triu_i = np.triu_indices(3, 1)
+_tril_i = np.tril_indices(3, -1)
 
 
 class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
@@ -326,8 +328,19 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
     # Constructors from other software
     #
     @classmethod
-    def from_roseau_load_flow(cls, lp_m: MultiLineParameters, /) -> Self:
-        """Create an instance from a multi-phase `rlf.LineParameters` object."""
+    def from_roseau_load_flow(cls, lp_m: MultiLineParameters, /, *, strict: bool = False) -> Self:
+        """Create an instance from a multi-phase `rlf.LineParameters` object.
+
+        Args:
+            lp_m:
+                A multi-phase line parameters object to convert to a single-phase line parameters object.
+
+            strict:
+                If `True`, raises an exception if the multi-phase line parameters have unbalanced
+                series impedances or shunt admittances, or if the phases have different materials,
+                sections, insulators or ampacities. If `False` (the default), these checks are
+                skipped.
+        """
         if not isinstance(lp_m, MultiLineParameters):
             raise TypeError(f"Expected an rlf.LineParameters object, got {type(lp_m)}.")
         n_phases = lp_m._z_line.shape[0]
@@ -337,7 +350,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
                 f"converted to `rlfs.LineParameters`. It must be three-phase."
             )
             logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_MODEL)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.INVALID_FOR_SINGLE_PHASE)
         z_line = lp_m._z_line
         y_shunt = lp_m._y_shunt
 
@@ -348,10 +361,30 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         if y1.real < 0:  # might produce a value with a small negative real part
             y1 = 1j * y1.imag
 
-        materials = lp_m.materials
-        sections = lp_m.sections
-        insulators = lp_m.insulators
-        ampacities = lp_m.ampacities
+        materials = lp_m._materials
+        sections = lp_m._sections
+        insulators = lp_m._insulators
+        ampacities = lp_m._ampacities
+
+        if strict:
+            if len(np.unique_values(z_line[_triu_i, _tril_i])) > 1:
+                msg = f"Multi-phase line parameters with id {lp_m.id!r} have unbalanced series impedances."
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.INVALID_FOR_SINGLE_PHASE)
+            if len(np.unique_values(y_shunt[_triu_i, _tril_i])) > 1:
+                msg = f"Multi-phase line parameters with id {lp_m.id!r} have unbalanced shunt admittances."
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.INVALID_FOR_SINGLE_PHASE)
+            if materials is not None and len(np.unique_values(materials[:3])) > 1:
+                msg = f"Multi-phase line parameters with id {lp_m.id!r} have different materials for the phases."
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.INVALID_FOR_SINGLE_PHASE)
+            if sections is not None and len(np.unique_values(sections[:3])) > 1:
+                msg = f"Multi-phase line parameters with id {lp_m.id!r} have different sections for the phases."
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.INVALID_FOR_SINGLE_PHASE)
+            if insulators is not None and len(np.unique_values(insulators[:3])) > 1:
+                msg = f"Multi-phase line parameters with id {lp_m.id!r} have different insulators for the phases."
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.INVALID_FOR_SINGLE_PHASE)
+            if ampacities is not None and len(np.unique_values(ampacities[:3])) > 1:
+                msg = f"Multi-phase line parameters with id {lp_m.id!r} have different ampacities for the phases."
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.INVALID_FOR_SINGLE_PHASE)
 
         return cls(
             id=lp_m.id,
@@ -359,9 +392,9 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             y_shunt=y1,
             line_type=lp_m.line_type,
             material=materials[0] if materials is not None else None,
-            section=sections.m[0] if sections is not None else None,
+            section=sections[0] if sections is not None else None,
             insulator=insulators[0] if insulators is not None else None,
-            ampacity=ampacities.m[0] if ampacities is not None else None,
+            ampacity=ampacities[0] if ampacities is not None else None,
         )
 
     @classmethod
