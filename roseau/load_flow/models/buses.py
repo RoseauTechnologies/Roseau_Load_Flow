@@ -118,7 +118,7 @@ class Bus(AbstractTerminal[CyBus]):
             msg = f"Incorrect number of potentials: {len(value)} instead of {len(self.phases)}"
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_POTENTIALS_SIZE)
-        self._initial_potentials = np.array(value, dtype=np.complex128)
+        self._initial_potentials: ComplexArray = np.array(value, dtype=np.complex128)
         self._invalidate_network_results()
         self._initialized = True
         self._initialized_by_the_user = True
@@ -491,7 +491,7 @@ class Bus(AbstractTerminal[CyBus]):
     def _to_dict(self, include_results: bool) -> JsonDict:
         data = super()._to_dict(include_results=include_results)
         if self._initialized_by_the_user:
-            data["initial_potentials"] = [[v.real, v.imag] for v in self._initial_potentials]
+            data["initial_potentials"] = [[v.real, v.imag] for v in self._initial_potentials.tolist()]
         if self.geometry is not None:
             data["geometry"] = self.geometry.__geo_interface__
         if self.nominal_voltage is not None:

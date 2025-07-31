@@ -140,7 +140,7 @@ class VoltageSource(AbstractDisconnectable[CyVoltageSource | CyDeltaVoltageSourc
 
     def _to_dict(self, include_results: bool) -> JsonDict:
         source_dict = super()._to_dict(include_results=include_results)
-        source_dict["voltages"] = [[v.real, v.imag] for v in self._voltages]
+        source_dict["voltages"] = [[v.real, v.imag] for v in self._voltages.tolist()]
         if include_results:
             source_dict["results"] = source_dict.pop("results")  # move results to the end
         return source_dict

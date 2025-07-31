@@ -209,8 +209,8 @@ class AbstractConnectable(AbstractTerminal[_CyE_co], ABC):
             currents = self._res_currents_getter(warning=True)
             potentials = self._res_potentials_getter(warning=False)  # warn only once
             data["results"] = {
-                f"currents{self._side_suffix}": [[i.real, i.imag] for i in currents],
-                f"potentials{self._side_suffix}": [[v.real, v.imag] for v in potentials],
+                f"currents{self._side_suffix}": [[i.real, i.imag] for i in currents.tolist()],
+                f"potentials{self._side_suffix}": [[v.real, v.imag] for v in potentials.tolist()],
             }
         return data
 
@@ -220,14 +220,14 @@ class AbstractConnectable(AbstractTerminal[_CyE_co], ABC):
         results = {
             "id": self.id,
             f"phases{self._side_suffix}": self.phases,
-            f"currents{self._side_suffix}": [[i.real, i.imag] for i in currents],
-            f"potentials{self._side_suffix}": [[v.real, v.imag] for v in potentials],
+            f"currents{self._side_suffix}": [[i.real, i.imag] for i in currents.tolist()],
+            f"potentials{self._side_suffix}": [[v.real, v.imag] for v in potentials.tolist()],
         }
         if full:
             powers = potentials * currents.conjugate()
             voltages = _calculate_voltages(potentials, self.phases)
-            results[f"powers{self._side_suffix}"] = [[s.real, s.imag] for s in powers]
-            results[f"voltages{self._side_suffix}"] = [[v.real, v.imag] for v in voltages]
+            results[f"powers{self._side_suffix}"] = [[s.real, s.imag] for s in powers.tolist()]
+            results[f"voltages{self._side_suffix}"] = [[v.real, v.imag] for v in voltages.tolist()]
         return results
 
 

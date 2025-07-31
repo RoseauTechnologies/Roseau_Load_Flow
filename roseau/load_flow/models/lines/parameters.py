@@ -1561,9 +1561,9 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         if self._line_type is not None:
             data["line_type"] = self._line_type.name
         if self._materials is not None:
-            data["materials"] = [x.name for x in self._materials]
+            data["materials"] = [x.name for x in self._materials.tolist()]
         if self._insulators is not None:
-            data["insulators"] = [x.name for x in self._insulators]
+            data["insulators"] = [x.name for x in self._insulators.tolist()]
         if self._sections is not None:
             data["sections"] = self._sections.tolist()
         return data

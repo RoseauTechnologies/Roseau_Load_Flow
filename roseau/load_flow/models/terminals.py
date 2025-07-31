@@ -227,7 +227,7 @@ class AbstractTerminal(Element[_CyE_co], ABC):
         data = {"id": self.id, f"phases{self._side_suffix}": self.phases}
         if include_results:
             potentials = self._res_potentials_getter(warning=True)
-            data["results"] = {f"potentials{self._side_suffix}": [[v.real, v.imag] for v in potentials]}
+            data["results"] = {f"potentials{self._side_suffix}": [[v.real, v.imag] for v in potentials.tolist()]}
         return data
 
     def _results_to_dict(self, warning: bool, full: bool) -> JsonDict:
@@ -235,9 +235,9 @@ class AbstractTerminal(Element[_CyE_co], ABC):
         results = {
             "id": self.id,
             f"phases{self._side_suffix}": self.phases,
-            f"potentials{self._side_suffix}": [[v.real, v.imag] for v in potentials],
+            f"potentials{self._side_suffix}": [[v.real, v.imag] for v in potentials.tolist()],
         }
         if full:
             voltages = _calculate_voltages(potentials, self.phases)
-            results[f"voltages{self._side_suffix}"] = [[v.real, v.imag] for v in voltages]
+            results[f"voltages{self._side_suffix}"] = [[v.real, v.imag] for v in voltages.tolist()]
         return results

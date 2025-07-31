@@ -403,12 +403,12 @@ class Line(AbstractBranch["LineSide", CyShuntLine | CySimplifiedLine]):
             shunt_currents1 = self._side1._res_shunt_currents_getter(warning=False)
             shunt_currents2 = self._side2._res_shunt_currents_getter(warning=False)
             loading = self._res_loading_getter(warning=False)
-            results["power_losses"] = [[s.real, s.imag] for s in power_losses]
-            results["series_currents"] = [[i.real, i.imag] for i in series_currents]
-            results["series_power_losses"] = [[s.real, s.imag] for s in series_power_losses]
-            results["shunt_currents1"] = [[i.real, i.imag] for i in shunt_currents1]
-            results["shunt_currents2"] = [[i.real, i.imag] for i in shunt_currents2]
-            results["shunt_power_losses"] = [[s.real, s.imag] for s in shunt_power_losses]
+            results["power_losses"] = [[s.real, s.imag] for s in power_losses.tolist()]
+            results["series_currents"] = [[i.real, i.imag] for i in series_currents.tolist()]
+            results["series_power_losses"] = [[s.real, s.imag] for s in series_power_losses.tolist()]
+            results["shunt_currents1"] = [[i.real, i.imag] for i in shunt_currents1.tolist()]
+            results["shunt_currents2"] = [[i.real, i.imag] for i in shunt_currents2.tolist()]
+            results["shunt_power_losses"] = [[s.real, s.imag] for s in shunt_power_losses.tolist()]
             results["loading"] = None if loading is None else loading.tolist()
         return results
 
