@@ -443,7 +443,7 @@ class ElectricalNetwork(AbstractNetwork[Element]):
         res_dict = {"bus_id": [], "phase": [], "potential": []}
         dtypes = {c: DTYPES[c] for c in res_dict}
         for bus_id, bus in self.buses.items():
-            for potential, phase in zip(bus._res_potentials_getter(warning=False), bus.phases, strict=True):
+            for potential, phase in zip(bus._res_potentials_getter(warning=False).tolist(), bus.phases, strict=True):
                 res_dict["bus_id"].append(bus_id)
                 res_dict["phase"].append(phase)
                 res_dict["potential"].append(potential)
@@ -508,46 +508,44 @@ class ElectricalNetwork(AbstractNetwork[Element]):
         }
         dtypes = {c: DTYPES[c] for c in res_dict}
         for line in self.lines.values():
-            currents1 = line._side1._res_currents_getter(warning=False)
-            currents2 = line._side2._res_currents_getter(warning=False)
-            potentials1 = line._side1._res_potentials_getter(warning=False)
-            potentials2 = line._side2._res_potentials_getter(warning=False)
-            du_line, series_currents = line._res_series_values_getter(warning=False)
-            powers1 = potentials1 * currents1.conj()
-            powers2 = potentials2 * currents2.conj()
-            series_losses = du_line * series_currents.conj()
-            ampacity_array = line.parameters._ampacities
+            currents1 = line._side1._res_currents_getter(warning=False).tolist()
+            currents2 = line._side2._res_currents_getter(warning=False).tolist()
+            potentials1 = line._side1._res_potentials_getter(warning=False).tolist()
+            potentials2 = line._side2._res_potentials_getter(warning=False).tolist()
+            du_line, series_currents = (a.tolist() for a in line._res_series_values_getter(warning=False))
+            ampacities = (
+                line.parameters._ampacities.tolist()
+                if line.parameters._ampacities is not None
+                else [None] * len(line.phases)
+            )
             max_loading = line._max_loading
-            if ampacity_array is None:
-                ampacity_array = loading_array = violated_array = [None for _ in line.phases]
-            else:
-                loading_array = np.maximum(abs(currents1), abs(currents2)) / ampacity_array
-                violated_array = loading_array > max_loading
-            for i1, i2, s1, s2, v1, v2, s_series, i_series, phase, ampacity, loading, violated in zip(
+            for i1, i2, v1, v2, du_s, i_s, phase, ampacity in zip(
                 currents1,
                 currents2,
-                powers1,
-                powers2,
                 potentials1,
                 potentials2,
-                series_losses,
+                du_line,
                 series_currents,
                 line.phases,
-                ampacity_array,
-                loading_array,
-                violated_array,
+                ampacities,
                 strict=True,
             ):
+                if ampacity is None:
+                    loading = None
+                    violated = None
+                else:
+                    loading = max(abs(i1), abs(i2)) / ampacity
+                    violated = loading > max_loading
                 res_dict["line_id"].append(line.id)
                 res_dict["phase"].append(phase)
                 res_dict["current1"].append(i1)
                 res_dict["current2"].append(i2)
-                res_dict["power1"].append(s1)
-                res_dict["power2"].append(s2)
+                res_dict["power1"].append(v1 * i1.conjugate())
+                res_dict["power2"].append(v2 * i2.conjugate())
                 res_dict["potential1"].append(v1)
                 res_dict["potential2"].append(v2)
-                res_dict["series_losses"].append(s_series)
-                res_dict["series_current"].append(i_series)
+                res_dict["series_losses"].append(du_s * i_s.conjugate())
+                res_dict["series_current"].append(i_s)
                 res_dict["violated"].append(violated)
                 res_dict["loading"].append(loading)
                 # Non results
@@ -601,24 +599,24 @@ class ElectricalNetwork(AbstractNetwork[Element]):
         }
         dtypes = {c: DTYPES[c] for c in res_dict}
         for transformer in self.transformers.values():
-            currents_hv = transformer._side1._res_currents_getter(warning=False)
-            currents_lv = transformer._side2._res_currents_getter(warning=False)
-            potentials_hv = transformer._side1._res_potentials_getter(warning=False)
-            potentials_lv = transformer._side2._res_potentials_getter(warning=False)
-            powers_hv = potentials_hv * currents_hv.conj()
-            powers_lv = potentials_lv * currents_lv.conj()
+            currents_hv = transformer._side1._res_currents_getter(warning=False).tolist()
+            currents_lv = transformer._side2._res_currents_getter(warning=False).tolist()
+            potentials_hv = transformer._side1._res_potentials_getter(warning=False).tolist()
+            potentials_lv = transformer._side2._res_potentials_getter(warning=False).tolist()
+            powers_hv = [v * i.conjugate() for v, i in zip(potentials_hv, currents_hv, strict=True)]
+            powers_lv = [v * i.conjugate() for v, i in zip(potentials_lv, currents_lv, strict=True)]
             sn = transformer.parameters._sn
             max_loading = transformer._max_loading
-            loading = max(abs(powers_hv.sum()), abs(powers_lv.sum())) / sn
+            loading = max(abs(sum(powers_hv)), abs(sum(powers_lv))) / sn
             violated = loading > max_loading
             for phase in transformer._all_phases:
-                if phase in transformer.phases_hv:
-                    idx_hv = transformer.phases_hv.index(phase)
+                if phase in transformer._side1._phases:
+                    idx_hv = transformer._side1._phases.index(phase)
                     i_hv, s_hv, v_hv = currents_hv[idx_hv], powers_hv[idx_hv], potentials_hv[idx_hv]
                 else:
                     i_hv, s_hv, v_hv = None, None, None
-                if phase in transformer.phases_lv:
-                    idx_lv = transformer.phases_lv.index(phase)
+                if phase in transformer._side2._phases:
+                    idx_lv = transformer._side2._phases.index(phase)
                     i_lv, s_lv, v_lv = currents_lv[idx_lv], powers_lv[idx_lv], potentials_lv[idx_lv]
                 else:
                     i_lv, s_lv, v_lv = None, None, None
@@ -670,21 +668,19 @@ class ElectricalNetwork(AbstractNetwork[Element]):
         }
         dtypes = {c: DTYPES[c] for c in res_dict}
         for switch in self.switches.values():
-            currents1 = switch._side1._res_currents_getter(warning=False)
-            currents2 = switch._side2._res_currents_getter(warning=False)
-            potentials1 = switch._side1._res_potentials_getter(warning=False)
-            potentials2 = switch._side2._res_potentials_getter(warning=False)
-            powers1 = potentials1 * currents1.conj()
-            powers2 = potentials2 * currents2.conj()
-            for i1, i2, s1, s2, v1, v2, phase in zip(
-                currents1, currents2, powers1, powers2, potentials1, potentials2, switch.phases, strict=True
+            currents1 = switch._side1._res_currents_getter(warning=False).tolist()
+            currents2 = switch._side2._res_currents_getter(warning=False).tolist()
+            potentials1 = switch._side1._res_potentials_getter(warning=False).tolist()
+            potentials2 = switch._side2._res_potentials_getter(warning=False).tolist()
+            for i1, i2, v1, v2, phase in zip(
+                currents1, currents2, potentials1, potentials2, switch.phases, strict=True
             ):
                 res_dict["switch_id"].append(switch.id)
                 res_dict["phase"].append(phase)
                 res_dict["current1"].append(i1)
                 res_dict["current2"].append(i2)
-                res_dict["power1"].append(s1)
-                res_dict["power2"].append(s2)
+                res_dict["power1"].append(v1 * i1.conjugate())
+                res_dict["power2"].append(v2 * i2.conjugate())
                 res_dict["potential1"].append(v1)
                 res_dict["potential2"].append(v2)
         return pd.DataFrame(res_dict).astype(dtypes).set_index(["switch_id", "phase"])
@@ -707,15 +703,14 @@ class ElectricalNetwork(AbstractNetwork[Element]):
         res_dict = {"load_id": [], "phase": [], "type": [], "current": [], "power": [], "potential": []}
         dtypes = {c: DTYPES[c] for c in res_dict} | {"type": LoadTypeDtype}
         for load_id, load in self.loads.items():
-            currents = load._res_currents_getter(warning=False)
-            potentials = load._res_potentials_getter(warning=False)
-            powers = potentials * currents.conj()
-            for i, s, v, phase in zip(currents, powers, potentials, load.phases, strict=True):
+            currents = load._res_currents_getter(warning=False).tolist()
+            potentials = load._res_potentials_getter(warning=False).tolist()
+            for i, v, phase in zip(currents, potentials, load.phases, strict=True):
                 res_dict["load_id"].append(load_id)
                 res_dict["phase"].append(phase)
                 res_dict["type"].append(load.type)
                 res_dict["current"].append(i)
-                res_dict["power"].append(s)
+                res_dict["power"].append(v * i.conjugate())
                 res_dict["potential"].append(v)
         return pd.DataFrame(res_dict).astype(dtypes).set_index(["load_id", "phase"])
 
@@ -741,7 +736,7 @@ class ElectricalNetwork(AbstractNetwork[Element]):
             if not (isinstance(load, PowerLoad) and load.is_flexible):
                 continue
             for flexible_power, phase in zip(
-                load._res_flexible_powers_getter(warning=False), load.voltage_phases, strict=True
+                load._res_flexible_powers_getter(warning=False).tolist(), load.voltage_phases, strict=True
             ):
                 loads_dict["load_id"].append(load_id)
                 loads_dict["phase"].append(phase)
@@ -766,15 +761,14 @@ class ElectricalNetwork(AbstractNetwork[Element]):
         res_dict = {"source_id": [], "type": [], "phase": [], "current": [], "power": [], "potential": []}
         dtypes = {c: DTYPES[c] for c in res_dict} | {"type": SourceTypeDtype}
         for source_id, source in self.sources.items():
-            currents = source._res_currents_getter(warning=False)
-            potentials = source._res_potentials_getter(warning=False)
-            powers = potentials * currents.conj()
-            for i, s, v, phase in zip(currents, powers, potentials, source.phases, strict=True):
+            currents = source._res_currents_getter(warning=False).tolist()
+            potentials = source._res_potentials_getter(warning=False).tolist()
+            for i, v, phase in zip(currents, potentials, source.phases, strict=True):
                 res_dict["source_id"].append(source_id)
                 res_dict["phase"].append(phase)
                 res_dict["type"].append(source.type)
                 res_dict["current"].append(i)
-                res_dict["power"].append(s)
+                res_dict["power"].append(v * i.conjugate())
                 res_dict["potential"].append(v)
         return pd.DataFrame(res_dict).astype(dtypes).set_index(["source_id", "phase"])
 
@@ -884,9 +878,9 @@ class ElectricalNetwork(AbstractNetwork[Element]):
                 min_voltage_level = nan
             if max_voltage_level is None:
                 max_voltage_level = nan
-            for voltage, phase in zip(voltages, phases, strict=True):
-                voltage_abs = abs(voltage)
+            for voltage, phase in zip(voltages.tolist(), phases, strict=True):
                 if nominal_voltage_defined:
+                    voltage_abs = abs(voltage)
                     if "n" in phase:
                         voltage_level = SQRT3 * voltage_abs / nominal_voltage
                     else:
@@ -978,7 +972,7 @@ class ElectricalNetwork(AbstractNetwork[Element]):
         voltages_dict = {"load_id": [], "phase": [], "type": [], "voltage": []}
         dtypes = {c: DTYPES[c] for c in voltages_dict} | {"phase": VoltagePhaseDtype, "type": LoadTypeDtype}
         for load, voltages, phases in self._iter_terminal_res_voltages(self.loads, voltage_type):
-            for voltage, phase in zip(voltages, phases, strict=True):
+            for voltage, phase in zip(voltages.tolist(), phases, strict=True):
                 voltages_dict["load_id"].append(load.id)
                 voltages_dict["phase"].append(phase)
                 voltages_dict["type"].append(load.type)
@@ -1037,7 +1031,7 @@ class ElectricalNetwork(AbstractNetwork[Element]):
         voltages_dict = {"source_id": [], "phase": [], "type": [], "voltage": []}
         dtypes = {c: DTYPES[c] for c in voltages_dict} | {"phase": VoltagePhaseDtype, "type": SourceTypeDtype}
         for source, voltages, phases in self._iter_terminal_res_voltages(self.sources, voltage_type):
-            for voltage, phase in zip(voltages, phases, strict=True):
+            for voltage, phase in zip(voltages.tolist(), phases, strict=True):
                 voltages_dict["source_id"].append(source.id)
                 voltages_dict["phase"].append(phase)
                 voltages_dict["type"].append(source.type)
@@ -1166,8 +1160,8 @@ class ElectricalNetwork(AbstractNetwork[Element]):
         starting_source = None
         potentials = {"n": 0j}
         # if there are multiple voltage sources, start from the higher one (the last one in the sorted below)
-        for source in sorted(self.sources.values(), key=lambda x: np.average(np.abs(x._voltages))):
-            source_voltages = source._voltages
+        for source in sorted(self.sources.values(), key=lambda x: abs(x._voltages).mean()):
+            source_voltages = source._voltages.tolist()
             starting_source = source
             if "n" in source.phases:
                 # Assume Vn = 0
@@ -1193,7 +1187,7 @@ class ElectricalNetwork(AbstractNetwork[Element]):
         assert starting_source is not None, "No voltage source found in the network."
         if len(potentials) < len(all_phases):
             # We failed to determine all the potentials (the sources are strange), fallback to something simple
-            v = np.average(np.abs(starting_source._voltages))
+            v = abs(starting_source._voltages).mean()
             potentials["a"] = v
             potentials["b"] = v * ALPHA2
             potentials["c"] = v * ALPHA

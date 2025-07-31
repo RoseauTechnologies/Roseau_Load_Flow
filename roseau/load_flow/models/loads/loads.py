@@ -178,31 +178,31 @@ class AbstractLoad(AbstractDisconnectable[_CyL_co], ABC):
     def _to_dict(self, include_results: bool) -> JsonDict:
         complex_array = getattr(self, f"_{self.type}s")
         data = super()._to_dict(include_results=include_results)
-        data[f"{self.type}s"] = [[value.real, value.imag] for value in complex_array]
+        data[f"{self.type}s"] = [[value.real, value.imag] for value in complex_array.tolist()]
         if self.is_flexible:
             assert isinstance(self, PowerLoad), "Only PowerLoad can be flexible"
             assert self.flexible_params is not None, "Flexible load must have flexible parameters"
             data["flexible_params"] = [fp.to_dict(include_results=include_results) for fp in self.flexible_params]
             if include_results:
                 flexible_powers = self._res_flexible_powers_getter(warning=False)  # warn only once
-                data["results"]["flexible_powers"] = [[s.real, s.imag] for s in flexible_powers]
+                data["results"]["flexible_powers"] = [[s.real, s.imag] for s in flexible_powers.tolist()]
         if include_results:
             inner_currents = self._res_inner_currents_getter(warning=False)
-            data["results"]["inner_currents"] = [[i.real, i.imag] for i in inner_currents]
+            data["results"]["inner_currents"] = [[i.real, i.imag] for i in inner_currents.tolist()]
             data["results"] = data.pop("results")  # move results to the end
         return data
 
     def _results_to_dict(self, warning: bool, full: bool) -> JsonDict:
         results = super()._results_to_dict(warning=warning, full=full)
         inner_currents = self._res_inner_currents_getter(warning=False)
-        results["inner_currents"] = [[i.real, i.imag] for i in inner_currents]
+        results["inner_currents"] = [[i.real, i.imag] for i in inner_currents.tolist()]
         if full:
             inner_powers = self._res_inner_powers_getter(warning=False)
-            results["inner_powers"] = [[i.real, i.imag] for i in inner_powers]
+            results["inner_powers"] = [[i.real, i.imag] for i in inner_powers.tolist()]
         if self.is_flexible:
             assert isinstance(self, PowerLoad), "Only PowerLoad can be flexible"
             flexible_powers = self._res_flexible_powers_getter(warning=False)  # warn only once
-            results["flexible_powers"] = [[s.real, s.imag] for s in flexible_powers]
+            results["flexible_powers"] = [[s.real, s.imag] for s in flexible_powers.tolist()]
         return results
 
 

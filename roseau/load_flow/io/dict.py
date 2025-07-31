@@ -888,7 +888,7 @@ def v3_to_v4_converter(data: JsonDict) -> JsonDict:  # noqa: C901
                 assert load_data["type"] == "impedance"
                 impedances = np.array([complex(*z) for z in load_data["impedances"]], dtype=np.complex128)
                 inner_currents = voltages / impedances
-            load_data["results"]["inner_currents"] = [[i.real, i.imag] for i in inner_currents]
+            load_data["results"]["inner_currents"] = [[i.real, i.imag] for i in inner_currents.tolist()]
         loads.append(load_data)
 
     results = {

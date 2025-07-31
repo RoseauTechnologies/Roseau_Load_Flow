@@ -21,6 +21,10 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`398` Improve the performance of accessing network results as dataframes by up to 20% and serializing a network
+  to a dictionary by up to 15%. The improvements are mostly noticeable for large networks or when performing many
+  simulations like in a time series analysis.
+
 - {gh-pr}`396` Allow passing a single `FlexibleParameter` object to a constant-power load to be used for all phases.
 
 - {gh-pr}`395` Improve line and bus hover information in interactive map plots. Fix an error in automatic zoom
