@@ -568,8 +568,8 @@ def test_from_roseau_load_flow():
         LineParameters.from_roseau_load_flow(lp_m_bad)
     assert e.value.code == RoseauLoadFlowExceptionCode.INVALID_FOR_SINGLE_PHASE
     assert e.value.msg == (
-        "Multi-phase line parameters with id 'Bad LP' and 2 phases cannot be converted to "
-        "`rlfs.LineParameters`. It must be three-phase."
+        "Cannot create `rlfs.LineParameters` from multi-phase line parameters with id 'Bad LP' and "
+        "2 phases. It must be three-phase."
     )
 
 

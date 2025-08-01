@@ -504,6 +504,34 @@ def test_sym():
     y_shunt_expected = 0.00014106j * np.eye(3)
     npt.assert_allclose(y_shunt, y_shunt_expected)
 
+    # Test sym <-> zy roundtrip
+    z0 = 0.188 + 0.8224j
+    z1 = 0.188 + 0.0812j
+    zn = 0.4029 + 0.3522j
+    xpn = 0.2471
+    y0 = 0.000010462 + 0.000063134j
+    y1 = 0.000010462 + 0.00022999j
+    bn = 0.00011407
+    bpn = -0.000031502
+    lp_4wire = LineParameters.from_sym(id="LP 4-wire", z0=z0, z1=z1, zn=zn, xpn=xpn, y0=y0, y1=y1, bn=bn, bpn=bpn)
+    sym = lp_4wire.to_sym()
+    assert len(sym) == 8
+    npt.assert_allclose(sym["z0"], z0)
+    npt.assert_allclose(sym["y0"], y0)
+    npt.assert_allclose(sym["z1"], z1)
+    npt.assert_allclose(sym["y1"], y1)
+    npt.assert_allclose(sym["zn"], zn)
+    npt.assert_allclose(sym["yn"], bn * 1j)
+    npt.assert_allclose(sym["zpn"], xpn * 1j)
+    npt.assert_allclose(sym["ypn"], bpn * 1j)
+    lp_3wire = LineParameters.from_sym(id="LP 3-wire", z0=z0, z1=z1, y0=y0, y1=y1)
+    sym = lp_3wire.to_sym()
+    assert len(sym) == 4
+    npt.assert_allclose(sym["z0"], z0)
+    npt.assert_allclose(sym["y0"], y0)
+    npt.assert_allclose(sym["z1"], z1)
+    npt.assert_allclose(sym["y1"], y1)
+
 
 def test_from_coiffier_model():
     # Invalid names

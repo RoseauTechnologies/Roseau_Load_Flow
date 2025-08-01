@@ -11,7 +11,6 @@ import pandas as pd
 from roseau.load_flow import Insulator, LineType, Material, RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow import LineParameters as MultiLineParameters
 from roseau.load_flow.constants import F
-from roseau.load_flow.sym import A_INV, A
 from roseau.load_flow.typing import Complex, Float, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow.utils import CatalogueMixin, Identifiable, JsonMixin
@@ -343,21 +342,10 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         """
         if not isinstance(lp_m, MultiLineParameters):
             raise TypeError(f"Expected an rlf.LineParameters object, got {type(lp_m)}.")
-        n_phases = lp_m._z_line.shape[0]
-        if n_phases not in (3, 4):
-            msg = (
-                f"Multi-phase line parameters with id {lp_m.id!r} and {n_phases} phases cannot be "
-                f"converted to `rlfs.LineParameters`. It must be three-phase."
-            )
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.INVALID_FOR_SINGLE_PHASE)
-        z_line = lp_m._z_line
-        y_shunt = lp_m._y_shunt
-
-        z_012 = A_INV @ z_line[:3, :3] @ A
-        y_012 = A_INV @ y_shunt[:3, :3] @ A
-        z1 = z_012.item(1, 1)
-        y1 = y_012.item(1, 1)
+        _, (z1, y1) = lp_m._zy_to_sym(
+            operation="create `rlfs.LineParameters` from multi-phase",
+            exc_code=RoseauLoadFlowExceptionCode.INVALID_FOR_SINGLE_PHASE,
+        )
         if y1.real < 0:  # might produce a value with a small negative real part
             y1 = 1j * y1.imag
 
@@ -367,10 +355,10 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         ampacities = lp_m._ampacities
 
         if strict:
-            if len(np.unique_values(z_line[_triu_i, _tril_i])) > 1:
+            if len(np.unique_values(lp_m._z_line[_triu_i, _tril_i])) > 1:
                 msg = f"Multi-phase line parameters with id {lp_m.id!r} have unbalanced series impedances."
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.INVALID_FOR_SINGLE_PHASE)
-            if len(np.unique_values(y_shunt[_triu_i, _tril_i])) > 1:
+            if len(np.unique_values(lp_m._y_shunt[_triu_i, _tril_i])) > 1:
                 msg = f"Multi-phase line parameters with id {lp_m.id!r} have unbalanced shunt admittances."
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.INVALID_FOR_SINGLE_PHASE)
             if materials is not None and len(np.unique_values(materials[:3])) > 1:
