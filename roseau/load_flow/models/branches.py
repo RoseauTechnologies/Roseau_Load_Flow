@@ -3,7 +3,7 @@ import math
 import warnings
 from abc import abstractmethod
 from functools import cached_property
-from typing import TYPE_CHECKING, Generic, Self
+from typing import Generic, Self
 
 from shapely.geometry.base import BaseGeometry
 from typing_extensions import TypeVar
@@ -12,19 +12,16 @@ from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowE
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.connectables import AbstractConnectable
 from roseau.load_flow.models.core import Element
+from roseau.load_flow.models.line_parameters import LineParameters
+from roseau.load_flow.models.transformer_parameters import TransformerParameters
 from roseau.load_flow.typing import ComplexArray, Id, JsonDict, Side
 from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow.utils import find_stack_level, one_or_more_repr
 from roseau.load_flow_engine.cy_engine import CyBranch
 
-if TYPE_CHECKING:
-    from roseau.load_flow.models.line_parameters import LineParameters
-    from roseau.load_flow.models.transformer_parameters import TransformerParameters
-
-    _Parameters = LineParameters | TransformerParameters
-
 logger = logging.getLogger(__name__)
 
+_Parameters = LineParameters | TransformerParameters
 _CyB_co = TypeVar("_CyB_co", bound=CyBranch, default=CyBranch, covariant=True)
 _Side_co = TypeVar("_Side_co", bound="AbstractBranchSide", default="AbstractBranchSide", covariant=True)
 
@@ -217,7 +214,7 @@ class AbstractBranch(Element[_CyB_co], Generic[_Side_co, _CyB_co]):
                 stacklevel=find_stack_level(),
             )
 
-    def _update_network_parameters(self, old_parameters: "_Parameters | None", new_parameters: "_Parameters") -> None:
+    def _update_network_parameters(self, old_parameters: _Parameters | None, new_parameters: _Parameters) -> None:
         if old_parameters is not None and old_parameters is not new_parameters:
             old_parameters._elements.discard(self)
             if not old_parameters._elements and self._network is not None:
