@@ -9,7 +9,7 @@ from typing_extensions import TypeVar
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.connectables import AbstractDisconnectable
-from roseau.load_flow.models.loads.flexible_parameters import FlexibleParameter
+from roseau.load_flow.models.flexible_parameters import FlexibleParameter
 from roseau.load_flow.typing import ComplexArray, ComplexScalarOrArrayLike1D, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow_engine.cy_engine import (

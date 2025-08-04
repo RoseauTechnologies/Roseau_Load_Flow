@@ -9,22 +9,17 @@ from roseau.load_flow.models.branches import AbstractBranch, AbstractBranchSide
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.connectables import AbstractConnectable, AbstractDisconnectable
 from roseau.load_flow.models.core import Element
+from roseau.load_flow.models.flexible_parameters import Control, FlexibleParameter, Projection
 from roseau.load_flow.models.grounds import Ground, GroundConnection
-from roseau.load_flow.models.lines import Line, LineParameters
-from roseau.load_flow.models.loads import (
-    AbstractLoad,
-    Control,
-    CurrentLoad,
-    FlexibleParameter,
-    ImpedanceLoad,
-    PowerLoad,
-    Projection,
-)
+from roseau.load_flow.models.line_parameters import LineParameters
+from roseau.load_flow.models.lines import Line
+from roseau.load_flow.models.loads import AbstractLoad, CurrentLoad, ImpedanceLoad, PowerLoad
 from roseau.load_flow.models.potential_refs import PotentialRef
 from roseau.load_flow.models.sources import VoltageSource
 from roseau.load_flow.models.switches import Switch
 from roseau.load_flow.models.terminals import AbstractTerminal
-from roseau.load_flow.models.transformers import Transformer, TransformerParameters
+from roseau.load_flow.models.transformer_parameters import TransformerParameters
+from roseau.load_flow.models.transformers import Transformer
 
 __all__ = [
     # Core
