@@ -21,7 +21,7 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
-- {gh-pr}`401` Delete some internal models modules. The models classes are always available as `rlf.<model_name>`.
+- {gh-pr}`401` Rename some internal models modules. The models classes are always available as `rlf.<model_name>`.
 
 - {gh-pr}`400` Add `LineParameters.to_sym` method to convert three-phase line parameters to symmetrical components. The
   method returns the symmetrical components: `z0`, `z1`, `y0`, `y1`, and for lines with a neutral wire: `zn`, `zpn`,
