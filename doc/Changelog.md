@@ -21,6 +21,10 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`400` Add `LineParameters.to_sym` method to convert three-phase line parameters to symmetrical components. The
+  method returns the symmetrical components: `z0`, `z1`, `y0`, `y1`, and for lines with a neutral wire: `zn`, `zpn`,
+  `yn`, `ypn`.
+
 - {gh-pr}`399` Add popup and search functionality to the interactive map plot. `rlf.plotting.plot_interactive_map` now
   accepts `add_tooltips`, `add_popups` and `add_search` arguments to control the display of tooltips, popups and search
   features. These features are enabled by default.
