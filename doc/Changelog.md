@@ -21,6 +21,12 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`402` Improve the `en.to_graph` method.
+
+  - Add nominal voltage and min/max voltage levels as node attributes.
+  - Change the `geom` attribute to be a GeoJSON-like dictionary instead of a shapely geometry object. This makes the
+    graph data JSON-serializable and compatible with pyviz plotting.
+
 - {gh-pr}`401` Rename some internal models modules. The models classes are always available as `rlf.<model_name>`.
 
 - {gh-pr}`400` Add `LineParameters.to_sym` method to convert three-phase line parameters to symmetrical components. The
