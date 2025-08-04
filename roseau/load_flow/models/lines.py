@@ -9,7 +9,7 @@ from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowE
 from roseau.load_flow.models.branches import AbstractBranch, AbstractBranchSide
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.grounds import Ground
-from roseau.load_flow.models.lines.parameters import LineParameters
+from roseau.load_flow.models.line_parameters import LineParameters
 from roseau.load_flow.typing import BoolArray, ComplexArray, ComplexMatrix, FloatArray, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow_engine.cy_engine import CyShuntLine, CySimplifiedLine
