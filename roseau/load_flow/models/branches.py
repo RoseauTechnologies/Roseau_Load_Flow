@@ -18,8 +18,8 @@ from roseau.load_flow.utils import find_stack_level, one_or_more_repr
 from roseau.load_flow_engine.cy_engine import CyBranch
 
 if TYPE_CHECKING:
-    from roseau.load_flow.models.lines.parameters import LineParameters
-    from roseau.load_flow.models.transformers.parameters import TransformerParameters
+    from roseau.load_flow.models.line_parameters import LineParameters
+    from roseau.load_flow.models.transformer_parameters import TransformerParameters
 
     _Parameters = LineParameters | TransformerParameters
 
