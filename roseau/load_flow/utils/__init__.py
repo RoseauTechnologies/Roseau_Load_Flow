@@ -97,6 +97,7 @@ def __getattr__(name: str):
         "RHO",
         "TAN_D",
     ):
+        # deprecated since 0.12.0
         warnings.warn(
             deprecation_template.format(name=name, module="constants"),
             category=FutureWarning,

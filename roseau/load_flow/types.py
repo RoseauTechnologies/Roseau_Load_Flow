@@ -3,7 +3,7 @@
 import logging
 from enum import auto
 
-from roseau.load_flow.utils import CaseInsensitiveStrEnum
+from roseau.load_flow.utils.helpers import CaseInsensitiveStrEnum
 
 # The local logger
 logger = logging.getLogger(__name__)
