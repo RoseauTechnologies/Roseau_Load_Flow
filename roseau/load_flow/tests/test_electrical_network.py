@@ -2066,7 +2066,12 @@ def test_to_graph(all_element_network: ElectricalNetwork):
 
     for bus in all_element_network.buses.values():
         node_data = g.nodes[bus.id]
-        assert node_data["geom"] == bus.geometry
+        assert node_data == {
+            "nominal_voltage": bus._nominal_voltage,
+            "min_voltage_level": bus._min_voltage_level,
+            "max_voltage_level": bus._max_voltage_level,
+            "geom": bus.geometry.__geo_interface__ if bus.geometry is not None else None,
+        }
 
     for line in all_element_network.lines.values():
         edge_data = g.edges[line.bus1.id, line.bus2.id, 0]
@@ -2079,7 +2084,7 @@ def test_to_graph(all_element_network: ElectricalNetwork):
             "parameters_id": line.parameters.id,
             "ampacities": ampacities,
             "max_loading": line._max_loading,
-            "geom": line.geometry,
+            "geom": line.geometry.__geo_interface__ if line.geometry is not None else None,
         }
 
     for transformer in all_element_network.transformers.values():
@@ -2093,12 +2098,17 @@ def test_to_graph(all_element_network: ElectricalNetwork):
             "parameters_id": transformer.parameters.id,
             "max_loading": max_loading,
             "sn": transformer.sn.magnitude,
-            "geom": transformer.geometry,
+            "geom": transformer.geometry.__geo_interface__ if transformer.geometry is not None else None,
         }
 
     for switch in all_element_network.switches.values():
         edge_data = g.edges[switch.bus1.id, switch.bus2.id, 0]
-        assert edge_data == {"id": switch.id, "type": "switch", "phases": switch.phases, "geom": switch.geometry}
+        assert edge_data == {
+            "id": switch.id,
+            "type": "switch",
+            "phases": switch.phases,
+            "geom": switch.geometry.__geo_interface__ if switch.geometry is not None else None,
+        }
 
     # Test parallel branches
     bus1 = Bus(id="Bus1", phases="abc")
@@ -2137,6 +2147,10 @@ def test_to_graph(all_element_network: ElectricalNetwork):
     sw.open()
     assert (bus1.id, bus2.id, 2) not in en.to_graph().edges  # not included by default
     assert en.to_graph(respect_switches=False).edges[bus1.id, bus2.id, 2]["id"] == sw.id
+
+    # Test serialization to JSON
+    json_data = nx.node_link_data(g, edges="edges")
+    json.dumps(json_data, ensure_ascii=False)
 
 
 def test_serialization(all_element_network, all_element_network_with_results):

@@ -26,6 +26,7 @@ from roseau.load_flow.utils.helpers import (
     abstractattrs,
     count_repr,
     ensure_startsupper,
+    geom_mapping,
     id_sort_key,
     one_or_more_repr,
 )
@@ -63,6 +64,7 @@ __all__ = [
     "one_or_more_repr",
     "id_sort_key",
     "ensure_startsupper",
+    "geom_mapping",
     # Enums
     "CaseInsensitiveStrEnum",
     # Decorators

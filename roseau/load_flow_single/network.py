@@ -16,7 +16,7 @@ import pandas as pd
 from roseau.load_flow import SQRT3, RoseauLoadFlowExceptionCode
 from roseau.load_flow import ElectricalNetwork as MultiElectricalNetwork
 from roseau.load_flow.typing import CRSLike, Id, JsonDict, MapOrSeq, StrPath
-from roseau.load_flow.utils import DTYPES, AbstractNetwork, LoadTypeDtype, count_repr, optional_deps
+from roseau.load_flow.utils import DTYPES, AbstractNetwork, LoadTypeDtype, count_repr, geom_mapping, optional_deps
 from roseau.load_flow_engine.cy_engine import CyGround, CyPotentialRef
 from roseau.load_flow_single.io import network_from_dgs, network_from_dict, network_to_dgs, network_to_dict
 from roseau.load_flow_single.io.rlf import OnIncompatibleType, network_from_rlf
@@ -270,7 +270,13 @@ class ElectricalNetwork(AbstractNetwork[Element]):
         nx = optional_deps.networkx
         graph = nx.MultiGraph()
         for bus in self.buses.values():
-            graph.add_node(bus.id, geom=bus.geometry)
+            graph.add_node(
+                bus.id,
+                nominal_voltage=bus._nominal_voltage,
+                min_voltage_level=bus._min_voltage_level,
+                max_voltage_level=bus._max_voltage_level,
+                geom=geom_mapping(bus.geometry),
+            )
         for line in self.lines.values():
             graph.add_edge(
                 line.bus1.id,
@@ -280,7 +286,7 @@ class ElectricalNetwork(AbstractNetwork[Element]):
                 parameters_id=line.parameters.id,
                 max_loading=line._max_loading,
                 ampacity=line.parameters._ampacity,
-                geom=line.geometry,
+                geom=geom_mapping(line.geometry),
             )
         for transformer in self.transformers.values():
             graph.add_edge(
@@ -291,7 +297,7 @@ class ElectricalNetwork(AbstractNetwork[Element]):
                 parameters_id=transformer.parameters.id,
                 max_loading=transformer._max_loading,
                 sn=transformer.parameters._sn,
-                geom=transformer.geometry,
+                geom=geom_mapping(transformer.geometry),
             )
         for switch in self.switches.values():
             if not respect_switches or switch.closed:
@@ -300,7 +306,7 @@ class ElectricalNetwork(AbstractNetwork[Element]):
                     switch.bus2.id,
                     id=switch.id,
                     type="switch",
-                    geom=switch.geometry,
+                    geom=geom_mapping(switch.geometry),
                 )
         return graph
 

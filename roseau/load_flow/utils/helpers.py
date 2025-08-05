@@ -3,6 +3,8 @@ from collections.abc import Callable, Collection, Sized
 from enum import StrEnum
 from typing import Final, TypeVar
 
+from shapely.geometry.base import BaseGeometry
+
 from roseau.load_flow.typing import Side
 
 SIDE_INDEX: Final[dict[Side | None, int]] = {"HV": 0, "LV": 1, 1: 0, 2: 1, None: 0}
@@ -42,6 +44,13 @@ def ensure_startsupper(s: str, /) -> str:
 def id_sort_key(x: dict, /) -> tuple[str, str]:
     """Sorting key function for objects with an 'id' key."""
     return type(x["id"]).__name__, str(x["id"])
+
+
+def geom_mapping(geom: BaseGeometry | None) -> dict[str, object] | None:
+    """Return a GeoJSON-like mapping of the geometry or None if the geometry is None."""
+    if geom is None:
+        return None
+    return geom.__geo_interface__
 
 
 class CaseInsensitiveStrEnum(StrEnum):

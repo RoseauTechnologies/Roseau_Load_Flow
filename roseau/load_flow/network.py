@@ -42,6 +42,7 @@ from roseau.load_flow.utils import (
     SourceTypeDtype,
     VoltagePhaseDtype,
     count_repr,
+    geom_mapping,
     optional_deps,
 )
 
@@ -384,7 +385,13 @@ class ElectricalNetwork(AbstractNetwork[Element]):
         nx = optional_deps.networkx
         graph = nx.MultiGraph()
         for bus in self.buses.values():
-            graph.add_node(bus.id, geom=bus.geometry)
+            graph.add_node(
+                bus.id,
+                nominal_voltage=bus._nominal_voltage,
+                min_voltage_level=bus._min_voltage_level,
+                max_voltage_level=bus._max_voltage_level,
+                geom=geom_mapping(bus.geometry),
+            )
         for line in self.lines.values():
             if (ampacities := line.parameters._ampacities) is not None:
                 ampacities = ampacities.tolist()
@@ -398,7 +405,7 @@ class ElectricalNetwork(AbstractNetwork[Element]):
                 length=line._length,
                 max_loading=line._max_loading,
                 ampacities=ampacities,
-                geom=line.geometry,
+                geom=geom_mapping(line.geometry),
             )
         for transformer in self.transformers.values():
             graph.add_edge(
@@ -411,7 +418,7 @@ class ElectricalNetwork(AbstractNetwork[Element]):
                 parameters_id=transformer.parameters.id,
                 max_loading=transformer._max_loading,
                 sn=transformer.parameters._sn,
-                geom=transformer.geometry,
+                geom=geom_mapping(transformer.geometry),
             )
         for switch in self.switches.values():
             if not respect_switches or switch.closed:
@@ -421,7 +428,7 @@ class ElectricalNetwork(AbstractNetwork[Element]):
                     id=switch.id,
                     type="switch",
                     phases=switch.phases,
-                    geom=switch.geometry,
+                    geom=geom_mapping(switch.geometry),
                 )
         return graph
 
