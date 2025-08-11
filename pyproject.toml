@@ -35,7 +35,8 @@ dependencies = [
     "shapely>=2.0.0",
     "pint>=0.21.0",
     "typing-extensions>=4.6.2",
-    "pyproj>=3.3.0",
+    # "pyproj>=3.3.0",
+    "pyproj==3.7.2rc0",  # TODO: only for testing dev and free-threaded pythons, REMOVE BEFORE THE RELEASE
     "certifi>=2023.5.7",
     "platformdirs>=4.0.0",
     "roseau-load-flow-engine==0.18.0a0",
