@@ -45,39 +45,38 @@
       mark=none}}%
   \tikzset{non lisse/.style={line width=0.3mm, mark=*}}%
 
-  \begin{axis}
-    [%
-    height=7cm,%
-    width=0.9\textwidth,%
-    enlarge y limits,%
-    grid=major,%
-    xlabel={$|V_{p_1}-V_{p_2}|$},%
-    xtick={\uminnormvaleur,\umidminnormvaleur,\udownnormvaleur,\unomnormvaleur,\uupnormvaleur,\umidmaxnormvaleur,\umaxnormvaleur},%
-    xticklabels={%
-      $\uminnorm$,,$\udownnorm$,$\unomnorm$,$\uupnorm$,,$\umaxnorm$%
-    },%
-    y tick label style={%
-      /pgf/number format/.cd,%
-      set thousands separator={},%
-      fixed,%
-      fixed zerofill,%
-      precision=1,%
-      use comma%
-    },%
-    ytick={\yminnormvaleur,0,\qthnormvaleur,\ymaxnormvaleur},%
-    yticklabels={-1,0,$\dfrac{Q^{\theo}_{p_1p_2}}{\smax_{p_1p_2}}$,1},%
-    xmin=\xminnormvaleur,%
-    xmax=\xmaxnormvaleur,%
-    ymin=\yminnormvaleur,%
-    ymax=\ymaxnormvaleur,%
-    legend columns=2,%
-    legend style={%
-      at={(0.5,-0.25)},%
-      anchor=north,%
-      nodes={text width=4cm}%
-    },%
-    cycle list/YlOrRd-5,%
-    cycle list name=YlOrRd-5%
+  \begin{axis}[%
+      height=7cm,%
+      width=0.9\textwidth,%
+      enlarge y limits,%
+      grid=major,%
+      xlabel={$|V_{p_1}-V_{p_2}|$},%
+      xtick={\uminnormvaleur,\umidminnormvaleur,\udownnormvaleur,\unomnormvaleur,\uupnormvaleur,\umidmaxnormvaleur,\umaxnormvaleur},%
+      xticklabels={%
+        $\uminnorm$,,$\udownnorm$,$\unomnorm$,$\uupnorm$,,$\umaxnorm$%
+      },%
+      y tick label style={%
+        /pgf/number format/.cd,%
+        set thousands separator={},%
+        fixed,%
+        fixed zerofill,%
+        precision=1,%
+        use comma%
+      },%
+      ytick={\yminnormvaleur,0,\qthnormvaleur,\ymaxnormvaleur},%
+      yticklabels={-1,0,$\dfrac{Q^{\theo}_{p_1p_2}}{\smax_{p_1p_2}}$,1},%
+      xmin=\xminnormvaleur,%
+      xmax=\xmaxnormvaleur,%
+      ymin=\yminnormvaleur,%
+      ymax=\ymaxnormvaleur,%
+      legend columns=2,%
+      legend style={%
+        at={(0.5,-0.25)},%
+        anchor=north,%
+        nodes={text width=4cm}%
+      },%
+      cycle list/YlOrRd-5,%
+      cycle list name=YlOrRd-5%
     ]%%%%%%% initialize YlOrRd-5%
 
     % Fonction linéaire par morceaux
