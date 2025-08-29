@@ -1,5 +1,5 @@
 {
-  "version": 4,
+  "version": 5,
   "is_multiphase": true,
   "crs": {
     "data": "EPSG:4326",
@@ -81,9 +81,9 @@
   "lines": [
     {
       "id": "LVBranch070099",
-      "phases": "abcn",
       "bus1": "MVLVFeeder03862",
       "bus2": "LVBus169496",
+      "phases": "abcn",
       "geometry": {
         "type": "LineString",
         "coordinates": [
@@ -101,9 +101,9 @@
     },
     {
       "id": "LVBranch024186",
-      "phases": "abcn",
       "bus1": "LVBus169496",
       "bus2": "LVBus169497",
+      "phases": "abcn",
       "geometry": {
         "type": "LineString",
         "coordinates": [
@@ -125,9 +125,9 @@
     },
     {
       "id": "LVBranch070100",
-      "phases": "abcn",
       "bus1": "LVBus169496",
       "bus2": "LVBus169498",
+      "phases": "abcn",
       "geometry": {
         "type": "LineString",
         "coordinates": [
@@ -150,16 +150,16 @@
   "transformers": [
     {
       "id": "Transformer",
-      "phases_hv": "abc",
-      "phases_lv": "abcn",
       "bus_hv": "MVLV03862",
       "bus_lv": "MVLVFeeder03862",
+      "phases_hv": "abc",
+      "phases_lv": "abcn",
+      "connect_neutral_hv": null,
+      "connect_neutral_lv": null,
       "geometry": {
         "type": "Point",
         "coordinates": [-1.55883404863677, 49.11337818748383]
       },
-      "connect_neutral_hv": null,
-      "connect_neutral_lv": null,
       "max_loading": 1.0,
       "params_id": "Dyn11_160kVA",
       "tap": 1.0
@@ -171,48 +171,48 @@
       "id": "LVBus169496_consumption",
       "bus": "LVBus169496",
       "phases": "cn",
-      "type": "power",
       "connect_neutral": null,
+      "type": "power",
       "powers": [[0.0, 0.0]]
     },
     {
       "id": "LVBus169496_production",
       "bus": "LVBus169496",
       "phases": "bn",
-      "type": "power",
       "connect_neutral": null,
+      "type": "power",
       "powers": [[0.0, 0.0]]
     },
     {
       "id": "LVBus169497_consumption",
       "bus": "LVBus169497",
       "phases": "bn",
-      "type": "power",
       "connect_neutral": null,
+      "type": "power",
       "powers": [[1600.0, 500.0]]
     },
     {
       "id": "LVBus169497_production",
       "bus": "LVBus169497",
       "phases": "an",
-      "type": "power",
       "connect_neutral": null,
+      "type": "power",
       "powers": [[0.0, 0.0]]
     },
     {
       "id": "LVBus169498_consumption",
       "bus": "LVBus169498",
       "phases": "cn",
-      "type": "power",
       "connect_neutral": null,
+      "type": "power",
       "powers": [[1600.0, 500.0]]
     },
     {
       "id": "LVBus169498_production",
       "bus": "LVBus169498",
       "phases": "bn",
-      "type": "power",
       "connect_neutral": null,
+      "type": "power",
       "powers": [[0.0, 0.0]]
     }
   ],
@@ -221,8 +221,8 @@
       "id": "VoltageSource",
       "bus": "MVLV03862",
       "phases": "abc",
-      "type": "voltage",
       "connect_neutral": null,
+      "type": "voltage",
       "voltages": [[17320.50807568877, 10000.0], [0.0, -20000.0], [-17320.50807568877, 10000.0]]
     }
   ],

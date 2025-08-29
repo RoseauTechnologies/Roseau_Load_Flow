@@ -43,9 +43,9 @@
   "lines": [
     {
       "id": "line",
-      "phases": "an",
       "bus1": "bus1",
       "bus2": "bus2",
+      "phases": "an",
       "max_loading": 1.0,
       "params_id": "lp",
       "length": 10.0,
@@ -64,8 +64,8 @@
       "id": "load",
       "bus": "bus2",
       "phases": "an",
-      "type": "power",
       "connect_neutral": null,
+      "type": "power",
       "powers": [[1500000.0, -500000.0]],
       "results": {
         "currents": [[75.31408026597121, 24.685919734028797], [-75.31408026597121, -24.685919734028797]],
@@ -79,8 +79,8 @@
       "id": "vs",
       "bus": "bus1",
       "phases": "an",
-      "type": "voltage",
       "connect_neutral": null,
+      "type": "voltage",
       "voltages": [[20000.0, 0.0]],
       "results": {
         "currents": [[-75.31408026597317, -24.685919734027358], [75.31408026597317, 24.685919734027358]],

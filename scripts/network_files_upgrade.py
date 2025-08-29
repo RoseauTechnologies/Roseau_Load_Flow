@@ -2,12 +2,15 @@ import json
 from collections.abc import Generator
 from pathlib import Path
 
-from roseau.load_flow import ElectricalNetwork, RoseauLoadFlowException
+import roseau.load_flow as rlf
+import roseau.load_flow_single as rlfs
 
-PROJECT_ROOT = Path(__file__).parent.parent
-TEST_DATA_DIR = PROJECT_ROOT / "roseau" / "load_flow" / "tests" / "data"
-MODELS_TEST_DATA_DIR = PROJECT_ROOT / "roseau" / "load_flow" / "models" / "tests" / "data"
-DATA_DIR = PROJECT_ROOT / "roseau" / "load_flow" / "data" / "networks"
+ROSEAU_NAMESPACE_ROOT = Path(__file__).parent.parent / "roseau"
+TEST_DATA_DIR = ROSEAU_NAMESPACE_ROOT / "load_flow" / "tests" / "data"
+MODELS_TEST_DATA_DIR = ROSEAU_NAMESPACE_ROOT / "load_flow" / "models" / "tests" / "data"
+DATA_DIR = ROSEAU_NAMESPACE_ROOT / "load_flow" / "data" / "networks"
+
+SINGLE_TEST_DATA_DIR = ROSEAU_NAMESPACE_ROOT / "load_flow_single" / "tests" / "data"
 
 
 def all_network_paths() -> Generator[Path, None, None]:
@@ -19,8 +22,18 @@ def all_network_paths() -> Generator[Path, None, None]:
     yield from MODELS_TEST_DATA_DIR.glob("*.json")
 
 
+def all_single_network_paths() -> Generator[Path, None, None]:
+    # Test networks
+    yield from (SINGLE_TEST_DATA_DIR / "networks").glob("**/*network*.json")
+
+
 def upgrade_network(path: Path) -> None:
-    net = ElectricalNetwork.from_json(path)
+    net = rlf.ElectricalNetwork.from_json(path)
+    net.to_json(path)
+
+
+def upgrade_single_network(path: Path) -> None:
+    net = rlfs.ElectricalNetwork.from_json(path)
     net.to_json(path)
 
 
@@ -41,7 +54,7 @@ def update_bad_transformer_id(path: Path) -> None:
             if isinstance(transformer_id, str) and transformer_id.startswith("line"):
                 transformer["id"] = "tr" + transformer_id.removeprefix("line")
 
-    net = ElectricalNetwork.from_dict(data)
+    net = rlf.ElectricalNetwork.from_dict(data)
     net.to_json(path)
 
 
@@ -50,6 +63,12 @@ if __name__ == "__main__":
         try:
             upgrade_network(path)
             # update_bad_transformer_id(path)
-        except RoseauLoadFlowException:
-            print(f"Error in {path.relative_to(PROJECT_ROOT)}")
+        except rlf.RoseauLoadFlowException:
+            print(f"Error in {path.relative_to(ROSEAU_NAMESPACE_ROOT)}")
+            raise
+    for path in all_single_network_paths():
+        try:
+            upgrade_single_network(path)
+        except rlfs.RoseauLoadFlowException:
+            print(f"Error in {path.relative_to(ROSEAU_NAMESPACE_ROOT)}")
             raise

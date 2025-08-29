@@ -1,5 +1,5 @@
 {
-  "version": 4,
+  "version": 5,
   "is_multiphase": true,
   "crs": {
     "data": "EPSG:4326",
@@ -65,9 +65,9 @@
   "lines": [
     {
       "id": "MVBranch48268",
-      "phases": "abc",
       "bus1": "HVMVFeeder07",
       "bus2": "MVLV14092",
+      "phases": "abc",
       "geometry": {
         "type": "LineString",
         "coordinates": [
@@ -140,9 +140,9 @@
     },
     {
       "id": "MVBranch39083",
-      "phases": "abc",
       "bus1": "MVLV14092",
       "bus2": "MVLV05996",
+      "phases": "abc",
       "geometry": {
         "type": "LineString",
         "coordinates": [
@@ -259,13 +259,14 @@
   "switches": [
     {
       "id": "Switch",
-      "phases": "abc",
       "bus1": "HVMV07",
       "bus2": "HVMVFeeder07",
+      "phases": "abc",
       "geometry": {
         "type": "Point",
         "coordinates": [-1.687159292228112, 49.48974276829431]
-      }
+      },
+      "closed": true
     }
   ],
   "loads": [
@@ -273,32 +274,32 @@
       "id": "MVLV05996_consumption",
       "bus": "MVLV05996",
       "phases": "abc",
-      "type": "power",
       "connect_neutral": null,
+      "type": "power",
       "powers": [[0.0, 0.0], [0.0, 0.0], [0.0, 0.0]]
     },
     {
       "id": "MVLV05996_production",
       "bus": "MVLV05996",
       "phases": "abc",
-      "type": "power",
       "connect_neutral": null,
+      "type": "power",
       "powers": [[-3333300.0, 0.0], [-3333300.0, 0.0], [-3333300.0, 0.0]]
     },
     {
       "id": "MVLV14092_consumption",
       "bus": "MVLV14092",
       "phases": "abc",
-      "type": "power",
       "connect_neutral": null,
+      "type": "power",
       "powers": [[0.0, 0.0], [0.0, 0.0], [0.0, 0.0]]
     },
     {
       "id": "MVLV14092_production",
       "bus": "MVLV14092",
       "phases": "abc",
-      "type": "power",
       "connect_neutral": null,
+      "type": "power",
       "powers": [[0.0, 0.0], [0.0, 0.0], [0.0, 0.0]]
     }
   ],
@@ -307,8 +308,8 @@
       "id": "VoltageSource",
       "bus": "HVMV07",
       "phases": "abc",
-      "type": "voltage",
       "connect_neutral": null,
+      "type": "voltage",
       "voltages": [[17320.50807568877, 10000.0], [0.0, -20000.0], [-17320.50807568877, 10000.0]]
     }
   ],

@@ -1,5 +1,5 @@
 {
-  "version": 4,
+  "version": 5,
   "is_multiphase": true,
   "crs": {
     "data": "EPSG:4326",
@@ -109,9 +109,9 @@
   "lines": [
     {
       "id": "MVBranch42220",
-      "phases": "abc",
       "bus1": "HVMVFeeder11",
       "bus2": "MVBus01228",
+      "phases": "abc",
       "geometry": {
         "type": "LineString",
         "coordinates": [
@@ -143,9 +143,9 @@
     },
     {
       "id": "MVBranch16925",
-      "phases": "abc",
       "bus1": "MVBus01232",
       "bus2": "MVBus15631",
+      "phases": "abc",
       "geometry": {
         "type": "LineString",
         "coordinates": [
@@ -162,9 +162,9 @@
     },
     {
       "id": "MVBranch28505",
-      "phases": "abc",
       "bus1": "MVBus01231",
       "bus2": "MVBus01232",
+      "phases": "abc",
       "geometry": {
         "type": "LineString",
         "coordinates": [
@@ -187,9 +187,9 @@
     },
     {
       "id": "MVBranch28504",
-      "phases": "abc",
       "bus1": "MVBus01230",
       "bus2": "MVBus01231",
+      "phases": "abc",
       "geometry": {
         "type": "LineString",
         "coordinates": [
@@ -206,9 +206,9 @@
     },
     {
       "id": "MVBranch14190",
-      "phases": "abc",
       "bus1": "MVBus01229",
       "bus2": "MVBus01230",
+      "phases": "abc",
       "geometry": {
         "type": "LineString",
         "coordinates": [
@@ -229,9 +229,9 @@
     },
     {
       "id": "MVBranch45106",
-      "phases": "abc",
       "bus1": "MVBus01228",
       "bus2": "MVBus01229",
+      "phases": "abc",
       "geometry": {
         "type": "LineString",
         "coordinates": [
@@ -251,13 +251,14 @@
   "switches": [
     {
       "id": "Switch",
-      "phases": "abc",
       "bus1": "HVMV11",
       "bus2": "HVMVFeeder11",
+      "phases": "abc",
       "geometry": {
         "type": "Point",
         "coordinates": [-0.823722473264189, 49.08918556668978]
-      }
+      },
+      "closed": true
     }
   ],
   "loads": [],
@@ -266,8 +267,8 @@
       "id": "VoltageSource",
       "bus": "HVMV11",
       "phases": "abc",
-      "type": "voltage",
       "connect_neutral": null,
+      "type": "voltage",
       "voltages": [[17320.50807568877, 10000.0], [0.0, -20000.0], [-17320.50807568877, 10000.0]]
     }
   ],
