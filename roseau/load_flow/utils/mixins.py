@@ -305,14 +305,14 @@ class CatalogueMixin(Generic[_T], metaclass=ABCMeta):
         """
         vector = pd.Series(strings)
         if isinstance(value, re.Pattern):
-            result = vector.str.fullmatch(value)
+            result = vector.str.fullmatch(value, case=False)
         else:
             try:
                 pattern = re.compile(pattern=value, flags=re.IGNORECASE)
-                result = vector.str.fullmatch(pattern) | (vector.str.lower() == value.lower())
+                result = vector.str.fullmatch(pattern, case=False) | (vector.str.casefold() == value.casefold())
             except re.error:
                 # fallback to string comparison
-                result = vector.str.lower() == value.lower()
+                result = vector.str.casefold() == value.casefold()
         if isinstance(strings, pd.Series):
             return result
         else:
