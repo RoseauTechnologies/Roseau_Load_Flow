@@ -72,3 +72,17 @@ def test_switch_connection():
         Switch(id="switch", bus1=bus1, bus2=bus2, phases="abcn")
     assert "are connected with the switch" in e.value.msg
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_VOLTAGES_SOURCES_CONNECTION
+
+
+def test_switch_dict_roundtrip():
+    bus1 = Bus(id="bus1", phases="abcn")
+    bus2 = Bus(id="bus2", phases="abcn")
+    sw = Switch(id="switch", bus1=bus1, bus2=bus2, closed=False)
+    sw_dict = sw.to_dict(include_results=True)
+    sw_dict["bus1"] = bus1
+    sw_dict["bus2"] = bus2
+    sw2 = Switch.from_dict(sw_dict, include_results=True)
+    assert sw2.id == sw.id
+    assert sw2.bus1.id == sw.bus1.id
+    assert sw2.bus2.id == sw.bus2.id
+    assert sw2.closed == sw.closed

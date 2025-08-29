@@ -305,14 +305,14 @@ class CatalogueMixin(Generic[_T], metaclass=ABCMeta):
         """
         vector = pd.Series(strings)
         if isinstance(value, re.Pattern):
-            result = vector.str.fullmatch(value)
+            result = vector.str.fullmatch(value, case=False)
         else:
             try:
                 pattern = re.compile(pattern=value, flags=re.IGNORECASE)
-                result = vector.str.fullmatch(pattern) | (vector.str.lower() == value.lower())
+                result = vector.str.fullmatch(pattern, case=False) | (vector.str.casefold() == value.casefold())
             except re.error:
                 # fallback to string comparison
-                result = vector.str.lower() == value.lower()
+                result = vector.str.casefold() == value.casefold()
         if isinstance(strings, pd.Series):
             return result
         else:
@@ -513,7 +513,7 @@ class AbstractElement(Identifiable, JsonMixin, Generic[_N_co, _CyE_co]):
                 obj._element_info
                 if isinstance(obj, AbstractElement)
                 else "network"
-                if isinstance(obj, (AbstractNetwork, type(AbstractNetwork)))
+                if isinstance(obj, AbstractNetwork) or (isinstance(obj, type) and issubclass(obj, AbstractNetwork))
                 else f"parameters {obj.id!r}"
             )
             info = self._element_info if id is None else f"{self.element_type} {id!r}"

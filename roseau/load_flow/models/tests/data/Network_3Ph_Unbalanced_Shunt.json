@@ -61,9 +61,9 @@
   "lines": [
     {
       "id": "line",
-      "phases": "abc",
       "bus1": "sb",
       "bus2": "lb",
+      "phases": "abc",
       "max_loading": 1.0,
       "params_id": "lp",
       "length": 10.0,
@@ -100,8 +100,8 @@
       "id": "load",
       "bus": "lb",
       "phases": "abc",
-      "type": "power",
       "connect_neutral": null,
+      "type": "power",
       "powers": [[800000.0, 599999.9999999999], [500000.0, 0.0], [400000.0, 299999.99999999994]],
       "results": {
         "currents": [
@@ -127,8 +127,8 @@
       "id": "vs",
       "bus": "sb",
       "phases": "abcn",
-      "type": "voltage",
       "connect_neutral": null,
+      "type": "voltage",
       "voltages": [
         [11547.005383792517, 0.0],
         [-5773.502691896257, -10000.000000000002],

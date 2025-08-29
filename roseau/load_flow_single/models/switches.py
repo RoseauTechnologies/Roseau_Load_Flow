@@ -57,6 +57,7 @@ class Switch(AbstractBranch["SwitchSide", CySwitch | CyOpenSwitch]):
 
     def __repr__(self) -> str:
         parts = [
+            f"id={self.id!r}",
             f"bus1={self._side1.bus.id!r}",
             f"bus2={self._side2.bus.id!r}",
             f"closed={self.closed}",
@@ -151,6 +152,8 @@ class Switch(AbstractBranch["SwitchSide", CySwitch | CyOpenSwitch]):
     def _to_dict(self, include_results: bool) -> JsonDict:
         data = super()._to_dict(include_results)
         data["closed"] = self._closed
+        if include_results:
+            data["results"] = data.pop("results")  # move results to the end
         return data
 
 

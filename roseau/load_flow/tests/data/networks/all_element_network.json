@@ -114,9 +114,9 @@
   "lines": [
     {
       "id": "line0",
-      "phases": "abc",
       "bus1": "bus0",
       "bus2": "bus1",
+      "phases": "abc",
       "max_loading": 1.0,
       "params_id": "lp0",
       "length": 1.5,
@@ -147,9 +147,9 @@
     },
     {
       "id": "line1",
-      "phases": "abcn",
       "bus1": "bus3",
       "bus2": "bus4",
+      "phases": "abcn",
       "max_loading": 1.0,
       "params_id": "lp1",
       "length": 0.1,
@@ -182,9 +182,9 @@
     },
     {
       "id": "line2",
-      "phases": "ca",
       "bus1": "bus4",
       "bus2": "bus6",
+      "phases": "ca",
       "max_loading": 1.0,
       "params_id": "lp2",
       "length": 0.1,
@@ -201,10 +201,10 @@
   "transformers": [
     {
       "id": "transformer0",
-      "phases_hv": "abc",
-      "phases_lv": "abcn",
       "bus_hv": "bus1",
       "bus_lv": "bus2",
+      "phases_hv": "abc",
+      "phases_lv": "abcn",
       "connect_neutral_hv": null,
       "connect_neutral_lv": null,
       "max_loading": 1.0,
@@ -239,9 +239,10 @@
   "switches": [
     {
       "id": "switch0",
-      "phases": "abcn",
       "bus1": "bus2",
       "bus2": "bus3",
+      "phases": "abcn",
+      "closed": true,
       "results": {
         "currents1": [
           [1849.389923497086, -2302.4784505076605],
@@ -271,9 +272,10 @@
     },
     {
       "id": "switch1",
-      "phases": "bn",
       "bus1": "bus4",
       "bus2": "bus5",
+      "phases": "bn",
+      "closed": true,
       "results": {
         "currents1": [[-3372.26420790312, 429.483136151524], [3372.26420790312, -429.483136151524]],
         "currents2": [[3372.26420790312, -429.483136151524], [-3372.26420790312, 429.483136151524]],
@@ -287,8 +289,8 @@
       "id": "load0",
       "bus": "bus4",
       "phases": "abcn",
-      "type": "power",
       "connect_neutral": null,
+      "type": "power",
       "powers": [[100.0, 5.0], [100.0, 5.0], [100.0, 5.0]],
       "results": {
         "currents": [
@@ -314,8 +316,8 @@
       "id": "load1",
       "bus": "bus4",
       "phases": "abcn",
-      "type": "current",
       "connect_neutral": null,
+      "type": "current",
       "currents": [[10.0, 1.0], [10.0, 1.0], [10.0, 1.0]],
       "results": {
         "currents": [
@@ -337,8 +339,8 @@
       "id": "load2",
       "bus": "bus4",
       "phases": "abcn",
-      "type": "impedance",
       "connect_neutral": null,
+      "type": "impedance",
       "impedances": [[1.0, 0.0], [1.0, 0.0], [1.0, 0.0]],
       "results": {
         "currents": [
@@ -364,8 +366,8 @@
       "id": "load3",
       "bus": "bus4",
       "phases": "abcn",
-      "type": "power",
       "connect_neutral": null,
+      "type": "power",
       "powers": [[100.0, 0.0], [100.0, 0.0], [100.0, 0.0]],
       "flexible_params": [
         {
@@ -449,8 +451,8 @@
       "id": "load4",
       "bus": "bus4",
       "phases": "abcn",
-      "type": "power",
       "connect_neutral": null,
+      "type": "power",
       "powers": [[-100.0, 0.0], [-100.0, 0.0], [-100.0, 0.0]],
       "flexible_params": [
         {
@@ -534,8 +536,8 @@
       "id": "load5",
       "bus": "bus4",
       "phases": "abcn",
-      "type": "power",
       "connect_neutral": null,
+      "type": "power",
       "powers": [[-100.0, 0.0], [-100.0, 0.0], [-100.0, 0.0]],
       "flexible_params": [
         {
@@ -627,8 +629,8 @@
       "id": "load6",
       "bus": "bus5",
       "phases": "bn",
-      "type": "power",
       "connect_neutral": null,
+      "type": "power",
       "powers": [[100.0, 0.0]],
       "results": {
         "currents": [[0.43478260869565216, -0.0], [-0.43478260869565216, 0.0]],
@@ -640,8 +642,8 @@
       "id": "load7",
       "bus": "bus6",
       "phases": "ca",
-      "type": "power",
       "connect_neutral": null,
+      "type": "power",
       "powers": [[100.0, 0.0]],
       "results": {
         "currents": [[0.25, -0.0], [-0.25, 0.0]],
@@ -655,8 +657,8 @@
       "id": "source0",
       "bus": "bus0",
       "phases": "abc",
-      "type": "voltage",
       "connect_neutral": null,
+      "type": "voltage",
       "voltages": [[20000.0, 0.0], [-10000.000000000007, -17320.50807568877], [-9999.999999999996, 17320.508075688773]],
       "results": {
         "currents": [
@@ -675,8 +677,8 @@
       "id": "source1",
       "bus": "bus5",
       "phases": "bn",
-      "type": "voltage",
       "connect_neutral": null,
+      "type": "voltage",
       "voltages": [[230.0, 0.0]],
       "results": {
         "currents": [[-3372.6989905118157, 429.483136151524], [3372.6989905118157, -429.483136151524]],
@@ -687,8 +689,8 @@
       "id": "source2",
       "bus": "bus6",
       "phases": "ca",
-      "type": "voltage",
       "connect_neutral": null,
+      "type": "voltage",
       "voltages": [[400.0, 0.0]],
       "results": {
         "currents": [[-1763.8871822776343, 2316.7851063289395], [1763.8871822776343, -2316.7851063289395]],

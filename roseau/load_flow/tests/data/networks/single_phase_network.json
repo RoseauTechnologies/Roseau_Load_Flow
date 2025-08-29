@@ -49,9 +49,9 @@
   "lines": [
     {
       "id": "line",
-      "phases": "bn",
       "bus1": "bus0",
       "bus2": "bus1",
+      "phases": "bn",
       "geometry": {
         "type": "LineString",
         "coordinates": [[-1.318375372111463, 48.64794139348595], [-1.320149235966572, 48.64971306653889]]
@@ -74,8 +74,8 @@
       "id": "load",
       "bus": "bus1",
       "phases": "bn",
-      "type": "power",
       "connect_neutral": null,
+      "type": "power",
       "powers": [[100.0, 0.0]],
       "results": {
         "currents": [[0.005000025000250002, -0.0], [-0.005000025000250002, 0.0]],
@@ -89,8 +89,8 @@
       "id": "vs",
       "bus": "bus0",
       "phases": "bn",
-      "type": "voltage",
       "connect_neutral": null,
+      "type": "voltage",
       "voltages": [[20000.0, 0.0]],
       "results": {
         "currents": [[-0.005000025000125, 0.0], [0.005000025000125, 0.0]],

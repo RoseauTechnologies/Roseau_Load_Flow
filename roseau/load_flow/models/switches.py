@@ -8,7 +8,7 @@ from roseau.load_flow.models.branches import AbstractBranch, AbstractBranchSide
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import Element
 from roseau.load_flow.models.sources import VoltageSource
-from roseau.load_flow.typing import Id
+from roseau.load_flow.typing import Id, JsonDict
 from roseau.load_flow.utils import id_sort_key, one_or_more_repr
 from roseau.load_flow_engine.cy_engine import CyOpenSwitch, CySwitch
 
@@ -79,6 +79,7 @@ class Switch(AbstractBranch["SwitchSide", CySwitch | CyOpenSwitch]):
 
     def __repr__(self) -> str:
         parts = [
+            f"id={self.id!r}",
             f"bus1={self._side1.bus.id!r}",
             f"bus2={self._side2.bus.id!r}",
             f"phases={self._side1.phases!r}",
@@ -175,6 +176,16 @@ class Switch(AbstractBranch["SwitchSide", CySwitch | CyOpenSwitch]):
             self._cy_element = CySwitch(self._side1._n)
             self._cy_connect()
         self._closed = True
+
+    #
+    # Json Mixin interface
+    #
+    def _to_dict(self, include_results: bool) -> JsonDict:
+        data = super()._to_dict(include_results)
+        data["closed"] = self._closed
+        if include_results:
+            data["results"] = data.pop("results")  # move results to the end
+        return data
 
 
 class SwitchSide(AbstractBranchSide):

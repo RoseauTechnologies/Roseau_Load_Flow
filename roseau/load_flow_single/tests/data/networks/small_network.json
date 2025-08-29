@@ -119,6 +119,7 @@
       "id": "Switch",
       "bus1": "Bus 0",
       "bus2": "Bus 2",
+      "closed": true,
       "results": {
         "current1": [0.0, 0.0],
         "current2": [-0.0, -0.0],
