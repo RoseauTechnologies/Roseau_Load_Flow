@@ -19,7 +19,7 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 # Changelog
 
-## Unreleased
+## Version 0.13.0
 
 - {gh-pr}`402` Improve the `en.to_graph` method.
 
