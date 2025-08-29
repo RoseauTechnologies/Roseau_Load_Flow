@@ -308,8 +308,7 @@ class CatalogueMixin(Generic[_T], metaclass=ABCMeta):
             result = vector.str.fullmatch(value, case=False)
         else:
             try:
-                pattern = re.compile(pattern=value, flags=re.IGNORECASE)
-                result = vector.str.fullmatch(pattern, case=False) | (vector.str.casefold() == value.casefold())
+                result = vector.str.fullmatch(value, case=False) | (vector.str.casefold() == value.casefold())
             except re.error:
                 # fallback to string comparison
                 result = vector.str.casefold() == value.casefold()
