@@ -86,3 +86,17 @@ def test_different_voltage_levels():
         UserWarning, match=r"Switch 'sw bad' connects buses with different nominal voltages: 240.0 V and 400.0 V."
     ):
         Switch(id="sw bad", bus1=bus1, bus2=bus4)
+
+
+def test_switch_dict_roundtrip():
+    bus1 = Bus(id="bus1")
+    bus2 = Bus(id="bus2")
+    sw = Switch(id="switch", bus1=bus1, bus2=bus2, closed=False)
+    sw_dict = sw.to_dict(include_results=True)
+    sw_dict["bus1"] = bus1
+    sw_dict["bus2"] = bus2
+    sw2 = Switch.from_dict(sw_dict, include_results=True)
+    assert sw2.id == sw.id
+    assert sw2.bus1.id == sw.bus1.id
+    assert sw2.bus2.id == sw.bus2.id
+    assert sw2.closed == sw.closed
