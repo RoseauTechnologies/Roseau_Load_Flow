@@ -2,13 +2,14 @@ import logging
 import time
 import warnings
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Generic
+from typing import TYPE_CHECKING, Generic, TypeAlias
 
+import numpy as np
 from typing_extensions import TypeVar
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.license import activate_license, get_license
-from roseau.load_flow.typing import FloatMatrix, JsonDict, Solver
+from roseau.load_flow.typing import FloatArray, FloatArrayLike1D, FloatMatrix, JsonDict, Solver
 from roseau.load_flow.utils import find_stack_level
 from roseau.load_flow_engine.cy_engine import (
     CyAbstractNewton,
@@ -28,7 +29,9 @@ _SOLVERS_PARAMS: dict[Solver, list[str]] = {
 SOLVERS = list(_SOLVERS_PARAMS)
 
 if TYPE_CHECKING:
-    from roseau.load_flow.network import ElectricalNetwork
+    from roseau.load_flow.utils import AbstractElement, AbstractNetwork
+
+    ElectricalNetwork: TypeAlias = AbstractNetwork[AbstractElement]
 
 
 _CyS_co = TypeVar("_CyS_co", bound=CyAbstractSolver, default=CyAbstractSolver, covariant=True)
@@ -162,9 +165,24 @@ class AbstractSolver(ABC, Generic[_CyS_co]):
         """
         raise NotImplementedError(f"save_matrix() is not implemented for solver {self.name!r}.")
 
-    def current_jacobian(self) -> FloatMatrix:
+    def jacobian(self) -> FloatMatrix:
         """Get the jacobian of the current iteration (useful for debugging)."""
-        raise NotImplementedError(f"current_jacobian() is not implemented for solver {self.name!r}.")
+        raise NotImplementedError(f"jacobian() is not implemented for solver {self.name!r}.")
+
+    @property
+    def variables(self) -> FloatArray:
+        """Get the variables of the current iteration (useful for debugging)."""
+        return self._cy_solver.get_variables()
+
+    @variables.setter
+    def variables(self, variables: FloatArrayLike1D) -> None:
+        """Set the independent variables (useful for debugging)."""
+        self._cy_solver.set_variables(np.array(variables, dtype=np.float64))
+
+    @property
+    def residuals(self) -> FloatArray:
+        """Get the residuals of the current iteration (useful for debugging)."""
+        raise NotImplementedError(f"residuals is not implemented for solver {self.name!r}.")
 
     def analyse_jacobian(self) -> tuple[list[int], list[int]]:
         """Analyse the jacobian to try to understand why it is singular.
@@ -208,10 +226,9 @@ class AbstractNewton(AbstractSolver[_CyN_co], ABC):
             power_load = False
             flexible_load = False
             for inf_element in inf_elements:
-                load = self.network.loads.get(inf_element.id)
-                if load is inf_element and load.type == "power":
+                if inf_element.element_type == "load" and inf_element.type == "power":  # type: ignore
                     power_load = True
-                    if load.is_flexible:
+                    if inf_element.is_flexible:  # type: ignore
                         flexible_load = True
                         break
             if power_load:
@@ -233,8 +250,12 @@ class AbstractNewton(AbstractSolver[_CyN_co], ABC):
     def save_matrix(self, prefix: str) -> None:
         self._cy_solver.save_matrix(prefix)
 
-    def current_jacobian(self) -> FloatMatrix:
-        return self._cy_solver.current_jacobian()
+    def jacobian(self) -> FloatMatrix:
+        return self._cy_solver.get_jacobian()
+
+    @property
+    def residuals(self) -> FloatArray:
+        return self._cy_solver.get_residuals()
 
     def analyse_jacobian(self) -> tuple[list[int], list[int]]:
         return self._cy_solver.analyse_jacobian()

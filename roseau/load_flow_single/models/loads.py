@@ -1,5 +1,6 @@
+import cmath
 import logging
-from abc import ABC
+from abc import ABC, abstractmethod
 from typing import Final
 
 import numpy as np
@@ -10,7 +11,7 @@ from roseau.load_flow.typing import Complex, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow_engine.cy_engine import CyAdmittanceLoad, CyCurrentLoad, CyFlexibleLoad, CyLoad, CyPowerLoad
 from roseau.load_flow_single.models.buses import Bus
-from roseau.load_flow_single.models.connectables import AbstractConnectable
+from roseau.load_flow_single.models.connectables import AbstractDisconnectable
 from roseau.load_flow_single.models.flexible_parameters import FlexibleParameter
 
 logger = logging.getLogger(__name__)
@@ -18,11 +19,12 @@ logger = logging.getLogger(__name__)
 _CyL_co = TypeVar("_CyL_co", bound=CyLoad, default=CyLoad, covariant=True)
 
 
-class AbstractLoad(AbstractConnectable[_CyL_co], ABC):
+class AbstractLoad(AbstractDisconnectable[_CyL_co], ABC):
     """An abstract class of an electric load."""
 
     element_type: Final = "load"
 
+    @abstractmethod
     def __init__(self, id: Id, bus: Bus) -> None:
         """AbstractLoad constructor.
 
@@ -33,9 +35,7 @@ class AbstractLoad(AbstractConnectable[_CyL_co], ABC):
             bus:
                 The bus to connect the load to.
         """
-        if type(self) is AbstractLoad:
-            raise TypeError("Can't instantiate abstract class AbstractLoad")
-        super().__init__(id, bus)
+        super().__init__(id, bus=bus, n=2)
 
     @property
     def is_flexible(self) -> bool:
@@ -43,11 +43,6 @@ class AbstractLoad(AbstractConnectable[_CyL_co], ABC):
         return False
 
     def _validate_value(self, value: Complex) -> complex:
-        # A load cannot have any zero impedance
-        if self.type == "impedance" and np.isclose(value, 0).any():
-            msg = f"An impedance of the load {self.id!r} is null"
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Z_VALUE)
         return complex(value)
 
     #
@@ -62,22 +57,13 @@ class AbstractLoad(AbstractConnectable[_CyL_co], ABC):
                 fp = FlexibleParameter.from_dict(data=fp_data, include_results=include_results)
             else:
                 fp = None
-            self = PowerLoad(
-                id=data["id"],
-                bus=data["bus"],
-                power=power,
-                flexible_param=fp,
-            )
+            self = PowerLoad(id=data["id"], bus=data["bus"], power=power, flexible_param=fp)
         elif load_type == "current":
             current = complex(data["current"][0], data["current"][1])
             self = CurrentLoad(id=data["id"], bus=data["bus"], current=current)
         elif load_type == "impedance":
             impedance = complex(data["impedance"][0], data["impedance"][1])
-            self = ImpedanceLoad(
-                id=data["id"],
-                bus=data["bus"],
-                impedance=impedance,
-            )
+            self = ImpedanceLoad(id=data["id"], bus=data["bus"], impedance=impedance)
         else:
             msg = f"Unknown load type {load_type!r} for load {data['id']!r}"
             logger.error(msg)
@@ -191,7 +177,7 @@ class PowerLoad(AbstractLoad[CyPowerLoad | CyFlexibleLoad]):
                     raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_S_VALUE)
         self._power = value
         self._invalidate_network_results()
-        if self._cy_element is not None:
+        if self._cy_initialized:
             self._cy_element.update_powers(np.array([self._power / 3.0], dtype=np.complex128))
 
     #
@@ -253,7 +239,7 @@ class CurrentLoad(AbstractLoad[CyCurrentLoad]):
     def current(self, value: Complex | Q_[Complex]) -> None:
         self._current = self._validate_value(value)
         self._invalidate_network_results()
-        if self._cy_element is not None:
+        if self._cy_initialized:
             self._cy_element.update_currents(np.array([self._current], dtype=np.complex128))
 
 
@@ -283,6 +269,14 @@ class ImpedanceLoad(AbstractLoad[CyAdmittanceLoad]):
         )
         self._cy_connect()
 
+    def _validate_value(self, value: Complex) -> complex:
+        # A load cannot have a zero impedance
+        if cmath.isclose(value, 0):
+            msg = f"The impedance of the load {self.id!r} is null"
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Z_VALUE)
+        return super()._validate_value(value)
+
     @property
     @ureg_wraps("ohm", (None,))
     def impedance(self) -> Q_[complex]:
@@ -297,5 +291,5 @@ class ImpedanceLoad(AbstractLoad[CyAdmittanceLoad]):
     def impedance(self, value: Complex | Q_[Complex]) -> None:
         self._impedance = self._validate_value(value)
         self._invalidate_network_results()
-        if self._cy_element is not None:
+        if self._cy_initialized:
             self._cy_element.update_admittances(np.array([1.0 / self._impedance], dtype=np.complex128))

@@ -1,5 +1,6 @@
 import logging
-from abc import ABC
+from abc import ABC, abstractmethod
+from collections.abc import Iterable
 from typing import Final
 
 import numpy as np
@@ -7,8 +8,8 @@ from typing_extensions import TypeVar
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.buses import Bus
-from roseau.load_flow.models.connectables import AbstractConnectable
-from roseau.load_flow.models.loads.flexible_parameters import FlexibleParameter
+from roseau.load_flow.models.connectables import AbstractDisconnectable
+from roseau.load_flow.models.flexible_parameters import FlexibleParameter
 from roseau.load_flow.typing import ComplexArray, ComplexScalarOrArrayLike1D, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow_engine.cy_engine import (
@@ -28,7 +29,7 @@ logger = logging.getLogger(__name__)
 _CyL_co = TypeVar("_CyL_co", bound=CyLoad, default=CyLoad, covariant=True)
 
 
-class AbstractLoad(AbstractConnectable[_CyL_co], ABC):
+class AbstractLoad(AbstractDisconnectable[_CyL_co], ABC):
     """An abstract class of an electric load.
 
     The subclasses of this class can be used to model:
@@ -38,6 +39,7 @@ class AbstractLoad(AbstractConnectable[_CyL_co], ABC):
 
     element_type: Final = "load"
 
+    @abstractmethod
     def __init__(self, id: Id, bus: Bus, *, phases: str | None = None, connect_neutral: bool | None = None) -> None:
         """AbstractLoad constructor.
 
@@ -62,8 +64,6 @@ class AbstractLoad(AbstractConnectable[_CyL_co], ABC):
                 neutral. If the bus does not have a neutral, the load's neutral is left floating
                 by default. To override the default behavior, pass an explicit ``True`` or ``False``.
         """
-        if type(self) is AbstractLoad:
-            raise TypeError("Can't instantiate abstract class AbstractLoad")
         super().__init__(id, bus, phases=phases, connect_neutral=connect_neutral)
         self._symbol = {"power": "S", "current": "I", "impedance": "Z"}[self.type]
         self._res_inner_currents: ComplexArray | None = None
@@ -74,8 +74,9 @@ class AbstractLoad(AbstractConnectable[_CyL_co], ABC):
         return False
 
     def _refresh_results(self) -> None:
-        if self._fetch_results:
-            super()._refresh_results()
+        fetch_results = self._fetch_results
+        super()._refresh_results()
+        if fetch_results:
             self._res_inner_currents = self._cy_element.get_inner_currents(self._size)
 
     def _res_inner_currents_getter(self, warning: bool) -> ComplexArray:
@@ -177,31 +178,31 @@ class AbstractLoad(AbstractConnectable[_CyL_co], ABC):
     def _to_dict(self, include_results: bool) -> JsonDict:
         complex_array = getattr(self, f"_{self.type}s")
         data = super()._to_dict(include_results=include_results)
-        data[f"{self.type}s"] = [[value.real, value.imag] for value in complex_array]
+        data[f"{self.type}s"] = [[value.real, value.imag] for value in complex_array.tolist()]
         if self.is_flexible:
             assert isinstance(self, PowerLoad), "Only PowerLoad can be flexible"
             assert self.flexible_params is not None, "Flexible load must have flexible parameters"
             data["flexible_params"] = [fp.to_dict(include_results=include_results) for fp in self.flexible_params]
             if include_results:
                 flexible_powers = self._res_flexible_powers_getter(warning=False)  # warn only once
-                data["results"]["flexible_powers"] = [[s.real, s.imag] for s in flexible_powers]
+                data["results"]["flexible_powers"] = [[s.real, s.imag] for s in flexible_powers.tolist()]
         if include_results:
             inner_currents = self._res_inner_currents_getter(warning=False)
-            data["results"]["inner_currents"] = [[i.real, i.imag] for i in inner_currents]
+            data["results"]["inner_currents"] = [[i.real, i.imag] for i in inner_currents.tolist()]
             data["results"] = data.pop("results")  # move results to the end
         return data
 
     def _results_to_dict(self, warning: bool, full: bool) -> JsonDict:
         results = super()._results_to_dict(warning=warning, full=full)
         inner_currents = self._res_inner_currents_getter(warning=False)
-        results["inner_currents"] = [[i.real, i.imag] for i in inner_currents]
+        results["inner_currents"] = [[i.real, i.imag] for i in inner_currents.tolist()]
         if full:
             inner_powers = self._res_inner_powers_getter(warning=False)
-            results["inner_powers"] = [[i.real, i.imag] for i in inner_powers]
+            results["inner_powers"] = [[i.real, i.imag] for i in inner_powers.tolist()]
         if self.is_flexible:
             assert isinstance(self, PowerLoad), "Only PowerLoad can be flexible"
             flexible_powers = self._res_flexible_powers_getter(warning=False)  # warn only once
-            results["flexible_powers"] = [[s.real, s.imag] for s in flexible_powers]
+            results["flexible_powers"] = [[s.real, s.imag] for s in flexible_powers.tolist()]
         return results
 
 
@@ -217,7 +218,7 @@ class PowerLoad(AbstractLoad[CyPowerLoad | CyDeltaPowerLoad | CyFlexibleLoad | C
         *,
         powers: ComplexScalarOrArrayLike1D,
         phases: str | None = None,
-        flexible_params: list[FlexibleParameter] | None = None,
+        flexible_params: FlexibleParameter | Iterable[FlexibleParameter] | None = None,
         connect_neutral: bool | None = None,
     ) -> None:
         """PowerLoad constructor.
@@ -248,9 +249,13 @@ class PowerLoad(AbstractLoad[CyPowerLoad | CyDeltaPowerLoad | CyFlexibleLoad | C
                 ``True``.
 
             flexible_params:
-                A list of :class:`FlexibleParameters` object, one for each phase. When provided,
-                the load is considered as flexible (or controllable) and the parameters are used
-                to compute the flexible power of the load.
+                A :class:`FlexibleParameters` object to make the load flexible, i.e., controllable
+                based on the voltage using the commonly known `P(U)` and `Q(U)` controls. These
+                parameters are used to compute the flexible powers of the load which could be
+                different from the input powers.
+
+                It is also possible to pass an iterable of :class:`FlexibleParameter` objects to
+                create unbalanced control settings, one for each phase of the load.
 
             connect_neutral:
                 Specifies whether the load's neutral should be connected to the bus's neutral or
@@ -267,12 +272,17 @@ class PowerLoad(AbstractLoad[CyPowerLoad | CyDeltaPowerLoad | CyFlexibleLoad | C
             )
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_SHORT_CIRCUIT)
-        if flexible_params and len(flexible_params) != self._size:
-            msg = f"Incorrect number of parameters: {len(flexible_params)} instead of {self._size}"
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PARAMETERS_SIZE)
+        if flexible_params is not None:
+            if isinstance(flexible_params, FlexibleParameter):
+                flexible_params = [flexible_params] * self._size
+            else:
+                flexible_params = list(flexible_params)
+                if len(flexible_params) != self._size:
+                    msg = f"Incorrect number of parameters: {len(flexible_params)} instead of {self._size}"
+                    logger.error(msg)
+                    raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PARAMETERS_SIZE)
 
-        self._flexible_params = flexible_params
+        self._flexible_params: list[FlexibleParameter] | None = flexible_params
         self.powers = powers
         self._res_flexible_powers: ComplexArray | None = None
 
@@ -291,6 +301,11 @@ class PowerLoad(AbstractLoad[CyPowerLoad | CyDeltaPowerLoad | CyFlexibleLoad | C
 
     @property
     def flexible_params(self) -> list[FlexibleParameter] | None:
+        """The flexible parameters of the load or None if the load is not flexible.
+
+        If the load is flexible, this property returns a list of :class:`FlexibleParameter` objects
+        that define the control settings of each phase of the load.
+        """
         return self._flexible_params
 
     @property
@@ -336,14 +351,14 @@ class PowerLoad(AbstractLoad[CyPowerLoad | CyDeltaPowerLoad | CyFlexibleLoad | C
                     raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_S_VALUE)
         self._powers = value
         self._invalidate_network_results()
-        if self._cy_element is not None:
+        if self._cy_initialized:
             self._cy_element.update_powers(self._powers)
 
     def _refresh_results(self) -> None:
-        if self._fetch_results:
-            super()._refresh_results()
-            if self.is_flexible:
-                self._res_flexible_powers = self._cy_element.get_powers(self._n)
+        fetch_results = self._fetch_results
+        super()._refresh_results()
+        if fetch_results and self.is_flexible:
+            self._res_flexible_powers = self._cy_element.get_powers(self._n)
 
     def _res_flexible_powers_getter(self, warning: bool) -> ComplexArray:
         self._refresh_results()
@@ -438,7 +453,7 @@ class CurrentLoad(AbstractLoad[CyCurrentLoad | CyDeltaCurrentLoad]):
     def currents(self, value: ComplexScalarOrArrayLike1D) -> None:
         self._currents = self._validate_value(value)
         self._invalidate_network_results()
-        if self._cy_element is not None:
+        if self._cy_initialized:
             self._cy_element.update_currents(self._currents)
 
 
@@ -507,5 +522,5 @@ class ImpedanceLoad(AbstractLoad[CyAdmittanceLoad | CyDeltaAdmittanceLoad]):
     def impedances(self, impedances: ComplexScalarOrArrayLike1D) -> None:
         self._impedances = self._validate_value(impedances)
         self._invalidate_network_results()
-        if self._cy_element is not None:
+        if self._cy_initialized:
             self._cy_element.update_admittances(1.0 / self._impedances)

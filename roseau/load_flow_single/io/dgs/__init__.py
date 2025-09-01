@@ -1,7 +1,7 @@
 """
 This module is not for public use.
 
-Use the `ElectricalNetwork.from_dgs` method to read a network from a dgs file.
+Use the `ElectricalNetwork.from_dgs_file` method to read a network from a dgs file.
 """
 
 import logging

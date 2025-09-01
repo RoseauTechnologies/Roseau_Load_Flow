@@ -1,13 +1,15 @@
 ---
 myst:
   html_meta:
-    "description lang=en": |
+    description lang=en: |
       Additional Roseau Load Flow features: graph theory, conversions to symmetrical components, constants, etc.
-    "description lang=fr": |
+    keywords lang=en: simulation, distribution grid, symmetrical components, conversion
+    # spellchecker:off
+    description lang=fr: |
       Fonctionnalités supplémentaires de Roseau Load Flow: affichage du graphe, conversions vers des composantes
       symétriques, constantes, etc.
-    "keywords lang=fr": simulation, réseau, électrique, composantes symétriques, conversions
-    "keywords lang=en": simulation, distribution grid, symmetrical components, conversion
+    keywords lang=fr: simulation, réseau, électrique, composantes symétriques, conversions
+    # spellchecker:on
 ---
 
 # Extra features
@@ -16,11 +18,10 @@ myst:
 
 ## Graph theory
 
-{meth}`ElectricalNetwork.to_graph() <roseau.load_flow.ElectricalNetwork.to_graph>` can be used to
-get a {class}`networkx.Graph` object from the electrical network.
+{meth}`ElectricalNetwork.to_graph() <roseau.load_flow.ElectricalNetwork.to_graph>` can be used to get a
+{class}`networkx.MultiGraph` object from the electrical network.
 
-The graph contains the geometries of the buses in the nodes data and the geometries and branch
-types in the edges data.
+The graph contains the geometries of the buses in the nodes data and the geometries and branch types in the edges data.
 
 ```{note}
 This method requires *networkx* which is not installed by default in pip managed installs. You can
@@ -28,12 +29,11 @@ install it with the `"graph"` extra if you are using pip: `pip install "roseau-l
 ```
 
 In addition, you can use the property
-{meth}`ElectricalNetwork.buses_clusters <roseau.load_flow.ElectricalNetwork.buses_clusters>` to
-get a list of sets of IDs of buses in galvanically isolated sections of the network. In other terms,
-to get groups of buses connected by one or more lines or a switches, stopping at transformers. For
-example, for a network with a MV feeder, this property returns a list containing a set of MV buses
-IDs and all sets of LV subnetworks buses IDs. If you want to get the cluster of only one bus, you
-can use {meth}`Bus.get_connected_buses <roseau.load_flow.models.Bus.get_connected_buses>`
+{meth}`ElectricalNetwork.buses_clusters <roseau.load_flow.ElectricalNetwork.buses_clusters>` to get a list of sets of
+IDs of buses in galvanically isolated sections of the network. In other terms, to get groups of buses connected by one
+or more lines or a switches, stopping at transformers. For example, for a network with a MV feeder, this property
+returns a list containing a set of MV buses IDs and all sets of LV subnetworks buses IDs. If you want to get the cluster
+of only one bus, you can use {meth}`Bus.get_connected_buses <roseau.load_flow.models.Bus.get_connected_buses>`
 
 If we take the example network from the [Getting Started page](./Getting_Started.md#creating-a-network):
 
@@ -50,8 +50,8 @@ As there are no transformers between the two buses, they all belong to the same 
 
 ## Symmetrical components
 
-{mod}`roseau.load_flow.sym` contains helpers to work with symmetrical components. For example, to
-convert a phasor voltage to symmetrical components:
+{mod}`roseau.load_flow.sym` contains helpers to work with symmetrical components. For example, to convert a phasor
+voltage to symmetrical components:
 
 ```pycon
 >>> import numpy as np
@@ -66,8 +66,8 @@ array([[ 8.52651283e-14-1.42108547e-14j],
        [-7.10542736e-14-2.84217094e-14j]])
 ```
 
-As you can see, for this positive-sequence balanced voltage, only the positive-sequence component
-is non-zero. Converting back to phasor, you get the original voltage values back:
+As you can see, for this positive-sequence balanced voltage, only the positive-sequence component is non-zero.
+Converting back to phasor, you get the original voltage values back:
 
 ```pycon
 >>> sym_to_phasor(v_sym)
@@ -91,9 +91,8 @@ sb      zero        9.947598e-14-1.421085e-14j
 Name: voltage, dtype: complex128
 ```
 
-The `rlf.sym` module also provides useful helpers to create three-phase balanced quantities by only
-providing the magnitude of the quantities. For example, to create a three-phase balanced positive
-sequence voltage:
+The `rlf.sym` module also provides useful helpers to create three-phase balanced quantities by only providing the
+magnitude of the quantities. For example, to create a three-phase balanced positive sequence voltage:
 
 ```pycon
 >>> import numpy as np
@@ -107,14 +106,13 @@ array([230., 230., 230.])
 array([   0., -120.,  120.])
 ```
 
-Similarly, you can use `rlf.sym.NegativeSequence` and `rlf.sym.ZeroSequence` to create negative-sequence
-and zero-sequence quantities respectively. Because these are so common, you can also access them
-directly from the top-level module as `rlf.PositiveSequence`, etc.
+Similarly, you can use `rlf.sym.NegativeSequence` and `rlf.sym.ZeroSequence` to create negative-sequence and
+zero-sequence quantities respectively. Because these are so common, you can also access them directly from the top-level
+module as `rlf.PositiveSequence`, etc.
 
 ## Potentials to voltages conversion
 
-{mod}`roseau.load_flow.converters` contains helpers to convert a vector of potentials to a vector of
-voltages. Example:
+{mod}`roseau.load_flow.converters` contains helpers to convert a vector of potentials to a vector of voltages. Example:
 
 ```pycon
 >>> import numpy as np
@@ -128,8 +126,8 @@ array([ 230.  +0.j        , -115.-199.18584287j, -115.+199.18584287j,
 array([ 230.  +0.j        , -115.-199.18584287j, -115.+199.18584287j]) <Unit('volt')>
 ```
 
-Because the phases include the neutral, the voltages calculated are phase-to-neutral voltages.
-You can also calculate phase-to-phase voltages by omitting the neutral:
+Because the phases include the neutral, the voltages calculated are phase-to-neutral voltages. You can also calculate
+phase-to-phase voltages by omitting the neutral:
 
 ```pycon
 >>> rlf.converters.calculate_voltages(potentials[:-1], phases[:-1])
@@ -160,25 +158,23 @@ array([345.+199.18584287j]) <Unit('volt')>
 
 ## Constants
 
-{mod}`roseau.load_flow.constants` contains some common mathematical and physical constants like the
-resistivity and permeability of common materials in addition to other useful constants. Please refer
-to the module documentation for more details. An enumeration of available materials can be found in
-the {mod}`roseau.load_flow.types` module.
+{mod}`roseau.load_flow.constants` contains some common mathematical and physical constants like the resistivity and
+permeability of common materials in addition to other useful constants. Please refer to the module documentation for
+more details. An enumeration of available materials can be found in the {mod}`roseau.load_flow.types` module.
 
-Some commonly used constants can be accessed directly from the top-level module for convenience.
-Notable top-level constants:
+Some commonly used constants can be accessed directly from the top-level module for convenience. Notable top-level
+constants:
 
-- `rlf.SQRT3`: the square root of 3. Useful for converting between phase-to-phase and phase-to-neutral
-  voltages.
+- `rlf.SQRT3`: the square root of 3. Useful for converting between phase-to-phase and phase-to-neutral voltages.
 - `rlf.ALPHA`: the alpha constant. Rotates a complex number by 120°.
 - `rlf.ALPHA2`: the alpha constant squared. Rotates a complex number by 240° (or -120°).
 
 ## Voltage unbalance
 
-It is possible to calculate the voltage unbalance due to asymmetric operation. There are many
-definitions of voltage unbalance (see {cite:p}`Girigoudar_2019`). In `roseau-load-flow`, you can
-use the {meth}`~roseau.load_flow.models.Bus.res_voltage_unbalance` method on a 3-phase bus to get
-the Voltage Unbalance Factor (VUF) as per the IEC definition:
+It is possible to calculate the voltage unbalance due to asymmetric operation. There are many definitions of voltage
+unbalance (see {cite:p}`Girigoudar_2019`). In `roseau-load-flow`, you can use the
+{meth}`~roseau.load_flow.models.Bus.res_voltage_unbalance` method on a 3-phase bus to get the Voltage Unbalance Factor
+(VUF) as per the IEC definition:
 
 ```{math}
 VUF = \frac{|V_{\mathrm{n}}|}{|V_{\mathrm{p}}|} \times 100 (\%)
@@ -194,5 +190,7 @@ definition, please open an issue on the GitHub repository.
 ## Bibliography
 
 ```{bibliography}
-:filter: docname in docnames
+---
+filter: docname in docnames
+---
 ```

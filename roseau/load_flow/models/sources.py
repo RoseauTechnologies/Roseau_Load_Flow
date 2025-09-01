@@ -1,12 +1,11 @@
 import logging
-from typing import Final
+from typing import Final, Self
 
 import numpy as np
-from typing_extensions import Self
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.buses import Bus
-from roseau.load_flow.models.connectables import AbstractConnectable
+from roseau.load_flow.models.connectables import AbstractDisconnectable
 from roseau.load_flow.sym import PositiveSequence
 from roseau.load_flow.typing import ComplexArray, ComplexScalarOrArrayLike1D, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
@@ -15,7 +14,7 @@ from roseau.load_flow_engine.cy_engine import CyDeltaVoltageSource, CyVoltageSou
 logger = logging.getLogger(__name__)
 
 
-class VoltageSource(AbstractConnectable[CyVoltageSource | CyDeltaVoltageSource]):
+class VoltageSource(AbstractDisconnectable[CyVoltageSource | CyDeltaVoltageSource]):
     """A voltage source fixes the voltages on the phases of the bus it is connected to.
 
     The source can be connected in a wye or star configuration (i.e with a neutral) or in a delta
@@ -119,9 +118,9 @@ class VoltageSource(AbstractConnectable[CyVoltageSource | CyDeltaVoltageSource])
             msg = f"Incorrect number of voltages: {len(voltages)} instead of {self._size}"
             logger.error(msg)
             raise RoseauLoadFlowException(msg, code=RoseauLoadFlowExceptionCode.BAD_VOLTAGES_SIZE)
-        self._voltages = voltages
+        self._voltages: ComplexArray = voltages
         self._invalidate_network_results()
-        if self._cy_element is not None:
+        if self._cy_initialized:
             self._cy_element.update_voltages(self._voltages)
 
     #
@@ -141,7 +140,7 @@ class VoltageSource(AbstractConnectable[CyVoltageSource | CyDeltaVoltageSource])
 
     def _to_dict(self, include_results: bool) -> JsonDict:
         source_dict = super()._to_dict(include_results=include_results)
-        source_dict["voltages"] = [[v.real, v.imag] for v in self._voltages]
+        source_dict["voltages"] = [[v.real, v.imag] for v in self._voltages.tolist()]
         if include_results:
             source_dict["results"] = source_dict.pop("results")  # move results to the end
         return source_dict

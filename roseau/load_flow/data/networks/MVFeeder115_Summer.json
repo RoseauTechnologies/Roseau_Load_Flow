@@ -1,5 +1,5 @@
 {
-  "version": 4,
+  "version": 5,
   "is_multiphase": true,
   "crs": {
     "data": "EPSG:4326",
@@ -25,7 +25,8 @@
         "coordinates": [-1.687159292228112, 49.48974276829431]
       },
       "nominal_voltage": 20000,
-      "min_voltage_level": 0.95
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05
     },
     {
       "id": "HVMVFeeder07",
@@ -35,7 +36,8 @@
         "coordinates": [-1.687159292228112, 49.48974276829431]
       },
       "nominal_voltage": 20000,
-      "min_voltage_level": 0.95
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05
     },
     {
       "id": "MVLV05996",
@@ -45,7 +47,8 @@
         "coordinates": [-1.626239709998294, 49.43249717368583]
       },
       "nominal_voltage": 20000,
-      "min_voltage_level": 0.95
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05
     },
     {
       "id": "MVLV14092",
@@ -55,15 +58,16 @@
         "coordinates": [-1.6650298238154546, 49.46180069059946]
       },
       "nominal_voltage": 20000,
-      "min_voltage_level": 0.95
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05
     }
   ],
   "lines": [
     {
       "id": "MVBranch48268",
-      "phases": "abc",
       "bus1": "HVMVFeeder07",
       "bus2": "MVLV14092",
+      "phases": "abc",
       "geometry": {
         "type": "LineString",
         "coordinates": [
@@ -136,9 +140,9 @@
     },
     {
       "id": "MVBranch39083",
-      "phases": "abc",
       "bus1": "MVLV14092",
       "bus2": "MVLV05996",
+      "phases": "abc",
       "geometry": {
         "type": "LineString",
         "coordinates": [
@@ -255,13 +259,14 @@
   "switches": [
     {
       "id": "Switch",
-      "phases": "abc",
       "bus1": "HVMV07",
       "bus2": "HVMVFeeder07",
+      "phases": "abc",
       "geometry": {
         "type": "Point",
         "coordinates": [-1.687159292228112, 49.48974276829431]
-      }
+      },
+      "closed": true
     }
   ],
   "loads": [
@@ -269,49 +274,33 @@
       "id": "MVLV05996_consumption",
       "bus": "MVLV05996",
       "phases": "abc",
-      "type": "power",
       "connect_neutral": null,
-      "powers": [
-        [0.0, 0.0],
-        [0.0, 0.0],
-        [0.0, 0.0]
-      ]
+      "type": "power",
+      "powers": [[0.0, 0.0], [0.0, 0.0], [0.0, 0.0]]
     },
     {
       "id": "MVLV05996_production",
       "bus": "MVLV05996",
       "phases": "abc",
-      "type": "power",
       "connect_neutral": null,
-      "powers": [
-        [-3333300.0, 0.0],
-        [-3333300.0, 0.0],
-        [-3333300.0, 0.0]
-      ]
+      "type": "power",
+      "powers": [[-3333300.0, 0.0], [-3333300.0, 0.0], [-3333300.0, 0.0]]
     },
     {
       "id": "MVLV14092_consumption",
       "bus": "MVLV14092",
       "phases": "abc",
-      "type": "power",
       "connect_neutral": null,
-      "powers": [
-        [0.0, 0.0],
-        [0.0, 0.0],
-        [0.0, 0.0]
-      ]
+      "type": "power",
+      "powers": [[0.0, 0.0], [0.0, 0.0], [0.0, 0.0]]
     },
     {
       "id": "MVLV14092_production",
       "bus": "MVLV14092",
       "phases": "abc",
-      "type": "power",
       "connect_neutral": null,
-      "powers": [
-        [0.0, 0.0],
-        [0.0, 0.0],
-        [0.0, 0.0]
-      ]
+      "type": "power",
+      "powers": [[0.0, 0.0], [0.0, 0.0], [0.0, 0.0]]
     }
   ],
   "sources": [
@@ -319,41 +308,21 @@
       "id": "VoltageSource",
       "bus": "HVMV07",
       "phases": "abc",
-      "type": "voltage",
       "connect_neutral": null,
-      "voltages": [
-        [17320.50807568877, 10000.0],
-        [0.0, -20000.0],
-        [-17320.50807568877, 10000.0]
-      ]
+      "type": "voltage",
+      "voltages": [[17320.50807568877, 10000.0], [0.0, -20000.0], [-17320.50807568877, 10000.0]]
     }
   ],
   "lines_params": [
     {
       "id": "U_AL_240",
       "z_line": [
-        [
-          [0.12499999999999999, 0.0, 0.0],
-          [0.0, 0.12499999999999999, 0.0],
-          [0.0, 0.0, 0.12499999999999999]
-        ],
-        [
-          [0.1, 0.0, 0.0],
-          [0.0, 0.1, 0.0],
-          [0.0, 0.0, 0.1]
-        ]
+        [[0.12499999999999999, 0.0, 0.0], [0.0, 0.12499999999999999, 0.0], [0.0, 0.0, 0.12499999999999999]],
+        [[0.1, 0.0, 0.0], [0.0, 0.1, 0.0], [0.0, 0.0, 0.1]]
       ],
       "y_shunt": [
-        [
-          [0.0, 0.0, 0.0],
-          [0.0, 0.0, 0.0],
-          [0.0, 0.0, 0.0]
-        ],
-        [
-          [0.00018346901096964396, 0.0, 0.0],
-          [0.0, 0.00018346901096964396, 0.0],
-          [0.0, 0.0, 0.00018346901096964396]
-        ]
+        [[0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]],
+        [[0.00018346901096964396, 0.0, 0.0], [0.0, 0.00018346901096964396, 0.0], [0.0, 0.0, 0.00018346901096964396]]
       ],
       "ampacities": [428.0, 428.0, 428.0],
       "line_type": "UNDERGROUND",

@@ -1,6 +1,6 @@
 [project]
 name = "roseau-load-flow"
-version = "0.12.0"
+version = "0.13.0"
 description = "Highly capable multi-phase load flow solver"
 authors = [
     { name = "Ali Hamdan", email = "ali.hamdan@roseautechnologies.com" },
@@ -8,6 +8,7 @@ authors = [
     { name = "Benoît Vinot", email = "benoit.vinot@roseautechnologies.com" },
     { name = "Florent Cadoux", email = "florent.cadoux@roseautechnologies.com" },
     { name = "Louise Muller", email = "louise.muller@roseautechnologies.com" },
+    { name = "Audrey Ficot", email = "audrey.ficot@roseautechnologies.com" },
     { name = "Victor Gouin" },
 ]
 maintainers = [
@@ -21,13 +22,14 @@ classifiers = [
     "Operating System :: MacOS :: MacOS X",
     "Operating System :: Microsoft :: Windows",
     "Operating System :: POSIX :: Linux",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: Free Threading :: 2 - Beta",
     "Topic :: Scientific/Engineering :: Physics",
 ]
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
     "numpy>=1.21.5",
     "pandas>=1.4.0",
@@ -38,7 +40,7 @@ dependencies = [
     "pyproj>=3.3.0",
     "certifi>=2023.5.7",
     "platformdirs>=4.0.0",
-    "roseau-load-flow-engine==0.17.0",
+    "roseau-load-flow-engine==0.18.0",
 ]
 
 [project.urls]
@@ -57,7 +59,6 @@ dev = [
     "pytest>=8.0.0",
     "pytest-cov>=5.0.0",
     "pytest-xdist>=3.1.0",
-    "coverage[toml]>=7.0.5",
     "covdefaults>=2.3.0",
 ]
 doc = [
@@ -79,15 +80,13 @@ doc = [
 managed = true
 
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = ["uv_build>=0.8.13,<0.9.0"]
+build-backend = "uv_build"
 
-[tool.hatch.build.targets.sdist]
-only-include = ["roseau"]
-exclude = ["*tests*", "*conftest.py"]
-
-[tool.hatch.build.targets.wheel]
-packages = ["roseau"]
+[tool.uv.build-backend]
+module-name = ["roseau.load_flow", "roseau.load_flow_single"]
+module-root = ""
+source-exclude = ["*tests*", "*conftest.py"]
 
 [tool.ruff]
 line-length = 120
@@ -95,7 +94,25 @@ show-fixes = true
 namespace-packages = ["roseau"]
 
 [tool.ruff.lint]
-select = ["E", "F", "C90", "W", "B", "UP", "I", "RUF100", "TID", "SIM", "PT", "PIE", "N", "C4", "NPY", "T10", "PTH"]
+select = [
+    "E",
+    "F",
+    "C90",
+    "W",
+    "B",
+    "UP",
+    "I",
+    "RUF100",
+    "TID",
+    "SIM",
+    "PT",
+    "PIE",
+    "N",
+    "C4",
+    "NPY",
+    "T10",
+    "PTH",
+]
 unfixable = ["B"]
 ignore = ["E501", "B024", "N818", "UP038", "PTH123"]
 flake8-tidy-imports.ban-relative-imports = "all"
@@ -125,3 +142,42 @@ addopts = "--color=yes -n=0 --import-mode=importlib"
 testpaths = ["roseau/load_flow/", "roseau/load_flow_single/"]
 filterwarnings = []
 markers = ["no_patch_engine"]
+
+# Typos
+[tool.typos.files]
+extend-exclude = [
+    "*.svg",
+    "*.html",
+    "*.tex",
+    "*.xml",
+    "roseau/load_flow/tests/data/",
+]
+
+[tool.typos.default]
+extend-ignore-re = [
+    # spellchecker:disable-line
+    "(?Rm)^.*(#|//|%)\\s*spellchecker:disable-line$",
+    # spellchecker:<on|off>
+    "(?s)(#|//)\\s*spellchecker:off.*?\\n\\s*(#|//)\\s*spellchecker:on",
+]
+extend-ignore-identifiers-re = ["YNd[0-9]*"]
+
+[tool.typos.default.extend-identifiers]
+# The phase "ba" sometimes appears
+ba = "ba"
+# np.arange
+arange = "arange"
+# In Bibliography.bib
+Stichting = "Stichting"
+
+[tool.typos.default.extend-words]
+# typ and lod are heavily used in the DGS format
+typ = "typ"
+lod = "lod"
+# Phase to Neutral
+pn = "pn"
+
+# MD format
+[tool.mdformat]
+wrap = 120
+number = true

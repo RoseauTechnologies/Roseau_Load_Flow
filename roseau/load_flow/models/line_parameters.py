@@ -2,19 +2,19 @@ import logging
 import re
 import warnings
 from collections.abc import Sequence
+from enum import StrEnum
 from importlib import resources
 from pathlib import Path
-from typing import Literal, NoReturn, TypeAlias, TypeVar
+from typing import Final, Literal, NoReturn, Self, TypeAlias, TypeVar
 
 import numpy as np
 import numpy.linalg as nplin
 import pandas as pd
-from numpy._typing import NDArray
-from typing_extensions import Self
+from numpy.typing import NDArray
 
-from roseau.load_flow._compat import StrEnum
 from roseau.load_flow.constants import EPSILON_0, EPSILON_R, MU_0, OMEGA, PI, RHO, SQRT3, TAN_D, F
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
+from roseau.load_flow.sym import A_INV, A
 from roseau.load_flow.types import Insulator, LineType, Material
 from roseau.load_flow.typing import (
     ComplexArrayLike2D,
@@ -49,6 +49,8 @@ _StrEnumType = TypeVar("_StrEnumType", bound=StrEnum)
 
 class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
     """Parameters that define electrical models of lines."""
+
+    is_multi_phase: Final = True
 
     @ureg_wraps(None, (None, None, "ohm/km", "S/km", "A", None, None, None, "mm²"))
     def __init__(
@@ -133,6 +135,8 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         self.sections = sections
         self._check_matrix()
 
+        self._elements = set()  # Set of elements using this line parameters object
+
     def __repr__(self) -> str:
         s = f"<{type(self).__name__}: id={self.id!r}"
         if self._line_type is not None:
@@ -147,61 +151,6 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             s += f", ampacities={self._ampacities}"
         s += ">"
         return s
-
-    def __eq__(self, other: object) -> bool:
-        if not isinstance(other, LineParameters):
-            return NotImplemented
-        return (
-            self.id == other.id
-            and self._z_line.shape == other._z_line.shape
-            and np.allclose(self._z_line, other._z_line)
-            and (
-                (self._ampacities is None and other._ampacities is None)
-                or (
-                    self._ampacities is not None
-                    and other._ampacities is not None
-                    and self._ampacities.shape == other._ampacities.shape
-                    and np.allclose(self._ampacities, other._ampacities)
-                )
-            )
-            and self._line_type == other._line_type
-            and (
-                (self._materials is None and other._materials is None)
-                or (
-                    self._materials is not None
-                    and other._materials is not None
-                    and self._materials.shape == other._materials.shape
-                    and np.array_equal(self._materials, other._materials)
-                )
-            )
-            and (
-                (self._insulators is None and other._insulators is None)
-                or (
-                    self._insulators is not None
-                    and other._insulators is not None
-                    and self._insulators.shape == other._insulators.shape
-                    and np.array_equal(self._insulators, other._insulators)
-                )
-            )
-            and (
-                (self._sections is None and other._sections is None)
-                or (
-                    self._sections is not None
-                    and other._sections is not None
-                    and self._sections.shape == other._sections.shape
-                    and np.allclose(self._sections, other._sections)
-                )
-            )
-            and (
-                (not self._with_shunt and not other._with_shunt)
-                or (
-                    self._with_shunt
-                    and other._with_shunt
-                    and self._y_shunt.shape == other._y_shunt.shape
-                    and np.allclose(self._y_shunt, other._y_shunt)
-                )
-            )
-        )
 
     @property
     @ureg_wraps("ohm/km", (None,))
@@ -260,6 +209,9 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
     def sections(self, value: FloatScalarOrArrayLike1D | None) -> None:
         self._sections = self._check_positive_float_array(value=value, name="sections", unit="mm²", size=self._size)
 
+    #
+    # Symmetrical components
+    #
     @staticmethod
     def _sym_to_zy_simple(n, z0: complex, z1: complex, y0: complex, y1: complex) -> tuple[ComplexMatrix, ComplexMatrix]:
         """Symmetrical components to Z/Y matrices.
@@ -287,14 +239,6 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         np.fill_diagonal(z, zs)
         np.fill_diagonal(y, ys)
         return z, y
-
-    @staticmethod
-    def _check_z_line_matrix(id: Id, z_line: ComplexMatrix) -> None:
-        """Check that the z_line matrix is not singular."""
-        if nplin.det(z_line) == 0:
-            msg = f"The symmetric model data provided for line type {id!r} produces invalid line impedance matrix."
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Z_LINE_VALUE)
 
     @classmethod
     @ureg_wraps(None, (None, None, "ohm/km", "ohm/km", "S/km", "S/km", "ohm/km", "ohm/km", "S/km", "S/km", "A"))
@@ -459,6 +403,54 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
 
         return z_line, y_shunt
 
+    def _zy_to_sym(
+        self, operation: str, exc_code: RoseauLoadFlowExceptionCode
+    ) -> tuple[tuple[complex, complex], tuple[complex, complex]]:
+        """Convert the Z and Y matrices to a symmetrical model.
+
+        Returns:
+            The zero-sequence (z0, y0) and positive sequence (z1, y1) tuples.
+        """
+        n_phases = self._z_line.shape[0]
+        if n_phases not in (3, 4):
+            msg = (
+                f"Cannot {operation} line parameters with id {self.id!r} and {n_phases} phases. It must be three-phase."
+            )
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=exc_code)
+
+        z_012 = A_INV @ self._z_line[:3, :3] @ A
+        y_012 = A_INV @ self._y_shunt[:3, :3] @ A
+        z0 = z_012.item(0, 0)
+        y0 = y_012.item(0, 0)
+        z1 = z_012.item(1, 1)
+        y1 = y_012.item(1, 1)
+        return (z0, y0), (z1, y1)
+
+    def to_sym(self) -> dict[str, complex]:
+        """Return the symmetrical components of a three-phase line parameters.
+
+        An error is raised if the line parameters are not three-phase.
+
+        Returns:
+            The symmetrical components of the line impedance and shunt admittance. These are
+            ``z0, y0, z1, y1`` and optionally ``zn, zpn, bn, bpn`` if the line has a neutral.
+        """
+        (z0, y0), (z1, y1) = self._zy_to_sym(
+            operation="compute symmetrical components from", exc_code=RoseauLoadFlowExceptionCode.BAD_LINE_MODEL
+        )
+        result = {"z0": z0, "z1": z1, "y0": y0, "y1": y1}
+        if self._z_line.shape[0] == 4:
+            result["zn"] = self._z_line.item(3, 3)
+            result["yn"] = self._y_shunt.item(3, 3)
+            pn_indices = (0, 1, 2, 3, 3, 3), (3, 3, 3, 0, 1, 2)  # phase-neutral components indices
+            result["zpn"] = np.mean(self._z_line[pn_indices]).item()
+            result["ypn"] = np.mean(self._y_shunt[pn_indices]).item()
+        return result
+
+    #
+    # Geometric model
+    #
     @classmethod
     @ureg_wraps(None, (None, None, None, None, None, None, None, "mm**2", "mm**2", "m", "m", "A", "A"))
     def from_geometry(
@@ -543,6 +535,8 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             height=height,
             external_diameter=external_diameter,
         )
+        if ampacity_neutral is None:
+            ampacity_neutral = ampacity
         ampacities = [ampacity, ampacity, ampacity, ampacity_neutral]
         return cls(
             id=id,
@@ -1611,9 +1605,9 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         if self._line_type is not None:
             data["line_type"] = self._line_type.name
         if self._materials is not None:
-            data["materials"] = [x.name for x in self._materials]
+            data["materials"] = [x.name for x in self._materials.tolist()]
         if self._insulators is not None:
-            data["insulators"] = [x.name for x in self._insulators]
+            data["insulators"] = [x.name for x in self._insulators.tolist()]
         if self._sections is not None:
             data["sections"] = self._sections.tolist()
         return data
@@ -1662,6 +1656,14 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
                 msg = f"The {matrix_name} matrix of line type {self.id!r} has coefficients with negative real part."
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=code)
+
+    @staticmethod
+    def _check_z_line_matrix(id: Id, z_line: ComplexMatrix) -> None:
+        """Check that the z_line matrix is not singular."""
+        if nplin.det(z_line) == 0:
+            msg = f"The symmetric model data provided for line type {id!r} produces invalid line impedance matrix."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Z_LINE_VALUE)
 
     @staticmethod
     def _check_enum_array(

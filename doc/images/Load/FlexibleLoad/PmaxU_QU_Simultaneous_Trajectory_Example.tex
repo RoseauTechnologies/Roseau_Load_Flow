@@ -1,4 +1,4 @@
-\input{Preambule}%
+\input{Preamble}%
 
 \usepackage{pgfplots}%
 \pgfplotsset{compat=newest}%
@@ -48,19 +48,19 @@
     },%
     yticklabel style={align=center},%
     yticklabel={%
-    \pgfmathifthenelse{\tick==0}{%
-      "$Q^{\theo}$\hspace{3mm}"%
-    }{""}%
-    \pgfmathresult%
-    \pgfmathifthenelse{\tick==-5}{%
-    "$-S^{\max}$\hspace{3mm}"%
-    }{""}%
-    \pgfmathresult%
-    \pgfmathifthenelse{\tick==5}{%
-      "$S^{\max}$\hspace{3mm}"%
-    }{""}%
-    \pgfmathresult%
-    $\pgfmathprintnumber{\tick}$
+      \pgfmathifthenelse{\tick==0}{%
+        "$Q^{\theo}$\hspace{3mm}"%
+      }{""}%
+      \pgfmathresult%
+      \pgfmathifthenelse{\tick==-5}{%
+        "$-S^{\max}$\hspace{3mm}"%
+      }{""}%
+      \pgfmathresult%
+      \pgfmathifthenelse{\tick==5}{%
+        "$S^{\max}$\hspace{3mm}"%
+      }{""}%
+      \pgfmathresult%
+      $\pgfmathprintnumber{\tick}$
     },%
     colorbar,%
     colorbar style={%

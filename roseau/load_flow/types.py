@@ -1,7 +1,9 @@
+"""Common types and enumerations."""
+
 import logging
 from enum import auto
 
-from roseau.load_flow.utils import CaseInsensitiveStrEnum
+from roseau.load_flow.utils.helpers import CaseInsensitiveStrEnum
 
 # The local logger
 logger = logging.getLogger(__name__)
@@ -92,79 +94,177 @@ class Insulator(CaseInsensitiveStrEnum):
     PE = MDPE
 
 
+class TransformerInsulation(CaseInsensitiveStrEnum):
+    """The insulation technology of power transformers."""
+
+    DRY_TYPE = "dry-type"
+    """Dry-type transformer."""
+    LIQUID_IMMERSED = "liquid-immersed"
+    """Liquid-immersed transformer."""
+    GAS_FILLED = "gas-filled"
+    """Gas-filled transformer."""
+
+
 class TransformerCooling(CaseInsensitiveStrEnum):
-    """IEC Designations and Descriptions of the Cooling Classes Used in Power Transformers."""
+    """IEC designations and descriptions of the cooling classes used in power transformers.
 
-    # TODO add to the catalogue
 
-    ONAN = auto()
+    - Cooling class designations for liquid-immersed power transformers (IEC 60076-2):
+
+      +----------+---------------------+--------+--------------------------------------------------+
+      |          |                     | Letter | Description                                      |
+      +==========+=====================+========+==================================================+
+      | Internal | First Letter        | O      | Liquid with flash point ≤ 300°C                  |
+      +          + (Cooling medium)    +--------+--------------------------------------------------+
+      |          |                     | K      | Liquid with flash point > 300°C                  |
+      +          +                     +--------+--------------------------------------------------+
+      |          |                     | L      | Liquid with no measurable flash point            |
+      +          +                     +--------+--------------------------------------------------+
+      |          |                     | G      | Insulating gas (IEC 60076-15)                    |
+      +          +---------------------+--------+--------------------------------------------------+
+      |          | Second Letter       | N      | Natural convection through cooling equipment and |
+      |          | (Cooling mechanism) |        | windings                                         |
+      +          +                     +--------+--------------------------------------------------+
+      |          |                     | F      | Forced circulation through cooling equipment,    |
+      |          |                     |        | natural convection in windings                   |
+      +          +                     +--------+--------------------------------------------------+
+      |          |                     | D      | Forced circulation through cooling equipment,    |
+      |          |                     |        | directed from the cooling equipment into at      |
+      |          |                     |        | least the main windings                          |
+      +----------+---------------------+--------+--------------------------------------------------+
+      | External | Third letter        | A      | Air                                              |
+      +          + (Cooling medium)    +--------+--------------------------------------------------+
+      |          |                     | W      | Water                                            |
+      +          +---------------------+--------+--------------------------------------------------+
+      |          | Fourth Letter       | N      | Natural convection                               |
+      +          + (Cooling mechanism) +--------+--------------------------------------------------+
+      |          |                     | F      | Forced circulation (fans, air blowers, water     |
+      |          |                     |        | pumps)                                           |
+      +----------+---------------------+--------+--------------------------------------------------+
+
+    - Cooling class designations for gas-filled power transformers (IEC 60076-15):
+
+      Same as liquid-immersed transformers, but with the first letter always `G` (Insulating gas).
+
+    - Cooling class designations for dry-type power transformers (IEC 60076-11):
+
+      +---------------------+--------+-------------------------------------------------------------+
+      |                     | Letter | Description                                                 |
+      +=====================+========+=============================================================+
+      | First Letter        | A      | Air                                                         |
+      | (Cooling medium)    |        |                                                             |
+      +---------------------+--------+-------------------------------------------------------------+
+      | Second Letter       | N      | Natural convection                                          |
+      + (Cooling mechanism) +--------+-------------------------------------------------------------+
+      |                     | F      | Forced circulation                                          |
+      +---------------------+--------+-------------------------------------------------------------+
+    """
+
+    # Liquid-immersed: Mineral oil
+    ONAN = "ONAN"  # Previous designation (1993): OA or ONS
     """Oil Natural/Air Natural.
 
     Oil-air (self-cooled).
-
-    Previous designation (1993): OA or ONS
     """
-    ONAF = auto()
-    """Oil Natural/Air Forced, Forced-air
-
-    Previous designation (1993): FA or ONF
-    """
-    ONAN_ONAF_ONAF = auto()
+    ONAF = "ONAF"  # Previous designation (1993): FA or ONF
+    """Oil Natural/Air Forced, Forced-air."""
+    ONAN_ONAF_ONAF = "ONAN/ONAF/ONAF"  # Previous designation (1993): OA/FA/FA
     """Oil Natural Air Natural/Oil Natural Air Forced/Oil Natural Air Forced.
 
     Oil-air (self-cooled), followed by two stages of forced-air cooling (fans).
-
-    Previous designation (1993): OA/FA/FA
     """
-    ONAN_ONAF_OFAF = auto()
+    ONAN_ONAF_OFAF = "ONAN/ONAF/OFAF"  # Previous designation (1993): OA/FA/FOA
     """Oil Natural Air Natural/Oil Natural Air Forced/Oil Forced Air Forced.
 
     Oil-air (self-cooled), followed by one stage of forced-air cooling (fans), followed by 1 stage
     of forced oil (oil pumps).
-
-    Previous designation (1993): OA/FA/FOA
     """
-    ONAF_ODAF = auto()
-    """Oil Natural Air Forced/Oil Direct Air Forced.
+    ONAN_ODAF = "ONAF/ODAF"  # Previous designation (1993): OA/FOA
+    """Oil Natural Air Natural/Oil Direct Air Forced.
 
     Oil-air (self-cooled), followed by one stage of directed oil flow pumps (with fans).
-
-    Previous designation (1993): OA/FOA
     """
-    ONAF_ODAF_ODAF = auto()
+    ONAF_ODAF_ODAF = "ONAF/ODAF/ODAF"  # Previous designation (1993): OA/FOA/FOA
     """Oil Natural Air Forced/Oil Direct Air Forced/Oil Direct Air Forced.
 
     Oil-air (self-cooled), followed by two stages of directed oil flow pumps (with fans).
-
-    Previous designation (1993): OA/FOA/FOA
     """
-    OFAF = auto()
+    OFAF = "OFAF"  # Previous designation (1993): FOA
     """Oil Forced Air Forced.
 
     Forced oil/air (with fans) rating only -- no self-cooled rating.
-
-    Previous designation (1993): FOA
     """
-    OFWF = auto()
+    OFWF = "OFWF"  # Previous designation (1993): FOW
     """Oil Forced Water Forced.
 
     Forced oil/water cooled rating only (oil/water heat exchanger with oil and water pumps) -- no
     self-cooled rating.
-
-    Previous designation (1993): FOW
     """
-    ODAF = auto()
+    ODAF = "ODAF"  # Previous designation (1993): FOA
     """Oil Direct Air Forced
 
     Forced oil/air cooled rating only with directed oil flow pumps and fans -- no self-cooled rating.
-
-    Previous designation (1993): FOA
     """
-    ODWF = auto()
+    ODWF = "ODWF"  # Previous designation (1993): FOW
     """Oil Direct Water Forced
 
     Forced oil/water cooled rating only (oil/water heat exchanger with directed oil flow pumps and
     water pumps) --  no self-cooled rating.
-
-    Previous designation (1993): FOW
     """
+
+    # Liquid-immersed: Non-mineral oil
+    KNAN = "KNAN"
+    """Less flammable liquid-immersed self-cooled."""
+    KNAF = "KNAF"
+    """Less flammable liquid-immersed forced-air-cooled."""
+    KFAF = "KFAF"
+    """Less flammable liquid-immersed forced-liquid-cooled (non-directed flow) with forced-air cooler."""
+    KDAF = "KDAF"
+    """Less flammable liquid-immersed forced-liquid-cooled (directed flow) with forced-air cooler."""
+    KNWF = "KNWF"
+    """Less flammable liquid-immersed self cooled with forced-water cooler."""
+    KFWF = "KFWF"
+    """Less flammable liquid-immersed forced-liquid-cooled (non-directed flow) with forced-water cooler."""
+    KDWF = "KDWF"
+    """Less flammable liquid-immersed forced-liquid-cooled (directed flow) with forced-water cooler."""
+
+    # Liquid-immersed: Liquid with no measurable flash point (L)
+    LNAN = "LNAN"
+    """Liquid with no measurable flash point self-cooled."""
+    LNAF = "LNAF"
+    """Liquid with no measurable flash point forced-air-cooled."""
+    # <<<< Add others on demand >>>>
+
+    # Gas-filled
+    GNAN = "GNAN"
+    """Gas Natural/Air Natural."""
+    GNAF = "GNAF"
+    """Gas Natural/Air Forced."""
+    GFAF = "GFAF"
+    """Gas Forced/Air Forced."""
+    GDAF = "GDAF"
+    """Gas Direct/Air Forced."""
+    GNWF = "GNWF"
+    """Gas Natural/Water Forced."""
+    GFWF = "GFWF"
+    """Gas Forced/Water Forced."""
+
+    # Dry-type
+    AN = "AN"
+    """Air Natural."""
+    AF = "AF"
+    """Air Forced."""
+    AN_AF = "AN/AF"
+    """Air Natural/Air Forced."""
+
+    @property
+    def type(self) -> TransformerInsulation:
+        """The type of the transformer based on the cooling class."""
+        if self.name.startswith(("O", "K", "L")):
+            return TransformerInsulation.LIQUID_IMMERSED
+        elif self.name.startswith("G"):
+            return TransformerInsulation.GAS_FILLED
+        elif self.name.startswith("A"):
+            return TransformerInsulation.DRY_TYPE
+        else:
+            raise NotImplementedError(self)

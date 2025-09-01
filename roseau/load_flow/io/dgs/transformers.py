@@ -44,6 +44,7 @@ def typ_tr2_to_tp(
         p0 = Q_(typ_tr.at[fid, "pfe"], "kW")  # Losses during off-load test (kW)
         psc = Q_(typ_tr.at[fid, "pcutr"], "kW")  # Losses during short-circuit test (kW)
         vsc = Q_(typ_tr.at[fid, "uktr"], "percent")  # Voltages on LV side during short-circuit test (%)
+        fn = Q_(typ_tr.at[fid, "frnom"], "Hz")  # Nominal frequency (Hz)
         whv = typ_tr.at[fid, "tr2cn_h"]  # Vector Group: HV-Side
         wlv = typ_tr.at[fid, "tr2cn_l"]  # Vector Group: LV-Side
         clock = typ_tr.at[fid, "nt2ag"]  # Vector Group: Phase Shift
@@ -51,7 +52,7 @@ def typ_tr2_to_tp(
 
         # Generate transformer parameters
         tr_params[fid] = TransformerParameters.from_open_and_short_circuit_tests(
-            id=type_id, vg=vg, uhv=uhv, ulv=ulv, sn=sn, p0=p0, i0=i0, psc=psc, vsc=vsc
+            id=type_id, vg=vg, uhv=uhv, ulv=ulv, sn=sn, p0=p0, i0=i0, psc=psc, vsc=vsc, fn=fn
         )
         tr_taps[fid] = typ_tr.at[fid, "dutap"]
 

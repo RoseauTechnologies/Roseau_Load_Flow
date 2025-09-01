@@ -14,13 +14,18 @@ on:
       - ".vscode/**"
       - ".idea/**"
 
+permissions: {}
+
 jobs:
   pre-commit:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
         with:
           lfs: false
+          persist-credentials: false
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"

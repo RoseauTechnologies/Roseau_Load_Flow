@@ -2,15 +2,19 @@
 
 import cmath
 import math
+import warnings
 from collections.abc import Callable, Iterable, Mapping
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any, Literal, overload
 
+import geopandas as gpd
 import numpy as np
+from typing_extensions import deprecated
 
 from roseau.load_flow.models import AbstractBranch, AbstractTerminal
 from roseau.load_flow.network import ElectricalNetwork
 from roseau.load_flow.sym import NegativeSequence, PositiveSequence, ZeroSequence, phasor_to_sym
-from roseau.load_flow.typing import ComplexArray
+from roseau.load_flow.typing import ComplexArray, Id, Side
+from roseau.load_flow.utils import find_stack_level
 
 if TYPE_CHECKING:
     import folium
@@ -78,47 +82,73 @@ def _draw_voltage_phasor(
 
 
 def _get_phases_and_potentials(
-    element: AbstractTerminal | AbstractBranch,
-    voltage_type: Literal["pp", "pn", "auto"],
-    side: Literal[1, 2, "HV", "LV"] | None,
-) -> tuple[str, ComplexArray]:
+    element: AbstractTerminal | AbstractBranch, voltage_type: Literal["pp", "pn", "auto"], side: Side | None
+) -> tuple[AbstractTerminal, str, ComplexArray]:
+    if not element.is_multi_phase:
+        raise TypeError(f"Only multi-phase elements can be plotted. Did you mean to use rlf.{type(element).__name__}?")
     if isinstance(element, AbstractTerminal):
         if side is not None:
             raise ValueError("The side argument is only valid for branch elements.")
-        phases, potentials = element.phases, element.res_potentials.m
-    elif side in (1, "HV"):
-        phases, potentials = element.phases1, element.res_potentials[0].m
-    elif side in (2, "LV"):
-        phases, potentials = element.phases2, element.res_potentials[1].m
-    elif side is None:
-        expected = ("HV", "LV") if element.element_type == "transformer" else (1, 2)
-        raise ValueError(f"The side for a {element.element_type} must be one of {expected}.")
     else:
-        raise ValueError(f"Invalid side: {side!r}")
+        if side in (1, "HV"):
+            element = element.side1
+        elif side in (2, "LV"):
+            element = element.side2
+        elif side is None:
+            expected = ("HV", "LV") if element.element_type == "transformer" else (1, 2)
+            raise ValueError(f"The side for a {element.element_type} must be one of {expected}.")
+        else:
+            raise ValueError(f"Invalid side: {side!r}")
+        warnings.warn(
+            (
+                f"Plotting the voltages of a {element._branch.element_type} using the side argument "
+                f"is deprecated. Use {element._branch.element_type}.side{element._side_suffix} "
+                f"directly instead."
+            ),
+            category=DeprecationWarning,
+            stacklevel=find_stack_level(),
+        )
+    phases, potentials = element.phases, element.res_potentials.m
+
+    if len(phases) < 2:
+        raise ValueError(f"The element {element.id!r} must have at least two phases to plot voltages.")
+
     if voltage_type == "auto":
-        return phases, potentials
+        pass
     elif voltage_type == "pn":
         if "n" not in phases:
             raise ValueError("The element must have a neutral to plot phase-to-neutral voltages.")
-        return phases, potentials
     elif voltage_type == "pp":
-        phases_pp = phases.removesuffix("n")
-        n_pp = len(phases_pp)
-        if n_pp == 1:
+        phases = phases.removesuffix("n")
+        n_pp = len(phases)
+        if n_pp < 2:
             raise ValueError("The element must have more than one phase to plot phase-to-phase voltages.")
-        return phases_pp, potentials[:n_pp]
+        potentials = potentials[:n_pp]
     else:
         raise ValueError(f"Invalid voltage_type: {voltage_type!r}")
+    return element, phases, potentials
 
 
 #
 # Phasor plotting functions
 #
+@overload
+def plot_voltage_phasors(
+    element: AbstractTerminal, *, voltage_type: Literal["pp", "pn", "auto"] = "auto", ax: "Axes | None" = None
+) -> "Axes": ...
+@overload
+@deprecated(
+    "Plotting the voltage phasors of a branch using the side argument is deprecated. Use "
+    "branch.side1 or branch.side2 directly instead."
+)
+def plot_voltage_phasors(
+    element: AbstractBranch, *, voltage_type: Literal["pp", "pn", "auto"] = "auto", side: Side, ax: "Axes | None" = None
+) -> "Axes": ...
 def plot_voltage_phasors(
     element: AbstractTerminal | AbstractBranch,
     *,
     voltage_type: Literal["pp", "pn", "auto"] = "auto",
-    side: Literal[1, 2, "HV", "LV"] | None = None,
+    side: Side | None = None,
     ax: "Axes | None" = None,
 ) -> "Axes":
     """Plot the voltage phasors of a terminal element or a branch element.
@@ -154,9 +184,9 @@ def plot_voltage_phasors(
 
     if ax is None:
         ax = plt.gca()
-    phases, potentials = _get_phases_and_potentials(element, voltage_type, side)
+    element, phases, potentials = _get_phases_and_potentials(element, voltage_type, side)
     _configure_axes(ax, potentials)
-    ax.set_title(f"{element.id}" if side is None else f"{element.id} ({side})")
+    ax.set_title(f"{element.id}" if element._side_value is None else f"{element.id} ({element._side_value})")
     if "n" in phases:
         origin = potentials.flat[-1]
         for phase, potential in zip(phases[:-1], potentials[:-1].flat, strict=True):
@@ -180,11 +210,20 @@ def plot_voltage_phasors(
     return ax
 
 
+@overload
 def plot_symmetrical_voltages(
-    element: AbstractTerminal | AbstractBranch,
-    *,
-    side: Literal[1, 2, "HV", "LV"] | None = None,
-    axes: Iterable["Axes"] | None = None,
+    element: AbstractTerminal, *, axes: Iterable["Axes"] | None = None
+) -> "tuple[Axes, Axes, Axes]": ...
+@overload
+@deprecated(
+    "Plotting the symmetrical voltages of a branch using the side argument is deprecated. Use "
+    "branch.side1 or branch.side2 directly instead."
+)
+def plot_symmetrical_voltages(
+    element: AbstractBranch, *, side: Side, axes: Iterable["Axes"] | None = None
+) -> "tuple[Axes, Axes, Axes]": ...
+def plot_symmetrical_voltages(
+    element: AbstractTerminal | AbstractBranch, *, side: Side | None = None, axes: Iterable["Axes"] | None = None
 ) -> "tuple[Axes, Axes, Axes]":
     """Plot the symmetrical voltages of a terminal element or a branch element.
 
@@ -210,7 +249,7 @@ def plot_symmetrical_voltages(
     """
     from roseau.load_flow.utils.optional_deps import pyplot as plt
 
-    phases, potentials = _get_phases_and_potentials(element, "auto", side)
+    element, phases, potentials = _get_phases_and_potentials(element, "auto", side)
     if phases not in {"abc", "abcn"}:
         raise ValueError("The element must have 'abc' or 'abcn' phases.")
     if axes is None:
@@ -219,7 +258,7 @@ def plot_symmetrical_voltages(
     u0, u1, u2 = sym_components = phasor_to_sym(potentials[:3])
     un = potentials[3] if "n" in phases else 0j
     ax_limits = np.array(1.2 * max(abs(sym_components)) * PositiveSequence, dtype=np.complex128)
-    title = f"{element.id}" if side is None else f"{element.id} ({side})"
+    title = f"{element.id}" if element._side_value is None else f"{element.id} ({element._side_value})"
 
     def _draw_balanced_voltages(ax: "Axes", u: "complex", seq: "ComplexArray"):
         seq_potentials = np.array(u * seq, dtype=np.complex128)
@@ -255,6 +294,140 @@ def plot_symmetrical_voltages(
 #
 # Map plotting functions
 #
+def _check_folium(func_name: str) -> None:
+    """Check if the folium library is installed."""
+    try:
+        import folium  # pyright: ignore # noqa: F401
+    except ImportError as e:
+        e.add_note(f"The `folium` library is required when using `{func_name}`. Install it with `pip install folium`.")
+        raise
+
+
+def _plot_interactive_map_internal(
+    buses_gdf: gpd.GeoDataFrame,
+    lines_gdf: gpd.GeoDataFrame,
+    bus_fields: dict[str, str],
+    line_fields: dict[str, str],
+    style_color_callback: Callable[[str, Id], str],
+    highlight_color: str,
+    style_function: Callable[["FeatureMap"], "StyleDict | None"] | None,
+    highlight_function: Callable[["FeatureMap"], "StyleDict | None"] | None,
+    map_kws: Mapping[str, Any] | None,
+    add_tooltips: bool,
+    add_popups: bool,
+    add_search: bool,
+) -> "folium.Map":
+    import folium
+
+    def internal_style_function(feature):
+        result = style_function(feature) if style_function is not None else None
+        if result is not None:
+            return result
+        # Default style
+        style_color = style_color_callback(feature["properties"]["element_type"], feature["properties"]["id"])
+        if feature["properties"]["element_type"] == "bus":
+            return {
+                "fill": True,
+                "fillColor": style_color,
+                "color": style_color,
+                "fillOpacity": 1,
+                "radius": 3,
+            }
+        elif feature["properties"]["element_type"] == "line":
+            return {"color": style_color, "weight": 2}
+        else:
+            return {"color": style_color, "weight": 2}
+
+    def internal_highlight_function(feature):
+        result = highlight_function(feature) if highlight_function is not None else None
+        if result is not None:
+            return result
+        # Default highlight style
+        if feature["properties"]["element_type"] == "bus":
+            return {"color": highlight_color, "fillColor": highlight_color}
+        elif feature["properties"]["element_type"] == "line":
+            return {"color": highlight_color}
+        else:
+            return {"color": highlight_color}
+
+    if add_tooltips:
+        bus_tooltip = folium.GeoJsonTooltip(
+            fields=list(bus_fields.keys()),
+            aliases=list(bus_fields.values()),
+            localize=True,
+            sticky=False,
+            labels=True,
+            max_width=800,
+        )
+        line_tooltip = folium.GeoJsonTooltip(
+            fields=list(line_fields.keys()),
+            aliases=list(line_fields.values()),
+            localize=True,
+            sticky=False,
+            labels=True,
+            max_width=800,
+        )
+    else:
+        bus_tooltip = line_tooltip = None
+    if add_popups:
+        bus_popup = folium.GeoJsonPopup(
+            fields=list(bus_fields.keys()),
+            aliases=list(bus_fields.values()),
+            localize=True,
+            labels=True,
+        )
+        line_popup = folium.GeoJsonPopup(
+            fields=list(line_fields.keys()),
+            aliases=list(line_fields.values()),
+            localize=True,
+            labels=True,
+        )
+    else:
+        bus_popup = line_popup = None
+
+    map_kws = dict(map_kws) if map_kws is not None else {}
+
+    # Calculate the center and zoom level of the map if not provided
+    if "location" not in map_kws or "zoom_start" not in map_kws:
+        geom_union = buses_gdf.union_all()
+        if "location" not in map_kws:
+            map_kws["location"] = list(reversed(geom_union.centroid.coords[0]))
+        if "zoom_start" not in map_kws:
+            # Calculate the zoom level based on the bounding box of the network
+            min_x, min_y, max_x, max_y = geom_union.bounds
+            # The bounding box could be a point, a vertical line or a horizontal line. In these
+            # cases, we set a default zoom level of 16.
+            zoom_lon = math.ceil(math.log2(360 * 2.0 / (max_x - min_x))) if max_x > min_x else 16
+            zoom_lat = math.ceil(math.log2(360 * 2.0 / (max_y - min_y))) if max_y > min_y else 16
+            map_kws["zoom_start"] = min(zoom_lon, zoom_lat)
+
+    m = folium.Map(**map_kws)
+    network_layer = folium.FeatureGroup(name="Electrical Network").add_to(m)
+    folium.GeoJson(
+        data=lines_gdf,
+        name="lines",
+        style_function=internal_style_function,
+        highlight_function=internal_highlight_function,
+        tooltip=line_tooltip,
+        popup=line_popup,
+    ).add_to(network_layer)
+    folium.GeoJson(
+        data=buses_gdf,
+        name="buses",
+        marker=folium.CircleMarker(),
+        style_function=internal_style_function,
+        highlight_function=internal_highlight_function,
+        tooltip=bus_tooltip,
+        popup=bus_popup,
+    ).add_to(network_layer)
+    folium.LayerControl().add_to(m)
+    if add_search:
+        from folium.plugins import Search
+
+        Search(network_layer, search_label="id", placeholder="Search network elements...").add_to(m)
+    return m
+
+
 def plot_interactive_map(
     network: ElectricalNetwork,
     *,
@@ -263,6 +436,9 @@ def plot_interactive_map(
     style_function: Callable[["FeatureMap"], "StyleDict | None"] | None = None,
     highlight_function: Callable[["FeatureMap"], "StyleDict | None"] | None = None,
     map_kws: Mapping[str, Any] | None = None,
+    add_tooltips: bool = True,
+    add_popups: bool = True,
+    add_search: bool = True,
 ) -> "folium.Map":
     """Plot an electrical network on an interactive map.
 
@@ -295,98 +471,97 @@ def plot_interactive_map(
             `location` is set to the centroid of the network geometry and `zoom_start` is calculated
             based on its bounding box.
 
+        add_tooltips:
+            If ``True`` (default), tooltips will be added to the map elements. Tooltips appear when
+            hovering over an element.
+
+        add_popups:
+            If ``True`` (default), popups will be added to the map elements. Popups appear when
+            clicking on an element.
+
+        add_search:
+            If ``True`` (default), a search bar will be added to the map to search for network
+            elements by their ID.
+
     Returns:
         The :class:`folium.Map` object with the network plot.
     """
-    try:
-        import folium
-    except ImportError as e:
-        raise ImportError(
-            "The `folium` library is required when using `roseau.load_flow.plotting.plot_interactive_map`."
-            "Install it with `pip install folium`."
-        ) from e
+    _check_folium(func_name="plot_interactive_map")
+    if not network.is_multi_phase:
+        raise TypeError(
+            "Only multi-phase networks can be plotted. Did you mean to use rlfs.plotting.plot_interactive_map?"
+        )
 
-    map_kws = dict(map_kws) if map_kws is not None else {}
+    def _scalar_if_unique(value):
+        # If the value is the same for all phases, return it as a scalar, otherwise, return the array
+        if value is None:
+            return None
+        unique = np.unique(value)
+        if unique.size == 1:
+            return unique.item()
+        return value.tolist()
 
     buses_gdf = network.buses_frame
     buses_gdf.reset_index(inplace=True)
     buses_gdf["element_type"] = "bus"
+    buses_gdf["min_voltage_level"] *= 100  # Convert to percentage
+    buses_gdf["max_voltage_level"] *= 100  # Convert to percentage
     lines_gdf = network.lines_frame
     lines_gdf.reset_index(inplace=True)
     lines_gdf["element_type"] = "line"
-
-    def internal_style_function(feature):
-        result = style_function(feature) if style_function is not None else None
-        if result is not None:
-            return result
-        # Default style
-        if feature["properties"]["element_type"] == "bus":
-            return {
-                "fill": True,
-                "fillColor": style_color,
-                "color": style_color,
-                "fillOpacity": 1,
-                "radius": 3,
+    lines_gdf["max_loading"] *= 100  # Convert to percentage
+    lines_gdf[["ampacity", "section", "line_type", "material", "insulator"]] = None
+    line_params = {}
+    for idx in lines_gdf.index:
+        lp = network.lines[lines_gdf.at[idx, "id"]].parameters
+        if lp.id not in line_params:
+            line_params[lp.id] = {
+                "ampacity": _scalar_if_unique(lp._ampacities),
+                "section": _scalar_if_unique(lp._sections),
+                "line_type": lp._line_type,
+                "material": _scalar_if_unique(lp._materials),
+                "insulator": _scalar_if_unique(lp._insulators),
             }
-        elif feature["properties"]["element_type"] == "line":
-            return {"color": style_color, "weight": 2}
-        else:
-            return {"color": style_color, "weight": 2}
+        lines_gdf.at[idx, "ampacity"] = line_params[lp.id]["ampacity"]
+        lines_gdf.at[idx, "section"] = line_params[lp.id]["section"]
+        lines_gdf.at[idx, "line_type"] = line_params[lp.id]["line_type"]
+        lines_gdf.at[idx, "material"] = line_params[lp.id]["material"]
+        lines_gdf.at[idx, "insulator"] = line_params[lp.id]["insulator"]
 
-    def internal_highlight_function(feature):
-        result = highlight_function(feature) if highlight_function is not None else None
-        if result is not None:
-            return result
-        # Default highlight style
-        if feature["properties"]["element_type"] == "bus":
-            return {"color": highlight_color, "fillColor": highlight_color}
-        elif feature["properties"]["element_type"] == "line":
-            return {"color": highlight_color}
-        else:
-            return {"color": highlight_color}
+    bus_fields = {
+        "id": "Id:",
+        "phases": "Phases:",
+        "nominal_voltage": "Un (V):",
+        "min_voltage_level": "Umin (%):",
+        "max_voltage_level": "Umax (%):",
+    }
+    line_fields = {
+        "id": "Id:",
+        "phases": "Phases:",
+        "bus1_id": "Bus1:",
+        "bus2_id": "Bus2:",
+        "parameters_id": "Parameters:",
+        "length": "Length (km):",
+        "line_type": "Line Type:",
+        "material": "Material:",
+        "insulator": "Insulator:",
+        "section": "Section (mm²):",
+        "ampacity": "Ampacity (A):",
+        "max_loading": "Max loading (%):",
+    }
 
-    # Calculate the center and zoom level of the map if not provided
-    if "location" not in map_kws or "zoom_start" not in map_kws:
-        geom_union = buses_gdf.union_all()
-        if "location" not in map_kws:
-            map_kws["location"] = list(reversed(geom_union.centroid.coords[0]))
-        if "zoom_start" not in map_kws:
-            # Calculate the zoom level based on the bounding box of the network
-            min_x, min_y, max_x, max_y = geom_union.bounds
-            zoom_lon = math.ceil(math.log2(360 * 2.0 / (max_x - min_x)))
-            zoom_lat = math.ceil(math.log2(360 * 2.0 / (max_y - min_y)))
-            map_kws["zoom_start"] = min(zoom_lon, zoom_lat)
-
-    m = folium.Map(**map_kws)
-    folium.GeoJson(
-        data=lines_gdf,
-        name="lines",
-        marker=folium.CircleMarker(),
-        style_function=internal_style_function,
-        highlight_function=internal_highlight_function,
-        tooltip=folium.GeoJsonTooltip(
-            fields=["id", "phases", "bus1_id", "bus2_id", "parameters_id", "length"],
-            aliases=["Id:", "Phases:", "Bus1:", "Bus2:", "Parameters:", "Length (km):"],
-            localize=True,
-            sticky=False,
-            labels=True,
-            max_width=800,
-        ),
-    ).add_to(m)
-    folium.GeoJson(
-        data=buses_gdf,
-        name="buses",
-        marker=folium.CircleMarker(),
-        style_function=internal_style_function,
-        highlight_function=internal_highlight_function,
-        tooltip=folium.GeoJsonTooltip(
-            fields=["id", "phases"],
-            aliases=["Id:", "Phases:"],
-            localize=True,
-            sticky=False,
-            labels=True,
-            max_width=800,
-        ),
-    ).add_to(m)
-    folium.LayerControl().add_to(m)
+    m = _plot_interactive_map_internal(
+        buses_gdf=buses_gdf,
+        lines_gdf=lines_gdf,
+        bus_fields=bus_fields,
+        line_fields=line_fields,
+        style_color_callback=lambda et, id: style_color,
+        highlight_color=highlight_color,
+        style_function=style_function,
+        highlight_function=highlight_function,
+        map_kws=map_kws,
+        add_tooltips=add_tooltips,
+        add_popups=add_popups,
+        add_search=add_search,
+    )
     return m

@@ -1,27 +1,30 @@
 ---
 myst:
   html_meta:
-    "description lang=en": |
+    description lang=en: |
       Buses in Roseau Load Flow - Three-phase unbalanced load flow solver in a Python API by Roseau Technologies.
-    "description lang=fr": |
+    keywords lang=en: simulation, distribution grid, bus, model
+    # spellchecker:off
+    description lang=fr: |
       Les bus dans Roseau Load Flow - Solveur d'écoulement de charge triphasé et déséquilibré dans une API Python par
       Roseau Technologies.
-    "keywords lang=fr": simulation, réseau, électrique, bus, roseau load flow, modèle
-    "keywords lang=en": simulation, distribution grid, bus, model
+    keywords lang=fr: simulation, réseau, électrique, bus, roseau load flow, modèle
+    # spellchecker:on
 ---
 
 # Bus
 
 ## Definition
 
-It represents a multiphase node in the network that other elements (loads, lines, transformers,
-voltage sources...) can connect to. A bus is a placeholder point where we want the voltage to be
-computed during the load flow.
+It represents a multiphase node in the network that other elements (loads, lines, transformers, voltage sources...) can
+connect to. A bus is a placeholder point where we want the voltage to be computed during the load flow.
 
 ```{image} /_static/Bus.svg
-:alt: Bus diagram
-:width: 100px
-:align: center
+---
+alt: Bus diagram
+width: 100px
+align: center
+---
 ```
 
 No equation is added for a bus.
@@ -37,7 +40,7 @@ The following results are available for all buses:
 | `res_voltage_levels` | $\mathrm{pu}$ | number array  | The per-unit voltage levels: ($\sqrt{3} V_{pn} / V_\mathrm{nom}$) if the bus has a neutral, ($V_{pp} / V_\mathrm{nom}$) otherwise |
 | `res_violated`       | -             | boolean array | Indicates if the voltage levels violate the limits                                                                                |
 
-Addionally, the following results are available for buses _with a neutral_:
+Additionally, the following results are available for buses _with a neutral_:
 
 | Result Accessor         | Default Unit  | Type          | Description                                                                      |
 | ----------------------- | ------------- | ------------- | -------------------------------------------------------------------------------- |
@@ -53,14 +56,14 @@ And the following results are available for buses _with more than one phase_:
 
 And the following results are available for _three-phase_ buses:
 
-| Result Accessor           | Default Unit | Type   | Description                                                      |
-| ------------------------- | ------------ | ------ | ---------------------------------------------------------------- |
-| `res_voltage_unbalance()` | $\%$         | number | The voltage unbalance of the bus according to the IEC definition |
+| Result Accessor           | Default Unit | Type   | Description                                                                    |
+| ------------------------- | ------------ | ------ | ------------------------------------------------------------------------------ |
+| `res_voltage_unbalance()` | $\%$         | number | The voltage unbalance of the bus according to the IEC, IEEE or NEMA definition |
 
 ## Usage
 
-A bus is identified by its unique id and must define the phases it is connected to. A bus must
-have all the phases of the elements connected to it.
+A bus is identified by its unique id and must define the phases it is connected to. A bus must have all the phases of
+the elements connected to it.
 
 ```python
 import roseau.load_flow as rlf
@@ -77,8 +80,7 @@ rlf.PowerLoad(
 )  # Error: bus3 does not have phase "b"
 ```
 
-Since a bus represents a point in the network, it is possible to define the coordinates of this
-point:
+Since a bus represents a point in the network, it is possible to define the coordinates of this point:
 
 ```python
 import roseau.load_flow as rlf
@@ -87,8 +89,7 @@ from shapely import Point
 bus = rlf.Bus(id="bus", phases="abc", geometry=Point(1.0, -2.5))
 ```
 
-This information is not used by the load flow solver but could be used to generate geographical
-plots of the results.
+This information is not used by the load flow solver but could be used to generate geographical plots of the results.
 
 ## Short-circuit
 

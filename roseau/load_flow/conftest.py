@@ -1,6 +1,7 @@
 import importlib
 import inspect
 import os
+from itertools import chain
 from pathlib import Path
 
 import pytest
@@ -43,6 +44,7 @@ _CY_CLASSES_WITH_BASES = {
     "CySimplifiedLine": ("CyBranch",),
     "CyShuntLine": ("CyBranch",),
     "CySwitch": ("CyBranch",),
+    "CyOpenSwitch": ("CyBranch",),
     "CyTransformer": ("CyBranch",),
     "CyThreePhaseTransformer": ("CyTransformer",),
     "CySingleTransformer": ("CyTransformer",),
@@ -79,8 +81,7 @@ for class_name, bases in _CY_CLASSES_WITH_BASES.items():
     _PATCHED_CY_CLASSES[class_name] = type(class_name, bases, {})
 
 
-@pytest.fixture(autouse=True)
-def patch_engine(request):
+def patch_engine_impl(request: pytest.FixtureRequest, extra_dir: Path | None = None):
     mpatch = pytest.MonkeyPatch()
 
     if "no_patch_engine" in request.keywords:
@@ -97,7 +98,11 @@ def patch_engine(request):
         # Get all roseau.load_flow submodules
         rlf_directory_path = Path(roseau.load_flow.__file__).parent
         relative_to = Path(roseau.load_flow.__file__).parents[2]
-        for dirpath, _, filenames in os.walk(rlf_directory_path):  # TODO In Python 3.12 use rlf_directory_path.walk()
+        dirs = [rlf_directory_path]
+        if extra_dir:
+            dirs.append(extra_dir)
+        for dirpath, _, filenames in chain.from_iterable(os.walk(d) for d in dirs):
+            # TODO In Python 3.12 use rlf_directory_path.walk()
             dirpath = Path(dirpath)  # TODO Useless in Python 3.12
             for p in dirpath.parts:
                 if p in {"tests", "__pycache__", "data"}:
@@ -124,6 +129,11 @@ def patch_engine(request):
 
     yield mpatch
     mpatch.undo()
+
+
+@pytest.fixture(autouse=True)
+def patch_engine(request):
+    yield from patch_engine_impl(request)
 
 
 @pytest.fixture(params=["impedance", "power"], ids=["impedance", "power"])

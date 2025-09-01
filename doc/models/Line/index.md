@@ -1,33 +1,33 @@
 ---
 myst:
   html_meta:
-    "description lang=en": |
+    description lang=en: |
       Line models in Roseau Load Flow - Three-phase unbalanced load flow solver in a Python API by Roseau Technologies.
-    "description lang=fr": |
+    keywords lang=en: simulation, distribution grid, power line, electric line, lines, model
+    # spellchecker:off
+    description lang=fr: |
       Les modèles de ligne dans Roseau Load Flow - Solveur d'écoulement de charge triphasé et déséquilibré dans une
       API Python par Roseau Technologies.
-    "keywords lang=fr": simulation, réseau, électrique, bus, roseau load flow, lignes, modèle
-    "keywords lang=en": simulation, distribution grid, power line, electric line, lines, model
+    keywords lang=fr: simulation, réseau, électrique, bus, roseau load flow, lignes, modèle
+# spellchecker:on
 ---
 
 # Lines
 
 ## Definition
 
-Lines are modeled using passive components lumped in a PI section. The lumped parameters are
-defined using the series impedance matrix $\underline{Z}$ and the shunt admittance matrix
-$\underline{Y}$.
+Lines are modeled using passive components lumped in a PI section. The lumped parameters are defined using the series
+impedance matrix $\underline{Z}$ and the shunt admittance matrix $\underline{Y}$.
 
 ## Matrices definition
 
-Before diving into the different line models, lets define the series impedance matrix $\underline{Z}$, and the
-shunt admittance matrix $\underline{Y}$ used to model the lines.
+Before diving into the different line models, lets define the series impedance matrix $\underline{Z}$, and the shunt
+admittance matrix $\underline{Y}$ used to model the lines.
 
 ### Series impedance matrix
 
-The series impedance matrix $\underline{Z}$, in $\Omega$, consists of the series resistance of the
-conductors ($R\in{\mathbb{R}^+}^4$), the self-inductances ($L\in\mathbb{R}^4$) and the mutual
-inductances ($M\in\mathbb{R}^{12}$).
+The series impedance matrix $\underline{Z}$, in $\Omega$, consists of the series resistance of the conductors
+($R\in{\mathbb{R}^+}^4$), the self-inductances ($L\in\mathbb{R}^4$) and the mutual inductances ($M\in\mathbb{R}^{12}$).
 
 ```{math}
 \begin{aligned}
@@ -64,8 +64,8 @@ The admittance matrix $\underline{y}$ shouldn't be confused with the shunt admit
 $\underline{Y}$ defined below.
 ```
 
-$\underline{y}$ represents the admittances between each node, while $\underline{Y}$ is used to
-compute the currents and voltages.
+$\underline{y}$ represents the admittances between each node, while $\underline{Y}$ is used to compute the currents and
+voltages.
 
 ```{math}
 \begin{aligned}
@@ -125,10 +125,9 @@ The shunt admittance matrix $\underline{Y}$ is defined from the admittance matri
 
 ## Line parameters
 
-The parameters of the lines are defined using the `LineParameters` class. It takes the series
-impedance matrix $\underline{Z}$ and optionally, the shunt admittance matrix $\underline{Y}$. The
-first one must be given in $\Omega$/km (or an equivalent unit) and the second must be given in
-$S/km$ (or an equivalent unit).
+The parameters of the lines are defined using the `LineParameters` class. It takes the series impedance matrix
+$\underline{Z}$ and optionally, the shunt admittance matrix $\underline{Y}$. The first one must be given in $\Omega$/km
+(or an equivalent unit) and the second must be given in $S/km$ (or an equivalent unit).
 
 ```python
 import numpy as np
@@ -183,28 +182,78 @@ The following results are available for all lines:
 
 | Result Accessor           | Default Unit  | Type             | Description                                                                                    |
 | ------------------------- | ------------- | ---------------- | ---------------------------------------------------------------------------------------------- |
-| `res_potentials`          | $V$           | 2 complex arrays | The potentials of each phase of the line                                                       |
-| `res_currents`            | $A$           | 2 complex arrays | The currents flowing into each phase of the line                                               |
-| `res_powers`              | $V\!A$        | 2 complex arrays | The powers flowing into each phase of the line                                                 |
-| `res_voltages`            | $V$           | 2 complex arrays | The phase-to-neutral voltages if the line has a neutral, the phase-to-phase voltages otherwise |
+| `res_potentials`⭑         | $V$           | 2 complex arrays | The potentials of each phase of the line                                                       |
+| `res_currents`⭑           | $A$           | 2 complex arrays | The currents flowing into each phase of the line                                               |
+| `res_powers`⭑             | $V\!A$        | 2 complex arrays | The powers flowing into each phase of the line                                                 |
+| `res_voltages`⭑           | $V$           | 2 complex arrays | The phase-to-neutral voltages if the line has a neutral, the phase-to-phase voltages otherwise |
 | `res_series_currents`     | $A$           | complex array    | The currents flowing in the series impedance of each phase of the line from bus 1 to bus 2     |
 | `res_power_losses`        | $V\!A$        | complex array    | The total power losses in each phase of the line                                               |
 | `res_series_power_losses` | $V\!A$        | complex array    | The power losses in the series impedance of each phase of the line                             |
 | `res_loading`             | $\mathrm{pu}$ | number array     | The loading of each phase of the line compared to its ampacity                                 |
 | `res_violated`            | -             | boolean array    | Indicates if the loading of each phase exceeds the maximal loading                             |
 
-The results with two arrays are for the first and second ends of the line, respectively. The sense
-of currents and powers is from the corresponding bus into the line.
+Lines with shunt components also have the following results:
+
+| Result Accessor          | Default Unit | Type             | Description                                                 |
+| ------------------------ | ------------ | ---------------- | ----------------------------------------------------------- |
+| `res_shunt_currents`⭑    | $A$          | 2 complex arrays | The currents flowing into the shunt admittances of the line |
+| `res_shunt_power_losses` | $V\!A$       | complex array    | The power losses in the shunt admittances of the line       |
+| `res_ground_potential`   | $V$          | complex          | The potential of the ground element connected to the line   |
+
+```{note}
+The result accessors marked with ⭑ contain tuples for the results of the first and second sides of
+the line. These are the old accessors to the results of the sides of the line. They may be deprecated
+in the future. The new interface is to use `<side>.res_*` presented below.
+```
+
+Additionally, the following results are available on each side of the line accessible with `<side>.` prefix where
+`<side>` is either `side1` or `side2`:
+
+| Result Accessor         | Default Unit | Type          | Description                                                                                                 |
+| ----------------------- | ------------ | ------------- | ----------------------------------------------------------------------------------------------------------- |
+| `<side>.res_potentials` | $V$          | complex array | The potentials of each phase of the corresponding line side                                                 |
+| `<side>.res_currents`   | $A$          | complex array | The currents flowing **into** each phase of the corresponding line side                                     |
+| `<side>.res_powers`     | $V\!A$       | complex array | The powers flowing **into** each phase of the corresponding line side                                       |
+| `<side>.res_voltages`   | $V$          | complex array | The voltages of the corresponding line side: phase-to-neutral if it has a neutral, phase-to-phase otherwise |
+
+And the following results are available for lines _with shunt components_:
+
+| Result Accessor             | Default Unit | Type          | Description                                                                    |
+| --------------------------- | ------------ | ------------- | ------------------------------------------------------------------------------ |
+| `<side>.res_shunt_currents` | $A$          | complex array | The currents flowing into the shunt admittances of the corresponding line side |
+| `<side>.res_shunt_losses`   | $V\!A$       | complex array | The losses in the shunt admittances of the corresponding line side             |
+
+And the following results are available for lines _with a neutral and at least one phase_:
+
+| Result Accessor                | Default Unit  | Type          | Description                                                                                          |
+| ------------------------------ | ------------- | ------------- | ---------------------------------------------------------------------------------------------------- |
+| `<side>.res_voltages_pn`       | $V$           | complex array | The phase-to-neutral voltages of the corresponding line side                                         |
+| `<side>.res_voltage_levels_pn` | $\mathrm{pu}$ | number array  | The voltage levels of each phase of the corresponding line side ($\sqrt{3} V_{pn} / V_\mathrm{nom}$) |
+
+And the following results are available for lines _with more than one phase_:
+
+| Result Accessor                | Default Unit  | Type          | Description                                                                                 |
+| ------------------------------ | ------------- | ------------- | ------------------------------------------------------------------------------------------- |
+| `<side>.res_voltages_pp`       | $V$           | complex array | The phase-to-phase voltages of the corresponding line side                                  |
+| `<side>.res_voltage_levels_pp` | $\mathrm{pu}$ | number array  | The voltage levels of each phase of the corresponding line side ($V_{pp} / V_\mathrm{nom}$) |
+
+And the following results are available for _three-phase_ lines:
+
+| Result Accessor                  | Default Unit | Type   | Description                                                                                        |
+| -------------------------------- | ------------ | ------ | -------------------------------------------------------------------------------------------------- |
+| `<side>.res_voltage_unbalance()` | $\%$         | number | The voltage unbalance of the corresponding line side according to the IEC, IEEE or NEMA definition |
+| `<side>.res_current_unbalance()` | $\%$         | number | The Current Unbalance Factor (CUF) of the line side                                                |
 
 ## Available models
 
-The following line models are available in _Roseau Load Flow_. Please also have a look at the parameters page to
-define the parameters of lines.
+The following line models are available in _Roseau Load Flow_. Please also have a look at the parameters page to define
+the parameters of lines.
 
 ```{toctree}
-:maxdepth: 2
-:caption: Lines
-
+---
+maxdepth: 2
+caption: Lines
+---
 Parameters
 ShuntLine
 SimplifiedLine

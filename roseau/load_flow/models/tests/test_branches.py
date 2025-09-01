@@ -22,8 +22,7 @@ def test_different_voltage_levels():
     bus3 = Bus(id="bus3", phases="abc")
     bus4 = Bus(id="bus4", phases="abc", nominal_voltage=400)
     lp = LineParameters(id="lp", z_line=np.eye(3, dtype=complex))
-    with warnings.catch_warnings():
-        warnings.simplefilter("error")
+    with warnings.catch_warnings(action="error"):
         Line(id="ln good", bus1=bus1, bus2=bus2, parameters=lp, length=0.1)  # OK
         Line(id="ln good2", bus1=bus1, bus2=bus3, parameters=lp, length=0.1)  # OK
         Switch(id="sw good", bus1=bus1, bus2=bus2)  # OK

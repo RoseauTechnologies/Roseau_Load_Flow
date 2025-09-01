@@ -90,6 +90,15 @@ def test_short_circuit():
     assert "is already connected on bus" in e.value.msg
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_SHORT_CIRCUIT
 
+    # Create the ground after the network GH359
+    bus = Bus(id="bus", phases="abcn")
+    _ = VoltageSource(id="source", bus=bus, voltages=400)
+    _ = PotentialRef(id="pref", element=bus, phases="n")
+    en = ElectricalNetwork.from_element(bus)
+    ground = Ground(id="ground")
+    bus.add_short_circuit("abc", ground=ground)
+    assert "ground" in en.grounds
+
 
 def test_voltage_limits(recwarn):
     # Default values
@@ -488,17 +497,31 @@ def test_res_voltage_unbalance():
     # Balanced system
     bus._res_potentials = np.array([va, vb, vc])
     assert np.isclose(bus.res_voltage_unbalance().magnitude, 0)
+    assert np.isclose(bus.res_voltage_unbalance(definition="LVUR").magnitude, 0)
 
     # Unbalanced system
     bus._res_potentials = np.array([va, vb, vb])
     assert np.isclose(bus.res_voltage_unbalance().magnitude, 100)
+    assert np.isclose(bus.res_voltage_unbalance(definition="LVUR").magnitude, 100)
+    with pytest.raises(RoseauLoadFlowException) as e:
+        bus.res_voltage_unbalance(definition="PVUR")
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
+    assert e.value.msg == "Phase-to-neutral voltages cannot exist for bus 'b3' without a neutral."
 
     # With neutral
     bus = Bus(id="b3n", phases="abcn")
     bus._res_potentials = np.array([va, vb, vc, 0])
     assert np.isclose(bus.res_voltage_unbalance().magnitude, 0)
+    assert np.isclose(bus.res_voltage_unbalance(definition="LVUR").magnitude, 0)
+    assert np.isclose(bus.res_voltage_unbalance(definition="PVUR").magnitude, 0)
     bus._res_potentials = np.array([va, vb, vb, 0])
     assert np.isclose(bus.res_voltage_unbalance().magnitude, 100)
+    assert np.isclose(bus.res_voltage_unbalance(definition="LVUR").magnitude, 100)
+    assert np.isclose(bus.res_voltage_unbalance(definition="PVUR").magnitude, 0)
+    bus._res_potentials = np.array([va, vb, vc, 20])
+    assert np.isclose(bus.res_voltage_unbalance().magnitude, 0)
+    assert np.isclose(bus.res_voltage_unbalance(definition="LVUR").magnitude, 0)
+    assert np.isclose(bus.res_voltage_unbalance(definition="PVUR").magnitude, 8.860545454)
 
     # Non 3-phase bus
     bus = Bus(id="b1", phases="an")

@@ -1,5 +1,5 @@
 {
-  "version": 4,
+  "version": 5,
   "is_multiphase": true,
   "crs": {
     "data": "EPSG:4326",
@@ -25,7 +25,8 @@
         "coordinates": [-0.8900710079343, 49.258817450938]
       },
       "nominal_voltage": 20000,
-      "min_voltage_level": 0.95
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05
     },
     {
       "id": "HVMVFeeder23",
@@ -35,7 +36,8 @@
         "coordinates": [-0.8900710079343, 49.258817450938]
       },
       "nominal_voltage": 20000,
-      "min_voltage_level": 0.95
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05
     },
     {
       "id": "MVLV12316",
@@ -45,7 +47,8 @@
         "coordinates": [-0.886134334135075, 49.23811159939885]
       },
       "nominal_voltage": 20000,
-      "min_voltage_level": 0.95
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05
     },
     {
       "id": "MVBus07867",
@@ -55,7 +58,8 @@
         "coordinates": [-0.886163224026916, 49.23814376086724]
       },
       "nominal_voltage": 20000,
-      "min_voltage_level": 0.95
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05
     },
     {
       "id": "MVLV18592",
@@ -65,7 +69,8 @@
         "coordinates": [-0.877273257127134, 49.23991209308561]
       },
       "nominal_voltage": 20000,
-      "min_voltage_level": 0.95
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05
     },
     {
       "id": "MVBus09362",
@@ -75,7 +80,8 @@
         "coordinates": [-0.880607514550805, 49.2408818422678]
       },
       "nominal_voltage": 20000,
-      "min_voltage_level": 0.95
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05
     },
     {
       "id": "MVBus09361",
@@ -85,7 +91,8 @@
         "coordinates": [-0.880642256929955, 49.24089738375072]
       },
       "nominal_voltage": 20000,
-      "min_voltage_level": 0.95
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05
     },
     {
       "id": "MVLV07687",
@@ -95,7 +102,8 @@
         "coordinates": [-0.881835000987274, 49.241389848492354]
       },
       "nominal_voltage": 20000,
-      "min_voltage_level": 0.95
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05
     },
     {
       "id": "MVLV14607",
@@ -105,7 +113,8 @@
         "coordinates": [-0.892897202229386, 49.2363866831773]
       },
       "nominal_voltage": 20000,
-      "min_voltage_level": 0.95
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05
     },
     {
       "id": "MVBus03247",
@@ -115,7 +124,8 @@
         "coordinates": [-0.883709467593089, 49.24446960503848]
       },
       "nominal_voltage": 20000,
-      "min_voltage_level": 0.95
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05
     },
     {
       "id": "MVBus03246",
@@ -125,15 +135,16 @@
         "coordinates": [-0.890518079267901, 49.25885604408974]
       },
       "nominal_voltage": 20000,
-      "min_voltage_level": 0.95
+      "min_voltage_level": 0.95,
+      "max_voltage_level": 1.05
     }
   ],
   "lines": [
     {
       "id": "MVBranch33893",
-      "phases": "abc",
       "bus1": "HVMVFeeder23",
       "bus2": "MVBus03246",
+      "phases": "abc",
       "geometry": {
         "type": "LineString",
         "coordinates": [
@@ -153,9 +164,9 @@
     },
     {
       "id": "MVBranch42705",
-      "phases": "abc",
       "bus1": "MVBus07867",
       "bus2": "MVLV12316",
+      "phases": "abc",
       "geometry": {
         "type": "LineString",
         "coordinates": [
@@ -172,9 +183,9 @@
     },
     {
       "id": "MVBranch34205",
-      "phases": "abc",
       "bus1": "MVBus09362",
       "bus2": "MVLV18592",
+      "phases": "abc",
       "geometry": {
         "type": "LineString",
         "coordinates": [
@@ -203,9 +214,9 @@
     },
     {
       "id": "MVBranch46357",
-      "phases": "abc",
       "bus1": "MVBus09361",
       "bus2": "MVBus09362",
+      "phases": "abc",
       "geometry": {
         "type": "LineString",
         "coordinates": [
@@ -222,9 +233,9 @@
     },
     {
       "id": "MVBranch47021",
-      "phases": "abc",
       "bus1": "MVLV07687",
       "bus2": "MVBus09361",
+      "phases": "abc",
       "geometry": {
         "type": "LineString",
         "coordinates": [
@@ -245,9 +256,9 @@
     },
     {
       "id": "MVBranch46354",
-      "phases": "abc",
       "bus1": "MVBus07867",
       "bus2": "MVLV07687",
+      "phases": "abc",
       "geometry": {
         "type": "LineString",
         "coordinates": [
@@ -288,9 +299,9 @@
     },
     {
       "id": "MVBranch42704",
-      "phases": "abc",
       "bus1": "MVLV14607",
       "bus2": "MVBus07867",
+      "phases": "abc",
       "geometry": {
         "type": "LineString",
         "coordinates": [
@@ -316,9 +327,9 @@
     },
     {
       "id": "MVBranch45456",
-      "phases": "abc",
       "bus1": "MVBus03247",
       "bus2": "MVLV14607",
+      "phases": "abc",
       "geometry": {
         "type": "LineString",
         "coordinates": [
@@ -391,9 +402,9 @@
     },
     {
       "id": "MVBranch46168",
-      "phases": "abc",
       "bus1": "MVBus03246",
       "bus2": "MVBus03247",
+      "phases": "abc",
       "geometry": {
         "type": "LineString",
         "coordinates": [
@@ -501,13 +512,14 @@
   "switches": [
     {
       "id": "Switch",
-      "phases": "abc",
       "bus1": "HVMV23",
       "bus2": "HVMVFeeder23",
+      "phases": "abc",
       "geometry": {
         "type": "Point",
         "coordinates": [-0.8900710079343, 49.258817450938]
-      }
+      },
+      "closed": true
     }
   ],
   "loads": [
@@ -515,97 +527,65 @@
       "id": "MVLV12316_consumption",
       "bus": "MVLV12316",
       "phases": "abc",
-      "type": "power",
       "connect_neutral": null,
-      "powers": [
-        [9300.0, 3100.0],
-        [9300.0, 3100.0],
-        [9300.0, 3100.0]
-      ]
+      "type": "power",
+      "powers": [[9300.0, 3100.0], [9300.0, 3100.0], [9300.0, 3100.0]]
     },
     {
       "id": "MVLV12316_production",
       "bus": "MVLV12316",
       "phases": "abc",
-      "type": "power",
       "connect_neutral": null,
-      "powers": [
-        [-1000.0, 0.0],
-        [-1000.0, 0.0],
-        [-1000.0, 0.0]
-      ]
+      "type": "power",
+      "powers": [[-1000.0, 0.0], [-1000.0, 0.0], [-1000.0, 0.0]]
     },
     {
       "id": "MVLV18592_consumption",
       "bus": "MVLV18592",
       "phases": "abc",
-      "type": "power",
       "connect_neutral": null,
-      "powers": [
-        [9300.0, 3100.0],
-        [9300.0, 3100.0],
-        [9300.0, 3100.0]
-      ]
+      "type": "power",
+      "powers": [[9300.0, 3100.0], [9300.0, 3100.0], [9300.0, 3100.0]]
     },
     {
       "id": "MVLV18592_production",
       "bus": "MVLV18592",
       "phases": "abc",
-      "type": "power",
       "connect_neutral": null,
-      "powers": [
-        [-1000.0, 0.0],
-        [-1000.0, 0.0],
-        [-1000.0, 0.0]
-      ]
+      "type": "power",
+      "powers": [[-1000.0, 0.0], [-1000.0, 0.0], [-1000.0, 0.0]]
     },
     {
       "id": "MVLV07687_consumption",
       "bus": "MVLV07687",
       "phases": "abc",
-      "type": "power",
       "connect_neutral": null,
-      "powers": [
-        [9300.0, 3100.0],
-        [9300.0, 3100.0],
-        [9300.0, 3100.0]
-      ]
+      "type": "power",
+      "powers": [[9300.0, 3100.0], [9300.0, 3100.0], [9300.0, 3100.0]]
     },
     {
       "id": "MVLV07687_production",
       "bus": "MVLV07687",
       "phases": "abc",
-      "type": "power",
       "connect_neutral": null,
-      "powers": [
-        [-1000.0, 0.0],
-        [-1000.0, 0.0],
-        [-1000.0, 0.0]
-      ]
+      "type": "power",
+      "powers": [[-1000.0, 0.0], [-1000.0, 0.0], [-1000.0, 0.0]]
     },
     {
       "id": "MVLV14607_consumption",
       "bus": "MVLV14607",
       "phases": "abc",
-      "type": "power",
       "connect_neutral": null,
-      "powers": [
-        [9300.0, 3100.0],
-        [9300.0, 3100.0],
-        [9300.0, 3100.0]
-      ]
+      "type": "power",
+      "powers": [[9300.0, 3100.0], [9300.0, 3100.0], [9300.0, 3100.0]]
     },
     {
       "id": "MVLV14607_production",
       "bus": "MVLV14607",
       "phases": "abc",
-      "type": "power",
       "connect_neutral": null,
-      "powers": [
-        [-1000.0, 0.0],
-        [-1000.0, 0.0],
-        [-1000.0, 0.0]
-      ]
+      "type": "power",
+      "powers": [[-1000.0, 0.0], [-1000.0, 0.0], [-1000.0, 0.0]]
     }
   ],
   "sources": [
@@ -613,41 +593,21 @@
       "id": "VoltageSource",
       "bus": "HVMV23",
       "phases": "abc",
-      "type": "voltage",
       "connect_neutral": null,
-      "voltages": [
-        [17320.50807568877, 10000.0],
-        [0.0, -20000.0],
-        [-17320.50807568877, 10000.0]
-      ]
+      "type": "voltage",
+      "voltages": [[17320.50807568877, 10000.0], [0.0, -20000.0], [-17320.50807568877, 10000.0]]
     }
   ],
   "lines_params": [
     {
       "id": "U_AL_150",
       "z_line": [
-        [
-          [0.19999999999999998, 0.0, 0.0],
-          [0.0, 0.19999999999999998, 0.0],
-          [0.0, 0.0, 0.19999999999999998]
-        ],
-        [
-          [0.1, 0.0, 0.0],
-          [0.0, 0.1, 0.0],
-          [0.0, 0.0, 0.1]
-        ]
+        [[0.19999999999999998, 0.0, 0.0], [0.0, 0.19999999999999998, 0.0], [0.0, 0.0, 0.19999999999999998]],
+        [[0.1, 0.0, 0.0], [0.0, 0.1, 0.0], [0.0, 0.0, 0.1]]
       ],
       "y_shunt": [
-        [
-          [0.0, 0.0, 0.0],
-          [0.0, 0.0, 0.0],
-          [0.0, 0.0, 0.0]
-        ],
-        [
-          [0.00014105751014618172, 0.0, 0.0],
-          [0.0, 0.00014105751014618172, 0.0],
-          [0.0, 0.0, 0.00014105751014618172]
-        ]
+        [[0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]],
+        [[0.00014105751014618172, 0.0, 0.0], [0.0, 0.00014105751014618172, 0.0], [0.0, 0.0, 0.00014105751014618172]]
       ],
       "ampacities": [325.0, 325.0, 325.0],
       "line_type": "UNDERGROUND",

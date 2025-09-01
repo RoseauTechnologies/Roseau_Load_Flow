@@ -1,12 +1,12 @@
 import logging
+import math
 import warnings
 from collections.abc import Iterator
-from typing import Final
+from typing import Final, Self
 
 import numpy as np
 import pandas as pd
 from shapely.geometry.base import BaseGeometry
-from typing_extensions import Self
 
 from roseau.load_flow import SQRT3, RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.typing import Complex, Float, Id, JsonDict
@@ -64,7 +64,7 @@ class Bus(AbstractTerminal[CyBus]):
                 An optional initial voltage of the bus (V). It can be used to improve the convergence
                 of the load flow algorithm.
         """
-        super().__init__(id)
+        super().__init__(id, n=2)
         initialized = initial_voltage is not None
         if initial_voltage is None:
             initial_voltage = 0.0
@@ -105,7 +105,7 @@ class Bus(AbstractTerminal[CyBus]):
         self._invalidate_network_results()
         self._initialized = True
         self._initialized_by_the_user = True
-        if self._cy_element is not None:
+        if self._cy_initialized:
             self._cy_element.initialize_potentials(np.array([self._initial_voltage / SQRT3, 0], dtype=np.complex128))
 
     @property
@@ -273,7 +273,7 @@ class Bus(AbstractTerminal[CyBus]):
                     force
                     or self._nominal_voltage is None
                     or element._nominal_voltage is None
-                    or np.isclose(element._nominal_voltage, self._nominal_voltage)
+                    or math.isclose(element._nominal_voltage, self._nominal_voltage)
                 ):
                     msg = (
                         f"Cannot propagate the nominal voltage ({self._nominal_voltage} V) of bus {self.id!r} "
@@ -285,7 +285,7 @@ class Bus(AbstractTerminal[CyBus]):
                     force
                     or self._min_voltage_level is None
                     or element._min_voltage_level is None
-                    or np.isclose(element._min_voltage_level, self._min_voltage_level)
+                    or math.isclose(element._min_voltage_level, self._min_voltage_level)
                 ):
                     msg = (
                         f"Cannot propagate the minimum voltage level ({self._min_voltage_level}) of bus {self.id!r} "
@@ -297,7 +297,7 @@ class Bus(AbstractTerminal[CyBus]):
                     force
                     or self._max_voltage_level is None
                     or element._max_voltage_level is None
-                    or np.isclose(element._max_voltage_level, self._max_voltage_level)
+                    or math.isclose(element._max_voltage_level, self._max_voltage_level)
                 ):
                     msg = (
                         f"Cannot propagate the maximum voltage level ({self._max_voltage_level}) of bus {self.id!r} "
@@ -350,8 +350,8 @@ class Bus(AbstractTerminal[CyBus]):
     @property
     def res_voltage_level(self) -> Q_[float] | None:
         """The load flow result of the bus voltage levels (unitless)."""
-        voltages_level = self._res_voltage_level_getter(warning=True)
-        return None if voltages_level is None else Q_(voltages_level, "")
+        voltage_level = self._res_voltage_level_getter(warning=True)
+        return None if voltage_level is None else Q_(voltage_level, "")
 
     @property
     def res_violated(self) -> bool | None:

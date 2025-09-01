@@ -404,6 +404,22 @@ def test_from_geometry_checks():
         "`phase_radius*2 <= external_diameter * sqrt(2) / 4` is not satisfied."
     )
 
+    # Missing neutral values OK
+    lp = LineParameters.from_geometry(
+        "test",
+        line_type=LineType.OVERHEAD,
+        material=Material.AL,
+        insulator=Insulator.PEX,
+        section=150,
+        height=10,
+        external_diameter=0.04,
+        ampacity=150,
+    )
+    assert lp.materials.tolist() == [Material.AL, Material.AL, Material.AL, Material.AL]
+    assert lp.insulators.tolist() == [Insulator.PEX, Insulator.PEX, Insulator.PEX, Insulator.PEX]
+    assert lp.ampacities.m.tolist() == [150, 150, 150, 150]
+    assert lp.sections.m.tolist() == [150, 150, 150, 150]
+
 
 def test_sym():
     # With the bad model of PwF
@@ -487,6 +503,34 @@ def test_sym():
     npt.assert_allclose(z_line, z_line_expected)
     y_shunt_expected = 0.00014106j * np.eye(3)
     npt.assert_allclose(y_shunt, y_shunt_expected)
+
+    # Test sym <-> zy roundtrip
+    z0 = 0.188 + 0.8224j
+    z1 = 0.188 + 0.0812j
+    zn = 0.4029 + 0.3522j
+    xpn = 0.2471
+    y0 = 0.000010462 + 0.000063134j
+    y1 = 0.000010462 + 0.00022999j
+    bn = 0.00011407
+    bpn = -0.000031502
+    lp_4wire = LineParameters.from_sym(id="LP 4-wire", z0=z0, z1=z1, zn=zn, xpn=xpn, y0=y0, y1=y1, bn=bn, bpn=bpn)
+    sym = lp_4wire.to_sym()
+    assert len(sym) == 8
+    npt.assert_allclose(sym["z0"], z0)
+    npt.assert_allclose(sym["y0"], y0)
+    npt.assert_allclose(sym["z1"], z1)
+    npt.assert_allclose(sym["y1"], y1)
+    npt.assert_allclose(sym["zn"], zn)
+    npt.assert_allclose(sym["yn"], bn * 1j)
+    npt.assert_allclose(sym["zpn"], xpn * 1j)
+    npt.assert_allclose(sym["ypn"], bpn * 1j)
+    lp_3wire = LineParameters.from_sym(id="LP 3-wire", z0=z0, z1=z1, y0=y0, y1=y1)
+    sym = lp_3wire.to_sym()
+    assert len(sym) == 4
+    npt.assert_allclose(sym["z0"], z0)
+    npt.assert_allclose(sym["y0"], y0)
+    npt.assert_allclose(sym["z1"], z1)
+    npt.assert_allclose(sym["y1"], y1)
 
 
 def test_from_coiffier_model():
@@ -1033,36 +1077,3 @@ def test_results_to_dict():
         lp.results_to_dict()
     assert e.value.msg == "The LineParameters has no results to export."
     assert e.value.code == RoseauLoadFlowExceptionCode.JSON_NO_RESULTS
-
-
-def test_equality():
-    lp = LineParameters.from_catalogue(name="U_AL_150", nb_phases=3)
-    data = {
-        "id": lp.id,
-        "z_line": lp.z_line,
-        "y_shunt": lp.y_shunt,
-        "ampacities": lp.ampacities,
-        "line_type": lp.line_type,
-        "materials": lp.materials,
-        "insulators": lp.insulators,
-        "sections": lp.sections,
-    }
-    lp2 = LineParameters(**data)
-    assert lp2 == lp
-
-    other_data = {
-        "id": lp.id + " other",
-        "z_line": lp.z_line.m + 0.1j,
-        "y_shunt": lp.y_shunt.m + 0.1j,
-        "ampacities": lp.ampacities.m + 1,
-        "line_type": LineType.OVERHEAD,
-        "materials": Material.CU,
-        "insulators": Insulator.XLPE,
-        "sections": lp.sections.m + 1,
-    }
-    for k, v in other_data.items():
-        other_lp = LineParameters(**(data | {k: v}))
-        assert other_lp != lp, k
-
-    # Test the case which returns NotImplemented in the equality operator
-    assert lp != object()

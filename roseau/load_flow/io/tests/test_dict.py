@@ -9,13 +9,13 @@ import pytest
 from pyproj import CRS
 from shapely import LineString, Point
 
-from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.io.dict import (
     NETWORK_JSON_VERSION,
     v0_to_v1_converter,
     v1_to_v2_converter,
     v2_to_v3_converter,
     v3_to_v4_converter,
+    v4_to_v5_converter,
 )
 from roseau.load_flow.models import (
     Bus,
@@ -35,9 +35,10 @@ from roseau.load_flow.types import Insulator, LineType, Material
 # Store the expected hashes of the files that should not be modified
 EXPECTED_HASHES = {
     "network_json_v0.json": "ad984cbcd26b36602a2789e2f0badcb5",
-    "network_json_v1.json": "fc930431b69165f68961b0f0dc2635b5",
-    "network_json_v2.json": "d85a2658708576c083ceab666a83150b",
-    "network_json_v3.json": "551f852aefc71d744f4738d31bd0e90b",
+    "network_json_v1.json": "49be6656c9c40c7f71633eda9b913c97",
+    "network_json_v2.json": "efc3b4cb71409c57f30b44b40cc019c5",
+    "network_json_v3.json": "78944e4458a7d27cc5ccceec35ac0309",
+    "network_json_v4.json": "f6b88d6cefef751d0cb8f5104b51e818",
 }
 
 
@@ -83,7 +84,6 @@ def test_to_dict():
         insulators=Insulator.PVC,
         sections=120,
     )
-    lp2 = LineParameters("test", z_line=np.eye(4, dtype=complex), y_shunt=np.eye(4, dtype=complex) * 1.1)
 
     geom = LineString([(0.0, 0.0), (0.0, 1.0)])
     line1 = Line(
@@ -102,7 +102,7 @@ def test_to_dict():
         bus2=load_bus,
         phases="abcn",
         ground=ground,
-        parameters=lp2,
+        parameters=lp1,
         length=10,
         geometry=geom,
     )
@@ -118,27 +118,7 @@ def test_to_dict():
         ground_connections=[gc],
     )
 
-    # Same id, different line parameters -> fail
-    with pytest.raises(RoseauLoadFlowException) as e:
-        en.to_dict(include_results=False)
-    assert "There are multiple line parameters with id 'test'" in e.value.msg
-    assert e.value.code == RoseauLoadFlowExceptionCode.JSON_LINE_PARAMETERS_DUPLICATES
-
-    # Same id, same line parameters -> ok
-    lp2 = LineParameters(
-        id="test",
-        z_line=np.eye(4, dtype=complex),
-        y_shunt=np.eye(4, dtype=complex),
-        line_type=LineType.UNDERGROUND,
-        materials=Material.AA,
-        insulators=Insulator.PVC,
-        sections=120,
-    )
-    line2.parameters = lp2
-    en.to_dict(include_results=False)
-
     # Dict content
-    line2.parameters = lp1
     lp1.ampacities = 1000
     res = en.to_dict(include_results=False)
     res_bus0, res_bus1 = res["buses"]
@@ -177,11 +157,8 @@ def test_to_dict():
     tp1 = TransformerParameters.from_open_and_short_circuit_tests(
         id="t", vg="Dyn11", uhv=20000, ulv=400, sn=160 * 1e3, p0=460, i0=2.3 / 100, psc=2350, vsc=4 / 100
     )
-    tp2 = TransformerParameters.from_open_and_short_circuit_tests(
-        id="t", vg="Dyn11", uhv=20000, ulv=400, sn=200 * 1e3, p0=460, i0=2.3 / 100, psc=2350, vsc=4 / 100
-    )
     transformer1 = Transformer(id="Transformer1", bus_hv=source_bus, bus_lv=load_bus, parameters=tp1, geometry=geom)
-    transformer2 = Transformer(id="Transformer2", bus_hv=source_bus, bus_lv=load_bus, parameters=tp2, geometry=geom)
+    transformer2 = Transformer(id="Transformer2", bus_hv=source_bus, bus_lv=load_bus, parameters=tp1, geometry=geom)
     en = ElectricalNetwork(
         buses=[source_bus, load_bus],
         lines=[],
@@ -194,21 +171,7 @@ def test_to_dict():
         ground_connections=[gc_load, gc_source],
     )
 
-    # Same id, different transformer parameters -> fail
-    with pytest.raises(RoseauLoadFlowException) as e:
-        en.to_dict(include_results=False)
-    assert "There are multiple transformer parameters with id 't'" in e.value.msg
-    assert e.value.code == RoseauLoadFlowExceptionCode.JSON_TRANSFORMER_PARAMETERS_DUPLICATES
-
-    # Same id, same transformer parameters -> ok
-    tp2 = TransformerParameters.from_open_and_short_circuit_tests(
-        id="t", vg="Dyn11", uhv=20000, ulv=400, sn=160 * 1e3, p0=460, i0=2.3 / 100, psc=2350, vsc=4 / 100
-    )
-    transformer2.parameters = tp2
-    en.to_dict(include_results=False)
-
     # Dict content
-    transformer2.parameters = tp1
     res = en.to_dict(include_results=False)
     assert "geometry" in res["buses"][0]
     assert "geometry" in res["buses"][1]
@@ -222,50 +185,49 @@ def test_all_converters():
     dict_v0 = json.loads(read_json_file("network_json_v0.json"))
     net_dict = en.to_dict(include_results=False)
     expected_dict = copy.deepcopy(dict_v0)
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
+    with warnings.catch_warnings(action="ignore"):
         expected_dict = v0_to_v1_converter(expected_dict)
         expected_dict = v1_to_v2_converter(expected_dict)
         expected_dict = v2_to_v3_converter(expected_dict)
         expected_dict = v3_to_v4_converter(expected_dict)
+        expected_dict = v4_to_v5_converter(expected_dict)
     assert_json_close(net_dict, expected_dict)
 
 
 def test_from_dict_v0():
     dict_v0 = json.loads(read_json_file("network_json_v0.json"))
 
-    with pytest.warns(UserWarning, match=r"Got an outdated network file \(version 0\)") as warn_check:
+    with pytest.warns(UserWarning, match=r"Got an outdated network file \(version 0\)") as warn_check:  # noqa: PT031
         en = ElectricalNetwork.from_dict(data=dict_v0, include_results=False)
         ignore_unmatched_warnings(warn_check)
     net_dict = en.to_dict(include_results=False)
     expected_dict = copy.deepcopy(dict_v0)
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
+    with warnings.catch_warnings(action="ignore"):
         expected_dict = v0_to_v1_converter(expected_dict)
         expected_dict = v1_to_v2_converter(expected_dict)
         expected_dict = v2_to_v3_converter(expected_dict)
         expected_dict = v3_to_v4_converter(expected_dict)
+        expected_dict = v4_to_v5_converter(expected_dict)
     assert_json_close(net_dict, expected_dict)
 
 
 def test_from_dict_v1():
     dict_v1 = json.loads(read_json_file("network_json_v1.json"))
 
-    with pytest.warns(UserWarning, match=r"Got an outdated network file \(version 1\)") as warn_check:
+    with pytest.warns(UserWarning, match=r"Got an outdated network file \(version 1\)") as warn_check:  # noqa: PT031
         en = ElectricalNetwork.from_dict(data=dict_v1, include_results=True)
         ignore_unmatched_warnings(warn_check)
     net_dict = en.to_dict(include_results=True)
     expected_dict = copy.deepcopy(dict_v1)
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
+    with warnings.catch_warnings(action="ignore"):
         expected_dict = v1_to_v2_converter(expected_dict)
         expected_dict = v2_to_v3_converter(expected_dict)
         expected_dict = v3_to_v4_converter(expected_dict)
+        expected_dict = v4_to_v5_converter(expected_dict)
     assert_json_close(net_dict, expected_dict)
 
     # Test with `include_results=False`
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
+    with warnings.catch_warnings(action="ignore"):
         net = ElectricalNetwork.from_dict(data=dict_v1, include_results=False)
         net_dict = net.to_dict(include_results=False)
         expected_dict_no_results = copy.deepcopy(dict_v1)
@@ -273,6 +235,7 @@ def test_from_dict_v1():
         expected_dict_no_results = v1_to_v2_converter(expected_dict_no_results)
         expected_dict_no_results = v2_to_v3_converter(expected_dict_no_results)
         expected_dict_no_results = v3_to_v4_converter(expected_dict_no_results)
+        expected_dict_no_results = v4_to_v5_converter(expected_dict_no_results)
     assert_json_close(net_dict, expected_dict_no_results)
 
 
@@ -293,10 +256,10 @@ def test_from_dict_v2():
         en = ElectricalNetwork.from_dict(data=dict_v2, include_results=True)
     net_dict = en.to_dict(include_results=True)
     expected_dict = copy.deepcopy(dict_v2)
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
+    with warnings.catch_warnings(action="ignore"):
         expected_dict = v2_to_v3_converter(expected_dict)
         expected_dict = v3_to_v4_converter(expected_dict)
+        expected_dict = v4_to_v5_converter(expected_dict)
 
     assert_json_close(net_dict, expected_dict)
 
@@ -313,9 +276,9 @@ def test_from_dict_v3():
         en = ElectricalNetwork.from_dict(data=dict_v3, include_results=True)
     net_dict = en.to_dict(include_results=True)
     expected_dict = copy.deepcopy(dict_v3)
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
+    with warnings.catch_warnings(action="ignore"):
         expected_dict = v3_to_v4_converter(expected_dict)
+        expected_dict = v4_to_v5_converter(expected_dict)
 
     assert_json_close(net_dict, expected_dict)
 

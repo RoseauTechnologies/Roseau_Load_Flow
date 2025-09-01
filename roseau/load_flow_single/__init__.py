@@ -6,6 +6,8 @@ from roseau.load_flow import (
     Material,
     RoseauLoadFlowException,
     RoseauLoadFlowExceptionCode,
+    TransformerCooling,
+    TransformerInsulation,
     __authors__,
     __copyright__,
     __credits__,
@@ -29,9 +31,11 @@ from roseau.load_flow import (
     utils,
 )
 from roseau.load_flow.units import Q_, ureg
+from roseau.load_flow_single import plotting
 from roseau.load_flow_single.models import (
     AbstractBranch,
     AbstractConnectable,
+    AbstractDisconnectable,
     AbstractLoad,
     AbstractTerminal,
     Bus,
@@ -62,6 +66,7 @@ __all__ = [
     "__status__",
     "__url__",
     "__version__",
+    "plotting",
     "Element",
     "Line",
     "LineParameters",
@@ -81,11 +86,14 @@ __all__ = [
     "AbstractBranch",
     "AbstractTerminal",
     "AbstractConnectable",
+    "AbstractDisconnectable",
     # Other imports from RLF to have the same interface
     # utils
     "Insulator",
     "LineType",
     "Material",
+    "TransformerCooling",
+    "TransformerInsulation",
     "utils",
     "constants",
     # License

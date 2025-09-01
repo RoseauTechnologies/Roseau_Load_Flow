@@ -174,7 +174,7 @@ def test_voltage_limits():
     assert e.value.msg == "The nominal voltage of bus 'bus' must be positive. -400 V has been provided."
 
 
-def test_res_voltages():
+def test_res_voltage():
     bus = Bus(id="bus")
     bus._res_voltage = 400 + 0j
 

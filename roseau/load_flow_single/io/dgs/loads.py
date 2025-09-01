@@ -138,7 +138,7 @@ def loads_to_elm_lod(loads: Iterable[AbstractLoad], fid_counter: Iterator[str], 
         slini = abs(power)
         plini = power.real
         qlini = power.imag
-        coslini = plini / slini
+        coslini = 0 if slini == 0 else plini / slini
         pf_recap = int(power.real * power.imag < 0)
         p_direc = int(power.real < 0)
         values.append(

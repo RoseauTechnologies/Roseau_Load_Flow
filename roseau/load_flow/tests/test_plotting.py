@@ -4,6 +4,7 @@ import numpy as np
 import numpy.testing as npt
 import pytest
 
+import roseau.load_flow_single as rlfs
 from roseau.load_flow.models import (
     Bus,
     Line,
@@ -45,6 +46,8 @@ load._res_potentials = np.array(potentials, dtype=np.complex128)
 load._res_currents = np.array(currents, dtype=np.complex128)
 source._res_potentials = np.array(potentials, dtype=np.complex128)
 source._res_currents = np.array(-currents, dtype=np.complex128)
+bus_single = rlfs.Bus(id="Bus")
+bus_single._res_voltage = 400 + 0j
 
 
 @pytest.mark.usefixtures("mock_gca")
@@ -112,7 +115,11 @@ def test_plot_voltage_phasors_errors():
 
     # Bad side
     with pytest.raises(ValueError, match=r"The side argument is only valid for branch elements"):
-        plot_voltage_phasors(bus_abc, side="HV")
+        plot_voltage_phasors(bus_abc, side="HV")  # type: ignore
+
+    # Not a multi-phase element
+    with pytest.raises(TypeError, match=r"Only multi-phase elements can be plotted. Did you mean to use rlf.Bus\?"):
+        plot_voltage_phasors(bus_single)  # type: ignore
 
 
 @pytest.mark.usefixtures("mock_gca")
@@ -127,39 +134,61 @@ def test_plot_voltage_phasors_branches():
     potentials = 20e3 * PositiveSequence
     b1._res_potentials = np.array(potentials, dtype=np.complex128)
     b2._res_potentials = np.array(potentials, dtype=np.complex128)
-    sw._res_potentials = np.array(potentials, dtype=np.complex128), np.array(potentials, dtype=np.complex128)
-    ln._res_potentials = np.array(potentials, dtype=np.complex128), np.array(potentials, dtype=np.complex128)
-    tr._res_potentials = np.array(potentials, dtype=np.complex128), np.array(potentials / 2, dtype=np.complex128)
+    sw.side1._res_potentials = np.array(potentials, dtype=np.complex128)
+    sw.side2._res_potentials = np.array(potentials, dtype=np.complex128)
+    ln.side1._res_potentials = np.array(potentials, dtype=np.complex128)
+    ln.side2._res_potentials = np.array(potentials, dtype=np.complex128)
+    tr.side_hv._res_potentials = np.array(potentials, dtype=np.complex128)
+    tr.side_lv._res_potentials = np.array(potentials / 2, dtype=np.complex128)
 
     # Bad side
     with pytest.raises(ValueError, match=r"The side for a switch must be one of \(1, 2\)"):
-        plot_voltage_phasors(sw)
+        plot_voltage_phasors(sw)  # type: ignore
     with pytest.raises(ValueError, match=r"The side for a line must be one of \(1, 2\)"):
-        plot_voltage_phasors(ln)
+        plot_voltage_phasors(ln)  # type: ignore
     with pytest.raises(ValueError, match=r"The side for a transformer must be one of \('HV', 'LV'\)"):
-        plot_voltage_phasors(tr)
+        plot_voltage_phasors(tr)  # type: ignore
     with pytest.raises(ValueError, match=r"Invalid side: 'bad'"):
         plot_voltage_phasors(tr, side="bad")  # type: ignore
 
-    # Switches
-    ax = plot_voltage_phasors(sw, side=1)
+    # Switches warnings
+    ax = plot_voltage_phasors(sw.side1)
     ax.set_title.assert_called_once_with("Sw (1)")
-    ax = plot_voltage_phasors(sw, side=2)
+    ax = plot_voltage_phasors(sw.side2)
     ax.set_title.assert_called_once_with("Sw (2)")
 
     # Lines
-    ax = plot_voltage_phasors(ln, side=1)
+    ax = plot_voltage_phasors(ln.side1)
     ax.set_title.assert_called_once_with("Ln (1)")
-    ax = plot_voltage_phasors(ln, side=2)
+    ax = plot_voltage_phasors(ln.side2)
     ax.set_title.assert_called_once_with("Ln (2)")
 
     # Transformers
-    ax = plot_voltage_phasors(tr, side="HV")
+    ax = plot_voltage_phasors(tr.side_hv)
     ax.set_title.assert_called_once_with("Tr (HV)")
     npt.assert_allclose(abs(complex(*ax.scatter.call_args.args)), 20e3)
-    ax = plot_voltage_phasors(tr, side="LV")
+    ax = plot_voltage_phasors(tr.side_lv)
     ax.set_title.assert_called_once_with("Tr (LV)")
     npt.assert_allclose(abs(complex(*ax.scatter.call_args.args)), 10e3)
+
+    # Deprecations
+    for element, side, element_type, side_suffix, expected_id in [
+        (sw, 1, "switch", "1", "Sw (1)"),
+        (sw, 2, "switch", "2", "Sw (2)"),
+        (ln, 1, "line", "1", "Ln (1)"),
+        (ln, 2, "line", "2", "Ln (2)"),
+        (tr, "HV", "transformer", "_hv", "Tr (HV)"),
+        (tr, "LV", "transformer", "_lv", "Tr (LV)"),
+    ]:
+        with pytest.warns(
+            DeprecationWarning,
+            match=(
+                rf"Plotting the voltages of a {element_type} using the side argument is deprecated. "
+                rf"Use {element_type}.side{side_suffix} directly instead."
+            ),
+        ):
+            ax = plot_voltage_phasors(element, side=side)
+        ax.set_title.assert_called_once_with(expected_id)
 
 
 @pytest.mark.usefixtures("mock_subplots")
@@ -180,3 +209,7 @@ def test_plot_symmetrical_voltages():
         assert ax.scatter.call_count == 3  # 1 "a" + "b" + "c"
         assert ax.arrow.call_count == 3
         assert ax.annotate.call_count == 1
+
+    # Not a multi-phase element
+    with pytest.raises(TypeError, match=r"Only multi-phase elements can be plotted. Did you mean to use rlf.Bus\?"):
+        plot_symmetrical_voltages(bus_single)  # type: ignore

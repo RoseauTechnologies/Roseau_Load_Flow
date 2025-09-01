@@ -10,7 +10,7 @@ import copy
 import logging
 import warnings
 from collections import defaultdict
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 import numpy as np
 from pyproj import CRS
@@ -34,18 +34,20 @@ from roseau.load_flow.models import (
 )
 from roseau.load_flow.types import Insulator, Material
 from roseau.load_flow.typing import Id, JsonDict
-from roseau.load_flow.utils import find_stack_level
+from roseau.load_flow.utils import SIDE_SUFFIX, find_stack_level, id_sort_key
 
 if TYPE_CHECKING:
     from roseau.load_flow.network import ElectricalNetwork
 
 logger = logging.getLogger(__name__)
 
-NETWORK_JSON_VERSION = 4
+NETWORK_JSON_VERSION: Final = 5
 """The current version of the network JSON file format."""
 
 
-def network_from_dict(data: JsonDict, *, include_results: bool = True) -> tuple[NetworkElements, bool]:  # noqa: C901
+def network_from_dict(  # noqa: C901
+    data: JsonDict, *, include_results: bool = True
+) -> tuple[NetworkElements, dict[str, JsonDict], bool]:
     """Create the electrical network elements from a dictionary.
 
     Args:
@@ -64,7 +66,7 @@ def network_from_dict(data: JsonDict, *, include_results: bool = True) -> tuple[
     data = copy.deepcopy(data)  # Make a copy to avoid modifying the original
 
     version = data.get("version", 0)
-    if version <= 3:
+    if version <= 4:
         warnings.warn(
             f"Got an outdated network file (version {version}), trying to update to the current format "
             f"(version {NETWORK_JSON_VERSION}). Please save the network again.",
@@ -80,6 +82,8 @@ def network_from_dict(data: JsonDict, *, include_results: bool = True) -> tuple[
             data = v2_to_v3_converter(data)
         if version <= 3:
             data = v3_to_v4_converter(data)
+        if version <= 4:
+            data = v4_to_v5_converter(data)
     else:
         # If we arrive here, we dealt with all legacy versions, it must be the current one
         assert version == NETWORK_JSON_VERSION, f"Unsupported network file version {version}."
@@ -181,6 +185,7 @@ def network_from_dict(data: JsonDict, *, include_results: bool = True) -> tuple[
     for gc_data in data["ground_connections"]:
         element = gc_data.pop("element")
         gc_data["ground"] = grounds[gc_data.pop("ground")]
+        side = gc_data.pop("side")
         match element["type"]:
             case "bus":
                 gc_data["element"] = buses[element["id"]]
@@ -189,11 +194,11 @@ def network_from_dict(data: JsonDict, *, include_results: bool = True) -> tuple[
             case "source":
                 gc_data["element"] = sources[element["id"]]
             case "line":
-                gc_data["element"] = lines[element["id"]]
+                gc_data["element"] = getattr(lines[element["id"]], f"side{SIDE_SUFFIX[side]}")
             case "transformer":
-                gc_data["element"] = transformers[element["id"]]
+                gc_data["element"] = getattr(transformers[element["id"]], f"side{SIDE_SUFFIX[side]}")
             case "switch":
-                gc_data["element"] = switches[element["id"]]
+                gc_data["element"] = getattr(switches[element["id"]], f"side{SIDE_SUFFIX[side]}")
             case what:
                 raise AssertionError(f"Unknown element type {what!r} for ground connection {gc_data['id']!r}.")
         gc = GroundConnection.from_dict(data=gc_data, include_results=include_results)
@@ -208,6 +213,9 @@ def network_from_dict(data: JsonDict, *, include_results: bool = True) -> tuple[
             ground = grounds[ground_id] if ground_id is not None else None
             buses[sc["bus_id"]].add_short_circuit(*sc["short_circuit"]["phases"], ground=ground)
 
+    # Tool data
+    tool_data = data.get("tool", {})
+
     return (
         {
             "buses": buses,
@@ -221,6 +229,7 @@ def network_from_dict(data: JsonDict, *, include_results: bool = True) -> tuple[
             "ground_connections": ground_connections,
             "crs": crs,
         },
+        tool_data,
         has_results,
     )
 
@@ -273,11 +282,8 @@ def network_to_dict(en: "ElectricalNetwork", *, include_results: bool) -> JsonDi
     for line in en.lines.values():
         lines.append(line.to_dict(include_results=include_results))
         params_id = line.parameters.id
-        if params_id in lines_params_dict and line.parameters != lines_params_dict[params_id]:
-            msg = f"There are multiple line parameters with id {params_id!r}"
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.JSON_LINE_PARAMETERS_DUPLICATES)
-        lines_params_dict[line.parameters.id] = line.parameters
+        if params_id not in lines_params_dict:
+            lines_params_dict[line.parameters.id] = line.parameters
 
     # Export the transformers with their parameters
     transformers: list[JsonDict] = []
@@ -285,28 +291,24 @@ def network_to_dict(en: "ElectricalNetwork", *, include_results: bool) -> JsonDi
     for transformer in en.transformers.values():
         transformers.append(transformer.to_dict(include_results=include_results))
         params_id = transformer.parameters.id
-        if params_id in transformers_params_dict and transformer.parameters != transformers_params_dict[params_id]:
-            msg = f"There are multiple transformer parameters with id {params_id!r}"
-            logger.error(msg)
-            raise RoseauLoadFlowException(
-                msg=msg, code=RoseauLoadFlowExceptionCode.JSON_TRANSFORMER_PARAMETERS_DUPLICATES
-            )
-        transformers_params_dict[params_id] = transformer.parameters
+        if params_id not in transformers_params_dict:
+            transformers_params_dict[params_id] = transformer.parameters
 
     # Export the switches
     switches = [switch.to_dict(include_results=include_results) for switch in en.switches.values()]
 
-    # Line parameters
-    line_params: list[JsonDict] = []
-    for lp in lines_params_dict.values():
-        line_params.append(lp.to_dict(include_results=include_results))
-    line_params.sort(key=lambda x: (type(x["id"]).__name__, str(x["id"])))  # Always keep the same order
+    # Line and transformer parameters (sorted)
+    line_params = sorted(
+        (lp.to_dict(include_results=include_results) for lp in lines_params_dict.values()),
+        key=id_sort_key,
+    )
+    transformer_params = sorted(
+        (tp.to_dict(include_results=include_results) for tp in transformers_params_dict.values()),
+        key=id_sort_key,
+    )
 
-    # Transformer parameters
-    transformer_params: list[JsonDict] = []
-    for tp in transformers_params_dict.values():
-        transformer_params.append(tp.to_dict(include_results=include_results))
-    transformer_params.sort(key=lambda x: (type(x["id"]).__name__, str(x["id"])))  # Always keep the same order
+    # Tool data
+    tool_data = en.tool_data.to_dict()
 
     res = {
         "version": NETWORK_JSON_VERSION,
@@ -326,6 +328,8 @@ def network_to_dict(en: "ElectricalNetwork", *, include_results: bool) -> JsonDi
     }
     if short_circuits:
         res["short_circuits"] = short_circuits
+    if tool_data:
+        res["tool"] = tool_data
     return res
 
 
@@ -884,7 +888,7 @@ def v3_to_v4_converter(data: JsonDict) -> JsonDict:  # noqa: C901
                 assert load_data["type"] == "impedance"
                 impedances = np.array([complex(*z) for z in load_data["impedances"]], dtype=np.complex128)
                 inner_currents = voltages / impedances
-            load_data["results"]["inner_currents"] = [[i.real, i.imag] for i in inner_currents]
+            load_data["results"]["inner_currents"] = [[i.real, i.imag] for i in inner_currents.tolist()]
         loads.append(load_data)
 
     results = {
@@ -902,6 +906,60 @@ def v3_to_v4_converter(data: JsonDict) -> JsonDict:  # noqa: C901
         "lines_params": line_params,
         "transformers_params": transformer_params,
         "ground_connections": ground_connections,
+    }
+    if "short_circuits" in data:
+        results["short_circuits"] = data["short_circuits"]  # Unchanged
+
+    return results
+
+
+def v4_to_v5_converter(data: JsonDict) -> JsonDict:
+    """Convert a v4 network dict to a v5 network dict.
+
+    Args:
+        data:
+            The v4 network data.
+
+    Returns:
+        The v5 network data.
+    """
+    assert data["version"] == 4, data["version"]
+
+    grounds_dict = {ground["id"]: ground for ground in data["grounds"]}
+
+    lines = []
+    for line_data in data["lines"]:
+        # Handle missing results
+        if "results" in line_data:
+            # Copy ground potential to line results
+            if line_data.get("ground") is not None:
+                ground_data = grounds_dict[line_data["ground"]]
+                line_data["results"]["ground_potential"] = ground_data["results"]["potential"]
+            else:
+                pass
+        lines.append(line_data)
+
+    switches = []
+    for switch_data in data["switches"]:
+        # Add closed parameter
+        switch_data["closed"] = True
+        switches.append(switch_data)
+
+    results = {
+        "version": 5,
+        "is_multiphase": data["is_multiphase"],  # Unchanged
+        "crs": data["crs"],  # Unchanged
+        "grounds": data["grounds"],  # Unchanged
+        "potential_refs": data["potential_refs"],  # Unchanged
+        "buses": data["buses"],  # Unchanged
+        "lines": lines,
+        "switches": switches,
+        "transformers": data["transformers"],  # Unchanged
+        "loads": data["loads"],  # Unchanged
+        "sources": data["sources"],  # Unchanged
+        "lines_params": data["lines_params"],  # Unchanged
+        "transformers_params": data["transformers_params"],  # Unchanged
+        "ground_connections": data["ground_connections"],  # Unchanged
     }
     if "short_circuits" in data:
         results["short_circuits"] = data["short_circuits"]  # Unchanged

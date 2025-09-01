@@ -48,8 +48,10 @@ def test_res_violated():
     )
     transformer = Transformer(id="transformer", bus_hv=bus_hv, bus_lv=bus_lv, parameters=tp)
 
-    transformer._res_voltages = (20e3 + 0j), (400 + 0j)
-    transformer._res_currents = (1 + 0j), (-29 + 0j)  # 69% loading primary, 40% loading secondary
+    transformer.side_hv._res_voltage = 20e3 + 0j
+    transformer.side_lv._res_voltage = 400 + 0j
+    transformer.side_hv._res_current = 1 + 0j  # 69% loading HV
+    transformer.side_lv._res_current = -29 + 0j  # 40% loading LV
 
     # Default value
     assert transformer.max_loading == Q_(1, "")
@@ -72,7 +74,8 @@ def test_res_violated():
 
     # Secondary side violation
     transformer.max_loading = 1
-    transformer._res_currents = 1.0, -87.0  # 69% loading primary, 120% loading secondary
+    transformer.side_hv._res_current = 1.0  # 69% loading HV
+    transformer.side_lv._res_current = -87.0  # 120% loading LV
     assert transformer.res_violated is True
     assert np.allclose(transformer.res_loading, 87 * 400 * np.sqrt(3) / 50_000)
 
@@ -85,15 +88,17 @@ def test_transformer_results():
     )
     tr = Transformer(id="transformer", bus_hv=bus_hv, bus_lv=bus_lv, parameters=tp)
 
-    tr._res_voltages = 20e3 + 0j, 400 + 0j
-    tr._res_currents = 0.8 + 0j, -65 + 0j
+    tr.side_hv._res_voltage = 20e3 + 0j
+    tr.side_lv._res_voltage = 400 + 0j
+    tr.side_hv._res_current = 0.8 + 0j
+    tr.side_lv._res_current = -65 + 0j
 
-    p_hv, p_lv = (p.m for p in tr.res_powers)
+    p_hv = tr.side_hv.res_power.m
+    p_lv = tr.side_lv.res_power.m
 
-    np.testing.assert_allclose(p_hv, tr.res_voltages[0].m * tr.res_currents[0].m.conjugate() * np.sqrt(3.0))
-    np.testing.assert_allclose(p_lv, tr.res_voltages[1].m * tr.res_currents[1].m.conjugate() * np.sqrt(3.0))
+    np.testing.assert_allclose(p_hv, tr.side_hv.res_voltage.m * tr.side_hv.res_current.m.conjugate() * np.sqrt(3.0))
+    np.testing.assert_allclose(p_lv, tr.side_lv.res_voltage.m * tr.side_lv.res_current.m.conjugate() * np.sqrt(3.0))
 
     expected_total_losses = p_hv + p_lv
     actual_total_losses = tr.res_power_losses.m
-    assert np.isscalar(actual_total_losses)
     np.testing.assert_allclose(actual_total_losses, expected_total_losses)

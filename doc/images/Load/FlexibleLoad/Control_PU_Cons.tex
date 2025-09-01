@@ -1,4 +1,4 @@
-\input{Preambule}%
+\input{Preamble}%
 
 \usepackage{pgfplots}%
 \pgfplotsset{compat=newest}%
@@ -43,35 +43,34 @@
       domain=\xminnormvaleur:\xmaxnormvaleur, samples=75, mark=none}}%
   \tikzset{non lisse/.style={line width=0.3mm, mark=*}}%
 
-  \begin{axis}
-    [%
-    height=7cm,%
-    width=0.9\textwidth,%
-    enlarge y limits,%
-    grid=major,%
-    xlabel={$|V_{p_1}-V_{p_2}|$},%
-    xtick={\uminnormvaleur,\umidminnormvaleur,\udownnormvaleur,\unomnormvaleur,\uupnormvaleur,\umidmaxnormvaleur,\umaxnormvaleur},%
-    xticklabels={%
-      $\uminnorm$,,$\udownnorm$,$\unomnorm$,$\uupnorm$,,$\umaxnorm$%
-    },%
-    y tick label style={%
-      /pgf/number format/.cd,%
-      set thousands separator={},%
-      fixed,%
-      precision=1,%
-      use comma%
-    },%
-    xmin=\xminnormvaleur,%
-    xmax=\xmaxnormvaleur,%
-    ymin=\yminnormvaleur,%
-    ymax=\ymaxnormvaleur,%
-    legend columns=2,%
-    legend style={at={(0.5,-0.25)},%
-      anchor=north,%
-      nodes={text width=4cm}%
-    },%
-    cycle list/YlOrRd-5,%
-    cycle list name=YlOrRd-5%
+  \begin{axis}[%
+      height=7cm,%
+      width=0.9\textwidth,%
+      enlarge y limits,%
+      grid=major,%
+      xlabel={$|V_{p_1}-V_{p_2}|$},%
+      xtick={\uminnormvaleur,\umidminnormvaleur,\udownnormvaleur,\unomnormvaleur,\uupnormvaleur,\umidmaxnormvaleur,\umaxnormvaleur},%
+      xticklabels={%
+        $\uminnorm$,,$\udownnorm$,$\unomnorm$,$\uupnorm$,,$\umaxnorm$%
+      },%
+      y tick label style={%
+        /pgf/number format/.cd,%
+        set thousands separator={},%
+        fixed,%
+        precision=1,%
+        use comma%
+      },%
+      xmin=\xminnormvaleur,%
+      xmax=\xmaxnormvaleur,%
+      ymin=\yminnormvaleur,%
+      ymax=\ymaxnormvaleur,%
+      legend columns=2,%
+      legend style={at={(0.5,-0.25)},%
+        anchor=north,%
+        nodes={text width=4cm}%
+      },%
+      cycle list/YlOrRd-5,%
+      cycle list name=YlOrRd-5%
     ]%%%%%%%%%%%%%% initialize YlOrRd-5%
 
     % Piecewise linear function

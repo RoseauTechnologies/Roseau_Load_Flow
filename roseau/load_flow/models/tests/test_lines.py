@@ -154,7 +154,8 @@ def test_res_violated():
 
     bus1._res_potentials = 230 * PosSeq
     bus2._res_potentials = 225 * PosSeq
-    line._res_currents = 10 * PosSeq, -10 * PosSeq
+    line.side1._res_currents = 10 * PosSeq
+    line.side2._res_currents = -10 * PosSeq
 
     # No limits
     assert line.max_loading == Q_(1, "")
@@ -179,28 +180,32 @@ def test_res_violated():
 
     # Side 1 violation
     lp.ampacities = 11
-    line._res_currents = 12 * PosSeq, -10 * PosSeq
+    line.side1._res_currents = 12 * PosSeq
+    line.side2._res_currents = -10 * PosSeq
     assert (line.res_violated == [True, True, True]).all()
     np.testing.assert_allclose(line.res_loading.m, 12 / 11)
 
     # Side 2 violation
     lp.ampacities = 11
-    line._res_currents = 10 * PosSeq, -12 * PosSeq
+    line.side1._res_currents = 10 * PosSeq
+    line.side2._res_currents = -12 * PosSeq
     assert (line.res_violated == [True, True, True]).all()
     np.testing.assert_allclose(line.res_loading.m, 12 / 11)
 
     # A single phase violation
     lp.ampacities = 11
-    line._res_currents = 10 * PosSeq, -10 * PosSeq
-    line._res_currents[0][0] = 12
-    line._res_currents[1][0] = -12
+    line.side1._res_currents = 10 * PosSeq
+    line.side2._res_currents = -10 * PosSeq
+    line.side1._res_currents[0] = 12
+    line.side2._res_currents[0] = -12
     assert (line.res_violated == [True, False, False]).all()
     np.testing.assert_allclose(line.res_loading.m, [12 / 11, 10 / 11, 10 / 11])
 
     #
     # The same with arrays
     #
-    line._res_currents = 10 * PosSeq, -10 * PosSeq
+    line.side1._res_currents = 10 * PosSeq
+    line.side2._res_currents = -10 * PosSeq
 
     # No constraint violated
     lp.ampacities = [11, 12, 13]
@@ -215,13 +220,15 @@ def test_res_violated():
 
     # Side 1 violation
     lp.ampacities = [11, 13, 11]
-    line._res_currents = 12 * PosSeq, -10 * PosSeq
+    line.side1._res_currents = 12 * PosSeq
+    line.side2._res_currents = -10 * PosSeq
     assert (line.res_violated == [True, False, True]).all()
     np.testing.assert_allclose(line.res_loading.m, [12 / 11, 12 / 13, 12 / 11])
 
     # Side 2 violation
     lp.ampacities = [11, 11, 13]
-    line._res_currents = 10 * PosSeq, -12 * PosSeq
+    line.side1._res_currents = 10 * PosSeq
+    line.side2._res_currents = -12 * PosSeq
     assert (line.res_violated == [True, True, False]).all()
     np.testing.assert_allclose(line.res_loading.m, [12 / 11, 12 / 11, 12 / 13])
 
@@ -421,15 +428,17 @@ def test_lines_results(phases, z_line, y_shunt, len_line, bus_pot, line_cur, gro
         parameters=lp,
         ground=ground if lp.with_shunt else None,
     )
-    bus1._res_potentials = np.array(bus_pot[0], dtype=complex)
-    bus2._res_potentials = np.array(bus_pot[1], dtype=complex)
-    line._res_currents = np.array(line_cur[0], dtype=complex), np.array(line_cur[1], dtype=complex)
-    line._res_potentials = (
-        np.array([bus1._res_potentials[bus1.phases.index(p)] for p in line.phases1], dtype=complex),
-        np.array([bus2._res_potentials[bus2.phases.index(p)] for p in line.phases2], dtype=complex),
-    )
+    for bus, side, res_potentials, res_currents in zip(
+        (bus1, bus2), (line.side1, line.side2), bus_pot, line_cur, strict=True
+    ):
+        bus._res_potentials = np.array(res_potentials, dtype=complex)
+        side._res_currents = np.array(res_currents, dtype=complex)
+        side._res_potentials = bus._res_potentials[[bus.phases.index(p) for p in side.phases]]
     ground._res_potential = ground_pot
-    res_powers1, res_powers2 = (x.m for x in line.res_powers)
+    if lp.with_shunt:
+        line._res_ground_potential = ground._res_potential
+    res_powers1 = line.side1.res_powers.m
+    res_powers2 = line.side2.res_powers.m
     series_losses = line.res_series_power_losses.m
     shunt_losses = line.res_shunt_power_losses.m
     line_losses = line.res_power_losses.m
@@ -442,6 +451,16 @@ def test_lines_results(phases, z_line, y_shunt, len_line, bus_pot, line_cur, gro
     else:
         assert not np.allclose(shunt_losses, 0)
     np.testing.assert_allclose(line_losses, series_losses + shunt_losses)
+    if line.with_shunt:
+        np.testing.assert_allclose(line.res_ground_potential, ground.res_potential)
+    else:
+        with pytest.raises(RoseauLoadFlowException) as e:
+            _ = line.res_ground_potential
+        assert e.value.msg == (
+            "Ground potential is only available for lines with shunt components. Line 'line' does "
+            "not have shunt components."
+        )
+        assert e.value.code == RoseauLoadFlowExceptionCode.BAD_LINE_TYPE
 
     # Sanity check: the total power lost is equal to the sum of the powers flowing through
     np.testing.assert_allclose(res_powers1 + res_powers2, line_losses, rtol=1e-6)

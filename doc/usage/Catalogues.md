@@ -1,15 +1,17 @@
 ---
 myst:
   html_meta:
-    "description lang=en": |
+    description lang=en: |
       Roseau Load Flow comes with a catalogue of components including numerous models of medium and low voltage
       networks, transformers and lines.
-    "description lang=fr": |
+    keywords lang=en: simulation, distribution grid, MT, LV, transformer, cables, model
+    # spellchecker:off
+    description lang=fr: |
       Roseau Load Flow est livré avec un catalogue de composants comportant de nombreux modèles de réseaux
       moyenne-tension et basse tension, de transformateurs et de lignes.
-    "keywords lang=fr": |
+    keywords lang=fr: |
       simulation, réseau, électrique, réseaux, MT, BT, moyenne tension, basse tension, transformateurs, lignes, modèle
-    "keywords lang=en": simulation, distribution grid, MT, LV, transformer, cables, model
+    # spellchecker:on
 ---
 
 # Catalogues
@@ -20,19 +22,18 @@ In _Roseau Load Flow_, some classes are provided with a catalogue. This page des
 
 ## Networks
 
-_Roseau Load Flow_ is provided with a small catalogue of MV and LV networks. These networks are available through
-the class `ElectricalNetwork`.
+_Roseau Load Flow_ is provided with a small catalogue of MV and LV networks. These networks are available through the
+class `ElectricalNetwork`.
 
-Here is an interactive plot to explore them. See the [Plotting page](./Plotting.md) to learn how to get such
-interactive map.
+Here is an interactive plot to explore them. See the [Plotting page](./Plotting.md) to learn how to get such interactive
+map.
 
 <iframe src="../_static/Network/Catalogue.html" height="600px" width="100%" frameborder="0"></iframe>
 
 ### Source of data
 
-All these networks are built from open data available in France. **The complete model of the French distribution
-network can be provided on demand**. Please email us at
-[contact@roseautechnologies.com](mailto:contact@roseautechnologies.com).
+All these networks are built from open data available in France. **The complete model of the French distribution network
+can be provided on demand**. Please email us at [contact@roseautechnologies.com](mailto:contact@roseautechnologies.com).
 
 ### Inspecting the catalogue
 
@@ -45,55 +46,55 @@ This catalogue can be retrieved in the form of a dataframe using:
 
 | Name                                                                              | Nb buses | Nb lines | Nb transformers | Nb switches | Nb loads | Nb sources | Nb grounds | Nb potential refs | Available load points |
 | :-------------------------------------------------------------------------------- | -------: | -------: | --------------: | ----------: | -------: | ---------: | ---------: | ----------------: | :-------------------- |
-| <a href="../_static/Network/LVFeeder00939.html" target="_blank">LVFeeder00939</a> |        8 |        6 |               1 |           0 |       12 |          1 |          1 |                 2 | \['Winter', 'Summer'] |
-| <a href="../_static/Network/LVFeeder02639.html" target="_blank">LVFeeder02639</a> |        7 |        5 |               1 |           0 |       10 |          1 |          1 |                 2 | \['Winter', 'Summer'] |
-| <a href="../_static/Network/LVFeeder04790.html" target="_blank">LVFeeder04790</a> |        4 |        2 |               1 |           0 |        4 |          1 |          1 |                 2 | \['Winter', 'Summer'] |
-| <a href="../_static/Network/LVFeeder06713.html" target="_blank">LVFeeder06713</a> |        3 |        1 |               1 |           0 |        2 |          1 |          1 |                 2 | \['Summer', 'Winter'] |
-| <a href="../_static/Network/LVFeeder06926.html" target="_blank">LVFeeder06926</a> |        3 |        1 |               1 |           0 |        2 |          1 |          1 |                 2 | \['Winter', 'Summer'] |
-| <a href="../_static/Network/LVFeeder06975.html" target="_blank">LVFeeder06975</a> |        6 |        4 |               1 |           0 |        8 |          1 |          1 |                 2 | \['Winter', 'Summer'] |
-| <a href="../_static/Network/LVFeeder18498.html" target="_blank">LVFeeder18498</a> |       18 |       16 |               1 |           0 |       32 |          1 |          1 |                 2 | \['Winter', 'Summer'] |
-| <a href="../_static/Network/LVFeeder18769.html" target="_blank">LVFeeder18769</a> |        7 |        5 |               1 |           0 |       10 |          1 |          1 |                 2 | \['Winter', 'Summer'] |
-| <a href="../_static/Network/LVFeeder19558.html" target="_blank">LVFeeder19558</a> |        3 |        1 |               1 |           0 |        2 |          1 |          1 |                 2 | \['Winter', 'Summer'] |
-| <a href="../_static/Network/LVFeeder20256.html" target="_blank">LVFeeder20256</a> |        9 |        7 |               1 |           0 |       14 |          1 |          1 |                 2 | \['Winter', 'Summer'] |
-| <a href="../_static/Network/LVFeeder23832.html" target="_blank">LVFeeder23832</a> |        3 |        1 |               1 |           0 |        2 |          1 |          1 |                 2 | \['Winter', 'Summer'] |
-| <a href="../_static/Network/LVFeeder24400.html" target="_blank">LVFeeder24400</a> |        4 |        2 |               1 |           0 |        4 |          1 |          1 |                 2 | \['Summer', 'Winter'] |
-| <a href="../_static/Network/LVFeeder27429.html" target="_blank">LVFeeder27429</a> |       11 |        9 |               1 |           0 |       18 |          1 |          1 |                 2 | \['Winter', 'Summer'] |
-| <a href="../_static/Network/LVFeeder27681.html" target="_blank">LVFeeder27681</a> |        3 |        1 |               1 |           0 |        2 |          1 |          1 |                 2 | \['Winter', 'Summer'] |
-| <a href="../_static/Network/LVFeeder30216.html" target="_blank">LVFeeder30216</a> |        9 |        7 |               1 |           0 |       14 |          1 |          1 |                 2 | \['Summer', 'Winter'] |
-| <a href="../_static/Network/LVFeeder31441.html" target="_blank">LVFeeder31441</a> |        4 |        2 |               1 |           0 |        4 |          1 |          1 |                 2 | \['Summer', 'Winter'] |
-| <a href="../_static/Network/LVFeeder36284.html" target="_blank">LVFeeder36284</a> |        5 |        3 |               1 |           0 |        6 |          1 |          1 |                 2 | \['Winter', 'Summer'] |
-| <a href="../_static/Network/LVFeeder36360.html" target="_blank">LVFeeder36360</a> |        9 |        7 |               1 |           0 |       14 |          1 |          1 |                 2 | \['Summer', 'Winter'] |
-| <a href="../_static/Network/LVFeeder37263.html" target="_blank">LVFeeder37263</a> |        3 |        1 |               1 |           0 |        2 |          1 |          1 |                 2 | \['Summer', 'Winter'] |
-| <a href="../_static/Network/LVFeeder38211.html" target="_blank">LVFeeder38211</a> |        6 |        4 |               1 |           0 |        8 |          1 |          1 |                 2 | \['Winter', 'Summer'] |
-| <a href="../_static/Network/MVFeeder004.html" target="_blank">MVFeeder004</a>     |       17 |       15 |               0 |           1 |       10 |          1 |          1 |                 1 | \['Summer', 'Winter'] |
-| <a href="../_static/Network/MVFeeder011.html" target="_blank">MVFeeder011</a>     |       50 |       48 |               0 |           1 |       68 |          1 |          1 |                 1 | \['Summer', 'Winter'] |
-| <a href="../_static/Network/MVFeeder015.html" target="_blank">MVFeeder015</a>     |       30 |       28 |               0 |           1 |       20 |          1 |          1 |                 1 | \['Winter', 'Summer'] |
-| <a href="../_static/Network/MVFeeder032.html" target="_blank">MVFeeder032</a>     |       53 |       51 |               0 |           1 |       40 |          1 |          1 |                 1 | \['Summer', 'Winter'] |
-| <a href="../_static/Network/MVFeeder041.html" target="_blank">MVFeeder041</a>     |       88 |       86 |               0 |           1 |       62 |          1 |          1 |                 1 | \['Winter', 'Summer'] |
-| <a href="../_static/Network/MVFeeder063.html" target="_blank">MVFeeder063</a>     |       39 |       37 |               0 |           1 |       38 |          1 |          1 |                 1 | \['Summer', 'Winter'] |
-| <a href="../_static/Network/MVFeeder078.html" target="_blank">MVFeeder078</a>     |       69 |       67 |               0 |           1 |       46 |          1 |          1 |                 1 | \['Summer', 'Winter'] |
-| <a href="../_static/Network/MVFeeder115.html" target="_blank">MVFeeder115</a>     |        4 |        2 |               0 |           1 |        4 |          1 |          1 |                 1 | \['Summer', 'Winter'] |
-| <a href="../_static/Network/MVFeeder128.html" target="_blank">MVFeeder128</a>     |       49 |       47 |               0 |           1 |       32 |          1 |          1 |                 1 | \['Winter', 'Summer'] |
-| <a href="../_static/Network/MVFeeder151.html" target="_blank">MVFeeder151</a>     |       59 |       57 |               0 |           1 |       44 |          1 |          1 |                 1 | \['Summer', 'Winter'] |
-| <a href="../_static/Network/MVFeeder159.html" target="_blank">MVFeeder159</a>     |        8 |        6 |               0 |           1 |        0 |          1 |          1 |                 1 | \['Summer', 'Winter'] |
-| <a href="../_static/Network/MVFeeder176.html" target="_blank">MVFeeder176</a>     |       33 |       31 |               0 |           1 |       20 |          1 |          1 |                 1 | \['Summer', 'Winter'] |
-| <a href="../_static/Network/MVFeeder210.html" target="_blank">MVFeeder210</a>     |      128 |      126 |               0 |           1 |       82 |          1 |          1 |                 1 | \['Winter', 'Summer'] |
-| <a href="../_static/Network/MVFeeder217.html" target="_blank">MVFeeder217</a>     |       44 |       42 |               0 |           1 |       44 |          1 |          1 |                 1 | \['Winter', 'Summer'] |
-| <a href="../_static/Network/MVFeeder232.html" target="_blank">MVFeeder232</a>     |       66 |       64 |               0 |           1 |       38 |          1 |          1 |                 1 | \['Summer', 'Winter'] |
-| <a href="../_static/Network/MVFeeder251.html" target="_blank">MVFeeder251</a>     |      125 |      123 |               0 |           1 |      106 |          1 |          1 |                 1 | \['Winter', 'Summer'] |
-| <a href="../_static/Network/MVFeeder290.html" target="_blank">MVFeeder290</a>     |       12 |       10 |               0 |           1 |       16 |          1 |          1 |                 1 | \['Winter', 'Summer'] |
-| <a href="../_static/Network/MVFeeder312.html" target="_blank">MVFeeder312</a>     |       11 |        9 |               0 |           1 |        8 |          1 |          1 |                 1 | \['Winter', 'Summer'] |
-| <a href="../_static/Network/MVFeeder320.html" target="_blank">MVFeeder320</a>     |       20 |       18 |               0 |           1 |       12 |          1 |          1 |                 1 | \['Winter', 'Summer'] |
-| <a href="../_static/Network/MVFeeder339.html" target="_blank">MVFeeder339</a>     |       33 |       31 |               0 |           1 |       28 |          1 |          1 |                 1 | \['Summer', 'Winter'] |
+| <a href="../_static/Network/LVFeeder00939.html" target="_blank">LVFeeder00939</a> |        8 |        6 |               1 |           0 |       12 |          1 |          1 |                 2 | ['Winter', 'Summer']  |
+| <a href="../_static/Network/LVFeeder02639.html" target="_blank">LVFeeder02639</a> |        7 |        5 |               1 |           0 |       10 |          1 |          1 |                 2 | ['Winter', 'Summer']  |
+| <a href="../_static/Network/LVFeeder04790.html" target="_blank">LVFeeder04790</a> |        4 |        2 |               1 |           0 |        4 |          1 |          1 |                 2 | ['Winter', 'Summer']  |
+| <a href="../_static/Network/LVFeeder06713.html" target="_blank">LVFeeder06713</a> |        3 |        1 |               1 |           0 |        2 |          1 |          1 |                 2 | ['Summer', 'Winter']  |
+| <a href="../_static/Network/LVFeeder06926.html" target="_blank">LVFeeder06926</a> |        3 |        1 |               1 |           0 |        2 |          1 |          1 |                 2 | ['Winter', 'Summer']  |
+| <a href="../_static/Network/LVFeeder06975.html" target="_blank">LVFeeder06975</a> |        6 |        4 |               1 |           0 |        8 |          1 |          1 |                 2 | ['Winter', 'Summer']  |
+| <a href="../_static/Network/LVFeeder18498.html" target="_blank">LVFeeder18498</a> |       18 |       16 |               1 |           0 |       32 |          1 |          1 |                 2 | ['Winter', 'Summer']  |
+| <a href="../_static/Network/LVFeeder18769.html" target="_blank">LVFeeder18769</a> |        7 |        5 |               1 |           0 |       10 |          1 |          1 |                 2 | ['Winter', 'Summer']  |
+| <a href="../_static/Network/LVFeeder19558.html" target="_blank">LVFeeder19558</a> |        3 |        1 |               1 |           0 |        2 |          1 |          1 |                 2 | ['Winter', 'Summer']  |
+| <a href="../_static/Network/LVFeeder20256.html" target="_blank">LVFeeder20256</a> |        9 |        7 |               1 |           0 |       14 |          1 |          1 |                 2 | ['Winter', 'Summer']  |
+| <a href="../_static/Network/LVFeeder23832.html" target="_blank">LVFeeder23832</a> |        3 |        1 |               1 |           0 |        2 |          1 |          1 |                 2 | ['Winter', 'Summer']  |
+| <a href="../_static/Network/LVFeeder24400.html" target="_blank">LVFeeder24400</a> |        4 |        2 |               1 |           0 |        4 |          1 |          1 |                 2 | ['Summer', 'Winter']  |
+| <a href="../_static/Network/LVFeeder27429.html" target="_blank">LVFeeder27429</a> |       11 |        9 |               1 |           0 |       18 |          1 |          1 |                 2 | ['Winter', 'Summer']  |
+| <a href="../_static/Network/LVFeeder27681.html" target="_blank">LVFeeder27681</a> |        3 |        1 |               1 |           0 |        2 |          1 |          1 |                 2 | ['Winter', 'Summer']  |
+| <a href="../_static/Network/LVFeeder30216.html" target="_blank">LVFeeder30216</a> |        9 |        7 |               1 |           0 |       14 |          1 |          1 |                 2 | ['Summer', 'Winter']  |
+| <a href="../_static/Network/LVFeeder31441.html" target="_blank">LVFeeder31441</a> |        4 |        2 |               1 |           0 |        4 |          1 |          1 |                 2 | ['Summer', 'Winter']  |
+| <a href="../_static/Network/LVFeeder36284.html" target="_blank">LVFeeder36284</a> |        5 |        3 |               1 |           0 |        6 |          1 |          1 |                 2 | ['Winter', 'Summer']  |
+| <a href="../_static/Network/LVFeeder36360.html" target="_blank">LVFeeder36360</a> |        9 |        7 |               1 |           0 |       14 |          1 |          1 |                 2 | ['Summer', 'Winter']  |
+| <a href="../_static/Network/LVFeeder37263.html" target="_blank">LVFeeder37263</a> |        3 |        1 |               1 |           0 |        2 |          1 |          1 |                 2 | ['Summer', 'Winter']  |
+| <a href="../_static/Network/LVFeeder38211.html" target="_blank">LVFeeder38211</a> |        6 |        4 |               1 |           0 |        8 |          1 |          1 |                 2 | ['Winter', 'Summer']  |
+| <a href="../_static/Network/MVFeeder004.html" target="_blank">MVFeeder004</a>     |       17 |       15 |               0 |           1 |       10 |          1 |          1 |                 1 | ['Summer', 'Winter']  |
+| <a href="../_static/Network/MVFeeder011.html" target="_blank">MVFeeder011</a>     |       50 |       48 |               0 |           1 |       68 |          1 |          1 |                 1 | ['Summer', 'Winter']  |
+| <a href="../_static/Network/MVFeeder015.html" target="_blank">MVFeeder015</a>     |       30 |       28 |               0 |           1 |       20 |          1 |          1 |                 1 | ['Winter', 'Summer']  |
+| <a href="../_static/Network/MVFeeder032.html" target="_blank">MVFeeder032</a>     |       53 |       51 |               0 |           1 |       40 |          1 |          1 |                 1 | ['Summer', 'Winter']  |
+| <a href="../_static/Network/MVFeeder041.html" target="_blank">MVFeeder041</a>     |       88 |       86 |               0 |           1 |       62 |          1 |          1 |                 1 | ['Winter', 'Summer']  |
+| <a href="../_static/Network/MVFeeder063.html" target="_blank">MVFeeder063</a>     |       39 |       37 |               0 |           1 |       38 |          1 |          1 |                 1 | ['Summer', 'Winter']  |
+| <a href="../_static/Network/MVFeeder078.html" target="_blank">MVFeeder078</a>     |       69 |       67 |               0 |           1 |       46 |          1 |          1 |                 1 | ['Summer', 'Winter']  |
+| <a href="../_static/Network/MVFeeder115.html" target="_blank">MVFeeder115</a>     |        4 |        2 |               0 |           1 |        4 |          1 |          1 |                 1 | ['Summer', 'Winter']  |
+| <a href="../_static/Network/MVFeeder128.html" target="_blank">MVFeeder128</a>     |       49 |       47 |               0 |           1 |       32 |          1 |          1 |                 1 | ['Winter', 'Summer']  |
+| <a href="../_static/Network/MVFeeder151.html" target="_blank">MVFeeder151</a>     |       59 |       57 |               0 |           1 |       44 |          1 |          1 |                 1 | ['Summer', 'Winter']  |
+| <a href="../_static/Network/MVFeeder159.html" target="_blank">MVFeeder159</a>     |        8 |        6 |               0 |           1 |        0 |          1 |          1 |                 1 | ['Summer', 'Winter']  |
+| <a href="../_static/Network/MVFeeder176.html" target="_blank">MVFeeder176</a>     |       33 |       31 |               0 |           1 |       20 |          1 |          1 |                 1 | ['Summer', 'Winter']  |
+| <a href="../_static/Network/MVFeeder210.html" target="_blank">MVFeeder210</a>     |      128 |      126 |               0 |           1 |       82 |          1 |          1 |                 1 | ['Winter', 'Summer']  |
+| <a href="../_static/Network/MVFeeder217.html" target="_blank">MVFeeder217</a>     |       44 |       42 |               0 |           1 |       44 |          1 |          1 |                 1 | ['Winter', 'Summer']  |
+| <a href="../_static/Network/MVFeeder232.html" target="_blank">MVFeeder232</a>     |       66 |       64 |               0 |           1 |       38 |          1 |          1 |                 1 | ['Summer', 'Winter']  |
+| <a href="../_static/Network/MVFeeder251.html" target="_blank">MVFeeder251</a>     |      125 |      123 |               0 |           1 |      106 |          1 |          1 |                 1 | ['Winter', 'Summer']  |
+| <a href="../_static/Network/MVFeeder290.html" target="_blank">MVFeeder290</a>     |       12 |       10 |               0 |           1 |       16 |          1 |          1 |                 1 | ['Winter', 'Summer']  |
+| <a href="../_static/Network/MVFeeder312.html" target="_blank">MVFeeder312</a>     |       11 |        9 |               0 |           1 |        8 |          1 |          1 |                 1 | ['Winter', 'Summer']  |
+| <a href="../_static/Network/MVFeeder320.html" target="_blank">MVFeeder320</a>     |       20 |       18 |               0 |           1 |       12 |          1 |          1 |                 1 | ['Winter', 'Summer']  |
+| <a href="../_static/Network/MVFeeder339.html" target="_blank">MVFeeder339</a>     |       33 |       31 |               0 |           1 |       28 |          1 |          1 |                 1 | ['Summer', 'Winter']  |
 
-There are MV networks whose names start with "MVFeeder" and LV networks whose names with "LVFeeder". For each
-network, there are two available load points:
+There are MV networks whose names start with "MVFeeder" and LV networks whose names with "LVFeeder". For each network,
+there are two available load points:
 
 - "Winter": it contains power loads without production.
 - "Summer": it contains power loads with production and 20% of the "Winter" load.
 
-The arguments of the method `get_catalogue` can be used to filter the output. If you want to get the LV networks
-only, you can call:
+The arguments of the method `get_catalogue` can be used to filter the output. If you want to get the LV networks only,
+you can call:
 
 ```pycon
 >>> rlf.ElectricalNetwork.get_catalogue(name=r"LVFeeder.*")
@@ -101,26 +102,26 @@ only, you can call:
 
 | Name          | Nb buses | Nb lines | Nb transformers | Nb switches | Nb loads | Nb sources | Nb grounds | Nb potential refs | Available load points |
 | :------------ | -------: | -------: | --------------: | ----------: | -------: | ---------: | ---------: | ----------------: | :-------------------- |
-| LVFeeder00939 |        8 |        6 |               1 |           0 |       12 |          1 |          1 |                 2 | \['Winter', 'Summer'] |
-| LVFeeder02639 |        7 |        5 |               1 |           0 |       10 |          1 |          1 |                 2 | \['Winter', 'Summer'] |
-| LVFeeder04790 |        4 |        2 |               1 |           0 |        4 |          1 |          1 |                 2 | \['Winter', 'Summer'] |
-| LVFeeder06713 |        3 |        1 |               1 |           0 |        2 |          1 |          1 |                 2 | \['Summer', 'Winter'] |
-| LVFeeder06926 |        3 |        1 |               1 |           0 |        2 |          1 |          1 |                 2 | \['Winter', 'Summer'] |
-| LVFeeder06975 |        6 |        4 |               1 |           0 |        8 |          1 |          1 |                 2 | \['Winter', 'Summer'] |
-| LVFeeder18498 |       18 |       16 |               1 |           0 |       32 |          1 |          1 |                 2 | \['Winter', 'Summer'] |
-| LVFeeder18769 |        7 |        5 |               1 |           0 |       10 |          1 |          1 |                 2 | \['Winter', 'Summer'] |
-| LVFeeder19558 |        3 |        1 |               1 |           0 |        2 |          1 |          1 |                 2 | \['Winter', 'Summer'] |
-| LVFeeder20256 |        9 |        7 |               1 |           0 |       14 |          1 |          1 |                 2 | \['Winter', 'Summer'] |
-| LVFeeder23832 |        3 |        1 |               1 |           0 |        2 |          1 |          1 |                 2 | \['Winter', 'Summer'] |
-| LVFeeder24400 |        4 |        2 |               1 |           0 |        4 |          1 |          1 |                 2 | \['Summer', 'Winter'] |
-| LVFeeder27429 |       11 |        9 |               1 |           0 |       18 |          1 |          1 |                 2 | \['Winter', 'Summer'] |
-| LVFeeder27681 |        3 |        1 |               1 |           0 |        2 |          1 |          1 |                 2 | \['Winter', 'Summer'] |
-| LVFeeder30216 |        9 |        7 |               1 |           0 |       14 |          1 |          1 |                 2 | \['Summer', 'Winter'] |
-| LVFeeder31441 |        4 |        2 |               1 |           0 |        4 |          1 |          1 |                 2 | \['Summer', 'Winter'] |
-| LVFeeder36284 |        5 |        3 |               1 |           0 |        6 |          1 |          1 |                 2 | \['Winter', 'Summer'] |
-| LVFeeder36360 |        9 |        7 |               1 |           0 |       14 |          1 |          1 |                 2 | \['Summer', 'Winter'] |
-| LVFeeder37263 |        3 |        1 |               1 |           0 |        2 |          1 |          1 |                 2 | \['Summer', 'Winter'] |
-| LVFeeder38211 |        6 |        4 |               1 |           0 |        8 |          1 |          1 |                 2 | \['Winter', 'Summer'] |
+| LVFeeder00939 |        8 |        6 |               1 |           0 |       12 |          1 |          1 |                 2 | ['Winter', 'Summer']  |
+| LVFeeder02639 |        7 |        5 |               1 |           0 |       10 |          1 |          1 |                 2 | ['Winter', 'Summer']  |
+| LVFeeder04790 |        4 |        2 |               1 |           0 |        4 |          1 |          1 |                 2 | ['Winter', 'Summer']  |
+| LVFeeder06713 |        3 |        1 |               1 |           0 |        2 |          1 |          1 |                 2 | ['Summer', 'Winter']  |
+| LVFeeder06926 |        3 |        1 |               1 |           0 |        2 |          1 |          1 |                 2 | ['Winter', 'Summer']  |
+| LVFeeder06975 |        6 |        4 |               1 |           0 |        8 |          1 |          1 |                 2 | ['Winter', 'Summer']  |
+| LVFeeder18498 |       18 |       16 |               1 |           0 |       32 |          1 |          1 |                 2 | ['Winter', 'Summer']  |
+| LVFeeder18769 |        7 |        5 |               1 |           0 |       10 |          1 |          1 |                 2 | ['Winter', 'Summer']  |
+| LVFeeder19558 |        3 |        1 |               1 |           0 |        2 |          1 |          1 |                 2 | ['Winter', 'Summer']  |
+| LVFeeder20256 |        9 |        7 |               1 |           0 |       14 |          1 |          1 |                 2 | ['Winter', 'Summer']  |
+| LVFeeder23832 |        3 |        1 |               1 |           0 |        2 |          1 |          1 |                 2 | ['Winter', 'Summer']  |
+| LVFeeder24400 |        4 |        2 |               1 |           0 |        4 |          1 |          1 |                 2 | ['Summer', 'Winter']  |
+| LVFeeder27429 |       11 |        9 |               1 |           0 |       18 |          1 |          1 |                 2 | ['Winter', 'Summer']  |
+| LVFeeder27681 |        3 |        1 |               1 |           0 |        2 |          1 |          1 |                 2 | ['Winter', 'Summer']  |
+| LVFeeder30216 |        9 |        7 |               1 |           0 |       14 |          1 |          1 |                 2 | ['Summer', 'Winter']  |
+| LVFeeder31441 |        4 |        2 |               1 |           0 |        4 |          1 |          1 |                 2 | ['Summer', 'Winter']  |
+| LVFeeder36284 |        5 |        3 |               1 |           0 |        6 |          1 |          1 |                 2 | ['Winter', 'Summer']  |
+| LVFeeder36360 |        9 |        7 |               1 |           0 |       14 |          1 |          1 |                 2 | ['Summer', 'Winter']  |
+| LVFeeder37263 |        3 |        1 |               1 |           0 |        2 |          1 |          1 |                 2 | ['Summer', 'Winter']  |
+| LVFeeder38211 |        6 |        4 |               1 |           0 |        8 |          1 |          1 |                 2 | ['Winter', 'Summer']  |
 
 A regular expression can also be used:
 
@@ -130,12 +131,12 @@ A regular expression can also be used:
 
 | Name          | Nb buses | Nb lines | Nb transformers | Nb switches | Nb loads | Nb sources | Nb grounds | Nb potential refs | Available load points |
 | :------------ | -------: | -------: | --------------: | ----------: | -------: | ---------: | ---------: | ----------------: | :-------------------- |
-| LVFeeder38211 |        6 |        4 |               1 |           0 |        8 |          1 |          1 |                 2 | \['Winter', 'Summer'] |
+| LVFeeder38211 |        6 |        4 |               1 |           0 |        8 |          1 |          1 |                 2 | ['Winter', 'Summer']  |
 
 ### Getting an instance
 
-You can build an `ElectricalNetwork` instance from the catalogue using the class method
-`from_catalogue`. The name of the network and the name of the load point must be provided:
+You can build an `ElectricalNetwork` instance from the catalogue using the class method `from_catalogue`. The name of
+the network and the name of the load point must be provided:
 
 ```pycon
 >>> en = rlf.ElectricalNetwork.from_catalogue(name="LVFeeder38211", load_point_name="Summer")
@@ -154,8 +155,7 @@ have been found. Please look at the catalogue using the `get_catalogue` class me
 
 ## Transformers
 
-_Roseau Load Flow_ ships with a catalogue of `TransformerParameters` obtained from data sheets of
-real transformers.
+_Roseau Load Flow_ ships with a catalogue of `TransformerParameters` obtained from data sheets of real transformers.
 
 ### Source of data
 
@@ -184,67 +184,60 @@ This catalogue can be retrieved in the form of a dataframe using:
 
 <!-- Generated with:
     import roseau.load_flow as rlf
-    from roseau.load_flow.utils._doc_utils import to_markdown
+    from roseau.load_flow.utils.doc_utils import to_markdown
     tr_catalogue = rlf.TransformerParameters.get_catalogue().sample(30, random_state=1)
     print(to_markdown(tr_catalogue, no_wrap_index=True))
  -->
 
 _Truncated output_
 
-| Name                                                              | Manufacturer | Product range | Efficiency         | Type          | Oil     | Nominal power (kVA) | Vector group | High voltage (kV) | Low voltage (kV) |
-| :---------------------------------------------------------------- | :----------- | :------------ | :----------------- | :------------ | :------ | ------------------: | :----------- | ----------------: | ---------------: |
-| <nobr>SE Vegeta C0Bk 100kVA 15/20kV(15) 410V Dyn11</nobr>         | SE           | Vegeta        | C0Bk               | three-phase   | ester   |                 100 | Dyn11        |                15 |             0.41 |
-| <nobr>SE Vegeta Standard 400kVA 15/20kV(20) 410V Dyn11</nobr>     | SE           | Vegeta        | Standard           | three-phase   | ester   |                 400 | Dyn11        |                20 |             0.41 |
-| <nobr>SE Vegeta AA0Ak 630kVA 20kV 410V Dyn11</nobr>               | SE           | Vegeta        | AA0Ak              | three-phase   | ester   |                 630 | Dyn11        |                20 |             0.41 |
-| <nobr>SE Minera B0Bk 250kVA 15/20kV(20) 410V Dyn11</nobr>         | SE           | Minera        | B0Bk               | three-phase   | mineral |                 250 | Dyn11        |                20 |             0.41 |
-| <nobr>SE Minera Standard 160kVA 15/20kV(15) 410V Dyn11</nobr>     | SE           | Minera        | Standard           | three-phase   | mineral |                 160 | Dyn11        |                15 |             0.41 |
-| <nobr>SE Imprego 10kVA 230V 230V Ii0</nobr>                       | SE           | Imprego       |                    | single-phase  | dry     |                  10 | Ii0          |              0.23 |             0.23 |
-| <nobr>CA Yellow A0Ak 1250kVA 15.75/21kV(21) 400V Dyn11</nobr>     | CA           | Yellow        | A0Ak               | three-phase   |         |                1250 | Dyn11        |                21 |              0.4 |
-| <nobr>SE Trihal AA0Ak 800kVA 15/20kV(15) 410V Dyn11</nobr>        | SE           | Trihal        | AA0Ak              | three-phase   | dry     |                 800 | Dyn11        |                15 |             0.41 |
-| <nobr>SE Vegeta C0Bk 100kVA 15/20kV(20) 410V Dyn11</nobr>         | SE           | Vegeta        | C0Bk               | three-phase   | ester   |                 100 | Dyn11        |                20 |             0.41 |
-| <nobr>SE Trihal AA0Ak 1000kVA 15/20kV(15) 410V Dyn11</nobr>       | SE           | Trihal        | AA0Ak              | three-phase   | dry     |                1000 | Dyn11        |                15 |             0.41 |
-| <nobr>SE Trihal AA0Ak 800kVA 15/20kV(20) 410V Dyn11</nobr>        | SE           | Trihal        | AA0Ak              | three-phase   | dry     |                 800 | Dyn11        |                20 |             0.41 |
-| <nobr>SE Minera C0Bk 1600kVA 15/20kV(15) 410V Dyn11</nobr>        | SE           | Minera        | C0Bk               | three-phase   | mineral |                1600 | Dyn11        |                15 |             0.41 |
-| <nobr>SE Trihal ExtraReducedLosses 1250kVA 20kV 410V Dyn11</nobr> | SE           | Trihal        | ExtraReducedLosses | three-phase   | dry     |                1250 | Dyn11        |                20 |             0.41 |
-| <nobr>SE Minera B0Bk 500kVA 15/20kV(20) 410V Dyn11</nobr>         | SE           | Minera        | B0Bk               | three-phase   | mineral |                 500 | Dyn11        |                20 |             0.41 |
-| <nobr>SE Imprego 10kVA 230V 230V Iii0</nobr>                      | SE           | Imprego       |                    | center-tapped | dry     |                  10 | Iii0         |              0.23 |             0.23 |
-| <nobr>SE Vegeta C0Bk 400kVA 15/20kV(20) 410V Dyn11</nobr>         | SE           | Vegeta        | C0Bk               | three-phase   | ester   |                 400 | Dyn11        |                20 |             0.41 |
-| <nobr>CA Yellow A0Ak 800kVA 15.75/21kV(15.75) 400V Dyn11</nobr>   | CA           | Yellow        | A0Ak               | three-phase   |         |                 800 | Dyn11        |             15.75 |              0.4 |
-| <nobr>SE Trihal AA0Ak 2000kVA 15/20kV(20) 410V Dyn11</nobr>       | SE           | Trihal        | AA0Ak              | three-phase   | dry     |                2000 | Dyn11        |                20 |             0.41 |
-| <nobr>SE Vegeta C0Bk 1000kVA 15/20kV(20) 410V Dyn11</nobr>        | SE           | Vegeta        | C0Bk               | three-phase   | ester   |                1000 | Dyn11        |                20 |             0.41 |
-| <nobr>FT 400kVA 15/20kV(15) 400V Dyn11</nobr>                     | FT           |               |                    | three-phase   | mineral |                 400 | Dyn11        |                15 |              0.4 |
-| <nobr>CA Yellow A0Ak 3150kVA 15.75/21kV(15.75) 400V Dyn11</nobr>  | CA           | Yellow        | A0Ak               | three-phase   |         |                3150 | Dyn11        |             15.75 |              0.4 |
-| <nobr>FT 2000kVA 15/20kV(20) 400V Dyn11</nobr>                    | FT           |               |                    | three-phase   | mineral |                2000 | Dyn11        |                20 |              0.4 |
-| <nobr>CA Yellow A0Ak 400kVA 15.75/21kV(15.75) 400V Dyn11</nobr>   | CA           | Yellow        | A0Ak               | three-phase   |         |                 400 | Dyn11        |             15.75 |              0.4 |
-| <nobr>SE Vegeta Standard 800kVA 15/20kV(15) 410V Dyn11</nobr>     | SE           | Vegeta        | Standard           | three-phase   | ester   |                 800 | Dyn11        |                15 |             0.41 |
-| <nobr>SE Minera B0Bk 315kVA 15/20kV(15) 410V Dyn11</nobr>         | SE           | Minera        | B0Bk               | three-phase   | mineral |                 315 | Dyn11        |                15 |             0.41 |
-| <nobr>SE Minera C0Bk 50kVA 15/20kV(20) 410V Yzn11</nobr>          | SE           | Minera        | C0Bk               | three-phase   | mineral |                  50 | Yzn11        |                20 |             0.41 |
-| <nobr>SE Minera C0Bk 630kVA 15/20kV(20) 410V Dyn11</nobr>         | SE           | Minera        | C0Bk               | three-phase   | mineral |                 630 | Dyn11        |                20 |             0.41 |
-| <nobr>SE Minera C0Bk 1250kVA 15/20kV(15) 410V Dyn11</nobr>        | SE           | Minera        | C0Bk               | three-phase   | mineral |                1250 | Dyn11        |                15 |             0.41 |
-| <nobr>SE Trihal AA0Ak 800kVA 20kV 410V Dyn11</nobr>               | SE           | Trihal        | AA0Ak              | three-phase   | dry     |                 800 | Dyn11        |                20 |             0.41 |
-| <nobr>SE Minera B0Bk 2500kVA 15/20kV(20) 410V Dyn11</nobr>        | SE           | Minera        | B0Bk               | three-phase   | mineral |                2500 | Dyn11        |                20 |             0.41 |
+| Name                                                              | Manufacturer       | Product range | Efficiency         | Cooling class | Vector group | Nominal power (kVA) | High voltage (kV) | Low voltage (kV) | Frequency (Hz) |
+| :---------------------------------------------------------------- | :----------------- | :------------ | :----------------- | :------------ | :----------- | ------------------: | ----------------: | ---------------: | -------------: |
+| <nobr>SE Minera A0Ak 500kVA 15/20kV(15) 410V Dyn11</nobr>         | Schneider Electric | Minera        | A0Ak               | ONAN          | Dyn11        |                 500 |                15 |             0.41 |             50 |
+| <nobr>SE Vegeta Standard 100kVA 15/20kV(15) 410V Dyn11</nobr>     | Schneider Electric | Vegeta        | Standard           | KNAN          | Dyn11        |                 100 |                15 |             0.41 |             50 |
+| <nobr>SE Trihal AA0Ak 3150kVA 20kV 410V Dyn11</nobr>              | Schneider Electric | Trihal        | AA0Ak              | AN            | Dyn11        |                3150 |                20 |             0.41 |             50 |
+| <nobr>SE Trihal ReducedLosses 250kVA 20kV 410V Dyn11</nobr>       | Schneider Electric | Trihal        | ReducedLosses      | AN            | Dyn11        |                 250 |                20 |             0.41 |             50 |
+| <nobr>SE Imprego 10kVA 230V 230V Iii0</nobr>                      | Schneider Electric | Imprego       |                    | AN            | Iii0         |                  10 |              0.23 |             0.23 |             50 |
+| <nobr>SE Trihal AA0Ak 1600kVA 20kV 410V Dyn11</nobr>              | Schneider Electric | Trihal        | AA0Ak              | AN            | Dyn11        |                1600 |                20 |             0.41 |             50 |
+| <nobr>SE Minera B0Bk 1600kVA 15/20kV(15) 410V Dyn11</nobr>        | Schneider Electric | Minera        | B0Bk               | ONAN          | Dyn11        |                1600 |                15 |             0.41 |             50 |
+| <nobr>SE Trihal ExtraReducedLosses 1250kVA 20kV 410V Dyn11</nobr> | Schneider Electric | Trihal        | ExtraReducedLosses | AN            | Dyn11        |                1250 |                20 |             0.41 |             50 |
+| <nobr>SE Minera B0Bk 800kVA 15/20kV(15) 410V Dyn11</nobr>         | Schneider Electric | Minera        | B0Bk               | ONAN          | Dyn11        |                 800 |                15 |             0.41 |             50 |
+| <nobr>SE Trihal ExtraReducedLosses 2000kVA 20kV 410V Dyn11</nobr> | Schneider Electric | Trihal        | ExtraReducedLosses | AN            | Dyn11        |                2000 |                20 |             0.41 |             50 |
+| <nobr>SE Vegeta AA0Ak 400kVA 20kV 410V Dyn11</nobr>               | Schneider Electric | Vegeta        | AA0Ak              | KNAN          | Dyn11        |                 400 |                20 |             0.41 |             50 |
+| <nobr>FT 400kVA 15/20kV(20) 400V Dyn11</nobr>                     | France Transfo     |               |                    | ONAN          | Dyn11        |                 400 |                20 |              0.4 |             50 |
+| <nobr>SE Minera A0Ak 400kVA 15/20kV(15) 410V Dyn11</nobr>         | Schneider Electric | Minera        | A0Ak               | ONAN          | Dyn11        |                 400 |                15 |             0.41 |             50 |
+| <nobr>SE Trihal AA0Ak 1600kVA 15/20kV(15) 410V Dyn11</nobr>       | Schneider Electric | Trihal        | AA0Ak              | AN            | Dyn11        |                1600 |                15 |             0.41 |             50 |
+| <nobr>SE Trihal Standard 1000kVA 20kV 410V Dyn11</nobr>           | Schneider Electric | Trihal        | Standard           | AN            | Dyn11        |                1000 |                20 |             0.41 |             50 |
+| <nobr>SE Trihal AA0Ak 2000kVA 15/20kV(20) 410V Dyn11</nobr>       | Schneider Electric | Trihal        | AA0Ak              | AN            | Dyn11        |                2000 |                20 |             0.41 |             50 |
+| <nobr>SE Trihal ExtraReducedLosses 1000kVA 20kV 410V Dyn11</nobr> | Schneider Electric | Trihal        | ExtraReducedLosses | AN            | Dyn11        |                1000 |                20 |             0.41 |             50 |
+| <nobr>SE Trihal AA0Ak 800kVA 20kV 410V Dyn11</nobr>               | Schneider Electric | Trihal        | AA0Ak              | AN            | Dyn11        |                 800 |                20 |             0.41 |             50 |
+| <nobr>FT 630kVA 15/20kV(20) 400V Dyn11</nobr>                     | France Transfo     |               |                    | ONAN          | Dyn11        |                 630 |                20 |              0.4 |             50 |
+| <nobr>SE Minera C0Bk 1600kVA 15/20kV(15) 410V Dyn11</nobr>        | Schneider Electric | Minera        | C0Bk               | ONAN          | Dyn11        |                1600 |                15 |             0.41 |             50 |
+| <nobr>SE Vegeta Standard 800kVA 15/20kV(20) 410V Dyn11</nobr>     | Schneider Electric | Vegeta        | Standard           | KNAN          | Dyn11        |                 800 |                20 |             0.41 |             50 |
+| <nobr>SE Minera C0Bk 1250kVA 15/20kV(15) 410V Dyn11</nobr>        | Schneider Electric | Minera        | C0Bk               | ONAN          | Dyn11        |                1250 |                15 |             0.41 |             50 |
+| <nobr>SE Minera C0Bk 2000kVA 15/20kV(20) 410V Dyn11</nobr>        | Schneider Electric | Minera        | C0Bk               | ONAN          | Dyn11        |                2000 |                20 |             0.41 |             50 |
+| <nobr>SE Minera C0Bk 630kVA 15/20kV(20) 410V Dyn11</nobr>         | Schneider Electric | Minera        | C0Bk               | ONAN          | Dyn11        |                 630 |                20 |             0.41 |             50 |
+| <nobr>SE Minera C0Bk 160kVA 15/20kV(15) 410V Dyn11</nobr>         | Schneider Electric | Minera        | C0Bk               | ONAN          | Dyn11        |                 160 |                15 |             0.41 |             50 |
+| <nobr>FT 400kVA 15/20kV(15) 400V Dyn11</nobr>                     | France Transfo     |               |                    | ONAN          | Dyn11        |                 400 |                15 |              0.4 |             50 |
+| <nobr>CA Yellow A0Ak 2500kVA 15.75/21kV(15.75) 400V Dyn11</nobr>  | Cahors             | Yellow        | A0Ak               | ONAN          | Dyn11        |                2500 |             15.75 |              0.4 |             50 |
+| <nobr>FT 2000kVA 15/20kV(20) 400V Dyn11</nobr>                    | France Transfo     |               |                    | ONAN          | Dyn11        |                2000 |                20 |              0.4 |             50 |
+| <nobr>CA Yellow A0Ak 250kVA 15.75/21kV(15.75) 400V Dyn11</nobr>   | Cahors             | Yellow        | A0Ak               | ONAN          | Dyn11        |                 250 |             15.75 |              0.4 |             50 |
+| <nobr>SE Vegeta C0Bk 630kVA 15/20kV(15) 410V Dyn11</nobr>         | Schneider Electric | Vegeta        | C0Bk               | KNAN          | Dyn11        |                 630 |                15 |             0.41 |             50 |
 
 The following data are available in this table:
 
-- the **name**: a unique name of the transformer in the catalogue. This is usually a concatenation
-  of the manufacturer, the product range, the efficiency class, the nominal power, the high voltage,
-  the low voltage, and the vector group.
-- the **manufacturer**: these manufacturers are currently available:
-  - `"SE"` stands for "Schneider-Electric"
-  - `"FT"` stands for "France Transfo"
-  - `"CA"` stands for "Cahors"
+- the **name**: a unique name of the transformer in the catalogue. This is usually a concatenation of the manufacturer,
+  the product range, the efficiency class, the nominal power, the high voltage, the low voltage, and the vector group.
+- the **manufacturer**: the manufacturer of the transformer.
 - the product **range** which depends on the manufacturer
-- the **efficiency** class of the transformer. The efficiency class used in the catalogue follows the
-  `Eco-Design` requirements as defined by the `EN 50629` standard.
-- the **type** of the transfomer. It can be `three-phase`, `single-phase`, or `center-tapped`.
-- the oil type of the transformer, noted **oil**:
-  - `dry`: dry-type transformer
-  - `mineral`: mineral oil immersed transformer
-  - `ester`: vegetable oil (natural ester) immersed transformer
+- the **efficiency** class of the transformer. The efficiency class used in the catalogue follows the `Eco-Design`
+  requirements as defined by the `EN 50629` standard.
+- the **cooling** class of the transformer according to IEC 60076: (e.g., `ONAN`, `KNAN`, `AN`, etc.)
 - the vector group of the transformer, noted **vg** (e.g., `Dyn11`, `Yzn11`, `Ii0`, etc.)
 - the nominal power, noted **sn**.
-- the phase-to-phase high voltage, noted **uhv**.
-- the no-load phase-to-phase low voltage, noted **ulv**.
+- the rated high voltage (phase-to-phase), noted **uhv**.
+- the rated no-load low voltage (phase-to-phase), noted **ulv**.
+- the nominal frequency, noted **fn**.
 
 The `get_catalogue` method accepts arguments (in bold above) that can be used to filter the returned table. The
 following command only retrieves transformer parameters of transformers with an efficiency of "A0Ak":
@@ -255,25 +248,25 @@ following command only retrieves transformer parameters of transformers with an 
 
 <!-- Generated with:
     import roseau.load_flow as rlf
-    from roseau.load_flow.utils._doc_utils import to_markdown
+    from roseau.load_flow.utils.doc_utils import to_markdown
     tr_catalogue = rlf.TransformerParameters.get_catalogue(efficiency="A0Ak").head(10)
     print(to_markdown(tr_catalogue, no_wrap_index=True))
  -->
 
 _Truncated output_
 
-| Name                                                       | Manufacturer | Product range | Efficiency | Type        | Oil     | Nominal power (kVA) | Vector group | High voltage (kV) | Low voltage (kV) |
-| :--------------------------------------------------------- | :----------- | :------------ | :--------- | :---------- | :------ | ------------------: | :----------- | ----------------: | ---------------: |
-| <nobr>SE Minera A0Ak 50kVA 15/20kV(20) 410V Yzn11</nobr>   | SE           | Minera        | A0Ak       | three-phase | mineral |                  50 | Yzn11        |                20 |             0.41 |
-| <nobr>SE Minera A0Ak 100kVA 15/20kV(20) 410V Dyn11</nobr>  | SE           | Minera        | A0Ak       | three-phase | mineral |                 100 | Dyn11        |                20 |             0.41 |
-| <nobr>SE Minera A0Ak 160kVA 15/20kV(20) 410V Dyn11</nobr>  | SE           | Minera        | A0Ak       | three-phase | mineral |                 160 | Dyn11        |                20 |             0.41 |
-| <nobr>SE Minera A0Ak 250kVA 15/20kV(20) 410V Dyn11</nobr>  | SE           | Minera        | A0Ak       | three-phase | mineral |                 250 | Dyn11        |                20 |             0.41 |
-| <nobr>SE Minera A0Ak 315kVA 15/20kV(20) 410V Dyn11</nobr>  | SE           | Minera        | A0Ak       | three-phase | mineral |                 315 | Dyn11        |                20 |             0.41 |
-| <nobr>SE Minera A0Ak 400kVA 15/20kV(20) 410V Dyn11</nobr>  | SE           | Minera        | A0Ak       | three-phase | mineral |                 400 | Dyn11        |                20 |             0.41 |
-| <nobr>SE Minera A0Ak 500kVA 15/20kV(20) 410V Dyn11</nobr>  | SE           | Minera        | A0Ak       | three-phase | mineral |                 500 | Dyn11        |                20 |             0.41 |
-| <nobr>SE Minera A0Ak 630kVA 15/20kV(20) 410V Dyn11</nobr>  | SE           | Minera        | A0Ak       | three-phase | mineral |                 630 | Dyn11        |                20 |             0.41 |
-| <nobr>SE Minera A0Ak 800kVA 15/20kV(20) 410V Dyn11</nobr>  | SE           | Minera        | A0Ak       | three-phase | mineral |                 800 | Dyn11        |                20 |             0.41 |
-| <nobr>SE Minera A0Ak 1000kVA 15/20kV(20) 410V Dyn11</nobr> | SE           | Minera        | A0Ak       | three-phase | mineral |                1000 | Dyn11        |                20 |             0.41 |
+| Name                                                       | Manufacturer       | Product range | Efficiency | Cooling class | Vector group | Nominal power (kVA) | High voltage (kV) | Low voltage (kV) | Frequency (Hz) |
+| :--------------------------------------------------------- | :----------------- | :------------ | :--------- | :------------ | :----------- | ------------------: | ----------------: | ---------------: | -------------: |
+| <nobr>SE Minera A0Ak 50kVA 15/20kV(20) 410V Yzn11</nobr>   | Schneider Electric | Minera        | A0Ak       | ONAN          | Yzn11        |                  50 |                20 |             0.41 |             50 |
+| <nobr>SE Minera A0Ak 100kVA 15/20kV(20) 410V Dyn11</nobr>  | Schneider Electric | Minera        | A0Ak       | ONAN          | Dyn11        |                 100 |                20 |             0.41 |             50 |
+| <nobr>SE Minera A0Ak 160kVA 15/20kV(20) 410V Dyn11</nobr>  | Schneider Electric | Minera        | A0Ak       | ONAN          | Dyn11        |                 160 |                20 |             0.41 |             50 |
+| <nobr>SE Minera A0Ak 250kVA 15/20kV(20) 410V Dyn11</nobr>  | Schneider Electric | Minera        | A0Ak       | ONAN          | Dyn11        |                 250 |                20 |             0.41 |             50 |
+| <nobr>SE Minera A0Ak 315kVA 15/20kV(20) 410V Dyn11</nobr>  | Schneider Electric | Minera        | A0Ak       | ONAN          | Dyn11        |                 315 |                20 |             0.41 |             50 |
+| <nobr>SE Minera A0Ak 400kVA 15/20kV(20) 410V Dyn11</nobr>  | Schneider Electric | Minera        | A0Ak       | ONAN          | Dyn11        |                 400 |                20 |             0.41 |             50 |
+| <nobr>SE Minera A0Ak 500kVA 15/20kV(20) 410V Dyn11</nobr>  | Schneider Electric | Minera        | A0Ak       | ONAN          | Dyn11        |                 500 |                20 |             0.41 |             50 |
+| <nobr>SE Minera A0Ak 630kVA 15/20kV(20) 410V Dyn11</nobr>  | Schneider Electric | Minera        | A0Ak       | ONAN          | Dyn11        |                 630 |                20 |             0.41 |             50 |
+| <nobr>SE Minera A0Ak 800kVA 15/20kV(20) 410V Dyn11</nobr>  | Schneider Electric | Minera        | A0Ak       | ONAN          | Dyn11        |                 800 |                20 |             0.41 |             50 |
+| <nobr>SE Minera A0Ak 1000kVA 15/20kV(20) 410V Dyn11</nobr> | Schneider Electric | Minera        | A0Ak       | ONAN          | Dyn11        |                1000 |                20 |             0.41 |             50 |
 
 or only transformers with a wye winding on the high voltage side (using a regular expression)
 
@@ -283,21 +276,23 @@ or only transformers with a wye winding on the high voltage side (using a regula
 
 <!-- Generated with:
     import roseau.load_flow as rlf
-    from roseau.load_flow.utils._doc_utils import to_markdown
+    from roseau.load_flow.utils.doc_utils import to_markdown
     tr_catalogue = rlf.TransformerParameters.get_catalogue(vg=r"Y.*").head(10)
     print(to_markdown(tr_catalogue, no_wrap_index=True))
  -->
 
-| Name                                                         | Manufacturer | Product range | Efficiency | Type        | Oil     | Nominal power (kVA) | Vector group | High voltage (kV) | Low voltage (kV) |
-| :----------------------------------------------------------- | :----------- | :------------ | :--------- | :---------- | :------ | ------------------: | :----------- | ----------------: | ---------------: |
-| <nobr>SE Minera A0Ak 50kVA 15/20kV(20) 410V Yzn11</nobr>     | SE           | Minera        | A0Ak       | three-phase | mineral |                  50 | Yzn11        |                20 |             0.41 |
-| <nobr>SE Minera A0Ak 50kVA 15/20kV(15) 410V Yzn11</nobr>     | SE           | Minera        | A0Ak       | three-phase | mineral |                  50 | Yzn11        |                15 |             0.41 |
-| <nobr>SE Minera B0Bk 50kVA 15/20kV(20) 410V Yzn11</nobr>     | SE           | Minera        | B0Bk       | three-phase | mineral |                  50 | Yzn11        |                20 |             0.41 |
-| <nobr>SE Minera B0Bk 50kVA 15/20kV(15) 410V Yzn11</nobr>     | SE           | Minera        | B0Bk       | three-phase | mineral |                  50 | Yzn11        |                15 |             0.41 |
-| <nobr>SE Minera C0Bk 50kVA 15/20kV(20) 410V Yzn11</nobr>     | SE           | Minera        | C0Bk       | three-phase | mineral |                  50 | Yzn11        |                20 |             0.41 |
-| <nobr>SE Minera C0Bk 50kVA 15/20kV(15) 410V Yzn11</nobr>     | SE           | Minera        | C0Bk       | three-phase | mineral |                  50 | Yzn11        |                15 |             0.41 |
-| <nobr>SE Minera Standard 50kVA 15/20kV(20) 410V Yzn11</nobr> | SE           | Minera        | Standard   | three-phase | mineral |                  50 | Yzn11        |                20 |             0.41 |
-| <nobr>SE Minera Standard 50kVA 15/20kV(15) 410V Yzn11</nobr> | SE           | Minera        | Standard   | three-phase | mineral |                  50 | Yzn11        |                15 |             0.41 |
+| Name                                                         | Manufacturer       | Product range | Efficiency | Cooling class | Vector group | Nominal power (kVA) | High voltage (kV) | Low voltage (kV) | Frequency (Hz) |
+| :----------------------------------------------------------- | :----------------- | :------------ | :--------- | :------------ | :----------- | ------------------: | ----------------: | ---------------: | -------------: |
+| <nobr>SE Minera A0Ak 50kVA 15/20kV(20) 410V Yzn11</nobr>     | Schneider Electric | Minera        | A0Ak       | ONAN          | Yzn11        |                  50 |                20 |             0.41 |             50 |
+| <nobr>SE Minera A0Ak 50kVA 15/20kV(15) 410V Yzn11</nobr>     | Schneider Electric | Minera        | A0Ak       | ONAN          | Yzn11        |                  50 |                15 |             0.41 |             50 |
+| <nobr>SE Minera B0Bk 50kVA 15/20kV(20) 410V Yzn11</nobr>     | Schneider Electric | Minera        | B0Bk       | ONAN          | Yzn11        |                  50 |                20 |             0.41 |             50 |
+| <nobr>SE Minera B0Bk 50kVA 15/20kV(15) 410V Yzn11</nobr>     | Schneider Electric | Minera        | B0Bk       | ONAN          | Yzn11        |                  50 |                15 |             0.41 |             50 |
+| <nobr>SE Minera C0Bk 50kVA 15/20kV(20) 410V Yzn11</nobr>     | Schneider Electric | Minera        | C0Bk       | ONAN          | Yzn11        |                  50 |                20 |             0.41 |             50 |
+| <nobr>SE Minera C0Bk 50kVA 15/20kV(15) 410V Yzn11</nobr>     | Schneider Electric | Minera        | C0Bk       | ONAN          | Yzn11        |                  50 |                15 |             0.41 |             50 |
+| <nobr>SE Minera Standard 50kVA 15/20kV(20) 410V Yzn11</nobr> | Schneider Electric | Minera        | Standard   | ONAN          | Yzn11        |                  50 |                20 |             0.41 |             50 |
+| <nobr>SE Minera Standard 50kVA 15/20kV(15) 410V Yzn11</nobr> | Schneider Electric | Minera        | Standard   | ONAN          | Yzn11        |                  50 |                15 |             0.41 |             50 |
+| <nobr>SC SZ11-76 MVA-110/35 kV</nobr>                        | SCOTECH            |               |            | ONAF          | YNd11        |               76000 |               110 |               35 |             50 |
+| <nobr>SC S-100 MVA-220/35KV</nobr>                           | SCOTECH            |               |            | ONAN          | YNd11        |              100000 |               220 |               35 |             50 |
 
 or only transformers meeting both criteria
 
@@ -307,20 +302,20 @@ or only transformers meeting both criteria
 
 <!-- Generated with:
     import roseau.load_flow as rlf
-    from roseau.load_flow.utils._doc_utils import to_markdown
+    from roseau.load_flow.utils.doc_utils import to_markdown
     tr_catalogue = rlf.TransformerParameters.get_catalogue(efficiency="A0Ak", vg=r"Y.*").head(10)
     print(to_markdown(tr_catalogue, no_wrap_index=True))
  -->
 
-| Name                                                     | Manufacturer | Product range | Efficiency | Type        | Oil     | Nominal power (kVA) | Vector group | High voltage (kV) | Low voltage (kV) |
-| :------------------------------------------------------- | :----------- | :------------ | :--------- | :---------- | :------ | ------------------: | :----------- | ----------------: | ---------------: |
-| <nobr>SE Minera A0Ak 50kVA 15/20kV(20) 410V Yzn11</nobr> | SE           | Minera        | A0Ak       | three-phase | mineral |                  50 | Yzn11        |                20 |             0.41 |
-| <nobr>SE Minera A0Ak 50kVA 15/20kV(15) 410V Yzn11</nobr> | SE           | Minera        | A0Ak       | three-phase | mineral |                  50 | Yzn11        |                15 |             0.41 |
+| Name                                                     | Manufacturer       | Product range | Efficiency | Cooling class | Vector group | Nominal power (kVA) | High voltage (kV) | Low voltage (kV) | Frequency (Hz) |
+| :------------------------------------------------------- | :----------------- | :------------ | :--------- | :------------ | :----------- | ------------------: | ----------------: | ---------------: | -------------: |
+| <nobr>SE Minera A0Ak 50kVA 15/20kV(20) 410V Yzn11</nobr> | Schneider Electric | Minera        | A0Ak       | ONAN          | Yzn11        |                  50 |                20 |             0.41 |             50 |
+| <nobr>SE Minera A0Ak 50kVA 15/20kV(15) 410V Yzn11</nobr> | Schneider Electric | Minera        | A0Ak       | ONAN          | Yzn11        |                  50 |                15 |             0.41 |             50 |
 
-Among all the possible filters, the nominal power and voltages are expected in their default unit
-(VA and V). You can also use the [Pint](https://pint.readthedocs.io/en/stable/) library to express
-the values in different units. For instance, if you want to get transformer parameters with a
-nominal power of 3150 kVA, the following two commands return the same table:
+Among all the possible filters, the nominal power and voltages are expected in their default unit (VA and V). You can
+also use the [Pint](https://pint.readthedocs.io/en/stable/) library to express the values in different units. For
+instance, if you want to get transformer parameters with a nominal power of 3150 kVA, the following two commands return
+the same table:
 
 ```pycon
 >>> import roseau.load_flow as rlf
@@ -331,36 +326,37 @@ nominal power of 3150 kVA, the following two commands return the same table:
 
 <!-- Generated with:
     import roseau.load_flow as rlf
-    from roseau.load_flow.utils._doc_utils import to_markdown
+    from roseau.load_flow.utils.doc_utils import to_markdown
     tr_catalogue = rlf.TransformerParameters.get_catalogue(sn=rlf.Q_(3150, "kVA")).head(10)
     print(to_markdown(tr_catalogue, no_wrap_index=True))
  -->
 
-| Name                                                           | Manufacturer | Product range | Efficiency | Type        | Oil     | Nominal power (kVA) | Vector group | High voltage (kV) | Low voltage (kV) |
-| :------------------------------------------------------------- | :----------- | :------------ | :--------- | :---------- | :------ | ------------------: | :----------- | ----------------: | ---------------: |
-| <nobr>FT 3150kVA 15/20kV(20) 400V Dyn11</nobr>                 | FT           |               |            | three-phase | mineral |                3150 | Dyn11        |                20 |              0.4 |
-| <nobr>FT 3150kVA 15/20kV(15) 400V Dyn11</nobr>                 | FT           |               |            | three-phase | mineral |                3150 | Dyn11        |                15 |              0.4 |
-| <nobr>SE Minera AA0Ak 3150kVA 20kV 410V Dyn11</nobr>           | SE           | Minera        | AA0Ak      | three-phase | mineral |                3150 | Dyn11        |                20 |             0.41 |
-| <nobr>SE Trihal AA0Ak 3150kVA 15/20kV(20) 410V Dyn11</nobr>    | SE           | Trihal        | AA0Ak      | three-phase | dry     |                3150 | Dyn11        |                20 |             0.41 |
-| <nobr>SE Trihal AA0Ak 3150kVA 15/20kV(15) 410V Dyn11</nobr>    | SE           | Trihal        | AA0Ak      | three-phase | dry     |                3150 | Dyn11        |                15 |             0.41 |
-| <nobr>SE Trihal AA0Ak 3150kVA 20kV 410V Dyn11</nobr>           | SE           | Trihal        | AA0Ak      | three-phase | dry     |                3150 | Dyn11        |                20 |             0.41 |
-| <nobr>SE Vegeta AA0Ak 3150kVA 20kV 410V Dyn11</nobr>           | SE           | Vegeta        | AA0Ak      | three-phase | ester   |                3150 | Dyn11        |                20 |             0.41 |
-| <nobr>SE Vegeta C0Bk 3150kVA 15/20kV(20) 410V Dyn11</nobr>     | SE           | Vegeta        | C0Bk       | three-phase | ester   |                3150 | Dyn11        |                20 |             0.41 |
-| <nobr>SE Vegeta C0Bk 3150kVA 15/20kV(15) 410V Dyn11</nobr>     | SE           | Vegeta        | C0Bk       | three-phase | ester   |                3150 | Dyn11        |                15 |             0.41 |
-| <nobr>SE Vegeta Standard 3150kVA 15/20kV(20) 410V Dyn11</nobr> | SE           | Vegeta        | Standard   | three-phase | ester   |                3150 | Dyn11        |                20 |             0.41 |
+| Name                                                           | Manufacturer       | Product range | Efficiency | Cooling class | Vector group | Nominal power (kVA) | High voltage (kV) | Low voltage (kV) | Frequency (Hz) |
+| :------------------------------------------------------------- | :----------------- | :------------ | :--------- | :------------ | :----------- | ------------------: | ----------------: | ---------------: | -------------: |
+| <nobr>FT 3150kVA 15/20kV(20) 400V Dyn11</nobr>                 | France Transfo     |               |            | ONAN          | Dyn11        |                3150 |                20 |              0.4 |             50 |
+| <nobr>FT 3150kVA 15/20kV(15) 400V Dyn11</nobr>                 | France Transfo     |               |            | ONAN          | Dyn11        |                3150 |                15 |              0.4 |             50 |
+| <nobr>SE Minera AA0Ak 3150kVA 20kV 410V Dyn11</nobr>           | Schneider Electric | Minera        | AA0Ak      | ONAN          | Dyn11        |                3150 |                20 |             0.41 |             50 |
+| <nobr>SE Trihal AA0Ak 3150kVA 15/20kV(20) 410V Dyn11</nobr>    | Schneider Electric | Trihal        | AA0Ak      | AN            | Dyn11        |                3150 |                20 |             0.41 |             50 |
+| <nobr>SE Trihal AA0Ak 3150kVA 15/20kV(15) 410V Dyn11</nobr>    | Schneider Electric | Trihal        | AA0Ak      | AN            | Dyn11        |                3150 |                15 |             0.41 |             50 |
+| <nobr>SE Trihal AA0Ak 3150kVA 20kV 410V Dyn11</nobr>           | Schneider Electric | Trihal        | AA0Ak      | AN            | Dyn11        |                3150 |                20 |             0.41 |             50 |
+| <nobr>SE Vegeta AA0Ak 3150kVA 20kV 410V Dyn11</nobr>           | Schneider Electric | Vegeta        | AA0Ak      | KNAN          | Dyn11        |                3150 |                20 |             0.41 |             50 |
+| <nobr>SE Vegeta C0Bk 3150kVA 15/20kV(20) 410V Dyn11</nobr>     | Schneider Electric | Vegeta        | C0Bk       | KNAN          | Dyn11        |                3150 |                20 |             0.41 |             50 |
+| <nobr>SE Vegeta C0Bk 3150kVA 15/20kV(15) 410V Dyn11</nobr>     | Schneider Electric | Vegeta        | C0Bk       | KNAN          | Dyn11        |                3150 |                15 |             0.41 |             50 |
+| <nobr>SE Vegeta Standard 3150kVA 15/20kV(20) 410V Dyn11</nobr> | Schneider Electric | Vegeta        | Standard   | KNAN          | Dyn11        |                3150 |                20 |             0.41 |             50 |
 
 ### Getting an instance
 
-You can build a `TransformerParameters` instance from the catalogue using the class method `from_catalogue`.
-You must filter the data to get a single transformer. You can apply the same filtering technique used for
-the method `get_catalogue` to narrow down the result to a single transformer in the catalogue.
+You can build a `TransformerParameters` instance from the catalogue using the class method `from_catalogue`. You must
+filter the data to get a single transformer. You can apply the same filtering technique used for the method
+`get_catalogue` to narrow down the result to a single transformer in the catalogue.
 
 For instance, these parameters filter the catalogue down to a single transformer parameters:
 
 ```pycon
 >>> rlf.TransformerParameters.from_catalogue(efficiency="A0Ak", vg=r"Y.*", uhv=15000)
-<TransformerParameters: id='SE Minera A0Ak 50kVA 15/20kV(15) 410V Yzn11', vg='Yzn11', sn=50000, uhv=15000,
-ulv=410, p0=90.0, i0=0.005, psc=750.0, vsc=0.04, manufacturer='SE', range='Minera', efficiency='A0Ak'>
+<TransformerParameters: id='SE Minera A0Ak 50kVA 15/20kV(15) 410V Yzn11', vg='Yzn11', sn=50000,
+uhv=15000, ulv=410, fn=50.0, p0=90.0, i0=0.005, psc=750.0, vsc=0.04, manufacturer='Schneider Electric',
+range='Minera', efficiency='A0Ak', cooling='ONAN', insulation='liquid-immersed'>
 ```
 
 The `name` filter can be directly used:
@@ -369,15 +365,16 @@ The `name` filter can be directly used:
 >>> rlf.TransformerParameters.from_catalogue(
 ...     name="SE Minera A0Ak 50kVA 15/20kV(15) 410V Yzn11"
 ... )
-<TransformerParameters: id='SE Minera A0Ak 50kVA 15/20kV(15) 410V Yzn11', vg='Yzn11', sn=50000, uhv=15000,
-ulv=410, p0=90.0, i0=0.005, psc=750.0, vsc=0.04, manufacturer='SE', range='Minera', efficiency='A0Ak'>
+<TransformerParameters: id='SE Minera A0Ak 50kVA 15/20kV(15) 410V Yzn11', vg='Yzn11', sn=50000,
+uhv=15000, ulv=410, fn=50.0, p0=90.0, i0=0.005, psc=750.0, vsc=0.04, manufacturer='Schneider Electric',
+range='Minera', efficiency='A0Ak', cooling='ONAN', insulation='liquid-immersed'>
 ```
 
 In case no or several results match the parameters, an error is raised:
 
 ```pycon
->>> rlf.TransformerParameters.from_catalogue(manufacturer="ft")
-RoseauLoadFlowException: Several transformers matching the query (manufacturer='ft') have been found:
+>>> rlf.TransformerParameters.from_catalogue(manufacturer="France Transfo")
+RoseauLoadFlowException: Several transformers matching the query (manufacturer='France Transfo') have been found:
 'FT 100kVA 15/20kV(20) 400V Dyn11', 'FT 160kVA 15/20kV(20) 400V Dyn11', 'FT 250kVA 15/20kV(20) 400V Dyn11',
 'FT 315kVA 15/20kV(20) 400V Dyn11', 'FT 400kVA 15/20kV(20) 400V Dyn11', 'FT 500kVA 15/20kV(20) 400V Dyn11',
 'FT 630kVA 15/20kV(20) 400V Dyn11', 'FT 800kVA 15/20kV(20) 400V Dyn11', 'FT 1000kVA 15/20kV(20) 400V Dyn11',
@@ -390,15 +387,15 @@ or if no results:
 ```pycon
 >>> rlf.TransformerParameters.from_catalogue(manufacturer="unknown")
 RoseauLoadFlowException: No manufacturer matching 'unknown' has been found. Available manufacturers
-are 'FT', 'SE', 'CA'. [catalogue_not_found]
+are 'France Transfo', 'Schneider Electric', 'Cahors', 'SCOTECH', '', 'Pauwels', 'GBE'. [catalogue_not_found]
 ```
 
 (catalogues-lines)=
 
 ## Lines
 
-_Roseau Load Flow_ is provided with a catalogue of line parameters. These parameters are available
-through the class `LineParameters`.
+_Roseau Load Flow_ is provided with a catalogue of line parameters. These parameters are available through the class
+`LineParameters`.
 
 ### Source of data
 
@@ -443,9 +440,8 @@ _Truncated output_
 
 The following data are available in this table:
 
-- the **name**. A name that contains the type of the line, the material of the conductor, the
-  cross-section area, and optionally the insulator. It is in the form
-  `{line_type}_{conductor_material}_{cross_section}_{insulator}`.
+- the **name**. A name that contains the type of the line, the material of the conductor, the cross-section area, and
+  optionally the insulator. It is in the form `{line_type}_{conductor_material}_{cross_section}_{insulator}`.
 - the **line type**. It can be `"OVERHEAD"`, `"UNDERGROUND"` or `"TWISTED"`.
 - the **conductor material** for the phases and for the neutral. See the {class}`~roseau.load_flow.Material` class.
 - the **insulator** for the phases and for the neutral. See the {class}`~roseau.load_flow.Insulator` class.
@@ -462,8 +458,8 @@ in addition to the following calculated physical parameters:
 - the _Phase ampacity_ of the line in A.
 - the _neutral ampacity_ of the line in A.
 
-The `get_catalogue` method accepts arguments (in bold above) that can be used to filter the returned
-table. The following command only returns line parameters made of Aluminum:
+The `get_catalogue` method accepts arguments (in bold above) that can be used to filter the returned table. The
+following command only returns line parameters made of Aluminum:
 
 ```pycon
 >>> rlf.LineParameters.get_catalogue(material="al")
@@ -518,9 +514,9 @@ When filtering by the cross-section area, it is expected to provide a numeric va
 
 ### Getting an instance
 
-You can build a `LineParameters` instance from the catalogue using the class method `from_catalogue`.
-You must filter the data to get a single line. You can apply the same filtering technique used for
-the method `get_catalogue` to narrow down the result to a single line in the catalogue.
+You can build a `LineParameters` instance from the catalogue using the class method `from_catalogue`. You must filter
+the data to get a single line. You can apply the same filtering technique used for the method `get_catalogue` to narrow
+down the result to a single line in the catalogue.
 
 For instance, these parameters filter the results down to a single line parameters:
 
@@ -536,16 +532,16 @@ Or you can use the `name` filter directly:
 LineParameters(id='U_AL_240')
 ```
 
-As you can see, the `id` of the created instance is the same as the name in the catalogue. You can
-override this behaviour by passing the `id` parameter to `from_catalogue`:
+As you can see, the `id` of the created instance is the same as the name in the catalogue. You can override this
+behaviour by passing the `id` parameter to `from_catalogue`:
 
 ```pycon
 >>> rlf.LineParameters.from_catalogue(name="U_AL_240", id="lp-special")
 LineParameters(id='lp-special')
 ```
 
-Line parameters created from the catalogue are 3-phase without a neutral by default. It is possible
-to create line parameters with different numbers of phases using the `nb_phases` parameter.
+Line parameters created from the catalogue are 3-phase without a neutral by default. It is possible to create line
+parameters with different numbers of phases using the `nb_phases` parameter.
 
 ```pycon
 >>> rlf.LineParameters.from_catalogue(name="U_AL_240").z_line.shape

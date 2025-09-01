@@ -1,8 +1,8 @@
 import logging
 from collections.abc import Iterable
+from typing import Self
 
 import numpy as np
-from typing_extensions import Self
 
 from roseau.load_flow import SQRT3, Projection, RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow import Control as MultiControl
@@ -84,6 +84,36 @@ class Control(MultiControl):
             alpha=self._alpha,
             epsilon=self._epsilon,
         )
+
+    @classmethod
+    def from_roseau_load_flow(cls, fp_m: MultiControl, /, *, phases: str) -> Self:
+        """Create an instance from a multi-phase `rlf.Control` object."""
+        if not isinstance(fp_m, MultiControl):
+            raise TypeError(f"Expected an rlf.Control object, got {type(fp_m)}.")
+        if phases in {"an", "bn", "cn"}:
+            return cls(
+                type=fp_m._type,
+                u_min=fp_m._u_min * SQRT3,
+                u_down=fp_m._u_down * SQRT3,
+                u_up=fp_m._u_up * SQRT3,
+                u_max=fp_m._u_max * SQRT3,
+                alpha=fp_m._alpha,
+                epsilon=fp_m._epsilon,
+            )
+        elif phases in {"ab", "bc", "ca"}:
+            return cls(
+                type=fp_m._type,
+                u_min=fp_m._u_min,
+                u_down=fp_m._u_down,
+                u_up=fp_m._u_up,
+                u_max=fp_m._u_max,
+                alpha=fp_m._alpha,
+                epsilon=fp_m._epsilon,
+            )
+        else:
+            msg = f"Invalid control phases: {phases!r}."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
 
 
 class FlexibleParameter(MultiFlexibleParameter):
@@ -622,6 +652,23 @@ class FlexibleParameter(MultiFlexibleParameter):
             s_max=s_max,
             q_min=q_min,
             q_max=q_max,
+        )
+
+    @classmethod
+    def from_roseau_load_flow(cls, fp_m: MultiFlexibleParameter, /, *, phases: str) -> Self:
+        """Create an instance from a multi-phase `rlf.FlexibleParameter` object."""
+        if not isinstance(fp_m, MultiFlexibleParameter):
+            raise TypeError(f"Expected an rlf.FlexibleParameter object, got {type(fp_m)}.")
+        control_p = Control.from_roseau_load_flow(fp_m.control_p, phases=phases)
+        control_q = Control.from_roseau_load_flow(fp_m.control_q, phases=phases)
+        projection = fp_m.projection
+        return cls(
+            control_p=control_p,
+            control_q=control_q,
+            projection=projection,
+            s_max=fp_m._s_max * 3,
+            q_min=fp_m._q_min_value * 3 if fp_m._q_min_value is not None else None,
+            q_max=fp_m._q_max_value * 3 if fp_m._q_max_value is not None else None,
         )
 
     def _compute_powers(self, voltages: Iterable[float], power: complex) -> ComplexArray:

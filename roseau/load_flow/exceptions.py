@@ -2,9 +2,7 @@
 This module contains the exceptions used by Roseau Load Flow.
 """
 
-from enum import auto
-
-from roseau.load_flow._compat import StrEnum
+from enum import StrEnum, auto
 
 
 class RoseauLoadFlowExceptionCode(StrEnum):
@@ -14,6 +12,7 @@ class RoseauLoadFlowExceptionCode(StrEnum):
     BAD_GEOMETRY_TYPE = auto()
     BAD_PHASE = auto()
     BAD_ID_TYPE = auto()
+    INVALID_FOR_SINGLE_PHASE = auto()
 
     # Grounds and Potential references
     BAD_GROUND_ID = auto()
@@ -63,6 +62,7 @@ class RoseauLoadFlowExceptionCode(StrEnum):
 
     # Transformer and line
     BAD_MAX_LOADING_VALUE = auto()
+    BAD_PARAMETERS_ID = auto()
 
     # Switch
     BAD_SWITCH_ID = auto()
@@ -123,8 +123,6 @@ class RoseauLoadFlowExceptionCode(StrEnum):
     DGS_MISSING_REQUIRED_DATA = auto()
 
     # JSON export
-    JSON_LINE_PARAMETERS_DUPLICATES = auto()
-    JSON_TRANSFORMER_PARAMETERS_DUPLICATES = auto()
     JSON_PREF_INVALID = auto()
     JSON_NO_RESULTS = auto()
 

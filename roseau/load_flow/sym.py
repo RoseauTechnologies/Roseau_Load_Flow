@@ -6,11 +6,12 @@ import numpy as np
 import pandas as pd
 
 from roseau.load_flow.constants import ALPHA, ALPHA2
-from roseau.load_flow.typing import ComplexArray, ComplexArrayLike1D
+from roseau.load_flow.typing import ComplexArray, ComplexArrayLike1D, ComplexMatrix
 from roseau.load_flow.utils.dtypes import SequenceDtype
 
 __all__ = [
     "A",
+    "A_INV",
     "PositiveSequence",
     "NegativeSequence",
     "ZeroSequence",
@@ -26,24 +27,26 @@ NegativeSequence: Final[ComplexArray] = np.array([1, ALPHA, ALPHA2], dtype=np.co
 ZeroSequence: Final[ComplexArray] = np.array([1, 1, 1], dtype=np.complex128)  # type: ignore
 """numpy.ndarray[complex]: Unit vector of zero-sequence components of a three-phase system."""
 
-A: Final = np.array([ZeroSequence, PositiveSequence, NegativeSequence], dtype=np.complex128)
+A: Final[ComplexMatrix] = np.array([ZeroSequence, PositiveSequence, NegativeSequence], dtype=np.complex128)  # type: ignore
 """numpy.ndarray[complex]: `A` matrix: transformation matrix from phasor to symmetrical components."""
 
-_A_INV = np.linalg.inv(A)
+A_INV: Final[ComplexMatrix] = np.linalg.inv(A)  # type: ignore
+"""numpy.ndarray[complex]: Inverse of `A` matrix: transformation matrix from symmetrical to phasor components."""
+
 _SEQ_INDEX = pd.CategoricalIndex(["zero", "pos", "neg"], name="sequence", dtype=SequenceDtype)
 
 
 def phasor_to_sym(v_abc: ComplexArrayLike1D) -> ComplexArray:
     """Compute the symmetrical components `(0, +, -)` from the phasor components `(a, b, c)`."""
-    v_abc_array = np.asarray(v_abc)
+    v_abc_array = np.asarray(v_abc, dtype=np.complex128)
     orig_shape = v_abc_array.shape
-    v_012 = _A_INV @ v_abc_array.reshape((3, 1))
+    v_012 = A_INV @ v_abc_array.reshape((3, 1))
     return v_012.reshape(orig_shape)
 
 
 def sym_to_phasor(v_012: ComplexArrayLike1D) -> ComplexArray:
     """Compute the phasor components `(a, b, c)` from the symmetrical components `(0, +, -)`."""
-    v_012_array = np.asarray(v_012)
+    v_012_array = np.asarray(v_012, dtype=np.complex128)
     orig_shape = v_012_array.shape
     v_abc = A @ v_012_array.reshape((3, 1))
     return v_abc.reshape(orig_shape)
@@ -105,6 +108,6 @@ def series_phasor_to_sym(s_abc: pd.Series) -> pd.Series:
         raise ValueError("Input series must have a 'phase' level in the MultiIndex.")
     level_names = [name for name in s_abc.index.names if name != "phase"]
     s_012 = s_abc.groupby(level=level_names, sort=False).apply(
-        lambda s: pd.Series(_A_INV @ s, index=_SEQ_INDEX, dtype=np.complex128)
+        lambda s: pd.Series(A_INV @ s, index=_SEQ_INDEX, dtype=np.complex128)
     )
     return s_012

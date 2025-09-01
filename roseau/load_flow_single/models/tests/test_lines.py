@@ -5,7 +5,7 @@ import pytest
 from pint import DimensionalityError
 
 from roseau.load_flow import Q_, RoseauLoadFlowException, RoseauLoadFlowExceptionCode
-from roseau.load_flow_single.models import Bus, Line, LineParameters
+from roseau.load_flow_single.models import AbstractBranch, Bus, Line, LineParameters
 
 
 def test_lines_length():
@@ -121,7 +121,8 @@ def test_res_violated():
     lp = LineParameters(id="lp", z_line=1.0)
     line = Line(id="line", bus1=bus1, bus2=bus2, parameters=lp, length=Q_(50, "m"))
 
-    line._res_currents = 10, -10
+    line.side1._res_current = 10
+    line.side2._res_current = -10
 
     # No limits
     assert line.max_loading == Q_(1, "")
@@ -149,21 +150,24 @@ def test_res_violated():
     # Side 1 violation
     lp = LineParameters(id="lp", z_line=1.0, ampacity=11)
     line.parameters = lp
-    line._res_currents = 12, -10
+    line.side1._res_current = 12
+    line.side2._res_current = -10
     assert line.res_violated
     assert np.allclose(line.res_loading, 12 / 11)
 
     # Side 2 violation
     lp = LineParameters(id="lp", z_line=1.0, ampacity=11)
     line.parameters = lp
-    line._res_currents = 10, -12
+    line.side1._res_current = 10
+    line.side2._res_current = -12
     assert line.res_violated
     assert np.allclose(line.res_loading, 12 / 11)
 
     #
     # The same with arrays
     #
-    line._res_currents = 10, -10
+    line.side1._res_current = 10
+    line.side2._res_current = -10
 
     # No constraint violated
     lp = LineParameters(id="lp", z_line=1.0, ampacity=11)
@@ -175,14 +179,16 @@ def test_res_violated():
     # Side 1 violation
     lp = LineParameters(id="lp", z_line=1.0, ampacity=11)
     line.parameters = lp
-    line._res_currents = 12, -10
+    line.side1._res_current = 12
+    line.side2._res_current = -10
     assert line.res_violated
     assert np.allclose(line.res_loading, 12 / 11)
 
     # Side 2 violation
     lp = LineParameters(id="lp", z_line=1.0, ampacity=11)
     line.parameters = lp
-    line._res_currents = 10, -12
+    line.side1._res_current = 10
+    line.side2._res_current = -12
     assert line.res_violated
     assert np.allclose(line.res_loading, 12 / 11)
 
@@ -191,29 +197,37 @@ def test_lines_results():
     z_line = (0.1 + 0.1j) / 2
     y_shunt = None
     len_line = 10
-    line_voltages = 20000.0 + 0.0j, 19883.965550324414 - 84.999999999981j
-    line_currents = (116.06729363657514 - 17.9177478743607j), (-116.06729363657514 + 17.9177478743607j)
     bus1 = Bus(id="bus1")
     bus2 = Bus(id="bus2")
     lp = LineParameters(id="lp", z_line=z_line, y_shunt=y_shunt)
     line = Line(id="line", bus1=bus1, bus2=bus2, length=len_line, parameters=lp)
-    line._res_voltages = line_voltages
-    line._res_currents = line_currents
-    res_powers1, res_powers2 = (x.m for x in line.res_powers)
+    line.side1._res_voltage = 20000.0 + 0.0j
+    line.side2._res_voltage = 19883.965550324414 - 84.999999999981j
+    line.side1._res_current = 116.06729363657514 - 17.9177478743607j
+    line.side2._res_current = -116.06729363657514 + 17.9177478743607j
+    res_power1 = line.side1.res_power.m
+    res_power2 = line.side2.res_power.m
     series_losses = line.res_series_power_losses.m
     shunt_losses = line.res_shunt_power_losses.m
+    shunt_losses1 = line.side1.res_shunt_losses.m
+    shunt_losses2 = line.side2.res_shunt_losses.m
     line_losses = line.res_power_losses.m
     if y_shunt is None:
         assert np.isclose(shunt_losses, 0)
+        assert np.isclose(shunt_losses1, 0)
+        assert np.isclose(shunt_losses2, 0)
     else:
         assert not np.isclose(shunt_losses, 0)
+        assert not np.isclose(shunt_losses1, 0)
+        assert not np.isclose(shunt_losses2, 0)
     assert np.isclose(line_losses, series_losses + shunt_losses)
 
     # Sanity check: the total power lost is equal to the sum of the powers flowing through
-    assert np.isclose(res_powers1 + res_powers2, line_losses)
+    assert np.isclose(res_power1 + res_power2, line_losses)
 
     # Check currents (Kirchhoff's law at each end of the line)
-    i1_line, i2_line = (x.m for x in line.res_currents)
+    i1_line = line.side1.res_current.m
+    i2_line = line.side2.res_current.m
     i_series = line.res_series_current.m
     i1_shunt, i2_shunt = (x.m for x in line.res_shunt_currents)
     assert np.isclose(i1_line, i_series + i1_shunt)
@@ -221,22 +235,30 @@ def test_lines_results():
 
 
 def test_currents_equal(network_with_results):
-    line = network_with_results.lines["line"]
-    current1, current2 = (x.m for x in line.res_currents)
-    series_current = line.res_series_current.m
-    shunt_current1, shunt_current2 = (x.m for x in line.res_shunt_currents)
-    assert np.isclose(current1, series_current + shunt_current1)
-    assert np.isclose(current2 + series_current, shunt_current2)
+    for line in network_with_results.lines.values():
+        current1 = line.side1.res_current.m
+        current2 = line.side2.res_current.m
+        series_current = line.res_series_current.m
+        shunt_current1 = line.side1.res_shunt_current.m
+        shunt_current2 = line.side2.res_shunt_current.m
+        assert np.isclose(current1, series_current + shunt_current1)
+        assert np.isclose(current2 + series_current, shunt_current2)
 
 
 def test_powers_equal(network_with_results):
-    line = network_with_results.lines["line"]
-    vs = network_with_results.sources["vs"]
-    pl = network_with_results.loads["load"]
-    power1, power2 = (x.m for x in line.res_powers)
+    source = next(iter(network_with_results.sources.values()))
+    load = next(iter(network_with_results.loads.values()))
+    line = next(
+        line for line in network_with_results.lines.values() if line.bus1 == source.bus and line.bus2 == load.bus
+    )
+    other_powers = sum(
+        br.side1.res_power.m for br in source.bus._connected_elements if isinstance(br, AbstractBranch) and br != line
+    )
+    power1 = line.side1.res_power.m
+    power2 = line.side2.res_power.m
     power_loss = power1 + power2
-    expected_power1 = -vs.res_power.m
-    expected_power2 = -pl.res_power.m
+    expected_power1 = -source.res_power.m - other_powers
+    expected_power2 = -load.res_power.m
     expected_power_loss = line.res_power_losses.m
     assert np.isclose(power1, expected_power1)
     assert np.isclose(power2, expected_power2)
@@ -249,8 +271,7 @@ def test_different_voltage_levels():
     bus3 = Bus(id="bus3")
     bus4 = Bus(id="bus4", nominal_voltage=400)
     lp = LineParameters(id="lp", z_line=1)
-    with warnings.catch_warnings():
-        warnings.simplefilter("error")
+    with warnings.catch_warnings(action="error"):
         Line(id="ln good", bus1=bus1, bus2=bus2, parameters=lp, length=0.1)  # OK
         Line(id="ln good2", bus1=bus1, bus2=bus3, parameters=lp, length=0.1)  # OK
     with pytest.warns(

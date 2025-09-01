@@ -3,9 +3,10 @@
 A description of the electrical models used for each component is available:
 
 ```{toctree}
-:maxdepth: 2
-:caption: Models
-
+---
+maxdepth: 2
+caption: Models
+---
 PotentialRef
 Ground
 Bus

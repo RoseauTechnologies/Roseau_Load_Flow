@@ -1,5 +1,4 @@
 import logging
-import warnings
 
 import pandas as pd
 import shapely
@@ -7,7 +6,6 @@ import shapely
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models import Bus, Switch
 from roseau.load_flow.typing import Id
-from roseau.load_flow.utils import find_stack_level
 
 logger = logging.getLogger(__name__)
 
@@ -48,10 +46,7 @@ def elm_coup_to_switches(
         geometry = (
             shapely.Point(elm_coup.at[switch_id, "GPSlon"], elm_coup.at[switch_id, "GPSlat"]) if has_geometry else None
         )
-        on_off = elm_coup.at[switch_id, "on_off"]
-        if not on_off:
-            warnings.warn(
-                f"Switch {switch_id!r} is open but switches are always closed in roseau-load-flow.",
-                stacklevel=find_stack_level(),
-            )
-        switches[switch_id] = Switch(id=switch_id, phases=phases, bus1=bus1, bus2=bus2, geometry=geometry)
+        closed = bool(elm_coup.at[switch_id, "on_off"])
+        switches[switch_id] = Switch(
+            id=switch_id, phases=phases, bus1=bus1, bus2=bus2, closed=closed, geometry=geometry
+        )

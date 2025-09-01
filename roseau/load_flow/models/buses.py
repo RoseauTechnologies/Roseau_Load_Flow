@@ -1,12 +1,12 @@
 import logging
 import warnings
 from collections.abc import Iterator
-from typing import TYPE_CHECKING, Any, Final, Literal
+from typing import TYPE_CHECKING, Any, Final, Self
 
 import numpy as np
 import pandas as pd
 from shapely.geometry.base import BaseGeometry
-from typing_extensions import Self, deprecated
+from typing_extensions import deprecated
 
 from roseau.load_flow.constants import SQRT3
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
@@ -14,7 +14,7 @@ from roseau.load_flow.models.core import Element
 from roseau.load_flow.models.terminals import AbstractTerminal
 from roseau.load_flow.typing import BoolArray, ComplexArray, ComplexArrayLike1D, FloatArray, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
-from roseau.load_flow.utils import deprecate_renamed_parameter, find_stack_level, one_or_more_repr
+from roseau.load_flow.utils import deprecate_renamed_parameter, find_stack_level
 from roseau.load_flow_engine.cy_engine import CyBus
 
 logger = logging.getLogger(__name__)
@@ -118,11 +118,11 @@ class Bus(AbstractTerminal[CyBus]):
             msg = f"Incorrect number of potentials: {len(value)} instead of {len(self.phases)}"
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_POTENTIALS_SIZE)
-        self._initial_potentials = np.array(value, dtype=np.complex128)
+        self._initial_potentials: ComplexArray = np.array(value, dtype=np.complex128)
         self._invalidate_network_results()
         self._initialized = True
         self._initialized_by_the_user = True
-        if self._cy_element is not None:
+        if self._cy_initialized:
             self._cy_element.initialize_potentials(self._initial_potentials)
 
     @property
@@ -245,43 +245,6 @@ class Bus(AbstractTerminal[CyBus]):
         """Return the list of short-circuits of this bus."""
         return self._short_circuits[:]  # return a copy as users should not modify the list directly
 
-    def _is_element_neutral_floating(self, phases: str, connect_neutral: bool | None) -> bool:
-        """Check if a connected element with `phases` has a floating neutral."""
-        if "n" not in phases:
-            return False
-        if connect_neutral is False:
-            return True
-        if connect_neutral is None:
-            return "n" not in self.phases
-        return False
-
-    def _check_element_phases(
-        self, e: Element, eid: Id, phases: str, connect_neutral: bool | None, side: Literal["HV", "LV", ""]
-    ) -> bool | None:
-        side_sep = f"{side} " if side else ""
-        if connect_neutral is not None:
-            connect_neutral = bool(connect_neutral)  # to allow np.bool
-        if connect_neutral and "n" not in phases:
-            warnings.warn(
-                message=f"Neutral connection requested for {e.element_type} {eid!r} with no {side_sep}neutral phase",
-                category=UserWarning,
-                stacklevel=find_stack_level(),
-            )
-            connect_neutral = None
-        # Also check they are in the bus phases
-        phases_not_in_bus = set(phases) - set(self.phases)
-        # "n" is allowed to be absent from the self only if the element has more than 2 phases
-        missing_ok = phases_not_in_bus == {"n"} and len(phases) > 2 and not connect_neutral
-        if phases_not_in_bus and not missing_ok:
-            ph, be = one_or_more_repr(sorted(phases_not_in_bus), f"{side_sep}phase")
-            ph = ph[0].upper() + ph[1:]
-            msg = (
-                f"{ph} of {e.element_type} {eid!r} {be} not in phases {self.phases!r} of its {side_sep}bus {self.id!r}."
-            )
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
-        return connect_neutral
-
     def add_short_circuit(self, *phases: str, ground: "Ground | None" = None) -> None:
         """Add a short-circuit by connecting multiple phases together optionally with a ground.
 
@@ -331,6 +294,7 @@ class Bus(AbstractTerminal[CyBus]):
         self._cy_element.connect_ports(phases_index)
 
         if ground is not None:
+            self._connect(ground)
             self._cy_element.connect(ground._cy_element, [(phases_index[0], 0)])
 
     def propagate_limits(self, force: bool = False) -> None:
@@ -527,7 +491,7 @@ class Bus(AbstractTerminal[CyBus]):
     def _to_dict(self, include_results: bool) -> JsonDict:
         data = super()._to_dict(include_results=include_results)
         if self._initialized_by_the_user:
-            data["initial_potentials"] = [[v.real, v.imag] for v in self._initial_potentials]
+            data["initial_potentials"] = [[v.real, v.imag] for v in self._initial_potentials.tolist()]
         if self.geometry is not None:
             data["geometry"] = self.geometry.__geo_interface__
         if self.nominal_voltage is not None:

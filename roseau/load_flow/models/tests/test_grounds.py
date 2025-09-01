@@ -95,14 +95,14 @@ def test_ground_connections():
         GroundConnection(ground=ground1, element=tr, side="BT")  # type: ignore
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_BRANCH_SIDE
     assert e.value.msg == "Invalid side 'BT' for transformer 'tr', expected one of ('HV', 'LV')."
-    gc8 = GroundConnection(ground=ground1, element=tr, side="LV", phase="n")
+    gc8 = GroundConnection(ground=ground1, element=tr.side_lv, phase="n")
     assert gc8 in ground1.connections
-    assert gc8.id == "transformer 'tr' LV phase 'n' to ground 'ground1'"
+    assert gc8.id == "transformer 'tr' LV side phase 'n' to ground 'ground1'"
     with pytest.raises(RoseauLoadFlowException) as e:
-        GroundConnection(ground=ground1, element=tr, side="HV", phase="n")
+        GroundConnection(ground=ground1, element=tr.side_hv, phase="n")
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
-    assert e.value.msg == "Phase 'n' is not present in HV phases 'abc' of transformer 'tr'."
-    gc9 = GroundConnection(ground=ground1, element=tr, side="HV", phase="a")
+    assert e.value.msg == "Phase 'n' is not present in HV side phases 'abc' of transformer 'tr'."
+    gc9 = GroundConnection(ground=ground1, element=tr.side_hv, phase="a")
     assert gc9 in ground1.connections
 
     # Lines and switches
@@ -118,15 +118,15 @@ def test_ground_connections():
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_BRANCH_SIDE
     assert e.value.msg == "Side is missing for switch 'sw', expected one of (1, 2)."
     with pytest.raises(RoseauLoadFlowException) as e:
-        GroundConnection(ground=ground1, element=sw, side=1)
+        GroundConnection(ground=ground1, element=sw.side1)
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
-    assert e.value.msg == "Phase 'n' is not present in phases 1 'bc' of switch 'sw'."
-    gc10 = GroundConnection(ground=ground1, element=ln, side=1, phase="a")
+    assert e.value.msg == "Phase 'n' is not present in side (1) phases 'bc' of switch 'sw'."
+    gc10 = GroundConnection(ground=ground1, element=ln.side1, phase="a")
     assert gc10 in ground1.connections
-    assert gc10.id == "line 'ln' phase 1 'a' to ground 'ground1'"
-    gc11 = GroundConnection(ground=ground1, element=sw, side=2, phase="b")
+    assert gc10.id == "line 'ln' side (1) phase 'a' to ground 'ground1'"
+    gc11 = GroundConnection(ground=ground1, element=sw.side2, phase="b")
     assert gc11 in ground1.connections
-    assert gc11.id == "switch 'sw' phase 2 'b' to ground 'ground1'"
+    assert gc11.id == "switch 'sw' side (2) phase 'b' to ground 'ground1'"
 
 
 def test_impedant_ground():
@@ -164,8 +164,8 @@ def test_ground_connections_to_from_dict_roundtrip():
     connections = [
         GroundConnection(element=bus1, ground=ground),
         GroundConnection(element=bus2, ground=ground, phase="a"),
-        GroundConnection(element=tr, ground=ground, side="HV"),
-        GroundConnection(element=tr, ground=ground, side="LV", phase="b"),
+        GroundConnection(element=tr.side_hv, ground=ground),
+        GroundConnection(element=tr.side_lv, ground=ground, phase="b"),
         GroundConnection(element=load, ground=ground),
         GroundConnection(element=source, ground=ground, phase="c"),
     ]
@@ -211,3 +211,44 @@ def test_ground_deprecations():
     ):
         connected_buses = ground.connected_buses
     assert connected_buses == {"bus": "a"}
+
+    # Deprecated side argument for branches
+    ground1 = Ground("ground1")
+    bus1 = Bus("bus1", phases="abcn")
+    bus2 = Bus("bus2", phases="abcn")
+    bus3 = Bus("bus3", phases="abc")
+    tp = TransformerParameters("tp", vg="Yzn11", uhv=20e3, ulv=400, sn=160e3, z2=0.01, ym=0.01j)
+    tr = Transformer("tr", bus_hv=bus1, bus_lv=bus2, parameters=tp)
+    lp = LineParameters("lp", z_line=[[0.1, 0], [0, 0.1]])
+    ln = Line("ln", bus1=bus1, bus2=bus2, parameters=lp, phases="an", length=1)
+    sw = Switch("sw", bus1=bus2, bus2=bus3, phases="bc")
+    with pytest.warns(
+        DeprecationWarning,
+        match=(
+            r"Connecting a transformer to a ground using the side argument is deprecated. Use "
+            r"transformer.side_lv directly instead."
+        ),
+    ):
+        gc8 = GroundConnection(ground=ground1, element=tr, side="LV", phase="n")
+    assert gc8 in ground1.connections
+    assert gc8.id == "transformer 'tr' LV side phase 'n' to ground 'ground1'"
+    with pytest.warns(
+        DeprecationWarning,
+        match=(
+            r"Connecting a line to a ground using the side argument is deprecated. Use "
+            r"line.side1 directly instead."
+        ),
+    ):
+        gc10 = GroundConnection(ground=ground1, element=ln, side=1, phase="a")
+    assert gc10 in ground1.connections
+    assert gc10.id == "line 'ln' side (1) phase 'a' to ground 'ground1'"
+    with pytest.warns(
+        DeprecationWarning,
+        match=(
+            r"Connecting a switch to a ground using the side argument is deprecated. Use "
+            r"switch.side2 directly instead."
+        ),
+    ):
+        gc11 = GroundConnection(ground=ground1, element=sw, side=2, phase="b")
+    assert gc11 in ground1.connections
+    assert gc11.id == "switch 'sw' side (2) phase 'b' to ground 'ground1'"

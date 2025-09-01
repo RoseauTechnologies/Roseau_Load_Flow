@@ -58,6 +58,7 @@ def typ_tr2_to_tp(
         p0 = Q_(typ_tr.at[fid, "pfe"], "kW")  # Losses during off-load test (kW)
         psc = Q_(typ_tr.at[fid, "pcutr"], "kW")  # Losses during short-circuit test (kW)
         vsc = Q_(typ_tr.at[fid, "uktr"], "percent")  # Voltages on LV side during short-circuit test (%)
+        fn = Q_(typ_tr.at[fid, "frnom"], "Hz")  # Nominal frequency (Hz)
         whv = typ_tr.at[fid, "tr2cn_h"]  # Vector Group: HV-Side
         wlv = typ_tr.at[fid, "tr2cn_l"]  # Vector Group: LV-Side
         clock = typ_tr.at[fid, "nt2ag"]  # Vector Group: Phase Shift
@@ -76,6 +77,7 @@ def typ_tr2_to_tp(
             i0=i0,
             psc=psc,
             vsc=vsc,
+            fn=fn,
             manufacturer=manufacturer,
             **extra_data,
         )
@@ -178,13 +180,29 @@ def tp_to_typ_tr2(transformer_params: Iterable[TransformerParameters], fid_count
     ]
     values: list[list[str | float | None]] = []
     for tp in transformer_params:
+        desc0 = generate_extra_rlf_data(
+            {
+                "range": tp.range,
+                "efficiency": tp.efficiency,
+                "cooling": tp.cooling,
+                "insulation": tp.insulation,
+            }
+        )
+        if (fn := tp.fn) is None:
+            warnings.warn(
+                f"Transformer parameters {tp.id!r} has no nominal frequency. Setting it to 50 Hz.",
+                stacklevel=find_stack_level(),
+            )
+            frnom = 50.0
+        else:
+            frnom = fn.m_as("Hz")
         values.append(
             [
                 next(fid_counter),  # FID
                 "C",  # OP
                 tp.id,  # loc_name
                 None,  # fold_id
-                50,  # frnom
+                frnom,  # frnom
                 tp.sn.m_as("MVA"),  # strn
                 3,  # nt2ph
                 tp.whv,  # tr2cn_h
@@ -208,7 +226,7 @@ def tp_to_typ_tr2(transformer_params: Iterable[TransformerParameters], fid_count
                 -20,  # ntpmn
                 20,  # ntpmx
                 tp.manufacturer,  # manuf
-                generate_extra_rlf_data({"range": tp.range, "efficiency": tp.efficiency}),  # desc:0
+                desc0,  # desc:0
             ]
         )
     return {"Attributes": attributes, "Values": values}

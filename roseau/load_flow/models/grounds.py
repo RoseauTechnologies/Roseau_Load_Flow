@@ -1,18 +1,20 @@
 import logging
 import warnings
-from typing import TYPE_CHECKING, Final, Literal
+from typing import TYPE_CHECKING, Final, Literal, Self
 
 import numpy as np
-from typing_extensions import Self, deprecated
+from typing_extensions import deprecated
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.core import Element
+from roseau.load_flow.models.terminals import AbstractTerminal
 from roseau.load_flow.typing import Complex, Id, JsonDict, Side
 from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow.utils import find_stack_level, one_or_more_repr
 from roseau.load_flow_engine.cy_engine import CyBranch, CyGround, CySimplifiedLine, CySwitch
 
 if TYPE_CHECKING:
+    from roseau.load_flow.models.branches import AbstractBranch
     from roseau.load_flow.models.buses import Bus
 
 logger = logging.getLogger(__name__)
@@ -94,7 +96,7 @@ class Ground(Element[CyGround]):
     #
     def _refresh_results(self) -> None:
         if self._fetch_results:
-            self._res_potential = self._cy_element.get_potentials(1)[0]
+            self._res_potential = self._cy_element.get_port_potential(0)
 
     def _res_potential_getter(self, warning: bool) -> complex:
         self._refresh_results()
@@ -134,7 +136,7 @@ class Ground(Element[CyGround]):
 class GroundConnection(Element[CySimplifiedLine | CySwitch]):
     """An ideal or impedant connection to the ground."""
 
-    element_type: Final = "ground_connection"
+    element_type: Final = "ground connection"
     allowed_phases: Final = frozenset({"a", "b", "c", "n"})
 
     def __init__(
@@ -142,10 +144,10 @@ class GroundConnection(Element[CySimplifiedLine | CySwitch]):
         id: Id | None = None,
         *,
         ground: Ground,
-        element: Element,
+        element: "AbstractTerminal | AbstractBranch",
         impedance: Complex | Q_[Complex] = 0j,
         phase: str = "n",
-        side: Side = None,
+        side: Side | None = None,
         on_connected: Literal["raise", "warn", "ignore"] = "raise",
     ) -> None:
         """Ground connection constructor.
@@ -159,7 +161,8 @@ class GroundConnection(Element[CySimplifiedLine | CySwitch]):
                 The ground object to connect to.
 
             element:
-                The branch or terminal element to connect to the ground.
+                The terminal element to connect to the ground. This can be a bus, source, load, or a
+                branch side. Passing a branch element is deprecated.
 
             impedance:
                 The impedance of the connection to the ground (ohm). Defaults to 0.
@@ -173,6 +176,11 @@ class GroundConnection(Element[CySimplifiedLine | CySwitch]):
                 must be either ``'HV'`` or ``'LV'``. If the element is a line or a switch, this must
                 be either ``1`` or ``2``. For other elements, this must be ``None``.
 
+                .. deprecated:: 0.13.0
+
+                    Using the `side` argument with branch elements is deprecated. Use
+                    `element.side1` or `element.side2` directly instead.
+
             on_connected:
                 The action to take if *other phases* of the element are already connected to this
                 ground. If ``"raise"`` (default), raise an error. If ``"warn"``, issue a warning. If
@@ -182,66 +190,79 @@ class GroundConnection(Element[CySimplifiedLine | CySwitch]):
         if on_connected not in {"warn", "raise", "ignore"}:
             raise ValueError(f"Invalid value for `on_connected`: {on_connected!r}")
 
+        self._check_compatible_phase_tech(element, id=id)
+        element_to_connect = element
         # Check the element type and the side.
-        if element.element_type in {"transformer", "line", "switch"}:
+        if isinstance(element, AbstractTerminal):
+            if side is not None:
+                msg = f"Side cannot be used with {element.element_type} elements, only with branches."
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.BAD_BRANCH_SIDE)
+            if element.element_type in {"transformer", "line", "switch"}:
+                element_to_connect = element._branch  # type: ignore
+        elif element.element_type in {"transformer", "line", "switch"}:
             if side not in (1, 2, "HV", "LV"):
                 side_status = "Side is missing" if side is None else f"Invalid side {side!r}"
                 expected_sides = ("HV", "LV") if element.element_type == "transformer" else (1, 2)
                 msg = f"{side_status} for {element._element_info}, expected one of {expected_sides}."
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.BAD_BRANCH_SIDE)
-        elif element.element_type in {"bus", "source", "load"}:
-            if side is not None:
-                msg = f"Side cannot be used with {element.element_type} elements, only with branches."
-                logger.error(msg)
-                raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.BAD_BRANCH_SIDE)
+            element = element.side1 if side in (1, "HV") else element.side2
+            warnings.warn(
+                (
+                    f"Connecting a {element_to_connect.element_type} to a ground using the side "
+                    f"argument is deprecated. Use {element_to_connect.element_type}.side"
+                    f"{element._side_suffix} directly instead."
+                ),
+                category=DeprecationWarning,
+                stacklevel=find_stack_level(),
+            )
         else:
             msg = f"Cannot connect {element._element_info} to the ground."
             logger.error(msg)
             raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT)
 
-        pretty_phases = f"{side} phases" if side in ("HV", "LV") else f"phases {side}" if side in (1, 2) else "phases"
-        pretty_phase = pretty_phases.replace("phases", "phase")
         if id is None:
-            id = f"{element.element_type} {element.id!r} {pretty_phase} {phase!r} to ground {ground.id!r}"
+            id = f"{element.element_type} {element.id!r} {element._side_desc}phase {phase!r} to ground {ground.id!r}"
+        super().__init__(id)
         # Check the phase is valid.
         self._check_phases(id, phases=phase)
 
         # Check the phase is present in the element phases.
-        self._element_phases_attr = "phases" + {1: "1", 2: "2", "HV": "1", "LV": "2", None: ""}[side]
-        self._element_phases: str = getattr(element, self._element_phases_attr)
-        if phase not in self._element_phases:
+        if phase not in element.phases:
             msg = (
-                f"Phase {phase!r} is not present in {pretty_phases} {self._element_phases!r} of "
-                f"{element._element_info}."
+                f"Phase {phase!r} is not present in {element._side_desc}phases {element.phases!r} "
+                f"of {element._element_info}."
             )
             logger.error(msg)
             raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.BAD_PHASE)
 
         # Check if the element is already connected to this ground
-        connected_phases = [gc._phase for gc in ground._connections if gc._element is element and gc._side == side]
+        connected_phases = [gc._phase for gc in ground._connections if gc._element is element]
         if connected_phases:
             if phase in connected_phases:
                 msg = (
-                    f"Ground {ground.id!r} is already connected to {pretty_phase} {phase!r} of {element._element_info}."
+                    f"Ground {ground.id!r} is already connected to {element._side_desc}phase "
+                    f"{phase!r} of {element._element_info}."
                 )
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
             if on_connected != "ignore":
-                connections, _ = one_or_more_repr(connected_phases, pretty_phase, pretty_phases)
-                msg = f"Ground {ground.id!r} is already connected to {connections} of {element._element_info}."
+                connections, _ = one_or_more_repr(connected_phases, "phase")
+                msg = (
+                    f"Ground {ground.id!r} is already connected to {element._side_desc}"
+                    f"{connections} of {element._element_info}."
+                )
                 if on_connected == "raise":
                     logger.error(msg)
                     raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_GROUND_ID)
                 else:
                     warnings.warn(msg, stacklevel=find_stack_level())
 
-        super().__init__(id)
-        self._connect(ground, element)
+        self._connect(ground, element_to_connect)
         self._ground = ground
         self._element = element
         self._phase = phase
-        self._side: Side = side
         self.on_connected: Literal["raise", "warn", "ignore"] = on_connected
         self.impedance = impedance
         ground._connections.append(self)
@@ -252,14 +273,15 @@ class GroundConnection(Element[CySimplifiedLine | CySwitch]):
         parts = [
             f"id={self.id!r}",
             f"ground={self._ground.id!r}",
-            f"element={self._element.id!r}",
+            f"element={self._element_info!r} {self._element._side_desc}".rstrip(),
             f"impedance={self._impedance!r}",
             f"phase={self._phase!r}",
+            f"on_connected={self.on_connected!r}",
         ]
-        if self._side is not None:
-            parts.append(f"side={self._side!r}")
-        parts.append(f"on_connected={self.on_connected!r}")
-        return f"<{type(self).__name__}: {', '.join(parts)}>"
+        s = f"<{type(self).__name__}: {', '.join(parts)}>"
+        if self._is_disconnected:
+            s += " (disconnected)"
+        return s
 
     @property
     def phase(self) -> str:
@@ -267,9 +289,9 @@ class GroundConnection(Element[CySimplifiedLine | CySwitch]):
         return self._phase
 
     @property
-    def side(self) -> Side:
+    def side(self) -> Side | None:
         """The side of the element to connect to."""
-        return self._side
+        return self._element._side_value
 
     @property
     @ureg_wraps("ohm", (None,))
@@ -283,8 +305,8 @@ class GroundConnection(Element[CySimplifiedLine | CySwitch]):
         self._impedance = complex(value)
         self._invalidate_network_results()
         if np.isclose(self._impedance, 0):
-            if not isinstance(self._cy_element, CySwitch):
-                if self._cy_element is not None:
+            if not (self._cy_initialized and isinstance(self._cy_element, CySwitch)):
+                if self._cy_initialized:
                     self._cy_element.disconnect()
                 if self._network is not None:
                     self._network._valid = False
@@ -294,8 +316,8 @@ class GroundConnection(Element[CySimplifiedLine | CySwitch]):
                 pass  # do nothing, switch has no parameters
         else:
             z_line = np.array([self._impedance], dtype=np.complex128)
-            if not isinstance(self._cy_element, CySimplifiedLine):
-                if self._cy_element is not None:
+            if not (self._cy_initialized and isinstance(self._cy_element, CySimplifiedLine)):
+                if self._cy_initialized:
                     self._cy_element.disconnect()
                 if self._network is not None:
                     self._network._valid = False
@@ -315,23 +337,28 @@ class GroundConnection(Element[CySimplifiedLine | CySwitch]):
         return self._element
 
     def _cy_connect(self) -> None:
-        assert self._cy_element is not None
-        assert self._ground._cy_element is not None, "Ground cannot be disconnected."
-        i = self._element_phases.index(self._phase)
-        if self._side is None:
-            self._element._cy_element.connect(self._cy_element, [(i, 0)])
+        # Connect the phase of the element to the first side of the ground connection.
+        i = self._element.phases.index(self._phase)
+        if isinstance(self._element._cy_element, CyBranch):
+            self._element._cy_element.connect_side(self._cy_element, [(i, 0)], beginning=self._element._side_index == 0)
         else:
-            assert isinstance(self._element._cy_element, CyBranch)
-            beginning = self._side in (1, "HV")
-            self._element._cy_element.connect(self._cy_element, [(i, 0)], beginning=beginning)
-        self._cy_element.connect(self._ground._cy_element, [(0, 0)], beginning=False)
+            assert self._element._side_value is None
+            self._element._cy_element.connect(self._cy_element, [(i, 0)])
+        # Connect the ground to the second side of the ground connection.
+        self._ground._cy_element.connect(self._cy_element, [(0, 1)])
+
+    @property
+    def is_disconnected(self) -> bool:
+        """Is this ground connection disconnected from the network?"""
+        return self._is_disconnected
 
     #
     # Results
     #
     def _refresh_results(self) -> None:
+        self._raise_disconnected_error()
         if self._fetch_results:
-            self._res_current = self._cy_element.get_currents(n1=1, n2=1)[0][0]
+            self._res_current = self._cy_element.get_port_current(0)
 
     def _res_current_getter(self, warning: bool) -> complex:
         self._refresh_results()
@@ -359,13 +386,14 @@ class GroundConnection(Element[CySimplifiedLine | CySwitch]):
         return self
 
     def _to_dict(self, include_results: bool) -> JsonDict:
+        self._raise_disconnected_error()
         data: JsonDict = {
             "id": self.id,
             "ground": self._ground.id,
             "element": {"id": self._element.id, "type": self._element.element_type},
             "phase": self._phase,
             "impedance": [self._impedance.real, self._impedance.imag],
-            "side": self._side,
+            "side": self._element._side_value,
             "on_connected": self.on_connected,
         }
         if include_results:
@@ -374,6 +402,7 @@ class GroundConnection(Element[CySimplifiedLine | CySwitch]):
         return data
 
     def _results_to_dict(self, warning: bool, full: bool) -> JsonDict:
+        self._raise_disconnected_error()
         current = self._res_current_getter(warning)
         results: JsonDict = {"id": self.id, "current": [current.real, current.imag]}
         return results

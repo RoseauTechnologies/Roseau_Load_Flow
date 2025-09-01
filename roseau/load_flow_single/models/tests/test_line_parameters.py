@@ -1,12 +1,11 @@
 import re
 
 import numpy as np
-import numpy.linalg as nplin
-import numpy.testing as npt
 import pandas as pd
 import pytest
 
 from roseau.load_flow import Q_, Insulator, LineType, Material, RoseauLoadFlowException, RoseauLoadFlowExceptionCode
+from roseau.load_flow import LineParameters as MultiLineParameters
 from roseau.load_flow_single.models import Bus, Line, LineParameters
 
 
@@ -15,19 +14,16 @@ def test_line_parameters():
     bus2 = Bus(id="junction2")
 
     # Negative real values (Z)
-    z_line = -3
-    y_shunt = -2
     with pytest.raises(RoseauLoadFlowException) as e:
-        LineParameters("test", z_line=z_line, y_shunt=y_shunt)
+        LineParameters("test", z_line=-3, y_shunt=2)
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_Z_LINE_VALUE
-    assert e.value.msg == "The z_line value of line type 'test' has coefficients with negative real part."
+    assert e.value.msg == "The z_line value of line type 'test' has negative real part: (-3+0j)"
 
     # Negative real values (Y)
-    y_shunt = -3
-    with pytest.raises(RoseauLoadFlowException):
-        LineParameters(id="test", z_line=z_line, y_shunt=y_shunt)
-    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_Z_LINE_VALUE
-    assert e.value.msg == "The z_line value of line type 'test' has coefficients with negative real part."
+    with pytest.raises(RoseauLoadFlowException) as e:
+        LineParameters(id="test", z_line=3, y_shunt=-2)
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_Y_SHUNT_VALUE
+    assert e.value.msg == "The y_shunt value of line type 'test' has negative real part: (-2+0j)"
 
     # Adding/Removing a shunt to a line is not allowed
     lp1 = LineParameters(id="lp1", z_line=1.0, y_shunt=1.0)
@@ -64,52 +60,10 @@ def test_from_geometry():
     )
 
     # TODO regenerate all expected values with the IEC constants and update this test
-    y_line_expected = np.array(
-        [
-            [3.3915102901533754, -1.2233003903972888, -1.2233003903972615, -0.7121721195595286],
-            [-1.2233003903972892, 3.391510290153375, -1.2233003903972615, -0.7121721195595287],
-            [-1.2233003903972615, -1.2233003903972612, 3.391510290153371, -0.7121721195595507],
-            [-0.7121721195595287, -0.7121721195595287, -0.7121721195595507, 2.098835790241813],
-        ]
-    ) + 1j * np.array(
-        [
-            [-1.5097083093938377, 0.29317485508286, 0.2931748550828966, -0.05601082045448763],
-            [0.29317485508285984, -1.509708309393838, 0.29317485508289676, -0.0560108204544873],
-            [0.2931748550828965, 0.2931748550828968, -1.509708309393831, -0.056010820454528876],
-            [-0.056010820454487645, -0.05601082045448755, -0.056010820454528834, -0.3005121042954534],
-        ]
-    )
-
-    assert np.isclose(lp.z_line.m, nplin.inv(y_line_expected)[0, 0], rtol=0.04, atol=0.02)
-    y_shunt_expected = np.array(
-        [
-            [
-                9.89734304e-08 + 4.88922793e-05j,
-                -0.00000000e00 - 1.92918966e-06j,
-                -0.00000000e00 - 1.92821912e-06j,
-                -0.00000000e00 - 1.20437270e-05j,
-            ],
-            [
-                -0.00000000e00 - 1.92918966e-06j,
-                9.89734304e-08 + 4.88922793e-05j,
-                -0.00000000e00 - 1.92821912e-06j,
-                -0.00000000e00 - 1.20437270e-05j,
-            ],
-            [
-                -0.00000000e00 - 1.92821912e-06j,
-                -0.00000000e00 - 1.92821912e-06j,
-                9.89791759e-08 + 4.88941669e-05j,
-                -0.00000000e00 - 1.20446700e-05j,
-            ],
-            [
-                -0.00000000e00 - 1.20437270e-05j,
-                -0.00000000e00 - 1.20437270e-05j,
-                -0.00000000e00 - 1.20446700e-05j,
-                2.13327419e-07 + 1.07241264e-04j,
-            ],
-        ]
-    )
-    npt.assert_allclose(lp.y_shunt.m, y_shunt_expected[0, 0], rtol=0.001)
+    z_line_expected = 0.18842666666666666 + 0.0734465742082604j
+    y_shunt_expected = 5.0821451105135946e-05j
+    assert np.isclose(lp.z_line.m, z_line_expected, atol=1e-6)
+    assert np.isclose(lp.y_shunt.m, y_shunt_expected, atol=1e-4)
 
     assert lp.line_type == LineType.OVERHEAD
     assert lp.material == Material.AL
@@ -177,8 +131,8 @@ def test_from_geometry():
         height=10,
         external_diameter=0.04,
     )
-    assert np.isclose(lp.z_line.m, nplin.inv(y_line_expected)[0, 0], rtol=0.04, atol=0.02)
-    assert np.isclose(lp.y_shunt.m, y_shunt_expected[0, 0], rtol=0.001)
+    assert np.isclose(lp.z_line.m, z_line_expected, atol=1e-6)
+    assert np.isclose(lp.y_shunt.m, y_shunt_expected, atol=1e-4)
     assert lp.line_type == LineType.OVERHEAD
     assert lp.material == Material.AL
     assert lp.insulator == Insulator.PEX
@@ -198,51 +152,11 @@ def test_from_geometry():
         height=-1.5,
         external_diameter=0.049,
     )
-    y_line_expected = np.array(
-        [
-            [3.218429448662283, -1.329262437638587, -1.0144886997705809, -0.6708409749422017],
-            [-1.329262437638587, 3.3132903818151664, -1.3292624376385969, -0.5071931750041125],
-            [-1.0144886997705809, -1.329262437638597, 3.218429448662286, -0.6708409749421965],
-            [-0.6708409749422021, -0.5071931750041122, -0.6708409749421965, 2.0134069034544098],
-        ]
-    ) + 1j * np.array(
-        [
-            [-1.6513767151219196, 0.16540589778392523, 0.4929007890271932, -0.038590931317931176],
-            [0.16540589778392534, -1.5534190611819065, 0.1654058977839179, 0.20837873067712712],
-            [0.49290078902719336, 0.16540589778391795, -1.6513767151219172, -0.03859093131792596],
-            [-0.03859093131793137, 0.20837873067712717, -0.03859093131792582, -0.6182914857776997],
-        ]
-    )
-    assert np.isclose(lp.z_line.m, nplin.inv(y_line_expected)[0, 0], rtol=0.04, atol=0.02)
-    y_shunt_expected = np.array(
-        [
-            [
-                1.90891221e-05 + 4.58910922e-04j,
-                -0.00000000e00 - 7.48205724e-05j,
-                -0.00000000e00 - 2.10155861e-05j,
-                -0.00000000e00 - 4.49227283e-05j,
-            ],
-            [
-                -0.00000000e00 - 7.48205724e-05j,
-                2.06391240e-05 + 4.99733590e-04j,
-                -0.00000000e00 - 7.48205724e-05j,
-                -0.00000000e00 - 6.10704585e-06j,
-            ],
-            [
-                -0.00000000e00 - 2.10155861e-05j,
-                -0.00000000e00 - 7.48205724e-05j,
-                1.90891221e-05 + 4.58910922e-04j,
-                -0.00000000e00 - 4.49227283e-05j,
-            ],
-            [
-                -0.00000000e00 - 4.49227283e-05j,
-                -0.00000000e00 - 6.10704585e-06j,
-                -0.00000000e00 - 4.49227283e-05j,
-                1.26846966e-05 + 3.07364112e-04j,
-            ],
-        ]
-    )
-    assert np.isclose(lp.y_shunt.m, y_shunt_expected[0, 0], rtol=0.3)
+    # TODO regenerate all expected values with the IEC constants and update this test
+    z_line_expected = 0.18842666666666666 + 0.08071828175629972j
+    y_shunt_expected = 0.0006515742213003806j
+    assert np.isclose(lp.z_line.m, z_line_expected, atol=1e-6)
+    assert np.isclose(lp.y_shunt.m, y_shunt_expected, atol=1e-4)
     assert isinstance(lp.line_type, LineType)
     assert lp.line_type == LineType.UNDERGROUND
     assert lp.material == Material.AL
@@ -251,45 +165,18 @@ def test_from_geometry():
 
 
 def test_sym():
-    # With the bad model of PwF
-    # line_data = {"id": "NKBA NOR  25.00 kV", "un": 25000.0, "in": 277.0000100135803}
-
     z0 = 0.0j
     z1 = 1.0 + 1.0j
     y0 = 0.0j
     y1 = 1e-06j
     lp = LineParameters.from_sym(id="NKBA NOR  25.00 kV", z0=z0, z1=z1, y0=y0, y1=y1)
-    zs = (z0 + 2 * z1) / 3
-    ys = (y0 + 2 * y1) / 3
-    assert np.isclose(lp.z_line.m, zs)
-    assert np.isclose(lp.y_shunt.m, ys)
+    assert np.isclose(lp.z_line.m, z1)
+    assert np.isclose(lp.y_shunt.m, y1)
 
-    # line_data = {"id": "NKBA 4x150   1.00 kV", "un": 1000.0, "in": 361.0000014305115}
-    # Downgraded model because of PwF bad data
-    lp = LineParameters.from_sym(
-        id="NKBA 4x150   1.00 kV", z0=0.5 + 0.3050000071525574j, z1=0.125 + 0.0860000029206276j, y0=0.0j, y1=0.0j
-    )
-    assert np.isclose(lp.z_line.m, 0.25 + 0.159j)
-    assert np.isclose(lp.y_shunt.m, 0)
-
-    # First line
-    # line_data = {"id": "sym_neutral_underground_line_example", "un": 400.0, "in": 150}
-    lp = LineParameters.from_sym(
-        id="sym_neutral_underground_line_example",
-        z0=0.188 + 0.8224j,
-        z1=0.188 + 0.0812j,
-        y0=0.000010462 + 0.000063134j,
-        y1=0.000010462 + 0.00022999j,
-    )
-    assert np.isclose(lp.z_line.m, 0.188 + 0.32826667j)
-    assert np.isclose(lp.y_shunt.m, 1.0462e-05 + 1.74371333e-04j)
-
-    # Second line
-    # line_data = {"id": "sym_line_example", "un": 20000.0, "in": 309}
-
-    lp = LineParameters.from_sym(id="sym_line_example", z0=0.2 + 0.1j, z1=0.2 + 0.1j, y0=0.00014106j, y1=0.00014106j)
-    assert np.isclose(lp.z_line.m, 0.2 + 0.1j)
-    assert np.isclose(lp.y_shunt.m, 0.00014106j)
+    # Test optional zero-sequence parameters
+    lp2 = LineParameters.from_sym(id="NKBA NOR  25.00 kV", z1=z1, y1=y1)
+    assert np.isclose(lp2.z_line.m, z1)
+    assert np.isclose(lp2.y_shunt.m, y1)
 
 
 def test_from_coiffier_model():
@@ -345,7 +232,8 @@ def test_catalogue_data():
         assert isinstance(row.ampacity, int | float)
         LineType(row.type)  # Check that the type is valid
         Material(row.material)  # Check that the material is valid
-        pd.isna(row.insulator) or Insulator(row.insulator)  # Check that the insulator is valid
+        if not pd.isna(row.insulator):
+            Insulator(row.insulator)  # Check that the insulator is valid
         assert isinstance(row.section, int | float)
 
 
@@ -585,42 +473,43 @@ def test_json_serialization(tmp_path):
 
 def test_from_open_dss():
     # DSS command: `New linecode.240sq nphases=3 R1=0.127 X1=0.072 R0=0.342 X0=0.089 units=km`
-    lp240sq = LineParameters.from_open_dss(
-        id="linecode-240sq",
-        r1=Q_(0.127, "ohm/km"),
-        x1=Q_(0.072, "ohm/km"),
-        r0=Q_(0.342, "ohm/km"),
-        x0=Q_(0.089, "ohm/km"),
-        c1=Q_(3.4, "nF/km"),
-        c0=Q_(1.6, "nF/km"),
-    )
+    r1 = Q_(0.127, "ohm/km")
+    x1 = Q_(0.072, "ohm/km")
+    r0 = Q_(0.342, "ohm/km")
+    x0 = Q_(0.089, "ohm/km")
+    c1 = Q_(3.4, "nF/km")
+    c0 = Q_(1.6, "nF/km")
+    lp240sq = LineParameters.from_open_dss(id="linecode-240sq", r1=r1, x1=x1, r0=r0, x0=x0, c1=c1, c0=c0)
     assert lp240sq.id == "linecode-240sq"
-    zs_e = 0.19866666666666669 + 0.07766666666666666j
-    assert np.isclose(lp240sq.z_line.m, zs_e)
-    ys_e = 8.796459430051418e-07j
-    assert np.isclose(lp240sq.y_shunt.m, ys_e)
+    z_expected = complex(r1.m_as("ohm/km"), x1.m_as("ohm/km"))
+    assert np.isclose(lp240sq.z_line.m, z_expected)
+    y_expected = complex(0, c1.m_as("F/km") * 2 * np.pi * 50)
+    assert np.isclose(lp240sq.y_shunt.m, y_expected)
     assert lp240sq.line_type is None
     assert lp240sq.ampacity is None
 
     # DSS command: `New LineCode.16sq NPhases=1 R1=0.350, X1=0.025, R0=0.366, X0=0.025, C1=1.036, C0=0.488 Units=kft NormAmps=400 LineType=OH`
+    r1 = Q_(0.350, "ohm/kft")
+    x1 = Q_(0.025, "ohm/kft")
+    r0 = Q_(0.366, "ohm/kft")
+    x0 = Q_(0.025, "ohm/kft")
+    c1 = Q_(1.036, "nF/kft")
+    c0 = Q_(0.488, "nF/kft")
     lp16sq = LineParameters.from_open_dss(
-        id="linecode-16sq",
-        r1=Q_(0.350, "ohm/kft"),
-        x1=Q_(0.025, "ohm/kft"),
-        r0=Q_(0.366, "ohm/kft"),
-        x0=Q_(0.025, "ohm/kft"),
-        c1=Q_(1.036, "nF/kft"),
-        c0=Q_(0.488, "nF/kft"),
-        linetype="OH",
-        normamps=Q_(400, "A"),
+        id="linecode-16sq", r1=r1, x1=x1, r0=r0, x0=x0, c1=c1, c0=c0, linetype="OH", normamps=Q_(400, "A")
     )
     assert lp16sq.id == "linecode-16sq"
-    zs_e = 1.1657917760279966 + 0.08202099737532809j
-    assert np.isclose(lp16sq.z_line.m, zs_e)
-    ys_e = 8.795360010050165e-07j
-    assert np.isclose(lp16sq.y_shunt.m, ys_e)
+    z_expected = complex(r1.m_as("ohm/km"), x1.m_as("ohm/km"))
+    assert np.isclose(lp16sq.z_line.m, z_expected)
+    y_expected = complex(0, c1.m_as("F/km") * 2 * np.pi * 50)
+    assert np.isclose(lp16sq.y_shunt.m, y_expected)
     assert lp16sq.line_type == LineType.OVERHEAD
     assert np.isclose(lp16sq.ampacity.m, 400)
+
+    # Test optional zero-sequence parameters
+    lp16sq2 = LineParameters.from_open_dss(id="linecode-16sq-2", r1=r1, x1=x1, c1=c1)
+    assert np.isclose(lp16sq2.z_line.m, z_expected)
+    assert np.isclose(lp16sq2.y_shunt.m, y_expected)
 
 
 def test_from_power_factory():
@@ -642,10 +531,10 @@ def test_from_power_factory():
     na2ysy1x95rm = LineParameters.from_power_factory(**pwf_params)
 
     assert na2ysy1x95rm.id == "NA2YSY 1x95rm 12/20kV it"
-    zs_e = 0.645 + 0.2513266666666667j
-    assert np.isclose(na2ysy1x95rm.z_line.m, zs_e)
-    ys_e = 7.318863666666666e-05j
-    assert np.isclose(na2ysy1x95rm.y_shunt.m, ys_e)
+    z_expected = complex(pwf_params["r1"], pwf_params["x1"])
+    assert np.isclose(na2ysy1x95rm.z_line.m, z_expected)
+    y_expected = complex(0, pwf_params["b1"] * 1e-6)
+    assert np.isclose(na2ysy1x95rm.y_shunt.m, y_expected)
     assert np.isclose(na2ysy1x95rm.ampacity.m, 235)
     assert na2ysy1x95rm.line_type == LineType.UNDERGROUND
     assert na2ysy1x95rm.material == Material.AL
@@ -658,6 +547,31 @@ def test_from_power_factory():
     assert lp.line_type == LineType.OVERHEAD
     assert lp.insulator == Insulator.XLPE
 
+    # Test optional zero-sequence parameters
+    lp2 = LineParameters.from_power_factory(
+        id="NA2YSY 1x95rm 12/20kV it", r1=pwf_params["r1"], x1=pwf_params["x1"], b1=pwf_params["b1"]
+    )
+    assert np.isclose(lp2.z_line.m, z_expected)
+    assert np.isclose(lp2.y_shunt.m, y_expected)
+
+
+def test_from_roseau_load_flow():
+    z1 = 1.0 + 2.0j
+    y1 = 1e-02j
+    lp_m = MultiLineParameters.from_sym(id="LP", z0=1.0, z1=z1, y0=0.2j, y1=y1, zn=1.0, xpn=0.0, bn=0.0, bpn=0.0)
+    lp_s = LineParameters.from_roseau_load_flow(lp_m)
+    assert np.isclose(lp_s.z_line.m, z1)
+    assert np.isclose(lp_s.y_shunt.m, y1)
+
+    lp_m_bad = MultiLineParameters(id="Bad LP", z_line=np.eye(2), y_shunt=np.eye(2))
+    with pytest.raises(RoseauLoadFlowException) as e:
+        LineParameters.from_roseau_load_flow(lp_m_bad)
+    assert e.value.code == RoseauLoadFlowExceptionCode.INVALID_FOR_SINGLE_PHASE
+    assert e.value.msg == (
+        "Cannot create `rlfs.LineParameters` from multi-phase line parameters with id 'Bad LP' and "
+        "2 phases. It must be three-phase."
+    )
+
 
 def test_results_to_dict():
     # No results to export
@@ -666,36 +580,3 @@ def test_results_to_dict():
         lp.results_to_dict()
     assert e.value.msg == "The LineParameters has no results to export."
     assert e.value.code == RoseauLoadFlowExceptionCode.JSON_NO_RESULTS
-
-
-def test_equality():
-    lp = LineParameters.from_catalogue(name="U_AL_150")
-    data = {
-        "id": lp.id,
-        "z_line": lp.z_line,
-        "y_shunt": lp.y_shunt,
-        "ampacity": lp.ampacity,
-        "line_type": lp.line_type,
-        "material": lp.material,
-        "insulator": lp.insulator,
-        "section": lp.section,
-    }
-    lp2 = LineParameters(**data)
-    assert lp2 == lp
-
-    other_data = {
-        "id": lp.id + " other",
-        "z_line": lp.z_line.m + 1j,
-        "y_shunt": lp.y_shunt.m + 1j,
-        "ampacity": lp.ampacity.m + 1,
-        "line_type": LineType.OVERHEAD,
-        "material": Material.CU,
-        "insulator": Insulator.XLPE,
-        "section": lp.section.m + 1,
-    }
-    for k, v in other_data.items():
-        other_lp = LineParameters(**(data | {k: v}))
-        assert other_lp != lp, k
-
-    # Test the case which returns NotImplemented in the equality operator
-    assert lp != object()
