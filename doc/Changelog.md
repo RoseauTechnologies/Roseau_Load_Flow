@@ -19,6 +19,13 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 # Changelog
 
+## Unreleased
+
+- Fix a bug where license validation failed when the English (US) language was not installed on the system (observed on
+  Linux).
+
+- {gh-pr}`408` Improve the display of C++ code error messages.
+
 ## Version 0.13.0
 
 - {gh-pr}`402` Improve the `en.to_graph` method.

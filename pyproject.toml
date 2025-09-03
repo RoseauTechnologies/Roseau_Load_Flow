@@ -40,7 +40,7 @@ dependencies = [
     "pyproj>=3.3.0",
     "certifi>=2023.5.7",
     "platformdirs>=4.0.0",
-    "roseau-load-flow-engine==0.18.0",
+    "roseau-load-flow-engine>=0.18.0",
 ]
 
 [project.urls]
@@ -80,7 +80,7 @@ doc = [
 managed = true
 
 [build-system]
-requires = ["uv_build>=0.8.13,<0.9.0"]
+requires = ["uv_build>=0.8.15,<0.9.0"]
 build-backend = "uv_build"
 
 [tool.uv.build-backend]
