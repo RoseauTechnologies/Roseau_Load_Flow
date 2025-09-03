@@ -19,7 +19,7 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 # Changelog
 
-## Unreleased
+## Version 0.13.1
 
 - Fix a bug where license validation failed when the English (US) language was not installed on the system (observed on
   Linux).
