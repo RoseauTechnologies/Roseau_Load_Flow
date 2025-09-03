@@ -1,6 +1,7 @@
 import datetime as dt
 import logging
 import os
+import re
 
 import certifi
 from platformdirs import user_cache_dir
@@ -89,7 +90,10 @@ def activate_license(key: str | None = None) -> None:
         cy_activate_license(key=key, cacert_filepath=certifi.where(), cache_folderpath=user_cache_dir())
         _license = None
     except RuntimeError as e:
-        msg = f"The license cannot be activated. The detailed error message is {e.args[0][2:]!r}."
+        err_msg = e.args[0]
+        if re.search(r"^[0-2] ", err_msg):
+            err_msg = err_msg[2:]
+        msg = f"The license cannot be activated. The detailed error message is {err_msg!r}."
         logger.error(msg)
         raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.LICENSE_ERROR) from e
 
