@@ -55,19 +55,19 @@ plot = ["matplotlib>=3.7.2"]
 [dependency-groups]
 dev = [
   "covdefaults>=2.3.0",
+  "pytest>=8.0.0",
   "pytest-cov>=5.0.0",
   "pytest-xdist>=3.1.0",
-  "pytest>=8.0.0",
 ]
 doc = [
   "furo>=2022.9.29",
   "ipython>=8.31.0",
   "myst-parser>=0.16.1",
+  "sphinx>=8.0.2",
   "sphinx-autoapi>=3.0.0",
   "sphinx-copybutton>=0.5.1",
   "sphinx-inline-tabs>=2022.1.2b11",
   "sphinx-math-dollar>=1.2.1",
-  "sphinx>=8.0.2",
   "sphinxcontrib-bibtex>=2.5.0",
   "sphinxcontrib-googleanalytics>=0.3",
   "sphinxext-opengraph>=0.9.1",
@@ -128,7 +128,7 @@ select = [
   "PTH",
 ]
 unfixable = ["B"]
-ignore = ["E501", "B024", "N818", "UP038", "PTH123"]
+ignore = ["E501", "B024", "N818", "PTH123"]
 flake8-tidy-imports.ban-relative-imports = "all"
 flake8-pytest-style.parametrize-values-type = "tuple"
 mccabe.max-complexity = 15
