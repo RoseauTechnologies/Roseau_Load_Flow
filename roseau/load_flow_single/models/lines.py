@@ -94,13 +94,10 @@ class Line(AbstractBranch["LineSide", CyShuntLine | CySimplifiedLine]):
         if self._cy_initialized:
             if self._parameters.with_shunt:
                 assert isinstance(self._cy_element, CyShuntLine)
-                self._cy_element.update_line_parameters(
-                    y_shunt=np.array([self._y_shunt], dtype=np.complex128),
-                    z_line=np.array([self._z_line], dtype=np.complex128),
-                )
+                self._cy_element.update_single_line_parameters(y_shunt=self._y_shunt, z_line=self._z_line)
             else:
                 assert isinstance(self._cy_element, CySimplifiedLine)
-                self._cy_element.update_line_parameters(z_line=np.array([self._z_line], dtype=np.complex128))
+                self._cy_element.update_single_line_parameters(z_line=self._z_line)
 
     @property
     @ureg_wraps("km", (None,))
