@@ -318,6 +318,7 @@ def _plot_interactive_map_internal(
     add_search: bool,
 ) -> "folium.Map":
     import folium
+    from folium.plugins import FeatureGroupSubGroup, Search
 
     def internal_style_function(feature):
         result = style_function(feature) if style_function is not None else None
@@ -410,7 +411,7 @@ def _plot_interactive_map_internal(
         highlight_function=internal_highlight_function,
         tooltip=line_tooltip,
         popup=line_popup,
-    ).add_to(network_layer)
+    ).add_to(FeatureGroupSubGroup(network_layer, "Lines").add_to(m))
     folium.GeoJson(
         data=buses_gdf,
         name="buses",
@@ -419,11 +420,9 @@ def _plot_interactive_map_internal(
         highlight_function=internal_highlight_function,
         tooltip=bus_tooltip,
         popup=bus_popup,
-    ).add_to(network_layer)
-    folium.LayerControl().add_to(m)
+    ).add_to(FeatureGroupSubGroup(network_layer, "Buses").add_to(m))
+    folium.LayerControl(collapsed=False).add_to(m)
     if add_search:
-        from folium.plugins import Search
-
         Search(network_layer, search_label="id", placeholder="Search network elements...").add_to(m)
     return m
 
