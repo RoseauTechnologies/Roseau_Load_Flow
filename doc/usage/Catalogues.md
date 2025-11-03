@@ -32,8 +32,14 @@ map.
 
 ### Source of data
 
-All these networks are built from open data available in France. **The complete model of the French distribution network
-can be provided on demand**. Please email us at [contact@roseautechnologies.com](mailto:contact@roseautechnologies.com).
+All these networks are built from open data available in France.
+
+```{include} ../../README.md
+---
+start-after: <!-- start representative-networks -->
+end-before: <!-- end representative-networks -->
+---
+```
 
 ### Inspecting the catalogue
 
