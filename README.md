@@ -53,11 +53,12 @@ with its summer and winter load points.
 
 <!-- start representative-networks -->
 
-We also maintain the 150 MV feeders with their downstream LV networks at
-https://github.com/RoseauTechnologies/Representative_French_Power_Grids. These networks are the result of the study
-[Départs HTA représentatifs pour l'analyse des réseaux de distribution français](https://www.data.gouv.fr/fr/datasets/departs-hta-representatifs-pour-lanalyse-des-reseaux-de-distribution-francais/),
-published by [Mines Paris Tech](https://www.minesparis.psl.eu/). The repository also contains the cluster size that
-indicates how representative is each network of the French distribution system.
+We also maintain a set of 150 MV feeders representative of the French distribution system at
+https://github.com/RoseauTechnologies/Representative_French_Power_Grids. Each feeder is modeled with its downstream LV
+networks. The repository also contains the cluster size that indicates how representative is each network of the French
+distribution system. These networks are the result of the study
+[Representative MV feeders for the analysis of French distribution networks](https://www.roseautechnologies.com/en/electrical-model-of-the-french-distribution-network/),
+made and published by [Mines Paris Tech](https://www.minesparis.psl.eu/).
 
 <!-- end representative-networks -->
 
