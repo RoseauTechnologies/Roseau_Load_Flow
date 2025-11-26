@@ -23,6 +23,7 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 - {gh-pr}`413` Restore bus and layers to the layer control in the interactive map plot. This was broken in version
   0.13.0.
+- {gh-pr}`404` Fix filtering catalogues using compiled regular expressions with newer versions of pandas.
 
 ## Version 0.13.1
 
