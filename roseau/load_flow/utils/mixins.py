@@ -305,7 +305,7 @@ class CatalogueMixin(Generic[_T], metaclass=ABCMeta):
         """
         vector = pd.Series(strings)
         if isinstance(value, re.Pattern):
-            result = vector.str.fullmatch(value, case=False)
+            result = vector.str.fullmatch(value.pattern, case=False, flags=value.flags)
         else:
             try:
                 result = vector.str.fullmatch(value, case=False) | (vector.str.casefold() == value.casefold())
