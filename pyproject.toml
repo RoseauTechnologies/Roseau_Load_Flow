@@ -55,9 +55,8 @@ plot = ["matplotlib>=3.7.2"]
 [dependency-groups]
 dev = [
   "covdefaults>=2.3.0",
-  "pytest>=8.0.0",
+  "pytest>=9.0.0",
   "pytest-cov>=5.0.0",
-  "pytest-xdist>=3.1.0",
 ]
 doc = [
   "furo>=2022.9.29",
@@ -95,8 +94,8 @@ wrap = 120
 number = true
 
 # Pytest
-[tool.pytest.ini_options]
-addopts = "--color=yes -n=0 --import-mode=importlib"
+[tool.pytest]
+addopts = ["--color=yes", "--import-mode=importlib"]
 filterwarnings = []
 markers = ["no_patch_engine"]
 testpaths = ["roseau/load_flow/", "roseau/load_flow_single/"]
@@ -164,6 +163,8 @@ extend-ignore-re = [
   "(?Rm)^.*(#|//|%)\\s*spellchecker:disable-line$",
   # spellchecker:<on|off>
   "(?s)(#|//)\\s*spellchecker:off.*?\\n\\s*(#|//)\\s*spellchecker:on",
+  # spellchecker:ignore-next-line
+  "(#|//)\\s*spellchecker:ignore-next-line\\n.*",
 ]
 extend-ignore-identifiers-re = ["YNd[0-9]*"]
 

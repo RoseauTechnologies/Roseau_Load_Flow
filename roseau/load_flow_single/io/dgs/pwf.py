@@ -103,6 +103,7 @@ def create_graphic_net(fid_counter: Iterator[str]) -> DGSData:
             "OP",  # Operation (C=create, U=update, D=delete, M=merge, I=ignore)
             "loc_name",  # Name
             "fold_id",  # In Folder
+            # spellchecker:ignore-next-line
             "sBordSym:SIZEROW",
             "snap_on",  # Snap to grid: 0=off, 1=on
             "ortho_on",  # Line routing: 0=non-orthogonal, 1=orthogonal, 2=semi-orthogonal
@@ -115,6 +116,7 @@ def create_graphic_net(fid_counter: Iterator[str]) -> DGSData:
                 "C",  # OP
                 "RLF Graphic",  # loc_name
                 None,  # fold_id
+                # spellchecker:ignore-next-line
                 "0",  # sBordSym:SIZEROW
                 1,  # snap_on
                 1,  # ortho_on

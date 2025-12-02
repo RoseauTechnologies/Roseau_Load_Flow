@@ -16,33 +16,33 @@
       xml:lang="en"
     >
     <style>
-      h1 {
-        text-align: center;
-      }
+    h1 {
+      text-align: center;
+    }
     </style>
 
     <script>
-      L_NO_TOUCH = false;
-      L_DISABLE_3D = false;
+    L_NO_TOUCH = false;
+    L_DISABLE_3D = false;
     </script>
 
     <style>
-      html,
-      body {
-        width: 100%;
-        height: 100%;
-        margin: 0;
-        padding: 0;
-      }
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
     </style>
     <style>
-      #map {
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        right: 0;
-        left: 0;
-      }
+    #map {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      right: 0;
+      left: 0;
+    }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
@@ -69,46 +69,46 @@
                 initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     >
     <style>
-      #map_76825ffa7652f9e8a6ed9ef772dd0ec7 {
-        position: relative;
-        width: 100%;
-        height: 100%;
-        left: 0%;
-        top: 0%;
-      }
-      .leaflet-container {
-        font-size: 1rem;
-      }
+    #map_76825ffa7652f9e8a6ed9ef772dd0ec7 {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      left: 0%;
+      top: 0%;
+    }
+    .leaflet-container {
+      font-size: 1rem;
+    }
     </style>
 
     <style>
-      .foliumtooltip {
-      }
-      .foliumtooltip table {
-        margin: auto;
-      }
-      .foliumtooltip tr {
-        text-align: left;
-      }
-      .foliumtooltip th {
-        padding: 2px;
-        padding-right: 8px;
-      }
+    .foliumtooltip {
+    }
+    .foliumtooltip table {
+      margin: auto;
+    }
+    .foliumtooltip tr {
+      text-align: left;
+    }
+    .foliumtooltip th {
+      padding: 2px;
+      padding-right: 8px;
+    }
     </style>
 
     <style>
-      .foliumtooltip {
-      }
-      .foliumtooltip table {
-        margin: auto;
-      }
-      .foliumtooltip tr {
-        text-align: left;
-      }
-      .foliumtooltip th {
-        padding: 2px;
-        padding-right: 8px;
-      }
+    .foliumtooltip {
+    }
+    .foliumtooltip table {
+      margin: auto;
+    }
+    .foliumtooltip tr {
+      text-align: left;
+    }
+    .foliumtooltip th {
+      padding: 2px;
+      padding-right: 8px;
+    }
     </style>
 
     <link rel="stylesheet" href="../css/custom.css">
@@ -119,321 +119,321 @@
     <div class="folium-map" id="map_76825ffa7652f9e8a6ed9ef772dd0ec7"></div>
   </body>
   <script>
-    var map_76825ffa7652f9e8a6ed9ef772dd0ec7 = L.map("map_76825ffa7652f9e8a6ed9ef772dd0ec7", {
-      center: [48.48683327490071, -1.186123624662575],
-      crs: L.CRS.EPSG3857,
-      zoom: 16,
-      zoomControl: true,
-      preferCanvas: false,
-    });
+  var map_76825ffa7652f9e8a6ed9ef772dd0ec7 = L.map("map_76825ffa7652f9e8a6ed9ef772dd0ec7", {
+    center: [48.48683327490071, -1.186123624662575],
+    crs: L.CRS.EPSG3857,
+    zoom: 16,
+    zoomControl: true,
+    preferCanvas: false,
+  });
 
-    var tile_layer_b7c7e6f7d90c8f0962f2a4168cbb319c = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution:
-        '\u0026copy; \u003ca href="https://www.openstreetmap.org/copyright"\u003eOpenStreetMap\u003c/a\u003e contributors',
-      detectRetina: false,
-      maxNativeZoom: 19,
-      maxZoom: 19,
-      minZoom: 0,
-      noWrap: false,
-      opacity: 1,
-      subdomains: "abc",
-      tms: false,
-    });
+  var tile_layer_b7c7e6f7d90c8f0962f2a4168cbb319c = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution:
+      '\u0026copy; \u003ca href="https://www.openstreetmap.org/copyright"\u003eOpenStreetMap\u003c/a\u003e contributors',
+    detectRetina: false,
+    maxNativeZoom: 19,
+    maxZoom: 19,
+    minZoom: 0,
+    noWrap: false,
+    opacity: 1,
+    subdomains: "abc",
+    tms: false,
+  });
 
-    tile_layer_b7c7e6f7d90c8f0962f2a4168cbb319c.addTo(map_76825ffa7652f9e8a6ed9ef772dd0ec7);
+  tile_layer_b7c7e6f7d90c8f0962f2a4168cbb319c.addTo(map_76825ffa7652f9e8a6ed9ef772dd0ec7);
 
-    function geo_json_a7e6384b64c85fe529bd64d0183132f9_styler(feature) {
-      switch (feature.id) {
-        default:
-          return { color: "#adb9cb", weight: 3 };
-      }
+  function geo_json_a7e6384b64c85fe529bd64d0183132f9_styler(feature) {
+    switch (feature.id) {
+      default:
+        return { color: "#adb9cb", weight: 3 };
     }
-    function geo_json_a7e6384b64c85fe529bd64d0183132f9_highlighter(feature) {
-      switch (feature.id) {
-        default:
-          return { color: "#cad40e" };
-      }
+  }
+  function geo_json_a7e6384b64c85fe529bd64d0183132f9_highlighter(feature) {
+    switch (feature.id) {
+      default:
+        return { color: "#cad40e" };
     }
-    function geo_json_a7e6384b64c85fe529bd64d0183132f9_pointToLayer(feature, latlng) {
-      var opts = {
-        bubblingMouseEvents: true,
-        color: "#3388ff",
-        dashArray: null,
-        dashOffset: null,
-        fill: false,
-        fillColor: "#3388ff",
-        fillOpacity: 0.2,
-        fillRule: "evenodd",
-        lineCap: "round",
-        lineJoin: "round",
-        opacity: 1.0,
-        radius: 10,
-        stroke: true,
-        weight: 3,
-      };
-
-      let style = geo_json_a7e6384b64c85fe529bd64d0183132f9_styler(feature);
-      Object.assign(opts, style);
-
-      return new L.CircleMarker(latlng, opts);
-    }
-
-    function geo_json_a7e6384b64c85fe529bd64d0183132f9_onEachFeature(feature, layer) {
-      layer.on({
-        mouseout: function (e) {
-          if (typeof e.target.setStyle === "function") {
-            geo_json_a7e6384b64c85fe529bd64d0183132f9.resetStyle(e.target);
-          }
-        },
-        mouseover: function (e) {
-          if (typeof e.target.setStyle === "function") {
-            const highlightStyle = geo_json_a7e6384b64c85fe529bd64d0183132f9_highlighter(e.target.feature);
-            e.target.setStyle(highlightStyle);
-          }
-        },
-      });
-    }
-    var geo_json_a7e6384b64c85fe529bd64d0183132f9 = L.geoJson(null, {
-      onEachFeature: geo_json_a7e6384b64c85fe529bd64d0183132f9_onEachFeature,
-
-      style: geo_json_a7e6384b64c85fe529bd64d0183132f9_styler,
-      pointToLayer: geo_json_a7e6384b64c85fe529bd64d0183132f9_pointToLayer,
-    });
-
-    function geo_json_a7e6384b64c85fe529bd64d0183132f9_add(data) {
-      geo_json_a7e6384b64c85fe529bd64d0183132f9.addData(data);
-    }
-    geo_json_a7e6384b64c85fe529bd64d0183132f9_add({
-      bbox: [-1.186472797718411, 48.48667576673907, -1.185774451606739, 48.48699078306235],
-      features: [
-        {
-          bbox: [-1.186472797718411, 48.48667576673907, -1.185774451606739, 48.48699078306235],
-          geometry: {
-            coordinates: [
-              [-1.186472797718411, 48.48667576673907],
-              [-1.186470974221073, 48.48670271006807],
-              [-1.186470974221073, 48.48670271006807],
-              [-1.186470776739339, 48.486707206448116],
-              [-1.18646888590348, 48.48674960303377],
-              [-1.186418625521345, 48.48676871272873],
-              [-1.186406892011057, 48.48677317513547],
-              [-1.186125139763946, 48.48688029493635],
-              [-1.18608992556666, 48.48689368246748],
-              [-1.186088763945046, 48.48689412205574],
-              [-1.186053155246573, 48.48690507361564],
-              [-1.185780592282937, 48.48698889918556],
-              [-1.185774451606739, 48.48699078306235],
-              [-1.185774451606739, 48.48699078306235],
-            ],
-            type: "LineString",
-          },
-          id: "0",
-          properties: {
-            bus1_id: "MVLVFeeder17131",
-            bus2_id: "LVBus173891",
-            id: "LVBranch142132",
-            length: 0.06318652813386802,
-            max_loading: 1,
-            network: "LVFeeder37263",
-            parameters_id: "U_AL_150",
-            phases: "abcn",
-          },
-          type: "Feature",
-        },
-      ],
-      type: "FeatureCollection",
-    });
-
-    geo_json_a7e6384b64c85fe529bd64d0183132f9.bindTooltip(
-      function (layer) {
-        let div = L.DomUtil.create("div");
-
-        let handleObject = (feature) => (typeof feature == "object" ? JSON.stringify(feature) : feature);
-        let fields = ["id", "phases", "bus1_id", "bus2_id", "parameters_id", "length"];
-        let aliases = ["Id:", "Phases:", "Bus1:", "Bus2:", "Parameters:", "Length (km):"];
-        let table =
-          "<table>" +
-          String(
-            fields
-              .map(
-                (v, i) =>
-                  `<tr>
-            <th>${aliases[i].toLocaleString()}</th>
-
-            <td>${handleObject(layer.feature.properties[v]).toLocaleString()}</td>
-        </tr>`,
-              )
-              .join(""),
-          ) +
-          "</table>";
-        div.innerHTML = table;
-
-        return div;
-      },
-      { className: "foliumtooltip", maxWidth: 800, sticky: false },
-    );
-
-    geo_json_a7e6384b64c85fe529bd64d0183132f9.addTo(map_76825ffa7652f9e8a6ed9ef772dd0ec7);
-
-    function geo_json_f49d50e4e0deb7850cad30c12e9fb72c_styler(feature) {
-      switch (feature.id) {
-        case "0":
-        case "1":
-          return { color: "#234e83", fill: true, fillColor: "#234e83", fillOpacity: 1, radius: 5 };
-        default:
-          return { color: "#adb9cb", fill: true, fillColor: "#adb9cb", fillOpacity: 1, radius: 1 };
-      }
-    }
-    function geo_json_f49d50e4e0deb7850cad30c12e9fb72c_highlighter(feature) {
-      switch (feature.id) {
-        default:
-          return { color: "#cad40e", fillColor: "#cad40e" };
-      }
-    }
-    function geo_json_f49d50e4e0deb7850cad30c12e9fb72c_pointToLayer(feature, latlng) {
-      var opts = {
-        bubblingMouseEvents: true,
-        color: "#3388ff",
-        dashArray: null,
-        dashOffset: null,
-        fill: false,
-        fillColor: "#3388ff",
-        fillOpacity: 0.2,
-        fillRule: "evenodd",
-        lineCap: "round",
-        lineJoin: "round",
-        opacity: 1.0,
-        radius: 10,
-        stroke: true,
-        weight: 3,
-      };
-
-      let style = geo_json_f49d50e4e0deb7850cad30c12e9fb72c_styler(feature);
-      Object.assign(opts, style);
-
-      return new L.CircleMarker(latlng, opts);
-    }
-
-    function geo_json_f49d50e4e0deb7850cad30c12e9fb72c_onEachFeature(feature, layer) {
-      layer.on({
-        mouseout: function (e) {
-          if (typeof e.target.setStyle === "function") {
-            geo_json_f49d50e4e0deb7850cad30c12e9fb72c.resetStyle(e.target);
-          }
-        },
-        mouseover: function (e) {
-          if (typeof e.target.setStyle === "function") {
-            const highlightStyle = geo_json_f49d50e4e0deb7850cad30c12e9fb72c_highlighter(e.target.feature);
-            e.target.setStyle(highlightStyle);
-          }
-        },
-      });
-    }
-    var geo_json_f49d50e4e0deb7850cad30c12e9fb72c = L.geoJson(null, {
-      onEachFeature: geo_json_f49d50e4e0deb7850cad30c12e9fb72c_onEachFeature,
-
-      style: geo_json_f49d50e4e0deb7850cad30c12e9fb72c_styler,
-      pointToLayer: geo_json_f49d50e4e0deb7850cad30c12e9fb72c_pointToLayer,
-    });
-
-    function geo_json_f49d50e4e0deb7850cad30c12e9fb72c_add(data) {
-      geo_json_f49d50e4e0deb7850cad30c12e9fb72c.addData(data);
-    }
-    geo_json_f49d50e4e0deb7850cad30c12e9fb72c_add({
-      bbox: [-1.186472797718411, 48.48667576673907, -1.185774451606739, 48.48699078306235],
-      features: [
-        {
-          bbox: [-1.186472797718411, 48.48667576673907, -1.186472797718411, 48.48667576673907],
-          geometry: { coordinates: [-1.186472797718411, 48.48667576673907], type: "Point" },
-          id: "0",
-          properties: {
-            id: "MVLV17131",
-            max_voltage_level: null,
-            min_voltage_level: 0.95,
-            network: "LVFeeder37263",
-            nominal_voltage: 20000,
-            phases: "abc",
-          },
-          type: "Feature",
-        },
-        {
-          bbox: [-1.186472797718411, 48.48667576673907, -1.186472797718411, 48.48667576673907],
-          geometry: { coordinates: [-1.186472797718411, 48.48667576673907], type: "Point" },
-          id: "1",
-          properties: {
-            id: "MVLVFeeder17131",
-            max_voltage_level: null,
-            min_voltage_level: 0.9,
-            network: "LVFeeder37263",
-            nominal_voltage: 400,
-            phases: "abcn",
-          },
-          type: "Feature",
-        },
-        {
-          bbox: [-1.185774451606739, 48.48699078306235, -1.185774451606739, 48.48699078306235],
-          geometry: { coordinates: [-1.185774451606739, 48.48699078306235], type: "Point" },
-          id: "2",
-          properties: {
-            id: "LVBus173891",
-            max_voltage_level: null,
-            min_voltage_level: 0.9,
-            network: "LVFeeder37263",
-            nominal_voltage: 400,
-            phases: "abcn",
-          },
-          type: "Feature",
-        },
-      ],
-      type: "FeatureCollection",
-    });
-
-    geo_json_f49d50e4e0deb7850cad30c12e9fb72c.bindTooltip(
-      function (layer) {
-        let div = L.DomUtil.create("div");
-
-        let handleObject = (feature) => (typeof feature == "object" ? JSON.stringify(feature) : feature);
-        let fields = ["id", "phases"];
-        let aliases = ["Id:", "Phases:"];
-        let table =
-          "<table>" +
-          String(
-            fields
-              .map(
-                (v, i) =>
-                  `<tr>
-            <th>${aliases[i].toLocaleString()}</th>
-
-            <td>${handleObject(layer.feature.properties[v]).toLocaleString()}</td>
-        </tr>`,
-              )
-              .join(""),
-          ) +
-          "</table>";
-        div.innerHTML = table;
-
-        return div;
-      },
-      { className: "foliumtooltip", maxWidth: 800, sticky: false },
-    );
-
-    geo_json_f49d50e4e0deb7850cad30c12e9fb72c.addTo(map_76825ffa7652f9e8a6ed9ef772dd0ec7);
-
-    var layer_control_999d20415eb81187a87c2317831bdd39_layers = {
-      base_layers: {
-        openstreetmap: tile_layer_b7c7e6f7d90c8f0962f2a4168cbb319c,
-      },
-      overlays: {
-        lines: geo_json_a7e6384b64c85fe529bd64d0183132f9,
-        buses: geo_json_f49d50e4e0deb7850cad30c12e9fb72c,
-      },
+  }
+  function geo_json_a7e6384b64c85fe529bd64d0183132f9_pointToLayer(feature, latlng) {
+    var opts = {
+      bubblingMouseEvents: true,
+      color: "#3388ff",
+      dashArray: null,
+      dashOffset: null,
+      fill: false,
+      fillColor: "#3388ff",
+      fillOpacity: 0.2,
+      fillRule: "evenodd",
+      lineCap: "round",
+      lineJoin: "round",
+      opacity: 1.0,
+      radius: 10,
+      stroke: true,
+      weight: 3,
     };
-    let layer_control_999d20415eb81187a87c2317831bdd39 = L.control
-      .layers(
-        layer_control_999d20415eb81187a87c2317831bdd39_layers.base_layers,
-        layer_control_999d20415eb81187a87c2317831bdd39_layers.overlays,
-        { autoZIndex: true, collapsed: true, position: "topright" },
-      )
-      .addTo(map_76825ffa7652f9e8a6ed9ef772dd0ec7);
+
+    const style = geo_json_a7e6384b64c85fe529bd64d0183132f9_styler(feature);
+    Object.assign(opts, style);
+
+    return new L.CircleMarker(latlng, opts);
+  }
+
+  function geo_json_a7e6384b64c85fe529bd64d0183132f9_onEachFeature(feature, layer) {
+    layer.on({
+      mouseout: (e) => {
+        if (typeof e.target.setStyle === "function") {
+          geo_json_a7e6384b64c85fe529bd64d0183132f9.resetStyle(e.target);
+        }
+      },
+      mouseover: (e) => {
+        if (typeof e.target.setStyle === "function") {
+          const highlightStyle = geo_json_a7e6384b64c85fe529bd64d0183132f9_highlighter(e.target.feature);
+          e.target.setStyle(highlightStyle);
+        }
+      },
+    });
+  }
+  var geo_json_a7e6384b64c85fe529bd64d0183132f9 = L.geoJson(null, {
+    onEachFeature: geo_json_a7e6384b64c85fe529bd64d0183132f9_onEachFeature,
+
+    style: geo_json_a7e6384b64c85fe529bd64d0183132f9_styler,
+    pointToLayer: geo_json_a7e6384b64c85fe529bd64d0183132f9_pointToLayer,
+  });
+
+  function geo_json_a7e6384b64c85fe529bd64d0183132f9_add(data) {
+    geo_json_a7e6384b64c85fe529bd64d0183132f9.addData(data);
+  }
+  geo_json_a7e6384b64c85fe529bd64d0183132f9_add({
+    bbox: [-1.186472797718411, 48.48667576673907, -1.185774451606739, 48.48699078306235],
+    features: [
+      {
+        bbox: [-1.186472797718411, 48.48667576673907, -1.185774451606739, 48.48699078306235],
+        geometry: {
+          coordinates: [
+            [-1.186472797718411, 48.48667576673907],
+            [-1.186470974221073, 48.48670271006807],
+            [-1.186470974221073, 48.48670271006807],
+            [-1.186470776739339, 48.486707206448116],
+            [-1.18646888590348, 48.48674960303377],
+            [-1.186418625521345, 48.48676871272873],
+            [-1.186406892011057, 48.48677317513547],
+            [-1.186125139763946, 48.48688029493635],
+            [-1.18608992556666, 48.48689368246748],
+            [-1.186088763945046, 48.48689412205574],
+            [-1.186053155246573, 48.48690507361564],
+            [-1.185780592282937, 48.48698889918556],
+            [-1.185774451606739, 48.48699078306235],
+            [-1.185774451606739, 48.48699078306235],
+          ],
+          type: "LineString",
+        },
+        id: "0",
+        properties: {
+          bus1_id: "MVLVFeeder17131",
+          bus2_id: "LVBus173891",
+          id: "LVBranch142132",
+          length: 0.06318652813386802,
+          max_loading: 1,
+          network: "LVFeeder37263",
+          parameters_id: "U_AL_150",
+          phases: "abcn",
+        },
+        type: "Feature",
+      },
+    ],
+    type: "FeatureCollection",
+  });
+
+  geo_json_a7e6384b64c85fe529bd64d0183132f9.bindTooltip(
+    (layer) => {
+      const div = L.DomUtil.create("div");
+
+      const handleObject = (feature) => (typeof feature == "object" ? JSON.stringify(feature) : feature);
+      const fields = ["id", "phases", "bus1_id", "bus2_id", "parameters_id", "length"];
+      const aliases = ["Id:", "Phases:", "Bus1:", "Bus2:", "Parameters:", "Length (km):"];
+      const table =
+        "<table>" +
+        String(
+          fields
+            .map(
+              (v, i) =>
+                `<tr>
+            <th>${aliases[i].toLocaleString()}</th>
+
+            <td>${handleObject(layer.feature.properties[v]).toLocaleString()}</td>
+        </tr>`,
+            )
+            .join(""),
+        ) +
+        "</table>";
+      div.innerHTML = table;
+
+      return div;
+    },
+    { className: "foliumtooltip", maxWidth: 800, sticky: false },
+  );
+
+  geo_json_a7e6384b64c85fe529bd64d0183132f9.addTo(map_76825ffa7652f9e8a6ed9ef772dd0ec7);
+
+  function geo_json_f49d50e4e0deb7850cad30c12e9fb72c_styler(feature) {
+    switch (feature.id) {
+      case "0":
+      case "1":
+        return { color: "#234e83", fill: true, fillColor: "#234e83", fillOpacity: 1, radius: 5 };
+      default:
+        return { color: "#adb9cb", fill: true, fillColor: "#adb9cb", fillOpacity: 1, radius: 1 };
+    }
+  }
+  function geo_json_f49d50e4e0deb7850cad30c12e9fb72c_highlighter(feature) {
+    switch (feature.id) {
+      default:
+        return { color: "#cad40e", fillColor: "#cad40e" };
+    }
+  }
+  function geo_json_f49d50e4e0deb7850cad30c12e9fb72c_pointToLayer(feature, latlng) {
+    var opts = {
+      bubblingMouseEvents: true,
+      color: "#3388ff",
+      dashArray: null,
+      dashOffset: null,
+      fill: false,
+      fillColor: "#3388ff",
+      fillOpacity: 0.2,
+      fillRule: "evenodd",
+      lineCap: "round",
+      lineJoin: "round",
+      opacity: 1.0,
+      radius: 10,
+      stroke: true,
+      weight: 3,
+    };
+
+    const style = geo_json_f49d50e4e0deb7850cad30c12e9fb72c_styler(feature);
+    Object.assign(opts, style);
+
+    return new L.CircleMarker(latlng, opts);
+  }
+
+  function geo_json_f49d50e4e0deb7850cad30c12e9fb72c_onEachFeature(feature, layer) {
+    layer.on({
+      mouseout: (e) => {
+        if (typeof e.target.setStyle === "function") {
+          geo_json_f49d50e4e0deb7850cad30c12e9fb72c.resetStyle(e.target);
+        }
+      },
+      mouseover: (e) => {
+        if (typeof e.target.setStyle === "function") {
+          const highlightStyle = geo_json_f49d50e4e0deb7850cad30c12e9fb72c_highlighter(e.target.feature);
+          e.target.setStyle(highlightStyle);
+        }
+      },
+    });
+  }
+  var geo_json_f49d50e4e0deb7850cad30c12e9fb72c = L.geoJson(null, {
+    onEachFeature: geo_json_f49d50e4e0deb7850cad30c12e9fb72c_onEachFeature,
+
+    style: geo_json_f49d50e4e0deb7850cad30c12e9fb72c_styler,
+    pointToLayer: geo_json_f49d50e4e0deb7850cad30c12e9fb72c_pointToLayer,
+  });
+
+  function geo_json_f49d50e4e0deb7850cad30c12e9fb72c_add(data) {
+    geo_json_f49d50e4e0deb7850cad30c12e9fb72c.addData(data);
+  }
+  geo_json_f49d50e4e0deb7850cad30c12e9fb72c_add({
+    bbox: [-1.186472797718411, 48.48667576673907, -1.185774451606739, 48.48699078306235],
+    features: [
+      {
+        bbox: [-1.186472797718411, 48.48667576673907, -1.186472797718411, 48.48667576673907],
+        geometry: { coordinates: [-1.186472797718411, 48.48667576673907], type: "Point" },
+        id: "0",
+        properties: {
+          id: "MVLV17131",
+          max_voltage_level: null,
+          min_voltage_level: 0.95,
+          network: "LVFeeder37263",
+          nominal_voltage: 20000,
+          phases: "abc",
+        },
+        type: "Feature",
+      },
+      {
+        bbox: [-1.186472797718411, 48.48667576673907, -1.186472797718411, 48.48667576673907],
+        geometry: { coordinates: [-1.186472797718411, 48.48667576673907], type: "Point" },
+        id: "1",
+        properties: {
+          id: "MVLVFeeder17131",
+          max_voltage_level: null,
+          min_voltage_level: 0.9,
+          network: "LVFeeder37263",
+          nominal_voltage: 400,
+          phases: "abcn",
+        },
+        type: "Feature",
+      },
+      {
+        bbox: [-1.185774451606739, 48.48699078306235, -1.185774451606739, 48.48699078306235],
+        geometry: { coordinates: [-1.185774451606739, 48.48699078306235], type: "Point" },
+        id: "2",
+        properties: {
+          id: "LVBus173891",
+          max_voltage_level: null,
+          min_voltage_level: 0.9,
+          network: "LVFeeder37263",
+          nominal_voltage: 400,
+          phases: "abcn",
+        },
+        type: "Feature",
+      },
+    ],
+    type: "FeatureCollection",
+  });
+
+  geo_json_f49d50e4e0deb7850cad30c12e9fb72c.bindTooltip(
+    (layer) => {
+      const div = L.DomUtil.create("div");
+
+      const handleObject = (feature) => (typeof feature == "object" ? JSON.stringify(feature) : feature);
+      const fields = ["id", "phases"];
+      const aliases = ["Id:", "Phases:"];
+      const table =
+        "<table>" +
+        String(
+          fields
+            .map(
+              (v, i) =>
+                `<tr>
+            <th>${aliases[i].toLocaleString()}</th>
+
+            <td>${handleObject(layer.feature.properties[v]).toLocaleString()}</td>
+        </tr>`,
+            )
+            .join(""),
+        ) +
+        "</table>";
+      div.innerHTML = table;
+
+      return div;
+    },
+    { className: "foliumtooltip", maxWidth: 800, sticky: false },
+  );
+
+  geo_json_f49d50e4e0deb7850cad30c12e9fb72c.addTo(map_76825ffa7652f9e8a6ed9ef772dd0ec7);
+
+  var layer_control_999d20415eb81187a87c2317831bdd39_layers = {
+    base_layers: {
+      openstreetmap: tile_layer_b7c7e6f7d90c8f0962f2a4168cbb319c,
+    },
+    overlays: {
+      lines: geo_json_a7e6384b64c85fe529bd64d0183132f9,
+      buses: geo_json_f49d50e4e0deb7850cad30c12e9fb72c,
+    },
+  };
+  const layer_control_999d20415eb81187a87c2317831bdd39 = L.control
+    .layers(
+      layer_control_999d20415eb81187a87c2317831bdd39_layers.base_layers,
+      layer_control_999d20415eb81187a87c2317831bdd39_layers.overlays,
+      { autoZIndex: true, collapsed: true, position: "topright" },
+    )
+    .addTo(map_76825ffa7652f9e8a6ed9ef772dd0ec7);
   </script>
 </html>

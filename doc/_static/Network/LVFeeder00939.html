@@ -16,33 +16,33 @@
       xml:lang="en"
     >
     <style>
-      h1 {
-        text-align: center;
-      }
+    h1 {
+      text-align: center;
+    }
     </style>
 
     <script>
-      L_NO_TOUCH = false;
-      L_DISABLE_3D = false;
+    L_NO_TOUCH = false;
+    L_DISABLE_3D = false;
     </script>
 
     <style>
-      html,
-      body {
-        width: 100%;
-        height: 100%;
-        margin: 0;
-        padding: 0;
-      }
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
     </style>
     <style>
-      #map {
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        right: 0;
-        left: 0;
-      }
+    #map {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      right: 0;
+      left: 0;
+    }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
@@ -69,46 +69,46 @@
                 initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     >
     <style>
-      #map_f488d512e5d25115ef7c9b641582d56d {
-        position: relative;
-        width: 100%;
-        height: 100%;
-        left: 0%;
-        top: 0%;
-      }
-      .leaflet-container {
-        font-size: 1rem;
-      }
+    #map_f488d512e5d25115ef7c9b641582d56d {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      left: 0%;
+      top: 0%;
+    }
+    .leaflet-container {
+      font-size: 1rem;
+    }
     </style>
 
     <style>
-      .foliumtooltip {
-      }
-      .foliumtooltip table {
-        margin: auto;
-      }
-      .foliumtooltip tr {
-        text-align: left;
-      }
-      .foliumtooltip th {
-        padding: 2px;
-        padding-right: 8px;
-      }
+    .foliumtooltip {
+    }
+    .foliumtooltip table {
+      margin: auto;
+    }
+    .foliumtooltip tr {
+      text-align: left;
+    }
+    .foliumtooltip th {
+      padding: 2px;
+      padding-right: 8px;
+    }
     </style>
 
     <style>
-      .foliumtooltip {
-      }
-      .foliumtooltip table {
-        margin: auto;
-      }
-      .foliumtooltip tr {
-        text-align: left;
-      }
-      .foliumtooltip th {
-        padding: 2px;
-        padding-right: 8px;
-      }
+    .foliumtooltip {
+    }
+    .foliumtooltip table {
+      margin: auto;
+    }
+    .foliumtooltip tr {
+      text-align: left;
+    }
+    .foliumtooltip th {
+      padding: 2px;
+      padding-right: 8px;
+    }
     </style>
 
     <link rel="stylesheet" href="../css/custom.css">
@@ -119,522 +119,522 @@
     <div class="folium-map" id="map_f488d512e5d25115ef7c9b641582d56d"></div>
   </body>
   <script>
-    var map_f488d512e5d25115ef7c9b641582d56d = L.map("map_f488d512e5d25115ef7c9b641582d56d", {
-      center: [48.64968940378774, -1.319931606954789],
-      crs: L.CRS.EPSG3857,
-      zoom: 16,
-      zoomControl: true,
-      preferCanvas: false,
-    });
+  var map_f488d512e5d25115ef7c9b641582d56d = L.map("map_f488d512e5d25115ef7c9b641582d56d", {
+    center: [48.64968940378774, -1.319931606954789],
+    crs: L.CRS.EPSG3857,
+    zoom: 16,
+    zoomControl: true,
+    preferCanvas: false,
+  });
 
-    var tile_layer_000df70d5b112f4a0e603bcfb8bd000a = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution:
-        '\u0026copy; \u003ca href="https://www.openstreetmap.org/copyright"\u003eOpenStreetMap\u003c/a\u003e contributors',
-      detectRetina: false,
-      maxNativeZoom: 19,
-      maxZoom: 19,
-      minZoom: 0,
-      noWrap: false,
-      opacity: 1,
-      subdomains: "abc",
-      tms: false,
-    });
+  var tile_layer_000df70d5b112f4a0e603bcfb8bd000a = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution:
+      '\u0026copy; \u003ca href="https://www.openstreetmap.org/copyright"\u003eOpenStreetMap\u003c/a\u003e contributors',
+    detectRetina: false,
+    maxNativeZoom: 19,
+    maxZoom: 19,
+    minZoom: 0,
+    noWrap: false,
+    opacity: 1,
+    subdomains: "abc",
+    tms: false,
+  });
 
-    tile_layer_000df70d5b112f4a0e603bcfb8bd000a.addTo(map_f488d512e5d25115ef7c9b641582d56d);
+  tile_layer_000df70d5b112f4a0e603bcfb8bd000a.addTo(map_f488d512e5d25115ef7c9b641582d56d);
 
-    function geo_json_e62d63283bf97b0c46db1e68d394e4c2_styler(feature) {
-      switch (feature.id) {
-        default:
-          return { color: "#adb9cb", weight: 3 };
-      }
+  function geo_json_e62d63283bf97b0c46db1e68d394e4c2_styler(feature) {
+    switch (feature.id) {
+      default:
+        return { color: "#adb9cb", weight: 3 };
     }
-    function geo_json_e62d63283bf97b0c46db1e68d394e4c2_highlighter(feature) {
-      switch (feature.id) {
-        default:
-          return { color: "#cad40e" };
-      }
+  }
+  function geo_json_e62d63283bf97b0c46db1e68d394e4c2_highlighter(feature) {
+    switch (feature.id) {
+      default:
+        return { color: "#cad40e" };
     }
-    function geo_json_e62d63283bf97b0c46db1e68d394e4c2_pointToLayer(feature, latlng) {
-      var opts = {
-        bubblingMouseEvents: true,
-        color: "#3388ff",
-        dashArray: null,
-        dashOffset: null,
-        fill: false,
-        fillColor: "#3388ff",
-        fillOpacity: 0.2,
-        fillRule: "evenodd",
-        lineCap: "round",
-        lineJoin: "round",
-        opacity: 1.0,
-        radius: 10,
-        stroke: true,
-        weight: 3,
-      };
-
-      let style = geo_json_e62d63283bf97b0c46db1e68d394e4c2_styler(feature);
-      Object.assign(opts, style);
-
-      return new L.CircleMarker(latlng, opts);
-    }
-
-    function geo_json_e62d63283bf97b0c46db1e68d394e4c2_onEachFeature(feature, layer) {
-      layer.on({
-        mouseout: function (e) {
-          if (typeof e.target.setStyle === "function") {
-            geo_json_e62d63283bf97b0c46db1e68d394e4c2.resetStyle(e.target);
-          }
-        },
-        mouseover: function (e) {
-          if (typeof e.target.setStyle === "function") {
-            const highlightStyle = geo_json_e62d63283bf97b0c46db1e68d394e4c2_highlighter(e.target.feature);
-            e.target.setStyle(highlightStyle);
-          }
-        },
-      });
-    }
-    var geo_json_e62d63283bf97b0c46db1e68d394e4c2 = L.geoJson(null, {
-      onEachFeature: geo_json_e62d63283bf97b0c46db1e68d394e4c2_onEachFeature,
-
-      style: geo_json_e62d63283bf97b0c46db1e68d394e4c2_styler,
-      pointToLayer: geo_json_e62d63283bf97b0c46db1e68d394e4c2_pointToLayer,
-    });
-
-    function geo_json_e62d63283bf97b0c46db1e68d394e4c2_add(data) {
-      geo_json_e62d63283bf97b0c46db1e68d394e4c2.addData(data);
-    }
-    geo_json_e62d63283bf97b0c46db1e68d394e4c2_add({
-      bbox: [-1.321757789157954, 48.64794139348595, -1.318356873544854, 48.65071019353541],
-      features: [
-        {
-          bbox: [-1.319439380306016, 48.64794139348595, -1.318356873544854, 48.64935651484044],
-          geometry: {
-            coordinates: [
-              [-1.318375372111463, 48.64794139348595],
-              [-1.318372262723904, 48.64795764182027],
-              [-1.318372262723904, 48.64795764182027],
-              [-1.318356873544854, 48.648119631764985],
-              [-1.318375980897601, 48.6481408999871],
-              [-1.318601939788418, 48.64839239672023],
-              [-1.318954973911141, 48.648990539493255],
-              [-1.31920351237447, 48.649289813902186],
-              [-1.319439380306016, 48.64935651484044],
-              [-1.319439380306016, 48.64935651484044],
-            ],
-            type: "LineString",
-          },
-          id: "0",
-          properties: {
-            bus1_id: "MVLVFeeder03045",
-            bus2_id: "LVBus004111",
-            id: "LVBranch128683",
-            length: 0.18165362031560994,
-            max_loading: 1,
-            network: "LVFeeder00939",
-            parameters_id: "U_AL_150",
-            phases: "abcn",
-          },
-          type: "Feature",
-        },
-        {
-          bbox: [-1.320149235966572, 48.64935651484044, -1.319439380306016, 48.64971306653889],
-          geometry: {
-            coordinates: [
-              [-1.319439380306016, 48.64935651484044],
-              [-1.319439380306016, 48.64935651484044],
-              [-1.319444760628315, 48.64935925539479],
-              [-1.320149235966572, 48.64971306653889],
-              [-1.320149235966572, 48.64971306653889],
-            ],
-            type: "LineString",
-          },
-          id: "1",
-          properties: {
-            bus1_id: "LVBus004111",
-            bus2_id: "LVBus004113",
-            id: "LVBranch022998",
-            length: 0.06563452239076538,
-            max_loading: 1,
-            network: "LVFeeder00939",
-            parameters_id: "T_AL_70",
-            phases: "abcn",
-          },
-          type: "Feature",
-        },
-        {
-          bbox: [-1.320149235966572, 48.64971306653889, -1.320032407456181, 48.64986022542928],
-          geometry: {
-            coordinates: [
-              [-1.320149235966572, 48.64971306653889],
-              [-1.320149235966572, 48.64971306653889],
-              [-1.320036206285348, 48.64985649979303],
-              [-1.320032407456181, 48.64986022542928],
-              [-1.320032407456181, 48.64986022542928],
-            ],
-            type: "LineString",
-          },
-          id: "2",
-          properties: {
-            bus1_id: "LVBus004113",
-            bus2_id: "LVBus004116",
-            id: "LVBranch013210",
-            length: 0.01849364446078355,
-            max_loading: 1,
-            network: "LVFeeder00939",
-            parameters_id: "T_AL_70",
-            phases: "abcn",
-          },
-          type: "Feature",
-        },
-        {
-          bbox: [-1.320930091968568, 48.64971306653889, -1.320149235966572, 48.64998504109587],
-          geometry: {
-            coordinates: [
-              [-1.320149235966572, 48.64971306653889],
-              [-1.320149235966572, 48.64971306653889],
-              [-1.320924091665486, 48.64998294963954],
-              [-1.320929757900593, 48.64998492542595],
-              [-1.320930091968568, 48.64998504109587],
-              [-1.320930091968568, 48.64998504109587],
-            ],
-            type: "LineString",
-          },
-          id: "3",
-          properties: {
-            bus1_id: "LVBus004113",
-            bus2_id: "LVBus004114",
-            id: "LVBranch013211",
-            length: 0.06500094076102345,
-            max_loading: 1,
-            network: "LVFeeder00939",
-            parameters_id: "T_AL_70",
-            phases: "abcn",
-          },
-          type: "Feature",
-        },
-        {
-          bbox: [-1.321757789157954, 48.649976336965366, -1.320930091968568, 48.65025939158834],
-          geometry: {
-            coordinates: [
-              [-1.320930091968568, 48.64998504109587],
-              [-1.320930091968568, 48.64998504109587],
-              [-1.320959330644131, 48.649976336965366],
-              [-1.321402033442493, 48.65012293785019],
-              [-1.321657507976488, 48.650209573100575],
-              [-1.321681660037352, 48.65021776315184],
-              [-1.321757789157954, 48.650243578682044],
-              [-1.321744301484108, 48.65025939158834],
-              [-1.321744301484108, 48.65025939158834],
-            ],
-            type: "LineString",
-          },
-          id: "4",
-          properties: {
-            bus1_id: "LVBus004114",
-            bus2_id: "LVBus004115",
-            id: "LVBranch147387",
-            length: 0.07029495574312403,
-            max_loading: 1,
-            network: "LVFeeder00939",
-            parameters_id: "U_AL_150",
-            phases: "abcn",
-          },
-          type: "Feature",
-        },
-        {
-          bbox: [-1.319439380306016, 48.64935651484044, -1.318850459390614, 48.65071019353541],
-          geometry: {
-            coordinates: [
-              [-1.319439380306016, 48.64935651484044],
-              [-1.319439380306016, 48.64935651484044],
-              [-1.319213661443218, 48.64963763726965],
-              [-1.3192072357427, 48.649645340289645],
-              [-1.319310285624904, 48.65014425413255],
-              [-1.319312529830104, 48.650155127151486],
-              [-1.319287770629054, 48.65018487528955],
-              [-1.318853741189945, 48.650706258927364],
-              [-1.318850459390614, 48.65071019353541],
-              [-1.318850459390614, 48.65071019353541],
-            ],
-            type: "LineString",
-          },
-          id: "5",
-          properties: {
-            bus1_id: "LVBus004111",
-            bus2_id: "LVBus004112",
-            id: "LVBranch068439",
-            length: 0.1640996914834165,
-            max_loading: 1,
-            network: "LVFeeder00939",
-            parameters_id: "T_AL_70",
-            phases: "abcn",
-          },
-          type: "Feature",
-        },
-      ],
-      type: "FeatureCollection",
-    });
-
-    geo_json_e62d63283bf97b0c46db1e68d394e4c2.bindTooltip(
-      function (layer) {
-        let div = L.DomUtil.create("div");
-
-        let handleObject = (feature) => (typeof feature == "object" ? JSON.stringify(feature) : feature);
-        let fields = ["id", "phases", "bus1_id", "bus2_id", "parameters_id", "length"];
-        let aliases = ["Id:", "Phases:", "Bus1:", "Bus2:", "Parameters:", "Length (km):"];
-        let table =
-          "<table>" +
-          String(
-            fields
-              .map(
-                (v, i) =>
-                  `<tr>
-            <th>${aliases[i].toLocaleString()}</th>
-
-            <td>${handleObject(layer.feature.properties[v]).toLocaleString()}</td>
-        </tr>`,
-              )
-              .join(""),
-          ) +
-          "</table>";
-        div.innerHTML = table;
-
-        return div;
-      },
-      { className: "foliumtooltip", maxWidth: 800, sticky: false },
-    );
-
-    geo_json_e62d63283bf97b0c46db1e68d394e4c2.addTo(map_f488d512e5d25115ef7c9b641582d56d);
-
-    function geo_json_fbd08df6bee809bbf198372d524146b5_styler(feature) {
-      switch (feature.id) {
-        case "0":
-        case "1":
-          return { color: "#234e83", fill: true, fillColor: "#234e83", fillOpacity: 1, radius: 5 };
-        default:
-          return { color: "#adb9cb", fill: true, fillColor: "#adb9cb", fillOpacity: 1, radius: 1 };
-      }
-    }
-    function geo_json_fbd08df6bee809bbf198372d524146b5_highlighter(feature) {
-      switch (feature.id) {
-        default:
-          return { color: "#cad40e", fillColor: "#cad40e" };
-      }
-    }
-    function geo_json_fbd08df6bee809bbf198372d524146b5_pointToLayer(feature, latlng) {
-      var opts = {
-        bubblingMouseEvents: true,
-        color: "#3388ff",
-        dashArray: null,
-        dashOffset: null,
-        fill: false,
-        fillColor: "#3388ff",
-        fillOpacity: 0.2,
-        fillRule: "evenodd",
-        lineCap: "round",
-        lineJoin: "round",
-        opacity: 1.0,
-        radius: 10,
-        stroke: true,
-        weight: 3,
-      };
-
-      let style = geo_json_fbd08df6bee809bbf198372d524146b5_styler(feature);
-      Object.assign(opts, style);
-
-      return new L.CircleMarker(latlng, opts);
-    }
-
-    function geo_json_fbd08df6bee809bbf198372d524146b5_onEachFeature(feature, layer) {
-      layer.on({
-        mouseout: function (e) {
-          if (typeof e.target.setStyle === "function") {
-            geo_json_fbd08df6bee809bbf198372d524146b5.resetStyle(e.target);
-          }
-        },
-        mouseover: function (e) {
-          if (typeof e.target.setStyle === "function") {
-            const highlightStyle = geo_json_fbd08df6bee809bbf198372d524146b5_highlighter(e.target.feature);
-            e.target.setStyle(highlightStyle);
-          }
-        },
-      });
-    }
-    var geo_json_fbd08df6bee809bbf198372d524146b5 = L.geoJson(null, {
-      onEachFeature: geo_json_fbd08df6bee809bbf198372d524146b5_onEachFeature,
-
-      style: geo_json_fbd08df6bee809bbf198372d524146b5_styler,
-      pointToLayer: geo_json_fbd08df6bee809bbf198372d524146b5_pointToLayer,
-    });
-
-    function geo_json_fbd08df6bee809bbf198372d524146b5_add(data) {
-      geo_json_fbd08df6bee809bbf198372d524146b5.addData(data);
-    }
-    geo_json_fbd08df6bee809bbf198372d524146b5_add({
-      bbox: [-1.321744301484108, 48.64794139348595, -1.318375372111463, 48.65071019353541],
-      features: [
-        {
-          bbox: [-1.318375372111463, 48.64794139348595, -1.318375372111463, 48.64794139348595],
-          geometry: { coordinates: [-1.318375372111463, 48.64794139348595], type: "Point" },
-          id: "0",
-          properties: {
-            id: "MVLV03045",
-            max_voltage_level: null,
-            min_voltage_level: 0.95,
-            network: "LVFeeder00939",
-            nominal_voltage: 20000,
-            phases: "abc",
-          },
-          type: "Feature",
-        },
-        {
-          bbox: [-1.318375372111463, 48.64794139348595, -1.318375372111463, 48.64794139348595],
-          geometry: { coordinates: [-1.318375372111463, 48.64794139348595], type: "Point" },
-          id: "1",
-          properties: {
-            id: "MVLVFeeder03045",
-            max_voltage_level: null,
-            min_voltage_level: 0.9,
-            network: "LVFeeder00939",
-            nominal_voltage: 400,
-            phases: "abcn",
-          },
-          type: "Feature",
-        },
-        {
-          bbox: [-1.319439380306016, 48.64935651484044, -1.319439380306016, 48.64935651484044],
-          geometry: { coordinates: [-1.319439380306016, 48.64935651484044], type: "Point" },
-          id: "2",
-          properties: {
-            id: "LVBus004111",
-            max_voltage_level: null,
-            min_voltage_level: 0.9,
-            network: "LVFeeder00939",
-            nominal_voltage: 400,
-            phases: "abcn",
-          },
-          type: "Feature",
-        },
-        {
-          bbox: [-1.320149235966572, 48.64971306653889, -1.320149235966572, 48.64971306653889],
-          geometry: { coordinates: [-1.320149235966572, 48.64971306653889], type: "Point" },
-          id: "3",
-          properties: {
-            id: "LVBus004113",
-            max_voltage_level: null,
-            min_voltage_level: 0.9,
-            network: "LVFeeder00939",
-            nominal_voltage: 400,
-            phases: "abcn",
-          },
-          type: "Feature",
-        },
-        {
-          bbox: [-1.320032407456181, 48.64986022542928, -1.320032407456181, 48.64986022542928],
-          geometry: { coordinates: [-1.320032407456181, 48.64986022542928], type: "Point" },
-          id: "4",
-          properties: {
-            id: "LVBus004116",
-            max_voltage_level: null,
-            min_voltage_level: 0.9,
-            network: "LVFeeder00939",
-            nominal_voltage: 400,
-            phases: "abcn",
-          },
-          type: "Feature",
-        },
-        {
-          bbox: [-1.320930091968568, 48.64998504109587, -1.320930091968568, 48.64998504109587],
-          geometry: { coordinates: [-1.320930091968568, 48.64998504109587], type: "Point" },
-          id: "5",
-          properties: {
-            id: "LVBus004114",
-            max_voltage_level: null,
-            min_voltage_level: 0.9,
-            network: "LVFeeder00939",
-            nominal_voltage: 400,
-            phases: "abcn",
-          },
-          type: "Feature",
-        },
-        {
-          bbox: [-1.321744301484108, 48.65025939158834, -1.321744301484108, 48.65025939158834],
-          geometry: { coordinates: [-1.321744301484108, 48.65025939158834], type: "Point" },
-          id: "6",
-          properties: {
-            id: "LVBus004115",
-            max_voltage_level: null,
-            min_voltage_level: 0.9,
-            network: "LVFeeder00939",
-            nominal_voltage: 400,
-            phases: "abcn",
-          },
-          type: "Feature",
-        },
-        {
-          bbox: [-1.318850459390614, 48.65071019353541, -1.318850459390614, 48.65071019353541],
-          geometry: { coordinates: [-1.318850459390614, 48.65071019353541], type: "Point" },
-          id: "7",
-          properties: {
-            id: "LVBus004112",
-            max_voltage_level: null,
-            min_voltage_level: 0.9,
-            network: "LVFeeder00939",
-            nominal_voltage: 400,
-            phases: "abcn",
-          },
-          type: "Feature",
-        },
-      ],
-      type: "FeatureCollection",
-    });
-
-    geo_json_fbd08df6bee809bbf198372d524146b5.bindTooltip(
-      function (layer) {
-        let div = L.DomUtil.create("div");
-
-        let handleObject = (feature) => (typeof feature == "object" ? JSON.stringify(feature) : feature);
-        let fields = ["id", "phases"];
-        let aliases = ["Id:", "Phases:"];
-        let table =
-          "<table>" +
-          String(
-            fields
-              .map(
-                (v, i) =>
-                  `<tr>
-            <th>${aliases[i].toLocaleString()}</th>
-
-            <td>${handleObject(layer.feature.properties[v]).toLocaleString()}</td>
-        </tr>`,
-              )
-              .join(""),
-          ) +
-          "</table>";
-        div.innerHTML = table;
-
-        return div;
-      },
-      { className: "foliumtooltip", maxWidth: 800, sticky: false },
-    );
-
-    geo_json_fbd08df6bee809bbf198372d524146b5.addTo(map_f488d512e5d25115ef7c9b641582d56d);
-
-    var layer_control_648a9d14e32c011b3c15f34309386ac8_layers = {
-      base_layers: {
-        openstreetmap: tile_layer_000df70d5b112f4a0e603bcfb8bd000a,
-      },
-      overlays: {
-        lines: geo_json_e62d63283bf97b0c46db1e68d394e4c2,
-        buses: geo_json_fbd08df6bee809bbf198372d524146b5,
-      },
+  }
+  function geo_json_e62d63283bf97b0c46db1e68d394e4c2_pointToLayer(feature, latlng) {
+    var opts = {
+      bubblingMouseEvents: true,
+      color: "#3388ff",
+      dashArray: null,
+      dashOffset: null,
+      fill: false,
+      fillColor: "#3388ff",
+      fillOpacity: 0.2,
+      fillRule: "evenodd",
+      lineCap: "round",
+      lineJoin: "round",
+      opacity: 1.0,
+      radius: 10,
+      stroke: true,
+      weight: 3,
     };
-    let layer_control_648a9d14e32c011b3c15f34309386ac8 = L.control
-      .layers(
-        layer_control_648a9d14e32c011b3c15f34309386ac8_layers.base_layers,
-        layer_control_648a9d14e32c011b3c15f34309386ac8_layers.overlays,
-        { autoZIndex: true, collapsed: true, position: "topright" },
-      )
-      .addTo(map_f488d512e5d25115ef7c9b641582d56d);
+
+    const style = geo_json_e62d63283bf97b0c46db1e68d394e4c2_styler(feature);
+    Object.assign(opts, style);
+
+    return new L.CircleMarker(latlng, opts);
+  }
+
+  function geo_json_e62d63283bf97b0c46db1e68d394e4c2_onEachFeature(feature, layer) {
+    layer.on({
+      mouseout: (e) => {
+        if (typeof e.target.setStyle === "function") {
+          geo_json_e62d63283bf97b0c46db1e68d394e4c2.resetStyle(e.target);
+        }
+      },
+      mouseover: (e) => {
+        if (typeof e.target.setStyle === "function") {
+          const highlightStyle = geo_json_e62d63283bf97b0c46db1e68d394e4c2_highlighter(e.target.feature);
+          e.target.setStyle(highlightStyle);
+        }
+      },
+    });
+  }
+  var geo_json_e62d63283bf97b0c46db1e68d394e4c2 = L.geoJson(null, {
+    onEachFeature: geo_json_e62d63283bf97b0c46db1e68d394e4c2_onEachFeature,
+
+    style: geo_json_e62d63283bf97b0c46db1e68d394e4c2_styler,
+    pointToLayer: geo_json_e62d63283bf97b0c46db1e68d394e4c2_pointToLayer,
+  });
+
+  function geo_json_e62d63283bf97b0c46db1e68d394e4c2_add(data) {
+    geo_json_e62d63283bf97b0c46db1e68d394e4c2.addData(data);
+  }
+  geo_json_e62d63283bf97b0c46db1e68d394e4c2_add({
+    bbox: [-1.321757789157954, 48.64794139348595, -1.318356873544854, 48.65071019353541],
+    features: [
+      {
+        bbox: [-1.319439380306016, 48.64794139348595, -1.318356873544854, 48.64935651484044],
+        geometry: {
+          coordinates: [
+            [-1.318375372111463, 48.64794139348595],
+            [-1.318372262723904, 48.64795764182027],
+            [-1.318372262723904, 48.64795764182027],
+            [-1.318356873544854, 48.648119631764985],
+            [-1.318375980897601, 48.6481408999871],
+            [-1.318601939788418, 48.64839239672023],
+            [-1.318954973911141, 48.648990539493255],
+            [-1.31920351237447, 48.649289813902186],
+            [-1.319439380306016, 48.64935651484044],
+            [-1.319439380306016, 48.64935651484044],
+          ],
+          type: "LineString",
+        },
+        id: "0",
+        properties: {
+          bus1_id: "MVLVFeeder03045",
+          bus2_id: "LVBus004111",
+          id: "LVBranch128683",
+          length: 0.18165362031560994,
+          max_loading: 1,
+          network: "LVFeeder00939",
+          parameters_id: "U_AL_150",
+          phases: "abcn",
+        },
+        type: "Feature",
+      },
+      {
+        bbox: [-1.320149235966572, 48.64935651484044, -1.319439380306016, 48.64971306653889],
+        geometry: {
+          coordinates: [
+            [-1.319439380306016, 48.64935651484044],
+            [-1.319439380306016, 48.64935651484044],
+            [-1.319444760628315, 48.64935925539479],
+            [-1.320149235966572, 48.64971306653889],
+            [-1.320149235966572, 48.64971306653889],
+          ],
+          type: "LineString",
+        },
+        id: "1",
+        properties: {
+          bus1_id: "LVBus004111",
+          bus2_id: "LVBus004113",
+          id: "LVBranch022998",
+          length: 0.06563452239076538,
+          max_loading: 1,
+          network: "LVFeeder00939",
+          parameters_id: "T_AL_70",
+          phases: "abcn",
+        },
+        type: "Feature",
+      },
+      {
+        bbox: [-1.320149235966572, 48.64971306653889, -1.320032407456181, 48.64986022542928],
+        geometry: {
+          coordinates: [
+            [-1.320149235966572, 48.64971306653889],
+            [-1.320149235966572, 48.64971306653889],
+            [-1.320036206285348, 48.64985649979303],
+            [-1.320032407456181, 48.64986022542928],
+            [-1.320032407456181, 48.64986022542928],
+          ],
+          type: "LineString",
+        },
+        id: "2",
+        properties: {
+          bus1_id: "LVBus004113",
+          bus2_id: "LVBus004116",
+          id: "LVBranch013210",
+          length: 0.01849364446078355,
+          max_loading: 1,
+          network: "LVFeeder00939",
+          parameters_id: "T_AL_70",
+          phases: "abcn",
+        },
+        type: "Feature",
+      },
+      {
+        bbox: [-1.320930091968568, 48.64971306653889, -1.320149235966572, 48.64998504109587],
+        geometry: {
+          coordinates: [
+            [-1.320149235966572, 48.64971306653889],
+            [-1.320149235966572, 48.64971306653889],
+            [-1.320924091665486, 48.64998294963954],
+            [-1.320929757900593, 48.64998492542595],
+            [-1.320930091968568, 48.64998504109587],
+            [-1.320930091968568, 48.64998504109587],
+          ],
+          type: "LineString",
+        },
+        id: "3",
+        properties: {
+          bus1_id: "LVBus004113",
+          bus2_id: "LVBus004114",
+          id: "LVBranch013211",
+          length: 0.06500094076102345,
+          max_loading: 1,
+          network: "LVFeeder00939",
+          parameters_id: "T_AL_70",
+          phases: "abcn",
+        },
+        type: "Feature",
+      },
+      {
+        bbox: [-1.321757789157954, 48.649976336965366, -1.320930091968568, 48.65025939158834],
+        geometry: {
+          coordinates: [
+            [-1.320930091968568, 48.64998504109587],
+            [-1.320930091968568, 48.64998504109587],
+            [-1.320959330644131, 48.649976336965366],
+            [-1.321402033442493, 48.65012293785019],
+            [-1.321657507976488, 48.650209573100575],
+            [-1.321681660037352, 48.65021776315184],
+            [-1.321757789157954, 48.650243578682044],
+            [-1.321744301484108, 48.65025939158834],
+            [-1.321744301484108, 48.65025939158834],
+          ],
+          type: "LineString",
+        },
+        id: "4",
+        properties: {
+          bus1_id: "LVBus004114",
+          bus2_id: "LVBus004115",
+          id: "LVBranch147387",
+          length: 0.07029495574312403,
+          max_loading: 1,
+          network: "LVFeeder00939",
+          parameters_id: "U_AL_150",
+          phases: "abcn",
+        },
+        type: "Feature",
+      },
+      {
+        bbox: [-1.319439380306016, 48.64935651484044, -1.318850459390614, 48.65071019353541],
+        geometry: {
+          coordinates: [
+            [-1.319439380306016, 48.64935651484044],
+            [-1.319439380306016, 48.64935651484044],
+            [-1.319213661443218, 48.64963763726965],
+            [-1.3192072357427, 48.649645340289645],
+            [-1.319310285624904, 48.65014425413255],
+            [-1.319312529830104, 48.650155127151486],
+            [-1.319287770629054, 48.65018487528955],
+            [-1.318853741189945, 48.650706258927364],
+            [-1.318850459390614, 48.65071019353541],
+            [-1.318850459390614, 48.65071019353541],
+          ],
+          type: "LineString",
+        },
+        id: "5",
+        properties: {
+          bus1_id: "LVBus004111",
+          bus2_id: "LVBus004112",
+          id: "LVBranch068439",
+          length: 0.1640996914834165,
+          max_loading: 1,
+          network: "LVFeeder00939",
+          parameters_id: "T_AL_70",
+          phases: "abcn",
+        },
+        type: "Feature",
+      },
+    ],
+    type: "FeatureCollection",
+  });
+
+  geo_json_e62d63283bf97b0c46db1e68d394e4c2.bindTooltip(
+    (layer) => {
+      const div = L.DomUtil.create("div");
+
+      const handleObject = (feature) => (typeof feature == "object" ? JSON.stringify(feature) : feature);
+      const fields = ["id", "phases", "bus1_id", "bus2_id", "parameters_id", "length"];
+      const aliases = ["Id:", "Phases:", "Bus1:", "Bus2:", "Parameters:", "Length (km):"];
+      const table =
+        "<table>" +
+        String(
+          fields
+            .map(
+              (v, i) =>
+                `<tr>
+            <th>${aliases[i].toLocaleString()}</th>
+
+            <td>${handleObject(layer.feature.properties[v]).toLocaleString()}</td>
+        </tr>`,
+            )
+            .join(""),
+        ) +
+        "</table>";
+      div.innerHTML = table;
+
+      return div;
+    },
+    { className: "foliumtooltip", maxWidth: 800, sticky: false },
+  );
+
+  geo_json_e62d63283bf97b0c46db1e68d394e4c2.addTo(map_f488d512e5d25115ef7c9b641582d56d);
+
+  function geo_json_fbd08df6bee809bbf198372d524146b5_styler(feature) {
+    switch (feature.id) {
+      case "0":
+      case "1":
+        return { color: "#234e83", fill: true, fillColor: "#234e83", fillOpacity: 1, radius: 5 };
+      default:
+        return { color: "#adb9cb", fill: true, fillColor: "#adb9cb", fillOpacity: 1, radius: 1 };
+    }
+  }
+  function geo_json_fbd08df6bee809bbf198372d524146b5_highlighter(feature) {
+    switch (feature.id) {
+      default:
+        return { color: "#cad40e", fillColor: "#cad40e" };
+    }
+  }
+  function geo_json_fbd08df6bee809bbf198372d524146b5_pointToLayer(feature, latlng) {
+    var opts = {
+      bubblingMouseEvents: true,
+      color: "#3388ff",
+      dashArray: null,
+      dashOffset: null,
+      fill: false,
+      fillColor: "#3388ff",
+      fillOpacity: 0.2,
+      fillRule: "evenodd",
+      lineCap: "round",
+      lineJoin: "round",
+      opacity: 1.0,
+      radius: 10,
+      stroke: true,
+      weight: 3,
+    };
+
+    const style = geo_json_fbd08df6bee809bbf198372d524146b5_styler(feature);
+    Object.assign(opts, style);
+
+    return new L.CircleMarker(latlng, opts);
+  }
+
+  function geo_json_fbd08df6bee809bbf198372d524146b5_onEachFeature(feature, layer) {
+    layer.on({
+      mouseout: (e) => {
+        if (typeof e.target.setStyle === "function") {
+          geo_json_fbd08df6bee809bbf198372d524146b5.resetStyle(e.target);
+        }
+      },
+      mouseover: (e) => {
+        if (typeof e.target.setStyle === "function") {
+          const highlightStyle = geo_json_fbd08df6bee809bbf198372d524146b5_highlighter(e.target.feature);
+          e.target.setStyle(highlightStyle);
+        }
+      },
+    });
+  }
+  var geo_json_fbd08df6bee809bbf198372d524146b5 = L.geoJson(null, {
+    onEachFeature: geo_json_fbd08df6bee809bbf198372d524146b5_onEachFeature,
+
+    style: geo_json_fbd08df6bee809bbf198372d524146b5_styler,
+    pointToLayer: geo_json_fbd08df6bee809bbf198372d524146b5_pointToLayer,
+  });
+
+  function geo_json_fbd08df6bee809bbf198372d524146b5_add(data) {
+    geo_json_fbd08df6bee809bbf198372d524146b5.addData(data);
+  }
+  geo_json_fbd08df6bee809bbf198372d524146b5_add({
+    bbox: [-1.321744301484108, 48.64794139348595, -1.318375372111463, 48.65071019353541],
+    features: [
+      {
+        bbox: [-1.318375372111463, 48.64794139348595, -1.318375372111463, 48.64794139348595],
+        geometry: { coordinates: [-1.318375372111463, 48.64794139348595], type: "Point" },
+        id: "0",
+        properties: {
+          id: "MVLV03045",
+          max_voltage_level: null,
+          min_voltage_level: 0.95,
+          network: "LVFeeder00939",
+          nominal_voltage: 20000,
+          phases: "abc",
+        },
+        type: "Feature",
+      },
+      {
+        bbox: [-1.318375372111463, 48.64794139348595, -1.318375372111463, 48.64794139348595],
+        geometry: { coordinates: [-1.318375372111463, 48.64794139348595], type: "Point" },
+        id: "1",
+        properties: {
+          id: "MVLVFeeder03045",
+          max_voltage_level: null,
+          min_voltage_level: 0.9,
+          network: "LVFeeder00939",
+          nominal_voltage: 400,
+          phases: "abcn",
+        },
+        type: "Feature",
+      },
+      {
+        bbox: [-1.319439380306016, 48.64935651484044, -1.319439380306016, 48.64935651484044],
+        geometry: { coordinates: [-1.319439380306016, 48.64935651484044], type: "Point" },
+        id: "2",
+        properties: {
+          id: "LVBus004111",
+          max_voltage_level: null,
+          min_voltage_level: 0.9,
+          network: "LVFeeder00939",
+          nominal_voltage: 400,
+          phases: "abcn",
+        },
+        type: "Feature",
+      },
+      {
+        bbox: [-1.320149235966572, 48.64971306653889, -1.320149235966572, 48.64971306653889],
+        geometry: { coordinates: [-1.320149235966572, 48.64971306653889], type: "Point" },
+        id: "3",
+        properties: {
+          id: "LVBus004113",
+          max_voltage_level: null,
+          min_voltage_level: 0.9,
+          network: "LVFeeder00939",
+          nominal_voltage: 400,
+          phases: "abcn",
+        },
+        type: "Feature",
+      },
+      {
+        bbox: [-1.320032407456181, 48.64986022542928, -1.320032407456181, 48.64986022542928],
+        geometry: { coordinates: [-1.320032407456181, 48.64986022542928], type: "Point" },
+        id: "4",
+        properties: {
+          id: "LVBus004116",
+          max_voltage_level: null,
+          min_voltage_level: 0.9,
+          network: "LVFeeder00939",
+          nominal_voltage: 400,
+          phases: "abcn",
+        },
+        type: "Feature",
+      },
+      {
+        bbox: [-1.320930091968568, 48.64998504109587, -1.320930091968568, 48.64998504109587],
+        geometry: { coordinates: [-1.320930091968568, 48.64998504109587], type: "Point" },
+        id: "5",
+        properties: {
+          id: "LVBus004114",
+          max_voltage_level: null,
+          min_voltage_level: 0.9,
+          network: "LVFeeder00939",
+          nominal_voltage: 400,
+          phases: "abcn",
+        },
+        type: "Feature",
+      },
+      {
+        bbox: [-1.321744301484108, 48.65025939158834, -1.321744301484108, 48.65025939158834],
+        geometry: { coordinates: [-1.321744301484108, 48.65025939158834], type: "Point" },
+        id: "6",
+        properties: {
+          id: "LVBus004115",
+          max_voltage_level: null,
+          min_voltage_level: 0.9,
+          network: "LVFeeder00939",
+          nominal_voltage: 400,
+          phases: "abcn",
+        },
+        type: "Feature",
+      },
+      {
+        bbox: [-1.318850459390614, 48.65071019353541, -1.318850459390614, 48.65071019353541],
+        geometry: { coordinates: [-1.318850459390614, 48.65071019353541], type: "Point" },
+        id: "7",
+        properties: {
+          id: "LVBus004112",
+          max_voltage_level: null,
+          min_voltage_level: 0.9,
+          network: "LVFeeder00939",
+          nominal_voltage: 400,
+          phases: "abcn",
+        },
+        type: "Feature",
+      },
+    ],
+    type: "FeatureCollection",
+  });
+
+  geo_json_fbd08df6bee809bbf198372d524146b5.bindTooltip(
+    (layer) => {
+      const div = L.DomUtil.create("div");
+
+      const handleObject = (feature) => (typeof feature == "object" ? JSON.stringify(feature) : feature);
+      const fields = ["id", "phases"];
+      const aliases = ["Id:", "Phases:"];
+      const table =
+        "<table>" +
+        String(
+          fields
+            .map(
+              (v, i) =>
+                `<tr>
+            <th>${aliases[i].toLocaleString()}</th>
+
+            <td>${handleObject(layer.feature.properties[v]).toLocaleString()}</td>
+        </tr>`,
+            )
+            .join(""),
+        ) +
+        "</table>";
+      div.innerHTML = table;
+
+      return div;
+    },
+    { className: "foliumtooltip", maxWidth: 800, sticky: false },
+  );
+
+  geo_json_fbd08df6bee809bbf198372d524146b5.addTo(map_f488d512e5d25115ef7c9b641582d56d);
+
+  var layer_control_648a9d14e32c011b3c15f34309386ac8_layers = {
+    base_layers: {
+      openstreetmap: tile_layer_000df70d5b112f4a0e603bcfb8bd000a,
+    },
+    overlays: {
+      lines: geo_json_e62d63283bf97b0c46db1e68d394e4c2,
+      buses: geo_json_fbd08df6bee809bbf198372d524146b5,
+    },
+  };
+  const layer_control_648a9d14e32c011b3c15f34309386ac8 = L.control
+    .layers(
+      layer_control_648a9d14e32c011b3c15f34309386ac8_layers.base_layers,
+      layer_control_648a9d14e32c011b3c15f34309386ac8_layers.overlays,
+      { autoZIndex: true, collapsed: true, position: "topright" },
+    )
+    .addTo(map_f488d512e5d25115ef7c9b641582d56d);
   </script>
 </html>
