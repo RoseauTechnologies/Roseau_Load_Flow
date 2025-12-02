@@ -33,7 +33,7 @@ jobs:
       contents: read
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           lfs: false
           persist-credentials: false
@@ -69,7 +69,7 @@ jobs:
 
       - name: Test with pytest
         run: |
-          uv run pytest -vv -n=auto --durations=25 --cov --cov-report=html roseau
+          uv run pytest -vv --durations=25 --cov --cov-report=html roseau
         env:
           ROSEAU_LOAD_FLOW_LICENSE_KEY: ${{ secrets.ROSEAU_LOAD_FLOW_LICENSE_KEY }}
 

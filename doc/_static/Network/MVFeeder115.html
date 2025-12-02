@@ -16,33 +16,33 @@
       xml:lang="en"
     >
     <style>
-      h1 {
-        text-align: center;
-      }
+    h1 {
+      text-align: center;
+    }
     </style>
 
     <script>
-      L_NO_TOUCH = false;
-      L_DISABLE_3D = false;
+    L_NO_TOUCH = false;
+    L_DISABLE_3D = false;
     </script>
 
     <style>
-      html,
-      body {
-        width: 100%;
-        height: 100%;
-        margin: 0;
-        padding: 0;
-      }
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
     </style>
     <style>
-      #map {
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        right: 0;
-        left: 0;
-      }
+    #map {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      right: 0;
+      left: 0;
+    }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
@@ -69,46 +69,46 @@
                 initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     >
     <style>
-      #map_c0df055412a41017c02658c0efc868f1 {
-        position: relative;
-        width: 100%;
-        height: 100%;
-        left: 0%;
-        top: 0%;
-      }
-      .leaflet-container {
-        font-size: 1rem;
-      }
+    #map_c0df055412a41017c02658c0efc868f1 {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      left: 0%;
+      top: 0%;
+    }
+    .leaflet-container {
+      font-size: 1rem;
+    }
     </style>
 
     <style>
-      .foliumtooltip {
-      }
-      .foliumtooltip table {
-        margin: auto;
-      }
-      .foliumtooltip tr {
-        text-align: left;
-      }
-      .foliumtooltip th {
-        padding: 2px;
-        padding-right: 8px;
-      }
+    .foliumtooltip {
+    }
+    .foliumtooltip table {
+      margin: auto;
+    }
+    .foliumtooltip tr {
+      text-align: left;
+    }
+    .foliumtooltip th {
+      padding: 2px;
+      padding-right: 8px;
+    }
     </style>
 
     <style>
-      .foliumtooltip {
-      }
-      .foliumtooltip table {
-        margin: auto;
-      }
-      .foliumtooltip tr {
-        text-align: left;
-      }
-      .foliumtooltip th {
-        padding: 2px;
-        padding-right: 8px;
-      }
+    .foliumtooltip {
+    }
+    .foliumtooltip table {
+      margin: auto;
+    }
+    .foliumtooltip tr {
+      text-align: left;
+    }
+    .foliumtooltip th {
+      padding: 2px;
+      padding-right: 8px;
+    }
     </style>
 
     <link rel="stylesheet" href="../css/custom.css">
@@ -119,502 +119,502 @@
     <div class="folium-map" id="map_c0df055412a41017c02658c0efc868f1"></div>
   </body>
   <script>
-    var map_c0df055412a41017c02658c0efc868f1 = L.map("map_c0df055412a41017c02658c0efc868f1", {
-      center: [49.461346877526545, -1.659476275347287],
-      crs: L.CRS.EPSG3857,
-      zoom: 12,
-      zoomControl: true,
-      preferCanvas: false,
-    });
+  var map_c0df055412a41017c02658c0efc868f1 = L.map("map_c0df055412a41017c02658c0efc868f1", {
+    center: [49.461346877526545, -1.659476275347287],
+    crs: L.CRS.EPSG3857,
+    zoom: 12,
+    zoomControl: true,
+    preferCanvas: false,
+  });
 
-    var tile_layer_cae763d28d5e6262c248b388dbcd213a = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution:
-        '\u0026copy; \u003ca href="https://www.openstreetmap.org/copyright"\u003eOpenStreetMap\u003c/a\u003e contributors',
-      detectRetina: false,
-      maxNativeZoom: 19,
-      maxZoom: 19,
-      minZoom: 0,
-      noWrap: false,
-      opacity: 1,
-      subdomains: "abc",
-      tms: false,
-    });
+  var tile_layer_cae763d28d5e6262c248b388dbcd213a = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution:
+      '\u0026copy; \u003ca href="https://www.openstreetmap.org/copyright"\u003eOpenStreetMap\u003c/a\u003e contributors',
+    detectRetina: false,
+    maxNativeZoom: 19,
+    maxZoom: 19,
+    minZoom: 0,
+    noWrap: false,
+    opacity: 1,
+    subdomains: "abc",
+    tms: false,
+  });
 
-    tile_layer_cae763d28d5e6262c248b388dbcd213a.addTo(map_c0df055412a41017c02658c0efc868f1);
+  tile_layer_cae763d28d5e6262c248b388dbcd213a.addTo(map_c0df055412a41017c02658c0efc868f1);
 
-    function geo_json_1716dde551c734c1cac2658e54df0102_styler(feature) {
-      switch (feature.id) {
-        default:
-          return { color: "#234e83", weight: 4 };
-      }
+  function geo_json_1716dde551c734c1cac2658e54df0102_styler(feature) {
+    switch (feature.id) {
+      default:
+        return { color: "#234e83", weight: 4 };
     }
-    function geo_json_1716dde551c734c1cac2658e54df0102_highlighter(feature) {
-      switch (feature.id) {
-        default:
-          return { color: "#cad40e" };
-      }
+  }
+  function geo_json_1716dde551c734c1cac2658e54df0102_highlighter(feature) {
+    switch (feature.id) {
+      default:
+        return { color: "#cad40e" };
     }
-    function geo_json_1716dde551c734c1cac2658e54df0102_pointToLayer(feature, latlng) {
-      var opts = {
-        bubblingMouseEvents: true,
-        color: "#3388ff",
-        dashArray: null,
-        dashOffset: null,
-        fill: false,
-        fillColor: "#3388ff",
-        fillOpacity: 0.2,
-        fillRule: "evenodd",
-        lineCap: "round",
-        lineJoin: "round",
-        opacity: 1.0,
-        radius: 10,
-        stroke: true,
-        weight: 3,
-      };
-
-      let style = geo_json_1716dde551c734c1cac2658e54df0102_styler(feature);
-      Object.assign(opts, style);
-
-      return new L.CircleMarker(latlng, opts);
-    }
-
-    function geo_json_1716dde551c734c1cac2658e54df0102_onEachFeature(feature, layer) {
-      layer.on({
-        mouseout: function (e) {
-          if (typeof e.target.setStyle === "function") {
-            geo_json_1716dde551c734c1cac2658e54df0102.resetStyle(e.target);
-          }
-        },
-        mouseover: function (e) {
-          if (typeof e.target.setStyle === "function") {
-            const highlightStyle = geo_json_1716dde551c734c1cac2658e54df0102_highlighter(e.target.feature);
-            e.target.setStyle(highlightStyle);
-          }
-        },
-      });
-    }
-    var geo_json_1716dde551c734c1cac2658e54df0102 = L.geoJson(null, {
-      onEachFeature: geo_json_1716dde551c734c1cac2658e54df0102_onEachFeature,
-
-      style: geo_json_1716dde551c734c1cac2658e54df0102_styler,
-      pointToLayer: geo_json_1716dde551c734c1cac2658e54df0102_pointToLayer,
-    });
-
-    function geo_json_1716dde551c734c1cac2658e54df0102_add(data) {
-      geo_json_1716dde551c734c1cac2658e54df0102.addData(data);
-    }
-    geo_json_1716dde551c734c1cac2658e54df0102_add({
-      bbox: [-1.687659173697866, 49.43078007274172, -1.626137691403677, 49.49160200394196],
-      features: [
-        {
-          bbox: [-1.687659173697866, 49.46180069059946, -1.658235032053802, 49.49160200394196],
-          geometry: {
-            coordinates: [
-              [-1.687159292228112, 49.48974276829431],
-              [-1.687208163893635, 49.48976202984574],
-              [-1.687208163893635, 49.48976202984574],
-              [-1.687224018535021, 49.48976805718449],
-              [-1.687430783993926, 49.48985719226643],
-              [-1.687541737944976, 49.49016189962252],
-              [-1.687659173697866, 49.49024117311308],
-              [-1.687615613788664, 49.4902859241784],
-              [-1.68675950613287, 49.49078269890351],
-              [-1.68662118929768, 49.49078901524194],
-              [-1.684348191361692, 49.491001725794675],
-              [-1.682879543397161, 49.49116652038543],
-              [-1.681416891160085, 49.49142531696421],
-              [-1.680243941448098, 49.49153947086583],
-              [-1.679307023878961, 49.49160200394196],
-              [-1.678285723941946, 49.4915860084893],
-              [-1.677483533549372, 49.49150939278706],
-              [-1.677277748768471, 49.49141571157867],
-              [-1.677771968678011, 49.49026822890711],
-              [-1.677806142259258, 49.49000139344616],
-              [-1.677647110805917, 49.48895824463737],
-              [-1.677537129796116, 49.48851120500794],
-              [-1.677356127071978, 49.488068140126884],
-              [-1.67729115491888, 49.487240157191806],
-              [-1.677090163735787, 49.486675278083105],
-              [-1.677321148850147, 49.48589186973337],
-              [-1.677429869430512, 49.48368359327891],
-              [-1.677209720359986, 49.48287438262977],
-              [-1.676884860721908, 49.48206185870231],
-              [-1.676106724527331, 49.481461753592455],
-              [-1.675529096354016, 49.48115435975139],
-              [-1.674873315966908, 49.48051615929721],
-              [-1.674312533622679, 49.47935764094288],
-              [-1.673974167184083, 49.47757250040996],
-              [-1.673680791981945, 49.477160383214475],
-              [-1.673392740984098, 49.476816136590884],
-              [-1.672944069166365, 49.476021328640364],
-              [-1.673761322344521, 49.4741909262947],
-              [-1.674781032160666, 49.47201354701551],
-              [-1.67567987985738, 49.470159987009836],
-              [-1.676203375966493, 49.46871358586538],
-              [-1.67701105581831, 49.46689707685337],
-              [-1.676879701981912, 49.46681979510555],
-              [-1.674470429452406, 49.466852395138005],
-              [-1.670455470981454, 49.46690662200656],
-              [-1.669502378959354, 49.46687479188464],
-              [-1.668227991572027, 49.4667334382557],
-              [-1.666850849753254, 49.46647980454698],
-              [-1.665210005131523, 49.46605799326564],
-              [-1.663956799995638, 49.46578660275987],
-              [-1.66296732733047, 49.46568336606076],
-              [-1.660861689875882, 49.4657260332333],
-              [-1.658235032053802, 49.465779204099725],
-              [-1.659936765935147, 49.464844906008366],
-              [-1.661544399709459, 49.46396221764614],
-              [-1.664333945847665, 49.462330960840106],
-              [-1.665001984512108, 49.461940285883294],
-              [-1.66499793038946, 49.461831430434415],
-              [-1.664997490891627, 49.46181945594003],
-              [-1.6650298238154546, 49.46180069059946],
-            ],
-            type: "LineString",
-          },
-          id: "0",
-          properties: {
-            bus1_id: "HVMVFeeder07",
-            bus2_id: "MVLV14092",
-            id: "MVBranch48268",
-            length: 5.766634582124083,
-            max_loading: 1,
-            network: "MVFeeder115",
-            parameters_id: "U_AL_240",
-            phases: "abc",
-          },
-          type: "Feature",
-        },
-        {
-          bbox: [-1.668469000759015, 49.43078007274172, -1.626137691403677, 49.46180069059946],
-          geometry: {
-            coordinates: [
-              [-1.6650298238154546, 49.46180069059946],
-              [-1.665062156739282, 49.46178192525889],
-              [-1.665079299356057, 49.4617743944145],
-              [-1.665922748216245, 49.461403834739585],
-              [-1.666675164238545, 49.46103161687154],
-              [-1.667064096088348, 49.46071716466963],
-              [-1.667486059341152, 49.460287397012266],
-              [-1.668469000759015, 49.45959226949676],
-              [-1.66754867205653, 49.458937567424314],
-              [-1.667279192030924, 49.45871809227462],
-              [-1.666020022033455, 49.45677715913894],
-              [-1.665955712160401, 49.45631329262616],
-              [-1.66588591301336, 49.45605764245268],
-              [-1.665787565973307, 49.45593483065401],
-              [-1.665642711710583, 49.45561653869461],
-              [-1.665570185070392, 49.45514739523584],
-              [-1.665457808502842, 49.45478564343815],
-              [-1.664864575924415, 49.454010405843526],
-              [-1.664801086071352, 49.45377534858149],
-              [-1.664778383422543, 49.45353204676319],
-              [-1.664750928695544, 49.45344309835057],
-              [-1.664715044966024, 49.45337745494814],
-              [-1.664365400324017, 49.45300360777296],
-              [-1.663941262278689, 49.45267391275986],
-              [-1.6634575633963, 49.452358768207674],
-              [-1.662521012730601, 49.45178915819017],
-              [-1.662318507761525, 49.45168717860438],
-              [-1.662154729392529, 49.451616993429845],
-              [-1.661519261766548, 49.45138601063132],
-              [-1.660746542391683, 49.45113043891435],
-              [-1.659732007492689, 49.450745195023444],
-              [-1.659630090963317, 49.45069721112411],
-              [-1.659479016903996, 49.45055728312873],
-              [-1.65939166493412, 49.45049086350554],
-              [-1.65926776530641, 49.450435891699996],
-              [-1.658544711531244, 49.45025901231274],
-              [-1.657499108646347, 49.449969498194974],
-              [-1.65617302732469, 49.44970401539244],
-              [-1.655824131670615, 49.449674010566724],
-              [-1.655161313518678, 49.44964496579746],
-              [-1.654836327774363, 49.44963072385811],
-              [-1.65453558052459, 49.449658768644085],
-              [-1.653547096409656, 49.44997256911071],
-              [-1.651951099735394, 49.45035437462746],
-              [-1.651396900353868, 49.45043668334064],
-              [-1.651188754480879, 49.450396689008315],
-              [-1.651093682339142, 49.45028290462896],
-              [-1.650970813937655, 49.44988824655155],
-              [-1.65071667345514, 49.44901788331174],
-              [-1.650511520914955, 49.44875037303698],
-              [-1.650360399216343, 49.447810023528945],
-              [-1.650290256698077, 49.4472809734883],
-              [-1.649860859039988, 49.44654938680829],
-              [-1.649937134617494, 49.44627894513112],
-              [-1.650009567025331, 49.44604171091064],
-              [-1.65001874924865, 49.44586201915364],
-              [-1.649882344906865, 49.44543712796742],
-              [-1.649452852837525, 49.44490904351998],
-              [-1.648990621610768, 49.44453563386657],
-              [-1.648662112342258, 49.4441705150223],
-              [-1.648472910984314, 49.44401539444214],
-              [-1.648221925864255, 49.44389462492231],
-              [-1.64800996890672, 49.443855795237404],
-              [-1.646433377364146, 49.44410436462664],
-              [-1.646241415644245, 49.44409683561565],
-              [-1.645943952141011, 49.44290021976039],
-              [-1.645820152637303, 49.44284202059801],
-              [-1.645589363666875, 49.44279951041141],
-              [-1.643094734213601, 49.44207662719116],
-              [-1.642607529304422, 49.44212580783593],
-              [-1.641815225315199, 49.44240925374231],
-              [-1.641306202273998, 49.44249083600409],
-              [-1.640739856643976, 49.442403610306684],
-              [-1.639766478477356, 49.44218858877706],
-              [-1.639408213269007, 49.44222395588984],
-              [-1.6387319609021, 49.4423974098495],
-              [-1.638662137299313, 49.44234657774967],
-              [-1.638614129523796, 49.44233120867681],
-              [-1.638556321971131, 49.44232197326178],
-              [-1.638448284120058, 49.442067445183206],
-              [-1.637839502846353, 49.44025014453263],
-              [-1.637675404893065, 49.439501953456734],
-              [-1.636815393816563, 49.438525216377904],
-              [-1.636451394016763, 49.43811485473001],
-              [-1.636161528623046, 49.437696622618816],
-              [-1.635938867821376, 49.43737535074427],
-              [-1.635852394011747, 49.43702994235667],
-              [-1.635805046474285, 49.43641960721379],
-              [-1.635918174025514, 49.43466680352085],
-              [-1.635959897762616, 49.43317086906634],
-              [-1.635993133167653, 49.43197851371761],
-              [-1.636008229846451, 49.43078007274172],
-              [-1.63395592797031, 49.43091142678521],
-              [-1.630159384376024, 49.43110589408643],
-              [-1.626316521869996, 49.43133379348475],
-              [-1.626677826001981, 49.43204211302102],
-              [-1.62645933724806, 49.432098871702124],
-              [-1.626137691403677, 49.43242237277039],
-              [-1.626220660544817, 49.432483212250645],
-              [-1.626239709998294, 49.43249717368583],
-              [-1.626239709998294, 49.43249717368583],
-            ],
-            type: "LineString",
-          },
-          id: "1",
-          properties: {
-            bus1_id: "MVLV14092",
-            bus2_id: "MVLV05996",
-            id: "MVBranch39083",
-            length: 6.070765210726548,
-            max_loading: 1,
-            network: "MVFeeder115",
-            parameters_id: "U_AL_240",
-            phases: "abc",
-          },
-          type: "Feature",
-        },
-      ],
-      type: "FeatureCollection",
-    });
-
-    geo_json_1716dde551c734c1cac2658e54df0102.bindTooltip(
-      function (layer) {
-        let div = L.DomUtil.create("div");
-
-        let handleObject = (feature) => (typeof feature == "object" ? JSON.stringify(feature) : feature);
-        let fields = ["id", "phases", "bus1_id", "bus2_id", "parameters_id", "length"];
-        let aliases = ["Id:", "Phases:", "Bus1:", "Bus2:", "Parameters:", "Length (km):"];
-        let table =
-          "<table>" +
-          String(
-            fields
-              .map(
-                (v, i) =>
-                  `<tr>
-            <th>${aliases[i].toLocaleString()}</th>
-
-            <td>${handleObject(layer.feature.properties[v]).toLocaleString()}</td>
-        </tr>`,
-              )
-              .join(""),
-          ) +
-          "</table>";
-        div.innerHTML = table;
-
-        return div;
-      },
-      { className: "foliumtooltip", maxWidth: 800, sticky: false },
-    );
-
-    geo_json_1716dde551c734c1cac2658e54df0102.addTo(map_c0df055412a41017c02658c0efc868f1);
-
-    function geo_json_621541b81e421d0b7b16dcd459e1d8a6_styler(feature) {
-      switch (feature.id) {
-        case "0":
-        case "1":
-          return { color: "#000000", fill: true, fillColor: "#000000", fillOpacity: 1, radius: 7 };
-        default:
-          return { color: "#234e83", fill: true, fillColor: "#234e83", fillOpacity: 1, radius: 5 };
-      }
-    }
-    function geo_json_621541b81e421d0b7b16dcd459e1d8a6_highlighter(feature) {
-      switch (feature.id) {
-        default:
-          return { color: "#cad40e", fillColor: "#cad40e" };
-      }
-    }
-    function geo_json_621541b81e421d0b7b16dcd459e1d8a6_pointToLayer(feature, latlng) {
-      var opts = {
-        bubblingMouseEvents: true,
-        color: "#3388ff",
-        dashArray: null,
-        dashOffset: null,
-        fill: false,
-        fillColor: "#3388ff",
-        fillOpacity: 0.2,
-        fillRule: "evenodd",
-        lineCap: "round",
-        lineJoin: "round",
-        opacity: 1.0,
-        radius: 10,
-        stroke: true,
-        weight: 3,
-      };
-
-      let style = geo_json_621541b81e421d0b7b16dcd459e1d8a6_styler(feature);
-      Object.assign(opts, style);
-
-      return new L.CircleMarker(latlng, opts);
-    }
-
-    function geo_json_621541b81e421d0b7b16dcd459e1d8a6_onEachFeature(feature, layer) {
-      layer.on({
-        mouseout: function (e) {
-          if (typeof e.target.setStyle === "function") {
-            geo_json_621541b81e421d0b7b16dcd459e1d8a6.resetStyle(e.target);
-          }
-        },
-        mouseover: function (e) {
-          if (typeof e.target.setStyle === "function") {
-            const highlightStyle = geo_json_621541b81e421d0b7b16dcd459e1d8a6_highlighter(e.target.feature);
-            e.target.setStyle(highlightStyle);
-          }
-        },
-      });
-    }
-    var geo_json_621541b81e421d0b7b16dcd459e1d8a6 = L.geoJson(null, {
-      onEachFeature: geo_json_621541b81e421d0b7b16dcd459e1d8a6_onEachFeature,
-
-      style: geo_json_621541b81e421d0b7b16dcd459e1d8a6_styler,
-      pointToLayer: geo_json_621541b81e421d0b7b16dcd459e1d8a6_pointToLayer,
-    });
-
-    function geo_json_621541b81e421d0b7b16dcd459e1d8a6_add(data) {
-      geo_json_621541b81e421d0b7b16dcd459e1d8a6.addData(data);
-    }
-    geo_json_621541b81e421d0b7b16dcd459e1d8a6_add({
-      bbox: [-1.687159292228112, 49.43249717368583, -1.626239709998294, 49.48974276829431],
-      features: [
-        {
-          bbox: [-1.687159292228112, 49.48974276829431, -1.687159292228112, 49.48974276829431],
-          geometry: { coordinates: [-1.687159292228112, 49.48974276829431], type: "Point" },
-          id: "0",
-          properties: {
-            id: "HVMV07",
-            max_voltage_level: null,
-            min_voltage_level: 0.95,
-            network: "MVFeeder115",
-            nominal_voltage: 20000,
-            phases: "abc",
-          },
-          type: "Feature",
-        },
-        {
-          bbox: [-1.687159292228112, 49.48974276829431, -1.687159292228112, 49.48974276829431],
-          geometry: { coordinates: [-1.687159292228112, 49.48974276829431], type: "Point" },
-          id: "1",
-          properties: {
-            id: "HVMVFeeder07",
-            max_voltage_level: null,
-            min_voltage_level: 0.95,
-            network: "MVFeeder115",
-            nominal_voltage: 20000,
-            phases: "abc",
-          },
-          type: "Feature",
-        },
-        {
-          bbox: [-1.626239709998294, 49.43249717368583, -1.626239709998294, 49.43249717368583],
-          geometry: { coordinates: [-1.626239709998294, 49.43249717368583], type: "Point" },
-          id: "2",
-          properties: {
-            id: "MVLV05996",
-            max_voltage_level: null,
-            min_voltage_level: 0.95,
-            network: "MVFeeder115",
-            nominal_voltage: 20000,
-            phases: "abc",
-          },
-          type: "Feature",
-        },
-        {
-          bbox: [-1.6650298238154546, 49.46180069059946, -1.6650298238154546, 49.46180069059946],
-          geometry: { coordinates: [-1.6650298238154546, 49.46180069059946], type: "Point" },
-          id: "3",
-          properties: {
-            id: "MVLV14092",
-            max_voltage_level: null,
-            min_voltage_level: 0.95,
-            network: "MVFeeder115",
-            nominal_voltage: 20000,
-            phases: "abc",
-          },
-          type: "Feature",
-        },
-      ],
-      type: "FeatureCollection",
-    });
-
-    geo_json_621541b81e421d0b7b16dcd459e1d8a6.bindTooltip(
-      function (layer) {
-        let div = L.DomUtil.create("div");
-
-        let handleObject = (feature) => (typeof feature == "object" ? JSON.stringify(feature) : feature);
-        let fields = ["id", "phases"];
-        let aliases = ["Id:", "Phases:"];
-        let table =
-          "<table>" +
-          String(
-            fields
-              .map(
-                (v, i) =>
-                  `<tr>
-            <th>${aliases[i].toLocaleString()}</th>
-
-            <td>${handleObject(layer.feature.properties[v]).toLocaleString()}</td>
-        </tr>`,
-              )
-              .join(""),
-          ) +
-          "</table>";
-        div.innerHTML = table;
-
-        return div;
-      },
-      { className: "foliumtooltip", maxWidth: 800, sticky: false },
-    );
-
-    geo_json_621541b81e421d0b7b16dcd459e1d8a6.addTo(map_c0df055412a41017c02658c0efc868f1);
-
-    var layer_control_db6a0c2400deb9c850ef70e23124f4a0_layers = {
-      base_layers: {
-        openstreetmap: tile_layer_cae763d28d5e6262c248b388dbcd213a,
-      },
-      overlays: {
-        lines: geo_json_1716dde551c734c1cac2658e54df0102,
-        buses: geo_json_621541b81e421d0b7b16dcd459e1d8a6,
-      },
+  }
+  function geo_json_1716dde551c734c1cac2658e54df0102_pointToLayer(feature, latlng) {
+    var opts = {
+      bubblingMouseEvents: true,
+      color: "#3388ff",
+      dashArray: null,
+      dashOffset: null,
+      fill: false,
+      fillColor: "#3388ff",
+      fillOpacity: 0.2,
+      fillRule: "evenodd",
+      lineCap: "round",
+      lineJoin: "round",
+      opacity: 1.0,
+      radius: 10,
+      stroke: true,
+      weight: 3,
     };
-    let layer_control_db6a0c2400deb9c850ef70e23124f4a0 = L.control
-      .layers(
-        layer_control_db6a0c2400deb9c850ef70e23124f4a0_layers.base_layers,
-        layer_control_db6a0c2400deb9c850ef70e23124f4a0_layers.overlays,
-        { autoZIndex: true, collapsed: true, position: "topright" },
-      )
-      .addTo(map_c0df055412a41017c02658c0efc868f1);
+
+    const style = geo_json_1716dde551c734c1cac2658e54df0102_styler(feature);
+    Object.assign(opts, style);
+
+    return new L.CircleMarker(latlng, opts);
+  }
+
+  function geo_json_1716dde551c734c1cac2658e54df0102_onEachFeature(feature, layer) {
+    layer.on({
+      mouseout: (e) => {
+        if (typeof e.target.setStyle === "function") {
+          geo_json_1716dde551c734c1cac2658e54df0102.resetStyle(e.target);
+        }
+      },
+      mouseover: (e) => {
+        if (typeof e.target.setStyle === "function") {
+          const highlightStyle = geo_json_1716dde551c734c1cac2658e54df0102_highlighter(e.target.feature);
+          e.target.setStyle(highlightStyle);
+        }
+      },
+    });
+  }
+  var geo_json_1716dde551c734c1cac2658e54df0102 = L.geoJson(null, {
+    onEachFeature: geo_json_1716dde551c734c1cac2658e54df0102_onEachFeature,
+
+    style: geo_json_1716dde551c734c1cac2658e54df0102_styler,
+    pointToLayer: geo_json_1716dde551c734c1cac2658e54df0102_pointToLayer,
+  });
+
+  function geo_json_1716dde551c734c1cac2658e54df0102_add(data) {
+    geo_json_1716dde551c734c1cac2658e54df0102.addData(data);
+  }
+  geo_json_1716dde551c734c1cac2658e54df0102_add({
+    bbox: [-1.687659173697866, 49.43078007274172, -1.626137691403677, 49.49160200394196],
+    features: [
+      {
+        bbox: [-1.687659173697866, 49.46180069059946, -1.658235032053802, 49.49160200394196],
+        geometry: {
+          coordinates: [
+            [-1.687159292228112, 49.48974276829431],
+            [-1.687208163893635, 49.48976202984574],
+            [-1.687208163893635, 49.48976202984574],
+            [-1.687224018535021, 49.48976805718449],
+            [-1.687430783993926, 49.48985719226643],
+            [-1.687541737944976, 49.49016189962252],
+            [-1.687659173697866, 49.49024117311308],
+            [-1.687615613788664, 49.4902859241784],
+            [-1.68675950613287, 49.49078269890351],
+            [-1.68662118929768, 49.49078901524194],
+            [-1.684348191361692, 49.491001725794675],
+            [-1.682879543397161, 49.49116652038543],
+            [-1.681416891160085, 49.49142531696421],
+            [-1.680243941448098, 49.49153947086583],
+            [-1.679307023878961, 49.49160200394196],
+            [-1.678285723941946, 49.4915860084893],
+            [-1.677483533549372, 49.49150939278706],
+            [-1.677277748768471, 49.49141571157867],
+            [-1.677771968678011, 49.49026822890711],
+            [-1.677806142259258, 49.49000139344616],
+            [-1.677647110805917, 49.48895824463737],
+            [-1.677537129796116, 49.48851120500794],
+            [-1.677356127071978, 49.488068140126884],
+            [-1.67729115491888, 49.487240157191806],
+            [-1.677090163735787, 49.486675278083105],
+            [-1.677321148850147, 49.48589186973337],
+            [-1.677429869430512, 49.48368359327891],
+            [-1.677209720359986, 49.48287438262977],
+            [-1.676884860721908, 49.48206185870231],
+            [-1.676106724527331, 49.481461753592455],
+            [-1.675529096354016, 49.48115435975139],
+            [-1.674873315966908, 49.48051615929721],
+            [-1.674312533622679, 49.47935764094288],
+            [-1.673974167184083, 49.47757250040996],
+            [-1.673680791981945, 49.477160383214475],
+            [-1.673392740984098, 49.476816136590884],
+            [-1.672944069166365, 49.476021328640364],
+            [-1.673761322344521, 49.4741909262947],
+            [-1.674781032160666, 49.47201354701551],
+            [-1.67567987985738, 49.470159987009836],
+            [-1.676203375966493, 49.46871358586538],
+            [-1.67701105581831, 49.46689707685337],
+            [-1.676879701981912, 49.46681979510555],
+            [-1.674470429452406, 49.466852395138005],
+            [-1.670455470981454, 49.46690662200656],
+            [-1.669502378959354, 49.46687479188464],
+            [-1.668227991572027, 49.4667334382557],
+            [-1.666850849753254, 49.46647980454698],
+            [-1.665210005131523, 49.46605799326564],
+            [-1.663956799995638, 49.46578660275987],
+            [-1.66296732733047, 49.46568336606076],
+            [-1.660861689875882, 49.4657260332333],
+            [-1.658235032053802, 49.465779204099725],
+            [-1.659936765935147, 49.464844906008366],
+            [-1.661544399709459, 49.46396221764614],
+            [-1.664333945847665, 49.462330960840106],
+            [-1.665001984512108, 49.461940285883294],
+            [-1.66499793038946, 49.461831430434415],
+            [-1.664997490891627, 49.46181945594003],
+            [-1.6650298238154546, 49.46180069059946],
+          ],
+          type: "LineString",
+        },
+        id: "0",
+        properties: {
+          bus1_id: "HVMVFeeder07",
+          bus2_id: "MVLV14092",
+          id: "MVBranch48268",
+          length: 5.766634582124083,
+          max_loading: 1,
+          network: "MVFeeder115",
+          parameters_id: "U_AL_240",
+          phases: "abc",
+        },
+        type: "Feature",
+      },
+      {
+        bbox: [-1.668469000759015, 49.43078007274172, -1.626137691403677, 49.46180069059946],
+        geometry: {
+          coordinates: [
+            [-1.6650298238154546, 49.46180069059946],
+            [-1.665062156739282, 49.46178192525889],
+            [-1.665079299356057, 49.4617743944145],
+            [-1.665922748216245, 49.461403834739585],
+            [-1.666675164238545, 49.46103161687154],
+            [-1.667064096088348, 49.46071716466963],
+            [-1.667486059341152, 49.460287397012266],
+            [-1.668469000759015, 49.45959226949676],
+            [-1.66754867205653, 49.458937567424314],
+            [-1.667279192030924, 49.45871809227462],
+            [-1.666020022033455, 49.45677715913894],
+            [-1.665955712160401, 49.45631329262616],
+            [-1.66588591301336, 49.45605764245268],
+            [-1.665787565973307, 49.45593483065401],
+            [-1.665642711710583, 49.45561653869461],
+            [-1.665570185070392, 49.45514739523584],
+            [-1.665457808502842, 49.45478564343815],
+            [-1.664864575924415, 49.454010405843526],
+            [-1.664801086071352, 49.45377534858149],
+            [-1.664778383422543, 49.45353204676319],
+            [-1.664750928695544, 49.45344309835057],
+            [-1.664715044966024, 49.45337745494814],
+            [-1.664365400324017, 49.45300360777296],
+            [-1.663941262278689, 49.45267391275986],
+            [-1.6634575633963, 49.452358768207674],
+            [-1.662521012730601, 49.45178915819017],
+            [-1.662318507761525, 49.45168717860438],
+            [-1.662154729392529, 49.451616993429845],
+            [-1.661519261766548, 49.45138601063132],
+            [-1.660746542391683, 49.45113043891435],
+            [-1.659732007492689, 49.450745195023444],
+            [-1.659630090963317, 49.45069721112411],
+            [-1.659479016903996, 49.45055728312873],
+            [-1.65939166493412, 49.45049086350554],
+            [-1.65926776530641, 49.450435891699996],
+            [-1.658544711531244, 49.45025901231274],
+            [-1.657499108646347, 49.449969498194974],
+            [-1.65617302732469, 49.44970401539244],
+            [-1.655824131670615, 49.449674010566724],
+            [-1.655161313518678, 49.44964496579746],
+            [-1.654836327774363, 49.44963072385811],
+            [-1.65453558052459, 49.449658768644085],
+            [-1.653547096409656, 49.44997256911071],
+            [-1.651951099735394, 49.45035437462746],
+            [-1.651396900353868, 49.45043668334064],
+            [-1.651188754480879, 49.450396689008315],
+            [-1.651093682339142, 49.45028290462896],
+            [-1.650970813937655, 49.44988824655155],
+            [-1.65071667345514, 49.44901788331174],
+            [-1.650511520914955, 49.44875037303698],
+            [-1.650360399216343, 49.447810023528945],
+            [-1.650290256698077, 49.4472809734883],
+            [-1.649860859039988, 49.44654938680829],
+            [-1.649937134617494, 49.44627894513112],
+            [-1.650009567025331, 49.44604171091064],
+            [-1.65001874924865, 49.44586201915364],
+            [-1.649882344906865, 49.44543712796742],
+            [-1.649452852837525, 49.44490904351998],
+            [-1.648990621610768, 49.44453563386657],
+            [-1.648662112342258, 49.4441705150223],
+            [-1.648472910984314, 49.44401539444214],
+            [-1.648221925864255, 49.44389462492231],
+            [-1.64800996890672, 49.443855795237404],
+            [-1.646433377364146, 49.44410436462664],
+            [-1.646241415644245, 49.44409683561565],
+            [-1.645943952141011, 49.44290021976039],
+            [-1.645820152637303, 49.44284202059801],
+            [-1.645589363666875, 49.44279951041141],
+            [-1.643094734213601, 49.44207662719116],
+            [-1.642607529304422, 49.44212580783593],
+            [-1.641815225315199, 49.44240925374231],
+            [-1.641306202273998, 49.44249083600409],
+            [-1.640739856643976, 49.442403610306684],
+            [-1.639766478477356, 49.44218858877706],
+            [-1.639408213269007, 49.44222395588984],
+            [-1.6387319609021, 49.4423974098495],
+            [-1.638662137299313, 49.44234657774967],
+            [-1.638614129523796, 49.44233120867681],
+            [-1.638556321971131, 49.44232197326178],
+            [-1.638448284120058, 49.442067445183206],
+            [-1.637839502846353, 49.44025014453263],
+            [-1.637675404893065, 49.439501953456734],
+            [-1.636815393816563, 49.438525216377904],
+            [-1.636451394016763, 49.43811485473001],
+            [-1.636161528623046, 49.437696622618816],
+            [-1.635938867821376, 49.43737535074427],
+            [-1.635852394011747, 49.43702994235667],
+            [-1.635805046474285, 49.43641960721379],
+            [-1.635918174025514, 49.43466680352085],
+            [-1.635959897762616, 49.43317086906634],
+            [-1.635993133167653, 49.43197851371761],
+            [-1.636008229846451, 49.43078007274172],
+            [-1.63395592797031, 49.43091142678521],
+            [-1.630159384376024, 49.43110589408643],
+            [-1.626316521869996, 49.43133379348475],
+            [-1.626677826001981, 49.43204211302102],
+            [-1.62645933724806, 49.432098871702124],
+            [-1.626137691403677, 49.43242237277039],
+            [-1.626220660544817, 49.432483212250645],
+            [-1.626239709998294, 49.43249717368583],
+            [-1.626239709998294, 49.43249717368583],
+          ],
+          type: "LineString",
+        },
+        id: "1",
+        properties: {
+          bus1_id: "MVLV14092",
+          bus2_id: "MVLV05996",
+          id: "MVBranch39083",
+          length: 6.070765210726548,
+          max_loading: 1,
+          network: "MVFeeder115",
+          parameters_id: "U_AL_240",
+          phases: "abc",
+        },
+        type: "Feature",
+      },
+    ],
+    type: "FeatureCollection",
+  });
+
+  geo_json_1716dde551c734c1cac2658e54df0102.bindTooltip(
+    (layer) => {
+      const div = L.DomUtil.create("div");
+
+      const handleObject = (feature) => (typeof feature == "object" ? JSON.stringify(feature) : feature);
+      const fields = ["id", "phases", "bus1_id", "bus2_id", "parameters_id", "length"];
+      const aliases = ["Id:", "Phases:", "Bus1:", "Bus2:", "Parameters:", "Length (km):"];
+      const table =
+        "<table>" +
+        String(
+          fields
+            .map(
+              (v, i) =>
+                `<tr>
+            <th>${aliases[i].toLocaleString()}</th>
+
+            <td>${handleObject(layer.feature.properties[v]).toLocaleString()}</td>
+        </tr>`,
+            )
+            .join(""),
+        ) +
+        "</table>";
+      div.innerHTML = table;
+
+      return div;
+    },
+    { className: "foliumtooltip", maxWidth: 800, sticky: false },
+  );
+
+  geo_json_1716dde551c734c1cac2658e54df0102.addTo(map_c0df055412a41017c02658c0efc868f1);
+
+  function geo_json_621541b81e421d0b7b16dcd459e1d8a6_styler(feature) {
+    switch (feature.id) {
+      case "0":
+      case "1":
+        return { color: "#000000", fill: true, fillColor: "#000000", fillOpacity: 1, radius: 7 };
+      default:
+        return { color: "#234e83", fill: true, fillColor: "#234e83", fillOpacity: 1, radius: 5 };
+    }
+  }
+  function geo_json_621541b81e421d0b7b16dcd459e1d8a6_highlighter(feature) {
+    switch (feature.id) {
+      default:
+        return { color: "#cad40e", fillColor: "#cad40e" };
+    }
+  }
+  function geo_json_621541b81e421d0b7b16dcd459e1d8a6_pointToLayer(feature, latlng) {
+    var opts = {
+      bubblingMouseEvents: true,
+      color: "#3388ff",
+      dashArray: null,
+      dashOffset: null,
+      fill: false,
+      fillColor: "#3388ff",
+      fillOpacity: 0.2,
+      fillRule: "evenodd",
+      lineCap: "round",
+      lineJoin: "round",
+      opacity: 1.0,
+      radius: 10,
+      stroke: true,
+      weight: 3,
+    };
+
+    const style = geo_json_621541b81e421d0b7b16dcd459e1d8a6_styler(feature);
+    Object.assign(opts, style);
+
+    return new L.CircleMarker(latlng, opts);
+  }
+
+  function geo_json_621541b81e421d0b7b16dcd459e1d8a6_onEachFeature(feature, layer) {
+    layer.on({
+      mouseout: (e) => {
+        if (typeof e.target.setStyle === "function") {
+          geo_json_621541b81e421d0b7b16dcd459e1d8a6.resetStyle(e.target);
+        }
+      },
+      mouseover: (e) => {
+        if (typeof e.target.setStyle === "function") {
+          const highlightStyle = geo_json_621541b81e421d0b7b16dcd459e1d8a6_highlighter(e.target.feature);
+          e.target.setStyle(highlightStyle);
+        }
+      },
+    });
+  }
+  var geo_json_621541b81e421d0b7b16dcd459e1d8a6 = L.geoJson(null, {
+    onEachFeature: geo_json_621541b81e421d0b7b16dcd459e1d8a6_onEachFeature,
+
+    style: geo_json_621541b81e421d0b7b16dcd459e1d8a6_styler,
+    pointToLayer: geo_json_621541b81e421d0b7b16dcd459e1d8a6_pointToLayer,
+  });
+
+  function geo_json_621541b81e421d0b7b16dcd459e1d8a6_add(data) {
+    geo_json_621541b81e421d0b7b16dcd459e1d8a6.addData(data);
+  }
+  geo_json_621541b81e421d0b7b16dcd459e1d8a6_add({
+    bbox: [-1.687159292228112, 49.43249717368583, -1.626239709998294, 49.48974276829431],
+    features: [
+      {
+        bbox: [-1.687159292228112, 49.48974276829431, -1.687159292228112, 49.48974276829431],
+        geometry: { coordinates: [-1.687159292228112, 49.48974276829431], type: "Point" },
+        id: "0",
+        properties: {
+          id: "HVMV07",
+          max_voltage_level: null,
+          min_voltage_level: 0.95,
+          network: "MVFeeder115",
+          nominal_voltage: 20000,
+          phases: "abc",
+        },
+        type: "Feature",
+      },
+      {
+        bbox: [-1.687159292228112, 49.48974276829431, -1.687159292228112, 49.48974276829431],
+        geometry: { coordinates: [-1.687159292228112, 49.48974276829431], type: "Point" },
+        id: "1",
+        properties: {
+          id: "HVMVFeeder07",
+          max_voltage_level: null,
+          min_voltage_level: 0.95,
+          network: "MVFeeder115",
+          nominal_voltage: 20000,
+          phases: "abc",
+        },
+        type: "Feature",
+      },
+      {
+        bbox: [-1.626239709998294, 49.43249717368583, -1.626239709998294, 49.43249717368583],
+        geometry: { coordinates: [-1.626239709998294, 49.43249717368583], type: "Point" },
+        id: "2",
+        properties: {
+          id: "MVLV05996",
+          max_voltage_level: null,
+          min_voltage_level: 0.95,
+          network: "MVFeeder115",
+          nominal_voltage: 20000,
+          phases: "abc",
+        },
+        type: "Feature",
+      },
+      {
+        bbox: [-1.6650298238154546, 49.46180069059946, -1.6650298238154546, 49.46180069059946],
+        geometry: { coordinates: [-1.6650298238154546, 49.46180069059946], type: "Point" },
+        id: "3",
+        properties: {
+          id: "MVLV14092",
+          max_voltage_level: null,
+          min_voltage_level: 0.95,
+          network: "MVFeeder115",
+          nominal_voltage: 20000,
+          phases: "abc",
+        },
+        type: "Feature",
+      },
+    ],
+    type: "FeatureCollection",
+  });
+
+  geo_json_621541b81e421d0b7b16dcd459e1d8a6.bindTooltip(
+    (layer) => {
+      const div = L.DomUtil.create("div");
+
+      const handleObject = (feature) => (typeof feature == "object" ? JSON.stringify(feature) : feature);
+      const fields = ["id", "phases"];
+      const aliases = ["Id:", "Phases:"];
+      const table =
+        "<table>" +
+        String(
+          fields
+            .map(
+              (v, i) =>
+                `<tr>
+            <th>${aliases[i].toLocaleString()}</th>
+
+            <td>${handleObject(layer.feature.properties[v]).toLocaleString()}</td>
+        </tr>`,
+            )
+            .join(""),
+        ) +
+        "</table>";
+      div.innerHTML = table;
+
+      return div;
+    },
+    { className: "foliumtooltip", maxWidth: 800, sticky: false },
+  );
+
+  geo_json_621541b81e421d0b7b16dcd459e1d8a6.addTo(map_c0df055412a41017c02658c0efc868f1);
+
+  var layer_control_db6a0c2400deb9c850ef70e23124f4a0_layers = {
+    base_layers: {
+      openstreetmap: tile_layer_cae763d28d5e6262c248b388dbcd213a,
+    },
+    overlays: {
+      lines: geo_json_1716dde551c734c1cac2658e54df0102,
+      buses: geo_json_621541b81e421d0b7b16dcd459e1d8a6,
+    },
+  };
+  const layer_control_db6a0c2400deb9c850ef70e23124f4a0 = L.control
+    .layers(
+      layer_control_db6a0c2400deb9c850ef70e23124f4a0_layers.base_layers,
+      layer_control_db6a0c2400deb9c850ef70e23124f4a0_layers.overlays,
+      { autoZIndex: true, collapsed: true, position: "topright" },
+    )
+    .addTo(map_c0df055412a41017c02658c0efc868f1);
   </script>
 </html>
