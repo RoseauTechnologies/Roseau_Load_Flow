@@ -1067,11 +1067,14 @@ class AbstractNetwork(RLFObject, JsonMixin, CatalogueMixin[JsonDict], Generic[_E
 
         # Propagate voltages by traversing the entire network
         buses = [(reference_bus, reference_nominal_voltage)]
+        seen_buses: set[Id] = set()
         while buses:
             current_bus, current_vn = buses.pop()
-            if current_bus.id in nominal_voltages:
+            if current_bus.id in seen_buses:
                 continue
-            nominal_voltages[current_bus.id] = current_vn
+            seen_buses.add(current_bus.id)
+            if current_bus.id not in nominal_voltages:
+                nominal_voltages[current_bus.id] = current_vn
             for e in current_bus._connected_elements:
                 if isinstance(e, (rlf.Transformer, rlfs.Transformer)):
                     if e.bus_hv.id == current_bus.id:

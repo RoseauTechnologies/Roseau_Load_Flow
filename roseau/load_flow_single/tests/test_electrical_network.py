@@ -971,6 +971,24 @@ def test_propagate_nominal_voltages(all_elements_network):
     nominal_voltages = en._get_nominal_voltages()
     npt.assert_allclose(list(nominal_voltages.values()), 20e3)
 
+    # With transformer and one nominal voltage at the source
+    bus1 = Bus(id="bus1", nominal_voltage=20.5e3)
+    bus2 = Bus(id="bus2")
+    bus3 = Bus(id="bus3")
+    VoltageSource(id="vs", bus=bus1, voltage=21e3)
+    Switch(id="sw", bus1=bus1, bus2=bus2)
+    tp = TransformerParameters.from_open_and_short_circuit_tests(
+        id="t1", vg="Dyn11", uhv=20e3, ulv=400, sn=100e3, p0=200, i0=1.5e-2, psc=1e3, vsc=4e-2
+    )
+    Transformer(id="t1", bus_hv=bus2, bus_lv=bus3, parameters=tp)
+    en = ElectricalNetwork.from_element(bus1)
+    nominal_voltages = en._get_nominal_voltages()
+    assert nominal_voltages == {
+        "bus1": 20.5e3,  # the expected vn from the source bus (not the transformer or the source)
+        "bus2": 20.5e3,
+        "bus3": 410.0,
+    }
+
 
 def test_catalogue_data():
     # The catalogue data path exists
