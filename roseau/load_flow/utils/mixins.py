@@ -1048,7 +1048,6 @@ class AbstractNetwork(RLFObject, JsonMixin, CatalogueMixin[JsonDict], Generic[_E
             # We have at least one nominal voltage defined, use it as reference
             reference_bus = self.buses[next(iter(nominal_voltages))]
             reference_nominal_voltage = nominal_voltages[reference_bus.id]
-            del nominal_voltages[reference_bus.id]  # will be re-added in propagation
         elif self.transformers:
             # Use the highest voltage transformer HV side as reference
             starting_transformer = max(self.transformers.values(), key=lambda t: t.parameters._uhv)
