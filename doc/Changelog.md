@@ -21,8 +21,24 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`418` Many improvements to the styles of interactive map plots:
+
+  - Different voltage levels are represented with different marker sizes and line widths. Nominal voltages are used to
+    determine the voltage levels automatically. If nominal voltages are not available, they are inferred from the
+    transformers and sources
+  - Underground lines are dashed while other lines are solid including lines with unknown line type
+  - Transformers are now represented with a square icon with a divider in the middle and with both HV and LV buses
+    information in the tooltip and popup
+  - Sourcers are represented with a bigger square icon
+  - If the new parameter `fit_bounds` is set to `True` (default), the bounds of the map will be automatically adjusted
+    using `folium.FitOverlays` to fit the network elements.
+
+  Note that the markers of buses, transformers and sources now use the `folium.DivIcon` icon which means the style
+  function must now return a style dictionary of the form `{'html': ...}` for these elements.
+
 - {gh-pr}`413` Restore bus and layers to the layer control in the interactive map plot. This was broken in version
   0.13.0.
+
 - {gh-pr}`404` Fix filtering catalogues using compiled regular expressions with newer versions of pandas.
 
 ## Version 0.13.1

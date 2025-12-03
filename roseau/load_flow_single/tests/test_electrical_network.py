@@ -933,6 +933,63 @@ def test_propagate_voltages():
     assert np.allclose(source_bus.initial_voltage.m, expected_voltages)
 
 
+def test_propagate_nominal_voltages(all_elements_network):
+    en = all_elements_network
+    # Test that it works even if some nominal voltages are missing
+    assert en.buses["bus0"].nominal_voltage is None
+    assert en.buses["bus4"].nominal_voltage is None
+    nominal_voltages = en._get_nominal_voltages()
+    assert nominal_voltages == {
+        "bus1": 20000.0,
+        "bus2": 400,
+        "bus3": 400,
+        "bus0": 20000.0,
+        "bus4": 400,
+    }
+
+    # No nominal voltages in the network
+    for bus in en.buses.values():
+        bus._min_voltage_level = None
+        bus._max_voltage_level = None
+        bus._nominal_voltage = None
+    nominal_voltages = en._get_nominal_voltages()
+    assert nominal_voltages == {
+        "bus1": 20000.0,
+        "bus2": 400,
+        "bus3": 400,
+        "bus0": 20000.0,
+        "bus4": 400,
+    }
+
+    # No transformer
+    bus1 = Bus(id="bus1")
+    bus2 = Bus(id="bus2")
+    VoltageSource(id="vs", bus=bus1, voltage=20e3)
+    Switch(id="sw", bus1=bus1, bus2=bus2)
+    en = ElectricalNetwork.from_element(bus1)
+    assert not en.transformers, "This test requires a network without transformers"
+    nominal_voltages = en._get_nominal_voltages()
+    npt.assert_allclose(list(nominal_voltages.values()), 20e3)
+
+    # With transformer and one nominal voltage at the source
+    bus1 = Bus(id="bus1", nominal_voltage=20.5e3)
+    bus2 = Bus(id="bus2")
+    bus3 = Bus(id="bus3")
+    VoltageSource(id="vs", bus=bus1, voltage=21e3)
+    Switch(id="sw", bus1=bus1, bus2=bus2)
+    tp = TransformerParameters.from_open_and_short_circuit_tests(
+        id="t1", vg="Dyn11", uhv=20e3, ulv=400, sn=100e3, p0=200, i0=1.5e-2, psc=1e3, vsc=4e-2
+    )
+    Transformer(id="t1", bus_hv=bus2, bus_lv=bus3, parameters=tp)
+    en = ElectricalNetwork.from_element(bus1)
+    nominal_voltages = en._get_nominal_voltages()
+    assert nominal_voltages == {
+        "bus1": 20.5e3,  # the expected vn from the source bus (not the transformer or the source)
+        "bus2": 20.5e3,
+        "bus3": 410.0,
+    }
+
+
 def test_catalogue_data():
     # The catalogue data path exists
     catalogue_path = ElectricalNetwork.catalogue_path()

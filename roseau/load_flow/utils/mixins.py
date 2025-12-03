@@ -1007,6 +1007,98 @@ class AbstractNetwork(RLFObject, JsonMixin, CatalogueMixin[JsonDict], Generic[_E
             return False
         return True
 
+    def _get_nominal_voltages(self) -> dict[Id, float]:  # noqa: C901
+        """Get approximate nominal voltages for all buses in the network (even if not defined).
+
+        This function attempts to infer nominal voltages for all buses in the network by propagating
+        known nominal voltages through connected feeders and transformers. If there are no defined
+        nominal voltages, it uses the HV voltage of the transformer with the highest voltage or the
+        voltage of the starting source as a reference.
+
+        These voltages are used to determine voltage levels for plotting purposes only.
+        """
+        import roseau.load_flow as rlf
+        import roseau.load_flow_single as rlfs
+
+        assert isinstance(self, (rlf.ElectricalNetwork, rlfs.ElectricalNetwork))
+
+        nominal_voltages: dict[Id, float] = {}
+        nb_buses = len(self.buses)
+
+        for bus in self.buses.values():
+            if bus._nominal_voltage is not None:
+                nominal_voltages[bus.id] = bus._nominal_voltage
+
+        if len(nominal_voltages) == nb_buses:
+            # all nominal voltages are defined, return them
+            return nominal_voltages
+
+        # Propagate nominal voltages of each feeder first (shortcut version)
+        for bus_id, nominal_voltage in list(nominal_voltages.items()):
+            for feeder_bus_id in self.buses[bus_id].get_connected_buses():
+                if feeder_bus_id not in nominal_voltages:
+                    nominal_voltages[feeder_bus_id] = nominal_voltage
+
+        if len(nominal_voltages) == nb_buses:
+            # all nominal voltages are defined, return them
+            return nominal_voltages
+
+        # Determine reference bus for voltage propagation
+        if nominal_voltages:
+            # We have at least one nominal voltage defined, use it as reference
+            reference_bus = self.buses[next(iter(nominal_voltages))]
+            reference_nominal_voltage = nominal_voltages[reference_bus.id]
+        elif self.transformers:
+            # Use the highest voltage transformer HV side as reference
+            starting_transformer = max(self.transformers.values(), key=lambda t: t.parameters._uhv)
+            reference_bus = starting_transformer.bus_hv
+            reference_nominal_voltage = starting_transformer.parameters._uhv
+        else:
+            # Use the first source bus as reference
+            if isinstance(self, rlf.ElectricalNetwork):
+                starting_potentials, starting_source = self._get_starting_potentials(all_phases=set("abcn"))
+                reference_bus = starting_source.bus
+                reference_nominal_voltage = abs(starting_potentials["a"] - starting_potentials["b"])
+            else:
+                starting_voltage, starting_source = self._get_starting_voltage()
+                reference_bus = starting_source.bus
+                reference_nominal_voltage = abs(starting_voltage)
+
+        # Propagate voltages by traversing the entire network
+        buses = [(reference_bus, reference_nominal_voltage)]
+        seen_buses: set[Id] = set()
+        while buses:
+            current_bus, current_vn = buses.pop()
+            if current_bus.id in seen_buses:
+                continue
+            seen_buses.add(current_bus.id)
+            if current_bus.id not in nominal_voltages:
+                nominal_voltages[current_bus.id] = current_vn
+            for e in current_bus._connected_elements:
+                if isinstance(e, (rlf.Transformer, rlfs.Transformer)):
+                    if e.bus_hv.id == current_bus.id:
+                        other_bus = e.bus_lv
+                        other_vn = (
+                            nominal_voltages[other_bus.id]
+                            if other_bus.id in nominal_voltages
+                            else current_vn * e.parameters._ulv / e.parameters._uhv
+                        )
+                    else:
+                        other_bus = e.bus_hv
+                        other_vn = (
+                            nominal_voltages[other_bus.id]
+                            if other_bus.id in nominal_voltages
+                            else current_vn * e.parameters._uhv / e.parameters._ulv
+                        )
+                    buses.append((other_bus, other_vn))
+                elif isinstance(e, (rlf.Line, rlf.Switch, rlfs.Line, rlfs.Switch)):
+                    other_bus = e.bus2 if e.bus1.id == current_bus.id else e.bus1
+                    other_vn = nominal_voltages.get(other_bus.id, current_vn)
+                    buses.append((other_bus, other_vn))
+
+        assert len(nominal_voltages) == nb_buses, "Failed to infer nominal voltages for all buses."
+        return nominal_voltages
+
     #
     # DGS interface
     #

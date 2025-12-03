@@ -2153,6 +2153,50 @@ def test_to_graph(all_element_network: ElectricalNetwork):
     json.dumps(json_data, ensure_ascii=False)
 
 
+def test_propagate_nominal_voltages(all_element_network, small_network):
+    en = all_element_network
+    # Test that it works even if some nominal voltages are missing
+    assert en.buses["bus0"].nominal_voltage is None
+    assert en.buses["bus4"].nominal_voltage is None
+    assert en.buses["bus6"].nominal_voltage is None
+    nominal_voltages = en._get_nominal_voltages()
+    assert nominal_voltages == {
+        "bus1": 20000.0,
+        "bus2": 400,
+        "bus3": 400,
+        "bus5": 400,
+        "bus0": 20000.0,
+        "bus4": 400,
+        "bus6": 400,
+    }
+
+    # No nominal voltages in the network
+    for bus in en.buses.values():
+        bus._min_voltage_level = None
+        bus._max_voltage_level = None
+        bus._nominal_voltage = None
+    nominal_voltages = en._get_nominal_voltages()
+    assert nominal_voltages == {
+        "bus1": 20000.0,
+        "bus2": 410,  # not exactly 400V but close enough for determining the voltage level
+        "bus3": 410,
+        "bus5": 410,
+        "bus0": 20000.0,
+        "bus4": 410,
+        "bus6": 410,
+    }
+
+    # No transformer
+    en = small_network
+    assert not en.transformers, "This test requires a network without transformers"
+    for bus in en.buses.values():
+        bus._min_voltage_level = None
+        bus._max_voltage_level = None
+        bus._nominal_voltage = None
+    nominal_voltages = en._get_nominal_voltages()
+    npt.assert_allclose(list(nominal_voltages.values()), 20e3 * np.sqrt(3))
+
+
 def test_serialization(all_element_network, all_element_network_with_results):
     def assert_results(en_dict: dict, included: bool):
         for bus_data in en_dict["buses"]:
