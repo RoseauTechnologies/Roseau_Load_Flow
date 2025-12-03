@@ -4,10 +4,10 @@ from typing import TYPE_CHECKING, Any
 import geopandas as gpd
 
 from roseau.load_flow.plotting import _check_folium, _plot_interactive_map_internal
+from roseau.load_flow.typing import Id
 from roseau.load_flow_single.network import ElectricalNetwork
 
 if TYPE_CHECKING:
-    import branca.colormap as cm
     import folium
 
     from roseau.load_flow.plotting import FeatureMap, StyleDict
@@ -24,6 +24,7 @@ def plot_interactive_map(
     add_tooltips: bool = True,
     add_popups: bool = True,
     add_search: bool = True,
+    fit_bounds: bool = True,
 ) -> "folium.Map":
     """Plot an electrical network on an interactive map.
 
@@ -31,10 +32,12 @@ def plot_interactive_map(
 
     Make sure you have defined the geometry of the buses and lines in the network before using this
     function. You can do this by setting the `geometry` attribute of the buses and lines.
+    Transformers use the geometry of their HV buses.
 
     Args:
         network:
-            The electrical network to plot. Only the buses and lines are currently plotted.
+            The electrical network to plot. Buses, lines and transformers are plotted. Buses of
+            source elements are represented with bigger square markers.
 
         style_color:
             The color of the default style of an element. Defaults to :roseau-primary:`■ #234e83`.
@@ -53,8 +56,8 @@ def plot_interactive_map(
 
         map_kws:
             Additional keyword arguments to pass to the :class:`folium.Map` constructor. By default,
-            `location` is set to the centroid of the network geometry and `zoom_start` is calculated
-            based on its bounding box.
+            if ``fit_bounds`` is false, `location` is set to the centroid of the network geometry
+            and `zoom_start` is calculated based on its bounding box.
 
         add_tooltips:
             If ``True`` (default), tooltips will be added to the map elements. Tooltips appear when
@@ -67,6 +70,11 @@ def plot_interactive_map(
         add_search:
             If ``True`` (default), a search bar will be added to the map to search for network
             elements by their ID.
+
+        fit_bounds:
+            If ``True`` (default), the map view will be adjusted to fit all network elements. If
+            ``False``, the initial view is determined by the `location` and `zoom_start` parameters
+            in `map_kws`.
 
     Returns:
         The :class:`folium.Map` object with the network plot.
@@ -82,45 +90,77 @@ def plot_interactive_map(
     buses_gdf["element_type"] = "bus"
     buses_gdf["min_voltage_level"] *= 100  # Convert to percentage
     buses_gdf["max_voltage_level"] *= 100  # Convert to percentage
+
     lines_gdf = network.lines_frame
     lines_gdf.reset_index(inplace=True)
     lines_gdf["element_type"] = "line"
     lines_gdf["max_loading"] *= 100  # Convert to percentage
     lines_gdf[["ampacity", "section", "line_type", "material", "insulator"]] = None
     for idx in lines_gdf.index:
-        lp = network.lines[lines_gdf.at[idx, "id"]].parameters
+        line_id: Id = lines_gdf.at[idx, "id"]  # type: ignore
+        lp = network.lines[line_id].parameters
         lines_gdf.at[idx, "ampacity"] = lp._ampacity
         lines_gdf.at[idx, "section"] = lp._section
         lines_gdf.at[idx, "line_type"] = lp._line_type
         lines_gdf.at[idx, "material"] = lp._material
         lines_gdf.at[idx, "insulator"] = lp._insulator
 
-    bus_fields = {
-        "id": "Id:",
-        "nominal_voltage": "Un (V):",
-        "min_voltage_level": "Umin (%):",
-        "max_voltage_level": "Umax (%):",
-    }
-    line_fields = {
-        "id": "Id:",
-        "bus1_id": "Bus1:",
-        "bus2_id": "Bus2:",
-        "parameters_id": "Parameters:",
-        "length": "Length (km):",
-        "line_type": "Line Type:",
-        "material": "Material:",
-        "insulator": "Insulator:",
-        "section": "Section (mm²):",
-        "ampacity": "Ampacity (A):",
-        "max_loading": "Max loading (%):",
-    }
+    transformers_gdf = network.transformers_frame
+    transformers_gdf.reset_index(inplace=True)
+    transformers_gdf["element_type"] = "transformer"
+    transformers_gdf["tap"] *= 100  # Convert to percentage
+    transformers_gdf[["hv_side", "lv_side"]] = ""
+    transformers_gdf[["vg", "sn", "uhv", "ulv"]] = None
+    for idx in transformers_gdf.index:
+        tr_id: Id = transformers_gdf.at[idx, "id"]  # type: ignore
+        # Replace geometry with that of the HV bus
+        bus_hv_id: Id = transformers_gdf.at[idx, "bus_hv_id"]  # type: ignore
+        transformers_gdf.at[idx, "geometry"] = network.buses[bus_hv_id].geometry  # type: ignore
+        lp = network.transformers[tr_id].parameters
+        transformers_gdf.at[idx, "vg"] = lp.vg
+        transformers_gdf.at[idx, "sn"] = lp._sn / 1e3  # Convert to kVA
+        transformers_gdf.at[idx, "uhv"] = lp._uhv
+        transformers_gdf.at[idx, "ulv"] = lp._ulv
 
     m = _plot_interactive_map_internal(
-        buses_gdf=buses_gdf,
-        lines_gdf=lines_gdf,
-        bus_fields=bus_fields,
-        line_fields=line_fields,
-        style_color_callback=lambda et, id: style_color,
+        network=network,
+        dataframes={"bus": buses_gdf, "line": lines_gdf, "transformer": transformers_gdf},
+        fields={
+            "bus": {
+                "id": "Id:",
+                "nominal_voltage": "Un (V):",
+                "min_voltage_level": "Umin (%):",
+                "max_voltage_level": "Umax (%):",
+            },
+            "line": {
+                "id": "Id:",
+                "bus1_id": "Bus1:",
+                "bus2_id": "Bus2:",
+                "parameters_id": "Parameters:",
+                "length": "Length (km):",
+                "line_type": "Line Type:",
+                "material": "Material:",
+                "insulator": "Insulator:",
+                "section": "Section (mm²):",
+                "ampacity": "Ampacity (A):",
+                "max_loading": "Max loading (%):",
+            },
+            "transformer": {
+                "id": "Id:",
+                "vg": "Vector Group:",
+                "sn": "Sn (kVA):",
+                "tap": "Tap Position (%):",
+                "parameters_id": "Parameters:",
+                "max_loading": "Max loading (%):",
+                "hv_side": "HV Side",
+                "bus_hv_id": "» Bus:",
+                "uhv": "» Ur (V):",
+                "lv_side": "LV Side",
+                "bus_lv_id": "» Bus:",
+                "ulv": "» Ur (V):",
+            },
+        },
+        style_color_callback=lambda et, id: "#000000" if et == "transformer" else style_color,
         highlight_color=highlight_color,
         style_function=style_function,
         highlight_function=highlight_function,
@@ -128,37 +168,42 @@ def plot_interactive_map(
         add_tooltips=add_tooltips,
         add_popups=add_popups,
         add_search=add_search,
+        fit_bounds=fit_bounds,
     )
     return m
 
 
-def plot_results_interactive_map(
+def plot_results_interactive_map(  # noqa: C901
     network: ElectricalNetwork,
     *,
     style_color: str = "#234e83",
     highlight_color: str = "#cad40e",
     style_function: Callable[["FeatureMap"], "StyleDict | None"] | None = None,
     highlight_function: Callable[["FeatureMap"], "StyleDict | None"] | None = None,
-    bus_colormap: "cm.ColorMap | Sequence[str] | None" = None,
-    line_colormap: "cm.ColorMap | Sequence[str] | None" = None,
+    bus_colormap: "folium.ColorMap | Sequence[str] | None" = None,
+    line_colormap: "folium.ColorMap | Sequence[str] | None" = None,
+    transformer_colormap: "folium.ColorMap | Sequence[str] | None" = None,
     map_kws: Mapping[str, Any] | None = None,
     add_tooltips: bool = True,
     add_popups: bool = True,
     add_search: bool = True,
+    fit_bounds: bool = True,
 ) -> "folium.Map":
     """Plot an electrical network on an interactive map with the load flow results.
 
     This function uses the `folium` library to create an interactive map of the electrical network
-    with the buses colored according to their voltage levels and the lines colored according to their
-    loading.
+    with buses colored according to their voltage levels and lines/transformers colored according to
+    their loadings.
 
     Make sure you have defined the geometry of the buses and lines in the network before using this
-    function. You can do this by setting the `geometry` attribute of the buses and lines. Also,
-    ensure that the network has valid results by running a load flow calculation before plotting.
+    function. You can do this by setting the `geometry` attribute of the buses and lines.
+    Transformers use the geometry of their HV buses. Also, ensure that the network has valid results
+    by running a load flow calculation before plotting.
 
     Args:
         network:
-            The electrical network to plot. Only the buses and lines are currently plotted.
+            The electrical network to plot. Buses, lines and transformers are plotted. Buses of
+            source elements are represented with bigger square markers.
 
         style_color:
             The color of the default style of an element. Defaults to :roseau-primary:`■ #234e83`.
@@ -187,10 +232,16 @@ def plot_results_interactive_map(
             maximum. If not provided, a linear colormap is created with the colors
             ``["green", "yellow", "red"]``.
 
+        transformer_colormap:
+            A callable that takes a loading in % and returns a color for the transformer markers
+            or a sequence of colors to create a linear colormap representing the loading from 0%
+            to maximum. If not provided, a linear colormap is created with the colors
+            ``["green", "yellow", "red"]``.
+
         map_kws:
             Additional keyword arguments to pass to the :class:`folium.Map` constructor. By default,
-            `location` is set to the centroid of the network geometry and `zoom_start` is calculated
-            based on its bounding box.
+            if ``fit_bounds`` is false, `location` is set to the centroid of the network geometry
+            and `zoom_start` is calculated based on its bounding box.
 
         add_tooltips:
             If ``True`` (default), tooltips will be added to the map elements. Tooltips appear when
@@ -204,11 +255,16 @@ def plot_results_interactive_map(
             If ``True`` (default), a search bar will be added to the map to search for network
             elements by their ID.
 
+        fit_bounds:
+            If ``True`` (default), the map view will be adjusted to fit all network elements. If
+            ``False``, the initial view is determined by the `location` and `zoom_start` parameters
+            in `map_kws`.
+
     Returns:
         The `folium.Map` object with the network plot.
     """
     _check_folium(func_name="plot_results_interactive_map")
-    import branca.colormap as cm
+    import folium
 
     if network.is_multi_phase:
         # TODO: add " Did you mean to use rlf.plotting.plot_results_interactive_map?" when it is implemented
@@ -217,9 +273,9 @@ def plot_results_interactive_map(
 
     min_voltage = float("inf")
     max_voltage = 0.0
-    max_loading = 0.0
+    max_line_loading = 0.0
+    max_tr_loading = 0.0
     buses_data = []
-    buses_voltage_levels = {}
     for bus in network.buses.values():
         if bus._nominal_voltage is None:
             no_nominal_voltage = [bus.id for bus in network.buses.values() if bus._nominal_voltage is None]
@@ -244,20 +300,23 @@ def plot_results_interactive_map(
                 "max_voltage_level": bus._max_voltage_level * 100,
                 "geometry": bus.geometry,
                 "res_separator": "",  # Results separator
-                "res_voltage": abs(bus.res_voltage.m),
+                "res_voltage": abs(bus._res_voltage_getter(warning=False)),
                 "res_voltage_level": res_voltage_level,
             }
         )
-        buses_voltage_levels[bus.id] = res_voltage_level
+    buses_data_by_id = {bus["id"]: bus for bus in buses_data}
 
     lines_data = []
-    lines_loading = {}
     for line in network.lines.values():
         lp = line.parameters
         if lp._ampacity is None:
-            no_ampacity = list(dict.fromkeys(lp.id for line in network.lines.values() if lp._ampacity is None))
+            no_ampacity = list(
+                dict.fromkeys(
+                    line.parameters.id for line in network.lines.values() if line.parameters._ampacity is None
+                )
+            )
             raise ValueError(f"The following line parameters do not have an ampacity defined: {no_ampacity}.")
-        max_loading = max(max_loading, line._max_loading * 100)
+        max_line_loading = max(max_line_loading, line._max_loading * 100)
         res_loading = line._res_loading_getter(warning=False)
         assert res_loading is not None
         res_loading *= 100
@@ -280,62 +339,123 @@ def plot_results_interactive_map(
                 "res_loading": res_loading,
             }
         )
-        lines_loading[line.id] = res_loading
+    lines_data_by_id = {line["id"]: line for line in lines_data}
+
+    transformers_data = []
+    for tr in network.transformers.values():
+        tp = tr.parameters
+        max_tr_loading = max(max_tr_loading, tr._max_loading * 100)
+        hv_data = buses_data_by_id[tr.bus_hv.id]
+        lv_data = buses_data_by_id[tr.bus_lv.id]
+        transformers_data.append(
+            {
+                "id": tr.id,
+                "element_type": "transformer",
+                "bus_hv_id": tr.bus_hv.id,
+                "bus_lv_id": tr.bus_lv.id,
+                "parameters_id": tp.id,
+                "geometry": tr.bus_hv.geometry,
+                "vg": tp.vg,
+                "sn": tp._sn / 1e3,  # Convert to kVA
+                "tap": tr._tap * 100,  # Convert to percentage
+                "rated_voltages": f"{tp._uhv:.6g} / {tp._ulv:.6g}",
+                "max_loading": tr._max_loading * 100,
+                "nominal_voltages": f"{hv_data['nominal_voltage']:.6g} / {lv_data['nominal_voltage']:.6g}",
+                "min_voltage_levels": f"{hv_data['min_voltage_level']:.6g} / {lv_data['min_voltage_level']:.6g}",
+                "max_voltage_levels": f"{hv_data['max_voltage_level']:.6g} / {lv_data['max_voltage_level']:.6g}",
+                "res_separator": "",  # Results separator
+                "res_loading": tr._res_loading_getter(warning=False) * 100,
+                "res_voltages": f"{hv_data['res_voltage']:.6g} / {lv_data['res_voltage']:.6g}",
+                "res_voltage_levels": f"{hv_data['res_voltage_level']:.6g} / {lv_data['res_voltage_level']:.6g}",
+            }
+        )
+    transformers_data_by_id = {tr["id"]: tr for tr in transformers_data}
 
     buses_gdf = gpd.GeoDataFrame(buses_data, crs=network.crs)
     lines_gdf = gpd.GeoDataFrame(lines_data, crs=network.crs)
-    if not isinstance(bus_colormap, cm.ColorMap):
-        bus_colormap = cm.LinearColormap(
+    transformers_gdf = gpd.GeoDataFrame(transformers_data, crs=network.crs)
+    if not isinstance(bus_colormap, folium.ColorMap):
+        bus_colormap = folium.LinearColormap(
             colors=["blue", "cyan", "green", "yellow", "red"] if bus_colormap is None else bus_colormap,
             vmin=min_voltage,
             vmax=max_voltage,
             caption="Voltage level (%)",
         )
-    if not isinstance(line_colormap, cm.ColorMap):
-        line_colormap = cm.LinearColormap(
+        bus_colormap.width = 200
+    if not isinstance(line_colormap, folium.ColorMap):
+        line_colormap = folium.LinearColormap(
             ["green", "yellow", "red"] if line_colormap is None else line_colormap,
             vmin=0,
-            vmax=max_loading,
+            vmax=max_line_loading,
             caption="Line loading %",
         )
+        line_colormap.width = 200
+    if not isinstance(transformer_colormap, folium.ColorMap):
+        transformer_colormap = folium.LinearColormap(
+            ["green", "yellow", "red"] if transformer_colormap is None else transformer_colormap,
+            vmin=0,
+            vmax=max_tr_loading,
+            caption="Transformer loading %",
+        )
+        transformer_colormap.width = 200
 
     def style_color_callback(et, eid):
         if et == "bus":
-            return bus_colormap(buses_voltage_levels[eid])
+            return bus_colormap(buses_data_by_id[eid]["res_voltage_level"])
         elif et == "line":
-            return line_colormap(lines_loading[eid])
+            return line_colormap(lines_data_by_id[eid]["res_loading"])
+        elif et == "transformer":
+            return transformer_colormap(transformers_data_by_id[eid]["res_loading"])
         else:
             return style_color
 
-    bus_fields = {
-        "id": "Id:",
-        "nominal_voltage": "Un (V):",
-        "min_voltage_level": "Umin (%):",
-        "max_voltage_level": "Umax (%):",
-        "res_separator": "--",
-        "res_voltage": "U (V):",
-        "res_voltage_level": "U (%):",
-    }
-    line_fields = {
-        "id": "Id:",
-        "bus1_id": "Bus1:",
-        "bus2_id": "Bus2:",
-        "parameters_id": "Parameters:",
-        "length": "Length (km):",
-        "line_type": "Line Type:",
-        "material": "Material:",
-        "insulator": "Insulator:",
-        "section": "Section (mm²):",
-        "ampacity": "Ampacity (A):",
-        "max_loading": "Max loading (%):",
-        "res_separator": "--",
-        "res_loading": "Loading (%):",
-    }
     m = _plot_interactive_map_internal(
-        buses_gdf=buses_gdf,
-        lines_gdf=lines_gdf,
-        bus_fields=bus_fields,
-        line_fields=line_fields,
+        network=network,
+        dataframes={"bus": buses_gdf, "line": lines_gdf, "transformer": transformers_gdf},
+        fields={
+            "bus": {
+                "id": "Id:",
+                "nominal_voltage": "Un (V):",
+                "min_voltage_level": "Umin (%):",
+                "max_voltage_level": "Umax (%):",
+                "res_separator": "--",
+                "res_voltage": "U (V):",
+                "res_voltage_level": "U (%):",
+            },
+            "line": {
+                "id": "Id:",
+                "bus1_id": "Bus1:",
+                "bus2_id": "Bus2:",
+                "parameters_id": "Parameters:",
+                "length": "Length (km):",
+                "line_type": "Line Type:",
+                "material": "Material:",
+                "insulator": "Insulator:",
+                "section": "Section (mm²):",
+                "ampacity": "Ampacity (A):",
+                "max_loading": "Max loading (%):",
+                "res_separator": "--",
+                "res_loading": "Loading (%):",
+            },
+            "transformer": {
+                "id": "Id:",
+                "bus_hv_id": "HV Bus:",
+                "bus_lv_id": "LV Bus:",
+                "vg": "Vector Group:",
+                "sn": "Sn (kVA):",
+                "rated_voltages": "Ur ʜv/ʟv (V):",
+                "tap": "Tap Position (%):",
+                "parameters_id": "Parameters:",
+                "max_loading": "Max loading (%):",
+                "nominal_voltages": "Un ʜv/ʟv (V):",
+                "min_voltage_levels": "Umin ʜv/ʟv (%):",
+                "max_voltage_levels": "Umax ʜv/ʟv (%):",
+                "res_separator": "--",
+                "res_loading": "Loading (%):",
+                "res_voltages": "U ʜv/ʟv (V):",
+                "res_voltage_levels": "U ʜv/ʟv (%):",
+            },
+        },
         style_color_callback=style_color_callback,
         highlight_color=highlight_color,
         style_function=style_function,
@@ -344,8 +464,12 @@ def plot_results_interactive_map(
         add_tooltips=add_tooltips,
         add_popups=add_popups,
         add_search=add_search,
+        fit_bounds=fit_bounds,
     )
     bus_colormap.add_to(m)
-    line_colormap.add_to(m)
+    if network.lines:  # Unlikely to be empty for a map plot, but just in case
+        line_colormap.add_to(m)
+    if network.transformers:
+        transformer_colormap.add_to(m)
 
     return m

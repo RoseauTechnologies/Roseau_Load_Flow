@@ -13,6 +13,7 @@ from typing_extensions import deprecated
 from roseau.load_flow.models import AbstractBranch, AbstractTerminal
 from roseau.load_flow.network import ElectricalNetwork
 from roseau.load_flow.sym import NegativeSequence, PositiveSequence, ZeroSequence, phasor_to_sym
+from roseau.load_flow.types import LineType
 from roseau.load_flow.typing import ComplexArray, Id, Side
 from roseau.load_flow.utils import find_stack_level
 
@@ -20,8 +21,11 @@ if TYPE_CHECKING:
     import folium
     from matplotlib.axes import Axes
 
+    import roseau.load_flow_single as rlfs
+
     FeatureMap = dict[str, Any]
     StyleDict = dict[str, Any]
+    MapElementType = Literal["bus", "line", "transformer"]
 
 _COLORS = {"a": "#234e83", "b": "#cad40e", "c": "#55b2aa", "n": "#000000"}
 _COLORS.update(
@@ -187,21 +191,22 @@ def plot_voltage_phasors(
     element, phases, potentials = _get_phases_and_potentials(element, voltage_type, side)
     _configure_axes(ax, potentials)
     ax.set_title(f"{element.id}" if element._side_value is None else f"{element.id} ({element._side_value})")
+    potentials = potentials.tolist()
     if "n" in phases:
-        origin = potentials.flat[-1]
-        for phase, potential in zip(phases[:-1], potentials[:-1].flat, strict=True):
+        origin = potentials[-1]
+        for phase, potential in zip(phases[:-1], potentials[:-1], strict=True):
             _draw_voltage_phasor(ax, potential, origin, color=_COLORS[phase])
-        for phase, potential in zip(phases, potentials.flat, strict=True):
+        for phase, potential in zip(phases, potentials, strict=True):
             ax.scatter(potential.real, potential.imag, color=_COLORS[phase], label=phase)
     elif len(phases) == 2:
-        v1, v2 = potentials.flat
+        v1, v2 = potentials
         phase = phases
         _draw_voltage_phasor(ax, v1, v2, color=_COLORS[phase])
         for v, ph in ((v1, phase[0]), (v2, phase[1])):
             ax.scatter(v.real, v.imag, color=_COLORS[ph], label=ph)
     else:
         assert phases == "abc"
-        va, vb, vc = potentials.flat
+        va, vb, vc = potentials
         for v1, v2, phase in ((va, vb, "ab"), (vb, vc, "bc"), (vc, va, "ca")):
             _draw_voltage_phasor(ax, v1, v2, color=_COLORS[phase])
         for v, phase in ((va, "a"), (vb, "b"), (vc, "c")):
@@ -255,17 +260,18 @@ def plot_symmetrical_voltages(
     if axes is None:
         _, axes = plt.subplots(1, 3)
     ax0, ax1, ax2 = axes  # type: ignore
-    u0, u1, u2 = sym_components = phasor_to_sym(potentials[:3])
-    un = potentials[3] if "n" in phases else 0j
-    ax_limits = np.array(1.2 * max(abs(sym_components)) * PositiveSequence, dtype=np.complex128)
+    sym_components = phasor_to_sym(potentials[:3])
+    u0, u1, u2 = sym_components.tolist()
+    un = potentials.item(3) if "n" in phases else 0j
+    ax_limits = (1.2 * max(abs(sym_components)) * PositiveSequence).ravel()
     title = f"{element.id}" if element._side_value is None else f"{element.id} ({element._side_value})"
 
     def _draw_balanced_voltages(ax: "Axes", u: "complex", seq: "ComplexArray"):
-        seq_potentials = np.array(u * seq, dtype=np.complex128)
-        for phase, u in zip("abc", seq_potentials.flat, strict=False):
-            _draw_voltage_phasor(ax, u, 0j, color=_COLORS[phase], annotate=False)
-        for phase, u in zip("abc", seq_potentials.flat, strict=False):
-            ax.scatter(u.real, u.imag, color=_COLORS[phase], label=phase)
+        seq_potentials = (u * seq).ravel().tolist()
+        for phase, v in zip("abc", seq_potentials, strict=False):
+            _draw_voltage_phasor(ax, v, 0j, color=_COLORS[phase], annotate=False)
+        for phase, v in zip("abc", seq_potentials, strict=False):
+            ax.scatter(v.real, v.imag, color=_COLORS[phase], label=phase)
 
     def _draw_zero_voltages(ax: "Axes", u: "complex", seq: "ComplexArray"):
         _draw_voltage_phasor(ax, u, un, color=_COLORS["a"], annotate=False)
@@ -284,7 +290,7 @@ def plot_symmetrical_voltages(
         angle = cmath.phase(u)
         ha = "right" if cmath.pi / 2 < abs(angle) < 3 * cmath.pi / 2 else "left"
         va = "bottom" if abs(angle) < cmath.pi else "top"
-        xy = u + ax_limits[0] / 20 * cmath.exp(1j * angle)  # move it 5% of the axis limits
+        xy = u + ax_limits.item(0) / 20 * cmath.exp(1j * angle)  # move it 5% of the axis limits
         ax.annotate(f"{abs(u):.0f}V", (xy.real, xy.imag), ha=ha, va=va)
         ax.legend()
 
@@ -303,11 +309,10 @@ def _check_folium(func_name: str) -> None:
         raise
 
 
-def _plot_interactive_map_internal(
-    buses_gdf: gpd.GeoDataFrame,
-    lines_gdf: gpd.GeoDataFrame,
-    bus_fields: dict[str, str],
-    line_fields: dict[str, str],
+def _plot_interactive_map_internal(  # noqa: C901
+    network: "ElectricalNetwork | rlfs.ElectricalNetwork",
+    dataframes: dict["MapElementType", gpd.GeoDataFrame],
+    fields: dict["MapElementType", dict[str, str]],
     style_color_callback: Callable[[str, Id], str],
     highlight_color: str,
     style_function: Callable[["FeatureMap"], "StyleDict | None"] | None,
@@ -316,6 +321,7 @@ def _plot_interactive_map_internal(
     add_tooltips: bool,
     add_popups: bool,
     add_search: bool,
+    fit_bounds: bool,
 ) -> "folium.Map":
     import folium
     from folium.plugins import FeatureGroupSubGroup, Search
@@ -325,17 +331,81 @@ def _plot_interactive_map_internal(
         if result is not None:
             return result
         # Default style
-        style_color = style_color_callback(feature["properties"]["element_type"], feature["properties"]["id"])
-        if feature["properties"]["element_type"] == "bus":
-            return {
-                "fill": True,
-                "fillColor": style_color,
-                "color": style_color,
-                "fillOpacity": 1,
-                "radius": 3,
-            }
-        elif feature["properties"]["element_type"] == "line":
-            return {"color": style_color, "weight": 2}
+        e_id, e_type = feature["properties"]["id"], feature["properties"]["element_type"]
+        style_color = style_color_callback(e_type, e_id)
+        if e_type == "bus":
+            vn = nominal_voltages[e_id]
+            if e_id in source_buses:
+                radius, margin = 15, -1
+                border_radius = 0  # Source bus: square
+            else:
+                if vn < lv:
+                    radius, margin = 5, 3  # LV
+                elif vn < mv:
+                    radius, margin = 10, 1  # MV
+                else:
+                    radius, margin = 15, -1  # HV
+                border_radius = radius / 2
+            markup = f"""
+            <div style="font-size: 0.8em;">
+                <div style="width: {radius}px;
+                            height: {radius}px;
+                            border-radius: {border_radius}px;
+                            background-color: {style_color};
+                            margin: {margin}px;
+                            ">
+                </div>
+            </div>
+            """
+            return {"html": markup}
+        elif e_type == "line":
+            line = network.lines[e_id]
+            line_type = line.parameters._line_type
+            vn = nominal_voltages[line.bus1.id]
+            if vn < lv:
+                weight = 2  # LV
+            elif vn < mv:
+                weight = 3  # MV
+            else:
+                weight = 4  # HV
+            dash_array = "5, 5" if line_type == LineType.UNDERGROUND else None
+            return {"color": style_color, "weight": weight, "dashArray": dash_array}
+        elif e_type == "transformer":
+            bus_hv_id = feature["properties"]["bus_hv_id"]
+            bus_lv_id = feature["properties"]["bus_lv_id"]
+            vn = nominal_voltages[bus_hv_id]
+            if bus_hv_id in source_buses or bus_lv_id in source_buses:
+                radius, margin = 15, -1
+            else:
+                if vn < lv:
+                    radius, margin = 5, 3  # LV
+                elif vn < mv:
+                    radius, margin = 10, 1  # MV
+                else:
+                    radius, margin = 15, -1  # HV
+            tr_color = style_color
+            hv_color = style_color_callback("bus", bus_hv_id)
+            lv_color = style_color_callback("bus", bus_lv_id)
+            markup = f"""
+            <div style="font-size: 0.8em;">
+                <div style="width: {radius}px;
+                            height: {radius}px;
+                            border-top: 2px solid {tr_color};
+                            border-bottom: 2px solid {tr_color};
+                            background: linear-gradient(to right,
+                                                       {hv_color} 0%,
+                                                       {hv_color} 40%,
+                                                       {tr_color} 41%,
+                                                       {tr_color} 59%,
+                                                       {lv_color} 60%,
+                                                       {lv_color} 100%);
+                            margin: {margin}px;
+                            ">
+                </div>
+
+            </div>
+            """
+            return {"html": markup}
         else:
             return {"color": style_color, "weight": 2}
 
@@ -344,53 +414,54 @@ def _plot_interactive_map_internal(
         if result is not None:
             return result
         # Default highlight style
-        if feature["properties"]["element_type"] == "bus":
+        e_type = feature["properties"]["element_type"]
+        if e_type == "bus":  # noqa: SIM116
             return {"color": highlight_color, "fillColor": highlight_color}
-        elif feature["properties"]["element_type"] == "line":
+        elif e_type == "line":
             return {"color": highlight_color}
+        elif e_type == "transformer":
+            return {"color": highlight_color, "fillColor": highlight_color}
         else:
             return {"color": highlight_color}
 
+    source_buses = {src.bus.id for src in network.sources.values()}
+    transformer_buses = {side.bus.id for tr in network.transformers.values() for side in (tr.side_hv, tr.side_lv)}
+    nominal_voltages = network._get_nominal_voltages()
+    mv, lv = 60e3, 1e3
+
+    # Filter out transformer buses, these are represented by the transformers themselves
+    dataframes["bus"] = dataframes["bus"].loc[~dataframes["bus"]["id"].isin(transformer_buses)]
+
+    tooltips: dict[MapElementType, folium.GeoJsonTooltip | None] = {}
     if add_tooltips:
-        bus_tooltip = folium.GeoJsonTooltip(
-            fields=list(bus_fields.keys()),
-            aliases=list(bus_fields.values()),
-            localize=True,
-            sticky=False,
-            labels=True,
-            max_width=800,
-        )
-        line_tooltip = folium.GeoJsonTooltip(
-            fields=list(line_fields.keys()),
-            aliases=list(line_fields.values()),
-            localize=True,
-            sticky=False,
-            labels=True,
-            max_width=800,
-        )
+        for e_type, e_fields in fields.items():
+            tooltips[e_type] = folium.GeoJsonTooltip(
+                fields=list(e_fields.keys()),
+                aliases=list(e_fields.values()),
+                localize=True,
+                sticky=False,
+                labels=True,
+                max_width=800,
+            )
     else:
-        bus_tooltip = line_tooltip = None
+        tooltips = dict.fromkeys(fields.keys(), None)
+    popups: dict[MapElementType, folium.GeoJsonPopup | None] = {}
     if add_popups:
-        bus_popup = folium.GeoJsonPopup(
-            fields=list(bus_fields.keys()),
-            aliases=list(bus_fields.values()),
-            localize=True,
-            labels=True,
-        )
-        line_popup = folium.GeoJsonPopup(
-            fields=list(line_fields.keys()),
-            aliases=list(line_fields.values()),
-            localize=True,
-            labels=True,
-        )
+        for e_type, e_fields in fields.items():
+            popups[e_type] = folium.GeoJsonPopup(
+                fields=list(e_fields.keys()),
+                aliases=list(e_fields.values()),
+                localize=True,
+                labels=True,
+            )
     else:
-        bus_popup = line_popup = None
+        popups = dict.fromkeys(fields.keys(), None)
 
     map_kws = dict(map_kws) if map_kws is not None else {}
 
     # Calculate the center and zoom level of the map if not provided
-    if "location" not in map_kws or "zoom_start" not in map_kws:
-        geom_union = buses_gdf.union_all()
+    if not fit_bounds and ("location" not in map_kws or "zoom_start" not in map_kws):
+        geom_union = dataframes["bus"].union_all().union(dataframes["line"].union_all())
         if "location" not in map_kws:
             map_kws["location"] = list(reversed(geom_union.centroid.coords[0]))
         if "zoom_start" not in map_kws:
@@ -400,30 +471,33 @@ def _plot_interactive_map_internal(
             # cases, we set a default zoom level of 16.
             zoom_lon = math.ceil(math.log2(360 * 2.0 / (max_x - min_x))) if max_x > min_x else 16
             zoom_lat = math.ceil(math.log2(360 * 2.0 / (max_y - min_y))) if max_y > min_y else 16
-            map_kws["zoom_start"] = min(zoom_lon, zoom_lat)
+            map_kws["zoom_start"] = min(zoom_lon, zoom_lat) - 1
 
     m = folium.Map(**map_kws)
     network_layer = folium.FeatureGroup(name="Electrical Network").add_to(m)
-    folium.GeoJson(
-        data=lines_gdf,
-        name="lines",
-        style_function=internal_style_function,
-        highlight_function=internal_highlight_function,
-        tooltip=line_tooltip,
-        popup=line_popup,
-    ).add_to(FeatureGroupSubGroup(network_layer, "Lines").add_to(m))
-    folium.GeoJson(
-        data=buses_gdf,
-        name="buses",
-        marker=folium.CircleMarker(),
-        style_function=internal_style_function,
-        highlight_function=internal_highlight_function,
-        tooltip=bus_tooltip,
-        popup=bus_popup,
-    ).add_to(FeatureGroupSubGroup(network_layer, "Buses").add_to(m))
-    folium.LayerControl(collapsed=False).add_to(m)
+    for e_type, frame in dataframes.items():
+        if frame.empty:
+            continue
+        marker = folium.Marker(icon=folium.DivIcon()) if e_type != "line" else None
+        name = f"{e_type}s".capitalize()
+        folium.GeoJson(
+            data=frame,
+            name=name,
+            marker=marker,
+            style_function=internal_style_function,
+            highlight_function=internal_highlight_function,
+            tooltip=tooltips[e_type],
+            popup=popups[e_type],
+        ).add_to(FeatureGroupSubGroup(network_layer, name).add_to(m))
+    folium.LayerControl(
+        collapsed=False,
+        draggable=True,
+        position="bottomright",
+    ).add_to(m)
     if add_search:
         Search(network_layer, search_label="id", placeholder="Search network elements...").add_to(m)
+    if fit_bounds:
+        folium.FitOverlays(padding=30).add_to(m)
     return m
 
 
@@ -438,6 +512,7 @@ def plot_interactive_map(
     add_tooltips: bool = True,
     add_popups: bool = True,
     add_search: bool = True,
+    fit_bounds: bool = True,
 ) -> "folium.Map":
     """Plot an electrical network on an interactive map.
 
@@ -445,10 +520,12 @@ def plot_interactive_map(
 
     Make sure you have defined the geometry of the buses and lines in the network before using this
     function. You can do this by setting the `geometry` attribute of the buses and lines.
+    Transformers use the geometry of their HV buses.
 
     Args:
         network:
-            The electrical network to plot. Only the buses and lines are currently plotted.
+            The electrical network to plot. Buses, lines and transformers are plotted. Buses of
+            source elements are represented with bigger square markers.
 
         style_color:
             The color of the default style of an element. Defaults to :roseau-primary:`■ #234e83`.
@@ -467,8 +544,8 @@ def plot_interactive_map(
 
         map_kws:
             Additional keyword arguments to pass to the :class:`folium.Map` constructor. By default,
-            `location` is set to the centroid of the network geometry and `zoom_start` is calculated
-            based on its bounding box.
+            if ``fit_bounds`` is false, `location` is set to the centroid of the network geometry
+            and `zoom_start` is calculated based on its bounding box.
 
         add_tooltips:
             If ``True`` (default), tooltips will be added to the map elements. Tooltips appear when
@@ -481,6 +558,11 @@ def plot_interactive_map(
         add_search:
             If ``True`` (default), a search bar will be added to the map to search for network
             elements by their ID.
+
+        fit_bounds:
+            If ``True`` (default), the map view will be adjusted to fit all network elements. If
+            ``False``, the initial view is determined by the `location` and `zoom_start` parameters
+            in `map_kws`.
 
     Returns:
         The :class:`folium.Map` object with the network plot.
@@ -505,6 +587,7 @@ def plot_interactive_map(
     buses_gdf["element_type"] = "bus"
     buses_gdf["min_voltage_level"] *= 100  # Convert to percentage
     buses_gdf["max_voltage_level"] *= 100  # Convert to percentage
+
     lines_gdf = network.lines_frame
     lines_gdf.reset_index(inplace=True)
     lines_gdf["element_type"] = "line"
@@ -512,7 +595,8 @@ def plot_interactive_map(
     lines_gdf[["ampacity", "section", "line_type", "material", "insulator"]] = None
     line_params = {}
     for idx in lines_gdf.index:
-        lp = network.lines[lines_gdf.at[idx, "id"]].parameters
+        line_id: Id = lines_gdf.at[idx, "id"]  # type: ignore
+        lp = network.lines[line_id].parameters
         if lp.id not in line_params:
             line_params[lp.id] = {
                 "ampacity": _scalar_if_unique(lp._ampacities),
@@ -527,34 +611,66 @@ def plot_interactive_map(
         lines_gdf.at[idx, "material"] = line_params[lp.id]["material"]
         lines_gdf.at[idx, "insulator"] = line_params[lp.id]["insulator"]
 
-    bus_fields = {
-        "id": "Id:",
-        "phases": "Phases:",
-        "nominal_voltage": "Un (V):",
-        "min_voltage_level": "Umin (%):",
-        "max_voltage_level": "Umax (%):",
-    }
-    line_fields = {
-        "id": "Id:",
-        "phases": "Phases:",
-        "bus1_id": "Bus1:",
-        "bus2_id": "Bus2:",
-        "parameters_id": "Parameters:",
-        "length": "Length (km):",
-        "line_type": "Line Type:",
-        "material": "Material:",
-        "insulator": "Insulator:",
-        "section": "Section (mm²):",
-        "ampacity": "Ampacity (A):",
-        "max_loading": "Max loading (%):",
-    }
+    transformers_gdf = network.transformers_frame
+    transformers_gdf.reset_index(inplace=True)
+    transformers_gdf["element_type"] = "transformer"
+    transformers_gdf["tap"] *= 100  # Convert to percentage
+    transformers_gdf[["hv_side", "lv_side"]] = ""
+    transformers_gdf[["vg", "sn", "uhv", "ulv"]] = None
+    for idx in transformers_gdf.index:
+        tr_id: Id = transformers_gdf.at[idx, "id"]  # type: ignore
+        # Replace geometry with that of the HV bus
+        bus_hv_id: Id = transformers_gdf.at[idx, "bus_hv_id"]  # type: ignore
+        transformers_gdf.at[idx, "geometry"] = network.buses[bus_hv_id].geometry  # type: ignore
+        lp = network.transformers[tr_id].parameters
+        transformers_gdf.at[idx, "vg"] = lp.vg
+        transformers_gdf.at[idx, "sn"] = lp._sn / 1e3  # Convert to kVA
+        transformers_gdf.at[idx, "uhv"] = lp._uhv
+        transformers_gdf.at[idx, "ulv"] = lp._ulv
 
     m = _plot_interactive_map_internal(
-        buses_gdf=buses_gdf,
-        lines_gdf=lines_gdf,
-        bus_fields=bus_fields,
-        line_fields=line_fields,
-        style_color_callback=lambda et, id: style_color,
+        network=network,
+        dataframes={"bus": buses_gdf, "line": lines_gdf, "transformer": transformers_gdf},
+        fields={
+            "bus": {
+                "id": "Id:",
+                "phases": "Phases:",
+                "nominal_voltage": "Un (V):",
+                "min_voltage_level": "Umin (%):",
+                "max_voltage_level": "Umax (%):",
+            },
+            "line": {
+                "id": "Id:",
+                "phases": "Phases:",
+                "bus1_id": "Bus1:",
+                "bus2_id": "Bus2:",
+                "parameters_id": "Parameters:",
+                "length": "Length (km):",
+                "line_type": "Line Type:",
+                "material": "Material:",
+                "insulator": "Insulator:",
+                "section": "Section (mm²):",
+                "ampacity": "Ampacity (A):",
+                "max_loading": "Max loading (%):",
+            },
+            "transformer": {
+                "id": "Id:",
+                "vg": "Vector Group:",
+                "sn": "Sn (kVA):",
+                "tap": "Tap Position (%):",
+                "parameters_id": "Parameters:",
+                "max_loading": "Max loading (%):",
+                "hv_side": "HV Side",
+                "bus_hv_id": "» Bus:",
+                "phases_hv": "» Phases:",
+                "uhv": "» Ur (V):",
+                "lv_side": "LV Side",
+                "bus_lv_id": "» Bus:",
+                "phases_lv": "» Phases:",
+                "ulv": "» Ur (V):",
+            },
+        },
+        style_color_callback=lambda et, id: "#000000" if et == "transformer" else style_color,
         highlight_color=highlight_color,
         style_function=style_function,
         highlight_function=highlight_function,
@@ -562,5 +678,6 @@ def plot_interactive_map(
         add_tooltips=add_tooltips,
         add_popups=add_popups,
         add_search=add_search,
+        fit_bounds=fit_bounds,
     )
     return m
