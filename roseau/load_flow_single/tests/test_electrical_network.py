@@ -933,6 +933,45 @@ def test_propagate_voltages():
     assert np.allclose(source_bus.initial_voltage.m, expected_voltages)
 
 
+def test_propagate_nominal_voltages(all_elements_network):
+    en = all_elements_network
+    # Test that it works even if some nominal voltages are missing
+    assert en.buses["bus0"].nominal_voltage is None
+    assert en.buses["bus4"].nominal_voltage is None
+    nominal_voltages = en._get_nominal_voltages()
+    assert nominal_voltages == {
+        "bus1": 20000.0,
+        "bus2": 400,
+        "bus3": 400,
+        "bus0": 20000.0,
+        "bus4": 400,
+    }
+
+    # No nominal voltages in the network
+    for bus in en.buses.values():
+        bus._min_voltage_level = None
+        bus._max_voltage_level = None
+        bus._nominal_voltage = None
+    nominal_voltages = en._get_nominal_voltages()
+    assert nominal_voltages == {
+        "bus1": 20000.0,
+        "bus2": 400,
+        "bus3": 400,
+        "bus0": 20000.0,
+        "bus4": 400,
+    }
+
+    # No transformer
+    bus1 = Bus(id="bus1")
+    bus2 = Bus(id="bus2")
+    VoltageSource(id="vs", bus=bus1, voltage=20e3)
+    Switch(id="sw", bus1=bus1, bus2=bus2)
+    en = ElectricalNetwork.from_element(bus1)
+    assert not en.transformers, "This test requires a network without transformers"
+    nominal_voltages = en._get_nominal_voltages()
+    npt.assert_allclose(list(nominal_voltages.values()), 20e3)
+
+
 def test_catalogue_data():
     # The catalogue data path exists
     catalogue_path = ElectricalNetwork.catalogue_path()

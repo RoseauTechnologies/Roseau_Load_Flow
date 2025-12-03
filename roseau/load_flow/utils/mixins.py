@@ -1034,7 +1034,7 @@ class AbstractNetwork(RLFObject, JsonMixin, CatalogueMixin[JsonDict], Generic[_E
             return nominal_voltages
 
         # Propagate nominal voltages of each feeder first (shortcut version)
-        for bus_id, nominal_voltage in nominal_voltages.items():
+        for bus_id, nominal_voltage in list(nominal_voltages.items()):
             for feeder_bus_id in self.buses[bus_id].get_connected_buses():
                 if feeder_bus_id not in nominal_voltages:
                     nominal_voltages[feeder_bus_id] = nominal_voltage
