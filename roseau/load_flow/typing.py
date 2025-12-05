@@ -116,7 +116,7 @@ Numpy Output Types (Narrow)
 
 import os
 from collections.abc import Mapping, Sequence
-from typing import Any, Literal, Protocol, TypeAlias, TypeVar
+from typing import Any, Literal, Protocol
 
 import numpy as np
 from numpy.typing import NDArray
@@ -124,38 +124,36 @@ from pyproj import CRS
 
 from roseau.load_flow.units import Q_
 
-T = TypeVar("T", bound=Any)
-
 
 class _SupportsToWkt(Protocol):
     def to_wkt(self) -> str: ...
 
 
 # RLF Helpers
-Id: TypeAlias = int | str
-JsonDict: TypeAlias = dict[str, Any]
-StrPath: TypeAlias = str | os.PathLike[str]
-MapOrSeq: TypeAlias = Mapping[int, T] | Mapping[str, T] | Mapping[Id, T] | Sequence[T]
-QtyOrMag: TypeAlias = Q_[T] | T
+type Id = int | str
+type JsonDict = dict[str, Any]
+type StrPath = str | os.PathLike[str]
+type MapOrSeq[T] = Mapping[int, T] | Mapping[str, T] | Mapping[Id, T] | Sequence[T]
+type QtyOrMag[T: Any] = Q_[T] | T
 
 # RLF Literals
-ControlType: TypeAlias = Literal["constant", "p_max_u_production", "p_max_u_consumption", "q_u"]
-ProjectionType: TypeAlias = Literal["euclidean", "keep_p", "keep_q"]
-Solver: TypeAlias = Literal["newton", "newton_goldstein", "backward_forward"]
-Side: TypeAlias = Literal[1, 2, "HV", "LV"]
+type ControlType = Literal["constant", "p_max_u_production", "p_max_u_consumption", "q_u"]
+type ProjectionType = Literal["euclidean", "keep_p", "keep_q"]
+type Solver = Literal["newton", "newton_goldstein", "backward_forward"]
+type Side = Literal[1, 2, "HV", "LV"]
 
 # Input Types (Wide)
-Int: TypeAlias = int | np.integer
-Float: TypeAlias = float | np.floating | Int
-Complex: TypeAlias = complex | np.complexfloating[Any, Any] | Float
-ComplexArrayLike1D: TypeAlias = QtyOrMag[NDArray[np.number] | Sequence[Complex]] | Sequence[QtyOrMag[Complex]]
-ComplexScalarOrArrayLike1D: TypeAlias = ComplexArrayLike1D | QtyOrMag[Complex]
-ComplexArrayLike2D: TypeAlias = (
+type Int = int | np.integer
+type Float = float | np.floating | Int
+type Complex = complex | np.complexfloating[Any, Any] | Float
+type ComplexArrayLike1D = QtyOrMag[NDArray[np.number] | Sequence[Complex]] | Sequence[QtyOrMag[Complex]]
+type ComplexScalarOrArrayLike1D = ComplexArrayLike1D | QtyOrMag[Complex]
+type ComplexArrayLike2D = (
     QtyOrMag[NDArray[np.number] | Sequence[Sequence[Complex]]] | Sequence[Sequence[QtyOrMag[Complex]]]
 )
-FloatArrayLike1D: TypeAlias = QtyOrMag[NDArray[np.floating | np.integer] | Sequence[Float]] | Sequence[QtyOrMag[Float]]
-FloatScalarOrArrayLike1D: TypeAlias = FloatArrayLike1D | QtyOrMag[Float]
-CRSLike: TypeAlias = (
+type FloatArrayLike1D = QtyOrMag[NDArray[np.floating | np.integer] | Sequence[Float]] | Sequence[QtyOrMag[Float]]
+type FloatScalarOrArrayLike1D = FloatArrayLike1D | QtyOrMag[Float]
+type CRSLike = (
     # The following are documented in the pyproj.CRS class
     # - PROJ string
     # - JSON string with PROJ parameters
@@ -175,11 +173,11 @@ CRSLike: TypeAlias = (
 )
 
 # Numpy Output Types (Narrow)
-ComplexMatrix: TypeAlias = np.ndarray[tuple[int, int], np.dtype[np.complex128]]  # 2D
-FloatMatrix: TypeAlias = np.ndarray[tuple[int, int], np.dtype[np.float64]]  # 2D
-ComplexArray: TypeAlias = np.ndarray[tuple[int], np.dtype[np.complex128]]  # 1D
-FloatArray: TypeAlias = np.ndarray[tuple[int], np.dtype[np.float64]]  # 1D
-BoolArray: TypeAlias = np.ndarray[tuple[int], np.dtype[np.bool_]]  # 1D
+type ComplexMatrix = np.ndarray[tuple[int, int], np.dtype[np.complex128]]  # 2D
+type FloatMatrix = np.ndarray[tuple[int, int], np.dtype[np.float64]]  # 2D
+type ComplexArray = np.ndarray[tuple[int], np.dtype[np.complex128]]  # 1D
+type FloatArray = np.ndarray[tuple[int], np.dtype[np.float64]]  # 1D
+type BoolArray = np.ndarray[tuple[int], np.dtype[np.bool_]]  # 1D
 
 __all__ = [
     # Helpers

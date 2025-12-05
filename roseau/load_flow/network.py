@@ -7,7 +7,7 @@ import logging
 import re
 from collections.abc import Generator, Iterable, Mapping
 from math import nan
-from typing import TYPE_CHECKING, Any, Final, Literal, Self, TypeVar, final
+from typing import TYPE_CHECKING, Any, Final, Literal, Self, final
 
 import geopandas as gpd
 import numpy as np
@@ -50,8 +50,6 @@ if TYPE_CHECKING:
     from networkx import MultiGraph
 
 logger = logging.getLogger(__name__)
-
-_AT = TypeVar("_AT", bound=AbstractTerminal)
 
 
 @final
@@ -835,9 +833,9 @@ class ElectricalNetwork(AbstractNetwork[Element]):
         return pd.DataFrame(res_dict).astype(dtypes).set_index(["connection_id"])
 
     # Voltages results
-    def _iter_terminal_res_voltages(
-        self, terminals: Mapping[Id, _AT], voltage_type: Literal["pp", "pn", "auto"]
-    ) -> Generator[tuple[_AT, ComplexArray, list[str]]]:
+    def _iter_terminal_res_voltages[AT: AbstractTerminal](
+        self, terminals: Mapping[Id, AT], voltage_type: Literal["pp", "pn", "auto"]
+    ) -> Generator[tuple[AT, ComplexArray, list[str]]]:
         if voltage_type == "auto":
             for e in terminals.values():
                 yield e, e._res_voltages_getter(warning=False), e.voltage_phases

@@ -27,8 +27,6 @@ from roseau.load_flow_engine.cy_engine import CyElectricalNetwork, CyElement
 
 logger = logging.getLogger(__name__)
 
-_T = TypeVar("_T")
-_E = TypeVar("_E", bound="AbstractElement")
 _E_co = TypeVar("_E_co", bound="AbstractElement", covariant=True)
 _N_co = TypeVar("_N_co", bound="AbstractNetwork", covariant=True)
 _CyE_co = TypeVar("_CyE_co", bound=CyElement, default=CyElement, covariant=True)
@@ -250,7 +248,7 @@ class JsonMixin(metaclass=ABCMeta):
         return path
 
 
-class CatalogueMixin(Generic[_T], metaclass=ABCMeta):
+class CatalogueMixin[T](metaclass=ABCMeta):
     """A mixin class for objects which can be built from a catalogue. It adds the `from_catalogue` class method."""
 
     @classmethod
@@ -261,7 +259,7 @@ class CatalogueMixin(Generic[_T], metaclass=ABCMeta):
 
     @classmethod
     @abstractmethod
-    def catalogue_data(cls) -> _T:
+    def catalogue_data(cls) -> T:
         """Get the catalogue data."""
         raise NotImplementedError
 
@@ -530,7 +528,7 @@ class AbstractElement(Identifiable, JsonMixin, Generic[_N_co, _CyE_co]):
         """Refresh the results of the element."""
         raise NotImplementedError
 
-    def _res_getter(self, value: _T | None, warning: bool) -> _T:
+    def _res_getter[T](self, value: T | None, warning: bool) -> T:
         """A safe getter for load flow results.
 
         Args:
@@ -592,7 +590,7 @@ class AbstractElement(Identifiable, JsonMixin, Generic[_N_co, _CyE_co]):
         raise RoseauLoadFlowException(msg, code=RoseauLoadFlowExceptionCode.SEVERAL_NETWORKS)
 
 
-class AbstractNetwork(RLFObject, JsonMixin, CatalogueMixin[JsonDict], Generic[_E_co]):
+class AbstractNetwork(RLFObject, JsonMixin, CatalogueMixin[JsonDict], Generic[_E_co]):  # noqa: UP046
     """An abstract class of an electrical network."""
 
     _DEFAULT_SOLVER: Solver = "newton_goldstein"
@@ -765,10 +763,12 @@ class AbstractNetwork(RLFObject, JsonMixin, CatalogueMixin[JsonDict], Generic[_E
         return result
 
     @staticmethod
-    def _elements_as_dict(elements: MapOrSeq[_E], error_code: RoseauLoadFlowExceptionCode) -> dict[Id, _E]:
+    def _elements_as_dict[E: AbstractElement](
+        elements: MapOrSeq[E], error_code: RoseauLoadFlowExceptionCode
+    ) -> dict[Id, E]:
         """Convert a sequence or a mapping of elements to a dictionary of elements with their IDs as keys."""
         typ = error_code.name.removeprefix("BAD_").removesuffix("_ID").replace("_", " ")
-        elements_dict: dict[Id, _E] = {}
+        elements_dict: dict[Id, E] = {}
         if isinstance(elements, Mapping):
             for element_id, element in elements.items():
                 if element.id != element_id:
@@ -858,7 +858,9 @@ class AbstractNetwork(RLFObject, JsonMixin, CatalogueMixin[JsonDict], Generic[_E
     def _remove_parameters(self, element_type: str, params_id: Id) -> None:
         del self._parameters[element_type][params_id]
 
-    def _add_element_to_dict(self, element: _E, to: dict[Id, _E], disconnectable: bool = False) -> None:
+    def _add_element_to_dict[E: AbstractElement](
+        self, element: E, to: dict[Id, E], disconnectable: bool = False
+    ) -> None:
         if element.id in to and (old := to[element.id]) is not element:
             element._disconnect()  # Don't leave it lingering in other elements _connected_elements
             old_type = type(old).__name__

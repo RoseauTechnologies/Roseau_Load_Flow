@@ -2,7 +2,7 @@ import logging
 import time
 import warnings
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Generic, TypeAlias
+from typing import TYPE_CHECKING, Generic
 
 import numpy as np
 from typing_extensions import TypeVar
@@ -31,7 +31,7 @@ SOLVERS = list(_SOLVERS_PARAMS)
 if TYPE_CHECKING:
     from roseau.load_flow.utils import AbstractElement, AbstractNetwork
 
-    ElectricalNetwork: TypeAlias = AbstractNetwork[AbstractElement]
+    type ElectricalNetwork = AbstractNetwork[AbstractElement]
 
 
 _CyS_co = TypeVar("_CyS_co", bound=CyAbstractSolver, default=CyAbstractSolver, covariant=True)

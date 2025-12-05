@@ -1,7 +1,7 @@
 import cmath
 import logging
 import warnings
-from typing import Literal, TypeAlias
+from typing import Literal
 
 import numpy as np
 
@@ -26,7 +26,7 @@ from roseau.load_flow_single.models import (
 
 logger = logging.getLogger(__name__)
 
-OnIncompatibleType: TypeAlias = Literal["ignore", "warn", "raise-critical", "raise"]
+type OnIncompatibleType = Literal["ignore", "warn", "raise-critical", "raise"]
 
 
 def _handle_incompatibility(msg: str, on_incompatible: OnIncompatibleType, critical: bool = True) -> None:

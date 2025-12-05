@@ -3,7 +3,7 @@ import logging
 import re
 from enum import StrEnum
 from pathlib import Path
-from typing import Final, Literal, NoReturn, Self, TypeVar
+from typing import Final, Literal, NoReturn, Self
 
 import numpy as np
 import pandas as pd
@@ -17,7 +17,6 @@ from roseau.load_flow.utils import CatalogueMixin, Identifiable, JsonMixin
 
 logger = logging.getLogger(__name__)
 
-_StrEnumT = TypeVar("_StrEnumT", bound=StrEnum)
 _triu_i = np.triu_indices(3, 1)
 _tril_i = np.tril_indices(3, -1)
 
@@ -924,7 +923,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             return float(value)
 
     @staticmethod
-    def _check_str_enum(value: _StrEnumT | str | None, enum_class: type[_StrEnumT], error_code) -> _StrEnumT | None:
+    def _check_str_enum[SE: StrEnum](value: SE | str | None, enum_class: type[SE], error_code) -> SE | None:
         if pd.isna(value):
             return None
         try:
