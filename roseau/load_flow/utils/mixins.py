@@ -2,7 +2,6 @@ import json
 import logging
 import re
 import textwrap
-import warnings
 from abc import ABCMeta, abstractmethod
 from collections import defaultdict
 from collections.abc import Collection, Iterable, Mapping, Sequence
@@ -20,8 +19,7 @@ from typing_extensions import TypeVar
 from roseau.load_flow._solvers import AbstractSolver
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.typing import CRSLike, Id, JsonDict, MapOrSeq, Solver, StrPath
-from roseau.load_flow.utils.exceptions import find_stack_level
-from roseau.load_flow.utils.helpers import abstractattrs
+from roseau.load_flow.utils.helpers import abstractattrs, warn_external
 from roseau.load_flow.utils.tool_data import ToolData
 from roseau.load_flow_engine.cy_engine import CyElectricalNetwork, CyElement
 
@@ -549,13 +547,12 @@ class AbstractElement(Identifiable, JsonMixin, Generic[_N_co, _CyE_co]):
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN)
         if warning and self._network is not None and not self._network._results_valid:
-            warnings.warn(
+            warn_external(
                 message=(
                     f"The results of {type(self).__name__} {self.id!r} may be outdated. Please re-run a load flow to "
                     "ensure the validity of results."
                 ),
                 category=UserWarning,
-                stacklevel=find_stack_level(),
             )
         self._fetch_results = False
         return value
@@ -998,13 +995,12 @@ class AbstractNetwork(RLFObject, JsonMixin, CatalogueMixin[JsonDict], Generic[_E
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN)
 
         if not self._results_valid:
-            warnings.warn(
+            warn_external(
                 message=(
                     "The results of this network may be outdated. Please re-run a load flow to "
                     "ensure the validity of results."
                 ),
                 category=UserWarning,
-                stacklevel=find_stack_level(),
             )
             return False
         return True

@@ -17,7 +17,6 @@ from roseau.load_flow.utils.dtypes import (
     SourceTypeDtype,
     VoltagePhaseDtype,
 )
-from roseau.load_flow.utils.exceptions import find_stack_level
 from roseau.load_flow.utils.helpers import (
     SIDE_DESC,
     SIDE_INDEX,
@@ -29,6 +28,7 @@ from roseau.load_flow.utils.helpers import (
     geom_mapping,
     id_sort_key,
     one_or_more_repr,
+    warn_external,
 )
 from roseau.load_flow.utils.log import set_logging_config
 from roseau.load_flow.utils.mixins import AbstractElement, AbstractNetwork, CatalogueMixin, Identifiable, JsonMixin
@@ -42,7 +42,7 @@ __all__ = [
     "AbstractElement",
     "AbstractNetwork",
     # Exceptions and warnings
-    "find_stack_level",
+    "warn_external",
     "deprecate_nonkeyword_arguments",
     "deprecate_parameter_as_multi_positional",
     "deprecate_renamed_parameter",
@@ -77,8 +77,6 @@ __all__ = [
 
 
 def __getattr__(name: str):
-    import warnings
-
     deprecation_template = (
         "Importing {name} from 'roseau.load_flow.utils' is deprecated. Use 'rlf.{module}.{name}' instead."
     )
@@ -98,29 +96,17 @@ def __getattr__(name: str):
         "TAN_D",
     ):
         # deprecated since 0.12.0
-        warnings.warn(
-            deprecation_template.format(name=name, module="constants"),
-            category=FutureWarning,
-            stacklevel=find_stack_level(),
-        )
+        warn_external(deprecation_template.format(name=name, module="constants"), category=FutureWarning)
         from roseau.load_flow import constants
 
         return getattr(constants, name)
     elif name in ("PositiveSequence", "NegativeSequence", "ZeroSequence"):
-        warnings.warn(
-            deprecation_template.format(name=name, module="sym"),
-            category=FutureWarning,
-            stacklevel=find_stack_level(),
-        )
+        warn_external(deprecation_template.format(name=name, module="sym"), category=FutureWarning)
         from roseau.load_flow import sym
 
         return getattr(sym, name)
     elif name in ("LineType", "Material", "Insulator"):
-        warnings.warn(
-            deprecation_template.format(name=name, module="types"),
-            category=FutureWarning,
-            stacklevel=find_stack_level(),
-        )
+        warn_external(deprecation_template.format(name=name, module="types"), category=FutureWarning)
         from roseau.load_flow import types
 
         return getattr(types, name)

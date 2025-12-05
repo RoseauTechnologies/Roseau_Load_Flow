@@ -8,7 +8,6 @@ to read and write networks from and to JSON files.
 
 import copy
 import logging
-import warnings
 from collections import defaultdict
 from typing import TYPE_CHECKING, Final
 
@@ -34,7 +33,7 @@ from roseau.load_flow.models import (
 )
 from roseau.load_flow.types import Insulator, Material
 from roseau.load_flow.typing import Id, JsonDict
-from roseau.load_flow.utils import SIDE_SUFFIX, find_stack_level, id_sort_key
+from roseau.load_flow.utils import SIDE_SUFFIX, id_sort_key, warn_external
 
 if TYPE_CHECKING:
     from roseau.load_flow.network import ElectricalNetwork
@@ -67,11 +66,10 @@ def network_from_dict(  # noqa: C901
 
     version = data.get("version", 0)
     if version <= 4:
-        warnings.warn(
+        warn_external(
             f"Got an outdated network file (version {version}), trying to update to the current format "
             f"(version {NETWORK_JSON_VERSION}). Please save the network again.",
             category=UserWarning,
-            stacklevel=find_stack_level(),
         )
         if version <= 0:
             data = v0_to_v1_converter(data)
@@ -652,11 +650,10 @@ def v2_to_v3_converter(data: JsonDict) -> JsonDict:  # noqa: C901
     for bus_data in old_buses:
         for key in ("min_voltage", "max_voltage"):
             if bus_data.pop(key, None) is not None and not bus_warning_emitted:
-                warnings.warn(
+                warn_external(
                     "Starting with version 0.11.0 of roseau-load-flow (JSON file v3), `min_voltage` and "
                     "`max_voltage` are replaced with `min_voltage_level`, `max_voltage_level` and `nominal_voltage`. "
-                    "The found values of `min_voltage` or `max_voltage` are dropped.",
-                    stacklevel=find_stack_level(),
+                    "The found values of `min_voltage` or `max_voltage` are dropped."
                 )
                 bus_warning_emitted = True
         buses.append(bus_data)

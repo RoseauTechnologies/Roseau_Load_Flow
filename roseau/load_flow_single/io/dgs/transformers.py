@@ -1,6 +1,5 @@
 import logging
 import math
-import warnings
 from collections.abc import Iterable, Iterator
 
 import pandas as pd
@@ -15,7 +14,7 @@ from roseau.load_flow.io.dgs.utils import (
 )
 from roseau.load_flow.typing import Id
 from roseau.load_flow.units import Q_
-from roseau.load_flow.utils import find_stack_level
+from roseau.load_flow.utils import warn_external
 from roseau.load_flow_single.io.dgs.pwf import STA_CUBIC_FID_INDEX, STA_CUBIC_OBJ_ID_INDEX
 from roseau.load_flow_single.models import Bus, Transformer, TransformerParameters
 
@@ -189,10 +188,7 @@ def tp_to_typ_tr2(transformer_params: Iterable[TransformerParameters], fid_count
             }
         )
         if (fn := tp.fn) is None:
-            warnings.warn(
-                f"Transformer parameters {tp.id!r} has no nominal frequency. Setting it to 50 Hz.",
-                stacklevel=find_stack_level(),
-            )
+            warn_external(f"Transformer parameters {tp.id!r} has no nominal frequency. Setting it to 50 Hz.")
             frnom = 50.0
         else:
             frnom = fn.m_as("Hz")
@@ -265,13 +261,10 @@ def transformers_to_elm_tr2(
         nntap_float = 100 * (1.0 - tr.tap) / DU_TAP
         nntap = round(nntap_float)
         if not math.isclose(nntap_float, nntap, abs_tol=0.1):
-            warnings.warn(
-                (
-                    f"Transformer {tr.id!r} has tap value {tr.tap} which is equivalent to position "
-                    f"{nntap_float} of {DU_TAP}% additional voltage per tap. Setting the tap position "
-                    f"to {nntap} instead."
-                ),
-                stacklevel=find_stack_level(),
+            warn_external(
+                f"Transformer {tr.id!r} has tap value {tr.tap} which is equivalent to position "
+                f"{nntap_float} of {DU_TAP}% additional voltage per tap. Setting the tap position "
+                f"to {nntap} instead."
             )
         values.append(
             [

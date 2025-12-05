@@ -1,6 +1,9 @@
+import warnings
 from abc import ABCMeta, abstractmethod, update_abstractmethods
 from collections.abc import Callable, Collection, Sized
 from enum import StrEnum
+from functools import cache
+from pathlib import Path
 from typing import Final
 
 from shapely.geometry.base import BaseGeometry
@@ -102,3 +105,18 @@ def abstractattrs[T: ABCMeta](*attrs: str) -> Callable[[T], T]:
         return cls
 
     return decorator
+
+
+@cache
+def _get_skip_file_prefixes() -> tuple[str, ...]:
+    import roseau.load_flow as rlf
+    import roseau.load_flow_single as rlfs
+
+    rlf_dir = Path(rlf.__file__).parent
+    rlfs_dir = Path(rlfs.__file__).parent
+    return str(rlf_dir), str(rlfs_dir)
+
+
+def warn_external(message: str, category: type[Warning] | None = None) -> None:
+    """Issue a warning to external code, skipping internal frames."""
+    warnings.warn(message, category, skip_file_prefixes=_get_skip_file_prefixes())

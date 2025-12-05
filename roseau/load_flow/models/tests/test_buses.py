@@ -1,3 +1,5 @@
+import warnings
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -100,7 +102,7 @@ def test_short_circuit():
     assert "ground" in en.grounds
 
 
-def test_voltage_limits(recwarn):
+def test_voltage_limits():
     # Default values
     bus = Bus(id="bus", phases="abc")
     assert bus.nominal_voltage is None
@@ -125,9 +127,9 @@ def test_voltage_limits(recwarn):
     assert bus.max_voltage == Q_(434.6, "V")
 
     # Can be reset to None
-    bus.nominal_voltage = None
     bus.min_voltage_level = None
     bus.max_voltage_level = None
+    bus.nominal_voltage = None
     assert bus.min_voltage_level is None
     assert bus.max_voltage_level is None
     assert bus.min_voltage is None
@@ -145,9 +147,9 @@ def test_voltage_limits(recwarn):
 
     # NaNs are converted to None
     for na in (np.nan, float("nan"), pd.NA):
-        bus.nominal_voltage = na
         bus.min_voltage_level = na
         bus.max_voltage_level = na
+        bus.nominal_voltage = na
         assert bus.nominal_voltage is None
         assert bus.min_voltage_level is None
         assert bus.max_voltage_level is None
@@ -158,43 +160,42 @@ def test_voltage_limits(recwarn):
     bus.nominal_voltage = None
     bus.min_voltage_level = None
     bus.max_voltage_level = None
-    recwarn.clear()
-    bus.min_voltage_level = 0.95
-    assert len(recwarn) == 1
-    assert (
-        recwarn[0].message.args[0]
-        == "The min voltage level of the bus 'bus' is useless without a nominal voltage. Please define a nominal "
-        "voltage for this bus."
-    )
+    with pytest.warns(
+        UserWarning,
+        match=(
+            "The min voltage level of the bus 'bus' is useless without a nominal voltage. Please "
+            "define a nominal voltage for this bus."
+        ),
+    ):
+        bus.min_voltage_level = 0.95
     assert bus.min_voltage_level == Q_(0.95, "")
     assert bus.min_voltage is None
-    recwarn.clear()
-    bus.max_voltage_level = 1.05
-    assert len(recwarn) == 1
-    assert (
-        recwarn[0].message.args[0]
-        == "The max voltage level of the bus 'bus' is useless without a nominal voltage. Please define a nominal "
-        "voltage for this bus."
-    )
+    with pytest.warns(
+        UserWarning,
+        match=(
+            "The max voltage level of the bus 'bus' is useless without a nominal voltage. Please "
+            "define a nominal voltage for this bus."
+        ),
+    ):
+        bus.max_voltage_level = 1.05
     assert bus.max_voltage_level == Q_(1.05, "")
     assert bus.max_voltage is None
 
     # Erasing a nominal voltage with a min or max voltage level emits a warning
     bus.nominal_voltage = Q_(400, "V")
-    recwarn.clear()
-    bus.nominal_voltage = None
-    assert len(recwarn) == 1
-    assert (
-        recwarn[0].message.args[0]
-        == "The nominal voltage of the bus 'bus' is required to use `min_voltage_level` and `max_voltage_level`."
-    )
+    with pytest.warns(
+        UserWarning,
+        match="The nominal voltage of the bus 'bus' is required to use `min_voltage_level` and `max_voltage_level`.",
+    ):
+        bus.nominal_voltage = None
+
     bus.nominal_voltage = Q_(400, "V")
     bus.min_voltage_level = None
     bus.max_voltage_level = None
-    recwarn.clear()
-    bus.nominal_voltage = None
-    assert len(recwarn) == 0
+    with warnings.catch_warnings(action="error"):
+        bus.nominal_voltage = None
 
+    bus.nominal_voltage = Q_(400, "V")
     # Bad values
     bus.min_voltage_level = 0.95
     with pytest.raises(RoseauLoadFlowException) as e:

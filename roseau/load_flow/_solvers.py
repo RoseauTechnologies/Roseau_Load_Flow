@@ -1,6 +1,5 @@
 import logging
 import time
-import warnings
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Generic
 
@@ -10,7 +9,7 @@ from typing_extensions import TypeVar
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.license import activate_license, get_license
 from roseau.load_flow.typing import FloatArray, FloatArrayLike1D, FloatMatrix, JsonDict, Solver
-from roseau.load_flow.utils import find_stack_level
+from roseau.load_flow.utils import warn_external
 from roseau.load_flow_engine.cy_engine import (
     CyAbstractNewton,
     CyAbstractSolver,
@@ -140,7 +139,7 @@ class AbstractSolver(ABC, Generic[_CyS_co]):
     def update_params(self, params: JsonDict) -> None:
         """If the network has changed, we need to re-create a solver for this new network."""
         msg = "The update_params() method is called for a solver that doesn't have any parameters."
-        warnings.warn(msg, stacklevel=find_stack_level())
+        warn_external(msg)
 
     def to_dict(self) -> JsonDict:
         """Return the solver information as a dictionary format."""

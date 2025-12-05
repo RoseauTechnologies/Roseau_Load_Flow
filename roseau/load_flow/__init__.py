@@ -130,16 +130,10 @@ def __getattr__(name: str) -> Any:
     deprecated_classes = {"ConductorType": Material, "InsulatorType": Insulator}
 
     if name in deprecated_classes and name not in globals():
-        import warnings
-
-        from roseau.load_flow.utils.exceptions import find_stack_level
+        from roseau.load_flow.utils.helpers import warn_external
 
         new_class = deprecated_classes[name]
-        warnings.warn(
-            f"The `{name}` class is deprecated. Use `{new_class.__name__}` instead.",
-            category=FutureWarning,
-            stacklevel=find_stack_level(),
-        )
+        warn_external(f"The `{name}` class is deprecated. Use `{new_class.__name__}` instead.", category=FutureWarning)
         globals()[name] = new_class
         return new_class
     else:

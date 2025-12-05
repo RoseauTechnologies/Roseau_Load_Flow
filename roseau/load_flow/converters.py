@@ -119,17 +119,11 @@ def calculate_voltage_phases(phases: str) -> list[str]:
 
 
 def __getattr__(name: str):
-    import warnings
-
-    from roseau.load_flow.utils.exceptions import find_stack_level
+    from roseau.load_flow.utils.helpers import warn_external
 
     if name in ("phasor_to_sym", "sym_to_phasor", "series_phasor_to_sym"):
         # deprecated since 0.12.0
-        warnings.warn(
-            f"'rlf.converters.{name}' is deprecated. Use 'rlf.sym.{name}' instead.",
-            category=FutureWarning,
-            stacklevel=find_stack_level(),
-        )
+        warn_external(f"'rlf.converters.{name}' is deprecated. Use 'rlf.sym.{name}' instead.", category=FutureWarning)
         from roseau.load_flow import sym
 
         return getattr(sym, name)

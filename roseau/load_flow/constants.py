@@ -117,17 +117,11 @@ EPSILON_R: Final[dict[Insulator, Q_[float]]] = {
 
 
 def __getattr__(name: str):
-    import warnings
-
-    from roseau.load_flow.utils.exceptions import find_stack_level
+    from roseau.load_flow.utils.helpers import warn_external
 
     if name in ("PositiveSequence", "NegativeSequence", "ZeroSequence"):
         # deprecated since 0.12.0
-        warnings.warn(
-            f"'rlf.constants.{name}' is deprecated. Use 'rlf.sym.{name}' instead.",
-            category=FutureWarning,
-            stacklevel=find_stack_level(),
-        )
+        warn_external(f"'rlf.constants.{name}' is deprecated. Use 'rlf.sym.{name}' instead.", category=FutureWarning)
         from roseau.load_flow import sym
 
         return getattr(sym, name)
