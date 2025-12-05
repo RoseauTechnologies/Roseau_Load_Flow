@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod, update_abstractmethods
 from collections.abc import Callable, Collection, Sized
 from enum import StrEnum
-from typing import Final, TypeVar
+from typing import Final
 
 from shapely.geometry.base import BaseGeometry
 
@@ -83,9 +83,6 @@ class CaseInsensitiveStrEnum(StrEnum):
         return None
 
 
-_ABCT = TypeVar("_ABCT", bound=ABCMeta)
-
-
 @staticmethod
 @abstractmethod
 def _abstract_attr():
@@ -93,10 +90,10 @@ def _abstract_attr():
     raise TypeError("abstract attributes are not callable")
 
 
-def abstractattrs(*attrs: str) -> Callable[[_ABCT], _ABCT]:
+def abstractattrs[T: ABCMeta](*attrs: str) -> Callable[[T], T]:
     """Class decorator to mark attributes as abstract."""
 
-    def decorator(cls: "_ABCT", /) -> "_ABCT":
+    def decorator(cls: "T", /) -> "T":
         assert isinstance(cls, ABCMeta), "abstractattrs can only be used on ABC classes"
         for attr in attrs:
             if not hasattr(cls, attr):

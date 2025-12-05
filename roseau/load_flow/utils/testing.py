@@ -3,12 +3,8 @@ import warnings
 from collections.abc import Callable, Generator
 from contextlib import AbstractContextManager, contextmanager
 from functools import cache
-from typing import ParamSpec, TypeVar
 
 from roseau.load_flow.utils.mixins import AbstractNetwork
-
-P = ParamSpec("P")
-R = TypeVar("R")
 
 
 @contextmanager
@@ -22,7 +18,7 @@ def check_result_warning(match: str | re.Pattern[str]) -> Generator[None]:
     assert record.category is UserWarning
 
 
-def invoke_result_access(
+def invoke_result_access[**P, R](
     en_or_elm: object, res_name: str, func: Callable[P, AbstractContextManager[R]], /, *args: P.args, **kwargs: P.kwargs
 ) -> R:
     """Invoke a context manager when accessing a result on a network or element.
@@ -68,7 +64,7 @@ def get_result_names(en_or_elm_class: type[object], /) -> Generator[str]:
     yield from (attr for attr in dir(en_or_elm_class) if attr.startswith("res_"))
 
 
-def access_elements_results(
+def access_elements_results[**P, R](
     en: "AbstractNetwork", func: Callable[P, AbstractContextManager[R]], /, *args: P.args, **kwargs: P.kwargs
 ) -> Generator[R]:
     for element_type, elements in en._elements_by_type.items():

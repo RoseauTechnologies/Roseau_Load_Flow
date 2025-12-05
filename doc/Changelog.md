@@ -21,6 +21,9 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`419` Require Python 3.12 or newer and bump the minimum supported versions of some dependencies per
+  [SPEC-0](https://scientific-python.org/specs/spec-0000/).
+
 - {gh-pr}`418` Many improvements to the styles of interactive map plots:
 
   - Different voltage levels are represented with different marker sizes and line widths. Nominal voltages are used to

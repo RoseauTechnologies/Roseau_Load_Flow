@@ -1,4 +1,4 @@
-from typing import Final, Literal, TypeAlias
+from typing import Final, Literal
 
 from roseau.load_flow.types import Insulator, LineType, Material
 
@@ -33,7 +33,7 @@ MATERIALS_REVERSE: Final[dict[Material, str]] = {v: k for k, v in MATERIALS.item
 INSULATORS_REVERSE: Final[dict[Insulator, int]] = {v: k for k, v in INSULATORS.items()}
 
 # Loads
-PwFLoadType: TypeAlias = Literal["MV", "LV", "General", "PV", "GenStat"]
+type PwFLoadType = Literal["MV", "LV", "General", "PV", "GenStat"]
 LOAD_I_SYM_FIELD_NAMES: Final[dict[PwFLoadType, str | None]] = {
     "MV": "ci_sym",
     "LV": "i_sym",

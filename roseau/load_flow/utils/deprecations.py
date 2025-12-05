@@ -6,15 +6,11 @@ import inspect
 import warnings
 from collections.abc import Callable, Mapping, Sequence
 from functools import wraps
-from typing import ParamSpec, TypeVar
 
 from roseau.load_flow.utils.exceptions import find_stack_level
 
-P = ParamSpec("P")
-T = TypeVar("T")
 
-
-def deprecate_renamed_parameters(
+def deprecate_renamed_parameters[**P, T](
     replaced_names: Mapping[str, str], *, version: str, category: type[Warning] = FutureWarning
 ) -> Callable[[Callable[P, T]], Callable[P, T]]:
     """Decorator to mark function parameters as deprecated due to being renamed.
@@ -53,7 +49,7 @@ def deprecate_renamed_parameters(
     return decorate
 
 
-def deprecate_renamed_parameter(
+def deprecate_renamed_parameter[**P, T](
     old_name: str, new_name: str, *, version: str, category: type[Warning] = FutureWarning
 ) -> Callable[[Callable[P, T]], Callable[P, T]]:
     """Decorator to mark a function parameter as deprecated due to being renamed.
@@ -66,7 +62,7 @@ def deprecate_renamed_parameter(
     return deprecate_renamed_parameters({old_name: new_name}, version=version, category=category)
 
 
-def deprecate_nonkeyword_arguments(
+def deprecate_nonkeyword_arguments[**P, T](
     allowed_args: Sequence[str] | None = None, message: str | None = None, *, version: str
 ) -> Callable[[Callable[P, T]], Callable[P, T]]:
     """Decorator to deprecate the use of non-keyword arguments of a function.
@@ -136,7 +132,7 @@ def deprecate_nonkeyword_arguments(
     return decorate
 
 
-def deprecate_parameter_as_multi_positional(
+def deprecate_parameter_as_multi_positional[**P, T](
     old_name: str, *, version: str
 ) -> Callable[[Callable[P, T]], Callable[P, T]]:
     """Decorator to mark a function argument as deprecated due to being made multi-positional.

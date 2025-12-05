@@ -25,7 +25,7 @@ In addition to the following **unique** set of features:
 
 <!-- end rlf-pitch -->
 
-This project is compatible with Python version 3.11 and newer. The
+This project is compatible with Python version 3.12 and newer. The
 [installation instructions](https://roseau-load-flow.roseautechnologies.com/en/latest/Installation.html) will guide you
 through the installation process. If you are new to _Roseau Load Flow_, we recommend you start with the
 [getting started tutorial](https://roseau-load-flow.roseautechnologies.com/en/latest/usage/Getting_Started.html). You

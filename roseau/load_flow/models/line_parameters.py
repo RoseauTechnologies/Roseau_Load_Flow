@@ -5,7 +5,7 @@ from collections.abc import Sequence
 from enum import StrEnum
 from importlib import resources
 from pathlib import Path
-from typing import Final, Literal, NoReturn, Self, TypeAlias, TypeVar
+from typing import Final, Literal, NoReturn, Self
 
 import numpy as np
 import numpy.linalg as nplin
@@ -42,9 +42,8 @@ _DEFAULT_INSULATOR = {
     LineType.UNDERGROUND: Insulator.PVC,
 }
 
-MaterialArray: TypeAlias = NDArray[np.object_]
-InsulatorArray: TypeAlias = NDArray[np.object_]
-_StrEnumType = TypeVar("_StrEnumType", bound=StrEnum)
+type MaterialArray = NDArray[np.object_]
+type InsulatorArray = NDArray[np.object_]
 
 
 class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
