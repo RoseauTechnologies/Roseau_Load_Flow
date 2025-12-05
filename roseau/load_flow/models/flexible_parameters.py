@@ -1,5 +1,4 @@
 import logging
-import warnings
 from collections.abc import Iterable
 from typing import TYPE_CHECKING, NoReturn, Self
 
@@ -19,7 +18,7 @@ from roseau.load_flow.typing import (
     ProjectionType,
 )
 from roseau.load_flow.units import Q_, ureg_wraps
-from roseau.load_flow.utils import JsonMixin, find_stack_level, optional_deps
+from roseau.load_flow.utils import JsonMixin, optional_deps, warn_external
 from roseau.load_flow_engine.cy_engine import CyControl, CyFlexibleParameter, CyProjection
 
 logger = logging.getLogger(__name__)
@@ -132,13 +131,12 @@ class Control(JsonMixin):
 
         if msg_list:
             msg = ", ".join(msg_list)
-            warnings.warn(
+            warn_external(
                 message=(
                     f"The following voltage parameters are not used by the {self.type!r} control "
                     f"and should be set to 0 V: {msg}"
                 ),
                 category=UserWarning,
-                stacklevel=find_stack_level(),
             )
 
         # Raise an error if the useful values are not well-ordered and positive

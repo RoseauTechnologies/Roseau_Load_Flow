@@ -3,11 +3,10 @@
 # under the MIT license.
 # polars source code is available at https://github.com/pola-rs/polars
 import inspect
-import warnings
 from collections.abc import Callable, Mapping, Sequence
 from functools import wraps
 
-from roseau.load_flow.utils.exceptions import find_stack_level
+from roseau.load_flow.utils.helpers import warn_external
 
 
 def deprecate_renamed_parameters[**P, T](
@@ -32,13 +31,12 @@ def deprecate_renamed_parameters[**P, T](
                             f"{func_name}() got both {old_name!r} and {new_name!r} as arguments; "
                             f"{old_name!r} is deprecated, use {new_name!r} instead."
                         )
-                    warnings.warn(
+                    warn_external(
                         message=(
                             f"Argument {old_name!r} for {func_name}() is deprecated. It has been "
                             f"renamed to {new_name!r}."
                         ),
                         category=category,
-                        stacklevel=find_stack_level(),
                     )
                     kwargs[new_name] = kwargs.pop(old_name)
             return function(*args, **kwargs)
@@ -123,7 +121,7 @@ def deprecate_nonkeyword_arguments[**P, T](
         @wraps(function)
         def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
             if len(args) > num_allowed_args:
-                warnings.warn(message=msg, category=FutureWarning, stacklevel=find_stack_level())
+                warn_external(message=msg, category=FutureWarning)
             return function(*args, **kwargs)
 
         wrapper.__signature__ = new_sig  # type: ignore
@@ -151,13 +149,12 @@ def deprecate_parameter_as_multi_positional[**P, T](
             except KeyError:
                 return function(*args, **kwargs)
 
-            warnings.warn(
+            warn_external(
                 message=(
                     f"Passing {old_name!r} as a keyword argument is deprecated. Pass it as a "
                     "positional argument instead."
                 ),
                 category=FutureWarning,
-                stacklevel=find_stack_level(),
             )
 
             if not isinstance(arg_value, Sequence) or isinstance(arg_value, str):

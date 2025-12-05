@@ -1,5 +1,4 @@
 import logging
-import warnings
 from typing import TYPE_CHECKING, Final, Literal, Self
 
 import numpy as np
@@ -10,7 +9,7 @@ from roseau.load_flow.models.core import Element
 from roseau.load_flow.models.terminals import AbstractTerminal
 from roseau.load_flow.typing import Complex, Id, JsonDict, Side
 from roseau.load_flow.units import Q_, ureg_wraps
-from roseau.load_flow.utils import find_stack_level, one_or_more_repr
+from roseau.load_flow.utils import one_or_more_repr, warn_external
 from roseau.load_flow_engine.cy_engine import CyBranch, CyGround, CySimplifiedLine, CySwitch
 
 if TYPE_CHECKING:
@@ -208,14 +207,13 @@ class GroundConnection(Element[CySimplifiedLine | CySwitch]):
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.BAD_BRANCH_SIDE)
             element = element.side1 if side in (1, "HV") else element.side2
-            warnings.warn(
+            warn_external(
                 (
                     f"Connecting a {element_to_connect.element_type} to a ground using the side "
                     f"argument is deprecated. Use {element_to_connect.element_type}.side"
                     f"{element._side_suffix} directly instead."
                 ),
                 category=DeprecationWarning,
-                stacklevel=find_stack_level(),
             )
         else:
             msg = f"Cannot connect {element._element_info} to the ground."
@@ -257,7 +255,7 @@ class GroundConnection(Element[CySimplifiedLine | CySwitch]):
                     logger.error(msg)
                     raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_GROUND_ID)
                 else:
-                    warnings.warn(msg, stacklevel=find_stack_level())
+                    warn_external(msg)
 
         self._connect(ground, element_to_connect)
         self._ground = ground

@@ -1,6 +1,5 @@
 import logging
 import math
-import warnings
 from collections.abc import Iterator
 from typing import Final, Self
 
@@ -11,7 +10,7 @@ from shapely.geometry.base import BaseGeometry
 from roseau.load_flow import SQRT3, RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.typing import Complex, Float, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
-from roseau.load_flow.utils import find_stack_level
+from roseau.load_flow.utils import warn_external
 from roseau.load_flow_engine.cy_engine import CyBus
 from roseau.load_flow_single.models.core import Element
 from roseau.load_flow_single.models.terminals import AbstractTerminal
@@ -118,13 +117,12 @@ class Bus(AbstractTerminal[CyBus]):
     def nominal_voltage(self, value: Float | Q_[Float] | None) -> None:
         if pd.isna(value):
             if self._max_voltage_level is not None or self._min_voltage_level is not None:
-                warnings.warn(
+                warn_external(
                     message=(
                         f"The nominal voltage of bus {self.id!r} is required to use `min_voltage_level` "
                         f"and `max_voltage_level`."
                     ),
                     category=UserWarning,
-                    stacklevel=find_stack_level(),
                 )
             self._nominal_voltage = None
         else:
@@ -153,13 +151,12 @@ class Bus(AbstractTerminal[CyBus]):
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_VOLTAGES)
             if self._nominal_voltage is None:
-                warnings.warn(
+                warn_external(
                     message=(
                         f"The min voltage level of bus {self.id!r} is useless without a nominal voltage. Please "
                         f"define a nominal voltage for this bus."
                     ),
                     category=UserWarning,
-                    stacklevel=find_stack_level(),
                 )
             self._min_voltage_level = float(value)
 
@@ -191,13 +188,12 @@ class Bus(AbstractTerminal[CyBus]):
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_VOLTAGES)
             if self._nominal_voltage is None:
-                warnings.warn(
+                warn_external(
                     message=(
                         f"The max voltage level of bus {self.id!r} is useless without a nominal voltage. Please "
                         f"define a nominal voltage for this bus."
                     ),
                     category=UserWarning,
-                    stacklevel=find_stack_level(),
                 )
             self._max_voltage_level = float(value)
 

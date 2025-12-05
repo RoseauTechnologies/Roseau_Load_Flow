@@ -1,6 +1,5 @@
 import logging
 import math
-import warnings
 from abc import abstractmethod
 from typing import Generic, Self
 
@@ -10,7 +9,7 @@ from typing_extensions import TypeVar
 from roseau.load_flow import SQRT3
 from roseau.load_flow.typing import Id, JsonDict, Side
 from roseau.load_flow.units import Q_, ureg_wraps
-from roseau.load_flow.utils import find_stack_level
+from roseau.load_flow.utils import warn_external
 from roseau.load_flow_engine.cy_engine import CyBranch
 from roseau.load_flow_single.models.buses import Bus
 from roseau.load_flow_single.models.connectables import AbstractConnectable
@@ -137,12 +136,9 @@ class AbstractBranch(Element[_CyB_co], Generic[_Side_co, _CyB_co]):
             and self.bus2._nominal_voltage is not None
             and not math.isclose(self.bus1._nominal_voltage, self.bus2._nominal_voltage)
         ):
-            warnings.warn(
-                (
-                    f"{self.element_type.capitalize()} {self.id!r} connects buses with different "
-                    f"nominal voltages: {self.bus1._nominal_voltage} V and {self.bus2._nominal_voltage} V."
-                ),
-                stacklevel=find_stack_level(),
+            warn_external(
+                f"{self.element_type.capitalize()} {self.id!r} connects buses with different "
+                f"nominal voltages: {self.bus1._nominal_voltage} V and {self.bus2._nominal_voltage} V."
             )
 
     def _update_network_parameters(self, old_parameters: _Parameters | None, new_parameters: _Parameters) -> None:

@@ -2,7 +2,6 @@
 
 import cmath
 import math
-import warnings
 from collections.abc import Callable, Iterable, Mapping
 from typing import TYPE_CHECKING, Any, Literal, overload
 
@@ -15,7 +14,7 @@ from roseau.load_flow.network import ElectricalNetwork
 from roseau.load_flow.sym import NegativeSequence, PositiveSequence, ZeroSequence, phasor_to_sym
 from roseau.load_flow.types import LineType
 from roseau.load_flow.typing import ComplexArray, Id, Side
-from roseau.load_flow.utils import find_stack_level
+from roseau.load_flow.utils import warn_external
 
 if TYPE_CHECKING:
     import folium
@@ -103,14 +102,13 @@ def _get_phases_and_potentials(
             raise ValueError(f"The side for a {element.element_type} must be one of {expected}.")
         else:
             raise ValueError(f"Invalid side: {side!r}")
-        warnings.warn(
+        warn_external(
             (
                 f"Plotting the voltages of a {element._branch.element_type} using the side argument "
                 f"is deprecated. Use {element._branch.element_type}.side{element._side_suffix} "
                 f"directly instead."
             ),
             category=DeprecationWarning,
-            stacklevel=find_stack_level(),
         )
     phases, potentials = element.phases, element.res_potentials.m
 

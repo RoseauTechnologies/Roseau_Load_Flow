@@ -1,6 +1,5 @@
 import json
 import logging
-import warnings
 from collections.abc import Iterator, Mapping
 from typing import Any, Final, Self, TypedDict
 
@@ -11,7 +10,7 @@ from typing_extensions import TypeIs
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.typing import Id, JsonDict
-from roseau.load_flow.utils import find_stack_level
+from roseau.load_flow.utils import warn_external
 
 logger = logging.getLogger(__name__)
 
@@ -71,7 +70,7 @@ def parse_dgs_version(data: Mapping[str, Any]) -> tuple[int, ...]:
             f"The DGS version {dgs_version} is too old, this may cause conversion errors. Try "
             f"updating the version before exporting."
         )
-        warnings.warn(msg, stacklevel=find_stack_level())
+        warn_external(msg)
     return dgs_version_tuple
 
 
@@ -96,7 +95,7 @@ def has_typ_lne(typ_lne: pd.DataFrame | None) -> TypeIs[pd.DataFrame]:
             "types from the library to the project before exporting otherwise a LineParameter object "
             "will be created for each line."
         )
-        warnings.warn(msg, stacklevel=find_stack_level())
+        warn_external(msg)
         return False
     else:
         return True
@@ -163,10 +162,7 @@ def gps_coords_to_linestring(elm_lne: pd.DataFrame, lne_idx: str) -> shapely.Lin
         if nb_points == 0 or nb_cols == 0:
             pass  # nb_points is 0 -> no GPS points; nb_cols is 0 -> badly initialized GPS data by PwF
         elif nb_points == 1:
-            warnings.warn(
-                f"Failed to read geometry data for line {lne_idx!r}: it has a single GPS point.",
-                stacklevel=find_stack_level(),
-            )
+            warn_external(f"Failed to read geometry data for line {lne_idx!r}: it has a single GPS point.")
         else:
             assert nb_cols == 2, f"Expected 2 GPS columns (Latitude/Longitude), got {nb_cols}."
             lat_cols = [f"GPScoords:{i}:0" for i in range(nb_points)]
@@ -178,10 +174,7 @@ def gps_coords_to_linestring(elm_lne: pd.DataFrame, lne_idx: str) -> shapely.Lin
                 )  # type: ignore
             )
     except Exception as e:
-        warnings.warn(
-            f"Failed to read geometry data for line {lne_idx!r}: {type(e).__name__}: {e}",
-            stacklevel=find_stack_level(),
-        )
+        warn_external(f"Failed to read geometry data for line {lne_idx!r}: {type(e).__name__}: {e}")
     return geometry
 
 

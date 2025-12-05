@@ -26,7 +26,7 @@ from roseau.load_flow.typing import (
     JsonDict,
 )
 from roseau.load_flow.units import Q_, ureg_wraps
-from roseau.load_flow.utils import CatalogueMixin, Identifiable, JsonMixin, find_stack_level
+from roseau.load_flow.utils import CatalogueMixin, Identifiable, JsonMixin, warn_external
 
 logger = logging.getLogger(__name__)
 
@@ -365,11 +365,10 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
                 ypn = bpn * 1j  # Phase-to-neutral shunt admittance (Siemens/km)
 
                 if np.isclose(zpn, 0) and np.isclose(zn, 0):
-                    warnings.warn(
+                    warn_external(
                         f"The line model {id!r} does not have neutral elements. It will be modelled as a 3 wires line "
                         f"instead.",
                         category=UserWarning,
-                        stacklevel=find_stack_level(),
                     )
                 else:
                     z_line = np.pad(z_line, (0, 1), mode="constant", constant_values=zpn)
@@ -824,10 +823,9 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TYPE_NAME_SYNTAX) from None
         if insulator is not None:
             # TODO: add insulator support
-            warnings.warn(
+            warn_external(
                 f"The insulator is currently ignored in the Coiffier model, got '{insulator.upper()}'.",
                 category=UserWarning,
-                stacklevel=find_stack_level(),
             )
         r = RHO[material] / section
         if line_type == LineType.OVERHEAD:
@@ -1643,11 +1641,10 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             # Check that the off-diagonal element have a zero real part
             off_diagonal_elements = matrix[~np.eye(*matrix.shape, dtype=np.bool_)]
             if not np.allclose(off_diagonal_elements.real, 0):
-                warnings.warn(
+                warn_external(
                     f"The {matrix_name} matrix of line type {self.id!r} has off-diagonal elements "
                     f"with a non-zero real part.",
                     category=UserWarning,
-                    stacklevel=find_stack_level(),
                 )
 
             # Check that the real coefficients are non-negative

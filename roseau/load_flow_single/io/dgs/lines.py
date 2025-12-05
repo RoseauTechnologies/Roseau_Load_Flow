@@ -1,6 +1,5 @@
 import logging
 import math
-import warnings
 from collections.abc import Iterable, Iterator
 
 import pandas as pd
@@ -23,7 +22,7 @@ from roseau.load_flow.io.dgs.utils import (
 )
 from roseau.load_flow.typing import Id
 from roseau.load_flow.units import Q_
-from roseau.load_flow.utils import find_stack_level
+from roseau.load_flow.utils import warn_external
 from roseau.load_flow_single.io.dgs.pwf import STA_CUBIC_FID_INDEX, STA_CUBIC_OBJ_ID_INDEX
 from roseau.load_flow_single.models import Bus, Line, LineParameters
 
@@ -260,22 +259,16 @@ def lp_to_typ_lne(
     for lp, uns in zip(line_params, lp_uns, strict=True):
         if len(uns) == 0:
             uline = 0.0
-            warnings.warn(
-                (
-                    f"Cannot determine the nominal voltage of line parameters {lp.id!r} because buses "
-                    f"connected to its lines do not define a nominal voltage."
-                ),
-                stacklevel=find_stack_level(),
+            warn_external(
+                f"Cannot determine the nominal voltage of line parameters {lp.id!r} because buses "
+                f"connected to its lines do not define a nominal voltage."
             )
         elif len(uns) > 1:
             uline = max(uns)
-            warnings.warn(
-                (
-                    f"Line parameters {lp.id!r} has line that are connected to buses with different "
-                    f"nominal voltages {sorted(uns)}. This may cause errors in the load flow "
-                    f"calculation in PowerFactory. Choosing {uline} V as the nominal voltage."
-                ),
-                stacklevel=find_stack_level(),
+            warn_external(
+                f"Line parameters {lp.id!r} has line that are connected to buses with different "
+                f"nominal voltages {sorted(uns)}. This may cause errors in the load flow "
+                f"calculation in PowerFactory. Choosing {uline} V as the nominal voltage."
             )
         else:
             uline = next(iter(uns))

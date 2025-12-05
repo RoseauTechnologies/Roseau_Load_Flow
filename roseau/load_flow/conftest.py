@@ -131,6 +131,19 @@ def patch_engine_impl(request: pytest.FixtureRequest, extra_dir: Path | None = N
     mpatch.undo()
 
 
+@pytest.fixture(scope="session", autouse=True)
+def patch_warn_external():
+    # Exclude test files from skipped files in warn_external
+    from roseau.load_flow.utils import helpers
+
+    paths = tuple(
+        str(p)
+        for p in Path(roseau.load_flow.__file__).resolve().parent.parent.rglob("**/*.py")
+        if "tests" not in p.parts
+    )
+    helpers._get_skip_file_prefixes = lambda: paths
+
+
 @pytest.fixture(autouse=True)
 def patch_engine(request):
     yield from patch_engine_impl(request)

@@ -1,5 +1,4 @@
 import logging
-import warnings
 from collections.abc import Iterable, Iterator
 
 import pandas as pd
@@ -10,7 +9,7 @@ from roseau.load_flow.io.dgs.constants import BUS_PHASES
 from roseau.load_flow.io.dgs.utils import DEFAULT_GPS_COORDS, DEFAULT_TERM_VMAX, DEFAULT_TERM_VMIN, DGSData, clean_id
 from roseau.load_flow.typing import Id
 from roseau.load_flow.units import Q_
-from roseau.load_flow.utils import find_stack_level
+from roseau.load_flow.utils import warn_external
 from roseau.load_flow_single.models import Bus
 
 logger = logging.getLogger(__name__)
@@ -108,12 +107,9 @@ def buses_to_elm_term(buses: Iterable[Bus], fid_counter: Iterator[str], fold_id:
             ]
         )
     if buses_missing_un:
-        warnings.warn(
-            (
-                f"Power factory requires all buses to define their nominal voltage. Missing nominal "
-                f"voltage might cause problems on import. The following buses do not define their "
-                f"nominal voltage: {buses_missing_un}"
-            ),
-            stacklevel=find_stack_level(),
+        warn_external(
+            f"Power factory requires all buses to define their nominal voltage. Missing nominal "
+            f"voltage might cause problems on import. The following buses do not define their "
+            f"nominal voltage: {buses_missing_un}"
         )
     return {"Attributes": attributes, "Values": values}

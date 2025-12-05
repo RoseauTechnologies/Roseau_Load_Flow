@@ -1,5 +1,4 @@
 import logging
-import warnings
 from functools import cached_property
 from typing import Final
 
@@ -13,7 +12,7 @@ from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.transformer_parameters import TransformerParameters
 from roseau.load_flow.typing import ComplexArray, Id, JsonDict
 from roseau.load_flow.units import Q_, ureg_wraps
-from roseau.load_flow.utils import deprecate_renamed_parameters, find_stack_level
+from roseau.load_flow.utils import deprecate_renamed_parameters, warn_external
 from roseau.load_flow_engine.cy_engine import CyTransformer
 
 logger = logging.getLogger(__name__)
@@ -281,13 +280,12 @@ class Transformer(AbstractBranch["TransformerSide", CyTransformer]):
             if "n" in phases_hv and not w1_has_neutral:
                 if whv.startswith(("Y", "Z")):
                     correct_vg = f"{whv}N{wlv}{clock}"
-                    warnings.warn(
+                    warn_external(
                         f"Transformer {id!r} with vector group '{parameters.vg}' does not have a "
                         f"brought out neutral on the HV side. The neutral phase 'n' is ignored. If "
                         f"you meant to use a brought out neutral, use vector group '{correct_vg}'. "
                         f"This will raise an error in the future.",
                         FutureWarning,
-                        stacklevel=find_stack_level(),
                     )
                     phases_hv = phases_hv.replace("n", "")
                 else:
@@ -304,13 +302,12 @@ class Transformer(AbstractBranch["TransformerSide", CyTransformer]):
             if "n" in phases_lv and not w2_has_neutral:
                 if wlv.startswith(("y", "z")):
                     correct_vg = f"{whv}{wlv}n{clock}"
-                    warnings.warn(
+                    warn_external(
                         f"Transformer {id!r} with vector group '{parameters.vg}' does not have a "
                         f"brought out neutral on the LV side. The neutral phase 'n' is ignored. If "
                         f"you meant to use a brought out neutral, use vector group '{correct_vg}'. "
                         f"This will raise an error in the future.",
                         FutureWarning,
-                        stacklevel=find_stack_level(),
                     )
                     phases_lv = phases_lv.replace("n", "")
                 else:

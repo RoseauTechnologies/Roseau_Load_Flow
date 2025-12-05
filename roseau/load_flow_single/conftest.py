@@ -57,3 +57,16 @@ def three_phases_transformer_type(request) -> str:
 @pytest.fixture(autouse=True)
 def patch_engine(request):
     yield from patch_engine_impl(request, extra_dir=Path(roseau.load_flow_single.__file__).parent)
+
+
+@pytest.fixture(scope="session", autouse=True)
+def patch_warn_external():
+    # Exclude test files from skipped files in warn_external
+    from roseau.load_flow.utils import helpers
+
+    paths = tuple(
+        str(p)
+        for p in Path(roseau.load_flow_single.__file__).resolve().parent.parent.rglob("**/*.py")
+        if "tests" not in p.parts
+    )
+    helpers._get_skip_file_prefixes = lambda: paths

@@ -8,7 +8,6 @@ to read and write networks from and to JSON files.
 
 import copy
 import logging
-import warnings
 from typing import TYPE_CHECKING
 
 from pyproj import CRS
@@ -16,7 +15,7 @@ from pyproj import CRS
 from roseau.load_flow import Insulator, Material
 from roseau.load_flow.io.dict import NETWORK_JSON_VERSION as NETWORK_JSON_VERSION
 from roseau.load_flow.typing import Id, JsonDict
-from roseau.load_flow.utils import find_stack_level, id_sort_key
+from roseau.load_flow.utils import id_sort_key, warn_external
 from roseau.load_flow_single.io.common import NetworkElements
 from roseau.load_flow_single.models import (
     AbstractLoad,
@@ -69,11 +68,10 @@ def network_from_dict(
         f"Unsupported network file version {version}, expected <={NETWORK_JSON_VERSION}."
     )
     if version < NETWORK_JSON_VERSION:
-        warnings.warn(
+        warn_external(
             f"Got an outdated network file (version {version}), trying to update to the current format "
             f"(version {NETWORK_JSON_VERSION}). Please save the network again.",
             category=UserWarning,
-            stacklevel=find_stack_level(),
         )
         if version <= 3:
             data = v3_to_v4_converter(data)
