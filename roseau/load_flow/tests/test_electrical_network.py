@@ -1911,6 +1911,19 @@ def test_propagate_voltages():
         load_bus.initial_potentials.m, 100 * np.array([1, np.exp(-2j * np.pi / 3), np.exp(2j * np.pi / 3), 0])
     )
 
+    # Delta vs Wye
+    bus = Bus("Bus", phases="abcn")
+    src_y = VoltageSource("Y src", bus=bus, phases="an", voltages=230)
+    VoltageSource("D src", bus=bus, phases="bc", voltages=300)
+    PotentialRef(id="pref", element=bus)
+    en = ElectricalNetwork.from_element(bus)
+    main_v, main_src = en._get_starting_potentials(set("abcn"))
+    assert main_src is src_y  # Y has lower V input but higher Vphase-phase value than D
+    assert main_v["a"] == 230
+    src_y.disconnect()  # now the voltages of the delta source are used
+    main_v, main_src = en._get_starting_potentials(set("abcn"))
+    npt.assert_allclose(abs(main_v["a"] - main_v["b"]), 300)
+
 
 def test_short_circuits():
     vn = 400 / np.sqrt(3)

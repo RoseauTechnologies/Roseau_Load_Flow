@@ -1165,7 +1165,9 @@ class ElectricalNetwork(AbstractNetwork[Element]):
         starting_source = None
         potentials = {"n": 0j}
         # if there are multiple voltage sources, start from the higher one (the last one in the sorted below)
-        for source in sorted(self.sources.values(), key=lambda x: abs(x._voltages).mean()):
+        for source in sorted(
+            self.sources.values(), key=lambda x: abs(x._voltages).mean() / (1 if "n" in x.phases else SQRT3)
+        ):
             source_voltages = source._voltages.tolist()
             starting_source = source
             if "n" in source.phases:
@@ -1192,7 +1194,9 @@ class ElectricalNetwork(AbstractNetwork[Element]):
         assert starting_source is not None, "No voltage source found in the network."
         if len(potentials) < len(all_phases):
             # We failed to determine all the potentials (the sources are strange), fallback to something simple
-            v = abs(starting_source._voltages).mean()
+            v = abs(starting_source._voltages).mean().item()
+            if "n" not in starting_source.phases:
+                v /= SQRT3
             potentials["a"] = v
             potentials["b"] = v * ALPHA2
             potentials["c"] = v * ALPHA
