@@ -21,6 +21,8 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`421` Improve initial voltage guesses in the Newton algorithm for networks involving delta connected sources.
+
 - {gh-pr}`419` {gh-pr}`420` Require Python 3.12 or newer and bump the minimum supported versions of some dependencies
   per [SPEC-0](https://scientific-python.org/specs/spec-0000/).
 
