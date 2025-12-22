@@ -13,7 +13,7 @@ from roseau.load_flow.models import AbstractBranch, AbstractTerminal
 from roseau.load_flow.network import ElectricalNetwork
 from roseau.load_flow.sym import NegativeSequence, PositiveSequence, ZeroSequence, phasor_to_sym
 from roseau.load_flow.types import LineType
-from roseau.load_flow.typing import ComplexArray, Id, Side
+from roseau.load_flow.typing import ComplexArray, Id, ResultState, Side
 from roseau.load_flow.utils import warn_external
 
 if TYPE_CHECKING:
@@ -22,9 +22,9 @@ if TYPE_CHECKING:
 
     import roseau.load_flow_single as rlfs
 
-    FeatureMap = dict[str, Any]
-    StyleDict = dict[str, Any]
-    MapElementType = Literal["bus", "line", "transformer"]
+    type FeatureMap = dict[str, Any]
+    type StyleDict = dict[str, Any]
+    type MapElementType = Literal["bus", "line", "transformer"]
 
 _COLORS = {"a": "#234e83", "b": "#cad40e", "c": "#55b2aa", "n": "#000000"}
 _COLORS.update(
@@ -37,6 +37,16 @@ _COLORS.update(
         "ca": _COLORS["c"],
     }
 )
+
+# TODO: consult with the frontend team for a color scheme
+_RESULT_COLORS: dict[ResultState, str] = {
+    "very-high": "#d7191c",  # reddish
+    "high": "#fdae61",  # orangy
+    "ok": "#1a9850",  # greenish
+    "low": "#abd9e9",  # light bluish
+    "very-low": "#2c7bb6",  # bluish
+    "unknown": "#666666",  # gray
+}
 
 
 #
@@ -129,6 +139,26 @@ def _get_phases_and_potentials(
     else:
         raise ValueError(f"Invalid voltage_type: {voltage_type!r}")
     return element, phases, potentials
+
+
+def _pu_to_pct[V: (float, list[float], None, float | None, list[float] | None)](v: V, /) -> V:
+    """Convert per unit value to percentage."""
+    if v is None:
+        return None
+    elif isinstance(v, list):
+        return [val * 100 for val in v]
+    else:
+        return v * 100
+
+
+def _pp_num(v: float | list[float] | None, /, missing: str = "n/a") -> str:
+    """Pretty print number(s) or `missing` if `None`."""
+    if v is None:
+        return missing
+    elif isinstance(v, list):
+        return "[" + ", ".join(f"{val:.5g}" for val in v) + "]"
+    else:
+        return f"{v:.5g}"
 
 
 #
@@ -361,11 +391,11 @@ def _plot_interactive_map_internal(  # noqa: C901
             line_type = line.parameters._line_type
             vn = nominal_voltages[line.bus1.id]
             if vn < lv:
-                weight = 2  # LV
+                weight = 1.5  # LV
             elif vn < mv:
-                weight = 3  # MV
+                weight = 3.0  # MV
             else:
-                weight = 4  # HV
+                weight = 4.5  # HV
             dash_array = "5, 5" if line_type == LineType.UNDERGROUND else None
             return {"color": style_color, "weight": weight, "dashArray": dash_array}
         elif e_type == "transformer":
@@ -471,13 +501,17 @@ def _plot_interactive_map_internal(  # noqa: C901
             zoom_lat = math.ceil(math.log2(360 * 2.0 / (max_y - min_y))) if max_y > min_y else 16
             map_kws["zoom_start"] = min(zoom_lon, zoom_lat) - 1
 
+    if "zoom_control" not in map_kws and add_search:
+        map_kws["zoom_control"] = "topright"
+
     m = folium.Map(**map_kws)
     network_layer = folium.FeatureGroup(name="Electrical Network").add_to(m)
+    names = {"bus": "Buses", "line": "Lines", "transformer": "Transformers"}
     for e_type, frame in dataframes.items():
         if frame.empty:
             continue
         marker = folium.Marker(icon=folium.DivIcon()) if e_type != "line" else None
-        name = f"{e_type}s".capitalize()
+        name = names[e_type]
         folium.GeoJson(
             data=frame,
             name=name,

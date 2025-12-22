@@ -8,7 +8,7 @@ import pandas as pd
 from shapely.geometry.base import BaseGeometry
 
 from roseau.load_flow import SQRT3, RoseauLoadFlowException, RoseauLoadFlowExceptionCode
-from roseau.load_flow.typing import Complex, Float, Id, JsonDict
+from roseau.load_flow.typing import Complex, Float, Id, JsonDict, ResultState
 from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow.utils import warn_external
 from roseau.load_flow_engine.cy_engine import CyBus
@@ -342,6 +342,27 @@ class Bus(AbstractTerminal[CyBus]):
             return None
         voltage = self._res_voltage_getter(warning)
         return abs(voltage) / self._nominal_voltage
+
+    def _res_state_getter(self) -> ResultState:
+        """The state of the bus based on its voltage levels and limits."""
+        u = self._res_voltage_level_getter(warning=False)
+        if u is None:
+            return "unknown"
+        u_min = self._min_voltage_level
+        u_max = self._max_voltage_level
+        if u_min is None and u_max is None:
+            return "unknown"
+        if u_max is not None:
+            if u > u_max:
+                return "very-high"
+            elif u > 0.75 * u_max + 0.25:
+                return "high"
+        if u_min is not None:
+            if u < u_min:
+                return "very-low"
+            elif u < 0.75 * u_min + 0.25:
+                return "low"
+        return "ok"
 
     @property
     def res_voltage_level(self) -> Q_[float] | None:

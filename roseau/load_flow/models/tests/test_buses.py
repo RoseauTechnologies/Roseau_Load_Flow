@@ -288,6 +288,51 @@ def test_res_violated():
     assert (bus.res_violated == [True, False, True]).all()
 
 
+def test_res_state():
+    bus = Bus(id="bus", phases="abc")
+    bus._res_potentials = 230 * PositiveSequence
+
+    # No nominal voltage
+    assert bus._res_state_getter() == "unknown"
+
+    # No limits
+    bus.nominal_voltage = 230 * np.sqrt(3)
+    assert bus._res_state_getter() == "unknown"
+
+    # Only max voltage
+    bus.max_voltage_level = 1.05
+    bus._res_potentials = 230 * 1.06 * PositiveSequence
+    assert bus._res_state_getter() == "very-high"
+    bus._res_potentials = 230 * 1.04 * PositiveSequence
+    assert bus._res_state_getter() == "high"
+    bus._res_potentials = 230 * 1.02 * PositiveSequence
+    assert bus._res_state_getter() == "ok"
+
+    # Only min voltage
+    bus.max_voltage_level = None
+    bus.min_voltage_level = 0.95
+    bus._res_potentials = 230 * 0.94 * PositiveSequence
+    assert bus._res_state_getter() == "very-low"
+    bus._res_potentials = 230 * 0.96 * PositiveSequence
+    assert bus._res_state_getter() == "low"
+    bus._res_potentials = 230 * 0.98 * PositiveSequence
+    assert bus._res_state_getter() == "ok"
+
+    # Both min and max voltage
+    bus.min_voltage_level = 0.95
+    bus.max_voltage_level = 1.05
+    bus._res_potentials = 230 * 1.06 * PositiveSequence
+    assert bus._res_state_getter() == "very-high"
+    bus._res_potentials = 230 * 1.04 * PositiveSequence
+    assert bus._res_state_getter() == "high"
+    bus._res_potentials = 230 * 1.0 * PositiveSequence
+    assert bus._res_state_getter() == "ok"
+    bus._res_potentials = 230 * 0.96 * PositiveSequence
+    assert bus._res_state_getter() == "low"
+    bus._res_potentials = 230 * 0.94 * PositiveSequence
+    assert bus._res_state_getter() == "very-low"
+
+
 def test_propagate_limits():  # noqa: C901
     b1_mv = Bus(id="b1_mv", phases="abc")
     b2_mv = Bus(id="b2_mv", phases="abc")

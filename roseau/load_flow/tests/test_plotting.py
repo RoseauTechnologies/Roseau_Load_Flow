@@ -36,36 +36,40 @@ def mock_subplots(monkeypatch):
         yield m
 
 
-bus = Bus(id="Bus", phases="abcn")
-source = VoltageSource(id="Source", bus=bus, phases="abcn", voltages=230)
-load = PowerLoad(id="Load", bus=bus, phases="abcn", powers=1e3)
-potentials = 230 * np.array([*PositiveSequence, 0.0j])
-currents = 1e3 / np.array([*potentials[:3], np.inf])
-bus._res_potentials = np.array(potentials, dtype=np.complex128)
-load._res_potentials = np.array(potentials, dtype=np.complex128)
-load._res_currents = np.array(currents, dtype=np.complex128)
-source._res_potentials = np.array(potentials, dtype=np.complex128)
-source._res_currents = np.array(-currents, dtype=np.complex128)
-bus_single = rlfs.Bus(id="Bus")
-bus_single._res_voltage = 400 + 0j
+@pytest.fixture(scope="module")
+def elements():
+    bus = Bus(id="Bus", phases="abcn")
+    source = VoltageSource(id="Source", bus=bus, phases="abcn", voltages=230)
+    load = PowerLoad(id="Load", bus=bus, phases="abcn", powers=1e3)
+    potentials = 230 * np.array([*PositiveSequence, 0.0j])
+    currents = 1e3 / np.array([*potentials[:3], np.inf])
+    bus._res_potentials = np.array(potentials, dtype=np.complex128)
+    load._res_potentials = np.array(potentials, dtype=np.complex128)
+    load._res_currents = np.array(currents, dtype=np.complex128)
+    source._res_potentials = np.array(potentials, dtype=np.complex128)
+    source._res_currents = np.array(-currents, dtype=np.complex128)
+    bus_single = rlfs.Bus(id="Bus")
+    bus_single._res_voltage = 400 + 0j
+    return {"bus": bus, "load": load, "source": source, "bus_single": bus_single}
 
 
 @pytest.mark.usefixtures("mock_gca")
 @pytest.mark.parametrize(
-    ("element", "voltage_type"),
+    ("element_key", "voltage_type"),
     (
-        pytest.param(bus, "auto", id="Bus"),
-        pytest.param(bus, "pp", id="Bus-pp"),
-        pytest.param(bus, "pn", id="Bus-pn"),
-        pytest.param(load, "auto", id="Load"),
-        pytest.param(source, "auto", id="Source"),
+        pytest.param("bus", "auto", id="Bus"),
+        pytest.param("bus", "pp", id="Bus-pp"),
+        pytest.param("bus", "pn", id="Bus-pn"),
+        pytest.param("load", "auto", id="Load"),
+        pytest.param("source", "auto", id="Source"),
     ),
 )
-def test_plot_voltage_phasors(element, voltage_type):
+def test_plot_voltage_phasors(element_key, voltage_type, elements):
+    element = elements[element_key]
     ax = plot_voltage_phasors(element, voltage_type=voltage_type)
 
     # The title is set to the element's id
-    ax.set_title.assert_called_once_with(f"{element.id}")
+    ax.set_title.assert_called_once_with(f"{element.id}")  # type: ignore
     ua, ub, uc, un = element._res_potentials
 
     if voltage_type == "pp":
@@ -76,20 +80,20 @@ def test_plot_voltage_phasors(element, voltage_type):
         voltages = [(ua, un), (ub, un), (uc, un)]
 
     # Draws three (3P) or four (3P+N) potential points
-    assert ax.scatter.call_count == n
-    for u, phase, call in zip(element._res_potentials[:n], element.phases[:n], ax.scatter.call_args_list, strict=True):
+    assert ax.scatter.call_count == n  # type: ignore
+    for u, phase, call in zip(element._res_potentials[:n], element.phases[:n], ax.scatter.call_args_list, strict=True):  # type: ignore
         assert call.args == (u.real, u.imag)
         assert call.kwargs["label"] == phase
 
     # Draws three voltage phasors
-    assert ax.arrow.call_count == 3
-    for (u1, u2), call in zip(voltages, ax.arrow.call_args_list, strict=True):
+    assert ax.arrow.call_count == 3  # type: ignore
+    for (u1, u2), call in zip(voltages, ax.arrow.call_args_list, strict=True):  # type: ignore
         npt.assert_allclose(call.args, (u2.real, u2.imag, u1.real - u2.real, u1.imag - u2.imag))
         assert "label" not in call.kwargs
 
 
 @pytest.mark.usefixtures("mock_gca")
-def test_plot_voltage_phasors_errors():
+def test_plot_voltage_phasors_errors(elements):
     bus_abc = Bus(id="Bus", phases="abc")
     bus_an = Bus(id="Bus", phases="an")
     bus_abc._res_potentials = np.array(20e3 * PositiveSequence, dtype=np.complex128)
@@ -97,9 +101,9 @@ def test_plot_voltage_phasors_errors():
 
     # By default both work
     ax = plot_voltage_phasors(bus_abc)
-    assert ax.scatter.call_count == 3
+    assert ax.scatter.call_count == 3  # type: ignore
     ax = plot_voltage_phasors(bus_an)
-    assert ax.scatter.call_count == 2
+    assert ax.scatter.call_count == 2  # type: ignore
 
     # 'pn' without neutral
     with pytest.raises(ValueError, match=r"The element must have a neutral to plot phase-to-neutral voltages"):
@@ -118,6 +122,7 @@ def test_plot_voltage_phasors_errors():
         plot_voltage_phasors(bus_abc, side="HV")  # type: ignore
 
     # Not a multi-phase element
+    bus_single = elements["bus_single"]
     with pytest.raises(TypeError, match=r"Only multi-phase elements can be plotted. Did you mean to use rlf.Bus\?"):
         plot_voltage_phasors(bus_single)  # type: ignore
 
@@ -153,23 +158,23 @@ def test_plot_voltage_phasors_branches():
 
     # Switches warnings
     ax = plot_voltage_phasors(sw.side1)
-    ax.set_title.assert_called_once_with("Sw (1)")
+    ax.set_title.assert_called_once_with("Sw (1)")  # type: ignore
     ax = plot_voltage_phasors(sw.side2)
-    ax.set_title.assert_called_once_with("Sw (2)")
+    ax.set_title.assert_called_once_with("Sw (2)")  # type: ignore
 
     # Lines
     ax = plot_voltage_phasors(ln.side1)
-    ax.set_title.assert_called_once_with("Ln (1)")
+    ax.set_title.assert_called_once_with("Ln (1)")  # type: ignore
     ax = plot_voltage_phasors(ln.side2)
-    ax.set_title.assert_called_once_with("Ln (2)")
+    ax.set_title.assert_called_once_with("Ln (2)")  # type: ignore
 
     # Transformers
     ax = plot_voltage_phasors(tr.side_hv)
-    ax.set_title.assert_called_once_with("Tr (HV)")
-    npt.assert_allclose(abs(complex(*ax.scatter.call_args.args)), 20e3)
+    ax.set_title.assert_called_once_with("Tr (HV)")  # type: ignore
+    npt.assert_allclose(abs(complex(*ax.scatter.call_args.args)), 20e3)  # type: ignore
     ax = plot_voltage_phasors(tr.side_lv)
-    ax.set_title.assert_called_once_with("Tr (LV)")
-    npt.assert_allclose(abs(complex(*ax.scatter.call_args.args)), 10e3)
+    ax.set_title.assert_called_once_with("Tr (LV)")  # type: ignore
+    npt.assert_allclose(abs(complex(*ax.scatter.call_args.args)), 10e3)  # type: ignore
 
     # Deprecations
     for element, side, element_type, side_suffix, expected_id in [
@@ -192,24 +197,26 @@ def test_plot_voltage_phasors_branches():
 
 
 @pytest.mark.usefixtures("mock_subplots")
-def test_plot_symmetrical_voltages():
+def test_plot_symmetrical_voltages(elements):
+    bus = elements["bus"]
     ax0, ax1, ax2 = plot_symmetrical_voltages(bus)
 
     # The title is set to the element's id
-    ax0.set_title.assert_called_once_with(f"{bus.id}\nZero Sequence")
-    ax1.set_title.assert_called_once_with(f"{bus.id}\nPositive Sequence")
-    ax2.set_title.assert_called_once_with(f"{bus.id}\nNegative Sequence")
+    ax0.set_title.assert_called_once_with(f"{bus.id}\nZero Sequence")  # type: ignore
+    ax1.set_title.assert_called_once_with(f"{bus.id}\nPositive Sequence")  # type: ignore
+    ax2.set_title.assert_called_once_with(f"{bus.id}\nNegative Sequence")  # type: ignore
     ua, ub, uc, un = bus._res_potentials  # type: ignore
 
-    assert ax0.scatter.call_count == 2  # 1 "abc" + 1 "n"
-    assert ax0.arrow.call_count == 1
-    assert ax0.annotate.call_count == 1
+    assert ax0.scatter.call_count == 2  # 1 "abc" + 1 "n"  # type: ignore
+    assert ax0.arrow.call_count == 1  # type: ignore
+    assert ax0.annotate.call_count == 1  # type: ignore
 
     for ax in (ax1, ax2):
-        assert ax.scatter.call_count == 3  # 1 "a" + "b" + "c"
-        assert ax.arrow.call_count == 3
-        assert ax.annotate.call_count == 1
+        assert ax.scatter.call_count == 3  # 1 "a" + "b" + "c"  # type: ignore
+        assert ax.arrow.call_count == 3  # type: ignore
+        assert ax.annotate.call_count == 1  # type: ignore
 
     # Not a multi-phase element
+    bus_single = elements["bus_single"]
     with pytest.raises(TypeError, match=r"Only multi-phase elements can be plotted. Did you mean to use rlf.Bus\?"):
         plot_symmetrical_voltages(bus_single)  # type: ignore

@@ -5,7 +5,7 @@ import numpy as np
 from shapely.geometry.base import BaseGeometry
 
 from roseau.load_flow import SQRT3, RoseauLoadFlowException, RoseauLoadFlowExceptionCode
-from roseau.load_flow.typing import Float, Id, JsonDict
+from roseau.load_flow.typing import Float, Id, JsonDict, ResultState
 from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow_engine.cy_engine import CyShuntLine, CySimplifiedLine
 from roseau.load_flow_single.models.branches import AbstractBranch, AbstractBranchSide
@@ -215,6 +215,19 @@ class Line(AbstractBranch["LineSide", CyShuntLine | CySimplifiedLine]):
         current1 = self._side1._res_current_getter(warning)
         current2 = self._side2._res_current_getter(warning=False)  # warn only once
         return max(abs(current1), abs(current2)) / amp
+
+    def _res_state_getter(self) -> ResultState:
+        """Get the state of the line based on its loading."""
+        loading = self._res_loading_getter(warning=False)
+        if loading is None:
+            return "unknown"
+        max_loading = self._max_loading
+        if loading > max_loading:
+            return "very-high"
+        elif loading > 0.75 * max_loading:
+            return "high"
+        else:
+            return "ok"
 
     @property
     @ureg_wraps("A", (None,))

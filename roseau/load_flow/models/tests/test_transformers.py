@@ -83,6 +83,33 @@ def test_res_violated():
     np.testing.assert_allclose(transformer.res_loading.m, 80 * 230 * 3 / 50_000)
 
 
+def test_res_state():
+    bus1 = Bus(id="bus1", phases="abc")
+    bus2 = Bus(id="bus2", phases="abcn")
+    tp = TransformerParameters.from_open_and_short_circuit_tests(
+        id="tp", vg="Yzn11", sn=50e3, uhv=20e3, ulv=400, p0=145, i0=0.018, psc=1350, vsc=0.04
+    )
+    tr = Transformer(id="transformer", bus_hv=bus1, bus_lv=bus2, parameters=tp)
+
+    def current(s, u):
+        return s / (np.sqrt(3) * u)
+
+    tr.side_hv._res_potentials = 20e3 / np.sqrt(3) * PosSeq
+    tr.side_lv._res_potentials = 400 / np.sqrt(3) * PosSeq
+    tr.side_hv._res_currents = current(30e3, 20e3) * PosSeq
+    tr.side_lv._res_currents = current(-30e3, 400) * PosSeq
+
+    assert tr._res_state_getter() == "ok"
+    tr.side_hv._res_currents = current(45e3, 20e3) * PosSeq
+    assert tr._res_state_getter() == "high"
+    tr.side_hv._res_currents = current(60e3, 20e3) * PosSeq
+    assert tr._res_state_getter() == "very-high"
+
+    # Change max loading
+    tr._max_loading = 1.2
+    assert tr._res_state_getter() == "high"
+
+
 def test_transformer_results():
     bus_hv = Bus(id="bus_hv", phases="abc")
     bus_lv = Bus(id="bus_lv", phases="abcn")

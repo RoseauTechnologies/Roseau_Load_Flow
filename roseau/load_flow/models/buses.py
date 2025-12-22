@@ -11,7 +11,7 @@ from roseau.load_flow.constants import SQRT3
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.core import Element
 from roseau.load_flow.models.terminals import AbstractTerminal
-from roseau.load_flow.typing import BoolArray, ComplexArray, ComplexArrayLike1D, FloatArray, Id, JsonDict
+from roseau.load_flow.typing import BoolArray, ComplexArray, ComplexArrayLike1D, FloatArray, Id, JsonDict, ResultState
 from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow.utils import deprecate_renamed_parameter, warn_external
 from roseau.load_flow_engine.cy_engine import CyBus
@@ -420,6 +420,30 @@ class Bus(AbstractTerminal[CyBus]):
             return None
         voltages_abs = abs(self._res_voltages_pn_getter(warning=warning))
         return SQRT3 * voltages_abs / self._nominal_voltage
+
+    def _res_state_getter(self) -> ResultState:
+        """The state of the bus based on its voltage levels and limits."""
+        u_array = self._res_voltage_levels_getter(warning=False)
+        if u_array is None:
+            return "unknown"
+        u_min = self._min_voltage_level
+        u_max = self._max_voltage_level
+        if u_min is None and u_max is None:
+            return "unknown"
+        u = u_array.tolist()
+        u_low, u_high = min(u), max(u)
+
+        if u_max is not None:
+            if u_high > u_max:
+                return "very-high"
+            elif u_high > 0.75 * u_max + 0.25:
+                return "high"
+        if u_min is not None:
+            if u_low < u_min:
+                return "very-low"
+            elif u_low < 0.75 * u_min + 0.25:
+                return "low"
+        return "ok"
 
     @property
     def res_voltage_levels(self) -> Q_[FloatArray] | None:
