@@ -281,7 +281,7 @@ class Transformer(AbstractBranch["TransformerSide", CyTransformer]):
                     warn_external(
                         f"Transformer {id!r} with vector group '{parameters.vg}' does not have a "
                         f"brought out neutral on the HV side. The neutral phase 'n' is ignored. If "
-                        f"you meant to use a brought out neutral, use vector group '{correct_vg}'. ",
+                        f"you meant to use a brought out neutral, use vector group '{correct_vg}'.",
                         UserWarning,
                     )
                     phases_hv = phases_hv.replace("n", "")
@@ -302,7 +302,7 @@ class Transformer(AbstractBranch["TransformerSide", CyTransformer]):
                     warn_external(
                         f"Transformer {id!r} with vector group '{parameters.vg}' does not have a "
                         f"brought out neutral on the LV side. The neutral phase 'n' is ignored. If "
-                        f"you meant to use a brought out neutral, use vector group '{correct_vg}'. ",
+                        f"you meant to use a brought out neutral, use vector group '{correct_vg}'.",
                         UserWarning,
                     )
                     phases_lv = phases_lv.replace("n", "")
