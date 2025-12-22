@@ -21,6 +21,21 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`425` Enforce the following deprecations:
+
+  - The `side` parameter of `rlf.GroundConnection`, `rlf.plotting.plot_voltage_phasors` and
+    `rlf.plotting.plot_symmetrical_voltages` is removed. Pass a branch side directly instead (e.g.
+    `rlf.GroundConnection(ground=ground, element=transformer.side_hv)`).
+  - The `potentials` attribute and and constructor parameter of `Bus` is removed. Use `initial_potentials` instead.
+  - The `bus` of a disconnected load or source no longer returns `None`. Use the new `is_disconnected` property to check
+    if the load or source is disconnected.
+  - The `phase` parameter of `rlf.PotentialRef` is removed. Use `phases` instead.
+  - The `res_voltages_hv` and `res_voltages_lv` attributes of `rlf.Transformer` are removed. Use `<side>.res_voltages`
+    instead.
+  - Deprecated names in `rlf.constants`, `rlf.types` and `rlf.sym` modules are removed.
+  - Deprecated modules in the `rlf.utils` package are removed. This package is for internal use only and should not be
+    considered stable.
+
 - {gh-pr}`421` Improve initial voltage guesses in the Newton algorithm for networks involving delta connected sources.
 
 - {gh-pr}`419` {gh-pr}`420` Require Python 3.12 or newer and bump the minimum supported versions of some dependencies

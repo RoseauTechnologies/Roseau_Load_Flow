@@ -116,16 +116,3 @@ def calculate_voltage_phases(phases: str) -> list[str]:
         msg = f"Invalid phases '{phases}'. Must be one of {', '.join(_VOLTAGE_PHASES_CACHE)}."
         logger.error(msg)
         raise RoseauLoadFlowException(msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE) from None
-
-
-def __getattr__(name: str):
-    from roseau.load_flow.utils.helpers import warn_external
-
-    if name in ("phasor_to_sym", "sym_to_phasor", "series_phasor_to_sym"):
-        # deprecated since 0.12.0
-        warn_external(f"'rlf.converters.{name}' is deprecated. Use 'rlf.sym.{name}' instead.", category=FutureWarning)
-        from roseau.load_flow import sym
-
-        return getattr(sym, name)
-
-    raise AttributeError(f"module '{__name__}' has no attribute '{name}'")

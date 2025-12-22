@@ -150,23 +150,23 @@ def test_brought_out_neutral():
     tr2 = Transformer(id="tr2", bus_hv=bus_hv, bus_lv=bus_lv, parameters=tp2)
     assert tr2.phases_lv == "abc"
 
-    # Warn on old behavior
+    # Warn on missing brought out neutral
     with pytest.warns(
-        FutureWarning,
+        UserWarning,
         match=(
             r"Transformer 'tr3' with vector group 'Yd5' does not have a brought out neutral on the "
             r"HV side. The neutral phase 'n' is ignored. If you meant to use a brought out neutral, "
-            r"use vector group 'YNd5'. This will raise an error in the future."
+            r"use vector group 'YNd5'."
         ),
     ):
         tr3 = Transformer(id="tr3", bus_hv=bus_hv, bus_lv=bus_lv, parameters=tp1, phases_hv="abcn", phases_lv="abc")
     assert tr3.phases_hv == "abc"
     with pytest.warns(
-        FutureWarning,
+        UserWarning,
         match=(
             r"Transformer 'tr4' with vector group 'Dy11' does not have a brought out neutral on the "
             r"LV side. The neutral phase 'n' is ignored. If you meant to use a brought out neutral, "
-            r"use vector group 'Dyn11'. This will raise an error in the future."
+            r"use vector group 'Dyn11'."
         ),
     ):
         tr4 = Transformer(id="tr4", bus_hv=bus_hv, bus_lv=bus_lv, parameters=tp2, phases_hv="abc", phases_lv="abcn")

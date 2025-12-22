@@ -13,7 +13,6 @@ from roseau.load_flow.utils import one_or_more_repr, warn_external
 from roseau.load_flow_engine.cy_engine import CyBranch, CyGround, CySimplifiedLine, CySwitch
 
 if TYPE_CHECKING:
-    from roseau.load_flow.models.branches import AbstractBranch
     from roseau.load_flow.models.buses import Bus
 
 logger = logging.getLogger(__name__)
@@ -56,16 +55,6 @@ class Ground(Element[CyGround]):
     def connections(self) -> list["GroundConnection"]:
         """The connections to the ground."""
         return self._connections[:]
-
-    @property
-    @deprecated("`Ground.connected_buses` is deprecated, use `Ground.connections` instead.")
-    def connected_buses(self) -> dict[Id, str]:
-        """The bus ID and phase of the buses connected to this ground.
-
-        .. deprecated:: 0.12.0
-            Use the more flexible :attr:`Ground.connections` attribute instead.
-        """
-        return {gc.element.id: gc.phase for gc in self._connections if gc.element.element_type == "bus"}
 
     @deprecated("`Ground.connect` is deprecated, use the `GroundConnection` class instead.")
     def connect(self, bus: "Bus", phase: str = "n") -> None:
@@ -143,10 +132,9 @@ class GroundConnection(Element[CySimplifiedLine | CySwitch]):
         id: Id | None = None,
         *,
         ground: Ground,
-        element: "AbstractTerminal | AbstractBranch",
+        element: AbstractTerminal,
         impedance: Complex | Q_[Complex] = 0j,
         phase: str = "n",
-        side: Side | None = None,
         on_connected: Literal["raise", "warn", "ignore"] = "raise",
     ) -> None:
         """Ground connection constructor.
@@ -161,7 +149,7 @@ class GroundConnection(Element[CySimplifiedLine | CySwitch]):
 
             element:
                 The terminal element to connect to the ground. This can be a bus, source, load, or a
-                branch side. Passing a branch element is deprecated.
+                branch side.
 
             impedance:
                 The impedance of the connection to the ground (ohm). Defaults to 0.
@@ -169,16 +157,6 @@ class GroundConnection(Element[CySimplifiedLine | CySwitch]):
             phase:
                 The phase of the connection. It must be one of ``{"a", "b", "c", "n"}``. Defaults to
                 ``"n"``.
-
-            side:
-                The side of the branch element to connect to. If the element is a transformer, this
-                must be either ``'HV'`` or ``'LV'``. If the element is a line or a switch, this must
-                be either ``1`` or ``2``. For other elements, this must be ``None``.
-
-                .. deprecated:: 0.13.0
-
-                    Using the `side` argument with branch elements is deprecated. Use
-                    `element.side1` or `element.side2` directly instead.
 
             on_connected:
                 The action to take if *other phases* of the element are already connected to this
@@ -191,34 +169,14 @@ class GroundConnection(Element[CySimplifiedLine | CySwitch]):
 
         self._check_compatible_phase_tech(element, id=id)
         element_to_connect = element
-        # Check the element type and the side.
-        if isinstance(element, AbstractTerminal):
-            if side is not None:
-                msg = f"Side cannot be used with {element.element_type} elements, only with branches."
-                logger.error(msg)
-                raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.BAD_BRANCH_SIDE)
-            if element.element_type in {"transformer", "line", "switch"}:
-                element_to_connect = element._branch  # type: ignore
-        elif element.element_type in {"transformer", "line", "switch"}:
-            if side not in (1, 2, "HV", "LV"):
-                side_status = "Side is missing" if side is None else f"Invalid side {side!r}"
-                expected_sides = ("HV", "LV") if element.element_type == "transformer" else (1, 2)
-                msg = f"{side_status} for {element._element_info}, expected one of {expected_sides}."
-                logger.error(msg)
-                raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.BAD_BRANCH_SIDE)
-            element = element.side1 if side in (1, "HV") else element.side2
-            warn_external(
-                (
-                    f"Connecting a {element_to_connect.element_type} to a ground using the side "
-                    f"argument is deprecated. Use {element_to_connect.element_type}.side"
-                    f"{element._side_suffix} directly instead."
-                ),
-                category=DeprecationWarning,
-            )
-        else:
+        if not isinstance(element, AbstractTerminal):
             msg = f"Cannot connect {element._element_info} to the ground."
+            if element.element_type in {"transformer", "line", "switch"}:
+                msg += " Did you mean to connect one of its sides?"
             logger.error(msg)
             raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT)
+        if element.element_type in {"transformer", "line", "switch"}:
+            element_to_connect = element._branch  # type: ignore
 
         if id is None:
             id = f"{element.element_type} {element.id!r} {element._side_desc}phase {phase!r} to ground {ground.id!r}"
