@@ -1,10 +1,11 @@
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Mapping
 from typing import TYPE_CHECKING, Any
 
 import geopandas as gpd
 
-from roseau.load_flow.plotting import _check_folium, _plot_interactive_map_internal
+from roseau.load_flow.plotting import _RESULT_COLORS, _check_folium, _plot_interactive_map_internal, _pp_num, _pu_to_pct
 from roseau.load_flow.typing import Id
+from roseau.load_flow_single.models import Transformer
 from roseau.load_flow_single.network import ElectricalNetwork
 
 if TYPE_CHECKING:
@@ -173,16 +174,13 @@ def plot_interactive_map(
     return m
 
 
-def plot_results_interactive_map(  # noqa: C901
+def plot_results_interactive_map(
     network: ElectricalNetwork,
     *,
     style_color: str = "#234e83",
     highlight_color: str = "#cad40e",
     style_function: Callable[["FeatureMap"], "StyleDict | None"] | None = None,
     highlight_function: Callable[["FeatureMap"], "StyleDict | None"] | None = None,
-    bus_colormap: "folium.ColorMap | Sequence[str] | None" = None,
-    line_colormap: "folium.ColorMap | Sequence[str] | None" = None,
-    transformer_colormap: "folium.ColorMap | Sequence[str] | None" = None,
     map_kws: Mapping[str, Any] | None = None,
     add_tooltips: bool = True,
     add_popups: bool = True,
@@ -214,29 +212,12 @@ def plot_results_interactive_map(  # noqa: C901
 
         style_function:
             Function mapping a GeoJson Feature to a style dict. If not provided or when it returns
-            ``None``, the default style is used.
+            ``None``, the default style is used. By default, buses and lines are colored according
+            to their voltage levels and loadings, respectively.
 
         highlight_function:
             Function mapping a GeoJson Feature to a style dict for mouse events. If not provided or
             when it returns ``None``, the default highlight style is used.
-
-        bus_colormap:
-            A callable that takes a voltage level in % and returns a color for the bus markers
-            or a sequence of colors to create a linear colormap representing the voltage level
-            from minimum to maximum. If not provided, a linear colormap is created with the
-            colors ``["blue", "cyan", "green", "yellow", "red"]``
-
-        line_colormap:
-            A callable that takes a loading in % and returns a color for the line markers or a
-            sequence of colors to create a linear colormap representing the loading from 0% to
-            maximum. If not provided, a linear colormap is created with the colors
-            ``["green", "yellow", "red"]``.
-
-        transformer_colormap:
-            A callable that takes a loading in % and returns a color for the transformer markers
-            or a sequence of colors to create a linear colormap representing the loading from 0%
-            to maximum. If not provided, a linear colormap is created with the colors
-            ``["green", "yellow", "red"]``.
 
         map_kws:
             Additional keyword arguments to pass to the :class:`folium.Map` constructor. By default,
@@ -264,148 +245,87 @@ def plot_results_interactive_map(  # noqa: C901
         The `folium.Map` object with the network plot.
     """
     _check_folium(func_name="plot_results_interactive_map")
-    import folium
 
     if network.is_multi_phase:
         # TODO: add " Did you mean to use rlf.plotting.plot_results_interactive_map?" when it is implemented
         raise TypeError("Only single-phase networks can be plotted.")
     network._check_valid_results()
 
-    min_voltage = float("inf")
-    max_voltage = 0.0
-    max_line_loading = 0.0
-    max_tr_loading = 0.0
-    buses_data = []
-    for bus in network.buses.values():
-        if bus._nominal_voltage is None:
-            no_nominal_voltage = [bus.id for bus in network.buses.values() if bus._nominal_voltage is None]
-            raise ValueError(f"The following buses do not have a nominal voltage defined: {no_nominal_voltage}.")
-        if bus._min_voltage_level is None:
-            no_min_voltage = [bus.id for bus in network.buses.values() if bus._min_voltage_level is None]
-            raise ValueError(f"The following buses do not have a minimum voltage level defined: {no_min_voltage}.")
-        if bus._max_voltage_level is None:
-            no_max_voltage = [bus.id for bus in network.buses.values() if bus._max_voltage_level is None]
-            raise ValueError(f"The following buses do not have a maximum voltage level defined: {no_max_voltage}.")
-        min_voltage = min(min_voltage, bus._min_voltage_level * 100)
-        max_voltage = max(max_voltage, bus._max_voltage_level * 100)
-        res_voltage_level = bus._res_voltage_level_getter(warning=False)
-        assert res_voltage_level is not None
-        res_voltage_level *= 100
-        buses_data.append(
-            {
-                "id": bus.id,
-                "element_type": "bus",
-                "nominal_voltage": bus._nominal_voltage,
-                "min_voltage_level": bus._min_voltage_level * 100,
-                "max_voltage_level": bus._max_voltage_level * 100,
-                "geometry": bus.geometry,
-                "res_separator": "",  # Results separator
-                "res_voltage": abs(bus._res_voltage_getter(warning=False)),
-                "res_voltage_level": res_voltage_level,
-            }
-        )
+    buses_data: list[dict[str, Any]] = [
+        {
+            "id": bus.id,
+            "element_type": "bus",
+            "nominal_voltage": bus._nominal_voltage,
+            "min_voltage_level": _pu_to_pct(bus._min_voltage_level),
+            "max_voltage_level": _pu_to_pct(bus._max_voltage_level),
+            "geometry": bus.geometry,
+            "res_separator": "",  # Results separator
+            "res_voltage": abs(bus._res_voltage_getter(warning=False)),
+            "res_voltage_level": _pu_to_pct(bus._res_voltage_level_getter(warning=False)),
+        }
+        for bus in network.buses.values()
+    ]
     buses_data_by_id = {bus["id"]: bus for bus in buses_data}
 
-    lines_data = []
-    for line in network.lines.values():
-        lp = line.parameters
-        if lp._ampacity is None:
-            no_ampacity = list(
-                dict.fromkeys(
-                    line.parameters.id for line in network.lines.values() if line.parameters._ampacity is None
-                )
-            )
-            raise ValueError(f"The following line parameters do not have an ampacity defined: {no_ampacity}.")
-        max_line_loading = max(max_line_loading, line._max_loading * 100)
-        res_loading = line._res_loading_getter(warning=False)
-        assert res_loading is not None
-        res_loading *= 100
-        lines_data.append(
-            {
-                "id": line.id,
-                "element_type": "line",
-                "bus1_id": line.bus1.id,
-                "bus2_id": line.bus2.id,
-                "parameters_id": lp.id,
-                "length": line._length,
-                "line_type": lp._line_type,
-                "material": lp._material,
-                "insulator": lp._insulator,
-                "section": lp._section,
-                "ampacity": lp._ampacity,
-                "geometry": line.geometry,
-                "res_separator": "",  # Results separator
-                "max_loading": line._max_loading * 100,
-                "res_loading": res_loading,
-            }
-        )
-    lines_data_by_id = {line["id"]: line for line in lines_data}
+    lines_data: list[dict[str, Any]] = [
+        {
+            "id": line.id,
+            "element_type": "line",
+            "bus1_id": line.bus1.id,
+            "bus2_id": line.bus2.id,
+            "parameters_id": line._parameters.id,
+            "length": line._length,
+            "line_type": line._parameters._line_type,
+            "material": line._parameters._material,
+            "insulator": line._parameters._insulator,
+            "section": line._parameters._section,
+            "ampacity": line._parameters._ampacity,
+            "geometry": line.geometry,
+            "res_separator": "",  # Results separator
+            "max_loading": line._max_loading * 100,
+            "res_loading": _pu_to_pct(line._res_loading_getter(warning=False)),
+        }
+        for line in network.lines.values()
+    ]
 
-    transformers_data = []
-    for tr in network.transformers.values():
-        tp = tr.parameters
-        max_tr_loading = max(max_tr_loading, tr._max_loading * 100)
-        hv_data = buses_data_by_id[tr.bus_hv.id]
-        lv_data = buses_data_by_id[tr.bus_lv.id]
-        transformers_data.append(
-            {
-                "id": tr.id,
-                "element_type": "transformer",
-                "bus_hv_id": tr.bus_hv.id,
-                "bus_lv_id": tr.bus_lv.id,
-                "parameters_id": tp.id,
-                "geometry": tr.bus_hv.geometry,
-                "vg": tp.vg,
-                "sn": tp._sn / 1e3,  # Convert to kVA
-                "tap": tr._tap * 100,  # Convert to percentage
-                "rated_voltages": f"{tp._uhv:.6g} / {tp._ulv:.6g}",
-                "max_loading": tr._max_loading * 100,
-                "nominal_voltages": f"{hv_data['nominal_voltage']:.6g} / {lv_data['nominal_voltage']:.6g}",
-                "min_voltage_levels": f"{hv_data['min_voltage_level']:.6g} / {lv_data['min_voltage_level']:.6g}",
-                "max_voltage_levels": f"{hv_data['max_voltage_level']:.6g} / {lv_data['max_voltage_level']:.6g}",
-                "res_separator": "",  # Results separator
-                "res_loading": tr._res_loading_getter(warning=False) * 100,
-                "res_voltages": f"{hv_data['res_voltage']:.6g} / {lv_data['res_voltage']:.6g}",
-                "res_voltage_levels": f"{hv_data['res_voltage_level']:.6g} / {lv_data['res_voltage_level']:.6g}",
-            }
-        )
-    transformers_data_by_id = {tr["id"]: tr for tr in transformers_data}
+    def _get_tr_buses_data(tr: Transformer, field: str) -> str:
+        return _pp_num([buses_data_by_id[bus_id][field] for bus_id in (tr.bus_hv.id, tr.bus_lv.id)])
+
+    transformers_data: list[dict[str, Any]] = [
+        {
+            "id": tr.id,
+            "element_type": "transformer",
+            "bus_hv_id": tr.bus_hv.id,
+            "bus_lv_id": tr.bus_lv.id,
+            "parameters_id": tr._parameters.id,
+            "geometry": tr.bus_hv.geometry,
+            "vg": tr._parameters.vg,
+            "sn": tr._parameters._sn / 1e3,  # Convert to kVA
+            "tap": tr._tap * 100,  # Convert to percentage
+            "rated_voltages": _pp_num([tr._parameters._uhv, tr._parameters._ulv]),
+            "max_loading": tr._max_loading * 100,
+            "nominal_voltages": _get_tr_buses_data(tr, "nominal_voltage"),
+            "min_voltage_levels": _get_tr_buses_data(tr, "min_voltage_level"),
+            "max_voltage_levels": _get_tr_buses_data(tr, "max_voltage_level"),
+            "res_separator": "",  # Results separator
+            "res_loading": tr._res_loading_getter(warning=False) * 100,
+            "res_voltages": _get_tr_buses_data(tr, "res_voltage"),
+            "res_voltage_levels": _get_tr_buses_data(tr, "res_voltage_level"),
+        }
+        for tr in network.transformers.values()
+    ]
 
     buses_gdf = gpd.GeoDataFrame(buses_data, crs=network.crs)
     lines_gdf = gpd.GeoDataFrame(lines_data, crs=network.crs)
     transformers_gdf = gpd.GeoDataFrame(transformers_data, crs=network.crs)
-    if not isinstance(bus_colormap, folium.ColorMap):
-        bus_colormap = folium.LinearColormap(
-            colors=["blue", "cyan", "green", "yellow", "red"] if bus_colormap is None else bus_colormap,
-            vmin=min_voltage,
-            vmax=max_voltage,
-            caption="Voltage level (%)",
-        )
-        bus_colormap.width = 200
-    if not isinstance(line_colormap, folium.ColorMap):
-        line_colormap = folium.LinearColormap(
-            ["green", "yellow", "red"] if line_colormap is None else line_colormap,
-            vmin=0,
-            vmax=max_line_loading,
-            caption="Line loading %",
-        )
-        line_colormap.width = 200
-    if not isinstance(transformer_colormap, folium.ColorMap):
-        transformer_colormap = folium.LinearColormap(
-            ["green", "yellow", "red"] if transformer_colormap is None else transformer_colormap,
-            vmin=0,
-            vmax=max_tr_loading,
-            caption="Transformer loading %",
-        )
-        transformer_colormap.width = 200
 
     def style_color_callback(et, eid):
         if et == "bus":
-            return bus_colormap(buses_data_by_id[eid]["res_voltage_level"])
+            return _RESULT_COLORS[network.buses[eid]._res_state_getter()]
         elif et == "line":
-            return line_colormap(lines_data_by_id[eid]["res_loading"])
+            return _RESULT_COLORS[network.lines[eid]._res_state_getter()]
         elif et == "transformer":
-            return transformer_colormap(transformers_data_by_id[eid]["res_loading"])
+            return _RESULT_COLORS[network.transformers[eid]._res_state_getter()]
         else:
             return style_color
 
@@ -443,17 +363,17 @@ def plot_results_interactive_map(  # noqa: C901
                 "bus_lv_id": "LV Bus:",
                 "vg": "Vector Group:",
                 "sn": "Sn (kVA):",
-                "rated_voltages": "Ur ʜv/ʟv (V):",
+                "rated_voltages": "Ur [ʜv,ʟv] (V):",
                 "tap": "Tap Position (%):",
                 "parameters_id": "Parameters:",
                 "max_loading": "Max loading (%):",
-                "nominal_voltages": "Un ʜv/ʟv (V):",
-                "min_voltage_levels": "Umin ʜv/ʟv (%):",
-                "max_voltage_levels": "Umax ʜv/ʟv (%):",
+                "nominal_voltages": "Un [ʜv,ʟv] (V):",
+                "min_voltage_levels": "Umin [ʜv,ʟv] (%):",
+                "max_voltage_levels": "Umax [ʜv,ʟv] (%):",
                 "res_separator": "--",
                 "res_loading": "Loading (%):",
-                "res_voltages": "U ʜv/ʟv (V):",
-                "res_voltage_levels": "U ʜv/ʟv (%):",
+                "res_voltages": "U [ʜv,ʟv] (V):",
+                "res_voltage_levels": "U [ʜv,ʟv] (%):",
             },
         },
         style_color_callback=style_color_callback,
@@ -466,10 +386,4 @@ def plot_results_interactive_map(  # noqa: C901
         add_search=add_search,
         fit_bounds=fit_bounds,
     )
-    bus_colormap.add_to(m)
-    if network.lines:  # Unlikely to be empty for a map plot, but just in case
-        line_colormap.add_to(m)
-    if network.transformers:
-        transformer_colormap.add_to(m)
-
     return m

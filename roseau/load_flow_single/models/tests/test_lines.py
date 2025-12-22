@@ -193,6 +193,33 @@ def test_res_violated():
     assert np.allclose(line.res_loading, 12 / 11)
 
 
+def test_res_state():
+    bus1 = Bus(id="bus1")
+    bus2 = Bus(id="bus2")
+    lp = LineParameters(id="lp", z_line=1 + 0j)
+    line = Line(id="line", bus1=bus1, bus2=bus2, parameters=lp, length=Q_(50, "m"))
+
+    line.side1._res_voltage = 230
+    line.side2._res_voltage = 225
+    line.side1._res_current = 50
+    line.side2._res_current = -50
+
+    # No ampacity
+    assert line._res_state_getter() == "unknown"
+
+    # With ampacity
+    lp._ampacity = 100
+    assert line._res_state_getter() == "ok"
+    line.side1._res_current = 80
+    assert line._res_state_getter() == "high"
+    line.side1._res_current = 120
+    assert line._res_state_getter() == "very-high"
+
+    # Change max loading
+    line._max_loading = 1.2
+    assert line._res_state_getter() == "high"
+
+
 def test_lines_results():
     z_line = (0.1 + 0.1j) / 2
     y_shunt = None

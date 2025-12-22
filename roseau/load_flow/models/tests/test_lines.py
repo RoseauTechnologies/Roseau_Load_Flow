@@ -230,6 +230,38 @@ def test_res_violated():
     np.testing.assert_allclose(line.res_loading.m, [12 / 11, 12 / 11, 12 / 13])
 
 
+def test_res_state():
+    bus1 = Bus(id="bus1", phases="abc")
+    bus2 = Bus(id="bus2", phases="abc")
+    lp = LineParameters(id="lp", z_line=np.eye(3, dtype=complex))
+    line = Line(id="line", bus1=bus1, bus2=bus2, parameters=lp, length=Q_(50, "m"))
+
+    bus1._res_potentials = 230 * PosSeq
+    bus2._res_potentials = 225 * PosSeq
+    line.side1._res_currents = 50 * PosSeq
+    line.side2._res_currents = -50 * PosSeq
+
+    # No ampacity
+    assert line._res_state_getter() == "unknown"
+
+    # With ampacity
+    lp._ampacities = np.array([100, 100, 100], dtype=np.float64)
+    assert line._res_state_getter() == "ok"
+    line.side1._res_currents = 80 * PosSeq
+    assert line._res_state_getter() == "high"
+    line.side1._res_currents = 120 * PosSeq
+    assert line._res_state_getter() == "very-high"
+
+    line.side1._res_currents = 50 * PosSeq
+    assert line._res_state_getter() == "ok"
+    line.side2._res_currents = 120 * PosSeq * (1, 0.5, 0.5)  # Only one violation
+    assert line._res_state_getter() == "very-high"
+
+    # Change max loading
+    line._max_loading = 1.2
+    assert line._res_state_getter() == "high"
+
+
 @pytest.mark.parametrize(
     ("phases", "z_line", "y_shunt", "len_line", "bus_pot", "line_cur", "ground_pot", "expected_pow"),
     (

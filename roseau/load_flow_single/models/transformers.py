@@ -4,7 +4,7 @@ from typing import Final
 from shapely.geometry.base import BaseGeometry
 
 from roseau.load_flow import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
-from roseau.load_flow.typing import Float, Id, JsonDict
+from roseau.load_flow.typing import Float, Id, JsonDict, ResultState
 from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow.utils import deprecate_renamed_parameters
 from roseau.load_flow_engine.cy_engine import CySingleTransformer
@@ -179,6 +179,17 @@ class Transformer(AbstractBranch["TransformerSide", CySingleTransformer]):
         power_hv = self._side1._res_power_getter(warning)
         power_lv = self._side2._res_power_getter(warning=False)  # warn only once
         return max(abs(power_hv), abs(power_lv)) / sn
+
+    def _res_state_getter(self) -> ResultState:
+        """Get the state of the transformer based on its loading."""
+        loading = self._res_loading_getter(warning=False)
+        max_loading = self._max_loading
+        if loading > max_loading:
+            return "very-high"
+        elif loading > 0.75 * max_loading:
+            return "high"
+        else:
+            return "ok"
 
     @property
     @ureg_wraps("", (None,))
