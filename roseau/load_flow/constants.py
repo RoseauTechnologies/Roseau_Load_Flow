@@ -114,16 +114,3 @@ EPSILON_R: Final[dict[Insulator, Q_[float]]] = {
 }
 """Relative permittivity of common insulator materials according to the IEC 60287 standard."""
 # IEC 60287-1-1 Table 3. We only include the MV values.
-
-
-def __getattr__(name: str):
-    from roseau.load_flow.utils.helpers import warn_external
-
-    if name in ("PositiveSequence", "NegativeSequence", "ZeroSequence"):
-        # deprecated since 0.12.0
-        warn_external(f"'rlf.constants.{name}' is deprecated. Use 'rlf.sym.{name}' instead.", category=FutureWarning)
-        from roseau.load_flow import sym
-
-        return getattr(sym, name)
-
-    raise AttributeError(f"module '{__name__}' has no attribute '{name}'")

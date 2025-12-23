@@ -3,18 +3,16 @@
 import cmath
 import math
 from collections.abc import Callable, Iterable, Mapping
-from typing import TYPE_CHECKING, Any, Literal, overload
+from typing import TYPE_CHECKING, Any, Literal
 
 import geopandas as gpd
 import numpy as np
-from typing_extensions import deprecated
 
-from roseau.load_flow.models import AbstractBranch, AbstractTerminal
+from roseau.load_flow.models import AbstractTerminal
 from roseau.load_flow.network import ElectricalNetwork
 from roseau.load_flow.sym import NegativeSequence, PositiveSequence, ZeroSequence, phasor_to_sym
 from roseau.load_flow.types import LineType
-from roseau.load_flow.typing import ComplexArray, Id, ResultState, Side
-from roseau.load_flow.utils import warn_external
+from roseau.load_flow.typing import ComplexArray, Id, ResultState
 
 if TYPE_CHECKING:
     import folium
@@ -95,30 +93,13 @@ def _draw_voltage_phasor(
 
 
 def _get_phases_and_potentials(
-    element: AbstractTerminal | AbstractBranch, voltage_type: Literal["pp", "pn", "auto"], side: Side | None
+    element: AbstractTerminal, voltage_type: Literal["pp", "pn", "auto"]
 ) -> tuple[AbstractTerminal, str, ComplexArray]:
     if not element.is_multi_phase:
         raise TypeError(f"Only multi-phase elements can be plotted. Did you mean to use rlf.{type(element).__name__}?")
-    if isinstance(element, AbstractTerminal):
-        if side is not None:
-            raise ValueError("The side argument is only valid for branch elements.")
-    else:
-        if side in (1, "HV"):
-            element = element.side1
-        elif side in (2, "LV"):
-            element = element.side2
-        elif side is None:
-            expected = ("HV", "LV") if element.element_type == "transformer" else (1, 2)
-            raise ValueError(f"The side for a {element.element_type} must be one of {expected}.")
-        else:
-            raise ValueError(f"Invalid side: {side!r}")
-        warn_external(
-            (
-                f"Plotting the voltages of a {element._branch.element_type} using the side argument "
-                f"is deprecated. Use {element._branch.element_type}.side{element._side_suffix} "
-                f"directly instead."
-            ),
-            category=DeprecationWarning,
+    if not isinstance(element, AbstractTerminal):
+        raise ValueError(
+            "The element must be a terminal (bus, load, source) or a branch side (line, switch, transformer)."
         )
     phases, potentials = element.phases, element.res_potentials.m
 
@@ -164,30 +145,14 @@ def _pp_num(v: float | list[float] | None, /, missing: str = "n/a") -> str:
 #
 # Phasor plotting functions
 #
-@overload
 def plot_voltage_phasors(
     element: AbstractTerminal, *, voltage_type: Literal["pp", "pn", "auto"] = "auto", ax: "Axes | None" = None
-) -> "Axes": ...
-@overload
-@deprecated(
-    "Plotting the voltage phasors of a branch using the side argument is deprecated. Use "
-    "branch.side1 or branch.side2 directly instead."
-)
-def plot_voltage_phasors(
-    element: AbstractBranch, *, voltage_type: Literal["pp", "pn", "auto"] = "auto", side: Side, ax: "Axes | None" = None
-) -> "Axes": ...
-def plot_voltage_phasors(
-    element: AbstractTerminal | AbstractBranch,
-    *,
-    voltage_type: Literal["pp", "pn", "auto"] = "auto",
-    side: Side | None = None,
-    ax: "Axes | None" = None,
 ) -> "Axes":
     """Plot the voltage phasors of a terminal element or a branch element.
 
     Args:
         element:
-            The bus, load, source, line, switch or transformer whose voltages to plot.
+            The bus, load, source, branch side whose voltages to plot.
 
         voltage_type:
             The type of the voltages to plot.
@@ -199,13 +164,6 @@ def plot_voltage_phasors(
             - ``"pn"``: Plots the phase-to-neutral voltages. Raises an error if the element has no
               neutral.
 
-        side:
-            The side of the branch element to plot.
-
-            - For transformers: ``"HV"`` or ``"LV"``
-            - For lines/switches: ``1`` or ``2``
-            - For buses/loads/sources: ignored
-
         ax:
             The axes to plot on. If None, the currently active axes object is used.
 
@@ -216,7 +174,7 @@ def plot_voltage_phasors(
 
     if ax is None:
         ax = plt.gca()
-    element, phases, potentials = _get_phases_and_potentials(element, voltage_type, side)
+    element, phases, potentials = _get_phases_and_potentials(element, voltage_type)
     _configure_axes(ax, potentials)
     ax.set_title(f"{element.id}" if element._side_value is None else f"{element.id} ({element._side_value})")
     potentials = potentials.tolist()
@@ -243,34 +201,15 @@ def plot_voltage_phasors(
     return ax
 
 
-@overload
 def plot_symmetrical_voltages(
     element: AbstractTerminal, *, axes: Iterable["Axes"] | None = None
-) -> "tuple[Axes, Axes, Axes]": ...
-@overload
-@deprecated(
-    "Plotting the symmetrical voltages of a branch using the side argument is deprecated. Use "
-    "branch.side1 or branch.side2 directly instead."
-)
-def plot_symmetrical_voltages(
-    element: AbstractBranch, *, side: Side, axes: Iterable["Axes"] | None = None
-) -> "tuple[Axes, Axes, Axes]": ...
-def plot_symmetrical_voltages(
-    element: AbstractTerminal | AbstractBranch, *, side: Side | None = None, axes: Iterable["Axes"] | None = None
 ) -> "tuple[Axes, Axes, Axes]":
     """Plot the symmetrical voltages of a terminal element or a branch element.
 
     Args:
         element:
-            The bus, load, source, line, switch or transformer whose voltages to plot. The element
-            must have ``'abc'`` or ``'abcn'`` phases.
-
-        side:
-            The side of the branch element to plot.
-
-            - For transformers: ``"HV"`` or ``"LV"``
-            - For lines/switches: ``1`` or ``2``
-            - For buses/loads/sources: ignored
+            The bus, load, source, branch side whose voltages to plot. The element must have
+            ``'abc'`` or ``'abcn'`` phases.
 
         axes:
             The three axes to plot on for the symmetrical components in the order zero, positive,
@@ -282,7 +221,7 @@ def plot_symmetrical_voltages(
     """
     from roseau.load_flow.utils.optional_deps import pyplot as plt
 
-    element, phases, potentials = _get_phases_and_potentials(element, "auto", side)
+    element, phases, potentials = _get_phases_and_potentials(element, "auto")
     if phases not in {"abc", "abcn"}:
         raise ValueError("The element must have 'abc' or 'abcn' phases.")
     if axes is None:

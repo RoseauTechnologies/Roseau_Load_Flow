@@ -3,14 +3,12 @@ from functools import cached_property
 from typing import Final
 
 from shapely.geometry.base import BaseGeometry
-from typing_extensions import deprecated
 
-from roseau.load_flow.converters import _calculate_voltages
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.branches import AbstractBranch, AbstractBranchSide
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.transformer_parameters import TransformerParameters
-from roseau.load_flow.typing import ComplexArray, Id, JsonDict, ResultState
+from roseau.load_flow.typing import Id, JsonDict, ResultState
 from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow.utils import deprecate_renamed_parameters, warn_external
 from roseau.load_flow_engine.cy_engine import CyTransformer
@@ -283,9 +281,8 @@ class Transformer(AbstractBranch["TransformerSide", CyTransformer]):
                     warn_external(
                         f"Transformer {id!r} with vector group '{parameters.vg}' does not have a "
                         f"brought out neutral on the HV side. The neutral phase 'n' is ignored. If "
-                        f"you meant to use a brought out neutral, use vector group '{correct_vg}'. "
-                        f"This will raise an error in the future.",
-                        FutureWarning,
+                        f"you meant to use a brought out neutral, use vector group '{correct_vg}'.",
+                        UserWarning,
                     )
                     phases_hv = phases_hv.replace("n", "")
                 else:
@@ -305,9 +302,8 @@ class Transformer(AbstractBranch["TransformerSide", CyTransformer]):
                     warn_external(
                         f"Transformer {id!r} with vector group '{parameters.vg}' does not have a "
                         f"brought out neutral on the LV side. The neutral phase 'n' is ignored. If "
-                        f"you meant to use a brought out neutral, use vector group '{correct_vg}'. "
-                        f"This will raise an error in the future.",
-                        FutureWarning,
+                        f"you meant to use a brought out neutral, use vector group '{correct_vg}'.",
+                        UserWarning,
                     )
                     phases_lv = phases_lv.replace("n", "")
                 else:
@@ -424,22 +420,6 @@ class Transformer(AbstractBranch["TransformerSide", CyTransformer]):
         # True if either the HV or LV side is overloaded
         loading = self._res_loading_getter(warning=True)
         return bool(loading > self._max_loading)
-
-    @property  # TODO remove in version 0.14
-    @deprecated("`res_voltages_hv` will be removed in the next release, use `res_voltages[0]` instead")
-    @ureg_wraps("V", (None,))
-    def res_voltages_hv(self) -> Q_[ComplexArray]:
-        """The load flow result of the transformer voltages on the HV side (V)."""
-        potentials_hv = self._side1._res_potentials_getter(warning=True)
-        return _calculate_voltages(potentials=potentials_hv, phases=self.phases_hv)
-
-    @property  # TODO remove in version 0.14
-    @deprecated("`res_voltages_lv` will be removed in the next release, use `res_voltages[1]` instead")
-    @ureg_wraps("V", (None,))
-    def res_voltages_lv(self) -> Q_[ComplexArray]:
-        """The load flow result of the transformer voltages on the LV side (V)."""
-        potentials_lv = self._side2._res_potentials_getter(warning=True)
-        return _calculate_voltages(potentials=potentials_lv, phases=self.phases_lv)
 
     #
     # Json Mixin interface

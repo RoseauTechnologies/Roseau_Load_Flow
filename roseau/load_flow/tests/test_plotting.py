@@ -117,10 +117,6 @@ def test_plot_voltage_phasors_errors(elements):
     with pytest.raises(ValueError, match=r"Invalid voltage_type: 'bad'"):
         plot_voltage_phasors(bus_abc, voltage_type="bad")  # type: ignore
 
-    # Bad side
-    with pytest.raises(ValueError, match=r"The side argument is only valid for branch elements"):
-        plot_voltage_phasors(bus_abc, side="HV")  # type: ignore
-
     # Not a multi-phase element
     bus_single = elements["bus_single"]
     with pytest.raises(TypeError, match=r"Only multi-phase elements can be plotted. Did you mean to use rlf.Bus\?"):
@@ -146,16 +142,6 @@ def test_plot_voltage_phasors_branches():
     tr.side_hv._res_potentials = np.array(potentials, dtype=np.complex128)
     tr.side_lv._res_potentials = np.array(potentials / 2, dtype=np.complex128)
 
-    # Bad side
-    with pytest.raises(ValueError, match=r"The side for a switch must be one of \(1, 2\)"):
-        plot_voltage_phasors(sw)  # type: ignore
-    with pytest.raises(ValueError, match=r"The side for a line must be one of \(1, 2\)"):
-        plot_voltage_phasors(ln)  # type: ignore
-    with pytest.raises(ValueError, match=r"The side for a transformer must be one of \('HV', 'LV'\)"):
-        plot_voltage_phasors(tr)  # type: ignore
-    with pytest.raises(ValueError, match=r"Invalid side: 'bad'"):
-        plot_voltage_phasors(tr, side="bad")  # type: ignore
-
     # Switches warnings
     ax = plot_voltage_phasors(sw.side1)
     ax.set_title.assert_called_once_with("Sw (1)")  # type: ignore
@@ -175,25 +161,6 @@ def test_plot_voltage_phasors_branches():
     ax = plot_voltage_phasors(tr.side_lv)
     ax.set_title.assert_called_once_with("Tr (LV)")  # type: ignore
     npt.assert_allclose(abs(complex(*ax.scatter.call_args.args)), 10e3)  # type: ignore
-
-    # Deprecations
-    for element, side, element_type, side_suffix, expected_id in [
-        (sw, 1, "switch", "1", "Sw (1)"),
-        (sw, 2, "switch", "2", "Sw (2)"),
-        (ln, 1, "line", "1", "Ln (1)"),
-        (ln, 2, "line", "2", "Ln (2)"),
-        (tr, "HV", "transformer", "_hv", "Tr (HV)"),
-        (tr, "LV", "transformer", "_lv", "Tr (LV)"),
-    ]:
-        with pytest.warns(
-            DeprecationWarning,
-            match=(
-                rf"Plotting the voltages of a {element_type} using the side argument is deprecated. "
-                rf"Use {element_type}.side{side_suffix} directly instead."
-            ),
-        ):
-            ax = plot_voltage_phasors(element, side=side)
-        ax.set_title.assert_called_once_with(expected_id)
 
 
 @pytest.mark.usefixtures("mock_subplots")

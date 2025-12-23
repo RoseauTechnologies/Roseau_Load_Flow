@@ -640,28 +640,3 @@ def test_to_from_dict_roundtrip():
     bus2 = Bus.from_dict(bus_dict)
     bus2_dict = bus2.to_dict(include_results=False)
     assert_json_close(bus_dict, bus2_dict)
-
-
-def test_deprecated_potentials():
-    # Constructor
-    with pytest.warns(
-        DeprecationWarning,
-        match=r"Argument 'potentials' for Bus\(\) is deprecated. It has been renamed to 'initial_potentials'",
-    ):
-        bus = Bus(id="bus", phases="an", potentials=[230, 0])  # type: ignore
-    np.testing.assert_allclose(bus.initial_potentials.m, [230, 0])
-
-    # Property getter
-    with pytest.warns(
-        DeprecationWarning,
-        match=r"'Bus.potentials' is deprecated. It has been renamed to 'initial_potentials'",
-    ):
-        _ = bus.potentials
-
-    # Property setter
-    with pytest.warns(
-        DeprecationWarning,
-        match=r"'Bus.potentials' is deprecated. It has been renamed to 'initial_potentials'",
-    ):
-        bus.potentials = [220, 0]
-    np.testing.assert_allclose(bus.initial_potentials.m, [220, 0])

@@ -249,26 +249,6 @@ class AbstractDisconnectable(AbstractConnectable[_CyE_co], ABC):
         """Is this element disconnected from the network?"""
         return self._is_disconnected
 
-    @property
-    def bus(self) -> Bus | None:
-        """The bus of the element, or None if it is disconnected.
-
-        .. deprecated:: 0.13.0
-
-            Accessing the bus of a disconnected element will change in the future to return the bus
-            it was connected to before disconnection instead of `None`. If you rely on this behavior
-            to check if the element is disconnected, please use the `is_disconnected` property instead.
-        """
-        if self._is_disconnected:
-            warn_external(
-                f"Accessing the bus of the disconnected {self._element_info} will change in the "
-                f"future to return the bus it was connected to before disconnection instead of None. "
-                f"If you rely on this behavior to check if the element is disconnected, please use "
-                f"`is_disconnected` instead."
-            )
-            return None
-        return self._bus
-
     def disconnect(self) -> None:
         """Disconnect this element from the network. It cannot be used afterwards."""
         for element in self._connected_elements:

@@ -714,10 +714,3 @@ def test_potential_ref_phases():
         PotentialRef(id="ref9", element=switch)  # type: ignore
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT
     assert e.value.msg == "Potential reference 'ref9' cannot be connected to a switch."
-
-    # Deprecated
-    with pytest.warns(
-        DeprecationWarning,
-        match=r"Argument 'phase' for PotentialRef\(\) is deprecated. It has been renamed to 'phases'.",
-    ):
-        assert PotentialRef(id="ref10", element=bus_abc, phase="a").phases == "a"  # type: ignore
