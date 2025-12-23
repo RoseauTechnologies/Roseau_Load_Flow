@@ -240,7 +240,7 @@ def test_res_state():
     bus._res_voltage = (400 + 0j) * 1.04
     assert bus._res_state_getter() == "high"
     bus._res_voltage = (400 + 0j) * 1.02
-    assert bus._res_state_getter() == "ok"
+    assert bus._res_state_getter() == "normal"
 
     # Only min voltage
     bus.max_voltage_level = None
@@ -250,7 +250,7 @@ def test_res_state():
     bus._res_voltage = (400 + 0j) * 0.96
     assert bus._res_state_getter() == "low"
     bus._res_voltage = (400 + 0j) * 0.98
-    assert bus._res_state_getter() == "ok"
+    assert bus._res_state_getter() == "normal"
 
     # Both min and max voltage
     bus.min_voltage_level = 0.95
@@ -260,7 +260,7 @@ def test_res_state():
     bus._res_voltage = (400 + 0j) * 1.04
     assert bus._res_state_getter() == "high"
     bus._res_voltage = (400 + 0j) * 1.0
-    assert bus._res_state_getter() == "ok"
+    assert bus._res_state_getter() == "normal"
     bus._res_voltage = (400 + 0j) * 0.96
     assert bus._res_state_getter() == "low"
     bus._res_voltage = (400 + 0j) * 0.94

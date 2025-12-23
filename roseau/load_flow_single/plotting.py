@@ -247,73 +247,111 @@ def plot_results_interactive_map(
     _check_folium(func_name="plot_results_interactive_map")
 
     if network.is_multi_phase:
-        # TODO: add " Did you mean to use rlf.plotting.plot_results_interactive_map?" when it is implemented
-        raise TypeError("Only single-phase networks can be plotted.")
+        raise TypeError(
+            "Only single-phase networks can be plotted. Did you mean to use rlf.plotting.plot_results_interactive_map?"
+        )
     network._check_valid_results()
 
-    buses_data: list[dict[str, Any]] = [
-        {
-            "id": bus.id,
-            "element_type": "bus",
-            "nominal_voltage": bus._nominal_voltage,
-            "min_voltage_level": _pu_to_pct(bus._min_voltage_level),
-            "max_voltage_level": _pu_to_pct(bus._max_voltage_level),
-            "geometry": bus.geometry,
-            "res_separator": "",  # Results separator
-            "res_voltage": abs(bus._res_voltage_getter(warning=False)),
-            "res_voltage_level": _pu_to_pct(bus._res_voltage_level_getter(warning=False)),
-        }
-        for bus in network.buses.values()
-    ]
-    buses_data_by_id = {bus["id"]: bus for bus in buses_data}
+    buses_data: dict[str, list[Any]] = {
+        "id": [],
+        "element_type": [],
+        "nominal_voltage": [],
+        "min_voltage_level": [],
+        "max_voltage_level": [],
+        "geometry": [],
+        "res_separator": [],
+        "res_voltage": [],
+        "res_voltage_level": [],
+    }
+    buses_ids: list[Id] = []
+    for bus in network.buses.values():
+        buses_ids.append(bus.id)
+        buses_data["id"].append(bus.id)
+        buses_data["element_type"].append("bus")
+        buses_data["nominal_voltage"].append(bus._nominal_voltage)
+        buses_data["min_voltage_level"].append(_pu_to_pct(bus._min_voltage_level))
+        buses_data["max_voltage_level"].append(_pu_to_pct(bus._max_voltage_level))
+        buses_data["geometry"].append(bus.geometry)
+        buses_data["res_separator"].append("")  # Results separator
+        buses_data["res_voltage"].append(abs(bus._res_voltage_getter(warning=False)))
+        buses_data["res_voltage_level"].append(_pu_to_pct(bus._res_voltage_level_getter(warning=False)))
 
-    lines_data: list[dict[str, Any]] = [
-        {
-            "id": line.id,
-            "element_type": "line",
-            "bus1_id": line.bus1.id,
-            "bus2_id": line.bus2.id,
-            "parameters_id": line._parameters.id,
-            "length": line._length,
-            "line_type": line._parameters._line_type,
-            "material": line._parameters._material,
-            "insulator": line._parameters._insulator,
-            "section": line._parameters._section,
-            "ampacity": line._parameters._ampacity,
-            "geometry": line.geometry,
-            "res_separator": "",  # Results separator
-            "max_loading": line._max_loading * 100,
-            "res_loading": _pu_to_pct(line._res_loading_getter(warning=False)),
-        }
-        for line in network.lines.values()
-    ]
+    lines_data: dict[str, list[Any]] = {
+        "id": [],
+        "element_type": [],
+        "bus1_id": [],
+        "bus2_id": [],
+        "parameters_id": [],
+        "length": [],
+        "line_type": [],
+        "material": [],
+        "insulator": [],
+        "section": [],
+        "ampacity": [],
+        "geometry": [],
+        "res_separator": [],
+        "max_loading": [],
+        "res_loading": [],
+    }
+    for line in network.lines.values():
+        lines_data["id"].append(line.id)
+        lines_data["element_type"].append("line")
+        lines_data["bus1_id"].append(line.bus1.id)
+        lines_data["bus2_id"].append(line.bus2.id)
+        lines_data["parameters_id"].append(line._parameters.id)
+        lines_data["length"].append(line._length)
+        lines_data["line_type"].append(line._parameters._line_type)
+        lines_data["material"].append(line._parameters._material)
+        lines_data["insulator"].append(line._parameters._insulator)
+        lines_data["section"].append(line._parameters._section)
+        lines_data["ampacity"].append(line._parameters._ampacity)
+        lines_data["geometry"].append(line.geometry)
+        lines_data["res_separator"].append("")  # Results separator
+        lines_data["max_loading"].append(line._max_loading * 100)
+        lines_data["res_loading"].append(_pu_to_pct(line._res_loading_getter(warning=False)))
 
     def _get_tr_buses_data(tr: Transformer, field: str) -> str:
-        return _pp_num([buses_data_by_id[bus_id][field] for bus_id in (tr.bus_hv.id, tr.bus_lv.id)])
+        return _pp_num([buses_data[field][buses_ids.index(bus_id)] for bus_id in (tr.bus_hv.id, tr.bus_lv.id)])
 
-    transformers_data: list[dict[str, Any]] = [
-        {
-            "id": tr.id,
-            "element_type": "transformer",
-            "bus_hv_id": tr.bus_hv.id,
-            "bus_lv_id": tr.bus_lv.id,
-            "parameters_id": tr._parameters.id,
-            "geometry": tr.bus_hv.geometry,
-            "vg": tr._parameters.vg,
-            "sn": tr._parameters._sn / 1e3,  # Convert to kVA
-            "tap": tr._tap * 100,  # Convert to percentage
-            "rated_voltages": _pp_num([tr._parameters._uhv, tr._parameters._ulv]),
-            "max_loading": tr._max_loading * 100,
-            "nominal_voltages": _get_tr_buses_data(tr, "nominal_voltage"),
-            "min_voltage_levels": _get_tr_buses_data(tr, "min_voltage_level"),
-            "max_voltage_levels": _get_tr_buses_data(tr, "max_voltage_level"),
-            "res_separator": "",  # Results separator
-            "res_loading": tr._res_loading_getter(warning=False) * 100,
-            "res_voltages": _get_tr_buses_data(tr, "res_voltage"),
-            "res_voltage_levels": _get_tr_buses_data(tr, "res_voltage_level"),
-        }
-        for tr in network.transformers.values()
-    ]
+    transformers_data: dict[str, list[Any]] = {
+        "id": [],
+        "element_type": [],
+        "bus_hv_id": [],
+        "bus_lv_id": [],
+        "parameters_id": [],
+        "geometry": [],
+        "vg": [],
+        "sn": [],
+        "tap": [],
+        "rated_voltages": [],
+        "max_loading": [],
+        "nominal_voltages": [],
+        "min_voltage_levels": [],
+        "max_voltage_levels": [],
+        "res_separator": [],
+        "res_loading": [],
+        "res_voltages": [],
+        "res_voltage_levels": [],
+    }
+    for tr in network.transformers.values():
+        transformers_data["id"].append(tr.id)
+        transformers_data["element_type"].append("transformer")
+        transformers_data["bus_hv_id"].append(tr.bus_hv.id)
+        transformers_data["bus_lv_id"].append(tr.bus_lv.id)
+        transformers_data["parameters_id"].append(tr._parameters.id)
+        transformers_data["geometry"].append(tr.bus_hv.geometry)
+        transformers_data["vg"].append(tr._parameters.vg)
+        transformers_data["sn"].append(tr._parameters._sn / 1e3)  # Convert to kVA
+        transformers_data["tap"].append(tr._tap * 100)  # Convert to percentage
+        transformers_data["rated_voltages"].append(_pp_num([tr._parameters._uhv, tr._parameters._ulv]))
+        transformers_data["max_loading"].append(tr._max_loading * 100)
+        transformers_data["nominal_voltages"].append(_get_tr_buses_data(tr, "nominal_voltage"))
+        transformers_data["min_voltage_levels"].append(_get_tr_buses_data(tr, "min_voltage_level"))
+        transformers_data["max_voltage_levels"].append(_get_tr_buses_data(tr, "max_voltage_level"))
+        transformers_data["res_separator"].append("")  # Results separator
+        transformers_data["res_loading"].append(tr._res_loading_getter(warning=False) * 100)
+        transformers_data["res_voltages"].append(_get_tr_buses_data(tr, "res_voltage"))
+        transformers_data["res_voltage_levels"].append(_get_tr_buses_data(tr, "res_voltage_level"))
 
     buses_gdf = gpd.GeoDataFrame(buses_data, crs=network.crs)
     lines_gdf = gpd.GeoDataFrame(lines_data, crs=network.crs)

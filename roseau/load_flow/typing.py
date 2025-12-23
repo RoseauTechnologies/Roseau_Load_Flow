@@ -141,7 +141,7 @@ type ControlType = Literal["constant", "p_max_u_production", "p_max_u_consumptio
 type ProjectionType = Literal["euclidean", "keep_p", "keep_q"]
 type Solver = Literal["newton", "newton_goldstein", "backward_forward"]
 type Side = Literal[1, 2, "HV", "LV"]
-type ResultState = Literal["very-low", "low", "ok", "high", "very-high", "unknown"]
+type ResultState = Literal["very-low", "low", "normal", "high", "very-high", "unknown"]
 
 # Input Types (Wide)
 type Int = int | np.integer

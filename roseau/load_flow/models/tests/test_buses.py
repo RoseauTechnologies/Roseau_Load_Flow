@@ -306,7 +306,7 @@ def test_res_state():
     bus._res_potentials = 230 * 1.04 * PositiveSequence
     assert bus._res_state_getter() == "high"
     bus._res_potentials = 230 * 1.02 * PositiveSequence
-    assert bus._res_state_getter() == "ok"
+    assert bus._res_state_getter() == "normal"
 
     # Only min voltage
     bus.max_voltage_level = None
@@ -316,7 +316,7 @@ def test_res_state():
     bus._res_potentials = 230 * 0.96 * PositiveSequence
     assert bus._res_state_getter() == "low"
     bus._res_potentials = 230 * 0.98 * PositiveSequence
-    assert bus._res_state_getter() == "ok"
+    assert bus._res_state_getter() == "normal"
 
     # Both min and max voltage
     bus.min_voltage_level = 0.95
@@ -326,7 +326,7 @@ def test_res_state():
     bus._res_potentials = 230 * 1.04 * PositiveSequence
     assert bus._res_state_getter() == "high"
     bus._res_potentials = 230 * 1.0 * PositiveSequence
-    assert bus._res_state_getter() == "ok"
+    assert bus._res_state_getter() == "normal"
     bus._res_potentials = 230 * 0.96 * PositiveSequence
     assert bus._res_state_getter() == "low"
     bus._res_potentials = 230 * 0.94 * PositiveSequence

@@ -227,7 +227,7 @@ class Line(AbstractBranch["LineSide", CyShuntLine | CySimplifiedLine]):
         elif loading > 0.75 * max_loading:
             return "high"
         else:
-            return "ok"
+            return "normal"
 
     @property
     @ureg_wraps("A", (None,))

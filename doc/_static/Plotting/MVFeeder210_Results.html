@@ -27,7 +27,7 @@
                 initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     >
     <style>
-    #map_5364bbe7961b88aed023066be222ce3c {
+    #map_8a9d910f66634210d2ed29b9d4183efb {
       position: relative;
       width: 100.0%;
       height: 100.0%;
@@ -132,10 +132,10 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-search@2.9.7/dist/leaflet-search.min.css">
   </head>
   <body>
-    <div class="folium-map" id="map_5364bbe7961b88aed023066be222ce3c"></div>
+    <div class="folium-map" id="map_8a9d910f66634210d2ed29b9d4183efb"></div>
   </body>
   <script>
-  var map_5364bbe7961b88aed023066be222ce3c = L.map("map_5364bbe7961b88aed023066be222ce3c", {
+  var map_8a9d910f66634210d2ed29b9d4183efb = L.map("map_8a9d910f66634210d2ed29b9d4183efb", {
     center: [0.0, 0.0],
     crs: L.CRS.EPSG3857,
     ...{
@@ -144,9 +144,9 @@
       preferCanvas: false,
     },
   });
-  L.control.zoom({ position: "topright" }).addTo(map_5364bbe7961b88aed023066be222ce3c);
+  L.control.zoom({ position: "topright" }).addTo(map_8a9d910f66634210d2ed29b9d4183efb);
 
-  var tile_layer_ebcec64e0e7b89934ee610288b4f4d78 = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  var tile_layer_55eaaed7d73356503b5b944ec45ce34e = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
     minZoom: 0,
     maxZoom: 19,
     maxNativeZoom: 19,
@@ -159,35 +159,171 @@
     opacity: 1,
   });
 
-  tile_layer_ebcec64e0e7b89934ee610288b4f4d78.addTo(map_5364bbe7961b88aed023066be222ce3c);
+  tile_layer_55eaaed7d73356503b5b944ec45ce34e.addTo(map_8a9d910f66634210d2ed29b9d4183efb);
 
-  var feature_group_ca2022bcf33ca4b872d8dc85d8cc809e = L.featureGroup({});
+  var feature_group_c5c573e83eb8541cf95443e743c587f3 = L.featureGroup({});
 
-  feature_group_ca2022bcf33ca4b872d8dc85d8cc809e.addTo(map_5364bbe7961b88aed023066be222ce3c);
+  feature_group_c5c573e83eb8541cf95443e743c587f3.addTo(map_8a9d910f66634210d2ed29b9d4183efb);
 
-  var feature_group_sub_group_4330983a0e66b58717a8444539bb4fb4 = L.featureGroup.subGroup(
-    feature_group_ca2022bcf33ca4b872d8dc85d8cc809e,
+  var feature_group_sub_group_ad15b891e3ebc7707f5246c1c5e54fa9 = L.featureGroup.subGroup(
+    feature_group_c5c573e83eb8541cf95443e743c587f3,
   );
 
-  function geo_json_d12636f6e57956329b4642e0759d8d80_styler(feature) {
+  function geo_json_9e072826bb5ec0feb3f3478cf259f1df_styler(feature) {
     switch (feature.id) {
       case "0":
         return {
-          html: '\n            <div style="font-size: 0.8em;">\n                <div style="width: 15px;\n                            height: 15px;\n                            border-radius: 0px;\n                            background-color: #234e83;\n                            margin: -1px;\n                            ">\n                </div>\n            </div>\n            ',
+          html: '\n            <div style="font-size: 0.8em;">\n                <div style="width: 15px;\n                            height: 15px;\n                            border-radius: 0px;\n                            background-color: #1a9850;\n                            margin: -1px;\n                            ">\n                </div>\n            </div>\n            ',
+        };
+      case "1":
+      case "2":
+      case "3":
+      case "4":
+      case "5":
+      case "6":
+      case "11":
+      case "12":
+      case "13":
+      case "14":
+      case "15":
+      case "16":
+      case "17":
+      case "18":
+      case "19":
+      case "20":
+      case "21":
+      case "22":
+      case "23":
+      case "24":
+      case "25":
+      case "26":
+      case "27":
+      case "28":
+      case "29":
+      case "30":
+      case "31":
+      case "32":
+      case "33":
+      case "34":
+      case "35":
+      case "36":
+      case "37":
+      case "38":
+      case "39":
+      case "40":
+      case "41":
+      case "42":
+      case "43":
+      case "44":
+      case "45":
+      case "46":
+      case "47":
+      case "48":
+      case "49":
+      case "50":
+      case "51":
+      case "52":
+      case "53":
+      case "54":
+      case "55":
+      case "56":
+      case "57":
+      case "58":
+      case "59":
+      case "91":
+      case "92":
+      case "93":
+      case "94":
+      case "95":
+      case "96":
+      case "97":
+      case "98":
+      case "99":
+      case "100":
+      case "101":
+      case "102":
+      case "103":
+      case "104":
+      case "105":
+      case "106":
+      case "107":
+      case "108":
+      case "109":
+      case "110":
+      case "111":
+      case "112":
+      case "113":
+      case "114":
+      case "115":
+      case "116":
+      case "117":
+      case "118":
+      case "119":
+      case "120":
+      case "121":
+      case "122":
+      case "123":
+      case "124":
+      case "125":
+      case "126":
+      case "127":
+        return {
+          html: '\n            <div style="font-size: 0.8em;">\n                <div style="width: 10px;\n                            height: 10px;\n                            border-radius: 5.0px;\n                            background-color: #1a9850;\n                            margin: 1px;\n                            ">\n                </div>\n            </div>\n            ',
+        };
+      case "10":
+        return {
+          html: '\n            <div style="font-size: 0.8em;">\n                <div style="width: 10px;\n                            height: 10px;\n                            border-radius: 5.0px;\n                            background-color: #fdae61;\n                            margin: 1px;\n                            ">\n                </div>\n            </div>\n            ',
+        };
+      case "60":
+      case "61":
+      case "62":
+      case "63":
+      case "64":
+      case "65":
+      case "66":
+      case "67":
+      case "68":
+      case "85":
+      case "86":
+      case "87":
+      case "88":
+      case "89":
+      case "90":
+        return {
+          html: '\n            <div style="font-size: 0.8em;">\n                <div style="width: 10px;\n                            height: 10px;\n                            border-radius: 5.0px;\n                            background-color: #abd9e9;\n                            margin: 1px;\n                            ">\n                </div>\n            </div>\n            ',
+        };
+      case "69":
+      case "70":
+      case "71":
+      case "72":
+      case "73":
+      case "74":
+      case "75":
+      case "76":
+      case "77":
+      case "78":
+      case "79":
+      case "80":
+      case "81":
+      case "82":
+      case "83":
+      case "84":
+        return {
+          html: '\n            <div style="font-size: 0.8em;">\n                <div style="width: 10px;\n                            height: 10px;\n                            border-radius: 5.0px;\n                            background-color: #2c7bb6;\n                            margin: 1px;\n                            ">\n                </div>\n            </div>\n            ',
         };
       default:
         return {
-          html: '\n            <div style="font-size: 0.8em;">\n                <div style="width: 10px;\n                            height: 10px;\n                            border-radius: 5.0px;\n                            background-color: #234e83;\n                            margin: 1px;\n                            ">\n                </div>\n            </div>\n            ',
+          html: '\n            <div style="font-size: 0.8em;">\n                <div style="width: 10px;\n                            height: 10px;\n                            border-radius: 5.0px;\n                            background-color: #d7191c;\n                            margin: 1px;\n                            ">\n                </div>\n            </div>\n            ',
         };
     }
   }
-  function geo_json_d12636f6e57956329b4642e0759d8d80_highlighter(feature) {
+  function geo_json_9e072826bb5ec0feb3f3478cf259f1df_highlighter(feature) {
     switch (feature.id) {
       default:
         return { color: "#cad40e", fillColor: "#cad40e" };
     }
   }
-  function geo_json_d12636f6e57956329b4642e0759d8d80_pointToLayer(feature, latlng) {
+  function geo_json_9e072826bb5ec0feb3f3478cf259f1df_pointToLayer(feature, latlng) {
     var opts = {};
 
     const iconOptions = {
@@ -196,39 +332,39 @@
     const iconRootAlias = L;
     opts.icon = new iconRootAlias.DivIcon(iconOptions);
 
-    let style = geo_json_d12636f6e57956329b4642e0759d8d80_styler(feature);
+    let style = geo_json_9e072826bb5ec0feb3f3478cf259f1df_styler(feature);
     Object.assign(opts.icon.options, style);
 
     return new L.Marker(latlng, opts);
   }
 
-  function geo_json_d12636f6e57956329b4642e0759d8d80_onEachFeature(feature, layer) {
+  function geo_json_9e072826bb5ec0feb3f3478cf259f1df_onEachFeature(feature, layer) {
     layer.on({
       mouseout: function (e) {
         if (typeof e.target.setStyle === "function") {
-          geo_json_d12636f6e57956329b4642e0759d8d80.resetStyle(e.target);
+          geo_json_9e072826bb5ec0feb3f3478cf259f1df.resetStyle(e.target);
         }
       },
       mouseover: function (e) {
         if (typeof e.target.setStyle === "function") {
-          const highlightStyle = geo_json_d12636f6e57956329b4642e0759d8d80_highlighter(e.target.feature);
+          const highlightStyle = geo_json_9e072826bb5ec0feb3f3478cf259f1df_highlighter(e.target.feature);
           e.target.setStyle(highlightStyle);
         }
       },
     });
   }
-  var geo_json_d12636f6e57956329b4642e0759d8d80 = L.geoJson(null, {
-    onEachFeature: geo_json_d12636f6e57956329b4642e0759d8d80_onEachFeature,
+  var geo_json_9e072826bb5ec0feb3f3478cf259f1df = L.geoJson(null, {
+    onEachFeature: geo_json_9e072826bb5ec0feb3f3478cf259f1df_onEachFeature,
 
-    style: geo_json_d12636f6e57956329b4642e0759d8d80_styler,
-    pointToLayer: geo_json_d12636f6e57956329b4642e0759d8d80_pointToLayer,
+    style: geo_json_9e072826bb5ec0feb3f3478cf259f1df_styler,
+    pointToLayer: geo_json_9e072826bb5ec0feb3f3478cf259f1df_pointToLayer,
     ...{},
   });
 
-  function geo_json_d12636f6e57956329b4642e0759d8d80_add(data) {
-    geo_json_d12636f6e57956329b4642e0759d8d80.addData(data);
+  function geo_json_9e072826bb5ec0feb3f3478cf259f1df_add(data) {
+    geo_json_9e072826bb5ec0feb3f3478cf259f1df.addData(data);
   }
-  geo_json_d12636f6e57956329b4642e0759d8d80_add({
+  geo_json_9e072826bb5ec0feb3f3478cf259f1df_add({
     bbox: [-1.471496954704484, 48.665013198677705, -1.315508137717839, 48.70845136474554],
     features: [
       {
@@ -242,6 +378,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[20000, 20000, 20000]",
+          res_voltage_level: "[100, 100, 100]",
         },
         type: "Feature",
       },
@@ -256,6 +395,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[20000, 20000, 20000]",
+          res_voltage_level: "[100, 100, 100]",
         },
         type: "Feature",
       },
@@ -270,6 +412,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[20127, 20127, 20127]",
+          res_voltage_level: "[100.63, 100.63, 100.63]",
         },
         type: "Feature",
       },
@@ -284,6 +429,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[20127, 20127, 20127]",
+          res_voltage_level: "[100.63, 100.63, 100.63]",
         },
         type: "Feature",
       },
@@ -298,6 +446,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[20127, 20127, 20127]",
+          res_voltage_level: "[100.63, 100.63, 100.63]",
         },
         type: "Feature",
       },
@@ -312,6 +463,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[20701, 20701, 20701]",
+          res_voltage_level: "[103.5, 103.5, 103.5]",
         },
         type: "Feature",
       },
@@ -326,6 +480,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[20701, 20701, 20701]",
+          res_voltage_level: "[103.5, 103.5, 103.5]",
         },
         type: "Feature",
       },
@@ -340,6 +497,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[21018, 21018, 21018]",
+          res_voltage_level: "[105.09, 105.09, 105.09]",
         },
         type: "Feature",
       },
@@ -354,6 +514,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[21018, 21018, 21018]",
+          res_voltage_level: "[105.09, 105.09, 105.09]",
         },
         type: "Feature",
       },
@@ -368,6 +531,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[21142, 21142, 21142]",
+          res_voltage_level: "[105.71, 105.71, 105.71]",
         },
         type: "Feature",
       },
@@ -382,6 +548,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[20802, 20802, 20802]",
+          res_voltage_level: "[104.01, 104.01, 104.01]",
         },
         type: "Feature",
       },
@@ -396,6 +565,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[20576, 20576, 20576]",
+          res_voltage_level: "[102.88, 102.88, 102.88]",
         },
         type: "Feature",
       },
@@ -410,6 +582,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[20533, 20533, 20533]",
+          res_voltage_level: "[102.66, 102.66, 102.66]",
         },
         type: "Feature",
       },
@@ -424,6 +599,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[20532, 20532, 20532]",
+          res_voltage_level: "[102.66, 102.66, 102.66]",
         },
         type: "Feature",
       },
@@ -438,6 +616,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[20408, 20408, 20408]",
+          res_voltage_level: "[102.04, 102.04, 102.04]",
         },
         type: "Feature",
       },
@@ -452,6 +633,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[20367, 20367, 20367]",
+          res_voltage_level: "[101.83, 101.83, 101.83]",
         },
         type: "Feature",
       },
@@ -466,6 +650,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[20367, 20367, 20367]",
+          res_voltage_level: "[101.83, 101.83, 101.83]",
         },
         type: "Feature",
       },
@@ -480,6 +667,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[20367, 20367, 20367]",
+          res_voltage_level: "[101.83, 101.83, 101.83]",
         },
         type: "Feature",
       },
@@ -494,6 +684,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[20367, 20367, 20367]",
+          res_voltage_level: "[101.83, 101.83, 101.83]",
         },
         type: "Feature",
       },
@@ -508,6 +701,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[20306, 20306, 20306]",
+          res_voltage_level: "[101.53, 101.53, 101.53]",
         },
         type: "Feature",
       },
@@ -522,6 +718,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[20264, 20264, 20264]",
+          res_voltage_level: "[101.32, 101.32, 101.32]",
         },
         type: "Feature",
       },
@@ -536,6 +735,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[20099, 20099, 20099]",
+          res_voltage_level: "[100.49, 100.49, 100.49]",
         },
         type: "Feature",
       },
@@ -550,6 +752,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19859, 19859, 19859]",
+          res_voltage_level: "[99.297, 99.297, 99.297]",
         },
         type: "Feature",
       },
@@ -564,6 +769,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19860, 19860, 19860]",
+          res_voltage_level: "[99.298, 99.298, 99.298]",
         },
         type: "Feature",
       },
@@ -578,6 +786,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19804, 19804, 19804]",
+          res_voltage_level: "[99.019, 99.019, 99.019]",
         },
         type: "Feature",
       },
@@ -592,6 +803,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19804, 19804, 19804]",
+          res_voltage_level: "[99.019, 99.019, 99.019]",
         },
         type: "Feature",
       },
@@ -606,6 +820,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19716, 19716, 19716]",
+          res_voltage_level: "[98.581, 98.581, 98.581]",
         },
         type: "Feature",
       },
@@ -620,6 +837,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19716, 19716, 19716]",
+          res_voltage_level: "[98.581, 98.581, 98.581]",
         },
         type: "Feature",
       },
@@ -634,6 +854,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19717, 19717, 19717]",
+          res_voltage_level: "[98.586, 98.586, 98.586]",
         },
         type: "Feature",
       },
@@ -648,6 +871,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19562, 19562, 19562]",
+          res_voltage_level: "[97.812, 97.812, 97.812]",
         },
         type: "Feature",
       },
@@ -662,6 +888,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19563, 19563, 19563]",
+          res_voltage_level: "[97.813, 97.813, 97.813]",
         },
         type: "Feature",
       },
@@ -676,6 +905,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19563, 19563, 19563]",
+          res_voltage_level: "[97.813, 97.813, 97.813]",
         },
         type: "Feature",
       },
@@ -690,6 +922,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19563, 19563, 19563]",
+          res_voltage_level: "[97.813, 97.813, 97.813]",
         },
         type: "Feature",
       },
@@ -704,6 +939,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19563, 19563, 19563]",
+          res_voltage_level: "[97.814, 97.814, 97.814]",
         },
         type: "Feature",
       },
@@ -718,6 +956,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19563, 19563, 19563]",
+          res_voltage_level: "[97.816, 97.816, 97.816]",
         },
         type: "Feature",
       },
@@ -732,6 +973,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19563, 19563, 19563]",
+          res_voltage_level: "[97.816, 97.816, 97.816]",
         },
         type: "Feature",
       },
@@ -746,6 +990,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19564, 19564, 19564]",
+          res_voltage_level: "[97.821, 97.821, 97.821]",
         },
         type: "Feature",
       },
@@ -760,6 +1007,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19564, 19564, 19564]",
+          res_voltage_level: "[97.82, 97.82, 97.82]",
         },
         type: "Feature",
       },
@@ -774,6 +1024,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19565, 19565, 19565]",
+          res_voltage_level: "[97.826, 97.826, 97.826]",
         },
         type: "Feature",
       },
@@ -788,6 +1041,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19564, 19564, 19564]",
+          res_voltage_level: "[97.822, 97.822, 97.822]",
         },
         type: "Feature",
       },
@@ -802,6 +1058,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19566, 19566, 19566]",
+          res_voltage_level: "[97.829, 97.829, 97.829]",
         },
         type: "Feature",
       },
@@ -816,6 +1075,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19575, 19575, 19575]",
+          res_voltage_level: "[97.874, 97.874, 97.874]",
         },
         type: "Feature",
       },
@@ -830,6 +1092,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19358, 19358, 19358]",
+          res_voltage_level: "[96.789, 96.789, 96.789]",
         },
         type: "Feature",
       },
@@ -844,6 +1109,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19358, 19358, 19358]",
+          res_voltage_level: "[96.789, 96.789, 96.789]",
         },
         type: "Feature",
       },
@@ -858,6 +1126,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19358, 19358, 19358]",
+          res_voltage_level: "[96.792, 96.792, 96.792]",
         },
         type: "Feature",
       },
@@ -872,6 +1143,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19358, 19358, 19358]",
+          res_voltage_level: "[96.79, 96.79, 96.79]",
         },
         type: "Feature",
       },
@@ -886,6 +1160,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19358, 19358, 19358]",
+          res_voltage_level: "[96.791, 96.791, 96.791]",
         },
         type: "Feature",
       },
@@ -900,6 +1177,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19359, 19359, 19359]",
+          res_voltage_level: "[96.797, 96.797, 96.797]",
         },
         type: "Feature",
       },
@@ -914,6 +1194,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19360, 19360, 19360]",
+          res_voltage_level: "[96.8, 96.8, 96.8]",
         },
         type: "Feature",
       },
@@ -928,6 +1211,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19360, 19360, 19360]",
+          res_voltage_level: "[96.802, 96.802, 96.802]",
         },
         type: "Feature",
       },
@@ -942,6 +1228,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19262, 19262, 19262]",
+          res_voltage_level: "[96.31, 96.31, 96.31]",
         },
         type: "Feature",
       },
@@ -956,6 +1245,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19263, 19263, 19263]",
+          res_voltage_level: "[96.315, 96.315, 96.315]",
         },
         type: "Feature",
       },
@@ -970,6 +1262,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19263, 19263, 19263]",
+          res_voltage_level: "[96.315, 96.315, 96.315]",
         },
         type: "Feature",
       },
@@ -984,6 +1279,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19265, 19265, 19265]",
+          res_voltage_level: "[96.326, 96.326, 96.326]",
         },
         type: "Feature",
       },
@@ -998,6 +1296,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19266, 19266, 19266]",
+          res_voltage_level: "[96.328, 96.328, 96.328]",
         },
         type: "Feature",
       },
@@ -1012,6 +1313,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19265, 19265, 19265]",
+          res_voltage_level: "[96.325, 96.325, 96.325]",
         },
         type: "Feature",
       },
@@ -1026,6 +1330,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19266, 19266, 19266]",
+          res_voltage_level: "[96.332, 96.332, 96.332]",
         },
         type: "Feature",
       },
@@ -1040,6 +1347,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19266, 19266, 19266]",
+          res_voltage_level: "[96.329, 96.329, 96.329]",
         },
         type: "Feature",
       },
@@ -1054,6 +1364,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19269, 19269, 19269]",
+          res_voltage_level: "[96.343, 96.343, 96.343]",
         },
         type: "Feature",
       },
@@ -1068,6 +1381,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19269, 19269, 19269]",
+          res_voltage_level: "[96.345, 96.345, 96.345]",
         },
         type: "Feature",
       },
@@ -1082,6 +1398,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19250, 19250, 19250]",
+          res_voltage_level: "[96.248, 96.248, 96.248]",
         },
         type: "Feature",
       },
@@ -1096,6 +1415,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19250, 19250, 19250]",
+          res_voltage_level: "[96.249, 96.249, 96.249]",
         },
         type: "Feature",
       },
@@ -1110,6 +1432,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19189, 19189, 19189]",
+          res_voltage_level: "[95.946, 95.946, 95.946]",
         },
         type: "Feature",
       },
@@ -1124,6 +1449,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19189, 19189, 19189]",
+          res_voltage_level: "[95.946, 95.946, 95.946]",
         },
         type: "Feature",
       },
@@ -1138,6 +1466,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19141, 19141, 19141]",
+          res_voltage_level: "[95.706, 95.706, 95.706]",
         },
         type: "Feature",
       },
@@ -1152,6 +1483,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19141, 19141, 19141]",
+          res_voltage_level: "[95.706, 95.706, 95.706]",
         },
         type: "Feature",
       },
@@ -1166,6 +1500,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19141, 19141, 19141]",
+          res_voltage_level: "[95.707, 95.707, 95.707]",
         },
         type: "Feature",
       },
@@ -1180,6 +1517,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19021, 19021, 19021]",
+          res_voltage_level: "[95.105, 95.105, 95.105]",
         },
         type: "Feature",
       },
@@ -1194,6 +1534,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19021, 19021, 19021]",
+          res_voltage_level: "[95.107, 95.107, 95.107]",
         },
         type: "Feature",
       },
@@ -1208,6 +1551,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[18812, 18812, 18812]",
+          res_voltage_level: "[94.06, 94.06, 94.06]",
         },
         type: "Feature",
       },
@@ -1222,6 +1568,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[18811, 18811, 18811]",
+          res_voltage_level: "[94.057, 94.057, 94.057]",
         },
         type: "Feature",
       },
@@ -1236,6 +1585,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[18783, 18783, 18783]",
+          res_voltage_level: "[93.916, 93.916, 93.916]",
         },
         type: "Feature",
       },
@@ -1250,6 +1602,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[18811, 18811, 18811]",
+          res_voltage_level: "[94.056, 94.056, 94.056]",
         },
         type: "Feature",
       },
@@ -1264,6 +1619,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[18813, 18813, 18813]",
+          res_voltage_level: "[94.063, 94.063, 94.063]",
         },
         type: "Feature",
       },
@@ -1278,6 +1636,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[18875, 18875, 18875]",
+          res_voltage_level: "[94.376, 94.376, 94.376]",
         },
         type: "Feature",
       },
@@ -1292,6 +1653,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[18875, 18875, 18875]",
+          res_voltage_level: "[94.375, 94.375, 94.375]",
         },
         type: "Feature",
       },
@@ -1306,6 +1670,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[18917, 18917, 18917]",
+          res_voltage_level: "[94.584, 94.584, 94.584]",
         },
         type: "Feature",
       },
@@ -1320,6 +1687,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[18941, 18941, 18941]",
+          res_voltage_level: "[94.705, 94.705, 94.705]",
         },
         type: "Feature",
       },
@@ -1334,6 +1704,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[18941, 18941, 18941]",
+          res_voltage_level: "[94.705, 94.705, 94.705]",
         },
         type: "Feature",
       },
@@ -1348,6 +1721,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[18941, 18941, 18941]",
+          res_voltage_level: "[94.705, 94.705, 94.705]",
         },
         type: "Feature",
       },
@@ -1362,6 +1738,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[18952, 18952, 18952]",
+          res_voltage_level: "[94.76, 94.76, 94.76]",
         },
         type: "Feature",
       },
@@ -1376,6 +1755,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[18974, 18974, 18974]",
+          res_voltage_level: "[94.87, 94.87, 94.87]",
         },
         type: "Feature",
       },
@@ -1390,6 +1772,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[18974, 18974, 18974]",
+          res_voltage_level: "[94.869, 94.869, 94.869]",
         },
         type: "Feature",
       },
@@ -1404,6 +1789,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[18992, 18992, 18992]",
+          res_voltage_level: "[94.958, 94.958, 94.958]",
         },
         type: "Feature",
       },
@@ -1418,6 +1806,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[18991, 18991, 18991]",
+          res_voltage_level: "[94.953, 94.953, 94.953]",
         },
         type: "Feature",
       },
@@ -1432,6 +1823,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19034, 19034, 19034]",
+          res_voltage_level: "[95.168, 95.168, 95.168]",
         },
         type: "Feature",
       },
@@ -1446,6 +1840,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19124, 19124, 19124]",
+          res_voltage_level: "[95.619, 95.619, 95.619]",
         },
         type: "Feature",
       },
@@ -1460,6 +1857,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19123, 19123, 19123]",
+          res_voltage_level: "[95.616, 95.616, 95.616]",
         },
         type: "Feature",
       },
@@ -1474,6 +1874,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19124, 19124, 19124]",
+          res_voltage_level: "[95.618, 95.618, 95.618]",
         },
         type: "Feature",
       },
@@ -1488,6 +1891,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19152, 19152, 19152]",
+          res_voltage_level: "[95.762, 95.762, 95.762]",
         },
         type: "Feature",
       },
@@ -1502,6 +1908,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19220, 19220, 19220]",
+          res_voltage_level: "[96.1, 96.1, 96.1]",
         },
         type: "Feature",
       },
@@ -1516,6 +1925,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19422, 19422, 19422]",
+          res_voltage_level: "[97.108, 97.108, 97.108]",
         },
         type: "Feature",
       },
@@ -1530,6 +1942,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19421, 19421, 19421]",
+          res_voltage_level: "[97.104, 97.104, 97.104]",
         },
         type: "Feature",
       },
@@ -1544,6 +1959,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19421, 19421, 19421]",
+          res_voltage_level: "[97.105, 97.105, 97.105]",
         },
         type: "Feature",
       },
@@ -1558,6 +1976,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19421, 19421, 19421]",
+          res_voltage_level: "[97.106, 97.106, 97.106]",
         },
         type: "Feature",
       },
@@ -1572,6 +1993,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19420, 19420, 19420]",
+          res_voltage_level: "[97.1, 97.1, 97.1]",
         },
         type: "Feature",
       },
@@ -1586,6 +2010,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19420, 19420, 19420]",
+          res_voltage_level: "[97.1, 97.1, 97.1]",
         },
         type: "Feature",
       },
@@ -1600,6 +2027,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19419, 19419, 19419]",
+          res_voltage_level: "[97.097, 97.097, 97.097]",
         },
         type: "Feature",
       },
@@ -1614,6 +2044,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19419, 19419, 19419]",
+          res_voltage_level: "[97.097, 97.097, 97.097]",
         },
         type: "Feature",
       },
@@ -1628,6 +2061,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19420, 19420, 19420]",
+          res_voltage_level: "[97.099, 97.099, 97.099]",
         },
         type: "Feature",
       },
@@ -1642,6 +2078,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19420, 19420, 19420]",
+          res_voltage_level: "[97.1, 97.1, 97.1]",
         },
         type: "Feature",
       },
@@ -1656,6 +2095,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19420, 19420, 19420]",
+          res_voltage_level: "[97.101, 97.101, 97.101]",
         },
         type: "Feature",
       },
@@ -1670,6 +2112,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19421, 19421, 19421]",
+          res_voltage_level: "[97.107, 97.107, 97.107]",
         },
         type: "Feature",
       },
@@ -1684,6 +2129,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19729, 19729, 19729]",
+          res_voltage_level: "[98.644, 98.644, 98.644]",
         },
         type: "Feature",
       },
@@ -1698,6 +2146,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19769, 19769, 19769]",
+          res_voltage_level: "[98.843, 98.843, 98.843]",
         },
         type: "Feature",
       },
@@ -1712,6 +2163,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19768, 19768, 19768]",
+          res_voltage_level: "[98.84, 98.84, 98.84]",
         },
         type: "Feature",
       },
@@ -1726,6 +2180,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19803, 19803, 19803]",
+          res_voltage_level: "[99.016, 99.016, 99.016]",
         },
         type: "Feature",
       },
@@ -1740,6 +2197,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19983, 19983, 19983]",
+          res_voltage_level: "[99.914, 99.914, 99.914]",
         },
         type: "Feature",
       },
@@ -1754,6 +2214,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[19997, 19997, 19997]",
+          res_voltage_level: "[99.985, 99.985, 99.985]",
         },
         type: "Feature",
       },
@@ -1768,6 +2231,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[20097, 20097, 20097]",
+          res_voltage_level: "[100.49, 100.49, 100.49]",
         },
         type: "Feature",
       },
@@ -1782,6 +2248,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[20078, 20078, 20078]",
+          res_voltage_level: "[100.39, 100.39, 100.39]",
         },
         type: "Feature",
       },
@@ -1796,6 +2265,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[20077, 20077, 20077]",
+          res_voltage_level: "[100.38, 100.38, 100.38]",
         },
         type: "Feature",
       },
@@ -1810,6 +2282,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[20076, 20076, 20076]",
+          res_voltage_level: "[100.38, 100.38, 100.38]",
         },
         type: "Feature",
       },
@@ -1824,6 +2299,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[20044, 20044, 20044]",
+          res_voltage_level: "[100.22, 100.22, 100.22]",
         },
         type: "Feature",
       },
@@ -1838,6 +2316,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[20043, 20043, 20043]",
+          res_voltage_level: "[100.22, 100.22, 100.22]",
         },
         type: "Feature",
       },
@@ -1852,6 +2333,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[20043, 20043, 20043]",
+          res_voltage_level: "[100.22, 100.22, 100.22]",
         },
         type: "Feature",
       },
@@ -1866,6 +2350,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[20038, 20038, 20038]",
+          res_voltage_level: "[100.19, 100.19, 100.19]",
         },
         type: "Feature",
       },
@@ -1880,6 +2367,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[20038, 20038, 20038]",
+          res_voltage_level: "[100.19, 100.19, 100.19]",
         },
         type: "Feature",
       },
@@ -1894,6 +2384,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[20038, 20038, 20038]",
+          res_voltage_level: "[100.19, 100.19, 100.19]",
         },
         type: "Feature",
       },
@@ -1908,6 +2401,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[20042, 20042, 20042]",
+          res_voltage_level: "[100.21, 100.21, 100.21]",
         },
         type: "Feature",
       },
@@ -1922,6 +2418,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[20043, 20043, 20043]",
+          res_voltage_level: "[100.22, 100.22, 100.22]",
         },
         type: "Feature",
       },
@@ -1936,6 +2435,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[20043, 20043, 20043]",
+          res_voltage_level: "[100.22, 100.22, 100.22]",
         },
         type: "Feature",
       },
@@ -1950,6 +2452,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[20043, 20043, 20043]",
+          res_voltage_level: "[100.22, 100.22, 100.22]",
         },
         type: "Feature",
       },
@@ -1964,6 +2469,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[20026, 20026, 20026]",
+          res_voltage_level: "[100.13, 100.13, 100.13]",
         },
         type: "Feature",
       },
@@ -1978,6 +2486,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[20025, 20025, 20025]",
+          res_voltage_level: "[100.13, 100.13, 100.13]",
         },
         type: "Feature",
       },
@@ -1992,6 +2503,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[20018, 20018, 20018]",
+          res_voltage_level: "[100.09, 100.09, 100.09]",
         },
         type: "Feature",
       },
@@ -2006,6 +2520,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[20016, 20016, 20016]",
+          res_voltage_level: "[100.08, 100.08, 100.08]",
         },
         type: "Feature",
       },
@@ -2020,6 +2537,9 @@
           min_voltage_level: 95.0,
           nominal_voltage: 20000,
           phases: "abc",
+          res_separator: "",
+          res_voltage: "[20009, 20009, 20009]",
+          res_voltage_level: "[100.05, 100.05, 100.05]",
         },
         type: "Feature",
       },
@@ -2027,7 +2547,7 @@
     type: "FeatureCollection",
   });
 
-  geo_json_d12636f6e57956329b4642e0759d8d80.bindTooltip(
+  geo_json_9e072826bb5ec0feb3f3478cf259f1df.bindTooltip(
     function (layer) {
       let div = L.DomUtil.create("div");
 
@@ -2040,8 +2560,17 @@
           return feature;
         }
       };
-      let fields = ["id", "phases", "nominal_voltage", "min_voltage_level", "max_voltage_level"];
-      let aliases = ["Id:", "Phases:", "Un (V):", "Umin (%):", "Umax (%):"];
+      let fields = [
+        "id",
+        "phases",
+        "nominal_voltage",
+        "min_voltage_level",
+        "max_voltage_level",
+        "res_separator",
+        "res_voltage",
+        "res_voltage_level",
+      ];
+      let aliases = ["Id:", "Phases:", "Un (V):", "Umin (%):", "Umax (%):", "--", "U (V):", "U (%):"];
       let table =
         "<table>" +
         String(
@@ -2068,7 +2597,7 @@
     },
   );
 
-  geo_json_d12636f6e57956329b4642e0759d8d80.bindPopup(
+  geo_json_9e072826bb5ec0feb3f3478cf259f1df.bindPopup(
     function (layer) {
       let div = L.DomUtil.create("div");
 
@@ -2081,8 +2610,17 @@
           return feature;
         }
       };
-      let fields = ["id", "phases", "nominal_voltage", "min_voltage_level", "max_voltage_level"];
-      let aliases = ["Id:", "Phases:", "Un (V):", "Umin (%):", "Umax (%):"];
+      let fields = [
+        "id",
+        "phases",
+        "nominal_voltage",
+        "min_voltage_level",
+        "max_voltage_level",
+        "res_separator",
+        "res_voltage",
+        "res_voltage_level",
+      ];
+      let aliases = ["Id:", "Phases:", "Un (V):", "Umin (%):", "Umax (%):", "--", "U (V):", "U (%):"];
       let table =
         "<table>" +
         String(
@@ -2107,19 +2645,18 @@
     },
   );
 
-  geo_json_d12636f6e57956329b4642e0759d8d80.addTo(feature_group_sub_group_4330983a0e66b58717a8444539bb4fb4);
+  geo_json_9e072826bb5ec0feb3f3478cf259f1df.addTo(feature_group_sub_group_ad15b891e3ebc7707f5246c1c5e54fa9);
 
-  feature_group_sub_group_4330983a0e66b58717a8444539bb4fb4.addTo(map_5364bbe7961b88aed023066be222ce3c);
+  feature_group_sub_group_ad15b891e3ebc7707f5246c1c5e54fa9.addTo(map_8a9d910f66634210d2ed29b9d4183efb);
 
-  var feature_group_sub_group_5535b7b31c7d39f80f5b1322f1e2d669 = L.featureGroup.subGroup(
-    feature_group_ca2022bcf33ca4b872d8dc85d8cc809e,
+  var feature_group_sub_group_e7ed2bffc4b93ff82b3fe42706588b5c = L.featureGroup.subGroup(
+    feature_group_c5c573e83eb8541cf95443e743c587f3,
   );
 
-  function geo_json_292f4ebca68aedd0d500904b188ec64d_styler(feature) {
+  function geo_json_24579a0bc8c941837eb21dbdb5aba009_styler(feature) {
     switch (feature.id) {
       case "0":
       case "1":
-      case "19":
       case "20":
       case "21":
       case "22":
@@ -2136,29 +2673,15 @@
       case "54":
       case "55":
       case "57":
-      case "58":
-      case "59":
-      case "60":
-      case "64":
       case "65":
       case "66":
-      case "67":
       case "69":
-      case "74":
       case "76":
-      case "77":
-      case "78":
       case "85":
       case "87":
       case "88":
       case "91":
       case "92":
-      case "101":
-      case "102":
-      case "103":
-      case "104":
-      case "105":
-      case "106":
       case "107":
       case "108":
       case "109":
@@ -2175,44 +2698,118 @@
       case "123":
       case "124":
       case "125":
-        return { color: "#234e83", dashArray: "5, 5", weight: 3.0 };
+        return { color: "#1a9850", dashArray: "5, 5", weight: 3.0 };
+      case "2":
+      case "3":
+      case "4":
+      case "10":
+      case "13":
+      case "14":
+      case "15":
+      case "23":
+      case "31":
+      case "32":
+      case "33":
+      case "34":
+      case "35":
+      case "37":
+      case "39":
+      case "40":
+      case "41":
+      case "42":
+      case "43":
+      case "44":
+      case "45":
+      case "46":
+      case "47":
+      case "48":
+      case "49":
+      case "50":
+      case "51":
+      case "52":
+      case "56":
+      case "62":
+      case "71":
+      case "75":
+      case "86":
+      case "89":
+      case "90":
+      case "93":
+      case "94":
+      case "95":
+      case "100":
+      case "115":
+      case "116":
+      case "117":
+        return { color: "#1a9850", dashArray: null, weight: 3.0 };
+      case "5":
+      case "6":
+      case "7":
+      case "8":
+      case "9":
+      case "11":
+      case "12":
+      case "16":
+      case "17":
+      case "18":
+      case "97":
+      case "98":
+      case "99":
+        return { color: "#d7191c", dashArray: null, weight: 3.0 };
+      case "19":
+      case "67":
+      case "74":
+      case "77":
+      case "78":
+      case "101":
+      case "102":
+      case "103":
+      case "104":
+      case "105":
+      case "106":
+        return { color: "#d7191c", dashArray: "5, 5", weight: 3.0 };
+      case "58":
+      case "59":
+      case "60":
+      case "64":
+        return { color: "#fdae61", dashArray: "5, 5", weight: 3.0 };
       default:
-        return { color: "#234e83", dashArray: null, weight: 3.0 };
+        return { color: "#fdae61", dashArray: null, weight: 3.0 };
     }
   }
-  function geo_json_292f4ebca68aedd0d500904b188ec64d_highlighter(feature) {
+  function geo_json_24579a0bc8c941837eb21dbdb5aba009_highlighter(feature) {
     switch (feature.id) {
       default:
         return { color: "#cad40e" };
     }
   }
 
-  function geo_json_292f4ebca68aedd0d500904b188ec64d_onEachFeature(feature, layer) {
+  function geo_json_24579a0bc8c941837eb21dbdb5aba009_onEachFeature(feature, layer) {
     layer.on({
       mouseout: function (e) {
         if (typeof e.target.setStyle === "function") {
-          geo_json_292f4ebca68aedd0d500904b188ec64d.resetStyle(e.target);
+          geo_json_24579a0bc8c941837eb21dbdb5aba009.resetStyle(e.target);
         }
       },
       mouseover: function (e) {
         if (typeof e.target.setStyle === "function") {
-          const highlightStyle = geo_json_292f4ebca68aedd0d500904b188ec64d_highlighter(e.target.feature);
+          const highlightStyle = geo_json_24579a0bc8c941837eb21dbdb5aba009_highlighter(e.target.feature);
           e.target.setStyle(highlightStyle);
         }
       },
     });
   }
-  var geo_json_292f4ebca68aedd0d500904b188ec64d = L.geoJson(null, {
-    onEachFeature: geo_json_292f4ebca68aedd0d500904b188ec64d_onEachFeature,
+  var geo_json_24579a0bc8c941837eb21dbdb5aba009 = L.geoJson(null, {
+    onEachFeature: geo_json_24579a0bc8c941837eb21dbdb5aba009_onEachFeature,
 
-    style: geo_json_292f4ebca68aedd0d500904b188ec64d_styler,
+    style: geo_json_24579a0bc8c941837eb21dbdb5aba009_styler,
     ...{},
   });
 
-  function geo_json_292f4ebca68aedd0d500904b188ec64d_add(data) {
-    geo_json_292f4ebca68aedd0d500904b188ec64d.addData(data);
+  function geo_json_24579a0bc8c941837eb21dbdb5aba009_add(data) {
+    geo_json_24579a0bc8c941837eb21dbdb5aba009.addData(data);
   }
-  geo_json_292f4ebca68aedd0d500904b188ec64d_add({
+  geo_json_24579a0bc8c941837eb21dbdb5aba009_add({
     bbox: [-1.471709586496959, 48.66494015250545, -1.315198632188688, 48.70845136474554],
     features: [
       {
@@ -2259,6 +2856,8 @@
           max_loading: 100.0,
           parameters_id: "U_AL_150",
           phases: "abc",
+          res_loading: "[19.438, 19.438, 19.438]",
+          res_separator: "",
           section: 150.0,
         },
         type: "Feature",
@@ -2293,6 +2892,8 @@
           max_loading: 100.0,
           parameters_id: "U_AL_150",
           phases: "abc",
+          res_loading: "[0.28721, 0.28721, 0.28721]",
+          res_separator: "",
           section: 150.0,
         },
         type: "Feature",
@@ -2323,6 +2924,8 @@
           max_loading: 100.0,
           parameters_id: "O_AM_54",
           phases: "abc",
+          res_loading: "[0.46033, 0.46033, 0.46033]",
+          res_separator: "",
           section: 54.0,
         },
         type: "Feature",
@@ -2352,6 +2955,8 @@
           max_loading: 100.0,
           parameters_id: "O_AM_54",
           phases: "abc",
+          res_loading: "[0.47024, 0.47024, 0.47024]",
+          res_separator: "",
           section: 54.0,
         },
         type: "Feature",
@@ -2381,6 +2986,8 @@
           max_loading: 100.0,
           parameters_id: "O_AM_54",
           phases: "abc",
+          res_loading: "[0.46314, 0.46314, 0.46314]",
+          res_separator: "",
           section: 54.0,
         },
         type: "Feature",
@@ -2410,6 +3017,8 @@
           max_loading: 100.0,
           parameters_id: "O_AM_54",
           phases: "abc",
+          res_loading: "[233.03, 233.03, 233.03]",
+          res_separator: "",
           section: 54.0,
         },
         type: "Feature",
@@ -2440,6 +3049,8 @@
           max_loading: 100.0,
           parameters_id: "O_AM_54",
           phases: "abc",
+          res_loading: "[232.59, 232.59, 232.59]",
+          res_separator: "",
           section: 54.0,
         },
         type: "Feature",
@@ -2469,6 +3080,8 @@
           max_loading: 100.0,
           parameters_id: "O_AM_54",
           phases: "abc",
+          res_loading: "[232.59, 232.59, 232.59]",
+          res_separator: "",
           section: 54.0,
         },
         type: "Feature",
@@ -2498,6 +3111,8 @@
           max_loading: 100.0,
           parameters_id: "O_AM_54",
           phases: "abc",
+          res_loading: "[232.14, 232.14, 232.14]",
+          res_separator: "",
           section: 54.0,
         },
         type: "Feature",
@@ -2527,6 +3142,8 @@
           max_loading: 100.0,
           parameters_id: "O_AM_54",
           phases: "abc",
+          res_loading: "[232.14, 232.14, 232.14]",
+          res_separator: "",
           section: 54.0,
         },
         type: "Feature",
@@ -2557,6 +3174,8 @@
           max_loading: 100.0,
           parameters_id: "O_AM_54",
           phases: "abc",
+          res_loading: "[0.47409, 0.47409, 0.47409]",
+          res_separator: "",
           section: 54.0,
         },
         type: "Feature",
@@ -2587,6 +3206,8 @@
           max_loading: 100.0,
           parameters_id: "O_AM_54",
           phases: "abc",
+          res_loading: "[231.7, 231.7, 231.7]",
+          res_separator: "",
           section: 54.0,
         },
         type: "Feature",
@@ -2616,6 +3237,8 @@
           max_loading: 100.0,
           parameters_id: "O_AM_54",
           phases: "abc",
+          res_loading: "[231.7, 231.7, 231.7]",
+          res_separator: "",
           section: 54.0,
         },
         type: "Feature",
@@ -2645,6 +3268,8 @@
           max_loading: 100.0,
           parameters_id: "O_AM_54",
           phases: "abc",
+          res_loading: "[0.47795, 0.47795, 0.47795]",
+          res_separator: "",
           section: 54.0,
         },
         type: "Feature",
@@ -2674,6 +3299,8 @@
           max_loading: 100.0,
           parameters_id: "O_AM_54",
           phases: "abc",
+          res_loading: "[0.47772, 0.47772, 0.47772]",
+          res_separator: "",
           section: 54.0,
         },
         type: "Feature",
@@ -2703,6 +3330,8 @@
           max_loading: 100.0,
           parameters_id: "O_AM_54",
           phases: "abc",
+          res_loading: "[0.4775, 0.4775, 0.4775]",
+          res_separator: "",
           section: 54.0,
         },
         type: "Feature",
@@ -2732,6 +3361,8 @@
           max_loading: 100.0,
           parameters_id: "O_AM_54",
           phases: "abc",
+          res_loading: "[231.25, 231.25, 231.25]",
+          res_separator: "",
           section: 54.0,
         },
         type: "Feature",
@@ -2761,6 +3392,8 @@
           max_loading: 100.0,
           parameters_id: "O_AM_54",
           phases: "abc",
+          res_loading: "[231.25, 231.25, 231.25]",
+          res_separator: "",
           section: 54.0,
         },
         type: "Feature",
@@ -2790,6 +3423,8 @@
           max_loading: 100.0,
           parameters_id: "O_AM_54",
           phases: "abc",
+          res_loading: "[231.25, 231.25, 231.25]",
+          res_separator: "",
           section: 54.0,
         },
         type: "Feature",
@@ -2824,6 +3459,8 @@
           max_loading: 100.0,
           parameters_id: "U_AL_150",
           phases: "abc",
+          res_loading: "[137.05, 137.05, 137.05]",
+          res_separator: "",
           section: 150.0,
         },
         type: "Feature",
@@ -2856,6 +3493,8 @@
           max_loading: 100.0,
           parameters_id: "U_AL_150",
           phases: "abc",
+          res_loading: "[0.67805, 0.67805, 0.67805]",
+          res_separator: "",
           section: 150.0,
         },
         type: "Feature",
@@ -2888,6 +3527,8 @@
           max_loading: 100.0,
           parameters_id: "U_AL_150",
           phases: "abc",
+          res_loading: "[0.67995, 0.67995, 0.67995]",
+          res_separator: "",
           section: 150.0,
         },
         type: "Feature",
@@ -2928,6 +3569,8 @@
           max_loading: 100.0,
           parameters_id: "U_AL_150",
           phases: "abc",
+          res_loading: "[0.68298, 0.68298, 0.68298]",
+          res_separator: "",
           section: 150.0,
         },
         type: "Feature",
@@ -2958,6 +3601,8 @@
           max_loading: 100.0,
           parameters_id: "O_AM_54",
           phases: "abc",
+          res_loading: "[1.1266, 1.1266, 1.1266]",
+          res_separator: "",
           section: 54.0,
         },
         type: "Feature",
@@ -2992,6 +3637,8 @@
           max_loading: 100.0,
           parameters_id: "U_AL_150",
           phases: "abc",
+          res_loading: "[0.68834, 0.68834, 0.68834]",
+          res_separator: "",
           section: 150.0,
         },
         type: "Feature",
@@ -3022,6 +3669,8 @@
           max_loading: 100.0,
           parameters_id: "U_AL_150",
           phases: "abc",
+          res_loading: "[0.45917, 0.45917, 0.45917]",
+          res_separator: "",
           section: 150.0,
         },
         type: "Feature",
@@ -3054,6 +3703,8 @@
           max_loading: 100.0,
           parameters_id: "U_AL_150",
           phases: "abc",
+          res_loading: "[0.45866, 0.45866, 0.45866]",
+          res_separator: "",
           section: 150.0,
         },
         type: "Feature",
@@ -3086,6 +3737,8 @@
           max_loading: 100.0,
           parameters_id: "U_AL_150",
           phases: "abc",
+          res_loading: "[1.1018, 1.1018, 1.1018]",
+          res_separator: "",
           section: 150.0,
         },
         type: "Feature",
@@ -3141,6 +3794,8 @@
           max_loading: 100.0,
           parameters_id: "U_AL_150",
           phases: "abc",
+          res_loading: "[1.0987, 1.0987, 1.0987]",
+          res_separator: "",
           section: 150.0,
         },
         type: "Feature",
@@ -3174,6 +3829,8 @@
           max_loading: 100.0,
           parameters_id: "U_AL_150",
           phases: "abc",
+          res_loading: "[0.68831, 0.68831, 0.68831]",
+          res_separator: "",
           section: 150.0,
         },
         type: "Feature",
@@ -3229,6 +3886,8 @@
           max_loading: 100.0,
           parameters_id: "U_AL_150",
           phases: "abc",
+          res_loading: "[1.7518, 1.7518, 1.7518]",
+          res_separator: "",
           section: 150.0,
         },
         type: "Feature",
@@ -3258,6 +3917,8 @@
           max_loading: 100.0,
           parameters_id: "O_AM_54",
           phases: "abc",
+          res_loading: "[1.159, 1.159, 1.159]",
+          res_separator: "",
           section: 54.0,
         },
         type: "Feature",
@@ -3287,6 +3948,8 @@
           max_loading: 100.0,
           parameters_id: "O_AM_54",
           phases: "abc",
+          res_loading: "[4.0466, 4.0466, 4.0466]",
+          res_separator: "",
           section: 54.0,
         },
         type: "Feature",
@@ -3316,6 +3979,8 @@
           max_loading: 100.0,
           parameters_id: "O_AM_54",
           phases: "abc",
+          res_loading: "[1.159, 1.159, 1.159]",
+          res_separator: "",
           section: 54.0,
         },
         type: "Feature",
@@ -3345,6 +4010,8 @@
           max_loading: 100.0,
           parameters_id: "O_AM_54",
           phases: "abc",
+          res_loading: "[5.1774, 5.1774, 5.1774]",
+          res_separator: "",
           section: 54.0,
         },
         type: "Feature",
@@ -3375,6 +4042,8 @@
           max_loading: 100.0,
           parameters_id: "O_AM_54",
           phases: "abc",
+          res_loading: "[5.1773, 5.1773, 5.1773]",
+          res_separator: "",
           section: 54.0,
         },
         type: "Feature",
@@ -3410,6 +4079,8 @@
           max_loading: 100.0,
           parameters_id: "U_AL_150",
           phases: "abc",
+          res_loading: "[0.46403, 0.46403, 0.46403]",
+          res_separator: "",
           section: 150.0,
         },
         type: "Feature",
@@ -3441,6 +4112,8 @@
           max_loading: 100.0,
           parameters_id: "O_AM_54",
           phases: "abc",
+          res_loading: "[0.75348, 0.75348, 0.75348]",
+          res_separator: "",
           section: 54.0,
         },
         type: "Feature",
@@ -3475,6 +4148,8 @@
           max_loading: 100.0,
           parameters_id: "U_AL_150",
           phases: "abc",
+          res_loading: "[0.46403, 0.46403, 0.46403]",
+          res_separator: "",
           section: 150.0,
         },
         type: "Feature",
@@ -3504,6 +4179,8 @@
           max_loading: 100.0,
           parameters_id: "O_AM_54",
           phases: "abc",
+          res_loading: "[0.74187, 0.74187, 0.74187]",
+          res_separator: "",
           section: 54.0,
         },
         type: "Feature",
@@ -3533,6 +4210,8 @@
           max_loading: 100.0,
           parameters_id: "O_AM_54",
           phases: "abc",
+          res_loading: "[1.4902, 1.4902, 1.4902]",
+          res_separator: "",
           section: 54.0,
         },
         type: "Feature",
@@ -3563,6 +4242,8 @@
           max_loading: 100.0,
           parameters_id: "O_AM_54",
           phases: "abc",
+          res_loading: "[1.4899, 1.4899, 1.4899]",
+          res_separator: "",
           section: 54.0,
         },
         type: "Feature",
@@ -3592,6 +4273,8 @@
           max_loading: 100.0,
           parameters_id: "O_AM_54",
           phases: "abc",
+          res_loading: "[1.4898, 1.4898, 1.4898]",
+          res_separator: "",
           section: 54.0,
         },
         type: "Feature",
@@ -3624,6 +4307,8 @@
           max_loading: 100.0,
           parameters_id: "O_AM_54",
           phases: "abc",
+          res_loading: "[0.78529, 0.78529, 0.78529]",
+          res_separator: "",
           section: 54.0,
         },
         type: "Feature",
@@ -3653,6 +4338,8 @@
           max_loading: 100.0,
           parameters_id: "O_AM_54",
           phases: "abc",
+          res_loading: "[0.78525, 0.78525, 0.78525]",
+          res_separator: "",
           section: 54.0,
         },
         type: "Feature",
@@ -3682,6 +4369,8 @@
           max_loading: 100.0,
           parameters_id: "O_AM_54",
           phases: "abc",
+          res_loading: "[1.569, 1.569, 1.569]",
+          res_separator: "",
           section: 54.0,
         },
         type: "Feature",
@@ -3711,6 +4400,8 @@
           max_loading: 100.0,
           parameters_id: "O_AM_54",
           phases: "abc",
+          res_loading: "[1.5673, 1.5673, 1.5673]",
+          res_separator: "",
           section: 54.0,
         },
         type: "Feature",
@@ -3741,6 +4432,8 @@
           max_loading: 100.0,
           parameters_id: "O_AM_54",
           phases: "abc",
+          res_loading: "[0.78517, 0.78517, 0.78517]",
+          res_separator: "",
           section: 54.0,
         },
         type: "Feature",
@@ -3771,6 +4464,8 @@
           max_loading: 100.0,
           parameters_id: "O_AM_54",
           phases: "abc",
+          res_loading: "[2.3515, 2.3515, 2.3515]",
+          res_separator: "",
           section: 54.0,
         },
         type: "Feature",
@@ -3801,6 +4496,8 @@
           max_loading: 100.0,
           parameters_id: "O_AM_54",
           phases: "abc",
+          res_loading: "[0.78514, 0.78514, 0.78514]",
+          res_separator: "",
           section: 54.0,
         },
         type: "Feature",
@@ -3833,6 +4530,8 @@
           max_loading: 100.0,
           parameters_id: "O_AM_54",
           phases: "abc",
+          res_loading: "[3.1352, 3.1352, 3.1352]",
+          res_separator: "",
           section: 54.0,
         },
         type: "Feature",
@@ -3862,6 +4561,8 @@
           max_loading: 100.0,
           parameters_id: "O_AM_54",
           phases: "abc",
+          res_loading: "[3.1343, 3.1343, 3.1343]",
+          res_separator: "",
           section: 54.0,
         },
         type: "Feature",
@@ -3892,6 +4593,8 @@
           max_loading: 100.0,
           parameters_id: "O_AM_54",
           phases: "abc",
+          res_loading: "[0.7858, 0.7858, 0.7858]",
+          res_separator: "",
           section: 54.0,
         },
         type: "Feature",
@@ -3925,6 +4628,8 @@
           max_loading: 100.0,
           parameters_id: "U_AL_150",
           phases: "abc",
+          res_loading: "[0.46811, 0.46811, 0.46811]",
+          res_separator: "",
           section: 150.0,
         },
         type: "Feature",
@@ -3955,6 +4660,8 @@
           max_loading: 100.0,
           parameters_id: "U_AL_150",
           phases: "abc",
+          res_loading: "[0.46928, 0.46928, 0.46928]",
+          res_separator: "",
           section: 150.0,
         },
         type: "Feature",
@@ -3995,6 +4702,8 @@
           max_loading: 100.0,
           parameters_id: "U_AL_150",
           phases: "abc",
+          res_loading: "[0.46837, 0.46837, 0.46837]",
+          res_separator: "",
           section: 150.0,
         },
         type: "Feature",
@@ -4024,6 +4733,8 @@
           max_loading: 100.0,
           parameters_id: "O_AM_54",
           phases: "abc",
+          res_loading: "[0.79524, 0.79524, 0.79524]",
+          res_separator: "",
           section: 54.0,
         },
         type: "Feature",
@@ -4102,6 +4813,8 @@
           max_loading: 100.0,
           parameters_id: "U_AL_150",
           phases: "abc",
+          res_loading: "[1.0154, 1.0154, 1.0154]",
+          res_separator: "",
           section: 150.0,
         },
         type: "Feature",
@@ -4188,6 +4901,8 @@
           max_loading: 100.0,
           parameters_id: "U_AL_150",
           phases: "abc",
+          res_loading: "[99.306, 99.306, 99.306]",
+          res_separator: "",
           section: 150.0,
         },
         type: "Feature",
@@ -4217,6 +4932,8 @@
           max_loading: 100.0,
           parameters_id: "U_AL_150",
           phases: "abc",
+          res_loading: "[99.306, 99.306, 99.306]",
+          res_separator: "",
           section: 150.0,
         },
         type: "Feature",
@@ -4246,6 +4963,8 @@
           max_loading: 100.0,
           parameters_id: "U_AL_150",
           phases: "abc",
+          res_loading: "[99.311, 99.311, 99.311]",
+          res_separator: "",
           section: 150.0,
         },
         type: "Feature",
@@ -4276,6 +4995,8 @@
           max_loading: 100.0,
           parameters_id: "O_AM_148",
           phases: "abc",
+          res_loading: "[90.409, 90.409, 90.409]",
+          res_separator: "",
           section: 148.0,
         },
         type: "Feature",
@@ -4305,6 +5026,8 @@
           max_loading: 100.0,
           parameters_id: "O_AM_54",
           phases: "abc",
+          res_loading: "[0.80139, 0.80139, 0.80139]",
+          res_separator: "",
           section: 54.0,
         },
         type: "Feature",
@@ -4334,6 +5057,8 @@
           max_loading: 100.0,
           parameters_id: "O_AM_148",
           phases: "abc",
+          res_loading: "[90.82, 90.82, 90.82]",
+          res_separator: "",
           section: 148.0,
         },
         type: "Feature",
@@ -4368,6 +5093,8 @@
           max_loading: 100.0,
           parameters_id: "U_AL_150",
           phases: "abc",
+          res_loading: "[99.762, 99.762, 99.762]",
+          res_separator: "",
           section: 150.0,
         },
         type: "Feature",
@@ -4397,6 +5124,8 @@
           max_loading: 100.0,
           parameters_id: "U_AL_150",
           phases: "abc",
+          res_loading: "[0.47424, 0.47424, 0.47424]",
+          res_separator: "",
           section: 150.0,
         },
         type: "Feature",
@@ -4432,6 +5161,8 @@
           max_loading: 100.0,
           parameters_id: "U_AL_150",
           phases: "abc",
+          res_loading: "[0.47364, 0.47364, 0.47364]",
+          res_separator: "",
           section: 150.0,
         },
         type: "Feature",
@@ -4463,6 +5194,8 @@
           max_loading: 100.0,
           parameters_id: "U_AL_150",
           phases: "abc",
+          res_loading: "[100.21, 100.21, 100.21]",
+          res_separator: "",
           section: 150.0,
         },
         type: "Feature",
@@ -4492,6 +5225,8 @@
           max_loading: 100.0,
           parameters_id: "O_AM_148",
           phases: "abc",
+          res_loading: "[91.23, 91.23, 91.23]",
+          res_separator: "",
           section: 148.0,
         },
         type: "Feature",
@@ -4523,6 +5258,8 @@
           max_loading: 100.0,
           parameters_id: "U_AL_150",
           phases: "abc",
+          res_loading: "[0.47342, 0.47342, 0.47342]",
+          res_separator: "",
           section: 150.0,
         },
         type: "Feature",
@@ -4552,6 +5289,8 @@
           max_loading: 100.0,
           parameters_id: "O_AM_148",
           phases: "abc",
+          res_loading: "[91.639, 91.639, 91.639]",
+          res_separator: "",
           section: 148.0,
         },
         type: "Feature",
@@ -4583,6 +5322,8 @@
           max_loading: 100.0,
           parameters_id: "O_AM_54",
           phases: "abc",
+          res_loading: "[0.79651, 0.79651, 0.79651]",
+          res_separator: "",
           section: 54.0,
         },
         type: "Feature",
@@ -4612,6 +5353,8 @@
           max_loading: 100.0,
           parameters_id: "O_AM_148",
           phases: "abc",
+          res_loading: "[92.048, 92.048, 92.048]",
+          res_separator: "",
           section: 148.0,
         },
         type: "Feature",
@@ -4641,6 +5384,8 @@
           max_loading: 100.0,
           parameters_id: "O_AM_148",
           phases: "abc",
+          res_loading: "[92.458, 92.458, 92.458]",
+          res_separator: "",
           section: 148.0,
         },
         type: "Feature",
@@ -4691,6 +5436,8 @@
           max_loading: 100.0,
           parameters_id: "U_AL_150",
           phases: "abc",
+          res_loading: "[101.56, 101.56, 101.56]",
+          res_separator: "",
           section: 150.0,
         },
         type: "Feature",
@@ -4721,6 +5468,8 @@
           max_loading: 100.0,
           parameters_id: "O_AM_54",
           phases: "abc",
+          res_loading: "[0.79099, 0.79099, 0.79099]",
+          res_separator: "",
           section: 54.0,
         },
         type: "Feature",
@@ -4752,6 +5501,8 @@
           max_loading: 100.0,
           parameters_id: "U_AL_150",
           phases: "abc",
+          res_loading: "[0.46922, 0.46922, 0.46922]",
+          res_separator: "",
           section: 150.0,
         },
         type: "Feature",
@@ -4786,6 +5537,8 @@
           max_loading: 100.0,
           parameters_id: "U_AL_150",
           phases: "abc",
+          res_loading: "[102, 102, 102]",
+          res_separator: "",
           section: 150.0,
         },
         type: "Feature",
@@ -4818,6 +5571,8 @@
           max_loading: 100.0,
           parameters_id: "U_AL_150",
           phases: "abc",
+          res_loading: "[102.45, 102.45, 102.45]",
+          res_separator: "",
           section: 150.0,
         },
         type: "Feature",
@@ -4847,6 +5602,8 @@
           max_loading: 100.0,
           parameters_id: "O_AM_148",
           phases: "abc",
+          res_loading: "[93.265, 93.265, 93.265]",
+          res_separator: "",
           section: 148.0,
         },
         type: "Feature",
@@ -4876,6 +5633,8 @@
           max_loading: 100.0,
           parameters_id: "O_AM_148",
           phases: "abc",
+          res_loading: "[93.671, 93.671, 93.671]",
+          res_separator: "",
           section: 148.0,
         },
         type: "Feature",
@@ -4905,6 +5664,8 @@
           max_loading: 100.0,
           parameters_id: "O_AM_148",
           phases: "abc",
+          res_loading: "[93.671, 93.671, 93.671]",
+          res_separator: "",
           section: 148.0,
         },
         type: "Feature",
@@ -4934,6 +5695,8 @@
           max_loading: 100.0,
           parameters_id: "O_AM_148",
           phases: "abc",
+          res_loading: "[94.077, 94.077, 94.077]",
+          res_separator: "",
           section: 148.0,
         },
         type: "Feature",
@@ -4964,6 +5727,8 @@
           max_loading: 100.0,
           parameters_id: "O_AM_148",
           phases: "abc",
+          res_loading: "[95.7, 95.7, 95.7]",
+          res_separator: "",
           section: 148.0,
         },
         type: "Feature",
@@ -4993,6 +5758,8 @@
           max_loading: 100.0,
           parameters_id: "O_AM_148",
           phases: "abc",
+          res_loading: "[96.504, 96.504, 96.504]",
+          res_separator: "",
           section: 148.0,
         },
         type: "Feature",
@@ -5023,6 +5790,8 @@
           max_loading: 100.0,
           parameters_id: "U_AL_150",
           phases: "abc",
+          res_loading: "[0.46253, 0.46253, 0.46253]",
+          res_separator: "",
           section: 150.0,
         },
         type: "Feature",
@@ -5052,6 +5821,8 @@
           max_loading: 100.0,
           parameters_id: "O_AM_54",
           phases: "abc",
+          res_loading: "[0.74864, 0.74864, 0.74864]",
+          res_separator: "",
           section: 54.0,
         },
         type: "Feature",
@@ -5084,6 +5855,8 @@
           max_loading: 100.0,
           parameters_id: "U_AL_150",
           phases: "abc",
+          res_loading: "[0.46255, 0.46255, 0.46255]",
+          res_separator: "",
           section: 150.0,
         },
         type: "Feature",
@@ -5116,6 +5889,8 @@
           max_loading: 100.0,
           parameters_id: "U_AL_150",
           phases: "abc",
+          res_loading: "[0.46256, 0.46256, 0.46256]",
+          res_separator: "",
           section: 150.0,
         },
         type: "Feature",
@@ -5145,6 +5920,8 @@
           max_loading: 100.0,
           parameters_id: "O_AM_54",
           phases: "abc",
+          res_loading: "[0.75551, 0.75551, 0.75551]",
+          res_separator: "",
           section: 54.0,
         },
         type: "Feature",
@@ -5174,6 +5951,8 @@
           max_loading: 100.0,
           parameters_id: "O_AM_54",
           phases: "abc",
+          res_loading: "[0.75519, 0.75519, 0.75519]",
+          res_separator: "",
           section: 54.0,
         },
         type: "Feature",
@@ -5203,6 +5982,8 @@
           max_loading: 100.0,
           parameters_id: "U_AL_150",
           phases: "abc",
+          res_loading: "[0.44835, 0.44835, 0.44835]",
+          res_separator: "",
           section: 150.0,
         },
         type: "Feature",
@@ -5235,6 +6016,8 @@
           max_loading: 100.0,
           parameters_id: "U_AL_150",
           phases: "abc",
+          res_loading: "[0.90465, 0.90465, 0.90465]",
+          res_separator: "",
           section: 150.0,
         },
         type: "Feature",
@@ -5264,6 +6047,8 @@
           max_loading: 100.0,
           parameters_id: "O_AM_54",
           phases: "abc",
+          res_loading: "[1.5004, 1.5004, 1.5004]",
+          res_separator: "",
           section: 54.0,
         },
         type: "Feature",
@@ -5293,6 +6078,8 @@
           max_loading: 100.0,
           parameters_id: "O_AM_54",
           phases: "abc",
+          res_loading: "[2.2484, 2.2484, 2.2484]",
+          res_separator: "",
           section: 54.0,
         },
         type: "Feature",
@@ -5322,6 +6109,8 @@
           max_loading: 100.0,
           parameters_id: "O_AM_54",
           phases: "abc",
+          res_loading: "[2.2484, 2.2484, 2.2484]",
+          res_separator: "",
           section: 54.0,
         },
         type: "Feature",
@@ -5352,6 +6141,8 @@
           max_loading: 100.0,
           parameters_id: "O_AM_148",
           phases: "abc",
+          res_loading: "[97.71, 97.71, 97.71]",
+          res_separator: "",
           section: 148.0,
         },
         type: "Feature",
@@ -5381,6 +6172,8 @@
           max_loading: 100.0,
           parameters_id: "O_AM_148",
           phases: "abc",
+          res_loading: "[100.5, 100.5, 100.5]",
+          res_separator: "",
           section: 148.0,
         },
         type: "Feature",
@@ -5411,6 +6204,8 @@
           max_loading: 100.0,
           parameters_id: "O_AM_148",
           phases: "abc",
+          res_loading: "[101.1, 101.1, 101.1]",
+          res_separator: "",
           section: 148.0,
         },
         type: "Feature",
@@ -5440,6 +6235,8 @@
           max_loading: 100.0,
           parameters_id: "O_AM_148",
           phases: "abc",
+          res_loading: "[101.1, 101.1, 101.1]",
+          res_separator: "",
           section: 148.0,
         },
         type: "Feature",
@@ -5470,6 +6267,8 @@
           max_loading: 100.0,
           parameters_id: "O_AM_54",
           phases: "abc",
+          res_loading: "[1.1471, 1.1471, 1.1471]",
+          res_separator: "",
           section: 54.0,
         },
         type: "Feature",
@@ -5509,6 +6308,8 @@
           max_loading: 100.0,
           parameters_id: "U_AL_150",
           phases: "abc",
+          res_loading: "[111.71, 111.71, 111.71]",
+          res_separator: "",
           section: 150.0,
         },
         type: "Feature",
@@ -5539,6 +6340,8 @@
           max_loading: 100.0,
           parameters_id: "U_AL_150",
           phases: "abc",
+          res_loading: "[112.36, 112.36, 112.36]",
+          res_separator: "",
           section: 150.0,
         },
         type: "Feature",
@@ -5582,6 +6385,8 @@
           max_loading: 100.0,
           parameters_id: "U_AL_150",
           phases: "abc",
+          res_loading: "[113.02, 113.02, 113.02]",
+          res_separator: "",
           section: 150.0,
         },
         type: "Feature",
@@ -5625,6 +6430,8 @@
           max_loading: 100.0,
           parameters_id: "U_AL_150",
           phases: "abc",
+          res_loading: "[113.66, 113.66, 113.66]",
+          res_separator: "",
           section: 150.0,
         },
         type: "Feature",
@@ -5658,6 +6465,8 @@
           max_loading: 100.0,
           parameters_id: "U_AL_150",
           phases: "abc",
+          res_loading: "[113.63, 113.63, 113.63]",
+          res_separator: "",
           section: 150.0,
         },
         type: "Feature",
@@ -5710,6 +6519,8 @@
           max_loading: 100.0,
           parameters_id: "U_AL_150",
           phases: "abc",
+          res_loading: "[113.62, 113.62, 113.62]",
+          res_separator: "",
           section: 150.0,
         },
         type: "Feature",
@@ -5740,6 +6551,8 @@
           max_loading: 100.0,
           parameters_id: "U_AL_150",
           phases: "abc",
+          res_loading: "[26.582, 26.582, 26.582]",
+          res_separator: "",
           section: 150.0,
         },
         type: "Feature",
@@ -5787,6 +6600,8 @@
           max_loading: 100.0,
           parameters_id: "U_AL_150",
           phases: "abc",
+          res_loading: "[26.365, 26.365, 26.365]",
+          res_separator: "",
           section: 150.0,
         },
         type: "Feature",
@@ -5826,6 +6641,8 @@
           max_loading: 100.0,
           parameters_id: "U_AL_150",
           phases: "abc",
+          res_loading: "[26.136, 26.136, 26.136]",
+          res_separator: "",
           section: 150.0,
         },
         type: "Feature",
@@ -5864,6 +6681,8 @@
           max_loading: 100.0,
           parameters_id: "U_AL_150",
           phases: "abc",
+          res_loading: "[26.121, 26.121, 26.121]",
+          res_separator: "",
           section: 150.0,
         },
         type: "Feature",
@@ -5926,6 +6745,8 @@
           max_loading: 100.0,
           parameters_id: "U_AL_150",
           phases: "abc",
+          res_loading: "[26.109, 26.109, 26.109]",
+          res_separator: "",
           section: 150.0,
         },
         type: "Feature",
@@ -5955,6 +6776,8 @@
           max_loading: 100.0,
           parameters_id: "U_AL_150",
           phases: "abc",
+          res_loading: "[25.759, 25.759, 25.759]",
+          res_separator: "",
           section: 150.0,
         },
         type: "Feature",
@@ -5985,6 +6808,8 @@
           max_loading: 100.0,
           parameters_id: "U_AL_150",
           phases: "abc",
+          res_loading: "[25.755, 25.755, 25.755]",
+          res_separator: "",
           section: 150.0,
         },
         type: "Feature",
@@ -6014,6 +6839,8 @@
           max_loading: 100.0,
           parameters_id: "U_AL_150",
           phases: "abc",
+          res_loading: "[1.73, 1.73, 1.73]",
+          res_separator: "",
           section: 150.0,
         },
         type: "Feature",
@@ -6043,6 +6870,8 @@
           max_loading: 100.0,
           parameters_id: "O_AM_54",
           phases: "abc",
+          res_loading: "[2.9133, 2.9133, 2.9133]",
+          res_separator: "",
           section: 54.0,
         },
         type: "Feature",
@@ -6073,6 +6902,8 @@
           max_loading: 100.0,
           parameters_id: "O_AM_54",
           phases: "abc",
+          res_loading: "[5.8107, 5.8107, 5.8107]",
+          res_separator: "",
           section: 54.0,
         },
         type: "Feature",
@@ -6102,6 +6933,8 @@
           max_loading: 100.0,
           parameters_id: "O_AM_54",
           phases: "abc",
+          res_loading: "[5.81, 5.81, 5.81]",
+          res_separator: "",
           section: 54.0,
         },
         type: "Feature",
@@ -6132,6 +6965,8 @@
           max_loading: 100.0,
           parameters_id: "U_AL_150",
           phases: "abc",
+          res_loading: "[3.4501, 3.4501, 3.4501]",
+          res_separator: "",
           section: 150.0,
         },
         type: "Feature",
@@ -6163,6 +6998,8 @@
           max_loading: 100.0,
           parameters_id: "U_AL_150",
           phases: "abc",
+          res_loading: "[3.4477, 3.4477, 3.4477]",
+          res_separator: "",
           section: 150.0,
         },
         type: "Feature",
@@ -6194,6 +7031,8 @@
           max_loading: 100.0,
           parameters_id: "U_AL_150",
           phases: "abc",
+          res_loading: "[22.233, 22.233, 22.233]",
+          res_separator: "",
           section: 150.0,
         },
         type: "Feature",
@@ -6249,6 +7088,8 @@
           max_loading: 100.0,
           parameters_id: "U_AL_150",
           phases: "abc",
+          res_loading: "[22.229, 22.229, 22.229]",
+          res_separator: "",
           section: 150.0,
         },
         type: "Feature",
@@ -6280,6 +7121,8 @@
           max_loading: 100.0,
           parameters_id: "U_AL_150",
           phases: "abc",
+          res_loading: "[1.7311, 1.7311, 1.7311]",
+          res_separator: "",
           section: 150.0,
         },
         type: "Feature",
@@ -6318,6 +7161,8 @@
           max_loading: 100.0,
           parameters_id: "U_AL_150",
           phases: "abc",
+          res_loading: "[20.826, 20.826, 20.826]",
+          res_separator: "",
           section: 150.0,
         },
         type: "Feature",
@@ -6354,6 +7199,8 @@
           max_loading: 100.0,
           parameters_id: "U_AL_150",
           phases: "abc",
+          res_loading: "[20.651, 20.651, 20.651]",
+          res_separator: "",
           section: 150.0,
         },
         type: "Feature",
@@ -6394,6 +7241,8 @@
           max_loading: 100.0,
           parameters_id: "U_AL_150",
           phases: "abc",
+          res_loading: "[20.581, 20.581, 20.581]",
+          res_separator: "",
           section: 150.0,
         },
         type: "Feature",
@@ -6402,7 +7251,7 @@
     type: "FeatureCollection",
   });
 
-  geo_json_292f4ebca68aedd0d500904b188ec64d.bindTooltip(
+  geo_json_24579a0bc8c941837eb21dbdb5aba009.bindTooltip(
     function (layer) {
       let div = L.DomUtil.create("div");
 
@@ -6428,6 +7277,8 @@
         "section",
         "ampacity",
         "max_loading",
+        "res_separator",
+        "res_loading",
       ];
       let aliases = [
         "Id:",
@@ -6442,6 +7293,8 @@
         "Section (mm\u00b2):",
         "Ampacity (A):",
         "Max loading (%):",
+        "--",
+        "Loading (%):",
       ];
       let table =
         "<table>" +
@@ -6469,7 +7322,7 @@
     },
   );
 
-  geo_json_292f4ebca68aedd0d500904b188ec64d.bindPopup(
+  geo_json_24579a0bc8c941837eb21dbdb5aba009.bindPopup(
     function (layer) {
       let div = L.DomUtil.create("div");
 
@@ -6495,6 +7348,8 @@
         "section",
         "ampacity",
         "max_loading",
+        "res_separator",
+        "res_loading",
       ];
       let aliases = [
         "Id:",
@@ -6509,6 +7364,8 @@
         "Section (mm\u00b2):",
         "Ampacity (A):",
         "Max loading (%):",
+        "--",
+        "Loading (%):",
       ];
       let table =
         "<table>" +
@@ -6534,35 +7391,35 @@
     },
   );
 
-  geo_json_292f4ebca68aedd0d500904b188ec64d.addTo(feature_group_sub_group_5535b7b31c7d39f80f5b1322f1e2d669);
+  geo_json_24579a0bc8c941837eb21dbdb5aba009.addTo(feature_group_sub_group_e7ed2bffc4b93ff82b3fe42706588b5c);
 
-  feature_group_sub_group_5535b7b31c7d39f80f5b1322f1e2d669.addTo(map_5364bbe7961b88aed023066be222ce3c);
+  feature_group_sub_group_e7ed2bffc4b93ff82b3fe42706588b5c.addTo(map_8a9d910f66634210d2ed29b9d4183efb);
 
-  var layer_control_f4f47867aeb92c3a581a64681d807be9_layers = {
+  var layer_control_0a86559021d59cc75a2ff6280fc96c15_layers = {
     base_layers: {
-      openstreetmap: tile_layer_ebcec64e0e7b89934ee610288b4f4d78,
+      openstreetmap: tile_layer_55eaaed7d73356503b5b944ec45ce34e,
     },
     overlays: {
-      "Electrical Network": feature_group_ca2022bcf33ca4b872d8dc85d8cc809e,
-      Buses: feature_group_sub_group_4330983a0e66b58717a8444539bb4fb4,
-      Lines: feature_group_sub_group_5535b7b31c7d39f80f5b1322f1e2d669,
+      "Electrical Network": feature_group_c5c573e83eb8541cf95443e743c587f3,
+      Buses: feature_group_sub_group_ad15b891e3ebc7707f5246c1c5e54fa9,
+      Lines: feature_group_sub_group_e7ed2bffc4b93ff82b3fe42706588b5c,
     },
   };
-  let layer_control_f4f47867aeb92c3a581a64681d807be9 = L.control
+  let layer_control_0a86559021d59cc75a2ff6280fc96c15 = L.control
     .layers(
-      layer_control_f4f47867aeb92c3a581a64681d807be9_layers.base_layers,
-      layer_control_f4f47867aeb92c3a581a64681d807be9_layers.overlays,
+      layer_control_0a86559021d59cc75a2ff6280fc96c15_layers.base_layers,
+      layer_control_0a86559021d59cc75a2ff6280fc96c15_layers.overlays,
       {
         position: "bottomright",
         collapsed: false,
         autoZIndex: true,
       },
     )
-    .addTo(map_5364bbe7961b88aed023066be222ce3c);
-  new L.Draggable(layer_control_f4f47867aeb92c3a581a64681d807be9.getContainer()).enable();
+    .addTo(map_8a9d910f66634210d2ed29b9d4183efb);
+  new L.Draggable(layer_control_0a86559021d59cc75a2ff6280fc96c15.getContainer()).enable();
 
-  var feature_group_ca2022bcf33ca4b872d8dc85d8cc809esearchControl = new L.Control.Search({
-    layer: feature_group_ca2022bcf33ca4b872d8dc85d8cc809e,
+  var feature_group_c5c573e83eb8541cf95443e743c587f3searchControl = new L.Control.Search({
+    layer: feature_group_c5c573e83eb8541cf95443e743c587f3,
 
     propertyName: "id",
 
@@ -6574,34 +7431,34 @@
 
     hideMarkerOnCollapse: true,
   });
-  feature_group_ca2022bcf33ca4b872d8dc85d8cc809esearchControl.on("search:locationfound", function (e) {
-    feature_group_ca2022bcf33ca4b872d8dc85d8cc809e.setStyle(function (feature) {
+  feature_group_c5c573e83eb8541cf95443e743c587f3searchControl.on("search:locationfound", function (e) {
+    feature_group_c5c573e83eb8541cf95443e743c587f3.setStyle(function (feature) {
       return feature.properties.style;
     });
 
     if (e.layer._popup) e.layer.openPopup();
   });
-  feature_group_ca2022bcf33ca4b872d8dc85d8cc809esearchControl.on("search:collapsed", function (e) {
-    feature_group_ca2022bcf33ca4b872d8dc85d8cc809e.setStyle(function (feature) {
+  feature_group_c5c573e83eb8541cf95443e743c587f3searchControl.on("search:collapsed", function (e) {
+    feature_group_c5c573e83eb8541cf95443e743c587f3.setStyle(function (feature) {
       return feature.properties.style;
     });
   });
-  map_5364bbe7961b88aed023066be222ce3c.addControl(feature_group_ca2022bcf33ca4b872d8dc85d8cc809esearchControl);
+  map_8a9d910f66634210d2ed29b9d4183efb.addControl(feature_group_c5c573e83eb8541cf95443e743c587f3searchControl);
 
   function customFlyToBounds() {
     let bounds = L.latLngBounds([]);
-    map_5364bbe7961b88aed023066be222ce3c.eachLayer(function (layer) {
+    map_8a9d910f66634210d2ed29b9d4183efb.eachLayer(function (layer) {
       if (typeof layer.getBounds === "function") {
         bounds.extend(layer.getBounds());
       }
     });
     if (bounds.isValid()) {
-      map_5364bbe7961b88aed023066be222ce3c.fitBounds(bounds, {
+      map_8a9d910f66634210d2ed29b9d4183efb.fitBounds(bounds, {
         padding: [30, 30],
       });
     }
   }
-  map_5364bbe7961b88aed023066be222ce3c.on("overlayadd", customFlyToBounds);
+  map_8a9d910f66634210d2ed29b9d4183efb.on("overlayadd", customFlyToBounds);
   customFlyToBounds();
   </script>
 </html>

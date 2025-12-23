@@ -246,14 +246,14 @@ def test_res_state():
 
     # With ampacity
     lp._ampacities = np.array([100, 100, 100], dtype=np.float64)
-    assert line._res_state_getter() == "ok"
+    assert line._res_state_getter() == "normal"
     line.side1._res_currents = 80 * PosSeq
     assert line._res_state_getter() == "high"
     line.side1._res_currents = 120 * PosSeq
     assert line._res_state_getter() == "very-high"
 
     line.side1._res_currents = 50 * PosSeq
-    assert line._res_state_getter() == "ok"
+    assert line._res_state_getter() == "normal"
     line.side2._res_currents = 120 * PosSeq * (1, 0.5, 0.5)  # Only one violation
     assert line._res_state_getter() == "very-high"
 

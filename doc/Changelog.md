@@ -21,6 +21,10 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`426` Add `rlf.plotting.plot_results_interactive_map` for plotting a network with load flow results on an
+  interactive map. Buses are colored according to their voltage levels and lines are colored according to their loading
+  levels.
+
 - {gh-pr}`425` Enforce the following deprecations:
 
   - The `side` parameter of `rlf.GroundConnection`, `rlf.plotting.plot_voltage_phasors` and

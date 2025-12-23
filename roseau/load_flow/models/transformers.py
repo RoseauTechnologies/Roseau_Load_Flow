@@ -398,7 +398,7 @@ class Transformer(AbstractBranch["TransformerSide", CyTransformer]):
         elif loading > 0.75 * max_loading:
             return "high"
         else:
-            return "ok"
+            return "normal"
 
     @property
     @ureg_wraps("", (None,))

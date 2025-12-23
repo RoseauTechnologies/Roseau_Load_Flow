@@ -96,7 +96,7 @@ def test_res_state():
     tr.side_hv._res_current = current(30e3, 20e3)
     tr.side_lv._res_current = current(-30e3, 400)
 
-    assert tr._res_state_getter() == "ok"
+    assert tr._res_state_getter() == "normal"
     tr.side_hv._res_current = current(45e3, 20e3)
     assert tr._res_state_getter() == "high"
     tr.side_hv._res_current = current(60e3, 20e3)
