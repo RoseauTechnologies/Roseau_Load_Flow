@@ -133,12 +133,12 @@ def _pu_to_pct[V: (float, list[float])](v: V | None, /) -> V | None:
         return v * 100
 
 
-def _pp_num(v: float | list[float] | None, /, missing: str = "n/a") -> str:
+def _pp_num(v: float | list[float] | list[float | None] | None, /, missing: str = "n/a") -> str:
     """Pretty print number(s) or `missing` if `None`."""
     if v is None:
         return missing
     elif isinstance(v, list):
-        return "[" + ", ".join(f"{val:.5g}" for val in v) + "]"
+        return "[" + ", ".join(missing if val is None else f"{val:.5g}" for val in v) + "]"
     else:
         return f"{v:.5g}"
 
