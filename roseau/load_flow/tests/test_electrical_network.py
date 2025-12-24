@@ -2093,6 +2093,7 @@ def test_to_graph(all_element_network: ElectricalNetwork):
             "parameters_id": transformer.parameters.id,
             "max_loading": max_loading,
             "sn": transformer.sn.magnitude,
+            "tap": transformer.tap,
             "geom": transformer.geometry.__geo_interface__ if transformer.geometry is not None else None,
         }
 

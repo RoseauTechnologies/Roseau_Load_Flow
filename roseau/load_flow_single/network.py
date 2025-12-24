@@ -284,6 +284,7 @@ class ElectricalNetwork(AbstractNetwork[Element]):
                 id=line.id,
                 type="line",
                 parameters_id=line.parameters.id,
+                length=line._length,
                 max_loading=line._max_loading,
                 ampacity=line.parameters._ampacity,
                 geom=geom_mapping(line.geometry),
@@ -297,6 +298,7 @@ class ElectricalNetwork(AbstractNetwork[Element]):
                 parameters_id=transformer.parameters.id,
                 max_loading=transformer._max_loading,
                 sn=transformer.parameters._sn,
+                tap=transformer._tap,
                 geom=geom_mapping(transformer.geometry),
             )
         for switch in self.switches.values():
