@@ -15,81 +15,81 @@ myst:
 
 # Plotting
 
-_Roseau Load Flow_ provides functions to plot networks and some electric quantities in the `roseau.load_flow.plotting`
-module.
+_Roseau Load Flow_ provides plotting functionality in the `rlf.plotting` module.
 
 ## Plotting a network on a map
 
-The {func}`~roseau.load_flow.plotting.plot_interactive_map` function plots an `ElectricalNetwork` on an interactive map
-using the [folium](https://python-visualization.github.io/folium/latest) library. The function requires the geometries
-of the elements in the network to be defined. Only buses and lines are currently plotted. Simply call the function with
-an `ElectricalNetwork` to get an interactive map of the network `plot_interactive_map(en)`.
-
-The `plot_interactive_map` function uses the `ElectricalNetwork` geo dataframes of buses and lines to plot the network
-on a map. The function accepts optional arguments to customize the appearance of the plot. Refer to the function's
-documentation for more information.
-
-Let's take a MV network from the catalogue as an example to show how we can customize the style of the buses on the map:
+The simplest way to visualize an electrical network with bus and line geometries is to plot it on a map using the
+{func}`~roseau.load_flow.plotting.plot_interactive_map` function. Example:
 
 ```pycon
 >>> import roseau.load_flow as rlf
->>> from roseau.load_flow.plotting import plot_interactive_map
 >>> en = rlf.ElectricalNetwork.from_catalogue(name="MVFeeder210", load_point_name="Winter")
 >>> en
-<ElectricalNetwork: 128 buses, 126 lines, 0 transformers, 1 switch, 82 loads, 1 source, 1 ground, 1 potential ref>
-```
-
-As the `id` of the buses of this network contains information about the type of bus, we can use it to apply different
-styles for different bus types. For example, HV/MV substation can have different size and color than MV/LV substations
-and junction buses. `plot_interactive_map` takes an optional `style_function` argument to customize the style of the
-plots. This is a function that accepts a GeoJSON feature mapping and returns an optional dictionary of style properties.
-The GeoJSON feature contains an `"element_type"` property that indicates the type of the element (bus, line, etc.). The
-other properties are the columns of the dataframes of the elements of the network.
-
-```pycon
->>> def style_function(feature: dict) -> dict | None:
-...     # If the element is not a bus, return None to use the default style
-...     if feature["properties"]["element_type"] != "bus":
-...         return None
-...     # Override the default style of buses based on the bus id
-...     bus_id = feature["properties"]["id"]
-...     if bus_id.startswith("HVMV"):  # HV/MV substation
-...         return {
-...             "fill": True,
-...             "fillColor": "#000000",
-...             "color": "#000000",
-...             "fillOpacity": 1,
-...             "radius": 7,
-...         }
-...     elif bus_id.startswith("MVLV"):  # MV/LV substations
-...         return {
-...             "fill": True,
-...             "fillColor": "#234e83",
-...             "color": "#234e83",
-...             "fillOpacity": 1,
-...             "radius": 5,
-...         }
-...     else:  # Junction buses
-...         return {
-...             "fill": True,
-...             "fillColor": "#234e83",
-...             "color": "#234e83",
-...             "fillOpacity": 1,
-...             "radius": 3,
-...         }
-...
-
-```
-
-Finally, calling the `plot_interactive_map` function with the custom style function produces an interactive map of the
-network:
-
-```pycon
->>> m = plot_interactive_map(en, style_function=style_function)
->>> m
+<ElectricalNetwork: 128 buses, 126 lines, 0 transformers, 1 switch, 82 loads, 1 source, 1 ground, 1 potential ref, 0 ground connections>
+>>> rlf.plotting.plot_interactive_map(en)
 ```
 
 <iframe src="../_static/Plotting/MVFeeder210.html" height="500px" width="100%" frameborder="0"></iframe>
+
+Make sure you have [folium](https://python-visualization.github.io/folium/latest) installed in your Python environment
+and that your network has a coordinate reference system (CRS) set via the `en.crs` attribute.
+
+### Features
+
+1. **Interactive map**: zoom in/out, pan, hover or click on elements to see their properties
+2. **Base maps**: all
+   [folium tilesets](https://python-visualization.github.io/folium/latest/getting_started.html#Choosing-a-tileset) are
+   supported
+3. **Search**: search for specific elements by their ID
+4. **Line laying**: underground cables are dashed, other lines are solid
+5. **Voltage levels**: HV/MV/LV elements have different sizes for easier identification
+6. **Layer control**: toggle visibility of buses, lines, transformers
+7. **Custom styling**: customize colors, sizes, and styles of elements based on their properties.
+
+Use the `map_kws` keyword to pass additional arguments to the `folium.Map` constructor. Refer to the function's
+documentation for more details.
+
+**Note**
+
+Only buses, lines and transformers are currently plotted.
+
+## Plotting a network with results on a map
+
+The {func}`~roseau.load_flow.plotting.plot_results_interactive_map` function can be used to plot load flow results on
+the map. The network must have valid results before calling this function. Example:
+
+```pycon
+>>> import roseau.load_flow as rlf
+>>> en = rlf.ElectricalNetwork.from_catalogue(name="MVFeeder210", load_point_name="Winter")
+>>> # Let's create some extreme conditions to see  voltage drops/rises and line overloads
+>>> en.loads["MVLV14633_consumption"].powers = 3.5e6
+>>> en.loads["MVLV15838_production"].powers = -5.5e6
+>>> en.solve_load_flow()
+(3, 3.725290298461914e-09)
+>>> rlf.plotting.plot_results_interactive_map(en)
+```
+
+<iframe src="../_static/Plotting/MVFeeder210_Results.html" height="500px" width="100%" frameborder="0"></iframe>
+
+The plot shows the color-coded voltage levels at buses and color-coded loading of lines and transformers. The following
+states are represented:
+
+- **very-low (blue)**: bus voltage below {math}`U_{min}`
+- **low (light blue)**: bus voltage in the first quadrant of the {math}`(U_{min}, U_{n})` range
+- **normal (green)**: bus voltage in the last three quadrants of the {math}`(U_{min}, U_{n})` range or in the first
+  three quadrants of the {math}`(U_{n}, U_{max})` range; line or transformer loading below 75% {math}`load_{max}`
+- **high (orange)**: bus voltage in the last quadrant of the {math}`(U_{n}, U_{max})` range; line or transformer loading
+  between 75% and 100% {math}`load_{max}`
+- **very-high (red)**: bus voltage above {math}`U_{max}`; line or transformer loading above 100% {math}`load_{max}`
+- **unknown (gray)**: bus nominal voltage or limits not defined; line ampacity not defined
+
+```{image} /_static/Plotting/Result_States.png
+---
+alt: The different states for bus voltages and line/transformer loadings
+align: center
+---
+```
 
 ## Plotting a network with no geometries
 

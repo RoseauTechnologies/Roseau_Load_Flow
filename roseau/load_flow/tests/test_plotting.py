@@ -15,7 +15,13 @@ from roseau.load_flow.models import (
     TransformerParameters,
     VoltageSource,
 )
-from roseau.load_flow.plotting import plot_symmetrical_voltages, plot_voltage_phasors
+from roseau.load_flow.network import ElectricalNetwork
+from roseau.load_flow.plotting import (
+    plot_interactive_map,
+    plot_results_interactive_map,
+    plot_symmetrical_voltages,
+    plot_voltage_phasors,
+)
 from roseau.load_flow.sym import PositiveSequence
 
 
@@ -187,3 +193,10 @@ def test_plot_symmetrical_voltages(elements):
     bus_single = elements["bus_single"]
     with pytest.raises(TypeError, match=r"Only multi-phase elements can be plotted. Did you mean to use rlf.Bus\?"):
         plot_symmetrical_voltages(bus_single)  # type: ignore
+
+
+def test_plot_interactive_map(test_networks_path):
+    en = ElectricalNetwork.from_json(path=test_networks_path / "all_element_network.json", include_results=True)
+    en.crs = "EPSG:4326"
+    plot_interactive_map(en)
+    plot_results_interactive_map(en)

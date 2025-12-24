@@ -99,7 +99,7 @@ def test_res_state():
     tr.side_hv._res_currents = current(30e3, 20e3) * PosSeq
     tr.side_lv._res_currents = current(-30e3, 400) * PosSeq
 
-    assert tr._res_state_getter() == "ok"
+    assert tr._res_state_getter() == "normal"
     tr.side_hv._res_currents = current(45e3, 20e3) * PosSeq
     assert tr._res_state_getter() == "high"
     tr.side_hv._res_currents = current(60e3, 20e3) * PosSeq

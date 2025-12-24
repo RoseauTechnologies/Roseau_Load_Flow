@@ -209,7 +209,7 @@ def test_res_state():
 
     # With ampacity
     lp._ampacity = 100
-    assert line._res_state_getter() == "ok"
+    assert line._res_state_getter() == "normal"
     line.side1._res_current = 80
     assert line._res_state_getter() == "high"
     line.side1._res_current = 120

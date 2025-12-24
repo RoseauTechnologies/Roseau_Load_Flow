@@ -362,7 +362,7 @@ class Bus(AbstractTerminal[CyBus]):
                 return "very-low"
             elif u < 0.75 * u_min + 0.25:
                 return "low"
-        return "ok"
+        return "normal"
 
     @property
     def res_voltage_level(self) -> Q_[float] | None:
