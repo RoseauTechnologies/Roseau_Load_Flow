@@ -1140,6 +1140,7 @@ def test_to_graph(small_network: ElectricalNetwork):
             "parameters_id": line.parameters.id,
             "max_loading": line.max_loading.m,
             "ampacity": ampacity,
+            "length": line.length.m,
             "geom": line.geometry.__geo_interface__ if line.geometry is not None else None,
         }
 
@@ -1151,6 +1152,7 @@ def test_to_graph(small_network: ElectricalNetwork):
             "parameters_id": transformer.parameters.id,
             "max_loading": transformer.max_loading.m,
             "sn": transformer.sn.m,
+            "tap": transformer.tap,
             "geom": transformer.geometry.__geo_interface__ if transformer.geometry is not None else None,
         }
 
