@@ -28,7 +28,7 @@ from fractions import Fraction
 from inspect import Parameter, Signature, signature
 from itertools import zip_longest
 from types import GenericAlias
-from typing import TYPE_CHECKING, Any, TypeVar, overload
+from typing import TYPE_CHECKING, Any, Protocol, TypeVar, overload
 
 import numpy as np
 from numpy.typing import NDArray
@@ -102,7 +102,11 @@ else:
 type OptionalUnits = str | Unit | None | tuple[str | Unit | None, ...] | list[str | Unit | None]
 
 
-def ureg_wraps[F: Callable](ret: OptionalUnits, args: OptionalUnits, strict: bool = True) -> Callable[[F], F]:
+class _IdentityFunction(Protocol):
+    def __call__[F: Callable](self, fn: F, /) -> F: ...
+
+
+def ureg_wraps(ret: OptionalUnits, args: OptionalUnits, strict: bool = True) -> _IdentityFunction:
     """Wraps a function to become pint-aware.
 
     Args:
@@ -167,7 +171,7 @@ def _apply_defaults(sig: Signature, args: tuple[Any], kwargs: dict[str, Any]) ->
     return list(args), kwargs
 
 
-def wraps[F: Callable](ureg: UnitRegistry, ret: OptionalUnits, args: OptionalUnits) -> Callable[[F], F]:
+def wraps(ureg: UnitRegistry, ret: OptionalUnits, args: OptionalUnits) -> _IdentityFunction:
     """Wraps a function to become pint-aware.
 
     Use it when a function requires a numerical value but in some specific
