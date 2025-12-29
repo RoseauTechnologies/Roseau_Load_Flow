@@ -1,9 +1,16 @@
 from collections.abc import Callable, Mapping
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 import geopandas as gpd
 
-from roseau.load_flow.plotting import _RESULT_COLORS, _check_folium, _plot_interactive_map_internal, _pp_num, _pu_to_pct
+from roseau.load_flow.plotting import (
+    _RESULT_COLORS,
+    _check_folium,
+    _plot_interactive_map_internal,
+    _pp_num,
+    _pu_to_pct,
+    _VoltageProfile,
+)
 from roseau.load_flow.typing import Id
 from roseau.load_flow_single.models import Transformer
 from roseau.load_flow_single.network import ElectricalNetwork
@@ -425,3 +432,56 @@ def plot_results_interactive_map(
         fit_bounds=fit_bounds,
     )
     return m
+
+
+def voltage_profile(
+    network: ElectricalNetwork,
+    *,
+    starting_bus_id: Id | None = None,
+    traverse_transformers: bool = False,
+    switch_length: float | None = None,
+    distance_unit: str = "km",
+) -> _VoltageProfile[ElectricalNetwork, Literal[""]]:
+    """Create a voltage profile of the network.
+
+    A voltage profile shows the voltage (in %) of buses in the network as a function of distance
+    from a starting bus. Lines and transformers are also represented, colored according to their
+    loading levels.
+
+    The network does not need to have geometries defined for this function to work, as distances are
+    calculated based on line lengths. However, the network must have valid load flow results, and
+    relevant buses must have nominal voltages defined.
+
+    Args:
+        network:
+            The electrical network to create the voltage profile for.
+
+        starting_bus_id:
+            The ID of the bus to start the profile from. If None, the bus of the source with the
+            highest voltage is used.
+
+        traverse_transformers:
+            If True, the entire network is traversed including transformers. If False, transformers
+            are not traversed.
+
+        switch_length:
+            The length in km to assign to switches when calculating distances. If None, it is set to
+            the minimum of 2 meters and the shortest line in the network. Must be non-negative.
+
+        distance_unit:
+            The unit to use for distances in the profile. Defaults to "km".
+
+    Returns:
+        An object containing the voltage profile data for plotting. Use its plotting methods to
+        create plots. E.g., ``rlfs.plotting.voltage_profile(en).plot_matplotlib()``.
+    """
+    if network.is_multi_phase:
+        raise TypeError("Only single-phase networks can be plotted. Did you mean to use rlf.plotting.voltage_profile?")
+    return _VoltageProfile._from_network(
+        network,
+        mode="",
+        starting_bus_id=starting_bus_id,
+        traverse_transformers=traverse_transformers,
+        switch_length=switch_length,
+        distance_unit=distance_unit,
+    )

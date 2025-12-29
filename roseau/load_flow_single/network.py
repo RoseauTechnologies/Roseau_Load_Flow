@@ -666,6 +666,10 @@ class ElectricalNetwork(AbstractNetwork[Element]):
                 starting_source = source
         return starting_source._voltage, starting_source
 
+    def _get_starting_bus_id(self) -> Id:
+        _, starting_source = self._get_starting_voltage()
+        return starting_source.bus.id
+
     @classmethod
     def _check_ref(cls, elements: Iterable[Element]) -> None:
         pass  # potential reference is managed internally
