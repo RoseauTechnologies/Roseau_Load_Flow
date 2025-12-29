@@ -50,15 +50,18 @@ To visualize the voltage profile of a network, use one of the `plot_<backend>` m
 ... ).plot_plotly().show()
 ```
 
-<!-- en = rlf.ElectricalNetwork.from_catalogue("LVFeeder36360", "Winter")
+<!-- # To generate the following iframe, run:
+import roseau.load_flow as rlf
+en = rlf.ElectricalNetwork.from_catalogue("LVFeeder36360", "Winter")
 en.solve_load_flow()
 (
   rlf.plotting.voltage_profile(en, mode="min", traverse_transformers=True, distance_unit="m")
   .plot_plotly()
   .write_html(
-      "doc/_static/Plotting/Voltage_Profile_LVFeeder36360_Plotly2.html", include_plotlyjs="cdn"
+      "doc/_static/Plotting/Voltage_Profile_LVFeeder36360_Plotly.html", include_plotlyjs="cdn"
   )
-) -->
+)
+-->
 
 <iframe src="../_static/Plotting/Voltage_Profile_LVFeeder36360_Plotly.html" height="500px" width="100%" frameborder="0"></iframe>
 

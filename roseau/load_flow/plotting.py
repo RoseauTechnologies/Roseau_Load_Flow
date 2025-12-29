@@ -1007,7 +1007,7 @@ class _VoltageProfile[NetT: ElectricalNetwork | rlfs.ElectricalNetwork, ModeT: L
             raise ValueError(f"Bus {starting_bus_id!r} not found in the network.")
 
         try:
-            distance_factor = cls._get_distance_factor(distance_unit)
+            distance_factor = Q_(1.0, units="km").m_as(distance_unit)
         except PintError as e:
             raise ValueError(f"Invalid distance unit: {distance_unit}") from e
 
@@ -1148,10 +1148,6 @@ class _VoltageProfile[NetT: ElectricalNetwork | rlfs.ElectricalNetwork, ModeT: L
         if self.mode:
             label = f"{self.mode.capitalize()} {label}"
         return label
-
-    @staticmethod
-    def _get_distance_factor(distance_unit: str) -> float:
-        return Q_(1.0, units="km").m_as(distance_unit)
 
     def _edge_segs(self, edge: "VoltageProfileEdge") -> tuple[tuple[float, float], tuple[float, float]]:
         """Get the segments for an edge in the form ((x1, y1), (x2, y2))."""
