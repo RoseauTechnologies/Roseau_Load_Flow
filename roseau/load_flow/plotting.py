@@ -1,21 +1,25 @@
 """Plotting functions for `roseau.load_flow`."""
 
 import cmath
+import dataclasses
 import math
 from collections.abc import Callable, Iterable, Mapping
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any, Literal, Self, TypedDict
 
 import geopandas as gpd
 import numpy as np
+from pint import PintError
 
-from roseau.load_flow.models import AbstractTerminal, Transformer
+from roseau.load_flow.models import AbstractTerminal, Bus, Line, Switch, Transformer
 from roseau.load_flow.network import ElectricalNetwork
 from roseau.load_flow.sym import NegativeSequence, PositiveSequence, ZeroSequence, phasor_to_sym
 from roseau.load_flow.types import LineType
 from roseau.load_flow.typing import ComplexArray, Id, ResultState
+from roseau.load_flow.units import Q_
 
 if TYPE_CHECKING:
     import folium
+    import plotly.graph_objects as go
     from matplotlib.axes import Axes
 
     import roseau.load_flow_single as rlfs
@@ -23,6 +27,23 @@ if TYPE_CHECKING:
     type FeatureMap = dict[str, Any]
     type StyleDict = dict[str, Any]
     type MapElementType = Literal["bus", "line", "transformer"]
+
+    class VoltageProfileNode(TypedDict):
+        distance: float
+        voltage: float
+        voltages: list[float] | None
+        min_voltage: float | None
+        max_voltage: float | None
+        state: ResultState
+        is_tr_bus: bool
+
+    class VoltageProfileEdge(TypedDict):
+        from_bus: Id
+        to_bus: Id
+        loading: float | None
+        loadings: list[float] | None
+        max_loading: float
+        state: ResultState
 
 
 _COLORS = {"a": "#234e83", "b": "#cad40e", "c": "#55b2aa", "n": "#000000"}
@@ -948,3 +969,520 @@ def plot_results_interactive_map(
         fit_bounds=fit_bounds,
     )
     return m
+
+
+#
+# Voltage profile plotting functions
+#
+@dataclasses.dataclass(frozen=True, slots=True, kw_only=True)
+class _VoltageProfile[NetT: ElectricalNetwork | rlfs.ElectricalNetwork, ModeT: Literal["min", "max", ""]]:
+    network: NetT
+    mode: ModeT
+    starting_bus_id: Id
+    traverse_transformers: bool
+    switch_length: float
+    distance_unit: str
+    colors: dict[ResultState, str] = dataclasses.field(repr=False)
+    buses: dict[Id, "VoltageProfileNode"] = dataclasses.field(repr=False)
+    lines: dict[Id, "VoltageProfileEdge"] = dataclasses.field(repr=False)
+    transformers: dict[Id, "VoltageProfileEdge"] = dataclasses.field(repr=False)
+    switches: dict[Id, "VoltageProfileEdge"] = dataclasses.field(repr=False)
+
+    @classmethod
+    def _from_network(
+        cls,
+        network: NetT,
+        mode: ModeT,
+        *,
+        starting_bus_id: Id | None = None,
+        traverse_transformers: bool = False,
+        switch_length: float | None = None,
+        distance_unit: str = "km",
+    ) -> Self:
+        network._check_valid_results()
+
+        if starting_bus_id is None:
+            starting_bus_id = network._get_starting_bus_id()
+        elif starting_bus_id not in network.buses:
+            raise ValueError(f"Bus {starting_bus_id!r} not found in the network.")
+
+        try:
+            distance_factor = cls._get_distance_factor(distance_unit)
+        except PintError as e:
+            raise ValueError(f"Invalid distance unit: {distance_unit}") from e
+
+        if switch_length is None:
+            min_line_length = min((line._length for line in network.lines.values()), default=math.inf)
+            switch_length = min(2e-3, min_line_length)
+        elif switch_length < 0:
+            raise ValueError("switch_length must be non-negative.")
+
+        distances = network._shortest_paths(
+            starting_bus_id,
+            weight=lambda et, eid: (
+                network.lines[eid]._length
+                if et == "line"
+                else (0.0 if traverse_transformers else None)
+                if et == "transformer"
+                else (switch_length if network.switches[eid].closed else None)
+            ),
+        )
+
+        buses: dict[Id, VoltageProfileNode] = {}
+        lines: dict[Id, VoltageProfileEdge] = {}
+        transformers: dict[Id, VoltageProfileEdge] = {}
+        switches: dict[Id, VoltageProfileEdge] = {}
+        for bus_id, distance in distances.items():
+            buses[bus_id] = cls._handle_bus(network.buses[bus_id], distance=distance * distance_factor, mode=mode)
+        for line in network.lines.values():
+            if not traverse_transformers and line.bus1.id not in distances:
+                continue
+            lines[line.id] = cls._handle_line(line)
+        if traverse_transformers:
+            for tr in network.transformers.values():
+                transformers[tr.id] = cls._handle_transformer(tr)
+                buses[tr.bus_hv.id]["is_tr_bus"] = True
+                buses[tr.bus_lv.id]["is_tr_bus"] = True
+        for switch in network.switches.values():
+            if not switch.closed or (not traverse_transformers and switch.bus1.id not in distances):
+                continue
+            switches[switch.id] = cls._handle_switch(switch)
+
+        return cls(
+            network=network,
+            mode=mode,
+            starting_bus_id=starting_bus_id,
+            traverse_transformers=traverse_transformers,
+            switch_length=switch_length,
+            distance_unit=distance_unit,
+            buses=buses,
+            lines=lines,
+            transformers=transformers,
+            switches=switches,
+            colors=_RESULT_COLORS,
+        )
+
+    @classmethod
+    def _handle_bus(cls, bus: "Bus | rlfs.Bus", distance: float, mode: ModeT) -> "VoltageProfileNode":
+        if bus._nominal_voltage is None:
+            raise ValueError(
+                f"The voltage profile requires buses to have their nominal voltage defined. "
+                f"Bus {bus.id!r} has no nominal voltage."
+            )
+        if isinstance(bus, Bus):
+            voltages = bus._res_voltage_levels_getter(warning=False)
+            assert voltages is not None
+            voltages = voltages.tolist()
+            voltage = {"min": min(voltages), "max": max(voltages)}[mode]
+        else:
+            voltages = None
+            voltage = bus._res_voltage_level_getter(warning=False)
+            assert voltage is not None
+
+        return {
+            "distance": distance,
+            "voltage": voltage * 100,
+            "voltages": _pu_to_pct(voltages),
+            "min_voltage": _pu_to_pct(bus._min_voltage_level),
+            "max_voltage": _pu_to_pct(bus._max_voltage_level),
+            "state": bus._res_state_getter(),
+            "is_tr_bus": False,  # Will be updated later if needed
+        }
+
+    @classmethod
+    def _handle_line(cls, line: "Line | rlfs.Line") -> "VoltageProfileEdge":
+        if isinstance(line, Line):
+            loadings = line._res_loading_getter(warning=False)
+            loading = None
+            if loadings is not None:
+                loadings = loadings.tolist()
+                loading = max(loadings)
+        else:
+            loadings = None
+            loading = line._res_loading_getter(warning=False)
+        return {
+            "from_bus": line.bus1.id,
+            "to_bus": line.bus2.id,
+            "loading": _pu_to_pct(loading),
+            "loadings": _pu_to_pct(loadings),
+            "max_loading": line._max_loading * 100,
+            "state": line._res_state_getter(),
+        }
+
+    @classmethod
+    def _handle_transformer(cls, tr: "Transformer | rlfs.Transformer") -> "VoltageProfileEdge":
+        return {
+            "from_bus": tr.bus_hv.id,
+            "to_bus": tr.bus_lv.id,
+            "loading": tr._res_loading_getter(warning=False) * 100,
+            "loadings": None,
+            "max_loading": tr._max_loading * 100,
+            "state": tr._res_state_getter(),
+        }
+
+    @classmethod
+    def _handle_switch(cls, switch: "Switch | rlfs.Switch") -> "VoltageProfileEdge":
+        return {
+            "from_bus": switch.bus1.id,
+            "to_bus": switch.bus2.id,
+            "loading": None,
+            "loadings": None,
+            "max_loading": 100.0,
+            "state": "unknown",
+        }
+
+    @property
+    def _title(self) -> str:
+        title = f"Voltage Profile Starting at Bus {self.starting_bus_id!r}"
+        if self.mode:
+            title = f"{self.mode.capitalize()} {title}"
+        return title
+
+    @property
+    def _xlabel(self) -> str:
+        return f"Distance ({self.distance_unit})"
+
+    @property
+    def _ylabel(self) -> str:
+        label = "Voltage (%)"
+        if self.mode:
+            label = f"{self.mode.capitalize()} {label}"
+        return label
+
+    @staticmethod
+    def _get_distance_factor(distance_unit: str) -> float:
+        return Q_(1.0, units="km").m_as(distance_unit)
+
+    def _edge_segs(self, edge: "VoltageProfileEdge") -> tuple[tuple[float, float], tuple[float, float]]:
+        """Get the segments for an edge in the form ((x1, y1), (x2, y2))."""
+        return (
+            (self.buses[edge["from_bus"]]["distance"], self.buses[edge["from_bus"]]["voltage"]),
+            (self.buses[edge["to_bus"]]["distance"], self.buses[edge["to_bus"]]["voltage"]),
+        )
+
+    def _edge_xs(self, edge: "VoltageProfileEdge") -> tuple[float, float]:
+        """Get the x coordinates for an edge in the form (x1, x2)."""
+        return (self.buses[edge["from_bus"]]["distance"], self.buses[edge["to_bus"]]["distance"])
+
+    def _edge_ys(self, edge: "VoltageProfileEdge") -> tuple[float, float]:
+        """Get the y coordinates for an edge in the form (y1, y2)."""
+        return (self.buses[edge["from_bus"]]["voltage"], self.buses[edge["to_bus"]]["voltage"])
+
+    # Public API
+    # ----------
+    def plot_matplotlib(self, *, ax: "Axes | None" = None) -> "Axes":
+        """Plot the network voltage profile using Matplotlib.
+
+        Args:
+            ax:
+                The axes to plot on. If None, the current axes will be used.
+
+        Returns:
+            The Matplotlib Axes with the voltage profile plot.
+        """
+        try:
+            import matplotlib.pyplot as plt
+        except ImportError as e:
+            e.add_note("matplotlib is required for plotting the voltage profile using plot_matplotlib.")
+            raise
+        from matplotlib.collections import LineCollection
+        from matplotlib.markers import MarkerStyle
+        from matplotlib.patheffects import Normal, Stroke
+
+        if ax is None:
+            ax = plt.gca()
+
+        ax.add_collection(
+            LineCollection(
+                segments=[self._edge_segs(ln) for ln in self.lines.values()],
+                colors=[self.colors[ln["state"]] for ln in self.lines.values()],
+                zorder=2,
+            )
+        )
+
+        if self.transformers:
+            ax.add_collection(
+                LineCollection(
+                    segments=[self._edge_segs(tr) for tr in self.transformers.values()],
+                    colors=[self.colors[tr["state"]] for tr in self.transformers.values()],
+                    linewidths=3,
+                    zorder=3,
+                    path_effects=[Stroke(linewidth=6, foreground="k"), Normal()],
+                )
+            )
+
+        if self.switches:
+            ax.add_collection(
+                LineCollection(
+                    segments=[self._edge_segs(sw) for sw in self.switches.values()],
+                    colors=[self.colors[sw["state"]] for sw in self.switches.values()],
+                    linestyles="dashed",
+                    linewidths=3,
+                    zorder=3,
+                )
+            )
+
+        bus_pc = ax.scatter(
+            x=[bus["distance"] for bus in self.buses.values()],
+            y=[bus["voltage"] for bus in self.buses.values()],
+            c=[self.colors[bus["state"]] for bus in self.buses.values()],
+            s=10,
+            zorder=4,
+        )
+        if self.traverse_transformers:
+            # ax.scatter does not support per-point marker styles, so we set them manually
+            bus_pc.set_paths(
+                [
+                    (m := MarkerStyle("s" if bus["is_tr_bus"] else "o")).get_path().transformed(m.get_transform())
+                    for bus in self.buses.values()
+                ]
+            )
+
+        ax.set_title(self._title, fontsize=10)
+        ax.set_xlabel(self._xlabel)
+        ax.set_ylabel(self._ylabel)
+        ax.spines["top"].set_visible(False)
+        ax.spines["right"].set_visible(False)
+        ax.grid(alpha=0.25)
+        return ax
+
+    def plot_plotly(self) -> "go.Figure":
+        """Plot the network voltage profile using Plotly.
+
+        Returns:
+            A Plotly Figure with the voltage profile plot.
+        """
+        try:
+            import plotly.graph_objects as go
+        except ImportError as e:
+            e.add_note("plotly is required for plotting the voltage profile using plot_plotly.")
+            raise
+
+        traces: list[go.Scatter] = []
+
+        # Buses
+        voltage_key = "voltages" if self.network.is_multi_phase else "voltage"
+        buses_trace = go.Scatter(
+            x=[bus["distance"] for bus in self.buses.values()],
+            y=[bus["voltage"] for bus in self.buses.values()],
+            mode="markers",
+            marker={
+                "color": [self.colors[bus["state"]] for bus in self.buses.values()],
+                "symbol": (
+                    ["square" if bus["is_tr_bus"] else "circle" for bus in self.buses.values()]
+                    if self.traverse_transformers
+                    else "circle"
+                ),
+                "size": 6,
+            },
+            customdata=[  # used in hovers
+                (bus_id, _pp_num(bus[voltage_key]), _pp_num(bus["min_voltage"]), _pp_num(bus["max_voltage"]))
+                for bus_id, bus in self.buses.items()
+            ],
+            hovertemplate=(
+                "Bus: %{customdata[0]}"
+                "<br>Voltage (%): %{customdata[1]}"
+                "<br>Voltage limits (%): [%{customdata[2]}, %{customdata[3]}]"
+                "<extra></extra>"
+            ),
+            zorder=3,
+        )
+        traces.append(buses_trace)
+
+        # Transformers
+        if self.transformers:
+            # Black borders for transformers
+            traces.append(
+                go.Scatter(
+                    x=[x for tr in self.transformers.values() for x in (*self._edge_xs(tr), None)],
+                    y=[y for tr in self.transformers.values() for y in (*self._edge_ys(tr), None)],
+                    mode="lines",
+                    line={"color": "black", "width": 6},
+                    zorder=2,
+                    hoverinfo="skip",
+                )
+            )
+            # Traces for transformers (grouped by color for better performance)
+            tr_traces: dict[ResultState, dict[str, list[float | None]]] = {
+                state: {"x": [], "y": []} for state in ("normal", "high", "very-high")
+            }
+            for tr in self.transformers.values():
+                tr_traces[tr["state"]]["x"].extend((*self._edge_xs(tr), None))
+                tr_traces[tr["state"]]["y"].extend((*self._edge_ys(tr), None))
+            traces.extend(
+                go.Scatter(
+                    x=t["x"],
+                    y=t["y"],
+                    mode="lines",
+                    line={"color": self.colors[s], "width": 3},
+                    zorder=2,
+                    hoverinfo="skip",
+                )
+                for s, t in tr_traces.items()
+                if t["x"]  # skip empty colors
+            )
+            # Cannot hover on line traces, add invisible midpoint markers to show hover info
+            # https://github.com/plotly/plotly.js/issues/1960
+            traces.append(
+                go.Scatter(
+                    x=[sum(self._edge_xs(tr)) / 2 for tr in self.transformers.values()],
+                    y=[sum(self._edge_ys(tr)) / 2 for tr in self.transformers.values()],
+                    mode="markers",
+                    marker={"opacity": 0, "color": [self.colors[tr["state"]] for tr in self.transformers.values()]},
+                    customdata=[(tr_id, tr["loading"], tr["max_loading"]) for tr_id, tr in self.transformers.items()],
+                    hovertemplate=(
+                        # For parallel transformers, only the last one might be shown in hover
+                        # https://github.com/plotly/plotly.py/issues/2476
+                        "Transformer: %{customdata[0]}"
+                        "<br>Loading (%): %{customdata[1]:.5g}"
+                        "<br>Loading limit (%): %{customdata[2]:.5g}"
+                        "<extra></extra>"
+                    ),
+                )
+            )
+
+        # Lines
+        lines_traces: dict[ResultState, dict[str, list[float | None]]] = {
+            state: {"x": [], "y": []} for state in ("normal", "high", "very-high", "unknown")
+        }
+        loading_key = "loadings" if self.network.is_multi_phase else "loading"
+        for line in self.lines.values():
+            lines_traces[line["state"]]["x"].extend((*self._edge_xs(line), None))
+            lines_traces[line["state"]]["y"].extend((*self._edge_ys(line), None))
+        # Traces for lines (grouped by color for better performance)
+        traces.extend(
+            go.Scatter(
+                x=t["x"],
+                y=t["y"],
+                mode="lines",
+                line={"color": self.colors[s], "width": 1.5},
+                zorder=1,
+                hoverinfo="skip",
+            )
+            for s, t in lines_traces.items()
+            if t["x"]  # skip empty colors
+        )
+        # Cannot hover on line traces, add invisible midpoint markers to show hover info
+        # https://github.com/plotly/plotly.js/issues/1960
+        traces.append(
+            go.Scatter(
+                x=[sum(self._edge_xs(line)) / 2 for line in self.lines.values()],
+                y=[sum(self._edge_ys(line)) / 2 for line in self.lines.values()],
+                mode="markers",
+                marker={"opacity": 0, "color": [self.colors[ln["state"]] for ln in self.lines.values()]},
+                customdata=[
+                    (ln_id, _pp_num(ln[loading_key]), _pp_num(ln["max_loading"])) for ln_id, ln in self.lines.items()
+                ],
+                hovertemplate=(
+                    "Line: %{customdata[0]}"
+                    "<br>Loading (%): %{customdata[1]}"
+                    "<br>Loading limit (%): %{customdata[2]}"
+                    "<extra></extra>"
+                ),
+            )
+        )
+
+        # Switches
+        if self.switches:
+            sw_traces: dict[ResultState, dict[str, list[float | None]]] = {
+                state: {"x": [], "y": []} for state in ("normal", "high", "very-high", "unknown")
+            }
+            for sw in self.switches.values():
+                sw_traces[sw["state"]]["x"].extend((*self._edge_xs(sw), None))
+                sw_traces[sw["state"]]["y"].extend((*self._edge_ys(sw), None))
+            # Traces for switches (grouped by color for better performance)
+            traces.extend(
+                go.Scatter(
+                    x=t["x"],
+                    y=t["y"],
+                    mode="lines",
+                    line={"color": self.colors[s], "width": 5, "dash": "dash"},
+                    zorder=2,
+                    hoverinfo="skip",
+                )
+                for s, t in sw_traces.items()
+                if t["x"]  # skip empty colors
+            )
+            # Cannot hover on line traces, add invisible midpoint markers to show hover info
+            # https://github.com/plotly/plotly.js/issues/1960
+            traces.append(
+                go.Scatter(
+                    x=[sum(self._edge_xs(sw)) / 2 for sw in self.switches.values()],
+                    y=[sum(self._edge_ys(sw)) / 2 for sw in self.switches.values()],
+                    mode="markers",
+                    marker={"opacity": 0, "color": [self.colors[sw["state"]] for sw in self.switches.values()]},
+                    customdata=list(self.switches),
+                    hovertemplate="Switch: %{customdata}<extra></extra>",
+                )
+            )
+
+        return go.Figure(
+            data=traces,
+            layout=go.Layout(
+                title=self._title,
+                xaxis_title=self._xlabel,
+                yaxis_title=self._ylabel,
+                template="plotly_white",
+                margin={"l": 20, "r": 20, "t": 40, "b": 20},
+                showlegend=False,
+                width=800,
+            ),
+        )
+
+
+def voltage_profile(
+    network: ElectricalNetwork,
+    *,
+    mode: Literal["min", "max"],
+    starting_bus_id: Id | None = None,
+    traverse_transformers: bool = False,
+    switch_length: float | None = None,
+    distance_unit: str = "km",
+) -> _VoltageProfile[ElectricalNetwork, Literal["min", "max"]]:
+    """Create a voltage profile of the network.
+
+    A voltage profile shows the voltage (in %) of buses in the network as a function of distance
+    from a starting bus. Lines and transformers are also represented, colored according to their
+    loading levels.
+
+    The network does not need to have geometries defined for this function to work, as distances are
+    calculated based on line lengths. However, the network must have valid load flow results, and
+    relevant buses must have nominal voltages defined.
+
+    Args:
+        network:
+            The electrical network to create the voltage profile for.
+
+        mode:
+            The aggregation mode to use for bus voltages plots. `"min"` for the minimum voltage of
+            buses' phases, `"max"` for the maximum.
+
+        starting_bus_id:
+            The ID of the bus to start the profile from. If None, the bus of the source with the
+            highest voltage is used.
+
+        traverse_transformers:
+            If True, the entire network is traversed including transformers. If False, transformers
+            are not traversed.
+
+        switch_length:
+            The length in km to assign to switches when calculating distances. If None, it is set to
+            the minimum of 2 meters and the shortest line in the network. Must be non-negative.
+
+        distance_unit:
+            The unit to use for distances in the profile. Defaults to "km".
+
+    Returns:
+        An object containing the voltage profile data for plotting. Use its plotting methods to
+        create plots. E.g., ``rlf.plotting.voltage_profile(en).plot_matplotlib()``.
+    """
+    if not network.is_multi_phase:
+        raise TypeError("Only multi-phase networks can be plotted. Did you mean to use rlfs.plotting.voltage_profile?")
+    return _VoltageProfile._from_network(
+        network,
+        mode=mode,
+        starting_bus_id=starting_bus_id,
+        traverse_transformers=traverse_transformers,
+        switch_length=switch_length,
+        distance_unit=distance_unit,
+    )

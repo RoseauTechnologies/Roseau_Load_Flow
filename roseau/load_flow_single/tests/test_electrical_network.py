@@ -3,7 +3,6 @@ import itertools as it
 import json
 import re
 import warnings
-from pathlib import Path
 
 import geopandas as gpd
 import networkx as nx
@@ -36,36 +35,6 @@ from roseau.load_flow_single.models import (
     VoltageSource,
 )
 from roseau.load_flow_single.network import ElectricalNetwork
-
-
-# The following networks are generated using the scripts/generate_test_networks.py script
-@pytest.fixture
-def all_elements_network_path(test_networks_path) -> Path:
-    return test_networks_path / "all_elements_network.json"
-
-
-@pytest.fixture
-def all_elements_network(all_elements_network_path) -> ElectricalNetwork:
-    """Load the network from the JSON file (without results)."""
-    return ElectricalNetwork.from_json(path=all_elements_network_path, include_results=False)
-
-
-@pytest.fixture
-def all_elements_network_with_results(all_elements_network_path) -> ElectricalNetwork:
-    """Load the network from the JSON file (with results, no need to invoke the solver)."""
-    return ElectricalNetwork.from_json(path=all_elements_network_path, include_results=True)
-
-
-@pytest.fixture
-def small_network(test_networks_path) -> ElectricalNetwork:
-    """Load the network from the JSON file (without results)."""
-    return ElectricalNetwork.from_json(path=test_networks_path / "small_network.json", include_results=False)
-
-
-@pytest.fixture
-def small_network_with_results(test_networks_path) -> ElectricalNetwork:
-    """Load the network from the JSON file (with results, no need to invoke the solver)."""
-    return ElectricalNetwork.from_json(path=test_networks_path / "small_network.json", include_results=True)
 
 
 def strip_q(value):

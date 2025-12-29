@@ -4,7 +4,8 @@ import re
 import textwrap
 from abc import ABCMeta, abstractmethod
 from collections import defaultdict
-from collections.abc import Collection, Iterable, Mapping, Sequence
+from collections.abc import Callable, Collection, Iterable, Mapping, Sequence
+from heapq import heappop, heappush
 from importlib import resources
 from pathlib import Path
 from typing import Any, ClassVar, Generic, NoReturn, Self, overload
@@ -1096,6 +1097,87 @@ class AbstractNetwork(RLFObject, JsonMixin, CatalogueMixin[JsonDict], Generic[_E
 
         assert len(nominal_voltages) == nb_buses, "Failed to infer nominal voltages for all buses."
         return nominal_voltages
+
+    @abstractmethod
+    def _get_starting_bus_id(self) -> Id:
+        raise NotImplementedError
+
+    def _shortest_paths(
+        self,
+        source: Id,
+        *,
+        weight: Callable[[str, Id], float | None],
+        pred: dict[Id, list[Id]] | None = None,
+        adj: dict[Id, dict[Id, list[tuple[str, Id]]]] | None = None,
+    ) -> dict[Id, float]:
+        """Compute the shortest paths from a source bus to all buses in the network.
+
+        The network is represented as an undirected multigraph where edges correspond to lines,
+        transformers, and closed switches. The length of lines is used as the weight for the edges,
+        while transformers and closed switches have a length of 0. Open switches are ignored.
+
+        The algorithm used is Dijkstra's algorithm.
+
+        Args:
+            source:
+                The ID of the source bus. All distances are computed from this bus.
+
+            weight:
+                A callable that takes the element type and element ID and returns the weight for the edge.
+                If the callable returns None, the edge is ignored.
+
+            pred:
+                An optional dictionary to store the predecessors of each bus in the shortest paths.
+                If provided, it will be filled with the predecessors during the computation.
+
+            adj:
+                An optional adjacency representation of the network. If provided, it will be filled
+                with the adjacency information during the computation.
+
+        Returns:
+            The distances from the source bus to all other buses in the network.
+        """
+        if adj is None:
+            adj = {}
+        for n in self._elements_by_type["bus"]:
+            adj.setdefault(n, {})
+        for et in ("line", "transformer", "switch"):
+            for e in self._elements_by_type[et].values():
+                u, v = e.bus1.id, e.bus2.id  # type: ignore
+                edge_data = (et, e.id)
+                adj[u].setdefault(v, []).append(edge_data)
+                adj[v].setdefault(u, []).append(edge_data)
+        if pred is not None:
+            pred.setdefault(source, [])
+
+        distances: dict[Id, float] = {}
+        seen: dict[Id, float] = {source: 0.0}
+
+        # middle item is a counter used to avoid comparing nodes (which may not be comparable)
+        heap: list[tuple[float, int, Id]] = [(0.0, 0, source)]
+        while heap:
+            (v_dist, c, v) = heappop(heap)
+            if v in distances:
+                continue
+            distances[v] = v_dist
+            for u, edges in adj[v].items():
+                cost = min((w for (et, eid) in edges if (w := weight(et, eid)) is not None), default=None)
+                if cost is None:
+                    continue
+                vu_dist = v_dist + cost
+                if u in distances:
+                    u_dist = distances[u]
+                    if pred is not None and vu_dist == u_dist:
+                        pred[u].append(v)
+                elif u not in seen or vu_dist < seen[u]:
+                    seen[u] = vu_dist
+                    heappush(heap, (vu_dist, c + 1, u))
+                    if pred is not None:
+                        pred[u] = [v]
+                elif pred is not None and vu_dist == seen[u]:
+                    pred[u].append(v)
+
+        return distances
 
     #
     # DGS interface

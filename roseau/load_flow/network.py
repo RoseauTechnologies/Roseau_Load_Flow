@@ -1205,6 +1205,10 @@ class ElectricalNetwork(AbstractNetwork[Element]):
 
         return potentials, starting_source
 
+    def _get_starting_bus_id(self) -> Id:
+        _, starting_source = self._get_starting_potentials(all_phases=set())
+        return starting_source.bus.id
+
     @staticmethod
     def _check_ref(elements: Iterable[Element]) -> None:
         """Check the number of potential references to avoid having a singular jacobian matrix."""
