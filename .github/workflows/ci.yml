@@ -75,7 +75,7 @@ jobs:
           ROSEAU_LOAD_FLOW_LICENSE_KEY: ${{ secrets.ROSEAU_LOAD_FLOW_LICENSE_KEY }}
 
       - name: Archive code coverage results
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         if: ${{ always() }}
         with:
           name: code-coverage-report-${{ runner.os }}-python-${{ matrix.python-version }}
