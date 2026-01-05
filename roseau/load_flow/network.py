@@ -34,6 +34,7 @@ from roseau.load_flow.models import (
     Transformer,
     VoltageSource,
 )
+from roseau.load_flow.models.dc import ACDCConvertor
 from roseau.load_flow.typing import ComplexArray, CRSLike, Id, JsonDict, MapOrSeq, StrPath
 from roseau.load_flow.utils import (
     DTYPES,
@@ -1143,6 +1144,8 @@ class ElectricalNetwork(AbstractNetwork[Element]):
                             else:
                                 # Traversing from LV side to HV side
                                 new_potentials = {key: p / (kd * element.tap) for key, p in potentials.items()}
+                        elif isinstance(element, ACDCConvertor):
+                            new_potentials = {"a": element.v_dc, "n": 0}
                         else:
                             new_potentials = potentials
                         elements.append((e, new_potentials, element))
@@ -1214,7 +1217,7 @@ class ElectricalNetwork(AbstractNetwork[Element]):
         """Check the number of potential references to avoid having a singular jacobian matrix."""
         visited_elements: set[Element] = set()
         for initial_element in elements:
-            if initial_element in visited_elements or isinstance(initial_element, Transformer):
+            if initial_element in visited_elements or isinstance(initial_element, Transformer | ACDCConvertor):
                 continue
             visited_elements.add(initial_element)
             connected_component: list[Element] = []
@@ -1223,7 +1226,11 @@ class ElectricalNetwork(AbstractNetwork[Element]):
                 element = to_visit.pop(-1)
                 connected_component.append(element)
                 for connected_element in element._connected_elements:
-                    if connected_element not in visited_elements and not isinstance(connected_element, Transformer):
+                    if (
+                        connected_element not in visited_elements
+                        and not isinstance(connected_element, Transformer)
+                        and not isinstance(connected_element, ACDCConvertor)
+                    ):
                         to_visit.append(connected_element)
                         visited_elements.add(connected_element)
 
