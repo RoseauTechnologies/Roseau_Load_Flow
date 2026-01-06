@@ -65,7 +65,7 @@ made and published by [Mines Paris Tech](https://www.minesparis.psl.eu/).
 <!-- end rlf-networks -->
 
 <div align="center">
-  <img alt="Catalogue of networks" src="https://github.com/RoseauTechnologies/Roseau_Load_Flow/blob/main/doc/_static/Network/Catalogue.png?raw=True" />
+  <img alt="Catalogue of networks" src="https://github.com/RoseauTechnologies/Roseau_Load_Flow/blob/main/doc/_static/Network/Catalogue.webp?raw=True" />
 </div>
 
 ## Bug reports / Feature requests

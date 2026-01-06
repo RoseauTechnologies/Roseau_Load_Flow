@@ -3,3 +3,4 @@
 *.ico filter=lfs diff=lfs merge=lfs -text
 *.pfd filter=lfs diff=lfs merge=lfs -text
 .vscode/*.json linguist-language=jsonc
+*.webp filter=lfs diff=lfs merge=lfs -text

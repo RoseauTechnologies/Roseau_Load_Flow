@@ -7,7 +7,12 @@
   },
   "files": {
     "ignoreUnknown": false,
-    "maxSize": 2097152 // 2 MiB to accommodate the networks Catalogue.html file (1.6 MiB)
+    "includes": [
+      "**",
+      "!doc/_static/**/*.html"
+    ],
+    "maxSize": 2097152
+    // 2 MiB to accommodate the networks Catalogue.html file (1.6 MiB)
   },
   "formatter": {
     "enabled": true,
