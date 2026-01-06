@@ -225,7 +225,10 @@ def test_catalogue_data():
     assert catalogue_data["name"].is_unique, "Regenerate catalogue."
 
     for row in catalogue_data.itertuples():
-        assert re.match(r"^[UOT]_[A-Z]+_\d+(?:_\w+)?$", row.name)
+        assert isinstance(row.name, str)
+        assert re.match(r"^[UOT]_[A-Z]+_\d+(?:_\w+)?$", row.name) or re.match(
+            r"^[UOT]_[A-Z]+_3x(\d+)\+(\d+(?:\.\d+)?)$", row.name
+        )
         assert isinstance(row.resistance, float)
         assert isinstance(row.reactance, float)
         assert isinstance(row.susceptance, float)
@@ -290,7 +293,8 @@ def test_from_catalogue():
         "'U_AL_54', 'U_AL_55', 'U_AL_59', 'U_AL_60', 'U_AL_69', 'U_AL_70', 'U_AL_74', "
         "'U_AL_75', 'U_AL_79', 'U_AL_80', 'U_AL_90', 'U_AL_93', 'U_AL_95', 'U_AL_100', "
         "'U_AL_116', 'U_AL_117', 'U_AL_120', 'U_AL_147', 'U_AL_148', 'U_AL_150', 'U_AL_228', "
-        "'U_AL_240', 'U_AL_288'."
+        "'U_AL_240', 'U_AL_288', 'U_AL_3x50+50', 'U_AL_3x95+50', 'U_AL_3x150+70', "
+        "'U_AL_3x150+150', 'U_AL_3x240+95'."
     )
     assert e.value.code == RoseauLoadFlowExceptionCode.CATALOGUE_SEVERAL_FOUND
 
@@ -319,7 +323,7 @@ def test_get_catalogue():
     # Get the entire catalogue
     catalogue = LineParameters.get_catalogue()
     assert isinstance(catalogue, pd.DataFrame)
-    assert catalogue.shape == (355, 8)
+    assert catalogue.shape == (370, 8)
 
     # Filter on a single attribute
     for field_name, value, expected_size in (
@@ -327,20 +331,20 @@ def test_get_catalogue():
         ("line_type", "OvErHeAd", 122),
         ("material", "Cu", 121),
         # ("insulator", Insulator.SE, 240),
-        ("section", 150, 9),
-        ("section", Q_(1.5, "cm²"), 9),
+        ("section", 150, 13),
+        ("section", Q_(1.5, "cm²"), 13),
     ):
         filtered_catalogue = LineParameters.get_catalogue(**{field_name: value})
-        assert filtered_catalogue.shape == (expected_size, 8)
+        assert filtered_catalogue.shape == (expected_size, 8), f"Failed for {field_name}={value}"
 
     # Filter on two attributes
     for field_name, value, expected_size in (
         ("name", r"U_AL_150.*", 1),
-        ("line_type", "OvErHeAd", 122),
-        ("section", 150, 9),
+        ("line_type", "OvErHeAd", 40),
+        ("section", 150, 7),
     ):
-        filtered_catalogue = LineParameters.get_catalogue(**{field_name: value})
-        assert filtered_catalogue.shape == (expected_size, 8)
+        filtered_catalogue = LineParameters.get_catalogue(**{field_name: value}, material="AL")
+        assert filtered_catalogue.shape == (expected_size, 8), f"Failed for {field_name}={value}"
 
     # No results
     empty_catalogue = LineParameters.get_catalogue(section=15000)
