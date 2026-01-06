@@ -63,7 +63,7 @@ Then drag-and-drop this file into your PowerFactory project to use it as "Export
 With the folder now available in PowerFactory, make sure you have your project activated then export the network to DGS,
 click on the `File` menu then hover over `Export` and choose `DGS Format...` from the list like so:
 
-```{image} /_static/IO/DGS_How_To_Export.png
+```{image} /_static/IO/DGS_How_To_Export.webp
 ---
 alt: Screenshot showing PowerFactory's "File/Export/DGS Format..." menu
 width: 500px
@@ -73,7 +73,7 @@ align: center
 
 A "DGS-Export" window will open, set the "Export Options" and "Export Definition" as shown in the following picture:
 
-```{image} /_static/IO/DGS_Export_Window.png
+```{image} /_static/IO/DGS_Export_Window.webp
 ---
 alt: Screenshot showing PowerFactory's "DGS-Export" window
 width: 800px
@@ -125,7 +125,7 @@ The parameters of a line type can be found in two different panels on the graphi
 
 - the "Basic Data" panel as shown in the figure below
 
-  ```{image} /_static/IO/DGS_Line_Basic_Data.png
+  ```{image} /_static/IO/DGS_Line_Basic_Data.webp
   ---
   alt: Line basic data panel
   align: center
@@ -134,7 +134,7 @@ The parameters of a line type can be found in two different panels on the graphi
 
 - the "Load Flow" panel as shown in the figure below
 
-  ```{image} /_static/IO/DGS_Line_Load_Flow.png
+  ```{image} /_static/IO/DGS_Line_Load_Flow.webp
   ---
   alt: Line load flow panel
   align: center
@@ -172,7 +172,7 @@ PowerFactory:
 
 - the "Basic Data" panel as shown in the figure below
 
-  ```{image} /_static/IO/DGS_Two_Winding_Three_Phase_Transformer_Basic_Data.png
+  ```{image} /_static/IO/DGS_Two_Winding_Three_Phase_Transformer_Basic_Data.webp
   ---
   alt: Two winding three-phase transformer basic data panel
   align: center
@@ -181,7 +181,7 @@ PowerFactory:
 
 - the "Load Flow" panel as shown in the figure below
 
-  ```{image} /_static/IO/DGS_Two_Winding_Three_Phase_Transformer_Load_Flow.png
+  ```{image} /_static/IO/DGS_Two_Winding_Three_Phase_Transformer_Load_Flow.webp
   ---
   alt: Two winding three-phase transformer load flow panel
   align: center

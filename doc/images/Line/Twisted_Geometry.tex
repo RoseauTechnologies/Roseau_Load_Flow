@@ -1,6 +1,5 @@
 \input{Preamble}%
 
-\usetikzlibrary{patterns}%
 
 \begin{document}
 \begin{tikzpicture}[%
@@ -12,7 +11,7 @@
     %
     % Terre
     %
-    \filldraw[pattern=north west lines] (-5,0) rectangle (5,0.5);%
+    \filldraw[color=DarkGray] (-5,0) rectangle (5,0.5);%
 
     %
     % Conducteurs
@@ -20,15 +19,14 @@
     % Neutre
     \coordinate (n center) at (0,8);%
     \path[fill=RoseauGrey, draw=black] (n center) circle[radius=1];%
-    \draw[pattern=north east lines, pattern color=red, preaction={fill, white}] (n center) circle[radius=0.90];%
+    \draw[fill=red] (n center) circle[radius=0.90];%
     \node[shape=circle, draw, fill=white] (n center node) at (n center) {$\nrm$};%
 
     % Phases
     \foreach \x/\y/\z in {a/135/$\arm$,b/45/$\brm$,c/-90/$\crm$} {%
         \path (n center) ++(\y:2.5) coordinate (\x\space center);%
         \path[fill=RoseauGrey, draw=black] (\x\space center) circle[radius=1.5];%
-        \draw[pattern=north east lines, pattern color=RoseauGreen, preaction={fill, white}] %
-        (\x\space center) circle[radius=1.4];%
+        \draw[fill=RoseauGreen] (\x\space center) circle[radius=1.4];%
         \node[shape=circle, draw, fill=white] at (\x\space center) {\z};%
       }%
     \draw[dashed] (n center) circle[radius=4];%
@@ -43,13 +41,13 @@
   \path let \p1=($(dessin.north)!0.5!(dessin.south)$) in %
   coordinate (ancre legende) at (5,\y1);%
   \begin{scope}[shift={(ancre legende)}, local bounding box=legende]
-    \path[pattern=north east lines, pattern color=red] (0, 2) circle[radius=0.25];%
+    \path[fill=red] (0, 2) circle[radius=0.25];%
     \node[right] at (0.3, 2) {Neutral conductor};%
-    \path[pattern=north east lines, pattern color=RoseauGreen] (0, 1) circle[radius=0.25];%
+    \path[fill=RoseauGreen] (0, 1) circle[radius=0.25];%
     \node[right] at (0.3, 1) {Phase conductor};%
     \path[fill=RoseauGrey, draw=black] (0, 0) circle[radius=0.25];%
     \node[right] at (0.3, 0) {Insulator};%
-    \filldraw[pattern=north west lines] (-0.25, -1.25) rectangle +(0.5, 0.5);%
+    \filldraw[color=DarkGray] (-0.25, -1.25) rectangle +(0.5, 0.5);%
     \node[right] at (0.3, -1) {Ground};%
     \node[shape=circle, draw, fill=white] at (0, -2) {$\arm$};%
     \node[right] at (0.3, -2) {Identifier (phase or neutral)};%

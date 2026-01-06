@@ -104,7 +104,7 @@ section. Create a new variable called `ROSEAU_LOAD_FLOW_LICENSE_KEY`, with the v
 variable is personal to you, and the toggle will allow you to enable access to the license key for notebooks of your
 choice.
 
-```{image} /_static/2024_09_16_Google_Colab_Environment_Variable.png
+```{image} /_static/2024_09_16_Google_Colab_Environment_Variable.webp
 ---
 alt: Google Colab environment variable
 align: center
@@ -148,7 +148,7 @@ this file when you run your code (including when using Jupyter Notebooks in VS C
 If you are using [PyCharm](https://www.jetbrains.com/pycharm/), you can add the environment variable to your _Python
 Console_ settings as indicated in the screenshot below:
 
-```{image} /_static/2024_01_12_Pycharm_Console_Environment_Variable.png
+```{image} /_static/2024_01_12_Pycharm_Console_Environment_Variable.webp
 ---
 alt: Pycharm Console environment variable
 align: center

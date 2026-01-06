@@ -101,7 +101,7 @@ You can plot both minimum and maximum voltage profiles on the same plot by passi
 ... plt.show()
 ```
 
-```{image} /_static/Plotting/Voltage_Profile_LVFeeder36360_Min_Max.png
+```{image} /_static/Plotting/Voltage_Profile_LVFeeder36360_Min_Max.webp
 ---
 alt: The voltage profile (min and max) of the network LVFeeder36360
 align: center
@@ -180,7 +180,7 @@ following example we plot the graph of the network `MVFeeder210` from the previo
 ... nx.draw(G, node_size=50)  # This works even if the geometries are not defined
 ```
 
-```{image} /_static/Plotting/MVFeeder210_Graph_No_Geometries.png
+```{image} /_static/Plotting/MVFeeder210_Graph_No_Geometries.webp
 ---
 alt: The graph of the network MVFeeder210 with no geometries using networkx
 align: center
@@ -216,7 +216,7 @@ Note that the element must have load flow results to plot the voltage phasors.
 ... plt.show()
 ```
 
-```{image} /_static/Plotting/Plot_Voltage_Phasors.png
+```{image} /_static/Plotting/Plot_Voltage_Phasors.webp
 ---
 alt: The voltage phasors of a wye-connected source and a delta-connected load
 align: center
@@ -241,7 +241,7 @@ The results in plots are color-coded based on the following predefined states:
 - **very-high** (red): bus voltage above {math}`U_{max}`; line or transformer loading above 100% {math}`load_{max}`
 - **unknown** (gray): bus nominal voltage or limits not defined; line ampacity not defined
 
-```{image} /_static/Plotting/Result_States.png
+```{image} /_static/Plotting/Result_States.webp
 ---
 alt: The different states for bus voltages and line/transformer loadings
 align: center
