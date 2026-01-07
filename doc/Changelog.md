@@ -21,6 +21,9 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`434` {gh-issue}`422` Add LV line parameters to the catalogue (e.g. `U_AL_3x150+70`). You can get all added LV
+  lines with `rlf.LineParameters.get_catalogue(r"^[UOT]_[A-Z]+_3x(\d+)\+(\d+(?:\.\d+)?)$")`.
+
 - {gh-pr}`429` {gh-issue}`298` Add `rlf.plotting.voltage_profile` function to plot the voltage profile of a network. The
   function returns an object with `plot_matplotlib()` and `plot_plotly()` methods to create plots using Matplotlib or
   Plotly respectively.

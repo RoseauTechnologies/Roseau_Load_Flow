@@ -26,7 +26,28 @@ jobs:
         with:
           lfs: false
           persist-credentials: false
+
+      - name: Create LFS file list
+        run: git lfs ls-files -l | cut -d' ' -f1 | sort > .lfs-assets-id
+
+      - name: Cache git LFS
+        uses: actions/cache@v5
+        with:
+          path: .git/lfs
+          key: git-lfs-v1-${{ matrix.python-version }}-${{ hashFiles('.lfs-assets-id') }}
+          restore-keys: |
+            git-lfs-v1-${{ matrix.python-version }}
+            git-lfs-v1
+            git-lfs
+
+      - name: Git LFS
+        run: |
+          git lfs checkout
+          git lfs pull
+          git lfs prune --verify-remote
+
       - uses: actions/setup-python@v6
         with:
           python-version: "3.13"
+
       - uses: pre-commit/action@v3.0.1

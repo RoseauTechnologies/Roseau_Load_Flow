@@ -182,6 +182,8 @@ typ = "typ"
 lod = "lod"
 # Phase to Neutral
 pn = "pn"
+# In scripts/generate_lv_line_parameters_catalogue.py
+AGS = "AGS"
 
 # UV
 [tool.uv]

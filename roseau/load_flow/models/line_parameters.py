@@ -1364,7 +1364,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         section: float | Q_[float] | None = None,
         section_neutral: float | Q_[float] | None = None,
         id: Id | None = None,
-        nb_phases: int = 3,
+        nb_phases: int | None = None,
     ) -> Self:
         """Create line parameters from a catalogue.
 
@@ -1405,13 +1405,14 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
                 that this parameter is not used in the data filtering.
 
             nb_phases:
-                The number of phases of the line between 1 and 4, defaults to 3. It represents the
-                size of the ``z_line`` and ``y_shunt`` matrices.
+                The number of phases of the line between 1 and 4. It represents the size of the
+                ``z_line`` and ``y_shunt`` matrices. Default is 4 for LV lines (name in the form
+                ``"3x...+..."``) and 3 otherwise.
 
         Returns:
             The created line parameters.
         """
-        if nb_phases not in {1, 2, 3, 4}:
+        if nb_phases not in {None, 1, 2, 3, 4}:
             msg = f"Expected nb_phases to be one of (1, 2, 3, 4), got {nb_phases!r} instead."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
@@ -1456,6 +1457,8 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         ampacity_neutral = catalogue_data.at[idx, "ampacity_neutral"]
         if pd.isna(ampacity_neutral):
             ampacity_neutral = None
+        if nb_phases is None:
+            nb_phases = 4 if "3x" in name and "+" in name else 3
         nb_phases_m1 = nb_phases - 1
         z_line = (r + x * 1j) * np.eye(nb_phases, dtype=np.complex128)
         z_line[nb_phases_m1, nb_phases_m1] = rn + 1j * xn

@@ -409,6 +409,7 @@ The available lines data are based on the following sources:
 
 - IEC standards including: IEC-60228, IEC-60287, IEC-60364
 - Technique de l'ingénieur (French technical and scientific documentation)
+- Catalogues of Nexans and the NF C 33-209 and NF C 33-210 standards.
 
 ### Inspecting the catalogue
 
@@ -527,37 +528,47 @@ down the result to a single line in the catalogue.
 For instance, these parameters filter the results down to a single line parameters:
 
 ```pycon
->>> rlf.LineParameters.from_catalogue(line_type="underground", material="al", section=240)
-LineParameters(id='U_AL_240')
+>>> rlf.LineParameters.from_catalogue(line_type="underground", material="al", section=288)
+LineParameters(id='U_AL_288')
 ```
 
 Or you can use the `name` filter directly:
 
 ```pycon
->>> rlf.LineParameters.from_catalogue(name="U_AL_240")
-LineParameters(id='U_AL_240')
+>>> rlf.LineParameters.from_catalogue(name="U_AL_288")
+LineParameters(id='U_AL_288')
 ```
 
 As you can see, the `id` of the created instance is the same as the name in the catalogue. You can override this
 behaviour by passing the `id` parameter to `from_catalogue`:
 
 ```pycon
->>> rlf.LineParameters.from_catalogue(name="U_AL_240", id="lp-special")
+>>> rlf.LineParameters.from_catalogue(name="U_AL_288", id="lp-special")
 LineParameters(id='lp-special')
 ```
 
-Line parameters created from the catalogue are 3-phase without a neutral by default. It is possible to create line
+Most line parameters created from the catalogue are 3-phase without a neutral by default. It is possible to create line
 parameters with different numbers of phases using the `nb_phases` parameter.
 
 ```pycon
->>> rlf.LineParameters.from_catalogue(name="U_AL_240").z_line.shape
+>>> rlf.LineParameters.from_catalogue(name="U_AL_288").z_line.shape
 (3, 3)
 >>> # For 3-phase with neutral lines
-... rlf.LineParameters.from_catalogue(name="U_AL_240", nb_phases=4).z_line.shape
+... rlf.LineParameters.from_catalogue(name="U_AL_288", nb_phases=4).z_line.shape
 (4, 4)
 >>> # For single-phase lines
-... rlf.LineParameters.from_catalogue(name="U_AL_240", nb_phases=2).z_line.shape
+... rlf.LineParameters.from_catalogue(name="U_AL_288", nb_phases=2).z_line.shape
 (2, 2)
+```
+
+LV line parameters have a neutral conductor by default. These are identified by a name having the format
+`..._..._3x...+...`.
+
+```pycon
+>>> rlf.LineParameters.from_catalogue(name="U_AL_3x150+70")
+LineParameters(id='U_AL_3x150+70')
+>>> rlf.LineParameters.from_catalogue(name="U_AL_3x150+70").z_line.shape
+(4, 4)
 ```
 
 In case no or several results match the parameters, an error is raised:
