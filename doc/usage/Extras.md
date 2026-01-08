@@ -156,6 +156,31 @@ array([345.+199.18584287j]) <Unit('volt')>
 ['bn', 'cn']
 ```
 
+## Kron's reduction
+
+Kron's reduction is a method to reduce the size of an admittance or impedance matrix by eliminating nodes that are not
+of interest, typically the neutral conductor in power systems. You can use the function
+{func}`roseau.load_flow.converters.kron_reduction` to perform Kron's reduction on any square matrix of real or complex
+numbers. Example:
+
+```pycon
+>>> import numpy as np
+... import roseau.load_flow as rlf
+>>> matrix_4x4 = np.array(
+...     [
+...         [4, 1, 2, 0],
+...         [1, 3, 0, 1],
+...         [2, 0, 3, 1],
+...         [0, 1, 1, 2],
+...     ],
+...     dtype=np.float64,
+... )
+... rlf.converters.kron_reduction(matrix_4x4)
+array([[ 4. ,  1. ,  2. ],
+       [ 1. ,  2.5, -0.5],
+       [ 2. , -0.5,  2.5]])
+```
+
 ## Constants
 
 {mod}`roseau.load_flow.constants` contains some common mathematical and physical constants like the resistivity and

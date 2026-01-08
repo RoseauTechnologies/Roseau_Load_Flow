@@ -344,6 +344,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         _, (z1, y1) = lp_m._zy_to_sym(
             operation="create `rlfs.LineParameters` from multi-phase",
             exc_code=RoseauLoadFlowExceptionCode.INVALID_FOR_SINGLE_PHASE,
+            kron=True,
         )
         if y1.real < 0:  # might produce a value with a small negative real part
             y1 = 1j * y1.imag
