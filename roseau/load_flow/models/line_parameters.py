@@ -423,7 +423,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         z_012 = A_INV @ z_line @ A
         z0, z1, _ = z_012.diagonal().tolist()
         if self.with_shunt:
-            y_shunt = kron_reduction(self._y_shunt) if kron and self._y_shunt[3, 3] != 0 else self._y_shunt[:3, :3]
+            y_shunt = self._y_shunt[:3, :3]
             y_012 = A_INV @ y_shunt @ A
             y0, y1, _ = y_012.diagonal().tolist()
         else:
