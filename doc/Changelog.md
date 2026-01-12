@@ -21,6 +21,11 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`435` {gh-issue}`436` Add `rlf.converters.kron_reduction` function to perform Kron reduction on any nxn matrix
+  reducing it to an (n-1)x(n-1) matrix by eliminating the last row and column. Also add `eliminate_neutral` parameter to
+  `rlf.LineParameters.to_sym` to optionally eliminate the neutral conductor using Kron's reduction when converting line
+  parameters to symmetrical components.
+
 - {gh-pr}`434` {gh-issue}`422` Add LV line parameters to the catalogue (e.g. `U_AL_3x150+70`). You can get all added LV
   lines with `rlf.LineParameters.get_catalogue(r"^[UOT]_[A-Z]+_3x(\d+)\+(\d+(?:\.\d+)?)$")`.
 

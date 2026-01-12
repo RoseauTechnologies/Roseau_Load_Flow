@@ -13,6 +13,7 @@ import pandas as pd
 from numpy.typing import NDArray
 
 from roseau.load_flow.constants import EPSILON_0, EPSILON_R, MU_0, OMEGA, PI, RHO, SQRT3, TAN_D, F
+from roseau.load_flow.converters import kron_reduction
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.sym import A_INV, A
 from roseau.load_flow.types import Insulator, LineType, Material
@@ -402,7 +403,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         return z_line, y_shunt
 
     def _zy_to_sym(
-        self, operation: str, exc_code: RoseauLoadFlowExceptionCode
+        self, operation: str, exc_code: RoseauLoadFlowExceptionCode, kron: bool
     ) -> tuple[tuple[complex, complex], tuple[complex, complex]]:
         """Convert the Z and Y matrices to a symmetrical model.
 
@@ -416,29 +417,42 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             )
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=exc_code)
-
-        z_012 = A_INV @ self._z_line[:3, :3] @ A
-        y_012 = A_INV @ self._y_shunt[:3, :3] @ A
-        z0 = z_012.item(0, 0)
-        y0 = y_012.item(0, 0)
-        z1 = z_012.item(1, 1)
-        y1 = y_012.item(1, 1)
+        if n_phases != 4:
+            kron = False
+        z_line = kron_reduction(self._z_line) if kron else self._z_line[:3, :3]
+        z_012 = A_INV @ z_line @ A
+        z0, z1, _ = z_012.diagonal().tolist()
+        if self.with_shunt:
+            y_shunt = self._y_shunt[:3, :3]
+            y_012 = A_INV @ y_shunt @ A
+            y0, y1, _ = y_012.diagonal().tolist()
+        else:
+            y0 = y1 = 0.0j
         return (z0, y0), (z1, y1)
 
-    def to_sym(self) -> dict[str, complex]:
+    def to_sym(self, *, eliminate_neutral: bool = False) -> dict[str, complex]:
         """Return the symmetrical components of a three-phase line parameters.
 
         An error is raised if the line parameters are not three-phase.
 
+        Args:
+            eliminate_neutral:
+                If True, perform Kron's reduction to eliminate the neutral conductor before computing
+                the symmetrical components. This option is only relevant for 4-wire lines. By
+                default, the neutral is kept and its parameters are returned.
+
         Returns:
             The symmetrical components of the line impedance and shunt admittance. These are
-            ``z0, y0, z1, y1`` and optionally ``zn, zpn, bn, bpn`` if the line has a neutral.
+            ``z0, y0, z1, y1`` and optionally ``zn, zpn, bn, bpn`` if the line has a neutral and
+            ``eliminate_neutral`` is False.
         """
         (z0, y0), (z1, y1) = self._zy_to_sym(
-            operation="compute symmetrical components from", exc_code=RoseauLoadFlowExceptionCode.BAD_LINE_MODEL
+            operation="compute symmetrical components from",
+            exc_code=RoseauLoadFlowExceptionCode.BAD_LINE_MODEL,
+            kron=eliminate_neutral,
         )
         result = {"z0": z0, "z1": z1, "y0": y0, "y1": y1}
-        if self._z_line.shape[0] == 4:
+        if not eliminate_neutral and self._z_line.shape[0] == 4:
             result["zn"] = self._z_line.item(3, 3)
             result["yn"] = self._y_shunt.item(3, 3)
             pn_indices = (0, 1, 2, 3, 3, 3), (3, 3, 3, 0, 1, 2)  # phase-neutral components indices

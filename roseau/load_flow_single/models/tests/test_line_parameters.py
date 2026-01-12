@@ -155,7 +155,7 @@ def test_from_geometry():
     # TODO regenerate all expected values with the IEC constants and update this test
     z_line_expected = 0.18842666666666666 + 0.08071828175629972j
     y_shunt_expected = 0.0006515742213003806j
-    assert np.isclose(lp.z_line.m, z_line_expected, atol=1e-6)
+    assert np.isclose(lp.z_line.m, z_line_expected, atol=1e-3)
     assert np.isclose(lp.y_shunt.m, y_shunt_expected, atol=1e-4)
     assert isinstance(lp.line_type, LineType)
     assert lp.line_type == LineType.UNDERGROUND

@@ -4,6 +4,7 @@ This module provides helper functions to convert from one representation to anot
 Available functions:
 
 * convert potentials to voltages
+* perform Kron reduction on nxn matrices
 """
 
 import logging
@@ -116,3 +117,21 @@ def calculate_voltage_phases(phases: str) -> list[str]:
         msg = f"Invalid phases '{phases}'. Must be one of {', '.join(_VOLTAGE_PHASES_CACHE)}."
         logger.error(msg)
         raise RoseauLoadFlowException(msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE) from None
+
+
+def kron_reduction[D: np.dtype](matrix: np.ndarray[tuple[int, int], D]) -> np.ndarray[tuple[int, int], D]:
+    """Perform Kron's reduction on a square matrix to reduce it by one dimension.
+
+    Let :math:`M` be a :math:`n \\times n` matrix and :math:`M_{ij}` be the element at row :math:`i`
+    and column :math:`j` of :math:`M`. Kron's reduction of :math:`M`, denoted :math:`M'` is a
+    :math:`(n-1) \\times (n-1)` matrix with elements :math:`M'_{ij}` defined as:
+
+    .. math::
+
+        M'_{ij} = M_{ij} - (M_{in} * M_{nj}) / M_{nn}  \\text{ for } i, j \\in \\{1, 2, ..., n-1\\}
+    """
+    n = matrix.shape[0]
+    if matrix.shape != (n, n):
+        raise ValueError(f"Matrix must be square, got shape {matrix.shape}.")
+    n_1 = n - 1
+    return matrix[:n_1, :n_1] - matrix[:n_1, n_1:] @ matrix[n_1:, :n_1] / matrix[n_1, n_1]
