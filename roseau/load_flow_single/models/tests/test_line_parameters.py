@@ -165,18 +165,27 @@ def test_from_geometry():
 
 
 def test_sym():
-    z0 = 0.0j
-    z1 = 1.0 + 1.0j
-    y0 = 0.0j
-    y1 = 1e-06j
-    lp = LineParameters.from_sym(id="NKBA NOR  25.00 kV", z0=z0, z1=z1, y0=y0, y1=y1)
-    assert np.isclose(lp.z_line.m, z1)
-    assert np.isclose(lp.y_shunt.m, y1)
-
-    # Test optional zero-sequence parameters
-    lp2 = LineParameters.from_sym(id="NKBA NOR  25.00 kV", z1=z1, y1=y1)
-    assert np.isclose(lp2.z_line.m, z1)
-    assert np.isclose(lp2.y_shunt.m, y1)
+    # There is no rlfs.LineParameters.from_sym method because it is redundant with calling the
+    # constructor directly with z1 and y1. This is for two reasons:
+    # 1. The method would create a line model that is always symmetric (diagonal elements are equal
+    #    and off-diagonal elements are equal):
+    #    z,ii = (z0 + 2*z1)/3; z,ij = (z0 - z1)/3; z,nn = zn; z,in = complex(0, xpn); i,j in {a,b,c}
+    # 2. We are only interested in the positive-sequence parameters which are not affected by
+    #    Kron's reduction if the model is symmetric (point 1):
+    #    z1' = zs' - zm' = (zs - zpn²/zn) - (zm - zpn²/zn) = zs - zm = z1
+    # This test proves this claim.
+    z0 = 0.188 + 0.8224j
+    z1 = 0.188 + 0.0812j
+    zn = 0.4029 + 0.3522j
+    xpn = 0.2471
+    y0 = 0.000010462 + 0.000063134j
+    y1 = 0.000010462 + 0.00022999j
+    bn = 0.00011407
+    bpn = -0.000031502
+    lp_m = MultiLineParameters.from_sym(id="TP", z0=z0, z1=z1, y0=y0, y1=y1, zn=zn, xpn=xpn, bn=bn, bpn=bpn)
+    lp4 = LineParameters.from_roseau_load_flow(lp_m)
+    assert np.isclose(lp4.z_line.m, z1)
+    assert np.isclose(lp4.y_shunt.m, y1)
 
 
 def test_from_coiffier_model():
@@ -479,11 +488,8 @@ def test_from_open_dss():
     # DSS command: `New linecode.240sq nphases=3 R1=0.127 X1=0.072 R0=0.342 X0=0.089 units=km`
     r1 = Q_(0.127, "ohm/km")
     x1 = Q_(0.072, "ohm/km")
-    r0 = Q_(0.342, "ohm/km")
-    x0 = Q_(0.089, "ohm/km")
     c1 = Q_(3.4, "nF/km")
-    c0 = Q_(1.6, "nF/km")
-    lp240sq = LineParameters.from_open_dss(id="linecode-240sq", r1=r1, x1=x1, r0=r0, x0=x0, c1=c1, c0=c0)
+    lp240sq = LineParameters.from_open_dss(id="linecode-240sq", r1=r1, x1=x1, c1=c1)
     assert lp240sq.id == "linecode-240sq"
     z_expected = complex(r1.m_as("ohm/km"), x1.m_as("ohm/km"))
     assert np.isclose(lp240sq.z_line.m, z_expected)
@@ -495,13 +501,8 @@ def test_from_open_dss():
     # DSS command: `New LineCode.16sq NPhases=1 R1=0.350, X1=0.025, R0=0.366, X0=0.025, C1=1.036, C0=0.488 Units=kft NormAmps=400 LineType=OH`
     r1 = Q_(0.350, "ohm/kft")
     x1 = Q_(0.025, "ohm/kft")
-    r0 = Q_(0.366, "ohm/kft")
-    x0 = Q_(0.025, "ohm/kft")
     c1 = Q_(1.036, "nF/kft")
-    c0 = Q_(0.488, "nF/kft")
-    lp16sq = LineParameters.from_open_dss(
-        id="linecode-16sq", r1=r1, x1=x1, r0=r0, x0=x0, c1=c1, c0=c0, linetype="OH", normamps=Q_(400, "A")
-    )
+    lp16sq = LineParameters.from_open_dss(id="linecode-16sq", r1=r1, x1=x1, c1=c1, linetype="OH", normamps=Q_(400, "A"))
     assert lp16sq.id == "linecode-16sq"
     z_expected = complex(r1.m_as("ohm/km"), x1.m_as("ohm/km"))
     assert np.isclose(lp16sq.z_line.m, z_expected)
@@ -523,9 +524,6 @@ def test_from_power_factory():
         "r1": 0.3225,  # Ohm/km
         "x1": 0.125663,  # Ohm/km
         "b1": 72.25663,  # µS/km
-        "r0": 1.29,  # Ohm/km
-        "x0": 0.502654,  # Ohm/km
-        "b0": 75.05265,  # µS/km
         "inom": 0.235,  # kA
         "cohl": 0,  # Cable (underground)
         "conductor": "Al",  # Aluminium
