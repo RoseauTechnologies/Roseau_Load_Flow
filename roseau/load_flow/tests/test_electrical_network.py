@@ -737,7 +737,7 @@ def test_buses_voltages(small_network_with_results):
         pd.DataFrame.from_records(voltage_records)
         .astype(
             {
-                "bus_id": str,
+                "bus_id": object,
                 "phase": VoltagePhaseDtype,
                 "voltage": complex,
                 "voltage_level": float,
@@ -817,7 +817,7 @@ def test_single_phase_network(single_phase_network: ElectricalNetwork):
                 {"bus_id": "bus1", "phase": "n", "potential": 0j},
             ]
         )
-        .astype({"phase": PhaseDtype, "potential": complex})
+        .astype({"bus_id": object, "phase": PhaseDtype, "potential": complex})
         .set_index(["bus_id", "phase"]),
     )
     # Buses voltages results
@@ -849,6 +849,7 @@ def test_single_phase_network(single_phase_network: ElectricalNetwork):
         )
         .astype(
             {
+                "bus_id": object,
                 "phase": VoltagePhaseDtype,
                 "voltage": complex,
                 "voltage_level": float,
@@ -883,6 +884,7 @@ def test_single_phase_network(single_phase_network: ElectricalNetwork):
         )
         .astype(
             {
+                "transformer_id": object,
                 "phase": PhaseDtype,
                 "current_hv": complex,
                 "current_lv": complex,
@@ -945,6 +947,7 @@ def test_single_phase_network(single_phase_network: ElectricalNetwork):
         )
         .astype(
             {
+                "line_id": object,
                 "phase": PhaseDtype,
                 "current1": complex,
                 "current2": complex,
@@ -981,6 +984,7 @@ def test_single_phase_network(single_phase_network: ElectricalNetwork):
         )
         .astype(
             {
+                "switch_id": object,
                 "phase": PhaseDtype,
                 "current1": complex,
                 "current2": complex,
@@ -1016,7 +1020,14 @@ def test_single_phase_network(single_phase_network: ElectricalNetwork):
             ]
         )
         .astype(
-            {"phase": PhaseDtype, "type": LoadTypeDtype, "current": complex, "power": complex, "potential": complex}
+            {
+                "load_id": object,
+                "phase": PhaseDtype,
+                "type": LoadTypeDtype,
+                "current": complex,
+                "power": complex,
+                "potential": complex,
+            }
         )
         .set_index(["load_id", "phase"]),
     )

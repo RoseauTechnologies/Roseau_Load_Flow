@@ -16,7 +16,7 @@ SourceTypeDtype: Final = pd.CategoricalDtype(categories=["voltage"], ordered=Tru
 SequenceDtype: Final = pd.CategoricalDtype(categories=["zero", "pos", "neg"], ordered=True)
 """Categorical data type used for symmetrical components."""
 DTYPES: Final = {
-    "bus_id": object,
+    "bus_id": object,  # we use object for ids because they could be either str or int
     "branch_id": object,
     "transformer_id": object,
     "line_id": object,

@@ -44,7 +44,7 @@ og:description: See what's new in the latest release of Roseau Load Flow !
   - The `side` parameter of `rlf.GroundConnection`, `rlf.plotting.plot_voltage_phasors` and
     `rlf.plotting.plot_symmetrical_voltages` is removed. Pass a branch side directly instead (e.g.
     `rlf.GroundConnection(ground=ground, element=transformer.side_hv)`).
-  - The `potentials` attribute and and constructor parameter of `Bus` is removed. Use `initial_potentials` instead.
+  - The `potentials` attribute and constructor parameter of `Bus` is removed. Use `initial_potentials` instead.
   - The `bus` of a disconnected load or source no longer returns `None`. Use the new `is_disconnected` property to check
     if the load or source is disconnected.
   - The `phase` parameter of `rlf.PotentialRef` is removed. Use `phases` instead.
