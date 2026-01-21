@@ -1,6 +1,6 @@
 [project]
 name = "roseau-load-flow"
-version = "0.13.1"
+version = "0.14.0"
 description = "Highly capable multi-phase load flow solver"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -36,7 +36,7 @@ dependencies = [
   "pint>=0.21.0",
   "platformdirs>=4.0.0",
   "pyproj>=3.3.0",
-  "roseau-load-flow-engine>=0.18.1",
+  "roseau-load-flow-engine==0.19.0",
   "shapely>=2.0.0",
   "typing-extensions>=4.6.2",
 ]

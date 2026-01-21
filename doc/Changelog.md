@@ -19,7 +19,7 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 # Changelog
 
-## Unreleased
+## Version 0.14.0
 
 - {gh-pr}`435` {gh-issue}`436` Add `rlf.converters.kron_reduction` function to perform Kron reduction on any nxn matrix
   reducing it to an (n-1)x(n-1) matrix by eliminating the last row and column. Also add `eliminate_neutral` parameter to
